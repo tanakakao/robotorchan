@@ -5,8 +5,8 @@ from __future__ import annotations
 from botorch.models.fully_bayesian import (
     SaasFullyBayesianSingleTaskGP as BoTorchSaasFullyBayesianSingleTaskGP,
 )
+from botorch.models.fully_bayesian_multitask import MultitaskSaasPyroModel
 from botorch.models.fully_bayesian_multitask import (
-    MultitaskSaasPyroModel,
     SaasFullyBayesianMultiTaskGP as BoTorchSaasFullyBayesianMultiTaskGP,
 )
 from botorch.models.transforms.input import InputTransform
