@@ -64,7 +64,8 @@ class RawDataMixin:
         The returned dictionary is a new mapping, while tensor values refer to
         the model-owned buffers.
         """
-        return {name: self._get_raw_tensor(name) for name in self._raw_data_names}
+        names = getattr(self, "_raw_data_names", ())
+        return {name: self._get_raw_tensor(name) for name in names}
 
 
 class SupervisedTrainingDataMixin(RawDataMixin):
