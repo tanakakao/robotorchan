@@ -37,9 +37,7 @@ def _one_hot_encode(
 ) -> Tensor:
     """Encode categorical columns while preserving all other columns in order."""
     if X.shape[-1] != input_dim:
-        raise ValueError(
-            f"Expected inputs with {input_dim} features, got {X.shape[-1]}."
-        )
+        raise ValueError(f"Expected inputs with {input_dim} features, got {X.shape[-1]}.")
 
     value_by_dim = dict(zip(cat_dims, category_values, strict=True))
     parts: list[Tensor] = []
@@ -52,9 +50,7 @@ def _one_hot_encode(
         shape = (1,) * (X.ndim - 1) + (values.numel(),)
         encoded = X[..., dim : dim + 1] == values.reshape(shape)
         if not torch.all(encoded.sum(dim=-1) == 1):
-            raise ValueError(
-                f"Input contains an unseen category in categorical feature {dim}."
-            )
+            raise ValueError(f"Input contains an unseen category in categorical feature {dim}.")
         parts.append(encoded.to(dtype=X.dtype))
 
     return torch.cat(parts, dim=-1)
@@ -191,9 +187,7 @@ class MixedSaasFullyBayesianSingleTaskGP(SaasFullyBayesianSingleTaskGP):
         self._category_buffer_names: tuple[str, ...] = tuple(
             f"_category_values_{index}" for index in range(len(category_values))
         )
-        for name, values in zip(
-            self._category_buffer_names, category_values, strict=True
-        ):
+        for name, values in zip(self._category_buffer_names, category_values, strict=True):
             self.register_buffer(name, values.detach().clone())
         self._store_supervised_training_data(
             train_X=raw_train_X,
@@ -332,9 +326,7 @@ class MixedSaasFullyBayesianMultiTaskGP(SaasFullyBayesianMultiTaskGP):
         self._category_buffer_names: tuple[str, ...] = tuple(
             f"_category_values_{index}" for index in range(len(category_values))
         )
-        for name, values in zip(
-            self._category_buffer_names, category_values, strict=True
-        ):
+        for name, values in zip(self._category_buffer_names, category_values, strict=True):
             self.register_buffer(name, values.detach().clone())
         self._store_supervised_training_data(
             train_X=raw_train_X,
