@@ -43,9 +43,12 @@ Supervised single-model wrappers add the common robotorchan model surface where 
 - `raw_train_X`
 - `raw_train_Y`
 - `raw_train_Yvar`
+- `raw_data_names`
 - `raw_data`
 - `supports_mll`
 - `make_mll()` when the model family supports MLL-style fitting
+
+`raw_*` values are **constructor-level provenance snapshots**. They record caller-supplied tensors before BoTorch transforms or preprocessing and are not intended to mirror later conditioned or fantasy training state. After `condition_on_observations()` or `fantasize()`, use native BoTorch attributes such as `train_inputs` and `train_targets` for the model's current training state; the `raw_*` values continue to describe the original wrapper construction input.
 
 The wrappers preserve the upstream constructor surface and delegate predictive behavior, kernels, transforms, conditioning, and model-specific semantics to BoTorch. For models whose upstream constructor does not expose `train_Yvar`, `raw_train_Yvar` is `None`.
 
@@ -163,7 +166,9 @@ Planned extension areas include:
 ## Requirements
 
 - Python >= 3.11
-- BoTorch >= 0.18.1
+- BoTorch >= 0.18.1, < 0.19
+
+The wrapper constructor contract is tested against the supported BoTorch 0.18.x line. Support for a future BoTorch minor line should be added deliberately after constructor and behavior compatibility are verified.
 
 ## Status
 
