@@ -318,7 +318,7 @@ def test_heterogeneous_posterior_matches_upstream_with_same_initialization() -> 
     torch.manual_seed(1234)
     upstream = BoTorchHeterogeneousMTGP(**kwargs)
 
-    test_X = torch.tensor([[0.25, 0.30], [0.65, 0.75]], dtype=torch.double)
+    test_X = torch.tensor([[0.25, 0.30, 0.0], [0.65, 0.75, 0.0]], dtype=torch.double)
     wrapper.eval()
     upstream.eval()
     wrapper_posterior = wrapper.posterior(test_X)
