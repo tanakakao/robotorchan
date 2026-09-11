@@ -70,6 +70,8 @@ For supervised model wrappers, use these names consistently where the concept ap
 
 Do not force supervised names onto models whose data have different semantics. For example, preference models should use names such as `raw_datapoints` and `raw_comparisons` rather than pretending comparisons are ordinary `train_Y` values.
 
+Composite models follow the same principle. `ModelListGP` is not treated as if it had one global training tensor pair. Raw data remains owned by the child models and the wrapper exposes grouped `raw_train_Xs`, `raw_train_Ys`, and `raw_train_Yvars` convenience properties. Its training objective is `SumMarginalLogLikelihood`, not `ExactMarginalLogLikelihood` for the container as a whole.
+
 ## Roadmap
 
 ### Phase 1 — wrapper foundation
@@ -89,9 +91,17 @@ Add `MixedSingleTaskGP` and `SingleTaskMultiFidelityGP` using the Phase 1 contra
 
 Add `MultiTaskGP` and `KroneckerMultiTaskGP`, retaining the same supervised raw-data surface where the semantics match.
 
-### Phase 4 — composite and non-exact wrappers
+### Phase 4 — model-list wrapper
 
-Add `ModelListGP`, variational models, preference models, and fully Bayesian models with model-family-specific training objectives and capabilities rather than forcing `ExactMarginalLogLikelihood` everywhere.
+Add `ModelListGP` with grouped child raw-data access and `SumMarginalLogLikelihood` construction while preserving native BoTorch child-model interoperability.
+
+### Phase 5 — variational wrapper
+
+Add `SingleTaskVariationalGP` with the appropriate variational training objective rather than forcing exact-GP semantics.
+
+### Later model-wrapper phases
+
+Continue with preference, fully Bayesian, higher-order, latent-Kronecker, and other specialized BoTorch models using model-family-specific training objectives and raw-data conventions.
 
 ### Later extension phases
 
