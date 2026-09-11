@@ -17,6 +17,7 @@ PUBLIC_MODEL_NAMES = {
     "MixedKroneckerMultiTaskGP",
     "MixedMultiTaskGP",
     "MixedSingleTaskGP",
+    "MixedSingleTaskVariationalGP",
     "ModelListGP",
     "MultiTaskGP",
     "OrthogonalAdditiveGP",
