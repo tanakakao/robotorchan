@@ -21,15 +21,14 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-  "botorch>=0.18.1",
+  "botorch>=0.18.1,<0.19",
 ]
 
 [project.optional-dependencies]
 fully-bayesian = [
-  "botorch[fully_bayesian]>=0.18.1",
+  "botorch[fully_bayesian]>=0.18.1,<0.19",
 ]
 dev = [
-  "botorch[fully_bayesian]>=0.18.1",
   "pytest>=8.0",
   "pytest-cov>=5.0",
   "ruff>=0.11",
