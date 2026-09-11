@@ -76,13 +76,11 @@ def test_higher_order_gp_raw_buffers_follow_dtype_and_serialize() -> None:
 
 def test_higher_order_gp_matches_upstream_posterior() -> None:
     train_X, train_Y = _training_data()
-    wrapper = HigherOrderGP(train_X=train_X, train_Y=train_Y)
-    upstream = BoTorchHigherOrderGP(train_X=train_X, train_Y=train_Y)
 
-    upstream_state = {
-        name: value for name, value in wrapper.state_dict().items() if not name.startswith("_raw_")
-    }
-    upstream.load_state_dict(upstream_state)
+    torch.manual_seed(1234)
+    wrapper = HigherOrderGP(train_X=train_X, train_Y=train_Y)
+    torch.manual_seed(1234)
+    upstream = BoTorchHigherOrderGP(train_X=train_X, train_Y=train_Y)
 
     test_X = torch.tensor([[0.15, 0.25], [0.75, 0.65]], dtype=torch.double)
     wrapper.eval()
