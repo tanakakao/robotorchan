@@ -14,6 +14,7 @@ PUBLIC_MODEL_NAMES = {
     "LCEAGP",
     "LCEMGP",
     "LatentKroneckerGP",
+    "MixedKroneckerMultiTaskGP",
     "MixedMultiTaskGP",
     "MixedSingleTaskGP",
     "ModelListGP",
