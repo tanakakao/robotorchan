@@ -16,6 +16,8 @@ def test_conditioning_preserves_constructor_raw_snapshot() -> None:
     new_X = torch.tensor([[0.33]], dtype=torch.double)
     new_Y = torch.sin(new_X * 3.0)
 
+    model.eval()
+    _ = model.posterior(new_X)
     conditioned = model.condition_on_observations(X=new_X, Y=new_Y)
 
     assert isinstance(conditioned, SingleTaskGP)
