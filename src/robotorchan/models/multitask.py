@@ -192,3 +192,49 @@ class KroneckerMultiTaskGP(ExactGPModelMixin, BoTorchKroneckerMultiTaskGP):
             train_Y=raw_train_Y,
             train_Yvar=None,
         )
+
+
+class MixedKroneckerMultiTaskGP(KroneckerMultiTaskGP):
+    """Kronecker multi-task GP for mixed continuous/categorical inputs.
+
+    The block-design task representation is unchanged from BoTorch's
+    ``KroneckerMultiTaskGP``: task identity lives in the output dimension of
+    ``train_Y`` rather than in ``train_X``. Therefore ``cat_dims`` applies
+    directly to the columns of ``train_X`` used by the data covariance.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        cat_dims: list[int],
+        likelihood: MultitaskGaussianLikelihood | None = None,
+        cont_kernel_factory: ContinuousKernelFactory | None = None,
+        task_covar_prior: Prior | None = None,
+        rank: int | None = None,
+        outcome_transform: OutcomeTransform | None = None,
+        input_transform: InputTransform | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a mixed-input Kronecker multi-task GP."""
+        input_dim = train_X.shape[-1]
+        normalized_cat_dims = _normalize_cat_dims(cat_dims=cat_dims, input_dim=input_dim)
+        data_covar_module = _make_mixed_covar_module(
+            input_dim=input_dim,
+            cat_dims=normalized_cat_dims,
+            batch_shape=train_X.shape[:-2],
+            cont_kernel_factory=cont_kernel_factory,
+        )
+
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            likelihood=likelihood,
+            data_covar_module=data_covar_module,
+            task_covar_prior=task_covar_prior,
+            rank=rank,
+            outcome_transform=outcome_transform,
+            input_transform=input_transform,
+            **kwargs,
+        )
+        self.cat_dims = tuple(normalized_cat_dims)
