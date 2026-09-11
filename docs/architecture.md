@@ -80,6 +80,8 @@ Fully Bayesian models retain the normal supervised raw-data vocabulary, but do *
 
 Structured exact GPs retain the exact-GP training objective while preserving model-specific raw tensors and fitting contexts. `HigherOrderGP` retains tensor-valued `raw_train_Y` before BoTorch flattens / standardizes its structured outputs. `LatentKroneckerGP` additionally exposes `raw_train_T`, captured before BoTorch broadcasts task / time coordinates, masks missing outputs, or transforms data. Both use `ExactMarginalLogLikelihood`; specialized solver contexts and optimizers remain explicit BoTorch behavior rather than being hidden by the wrapper.
 
+Specialized BoTorch models follow the same principle: use the normal supervised raw-data contract whenever the model actually receives one global training tensor pair, and preserve model-specific data structure otherwise. Additive / MAP-SAAS, robust relevance-pursuit, hierarchical, and contextual wrappers use the exact-GP contract while leaving their kernels and fitting behavior upstream. `HeterogeneousMTGP` instead receives task-specific tensor lists and therefore exposes grouped `raw_train_Xs`, `raw_train_Ys`, and `raw_train_Yvars`; robotorchan does not invent singular raw tensors after BoTorch embeds those inputs into a common feature space.
+
 ## Roadmap
 
 ### Phase 1 — wrapper foundation
@@ -119,9 +121,13 @@ Add `SaasFullyBayesianSingleTaskGP` and `SaasFullyBayesianMultiTaskGP` with raw 
 
 Add `HigherOrderGP` and `LatentKroneckerGP` with exact-MLL support, tensor-output raw retention, semantically correct `raw_train_T` handling, and upstream numerical parity while keeping BoTorch's specialized solver contexts explicit.
 
-### Later model-wrapper phases
+### Phase 9 — specialized BoTorch model wrappers
 
-Continue with specialized BoTorch models using model-family-specific training objectives and raw-data conventions.
+Add `OrthogonalAdditiveGP`, additive / ensemble MAP-SAAS, Robust Relevance Pursuit, hierarchical single- and multi-task GPs, `HeterogeneousMTGP`, and the contextual `SACGP`, `LCEAGP`, and `LCEMGP` models. Preserve specialized BoTorch kernels and fitting dispatch while applying robotorchan raw-data and MLL conventions only where semantically valid.
+
+### Phase 10 — API cleanup and comprehensive tests
+
+Consolidate exports and compatibility documentation, expand cross-model contract tests, clarify conditioning / fantasy raw-data semantics, and streamline CI without changing predictive model behavior.
 
 ### Later extension phases
 
