@@ -50,9 +50,7 @@ def test_mixed_single_task_gp_matches_upstream_posterior() -> None:
     upstream = BoTorchMixedSingleTaskGP(train_X=train_X, train_Y=train_Y, cat_dims=[-1])
 
     upstream_state = {
-        name: value
-        for name, value in wrapper.state_dict().items()
-        if not name.startswith("_raw_")
+        name: value for name, value in wrapper.state_dict().items() if not name.startswith("_raw_")
     }
     upstream.load_state_dict(upstream_state)
 
