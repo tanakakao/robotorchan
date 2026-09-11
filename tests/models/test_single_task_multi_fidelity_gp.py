@@ -23,11 +23,7 @@ def _make_mixed_data() -> tuple[torch.Tensor, torch.Tensor]:
     categorical = torch.randint(0, 3, (16, 1)).to(dtype=torch.double)
     fidelity = torch.linspace(0.2, 1.0, 16, dtype=torch.double).unsqueeze(-1)
     train_X = torch.cat([continuous, categorical, fidelity], dim=-1)
-    train_Y = (
-        torch.sin(continuous * 2.0)
-        + 0.15 * categorical
-        + 0.3 * (1.0 - fidelity)
-    )
+    train_Y = torch.sin(continuous * 2.0) + 0.15 * categorical + 0.3 * (1.0 - fidelity)
     return train_X, train_Y
 
 
