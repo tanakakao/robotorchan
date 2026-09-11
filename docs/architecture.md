@@ -97,10 +97,10 @@ The wrapper surface is currently supported against BoTorch `>=0.18.1,<0.19`. Con
 
 CI follows two layers:
 
-1. the core Python 3.11 / 3.12 / 3.13 matrix installs normal robotorchan development dependencies and runs the full wrapper test suite;
-2. a dedicated Python 3.11 job installs the optional `fully-bayesian` dependency group and smoke-tests JAX / NumPyro availability plus the fully Bayesian wrappers.
+1. the core Python 3.11 / 3.12 / 3.13 matrix installs the normal development dependencies and runs all wrapper tests that require only the core package dependencies;
+2. a dedicated Python 3.11 job installs the optional `fully-bayesian` dependency group, smoke-tests JAX / NumPyro availability, and runs the fully Bayesian wrapper tests.
 
-Linux CI installs CPU-only PyTorch before robotorchan dependencies so ordinary pull requests do not download or cache CUDA runtime packages that are unused by the test suite. Lint and formatting checks run once on Python 3.11 rather than being duplicated across every matrix entry.
+Linux CI installs CPU-only PyTorch before robotorchan dependencies so ordinary pull requests do not download CUDA runtime packages that are unused by the test suite. The workflow intentionally does not restore pip caches: an older cache containing CUDA wheels was several gigabytes and cost more to restore than the lean CPU-only dependency set costs to install. Lint and formatting checks run once on Python 3.11 rather than being duplicated across every matrix entry.
 
 Cross-model tests pin the public model export set and require every public wrapper class to expose the `supports_mll` / `make_mll()` capability contract. This is intended to catch API drift when new wrappers are added.
 
