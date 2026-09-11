@@ -43,10 +43,7 @@ def _assert_constructor_surface(wrapper: type, upstream: type) -> None:
 
     assert tuple(wrapper_signature.parameters) == tuple(upstream_signature.parameters)
     for name in wrapper_signature.parameters:
-        assert (
-            wrapper_signature.parameters[name].kind
-            == upstream_signature.parameters[name].kind
-        )
+        assert wrapper_signature.parameters[name].kind == upstream_signature.parameters[name].kind
         assert (
             wrapper_signature.parameters[name].default
             == upstream_signature.parameters[name].default
