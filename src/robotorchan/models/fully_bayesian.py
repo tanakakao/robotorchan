@@ -1,4 +1,17 @@
-"""Fully Bayesian SAAS wrappers with robotorchan model conventions."""
+"""Fully Bayesian SAAS wrappers with robotorchan model conventions.
+
+Mixed continuous/categorical SAAS variants are intentionally not exposed yet.
+BoTorch's fully Bayesian models evaluate their covariance inside the lightweight
+JAX/NumPyro sampling path used by NUTS, then load sampled hyperparameters into
+GPyTorch modules afterwards. That architecture means robotorchan's normal mixed
+kernel injection helper cannot make NUTS use a categorical covariance.
+
+A correct mixed SAAS implementation therefore requires a dedicated mixed Pyro
+model whose sampling-time covariance matches the GPyTorch model loaded after
+MCMC. Until that path exists and is tested, these wrappers retain upstream
+BoTorch's continuous-input SAAS semantics rather than accepting ``cat_dims``
+that would only affect the post-fit model.
+"""
 
 from __future__ import annotations
 
@@ -27,6 +40,11 @@ class SaasFullyBayesianSingleTaskGP(
     ``fit_fully_bayesian_model_nuts``. This wrapper only retains the caller's
     untransformed training tensors and makes the lack of MLL-style fitting
     explicit through ``supports_mll = False``.
+
+    Mixed continuous/categorical SAAS is deliberately deferred because the
+    NUTS-side JAX/NumPyro covariance must be extended together with the loaded
+    GPyTorch covariance. This wrapper therefore preserves the upstream
+    continuous-input constructor surface and does not accept ``cat_dims``.
     """
 
     supports_mll = False
@@ -72,6 +90,11 @@ class SaasFullyBayesianMultiTaskGP(
     The long-format task-feature representation, Pyro model, MCMC loading,
     transforms, and posterior computation are inherited from BoTorch. Fitting
     is performed with ``fit_fully_bayesian_model_nuts`` rather than an MLL.
+
+    Mixed continuous/categorical SAAS is deliberately deferred for the same
+    sampling-path reason as the single-task wrapper. A future implementation
+    must also exclude the task feature from the mixed design covariance while
+    preserving the categorical feature indices used during NUTS.
     """
 
     supports_mll = False
