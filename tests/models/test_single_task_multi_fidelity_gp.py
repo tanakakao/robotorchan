@@ -58,9 +58,7 @@ def test_multi_fidelity_gp_matches_upstream_posterior() -> None:
     )
 
     upstream_state = {
-        name: value
-        for name, value in wrapper.state_dict().items()
-        if not name.startswith("_raw_")
+        name: value for name, value in wrapper.state_dict().items() if not name.startswith("_raw_")
     }
     upstream.load_state_dict(upstream_state)
 
