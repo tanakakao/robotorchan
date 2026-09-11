@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "robotorchan"
+version = "0.1.0"
+description = "Research-oriented extensions for BoTorch Bayesian optimization and active learning."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "tanakakao" },
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "botorch>=0.18.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "ruff>=0.11",
+]
+
+[project.urls]
+Repository = "https://github.com/tanakakao/robotorchan"
+Issues = "https://github.com/tanakakao/robotorchan/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/robotorchan"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.format]
+docstring-code-format = true
