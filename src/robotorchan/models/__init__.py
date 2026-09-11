@@ -20,7 +20,7 @@ from robotorchan.models.map_saas import (
 )
 from robotorchan.models.model_list import ModelListGP
 from robotorchan.models.multi_fidelity import SingleTaskMultiFidelityGP
-from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
+from robotorchan.models.multitask import KroneckerMultiTaskGP, MixedMultiTaskGP, MultiTaskGP
 from robotorchan.models.pairwise import PairwiseGP
 from robotorchan.models.robust import RobustRelevancePursuitSingleTaskGP
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
@@ -38,6 +38,7 @@ __all__ = [
     "HigherOrderGP",
     "KroneckerMultiTaskGP",
     "LatentKroneckerGP",
+    "MixedMultiTaskGP",
     "MixedSingleTaskGP",
     "ModelListGP",
     "MultiTaskGP",

@@ -150,82 +150,80 @@ class ExactGPModelMixin(SupervisedTrainingDataMixin, ModelTrainingMixin):
 ContinuousKernelFactory = Callable[[torch.Size, int, list[int]], Kernel]
 
 
+def _normalize_dims(dims: list[int], input_dim: int, *, name: str) -> list[int]:
+    """Normalize feature indices against an input dimension."""
+    if input_dim <= 0:
+        raise ValueError("input_dim must be positive.")
+
+    normalized: list[int] = []
+    for dim in dims:
+        resolved = dim + input_dim if dim < 0 else dim
+        if resolved < 0 or resolved >= input_dim:
+            raise ValueError(f"{name} dimension {dim} is out of range for input_dim={input_dim}.")
+        normalized.append(resolved)
+
+    if len(set(normalized)) != len(normalized):
+        raise ValueError(f"{name} must not contain duplicate feature indices.")
+    return sorted(normalized)
+
+
 def _normalize_cat_dims(cat_dims: list[int], input_dim: int) -> list[int]:
     """Normalize categorical feature indices against an input dimension.
 
     Negative indices follow normal Python indexing semantics. The returned
     indices are unique, non-negative, and sorted so downstream kernel
     construction has a stable representation.
-
-    Args:
-        cat_dims: Categorical feature indices.
-        input_dim: Total number of input features.
-
-    Returns:
-        Normalized categorical feature indices.
-
-    Raises:
-        ValueError: If ``input_dim`` is not positive, ``cat_dims`` is empty,
-            contains duplicates, or contains an out-of-range index.
     """
-    if input_dim <= 0:
-        raise ValueError("input_dim must be positive.")
     if not cat_dims:
         raise ValueError("cat_dims must contain at least one categorical feature index.")
-
-    normalized: list[int] = []
-    for dim in cat_dims:
-        resolved = dim + input_dim if dim < 0 else dim
-        if resolved < 0 or resolved >= input_dim:
-            raise ValueError(
-                f"Categorical dimension {dim} is out of range for input_dim={input_dim}."
-            )
-        normalized.append(resolved)
-
-    if len(set(normalized)) != len(normalized):
-        raise ValueError("cat_dims must not contain duplicate feature indices.")
-
-    return sorted(normalized)
+    return _normalize_dims(cat_dims, input_dim, name="Categorical")
 
 
-def _get_cont_dims(*, input_dim: int, cat_dims: list[int]) -> list[int]:
-    """Return continuous feature indices complementary to ``cat_dims``."""
+def _get_cont_dims(
+    *,
+    input_dim: int,
+    cat_dims: list[int],
+    excluded_dims: list[int] | None = None,
+) -> list[int]:
+    """Return continuous feature indices excluding categorical/structural columns."""
     normalized_cat_dims = _normalize_cat_dims(cat_dims=cat_dims, input_dim=input_dim)
-    categorical = set(normalized_cat_dims)
-    return [dim for dim in range(input_dim) if dim not in categorical]
+    normalized_excluded_dims = _normalize_dims(excluded_dims or [], input_dim, name="Excluded")
+    overlap = set(normalized_cat_dims).intersection(normalized_excluded_dims)
+    if overlap:
+        raise ValueError("cat_dims and excluded_dims must be disjoint.")
+
+    unavailable = set(normalized_cat_dims) | set(normalized_excluded_dims)
+    return [dim for dim in range(input_dim) if dim not in unavailable]
 
 
 def _make_mixed_covar_module(
     *,
     input_dim: int,
     cat_dims: list[int],
+    excluded_dims: list[int] | None = None,
     batch_shape: torch.Size | None = None,
     cont_kernel_factory: ContinuousKernelFactory | None = None,
 ) -> Kernel:
     """Build the default robotorchan covariance for a mixed input space.
 
     For mixed continuous/categorical inputs, the covariance is the sum of a
-    continuous component, a categorical component, and their interaction. For
-    categorical-only inputs, a scaled categorical covariance is returned.
-
-    This helper is intentionally private. Model wrappers expose ``cat_dims`` and
-    delegate kernel construction here so mixed-space behavior stays consistent
-    across single-task, multi-task, variational, and other model families.
-
-    Args:
-        input_dim: Total number of model input features handled by this kernel.
-        cat_dims: Categorical feature indices. Negative indices are supported.
-        batch_shape: Batch shape for kernel hyperparameters. Defaults to an
-            empty batch shape when omitted.
-        cont_kernel_factory: Optional continuous-kernel factory with the same
-            calling convention used by BoTorch ``MixedSingleTaskGP``.
-
-    Returns:
-        A GPyTorch covariance module for the mixed input space.
+    continuous component, a categorical component, and their interaction.
+    Structural columns such as a multi-task task feature can be excluded from
+    the data covariance via ``excluded_dims``. For categorical-only data inputs,
+    a scaled categorical covariance is returned.
     """
     resolved_batch_shape = torch.Size() if batch_shape is None else batch_shape
     normalized_cat_dims = _normalize_cat_dims(cat_dims=cat_dims, input_dim=input_dim)
-    cont_dims = _get_cont_dims(input_dim=input_dim, cat_dims=normalized_cat_dims)
+    normalized_excluded_dims = _normalize_dims(excluded_dims or [], input_dim, name="Excluded")
+    overlap = set(normalized_cat_dims).intersection(normalized_excluded_dims)
+    if overlap:
+        raise ValueError("cat_dims and excluded_dims must be disjoint.")
+
+    cont_dims = _get_cont_dims(
+        input_dim=input_dim,
+        cat_dims=normalized_cat_dims,
+        excluded_dims=normalized_excluded_dims,
+    )
 
     def make_categorical_kernel(*, scaled: bool) -> Kernel:
         kernel: Kernel = CategoricalKernel(
@@ -240,9 +238,17 @@ def _make_mixed_covar_module(
     if not cont_dims:
         return make_categorical_kernel(scaled=True)
 
-    factory = cont_kernel_factory or get_covar_module_with_dim_scaled_prior
-    continuous_main = factory(resolved_batch_shape, len(cont_dims), cont_dims)
-    continuous_interaction = factory(resolved_batch_shape, len(cont_dims), cont_dims)
+    def make_continuous_kernel() -> Kernel:
+        if cont_kernel_factory is not None:
+            return cont_kernel_factory(resolved_batch_shape, len(cont_dims), cont_dims)
+        return get_covar_module_with_dim_scaled_prior(
+            ard_num_dims=len(cont_dims),
+            batch_shape=resolved_batch_shape,
+            active_dims=cont_dims,
+        )
+
+    continuous_main = make_continuous_kernel()
+    continuous_interaction = make_continuous_kernel()
     categorical_main = make_categorical_kernel(scaled=True)
     categorical_interaction = make_categorical_kernel(scaled=False)
 
