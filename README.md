@@ -27,6 +27,16 @@ Current wrappers are:
 - `robotorchan.models.SaasFullyBayesianMultiTaskGP`
 - `robotorchan.models.HigherOrderGP`
 - `robotorchan.models.LatentKroneckerGP`
+- `robotorchan.models.OrthogonalAdditiveGP`
+- `robotorchan.models.AdditiveMapSaasSingleTaskGP`
+- `robotorchan.models.EnsembleMapSaasSingleTaskGP`
+- `robotorchan.models.RobustRelevancePursuitSingleTaskGP`
+- `robotorchan.models.HierarchicalConditionalKernelGP`
+- `robotorchan.models.HierarchicalConditionalKernelMultiTaskGP`
+- `robotorchan.models.HeterogeneousMTGP`
+- `robotorchan.models.SACGP`
+- `robotorchan.models.LCEAGP`
+- `robotorchan.models.LCEMGP`
 
 Supervised single-model wrappers add the common robotorchan model surface where applicable:
 
@@ -132,6 +142,10 @@ with model.use_iterative_methods():
 
 assert torch.equal(model.raw_train_T, train_T)
 ```
+
+Specialized exact-GP wrappers cover additive / MAP-SAAS, robust relevance pursuit, hierarchical search spaces, heterogeneous multitask data, and contextual models. They preserve model-specific BoTorch kernels, posterior implementations, and fitting dispatch while adding the same raw-data and MLL conventions where those concepts apply.
+
+`HeterogeneousMTGP` receives separate input and outcome tensors for each task, so it intentionally exposes grouped `raw_train_Xs`, `raw_train_Ys`, and `raw_train_Yvars` rather than inventing a single global training tensor. `RobustRelevancePursuitSingleTaskGP` remains compatible with BoTorch's specialized `fit_gpytorch_mll` dispatch.
 
 ## Initial scope
 
