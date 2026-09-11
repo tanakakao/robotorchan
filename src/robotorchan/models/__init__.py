@@ -19,7 +19,10 @@ from robotorchan.models.map_saas import (
     EnsembleMapSaasSingleTaskGP,
 )
 from robotorchan.models.model_list import ModelListGP
-from robotorchan.models.multi_fidelity import SingleTaskMultiFidelityGP
+from robotorchan.models.multi_fidelity import (
+    MixedSingleTaskMultiFidelityGP,
+    SingleTaskMultiFidelityGP,
+)
 from robotorchan.models.multitask import (
     KroneckerMultiTaskGP,
     MixedKroneckerMultiTaskGP,
@@ -46,6 +49,7 @@ __all__ = [
     "MixedKroneckerMultiTaskGP",
     "MixedMultiTaskGP",
     "MixedSingleTaskGP",
+    "MixedSingleTaskMultiFidelityGP",
     "MixedSingleTaskVariationalGP",
     "ModelListGP",
     "MultiTaskGP",
