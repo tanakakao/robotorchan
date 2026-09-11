@@ -18,6 +18,10 @@ class ModelListGP(ModelTrainingMixin, BoTorchModelListGP):
     single supervised GP with one training tensor pair. robotorchan therefore
     preserves raw training data per child model instead of inventing singular
     ``raw_train_X`` / ``raw_train_Y`` attributes at the container level.
+
+    Mixed-space models do not require a separate container type. Any compatible
+    robotorchan mixed and non-mixed child models can be combined in this class,
+    matching the composition semantics of BoTorch ``ModelListGP``.
     """
 
     supports_mll: ClassVar[bool] = True

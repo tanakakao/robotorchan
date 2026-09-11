@@ -5,13 +5,24 @@ from botorch.models import ModelListGP as BoTorchModelListGP
 from botorch.models import SingleTaskGP as BoTorchSingleTaskGP
 from gpytorch.mlls import SumMarginalLogLikelihood
 
-from robotorchan.models import ModelListGP, SingleTaskGP
+from robotorchan.models import MixedSingleTaskGP, ModelListGP, SingleTaskGP
 
 
 def _make_child_data(n: int, offset: float = 0.0) -> tuple[torch.Tensor, torch.Tensor]:
     train_X = torch.rand(n, 2, dtype=torch.double)
     train_Y = torch.sin(train_X[:, :1] * 2.0) + offset
     return train_X, train_Y
+
+
+def _make_mixed_child_data(
+    n: int,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    continuous = torch.rand(n, 2, dtype=torch.double)
+    categorical = torch.randint(0, 3, (n, 1)).to(dtype=torch.double)
+    train_X = torch.cat([continuous[:, :1], categorical, continuous[:, 1:]], dim=-1)
+    mixed_Y = torch.sin(continuous[:, :1] * 2.0) + 0.2 * categorical
+    standard_Y = continuous[:, 1:] + 0.1 * categorical
+    return train_X, mixed_Y, standard_Y
 
 
 def test_model_list_gp_matches_upstream_constructor_surface() -> None:
@@ -108,3 +119,56 @@ def test_model_list_gp_matches_upstream_posterior() -> None:
 
     torch.testing.assert_close(wrapper_posterior.mean, upstream_posterior.mean)
     torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
+
+
+def test_model_list_gp_composes_mixed_and_standard_children() -> None:
+    train_X, mixed_Y, standard_Y = _make_mixed_child_data(14)
+    mixed_child = MixedSingleTaskGP(
+        train_X=train_X,
+        train_Y=mixed_Y,
+        cat_dims=[1],
+    )
+    standard_child = SingleTaskGP(
+        train_X=train_X,
+        train_Y=standard_Y,
+    )
+    model = ModelListGP(mixed_child, standard_child)
+
+    assert len(model.models) == 2
+    assert isinstance(model.models[0], MixedSingleTaskGP)
+    assert isinstance(model.models[1], SingleTaskGP)
+    assert torch.equal(model.raw_train_Xs[0], train_X)
+    assert torch.equal(model.raw_train_Xs[1], train_X)
+    assert torch.equal(model.raw_train_Ys[0], mixed_Y)
+    assert torch.equal(model.raw_train_Ys[1], standard_Y)
+    assert isinstance(model.make_mll(), SumMarginalLogLikelihood)
+
+
+def test_model_list_gp_mixed_composition_posterior() -> None:
+    train_X, mixed_Y, standard_Y = _make_mixed_child_data(16)
+    model = ModelListGP(
+        MixedSingleTaskGP(
+            train_X=train_X,
+            train_Y=mixed_Y,
+            cat_dims=[1],
+        ),
+        SingleTaskGP(
+            train_X=train_X,
+            train_Y=standard_Y,
+        ),
+    )
+
+    continuous = torch.rand(5, 2, dtype=torch.double)
+    categorical = torch.randint(0, 3, (5, 1)).to(dtype=torch.double)
+    test_X = torch.cat(
+        [continuous[:, :1], categorical, continuous[:, 1:]],
+        dim=-1,
+    )
+
+    model.eval()
+    posterior = model.posterior(test_X)
+
+    assert posterior.mean.shape == torch.Size([5, 2])
+    assert posterior.variance.shape == torch.Size([5, 2])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
