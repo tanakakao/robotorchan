@@ -92,7 +92,7 @@ def test_mixed_kronecker_multi_task_gp_uses_common_wrapper_contract() -> None:
     assert torch.equal(model.raw_train_Y, train_Y)
     assert model.raw_train_Yvar is None
     assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
-    assert isinstance(model.data_covar_module, AdditiveKernel)
+    assert isinstance(model.covar_module.data_covar_module, AdditiveKernel)
 
 
 def test_mixed_kronecker_multi_task_gp_posterior_supports_mixed_features() -> None:
@@ -122,4 +122,4 @@ def test_mixed_kronecker_multi_task_gp_supports_categorical_only_inputs() -> Non
     model = MixedKroneckerMultiTaskGP(train_X=train_X, train_Y=train_Y, cat_dims=[0, 1])
 
     assert model.cat_dims == (0, 1)
-    assert isinstance(model.data_covar_module, ScaleKernel)
+    assert isinstance(model.covar_module.data_covar_module, ScaleKernel)
