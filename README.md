@@ -11,6 +11,8 @@
 - **Tested**: numerical behavior and tensor shapes are covered by automated tests.
 - **Clean-room implementation**: robotorchan is implemented from scratch from public algorithms and public APIs. It does not copy source code from prior private/internal projects.
 
+Detailed implementation rules for model wrappers and extensions are documented in [`docs/model-design-guidelines.md`](docs/model-design-guidelines.md). New model work should consult those guidelines before introducing new public APIs or Mixed variants.
+
 ## Model conventions
 
 Current wrappers are:
@@ -18,13 +20,19 @@ Current wrappers are:
 - `robotorchan.models.SingleTaskGP`
 - `robotorchan.models.MixedSingleTaskGP`
 - `robotorchan.models.SingleTaskMultiFidelityGP`
+- `robotorchan.models.MixedSingleTaskMultiFidelityGP`
 - `robotorchan.models.MultiTaskGP`
+- `robotorchan.models.MixedMultiTaskGP`
 - `robotorchan.models.KroneckerMultiTaskGP`
+- `robotorchan.models.MixedKroneckerMultiTaskGP`
 - `robotorchan.models.ModelListGP`
 - `robotorchan.models.SingleTaskVariationalGP`
+- `robotorchan.models.MixedSingleTaskVariationalGP`
 - `robotorchan.models.PairwiseGP`
 - `robotorchan.models.SaasFullyBayesianSingleTaskGP`
+- `robotorchan.models.MixedSaasFullyBayesianSingleTaskGP`
 - `robotorchan.models.SaasFullyBayesianMultiTaskGP`
+- `robotorchan.models.MixedSaasFullyBayesianMultiTaskGP`
 - `robotorchan.models.HigherOrderGP`
 - `robotorchan.models.LatentKroneckerGP`
 - `robotorchan.models.OrthogonalAdditiveGP`
