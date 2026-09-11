@@ -8,10 +8,14 @@ from botorch.models.contextual_multioutput import LCEMGP as BoTorchLCEMGP
 from botorch.models.heterogeneous_mtgp import HeterogeneousMTGP as BoTorchHeterogeneousMTGP
 from botorch.models.hierarchical.conditional_kernel_gp import (
     HierarchicalConditionalKernelGP as BoTorchHierarchicalConditionalKernelGP,
+)
+from botorch.models.hierarchical.conditional_kernel_gp import (
     HierarchicalConditionalKernelMultiTaskGP as BoTorchHierarchicalConditionalKernelMultiTaskGP,
 )
 from botorch.models.map_saas import (
     AdditiveMapSaasSingleTaskGP as BoTorchAdditiveMapSaasSingleTaskGP,
+)
+from botorch.models.map_saas import (
     EnsembleMapSaasSingleTaskGP as BoTorchEnsembleMapSaasSingleTaskGP,
 )
 from botorch.models.robust_relevance_pursuit_model import (
@@ -20,16 +24,16 @@ from botorch.models.robust_relevance_pursuit_model import (
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import (
+    LCEAGP,
+    LCEMGP,
+    SACGP,
     AdditiveMapSaasSingleTaskGP,
     EnsembleMapSaasSingleTaskGP,
     HeterogeneousMTGP,
     HierarchicalConditionalKernelGP,
     HierarchicalConditionalKernelMultiTaskGP,
-    LCEAGP,
-    LCEMGP,
     OrthogonalAdditiveGP,
     RobustRelevancePursuitSingleTaskGP,
-    SACGP,
 )
 
 
@@ -39,8 +43,14 @@ def _assert_constructor_surface(wrapper: type, upstream: type) -> None:
 
     assert tuple(wrapper_signature.parameters) == tuple(upstream_signature.parameters)
     for name in wrapper_signature.parameters:
-        assert wrapper_signature.parameters[name].kind == upstream_signature.parameters[name].kind
-        assert wrapper_signature.parameters[name].default == upstream_signature.parameters[name].default
+        assert (
+            wrapper_signature.parameters[name].kind
+            == upstream_signature.parameters[name].kind
+        )
+        assert (
+            wrapper_signature.parameters[name].default
+            == upstream_signature.parameters[name].default
+        )
 
 
 def _single_task_data() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -133,7 +143,10 @@ def test_phase9_wrappers_match_upstream_constructor_surfaces() -> None:
         (OrthogonalAdditiveGP, BoTorchOrthogonalAdditiveGP),
         (AdditiveMapSaasSingleTaskGP, BoTorchAdditiveMapSaasSingleTaskGP),
         (EnsembleMapSaasSingleTaskGP, BoTorchEnsembleMapSaasSingleTaskGP),
-        (RobustRelevancePursuitSingleTaskGP, BoTorchRobustRelevancePursuitSingleTaskGP),
+        (
+            RobustRelevancePursuitSingleTaskGP,
+            BoTorchRobustRelevancePursuitSingleTaskGP,
+        ),
         (HierarchicalConditionalKernelGP, BoTorchHierarchicalConditionalKernelGP),
         (
             HierarchicalConditionalKernelMultiTaskGP,
@@ -237,7 +250,12 @@ def test_contextual_wrappers_use_common_exact_gp_contract() -> None:
     mt_X, mt_Y = _lcem_data()
     lcem = LCEMGP(train_X=mt_X, train_Y=mt_Y, task_feature=-1)
 
-    for model, X, Y in [(sac, train_X, train_Y), (lcea, train_X, train_Y), (lcem, mt_X, mt_Y)]:
+    models_and_data = [
+        (sac, train_X, train_Y),
+        (lcea, train_X, train_Y),
+        (lcem, mt_X, mt_Y),
+    ]
+    for model, X, Y in models_and_data:
         assert model.supports_mll is True
         assert torch.equal(model.raw_train_X, X)
         assert torch.equal(model.raw_train_Y, Y)
@@ -261,10 +279,10 @@ def test_heterogeneous_wrapper_retains_task_grouped_raw_data() -> None:
     assert model.raw_train_Yvars is None
     assert set(model.raw_data) == {"train_Xs", "train_Ys", "train_Yvars"}
     assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
-    for raw, original in zip(model.raw_train_Xs, train_Xs):
+    for raw, original in zip(model.raw_train_Xs, train_Xs, strict=True):
         assert torch.equal(raw, original)
         assert raw.data_ptr() != original.data_ptr()
-    for raw, original in zip(model.raw_train_Ys, train_Ys):
+    for raw, original in zip(model.raw_train_Ys, train_Ys, strict=True):
         assert torch.equal(raw, original)
         assert raw.data_ptr() != original.data_ptr()
 
