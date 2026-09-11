@@ -74,6 +74,8 @@ Composite models follow the same principle. `ModelListGP` is not treated as if i
 
 Variational models also require model-family-specific training semantics. `SingleTaskVariationalGP` retains `raw_train_X` and optional `raw_train_Y`, exposes `raw_train_Yvar = None` because the upstream constructor has no `train_Yvar` argument, and constructs `VariationalELBO` against the internal approximate GP (`model.model`). `make_mll(num_data=None)` defaults to the row count of `raw_train_X`; callers performing minibatch training must pass the total data-set size explicitly.
 
+Preference models use their own raw-data vocabulary. `PairwiseGP` retains `raw_datapoints` and `raw_comparisons` before BoTorch input transforms or duplicate consolidation, preserves the upstream prior-only mode where either value may be `None`, and constructs `PairwiseLaplaceMarginalLogLikelihood`. It deliberately does not expose `raw_train_Y`, because pairwise comparisons are not ordinary supervised targets.
+
 ## Roadmap
 
 ### Phase 1 — wrapper foundation
@@ -103,7 +105,7 @@ Add `SingleTaskVariationalGP` with raw-data retention and `VariationalELBO` cons
 
 ### Phase 6 — preference wrapper
 
-Add `PairwiseGP` with semantically correct `raw_datapoints` / `raw_comparisons` retention and `PairwiseLaplaceMarginalLogLikelihood` construction.
+Add `PairwiseGP` with semantically correct `raw_datapoints` / `raw_comparisons` retention, prior-only compatibility, and `PairwiseLaplaceMarginalLogLikelihood` construction.
 
 ### Later model-wrapper phases
 

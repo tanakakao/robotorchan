@@ -22,6 +22,7 @@ Current wrappers are:
 - `robotorchan.models.KroneckerMultiTaskGP`
 - `robotorchan.models.ModelListGP`
 - `robotorchan.models.SingleTaskVariationalGP`
+- `robotorchan.models.PairwiseGP`
 
 Supervised single-model wrappers add the common robotorchan model surface where applicable:
 
@@ -62,6 +63,32 @@ mll = model.make_mll()
 
 assert torch.equal(model.raw_train_X, train_X)
 assert mll.num_data == 200
+```
+
+`PairwiseGP` preserves preference-learning semantics rather than pretending comparisons are ordinary supervised targets. It exposes:
+
+- `raw_datapoints`
+- `raw_comparisons`
+- `raw_data`
+- `supports_mll = True`
+- `make_mll()` returning `PairwiseLaplaceMarginalLogLikelihood`
+
+Raw preference tensors are captured before BoTorch applies input transforms or duplicate consolidation. Both tensors may be `None`, matching BoTorch's prior-only construction mode.
+
+```python
+import torch
+from botorch.fit import fit_gpytorch_mll
+from robotorchan.models import PairwiseGP
+
+items = torch.rand(12, 3, dtype=torch.double)
+comparisons = torch.tensor([[0, 1], [2, 3], [4, 5], [6, 7]], dtype=torch.long)
+
+model = PairwiseGP(datapoints=items, comparisons=comparisons)
+mll = model.make_mll()
+fit_gpytorch_mll(mll)
+
+assert torch.equal(model.raw_datapoints, items)
+assert torch.equal(model.raw_comparisons, comparisons)
 ```
 
 ## Initial scope
