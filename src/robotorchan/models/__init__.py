@@ -6,6 +6,7 @@ from robotorchan.models.model_list import ModelListGP
 from robotorchan.models.multi_fidelity import SingleTaskMultiFidelityGP
 from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.single_task import SingleTaskGP
+from robotorchan.models.variational import SingleTaskVariationalGP
 
 __all__ = [
     "KroneckerMultiTaskGP",
@@ -14,5 +15,6 @@ __all__ = [
     "MultiTaskGP",
     "SingleTaskGP",
     "SingleTaskMultiFidelityGP",
+    "SingleTaskVariationalGP",
     "UnsupportedModelOperationError",
 ]
