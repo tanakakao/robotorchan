@@ -1,4 +1,4 @@
-from robotorchan import models
+import robotorchan.models as models
 
 
 PUBLIC_MODEL_NAMES = {
