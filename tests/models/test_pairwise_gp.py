@@ -6,7 +6,7 @@ from botorch.models import PairwiseGP as BoTorchPairwiseGP
 from botorch.models.pairwise_gp import PairwiseLaplaceMarginalLogLikelihood
 from botorch.models.transforms.input import Normalize
 
-from robotorchan.models.pairwise import PairwiseGP
+from robotorchan.models import PairwiseGP
 
 
 def _preference_data() -> tuple[torch.Tensor, torch.Tensor]:
