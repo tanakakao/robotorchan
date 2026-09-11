@@ -1,10 +1,17 @@
 import inspect
 
+import pytest
 import torch
 from botorch.models import MixedSingleTaskGP as BoTorchMixedSingleTaskGP
+from gpytorch.kernels import AdditiveKernel, Kernel, ScaleKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import MixedSingleTaskGP
+from robotorchan.models.base import (
+    _get_cont_dims,
+    _make_mixed_covar_module,
+    _normalize_cat_dims,
+)
 
 
 def _make_data() -> tuple[torch.Tensor, torch.Tensor]:
@@ -65,3 +72,63 @@ def test_mixed_single_task_gp_matches_upstream_posterior() -> None:
 
     torch.testing.assert_close(wrapper_posterior.mean, upstream_posterior.mean)
     torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
+
+
+def test_normalize_cat_dims_supports_negative_indices_and_stable_order() -> None:
+    assert _normalize_cat_dims(cat_dims=[-1, 1], input_dim=4) == [1, 3]
+    assert _get_cont_dims(input_dim=4, cat_dims=[-1, 1]) == [0, 2]
+
+
+@pytest.mark.parametrize(
+    ("cat_dims", "input_dim", "message"),
+    [
+        ([], 3, "at least one"),
+        ([3], 3, "out of range"),
+        ([-4], 3, "out of range"),
+        ([1, -2], 3, "duplicate"),
+    ],
+)
+def test_normalize_cat_dims_rejects_invalid_indices(
+    cat_dims: list[int], input_dim: int, message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        _normalize_cat_dims(cat_dims=cat_dims, input_dim=input_dim)
+
+
+def test_make_mixed_covar_module_builds_mixed_kernel_and_passes_active_dims() -> None:
+    calls: list[tuple[torch.Size, int, list[int]]] = []
+
+    def factory(batch_shape: torch.Size, ard_num_dims: int, active_dims: list[int]) -> Kernel:
+        calls.append((batch_shape, ard_num_dims, active_dims))
+        from gpytorch.kernels import RBFKernel
+
+        return RBFKernel(
+            batch_shape=batch_shape,
+            ard_num_dims=ard_num_dims,
+            active_dims=active_dims,
+        )
+
+    kernel = _make_mixed_covar_module(
+        input_dim=4,
+        cat_dims=[-1, 1],
+        batch_shape=torch.Size([2]),
+        cont_kernel_factory=factory,
+    )
+
+    assert isinstance(kernel, AdditiveKernel)
+    assert calls == [
+        (torch.Size([2]), 2, [0, 2]),
+        (torch.Size([2]), 2, [0, 2]),
+    ]
+
+
+def test_make_mixed_covar_module_supports_categorical_only_inputs() -> None:
+    kernel = _make_mixed_covar_module(input_dim=2, cat_dims=[0, 1])
+
+    assert isinstance(kernel, ScaleKernel)
+
+    X = torch.tensor([[0.0, 0.0], [0.0, 1.0]], dtype=torch.double)
+    covariance = kernel(X).to_dense()
+
+    assert covariance.shape == torch.Size([2, 2])
+    assert covariance[0, 0] > covariance[0, 1]
