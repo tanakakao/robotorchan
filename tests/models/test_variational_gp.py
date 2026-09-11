@@ -4,9 +4,10 @@ import pytest
 import torch
 from botorch.models import SingleTaskVariationalGP as BoTorchSingleTaskVariationalGP
 from botorch.models.transforms.outcome import Standardize
+from gpytorch.kernels import AdditiveKernel, RBFKernel, ScaleKernel
 from gpytorch.mlls import VariationalELBO
 
-from robotorchan.models import SingleTaskVariationalGP
+from robotorchan.models import MixedSingleTaskVariationalGP, SingleTaskVariationalGP
 
 
 def test_variational_gp_matches_upstream_constructor_surface() -> None:
@@ -137,3 +138,92 @@ def test_variational_gp_matches_upstream_posterior() -> None:
 
     torch.testing.assert_close(wrapper_posterior.mean, upstream_posterior.mean)
     torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
+
+
+def _make_mixed_variational_data() -> tuple[torch.Tensor, torch.Tensor]:
+    continuous = torch.rand(16, 2, dtype=torch.double)
+    categorical = torch.randint(0, 3, (16, 1)).to(dtype=torch.double)
+    train_X = torch.cat([continuous, categorical], dim=-1)
+    train_Y = torch.sin(continuous[:, :1] * 2.0) + 0.25 * categorical
+    return train_X, train_Y
+
+
+def test_mixed_variational_gp_uses_common_wrapper_contract() -> None:
+    train_X, train_Y = _make_mixed_variational_data()
+    model = MixedSingleTaskVariationalGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        cat_dims=[-1],
+        inducing_points=train_X[:5].clone(),
+    )
+
+    assert isinstance(model, BoTorchSingleTaskVariationalGP)
+    assert model.supports_mll is True
+    assert model.cat_dims == (2,)
+    assert torch.equal(model.raw_train_X, train_X)
+    assert torch.equal(model.raw_train_Y, train_Y)
+    assert model.raw_train_Yvar is None
+    assert isinstance(model.make_mll(), VariationalELBO)
+    assert isinstance(model.model.covar_module, AdditiveKernel)
+
+
+def test_mixed_variational_gp_custom_factory_uses_continuous_dims() -> None:
+    train_X, train_Y = _make_mixed_variational_data()
+    calls: list[tuple[torch.Size, int, list[int]]] = []
+
+    def factory(batch_shape: torch.Size, ard_num_dims: int, active_dims: list[int]) -> RBFKernel:
+        calls.append((batch_shape, ard_num_dims, active_dims))
+        return RBFKernel(
+            batch_shape=batch_shape,
+            ard_num_dims=ard_num_dims,
+            active_dims=active_dims,
+        )
+
+    MixedSingleTaskVariationalGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        cat_dims=[2],
+        cont_kernel_factory=factory,
+        inducing_points=train_X[:5].clone(),
+    )
+
+    assert calls == [(torch.Size(), 2, [0, 1]), (torch.Size(), 2, [0, 1])]
+
+
+def test_mixed_variational_gp_posterior_supports_mixed_features() -> None:
+    train_X, train_Y = _make_mixed_variational_data()
+    model = MixedSingleTaskVariationalGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        cat_dims=[2],
+        inducing_points=train_X[:5].clone(),
+    )
+    test_X = torch.cat(
+        [
+            torch.rand(4, 2, dtype=torch.double),
+            torch.randint(0, 3, (4, 1)).to(dtype=torch.double),
+        ],
+        dim=-1,
+    )
+
+    model.eval()
+    posterior = model.posterior(test_X)
+
+    assert posterior.mean.shape == torch.Size([4, 1])
+    assert posterior.variance.shape == torch.Size([4, 1])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+
+
+def test_mixed_variational_gp_supports_categorical_only_inputs() -> None:
+    train_X = torch.randint(0, 3, (12, 2)).to(dtype=torch.double)
+    train_Y = (train_X[:, :1] + 0.2 * train_X[:, 1:2]).sin()
+    model = MixedSingleTaskVariationalGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        cat_dims=[0, 1],
+        inducing_points=train_X[:4].clone(),
+    )
+
+    assert model.cat_dims == (0, 1)
+    assert isinstance(model.model.covar_module, ScaleKernel)
