@@ -34,6 +34,10 @@ class SingleTaskGP(ExactGPModelMixin, BoTorchSingleTaskGP):
         input_transform: InputTransform | None = None,
     ) -> None:
         """Initialize the model while retaining the caller's raw tensors."""
+        raw_train_X = train_X.detach().clone()
+        raw_train_Y = train_Y.detach().clone()
+        raw_train_Yvar = None if train_Yvar is None else train_Yvar.detach().clone()
+
         super().__init__(
             train_X=train_X,
             train_Y=train_Y,
@@ -45,7 +49,7 @@ class SingleTaskGP(ExactGPModelMixin, BoTorchSingleTaskGP):
             input_transform=input_transform,
         )
         self._store_supervised_training_data(
-            train_X=train_X,
-            train_Y=train_Y,
-            train_Yvar=train_Yvar,
+            train_X=raw_train_X,
+            train_Y=raw_train_Y,
+            train_Yvar=raw_train_Yvar,
         )
