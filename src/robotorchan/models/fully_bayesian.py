@@ -1,16 +1,14 @@
 """Fully Bayesian SAAS wrappers with robotorchan model conventions.
 
-Mixed continuous/categorical SAAS variants are intentionally not exposed yet.
-BoTorch's fully Bayesian models evaluate their covariance inside the lightweight
-JAX/NumPyro sampling path used by NUTS, then load sampled hyperparameters into
-GPyTorch modules afterwards. That architecture means robotorchan's normal mixed
-kernel injection helper cannot make NUTS use a categorical covariance.
+For categorical variables, the supported Phase 8 path is one-hot preprocessing
+before constructing the SAAS model. The one-hot columns are then part of the
+same numeric feature tensor used both by the JAX/NumPyro NUTS covariance and by
+the GPyTorch model loaded after MCMC, so fitting and prediction stay consistent.
 
-A correct mixed SAAS implementation therefore requires a dedicated mixed Pyro
-model whose sampling-time covariance matches the GPyTorch model loaded after
-MCMC. Until that path exists and is tested, these wrappers retain upstream
-BoTorch's continuous-input SAAS semantics rather than accepting ``cat_dims``
-that would only affect the post-fit model.
+Native categorical-kernel SAAS remains a separate future extension. BoTorch's
+fully Bayesian models evaluate covariance inside the lightweight JAX/NumPyro
+sampling path, so robotorchan's normal GPyTorch mixed-kernel injection helper
+cannot provide a true categorical kernel during NUTS.
 """
 
 from __future__ import annotations
@@ -41,10 +39,11 @@ class SaasFullyBayesianSingleTaskGP(
     untransformed training tensors and makes the lack of MLL-style fitting
     explicit through ``supports_mll = False``.
 
-    Mixed continuous/categorical SAAS is deliberately deferred because the
-    NUTS-side JAX/NumPyro covariance must be extended together with the loaded
-    GPyTorch covariance. This wrapper therefore preserves the upstream
-    continuous-input constructor surface and does not accept ``cat_dims``.
+    Categorical variables are supported through one-hot preprocessing before
+    construction. Pass the same encoded feature layout for training and
+    prediction. A dedicated native categorical-kernel SAAS model is not exposed
+    because that would require matching changes in BoTorch's JAX/NumPyro NUTS
+    covariance implementation.
     """
 
     supports_mll = False
@@ -91,10 +90,10 @@ class SaasFullyBayesianMultiTaskGP(
     transforms, and posterior computation are inherited from BoTorch. Fitting
     is performed with ``fit_fully_bayesian_model_nuts`` rather than an MLL.
 
-    Mixed continuous/categorical SAAS is deliberately deferred for the same
-    sampling-path reason as the single-task wrapper. A future implementation
-    must also exclude the task feature from the mixed design covariance while
-    preserving the categorical feature indices used during NUTS.
+    Categorical design variables may be one-hot encoded before the task feature
+    is appended. The task feature remains a single long-format task column and
+    must not itself be one-hot encoded. Native categorical-kernel SAAS remains a
+    future extension of the NUTS-side covariance rather than this thin wrapper.
     """
 
     supports_mll = False
