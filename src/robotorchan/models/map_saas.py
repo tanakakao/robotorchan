@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from botorch.models.map_saas import (
     AdditiveMapSaasSingleTaskGP as BoTorchAdditiveMapSaasSingleTaskGP,
+)
+from botorch.models.map_saas import (
     EnsembleMapSaasSingleTaskGP as BoTorchEnsembleMapSaasSingleTaskGP,
 )
 from botorch.models.transforms.input import InputTransform
