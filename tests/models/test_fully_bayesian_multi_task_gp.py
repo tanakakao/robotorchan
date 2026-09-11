@@ -129,3 +129,43 @@ def test_saas_multi_task_matches_upstream_posterior_with_same_mcmc_samples() -> 
 
     torch.testing.assert_close(wrapper_posterior.mean, upstream_posterior.mean)
     torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
+
+
+def test_saas_multi_task_supports_one_hot_encoded_categories() -> None:
+    continuous = torch.tensor(
+        [[0.1], [0.3], [0.6], [0.8], [0.15], [0.35], [0.65], [0.85]],
+        dtype=torch.double,
+    )
+    category = torch.tensor([0, 1, 2, 0, 0, 1, 2, 0])
+    one_hot = torch.nn.functional.one_hot(category, num_classes=3).to(torch.double)
+    tasks = torch.tensor([[0.0]] * 4 + [[1.0]] * 4, dtype=torch.double)
+    train_X = torch.cat([continuous, one_hot, tasks], dim=-1)
+    train_Y = continuous + 0.1 * category.to(torch.double).unsqueeze(-1)
+
+    model = SaasFullyBayesianMultiTaskGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        task_feature=-1,
+    )
+    samples = model.pyro_model.get_dummy_mcmc_samples(
+        num_mcmc_samples=3,
+        dtype=train_X.dtype,
+        device=train_X.device,
+    )
+    model.load_mcmc_samples(samples)
+
+    test_continuous = torch.tensor([[0.25], [0.75]], dtype=torch.double)
+    test_category = torch.tensor([1, 2])
+    test_one_hot = torch.nn.functional.one_hot(
+        test_category, num_classes=3
+    ).to(torch.double)
+    test_X = torch.cat([test_continuous, test_one_hot], dim=-1)
+
+    model.eval()
+    posterior = model.posterior(test_X, output_indices=[0, 1])
+
+    assert torch.equal(model.raw_train_X, train_X)
+    assert posterior.mean.shape == torch.Size([2, 2])
+    assert posterior.variance.shape == torch.Size([2, 2])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
