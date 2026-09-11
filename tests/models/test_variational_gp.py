@@ -125,9 +125,7 @@ def test_variational_gp_matches_upstream_posterior() -> None:
         inducing_points=inducing_points.clone(),
     )
     upstream_state = {
-        name: value
-        for name, value in wrapper.state_dict().items()
-        if not name.startswith("_raw_")
+        name: value for name, value in wrapper.state_dict().items() if not name.startswith("_raw_")
     }
     upstream.load_state_dict(upstream_state)
 
