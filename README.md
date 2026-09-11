@@ -25,6 +25,8 @@ Current wrappers are:
 - `robotorchan.models.PairwiseGP`
 - `robotorchan.models.SaasFullyBayesianSingleTaskGP`
 - `robotorchan.models.SaasFullyBayesianMultiTaskGP`
+- `robotorchan.models.HigherOrderGP`
+- `robotorchan.models.LatentKroneckerGP`
 
 Supervised single-model wrappers add the common robotorchan model surface where applicable:
 
@@ -109,6 +111,27 @@ fit_fully_bayesian_model_nuts(model)
 ```
 
 The multi-task SAAS wrapper uses BoTorch's long-format task-feature representation and follows the same NUTS fitting path.
+
+`HigherOrderGP` retains tensor-valued training outcomes before flattening / standardization and provides the normal exact-GP `make_mll()` helper. BoTorch recommends using its specialized fast Kronecker solves and torch-based MLL optimizer when fitting this model.
+
+`LatentKroneckerGP` adds `raw_train_T` alongside `raw_train_X`, `raw_train_Y`, and `raw_train_Yvar = None`. The raw tensors are captured before BoTorch broadcasts `train_T`, masks missing observations, or applies transforms. Fitting remains compatible with BoTorch's `use_iterative_methods()` context.
+
+```python
+import torch
+from botorch.fit import fit_gpytorch_mll
+from robotorchan.models import LatentKroneckerGP
+
+train_X = torch.rand(8, 2, dtype=torch.double)
+train_T = torch.linspace(0, 1, 4, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.rand(8, 4, dtype=torch.double)
+
+model = LatentKroneckerGP(train_X=train_X, train_T=train_T, train_Y=train_Y)
+mll = model.make_mll()
+with model.use_iterative_methods():
+    fit_gpytorch_mll(mll)
+
+assert torch.equal(model.raw_train_T, train_T)
+```
 
 ## Initial scope
 

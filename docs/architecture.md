@@ -78,6 +78,8 @@ Preference models use their own raw-data vocabulary. `PairwiseGP` retains `raw_d
 
 Fully Bayesian models retain the normal supervised raw-data vocabulary, but do **not** use MLL fitting. `SaasFullyBayesianSingleTaskGP` and `SaasFullyBayesianMultiTaskGP` therefore expose `supports_mll = False`; calling `make_mll()` raises `UnsupportedModelOperationError`. Fitting remains delegated directly to BoTorch's `fit_fully_bayesian_model_nuts`. robotorchan does not add a parallel NUTS fitting API in the model wrapper layer. The optional `fully-bayesian` dependency group installs the JAX / NumPyro dependencies required by BoTorch.
 
+Structured exact GPs retain the exact-GP training objective while preserving model-specific raw tensors and fitting contexts. `HigherOrderGP` retains tensor-valued `raw_train_Y` before BoTorch flattens / standardizes its structured outputs. `LatentKroneckerGP` additionally exposes `raw_train_T`, captured before BoTorch broadcasts task / time coordinates, masks missing outputs, or transforms data. Both use `ExactMarginalLogLikelihood`; specialized solver contexts and optimizers remain explicit BoTorch behavior rather than being hidden by the wrapper.
+
 ## Roadmap
 
 ### Phase 1 — wrapper foundation
@@ -113,9 +115,13 @@ Add `PairwiseGP` with semantically correct `raw_datapoints` / `raw_comparisons` 
 
 Add `SaasFullyBayesianSingleTaskGP` and `SaasFullyBayesianMultiTaskGP` with raw supervised data retention, explicit non-MLL training semantics, and direct compatibility with BoTorch's `fit_fully_bayesian_model_nuts`.
 
+### Phase 8 — structured advanced GP wrappers
+
+Add `HigherOrderGP` and `LatentKroneckerGP` with exact-MLL support, tensor-output raw retention, semantically correct `raw_train_T` handling, and upstream numerical parity while keeping BoTorch's specialized solver contexts explicit.
+
 ### Later model-wrapper phases
 
-Continue with higher-order, latent-Kronecker, and other specialized BoTorch models using model-family-specific training objectives and raw-data conventions.
+Continue with specialized BoTorch models using model-family-specific training objectives and raw-data conventions.
 
 ### Later extension phases
 
