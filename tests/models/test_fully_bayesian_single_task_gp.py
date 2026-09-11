@@ -136,8 +136,8 @@ def test_mixed_saas_single_task_encodes_categories_internally() -> None:
     assert model.encoded_input_dim == 4
     assert torch.equal(model.raw_train_X, train_X)
     assert model.pyro_model.train_X.shape[-1] == 4
-    assert posterior.mean.shape == torch.Size([2, 1])
-    assert posterior.variance.shape == torch.Size([2, 1])
+    assert posterior.mean.shape == torch.Size([3, 2, 1])
+    assert posterior.variance.shape == torch.Size([3, 2, 1])
     assert torch.isfinite(posterior.mean).all()
     assert torch.isfinite(posterior.variance).all()
 
