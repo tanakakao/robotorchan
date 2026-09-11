@@ -33,11 +33,7 @@ class HeterogeneousMTGP(RawDataMixin, ModelTrainingMixin, BoTorchHeterogeneousMT
     ) -> None:
         raw_Xs = [X.detach().clone() for X in train_Xs]
         raw_Ys = [Y.detach().clone() for Y in train_Ys]
-        raw_Yvars = (
-            None
-            if train_Yvars is None
-            else [Yvar.detach().clone() for Yvar in train_Yvars]
-        )
+        raw_Yvars = None if train_Yvars is None else [Yvar.detach().clone() for Yvar in train_Yvars]
 
         super().__init__(
             train_Xs=train_Xs,
@@ -66,15 +62,13 @@ class HeterogeneousMTGP(RawDataMixin, ModelTrainingMixin, BoTorchHeterogeneousMT
     @property
     def raw_train_Xs(self) -> tuple[Tensor, ...]:
         return tuple(
-            self._get_raw_tensor(f"train_X_{index}")
-            for index in range(self._raw_task_count)
+            self._get_raw_tensor(f"train_X_{index}") for index in range(self._raw_task_count)
         )  # type: ignore[return-value]
 
     @property
     def raw_train_Ys(self) -> tuple[Tensor, ...]:
         return tuple(
-            self._get_raw_tensor(f"train_Y_{index}")
-            for index in range(self._raw_task_count)
+            self._get_raw_tensor(f"train_Y_{index}") for index in range(self._raw_task_count)
         )  # type: ignore[return-value]
 
     @property
@@ -82,8 +76,7 @@ class HeterogeneousMTGP(RawDataMixin, ModelTrainingMixin, BoTorchHeterogeneousMT
         if not any(name.startswith("train_Yvar_") for name in self._raw_data_names):
             return None
         return tuple(
-            self._get_raw_tensor(f"train_Yvar_{index}")
-            for index in range(self._raw_task_count)
+            self._get_raw_tensor(f"train_Yvar_{index}") for index in range(self._raw_task_count)
         )  # type: ignore[return-value]
 
     @property
