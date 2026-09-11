@@ -91,7 +91,9 @@ def test_model_list_gp_matches_upstream_posterior() -> None:
         (wrapped_child2, upstream_child2),
     ):
         upstream_state = {
-            name: value for name, value in wrapped.state_dict().items() if not name.startswith("_raw_")
+            name: value
+            for name, value in wrapped.state_dict().items()
+            if not name.startswith("_raw_")
         }
         upstream.load_state_dict(upstream_state)
 
