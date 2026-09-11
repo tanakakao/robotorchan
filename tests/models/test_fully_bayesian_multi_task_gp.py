@@ -152,8 +152,8 @@ def test_mixed_saas_multi_task_encodes_categories_and_preserves_task_feature() -
     assert model.encoded_input_dim == 5
     assert torch.equal(model.raw_train_X, train_X)
     assert model.pyro_model.train_X.shape[-1] == 5
-    assert posterior.mean.shape == torch.Size([2, 2])
-    assert posterior.variance.shape == torch.Size([2, 2])
+    assert posterior.mean.shape == torch.Size([3, 2, 2])
+    assert posterior.variance.shape == torch.Size([3, 2, 2])
     assert torch.isfinite(posterior.mean).all()
     assert torch.isfinite(posterior.variance).all()
 
