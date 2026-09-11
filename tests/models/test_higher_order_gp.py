@@ -80,9 +80,7 @@ def test_higher_order_gp_matches_upstream_posterior() -> None:
     upstream = BoTorchHigherOrderGP(train_X=train_X, train_Y=train_Y)
 
     upstream_state = {
-        name: value
-        for name, value in wrapper.state_dict().items()
-        if not name.startswith("_raw_")
+        name: value for name, value in wrapper.state_dict().items() if not name.startswith("_raw_")
     }
     upstream.load_state_dict(upstream_state)
 
