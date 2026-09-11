@@ -1,5 +1,7 @@
-import robotorchan.models
+import importlib
 
+
+MODELS = importlib.import_module("robotorchan.models")
 
 PUBLIC_MODEL_NAMES = {
     "AdditiveMapSaasSingleTaskGP",
@@ -33,14 +35,14 @@ NON_MLL_MODELS = {
 
 
 def test_public_model_exports_are_complete_and_explicit() -> None:
-    exported = set(robotorchan.models.__all__)
+    exported = set(MODELS.__all__)
 
     assert exported == PUBLIC_MODEL_NAMES | {"UnsupportedModelOperationError"}
 
 
 def test_public_model_names_resolve_to_matching_classes() -> None:
     for name in PUBLIC_MODEL_NAMES:
-        model_class = getattr(robotorchan.models, name)
+        model_class = getattr(MODELS, name)
 
         assert isinstance(model_class, type)
         assert model_class.__name__ == name
@@ -48,7 +50,7 @@ def test_public_model_names_resolve_to_matching_classes() -> None:
 
 def test_all_public_models_expose_training_capability_contract() -> None:
     for name in PUBLIC_MODEL_NAMES:
-        model_class = getattr(robotorchan.models, name)
+        model_class = getattr(MODELS, name)
 
         assert hasattr(model_class, "supports_mll")
         assert hasattr(model_class, "make_mll")
