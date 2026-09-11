@@ -187,9 +187,7 @@ def _get_cont_dims(
 ) -> list[int]:
     """Return continuous feature indices excluding categorical/structural columns."""
     normalized_cat_dims = _normalize_cat_dims(cat_dims=cat_dims, input_dim=input_dim)
-    normalized_excluded_dims = _normalize_dims(
-        excluded_dims or [], input_dim, name="Excluded"
-    )
+    normalized_excluded_dims = _normalize_dims(excluded_dims or [], input_dim, name="Excluded")
     overlap = set(normalized_cat_dims).intersection(normalized_excluded_dims)
     if overlap:
         raise ValueError("cat_dims and excluded_dims must be disjoint.")
@@ -216,9 +214,7 @@ def _make_mixed_covar_module(
     """
     resolved_batch_shape = torch.Size() if batch_shape is None else batch_shape
     normalized_cat_dims = _normalize_cat_dims(cat_dims=cat_dims, input_dim=input_dim)
-    normalized_excluded_dims = _normalize_dims(
-        excluded_dims or [], input_dim, name="Excluded"
-    )
+    normalized_excluded_dims = _normalize_dims(excluded_dims or [], input_dim, name="Excluded")
     overlap = set(normalized_cat_dims).intersection(normalized_excluded_dims)
     if overlap:
         raise ValueError("cat_dims and excluded_dims must be disjoint.")
@@ -242,9 +238,17 @@ def _make_mixed_covar_module(
     if not cont_dims:
         return make_categorical_kernel(scaled=True)
 
-    factory = cont_kernel_factory or get_covar_module_with_dim_scaled_prior
-    continuous_main = factory(resolved_batch_shape, len(cont_dims), cont_dims)
-    continuous_interaction = factory(resolved_batch_shape, len(cont_dims), cont_dims)
+    def make_continuous_kernel() -> Kernel:
+        if cont_kernel_factory is not None:
+            return cont_kernel_factory(resolved_batch_shape, len(cont_dims), cont_dims)
+        return get_covar_module_with_dim_scaled_prior(
+            ard_num_dims=len(cont_dims),
+            batch_shape=resolved_batch_shape,
+            active_dims=cont_dims,
+        )
+
+    continuous_main = make_continuous_kernel()
+    continuous_interaction = make_continuous_kernel()
     categorical_main = make_categorical_kernel(scaled=True)
     categorical_interaction = make_categorical_kernel(scaled=False)
 
