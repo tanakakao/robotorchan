@@ -1,4 +1,4 @@
-import importlib
+import importlib  # noqa: I001
 
 
 MODELS = importlib.import_module("robotorchan.models")
