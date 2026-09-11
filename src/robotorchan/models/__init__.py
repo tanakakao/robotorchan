@@ -1,6 +1,10 @@
 """Surrogate-model extensions and BoTorch-compatible wrappers."""
 
 from robotorchan.models.base import UnsupportedModelOperationError
+from robotorchan.models.fully_bayesian import (
+    SaasFullyBayesianMultiTaskGP,
+    SaasFullyBayesianSingleTaskGP,
+)
 from robotorchan.models.mixed import MixedSingleTaskGP
 from robotorchan.models.model_list import ModelListGP
 from robotorchan.models.multi_fidelity import SingleTaskMultiFidelityGP
@@ -15,6 +19,8 @@ __all__ = [
     "ModelListGP",
     "MultiTaskGP",
     "PairwiseGP",
+    "SaasFullyBayesianMultiTaskGP",
+    "SaasFullyBayesianSingleTaskGP",
     "SingleTaskGP",
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",

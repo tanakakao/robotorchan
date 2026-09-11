@@ -76,6 +76,8 @@ Variational models also require model-family-specific training semantics. `Singl
 
 Preference models use their own raw-data vocabulary. `PairwiseGP` retains `raw_datapoints` and `raw_comparisons` before BoTorch input transforms or duplicate consolidation, preserves the upstream prior-only mode where either value may be `None`, and constructs `PairwiseLaplaceMarginalLogLikelihood`. It deliberately does not expose `raw_train_Y`, because pairwise comparisons are not ordinary supervised targets.
 
+Fully Bayesian models retain the normal supervised raw-data vocabulary, but do **not** use MLL fitting. `SaasFullyBayesianSingleTaskGP` and `SaasFullyBayesianMultiTaskGP` therefore expose `supports_mll = False`; calling `make_mll()` raises `UnsupportedModelOperationError`. Fitting remains delegated directly to BoTorch's `fit_fully_bayesian_model_nuts`. robotorchan does not add a parallel NUTS fitting API in the model wrapper layer. The optional `fully-bayesian` dependency group installs the JAX / NumPyro dependencies required by BoTorch.
+
 ## Roadmap
 
 ### Phase 1 — wrapper foundation
@@ -107,9 +109,13 @@ Add `SingleTaskVariationalGP` with raw-data retention and `VariationalELBO` cons
 
 Add `PairwiseGP` with semantically correct `raw_datapoints` / `raw_comparisons` retention, prior-only compatibility, and `PairwiseLaplaceMarginalLogLikelihood` construction.
 
+### Phase 7 — fully Bayesian wrappers
+
+Add `SaasFullyBayesianSingleTaskGP` and `SaasFullyBayesianMultiTaskGP` with raw supervised data retention, explicit non-MLL training semantics, and direct compatibility with BoTorch's `fit_fully_bayesian_model_nuts`.
+
 ### Later model-wrapper phases
 
-Continue with fully Bayesian, higher-order, latent-Kronecker, and other specialized BoTorch models using model-family-specific training objectives and raw-data conventions.
+Continue with higher-order, latent-Kronecker, and other specialized BoTorch models using model-family-specific training objectives and raw-data conventions.
 
 ### Later extension phases
 
