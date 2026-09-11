@@ -13,14 +13,22 @@
 
 ## Model conventions
 
-The first model wrapper is `robotorchan.models.SingleTaskGP`. It subclasses BoTorch's `SingleTaskGP`, while adding:
+Current exact-GP wrappers are:
+
+- `robotorchan.models.SingleTaskGP`
+- `robotorchan.models.MixedSingleTaskGP`
+- `robotorchan.models.SingleTaskMultiFidelityGP`
+
+They subclass the corresponding BoTorch models while adding the common robotorchan model surface where applicable:
 
 - `raw_train_X`
 - `raw_train_Y`
 - `raw_train_Yvar`
+- `raw_data`
+- `supports_mll`
 - `make_mll()`
 
-The intention is to use the same names across compatible model wrappers so downstream utilities do not need model-specific branching for common operations.
+The wrappers preserve the upstream constructor surface and delegate predictive behavior, kernels, transforms, conditioning, and model-specific semantics to BoTorch.
 
 ```python
 import torch
