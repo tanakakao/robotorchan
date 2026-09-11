@@ -80,17 +80,15 @@ def test_latent_kronecker_gp_raw_buffers_follow_dtype_and_serialize() -> None:
 
 def test_latent_kronecker_gp_matches_upstream_posterior() -> None:
     train_X, train_T, train_Y = _training_data()
+
+    torch.manual_seed(1234)
     wrapper = LatentKroneckerGP(train_X=train_X, train_T=train_T, train_Y=train_Y)
+    torch.manual_seed(1234)
     upstream = BoTorchLatentKroneckerGP(
         train_X=train_X,
         train_T=train_T,
         train_Y=train_Y,
     )
-
-    upstream_state = {
-        name: value for name, value in wrapper.state_dict().items() if not name.startswith("_raw_")
-    }
-    upstream.load_state_dict(upstream_state)
 
     test_X = torch.tensor([[0.20, 0.30], [0.70, 0.65]], dtype=torch.double)
     test_T = torch.tensor([[0.25], [0.75]], dtype=torch.double)
