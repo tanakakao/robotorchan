@@ -199,7 +199,7 @@ def _make_mixed_covar_module(
     *,
     input_dim: int,
     cat_dims: list[int],
-    batch_shape: torch.Size = torch.Size(),
+    batch_shape: torch.Size | None = None,
     cont_kernel_factory: ContinuousKernelFactory | None = None,
 ) -> Kernel:
     """Build the default robotorchan covariance for a mixed input space.
@@ -215,32 +215,34 @@ def _make_mixed_covar_module(
     Args:
         input_dim: Total number of model input features handled by this kernel.
         cat_dims: Categorical feature indices. Negative indices are supported.
-        batch_shape: Batch shape for kernel hyperparameters.
+        batch_shape: Batch shape for kernel hyperparameters. Defaults to an
+            empty batch shape when omitted.
         cont_kernel_factory: Optional continuous-kernel factory with the same
             calling convention used by BoTorch ``MixedSingleTaskGP``.
 
     Returns:
         A GPyTorch covariance module for the mixed input space.
     """
+    resolved_batch_shape = torch.Size() if batch_shape is None else batch_shape
     normalized_cat_dims = _normalize_cat_dims(cat_dims=cat_dims, input_dim=input_dim)
     cont_dims = _get_cont_dims(input_dim=input_dim, cat_dims=normalized_cat_dims)
 
     def make_categorical_kernel(*, scaled: bool) -> Kernel:
         kernel: Kernel = CategoricalKernel(
-            batch_shape=batch_shape,
+            batch_shape=resolved_batch_shape,
             ard_num_dims=len(normalized_cat_dims),
             active_dims=normalized_cat_dims,
         )
         if scaled:
-            kernel = ScaleKernel(kernel, batch_shape=batch_shape)
+            kernel = ScaleKernel(kernel, batch_shape=resolved_batch_shape)
         return kernel
 
     if not cont_dims:
         return make_categorical_kernel(scaled=True)
 
     factory = cont_kernel_factory or get_covar_module_with_dim_scaled_prior
-    continuous_main = factory(batch_shape, len(cont_dims), cont_dims)
-    continuous_interaction = factory(batch_shape, len(cont_dims), cont_dims)
+    continuous_main = factory(resolved_batch_shape, len(cont_dims), cont_dims)
+    continuous_interaction = factory(resolved_batch_shape, len(cont_dims), cont_dims)
     categorical_main = make_categorical_kernel(scaled=True)
     categorical_interaction = make_categorical_kernel(scaled=False)
 
