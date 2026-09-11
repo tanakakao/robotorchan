@@ -6,6 +6,8 @@ from typing import Any
 
 from botorch.models import (
     KroneckerMultiTaskGP as BoTorchKroneckerMultiTaskGP,
+)
+from botorch.models import (
     MultiTaskGP as BoTorchMultiTaskGP,
 )
 from botorch.models.transforms.input import InputTransform
