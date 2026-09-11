@@ -18,13 +18,12 @@ from robotorchan.models.map_saas import (
     AdditiveMapSaasSingleTaskGP,
     EnsembleMapSaasSingleTaskGP,
 )
-from robotorchan.models.mixed import MixedSingleTaskGP
 from robotorchan.models.model_list import ModelListGP
 from robotorchan.models.multi_fidelity import SingleTaskMultiFidelityGP
 from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.pairwise import PairwiseGP
 from robotorchan.models.robust import RobustRelevancePursuitSingleTaskGP
-from robotorchan.models.single_task import SingleTaskGP
+from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
 from robotorchan.models.variational import SingleTaskVariationalGP
 
 __all__ = [
