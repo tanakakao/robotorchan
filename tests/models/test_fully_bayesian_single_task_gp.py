@@ -8,6 +8,7 @@ from botorch.models.fully_bayesian import (
 from botorch.models.transforms.outcome import Standardize
 
 from robotorchan.models import (
+    MixedSaasFullyBayesianSingleTaskGP,
     SaasFullyBayesianSingleTaskGP,
     UnsupportedModelOperationError,
 )
@@ -106,3 +107,58 @@ def test_saas_single_task_matches_upstream_posterior_with_same_mcmc_samples() ->
 
     torch.testing.assert_close(wrapper_posterior.mean, upstream_posterior.mean)
     torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
+
+
+def test_mixed_saas_single_task_encodes_categories_internally() -> None:
+    continuous = torch.linspace(0.1, 0.9, 9, dtype=torch.double).unsqueeze(-1)
+    category = torch.tensor([0, 1, 2, 0, 1, 2, 0, 1, 2], dtype=torch.double).unsqueeze(-1)
+    train_X = torch.cat([continuous, category], dim=-1)
+    train_Y = continuous + 0.2 * category
+
+    model = MixedSaasFullyBayesianSingleTaskGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        cat_dims=[-1],
+    )
+    samples = model.pyro_model.get_dummy_mcmc_samples(
+        num_mcmc_samples=3,
+        dtype=train_X.dtype,
+        device=train_X.device,
+    )
+    model.load_mcmc_samples(samples)
+
+    test_X = torch.tensor([[0.25, 1.0], [0.75, 2.0]], dtype=torch.double)
+    model.eval()
+    posterior = model.posterior(test_X)
+
+    assert model.cat_dims == (1,)
+    assert model.raw_input_dim == 2
+    assert model.encoded_input_dim == 4
+    assert torch.equal(model.raw_train_X, train_X)
+    assert model.pyro_model.train_X.shape[-1] == 4
+    assert posterior.mean.shape == torch.Size([3, 2, 1])
+    assert posterior.variance.shape == torch.Size([3, 2, 1])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+
+
+def test_mixed_saas_single_task_rejects_unseen_categories() -> None:
+    train_X = torch.tensor(
+        [[0.1, 0.0], [0.3, 1.0], [0.6, 0.0], [0.9, 1.0]],
+        dtype=torch.double,
+    )
+    train_Y = train_X[:, :1]
+    model = MixedSaasFullyBayesianSingleTaskGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        cat_dims=[1],
+    )
+    samples = model.pyro_model.get_dummy_mcmc_samples(
+        num_mcmc_samples=2,
+        dtype=train_X.dtype,
+        device=train_X.device,
+    )
+    model.load_mcmc_samples(samples)
+
+    with pytest.raises(ValueError, match="unseen category"):
+        model.posterior(torch.tensor([[0.5, 2.0]], dtype=torch.double))

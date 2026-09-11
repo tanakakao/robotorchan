@@ -16,6 +16,8 @@ PUBLIC_MODEL_NAMES = {
     "LatentKroneckerGP",
     "MixedKroneckerMultiTaskGP",
     "MixedMultiTaskGP",
+    "MixedSaasFullyBayesianMultiTaskGP",
+    "MixedSaasFullyBayesianSingleTaskGP",
     "MixedSingleTaskGP",
     "MixedSingleTaskMultiFidelityGP",
     "MixedSingleTaskVariationalGP",
@@ -33,6 +35,8 @@ PUBLIC_MODEL_NAMES = {
 }
 
 NON_MLL_MODELS = {
+    "MixedSaasFullyBayesianMultiTaskGP",
+    "MixedSaasFullyBayesianSingleTaskGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
 }
