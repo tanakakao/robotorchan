@@ -4,6 +4,8 @@ from robotorchan.models.additive import OrthogonalAdditiveGP
 from robotorchan.models.base import UnsupportedModelOperationError
 from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP
 from robotorchan.models.fully_bayesian import (
+    MixedSaasFullyBayesianMultiTaskGP,
+    MixedSaasFullyBayesianSingleTaskGP,
     SaasFullyBayesianMultiTaskGP,
     SaasFullyBayesianSingleTaskGP,
 )
@@ -48,6 +50,8 @@ __all__ = [
     "LatentKroneckerGP",
     "MixedKroneckerMultiTaskGP",
     "MixedMultiTaskGP",
+    "MixedSaasFullyBayesianMultiTaskGP",
+    "MixedSaasFullyBayesianSingleTaskGP",
     "MixedSingleTaskGP",
     "MixedSingleTaskMultiFidelityGP",
     "MixedSingleTaskVariationalGP",
