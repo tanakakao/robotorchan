@@ -124,10 +124,8 @@ def test_variational_gp_matches_upstream_posterior() -> None:
         train_Y=train_Y,
         inducing_points=inducing_points.clone(),
     )
-    upstream_state = {
-        name: value for name, value in wrapper.state_dict().items() if not name.startswith("_raw_")
-    }
-    upstream.load_state_dict(upstream_state)
+    upstream.model.load_state_dict(wrapper.model.state_dict())
+    upstream.likelihood.load_state_dict(wrapper.likelihood.state_dict())
 
     test_X = torch.rand(6, 2, dtype=torch.double)
     wrapper.eval()
