@@ -18,8 +18,8 @@ class SingleTaskGP(ExactGPModelMixin, BoTorchSingleTaskGP):
     """BoTorch ``SingleTaskGP`` with robotorchan convenience features.
 
     The predictive model and posterior behavior are inherited directly from
-    BoTorch. robotorchan only adds a small common surface used across model
-    wrappers, currently raw training-data retention and ``make_mll``.
+    BoTorch. robotorchan only adds the common wrapper surface: raw training
+    data retention, training-capability metadata, and ``make_mll()``.
     """
 
     def __init__(
@@ -44,7 +44,7 @@ class SingleTaskGP(ExactGPModelMixin, BoTorchSingleTaskGP):
             outcome_transform=outcome_transform,
             input_transform=input_transform,
         )
-        self._store_raw_training_data(
+        self._store_supervised_training_data(
             train_X=train_X,
             train_Y=train_Y,
             train_Yvar=train_Yvar,
