@@ -18,6 +18,12 @@ class DummyNonMLLModel(ModelTrainingMixin):
     pass
 
 
+def test_raw_data_registry_is_empty_before_storage() -> None:
+    model = DummyRawModel()
+
+    assert model.raw_data == {}
+
+
 def test_raw_data_mixin_stores_arbitrary_named_tensors() -> None:
     datapoints = torch.rand(6, 3, dtype=torch.double)
     comparisons = torch.tensor([[0, 1], [2, 3]], dtype=torch.long)
