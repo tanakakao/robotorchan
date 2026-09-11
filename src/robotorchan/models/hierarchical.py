@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from botorch.models.hierarchical.conditional_kernel_gp import (
     HierarchicalConditionalKernelGP as BoTorchHierarchicalConditionalKernelGP,
+)
+from botorch.models.hierarchical.conditional_kernel_gp import (
     HierarchicalConditionalKernelMultiTaskGP as BoTorchHierarchicalConditionalKernelMultiTaskGP,
 )
 from botorch.models.transforms.input import InputTransform
