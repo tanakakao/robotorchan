@@ -113,6 +113,7 @@ def test_variational_gp_matches_upstream_posterior() -> None:
     train_X = torch.rand(14, 2, dtype=torch.double)
     train_Y = torch.sin(train_X[:, :1] * 2.0)
     inducing_points = train_X[:5].clone()
+    test_X = torch.rand(6, 2, dtype=torch.double)
 
     wrapper = SingleTaskVariationalGP(
         train_X=train_X,
@@ -124,11 +125,11 @@ def test_variational_gp_matches_upstream_posterior() -> None:
         train_Y=train_Y,
         inducing_points=inducing_points.clone(),
     )
+
+    wrapper.eval()
+    wrapper.posterior(test_X)
     upstream.model.load_state_dict(wrapper.model.state_dict())
     upstream.likelihood.load_state_dict(wrapper.likelihood.state_dict())
-
-    test_X = torch.rand(6, 2, dtype=torch.double)
-    wrapper.eval()
     upstream.eval()
 
     wrapper_posterior = wrapper.posterior(test_X)
