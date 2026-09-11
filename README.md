@@ -18,6 +18,8 @@ Current exact-GP wrappers are:
 - `robotorchan.models.SingleTaskGP`
 - `robotorchan.models.MixedSingleTaskGP`
 - `robotorchan.models.SingleTaskMultiFidelityGP`
+- `robotorchan.models.MultiTaskGP`
+- `robotorchan.models.KroneckerMultiTaskGP`
 
 They subclass the corresponding BoTorch models while adding the common robotorchan model surface where applicable:
 
@@ -28,7 +30,7 @@ They subclass the corresponding BoTorch models while adding the common robotorch
 - `supports_mll`
 - `make_mll()`
 
-The wrappers preserve the upstream constructor surface and delegate predictive behavior, kernels, transforms, conditioning, and model-specific semantics to BoTorch.
+The wrappers preserve the upstream constructor surface and delegate predictive behavior, kernels, transforms, conditioning, and model-specific semantics to BoTorch. For `KroneckerMultiTaskGP`, `raw_train_Yvar` is `None` because the upstream constructor does not expose a `train_Yvar` argument.
 
 ```python
 import torch
