@@ -28,6 +28,9 @@ from robotorchan.models.single_task import SingleTaskGP
 from robotorchan.models.variational import SingleTaskVariationalGP
 
 __all__ = [
+    "LCEAGP",
+    "LCEMGP",
+    "SACGP",
     "AdditiveMapSaasSingleTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "HeterogeneousMTGP",
@@ -35,8 +38,6 @@ __all__ = [
     "HierarchicalConditionalKernelMultiTaskGP",
     "HigherOrderGP",
     "KroneckerMultiTaskGP",
-    "LCEAGP",
-    "LCEMGP",
     "LatentKroneckerGP",
     "MixedSingleTaskGP",
     "ModelListGP",
@@ -44,7 +45,6 @@ __all__ = [
     "OrthogonalAdditiveGP",
     "PairwiseGP",
     "RobustRelevancePursuitSingleTaskGP",
-    "SACGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
     "SingleTaskGP",
