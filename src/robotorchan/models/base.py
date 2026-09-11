@@ -120,9 +120,7 @@ class ModelTrainingMixin:
             UnsupportedModelOperationError: If the model does not use an MLL
                 style training objective.
         """
-        raise UnsupportedModelOperationError(
-            f"{type(self).__name__} does not support make_mll()."
-        )
+        raise UnsupportedModelOperationError(f"{type(self).__name__} does not support make_mll().")
 
 
 class ExactGPModelMixin(SupervisedTrainingDataMixin, ModelTrainingMixin):
