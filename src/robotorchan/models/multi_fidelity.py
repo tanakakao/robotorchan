@@ -9,7 +9,6 @@ from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
 from gpytorch.likelihoods import Likelihood
-from gpytorch.means import Mean
 from gpytorch.module import Module
 from torch import Tensor
 
@@ -32,7 +31,6 @@ class SingleTaskMultiFidelityGP(ExactGPModelMixin, BoTorchSingleTaskMultiFidelit
         likelihood: Likelihood | None = None,
         outcome_transform: OutcomeTransform | _DefaultType | None = DEFAULT,
         input_transform: InputTransform | None = None,
-        mean_module: Mean | None = None,
     ) -> None:
         """Initialize the multi-fidelity GP while retaining raw training tensors."""
         raw_train_X = train_X.detach().clone()
@@ -51,7 +49,6 @@ class SingleTaskMultiFidelityGP(ExactGPModelMixin, BoTorchSingleTaskMultiFidelit
             likelihood=likelihood,
             outcome_transform=outcome_transform,
             input_transform=input_transform,
-            mean_module=mean_module,
         )
         self._store_supervised_training_data(
             train_X=raw_train_X,
