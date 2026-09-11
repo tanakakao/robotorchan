@@ -13,11 +13,16 @@ class UnsupportedModelOperationError(RuntimeError):
 
 
 class RawDataMixin:
-    """Provide generic storage for caller-supplied raw tensors.
+    """Provide provenance snapshots for caller-supplied raw tensors.
 
-    Raw tensors are detached, cloned, and registered as buffers. This keeps
-    them independent from caller-owned tensors while preserving normal PyTorch
-    device / dtype moves and ``state_dict`` serialization behavior.
+    Raw tensors are detached, cloned, and registered as buffers. They represent
+    the tensors supplied to the wrapper constructor before BoTorch transforms or
+    preprocessing. They are intentionally not rewritten by later model-update
+    operations such as ``condition_on_observations`` or ``fantasize``.
+
+    This keeps provenance separate from BoTorch's current training state. Use
+    native BoTorch attributes such as ``train_inputs`` and ``train_targets``
+    when the current conditioned / fantasy training state is required.
     """
 
     _RAW_BUFFER_PREFIX: ClassVar[str] = "_raw_"
@@ -58,14 +63,18 @@ class RawDataMixin:
         return getattr(self, f"{self._RAW_BUFFER_PREFIX}{name}")
 
     @property
+    def raw_data_names(self) -> tuple[str, ...]:
+        """Names of the constructor-level raw-data snapshots retained by the model."""
+        return getattr(self, "_raw_data_names", ())
+
+    @property
     def raw_data(self) -> dict[str, Tensor | None]:
-        """Return all raw tensors registered by this wrapper.
+        """Return all constructor-level raw-data snapshots retained by the wrapper.
 
         The returned dictionary is a new mapping, while tensor values refer to
         the model-owned buffers.
         """
-        names = getattr(self, "_raw_data_names", ())
-        return {name: self._get_raw_tensor(name) for name in names}
+        return {name: self._get_raw_tensor(name) for name in self.raw_data_names}
 
 
 class SupervisedTrainingDataMixin(RawDataMixin):
@@ -88,7 +97,7 @@ class SupervisedTrainingDataMixin(RawDataMixin):
 
     @property
     def raw_train_X(self) -> Tensor:
-        """Training inputs before any model input transform is applied."""
+        """Constructor-supplied inputs before any model input transform."""
         value = self._get_raw_tensor("train_X")
         if value is None:  # pragma: no cover - guarded by constructor contract
             raise RuntimeError("raw_train_X was unexpectedly stored as None.")
@@ -96,7 +105,7 @@ class SupervisedTrainingDataMixin(RawDataMixin):
 
     @property
     def raw_train_Y(self) -> Tensor:
-        """Training outcomes before any model outcome transform is applied."""
+        """Constructor-supplied outcomes before any model outcome transform."""
         value = self._get_raw_tensor("train_Y")
         if value is None:  # pragma: no cover - guarded by constructor contract
             raise RuntimeError("raw_train_Y was unexpectedly stored as None.")
@@ -104,7 +113,7 @@ class SupervisedTrainingDataMixin(RawDataMixin):
 
     @property
     def raw_train_Yvar(self) -> Tensor | None:
-        """Observation variances supplied by the caller, if any."""
+        """Constructor-supplied observation variances, if any."""
         return self._get_raw_tensor("train_Yvar")
 
 
@@ -131,7 +140,3 @@ class ExactGPModelMixin(SupervisedTrainingDataMixin, ModelTrainingMixin):
     def make_mll(self) -> ExactMarginalLogLikelihood:
         """Construct the exact marginal log likelihood for this model."""
         return ExactMarginalLogLikelihood(self.likelihood, self)
-
-
-# Backward-compatible internal alias retained while the wrapper API is young.
-RawTrainingDataMixin = SupervisedTrainingDataMixin

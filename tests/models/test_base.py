@@ -22,6 +22,7 @@ def test_raw_data_registry_is_empty_before_storage() -> None:
     model = DummyRawModel()
 
     assert model.raw_data == {}
+    assert model.raw_data_names == ()
 
 
 def test_raw_data_mixin_stores_arbitrary_named_tensors() -> None:
@@ -33,11 +34,23 @@ def test_raw_data_mixin_stores_arbitrary_named_tensors() -> None:
     model._store_raw_tensor("comparisons", comparisons)
     model._store_raw_tensor("optional", None)
 
+    assert model.raw_data_names == ("datapoints", "comparisons", "optional")
     assert set(model.raw_data) == {"datapoints", "comparisons", "optional"}
     assert torch.equal(model.raw_data["datapoints"], datapoints)
     assert torch.equal(model.raw_data["comparisons"], comparisons)
     assert model.raw_data["optional"] is None
     assert model.raw_data["datapoints"].data_ptr() != datapoints.data_ptr()
+
+
+def test_raw_data_mapping_is_a_new_mapping() -> None:
+    model = DummyRawModel()
+    model._store_raw_tensor("train_X", torch.ones(2, 1))
+
+    raw_data = model.raw_data
+    raw_data.clear()
+
+    assert model.raw_data_names == ("train_X",)
+    assert torch.equal(model.raw_data["train_X"], torch.ones(2, 1))
 
 
 def test_raw_data_buffers_follow_dtype_and_are_serialized() -> None:
@@ -63,6 +76,7 @@ def test_raw_data_tensor_can_be_replaced_without_duplicate_registration() -> Non
     model._store_raw_tensor("train_Y", first)
     model._store_raw_tensor("train_Y", second)
 
+    assert model.raw_data_names == ("train_Y",)
     assert tuple(model.raw_data) == ("train_Y",)
     assert torch.equal(model.raw_data["train_Y"], second)
 
