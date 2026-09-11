@@ -72,6 +72,8 @@ Do not force supervised names onto models whose data have different semantics. F
 
 Composite models follow the same principle. `ModelListGP` is not treated as if it had one global training tensor pair. Raw data remains owned by the child models and the wrapper exposes grouped `raw_train_Xs`, `raw_train_Ys`, and `raw_train_Yvars` convenience properties. Its training objective is `SumMarginalLogLikelihood`, not `ExactMarginalLogLikelihood` for the container as a whole.
 
+Variational models also require model-family-specific training semantics. `SingleTaskVariationalGP` retains `raw_train_X` and optional `raw_train_Y`, exposes `raw_train_Yvar = None` because the upstream constructor has no `train_Yvar` argument, and constructs `VariationalELBO` against the internal approximate GP (`model.model`). `make_mll(num_data=None)` defaults to the row count of `raw_train_X`; callers performing minibatch training must pass the total data-set size explicitly.
+
 ## Roadmap
 
 ### Phase 1 — wrapper foundation
@@ -97,11 +99,15 @@ Add `ModelListGP` with grouped child raw-data access and `SumMarginalLogLikeliho
 
 ### Phase 5 — variational wrapper
 
-Add `SingleTaskVariationalGP` with the appropriate variational training objective rather than forcing exact-GP semantics.
+Add `SingleTaskVariationalGP` with raw-data retention and `VariationalELBO` construction, including an explicit total-data-size override for minibatch training.
+
+### Phase 6 — preference wrapper
+
+Add `PairwiseGP` with semantically correct `raw_datapoints` / `raw_comparisons` retention and `PairwiseLaplaceMarginalLogLikelihood` construction.
 
 ### Later model-wrapper phases
 
-Continue with preference, fully Bayesian, higher-order, latent-Kronecker, and other specialized BoTorch models using model-family-specific training objectives and raw-data conventions.
+Continue with fully Bayesian, higher-order, latent-Kronecker, and other specialized BoTorch models using model-family-specific training objectives and raw-data conventions.
 
 ### Later extension phases
 

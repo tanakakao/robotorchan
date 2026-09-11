@@ -21,6 +21,7 @@ Current wrappers are:
 - `robotorchan.models.MultiTaskGP`
 - `robotorchan.models.KroneckerMultiTaskGP`
 - `robotorchan.models.ModelListGP`
+- `robotorchan.models.SingleTaskVariationalGP`
 
 Supervised single-model wrappers add the common robotorchan model surface where applicable:
 
@@ -31,7 +32,7 @@ Supervised single-model wrappers add the common robotorchan model surface where 
 - `supports_mll`
 - `make_mll()`
 
-The wrappers preserve the upstream constructor surface and delegate predictive behavior, kernels, transforms, conditioning, and model-specific semantics to BoTorch. For `KroneckerMultiTaskGP`, `raw_train_Yvar` is `None` because the upstream constructor does not expose a `train_Yvar` argument.
+The wrappers preserve the upstream constructor surface and delegate predictive behavior, kernels, transforms, conditioning, and model-specific semantics to BoTorch. For models whose upstream constructor does not expose `train_Yvar`, `raw_train_Yvar` is `None`.
 
 `ModelListGP` is a container of independent child models, so it does not invent singular container-level training tensors. Instead it exposes:
 
@@ -43,24 +44,24 @@ The wrappers preserve the upstream constructor surface and delegate predictive b
 
 Grouped raw values are available when the corresponding child model implements the robotorchan raw-data contract. Native BoTorch children remain fully supported and yield `None` for unavailable raw values.
 
+`SingleTaskVariationalGP` preserves BoTorch's variational model semantics and uses `VariationalELBO` rather than an exact marginal log likelihood. Its `make_mll(num_data=None)` method uses the number of rows in `raw_train_X` by default. For minibatch training, pass the total training-set size explicitly as `num_data`.
+
 ```python
 import torch
-from botorch.fit import fit_gpytorch_mll
-from robotorchan.models import ModelListGP, SingleTaskGP
+from robotorchan.models import SingleTaskVariationalGP
 
-train_X1 = torch.rand(20, 3, dtype=torch.double)
-train_Y1 = train_X1.sin().sum(dim=-1, keepdim=True)
-train_X2 = torch.rand(16, 3, dtype=torch.double)
-train_Y2 = train_X2.cos().sum(dim=-1, keepdim=True)
+train_X = torch.rand(200, 3, dtype=torch.double)
+train_Y = train_X.sin().sum(dim=-1, keepdim=True)
 
-model = ModelListGP(
-    SingleTaskGP(train_X=train_X1, train_Y=train_Y1),
-    SingleTaskGP(train_X=train_X2, train_Y=train_Y2),
+model = SingleTaskVariationalGP(
+    train_X=train_X,
+    train_Y=train_Y,
+    inducing_points=40,
 )
 mll = model.make_mll()
-fit_gpytorch_mll(mll)
 
-assert torch.equal(model.raw_train_Xs[0], train_X1)
+assert torch.equal(model.raw_train_X, train_X)
+assert mll.num_data == 200
 ```
 
 ## Initial scope
