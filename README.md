@@ -23,6 +23,8 @@ Current wrappers are:
 - `robotorchan.models.ModelListGP`
 - `robotorchan.models.SingleTaskVariationalGP`
 - `robotorchan.models.PairwiseGP`
+- `robotorchan.models.SaasFullyBayesianSingleTaskGP`
+- `robotorchan.models.SaasFullyBayesianMultiTaskGP`
 
 Supervised single-model wrappers add the common robotorchan model surface where applicable:
 
@@ -31,7 +33,7 @@ Supervised single-model wrappers add the common robotorchan model surface where 
 - `raw_train_Yvar`
 - `raw_data`
 - `supports_mll`
-- `make_mll()`
+- `make_mll()` when the model family supports MLL-style fitting
 
 The wrappers preserve the upstream constructor surface and delegate predictive behavior, kernels, transforms, conditioning, and model-specific semantics to BoTorch. For models whose upstream constructor does not expose `train_Yvar`, `raw_train_Yvar` is `None`.
 
@@ -90,6 +92,23 @@ fit_gpytorch_mll(mll)
 assert torch.equal(model.raw_datapoints, items)
 assert torch.equal(model.raw_comparisons, comparisons)
 ```
+
+Fully Bayesian SAAS wrappers preserve the same raw supervised training data, but intentionally do not expose MLL-style fitting. Install the optional dependencies with `pip install "robotorchan[fully-bayesian]"`, then fit through BoTorch directly:
+
+```python
+import torch
+from botorch.fit import fit_fully_bayesian_model_nuts
+from robotorchan.models import SaasFullyBayesianSingleTaskGP
+
+train_X = torch.rand(20, 4, dtype=torch.double)
+train_Y = torch.randn(20, 1, dtype=torch.double)
+
+model = SaasFullyBayesianSingleTaskGP(train_X=train_X, train_Y=train_Y)
+assert model.supports_mll is False
+fit_fully_bayesian_model_nuts(model)
+```
+
+The multi-task SAAS wrapper uses BoTorch's long-format task-feature representation and follows the same NUTS fitting path.
 
 ## Initial scope
 
