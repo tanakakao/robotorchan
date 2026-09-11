@@ -11,9 +11,9 @@ from gpytorch.likelihoods import Likelihood
 from gpytorch.means import Mean
 from gpytorch.mlls import VariationalELBO
 from gpytorch.variational import (
+    VariationalStrategy,
     _VariationalDistribution,
     _VariationalStrategy,
-    VariationalStrategy,
 )
 from torch import Tensor
 
