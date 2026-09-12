@@ -15,7 +15,7 @@
 5. [Mixed Variables](05_mixed_variables.md)
 6. [Multi-Fidelity](06_multi_fidelity.md)
 7. [Multi-task / Multi-output](07_multitask_multioutput.md)
-8. High-dimensional GP
+8. [High-dimensional GP](08_high_dimensional_gp.md)
 9. Variational GP
 10. Preference Learning
 11. Structured Output
@@ -63,7 +63,6 @@
 
 以下は今後の理論章として順次追加します。
 
-- `08_high_dimensional_gp.md`
 - `09_variational_gp.md`
 - `10_preference_learning.md`
 - `11_structured_output.md`
