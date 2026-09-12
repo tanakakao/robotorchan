@@ -14,6 +14,8 @@ PUBLIC_MODEL_NAMES = {
     "LCEAGP",
     "LCEMGP",
     "LatentKroneckerGP",
+    "MixedAdditiveMapSaasSingleTaskGP",
+    "MixedEnsembleMapSaasSingleTaskGP",
     "MixedKroneckerMultiTaskGP",
     "MixedMultiTaskGP",
     "MixedSaasFullyBayesianMultiTaskGP",
