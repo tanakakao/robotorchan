@@ -157,9 +157,9 @@ class OutputPLSReducer(OutputReducer):
             predictor_loading = (predictor_residual.transpose(-2, -1) @ score) / score_norm
 
             output_residual = output_residual - score.unsqueeze(-1) * output_loading.unsqueeze(0)
-            predictor_residual = (
-                predictor_residual - score.unsqueeze(-1) * predictor_loading.unsqueeze(0)
-            )
+            predictor_residual = predictor_residual - score.unsqueeze(
+                -1
+            ) * predictor_loading.unsqueeze(0)
             weights.append(weight)
             loadings.append(output_loading)
 
