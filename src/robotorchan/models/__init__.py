@@ -19,6 +19,8 @@ from robotorchan.models.latent_kronecker import LatentKroneckerGP
 from robotorchan.models.map_saas import (
     AdditiveMapSaasSingleTaskGP,
     EnsembleMapSaasSingleTaskGP,
+    MixedAdditiveMapSaasSingleTaskGP,
+    MixedEnsembleMapSaasSingleTaskGP,
 )
 from robotorchan.models.model_list import ModelListGP
 from robotorchan.models.multi_fidelity import (
@@ -48,6 +50,8 @@ __all__ = [
     "HigherOrderGP",
     "KroneckerMultiTaskGP",
     "LatentKroneckerGP",
+    "MixedAdditiveMapSaasSingleTaskGP",
+    "MixedEnsembleMapSaasSingleTaskGP",
     "MixedKroneckerMultiTaskGP",
     "MixedMultiTaskGP",
     "MixedSaasFullyBayesianMultiTaskGP",
