@@ -497,7 +497,7 @@ BoTorch では downstream task に合わせた custom allocator も利用でき�
 `SingleTaskVariationalGP` には
 
 ```python
-learn_inducing_points=True
+learn_inducing_points = True
 ```
 
 があります。
@@ -645,11 +645,7 @@ from robotorchan.models import SingleTaskVariationalGP
 torch.set_default_dtype(torch.double)
 
 train_X = torch.rand(500, 3)
-train_Y = (
-    torch.sin(2 * torch.pi * train_X[:, :1])
-    + 0.2 * train_X[:, 1:2]
-    - 0.1 * train_X[:, 2:3]
-)
+train_Y = torch.sin(2 * torch.pi * train_X[:, :1]) + 0.2 * train_X[:, 1:2] - 0.1 * train_X[:, 2:3]
 
 model = SingleTaskVariationalGP(
     train_X=train_X,
