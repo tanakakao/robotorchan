@@ -47,10 +47,7 @@ from robotorchan.models import SingleTaskGP
 torch.set_default_dtype(torch.double)
 
 train_X = torch.rand(20, 2)
-train_Y = (
-    torch.sin(2 * torch.pi * train_X[:, :1])
-    + 0.2 * train_X[:, 1:2]
-)
+train_Y = torch.sin(2 * torch.pi * train_X[:, :1]) + 0.2 * train_X[:, 1:2]
 
 model = SingleTaskGP(
     train_X=train_X,
