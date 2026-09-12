@@ -60,4 +60,5 @@ extend-exclude = ["examples/notebooks/*.ipynb"]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 
 [tool.ruff.format]
+exclude = ["docs/theory/*.md"]
 docstring-code-format = true
