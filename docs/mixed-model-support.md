@@ -17,6 +17,8 @@ Internal one-hot encoding is a compatibility fallback for model families whose c
 | Single-task exact GP | Native mixed kernel | `MixedSingleTaskGP` |
 | ICM multi-task GP | Native mixed kernel | `MixedMultiTaskGP` |
 | Kronecker multi-task GP | Native mixed kernel | `MixedKroneckerMultiTaskGP` |
+| Latent Kronecker GP | Native mixed kernel on X factor | `MixedLatentKroneckerGP` |
+| Heterogeneous MTGP | Native categorical/mixed kernels inside conditional feature subsets | `MixedHeterogeneousMTGP` |
 | Variational single-task GP | Native mixed kernel | `MixedSingleTaskVariationalGP` |
 | Single-task multi-fidelity GP | Native mixed design kernel + BoTorch fidelity kernels | `MixedSingleTaskMultiFidelityGP` |
 | Robust relevance-pursuit single-task GP | Native mixed kernel + robust outlier likelihood | `MixedRobustRelevancePursuitSingleTaskGP` |
@@ -61,3 +63,11 @@ Using an `InputTransform` rather than manually encoding only constructor and pos
 BoTorch's robust relevance-pursuit model exposes its data `covar_module` directly. Its specialized behavior is implemented by wrapping the observation likelihood with sparse outlier noise and by dispatching relevance pursuit during `fit_gpytorch_mll`; the data covariance itself remains replaceable.
 
 `MixedRobustRelevancePursuitSingleTaskGP` therefore uses the normal robotorchan native mixed covariance rather than one-hot encoding. The continuous, categorical, and interaction terms participate directly in fitting and prediction, while the upstream robust likelihood and relevance-pursuit fitting path remain unchanged. The model's `to_standard_model()` path also retains the same mixed covariance module so the specialized fitting dispatch does not silently fall back to a continuous-only kernel.
+
+## Latent Kronecker GP
+
+`LatentKroneckerGP` factorizes covariance across the design coordinates X and the task/time coordinates T. BoTorch exposes `covar_module_X` independently, so `MixedLatentKroneckerGP` installs native mixed covariance only on X while preserving the original T covariance and Kronecker inference path.
+
+## Heterogeneous MTGP
+
+`HeterogeneousMTGP` uses `MultiTaskConditionalKernel`, which partitions the global feature space into subsets shared by different task search spaces and conditionally activates a kernel for each subset. `MixedHeterogeneousMTGP` preserves this conditional structure. Continuous-only subsets keep the upstream Matern construction, categorical-only subsets use `CategoricalKernel`, and subsets containing both types use continuous + categorical + interaction covariance. `cat_dims` refers to the global feature numbering defined by `feature_indices`; the internally appended task indicator is structural and is never categorical.
