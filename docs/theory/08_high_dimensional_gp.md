@@ -436,10 +436,7 @@ from robotorchan.models import SaasFullyBayesianSingleTaskGP
 torch.set_default_dtype(torch.double)
 
 train_X = torch.rand(30, 50)
-train_Y = (
-    torch.sin(6.0 * train_X[:, :1])
-    + 0.5 * train_X[:, 3:4]
-)
+train_Y = torch.sin(6.0 * train_X[:, :1]) + 0.5 * train_X[:, 3:4]
 
 model = SaasFullyBayesianSingleTaskGP(
     train_X=train_X,
@@ -851,7 +848,7 @@ f(x)=c+\sum_i f_i(x_i)
 `OrthogonalAdditiveGP`では
 
 ```python
-second_order=True
+second_order = True
 ```
 
 を使うことで、概念的に
