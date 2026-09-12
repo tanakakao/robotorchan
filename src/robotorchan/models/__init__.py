@@ -9,13 +9,13 @@ from robotorchan.models.fully_bayesian import (
     SaasFullyBayesianMultiTaskGP,
     SaasFullyBayesianSingleTaskGP,
 )
-from robotorchan.models.heterogeneous import HeterogeneousMTGP
+from robotorchan.models.heterogeneous import HeterogeneousMTGP, MixedHeterogeneousMTGP
 from robotorchan.models.hierarchical import (
     HierarchicalConditionalKernelGP,
     HierarchicalConditionalKernelMultiTaskGP,
 )
 from robotorchan.models.higher_order import HigherOrderGP
-from robotorchan.models.latent_kronecker import LatentKroneckerGP
+from robotorchan.models.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
 from robotorchan.models.map_saas import (
     AdditiveMapSaasSingleTaskGP,
     EnsembleMapSaasSingleTaskGP,
@@ -55,7 +55,9 @@ __all__ = [
     "LatentKroneckerGP",
     "MixedAdditiveMapSaasSingleTaskGP",
     "MixedEnsembleMapSaasSingleTaskGP",
+    "MixedHeterogeneousMTGP",
     "MixedKroneckerMultiTaskGP",
+    "MixedLatentKroneckerGP",
     "MixedMultiTaskGP",
     "MixedRobustRelevancePursuitSingleTaskGP",
     "MixedSaasFullyBayesianMultiTaskGP",
