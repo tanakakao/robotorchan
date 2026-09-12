@@ -13,7 +13,7 @@
 3. [Kernel](03_kernel.md)
 4. [Acquisition Function](04_acquisition_function.md)
 5. [Mixed Variables](05_mixed_variables.md)
-6. Multi-Fidelity
+6. [Multi-Fidelity](06_multi_fidelity.md)
 7. Multi-task / Multi-output
 8. High-dimensional GP
 9. Variational GP
@@ -63,7 +63,6 @@
 
 以下は今後の理論章として順次追加します。
 
-- `06_multi_fidelity.md`
 - `07_multitask_multioutput.md`
 - `08_high_dimensional_gp.md`
 - `09_variational_gp.md`
