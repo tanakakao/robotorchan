@@ -90,7 +90,7 @@ def test_variational_gp_make_mll_rejects_non_positive_num_data() -> None:
         model.make_mll(num_data=0)
 
 
-def test_variational_gp_raw_buffers_follow_dtype_and_serialize() -> None:
+def test_variational_gp_raw_buffers_follow_dtype_and_are_non_persistent() -> None:
     train_X = torch.rand(10, 2, dtype=torch.double)
     train_Y = train_X[:, :1]
     model = SingleTaskVariationalGP(
@@ -102,8 +102,8 @@ def test_variational_gp_raw_buffers_follow_dtype_and_serialize() -> None:
     state_dict = model.state_dict()
     model = model.to(dtype=torch.float32)
 
-    assert "_raw_train_X" in state_dict
-    assert "_raw_train_Y" in state_dict
+    assert "_raw_train_X" not in state_dict
+    assert "_raw_train_Y" not in state_dict
     assert "_raw_train_Yvar" not in state_dict
     assert model.raw_train_X.dtype == torch.float32
     assert model.raw_train_Y.dtype == torch.float32
