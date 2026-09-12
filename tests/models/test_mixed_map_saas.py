@@ -34,7 +34,8 @@ def test_mixed_map_saas_encodes_categories_internally(model_class: type) -> None
     assert model.raw_input_dim == 2
     assert model.encoded_input_dim == 4
     assert torch.equal(model.raw_train_X, train_X)
-    assert torch.equal(model.category_values[0], torch.tensor([10.0, 20.0, 30.0], dtype=torch.double))
+    expected_categories = torch.tensor([10.0, 20.0, 30.0], dtype=torch.double)
+    assert torch.equal(model.category_values[0], expected_categories)
 
     encoded = model.input_transform.transform(train_X[:2])
     assert encoded.shape == torch.Size([2, 4])
