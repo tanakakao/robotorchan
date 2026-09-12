@@ -1,58 +1,47 @@
 # robotorchan モデル概要・使い所ガイド
 
 > 対象: `robotorchan` main ブランチ（2026-09-12 時点）  
-> 対応方針: BoTorch の既存モデルを薄くラップし、`raw_*` データ保持や `make_mll()` など robotorchan 共通 API を追加する。
-
----
+> 方針: BoTorch のモデル挙動を維持しつつ、raw data の保持や `make_mll()` など robotorchan 共通 API を追加する。
 
 ## 1. このドキュメントの目的
 
-robotorchan には、通常の Gaussian Process だけでなく、混合変数、マルチタスク、Multi-Fidelity、高次元、Preference、構造化出力、階層探索空間、Contextual BO などに対応するモデルが含まれる。
+このドキュメントは「どのモデルを選ぶか」を判断するためのガイドです。実際の構築・学習・事後分布予測は、各モデルに対応する Jupyter Notebook を参照してください。
 
-このドキュメントでは各モデルについて、
+- モデル選択: この `docs/models.md`
+- 実行例: [`examples/notebooks/`](../examples/notebooks/)
+- Notebook 一覧: [`examples/README.md`](../examples/README.md)
+- 実装設計: [`docs/architecture.md`](architecture.md)
+- 正しさの検証: `tests/`
 
-- 何を表現するモデルか
-- どのようなデータに向いているか
-- どのような場面で使うべきか
-- 似たモデルとの使い分け
-- 主な注意点
+## 2. モデル選択早見表
 
-を整理する。
-
----
-
-# 2. まずどのモデルを選ぶか
-
-## 2.1 モデル選択早見表
-
-| 状況 | 第一候補 | コメント |
+| 状況 | 第一候補 | 実行例 |
 |---|---|---|
-| 通常の連続変数 + 単一目的 | `SingleTaskGP` | まずここから始める基本モデル |
-| 連続変数 + カテゴリ変数 | `MixedSingleTaskGP` | 材料種、装置種、製法などカテゴリを含む場合 |
-| 低精度/高精度データを併用 | `SingleTaskMultiFidelityGP` | シミュレーション精度や試験コストが複数段階ある場合 |
-| 複数タスクで情報共有したい | `MultiTaskGP` | タスクごとの観測点が異なっていても扱いやすい |
-| 全タスクを同じ X で測定 | `KroneckerMultiTaskGP` | block design のマルチタスク |
-| 出力ごとに独立モデルでよい | `ModelListGP` | 相関をモデル化しない複数出力 |
-| データ量が多く Exact GP が重い | `SingleTaskVariationalGP` | inducing point による近似 GP |
-| 「A と B のどちらが良いか」の比較データ | `PairwiseGP` | Preference / ranking 学習 |
-| 高次元・少数データ | `SaasFullyBayesianSingleTaskGP` | NUTS を使う本格 SAAS |
-| 高次元・高速寄り | `AdditiveMapSaasSingleTaskGP` / `EnsembleMapSaasSingleTaskGP` | MAP-SAAS 系 |
-| 外れ値や不要特徴の影響を抑えたい | `RobustRelevancePursuitSingleTaskGP` | relevance pursuit を利用 |
-| 高次元だが低次の加法構造を期待 | `OrthogonalAdditiveGP` | additive structure を仮定 |
-| 画像・曲線・テンソルなど構造化出力 | `HigherOrderGP` | tensor-valued output |
-| 時間/位置など潜在的な軸を持つ出力 | `LatentKroneckerGP` | `train_T` を別に持つ構造化出力 |
-| 条件によって有効変数が変わる | `HierarchicalConditionalKernelGP` | 階層・条件付き探索空間 |
-| 階層探索 + マルチタスク | `HierarchicalConditionalKernelMultiTaskGP` | 上記の multitask 版 |
-| タスクごとに X の構造が異なる | `HeterogeneousMTGP` | heterogeneous multitask |
-| Context ごとに入力を分解できる | `SACGP` | Structural Additive Contextual GP |
-| Context 間の潜在表現も学習したい | `LCEAGP` | latent context embedding + additive |
-| Context/Task を埋め込みで扱う multi-output | `LCEMGP` | latent context embedding multi-output |
+| 通常の連続変数 + 単一目的 | `SingleTaskGP` | [01](../examples/notebooks/01_single_task_gp.ipynb) |
+| 連続変数 + カテゴリ変数 | `MixedSingleTaskGP` | [02](../examples/notebooks/02_mixed_single_task_gp.ipynb) |
+| 低精度/高精度データを併用 | `SingleTaskMultiFidelityGP` | [03](../examples/notebooks/03_multi_fidelity_gp.ipynb) |
+| 複数タスクで情報共有 | `MultiTaskGP` | [04](../examples/notebooks/04_multitask_gp.ipynb) |
+| 全タスクを同じ X で測定 | `KroneckerMultiTaskGP` | [04](../examples/notebooks/04_multitask_gp.ipynb) |
+| 出力ごとに独立 GP | `ModelListGP` | [05](../examples/notebooks/05_model_list_gp.ipynb) |
+| Exact GP が重い大規模データ | `SingleTaskVariationalGP` | [06](../examples/notebooks/06_variational_gp.ipynb) |
+| 比較・選好データ | `PairwiseGP` | [07](../examples/notebooks/07_pairwise_gp.ipynb) |
+| 高次元・少数の有効変数 | `SaasFullyBayesianSingleTaskGP` | [08](../examples/notebooks/08_saas_gp.ipynb) |
+| 高次元・マルチタスク | `SaasFullyBayesianMultiTaskGP` | [08](../examples/notebooks/08_saas_gp.ipynb) |
+| 高次元・MAP-SAAS | `AdditiveMapSaasSingleTaskGP` / `EnsembleMapSaasSingleTaskGP` | [09](../examples/notebooks/09_map_saas_and_additive_gp.ipynb) |
+| 加法構造を仮定 | `OrthogonalAdditiveGP` | [09](../examples/notebooks/09_map_saas_and_additive_gp.ipynb) |
+| 外れ値の影響を抑えたい | `RobustRelevancePursuitSingleTaskGP` | [10](../examples/notebooks/10_robust_gp.ipynb) |
+| テンソル出力 | `HigherOrderGP` | [11](../examples/notebooks/11_structured_output_gp.ipynb) |
+| 時間・波長・位置など明示的な出力軸 | `LatentKroneckerGP` | [11](../examples/notebooks/11_structured_output_gp.ipynb) |
+| 条件によって有効変数が変わる | `HierarchicalConditionalKernelGP` | [12](../examples/notebooks/12_hierarchical_gp.ipynb) |
+| 階層探索 + マルチタスク | `HierarchicalConditionalKernelMultiTaskGP` | [12](../examples/notebooks/12_hierarchical_gp.ipynb) |
+| タスクごとに特徴量構造が異なる | `HeterogeneousMTGP` | [13](../examples/notebooks/13_heterogeneous_multitask_gp.ipynb) |
+| Context ごとの加法構造 | `SACGP` | [14](../examples/notebooks/14_contextual_gp.ipynb) |
+| Context 間の潜在関係を学習 | `LCEAGP` | [14](../examples/notebooks/14_contextual_gp.ipynb) |
+| Context / Task を multi-output として扱う | `LCEMGP` | [14](../examples/notebooks/14_contextual_gp.ipynb) |
 
----
+## 3. robotorchan 共通 API
 
-# 3. robotorchan 共通 API
-
-robotorchan の多くの supervised model wrapper は、BoTorch の予測挙動をそのまま利用しつつ、以下の共通情報を保持する。
+多くの supervised wrapper は、BoTorch のモデル機能に加えて次の情報を保持します。
 
 ```python
 model.raw_train_X
@@ -60,920 +49,245 @@ model.raw_train_Y
 model.raw_train_Yvar
 model.raw_data
 model.raw_data_names
-
 model.supports_mll
 model.make_mll()
 ```
 
-`raw_*` は **コンストラクタに渡した生データのスナップショット** である。
+`raw_*` は **コンストラクタへ渡したデータのスナップショット** です。`condition_on_observations()` や `fantasize()` 後の現在状態を表すものではありません。最新の学習状態は BoTorch の `train_inputs` / `train_targets` を参照してください。
 
-重要なのは、`condition_on_observations()` や `fantasize()` 後の最新学習状態を表すものではない点である。最新状態は BoTorch ネイティブの `train_inputs` や `train_targets` を参照する。
-
-基本的な Exact GP では以下の形で学習できる。
+Exact GP 系の基本的な学習は次の形です。
 
 ```python
 from botorch.fit import fit_gpytorch_mll
-from robotorchan.models import SingleTaskGP
 
-model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
 mll = model.make_mll()
 fit_gpytorch_mll(mll)
 ```
 
----
+モデルによっては学習方法が異なります。たとえば Variational GP は `VariationalELBO`、Fully Bayesian SAAS は NUTS を使います。
 
-# 4. 標準モデル
+## 4. 標準モデル
 
-## 4.1 `SingleTaskGP`
+### `SingleTaskGP`
 
-### 概要
+連続変数中心の単一タスク回帰に使う基本モデルです。迷った場合の最初のベースラインとして適しています。
 
-最も標準的な単一タスク GP。
+材料・製造では温度、圧力、時間、組成比、連続プロセス条件などを入力として性能を予測する通常の BO に向きます。
 
-### 向いているケース
+高次元で有効変数が少ない場合は SAAS 系も検討します。
 
-- 単一目的の回帰
-- 連続変数中心の Bayesian Optimization
-- データ数が数十〜数百程度
-- まずベースラインを作りたい場合
+**Notebook:** [01_single_task_gp.ipynb](../examples/notebooks/01_single_task_gp.ipynb)
 
-### 使い所
+### `MixedSingleTaskGP`
 
-robotorchan で迷った場合の第一候補。
+連続変数とカテゴリ変数が混在する探索空間向けです。装置種、製法、触媒種、材料種などをカテゴリ次元として明示できます。
 
-材料開発であれば、
+カテゴリ値を単純な連続値として `SingleTaskGP` に入れる代替ではありません。`cat_dims` を指定します。
 
-- 温度
-- 圧力
-- 時間
-- 組成比
-- 製造条件
+**Notebook:** [02_mixed_single_task_gp.ipynb](../examples/notebooks/02_mixed_single_task_gp.ipynb)
 
-などを連続変数として性能を予測する通常の BO に適する。
+## 5. Multi-Fidelity
 
-### 注意点
+### `SingleTaskMultiFidelityGP`
 
-高次元では ARD lengthscale の推定が難しくなりやすい。数十次元以上で有効変数が少ないと考えられる場合は SAAS 系を検討する。
+低 fidelity の安価な情報と高 fidelity の高精度情報を共有して学習します。シミュレーション精度、メッシュ解像度、簡易試験 / 実機試験などに向きます。
 
----
+低 fidelity と高 fidelity に相関があり、高 fidelity の評価コストが高いときに特に有効です。
 
-## 4.2 `MixedSingleTaskGP`
+**Notebook:** [03_multi_fidelity_gp.ipynb](../examples/notebooks/03_multi_fidelity_gp.ipynb)
 
-### 概要
+## 6. Multi-task / Multi-output
 
-連続変数とカテゴリ変数が混在する single-task GP。
+### `MultiTaskGP`
 
-### 向いているケース
+BoTorch の long-format 表現を使い、タスク間相関を学習します。タスクごとに異なる X で観測されていても扱えます。
 
-例えば次のような探索空間。
+装置、製品、測定方法などを「関連する別タスク」として情報共有したい場合に向きます。
 
-```text
-temperature : continuous
-pressure    : continuous
-material    : categorical
-machine     : categorical
-```
+**Notebook:** [04_multitask_gp.ipynb](../examples/notebooks/04_multitask_gp.ipynb)
 
-### 使い所
+### `KroneckerMultiTaskGP`
 
-- 装置番号
-- 原料種
-- 製法
-- 触媒種
-- 処理方式
-
-のようなカテゴリ条件を含む BO。
-
-### `SingleTaskGP` との違い
-
-カテゴリを単純な連続値として扱うのではなく、カテゴリ次元としてモデル化する。
-
-### 注意点
-
-カテゴリ値を「0, 1, 2」という連続変数として扱う SingleTaskGP の代替ではない。カテゴリ変数は `cat_dims` で明示する。
-
----
-
-# 5. Multi-Fidelity
-
-## 5.1 `SingleTaskMultiFidelityGP`
-
-### 概要
-
-異なる fidelity のデータをまとめて利用する Gaussian Process。
-
-fidelity は例えば、
-
-- シミュレーションの粗さ
-- 計算反復回数
-- メッシュ解像度
-- 実験の簡易測定 / 精密測定
-- 小型試験 / 実機試験
-
-などを表す。
-
-### 使い所
-
-高 fidelity の測定が高コストで、低 fidelity のデータを安く大量に取得できる場合。
+すべての X で全タスクが観測される block design 向けです。
 
 ```text
-low fidelity simulation
-        ↓
-medium fidelity simulation
-        ↓
-high fidelity experiment
+train_X: [n, d]
+train_Y: [n, m]
 ```
 
-の情報を共有しながら最適化する。
+同じ条件で複数特性を毎回測定する場合に適しています。
 
-### 主な指定
+**Notebook:** [04_multitask_gp.ipynb](../examples/notebooks/04_multitask_gp.ipynb)
 
-- `iteration_fidelity`
-- `data_fidelities`
+### `ModelListGP`
 
-### 通常 GP との違い
+独立した複数 GP を1つの BoTorch model としてまとめます。出力間共分散を学習する必要がない場合や、多目的 BO で目的ごとに別 GP を持つ場合に自然です。
 
-通常 GP は fidelity を単なる入力変数として扱うが、Multi-Fidelity GP は fidelity の構造をカーネル側で明示的に扱う。
+複数目的だから必ず `MultiTaskGP` にする必要はありません。
 
-### 注意点
+**Notebook:** [05_model_list_gp.ipynb](../examples/notebooks/05_model_list_gp.ipynb)
 
-「測定条件の一つとして fidelity 値がある」だけでは利用メリットが出ない。低 fidelity と高 fidelity の間に相関があることが前提。
+## 7. 大規模データ
 
----
+### `SingleTaskVariationalGP`
 
-# 6. Multi-task / Multi-output
+inducing point を使う近似 GP です。Exact GP の計算量がボトルネックになるデータ量で利用します。
 
-## 6.1 `MultiTaskGP`
+`make_mll()` は `VariationalELBO` を返し、minibatch 学習時は全データ件数を `num_data` として扱います。
 
-### 概要
+**Notebook:** [06_variational_gp.ipynb](../examples/notebooks/06_variational_gp.ipynb)
 
-複数タスク間の相関を学習する GP。
+## 8. Preference Learning
 
-BoTorch の long-format representation を使う。
+### `PairwiseGP`
 
-```text
-X1, task=0 -> y
-X2, task=0 -> y
-X3, task=1 -> y
-X4, task=2 -> y
-```
+絶対スコアではなく「A の方が B より良い」という比較データを学習します。官能評価、デザイン選好、ランキング、定量化しにくい品質評価などに向きます。
 
-### 向いているケース
+通常の `train_Y` ではなく `datapoints` と `comparisons` を使います。
 
-- 材料 A / B / C を別タスクと考える
-- 装置ごとのモデルを共有したい
-- 測定方法ごとの出力を関連付けたい
-- 低コスト評価と高コスト評価を「タスク」として扱いたい
+**Notebook:** [07_pairwise_gp.ipynb](../examples/notebooks/07_pairwise_gp.ipynb)
 
-### 強み
+## 9. 高次元モデル
 
-タスク間に相関があれば、データの少ないタスクが他タスクから情報を借りられる。
+### `SaasFullyBayesianSingleTaskGP`
 
-### 注意点
+SAAS prior と NUTS を使う fully Bayesian GP です。高次元空間で少数の次元のみが重要だと考えられる場合に強力です。
 
-単純に複数の目的変数があるから MultiTaskGP、というわけではない。
+計算コストは高く、`supports_mll=False` です。
 
-「同一現象を異なる task として共有できる」と考えられる場合に使う。
+**Notebook:** [08_saas_gp.ipynb](../examples/notebooks/08_saas_gp.ipynb)
 
----
+### `SaasFullyBayesianMultiTaskGP`
 
-## 6.2 `KroneckerMultiTaskGP`
+SAAS の multi-task 版です。高次元性とタスク間共有の両方を扱います。
 
-### 概要
+**Notebook:** [08_saas_gp.ipynb](../examples/notebooks/08_saas_gp.ipynb)
 
-すべての X で全タスクが観測される **block design** 向け MultiTask GP。
+### `AdditiveMapSaasSingleTaskGP`
 
-```python
-train_X.shape == [n, d]
-train_Y.shape == [n, m]
-```
+MAP 推定を使う SAAS 系モデルです。Fully Bayesian SAAS より軽量な高次元モデル候補です。
 
-### 向いているケース
+**Notebook:** [09_map_saas_and_additive_gp.ipynb](../examples/notebooks/09_map_saas_and_additive_gp.ipynb)
 
-各実験条件 X について、
+### `EnsembleMapSaasSingleTaskGP`
 
-```text
-property_A
-property_B
-property_C
-...
-```
+複数の MAP-SAAS 設定を ensemble として扱います。NUTS を避けつつ SAAS 的な高次元モデリングを行いたい場合に候補になります。
 
-を毎回すべて測定している場合。
+**Notebook:** [09_map_saas_and_additive_gp.ipynb](../examples/notebooks/09_map_saas_and_additive_gp.ipynb)
 
-### `MultiTaskGP` との使い分け
+### `OrthogonalAdditiveGP`
 
-| | `MultiTaskGP` | `KroneckerMultiTaskGP` |
-|---|---|---|
-| 入力形式 | long format | block design |
-| 全タスク同じ X 必須 | No | Yes |
-| 欠測タスク | 扱いやすい | 基本的に block design 前提 |
-| タスク数が多い | 可 | Kronecker 構造が有効な場合あり |
+1次・低次の加法構造を仮定する高次元 GP です。目的関数が少数変数の加法的な寄与で近似できると考えられる場合に向きます。
 
-**全タスクが同じ X で観測されているなら `KroneckerMultiTaskGP` を検討する。**
+**Notebook:** [09_map_saas_and_additive_gp.ipynb](../examples/notebooks/09_map_saas_and_additive_gp.ipynb)
 
----
+### `RobustRelevancePursuitSingleTaskGP`
 
-## 6.3 `ModelListGP`
+少数の異常観測や強い外れ値の影響を抑えたい場合の robust GP です。
 
-### 概要
+外れ値に見えるデータが実際には別レジームなら、階層・タスク・混合モデルの方が適切なことがあります。
 
-複数の独立 GP を一つの BoTorch Model としてまとめるコンテナ。
+**Notebook:** [10_robust_gp.ipynb](../examples/notebooks/10_robust_gp.ipynb)
 
-### 向いているケース
+## 10. 構造化出力
 
-複数出力があるが、出力間相関をモデル化する必要がない場合。
+### `HigherOrderGP`
 
-例えば、
+画像、スペクトルグリッド、空間分布など tensor-valued output を直接扱うモデルです。
 
-```text
-strength -> GP1
-cost     -> GP2
-density  -> GP3
-```
+出力テンソルの各軸そのものに構造的意味がある場合に向きます。
 
-### MultiTaskGP との違い
+**Notebook:** [11_structured_output_gp.ipynb](../examples/notebooks/11_structured_output_gp.ipynb)
 
-`ModelListGP` は原則として各モデルが独立。
+### `LatentKroneckerGP`
 
-`MultiTaskGP` は task covariance を通じて情報共有する。
+入力 `X` に加えて、時間・波長・位置などの出力座標 `T` を明示的に扱います。robotorchan は `raw_train_T` も保持します。
 
-### Multi-objective BO では
+新しい `T` グリッドで補間・予測したい場合に特に自然です。
 
-まず `ModelListGP` を使う構成は非常に自然。
+**Notebook:** [11_structured_output_gp.ipynb](../examples/notebooks/11_structured_output_gp.ipynb)
 
-複数目的だから必ず multitask にする必要はない。
+## 11. 階層・条件付き探索空間
 
----
+### `HierarchicalConditionalKernelGP`
 
-# 7. 大規模データ
-
-## 7.1 `SingleTaskVariationalGP`
-
-### 概要
-
-inducing points を用いる variational GP。
-
-Exact GP の計算量が問題になるデータ量で利用する。
-
-### 向いているケース
-
-- 数千点以上のデータ
-- Exact GP の学習が重い
-- minibatch 学習を行いたい
-
-### 学習
-
-Exact GP の `ExactMarginalLogLikelihood` ではなく `VariationalELBO` を使用する。
-
-```python
-model = SingleTaskVariationalGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    inducing_points=40,
-)
-
-mll = model.make_mll()
-```
-
-minibatch の場合は、`num_data` に全データ件数を指定する。
-
-### 注意点
-
-データが数十点程度なら Exact GP の方が単純かつ有力なことが多い。
-
----
-
-# 8. Preference Learning
-
-## 8.1 `PairwiseGP`
-
-### 概要
-
-絶対値の目的値ではなく「どちらが好ましいか」という pairwise comparison を学習する。
-
-```text
-A > B
-C > D
-A > D
-```
-
-### 向いているケース
-
-- 人間の官能評価
-- デザイン評価
-- 見た目の好み
-- 定量スコア化しにくい品質
-- A/B comparison
-
-### データ
-
-通常の `train_Y` ではなく、
-
-- `datapoints`
-- `comparisons`
-
-を使う。
-
-### 注意点
-
-比較結果を 0/1 の通常回帰に変換して `SingleTaskGP` に入れる問題ではない。
-
----
-
-# 9. 高次元モデル
-
-## 9.1 `SaasFullyBayesianSingleTaskGP`
-
-### 概要
-
-SAAS prior を使う fully Bayesian GP。
-
-高次元空間の中で、本当に効いている変数が少数という sparse な構造を仮定する。
-
-### 向いているケース
-
-例えば、
-
-```text
-入力 50 次元
-実際に重要なのは 3〜8 変数程度
-データ 30〜100 点
-```
-
-のような場合。
-
-### 強み
-
-高次元少数データの BO で非常に有力。
-
-### 注意点
-
-NUTS / NumPyro による fully Bayesian fitting のため、通常 GP よりかなり重い。
-
-`make_mll()` は使わず、
-
-```python
-from botorch.fit import fit_fully_bayesian_model_nuts
-fit_fully_bayesian_model_nuts(model)
-```
-
-を使う。
-
----
-
-## 9.2 `SaasFullyBayesianMultiTaskGP`
-
-### 概要
-
-上記 SAAS の multitask 版。
-
-### 使い所
-
-- 高次元
-- 少数データ
-- 複数タスク
-- タスク間情報共有
-
-を同時に扱いたい場合。
-
-### 注意点
-
-モデル・推論ともにかなり重い。必要性が明確な場合に選ぶ。
-
----
-
-## 9.3 `AdditiveMapSaasSingleTaskGP`
-
-### 概要
-
-SAAS 的な shrinkage を MAP 推定で扱う高速寄りのモデル。
-
-### 向いているケース
-
-Fully Bayesian SAAS を使いたいが NUTS が重すぎる場合。
-
-### 特徴
-
-- SAAS の高次元適応性を狙う
-- Fully Bayesian より計算を抑えやすい
-- `num_taus` で複数の shrinkage scale を利用
-
----
-
-## 9.4 `EnsembleMapSaasSingleTaskGP`
-
-### 概要
-
-複数の MAP-SAAS モデルを ensemble 的に扱うモデル。
-
-### 使い所
-
-単一 MAP 解だけでは不安定な場合に、複数の shrinkage scale を組み合わせたい場合。
-
-### ざっくりした選択
-
-```text
-高速性優先
-    ↓
-AdditiveMapSaas
-    ↓
-EnsembleMapSaas
-    ↓
-Fully Bayesian SAAS
-精密な不確実性優先
-```
-
----
-
-## 9.5 `OrthogonalAdditiveGP`
-
-### 概要
-
-目的関数が各変数や低次相互作用の「和」で近似できるという additive structure を利用する GP。
-
-概念的には、
-
-```text
-f(x) ≈ f1(x1) + f2(x2) + ... + fij(xi, xj)
-```
-
-のような構造を仮定する。
-
-### 向いているケース
-
-- 入力次元が多い
-- ただし複雑な高次相互作用は少ない
-- 各因子の寄与を足し合わせる構造が期待できる
-
-### `second_order=True`
-
-二変数相互作用まで含めたい場合。
-
-### 注意点
-
-目的関数に強い高次相互作用がある場合は additive assumption が合わない。
-
----
-
-## 9.6 `RobustRelevancePursuitSingleTaskGP`
-
-### 概要
-
-Relevance Pursuit を利用する robust GP。
-
-### 向いているケース
-
-- 一部観測が異常
-- 外れ値的な挙動がある
-- 通常 GP が少数点に引きずられやすい
-
-### 注意点
-
-単なる「高次元用モデル」として選ぶのではなく、robustness / relevance selection が必要なデータで使う。
-
----
-
-# 10. 構造化出力
-
-## 10.1 `HigherOrderGP`
-
-### 概要
-
-出力が scalar ではなくテンソル構造を持つ場合の GP。
-
-例えば、
-
-- 画像
-- 2D map
-- スペクトル
-- 時系列曲線
-- 空間分布
-
-など。
-
-### 例
-
-```python
-train_X.shape == [n, d]
-train_Y.shape == [n, h, w]
-```
-
-### 使い所
-
-各 X に対して、単一の値ではなく「構造全体」を予測したい場合。
-
-### 注意点
-
-単純に出力数が数個あるだけなら `ModelListGP` や multitask の方が扱いやすい場合が多い。
-
----
-
-## 10.2 `LatentKroneckerGP`
-
-### 概要
-
-入力 `X` に加えて、出力側の座標 `T` を明示的に持つ構造化 GP。
-
-```text
-X : 実験条件
-T : 時間 / 波長 / 空間座標
-Y : X × T 上の応答
-```
-
-### 向いているケース
-
-- スペクトル
-- 時系列
-- 温度プロファイル
-- 波長依存特性
-- 位置依存応答
-
-### `HigherOrderGP` との違い
-
-`LatentKroneckerGP` では、出力軸に意味のある座標 `train_T` が存在する。
-
-単なるテンソル形状だけでなく、時間・波長・位置などの連続構造を利用したい場合に有力。
-
----
-
-# 11. 階層・条件付き探索空間
-
-## 11.1 `HierarchicalConditionalKernelGP`
-
-### 概要
-
-ある変数の値によって、別の変数が「有効 / 無効」になる hierarchical search space 用 GP。
-
-### 例
-
-```text
-process = "heat"
-    ├─ temperature
-    └─ heating_time
-
-process = "press"
-    ├─ pressure
-    └─ holding_time
-```
-
-`process=heat` のとき pressure は意味を持たない。
-
-### 向いているケース
-
-- アルゴリズム選択 + ハイパーパラメータ
-- 製法選択 + 製法固有条件
-- 材料種選択 + 材料固有条件
-
-### 強み
-
-無効な変数を通常の GP に無理やり入力するより、探索空間の条件構造を明示できる。
-
----
-
-## 11.2 `HierarchicalConditionalKernelMultiTaskGP`
-
-### 概要
-
-Hierarchical Conditional Kernel と MultiTask GP を組み合わせたもの。
-
-### 向いているケース
-
-- 条件付き探索空間
-- 複数タスク
-- タスク間で情報共有
-
-が同時に必要な場合。
-
----
-
-# 12. Heterogeneous Multi-task
-
-## 12.1 `HeterogeneousMTGP`
-
-### 概要
-
-タスクごとに異なる入力データ集合を持つ heterogeneous multitask GP。
-
-通常の multitask では共通 feature space を前提とすることが多いが、このモデルは task-specific input structure を扱う。
-
-### 向いているケース
-
-例えば、
-
-```text
-Task A: process conditions
-Task B: composition descriptors
-Task C: measurement descriptors
-```
-
-のようにタスクごとのデータ構造が均一でない場合。
-
-### 注意点
-
-通常の `MultiTaskGP` で表現できる問題なら、まずそちらを使う方が単純。
-
----
-
-# 13. Contextual GP
-
-## 13.1 `SACGP`
-
-### 概要
-
-Structural Additive Contextual GP。
-
-入力を context ごとの部分構造に分解し、加法的にモデル化する。
-
-### 向いているケース
-
-複数 context があり、それぞれの context に対応する入力部分が明確な場合。
-
-例えば、
-
-```text
-炉1 context -> 炉1の条件
-炉2 context -> 炉2の条件
-炉3 context -> 炉3の条件
-```
-
-### 必要情報
-
-`decomposition` で context と入力次元の対応を指定する。
-
----
-
-## 13.2 `LCEAGP`
-
-### 概要
-
-Latent Context Embedding Additive GP。
-
-SACGP の context structure に加えて、context 自体の latent embedding を学習する。
-
-### 向いているケース
-
-context 間に似た構造があり、それを低次元 embedding で共有したい場合。
+親変数の値によって有効になる子変数が変わる探索空間向けです。
 
 例:
+- 装置方式 A では温度が有効
+- 装置方式 B では圧力が有効
 
-- 複数装置
-- 複数ライン
-- 複数材料系
-- 複数プロセス
+通常の mixed model では表しにくい「条件付きで存在する変数」を扱えます。
 
-### SACGP との違い
+**Notebook:** [12_hierarchical_gp.ipynb](../examples/notebooks/12_hierarchical_gp.ipynb)
 
-SACGP:
-- context の構造を明示
+### `HierarchicalConditionalKernelMultiTaskGP`
 
-LCEAGP:
-- context 間の類似性を embedding としてさらに学習
+上記に task covariance を加えた multi-task 版です。
 
----
+**Notebook:** [12_hierarchical_gp.ipynb](../examples/notebooks/12_hierarchical_gp.ipynb)
 
-## 13.3 `LCEMGP`
+## 12. Heterogeneous Multi-task
 
-### 概要
+### `HeterogeneousMTGP`
 
-Latent Context Embedding Multi-output GP。
+タスクごとに入力特徴量の構成が異なる場合に使います。
 
-task / output の context 情報を埋め込みとして利用する multi-output GP。
+各タスクで別々の `train_Xs` / `train_Ys` を持ち、`feature_indices` で共通の full feature space へ対応付けます。
 
-### 向いているケース
+**Notebook:** [13_heterogeneous_multitask_gp.ipynb](../examples/notebooks/13_heterogeneous_multitask_gp.ipynb)
 
-複数出力・複数タスクに対して、
+## 13. Contextual GP
 
-- categorical context feature
-- continuous embedding feature
+### `SACGP`
 
-などを持たせたい場合。
+入力を context ごとの成分へ分解し、構造的な加法関係を利用する Contextual GP です。
 
-### 使い所
+**Notebook:** [14_contextual_gp.ipynb](../examples/notebooks/14_contextual_gp.ipynb)
 
-単純な task index だけでなく、「タスク間のメタ情報」がある場合に特に有効。
+### `LCEAGP`
 
----
+context の潜在 embedding を学習し、context 間の関係もモデル化する additive contextual GP です。
 
-# 14. 特に重要な使い分け
+**Notebook:** [14_contextual_gp.ipynb](../examples/notebooks/14_contextual_gp.ipynb)
 
-## 14.1 複数出力だから何を使うか
+### `LCEMGP`
 
-```text
-複数出力
-│
-├─ 出力間の相関を利用しない
-│      └─ ModelListGP
-│
-├─ タスクとして相関を利用する
-│      │
-│      ├─ X がタスクごとに異なる
-│      │      └─ MultiTaskGP
-│      │
-│      └─ 全タスクを同じ X で観測
-│             └─ KroneckerMultiTaskGP
-│
-├─ 出力が画像・曲線・tensor
-│      └─ HigherOrderGP
-│
-└─ 出力軸に時間/波長/位置の座標がある
-       └─ LatentKroneckerGP
-```
+context / task を multi-output として扱い、context 特徴量や embedding を通じて出力間関係を学習します。
 
----
+`SACGP` / `LCEAGP` が集約報酬を扱う contextual model であるのに対し、`LCEMGP` は context 別出力を観測できる場合に向きます。
 
-## 14.2 高次元なら何を使うか
+**Notebook:** [14_contextual_gp.ipynb](../examples/notebooks/14_contextual_gp.ipynb)
 
-```text
-高次元
-│
-├─ 有効変数が少数と考えられる
-│      ├─ 精度・Bayesian inference 重視
-│      │      └─ SaasFullyBayesianSingleTaskGP
-│      │
-│      └─ 計算速度重視
-│             └─ MAP-SAAS
-│
-├─ 加法構造が期待できる
-│      └─ OrthogonalAdditiveGP
-│
-└─ 特別な仮定がない
-       └─ SingleTaskGP を baseline にして比較
-```
+## 14. 実務的な選び方
 
-「高次元だから SAAS」と決め打ちするのではなく、まず `SingleTaskGP` を baseline として比較するのが望ましい。
+1. まず `SingleTaskGP` をベースラインにする。
+2. カテゴリがあるなら `MixedSingleTaskGP`。
+3. 明確な fidelity があるなら `SingleTaskMultiFidelityGP`。
+4. 関連タスク間で情報共有したいなら `MultiTaskGP` / `KroneckerMultiTaskGP`。
+5. 複数目的を独立に学習するなら `ModelListGP`。
+6. データ量が大きければ `SingleTaskVariationalGP`。
+7. 高次元・少数有効変数なら SAAS / MAP-SAAS。
+8. 出力がスペクトル・画像・時系列なら structured-output GP。
+9. 条件によって変数の有効/無効が変わるなら hierarchical GP。
+10. task ごとに特徴量構造が異なるなら `HeterogeneousMTGP`。
+11. 明示的な context 構造があるときだけ contextual GP を選ぶ。
 
----
+モデルの特殊性が高いほど、「使えるから選ぶ」のではなく、そのモデルが仮定するデータ構造が実問題に一致しているかを優先してください。
 
-## 14.3 Multi-Fidelity と MultiTask の違い
+## 15. 全Notebook一覧
 
-### Multi-Fidelity
-
-```text
-同じ物理量を
-安い近似 → 高精度評価
-として測る
-```
-
-→ `SingleTaskMultiFidelityGP`
-
-### MultiTask
-
-```text
-異なる task 間の相関を利用する
-```
-
-→ `MultiTaskGP`
-
-低 fidelity / 高 fidelity を task として表現することも可能だが、fidelity 固有の構造を利用したいなら Multi-Fidelity GP が第一候補。
-
----
-
-# 15. robotorchan での推奨モデル選択フロー
-
-```text
-START
-  │
-  ├─ Preference data?
-  │      └─ Yes → PairwiseGP
-  │
-  ├─ Structured output?
-  │      ├─ tensor → HigherOrderGP
-  │      └─ time/wavelength/location axis → LatentKroneckerGP
-  │
-  ├─ Hierarchical search space?
-  │      └─ Yes → HierarchicalConditionalKernelGP
-  │
-  ├─ Multi-fidelity?
-  │      └─ Yes → SingleTaskMultiFidelityGP
-  │
-  ├─ Multiple tasks / outputs?
-  │      ├─ independent → ModelListGP
-  │      ├─ same X for every task → KroneckerMultiTaskGP
-  │      └─ otherwise → MultiTaskGP
-  │
-  ├─ Categorical inputs?
-  │      └─ Yes → MixedSingleTaskGP
-  │
-  ├─ Very high-dimensional?
-  │      ├─ sparse relevance → SAAS / MAP-SAAS
-  │      └─ additive structure → OrthogonalAdditiveGP
-  │
-  ├─ Large dataset?
-  │      └─ Yes → SingleTaskVariationalGP
-  │
-  └─ Otherwise
-         └─ SingleTaskGP
-```
-
----
-
-# 16. 実務上の推奨優先順位
-
-特殊モデルを最初から使うより、次の順序で比較する方がよい。
-
-1. `SingleTaskGP` を baseline にする
-2. 入力構造に明確な理由がある場合だけ specialized model を使う
-3. cross-validation / predictive likelihood / BO performance で比較する
-4. モデルが複雑になることで得られる改善が実際にあるか確認する
-
-特に、
-
-- SAAS
-- hierarchical GP
-- contextual GP
-- heterogeneous multitask
-- structured output GP
-
-は強力だが、問題設定そのものが対応する構造を持つ場合に使うモデルである。
-
----
-
-# 17. 現在の public model 一覧
-
-```python
-from robotorchan.models import (
-    SingleTaskGP,
-    MixedSingleTaskGP,
-    SingleTaskMultiFidelityGP,
-    MultiTaskGP,
-    KroneckerMultiTaskGP,
-    ModelListGP,
-    SingleTaskVariationalGP,
-    PairwiseGP,
-    SaasFullyBayesianSingleTaskGP,
-    SaasFullyBayesianMultiTaskGP,
-    HigherOrderGP,
-    LatentKroneckerGP,
-    OrthogonalAdditiveGP,
-    AdditiveMapSaasSingleTaskGP,
-    EnsembleMapSaasSingleTaskGP,
-    RobustRelevancePursuitSingleTaskGP,
-    HierarchicalConditionalKernelGP,
-    HierarchicalConditionalKernelMultiTaskGP,
-    HeterogeneousMTGP,
-    SACGP,
-    LCEAGP,
-    LCEMGP,
-)
-```
-
----
-
-# 18. モデルカテゴリまとめ
-
-| カテゴリ | モデル |
-|---|---|
-| Standard GP | `SingleTaskGP` |
-| Mixed variable | `MixedSingleTaskGP` |
-| Multi-Fidelity | `SingleTaskMultiFidelityGP` |
-| Multi-task | `MultiTaskGP`, `KroneckerMultiTaskGP` |
-| Independent multi-output | `ModelListGP` |
-| Approximate / scalable GP | `SingleTaskVariationalGP` |
-| Preference | `PairwiseGP` |
-| Fully Bayesian / high-dimensional | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` |
-| MAP-SAAS | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP` |
-| Additive | `OrthogonalAdditiveGP` |
-| Robust | `RobustRelevancePursuitSingleTaskGP` |
-| Structured output | `HigherOrderGP`, `LatentKroneckerGP` |
-| Hierarchical | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` |
-| Heterogeneous multitask | `HeterogeneousMTGP` |
-| Contextual | `SACGP`, `LCEAGP`, `LCEMGP` |
-
----
-
-# 19. 設計上のポイント
-
-robotorchan の model layer は「BoTorch とは別の GP ライブラリ」を作ることを目的としていない。
-
-基本方針は、
-
-```text
-BoTorch model
-    +
-robotorchan 共通 API
-```
-
-である。
-
-そのため、
-
-- posterior
-- covariance
-- input / outcome transform
-- conditioning
-- fantasize
-- model-specific numerical behavior
-
-などは可能な限り BoTorch に委譲する。
-
-robotorchan 側では主に、
-
-- raw data retention
-- `supports_mll`
-- `make_mll()`
-- 一貫した public API
-
-を提供する。
-
-この構造により、BoTorch の acquisition function や optimizer と自然に組み合わせられることを重視している。
+1. [SingleTaskGP](../examples/notebooks/01_single_task_gp.ipynb)
+2. [MixedSingleTaskGP](../examples/notebooks/02_mixed_single_task_gp.ipynb)
+3. [SingleTaskMultiFidelityGP](../examples/notebooks/03_multi_fidelity_gp.ipynb)
+4. [MultiTaskGP / KroneckerMultiTaskGP](../examples/notebooks/04_multitask_gp.ipynb)
+5. [ModelListGP](../examples/notebooks/05_model_list_gp.ipynb)
+6. [SingleTaskVariationalGP](../examples/notebooks/06_variational_gp.ipynb)
+7. [PairwiseGP](../examples/notebooks/07_pairwise_gp.ipynb)
+8. [Fully Bayesian SAAS](../examples/notebooks/08_saas_gp.ipynb)
+9. [MAP-SAAS / OrthogonalAdditiveGP](../examples/notebooks/09_map_saas_and_additive_gp.ipynb)
+10. [RobustRelevancePursuitSingleTaskGP](../examples/notebooks/10_robust_gp.ipynb)
+11. [HigherOrderGP / LatentKroneckerGP](../examples/notebooks/11_structured_output_gp.ipynb)
+12. [Hierarchical GP](../examples/notebooks/12_hierarchical_gp.ipynb)
+13. [HeterogeneousMTGP](../examples/notebooks/13_heterogeneous_multitask_gp.ipynb)
+14. [Contextual GP](../examples/notebooks/14_contextual_gp.ipynb)
