@@ -15,10 +15,15 @@ class UnsupportedModelOperationError(RuntimeError):
 class RawDataMixin:
     """Provide provenance snapshots for caller-supplied raw tensors.
 
-    Raw tensors are detached, cloned, and registered as buffers. They represent
-    the tensors supplied to the wrapper constructor before BoTorch transforms or
-    preprocessing. They are intentionally not rewritten by later model-update
-    operations such as ``condition_on_observations`` or ``fantasize``.
+    Raw tensors are detached, cloned, and registered as non-persistent buffers.
+    They therefore follow model device / dtype changes, but are intentionally
+    excluded from ``state_dict`` so that BoTorch-internal model cloning and
+    parameter loading are not affected by robotorchan-only provenance data.
+
+    The snapshots represent tensors supplied to the wrapper constructor before
+    BoTorch transforms or preprocessing. They are intentionally not rewritten by
+    later model-update operations such as ``condition_on_observations`` or
+    ``fantasize``.
 
     This keeps provenance separate from BoTorch's current training state. Use
     native BoTorch attributes such as ``train_inputs`` and ``train_targets``
@@ -51,7 +56,7 @@ class RawDataMixin:
         if buffer_name in buffers:
             setattr(self, buffer_name, value)
         else:
-            self.register_buffer(buffer_name, value)
+            self.register_buffer(buffer_name, value, persistent=False)
 
         names = list(getattr(self, "_raw_data_names", ()))
         if name not in names:
