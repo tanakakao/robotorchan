@@ -79,7 +79,7 @@ def test_saas_multi_task_rejects_mll_training() -> None:
         model.make_mll()
 
 
-def test_saas_multi_task_raw_buffers_follow_dtype_and_serialize() -> None:
+def test_saas_multi_task_raw_buffers_follow_dtype_and_are_non_persistent() -> None:
     train_X, train_Y, train_Yvar = _training_data()
     model = SaasFullyBayesianMultiTaskGP(
         train_X=train_X,
@@ -91,9 +91,9 @@ def test_saas_multi_task_raw_buffers_follow_dtype_and_serialize() -> None:
     state_dict = model.state_dict()
     model = model.to(dtype=torch.float32)
 
-    assert "_raw_train_X" in state_dict
-    assert "_raw_train_Y" in state_dict
-    assert "_raw_train_Yvar" in state_dict
+    assert "_raw_train_X" not in state_dict
+    assert "_raw_train_Y" not in state_dict
+    assert "_raw_train_Yvar" not in state_dict
     assert model.raw_train_X.dtype == torch.float32
     assert model.raw_train_Y.dtype == torch.float32
     assert model.raw_train_Yvar.dtype == torch.float32

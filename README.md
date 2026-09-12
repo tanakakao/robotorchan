@@ -6,13 +6,16 @@
 
 ## ドキュメント
 
-最初に見る場所は次の3つです。
+最初に見る場所は次の4つです。
 
+- **理論から理解する:** [`docs/theory/README.md`](docs/theory/README.md)
 - **どのモデルを選ぶか:** [`docs/models.md`](docs/models.md)
 - **実際にどう使うか:** [`examples/README.md`](examples/README.md)
 - **設計方針・内部構造:** [`docs/architecture.md`](docs/architecture.md)
 
 モデルごとの実行可能な Jupyter Notebook は [`examples/notebooks/`](examples/notebooks/) にあります。
+
+ベイズ最適化を初めて学ぶ場合は、[`ベイズ最適化とは`](docs/theory/01_bayesian_optimization.md) → [`Gaussian Process`](docs/theory/02_gaussian_process.md) → [`Kernel`](docs/theory/03_kernel.md) の順に読むことを推奨します。
 
 ## インストール
 
@@ -44,10 +47,7 @@ from robotorchan.models import SingleTaskGP
 torch.set_default_dtype(torch.double)
 
 train_X = torch.rand(20, 2)
-train_Y = (
-    torch.sin(2 * torch.pi * train_X[:, :1])
-    + 0.2 * train_X[:, 1:2]
-)
+train_Y = torch.sin(2 * torch.pi * train_X[:, :1]) + 0.2 * train_X[:, 1:2]
 
 model = SingleTaskGP(
     train_X=train_X,
