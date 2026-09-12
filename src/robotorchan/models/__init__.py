@@ -22,6 +22,13 @@ from robotorchan.models.model_list import ModelListGP
 from robotorchan.models.multi_fidelity import SingleTaskMultiFidelityGP
 from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.pairwise import PairwiseGP
+from robotorchan.models.reduction import (
+    InputReducer,
+    OutputReducer,
+    ReducerNotFittedError,
+    ReductionMixin,
+    TensorReducer,
+)
 from robotorchan.models.robust import RobustRelevancePursuitSingleTaskGP
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
 from robotorchan.models.variational import SingleTaskVariationalGP
@@ -36,18 +43,23 @@ __all__ = [
     "HierarchicalConditionalKernelGP",
     "HierarchicalConditionalKernelMultiTaskGP",
     "HigherOrderGP",
+    "InputReducer",
     "KroneckerMultiTaskGP",
     "LatentKroneckerGP",
     "MixedSingleTaskGP",
     "ModelListGP",
     "MultiTaskGP",
     "OrthogonalAdditiveGP",
+    "OutputReducer",
     "PairwiseGP",
+    "ReducerNotFittedError",
+    "ReductionMixin",
     "RobustRelevancePursuitSingleTaskGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
     "SingleTaskGP",
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
+    "TensorReducer",
     "UnsupportedModelOperationError",
 ]
