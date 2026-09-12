@@ -93,15 +93,15 @@ def test_pairwise_gp_make_mll() -> None:
     assert mll.likelihood is model.likelihood
 
 
-def test_pairwise_gp_raw_buffers_follow_dtype_and_serialize() -> None:
+def test_pairwise_gp_raw_buffers_follow_dtype_and_are_non_persistent() -> None:
     datapoints, comparisons = _preference_data()
     model = PairwiseGP(datapoints=datapoints, comparisons=comparisons)
 
     state_dict = model.state_dict()
     model = model.to(dtype=torch.float32)
 
-    assert "_raw_datapoints" in state_dict
-    assert "_raw_comparisons" in state_dict
+    assert "_raw_datapoints" not in state_dict
+    assert "_raw_comparisons" not in state_dict
     assert model.raw_datapoints.dtype == torch.float32
     assert model.raw_comparisons.dtype == torch.long
 
