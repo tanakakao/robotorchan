@@ -34,7 +34,10 @@ from robotorchan.models.multitask import (
     MultiTaskGP,
 )
 from robotorchan.models.pairwise import PairwiseGP
-from robotorchan.models.robust import RobustRelevancePursuitSingleTaskGP
+from robotorchan.models.robust import (
+    MixedRobustRelevancePursuitSingleTaskGP,
+    RobustRelevancePursuitSingleTaskGP,
+)
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
 from robotorchan.models.variational import MixedSingleTaskVariationalGP, SingleTaskVariationalGP
 
@@ -54,6 +57,7 @@ __all__ = [
     "MixedEnsembleMapSaasSingleTaskGP",
     "MixedKroneckerMultiTaskGP",
     "MixedMultiTaskGP",
+    "MixedRobustRelevancePursuitSingleTaskGP",
     "MixedSaasFullyBayesianMultiTaskGP",
     "MixedSaasFullyBayesianSingleTaskGP",
     "MixedSingleTaskGP",
