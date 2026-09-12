@@ -2,7 +2,7 @@
 
 from robotorchan.models.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
 from robotorchan.models.base import UnsupportedModelOperationError
-from robotorchan.models.contextual import LCEAGP, LCEMGP, MixedLCEMGP, SACGP
+from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
 from robotorchan.models.fully_bayesian import (
     MixedSaasFullyBayesianMultiTaskGP,
     MixedSaasFullyBayesianSingleTaskGP,
@@ -44,10 +44,6 @@ from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
 from robotorchan.models.variational import MixedSingleTaskVariationalGP, SingleTaskVariationalGP
 
 __all__ = [
-    "LCEAGP",
-    "LCEMGP",
-    "MixedLCEMGP",
-    "SACGP",
     "AdditiveMapSaasSingleTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "HeterogeneousMTGP",
@@ -55,6 +51,8 @@ __all__ = [
     "HierarchicalConditionalKernelMultiTaskGP",
     "HigherOrderGP",
     "KroneckerMultiTaskGP",
+    "LCEAGP",
+    "LCEMGP",
     "LatentKroneckerGP",
     "MixedAdditiveMapSaasSingleTaskGP",
     "MixedEnsembleMapSaasSingleTaskGP",
@@ -63,6 +61,7 @@ __all__ = [
     "MixedHierarchicalConditionalKernelMultiTaskGP",
     "MixedHigherOrderGP",
     "MixedKroneckerMultiTaskGP",
+    "MixedLCEMGP",
     "MixedLatentKroneckerGP",
     "MixedMultiTaskGP",
     "MixedOrthogonalAdditiveGP",
@@ -77,6 +76,7 @@ __all__ = [
     "OrthogonalAdditiveGP",
     "PairwiseGP",
     "RobustRelevancePursuitSingleTaskGP",
+    "SACGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
     "SingleTaskGP",
