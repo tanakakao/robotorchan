@@ -14,11 +14,7 @@ from robotorchan.models.reduction import (
 def _training_data() -> tuple[torch.Tensor, torch.Tensor]:
     torch.manual_seed(7)
     train_X = torch.randn(18, 6, dtype=torch.double)
-    train_Y = (
-        1.5 * train_X[:, :1]
-        - 0.7 * train_X[:, 1:2]
-        + 0.2 * train_X[:, 2:3].square()
-    )
+    train_Y = 1.5 * train_X[:, :1] - 0.7 * train_X[:, 1:2] + 0.2 * train_X[:, 2:3].square()
     return train_X, train_Y
 
 
