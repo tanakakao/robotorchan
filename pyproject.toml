@@ -11,9 +11,17 @@ requires-python = ">=3.11"
 authors = [
   { name = "tanakakao" },
 ]
+keywords = [
+  "active-learning",
+  "bayesian-optimization",
+  "botorch",
+  "gaussian-process",
+  "machine-learning",
+]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -41,6 +49,8 @@ dev = [
 ]
 
 [project.urls]
+Homepage = "https://github.com/tanakakao/robotorchan"
+Documentation = "https://github.com/tanakakao/robotorchan/tree/main/docs"
 Repository = "https://github.com/tanakakao/robotorchan"
 Issues = "https://github.com/tanakakao/robotorchan/issues"
 
