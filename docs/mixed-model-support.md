@@ -21,6 +21,9 @@ Internal one-hot encoding is a compatibility fallback for model families whose c
 | Heterogeneous MTGP | Native categorical/mixed kernels inside conditional feature subsets | `MixedHeterogeneousMTGP` |
 | Higher-order GP | Native mixed kernel on design-input factor | `MixedHigherOrderGP` |
 | Orthogonal additive GP | Internal one-hot fallback | `MixedOrthogonalAdditiveGP` |
+| LCE-M contextual multi-output GP | Native mixed kernel on non-task design features | `MixedLCEMGP` |
+| Hierarchical conditional GP | Native categorical/mixed kernels inside active hierarchical blocks | `MixedHierarchicalConditionalKernelGP` |
+| Hierarchical conditional multi-task GP | Native categorical/mixed data kernel + task covariance | `MixedHierarchicalConditionalKernelMultiTaskGP` |
 | Variational single-task GP | Native mixed kernel | `MixedSingleTaskVariationalGP` |
 | Single-task multi-fidelity GP | Native mixed design kernel + BoTorch fidelity kernels | `MixedSingleTaskMultiFidelityGP` |
 | Robust relevance-pursuit single-task GP | Native mixed kernel + robust outlier likelihood | `MixedRobustRelevancePursuitSingleTaskGP` |
@@ -32,21 +35,7 @@ Internal one-hot encoding is a compatibility fallback for model families whose c
 
 ## Internal one-hot behavior
 
-Mixed wrappers that use the fallback path still expose raw categorical columns to callers:
-
-```python
-from robotorchan.models import MixedSaasFullyBayesianSingleTaskGP
-
-model = MixedSaasFullyBayesianSingleTaskGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    cat_dims=[1, 3],
-)
-
-posterior = model.posterior(raw_mixed_X)
-```
-
-The model owns the category vocabulary and encoded representation. The original caller tensor remains available through `raw_train_X`. Prediction inputs are encoded using the same stored vocabulary, and unseen categories are rejected explicitly unless a future model documents another policy.
+Mixed wrappers that use the fallback path still expose raw categorical columns to callers. The model owns the category vocabulary and encoded representation. The original caller tensor remains available through `raw_train_X`. Prediction inputs are encoded using the same stored vocabulary, and unseen categories are rejected explicitly unless a future model documents another policy.
 
 ## Fully Bayesian SAAS
 
@@ -64,7 +53,7 @@ Using an `InputTransform` rather than manually encoding only constructor and pos
 
 BoTorch's robust relevance-pursuit model exposes its data `covar_module` directly. Its specialized behavior is implemented by wrapping the observation likelihood with sparse outlier noise and by dispatching relevance pursuit during `fit_gpytorch_mll`; the data covariance itself remains replaceable.
 
-`MixedRobustRelevancePursuitSingleTaskGP` therefore uses the normal robotorchan native mixed covariance rather than one-hot encoding. The continuous, categorical, and interaction terms participate directly in fitting and prediction, while the upstream robust likelihood and relevance-pursuit fitting path remain unchanged. The model's `to_standard_model()` path also retains the same mixed covariance module so the specialized fitting dispatch does not silently fall back to a continuous-only kernel.
+`MixedRobustRelevancePursuitSingleTaskGP` therefore uses the normal robotorchan native mixed covariance rather than one-hot encoding. The continuous, categorical, and interaction terms participate directly in fitting and prediction, while the upstream robust likelihood and relevance-pursuit fitting path remain unchanged.
 
 ## Latent Kronecker GP
 
@@ -76,14 +65,20 @@ BoTorch's robust relevance-pursuit model exposes its data `covar_module` directl
 
 ## Higher-order GP
 
-`HigherOrderGP` represents covariance as a Kronecker product between one design-input kernel and one kernel for each tensor-output axis. BoTorch exposes these through `covar_modules`, with `covar_modules[0]` corresponding to X. `MixedHigherOrderGP` replaces only that first factor with robotorchan's native mixed covariance and leaves every output-axis factor unchanged. The higher-order tensor semantics and specialized Kronecker posterior therefore remain intact.
-
-The Mixed wrapper currently owns the design-input covariance and does not accept custom `covar_modules`. This avoids silently overriding a user-supplied X kernel while keeping room for a future explicit API for custom output-axis kernels.
+`HigherOrderGP` represents covariance as a Kronecker product between one design-input kernel and one kernel for each tensor-output axis. `MixedHigherOrderGP` replaces only the design-input factor with native mixed covariance and leaves every output-axis factor unchanged.
 
 ## Orthogonal additive GP
 
-`OrthogonalAdditiveKernel` is structurally different from an ordinary additive GPyTorch kernel. It constructs one-dimensional components and orthogonalizes them using Gauss-Legendre quadrature over the continuous interval `[0, 1]`. Replacing one of those scalar kernels with `CategoricalKernel` would not provide the corresponding discrete orthogonalization measure and would change the mathematical definition of the model.
+`OrthogonalAdditiveKernel` orthogonalizes one-dimensional base kernels using Gauss-Legendre quadrature over `[0, 1]`. A plain `CategoricalKernel` does not supply the corresponding discrete orthogonalization measure, so `MixedOrthogonalAdditiveGP` uses the internal one-hot fallback. A future native categorical OAK should use a mathematically valid discrete measure while preserving the public `cat_dims` API.
 
-`MixedOrthogonalAdditiveGP` therefore uses the internal one-hot fallback. Continuous caller inputs must still satisfy the upstream `[0, 1]` requirement, while categorical columns may use arbitrary observed numeric labels. The encoded one-hot columns are each treated as additive OAK dimensions, so component-level interpretation is in encoded space rather than one raw categorical feature per component. Unknown category values are rejected.
+## Contextual models
 
-A future native categorical OAK should use a mathematically valid discrete orthogonalization measure. If such an implementation becomes available, this wrapper should migrate to it while retaining the same `MixedOrthogonalAdditiveGP(..., cat_dims=[...])` public API.
+`MixedLCEMGP` treats the task/context feature as structural and applies native mixed covariance only to the non-task design features. `context_cat_feature` remains a separate concept: it describes metadata used to learn the latent context embedding and is not part of `cat_dims`.
+
+`SACGP` and `LCEAGP` intentionally do not expose generic `MixedSACGP` or `MixedLCEAGP` wrappers in Phase 13. Their `decomposition` defines the contextual feature structure itself, and LCEA already has categorical context metadata through `cat_feature_dict`. Treating those structural concepts as ordinary mixed design columns would blur model semantics. A future extension should add such support only with an explicit definition of how categorical design variables interact with each contextual block.
+
+## Hierarchical conditional models
+
+The hierarchical kernel already uses parent dimensions as structural branch selectors. `MixedHierarchicalConditionalKernelGP` and `MixedHierarchicalConditionalKernelMultiTaskGP` preserve that activation logic and add native categorical covariance only inside active feature blocks. A block containing continuous and categorical design features uses continuous, categorical, and interaction terms.
+
+Hierarchical parent dimensions are structural and therefore cannot also appear in `cat_dims`. In the multi-task model the task feature is also structural and is excluded. Public `cat_dims` uses the original `train_X` coordinates; internally those indices are remapped after removal of the task feature before constructing the hierarchical data kernel.
