@@ -19,10 +19,7 @@ def _training_data() -> tuple[torch.Tensor, torch.Tensor]:
         ],
         dtype=torch.double,
     )
-    train_Y = (
-        torch.sin(train_X[:, :1] * 3.0)
-        + 0.15 * train_X[:, 1:2]
-    )
+    train_Y = torch.sin(train_X[:, :1] * 3.0) + 0.15 * train_X[:, 1:2]
     train_Y[-1] = train_Y[-1] + 2.0
     return train_X, train_Y
 
@@ -97,9 +94,7 @@ def test_mixed_robust_gp_allows_unseen_category_values() -> None:
     )
     model.eval()
 
-    posterior = model.posterior(
-        torch.tensor([[0.40, 99.0]], dtype=torch.double)
-    )
+    posterior = model.posterior(torch.tensor([[0.40, 99.0]], dtype=torch.double))
 
     assert torch.isfinite(posterior.mean).all()
     assert torch.isfinite(posterior.variance).all()
