@@ -91,7 +91,7 @@ Typical regression notebooks should visualize, where practical:
 | [`09_map_saas_and_additive_gp.ipynb`](notebooks/09_map_saas_and_additive_gp.ipynb) | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`, `OrthogonalAdditiveGP` | Available |
 | [`10_robust_gp.ipynb`](notebooks/10_robust_gp.ipynb) | `RobustRelevancePursuitSingleTaskGP` | Available |
 | [`11_structured_output_gp.ipynb`](notebooks/11_structured_output_gp.ipynb) | `HigherOrderGP`, `LatentKroneckerGP` | Available |
-| `12_hierarchical_gp.ipynb` | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` | Planned |
+| [`12_hierarchical_gp.ipynb`](notebooks/12_hierarchical_gp.ipynb) | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` | Available |
 | `13_heterogeneous_multitask_gp.ipynb` | `HeterogeneousMTGP` | Planned |
 | `14_contextual_gp.ipynb` | `SACGP`, `LCEAGP`, `LCEMGP` | Planned |
 
