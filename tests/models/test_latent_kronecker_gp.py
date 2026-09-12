@@ -62,16 +62,16 @@ def test_latent_kronecker_gp_retains_product_space_raw_data() -> None:
     assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
 
 
-def test_latent_kronecker_gp_raw_buffers_follow_dtype_and_serialize() -> None:
+def test_latent_kronecker_gp_raw_buffers_follow_dtype_and_are_non_persistent() -> None:
     train_X, train_T, train_Y = _training_data()
     model = LatentKroneckerGP(train_X=train_X, train_T=train_T, train_Y=train_Y)
 
     state_dict = model.state_dict()
     model = model.to(dtype=torch.float32)
 
-    assert "_raw_train_X" in state_dict
-    assert "_raw_train_T" in state_dict
-    assert "_raw_train_Y" in state_dict
+    assert "_raw_train_X" not in state_dict
+    assert "_raw_train_T" not in state_dict
+    assert "_raw_train_Y" not in state_dict
     assert "_raw_train_Yvar" not in state_dict
     assert model.raw_train_X.dtype == torch.float32
     assert model.raw_train_T.dtype == torch.float32
