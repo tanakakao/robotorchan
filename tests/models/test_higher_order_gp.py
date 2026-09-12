@@ -60,15 +60,15 @@ def test_higher_order_gp_uses_common_exact_gp_contract() -> None:
     assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
 
 
-def test_higher_order_gp_raw_buffers_follow_dtype_and_serialize() -> None:
+def test_higher_order_gp_raw_buffers_follow_dtype_and_are_non_persistent() -> None:
     train_X, train_Y = _training_data()
     model = HigherOrderGP(train_X=train_X, train_Y=train_Y)
 
     state_dict = model.state_dict()
     model = model.to(dtype=torch.float32)
 
-    assert "_raw_train_X" in state_dict
-    assert "_raw_train_Y" in state_dict
+    assert "_raw_train_X" not in state_dict
+    assert "_raw_train_Y" not in state_dict
     assert "_raw_train_Yvar" not in state_dict
     assert model.raw_train_X.dtype == torch.float32
     assert model.raw_train_Y.dtype == torch.float32
