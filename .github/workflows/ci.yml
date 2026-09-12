@@ -34,6 +34,56 @@ jobs:
           --ignore=tests/models/test_fully_bayesian_single_task_gp.py
           --ignore=tests/models/test_fully_bayesian_multi_task_gp.py
 
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install build tools
+        run: python -m pip install --upgrade build twine
+      - name: Build sdist and wheel
+        run: python -m build
+      - name: Validate distribution metadata
+        run: python -m twine check dist/*
+      - name: Inspect wheel contents
+        run: |
+          unzip -l dist/*.whl | tee /tmp/wheel-contents.txt
+          grep -q "robotorchan/__init__.py" /tmp/wheel-contents.txt
+          grep -q "robotorchan/models/" /tmp/wheel-contents.txt
+      - name: Create isolated smoke-test environment
+        run: python -m venv /tmp/robotorchan-smoke
+      - name: Install CPU PyTorch in smoke-test environment
+        run: >-
+          /tmp/robotorchan-smoke/bin/python -m pip install
+          --index-url https://download.pytorch.org/whl/cpu
+          "torch>=2.4"
+      - name: Install built wheel in smoke-test environment
+        run: >-
+          /tmp/robotorchan-smoke/bin/python -m pip install
+          dist/*.whl
+      - name: Smoke test installed package outside repository
+        working-directory: /tmp
+        run: >-
+          /tmp/robotorchan-smoke/bin/python -c
+          "import pathlib, robotorchan; from importlib.metadata import version; from robotorchan.models import SingleTaskGP; p = pathlib.Path(robotorchan.__file__).resolve(); assert '/site-packages/' in p.as_posix(), p; assert robotorchan.__version__ == version('robotorchan'); print(p); print(robotorchan.__version__); print(SingleTaskGP)"
+      - name: Validate published extras metadata
+        working-directory: /tmp
+        run: >-
+          /tmp/robotorchan-smoke/bin/python -c
+          "from importlib.metadata import metadata; extras = set(metadata('robotorchan').get_all('Provides-Extra') or []); expected = {'fully-bayesian', 'examples', 'dev'}; missing = expected - extras; assert not missing, f'missing extras: {sorted(missing)}'; print(sorted(extras))"
+      - name: Check dependency consistency
+        working-directory: /tmp
+        run: /tmp/robotorchan-smoke/bin/python -m pip check
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/
+          if-no-files-found: error
+
   notebooks:
     runs-on: ubuntu-latest
 
