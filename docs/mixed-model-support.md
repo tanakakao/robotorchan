@@ -19,6 +19,7 @@ Internal one-hot encoding is a compatibility fallback for model families whose c
 | Kronecker multi-task GP | Native mixed kernel | `MixedKroneckerMultiTaskGP` |
 | Variational single-task GP | Native mixed kernel | `MixedSingleTaskVariationalGP` |
 | Single-task multi-fidelity GP | Native mixed design kernel + BoTorch fidelity kernels | `MixedSingleTaskMultiFidelityGP` |
+| Robust relevance-pursuit single-task GP | Native mixed kernel + robust outlier likelihood | `MixedRobustRelevancePursuitSingleTaskGP` |
 | Model list | Composes mixed and non-mixed children directly | `ModelListGP` |
 | Fully Bayesian SAAS single-task GP | Internal one-hot fallback | `MixedSaasFullyBayesianSingleTaskGP` |
 | Fully Bayesian SAAS multi-task GP | Internal one-hot fallback | `MixedSaasFullyBayesianMultiTaskGP` |
@@ -54,3 +55,9 @@ A future true categorical-kernel implementation would require matching categoric
 BoTorch MAP-SAAS builds specialized SAAS covariance modules internally rather than exposing the normal mixed covariance injection surface used by robotorchan's native Mixed exact-GP wrappers. Phase 9 therefore uses a model-owned one-hot `InputTransform` for `MixedAdditiveMapSaasSingleTaskGP` and `MixedEnsembleMapSaasSingleTaskGP`.
 
 Using an `InputTransform` rather than manually encoding only constructor and posterior tensors keeps the transformation attached to the BoTorch model and allows supported conditioning / fantasy workflows to reuse the same representation. If BoTorch later exposes a mathematically faithful way to combine MAP-SAAS sparsity priors with native categorical covariance, these wrappers should migrate to that implementation without changing the public `cat_dims` interface.
+
+## Robust relevance pursuit
+
+BoTorch's robust relevance-pursuit model exposes its data `covar_module` directly. Its specialized behavior is implemented by wrapping the observation likelihood with sparse outlier noise and by dispatching relevance pursuit during `fit_gpytorch_mll`; the data covariance itself remains replaceable.
+
+`MixedRobustRelevancePursuitSingleTaskGP` therefore uses the normal robotorchan native mixed covariance rather than one-hot encoding. The continuous, categorical, and interaction terms participate directly in fitting and prediction, while the upstream robust likelihood and relevance-pursuit fitting path remain unchanged. The model's `to_standard_model()` path also retains the same mixed covariance module so the specialized fitting dispatch does not silently fall back to a continuous-only kernel.
