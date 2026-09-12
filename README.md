@@ -1,175 +1,174 @@
 # robotorchan
 
-`robotorchan` is an extension library for [BoTorch](https://botorch.org/) focused on Bayesian optimization, active learning, experimental design, and a consistent model-facing API.
+`robotorchan` は [BoTorch](https://botorch.org/) をベースに、ベイズ最適化、Active Learning、実験計画、拡張獲得関数・モデルを扱うためのライブラリです。
 
-## Design goals
+既存の BoTorch モデルについては必要に応じて薄い wrapper を用意し、raw data の保持や `make_mll()` など、robotorchan 内で一貫したモデル API を提供します。
 
-- **BoTorch-native**: accept and return standard BoTorch / PyTorch objects whenever possible.
-- **Thin wrappers where useful**: existing BoTorch models may be wrapped when that adds consistent robotorchan behavior such as raw-data retention or `make_mll()`.
-- **Research-friendly**: make experimental acquisition functions and optimization utilities easy to test.
-- **Composable**: keep models, acquisition functions, objectives, transforms, and optimizers separable.
-- **Tested**: numerical behavior and tensor shapes are covered by automated tests.
-- **Clean-room implementation**: robotorchan is implemented from scratch from public algorithms and public APIs. It does not copy source code from prior private/internal projects.
+## ドキュメント
 
-## Model conventions
+最初に見る場所は次の3つです。
 
-Current wrappers are:
+- **どのモデルを選ぶか:** [`docs/models.md`](docs/models.md)
+- **実際にどう使うか:** [`examples/README.md`](examples/README.md)
+- **設計方針・内部構造:** [`docs/architecture.md`](docs/architecture.md)
 
-- `robotorchan.models.SingleTaskGP`
-- `robotorchan.models.MixedSingleTaskGP`
-- `robotorchan.models.SingleTaskMultiFidelityGP`
-- `robotorchan.models.MultiTaskGP`
-- `robotorchan.models.KroneckerMultiTaskGP`
-- `robotorchan.models.ModelListGP`
-- `robotorchan.models.SingleTaskVariationalGP`
-- `robotorchan.models.PairwiseGP`
-- `robotorchan.models.SaasFullyBayesianSingleTaskGP`
-- `robotorchan.models.SaasFullyBayesianMultiTaskGP`
-- `robotorchan.models.HigherOrderGP`
-- `robotorchan.models.LatentKroneckerGP`
-- `robotorchan.models.OrthogonalAdditiveGP`
-- `robotorchan.models.AdditiveMapSaasSingleTaskGP`
-- `robotorchan.models.EnsembleMapSaasSingleTaskGP`
-- `robotorchan.models.RobustRelevancePursuitSingleTaskGP`
-- `robotorchan.models.HierarchicalConditionalKernelGP`
-- `robotorchan.models.HierarchicalConditionalKernelMultiTaskGP`
-- `robotorchan.models.HeterogeneousMTGP`
-- `robotorchan.models.SACGP`
-- `robotorchan.models.LCEAGP`
-- `robotorchan.models.LCEMGP`
+モデルごとの実行可能な Jupyter Notebook は [`examples/notebooks/`](examples/notebooks/) にあります。
 
-Supervised single-model wrappers add the common robotorchan model surface where applicable:
+## インストール
 
-- `raw_train_X`
-- `raw_train_Y`
-- `raw_train_Yvar`
-- `raw_data_names`
-- `raw_data`
-- `supports_mll`
-- `make_mll()` when the model family supports MLL-style fitting
+開発版を editable install する場合:
 
-`raw_*` values are **constructor-level provenance snapshots**. They record caller-supplied tensors before BoTorch transforms or preprocessing and are not intended to mirror later conditioned or fantasy training state. After `condition_on_observations()` or `fantasize()`, use native BoTorch attributes such as `train_inputs` and `train_targets` for the model's current training state; the `raw_*` values continue to describe the original wrapper construction input.
-
-The wrappers preserve the upstream constructor surface and delegate predictive behavior, kernels, transforms, conditioning, and model-specific semantics to BoTorch. For models whose upstream constructor does not expose `train_Yvar`, `raw_train_Yvar` is `None`.
-
-`ModelListGP` is a container of independent child models, so it does not invent singular container-level training tensors. Instead it exposes:
-
-- `raw_train_Xs`
-- `raw_train_Ys`
-- `raw_train_Yvars`
-- `supports_mll = True`
-- `make_mll()` returning `SumMarginalLogLikelihood`
-
-Grouped raw values are available when the corresponding child model implements the robotorchan raw-data contract. Native BoTorch children remain fully supported and yield `None` for unavailable raw values.
-
-`SingleTaskVariationalGP` preserves BoTorch's variational model semantics and uses `VariationalELBO` rather than an exact marginal log likelihood. Its `make_mll(num_data=None)` method uses the number of rows in `raw_train_X` by default. For minibatch training, pass the total training-set size explicitly as `num_data`.
-
-```python
-import torch
-from robotorchan.models import SingleTaskVariationalGP
-
-train_X = torch.rand(200, 3, dtype=torch.double)
-train_Y = train_X.sin().sum(dim=-1, keepdim=True)
-
-model = SingleTaskVariationalGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    inducing_points=40,
-)
-mll = model.make_mll()
-
-assert torch.equal(model.raw_train_X, train_X)
-assert mll.num_data == 200
+```bash
+pip install -e .
 ```
 
-`PairwiseGP` preserves preference-learning semantics rather than pretending comparisons are ordinary supervised targets. It exposes:
+Notebook 例も動かす場合:
 
-- `raw_datapoints`
-- `raw_comparisons`
-- `raw_data`
-- `supports_mll = True`
-- `make_mll()` returning `PairwiseLaplaceMarginalLogLikelihood`
+```bash
+pip install -e ".[examples]"
+```
 
-Raw preference tensors are captured before BoTorch applies input transforms or duplicate consolidation. Both tensors may be `None`, matching BoTorch's prior-only construction mode.
+Fully Bayesian SAAS の例も動かす場合:
+
+```bash
+pip install -e ".[examples,fully-bayesian]"
+```
+
+## 基本例
 
 ```python
 import torch
 from botorch.fit import fit_gpytorch_mll
-from robotorchan.models import PairwiseGP
+from robotorchan.models import SingleTaskGP
 
-items = torch.rand(12, 3, dtype=torch.double)
-comparisons = torch.tensor([[0, 1], [2, 3], [4, 5], [6, 7]], dtype=torch.long)
+torch.set_default_dtype(torch.double)
 
-model = PairwiseGP(datapoints=items, comparisons=comparisons)
+train_X = torch.rand(20, 2)
+train_Y = (
+    torch.sin(2 * torch.pi * train_X[:, :1])
+    + 0.2 * train_X[:, 1:2]
+)
+
+model = SingleTaskGP(
+    train_X=train_X,
+    train_Y=train_Y,
+)
+
 mll = model.make_mll()
 fit_gpytorch_mll(mll)
 
-assert torch.equal(model.raw_datapoints, items)
-assert torch.equal(model.raw_comparisons, comparisons)
+test_X = torch.rand(5, 2)
+posterior = model.posterior(test_X)
+
+print(posterior.mean)
+print(posterior.variance)
 ```
 
-Fully Bayesian SAAS wrappers preserve the same raw supervised training data, but intentionally do not expose MLL-style fitting. Install the optional dependencies with `pip install "robotorchan[fully-bayesian]"`, then fit through BoTorch directly:
+## モデル共通規約
+
+多くの supervised wrapper は、BoTorch の予測挙動を維持したまま次の情報を保持します。
 
 ```python
-import torch
+model.raw_train_X
+model.raw_train_Y
+model.raw_train_Yvar
+model.raw_data
+model.raw_data_names
+model.supports_mll
+model.make_mll()
+```
+
+`raw_*` は **wrapper 構築時に渡された入力のスナップショット** です。
+
+`condition_on_observations()` や `fantasize()` 後の現在の学習状態を表すものではありません。現在状態には BoTorch ネイティブの `train_inputs` / `train_targets` を使用してください。
+
+## 利用可能なモデル
+
+### 標準・混合・Multi-Fidelity
+
+- `SingleTaskGP`
+- `MixedSingleTaskGP`
+- `SingleTaskMultiFidelityGP`
+
+### Multi-task / Multi-output
+
+- `MultiTaskGP`
+- `KroneckerMultiTaskGP`
+- `ModelListGP`
+- `HeterogeneousMTGP`
+
+### 大規模・高次元
+
+- `SingleTaskVariationalGP`
+- `SaasFullyBayesianSingleTaskGP`
+- `SaasFullyBayesianMultiTaskGP`
+- `AdditiveMapSaasSingleTaskGP`
+- `EnsembleMapSaasSingleTaskGP`
+- `OrthogonalAdditiveGP`
+- `RobustRelevancePursuitSingleTaskGP`
+
+### Preference / Structured output
+
+- `PairwiseGP`
+- `HigherOrderGP`
+- `LatentKroneckerGP`
+
+### 階層・Contextual
+
+- `HierarchicalConditionalKernelGP`
+- `HierarchicalConditionalKernelMultiTaskGP`
+- `SACGP`
+- `LCEAGP`
+- `LCEMGP`
+
+詳しい使い分けと各Notebookへのリンクは [`docs/models.md`](docs/models.md) を参照してください。
+
+## 特殊な学習方法
+
+すべてのモデルが通常の Exact MLL 学習を使うわけではありません。
+
+### Variational GP
+
+`SingleTaskVariationalGP.make_mll()` は `VariationalELBO` を返します。minibatch 学習では全データ件数を `num_data` として扱います。
+
+### Fully Bayesian SAAS
+
+Fully Bayesian SAAS は MLL fitting ではなく NUTS を使います。
+
+```python
 from botorch.fit import fit_fully_bayesian_model_nuts
-from robotorchan.models import SaasFullyBayesianSingleTaskGP
 
-train_X = torch.rand(20, 4, dtype=torch.double)
-train_Y = torch.randn(20, 1, dtype=torch.double)
-
-model = SaasFullyBayesianSingleTaskGP(train_X=train_X, train_Y=train_Y)
-assert model.supports_mll is False
 fit_fully_bayesian_model_nuts(model)
 ```
 
-The multi-task SAAS wrapper uses BoTorch's long-format task-feature representation and follows the same NUTS fitting path.
+このため `supports_mll=False` です。
 
-`HigherOrderGP` retains tensor-valued training outcomes before flattening / standardization and provides the normal exact-GP `make_mll()` helper. BoTorch recommends using its specialized fast Kronecker solves and torch-based MLL optimizer when fitting this model.
+### PairwiseGP
 
-`LatentKroneckerGP` adds `raw_train_T` alongside `raw_train_X`, `raw_train_Y`, and `raw_train_Yvar = None`. The raw tensors are captured before BoTorch broadcasts `train_T`, masks missing observations, or applies transforms. Fitting remains compatible with BoTorch's `use_iterative_methods()` context.
+Preference data を通常の回帰 target として扱わず、`datapoints` と `comparisons` を使います。
 
-```python
-import torch
-from botorch.fit import fit_gpytorch_mll
-from robotorchan.models import LatentKroneckerGP
+### LatentKroneckerGP
 
-train_X = torch.rand(8, 2, dtype=torch.double)
-train_T = torch.linspace(0, 1, 4, dtype=torch.double).unsqueeze(-1)
-train_Y = torch.rand(8, 4, dtype=torch.double)
+`train_X` / `train_Y` に加えて、時間・波長・位置などの出力軸 `train_T` を明示的に持ちます。
 
-model = LatentKroneckerGP(train_X=train_X, train_T=train_T, train_Y=train_Y)
-mll = model.make_mll()
-with model.use_iterative_methods():
-    fit_gpytorch_mll(mll)
+## 設計目標
 
-assert torch.equal(model.raw_train_T, train_T)
-```
+- **BoTorch-native**: 可能な限り標準の BoTorch / PyTorch object を利用する
+- **薄い wrapper**: upstream のモデル挙動を維持し、robotorchan 固有機能だけを追加する
+- **Research-friendly**: 新しい獲得関数や最適化手法を試しやすくする
+- **Composable**: model / acquisition / objective / transform / optimizer を分離する
+- **Tested**: tensor shape、API、数値挙動を自動テストする
+- **Clean-room implementation**: 公開アルゴリズム・公開 API を基にゼロから実装する
 
-Specialized exact-GP wrappers cover additive / MAP-SAAS, robust relevance pursuit, hierarchical search spaces, heterogeneous multitask data, and contextual models. They preserve model-specific BoTorch kernels, posterior implementations, and fitting dispatch while adding the same raw-data and MLL conventions where those concepts apply.
-
-`HeterogeneousMTGP` receives separate input and outcome tensors for each task, so it intentionally exposes grouped `raw_train_Xs`, `raw_train_Ys`, and `raw_train_Yvars` rather than inventing a single global training tensor. `RobustRelevancePursuitSingleTaskGP` remains compatible with BoTorch's specialized `fit_gpytorch_mll` dispatch.
-
-## Initial scope
-
-Planned extension areas include:
-
-- thin wrappers for selected existing BoTorch models when they benefit from the common robotorchan API;
-- custom acquisition functions for Bayesian optimization and active learning;
-- multi-objective, constrained, robust, and risk-aware extensions;
-- classification / boundary-search acquisition functions;
-- ordinal and preference-oriented optimization;
-- lookahead and information-theoretic methods;
-- utilities for mixed, discrete, and structured search spaces;
-- new surrogate-model extensions that remain compatible with BoTorch APIs.
-
-## Requirements
+## 対応環境
 
 - Python >= 3.11
 - BoTorch >= 0.18.1, < 0.19
 
-The wrapper constructor contract is tested against the supported BoTorch 0.18.x line. Support for a future BoTorch minor line should be added deliberately after constructor and behavior compatibility are verified.
+BoTorch の minor version を更新する際は、constructor signature と挙動の互換性を確認した上で対応します。
 
 ## Status
 
-Early development. The public API is not yet stable.
+Early development / pre-alpha.
+
+公開 API は今後変更される可能性があります。
