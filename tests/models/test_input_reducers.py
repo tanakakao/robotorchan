@@ -99,7 +99,7 @@ def test_pls_input_reducer_extracts_supervised_latent_space() -> None:
 def test_pls_input_reducer_preserves_candidate_batch_shape() -> None:
     torch.manual_seed(4)
     train_X = torch.randn(24, 5)
-    train_Y = (train_X[:, :2].sum(dim=-1, keepdim=True) + 0.1 * torch.randn(24, 1))
+    train_Y = train_X[:, :2].sum(dim=-1, keepdim=True) + 0.1 * torch.randn(24, 1)
     reducer = PLSInputReducer(n_components=2).fit(train_X, train_Y)
 
     X = torch.randn(2, 3, 7, 5)
