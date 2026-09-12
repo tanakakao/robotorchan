@@ -83,8 +83,8 @@ Typical regression notebooks should visualize, where practical:
 | [`01_single_task_gp.ipynb`](notebooks/01_single_task_gp.ipynb) | `SingleTaskGP` | Available |
 | [`02_mixed_single_task_gp.ipynb`](notebooks/02_mixed_single_task_gp.ipynb) | `MixedSingleTaskGP` | Available |
 | [`03_multi_fidelity_gp.ipynb`](notebooks/03_multi_fidelity_gp.ipynb) | `SingleTaskMultiFidelityGP` | Available |
-| `04_multitask_gp.ipynb` | `MultiTaskGP`, `KroneckerMultiTaskGP` | Planned |
-| `05_model_list_gp.ipynb` | `ModelListGP` | Planned |
+| [`04_multitask_gp.ipynb`](notebooks/04_multitask_gp.ipynb) | `MultiTaskGP`, `KroneckerMultiTaskGP` | Available |
+| [`05_model_list_gp.ipynb`](notebooks/05_model_list_gp.ipynb) | `ModelListGP` | Available |
 | `06_variational_gp.ipynb` | `SingleTaskVariationalGP` | Planned |
 | `07_pairwise_gp.ipynb` | `PairwiseGP` | Planned |
 | `08_saas_gp.ipynb` | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` | Planned |
