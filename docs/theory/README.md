@@ -20,7 +20,7 @@
 10. [Preference Learning](10_preference_learning.md)
 11. [Structured Output](11_structured_output.md)
 12. [Hierarchical / Contextual GP](12_hierarchical_contextual_gp.md)
-13. Model Selection
+13. [Model Selection](13_model_selection.md)
 
 ## このガイドの構成方針
 
@@ -58,9 +58,3 @@
 - [実装設計](../architecture.md)
 - [Notebook 一覧](../../examples/README.md)
 - [実行例](../../examples/notebooks/)
-
-## 今後追加する章
-
-以下は今後の理論章として順次追加します。
-
-- `13_model_selection.md`
