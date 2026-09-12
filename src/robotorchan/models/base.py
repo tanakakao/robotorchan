@@ -7,6 +7,7 @@ from typing import ClassVar
 
 import torch
 from botorch.models.kernels.categorical import CategoricalKernel
+from botorch.models.transforms.input import InputTransform
 from botorch.models.utils.gpytorch_modules import get_covar_module_with_dim_scaled_prior
 from gpytorch.kernels import AdditiveKernel, Kernel, ProductKernel, ScaleKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood, MarginalLogLikelihood
@@ -34,18 +35,7 @@ class RawDataMixin:
     _raw_data_names: tuple[str, ...]
 
     def _store_raw_tensor(self, name: str, tensor: Tensor | None) -> None:
-        """Store one raw tensor under a stable robotorchan name.
-
-        Args:
-            name: Public raw-data name without the ``raw_`` prefix, for example
-                ``train_X`` or ``comparisons``.
-            tensor: Tensor supplied by the caller, or ``None`` when the concept
-                applies but no tensor was supplied.
-
-        Raises:
-            ValueError: If ``name`` is empty or cannot be used as a PyTorch
-                buffer name.
-        """
+        """Store one raw tensor under a stable robotorchan name."""
         if not name or "." in name:
             raise ValueError("Raw-data names must be non-empty and cannot contain '.'.")
 
@@ -74,11 +64,7 @@ class RawDataMixin:
 
     @property
     def raw_data(self) -> dict[str, Tensor | None]:
-        """Return all constructor-level raw-data snapshots retained by the wrapper.
-
-        The returned dictionary is a new mapping, while tensor values refer to
-        the model-owned buffers.
-        """
+        """Return all constructor-level raw-data snapshots retained by the wrapper."""
         return {name: self._get_raw_tensor(name) for name in self.raw_data_names}
 
 
@@ -128,12 +114,7 @@ class ModelTrainingMixin:
     supports_mll: ClassVar[bool] = False
 
     def make_mll(self) -> MarginalLogLikelihood:
-        """Construct this model's marginal-likelihood training objective.
-
-        Raises:
-            UnsupportedModelOperationError: If the model does not use an MLL
-                style training objective.
-        """
+        """Construct this model's marginal-likelihood training objective."""
         raise UnsupportedModelOperationError(f"{type(self).__name__} does not support make_mll().")
 
 
@@ -168,15 +149,78 @@ def _normalize_dims(dims: list[int], input_dim: int, *, name: str) -> list[int]:
 
 
 def _normalize_cat_dims(cat_dims: list[int], input_dim: int) -> list[int]:
-    """Normalize categorical feature indices against an input dimension.
-
-    Negative indices follow normal Python indexing semantics. The returned
-    indices are unique, non-negative, and sorted so downstream kernel
-    construction has a stable representation.
-    """
+    """Normalize categorical feature indices against an input dimension."""
     if not cat_dims:
         raise ValueError("cat_dims must contain at least one categorical feature index.")
     return _normalize_dims(cat_dims, input_dim, name="Categorical")
+
+
+class _CategoricalOneHotInputTransform(InputTransform):
+    """Encode categorical scalar columns while keeping a raw mixed public space.
+
+    This private transform is used only for model families whose upstream
+    covariance architecture cannot safely accept robotorchan's native mixed
+    covariance. Category values are learned from ``train_X`` and stored as
+    buffers so training, posterior, conditioning, serialization, and dtype /
+    device moves share the same encoding.
+    """
+
+    def __init__(self, train_X: Tensor, cat_dims: list[int]) -> None:
+        super().__init__()
+        self.transform_on_train = True
+        self.transform_on_eval = True
+        self.transform_on_fantasize = True
+        self.raw_input_dim = train_X.shape[-1]
+        self.cat_dims = tuple(_normalize_cat_dims(cat_dims, self.raw_input_dim))
+        self._category_buffer_names = tuple(
+            f"_category_values_{index}" for index in range(len(self.cat_dims))
+        )
+
+        encoded_input_dim = self.raw_input_dim
+        for name, dim in zip(self._category_buffer_names, self.cat_dims, strict=True):
+            values = torch.unique(train_X[..., dim]).sort().values.detach().clone()
+            if values.numel() == 0:  # pragma: no cover - impossible for valid training data
+                raise ValueError(f"Categorical feature {dim} has no observed values.")
+            self.register_buffer(name, values)
+            encoded_input_dim += values.numel() - 1
+        self.encoded_input_dim = encoded_input_dim
+
+    @property
+    def category_values(self) -> tuple[Tensor, ...]:
+        """Observed category values in normalized ``cat_dims`` order."""
+        return tuple(getattr(self, name) for name in self._category_buffer_names)
+
+    def transform(self, X: Tensor) -> Tensor:
+        """One-hot encode categorical columns in a raw mixed-space tensor."""
+        if X.shape[-1] != self.raw_input_dim:
+            raise ValueError(
+                f"Expected inputs with {self.raw_input_dim} features, got {X.shape[-1]}."
+            )
+
+        value_by_dim = dict(zip(self.cat_dims, self.category_values, strict=True))
+        parts: list[Tensor] = []
+        for dim in range(self.raw_input_dim):
+            if dim not in value_by_dim:
+                parts.append(X[..., dim : dim + 1])
+                continue
+
+            values = value_by_dim[dim].to(device=X.device, dtype=X.dtype)
+            shape = (1,) * (X.ndim - 1) + (values.numel(),)
+            encoded = X[..., dim : dim + 1] == values.reshape(shape)
+            if not torch.all(encoded.sum(dim=-1) == 1):
+                raise ValueError(f"Input contains an unseen category in categorical feature {dim}.")
+            parts.append(encoded.to(dtype=X.dtype))
+
+        return torch.cat(parts, dim=-1)
+
+    def equals(self, other: InputTransform) -> bool:
+        """Return whether another transform has the same encoding contract."""
+        return (
+            isinstance(other, _CategoricalOneHotInputTransform)
+            and self.raw_input_dim == other.raw_input_dim
+            and self.cat_dims == other.cat_dims
+            and super().equals(other)
+        )
 
 
 def _get_cont_dims(
@@ -204,14 +248,7 @@ def _make_mixed_covar_module(
     batch_shape: torch.Size | None = None,
     cont_kernel_factory: ContinuousKernelFactory | None = None,
 ) -> Kernel:
-    """Build the default robotorchan covariance for a mixed input space.
-
-    For mixed continuous/categorical inputs, the covariance is the sum of a
-    continuous component, a categorical component, and their interaction.
-    Structural columns such as a multi-task task feature can be excluded from
-    the data covariance via ``excluded_dims``. For categorical-only data inputs,
-    a scaled categorical covariance is returned.
-    """
+    """Build the default robotorchan covariance for a mixed input space."""
     resolved_batch_shape = torch.Size() if batch_shape is None else batch_shape
     normalized_cat_dims = _normalize_cat_dims(cat_dims=cat_dims, input_dim=input_dim)
     normalized_excluded_dims = _normalize_dims(excluded_dims or [], input_dim, name="Excluded")
