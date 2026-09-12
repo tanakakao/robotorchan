@@ -92,10 +92,14 @@ class MixedRobustRelevancePursuitSingleTaskGP(RobustRelevancePursuitSingleTaskGP
     ) -> None:
         input_dim = train_X.shape[-1]
         normalized_cat_dims = _normalize_cat_dims(cat_dims=cat_dims, input_dim=input_dim)
+        _, aug_batch_shape = self.get_batch_dimensions(
+            train_X=train_X,
+            train_Y=train_Y,
+        )
         covar_module = _make_mixed_covar_module(
             input_dim=input_dim,
             cat_dims=normalized_cat_dims,
-            batch_shape=train_X.shape[:-2],
+            batch_shape=aug_batch_shape,
             cont_kernel_factory=cont_kernel_factory,
         )
 
