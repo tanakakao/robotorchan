@@ -123,3 +123,55 @@ model.make_mll()
 - `SACGP`
 - `LCEAGP`
 - `LCEMGP`
+
+詳しい使い分けと各Notebookへのリンクは [`docs/models.md`](docs/models.md) を参照してください。
+
+## 特殊な学習方法
+
+すべてのモデルが通常の Exact MLL 学習を使うわけではありません。
+
+### Variational GP
+
+`SingleTaskVariationalGP.make_mll()` は `VariationalELBO` を返します。minibatch 学習では全データ件数を `num_data` として扱います。
+
+### Fully Bayesian SAAS
+
+Fully Bayesian SAAS は MLL fitting ではなく NUTS を使います。
+
+```python
+from botorch.fit import fit_fully_bayesian_model_nuts
+
+fit_fully_bayesian_model_nuts(model)
+```
+
+このため `supports_mll=False` です。
+
+### PairwiseGP
+
+Preference data を通常の回帰 target として扱わず、`datapoints` と `comparisons` を使います。
+
+### LatentKroneckerGP
+
+`train_X` / `train_Y` に加えて、時間・波長・位置などの出力軸 `train_T` を明示的に持ちます。
+
+## 設計目標
+
+- **BoTorch-native**: 可能な限り標準の BoTorch / PyTorch object を利用する
+- **薄い wrapper**: upstream のモデル挙動を維持し、robotorchan 固有機能だけを追加する
+- **Research-friendly**: 新しい獲得関数や最適化手法を試しやすくする
+- **Composable**: model / acquisition / objective / transform / optimizer を分離する
+- **Tested**: tensor shape、API、数値挙動を自動テストする
+- **Clean-room implementation**: 公開アルゴリズム・公開 API を基にゼロから実装する
+
+## 対応環境
+
+- Python >= 3.11
+- BoTorch >= 0.18.1, < 0.19
+
+BoTorch の minor version を更新する際は、constructor signature と挙動の互換性を確認した上で対応します。
+
+## Status
+
+Early development / pre-alpha.
+
+公開 API は今後変更される可能性があります。
