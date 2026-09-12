@@ -19,6 +19,8 @@ Internal one-hot encoding is a compatibility fallback for model families whose c
 | Kronecker multi-task GP | Native mixed kernel | `MixedKroneckerMultiTaskGP` |
 | Latent Kronecker GP | Native mixed kernel on X factor | `MixedLatentKroneckerGP` |
 | Heterogeneous MTGP | Native categorical/mixed kernels inside conditional feature subsets | `MixedHeterogeneousMTGP` |
+| Higher-order GP | Native mixed kernel on design-input factor | `MixedHigherOrderGP` |
+| Orthogonal additive GP | Internal one-hot fallback | `MixedOrthogonalAdditiveGP` |
 | Variational single-task GP | Native mixed kernel | `MixedSingleTaskVariationalGP` |
 | Single-task multi-fidelity GP | Native mixed design kernel + BoTorch fidelity kernels | `MixedSingleTaskMultiFidelityGP` |
 | Robust relevance-pursuit single-task GP | Native mixed kernel + robust outlier likelihood | `MixedRobustRelevancePursuitSingleTaskGP` |
@@ -71,3 +73,17 @@ BoTorch's robust relevance-pursuit model exposes its data `covar_module` directl
 ## Heterogeneous MTGP
 
 `HeterogeneousMTGP` uses `MultiTaskConditionalKernel`, which partitions the global feature space into subsets shared by different task search spaces and conditionally activates a kernel for each subset. `MixedHeterogeneousMTGP` preserves this conditional structure. Continuous-only subsets keep the upstream Matern construction, categorical-only subsets use `CategoricalKernel`, and subsets containing both types use continuous + categorical + interaction covariance. `cat_dims` refers to the global feature numbering defined by `feature_indices`; the internally appended task indicator is structural and is never categorical.
+
+## Higher-order GP
+
+`HigherOrderGP` represents covariance as a Kronecker product between one design-input kernel and one kernel for each tensor-output axis. BoTorch exposes these through `covar_modules`, with `covar_modules[0]` corresponding to X. `MixedHigherOrderGP` replaces only that first factor with robotorchan's native mixed covariance and leaves every output-axis factor unchanged. The higher-order tensor semantics and specialized Kronecker posterior therefore remain intact.
+
+The Mixed wrapper currently owns the design-input covariance and does not accept custom `covar_modules`. This avoids silently overriding a user-supplied X kernel while keeping room for a future explicit API for custom output-axis kernels.
+
+## Orthogonal additive GP
+
+`OrthogonalAdditiveKernel` is structurally different from an ordinary additive GPyTorch kernel. It constructs one-dimensional components and orthogonalizes them using Gauss-Legendre quadrature over the continuous interval `[0, 1]`. Replacing one of those scalar kernels with `CategoricalKernel` would not provide the corresponding discrete orthogonalization measure and would change the mathematical definition of the model.
+
+`MixedOrthogonalAdditiveGP` therefore uses the internal one-hot fallback. Continuous caller inputs must still satisfy the upstream `[0, 1]` requirement, while categorical columns may use arbitrary observed numeric labels. The encoded one-hot columns are each treated as additive OAK dimensions, so component-level interpretation is in encoded space rather than one raw categorical feature per component. Unknown category values are rejected.
+
+A future native categorical OAK should use a mathematically valid discrete orthogonalization measure. If such an implementation becomes available, this wrapper should migrate to it while retaining the same `MixedOrthogonalAdditiveGP(..., cat_dims=[...])` public API.
