@@ -15,7 +15,7 @@
 
 モデルごとの実行可能な Jupyter Notebook は [`examples/notebooks/`](examples/notebooks/) にあります。
 
-ベイズ最適化を初めて学ぶ場合は、[`ベイズ最適化とは`](docs/theory/01_bayesian_optimization.md) → [`Gaussian Process`](docs/theory/02_gaussian_process.md) → [`Kernel`](docs/theory/03_kernel.md) → [`Acquisition Function`](docs/theory/04_acquisition_function.md) → [`Mixed Variables`](docs/theory/05_mixed_variables.md) → [`Multi-Fidelity`](docs/theory/06_multi_fidelity.md) → [`Multi-task / Multi-output`](docs/theory/07_multitask_multioutput.md) → [`High-dimensional GP`](docs/theory/08_high_dimensional_gp.md) の順に読むことを推奨します。
+ベイズ最適化を初めて学ぶ場合は、[`ベイズ最適化とは`](docs/theory/01_bayesian_optimization.md) → [`Gaussian Process`](docs/theory/02_gaussian_process.md) → [`Kernel`](docs/theory/03_kernel.md) → [`Acquisition Function`](docs/theory/04_acquisition_function.md) → [`Mixed Variables`](docs/theory/05_mixed_variables.md) → [`Multi-Fidelity`](docs/theory/06_multi_fidelity.md) → [`Multi-task / Multi-output`](docs/theory/07_multitask_multioutput.md) → [`High-dimensional GP`](docs/theory/08_high_dimensional_gp.md) → [`Variational GP`](docs/theory/09_variational_gp.md) の順に読むことを推奨します。
 
 ## インストール
 
