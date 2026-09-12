@@ -87,9 +87,9 @@ Typical regression notebooks should visualize, where practical:
 | [`05_model_list_gp.ipynb`](notebooks/05_model_list_gp.ipynb) | `ModelListGP` | Available |
 | [`06_variational_gp.ipynb`](notebooks/06_variational_gp.ipynb) | `SingleTaskVariationalGP` | Available |
 | [`07_pairwise_gp.ipynb`](notebooks/07_pairwise_gp.ipynb) | `PairwiseGP` | Available |
-| `08_saas_gp.ipynb` | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` | Planned |
-| `09_map_saas_and_additive_gp.ipynb` | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`, `OrthogonalAdditiveGP` | Planned |
-| `10_robust_gp.ipynb` | `RobustRelevancePursuitSingleTaskGP` | Planned |
+| [`08_saas_gp.ipynb`](notebooks/08_saas_gp.ipynb) | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` | Available |
+| [`09_map_saas_and_additive_gp.ipynb`](notebooks/09_map_saas_and_additive_gp.ipynb) | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`, `OrthogonalAdditiveGP` | Available |
+| [`10_robust_gp.ipynb`](notebooks/10_robust_gp.ipynb) | `RobustRelevancePursuitSingleTaskGP` | Available |
 | `11_structured_output_gp.ipynb` | `HigherOrderGP`, `LatentKroneckerGP` | Planned |
 | `12_hierarchical_gp.ipynb` | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` | Planned |
 | `13_heterogeneous_multitask_gp.ipynb` | `HeterogeneousMTGP` | Planned |
