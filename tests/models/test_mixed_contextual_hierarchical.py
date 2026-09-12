@@ -25,7 +25,7 @@ def test_mixed_lcemgp_uses_native_mixed_design_covariance() -> None:
         ],
         dtype=torch.double,
     )
-    train_Y = (train_X[:, :1] + 0.25 * train_X[:, 1:2] + 0.4 * train_X[:, 2:3])
+    train_Y = train_X[:, :1] + 0.25 * train_X[:, 1:2] + 0.4 * train_X[:, 2:3]
 
     model = MixedLCEMGP(
         train_X=train_X,
@@ -55,11 +55,7 @@ def _hierarchical_training_data() -> tuple[torch.Tensor, torch.Tensor]:
         ],
         dtype=torch.double,
     )
-    train_Y = (
-        0.3 * train_X[:, :1]
-        + train_X[:, 1:2]
-        + 0.2 * train_X[:, 3:4]
-    )
+    train_Y = 0.3 * train_X[:, :1] + train_X[:, 1:2] + 0.2 * train_X[:, 3:4]
     return train_X, train_Y
 
 
