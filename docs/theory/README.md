@@ -11,7 +11,7 @@
 1. [ベイズ最適化とは](01_bayesian_optimization.md)
 2. [Gaussian Process](02_gaussian_process.md)
 3. [Kernel](03_kernel.md)
-4. Acquisition Function
+4. [Acquisition Function](04_acquisition_function.md)
 5. Mixed Variables
 6. Multi-Fidelity
 7. Multi-task / Multi-output
@@ -63,7 +63,6 @@
 
 以下は今後の理論章として順次追加します。
 
-- `04_acquisition_function.md`
 - `05_mixed_variables.md`
 - `06_multi_fidelity.md`
 - `07_multitask_multioutput.md`
