@@ -18,7 +18,7 @@
 8. [High-dimensional GP](08_high_dimensional_gp.md)
 9. [Variational GP](09_variational_gp.md)
 10. [Preference Learning](10_preference_learning.md)
-11. Structured Output
+11. [Structured Output](11_structured_output.md)
 12. Hierarchical / Contextual GP
 13. Model Selection
 
@@ -63,6 +63,5 @@
 
 以下は今後の理論章として順次追加します。
 
-- `11_structured_output.md`
 - `12_hierarchical_contextual_gp.md`
 - `13_model_selection.md`
