@@ -34,7 +34,7 @@ def test_single_task_gp_make_mll() -> None:
     assert mll.likelihood is model.likelihood
 
 
-def test_raw_training_data_are_serialized_as_buffers() -> None:
+def test_raw_training_data_are_non_persistent_buffers() -> None:
     train_X = torch.rand(8, 2, dtype=torch.double)
     train_Y = train_X[:, :1]
     train_Yvar = torch.full_like(train_Y, 1e-4)
@@ -46,9 +46,9 @@ def test_raw_training_data_are_serialized_as_buffers() -> None:
     )
     state_dict = model.state_dict()
 
-    assert "_raw_train_X" in state_dict
-    assert "_raw_train_Y" in state_dict
-    assert "_raw_train_Yvar" in state_dict
+    assert "_raw_train_X" not in state_dict
+    assert "_raw_train_Y" not in state_dict
+    assert "_raw_train_Yvar" not in state_dict
     assert torch.equal(model.raw_train_Yvar, train_Yvar)
 
 
