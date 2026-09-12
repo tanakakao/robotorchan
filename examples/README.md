@@ -72,13 +72,53 @@ model.make_mll()
 | [`05_model_list_gp.ipynb`](notebooks/05_model_list_gp.ipynb) | `ModelListGP` | 利用可能 |
 | [`06_variational_gp.ipynb`](notebooks/06_variational_gp.ipynb) | `SingleTaskVariationalGP` | 利用可能 |
 | [`07_pairwise_gp.ipynb`](notebooks/07_pairwise_gp.ipynb) | `PairwiseGP` | 利用可能 |
-| [`08_saas_gp.ipynb`](notebooks/08_saas_gp.ipynb) | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` | 利用可能 |
+| [`08_saas_gp.ipynb`](notebooks/08_saas_gp.ipynb) | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` | 利用可能 / 通常CI対象外 |
 | [`09_map_saas_and_additive_gp.ipynb`](notebooks/09_map_saas_and_additive_gp.ipynb) | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`, `OrthogonalAdditiveGP` | 利用可能 |
 | [`10_robust_gp.ipynb`](notebooks/10_robust_gp.ipynb) | `RobustRelevancePursuitSingleTaskGP` | 利用可能 |
-| [`11_structured_output_gp.ipynb`](notebooks/11_structured_output_gp.ipynb) | `HigherOrderGP`, `LatentKroneckerGP` | 利用可能 |
+| [`11_structured_output_gp.ipynb`](notebooks/11_structured_output_gp.ipynb) | `HigherOrderGP`, `LatentKroneckerGP` | 利用可能 / 通常CI対象外 |
 | [`12_hierarchical_gp.ipynb`](notebooks/12_hierarchical_gp.ipynb) | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` | 利用可能 |
 | [`13_heterogeneous_multitask_gp.ipynb`](notebooks/13_heterogeneous_multitask_gp.ipynb) | `HeterogeneousMTGP` | 利用可能 |
 | [`14_contextual_gp.ipynb`](notebooks/14_contextual_gp.ipynb) | `SACGP`, `LCEAGP`, `LCEMGP` | 利用可能 |
+
+## Notebook の一括実行
+
+通常のCI対象となる軽量Notebookは次のコマンドで一括実行できます。
+
+```bash
+python examples/run_notebooks.py
+```
+
+1セルあたりのタイムアウトを変更する場合は `--timeout` を指定します。
+
+```bash
+python examples/run_notebooks.py --timeout 600
+```
+
+通常CIから除外している `08_saas_gp.ipynb` と `11_structured_output_gp.ipynb` も含めて実行する場合は、必要な optional dependency をインストールしてから `--include-slow` を付けます。
+
+```bash
+pip install -e ".[examples,fully-bayesian]"
+python examples/run_notebooks.py --include-slow --timeout 900
+```
+
+## Notebook CI
+
+GitHub Actions の `notebooks` job では Python 3.11 / CPU 環境を使用し、次の Notebook を実行します。
+
+```text
+01, 02, 03, 04, 05, 06, 07,
+09, 10,
+12, 13, 14
+```
+
+以下は通常の Pull Request CI から除外します。
+
+- `08_saas_gp.ipynb`: NUTS / MCMC を使うため実行時間の変動が大きい
+- `11_structured_output_gp.ipynb`: HOGP / LatentKroneckerGP の学習が比較的重く、通常の軽量CIから分離した方が安定する
+
+`08` のwrapper自体は既存の `fully-bayesian-extra` job でテストします。重いNotebookも必要に応じて `examples/run_notebooks.py --include-slow` で明示的に実行できます。
+
+CIでは `MPLBACKEND=Agg` を使用し、GUIを必要とせずMatplotlibの描画セルを実行します。
 
 ## 再現性
 
@@ -94,7 +134,7 @@ torch.manual_seed(0)
 
 ## 実行時間
 
-通常の Notebook は日常的に実行できる程度の軽さを目標とします。Fully Bayesian NUTS は例外で、ドキュメント用には sampling 設定を小さくします。Notebook CI を追加する際は、重い MCMC Notebook を通常の軽量実行経路から分離します。
+通常の Notebook は日常的に実行できる程度の軽さを目標とします。Fully Bayesian NUTS は例外で、ドキュメント用には sampling 設定を小さくします。計算負荷が高いNotebookは通常CIとは分離します。
 
 ## ドキュメント・Notebook・テストの役割
 
