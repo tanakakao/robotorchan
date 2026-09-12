@@ -2,7 +2,7 @@
 
 from robotorchan.models.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
 from robotorchan.models.base import UnsupportedModelOperationError
-from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP
+from robotorchan.models.contextual import LCEAGP, LCEMGP, MixedLCEMGP, SACGP
 from robotorchan.models.fully_bayesian import (
     MixedSaasFullyBayesianMultiTaskGP,
     MixedSaasFullyBayesianSingleTaskGP,
@@ -13,6 +13,8 @@ from robotorchan.models.heterogeneous import HeterogeneousMTGP, MixedHeterogeneo
 from robotorchan.models.hierarchical import (
     HierarchicalConditionalKernelGP,
     HierarchicalConditionalKernelMultiTaskGP,
+    MixedHierarchicalConditionalKernelGP,
+    MixedHierarchicalConditionalKernelMultiTaskGP,
 )
 from robotorchan.models.higher_order import HigherOrderGP, MixedHigherOrderGP
 from robotorchan.models.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
@@ -44,6 +46,7 @@ from robotorchan.models.variational import MixedSingleTaskVariationalGP, SingleT
 __all__ = [
     "LCEAGP",
     "LCEMGP",
+    "MixedLCEMGP",
     "SACGP",
     "AdditiveMapSaasSingleTaskGP",
     "EnsembleMapSaasSingleTaskGP",
@@ -56,6 +59,8 @@ __all__ = [
     "MixedAdditiveMapSaasSingleTaskGP",
     "MixedEnsembleMapSaasSingleTaskGP",
     "MixedHeterogeneousMTGP",
+    "MixedHierarchicalConditionalKernelGP",
+    "MixedHierarchicalConditionalKernelMultiTaskGP",
     "MixedHigherOrderGP",
     "MixedKroneckerMultiTaskGP",
     "MixedLatentKroneckerGP",
