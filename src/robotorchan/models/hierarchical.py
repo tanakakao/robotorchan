@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-import torch
 from botorch.models.hierarchical.conditional_kernel_gp import (
     LOG_OUTPUTSCALE_CONSTRAINT,
     HierarchicalConditionalKernel,
-    HierarchicalConditionalKernelGP as BoTorchHierarchicalConditionalKernelGP,
-    HierarchicalConditionalKernelMultiTaskGP as BoTorchHierarchicalConditionalKernelMultiTaskGP,
     _transform_hierarchical_dependencies,
+)
+from botorch.models.hierarchical.conditional_kernel_gp import (
+    HierarchicalConditionalKernelGP as BoTorchHierarchicalConditionalKernelGP,
+)
+from botorch.models.hierarchical.conditional_kernel_gp import (
+    HierarchicalConditionalKernelMultiTaskGP as BoTorchHierarchicalConditionalKernelMultiTaskGP,
 )
 from botorch.models.kernels.categorical import CategoricalKernel
 from botorch.models.map_saas import add_saas_prior
@@ -140,7 +143,9 @@ class MixedHierarchicalConditionalKernelGP(HierarchicalConditionalKernelGP):
         normalized = _normalize_cat_dims(cat_dims, train_X.shape[-1])
         overlap = set(normalized) & _parent_dims(hierarchical_dependencies)
         if overlap:
-            raise ValueError("Hierarchical parent dimensions are structural and cannot be in cat_dims.")
+            raise ValueError(
+                "Hierarchical parent dimensions are structural and cannot be in cat_dims."
+            )
 
         super().__init__(
             train_X=train_X,
@@ -255,7 +260,9 @@ class MixedHierarchicalConditionalKernelMultiTaskGP(HierarchicalConditionalKerne
         data_cat_dims = [dim if dim < task_dim else dim - 1 for dim in normalized]
         overlap = set(data_cat_dims) & _parent_dims(hierarchical_dependencies)
         if overlap:
-            raise ValueError("Hierarchical parent dimensions are structural and cannot be in cat_dims.")
+            raise ValueError(
+                "Hierarchical parent dimensions are structural and cannot be in cat_dims."
+            )
 
         super().__init__(
             train_X=train_X,
