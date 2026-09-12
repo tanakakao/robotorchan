@@ -76,24 +76,24 @@ Typical regression notebooks should visualize, where practical:
 - posterior uncertainty,
 - selected candidate points for BO examples.
 
-## Planned notebooks
+## Notebook index
 
-| Notebook | Main models |
-|---|---|
-| `01_single_task_gp.ipynb` | `SingleTaskGP` |
-| `02_mixed_single_task_gp.ipynb` | `MixedSingleTaskGP` |
-| `03_multi_fidelity_gp.ipynb` | `SingleTaskMultiFidelityGP` |
-| `04_multitask_gp.ipynb` | `MultiTaskGP`, `KroneckerMultiTaskGP` |
-| `05_model_list_gp.ipynb` | `ModelListGP` |
-| `06_variational_gp.ipynb` | `SingleTaskVariationalGP` |
-| `07_pairwise_gp.ipynb` | `PairwiseGP` |
-| `08_saas_gp.ipynb` | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` |
-| `09_map_saas_and_additive_gp.ipynb` | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`, `OrthogonalAdditiveGP` |
-| `10_robust_gp.ipynb` | `RobustRelevancePursuitSingleTaskGP` |
-| `11_structured_output_gp.ipynb` | `HigherOrderGP`, `LatentKroneckerGP` |
-| `12_hierarchical_gp.ipynb` | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` |
-| `13_heterogeneous_multitask_gp.ipynb` | `HeterogeneousMTGP` |
-| `14_contextual_gp.ipynb` | `SACGP`, `LCEAGP`, `LCEMGP` |
+| Notebook | Main models | Status |
+|---|---|---|
+| [`01_single_task_gp.ipynb`](notebooks/01_single_task_gp.ipynb) | `SingleTaskGP` | Available |
+| [`02_mixed_single_task_gp.ipynb`](notebooks/02_mixed_single_task_gp.ipynb) | `MixedSingleTaskGP` | Available |
+| `03_multi_fidelity_gp.ipynb` | `SingleTaskMultiFidelityGP` | Planned |
+| `04_multitask_gp.ipynb` | `MultiTaskGP`, `KroneckerMultiTaskGP` | Planned |
+| `05_model_list_gp.ipynb` | `ModelListGP` | Planned |
+| `06_variational_gp.ipynb` | `SingleTaskVariationalGP` | Planned |
+| `07_pairwise_gp.ipynb` | `PairwiseGP` | Planned |
+| `08_saas_gp.ipynb` | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` | Planned |
+| `09_map_saas_and_additive_gp.ipynb` | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`, `OrthogonalAdditiveGP` | Planned |
+| `10_robust_gp.ipynb` | `RobustRelevancePursuitSingleTaskGP` | Planned |
+| `11_structured_output_gp.ipynb` | `HigherOrderGP`, `LatentKroneckerGP` | Planned |
+| `12_hierarchical_gp.ipynb` | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` | Planned |
+| `13_heterogeneous_multitask_gp.ipynb` | `HeterogeneousMTGP` | Planned |
+| `14_contextual_gp.ipynb` | `SACGP`, `LCEAGP`, `LCEMGP` | Planned |
 
 ## Reproducibility
 
