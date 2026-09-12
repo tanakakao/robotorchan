@@ -72,9 +72,7 @@ class TensorReducer(Module, ABC):
         """Transform the final feature dimension while preserving leading dims."""
         self._check_fitted()
         if X.shape[-1] != self.input_dim:
-            raise ValueError(
-                f"Expected final dimension {self.input_dim}, got {X.shape[-1]}."
-            )
+            raise ValueError(f"Expected final dimension {self.input_dim}, got {X.shape[-1]}.")
 
         original_shape = X.shape
         X_2d = X.reshape(-1, original_shape[-1])
@@ -115,9 +113,7 @@ class OutputReducer(TensorReducer, ABC):
         """Restore reduced values to the original outcome space."""
         self._check_fitted()
         if Y.shape[-1] != self.output_dim:
-            raise ValueError(
-                f"Expected final dimension {self.output_dim}, got {Y.shape[-1]}."
-            )
+            raise ValueError(f"Expected final dimension {self.output_dim}, got {Y.shape[-1]}.")
 
         original_shape = Y.shape
         Y_2d = Y.reshape(-1, original_shape[-1])
