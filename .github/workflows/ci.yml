@@ -34,6 +34,23 @@ jobs:
           --ignore=tests/models/test_fully_bayesian_single_task_gp.py
           --ignore=tests/models/test_fully_bayesian_multi_task_gp.py
 
+  notebooks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install CPU PyTorch
+        run: python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
+      - name: Install notebook dependencies
+        run: python -m pip install -e ".[examples]"
+      - name: Execute lightweight notebooks
+        env:
+          MPLBACKEND: Agg
+        run: python examples/run_notebooks.py --timeout 300
+
   fully-bayesian-extra:
     runs-on: ubuntu-latest
 
