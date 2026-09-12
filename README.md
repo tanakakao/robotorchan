@@ -6,12 +6,13 @@
 
 ## ドキュメント
 
-最初に見る場所は次の4つです。
+最初に見る場所は次の5つです。
 
 - **理論から理解する:** [`docs/theory/README.md`](docs/theory/README.md)
 - **どのモデルを選ぶか:** [`docs/models.md`](docs/models.md)
 - **実際にどう使うか:** [`examples/README.md`](examples/README.md)
 - **設計方針・内部構造:** [`docs/architecture.md`](docs/architecture.md)
+- **リリース手順:** [`docs/releasing.md`](docs/releasing.md)
 
 モデルごとの実行可能な Jupyter Notebook は [`examples/notebooks/`](examples/notebooks/) にあります。
 
@@ -19,7 +20,19 @@
 
 ## インストール
 
-開発版を editable install する場合:
+PyPIリリース版を利用する場合:
+
+```bash
+pip install robotorchan
+```
+
+Fully Bayesian SAASを利用する場合:
+
+```bash
+pip install "robotorchan[fully-bayesian]"
+```
+
+リポジトリをcloneして開発版をeditable installする場合:
 
 ```bash
 pip install -e .
