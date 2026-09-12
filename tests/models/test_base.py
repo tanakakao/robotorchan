@@ -53,7 +53,7 @@ def test_raw_data_mapping_is_a_new_mapping() -> None:
     assert torch.equal(model.raw_data["train_X"], torch.ones(2, 1))
 
 
-def test_raw_data_buffers_follow_dtype_and_are_serialized() -> None:
+def test_raw_data_buffers_follow_dtype_but_are_not_serialized() -> None:
     model = DummyRawModel()
     model._store_raw_tensor("train_X", torch.rand(4, 2, dtype=torch.double))
     model._store_raw_tensor("missing", None)
@@ -62,7 +62,7 @@ def test_raw_data_buffers_follow_dtype_and_are_serialized() -> None:
     state_dict = model.state_dict()
 
     assert model.raw_data["train_X"].dtype == torch.float32
-    assert "_raw_train_X" in state_dict
+    assert "_raw_train_X" not in state_dict
     assert "_raw_missing" not in state_dict
     assert "missing" in model.raw_data
     assert model.raw_data["missing"] is None
