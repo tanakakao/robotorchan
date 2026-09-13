@@ -132,12 +132,16 @@ def test_autoencoder_reducer_state_dict_round_trip() -> None:
 
 def test_autoencoder_reducer_follows_dtype_conversion() -> None:
     X = _training_data()
-    reducer = AutoEncoderInputReducer(
-        latent_dim=2,
-        hidden_dims=(8,),
-        epochs=20,
-        random_state=23,
-    ).fit(X).float()
+    reducer = (
+        AutoEncoderInputReducer(
+            latent_dim=2,
+            hidden_dims=(8,),
+            epochs=20,
+            random_state=23,
+        )
+        .fit(X)
+        .float()
+    )
     assert reducer.encoder is not None
     assert reducer.x_mean is not None
     assert reducer.x_scale is not None
