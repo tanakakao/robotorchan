@@ -62,8 +62,7 @@ class AutoEncoderInputReducer(InputReducer):
             raise ValueError("hidden_dims must contain only positive integers.")
         if activation not in _ACTIVATIONS:
             raise ValueError(
-                f"Unsupported activation {activation!r}. "
-                f"Choose from {sorted(_ACTIVATIONS)}."
+                f"Unsupported activation {activation!r}. Choose from {sorted(_ACTIVATIONS)}."
             )
         if epochs <= 0:
             raise ValueError("epochs must be a positive integer.")
@@ -138,9 +137,7 @@ class AutoEncoderInputReducer(InputReducer):
     def _fit_2d(self, X: Tensor, Y: Tensor | None) -> int:
         del Y
         if self.latent_dim > X.shape[-1]:
-            raise ValueError(
-                f"latent_dim={self.latent_dim} exceeds input dimension {X.shape[-1]}."
-            )
+            raise ValueError(f"latent_dim={self.latent_dim} exceeds input dimension {X.shape[-1]}.")
 
         if self.standardize:
             x_mean = X.mean(dim=0)
@@ -178,9 +175,13 @@ class AutoEncoderInputReducer(InputReducer):
             )
             training_X = self._standardize(X).detach()
             n_observations = training_X.shape[0]
-            batch_size = n_observations if self.batch_size is None else min(
-                self.batch_size,
-                n_observations,
+            batch_size = (
+                n_observations
+                if self.batch_size is None
+                else min(
+                    self.batch_size,
+                    n_observations,
+                )
             )
 
             final_loss = torch.tensor(float("nan"), device=X.device, dtype=X.dtype)
