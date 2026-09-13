@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import torch
-from torch import Tensor, nn
+from torch import nn, Tensor
 
 from robotorchan.models.reduction import InputReducer
 
@@ -154,7 +154,10 @@ class AutoEncoderInputReducer(InputReducer):
 
         cuda_devices: list[int] = []
         if X.device.type == "cuda":
-            cuda_devices = [X.device.index if X.device.index is not None else torch.cuda.current_device()]
+            device_index = X.device.index
+            if device_index is None:
+                device_index = torch.cuda.current_device()
+            cuda_devices = [device_index]
 
         with torch.random.fork_rng(devices=cuda_devices):
             torch.manual_seed(self.random_state)
