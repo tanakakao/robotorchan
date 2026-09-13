@@ -53,17 +53,13 @@ posterior = model.posterior(X)
 PCA component は元の目的変数ではありません。BO の objective は復元後の元 Y 空間で定義します。
 
 ```python
-objective = GenericMCObjective(
-    lambda samples, X=None: samples[..., 10]
-)
+objective = GenericMCObjective(lambda samples, X=None: samples[..., 10])
 ```
 
 多目的の場合も同様です。
 
 ```python
-objective = IdentityMCMultiOutputObjective(
-    outcomes=[2, 7, 10]
-)
+objective = IdentityMCMultiOutputObjective(outcomes=[2, 7, 10])
 ```
 
 robotorchan の output-reduced GP は posterior sample を元の出力空間へ復元してから acquisition function に渡します。
