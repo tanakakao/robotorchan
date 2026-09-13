@@ -34,6 +34,12 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
     training outcomes are reduced before GP construction and the public
     posterior is reconstructed in the original outcome space.
 
+    An unfitted reducer is fitted exactly once during model construction. A
+    reducer that is already fitted is reused as-is and only ``transform`` is
+    applied to the supplied training data. This permits externally pre-fitted
+    reducers, including future pretrained neural reducers, to preserve their
+    learned latent coordinate system when attached to a GP.
+
     ``input_transform`` is applied by the underlying ``SingleTaskGP`` after
     input reduction. ``outcome_transform`` is likewise applied after output
     reduction, so both transforms must be configured for latent dimensions.
@@ -41,8 +47,10 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
     Args:
         train_X: Original training inputs with shape ``n x d``.
         train_Y: Original training outcomes with shape ``n x m``.
-        input_reducer: Optional reducer for the input space.
-        output_reducer: Optional reducer for the outcome space.
+        input_reducer: Optional reducer for the input space. Unfitted reducers
+            are fitted from ``train_X`` / ``train_Y``; fitted reducers are reused.
+        output_reducer: Optional reducer for the outcome space. Unfitted reducers
+            are fitted from ``train_Y`` / ``train_X``; fitted reducers are reused.
         train_Yvar: Optional observation-noise variances. Output reduction with
             explicit ``train_Yvar`` is not supported because the noise must be
             transformed consistently into latent outcome coordinates.
@@ -76,12 +84,19 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
         self._original_input_dim_value = train_X.shape[-1]
         self._original_output_dim_value = train_Y.shape[-1]
 
-        reduced_train_X = (
-            train_X if input_reducer is None else input_reducer.fit_transform(train_X, train_Y)
-        )
-        reduced_train_Y = (
-            train_Y if output_reducer is None else output_reducer.fit_transform(train_Y, train_X)
-        )
+        if input_reducer is None:
+            reduced_train_X = train_X
+        elif input_reducer.is_fitted:
+            reduced_train_X = input_reducer.transform(train_X)
+        else:
+            reduced_train_X = input_reducer.fit_transform(train_X, train_Y)
+
+        if output_reducer is None:
+            reduced_train_Y = train_Y
+        elif output_reducer.is_fitted:
+            reduced_train_Y = output_reducer.transform(train_Y)
+        else:
+            reduced_train_Y = output_reducer.fit_transform(train_Y, train_X)
 
         super().__init__(
             train_X=reduced_train_X,
