@@ -194,3 +194,91 @@ Structured / correlated output family
 ```
 
 `ReducedGP` は reducer composition を担当し、structured-output model はそれぞれ BoTorch 本来の covariance structure を保持します。
+
+## 9. Reducer の lifecycle
+
+入力・出力 reducer はモデル構築時に学習し、その後は同じ基底を固定して使います。
+
+```text
+model construction
+    ↓
+reducer.fit(...)
+    ↓
+BO iteration 1, 2, 3, ...
+    ↓
+同じ reducer.transform(...) を利用
+```
+
+BO iteration ごとに PCA / PLS 基底を学習し直すと latent 座標系自体が変化し、posterior、pending point、fantasy、acquisition landscape の意味が変わります。そのため通常の逐次 BO では reducer を再 fit しません。
+
+`condition_on_observations()` でも reducer は再学習せず、新しい `X` / `Y` を既存の基底へ投影します。
+
+## 10. 変換順序
+
+現行の `ReducedGP` では reducer と BoTorch transform の順序は次の通りです。
+
+入力側:
+
+```text
+raw X
+  ↓ input reducer
+latent X
+  ↓ input_transform
+GP
+```
+
+出力側:
+
+```text
+raw Y
+  ↓ output reducer
+latent Y
+  ↓ outcome_transform
+GP
+```
+
+posterior では逆方向に戻し、公開される出力は元の `Y` 空間です。
+
+したがって `Normalize` や `Standardize` を指定する場合、それらは reducer 後の latent 次元に対して設定します。元の物理量空間でのスケーリングを PCA 前に適用したい場合は、学習データを事前にスケーリングするか、将来の raw-space preprocessing 層を利用する設計とします。
+
+## 11. 保存と再利用
+
+Reducer の学習済み基底と fit metadata は PyTorch の `state_dict` に含まれます。
+
+```python
+state = model.state_dict()
+torch.save(state, "model.pt")
+```
+
+Reducer 単体でも round-trip できます。
+
+```python
+from robotorchan.models.reduction import PCAInputReducer
+
+reducer = PCAInputReducer(n_components=5)
+reducer.fit(train_X)
+
+torch.save(reducer.state_dict(), "pca_reducer.pt")
+
+restored = PCAInputReducer(n_components=5)
+restored.load_state_dict(torch.load("pca_reducer.pt", weights_only=True))
+
+Z = restored.transform(X)
+```
+
+`is_fitted`、`input_dim`、`output_dim` も復元されるため、load 後に `fit()` を呼び直す必要はありません。
+
+モデル全体を復元する場合は、同じモデル構成を生成してから `load_state_dict()` を使う PyTorch 標準の方式を前提とします。
+
+## 12. 現時点の制約
+
+Output reduction では次の機能を明示的に制限しています。
+
+- explicit `train_Yvar`
+- Tensor-valued `observation_noise`
+- output reduction と `output_indices` の直接併用
+- output reduction と `posterior_transform` の直接併用
+
+理由は、これらを latent output 空間へ単純に渡すと元出力空間とは異なる意味になるためです。
+
+多目的・制約付き BO では、MC posterior sample が元の `Y` 空間へ復元された後に `GenericMCObjective`、`MCMultiOutputObjective`、constraint を適用する使い方を基本とします。
