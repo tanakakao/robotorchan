@@ -23,10 +23,10 @@ from robotorchan.models.multi_fidelity import SingleTaskMultiFidelityGP
 from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.pairwise import PairwiseGP
 from robotorchan.models.reduced import (
-    OutputPCAGP,
-    OutputPLSGP,
     PCAGP,
     PLSGP,
+    OutputPCAGP,
+    OutputPLSGP,
     RandomProjectionGP,
     ReducedGP,
 )
@@ -37,8 +37,6 @@ from robotorchan.models.variational import SingleTaskVariationalGP
 __all__ = [
     "LCEAGP",
     "LCEMGP",
-    "OutputPCAGP",
-    "OutputPLSGP",
     "PCAGP",
     "PLSGP",
     "SACGP",
@@ -54,6 +52,8 @@ __all__ = [
     "ModelListGP",
     "MultiTaskGP",
     "OrthogonalAdditiveGP",
+    "OutputPCAGP",
+    "OutputPLSGP",
     "PairwiseGP",
     "RandomProjectionGP",
     "ReducedGP",
