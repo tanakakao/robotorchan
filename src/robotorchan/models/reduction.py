@@ -23,32 +23,34 @@ class TensorReducer(Module, ABC):
     ``transform`` must accept arbitrary leading batch dimensions and only alter
     the final feature dimension. This contract keeps reduced models compatible
     with BoTorch q-batches, fantasies, and input perturbation workflows.
+
+    Fitted metadata is stored in a persistent buffer so ``state_dict`` round
+    trips preserve the reducer lifecycle as well as learned projection tensors.
     """
 
     def __init__(self) -> None:
         super().__init__()
-        self._is_fitted = False
-        self._input_dim: int | None = None
-        self._output_dim: int | None = None
+        self.register_buffer(
+            "_fit_metadata",
+            torch.tensor([0, -1, -1], dtype=torch.long),
+        )
 
     @property
     def is_fitted(self) -> bool:
         """Whether the reducer has been fitted."""
-        return self._is_fitted
+        return bool(self._fit_metadata[0].item())
 
     @property
     def input_dim(self) -> int:
         """Feature dimension seen during fitting."""
         self._check_fitted()
-        assert self._input_dim is not None
-        return self._input_dim
+        return int(self._fit_metadata[1].item())
 
     @property
     def output_dim(self) -> int:
         """Reduced feature dimension produced by ``transform``."""
         self._check_fitted()
-        assert self._output_dim is not None
-        return self._output_dim
+        return int(self._fit_metadata[2].item())
 
     def fit(self, X: Tensor, Y: Tensor | None = None) -> Self:
         """Fit the reducer from a two-dimensional training tensor.
@@ -65,9 +67,13 @@ class TensorReducer(Module, ABC):
         if output_dim <= 0:
             raise ValueError("A reducer must produce at least one output dimension.")
 
-        self._input_dim = X.shape[-1]
-        self._output_dim = output_dim
-        self._is_fitted = True
+        self._fit_metadata.copy_(
+            torch.tensor(
+                [1, X.shape[-1], output_dim],
+                dtype=self._fit_metadata.dtype,
+                device=self._fit_metadata.device,
+            )
+        )
         return self
 
     def transform(self, X: Tensor) -> Tensor:
@@ -92,8 +98,40 @@ class TensorReducer(Module, ABC):
         return self.fit(X, Y).transform(X)
 
     def _check_fitted(self) -> None:
-        if not self._is_fitted:
+        if not self.is_fitted:
             raise ReducerNotFittedError(f"{type(self).__name__} has not been fitted.")
+
+    def _load_from_state_dict(
+        self,
+        state_dict: dict[str, Tensor],
+        prefix: str,
+        local_metadata: dict[str, object],
+        strict: bool,
+        missing_keys: list[str],
+        unexpected_keys: list[str],
+        error_msgs: list[str],
+    ) -> None:
+        """Materialize learned buffers before loading a reducer state dict.
+
+        Reducer subclasses register learned tensors as ``None`` before fitting.
+        PyTorch omits such buffers from an unfitted module's state structure, so
+        they must be materialized from checkpoint shapes before the standard
+        loader can copy the saved values.
+        """
+        for name, value in self._buffers.items():
+            key = f"{prefix}{name}"
+            if value is None and key in state_dict:
+                self._buffers[name] = torch.empty_like(state_dict[key])
+
+        super()._load_from_state_dict(
+            state_dict=state_dict,
+            prefix=prefix,
+            local_metadata=local_metadata,
+            strict=strict,
+            missing_keys=missing_keys,
+            unexpected_keys=unexpected_keys,
+            error_msgs=error_msgs,
+        )
 
     @abstractmethod
     def _fit_2d(self, X: Tensor, Y: Tensor | None) -> int:

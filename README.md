@@ -6,10 +6,11 @@
 
 ## ドキュメント
 
-最初に見る場所は次の5つです。
+最初に見る場所は次の6つです。
 
 - **理論から理解する:** [`docs/theory/README.md`](docs/theory/README.md)
 - **どのモデルを選ぶか:** [`docs/models.md`](docs/models.md)
+- **高次元出力モデルを選ぶ:** [`docs/high_dimensional_outputs.md`](docs/high_dimensional_outputs.md)
 - **実際にどう使うか:** [`examples/README.md`](examples/README.md)
 - **設計方針・内部構造:** [`docs/architecture.md`](docs/architecture.md)
 - **リリース手順:** [`docs/releasing.md`](docs/releasing.md)
@@ -110,6 +111,17 @@ model.make_mll()
 - `ModelListGP`
 - `HeterogeneousMTGP`
 
+### 次元削減・高次元入出力
+
+- `ReducedGP`
+- `PCAGP`
+- `PLSGP`
+- `RandomProjectionGP`
+- `OutputPCAGP`
+- `OutputPLSGP`
+
+`ReducedGP` は input reducer / output reducer を組み合わせる共通実装です。named wrapper は代表的な reducer 構成を簡潔に使うための薄いラッパーです。高次元出力の構造化モデルとの使い分けは [`docs/high_dimensional_outputs.md`](docs/high_dimensional_outputs.md) を参照してください。
+
 ### 大規模・高次元
 
 - `SingleTaskVariationalGP`
@@ -177,11 +189,3 @@ Preference data を通常の回帰 target として扱わず、`datapoints` と 
 
 - Python >= 3.11
 - BoTorch >= 0.18.1, < 0.19
-
-BoTorch の minor version を更新する際は、constructor signature と挙動の互換性を確認した上で対応します。
-
-## Status
-
-Early development / pre-alpha.
-
-公開 API は今後変更される可能性があります。

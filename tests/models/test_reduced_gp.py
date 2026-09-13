@@ -211,3 +211,38 @@ def test_output_reduced_gp_guards_latent_incompatible_posterior_options() -> Non
         model.posterior(X, output_indices=[0])
     with pytest.raises(NotImplementedError, match="Tensor-valued observation_noise"):
         model.posterior(X, observation_noise=torch.ones(2, 6, dtype=torch.double))
+
+
+def test_combined_reduced_gp_state_dict_round_trip_preserves_posterior() -> None:
+    train_X, train_Y = _multioutput_training_data()
+    input_reducer = PCAInputReducer(n_components=3)
+    output_reducer = OutputPCAReducer(n_components=2)
+    source = ReducedGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        input_reducer=input_reducer,
+        output_reducer=output_reducer,
+    )
+    source.eval()
+    source.likelihood.eval()
+
+    restored = ReducedGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        input_reducer=PCAInputReducer(n_components=3),
+        output_reducer=OutputPCAReducer(n_components=2),
+    )
+    restored.load_state_dict(source.state_dict())
+    restored.eval()
+    restored.likelihood.eval()
+
+    X = torch.randn(4, 5, dtype=torch.double)
+    source_posterior = source.posterior(X)
+    restored_posterior = restored.posterior(X)
+
+    assert restored.input_reducer is not None
+    assert restored.output_reducer is not None
+    assert restored.input_reducer.is_fitted is True
+    assert restored.output_reducer.is_fitted is True
+    torch.testing.assert_close(restored_posterior.mean, source_posterior.mean)
+    torch.testing.assert_close(restored_posterior.variance, source_posterior.variance)
