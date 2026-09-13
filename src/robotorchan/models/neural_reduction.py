@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
 
 from robotorchan.models.reduction import InputReducer
 
