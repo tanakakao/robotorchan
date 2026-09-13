@@ -68,9 +68,7 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
         input_transform: InputTransform | None = None,
     ) -> None:
         if output_reducer is not None and train_Yvar is not None:
-            raise NotImplementedError(
-                "Explicit train_Yvar is not supported with output reduction."
-            )
+            raise NotImplementedError("Explicit train_Yvar is not supported with output reduction.")
 
         raw_train_X = train_X.detach().clone()
         raw_train_Y = train_Y.detach().clone()
@@ -79,14 +77,10 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
         self._original_output_dim_value = train_Y.shape[-1]
 
         reduced_train_X = (
-            train_X
-            if input_reducer is None
-            else input_reducer.fit_transform(train_X, train_Y)
+            train_X if input_reducer is None else input_reducer.fit_transform(train_X, train_Y)
         )
         reduced_train_Y = (
-            train_Y
-            if output_reducer is None
-            else output_reducer.fit_transform(train_Y, train_X)
+            train_Y if output_reducer is None else output_reducer.fit_transform(train_Y, train_X)
         )
 
         super().__init__(
@@ -138,8 +132,7 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
         if self.input_reducer is None:
             if X.shape[-1] != self.original_input_dim:
                 raise ValueError(
-                    f"Expected final input dimension {self.original_input_dim}, "
-                    f"got {X.shape[-1]}."
+                    f"Expected final input dimension {self.original_input_dim}, got {X.shape[-1]}."
                 )
             return X
         if X.shape[-1] == self.original_input_dim:
