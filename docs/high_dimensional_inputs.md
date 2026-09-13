@@ -73,7 +73,7 @@ reducer.transform(train_X)
 latent GP
 ```
 
-この仕様により、別データで学習済みの PCA / PLS や、将来追加する pretrained AutoEncoder / VAE encoder を、その潜在座標系を壊さず GP に接続できます。
+この仕様により、別データで学習済みの PCA / PLS や、pretrained AutoEncoder / VAE encoder を、その潜在座標系を壊さず GP に接続できます。
 
 この方針は output reducer にも適用されます。すでに学習済みの `OutputReducer` を渡した場合も再fitしません。
 
@@ -134,6 +134,40 @@ model = RandomProjectionGP(
 
 射影行列は初期 fit 時に一度だけ生成され、その後固定されます。
 
+### AutoEncoderInputReducer
+
+`AutoEncoderInputReducer` は非線形な encoder / decoder を reconstruction loss で学習し、encoder 出力を潜在入力として使用します。
+
+```python
+from robotorchan.models.neural_reduction import AutoEncoderInputReducer
+
+reducer = AutoEncoderInputReducer(
+    latent_dim=5,
+    hidden_dims=(64, 32),
+    activation="gelu",
+    epochs=200,
+    learning_rate=1e-3,
+)
+
+latent_X = reducer.fit_transform(train_X)
+```
+
+標準では入力特徴を標準化してから AutoEncoder を学習します。学習後は encoder / decoder のパラメータを freeze し、`transform(X)` では encoder の再学習を行いません。
+
+```text
+original X
+   ↓ standardize with fitted mean / scale
+frozen encoder
+   ↓
+latent Z
+```
+
+ネットワークパラメータは固定されますが、`transform(X)` は入力 `X` に関して differentiable です。そのため、今後 `ReducedGP` に統合した際も acquisition function の勾配を元の入力空間へ伝播できます。
+
+また `reconstruct(X)` により decoder を通した元空間での再構成を確認できます。AutoEncoder の学習状態、標準化統計量、ネットワークパラメータは `state_dict` に保存され、device / dtype 変換にも追従します。
+
+Phase 3 では reducer 本体までを実装しています。`AutoEncoderGP` convenience wrapper と acquisition integration は次の Phase で追加します。
+
 ## BoTorch API との関係
 
 `ReducedGP` は BoTorch の `SingleTaskGP` と互換な公開インターフェースを維持します。
@@ -159,7 +193,7 @@ latent GP posterior
 
 したがって、PCA などの逆変換を使って潜在候補を元空間へ復元する処理は通常必要ありません。
 
-## Phase 1-2 の保証範囲
+## Phase 1-3 の保証範囲
 
 現在は次の契約を基盤仕様として固定しています。
 
@@ -176,12 +210,14 @@ latent GP posterior
 - 未学習 reducer はモデル構築時に一度だけ fit する。
 - 学習済み reducer は再fitせず、そのまま再利用する。
 - model に接続した reducer の自動再学習は行わない。
+- AutoEncoder は学習完了後にネットワークパラメータを freeze する。
+- AutoEncoder の `transform` は元入力に関する勾配を保持する。
 
 ## 今後の拡張
 
 この共通基盤上に以下を追加します。
 
-1. AutoEncoderInputReducer / AutoEncoderGP
+1. AutoEncoderGP convenience wrapper / acquisition integration
 2. VAEInputReducer / VAEGP
 
 SAAS / MAP-SAAS は明示的な reducer を使わないため、`ReducedGP` 系とは分離した高次元モデルとして扱います。
