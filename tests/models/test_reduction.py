@@ -5,9 +5,11 @@ import torch
 from botorch.posteriors import Posterior
 from torch import Tensor
 
+from robotorchan.models.output_reduction import OutputPCAReducer
 from robotorchan.models.reduction import (
     InputReducer,
     OutputReducer,
+    PCAInputReducer,
     ReducerNotFittedError,
     ReductionMixin,
 )
@@ -97,6 +99,48 @@ def test_output_reducer_inverse_preserves_leading_dimensions() -> None:
     assert restored.shape == torch.Size([2, 4, 5])
     torch.testing.assert_close(restored[..., :2], latent)
     torch.testing.assert_close(restored[..., 2:], torch.zeros_like(restored[..., 2:]))
+
+
+def test_reducer_fit_metadata_is_persistent() -> None:
+    reducer = FirstColumnsReducer(n_components=2)
+    reducer.fit(torch.randn(6, 4), torch.randn(6, 1))
+
+    state_dict = reducer.state_dict()
+
+    assert "_fit_metadata" in state_dict
+    torch.testing.assert_close(state_dict["_fit_metadata"], torch.tensor([1, 4, 2]))
+
+
+def test_pca_input_reducer_state_dict_round_trip_without_refit() -> None:
+    torch.manual_seed(17)
+    train_X = torch.randn(12, 5, dtype=torch.double)
+    test_X = torch.randn(4, 5, dtype=torch.double)
+    fitted = PCAInputReducer(n_components=3).fit(train_X)
+    expected = fitted.transform(test_X)
+
+    restored = PCAInputReducer(n_components=3)
+    restored.load_state_dict(fitted.state_dict())
+
+    assert restored.is_fitted is True
+    assert restored.input_dim == 5
+    assert restored.output_dim == 3
+    torch.testing.assert_close(restored.transform(test_X), expected)
+
+
+def test_pca_output_reducer_state_dict_round_trip_without_refit() -> None:
+    torch.manual_seed(19)
+    train_Y = torch.randn(14, 6, dtype=torch.double)
+    latent = torch.randn(5, 3, dtype=torch.double)
+    fitted = OutputPCAReducer(n_components=3).fit(train_Y)
+    expected = fitted.inverse_transform(latent)
+
+    restored = OutputPCAReducer(n_components=3)
+    restored.load_state_dict(fitted.state_dict())
+
+    assert restored.is_fitted is True
+    assert restored.input_dim == 6
+    assert restored.output_dim == 3
+    torch.testing.assert_close(restored.inverse_transform(latent), expected)
 
 
 def test_reduction_mixin_routes_training_and_candidate_tensors() -> None:
