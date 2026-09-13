@@ -5,10 +5,10 @@ import torch
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import (
-    OutputPCAGP,
-    OutputPLSGP,
     PCAGP,
     PLSGP,
+    OutputPCAGP,
+    OutputPLSGP,
     RandomProjectionGP,
     ReducedGP,
 )
