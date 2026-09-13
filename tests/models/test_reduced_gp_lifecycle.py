@@ -3,7 +3,8 @@ from __future__ import annotations
 import torch
 from botorch.sampling.normal import SobolQMCNormalSampler
 
-from robotorchan.models import PCAGP, PLSGP, RandomProjectionGP
+from robotorchan.models import PCAGP, PLSGP, RandomProjectionGP, ReducedGP
+from robotorchan.models.output_reduction import OutputPCAReducer
 from robotorchan.models.reduction import (
     PCAInputReducer,
     PLSInputReducer,
@@ -116,3 +117,90 @@ def test_reducer_buffers_follow_model_dtype_conversion() -> None:
     model.likelihood.eval()
     posterior = model.posterior(torch.randn(4, 8, dtype=torch.float32))
     assert posterior.mean.dtype == torch.float32
+
+
+def test_prefitted_pca_input_reducer_is_reused_without_refit() -> None:
+    train_X, train_Y = _training_data()
+    reducer = PCAInputReducer(n_components=3).fit(train_X)
+    assert reducer.components is not None
+    assert reducer.mean is not None
+
+    components = reducer.components.detach().clone()
+    mean = reducer.mean.detach().clone()
+    shifted_X = train_X + 4.0
+    expected_latent_X = reducer.transform(shifted_X)
+
+    model = ReducedGP(
+        train_X=shifted_X,
+        train_Y=train_Y,
+        input_reducer=reducer,
+    )
+
+    torch.testing.assert_close(reducer.components, components)
+    torch.testing.assert_close(reducer.mean, mean)
+    torch.testing.assert_close(model.train_inputs[0], expected_latent_X)
+    torch.testing.assert_close(model.raw_train_X, shifted_X)
+
+
+def test_prefitted_pls_input_reducer_is_reused_without_refit() -> None:
+    train_X, train_Y = _training_data()
+    reducer = PLSInputReducer(n_components=2).fit(train_X, train_Y)
+    assert reducer.rotation is not None
+    assert reducer.x_mean is not None
+
+    rotation = reducer.rotation.detach().clone()
+    x_mean = reducer.x_mean.detach().clone()
+    shifted_X = train_X + 2.0
+    shifted_Y = train_Y - 1.0
+    expected_latent_X = reducer.transform(shifted_X)
+
+    model = ReducedGP(
+        train_X=shifted_X,
+        train_Y=shifted_Y,
+        input_reducer=reducer,
+    )
+
+    torch.testing.assert_close(reducer.rotation, rotation)
+    torch.testing.assert_close(reducer.x_mean, x_mean)
+    torch.testing.assert_close(model.train_inputs[0], expected_latent_X)
+
+
+def test_prefitted_random_projection_is_reused_without_resampling() -> None:
+    train_X, train_Y = _training_data()
+    reducer = RandomProjectionInputReducer(n_components=3, random_state=23).fit(train_X)
+    assert reducer.projection is not None
+
+    projection = reducer.projection.detach().clone()
+    expected_latent_X = reducer.transform(train_X)
+
+    model = ReducedGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        input_reducer=reducer,
+    )
+
+    torch.testing.assert_close(reducer.projection, projection)
+    torch.testing.assert_close(model.train_inputs[0], expected_latent_X)
+
+
+def test_prefitted_output_reducer_is_reused_without_refit() -> None:
+    torch.manual_seed(202)
+    train_X = torch.randn(20, 4, dtype=torch.double)
+    fit_Y = torch.randn(20, 6, dtype=torch.double)
+    reducer = OutputPCAReducer(n_components=3).fit(fit_Y)
+    assert reducer.components is not None
+    assert reducer.mean is not None
+
+    components = reducer.components.detach().clone()
+    mean = reducer.mean.detach().clone()
+    train_Y = fit_Y + 3.0
+
+    model = ReducedGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        output_reducer=reducer,
+    )
+
+    assert model.output_reducer is reducer
+    torch.testing.assert_close(reducer.components, components)
+    torch.testing.assert_close(reducer.mean, mean)
