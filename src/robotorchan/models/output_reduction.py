@@ -9,12 +9,91 @@ from torch import Tensor
 from robotorchan.models.reduction import OutputReducer
 
 
+class LinearOutputPosterior(Posterior):
+    """Posterior restored from an independent latent linear-output posterior.
+
+    Base samples and latent sampling are delegated to the wrapped posterior so
+    BoTorch samplers retain common-random-number behavior. Samples are mapped
+    back to the original output space through the reducer inverse transform.
+    Marginal variances assume independent latent outputs, matching the
+    independent-output ``SingleTaskGP`` representation used by reduced models.
+    """
+
+    def __init__(
+        self,
+        posterior: Posterior,
+        reducer: OutputReducer,
+        decoder: Tensor,
+    ) -> None:
+        self._posterior = posterior
+        self._reducer = reducer
+        self._decoder = decoder
+
+        latent_shape = posterior._extended_shape()
+        if latent_shape[-1] != reducer.output_dim:
+            raise ValueError(
+                "Latent posterior output dimension does not match the fitted reducer: "
+                f"expected {reducer.output_dim}, got {latent_shape[-1]}."
+            )
+        if decoder.shape != torch.Size([reducer.output_dim, reducer.input_dim]):
+            raise ValueError(
+                "Decoder must have shape "
+                f"[{reducer.output_dim}, {reducer.input_dim}], got {tuple(decoder.shape)}."
+            )
+
+    @property
+    def base_sample_shape(self) -> torch.Size:
+        return self._posterior.base_sample_shape
+
+    @property
+    def batch_range(self) -> tuple[int, int]:
+        return self._posterior.batch_range
+
+    @property
+    def device(self) -> torch.device:
+        return self._posterior.device
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return self._posterior.dtype
+
+    @property
+    def mean(self) -> Tensor:
+        return self._reducer.inverse_transform(self._posterior.mean)
+
+    @property
+    def variance(self) -> Tensor:
+        latent_variance = self._posterior.variance
+        return latent_variance @ self._decoder.square()
+
+    def _extended_shape(
+        self,
+        sample_shape: torch.Size = torch.Size(),  # noqa: B008
+    ) -> torch.Size:
+        latent_shape = self._posterior._extended_shape(sample_shape=sample_shape)
+        return torch.Size((*latent_shape[:-1], self._reducer.input_dim))
+
+    def rsample(
+        self,
+        sample_shape: torch.Size | None = None,
+    ) -> Tensor:
+        samples = self._posterior.rsample(sample_shape=sample_shape)
+        return self._reducer.inverse_transform(samples)
+
+    def rsample_from_base_samples(
+        self,
+        sample_shape: torch.Size,
+        base_samples: Tensor,
+    ) -> Tensor:
+        samples = self._posterior.rsample_from_base_samples(
+            sample_shape=sample_shape,
+            base_samples=base_samples,
+        )
+        return self._reducer.inverse_transform(samples)
+
+
 class OutputPCAReducer(OutputReducer):
     """Principal-component reduction for high-dimensional outcomes.
-
-    The reducer learns a linear basis in the original outcome space and supports
-    deterministic forward and inverse transforms. Posterior uncertainty
-    propagation is intentionally implemented in the next phase.
 
     Args:
         n_components: Number of principal components to retain.
@@ -75,19 +154,18 @@ class OutputPCAReducer(OutputReducer):
         return restored
 
     def restore_posterior(self, posterior: Posterior) -> Posterior:
-        del posterior
-        raise NotImplementedError(
-            "OutputPCAReducer posterior restoration is implemented in Phase 5."
+        self._check_fitted()
+        assert self.components is not None
+        decoder = self.components.transpose(-2, -1)
+        return LinearOutputPosterior(
+            posterior=posterior,
+            reducer=self,
+            decoder=decoder,
         )
 
 
 class OutputPLSReducer(OutputReducer):
     """Supervised PLS-style reduction for high-dimensional outcomes.
-
-    The original outcomes are projected onto directions with strong
-    cross-covariance with the paired predictor tensor. A least-squares decoder
-    learned from the latent training scores maps reduced values back to the
-    original outcome space.
 
     Args:
         n_components: Number of supervised latent output components.
@@ -193,7 +271,10 @@ class OutputPLSReducer(OutputReducer):
         return restored
 
     def restore_posterior(self, posterior: Posterior) -> Posterior:
-        del posterior
-        raise NotImplementedError(
-            "OutputPLSReducer posterior restoration is implemented in Phase 5."
+        self._check_fitted()
+        assert self.decoder is not None
+        return LinearOutputPosterior(
+            posterior=posterior,
+            reducer=self,
+            decoder=self.decoder,
         )
