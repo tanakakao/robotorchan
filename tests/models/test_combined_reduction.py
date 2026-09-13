@@ -37,7 +37,7 @@ def test_combined_pca_reduction_trains_in_both_latent_spaces() -> None:
     assert model.reduced_input_dim == 4
     assert model.original_output_dim == 6
     assert model.reduced_output_dim == 3
-    assert model.train_inputs[0].shape == torch.Size([28, 4])
+    assert model.train_inputs[0].shape == torch.Size([3, 28, 4])
     assert model.train_targets.shape == torch.Size([3, 28])
     torch.testing.assert_close(model.raw_train_X, train_X)
     torch.testing.assert_close(model.raw_train_Y, train_Y)
@@ -84,7 +84,7 @@ def test_combined_reduction_conditions_in_original_spaces_without_refitting() ->
     new_Y = torch.randn(3, 6, dtype=torch.double)
     fantasy_model = model.condition_on_observations(X=new_X, Y=new_Y)
 
-    assert fantasy_model.train_inputs[0].shape == torch.Size([31, 4])
+    assert fantasy_model.train_inputs[0].shape == torch.Size([3, 31, 4])
     assert fantasy_model.train_targets.shape == torch.Size([3, 31])
     assert isinstance(fantasy_model.input_reducer, PCAInputReducer)
     assert isinstance(fantasy_model.output_reducer, OutputPCAReducer)
@@ -109,7 +109,7 @@ def test_combined_supervised_pls_reducers_are_composable() -> None:
 
     assert isinstance(model.input_reducer, PLSInputReducer)
     assert isinstance(model.output_reducer, OutputPLSReducer)
-    assert model.train_inputs[0].shape == torch.Size([28, 4])
+    assert model.train_inputs[0].shape == torch.Size([3, 28, 4])
     assert model.train_targets.shape == torch.Size([3, 28])
 
     posterior = model.posterior(torch.randn(3, 8, dtype=torch.double))
