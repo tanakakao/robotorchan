@@ -50,6 +50,11 @@ class LinearOutputPosterior(Posterior):
         return self._posterior.batch_range
 
     @property
+    def batch_shape(self) -> torch.Size:
+        """Batch shape used by BoTorch cached Monte Carlo samplers."""
+        return self._posterior.batch_shape
+
+    @property
     def device(self) -> torch.device:
         return self._posterior.device
 
