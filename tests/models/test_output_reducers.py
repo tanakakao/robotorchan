@@ -2,8 +2,68 @@ from __future__ import annotations
 
 import pytest
 import torch
+from botorch.posteriors import Posterior
+from torch import Tensor
 
-from robotorchan.models.output_reduction import OutputPCAReducer, OutputPLSReducer
+from robotorchan.models.output_reduction import (
+    LinearOutputPosterior,
+    OutputPCAReducer,
+    OutputPLSReducer,
+)
+
+
+class IndependentNormalPosterior(Posterior):
+    def __init__(self, mean: Tensor, variance: Tensor) -> None:
+        self._mean = mean
+        self._variance = variance
+
+    @property
+    def mean(self) -> Tensor:
+        return self._mean
+
+    @property
+    def variance(self) -> Tensor:
+        return self._variance
+
+    @property
+    def device(self) -> torch.device:
+        return self._mean.device
+
+    @property
+    def dtype(self) -> torch.dtype:
+        return self._mean.dtype
+
+    @property
+    def base_sample_shape(self) -> torch.Size:
+        return self._mean.shape
+
+    @property
+    def batch_range(self) -> tuple[int, int]:
+        return (0, -2)
+
+    def _extended_shape(
+        self,
+        sample_shape: torch.Size = torch.Size(),  # noqa: B008
+    ) -> torch.Size:
+        return sample_shape + self._mean.shape
+
+    def rsample(self, sample_shape: torch.Size | None = None) -> Tensor:
+        if sample_shape is None:
+            sample_shape = torch.Size()
+        base_samples = torch.randn(
+            sample_shape + self.base_sample_shape,
+            dtype=self.dtype,
+            device=self.device,
+        )
+        return self.rsample_from_base_samples(sample_shape, base_samples)
+
+    def rsample_from_base_samples(
+        self,
+        sample_shape: torch.Size,
+        base_samples: Tensor,
+    ) -> Tensor:
+        del sample_shape
+        return self._mean + self._variance.sqrt() * base_samples
 
 
 def test_output_pca_matches_svd_projection() -> None:
@@ -108,13 +168,75 @@ def test_output_pls_inverse_preserves_arbitrary_leading_dimensions() -> None:
     assert restored.shape == torch.Size([2, 3, 4, 6])
 
 
-def test_output_reducers_defer_posterior_restoration_to_next_phase() -> None:
-    train_X = torch.randn(12, 3)
-    train_Y = torch.randn(12, 5)
-    pca = OutputPCAReducer(n_components=2).fit(train_Y)
-    pls = OutputPLSReducer(n_components=2).fit(train_Y, train_X)
+def test_output_pca_restores_posterior_mean_variance_and_shape() -> None:
+    torch.manual_seed(15)
+    train_Y = torch.randn(24, 5, dtype=torch.double)
+    reducer = OutputPCAReducer(n_components=2).fit(train_Y)
+    latent_mean = torch.randn(3, 2, dtype=torch.double)
+    latent_variance = torch.rand(3, 2, dtype=torch.double) + 0.1
+    latent_posterior = IndependentNormalPosterior(latent_mean, latent_variance)
 
-    with pytest.raises(NotImplementedError, match="Phase 5"):
-        pca.restore_posterior(None)  # type: ignore[arg-type]
-    with pytest.raises(NotImplementedError, match="Phase 5"):
-        pls.restore_posterior(None)  # type: ignore[arg-type]
+    posterior = reducer.restore_posterior(latent_posterior)
+
+    assert isinstance(posterior, LinearOutputPosterior)
+    assert posterior._extended_shape() == torch.Size([3, 5])
+    assert posterior._extended_shape(torch.Size([7])) == torch.Size([7, 3, 5])
+    assert posterior.base_sample_shape == latent_posterior.base_sample_shape
+    assert posterior.batch_range == latent_posterior.batch_range
+    torch.testing.assert_close(posterior.mean, reducer.inverse_transform(latent_mean))
+    assert reducer.components is not None
+    decoder = reducer.components.transpose(-2, -1)
+    torch.testing.assert_close(posterior.variance, latent_variance @ decoder.square())
+
+
+def test_output_pca_base_samples_are_transformed_to_original_output_space() -> None:
+    torch.manual_seed(16)
+    train_Y = torch.randn(20, 6, dtype=torch.double)
+    reducer = OutputPCAReducer(n_components=3).fit(train_Y)
+    latent_mean = torch.randn(2, 4, 3, dtype=torch.double)
+    latent_variance = torch.rand(2, 4, 3, dtype=torch.double) + 0.1
+    latent_posterior = IndependentNormalPosterior(latent_mean, latent_variance)
+    posterior = reducer.restore_posterior(latent_posterior)
+    sample_shape = torch.Size([5])
+    base_samples = torch.randn(
+        sample_shape + latent_posterior.base_sample_shape,
+        dtype=torch.double,
+    )
+
+    samples = posterior.rsample_from_base_samples(sample_shape, base_samples)
+    latent_samples = latent_posterior.rsample_from_base_samples(sample_shape, base_samples)
+    expected = reducer.inverse_transform(latent_samples)
+
+    assert samples.shape == torch.Size([5, 2, 4, 6])
+    torch.testing.assert_close(samples, expected)
+
+
+def test_output_pls_restores_posterior_to_original_output_dimension() -> None:
+    torch.manual_seed(17)
+    train_X = torch.randn(30, 4, dtype=torch.double)
+    train_Y = torch.randn(30, 7, dtype=torch.double)
+    train_Y[:, :4] += train_X
+    reducer = OutputPLSReducer(n_components=2).fit(train_Y, train_X)
+    latent_posterior = IndependentNormalPosterior(
+        mean=torch.randn(3, 2, dtype=torch.double),
+        variance=torch.rand(3, 2, dtype=torch.double) + 0.1,
+    )
+
+    posterior = reducer.restore_posterior(latent_posterior)
+
+    assert posterior.mean.shape == torch.Size([3, 7])
+    assert posterior.variance.shape == torch.Size([3, 7])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+
+
+def test_output_posterior_rejects_incompatible_latent_dimension() -> None:
+    train_Y = torch.randn(16, 5, dtype=torch.double)
+    reducer = OutputPCAReducer(n_components=2).fit(train_Y)
+    latent_posterior = IndependentNormalPosterior(
+        mean=torch.randn(4, 3, dtype=torch.double),
+        variance=torch.ones(4, 3, dtype=torch.double),
+    )
+
+    with pytest.raises(ValueError, match="does not match"):
+        reducer.restore_posterior(latent_posterior)
