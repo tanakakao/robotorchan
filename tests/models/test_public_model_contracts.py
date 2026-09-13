@@ -5,6 +5,7 @@ MODELS = importlib.import_module("robotorchan.models")
 
 PUBLIC_MODEL_NAMES = {
     "AdditiveMapSaasSingleTaskGP",
+    "AutoEncoderGP",
     "EnsembleMapSaasSingleTaskGP",
     "HeterogeneousMTGP",
     "HierarchicalConditionalKernelGP",
