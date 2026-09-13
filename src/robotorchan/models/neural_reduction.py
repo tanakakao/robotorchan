@@ -9,7 +9,6 @@ from torch import Tensor, nn
 
 from robotorchan.models.reduction import InputReducer
 
-
 _ACTIVATIONS: dict[str, Callable[[], nn.Module]] = {
     "gelu": nn.GELU,
     "relu": nn.ReLU,
