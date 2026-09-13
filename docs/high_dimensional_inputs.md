@@ -18,12 +18,18 @@ Gaussian Process
 
 `posterior(X)`、`condition_on_observations(X, Y)`、獲得関数評価では、元の入力空間のテンソルをそのまま渡します。`ReducedGP` が内部で fitted reducer を使って潜在空間へ変換します。
 
-### reducer lifecycle
+## Reducer lifecycle
 
-入力 reducer はモデル構築時に一度だけ学習し、その後は固定します。
+入力 reducer のライフサイクルは次の2通りです。
+
+### 1. 未学習 reducer を渡す場合
+
+通常の `PCAGP`、`PLSGP`、`RandomProjectionGP` はこの経路を使います。
 
 ```text
 model construction
+    ↓
+reducer is not fitted
     ↓
 reducer.fit(train_X, train_Y)
     ↓
@@ -34,9 +40,48 @@ posterior / acquisition / conditioning / fantasize
 reducer.transform(X) only
 ```
 
-BO ループ中に自動的な reducer 再学習は行いません。これにより、探索途中で潜在座標系が変化することを防ぎます。
+モデル構築時に一度だけ学習し、その後は固定します。BO ループ中に自動的な reducer 再学習は行いません。これにより、探索途中で潜在座標系が変化することを防ぎます。
 
-この方針は PCA、PLS、Random Projection に共通です。将来 AutoEncoder / VAE reducer を追加する場合も、まずは同じ frozen-reducer contract に従います。
+### 2. すでに学習済み reducer を渡す場合
+
+`ReducedGP` に `is_fitted == True` の reducer を渡した場合、再学習せず、そのまま再利用します。
+
+```python
+from robotorchan.models import ReducedGP
+from robotorchan.models.reduction import PCAInputReducer
+
+reducer = PCAInputReducer(n_components=5).fit(reference_X)
+
+model = ReducedGP(
+    train_X=train_X,
+    train_Y=train_Y,
+    input_reducer=reducer,
+)
+```
+
+この場合は次の経路になります。
+
+```text
+pre-fitted reducer
+    ↓
+ReducedGP construction
+    ↓
+fit is skipped
+    ↓
+reducer.transform(train_X)
+    ↓
+latent GP
+```
+
+この仕様により、別データで学習済みの PCA / PLS や、将来追加する pretrained AutoEncoder / VAE encoder を、その潜在座標系を壊さず GP に接続できます。
+
+この方針は output reducer にも適用されます。すでに学習済みの `OutputReducer` を渡した場合も再fitしません。
+
+### 再学習について
+
+モデルに接続済みの reducer を BO ループの途中で直接再fitすると、GP が保持している潜在 training inputs と reducer の座標系が不整合になります。そのため、`ReducedGP` は reducer の自動再学習を行いません。
+
+reducer を更新したい場合は、更新後の reducer と全 raw training data から新しい GP を構築するのが基本方針です。明示的な model-level rebuild API は将来必要になった段階で追加します。
 
 ## 現在の入力 reducer
 
@@ -114,9 +159,9 @@ latent GP posterior
 
 したがって、PCA などの逆変換を使って潜在候補を元空間へ復元する処理は通常必要ありません。
 
-## Phase 1 の保証範囲
+## Phase 1-2 の保証範囲
 
-Phase 1 では次の契約を基盤仕様として固定します。
+現在は次の契約を基盤仕様として固定しています。
 
 - raw training data は元空間のまま保持する。
 - GP 本体は潜在入力で学習する。
@@ -128,6 +173,9 @@ Phase 1 では次の契約を基盤仕様として固定します。
 - reducer の buffer は model の device / dtype 変換に追従する。
 - reducer の学習状態は `state_dict` round trip で保持する。
 - `make_mll()` は既存 Exact GP wrapper と同じ契約を維持する。
+- 未学習 reducer はモデル構築時に一度だけ fit する。
+- 学習済み reducer は再fitせず、そのまま再利用する。
+- model に接続した reducer の自動再学習は行わない。
 
 ## 今後の拡張
 
