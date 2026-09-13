@@ -18,6 +18,8 @@ PUBLIC_MODEL_NAMES = {
     "ModelListGP",
     "MultiTaskGP",
     "OrthogonalAdditiveGP",
+    "OutputPCAGP",
+    "OutputPLSGP",
     "PCAGP",
     "PLSGP",
     "PairwiseGP",
