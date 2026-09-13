@@ -119,6 +119,27 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
             train_Yvar=raw_train_Yvar,
         )
 
+    def load_state_dict(
+        self,
+        state_dict: dict[str, Tensor],
+        strict: bool = True,
+        assign: bool = False,
+    ):
+        """Load parameters and resynchronize reducer-dependent training inputs.
+
+        Neural reducers can reconstruct a different latent coordinate system at
+        model construction time. Loading their parameters changes the reducer,
+        while GPyTorch training inputs are not part of ``state_dict``. Rebuild
+        the latent training inputs from the constructor-level raw inputs after
+        loading so the GP and restored reducer remain consistent.
+        """
+        result = super().load_state_dict(state_dict, strict=strict, assign=assign)
+        train_X = self._prepare_inputs(self.raw_train_X)
+        if hasattr(self, "input_transform"):
+            train_X = self.transform_inputs(train_X)
+        self.set_train_data(inputs=train_X, targets=self.train_targets, strict=False)
+        return result
+
     @property
     def original_input_dim(self) -> int:
         """Input dimensionality expected by the public model interface."""
