@@ -46,8 +46,7 @@ def test_autoencoder_gp_preserves_raw_data_and_uses_latent_inputs() -> None:
     assert model.train_inputs[0].shape == torch.Size([18, 3])
     assert model.input_reducer.encoder is not None
     assert all(
-        not parameter.requires_grad
-        for parameter in model.input_reducer.encoder.parameters()
+        not parameter.requires_grad for parameter in model.input_reducer.encoder.parameters()
     )
 
 
@@ -89,10 +88,7 @@ def test_autoencoder_gp_conditioning_preserves_frozen_reducer() -> None:
     model, _, _ = _make_model()
     assert model.input_reducer is not None
     assert model.input_reducer.encoder is not None
-    before = [
-        parameter.detach().clone()
-        for parameter in model.input_reducer.encoder.parameters()
-    ]
+    before = [parameter.detach().clone() for parameter in model.input_reducer.encoder.parameters()]
     new_X = torch.rand(2, 8, dtype=torch.double)
     new_Y = torch.sin(2.0 * torch.pi * new_X[:, :1])
 
