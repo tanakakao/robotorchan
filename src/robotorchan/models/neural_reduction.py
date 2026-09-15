@@ -329,8 +329,14 @@ class VAEInputReducer(AutoEncoderInputReducer):
             )
             training_X = self._standardize(X).detach()
             n_observations = training_X.shape[0]
-            batch_size = n_observations if self.batch_size is None else min(self.batch_size, n_observations)
-            final_reconstruction = torch.tensor(float("nan"), device=X.device, dtype=X.dtype)
+            batch_size = (
+                n_observations
+                if self.batch_size is None
+                else min(self.batch_size, n_observations)
+            )
+            final_reconstruction = torch.tensor(
+                float("nan"), device=X.device, dtype=X.dtype
+            )
             final_kl = final_reconstruction.clone()
 
             for _ in range(self.epochs):
@@ -344,8 +350,12 @@ class VAEInputReducer(AutoEncoderInputReducer):
                     std = torch.exp(0.5 * logvar)
                     z = mu + std * torch.randn_like(std)
                     reconstruction = self.decoder(z)
-                    reconstruction_loss = torch.nn.functional.mse_loss(reconstruction, batch)
-                    kl_loss = -0.5 * torch.mean(1.0 + logvar - mu.square() - logvar.exp())
+                    reconstruction_loss = torch.nn.functional.mse_loss(
+                        reconstruction, batch
+                    )
+                    kl_loss = -0.5 * torch.mean(
+                        1.0 + logvar - mu.square() - logvar.exp()
+                    )
                     loss = reconstruction_loss + self.beta * kl_loss
                     loss.backward()
                     optimizer.step()
