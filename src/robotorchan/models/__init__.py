@@ -30,6 +30,7 @@ from robotorchan.models.reduced import (
     OutputPLSGP,
     RandomProjectionGP,
     ReducedGP,
+    VAEGP,
 )
 from robotorchan.models.robust import RobustRelevancePursuitSingleTaskGP
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
@@ -66,4 +67,5 @@ __all__ = [
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
     "UnsupportedModelOperationError",
+    "VAEGP",
 ]
