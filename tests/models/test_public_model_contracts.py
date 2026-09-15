@@ -33,6 +33,7 @@ PUBLIC_MODEL_NAMES = {
     "SingleTaskGP",
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
+    "SupervisedAutoEncoderGP",
     "VAEGP",
 }
 
