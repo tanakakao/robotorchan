@@ -56,7 +56,9 @@ def test_supervised_autoencoder_freezes_all_pretraining_modules():
     assert reducer.decoder is not None
     assert reducer.supervised_head is not None
     modules = (reducer.encoder, reducer.decoder, reducer.supervised_head)
-    assert all(not parameter.requires_grad for module in modules for parameter in module.parameters())
+    assert all(
+        not parameter.requires_grad for module in modules for parameter in module.parameters()
+    )
 
 
 def test_supervised_autoencoder_transform_keeps_input_gradients():
