@@ -14,6 +14,7 @@ from gpytorch.module import Module
 from torch import Tensor
 
 from robotorchan.models.base import ExactGPModelMixin
+from robotorchan.models.neural_reduction import AutoEncoderInputReducer
 from robotorchan.models.output_reduction import OutputPCAReducer, OutputPLSReducer
 from robotorchan.models.reduction import (
     InputReducer,
@@ -37,8 +38,8 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
     An unfitted reducer is fitted exactly once during model construction. A
     reducer that is already fitted is reused as-is and only ``transform`` is
     applied to the supplied training data. This permits externally pre-fitted
-    reducers, including future pretrained neural reducers, to preserve their
-    learned latent coordinate system when attached to a GP.
+    reducers, including pretrained neural reducers, to preserve their learned
+    latent coordinate system when attached to a GP.
 
     ``input_transform`` is applied by the underlying ``SingleTaskGP`` after
     input reduction. ``outcome_transform`` is likewise applied after output
@@ -117,6 +118,27 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
             train_Y=raw_train_Y,
             train_Yvar=raw_train_Yvar,
         )
+
+    def load_state_dict(
+        self,
+        state_dict: dict[str, Tensor],
+        strict: bool = True,
+        assign: bool = False,
+    ):
+        """Load parameters and resynchronize reducer-dependent training inputs.
+
+        Neural reducers can reconstruct a different latent coordinate system at
+        model construction time. Loading their parameters changes the reducer,
+        while GPyTorch training inputs are not part of ``state_dict``. Rebuild
+        the latent training inputs from the constructor-level raw inputs after
+        loading so the GP and restored reducer remain consistent.
+        """
+        result = super().load_state_dict(state_dict, strict=strict, assign=assign)
+        train_X = self._prepare_inputs(self.raw_train_X)
+        if hasattr(self, "input_transform"):
+            train_X = self.transform_inputs(train_X)
+        self.set_train_data(inputs=train_X, targets=self.train_targets, strict=False)
+        return result
 
     @property
     def original_input_dim(self) -> int:
@@ -284,6 +306,45 @@ class RandomProjectionGP(ReducedGP):
             train_Y=train_Y,
             input_reducer=RandomProjectionInputReducer(
                 n_components=n_components,
+                random_state=random_state,
+            ),
+            **kwargs,
+        )
+
+
+class AutoEncoderGP(ReducedGP):
+    """Single-task GP using a frozen autoencoder representation of the inputs."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        latent_dim: int,
+        *,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        epochs: int = 200,
+        learning_rate: float = 1e-3,
+        weight_decay: float = 0.0,
+        batch_size: int | None = None,
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=AutoEncoderInputReducer(
+                latent_dim=latent_dim,
+                hidden_dims=hidden_dims,
+                activation=activation,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                weight_decay=weight_decay,
+                batch_size=batch_size,
+                standardize=standardize,
+                eps=eps,
                 random_state=random_state,
             ),
             **kwargs,

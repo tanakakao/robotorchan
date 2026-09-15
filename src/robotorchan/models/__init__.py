@@ -25,6 +25,7 @@ from robotorchan.models.pairwise import PairwiseGP
 from robotorchan.models.reduced import (
     PCAGP,
     PLSGP,
+    AutoEncoderGP,
     OutputPCAGP,
     OutputPLSGP,
     RandomProjectionGP,
@@ -41,6 +42,7 @@ __all__ = [
     "PLSGP",
     "SACGP",
     "AdditiveMapSaasSingleTaskGP",
+    "AutoEncoderGP",
     "EnsembleMapSaasSingleTaskGP",
     "HeterogeneousMTGP",
     "HierarchicalConditionalKernelGP",
