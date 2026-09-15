@@ -23,11 +23,11 @@ from robotorchan.models.multi_fidelity import SingleTaskMultiFidelityGP
 from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.pairwise import PairwiseGP
 from robotorchan.models.reduced import (
-    PCAGP,
-    PLSGP,
     AutoEncoderGP,
     OutputPCAGP,
     OutputPLSGP,
+    PCAGP,
+    PLSGP,
     RandomProjectionGP,
     ReducedGP,
 )
@@ -42,6 +42,7 @@ __all__ = [
     "PCAGP",
     "PLSGP",
     "SACGP",
+    "VAEGP",
     "AdditiveMapSaasSingleTaskGP",
     "AutoEncoderGP",
     "EnsembleMapSaasSingleTaskGP",
@@ -67,5 +68,4 @@ __all__ = [
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
     "UnsupportedModelOperationError",
-    "VAEGP",
 ]
