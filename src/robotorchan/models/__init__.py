@@ -33,6 +33,7 @@ from robotorchan.models.reduced import (
 )
 from robotorchan.models.robust import RobustRelevancePursuitSingleTaskGP
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
+from robotorchan.models.vae import VAEGP
 from robotorchan.models.variational import SingleTaskVariationalGP
 
 __all__ = [
@@ -41,6 +42,7 @@ __all__ = [
     "PCAGP",
     "PLSGP",
     "SACGP",
+    "VAEGP",
     "AdditiveMapSaasSingleTaskGP",
     "AutoEncoderGP",
     "EnsembleMapSaasSingleTaskGP",
