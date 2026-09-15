@@ -11,6 +11,7 @@ PUBLIC_MODEL_NAMES = {
     "HierarchicalConditionalKernelGP",
     "HierarchicalConditionalKernelMultiTaskGP",
     "HigherOrderGP",
+    "HybridAutoEncoderGP",
     "JointEncoderGP",
     "KroneckerMultiTaskGP",
     "LCEAGP",
