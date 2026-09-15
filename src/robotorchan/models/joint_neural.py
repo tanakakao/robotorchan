@@ -197,4 +197,6 @@ class HybridAutoEncoderGP(JointEncoderGP):
         self.likelihood.train()
         output = self(self.raw_train_X)
         negative_mll = -self.make_mll()(output, self.train_targets)
+        if self.reconstruction_weight == 0.0:
+            return negative_mll
         return negative_mll + self.reconstruction_weight * self.reconstruction_loss()
