@@ -46,12 +46,9 @@ def test_joint_encoder_gp_mll_backpropagates_to_encoder():
 
     encoder_gradients = [parameter.grad for parameter in model.encoder.parameters()]
     assert all(gradient is not None for gradient in encoder_gradients)
-    assert all(
-        torch.isfinite(gradient).all()
-        for gradient in encoder_gradients
-        if gradient is not None
-    )
-    assert any(gradient.abs().sum() > 0 for gradient in encoder_gradients if gradient is not None)
+    gradients = [gradient for gradient in encoder_gradients if gradient is not None]
+    assert all(torch.isfinite(gradient).all() for gradient in gradients)
+    assert any(gradient.abs().sum() > 0 for gradient in gradients)
 
 
 def test_joint_encoder_gp_posterior_and_acquisition_keep_original_x_gradients():
