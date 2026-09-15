@@ -9,11 +9,7 @@ from robotorchan.models.supervised_neural_reduction import SupervisedAutoEncoder
 def _data():
     torch.manual_seed(701)
     X = torch.rand(24, 8, dtype=torch.double)
-    Y = (
-        1.5 * X[:, :1]
-        - 0.8 * X[:, 1:2]
-        + torch.sin(torch.pi * X[:, 2:3])
-    )
+    Y = 1.5 * X[:, :1] - 0.8 * X[:, 1:2] + torch.sin(torch.pi * X[:, 2:3])
     return X, Y
 
 
