@@ -23,13 +23,7 @@ _ACTIVATIONS: dict[str, Callable[[], nn.Module]] = {
 
 
 class JointEncoderGP(ExactGPModelMixin, BoTorchSingleTaskGP):
-    """Exact GP whose neural encoder is optimized jointly through the GP MLL.
-
-    Unlike frozen reduced-input models, training inputs remain in the original
-    feature space. ``forward`` applies the learnable encoder on every call, so
-    gradients from the exact marginal log likelihood update both GP parameters
-    and encoder parameters.
-    """
+    """Exact GP whose neural encoder is optimized jointly through the GP MLL."""
 
     def __init__(
         self,
@@ -141,3 +135,66 @@ class JointEncoderGP(ExactGPModelMixin, BoTorchSingleTaskGP):
         mean_x = self.mean_module(latent_X)
         covar_x = self.covar_module(latent_X)
         return MultivariateNormal(mean_x, covar_x)
+
+
+class HybridAutoEncoderGP(JointEncoderGP):
+    """Joint encoder-GP model with autoencoder reconstruction regularization.
+
+    The GP marginal log likelihood trains the predictive latent representation,
+    while a decoder regularizes that representation to retain information about
+    the original inputs. Use :meth:`hybrid_loss` for joint optimization.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        latent_dim: int,
+        *,
+        reconstruction_weight: float = 1.0,
+        **kwargs,
+    ) -> None:
+        if reconstruction_weight < 0:
+            raise ValueError("reconstruction_weight must be non-negative.")
+        super().__init__(train_X=train_X, train_Y=train_Y, latent_dim=latent_dim, **kwargs)
+        self.reconstruction_weight = float(reconstruction_weight)
+        self.decoder = self._make_decoder(
+            train_X.shape[-1],
+            device=train_X.device,
+            dtype=train_X.dtype,
+        )
+
+    def _make_decoder(
+        self,
+        output_dim: int,
+        *,
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> nn.Sequential:
+        layers: list[nn.Module] = []
+        previous = self.latent_dim
+        for width in reversed(self.hidden_dims):
+            layers.extend([nn.Linear(previous, width), _ACTIVATIONS[self.activation]()])
+            previous = width
+        layers.append(nn.Linear(previous, output_dim))
+        return nn.Sequential(*layers).to(device=device, dtype=dtype)
+
+    def reconstruct(self, X: Tensor) -> Tensor:
+        """Reconstruct original-scale inputs from their latent representation."""
+        standardized = self.decoder(self.encode(X))
+        return standardized * self.x_scale + self.x_mean
+
+    def reconstruction_loss(self, X: Tensor | None = None) -> Tensor:
+        """Return standardized input reconstruction MSE."""
+        if X is None:
+            X = self.raw_train_X
+        target = (X - self.x_mean) / self.x_scale
+        return torch.nn.functional.mse_loss(self.decoder(self.encode(X)), target)
+
+    def hybrid_loss(self) -> Tensor:
+        """Return negative exact MLL plus weighted reconstruction loss."""
+        self.train()
+        self.likelihood.train()
+        output = self(self.raw_train_X)
+        negative_mll = -self.make_mll()(output, self.train_targets)
+        return negative_mll + self.reconstruction_weight * self.reconstruction_loss()
