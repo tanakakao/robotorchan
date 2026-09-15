@@ -36,6 +36,7 @@ PUBLIC_MODEL_NAMES = {
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
     "SupervisedAutoEncoderGP",
+    "SupervisedVAEGP",
     "VAEGP",
 }
 
@@ -48,7 +49,10 @@ NON_MLL_MODELS = {
 def test_public_model_exports_are_complete_and_explicit() -> None:
     exported = set(MODELS.__all__)
 
-    assert exported == PUBLIC_MODEL_NAMES | {"UnsupportedModelOperationError"}
+    assert exported == PUBLIC_MODEL_NAMES | {
+        "SupervisedVAEInputReducer",
+        "UnsupportedModelOperationError",
+    }
 
 
 def test_public_model_names_resolve_to_matching_classes() -> None:
