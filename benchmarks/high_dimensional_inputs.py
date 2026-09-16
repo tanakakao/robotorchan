@@ -19,6 +19,9 @@ from robotorchan.models import (
     PLSGP,
     VAEGP,
     AutoEncoderGP,
+    HybridAutoEncoderGP,
+    JointEncoderGP,
+    JointVAEGP,
     RandomProjectionGP,
     SingleTaskGP,
     SupervisedAutoEncoderGP,
@@ -66,7 +69,7 @@ def model_factories(
     latent_dim: int,
     neural_epochs: int,
 ) -> dict[str, Callable[[Tensor, Tensor], object]]:
-    """Return benchmark model constructors with aligned dimensionality."""
+    """Return frozen/pretrained benchmark model constructors."""
     neural = {"latent_dim": latent_dim, "hidden_dims": (32, 16), "epochs": neural_epochs}
     return {
         "SingleTaskGP": lambda X, Y: SingleTaskGP(X, Y),
@@ -84,6 +87,65 @@ def model_factories(
     }
 
 
+def joint_model_factories(
+    latent_dim: int,
+) -> dict[str, Callable[[Tensor, Tensor], object]]:
+    """Return models whose representation is trained jointly with the GP."""
+    neural = {"latent_dim": latent_dim, "hidden_dims": (32, 16), "random_state": 0}
+    return {
+        "JointEncoderGP": lambda X, Y: JointEncoderGP(X, Y, **neural),
+        "HybridAutoEncoderGP": lambda X, Y: HybridAutoEncoderGP(
+            X, Y, reconstruction_weight=0.1, **neural
+        ),
+        "JointVAEGP": lambda X, Y: JointVAEGP(X, Y, beta=0.1, reconstruction_weight=0.1, **neural),
+    }
+
+
+def _fit_joint_model(model: object, steps: int, learning_rate: float) -> None:
+    """Optimize a joint neural-GP model with its model-specific objective."""
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    for _ in range(steps):
+        optimizer.zero_grad()
+        if isinstance(model, JointVAEGP):
+            loss = model.joint_loss()
+        elif isinstance(model, HybridAutoEncoderGP):
+            loss = model.hybrid_loss()
+        else:
+            model.train()
+            model.likelihood.train()
+            output = model(model.raw_train_X)
+            loss = -model.make_mll()(output, model.train_targets)
+        loss.backward()
+        optimizer.step()
+
+
+def _evaluate_model(
+    name: str,
+    model: object,
+    test_X: Tensor,
+    test_Y: Tensor,
+    train_seconds: float,
+) -> BenchmarkResult:
+    """Evaluate one fitted model with common predictive metrics."""
+    model.eval()
+    model.likelihood.eval()
+    start = time.perf_counter()
+    with torch.no_grad():
+        posterior = model.posterior(test_X)
+        mean = posterior.mean
+        variance = posterior.variance
+    posterior_seconds = time.perf_counter() - start
+    rmse = torch.sqrt(torch.mean((mean - test_Y).square()))
+    nll = gaussian_nll(mean, variance, test_Y)
+    return BenchmarkResult(
+        model=name,
+        rmse=float(rmse),
+        nll=float(nll),
+        train_seconds=train_seconds,
+        posterior_seconds=posterior_seconds,
+    )
+
+
 def run_benchmark(
     *,
     n_train: int = 64,
@@ -91,9 +153,11 @@ def run_benchmark(
     input_dim: int = 40,
     latent_dim: int = 5,
     neural_epochs: int = 50,
+    joint_steps: int = 100,
+    joint_learning_rate: float = 1e-2,
     seed: int = 0,
 ) -> list[BenchmarkResult]:
-    """Fit all benchmark models and return common predictive metrics."""
+    """Fit frozen and joint models and return common predictive metrics."""
     train_X, train_Y, test_X, test_Y = make_synthetic_data(n_train, n_test, input_dim, seed=seed)
     results: list[BenchmarkResult] = []
     for name, factory in model_factories(latent_dim, neural_epochs).items():
@@ -101,25 +165,14 @@ def run_benchmark(
         model = factory(train_X, train_Y)
         fit_gpytorch_mll(model.make_mll())
         train_seconds = time.perf_counter() - start
+        results.append(_evaluate_model(name, model, test_X, test_Y, train_seconds))
 
-        model.eval()
+    for name, factory in joint_model_factories(latent_dim).items():
         start = time.perf_counter()
-        with torch.no_grad():
-            posterior = model.posterior(test_X)
-            mean = posterior.mean
-            variance = posterior.variance
-        posterior_seconds = time.perf_counter() - start
-        rmse = torch.sqrt(torch.mean((mean - test_Y).square()))
-        nll = gaussian_nll(mean, variance, test_Y)
-        results.append(
-            BenchmarkResult(
-                model=name,
-                rmse=float(rmse),
-                nll=float(nll),
-                train_seconds=train_seconds,
-                posterior_seconds=posterior_seconds,
-            )
-        )
+        model = factory(train_X, train_Y)
+        _fit_joint_model(model, joint_steps, joint_learning_rate)
+        train_seconds = time.perf_counter() - start
+        results.append(_evaluate_model(name, model, test_X, test_Y, train_seconds))
     return results
 
 
@@ -139,6 +192,8 @@ def main() -> None:
     parser.add_argument("--input-dim", type=int, default=40)
     parser.add_argument("--latent-dim", type=int, default=5)
     parser.add_argument("--neural-epochs", type=int, default=50)
+    parser.add_argument("--joint-steps", type=int, default=100)
+    parser.add_argument("--joint-learning-rate", type=float, default=1e-2)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--output",
@@ -152,6 +207,8 @@ def main() -> None:
         input_dim=args.input_dim,
         latent_dim=args.latent_dim,
         neural_epochs=args.neural_epochs,
+        joint_steps=args.joint_steps,
+        joint_learning_rate=args.joint_learning_rate,
         seed=args.seed,
     )
     write_csv(results, args.output)

@@ -51,3 +51,41 @@ def test_model_factories_cover_initial_phase11_comparison_set():
         "SupervisedAutoEncoderGP",
         "SupervisedVAEGP",
     }
+
+
+def test_joint_model_factories_cover_joint_representation_models():
+    factories = BENCHMARK.joint_model_factories(latent_dim=2)
+
+    assert set(factories) == {
+        "JointEncoderGP",
+        "HybridAutoEncoderGP",
+        "JointVAEGP",
+    }
+
+
+def test_joint_model_training_smoke():
+    train_X, train_Y, test_X, test_Y = BENCHMARK.make_synthetic_data(
+        n_train=10,
+        n_test=4,
+        input_dim=6,
+        seed=7,
+    )
+    factory = BENCHMARK.joint_model_factories(latent_dim=2)["JointEncoderGP"]
+    model = factory(train_X, train_Y)
+
+    BENCHMARK._fit_joint_model(model, steps=1, learning_rate=1e-2)
+    result = BENCHMARK._evaluate_model(
+        "JointEncoderGP",
+        model,
+        test_X,
+        test_Y,
+        train_seconds=0.0,
+    )
+
+    assert result.model == "JointEncoderGP"
+    assert math_is_finite(result.rmse)
+    assert math_is_finite(result.nll)
+
+
+def math_is_finite(value: float) -> bool:
+    return value == value and value not in {float("inf"), float("-inf")}
