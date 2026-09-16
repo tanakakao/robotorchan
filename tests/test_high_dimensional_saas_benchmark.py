@@ -52,9 +52,5 @@ def test_map_saas_factory_retains_raw_training_data():
     assert model.supports_mll
 
 
-def test_fully_bayesian_wrapper_is_not_mll_fitted():
-    train_X, train_Y, _, _ = BENCHMARK.make_sparse_synthetic_data(10, 4, 8, seed=5)
-    model = BENCHMARK.SaasFullyBayesianSingleTaskGP(train_X, train_Y)
-
-    assert not model.supports_mll
-    assert torch.equal(model.raw_train_X, train_X)
+def test_fully_bayesian_wrapper_declares_non_mll_contract_without_optional_dependencies():
+    assert not BENCHMARK.SaasFullyBayesianSingleTaskGP.supports_mll
