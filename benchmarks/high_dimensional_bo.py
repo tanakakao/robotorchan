@@ -17,18 +17,18 @@ from botorch.sampling.normal import SobolQMCNormalSampler
 from torch import Tensor
 
 from robotorchan.models import (
+    PCAGP,
+    PLSGP,
+    VAEGP,
     AdditiveMapSaasSingleTaskGP,
     AutoEncoderGP,
     HybridAutoEncoderGP,
     JointEncoderGP,
     JointVAEGP,
-    PCAGP,
-    PLSGP,
     RandomProjectionGP,
     SingleTaskGP,
     SupervisedAutoEncoderGP,
     SupervisedVAEGP,
-    VAEGP,
 )
 
 
