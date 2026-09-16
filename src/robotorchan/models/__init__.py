@@ -14,6 +14,7 @@ from robotorchan.models.hierarchical import (
 )
 from robotorchan.models.higher_order import HigherOrderGP
 from robotorchan.models.joint_neural import HybridAutoEncoderGP, JointEncoderGP
+from robotorchan.models.joint_vae import JointVAEGP
 from robotorchan.models.latent_kronecker import LatentKroneckerGP
 from robotorchan.models.map_saas import (
     AdditiveMapSaasSingleTaskGP,
@@ -54,6 +55,7 @@ __all__ = [
     "HigherOrderGP",
     "HybridAutoEncoderGP",
     "JointEncoderGP",
+    "JointVAEGP",
     "KroneckerMultiTaskGP",
     "LatentKroneckerGP",
     "MixedSingleTaskGP",

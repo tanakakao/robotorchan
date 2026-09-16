@@ -13,6 +13,7 @@ PUBLIC_MODEL_NAMES = {
     "HigherOrderGP",
     "HybridAutoEncoderGP",
     "JointEncoderGP",
+    "JointVAEGP",
     "KroneckerMultiTaskGP",
     "LCEAGP",
     "LCEMGP",
