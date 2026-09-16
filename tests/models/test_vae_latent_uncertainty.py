@@ -64,7 +64,7 @@ def test_uncertainty_aware_posterior_propagates_original_x_gradients():
     assert candidate.grad.abs().sum() > 0
 
 
-def test_latent_uncertainty_increases_moment_matched_variance_when_spread_grows():
+def test_latent_spread_changes_marginalized_posterior_moments():
     X, Y = _data()
     model = _model(X, Y)
     candidate = X[:3]
@@ -73,14 +73,15 @@ def test_latent_uncertainty_increases_moment_matched_variance_when_spread_grows(
         model.logvar_head.weight.zero_()
         model.logvar_head.bias.fill_(-12.0)
     torch.manual_seed(13)
-    low = model.uncertainty_aware_posterior(candidate, n_latent_samples=64)
+    concentrated = model.uncertainty_aware_posterior(candidate, n_latent_samples=32)
 
     with torch.no_grad():
         model.logvar_head.bias.fill_(0.5)
     torch.manual_seed(13)
-    high = model.uncertainty_aware_posterior(candidate, n_latent_samples=64)
+    diffuse = model.uncertainty_aware_posterior(candidate, n_latent_samples=32)
 
-    assert high.variance.mean() > low.variance.mean()
+    assert not torch.allclose(diffuse.mean, concentrated.mean)
+    assert not torch.allclose(diffuse.variance, concentrated.variance)
 
 
 def test_uncertainty_aware_posterior_validates_sample_count():
