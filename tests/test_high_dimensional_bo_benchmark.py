@@ -84,6 +84,7 @@ def test_single_iteration_bo_smoke():
     assert results[0].iteration == 1
     assert results[0].n_observations == 9
     assert results[0].simple_regret >= 0.0
+    assert results[0].seed == 2
 
 
 def test_joint_encoder_fit_policy_smoke():
@@ -101,6 +102,36 @@ def test_joint_encoder_fit_policy_smoke():
 
     posterior = model.posterior(train_X[:2])
     assert posterior.mean.shape == (2, 1)
+
+
+def test_aggregate_results_computes_population_statistics():
+    rows = [
+        BENCHMARK.BOIterationResult("GP", 1, 9, 1.0, 0.4, 0.2, seed=0),
+        BENCHMARK.BOIterationResult("GP", 1, 9, 1.4, 0.2, 0.3, seed=1),
+    ]
+
+    summary = BENCHMARK.aggregate_results(rows)[0]
+
+    assert summary.model == "GP"
+    assert summary.iteration == 1
+    assert summary.n_seeds == 2
+    assert summary.simple_regret_mean == pytest.approx(0.3)
+    assert summary.simple_regret_std == pytest.approx(0.1)
+    assert summary.simple_regret_q25 == pytest.approx(0.25)
+    assert summary.simple_regret_q75 == pytest.approx(0.35)
+    assert summary.best_observed_mean == pytest.approx(1.2)
+    assert summary.best_observed_std == pytest.approx(0.2)
+
+
+def test_parse_seeds():
+    assert BENCHMARK.parse_seeds("0, 2,5") == [0, 2, 5]
+    with pytest.raises(Exception, match="at least one seed"):
+        BENCHMARK.parse_seeds(" , ")
+
+
+def test_repeated_benchmark_rejects_empty_seeds():
+    with pytest.raises(ValueError, match="at least one"):
+        BENCHMARK.run_repeated_benchmark([])
 
 
 def test_bo_rejects_more_iterations_than_candidates():
