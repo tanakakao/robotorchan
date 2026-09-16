@@ -11,7 +11,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import torch
+from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.fit import fit_gpytorch_mll
+from botorch.sampling.normal import SobolQMCNormalSampler
 from torch import Tensor
 
 from robotorchan.models import (
@@ -38,6 +40,8 @@ class BenchmarkResult:
     nll: float
     train_seconds: float
     posterior_seconds: float
+    acquisition_seconds: float
+    acquisition_value: float
 
 
 def make_synthetic_data(
@@ -119,14 +123,43 @@ def _fit_joint_model(model: object, steps: int, learning_rate: float) -> None:
         optimizer.step()
 
 
+def evaluate_acquisition(
+    model: object,
+    train_Y: Tensor,
+    candidate_X: Tensor,
+    *,
+    mc_samples: int = 128,
+    seed: int = 0,
+) -> tuple[float, float]:
+    """Measure qLogEI evaluation time on a shared candidate set."""
+    if mc_samples < 1:
+        raise ValueError("mc_samples must be at least 1")
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([mc_samples]), seed=seed)
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=float(train_Y.max()),
+        sampler=sampler,
+    )
+    start = time.perf_counter()
+    with torch.no_grad():
+        values = acquisition(candidate_X.unsqueeze(-2))
+    elapsed = time.perf_counter() - start
+    return elapsed, float(values.max())
+
+
 def _evaluate_model(
     name: str,
     model: object,
+    train_Y: Tensor,
     test_X: Tensor,
     test_Y: Tensor,
+    candidate_X: Tensor,
     train_seconds: float,
+    *,
+    acquisition_mc_samples: int,
+    seed: int,
 ) -> BenchmarkResult:
-    """Evaluate one fitted model with common predictive metrics."""
+    """Evaluate one fitted model with common predictive and acquisition metrics."""
     model.eval()
     model.likelihood.eval()
     start = time.perf_counter()
@@ -135,6 +168,13 @@ def _evaluate_model(
         mean = posterior.mean
         variance = posterior.variance
     posterior_seconds = time.perf_counter() - start
+    acquisition_seconds, acquisition_value = evaluate_acquisition(
+        model,
+        train_Y,
+        candidate_X,
+        mc_samples=acquisition_mc_samples,
+        seed=seed,
+    )
     rmse = torch.sqrt(torch.mean((mean - test_Y).square()))
     nll = gaussian_nll(mean, variance, test_Y)
     return BenchmarkResult(
@@ -143,6 +183,8 @@ def _evaluate_model(
         nll=float(nll),
         train_seconds=train_seconds,
         posterior_seconds=posterior_seconds,
+        acquisition_seconds=acquisition_seconds,
+        acquisition_value=acquisition_value,
     )
 
 
@@ -155,24 +197,58 @@ def run_benchmark(
     neural_epochs: int = 50,
     joint_steps: int = 100,
     joint_learning_rate: float = 1e-2,
+    acquisition_candidates: int = 128,
+    acquisition_mc_samples: int = 128,
     seed: int = 0,
 ) -> list[BenchmarkResult]:
-    """Fit frozen and joint models and return common predictive metrics."""
+    """Fit models and return predictive plus acquisition metrics."""
     train_X, train_Y, test_X, test_Y = make_synthetic_data(n_train, n_test, input_dim, seed=seed)
+    generator = torch.Generator().manual_seed(seed + 1)
+    candidate_X = torch.rand(
+        acquisition_candidates,
+        input_dim,
+        generator=generator,
+        dtype=train_X.dtype,
+        device=train_X.device,
+    )
     results: list[BenchmarkResult] = []
     for name, factory in model_factories(latent_dim, neural_epochs).items():
         start = time.perf_counter()
         model = factory(train_X, train_Y)
         fit_gpytorch_mll(model.make_mll())
         train_seconds = time.perf_counter() - start
-        results.append(_evaluate_model(name, model, test_X, test_Y, train_seconds))
+        results.append(
+            _evaluate_model(
+                name,
+                model,
+                train_Y,
+                test_X,
+                test_Y,
+                candidate_X,
+                train_seconds,
+                acquisition_mc_samples=acquisition_mc_samples,
+                seed=seed,
+            )
+        )
 
     for name, factory in joint_model_factories(latent_dim).items():
         start = time.perf_counter()
         model = factory(train_X, train_Y)
         _fit_joint_model(model, joint_steps, joint_learning_rate)
         train_seconds = time.perf_counter() - start
-        results.append(_evaluate_model(name, model, test_X, test_Y, train_seconds))
+        results.append(
+            _evaluate_model(
+                name,
+                model,
+                train_Y,
+                test_X,
+                test_Y,
+                candidate_X,
+                train_seconds,
+                acquisition_mc_samples=acquisition_mc_samples,
+                seed=seed,
+            )
+        )
     return results
 
 
@@ -194,6 +270,8 @@ def main() -> None:
     parser.add_argument("--neural-epochs", type=int, default=50)
     parser.add_argument("--joint-steps", type=int, default=100)
     parser.add_argument("--joint-learning-rate", type=float, default=1e-2)
+    parser.add_argument("--acquisition-candidates", type=int, default=128)
+    parser.add_argument("--acquisition-mc-samples", type=int, default=128)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--output",
@@ -209,6 +287,8 @@ def main() -> None:
         neural_epochs=args.neural_epochs,
         joint_steps=args.joint_steps,
         joint_learning_rate=args.joint_learning_rate,
+        acquisition_candidates=args.acquisition_candidates,
+        acquisition_mc_samples=args.acquisition_mc_samples,
         seed=args.seed,
     )
     write_csv(results, args.output)
