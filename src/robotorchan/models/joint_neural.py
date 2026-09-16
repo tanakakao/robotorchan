@@ -23,7 +23,12 @@ _ACTIVATIONS: dict[str, Callable[[], nn.Module]] = {
 
 
 class JointEncoderGP(ExactGPModelMixin, BoTorchSingleTaskGP):
-    """Exact GP whose neural encoder is optimized jointly through the GP MLL."""
+    """Exact GP whose neural encoder is optimized jointly through the GP MLL.
+
+    Unlike frozen-reducer models, the encoder is part of the predictive model and
+    receives gradients from the GP objective. :meth:`training_loss` is the common
+    optimization contract for all jointly trained neural GP variants.
+    """
 
     def __init__(
         self,
@@ -136,13 +141,26 @@ class JointEncoderGP(ExactGPModelMixin, BoTorchSingleTaskGP):
         covar_x = self.covar_module(latent_X)
         return MultivariateNormal(mean_x, covar_x)
 
+    def training_loss(self) -> Tensor:
+        """Return the scalar loss used to jointly optimize encoder and GP.
+
+        This base implementation is the negative exact GP marginal log
+        likelihood. Subclasses extend the same contract with representation
+        regularizers such as reconstruction or KL losses.
+        """
+        self.train()
+        self.likelihood.train()
+        output = self(self.raw_train_X)
+        return -self.make_mll()(output, self.train_targets)
+
 
 class HybridAutoEncoderGP(JointEncoderGP):
     """Joint encoder-GP model with autoencoder reconstruction regularization.
 
     The GP marginal log likelihood trains the predictive latent representation,
     while a decoder regularizes that representation to retain information about
-    the original inputs. Use :meth:`hybrid_loss` for joint optimization.
+    the original inputs. Use :meth:`training_loss` for joint optimization.
+    :meth:`hybrid_loss` remains as a backwards-compatible alias.
     """
 
     def __init__(
@@ -191,12 +209,13 @@ class HybridAutoEncoderGP(JointEncoderGP):
         target = (X - self.x_mean) / self.x_scale
         return torch.nn.functional.mse_loss(self.decoder(self.encode(X)), target)
 
-    def hybrid_loss(self) -> Tensor:
-        """Return negative exact MLL plus weighted reconstruction loss."""
-        self.train()
-        self.likelihood.train()
-        output = self(self.raw_train_X)
-        negative_mll = -self.make_mll()(output, self.train_targets)
+    def training_loss(self) -> Tensor:
+        """Return negative GP MLL plus weighted reconstruction loss."""
+        loss = super().training_loss()
         if self.reconstruction_weight == 0.0:
-            return negative_mll
-        return negative_mll + self.reconstruction_weight * self.reconstruction_loss()
+            return loss
+        return loss + self.reconstruction_weight * self.reconstruction_loss()
+
+    def hybrid_loss(self) -> Tensor:
+        """Return :meth:`training_loss` for backwards compatibility."""
+        return self.training_loss()
