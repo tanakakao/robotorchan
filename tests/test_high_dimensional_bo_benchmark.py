@@ -46,8 +46,8 @@ def test_extended_model_specs_cover_neural_joint_and_map_saas():
         "AdditiveMapSaasSingleTaskGP",
     } <= set(specs)
     assert specs["JointEncoderGP"].fit_policy == "joint"
-    assert specs["HybridAutoEncoderGP"].fit_policy == "hybrid"
-    assert specs["JointVAEGP"].fit_policy == "joint_vae"
+    assert specs["HybridAutoEncoderGP"].fit_policy == "joint"
+    assert specs["JointVAEGP"].fit_policy == "joint"
     assert specs["AdditiveMapSaasSingleTaskGP"].fit_policy == "mll"
 
 
