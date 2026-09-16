@@ -62,9 +62,7 @@ def make_synthetic_data(
 def gaussian_nll(mean: Tensor, variance: Tensor, target: Tensor) -> Tensor:
     """Return mean Gaussian negative log likelihood."""
     variance = variance.clamp_min(1e-10)
-    return 0.5 * (
-        torch.log(2.0 * torch.pi * variance) + (target - mean).square() / variance
-    ).mean()
+    return 0.5 * (torch.log(2.0 * torch.pi * variance) + (target - mean).square() / variance).mean()
 
 
 def model_factories(
@@ -99,9 +97,7 @@ def joint_model_factories(
         "HybridAutoEncoderGP": lambda X, Y: HybridAutoEncoderGP(
             X, Y, reconstruction_weight=0.1, **neural
         ),
-        "JointVAEGP": lambda X, Y: JointVAEGP(
-            X, Y, beta=0.1, reconstruction_weight=0.1, **neural
-        ),
+        "JointVAEGP": lambda X, Y: JointVAEGP(X, Y, beta=0.1, reconstruction_weight=0.1, **neural),
     }
 
 
@@ -162,9 +158,7 @@ def run_benchmark(
     seed: int = 0,
 ) -> list[BenchmarkResult]:
     """Fit frozen and joint models and return common predictive metrics."""
-    train_X, train_Y, test_X, test_Y = make_synthetic_data(
-        n_train, n_test, input_dim, seed=seed
-    )
+    train_X, train_Y, test_X, test_Y = make_synthetic_data(n_train, n_test, input_dim, seed=seed)
     results: list[BenchmarkResult] = []
     for name, factory in model_factories(latent_dim, neural_epochs).items():
         start = time.perf_counter()
