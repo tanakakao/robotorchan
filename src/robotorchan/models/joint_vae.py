@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import torch
+from botorch.posteriors.gpytorch import GPyTorchPosterior
+from gpytorch.distributions import MultivariateNormal
 from torch import Tensor, nn
 
 from robotorchan.models.joint_neural import _ACTIVATIONS, JointEncoderGP
@@ -11,9 +13,10 @@ from robotorchan.models.joint_neural import _ACTIVATIONS, JointEncoderGP
 class JointVAEGP(JointEncoderGP):
     """Exact GP jointly trained with a variational latent input representation.
 
-    GP predictions use the posterior-mean latent code ``mu(X)``. The training
-    objective can additionally regularize that representation with VAE input
-    reconstruction and KL divergence terms.
+    GP predictions use the posterior-mean latent code ``mu(X)`` by default. The
+    VAE representation can also be marginalized with
+    :meth:`uncertainty_aware_posterior`, which moment-matches GP predictions
+    over Monte Carlo samples from ``q(z | X)``.
     """
 
     def __init__(
@@ -129,3 +132,97 @@ class JointVAEGP(JointEncoderGP):
         if self.beta != 0.0:
             loss = loss + self.beta * self.kl_loss()
         return loss
+
+    def _training_noise(self) -> Tensor:
+        """Return observation noise aligned with the transformed training targets."""
+        noise = getattr(self.likelihood, "noise", None)
+        if noise is None:
+            raise NotImplementedError(
+                "uncertainty_aware_posterior requires a likelihood exposing observation noise."
+            )
+        noise = noise.to(device=self.raw_train_X.device, dtype=self.raw_train_X.dtype)
+        n_train = self.raw_train_X.shape[-2]
+        if noise.numel() == 1:
+            return noise.reshape(1).expand(n_train)
+        noise = noise.reshape(-1)
+        if noise.numel() != n_train:
+            raise NotImplementedError(
+                "uncertainty_aware_posterior currently supports scalar or per-observation noise."
+            )
+        return noise
+
+    def _posterior_moments_from_latent(self, latent_X: Tensor) -> tuple[Tensor, Tensor]:
+        """Compute exact scalar-GP posterior moments for one latent q-batch."""
+        if self.num_outputs != 1:
+            raise NotImplementedError(
+                "uncertainty_aware_posterior currently supports single-output JointVAEGP."
+            )
+        train_Z = self.encode(self.raw_train_X)
+        train_mean = self.mean_module(train_Z)
+        test_mean = self.mean_module(latent_X)
+        train_covar = self.covar_module(train_Z).to_dense()
+        cross_covar = self.covar_module(train_Z, latent_X).to_dense()
+        test_covar = self.covar_module(latent_X).to_dense()
+        noise = self._training_noise()
+        train_covar = train_covar + torch.diag_embed(noise)
+        residual = self.train_targets - train_mean
+        solve_residual = torch.linalg.solve(train_covar, residual.unsqueeze(-1)).squeeze(-1)
+        posterior_mean = test_mean + cross_covar.transpose(-1, -2) @ solve_residual
+        solve_cross = torch.linalg.solve(train_covar, cross_covar)
+        posterior_covar = test_covar - cross_covar.transpose(-1, -2) @ solve_cross
+        return posterior_mean, posterior_covar
+
+    def uncertainty_aware_posterior(
+        self,
+        X: Tensor,
+        *,
+        n_latent_samples: int = 32,
+    ) -> GPyTorchPosterior:
+        """Moment-match GP predictions marginalized over ``q(z | X)``.
+
+        This propagates VAE latent uncertainty into both predictive mean and
+        covariance. The returned Gaussian matches the first two moments of the
+        Monte Carlo mixture and remains differentiable with respect to ``X``.
+        """
+        if n_latent_samples <= 0:
+            raise ValueError("n_latent_samples must be a positive integer.")
+        if X.ndim < 2:
+            raise ValueError("X must have shape [..., q, d].")
+
+        latent_samples = self.sample_latent(X, n_latent_samples)
+        batch_shape = X.shape[:-2]
+        q = X.shape[-2]
+        flat_latent = latent_samples.reshape(n_latent_samples, -1, q, self.latent_dim)
+        component_means: list[Tensor] = []
+        component_covars: list[Tensor] = []
+        for batch_index in range(flat_latent.shape[1]):
+            batch_means: list[Tensor] = []
+            batch_covars: list[Tensor] = []
+            for sample_index in range(n_latent_samples):
+                mean, covar = self._posterior_moments_from_latent(
+                    flat_latent[sample_index, batch_index]
+                )
+                batch_means.append(mean)
+                batch_covars.append(covar)
+            means = torch.stack(batch_means)
+            covars = torch.stack(batch_covars)
+            mean = means.mean(dim=0)
+            centered = means - mean
+            between = torch.einsum("si,sj->sij", centered, centered).mean(dim=0)
+            covar = covars.mean(dim=0) + between
+            component_means.append(mean)
+            component_covars.append(covar)
+
+        posterior_mean = torch.stack(component_means).reshape(*batch_shape, q)
+        posterior_covar = torch.stack(component_covars).reshape(*batch_shape, q, q)
+        posterior_covar = 0.5 * (posterior_covar + posterior_covar.transpose(-1, -2))
+        jitter = torch.finfo(posterior_covar.dtype).eps * 10
+        posterior_covar = posterior_covar + jitter * torch.eye(
+            q,
+            device=posterior_covar.device,
+            dtype=posterior_covar.dtype,
+        )
+        posterior = GPyTorchPosterior(MultivariateNormal(posterior_mean, posterior_covar))
+        if self.outcome_transform is not None:
+            posterior = self.outcome_transform.untransform_posterior(posterior)
+        return posterior
