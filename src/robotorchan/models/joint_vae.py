@@ -5,7 +5,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor, nn
 
-from robotorchan.models.joint_neural import JointEncoderGP, _ACTIVATIONS
+from robotorchan.models.joint_neural import _ACTIVATIONS, JointEncoderGP
 
 
 class JointVAEGP(JointEncoderGP):
