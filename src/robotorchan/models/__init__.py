@@ -35,7 +35,7 @@ from robotorchan.models.reduced import (
 from robotorchan.models.robust import RobustRelevancePursuitSingleTaskGP
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
 from robotorchan.models.supervised_neural import SupervisedAutoEncoderGP
-from robotorchan.models.vae import VAEGP
+from robotorchan.models.vae import VAEGP, SupervisedVAEGP
 from robotorchan.models.variational import SingleTaskVariationalGP
 
 __all__ = [
@@ -72,5 +72,6 @@ __all__ = [
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
     "SupervisedAutoEncoderGP",
+    "SupervisedVAEGP",
     "UnsupportedModelOperationError",
 ]
