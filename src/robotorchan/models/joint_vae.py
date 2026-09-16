@@ -16,7 +16,8 @@ class JointVAEGP(JointEncoderGP):
     GP predictions use the posterior-mean latent code ``mu(X)`` by default. The
     VAE representation can also be marginalized with
     :meth:`uncertainty_aware_posterior`, which moment-matches GP predictions
-    over Monte Carlo samples from ``q(z | X)``.
+    over Monte Carlo samples from ``q(z | X)``. Use :meth:`training_loss` for
+    joint GP, reconstruction, and KL optimization.
     """
 
     def __init__(
@@ -121,17 +122,18 @@ class JointVAEGP(JointEncoderGP):
         mu, logvar = self.encode_distribution(X)
         return -0.5 * torch.mean(1.0 + logvar - mu.square() - logvar.exp())
 
-    def joint_loss(self) -> Tensor:
+    def training_loss(self) -> Tensor:
         """Return negative GP MLL plus reconstruction and KL regularization."""
-        self.train()
-        self.likelihood.train()
-        output = self(self.raw_train_X)
-        loss = -self.make_mll()(output, self.train_targets)
+        loss = super().training_loss()
         if self.reconstruction_weight != 0.0:
             loss = loss + self.reconstruction_weight * self.reconstruction_loss()
         if self.beta != 0.0:
             loss = loss + self.beta * self.kl_loss()
         return loss
+
+    def joint_loss(self) -> Tensor:
+        """Return :meth:`training_loss` for backwards compatibility."""
+        return self.training_loss()
 
     def _training_noise(self) -> Tensor:
         """Return observation noise aligned with the transformed training targets."""

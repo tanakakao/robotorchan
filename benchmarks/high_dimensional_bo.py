@@ -117,11 +117,11 @@ def model_specs(
             "JointEncoderGP": BOModelSpec(lambda X, Y: JointEncoderGP(X, Y, **joint), "joint"),
             "HybridAutoEncoderGP": BOModelSpec(
                 lambda X, Y: HybridAutoEncoderGP(X, Y, reconstruction_weight=0.1, **joint),
-                "hybrid",
+                "joint",
             ),
             "JointVAEGP": BOModelSpec(
                 lambda X, Y: JointVAEGP(X, Y, beta=0.1, reconstruction_weight=0.1, **joint),
-                "joint_vae",
+                "joint",
             ),
             "AdditiveMapSaasSingleTaskGP": BOModelSpec(
                 lambda X, Y: AdditiveMapSaasSingleTaskGP(X, Y, num_taus=2)
@@ -143,10 +143,12 @@ def fit_model(
     joint_steps: int,
     joint_learning_rate: float,
 ) -> None:
-    """Fit a model using the policy required by its representation."""
+    """Fit a model using its standard MLL or joint training-loss contract."""
     if fit_policy == "mll":
         fit_gpytorch_mll(model.make_mll())
         return
+    if fit_policy != "joint":
+        raise ValueError(f"Unsupported fit policy: {fit_policy}")
     if joint_steps < 1:
         raise ValueError("joint_steps must be at least 1")
     if joint_learning_rate <= 0:
@@ -155,17 +157,7 @@ def fit_model(
     optimizer = torch.optim.Adam(model.parameters(), lr=joint_learning_rate)
     for _ in range(joint_steps):
         optimizer.zero_grad()
-        if fit_policy == "joint_vae":
-            loss = model.joint_loss()
-        elif fit_policy == "hybrid":
-            loss = model.hybrid_loss()
-        elif fit_policy == "joint":
-            model.train()
-            model.likelihood.train()
-            output = model(model.raw_train_X)
-            loss = -model.make_mll()(output, model.train_targets)
-        else:
-            raise ValueError(f"Unsupported fit policy: {fit_policy}")
+        loss = model.training_loss()
         loss.backward()
         optimizer.step()
 

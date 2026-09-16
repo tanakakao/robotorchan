@@ -16,193 +16,60 @@ latent Z
 Gaussian Process
 ```
 
-`posterior(X)`、`condition_on_observations(X, Y)`、獲得関数評価では、元の入力空間のテンソルをそのまま渡します。`ReducedGP` が内部で fitted reducer を使って潜在空間へ変換します。
+`posterior(X)`、`condition_on_observations(X, Y)`、獲得関数評価では元の入力空間をそのまま渡し、`ReducedGP` が内部で fitted reducer を使って潜在空間へ変換します。
 
 ## Reducer lifecycle
 
-入力 reducer のライフサイクルは次の2通りです。
+未学習 reducer はモデル構築時に一度だけ fit し、その後固定します。学習済み reducer を渡した場合は再fitせず再利用します。接続済み reducer をBO途中で直接再fitするとGPの潜在training inputsと座標系が不整合になるため、更新したい場合は全raw training dataからモデルを再構築します。
 
-### 1. 未学習 reducer を渡す場合
+この契約は PCA / PLS / Random Projection / AE / VAE / supervised reducer、および output reducer に共通です。
 
-通常の `PCAGP`、`PLSGP`、`RandomProjectionGP`、`AutoEncoderGP` はこの経路を使います。
+## 実装済みモデル
 
-```text
-model construction
-    ↓
-reducer is not fitted
-    ↓
-reducer.fit(train_X, train_Y)
-    ↓
-reducer parameters fixed
-    ↓
-posterior / acquisition / conditioning / fantasize
-    ↓
-reducer.transform(X) only
-```
+### Frozen reduction
 
-モデル構築時に一度だけ学習し、その後は固定します。BO ループ中に自動的な reducer 再学習は行いません。これにより、探索途中で潜在座標系が変化することを防ぎます。
+- `PCAGP`: 教師なし線形PCA。
+- `PLSGP`: Yを利用する教師あり線形削減。
+- `RandomProjectionGP`: 安価なGaussian random projection。
+- `AutoEncoderGP`: reconstructionで事前学習したAEをfreezeしてGPへ接続。
+- `VAEGP`: VAE posterior meanを決定論的GP入力として使用。
+- `SupervisedAutoEncoderGP`: reconstruction + supervised lossで表現を事前学習。
+- `SupervisedVAEGP`: reconstruction + KL + supervised lossで表現を事前学習。
 
-### 2. すでに学習済み reducer を渡す場合
+Frozen reducerでも `transform(X)` は元入力Xに関してdifferentiableであり、acquisitionの勾配を元空間へ伝播できます。
 
-`ReducedGP` に `is_fitted == True` の reducer を渡した場合、再学習せず、そのまま再利用します。
+### Joint representation learning
 
-```python
-from robotorchan.models import ReducedGP
-from robotorchan.models.reduction import PCAInputReducer
+- `JointEncoderGP`: GP marginal log likelihoodでencoderとGPを共同学習。
+- `HybridAutoEncoderGP`: GP objectiveにreconstruction regularizationを追加。
+- `JointVAEGP`: GP objectiveにVAE reconstruction / KL regularizationを追加。
 
-reducer = PCAInputReducer(n_components=5).fit(reference_X)
-
-model = ReducedGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    input_reducer=reducer,
-)
-```
-
-この場合は次の経路になります。
-
-```text
-pre-fitted reducer
-    ↓
-ReducedGP construction
-    ↓
-fit is skipped
-    ↓
-reducer.transform(train_X)
-    ↓
-latent GP
-```
-
-この仕様により、別データで学習済みの PCA / PLS や pretrained neural encoder を、その潜在座標系を壊さず GP に接続できます。
-
-この方針は output reducer にも適用されます。すでに学習済みの `OutputReducer` を渡した場合も再fitしません。
-
-### 再学習について
-
-モデルに接続済みの reducer を BO ループの途中で直接再fitすると、GP が保持している潜在 training inputs と reducer の座標系が不整合になります。そのため、`ReducedGP` は reducer の自動再学習を行いません。
-
-reducer を更新したい場合は、更新後の reducer と全 raw training data から新しい GP を構築するのが基本方針です。明示的な model-level rebuild API は将来必要になった段階で追加します。
-
-## 現在の入力 reducer / model
-
-### PCAInputReducer / PCAGP
-
-PCA により入力を低次元空間へ射影します。
+Joint系は `training_loss()` を共通の最適化契約とします。
 
 ```python
-from robotorchan.models import PCAGP
-
-model = PCAGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    n_components=5,
-)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
+for _ in range(100):
+    optimizer.zero_grad()
+    loss = model.training_loss()
+    loss.backward()
+    optimizer.step()
 ```
 
-PCA の平均ベクトルと主成分行列はモデル構築時に学習され、その後の予測や fantasy model 生成では更新されません。
+`JointEncoderGP.training_loss()` は negative exact GP MLL、`HybridAutoEncoderGP` はそこへ weighted reconstruction loss、`JointVAEGP` はさらに reconstruction / KL を加えます。従来の `hybrid_loss()` / `joint_loss()` は後方互換aliasとして残します。
 
-### PLSInputReducer / PLSGP
+`make_mll()` は引き続きBoTorch/GPyTorchのMLLオブジェクトを返す低レベルAPIです。Hybrid / JointVAEで正則化まで含めて学習する場合は `fit_gpytorch_mll(model.make_mll())` ではなく `training_loss()` を使用してください。
 
-目的変数との共分散を利用した教師あり次元削減です。
+### VAE latent uncertainty
 
-```python
-from robotorchan.models import PLSGP
+`JointVAEGP.uncertainty_aware_posterior()` は `q(z | X)` からlatent sampleを生成し、GP posterior mixtureの一次・二次モーメントをMonte Carloで近似します。通常の `posterior(X)` は後方互換性のためposterior mean latent code `mu(X)` を使う決定論的予測のままです。
 
-model = PLSGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    n_components=5,
-)
-```
+### SAAS
 
-PLS は `train_Y` を利用して射影を学習しますが、射影行列はモデル構築後に固定されます。
+SAAS / MAP-SAASは明示的なreducerを使わず、元の高次元入力空間で有効次元を疎に扱う別系統です。ReducedGP系とは分離して実装しています。
 
-### RandomProjectionInputReducer / RandomProjectionGP
+## BoTorch APIとの関係
 
-Gaussian random projection を利用します。
-
-```python
-from robotorchan.models import RandomProjectionGP
-
-model = RandomProjectionGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    n_components=5,
-    random_state=0,
-)
-```
-
-射影行列は初期 fit 時に一度だけ生成され、その後固定されます。
-
-### AutoEncoderInputReducer / AutoEncoderGP
-
-`AutoEncoderInputReducer` は非線形な encoder / decoder を reconstruction loss で学習し、encoder 出力を潜在入力として使用します。目的変数 `Y` は潜在空間の学習には使用しません。
-
-```python
-from robotorchan.models import AutoEncoderGP
-
-model = AutoEncoderGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    latent_dim=5,
-    hidden_dims=(64, 32),
-    activation="gelu",
-    epochs=200,
-    learning_rate=1e-3,
-    random_state=0,
-)
-```
-
-内部では次の流れになります。
-
-```text
-train_X
-   ↓ standardize
-AutoEncoder training by reconstruction loss
-   ↓
-freeze encoder / decoder
-   ↓
-latent train_Z
-   ↓
-SingleTaskGP
-```
-
-予測・獲得関数評価時は、元の入力空間をそのまま使います。
-
-```text
-candidate X
-   ↓
-frozen encoder
-   ↓
-latent Z
-   ↓
-GP posterior
-```
-
-encoder のパラメータは freeze されていますが、`transform(X)` は入力 `X` に関して differentiable です。そのため、qLogEI などの acquisition function の勾配を元の入力空間へ伝播できます。
-
-`AutoEncoderGP` は `ReducedGP` と同じ公開契約を持ちます。
-
-```python
-posterior = model.posterior(test_X)
-mll = model.make_mll()
-conditioned = model.condition_on_observations(new_X, new_Y)
-```
-
-raw training data は元空間のまま保持し、GP の `train_inputs` のみ潜在空間になります。`condition_on_observations` や `fantasize` でも AutoEncoder を再学習しません。モデルと reducer の状態は `state_dict` に含まれます。
-
-## BoTorch API との関係
-
-`ReducedGP` 系は BoTorch の `SingleTaskGP` と互換な公開インターフェースを維持します。
-
-```python
-posterior = model.posterior(test_X)
-mll = model.make_mll()
-```
-
-`train_X` と `test_X` は元の入力次元のままで構いません。内部 GP は reducer が生成した潜在入力で学習します。
-
-この構造により、獲得関数の最適化も元空間で実行できます。
+ReducedGP系は元空間の `train_X` / `test_X` を公開APIで受け付け、内部GPのみ潜在空間を使います。
 
 ```text
 optimize acquisition in original X
@@ -214,80 +81,46 @@ reducer.transform(X)
 latent GP posterior
 ```
 
-したがって、PCA / AutoEncoder などの逆変換を使って潜在候補を元空間へ復元する処理は通常必要ありません。一方で、GP のモデル入力次元は削減されますが、acquisition optimizer 自体は元の `D` 次元空間を探索します。潜在空間そのものを最適化するモードは別拡張として扱います。
+このためPCA/AEなどの逆変換で潜在候補を復元する処理は通常不要です。ただしGP入力次元が削減されてもacquisition optimizer自体は元のD次元空間を探索します。潜在空間最適化やREMBO / BAxUS / TuRBOなど探索戦略側の高次元対応は別レイヤーとして扱います。
 
-## Phase 1-4 の保証範囲
+## 現在の保証範囲
 
-現在は次の契約を基盤仕様として固定しています。
-
-- raw training data は元空間のまま保持する。
-- GP 本体は潜在入力で学習する。
+- raw training dataを元空間のまま保持する。
+- ReducedGP本体は潜在入力で学習する。
 - `posterior` は元空間入力を受け付ける。
-- q-batch / leading batch dimension を保持して変換する。
-- acquisition から元空間入力へ勾配を伝播できる。
-- `condition_on_observations` で reducer を再学習しない。
-- `fantasize` で reducer を再学習しない。
-- reducer の buffer は model の device / dtype 変換に追従する。
-- reducer の学習状態は `state_dict` round trip で保持する。
-- `make_mll()` は既存 Exact GP wrapper と同じ契約を維持する。
-- 未学習 reducer はモデル構築時に一度だけ fit する。
-- 学習済み reducer は再fitせず、そのまま再利用する。
-- model に接続した reducer の自動再学習は行わない。
-- AutoEncoder は学習完了後にネットワークパラメータを freeze する。
-- AutoEncoder の `transform` は元入力に関する勾配を保持する。
-- `AutoEncoderGP` は公開 model API と acquisition integration を提供する。
+- q-batch / leading batch dimensionを保持する。
+- acquisitionから元入力へ勾配を伝播できる。
+- conditioning / fantasizeでfrozen reducerを再学習しない。
+- reducerのbufferはdevice / dtype変換に追従する。
+- reducer状態はstate_dict round tripで保持する。
+- 未学習reducerは構築時にfitし、学習済みreducerは再fitしない。
+- neural frozen reducerは学習後freezeする。
+- Joint系は `training_loss()` でencoderとGPを共同最適化できる。
+- JointVAEGPはlatent uncertainty-aware posteriorを提供する。
 
-## 今後の実装計画
+## Phase 1-11 実装状況
 
-高次元入力の neural reduction 系は、教師なし・教師あり・GPとの共同学習を分けて実装します。
+高次元入力モデルの初期実装計画は完了しています。
 
-1. **Phase 5: VAEInputReducer / VAEGP**
-   - VAE を入力表現として学習する。
-   - 初版では encoder posterior mean `mu(X)` を決定論的な GP 入力として使用する。
-   - VAE 学習後は encoder を freeze する。
-2. **Phase 6: SupervisedAutoEncoderInputReducer**
-   - reconstruction loss と `Y` 予測 loss を併用して潜在表現を事前学習する。
-   - 学習後は encoder を freeze し、通常の `ReducedGP` lifecycle に接続する。
-3. **Phase 7: SupervisedAutoEncoderGP**
-   - Supervised AutoEncoder と GP を接続する。
-   - PLS-GP の非線形版に近い位置づけとする。
-4. **Phase 8: Joint GP / Encoder Learning**
-   - GP marginal log likelihood を encoder まで逆伝播する DKL 型を扱う。
-   - frozen `InputReducer` とは分離した lifecycle とする。
-5. **Phase 9: Hybrid AutoEncoder-GP**
-   - GP likelihood と reconstruction loss を同時最適化する。
-   - `-log p(Y | Z) + lambda_rec * L_reconstruction` を基本形とする。
-6. **Phase 10: Supervised / Joint VAE extensions**
-   - Supervised VAE-GP: reconstruction + KL + supervised loss で事前学習する。
-   - Joint VAE-GP: GP likelihood を VAE encoder まで伝播する。
-   - uncertainty-aware VAE-GP: `q(Z | X)` のサンプルを GP posterior に伝播し、潜在表現の不確実性を扱う。
-7. **Phase 11: benchmark / notebook / model selection guide**
-   - PCA-GP、PLS-GP、RandomProjection-GP、AE-GP、VAE-GP、Supervised AE/VAE、Joint/Hybrid 系、SAAS 系を共通ベンチマークで比較する。
-   - RMSE、NLL、学習時間、acquisition 実行、BO regret を比較する。
+| Phase | 内容 | 状態 |
+| --- | --- | --- |
+| 1-4 | ReducedGP lifecycle、PCA/PLS/RP、AutoEncoderGP | 完了 |
+| 5 | VAEInputReducer / VAEGP | 完了 |
+| 6-7 | Supervised AutoEncoder reducer / GP | 完了 |
+| 8 | JointEncoderGP | 完了 |
+| 9 | HybridAutoEncoderGP | 完了 |
+| 10 | Supervised VAE、JointVAE、latent uncertainty propagation | 完了 |
+| 11 | predictive/acquisition/SAAS/sequential/repeated-seed benchmark、model-selection guide、Notebook | 完了 |
 
-### 系統の違い
+モデル選択とPhase 11 benchmarkの詳細は `docs/high_dimensional_model_selection.md`、実行例は `examples/notebooks/23_high_dimensional_bo_benchmark.ipynb` を参照してください。
 
-```text
-Unsupervised AE / VAE
-X → representation pretraining → freeze → GP
+## 次の拡張候補
 
-Supervised AE / VAE
-X,Y → supervised representation pretraining → freeze → GP
+Phase 1-11完了後の拡張は、モデル追加よりも以下を独立テーマとして扱います。
 
-Joint / DKL
-X → Encoder → GP → Y
-         ↑       │
-         └───────┘
-         GP objective
-
-Hybrid AE / VAE-GP
-X → Encoder → GP → Y
-    ↓        ↑
- Decoder     │
-    ↓        │
- reconstruction / KL + GP objective
-```
-
-Supervised 系は GP 学習前に目的変数を使って潜在表現を作り、その後 freeze する安定性重視の方式です。Joint 系は予測性能を直接改善するよう encoder と GP を同時最適化します。Hybrid 系では reconstruction / KL を正則化として残します。
-
-SAAS / MAP-SAAS は明示的な reducer を使わないため、`ReducedGP` 系とは分離した高次元モデルとして扱います。
+- 連続高次元空間での acquisition optimization benchmark。
+- REMBO / BAxUS / TuRBOなど探索戦略との統合。
+- latent dimension / reducer hyperparameter選択支援。
+- Joint系のconditioning / fantasize契約の強化。
+- VAEの再現性、log-variance安定化、sampling APIの改善。
+- 実材料・製造データを想定したbenchmark suite。

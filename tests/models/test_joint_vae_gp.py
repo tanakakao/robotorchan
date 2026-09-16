@@ -35,11 +35,11 @@ def test_joint_vae_gp_distribution_and_sampling_shapes():
     assert model.reconstruct(X[:4]).shape == (4, 7)
 
 
-def test_joint_vae_loss_backpropagates_to_variational_and_decoder_parameters():
+def test_training_loss_backpropagates_to_variational_and_decoder_parameters():
     X, Y = _data()
     model = _model(X, Y)
 
-    loss = model.joint_loss()
+    loss = model.training_loss()
     loss.backward()
 
     assert model.mu_head.weight.grad is not None
@@ -47,6 +47,18 @@ def test_joint_vae_loss_backpropagates_to_variational_and_decoder_parameters():
     assert next(model.decoder.parameters()).grad is not None
     assert torch.isfinite(model.mu_head.weight.grad).all()
     assert torch.isfinite(model.logvar_head.weight.grad).all()
+
+
+def test_joint_loss_is_backwards_compatible_alias():
+    X, Y = _data()
+    model = _model(X, Y)
+
+    torch.manual_seed(21)
+    expected = model.training_loss().detach()
+    torch.manual_seed(21)
+    actual = model.joint_loss().detach()
+
+    torch.testing.assert_close(actual, expected)
 
 
 def test_joint_vae_gp_posterior_and_acquisition_keep_original_x_gradients():

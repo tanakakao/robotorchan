@@ -36,12 +36,9 @@ def test_joint_encoder_gp_keeps_original_training_inputs_and_raw_data():
 def test_joint_encoder_gp_mll_backpropagates_to_encoder():
     X, Y = _data()
     model = _make_model(X, Y)
-    model.train()
-    model.likelihood.train()
 
-    mll = model.make_mll()
-    output = model(X)
-    loss = -mll(output, model.train_targets)
+    loss = model.training_loss()
+    assert loss.ndim == 0
     loss.backward()
 
     encoder_gradients = [parameter.grad for parameter in model.encoder.parameters()]
