@@ -1,9 +1,8 @@
 import importlib.util
-import sys
 from pathlib import Path
+import sys
 
 import torch
-
 
 BENCHMARK_PATH = Path(__file__).parents[1] / "benchmarks" / "high_dimensional_inputs.py"
 SPEC = importlib.util.spec_from_file_location("high_dimensional_inputs_benchmark", BENCHMARK_PATH)
