@@ -32,6 +32,25 @@ def test_core_model_factories_cover_repeated_fit_baselines():
     }
 
 
+def test_extended_model_specs_cover_neural_joint_and_map_saas():
+    specs = BENCHMARK.model_specs(latent_dim=2, neural_epochs=1, include_extended=True)
+
+    assert {
+        "AutoEncoderGP",
+        "VAEGP",
+        "SupervisedAutoEncoderGP",
+        "SupervisedVAEGP",
+        "JointEncoderGP",
+        "HybridAutoEncoderGP",
+        "JointVAEGP",
+        "AdditiveMapSaasSingleTaskGP",
+    } <= set(specs)
+    assert specs["JointEncoderGP"].fit_policy == "joint"
+    assert specs["HybridAutoEncoderGP"].fit_policy == "hybrid"
+    assert specs["JointVAEGP"].fit_policy == "joint_vae"
+    assert specs["AdditiveMapSaasSingleTaskGP"].fit_policy == "mll"
+
+
 def test_select_from_pool_returns_valid_index():
     train_X = torch.rand(8, 6, dtype=torch.double)
     train_Y = BENCHMARK.objective(train_X)
@@ -65,6 +84,23 @@ def test_single_iteration_bo_smoke():
     assert results[0].iteration == 1
     assert results[0].n_observations == 9
     assert results[0].simple_regret >= 0.0
+
+
+def test_joint_encoder_fit_policy_smoke():
+    train_X = torch.rand(8, 6, dtype=torch.double)
+    train_Y = BENCHMARK.objective(train_X)
+    spec = BENCHMARK.model_specs(2, neural_epochs=1, include_extended=True)["JointEncoderGP"]
+    model = spec.factory(train_X, train_Y)
+
+    BENCHMARK.fit_model(
+        model,
+        fit_policy=spec.fit_policy,
+        joint_steps=1,
+        joint_learning_rate=1e-2,
+    )
+
+    posterior = model.posterior(train_X[:2])
+    assert posterior.mean.shape == (2, 1)
 
 
 def test_bo_rejects_more_iterations_than_candidates():
