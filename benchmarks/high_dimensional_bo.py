@@ -15,7 +15,20 @@ from botorch.fit import fit_gpytorch_mll
 from botorch.sampling.normal import SobolQMCNormalSampler
 from torch import Tensor
 
-from robotorchan.models import PCAGP, PLSGP, RandomProjectionGP, SingleTaskGP
+from robotorchan.models import (
+    PCAGP,
+    PLSGP,
+    VAEGP,
+    AdditiveMapSaasSingleTaskGP,
+    AutoEncoderGP,
+    HybridAutoEncoderGP,
+    JointEncoderGP,
+    JointVAEGP,
+    RandomProjectionGP,
+    SingleTaskGP,
+    SupervisedAutoEncoderGP,
+    SupervisedVAEGP,
+)
 
 
 @dataclass
@@ -30,6 +43,14 @@ class BOIterationResult:
     selected_value: float
 
 
+@dataclass(frozen=True)
+class BOModelSpec:
+    """Model constructor and fitting policy for repeated BO fitting."""
+
+    factory: Callable[[Tensor, Tensor], object]
+    fit_policy: str = "mll"
+
+
 def objective(X: Tensor) -> Tensor:
     """Evaluate the sparse five-coordinate synthetic objective."""
     if X.shape[-1] < 5:
@@ -42,16 +63,93 @@ def objective(X: Tensor) -> Tensor:
     ).unsqueeze(-1)
 
 
-def model_factories(latent_dim: int) -> dict[str, Callable[[Tensor, Tensor], object]]:
-    """Return the inexpensive core model set for repeated BO fitting."""
-    return {
-        "SingleTaskGP": lambda X, Y: SingleTaskGP(X, Y),
-        "PCAGP": lambda X, Y: PCAGP(X, Y, n_components=latent_dim),
-        "PLSGP": lambda X, Y: PLSGP(X, Y, n_components=latent_dim),
-        "RandomProjectionGP": lambda X, Y: RandomProjectionGP(
-            X, Y, n_components=latent_dim, random_state=0
+def model_specs(
+    latent_dim: int,
+    *,
+    neural_epochs: int = 20,
+    include_extended: bool = False,
+) -> dict[str, BOModelSpec]:
+    """Return model constructors together with their repeated-fit policy."""
+    specs = {
+        "SingleTaskGP": BOModelSpec(lambda X, Y: SingleTaskGP(X, Y)),
+        "PCAGP": BOModelSpec(lambda X, Y: PCAGP(X, Y, n_components=latent_dim)),
+        "PLSGP": BOModelSpec(lambda X, Y: PLSGP(X, Y, n_components=latent_dim)),
+        "RandomProjectionGP": BOModelSpec(
+            lambda X, Y: RandomProjectionGP(X, Y, n_components=latent_dim, random_state=0)
         ),
     }
+    if not include_extended:
+        return specs
+
+    neural = {
+        "latent_dim": latent_dim,
+        "hidden_dims": (32, 16),
+        "epochs": neural_epochs,
+        "random_state": 0,
+    }
+    joint = {"latent_dim": latent_dim, "hidden_dims": (32, 16), "random_state": 0}
+    specs.update(
+        {
+            "AutoEncoderGP": BOModelSpec(lambda X, Y: AutoEncoderGP(X, Y, **neural)),
+            "VAEGP": BOModelSpec(lambda X, Y: VAEGP(X, Y, **neural)),
+            "SupervisedAutoEncoderGP": BOModelSpec(
+                lambda X, Y: SupervisedAutoEncoderGP(X, Y, **neural)
+            ),
+            "SupervisedVAEGP": BOModelSpec(lambda X, Y: SupervisedVAEGP(X, Y, **neural)),
+            "JointEncoderGP": BOModelSpec(lambda X, Y: JointEncoderGP(X, Y, **joint), "joint"),
+            "HybridAutoEncoderGP": BOModelSpec(
+                lambda X, Y: HybridAutoEncoderGP(X, Y, reconstruction_weight=0.1, **joint),
+                "hybrid",
+            ),
+            "JointVAEGP": BOModelSpec(
+                lambda X, Y: JointVAEGP(X, Y, beta=0.1, reconstruction_weight=0.1, **joint),
+                "joint_vae",
+            ),
+            "AdditiveMapSaasSingleTaskGP": BOModelSpec(
+                lambda X, Y: AdditiveMapSaasSingleTaskGP(X, Y, num_taus=2)
+            ),
+        }
+    )
+    return specs
+
+
+def model_factories(latent_dim: int) -> dict[str, Callable[[Tensor, Tensor], object]]:
+    """Return the inexpensive core model set for backwards-compatible callers."""
+    return {name: spec.factory for name, spec in model_specs(latent_dim).items()}
+
+
+def fit_model(
+    model: object,
+    *,
+    fit_policy: str,
+    joint_steps: int,
+    joint_learning_rate: float,
+) -> None:
+    """Fit a model using the policy required by its representation."""
+    if fit_policy == "mll":
+        fit_gpytorch_mll(model.make_mll())
+        return
+    if joint_steps < 1:
+        raise ValueError("joint_steps must be at least 1")
+    if joint_learning_rate <= 0:
+        raise ValueError("joint_learning_rate must be positive")
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=joint_learning_rate)
+    for _ in range(joint_steps):
+        optimizer.zero_grad()
+        if fit_policy == "joint_vae":
+            loss = model.joint_loss()
+        elif fit_policy == "hybrid":
+            loss = model.hybrid_loss()
+        elif fit_policy == "joint":
+            model.train()
+            model.likelihood.train()
+            output = model(model.raw_train_X)
+            loss = -model.make_mll()(output, model.train_targets)
+        else:
+            raise ValueError(f"Unsupported fit policy: {fit_policy}")
+        loss.backward()
+        optimizer.step()
 
 
 def select_from_pool(
@@ -90,6 +188,9 @@ def run_model_bo(
     n_iterations: int,
     mc_samples: int,
     seed: int,
+    fit_policy: str = "mll",
+    joint_steps: int = 30,
+    joint_learning_rate: float = 1e-2,
 ) -> list[BOIterationResult]:
     """Run sequential pool-based BO for one model."""
     if n_iterations < 1:
@@ -106,7 +207,12 @@ def run_model_bo(
 
     for iteration in range(1, n_iterations + 1):
         model = factory(train_X, train_Y)
-        fit_gpytorch_mll(model.make_mll())
+        fit_model(
+            model,
+            fit_policy=fit_policy,
+            joint_steps=joint_steps,
+            joint_learning_rate=joint_learning_rate,
+        )
         index = select_from_pool(
             model,
             train_Y,
@@ -145,6 +251,10 @@ def run_benchmark(
     n_iterations: int = 10,
     mc_samples: int = 64,
     seed: int = 0,
+    include_extended: bool = False,
+    neural_epochs: int = 20,
+    joint_steps: int = 30,
+    joint_learning_rate: float = 1e-2,
 ) -> list[BOIterationResult]:
     """Run comparable sequential BO trajectories on a shared candidate pool."""
     if input_dim < 5:
@@ -159,17 +269,25 @@ def run_benchmark(
     candidate_Y = objective(candidate_X)
 
     results: list[BOIterationResult] = []
-    for name, factory in model_factories(latent_dim).items():
+    specs = model_specs(
+        latent_dim,
+        neural_epochs=neural_epochs,
+        include_extended=include_extended,
+    )
+    for name, spec in specs.items():
         results.extend(
             run_model_bo(
                 name,
-                factory,
+                spec.factory,
                 initial_X,
                 candidate_X,
                 candidate_Y,
                 n_iterations=n_iterations,
                 mc_samples=mc_samples,
                 seed=seed,
+                fit_policy=spec.fit_policy,
+                joint_steps=joint_steps,
+                joint_learning_rate=joint_learning_rate,
             )
         )
     return results
@@ -193,6 +311,10 @@ def main() -> None:
     parser.add_argument("--n-iterations", type=int, default=10)
     parser.add_argument("--mc-samples", type=int, default=64)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--include-extended", action="store_true")
+    parser.add_argument("--neural-epochs", type=int, default=20)
+    parser.add_argument("--joint-steps", type=int, default=30)
+    parser.add_argument("--joint-learning-rate", type=float, default=1e-2)
     parser.add_argument(
         "--output",
         type=Path,
@@ -207,6 +329,10 @@ def main() -> None:
         n_iterations=args.n_iterations,
         mc_samples=args.mc_samples,
         seed=args.seed,
+        include_extended=args.include_extended,
+        neural_epochs=args.neural_epochs,
+        joint_steps=args.joint_steps,
+        joint_learning_rate=args.joint_learning_rate,
     )
     write_csv(results, args.output)
     for result in results:
