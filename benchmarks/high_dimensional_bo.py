@@ -5,7 +5,8 @@ from __future__ import annotations
 import argparse
 import csv
 import math
-from collections.abc import Callable
+from collections import defaultdict
+from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -41,6 +42,23 @@ class BOIterationResult:
     best_observed: float
     simple_regret: float
     selected_value: float
+    seed: int = 0
+
+
+@dataclass
+class BOAggregateResult:
+    """Repeated-seed summary for one model and BO iteration."""
+
+    model: str
+    iteration: int
+    n_seeds: int
+    simple_regret_mean: float
+    simple_regret_std: float
+    simple_regret_median: float
+    simple_regret_q25: float
+    simple_regret_q75: float
+    best_observed_mean: float
+    best_observed_std: float
 
 
 @dataclass(frozen=True)
@@ -237,6 +255,7 @@ def run_model_bo(
                 best_observed=best,
                 simple_regret=max(0.0, optimum - best),
                 selected_value=float(new_Y.squeeze()),
+                seed=seed,
             )
         )
     return results
@@ -293,13 +312,66 @@ def run_benchmark(
     return results
 
 
-def write_csv(results: list[BOIterationResult], path: Path) -> None:
-    """Write BO trajectories to CSV."""
+def run_repeated_benchmark(
+    seeds: Sequence[int],
+    **benchmark_kwargs: object,
+) -> list[BOIterationResult]:
+    """Run the benchmark for multiple independent random seeds."""
+    if not seeds:
+        raise ValueError("seeds must contain at least one value")
+    results: list[BOIterationResult] = []
+    for seed in seeds:
+        results.extend(run_benchmark(seed=int(seed), **benchmark_kwargs))
+    return results
+
+
+def aggregate_results(results: Sequence[BOIterationResult]) -> list[BOAggregateResult]:
+    """Aggregate repeated trajectories by model and iteration."""
+    if not results:
+        raise ValueError("results must contain at least one trajectory row")
+    groups: dict[tuple[str, int], list[BOIterationResult]] = defaultdict(list)
+    for result in results:
+        groups[(result.model, result.iteration)].append(result)
+
+    summaries: list[BOAggregateResult] = []
+    for (model, iteration), rows in sorted(groups.items()):
+        regrets = torch.tensor([row.simple_regret for row in rows], dtype=torch.double)
+        best = torch.tensor([row.best_observed for row in rows], dtype=torch.double)
+        summaries.append(
+            BOAggregateResult(
+                model=model,
+                iteration=iteration,
+                n_seeds=len(rows),
+                simple_regret_mean=float(regrets.mean()),
+                simple_regret_std=float(regrets.std(unbiased=False)),
+                simple_regret_median=float(regrets.median()),
+                simple_regret_q25=float(torch.quantile(regrets, 0.25)),
+                simple_regret_q75=float(torch.quantile(regrets, 0.75)),
+                best_observed_mean=float(best.mean()),
+                best_observed_std=float(best.std(unbiased=False)),
+            )
+        )
+    return summaries
+
+
+def write_csv(results: Sequence[object], path: Path) -> None:
+    """Write dataclass benchmark rows to CSV."""
+    if not results:
+        raise ValueError("results must contain at least one row")
     path.parent.mkdir(parents=True, exist_ok=True)
+    rows = [asdict(result) for result in results]
     with path.open("w", newline="", encoding="utf-8") as file:
-        writer = csv.DictWriter(file, fieldnames=list(asdict(results[0]).keys()))
+        writer = csv.DictWriter(file, fieldnames=list(rows[0].keys()))
         writer.writeheader()
-        writer.writerows(asdict(result) for result in results)
+        writer.writerows(rows)
+
+
+def parse_seeds(value: str) -> list[int]:
+    """Parse a comma-separated seed list."""
+    seeds = [int(item.strip()) for item in value.split(",") if item.strip()]
+    if not seeds:
+        raise argparse.ArgumentTypeError("at least one seed is required")
+    return seeds
 
 
 def main() -> None:
@@ -310,7 +382,7 @@ def main() -> None:
     parser.add_argument("--latent-dim", type=int, default=5)
     parser.add_argument("--n-iterations", type=int, default=10)
     parser.add_argument("--mc-samples", type=int, default=64)
-    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--seeds", type=parse_seeds, default=[0])
     parser.add_argument("--include-extended", action="store_true")
     parser.add_argument("--neural-epochs", type=int, default=20)
     parser.add_argument("--joint-steps", type=int, default=30)
@@ -320,23 +392,30 @@ def main() -> None:
         type=Path,
         default=Path("benchmark_results/high_dimensional_bo.csv"),
     )
+    parser.add_argument(
+        "--summary-output",
+        type=Path,
+        default=Path("benchmark_results/high_dimensional_bo_summary.csv"),
+    )
     args = parser.parse_args()
-    results = run_benchmark(
+    results = run_repeated_benchmark(
+        args.seeds,
         n_initial=args.n_initial,
         n_candidates=args.n_candidates,
         input_dim=args.input_dim,
         latent_dim=args.latent_dim,
         n_iterations=args.n_iterations,
         mc_samples=args.mc_samples,
-        seed=args.seed,
         include_extended=args.include_extended,
         neural_epochs=args.neural_epochs,
         joint_steps=args.joint_steps,
         joint_learning_rate=args.joint_learning_rate,
     )
+    summaries = aggregate_results(results)
     write_csv(results, args.output)
-    for result in results:
-        print(result)
+    write_csv(summaries, args.summary_output)
+    for summary in summaries:
+        print(summary)
 
 
 if __name__ == "__main__":
