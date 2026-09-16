@@ -18,6 +18,7 @@ from torch import Tensor
 from robotorchan.models import (
     PCAGP,
     PLSGP,
+    VAEGP,
     AdditiveMapSaasSingleTaskGP,
     AutoEncoderGP,
     HybridAutoEncoderGP,
@@ -27,7 +28,6 @@ from robotorchan.models import (
     SingleTaskGP,
     SupervisedAutoEncoderGP,
     SupervisedVAEGP,
-    VAEGP,
 )
 
 
