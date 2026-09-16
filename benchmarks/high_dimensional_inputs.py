@@ -6,9 +6,9 @@ import argparse
 import csv
 import math
 import time
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Callable
 
 import torch
 from botorch.fit import fit_gpytorch_mll
@@ -17,12 +17,12 @@ from torch import Tensor
 from robotorchan.models import (
     PCAGP,
     PLSGP,
+    VAEGP,
     AutoEncoderGP,
     RandomProjectionGP,
     SingleTaskGP,
     SupervisedAutoEncoderGP,
     SupervisedVAEGP,
-    VAEGP,
 )
 
 
@@ -59,10 +59,15 @@ def make_synthetic_data(
 def gaussian_nll(mean: Tensor, variance: Tensor, target: Tensor) -> Tensor:
     """Return mean Gaussian negative log likelihood."""
     variance = variance.clamp_min(1e-10)
-    return 0.5 * (torch.log(2.0 * torch.pi * variance) + (target - mean).square() / variance).mean()
+    return 0.5 * (
+        torch.log(2.0 * torch.pi * variance) + (target - mean).square() / variance
+    ).mean()
 
 
-def model_factories(latent_dim: int, neural_epochs: int) -> dict[str, Callable[[Tensor, Tensor], object]]:
+def model_factories(
+    latent_dim: int,
+    neural_epochs: int,
+) -> dict[str, Callable[[Tensor, Tensor], object]]:
     """Return benchmark model constructors with aligned dimensionality."""
     neural = {"latent_dim": latent_dim, "hidden_dims": (32, 16), "epochs": neural_epochs}
     return {
@@ -139,7 +144,11 @@ def main() -> None:
     parser.add_argument("--latent-dim", type=int, default=5)
     parser.add_argument("--neural-epochs", type=int, default=50)
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--output", type=Path, default=Path("benchmark_results/high_dimensional_inputs.csv"))
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("benchmark_results/high_dimensional_inputs.csv"),
+    )
     args = parser.parse_args()
     results = run_benchmark(
         n_train=args.n_train,
