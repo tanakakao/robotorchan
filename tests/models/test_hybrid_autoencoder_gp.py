@@ -33,11 +33,11 @@ def test_hybrid_autoencoder_gp_reconstructs_original_input_shape():
     assert model.make_mll().model is model
 
 
-def test_hybrid_loss_backpropagates_to_encoder_decoder_and_gp():
+def test_training_loss_backpropagates_to_encoder_decoder_and_gp():
     X, Y = _data()
     model = _make_model(X, Y)
 
-    loss = model.hybrid_loss()
+    loss = model.training_loss()
     loss.backward()
 
     encoder_grads = [parameter.grad for parameter in model.encoder.parameters()]
@@ -49,11 +49,23 @@ def test_hybrid_loss_backpropagates_to_encoder_decoder_and_gp():
     assert any(gradient is not None and gradient.abs().sum() > 0 for gradient in gp_grads)
 
 
+def test_hybrid_loss_is_backwards_compatible_alias():
+    X, Y = _data()
+    model = _make_model(X, Y)
+
+    torch.manual_seed(12)
+    expected = model.training_loss().detach()
+    torch.manual_seed(12)
+    actual = model.hybrid_loss().detach()
+
+    torch.testing.assert_close(actual, expected)
+
+
 def test_zero_reconstruction_weight_removes_decoder_gradient():
     X, Y = _data()
     model = _make_model(X, Y, reconstruction_weight=0.0)
 
-    model.hybrid_loss().backward()
+    model.training_loss().backward()
 
     assert all(parameter.grad is None for parameter in model.decoder.parameters())
     assert any(parameter.grad is not None for parameter in model.encoder.parameters())
