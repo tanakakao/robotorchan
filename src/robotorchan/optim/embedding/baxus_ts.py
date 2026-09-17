@@ -23,9 +23,7 @@ class BAxUSThompsonSamplingStrategy(BAxUSStrategy):
 
     def _candidate_pool(self, target_bounds: Tensor) -> tuple[Tensor, Tensor]:
         """Draw sparse perturbations around the current target-space incumbent."""
-        sobol_seed = int(
-            torch.randint(0, 2**31 - 1, (1,), generator=self._generator).item()
-        )
+        sobol_seed = int(torch.randint(0, 2**31 - 1, (1,), generator=self._generator).item())
         sobol = SobolEngine(self.target_dim, scramble=True, seed=sobol_seed)
         unit = sobol.draw(self.n_candidates).to(self.bounds)
         perturbations = target_bounds[0] + (target_bounds[1] - target_bounds[0]) * unit
@@ -51,9 +49,7 @@ class BAxUSThompsonSamplingStrategy(BAxUSStrategy):
             )
             mask[empty_rows, forced_dims] = True
 
-        target_pool = self.target_center.expand(
-            self.n_candidates, self.target_dim
-        ).clone()
+        target_pool = self.target_center.expand(self.n_candidates, self.target_dim).clone()
         target_pool[mask] = perturbations[mask]
         return target_pool, self.project(target_pool)
 
@@ -82,9 +78,7 @@ class BAxUSThompsonSamplingStrategy(BAxUSStrategy):
         with torch.no_grad():
             candidates = sampler(input_pool, num_samples=q)
             acquisition_value = acq_function(candidates)
-        target_candidates = self._match_target_candidates(
-            candidates, input_pool, target_pool
-        )
+        target_candidates = self._match_target_candidates(candidates, input_pool, target_pool)
 
         return SearchResult(
             candidates=candidates,
