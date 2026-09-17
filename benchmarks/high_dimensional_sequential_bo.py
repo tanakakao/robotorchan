@@ -140,6 +140,7 @@ def _make_strategy(
     num_restarts: int,
     raw_samples: int,
     search_seed: int,
+    eval_budget: int,
 ):
     """Construct one search strategy for a complete BO trajectory."""
     if name == "OriginalSpace":
@@ -174,11 +175,15 @@ def _make_strategy(
             raw_samples=raw_samples,
         )
     if name == "BAxUS":
+        state = BAxUSState(
+            dim=bounds.shape[-1],
+            eval_budget=eval_budget,
+            best_value=best_value,
+        )
         return BAxUSStrategy(
             bounds,
-            initial_target_dim=latent_dim,
+            state=state,
             seed=search_seed,
-            state=BAxUSState(target_dim=latent_dim, best_value=best_value),
             num_restarts=num_restarts,
             raw_samples=raw_samples,
         )
@@ -212,6 +217,8 @@ def run_strategy(
     All strategies use the same original-space ``SingleTaskGP`` and q=1
     ``LogExpectedImprovement``. Search reducers and random embeddings are created
     once per trajectory. TuRBO and BAxUS retain their state between iterations.
+    BAxUS derives its initial target dimension and expansion schedule from the
+    post-initial-design evaluation budget ``n_iterations``.
     """
     if name not in STRATEGY_NAMES:
         raise ValueError(f"Unknown strategy: {name}")
@@ -234,6 +241,7 @@ def run_strategy(
         num_restarts=num_restarts,
         raw_samples=raw_samples,
         search_seed=strategy_seed,
+        eval_budget=n_iterations,
     )
     optimum = 0.0
     results: list[SequentialBOResult] = []
