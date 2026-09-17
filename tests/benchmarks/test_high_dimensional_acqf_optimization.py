@@ -39,6 +39,30 @@ def test_run_dimension_compares_shared_problem() -> None:
     assert all(row.optimization_time >= 0.0 for row in results)
 
 
+def test_reported_acquisition_value_uses_returned_public_q_batch(monkeypatch) -> None:
+    seen_shapes: list[torch.Size] = []
+    original = benchmark.PosteriorMean
+
+    class RecordingPosteriorMean(original):
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            seen_shapes.append(X.shape)
+            return super().forward(X)
+
+    monkeypatch.setattr(benchmark, "PosteriorMean", RecordingPosteriorMean)
+    benchmark.run_dimension(
+        5,
+        n_train=8,
+        embedding_dim=3,
+        random_samples=8,
+        num_restarts=1,
+        raw_samples=4,
+        seed=3,
+    )
+
+    assert seen_shapes
+    assert all(shape[-2:] == torch.Size([1, 5]) for shape in seen_shapes)
+
+
 def test_search_rng_streams_are_independent_from_problem_rng() -> None:
     seed = 7
     n_train = 8
