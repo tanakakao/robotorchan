@@ -1,0 +1,1 @@
+Phase 14 preflight: sequential benchmark only; q=1 LogExpectedImprovement; common SingleTaskGP surrogate; frozen search reducers; tests cover acquisition type, dynamic best_f, and sequential smoke run.
