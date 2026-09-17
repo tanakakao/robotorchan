@@ -13,16 +13,22 @@ sys.modules[MODULE_NAME] = benchmark
 SPEC.loader.exec_module(benchmark)
 
 
-def test_problem_seed_and_random_search_seed_are_distinct() -> None:
+def test_problem_seed_and_search_seeds_are_distinct() -> None:
     problem_seed = 23
     _, bounds, _ = benchmark.make_problem(5, n_train=4, seed=problem_seed)
-    strategy = benchmark.strategy_factories(
+    strategies = benchmark.strategy_factories(
         bounds,
+        embedding_dim=3,
         random_samples=8,
         num_restarts=1,
         raw_samples=4,
         seed=problem_seed,
-    )["RandomSearch"]
+    )
+    random_strategy = strategies["RandomSearch"]
+    rembo_strategy = strategies["REMBO"]
 
-    assert strategy.seed == benchmark._search_seed(problem_seed)
-    assert strategy.seed != problem_seed
+    assert random_strategy.seed == benchmark._search_seed(problem_seed)
+    assert random_strategy.seed != problem_seed
+    assert benchmark._embedding_seed(problem_seed) != problem_seed
+    assert benchmark._embedding_seed(problem_seed) != random_strategy.seed
+    assert rembo_strategy.embedding.shape == (5, 3)
