@@ -12,7 +12,7 @@ robotorchan では surrogate model と acquisition function と search strategy 
 | `LatentSpaceStrategy` | PCA / RandomProjection 潜在空間 | reducer に依存 | 既知の低次元表現を使う探索 |
 | `REMBOStrategy` | 固定ランダム埋め込み | 固定 | intrinsic dimension が低いと期待できる場合 |
 | `TuRBOStrategy` | 元空間の局所 trust region | あり | 高次元で局所探索を適応的に集中 |
-| `BAxUSStrategy` | 適応的ランダム部分空間 | あり | intrinsic dimension が不明で、探索中に部分空間を拡張したい場合 |
+| `BAxUSStrategy` | sparse signed embedding | あり | intrinsic dimension が不明で、探索中に部分空間を拡張したい場合 |
 
 ### RandomSearch の q-batch
 
@@ -33,8 +33,8 @@ if state.restart_triggered:
 ```
 
 `BAxUSStrategy` は目的関数を評価しない。目的関数評価後に `update_state()` を明示的に呼ぶ。
-trust region が最小長を下回ると `restart_triggered=True` となり、`expand_subspace()` で target dimension を増やす。
-元の埋め込み方向は保持し、新しい方向だけを追加する。
+初期 embedding では、各元入力次元を target-space のちょうど 1 bin に割り当て、係数を `+1` または `-1` とする sparse signed embedding を使う。bin の占有数は可能な限り均等化する。
+trust region が最小長を下回ると `restart_triggered=True` となり、`expand_subspace()` は占有数の大きい bin を分割して target dimension を増やす。元入力次元を新しい独立 Gaussian 方向へ再埋め込みするのではなく、既存 bin のメンバーを分割することで探索空間を段階的に細分化する。
 
 ## 設計上の注意
 
@@ -44,7 +44,7 @@ trust region が最小長を下回ると `restart_triggered=True` となり、`e
 - 探索時間は benchmark / 呼び出し側で `strategy.optimize(...)` の前後を計測する。
 - `LatentSpaceStrategy` はデータから学習した reducer、REMBO / BAxUS は探索用の埋め込みであり役割が異なる。
 - TuRBO / BAxUS は stateful なので、逐次 BO ループ側が観測値を state に戻す必要がある。
-- BAxUS の target-space は `[-1, 1]^k` を基準とし、元の box bounds へアフィン変換するため、入力変数の物理スケールに依存しにくい。
+- BAxUS の target-space は trust-region length に応じた対称 box を使い、sparse embedding 後に元の box bounds へアフィン変換する。
 
 ## ベンチマーク
 
