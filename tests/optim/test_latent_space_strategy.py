@@ -68,7 +68,7 @@ def test_random_projection_strategy_uses_original_acquisition_contract() -> None
 
     result = strategy.optimize(acq_function, q=1)
 
-    expected = acq_function(result.candidates)
+    expected = acq_function(result.candidates).reshape(())
     assert result.candidates.shape == (1, 4)
     assert result.acquisition_value is not None
     torch.testing.assert_close(result.acquisition_value, expected)
