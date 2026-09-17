@@ -83,6 +83,47 @@ def test_random_search_optimizes_joint_q_batches() -> None:
     assert result.metadata == {"num_samples": 64, "q": 3}
 
 
+def test_random_search_preserves_float64_dtype_and_device() -> None:
+    bounds = torch.tensor(
+        [[0.0, 0.0], [1.0, 1.0]],
+        dtype=torch.float64,
+    )
+    strategy = RandomSearchStrategy(bounds, num_samples=8, seed=5)
+    result = strategy.optimize(_BatchSumAcquisition(), q=2)
+
+    assert result.candidates.dtype == bounds.dtype
+    assert result.candidates.device == bounds.device
+    assert result.acquisition_value is not None
+    assert result.acquisition_value.dtype == bounds.dtype
+    assert result.acquisition_value.device == bounds.device
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
+def test_random_search_runs_on_cuda_without_device_transfer() -> None:
+    bounds = torch.tensor(
+        [[0.0, 0.0], [1.0, 1.0]],
+        dtype=torch.float64,
+        device="cuda",
+    )
+
+    class _CudaBatchSum(AcquisitionFunction):
+        def __init__(self) -> None:
+            model = _make_acquisition().model.to(device=bounds.device)
+            super().__init__(model=model)
+
+        def forward(self, X: Tensor) -> Tensor:
+            return X.sum(dim=(-2, -1))
+
+    result = RandomSearchStrategy(bounds, num_samples=8, seed=5).optimize(
+        _CudaBatchSum(),
+        q=2,
+    )
+
+    assert result.candidates.device == bounds.device
+    assert result.acquisition_value is not None
+    assert result.acquisition_value.device == bounds.device
+
+
 def test_random_search_supports_one_sample() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     acq = _make_acquisition()
