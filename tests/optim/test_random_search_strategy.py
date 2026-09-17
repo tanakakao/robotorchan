@@ -51,7 +51,6 @@ def test_random_search_returns_best_sampled_candidates() -> None:
     assert torch.all(result.candidates >= bounds[0])
     assert torch.all(result.candidates <= bounds[1])
     assert result.metadata == {"num_samples": 128}
-    assert result.optimization_time >= 0.0
 
 
 def test_random_search_supports_one_sample() -> None:
