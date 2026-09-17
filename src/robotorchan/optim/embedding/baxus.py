@@ -155,9 +155,7 @@ class BAxUSStrategy(SearchStrategy):
         self._generator.seed() if seed is None else self._generator.manual_seed(seed)
         self.state = state
         self.embedding = self._new_sparse_embedding(state.target_dim)
-        self.target_X = torch.empty(
-            0, state.target_dim, dtype=bounds.dtype, device=bounds.device
-        )
+        self.target_X = torch.empty(0, state.target_dim, dtype=bounds.dtype, device=bounds.device)
         self.target_Y = torch.empty(0, dtype=bounds.dtype, device=bounds.device)
 
     @property
