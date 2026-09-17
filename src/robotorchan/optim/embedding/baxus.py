@@ -95,8 +95,9 @@ class BAxUSStrategy(SearchStrategy):
     """Optimize acquisitions with a sparse embedding that expands by bin splitting.
 
     Each original input dimension belongs to exactly one target-space bin with a
-    random sign. When the trust region collapses, populated bins are split and
-    the target dimension grows without replacing the complete embedding.
+    random sign. On expansion, every splittable target bin is partitioned into
+    up to ``new_bins_on_split + 1`` child bins, matching the nested BAxUS
+    embedding construction.
     """
 
     def __init__(
@@ -104,7 +105,7 @@ class BAxUSStrategy(SearchStrategy):
         bounds: Tensor,
         *,
         initial_target_dim: int = 1,
-        new_dimensions: int = 3,
+        new_bins_on_split: int = 3,
         seed: int | None = None,
         state: BAxUSState | None = None,
         num_restarts: int = 10,
@@ -115,14 +116,14 @@ class BAxUSStrategy(SearchStrategy):
         super().__init__(bounds)
         if initial_target_dim < 1 or initial_target_dim > self.input_dim:
             raise ValueError("initial_target_dim must be between 1 and input_dim.")
-        if new_dimensions < 1:
-            raise ValueError("new_dimensions must be at least 1.")
+        if new_bins_on_split < 1:
+            raise ValueError("new_bins_on_split must be at least 1.")
         if num_restarts < 1 or raw_samples < 1:
             raise ValueError("num_restarts and raw_samples must be at least 1.")
         if state is not None and state.target_dim != initial_target_dim:
             raise ValueError("state.target_dim must equal initial_target_dim.")
 
-        self.new_dimensions = new_dimensions
+        self.new_bins_on_split = new_bins_on_split
         self.num_restarts = num_restarts
         self.raw_samples = raw_samples
         self.options = None if options is None else dict(options)
@@ -186,33 +187,32 @@ class BAxUSStrategy(SearchStrategy):
         embedding[rows, assignments] = signs
         return embedding
 
-    def _split_embedding(self, next_dim: int) -> Tensor:
-        """Split the largest populated bins until ``next_dim`` is reached."""
-        embedding = self.embedding.clone()
-        while embedding.shape[-1] < next_dim:
-            occupancy = embedding.ne(0).sum(dim=0)
-            splittable = torch.nonzero(occupancy > 1, as_tuple=False).flatten()
-            if splittable.numel() == 0:
-                break
-            occupancies = occupancy[splittable]
-            source = int(splittable[torch.argmax(occupancies)].item())
-            members = torch.nonzero(embedding[:, source] != 0, as_tuple=False).flatten()
+    def _split_embedding(self) -> Tensor:
+        """Split every populated bin into nested child bins in one expansion."""
+        old_embedding = self.embedding
+        columns = [old_embedding[:, index].clone() for index in range(self.target_dim)]
+        new_columns: list[Tensor] = []
+
+        for source, column in enumerate(columns):
+            members = torch.nonzero(column != 0, as_tuple=False).flatten()
+            if members.numel() <= 1:
+                continue
             order = torch.randperm(
                 members.numel(),
                 device=self.bounds.device,
                 generator=self._generator,
             )
-            moved = members[order[: members.numel() // 2]]
-            new_column = torch.zeros(
-                self.input_dim,
-                1,
-                dtype=self.bounds.dtype,
-                device=self.bounds.device,
-            )
-            new_column[moved, 0] = embedding[moved, source]
-            embedding[moved, source] = 0
-            embedding = torch.cat([embedding, new_column], dim=-1)
-        return embedding
+            shuffled = members[order]
+            n_groups = min(self.new_bins_on_split + 1, members.numel())
+            groups = torch.tensor_split(shuffled, n_groups)
+            columns[source][groups[1:].copy() if False else groups[0]] = column[groups[0]]
+            for group in groups[1:]:
+                child = torch.zeros_like(column)
+                child[group] = column[group]
+                columns[source][group] = 0
+                new_columns.append(child)
+
+        return torch.stack(columns + new_columns, dim=-1)
 
     def project(self, Z: Tensor) -> Tensor:
         """Map target-space coordinates to the feasible original-space box."""
@@ -224,14 +224,16 @@ class BAxUSStrategy(SearchStrategy):
         return center + half_range * normalized
 
     def expand_subspace(self) -> bool:
-        """Expand the target space by splitting existing embedding bins."""
+        """Expand all splittable target bins while preserving the nested embedding."""
         if not self.state.restart_triggered:
             raise RuntimeError("Subspace expansion requires restart_triggered=True.")
         if self.target_dim >= self.input_dim:
             return False
 
-        next_dim = min(self.input_dim, self.target_dim + self.new_dimensions)
-        self.embedding = self._split_embedding(next_dim)
+        expanded = self._split_embedding()
+        if expanded.shape[-1] == self.target_dim:
+            return False
+        self.embedding = expanded
         self.state = BAxUSState(
             target_dim=self.target_dim,
             length=0.8,
