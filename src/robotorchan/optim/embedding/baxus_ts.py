@@ -31,13 +31,16 @@ class BAxUSThompsonSamplingStrategy(BAxUSStrategy):
         perturbations = target_bounds[0] + (target_bounds[1] - target_bounds[0]) * unit
 
         probability = min(20.0 / self.target_dim, 1.0)
-        mask = torch.rand(
-            self.n_candidates,
-            self.target_dim,
-            dtype=self.bounds.dtype,
-            device=self.bounds.device,
-            generator=self._generator,
-        ) <= probability
+        mask = (
+            torch.rand(
+                self.n_candidates,
+                self.target_dim,
+                dtype=self.bounds.dtype,
+                device=self.bounds.device,
+                generator=self._generator,
+            )
+            <= probability
+        )
         empty_rows = torch.where(mask.sum(dim=-1) == 0)[0]
         if empty_rows.numel() > 0:
             forced_dims = torch.randint(
@@ -48,7 +51,9 @@ class BAxUSThompsonSamplingStrategy(BAxUSStrategy):
             )
             mask[empty_rows, forced_dims] = True
 
-        target_pool = self.target_center.expand(self.n_candidates, self.target_dim).clone()
+        target_pool = self.target_center.expand(
+            self.n_candidates, self.target_dim
+        ).clone()
         target_pool[mask] = perturbations[mask]
         return target_pool, self.project(target_pool)
 
@@ -77,7 +82,9 @@ class BAxUSThompsonSamplingStrategy(BAxUSStrategy):
         with torch.no_grad():
             candidates = sampler(input_pool, num_samples=q)
             acquisition_value = acq_function(candidates)
-        target_candidates = self._match_target_candidates(candidates, input_pool, target_pool)
+        target_candidates = self._match_target_candidates(
+            candidates, input_pool, target_pool
+        )
 
         return SearchResult(
             candidates=candidates,
