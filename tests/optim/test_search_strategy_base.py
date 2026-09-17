@@ -88,6 +88,32 @@ def test_search_result_contains_only_search_outputs() -> None:
     }
 
 
+def test_search_strategy_preserves_bounds_dtype_and_device() -> None:
+    bounds = torch.tensor(
+        [[0.0, -1.0], [1.0, 2.0]],
+        dtype=torch.float64,
+    )
+    strategy = DummySearchStrategy(bounds)
+
+    assert strategy.bounds.dtype == bounds.dtype
+    assert strategy.bounds.device == bounds.device
+
+
+def test_search_result_preserves_candidate_dtype_and_device() -> None:
+    candidates = torch.zeros(2, 3, dtype=torch.float64)
+    acquisition_value = torch.tensor(1.0, dtype=torch.float64)
+    result = SearchResult(
+        candidates=candidates,
+        acquisition_value=acquisition_value,
+    )
+
+    assert result.candidates.dtype == candidates.dtype
+    assert result.candidates.device == candidates.device
+    assert result.acquisition_value is not None
+    assert result.acquisition_value.dtype == acquisition_value.dtype
+    assert result.acquisition_value.device == acquisition_value.device
+
+
 def test_dummy_strategy_returns_public_space_candidates() -> None:
     strategy = DummySearchStrategy(torch.tensor([[0.0, 0.0], [1.0, 1.0]]))
 

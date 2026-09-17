@@ -115,3 +115,10 @@ result = strategy.optimize(acq_function, q=1)
 モデル性能と探索戦略性能を混同しないため、探索戦略比較では同じ surrogate / acquisition を使うことを原則とする。
 BAxUS には `n_iterations` を初期設計後の評価予算として渡し、target dimension を評価予算から導出する。
 探索時間はライブラリの戻り値ではなく、benchmark 側で外部計測する。
+
+
+## dtype / device contract
+
+Search strategy は public-space `bounds` の dtype / device を保持する。strategy 内部で生成する random sample、embedding、latent / target bounds、diagnostic tensor は原則として `bounds` と同じ dtype / device 上に置き、`SearchResult.candidates` を暗黙に CPU や別 dtype へ変換しない。
+
+BoTorch の数値安定性を考慮し、通常の GP ベース BO では `torch.float64` を推奨する。GPU を使用する場合も、model / acquisition / bounds を同一 device に配置する。CPU CI では float64 の dtype/device propagation を常時検証し、CUDA が利用可能な環境では RandomSearch の device propagation test も実行する。
