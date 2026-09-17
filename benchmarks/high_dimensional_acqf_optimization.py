@@ -16,9 +16,15 @@ from botorch.fit import fit_gpytorch_mll
 from torch import Tensor
 
 from robotorchan.models import SingleTaskGP
-from robotorchan.optim import OriginalSpaceStrategy, RandomSearchStrategy, SearchStrategy
+from robotorchan.optim import (
+    OriginalSpaceStrategy,
+    RandomSearchStrategy,
+    REMBOStrategy,
+    SearchStrategy,
+)
 
 _SEARCH_SEED_OFFSET = 1_000_003
+_EMBEDDING_SEED_OFFSET = 2_000_033
 _MAX_TORCH_SEED = 2**63 - 1
 
 
@@ -59,8 +65,13 @@ def objective(X: Tensor) -> Tensor:
 
 
 def _search_seed(problem_seed: int) -> int:
-    """Derive a deterministic search seed independent from problem generation."""
+    """Derive a deterministic random-search seed independent from the problem RNG."""
     return (problem_seed + _SEARCH_SEED_OFFSET) % _MAX_TORCH_SEED
+
+
+def _embedding_seed(problem_seed: int) -> int:
+    """Derive a deterministic embedding seed independent from other RNG streams."""
+    return (problem_seed + _EMBEDDING_SEED_OFFSET) % _MAX_TORCH_SEED
 
 
 def make_problem(
@@ -94,12 +105,15 @@ def make_problem(
 def strategy_factories(
     bounds: Tensor,
     *,
+    embedding_dim: int,
     random_samples: int,
     num_restarts: int,
     raw_samples: int,
     seed: int,
 ) -> dict[str, SearchStrategy]:
-    """Build strategies with comparable public-space bounds and independent RNG."""
+    """Build strategies with shared public bounds and independent RNG streams."""
+    if embedding_dim < 1 or embedding_dim > bounds.shape[-1]:
+        raise ValueError("embedding_dim must be between 1 and input_dim")
     return {
         "OriginalSpace": OriginalSpaceStrategy(
             bounds,
@@ -111,6 +125,13 @@ def strategy_factories(
             num_samples=random_samples,
             seed=_search_seed(seed),
         ),
+        "REMBO": REMBOStrategy(
+            bounds,
+            embedding_dim=embedding_dim,
+            seed=_embedding_seed(seed),
+            num_restarts=num_restarts,
+            raw_samples=raw_samples,
+        ),
     }
 
 
@@ -118,6 +139,7 @@ def run_dimension(
     input_dim: int,
     *,
     n_train: int = 24,
+    embedding_dim: int = 5,
     random_samples: int = 4096,
     num_restarts: int = 10,
     raw_samples: int = 512,
@@ -131,6 +153,7 @@ def run_dimension(
 
     for name, strategy in strategy_factories(
         bounds,
+        embedding_dim=embedding_dim,
         random_samples=random_samples,
         num_restarts=num_restarts,
         raw_samples=raw_samples,
@@ -230,6 +253,7 @@ def main() -> None:
     parser.add_argument("--input-dims", type=parse_int_list, default=[20, 50, 100, 200])
     parser.add_argument("--seeds", type=parse_int_list, default=[0, 1, 2])
     parser.add_argument("--n-train", type=int, default=24)
+    parser.add_argument("--embedding-dim", type=int, default=5)
     parser.add_argument("--random-samples", type=int, default=4096)
     parser.add_argument("--num-restarts", type=int, default=10)
     parser.add_argument("--raw-samples", type=int, default=512)
@@ -248,6 +272,7 @@ def main() -> None:
         args.input_dims,
         args.seeds,
         n_train=args.n_train,
+        embedding_dim=args.embedding_dim,
         random_samples=args.random_samples,
         num_restarts=args.num_restarts,
         raw_samples=args.raw_samples,
