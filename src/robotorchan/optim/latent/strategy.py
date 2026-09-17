@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from time import perf_counter
 from typing import Any
 
 import torch
@@ -17,12 +16,7 @@ from robotorchan.optim.latent.reconstruction import LatentReconstruction
 class _ReconstructedAcquisition(AcquisitionFunction):
     """Evaluate an original-space acquisition through latent reconstruction."""
 
-    def __init__(
-        self,
-        acq_function: AcquisitionFunction,
-        reconstruction: LatentReconstruction,
-        bounds: Tensor,
-    ) -> None:
+    def __init__(self, acq_function: AcquisitionFunction, reconstruction: LatentReconstruction, bounds: Tensor) -> None:
         super().__init__(model=acq_function.model)
         self.acq_function = acq_function
         self.reconstruction = reconstruction
@@ -36,29 +30,12 @@ class _ReconstructedAcquisition(AcquisitionFunction):
 
 
 class LatentSpaceStrategy(SearchStrategy):
-    """Optimize an acquisition function through a fitted latent reconstruction.
+    """Optimize an acquisition function through a fitted latent reconstruction."""
 
-    The acquisition function keeps its original/public input contract. Latent
-    points are reconstructed and clamped to the original box before every
-    acquisition evaluation. The selected candidate is therefore always returned
-    in the original input space.
-    """
-
-    def __init__(
-        self,
-        bounds: Tensor,
-        reconstruction: LatentReconstruction,
-        *,
-        num_restarts: int = 10,
-        raw_samples: int = 512,
-        options: dict[str, Any] | None = None,
-        sequential: bool = False,
-    ) -> None:
+    def __init__(self, bounds: Tensor, reconstruction: LatentReconstruction, *, num_restarts: int = 10, raw_samples: int = 512, options: dict[str, Any] | None = None, sequential: bool = False) -> None:
         super().__init__(bounds)
         if reconstruction.input_dim != self.input_dim:
-            raise ValueError(
-                "Reconstruction input dimension must match the original bounds dimension."
-            )
+            raise ValueError("Reconstruction input dimension must match the original bounds dimension.")
         if num_restarts < 1:
             raise ValueError("num_restarts must be at least 1.")
         if raw_samples < 1:
@@ -75,21 +52,11 @@ class LatentSpaceStrategy(SearchStrategy):
         """Dimension optimized by the latent strategy."""
         return self.reconstruction.latent_dim
 
-    def optimize(
-        self,
-        acq_function: AcquisitionFunction,
-        *,
-        q: int = 1,
-    ) -> SearchResult:
+    def optimize(self, acq_function: AcquisitionFunction, *, q: int = 1) -> SearchResult:
         if q < 1:
             raise ValueError("q must be at least 1.")
 
-        latent_acq = _ReconstructedAcquisition(
-            acq_function=acq_function,
-            reconstruction=self.reconstruction,
-            bounds=self.bounds,
-        )
-        start = perf_counter()
+        latent_acq = _ReconstructedAcquisition(acq_function=acq_function, reconstruction=self.reconstruction, bounds=self.bounds)
         latent_candidates, _ = optimize_acqf(
             acq_function=latent_acq,
             bounds=self.latent_bounds,
@@ -99,7 +66,6 @@ class LatentSpaceStrategy(SearchStrategy):
             options=self.options,
             sequential=self.sequential,
         )
-        elapsed = perf_counter() - start
 
         reconstructed = self.reconstruction.reconstruct(latent_candidates)
         candidates = torch.maximum(reconstructed, self.bounds[0])
@@ -114,7 +80,6 @@ class LatentSpaceStrategy(SearchStrategy):
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
-            optimization_time=elapsed,
             metadata={
                 "latent_candidates": latent_candidates.detach(),
                 "reconstructed_candidates": reconstructed.detach(),
