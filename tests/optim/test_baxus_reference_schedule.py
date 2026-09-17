@@ -9,9 +9,7 @@ from robotorchan.optim import BAxUSState, BAxUSStrategy
 
 
 def _bounds(dim: int) -> torch.Tensor:
-    return torch.stack(
-        [torch.zeros(dim, dtype=torch.double), torch.ones(dim, dtype=torch.double)]
-    )
+    return torch.stack([torch.zeros(dim, dtype=torch.double), torch.ones(dim, dtype=torch.double)])
 
 
 def test_500d_reference_state_matches_botorch_tutorial() -> None:
