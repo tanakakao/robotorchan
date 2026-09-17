@@ -14,6 +14,12 @@ robotorchan では surrogate model と acquisition function と search strategy 
 | `TuRBOStrategy` | 元空間の局所 trust region | あり | 高次元で局所探索を適応的に集中 |
 | `BAxUSStrategy` | 適応的ランダム部分空間 | あり | intrinsic dimension が不明で、探索中に部分空間を拡張したい場合 |
 
+### RandomSearch の q-batch
+
+`RandomSearchStrategy` の `num_samples` は候補点数ではなく、評価するランダムな q-batch 数を表す。
+`q=1` では `num_samples` 個の点を比較し、`q>1` では shape `[num_samples, q, d]` の候補 batch を生成して、獲得関数が返す joint batch value が最大の 1 batch を返す。
+したがって `q>1` でも各点を q=1 として独立評価して上位 q 点を並べる処理は行わない。
+
 ## BAxUS の使い方
 
 ```python
