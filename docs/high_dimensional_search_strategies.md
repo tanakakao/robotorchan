@@ -34,6 +34,8 @@ trust region が最小長を下回ると `restart_triggered=True` となり、`e
 
 - search strategy は surrogate を置き換えない。
 - acquisition function には最終的に元入力空間の候補を渡す。
+- `SearchResult` は候補点・獲得関数値・探索診断だけを返し、wall-clock 時間は保持しない。
+- 探索時間は benchmark / 呼び出し側で `strategy.optimize(...)` の前後を計測する。
 - `LatentSpaceStrategy` はデータから学習した reducer、REMBO / BAxUS は探索用の埋め込みであり役割が異なる。
 - TuRBO / BAxUS は stateful なので、逐次 BO ループ側が観測値を state に戻す必要がある。
 - BAxUS の target-space は `[-1, 1]^k` を基準とし、元の box bounds へアフィン変換するため、入力変数の物理スケールに依存しにくい。
@@ -43,3 +45,4 @@ trust region が最小長を下回ると `restart_triggered=True` となり、`e
 `benchmarks/high_dimensional_acqf_optimization.py` は連続獲得関数最適化そのものを比較する。
 `benchmarks/high_dimensional_sequential_bo.py` は逐次 BO の simple regret と探索時間を比較する。
 モデル性能と探索戦略性能を混同しないため、探索戦略比較では同じ surrogate / acquisition を使うことを原則とする。
+探索時間はライブラリの戻り値ではなく、benchmark 側で外部計測する。
