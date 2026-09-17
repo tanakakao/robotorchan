@@ -56,21 +56,18 @@ class BAxUSState:
 
     @property
     def n_splits(self) -> int:
-        """Number of nested expansion levels implied by the ambient dimension."""
         if self.dim == 1:
             return 0
         return round(math.log(self.dim, self.new_bins_on_split + 1))
 
     @property
     def initial_target_dim(self) -> int:
-        """Choose the BAxUS initial target dimension from the expansion schedule."""
         scale = (self.new_bins_on_split + 1) ** self.n_splits
         candidates = range(1, self.new_bins_on_split + 1)
         return min(candidates, key=lambda value: abs(value * scale - self.dim))
 
     @property
     def split_budget(self) -> int:
-        """Evaluation budget allocated to the current target-space level."""
         denominator = self.initial_target_dim * (
             1 - (self.new_bins_on_split + 1) ** (self.n_splits + 1)
         )
@@ -79,7 +76,6 @@ class BAxUSState:
 
     @property
     def failure_tolerance(self) -> int:
-        """Dynamic failure tolerance for the current target dimensionality."""
         if self.target_dim == self.dim:
             return self.target_dim
         shrink_steps = math.floor(math.log(self.length_min / self.length_init, 0.5))
@@ -97,7 +93,6 @@ def update_baxus_state(
         raise ValueError("values must contain at least one observation.")
     if relative_improvement < 0:
         raise ValueError("relative_improvement must be non-negative.")
-
     candidate_best = float(values.max().item())
     if math.isfinite(state.best_value):
         threshold = relative_improvement * abs(state.best_value)
@@ -107,14 +102,12 @@ def update_baxus_state(
     successes = state.success_counter + 1 if success else 0
     failures = 0 if success else state.failure_counter + 1
     length = state.length
-
     if successes >= state.success_tolerance:
         length = min(2.0 * length, state.length_max)
         successes = 0
     elif failures >= state.failure_tolerance:
-        length = length / 2.0
+        length /= 2.0
         failures = 0
-
     return replace(
         state,
         length=length,
@@ -136,7 +129,7 @@ class _BAxUSAcquisition(AcquisitionFunction):
 
 
 class BAxUSStrategy(SearchStrategy):
-    """Optimize acquisitions with an evaluation-budget-aware BAxUS state."""
+    """Optimize acquisitions while retaining BAxUS target-space observations."""
 
     def __init__(
         self,
@@ -154,83 +147,66 @@ class BAxUSStrategy(SearchStrategy):
             raise ValueError("state.dim must equal input_dim.")
         if num_restarts < 1 or raw_samples < 1:
             raise ValueError("num_restarts and raw_samples must be at least 1.")
-
         self.num_restarts = num_restarts
         self.raw_samples = raw_samples
         self.options = None if options is None else dict(options)
         self.sequential = sequential
         self._generator = torch.Generator(device=bounds.device)
-        if seed is None:
-            self._generator.seed()
-        else:
-            self._generator.manual_seed(seed)
+        self._generator.seed() if seed is None else self._generator.manual_seed(seed)
         self.state = state
         self.embedding = self._new_sparse_embedding(state.target_dim)
+        self.target_X = torch.empty(0, state.target_dim, dtype=bounds.dtype, device=bounds.device)
+        self.target_Y = torch.empty(0, dtype=bounds.dtype, device=bounds.device)
 
     @property
     def target_dim(self) -> int:
         return self.embedding.shape[-1]
 
     @property
+    def target_center(self) -> Tensor:
+        """Return the best observed target point, or the origin before feedback."""
+        if self.target_Y.numel() == 0:
+            return torch.zeros(self.target_dim, dtype=self.bounds.dtype, device=self.bounds.device)
+        return self.target_X[self.target_Y.argmax()]
+
+    @property
     def target_bounds(self) -> Tensor:
-        half = self.state.length
+        center = self.target_center
         return torch.stack(
             [
-                torch.full(
-                    (self.target_dim,),
-                    -half,
-                    dtype=self.bounds.dtype,
-                    device=self.bounds.device,
-                ),
-                torch.full(
-                    (self.target_dim,),
-                    half,
-                    dtype=self.bounds.dtype,
-                    device=self.bounds.device,
-                ),
+                (center - self.state.length).clamp_min(-1.0),
+                (center + self.state.length).clamp_max(1.0),
             ]
         )
 
     def _new_sparse_embedding(self, target_dim: int) -> Tensor:
-        """Create a balanced sparse signed embedding of shape ``[D, d]``."""
         assignments = torch.arange(self.input_dim, device=self.bounds.device) % target_dim
         permutation = torch.randperm(
-            self.input_dim,
-            device=self.bounds.device,
-            generator=self._generator,
+            self.input_dim, device=self.bounds.device, generator=self._generator
         )
         assignments = assignments[permutation]
         signs = torch.randint(
-            0,
-            2,
-            (self.input_dim,),
-            device=self.bounds.device,
-            generator=self._generator,
+            0, 2, (self.input_dim,), device=self.bounds.device, generator=self._generator
         )
         signs = signs.to(dtype=self.bounds.dtype).mul_(2).sub_(1)
         embedding = torch.zeros(
-            self.input_dim,
-            target_dim,
-            dtype=self.bounds.dtype,
-            device=self.bounds.device,
+            self.input_dim, target_dim, dtype=self.bounds.dtype, device=self.bounds.device
         )
         rows = torch.arange(self.input_dim, device=self.bounds.device)
         embedding[rows, assignments] = signs
         return embedding
 
-    def _split_embedding(self) -> Tensor:
-        """Split every populated bin into nested child bins in one expansion."""
+    def _split_embedding(self) -> tuple[Tensor, Tensor]:
+        """Split bins and return the parent coordinate for every resulting bin."""
         columns = [self.embedding[:, index].clone() for index in range(self.target_dim)]
         new_columns: list[Tensor] = []
-
+        parents = list(range(self.target_dim))
         for source, column in enumerate(columns):
             members = torch.nonzero(column != 0, as_tuple=False).flatten()
             if members.numel() <= 1:
                 continue
             order = torch.randperm(
-                members.numel(),
-                device=self.bounds.device,
-                generator=self._generator,
+                members.numel(), device=self.bounds.device, generator=self._generator
             )
             shuffled = members[order]
             n_groups = min(self.state.new_bins_on_split + 1, members.numel())
@@ -240,11 +216,11 @@ class BAxUSStrategy(SearchStrategy):
                 child[group] = column[group]
                 columns[source][group] = 0
                 new_columns.append(child)
-
-        return torch.stack(columns + new_columns, dim=-1)
+                parents.append(source)
+        parent_indices = torch.tensor(parents, dtype=torch.long, device=self.bounds.device)
+        return torch.stack(columns + new_columns, dim=-1), parent_indices
 
     def project(self, Z: Tensor) -> Tensor:
-        """Map target-space coordinates to the feasible original-space box."""
         if Z.shape[-1] != self.target_dim:
             raise ValueError("Z last dimension must equal target_dim.")
         normalized = (Z @ self.embedding.transpose(-2, -1)).clamp(-1.0, 1.0)
@@ -253,15 +229,16 @@ class BAxUSStrategy(SearchStrategy):
         return center + half_range * normalized
 
     def expand_subspace(self) -> bool:
-        """Expand all splittable target bins while preserving the nested embedding."""
+        """Expand the embedding and carry target observations into child coordinates."""
         if not self.state.restart_triggered:
             raise RuntimeError("Subspace expansion requires restart_triggered=True.")
         if self.target_dim >= self.input_dim:
             return False
-
-        expanded = self._split_embedding()
+        expanded, parent_indices = self._split_embedding()
         if expanded.shape[-1] == self.target_dim:
             return False
+        if self.target_X.numel() > 0:
+            self.target_X = self.target_X.index_select(-1, parent_indices)
         self.embedding = expanded
         self.state = replace(
             self.state,
@@ -277,22 +254,28 @@ class BAxUSStrategy(SearchStrategy):
         self,
         values: Tensor,
         *,
+        target_candidates: Tensor,
         relative_improvement: float = 1e-3,
     ) -> BAxUSState:
+        """Record target-space observations and update the trust-region state."""
+        candidates = target_candidates.detach()
+        flat_values = values.detach().reshape(-1)
+        if candidates.ndim != 2 or candidates.shape[-1] != self.target_dim:
+            raise ValueError("target_candidates must have shape [n, target_dim].")
+        if candidates.shape[0] != flat_values.numel():
+            raise ValueError("target_candidates and values must contain the same number of rows.")
+        self.target_X = torch.cat([self.target_X, candidates], dim=0)
+        self.target_Y = torch.cat([self.target_Y, flat_values.to(self.target_Y)], dim=0)
         self.state = update_baxus_state(
-            self.state,
-            values,
-            relative_improvement=relative_improvement,
+            self.state, values, relative_improvement=relative_improvement
         )
         return self.state
 
     def optimize(self, acq_function: AcquisitionFunction, *, q: int = 1) -> SearchResult:
-        """Optimize an original-space acquisition in the current subspace."""
         if q < 1:
             raise ValueError("q must be at least 1.")
         if self.state.restart_triggered:
             raise RuntimeError("BAxUS subspace expansion is required before optimization.")
-
         embedded_acq = _BAxUSAcquisition(acq_function, self)
         Z, _ = optimize_acqf(
             acq_function=embedded_acq,
@@ -306,13 +289,13 @@ class BAxUSStrategy(SearchStrategy):
         candidates = self.project(Z)
         with torch.no_grad():
             acquisition_value = acq_function(candidates)
-
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
             metadata={
                 "target_candidates": Z.detach(),
                 "target_dim": self.target_dim,
+                "target_center": self.target_center.detach().clone(),
                 "trust_region_length": self.state.length,
                 "failure_tolerance": self.state.failure_tolerance,
                 "split_budget": self.state.split_budget,

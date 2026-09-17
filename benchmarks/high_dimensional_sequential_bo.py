@@ -43,8 +43,6 @@ STRATEGY_NAMES = (
 
 @dataclass(frozen=True)
 class SequentialBOResult:
-    """One BO iteration for one strategy and seed."""
-
     strategy: str
     input_dim: int
     seed: int
@@ -57,8 +55,6 @@ class SequentialBOResult:
 
 @dataclass(frozen=True)
 class SequentialBOAggregateResult:
-    """Repeated-seed summary at one BO iteration."""
-
     strategy: str
     input_dim: int
     iteration: int
@@ -72,14 +68,12 @@ class SequentialBOAggregateResult:
 
 
 def objective(X: Tensor) -> Tensor:
-    """Sparse synthetic objective with optimum zero at active coordinates 0.75."""
     if X.shape[-1] < 5:
         raise ValueError("input dimension must be at least 5")
     return -((X[..., :5] - 0.75).square().sum(dim=-1, keepdim=True))
 
 
 def make_initial_data(input_dim: int, *, n_train: int, seed: int) -> tuple[Tensor, Tensor, Tensor]:
-    """Generate common initial observations without sharing search RNG streams."""
     if input_dim < 5:
         raise ValueError("input_dim must be at least 5")
     if n_train < 2:
@@ -94,7 +88,6 @@ def make_initial_data(input_dim: int, *, n_train: int, seed: int) -> tuple[Tenso
 
 
 def _fit_model(train_X: Tensor, train_Y: Tensor) -> SingleTaskGP:
-    """Fit the same original-space surrogate for every search strategy."""
     model = SingleTaskGP(train_X, train_Y)
     fit_gpytorch_mll(model.make_mll())
     model.eval()
@@ -102,20 +95,12 @@ def _fit_model(train_X: Tensor, train_Y: Tensor) -> SingleTaskGP:
 
 
 def _make_acquisition(model: SingleTaskGP, train_Y: Tensor) -> LogExpectedImprovement:
-    """Build the same q=1 BO acquisition from the current observations."""
     return LogExpectedImprovement(model=model, best_f=train_Y.max())
 
 
-def _make_latent_reconstruction(
-    name: str,
-    train_X: Tensor,
-    *,
-    latent_dim: int,
-):
-    """Fit a search-only reducer once from the common initial design."""
+def _make_latent_reconstruction(name: str, train_X: Tensor, *, latent_dim: int):
     if name == "LatentPCA":
-        reducer = PCAInputReducer(latent_dim).fit(train_X)
-        return PCAReconstruction(reducer)
+        return PCAReconstruction(PCAInputReducer(latent_dim).fit(train_X))
     if name == "LatentRandomProjection":
         reducer = RandomProjectionInputReducer(latent_dim, random_state=17).fit(train_X)
         return RandomProjectionReconstruction(reducer)
@@ -123,7 +108,6 @@ def _make_latent_reconstruction(
 
 
 def _initial_incumbent(train_X: Tensor, train_Y: Tensor) -> tuple[Tensor, float]:
-    """Return the best observed original-space point and objective value."""
     best_index = train_Y.reshape(-1).argmax()
     return train_X[best_index].detach().clone(), float(train_Y.reshape(-1)[best_index])
 
@@ -142,7 +126,6 @@ def _make_strategy(
     search_seed: int,
     eval_budget: int,
 ):
-    """Construct one search strategy for a complete BO trajectory."""
     if name == "OriginalSpace":
         return OriginalSpaceStrategy(bounds, num_restarts=num_restarts, raw_samples=raw_samples)
     if name == "RandomSearch":
@@ -151,10 +134,7 @@ def _make_strategy(
         if reconstruction is None:
             raise RuntimeError(f"{name} requires a fitted search reconstruction")
         return LatentSpaceStrategy(
-            bounds,
-            reconstruction,
-            num_restarts=num_restarts,
-            raw_samples=raw_samples,
+            bounds, reconstruction, num_restarts=num_restarts, raw_samples=raw_samples
         )
     if name == "REMBO":
         return REMBOStrategy(
@@ -164,7 +144,6 @@ def _make_strategy(
             num_restarts=num_restarts,
             raw_samples=raw_samples,
         )
-
     center, best_value = _initial_incumbent(train_X, train_Y)
     if name == "TuRBO":
         return TuRBOStrategy(
@@ -175,11 +154,7 @@ def _make_strategy(
             raw_samples=raw_samples,
         )
     if name == "BAxUS":
-        state = BAxUSState(
-            dim=bounds.shape[-1],
-            eval_budget=eval_budget,
-            best_value=best_value,
-        )
+        state = BAxUSState(dim=bounds.shape[-1], eval_budget=eval_budget, best_value=best_value)
         return BAxUSStrategy(
             bounds,
             state=state,
@@ -190,12 +165,16 @@ def _make_strategy(
     raise ValueError(f"Unknown strategy: {name}")
 
 
-def _update_stateful_strategy(strategy, candidate: Tensor, candidate_Y: Tensor) -> None:
-    """Persist objective feedback required by stateful search strategies."""
+def _update_stateful_strategy(
+    strategy, candidate: Tensor, candidate_Y: Tensor, *, search_metadata: dict
+) -> None:
     if isinstance(strategy, TuRBOStrategy):
         strategy.update_state(candidate_Y, candidates=candidate)
     elif isinstance(strategy, BAxUSStrategy):
-        state = strategy.update_state(candidate_Y)
+        state = strategy.update_state(
+            candidate_Y,
+            target_candidates=search_metadata["target_candidates"],
+        )
         if state.restart_triggered and strategy.target_dim < strategy.input_dim:
             strategy.expand_subspace()
 
@@ -212,21 +191,12 @@ def run_strategy(
     raw_samples: int = 512,
     seed: int = 0,
 ) -> list[SequentialBOResult]:
-    """Run a sequential BO trajectory from common initial observations.
-
-    All strategies use the same original-space ``SingleTaskGP`` and q=1
-    ``LogExpectedImprovement``. Search reducers and random embeddings are created
-    once per trajectory. TuRBO and BAxUS retain their state between iterations.
-    BAxUS derives its initial target dimension and expansion schedule from the
-    post-initial-design evaluation budget ``n_iterations``.
-    """
     if name not in STRATEGY_NAMES:
         raise ValueError(f"Unknown strategy: {name}")
     if n_iterations < 1:
         raise ValueError("n_iterations must be at least 1")
     if latent_dim < 1 or latent_dim > input_dim:
         raise ValueError("latent_dim must be between 1 and input_dim")
-
     train_X, train_Y, bounds = make_initial_data(input_dim, n_train=n_train, seed=seed)
     reconstruction = _make_latent_reconstruction(name, train_X, latent_dim=latent_dim)
     strategy_seed = seed * 100_000 + 73
@@ -243,39 +213,34 @@ def run_strategy(
         search_seed=strategy_seed,
         eval_budget=n_iterations,
     )
-    optimum = 0.0
     results: list[SequentialBOResult] = []
-
     for iteration in range(1, n_iterations + 1):
         model = _fit_model(train_X, train_Y)
         acquisition = _make_acquisition(model, train_Y)
         if name == "RandomSearch":
             search_seed = seed * 100_000 + iteration * 1_009 + 73
-            strategy = RandomSearchStrategy(
-                bounds,
-                num_samples=random_samples,
-                seed=search_seed,
-            )
+            strategy = RandomSearchStrategy(bounds, num_samples=random_samples, seed=search_seed)
         start = perf_counter()
         search_result = strategy.optimize(acquisition, q=1)
         elapsed = perf_counter() - start
         candidate = search_result.candidates.detach()
         with torch.no_grad():
             candidate_Y = objective(candidate)
-        _update_stateful_strategy(strategy, candidate, candidate_Y)
+        _update_stateful_strategy(
+            strategy, candidate, candidate_Y, search_metadata=search_result.metadata
+        )
         train_X = torch.cat([train_X, candidate], dim=0)
         train_Y = torch.cat([train_Y, candidate_Y], dim=0)
         best_observed = float(train_Y.max())
-        objective_value = float(candidate_Y.squeeze())
         results.append(
             SequentialBOResult(
                 strategy=name,
                 input_dim=input_dim,
                 seed=seed,
                 iteration=iteration,
-                objective_value=objective_value,
+                objective_value=float(candidate_Y.squeeze()),
                 best_observed=best_observed,
-                simple_regret=max(0.0, optimum - best_observed),
+                simple_regret=max(0.0, -best_observed),
                 optimization_time=elapsed,
             )
         )
@@ -283,7 +248,6 @@ def run_strategy(
 
 
 def run_dimension(input_dim: int, *, seed: int = 0, **kwargs: object) -> list[SequentialBOResult]:
-    """Compare all strategies from identical initial observations."""
     results: list[SequentialBOResult] = []
     for name in STRATEGY_NAMES:
         results.extend(run_strategy(name, input_dim, seed=seed, **kwargs))
@@ -293,11 +257,8 @@ def run_dimension(input_dim: int, *, seed: int = 0, **kwargs: object) -> list[Se
 def run_benchmark(
     input_dims: Sequence[int], seeds: Sequence[int], **kwargs: object
 ) -> list[SequentialBOResult]:
-    """Run dimensions and repeated independent seeds."""
-    if not input_dims:
-        raise ValueError("input_dims must contain at least one value")
-    if not seeds:
-        raise ValueError("seeds must contain at least one value")
+    if not input_dims or not seeds:
+        raise ValueError("input_dims and seeds must contain at least one value")
     results: list[SequentialBOResult] = []
     for input_dim in input_dims:
         for seed in seeds:
@@ -306,14 +267,12 @@ def run_benchmark(
 
 
 def aggregate_results(results: Sequence[SequentialBOResult]) -> list[SequentialBOAggregateResult]:
-    """Aggregate repeated runs by strategy, dimension, and BO iteration."""
     if not results:
         raise ValueError("results must contain at least one row")
     groups: dict[tuple[str, int, int], list[SequentialBOResult]] = defaultdict(list)
     for result in results:
         groups[(result.strategy, result.input_dim, result.iteration)].append(result)
-
-    summaries: list[SequentialBOAggregateResult] = []
+    summaries = []
     for (strategy, input_dim, iteration), rows in sorted(groups.items()):
         best = torch.tensor([row.best_observed for row in rows], dtype=torch.double)
         regret = torch.tensor([row.simple_regret for row in rows], dtype=torch.double)
@@ -336,7 +295,6 @@ def aggregate_results(results: Sequence[SequentialBOResult]) -> list[SequentialB
 
 
 def write_csv(results: Sequence[object], path: Path) -> None:
-    """Write dataclass rows to CSV."""
     if not results:
         raise ValueError("results must contain at least one row")
     path.parent.mkdir(parents=True, exist_ok=True)
