@@ -25,6 +25,18 @@ def test_seed_reproduces_initial_embedding() -> None:
     torch.testing.assert_close(first.embedding, second.embedding)
 
 
+def test_initial_embedding_is_sparse_signed_and_balanced() -> None:
+    _, _, bounds = _problem(input_dim=11)
+    strategy = BAxUSStrategy(bounds, initial_target_dim=3, seed=7)
+    embedding = strategy.embedding
+
+    assert embedding.shape == (11, 3)
+    assert torch.all(embedding.ne(0).sum(dim=1) == 1)
+    assert set(embedding[embedding != 0].tolist()) == {-1.0, 1.0}
+    occupancy = embedding.ne(0).sum(dim=0)
+    assert int(occupancy.max() - occupancy.min()) <= 1
+
+
 def test_project_supports_arbitrary_leading_dimensions() -> None:
     _, _, bounds = _problem()
     strategy = BAxUSStrategy(bounds, initial_target_dim=2, seed=3)
@@ -35,7 +47,7 @@ def test_project_supports_arbitrary_leading_dimensions() -> None:
     assert torch.all(bounds[1] >= X)
 
 
-def test_state_collapse_triggers_expansion() -> None:
+def test_state_collapse_splits_existing_embedding_bins() -> None:
     _, _, bounds = _problem()
     state = BAxUSState(
         target_dim=1,
@@ -45,15 +57,49 @@ def test_state_collapse_triggers_expansion() -> None:
         best_value=1.0,
     )
     strategy = BAxUSStrategy(bounds, initial_target_dim=1, new_dimensions=2, seed=4, state=state)
-    old_embedding = strategy.embedding.clone()
+    old_signs = strategy.embedding.sum(dim=1).clone()
 
     state = strategy.update_state(torch.tensor([0.0]))
     assert state.restart_triggered
     assert strategy.expand_subspace()
     assert strategy.target_dim == 3
-    torch.testing.assert_close(strategy.embedding[:, :1], old_embedding)
+    assert torch.all(strategy.embedding.ne(0).sum(dim=1) == 1)
+    torch.testing.assert_close(strategy.embedding.sum(dim=1), old_signs)
+    assert torch.all(strategy.embedding.ne(0).sum(dim=0) > 0)
     assert not strategy.state.restart_triggered
     assert strategy.state.best_value == pytest.approx(1.0)
+
+
+def test_repeated_expansion_reaches_full_dimension_without_empty_bins() -> None:
+    _, _, bounds = _problem(input_dim=7)
+    state = BAxUSState(target_dim=1, length=0.1, length_min=0.15, restart_triggered=True)
+    strategy = BAxUSStrategy(
+        bounds,
+        initial_target_dim=1,
+        new_dimensions=3,
+        seed=5,
+        state=state,
+    )
+
+    assert strategy.expand_subspace()
+    assert strategy.target_dim == 4
+    strategy.state = replace_state_for_restart(strategy.state)
+    assert strategy.expand_subspace()
+    assert strategy.target_dim == 7
+    assert torch.all(strategy.embedding.ne(0).sum(dim=0) == 1)
+
+
+def replace_state_for_restart(state: BAxUSState) -> BAxUSState:
+    return BAxUSState(
+        target_dim=state.target_dim,
+        length=state.length_min / 2,
+        length_min=state.length_min,
+        length_max=state.length_max,
+        success_tolerance=state.success_tolerance,
+        failure_tolerance=state.failure_tolerance,
+        best_value=state.best_value,
+        restart_triggered=True,
+    )
 
 
 def test_full_dimension_cannot_expand_further() -> None:
