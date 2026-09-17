@@ -73,7 +73,7 @@ BoTorch の BAxUS tutorial と同じ式で `n_splits`、初期 target dimension�
 
 BoTorch の BAxUS tutorial は target-space GP の ARD lengthscale を使って trust-region 各辺をスケーリングする。robotorchan は search strategy と surrogate model を分離し、共通 benchmark では original-space surrogate を維持するため、別の target-space GP を strategy 内で再学習しない。
 
-代わりに acquisition model が original-space ARD lengthscale を公開している場合、現在の sparse embedding が誘導する target-space metric を計算する。target coordinate `j` に所属する元次元集合を `B_j`、元空間 lengthscale を `l_i` とすると、effective target lengthscale は `1 / sqrt(sum_{i in B_j] 1 / l_i^2)` とする。これは ARD の距離 metric を sparse signed embedding 上へ制限したときの target coordinate のスケールに対応する。その後、BoTorch tutorial と同じく重みの幾何平均が 1 になるよう正規化し、`center ± weight * state.length` で trust-region box を作る。
+代わりに acquisition model が original-space ARD lengthscale を公開している場合、現在の sparse embedding が誘導する target-space metric を計算する。target coordinate `j` に所属する元次元集合を `B_j`、元空間 lengthscale を `l_i` とすると、effective target lengthscale は `1 / sqrt(sum_{i in B_j} 1 / l_i^2)` とする。これは ARD の距離 metric を sparse signed embedding 上へ制限したときの target coordinate のスケールに対応する。その後、BoTorch tutorial と同じく重みの幾何平均が 1 になるよう正規化し、`center ± weight * state.length` で trust-region box を作る。
 
 acquisition model から適切な original-space ARD lengthscale を取得できない場合は等方重みへフォールバックする。実際に使った `target_lengthscale_weights` と `target_bounds` は `SearchResult.metadata` に保存する。これは search strategy / surrogate 分離を維持するための設計であり、BoTorch tutorial の「target-space GP を毎反復で fit してその lengthscale を直接使う」実装と完全に同一ではない。
 
@@ -109,7 +109,8 @@ result = strategy.optimize(acq_function, q=1)
 
 ## ベンチマーク
 
-`benchmarks/high_dimensional_acqf_optimization.py` は連続獲得関数最適化そのものを比較する。
+`benchmarks/high_dimensional_acqf_optimization.py` は連続獲得関数最適化そのものを比較する。`OriginalSpace`、`RandomSearch`、`REMBO`、`HeSBO` は同一の fitted original-space `SingleTaskGP` と同一の `PosteriorMean` に対して比較し、モデル差ではなく search strategy の差を測る。REMBO と HeSBO には同じ `embedding_dim` を与える一方、problem generation、RandomSearch、REMBO、HeSBO の乱数 stream は互いに分離する。
+
 `benchmarks/high_dimensional_sequential_bo.py` は逐次 BO の simple regret と探索時間を比較する。
 モデル性能と探索戦略性能を混同しないため、探索戦略比較では同じ surrogate / acquisition を使うことを原則とする。
 BAxUS には `n_iterations` を初期設計後の評価予算として渡し、target dimension を評価予算から導出する。

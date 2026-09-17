@@ -27,7 +27,12 @@ def test_run_dimension_compares_shared_problem() -> None:
         seed=3,
     )
 
-    assert {row.strategy for row in results} == {"OriginalSpace", "RandomSearch", "REMBO"}
+    assert {row.strategy for row in results} == {
+        "HeSBO",
+        "OriginalSpace",
+        "RandomSearch",
+        "REMBO",
+    }
     assert all(row.input_dim == 5 for row in results)
     assert all(row.seed == 3 for row in results)
     assert all(row.simple_regret >= 0.0 for row in results)
@@ -49,6 +54,7 @@ def test_search_rng_streams_are_independent_from_problem_rng() -> None:
     )
     random_strategy = strategies["RandomSearch"]
     rembo_strategy = strategies["REMBO"]
+    hesbo_strategy = strategies["HeSBO"]
 
     train_X = model.train_inputs[0]
     search_X = random_strategy._sample_candidate_batches(q=1).squeeze(-2)
@@ -57,17 +63,26 @@ def test_search_rng_streams_are_independent_from_problem_rng() -> None:
     assert random_strategy.seed != seed
     assert search_X.shape == train_X.shape
     assert not torch.equal(search_X, train_X)
-    assert benchmark._embedding_seed(seed) != seed
-    assert benchmark._embedding_seed(seed) != benchmark._search_seed(seed)
+    seeds = {
+        seed,
+        benchmark._search_seed(seed),
+        benchmark._embedding_seed(seed),
+        benchmark._hesbo_seed(seed),
+    }
+    assert len(seeds) == 4
     assert rembo_strategy.embedding.shape == (input_dim, 3)
+    assert hesbo_strategy.embedding.shape == (input_dim, 3)
+    assert not torch.equal(rembo_strategy.embedding, hesbo_strategy.embedding)
 
 
 def test_search_seeds_are_deterministic_and_wrapped() -> None:
     assert benchmark._search_seed(11) == benchmark._search_seed(11)
     assert benchmark._embedding_seed(11) == benchmark._embedding_seed(11)
+    assert benchmark._hesbo_seed(11) == benchmark._hesbo_seed(11)
     upper_seed = benchmark._MAX_TORCH_SEED - 1
     assert 0 <= benchmark._search_seed(upper_seed) < benchmark._MAX_TORCH_SEED
     assert 0 <= benchmark._embedding_seed(upper_seed) < benchmark._MAX_TORCH_SEED
+    assert 0 <= benchmark._hesbo_seed(upper_seed) < benchmark._MAX_TORCH_SEED
 
 
 def test_run_benchmark_and_aggregation() -> None:
@@ -82,9 +97,14 @@ def test_run_benchmark_and_aggregation() -> None:
     )
     summaries = benchmark.aggregate_results(results)
 
-    assert len(results) == 6
-    assert len(summaries) == 3
-    assert {row.strategy for row in summaries} == {"OriginalSpace", "RandomSearch", "REMBO"}
+    assert len(results) == 8
+    assert len(summaries) == 4
+    assert {row.strategy for row in summaries} == {
+        "HeSBO",
+        "OriginalSpace",
+        "RandomSearch",
+        "REMBO",
+    }
     assert all(row.n_seeds == 2 for row in summaries)
 
 
