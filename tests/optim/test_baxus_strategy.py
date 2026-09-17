@@ -18,16 +18,40 @@ def _problem(input_dim: int = 6):
     return train_X, train_Y, bounds
 
 
+def _state(input_dim: int, **kwargs) -> BAxUSState:
+    return BAxUSState(dim=input_dim, eval_budget=100, **kwargs)
+
+
+def test_state_derives_initial_dimension_and_split_schedule() -> None:
+    state = BAxUSState(dim=500, eval_budget=500)
+
+    assert state.n_splits == 4
+    assert state.initial_target_dim == 2
+    assert state.target_dim == 2
+    assert state.split_budget > 0
+    assert 1 <= state.failure_tolerance <= state.target_dim
+
+
+def test_failure_tolerance_depends_on_target_dimension() -> None:
+    initial = BAxUSState(dim=500, eval_budget=500)
+    expanded = BAxUSState(dim=500, eval_budget=500, target_dim=8)
+    full = BAxUSState(dim=500, eval_budget=500, target_dim=500)
+
+    assert expanded.split_budget > initial.split_budget
+    assert expanded.failure_tolerance >= initial.failure_tolerance
+    assert full.failure_tolerance == 500
+
+
 def test_seed_reproduces_initial_embedding() -> None:
     _, _, bounds = _problem()
-    first = BAxUSStrategy(bounds, initial_target_dim=2, seed=7)
-    second = BAxUSStrategy(bounds, initial_target_dim=2, seed=7)
+    first = BAxUSStrategy(bounds, state=_state(6), seed=7)
+    second = BAxUSStrategy(bounds, state=_state(6), seed=7)
     torch.testing.assert_close(first.embedding, second.embedding)
 
 
 def test_initial_embedding_is_sparse_signed_and_balanced() -> None:
     _, _, bounds = _problem(input_dim=11)
-    strategy = BAxUSStrategy(bounds, initial_target_dim=3, seed=7)
+    strategy = BAxUSStrategy(bounds, state=_state(11, target_dim=3), seed=7)
     embedding = strategy.embedding
 
     assert embedding.shape == (11, 3)
@@ -39,7 +63,7 @@ def test_initial_embedding_is_sparse_signed_and_balanced() -> None:
 
 def test_project_supports_arbitrary_leading_dimensions() -> None:
     _, _, bounds = _problem()
-    strategy = BAxUSStrategy(bounds, initial_target_dim=2, seed=3)
+    strategy = BAxUSStrategy(bounds, state=_state(6, target_dim=2), seed=3)
     Z = torch.randn(2, 3, 2, dtype=torch.double)
     X = strategy.project(Z)
     assert X.shape == (2, 3, 6)
@@ -50,25 +74,22 @@ def test_project_supports_arbitrary_leading_dimensions() -> None:
 def test_state_collapse_splits_existing_embedding_bins() -> None:
     _, _, bounds = _problem()
     state = BAxUSState(
-        target_dim=1,
-        length=0.2,
-        length_min=0.15,
-        failure_tolerance=1,
-        best_value=1.0,
-    )
-    strategy = BAxUSStrategy(
-        bounds,
-        initial_target_dim=1,
+        dim=6,
+        eval_budget=100,
         new_bins_on_split=2,
-        seed=4,
-        state=state,
+        target_dim=1,
+        length=0.1,
+        length_min=0.15,
+        best_value=1.0,
+        restart_triggered=True,
     )
+    strategy = BAxUSStrategy(bounds, state=state, seed=4)
     old_signs = strategy.embedding.sum(dim=1).clone()
 
-    state = strategy.update_state(torch.tensor([0.0]))
-    assert state.restart_triggered
     assert strategy.expand_subspace()
     assert strategy.target_dim == 3
+    assert strategy.state.target_dim == 3
+    assert strategy.state.length == pytest.approx(strategy.state.length_init)
     assert torch.all(strategy.embedding.ne(0).sum(dim=1) == 1)
     torch.testing.assert_close(strategy.embedding.sum(dim=1), old_signs)
     assert torch.all(strategy.embedding.ne(0).sum(dim=0) > 0)
@@ -78,14 +99,16 @@ def test_state_collapse_splits_existing_embedding_bins() -> None:
 
 def test_expansion_splits_every_splittable_parent_bin() -> None:
     _, _, bounds = _problem(input_dim=12)
-    state = BAxUSState(target_dim=2, length=0.1, length_min=0.15, restart_triggered=True)
-    strategy = BAxUSStrategy(
-        bounds,
-        initial_target_dim=2,
+    state = BAxUSState(
+        dim=12,
+        eval_budget=100,
         new_bins_on_split=2,
-        seed=8,
-        state=state,
+        target_dim=2,
+        length=0.1,
+        length_min=0.15,
+        restart_triggered=True,
     )
+    strategy = BAxUSStrategy(bounds, state=state, seed=8)
     parent_assignment = strategy.embedding.ne(0).to(torch.int64).argmax(dim=1)
 
     assert strategy.expand_subspace()
@@ -100,14 +123,15 @@ def test_expansion_splits_every_splittable_parent_bin() -> None:
 
 def test_repeated_expansion_reaches_full_dimension_without_empty_bins() -> None:
     _, _, bounds = _problem(input_dim=7)
-    state = BAxUSState(target_dim=1, length=0.1, length_min=0.15, restart_triggered=True)
-    strategy = BAxUSStrategy(
-        bounds,
-        initial_target_dim=1,
-        new_bins_on_split=3,
-        seed=5,
-        state=state,
+    state = BAxUSState(
+        dim=7,
+        eval_budget=100,
+        target_dim=1,
+        length=0.1,
+        length_min=0.15,
+        restart_triggered=True,
     )
+    strategy = BAxUSStrategy(bounds, state=state, seed=5)
 
     assert strategy.expand_subspace()
     assert strategy.target_dim == 4
@@ -119,12 +143,15 @@ def test_repeated_expansion_reaches_full_dimension_without_empty_bins() -> None:
 
 def replace_state_for_restart(state: BAxUSState) -> BAxUSState:
     return BAxUSState(
+        dim=state.dim,
+        eval_budget=state.eval_budget,
+        new_bins_on_split=state.new_bins_on_split,
         target_dim=state.target_dim,
         length=state.length_min / 2,
+        length_init=state.length_init,
         length_min=state.length_min,
         length_max=state.length_max,
         success_tolerance=state.success_tolerance,
-        failure_tolerance=state.failure_tolerance,
         best_value=state.best_value,
         restart_triggered=True,
     )
@@ -132,8 +159,8 @@ def replace_state_for_restart(state: BAxUSState) -> BAxUSState:
 
 def test_full_dimension_cannot_expand_further() -> None:
     _, _, bounds = _problem(input_dim=3)
-    state = BAxUSState(target_dim=3, length=0.1, length_min=0.15, restart_triggered=True)
-    strategy = BAxUSStrategy(bounds, initial_target_dim=3, state=state)
+    state = _state(3, target_dim=3, restart_triggered=True)
+    strategy = BAxUSStrategy(bounds, state=state)
     assert not strategy.expand_subspace()
 
 
@@ -143,7 +170,7 @@ def test_optimize_returns_original_space_candidates() -> None:
     acquisition = PosteriorMean(model)
     strategy = BAxUSStrategy(
         bounds,
-        initial_target_dim=2,
+        state=_state(6, target_dim=2),
         seed=9,
         num_restarts=2,
         raw_samples=16,
@@ -155,13 +182,15 @@ def test_optimize_returns_original_space_candidates() -> None:
     assert torch.all(bounds[0] <= result.candidates)
     assert torch.all(bounds[1] >= result.candidates)
     assert result.metadata["target_dim"] == 2
+    assert result.metadata["failure_tolerance"] == strategy.state.failure_tolerance
+    assert result.metadata["split_budget"] == strategy.state.split_budget
     with torch.no_grad():
         expected = acquisition(result.candidates)
     torch.testing.assert_close(result.acquisition_value, expected)
 
 
 def test_first_finite_observation_is_success() -> None:
-    state = BAxUSState(target_dim=2)
+    state = _state(6, target_dim=2)
 
     state = update_baxus_state(state, torch.tensor([-0.5]))
 
@@ -171,22 +200,26 @@ def test_first_finite_observation_is_success() -> None:
 
 
 def test_update_function_expands_and_shrinks_length() -> None:
-    state = BAxUSState(target_dim=2, length=0.4, success_tolerance=1, best_value=0.0)
+    state = _state(6, target_dim=2, length=0.4, success_tolerance=1, best_value=0.0)
     state = update_baxus_state(state, torch.tensor([1.0]))
     assert state.length == pytest.approx(0.8)
 
-    state = BAxUSState(target_dim=2, length=0.4, failure_tolerance=1, best_value=1.0)
-    state = update_baxus_state(state, torch.tensor([0.0]))
+    state = _state(6, target_dim=2, length=0.4, best_value=1.0)
+    for _ in range(state.failure_tolerance):
+        state = update_baxus_state(state, torch.tensor([0.0]))
     assert state.length == pytest.approx(0.2)
 
 
-def test_validates_state_and_expansion_contract() -> None:
+def test_validates_state_and_strategy_contract() -> None:
     _, _, bounds = _problem()
-    with pytest.raises(ValueError, match="initial_target_dim"):
-        BAxUSStrategy(bounds, initial_target_dim=0)
+    with pytest.raises(ValueError, match="dim"):
+        BAxUSState(dim=0, eval_budget=10)
+    with pytest.raises(ValueError, match="eval_budget"):
+        BAxUSState(dim=6, eval_budget=0)
     with pytest.raises(ValueError, match="new_bins_on_split"):
-        BAxUSStrategy(bounds, new_bins_on_split=0)
-    with pytest.raises(ValueError, match=r"state\.target_dim"):
-        BAxUSStrategy(bounds, initial_target_dim=2, state=BAxUSState(target_dim=1))
+        BAxUSState(dim=6, eval_budget=10, new_bins_on_split=0)
+    with pytest.raises(ValueError, match=r"state\.dim"):
+        BAxUSStrategy(bounds, state=BAxUSState(dim=5, eval_budget=10))
+    strategy = BAxUSStrategy(bounds, state=_state(6))
     with pytest.raises(RuntimeError, match="requires restart_triggered"):
-        BAxUSStrategy(bounds).expand_subspace()
+        strategy.expand_subspace()
