@@ -31,8 +31,8 @@ def test_project_supports_arbitrary_leading_dimensions() -> None:
     Z = torch.randn(2, 3, 2, dtype=torch.double)
     X = strategy.project(Z)
     assert X.shape == (2, 3, 6)
-    assert torch.all(X >= bounds[0])
-    assert torch.all(X <= bounds[1])
+    assert torch.all(bounds[0] <= X)
+    assert torch.all(bounds[1] >= X)
 
 
 def test_state_collapse_triggers_expansion() -> None:
@@ -78,8 +78,8 @@ def test_optimize_returns_original_space_candidates() -> None:
     result = strategy.optimize(acquisition)
 
     assert result.candidates.shape == (1, bounds.shape[-1])
-    assert torch.all(result.candidates >= bounds[0])
-    assert torch.all(result.candidates <= bounds[1])
+    assert torch.all(bounds[0] <= result.candidates)
+    assert torch.all(bounds[1] >= result.candidates)
     assert result.metadata["target_dim"] == 2
     with torch.no_grad():
         expected = acquisition(result.candidates)
@@ -100,7 +100,7 @@ def test_validates_state_and_expansion_contract() -> None:
     _, _, bounds = _problem()
     with pytest.raises(ValueError, match="initial_target_dim"):
         BAxUSStrategy(bounds, initial_target_dim=0)
-    with pytest.raises(ValueError, match="state.target_dim"):
+    with pytest.raises(ValueError, match=r"state\.target_dim"):
         BAxUSStrategy(bounds, initial_target_dim=2, state=BAxUSState(target_dim=1))
     with pytest.raises(RuntimeError, match="requires restart_triggered"):
         BAxUSStrategy(bounds).expand_subspace()
