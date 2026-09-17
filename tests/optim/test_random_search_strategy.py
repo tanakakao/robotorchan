@@ -2,7 +2,9 @@
 
 import pytest
 import torch
+from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.analytic import PosteriorMean
+from torch import Tensor
 
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim import RandomSearchStrategy
@@ -14,6 +16,17 @@ def _make_acquisition(dtype: torch.dtype = torch.double) -> PosteriorMean:
     model = SingleTaskGP(train_X, train_Y)
     model.eval()
     return PosteriorMean(model)
+
+
+class _BatchSumAcquisition(AcquisitionFunction):
+    """Simple acquisition with one scalar value for each q-batch."""
+
+    def __init__(self, dtype: torch.dtype = torch.double) -> None:
+        model = _make_acquisition(dtype=dtype).model
+        super().__init__(model=model)
+
+    def forward(self, X: Tensor) -> Tensor:
+        return X.sum(dim=(-2, -1))
 
 
 def test_random_search_validates_configuration() -> None:
@@ -28,29 +41,46 @@ def test_random_search_validates_q() -> None:
 
     with pytest.raises(ValueError, match="at least 1"):
         strategy.optimize(acq, q=0)
-    with pytest.raises(ValueError, match="num_samples"):
-        strategy.optimize(acq, q=5)
 
 
-def test_random_search_returns_best_sampled_candidates() -> None:
+def test_random_search_returns_best_sampled_point() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     acq = _make_acquisition()
     strategy = RandomSearchStrategy(bounds, num_samples=128, seed=17)
 
-    result = strategy.optimize(acq, q=3)
+    result = strategy.optimize(acq)
 
     generator = torch.Generator().manual_seed(17)
-    samples = torch.rand(128, 1, dtype=torch.double, generator=generator)
+    samples = torch.rand(128, 1, 1, dtype=torch.double, generator=generator)
     with torch.no_grad():
-        scores = acq(samples.unsqueeze(-2)).squeeze()
-    expected_indices = torch.topk(scores, k=3, largest=True, sorted=True).indices
+        scores = acq(samples).reshape(128)
+    expected_index = scores.argmax()
 
-    assert torch.equal(result.candidates, samples[expected_indices])
-    assert torch.equal(result.acquisition_value, scores[expected_indices])
-    assert result.candidates.shape == torch.Size([3, 1])
+    assert torch.equal(result.candidates, samples[expected_index])
+    assert torch.equal(result.acquisition_value, scores[expected_index])
+    assert result.candidates.shape == torch.Size([1, 1])
     assert torch.all(result.candidates >= bounds[0])
     assert torch.all(result.candidates <= bounds[1])
-    assert result.metadata == {"num_samples": 128}
+    assert result.metadata == {"num_samples": 128, "q": 1}
+
+
+def test_random_search_optimizes_joint_q_batches() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    acq = _BatchSumAcquisition()
+    strategy = RandomSearchStrategy(bounds, num_samples=64, seed=23)
+
+    result = strategy.optimize(acq, q=3)
+
+    generator = torch.Generator().manual_seed(23)
+    batches = torch.rand(64, 3, 2, dtype=torch.double, generator=generator)
+    scores = acq(batches)
+    expected_index = scores.argmax()
+
+    assert torch.equal(result.candidates, batches[expected_index])
+    assert torch.equal(result.acquisition_value, scores[expected_index])
+    assert result.candidates.shape == torch.Size([3, 2])
+    assert result.acquisition_value.ndim == 0
+    assert result.metadata == {"num_samples": 64, "q": 3}
 
 
 def test_random_search_supports_one_sample() -> None:
@@ -62,7 +92,22 @@ def test_random_search_supports_one_sample() -> None:
 
     assert result.candidates.shape == torch.Size([1, 1])
     assert result.acquisition_value is not None
-    assert result.acquisition_value.shape == torch.Size([1])
+    assert result.acquisition_value.ndim == 0
+
+
+def test_random_search_rejects_non_batch_acquisition_output() -> None:
+    class _VectorAcquisition(_BatchSumAcquisition):
+        def forward(self, X: Tensor) -> Tensor:
+            return X.sum(dim=-1)
+
+    strategy = RandomSearchStrategy(
+        torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
+        num_samples=8,
+        seed=3,
+    )
+
+    with pytest.raises(ValueError, match="one scalar value per sampled q-batch"):
+        strategy.optimize(_VectorAcquisition(), q=2)
 
 
 def test_random_search_seed_is_reproducible_without_global_rng_mutation() -> None:
