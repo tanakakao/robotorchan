@@ -42,8 +42,8 @@ def test_projection_returns_original_box_points() -> None:
     X = strategy.project(Z)
 
     assert X.shape == (2, 6)
-    assert torch.all(X >= bounds[0])
-    assert torch.all(X <= bounds[1])
+    assert torch.all(bounds[0] <= X)
+    assert torch.all(bounds[1] >= X)
 
 
 def test_optimize_preserves_original_acquisition_contract() -> None:
@@ -61,8 +61,8 @@ def test_optimize_preserves_original_acquisition_contract() -> None:
     result = strategy.optimize(acquisition, q=1)
 
     assert result.candidates.shape == (1, 6)
-    assert torch.all(result.candidates >= bounds[0])
-    assert torch.all(result.candidates <= bounds[1])
+    assert torch.all(bounds[0] <= result.candidates)
+    assert torch.all(bounds[1] >= result.candidates)
     assert result.acquisition_value is not None
     torch.testing.assert_close(result.acquisition_value, acquisition(result.candidates))
     assert result.metadata["embedded_candidates"].shape == (1, 2)
