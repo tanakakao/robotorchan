@@ -327,7 +327,7 @@ class BAxUSStrategy(SearchStrategy):
         )
         candidates = self.project(Z)
         with torch.no_grad():
-            acquisition_value = acq_function(candidates)
+            acquisition_value = acq_function(candidates).reshape(())
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,

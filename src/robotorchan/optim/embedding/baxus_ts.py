@@ -92,7 +92,7 @@ class BAxUSThompsonSamplingStrategy(BAxUSStrategy):
         sampler = MaxPosteriorSampling(model=acq_function.model, replacement=False)
         with torch.no_grad():
             candidates = sampler(input_pool, num_samples=q)
-            acquisition_value = acq_function(candidates)
+            acquisition_value = acq_function(candidates).reshape(())
         target_candidates = self._match_target_candidates(candidates, input_pool, target_pool)
 
         return SearchResult(

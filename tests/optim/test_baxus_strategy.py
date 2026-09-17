@@ -185,7 +185,7 @@ def test_optimize_returns_original_space_candidates() -> None:
     assert result.metadata["failure_tolerance"] == strategy.state.failure_tolerance
     assert result.metadata["split_budget"] == strategy.state.split_budget
     with torch.no_grad():
-        expected = acquisition(result.candidates)
+        expected = acquisition(result.candidates).reshape(())
     torch.testing.assert_close(result.acquisition_value, expected)
 
 

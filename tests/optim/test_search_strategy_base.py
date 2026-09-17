@@ -57,6 +57,24 @@ def test_search_result_requires_candidate_matrix() -> None:
         )
 
 
+def test_search_result_accepts_scalar_joint_acquisition_value() -> None:
+    result = SearchResult(
+        candidates=torch.zeros(3, 2),
+        acquisition_value=torch.tensor(1.5),
+    )
+
+    assert result.acquisition_value is not None
+    assert result.acquisition_value.ndim == 0
+
+
+def test_search_result_rejects_per_candidate_acquisition_values() -> None:
+    with pytest.raises(ValueError, match="scalar"):
+        SearchResult(
+            candidates=torch.zeros(3, 2),
+            acquisition_value=torch.tensor([1.0, 2.0, 3.0]),
+        )
+
+
 def test_search_result_contains_only_search_outputs() -> None:
     result = SearchResult(
         candidates=torch.zeros(1, 3),

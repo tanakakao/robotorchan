@@ -149,7 +149,7 @@ class REMBOStrategy(SearchStrategy):
 
         candidates, clipping_distance = embedded_acq.project(embedded_candidates)
         with torch.no_grad():
-            acquisition_value = acq_function(candidates)
+            acquisition_value = acq_function(candidates).reshape(())
 
         return SearchResult(
             candidates=candidates,

@@ -89,7 +89,7 @@ def test_optimize_preserves_original_acquisition_contract() -> None:
     assert torch.all(bounds[0] <= result.candidates)
     assert torch.all(bounds[1] >= result.candidates)
     assert result.acquisition_value is not None
-    torch.testing.assert_close(result.acquisition_value, acquisition(result.candidates))
+    torch.testing.assert_close(result.acquisition_value, acquisition(result.candidates).reshape(()))
     assert result.metadata["embedded_candidates"].shape == (1, 2)
     assert result.metadata["clipping_distance"].shape == (1,)
     assert result.metadata["embedding"].shape == (6, 2)

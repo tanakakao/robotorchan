@@ -155,7 +155,7 @@ class HeSBOStrategy(SearchStrategy):
             self.bounds,
         )
         with torch.no_grad():
-            acquisition_value = acq_function(candidates)
+            acquisition_value = acq_function(candidates).reshape(())
 
         return SearchResult(
             candidates=candidates,

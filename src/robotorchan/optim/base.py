@@ -27,8 +27,9 @@ class SearchResult:
     Args:
         candidates: Selected candidates in the original/public input space.
         acquisition_value: Acquisition value associated with the selected
-            candidates when the strategy computes one. Strategies that do not
-            expose a meaningful acquisition value may return ``None``.
+            joint candidate batch when the strategy computes one. The value is
+            a scalar tensor regardless of ``q``. Strategies that do not expose
+            a meaningful acquisition value may return ``None``.
         metadata: Strategy-specific diagnostics. Stable public information
             belongs in explicit fields; this mapping is reserved for optional
             diagnostics such as restart counts or latent reconstruction error.
@@ -41,6 +42,8 @@ class SearchResult:
     def __post_init__(self) -> None:
         if self.candidates.ndim < 2:
             raise ValueError("candidates must have shape [..., q, d].")
+        if self.acquisition_value is not None and self.acquisition_value.numel() != 1:
+            raise ValueError("acquisition_value must be a scalar tensor when provided.")
 
 
 class SearchStrategy(ABC):
