@@ -30,7 +30,7 @@ def test_500d_reference_state_matches_botorch_tutorial() -> None:
         (2, 1, 1),
         (8, 6, 1),
         (32, 23, 3),
-        (128, 94, 13),
+        (128, 94, 15),
         (500, 367, 500),
     ],
 )
