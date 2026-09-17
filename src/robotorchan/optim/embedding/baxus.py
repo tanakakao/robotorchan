@@ -79,7 +79,7 @@ def update_baxus_state(
 
 
 class _BAxUSAcquisition(AcquisitionFunction):
-    def __init__(self, acq_function: AcquisitionFunction, strategy: "BAxUSStrategy") -> None:
+    def __init__(self, acq_function: AcquisitionFunction, strategy: BAxUSStrategy) -> None:
         super().__init__(model=acq_function.model)
         self.acq_function = acq_function
         self.strategy = strategy
@@ -89,13 +89,7 @@ class _BAxUSAcquisition(AcquisitionFunction):
 
 
 class BAxUSStrategy(SearchStrategy):
-    """Optimize acquisitions in an adaptively expanding random subspace.
-
-    The original-space surrogate is unchanged. The strategy maps target-space
-    coordinates in ``[-1, 1]^k`` into the normalized original box and expands
-    ``k`` when the current trust region collapses. Expansion preserves the
-    existing target coordinates and appends new random directions.
-    """
+    """Optimize acquisitions in an adaptively expanding random subspace."""
 
     def __init__(
         self,
@@ -142,8 +136,18 @@ class BAxUSStrategy(SearchStrategy):
         half = self.state.length
         return torch.stack(
             [
-                torch.full((self.target_dim,), -half, dtype=self.bounds.dtype, device=self.bounds.device),
-                torch.full((self.target_dim,), half, dtype=self.bounds.dtype, device=self.bounds.device),
+                torch.full(
+                    (self.target_dim,),
+                    -half,
+                    dtype=self.bounds.dtype,
+                    device=self.bounds.device,
+                ),
+                torch.full(
+                    (self.target_dim,),
+                    half,
+                    dtype=self.bounds.dtype,
+                    device=self.bounds.device,
+                ),
             ]
         )
 
@@ -155,7 +159,8 @@ class BAxUSStrategy(SearchStrategy):
             device=self.bounds.device,
             generator=self._generator,
         )
-        return matrix / matrix.norm(dim=0, keepdim=True).clamp_min(torch.finfo(self.bounds.dtype).eps)
+        eps = torch.finfo(self.bounds.dtype).eps
+        return matrix / matrix.norm(dim=0, keepdim=True).clamp_min(eps)
 
     def project(self, Z: Tensor) -> Tensor:
         """Map target-space coordinates to the feasible original-space box."""
@@ -167,12 +172,7 @@ class BAxUSStrategy(SearchStrategy):
         return center + half_range * normalized
 
     def expand_subspace(self) -> bool:
-        """Expand the target subspace after a restart signal.
-
-        Returns ``False`` when the full original dimension has already been
-        reached. Otherwise existing directions are retained and new random
-        directions are appended, and the trust-region state is reset.
-        """
+        """Expand the target subspace after a restart signal."""
         if not self.state.restart_triggered:
             raise RuntimeError("Subspace expansion requires restart_triggered=True.")
         if self.target_dim >= self.input_dim:
