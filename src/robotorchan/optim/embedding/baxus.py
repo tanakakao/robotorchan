@@ -1,4 +1,4 @@
-"""Bayesian optimization with adaptively expanding subspaces (BAxUS)."""
+"""Bayesian optimization with adaptively expanding sparse subspaces (BAxUS)."""
 
 from __future__ import annotations
 
@@ -92,7 +92,12 @@ class _BAxUSAcquisition(AcquisitionFunction):
 
 
 class BAxUSStrategy(SearchStrategy):
-    """Optimize acquisitions in an adaptively expanding random subspace."""
+    """Optimize acquisitions with a sparse embedding that expands by bin splitting.
+
+    Each original input dimension belongs to exactly one target-space bin with a
+    random sign. When the trust region collapses, populated bins are split and
+    the target dimension grows without replacing the complete embedding.
+    """
 
     def __init__(
         self,
@@ -127,7 +132,7 @@ class BAxUSStrategy(SearchStrategy):
             self._generator.seed()
         else:
             self._generator.manual_seed(seed)
-        self.embedding = self._new_embedding(initial_target_dim)
+        self.embedding = self._new_sparse_embedding(initial_target_dim)
         self.state = BAxUSState(target_dim=initial_target_dim) if state is None else state
 
     @property
@@ -154,16 +159,60 @@ class BAxUSStrategy(SearchStrategy):
             ]
         )
 
-    def _new_embedding(self, target_dim: int) -> Tensor:
-        matrix = torch.randn(
+    def _new_sparse_embedding(self, target_dim: int) -> Tensor:
+        """Create a balanced sparse signed embedding of shape ``[D, d]``."""
+        assignments = torch.arange(self.input_dim, device=self.bounds.device) % target_dim
+        permutation = torch.randperm(
+            self.input_dim,
+            device=self.bounds.device,
+            generator=self._generator,
+        )
+        assignments = assignments[permutation]
+        signs = torch.randint(
+            0,
+            2,
+            (self.input_dim,),
+            device=self.bounds.device,
+            generator=self._generator,
+        )
+        signs = signs.to(dtype=self.bounds.dtype).mul_(2).sub_(1)
+        embedding = torch.zeros(
             self.input_dim,
             target_dim,
             dtype=self.bounds.dtype,
             device=self.bounds.device,
-            generator=self._generator,
         )
-        eps = torch.finfo(self.bounds.dtype).eps
-        return matrix / matrix.norm(dim=0, keepdim=True).clamp_min(eps)
+        rows = torch.arange(self.input_dim, device=self.bounds.device)
+        embedding[rows, assignments] = signs
+        return embedding
+
+    def _split_embedding(self, next_dim: int) -> Tensor:
+        """Split the largest populated bins until ``next_dim`` is reached."""
+        embedding = self.embedding.clone()
+        while embedding.shape[-1] < next_dim:
+            occupancy = embedding.ne(0).sum(dim=0)
+            splittable = torch.nonzero(occupancy > 1, as_tuple=False).flatten()
+            if splittable.numel() == 0:
+                break
+            occupancies = occupancy[splittable]
+            source = int(splittable[torch.argmax(occupancies)].item())
+            members = torch.nonzero(embedding[:, source] != 0, as_tuple=False).flatten()
+            order = torch.randperm(
+                members.numel(),
+                device=self.bounds.device,
+                generator=self._generator,
+            )
+            moved = members[order[: members.numel() // 2]]
+            new_column = torch.zeros(
+                self.input_dim,
+                1,
+                dtype=self.bounds.dtype,
+                device=self.bounds.device,
+            )
+            new_column[moved, 0] = embedding[moved, source]
+            embedding[moved, source] = 0
+            embedding = torch.cat([embedding, new_column], dim=-1)
+        return embedding
 
     def project(self, Z: Tensor) -> Tensor:
         """Map target-space coordinates to the feasible original-space box."""
@@ -175,17 +224,16 @@ class BAxUSStrategy(SearchStrategy):
         return center + half_range * normalized
 
     def expand_subspace(self) -> bool:
-        """Expand the target subspace after a restart signal."""
+        """Expand the target space by splitting existing embedding bins."""
         if not self.state.restart_triggered:
             raise RuntimeError("Subspace expansion requires restart_triggered=True.")
         if self.target_dim >= self.input_dim:
             return False
 
         next_dim = min(self.input_dim, self.target_dim + self.new_dimensions)
-        extra = self._new_embedding(next_dim - self.target_dim)
-        self.embedding = torch.cat([self.embedding, extra], dim=-1)
+        self.embedding = self._split_embedding(next_dim)
         self.state = BAxUSState(
-            target_dim=next_dim,
+            target_dim=self.target_dim,
             length=0.8,
             length_min=self.state.length_min,
             length_max=self.state.length_max,
