@@ -9,10 +9,10 @@
 `BAxUSTS` では `ts_candidates=None` を標準とする。この場合、`BAxUSThompsonSamplingStrategy` が BoTorch BAxUS tutorial と同じ規則
 
 ```text
-min(5000, max(2000, 200 * input_dim))
+min(5000, max(2000, 200 * target_dim))
 ```
 
-で候補 pool サイズを決める。例えば 6 次元では 2000、15 次元では 3000、30 次元以上では 5000 となる。
+で候補 pool サイズを決める。ここで `target_dim` は現在の BAxUS target-space 次元であり、ambient input 次元ではない。BoTorch tutorial の `X.shape[-1]` は target-space 観測 `X_baxus_target` の次元を参照する。したがって subspace expansion 後は自動候補数も現在の `target_dim` に追従する。例えば target 次元が 2 / 15 / 30 の場合はそれぞれ 2000 / 3000 / 5000 となる。
 
 再現性や計算量を固定した実験では `--ts-candidates` を明示指定できる。明示値は `q` 以上でなければならない。旧来の「benchmark 側で常に 5000 を渡す」挙動は残していない。
 

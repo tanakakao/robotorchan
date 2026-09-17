@@ -17,11 +17,16 @@ class BAxUSThompsonSamplingStrategy(BAxUSStrategy):
 
     def __init__(self, *args, n_candidates: int | None = None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        if n_candidates is None:
-            n_candidates = min(5000, max(2000, 200 * self.input_dim))
-        if n_candidates < 1:
+        if n_candidates is not None and n_candidates < 1:
             raise ValueError("n_candidates must be at least 1.")
-        self.n_candidates = n_candidates
+        self._n_candidates = n_candidates
+
+    @property
+    def n_candidates(self) -> int:
+        """Return the explicit pool size or the current target-space default."""
+        if self._n_candidates is not None:
+            return self._n_candidates
+        return min(5000, max(2000, 200 * self.target_dim))
 
     def _candidate_pool(self, target_bounds: Tensor) -> tuple[Tensor, Tensor]:
         """Draw sparse perturbations around the current target-space incumbent."""
