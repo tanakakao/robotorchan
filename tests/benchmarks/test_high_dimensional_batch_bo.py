@@ -167,3 +167,61 @@ def test_batch_benchmark_rejects_small_explicit_ts_pool() -> None:
         benchmark.run_strategy("HeSBO", 6, q=2, embedding_dim=7)
     with pytest.raises(ValueError, match="ts_candidates must be at least q"):
         benchmark.run_strategy("RandomSearch", 6, q=3, ts_candidates=2)
+
+
+
+def test_run_benchmark_uses_same_problem_grid_for_each_strategy() -> None:
+    rows = benchmark.run_benchmark(
+        ["RandomSearch", "HeSBO"],
+        [6],
+        [0, 1],
+        q=2,
+        n_train=4,
+        n_iterations=1,
+        random_samples=8,
+        embedding_dim=2,
+        ts_candidates=8,
+        num_restarts=1,
+        raw_samples=4,
+    )
+
+    assert len(rows) == 4
+    assert {(row.strategy, row.seed) for row in rows} == {
+        ("RandomSearch", 0),
+        ("RandomSearch", 1),
+        ("HeSBO", 0),
+        ("HeSBO", 1),
+    }
+    assert all(row.input_dim == 6 for row in rows)
+    assert all(row.q == 2 for row in rows)
+
+
+def test_batch_aggregation_keeps_q_and_iteration_separate() -> None:
+    rows = [
+        benchmark.BatchBOResult("RandomSearch", 6, 0, 1, 2, -0.5, -0.4, 0.4, 0.1),
+        benchmark.BatchBOResult("RandomSearch", 6, 1, 1, 2, -0.3, -0.2, 0.2, 0.2),
+        benchmark.BatchBOResult("RandomSearch", 6, 0, 2, 2, -0.2, -0.1, 0.1, 0.3),
+    ]
+
+    summaries = benchmark.aggregate_results(rows)
+
+    assert len(summaries) == 2
+    first = summaries[0]
+    assert first.iteration == 1
+    assert first.q == 2
+    assert first.n_seeds == 2
+    assert first.batch_best_mean == pytest.approx(-0.4)
+    assert first.simple_regret_mean == pytest.approx(0.3)
+
+
+def test_batch_benchmark_grid_validates_empty_inputs() -> None:
+    with pytest.raises(ValueError, match="strategy_names"):
+        benchmark.run_benchmark([], [6], [0])
+    with pytest.raises(ValueError, match="input_dims"):
+        benchmark.run_benchmark(["RandomSearch"], [], [0])
+    with pytest.raises(ValueError, match="seeds"):
+        benchmark.run_benchmark(["RandomSearch"], [6], [])
+    with pytest.raises(ValueError, match="Unknown strategies"):
+        benchmark.run_benchmark(["unknown"], [6], [0])
+    with pytest.raises(ValueError, match="results"):
+        benchmark.aggregate_results([])
