@@ -23,7 +23,12 @@ robotorchan では surrogate model と acquisition function と search strategy 
 ## BAxUS の使い方
 
 ```python
-strategy = BAxUSStrategy(bounds, initial_target_dim=2, new_dimensions=3, seed=0)
+strategy = BAxUSStrategy(
+    bounds,
+    initial_target_dim=2,
+    new_bins_on_split=3,
+    seed=0,
+)
 result = strategy.optimize(acq_function)
 y_new = objective(result.candidates)
 state = strategy.update_state(y_new)
@@ -34,7 +39,10 @@ if state.restart_triggered:
 
 `BAxUSStrategy` は目的関数を評価しない。目的関数評価後に `update_state()` を明示的に呼ぶ。
 初期 embedding では、各元入力次元を target-space のちょうど 1 bin に割り当て、係数を `+1` または `-1` とする sparse signed embedding を使う。bin の占有数は可能な限り均等化する。
-trust region が最小長を下回ると `restart_triggered=True` となり、`expand_subspace()` は占有数の大きい bin を分割して target dimension を増やす。元入力次元を新しい独立 Gaussian 方向へ再埋め込みするのではなく、既存 bin のメンバーを分割することで探索空間を段階的に細分化する。
+
+`new_bins_on_split` は BAxUS の 1 回の expansion で各 parent bin から追加できる child bin 数を表す。`expand_subspace()` は特定の大きな bin だけを分割するのではなく、メンバーを 2 個以上持つすべての parent bin を対象とし、それぞれを最大 `new_bins_on_split + 1` group に分割する。例えば target dimension 2、`new_bins_on_split=3` で各 parent に十分な入力次元があれば、1 回の expansion で target dimension は最大 8 になる。
+
+分割時には各元入力次元の `+1/-1` sign と「必ず 1 bin のみに所属する」という sparse embedding の構造を保持する。このため expansion 前の探索空間を細分化する nested subspace として扱える。旧 `new_dimensions` API と、target dimension に固定個数の新しい列だけを足す処理は残していない。
 
 ## 設計上の注意
 
