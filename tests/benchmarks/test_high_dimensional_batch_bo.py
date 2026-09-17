@@ -169,7 +169,6 @@ def test_batch_benchmark_rejects_small_explicit_ts_pool() -> None:
         benchmark.run_strategy("RandomSearch", 6, q=3, ts_candidates=2)
 
 
-
 def test_run_benchmark_uses_same_problem_grid_for_each_strategy() -> None:
     rows = benchmark.run_benchmark(
         ["RandomSearch", "HeSBO"],
