@@ -23,9 +23,9 @@ from robotorchan.optim import (
     LatentSpaceStrategy,
     OriginalSpaceStrategy,
     PCAReconstruction,
-    REMBOStrategy,
     RandomProjectionReconstruction,
     RandomSearchStrategy,
+    REMBOStrategy,
     TuRBOState,
     TuRBOStrategy,
 )
