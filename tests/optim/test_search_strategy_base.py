@@ -121,3 +121,30 @@ def test_dummy_strategy_returns_public_space_candidates() -> None:
 
     assert result.candidates.shape == torch.Size([3, 2])
     assert result.metadata == {}
+
+
+def test_public_optim_exports_are_complete() -> None:
+    import robotorchan.optim as optim
+
+    expected = {
+        "SearchResult",
+        "SearchStrategy",
+        "OriginalSpaceStrategy",
+        "RandomSearchStrategy",
+        "LatentReconstruction",
+        "LatentSpaceStrategy",
+        "PCAReconstruction",
+        "RandomProjectionReconstruction",
+        "REMBOStrategy",
+        "HeSBOStrategy",
+        "TuRBOState",
+        "TuRBOStrategy",
+        "update_turbo_state",
+        "BAxUSState",
+        "BAxUSStrategy",
+        "BAxUSThompsonSamplingStrategy",
+        "update_baxus_state",
+    }
+
+    assert set(optim.__all__) == expected
+    assert all(hasattr(optim, name) for name in expected)

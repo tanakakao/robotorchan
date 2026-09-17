@@ -3,6 +3,12 @@
 robotorchan では surrogate model と acquisition function と search strategy を分離する。
 高次元モデルを変更せず、獲得関数の最適化方法だけを切り替えられる。
 
+## 共通 API
+
+すべての search strategy は `SearchStrategy.optimize(acq_function, *, q=1) -> SearchResult` を共通入口とする。`SearchResult.candidates` は public/original input space の shape `[q, d]` 候補で、`acquisition_value` はその joint q-batch に対応する scalar tensor または `None` である。
+
+search strategy は surrogate の posterior API や reducer lifecycle を変更しない。探索時間は `SearchResult` に含めず、benchmark / 呼び出し側で外部計測する。旧 API 名、deprecated wrapper、互換 alias は提供しない。
+
 ## 戦略
 
 | Strategy | 探索空間 | 状態 | 主な用途 |
