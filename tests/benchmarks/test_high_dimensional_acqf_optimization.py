@@ -1,15 +1,17 @@
 """Tests for the continuous high-dimensional acquisition benchmark."""
 
 import importlib.util
+import sys
 from pathlib import Path
 
 import pytest
 
-
-MODULE_PATH = Path(__file__).parents[2] / "benchmarks" / "high_dimensional_acqf_optimization.py"
-SPEC = importlib.util.spec_from_file_location("high_dimensional_acqf_optimization", MODULE_PATH)
+MODULE_NAME = "high_dimensional_acqf_optimization"
+MODULE_PATH = Path(__file__).parents[2] / "benchmarks" / f"{MODULE_NAME}.py"
+SPEC = importlib.util.spec_from_file_location(MODULE_NAME, MODULE_PATH)
 assert SPEC is not None and SPEC.loader is not None
 benchmark = importlib.util.module_from_spec(SPEC)
+sys.modules[MODULE_NAME] = benchmark
 SPEC.loader.exec_module(benchmark)
 
 
