@@ -39,9 +39,7 @@ def _reference_state_values(
 )
 def test_baxus_state_matches_botorch_reference_equations(dim: int, eval_budget: int) -> None:
     state = BAxUSState(dim=dim, eval_budget=eval_budget)
-    n_splits, d_init, split_budget, failure_tolerance = _reference_state_values(
-        dim, eval_budget
-    )
+    n_splits, d_init, split_budget, failure_tolerance = _reference_state_values(dim, eval_budget)
 
     assert state.n_splits == n_splits
     assert state.initial_target_dim == d_init
