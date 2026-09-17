@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import math
 from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
