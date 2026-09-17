@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, replace
 from time import perf_counter
 from typing import Any
@@ -55,8 +56,11 @@ def update_baxus_state(
         raise ValueError("relative_improvement must be non-negative.")
 
     candidate_best = float(values.max().item())
-    threshold = relative_improvement * max(1.0, abs(state.best_value))
-    success = candidate_best > state.best_value + threshold
+    if math.isfinite(state.best_value):
+        threshold = relative_improvement * max(1.0, abs(state.best_value))
+        success = candidate_best > state.best_value + threshold
+    else:
+        success = True
     successes = state.success_counter + 1 if success else 0
     failures = 0 if success else state.failure_counter + 1
     length = state.length
