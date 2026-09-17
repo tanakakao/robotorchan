@@ -16,8 +16,10 @@ from robotorchan.optim import (
     BAxUSState,
     BAxUSStrategy,
     BAxUSThompsonSamplingStrategy,
+    HeSBOStrategy,
     OriginalSpaceStrategy,
     RandomSearchStrategy,
+    REMBOStrategy,
     TuRBOState,
     TuRBOStrategy,
 )
@@ -25,6 +27,8 @@ from robotorchan.optim import (
 STRATEGY_NAMES = (
     "OriginalSpace",
     "RandomSearch",
+    "REMBO",
+    "HeSBO",
     "TuRBO",
     "BAxUS",
     "BAxUSTS",
@@ -88,6 +92,7 @@ def _make_strategy(
     train_Y: Tensor,
     *,
     random_samples: int,
+    embedding_dim: int,
     ts_candidates: int | None,
     num_restarts: int,
     raw_samples: int,
@@ -98,6 +103,22 @@ def _make_strategy(
         return OriginalSpaceStrategy(bounds, num_restarts=num_restarts, raw_samples=raw_samples)
     if name == "RandomSearch":
         return RandomSearchStrategy(bounds, num_samples=random_samples, seed=search_seed)
+    if name == "REMBO":
+        return REMBOStrategy(
+            bounds,
+            embedding_dim=embedding_dim,
+            seed=search_seed,
+            num_restarts=num_restarts,
+            raw_samples=raw_samples,
+        )
+    if name == "HeSBO":
+        return HeSBOStrategy(
+            bounds,
+            embedding_dim=embedding_dim,
+            seed=search_seed,
+            num_restarts=num_restarts,
+            raw_samples=raw_samples,
+        )
     center, best_value = _initial_incumbent(train_X, train_Y)
     if name == "TuRBO":
         return TuRBOStrategy(
@@ -148,6 +169,7 @@ def run_strategy(
     n_train: int = 24,
     n_iterations: int = 5,
     random_samples: int = 1024,
+    embedding_dim: int = 5,
     ts_candidates: int | None = None,
     num_restarts: int = 10,
     raw_samples: int = 512,
@@ -161,6 +183,8 @@ def run_strategy(
         raise ValueError("n_iterations must be at least 1")
     if random_samples < 1:
         raise ValueError("random_samples must be at least 1")
+    if embedding_dim < 1 or embedding_dim > input_dim:
+        raise ValueError("embedding_dim must be between 1 and input_dim")
     if ts_candidates is not None and ts_candidates < q:
         raise ValueError("ts_candidates must be at least q")
 
@@ -172,6 +196,7 @@ def run_strategy(
         train_X,
         train_Y,
         random_samples=random_samples,
+        embedding_dim=embedding_dim,
         ts_candidates=ts_candidates,
         num_restarts=num_restarts,
         raw_samples=raw_samples,
@@ -224,6 +249,7 @@ def main() -> None:
     parser.add_argument("--n-train", type=int, default=24)
     parser.add_argument("--n-iterations", type=int, default=5)
     parser.add_argument("--random-samples", type=int, default=1024)
+    parser.add_argument("--embedding-dim", type=int, default=5)
     parser.add_argument("--ts-candidates", type=int, default=None)
     parser.add_argument("--num-restarts", type=int, default=10)
     parser.add_argument("--raw-samples", type=int, default=512)
@@ -236,6 +262,7 @@ def main() -> None:
         n_train=args.n_train,
         n_iterations=args.n_iterations,
         random_samples=args.random_samples,
+        embedding_dim=args.embedding_dim,
         ts_candidates=args.ts_candidates,
         num_restarts=args.num_restarts,
         raw_samples=args.raw_samples,

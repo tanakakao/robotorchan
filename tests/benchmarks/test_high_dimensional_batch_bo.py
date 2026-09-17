@@ -8,7 +8,7 @@ import pytest
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
 
-from robotorchan.optim import BAxUSThompsonSamplingStrategy
+from robotorchan.optim import BAxUSThompsonSamplingStrategy, HeSBOStrategy, REMBOStrategy
 
 MODULE_NAME = "high_dimensional_batch_bo"
 MODULE_PATH = Path(__file__).parents[2] / "benchmarks" / f"{MODULE_NAME}.py"
@@ -35,6 +35,7 @@ def test_baxus_ts_strategy_is_available_in_batch_benchmark() -> None:
         train_X,
         train_Y,
         random_samples=8,
+        embedding_dim=2,
         ts_candidates=16,
         num_restarts=1,
         raw_samples=4,
@@ -54,6 +55,7 @@ def test_baxus_ts_batch_benchmark_uses_automatic_candidate_budget() -> None:
         train_X,
         train_Y,
         random_samples=8,
+        embedding_dim=2,
         ts_candidates=None,
         num_restarts=1,
         raw_samples=4,
@@ -65,6 +67,46 @@ def test_baxus_ts_batch_benchmark_uses_automatic_candidate_budget() -> None:
     assert strategy.n_candidates == 2000
 
 
+def test_fixed_embedding_strategies_are_available_in_batch_benchmark() -> None:
+    train_X, train_Y, bounds = benchmark.make_initial_data(6, n_train=6, seed=3)
+    kwargs = dict(
+        random_samples=8,
+        embedding_dim=2,
+        ts_candidates=16,
+        num_restarts=1,
+        raw_samples=8,
+        search_seed=17,
+        eval_budget=12,
+    )
+
+    rembo = benchmark._make_strategy("REMBO", bounds, train_X, train_Y, **kwargs)
+    hesbo = benchmark._make_strategy("HeSBO", bounds, train_X, train_Y, **kwargs)
+
+    assert isinstance(rembo, REMBOStrategy)
+    assert isinstance(hesbo, HeSBOStrategy)
+    assert rembo.embedding.shape == (6, 2)
+    assert hesbo.embedding.shape == (6, 2)
+
+
+def test_hesbo_runs_joint_q_batch_with_qlogei() -> None:
+    rows = benchmark.run_strategy(
+        "HeSBO",
+        6,
+        q=2,
+        n_train=6,
+        n_iterations=1,
+        random_samples=8,
+        embedding_dim=2,
+        ts_candidates=16,
+        num_restarts=1,
+        raw_samples=8,
+        seed=4,
+    )
+    assert len(rows) == 1
+    assert rows[0].strategy == "HeSBO"
+    assert rows[0].q == 2
+
+
 def test_random_search_runs_joint_q_batches() -> None:
     rows = benchmark.run_strategy(
         "RandomSearch",
@@ -73,6 +115,7 @@ def test_random_search_runs_joint_q_batches() -> None:
         n_train=4,
         n_iterations=2,
         random_samples=16,
+        embedding_dim=2,
         ts_candidates=16,
         num_restarts=1,
         raw_samples=4,
@@ -92,6 +135,7 @@ def test_baxus_state_accepts_all_batch_feedback() -> None:
         train_X,
         train_Y,
         random_samples=8,
+        embedding_dim=2,
         ts_candidates=16,
         num_restarts=1,
         raw_samples=4,
@@ -118,5 +162,7 @@ def test_batch_benchmark_rejects_non_batch_q() -> None:
 
 
 def test_batch_benchmark_rejects_small_explicit_ts_pool() -> None:
+    with pytest.raises(ValueError, match="embedding_dim"):
+        benchmark.run_strategy("HeSBO", 6, q=2, embedding_dim=7)
     with pytest.raises(ValueError, match="ts_candidates must be at least q"):
         benchmark.run_strategy("RandomSearch", 6, q=3, ts_candidates=2)
