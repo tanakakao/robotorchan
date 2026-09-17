@@ -1,3 +1,4 @@
+import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
 from torch import Tensor
@@ -17,16 +18,21 @@ def _training_data(input_dim: int = 4) -> tuple[Tensor, Tensor]:
     return X, Y
 
 
+def _bounds(input_dim: int = 4) -> Tensor:
+    return torch.stack(
+        [
+            torch.zeros(input_dim, dtype=torch.double),
+            torch.ones(input_dim, dtype=torch.double),
+        ]
+    )
+
+
 def test_pca_strategy_returns_original_space_feasible_candidate() -> None:
     train_X, train_Y = _training_data()
     model = PCAGP(train_X, train_Y, n_components=2)
-    reconstruction = PCAReconstruction(model.reducer)
-    bounds = torch.stack(
-        [
-            torch.zeros(4, dtype=torch.double),
-            torch.ones(4, dtype=torch.double),
-        ]
-    )
+    assert model.input_reducer is not None
+    reconstruction = PCAReconstruction(model.input_reducer)
+    bounds = _bounds()
     strategy = LatentSpaceStrategy(
         bounds,
         reconstruction,
@@ -49,69 +55,47 @@ def test_pca_strategy_returns_original_space_feasible_candidate() -> None:
 def test_random_projection_strategy_uses_original_acquisition_contract() -> None:
     train_X, train_Y = _training_data()
     model = RandomProjectionGP(train_X, train_Y, n_components=2, random_state=3)
-    reconstruction = RandomProjectionReconstruction(model.reducer)
-    bounds = torch.stack(
-        [
-            torch.zeros(4, dtype=torch.double),
-            torch.ones(4, dtype=torch.double),
-        ]
-    )
+    assert model.input_reducer is not None
+    reconstruction = RandomProjectionReconstruction(model.input_reducer)
+    bounds = _bounds()
     strategy = LatentSpaceStrategy(
         bounds,
         reconstruction,
         num_restarts=2,
         raw_samples=16,
     )
+    acq_function = PosteriorMean(model)
 
-    result = strategy.optimize(PosteriorMean(model), q=1)
+    result = strategy.optimize(acq_function, q=1)
 
-    expected = PosteriorMean(model)(result.candidates.unsqueeze(-2))
+    expected = acq_function(result.candidates)
     assert result.candidates.shape == (1, 4)
-    assert torch.allclose(result.acquisition_value, expected)
+    assert result.acquisition_value is not None
+    torch.testing.assert_close(result.acquisition_value, expected)
 
 
 def test_strategy_validates_reconstruction_dimension() -> None:
     train_X, train_Y = _training_data()
     model = PCAGP(train_X, train_Y, n_components=2)
-    reconstruction = PCAReconstruction(model.reducer)
-    bad_bounds = torch.stack(
-        [
-            torch.zeros(3, dtype=torch.double),
-            torch.ones(3, dtype=torch.double),
-        ]
-    )
+    assert model.input_reducer is not None
+    reconstruction = PCAReconstruction(model.input_reducer)
 
-    try:
-        LatentSpaceStrategy(bad_bounds, reconstruction)
-    except ValueError as error:
-        assert "dimension" in str(error)
-    else:
-        raise AssertionError("Expected dimension mismatch to raise ValueError.")
+    with pytest.raises(ValueError, match="dimension"):
+        LatentSpaceStrategy(_bounds(3), reconstruction)
 
 
 def test_strategy_validates_optimizer_arguments() -> None:
     train_X, train_Y = _training_data()
     model = PCAGP(train_X, train_Y, n_components=2)
-    reconstruction = PCAReconstruction(model.reducer)
-    bounds = torch.stack(
-        [
-            torch.zeros(4, dtype=torch.double),
-            torch.ones(4, dtype=torch.double),
-        ]
-    )
+    assert model.input_reducer is not None
+    reconstruction = PCAReconstruction(model.input_reducer)
+    bounds = _bounds()
 
-    for kwargs in ({"num_restarts": 0}, {"raw_samples": 0}):
-        try:
-            LatentSpaceStrategy(bounds, reconstruction, **kwargs)
-        except ValueError:
-            pass
-        else:
-            raise AssertionError("Expected invalid optimizer argument to raise ValueError.")
+    with pytest.raises(ValueError, match="num_restarts"):
+        LatentSpaceStrategy(bounds, reconstruction, num_restarts=0)
+    with pytest.raises(ValueError, match="raw_samples"):
+        LatentSpaceStrategy(bounds, reconstruction, raw_samples=0)
 
     strategy = LatentSpaceStrategy(bounds, reconstruction, num_restarts=2, raw_samples=16)
-    try:
+    with pytest.raises(ValueError, match="q must be at least 1"):
         strategy.optimize(PosteriorMean(model), q=0)
-    except ValueError as error:
-        assert "q must be at least 1" in str(error)
-    else:
-        raise AssertionError("Expected q=0 to raise ValueError.")
