@@ -189,8 +189,7 @@ class BAxUSStrategy(SearchStrategy):
 
     def _split_embedding(self) -> Tensor:
         """Split every populated bin into nested child bins in one expansion."""
-        old_embedding = self.embedding
-        columns = [old_embedding[:, index].clone() for index in range(self.target_dim)]
+        columns = [self.embedding[:, index].clone() for index in range(self.target_dim)]
         new_columns: list[Tensor] = []
 
         for source, column in enumerate(columns):
@@ -205,7 +204,6 @@ class BAxUSStrategy(SearchStrategy):
             shuffled = members[order]
             n_groups = min(self.new_bins_on_split + 1, members.numel())
             groups = torch.tensor_split(shuffled, n_groups)
-            columns[source][groups[1:].copy() if False else groups[0]] = column[groups[0]]
             for group in groups[1:]:
                 child = torch.zeros_like(column)
                 child[group] = column[group]
