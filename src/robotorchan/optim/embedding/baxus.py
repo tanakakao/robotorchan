@@ -152,7 +152,10 @@ class BAxUSStrategy(SearchStrategy):
         self.options = None if options is None else dict(options)
         self.sequential = sequential
         self._generator = torch.Generator(device=bounds.device)
-        self._generator.seed() if seed is None else self._generator.manual_seed(seed)
+        if seed is None:
+            self._generator.seed()
+        else:
+            self._generator.manual_seed(seed)
         self.state = state
         self.embedding = self._new_sparse_embedding(state.target_dim)
         self.target_X = torch.empty(0, state.target_dim, dtype=bounds.dtype, device=bounds.device)
@@ -171,13 +174,41 @@ class BAxUSStrategy(SearchStrategy):
 
     @property
     def target_bounds(self) -> Tensor:
+        """Return the isotropic target-space trust region."""
+        return self._target_bounds(torch.ones_like(self.target_center))
+
+    def _target_bounds(self, weights: Tensor) -> Tensor:
         center = self.target_center
         return torch.stack(
             [
-                (center - self.state.length).clamp_min(-1.0),
-                (center + self.state.length).clamp_max(1.0),
+                (center - weights * self.state.length).clamp_min(-1.0),
+                (center + weights * self.state.length).clamp_max(1.0),
             ]
         )
+
+    def _input_lengthscales(self, acq_function: AcquisitionFunction) -> Tensor | None:
+        """Extract ARD lengthscales when the acquisition model exposes them."""
+        module = getattr(acq_function.model, "covar_module", None)
+        while module is not None:
+            lengthscale = getattr(module, "lengthscale", None)
+            if lengthscale is not None:
+                values = lengthscale.detach().reshape(-1).to(self.bounds)
+                if values.numel() == self.input_dim and torch.all(values > 0):
+                    return values
+                return None
+            module = getattr(module, "base_kernel", None)
+        return None
+
+    def _target_lengthscale_weights(self, acq_function: AcquisitionFunction) -> Tensor:
+        """Map original-space ARD lengthscales onto the current sparse embedding."""
+        input_lengthscales = self._input_lengthscales(acq_function)
+        if input_lengthscales is None:
+            return torch.ones_like(self.target_center)
+        inverse_square = input_lengthscales.pow(-2)
+        target_precision = self.embedding.abs().transpose(-2, -1) @ inverse_square
+        target_lengthscales = target_precision.rsqrt()
+        weights = target_lengthscales / target_lengthscales.mean()
+        return weights / torch.prod(weights.pow(1.0 / self.target_dim))
 
     def _new_sparse_embedding(self, target_dim: int) -> Tensor:
         assignments = torch.arange(self.input_dim, device=self.bounds.device) % target_dim
@@ -186,11 +217,18 @@ class BAxUSStrategy(SearchStrategy):
         )
         assignments = assignments[permutation]
         signs = torch.randint(
-            0, 2, (self.input_dim,), device=self.bounds.device, generator=self._generator
+            0,
+            2,
+            (self.input_dim,),
+            device=self.bounds.device,
+            generator=self._generator,
         )
         signs = signs.to(dtype=self.bounds.dtype).mul_(2).sub_(1)
         embedding = torch.zeros(
-            self.input_dim, target_dim, dtype=self.bounds.dtype, device=self.bounds.device
+            self.input_dim,
+            target_dim,
+            dtype=self.bounds.dtype,
+            device=self.bounds.device,
         )
         rows = torch.arange(self.input_dim, device=self.bounds.device)
         embedding[rows, assignments] = signs
@@ -276,10 +314,12 @@ class BAxUSStrategy(SearchStrategy):
             raise ValueError("q must be at least 1.")
         if self.state.restart_triggered:
             raise RuntimeError("BAxUS subspace expansion is required before optimization.")
+        target_weights = self._target_lengthscale_weights(acq_function)
+        target_bounds = self._target_bounds(target_weights)
         embedded_acq = _BAxUSAcquisition(acq_function, self)
         Z, _ = optimize_acqf(
             acq_function=embedded_acq,
-            bounds=self.target_bounds,
+            bounds=target_bounds,
             q=q,
             num_restarts=self.num_restarts,
             raw_samples=self.raw_samples,
@@ -296,6 +336,8 @@ class BAxUSStrategy(SearchStrategy):
                 "target_candidates": Z.detach(),
                 "target_dim": self.target_dim,
                 "target_center": self.target_center.detach().clone(),
+                "target_lengthscale_weights": target_weights.detach().clone(),
+                "target_bounds": target_bounds.detach().clone(),
                 "trust_region_length": self.state.length,
                 "failure_tolerance": self.state.failure_tolerance,
                 "split_budget": self.state.split_budget,

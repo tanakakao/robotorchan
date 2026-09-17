@@ -52,6 +52,14 @@ BoTorch の BAxUS tutorial と同様に、`n_splits`、`split_budget`、`failure
 
 分割時には各元入力次元の `+1/-1` sign と「必ず 1 bin のみに所属する」という sparse embedding の構造を保持する。既存の target-space 観測については parent coordinate を child bin へ複製するため、expansion 前後で元入力空間への projection が保存される。このため expansion 前の探索空間を細分化する nested subspace として扱える。旧 `initial_target_dim` / strategy 側 `new_bins_on_split` API、旧 `new_dimensions` API は残していない。
 
+### lengthscale-weighted trust region
+
+BoTorch の BAxUS tutorial は target-space GP の ARD lengthscale を使って trust-region 各辺をスケーリングする。robotorchan は search strategy と surrogate model を分離し、共通 benchmark では original-space surrogate を維持するため、別の target-space GP を strategy 内で再学習しない。
+
+代わりに acquisition model が original-space ARD lengthscale を公開している場合、現在の sparse embedding が誘導する target-space metric を計算する。target coordinate `j` に所属する元次元集合を `B_j`、元空間 lengthscale を `l_i` とすると、effective target lengthscale は `1 / sqrt(sum_{i in B_j} 1 / l_i^2)` とする。これは ARD の距離 metric を sparse signed embedding 上へ制限したときの target coordinate のスケールに対応する。その後、BoTorch tutorial と同じく重みの幾何平均が 1 になるよう正規化し、`center ± weight * state.length` で trust-region box を作る。
+
+acquisition model から適切な original-space ARD lengthscale を取得できない場合は等方重みへフォールバックする。実際に使った `target_lengthscale_weights` と `target_bounds` は `SearchResult.metadata` に保存する。これは search strategy / surrogate 分離を維持するための設計であり、BoTorch tutorial の「target-space GP を毎反復で fit してその lengthscale を直接使う」実装と完全に同一ではない。
+
 ## 設計上の注意
 
 - search strategy は surrogate を置き換えない。
@@ -60,8 +68,8 @@ BoTorch の BAxUS tutorial と同様に、`n_splits`、`split_budget`、`failure
 - 探索時間は benchmark / 呼び出し側で `strategy.optimize(...)` の前後を計測する。
 - `LatentSpaceStrategy` はデータから学習した reducer、REMBO / BAxUS は探索用の埋め込みであり役割が異なる。
 - TuRBO / BAxUS は stateful なので、逐次 BO ループ側が観測値を state に戻す必要がある。
-- BAxUS の target-space は現在、最良 target observation を中心とする対称・等方的な trust-region box を使い、sparse embedding 後に元の box bounds へアフィン変換する。
-- BoTorch の BAxUS tutorial では target-space GP の lengthscale で trust-region 各辺をスケーリングする。robotorchan の共通 search-strategy benchmark は全戦略で同じ original-space surrogate を使うため、この lengthscale-weighted geometry はまだ導入していない。これは今後の BAxUS fidelity 改善項目である。
+- BAxUS の trust region は最良 target observation を中心とし、利用可能な場合は original-space ARD metric から誘導した target-space weight で各辺をスケーリングする。
+- target-space GP を strategy 内で別途 fit しないため、BoTorch tutorial と完全に同じ surrogate 構成ではない。surrogate を全探索戦略で共通化する robotorchan の責務分離を優先している。
 
 ## ベンチマーク
 
