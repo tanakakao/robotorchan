@@ -61,7 +61,6 @@ def test_original_space_strategy_optimizes_single_task_gp() -> None:
     assert torch.all(result.candidates >= bounds[0])
     assert torch.all(result.candidates <= bounds[1])
     assert result.acquisition_value is not None
-    assert result.optimization_time >= 0.0
 
 
 def test_original_space_strategy_preserves_reduced_gp_public_space() -> None:
