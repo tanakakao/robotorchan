@@ -39,9 +39,7 @@ def test_q_batch_feedback_is_recorded_as_joint_target_history() -> None:
         state=BAxUSState(dim=8, eval_budget=40, target_dim=2),
         seed=4,
     )
-    target_X = torch.tensor(
-        [[-0.6, 0.1], [0.2, 0.3], [0.7, -0.4]], dtype=torch.double
-    )
+    target_X = torch.tensor([[-0.6, 0.1], [0.2, 0.3], [0.7, -0.4]], dtype=torch.double)
     target_Y = torch.tensor([[-1.0], [0.5], [0.1]], dtype=torch.double)
 
     strategy.update_state(target_Y, target_candidates=target_X)
