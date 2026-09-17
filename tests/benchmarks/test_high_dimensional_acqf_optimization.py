@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import torch
 
 MODULE_NAME = "high_dimensional_acqf_optimization"
 MODULE_PATH = Path(__file__).parents[2] / "benchmarks" / f"{MODULE_NAME}.py"
@@ -30,6 +31,32 @@ def test_run_dimension_compares_shared_problem() -> None:
     assert all(row.seed == 3 for row in results)
     assert all(row.simple_regret >= 0.0 for row in results)
     assert all(row.optimization_time >= 0.0 for row in results)
+
+
+def test_random_search_rng_is_independent_from_training_rng() -> None:
+    seed = 7
+    n_train = 8
+    input_dim = 5
+    model, bounds, _ = benchmark.make_problem(input_dim, n_train=n_train, seed=seed)
+    strategy = benchmark.strategy_factories(
+        bounds,
+        random_samples=n_train,
+        num_restarts=1,
+        raw_samples=4,
+        seed=seed,
+    )["RandomSearch"]
+
+    train_X = model.train_inputs[0]
+    search_X = strategy._sample_candidates()
+
+    assert strategy.seed == benchmark._search_seed(seed)
+    assert strategy.seed != seed
+    assert not torch.equal(search_X, train_X)
+
+
+def test_search_seed_is_deterministic_and_wrapped() -> None:
+    assert benchmark._search_seed(11) == benchmark._search_seed(11)
+    assert 0 <= benchmark._search_seed(benchmark._MAX_TORCH_SEED - 1) < benchmark._MAX_TORCH_SEED
 
 
 def test_run_benchmark_and_aggregation() -> None:
