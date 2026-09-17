@@ -19,27 +19,53 @@ def _problem(input_dim: int = 24):
     return bounds, PosteriorMean(model)
 
 
-def test_default_candidate_budget_matches_botorch_baxus_schedule() -> None:
-    small_bounds, _ = _problem(input_dim=6)
-    medium_bounds, _ = _problem(input_dim=15)
-    large_bounds, _ = _problem(input_dim=30)
-
-    small = BAxUSThompsonSamplingStrategy(
-        small_bounds,
-        state=BAxUSState(dim=6, eval_budget=20, target_dim=2),
+def test_default_candidate_budget_tracks_current_target_dimension() -> None:
+    bounds, _ = _problem(input_dim=30)
+    small_target = BAxUSThompsonSamplingStrategy(
+        bounds,
+        state=BAxUSState(dim=30, eval_budget=40, target_dim=2),
     )
-    medium = BAxUSThompsonSamplingStrategy(
-        medium_bounds,
-        state=BAxUSState(dim=15, eval_budget=20, target_dim=2),
+    medium_target = BAxUSThompsonSamplingStrategy(
+        bounds,
+        state=BAxUSState(dim=30, eval_budget=40, target_dim=15),
     )
-    large = BAxUSThompsonSamplingStrategy(
-        large_bounds,
-        state=BAxUSState(dim=30, eval_budget=20, target_dim=2),
+    full_target = BAxUSThompsonSamplingStrategy(
+        bounds,
+        state=BAxUSState(dim=30, eval_budget=40, target_dim=30),
     )
 
-    assert small.n_candidates == 2000
-    assert medium.n_candidates == 3000
-    assert large.n_candidates == 5000
+    assert small_target.n_candidates == 2000
+    assert medium_target.n_candidates == 3000
+    assert full_target.n_candidates == 5000
+
+
+def test_default_candidate_budget_updates_after_subspace_expansion() -> None:
+    bounds, _ = _problem(input_dim=30)
+    strategy = BAxUSThompsonSamplingStrategy(
+        bounds,
+        state=BAxUSState(dim=30, eval_budget=40, target_dim=2, restart_triggered=True),
+        seed=3,
+    )
+
+    assert strategy.n_candidates == 2000
+    strategy.expand_subspace()
+
+    assert strategy.target_dim == 8
+    assert strategy.n_candidates == 2000
+
+
+def test_explicit_candidate_budget_stays_fixed_across_expansion() -> None:
+    bounds, _ = _problem(input_dim=30)
+    strategy = BAxUSThompsonSamplingStrategy(
+        bounds,
+        state=BAxUSState(dim=30, eval_budget=40, target_dim=2, restart_triggered=True),
+        seed=3,
+        n_candidates=64,
+    )
+
+    strategy.expand_subspace()
+
+    assert strategy.n_candidates == 64
 
 
 def test_candidate_pool_uses_sparse_trust_region_perturbations() -> None:
