@@ -50,7 +50,6 @@ class BatchBOResult:
     optimization_time: float
 
 
-
 @dataclass(frozen=True)
 class BatchBOAggregateResult:
     """Repeated-seed summary for one strategy, dimension, q, and iteration."""
