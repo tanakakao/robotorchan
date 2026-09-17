@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, replace
 from time import perf_counter
 from typing import Any
@@ -47,19 +48,18 @@ def update_turbo_state(
     *,
     relative_improvement: float = 1e-3,
 ) -> TuRBOState:
-    """Return the next TuRBO state after observing objective values.
-
-    The state is immutable so callers explicitly retain the returned state. An
-    improvement is measured against the best objective value seen previously.
-    """
+    """Return the next TuRBO state after observing objective values."""
     if values.numel() < 1:
         raise ValueError("values must contain at least one observation.")
     if relative_improvement < 0:
         raise ValueError("relative_improvement must be non-negative.")
 
     candidate_best = float(values.max().item())
-    threshold = relative_improvement * max(1.0, abs(state.best_value))
-    success = candidate_best > state.best_value + threshold
+    if math.isfinite(state.best_value):
+        threshold = relative_improvement * max(1.0, abs(state.best_value))
+        success = candidate_best > state.best_value + threshold
+    else:
+        success = True
 
     success_counter = state.success_counter + 1 if success else 0
     failure_counter = 0 if success else state.failure_counter + 1
@@ -85,23 +85,16 @@ def update_turbo_state(
 class TuRBOStrategy(SearchStrategy):
     """Optimize an acquisition function inside a stateful TuRBO trust region.
 
-    The strategy owns the geometric search state but never evaluates the true
-    objective. After evaluating returned candidates, callers update the state
-    with :meth:`update_state` and the observed objective values.
-
-    Args:
-        bounds: Public/original-space box bounds with shape ``[2, d]``.
-        state: Initial TuRBO state. A default state is created when omitted.
-        num_restarts: Number of acquisition optimization restarts.
-        raw_samples: Number of raw samples used to initialize restarts.
-        options: Optional options forwarded to ``optimize_acqf``.
-        sequential: Whether to optimize a q-batch sequentially.
+    The incumbent is maintained explicitly in public/original input space. This
+    keeps the strategy independent from the surrogate's internal representation,
+    including reduced-space surrogate models.
     """
 
     def __init__(
         self,
         bounds: Tensor,
         *,
+        center: Tensor,
         state: TuRBOState | None = None,
         num_restarts: int = 10,
         raw_samples: int = 512,
@@ -113,36 +106,51 @@ class TuRBOStrategy(SearchStrategy):
             raise ValueError("num_restarts must be at least 1.")
         if raw_samples < 1:
             raise ValueError("raw_samples must be at least 1.")
+        self.center = self._validate_center(center)
         self.state = TuRBOState() if state is None else state
         self.num_restarts = num_restarts
         self.raw_samples = raw_samples
         self.options = None if options is None else dict(options)
         self.sequential = sequential
 
-    def trust_region_bounds(self, center: Tensor) -> Tensor:
-        """Return feasible trust-region bounds centered on ``center``."""
+    def _validate_center(self, center: Tensor) -> Tensor:
+        center = center.to(dtype=self.bounds.dtype, device=self.bounds.device)
         if center.shape != (self.input_dim,):
             raise ValueError("center must have shape [input_dim].")
         if torch.any(center < self.bounds[0]) or torch.any(center > self.bounds[1]):
             raise ValueError("center must lie inside bounds.")
+        return center.detach().clone()
 
+    def trust_region_bounds(self, center: Tensor | None = None) -> Tensor:
+        """Return feasible trust-region bounds around the current incumbent."""
+        current_center = self.center if center is None else self._validate_center(center)
         half_width = 0.5 * self.state.length * (self.bounds[1] - self.bounds[0])
-        lower = torch.maximum(center - half_width, self.bounds[0])
-        upper = torch.minimum(center + half_width, self.bounds[1])
+        lower = torch.maximum(current_center - half_width, self.bounds[0])
+        upper = torch.minimum(current_center + half_width, self.bounds[1])
         return torch.stack([lower, upper])
 
     def update_state(
         self,
         values: Tensor,
         *,
+        candidates: Tensor | None = None,
         relative_improvement: float = 1e-3,
     ) -> TuRBOState:
-        """Update and return the persistent state from observed objective values."""
-        self.state = update_turbo_state(
+        """Update state and move the incumbent to the best improving candidate."""
+        previous_best = self.state.best_value
+        next_state = update_turbo_state(
             self.state,
             values,
             relative_improvement=relative_improvement,
         )
+        if candidates is not None:
+            if candidates.ndim != 2 or candidates.shape != (values.numel(), self.input_dim):
+                raise ValueError("candidates must have shape [values.numel(), input_dim].")
+            best_index = values.reshape(-1).argmax()
+            candidate_best = float(values.reshape(-1)[best_index].item())
+            if candidate_best > previous_best:
+                self.center = self._validate_center(candidates[best_index])
+        self.state = next_state
         return self.state
 
     def optimize(
@@ -157,8 +165,7 @@ class TuRBOStrategy(SearchStrategy):
         if self.state.restart_triggered:
             raise RuntimeError("TuRBO restart is required before further optimization.")
 
-        center = self._select_center(acq_function)
-        trust_bounds = self.trust_region_bounds(center)
+        trust_bounds = self.trust_region_bounds()
         start = perf_counter()
         candidates, acquisition_value = optimize_acqf(
             acq_function=acq_function,
@@ -176,24 +183,10 @@ class TuRBOStrategy(SearchStrategy):
             acquisition_value=acquisition_value,
             optimization_time=elapsed,
             metadata={
-                "trust_region_center": center.detach(),
+                "trust_region_center": self.center.detach().clone(),
                 "trust_region_bounds": trust_bounds.detach(),
                 "trust_region_length": self.state.length,
                 "success_counter": self.state.success_counter,
                 "failure_counter": self.state.failure_counter,
             },
         )
-
-    def _select_center(self, acq_function: AcquisitionFunction) -> Tensor:
-        model = getattr(acq_function, "model", None)
-        train_inputs = getattr(model, "train_inputs", None)
-        train_targets = getattr(model, "train_targets", None)
-        if not train_inputs or train_targets is None:
-            raise ValueError("TuRBOStrategy requires an acquisition model with training data.")
-
-        train_X = train_inputs[0]
-        if train_X.ndim != 2 or train_X.shape[-1] != self.input_dim:
-            raise ValueError("TuRBOStrategy requires original-space two-dimensional train_X.")
-        scores = train_targets.reshape(train_X.shape[0], -1).mean(dim=-1)
-        center = train_X[scores.argmax()]
-        return center.detach().to(dtype=self.bounds.dtype, device=self.bounds.device)
