@@ -21,3 +21,12 @@ min(5000, max(2000, 200 * target_dim))
 BAxUS 系には `n_iterations * q` を初期設計後の評価予算として渡す。batch 内の全 candidate と objective value を target-space history へ戻し、restart 条件を満たした場合は nested sparse embedding を拡張する。
 
 探索時間は `SearchResult` ではなく benchmark 側で `strategy.optimize(...)` の前後を計測する。
+
+
+## 比較・集計の契約
+
+複数 strategy の比較では、同じ `input_dim` と `seed` に対して同じ初期データ生成規則を使用する。`run_benchmark()` は strategy × input dimension × seed の共通グリッドを実行し、個別 strategy ごとに異なる問題設定を作らない。
+
+`aggregate_results()` は `strategy / input_dim / iteration / q` ごとに repeated-seed 結果を集約する。`q` や iteration の異なる結果を同じ平均へ混ぜない。比較指標は batch best、best observed、simple regret、search optimization time とする。
+
+なお BAxUS-TS は posterior Thompson sampling による candidate selection であり、qLogEI を直接最大化する strategy ではない。そのためこの batch benchmark は「同一 surrogate / 同一 objective / 同一観測予算下の BO policy 比較」であり、純粋な acquisition optimizer の性能比較とは区別する。
