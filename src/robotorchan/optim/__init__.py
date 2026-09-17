@@ -5,6 +5,7 @@ from robotorchan.optim.embedding import (
     BAxUSState,
     BAxUSStrategy,
     BAxUSThompsonSamplingStrategy,
+    HeSBOStrategy,
     REMBOStrategy,
     update_baxus_state,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "BAxUSState",
     "BAxUSStrategy",
     "BAxUSThompsonSamplingStrategy",
+    "HeSBOStrategy",
     "LatentReconstruction",
     "LatentSpaceStrategy",
     "OriginalSpaceStrategy",
