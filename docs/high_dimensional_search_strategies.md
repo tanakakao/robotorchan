@@ -111,7 +111,7 @@ result = strategy.optimize(acq_function, q=1)
 
 `benchmarks/high_dimensional_acqf_optimization.py` は連続獲得関数最適化そのものを比較する。`OriginalSpace`、`RandomSearch`、`REMBO`、`HeSBO` は同一の fitted original-space `SingleTaskGP` と同一の `PosteriorMean` に対して比較し、モデル差ではなく search strategy の差を測る。REMBO と HeSBO には同じ `embedding_dim` を与える一方、problem generation、RandomSearch、REMBO、HeSBO の乱数 stream は互いに分離する。
 
-`benchmarks/high_dimensional_sequential_bo.py` は逐次 BO の simple regret と探索時間を比較する。
+`benchmarks/high_dimensional_sequential_bo.py` は逐次 BO の simple regret と探索時間を比較する。固定 embedding の `REMBO` と `HeSBO` は strategy 生成時に embedding を固定し、BO iteration ごとに再生成しない。両者とも original-space `SingleTaskGP` と各反復の `LogExpectedImprovement` を共有するため、逐次 BO でも surrogate の違いではなく search strategy の違いとして比較する。
 モデル性能と探索戦略性能を混同しないため、探索戦略比較では同じ surrogate / acquisition を使うことを原則とする。
 BAxUS には `n_iterations` を初期設計後の評価予算として渡し、target dimension を評価予算から導出する。
 探索時間はライブラリの戻り値ではなく、benchmark 側で外部計測する。

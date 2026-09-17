@@ -11,6 +11,7 @@ from botorch.acquisition.analytic import LogExpectedImprovement
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim import (
     BAxUSStrategy,
+    HeSBOStrategy,
     PCAReconstruction,
     RandomProjectionReconstruction,
     REMBOStrategy,
@@ -74,9 +75,12 @@ def test_stateful_strategies_start_from_initial_observations() -> None:
         eval_budget=20,
     )
     rembo = benchmark._make_strategy("REMBO", bounds, train_X, train_Y, **kwargs)
+    hesbo = benchmark._make_strategy("HeSBO", bounds, train_X, train_Y, **kwargs)
     turbo = benchmark._make_strategy("TuRBO", bounds, train_X, train_Y, **kwargs)
     baxus = benchmark._make_strategy("BAxUS", bounds, train_X, train_Y, **kwargs)
     assert isinstance(rembo, REMBOStrategy)
+    assert isinstance(hesbo, HeSBOStrategy)
+    assert hesbo.embedding.shape == (6, 2)
     assert isinstance(turbo, TuRBOStrategy)
     assert isinstance(baxus, BAxUSStrategy)
     torch.testing.assert_close(turbo.center, expected_center)
@@ -165,6 +169,27 @@ def test_rembo_runs_with_logei() -> None:
     )
     assert len(rows) == 1
     assert rows[0].strategy == "REMBO"
+
+
+def test_hesbo_runs_with_logei() -> None:
+    rows = benchmark.run_strategy(
+        "HeSBO",
+        6,
+        n_train=6,
+        n_iterations=1,
+        latent_dim=2,
+        random_samples=8,
+        num_restarts=1,
+        raw_samples=8,
+        seed=4,
+    )
+    assert len(rows) == 1
+    assert rows[0].strategy == "HeSBO"
+
+
+def test_strategy_names_include_fixed_embedding_methods() -> None:
+    assert "REMBO" in benchmark.STRATEGY_NAMES
+    assert "HeSBO" in benchmark.STRATEGY_NAMES
 
 
 def test_aggregate_results_groups_iterations() -> None:
