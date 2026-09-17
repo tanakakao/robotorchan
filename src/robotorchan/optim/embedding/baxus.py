@@ -16,30 +16,76 @@ from robotorchan.optim.base import SearchResult, SearchStrategy
 
 @dataclass(frozen=True)
 class BAxUSState:
-    """Persistent state for adaptive subspace expansion."""
+    """Persistent evaluation-budget-aware state for BAxUS."""
 
-    target_dim: int
+    dim: int
+    eval_budget: int
+    new_bins_on_split: int = 3
+    target_dim: int | None = None
     length: float = 0.8
+    length_init: float = 0.8
     length_min: float = 0.5**7
     length_max: float = 1.6
     success_counter: int = 0
     failure_counter: int = 0
     success_tolerance: int = 3
-    failure_tolerance: int = 4
     best_value: float = float("-inf")
     restart_triggered: bool = False
 
     def __post_init__(self) -> None:
-        if self.target_dim < 1:
-            raise ValueError("target_dim must be at least 1.")
-        if not 0 < self.length_min <= self.length_max:
-            raise ValueError("BAxUS lengths must satisfy 0 < length_min <= length_max.")
+        if self.dim < 1:
+            raise ValueError("dim must be at least 1.")
+        if self.eval_budget < 1:
+            raise ValueError("eval_budget must be at least 1.")
+        if self.new_bins_on_split < 1:
+            raise ValueError("new_bins_on_split must be at least 1.")
+        if not 0 < self.length_min <= self.length_init <= self.length_max:
+            raise ValueError(
+                "BAxUS lengths must satisfy 0 < length_min <= length_init <= length_max."
+            )
         if self.length <= 0 or self.length > self.length_max:
             raise ValueError("length must satisfy 0 < length <= length_max.")
         if self.length < self.length_min and not self.restart_triggered:
             raise ValueError("length below length_min requires restart_triggered=True.")
-        if self.success_tolerance < 1 or self.failure_tolerance < 1:
-            raise ValueError("success_tolerance and failure_tolerance must be at least 1.")
+        if self.success_tolerance < 1:
+            raise ValueError("success_tolerance must be at least 1.")
+        if self.target_dim is None:
+            object.__setattr__(self, "target_dim", self.initial_target_dim)
+        elif self.target_dim < 1 or self.target_dim > self.dim:
+            raise ValueError("target_dim must be between 1 and dim.")
+
+    @property
+    def n_splits(self) -> int:
+        """Number of nested expansion levels implied by the ambient dimension."""
+        if self.dim == 1:
+            return 0
+        return round(math.log(self.dim, self.new_bins_on_split + 1))
+
+    @property
+    def initial_target_dim(self) -> int:
+        """Choose the BAxUS initial target dimension from the expansion schedule."""
+        scale = (self.new_bins_on_split + 1) ** self.n_splits
+        candidates = range(1, self.new_bins_on_split + 1)
+        return min(candidates, key=lambda value: abs(value * scale - self.dim))
+
+    @property
+    def split_budget(self) -> int:
+        """Evaluation budget allocated to the current target-space level."""
+        denominator = self.initial_target_dim * (
+            1 - (self.new_bins_on_split + 1) ** (self.n_splits + 1)
+        )
+        budget = round(
+            -(self.new_bins_on_split * self.eval_budget * self.target_dim) / denominator
+        )
+        return max(1, budget)
+
+    @property
+    def failure_tolerance(self) -> int:
+        """Dynamic failure tolerance for the current target dimensionality."""
+        if self.target_dim == self.dim:
+            return self.target_dim
+        shrink_steps = math.floor(math.log(self.length_min / self.length_init, 0.5))
+        return min(self.target_dim, max(1, math.floor(self.split_budget / shrink_steps)))
 
 
 def update_baxus_state(
@@ -56,7 +102,7 @@ def update_baxus_state(
 
     candidate_best = float(values.max().item())
     if math.isfinite(state.best_value):
-        threshold = relative_improvement * max(1.0, abs(state.best_value))
+        threshold = relative_improvement * abs(state.best_value)
         success = candidate_best > state.best_value + threshold
     else:
         success = True
@@ -92,38 +138,25 @@ class _BAxUSAcquisition(AcquisitionFunction):
 
 
 class BAxUSStrategy(SearchStrategy):
-    """Optimize acquisitions with a sparse embedding that expands by bin splitting.
-
-    Each original input dimension belongs to exactly one target-space bin with a
-    random sign. On expansion, every splittable target bin is partitioned into
-    up to ``new_bins_on_split + 1`` child bins, matching the nested BAxUS
-    embedding construction.
-    """
+    """Optimize acquisitions with an evaluation-budget-aware BAxUS state."""
 
     def __init__(
         self,
         bounds: Tensor,
         *,
-        initial_target_dim: int = 1,
-        new_bins_on_split: int = 3,
+        state: BAxUSState,
         seed: int | None = None,
-        state: BAxUSState | None = None,
         num_restarts: int = 10,
         raw_samples: int = 512,
         options: dict[str, Any] | None = None,
         sequential: bool = False,
     ) -> None:
         super().__init__(bounds)
-        if initial_target_dim < 1 or initial_target_dim > self.input_dim:
-            raise ValueError("initial_target_dim must be between 1 and input_dim.")
-        if new_bins_on_split < 1:
-            raise ValueError("new_bins_on_split must be at least 1.")
+        if state.dim != self.input_dim:
+            raise ValueError("state.dim must equal input_dim.")
         if num_restarts < 1 or raw_samples < 1:
             raise ValueError("num_restarts and raw_samples must be at least 1.")
-        if state is not None and state.target_dim != initial_target_dim:
-            raise ValueError("state.target_dim must equal initial_target_dim.")
 
-        self.new_bins_on_split = new_bins_on_split
         self.num_restarts = num_restarts
         self.raw_samples = raw_samples
         self.options = None if options is None else dict(options)
@@ -133,8 +166,8 @@ class BAxUSStrategy(SearchStrategy):
             self._generator.seed()
         else:
             self._generator.manual_seed(seed)
-        self.embedding = self._new_sparse_embedding(initial_target_dim)
-        self.state = BAxUSState(target_dim=initial_target_dim) if state is None else state
+        self.state = state
+        self.embedding = self._new_sparse_embedding(state.target_dim)
 
     @property
     def target_dim(self) -> int:
@@ -202,7 +235,7 @@ class BAxUSStrategy(SearchStrategy):
                 generator=self._generator,
             )
             shuffled = members[order]
-            n_groups = min(self.new_bins_on_split + 1, members.numel())
+            n_groups = min(self.state.new_bins_on_split + 1, members.numel())
             groups = torch.tensor_split(shuffled, n_groups)
             for group in groups[1:]:
                 child = torch.zeros_like(column)
@@ -232,14 +265,13 @@ class BAxUSStrategy(SearchStrategy):
         if expanded.shape[-1] == self.target_dim:
             return False
         self.embedding = expanded
-        self.state = BAxUSState(
+        self.state = replace(
+            self.state,
             target_dim=self.target_dim,
-            length=0.8,
-            length_min=self.state.length_min,
-            length_max=self.state.length_max,
-            success_tolerance=self.state.success_tolerance,
-            failure_tolerance=self.state.failure_tolerance,
-            best_value=self.state.best_value,
+            length=self.state.length_init,
+            success_counter=0,
+            failure_counter=0,
+            restart_triggered=False,
         )
         return True
 
@@ -284,6 +316,8 @@ class BAxUSStrategy(SearchStrategy):
                 "target_candidates": Z.detach(),
                 "target_dim": self.target_dim,
                 "trust_region_length": self.state.length,
+                "failure_tolerance": self.state.failure_tolerance,
+                "split_budget": self.state.split_budget,
                 "embedding": self.embedding.detach().clone(),
             },
         )
