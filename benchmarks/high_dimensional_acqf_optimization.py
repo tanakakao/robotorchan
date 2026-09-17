@@ -18,6 +18,9 @@ from torch import Tensor
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim import OriginalSpaceStrategy, RandomSearchStrategy, SearchStrategy
 
+_SEARCH_SEED_OFFSET = 1_000_003
+_MAX_TORCH_SEED = 2**63 - 1
+
 
 @dataclass(frozen=True)
 class AcqfOptimizationResult:
@@ -53,6 +56,11 @@ def objective(X: Tensor) -> Tensor:
         raise ValueError("input dimension must be at least 5")
     active = X[..., :5]
     return -((active - 0.75).square().sum(dim=-1, keepdim=True))
+
+
+def _search_seed(problem_seed: int) -> int:
+    """Derive a deterministic search seed independent from problem generation."""
+    return (problem_seed + _SEARCH_SEED_OFFSET) % _MAX_TORCH_SEED
 
 
 def make_problem(
@@ -91,7 +99,7 @@ def strategy_factories(
     raw_samples: int,
     seed: int,
 ) -> dict[str, SearchStrategy]:
-    """Build strategies with comparable public-space bounds."""
+    """Build strategies with comparable public-space bounds and independent RNG."""
     return {
         "OriginalSpace": OriginalSpaceStrategy(
             bounds,
@@ -101,7 +109,7 @@ def strategy_factories(
         "RandomSearch": RandomSearchStrategy(
             bounds,
             num_samples=random_samples,
-            seed=seed,
+            seed=_search_seed(seed),
         ),
     }
 
