@@ -1,6 +1,7 @@
 """Acquisition-function optimization and search-strategy interfaces."""
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
+from robotorchan.optim.embedding import REMBOStrategy
 from robotorchan.optim.latent import (
     LatentReconstruction,
     LatentSpaceStrategy,
@@ -17,6 +18,7 @@ __all__ = [
     "PCAReconstruction",
     "RandomProjectionReconstruction",
     "RandomSearchStrategy",
+    "REMBOStrategy",
     "SearchResult",
     "SearchStrategy",
 ]
