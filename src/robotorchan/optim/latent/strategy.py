@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from time import perf_counter
 from typing import Any
 
 import torch
@@ -89,7 +88,6 @@ class LatentSpaceStrategy(SearchStrategy):
             reconstruction=self.reconstruction,
             bounds=self.bounds,
         )
-        start = perf_counter()
         latent_candidates, _ = optimize_acqf(
             acq_function=latent_acq,
             bounds=self.latent_bounds,
@@ -99,7 +97,6 @@ class LatentSpaceStrategy(SearchStrategy):
             options=self.options,
             sequential=self.sequential,
         )
-        elapsed = perf_counter() - start
 
         reconstructed = self.reconstruction.reconstruct(latent_candidates)
         candidates = torch.maximum(reconstructed, self.bounds[0])
@@ -114,7 +111,6 @@ class LatentSpaceStrategy(SearchStrategy):
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
-            optimization_time=elapsed,
             metadata={
                 "latent_candidates": latent_candidates.detach(),
                 "reconstructed_candidates": reconstructed.detach(),

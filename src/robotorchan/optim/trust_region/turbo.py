@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, replace
-from time import perf_counter
 from typing import Any
 
 import torch
@@ -166,7 +165,6 @@ class TuRBOStrategy(SearchStrategy):
             raise RuntimeError("TuRBO restart is required before further optimization.")
 
         trust_bounds = self.trust_region_bounds()
-        start = perf_counter()
         candidates, acquisition_value = optimize_acqf(
             acq_function=acq_function,
             bounds=trust_bounds,
@@ -176,12 +174,10 @@ class TuRBOStrategy(SearchStrategy):
             options=self.options,
             sequential=self.sequential,
         )
-        elapsed = perf_counter() - start
 
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
-            optimization_time=elapsed,
             metadata={
                 "trust_region_center": self.center.detach().clone(),
                 "trust_region_bounds": trust_bounds.detach(),

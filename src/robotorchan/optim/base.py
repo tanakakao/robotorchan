@@ -29,8 +29,6 @@ class SearchResult:
         acquisition_value: Acquisition value associated with the selected
             candidates when the strategy computes one. Strategies that do not
             expose a meaningful acquisition value may return ``None``.
-        optimization_time: Wall-clock time spent selecting candidates in
-            seconds. This excludes surrogate construction and fitting.
         metadata: Strategy-specific diagnostics. Stable public information
             belongs in explicit fields; this mapping is reserved for optional
             diagnostics such as restart counts or latent reconstruction error.
@@ -38,14 +36,11 @@ class SearchResult:
 
     candidates: Tensor
     acquisition_value: Tensor | None
-    optimization_time: float
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.candidates.ndim < 2:
             raise ValueError("candidates must have shape [..., q, d].")
-        if self.optimization_time < 0:
-            raise ValueError("optimization_time must be non-negative.")
 
 
 class SearchStrategy(ABC):

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from time import perf_counter
 from typing import Any
 
 from botorch.acquisition.acquisition import AcquisitionFunction
@@ -57,7 +56,6 @@ class OriginalSpaceStrategy(SearchStrategy):
         if q < 1:
             raise ValueError("q must be at least 1.")
 
-        start = perf_counter()
         candidates, acquisition_value = optimize_acqf(
             acq_function=acq_function,
             bounds=self.bounds,
@@ -67,11 +65,9 @@ class OriginalSpaceStrategy(SearchStrategy):
             options=self.options,
             sequential=self.sequential,
         )
-        elapsed = perf_counter() - start
 
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
-            optimization_time=elapsed,
             metadata={},
         )

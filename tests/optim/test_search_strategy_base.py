@@ -21,7 +21,6 @@ class DummySearchStrategy(SearchStrategy):
         return SearchResult(
             candidates=candidates,
             acquisition_value=None,
-            optimization_time=0.0,
         )
 
 
@@ -55,17 +54,20 @@ def test_search_result_requires_candidate_matrix() -> None:
         SearchResult(
             candidates=torch.zeros(3),
             acquisition_value=None,
-            optimization_time=0.0,
         )
 
 
-def test_search_result_rejects_negative_optimization_time() -> None:
-    with pytest.raises(ValueError, match="optimization_time"):
-        SearchResult(
-            candidates=torch.zeros(1, 3),
-            acquisition_value=None,
-            optimization_time=-1.0,
-        )
+def test_search_result_contains_only_search_outputs() -> None:
+    result = SearchResult(
+        candidates=torch.zeros(1, 3),
+        acquisition_value=None,
+    )
+
+    assert set(result.__dataclass_fields__) == {
+        "candidates",
+        "acquisition_value",
+        "metadata",
+    }
 
 
 def test_dummy_strategy_returns_public_space_candidates() -> None:
@@ -74,5 +76,4 @@ def test_dummy_strategy_returns_public_space_candidates() -> None:
     result = strategy.optimize(None, q=3)  # type: ignore[arg-type]
 
     assert result.candidates.shape == torch.Size([3, 2])
-    assert result.optimization_time == 0.0
     assert result.metadata == {}

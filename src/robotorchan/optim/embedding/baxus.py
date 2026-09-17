@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, replace
-from time import perf_counter
 from typing import Any
 
 import torch
@@ -217,7 +216,6 @@ class BAxUSStrategy(SearchStrategy):
             raise RuntimeError("BAxUS subspace expansion is required before optimization.")
 
         embedded_acq = _BAxUSAcquisition(acq_function, self)
-        start = perf_counter()
         Z, _ = optimize_acqf(
             acq_function=embedded_acq,
             bounds=self.target_bounds,
@@ -227,7 +225,6 @@ class BAxUSStrategy(SearchStrategy):
             options=self.options,
             sequential=self.sequential,
         )
-        elapsed = perf_counter() - start
         candidates = self.project(Z)
         with torch.no_grad():
             acquisition_value = acq_function(candidates)
@@ -235,7 +232,6 @@ class BAxUSStrategy(SearchStrategy):
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
-            optimization_time=elapsed,
             metadata={
                 "target_candidates": Z.detach(),
                 "target_dim": self.target_dim,
