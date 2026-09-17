@@ -71,9 +71,7 @@ class BAxUSState:
         denominator = self.initial_target_dim * (
             1 - (self.new_bins_on_split + 1) ** (self.n_splits + 1)
         )
-        budget = round(
-            -(self.new_bins_on_split * self.eval_budget * self.target_dim) / denominator
-        )
+        budget = round(-(self.new_bins_on_split * self.eval_budget * self.target_dim) / denominator)
         return max(1, budget)
 
     @property
@@ -160,9 +158,7 @@ class BAxUSStrategy(SearchStrategy):
             self._generator.manual_seed(seed)
         self.state = state
         self.embedding = self._new_sparse_embedding(state.target_dim)
-        self.target_X = torch.empty(
-            0, state.target_dim, dtype=bounds.dtype, device=bounds.device
-        )
+        self.target_X = torch.empty(0, state.target_dim, dtype=bounds.dtype, device=bounds.device)
         self.target_Y = torch.empty(0, dtype=bounds.dtype, device=bounds.device)
 
     @property
@@ -173,9 +169,7 @@ class BAxUSStrategy(SearchStrategy):
     def target_center(self) -> Tensor:
         """Return the best observed target point, or the origin before feedback."""
         if self.target_Y.numel() == 0:
-            return torch.zeros(
-                self.target_dim, dtype=self.bounds.dtype, device=self.bounds.device
-            )
+            return torch.zeros(self.target_dim, dtype=self.bounds.dtype, device=self.bounds.device)
         return self.target_X[self.target_Y.argmax()]
 
     @property
@@ -242,9 +236,7 @@ class BAxUSStrategy(SearchStrategy):
 
     def _split_embedding(self) -> tuple[Tensor, Tensor]:
         """Split bins and return the parent coordinate for every resulting bin."""
-        columns = [
-            self.embedding[:, index].clone() for index in range(self.target_dim)
-        ]
+        columns = [self.embedding[:, index].clone() for index in range(self.target_dim)]
         new_columns: list[Tensor] = []
         parents = list(range(self.target_dim))
         for source, column in enumerate(columns):
@@ -263,9 +255,7 @@ class BAxUSStrategy(SearchStrategy):
                 columns[source][group] = 0
                 new_columns.append(child)
                 parents.append(source)
-        parent_indices = torch.tensor(
-            parents, dtype=torch.long, device=self.bounds.device
-        )
+        parent_indices = torch.tensor(parents, dtype=torch.long, device=self.bounds.device)
         return torch.stack(columns + new_columns, dim=-1), parent_indices
 
     def project(self, Z: Tensor) -> Tensor:
@@ -311,21 +301,15 @@ class BAxUSStrategy(SearchStrategy):
         if candidates.ndim != 2 or candidates.shape[-1] != self.target_dim:
             raise ValueError("target_candidates must have shape [n, target_dim].")
         if candidates.shape[0] != flat_values.numel():
-            raise ValueError(
-                "target_candidates and values must contain the same number of rows."
-            )
+            raise ValueError("target_candidates and values must contain the same number of rows.")
         self.target_X = torch.cat([self.target_X, candidates], dim=0)
-        self.target_Y = torch.cat(
-            [self.target_Y, flat_values.to(self.target_Y)], dim=0
-        )
+        self.target_Y = torch.cat([self.target_Y, flat_values.to(self.target_Y)], dim=0)
         self.state = update_baxus_state(
             self.state, values, relative_improvement=relative_improvement
         )
         return self.state
 
-    def optimize(
-        self, acq_function: AcquisitionFunction, *, q: int = 1
-    ) -> SearchResult:
+    def optimize(self, acq_function: AcquisitionFunction, *, q: int = 1) -> SearchResult:
         if q < 1:
             raise ValueError("q must be at least 1.")
         if self.state.restart_triggered:
