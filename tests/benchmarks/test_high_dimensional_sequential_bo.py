@@ -12,8 +12,8 @@ from robotorchan.models import SingleTaskGP
 from robotorchan.optim import (
     BAxUSStrategy,
     PCAReconstruction,
-    REMBOStrategy,
     RandomProjectionReconstruction,
+    REMBOStrategy,
     TuRBOStrategy,
 )
 
