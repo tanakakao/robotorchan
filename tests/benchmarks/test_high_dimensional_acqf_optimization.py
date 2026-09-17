@@ -50,7 +50,7 @@ def test_run_benchmark_and_aggregation() -> None:
 
 
 def test_benchmark_validates_inputs() -> None:
-    with pytest.raises(ValueError, match="input dimension"):
+    with pytest.raises(ValueError, match="input_dim must be at least 5"):
         benchmark.make_problem(4, n_train=8, seed=0)
     with pytest.raises(ValueError, match="n_train"):
         benchmark.make_problem(5, n_train=1, seed=0)
