@@ -322,7 +322,11 @@ def main() -> None:
     parser.add_argument("--random-samples", type=int, default=4096)
     parser.add_argument("--num-restarts", type=int, default=10)
     parser.add_argument("--raw-samples", type=int, default=512)
-    parser.add_argument("--output", type=Path, default=Path("benchmark_results/high_dimensional_sequential_bo.csv"))
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("benchmark_results/high_dimensional_sequential_bo.csv"),
+    )
     parser.add_argument(
         "--summary-output",
         type=Path,
