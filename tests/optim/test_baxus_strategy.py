@@ -93,12 +93,7 @@ def test_expansion_splits_every_splittable_parent_bin() -> None:
     assert torch.all(strategy.embedding.ne(0).sum(dim=1) == 1)
     assert torch.all(strategy.embedding.ne(0).sum(dim=0) > 0)
     for parent in range(2):
-        child_bins = (
-            strategy.embedding[parent_assignment == parent]
-            .ne(0)
-            .to(torch.int64)
-            .argmax(dim=1)
-        )
+        child_bins = strategy.embedding[parent_assignment == parent].ne(0).to(torch.int64).argmax(dim=1)
         assert torch.unique(child_bins).numel() == 3
 
 
