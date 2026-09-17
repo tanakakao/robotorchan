@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+from collections import defaultdict
+from collections.abc import Sequence
 from dataclasses import dataclass
 from time import perf_counter
 
@@ -46,6 +48,26 @@ class BatchBOResult:
     best_observed: float
     simple_regret: float
     optimization_time: float
+
+
+
+@dataclass(frozen=True)
+class BatchBOAggregateResult:
+    """Repeated-seed summary for one strategy, dimension, q, and iteration."""
+
+    strategy: str
+    input_dim: int
+    iteration: int
+    q: int
+    n_seeds: int
+    batch_best_mean: float
+    batch_best_std: float
+    best_observed_mean: float
+    best_observed_std: float
+    simple_regret_mean: float
+    simple_regret_std: float
+    optimization_time_mean: float
+    optimization_time_std: float
 
 
 def objective(X: Tensor) -> Tensor:
@@ -239,6 +261,75 @@ def run_strategy(
             )
         )
     return results
+
+
+def run_benchmark(
+    strategy_names: Sequence[str],
+    input_dims: Sequence[int],
+    seeds: Sequence[int],
+    **kwargs: object,
+) -> list[BatchBOResult]:
+    """Run a common benchmark grid over strategies, dimensions, and seeds."""
+    if not strategy_names:
+        raise ValueError("strategy_names must contain at least one value")
+    if not input_dims:
+        raise ValueError("input_dims must contain at least one value")
+    if not seeds:
+        raise ValueError("seeds must contain at least one value")
+    unknown = set(strategy_names) - set(STRATEGY_NAMES)
+    if unknown:
+        raise ValueError(f"Unknown strategies: {sorted(unknown)}")
+
+    results: list[BatchBOResult] = []
+    for input_dim in input_dims:
+        for seed in seeds:
+            for name in strategy_names:
+                results.extend(
+                    run_strategy(
+                        name,
+                        int(input_dim),
+                        seed=int(seed),
+                        **kwargs,
+                    )
+                )
+    return results
+
+
+def aggregate_results(
+    results: Sequence[BatchBOResult],
+) -> list[BatchBOAggregateResult]:
+    """Aggregate repeated seeds without mixing dimensions, q, or iterations."""
+    if not results:
+        raise ValueError("results must contain at least one row")
+    groups: dict[tuple[str, int, int, int], list[BatchBOResult]] = defaultdict(list)
+    for result in results:
+        key = (result.strategy, result.input_dim, result.iteration, result.q)
+        groups[key].append(result)
+
+    summaries: list[BatchBOAggregateResult] = []
+    for (strategy, input_dim, iteration, q), rows in sorted(groups.items()):
+        batch_best = torch.tensor([row.batch_best for row in rows], dtype=torch.double)
+        best = torch.tensor([row.best_observed for row in rows], dtype=torch.double)
+        regret = torch.tensor([row.simple_regret for row in rows], dtype=torch.double)
+        timing = torch.tensor([row.optimization_time for row in rows], dtype=torch.double)
+        summaries.append(
+            BatchBOAggregateResult(
+                strategy=strategy,
+                input_dim=input_dim,
+                iteration=iteration,
+                q=q,
+                n_seeds=len(rows),
+                batch_best_mean=float(batch_best.mean()),
+                batch_best_std=float(batch_best.std(unbiased=False)),
+                best_observed_mean=float(best.mean()),
+                best_observed_std=float(best.std(unbiased=False)),
+                simple_regret_mean=float(regret.mean()),
+                simple_regret_std=float(regret.std(unbiased=False)),
+                optimization_time_mean=float(timing.mean()),
+                optimization_time_std=float(timing.std(unbiased=False)),
+            )
+        )
+    return summaries
 
 
 def main() -> None:
