@@ -102,7 +102,7 @@ class LatentSpaceStrategy(SearchStrategy):
         candidates = torch.maximum(reconstructed, self.bounds[0])
         candidates = torch.minimum(candidates, self.bounds[1])
         with torch.no_grad():
-            acquisition_value = acq_function(candidates)
+            acquisition_value = acq_function(candidates).reshape(())
 
         violation = (reconstructed - candidates).norm(dim=-1)
         projected_latent = self.reconstruction.transform(candidates)
