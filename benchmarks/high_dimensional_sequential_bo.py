@@ -15,7 +15,8 @@ from botorch.acquisition.analytic import PosteriorMean
 from botorch.fit import fit_gpytorch_mll
 from torch import Tensor
 
-from robotorchan.models import PCAGP, RandomProjectionGP, SingleTaskGP
+from robotorchan.models import SingleTaskGP
+from robotorchan.models.reduction import PCAInputReducer, RandomProjectionInputReducer
 from robotorchan.optim import (
     LatentSpaceStrategy,
     OriginalSpaceStrategy,
@@ -77,23 +78,35 @@ def make_initial_data(input_dim: int, *, n_train: int, seed: int) -> tuple[Tenso
     return train_X, train_Y, bounds
 
 
-def _fit_model(strategy: str, train_X: Tensor, train_Y: Tensor, latent_dim: int):
-    if strategy == "LatentPCA":
-        model = PCAGP(train_X, train_Y, n_components=latent_dim)
-    elif strategy == "LatentRandomProjection":
-        model = RandomProjectionGP(train_X, train_Y, n_components=latent_dim, random_state=17)
-    else:
-        model = SingleTaskGP(train_X, train_Y)
+def _fit_model(train_X: Tensor, train_Y: Tensor) -> SingleTaskGP:
+    """Fit the same original-space surrogate for every search strategy."""
+    model = SingleTaskGP(train_X, train_Y)
     fit_gpytorch_mll(model.make_mll())
     model.eval()
     return model
 
 
+def _make_latent_reconstruction(
+    name: str,
+    train_X: Tensor,
+    *,
+    latent_dim: int,
+):
+    """Fit a search-only reducer once from the common initial design."""
+    if name == "LatentPCA":
+        reducer = PCAInputReducer(latent_dim).fit(train_X)
+        return PCAReconstruction(reducer)
+    if name == "LatentRandomProjection":
+        reducer = RandomProjectionInputReducer(latent_dim, random_state=17).fit(train_X)
+        return RandomProjectionReconstruction(reducer)
+    return None
+
+
 def _make_strategy(
     name: str,
-    model,
     bounds: Tensor,
     *,
+    reconstruction,
     random_samples: int,
     num_restarts: int,
     raw_samples: int,
@@ -103,17 +116,12 @@ def _make_strategy(
         return OriginalSpaceStrategy(bounds, num_restarts=num_restarts, raw_samples=raw_samples)
     if name == "RandomSearch":
         return RandomSearchStrategy(bounds, num_samples=random_samples, seed=search_seed)
-    if name == "LatentPCA":
+    if name in {"LatentPCA", "LatentRandomProjection"}:
+        if reconstruction is None:
+            raise RuntimeError(f"{name} requires a fitted search reconstruction")
         return LatentSpaceStrategy(
             bounds,
-            PCAReconstruction(model.input_reducer),
-            num_restarts=num_restarts,
-            raw_samples=raw_samples,
-        )
-    if name == "LatentRandomProjection":
-        return LatentSpaceStrategy(
-            bounds,
-            RandomProjectionReconstruction(model.input_reducer),
+            reconstruction,
             num_restarts=num_restarts,
             raw_samples=raw_samples,
         )
@@ -132,25 +140,31 @@ def run_strategy(
     raw_samples: int = 512,
     seed: int = 0,
 ) -> list[SequentialBOResult]:
-    """Run a sequential BO trajectory from common initial observations."""
+    """Run a sequential BO trajectory from common initial observations.
+
+    All strategies use the same original-space ``SingleTaskGP``. Latent search
+    reducers are fitted once from the initial design and then frozen, so the
+    benchmark measures acquisition-search effects rather than surrogate-model
+    reduction effects.
+    """
     if n_iterations < 1:
         raise ValueError("n_iterations must be at least 1")
     if latent_dim < 1 or latent_dim > input_dim:
         raise ValueError("latent_dim must be between 1 and input_dim")
 
     train_X, train_Y, bounds = make_initial_data(input_dim, n_train=n_train, seed=seed)
+    reconstruction = _make_latent_reconstruction(name, train_X, latent_dim=latent_dim)
     optimum = 0.0
     results: list[SequentialBOResult] = []
 
     for iteration in range(1, n_iterations + 1):
-        model = _fit_model(name, train_X, train_Y, latent_dim)
+        model = _fit_model(train_X, train_Y)
         acquisition = PosteriorMean(model)
-        # Deliberately separate search RNG from initial-data RNG and BO iterations.
         search_seed = seed * 100_000 + iteration * 1_009 + 73
         strategy = _make_strategy(
             name,
-            model,
             bounds,
+            reconstruction=reconstruction,
             random_samples=random_samples,
             num_restarts=num_restarts,
             raw_samples=raw_samples,
