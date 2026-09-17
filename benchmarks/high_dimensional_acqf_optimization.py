@@ -178,7 +178,7 @@ def run_dimension(
         elapsed = perf_counter() - start
         candidate = search_result.candidates
         with torch.no_grad():
-            acq_value = float(acquisition(candidate.unsqueeze(-2)).squeeze())
+            acq_value = float(acquisition(candidate).reshape(()))
             objective_value = float(objective(candidate).squeeze())
         results.append(
             AcqfOptimizationResult(
