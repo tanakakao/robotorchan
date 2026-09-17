@@ -23,12 +23,12 @@ robotorchan では surrogate model と acquisition function と search strategy 
 ## BAxUS の使い方
 
 ```python
-strategy = BAxUSStrategy(
-    bounds,
-    initial_target_dim=2,
+state = BAxUSState(
+    dim=bounds.shape[-1],
+    eval_budget=100,
     new_bins_on_split=3,
-    seed=0,
 )
+strategy = BAxUSStrategy(bounds, state=state, seed=0)
 result = strategy.optimize(acq_function)
 y_new = objective(result.candidates)
 state = strategy.update_state(y_new)
@@ -37,12 +37,16 @@ if state.restart_triggered:
     strategy.expand_subspace()
 ```
 
+`BAxUSState` は ambient dimension `dim` と初期設計後に残っている `eval_budget` から、初期 target dimension と expansion schedule を決める。初期 target dimension を利用者が直接指定する方式は廃止した。`new_bins_on_split` も state が一元管理する。
+
+BoTorch の BAxUS tutorial と同様に、`n_splits`、`split_budget`、`failure_tolerance` を target dimension と評価予算から導出する。`failure_tolerance` は固定値ではなく、target space が拡張されると再計算される。full dimension に到達した場合は `failure_tolerance == dim` となる。
+
 `BAxUSStrategy` は目的関数を評価しない。目的関数評価後に `update_state()` を明示的に呼ぶ。
 初期 embedding では、各元入力次元を target-space のちょうど 1 bin に割り当て、係数を `+1` または `-1` とする sparse signed embedding を使う。bin の占有数は可能な限り均等化する。
 
-`new_bins_on_split` は BAxUS の 1 回の expansion で各 parent bin から追加できる child bin 数を表す。`expand_subspace()` は特定の大きな bin だけを分割するのではなく、メンバーを 2 個以上持つすべての parent bin を対象とし、それぞれを最大 `new_bins_on_split + 1` group に分割する。例えば target dimension 2、`new_bins_on_split=3` で各 parent に十分な入力次元があれば、1 回の expansion で target dimension は最大 8 になる。
+`new_bins_on_split` は BAxUS の 1 回の expansion で各 parent bin から追加できる child bin 数を表す。`expand_subspace()` はメンバーを 2 個以上持つすべての parent bin を対象とし、それぞれを最大 `new_bins_on_split + 1` group に分割する。分割後は `target_dim` を更新し、trust-region length と success / failure counter を初期状態へ戻す。一方、`best_value` と評価予算設定は保持する。
 
-分割時には各元入力次元の `+1/-1` sign と「必ず 1 bin のみに所属する」という sparse embedding の構造を保持する。このため expansion 前の探索空間を細分化する nested subspace として扱える。旧 `new_dimensions` API と、target dimension に固定個数の新しい列だけを足す処理は残していない。
+分割時には各元入力次元の `+1/-1` sign と「必ず 1 bin のみに所属する」という sparse embedding の構造を保持する。このため expansion 前の探索空間を細分化する nested subspace として扱える。旧 `initial_target_dim` / strategy 側 `new_bins_on_split` API、旧 `new_dimensions` API は残していない。
 
 ## 設計上の注意
 
@@ -59,4 +63,5 @@ if state.restart_triggered:
 `benchmarks/high_dimensional_acqf_optimization.py` は連続獲得関数最適化そのものを比較する。
 `benchmarks/high_dimensional_sequential_bo.py` は逐次 BO の simple regret と探索時間を比較する。
 モデル性能と探索戦略性能を混同しないため、探索戦略比較では同じ surrogate / acquisition を使うことを原則とする。
+BAxUS には `n_iterations` を初期設計後の評価予算として渡し、target dimension を評価予算から導出する。
 探索時間はライブラリの戻り値ではなく、benchmark 側で外部計測する。
