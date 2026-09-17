@@ -43,7 +43,7 @@ if state.restart_triggered:
 
 `BAxUSState` は ambient dimension `dim` と初期設計後に残っている `eval_budget` から、初期 target dimension と expansion schedule を決める。初期 target dimension を利用者が直接指定する方式は廃止した。`new_bins_on_split` も state が一元管理する。
 
-BoTorch の BAxUS tutorial と同様に、`n_splits`、`split_budget`、`failure_tolerance` を target dimension と評価予算から導出する。`failure_tolerance` は固定値ではなく、target space が拡張されると再計算される。full dimension に到達した場合は `failure_tolerance == dim` となる。
+BoTorch の BAxUS tutorial と同じ式で `n_splits`、初期 target dimension、`split_budget`、`failure_tolerance` を導出する。`split_budget` は式の丸め結果をそのまま保持し、小さい評価予算で 0 になる場合も人工的に 1 へ切り上げない。一方 `failure_tolerance` は tutorial と同様に最低 1 へ制限される。target space が拡張されるとこれらは現在の target dimension に対して再計算され、full dimension に到達した場合は `failure_tolerance == dim` となる。これらの式は複数の ambient dimension / evaluation budget に対する conformance test で固定する。
 
 `BAxUSStrategy` は目的関数を評価しない。目的関数評価後に、観測値と `SearchResult.metadata["target_candidates"]` を `update_state()` へ明示的に戻す。target-space の候補と目的値は strategy 内に履歴として保持され、最良の target-space 観測点が次回 trust region の中心になる。q-batch の場合も batch 内の各 target candidate と対応する観測値を同じ履歴へ保存する。
 

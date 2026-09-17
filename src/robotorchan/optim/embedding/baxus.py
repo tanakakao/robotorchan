@@ -71,8 +71,7 @@ class BAxUSState:
         denominator = self.initial_target_dim * (
             1 - (self.new_bins_on_split + 1) ** (self.n_splits + 1)
         )
-        budget = round(-(self.new_bins_on_split * self.eval_budget * self.target_dim) / denominator)
-        return max(1, budget)
+        return round(-(self.new_bins_on_split * self.eval_budget * self.target_dim) / denominator)
 
     @property
     def failure_tolerance(self) -> int:
