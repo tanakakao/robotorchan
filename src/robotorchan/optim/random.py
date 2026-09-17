@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from time import perf_counter
-
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
@@ -51,7 +49,6 @@ class RandomSearchStrategy(SearchStrategy):
         if q > self.num_samples:
             raise ValueError("q must not exceed num_samples.")
 
-        start = perf_counter()
         samples = self._sample_candidates()
         with torch.no_grad():
             values = acq_function(samples.unsqueeze(-2))
@@ -59,12 +56,10 @@ class RandomSearchStrategy(SearchStrategy):
         selected = torch.topk(scores, k=q, largest=True, sorted=True).indices
         candidates = samples[selected]
         acquisition_value = scores[selected]
-        elapsed = perf_counter() - start
 
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
-            optimization_time=elapsed,
             metadata={"num_samples": self.num_samples},
         )
 
