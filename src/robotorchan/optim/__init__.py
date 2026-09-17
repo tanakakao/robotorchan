@@ -3,6 +3,7 @@
 from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.latent import (
     LatentReconstruction,
+    LatentSpaceStrategy,
     PCAReconstruction,
     RandomProjectionReconstruction,
 )
@@ -11,6 +12,7 @@ from robotorchan.optim.random import RandomSearchStrategy
 
 __all__ = [
     "LatentReconstruction",
+    "LatentSpaceStrategy",
     "OriginalSpaceStrategy",
     "PCAReconstruction",
     "RandomProjectionReconstruction",
