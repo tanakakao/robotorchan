@@ -20,6 +20,7 @@ from robotorchan.models.reduction import PCAInputReducer, RandomProjectionInputR
 from robotorchan.optim import (
     BAxUSState,
     BAxUSStrategy,
+    HeSBOStrategy,
     LatentSpaceStrategy,
     OriginalSpaceStrategy,
     PCAReconstruction,
@@ -36,6 +37,7 @@ STRATEGY_NAMES = (
     "LatentPCA",
     "LatentRandomProjection",
     "REMBO",
+    "HeSBO",
     "TuRBO",
     "BAxUS",
 )
@@ -138,6 +140,14 @@ def _make_strategy(
         )
     if name == "REMBO":
         return REMBOStrategy(
+            bounds,
+            embedding_dim=latent_dim,
+            seed=search_seed,
+            num_restarts=num_restarts,
+            raw_samples=raw_samples,
+        )
+    if name == "HeSBO":
+        return HeSBOStrategy(
             bounds,
             embedding_dim=latent_dim,
             seed=search_seed,
