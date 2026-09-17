@@ -16,7 +16,12 @@ from botorch.fit import fit_gpytorch_mll
 from torch import Tensor
 
 from robotorchan.models import SingleTaskGP
-from robotorchan.optim import OriginalSpaceStrategy, RandomSearchStrategy, REMBOStrategy, SearchStrategy
+from robotorchan.optim import (
+    OriginalSpaceStrategy,
+    RandomSearchStrategy,
+    REMBOStrategy,
+    SearchStrategy,
+)
 
 _SEARCH_SEED_OFFSET = 1_000_003
 _EMBEDDING_SEED_OFFSET = 2_000_033
