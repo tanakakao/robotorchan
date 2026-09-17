@@ -88,7 +88,7 @@ def _make_strategy(
     train_Y: Tensor,
     *,
     random_samples: int,
-    ts_candidates: int,
+    ts_candidates: int | None,
     num_restarts: int,
     raw_samples: int,
     search_seed: int,
@@ -148,7 +148,7 @@ def run_strategy(
     n_train: int = 24,
     n_iterations: int = 5,
     random_samples: int = 1024,
-    ts_candidates: int = 5000,
+    ts_candidates: int | None = None,
     num_restarts: int = 10,
     raw_samples: int = 512,
     seed: int = 0,
@@ -161,7 +161,7 @@ def run_strategy(
         raise ValueError("n_iterations must be at least 1")
     if random_samples < 1:
         raise ValueError("random_samples must be at least 1")
-    if ts_candidates < q:
+    if ts_candidates is not None and ts_candidates < q:
         raise ValueError("ts_candidates must be at least q")
 
     train_X, train_Y, bounds = make_initial_data(input_dim, n_train=n_train, seed=seed)
@@ -224,7 +224,7 @@ def main() -> None:
     parser.add_argument("--n-train", type=int, default=24)
     parser.add_argument("--n-iterations", type=int, default=5)
     parser.add_argument("--random-samples", type=int, default=1024)
-    parser.add_argument("--ts-candidates", type=int, default=5000)
+    parser.add_argument("--ts-candidates", type=int, default=None)
     parser.add_argument("--num-restarts", type=int, default=10)
     parser.add_argument("--raw-samples", type=int, default=512)
     parser.add_argument("--seed", type=int, default=0)

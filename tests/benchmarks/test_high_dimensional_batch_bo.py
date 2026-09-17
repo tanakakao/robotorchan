@@ -43,6 +43,26 @@ def test_baxus_ts_strategy_is_available_in_batch_benchmark() -> None:
     )
     assert isinstance(strategy, BAxUSThompsonSamplingStrategy)
     assert strategy.state.eval_budget == 12
+    assert strategy.n_candidates == 16
+
+
+def test_baxus_ts_batch_benchmark_uses_automatic_candidate_budget() -> None:
+    train_X, train_Y, bounds = benchmark.make_initial_data(6, n_train=6, seed=3)
+    strategy = benchmark._make_strategy(
+        "BAxUSTS",
+        bounds,
+        train_X,
+        train_Y,
+        random_samples=8,
+        ts_candidates=None,
+        num_restarts=1,
+        raw_samples=4,
+        search_seed=17,
+        eval_budget=12,
+    )
+
+    assert isinstance(strategy, BAxUSThompsonSamplingStrategy)
+    assert strategy.n_candidates == 2000
 
 
 def test_random_search_runs_joint_q_batches() -> None:
@@ -97,6 +117,6 @@ def test_batch_benchmark_rejects_non_batch_q() -> None:
         benchmark.run_strategy("RandomSearch", 6, q=1)
 
 
-def test_batch_benchmark_rejects_small_ts_pool() -> None:
+def test_batch_benchmark_rejects_small_explicit_ts_pool() -> None:
     with pytest.raises(ValueError, match="ts_candidates must be at least q"):
         benchmark.run_strategy("RandomSearch", 6, q=3, ts_candidates=2)
