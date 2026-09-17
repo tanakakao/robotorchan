@@ -15,15 +15,25 @@ from robotorchan.optim.embedding.baxus import BAxUSStrategy
 class BAxUSThompsonSamplingStrategy(BAxUSStrategy):
     """Generate BAxUS candidates with sparse trust-region Thompson sampling."""
 
-    def __init__(self, *args, n_candidates: int = 5000, **kwargs) -> None:
+    def __init__(self, *args, n_candidates: int | None = None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        if n_candidates is None:
+            n_candidates = min(5000, max(2000, 200 * self.input_dim))
         if n_candidates < 1:
             raise ValueError("n_candidates must be at least 1.")
         self.n_candidates = n_candidates
 
     def _candidate_pool(self, target_bounds: Tensor) -> tuple[Tensor, Tensor]:
         """Draw sparse perturbations around the current target-space incumbent."""
-        sobol_seed = int(torch.randint(0, 2**31 - 1, (1,), generator=self._generator).item())
+        sobol_seed = int(
+            torch.randint(
+                0,
+                2**31 - 1,
+                (1,),
+                device=self.bounds.device,
+                generator=self._generator,
+            ).item()
+        )
         sobol = SobolEngine(self.target_dim, scramble=True, seed=sobol_seed)
         unit = sobol.draw(self.n_candidates).to(self.bounds)
         perturbations = target_bounds[0] + (target_bounds[1] - target_bounds[0]) * unit
