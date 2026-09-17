@@ -26,9 +26,15 @@ def test_problem_seed_and_search_seeds_are_distinct() -> None:
     )
     random_strategy = strategies["RandomSearch"]
     rembo_strategy = strategies["REMBO"]
+    hesbo_strategy = strategies["HeSBO"]
 
+    seeds = {
+        problem_seed,
+        benchmark._search_seed(problem_seed),
+        benchmark._embedding_seed(problem_seed),
+        benchmark._hesbo_seed(problem_seed),
+    }
+    assert len(seeds) == 4
     assert random_strategy.seed == benchmark._search_seed(problem_seed)
-    assert random_strategy.seed != problem_seed
-    assert benchmark._embedding_seed(problem_seed) != problem_seed
-    assert benchmark._embedding_seed(problem_seed) != random_strategy.seed
     assert rembo_strategy.embedding.shape == (5, 3)
+    assert hesbo_strategy.embedding.shape == (5, 3)
