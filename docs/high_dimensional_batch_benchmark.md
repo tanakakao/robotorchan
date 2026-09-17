@@ -2,7 +2,7 @@
 
 `benchmarks/high_dimensional_batch_bo.py` は、joint q-batch の高次元ベイズ最適化を比較するためのベンチマークである。
 
-比較対象は `OriginalSpace`、`RandomSearch`、`TuRBO`、`BAxUS`、`BAxUSTS`。全戦略で同じ original-space `SingleTaskGP` を学習し、診断用 acquisition として `qLogExpectedImprovement` を使用する。`BAxUSTS` の候補選択自体は acquisition 最大化ではなく posterior Thompson sampling に基づくため、純粋な acquisition-search 比較ではなく BO policy 比較として扱う。
+比較対象は `OriginalSpace`、`RandomSearch`、`REMBO`、`HeSBO`、`TuRBO`、`BAxUS`、`BAxUSTS`。`REMBO` と `HeSBO` には共通の `--embedding-dim` を与え、固定 embedding は batch BO trajectory 全体で再生成しない。全戦略で同じ original-space `SingleTaskGP` を学習し、診断用 acquisition として `qLogExpectedImprovement` を使用する。`BAxUSTS` の候補選択自体は acquisition 最大化ではなく posterior Thompson sampling に基づくため、純粋な acquisition-search 比較ではなく BO policy 比較として扱う。
 
 ## BAxUSTS の候補 pool
 
