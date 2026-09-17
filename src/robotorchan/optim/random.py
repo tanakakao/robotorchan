@@ -83,10 +83,10 @@ class RandomSearchStrategy(SearchStrategy):
         return self.bounds[0] + (self.bounds[1] - self.bounds[0]) * unit
 
     def _as_point_scores(self, values: Tensor) -> Tensor:
-        scores = values.squeeze()
-        if scores.ndim != 1 or scores.shape[0] != self.num_samples:
+        if values.numel() != self.num_samples:
             raise ValueError(
                 "RandomSearchStrategy requires an acquisition function that returns "
                 "one scalar value per q=1 candidate."
             )
+        scores = values.reshape(self.num_samples)
         return scores
