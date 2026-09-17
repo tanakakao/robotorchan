@@ -50,6 +50,14 @@ def test_state_shrinks_and_triggers_restart() -> None:
     assert state.restart_triggered
 
 
+def test_terminal_state_below_minimum_requires_restart_flag() -> None:
+    state = TuRBOState(length=0.1, length_min=0.15, restart_triggered=True)
+    assert state.restart_triggered
+
+    with pytest.raises(ValueError, match="requires restart_triggered"):
+        TuRBOState(length=0.1, length_min=0.15)
+
+
 def test_trust_region_is_clipped_to_public_bounds() -> None:
     _, _, bounds = _problem()
     strategy = TuRBOStrategy(bounds, state=TuRBOState(length=0.8))
