@@ -5,9 +5,11 @@ from robotorchan.optim.latent.reconstruction import (
     PCAReconstruction,
     RandomProjectionReconstruction,
 )
+from robotorchan.optim.latent.strategy import LatentSpaceStrategy
 
 __all__ = [
     "LatentReconstruction",
+    "LatentSpaceStrategy",
     "PCAReconstruction",
     "RandomProjectionReconstruction",
 ]
