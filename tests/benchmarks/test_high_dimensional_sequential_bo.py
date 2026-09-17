@@ -102,9 +102,7 @@ def test_stateful_strategy_feedback_is_persisted() -> None:
         seed=5,
     )
     target_candidate = torch.zeros((1, baxus.target_dim), dtype=torch.double)
-    benchmark._update_stateful_strategy(
-        turbo, candidate, candidate_Y, search_metadata={}
-    )
+    benchmark._update_stateful_strategy(turbo, candidate, candidate_Y, search_metadata={})
     benchmark._update_stateful_strategy(
         baxus,
         candidate,
@@ -119,8 +117,15 @@ def test_stateful_strategy_feedback_is_persisted() -> None:
 
 def test_random_search_runs_sequentially() -> None:
     rows = benchmark.run_strategy(
-        "RandomSearch", 6, n_train=4, n_iterations=2, latent_dim=2,
-        random_samples=16, num_restarts=1, raw_samples=4, seed=1,
+        "RandomSearch",
+        6,
+        n_train=4,
+        n_iterations=2,
+        latent_dim=2,
+        random_samples=16,
+        num_restarts=1,
+        raw_samples=4,
+        seed=1,
     )
     assert len(rows) == 2
     assert [row.iteration for row in rows] == [1, 2]
@@ -131,8 +136,15 @@ def test_random_search_runs_sequentially() -> None:
 
 def test_latent_pca_runs_with_original_space_surrogate() -> None:
     rows = benchmark.run_strategy(
-        "LatentPCA", 6, n_train=6, n_iterations=1, latent_dim=2,
-        random_samples=8, num_restarts=1, raw_samples=8, seed=2,
+        "LatentPCA",
+        6,
+        n_train=6,
+        n_iterations=1,
+        latent_dim=2,
+        random_samples=8,
+        num_restarts=1,
+        raw_samples=8,
+        seed=2,
     )
     assert len(rows) == 1
     assert rows[0].strategy == "LatentPCA"
@@ -141,8 +153,15 @@ def test_latent_pca_runs_with_original_space_surrogate() -> None:
 
 def test_rembo_runs_with_logei() -> None:
     rows = benchmark.run_strategy(
-        "REMBO", 6, n_train=6, n_iterations=1, latent_dim=2,
-        random_samples=8, num_restarts=1, raw_samples=8, seed=4,
+        "REMBO",
+        6,
+        n_train=6,
+        n_iterations=1,
+        latent_dim=2,
+        random_samples=8,
+        num_restarts=1,
+        raw_samples=8,
+        seed=4,
     )
     assert len(rows) == 1
     assert rows[0].strategy == "REMBO"
