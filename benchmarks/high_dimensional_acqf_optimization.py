@@ -17,6 +17,7 @@ from torch import Tensor
 
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim import (
+    HeSBOStrategy,
     OriginalSpaceStrategy,
     RandomSearchStrategy,
     REMBOStrategy,
@@ -25,6 +26,7 @@ from robotorchan.optim import (
 
 _SEARCH_SEED_OFFSET = 1_000_003
 _EMBEDDING_SEED_OFFSET = 2_000_033
+_HESBO_SEED_OFFSET = 3_000_047
 _MAX_TORCH_SEED = 2**63 - 1
 
 
@@ -70,8 +72,13 @@ def _search_seed(problem_seed: int) -> int:
 
 
 def _embedding_seed(problem_seed: int) -> int:
-    """Derive a deterministic embedding seed independent from other RNG streams."""
+    """Derive a deterministic REMBO seed independent from other RNG streams."""
     return (problem_seed + _EMBEDDING_SEED_OFFSET) % _MAX_TORCH_SEED
+
+
+def _hesbo_seed(problem_seed: int) -> int:
+    """Derive a deterministic HeSBO seed independent from other RNG streams."""
+    return (problem_seed + _HESBO_SEED_OFFSET) % _MAX_TORCH_SEED
 
 
 def make_problem(
@@ -129,6 +136,13 @@ def strategy_factories(
             bounds,
             embedding_dim=embedding_dim,
             seed=_embedding_seed(seed),
+            num_restarts=num_restarts,
+            raw_samples=raw_samples,
+        ),
+        "HeSBO": HeSBOStrategy(
+            bounds,
+            embedding_dim=embedding_dim,
+            seed=_hesbo_seed(seed),
             num_restarts=num_restarts,
             raw_samples=raw_samples,
         ),
