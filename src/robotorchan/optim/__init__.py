@@ -1,7 +1,7 @@
 """Acquisition-function optimization and search-strategy interfaces."""
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
-from robotorchan.optim.embedding import REMBOStrategy
+from robotorchan.optim.embedding import BAxUSState, BAxUSStrategy, REMBOStrategy, update_baxus_state
 from robotorchan.optim.latent import (
     LatentReconstruction,
     LatentSpaceStrategy,
@@ -13,6 +13,8 @@ from robotorchan.optim.random import RandomSearchStrategy
 from robotorchan.optim.trust_region import TuRBOState, TuRBOStrategy, update_turbo_state
 
 __all__ = [
+    "BAxUSState",
+    "BAxUSStrategy",
     "LatentReconstruction",
     "LatentSpaceStrategy",
     "OriginalSpaceStrategy",
@@ -24,5 +26,6 @@ __all__ = [
     "SearchStrategy",
     "TuRBOState",
     "TuRBOStrategy",
+    "update_baxus_state",
     "update_turbo_state",
 ]
