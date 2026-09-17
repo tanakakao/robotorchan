@@ -18,11 +18,26 @@ from torch import Tensor
 from robotorchan.models import SingleTaskGP
 from robotorchan.models.reduction import PCAInputReducer, RandomProjectionInputReducer
 from robotorchan.optim import (
+    BAxUSState,
+    BAxUSStrategy,
     LatentSpaceStrategy,
     OriginalSpaceStrategy,
     PCAReconstruction,
+    REMBOStrategy,
     RandomProjectionReconstruction,
     RandomSearchStrategy,
+    TuRBOState,
+    TuRBOStrategy,
+)
+
+STRATEGY_NAMES = (
+    "OriginalSpace",
+    "RandomSearch",
+    "LatentPCA",
+    "LatentRandomProjection",
+    "REMBO",
+    "TuRBO",
+    "BAxUS",
 )
 
 
@@ -107,16 +122,26 @@ def _make_latent_reconstruction(
     return None
 
 
+def _initial_incumbent(train_X: Tensor, train_Y: Tensor) -> tuple[Tensor, float]:
+    """Return the best observed original-space point and objective value."""
+    best_index = train_Y.reshape(-1).argmax()
+    return train_X[best_index].detach().clone(), float(train_Y.reshape(-1)[best_index])
+
+
 def _make_strategy(
     name: str,
     bounds: Tensor,
+    train_X: Tensor,
+    train_Y: Tensor,
     *,
     reconstruction,
+    latent_dim: int,
     random_samples: int,
     num_restarts: int,
     raw_samples: int,
     search_seed: int,
 ):
+    """Construct one search strategy for a complete BO trajectory."""
     if name == "OriginalSpace":
         return OriginalSpaceStrategy(bounds, num_restarts=num_restarts, raw_samples=raw_samples)
     if name == "RandomSearch":
@@ -130,7 +155,44 @@ def _make_strategy(
             num_restarts=num_restarts,
             raw_samples=raw_samples,
         )
+    if name == "REMBO":
+        return REMBOStrategy(
+            bounds,
+            embedding_dim=latent_dim,
+            seed=search_seed,
+            num_restarts=num_restarts,
+            raw_samples=raw_samples,
+        )
+
+    center, best_value = _initial_incumbent(train_X, train_Y)
+    if name == "TuRBO":
+        return TuRBOStrategy(
+            bounds,
+            center=center,
+            state=TuRBOState(best_value=best_value),
+            num_restarts=num_restarts,
+            raw_samples=raw_samples,
+        )
+    if name == "BAxUS":
+        return BAxUSStrategy(
+            bounds,
+            initial_target_dim=latent_dim,
+            seed=search_seed,
+            state=BAxUSState(target_dim=latent_dim, best_value=best_value),
+            num_restarts=num_restarts,
+            raw_samples=raw_samples,
+        )
     raise ValueError(f"Unknown strategy: {name}")
+
+
+def _update_stateful_strategy(strategy, candidate: Tensor, candidate_Y: Tensor) -> None:
+    """Persist objective feedback required by stateful search strategies."""
+    if isinstance(strategy, TuRBOStrategy):
+        strategy.update_state(candidate_Y, candidates=candidate)
+    elif isinstance(strategy, BAxUSStrategy):
+        state = strategy.update_state(candidate_Y)
+        if state.restart_triggered and strategy.target_dim < strategy.input_dim:
+            strategy.expand_subspace()
 
 
 def run_strategy(
@@ -148,10 +210,11 @@ def run_strategy(
     """Run a sequential BO trajectory from common initial observations.
 
     All strategies use the same original-space ``SingleTaskGP`` and q=1
-    ``LogExpectedImprovement``. Latent search reducers are fitted once from the
-    initial design and then frozen, so the benchmark measures acquisition-search
-    effects rather than surrogate-model reduction effects.
+    ``LogExpectedImprovement``. Search reducers and random embeddings are created
+    once per trajectory. TuRBO and BAxUS retain their state between iterations.
     """
+    if name not in STRATEGY_NAMES:
+        raise ValueError(f"Unknown strategy: {name}")
     if n_iterations < 1:
         raise ValueError("n_iterations must be at least 1")
     if latent_dim < 1 or latent_dim > input_dim:
@@ -159,28 +222,39 @@ def run_strategy(
 
     train_X, train_Y, bounds = make_initial_data(input_dim, n_train=n_train, seed=seed)
     reconstruction = _make_latent_reconstruction(name, train_X, latent_dim=latent_dim)
+    strategy_seed = seed * 100_000 + 73
+    strategy = _make_strategy(
+        name,
+        bounds,
+        train_X,
+        train_Y,
+        reconstruction=reconstruction,
+        latent_dim=latent_dim,
+        random_samples=random_samples,
+        num_restarts=num_restarts,
+        raw_samples=raw_samples,
+        search_seed=strategy_seed,
+    )
     optimum = 0.0
     results: list[SequentialBOResult] = []
 
     for iteration in range(1, n_iterations + 1):
         model = _fit_model(train_X, train_Y)
         acquisition = _make_acquisition(model, train_Y)
-        search_seed = seed * 100_000 + iteration * 1_009 + 73
-        strategy = _make_strategy(
-            name,
-            bounds,
-            reconstruction=reconstruction,
-            random_samples=random_samples,
-            num_restarts=num_restarts,
-            raw_samples=raw_samples,
-            search_seed=search_seed,
-        )
+        if name == "RandomSearch":
+            search_seed = seed * 100_000 + iteration * 1_009 + 73
+            strategy = RandomSearchStrategy(
+                bounds,
+                num_samples=random_samples,
+                seed=search_seed,
+            )
         start = perf_counter()
         search_result = strategy.optimize(acquisition, q=1)
         elapsed = perf_counter() - start
         candidate = search_result.candidates.detach()
         with torch.no_grad():
             candidate_Y = objective(candidate)
+        _update_stateful_strategy(strategy, candidate, candidate_Y)
         train_X = torch.cat([train_X, candidate], dim=0)
         train_Y = torch.cat([train_Y, candidate_Y], dim=0)
         best_observed = float(train_Y.max())
@@ -203,7 +277,7 @@ def run_strategy(
 def run_dimension(input_dim: int, *, seed: int = 0, **kwargs: object) -> list[SequentialBOResult]:
     """Compare all strategies from identical initial observations."""
     results: list[SequentialBOResult] = []
-    for name in ("OriginalSpace", "RandomSearch", "LatentPCA", "LatentRandomProjection"):
+    for name in STRATEGY_NAMES:
         results.extend(run_strategy(name, input_dim, seed=seed, **kwargs))
     return results
 
