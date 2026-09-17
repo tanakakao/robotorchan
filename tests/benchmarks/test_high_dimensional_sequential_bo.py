@@ -7,6 +7,9 @@ from pathlib import Path
 import pytest
 import torch
 
+from robotorchan.models import SingleTaskGP
+from robotorchan.optim import PCAReconstruction, RandomProjectionReconstruction
+
 MODULE_NAME = "high_dimensional_sequential_bo"
 MODULE_PATH = Path(__file__).parents[2] / "benchmarks" / f"{MODULE_NAME}.py"
 SPEC = importlib.util.spec_from_file_location(MODULE_NAME, MODULE_PATH)
@@ -22,6 +25,31 @@ def test_initial_data_is_reproducible() -> None:
     assert torch.equal(X1, X2)
     assert torch.equal(Y1, Y2)
     assert torch.equal(bounds1, bounds2)
+
+
+def test_every_strategy_uses_original_space_single_task_gp() -> None:
+    train_X, train_Y, _ = benchmark.make_initial_data(6, n_train=6, seed=3)
+
+    model = benchmark._fit_model(train_X, train_Y)
+
+    assert isinstance(model, SingleTaskGP)
+    assert model.train_inputs[0].shape[-1] == 6
+
+
+def test_search_reducers_are_independent_from_surrogate() -> None:
+    train_X, _, _ = benchmark.make_initial_data(6, n_train=6, seed=3)
+
+    pca = benchmark._make_latent_reconstruction("LatentPCA", train_X, latent_dim=2)
+    rp = benchmark._make_latent_reconstruction(
+        "LatentRandomProjection", train_X, latent_dim=2
+    )
+
+    assert isinstance(pca, PCAReconstruction)
+    assert isinstance(rp, RandomProjectionReconstruction)
+    assert pca.reducer.is_fitted
+    assert rp.reducer.is_fitted
+    assert pca.reducer.output_dim == 2
+    assert rp.reducer.output_dim == 2
 
 
 def test_random_search_runs_sequentially() -> None:
@@ -43,7 +71,7 @@ def test_random_search_runs_sequentially() -> None:
     assert all(row.optimization_time >= 0.0 for row in rows)
 
 
-def test_latent_pca_runs_sequentially() -> None:
+def test_latent_pca_runs_with_original_space_surrogate() -> None:
     rows = benchmark.run_strategy(
         "LatentPCA",
         6,
