@@ -126,7 +126,7 @@ def test_dummy_strategy_returns_public_space_candidates() -> None:
 def test_public_optim_exports_are_complete() -> None:
     import robotorchan.optim as optim
 
-    expected = {
+    expected = {\n        "ALEBOStrategy",
         "SearchResult",
         "SearchStrategy",
         "OriginalSpaceStrategy",
