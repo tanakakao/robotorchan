@@ -54,6 +54,18 @@ def test_random_search_returns_best_sampled_candidates() -> None:
     assert result.optimization_time >= 0.0
 
 
+def test_random_search_supports_one_sample() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    acq = _make_acquisition()
+    strategy = RandomSearchStrategy(bounds, num_samples=1, seed=17)
+
+    result = strategy.optimize(acq)
+
+    assert result.candidates.shape == torch.Size([1, 1])
+    assert result.acquisition_value is not None
+    assert result.acquisition_value.shape == torch.Size([1])
+
+
 def test_random_search_seed_is_reproducible_without_global_rng_mutation() -> None:
     bounds = torch.tensor([[-2.0, 1.0], [3.0, 4.0]], dtype=torch.double)
     acq = _make_two_dimensional_acquisition()

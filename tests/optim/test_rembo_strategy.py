@@ -46,6 +46,31 @@ def test_projection_returns_original_box_points() -> None:
     assert torch.all(bounds[1] >= X)
 
 
+def test_projection_is_invariant_to_public_input_units() -> None:
+    unit_bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    scaled_bounds = torch.tensor([[-10.0, 100.0], [30.0, 500.0]], dtype=torch.double)
+    unit = REMBOStrategy(unit_bounds, embedding_dim=1, seed=13)
+    scaled = REMBOStrategy(scaled_bounds, embedding_dim=1, seed=13)
+    Z = torch.tensor([[0.6]], dtype=torch.double)
+
+    unit_X = unit.project(Z)
+    scaled_X = scaled.project(Z)
+    scaled_normalized = (scaled_X - scaled_bounds[0]) / (scaled_bounds[1] - scaled_bounds[0])
+
+    torch.testing.assert_close(unit.embedding, scaled.embedding)
+    torch.testing.assert_close(unit_X, scaled_normalized)
+
+
+def test_seed_none_uses_global_rng_stream() -> None:
+    _, _, bounds = _problem()
+    torch.manual_seed(101)
+    first = REMBOStrategy(bounds, embedding_dim=2)
+    torch.manual_seed(102)
+    second = REMBOStrategy(bounds, embedding_dim=2)
+
+    assert not torch.equal(first.embedding, second.embedding)
+
+
 def test_optimize_preserves_original_acquisition_contract() -> None:
     train_X, train_Y, bounds = _problem()
     model = SingleTaskGP(train_X, train_Y)
