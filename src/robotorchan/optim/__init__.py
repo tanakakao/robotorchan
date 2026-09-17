@@ -16,9 +16,9 @@ __all__ = [
     "LatentSpaceStrategy",
     "OriginalSpaceStrategy",
     "PCAReconstruction",
+    "REMBOStrategy",
     "RandomProjectionReconstruction",
     "RandomSearchStrategy",
-    "REMBOStrategy",
     "SearchResult",
     "SearchStrategy",
 ]
