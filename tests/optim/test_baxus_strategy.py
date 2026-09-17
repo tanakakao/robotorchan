@@ -56,7 +56,13 @@ def test_state_collapse_splits_existing_embedding_bins() -> None:
         failure_tolerance=1,
         best_value=1.0,
     )
-    strategy = BAxUSStrategy(bounds, initial_target_dim=1, new_dimensions=2, seed=4, state=state)
+    strategy = BAxUSStrategy(
+        bounds,
+        initial_target_dim=1,
+        new_bins_on_split=2,
+        seed=4,
+        state=state,
+    )
     old_signs = strategy.embedding.sum(dim=1).clone()
 
     state = strategy.update_state(torch.tensor([0.0]))
@@ -70,13 +76,35 @@ def test_state_collapse_splits_existing_embedding_bins() -> None:
     assert strategy.state.best_value == pytest.approx(1.0)
 
 
+def test_expansion_splits_every_splittable_parent_bin() -> None:
+    _, _, bounds = _problem(input_dim=12)
+    state = BAxUSState(target_dim=2, length=0.1, length_min=0.15, restart_triggered=True)
+    strategy = BAxUSStrategy(
+        bounds,
+        initial_target_dim=2,
+        new_bins_on_split=2,
+        seed=8,
+        state=state,
+    )
+    parent_assignment = strategy.embedding.ne(0).to(torch.int64).argmax(dim=1)
+
+    assert strategy.expand_subspace()
+    assert strategy.target_dim == 6
+    assert torch.all(strategy.embedding.ne(0).sum(dim=1) == 1)
+    assert torch.all(strategy.embedding.ne(0).sum(dim=0) > 0)
+    for parent in range(2):
+        parent_embedding = strategy.embedding[parent_assignment == parent]
+        child_bins = parent_embedding.ne(0).to(torch.int64).argmax(dim=1)
+        assert torch.unique(child_bins).numel() == 3
+
+
 def test_repeated_expansion_reaches_full_dimension_without_empty_bins() -> None:
     _, _, bounds = _problem(input_dim=7)
     state = BAxUSState(target_dim=1, length=0.1, length_min=0.15, restart_triggered=True)
     strategy = BAxUSStrategy(
         bounds,
         initial_target_dim=1,
-        new_dimensions=3,
+        new_bins_on_split=3,
         seed=5,
         state=state,
     )
@@ -156,6 +184,8 @@ def test_validates_state_and_expansion_contract() -> None:
     _, _, bounds = _problem()
     with pytest.raises(ValueError, match="initial_target_dim"):
         BAxUSStrategy(bounds, initial_target_dim=0)
+    with pytest.raises(ValueError, match="new_bins_on_split"):
+        BAxUSStrategy(bounds, new_bins_on_split=0)
     with pytest.raises(ValueError, match=r"state\.target_dim"):
         BAxUSStrategy(bounds, initial_target_dim=2, state=BAxUSState(target_dim=1))
     with pytest.raises(RuntimeError, match="requires restart_triggered"):
