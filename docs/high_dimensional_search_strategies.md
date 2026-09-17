@@ -13,6 +13,7 @@ robotorchan では surrogate model と acquisition function と search strategy 
 | `REMBOStrategy` | 固定ランダム埋め込み | 固定 | intrinsic dimension が低いと期待できる場合 |
 | `TuRBOStrategy` | 元空間の局所 trust region | あり | 高次元で局所探索を適応的に集中 |
 | `BAxUSStrategy` | sparse signed embedding | あり | intrinsic dimension が不明で、探索中に部分空間を拡張したい場合 |
+| `BAxUSThompsonSamplingStrategy` | sparse signed embedding | あり | BAxUS の trust region 内で sparse perturbation + Thompson sampling を使う場合 |
 
 ### RandomSearch の q-batch
 
@@ -59,6 +60,24 @@ BoTorch の BAxUS tutorial は target-space GP の ARD lengthscale を使って 
 代わりに acquisition model が original-space ARD lengthscale を公開している場合、現在の sparse embedding が誘導する target-space metric を計算する。target coordinate `j` に所属する元次元集合を `B_j`、元空間 lengthscale を `l_i` とすると、effective target lengthscale は `1 / sqrt(sum_{i in B_j} 1 / l_i^2)` とする。これは ARD の距離 metric を sparse signed embedding 上へ制限したときの target coordinate のスケールに対応する。その後、BoTorch tutorial と同じく重みの幾何平均が 1 になるよう正規化し、`center ± weight * state.length` で trust-region box を作る。
 
 acquisition model から適切な original-space ARD lengthscale を取得できない場合は等方重みへフォールバックする。実際に使った `target_lengthscale_weights` と `target_bounds` は `SearchResult.metadata` に保存する。これは search strategy / surrogate 分離を維持するための設計であり、BoTorch tutorial の「target-space GP を毎反復で fit してその lengthscale を直接使う」実装と完全に同一ではない。
+
+### Thompson sampling candidate generation
+
+`BAxUSThompsonSamplingStrategy` は BoTorch の BAxUS tutorial にある TS 系 candidate generation を search strategy として分離した実装である。現在の target-space trust region 内へ Sobol 点を生成し、各候補について target dimension ごとに `min(20 / target_dim, 1)` の確率で incumbent から perturb する。どの次元も perturb されなかった候補には最低 1 次元の perturbation を強制する。
+
+生成した target-space pool は既存の sparse embedding で original space へ射影し、共通 surrogate model に対する `MaxPosteriorSampling` で候補を選ぶ。したがって TS 用に別の target-space GP を strategy 内で学習しない。選択された original-space candidate に対応する target coordinate は `SearchResult.metadata["target_candidates"]` に戻されるため、通常の BAxUS と同じ `update_state()` / `expand_subspace()` ループを使用できる。
+
+```python
+strategy = BAxUSThompsonSamplingStrategy(
+    bounds,
+    state=state,
+    seed=0,
+    n_candidates=5000,
+)
+result = strategy.optimize(acq_function, q=1)
+```
+
+`acq_function` は候補選択そのものではなく、共通 model の取得と返却候補の acquisition value 診断に利用する。候補選択は posterior sample に基づく。`n_candidates` は TS の有限候補 pool サイズであり、`q` を下回ってはならない。
 
 ## 設計上の注意
 
