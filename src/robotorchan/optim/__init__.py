@@ -10,6 +10,7 @@ from robotorchan.optim.latent import (
 )
 from robotorchan.optim.original import OriginalSpaceStrategy
 from robotorchan.optim.random import RandomSearchStrategy
+from robotorchan.optim.trust_region import TuRBOState, TuRBOStrategy, update_turbo_state
 
 __all__ = [
     "LatentReconstruction",
@@ -21,4 +22,7 @@ __all__ = [
     "RandomSearchStrategy",
     "SearchResult",
     "SearchStrategy",
+    "TuRBOState",
+    "TuRBOStrategy",
+    "update_turbo_state",
 ]
