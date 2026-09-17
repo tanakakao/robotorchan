@@ -12,6 +12,7 @@
 - **どのモデルを選ぶか:** [`docs/models.md`](docs/models.md)
 - **高次元出力モデルを選ぶ:** [`docs/high_dimensional_outputs.md`](docs/high_dimensional_outputs.md)
 - **実際にどう使うか:** [`examples/README.md`](examples/README.md)
+- **高次元の探索戦略:** [`docs/high_dimensional_search_strategies.md`](docs/high_dimensional_search_strategies.md)
 - **設計方針・内部構造:** [`docs/architecture.md`](docs/architecture.md)
 - **リリース手順:** [`docs/releasing.md`](docs/releasing.md)
 
@@ -175,6 +176,29 @@ Preference data を通常の回帰 target として扱わず、`datapoints` と 
 ### LatentKroneckerGP
 
 `train_X` / `train_Y` に加えて、時間・波長・位置などの出力軸 `train_T` を明示的に持ちます。
+
+
+## 高次元の探索戦略
+
+robotorchan は surrogate model と acquisition function に加えて、acquisition function をどの空間・方法で探索するかを `SearchStrategy` として分離します。
+
+```python
+from botorch.acquisition.analytic import LogExpectedImprovement
+from robotorchan.optim import HeSBOStrategy
+
+acq = LogExpectedImprovement(model=model, best_f=train_Y.max())
+strategy = HeSBOStrategy(bounds, embedding_dim=5, seed=0)
+result = strategy.optimize(acq, q=1)
+
+candidate = result.candidates
+acquisition_value = result.acquisition_value
+```
+
+利用可能な主な strategy は `OriginalSpaceStrategy`、`RandomSearchStrategy`、`LatentSpaceStrategy`、`REMBOStrategy`、`HeSBOStrategy`、`TuRBOStrategy`、`BAxUSStrategy`、`BAxUSThompsonSamplingStrategy` です。
+
+`SearchResult.candidates` は常に public/original input space の候補を返します。`acquisition_value` は選択された joint q-batch に対する scalar tensor です。TuRBO / BAxUS は stateful strategy のため、目的関数を評価した後に観測値を strategy へ戻します。
+
+詳細、各 strategy の役割、BAxUS の state 更新、benchmark の設計は [`docs/high_dimensional_search_strategies.md`](docs/high_dimensional_search_strategies.md) を参照してください。
 
 ## 設計目標
 
