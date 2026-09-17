@@ -40,9 +40,7 @@ def test_search_reducers_are_independent_from_surrogate() -> None:
     train_X, _, _ = benchmark.make_initial_data(6, n_train=6, seed=3)
 
     pca = benchmark._make_latent_reconstruction("LatentPCA", train_X, latent_dim=2)
-    rp = benchmark._make_latent_reconstruction(
-        "LatentRandomProjection", train_X, latent_dim=2
-    )
+    rp = benchmark._make_latent_reconstruction("LatentRandomProjection", train_X, latent_dim=2)
 
     assert isinstance(pca, PCAReconstruction)
     assert isinstance(rp, RandomProjectionReconstruction)
