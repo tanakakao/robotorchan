@@ -47,10 +47,11 @@ def test_random_search_rng_is_independent_from_training_rng() -> None:
     )["RandomSearch"]
 
     train_X = model.train_inputs[0]
-    search_X = strategy._sample_candidates()
+    search_X = strategy._sample_candidate_batches(q=1).squeeze(-2)
 
     assert strategy.seed == benchmark._search_seed(seed)
     assert strategy.seed != seed
+    assert search_X.shape == train_X.shape
     assert not torch.equal(search_X, train_X)
 
 
