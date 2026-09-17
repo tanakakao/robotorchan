@@ -77,6 +77,7 @@ def test_stateful_strategies_start_from_initial_observations() -> None:
         num_restarts=1,
         raw_samples=4,
         search_seed=17,
+        eval_budget=20,
     )
 
     rembo = benchmark._make_strategy("REMBO", bounds, train_X, train_Y, **kwargs)
@@ -89,7 +90,8 @@ def test_stateful_strategies_start_from_initial_observations() -> None:
     torch.testing.assert_close(turbo.center, expected_center)
     assert turbo.state.best_value == pytest.approx(expected_best)
     assert baxus.state.best_value == pytest.approx(expected_best)
-    assert baxus.target_dim == 2
+    assert baxus.state.eval_budget == 20
+    assert baxus.target_dim == baxus.state.initial_target_dim
 
 
 def test_stateful_strategy_feedback_is_persisted() -> None:
@@ -105,8 +107,7 @@ def test_stateful_strategy_feedback_is_persisted() -> None:
     )
     baxus = BAxUSStrategy(
         bounds,
-        initial_target_dim=2,
-        state=benchmark.BAxUSState(target_dim=2, best_value=best_value),
+        state=benchmark.BAxUSState(dim=6, eval_budget=20, best_value=best_value),
         seed=5,
     )
 
