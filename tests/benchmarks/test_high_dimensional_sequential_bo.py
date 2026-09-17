@@ -9,7 +9,13 @@ import torch
 from botorch.acquisition.analytic import LogExpectedImprovement
 
 from robotorchan.models import SingleTaskGP
-from robotorchan.optim import PCAReconstruction, RandomProjectionReconstruction
+from robotorchan.optim import (
+    BAxUSStrategy,
+    PCAReconstruction,
+    RandomProjectionReconstruction,
+    REMBOStrategy,
+    TuRBOStrategy,
+)
 
 MODULE_NAME = "high_dimensional_sequential_bo"
 MODULE_PATH = Path(__file__).parents[2] / "benchmarks" / f"{MODULE_NAME}.py"
@@ -61,6 +67,57 @@ def test_search_reducers_are_independent_from_surrogate() -> None:
     assert rp.reducer.output_dim == 2
 
 
+def test_stateful_strategies_start_from_initial_observations() -> None:
+    train_X, train_Y, bounds = benchmark.make_initial_data(6, n_train=6, seed=3)
+    expected_center, expected_best = benchmark._initial_incumbent(train_X, train_Y)
+    kwargs = dict(
+        reconstruction=None,
+        latent_dim=2,
+        random_samples=8,
+        num_restarts=1,
+        raw_samples=4,
+        search_seed=17,
+    )
+
+    rembo = benchmark._make_strategy("REMBO", bounds, train_X, train_Y, **kwargs)
+    turbo = benchmark._make_strategy("TuRBO", bounds, train_X, train_Y, **kwargs)
+    baxus = benchmark._make_strategy("BAxUS", bounds, train_X, train_Y, **kwargs)
+
+    assert isinstance(rembo, REMBOStrategy)
+    assert isinstance(turbo, TuRBOStrategy)
+    assert isinstance(baxus, BAxUSStrategy)
+    torch.testing.assert_close(turbo.center, expected_center)
+    assert turbo.state.best_value == pytest.approx(expected_best)
+    assert baxus.state.best_value == pytest.approx(expected_best)
+    assert baxus.target_dim == 2
+
+
+def test_stateful_strategy_feedback_is_persisted() -> None:
+    train_X, train_Y, bounds = benchmark.make_initial_data(6, n_train=6, seed=3)
+    center, best_value = benchmark._initial_incumbent(train_X, train_Y)
+    candidate = torch.full((1, 6), 0.75, dtype=torch.double)
+    candidate_Y = benchmark.objective(candidate)
+
+    turbo = TuRBOStrategy(
+        bounds,
+        center=center,
+        state=benchmark.TuRBOState(best_value=best_value),
+    )
+    baxus = BAxUSStrategy(
+        bounds,
+        initial_target_dim=2,
+        state=benchmark.BAxUSState(target_dim=2, best_value=best_value),
+        seed=5,
+    )
+
+    benchmark._update_stateful_strategy(turbo, candidate, candidate_Y)
+    benchmark._update_stateful_strategy(baxus, candidate, candidate_Y)
+
+    torch.testing.assert_close(turbo.center, candidate.squeeze(0))
+    assert turbo.state.best_value == pytest.approx(0.0)
+    assert baxus.state.best_value == pytest.approx(0.0)
+
+
 def test_random_search_runs_sequentially() -> None:
     rows = benchmark.run_strategy(
         "RandomSearch",
@@ -97,6 +154,22 @@ def test_latent_pca_runs_with_original_space_surrogate() -> None:
     assert rows[0].input_dim == 6
 
 
+def test_rembo_runs_with_logei() -> None:
+    rows = benchmark.run_strategy(
+        "REMBO",
+        6,
+        n_train=6,
+        n_iterations=1,
+        latent_dim=2,
+        random_samples=8,
+        num_restarts=1,
+        raw_samples=8,
+        seed=4,
+    )
+    assert len(rows) == 1
+    assert rows[0].strategy == "REMBO"
+
+
 def test_aggregate_results_groups_iterations() -> None:
     rows = [
         benchmark.SequentialBOResult("RandomSearch", 6, 0, 1, -1.0, -0.5, 0.5, 0.1),
@@ -110,6 +183,8 @@ def test_aggregate_results_groups_iterations() -> None:
 
 
 def test_invalid_arguments() -> None:
+    with pytest.raises(ValueError, match="Unknown strategy"):
+        benchmark.run_strategy("unknown", 6)
     with pytest.raises(ValueError, match="n_iterations"):
         benchmark.run_strategy("RandomSearch", 6, n_iterations=0)
     with pytest.raises(ValueError, match="latent_dim"):

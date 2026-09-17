@@ -86,6 +86,16 @@ def test_optimize_returns_original_space_candidates() -> None:
     torch.testing.assert_close(result.acquisition_value, expected)
 
 
+def test_first_finite_observation_is_success() -> None:
+    state = BAxUSState(target_dim=2)
+
+    state = update_baxus_state(state, torch.tensor([-0.5]))
+
+    assert state.best_value == pytest.approx(-0.5)
+    assert state.success_counter == 1
+    assert state.failure_counter == 0
+
+
 def test_update_function_expands_and_shrinks_length() -> None:
     state = BAxUSState(target_dim=2, length=0.4, success_tolerance=1, best_value=0.0)
     state = update_baxus_state(state, torch.tensor([1.0]))
