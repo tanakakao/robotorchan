@@ -123,7 +123,6 @@ def test_dummy_strategy_returns_public_space_candidates() -> None:
     assert result.metadata == {}
 
 
-
 def test_public_optim_exports_are_complete() -> None:
     import robotorchan.optim as optim
 
