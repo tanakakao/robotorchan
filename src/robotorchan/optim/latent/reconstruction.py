@@ -151,9 +151,7 @@ class RandomProjectionReconstruction(LatentReconstruction):
 
     def __init__(self, reducer: RandomProjectionInputReducer) -> None:
         if not isinstance(reducer, RandomProjectionInputReducer):
-            raise TypeError(
-                "RandomProjectionReconstruction requires RandomProjectionInputReducer."
-            )
+            raise TypeError("RandomProjectionReconstruction requires RandomProjectionInputReducer.")
         super().__init__(reducer)
 
     def _reconstruct_2d(self, Z: Tensor) -> Tensor:
