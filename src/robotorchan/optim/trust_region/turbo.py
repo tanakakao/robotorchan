@@ -29,8 +29,12 @@ class TuRBOState:
     restart_triggered: bool = False
 
     def __post_init__(self) -> None:
-        if not 0 < self.length_min <= self.length <= self.length_max:
-            raise ValueError("TuRBO lengths must satisfy 0 < length_min <= length <= length_max.")
+        if not 0 < self.length_min <= self.length_max:
+            raise ValueError("TuRBO lengths must satisfy 0 < length_min <= length_max.")
+        if self.length <= 0 or self.length > self.length_max:
+            raise ValueError("length must satisfy 0 < length <= length_max.")
+        if self.length < self.length_min and not self.restart_triggered:
+            raise ValueError("length below length_min requires restart_triggered=True.")
         if self.success_tolerance < 1:
             raise ValueError("success_tolerance must be at least 1.")
         if self.failure_tolerance < 1:
