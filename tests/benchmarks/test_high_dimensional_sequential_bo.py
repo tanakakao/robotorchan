@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 import torch
+from botorch.acquisition.analytic import LogExpectedImprovement
 
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim import PCAReconstruction, RandomProjectionReconstruction
@@ -34,6 +35,16 @@ def test_every_strategy_uses_original_space_single_task_gp() -> None:
 
     assert isinstance(model, SingleTaskGP)
     assert model.train_inputs[0].shape[-1] == 6
+
+
+def test_acquisition_is_log_expected_improvement_with_current_best() -> None:
+    train_X, train_Y, _ = benchmark.make_initial_data(6, n_train=6, seed=3)
+    model = benchmark._fit_model(train_X, train_Y)
+
+    acquisition = benchmark._make_acquisition(model, train_Y)
+
+    assert isinstance(acquisition, LogExpectedImprovement)
+    torch.testing.assert_close(acquisition.best_f, train_Y.max())
 
 
 def test_search_reducers_are_independent_from_surrogate() -> None:

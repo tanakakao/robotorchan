@@ -11,7 +11,7 @@ from pathlib import Path
 from time import perf_counter
 
 import torch
-from botorch.acquisition.analytic import PosteriorMean
+from botorch.acquisition.analytic import LogExpectedImprovement
 from botorch.fit import fit_gpytorch_mll
 from torch import Tensor
 
@@ -86,6 +86,11 @@ def _fit_model(train_X: Tensor, train_Y: Tensor) -> SingleTaskGP:
     return model
 
 
+def _make_acquisition(model: SingleTaskGP, train_Y: Tensor) -> LogExpectedImprovement:
+    """Build the same q=1 BO acquisition from the current observations."""
+    return LogExpectedImprovement(model=model, best_f=train_Y.max())
+
+
 def _make_latent_reconstruction(
     name: str,
     train_X: Tensor,
@@ -142,10 +147,10 @@ def run_strategy(
 ) -> list[SequentialBOResult]:
     """Run a sequential BO trajectory from common initial observations.
 
-    All strategies use the same original-space ``SingleTaskGP``. Latent search
-    reducers are fitted once from the initial design and then frozen, so the
-    benchmark measures acquisition-search effects rather than surrogate-model
-    reduction effects.
+    All strategies use the same original-space ``SingleTaskGP`` and q=1
+    ``LogExpectedImprovement``. Latent search reducers are fitted once from the
+    initial design and then frozen, so the benchmark measures acquisition-search
+    effects rather than surrogate-model reduction effects.
     """
     if n_iterations < 1:
         raise ValueError("n_iterations must be at least 1")
@@ -159,7 +164,7 @@ def run_strategy(
 
     for iteration in range(1, n_iterations + 1):
         model = _fit_model(train_X, train_Y)
-        acquisition = PosteriorMean(model)
+        acquisition = _make_acquisition(model, train_Y)
         search_seed = seed * 100_000 + iteration * 1_009 + 73
         strategy = _make_strategy(
             name,
