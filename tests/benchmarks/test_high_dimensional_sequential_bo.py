@@ -36,9 +36,7 @@ def test_initial_data_is_reproducible() -> None:
 
 def test_every_strategy_uses_original_space_single_task_gp() -> None:
     train_X, train_Y, _ = benchmark.make_initial_data(6, n_train=6, seed=3)
-
     model = benchmark._fit_model(train_X, train_Y)
-
     assert isinstance(model, SingleTaskGP)
     assert model.train_inputs[0].shape[-1] == 6
 
@@ -46,19 +44,15 @@ def test_every_strategy_uses_original_space_single_task_gp() -> None:
 def test_acquisition_is_log_expected_improvement_with_current_best() -> None:
     train_X, train_Y, _ = benchmark.make_initial_data(6, n_train=6, seed=3)
     model = benchmark._fit_model(train_X, train_Y)
-
     acquisition = benchmark._make_acquisition(model, train_Y)
-
     assert isinstance(acquisition, LogExpectedImprovement)
     torch.testing.assert_close(acquisition.best_f, train_Y.max())
 
 
 def test_search_reducers_are_independent_from_surrogate() -> None:
     train_X, _, _ = benchmark.make_initial_data(6, n_train=6, seed=3)
-
     pca = benchmark._make_latent_reconstruction("LatentPCA", train_X, latent_dim=2)
     rp = benchmark._make_latent_reconstruction("LatentRandomProjection", train_X, latent_dim=2)
-
     assert isinstance(pca, PCAReconstruction)
     assert isinstance(rp, RandomProjectionReconstruction)
     assert pca.reducer.is_fitted
@@ -79,11 +73,9 @@ def test_stateful_strategies_start_from_initial_observations() -> None:
         search_seed=17,
         eval_budget=20,
     )
-
     rembo = benchmark._make_strategy("REMBO", bounds, train_X, train_Y, **kwargs)
     turbo = benchmark._make_strategy("TuRBO", bounds, train_X, train_Y, **kwargs)
     baxus = benchmark._make_strategy("BAxUS", bounds, train_X, train_Y, **kwargs)
-
     assert isinstance(rembo, REMBOStrategy)
     assert isinstance(turbo, TuRBOStrategy)
     assert isinstance(baxus, BAxUSStrategy)
@@ -99,7 +91,6 @@ def test_stateful_strategy_feedback_is_persisted() -> None:
     center, best_value = benchmark._initial_incumbent(train_X, train_Y)
     candidate = torch.full((1, 6), 0.75, dtype=torch.double)
     candidate_Y = benchmark.objective(candidate)
-
     turbo = TuRBOStrategy(
         bounds,
         center=center,
@@ -110,26 +101,26 @@ def test_stateful_strategy_feedback_is_persisted() -> None:
         state=benchmark.BAxUSState(dim=6, eval_budget=20, best_value=best_value),
         seed=5,
     )
-
-    benchmark._update_stateful_strategy(turbo, candidate, candidate_Y)
-    benchmark._update_stateful_strategy(baxus, candidate, candidate_Y)
-
+    target_candidate = torch.zeros((1, baxus.target_dim), dtype=torch.double)
+    benchmark._update_stateful_strategy(
+        turbo, candidate, candidate_Y, search_metadata={}
+    )
+    benchmark._update_stateful_strategy(
+        baxus,
+        candidate,
+        candidate_Y,
+        search_metadata={"target_candidates": target_candidate},
+    )
     torch.testing.assert_close(turbo.center, candidate.squeeze(0))
     assert turbo.state.best_value == pytest.approx(0.0)
     assert baxus.state.best_value == pytest.approx(0.0)
+    torch.testing.assert_close(baxus.target_X, target_candidate)
 
 
 def test_random_search_runs_sequentially() -> None:
     rows = benchmark.run_strategy(
-        "RandomSearch",
-        6,
-        n_train=4,
-        n_iterations=2,
-        latent_dim=2,
-        random_samples=16,
-        num_restarts=1,
-        raw_samples=4,
-        seed=1,
+        "RandomSearch", 6, n_train=4, n_iterations=2, latent_dim=2,
+        random_samples=16, num_restarts=1, raw_samples=4, seed=1,
     )
     assert len(rows) == 2
     assert [row.iteration for row in rows] == [1, 2]
@@ -140,15 +131,8 @@ def test_random_search_runs_sequentially() -> None:
 
 def test_latent_pca_runs_with_original_space_surrogate() -> None:
     rows = benchmark.run_strategy(
-        "LatentPCA",
-        6,
-        n_train=6,
-        n_iterations=1,
-        latent_dim=2,
-        random_samples=8,
-        num_restarts=1,
-        raw_samples=8,
-        seed=2,
+        "LatentPCA", 6, n_train=6, n_iterations=1, latent_dim=2,
+        random_samples=8, num_restarts=1, raw_samples=8, seed=2,
     )
     assert len(rows) == 1
     assert rows[0].strategy == "LatentPCA"
@@ -157,15 +141,8 @@ def test_latent_pca_runs_with_original_space_surrogate() -> None:
 
 def test_rembo_runs_with_logei() -> None:
     rows = benchmark.run_strategy(
-        "REMBO",
-        6,
-        n_train=6,
-        n_iterations=1,
-        latent_dim=2,
-        random_samples=8,
-        num_restarts=1,
-        raw_samples=8,
-        seed=4,
+        "REMBO", 6, n_train=6, n_iterations=1, latent_dim=2,
+        random_samples=8, num_restarts=1, raw_samples=8, seed=4,
     )
     assert len(rows) == 1
     assert rows[0].strategy == "REMBO"
