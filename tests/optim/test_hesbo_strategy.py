@@ -45,8 +45,8 @@ def test_project_returns_original_space_candidates() -> None:
     X = strategy.project(Z)
 
     assert X.shape == (1, 6)
-    assert torch.all(X >= bounds[0])
-    assert torch.all(X <= bounds[1])
+    assert torch.all(bounds[0] <= X)
+    assert torch.all(bounds[1] >= X)
 
 
 def test_optimize_returns_public_space_candidate_and_embedding_metadata() -> None:
