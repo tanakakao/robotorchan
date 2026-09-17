@@ -64,6 +64,7 @@ def test_baxus_ts_batch_benchmark_uses_automatic_candidate_budget() -> None:
     )
 
     assert isinstance(strategy, BAxUSThompsonSamplingStrategy)
+    assert strategy.target_dim == 2
     assert strategy.n_candidates == 2000
 
 
