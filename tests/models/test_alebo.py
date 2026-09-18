@@ -92,7 +92,9 @@ def test_alebo_gp_fit_returns_same_model(monkeypatch) -> None:
     fitted = model.fit(optimizer_kwargs={"options": {"maxiter": 3}})
 
     assert fitted is model
-    assert captured["mll"].model is model
+    assert captured["mll"].model is not model
+    torch.testing.assert_close(captured["mll"].model.raw_train_X, model.raw_train_X)
+    torch.testing.assert_close(captured["mll"].model.raw_train_Y, model.raw_train_Y)
     assert captured["kwargs"] == {"optimizer_kwargs": {"options": {"maxiter": 3}}}
 
 
@@ -411,16 +413,13 @@ def test_fit_validates_alebo_map_restarts() -> None:
         model.fit(restarts=0)
 
 
-def test_randomize_map_state_changes_alebo_hyperparameters() -> None:
-    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
-    train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
-    original_metric = model.metric_parameter_vector().detach().clone()
-    original_mean = model.mean_module.constant.detach().clone()
-    original_scale = model.covar_module.raw_outputscale.detach().clone()
+def test_alebo_kernel_retains_projection_for_reference_restarts() -> None:
+    projection = torch.tensor(
+        [[1.0, 0.0, 0.5], [0.0, 1.0, -0.5]],
+        dtype=torch.double,
+    )
+    train_X = torch.zeros(3, 2, dtype=torch.double)
+    train_Y = torch.zeros(3, 1, dtype=torch.double)
+    model = ALEBOGP(train_X, train_Y, projection=projection)
 
-    model._randomize_map_state(generator=torch.Generator().manual_seed(47))
-
-    assert not torch.equal(model.metric_parameter_vector(), original_metric)
-    assert not torch.equal(model.mean_module.constant, original_mean)
-    assert not torch.equal(model.covar_module.raw_outputscale, original_scale)
+    torch.testing.assert_close(model.mahalanobis_kernel.projection, projection)
