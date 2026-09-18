@@ -127,6 +127,7 @@ def test_public_optim_exports_are_complete() -> None:
     import robotorchan.optim as optim
 
     expected = {
+        "ALEBOStrategy",
         "SearchResult",
         "SearchStrategy",
         "OriginalSpaceStrategy",

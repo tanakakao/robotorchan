@@ -2,6 +2,7 @@
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.embedding import (
+    ALEBOStrategy,
     BAxUSState,
     BAxUSStrategy,
     BAxUSThompsonSamplingStrategy,
@@ -20,6 +21,7 @@ from robotorchan.optim.random import RandomSearchStrategy
 from robotorchan.optim.trust_region import TuRBOState, TuRBOStrategy, update_turbo_state
 
 __all__ = [
+    "ALEBOStrategy",
     "BAxUSState",
     "BAxUSStrategy",
     "BAxUSThompsonSamplingStrategy",
