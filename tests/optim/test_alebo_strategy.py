@@ -144,6 +144,24 @@ def test_optimize_validates_q_and_optimizer_settings() -> None:
         strategy.optimize(_QuadraticAcquisition(), q=0)
 
 
+def test_project_clamps_only_feasible_numerical_boundary_overshoot() -> None:
+    strategy = ALEBOStrategy(
+        bounds=torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
+        embedding_dim=2,
+        seed=0,
+    )
+    strategy.embedding = torch.eye(2, dtype=torch.double)
+    strategy.embedding_pinv = torch.eye(2, dtype=torch.double)
+    Z = torch.tensor([[1.0 + 5e-11, -1.0 - 5e-11]], dtype=torch.double)
+
+    projected = strategy.project(Z)
+
+    torch.testing.assert_close(
+        projected,
+        torch.tensor([[1.0, 0.0]], dtype=torch.double),
+    )
+
+
 def test_sample_feasible_draws_points_inside_alebo_polytope() -> None:
     bounds = torch.stack([torch.zeros(6, dtype=torch.double), torch.ones(6, dtype=torch.double)])
     strategy = ALEBOStrategy(bounds, embedding_dim=2, seed=7)

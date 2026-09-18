@@ -9,14 +9,24 @@ from robotorchan.models import ALEBOGP
 from robotorchan.models.alebo import MahalanobisRBFKernel
 
 
-def test_mahalanobis_metric_is_symmetric_positive_definite() -> None:
+def test_mahalanobis_metric_is_symmetric_positive_semidefinite() -> None:
     kernel = MahalanobisRBFKernel(ard_num_dims=3).double()
 
     metric = kernel.metric
     eigenvalues = torch.linalg.eigvalsh(metric)
 
     torch.testing.assert_close(metric, metric.transpose(-2, -1))
-    assert torch.all(eigenvalues > 0)
+    assert torch.all(eigenvalues >= -1e-12)
+
+
+def test_mahalanobis_factor_keeps_reference_unconstrained_diagonal() -> None:
+    kernel = MahalanobisRBFKernel(ard_num_dims=2).double()
+
+    with torch.no_grad():
+        kernel.raw_tril.copy_(torch.tensor([-1.0, 0.5, -2.0], dtype=torch.double))
+
+    expected = torch.tensor([[-1.0, 0.5], [0.0, -2.0]], dtype=torch.double)
+    torch.testing.assert_close(kernel.metric_factor, expected)
 
 
 def test_mahalanobis_kernel_has_full_metric_parameters() -> None:
@@ -196,7 +206,7 @@ def test_sample_metric_parameters_validates_inputs() -> None:
         model.sample_metric_parameters(2, covariance=torch.eye(2, dtype=torch.double))
 
 
-def test_metric_parameter_vector_uses_only_free_lower_triangle() -> None:
+def test_metric_parameter_vector_uses_only_free_upper_triangle() -> None:
     train_X = torch.zeros(3, 3, dtype=torch.double)
     train_Y = torch.zeros(3, 1, dtype=torch.double)
     model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))

@@ -17,7 +17,7 @@ from robotorchan.models.single_task import SingleTaskGP
 
 
 class MahalanobisRBFKernel(Kernel):
-    """RBF kernel with a learned full positive-definite distance metric."""
+    """ALEBO RBF kernel parameterized by an unconstrained triangular factor."""
 
     has_lengthscale = False
 
@@ -33,8 +33,8 @@ class MahalanobisRBFKernel(Kernel):
             raise ValueError("ard_num_dims must be positive.")
         self.ard_num_dims = ard_num_dims
         self.register_buffer("projection", projection, persistent=False)
-        n_free = ard_num_dims * (ard_num_dims + 1) // 2
-        initial = torch.zeros(n_free)
+        rows, cols = torch.triu_indices(ard_num_dims, ard_num_dims)
+        initial = torch.zeros(rows.numel())
         if projection is not None:
             if projection.ndim != 2 or projection.shape[0] != ard_num_dims:
                 raise ValueError("projection must have shape [ard_num_dims, input_dim].")
@@ -49,35 +49,30 @@ class MahalanobisRBFKernel(Kernel):
             ).Q
             transformed = random_basis[:ard_num_dims] @ torch.linalg.pinv(projection)
             metric = transformed.transpose(-2, -1) @ transformed
-            factor = torch.linalg.cholesky(metric)
-            rows, cols = torch.tril_indices(ard_num_dims, ard_num_dims, device=projection.device)
+            factor = torch.linalg.cholesky(metric).transpose(-2, -1)
+            rows, cols = torch.triu_indices(
+                ard_num_dims,
+                ard_num_dims,
+                device=projection.device,
+            )
             initial = factor[rows, cols]
-            diagonal_mask = rows == cols
-            initial[diagonal_mask] = torch.log(torch.expm1(initial[diagonal_mask].clamp_min(1e-6)))
         self.register_parameter(
             name="raw_tril",
             parameter=torch.nn.Parameter(initial),
         )
-        self.register_buffer(
-            "tril_rows", torch.tril_indices(ard_num_dims, ard_num_dims)[0], persistent=False
-        )
-        self.register_buffer(
-            "tril_cols", torch.tril_indices(ard_num_dims, ard_num_dims)[1], persistent=False
-        )
+        self.register_buffer("triu_rows", rows, persistent=False)
+        self.register_buffer("triu_cols", cols, persistent=False)
 
     @property
     def metric_factor(self) -> Tensor:
-        """Lower-triangular factor whose Gram matrix is the distance metric."""
+        """Upper-triangular ALEBO factor used directly in embedded coordinates."""
         factor = self.raw_tril.new_zeros(self.ard_num_dims, self.ard_num_dims)
-        factor[self.tril_rows, self.tril_cols] = self.raw_tril
-        diagonal = torch.diagonal(factor)
-        positive_diagonal = torch.nn.functional.softplus(diagonal) + 1e-6
-        factor = factor - torch.diag_embed(diagonal) + torch.diag_embed(positive_diagonal)
+        factor[self.triu_rows, self.triu_cols] = self.raw_tril
         return factor
 
     @property
     def metric(self) -> Tensor:
-        """Symmetric positive-definite Mahalanobis metric."""
+        """Positive-semidefinite Mahalanobis metric induced by the ALEBO factor."""
         factor = self.metric_factor
         return factor @ factor.transpose(-2, -1)
 
