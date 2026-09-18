@@ -2,6 +2,7 @@
 
 import pytest
 import torch
+from botorch.acquisition.analytic import LogExpectedImprovement
 from gpytorch.kernels import RBFKernel, ScaleKernel
 
 from robotorchan.models import ALEBOGP
@@ -287,3 +288,38 @@ def test_marginal_metric_posterior_is_botorch_compatible() -> None:
     assert torch.isfinite(posterior.variance).all()
     samples = posterior.rsample(torch.Size([4]))
     assert samples.shape == (4, *train_Y.shape)
+
+
+def test_acquisition_model_uses_metric_marginal_posterior() -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+    covariance = torch.eye(1, dtype=torch.double) * 0.01
+    acquisition_model = model.acquisition_model(
+        n_metric_samples=3,
+        covariance=covariance,
+        generator=torch.Generator().manual_seed(23),
+    )
+
+    posterior = acquisition_model.posterior(train_X)
+
+    assert posterior.mean.shape == train_Y.shape
+    assert posterior.variance.shape == train_Y.shape
+
+
+def test_log_ei_accepts_alebo_metric_marginal_model() -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+    covariance = torch.eye(1, dtype=torch.double) * 0.01
+    acquisition_model = model.acquisition_model(
+        n_metric_samples=3,
+        covariance=covariance,
+        generator=torch.Generator().manual_seed(29),
+    )
+    acquisition = LogExpectedImprovement(model=acquisition_model, best_f=train_Y.max())
+
+    value = acquisition(torch.tensor([[0.25]], dtype=torch.double))
+
+    assert value.numel() == 1
+    assert torch.isfinite(value).all()
