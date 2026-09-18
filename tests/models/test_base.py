@@ -6,6 +6,8 @@ from robotorchan.models.base import (
     ModelTrainingMixin,
     RawDataMixin,
     UnsupportedModelOperationError,
+    continuous_feature_dims,
+    normalize_feature_dims,
 )
 
 
@@ -97,3 +99,21 @@ def test_default_training_capability_rejects_mll() -> None:
     assert model.supports_mll is False
     with pytest.raises(UnsupportedModelOperationError, match="does not support make_mll"):
         model.make_mll()
+
+
+def test_normalize_feature_dims_supports_negative_indices() -> None:
+    assert normalize_feature_dims([1, -1], 4, name="cat_dims") == (1, 3)
+
+
+def test_normalize_feature_dims_rejects_alias_duplicates() -> None:
+    with pytest.raises(ValueError, match="duplicate"):
+        normalize_feature_dims([-1, 3], 4, name="cat_dims")
+
+
+def test_normalize_feature_dims_rejects_structural_overlap() -> None:
+    with pytest.raises(ValueError, match="structural"):
+        normalize_feature_dims([1, -1], 4, name="cat_dims", excluded_dims=[3])
+
+
+def test_continuous_feature_dims_excludes_categories_and_structure() -> None:
+    assert continuous_feature_dims(5, cat_dims=[1, -1], excluded_dims=[2]) == (0, 3)
