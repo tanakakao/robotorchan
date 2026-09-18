@@ -116,9 +116,7 @@ class _QuadraticAcquisition(AcquisitionFunction):
 
 
 def test_optimize_returns_feasible_original_space_candidate() -> None:
-    strategy = ALEBOStrategy(
-        _bounds(), embedding_dim=2, seed=0, num_restarts=3, raw_samples=32
-    )
+    strategy = ALEBOStrategy(_bounds(), embedding_dim=2, seed=0, num_restarts=3, raw_samples=32)
 
     result = strategy.optimize(_QuadraticAcquisition(), q=1)
 
