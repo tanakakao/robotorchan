@@ -23,6 +23,7 @@ def _model(X, Y, *, random_state=19):
         reconstruction_weight=0.5,
     )
 
+
 def test_joint_vae_gp_distribution_and_sampling_shapes():
     X, Y = _data()
     model = _model(X, Y)
@@ -32,6 +33,7 @@ def test_joint_vae_gp_distribution_and_sampling_shapes():
     assert logvar.shape == (4, 3)
     assert model.sample_latent(X[:4], 5).shape == (5, 4, 3)
     assert model.reconstruct(X[:4]).shape == (4, 7)
+
 
 def test_training_loss_backpropagates_to_variational_and_decoder_parameters():
     X, Y = _data()
@@ -45,7 +47,6 @@ def test_training_loss_backpropagates_to_variational_and_decoder_parameters():
     assert next(model.decoder.parameters()).grad is not None
     assert torch.isfinite(model.mu_head.weight.grad).all()
     assert torch.isfinite(model.logvar_head.weight.grad).all()
-
 
 
 def test_joint_vae_gp_posterior_and_acquisition_keep_original_x_gradients():
@@ -65,6 +66,7 @@ def test_joint_vae_gp_posterior_and_acquisition_keep_original_x_gradients():
 
     assert candidate.grad is not None
     assert torch.isfinite(candidate.grad).all()
+
 
 def test_joint_vae_gp_state_dict_round_trip():
     X, Y = _data()
