@@ -129,7 +129,7 @@ class ALEBOMetricMarginalModel(Model):
             raise NotImplementedError("posterior_transform is not supported yet.")
         if not isinstance(observation_noise, bool):
             raise NotImplementedError("Tensor observation_noise is not supported yet.")
-        return self.base_model.metric_marginal_posterior_from_samples(
+        return self.base_model._metric_marginal_posterior_from_samples(
             X,
             metric_samples=self.metric_samples,
             observation_noise=observation_noise,
@@ -360,7 +360,7 @@ class ALEBOGP(SingleTaskGP):
         )
         return self._moment_match_metric_covariance(means, covariances)
 
-    def metric_marginal_posterior_from_samples(
+    def _metric_marginal_posterior_from_samples(
         self,
         X: Tensor,
         *,
@@ -394,28 +394,10 @@ class ALEBOGP(SingleTaskGP):
             covariance=covariance,
             generator=generator,
         )
-        return self.metric_marginal_posterior_from_samples(
+        return self._metric_marginal_posterior_from_samples(
             X,
             metric_samples=samples,
             observation_noise=observation_noise,
-        )
-
-    def posterior_with_metric_uncertainty(
-        self,
-        X: Tensor,
-        *,
-        n_metric_samples: int,
-        covariance: Tensor | None = None,
-        observation_noise: bool = False,
-        generator: torch.Generator | None = None,
-    ) -> GPyTorchPosterior:
-        """Return the ALEBO posterior used by acquisition functions."""
-        return self.marginal_metric_posterior(
-            X,
-            n_metric_samples=n_metric_samples,
-            covariance=covariance,
-            observation_noise=observation_noise,
-            generator=generator,
         )
 
     def acquisition_model(
@@ -434,24 +416,6 @@ class ALEBOGP(SingleTaskGP):
             generator=generator,
         )
         return ALEBOMetricMarginalModel(self, metric_samples=metric_samples)
-
-    @staticmethod
-    def moment_match_predictions(
-        means: Tensor,
-        variances: Tensor,
-    ) -> tuple[Tensor, Tensor]:
-        """Moment-match Gaussian predictions over metric posterior samples."""
-        if means.shape != variances.shape:
-            raise ValueError("means and variances must have the same shape.")
-        if means.ndim < 1 or means.shape[0] < 1:
-            raise ValueError("predictions must contain at least one metric sample.")
-        if bool((variances < 0).any()):
-            raise ValueError("variances must be non-negative.")
-
-        mean = means.mean(dim=0)
-        second_moment = (variances + means.square()).mean(dim=0)
-        variance = (second_moment - mean.square()).clamp_min(0.0)
-        return mean, variance
 
     def fit(
         self,
