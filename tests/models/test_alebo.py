@@ -147,7 +147,6 @@ def test_sample_metric_parameters_validates_inputs() -> None:
         model.sample_metric_parameters(2, covariance=torch.eye(2, dtype=torch.double))
 
 
-
 def test_metric_parameter_vector_uses_only_free_lower_triangle() -> None:
     train_X = torch.zeros(3, 3, dtype=torch.double)
     train_Y = torch.zeros(3, 1, dtype=torch.double)
