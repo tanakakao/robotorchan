@@ -84,6 +84,4 @@ class ALEBOStrategy(SearchStrategy):
     ) -> SearchResult:
         """Optimize an acquisition function with ALEBO."""
         del acq_function, q
-        raise NotImplementedError(
-            "ALEBO acquisition optimization is not implemented in Phase 1."
-        )
+        raise NotImplementedError("ALEBO acquisition optimization is not implemented in Phase 1.")
