@@ -16,7 +16,7 @@ def test_alebo_model_and_strategy_complete_one_bo_step() -> None:
     train_X = strategy.project(train_Z)
     train_Y = -((train_X - 0.5) ** 2).sum(dim=-1, keepdim=True)
 
-    model = ALEBOGP(train_Z, train_Y)
+    model = ALEBOGP(train_Z, train_Y, torch.full_like(train_Y, 1e-6))
     model.eval()
     covariance = torch.eye(model.metric_parameter_vector().numel(), dtype=torch.double) * 0.01
     acquisition_model = model.acquisition_model(
@@ -53,7 +53,7 @@ def test_alebo_metric_marginal_model_supports_batch_qlogei() -> None:
     )
     train_X = strategy.project(train_Z)
     train_Y = -((train_X - 0.5) ** 2).sum(dim=-1, keepdim=True)
-    model = ALEBOGP(train_Z, train_Y)
+    model = ALEBOGP(train_Z, train_Y, torch.full_like(train_Y, 1e-6))
     covariance = torch.eye(model.metric_parameter_vector().numel(), dtype=torch.double) * 0.01
     acquisition_model = model.acquisition_model(
         n_metric_samples=3,

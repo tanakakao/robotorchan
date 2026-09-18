@@ -49,7 +49,7 @@ def test_alebo_gp_uses_mahalanobis_kernel_and_common_contract() -> None:
     )
     train_Y = train_X[:, :1].square() + train_X[:, 1:].square()
 
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     assert isinstance(model.covar_module, ScaleKernel)
     assert isinstance(model.covar_module.base_kernel, MahalanobisRBFKernel)
@@ -68,7 +68,7 @@ def test_alebo_gp_exposes_metric_from_internal_kernel() -> None:
     )
     train_Y = train_X[:, :1].square() + train_X[:, 1:].square()
 
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     torch.testing.assert_close(model.metric, model.covar_module.base_kernel.metric)
 
@@ -79,7 +79,7 @@ def test_alebo_gp_fit_returns_same_model(monkeypatch) -> None:
         dtype=torch.double,
     )
     train_Y = train_X[:, :1].square() + train_X[:, 1:].square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     captured = {}
 
     def fake_fit(mll, **kwargs):
@@ -101,7 +101,7 @@ def test_alebo_gp_fit_returns_same_model(monkeypatch) -> None:
 def test_alebo_fit_warm_starts_first_restart(monkeypatch: pytest.MonkeyPatch) -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     with torch.no_grad():
         model.mean_module.constant.fill_(1.25)
     seen_means = []
@@ -122,7 +122,7 @@ def test_alebo_fit_warm_starts_first_restart(monkeypatch: pytest.MonkeyPatch) ->
 def test_alebo_fit_can_disable_warm_start(monkeypatch: pytest.MonkeyPatch) -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     with torch.no_grad():
         model.mean_module.constant.fill_(9.0)
     seen_means = []
@@ -142,7 +142,12 @@ def test_alebo_fit_can_disable_warm_start(monkeypatch: pytest.MonkeyPatch) -> No
 def test_alebo_gp_rejects_non_mahalanobis_covar_for_metric_access() -> None:
     train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y, covar_module=ScaleKernel(RBFKernel()))
+    model = ALEBOGP(
+        train_X,
+        train_Y,
+        torch.full_like(train_Y, 1e-6),
+        covar_module=ScaleKernel(RBFKernel()),
+    )
 
     with pytest.raises(TypeError, match="MahalanobisRBFKernel"):
         _ = model.metric
@@ -151,7 +156,7 @@ def test_alebo_gp_rejects_non_mahalanobis_covar_for_metric_access() -> None:
 def test_metric_parameter_vector_is_detached_copy() -> None:
     train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     with torch.no_grad():
         model.mahalanobis_kernel.raw_tril.fill_(0.5)
@@ -169,7 +174,7 @@ def test_sample_metric_parameters_uses_gaussian_laplace_covariance() -> None:
         dtype=torch.double,
     )
     train_Y = train_X[:, :1].square() + train_X[:, 1:].square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     n_params = model.metric_parameter_vector().numel()
     covariance = 0.01 * torch.eye(n_params, dtype=torch.double)
     generator = torch.Generator().manual_seed(7)
@@ -183,7 +188,7 @@ def test_sample_metric_parameters_uses_gaussian_laplace_covariance() -> None:
 def test_sample_metric_parameters_validates_inputs() -> None:
     train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     with pytest.raises(ValueError, match="n_samples"):
         model.sample_metric_parameters(0, covariance=torch.eye(1, dtype=torch.double))
@@ -194,7 +199,7 @@ def test_sample_metric_parameters_validates_inputs() -> None:
 def test_metric_parameter_vector_uses_only_free_lower_triangle() -> None:
     train_X = torch.zeros(3, 3, dtype=torch.double)
     train_Y = torch.zeros(3, 1, dtype=torch.double)
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     assert model.metric_parameter_vector().shape == (6,)
 
@@ -202,7 +207,7 @@ def test_metric_parameter_vector_uses_only_free_lower_triangle() -> None:
 def test_metric_laplace_covariance_uses_negative_diagonal_hessian() -> None:
     train_X = torch.zeros(3, 2, dtype=torch.double)
     train_Y = torch.zeros(3, 1, dtype=torch.double)
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     covariance = model.metric_laplace_covariance(
         diagonal_hessian=torch.tensor([-2.0, -4.0, -5.0], dtype=torch.double)
@@ -215,7 +220,7 @@ def test_metric_laplace_covariance_uses_negative_diagonal_hessian() -> None:
 def test_metric_laplace_covariance_uses_reference_nugget_stabilization() -> None:
     train_X = torch.zeros(3, 2, dtype=torch.double)
     train_Y = torch.zeros(3, 1, dtype=torch.double)
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     covariance = model.metric_laplace_covariance(
         diagonal_hessian=torch.tensor([-1.0, 0.0, -2.0], dtype=torch.double)
@@ -245,7 +250,7 @@ def test_moment_match_predictions_validates_inputs() -> None:
 def test_metric_diagonal_hessian_matches_autograd_curvature() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     diagonal = model.metric_diagonal_hessian()
 
@@ -259,7 +264,7 @@ def test_estimate_metric_laplace_covariance_uses_automatic_hessian(
 ) -> None:
     train_X = torch.zeros(3, 2, dtype=torch.double)
     train_Y = torch.zeros(3, 1, dtype=torch.double)
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     diagonal = torch.tensor([-2.0, -4.0, -5.0], dtype=torch.double)
     monkeypatch.setattr(model, "metric_diagonal_hessian", lambda: diagonal)
 
@@ -272,7 +277,7 @@ def test_estimate_metric_laplace_covariance_uses_automatic_hessian(
 def test_metric_sample_predictions_restore_fitted_metric() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     original = model.metric_parameter_vector()
     samples = torch.stack([original - 0.1, original + 0.1])
 
@@ -286,7 +291,7 @@ def test_metric_sample_predictions_restore_fitted_metric() -> None:
 def test_marginal_metric_moments_include_metric_uncertainty() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     covariance = torch.eye(1, dtype=torch.double) * 0.01
     generator = torch.Generator().manual_seed(11)
 
@@ -307,7 +312,7 @@ def test_marginal_metric_moments_include_metric_uncertainty() -> None:
 def test_metric_sample_predictions_validates_sample_shape() -> None:
     train_X = torch.zeros(3, 2, dtype=torch.double)
     train_Y = torch.zeros(3, 1, dtype=torch.double)
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     with pytest.raises(ValueError, match="metric_samples must have shape"):
         model.metric_sample_predictions(train_X, metric_samples=torch.zeros(2, 2))
@@ -316,7 +321,7 @@ def test_metric_sample_predictions_validates_sample_shape() -> None:
 def test_marginal_metric_posterior_is_botorch_compatible() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     covariance = torch.eye(1, dtype=torch.double) * 0.01
     generator = torch.Generator().manual_seed(17)
 
@@ -338,7 +343,7 @@ def test_marginal_metric_posterior_is_botorch_compatible() -> None:
 def test_acquisition_model_uses_metric_marginal_posterior() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     covariance = torch.eye(1, dtype=torch.double) * 0.01
     acquisition_model = model.acquisition_model(
         n_metric_samples=3,
@@ -355,7 +360,7 @@ def test_acquisition_model_uses_metric_marginal_posterior() -> None:
 def test_log_ei_accepts_alebo_metric_marginal_model() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     covariance = torch.eye(1, dtype=torch.double) * 0.01
     acquisition_model = model.acquisition_model(
         n_metric_samples=3,
@@ -373,7 +378,7 @@ def test_log_ei_accepts_alebo_metric_marginal_model() -> None:
 def test_marginal_metric_posterior_preserves_cross_point_covariance() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     covariance = torch.eye(1, dtype=torch.double) * 0.01
 
     posterior = model.marginal_metric_posterior(
@@ -392,7 +397,7 @@ def test_marginal_metric_posterior_preserves_cross_point_covariance() -> None:
 def test_acquisition_model_reuses_fixed_metric_samples() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     covariance = torch.eye(1, dtype=torch.double) * 0.01
     acquisition_model = model.acquisition_model(
         n_metric_samples=3,
@@ -415,7 +420,7 @@ def test_acquisition_model_reuses_fixed_metric_samples() -> None:
 def test_metric_samples_include_map_as_first_sample() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     covariance = torch.eye(1, dtype=torch.double) * 0.01
     map_metric = model.metric_parameter_vector().detach().clone()
 
@@ -437,7 +442,7 @@ def test_projection_initializes_nontrivial_alebo_metric() -> None:
     train_X = torch.tensor([[-0.5, 0.0], [0.0, 0.25], [0.5, -0.25]], dtype=torch.double)
     train_Y = train_X.square().sum(dim=-1, keepdim=True)
 
-    model = ALEBOGP(train_X, train_Y, projection=projection)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6), projection=projection)
 
     assert model.metric.shape == (2, 2)
     assert torch.isfinite(model.metric).all()
@@ -448,7 +453,7 @@ def test_projection_initializes_nontrivial_alebo_metric() -> None:
 def test_fit_validates_alebo_map_restarts() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     with pytest.raises(ValueError, match="restarts must be positive"):
         model.fit(restarts=0)
@@ -461,6 +466,6 @@ def test_alebo_kernel_retains_projection_for_reference_restarts() -> None:
     )
     train_X = torch.zeros(3, 2, dtype=torch.double)
     train_Y = torch.zeros(3, 1, dtype=torch.double)
-    model = ALEBOGP(train_X, train_Y, projection=projection)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6), projection=projection)
 
     torch.testing.assert_close(model.mahalanobis_kernel.projection, projection)
