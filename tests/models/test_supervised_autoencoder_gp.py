@@ -3,7 +3,7 @@ from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import SupervisedAutoEncoderGP
-from robotorchan.models.supervised_neural_reduction import SupervisedAutoEncoderInputReducer
+from robotorchan.reduction import SupervisedAutoEncoderInputReducer
 
 
 def _data():
