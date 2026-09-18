@@ -200,10 +200,7 @@ class ALEBOGP(SingleTaskGP):
         parameter = self.mahalanobis_kernel.raw_tril
         expected_shape = (parameter.numel(),)
         if metric_samples.ndim != 2 or metric_samples.shape[1:] != expected_shape:
-            raise ValueError(
-                "metric_samples must have shape "
-                f"[n_samples, {parameter.numel()}]."
-            )
+            raise ValueError(f"metric_samples must have shape [n_samples, {parameter.numel()}].")
         if metric_samples.shape[0] < 1:
             raise ValueError("metric_samples must contain at least one sample.")
 
