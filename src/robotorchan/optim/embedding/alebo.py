@@ -112,7 +112,6 @@ class ALEBOStrategy(SearchStrategy):
         half_range = 0.5 * (self.bounds[1] - self.bounds[0])
         return center + half_range * normalized
 
-
     def sample_feasible(
         self,
         n: int,
