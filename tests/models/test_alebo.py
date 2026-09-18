@@ -92,7 +92,9 @@ def test_alebo_gp_fit_returns_same_model(monkeypatch) -> None:
     fitted = model.fit(optimizer_kwargs={"options": {"maxiter": 3}})
 
     assert fitted is model
-    assert captured["mll"].model is model
+    assert captured["mll"].model is not model
+    torch.testing.assert_close(captured["mll"].model.raw_train_X, model.raw_train_X)
+    torch.testing.assert_close(captured["mll"].model.raw_train_Y, model.raw_train_Y)
     assert captured["kwargs"] == {"optimizer_kwargs": {"options": {"maxiter": 3}}}
 
 
