@@ -46,29 +46,40 @@ surrogate model は original space のままで、embedded coordinate は acquis
 
 ## ALEBO の使い方
 
-ALEBO は固定線形 embedding を使うが、REMBO のように元空間の box を越えた点を clamp しない。埋め込み座標 `z` に対して、元空間へ線形射影した点が bounds 内に残る領域を線形不等式の polytope として構成し、その領域内だけで acquisition function を最適化する。
+ALEBO は固定線形 embedding を使うが、REMBO のように元空間の box を越えた点を clamp しない。埋め込み座標 `z` から元空間へ線形射影した点が bounds 内に残る領域を polytope として構成し、その領域内で acquisition function を最適化する。
 
 ```python
+import torch
 from botorch.acquisition.analytic import LogExpectedImprovement
 from robotorchan.models import ALEBOGP
 from robotorchan.optim import ALEBOStrategy
 
-train_Z = ...  # feasible embedded coordinates corresponding to train_X
-model = ALEBOGP(train_Z, train_Y)
-model.fit()
-
-acq = LogExpectedImprovement(model=model, best_f=train_Y.max())
 strategy = ALEBOStrategy(bounds, embedding_dim=5, seed=0)
+train_Z = ...  # strategy の feasible embedded coordinates
+train_X = strategy.project(train_Z)
+train_Y = objective(train_X)
+train_Yvar = torch.full_like(train_Y, 1e-6)
+
+model = ALEBOGP(
+    train_Z,
+    train_Y,
+    train_Yvar,
+    projection=strategy.embedding,
+)
+acquisition_model = model.fit_acquisition_model(
+    n_metric_samples=16,
+    restarts=10,
+    generator=torch.Generator().manual_seed(1),
+)
+acq = LogExpectedImprovement(model=acquisition_model, best_f=train_Y.max())
 result = strategy.optimize(acq, q=1)
 ```
 
-`ALEBOGP` は full Mahalanobis RBF metric を使い、通常の axis-aligned ARD kernel では表現できない線形 embedding 後の回転した距離構造を扱う。metric は正定値になるよう lower-triangular factor から構成する。
+`ALEBOGP` は embedded coordinates `train_Z` 上で学習し、上三角 Cholesky factor `U` による full Mahalanobis metric `U.T @ U` を使う。観測分散 `train_Yvar` は fixed-noise ALEBO の必須入力である。`projection=strategy.embedding` を渡すと、ALEBO の projection に条件づけた metric 初期化を使う。
 
-robotorchan の実装には metric parameter の Gaussian Laplace approximation を扱うための `metric_laplace_covariance()`、`sample_metric_parameters()` と、複数の metric-conditioned prediction を統合する `moment_match_predictions()` がある。`metric_diagonal_hessian()` は現在の fitted GP state で Mahalanobis metric parameter に対する exact MLL の diagonal Hessian を autograd で評価し、`estimate_metric_laplace_covariance()` がその負の曲率から diagonal Laplace covariance を構築する。`metric_laplace_covariance()` は外部で評価した diagonal Hessian を直接与える低レベル API として使える。さらに `metric_sample_predictions()` は Laplace posterior から得た各 metric sample に条件づけた GP prediction を評価し、`marginal_metric_moments()` は conditional predictive covariance と metric 間の mean covariance を合わせて Gaussian moment matching する。候補点間の covariance も保持するため、joint posterior sampling でも ALEBO の予測相関を失わない。この joint posterior は `qLogExpectedImprovement` などの Monte Carlo batch acquisition にも利用でき、`ALEBOStrategy.optimize(..., q>1)` で feasible polytope 内の複数候補を同時最適化できる。`marginal_metric_posterior()` はその moment-matched Gaussian を BoTorch の `GPyTorchPosterior` として返す。さらに `acquisition_model()` は metric-marginal posterior を標準の `Model.posterior()` として公開するため、`LogExpectedImprovement` などの BoTorch acquisition function に直接渡せる。
+`fit_acquisition_model()` は multi-start MAP fitting、reference diagonal Laplace covariance、固定 metric sample、full predictive covariance の Gaussian moment matching を順に行い、BoTorch acquisition function に渡せる model を返す。個別の数値処理を検証・研究したい場合には `metric_hessian_diagonal()`、`metric_laplace_covariance()`、`sample_metric_parameters()`、`marginal_metric_posterior()` も利用できる。
 
-ALEBO の GP は原論文どおり embedded coordinates `train_Z` 上で学習する。acquisition function も embedded space で評価し、最適化後の候補だけを `B†z` で original/public input space へ戻す。
-
-ALEBO の embedding は strategy 作成時に固定される。`SearchResult.candidates` は original/public input space、`metadata["embedded_candidates"]` は feasible polytope 内の埋め込み座標である。
+acquisition function は embedded space で評価され、`ALEBOStrategy.optimize()` が feasible polytope 内で最適化した後にだけ original/public input space へ戻す。`SearchResult.candidates` は original space、`metadata["embedded_candidates"]` は embedded space の候補である。q-batch acquisition も同じ contract で扱う。
 
 ### REMBO / ALEBO / BAxUS の使い分け
 
