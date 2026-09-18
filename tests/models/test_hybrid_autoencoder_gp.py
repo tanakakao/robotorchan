@@ -22,7 +22,6 @@ def _make_model(X, Y, *, reconstruction_weight=0.5, random_state=19):
         random_state=random_state,
     )
 
-
 def test_hybrid_autoencoder_gp_reconstructs_original_input_shape():
     X, Y = _data()
     model = _make_model(X, Y)
@@ -31,7 +30,6 @@ def test_hybrid_autoencoder_gp_reconstructs_original_input_shape():
     assert model.reconstruction_loss().ndim == 0
     assert torch.isfinite(model.reconstruction_loss())
     assert model.make_mll().model is model
-
 
 def test_training_loss_backpropagates_to_encoder_decoder_and_gp():
     X, Y = _data()
@@ -50,7 +48,6 @@ def test_training_loss_backpropagates_to_encoder_decoder_and_gp():
 
 
 
-
 def test_zero_reconstruction_weight_removes_decoder_gradient():
     X, Y = _data()
     model = _make_model(X, Y, reconstruction_weight=0.0)
@@ -59,7 +56,6 @@ def test_zero_reconstruction_weight_removes_decoder_gradient():
 
     assert all(parameter.grad is None for parameter in model.decoder.parameters())
     assert any(parameter.grad is not None for parameter in model.encoder.parameters())
-
 
 def test_hybrid_autoencoder_gp_acquisition_keeps_original_x_gradients():
     X, Y = _data()
@@ -76,7 +72,6 @@ def test_hybrid_autoencoder_gp_acquisition_keeps_original_x_gradients():
 
     assert candidate.grad is not None
     assert torch.isfinite(candidate.grad).all()
-
 
 def test_hybrid_autoencoder_gp_state_dict_round_trip():
     X, Y = _data()
