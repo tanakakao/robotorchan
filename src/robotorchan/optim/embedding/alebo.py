@@ -145,8 +145,8 @@ class ALEBOStrategy(SearchStrategy):
         radius = torch.linalg.vector_norm(self.embedding, ord=1, dim=1).max()
         embedded_bounds = torch.stack(
             [
-                torch.full_like(self.embedding[0], -radius),
-                torch.full_like(self.embedding[0], radius),
+                self.bounds.new_full((self.embedding_dim,), -radius),
+                self.bounds.new_full((self.embedding_dim,), radius),
             ]
         )
         embedded_candidates, _ = optimize_acqf(
