@@ -1,4 +1,4 @@
-"""Adaptive linear embedding Bayesian optimization (ALEBO) foundation."""
+"""Adaptive Linear Embedding Bayesian Optimization (ALEBO)."""
 
 from __future__ import annotations
 
@@ -33,11 +33,10 @@ def _make_alebo_embedding(
 
 
 class ALEBOStrategy(SearchStrategy):
-    """Foundation for Adaptive Linear Embedding Bayesian Optimization.
+    """Optimize an acquisition function in a fixed ALEBO linear subspace.
 
-    Phase 1 defines the fixed linear subspace and public-space projection
-    contract. ALEBO-specific acquisition optimization and GP geometry are
-    intentionally deferred rather than approximated with REMBO behavior.
+    Candidates are restricted to the embedded polytope whose linear projection
+    remains inside the public input bounds, so no clipping is applied.
     """
 
     def __init__(

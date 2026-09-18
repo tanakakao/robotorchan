@@ -194,7 +194,7 @@ candidate = result.candidates
 acquisition_value = result.acquisition_value
 ```
 
-利用可能な主な strategy は `OriginalSpaceStrategy`、`RandomSearchStrategy`、`LatentSpaceStrategy`、`REMBOStrategy`、`HeSBOStrategy`、`TuRBOStrategy`、`BAxUSStrategy`、`BAxUSThompsonSamplingStrategy` です。
+利用可能な主な strategy は `OriginalSpaceStrategy`、`RandomSearchStrategy`、`LatentSpaceStrategy`、`REMBOStrategy`、`HeSBOStrategy`、`ALEBOStrategy`、`TuRBOStrategy`、`BAxUSStrategy`、`BAxUSThompsonSamplingStrategy` です。ALEBO 用には full Mahalanobis metric を持つ `ALEBOGP` も提供します。
 
 `SearchResult.candidates` は常に public/original input space の候補を返します。`acquisition_value` は選択された joint q-batch に対する scalar tensor です。TuRBO / BAxUS は stateful strategy のため、目的関数を評価した後に観測値を strategy へ戻します。
 
