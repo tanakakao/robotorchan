@@ -1,7 +1,7 @@
 """Surrogate-model extensions and BoTorch-compatible wrappers."""
 
 from robotorchan.models.additive import OrthogonalAdditiveGP
-from robotorchan.models.alebo import ALEBOGP, MahalanobisRBFKernel
+from robotorchan.models.alebo import ALEBOGP
 from robotorchan.models.base import UnsupportedModelOperationError
 from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP
 from robotorchan.models.fully_bayesian import (
@@ -60,7 +60,6 @@ __all__ = [
     "JointVAEGP",
     "KroneckerMultiTaskGP",
     "LatentKroneckerGP",
-    "MahalanobisRBFKernel",
     "MixedSingleTaskGP",
     "ModelListGP",
     "MultiTaskGP",
