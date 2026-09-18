@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import torch
 from botorch.fit import fit_gpytorch_mll
+from botorch.posteriors.gpytorch import GPyTorchPosterior
+from gpytorch.distributions import MultivariateNormal
 from gpytorch.kernels import Kernel, ScaleKernel
 from gpytorch.module import Module
 from torch import Tensor
@@ -242,6 +244,33 @@ class ALEBOGP(SingleTaskGP):
             observation_noise=observation_noise,
         )
         return self.moment_match_predictions(means, variances)
+
+    def marginal_metric_posterior(
+        self,
+        X: Tensor,
+        *,
+        n_metric_samples: int,
+        covariance: Tensor | None = None,
+        observation_noise: bool = False,
+        generator: torch.Generator | None = None,
+    ) -> GPyTorchPosterior:
+        """Return a BoTorch Gaussian posterior marginalized over metric uncertainty."""
+        mean, variance = self.marginal_metric_moments(
+            X,
+            n_metric_samples=n_metric_samples,
+            covariance=covariance,
+            observation_noise=observation_noise,
+            generator=generator,
+        )
+        if mean.shape[-1] != 1:
+            raise NotImplementedError(
+                "ALEBO metric-marginal posterior currently supports one output."
+            )
+        event_mean = mean.squeeze(-1)
+        event_variance = variance.squeeze(-1)
+        covariance_matrix = torch.diag_embed(event_variance)
+        distribution = MultivariateNormal(event_mean, covariance_matrix)
+        return GPyTorchPosterior(distribution)
 
     @staticmethod
     def moment_match_predictions(
