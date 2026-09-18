@@ -221,3 +221,47 @@ def test_estimate_metric_laplace_covariance_uses_automatic_hessian(
 
     expected = torch.diag(torch.tensor([0.5, 0.25, 0.2], dtype=torch.double))
     torch.testing.assert_close(covariance, expected)
+
+
+def test_metric_sample_predictions_restore_fitted_metric() -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+    original = model.metric_parameter_vector()
+    samples = torch.stack([original - 0.1, original + 0.1])
+
+    means, variances = model.metric_sample_predictions(train_X, metric_samples=samples)
+
+    assert means.shape[0] == 2
+    assert variances.shape == means.shape
+    torch.testing.assert_close(model.metric_parameter_vector(), original)
+
+
+def test_marginal_metric_moments_include_metric_uncertainty() -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+    covariance = torch.eye(1, dtype=torch.double) * 0.01
+    generator = torch.Generator().manual_seed(11)
+
+    mean, variance = model.marginal_metric_moments(
+        train_X,
+        n_metric_samples=3,
+        covariance=covariance,
+        generator=generator,
+    )
+
+    assert mean.shape == train_Y.shape
+    assert variance.shape == train_Y.shape
+    assert torch.isfinite(mean).all()
+    assert torch.isfinite(variance).all()
+    assert torch.all(variance >= 0)
+
+
+def test_metric_sample_predictions_validates_sample_shape() -> None:
+    train_X = torch.zeros(3, 2, dtype=torch.double)
+    train_Y = torch.zeros(3, 1, dtype=torch.double)
+    model = ALEBOGP(train_X, train_Y)
+
+    with pytest.raises(ValueError, match="metric_samples must have shape"):
+        model.metric_sample_predictions(train_X, metric_samples=torch.zeros(2, 2))
