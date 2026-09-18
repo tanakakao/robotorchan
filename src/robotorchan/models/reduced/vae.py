@@ -6,9 +6,8 @@ from typing import Any
 
 from torch import Tensor
 
-from robotorchan.reduction import VAEInputReducer
 from robotorchan.models.reduced.base import ReducedGP
-from robotorchan.reduction import SupervisedVAEInputReducer
+from robotorchan.reduction import SupervisedVAEInputReducer, VAEInputReducer
 
 
 class VAEGP(ReducedGP):
