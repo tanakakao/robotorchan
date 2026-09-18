@@ -39,7 +39,7 @@ def test_embedding_preserves_bounds_dtype_and_device() -> None:
 def test_projection_returns_original_box_points() -> None:
     bounds = _bounds()
     strategy = ALEBOStrategy(bounds, embedding_dim=2, seed=3)
-    Z = torch.tensor([[10.0, -10.0], [-10.0, 10.0]], dtype=torch.double)
+    Z = torch.tensor([[0.2, -0.2], [-0.2, 0.2]], dtype=torch.double)
 
     X = strategy.project(Z)
 
@@ -61,6 +61,27 @@ def test_projection_is_invariant_to_public_input_units() -> None:
 
     torch.testing.assert_close(unit.embedding, scaled.embedding)
     torch.testing.assert_close(unit_X, scaled_normalized)
+
+
+def test_polytope_constraints_match_feasibility() -> None:
+    strategy = ALEBOStrategy(_bounds(), embedding_dim=2, seed=3)
+    A, b = strategy.linear_constraints
+    feasible = torch.zeros(1, 2, dtype=torch.double)
+    infeasible = torch.tensor([[10.0, -10.0]], dtype=torch.double)
+
+    assert A.shape == (12, 2)
+    assert b.shape == (12,)
+    assert torch.all(A @ feasible[0] <= b)
+    assert bool(strategy.is_feasible(feasible).item())
+    assert not bool(strategy.is_feasible(infeasible).item())
+
+
+def test_projection_rejects_infeasible_points_instead_of_clipping() -> None:
+    strategy = ALEBOStrategy(_bounds(), embedding_dim=2, seed=3)
+    Z = torch.tensor([[10.0, -10.0]], dtype=torch.double)
+
+    with pytest.raises(ValueError, match="polytope"):
+        strategy.project(Z)
 
 
 def test_seed_none_uses_global_rng_stream() -> None:
@@ -88,5 +109,5 @@ def test_validates_embedding_dimension_and_projection_shape() -> None:
 def test_phase1_does_not_approximate_alebo_optimization() -> None:
     strategy = ALEBOStrategy(_bounds(), embedding_dim=2, seed=0)
 
-    with pytest.raises(NotImplementedError, match="Phase 1"):
+    with pytest.raises(NotImplementedError, match="Phase 2"):
         strategy.optimize(None)  # type: ignore[arg-type]
