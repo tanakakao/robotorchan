@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import ClassVar
 
+import torch
+from botorch.models.kernels.categorical import CategoricalKernel
+from botorch.models.utils.gpytorch_modules import get_covar_module_with_dim_scaled_prior
+from gpytorch.kernels import AdditiveKernel, Kernel, ProductKernel, ScaleKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood, MarginalLogLikelihood
 from torch import Tensor
 
@@ -66,6 +70,62 @@ def continuous_feature_dims(
     )
     occupied = set(categorical).union(structural)
     return tuple(dim for dim in range(input_dim) if dim not in occupied)
+
+
+ContinuousKernelFactory = Callable[[torch.Size, int, list[int]], Kernel]
+
+
+def make_mixed_covar_module(
+    *,
+    input_dim: int,
+    cat_dims: Sequence[int],
+    excluded_dims: Sequence[int] = (),
+    batch_shape: torch.Size = torch.Size(),
+    cont_kernel_factory: ContinuousKernelFactory | None = None,
+) -> Kernel:
+    """Build a native mixed covariance over ordinary design dimensions.
+
+    Structural dimensions are excluded from both continuous and categorical
+    covariance components. The default follows BoTorch's MixedSingleTaskGP
+    structure: continuous + categorical + their interaction.
+    """
+    categorical = normalize_feature_dims(
+        cat_dims,
+        input_dim,
+        name="cat_dims",
+        excluded_dims=excluded_dims,
+    )
+    continuous = continuous_feature_dims(
+        input_dim,
+        cat_dims=categorical,
+        excluded_dims=excluded_dims,
+    )
+
+    def categorical_kernel(*, scaled: bool) -> Kernel:
+        kernel: Kernel = CategoricalKernel(
+            batch_shape=batch_shape,
+            ard_num_dims=len(categorical),
+            active_dims=list(categorical),
+        )
+        return ScaleKernel(kernel, batch_shape=batch_shape) if scaled else kernel
+
+    if not continuous:
+        return categorical_kernel(scaled=True)
+
+    def continuous_kernel() -> Kernel:
+        if cont_kernel_factory is not None:
+            return cont_kernel_factory(batch_shape, len(continuous), list(continuous))
+        return get_covar_module_with_dim_scaled_prior(
+            ard_num_dims=len(continuous),
+            batch_shape=batch_shape,
+            active_dims=list(continuous),
+        )
+
+    return AdditiveKernel(
+        continuous_kernel(),
+        categorical_kernel(scaled=True),
+        ProductKernel(continuous_kernel(), categorical_kernel(scaled=False)),
+    )
 
 
 class UnsupportedModelOperationError(RuntimeError):
