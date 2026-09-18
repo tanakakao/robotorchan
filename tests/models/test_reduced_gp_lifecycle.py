@@ -4,8 +4,8 @@ import torch
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import PCAGP, PLSGP, RandomProjectionGP, ReducedGP
-from robotorchan.reduction import OutputPCAReducer
 from robotorchan.reduction import (
+    OutputPCAReducer,
     PCAInputReducer,
     PLSInputReducer,
     RandomProjectionInputReducer,
