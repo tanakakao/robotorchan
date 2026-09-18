@@ -7,6 +7,7 @@ from typing import Any
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.optim import optimize_acqf
+from botorch.utils.sampling import HitAndRunPolytopeSampler
 from torch import Tensor
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
@@ -111,6 +112,27 @@ class ALEBOStrategy(SearchStrategy):
         half_range = 0.5 * (self.bounds[1] - self.bounds[0])
         return center + half_range * normalized
 
+
+    def sample_feasible(
+        self,
+        n: int,
+        *,
+        seed: int | None = None,
+    ) -> Tensor:
+        """Sample embedded points directly from the feasible ALEBO polytope."""
+        if n < 1:
+            raise ValueError("n must be at least 1.")
+        A, b = self.linear_constraints
+        sampler = HitAndRunPolytopeSampler(
+            inequality_constraints=(A, b.unsqueeze(-1)),
+            interior_point=self.bounds.new_zeros((self.embedding_dim, 1)),
+        )
+        with torch.random.fork_rng(devices=[]):
+            if seed is not None:
+                torch.manual_seed(seed)
+            samples = sampler.draw(n=n)
+        return samples.to(dtype=self.bounds.dtype, device=self.bounds.device)
+
     def optimize(
         self,
         acq_function: AcquisitionFunction,
@@ -137,12 +159,17 @@ class ALEBOStrategy(SearchStrategy):
                 self.bounds.new_full((self.embedding_dim,), radius),
             ]
         )
+        batch_initial_conditions = self.sample_feasible(
+            self.num_restarts * q,
+            seed=None,
+        ).reshape(self.num_restarts, q, self.embedding_dim)
         embedded_candidates, acquisition_value = optimize_acqf(
             acq_function=acq_function,
             bounds=embedded_bounds,
             q=q,
             num_restarts=self.num_restarts,
-            raw_samples=self.raw_samples,
+            raw_samples=None,
+            batch_initial_conditions=batch_initial_conditions,
             options=self.options,
             inequality_constraints=inequality_constraints,
             sequential=self.sequential,
