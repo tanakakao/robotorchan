@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 import torch
 from torch import Tensor
 
-from robotorchan.models.reduction import (
+from robotorchan.reduction import (
     InputReducer,
     PCAInputReducer,
     RandomProjectionInputReducer,
