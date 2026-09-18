@@ -61,6 +61,7 @@ def continuous_feature_dims(
     excluded_dims: Sequence[int] = (),
 ) -> tuple[int, ...]:
     """Return ordinary continuous design dimensions in raw-input coordinates."""
+    batch_shape = torch.Size() if batch_shape is None else batch_shape
     categorical = normalize_feature_dims(cat_dims, input_dim, name="cat_dims")
     structural = normalize_feature_dims(
         excluded_dims,
@@ -80,7 +81,7 @@ def make_mixed_covar_module(
     input_dim: int,
     cat_dims: Sequence[int],
     excluded_dims: Sequence[int] = (),
-    batch_shape: torch.Size = torch.Size(),
+    batch_shape: torch.Size | None = None,
     cont_kernel_factory: ContinuousKernelFactory | None = None,
 ) -> Kernel:
     """Build a native mixed covariance over ordinary design dimensions.
