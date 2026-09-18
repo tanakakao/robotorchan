@@ -4,6 +4,7 @@ import importlib  # noqa: I001
 MODELS = importlib.import_module("robotorchan.models")
 
 PUBLIC_MODEL_NAMES = {
+    "ALEBOGP",
     "AdditiveMapSaasSingleTaskGP",
     "AutoEncoderGP",
     "EnsembleMapSaasSingleTaskGP",
