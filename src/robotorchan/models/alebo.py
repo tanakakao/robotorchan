@@ -119,6 +119,7 @@ class ALEBOMetricMarginalModel(Model):
             generator=self.generator,
         )
 
+
 class ALEBOGP(SingleTaskGP):
     """Single-task GP using ALEBO's full Mahalanobis RBF geometry."""
 
