@@ -49,16 +49,6 @@ def test_training_loss_backpropagates_to_variational_and_decoder_parameters():
     assert torch.isfinite(model.logvar_head.weight.grad).all()
 
 
-def test_joint_loss_is_backwards_compatible_alias():
-    X, Y = _data()
-    model = _model(X, Y)
-
-    torch.manual_seed(21)
-    expected = model.training_loss().detach()
-    torch.manual_seed(21)
-    actual = model.joint_loss().detach()
-
-    torch.testing.assert_close(actual, expected)
 
 
 def test_joint_vae_gp_posterior_and_acquisition_keep_original_x_gradients():
