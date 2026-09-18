@@ -231,10 +231,10 @@ def test_metric_sample_predictions_restore_fitted_metric() -> None:
     original = model.metric_parameter_vector()
     samples = torch.stack([original - 0.1, original + 0.1])
 
-    means, variances = model.metric_sample_predictions(train_X, metric_samples=samples)
+    means, covariances = model.metric_sample_predictions(train_X, metric_samples=samples)
 
     assert means.shape[0] == 2
-    assert variances.shape == means.shape
+    assert covariances.shape == (2, 3, 3)
     torch.testing.assert_close(model.metric_parameter_vector(), original)
 
 
@@ -245,7 +245,7 @@ def test_marginal_metric_moments_include_metric_uncertainty() -> None:
     covariance = torch.eye(1, dtype=torch.double) * 0.01
     generator = torch.Generator().manual_seed(11)
 
-    mean, variance = model.marginal_metric_moments(
+    mean, predictive_covariance = model.marginal_metric_moments(
         train_X,
         n_metric_samples=3,
         covariance=covariance,
@@ -253,10 +253,10 @@ def test_marginal_metric_moments_include_metric_uncertainty() -> None:
     )
 
     assert mean.shape == train_Y.shape
-    assert variance.shape == train_Y.shape
+    assert predictive_covariance.shape == (3, 3)
     assert torch.isfinite(mean).all()
-    assert torch.isfinite(variance).all()
-    assert torch.all(variance >= 0)
+    assert torch.isfinite(predictive_covariance).all()
+    torch.testing.assert_close(predictive_covariance, predictive_covariance.transpose(-2, -1))
 
 
 def test_metric_sample_predictions_validates_sample_shape() -> None:
@@ -323,3 +323,22 @@ def test_log_ei_accepts_alebo_metric_marginal_model() -> None:
 
     assert value.numel() == 1
     assert torch.isfinite(value).all()
+
+
+def test_marginal_metric_posterior_preserves_cross_point_covariance() -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+    covariance = torch.eye(1, dtype=torch.double) * 0.01
+
+    posterior = model.marginal_metric_posterior(
+        train_X,
+        n_metric_samples=3,
+        covariance=covariance,
+        generator=torch.Generator().manual_seed(31),
+    )
+    predictive_covariance = posterior.distribution.covariance_matrix
+
+    assert predictive_covariance.shape == (3, 3)
+    off_diagonal = predictive_covariance - torch.diag_embed(torch.diagonal(predictive_covariance))
+    assert torch.any(off_diagonal.abs() > 0)
