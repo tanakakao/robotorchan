@@ -155,6 +155,8 @@ class ALEBOGP(SingleTaskGP):
     ) -> None:
         if train_X.ndim < 2:
             raise ValueError("train_X must have at least two dimensions.")
+        if train_Yvar is None:
+            raise ValueError("ALEBOGP requires train_Yvar for fixed-noise modeling.")
         if covar_module is None:
             covar_module = ScaleKernel(
                 MahalanobisRBFKernel(
