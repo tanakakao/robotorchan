@@ -32,6 +32,7 @@ class MahalanobisRBFKernel(Kernel):
         if ard_num_dims < 1:
             raise ValueError("ard_num_dims must be positive.")
         self.ard_num_dims = ard_num_dims
+        self.register_buffer("projection", projection, persistent=False)
         n_free = ard_num_dims * (ard_num_dims + 1) // 2
         initial = torch.zeros(n_free)
         if projection is not None:
@@ -460,38 +461,30 @@ class ALEBOGP(SingleTaskGP):
         self,
         *,
         restarts: int = 10,
-        generator: torch.Generator | None = None,
         **fit_kwargs: object,
     ) -> ALEBOGP:
-        """Fit the ALEBO MAP state using random-restart marginal-likelihood optimization."""
+        """Fit the ALEBO MAP state using independent reference-style restarts."""
         if restarts < 1:
             raise ValueError("restarts must be positive.")
-        initial_state = deepcopy(self.state_dict())
+        projection = self.mahalanobis_kernel.projection
         best_state = None
         best_objective = float("-inf")
-        for restart in range(restarts):
-            self.load_state_dict(initial_state)
-            if restart > 0:
-                self._randomize_map_state(generator=generator)
-            fit_gpytorch_mll(self.make_mll(), **fit_kwargs)
-            self.eval()
+        for _ in range(restarts):
+            restart_model = ALEBOGP(
+                self.raw_train_X,
+                self.raw_train_Y,
+                self.raw_train_Yvar,
+                projection=projection,
+            )
+            fit_gpytorch_mll(restart_model.make_mll(), **fit_kwargs)
+            restart_model.eval()
             with torch.no_grad():
-                objective = float(self.metric_log_posterior().detach())
+                objective = float(restart_model.metric_log_posterior().detach())
             if objective > best_objective:
                 best_objective = objective
-                best_state = deepcopy(self.state_dict())
+                best_state = deepcopy(restart_model.state_dict())
         if best_state is None:
             raise RuntimeError("ALEBO MAP fitting did not produce a valid state.")
         self.load_state_dict(best_state)
         self.eval()
         return self
-
-    def _randomize_map_state(self, *, generator: torch.Generator | None) -> None:
-        """Randomize fitted ALEBO hyperparameters before a MAP restart."""
-        metric = self.mahalanobis_kernel.raw_tril
-        with torch.no_grad():
-            metric.normal_(generator=generator)
-            if hasattr(self.mean_module, "constant"):
-                self.mean_module.constant.normal_(generator=generator)
-            if isinstance(self.covar_module, ScaleKernel):
-                self.covar_module.raw_outputscale.normal_(generator=generator)
