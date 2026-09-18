@@ -22,7 +22,12 @@ from robotorchan.models.map_saas import (
 from robotorchan.models.mixed_multi_fidelity import MixedSingleTaskMultiFidelityGP
 from robotorchan.models.model_list import ModelListGP
 from robotorchan.models.multi_fidelity import SingleTaskMultiFidelityGP
-from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
+from robotorchan.models.multitask import (
+    KroneckerMultiTaskGP,
+    MixedKroneckerMultiTaskGP,
+    MixedMultiTaskGP,
+    MultiTaskGP,
+)
 from robotorchan.models.pairwise import PairwiseGP
 from robotorchan.models.reduced.base import (
     PCAGP,
@@ -72,6 +77,8 @@ __all__ = [
     "KroneckerMultiTaskGP",
     "LatentKroneckerGP",
     "MixedAutoEncoderGP",
+    "MixedKroneckerMultiTaskGP",
+    "MixedMultiTaskGP",
     "MixedPCAGP",
     "MixedPLSGP",
     "MixedRandomProjectionGP",
