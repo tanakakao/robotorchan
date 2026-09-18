@@ -7,7 +7,7 @@ from botorch.posteriors.gpytorch import GPyTorchPosterior
 from gpytorch.distributions import MultivariateNormal
 from torch import Tensor, nn
 
-from robotorchan.models.joint_neural import _ACTIVATIONS, JointEncoderGP
+from robotorchan.models.reduced.joint_neural import _ACTIVATIONS, JointEncoderGP
 
 
 class JointVAEGP(JointEncoderGP):
@@ -130,10 +130,6 @@ class JointVAEGP(JointEncoderGP):
         if self.beta != 0.0:
             loss = loss + self.beta * self.kl_loss()
         return loss
-
-    def joint_loss(self) -> Tensor:
-        """Return :meth:`training_loss` for backwards compatibility."""
-        return self.training_loss()
 
     def _training_noise(self) -> Tensor:
         """Return observation noise aligned with the transformed training targets."""

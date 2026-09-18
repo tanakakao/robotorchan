@@ -24,7 +24,7 @@ for _ in range(100):
 | `HybridAutoEncoderGP` | negative GP MLL + `reconstruction_weight * reconstruction_loss` |
 | `JointVAEGP` | negative GP MLL + `reconstruction_weight * reconstruction_loss + beta * KL` |
 
-`HybridAutoEncoderGP.hybrid_loss()` と `JointVAEGP.joint_loss()` は既存コードとの互換性のため残していますが、今後の共通コードでは `training_loss()` を使用します。
+`HybridAutoEncoderGP` と `JointVAEGP` を含む共同学習モデルは、共通の `training_loss()` を使用します。
 
 ## `make_mll()` との違い
 

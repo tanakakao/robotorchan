@@ -111,9 +111,9 @@ def _fit_joint_model(model: object, steps: int, learning_rate: float) -> None:
     for _ in range(steps):
         optimizer.zero_grad()
         if isinstance(model, JointVAEGP):
-            loss = model.joint_loss()
+            loss = model.training_loss()
         elif isinstance(model, HybridAutoEncoderGP):
-            loss = model.hybrid_loss()
+            loss = model.training_loss()
         else:
             model.train()
             model.likelihood.train()

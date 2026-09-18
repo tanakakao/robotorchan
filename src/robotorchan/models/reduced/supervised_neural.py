@@ -6,7 +6,7 @@ from typing import Any
 
 from torch import Tensor
 
-from robotorchan.models.reduced import ReducedGP
+from robotorchan.models.reduced.base import ReducedGP
 from robotorchan.models.supervised_neural_reduction import SupervisedAutoEncoderInputReducer
 
 

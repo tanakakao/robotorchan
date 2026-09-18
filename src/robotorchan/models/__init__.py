@@ -14,8 +14,8 @@ from robotorchan.models.hierarchical import (
     HierarchicalConditionalKernelMultiTaskGP,
 )
 from robotorchan.models.higher_order import HigherOrderGP
-from robotorchan.models.joint_neural import HybridAutoEncoderGP, JointEncoderGP
-from robotorchan.models.joint_vae import JointVAEGP
+from robotorchan.models.reduced.joint_neural import HybridAutoEncoderGP, JointEncoderGP
+from robotorchan.models.reduced.joint_vae import JointVAEGP
 from robotorchan.models.latent_kronecker import LatentKroneckerGP
 from robotorchan.models.map_saas import (
     AdditiveMapSaasSingleTaskGP,
@@ -25,7 +25,7 @@ from robotorchan.models.model_list import ModelListGP
 from robotorchan.models.multi_fidelity import SingleTaskMultiFidelityGP
 from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.pairwise import PairwiseGP
-from robotorchan.models.reduced import (
+from robotorchan.models.reduced.base import (
     PCAGP,
     PLSGP,
     AutoEncoderGP,
@@ -36,8 +36,8 @@ from robotorchan.models.reduced import (
 )
 from robotorchan.models.robust import RobustRelevancePursuitSingleTaskGP
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
-from robotorchan.models.supervised_neural import SupervisedAutoEncoderGP
-from robotorchan.models.vae import VAEGP, SupervisedVAEGP
+from robotorchan.models.reduced.supervised_neural import SupervisedAutoEncoderGP
+from robotorchan.models.reduced.vae import VAEGP, SupervisedVAEGP
 from robotorchan.models.variational import SingleTaskVariationalGP
 
 __all__ = [
