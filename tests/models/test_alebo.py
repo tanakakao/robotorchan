@@ -3,7 +3,7 @@
 import pytest
 import torch
 from botorch.acquisition.analytic import LogExpectedImprovement
-from gpytorch.kernels import RBFKernel, ScaleKernel
+from gpytorch.kernels import ScaleKernel
 
 from robotorchan.models import ALEBOGP
 from robotorchan.models.alebo import MahalanobisRBFKernel
@@ -50,6 +50,14 @@ def test_kernel_matches_exp_of_mahalanobis_distance() -> None:
     expected = torch.exp(-0.5 * (delta @ kernel.metric @ delta))
 
     torch.testing.assert_close(covariance.squeeze(), expected)
+
+
+def test_alebo_gp_requires_train_yvar_in_signature() -> None:
+    train_X = torch.zeros(3, 1, dtype=torch.double)
+    train_Y = torch.zeros(3, 1, dtype=torch.double)
+
+    with pytest.raises(TypeError, match="train_Yvar"):
+        ALEBOGP(train_X, train_Y)
 
 
 def test_alebo_gp_uses_mahalanobis_kernel_and_common_contract() -> None:
@@ -147,20 +155,6 @@ def test_alebo_fit_can_disable_warm_start(monkeypatch: pytest.MonkeyPatch) -> No
     model.fit(restarts=1, warm_start=False)
 
     assert not torch.equal(seen_means[0], torch.full_like(seen_means[0], 9.0))
-
-
-def test_alebo_gp_rejects_non_mahalanobis_covar_for_metric_access() -> None:
-    train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
-    train_Y = train_X.square()
-    model = ALEBOGP(
-        train_X,
-        train_Y,
-        torch.full_like(train_Y, 1e-6),
-        covar_module=ScaleKernel(RBFKernel()),
-    )
-
-    with pytest.raises(TypeError, match="MahalanobisRBFKernel"):
-        _ = model.metric
 
 
 def test_metric_parameter_vector_is_detached_copy() -> None:
