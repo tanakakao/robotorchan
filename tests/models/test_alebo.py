@@ -257,7 +257,7 @@ def test_moment_match_predictions_validates_inputs() -> None:
         ALEBOGP.moment_match_predictions(torch.zeros(1, 1), -torch.ones(1, 1))
 
 
-def test_metric_diagonal_hessian_matches_autograd_curvature() -> None:
+def test_metric_diagonal_hessian_is_finite_for_reference_forward_difference() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
     model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
@@ -267,6 +267,29 @@ def test_metric_diagonal_hessian_matches_autograd_curvature() -> None:
     assert diagonal.shape == model.metric_parameter_vector().shape
     assert diagonal.dtype == torch.double
     assert torch.isfinite(diagonal).all()
+
+
+def test_metric_diagonal_hessian_uses_forward_difference(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    train_X = torch.zeros(3, 1, dtype=torch.double)
+    train_Y = torch.zeros(3, 1, dtype=torch.double)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
+    parameter = model.mahalanobis_kernel.raw_tril
+    with torch.no_grad():
+        parameter.fill_(2.0)
+
+    monkeypatch.setattr(
+        model,
+        "metric_log_posterior",
+        lambda: (parameter**3).sum(),
+    )
+
+    diagonal = model.metric_diagonal_hessian(relative_step=1e-3, absolute_step=1e-4)
+    step = 1e-4 + 1e-3 * 2.0
+    expected = torch.tensor([12.0 + 3.0 * step], dtype=torch.double)
+
+    torch.testing.assert_close(diagonal, expected)
 
 
 def test_estimate_metric_laplace_covariance_uses_automatic_hessian(
