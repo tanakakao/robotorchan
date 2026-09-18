@@ -83,3 +83,26 @@ def test_alebo_metric_marginal_model_supports_batch_qlogei() -> None:
     assert torch.all(result.candidates <= bounds[1])
     assert result.acquisition_value is not None
     assert torch.isfinite(result.acquisition_value)
+
+
+def test_alebo_embedding_recovers_low_dimensional_objective_structure() -> None:
+    bounds = torch.stack([torch.zeros(8, dtype=torch.double), torch.ones(8, dtype=torch.double)])
+    strategy = ALEBOStrategy(bounds, embedding_dim=2, seed=23)
+    train_Z = strategy.sample_feasible(24, seed=29)
+    train_X = strategy.project(train_Z)
+    target = torch.tensor([0.65, 0.35], dtype=torch.double)
+    train_Y = -((train_X[:, :2] - target) ** 2).sum(dim=-1, keepdim=True)
+
+    model = ALEBOGP(
+        train_Z,
+        train_Y,
+        torch.full_like(train_Y, 1e-6),
+        projection=strategy.embedding,
+    )
+    posterior = model.posterior(train_Z)
+
+    assert posterior.mean.shape == train_Y.shape
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert bool(strategy.is_feasible(train_Z).all())
+    torch.testing.assert_close(strategy.project(train_Z), train_X)
