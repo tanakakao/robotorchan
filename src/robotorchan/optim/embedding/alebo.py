@@ -20,17 +20,17 @@ def _make_alebo_embedding(
     device: torch.device,
     generator: torch.Generator | None,
 ) -> Tensor:
-    """Create a fixed orthonormal-row linear embedding."""
-    gaussian = torch.randn(
-        input_dim,
+    """Sample ALEBO projection columns uniformly from the unit hypersphere."""
+    projection = torch.randn(
         embedding_dim,
+        input_dim,
         dtype=dtype,
         device=device,
         generator=generator,
     )
-    basis, _ = torch.linalg.qr(gaussian, mode="reduced")
-    return basis.transpose(-2, -1).contiguous()
-
+    return projection / projection.norm(dim=0, keepdim=True).clamp_min(
+        torch.finfo(dtype).eps
+    )
 
 class ALEBOStrategy(SearchStrategy):
     """Optimize an acquisition function in a fixed ALEBO linear subspace.
@@ -75,6 +75,7 @@ class ALEBOStrategy(SearchStrategy):
             device=bounds.device,
             generator=generator,
         )
+        self.embedding_pinv = torch.linalg.pinv(self.embedding)
 
     @property
     def embedding_dim(self) -> int:
@@ -84,7 +85,7 @@ class ALEBOStrategy(SearchStrategy):
     @property
     def linear_constraints(self) -> tuple[Tensor, Tensor]:
         """Return A and b for the ALEBO polytope A @ z <= b."""
-        coefficients = self.embedding.transpose(-2, -1)
+        coefficients = self.embedding_pinv
         A = torch.cat((coefficients, -coefficients), dim=0)
         b = torch.ones(
             2 * self.input_dim,
@@ -97,7 +98,7 @@ class ALEBOStrategy(SearchStrategy):
         """Return a mask indicating membership in the ALEBO polytope."""
         if Z.shape[-1] != self.embedding_dim:
             raise ValueError("Z last dimension must equal embedding_dim.")
-        normalized = Z @ self.embedding
+        normalized = Z @ self.embedding_pinv.transpose(-2, -1)_pinv.transpose(-2, -1)
         return (normalized.abs() <= 1.0 + atol).all(dim=-1)
 
     def project(self, Z: Tensor) -> Tensor:
