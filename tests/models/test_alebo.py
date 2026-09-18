@@ -382,3 +382,19 @@ def test_metric_samples_include_map_as_first_sample() -> None:
 
     torch.testing.assert_close(samples[0], map_metric)
     assert samples.shape == (4, 1)
+
+
+def test_projection_initializes_nontrivial_alebo_metric() -> None:
+    projection = torch.tensor(
+        [[1.0, 0.0, 0.5], [0.0, 1.0, -0.5]],
+        dtype=torch.double,
+    )
+    train_X = torch.tensor([[-0.5, 0.0], [0.0, 0.25], [0.5, -0.25]], dtype=torch.double)
+    train_Y = train_X.square().sum(dim=-1, keepdim=True)
+
+    model = ALEBOGP(train_X, train_Y, projection=projection)
+
+    assert model.metric.shape == (2, 2)
+    assert torch.isfinite(model.metric).all()
+    assert torch.all(torch.linalg.eigvalsh(model.metric) > 0)
+    assert not torch.allclose(model.metric, torch.eye(2, dtype=torch.double))
