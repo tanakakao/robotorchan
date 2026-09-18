@@ -57,9 +57,7 @@ def test_projection_is_invariant_to_public_input_units() -> None:
 
     unit_X = unit.project(Z)
     scaled_X = scaled.project(Z)
-    scaled_normalized = (scaled_X - scaled_bounds[0]) / (
-        scaled_bounds[1] - scaled_bounds[0]
-    )
+    scaled_normalized = (scaled_X - scaled_bounds[0]) / (scaled_bounds[1] - scaled_bounds[0])
 
     torch.testing.assert_close(unit.embedding, scaled.embedding)
     torch.testing.assert_close(unit_X, scaled_normalized)
