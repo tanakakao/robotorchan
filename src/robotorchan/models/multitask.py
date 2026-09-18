@@ -111,7 +111,9 @@ class MixedMultiTaskGP(MultiTaskGP):
     ) -> None:
         """Initialize a mixed-input multi-task GP."""
         input_dim = train_X.shape[-1]
-        resolved_task_feature = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
+        resolved_task_feature = normalize_feature_dims(
+            [task_feature], input_dim, name="task_feature"
+        )[0]
         normalized_cat_dims = normalize_feature_dims(
             cat_dims,
             input_dim,
