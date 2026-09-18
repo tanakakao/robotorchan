@@ -5,8 +5,8 @@ from __future__ import annotations
 import torch
 from botorch.fit import fit_gpytorch_mll
 from botorch.posteriors.gpytorch import GPyTorchPosterior
-from gpytorch.kernels import Kernel, ScaleKernel
 from gpytorch.distributions import MultivariateNormal
+from gpytorch.kernels import Kernel, ScaleKernel
 from gpytorch.module import Module
 from torch import Tensor
 
