@@ -17,8 +17,7 @@ from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import NondominatedPartitioning
 
 from robotorchan.models import ReducedGP
-from robotorchan.reduction import OutputPCAReducer
-from robotorchan.reduction import PCAInputReducer
+from robotorchan.reduction import OutputPCAReducer, PCAInputReducer
 
 
 def _training_data() -> tuple[torch.Tensor, torch.Tensor]:
