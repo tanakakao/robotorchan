@@ -126,6 +126,24 @@ class ALEBOGP(SingleTaskGP):
         variance = curvature.clamp_min(min_curvature).reciprocal()
         return torch.diag(variance)
 
+    def metric_laplace_covariance(
+        self,
+        *,
+        diagonal_hessian: Tensor,
+        min_curvature: float = 1e-8,
+    ) -> Tensor:
+        """Construct the diagonal Laplace covariance for metric parameters."""
+        mean = self.metric_parameter_vector()
+        if diagonal_hessian.shape != mean.shape:
+            raise ValueError(f"diagonal_hessian must have shape {tuple(mean.shape)}.")
+        if min_curvature <= 0:
+            raise ValueError("min_curvature must be positive.")
+        curvature = -diagonal_hessian.to(dtype=mean.dtype, device=mean.device)
+        if bool((curvature <= 0).any()):
+            raise ValueError("diagonal_hessian must be strictly negative at the posterior mode.")
+        variance = curvature.clamp_min(min_curvature).reciprocal()
+        return torch.diag(variance)
+
     def sample_metric_parameters(
         self,
         n_samples: int,
