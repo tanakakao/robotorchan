@@ -4,7 +4,7 @@ from pathlib import Path
 
 import torch
 
-BENCHMARK_PATH = Path(__file__).parents[1] / "benchmarks" / "high_dimensional_bo.py"
+BENCHMARK_PATH = Path(__file__).parents[2] / "benchmarks" / "high_dimensional_bo.py"
 SPEC = importlib.util.spec_from_file_location("joint_training_benchmark", BENCHMARK_PATH)
 assert SPEC is not None and SPEC.loader is not None
 BENCHMARK = importlib.util.module_from_spec(SPEC)

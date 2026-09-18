@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import torch
 
-BENCHMARK_PATH = Path(__file__).parents[1] / "benchmarks" / "high_dimensional_inputs.py"
+BENCHMARK_PATH = Path(__file__).parents[2] / "benchmarks" / "high_dimensional_inputs.py"
 SPEC = importlib.util.spec_from_file_location("high_dimensional_inputs_benchmark", BENCHMARK_PATH)
 assert SPEC is not None and SPEC.loader is not None
 BENCHMARK = importlib.util.module_from_spec(SPEC)
