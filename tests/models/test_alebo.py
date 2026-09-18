@@ -265,3 +265,25 @@ def test_metric_sample_predictions_validates_sample_shape() -> None:
 
     with pytest.raises(ValueError, match="metric_samples must have shape"):
         model.metric_sample_predictions(train_X, metric_samples=torch.zeros(2, 2))
+
+
+def test_marginal_metric_posterior_is_botorch_compatible() -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+    covariance = torch.eye(1, dtype=torch.double) * 0.01
+    generator = torch.Generator().manual_seed(17)
+
+    posterior = model.marginal_metric_posterior(
+        train_X,
+        n_metric_samples=3,
+        covariance=covariance,
+        generator=generator,
+    )
+
+    assert posterior.mean.shape == train_Y.shape
+    assert posterior.variance.shape == train_Y.shape
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    samples = posterior.rsample(torch.Size([4]))
+    assert samples.shape == (4, *train_Y.shape)
