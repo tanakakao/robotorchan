@@ -16,7 +16,6 @@ from botorch.fit import fit_gpytorch_mll
 from torch import Tensor
 
 from robotorchan.models import SingleTaskGP
-from robotorchan.reduction import PCAInputReducer, RandomProjectionInputReducer
 from robotorchan.optim import (
     BAxUSState,
     BAxUSStrategy,
@@ -30,6 +29,7 @@ from robotorchan.optim import (
     TuRBOState,
     TuRBOStrategy,
 )
+from robotorchan.reduction import PCAInputReducer, RandomProjectionInputReducer
 
 STRATEGY_NAMES = (
     "OriginalSpace",
