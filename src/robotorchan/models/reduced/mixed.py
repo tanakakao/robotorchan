@@ -17,6 +17,7 @@ from torch import Tensor
 
 from robotorchan.models.base import ExactGPModelMixin
 from robotorchan.reduction.base import InputReducer
+from robotorchan.reduction import AutoEncoderInputReducer, VAEInputReducer
 from robotorchan.reduction.input import (
     PCAInputReducer,
     PLSInputReducer,
@@ -132,13 +133,15 @@ class MixedInputReducer:
         if reducer.is_fitted:
             return reducer.output_dim
 
-        n_components = getattr(reducer, "n_components", None)
-        if n_components is None:
+        configured_dim = getattr(reducer, "n_components", None)
+        if configured_dim is None:
+            configured_dim = getattr(reducer, "latent_dim", None)
+        if configured_dim is None:
             raise ValueError(
                 "The wrapped reducer must expose its configured output dimension "
-                "before fitting or already be fitted."
+                "through n_components or latent_dim before fitting, or already be fitted."
             )
-        latent_dim = int(n_components)
+        latent_dim = int(configured_dim)
         if latent_dim < 1:
             raise ValueError("The reducer output dimension must be positive.")
         return latent_dim
@@ -376,6 +379,90 @@ class MixedRandomProjectionGP(MixedReducedGP):
             input_reducer=RandomProjectionInputReducer(
                 n_components=n_components,
                 random_state=random_state,
+            ),
+            cat_dims=cat_dims,
+            **kwargs,
+        )
+
+
+class MixedAutoEncoderGP(MixedReducedGP):
+    """Mixed GP using a frozen autoencoder on continuous inputs."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        latent_dim: int,
+        cat_dims: list[int],
+        *,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        epochs: int = 200,
+        learning_rate: float = 1e-3,
+        weight_decay: float = 0.0,
+        batch_size: int | None = None,
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=AutoEncoderInputReducer(
+                latent_dim=latent_dim,
+                hidden_dims=hidden_dims,
+                activation=activation,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                weight_decay=weight_decay,
+                batch_size=batch_size,
+                standardize=standardize,
+                eps=eps,
+                random_state=random_state,
+            ),
+            cat_dims=cat_dims,
+            **kwargs,
+        )
+
+
+class MixedVAEGP(MixedReducedGP):
+    """Mixed GP using a frozen VAE posterior-mean representation on continuous inputs."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        latent_dim: int,
+        cat_dims: list[int],
+        *,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        epochs: int = 200,
+        learning_rate: float = 1e-3,
+        weight_decay: float = 0.0,
+        batch_size: int | None = None,
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        beta: float = 1.0,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=VAEInputReducer(
+                latent_dim=latent_dim,
+                hidden_dims=hidden_dims,
+                activation=activation,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                weight_decay=weight_decay,
+                batch_size=batch_size,
+                standardize=standardize,
+                eps=eps,
+                random_state=random_state,
+                beta=beta,
             ),
             cat_dims=cat_dims,
             **kwargs,
