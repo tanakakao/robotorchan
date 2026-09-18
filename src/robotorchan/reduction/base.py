@@ -177,5 +177,3 @@ class OutputReducer(TensorReducer, ABC):
         Linear reducers such as PCA should therefore propagate covariance into
         the original output space.
         """
-
-
