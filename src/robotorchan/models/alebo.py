@@ -413,6 +413,24 @@ class ALEBOGP(SingleTaskGP):
         )
         return ALEBOMetricMarginalModel(self, metric_samples=metric_samples)
 
+    def fit_acquisition_model(
+        self,
+        *,
+        n_metric_samples: int,
+        restarts: int = 10,
+        warm_start: bool = True,
+        generator: torch.Generator | None = None,
+        **fit_kwargs: object,
+    ) -> ALEBOMetricMarginalModel:
+        """Fit ALEBO MAP state and return its fixed Laplace-marginal acquisition model."""
+        self.fit(restarts=restarts, warm_start=warm_start, **fit_kwargs)
+        covariance = self.estimate_metric_laplace_covariance()
+        return self.acquisition_model(
+            n_metric_samples=n_metric_samples,
+            covariance=covariance,
+            generator=generator,
+        )
+
     def fit(
         self,
         *,
