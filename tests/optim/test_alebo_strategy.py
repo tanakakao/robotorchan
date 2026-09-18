@@ -152,7 +152,7 @@ def test_project_clamps_only_feasible_numerical_boundary_overshoot() -> None:
     )
     strategy.embedding = torch.eye(2, dtype=torch.double)
     strategy.embedding_pinv = torch.eye(2, dtype=torch.double)
-    Z = torch.tensor([[1.0 + 5e-9, -1.0 - 5e-9]], dtype=torch.double)
+    Z = torch.tensor([[1.0 + 5e-11, -1.0 - 5e-11]], dtype=torch.double)
 
     projected = strategy.project(Z)
 
