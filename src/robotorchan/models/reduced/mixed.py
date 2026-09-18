@@ -2,12 +2,26 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 import torch
+from botorch.models import MixedSingleTaskGP as BoTorchMixedSingleTaskGP
+from botorch.models.transforms.input import InputTransform
+from botorch.models.transforms.outcome import OutcomeTransform
+from botorch.utils.types import DEFAULT, _DefaultType
+from gpytorch.kernels import Kernel
+from gpytorch.likelihoods import Likelihood
 from torch import Tensor
 
+from robotorchan.models.base import ExactGPModelMixin
 from robotorchan.reduction.base import InputReducer
+from robotorchan.reduction.input import (
+    PCAInputReducer,
+    PLSInputReducer,
+    RandomProjectionInputReducer,
+)
 
 
 @dataclass(frozen=True)
@@ -163,3 +177,206 @@ class MixedInputReducer:
         """Fit on continuous columns and transform the full mixed input."""
         self.fit(X, Y)
         return self.transform(X)
+
+
+class MixedReducedGP(ExactGPModelMixin, BoTorchMixedSingleTaskGP):
+    """Mixed single-task GP with reduction applied only to continuous inputs.
+
+    Public inputs remain in the original mixed space. Continuous columns are
+    projected into a frozen latent representation while categorical columns
+    bypass the reducer unchanged and are appended after the latent block.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        input_reducer: InputReducer,
+        cat_dims: list[int],
+        train_Yvar: Tensor | None = None,
+        cont_kernel_factory: Callable[[torch.Size, int, list[int]], Kernel] | None = None,
+        likelihood: Likelihood | None = None,
+        outcome_transform: OutcomeTransform | _DefaultType | None = DEFAULT,
+        input_transform: InputTransform | None = None,
+    ) -> None:
+        raw_train_X = train_X.detach().clone()
+        raw_train_Y = train_Y.detach().clone()
+        raw_train_Yvar = None if train_Yvar is None else train_Yvar.detach().clone()
+
+        mixed_reducer = MixedInputReducer(
+            input_reducer,
+            input_dim=train_X.shape[-1],
+            cat_dims=cat_dims,
+        )
+        if mixed_reducer.is_fitted:
+            reduced_train_X = mixed_reducer.transform(train_X)
+        else:
+            reduced_train_X = mixed_reducer.fit_transform(train_X, train_Y)
+
+        self._original_input_dim_value = train_X.shape[-1]
+        self._original_cat_dims_value = tuple(cat_dims)
+        self._mixed_layout = mixed_reducer.layout
+
+        super().__init__(
+            train_X=reduced_train_X,
+            train_Y=train_Y,
+            cat_dims=mixed_reducer.cat_dims,
+            train_Yvar=train_Yvar,
+            cont_kernel_factory=cont_kernel_factory,
+            likelihood=likelihood,
+            outcome_transform=outcome_transform,
+            input_transform=input_transform,
+        )
+        self.input_reducer = input_reducer
+        self._store_supervised_training_data(
+            train_X=raw_train_X,
+            train_Y=raw_train_Y,
+            train_Yvar=raw_train_Yvar,
+        )
+
+    @property
+    def original_input_dim(self) -> int:
+        """Input dimensionality expected by the public model interface."""
+        return self._original_input_dim_value
+
+    @property
+    def reduced_input_dim(self) -> int:
+        """Input dimensionality used by the underlying mixed GP."""
+        return self._mixed_layout.reduced_input_dim
+
+    @property
+    def original_cat_dims(self) -> list[int]:
+        """Categorical dimensions in the original public input space."""
+        return list(self._original_cat_dims_value)
+
+    @property
+    def reduced_cat_dims(self) -> list[int]:
+        """Categorical dimensions in the reduced GP input space."""
+        return self._mixed_layout.reduced_cat_dims
+
+    def _transform_original_inputs(self, X: Tensor) -> Tensor:
+        latent_X = self.input_reducer.transform(self._mixed_layout.continuous(X))
+        return self._mixed_layout.combine(latent_X, X)
+
+    def _prepare_inputs(self, X: Tensor) -> Tensor:
+        if X.shape[-1] == self.original_input_dim:
+            return self._transform_original_inputs(X)
+        if X.shape[-1] == self.reduced_input_dim:
+            return X
+        raise ValueError(
+            "Expected final input dimension "
+            f"{self.original_input_dim} (original) or {self.reduced_input_dim} (reduced), "
+            f"got {X.shape[-1]}."
+        )
+
+    def posterior(
+        self,
+        X: Tensor,
+        output_indices: list[int] | None = None,
+        observation_noise: bool | Tensor = False,
+        posterior_transform: Any | None = None,
+    ):
+        """Evaluate the posterior from original-space or reduced inputs."""
+        return super().posterior(
+            self._prepare_inputs(X),
+            output_indices=output_indices,
+            observation_noise=observation_noise,
+            posterior_transform=posterior_transform,
+        )
+
+    def condition_on_observations(self, X: Tensor, Y: Tensor, **kwargs: Any):
+        """Condition on observations supplied in the original mixed space."""
+        return super().condition_on_observations(
+            X=self._prepare_inputs(X),
+            Y=Y,
+            **kwargs,
+        )
+
+    def load_state_dict(
+        self,
+        state_dict: dict[str, Tensor],
+        strict: bool = True,
+        assign: bool = False,
+    ):
+        """Load parameters and resynchronize reducer-dependent training inputs."""
+        result = super().load_state_dict(state_dict, strict=strict, assign=assign)
+        train_X = self._transform_original_inputs(self.raw_train_X)
+        if hasattr(self, "input_transform"):
+            train_X = self.transform_inputs(train_X)
+        self.set_train_data(inputs=train_X, targets=self.train_targets, strict=False)
+        return result
+
+
+class MixedPCAGP(MixedReducedGP):
+    """Mixed GP using PCA on continuous inputs and passthrough categories."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        n_components: int,
+        cat_dims: list[int],
+        *,
+        center: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=PCAInputReducer(n_components=n_components, center=center),
+            cat_dims=cat_dims,
+            **kwargs,
+        )
+
+
+class MixedPLSGP(MixedReducedGP):
+    """Mixed GP using supervised PLS on continuous inputs."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        n_components: int,
+        cat_dims: list[int],
+        *,
+        center: bool = True,
+        eps: float = 1e-12,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=PLSInputReducer(
+                n_components=n_components,
+                center=center,
+                eps=eps,
+            ),
+            cat_dims=cat_dims,
+            **kwargs,
+        )
+
+
+class MixedRandomProjectionGP(MixedReducedGP):
+    """Mixed GP using a Gaussian projection on continuous inputs."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        n_components: int,
+        cat_dims: list[int],
+        *,
+        random_state: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=RandomProjectionInputReducer(
+                n_components=n_components,
+                random_state=random_state,
+            ),
+            cat_dims=cat_dims,
+            **kwargs,
+        )
