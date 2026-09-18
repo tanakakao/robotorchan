@@ -21,18 +21,27 @@ class MahalanobisRBFKernel(Kernel):
         if ard_num_dims < 1:
             raise ValueError("ard_num_dims must be positive.")
         self.ard_num_dims = ard_num_dims
+        n_free = ard_num_dims * (ard_num_dims + 1) // 2
         self.register_parameter(
             name="raw_tril",
-            parameter=torch.nn.Parameter(torch.eye(ard_num_dims)),
+            parameter=torch.nn.Parameter(torch.zeros(n_free)),
+        )
+        self.register_buffer(
+            "tril_rows", torch.tril_indices(ard_num_dims, ard_num_dims)[0], persistent=False
+        )
+        self.register_buffer(
+            "tril_cols", torch.tril_indices(ard_num_dims, ard_num_dims)[1], persistent=False
         )
 
     @property
     def metric_factor(self) -> Tensor:
         """Lower-triangular factor whose Gram matrix is the distance metric."""
-        lower = torch.tril(self.raw_tril, diagonal=-1)
-        diagonal = torch.diagonal(self.raw_tril, dim1=-2, dim2=-1)
+        factor = self.raw_tril.new_zeros(self.ard_num_dims, self.ard_num_dims)
+        factor[self.tril_rows, self.tril_cols] = self.raw_tril
+        diagonal = torch.diagonal(factor)
         positive_diagonal = torch.nn.functional.softplus(diagonal) + 1e-6
-        return lower + torch.diag_embed(positive_diagonal)
+        factor = factor - torch.diag_embed(diagonal) + torch.diag_embed(positive_diagonal)
+        return factor
 
     @property
     def metric(self) -> Tensor:
@@ -97,7 +106,25 @@ class ALEBOGP(SingleTaskGP):
 
     def metric_parameter_vector(self) -> Tensor:
         """Return the unconstrained Mahalanobis parameters as a flat vector."""
-        return self.mahalanobis_kernel.raw_tril.detach().reshape(-1).clone()
+        return self.mahalanobis_kernel.raw_tril.detach().clone()
+
+    def metric_laplace_covariance(
+        self,
+        *,
+        diagonal_hessian: Tensor,
+        min_curvature: float = 1e-8,
+    ) -> Tensor:
+        """Construct the diagonal Laplace covariance for metric parameters."""
+        mean = self.metric_parameter_vector()
+        if diagonal_hessian.shape != mean.shape:
+            raise ValueError(f"diagonal_hessian must have shape {tuple(mean.shape)}.")
+        if min_curvature <= 0:
+            raise ValueError("min_curvature must be positive.")
+        curvature = -diagonal_hessian.to(dtype=mean.dtype, device=mean.device)
+        if bool((curvature <= 0).any()):
+            raise ValueError("diagonal_hessian must be strictly negative at the posterior mode.")
+        variance = curvature.clamp_min(min_curvature).reciprocal()
+        return torch.diag(variance)
 
     def sample_metric_parameters(
         self,
