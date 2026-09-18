@@ -16,8 +16,8 @@ from gpytorch.likelihoods import Likelihood
 from torch import Tensor
 
 from robotorchan.models.base import ExactGPModelMixin
-from robotorchan.reduction.base import InputReducer
 from robotorchan.reduction import AutoEncoderInputReducer, VAEInputReducer
+from robotorchan.reduction.base import InputReducer
 from robotorchan.reduction.input import (
     PCAInputReducer,
     PLSInputReducer,
