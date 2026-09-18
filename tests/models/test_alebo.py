@@ -16,7 +16,7 @@ def test_mahalanobis_metric_is_symmetric_positive_semidefinite() -> None:
     eigenvalues = torch.linalg.eigvalsh(metric)
 
     torch.testing.assert_close(metric, metric.transpose(-2, -1))
-    assert torch.all(eigenvalues > 0)
+    assert torch.all(eigenvalues >= -1e-12)
 
 
 def test_mahalanobis_factor_keeps_reference_unconstrained_diagonal() -> None:
