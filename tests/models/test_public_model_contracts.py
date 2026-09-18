@@ -24,6 +24,8 @@ PUBLIC_MODEL_NAMES = {
     "MixedPLSGP",
     "MixedRandomProjectionGP",
     "MixedReducedGP",
+    "MixedSupervisedAutoEncoderGP",
+    "MixedSupervisedVAEGP",
     "MixedSingleTaskGP",
     "MixedVAEGP",
     "ModelListGP",
