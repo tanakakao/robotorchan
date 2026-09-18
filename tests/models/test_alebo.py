@@ -178,6 +178,7 @@ def test_metric_laplace_covariance_validates_curvature() -> None:
             diagonal_hessian=torch.tensor([-1.0, 0.0, -2.0], dtype=torch.double)
         )
 
+
 def test_moment_match_predictions_includes_between_model_uncertainty() -> None:
     means = torch.tensor([[0.0, 1.0], [2.0, 3.0]], dtype=torch.double)
     variances = torch.tensor([[1.0, 1.0], [1.0, 1.0]], dtype=torch.double)
