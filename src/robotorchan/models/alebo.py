@@ -95,6 +95,34 @@ class ALEBOGP(SingleTaskGP):
         """Return the current learned Mahalanobis metric."""
         return self.mahalanobis_kernel.metric
 
+    def metric_parameter_vector(self) -> Tensor:
+        """Return the unconstrained Mahalanobis parameters as a flat vector."""
+        return self.mahalanobis_kernel.raw_tril.detach().reshape(-1).clone()
+
+    def sample_metric_parameters(
+        self,
+        n_samples: int,
+        *,
+        covariance: Tensor,
+        generator: torch.Generator | None = None,
+    ) -> Tensor:
+        """Sample metric parameters from a Gaussian Laplace approximation."""
+        if n_samples < 1:
+            raise ValueError("n_samples must be positive.")
+        mean = self.metric_parameter_vector()
+        expected_shape = (mean.numel(), mean.numel())
+        if covariance.shape != expected_shape:
+            raise ValueError(f"covariance must have shape {expected_shape}.")
+        covariance = covariance.to(dtype=mean.dtype, device=mean.device)
+        chol = torch.linalg.cholesky(covariance)
+        noise = torch.randn(
+            n_samples,
+            mean.numel(),
+            dtype=mean.dtype,
+            device=mean.device,
+            generator=generator,
+        )
+        return mean.unsqueeze(0) + noise @ chol.transpose(-2, -1)
     def fit(self, **fit_kwargs: object) -> ALEBOGP:
         """Fit ALEBO GP hyperparameters by maximizing the exact marginal likelihood."""
         fit_gpytorch_mll(self.make_mll(), **fit_kwargs)
