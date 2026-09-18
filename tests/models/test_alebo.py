@@ -411,8 +411,6 @@ def test_fit_validates_alebo_map_restarts() -> None:
         model.fit(restarts=0)
 
 
-
-
 def test_alebo_kernel_retains_projection_for_reference_restarts() -> None:
     projection = torch.tensor(
         [[1.0, 0.0, 0.5], [0.0, 1.0, -0.5]],
