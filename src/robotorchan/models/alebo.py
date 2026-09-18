@@ -10,7 +10,6 @@ from botorch.models.model import Model
 from botorch.posteriors.gpytorch import GPyTorchPosterior
 from gpytorch.distributions import MultivariateNormal
 from gpytorch.kernels import Kernel, ScaleKernel
-from gpytorch.module import Module
 from torch import Tensor
 
 from robotorchan.models.single_task import SingleTaskGP
