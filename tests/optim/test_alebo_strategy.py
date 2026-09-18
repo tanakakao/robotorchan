@@ -1,4 +1,4 @@
-"""Tests for the ALEBO Phase 1 embedding foundation."""
+"""Tests for ALEBO embedding geometry and constrained optimization."""
 
 import pytest
 import torch
