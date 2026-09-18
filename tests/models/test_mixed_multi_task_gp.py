@@ -109,7 +109,7 @@ def test_mixed_multi_task_gp_posterior_supports_mixed_features() -> None:
 def test_mixed_multi_task_gp_rejects_task_feature_in_cat_dims() -> None:
     train_X, train_Y = _make_data()
 
-    with pytest.raises(ValueError, match="task_feature"):
+    with pytest.raises(ValueError, match="structural dimensions"):
         MixedMultiTaskGP(
             train_X=train_X,
             train_Y=train_Y,
