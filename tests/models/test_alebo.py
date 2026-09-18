@@ -98,6 +98,47 @@ def test_alebo_gp_fit_returns_same_model(monkeypatch) -> None:
     assert captured["kwargs"] == {"optimizer_kwargs": {"options": {"maxiter": 3}}}
 
 
+def test_alebo_fit_warm_starts_first_restart(monkeypatch: pytest.MonkeyPatch) -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+    with torch.no_grad():
+        model.mean_module.constant.fill_(1.25)
+    seen_means = []
+
+    def fake_fit(mll, **kwargs):
+        del kwargs
+        seen_means.append(mll.model.mean_module.constant.detach().clone())
+        return mll
+
+    monkeypatch.setattr("robotorchan.models.alebo.fit_gpytorch_mll", fake_fit)
+
+    model.fit(restarts=2)
+
+    torch.testing.assert_close(seen_means[0], torch.full_like(seen_means[0], 1.25))
+    assert len(seen_means) == 2
+
+
+def test_alebo_fit_can_disable_warm_start(monkeypatch: pytest.MonkeyPatch) -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+    with torch.no_grad():
+        model.mean_module.constant.fill_(9.0)
+    seen_means = []
+
+    def fake_fit(mll, **kwargs):
+        del kwargs
+        seen_means.append(mll.model.mean_module.constant.detach().clone())
+        return mll
+
+    monkeypatch.setattr("robotorchan.models.alebo.fit_gpytorch_mll", fake_fit)
+
+    model.fit(restarts=1, warm_start=False)
+
+    assert not torch.equal(seen_means[0], torch.full_like(seen_means[0], 9.0))
+
+
 def test_alebo_gp_rejects_non_mahalanobis_covar_for_metric_access() -> None:
     train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
     train_Y = train_X.square()
