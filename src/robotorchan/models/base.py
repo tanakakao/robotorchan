@@ -2,10 +2,70 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import ClassVar
 
 from gpytorch.mlls import ExactMarginalLogLikelihood, MarginalLogLikelihood
 from torch import Tensor
+
+
+def normalize_feature_dims(
+    dims: Sequence[int],
+    input_dim: int,
+    *,
+    name: str = "dims",
+    excluded_dims: Sequence[int] = (),
+    require_nonempty: bool = True,
+) -> tuple[int, ...]:
+    """Normalize raw-space feature indices with structural-dimension validation.
+
+    Negative indices follow normal Python indexing. Duplicate dimensions are
+    rejected after normalization, including aliases such as -1 and d - 1.
+    excluded_dims is for structural task, fidelity, context, or hierarchy
+    columns that must not be ordinary categorical design variables.
+    """
+    if input_dim < 1:
+        raise ValueError("input_dim must be positive.")
+
+    def _normalize(dim: int) -> int:
+        value = int(dim)
+        if value < 0:
+            value += input_dim
+        if value < 0 or value >= input_dim:
+            raise ValueError(
+                f"{name} entries must index the raw input dimension {input_dim}; got {dim}."
+            )
+        return value
+
+    normalized = tuple(_normalize(dim) for dim in dims)
+    if require_nonempty and not normalized:
+        raise ValueError(f"{name} must contain at least one dimension.")
+    if len(set(normalized)) != len(normalized):
+        raise ValueError(f"{name} must not contain duplicate dimensions after normalization.")
+
+    excluded = tuple(_normalize(dim) for dim in excluded_dims)
+    overlap = sorted(set(normalized).intersection(excluded))
+    if overlap:
+        raise ValueError(f"{name} must not overlap structural dimensions {overlap}.")
+    return normalized
+
+
+def continuous_feature_dims(
+    input_dim: int,
+    *,
+    cat_dims: Sequence[int],
+    excluded_dims: Sequence[int] = (),
+) -> tuple[int, ...]:
+    """Return ordinary continuous design dimensions in raw-input coordinates."""
+    categorical = normalize_feature_dims(cat_dims, input_dim, name="cat_dims")
+    structural = normalize_feature_dims(
+        excluded_dims,
+        input_dim,
+        name="excluded_dims",
+        require_nonempty=False,
+    )
+    occupied = set(categorical).union(structural)
+    return tuple(dim for dim in range(input_dim) if dim not in occupied)
 
 
 class UnsupportedModelOperationError(RuntimeError):
