@@ -19,9 +19,11 @@ from robotorchan.models.map_saas import (
     AdditiveMapSaasSingleTaskGP,
     EnsembleMapSaasSingleTaskGP,
 )
-from robotorchan.models.mixed_multi_fidelity import MixedSingleTaskMultiFidelityGP
 from robotorchan.models.model_list import ModelListGP
-from robotorchan.models.multi_fidelity import SingleTaskMultiFidelityGP
+from robotorchan.models.multi_fidelity import (
+    MixedSingleTaskMultiFidelityGP,
+    SingleTaskMultiFidelityGP,
+)
 from robotorchan.models.multitask import (
     KroneckerMultiTaskGP,
     MixedKroneckerMultiTaskGP,
@@ -54,7 +56,10 @@ from robotorchan.models.reduced.supervised_neural import SupervisedAutoEncoderGP
 from robotorchan.models.reduced.vae import VAEGP, SupervisedVAEGP
 from robotorchan.models.robust import RobustRelevancePursuitSingleTaskGP
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
-from robotorchan.models.variational import SingleTaskVariationalGP
+from robotorchan.models.variational import (
+    MixedSingleTaskVariationalGP,
+    SingleTaskVariationalGP,
+)
 
 __all__ = [
     "ALEBOGP",
@@ -87,6 +92,7 @@ __all__ = [
     "MixedSingleTaskMultiFidelityGP",
     "MixedSupervisedAutoEncoderGP",
     "MixedSupervisedVAEGP",
+    "MixedSingleTaskVariationalGP",
     "MixedVAEGP",
     "ModelListGP",
     "MultiTaskGP",
