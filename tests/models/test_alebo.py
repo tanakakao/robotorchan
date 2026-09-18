@@ -400,3 +400,27 @@ def test_projection_initializes_nontrivial_alebo_metric() -> None:
     assert torch.isfinite(model.metric).all()
     assert torch.all(torch.linalg.eigvalsh(model.metric) > 0)
     assert not torch.allclose(model.metric, torch.eye(2, dtype=torch.double))
+
+
+def test_fit_validates_alebo_map_restarts() -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+
+    with pytest.raises(ValueError, match="restarts must be positive"):
+        model.fit(restarts=0)
+
+
+def test_randomize_map_state_changes_alebo_hyperparameters() -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+    original_metric = model.metric_parameter_vector().detach().clone()
+    original_mean = model.mean_module.constant.detach().clone()
+    original_scale = model.covar_module.raw_outputscale.detach().clone()
+
+    model._randomize_map_state(generator=torch.Generator().manual_seed(47))
+
+    assert not torch.equal(model.metric_parameter_vector(), original_metric)
+    assert not torch.equal(model.mean_module.constant, original_mean)
+    assert not torch.equal(model.covar_module.raw_outputscale, original_scale)
