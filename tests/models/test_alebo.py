@@ -132,9 +132,7 @@ def test_sample_metric_parameters_uses_gaussian_laplace_covariance() -> None:
     covariance = 0.01 * torch.eye(n_params, dtype=torch.double)
     generator = torch.Generator().manual_seed(7)
 
-    samples = model.sample_metric_parameters(
-        5, covariance=covariance, generator=generator
-    )
+    samples = model.sample_metric_parameters(5, covariance=covariance, generator=generator)
 
     assert samples.shape == (5, n_params)
     assert samples.dtype == torch.double
