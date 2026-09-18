@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import torch
 from botorch.fit import fit_gpytorch_mll
+from botorch.models.model import Model
 from botorch.posteriors.gpytorch import GPyTorchPosterior
 from gpytorch.distributions import MultivariateNormal
 from gpytorch.kernels import Kernel, ScaleKernel
@@ -68,6 +69,55 @@ class MahalanobisRBFKernel(Kernel):
             difference = transformed_x1.unsqueeze(-2) - transformed_x2.unsqueeze(-3)
             squared_distance = difference.square().sum(dim=-1)
         return torch.exp(-0.5 * squared_distance)
+
+
+class ALEBOMetricMarginalModel(Model):
+    """BoTorch model surface backed by ALEBO metric-marginal predictions."""
+
+    def __init__(
+        self,
+        base_model: ALEBOGP,
+        *,
+        n_metric_samples: int,
+        covariance: Tensor | None = None,
+        generator: torch.Generator | None = None,
+    ) -> None:
+        super().__init__()
+        if n_metric_samples < 1:
+            raise ValueError("n_metric_samples must be positive.")
+        self.base_model = base_model
+        self.n_metric_samples = n_metric_samples
+        self.covariance = covariance
+        self.generator = generator
+
+    @property
+    def num_outputs(self) -> int:
+        """Return the number of modeled outputs."""
+        return 1
+
+    def posterior(
+        self,
+        X: Tensor,
+        output_indices: list[int] | None = None,
+        observation_noise: bool | Tensor = False,
+        posterior_transform: object | None = None,
+        **kwargs: object,
+    ) -> GPyTorchPosterior:
+        """Return the metric-marginal Gaussian posterior."""
+        del kwargs
+        if output_indices not in (None, [0]):
+            raise NotImplementedError("ALEBO metric marginalization supports one output.")
+        if posterior_transform is not None:
+            raise NotImplementedError("posterior_transform is not supported yet.")
+        if not isinstance(observation_noise, bool):
+            raise NotImplementedError("Tensor observation_noise is not supported yet.")
+        return self.base_model.marginal_metric_posterior(
+            X,
+            n_metric_samples=self.n_metric_samples,
+            covariance=self.covariance,
+            observation_noise=observation_noise,
+            generator=self.generator,
+        )
 
 
 class ALEBOGP(SingleTaskGP):
@@ -271,6 +321,39 @@ class ALEBOGP(SingleTaskGP):
         covariance_matrix = torch.diag_embed(event_variance)
         distribution = MultivariateNormal(event_mean, covariance_matrix)
         return GPyTorchPosterior(distribution)
+
+    def posterior_with_metric_uncertainty(
+        self,
+        X: Tensor,
+        *,
+        n_metric_samples: int,
+        covariance: Tensor | None = None,
+        observation_noise: bool = False,
+        generator: torch.Generator | None = None,
+    ) -> GPyTorchPosterior:
+        """Return the ALEBO posterior used by acquisition functions."""
+        return self.marginal_metric_posterior(
+            X,
+            n_metric_samples=n_metric_samples,
+            covariance=covariance,
+            observation_noise=observation_noise,
+            generator=generator,
+        )
+
+    def acquisition_model(
+        self,
+        *,
+        n_metric_samples: int,
+        covariance: Tensor | None = None,
+        generator: torch.Generator | None = None,
+    ) -> ALEBOMetricMarginalModel:
+        """Return a BoTorch model whose posterior includes metric uncertainty."""
+        return ALEBOMetricMarginalModel(
+            self,
+            n_metric_samples=n_metric_samples,
+            covariance=covariance,
+            generator=generator,
+        )
 
     @staticmethod
     def moment_match_predictions(
