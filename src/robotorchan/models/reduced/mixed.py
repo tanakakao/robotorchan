@@ -15,7 +15,7 @@ from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import Likelihood
 from torch import Tensor
 
-from robotorchan.models.base import ExactGPModelMixin
+from robotorchan.models.base import ExactGPModelMixin, normalize_feature_dims
 from robotorchan.reduction import (
     AutoEncoderInputReducer,
     SupervisedAutoEncoderInputReducer,
@@ -56,13 +56,7 @@ class MixedInputLayout:
             raise ValueError("input_dim must be positive.")
         if latent_dim < 1:
             raise ValueError("latent_dim must be positive.")
-        normalized = tuple(int(dim) for dim in cat_dims)
-        if not normalized:
-            raise ValueError("cat_dims must contain at least one categorical dimension.")
-        if len(set(normalized)) != len(normalized):
-            raise ValueError("cat_dims must not contain duplicates.")
-        if any(dim < 0 or dim >= input_dim for dim in normalized):
-            raise ValueError(f"cat_dims must be within [0, {input_dim}).")
+        normalized = normalize_feature_dims(cat_dims, input_dim, name="cat_dims")
         cat_set = set(normalized)
         cont_dims = tuple(dim for dim in range(input_dim) if dim not in cat_set)
         if not cont_dims:
@@ -223,7 +217,7 @@ class MixedReducedGP(ExactGPModelMixin, BoTorchMixedSingleTaskGP):
             reduced_train_X = mixed_reducer.fit_transform(train_X, train_Y)
 
         self._original_input_dim_value = train_X.shape[-1]
-        self._original_cat_dims_value = tuple(cat_dims)
+        self._original_cat_dims_value = mixed_reducer.layout.cat_dims
         self._mixed_layout = mixed_reducer.layout
 
         super().__init__(
