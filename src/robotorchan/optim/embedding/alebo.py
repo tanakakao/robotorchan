@@ -129,7 +129,8 @@ class ALEBOStrategy(SearchStrategy):
                 super().__init__(model=acq_function.model)
 
             def forward(self, Z: Tensor) -> Tensor:
-                return acq_function(strategy.project(Z))
+                projected = strategy.project(Z)
+                return acq_function(projected)
 
         embedded_acq = EmbeddedAcquisition()
         A, b = self.linear_constraints
