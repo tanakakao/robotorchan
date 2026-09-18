@@ -2,7 +2,7 @@
 
 import pytest
 import torch
-from gpytorch.kernels import ScaleKernel
+from gpytorch.kernels import RBFKernel, ScaleKernel
 
 from robotorchan.models import ALEBOGP
 from robotorchan.models.alebo import MahalanobisRBFKernel
@@ -103,7 +103,7 @@ def test_alebo_gp_fit_returns_same_model(monkeypatch) -> None:
 def test_alebo_gp_rejects_non_mahalanobis_covar_for_metric_access() -> None:
     train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(train_X, train_Y, covar_module=ScaleKernel(torch.nn.Identity()))
+    model = ALEBOGP(train_X, train_Y, covar_module=ScaleKernel(RBFKernel()))
 
     with pytest.raises(TypeError, match="MahalanobisRBFKernel"):
         _ = model.metric
