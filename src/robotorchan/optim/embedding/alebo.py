@@ -108,6 +108,7 @@ class ALEBOStrategy(SearchStrategy):
         if not bool(self.is_feasible(Z).all()):
             raise ValueError("Z must satisfy the ALEBO embedding polytope constraints.")
         normalized = Z @ self.embedding_pinv.transpose(-2, -1)
+        normalized = normalized.clamp(-1.0, 1.0)
         center = self.bounds.mean(dim=0)
         half_range = 0.5 * (self.bounds[1] - self.bounds[0])
         return center + half_range * normalized
