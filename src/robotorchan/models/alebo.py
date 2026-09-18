@@ -231,7 +231,9 @@ class ALEBOGP(SingleTaskGP):
             device=mean.device,
             generator=generator,
         )
-        return mean.unsqueeze(0) + noise @ chol.transpose(-2, -1)
+        samples = mean.unsqueeze(0) + noise @ chol.transpose(-2, -1)
+        samples[0] = mean
+        return samples
 
     def metric_sample_predictions(
         self,
