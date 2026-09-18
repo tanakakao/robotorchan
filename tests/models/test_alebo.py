@@ -3,7 +3,8 @@
 import torch
 from gpytorch.kernels import ScaleKernel
 
-from robotorchan.models import ALEBOGP, MahalanobisRBFKernel
+from robotorchan.models import ALEBOGP
+from robotorchan.models.alebo import MahalanobisRBFKernel
 
 
 def test_mahalanobis_metric_is_symmetric_positive_definite() -> None:
@@ -49,7 +50,7 @@ def test_alebo_gp_uses_mahalanobis_kernel_and_common_contract() -> None:
         [[0.0, 0.0], [0.2, -0.1], [-0.3, 0.4], [0.5, 0.1]],
         dtype=torch.double,
     )
-    train_Y = (train_X[:, :1].square() + train_X[:, 1:].square())
+    train_Y = train_X[:, :1].square() + train_X[:, 1:].square()
 
     model = ALEBOGP(train_X, train_Y)
 
