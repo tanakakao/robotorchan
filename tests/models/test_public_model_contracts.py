@@ -20,6 +20,8 @@ PUBLIC_MODEL_NAMES = {
     "LCEMGP",
     "LatentKroneckerGP",
     "MixedAutoEncoderGP",
+    "MixedKroneckerMultiTaskGP",
+    "MixedMultiTaskGP",
     "MixedPCAGP",
     "MixedPLSGP",
     "MixedRandomProjectionGP",

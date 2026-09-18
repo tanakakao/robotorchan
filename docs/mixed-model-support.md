@@ -192,3 +192,21 @@ add a generic kernel abstraction or a generic one-hot transform: current
 and the models that require one-hot fallback have different state/inference
 requirements. Those transforms should be introduced only in the model-family
 phase where they are actually required.
+
+
+## Phase 3 standard exact / multi-task status
+
+Phase 3 restores native categorical covariance for the current multi-task model
+families without restoring historical compatibility helpers. `MixedMultiTaskGP`
+and `MixedKroneckerMultiTaskGP` are colocated with their standard counterparts in
+`models/multitask.py`.
+
+`MixedMultiTaskGP` keeps the long-format task column structural: `task_feature`
+is normalized in raw coordinates, excluded from the data covariance, and rejected
+when it overlaps `cat_dims`. `MixedKroneckerMultiTaskGP` needs no structural task
+column because task identity remains on the output axis. Both use the shared native
+mixed covariance (continuous + categorical + interaction), accept negative raw-space
+`cat_dims`, preserve raw training data, and retain the exact-GP `make_mll()` contract.
+
+The existing `MixedSingleTaskGP` remains a thin wrapper over BoTorch's native
+`MixedSingleTaskGP`; Phase 3 does not duplicate that upstream implementation.
