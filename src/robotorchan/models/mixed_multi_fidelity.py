@@ -40,14 +40,11 @@ class MixedSingleTaskMultiFidelityGP(ExactGPModelMixin, BoTorchMixedSingleTaskGP
     ) -> None:
         input_dim = train_X.shape[-1]
         normalized_cat_dims = self._validate_dims(cat_dims, input_dim, "cat_dims")
-        normalized_fidelity_dims = self._validate_dims(
-            fidelity_dims, input_dim, "fidelity_dims"
-        )
+        normalized_fidelity_dims = self._validate_dims(fidelity_dims, input_dim, "fidelity_dims")
         overlap = set(normalized_cat_dims).intersection(normalized_fidelity_dims)
         if overlap:
             raise ValueError(
-                "Categorical and fidelity dimensions must be disjoint; "
-                f"overlap={sorted(overlap)}."
+                f"Categorical and fidelity dimensions must be disjoint; overlap={sorted(overlap)}."
             )
 
         raw_train_X = train_X.detach().clone()
