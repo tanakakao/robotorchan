@@ -12,8 +12,9 @@ from robotorchan.models import (
     RandomProjectionGP,
     ReducedGP,
 )
-from robotorchan.reduction import OutputPCAReducer, OutputPLSReducer
 from robotorchan.reduction import (
+    OutputPCAReducer,
+    OutputPLSReducer,
     PCAInputReducer,
     PLSInputReducer,
     RandomProjectionInputReducer,
