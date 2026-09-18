@@ -207,5 +207,3 @@ class PLSInputReducer(InputReducer):
         assert self.rotation is not None
         centered = X - self.x_mean if self.center else X
         return centered @ self.rotation
-
-
