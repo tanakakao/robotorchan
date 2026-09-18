@@ -66,12 +66,32 @@ class ALEBOStrategy(SearchStrategy):
         """Dimension of the fixed ALEBO search subspace."""
         return self.embedding.shape[0]
 
-    def project(self, Z: Tensor) -> Tensor:
-        """Map embedded coordinates to feasible public-space candidates."""
+    @property
+    def linear_constraints(self) -> tuple[Tensor, Tensor]:
+        """Return A and b for the ALEBO polytope A @ z <= b."""
+        coefficients = self.embedding.transpose(-2, -1)
+        A = torch.cat((coefficients, -coefficients), dim=0)
+        b = torch.ones(
+            2 * self.input_dim,
+            dtype=self.bounds.dtype,
+            device=self.bounds.device,
+        )
+        return A, b
+
+    def is_feasible(self, Z: Tensor, *, atol: float = 1e-10) -> Tensor:
+        """Return a mask indicating membership in the ALEBO polytope."""
         if Z.shape[-1] != self.embedding_dim:
             raise ValueError("Z last dimension must equal embedding_dim.")
-        raw_normalized = Z @ self.embedding
-        normalized = raw_normalized.clamp(-1.0, 1.0)
+        normalized = Z @ self.embedding
+        return (normalized.abs() <= 1.0 + atol).all(dim=-1)
+
+    def project(self, Z: Tensor) -> Tensor:
+        """Map feasible embedded coordinates linearly to public input units."""
+        if Z.shape[-1] != self.embedding_dim:
+            raise ValueError("Z last dimension must equal embedding_dim.")
+        if not bool(self.is_feasible(Z).all()):
+            raise ValueError("Z must satisfy the ALEBO embedding polytope constraints.")
+        normalized = Z @ self.embedding
         center = self.bounds.mean(dim=0)
         half_range = 0.5 * (self.bounds[1] - self.bounds[0])
         return center + half_range * normalized
@@ -84,4 +104,4 @@ class ALEBOStrategy(SearchStrategy):
     ) -> SearchResult:
         """Optimize an acquisition function with ALEBO."""
         del acq_function, q
-        raise NotImplementedError("ALEBO acquisition optimization is not implemented in Phase 1.")
+        raise NotImplementedError("ALEBO acquisition optimization is not implemented in Phase 2.")
