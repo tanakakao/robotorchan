@@ -175,3 +175,20 @@ instruction, with these concrete corrections discovered by the audit:
 Phase 1 changes documentation only. No model implementation, compatibility
 alias, deprecated wrapper, or monkey patch is introduced. The next phase may
 begin from this matrix after re-checking the then-current `main`.
+
+
+## Phase 2 infrastructure status
+
+Phase 2 establishes one canonical raw-space dimension-normalization contract in
+`models/base.py`. Mixed implementations should reuse it instead of implementing
+per-model index validation. It supports Python-style negative indices, rejects
+duplicates after normalization, and can reject overlap with structural columns.
+
+The existing frozen-reducer Mixed infrastructure now uses the same normalization,
+so categorical dimensions remain raw-space indices at the public API while the
+reducer continues to fit continuous columns only. Phase 2 intentionally does not
+add a generic kernel abstraction or a generic one-hot transform: current
+`MixedSingleTaskGP` already delegates native covariance construction to BoTorch,
+and the models that require one-hot fallback have different state/inference
+requirements. Those transforms should be introduced only in the model-family
+phase where they are actually required.
