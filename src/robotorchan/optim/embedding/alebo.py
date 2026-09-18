@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
+from botorch.optim import optimize_acqf
 from torch import Tensor
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
@@ -43,15 +46,28 @@ class ALEBOStrategy(SearchStrategy):
         *,
         embedding_dim: int,
         seed: int | None = None,
+        num_restarts: int = 10,
+        raw_samples: int = 512,
+        options: dict[str, Any] | None = None,
+        sequential: bool = False,
     ) -> None:
         super().__init__(bounds)
         if embedding_dim < 1 or embedding_dim > self.input_dim:
             raise ValueError("embedding_dim must be between 1 and input_dim.")
+        if num_restarts < 1:
+            raise ValueError("num_restarts must be at least 1.")
+        if raw_samples < 1:
+            raise ValueError("raw_samples must be at least 1.")
 
         generator = None
         if seed is not None:
             generator = torch.Generator(device=bounds.device)
             generator.manual_seed(seed)
+
+        self.num_restarts = num_restarts
+        self.raw_samples = raw_samples
+        self.options = None if options is None else dict(options)
+        self.sequential = sequential
 
         self.embedding = _make_alebo_embedding(
             self.input_dim,
@@ -102,6 +118,55 @@ class ALEBOStrategy(SearchStrategy):
         *,
         q: int = 1,
     ) -> SearchResult:
-        """Optimize an acquisition function with ALEBO."""
-        del acq_function, q
-        raise NotImplementedError("ALEBO acquisition optimization is not implemented in Phase 2.")
+        """Optimize an original-space acquisition over the ALEBO polytope."""
+        if q < 1:
+            raise ValueError("q must be at least 1.")
+
+        strategy = self
+
+        class EmbeddedAcquisition(AcquisitionFunction):
+            def __init__(self) -> None:
+                super().__init__(model=acq_function.model)
+
+            def forward(self, Z: Tensor) -> Tensor:
+                return acq_function(strategy.project(Z))
+
+        embedded_acq = EmbeddedAcquisition()
+        A, b = self.linear_constraints
+        inequality_constraints = [
+            (
+                torch.arange(self.embedding_dim, device=self.bounds.device),
+                -A[row],
+                -b[row],
+            )
+            for row in range(A.shape[0])
+        ]
+        radius = torch.linalg.vector_norm(self.embedding, ord=1, dim=1).max()
+        embedded_bounds = torch.stack(
+            [
+                torch.full_like(self.embedding[0], -radius),
+                torch.full_like(self.embedding[0], radius),
+            ]
+        )
+        embedded_candidates, _ = optimize_acqf(
+            acq_function=embedded_acq,
+            bounds=embedded_bounds,
+            q=q,
+            num_restarts=self.num_restarts,
+            raw_samples=self.raw_samples,
+            options=self.options,
+            inequality_constraints=inequality_constraints,
+            sequential=self.sequential,
+        )
+        candidates = self.project(embedded_candidates)
+        with torch.no_grad():
+            acquisition_value = acq_function(candidates).reshape(())
+
+        return SearchResult(
+            candidates=candidates,
+            acquisition_value=acquisition_value,
+            metadata={
+                "embedded_candidates": embedded_candidates.detach(),
+                "embedding": self.embedding.detach().clone(),
+            },
+        )
