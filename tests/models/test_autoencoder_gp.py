@@ -6,7 +6,7 @@ from botorch.sampling.normal import SobolQMCNormalSampler
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import AutoEncoderGP
-from robotorchan.models.neural_reduction import AutoEncoderInputReducer
+from robotorchan.reduction import AutoEncoderInputReducer
 
 
 def _training_data() -> tuple[torch.Tensor, torch.Tensor]:

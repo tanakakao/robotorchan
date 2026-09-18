@@ -17,7 +17,7 @@ Unlike `AutoEncoderInputReducer`, the representation therefore uses `Y` during p
 ## Usage
 
 ```python
-from robotorchan.models.supervised_neural_reduction import (
+from robotorchan.reduction import (
     SupervisedAutoEncoderInputReducer,
 )
 

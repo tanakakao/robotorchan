@@ -6,7 +6,7 @@ import torch
 from botorch.posteriors import Posterior
 from torch import Tensor
 
-from robotorchan.models.reduction import OutputReducer
+from robotorchan.reduction.base import OutputReducer
 
 
 class LinearOutputPosterior(Posterior):

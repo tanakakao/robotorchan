@@ -3,13 +3,13 @@
 import pytest
 import torch
 
-from robotorchan.models.reduction import (
+from robotorchan.optim.latent import PCAReconstruction, RandomProjectionReconstruction
+from robotorchan.reduction import (
     PCAInputReducer,
     PLSInputReducer,
     RandomProjectionInputReducer,
     ReducerNotFittedError,
 )
-from robotorchan.optim.latent import PCAReconstruction, RandomProjectionReconstruction
 
 
 def test_pca_reconstruction_round_trips_latent_coordinates() -> None:

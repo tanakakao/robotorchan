@@ -1,7 +1,7 @@
 import torch
 
 from robotorchan.models import SupervisedVAEGP
-from robotorchan.models.supervised_neural_reduction import SupervisedVAEInputReducer
+from robotorchan.reduction import SupervisedVAEInputReducer
 
 
 def _data():

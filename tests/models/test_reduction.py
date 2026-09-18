@@ -5,13 +5,13 @@ import torch
 from botorch.posteriors import Posterior
 from torch import Tensor
 
-from robotorchan.models.output_reduction import OutputPCAReducer
-from robotorchan.models.reduction import (
+from robotorchan.models.reduced.base import ReductionMixin
+from robotorchan.reduction import (
     InputReducer,
+    OutputPCAReducer,
     OutputReducer,
     PCAInputReducer,
     ReducerNotFittedError,
-    ReductionMixin,
 )
 
 
