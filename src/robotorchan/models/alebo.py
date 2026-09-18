@@ -37,7 +37,12 @@ class MahalanobisRBFKernel(Kernel):
                 raise ValueError("projection must have shape [ard_num_dims, input_dim].")
             ambient_dim = projection.shape[1]
             random_basis = torch.linalg.qr(
-                torch.randn(ambient_dim, ambient_dim, dtype=projection.dtype, device=projection.device)
+                torch.randn(
+                    ambient_dim,
+                    ambient_dim,
+                    dtype=projection.dtype,
+                    device=projection.device,
+                )
             ).Q
             transformed = random_basis[:ard_num_dims] @ torch.linalg.pinv(projection)
             metric = transformed.transpose(-2, -1) @ transformed
