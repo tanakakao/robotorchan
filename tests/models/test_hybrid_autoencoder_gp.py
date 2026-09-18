@@ -49,18 +49,6 @@ def test_training_loss_backpropagates_to_encoder_decoder_and_gp():
     assert any(gradient is not None and gradient.abs().sum() > 0 for gradient in gp_grads)
 
 
-def test_hybrid_loss_is_backwards_compatible_alias():
-    X, Y = _data()
-    model = _make_model(X, Y)
-
-    torch.manual_seed(12)
-    expected = model.training_loss().detach()
-    torch.manual_seed(12)
-    actual = model.hybrid_loss().detach()
-
-    torch.testing.assert_close(actual, expected)
-
-
 def test_zero_reconstruction_weight_removes_decoder_gradient():
     X, Y = _data()
     model = _make_model(X, Y, reconstruction_weight=0.0)

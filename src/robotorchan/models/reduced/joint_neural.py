@@ -160,7 +160,6 @@ class HybridAutoEncoderGP(JointEncoderGP):
     The GP marginal log likelihood trains the predictive latent representation,
     while a decoder regularizes that representation to retain information about
     the original inputs. Use :meth:`training_loss` for joint optimization.
-    :meth:`hybrid_loss` remains as a backwards-compatible alias.
     """
 
     def __init__(
@@ -215,7 +214,3 @@ class HybridAutoEncoderGP(JointEncoderGP):
         if self.reconstruction_weight == 0.0:
             return loss
         return loss + self.reconstruction_weight * self.reconstruction_loss()
-
-    def hybrid_loss(self) -> Tensor:
-        """Return :meth:`training_loss` for backwards compatibility."""
-        return self.training_loss()

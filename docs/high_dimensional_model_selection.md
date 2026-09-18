@@ -76,7 +76,7 @@ python benchmarks/high_dimensional_bo.py \
   --seeds 0,1,2,3,4
 ```
 
-AE/VAE、Joint系、MAP-SAASまで含める場合は `--include-extended` を追加します。Joint系は通常のGP fittingと学習目的が異なり、`JointEncoderGP` はGP MLL、`HybridAutoEncoderGP` は `hybrid_loss()`、`JointVAEGP` は `joint_loss()` を使います。
+AE/VAE、Joint系、MAP-SAASまで含める場合は `--include-extended` を追加します。Joint系は通常のGP fittingと学習目的が異なり、`JointEncoderGP` はGP MLL、`HybridAutoEncoderGP` は `training_loss()`、`JointVAEGP` は `training_loss()` を使います。
 
 出力は2種類です。
 

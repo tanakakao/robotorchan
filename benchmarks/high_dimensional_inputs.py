@@ -110,10 +110,8 @@ def _fit_joint_model(model: object, steps: int, learning_rate: float) -> None:
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     for _ in range(steps):
         optimizer.zero_grad()
-        if isinstance(model, JointVAEGP):
-            loss = model.joint_loss()
-        elif isinstance(model, HybridAutoEncoderGP):
-            loss = model.hybrid_loss()
+        if isinstance(model, (JointVAEGP, HybridAutoEncoderGP)):
+            loss = model.training_loss()
         else:
             model.train()
             model.likelihood.train()

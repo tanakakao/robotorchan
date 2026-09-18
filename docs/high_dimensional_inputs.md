@@ -55,7 +55,7 @@ for _ in range(100):
     optimizer.step()
 ```
 
-`JointEncoderGP.training_loss()` は negative exact GP MLL、`HybridAutoEncoderGP` はそこへ weighted reconstruction loss、`JointVAEGP` はさらに reconstruction / KL を加えます。従来の `hybrid_loss()` / `joint_loss()` は後方互換aliasとして残します。
+`JointEncoderGP.training_loss()` は negative exact GP MLL、`HybridAutoEncoderGP` はそこへ weighted reconstruction loss、`JointVAEGP` はさらに reconstruction / KL を加えます。従来の `training_loss()` / `training_loss()` は後方互換aliasとして残します。
 
 `make_mll()` は引き続きBoTorch/GPyTorchのMLLオブジェクトを返す低レベルAPIです。Hybrid / JointVAEで正則化まで含めて学習する場合は `fit_gpytorch_mll(model.make_mll())` ではなく `training_loss()` を使用してください。
 
