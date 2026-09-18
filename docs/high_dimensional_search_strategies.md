@@ -161,3 +161,8 @@ BAxUS には `n_iterations` を初期設計後の評価予算として渡し、t
 Search strategy は public-space `bounds` の dtype / device を保持する。strategy 内部で生成する random sample、embedding、latent / target bounds、diagnostic tensor は原則として `bounds` と同じ dtype / device 上に置き、`SearchResult.candidates` を暗黙に CPU や別 dtype へ変換しない。
 
 BoTorch の数値安定性を考慮し、通常の GP ベース BO では `torch.float64` を推奨する。GPU を使用する場合も、model / acquisition / bounds を同一 device に配置する。CPU CI では float64 の dtype/device propagation を常時検証し、CUDA が利用可能な環境では RandomSearch の device propagation test も実行する。
+
+
+### ALEBO原実装との対応
+
+ALEBOの公開参照実装では、MAP推定後にMahalanobis kernelのCholeskyパラメータだけをLaplace近似でサンプリングし、mean constantとoutput scaleはMAP値に固定する。さらにmetric sampleの先頭にはMAP値そのものを含める。robotorchanもmetric uncertaintyについてこのMAP-first sampling規約を採用する。なお、現実装はBoTorchの現行APIに合わせた構成であり、旧Axクラスの互換APIは提供しない。
