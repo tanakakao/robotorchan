@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from botorch.models import SingleTaskGP as BoTorchSingleTaskGP
-from botorch.posteriors import Posterior
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
+from botorch.posteriors import Posterior
 from botorch.utils.types import DEFAULT, _DefaultType
 from gpytorch.likelihoods import Likelihood
 from gpytorch.means import Mean
@@ -16,7 +16,11 @@ from torch import Tensor
 
 from robotorchan.models.base import ExactGPModelMixin
 from robotorchan.reduction.base import InputReducer, OutputReducer
-from robotorchan.reduction.input import PCAInputReducer, PLSInputReducer, RandomProjectionInputReducer
+from robotorchan.reduction.input import (
+    PCAInputReducer,
+    PLSInputReducer,
+    RandomProjectionInputReducer,
+)
 from robotorchan.reduction.neural import AutoEncoderInputReducer
 from robotorchan.reduction.output import OutputPCAReducer, OutputPLSReducer
 
