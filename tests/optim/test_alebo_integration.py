@@ -44,7 +44,6 @@ def test_alebo_metric_marginal_model_supports_batch_qlogei() -> None:
         embedding_dim=2,
         seed=11,
         num_restarts=2,
-        raw_samples=16,
         sequential=False,
     )
     train_Z = torch.tensor(
