@@ -11,7 +11,6 @@ from robotorchan.reduction import (
     OutputReducer,
     PCAInputReducer,
     ReducerNotFittedError,
-    ReductionMixin,
 )
 
 
