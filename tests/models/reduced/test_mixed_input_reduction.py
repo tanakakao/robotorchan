@@ -65,8 +65,7 @@ def test_mixed_input_reducer_preserves_categorical_values_on_transform() -> None
     [
         ([], "at least one"),
         ([1, 1], "duplicates"),
-        ([-1], "within"),
-        ([3], "within"),
+        ([3], "raw input dimension"),
         ([0, 1, 2], "continuous"),
     ],
 )
@@ -83,3 +82,11 @@ def test_mixed_input_layout_rejects_wrong_candidate_dimension() -> None:
 
     with pytest.raises(ValueError, match="Expected final input dimension 3"):
         layout.continuous(torch.zeros(2, 4))
+
+
+def test_mixed_input_layout_supports_negative_cat_dims() -> None:
+    layout = MixedInputLayout.from_cat_dims(input_dim=5, cat_dims=[1, -1], latent_dim=2)
+
+    assert layout.cat_dims == (1, 4)
+    assert layout.cont_dims == (0, 2, 3)
+    assert layout.reduced_cat_dims == [2, 3]
