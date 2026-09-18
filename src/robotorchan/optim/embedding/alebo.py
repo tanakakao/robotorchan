@@ -46,7 +46,6 @@ class ALEBOStrategy(SearchStrategy):
         embedding_dim: int,
         seed: int | None = None,
         num_restarts: int = 10,
-        raw_samples: int = 512,
         options: dict[str, Any] | None = None,
         sequential: bool = False,
     ) -> None:
@@ -55,16 +54,13 @@ class ALEBOStrategy(SearchStrategy):
             raise ValueError("embedding_dim must be between 1 and input_dim.")
         if num_restarts < 1:
             raise ValueError("num_restarts must be at least 1.")
-        if raw_samples < 1:
-            raise ValueError("raw_samples must be at least 1.")
-
         generator = None
         if seed is not None:
             generator = torch.Generator(device=bounds.device)
             generator.manual_seed(seed)
 
         self.num_restarts = num_restarts
-        self.raw_samples = raw_samples
+        self.seed = seed
         self.options = None if options is None else dict(options)
         self.sequential = sequential
 
@@ -161,7 +157,7 @@ class ALEBOStrategy(SearchStrategy):
         )
         batch_initial_conditions = self.sample_feasible(
             self.num_restarts * q,
-            seed=None,
+            seed=self.seed,
         ).reshape(self.num_restarts, q, self.embedding_dim)
         embedded_candidates, acquisition_value = optimize_acqf(
             acq_function=acq_function,

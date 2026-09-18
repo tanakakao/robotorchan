@@ -11,7 +11,7 @@ from robotorchan.optim import ALEBOStrategy
 
 def test_alebo_model_and_strategy_complete_one_bo_step() -> None:
     bounds = torch.stack([torch.zeros(6, dtype=torch.double), torch.ones(6, dtype=torch.double)])
-    strategy = ALEBOStrategy(bounds, embedding_dim=2, seed=7, num_restarts=3, raw_samples=32)
+    strategy = ALEBOStrategy(bounds, embedding_dim=2, seed=7, num_restarts=3)
     train_Z = torch.tensor([[0.0, 0.0], [0.25, -0.1], [-0.2, 0.2], [0.1, 0.3]], dtype=torch.double)
     train_X = strategy.project(train_Z)
     train_Y = -((train_X - 0.5) ** 2).sum(dim=-1, keepdim=True)
@@ -44,7 +44,6 @@ def test_alebo_metric_marginal_model_supports_batch_qlogei() -> None:
         embedding_dim=2,
         seed=11,
         num_restarts=2,
-        raw_samples=16,
         sequential=False,
     )
     train_Z = torch.tensor(

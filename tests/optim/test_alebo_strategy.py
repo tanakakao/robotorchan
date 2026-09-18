@@ -120,7 +120,7 @@ class _QuadraticAcquisition(AcquisitionFunction):
 
 
 def test_optimize_returns_feasible_original_space_candidate() -> None:
-    strategy = ALEBOStrategy(_bounds(), embedding_dim=2, seed=0, num_restarts=3, raw_samples=32)
+    strategy = ALEBOStrategy(_bounds(), embedding_dim=2, seed=0, num_restarts=3)
 
     result = strategy.optimize(_QuadraticAcquisition(), q=1)
 
@@ -136,9 +136,6 @@ def test_optimize_validates_q_and_optimizer_settings() -> None:
     bounds = _bounds()
     with pytest.raises(ValueError, match="num_restarts"):
         ALEBOStrategy(bounds, embedding_dim=2, num_restarts=0)
-    with pytest.raises(ValueError, match="raw_samples"):
-        ALEBOStrategy(bounds, embedding_dim=2, raw_samples=0)
-
     strategy = ALEBOStrategy(bounds, embedding_dim=2)
     with pytest.raises(ValueError, match="q"):
         strategy.optimize(_QuadraticAcquisition(), q=0)
@@ -170,3 +167,12 @@ def test_sample_feasible_draws_points_inside_alebo_polytope() -> None:
 
     assert samples.shape == (32, 2)
     assert bool(strategy.is_feasible(samples).all())
+
+
+def test_sample_feasible_is_reproducible_for_same_seed() -> None:
+    strategy = ALEBOStrategy(_bounds(), embedding_dim=2, seed=7)
+
+    first = strategy.sample_feasible(16, seed=19)
+    second = strategy.sample_feasible(16, seed=19)
+
+    torch.testing.assert_close(first, second)
