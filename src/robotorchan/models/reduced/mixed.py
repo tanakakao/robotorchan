@@ -91,9 +91,7 @@ class MixedInputLayout:
 
     def _validate_original_input(self, X: Tensor) -> None:
         if X.shape[-1] != self.input_dim:
-            raise ValueError(
-                f"Expected final input dimension {self.input_dim}, got {X.shape[-1]}."
-            )
+            raise ValueError(f"Expected final input dimension {self.input_dim}, got {X.shape[-1]}.")
 
 
 class MixedInputReducer:
