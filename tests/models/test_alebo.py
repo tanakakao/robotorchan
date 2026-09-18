@@ -22,9 +22,7 @@ def test_mahalanobis_kernel_has_full_metric_parameters() -> None:
     kernel = MahalanobisRBFKernel(ard_num_dims=3).double()
 
     with torch.no_grad():
-        kernel.raw_tril.copy_(
-            torch.tensor([0.2, 0.5, -0.3, -0.4, 0.7, 0.1], dtype=torch.double)
-        )
+        kernel.raw_tril.copy_(torch.tensor([0.2, 0.5, -0.3, -0.4, 0.7, 0.1], dtype=torch.double))
 
     metric = kernel.metric
     assert metric.shape == (3, 3)
