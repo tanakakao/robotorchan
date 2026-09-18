@@ -1,4 +1,4 @@
-"""Tests for the ALEBO Phase 1 embedding foundation."""
+"""Tests for ALEBO embedding geometry and constrained optimization."""
 
 import pytest
 import torch
@@ -16,7 +16,7 @@ def _bounds(input_dim: int = 6) -> torch.Tensor:
     )
 
 
-def test_embedding_is_reproducible_and_has_orthonormal_rows() -> None:
+def test_embedding_is_reproducible_and_has_unit_hypersphere_columns() -> None:
     bounds = _bounds()
     first = ALEBOStrategy(bounds, embedding_dim=2, seed=5)
     second = ALEBOStrategy(bounds, embedding_dim=2, seed=5)
@@ -24,7 +24,11 @@ def test_embedding_is_reproducible_and_has_orthonormal_rows() -> None:
     torch.testing.assert_close(first.embedding, second.embedding)
     assert first.embedding.shape == (2, 6)
     torch.testing.assert_close(
-        first.embedding @ first.embedding.transpose(-2, -1),
+        first.embedding.norm(dim=0),
+        torch.ones(6, dtype=torch.double),
+    )
+    torch.testing.assert_close(
+        first.embedding @ first.embedding_pinv,
         torch.eye(2, dtype=torch.double),
     )
 
