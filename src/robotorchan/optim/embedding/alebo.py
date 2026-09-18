@@ -1,4 +1,4 @@
-"""Adaptive linear embedding Bayesian optimization (ALEBO) foundation."""
+"""Adaptive Linear Embedding Bayesian Optimization (ALEBO)."""
 
 from __future__ import annotations
 
