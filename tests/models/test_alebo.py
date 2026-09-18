@@ -22,12 +22,7 @@ def test_mahalanobis_kernel_has_full_metric_parameters() -> None:
     kernel = MahalanobisRBFKernel(ard_num_dims=3).double()
 
     with torch.no_grad():
-        kernel.raw_tril.copy_(
-            torch.tensor(
-                [[0.2, 0.0, 0.0], [0.5, -0.3, 0.0], [-0.4, 0.7, 0.1]],
-                dtype=torch.double,
-            )
-        )
+        kernel.raw_tril.copy_(torch.tensor([0.2, 0.5, -0.3, -0.4, 0.7, 0.1], dtype=torch.double))
 
     metric = kernel.metric
     assert metric.shape == (3, 3)
@@ -114,12 +109,14 @@ def test_metric_parameter_vector_is_detached_copy() -> None:
     train_Y = train_X.square()
     model = ALEBOGP(train_X, train_Y)
 
+    with torch.no_grad():
+        model.mahalanobis_kernel.raw_tril.fill_(0.5)
     vector = model.metric_parameter_vector()
 
     assert vector.shape == (1,)
     assert not vector.requires_grad
     vector.zero_()
-    assert not torch.equal(vector, model.mahalanobis_kernel.raw_tril.reshape(-1))
+    assert not torch.equal(vector, model.mahalanobis_kernel.raw_tril)
 
 
 def test_sample_metric_parameters_uses_gaussian_laplace_covariance() -> None:
@@ -148,3 +145,35 @@ def test_sample_metric_parameters_validates_inputs() -> None:
         model.sample_metric_parameters(0, covariance=torch.eye(1, dtype=torch.double))
     with pytest.raises(ValueError, match="covariance must have shape"):
         model.sample_metric_parameters(2, covariance=torch.eye(2, dtype=torch.double))
+
+
+def test_metric_parameter_vector_uses_only_free_lower_triangle() -> None:
+    train_X = torch.zeros(3, 3, dtype=torch.double)
+    train_Y = torch.zeros(3, 1, dtype=torch.double)
+    model = ALEBOGP(train_X, train_Y)
+
+    assert model.metric_parameter_vector().shape == (6,)
+
+
+def test_metric_laplace_covariance_uses_negative_diagonal_hessian() -> None:
+    train_X = torch.zeros(3, 2, dtype=torch.double)
+    train_Y = torch.zeros(3, 1, dtype=torch.double)
+    model = ALEBOGP(train_X, train_Y)
+
+    covariance = model.metric_laplace_covariance(
+        diagonal_hessian=torch.tensor([-2.0, -4.0, -5.0], dtype=torch.double)
+    )
+
+    expected = torch.diag(torch.tensor([0.5, 0.25, 0.2], dtype=torch.double))
+    assert torch.allclose(covariance, expected)
+
+
+def test_metric_laplace_covariance_validates_curvature() -> None:
+    train_X = torch.zeros(3, 2, dtype=torch.double)
+    train_Y = torch.zeros(3, 1, dtype=torch.double)
+    model = ALEBOGP(train_X, train_Y)
+
+    with pytest.raises(ValueError, match="strictly negative"):
+        model.metric_laplace_covariance(
+            diagonal_hessian=torch.tensor([-1.0, 0.0, -2.0], dtype=torch.double)
+        )
