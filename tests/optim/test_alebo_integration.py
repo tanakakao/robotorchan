@@ -2,6 +2,8 @@
 
 import torch
 from botorch.acquisition.analytic import LogExpectedImprovement
+from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import ALEBOGP
 from robotorchan.optim import ALEBOStrategy
@@ -31,5 +33,46 @@ def test_alebo_model_and_strategy_complete_one_bo_step() -> None:
     assert torch.all(result.candidates <= bounds[1])
     embedded = result.metadata["embedded_candidates"]
     assert bool(strategy.is_feasible(embedded).all())
+    assert result.acquisition_value is not None
+    assert torch.isfinite(result.acquisition_value)
+
+
+def test_alebo_metric_marginal_model_supports_batch_qlogei() -> None:
+    bounds = torch.stack([torch.zeros(6, dtype=torch.double), torch.ones(6, dtype=torch.double)])
+    strategy = ALEBOStrategy(
+        bounds,
+        embedding_dim=2,
+        seed=11,
+        num_restarts=2,
+        raw_samples=16,
+        sequential=False,
+    )
+    train_Z = torch.tensor(
+        [[0.0, 0.0], [0.2, -0.1], [-0.15, 0.2], [0.1, 0.25]],
+        dtype=torch.double,
+    )
+    train_X = strategy.project(train_Z)
+    train_Y = -((train_X - 0.5) ** 2).sum(dim=-1, keepdim=True)
+    model = ALEBOGP(train_Z, train_Y)
+    covariance = torch.eye(model.metric_parameter_vector().numel(), dtype=torch.double) * 0.01
+    acquisition_model = model.acquisition_model(
+        n_metric_samples=3,
+        covariance=covariance,
+        generator=torch.Generator().manual_seed(37),
+    )
+    acquisition = qLogExpectedImprovement(
+        model=acquisition_model,
+        best_f=train_Y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([32])),
+    )
+
+    result = strategy.optimize(acquisition, q=2)
+
+    assert result.candidates.shape == (2, 6)
+    embedded = result.metadata["embedded_candidates"]
+    assert embedded.shape == (2, 2)
+    assert bool(strategy.is_feasible(embedded).all())
+    assert torch.all(result.candidates >= bounds[0])
+    assert torch.all(result.candidates <= bounds[1])
     assert result.acquisition_value is not None
     assert torch.isfinite(result.acquisition_value)
