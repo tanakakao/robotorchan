@@ -24,18 +24,18 @@ from robotorchan.reduction.output import (
 )
 
 __all__ = [
-    "PCAInputReducer",
-    "PLSInputReducer",
-    "VAEInputReducer",
     "AutoEncoderInputReducer",
     "InputReducer",
     "LinearOutputPosterior",
     "OutputPCAReducer",
     "OutputPLSReducer",
     "OutputReducer",
+    "PCAInputReducer",
+    "PLSInputReducer",
     "RandomProjectionInputReducer",
     "ReducerNotFittedError",
     "SupervisedAutoEncoderInputReducer",
     "SupervisedVAEInputReducer",
     "TensorReducer",
+    "VAEInputReducer",
 ]
