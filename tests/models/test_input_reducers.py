@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 import torch
 
-from robotorchan.models.reduction import (
+from robotorchan.reduction import (
     PCAInputReducer,
     PLSInputReducer,
     RandomProjectionInputReducer,
