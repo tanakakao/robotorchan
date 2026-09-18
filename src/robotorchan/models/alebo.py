@@ -461,21 +461,25 @@ class ALEBOGP(SingleTaskGP):
         self,
         *,
         restarts: int = 10,
+        warm_start: bool = True,
         **fit_kwargs: object,
     ) -> ALEBOGP:
-        """Fit the ALEBO MAP state using independent reference-style restarts."""
+        """Fit ALEBO by multi-start MAP optimization, optionally warm-starting once."""
         if restarts < 1:
             raise ValueError("restarts must be positive.")
         projection = self.mahalanobis_kernel.projection
+        warm_state = deepcopy(self.state_dict()) if warm_start else None
         best_state = None
         best_objective = float("-inf")
-        for _ in range(restarts):
+        for restart in range(restarts):
             restart_model = ALEBOGP(
                 self.raw_train_X,
                 self.raw_train_Y,
                 self.raw_train_Yvar,
                 projection=projection,
             )
+            if restart == 0 and warm_state is not None:
+                restart_model.load_state_dict(warm_state)
             fit_gpytorch_mll(restart_model.make_mll(), **fit_kwargs)
             restart_model.eval()
             with torch.no_grad():
