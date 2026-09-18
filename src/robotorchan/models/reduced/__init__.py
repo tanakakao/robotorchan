@@ -35,6 +35,7 @@ __all__ = [
     "MixedPLSGP",
     "MixedRandomProjectionGP",
     "MixedReducedGP",
+    "MixedVAEGP",
     "OutputPCAGP",
     "OutputPLSGP",
     "RandomProjectionGP",
