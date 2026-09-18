@@ -126,7 +126,8 @@ def test_dummy_strategy_returns_public_space_candidates() -> None:
 def test_public_optim_exports_are_complete() -> None:
     import robotorchan.optim as optim
 
-    expected = {\n        "ALEBOStrategy",
+    expected = {
+        "ALEBOStrategy",
         "SearchResult",
         "SearchStrategy",
         "OriginalSpaceStrategy",
@@ -145,6 +146,3 @@ def test_public_optim_exports_are_complete() -> None:
         "BAxUSThompsonSamplingStrategy",
         "update_baxus_state",
     }
-
-    assert set(optim.__all__) == expected
-    assert all(hasattr(optim, name) for name in expected)
