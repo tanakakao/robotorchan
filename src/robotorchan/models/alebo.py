@@ -303,13 +303,16 @@ class ALEBOGP(SingleTaskGP):
         predictive_covariance = 0.5 * (
             predictive_covariance + predictive_covariance.transpose(-2, -1)
         )
-        jitter = torch.finfo(predictive_covariance.dtype).eps * 100
+        eigenvalues = torch.linalg.eigvalsh(predictive_covariance)
+        scale = torch.diagonal(predictive_covariance, dim1=-2, dim2=-1).abs().amax(dim=-1)
+        floor = torch.finfo(predictive_covariance.dtype).eps * scale.clamp_min(1.0) * 100
+        correction = (floor - eigenvalues[..., 0]).clamp_min(0.0)
         identity = torch.eye(
             predictive_covariance.shape[-1],
             dtype=predictive_covariance.dtype,
             device=predictive_covariance.device,
         )
-        predictive_covariance = predictive_covariance + jitter * identity
+        predictive_covariance = predictive_covariance + correction[..., None, None] * identity
         return mean.unsqueeze(-1), predictive_covariance
 
     def marginal_metric_posterior(
