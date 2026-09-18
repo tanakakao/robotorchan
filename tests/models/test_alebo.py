@@ -365,3 +365,20 @@ def test_acquisition_model_reuses_fixed_metric_samples() -> None:
         second.distribution.covariance_matrix,
     )
     assert acquisition_model.metric_samples.shape == (3, 1)
+
+
+def test_metric_samples_include_map_as_first_sample() -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+    covariance = torch.eye(1, dtype=torch.double) * 0.01
+    map_metric = model.metric_parameter_vector().detach().clone()
+
+    samples = model.sample_metric_parameters(
+        4,
+        covariance=covariance,
+        generator=torch.Generator().manual_seed(43),
+    )
+
+    torch.testing.assert_close(samples[0], map_metric)
+    assert samples.shape == (4, 1)
