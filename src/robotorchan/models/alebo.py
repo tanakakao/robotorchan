@@ -198,7 +198,7 @@ class ALEBOGP(SingleTaskGP):
         relative_step: float = 1e-3,
         absolute_step: float = 1e-4,
     ) -> Tensor:
-        """Estimate ALEBO metric Hessian diagonal by finite differences of gradients."""
+        """Estimate ALEBO metric Hessian diagonal with the reference forward difference."""
         if relative_step <= 0 or absolute_step <= 0:
             raise ValueError("finite-difference steps must be positive.")
         parameter = self.mahalanobis_kernel.raw_tril
@@ -209,13 +209,12 @@ class ALEBOGP(SingleTaskGP):
                 step = absolute_step + relative_step * original[index].abs()
                 with torch.no_grad():
                     parameter.copy_(original)
-                    parameter[index] = original[index] + step
-                plus = torch.autograd.grad(self.metric_log_posterior(), parameter)[0][index]
+                base = torch.autograd.grad(self.metric_log_posterior(), parameter)[0][index]
                 with torch.no_grad():
                     parameter.copy_(original)
-                    parameter[index] = original[index] - step
-                minus = torch.autograd.grad(self.metric_log_posterior(), parameter)[0][index]
-                diagonal.append((plus - minus) / (2 * step))
+                    parameter[index] = original[index] + step
+                plus = torch.autograd.grad(self.metric_log_posterior(), parameter)[0][index]
+                diagonal.append((plus - base) / step)
         finally:
             with torch.no_grad():
                 parameter.copy_(original)
