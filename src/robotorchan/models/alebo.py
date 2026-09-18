@@ -189,6 +189,63 @@ class ALEBOGP(SingleTaskGP):
         )
         return mean.unsqueeze(0) + noise @ chol.transpose(-2, -1)
 
+    def metric_sample_predictions(
+        self,
+        X: Tensor,
+        *,
+        metric_samples: Tensor,
+        observation_noise: bool = False,
+    ) -> tuple[Tensor, Tensor]:
+        """Evaluate conditional GP moments for sampled metric parameters."""
+        parameter = self.mahalanobis_kernel.raw_tril
+        expected_shape = (parameter.numel(),)
+        if metric_samples.ndim != 2 or metric_samples.shape[1:] != expected_shape:
+            raise ValueError(
+                "metric_samples must have shape "
+                f"[n_samples, {parameter.numel()}]."
+            )
+        if metric_samples.shape[0] < 1:
+            raise ValueError("metric_samples must contain at least one sample.")
+
+        original = parameter.detach().clone()
+        means = []
+        variances = []
+        try:
+            for sample in metric_samples:
+                with torch.no_grad():
+                    parameter.copy_(sample.to(dtype=parameter.dtype, device=parameter.device))
+                posterior = super().posterior(X, observation_noise=observation_noise)
+                means.append(posterior.mean)
+                variances.append(posterior.variance)
+        finally:
+            with torch.no_grad():
+                parameter.copy_(original)
+        return torch.stack(means), torch.stack(variances)
+
+    def marginal_metric_moments(
+        self,
+        X: Tensor,
+        *,
+        n_metric_samples: int,
+        covariance: Tensor | None = None,
+        observation_noise: bool = False,
+        generator: torch.Generator | None = None,
+    ) -> tuple[Tensor, Tensor]:
+        """Moment-match predictions over the Laplace metric posterior."""
+        if covariance is None:
+            covariance = self.estimate_metric_laplace_covariance()
+        samples = self.sample_metric_parameters(
+            n_metric_samples,
+            covariance=covariance,
+            generator=generator,
+        )
+        means, variances = self.metric_sample_predictions(
+            X,
+            metric_samples=samples,
+            observation_noise=observation_noise,
+        )
+        return self.moment_match_predictions(means, variances)
+
     @staticmethod
     def moment_match_predictions(
         means: Tensor,
