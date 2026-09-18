@@ -285,9 +285,9 @@ def test_metric_diagonal_hessian_uses_forward_difference(
         lambda: (parameter**3).sum(),
     )
 
-    diagonal = model.metric_diagonal_hessian(relative_step=0.0 + 1e-3, absolute_step=1e-4)
+    diagonal = model.metric_diagonal_hessian(relative_step=1e-3, absolute_step=1e-4)
     step = 1e-4 + 1e-3 * 2.0
-    expected = torch.tensor([12.0 + 6.0 * step + step**2], dtype=torch.double)
+    expected = torch.tensor([12.0 + 3.0 * step], dtype=torch.double)
 
     torch.testing.assert_close(diagonal, expected)
 
