@@ -64,7 +64,7 @@ def test_mixed_input_reducer_preserves_categorical_values_on_transform() -> None
     ("cat_dims", "message"),
     [
         ([], "at least one"),
-        ([1, 1], "duplicates"),
+        ([1, 1], "duplicate"),
         ([3], "raw input dimension"),
         ([0, 1, 2], "continuous"),
     ],
