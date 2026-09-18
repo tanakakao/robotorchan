@@ -108,6 +108,44 @@ class ALEBOGP(SingleTaskGP):
         """Return the unconstrained Mahalanobis parameters as a flat vector."""
         return self.mahalanobis_kernel.raw_tril.detach().clone()
 
+    def metric_log_posterior(self) -> Tensor:
+        """Return the exact MLL used as the metric log-posterior objective."""
+        mll = self.make_mll()
+        output = self(*self.train_inputs)
+        target = self.train_targets
+        value = mll(output, target)
+        return value.sum() if value.ndim else value
+
+    def metric_diagonal_hessian(self) -> Tensor:
+        """Evaluate the diagonal Hessian with respect to metric parameters."""
+        parameter = self.mahalanobis_kernel.raw_tril
+        objective = self.metric_log_posterior()
+        gradient = torch.autograd.grad(
+            objective,
+            parameter,
+            create_graph=True,
+        )[0]
+        diagonal = []
+        for index in range(parameter.numel()):
+            second = torch.autograd.grad(
+                gradient[index],
+                parameter,
+                retain_graph=index + 1 < parameter.numel(),
+            )[0]
+            diagonal.append(second[index])
+        return torch.stack(diagonal).detach()
+
+    def estimate_metric_laplace_covariance(
+        self,
+        *,
+        min_curvature: float = 1e-8,
+    ) -> Tensor:
+        """Estimate the diagonal Laplace covariance at the current GP state."""
+        return self.metric_laplace_covariance(
+            diagonal_hessian=self.metric_diagonal_hessian(),
+            min_curvature=min_curvature,
+        )
+
     def metric_laplace_covariance(
         self,
         *,

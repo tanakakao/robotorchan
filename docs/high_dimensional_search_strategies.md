@@ -64,7 +64,7 @@ result = strategy.optimize(acq, q=1)
 
 `ALEBOGP` は full Mahalanobis RBF metric を使い、通常の axis-aligned ARD kernel では表現できない線形 embedding 後の回転した距離構造を扱う。metric は正定値になるよう lower-triangular factor から構成する。
 
-robotorchan の実装には metric parameter の Gaussian Laplace approximation を扱うための `metric_laplace_covariance()`、`sample_metric_parameters()` と、複数の metric-conditioned prediction を統合する `moment_match_predictions()` がある。ただし現時点では Hessian 自体を自動推定する API は提供せず、`metric_laplace_covariance()` は外部で評価した diagonal Hessian を受け取る。この点は原論文の完全な posterior fitting pipeline との差分として明示する。
+robotorchan の実装には metric parameter の Gaussian Laplace approximation を扱うための `metric_laplace_covariance()`、`sample_metric_parameters()` と、複数の metric-conditioned prediction を統合する `moment_match_predictions()` がある。`metric_diagonal_hessian()` は現在の fitted GP state で Mahalanobis metric parameter に対する exact MLL の diagonal Hessian を autograd で評価し、`estimate_metric_laplace_covariance()` がその負の曲率から diagonal Laplace covariance を構築する。`metric_laplace_covariance()` は外部で評価した diagonal Hessian を直接与える低レベル API として使える。
 
 ALEBO の GP は原論文どおり embedded coordinates `train_Z` 上で学習する。acquisition function も embedded space で評価し、最適化後の候補だけを `B†z` で original/public input space へ戻す。
 

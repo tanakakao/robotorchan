@@ -194,3 +194,30 @@ def test_moment_match_predictions_validates_inputs() -> None:
         ALEBOGP.moment_match_predictions(torch.zeros(2, 1), torch.zeros(2, 2))
     with pytest.raises(ValueError, match="non-negative"):
         ALEBOGP.moment_match_predictions(torch.zeros(1, 1), -torch.ones(1, 1))
+
+
+def test_metric_diagonal_hessian_matches_autograd_curvature() -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+
+    diagonal = model.metric_diagonal_hessian()
+
+    assert diagonal.shape == model.metric_parameter_vector().shape
+    assert diagonal.dtype == torch.double
+    assert torch.isfinite(diagonal).all()
+
+
+def test_estimate_metric_laplace_covariance_uses_automatic_hessian(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    train_X = torch.zeros(3, 2, dtype=torch.double)
+    train_Y = torch.zeros(3, 1, dtype=torch.double)
+    model = ALEBOGP(train_X, train_Y)
+    diagonal = torch.tensor([-2.0, -4.0, -5.0], dtype=torch.double)
+    monkeypatch.setattr(model, "metric_diagonal_hessian", lambda: diagonal)
+
+    covariance = model.estimate_metric_laplace_covariance()
+
+    expected = torch.diag(torch.tensor([0.5, 0.25, 0.2], dtype=torch.double))
+    torch.testing.assert_close(covariance, expected)
