@@ -117,21 +117,10 @@ class ALEBOStrategy(SearchStrategy):
         *,
         q: int = 1,
     ) -> SearchResult:
-        """Optimize an original-space acquisition over the ALEBO polytope."""
+        """Optimize an embedded-space acquisition over the ALEBO polytope."""
         if q < 1:
             raise ValueError("q must be at least 1.")
 
-        strategy = self
-
-        class EmbeddedAcquisition(AcquisitionFunction):
-            def __init__(self) -> None:
-                super().__init__(model=acq_function.model)
-
-            def forward(self, Z: Tensor) -> Tensor:
-                projected = strategy.project(Z)
-                return acq_function(projected)
-
-        embedded_acq = EmbeddedAcquisition()
         A, b = self.linear_constraints
         inequality_constraints = [
             (
@@ -148,8 +137,8 @@ class ALEBOStrategy(SearchStrategy):
                 self.bounds.new_full((self.embedding_dim,), radius),
             ]
         )
-        embedded_candidates, _ = optimize_acqf(
-            acq_function=embedded_acq,
+        embedded_candidates, acquisition_value = optimize_acqf(
+            acq_function=acq_function,
             bounds=embedded_bounds,
             q=q,
             num_restarts=self.num_restarts,
@@ -159,12 +148,10 @@ class ALEBOStrategy(SearchStrategy):
             sequential=self.sequential,
         )
         candidates = self.project(embedded_candidates)
-        with torch.no_grad():
-            acquisition_value = acq_function(candidates).reshape(())
 
         return SearchResult(
             candidates=candidates,
-            acquisition_value=acquisition_value,
+            acquisition_value=acquisition_value.reshape(()),
             metadata={
                 "embedded_candidates": embedded_candidates.detach(),
                 "embedding": self.embedding.detach().clone(),
