@@ -28,9 +28,7 @@ def _make_alebo_embedding(
         device=device,
         generator=generator,
     )
-    return projection / projection.norm(dim=0, keepdim=True).clamp_min(
-        torch.finfo(dtype).eps
-    )
+    return projection / projection.norm(dim=0, keepdim=True).clamp_min(torch.finfo(dtype).eps)
 
 
 class ALEBOStrategy(SearchStrategy):
