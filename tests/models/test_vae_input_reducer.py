@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import torch
 
-from robotorchan.models.neural_reduction import VAEInputReducer
+from robotorchan.reduction import VAEInputReducer
 
 
 def _training_data() -> torch.Tensor:
