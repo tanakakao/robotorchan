@@ -108,6 +108,7 @@ def test_alebo_gp_rejects_non_mahalanobis_covar_for_metric_access() -> None:
     with pytest.raises(TypeError, match="MahalanobisRBFKernel"):
         _ = model.metric
 
+
 def test_metric_parameter_vector_is_detached_copy() -> None:
     train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
     train_Y = train_X.square()
@@ -146,4 +147,6 @@ def test_sample_metric_parameters_validates_inputs() -> None:
     with pytest.raises(ValueError, match="n_samples"):
         model.sample_metric_parameters(0, covariance=torch.eye(1, dtype=torch.double))
     with pytest.raises(ValueError, match="covariance must have shape"):
-        model.sample_metric_parameters(2, covariance=torch.eye(2, dtype=torch.double))
+        model.sample_metric_parameters(
+            2, covariance=torch.eye(2, dtype=torch.double)
+        )
