@@ -109,6 +109,34 @@ def test_alebo_gp_exposes_metric_from_internal_kernel() -> None:
     torch.testing.assert_close(model.metric, model.covar_module.base_kernel.metric)
 
 
+def test_fit_acquisition_model_runs_map_then_laplace(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    train_X = torch.zeros(3, 1, dtype=torch.double)
+    train_Y = torch.zeros(3, 1, dtype=torch.double)
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
+    calls: list[str] = []
+
+    def fake_fit(**kwargs: object) -> ALEBOGP:
+        del kwargs
+        calls.append("fit")
+        return model
+
+    def fake_covariance(**kwargs: object) -> torch.Tensor:
+        del kwargs
+        calls.append("laplace")
+        return torch.eye(model.metric_parameter_vector().numel(), dtype=torch.double)
+
+    monkeypatch.setattr(model, "fit", fake_fit)
+    monkeypatch.setattr(model, "estimate_metric_laplace_covariance", fake_covariance)
+
+    acquisition_model = model.fit_acquisition_model(n_metric_samples=3, restarts=2)
+
+    assert calls == ["fit", "laplace"]
+    assert isinstance(acquisition_model, ALEBOMetricMarginalModel)
+    assert acquisition_model.metric_samples.shape[0] == 3
+
+
 def test_alebo_gp_fit_returns_same_model(monkeypatch) -> None:
     train_X = torch.tensor(
         [[0.0, 0.0], [0.2, -0.1], [-0.3, 0.4], [0.5, 0.1]],
