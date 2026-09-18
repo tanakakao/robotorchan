@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+
 import torch
 from botorch.fit import fit_gpytorch_mll
 from botorch.models.model import Model
@@ -454,7 +456,42 @@ class ALEBOGP(SingleTaskGP):
         variance = (second_moment - mean.square()).clamp_min(0.0)
         return mean, variance
 
-    def fit(self, **fit_kwargs: object) -> ALEBOGP:
-        """Fit ALEBO GP hyperparameters by maximizing the exact marginal likelihood."""
-        fit_gpytorch_mll(self.make_mll(), **fit_kwargs)
+    def fit(
+        self,
+        *,
+        restarts: int = 10,
+        generator: torch.Generator | None = None,
+        **fit_kwargs: object,
+    ) -> ALEBOGP:
+        """Fit the ALEBO MAP state using random-restart marginal-likelihood optimization."""
+        if restarts < 1:
+            raise ValueError("restarts must be positive.")
+        initial_state = deepcopy(self.state_dict())
+        best_state = None
+        best_objective = float("-inf")
+        for restart in range(restarts):
+            self.load_state_dict(initial_state)
+            if restart > 0:
+                self._randomize_map_state(generator=generator)
+            fit_gpytorch_mll(self.make_mll(), **fit_kwargs)
+            self.eval()
+            with torch.no_grad():
+                objective = float(self.metric_log_posterior().detach())
+            if objective > best_objective:
+                best_objective = objective
+                best_state = deepcopy(self.state_dict())
+        if best_state is None:
+            raise RuntimeError("ALEBO MAP fitting did not produce a valid state.")
+        self.load_state_dict(best_state)
+        self.eval()
         return self
+
+    def _randomize_map_state(self, *, generator: torch.Generator | None) -> None:
+        """Randomize fitted ALEBO hyperparameters before a MAP restart."""
+        metric = self.mahalanobis_kernel.raw_tril
+        with torch.no_grad():
+            metric.normal_(generator=generator)
+            if hasattr(self.mean_module, "constant"):
+                self.mean_module.constant.normal_(generator=generator)
+            if isinstance(self.covar_module, ScaleKernel):
+                self.covar_module.raw_outputscale.normal_(generator=generator)
