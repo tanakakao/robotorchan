@@ -1,7 +1,7 @@
 """End-to-end tests for the ALEBO model and search strategy."""
 
 import torch
-from botorch.acquisition.analytic import ExpectedImprovement
+from botorch.acquisition.analytic import LogExpectedImprovement
 
 from robotorchan.models import ALEBOGP
 from robotorchan.optim import ALEBOStrategy
@@ -16,7 +16,13 @@ def test_alebo_model_and_strategy_complete_one_bo_step() -> None:
 
     model = ALEBOGP(train_Z, train_Y)
     model.eval()
-    acquisition = ExpectedImprovement(model=model, best_f=train_Y.max())
+    covariance = torch.eye(model.metric_parameter_vector().numel(), dtype=torch.double) * 0.01
+    acquisition_model = model.acquisition_model(
+        n_metric_samples=3,
+        covariance=covariance,
+        generator=torch.Generator().manual_seed(13),
+    )
+    acquisition = LogExpectedImprovement(model=acquisition_model, best_f=train_Y.max())
 
     result = strategy.optimize(acquisition, q=1)
 
