@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from botorch.models import MixedSingleTaskGP as BoTorchMixedSingleTaskGP
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
-from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import Likelihood
 from torch import Tensor
 
@@ -34,7 +33,7 @@ class MixedSingleTaskMultiFidelityGP(ExactGPModelMixin, BoTorchMixedSingleTaskGP
         *,
         fidelity_dims: Sequence[int],
         train_Yvar: Tensor | None = None,
-        cont_kernel_factory: callable | None = None,
+        cont_kernel_factory: Callable[..., object] | None = None,
         likelihood: Likelihood | None = None,
         outcome_transform: OutcomeTransform | _DefaultType | None = DEFAULT,
         input_transform: InputTransform | None = None,
@@ -69,6 +68,7 @@ class MixedSingleTaskMultiFidelityGP(ExactGPModelMixin, BoTorchMixedSingleTaskGP
             input_transform=input_transform,
             **kwargs,
         )
+        self._cat_dims = normalized_cat_dims
         self._fidelity_dims = normalized_fidelity_dims
         self._store_supervised_training_data(
             train_X=raw_train_X,
@@ -95,4 +95,4 @@ class MixedSingleTaskMultiFidelityGP(ExactGPModelMixin, BoTorchMixedSingleTaskGP
     @property
     def cat_dims(self) -> list[int]:
         """Return original-space categorical dimensions."""
-        return list(self._ignore_X_dims_scaling_check)
+        return list(self._cat_dims)
