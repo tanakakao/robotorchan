@@ -41,9 +41,7 @@ def test_mixed_multifidelity_posterior_accepts_original_q_batch() -> None:
 def test_mixed_multifidelity_rejects_overlapping_roles() -> None:
     X, Y = _data()
     with pytest.raises(ValueError, match="disjoint"):
-        MixedSingleTaskMultiFidelityGP(
-            X, Y, cat_dims=[1, 3], fidelity_dims=[3]
-        )
+        MixedSingleTaskMultiFidelityGP(X, Y, cat_dims=[1, 3], fidelity_dims=[3])
 
 
 @pytest.mark.parametrize(
@@ -55,6 +53,4 @@ def test_mixed_multifidelity_validates_dimensions(
 ) -> None:
     X, Y = _data()
     with pytest.raises(ValueError):
-        MixedSingleTaskMultiFidelityGP(
-            X, Y, cat_dims=cat_dims, fidelity_dims=fidelity_dims
-        )
+        MixedSingleTaskMultiFidelityGP(X, Y, cat_dims=cat_dims, fidelity_dims=fidelity_dims)
