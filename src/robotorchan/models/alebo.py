@@ -272,6 +272,24 @@ class ALEBOGP(SingleTaskGP):
         distribution = MultivariateNormal(event_mean, covariance_matrix)
         return GPyTorchPosterior(distribution)
 
+    def posterior_with_metric_uncertainty(
+        self,
+        X: Tensor,
+        *,
+        n_metric_samples: int,
+        covariance: Tensor | None = None,
+        observation_noise: bool = False,
+        generator: torch.Generator | None = None,
+    ) -> GPyTorchPosterior:
+        """Return the ALEBO posterior used by acquisition functions."""
+        return self.marginal_metric_posterior(
+            X,
+            n_metric_samples=n_metric_samples,
+            covariance=covariance,
+            observation_noise=observation_noise,
+            generator=generator,
+        )
+
     @staticmethod
     def moment_match_predictions(
         means: Tensor,
