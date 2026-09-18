@@ -142,3 +142,13 @@ def test_optimize_validates_q_and_optimizer_settings() -> None:
     strategy = ALEBOStrategy(bounds, embedding_dim=2)
     with pytest.raises(ValueError, match="q"):
         strategy.optimize(_QuadraticAcquisition(), q=0)
+
+
+def test_sample_feasible_draws_points_inside_alebo_polytope() -> None:
+    bounds = torch.stack([torch.zeros(6, dtype=torch.double), torch.ones(6, dtype=torch.double)])
+    strategy = ALEBOStrategy(bounds, embedding_dim=2, seed=7)
+
+    samples = strategy.sample_feasible(32, seed=19)
+
+    assert samples.shape == (32, 2)
+    assert bool(strategy.is_feasible(samples).all())
