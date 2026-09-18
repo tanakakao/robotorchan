@@ -3,8 +3,12 @@ from __future__ import annotations
 import torch
 
 from robotorchan.models import ReducedGP
-from robotorchan.reduction import OutputPCAReducer, OutputPLSReducer
-from robotorchan.reduction import PCAInputReducer, PLSInputReducer
+from robotorchan.reduction import (
+    OutputPCAReducer,
+    OutputPLSReducer,
+    PCAInputReducer,
+    PLSInputReducer,
+)
 
 
 def _training_data() -> tuple[torch.Tensor, torch.Tensor]:
