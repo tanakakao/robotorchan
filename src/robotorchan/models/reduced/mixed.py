@@ -16,7 +16,12 @@ from gpytorch.likelihoods import Likelihood
 from torch import Tensor
 
 from robotorchan.models.base import ExactGPModelMixin
-from robotorchan.reduction import AutoEncoderInputReducer, VAEInputReducer
+from robotorchan.reduction import (
+    AutoEncoderInputReducer,
+    SupervisedAutoEncoderInputReducer,
+    SupervisedVAEInputReducer,
+    VAEInputReducer,
+)
 from robotorchan.reduction.base import InputReducer
 from robotorchan.reduction.input import (
     PCAInputReducer,
@@ -463,6 +468,98 @@ class MixedVAEGP(MixedReducedGP):
                 eps=eps,
                 random_state=random_state,
                 beta=beta,
+            ),
+            cat_dims=cat_dims,
+            **kwargs,
+        )
+
+
+class MixedSupervisedAutoEncoderGP(MixedReducedGP):
+    """Mixed GP using an outcome-aware frozen autoencoder on continuous inputs."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        latent_dim: int,
+        cat_dims: list[int],
+        *,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        epochs: int = 200,
+        learning_rate: float = 1e-3,
+        weight_decay: float = 0.0,
+        batch_size: int | None = None,
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        supervised_weight: float = 1.0,
+        standardize_y: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=SupervisedAutoEncoderInputReducer(
+                latent_dim=latent_dim,
+                hidden_dims=hidden_dims,
+                activation=activation,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                weight_decay=weight_decay,
+                batch_size=batch_size,
+                standardize=standardize,
+                eps=eps,
+                random_state=random_state,
+                supervised_weight=supervised_weight,
+                standardize_y=standardize_y,
+            ),
+            cat_dims=cat_dims,
+            **kwargs,
+        )
+
+
+class MixedSupervisedVAEGP(MixedReducedGP):
+    """Mixed GP using an outcome-aware frozen VAE on continuous inputs."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        latent_dim: int,
+        cat_dims: list[int],
+        *,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        epochs: int = 200,
+        learning_rate: float = 1e-3,
+        weight_decay: float = 0.0,
+        batch_size: int | None = None,
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        beta: float = 1.0,
+        supervised_weight: float = 1.0,
+        standardize_y: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=SupervisedVAEInputReducer(
+                latent_dim=latent_dim,
+                hidden_dims=hidden_dims,
+                activation=activation,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                weight_decay=weight_decay,
+                batch_size=batch_size,
+                standardize=standardize,
+                eps=eps,
+                random_state=random_state,
+                beta=beta,
+                supervised_weight=supervised_weight,
+                standardize_y=standardize_y,
             ),
             cat_dims=cat_dims,
             **kwargs,
