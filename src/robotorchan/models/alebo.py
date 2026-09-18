@@ -78,17 +78,11 @@ class ALEBOMetricMarginalModel(Model):
         self,
         base_model: ALEBOGP,
         *,
-        n_metric_samples: int,
-        covariance: Tensor | None = None,
-        generator: torch.Generator | None = None,
+        metric_samples: Tensor,
     ) -> None:
         super().__init__()
-        if n_metric_samples < 1:
-            raise ValueError("n_metric_samples must be positive.")
         self.base_model = base_model
-        self.n_metric_samples = n_metric_samples
-        self.covariance = covariance
-        self.generator = generator
+        self.register_buffer("metric_samples", metric_samples.detach().clone())
 
     @property
     def num_outputs(self) -> int:
@@ -111,12 +105,10 @@ class ALEBOMetricMarginalModel(Model):
             raise NotImplementedError("posterior_transform is not supported yet.")
         if not isinstance(observation_noise, bool):
             raise NotImplementedError("Tensor observation_noise is not supported yet.")
-        return self.base_model.marginal_metric_posterior(
+        return self.base_model.metric_marginal_posterior_from_samples(
             X,
-            n_metric_samples=self.n_metric_samples,
-            covariance=self.covariance,
+            metric_samples=self.metric_samples,
             observation_noise=observation_noise,
-            generator=self.generator,
         )
 
 
@@ -315,6 +307,23 @@ class ALEBOGP(SingleTaskGP):
         predictive_covariance = predictive_covariance + correction[..., None, None] * identity
         return mean.unsqueeze(-1), predictive_covariance
 
+    def metric_marginal_posterior_from_samples(
+        self,
+        X: Tensor,
+        *,
+        metric_samples: Tensor,
+        observation_noise: bool = False,
+    ) -> GPyTorchPosterior:
+        """Return a moment-matched posterior for fixed metric samples."""
+        means, covariances = self.metric_sample_predictions(
+            X,
+            metric_samples=metric_samples,
+            observation_noise=observation_noise,
+        )
+        mean, predictive_covariance = self._moment_match_metric_covariance(means, covariances)
+        distribution = MultivariateNormal(mean.squeeze(-1), predictive_covariance)
+        return GPyTorchPosterior(distribution)
+
     def marginal_metric_posterior(
         self,
         X: Tensor,
@@ -325,15 +334,18 @@ class ALEBOGP(SingleTaskGP):
         generator: torch.Generator | None = None,
     ) -> GPyTorchPosterior:
         """Return a BoTorch Gaussian posterior marginalized over metric uncertainty."""
-        mean, predictive_covariance = self.marginal_metric_moments(
-            X,
-            n_metric_samples=n_metric_samples,
+        if covariance is None:
+            covariance = self.estimate_metric_laplace_covariance()
+        samples = self.sample_metric_parameters(
+            n_metric_samples,
             covariance=covariance,
-            observation_noise=observation_noise,
             generator=generator,
         )
-        distribution = MultivariateNormal(mean.squeeze(-1), predictive_covariance)
-        return GPyTorchPosterior(distribution)
+        return self.metric_marginal_posterior_from_samples(
+            X,
+            metric_samples=samples,
+            observation_noise=observation_noise,
+        )
 
     def posterior_with_metric_uncertainty(
         self,
@@ -361,12 +373,14 @@ class ALEBOGP(SingleTaskGP):
         generator: torch.Generator | None = None,
     ) -> ALEBOMetricMarginalModel:
         """Return a BoTorch model whose posterior includes metric uncertainty."""
-        return ALEBOMetricMarginalModel(
-            self,
-            n_metric_samples=n_metric_samples,
+        if covariance is None:
+            covariance = self.estimate_metric_laplace_covariance()
+        metric_samples = self.sample_metric_parameters(
+            n_metric_samples,
             covariance=covariance,
             generator=generator,
         )
+        return ALEBOMetricMarginalModel(self, metric_samples=metric_samples)
 
     @staticmethod
     def moment_match_predictions(
