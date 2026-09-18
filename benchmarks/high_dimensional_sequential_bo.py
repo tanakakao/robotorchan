@@ -16,7 +16,7 @@ from botorch.fit import fit_gpytorch_mll
 from torch import Tensor
 
 from robotorchan.models import SingleTaskGP
-from robotorchan.models.reduction import PCAInputReducer, RandomProjectionInputReducer
+from robotorchan.reduction import PCAInputReducer, RandomProjectionInputReducer
 from robotorchan.optim import (
     BAxUSState,
     BAxUSStrategy,
