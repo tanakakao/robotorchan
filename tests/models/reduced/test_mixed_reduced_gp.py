@@ -29,12 +29,7 @@ def _training_data() -> tuple[torch.Tensor, torch.Tensor]:
         ),
         dim=-1,
     )
-    train_Y = (
-        continuous[:, :1]
-        - 0.4 * continuous[:, 1:2]
-        + 0.2 * category_a
-        - 0.1 * category_b
-    )
+    train_Y = continuous[:, :1] - 0.4 * continuous[:, 1:2] + 0.2 * category_a - 0.1 * category_b
     return train_X, train_Y
 
 
