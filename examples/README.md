@@ -79,6 +79,11 @@ model.make_mll()
 | [`12_hierarchical_gp.ipynb`](notebooks/12_hierarchical_gp.ipynb) | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` | 利用可能 |
 | [`13_heterogeneous_multitask_gp.ipynb`](notebooks/13_heterogeneous_multitask_gp.ipynb) | `HeterogeneousMTGP` | 利用可能 |
 | [`14_contextual_gp.ipynb`](notebooks/14_contextual_gp.ipynb) | `SACGP`, `LCEAGP`, `LCEMGP` | 利用可能 |
+| [`23_high_dimensional_bo_benchmark.ipynb`](notebooks/23_high_dimensional_bo_benchmark.ipynb) | 高次元BO benchmark | 利用可能 / benchmark解説 |
+
+## Benchmark
+
+再現可能な性能比較・探索戦略比較は `benchmarks/` に配置します。Notebook は利用方法や結果の読み方を説明する役割とし、benchmark本体のロジックをNotebookへ重複実装しません。高次元入力モデル・acquisition optimization・sequential BO・batch BO の実行コードは `benchmarks/`、その契約テストは `tests/benchmarks/` に集約します。
 
 ## Notebook の一括実行
 
