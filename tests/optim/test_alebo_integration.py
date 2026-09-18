@@ -14,7 +14,7 @@ def test_alebo_model_and_strategy_complete_one_bo_step() -> None:
     train_X = strategy.project(train_Z)
     train_Y = -((train_X - 0.5) ** 2).sum(dim=-1, keepdim=True)
 
-    model = ALEBOGP(train_X, train_Y)
+    model = ALEBOGP(train_Z, train_Y)
     model.eval()
     acquisition = ExpectedImprovement(model=model, best_f=train_Y.max())
 
