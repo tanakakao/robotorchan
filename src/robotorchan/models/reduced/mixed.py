@@ -107,11 +107,29 @@ class MixedInputReducer:
         cat_dims: list[int],
     ) -> None:
         self.reducer = reducer
+        latent_dim = self._configured_output_dim(reducer)
         self.layout = MixedInputLayout.from_cat_dims(
             input_dim=input_dim,
             cat_dims=cat_dims,
-            latent_dim=reducer.output_dim,
+            latent_dim=latent_dim,
         )
+
+    @staticmethod
+    def _configured_output_dim(reducer: InputReducer) -> int:
+        """Read the configured latent size without requiring a fitted reducer."""
+        if reducer.is_fitted:
+            return reducer.output_dim
+
+        n_components = getattr(reducer, "n_components", None)
+        if n_components is None:
+            raise ValueError(
+                "The wrapped reducer must expose its configured output dimension "
+                "before fitting or already be fitted."
+            )
+        latent_dim = int(n_components)
+        if latent_dim < 1:
+            raise ValueError("The reducer output dimension must be positive.")
+        return latent_dim
 
     @property
     def is_fitted(self) -> bool:
@@ -131,6 +149,11 @@ class MixedInputReducer:
     def fit(self, X: Tensor, Y: Tensor | None = None) -> "MixedInputReducer":
         """Fit the wrapped reducer on continuous columns only."""
         self.reducer.fit(self.layout.continuous(X), Y)
+        if self.reducer.output_dim != self.layout.latent_dim:
+            raise RuntimeError(
+                "Reducer output dimension changed during fit: "
+                f"expected {self.layout.latent_dim}, got {self.reducer.output_dim}."
+            )
         return self
 
     def transform(self, X: Tensor) -> Tensor:
@@ -140,6 +163,5 @@ class MixedInputReducer:
 
     def fit_transform(self, X: Tensor, Y: Tensor | None = None) -> Tensor:
         """Fit on continuous columns and transform the full mixed input."""
-        continuous_X = self.layout.continuous(X)
-        latent_X = self.reducer.fit_transform(continuous_X, Y)
-        return self.layout.combine(latent_X, X)
+        self.fit(X, Y)
+        return self.transform(X)
