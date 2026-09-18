@@ -177,3 +177,20 @@ def test_metric_laplace_covariance_validates_curvature() -> None:
         model.metric_laplace_covariance(
             diagonal_hessian=torch.tensor([-1.0, 0.0, -2.0], dtype=torch.double)
         )
+
+
+def test_moment_match_predictions_includes_between_model_uncertainty() -> None:
+    means = torch.tensor([[0.0, 1.0], [2.0, 3.0]], dtype=torch.double)
+    variances = torch.tensor([[1.0, 1.0], [1.0, 1.0]], dtype=torch.double)
+
+    mean, variance = ALEBOGP.moment_match_predictions(means, variances)
+
+    torch.testing.assert_close(mean, torch.tensor([1.0, 2.0], dtype=torch.double))
+    torch.testing.assert_close(variance, torch.tensor([2.0, 2.0], dtype=torch.double))
+
+
+def test_moment_match_predictions_validates_inputs() -> None:
+    with pytest.raises(ValueError, match="same shape"):
+        ALEBOGP.moment_match_predictions(torch.zeros(2, 1), torch.zeros(2, 2))
+    with pytest.raises(ValueError, match="non-negative"):
+        ALEBOGP.moment_match_predictions(torch.zeros(1, 1), -torch.ones(1, 1))
