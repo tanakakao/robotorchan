@@ -32,6 +32,7 @@ def _make_alebo_embedding(
         torch.finfo(dtype).eps
     )
 
+
 class ALEBOStrategy(SearchStrategy):
     """Optimize an acquisition function in a fixed ALEBO linear subspace.
 
@@ -98,7 +99,7 @@ class ALEBOStrategy(SearchStrategy):
         """Return a mask indicating membership in the ALEBO polytope."""
         if Z.shape[-1] != self.embedding_dim:
             raise ValueError("Z last dimension must equal embedding_dim.")
-        normalized = Z @ self.embedding_pinv.transpose(-2, -1)_pinv.transpose(-2, -1)
+        normalized = Z @ self.embedding_pinv.transpose(-2, -1)
         return (normalized.abs() <= 1.0 + atol).all(dim=-1)
 
     def project(self, Z: Tensor) -> Tensor:
@@ -107,7 +108,7 @@ class ALEBOStrategy(SearchStrategy):
             raise ValueError("Z last dimension must equal embedding_dim.")
         if not bool(self.is_feasible(Z).all()):
             raise ValueError("Z must satisfy the ALEBO embedding polytope constraints.")
-        normalized = Z @ self.embedding
+        normalized = Z @ self.embedding_pinv.transpose(-2, -1)
         center = self.bounds.mean(dim=0)
         half_range = 0.5 * (self.bounds[1] - self.bounds[0])
         return center + half_range * normalized
