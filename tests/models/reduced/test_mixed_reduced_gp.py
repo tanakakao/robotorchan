@@ -171,3 +171,17 @@ def test_mixed_reduced_gp_state_dict_round_trip_preserves_posterior() -> None:
 
     torch.testing.assert_close(restored_posterior.mean, source_posterior.mean)
     torch.testing.assert_close(restored_posterior.variance, source_posterior.variance)
+
+
+def test_mixed_reduced_gp_normalizes_negative_cat_dims_in_raw_space() -> None:
+    train_X, train_Y = _training_data()
+    model = MixedPCAGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        n_components=2,
+        cat_dims=[2, -1],
+    )
+
+    assert model.original_cat_dims == [2, 6]
+    assert model.reduced_cat_dims == [2, 3]
+    torch.testing.assert_close(model.raw_train_X, train_X)
