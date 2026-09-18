@@ -19,9 +19,9 @@ def _data() -> tuple[torch.Tensor, torch.Tensor]:
 
 def test_mixed_multifidelity_retains_raw_data_and_dimension_roles() -> None:
     X, Y = _data()
-    model = MixedSingleTaskMultiFidelityGP(X, Y, cat_dims=[1], fidelity_dims=[3])
-    assert model.cat_dims == [1]
-    assert model.fidelity_dims == [3]
+    model = MixedSingleTaskMultiFidelityGP(X, Y, cat_dims=[1], data_fidelities=[-1])
+    assert model.cat_dims == (1,)
+    assert model.fidelity_dims == (3,)
     torch.testing.assert_close(model.raw_train_X, X)
     torch.testing.assert_close(model.raw_train_Y, Y)
     assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
@@ -29,7 +29,7 @@ def test_mixed_multifidelity_retains_raw_data_and_dimension_roles() -> None:
 
 def test_mixed_multifidelity_posterior_accepts_original_q_batch() -> None:
     X, Y = _data()
-    model = MixedSingleTaskMultiFidelityGP(X, Y, cat_dims=[1], fidelity_dims=[3])
+    model = MixedSingleTaskMultiFidelityGP(X, Y, cat_dims=[1], data_fidelities=[3])
     model.eval()
     model.likelihood.eval()
     candidates = X[:8].reshape(2, 4, 4)
@@ -40,17 +40,19 @@ def test_mixed_multifidelity_posterior_accepts_original_q_batch() -> None:
 
 def test_mixed_multifidelity_rejects_overlapping_roles() -> None:
     X, Y = _data()
-    with pytest.raises(ValueError, match="disjoint"):
-        MixedSingleTaskMultiFidelityGP(X, Y, cat_dims=[1, 3], fidelity_dims=[3])
+    with pytest.raises(ValueError, match="structural dimensions"):
+        MixedSingleTaskMultiFidelityGP(X, Y, cat_dims=[1, 3], data_fidelities=[3])
 
 
 @pytest.mark.parametrize(
-    ("cat_dims", "fidelity_dims"),
+    ("cat_dims", "data_fidelities"),
     [([], [3]), ([1], []), ([1, 1], [3]), ([1], [4])],
 )
 def test_mixed_multifidelity_validates_dimensions(
-    cat_dims: list[int], fidelity_dims: list[int]
+    cat_dims: list[int], data_fidelities: list[int]
 ) -> None:
     X, Y = _data()
     with pytest.raises(ValueError):
-        MixedSingleTaskMultiFidelityGP(X, Y, cat_dims=cat_dims, fidelity_dims=fidelity_dims)
+        MixedSingleTaskMultiFidelityGP(
+            X, Y, cat_dims=cat_dims, data_fidelities=data_fidelities
+        )
