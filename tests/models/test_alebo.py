@@ -6,7 +6,7 @@ from botorch.acquisition.analytic import LogExpectedImprovement
 from gpytorch.kernels import ScaleKernel
 
 from robotorchan.models import ALEBOGP
-from robotorchan.models.alebo import MahalanobisRBFKernel
+from robotorchan.models.alebo import ALEBOMetricMarginalModel, MahalanobisRBFKernel
 
 
 def test_mahalanobis_metric_is_symmetric_positive_semidefinite() -> None:
