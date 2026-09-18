@@ -52,6 +52,14 @@ def test_kernel_matches_exp_of_mahalanobis_distance() -> None:
     torch.testing.assert_close(covariance.squeeze(), expected)
 
 
+def test_alebo_gp_requires_train_yvar_in_signature() -> None:
+    train_X = torch.zeros(3, 1, dtype=torch.double)
+    train_Y = torch.zeros(3, 1, dtype=torch.double)
+
+    with pytest.raises(TypeError, match="train_Yvar"):
+        ALEBOGP(train_X, train_Y)
+
+
 def test_alebo_gp_uses_mahalanobis_kernel_and_common_contract() -> None:
     train_X = torch.tensor(
         [[0.0, 0.0], [0.2, -0.1], [-0.3, 0.4], [0.5, 0.1]],
