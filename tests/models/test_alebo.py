@@ -165,19 +165,21 @@ def test_metric_laplace_covariance_uses_negative_diagonal_hessian() -> None:
         diagonal_hessian=torch.tensor([-2.0, -4.0, -5.0], dtype=torch.double)
     )
 
-    expected = torch.diag(torch.tensor([0.5, 0.25, 0.2], dtype=torch.double))
+    expected = torch.diag(1 / torch.tensor([2.001, 4.001, 5.001], dtype=torch.double))
     assert torch.allclose(covariance, expected)
 
 
-def test_metric_laplace_covariance_validates_curvature() -> None:
+def test_metric_laplace_covariance_uses_reference_nugget_stabilization() -> None:
     train_X = torch.zeros(3, 2, dtype=torch.double)
     train_Y = torch.zeros(3, 1, dtype=torch.double)
     model = ALEBOGP(train_X, train_Y)
 
-    with pytest.raises(ValueError, match="strictly negative"):
-        model.metric_laplace_covariance(
-            diagonal_hessian=torch.tensor([-1.0, 0.0, -2.0], dtype=torch.double)
-        )
+    covariance = model.metric_laplace_covariance(
+        diagonal_hessian=torch.tensor([-1.0, 0.0, -2.0], dtype=torch.double)
+    )
+
+    expected = torch.diag(1 / torch.tensor([1.001, 0.001, 2.001], dtype=torch.double))
+    torch.testing.assert_close(covariance, expected)
 
 
 def test_moment_match_predictions_includes_between_model_uncertainty() -> None:
@@ -220,7 +222,7 @@ def test_estimate_metric_laplace_covariance_uses_automatic_hessian(
 
     covariance = model.estimate_metric_laplace_covariance()
 
-    expected = torch.diag(torch.tensor([0.5, 0.25, 0.2], dtype=torch.double))
+    expected = torch.diag(1 / torch.tensor([2.001, 4.001, 5.001], dtype=torch.double))
     torch.testing.assert_close(covariance, expected)
 
 

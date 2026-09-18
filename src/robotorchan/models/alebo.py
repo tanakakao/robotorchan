@@ -192,53 +192,65 @@ class ALEBOGP(SingleTaskGP):
         value = mll(output, target)
         return value.sum() if value.ndim else value
 
-    def metric_diagonal_hessian(self) -> Tensor:
-        """Evaluate the diagonal Hessian with respect to metric parameters."""
+    def metric_diagonal_hessian(
+        self,
+        *,
+        relative_step: float = 1e-3,
+        absolute_step: float = 1e-4,
+    ) -> Tensor:
+        """Estimate ALEBO metric Hessian diagonal by finite differences of gradients."""
+        if relative_step <= 0 or absolute_step <= 0:
+            raise ValueError("finite-difference steps must be positive.")
         parameter = self.mahalanobis_kernel.raw_tril
-        objective = self.metric_log_posterior()
-        gradient = torch.autograd.grad(
-            objective,
-            parameter,
-            create_graph=True,
-        )[0]
+        original = parameter.detach().clone()
         diagonal = []
-        for index in range(parameter.numel()):
-            second = torch.autograd.grad(
-                gradient[index],
-                parameter,
-                retain_graph=index + 1 < parameter.numel(),
-            )[0]
-            diagonal.append(second[index])
+        try:
+            for index in range(parameter.numel()):
+                step = absolute_step + relative_step * original[index].abs()
+                with torch.no_grad():
+                    parameter.copy_(original)
+                    parameter[index] = original[index] + step
+                plus = torch.autograd.grad(self.metric_log_posterior(), parameter)[0][index]
+                with torch.no_grad():
+                    parameter.copy_(original)
+                    parameter[index] = original[index] - step
+                minus = torch.autograd.grad(self.metric_log_posterior(), parameter)[0][index]
+                diagonal.append((plus - minus) / (2 * step))
+        finally:
+            with torch.no_grad():
+                parameter.copy_(original)
         return torch.stack(diagonal).detach()
 
     def estimate_metric_laplace_covariance(
         self,
         *,
-        min_curvature: float = 1e-8,
+        nugget: float = 1e-3,
     ) -> Tensor:
-        """Estimate the diagonal Laplace covariance at the current GP state."""
+        """Estimate ALEBO's diagonal Laplace covariance at the current GP state."""
         return self.metric_laplace_covariance(
             diagonal_hessian=self.metric_diagonal_hessian(),
-            min_curvature=min_curvature,
+            nugget=nugget,
         )
 
     def metric_laplace_covariance(
         self,
         *,
         diagonal_hessian: Tensor,
-        min_curvature: float = 1e-8,
+        nugget: float = 1e-3,
     ) -> Tensor:
-        """Construct the diagonal Laplace covariance for metric parameters."""
+        """Construct ALEBO's diagonal Laplace covariance for metric parameters."""
         mean = self.metric_parameter_vector()
         if diagonal_hessian.shape != mean.shape:
             raise ValueError(f"diagonal_hessian must have shape {tuple(mean.shape)}.")
-        if min_curvature <= 0:
-            raise ValueError("min_curvature must be positive.")
-        curvature = -diagonal_hessian.to(dtype=mean.dtype, device=mean.device)
-        if bool((curvature <= 0).any()):
-            raise ValueError("diagonal_hessian must be strictly negative at the posterior mode.")
-        variance = curvature.clamp_min(min_curvature).reciprocal()
-        return torch.diag(variance)
+        if nugget <= 0:
+            raise ValueError("nugget must be positive.")
+        stabilized_hessian = diagonal_hessian.to(dtype=mean.dtype, device=mean.device) - nugget
+        covariance_diagonal = (-stabilized_hessian).reciprocal()
+        if bool((covariance_diagonal <= 0).any()) or not bool(
+            torch.isfinite(covariance_diagonal).all()
+        ):
+            raise ValueError("stabilized ALEBO Hessian must imply positive finite covariance.")
+        return torch.diag(covariance_diagonal)
 
     def sample_metric_parameters(
         self,
