@@ -2,6 +2,7 @@
 
 import pytest
 import torch
+from botorch.acquisition.acquisition import AcquisitionFunction
 
 from robotorchan.optim import ALEBOStrategy
 
@@ -106,8 +107,36 @@ def test_validates_embedding_dimension_and_projection_shape() -> None:
         strategy.project(torch.zeros(1, 3, dtype=torch.double))
 
 
-def test_phase1_does_not_approximate_alebo_optimization() -> None:
-    strategy = ALEBOStrategy(_bounds(), embedding_dim=2, seed=0)
+class _QuadraticAcquisition(AcquisitionFunction):
+    def __init__(self) -> None:
+        super().__init__(model=None)
 
-    with pytest.raises(NotImplementedError, match="Phase 2"):
-        strategy.optimize(None)  # type: ignore[arg-type]
+    def forward(self, X: torch.Tensor) -> torch.Tensor:
+        return -X.square().sum(dim=(-1, -2))
+
+
+def test_optimize_returns_feasible_original_space_candidate() -> None:
+    strategy = ALEBOStrategy(
+        _bounds(), embedding_dim=2, seed=0, num_restarts=3, raw_samples=32
+    )
+
+    result = strategy.optimize(_QuadraticAcquisition(), q=1)
+
+    assert result.candidates.shape == (1, 6)
+    assert torch.all(result.candidates >= strategy.bounds[0])
+    assert torch.all(result.candidates <= strategy.bounds[1])
+    embedded = result.metadata["embedded_candidates"]
+    assert bool(strategy.is_feasible(embedded).all())
+    torch.testing.assert_close(result.candidates, strategy.project(embedded))
+
+
+def test_optimize_validates_q_and_optimizer_settings() -> None:
+    bounds = _bounds()
+    with pytest.raises(ValueError, match="num_restarts"):
+        ALEBOStrategy(bounds, embedding_dim=2, num_restarts=0)
+    with pytest.raises(ValueError, match="raw_samples"):
+        ALEBOStrategy(bounds, embedding_dim=2, raw_samples=0)
+
+    strategy = ALEBOStrategy(bounds, embedding_dim=2)
+    with pytest.raises(ValueError, match="q"):
+        strategy.optimize(_QuadraticAcquisition(), q=0)
