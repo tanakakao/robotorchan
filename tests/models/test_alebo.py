@@ -342,3 +342,23 @@ def test_marginal_metric_posterior_preserves_cross_point_covariance() -> None:
     assert predictive_covariance.shape == (3, 3)
     off_diagonal = predictive_covariance - torch.diag_embed(torch.diagonal(predictive_covariance))
     assert torch.any(off_diagonal.abs() > 0)
+
+
+def test_acquisition_model_reuses_fixed_metric_samples() -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+    covariance = torch.eye(1, dtype=torch.double) * 0.01
+    acquisition_model = model.acquisition_model(
+        n_metric_samples=3,
+        covariance=covariance,
+        generator=torch.Generator().manual_seed(41),
+    )
+    test_X = torch.tensor([[-0.25], [0.25]], dtype=torch.double)
+
+    first = acquisition_model.posterior(test_X)
+    second = acquisition_model.posterior(test_X)
+
+    torch.testing.assert_close(first.mean, second.mean)
+    torch.testing.assert_close(first.distribution.covariance_matrix, second.distribution.covariance_matrix)
+    assert acquisition_model.metric_samples.shape == (3, 1)
