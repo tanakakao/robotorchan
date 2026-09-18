@@ -151,6 +151,24 @@ class ALEBOGP(SingleTaskGP):
         )
         return mean.unsqueeze(0) + noise @ chol.transpose(-2, -1)
 
+    @staticmethod
+    def moment_match_predictions(
+        means: Tensor,
+        variances: Tensor,
+    ) -> tuple[Tensor, Tensor]:
+        """Moment-match Gaussian predictions over metric posterior samples."""
+        if means.shape != variances.shape:
+            raise ValueError("means and variances must have the same shape.")
+        if means.ndim < 1 or means.shape[0] < 1:
+            raise ValueError("predictions must contain at least one metric sample.")
+        if bool((variances < 0).any()):
+            raise ValueError("variances must be non-negative.")
+
+        mean = means.mean(dim=0)
+        second_moment = (variances + means.square()).mean(dim=0)
+        variance = (second_moment - mean.square()).clamp_min(0.0)
+        return mean, variance
+
     def fit(self, **fit_kwargs: object) -> ALEBOGP:
         """Fit ALEBO GP hyperparameters by maximizing the exact marginal likelihood."""
         fit_gpytorch_mll(self.make_mll(), **fit_kwargs)
