@@ -360,5 +360,8 @@ def test_acquisition_model_reuses_fixed_metric_samples() -> None:
     second = acquisition_model.posterior(test_X)
 
     torch.testing.assert_close(first.mean, second.mean)
-    torch.testing.assert_close(first.distribution.covariance_matrix, second.distribution.covariance_matrix)
+    torch.testing.assert_close(
+        first.distribution.covariance_matrix,
+        second.distribution.covariance_matrix,
+    )
     assert acquisition_model.metric_samples.shape == (3, 1)
