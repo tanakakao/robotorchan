@@ -226,13 +226,13 @@ def test_metric_parameter_vector_uses_only_free_upper_triangle() -> None:
     assert model.metric_parameter_vector().shape == (6,)
 
 
-def test_metric_laplace_covariance_uses_negative_diagonal_hessian() -> None:
+def test_metric_laplace_covariance_uses_negative_hessian_diagonal() -> None:
     train_X = torch.zeros(3, 2, dtype=torch.double)
     train_Y = torch.zeros(3, 1, dtype=torch.double)
     model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     covariance = model.metric_laplace_covariance(
-        diagonal_hessian=torch.tensor([-2.0, -4.0, -5.0], dtype=torch.double)
+        hessian_diagonal=torch.tensor([-2.0, -4.0, -5.0], dtype=torch.double)
     )
 
     expected = torch.diag(1 / torch.tensor([2.001, 4.001, 5.001], dtype=torch.double))
@@ -245,26 +245,26 @@ def test_metric_laplace_covariance_uses_reference_nugget_stabilization() -> None
     model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     covariance = model.metric_laplace_covariance(
-        diagonal_hessian=torch.tensor([-1.0, 0.0, -2.0], dtype=torch.double)
+        hessian_diagonal=torch.tensor([-1.0, 0.0, -2.0], dtype=torch.double)
     )
 
     expected = torch.diag(1 / torch.tensor([1.001, 0.001, 2.001], dtype=torch.double))
     torch.testing.assert_close(covariance, expected)
 
 
-def test_metric_diagonal_hessian_is_finite_for_reference_forward_difference() -> None:
+def test_metric_hessian_diagonal_is_finite_for_reference_forward_difference() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
     model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
-    diagonal = model.metric_diagonal_hessian()
+    diagonal = model.metric_hessian_diagonal()
 
     assert diagonal.shape == model.metric_parameter_vector().shape
     assert diagonal.dtype == torch.double
     assert torch.isfinite(diagonal).all()
 
 
-def test_metric_diagonal_hessian_uses_forward_difference(
+def test_metric_hessian_diagonal_uses_forward_difference(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     train_X = torch.zeros(3, 1, dtype=torch.double)
@@ -280,7 +280,7 @@ def test_metric_diagonal_hessian_uses_forward_difference(
         lambda: (parameter**3).sum(),
     )
 
-    diagonal = model.metric_diagonal_hessian(relative_step=1e-3, absolute_step=1e-4)
+    diagonal = model.metric_hessian_diagonal(relative_step=1e-3, absolute_step=1e-4)
     step = 1e-4 + 1e-3 * 2.0
     expected = torch.tensor([12.0 + 3.0 * step], dtype=torch.double)
 
@@ -294,7 +294,7 @@ def test_estimate_metric_laplace_covariance_uses_automatic_hessian(
     train_Y = torch.zeros(3, 1, dtype=torch.double)
     model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
     diagonal = torch.tensor([-2.0, -4.0, -5.0], dtype=torch.double)
-    monkeypatch.setattr(model, "metric_diagonal_hessian", lambda: diagonal)
+    monkeypatch.setattr(model, "metric_hessian_diagonal", lambda: diagonal)
 
     covariance = model.estimate_metric_laplace_covariance()
 

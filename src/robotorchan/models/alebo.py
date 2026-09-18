@@ -188,7 +188,7 @@ class ALEBOGP(SingleTaskGP):
         value = mll(output, target)
         return value.sum() if value.ndim else value
 
-    def metric_diagonal_hessian(
+    def metric_hessian_diagonal(
         self,
         *,
         relative_step: float = 1e-3,
@@ -221,25 +221,25 @@ class ALEBOGP(SingleTaskGP):
         *,
         nugget: float = 1e-3,
     ) -> Tensor:
-        """Estimate ALEBO's diagonal Laplace covariance at the current GP state."""
+        """Estimate ALEBO's reference diagonal Laplace covariance at the MAP state."""
         return self.metric_laplace_covariance(
-            diagonal_hessian=self.metric_diagonal_hessian(),
+            hessian_diagonal=self.metric_hessian_diagonal(),
             nugget=nugget,
         )
 
     def metric_laplace_covariance(
         self,
         *,
-        diagonal_hessian: Tensor,
+        hessian_diagonal: Tensor,
         nugget: float = 1e-3,
     ) -> Tensor:
-        """Construct ALEBO's diagonal Laplace covariance for metric parameters."""
+        """Construct ALEBO's reference diagonal Laplace covariance for metric parameters."""
         mean = self.metric_parameter_vector()
-        if diagonal_hessian.shape != mean.shape:
-            raise ValueError(f"diagonal_hessian must have shape {tuple(mean.shape)}.")
+        if hessian_diagonal.shape != mean.shape:
+            raise ValueError(f"hessian_diagonal must have shape {tuple(mean.shape)}.")
         if nugget <= 0:
             raise ValueError("nugget must be positive.")
-        stabilized_hessian = diagonal_hessian.to(dtype=mean.dtype, device=mean.device) - nugget
+        stabilized_hessian = hessian_diagonal.to(dtype=mean.dtype, device=mean.device) - nugget
         covariance_diagonal = (-stabilized_hessian).reciprocal()
         if bool((covariance_diagonal <= 0).any()) or not bool(
             torch.isfinite(covariance_diagonal).all()
