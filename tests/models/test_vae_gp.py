@@ -5,7 +5,7 @@ from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import VAEGP
-from robotorchan.models.neural_reduction import VAEInputReducer
+from robotorchan.reduction import VAEInputReducer
 
 
 def _training_data() -> tuple[torch.Tensor, torch.Tensor]:
