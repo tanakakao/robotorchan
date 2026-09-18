@@ -81,6 +81,10 @@ result = strategy.optimize(acq, q=1)
 
 acquisition function は embedded space で評価され、`ALEBOStrategy.optimize()` が feasible polytope 内で最適化した後にだけ original/public input space へ戻す。`SearchResult.candidates` は original space、`metadata["embedded_candidates"]` は embedded space の候補である。q-batch acquisition も同じ contract で扱う。
 
+### ALEBO 実装ステータス
+
+ALEBO の実装範囲は、固定 hypersphere embedding、feasible polytope、projection-conditioned Mahalanobis GP、multi-start MAP、reference diagonal Laplace approximation、metric-marginal posterior、BoTorch acquisition model、q-batch constrained acquisition optimizationまでとする。これらを ALEBO の完成基準とし、追加の full-Hessian 近似や別 sampler などは将来の独立 enhancement として扱う。
+
 ### REMBO / ALEBO / BAxUS の使い分け
 
 - REMBO: 最も単純な固定 dense random embedding。box 外への射影は clamp する。
