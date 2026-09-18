@@ -258,18 +258,18 @@ class ALEBOGP(SingleTaskGP):
 
         original = parameter.detach().clone()
         means = []
-        variances = []
+        covariances = []
         try:
             for sample in metric_samples:
                 with torch.no_grad():
                     parameter.copy_(sample.to(dtype=parameter.dtype, device=parameter.device))
                 posterior = super().posterior(X, observation_noise=observation_noise)
                 means.append(posterior.mean)
-                variances.append(posterior.variance)
+                covariances.append(posterior.distribution.covariance_matrix)
         finally:
             with torch.no_grad():
                 parameter.copy_(original)
-        return torch.stack(means), torch.stack(variances)
+        return torch.stack(means), torch.stack(covariances)
 
     def marginal_metric_moments(
         self,
@@ -280,7 +280,7 @@ class ALEBOGP(SingleTaskGP):
         observation_noise: bool = False,
         generator: torch.Generator | None = None,
     ) -> tuple[Tensor, Tensor]:
-        """Moment-match predictions over the Laplace metric posterior."""
+        """Moment-match predictive mean and full covariance over metric samples."""
         if covariance is None:
             covariance = self.estimate_metric_laplace_covariance()
         samples = self.sample_metric_parameters(
@@ -288,12 +288,21 @@ class ALEBOGP(SingleTaskGP):
             covariance=covariance,
             generator=generator,
         )
-        means, variances = self.metric_sample_predictions(
+        means, covariances = self.metric_sample_predictions(
             X,
             metric_samples=samples,
             observation_noise=observation_noise,
         )
-        return self.moment_match_predictions(means, variances)
+        if means.shape[-1] != 1:
+            raise NotImplementedError(
+                "ALEBO metric marginalization currently supports one output."
+            )
+        event_means = means.squeeze(-1)
+        mean = event_means.mean(dim=0)
+        centered = event_means - mean
+        between_metric = torch.einsum("...i,...j->...ij", centered, centered).mean(dim=0)
+        predictive_covariance = covariances.mean(dim=0) + between_metric
+        return mean.unsqueeze(-1), predictive_covariance
 
     def marginal_metric_posterior(
         self,
@@ -305,21 +314,14 @@ class ALEBOGP(SingleTaskGP):
         generator: torch.Generator | None = None,
     ) -> GPyTorchPosterior:
         """Return a BoTorch Gaussian posterior marginalized over metric uncertainty."""
-        mean, variance = self.marginal_metric_moments(
+        mean, predictive_covariance = self.marginal_metric_moments(
             X,
             n_metric_samples=n_metric_samples,
             covariance=covariance,
             observation_noise=observation_noise,
             generator=generator,
         )
-        if mean.shape[-1] != 1:
-            raise NotImplementedError(
-                "ALEBO metric-marginal posterior currently supports one output."
-            )
-        event_mean = mean.squeeze(-1)
-        event_variance = variance.squeeze(-1)
-        covariance_matrix = torch.diag_embed(event_variance)
-        distribution = MultivariateNormal(event_mean, covariance_matrix)
+        distribution = MultivariateNormal(mean.squeeze(-1), predictive_covariance)
         return GPyTorchPosterior(distribution)
 
     def posterior_with_metric_uncertainty(
