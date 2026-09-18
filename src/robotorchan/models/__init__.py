@@ -40,6 +40,8 @@ from robotorchan.models.reduced.mixed import (
     MixedPLSGP,
     MixedRandomProjectionGP,
     MixedReducedGP,
+    MixedSupervisedAutoEncoderGP,
+    MixedSupervisedVAEGP,
     MixedVAEGP,
 )
 from robotorchan.models.reduced.supervised_neural import SupervisedAutoEncoderGP
@@ -74,6 +76,8 @@ __all__ = [
     "MixedRandomProjectionGP",
     "MixedReducedGP",
     "MixedSingleTaskGP",
+    "MixedSupervisedAutoEncoderGP",
+    "MixedSupervisedVAEGP",
     "MixedVAEGP",
     "ModelListGP",
     "MultiTaskGP",

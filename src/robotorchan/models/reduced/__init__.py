@@ -17,6 +17,8 @@ from robotorchan.models.reduced.mixed import (
     MixedPLSGP,
     MixedRandomProjectionGP,
     MixedReducedGP,
+    MixedSupervisedAutoEncoderGP,
+    MixedSupervisedVAEGP,
     MixedVAEGP,
 )
 from robotorchan.models.reduced.supervised_neural import SupervisedAutoEncoderGP
@@ -35,6 +37,8 @@ __all__ = [
     "MixedPLSGP",
     "MixedRandomProjectionGP",
     "MixedReducedGP",
+    "MixedSupervisedAutoEncoderGP",
+    "MixedSupervisedVAEGP",
     "MixedVAEGP",
     "OutputPCAGP",
     "OutputPLSGP",
