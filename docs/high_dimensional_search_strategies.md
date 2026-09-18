@@ -17,6 +17,7 @@ search strategy は surrogate の posterior API や reducer lifecycle を変更�
 | `RandomSearchStrategy` | 元の d 次元 | なし | 高次元での単純・堅牢なベースライン |
 | `LatentSpaceStrategy` | PCA / RandomProjection 潜在空間 | reducer に依存 | 既知の低次元表現を使う探索 |
 | `REMBOStrategy` | dense Gaussian random embedding | 固定 | intrinsic dimension が低いと期待できる場合 |
+| `ALEBOStrategy` | feasible linear polytope | 固定 | clipping を避け、線形埋め込みの幾何を保った探索 |
 | `HeSBOStrategy` | sparse signed hash embedding | 固定 | 高次元で疎な埋め込みにより acquisition search を軽量化したい場合 |
 | `TuRBOStrategy` | 元空間の局所 trust region | あり | 高次元で局所探索を適応的に集中 |
 | `BAxUSStrategy` | sparse signed embedding | あり | intrinsic dimension が不明で、探索中に部分空間を拡張したい場合 |
@@ -42,6 +43,35 @@ result = strategy.optimize(acq_function)
 ```
 
 surrogate model は original space のままで、embedded coordinate は acquisition 評価時に original space へ射影される。元空間の box を超える射影は normalized `[-1, 1]` box で clamp し、`SearchResult.metadata` に embedded candidate、embedding 行列、clipping distance を保存する。embedding は strategy の生成時に固定され、逐次 BO の途中で学習し直さない。
+
+## ALEBO の使い方
+
+ALEBO は固定線形 embedding を使うが、REMBO のように元空間の box を越えた点を clamp しない。埋め込み座標 `z` に対して、元空間へ線形射影した点が bounds 内に残る領域を線形不等式の polytope として構成し、その領域内だけで acquisition function を最適化する。
+
+```python
+from botorch.acquisition.analytic import LogExpectedImprovement
+from robotorchan.models import ALEBOGP
+from robotorchan.optim import ALEBOStrategy
+
+model = ALEBOGP(train_X, train_Y)
+model.fit()
+
+acq = LogExpectedImprovement(model=model, best_f=train_Y.max())
+strategy = ALEBOStrategy(bounds, embedding_dim=5, seed=0)
+result = strategy.optimize(acq, q=1)
+```
+
+`ALEBOGP` は full Mahalanobis RBF metric を使い、通常の axis-aligned ARD kernel では表現できない線形 embedding 後の回転した距離構造を扱う。metric は正定値になるよう lower-triangular factor から構成する。
+
+robotorchan の実装には metric parameter の Gaussian Laplace approximation を扱うための `metric_laplace_covariance()`、`sample_metric_parameters()` と、複数の metric-conditioned prediction を統合する `moment_match_predictions()` がある。ただし現時点では Hessian 自体を自動推定する API は提供せず、`metric_laplace_covariance()` は外部で評価した diagonal Hessian を受け取る。この点は原論文の完全な posterior fitting pipeline との差分として明示する。
+
+ALEBO の embedding は strategy 作成時に固定される。`SearchResult.candidates` は original/public input space、`metadata["embedded_candidates"]` は feasible polytope 内の埋め込み座標である。
+
+### REMBO / ALEBO / BAxUS の使い分け
+
+- REMBO: 最も単純な固定 dense random embedding。box 外への射影は clamp する。
+- ALEBO: 固定線形 embedding + feasible polytope + Mahalanobis geometry。clipping による非線形歪みを避けたい場合に使う。
+- BAxUS: sparse embedding を探索中に拡張する。intrinsic dimension が不明で、固定 embedding dimension を事前に決めにくい場合に使う。
 
 ## BAxUS の使い方
 
