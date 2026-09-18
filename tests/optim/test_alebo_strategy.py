@@ -27,7 +27,10 @@ def test_embedding_is_reproducible_and_has_unit_hypersphere_columns() -> None:
         first.embedding.norm(dim=0),
         torch.ones(6, dtype=torch.double),
     )
-    torch.testing.assert_close(first.embedding @ first.embedding_pinv, torch.eye(2, dtype=torch.double))
+    torch.testing.assert_close(
+        first.embedding @ first.embedding_pinv,
+        torch.eye(2, dtype=torch.double),
+    )
 
 
 def test_embedding_preserves_bounds_dtype_and_device() -> None:
