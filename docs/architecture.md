@@ -91,6 +91,14 @@ Structured exact GPs retain the exact-GP training objective while preserving mod
 
 Specialized BoTorch models follow the same principle: use the normal supervised raw-data contract whenever the model actually receives one global training tensor pair, and preserve model-specific data structure otherwise. Additive / MAP-SAAS, robust relevance-pursuit, hierarchical, and contextual wrappers use the exact-GP contract while leaving their kernels and fitting behavior upstream. `HeterogeneousMTGP` instead receives task-specific tensor lists and therefore exposes grouped `raw_train_Xs`, `raw_train_Ys`, and `raw_train_Yvars`; robotorchan does not invent singular raw tensors after BoTorch embeds those inputs into a common feature space.
 
+## Repository maintenance policy
+
+Repository-wide structural changes are completed atomically. When a module or public API moves, update implementation imports, tests, benchmarks, examples, notebooks, and documentation in the same change, then verify that the removed path or name no longer remains anywhere in the repository. Do not add compatibility modules, deprecated wrappers, legacy aliases, or old-name forwarding APIs; migrate callers completely to the current contract.
+
+Before a structural pull request is considered complete, run both `ruff check .` and `ruff format --check .` in addition to the relevant pytest and notebook checks. Passing lint alone is not evidence that formatting is valid.
+
+Permanent documentation should describe current architecture, behavior, usage, theory, benchmarks, or release procedures. Temporary phase-completion markers, status files, and phase-specific documentation indexes should not remain after their information has been incorporated into permanent documentation.
+
 ## Compatibility and CI policy
 
 The wrapper surface is currently supported against BoTorch `>=0.18.1,<0.19`. Constructor parity is part of the public compatibility contract, so a new BoTorch minor line should be enabled only after the wrapper signatures and numerical behavior have been revalidated.
