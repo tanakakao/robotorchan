@@ -123,6 +123,7 @@ class ALEBOGP(SingleTaskGP):
             generator=generator,
         )
         return mean.unsqueeze(0) + noise @ chol.transpose(-2, -1)
+
     def fit(self, **fit_kwargs: object) -> ALEBOGP:
         """Fit ALEBO GP hyperparameters by maximizing the exact marginal likelihood."""
         fit_gpytorch_mll(self.make_mll(), **fit_kwargs)
