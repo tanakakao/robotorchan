@@ -19,15 +19,36 @@ class MahalanobisRBFKernel(Kernel):
 
     has_lengthscale = False
 
-    def __init__(self, ard_num_dims: int, **kwargs: object) -> None:
+    def __init__(
+        self,
+        ard_num_dims: int,
+        *,
+        projection: Tensor | None = None,
+        **kwargs: object,
+    ) -> None:
         super().__init__(**kwargs)
         if ard_num_dims < 1:
             raise ValueError("ard_num_dims must be positive.")
         self.ard_num_dims = ard_num_dims
         n_free = ard_num_dims * (ard_num_dims + 1) // 2
+        initial = torch.zeros(n_free)
+        if projection is not None:
+            if projection.ndim != 2 or projection.shape[0] != ard_num_dims:
+                raise ValueError("projection must have shape [ard_num_dims, input_dim].")
+            ambient_dim = projection.shape[1]
+            random_basis = torch.linalg.qr(
+                torch.randn(ambient_dim, ambient_dim, dtype=projection.dtype, device=projection.device)
+            ).Q
+            transformed = random_basis[:ard_num_dims] @ torch.linalg.pinv(projection)
+            metric = transformed.transpose(-2, -1) @ transformed
+            factor = torch.linalg.cholesky(metric)
+            rows, cols = torch.tril_indices(ard_num_dims, ard_num_dims, device=projection.device)
+            initial = factor[rows, cols]
+            diagonal_mask = rows == cols
+            initial[diagonal_mask] = torch.log(torch.expm1(initial[diagonal_mask].clamp_min(1e-6)))
         self.register_parameter(
             name="raw_tril",
-            parameter=torch.nn.Parameter(torch.zeros(n_free)),
+            parameter=torch.nn.Parameter(initial),
         )
         self.register_buffer(
             "tril_rows", torch.tril_indices(ard_num_dims, ard_num_dims)[0], persistent=False
@@ -122,11 +143,17 @@ class ALEBOGP(SingleTaskGP):
         train_Yvar: Tensor | None = None,
         *,
         covar_module: Module | None = None,
+        projection: Tensor | None = None,
     ) -> None:
         if train_X.ndim < 2:
             raise ValueError("train_X must have at least two dimensions.")
         if covar_module is None:
-            covar_module = ScaleKernel(MahalanobisRBFKernel(ard_num_dims=train_X.shape[-1]))
+            covar_module = ScaleKernel(
+                MahalanobisRBFKernel(
+                    ard_num_dims=train_X.shape[-1],
+                    projection=projection,
+                )
+            )
         super().__init__(
             train_X=train_X,
             train_Y=train_Y,
