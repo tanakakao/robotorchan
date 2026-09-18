@@ -1,7 +1,8 @@
 """Tests for ALEBO Mahalanobis GP geometry."""
 
+import pytest
 import torch
-from gpytorch.kernels import ScaleKernel
+from gpytorch.kernels import RBFKernel, ScaleKernel
 
 from robotorchan.models import ALEBOGP
 from robotorchan.models.alebo import MahalanobisRBFKernel
@@ -62,3 +63,47 @@ def test_alebo_gp_uses_mahalanobis_kernel_and_common_contract() -> None:
 
     posterior = model.posterior(torch.zeros(1, 2, dtype=torch.double))
     assert posterior.mean.shape == (1, 1)
+
+
+def test_alebo_gp_exposes_metric_from_internal_kernel() -> None:
+    train_X = torch.tensor(
+        [[0.0, 0.0], [0.2, -0.1], [-0.3, 0.4], [0.5, 0.1]],
+        dtype=torch.double,
+    )
+    train_Y = train_X[:, :1].square() + train_X[:, 1:].square()
+
+    model = ALEBOGP(train_X, train_Y)
+
+    torch.testing.assert_close(model.metric, model.covar_module.base_kernel.metric)
+
+
+def test_alebo_gp_fit_returns_same_model(monkeypatch) -> None:
+    train_X = torch.tensor(
+        [[0.0, 0.0], [0.2, -0.1], [-0.3, 0.4], [0.5, 0.1]],
+        dtype=torch.double,
+    )
+    train_Y = train_X[:, :1].square() + train_X[:, 1:].square()
+    model = ALEBOGP(train_X, train_Y)
+    captured = {}
+
+    def fake_fit(mll, **kwargs):
+        captured["mll"] = mll
+        captured["kwargs"] = kwargs
+        return mll
+
+    monkeypatch.setattr("robotorchan.models.alebo.fit_gpytorch_mll", fake_fit)
+
+    fitted = model.fit(optimizer_kwargs={"options": {"maxiter": 3}})
+
+    assert fitted is model
+    assert captured["mll"].model is model
+    assert captured["kwargs"] == {"optimizer_kwargs": {"options": {"maxiter": 3}}}
+
+
+def test_alebo_gp_rejects_non_mahalanobis_covar_for_metric_access() -> None:
+    train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y, covar_module=ScaleKernel(RBFKernel()))
+
+    with pytest.raises(TypeError, match="MahalanobisRBFKernel"):
+        _ = model.metric

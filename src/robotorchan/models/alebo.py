@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import torch
+from botorch.fit import fit_gpytorch_mll
 from gpytorch.kernels import Kernel, ScaleKernel
 from gpytorch.module import Module
 from torch import Tensor
@@ -79,3 +80,22 @@ class ALEBOGP(SingleTaskGP):
             train_Yvar=train_Yvar,
             covar_module=covar_module,
         )
+
+    @property
+    def mahalanobis_kernel(self) -> MahalanobisRBFKernel:
+        """Return the ALEBO Mahalanobis base kernel."""
+        if not isinstance(self.covar_module, ScaleKernel) or not isinstance(
+            self.covar_module.base_kernel, MahalanobisRBFKernel
+        ):
+            raise TypeError("ALEBOGP requires a ScaleKernel wrapping MahalanobisRBFKernel.")
+        return self.covar_module.base_kernel
+
+    @property
+    def metric(self) -> Tensor:
+        """Return the current learned Mahalanobis metric."""
+        return self.mahalanobis_kernel.metric
+
+    def fit(self, **fit_kwargs: object) -> ALEBOGP:
+        """Fit ALEBO GP hyperparameters by maximizing the exact marginal likelihood."""
+        fit_gpytorch_mll(self.make_mll(), **fit_kwargs)
+        return self
