@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from botorch.models import SingleTaskGP as BoTorchSingleTaskGP
+from botorch.posteriors import Posterior
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
@@ -14,16 +15,45 @@ from gpytorch.module import Module
 from torch import Tensor
 
 from robotorchan.models.base import ExactGPModelMixin
-from robotorchan.models.neural_reduction import AutoEncoderInputReducer
-from robotorchan.models.output_reduction import OutputPCAReducer, OutputPLSReducer
-from robotorchan.models.reduction import (
-    InputReducer,
-    OutputReducer,
-    PCAInputReducer,
-    PLSInputReducer,
-    RandomProjectionInputReducer,
-    ReductionMixin,
-)
+from robotorchan.reduction.base import InputReducer, OutputReducer
+from robotorchan.reduction.input import PCAInputReducer, PLSInputReducer, RandomProjectionInputReducer
+from robotorchan.reduction.neural import AutoEncoderInputReducer
+from robotorchan.reduction.output import OutputPCAReducer, OutputPLSReducer
+
+
+class ReductionMixin:
+    """Shared reducer plumbing for future reduced GP wrappers."""
+
+    input_reducer: InputReducer | None
+    output_reducer: OutputReducer | None
+
+    def _set_reducers(
+        self,
+        input_reducer: InputReducer | None,
+        output_reducer: OutputReducer | None,
+    ) -> None:
+        self.input_reducer = input_reducer
+        self.output_reducer = output_reducer
+
+    def _fit_transform_inputs(self, train_X: Tensor, train_Y: Tensor) -> Tensor:
+        if self.input_reducer is None:
+            return train_X
+        return self.input_reducer.fit_transform(train_X, train_Y)
+
+    def _fit_transform_outputs(self, train_X: Tensor, train_Y: Tensor) -> Tensor:
+        if self.output_reducer is None:
+            return train_Y
+        return self.output_reducer.fit_transform(train_Y, train_X)
+
+    def _transform_inputs(self, X: Tensor) -> Tensor:
+        if self.input_reducer is None:
+            return X
+        return self.input_reducer.transform(X)
+
+    def _restore_output_posterior(self, posterior: Posterior) -> Posterior:
+        if self.output_reducer is None:
+            return posterior
+        return self.output_reducer.restore_posterior(posterior)
 
 
 class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
