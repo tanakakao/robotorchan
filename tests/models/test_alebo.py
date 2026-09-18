@@ -23,10 +23,7 @@ def test_mahalanobis_kernel_has_full_metric_parameters() -> None:
 
     with torch.no_grad():
         kernel.raw_tril.copy_(
-            torch.tensor(
-                [[0.2, 0.0, 0.0], [0.5, -0.3, 0.0], [-0.4, 0.7, 0.1]],
-                dtype=torch.double,
-            )
+            torch.tensor([0.2, 0.5, -0.3, -0.4, 0.7, 0.1], dtype=torch.double)
         )
 
     metric = kernel.metric
@@ -114,6 +111,8 @@ def test_metric_parameter_vector_is_detached_copy() -> None:
     train_Y = train_X.square()
     model = ALEBOGP(train_X, train_Y)
 
+    with torch.no_grad():
+        model.mahalanobis_kernel.raw_tril.fill_(0.5)
     vector = model.metric_parameter_vector()
 
     assert vector.shape == (1,)
