@@ -263,6 +263,34 @@ class ALEBOGP(SingleTaskGP):
                 parameter.copy_(original)
         return torch.stack(means), torch.stack(covariances)
 
+    @staticmethod
+    def _moment_match_metric_covariance(
+        means: Tensor,
+        covariances: Tensor,
+    ) -> tuple[Tensor, Tensor]:
+        """Moment-match conditional Gaussian predictions over metric samples."""
+        if means.shape[-1] != 1:
+            raise NotImplementedError("ALEBO metric marginalization currently supports one output.")
+        event_means = means.squeeze(-1)
+        mean = event_means.mean(dim=0)
+        centered = event_means - mean
+        between_metric = torch.einsum("...i,...j->...ij", centered, centered).mean(dim=0)
+        predictive_covariance = covariances.mean(dim=0) + between_metric
+        predictive_covariance = 0.5 * (
+            predictive_covariance + predictive_covariance.transpose(-2, -1)
+        )
+        eigenvalues = torch.linalg.eigvalsh(predictive_covariance)
+        scale = torch.diagonal(predictive_covariance, dim1=-2, dim2=-1).abs().amax(dim=-1)
+        floor = torch.finfo(predictive_covariance.dtype).eps * scale.clamp_min(1.0) * 100
+        correction = (floor - eigenvalues[..., 0]).clamp_min(0.0)
+        identity = torch.eye(
+            predictive_covariance.shape[-1],
+            dtype=predictive_covariance.dtype,
+            device=predictive_covariance.device,
+        )
+        predictive_covariance = predictive_covariance + correction[..., None, None] * identity
+        return mean.unsqueeze(-1), predictive_covariance
+
     def marginal_metric_moments(
         self,
         X: Tensor,
@@ -285,27 +313,7 @@ class ALEBOGP(SingleTaskGP):
             metric_samples=samples,
             observation_noise=observation_noise,
         )
-        if means.shape[-1] != 1:
-            raise NotImplementedError("ALEBO metric marginalization currently supports one output.")
-        event_means = means.squeeze(-1)
-        mean = event_means.mean(dim=0)
-        centered = event_means - mean
-        between_metric = torch.einsum("...i,...j->...ij", centered, centered).mean(dim=0)
-        predictive_covariance = covariances.mean(dim=0) + between_metric
-        predictive_covariance = 0.5 * (
-            predictive_covariance + predictive_covariance.transpose(-2, -1)
-        )
-        eigenvalues = torch.linalg.eigvalsh(predictive_covariance)
-        scale = torch.diagonal(predictive_covariance, dim1=-2, dim2=-1).abs().amax(dim=-1)
-        floor = torch.finfo(predictive_covariance.dtype).eps * scale.clamp_min(1.0) * 100
-        correction = (floor - eigenvalues[..., 0]).clamp_min(0.0)
-        identity = torch.eye(
-            predictive_covariance.shape[-1],
-            dtype=predictive_covariance.dtype,
-            device=predictive_covariance.device,
-        )
-        predictive_covariance = predictive_covariance + correction[..., None, None] * identity
-        return mean.unsqueeze(-1), predictive_covariance
+        return self._moment_match_metric_covariance(means, covariances)
 
     def metric_marginal_posterior_from_samples(
         self,
