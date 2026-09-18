@@ -143,22 +143,18 @@ class ALEBOGP(SingleTaskGP):
         self,
         train_X: Tensor,
         train_Y: Tensor,
-        train_Yvar: Tensor | None = None,
+        train_Yvar: Tensor,
         *,
-        covar_module: Module | None = None,
         projection: Tensor | None = None,
     ) -> None:
         if train_X.ndim < 2:
             raise ValueError("train_X must have at least two dimensions.")
-        if train_Yvar is None:
-            raise ValueError("ALEBOGP requires train_Yvar for fixed-noise modeling.")
-        if covar_module is None:
-            covar_module = ScaleKernel(
-                MahalanobisRBFKernel(
-                    ard_num_dims=train_X.shape[-1],
-                    projection=projection,
-                )
+        covar_module = ScaleKernel(
+            MahalanobisRBFKernel(
+                ard_num_dims=train_X.shape[-1],
+                projection=projection,
             )
+        )
         super().__init__(
             train_X=train_X,
             train_Y=train_Y,
