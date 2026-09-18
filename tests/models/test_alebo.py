@@ -142,7 +142,12 @@ def test_alebo_fit_can_disable_warm_start(monkeypatch: pytest.MonkeyPatch) -> No
 def test_alebo_gp_rejects_non_mahalanobis_covar_for_metric_access() -> None:
     train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
     train_Y = train_X.square()
-    model = ALEBOGP(\n        train_X,\n        train_Y,\n        torch.full_like(train_Y, 1e-6),\n        covar_module=ScaleKernel(RBFKernel()),\n    )
+    model = ALEBOGP(
+        train_X,
+        train_Y,
+        torch.full_like(train_Y, 1e-6),
+        covar_module=ScaleKernel(RBFKernel()),
+    )
 
     with pytest.raises(TypeError, match="MahalanobisRBFKernel"):
         _ = model.metric
