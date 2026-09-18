@@ -56,7 +56,7 @@ class MahalanobisRBFKernel(Kernel):
             )
             initial = factor[rows, cols]
         self.register_parameter(
-            name="raw_tril",
+            name="raw_triu",
             parameter=torch.nn.Parameter(initial),
         )
         self.register_buffer("triu_rows", rows, persistent=False)
@@ -64,16 +64,16 @@ class MahalanobisRBFKernel(Kernel):
 
     @property
     def metric_factor(self) -> Tensor:
-        """Upper-triangular ALEBO factor used directly in embedded coordinates."""
-        factor = self.raw_tril.new_zeros(self.ard_num_dims, self.ard_num_dims)
-        factor[self.triu_rows, self.triu_cols] = self.raw_tril
+        """Return the upper-triangular ALEBO Cholesky factor U."""
+        factor = self.raw_triu.new_zeros(self.ard_num_dims, self.ard_num_dims)
+        factor[self.triu_rows, self.triu_cols] = self.raw_triu
         return factor
 
     @property
     def metric(self) -> Tensor:
         """Positive-semidefinite Mahalanobis metric induced by the ALEBO factor."""
         factor = self.metric_factor
-        return factor @ factor.transpose(-2, -1)
+        return factor.transpose(-2, -1) @ factor
 
     def forward(
         self,
@@ -84,8 +84,9 @@ class MahalanobisRBFKernel(Kernel):
     ) -> Tensor:
         """Evaluate exp(-0.5 * Mahalanobis squared distance)."""
         del params
-        transformed_x1 = x1 @ self.metric_factor
-        transformed_x2 = x2 @ self.metric_factor
+        transform = self.metric_factor.transpose(-2, -1)
+        transformed_x1 = x1 @ transform
+        transformed_x2 = x2 @ transform
         if diag:
             squared_distance = (transformed_x1 - transformed_x2).square().sum(dim=-1)
         else:
@@ -177,7 +178,7 @@ class ALEBOGP(SingleTaskGP):
 
     def metric_parameter_vector(self) -> Tensor:
         """Return the unconstrained Mahalanobis parameters as a flat vector."""
-        return self.mahalanobis_kernel.raw_tril.detach().clone()
+        return self.mahalanobis_kernel.raw_triu.detach().clone()
 
     def metric_log_posterior(self) -> Tensor:
         """Return the exact MLL used as the metric log-posterior objective."""
@@ -196,7 +197,7 @@ class ALEBOGP(SingleTaskGP):
         """Estimate ALEBO metric Hessian diagonal with the reference forward difference."""
         if relative_step <= 0 or absolute_step <= 0:
             raise ValueError("finite-difference steps must be positive.")
-        parameter = self.mahalanobis_kernel.raw_tril
+        parameter = self.mahalanobis_kernel.raw_triu
         original = parameter.detach().clone()
         diagonal = []
         try:
@@ -281,7 +282,7 @@ class ALEBOGP(SingleTaskGP):
         observation_noise: bool = False,
     ) -> tuple[Tensor, Tensor]:
         """Evaluate conditional GP moments for sampled metric parameters."""
-        parameter = self.mahalanobis_kernel.raw_tril
+        parameter = self.mahalanobis_kernel.raw_triu
         expected_shape = (parameter.numel(),)
         if metric_samples.ndim != 2 or metric_samples.shape[1:] != expected_shape:
             raise ValueError(f"metric_samples must have shape [n_samples, {parameter.numel()}].")
