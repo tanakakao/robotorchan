@@ -23,7 +23,7 @@ def test_mahalanobis_factor_keeps_reference_unconstrained_diagonal() -> None:
     kernel = MahalanobisRBFKernel(ard_num_dims=2).double()
 
     with torch.no_grad():
-        kernel.raw_tril.copy_(torch.tensor([-1.0, 0.5, -2.0], dtype=torch.double))
+        kernel.raw_triu.copy_(torch.tensor([-1.0, 0.5, -2.0], dtype=torch.double))
 
     expected = torch.tensor([[-1.0, 0.5], [0.0, -2.0]], dtype=torch.double)
     torch.testing.assert_close(kernel.metric_factor, expected)
@@ -33,7 +33,7 @@ def test_mahalanobis_kernel_has_full_metric_parameters() -> None:
     kernel = MahalanobisRBFKernel(ard_num_dims=3).double()
 
     with torch.no_grad():
-        kernel.raw_tril.copy_(torch.tensor([0.2, 0.5, -0.3, -0.4, 0.7, 0.1], dtype=torch.double))
+        kernel.raw_triu.copy_(torch.tensor([0.2, 0.5, -0.3, -0.4, 0.7, 0.1], dtype=torch.double))
 
     metric = kernel.metric
     assert metric.shape == (3, 3)
@@ -50,6 +50,24 @@ def test_kernel_matches_exp_of_mahalanobis_distance() -> None:
     expected = torch.exp(-0.5 * (delta @ kernel.metric @ delta))
 
     torch.testing.assert_close(covariance.squeeze(), expected)
+
+
+def test_mahalanobis_kernel_matches_reference_upper_cholesky_orientation() -> None:
+    kernel = MahalanobisRBFKernel(ard_num_dims=2).double()
+    with torch.no_grad():
+        kernel.raw_triu.copy_(torch.tensor([2.0, 1.0, 3.0], dtype=torch.double))
+
+    upper = torch.tensor([[2.0, 1.0], [0.0, 3.0]], dtype=torch.double)
+    expected_metric = upper.transpose(-2, -1) @ upper
+    x1 = torch.tensor([[0.4, -0.2]], dtype=torch.double)
+    x2 = torch.tensor([[-0.1, 0.3]], dtype=torch.double)
+    delta = x1[0] - x2[0]
+
+    torch.testing.assert_close(kernel.metric, expected_metric)
+    torch.testing.assert_close(
+        kernel(x1, x2).to_dense().squeeze(),
+        torch.exp(-0.5 * (delta @ expected_metric @ delta)),
+    )
 
 
 def test_alebo_gp_requires_train_yvar_in_signature() -> None:
@@ -163,13 +181,13 @@ def test_metric_parameter_vector_is_detached_copy() -> None:
     model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
 
     with torch.no_grad():
-        model.mahalanobis_kernel.raw_tril.fill_(0.5)
+        model.mahalanobis_kernel.raw_triu.fill_(0.5)
     vector = model.metric_parameter_vector()
 
     assert vector.shape == (1,)
     assert not vector.requires_grad
     vector.zero_()
-    assert not torch.equal(vector, model.mahalanobis_kernel.raw_tril)
+    assert not torch.equal(vector, model.mahalanobis_kernel.raw_triu)
 
 
 def test_sample_metric_parameters_uses_gaussian_laplace_covariance() -> None:
@@ -252,7 +270,7 @@ def test_metric_diagonal_hessian_uses_forward_difference(
     train_X = torch.zeros(3, 1, dtype=torch.double)
     train_Y = torch.zeros(3, 1, dtype=torch.double)
     model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
-    parameter = model.mahalanobis_kernel.raw_tril
+    parameter = model.mahalanobis_kernel.raw_triu
     with torch.no_grad():
         parameter.fill_(2.0)
 
