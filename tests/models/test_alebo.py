@@ -107,3 +107,44 @@ def test_alebo_gp_rejects_non_mahalanobis_covar_for_metric_access() -> None:
 
     with pytest.raises(TypeError, match="MahalanobisRBFKernel"):
         _ = model.metric
+
+
+def test_metric_parameter_vector_is_detached_copy() -> None:
+    train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+
+    vector = model.metric_parameter_vector()
+
+    assert vector.shape == (1,)
+    assert not vector.requires_grad
+    vector.zero_()
+    assert not torch.equal(vector, model.mahalanobis_kernel.raw_tril.reshape(-1))
+
+
+def test_sample_metric_parameters_uses_gaussian_laplace_covariance() -> None:
+    train_X = torch.tensor(
+        [[0.0, 0.0], [0.2, -0.1], [-0.3, 0.4], [0.5, 0.1]],
+        dtype=torch.double,
+    )
+    train_Y = train_X[:, :1].square() + train_X[:, 1:].square()
+    model = ALEBOGP(train_X, train_Y)
+    n_params = model.metric_parameter_vector().numel()
+    covariance = 0.01 * torch.eye(n_params, dtype=torch.double)
+    generator = torch.Generator().manual_seed(7)
+
+    samples = model.sample_metric_parameters(5, covariance=covariance, generator=generator)
+
+    assert samples.shape == (5, n_params)
+    assert samples.dtype == torch.double
+
+
+def test_sample_metric_parameters_validates_inputs() -> None:
+    train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y)
+
+    with pytest.raises(ValueError, match="n_samples"):
+        model.sample_metric_parameters(0, covariance=torch.eye(1, dtype=torch.double))
+    with pytest.raises(ValueError, match="covariance must have shape"):
+        model.sample_metric_parameters(2, covariance=torch.eye(2, dtype=torch.double))
