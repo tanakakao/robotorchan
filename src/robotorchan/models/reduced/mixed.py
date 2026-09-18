@@ -30,7 +30,7 @@ class MixedInputLayout:
         input_dim: int,
         cat_dims: list[int],
         latent_dim: int,
-    ) -> "MixedInputLayout":
+    ) -> MixedInputLayout:
         """Validate dimensions and construct a mixed-input layout."""
         if input_dim < 1:
             raise ValueError("input_dim must be positive.")
@@ -146,7 +146,7 @@ class MixedInputReducer:
         """Categorical indices expected by the downstream mixed GP."""
         return self.layout.reduced_cat_dims
 
-    def fit(self, X: Tensor, Y: Tensor | None = None) -> "MixedInputReducer":
+    def fit(self, X: Tensor, Y: Tensor | None = None) -> MixedInputReducer:
         """Fit the wrapped reducer on continuous columns only."""
         self.reducer.fit(self.layout.continuous(X), Y)
         if self.reducer.output_dim != self.layout.latent_dim:
