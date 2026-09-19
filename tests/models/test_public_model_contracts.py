@@ -77,6 +77,7 @@ PUBLIC_MODEL_NAMES = {
     "ReducedGP",
     "ReducedKroneckerMultiTaskGP",
     "ReducedMultiTaskGP",
+    "ReplicateNoiseSingleTaskGP",
     "RobustRelevancePursuitSingleTaskGP",
     "SACGP",
     "SaasFullyBayesianMultiTaskGP",
