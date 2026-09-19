@@ -28,6 +28,12 @@ Two models intentionally remain available:
 The first is a practical baseline. The second models both latent processes in a
 joint training objective.
 
+### Replicate-derived observation noise
+
+Use `ReplicateNoiseSingleTaskGP` when repeated measurements are available at
+identical design conditions. It estimates empirical within-group variance and
+uses variance of the group mean as fixed likelihood noise.
+
 ### Globally heavy-tailed observation residuals
 
 Use `StudentTSingleTaskGP`.
@@ -82,12 +88,11 @@ composed externally.
 The next additions should be selected by a concrete statistical gap rather than
 by model-count growth. Candidates are:
 
-1. replicated-observation noise models when replicate structure is known;
+1. explicit contamination/mixture likelihoods if Student-t and relevance
+   pursuit do not cover the required outlier mechanism;
 2. uncertain categorical training inputs, only if a defensible probability
    model and kernel expectation are defined;
-3. explicit contamination/mixture likelihoods if Student-t and relevance
-   pursuit do not cover the required outlier mechanism;
-4. nonstationary observation/process models only when a use case requires
+3. nonstationary observation/process models only when a use case requires
    local behavior that current kernels cannot represent.
 
 ## Exit criteria
