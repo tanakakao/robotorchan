@@ -195,6 +195,31 @@ Structured / correlated output family
 
 `ReducedGP` は reducer composition を担当し、structured-output model はそれぞれ BoTorch 本来の covariance structure を保持します。
 
+## 9. ALEBO と ReducedGP の関係
+
+ALEBO は `PCAGP` や AE 系のようなデータ駆動 reducer ではなく、BO の探索空間そのものを
+固定された低次元線形 embedding へ制限する search strategy です。robotorchan では
+`ALEBOStrategy` が ambient-space bounds と embedding / feasible polytope を管理し、
+`ALEBOGP` は embedded coordinates 上で Mahalanobis geometry を学習します。
+
+したがって、ALEBO を `ReducedGP` / `ReducedMultiTaskGP` の reducer として組み込みません。
+両者を機械的に合成すると、候補生成に使う embedding と surrogate 内部の reducer という
+二重の座標変換が生じ、どの空間で bounds・pending points・acquisition optimization を扱うかが
+曖昧になります。
+
+基本的な使い分けは次の通りです。
+
+- ambient dimension は大きいが、目的関数が低次元の線形 subspace に依存すると仮定する:
+  `ALEBOStrategy` + `ALEBOGP`
+- 観測済み X から低次元表現を学習して通常の BO を行う: `ReducedGP` family
+- 元特徴の少数だけが重要だと仮定する: SAAS family
+- task 相関も同時に必要: `ReducedMultiTaskGP` family または SAAS MultiTask
+
+現行 ALEBO は single-output の embedded surrogate を明示的なスコープとします。
+`ALEBOMultiTaskGP`、`MixedALEBOGP`、`ReducedALEBOGP` のような名前だけの直積モデルは
+追加しません。multi-task / mixed ALEBO は embedding、task/categorical structure、
+feasible polytope、acquisition optimization を一体として定義できる場合に独立拡張として扱います。
+
 ## 9. SAAS と次元削減の関係
 
 SAAS は PCA / PLS / AE のように入力を低次元座標へ射影するモデルではありません。
