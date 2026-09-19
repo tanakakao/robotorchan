@@ -39,9 +39,7 @@ class GaussianUncertainInputKernel(Kernel):
         covar2 = x2[..., d:].reshape(*x2.shape[:-1], d, d)
         pair_covar = covar1.unsqueeze(-3) + covar2.unsqueeze(-4)
 
-        lengthscale2 = self.lengthscale.square().reshape(
-            *((1,) * (pair_covar.ndim - 2)), d
-        )
+        lengthscale2 = self.lengthscale.square().reshape(*((1,) * (pair_covar.ndim - 2)), d)
         metric = torch.diag_embed(lengthscale2)
         system = metric + pair_covar
         chol = torch.linalg.cholesky(system)
