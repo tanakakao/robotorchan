@@ -109,6 +109,7 @@ from robotorchan.models.robust import (
 )
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
 from robotorchan.models.student_t import StudentTSingleTaskGP
+from robotorchan.models.uncertain_categorical import UncertainCategoricalSingleTaskGP
 from robotorchan.models.uncertain_input import UncertainInputSingleTaskGP
 from robotorchan.models.variational import (
     MixedSingleTaskVariationalGP,
@@ -207,6 +208,7 @@ __all__ = [
     "SupervisedVAEGP",
     "SupervisedVAEKroneckerMultiTaskGP",
     "SupervisedVAEMultiTaskGP",
+    "UncertainCategoricalSingleTaskGP",
     "UncertainInputSingleTaskGP",
     "UnsupportedModelOperationError",
     "VAEKroneckerMultiTaskGP",
