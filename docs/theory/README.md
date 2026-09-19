@@ -75,6 +75,6 @@
 ## 関連ドキュメント
 
 - [モデル概要・使い所](../models.md)
-- [実装設計](../architecture.md)
+- [実装設計](../development/architecture.md)
 - [Notebook 一覧](../../examples/README.md)
 - [実行例](../../examples/notebooks/)
