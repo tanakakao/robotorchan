@@ -1,4 +1,6 @@
-# Joint neural GP の学習契約
+# Joint neural GP と Deep Kernel Learning
+
+`JointEncoderGP` は、ニューラル特徴写像 $\\phi_\\theta(x)$ の出力にExact GPを置き、GP MLLからencoderとGPを同時最適化するDeep Kernel Learning (DKL) の基本実装です。`DeepKernelGP` という重複クラスは追加せず、robotorchanでは `JointEncoderGP` をこの役割に使用します。
 
 `JointEncoderGP`、`HybridAutoEncoderGP`、`JointVAEGP` は、frozen reducerを使う `ReducedGP` 系とは異なり、encoderをGPと同時に最適化します。
 
@@ -54,3 +56,29 @@ X -> encoder -> GP -> Y
 ```
 
 この区別により、benchmarkや将来のtrainer実装でモデル固有の `hybrid` / `joint_vae` 分岐を持たず、Joint系を一つの学習契約で扱えます。
+
+
+## DKLとしての特徴抽出器
+
+既定では `hidden_dims` と `activation` からMLP encoderを構築します。`latent_dim` は入力次元以下に限定されず、圧縮・同次元・拡張のいずれも利用できます。
+
+任意のPyTorch moduleを `feature_extractor` として渡すこともできます。出力最終次元は `latent_dim` と一致させてください。
+
+```python
+feature_extractor = torch.nn.Sequential(
+    torch.nn.Linear(train_X.shape[-1], 64),
+    torch.nn.GELU(),
+    torch.nn.Linear(64, 8),
+)
+
+model = JointEncoderGP(
+    train_X,
+    train_Y,
+    latent_dim=8,
+    feature_extractor=feature_extractor,
+)
+```
+
+このmoduleはmodelのsubmoduleとして登録されるため、`model.parameters()` を使った `training_loss()` の最適化でGPと同時に更新されます。入力標準化はmodel側で行い、その後のテンソルがfeature extractorへ渡されます。
+
+この設計により、DKLのためだけに別の互換APIを増やさず、将来CNNやTransformerなど別の特徴抽出器を接続する場合も同じ学習契約を維持できます。
