@@ -54,6 +54,15 @@ jobs:
           unzip -l dist/*.whl | tee /tmp/wheel-contents.txt
           grep -q "robotorchan/__init__.py" /tmp/wheel-contents.txt
           grep -q "robotorchan/models/" /tmp/wheel-contents.txt
+          grep -q "robotorchan/py.typed" /tmp/wheel-contents.txt
+          grep -q "robotorchan-.*\.dist-info/licenses/LICENSE" /tmp/wheel-contents.txt
+      - name: Inspect source distribution contents
+        run: |
+          tar -tzf dist/*.tar.gz | tee /tmp/sdist-contents.txt
+          grep -q "/README.md$" /tmp/sdist-contents.txt
+          grep -q "/LICENSE$" /tmp/sdist-contents.txt
+          grep -q "/pyproject.toml$" /tmp/sdist-contents.txt
+          grep -q "/src/robotorchan/py.typed$" /tmp/sdist-contents.txt
       - name: Create isolated smoke-test environment
         run: python -m venv /tmp/robotorchan-smoke
       - name: Install CPU PyTorch in smoke-test environment
@@ -70,6 +79,16 @@ jobs:
         run: >-
           /tmp/robotorchan-smoke/bin/python -c
           "import pathlib, robotorchan; from importlib.metadata import version; from robotorchan.models import SingleTaskGP; p = pathlib.Path(robotorchan.__file__).resolve(); assert '/site-packages/' in p.as_posix(), p; assert robotorchan.__version__ == version('robotorchan'); print(p); print(robotorchan.__version__); print(SingleTaskGP)"
+      - name: Validate installed distribution metadata
+        working-directory: /tmp
+        run: >-
+          /tmp/robotorchan-smoke/bin/python -c
+          "from importlib.metadata import metadata; m = metadata('robotorchan'); assert m['License-File'] == 'LICENSE', m.get_all('License-File'); assert m['Requires-Python'] == '>=3.11', m['Requires-Python']; assert 'BSD License' in (m.get_all('Classifier') or []), m.get_all('Classifier'); print(m['Name'], m['Version'], m['Requires-Python'], m['License-File'])"
+      - name: Validate PEP 561 marker after installation
+        working-directory: /tmp
+        run: >-
+          /tmp/robotorchan-smoke/bin/python -c
+          "import pathlib, robotorchan; marker = pathlib.Path(robotorchan.__file__).with_name('py.typed'); assert marker.is_file(), marker; print(marker)"
       - name: Validate published extras metadata
         working-directory: /tmp
         run: >-
