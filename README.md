@@ -6,11 +6,12 @@
 
 ## ドキュメント
 
-最初に見る場所は次の7つです。
+最初に見る場所は次の8つです。
 
 - **理論から理解する:** [`docs/theory/README.md`](docs/theory/README.md)
 - **どのモデルを選ぶか:** [`docs/models.md`](docs/models.md)
 - **高次元モデルを選ぶ:** [`docs/high_dimensional_model_selection.md`](docs/high_dimensional_model_selection.md)
+- **Robust / Noise / Uncertaintyを選ぶ:** [`docs/robust-model-support.md`](docs/robust-model-support.md)
 - **高次元出力モデルを選ぶ:** [`docs/high_dimensional_outputs.md`](docs/high_dimensional_outputs.md)
 - **実際にどう使うか:** [`examples/README.md`](examples/README.md)
 - **高次元の探索戦略:** [`docs/high_dimensional_search_strategies.md`](docs/high_dimensional_search_strategies.md)
