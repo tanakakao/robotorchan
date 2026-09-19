@@ -6,7 +6,6 @@ import math
 
 import torch
 from botorch.posteriors.gpytorch import GPyTorchPosterior
-from gpytorch.distributions import MultivariateNormal
 from torch import Tensor, nn
 
 from robotorchan.models.base import RawDataMixin
@@ -92,10 +91,12 @@ class JointHeteroskedasticSingleTaskGP(RawDataMixin, nn.Module):
 
     def posterior(self, X: Tensor, **kwargs) -> GPyTorchPosterior:
         """Return the response-process posterior for BoTorch acquisitions."""
+        self.response_model.model.variational_strategy._clear_cache()
         return self.response_model.posterior(X, **kwargs)
 
     def noise_posterior(self, X: Tensor) -> GPyTorchPosterior:
         """Return the latent posterior over log observation variance."""
+        self.noise_model.model.variational_strategy._clear_cache()
         return self.noise_model.posterior(X)
 
     def predicted_noise(self, X: Tensor) -> Tensor:
