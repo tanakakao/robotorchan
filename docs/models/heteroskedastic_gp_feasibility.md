@@ -37,3 +37,17 @@ compatibility wrapper should be retained.
 
 Mixed, reduced, and multi-task cross-products remain deferred until this base
 model is validated by CI and robust benchmarks.
+
+
+## BoTorch integration
+
+Phase 6B validates the iterative model as a BoTorch surrogate rather than only
+as a standalone regression model. Integration coverage includes MC acquisition,
+batched noise prediction, raw-space scenario generation followed by risk
+aggregation, and dtype migration of the registered noise GP submodule.
+
+The noise GP is a registered PyTorch submodule after fitting, so normal model
+`.to(...)`, `.float()`, and `.double()` operations migrate both processes.
+The response posterior remains the standard BoTorch posterior used by
+acquisition functions; `predicted_noise` is an additional diagnostic and
+robust-design signal.
