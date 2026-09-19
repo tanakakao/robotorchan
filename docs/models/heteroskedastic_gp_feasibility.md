@@ -1,63 +1,39 @@
-# Heteroskedastic GP feasibility
+# Heteroskedastic GP
 
-## Decision
+## Implementation
 
-Phase 6 does not add a nominal `HeteroskedasticSingleTaskGP` wrapper on top of
-BoTorch 0.18.1 because the current dependency does not expose a maintained
-heteroskedastic exact-GP model that matches robotorchan's wrapper policy.
-
-A fake class implemented by silently converting learned noise into fixed
-`train_Yvar` would not be a heteroskedastic GP. It would freeze observation
-variance rather than jointly model input-dependent uncertainty.
-
-## Required statistical contract
-
-A future public heteroskedastic surrogate must represent
+robotorchan provides an iterative two-GP heteroskedastic surrogate. The mean
+process models the response while a second GP models log residual variance:
 
 ```text
 y = f(x) + epsilon(x)
 epsilon(x) ~ N(0, sigma(x)^2)
+log sigma(x)^2 ~ GP
 ```
 
-where the noise process depends on `x`. The implementation must expose a
-BoTorch-compatible posterior and a training objective that trains the intended
-noise model rather than treating per-observation variance as immutable data.
+`HeteroskedasticSingleTaskGP.fit_heteroskedastic()` alternates between fitting
+the response GP, fitting the log-noise GP from squared residuals, and updating
+the response likelihood with the predicted input-dependent variance.
 
-## What is already supported
+This is intentionally distinct from supplying known `train_Yvar`: the latter
+is fixed-noise modeling, while this model learns a noise surface that can be
+queried at unseen inputs.
 
-Known per-observation variances remain supported through existing
-`train_Yvar` arguments where the underlying BoTorch model accepts them. This
-is fixed-noise modeling and must not be documented as heteroskedastic learning.
+## API
 
-The robust scenario and risk layers from Phases 3-5 are orthogonal to this
-surrogate concern and remain composable with ordinary models.
+```python
+model = HeteroskedasticSingleTaskGP(train_X, train_Y, noise_floor=1e-6)
+model.fit_heteroskedastic(iterations=3)
 
-## Implementation options
+response = model.posterior(test_X)
+noise_variance = model.predicted_noise(test_X)
+log_noise_posterior = model.noise_posterior(test_X)
+```
 
-A later implementation may proceed when one of these contracts is selected and
-tested:
+The current implementation is the practical iterative two-process version. A
+future joint variational implementation may replace it only through a complete
+API migration if it provides a materially better inference contract; no
+compatibility wrapper should be retained.
 
-1. a maintained upstream BoTorch heteroskedastic model becomes available;
-2. a robotorchan variational two-process model is implemented explicitly;
-3. a custom likelihood / latent-noise construction is implemented with a clear
-   posterior and training contract.
-
-Option 2 is the preferred independent implementation path if heteroskedastic
-learning is required before upstream support exists.
-
-## API boundary
-
-The intended public name remains `HeteroskedasticSingleTaskGP`, but Phase 6
-does not reserve that name with a placeholder class. The repository rule against
-compatibility and placeholder APIs takes precedence.
-
-When implemented, the model should follow the same raw-training-data and
-training-API conventions as the existing model family. It must not masquerade
-as `ExactGPModelMixin` if its inference is variational or otherwise non-exact.
-
-## Mixed and high-dimensional boundaries
-
-Mixed, reduced, and multi-task heteroskedastic variants are intentionally not
-created before the base statistical model is validated. Once the base model
-exists, composition should be preferred where reduction or scenario handling
-does not change the noise-process mathematics.
+Mixed, reduced, and multi-task cross-products remain deferred until this base
+model is validated by CI and robust benchmarks.
