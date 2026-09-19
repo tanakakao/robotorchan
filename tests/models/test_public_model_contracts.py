@@ -11,6 +11,7 @@ PUBLIC_MODEL_NAMES = {
     "AutoEncoderMultiTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "HeterogeneousMTGP",
+    "HeteroskedasticSingleTaskGP",
     "HierarchicalConditionalKernelGP",
     "HierarchicalConditionalKernelMultiTaskGP",
     "HigherOrderGP",
