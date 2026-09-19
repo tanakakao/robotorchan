@@ -95,13 +95,22 @@ Use `NonstationarySingleTaskGP` when the latent response smoothness itself chang
 across the design space. Its Gibbs covariance is distinct from input-dependent
 observation noise.
 
+### Uncertain categorical training inputs
+
+Use `UncertainCategoricalSingleTaskGP` when an observed category is uncertain but
+an explicit probability vector over the finite category set is available. The
+model marginalizes that uncertainty through a positive-semidefinite expected
+categorical covariance. It does not jitter integer category codes or impose an
+ordinal distance.
+
 ## Remaining gaps worth evaluating
 
-The next additions should be selected by a concrete statistical gap rather than
-by model-count growth. Candidates are:
+No major surrogate-level robustness gap identified by this audit remains open.
 
-1. uncertain categorical training inputs represented by explicit category
-   probabilities and a positive-semidefinite expected categorical kernel.
+Further model classes should require a new, concrete statistical assumption that
+cannot be represented by the existing surrogate, scenario-generator, and risk
+aggregation layers. In particular, do not create cross-product classes merely
+to combine already-supported concerns.
 
 ## Exit criteria
 
@@ -114,3 +123,19 @@ Phase 9 is complete when:
 4. future work is prioritized by statistical semantics rather than wrapper
    combinations;
 5. public model contracts and CI remain unchanged by the documentation audit.
+
+## Phase 15 closeout
+
+The robust-surrogate audit is closed after implementation of:
+
+- sparse relevance-pursuit robustness;
+- iterative and joint heteroskedastic Gaussian noise;
+- Student-t observation likelihood;
+- diagonal/full-covariance uncertain continuous training inputs;
+- replicate-derived fixed observation noise;
+- contamination-mixture observation likelihood;
+- nonstationary Gibbs covariance;
+- probability-valued uncertain categorical training inputs.
+
+Candidate perturbation, environmental scenarios, and risk measures remain
+compositional concerns rather than reasons to multiply surrogate classes.
