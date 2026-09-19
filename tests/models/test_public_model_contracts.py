@@ -20,7 +20,6 @@ PUBLIC_MODEL_NAMES = {
     "HybridAutoEncoderKroneckerMultiTaskGP",
     "HybridAutoEncoderMultiTaskGP",
     "JointHeteroskedasticSingleTaskGP",
-    "MixedJointHeteroskedasticSingleTaskGP",
     "JointEncoderGP",
     "JointEncoderKroneckerMultiTaskGP",
     "JointEncoderMultiTaskGP",
