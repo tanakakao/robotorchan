@@ -63,9 +63,7 @@ model.make_mll()
 
 ## 現在の coverage
 
-既存 Notebook は標準 GP、Mixed、Multi-Fidelity、MultiTask、Variational、Preference、SAAS、structured output、hierarchical、heterogeneous、contextual、および Robust Relevance Pursuit の基本例をカバーしています。
-
-一方、最近追加された Student-t / contamination、heteroskedastic / replicate-noise、uncertain-input / uncertain-categorical、nonstationary、および reduced / neural-reduction 系の体系的な Notebook は未整備です。これらは実装済みであり、Notebook がないことはモデル未実装を意味しません。今後はモデルごとではなく問題設定・理論ファミリー単位で追加します。
+Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary、linear / neural reduction、Reduced MultiTask、Mixed reduction までを概念単位でカバーします。1 public class = 1 Notebook にはせず、同じ統計的仮定や学習契約を共有するモデルは同じ Notebook で比較します。
 
 ## Notebook 一覧
 
@@ -85,6 +83,14 @@ model.make_mll()
 | [`12_hierarchical_gp.ipynb`](notebooks/12_hierarchical_gp.ipynb) | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` | 利用可能 |
 | [`13_heterogeneous_multitask_gp.ipynb`](notebooks/13_heterogeneous_multitask_gp.ipynb) | `HeterogeneousMTGP` | 利用可能 |
 | [`14_contextual_gp.ipynb`](notebooks/14_contextual_gp.ipynb) | `SACGP`, `LCEAGP`, `LCEMGP` | 利用可能 |
+| [`15_robust_observation_models.ipynb`](notebooks/15_robust_observation_models.ipynb) | Student-t, Contaminated | 利用可能 |
+| [`16_noise_models.ipynb`](notebooks/16_noise_models.ipynb) | Replicate Noise | 利用可能 |
+| [`17_uncertain_input_gp.ipynb`](notebooks/17_uncertain_input_gp.ipynb) | Uncertain Input / Categorical | 利用可能 |
+| [`18_nonstationary_gp.ipynb`](notebooks/18_nonstationary_gp.ipynb) | Nonstationary GP | 利用可能 |
+| [`19_reduced_gp.ipynb`](notebooks/19_reduced_gp.ipynb) | PCA / PLS / Random Projection | 利用可能 |
+| [`20_neural_reduction_gp.ipynb`](notebooks/20_neural_reduction_gp.ipynb) | AE / VAE / Supervised AE | 利用可能 |
+| [`21_reduced_multitask_gp.ipynb`](notebooks/21_reduced_multitask_gp.ipynb) | Reduced MultiTask | 利用可能 |
+| [`22_mixed_reduced_gp.ipynb`](notebooks/22_mixed_reduced_gp.ipynb) | Mixed PCA / PLS | 利用可能 |
 | [`23_high_dimensional_bo_benchmark.ipynb`](notebooks/23_high_dimensional_bo_benchmark.ipynb) | 高次元BO benchmark | 利用可能 / benchmark解説 |
 
 ## Benchmark
@@ -121,7 +127,8 @@ GitHub Actions の `notebooks` job では Python 3.11 / CPU 環境を使用し�
 ```text
 01, 02, 03, 04, 05, 06, 07,
 09, 10,
-12, 13, 14
+12, 13, 14, 15, 16, 17, 18,
+19, 20, 21, 22
 ```
 
 以下は通常の Pull Request CI から除外します。
