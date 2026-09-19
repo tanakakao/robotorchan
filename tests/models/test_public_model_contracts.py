@@ -49,6 +49,8 @@ PUBLIC_MODEL_NAMES = {
     "MixedSaasFullyBayesianMultiTaskGP",
     "MixedSaasFullyBayesianSingleTaskGP",
     "MixedReducedGP",
+    "MixedReducedKroneckerMultiTaskGP",
+    "MixedReducedMultiTaskGP",
     "MixedSupervisedAutoEncoderGP",
     "MixedSupervisedVAEGP",
     "MixedSingleTaskGP",
