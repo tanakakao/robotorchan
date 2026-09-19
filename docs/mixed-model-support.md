@@ -258,3 +258,27 @@ likelihood semantics unchanged. This closes the Phase 1 / PR #167 verification
 gate with focused posterior, covariance, raw-data, and MLL contract tests.
 
 No compatibility aliases, deprecated wrappers, or monkey patches are introduced.
+
+
+## Phase 6 classical reduced GP status
+
+PCA, PLS, and Random Projection Mixed wrappers are now colocated with their
+standard model families in `models/reduced/base.py`. The shared
+`MixedReducedGP` / `MixedInputReducer` infrastructure remains in
+`models/reduced/mixed.py`; this is infrastructure rather than a parallel
+family module.
+
+For all three classical reducers, raw categorical integer codes never enter the
+continuous reducer. `cat_dims` is normalized in the original raw coordinate
+space, continuous columns alone are fitted/transformed by PCA / PLS / random
+projection, and untouched categorical columns bypass the reducer. The reduced
+continuous block plus categorical passthrough block is then modeled by
+BoTorch's native MixedSingleTaskGP categorical covariance path.
+
+Reducer lifecycle is unchanged: an unfitted reducer is fitted once at model
+construction, an already fitted reducer is reused, state loading reconstructs
+latent training inputs from retained raw training data, and public posterior /
+conditioning APIs continue to accept original mixed-space inputs.
+
+This phase intentionally does not change AE/VAE/supervised neural or joint /
+hybrid representations; those are handled by Phases 7 and 8.

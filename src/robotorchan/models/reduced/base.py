@@ -15,6 +15,7 @@ from gpytorch.module import Module
 from torch import Tensor
 
 from robotorchan.models.base import ExactGPModelMixin
+from robotorchan.models.reduced.mixed import MixedReducedGP
 from robotorchan.reduction.base import InputReducer, OutputReducer
 from robotorchan.reduction.input import (
     PCAInputReducer,
@@ -342,6 +343,76 @@ class RandomProjectionGP(ReducedGP):
                 n_components=n_components,
                 random_state=random_state,
             ),
+            **kwargs,
+        )
+
+
+class MixedPCAGP(MixedReducedGP):
+    """Mixed GP using PCA on continuous inputs and passthrough categories."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        n_components: int,
+        cat_dims: list[int],
+        *,
+        center: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=PCAInputReducer(n_components=n_components, center=center),
+            cat_dims=cat_dims,
+            **kwargs,
+        )
+
+
+class MixedPLSGP(MixedReducedGP):
+    """Mixed GP using supervised PLS on continuous inputs."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        n_components: int,
+        cat_dims: list[int],
+        *,
+        center: bool = True,
+        eps: float = 1e-12,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=PLSInputReducer(n_components=n_components, center=center, eps=eps),
+            cat_dims=cat_dims,
+            **kwargs,
+        )
+
+
+class MixedRandomProjectionGP(MixedReducedGP):
+    """Mixed GP using a Gaussian projection on continuous inputs."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        n_components: int,
+        cat_dims: list[int],
+        *,
+        random_state: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=RandomProjectionInputReducer(
+                n_components=n_components,
+                random_state=random_state,
+            ),
+            cat_dims=cat_dims,
             **kwargs,
         )
 
