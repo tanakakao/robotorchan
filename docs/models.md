@@ -14,7 +14,7 @@
 - 理論・数式: [`docs/theory/README.md`](theory/README.md)
 - 実行例: [`examples/notebooks/`](../examples/notebooks/)
 - Notebook 一覧: [`examples/README.md`](../examples/README.md)
-- 実装設計: [`docs/architecture.md`](architecture.md)
+- 実装設計: [`docs/development/development/architecture.md`](development/architecture.md)
 - 正しさの検証: `tests/`
 - Public model のドキュメント対応表: [`docs/model_coverage.json`](model_coverage.json)
 
