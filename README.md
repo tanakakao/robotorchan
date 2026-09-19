@@ -268,3 +268,11 @@ acquisition_value = result.acquisition_value
 
 - Python >= 3.11
 - BoTorch >= 0.18.1, < 0.19
+
+
+## 開発・引用・ライセンス
+
+- 開発への参加方法: [CONTRIBUTING.md](CONTRIBUTING.md)
+- 変更履歴: [CHANGELOG.md](CHANGELOG.md)
+- 研究・論文での引用情報: [CITATION.cff](CITATION.cff)
+- ライセンス: [BSD-3-Clause](LICENSE)
