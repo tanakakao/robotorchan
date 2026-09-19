@@ -12,7 +12,11 @@ from gpytorch.distributions import MultivariateNormal
 from gpytorch.likelihoods import Likelihood
 from torch import Tensor, nn
 
-from robotorchan.models.base import ExactGPModelMixin, make_mixed_covar_module, normalize_feature_dims
+from robotorchan.models.base import (
+    ExactGPModelMixin,
+    make_mixed_covar_module,
+    normalize_feature_dims,
+)
 
 _ACTIVATIONS: dict[str, Callable[[], nn.Module]] = {
     "gelu": nn.GELU,
@@ -246,7 +250,11 @@ class MixedJointEncoderGP(JointEncoderGP):
             input_dim=latent_dim + len(normalized),
             cat_dims=reduced_cat_dims,
         )
-        self.set_train_data(inputs=train_X.detach().clone(), targets=self.train_targets, strict=False)
+        self.set_train_data(
+            inputs=train_X.detach().clone(),
+            targets=self.train_targets,
+            strict=False,
+        )
 
     @property
     def cat_dims(self) -> list[int]:
@@ -254,7 +262,9 @@ class MixedJointEncoderGP(JointEncoderGP):
 
     def _continuous(self, X: Tensor) -> Tensor:
         if X.shape[-1] != self._mixed_input_dim:
-            raise ValueError(f"Expected final dimension {self._mixed_input_dim}, got {X.shape[-1]}.")
+            raise ValueError(
+                f"Expected final dimension {self._mixed_input_dim}, got {X.shape[-1]}."
+            )
         return X[..., list(self._mixed_cont_dims)]
 
     def encode(self, X: Tensor) -> Tensor:
@@ -304,7 +314,6 @@ class MixedHybridAutoEncoderGP(MixedJointEncoderGP):
         return nn.Sequential(*layers).to(device=device, dtype=dtype)
 
     def reconstruct(self, X: Tensor) -> Tensor:
-        continuous = self._continuous(X)
         latent = self.encode(X)[..., : self.latent_dim]
         standardized = self.decoder(latent)
         return standardized * self.x_scale + self.x_mean
