@@ -85,6 +85,13 @@ class JointHeteroskedasticSingleTaskGP(RawDataMixin, nn.Module):
         """No externally supplied observation variance is required."""
         return None
 
+    def load_state_dict(self, state_dict, strict: bool = True, assign: bool = False):
+        """Load both latent processes and clear derived variational caches."""
+        result = super().load_state_dict(state_dict, strict=strict, assign=assign)
+        self.response_model.model.variational_strategy._clear_cache()
+        self.noise_model.model.variational_strategy._clear_cache()
+        return result
+
     def make_mll(self):
         """Reject exact/standard variational MLL construction for the joint objective."""
         raise RuntimeError("Use training_loss() for joint heteroskedastic inference.")
