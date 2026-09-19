@@ -56,6 +56,8 @@ PUBLIC_MODEL_NAMES = {
     "PCAKroneckerMultiTaskGP",
     "PCAMultiTaskGP",
     "PLSGP",
+    "PLSKroneckerMultiTaskGP",
+    "PLSMultiTaskGP",
     "PairwiseGP",
     "RandomProjectionGP",
     "RandomProjectionKroneckerMultiTaskGP",

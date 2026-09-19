@@ -16,7 +16,11 @@ from torch import Tensor
 from robotorchan.models.base import normalize_feature_dims
 from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.reduction.base import InputReducer
-from robotorchan.reduction.input import PCAInputReducer, RandomProjectionInputReducer
+from robotorchan.reduction.input import (
+    PCAInputReducer,
+    PLSInputReducer,
+    RandomProjectionInputReducer,
+)
 
 
 class ReducedMultiTaskGP(MultiTaskGP):
@@ -254,6 +258,69 @@ class RandomProjectionKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
             input_reducer=RandomProjectionInputReducer(
                 n_components=n_components,
                 random_state=random_state,
+            ),
+            **kwargs,
+        )
+
+
+class PLSMultiTaskGP(ReducedMultiTaskGP):
+    """Long-format multi-task GP using supervised PLS over data features.
+
+    The task feature is excluded from the reducer input. PLS is fitted against
+    the row-wise long-format observations, so each task observation contributes
+    one supervised sample while task identity remains modeled exclusively by
+    the multi-task GP covariance.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        n_components: int,
+        *,
+        center: bool = True,
+        eps: float = 1e-12,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            task_feature=task_feature,
+            input_reducer=PLSInputReducer(
+                n_components=n_components,
+                center=center,
+                eps=eps,
+            ),
+            **kwargs,
+        )
+
+
+class PLSKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
+    """Block-design Kronecker multi-task GP using multi-output supervised PLS.
+
+    PLS is fitted from the shared design matrix and all task outcomes jointly.
+    This lets the latent input representation capture directions associated
+    with covariance across the complete task-output matrix.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        n_components: int,
+        *,
+        center: bool = True,
+        eps: float = 1e-12,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=PLSInputReducer(
+                n_components=n_components,
+                center=center,
+                eps=eps,
             ),
             **kwargs,
         )
