@@ -80,3 +80,57 @@ def test_joint_encoder_gp_state_dict_round_trip():
     source.eval()
     target.eval()
     torch.testing.assert_close(target.posterior(X[:4]).mean, source.posterior(X[:4]).mean)
+
+
+def test_joint_encoder_gp_supports_expansive_latent_dimension():
+    X, Y = _data()
+    model = JointEncoderGP(
+        X,
+        Y,
+        latent_dim=9,
+        hidden_dims=(12,),
+        random_state=13,
+    )
+
+    assert model.encode(X).shape == (20, 9)
+    assert torch.isfinite(model.training_loss())
+
+
+def test_joint_encoder_gp_accepts_custom_feature_extractor():
+    X, Y = _data()
+    feature_extractor = torch.nn.Sequential(
+        torch.nn.Linear(7, 10),
+        torch.nn.Tanh(),
+        torch.nn.Linear(10, 4),
+    )
+    model = JointEncoderGP(
+        X,
+        Y,
+        latent_dim=4,
+        feature_extractor=feature_extractor,
+        random_state=13,
+    )
+
+    assert model.encoder is feature_extractor
+    assert model.encode(X).shape == (20, 4)
+
+    loss = model.training_loss()
+    loss.backward()
+    assert all(parameter.grad is not None for parameter in feature_extractor.parameters())
+
+
+def test_joint_encoder_gp_rejects_custom_feature_dimension_mismatch():
+    X, Y = _data()
+    feature_extractor = torch.nn.Linear(7, 5)
+
+    try:
+        JointEncoderGP(
+            X,
+            Y,
+            latent_dim=4,
+            feature_extractor=feature_extractor,
+        )
+    except ValueError as error:
+        assert "output dimension must equal latent_dim" in str(error)
+    else:
+        raise AssertionError("Expected a feature-extractor dimension validation error.")
