@@ -58,6 +58,7 @@ from robotorchan.models.reduced.joint_neural import (
 )
 from robotorchan.models.reduced.joint_vae import JointVAEGP, MixedJointVAEGP
 from robotorchan.models.reduced.mixed import MixedReducedGP
+from robotorchan.models.reduced.multitask import ReducedKroneckerMultiTaskGP, ReducedMultiTaskGP
 from robotorchan.models.reduced.supervised_neural import (
     MixedSupervisedAutoEncoderGP,
     SupervisedAutoEncoderGP,
@@ -134,6 +135,8 @@ __all__ = [
     "PairwiseGP",
     "RandomProjectionGP",
     "ReducedGP",
+    "ReducedKroneckerMultiTaskGP",
+    "ReducedMultiTaskGP",
     "RobustRelevancePursuitSingleTaskGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
