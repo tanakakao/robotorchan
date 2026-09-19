@@ -1,4 +1,4 @@
-"""Latent Kronecker GP wrapper with robotorchan model conventions."""
+"""Latent Kronecker GP wrappers with robotorchan model conventions."""
 
 from __future__ import annotations
 
@@ -13,7 +13,12 @@ from gpytorch.means import Mean
 from gpytorch.module import Module
 from torch import Tensor
 
-from robotorchan.models.base import ExactGPModelMixin
+from robotorchan.models.base import (
+    ContinuousKernelFactory,
+    ExactGPModelMixin,
+    make_mixed_covar_module,
+    normalize_feature_dims,
+)
 
 
 class LatentKroneckerGP(ExactGPModelMixin, BoTorchLatentKroneckerGP):
@@ -69,3 +74,50 @@ class LatentKroneckerGP(ExactGPModelMixin, BoTorchLatentKroneckerGP):
         if value is None:  # pragma: no cover - guarded by constructor contract
             raise RuntimeError("raw_train_T was unexpectedly stored as None.")
         return value
+
+
+class MixedLatentKroneckerGP(LatentKroneckerGP):
+    """Latent Kronecker GP with native mixed covariance on the X factor.
+
+    The Kronecker structure separates design covariance ``K_X`` from the
+    task/time covariance ``K_T``. Since BoTorch exposes ``covar_module_X``
+    directly, categorical design dimensions can use robotorchan's native mixed
+    covariance without changing the latent Kronecker or iterative-inference
+    semantics. ``train_T`` remains entirely under the upstream T covariance.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_T: Tensor,
+        train_Y: Tensor,
+        cat_dims: list[int],
+        likelihood: Likelihood | None = None,
+        mean_module_X: Mean | None = None,
+        mean_module_T: Mean | None = None,
+        cont_kernel_factory: ContinuousKernelFactory | None = None,
+        covar_module_T: Module | None = None,
+        input_transform: InputTransform | None = None,
+        outcome_transform: OutcomeTransform | _DefaultType | None = DEFAULT,
+    ) -> None:
+        input_dim = train_X.shape[-1]
+        normalized_cat_dims = normalize_feature_dims(cat_dims, input_dim=input_dim)
+        covar_module_X = make_mixed_covar_module(
+            input_dim=input_dim,
+            cat_dims=normalized_cat_dims,
+            batch_shape=train_X.shape[:-2],
+            cont_kernel_factory=cont_kernel_factory,
+        )
+        super().__init__(
+            train_X=train_X,
+            train_T=train_T,
+            train_Y=train_Y,
+            likelihood=likelihood,
+            mean_module_X=mean_module_X,
+            mean_module_T=mean_module_T,
+            covar_module_X=covar_module_X,
+            covar_module_T=covar_module_T,
+            input_transform=input_transform,
+            outcome_transform=outcome_transform,
+        )
+        self.cat_dims = tuple(normalized_cat_dims)
