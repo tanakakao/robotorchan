@@ -109,7 +109,9 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         self.register_buffer("x_mean", x_mean.detach().clone())
         self.register_buffer("x_scale", x_scale.detach().clone())
         self._store_supervised_training_data(train_X, train_Y)
-        self.set_train_data(inputs=train_X.detach().clone(), targets=self.train_targets, strict=False)
+        self.set_train_data(
+            inputs=train_X.detach().clone(), targets=self.train_targets, strict=False
+        )
 
     def encode(self, X: Tensor) -> Tensor:
         """Encode data columns while preserving task identity."""
@@ -179,7 +181,9 @@ class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         self.register_buffer("x_mean", x_mean.detach().clone())
         self.register_buffer("x_scale", x_scale.detach().clone())
         self._store_supervised_training_data(train_X, train_Y)
-        self.set_train_data(inputs=train_X.detach().clone(), targets=self.train_targets, strict=False)
+        self.set_train_data(
+            inputs=train_X.detach().clone(), targets=self.train_targets, strict=False
+        )
 
     def encode(self, X: Tensor) -> Tensor:
         if X.shape[-1] != self._original_input_dim:
