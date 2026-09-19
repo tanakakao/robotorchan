@@ -48,6 +48,7 @@ PUBLIC_MODEL_NAMES = {
     "MixedJointVAEGP",
     "MixedKroneckerMultiTaskGP",
     "MixedMultiTaskGP",
+    "MixedNonstationarySingleTaskGP",
     "MixedPCAGP",
     "MixedPLSGP",
     "MixedRandomProjectionGP",
