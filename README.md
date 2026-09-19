@@ -6,7 +6,7 @@
 
 ## ドキュメント
 
-最初に見る場所は次の8つです。
+最初に見る場所は次の9つです。
 
 - **理論から理解する:** [`docs/theory/README.md`](docs/theory/README.md)
 - **どのモデルを選ぶか:** [`docs/models.md`](docs/models.md)
@@ -20,7 +20,7 @@
 
 モデルごとの実行可能な Jupyter Notebook は [`examples/notebooks/`](examples/notebooks/) にあります。
 
-ベイズ最適化を初めて学ぶ場合は、[`ベイズ最適化とは`](docs/theory/01_bayesian_optimization.md) → [`Gaussian Process`](docs/theory/02_gaussian_process.md) → [`Kernel`](docs/theory/03_kernel.md) → [`Acquisition Function`](docs/theory/04_acquisition_function.md) → [`Mixed Variables`](docs/theory/05_mixed_variables.md) → [`Multi-Fidelity`](docs/theory/06_multi_fidelity.md) → [`Multi-task / Multi-output`](docs/theory/07_multitask_multioutput.md) → [`High-dimensional GP`](docs/theory/08_high_dimensional_gp.md) → [`Variational GP`](docs/theory/09_variational_gp.md) → [`Preference Learning`](docs/theory/10_preference_learning.md) → [`Structured Output`](docs/theory/11_structured_output.md) → [`Hierarchical / Contextual GP`](docs/theory/12_hierarchical_contextual_gp.md) → [`Model Selection`](docs/theory/13_model_selection.md) の順に読むことを推奨します。
+ベイズ最適化を初めて学ぶ場合は、[`ベイズ最適化とは`](docs/theory/01_bayesian_optimization.md) → [`Gaussian Process`](docs/theory/02_gaussian_process.md) → [`Kernel`](docs/theory/03_kernel.md) → [`Acquisition Function`](docs/theory/04_acquisition_function.md) → [`Mixed Variables`](docs/theory/05_mixed_variables.md) → [`Multi-Fidelity`](docs/theory/06_multi_fidelity.md) → [`Multi-task / Multi-output`](docs/theory/07_multitask_multioutput.md) → [`High-dimensional GP`](docs/theory/08_high_dimensional_gp.md) → [`Variational GP`](docs/theory/09_variational_gp.md) → [`Preference Learning`](docs/theory/10_preference_learning.md) → [`Structured Output`](docs/theory/11_structured_output.md) → [`Hierarchical / Contextual GP`](docs/theory/12_hierarchical_contextual_gp.md) → [`Model Selection`](docs/theory/13_model_selection.md) までを基礎編として読み、その後は課題に応じて [`Robust Gaussian Process`](docs/theory/14_robust_gaussian_process.md) 〜 [`Advanced High-dimensional GP Models`](docs/theory/21_advanced_high_dimensional_models.md) を参照してください。
 
 ## インストール
 
