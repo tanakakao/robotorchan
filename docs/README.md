@@ -32,7 +32,7 @@
 
 ### Robust / Noise / Input uncertainty を扱いたい
 
-入口は [モデル概要・使い所](models.md) の Robust / Noise / Input Uncertainty セクションです。個別モデルの詳細は [models](models/) 以下にあります。
+入口は [モデルファミリー別ガイド](models/README.md) です。Robust / Noise と Input uncertainty を分けて、生成機構ごとの選択基準と個別モデルへの導線を整理しています。
 
 ### 開発・設計情報を確認したい
 
