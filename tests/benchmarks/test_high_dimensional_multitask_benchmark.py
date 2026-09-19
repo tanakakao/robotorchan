@@ -6,7 +6,9 @@ import pytest
 import torch
 
 BENCHMARK_PATH = Path(__file__).parents[2] / "benchmarks" / "high_dimensional_multitask.py"
-SPEC = importlib.util.spec_from_file_location("high_dimensional_multitask_benchmark", BENCHMARK_PATH)
+SPEC = importlib.util.spec_from_file_location(
+    "high_dimensional_multitask_benchmark", BENCHMARK_PATH
+)
 assert SPEC is not None and SPEC.loader is not None
 BENCHMARK = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = BENCHMARK
