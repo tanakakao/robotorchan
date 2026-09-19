@@ -9,7 +9,7 @@ from botorch.posteriors.gpytorch import GPyTorchPosterior
 from torch import Tensor, nn
 
 from robotorchan.models.base import RawDataMixin
-from robotorchan.models.variational import SingleTaskVariationalGP
+from robotorchan.models.variational import MixedSingleTaskVariationalGP, SingleTaskVariationalGP
 
 
 class ContaminatedSingleTaskGP(RawDataMixin, nn.Module):
@@ -145,3 +145,48 @@ class ContaminatedSingleTaskGP(RawDataMixin, nn.Module):
         log_inlier = math.log1p(-self.contamination_probability) + inlier
         log_outlier = math.log(self.contamination_probability) + outlier
         return torch.sigmoid(log_outlier - log_inlier)
+
+
+class MixedContaminatedSingleTaskGP(ContaminatedSingleTaskGP):
+    """Contamination-mixture GP with native mixed continuous/categorical covariance."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        cat_dims: list[int],
+        contamination_probability: float = 0.05,
+        inlier_scale: float = 0.05,
+        outlier_scale: float = 0.5,
+        num_inducing: int = 32,
+        num_likelihood_samples: int = 16,
+        beta: float = 1.0,
+    ) -> None:
+        nn.Module.__init__(self)
+        if train_Y.shape[-1] != 1:
+            raise ValueError("train_Y must have a single output.")
+        if not 0 < contamination_probability < 1:
+            raise ValueError("contamination_probability must be strictly between 0 and 1.")
+        if inlier_scale <= 0 or outlier_scale <= inlier_scale:
+            raise ValueError("Scales must satisfy 0 < inlier_scale < outlier_scale.")
+        if num_inducing < 1 or num_likelihood_samples < 1:
+            raise ValueError("num_inducing and num_likelihood_samples must be positive.")
+        if beta <= 0:
+            raise ValueError("beta must be positive.")
+        self.contamination_probability = float(contamination_probability)
+        self.inlier_scale = float(inlier_scale)
+        self.outlier_scale = float(outlier_scale)
+        self.num_likelihood_samples = int(num_likelihood_samples)
+        self.beta = float(beta)
+        inducing = min(int(num_inducing), train_X.shape[-2])
+        self.response_model = MixedSingleTaskVariationalGP(
+            train_X,
+            train_Y,
+            cat_dims=cat_dims,
+            inducing_points=inducing,
+        )
+        self.cat_dims = self.response_model.cat_dims
+        self._store_raw_tensor("train_X", train_X)
+        self._store_raw_tensor("train_Y", train_Y)
+        self._store_raw_tensor("train_Yvar", None)
