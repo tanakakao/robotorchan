@@ -30,3 +30,11 @@ BAxUS 系には `n_iterations * q` を初期設計後の評価予算として渡
 `aggregate_results()` は `strategy / input_dim / iteration / q` ごとに repeated-seed 結果を集約する。`q` や iteration の異なる結果を同じ平均へ混ぜない。比較指標は batch best、best observed、simple regret、search optimization time とする。
 
 なお BAxUS-TS は posterior Thompson sampling による candidate selection であり、qLogEI を直接最大化する strategy ではない。そのためこの batch benchmark は「同一 surrogate / 同一 objective / 同一観測予算下の BO policy 比較」であり、純粋な acquisition optimizer の性能比較とは区別する。
+
+## 再現性と解釈
+
+batch benchmark では q を含む評価予算を比較条件として固定し、同じ初期データと objective を共有します。stateful strategy は batch 間で同じ instance を保持し、固定 embedding を使う strategy は trajectory 中に embedding を再生成しません。
+
+結果は BO policy 全体の比較です。特に BAxUS-TS を含むため、search time や regret の差を acquisition optimizer 単体の性能差とは解釈しません。
+
+実行コードと CLI の現在仕様は `benchmarks/high_dimensional_batch_bo.py` を正とします。

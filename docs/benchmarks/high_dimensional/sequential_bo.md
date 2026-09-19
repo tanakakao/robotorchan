@@ -13,3 +13,11 @@ TuRBO と BAxUS は strategy instance を iteration 間で保持します。TuRB
 `RandomSearch` だけは各 iteration で異なる deterministic seed を使って候補集合を再生成します。同じ random candidate set を毎回再利用しないためです。
 
 現在のベンチマークは q=1 専用です。q>1 の batch BO を比較する場合は `qLogExpectedImprovement` 等を使う別設定として扱います。
+
+## 再現性と解釈
+
+この benchmark の主目的は、同一 surrogate と同一 objective の下で candidate search strategy の差を比較することです。したがって結果を surrogate model 自体の優劣として解釈しません。
+
+比較時には input dimension、seed、初期設計、評価回数、objective、獲得関数を揃えます。PCA / Random Projection / REMBO の固定写像を trajectory 途中で再学習・再生成すると、search strategy 以外の差が混入するため固定します。
+
+実行コードと CLI の現在仕様はリポジトリの `benchmarks/high_dimensional_sequential_bo.py` を正とします。実装変更時は本書の strategy 一覧、q 契約、stateful strategy の説明も同時に更新してください。
