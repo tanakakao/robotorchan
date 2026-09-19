@@ -58,9 +58,9 @@ class GibbsKernel(Kernel):
         ell1_sq = ell1.square().unsqueeze(-2)
         ell2_sq = ell2.square().unsqueeze(-3)
         denominator = ell1_sq + ell2_sq
-        prefactor = torch.sqrt(
-            2 * ell1.unsqueeze(-2) * ell2.unsqueeze(-3) / denominator
-        ).prod(dim=-1)
+        prefactor = torch.sqrt(2 * ell1.unsqueeze(-2) * ell2.unsqueeze(-3) / denominator).prod(
+            dim=-1
+        )
         delta = x1.unsqueeze(-2) - x2.unsqueeze(-3)
         exponent = -(delta.square() / denominator).sum(dim=-1)
         return prefactor * torch.exp(exponent)
