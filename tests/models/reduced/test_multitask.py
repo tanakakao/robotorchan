@@ -282,7 +282,9 @@ def test_autoencoder_kronecker_supports_q_batch_posterior() -> None:
 
     assert posterior.mean.shape[-2:] == torch.Size([3, 2])
     assert model.input_reducer.encoder is not None
-    assert all(not parameter.requires_grad for parameter in model.input_reducer.encoder.parameters())
+    assert all(
+        not parameter.requires_grad for parameter in model.input_reducer.encoder.parameters()
+    )
 
 
 def test_vae_multitask_uses_deterministic_posterior_mean_latent() -> None:
