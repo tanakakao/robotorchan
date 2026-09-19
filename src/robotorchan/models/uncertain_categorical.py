@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import torch
 from botorch.models.utils.gpytorch_modules import get_covar_module_with_dim_scaled_prior
-from gpytorch.kernels import Kernel, ProductKernel, ScaleKernel
+from gpytorch.kernels import Kernel, ScaleKernel
 from torch import Tensor, nn
 
 from robotorchan.models.single_task import SingleTaskGP
@@ -183,8 +183,12 @@ class UncertainCategoricalSingleTaskGP(SingleTaskGP):
             raise ValueError("Continuous inputs and category probabilities must align.")
         if X_cont.shape[-1] != self._continuous_dim:
             raise ValueError("Continuous inputs have an incompatible feature dimension.")
-        if X_cont.device != category_probabilities.device or X_cont.dtype != category_probabilities.dtype:
-            raise ValueError("Continuous inputs and category probabilities must share dtype and device.")
+        same_device = X_cont.device == category_probabilities.device
+        same_dtype = X_cont.dtype == category_probabilities.dtype
+        if not same_device or not same_dtype:
+            raise ValueError(
+                "Continuous inputs and category probabilities must share dtype and device."
+            )
         _validate_category_probabilities(
             category_probabilities,
             num_categories=self._num_categories,
