@@ -19,7 +19,10 @@ from robotorchan.models.hierarchical import (
     MixedHierarchicalConditionalKernelMultiTaskGP,
 )
 from robotorchan.models.higher_order import HigherOrderGP, MixedHigherOrderGP
-from robotorchan.models.joint_heteroskedastic import JointHeteroskedasticSingleTaskGP
+from robotorchan.models.joint_heteroskedastic import (
+    JointHeteroskedasticSingleTaskGP,
+    MixedJointHeteroskedasticSingleTaskGP,
+)
 from robotorchan.models.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
 from robotorchan.models.map_saas import (
     AdditiveMapSaasSingleTaskGP,
@@ -104,6 +107,7 @@ from robotorchan.models.reduced.vae import (
 from robotorchan.models.replicate_noise import ReplicateNoiseSingleTaskGP
 from robotorchan.models.robust import (
     HeteroskedasticSingleTaskGP,
+    MixedHeteroskedasticSingleTaskGP,
     MixedRobustRelevancePursuitSingleTaskGP,
     RobustRelevancePursuitSingleTaskGP,
 )
@@ -152,11 +156,13 @@ __all__ = [
     "MixedContaminatedSingleTaskGP",
     "MixedEnsembleMapSaasSingleTaskGP",
     "MixedHeterogeneousMTGP",
+    "MixedHeteroskedasticSingleTaskGP",
     "MixedHierarchicalConditionalKernelGP",
     "MixedHierarchicalConditionalKernelMultiTaskGP",
     "MixedHigherOrderGP",
     "MixedHybridAutoEncoderGP",
     "MixedJointEncoderGP",
+    "MixedJointHeteroskedasticSingleTaskGP",
     "MixedJointVAEGP",
     "MixedKroneckerMultiTaskGP",
     "MixedLCEMGP",

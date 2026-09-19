@@ -9,7 +9,7 @@ from botorch.posteriors.gpytorch import GPyTorchPosterior
 from torch import Tensor, nn
 
 from robotorchan.models.base import RawDataMixin
-from robotorchan.models.variational import SingleTaskVariationalGP
+from robotorchan.models.variational import MixedSingleTaskVariationalGP, SingleTaskVariationalGP
 
 
 class JointHeteroskedasticSingleTaskGP(RawDataMixin, nn.Module):
@@ -136,3 +136,52 @@ class JointHeteroskedasticSingleTaskGP(RawDataMixin, nn.Module):
         return (
             -expected_log_likelihood + self.beta_response * response_kl + self.beta_noise * noise_kl
         ) / X.shape[-2]
+
+
+class MixedJointHeteroskedasticSingleTaskGP(JointHeteroskedasticSingleTaskGP):
+    """Joint heteroskedastic GP with native mixed covariance in both latent processes."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        cat_dims: list[int],
+        num_inducing: int = 32,
+        noise_floor: float = 1e-6,
+        num_mc_samples: int = 16,
+        beta_response: float = 1.0,
+        beta_noise: float = 1.0,
+    ) -> None:
+        nn.Module.__init__(self)
+        if train_Y.shape[-1] != 1:
+            raise ValueError("train_Y must have a single output.")
+        if noise_floor <= 0:
+            raise ValueError("noise_floor must be positive.")
+        if num_inducing < 1 or num_mc_samples < 1:
+            raise ValueError("num_inducing and num_mc_samples must be positive.")
+        if beta_response <= 0 or beta_noise <= 0:
+            raise ValueError("beta_response and beta_noise must be positive.")
+
+        self.noise_floor = float(noise_floor)
+        self.num_mc_samples = int(num_mc_samples)
+        self.beta_response = float(beta_response)
+        self.beta_noise = float(beta_noise)
+        inducing = min(int(num_inducing), train_X.shape[-2])
+        self.response_model = MixedSingleTaskVariationalGP(
+            train_X,
+            train_Y,
+            cat_dims=cat_dims,
+            inducing_points=inducing,
+        )
+        initial_log_noise = torch.full_like(train_Y, math.log(self.noise_floor))
+        self.noise_model = MixedSingleTaskVariationalGP(
+            train_X,
+            initial_log_noise,
+            cat_dims=cat_dims,
+            inducing_points=inducing,
+        )
+        self.cat_dims = self.response_model.cat_dims
+        self._store_raw_tensor("train_X", train_X)
+        self._store_raw_tensor("train_Y", train_Y)
+        self._store_raw_tensor("train_Yvar", None)
