@@ -1,5 +1,8 @@
 # Robust × Mixed coverage closeout
 
+> **文書種別: audit / closeout record.** 現在の利用者向け選択ガイドは [robust-model-support.md](robust-model-support.md) を参照してください。
+
+
 ## Purpose
 
 This document closes the Robust × Mixed implementation sequence started by the

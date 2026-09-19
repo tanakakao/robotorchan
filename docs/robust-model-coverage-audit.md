@@ -1,5 +1,8 @@
 # Phase 9: robust surrogate coverage audit
 
+> **文書種別: audit / closeout record.** 現在の利用者向け選択ガイドは [robust-model-support.md](robust-model-support.md) を参照してください。
+
+
 ## Purpose
 
 Phases 1-8 established the main robustness semantics and the surrogate families
