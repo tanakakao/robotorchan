@@ -49,8 +49,8 @@ Multi-task は関連タスク間で統計的に情報共有するモデル化で
 判断します。SAAS や Reduced GP は surrogate 側、REMBO / HeSBO / ALEBO / TuRBO /
 BAxUS は主に探索側の選択肢です。
 
-詳細は [高次元モデル選択](../high_dimensional_model_selection.md) と
-[高次元探索戦略](../high_dimensional_search_strategies.md) を参照してください。
+詳細は [高次元モデル選択](../models/high_dimensional_model_selection.md) と
+[高次元探索戦略](../optimization/high_dimensional_search.md) を参照してください。
 
 ## Robust / Noise / Uncertainty は原因から選ぶ
 
