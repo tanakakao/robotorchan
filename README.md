@@ -58,13 +58,13 @@ print(posterior.mean)
 
 - **理論から理解する:** [`docs/theory/README.md`](docs/theory/README.md)
 - **どのモデルを選ぶか:** [`docs/models.md`](docs/models.md)
-- **高次元モデルを選ぶ:** [`docs/models/models/high_dimensional_model_selection.md`](docs/models/models/high_dimensional_model_selection.md)
-- **Robust / Noise / Uncertaintyを選ぶ:** [`docs/robust-model-support.md`](docs/robust-model-support.md)
-- **高次元出力モデルを選ぶ:** [`docs/models/models/high_dimensional_outputs.md`](docs/models/models/high_dimensional_outputs.md)
+- **高次元モデルを選ぶ:** [`docs/models/high_dimensional_model_selection.md`](docs/models/high_dimensional_model_selection.md)
+- **Robust / Noise / Uncertaintyを選ぶ:** [`docs/models/robust_noise.md`](docs/models/robust_noise.md)
+- **高次元出力モデルを選ぶ:** [`docs/models/high_dimensional_outputs.md`](docs/models/high_dimensional_outputs.md)
 - **実際にどう使うか:** [`examples/README.md`](examples/README.md)
 - **高次元の探索戦略:** [`docs/optimization/high_dimensional_search.md`](docs/optimization/high_dimensional_search.md)
-- **設計方針・内部構造:** [`docs/development/development/architecture.md`](docs/development/development/architecture.md)
-- **リリース手順:** [`docs/development/development/releasing.md`](docs/development/development/releasing.md)
+- **設計方針・内部構造:** [`docs/development/architecture.md`](docs/development/architecture.md)
+- **リリース手順:** [`docs/development/releasing.md`](docs/development/releasing.md)
 
 モデルごとの実行可能な Jupyter Notebook は [`examples/notebooks/`](examples/notebooks/) にあります。
 
@@ -152,7 +152,7 @@ model.make_mll()
 - `MixedSupervisedAutoEncoderGP`, `MixedSupervisedVAEGP`
 - `MixedJointEncoderGP`, `MixedHybridAutoEncoderGP`, `MixedJointVAEGP`
 
-`ReducedGP` は input reducer / output reducer を組み合わせる共通実装です。named wrapper は代表的な reducer 構成を簡潔に使うための薄いラッパーです。高次元出力の構造化モデルとの使い分けは [`docs/models/models/high_dimensional_outputs.md`](docs/models/models/high_dimensional_outputs.md) を参照してください。
+`ReducedGP` は input reducer / output reducer を組み合わせる共通実装です。named wrapper は代表的な reducer 構成を簡潔に使うための薄いラッパーです。高次元出力の構造化モデルとの使い分けは [`docs/models/high_dimensional_outputs.md`](docs/models/high_dimensional_outputs.md) を参照してください。
 
 ### Robust / Noise / Input uncertainty
 
@@ -166,7 +166,7 @@ model.make_mll()
 - `MixedReplicateNoiseSingleTaskGP`, `MixedNonstationarySingleTaskGP`
 - `MixedUncertainInputSingleTaskGP`
 
-外れ値、heavy-tailed noise、入力依存ノイズ、反復測定、入力不確かさ、非定常性は異なる問題設定です。使い分けは [`docs/models.md`](docs/models.md) と [robust model support](docs/robust-model-support.md) を参照してください。
+外れ値、heavy-tailed noise、入力依存ノイズ、反復測定、入力不確かさ、非定常性は異なる問題設定です。使い分けは [`docs/models.md`](docs/models.md) と [robust model support](docs/models/robust_noise.md) を参照してください。
 
 ### 大規模・高次元
 
