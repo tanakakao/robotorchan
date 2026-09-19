@@ -282,3 +282,28 @@ conditioning APIs continue to accept original mixed-space inputs.
 
 This phase intentionally does not change AE/VAE/supervised neural or joint /
 hybrid representations; those are handled by Phases 7 and 8.
+
+
+## Phase 7 frozen neural reduced GP status
+
+Frozen AutoEncoder, VAE, supervised AutoEncoder, and supervised VAE Mixed
+wrappers are colocated with their corresponding standard neural model families.
+The shared `MixedReducedGP` infrastructure remains in `reduced/mixed.py`.
+
+These models use the same categorical architecture as the classical reduced
+family: categorical integer codes are never treated as continuous neural
+features. The encoder/reducer is fitted only on continuous raw columns;
+categorical columns bypass the frozen representation unchanged and enter the
+downstream native Mixed GP categorical covariance. Supervised reducers receive
+the outcome target during reducer fitting but still receive only continuous
+input columns.
+
+Negative `cat_dims`, raw training-data retention, raw-space posterior calls,
+and the frozen reducer lifecycle are preserved. This phase does not introduce
+categorical embeddings inside the neural encoder because that would define a
+different representation model and would mix categorical semantics into the
+continuous latent block.
+
+JointEncoderGP, HybridAutoEncoderGP, and JointVAEGP are intentionally excluded:
+their representation parameters participate in GP MLL optimization and require
+the dedicated gradient-preserving Mixed design in Phase 8.
