@@ -34,6 +34,12 @@ Use `ReplicateNoiseSingleTaskGP` when repeated measurements are available at
 identical design conditions. It estimates empirical within-group variance and
 uses variance of the group mean as fixed likelihood noise.
 
+### Explicit observation contamination
+
+Use `ContaminatedSingleTaskGP` when observations are assumed to arise from a
+mixture of nominal and broader gross-error Gaussian components. This is distinct
+from global heavy tails and sparse relevance-pursuit corrections.
+
 ### Globally heavy-tailed observation residuals
 
 Use `StudentTSingleTaskGP`.
@@ -88,12 +94,10 @@ composed externally.
 The next additions should be selected by a concrete statistical gap rather than
 by model-count growth. Candidates are:
 
-1. explicit contamination/mixture likelihoods if Student-t and relevance
-   pursuit do not cover the required outlier mechanism;
+1. nonstationary process models when local smoothness changes across the design
+   space;
 2. uncertain categorical training inputs, only if a defensible probability
-   model and kernel expectation are defined;
-3. nonstationary observation/process models only when a use case requires
-   local behavior that current kernels cannot represent.
+   model and kernel expectation are defined.
 
 ## Exit criteria
 
