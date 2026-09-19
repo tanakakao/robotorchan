@@ -4,6 +4,8 @@
 
 中心となるサンプルは `examples/notebooks/` 以下の Jupyter Notebook です。モデルの選び方は [`docs/models.md`](../docs/models.md)、具体的な使い方は本ディレクトリ、実装の正しさは `tests/` を参照してください。
 
+ドキュメント全体では、[プロジェクトREADME](../README.md) → [モデル選択](../docs/models.md) → [理論確認](../docs/theory/README.md) → **実行例（現在地）**、という導線を想定しています。モデルの背景を確認したい場合は対応する理論章へ戻り、実装詳細が必要な場合は [architecture](../docs/architecture.md) を参照してください。
+
 ## インストール
 
 Notebook 用依存関係を含めてインストールします。
