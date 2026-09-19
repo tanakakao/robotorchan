@@ -31,13 +31,13 @@
 | 高次元・MAP-SAAS | `AdditiveMapSaasSingleTaskGP` / `EnsembleMapSaasSingleTaskGP` | [09](../examples/notebooks/09_map_saas_and_additive_gp.ipynb) |
 | 加法構造を仮定 | `OrthogonalAdditiveGP` | [09](../examples/notebooks/09_map_saas_and_additive_gp.ipynb) |
 | 外れ値の影響を抑えたい | `RobustRelevancePursuitSingleTaskGP` | [10](../examples/notebooks/10_robust_gp.ipynb) |
-| 裾の重い観測ノイズを扱いたい | `StudentTSingleTaskGP` | 個別ドキュメント参照 |
-| 一部の観測が汚染分布に由来する | `ContaminatedSingleTaskGP` | 個別ドキュメント参照 |
-| 入力位置で観測ノイズが変わる | `HeteroskedasticSingleTaskGP` / `JointHeteroskedasticSingleTaskGP` | 個別ドキュメント参照 |
-| 同一条件の反復測定からノイズを推定 | `ReplicateNoiseSingleTaskGP` | 個別ドキュメント参照 |
-| 入力空間で滑らかさが変化する | `NonstationarySingleTaskGP` | 個別ドキュメント参照 |
-| 連続入力自体に測定不確かさがある | `UncertainInputSingleTaskGP` | 個別ドキュメント参照 |
-| カテゴリ入力に確率的不確かさがある | `UncertainCategoricalSingleTaskGP` | 個別ドキュメント参照 |
+| 裾の重い観測ノイズを扱いたい | `StudentTSingleTaskGP` | [15](../examples/notebooks/15_robust_observation_models.ipynb) |
+| 一部の観測が汚染分布に由来する | `ContaminatedSingleTaskGP` | [15](../examples/notebooks/15_robust_observation_models.ipynb) |
+| 入力位置で観測ノイズが変わる | `HeteroskedasticSingleTaskGP` / `JointHeteroskedasticSingleTaskGP` | [16](../examples/notebooks/16_noise_models.ipynb) |
+| 同一条件の反復測定からノイズを推定 | `ReplicateNoiseSingleTaskGP` | [16](../examples/notebooks/16_noise_models.ipynb) |
+| 入力空間で滑らかさが変化する | `NonstationarySingleTaskGP` | [18](../examples/notebooks/18_nonstationary_gp.ipynb) |
+| 連続入力自体に測定不確かさがある | `UncertainInputSingleTaskGP` | [17](../examples/notebooks/17_uncertain_input_gp.ipynb) |
+| カテゴリ入力に確率的不確かさがある | `UncertainCategoricalSingleTaskGP` | [17](../examples/notebooks/17_uncertain_input_gp.ipynb) |
 | テンソル出力 | `HigherOrderGP` | [11](../examples/notebooks/11_structured_output_gp.ipynb) |
 | 時間・波長・位置など明示的な出力軸 | `LatentKroneckerGP` | [11](../examples/notebooks/11_structured_output_gp.ipynb) |
 | 条件によって有効変数が変わる | `HierarchicalConditionalKernelGP` | [12](../examples/notebooks/12_hierarchical_gp.ipynb) |
@@ -353,3 +353,12 @@ context / task を multi-output として扱い、context 特徴量や embedding
 12. [Hierarchical GP](../examples/notebooks/12_hierarchical_gp.ipynb)
 13. [HeterogeneousMTGP](../examples/notebooks/13_heterogeneous_multitask_gp.ipynb)
 14. [Contextual GP](../examples/notebooks/14_contextual_gp.ipynb)
+15. [Student-t / Contaminated observation models](../examples/notebooks/15_robust_observation_models.ipynb)
+16. [Heteroskedastic / Replicate Noise](../examples/notebooks/16_noise_models.ipynb)
+17. [Uncertain Input / Uncertain Categorical](../examples/notebooks/17_uncertain_input_gp.ipynb)
+18. [Nonstationary GP](../examples/notebooks/18_nonstationary_gp.ipynb)
+19. [PCA / PLS / Random Projection](../examples/notebooks/19_reduced_gp.ipynb)
+20. [Neural Reduction GP](../examples/notebooks/20_neural_reduction_gp.ipynb)
+21. [Reduced MultiTask GP](../examples/notebooks/21_reduced_multitask_gp.ipynb)
+22. [Mixed Reduced GP](../examples/notebooks/22_mixed_reduced_gp.ipynb)
+23. [High-dimensional BO benchmark](../examples/notebooks/23_high_dimensional_bo_benchmark.ipynb)
