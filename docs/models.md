@@ -18,6 +18,13 @@
 - 正しさの検証: `tests/`
 - Public model のドキュメント対応表: [`docs/model_coverage.json`](model_coverage.json)
 
+## モデルファミリー別ガイド
+
+このページは全体の索引として維持します。モデルファミリーごとの詳細は
+[Model guides](models/README.md) に分離しています。Standard / Multi-task /
+High-dimensional / Reduced / Robust / Input uncertainty / Structured output /
+Hierarchical / Preference の各ガイドから、個別モデル、Theory、Notebookへ辿れます。
+
 ## 2. モデル選択早見表
 
 | 状況 | 第一候補 | 実行例 |
