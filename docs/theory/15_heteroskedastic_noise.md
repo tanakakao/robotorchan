@@ -55,5 +55,5 @@ smoothness が場所で変わる問題は [Nonstationary GP](17_nonstationary_gp
 高ノイズ領域では epistemic uncertainty と observation noise を混同しないことが重要です。
 replicate を追加するか、新しい design point を探索するかという実験設計にも影響します。
 
-対応モデルの仕様は [robust model guide](../robust-model-support.md) と
+対応モデルの仕様は [Robust / Noise model guide](../models/robust_noise.md) と
 [Joint heteroskedastic GP](../models/joint_heteroskedastic_gp.md) を参照してください。

@@ -61,4 +61,4 @@ base で構成する場合があります。
 - GP predictive objective まで含めたい: Joint/Hybrid
 - representation uncertainty も必要: Joint VAE の uncertainty-aware posterior
 
-詳細は [high-dimensional inputs](../high_dimensional_inputs.md) を参照してください。
+詳細は [high-dimensional inputs](../models/high_dimensional_inputs.md) を参照してください。

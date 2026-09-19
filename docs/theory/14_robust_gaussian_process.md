@@ -70,4 +70,4 @@ observation robustness ではなく decision objective 側の risk aggregation �
 - 少数点へ sparse correction を置きたい: Relevance Pursuit
 - noise variance 自体が入力で変わる: [Heteroskedastic noise](15_heteroskedastic_noise.md)
 
-実装ガイドは [Robust / Noise / Uncertainty model guide](../robust-model-support.md) を参照してください。
+実装ガイドは [Robust / Noise model guide](../models/robust_noise.md) を参照してください。

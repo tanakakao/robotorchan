@@ -38,10 +38,18 @@ f(x) = f_1(x_S1) + ... + f_K(x_SK)
 として低次元 component の和で高次元関数を表します。`OrthogonalAdditiveGP` はこの系統です。
 active dimension sparsity と additive decomposition は異なる仮定です。
 
+## Relevance pursuit
+
+Relevance pursuit は sparse な relevance / correction 構造を選択し、高次元または外れ値を含む問題で不要な自由度を抑える考え方です。robotorchan の `RobustRelevancePursuitSingleTaskGP` は observation robustness の文脈で利用するため、SAAS の「入力次元 sparsity」と同一視しません。前者は観測側の sparse correction、後者は入力 lengthscale prior による active dimension sparsity です。
+
 ## ALEBOGP
 
 `ALEBOGP` は ALEBO search embedding 上で projection に整合する Mahalanobis geometry を
 学習する専用 surrogate です。一般的な data-driven dimensionality reducer ではありません。
+
+## ALEBO の geometry
+
+ALEBO は ambient space から低次元線形 subspace へ探索を制約します。surrogate の Mahalanobis geometry と candidate reconstruction が同じ embedding を共有することが重要です。単に GP の入力へ任意の projection を入れる Reduced GP とは目的が異なります。
 
 ## どの仮定を置くか
 

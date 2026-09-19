@@ -78,3 +78,11 @@
 - [実装設計](../development/architecture.md)
 - [Notebook 一覧](../../examples/README.md)
 - [実行例](../../examples/notebooks/)
+
+## Model guide との責務分離
+
+`docs/models/` は「どのモデルを、どの条件で使うか」を扱い、public class、入力形式、学習契約、制約、Mixed / MultiTask 対応、Notebook への導線を記載します。
+
+`docs/theory/` は「なぜそのモデルが成立するか」を扱い、確率モデル、kernel / likelihood、構造仮定、推論、獲得関数との関係を説明します。class ごとの API 一覧や同じ使用手順を theory 側へ重複させません。
+
+新しいモデルが既存の統計的仮定を共有する場合は既存 theory chapter へ接続し、新しい class が増えたという理由だけで theory chapter を複製しません。一方、新しい likelihood、kernel、inference、search geometry など独立した理論仮定を導入する場合は、既存章への追記または新章を追加します。
