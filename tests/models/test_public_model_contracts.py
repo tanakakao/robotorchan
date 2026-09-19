@@ -62,6 +62,7 @@ PUBLIC_MODEL_NAMES = {
     "MixedVAEGP",
     "ModelListGP",
     "MultiTaskGP",
+    "NonstationarySingleTaskGP",
     "OrthogonalAdditiveGP",
     "OutputPCAGP",
     "OutputPLSGP",
