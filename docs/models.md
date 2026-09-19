@@ -12,6 +12,7 @@
 - Notebook 一覧: [`examples/README.md`](../examples/README.md)
 - 実装設計: [`docs/architecture.md`](architecture.md)
 - 正しさの検証: `tests/`
+- Public model のドキュメント対応表: [`docs/model_coverage.json`](model_coverage.json)
 
 ## 2. モデル選択早見表
 
