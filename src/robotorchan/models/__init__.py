@@ -61,6 +61,8 @@ from robotorchan.models.reduced.mixed import MixedReducedGP
 from robotorchan.models.reduced.multitask import (
     PCAKroneckerMultiTaskGP,
     PCAMultiTaskGP,
+    PLSKroneckerMultiTaskGP,
+    PLSMultiTaskGP,
     RandomProjectionKroneckerMultiTaskGP,
     RandomProjectionMultiTaskGP,
     ReducedKroneckerMultiTaskGP,
@@ -141,6 +143,8 @@ __all__ = [
     "OutputPLSGP",
     "PCAKroneckerMultiTaskGP",
     "PCAMultiTaskGP",
+    "PLSKroneckerMultiTaskGP",
+    "PLSMultiTaskGP",
     "PairwiseGP",
     "RandomProjectionGP",
     "RandomProjectionKroneckerMultiTaskGP",
