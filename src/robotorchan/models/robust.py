@@ -175,7 +175,7 @@ class HeteroskedasticSingleTaskGP(ExactGPModelMixin, BoTorchRobustRelevancePursu
         return self.noise_posterior(X).mean.exp().clamp_min(self.noise_floor)
 
 
-class MixedHeteroskedasticSingleTaskGP(HeteroskedasticSingleTaskGP):
+class MixedHeteroskedasticSingleTaskGP(RobustRelevancePursuitSingleTaskGP):
     """Iterative heteroskedastic GP with native mixed categorical covariance."""
 
     def __init__(
