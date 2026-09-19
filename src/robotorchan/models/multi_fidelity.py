@@ -100,15 +100,11 @@ class MixedSingleTaskMultiFidelityGP(SingleTaskMultiFidelityGP):
         fidelity_dims: list[int] = []
         if iteration_fidelity is not None:
             fidelity_dims.extend(
-                normalize_feature_dims(
-                    [iteration_fidelity], input_dim, name="iteration_fidelity"
-                )
+                normalize_feature_dims([iteration_fidelity], input_dim, name="iteration_fidelity")
             )
         if data_fidelities is not None:
             fidelity_dims.extend(
-                normalize_feature_dims(
-                    data_fidelities, input_dim, name="data_fidelities"
-                )
+                normalize_feature_dims(data_fidelities, input_dim, name="data_fidelities")
             )
         if len(set(fidelity_dims)) != len(fidelity_dims):
             raise ValueError("Fidelity dimensions must not contain duplicates.")
