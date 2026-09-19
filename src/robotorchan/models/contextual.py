@@ -17,7 +17,6 @@ from robotorchan.models.base import (
     ExactGPModelMixin,
     make_mixed_covar_module,
     normalize_feature_dims,
-    normalize_feature_dims,
 )
 
 
