@@ -25,7 +25,7 @@ from gpytorch.priors import Prior
 from torch import Tensor
 from torch.nn import ModuleList
 
-from robotorchan.models.base import ExactGPModelMixin, normalize_feature_dims, normalize_feature_dims
+from robotorchan.models.base import ExactGPModelMixin, normalize_feature_dims
 
 
 class _MixedHierarchicalConditionalKernel(HierarchicalConditionalKernel):
