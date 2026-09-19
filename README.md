@@ -1,5 +1,9 @@
 # robotorchan
 
+[![CI](https://github.com/tanakakao/robotorchan/actions/workflows/ci.yml/badge.svg)](https://github.com/tanakakao/robotorchan/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/pypi/pyversions/robotorchan.svg)](https://pypi.org/project/robotorchan/)
+[![License](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
+
 `robotorchan` は [BoTorch](https://botorch.org/) をベースにした、ベイズ最適化・Active Learning 向けの研究開発用 Python ライブラリです。
 
 BoTorch-native なモデル構成を維持しながら、raw training data の保持、`make_mll()` などの共通インターフェースと、高次元・Mixed・Robust・Multi-task / Multi-output 問題向けのモデルや探索戦略を提供します。
