@@ -79,13 +79,13 @@ from robotorchan.models.variational import (
 )
 
 __all__ = [
+    "ALEBOGP",
     "LCEAGP",
     "LCEMGP",
     "PCAGP",
     "PLSGP",
     "SACGP",
     "VAEGP",
-    "ALEBOGP",
     "AdditiveMapSaasSingleTaskGP",
     "AutoEncoderGP",
     "EnsembleMapSaasSingleTaskGP",
