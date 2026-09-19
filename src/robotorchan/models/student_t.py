@@ -97,7 +97,6 @@ class StudentTSingleTaskGP(_StudentTGPBase):
         self._store_raw_tensor("train_Yvar", None)
 
 
-
 class MixedStudentTSingleTaskGP(_StudentTGPBase):
     """Student-t variational GP with native mixed continuous/categorical covariance."""
 
