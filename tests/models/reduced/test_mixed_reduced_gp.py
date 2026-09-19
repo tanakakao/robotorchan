@@ -185,3 +185,22 @@ def test_mixed_reduced_gp_normalizes_negative_cat_dims_in_raw_space() -> None:
     assert model.original_cat_dims == [2, 6]
     assert model.reduced_cat_dims == [2, 3]
     torch.testing.assert_close(model.raw_train_X, train_X)
+
+
+def test_classical_mixed_wrappers_are_colocated_with_standard_families() -> None:
+    from robotorchan.models.reduced import base as reduced_base
+
+    assert MixedPCAGP.__module__ == reduced_base.__name__
+    assert MixedPLSGP.__module__ == reduced_base.__name__
+    assert MixedRandomProjectionGP.__module__ == reduced_base.__name__
+
+
+def test_classical_mixed_reducer_never_sees_category_codes() -> None:
+    train_X, train_Y = _training_data()
+    model = MixedPCAGP(train_X, train_Y, 2, [2, -1])
+
+    assert model.input_reducer.input_dim == 5
+    assert model.original_cat_dims == [2, 6]
+    assert model.reduced_cat_dims == [2, 3]
+    torch.testing.assert_close(model.train_inputs[0][..., 2], train_X[..., 2])
+    torch.testing.assert_close(model.train_inputs[0][..., 3], train_X[..., 6])
