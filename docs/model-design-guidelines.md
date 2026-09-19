@@ -47,6 +47,16 @@ This stale-contract sweep is mandatory because robotorchan develops in phases:
 an earlier phase may intentionally add a negative contract test that a later
 phase is expected to invalidate.
 
+## Python 3.11 preflight
+
+Python 3.11 is the repository's lint/format gate, not merely another test
+version. Any phase that changes Python files must treat the 3.11 preflight as a
+separate mandatory check before PR creation or update: inspect the final branch
+state after all edits, then run the equivalent of `ruff check .` followed by
+`ruff format --check .`. Export changes additionally require isort-style
+`__all__` ordering. A green 3.12/3.13 test result does not imply that the 3.11
+job will pass, because those jobs do not execute these lint/format steps.
+
 ## CI interpretation
 
 Do not report a phase as successful while required jobs are queued or running.
