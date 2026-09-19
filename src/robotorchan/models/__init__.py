@@ -56,10 +56,10 @@ from robotorchan.models.reduced.supervised_neural import (
     SupervisedAutoEncoderGP,
 )
 from robotorchan.models.reduced.vae import (
+    VAEGP,
     MixedSupervisedVAEGP,
     MixedVAEGP,
     SupervisedVAEGP,
-    VAEGP,
 )
 from robotorchan.models.robust import (
     MixedRobustRelevancePursuitSingleTaskGP,
