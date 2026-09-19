@@ -1,5 +1,8 @@
 # Robust composition integration audit
 
+> **文書種別: integration audit.** 現在の利用者向け選択ガイドは [robust-model-support.md](robust-model-support.md) を参照してください。
+
+
 ## Scope
 
 This phase checks whether the uncertainty scenarios from Phase 3 and the risk
