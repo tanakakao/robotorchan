@@ -15,10 +15,10 @@ from botorch.fit import fit_gpytorch_mll
 from torch import Tensor
 
 from robotorchan.models import (
+    MultiTaskGP,
     PCAMultiTaskGP,
     PLSMultiTaskGP,
     RandomProjectionMultiTaskGP,
-    MultiTaskGP,
 )
 
 
