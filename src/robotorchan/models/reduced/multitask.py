@@ -103,9 +103,7 @@ class ReducedMultiTaskGP(MultiTaskGP):
         return super().posterior(self._prepare_inputs(X), *args, **kwargs)
 
     def condition_on_observations(self, X: Tensor, Y: Tensor, **kwargs: Any):
-        return super().condition_on_observations(
-            X=self._prepare_inputs(X), Y=Y, **kwargs
-        )
+        return super().condition_on_observations(X=self._prepare_inputs(X), Y=Y, **kwargs)
 
 
 class ReducedKroneckerMultiTaskGP(KroneckerMultiTaskGP):
