@@ -2,11 +2,9 @@
 
 ## Purpose
 
-This phase defines the probability model for combining Gaussian uncertainty in
+This document defines the probability model for combining Gaussian uncertainty in
 continuous observed training inputs with deterministic categorical design
-variables. It is intentionally a design gate before implementation.
-
-The model addresses uncertainty in the recorded continuous location of a
+variables. The model addresses uncertainty in the recorded continuous location of a
 training observation. It does not model uncertain category membership.
 
 ## Probability model
@@ -97,7 +95,7 @@ external augmentation transform.
 Candidate-side perturbation robustness remains a separate uncertainty/scenario
 layer and must not be folded into this training-input model.
 
-## Proposed API
+## API
 
 ```python
 MixedUncertainInputSingleTaskGP(
