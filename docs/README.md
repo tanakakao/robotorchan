@@ -23,12 +23,12 @@
 
 ### 高次元問題を扱いたい
 
-- [高次元入力](high_dimensional_inputs.md)
-- [高次元出力](high_dimensional_outputs.md)
-- [高次元 Multi-task](high_dimensional_multitask.md)
-- [モデル選択](high_dimensional_model_selection.md)
-- [探索戦略](high_dimensional_search_strategies.md)
-- [TuRBO](turbo_strategy.md)
+- [高次元入力](models/high_dimensional_inputs.md)
+- [高次元出力](models/high_dimensional_outputs.md)
+- [高次元 Multi-task](models/high_dimensional_multitask.md)
+- [モデル選択](models/high_dimensional_model_selection.md)
+- [探索戦略](optimization/high_dimensional_search.md)
+- [TuRBO](optimization/turbo.md)
 
 ### Robust / Noise / Input uncertainty を扱いたい
 
