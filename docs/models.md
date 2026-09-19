@@ -14,7 +14,7 @@
 - 理論・数式: [`docs/theory/README.md`](theory/README.md)
 - 実行例: [`examples/notebooks/`](../examples/notebooks/)
 - Notebook 一覧: [`examples/README.md`](../examples/README.md)
-- 実装設計: [`docs/development/development/architecture.md`](development/architecture.md)
+- 実装設計: [`docs/development/architecture.md`](development/architecture.md)
 - 正しさの検証: `tests/`
 - Public model のドキュメント対応表: [`docs/model_coverage.json`](model_coverage.json)
 
@@ -257,7 +257,7 @@ robotorchan には continuous 版の単純な alias ではなく、native catego
 - `MixedUncertainInputSingleTaskGP`
 - `MixedRobustRelevancePursuitSingleTaskGP`
 
-設計上の対応範囲は [Robust × Mixed coverage](robust-mixed-coverage-audit.md) を参照してください。
+設計上の対応範囲は [Robust / Mixed guide](models/robust_noise.md) を参照してください。
 
 ## 11. 構造化出力
 

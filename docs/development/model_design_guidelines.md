@@ -84,6 +84,17 @@ This stale-contract sweep is mandatory because robotorchan develops in phases:
 an earlier phase may intentionally add a negative contract test that a later
 phase is expected to invalidate.
 
+## Documentation path migration preflight
+
+When documentation is moved or renamed, treat the path change as a repository-wide contract change. Before the final commit:
+
+1. Search README files, Markdown, tests, scripts, JSON manifests, workflows, and examples for the old path and filename.
+2. Update path-based tests and machine-readable manifests in the same change.
+3. Check relative links from the source document's new directory; moving a file changes the meaning of relative paths.
+4. Do not add compatibility Markdown files or duplicate legacy pages to keep stale links working.
+5. Re-run the stale-reference search after all edits, because automated string replacement can create duplicated path segments such as `docs/models/models/` or `docs/development/development/`.
+6. If a moved path appears in Python tests, apply the 100-character line-length preflight to the rewritten path expression before CI.
+
 ## Python line-length and formatting discipline
 
 The repository line-length contract is **100 characters maximum** (`E501`).
