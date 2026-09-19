@@ -109,9 +109,6 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         self.register_buffer("x_mean", x_mean.detach().clone())
         self.register_buffer("x_scale", x_scale.detach().clone())
         self._store_supervised_training_data(train_X, train_Y)
-        self.set_train_data(
-            inputs=train_X.detach().clone(), targets=self.train_targets, strict=False
-        )
 
     def encode(self, X: Tensor) -> Tensor:
         """Encode data columns while preserving task identity."""
@@ -125,10 +122,12 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         return torch.cat([latent, task], dim=-1)
 
     def forward(self, X: Tensor) -> MultivariateNormal:
+        if X.shape[-1] == self.latent_dim + 1:
+            return super().forward(X)
         return super().forward(self.encode(X))
 
     def posterior(self, X: Tensor, *args: Any, **kwargs: Any):
-        return MultiTaskGP.posterior(self, self.encode(X), *args, **kwargs)
+        return super().posterior(self.encode(X), *args, **kwargs)
 
     def training_loss(self) -> Tensor:
         self.train()
