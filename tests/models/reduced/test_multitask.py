@@ -189,7 +189,7 @@ def test_pls_multitask_uses_long_format_outcomes_without_task_leakage() -> None:
     data = data.repeat_interleave(2, dim=0)
     task = torch.tensor([0.0, 1.0] * 8, dtype=dtype).unsqueeze(-1)
     train_X = torch.cat([data[:, :2], task, data[:, 2:]], dim=-1)
-    train_Y = (2.0 * data[:, :1] - data[:, 1:2] + 0.5 * task)
+    train_Y = 2.0 * data[:, :1] - data[:, 1:2] + 0.5 * task
 
     model = PLSMultiTaskGP(
         train_X,
