@@ -168,8 +168,6 @@ class UncertainInputSingleTaskGP(SingleTaskGP):
             posterior_transform=posterior_transform,
         )
 
-
-
 class MixedUncertainInputSingleTaskGP(SingleTaskGP):
     """Exact GP with uncertain continuous training inputs and deterministic categories."""
 
@@ -194,9 +192,7 @@ class MixedUncertainInputSingleTaskGP(SingleTaskGP):
             train_X_covar=train_X_covar,
         )
         category_X = train_X[..., list(categorical)]
-        augmented_X = torch.cat(
-            [continuous_X, input_covar.flatten(-2, -1), category_X], dim=-1
-        )
+        augmented_X = torch.cat([continuous_X, input_covar.flatten(-2, -1), category_X], dim=-1)
         kernel = MixedGaussianUncertainInputKernel(len(continuous), len(categorical))
         self._raw_input_dim = input_dim
         self._continuous_dims = continuous
