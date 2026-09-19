@@ -297,5 +297,3 @@ class MixedReducedGP(ExactGPModelMixin, BoTorchMixedSingleTaskGP):
             train_X = self.transform_inputs(train_X)
         self.set_train_data(inputs=train_X, targets=self.train_targets, strict=False)
         return result
-
-
