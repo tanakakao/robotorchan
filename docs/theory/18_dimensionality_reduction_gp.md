@@ -58,5 +58,5 @@ PCA/PLS GP の posterior は original X を受け、内部で reduction しま�
 `optimize_acqf` は依然 D 次元を探索します。REMBO / ALEBO / BAxUS などは
 [High-dimensional search](20_high_dimensional_search.md) の問題です。
 
-実装詳細は [high-dimensional inputs](../high_dimensional_inputs.md) と
-[high-dimensional outputs](../high_dimensional_outputs.md) を参照してください。
+実装詳細は [high-dimensional inputs](../models/high_dimensional_inputs.md) と
+[high-dimensional outputs](../models/high_dimensional_outputs.md) を参照してください。
