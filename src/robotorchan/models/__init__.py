@@ -1,22 +1,24 @@
 """Surrogate-model extensions and BoTorch-compatible wrappers."""
 
-from robotorchan.models.additive import OrthogonalAdditiveGP
+from robotorchan.models.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
 from robotorchan.models.alebo import ALEBOGP
 from robotorchan.models.base import UnsupportedModelOperationError
-from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP
+from robotorchan.models.contextual import LCEAGP, LCEMGP, MixedLCEMGP, SACGP
 from robotorchan.models.fully_bayesian import (
     MixedSaasFullyBayesianMultiTaskGP,
     MixedSaasFullyBayesianSingleTaskGP,
     SaasFullyBayesianMultiTaskGP,
     SaasFullyBayesianSingleTaskGP,
 )
-from robotorchan.models.heterogeneous import HeterogeneousMTGP
+from robotorchan.models.heterogeneous import HeterogeneousMTGP, MixedHeterogeneousMTGP
 from robotorchan.models.hierarchical import (
     HierarchicalConditionalKernelGP,
     HierarchicalConditionalKernelMultiTaskGP,
+    MixedHierarchicalConditionalKernelGP,
+    MixedHierarchicalConditionalKernelMultiTaskGP,
 )
-from robotorchan.models.higher_order import HigherOrderGP
-from robotorchan.models.latent_kronecker import LatentKroneckerGP
+from robotorchan.models.higher_order import HigherOrderGP, MixedHigherOrderGP
+from robotorchan.models.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
 from robotorchan.models.map_saas import (
     AdditiveMapSaasSingleTaskGP,
     EnsembleMapSaasSingleTaskGP,
@@ -100,6 +102,13 @@ __all__ = [
     "MixedAutoEncoderGP",
     "MixedEnsembleMapSaasSingleTaskGP",
     "MixedHybridAutoEncoderGP",
+    "MixedOrthogonalAdditiveGP",
+    "MixedLatentKroneckerGP",
+    "MixedLCEMGP",
+    "MixedHigherOrderGP",
+    "MixedHierarchicalConditionalKernelMultiTaskGP",
+    "MixedHierarchicalConditionalKernelGP",
+    "MixedHeterogeneousMTGP",
     "MixedJointEncoderGP",
     "MixedJointVAEGP",
     "MixedKroneckerMultiTaskGP",
