@@ -107,7 +107,10 @@ from robotorchan.models.reduced.vae import (
     MixedVAEGP,
     SupervisedVAEGP,
 )
-from robotorchan.models.replicate_noise import ReplicateNoiseSingleTaskGP
+from robotorchan.models.replicate_noise import (
+    MixedReplicateNoiseSingleTaskGP,
+    ReplicateNoiseSingleTaskGP,
+)
 from robotorchan.models.robust import (
     HeteroskedasticSingleTaskGP,
     MixedHeteroskedasticSingleTaskGP,
@@ -176,6 +179,7 @@ __all__ = [
     "MixedPCAGP",
     "MixedPLSGP",
     "MixedRandomProjectionGP",
+    "MixedReplicateNoiseSingleTaskGP",
     "MixedReducedGP",
     "MixedReducedKroneckerMultiTaskGP",
     "MixedReducedMultiTaskGP",
