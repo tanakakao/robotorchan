@@ -61,3 +61,66 @@ def test_uncertain_input_validation() -> None:
         pass
     else:
         raise AssertionError("Negative input uncertainty must be rejected.")
+
+
+def test_full_covariance_matches_diagonal_uncertainty() -> None:
+    X = torch.stack(
+        [
+            torch.linspace(0, 1, 10, dtype=torch.double),
+            torch.linspace(1, 0, 10, dtype=torch.double),
+        ],
+        dim=-1,
+    )
+    Y = torch.sin(2 * torch.pi * X[:, :1])
+    std = torch.full_like(X, 0.05)
+    diagonal = UncertainInputSingleTaskGP(X, Y, train_X_std=std)
+    full = UncertainInputSingleTaskGP(X, Y, train_X_covar=torch.diag_embed(std.square()))
+    full.covar_module.load_state_dict(diagonal.covar_module.state_dict())
+    diagonal_cov = diagonal.covar_module(
+        diagonal.train_inputs[0], diagonal.train_inputs[0]
+    ).to_dense()
+    full_cov = full.covar_module(full.train_inputs[0], full.train_inputs[0]).to_dense()
+    assert torch.allclose(diagonal_cov, full_cov)
+
+
+def test_correlated_input_uncertainty_changes_covariance() -> None:
+    X = torch.tensor([[0.0, 0.0], [0.5, 0.3], [1.0, 1.0]], dtype=torch.double)
+    Y = X[:, :1]
+    diagonal_covar = torch.diag_embed(torch.full_like(X, 0.1).square())
+    correlated_covar = diagonal_covar.clone()
+    correlated_covar[..., 0, 1] = 0.005
+    correlated_covar[..., 1, 0] = 0.005
+    diagonal = UncertainInputSingleTaskGP(X, Y, train_X_covar=diagonal_covar)
+    correlated = UncertainInputSingleTaskGP(X, Y, train_X_covar=correlated_covar)
+    correlated.covar_module.load_state_dict(diagonal.covar_module.state_dict())
+    diagonal_kernel = diagonal.covar_module(
+        diagonal.train_inputs[0], diagonal.train_inputs[0]
+    ).to_dense()
+    correlated_kernel = correlated.covar_module(
+        correlated.train_inputs[0], correlated.train_inputs[0]
+    ).to_dense()
+    assert not torch.allclose(diagonal_kernel, correlated_kernel)
+
+
+def test_full_covariance_validation() -> None:
+    X, Y = _data()
+    nonsymmetric = torch.ones(10, 1, 1, dtype=torch.double)
+    nonsymmetric[0, 0, 0] = -1
+    try:
+        UncertainInputSingleTaskGP(X, Y, train_X_covar=nonsymmetric)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Non-PSD covariance must be rejected.")
+
+    try:
+        UncertainInputSingleTaskGP(
+            X,
+            Y,
+            train_X_std=torch.zeros_like(X),
+            train_X_covar=torch.zeros(10, 1, 1, dtype=torch.double),
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Exactly one uncertainty representation is required.")
