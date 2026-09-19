@@ -94,3 +94,4 @@ class MixedSingleTaskGP(ExactGPModelMixin, BoTorchMixedSingleTaskGP):
             train_Y=raw_train_Y,
             train_Yvar=raw_train_Yvar,
         )
+        self.cat_dims = tuple(cat_dims)
