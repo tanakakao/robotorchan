@@ -168,6 +168,7 @@ class UncertainInputSingleTaskGP(SingleTaskGP):
             posterior_transform=posterior_transform,
         )
 
+
 class MixedUncertainInputSingleTaskGP(SingleTaskGP):
     """Exact GP with uncertain continuous training inputs and deterministic categories."""
 
