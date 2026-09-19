@@ -36,16 +36,44 @@ rather than encoding them into every surrogate class.
 
 ## Robustness taxonomy
 
-Future work should keep three concerns separate.
+Future work should keep four concerns separate.
 
 | Concern | Meaning | Current support |
 |---|---|---|
 | Observation robustness | Outliers or non-Gaussian / input-dependent observation noise | Relevance pursuit only |
-| Input robustness | Uncertain realized input, such as `x + delta` | No robotorchan public layer |
-| Decision robustness | Optimize a risk functional over uncertain outcomes | No robotorchan public layer |
+| Input robustness | Uncertain realized control input, such as `x + delta` | No robotorchan public layer |
+| Environmental robustness | Explicit uncontrollable noise factors `w`, such as humidity, lot, or equipment | No robotorchan public layer |
+| Decision robustness | Optimize a risk functional over uncertain outcomes or environments | No robotorchan public layer |
 
 This distinction is architectural. A model name containing `Robust` must not
-be used as a catch-all for all three concerns.
+be used as a catch-all for all four concerns.
+
+## Control factors and environmental noise factors
+
+For manufacturing and materials applications, robust optimization should support
+the quality-engineering distinction between controllable factors `x` and
+uncontrollable or scenario factors `w`:
+
+```text
+y = f(x, w) + observation noise
+```
+
+The optimizer chooses `x`; `w` represents operating environment, raw-material
+lot, equipment, ambient conditions, or other factors whose realized value is
+not the design decision. This differs from perturbing a control setting itself.
+
+Environmental robustness should marginalize or aggregate over `w` using a
+decision-risk measure. Candidate measures include expectation, mean-variance,
+worst case, VaR, CVaR, and quality-engineering signal-to-noise ratios.
+
+SN ratio support should be a risk / aggregation capability, not a dedicated GP
+class. Later design must allow the characteristic type to be explicit, such as
+larger-is-better, smaller-is-better, or nominal-is-best, rather than assuming a
+single SN formula.
+
+Environmental scenarios may be continuous, categorical, empirical, or
+correlated. Categorical noise factors such as material lot or equipment must
+not be represented by accidental continuous jitter.
 
 ## High-dimensional integration audit
 
@@ -108,9 +136,9 @@ Prefer this architecture:
 ```text
 surrogate model
     |
-input uncertainty / perturbation
+input perturbation or environmental scenarios
     |
-risk measure
+risk measure / SN aggregation
     |
 acquisition function and optimizer
 ```
@@ -124,7 +152,9 @@ Consequently:
 - heteroskedastic and heavy-tailed likelihoods are surrogate concerns;
 - uncertain training inputs may require a surrogate-level model;
 - candidate-time perturbation is not a new surrogate model;
-- VaR / CVaR / worst-case aggregation is not a new surrogate model;
+- explicit environmental factors should normally enter the surrogate as `f(x, w)`;
+- environmental marginalization / scenario aggregation is not a new surrogate model;
+- VaR / CVaR / worst-case / SN aggregation is not a new surrogate model;
 - high-dimensional, mixed, multi-task, and robust names must not be multiplied
   unless the mathematics requires a dedicated implementation.
 

@@ -13,6 +13,35 @@ deprecated wrappers, or monkey patches. When a public contract changes, migrate
 the implementation, exports, tests, examples, notebooks, and documentation to
 the new contract in the same phase.
 
+## Robustness semantics
+
+Robust functionality must distinguish four concerns instead of using
+`Robust*` as a generic model prefix:
+
+1. **Observation robustness** handles outliers, heavy-tailed observation noise,
+   or input-dependent observation variance.
+2. **Input robustness** handles uncertainty in a controllable setting itself,
+   such as a realized process setpoint `x + delta`.
+3. **Environmental robustness** models explicit uncontrollable noise factors
+   `w` and a response `f(x, w)`. Examples include ambient conditions,
+   raw-material lot, equipment, and other operating scenarios.
+4. **Decision robustness** aggregates uncertain responses using expectation,
+   mean-variance, worst case, VaR, CVaR, SN ratio, or another explicit risk
+   functional.
+
+Do not create cross-product model names merely because a surrogate is used with
+a perturbation or risk measure. Add a dedicated model only when robustness
+changes the surrogate likelihood, kernel, posterior, or inference procedure.
+
+For environmental robustness, keep control factors and noise factors explicit.
+The optimizer acts on control factors; environmental factors are marginalized or
+aggregated. Continuous jitter must not be used as a substitute for categorical
+noise factors such as material lot or equipment.
+
+Quality-engineering SN ratios belong to the decision aggregation layer rather
+than to a dedicated GP class. Their characteristic type must be explicit
+(larger-is-better, smaller-is-better, or nominal-is-best).
+
 ## Mixed-model semantics
 
 Mixed models accept raw mixed-space inputs and `cat_dims`. Structural columns
