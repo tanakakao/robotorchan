@@ -132,7 +132,9 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
     def training_loss(self) -> Tensor:
         self.train()
         self.likelihood.train()
-        return -self.make_mll()(self(self.raw_train_X), self.train_targets)
+        encoded_X = self.encode(self.raw_train_X)
+        self.set_train_data(inputs=encoded_X, targets=self.train_targets, strict=False)
+        return -self.make_mll()(self(encoded_X), self.train_targets)
 
 
 class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
@@ -269,9 +271,7 @@ class _JointVAEMixin(_HybridMixin):
     logvar_head: nn.Linear
 
     def encode_distribution(self, X: Tensor) -> tuple[Tensor, Tensor]:
-        source = X[..., list(self.data_dims)] if isinstance(
-            self, JointEncoderMultiTaskGP
-        ) else X
+        source = X[..., list(self.data_dims)] if isinstance(self, JointEncoderMultiTaskGP) else X
         standardized = (source - self.x_mean) / self.x_scale
         body = nn.Sequential(*list(self.encoder.children())[:-1])
         hidden = body(standardized)
