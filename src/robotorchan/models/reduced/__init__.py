@@ -21,10 +21,10 @@ from robotorchan.models.reduced.supervised_neural import (
     SupervisedAutoEncoderGP,
 )
 from robotorchan.models.reduced.vae import (
+    VAEGP,
     MixedSupervisedVAEGP,
     MixedVAEGP,
     SupervisedVAEGP,
-    VAEGP,
 )
 
 __all__ = [
