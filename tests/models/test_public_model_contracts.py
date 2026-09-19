@@ -18,6 +18,7 @@ PUBLIC_MODEL_NAMES = {
     "HybridAutoEncoderGP",
     "HybridAutoEncoderKroneckerMultiTaskGP",
     "HybridAutoEncoderMultiTaskGP",
+    "JointHeteroskedasticSingleTaskGP",
     "JointEncoderGP",
     "JointEncoderKroneckerMultiTaskGP",
     "JointEncoderMultiTaskGP",
@@ -95,6 +96,7 @@ PUBLIC_MODEL_NAMES = {
 }
 
 NON_MLL_MODELS = {
+    "JointHeteroskedasticSingleTaskGP",
     "MixedSaasFullyBayesianMultiTaskGP",
     "MixedSaasFullyBayesianSingleTaskGP",
     "SaasFullyBayesianMultiTaskGP",
