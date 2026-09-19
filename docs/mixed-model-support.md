@@ -373,3 +373,49 @@ See `docs/mixed-alebo-design.md` for the required end-to-end design boundary.
 `PairwiseGP` also remains without a generic Mixed wrapper pending a dedicated
 preference-model design that verifies categorical covariance together with
 Laplace inference and datapoint consolidation semantics.
+
+
+## Phase 11 cross-combination audit
+
+Phase 11 audits combinations across the Mixed implementations added in Phases
+2-10. The public contract is compositional rather than a Cartesian product of
+class names: a new `MixedXxxYyyGP` class is added only when the combination
+changes model mathematics or lifecycle.
+
+| Combination | Status | Contract |
+| --- | --- | --- |
+| Mixed + exact single-task | supported | native categorical covariance |
+| Mixed + multitask / Kronecker multitask | supported | task columns remain structural |
+| Mixed + multi-fidelity | supported | fidelity columns remain structural |
+| Mixed + variational | supported | native categorical covariance with variational inference |
+| Mixed + fully Bayesian / MAP-SAAS | supported | model-owned categorical encoding where required by inference |
+| Mixed + robust relevance pursuit | supported | robust likelihood semantics retained |
+| Mixed + classical reduction | supported | reducer sees continuous columns only; categories bypass |
+| Mixed + frozen neural reduction | supported | encoder sees continuous columns only; categories bypass |
+| Mixed + joint / hybrid neural representation | supported | continuous encoder remains trainable through GP MLL; categories bypass |
+| Mixed + latent Kronecker / HOGP | supported | only design-input covariance is Mixed |
+| Mixed + heterogeneous / hierarchical | supported | structural selectors are excluded from ordinary categories |
+| Mixed + OAK | supported | internal one-hot preserves continuous quadrature semantics |
+| Mixed + LCEMGP | supported | task/context structure is distinct from design categories |
+| Mixed + ModelListGP | composition only | container needs no nominal Mixed class |
+| Mixed + ALEBO | intentionally unsupported | requires categorical-aware end-to-end search, not a surrogate-only class |
+| Mixed + PairwiseGP | investigation boundary | preference consolidation/Laplace semantics require dedicated validation |
+| Mixed + SACGP/LCEAGP | intentionally no generic wrapper | contextual categorical semantics are not ordinary design categories |
+
+### Composition rules
+
+1. Structural dimensions always win over generic categorical handling. A task,
+   fidelity, hierarchy selector, or contextual metadata column must never be
+   silently accepted in `cat_dims`.
+2. Reduction and representation learning operate only on continuous design
+   columns unless a model explicitly owns a categorical encoder.
+3. Categories that bypass a reducer/encoder remain raw categorical coordinates
+   for the downstream Mixed covariance; integer category codes are never fed to
+   a continuous reducer merely to obtain API uniformity.
+4. Containers compose already-Mixed component models instead of acquiring a
+   redundant `MixedModelListGP` name.
+5. Specialized search algorithms are Mixed only when candidate generation and
+   reconstruction preserve discrete feasibility. Surrogate support alone is
+   insufficient.
+6. No compatibility aliases or Cartesian-product wrapper classes are created
+   to fill naming gaps.
