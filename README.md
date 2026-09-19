@@ -1,8 +1,46 @@
 # robotorchan
 
-`robotorchan` は [BoTorch](https://botorch.org/) をベースに、ベイズ最適化、Active Learning、実験計画、拡張獲得関数・モデルを扱うためのライブラリです。
+`robotorchan` は [BoTorch](https://botorch.org/) をベースにした、ベイズ最適化・Active Learning 向けの研究開発用 Python ライブラリです。
 
-既存の BoTorch モデルについては必要に応じて薄い wrapper を用意し、raw data の保持や `make_mll()` など、robotorchan 内で一貫したモデル API を提供します。
+BoTorch-native なモデル構成を維持しながら、raw training data の保持、`make_mll()` などの共通インターフェースと、高次元・Mixed・Robust・Multi-task / Multi-output 問題向けのモデルや探索戦略を提供します。
+
+## 主な特徴
+
+- **BoTorch-native**: BoTorch / GPyTorch のモデル・posterior・acquisition function と組み合わせやすい設計
+- **統一モデル API**: raw training data、`supports_mll`、`make_mll()` などを共通化
+- **幅広い surrogate**: 標準 GP、Mixed、Multi-Fidelity、Multi-task / Multi-output、Robust / Noise / Input uncertainty をサポート
+- **高次元対応**: PCA / PLS / Random Projection、AE / VAE 系 reducer、SAAS、ALEBO 系モデルを提供
+- **探索戦略の分離**: REMBO、HeSBO、ALEBO、TuRBO、BAxUS などを `SearchStrategy` として利用可能
+- **実行可能な資料**: モデル選択ガイド、理論ドキュメント、Jupyter Notebook を同じリポジトリで管理
+
+## Quick Start
+
+インストール:
+
+```bash
+pip install robotorchan
+```
+
+最小の GP fitting / posterior prediction:
+
+```python
+import torch
+from botorch.fit import fit_gpytorch_mll
+from robotorchan.models import SingleTaskGP
+
+torch.set_default_dtype(torch.double)
+
+train_X = torch.rand(20, 2)
+train_Y = torch.sin(2 * torch.pi * train_X[:, :1]) + 0.2 * train_X[:, 1:2]
+
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+fit_gpytorch_mll(model.make_mll())
+
+posterior = model.posterior(torch.rand(5, 2))
+print(posterior.mean)
+```
+
+より詳しいモデル選択と実行例は [モデルガイド](docs/models.md) と [examples](examples/README.md) を参照してください。
 
 ## ドキュメント
 
@@ -52,33 +90,6 @@ Fully Bayesian SAAS の例も動かす場合:
 
 ```bash
 pip install -e ".[examples,fully-bayesian]"
-```
-
-## 基本例
-
-```python
-import torch
-from botorch.fit import fit_gpytorch_mll
-from robotorchan.models import SingleTaskGP
-
-torch.set_default_dtype(torch.double)
-
-train_X = torch.rand(20, 2)
-train_Y = torch.sin(2 * torch.pi * train_X[:, :1]) + 0.2 * train_X[:, 1:2]
-
-model = SingleTaskGP(
-    train_X=train_X,
-    train_Y=train_Y,
-)
-
-mll = model.make_mll()
-fit_gpytorch_mll(mll)
-
-test_X = torch.rand(5, 2)
-posterior = model.posterior(test_X)
-
-print(posterior.mean)
-print(posterior.variance)
 ```
 
 ## モデル共通規約
