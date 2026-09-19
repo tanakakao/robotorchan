@@ -307,3 +307,29 @@ continuous latent block.
 JointEncoderGP, HybridAutoEncoderGP, and JointVAEGP are intentionally excluded:
 their representation parameters participate in GP MLL optimization and require
 the dedicated gradient-preserving Mixed design in Phase 8.
+
+
+## Phase 8 joint / hybrid representation GP status
+
+JointEncoderGP, HybridAutoEncoderGP, and JointVAEGP now have explicit Mixed
+counterparts. Their categorical architecture differs deliberately from an
+ordinary neural encoder over the full raw tensor.
+
+Continuous raw columns alone enter the learnable encoder. Raw categorical
+columns bypass the representation network and are appended after the latent
+continuous coordinates. The GP covariance is a native mixed covariance over
+the learned continuous latent block and categorical passthrough block. This
+keeps category codes out of continuous neural geometry while preserving the
+gradient path from exact GP marginal likelihood through the continuous
+encoder.
+
+MixedHybridAutoEncoderGP reconstructs only continuous raw columns; categorical
+codes are not assigned an artificial Euclidean reconstruction loss.
+MixedJointVAEGP likewise defines q(z|X) and reconstruction/KL losses only for
+continuous inputs while the native categorical GP component handles category
+identity.
+
+All public prediction and training interfaces remain in original raw mixed
+space, negative cat_dims are normalized there, and raw training data are
+retained. These classes are intentionally distinct from the frozen neural
+Mixed models in Phase 7.
