@@ -12,8 +12,8 @@ from gpytorch.means import Mean
 from torch import Tensor
 
 from robotorchan.models.base import (
-    ExactGPModelMixin,
     CategoricalOneHotInputTransform,
+    ExactGPModelMixin,
 )
 
 
