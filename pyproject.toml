@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "robotorchan"
 version = "0.1.0"
-description = "Research-oriented extensions for BoTorch Bayesian optimization and active learning."
+description = "BoTorch-based Bayesian optimization and active learning with unified APIs for advanced Gaussian process models."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
@@ -17,9 +17,15 @@ keywords = [
   "botorch",
   "gaussian-process",
   "machine-learning",
+  "mixed-variable-optimization",
+  "multi-objective-optimization",
+  "robust-optimization",
+  "high-dimensional-optimization",
+  "pytorch",
 ]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
@@ -27,6 +33,8 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: Mathematics",
+  "Typing :: Typed",
 ]
 dependencies = [
   "botorch>=0.18.1,<0.19",
@@ -53,6 +61,7 @@ Homepage = "https://github.com/tanakakao/robotorchan"
 Documentation = "https://github.com/tanakakao/robotorchan/tree/main/docs"
 Repository = "https://github.com/tanakakao/robotorchan"
 Issues = "https://github.com/tanakakao/robotorchan/issues"
+Changelog = "https://github.com/tanakakao/robotorchan/releases"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/robotorchan"]
