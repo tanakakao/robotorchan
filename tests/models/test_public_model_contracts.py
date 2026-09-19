@@ -109,6 +109,7 @@ NON_MLL_MODELS = {
     "ContaminatedSingleTaskGP",
     "MixedContaminatedSingleTaskGP",
     "JointHeteroskedasticSingleTaskGP",
+    "MixedJointHeteroskedasticSingleTaskGP",
     "MixedStudentTSingleTaskGP",
     "StudentTSingleTaskGP",
     "MixedSaasFullyBayesianMultiTaskGP",
