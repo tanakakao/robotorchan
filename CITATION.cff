@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use robotorchan in your research, please cite the software."
+title: "robotorchan"
+type: software
+authors:
+  - name: "tanakakao"
+repository-code: "https://github.com/tanakakao/robotorchan"
+url: "https://github.com/tanakakao/robotorchan"
+version: "0.1.0"
+license: "BSD-3-Clause"
