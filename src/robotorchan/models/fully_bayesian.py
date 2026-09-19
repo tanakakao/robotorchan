@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import torch
 from botorch.models.fully_bayesian import (
     SaasFullyBayesianSingleTaskGP as BoTorchSaasFullyBayesianSingleTaskGP,
 )
@@ -13,7 +14,6 @@ from botorch.models.fully_bayesian_multitask import (
 )
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
-import torch
 from torch import Tensor
 
 from robotorchan.models.base import (
@@ -261,9 +261,6 @@ class MixedSaasFullyBayesianMultiTaskGP(SaasFullyBayesianMultiTaskGP):
             dtype=X.dtype,
             device=X.device,
         )
-        raw_design_dims = [
-            dim for dim in range(self.raw_input_dim) if dim != self.raw_task_feature
-        ]
         design_train_X.copy_(X)
         category_values = self.category_values
         parts: list[Tensor] = []
