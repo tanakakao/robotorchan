@@ -63,7 +63,7 @@ Homepage = "https://github.com/tanakakao/robotorchan"
 Documentation = "https://github.com/tanakakao/robotorchan/tree/main/docs"
 Repository = "https://github.com/tanakakao/robotorchan"
 Issues = "https://github.com/tanakakao/robotorchan/issues"
-Changelog = "https://github.com/tanakakao/robotorchan/releases"
+Changelog = "https://github.com/tanakakao/robotorchan/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/robotorchan"]
