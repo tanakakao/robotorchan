@@ -51,6 +51,8 @@ def test_scenario_risk_composition() -> None:
 
 
 def test_dtype_conversion_moves_noise_model() -> None:
-    model = _fitted_model().float()
+    model = _fitted_model()
+    model.predicted_noise(torch.tensor([[0.4]], dtype=torch.double))
+    model = model.float()
     X = torch.tensor([[0.5]], dtype=torch.float)
     assert model.predicted_noise(X).dtype == torch.float
