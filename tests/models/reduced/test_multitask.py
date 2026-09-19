@@ -3,6 +3,8 @@
 import torch
 
 from robotorchan.models.reduced.multitask import (
+    AutoEncoderKroneckerMultiTaskGP,
+    AutoEncoderMultiTaskGP,
     PCAKroneckerMultiTaskGP,
     PCAMultiTaskGP,
     PLSKroneckerMultiTaskGP,
@@ -11,6 +13,8 @@ from robotorchan.models.reduced.multitask import (
     RandomProjectionMultiTaskGP,
     ReducedKroneckerMultiTaskGP,
     ReducedMultiTaskGP,
+    VAEKroneckerMultiTaskGP,
+    VAEMultiTaskGP,
 )
 from robotorchan.reduction.input import PCAInputReducer
 
@@ -230,5 +234,101 @@ def test_pls_kronecker_uses_all_task_outputs_for_supervised_projection() -> None
     assert model.input_reducer.y_mean.shape == torch.Size([2])
     assert model._prepare_inputs(train_X).shape == torch.Size([10, 2])
     posterior = model.posterior(train_X[:3])
+    assert posterior.mean.shape[-2:] == torch.Size([3, 2])
+    assert model.make_mll() is not None
+
+
+def test_autoencoder_multitask_freezes_reducer_and_preserves_task_feature() -> None:
+    dtype = torch.double
+    data = torch.rand(12, 4, dtype=dtype)
+    task = torch.tensor([0.0, 1.0] * 6, dtype=dtype).unsqueeze(-1)
+    train_X = torch.cat([data[:, :2], task, data[:, 2:]], dim=-1)
+    train_Y = data[:, :1] + 0.25 * task
+
+    model = AutoEncoderMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=2,
+        latent_dim=2,
+        hidden_dims=(6,),
+        epochs=2,
+        random_state=7,
+    )
+
+    prepared = model._prepare_inputs(train_X)
+    assert prepared.shape == torch.Size([12, 3])
+    assert torch.equal(prepared[:, -1], task.squeeze(-1))
+    assert model.input_reducer.encoder is not None
+    assert all(
+        not parameter.requires_grad for parameter in model.input_reducer.encoder.parameters()
+    )
+    assert model.make_mll() is not None
+
+
+def test_autoencoder_kronecker_supports_q_batch_posterior() -> None:
+    dtype = torch.double
+    train_X = torch.rand(8, 4, dtype=dtype)
+    train_Y = torch.stack([train_X[:, 0], train_X[:, 1]], dim=-1)
+    model = AutoEncoderKroneckerMultiTaskGP(
+        train_X,
+        train_Y,
+        latent_dim=2,
+        hidden_dims=(6,),
+        epochs=2,
+        random_state=11,
+    )
+
+    posterior = model.posterior(torch.rand(2, 3, 4, dtype=dtype))
+
+    assert posterior.mean.shape[-2:] == torch.Size([3, 2])
+    assert model.input_reducer.encoder is not None
+    assert all(
+        not parameter.requires_grad for parameter in model.input_reducer.encoder.parameters()
+    )
+
+
+def test_vae_multitask_uses_deterministic_posterior_mean_latent() -> None:
+    dtype = torch.double
+    data = torch.rand(10, 4, dtype=dtype)
+    task = torch.tensor([0.0, 1.0] * 5, dtype=dtype).unsqueeze(-1)
+    train_X = torch.cat([data, task], dim=-1)
+    train_Y = data[:, :1]
+
+    model = VAEMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=-1,
+        latent_dim=2,
+        hidden_dims=(6,),
+        epochs=2,
+        random_state=13,
+    )
+
+    first = model._prepare_inputs(train_X)
+    second = model._prepare_inputs(train_X)
+
+    assert torch.equal(first, second)
+    assert torch.equal(first[:, -1], task.squeeze(-1))
+    assert model.input_reducer.mu_head is not None
+    assert all(
+        not parameter.requires_grad for parameter in model.input_reducer.mu_head.parameters()
+    )
+
+
+def test_vae_kronecker_supports_posterior_and_mll() -> None:
+    dtype = torch.double
+    train_X = torch.rand(8, 4, dtype=dtype)
+    train_Y = torch.stack([train_X[:, 0], train_X[:, 1]], dim=-1)
+    model = VAEKroneckerMultiTaskGP(
+        train_X,
+        train_Y,
+        latent_dim=2,
+        hidden_dims=(6,),
+        epochs=2,
+        random_state=17,
+    )
+
+    posterior = model.posterior(train_X[:3])
+
     assert posterior.mean.shape[-2:] == torch.Size([3, 2])
     assert model.make_mll() is not None

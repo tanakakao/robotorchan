@@ -7,6 +7,8 @@ PUBLIC_MODEL_NAMES = {
     "ALEBOGP",
     "AdditiveMapSaasSingleTaskGP",
     "AutoEncoderGP",
+    "AutoEncoderKroneckerMultiTaskGP",
+    "AutoEncoderMultiTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "HeterogeneousMTGP",
     "HierarchicalConditionalKernelGP",
@@ -75,6 +77,8 @@ PUBLIC_MODEL_NAMES = {
     "SupervisedAutoEncoderGP",
     "SupervisedVAEGP",
     "VAEGP",
+    "VAEKroneckerMultiTaskGP",
+    "VAEMultiTaskGP",
 }
 
 NON_MLL_MODELS = {

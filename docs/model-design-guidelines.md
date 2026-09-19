@@ -55,6 +55,31 @@ This stale-contract sweep is mandatory because robotorchan develops in phases:
 an earlier phase may intentionally add a negative contract test that a later
 phase is expected to invalidate.
 
+## Python line-length and formatting discipline
+
+The repository line-length contract is **100 characters maximum** (`E501`).
+Treat this as a construction rule, not as a CI cleanup task. Every new or edited
+Python line must be kept at or below 100 characters while writing the change.
+
+Before the final commit of every phase that touches Python:
+
+1. Sweep every changed Python file for lines longer than 100 characters.
+   Long `assert`, constructor, function-call, type-annotation, and comprehension
+   lines are common failure points and must be wrapped proactively.
+2. Do not assume that Ruff's formatter will repair every `E501` violation.
+   Ruff formatting and Ruff linting are separate gates; a formatter-compatible
+   line can still fail `ruff check .` for `E501`.
+3. After line-length cleanup, validate the **entire final changed-file set**,
+   not only the line reported by the previous CI run. A repeated CI cycle caused
+   by fixing one of several equivalent `E501` violations is considered an
+   incomplete preflight.
+4. Run the equivalent of both `ruff check .` and `ruff format --check .` on the
+   final branch state. When remote connector editing cannot execute Ruff,
+   manually inspect all changed Python lines for the 100-character limit before
+   relying on CI.
+5. If CI reports an `E501`, inspect the surrounding changed file for additional
+   lines with the same pattern and repair them together.
+
 ## Python 3.11 preflight
 
 Python 3.11 is the repository's lint/format gate, not merely another test
