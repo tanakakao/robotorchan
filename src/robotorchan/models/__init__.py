@@ -99,6 +99,7 @@ from robotorchan.models.reduced.vae import (
     SupervisedVAEGP,
 )
 from robotorchan.models.robust import (
+    HeteroskedasticSingleTaskGP,
     MixedRobustRelevancePursuitSingleTaskGP,
     RobustRelevancePursuitSingleTaskGP,
 )
@@ -122,6 +123,7 @@ __all__ = [
     "AutoEncoderMultiTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "HeterogeneousMTGP",
+    "HeteroskedasticSingleTaskGP",
     "HierarchicalConditionalKernelGP",
     "HierarchicalConditionalKernelMultiTaskGP",
     "HigherOrderGP",

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import torch
 from botorch.models.robust_relevance_pursuit_model import (
     RobustRelevancePursuitSingleTaskGP as BoTorchRobustRelevancePursuitSingleTaskGP,
 )
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
-from gpytorch.likelihoods import Likelihood
+from gpytorch.likelihoods import FixedNoiseGaussianLikelihood, Likelihood
 from gpytorch.means import Mean
 from gpytorch.module import Module
 from torch import Tensor
@@ -103,3 +104,69 @@ class MixedRobustRelevancePursuitSingleTaskGP(RobustRelevancePursuitSingleTaskGP
             cache_model_trace=cache_model_trace,
         )
         self.cat_dims = normalized_cat_dims
+
+
+class HeteroskedasticSingleTaskGP(ExactGPModelMixin, BoTorchRobustRelevancePursuitSingleTaskGP):
+    """Iterative two-GP surrogate for input-dependent observation noise."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        noise_floor: float = 1e-6,
+        outcome_transform: OutcomeTransform | _DefaultType | None = DEFAULT,
+        input_transform: InputTransform | None = None,
+    ) -> None:
+        if noise_floor <= 0:
+            raise ValueError("noise_floor must be positive.")
+        self.noise_floor = noise_floor
+        initial_noise = torch.full_like(train_Y, noise_floor)
+        likelihood = FixedNoiseGaussianLikelihood(
+            noise=initial_noise.squeeze(-1),
+            learn_additional_noise=False,
+        )
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            train_Yvar=initial_noise,
+            likelihood=likelihood,
+            outcome_transform=outcome_transform,
+            input_transform=input_transform,
+        )
+        self._store_supervised_training_data(train_X, train_Y, initial_noise)
+        self.noise_model = None
+
+    def fit_heteroskedastic(self, *, iterations: int = 3) -> HeteroskedasticSingleTaskGP:
+        """Alternately fit the mean GP and a GP for log residual variance."""
+        from botorch.fit import fit_gpytorch_mll
+
+        from robotorchan.models.single_task import SingleTaskGP
+
+        if iterations < 1:
+            raise ValueError("iterations must be at least 1.")
+        train_X = self.raw_train_X
+        train_Y = self.raw_train_Y
+        for _ in range(iterations):
+            fit_gpytorch_mll(self.make_mll())
+            with torch.no_grad():
+                residual = train_Y - self.posterior(train_X).mean
+                log_noise = torch.log(residual.square().clamp_min(self.noise_floor))
+            noise_model = SingleTaskGP(train_X, log_noise)
+            fit_gpytorch_mll(noise_model.make_mll())
+            with torch.no_grad():
+                predicted_noise = noise_model.posterior(train_X).mean.exp()
+                predicted_noise = predicted_noise.clamp_min(self.noise_floor)
+            self.likelihood.noise_covar.noise = predicted_noise.squeeze(-1)
+            self.noise_model = noise_model
+        return self
+
+    def noise_posterior(self, X: Tensor):
+        """Return the latent posterior for log observation variance."""
+        if self.noise_model is None:
+            raise RuntimeError("fit_heteroskedastic must be called before noise_posterior.")
+        return self.noise_model.posterior(X)
+
+    def predicted_noise(self, X: Tensor) -> Tensor:
+        """Return input-dependent observation variance on the original scale."""
+        return self.noise_posterior(X).mean.exp().clamp_min(self.noise_floor)
