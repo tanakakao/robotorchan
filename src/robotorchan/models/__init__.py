@@ -5,6 +5,8 @@ from robotorchan.models.alebo import ALEBOGP
 from robotorchan.models.base import UnsupportedModelOperationError
 from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP
 from robotorchan.models.fully_bayesian import (
+    MixedSaasFullyBayesianMultiTaskGP,
+    MixedSaasFullyBayesianSingleTaskGP,
     SaasFullyBayesianMultiTaskGP,
     SaasFullyBayesianSingleTaskGP,
 )
@@ -18,6 +20,8 @@ from robotorchan.models.latent_kronecker import LatentKroneckerGP
 from robotorchan.models.map_saas import (
     AdditiveMapSaasSingleTaskGP,
     EnsembleMapSaasSingleTaskGP,
+    MixedAdditiveMapSaasSingleTaskGP,
+    MixedEnsembleMapSaasSingleTaskGP,
 )
 from robotorchan.models.model_list import ModelListGP
 from robotorchan.models.multi_fidelity import (
@@ -54,7 +58,10 @@ from robotorchan.models.reduced.mixed import (
 )
 from robotorchan.models.reduced.supervised_neural import SupervisedAutoEncoderGP
 from robotorchan.models.reduced.vae import VAEGP, SupervisedVAEGP
-from robotorchan.models.robust import RobustRelevancePursuitSingleTaskGP
+from robotorchan.models.robust import (
+    MixedRobustRelevancePursuitSingleTaskGP,
+    RobustRelevancePursuitSingleTaskGP,
+)
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
 from robotorchan.models.variational import (
     MixedSingleTaskVariationalGP,
@@ -81,12 +88,17 @@ __all__ = [
     "JointVAEGP",
     "KroneckerMultiTaskGP",
     "LatentKroneckerGP",
+    "MixedAdditiveMapSaasSingleTaskGP",
     "MixedAutoEncoderGP",
+    "MixedEnsembleMapSaasSingleTaskGP",
     "MixedKroneckerMultiTaskGP",
     "MixedMultiTaskGP",
     "MixedPCAGP",
     "MixedPLSGP",
     "MixedRandomProjectionGP",
+    "MixedRobustRelevancePursuitSingleTaskGP",
+    "MixedSaasFullyBayesianMultiTaskGP",
+    "MixedSaasFullyBayesianSingleTaskGP",
     "MixedReducedGP",
     "MixedSingleTaskGP",
     "MixedSingleTaskMultiFidelityGP",
