@@ -83,7 +83,9 @@ model.make_mll()
 
 ## Benchmark
 
-再現可能な性能比較・探索戦略比較は `benchmarks/` に配置します。Notebook は利用方法や結果の読み方を説明する役割とし、benchmark本体のロジックをNotebookへ重複実装しません。高次元入力モデル・acquisition optimization・sequential BO・batch BO の実行コードは `benchmarks/`、その契約テストは `tests/benchmarks/` に集約します。
+再現可能な性能比較・探索戦略比較は `benchmarks/` に配置します。Notebook は利用方法や結果の読み方を説明する役割とし、benchmark本体のロジックをNotebookへ重複実装しません。高次元入力モデル・高次元MultiTask・acquisition optimization・sequential BO・batch BO の実行コードは `benchmarks/`、その契約テストは `tests/benchmarks/` に集約します。
+
+高次元MultiTaskの実行方法は [`docs/high_dimensional_multitask.md`](../docs/high_dimensional_multitask.md)、モデル選択は [`docs/high_dimensional_model_selection.md`](../docs/high_dimensional_model_selection.md) を参照してください。
 
 ## Notebook の一括実行
 
