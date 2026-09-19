@@ -195,6 +195,42 @@ Structured / correlated output family
 
 `ReducedGP` は reducer composition を担当し、structured-output model はそれぞれ BoTorch 本来の covariance structure を保持します。
 
+## 9. MultiTask と output reduction の関係
+
+Phase 9 の監査では、output reduction と MultiTask / KroneckerMultiTask を単純に合成する
+専用モデルは追加しません。
+
+理由は、両者が同じ出力軸に対して異なる意味を持つためです。
+
+- `OutputPCAGP` / `OutputPLSGP`: 元の高次元 Y を latent component へ圧縮し、latent 出力を独立な GP 出力として扱う。
+- `MultiTaskGP`: task identity を明示的な入力特徴として持ち、task covariance を学習する。
+- `KroneckerMultiTaskGP`: Y の各列を task として保持し、列間の task covariance を学習する。
+
+したがって、例えば `OutputPCAKroneckerMultiTaskGP` のようなモデルを機械的に追加すると、
+「PCA component を task とみなす」のか「元の task を PCA で混合する」のかが曖昧になります。
+後者では task covariance の意味も元の task 空間から latent component 空間へ変化します。
+
+高次元 Y を圧縮すること自体が目的なら `OutputPCAGP` / `OutputPLSGP` を使い、
+各出力を task として相関までモデル化したいなら `MultiTaskGP` または
+`KroneckerMultiTaskGP` を使います。入力 X も高次元なら、Phase 2--8 で追加した
+`ReducedMultiTaskGP` / `ReducedKroneckerMultiTaskGP` 系で **入力側だけ** を圧縮します。
+
+つまり、robotorchan では次を別のモデリング選択として扱います。
+
+```text
+high-dimensional X + task-correlated Y
+    -> ReducedMultiTaskGP / ReducedKroneckerMultiTaskGP family
+
+ordinary X + compressible high-dimensional Y
+    -> OutputPCAGP / OutputPLSGP
+
+structured Y with coordinates / tensor axes
+    -> LatentKroneckerGP / HigherOrderGP
+```
+
+output reduction と task covariance の同時利用は、明確な統計モデルと posterior 復元則を
+定義できる場合にのみ将来の独立機能として追加します。単なるクラス直積としては追加しません。
+
 ## 9. Reducer の lifecycle
 
 入力・出力 reducer はモデル構築時に学習し、その後は同じ基底を固定して使います。
