@@ -445,9 +445,7 @@ def test_reduced_kronecker_load_state_resynchronizes_projection() -> None:
     dtype = torch.double
     train_X = torch.rand(8, 4, dtype=dtype)
     train_Y = torch.stack((train_X[:, 0], train_X[:, 1]), dim=-1)
-    source = RandomProjectionKroneckerMultiTaskGP(
-        train_X, train_Y, n_components=2, random_state=11
-    )
+    source = RandomProjectionKroneckerMultiTaskGP(train_X, train_Y, n_components=2, random_state=11)
     restored = RandomProjectionKroneckerMultiTaskGP(
         train_X, train_Y, n_components=2, random_state=23
     )
