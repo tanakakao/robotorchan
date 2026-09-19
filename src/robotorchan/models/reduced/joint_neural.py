@@ -288,6 +288,21 @@ class MixedHybridAutoEncoderGP(MixedJointEncoderGP):
             dtype=train_X.dtype,
         )
 
+    def _make_decoder(
+        self,
+        output_dim: int,
+        *,
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> nn.Sequential:
+        layers: list[nn.Module] = []
+        previous = self.latent_dim
+        for width in reversed(self.hidden_dims):
+            layers.extend([nn.Linear(previous, width), _ACTIVATIONS[self.activation]()])
+            previous = width
+        layers.append(nn.Linear(previous, output_dim))
+        return nn.Sequential(*layers).to(device=device, dtype=dtype)
+
     def reconstruct(self, X: Tensor) -> Tensor:
         continuous = self._continuous(X)
         latent = self.encode(X)[..., : self.latent_dim]
