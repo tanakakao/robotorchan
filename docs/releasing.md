@@ -49,6 +49,17 @@ pip install robotorchan
 
 PyPIへの認証にはTrusted Publishing (OIDC) を使用します。PyPI API tokenをGitHub Secretsに保存する運用は想定していません。
 
+## PyPI Trusted Publishing の事前設定
+
+初回リリース前にPyPI側でTrusted Publisherを設定します。
+
+- owner: `tanakakao`
+- repository: `robotorchan`
+- workflow: `publish.yml`
+- environment: `pypi`
+
+GitHub側でも `pypi` environment を作成し、必要に応じてrequired reviewerを設定してください。公開jobだけがこのenvironmentとOIDC権限を使用します。
+
 ## LICENSE
 
-公開前にLICENSEを明示的に選択してください。LICENSEの種類はプロジェクトの利用条件に関わるため、自動的には決定しません。
+robotorchanはBSD-3-Clauseで公開します。配布物にはリポジトリ直下の `LICENSE` を含め、package metadataとの一致をCIで検証します。
