@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import torch
 from botorch.models.robust_relevance_pursuit_model import (
     RobustRelevancePursuitSingleTaskGP as BoTorchRobustRelevancePursuitSingleTaskGP,
 )
@@ -11,7 +12,6 @@ from botorch.utils.types import DEFAULT, _DefaultType
 from gpytorch.likelihoods import FixedNoiseGaussianLikelihood, Likelihood
 from gpytorch.means import Mean
 from gpytorch.module import Module
-import torch
 from torch import Tensor
 
 from robotorchan.models.base import (
@@ -134,9 +134,10 @@ class HeteroskedasticSingleTaskGP(ExactGPModelMixin, BoTorchRobustRelevancePursu
             outcome_transform=outcome_transform,
             input_transform=input_transform,
         )
+        self._store_supervised_training_data(train_X, train_Y, initial_noise)
         self.noise_model = None
 
-    def fit_heteroskedastic(self, *, iterations: int = 3) -> "HeteroskedasticSingleTaskGP":
+    def fit_heteroskedastic(self, *, iterations: int = 3) -> HeteroskedasticSingleTaskGP:
         """Alternately fit the mean GP and a GP for log residual variance."""
         from botorch.fit import fit_gpytorch_mll
 
