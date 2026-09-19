@@ -89,15 +89,19 @@ A cross-product model is justified only when the additional concern changes the
 likelihood, kernel, posterior, or inference procedure in a way that cannot be
 composed externally.
 
+### Nonstationary latent-process behavior
+
+Use `NonstationarySingleTaskGP` when the latent response smoothness itself changes
+across the design space. Its Gibbs covariance is distinct from input-dependent
+observation noise.
+
 ## Remaining gaps worth evaluating
 
 The next additions should be selected by a concrete statistical gap rather than
 by model-count growth. Candidates are:
 
-1. nonstationary process models when local smoothness changes across the design
-   space;
-2. uncertain categorical training inputs, only if a defensible probability
-   model and kernel expectation are defined.
+1. uncertain categorical training inputs represented by explicit category
+   probabilities and a positive-semidefinite expected categorical kernel.
 
 ## Exit criteria
 
