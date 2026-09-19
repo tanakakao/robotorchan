@@ -7,6 +7,7 @@ name = "robotorchan"
 version = "0.1.0"
 description = "BoTorch-based Bayesian optimization and active learning with unified APIs for advanced Gaussian process models."
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.11"
 authors = [
   { name = "tanakakao" },
@@ -25,6 +26,7 @@ keywords = [
 ]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
+  "License :: OSI Approved :: BSD License",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
   "Operating System :: OS Independent",
