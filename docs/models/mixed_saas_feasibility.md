@@ -1,33 +1,28 @@
 # Mixed × SAAS feasibility
 
-Phase 6 evaluates whether robotorchan should expose a mixed categorical/continuous
-SAAS model.
+## Current implementation
 
-## Decision
+robotorchan now exposes fully Bayesian mixed SAAS wrappers:
 
-Do **not** add a `MixedSaasSingleTaskGP` wrapper at this time.
+- `MixedSaasFullyBayesianSingleTaskGP`
+- `MixedSaasFullyBayesianMultiTaskGP`
 
-BoTorch's mixed model and its MAP-SAAS models encode different kernel structures:
+They use model-owned categorical one-hot encoding before BoTorch's fully Bayesian
+SAAS model. In the multi-task wrapper, the task feature remains structural and is
+excluded from categorical encoding. Fitting uses BoTorch's
+`fit_fully_bayesian_model_nuts`; these models intentionally do not expose MLL fitting.
 
-- `MixedSingleTaskGP` constructs categorical/continuous additive and interaction
-  kernels and accepts a continuous-kernel factory.
-- `AdditiveMapSaasSingleTaskGP` and `EnsembleMapSaasSingleTaskGP` implement
-  dedicated MAP-SAAS models for continuous inputs.
+This is different from constructing a `MixedSingleTaskGP` categorical kernel with a
+SAAS-flavoured continuous kernel. robotorchan does not expose that composition as a
+SAAS model because it would not preserve BoTorch SAAS inference semantics.
 
-Simply injecting a SAAS-flavoured continuous kernel into `MixedSingleTaskGP`
-would not reproduce the MAP-SAAS model semantics, especially the tau handling
-and ensemble structure. Naming such a composition `MixedSaasSingleTaskGP`
-would therefore overstate what the model implements.
+## High-dimensional guidance
 
-## Current recommendation
+Use fully Bayesian mixed SAAS when categorical variables must be represented explicitly
+and sparsity over the encoded continuous/one-hot coordinate space is acceptable. Use
+mixed reduced models when the intended assumption is instead a low-dimensional latent
+representation of the continuous variables.
 
-For mixed high-dimensional problems:
-
-1. use `MixedSingleTaskGP` when categorical structure is essential;
-2. use the mixed reduced models when dimensionality reduction is appropriate;
-3. use `AdditiveMapSaasSingleTaskGP` or `EnsembleMapSaasSingleTaskGP` only
-   when all modeled dimensions are continuous.
-
-A future mixed SAAS model should be introduced only with a dedicated kernel and
-inference design plus benchmark evidence. It must not be a compatibility alias
-or a renamed `MixedSingleTaskGP`.
+Do not add a `ReducedSaas...` or `Saas...Kronecker...` class by naming convention alone.
+Those combinations require a separately defined prior, covariance, and inference model.
+They must not be compatibility aliases or thin renames of existing models.
