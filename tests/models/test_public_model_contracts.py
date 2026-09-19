@@ -105,7 +105,9 @@ PUBLIC_MODEL_NAMES = {
 
 NON_MLL_MODELS = {
     "ContaminatedSingleTaskGP",
+    "MixedContaminatedSingleTaskGP",
     "JointHeteroskedasticSingleTaskGP",
+    "MixedStudentTSingleTaskGP",
     "StudentTSingleTaskGP",
     "MixedSaasFullyBayesianMultiTaskGP",
     "MixedSaasFullyBayesianSingleTaskGP",
