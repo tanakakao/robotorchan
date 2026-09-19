@@ -83,7 +83,7 @@ jobs:
         working-directory: /tmp
         run: >-
           /tmp/robotorchan-smoke/bin/python -c
-          "from importlib.metadata import metadata; m = metadata('robotorchan'); assert m['License-File'] == 'LICENSE', m.get_all('License-File'); assert m['Requires-Python'] == '>=3.11', m['Requires-Python']; assert 'BSD License' in (m.get_all('Classifier') or []), m.get_all('Classifier'); print(m['Name'], m['Version'], m['Requires-Python'], m['License-File'])"
+          "from importlib.metadata import metadata; m = metadata('robotorchan'); assert m['License-File'] == 'LICENSE', m.get_all('License-File'); assert m['Requires-Python'] == '>=3.11', m['Requires-Python']; assert 'License :: OSI Approved :: BSD License' in (m.get_all('Classifier') or []), m.get_all('Classifier'); print(m['Name'], m['Version'], m['Requires-Python'], m['License-File'])"
       - name: Validate PEP 561 marker after installation
         working-directory: /tmp
         run: >-
