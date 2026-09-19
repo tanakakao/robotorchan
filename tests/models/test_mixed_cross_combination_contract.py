@@ -10,7 +10,6 @@ from robotorchan.models import (
     ModelListGP,
 )
 
-
 MODELS = importlib.import_module("robotorchan.models")
 
 
