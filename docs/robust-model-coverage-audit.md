@@ -39,7 +39,7 @@ relevance-pursuit corrections and heteroskedastic Gaussian noise.
 
 Use `UncertainInputSingleTaskGP`.
 
-This integrates diagonal Gaussian uncertainty in the observed input locations
+This integrates diagonal or full-covariance Gaussian uncertainty in the observed input locations
 into the covariance. It is distinct from perturbing a candidate during robust
 decision evaluation.
 
@@ -82,13 +82,12 @@ composed externally.
 The next additions should be selected by a concrete statistical gap rather than
 by model-count growth. Candidates are:
 
-1. correlated/full-covariance uncertain training inputs;
+1. replicated-observation noise models when replicate structure is known;
 2. uncertain categorical training inputs, only if a defensible probability
    model and kernel expectation are defined;
-3. replicated-observation noise models when replicate structure is known;
-4. explicit contamination/mixture likelihoods if Student-t and relevance
+3. explicit contamination/mixture likelihoods if Student-t and relevance
    pursuit do not cover the required outlier mechanism;
-5. nonstationary observation/process models only when a use case requires
+4. nonstationary observation/process models only when a use case requires
    local behavior that current kernels cannot represent.
 
 ## Exit criteria
