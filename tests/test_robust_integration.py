@@ -32,13 +32,13 @@ def test_single_task_gp_composes_with_scenarios_and_risk() -> None:
 
 def test_pca_gp_composes_in_original_input_space() -> None:
     train_X, train_Y = _training_data()
-    model = PCAGP(train_X, train_Y, latent_dim=2)
+    model = PCAGP(train_X, train_Y, n_components=2)
     means = _scenario_posterior_mean(model)
     assert Expectation()(means).shape == (2,)
 
 
 def test_pls_gp_composes_in_original_input_space() -> None:
     train_X, train_Y = _training_data()
-    model = PLSGP(train_X, train_Y, latent_dim=2)
+    model = PLSGP(train_X, train_Y, n_components=2)
     means = _scenario_posterior_mean(model)
     assert Expectation()(means).shape == (2,)
