@@ -21,7 +21,12 @@ from robotorchan.reduction.input import (
     PLSInputReducer,
     RandomProjectionInputReducer,
 )
-from robotorchan.reduction.neural import AutoEncoderInputReducer, VAEInputReducer
+from robotorchan.reduction.neural import (
+    AutoEncoderInputReducer,
+    SupervisedAutoEncoderInputReducer,
+    SupervisedVAEInputReducer,
+    VAEInputReducer,
+)
 
 
 class ReducedMultiTaskGP(MultiTaskGP):
@@ -486,6 +491,191 @@ class VAEKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
                 eps=eps,
                 random_state=random_state,
                 beta=beta,
+            ),
+            **kwargs,
+        )
+
+
+class SupervisedAutoEncoderMultiTaskGP(ReducedMultiTaskGP):
+    """Long-format multi-task GP using an outcome-aware frozen autoencoder.
+
+    The task feature is excluded from the reducer input. The auxiliary
+    supervised head is trained against row-wise long-format outcomes, while
+    task identity remains represented only by the multi-task GP.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        latent_dim: int,
+        *,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        epochs: int = 200,
+        learning_rate: float = 1e-3,
+        weight_decay: float = 0.0,
+        batch_size: int | None = None,
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        supervised_weight: float = 1.0,
+        standardize_y: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            task_feature=task_feature,
+            input_reducer=SupervisedAutoEncoderInputReducer(
+                latent_dim=latent_dim,
+                hidden_dims=hidden_dims,
+                activation=activation,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                weight_decay=weight_decay,
+                batch_size=batch_size,
+                standardize=standardize,
+                eps=eps,
+                random_state=random_state,
+                supervised_weight=supervised_weight,
+                standardize_y=standardize_y,
+            ),
+            **kwargs,
+        )
+
+
+class SupervisedAutoEncoderKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
+    """Kronecker multi-task GP using a multi-output supervised autoencoder."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        latent_dim: int,
+        *,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        epochs: int = 200,
+        learning_rate: float = 1e-3,
+        weight_decay: float = 0.0,
+        batch_size: int | None = None,
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        supervised_weight: float = 1.0,
+        standardize_y: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=SupervisedAutoEncoderInputReducer(
+                latent_dim=latent_dim,
+                hidden_dims=hidden_dims,
+                activation=activation,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                weight_decay=weight_decay,
+                batch_size=batch_size,
+                standardize=standardize,
+                eps=eps,
+                random_state=random_state,
+                supervised_weight=supervised_weight,
+                standardize_y=standardize_y,
+            ),
+            **kwargs,
+        )
+
+
+class SupervisedVAEMultiTaskGP(ReducedMultiTaskGP):
+    """Long-format multi-task GP using an outcome-aware frozen VAE."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        latent_dim: int,
+        *,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        epochs: int = 200,
+        learning_rate: float = 1e-3,
+        weight_decay: float = 0.0,
+        batch_size: int | None = None,
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        beta: float = 1.0,
+        supervised_weight: float = 1.0,
+        standardize_y: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            task_feature=task_feature,
+            input_reducer=SupervisedVAEInputReducer(
+                latent_dim=latent_dim,
+                hidden_dims=hidden_dims,
+                activation=activation,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                weight_decay=weight_decay,
+                batch_size=batch_size,
+                standardize=standardize,
+                eps=eps,
+                random_state=random_state,
+                beta=beta,
+                supervised_weight=supervised_weight,
+                standardize_y=standardize_y,
+            ),
+            **kwargs,
+        )
+
+
+class SupervisedVAEKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
+    """Kronecker multi-task GP using a multi-output supervised frozen VAE."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        latent_dim: int,
+        *,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        epochs: int = 200,
+        learning_rate: float = 1e-3,
+        weight_decay: float = 0.0,
+        batch_size: int | None = None,
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        beta: float = 1.0,
+        supervised_weight: float = 1.0,
+        standardize_y: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=SupervisedVAEInputReducer(
+                latent_dim=latent_dim,
+                hidden_dims=hidden_dims,
+                activation=activation,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                weight_decay=weight_decay,
+                batch_size=batch_size,
+                standardize=standardize,
+                eps=eps,
+                random_state=random_state,
+                beta=beta,
+                supervised_weight=supervised_weight,
+                standardize_y=standardize_y,
             ),
             **kwargs,
         )
