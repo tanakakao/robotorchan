@@ -53,6 +53,4 @@ def test_mixed_multifidelity_validates_dimensions(
 ) -> None:
     X, Y = _data()
     with pytest.raises(ValueError):
-        MixedSingleTaskMultiFidelityGP(
-            X, Y, cat_dims=cat_dims, data_fidelities=data_fidelities
-        )
+        MixedSingleTaskMultiFidelityGP(X, Y, cat_dims=cat_dims, data_fidelities=data_fidelities)
