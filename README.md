@@ -6,10 +6,11 @@
 
 ## ドキュメント
 
-最初に見る場所は次の6つです。
+最初に見る場所は次の7つです。
 
 - **理論から理解する:** [`docs/theory/README.md`](docs/theory/README.md)
 - **どのモデルを選ぶか:** [`docs/models.md`](docs/models.md)
+- **高次元モデルを選ぶ:** [`docs/high_dimensional_model_selection.md`](docs/high_dimensional_model_selection.md)
 - **高次元出力モデルを選ぶ:** [`docs/high_dimensional_outputs.md`](docs/high_dimensional_outputs.md)
 - **実際にどう使うか:** [`examples/README.md`](examples/README.md)
 - **高次元の探索戦略:** [`docs/high_dimensional_search_strategies.md`](docs/high_dimensional_search_strategies.md)
@@ -130,6 +131,20 @@ model.make_mll()
 - `MixedJointEncoderGP`, `MixedHybridAutoEncoderGP`, `MixedJointVAEGP`
 
 `ReducedGP` は input reducer / output reducer を組み合わせる共通実装です。named wrapper は代表的な reducer 構成を簡潔に使うための薄いラッパーです。高次元出力の構造化モデルとの使い分けは [`docs/high_dimensional_outputs.md`](docs/high_dimensional_outputs.md) を参照してください。
+
+### Robust / Noise / Input uncertainty
+
+- `StudentTSingleTaskGP`, `ContaminatedSingleTaskGP`
+- `HeteroskedasticSingleTaskGP`, `JointHeteroskedasticSingleTaskGP`
+- `ReplicateNoiseSingleTaskGP`
+- `NonstationarySingleTaskGP`
+- `UncertainInputSingleTaskGP`, `UncertainCategoricalSingleTaskGP`
+- `MixedStudentTSingleTaskGP`, `MixedContaminatedSingleTaskGP`
+- `MixedHeteroskedasticSingleTaskGP`, `MixedJointHeteroskedasticSingleTaskGP`
+- `MixedReplicateNoiseSingleTaskGP`, `MixedNonstationarySingleTaskGP`
+- `MixedUncertainInputSingleTaskGP`
+
+外れ値、heavy-tailed noise、入力依存ノイズ、反復測定、入力不確かさ、非定常性は異なる問題設定です。使い分けは [`docs/models.md`](docs/models.md) と [robust model support](docs/robust-model-support.md) を参照してください。
 
 ### 大規模・高次元
 
