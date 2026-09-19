@@ -48,11 +48,10 @@ class JointEncoderGP(ExactGPModelMixin, BoTorchSingleTaskGP):
         train_Yvar: Tensor | None = None,
         likelihood: Likelihood | None = None,
         outcome_transform: OutcomeTransform | _DefaultType | None = DEFAULT,
+        feature_extractor: nn.Module | None = None,
     ) -> None:
         if latent_dim <= 0:
             raise ValueError("latent_dim must be a positive integer.")
-        if latent_dim > train_X.shape[-1]:
-            raise ValueError("latent_dim cannot exceed the original input dimension.")
         if any(width <= 0 for width in hidden_dims):
             raise ValueError("hidden_dims must contain only positive integers.")
         if activation not in _ACTIVATIONS:
@@ -89,14 +88,25 @@ class JointEncoderGP(ExactGPModelMixin, BoTorchSingleTaskGP):
 
         with torch.random.fork_rng(devices=cuda_devices):
             torch.manual_seed(self.random_state)
-            encoder = self._make_encoder(
-                train_X.shape[-1],
-                device=train_X.device,
-                dtype=train_X.dtype,
-            )
+            if feature_extractor is None:
+                encoder = self._make_encoder(
+                    train_X.shape[-1],
+                    device=train_X.device,
+                    dtype=train_X.dtype,
+                )
+            else:
+                encoder = feature_extractor.to(device=train_X.device, dtype=train_X.dtype)
 
         standardized_X = (train_X - x_mean) / x_scale
-        latent_X = encoder(standardized_X).detach()
+        latent_X = encoder(standardized_X)
+        if latent_X.shape[:-1] != standardized_X.shape[:-1]:
+            raise ValueError("feature_extractor must preserve all non-feature input dimensions.")
+        if latent_X.shape[-1] != self.latent_dim:
+            raise ValueError(
+                "feature_extractor output dimension must equal latent_dim; "
+                f"expected {self.latent_dim}, got {latent_X.shape[-1]}."
+            )
+        latent_X = latent_X.detach()
         super().__init__(
             train_X=latent_X,
             train_Y=train_Y,
