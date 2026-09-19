@@ -268,7 +268,13 @@ class MixedJointVAEGP(MixedJointEncoderGP):
             dtype=train_X.dtype,
         )
 
-    def _make_decoder(self, output_dim: int, *, device: torch.device, dtype: torch.dtype) -> nn.Sequential:
+    def _make_decoder(
+        self,
+        output_dim: int,
+        *,
+        device: torch.device,
+        dtype: torch.dtype,
+    ) -> nn.Sequential:
         layers: list[nn.Module] = []
         previous = self.latent_dim
         for width in reversed(self.hidden_dims):
