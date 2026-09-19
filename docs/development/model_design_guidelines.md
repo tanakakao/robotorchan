@@ -169,3 +169,13 @@ wrapper. Wrapper initializers use `super()`, so bypassing the declared MRO can r
 `TypeError: super(type, obj)`. When a specialized model needs a custom covariance, either
 inherit from the wrapper whose initializer is called or factor shared construction into a helper.
 Check this before opening a PR for every model that manually delegates initialization.
+
+## Documentation coverage preflight
+
+Public model を追加・削除・改名した場合は、実装だけで完了としません。
+
+1. `docs/model_coverage.json` の public model 集合を更新する。
+2. model-family guide、Theory、代表Notebookの3方向を割り当てる。
+3. 新しい統計的仮定がなければ既存Theoryを再利用し、class数に合わせてTheoryを複製しない。
+4. 代表Notebookで学習契約を十分に説明できる場合はvariantごとのNotebookを量産しない。
+5. coverage testとstale-reference searchを実行し、旧名や旧パスを残さない。
