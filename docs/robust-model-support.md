@@ -52,7 +52,7 @@ joint objective で学習します。
 variance から group mean の observation variance を構成します。
 
 詳細:
-[heteroskedastic feasibility](models/heteroskedastic_gp_feasibility.md)、
+[heteroskedastic feasibility](models/heteroskedastic_gp.md)、
 [joint heteroskedastic GP](models/joint_heteroskedastic_gp.md)、
 [replicate-noise GP](models/replicate_noise_gp.md)。
 
