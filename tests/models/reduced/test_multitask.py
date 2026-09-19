@@ -435,7 +435,10 @@ def test_reduced_multitask_load_state_resynchronizes_projection() -> None:
 
     expected = restored._prepare_inputs(train_X)
     torch.testing.assert_close(restored.train_inputs[0], expected)
-    torch.testing.assert_close(restored.posterior(train_X[:2]).mean, source.posterior(train_X[:2]).mean)
+    torch.testing.assert_close(
+        restored.posterior(train_X[:2]).mean,
+        source.posterior(train_X[:2]).mean,
+    )
 
 
 def test_reduced_kronecker_load_state_resynchronizes_projection() -> None:
@@ -453,4 +456,7 @@ def test_reduced_kronecker_load_state_resynchronizes_projection() -> None:
 
     expected = restored._prepare_inputs(train_X)
     torch.testing.assert_close(restored.train_inputs[0], expected)
-    torch.testing.assert_close(restored.posterior(train_X[:2]).mean, source.posterior(train_X[:2]).mean)
+    torch.testing.assert_close(
+        restored.posterior(train_X[:2]).mean,
+        source.posterior(train_X[:2]).mean,
+    )
