@@ -5,6 +5,8 @@ import torch
 from robotorchan.models.reduced.multitask import (
     PCAKroneckerMultiTaskGP,
     PCAMultiTaskGP,
+    PLSKroneckerMultiTaskGP,
+    PLSMultiTaskGP,
     RandomProjectionKroneckerMultiTaskGP,
     RandomProjectionMultiTaskGP,
     ReducedKroneckerMultiTaskGP,
@@ -175,3 +177,58 @@ def test_random_projection_kronecker_supports_q_batch_posterior() -> None:
     posterior = model.posterior(candidates)
 
     assert posterior.mean.shape[-2:] == torch.Size([3, 2])
+
+
+def test_pls_multitask_uses_long_format_outcomes_without_task_leakage() -> None:
+    dtype = torch.double
+    base = torch.linspace(0.0, 1.0, 8, dtype=dtype)
+    data = torch.stack(
+        [base, base.square(), torch.sin(base), torch.cos(base)],
+        dim=-1,
+    )
+    data = data.repeat_interleave(2, dim=0)
+    task = torch.tensor([0.0, 1.0] * 8, dtype=dtype).unsqueeze(-1)
+    train_X = torch.cat([data[:, :2], task, data[:, 2:]], dim=-1)
+    train_Y = (2.0 * data[:, :1] - data[:, 1:2] + 0.5 * task)
+
+    model = PLSMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=2,
+        n_components=2,
+    )
+
+    assert model.input_reducer.input_dim == 4
+    assert model.input_reducer.y_mean is not None
+    assert model.input_reducer.y_mean.numel() == 1
+    prepared = model._prepare_inputs(train_X)
+    assert prepared.shape == torch.Size([16, 3])
+    assert torch.equal(prepared[:, -1], task.squeeze(-1))
+    assert model.make_mll() is not None
+
+
+def test_pls_kronecker_uses_all_task_outputs_for_supervised_projection() -> None:
+    dtype = torch.double
+    base = torch.linspace(0.0, 1.0, 10, dtype=dtype)
+    train_X = torch.stack(
+        [base, base.square(), torch.sin(base), torch.cos(base), base**3],
+        dim=-1,
+    )
+    train_Y = torch.stack(
+        [2.0 * train_X[:, 0] - train_X[:, 1], train_X[:, 2] + 0.5 * train_X[:, 3]],
+        dim=-1,
+    )
+
+    model = PLSKroneckerMultiTaskGP(
+        train_X,
+        train_Y,
+        n_components=2,
+    )
+
+    assert model.input_reducer.input_dim == 5
+    assert model.input_reducer.y_mean is not None
+    assert model.input_reducer.y_mean.shape == torch.Size([2])
+    assert model._prepare_inputs(train_X).shape == torch.Size([10, 2])
+    posterior = model.posterior(train_X[:3])
+    assert posterior.mean.shape[-2:] == torch.Size([3, 2])
+    assert model.make_mll() is not None
