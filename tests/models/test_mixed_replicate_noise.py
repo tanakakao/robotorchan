@@ -23,7 +23,8 @@ def test_mixed_replicate_noise_reuses_shared_aggregation_contract() -> None:
     assert torch.equal(model.raw_replicate_X, X)
     assert torch.equal(model.raw_replicate_Y, Y)
     assert torch.equal(model.replicate_counts, torch.tensor([2, 2, 2]))
-    assert torch.allclose(model.raw_train_Y.squeeze(-1), torch.tensor([0.1, 1.0, 0.2], dtype=Y.dtype))
+    expected_means = torch.tensor([0.1, 1.0, 0.2], dtype=Y.dtype)
+    assert torch.allclose(model.raw_train_Y.squeeze(-1), expected_means)
 
 
 def test_mixed_replicate_noise_supports_exact_mll_and_qucb() -> None:
