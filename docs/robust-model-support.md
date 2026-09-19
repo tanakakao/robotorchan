@@ -1,172 +1,144 @@
-# Robust modeling support audit
+# Robust / Noise / Uncertainty model guide
 
-## Scope
+このドキュメントは robotorchan の robust modeling に関する恒久的な入口です。
+「robust」という名前で異なる問題を一括りにせず、通常の GP から**何の仮定が変わるか**で
+surrogate と BO-layer の機能を選びます。
 
-This audit records the robust-modeling surface on current `main` before new
-robust functionality is implemented. It separates surrogate robustness from
-input perturbation and decision-risk handling so that later phases do not create
-unnecessary cross-product model wrappers.
+モデル選択全体は [models.md](models.md)、個別の数理・API 契約は
+[models/](models/) を参照してください。実装経緯を記録した audit 文書は設計判断の履歴であり、
+このガイドを置き換えるものではありません。
 
-## Current implementation
+## 問題設定から選ぶ
 
-### Robust surrogate models
+| 問題 | 主なモデル / 層 | 変わるもの |
+| --- | --- | --- |
+| 少数の gross outlier | `RobustRelevancePursuitSingleTaskGP` | sparse correction / inference |
+| residual 全体が heavy-tailed | `StudentTSingleTaskGP` | observation likelihood |
+| nominal + gross-error mixture | `ContaminatedSingleTaskGP` | observation likelihood |
+| noise variance が入力依存 | `HeteroskedasticSingleTaskGP` | observation-noise process |
+| response と noise を joint に学習 | `JointHeteroskedasticSingleTaskGP` | joint variational inference |
+| 同一条件の反復測定がある | `ReplicateNoiseSingleTaskGP` | replicate-derived fixed noise |
+| latent response の滑らかさが場所で変化 | `NonstationarySingleTaskGP` | covariance |
+| 観測された連続 training input が不確か | `UncertainInputSingleTaskGP` | training-input covariance |
+| 観測カテゴリが確率的に不確か | `UncertainCategoricalSingleTaskGP` | expected categorical covariance |
+| candidate の実現値がずれる | scenario / perturbation layer | candidate evaluation |
+| 環境因子 `w` が変動する | scenario layer | candidate evaluation |
+| CVaR / worst-case / SN などを最適化 | risk aggregation layer | decision objective |
 
-The current robust surrogate family contains:
+## Observation robustness
 
-- `RobustRelevancePursuitSingleTaskGP`
+### Sparse outlier
+
+`RobustRelevancePursuitSingleTaskGP` は少数の観測に sparse な補正が必要という仮定です。
+残差分布全体が heavy-tailed という Student-t の仮定とは異なります。
+
+### Heavy-tailed residual
+
+`StudentTSingleTaskGP` は Student-t likelihood により大きな残差を Gaussian likelihood より
+許容します。詳細は [Student-t GP](models/student_t_gp.md) を参照してください。
+
+### Contamination mixture
+
+`ContaminatedSingleTaskGP` は nominal observation と分散の大きい gross-error observation の
+mixture として観測を表現します。詳細は
+[Contaminated GP](models/contaminated_gp.md) を参照してください。
+
+## Observation noise
+
+`HeteroskedasticSingleTaskGP` は response GP と入力依存 noise の推定を反復する実用的な
+baseline です。`JointHeteroskedasticSingleTaskGP` は response と log-noise の latent process を
+joint objective で学習します。
+
+反復測定がある場合は、`ReplicateNoiseSingleTaskGP` が同一 design condition 内の empirical
+variance から group mean の observation variance を構成します。
+
+詳細:
+[heteroskedastic feasibility](models/heteroskedastic_gp_feasibility.md)、
+[joint heteroskedastic GP](models/joint_heteroskedastic_gp.md)、
+[replicate-noise GP](models/replicate_noise_gp.md)。
+
+## Input uncertainty
+
+`UncertainInputSingleTaskGP` は観測済み training input の連続座標に Gaussian uncertainty が
+ある場合のモデルです。candidate-time perturbation とは異なります。
+
+`UncertainCategoricalSingleTaskGP` は有限カテゴリ上の probability vector を使って
+categorical covariance を周辺化します。整数カテゴリコードへ連続 jitter を加えるモデルでは
+ありません。
+
+詳細:
+[uncertain-input GP](models/uncertain_input_gp.md)、
+[full-covariance uncertain-input GP](models/full_covariance_uncertain_input_gp.md)、
+[uncertain categorical GP](models/uncertain_categorical_gp.md)。
+
+## Nonstationarity
+
+`NonstationarySingleTaskGP` は latent response の局所 smoothness / lengthscale が入力位置で
+変化する場合に使います。入力位置によって**観測ノイズ**が変わる heteroskedastic GP とは
+別の仮定です。詳細は [Nonstationary GP](models/nonstationary_gp.md) を参照してください。
+
+## Mixed variables
+
+Mixed 版が必要なのは、categorical design variable が covariance または inference に
+実際に影響する場合です。現在の主な対応は次の通りです。
+
 - `MixedRobustRelevancePursuitSingleTaskGP`
+- `MixedStudentTSingleTaskGP`
+- `MixedContaminatedSingleTaskGP`
+- `MixedHeteroskedasticSingleTaskGP`
+- `MixedJointHeteroskedasticSingleTaskGP`
+- `MixedReplicateNoiseSingleTaskGP`
+- `MixedNonstationarySingleTaskGP`
+- `MixedUncertainInputSingleTaskGP`
 
-Both live in `robotorchan.models.robust` and are exported from
-`robotorchan.models`. The continuous wrapper follows the standard exact-GP
-contract, including constructor-level raw-data snapshots and `make_mll()`.
-The mixed wrapper reuses the repository's canonical mixed covariance helpers and
-stores normalized `cat_dims`.
+`UncertainCategoricalSingleTaskGP` は categorical uncertainty 自体を直接モデル化するため、
+単純な Mixed counterpart は設けません。
 
-The existing robust model addresses sparse gross observation outliers through
-relevance pursuit. It is not a general input-uncertainty or risk-aware BO layer.
+実装範囲と設計判断の記録は
+[Robust × Mixed coverage audit](robust-mixed-coverage-audit.md) を参照してください。
 
-### Input perturbation and decision risk
+## Compositional robust BO
 
-No robotorchan-owned public abstraction for input perturbations, VaR, CVaR,
-worst-case aggregation, or other decision-risk measures is currently exposed
-from `robotorchan.acquisition` or `robotorchan.objectives`.
-
-Therefore later phases should add these as composable BO-layer capabilities
-rather than encoding them into every surrogate class.
-
-## Robustness taxonomy
-
-Future work should keep four concerns separate.
-
-| Concern | Meaning | Current support |
-|---|---|---|
-| Observation robustness | Outliers or non-Gaussian / input-dependent observation noise | Relevance pursuit only |
-| Input robustness | Uncertain realized control input, such as `x + delta` | No robotorchan public layer |
-| Environmental robustness | Explicit uncontrollable noise factors `w`, such as humidity, lot, or equipment | No robotorchan public layer |
-| Decision robustness | Optimize a risk functional over uncertain outcomes or environments | No robotorchan public layer |
-
-This distinction is architectural. A model name containing `Robust` must not
-be used as a catch-all for all four concerns.
-
-## Control factors and environmental noise factors
-
-For manufacturing and materials applications, robust optimization should support
-the quality-engineering distinction between controllable factors `x` and
-uncontrollable or scenario factors `w`:
-
-```text
-y = f(x, w) + observation noise
-```
-
-The optimizer chooses `x`; `w` represents operating environment, raw-material
-lot, equipment, ambient conditions, or other factors whose realized value is
-not the design decision. This differs from perturbing a control setting itself.
-
-Environmental robustness should marginalize or aggregate over `w` using a
-decision-risk measure. Candidate measures include expectation, mean-variance,
-worst case, VaR, CVaR, and quality-engineering signal-to-noise ratios.
-
-SN ratio support should be a risk / aggregation capability, not a dedicated GP
-class. Later design must allow the characteristic type to be explicit, such as
-larger-is-better, smaller-is-better, or nominal-is-best, rather than assuming a
-single SN formula.
-
-Environmental scenarios may be continuous, categorical, empirical, or
-correlated. Categorical noise factors such as material lot or equipment must
-not be represented by accidental continuous jitter.
-
-## High-dimensional integration audit
-
-The high-dimensional model family is now broad enough that robust support must
-prefer composition over model-name cross products.
-
-### Reduced-input models
-
-PCA, PLS, random projection, autoencoder, VAE, supervised neural reduction, and
-joint neural models should not receive nominal `Robust*` subclasses merely to
-apply an input perturbation or a risk measure.
-
-For physical or process uncertainty, perturbations should normally be defined in
-the original design space before reduction. This preserves the interpretation
-of tolerances and measurement / actuation uncertainty. A latent-space
-perturbation is a different modeling assumption and must be explicit if added.
-
-### Multi-task reduced models
-
-Long-format and Kronecker reduced multi-task models should consume the same
-composable perturbation / risk layer where their posterior shape is compatible.
-Do not introduce names such as `RobustPCAMultiTaskGP` solely for composition.
-
-### Mixed reduced models
-
-Mixed reduced models preserve categorical design variables outside the reducer.
-A future perturbation layer must therefore distinguish perturbable continuous
-dimensions from categorical and structural dimensions. Categorical perturbation
-must be an explicit model of uncertainty, not an accidental continuous jitter.
-
-### SAAS
-
-SAAS remains sparse modeling in the original coordinate system rather than a
-dimensionality-reduction transform. Robust decision layers should compose with
-SAAS where BoTorch posterior semantics permit it. Do not add `RobustSAAS*`
-wrappers without a distinct surrogate model.
-
-### ALEBO
-
-ALEBO is an end-to-end embedded search strategy, not a generic reducer. Robust
-ALEBO requires a separate strategy-level feasibility audit. Do not create a
-nominal `RobustALEBOGP` by mechanically combining names.
-
-## Candidate surrogate gaps
-
-The previously identified heteroskedastic, Student-t, and uncertain-training-input gaps
-are now implemented. See `docs/robust-model-coverage-audit.md` for the post-Phase-8
-coverage map and the remaining statistically distinct candidates.
-
-## Composition policy
-
-Prefer this architecture:
+candidate-time uncertainty、environmental scenario、risk aggregation は surrogate class を
+増やさず composable な BO-layer として扱います。
 
 ```text
 surrogate model
-    |
-input perturbation or environmental scenarios
-    |
-risk measure / SN aggregation
-    |
-acquisition function and optimizer
+    × uncertainty / scenario generator
+    × risk aggregation
+    -> acquisition
 ```
 
-A dedicated cross-product model is justified only when robustness changes the
-surrogate likelihood, kernel, posterior, or inference procedure itself.
+物理的な tolerance や process uncertainty は原則として raw design space で scenario を
+生成し、その後 PCA / PLS / neural reducer へ渡します。カテゴリ次元や long-format
+MultiTask の task feature を暗黙に jitter してはいけません。
 
-Consequently:
+SAAS も original-coordinate surrogate なので scenario/risk layer を外側から合成します。
+ALEBO は generic reducer ではなく embedded search strategy であるため、robust composition は
+strategy geometry を考慮して扱います。
 
-- relevance pursuit is a surrogate model;
-- heteroskedastic and heavy-tailed likelihoods are surrogate concerns;
-- uncertain training inputs may require a surrogate-level model;
-- candidate-time perturbation is not a new surrogate model;
-- explicit environmental factors should normally enter the surrogate as `f(x, w)`;
-- environmental marginalization / scenario aggregation is not a new surrogate model;
-- VaR / CVaR / worst-case / SN aggregation is not a new surrogate model;
-- high-dimensional, mixed, multi-task, and robust names must not be multiplied
-  unless the mathematics requires a dedicated implementation.
+詳細は [robust integration](robust_integration.md) を参照してください。
 
-## Planned follow-up
+## Cross-product model を作らない基準
 
-Phase 2 should turn this audit into explicit design rules and decide the exact
-package boundary for perturbation and risk abstractions before implementation.
-Phase 3 can then implement the first perturbation primitives against that
-contract.
+次のような名前の組合せだけを理由に model class を追加しません。
 
-The audit intentionally adds no compatibility alias, deprecated wrapper, or
-placeholder public API.
+- `RobustPCAGP`
+- `StudentTPCAGP`
+- `StudentTHeteroskedasticGP`
+- `UncertainInputPLSGP`
+- `RobustALEBOGP`
 
+新しい class は likelihood、kernel、posterior、inference のいずれかに新しい統計的仮定が
+必要な場合に限ります。Mixed / reduced / MultiTask / robust の全組合せを機械的に作る設計には
+しません。
 
-## Phase 6C — joint heteroskedastic inference
+## Audit documents
 
-The iterative model remains the practical baseline. The next heteroskedastic
-surrogate is a two-latent variational model with jointly optimized response and
-log-noise processes. See `docs/models/joint_heteroskedastic_gp.md` for the
-inference objective, public API target, compatibility gates, and cross-product
-boundaries.
+次の文書は実装・設計の履歴を保存する audit / closeout record です。
+
+- [robust surrogate coverage audit](robust-model-coverage-audit.md)
+- [Robust × Mixed coverage audit](robust-mixed-coverage-audit.md)
+- [robust composition integration audit](robust_integration.md)
+
+新しい利用者はまず本ガイドと [models.md](models.md) を参照してください。
