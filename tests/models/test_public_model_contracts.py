@@ -57,6 +57,8 @@ PUBLIC_MODEL_NAMES = {
     "PairwiseGP",
     "RandomProjectionGP",
     "ReducedGP",
+    "ReducedKroneckerMultiTaskGP",
+    "ReducedMultiTaskGP",
     "RobustRelevancePursuitSingleTaskGP",
     "SACGP",
     "SaasFullyBayesianMultiTaskGP",
