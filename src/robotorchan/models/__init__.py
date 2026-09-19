@@ -168,6 +168,7 @@ __all__ = [
     "MixedLCEMGP",
     "MixedLatentKroneckerGP",
     "MixedMultiTaskGP",
+    "MixedNonstationarySingleTaskGP",
     "MixedOrthogonalAdditiveGP",
     "MixedPCAGP",
     "MixedPLSGP",
