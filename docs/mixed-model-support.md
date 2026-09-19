@@ -230,3 +230,31 @@ retention, and the `VariationalELBO` `make_mll()` contract remain owned by the s
 variational wrapper / BoTorch implementation. Both Phase 4 models accept raw mixed
 inputs and Python-style negative `cat_dims`; no compatibility alias or deprecated
 wrapper is retained.
+
+
+## Phase 5 fully Bayesian / MAP-SAAS / robust status
+
+Phase 5 resolves the historical feasibility gates against the current model
+constructors rather than restoring old PRs verbatim.
+
+Fully Bayesian SAAS uses a model-owned one-hot representation because BoTorch's
+SAAS covariance is constructed inside the Pyro / NUTS model. Raw mixed inputs
+remain the public API, observed category values are model state, unseen
+categories are rejected, and multi-task task columns remain structural.
+Categorical dimensions are never warped. These models remain non-MLL models and
+continue to use BoTorch fully Bayesian fitting.
+
+MAP-SAAS likewise keeps its specialized SAAS covariance and priors. Its Mixed
+variants therefore use the shared model-owned one-hot InputTransform rather than
+replacing the MAP-SAAS covariance with a nominal categorical kernel. The
+transform is active for training, evaluation, and fantasization and owns
+category state across dtype/device moves and serialization.
+
+Robust relevance pursuit has a different architecture: BoTorch exposes the data
+covariance directly while relevance pursuit specializes the likelihood/outlier
+path. The Mixed robust wrapper therefore uses the native categorical covariance
+(continuous + categorical + interaction) and leaves the relevance-pursuit
+likelihood semantics unchanged. This closes the Phase 1 / PR #167 verification
+gate with focused posterior, covariance, raw-data, and MLL contract tests.
+
+No compatibility aliases, deprecated wrappers, or monkey patches are introduced.
