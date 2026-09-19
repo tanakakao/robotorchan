@@ -166,3 +166,16 @@ Finalize public exports and capability contracts, define constructor-level raw-d
 ### Later extension phases
 
 After the existing-model wrapper surface is complete, continue with robotorchan-specific acquisition functions, active-learning criteria, robust / risk-aware methods, ordinal methods, lookahead methods, and new surrogate-model families.
+
+
+## Documentation coverage contract
+
+Public model documentation is tracked by `docs/model_coverage.json`.
+
+- `robotorchan.models.__all__` is the source of truth for public model exports.
+- Every public model export must have a `guide`, `theory`, and representative `notebook` entry.
+- Models that share theory or a training contract may point to the same chapter or Notebook.
+- Non-model public exports must be listed explicitly in `excluded_public_exports`.
+- `tests/test_model_documentation_coverage.py` validates exact public-API coverage and referenced file existence.
+
+This contract intentionally does not require one Notebook per class. It detects documentation drift without creating compatibility aliases or a separate documentation-only CI job; the check runs in the existing pytest matrix.
