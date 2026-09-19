@@ -32,6 +32,7 @@ from robotorchan.models.multi_fidelity import (
     MixedSingleTaskMultiFidelityGP,
     SingleTaskMultiFidelityGP,
 )
+from robotorchan.models.nonstationary import NonstationarySingleTaskGP
 from robotorchan.models.multitask import (
     KroneckerMultiTaskGP,
     MixedKroneckerMultiTaskGP,
@@ -177,6 +178,7 @@ __all__ = [
     "MixedVAEGP",
     "ModelListGP",
     "MultiTaskGP",
+    "NonstationarySingleTaskGP",
     "OrthogonalAdditiveGP",
     "OutputPCAGP",
     "OutputPLSGP",
