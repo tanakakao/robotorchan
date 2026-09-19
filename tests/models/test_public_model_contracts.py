@@ -91,6 +91,7 @@ PUBLIC_MODEL_NAMES = {
     "SupervisedVAEKroneckerMultiTaskGP",
     "SupervisedVAEMultiTaskGP",
     "StudentTSingleTaskGP",
+    "UncertainInputSingleTaskGP",
     "VAEGP",
     "VAEKroneckerMultiTaskGP",
     "VAEMultiTaskGP",
