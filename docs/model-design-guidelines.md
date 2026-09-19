@@ -142,3 +142,10 @@ isort-style ordering, which can differ for acronym-heavy names such as
 RUF022 reports a diff, apply the exact Ruff ordering (equivalent to
 `ruff check --fix`) before pushing. After adding a public export, inspect the
 whole RUF022 diff rather than fixing only the newly added symbol.
+
+### Ruff formatting before push
+
+After any Python edit, run both `ruff check .` and `ruff format --check .` (or apply
+`ruff format`) before pushing. A lint-clean file is not necessarily formatter-clean;
+CI treats these as separate gates. When CI prints an exact formatter diff, apply that
+diff verbatim instead of manually approximating line wrapping.
