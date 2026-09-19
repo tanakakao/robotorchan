@@ -5,10 +5,13 @@ from __future__ import annotations
 import torch
 import torch.nn.functional as F
 from gpytorch.kernels import Kernel, ScaleKernel
-
-from robotorchan.models.base import continuous_feature_dims, make_mixed_covar_module, normalize_feature_dims
 from torch import Tensor, nn
 
+from robotorchan.models.base import (
+    continuous_feature_dims,
+    make_mixed_covar_module,
+    normalize_feature_dims,
+)
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
 
 
