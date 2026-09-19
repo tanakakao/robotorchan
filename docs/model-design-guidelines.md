@@ -133,3 +133,12 @@ depend on the touched model family: core Python 3.11/3.12/3.13 always applies;
 package applies to public/export changes; notebooks applies to public examples
 or namespace changes; `fully-bayesian-extra` is mandatory when fully Bayesian
 models or their tests change.
+
+### Ruff RUF022 export ordering
+
+Do not approximate `__all__` ordering with a custom alphabetical sort. Ruff uses
+isort-style ordering, which can differ for acronym-heavy names such as
+`LCEMGP`, `LatentKroneckerGP`, and `PairwiseGP` versus PCA/PLS names. When
+RUF022 reports a diff, apply the exact Ruff ordering (equivalent to
+`ruff check --fix`) before pushing. After adding a public export, inspect the
+whole RUF022 diff rather than fixing only the newly added symbol.
