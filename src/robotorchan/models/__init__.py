@@ -193,6 +193,7 @@ __all__ = [
     "SingleTaskGP",
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
+    "StudentTSingleTaskGP",
     "SupervisedAutoEncoderGP",
     "SupervisedAutoEncoderKroneckerMultiTaskGP",
     "SupervisedAutoEncoderMultiTaskGP",
@@ -202,5 +203,4 @@ __all__ = [
     "UnsupportedModelOperationError",
     "VAEKroneckerMultiTaskGP",
     "VAEMultiTaskGP",
-    "StudentTSingleTaskGP",
 ]
