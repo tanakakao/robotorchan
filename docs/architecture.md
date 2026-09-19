@@ -179,3 +179,11 @@ Public model documentation is tracked by `docs/model_coverage.json`.
 - `tests/test_model_documentation_coverage.py` validates exact public-API coverage and referenced file existence.
 
 This contract intentionally does not require one Notebook per class. It detects documentation drift without creating compatibility aliases or a separate documentation-only CI job; the check runs in the existing pytest matrix.
+
+
+## Documentation completion
+
+モデルドキュメントの完成条件と今後の維持ルールは
+[`docs/documentation-closeout.md`](documentation-closeout.md) に固定します。
+新しい public model を追加するときは、coverage manifest、theory、representative
+Notebook、モデル選択ガイドの必要な更新を同じ変更で扱います。
