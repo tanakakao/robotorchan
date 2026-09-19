@@ -419,3 +419,35 @@ changes model mathematics or lifecycle.
    insufficient.
 6. No compatibility aliases or Cartesian-product wrapper classes are created
    to fill naming gaps.
+
+
+## Phase 12 global validation
+
+The twelve-phase Mixed-model rebuild is complete at the model-contract level.
+
+Global validation uses the following invariants:
+
+- every public Mixed model accepts raw mixed-space input rather than requiring
+  caller-side one-hot encoding;
+- negative `cat_dims` are normalized in raw coordinates by shared
+  infrastructure;
+- task, fidelity, hierarchy, and contextual structural dimensions are never
+  silently reclassified as ordinary categorical design variables;
+- native categorical covariance is preferred when compatible with the model
+  mathematics;
+- model-owned one-hot encoding is limited to families where replacing the
+  specialized covariance/inference path would change model semantics;
+- continuous reducers and encoders never consume raw integer category codes;
+- raw constructor data and each family's `make_mll()` / non-MLL contract are
+  retained;
+- ModelList remains composition-only;
+- ALEBO remains continuous-only until the search layer can preserve discrete
+  feasibility end to end;
+- Pairwise remains an explicit investigation boundary rather than an
+  unverified public Mixed wrapper;
+- no compatibility alias, deprecated wrapper, or monkey patch is used to fill
+  API gaps.
+
+The support matrix in this document is the authoritative Mixed capability
+inventory. Future model additions must update the matrix, public contract tests,
+and README in the same change.
