@@ -128,7 +128,7 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         return super().forward(self.encode(X))
 
     def posterior(self, X: Tensor, *args: Any, **kwargs: Any):
-        return super().posterior(self.encode(X), *args, **kwargs)
+        return MultiTaskGP.posterior(self, self.encode(X), *args, **kwargs)
 
     def training_loss(self) -> Tensor:
         self.train()
@@ -270,10 +270,9 @@ class _JointVAEMixin(_HybridMixin):
     logvar_head: nn.Linear
 
     def encode_distribution(self, X: Tensor) -> tuple[Tensor, Tensor]:
-        if isinstance(self, JointEncoderMultiTaskGP):
-            source = X[..., list(self.data_dims)]
-        else:
-            source = X
+        source = X[..., list(self.data_dims)] if isinstance(
+            self, JointEncoderMultiTaskGP
+        ) else X
         standardized = (source - self.x_mean) / self.x_scale
         body = nn.Sequential(*list(self.encoder.children())[:-1])
         hidden = body(standardized)
