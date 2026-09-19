@@ -45,7 +45,9 @@ class MixedReducedMultiTaskGP(MixedMultiTaskGP):
     ) -> None:
         input_dim = train_X.shape[-1]
         task_dim = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
-        cats = normalize_feature_dims(\n            cat_dims, input_dim, name="cat_dims", excluded_dims=[task_dim]\n        )
+        cats = normalize_feature_dims(
+            cat_dims, input_dim, name="cat_dims", excluded_dims=[task_dim]
+        )
         data_dims = tuple(i for i in range(input_dim) if i != task_dim)
         data_cat_dims = [data_dims.index(i) for i in cats]
         data_X = train_X[..., list(data_dims)]
@@ -105,7 +107,9 @@ class MixedReducedMultiTaskGP(MixedMultiTaskGP):
             )
         data_X = X[..., list(self.data_dims)]
         reduced_data_X = self._mixed_reducer.transform(data_X)
-        task = X[\n            ..., self.original_task_feature : self.original_task_feature + 1\n        ].to(reduced_data_X)
+        task = X[
+            ..., self.original_task_feature : self.original_task_feature + 1
+        ].to(reduced_data_X)
         return torch.cat((reduced_data_X, task), dim=-1)
 
     def posterior(self, X: Tensor, *args: Any, **kwargs: Any):
