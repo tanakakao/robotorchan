@@ -30,18 +30,12 @@ noise_variance = model.predicted_noise(test_X)
 log_noise_posterior = model.noise_posterior(test_X)
 ```
 
-The current implementation is the practical iterative two-process version. A
-future joint variational implementation may replace it only through a complete
-API migration if it provides a materially better inference contract; no
-compatibility wrapper should be retained.
-
-Mixed, reduced, and multi-task cross-products remain deferred until this base
-model is validated by CI and robust benchmarks.
+The current implementation is the practical iterative two-process version. `JointHeteroskedasticSingleTaskGP` は別の joint variational contract として実装されています。用途の違いは [Robust / Noise](robust_noise.md) を参照してください。
 
 
 ## BoTorch integration
 
-Phase 6B validates the iterative model as a BoTorch surrogate rather than only
+The current implementation validates the iterative model as a BoTorch surrogate rather than only
 as a standalone regression model. Integration coverage includes MC acquisition,
 batched noise prediction, raw-space scenario generation followed by risk
 aggregation, and dtype migration of the registered noise GP submodule.
