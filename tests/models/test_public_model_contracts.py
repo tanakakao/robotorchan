@@ -9,6 +9,7 @@ PUBLIC_MODEL_NAMES = {
     "AutoEncoderGP",
     "AutoEncoderKroneckerMultiTaskGP",
     "AutoEncoderMultiTaskGP",
+    "ContaminatedSingleTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "HeterogeneousMTGP",
     "HeteroskedasticSingleTaskGP",
@@ -99,6 +100,7 @@ PUBLIC_MODEL_NAMES = {
 }
 
 NON_MLL_MODELS = {
+    "ContaminatedSingleTaskGP",
     "JointHeteroskedasticSingleTaskGP",
     "StudentTSingleTaskGP",
     "MixedSaasFullyBayesianMultiTaskGP",
