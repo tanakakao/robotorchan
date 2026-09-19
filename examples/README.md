@@ -1,6 +1,6 @@
 # robotorchan examples
 
-このディレクトリには `robotorchan.models` で公開しているモデルの実行可能な使用例を収録します。
+このディレクトリには `robotorchan.models` の代表的なモデルファミリーと利用パターンの実行可能な使用例を収録します。すべての public class に1対1で Notebook を作るのではなく、同じ理論・学習契約を共有する派生モデルは概念単位でまとめます。
 
 中心となるサンプルは `examples/notebooks/` 以下の Jupyter Notebook です。モデルの選び方は [`docs/models.md`](../docs/models.md)、具体的な使い方は本ディレクトリ、実装の正しさは `tests/` を参照してください。
 
@@ -60,6 +60,12 @@ model.make_mll()
 ## 可視化
 
 軽量な可視化には Matplotlib を使用します。通常の回帰例では、可能な範囲で学習観測値、posterior mean、不確実性、BO の候補点を可視化します。
+
+## 現在の coverage
+
+既存 Notebook は標準 GP、Mixed、Multi-Fidelity、MultiTask、Variational、Preference、SAAS、structured output、hierarchical、heterogeneous、contextual、および Robust Relevance Pursuit の基本例をカバーしています。
+
+一方、最近追加された Student-t / contamination、heteroskedastic / replicate-noise、uncertain-input / uncertain-categorical、nonstationary、および reduced / neural-reduction 系の体系的な Notebook は未整備です。これらは実装済みであり、Notebook がないことはモデル未実装を意味しません。今後はモデルごとではなく問題設定・理論ファミリー単位で追加します。
 
 ## Notebook 一覧
 
