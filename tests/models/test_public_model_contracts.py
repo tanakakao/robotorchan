@@ -19,12 +19,17 @@ PUBLIC_MODEL_NAMES = {
     "LCEAGP",
     "LCEMGP",
     "LatentKroneckerGP",
+    "MixedAdditiveMapSaasSingleTaskGP",
     "MixedAutoEncoderGP",
+    "MixedEnsembleMapSaasSingleTaskGP",
     "MixedKroneckerMultiTaskGP",
     "MixedMultiTaskGP",
     "MixedPCAGP",
     "MixedPLSGP",
     "MixedRandomProjectionGP",
+    "MixedRobustRelevancePursuitSingleTaskGP",
+    "MixedSaasFullyBayesianMultiTaskGP",
+    "MixedSaasFullyBayesianSingleTaskGP",
     "MixedReducedGP",
     "MixedSupervisedAutoEncoderGP",
     "MixedSupervisedVAEGP",
@@ -55,6 +60,8 @@ PUBLIC_MODEL_NAMES = {
 }
 
 NON_MLL_MODELS = {
+    "MixedSaasFullyBayesianMultiTaskGP",
+    "MixedSaasFullyBayesianSingleTaskGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
 }
