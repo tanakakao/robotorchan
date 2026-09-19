@@ -40,7 +40,7 @@ def test_large_residual_has_higher_contamination_probability() -> None:
     observed[1] += 2.0
     probability = model.contamination_diagnostic(X[:2], observed)
 
-    assert torch.all((0 <= probability) & (probability <= 1))
+    assert torch.all((probability >= 0) & (probability <= 1))
     assert probability[1] > probability[0]
 
 
