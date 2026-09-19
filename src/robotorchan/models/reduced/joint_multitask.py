@@ -132,7 +132,9 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         self.likelihood.train()
         encoded_X = self.encode(self.raw_train_X)
         self.set_train_data(inputs=encoded_X, targets=self.train_targets, strict=False)
-        return -self.make_mll()(super().forward(encoded_X), self.train_targets)
+        function_dist = super().forward(encoded_X)
+        task_indices = encoded_X[..., -1:].long()
+        return -self.make_mll()(function_dist, self.train_targets, task_indices)
 
 
 class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
