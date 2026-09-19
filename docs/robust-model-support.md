@@ -119,15 +119,9 @@ nominal `RobustALEBOGP` by mechanically combining names.
 
 ## Candidate surrogate gaps
 
-The following surrogate capabilities remain materially distinct from the
-existing relevance-pursuit model and are candidates for later phases:
-
-1. Heteroskedastic observation modeling for input-dependent noise. Phase 6 found no maintained\n   BoTorch 0.18.1 exact-GP wrapper suitable for a truthful thin wrapper; see\n   `docs/models/heteroskedastic_gp_feasibility.md`.
-2. Heavy-tailed / Student-t observation modeling.
-3. Uncertain-input GP modeling when training inputs themselves are uncertain.
-
-These candidates require separate feasibility checks against current
-BoTorch / GPyTorch inference semantics before public classes are added.
+The previously identified heteroskedastic, Student-t, and uncertain-training-input gaps
+are now implemented. See `docs/robust-model-coverage-audit.md` for the post-Phase-8
+coverage map and the remaining statistically distinct candidates.
 
 ## Composition policy
 
