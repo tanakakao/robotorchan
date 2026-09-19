@@ -27,6 +27,14 @@ DEFAULT_NOTEBOOKS = [
     "12_hierarchical_gp.ipynb",
     "13_heterogeneous_multitask_gp.ipynb",
     "14_contextual_gp.ipynb",
+    "15_robust_observation_models.ipynb",
+    "16_noise_models.ipynb",
+    "17_uncertain_input_gp.ipynb",
+    "18_nonstationary_gp.ipynb",
+    "19_reduced_gp.ipynb",
+    "20_neural_reduction_gp.ipynb",
+    "21_reduced_multitask_gp.ipynb",
+    "22_mixed_reduced_gp.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [
