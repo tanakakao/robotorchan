@@ -38,6 +38,8 @@ When an algorithm is derived from a paper, its implementation should document th
 
 Additional top-level namespaces should only be introduced when a stable group of functionality exists.
 
+Documentation follows the same separation of concerns. `docs/models.md` is the model-selection entry point, `docs/theory/` explains statistical and optimization theory, model-specific documents record specialized contracts, and `examples/` demonstrates executable usage. Audit or phase-closeout documents must not replace the permanent user-facing model-selection or theory guides.
+
 ## API rules
 
 1. Prefer subclassing or composing BoTorch abstractions over introducing parallel abstractions.
@@ -111,6 +113,8 @@ CI follows two layers:
 Linux CI installs CPU-only PyTorch before robotorchan dependencies so ordinary pull requests do not download CUDA runtime packages that are unused by the test suite. The workflow intentionally does not restore pip caches: an older cache containing CUDA wheels was several gigabytes and cost more to restore than the lean CPU-only dependency set costs to install. Lint and formatting checks run once on Python 3.11 rather than being duplicated across every matrix entry.
 
 Cross-model tests pin the public model export set and require every public wrapper class to expose the `supports_mll` / `make_mll()` capability contract. This is intended to catch API drift when new wrappers are added.
+
+Documentation-only changes should not create dedicated CI jobs unless an executable invariant is being enforced. Link, public-model coverage, theory-coverage, and example-coverage automation should be added only when the corresponding machine-readable contract exists; prose synchronization remains a review concern until then.
 
 ## Roadmap
 
