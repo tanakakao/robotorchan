@@ -54,7 +54,8 @@ class UncertainInputSingleTaskGP(SingleTaskGP):
             raise ValueError("train_X_std must be nonnegative.")
         self._input_dim = train_X.shape[-1]
         augmented_X = torch.cat([train_X, train_X_std], dim=-1)
-        kernel = GaussianUncertainInputKernel(ard_num_dims=self._input_dim)
+        kernel = GaussianUncertainInputKernel()
+        kernel.ard_num_dims = None
         super().__init__(augmented_X, train_Y, covar_module=kernel)
         self._store_raw_tensor("train_X", train_X.detach().clone())
         self._store_raw_tensor("train_X_std", train_X_std.detach().clone())
