@@ -21,6 +21,14 @@
 11. [Structured Output](11_structured_output.md)
 12. [Hierarchical / Contextual GP](12_hierarchical_contextual_gp.md)
 13. [Model Selection](13_model_selection.md)
+14. [Robust Gaussian Process](14_robust_gaussian_process.md)
+15. [Heteroskedastic / Replicate Noise](15_heteroskedastic_noise.md)
+16. [Uncertain-input GP](16_uncertain_input_gp.md)
+17. [Nonstationary GP](17_nonstationary_gp.md)
+18. [Dimensionality Reduction GP](18_dimensionality_reduction_gp.md)
+19. [Neural Representation Learning for GP](19_neural_reduction_gp.md)
+20. [High-dimensional Search Strategies](20_high_dimensional_search.md)
+21. [Advanced High-dimensional GP Models](21_advanced_high_dimensional_models.md)
 
 ## このガイドの構成方針
 
@@ -46,7 +54,13 @@
 | Preference Learning | `PairwiseGP` |
 | 高次元 BO | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` |
 | MAP-SAAS / Additive GP | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`, `OrthogonalAdditiveGP` |
-| Robust GP | `RobustRelevancePursuitSingleTaskGP` |
+| Robust / heavy-tailed observation | `RobustRelevancePursuitSingleTaskGP`, `StudentTSingleTaskGP`, `ContaminatedSingleTaskGP` |
+| Heteroskedastic / replicate noise | `HeteroskedasticSingleTaskGP`, `JointHeteroskedasticSingleTaskGP`, `ReplicateNoiseSingleTaskGP` |
+| Input uncertainty | `UncertainInputSingleTaskGP`, `UncertainCategoricalSingleTaskGP` |
+| Nonstationarity | `NonstationarySingleTaskGP` |
+| Input/output reduction | `PCAGP`, `PLSGP`, `OutputPCAGP`, `OutputPLSGP` |
+| Neural reduction | `AutoEncoderGP`, `VAEGP`, `JointEncoderGP`, `JointVAEGP` |
+| High-dimensional search | REMBO, HeSBO, ALEBO, TuRBO, BAxUS |
 | Structured Output | `HigherOrderGP`, `LatentKroneckerGP` |
 | Hierarchical search space | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` |
 | Heterogeneous Multi-task | `HeterogeneousMTGP` |
