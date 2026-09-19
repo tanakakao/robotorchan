@@ -38,6 +38,7 @@ EXPECTED_MIXED_MODELS = {
     "MixedStudentTSingleTaskGP",
     "MixedSupervisedAutoEncoderGP",
     "MixedSupervisedVAEGP",
+    "MixedUncertainInputSingleTaskGP",
     "MixedVAEGP",
 }
 

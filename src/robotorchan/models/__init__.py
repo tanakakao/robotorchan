@@ -120,7 +120,10 @@ from robotorchan.models.robust import (
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
 from robotorchan.models.student_t import MixedStudentTSingleTaskGP, StudentTSingleTaskGP
 from robotorchan.models.uncertain_categorical import UncertainCategoricalSingleTaskGP
-from robotorchan.models.uncertain_input import UncertainInputSingleTaskGP
+from robotorchan.models.uncertain_input import (
+    MixedUncertainInputSingleTaskGP,
+    UncertainInputSingleTaskGP,
+)
 from robotorchan.models.variational import (
     MixedSingleTaskVariationalGP,
     SingleTaskVariationalGP,
@@ -192,6 +195,7 @@ __all__ = [
     "MixedStudentTSingleTaskGP",
     "MixedSupervisedAutoEncoderGP",
     "MixedSupervisedVAEGP",
+    "MixedUncertainInputSingleTaskGP",
     "MixedVAEGP",
     "ModelListGP",
     "MultiTaskGP",
