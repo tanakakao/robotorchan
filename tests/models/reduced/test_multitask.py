@@ -416,3 +416,45 @@ def test_supervised_vae_kronecker_uses_multioutput_auxiliary_head() -> None:
     assert model.input_reducer.supervised_head is not None
     assert model.input_reducer.supervised_head.out_features == 2
     assert model.make_mll() is not None
+
+
+def test_reduced_multitask_load_state_resynchronizes_projection() -> None:
+    dtype = torch.double
+    data = torch.rand(10, 4, dtype=dtype)
+    task = torch.tensor([0.0, 1.0] * 5, dtype=dtype).unsqueeze(-1)
+    train_X = torch.cat((data, task), dim=-1)
+    train_Y = data[:, :1]
+    source = RandomProjectionMultiTaskGP(
+        train_X, train_Y, task_feature=-1, n_components=2, random_state=7
+    )
+    restored = RandomProjectionMultiTaskGP(
+        train_X, train_Y, task_feature=-1, n_components=2, random_state=19
+    )
+
+    restored.load_state_dict(source.state_dict())
+
+    expected = restored._prepare_inputs(train_X)
+    torch.testing.assert_close(restored.train_inputs[0], expected)
+    torch.testing.assert_close(
+        restored.posterior(train_X[:2]).mean,
+        source.posterior(train_X[:2]).mean,
+    )
+
+
+def test_reduced_kronecker_load_state_resynchronizes_projection() -> None:
+    dtype = torch.double
+    train_X = torch.rand(8, 4, dtype=dtype)
+    train_Y = torch.stack((train_X[:, 0], train_X[:, 1]), dim=-1)
+    source = RandomProjectionKroneckerMultiTaskGP(train_X, train_Y, n_components=2, random_state=11)
+    restored = RandomProjectionKroneckerMultiTaskGP(
+        train_X, train_Y, n_components=2, random_state=23
+    )
+
+    restored.load_state_dict(source.state_dict())
+
+    expected = restored._prepare_inputs(train_X)
+    torch.testing.assert_close(restored.train_inputs[0], expected)
+    torch.testing.assert_close(
+        restored.posterior(train_X[:2]).mean,
+        source.posterior(train_X[:2]).mean,
+    )
