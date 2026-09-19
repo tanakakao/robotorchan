@@ -38,10 +38,10 @@
 
 現在は次の文書があります。
 
-- [Architecture](architecture.md)
-- [Model design guidelines](model-design-guidelines.md)
-- [Training API](training_api_note.md)
-- [Release procedure](releasing.md)
+- [Architecture](development/architecture.md)
+- [Model design guidelines](development/model_design_guidelines.md)
+- [Training API](development/training_api.md)
+- [Release procedure](development/releasing.md)
 
 設計記録、coverage audit、feasibility 文書は、後続Phaseで利用者向け文書と分離します。
 

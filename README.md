@@ -63,8 +63,8 @@ print(posterior.mean)
 - **高次元出力モデルを選ぶ:** [`docs/models/models/high_dimensional_outputs.md`](docs/models/models/high_dimensional_outputs.md)
 - **実際にどう使うか:** [`examples/README.md`](examples/README.md)
 - **高次元の探索戦略:** [`docs/optimization/high_dimensional_search.md`](docs/optimization/high_dimensional_search.md)
-- **設計方針・内部構造:** [`docs/architecture.md`](docs/architecture.md)
-- **リリース手順:** [`docs/releasing.md`](docs/releasing.md)
+- **設計方針・内部構造:** [`docs/development/development/architecture.md`](docs/development/development/architecture.md)
+- **リリース手順:** [`docs/development/development/releasing.md`](docs/development/development/releasing.md)
 
 モデルごとの実行可能な Jupyter Notebook は [`examples/notebooks/`](examples/notebooks/) にあります。
 
