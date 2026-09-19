@@ -44,7 +44,13 @@ print(posterior.mean)
 
 ## ドキュメント
 
-最初に見る場所は次の9つです。
+目的に応じて次の順に進むと、モデル選択から理論、実行例まで辿れます。
+
+1. **モデルを選ぶ:** [モデル概要・使い所ガイド](docs/models.md)
+2. **理論を確認する:** [理論ガイド](docs/theory/README.md)
+3. **コードを動かす:** [Examples / Notebook一覧](examples/README.md)
+
+より専門的な課題では次のドキュメントを参照してください。
 
 - **理論から理解する:** [`docs/theory/README.md`](docs/theory/README.md)
 - **どのモデルを選ぶか:** [`docs/models.md`](docs/models.md)

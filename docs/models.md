@@ -7,7 +7,11 @@
 
 このドキュメントは「どのモデルを選ぶか」を判断するためのガイドです。実際の構築・学習・事後分布予測は、各モデルに対応する Jupyter Notebook を参照してください。
 
+初めて利用する場合は、**このガイドでモデルを選ぶ → 理論ガイドで仮定を確認する → Notebookを実行する**、という順序を推奨します。
+
+- プロジェクト入口: [README](../README.md)
 - モデル選択: この `docs/models.md`
+- 理論・数式: [`docs/theory/README.md`](theory/README.md)
 - 実行例: [`examples/notebooks/`](../examples/notebooks/)
 - Notebook 一覧: [`examples/README.md`](../examples/README.md)
 - 実装設計: [`docs/architecture.md`](architecture.md)
