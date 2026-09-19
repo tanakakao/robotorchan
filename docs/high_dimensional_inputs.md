@@ -55,13 +55,13 @@ for _ in range(100):
     optimizer.step()
 ```
 
-`JointEncoderGP.training_loss()` は negative exact GP MLL、`HybridAutoEncoderGP` はそこへ weighted reconstruction loss、`JointVAEGP` はさらに reconstruction / KL を加えます。従来の `training_loss()` / `training_loss()` は後方互換aliasとして残します。
+`JointEncoderGP.training_loss()` は negative exact GP MLL、`HybridAutoEncoderGP` はそこへ weighted reconstruction loss、`JointVAEGP` はさらに reconstruction / KL を加えます。旧APIの互換aliasは設けず、Joint系の学習APIは `training_loss()` に統一します。
 
 `make_mll()` は引き続きBoTorch/GPyTorchのMLLオブジェクトを返す低レベルAPIです。Hybrid / JointVAEで正則化まで含めて学習する場合は `fit_gpytorch_mll(model.make_mll())` ではなく `training_loss()` を使用してください。
 
 ### VAE latent uncertainty
 
-`JointVAEGP.uncertainty_aware_posterior()` は `q(z | X)` からlatent sampleを生成し、GP posterior mixtureの一次・二次モーメントをMonte Carloで近似します。通常の `posterior(X)` は後方互換性のためposterior mean latent code `mu(X)` を使う決定論的予測のままです。
+`JointVAEGP.uncertainty_aware_posterior()` は `q(z | X)` からlatent sampleを生成し、GP posterior mixtureの一次・二次モーメントをMonte Carloで近似します。通常の `posterior(X)` はposterior mean latent code `mu(X)` を使う決定論的予測です。
 
 ### SAAS
 
@@ -98,9 +98,9 @@ latent GP posterior
 - Joint系は `training_loss()` でencoderとGPを共同最適化できる。
 - JointVAEGPはlatent uncertainty-aware posteriorを提供する。
 
-## Phase 1-11 実装状況
+## 高次元入力・MultiTask 拡張の実装状況
 
-高次元入力モデルの初期実装計画は完了しています。
+高次元入力モデルに加え、入力削減とMultiTask GPを組み合わせる基盤まで実装済みです。
 
 | Phase | 内容 | 状態 |
 | --- | --- | --- |
@@ -111,8 +111,12 @@ latent GP posterior
 | 9 | HybridAutoEncoderGP | 完了 |
 | 10 | Supervised VAE、JointVAE、latent uncertainty propagation | 完了 |
 | 11 | predictive/acquisition/SAAS/sequential/repeated-seed benchmark、model-selection guide、Notebook | 完了 |
+| MT拡張 | PCA/PLS/RP/AE/VAE/教師あり/Joint系 × MultiTask/Kronecker | 完了 |
+| Mixed MT | continuous reduction + categorical bypass + task保持 | 完了 |
+| lifecycle | state_dict復元後のreducer依存training input再同期 | 完了 |
+| benchmark | 高次元long-format MultiTaskの比較benchmark | 完了 |
 
-モデル選択とPhase 11 benchmarkの詳細は `docs/high_dimensional_model_selection.md`、実行例は `examples/notebooks/23_high_dimensional_bo_benchmark.ipynb` を参照してください。
+モデル選択とbenchmarkの詳細は `docs/high_dimensional_model_selection.md`、実行例は `examples/notebooks/23_high_dimensional_bo_benchmark.ipynb` を参照してください。
 
 ## 次の拡張候補
 
