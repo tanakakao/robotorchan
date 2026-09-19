@@ -16,6 +16,7 @@ from torch import Tensor
 from robotorchan.models.base import normalize_feature_dims
 from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.reduction.base import InputReducer
+from robotorchan.reduction.input import PCAInputReducer, RandomProjectionInputReducer
 
 
 class ReducedMultiTaskGP(MultiTaskGP):
@@ -166,3 +167,93 @@ class ReducedKroneckerMultiTaskGP(KroneckerMultiTaskGP):
 
     def condition_on_observations(self, X: Tensor, Y: Tensor, **kwargs: Any):
         return super().condition_on_observations(X=self._prepare_inputs(X), Y=Y, **kwargs)
+
+
+class PCAMultiTaskGP(ReducedMultiTaskGP):
+    """Long-format multi-task GP using PCA over non-task input features."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        n_components: int,
+        *,
+        center: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            task_feature=task_feature,
+            input_reducer=PCAInputReducer(n_components=n_components, center=center),
+            **kwargs,
+        )
+
+
+class PCAKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
+    """Block-design Kronecker multi-task GP using PCA over input features."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        n_components: int,
+        *,
+        center: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=PCAInputReducer(n_components=n_components, center=center),
+            **kwargs,
+        )
+
+
+class RandomProjectionMultiTaskGP(ReducedMultiTaskGP):
+    """Long-format multi-task GP using a frozen random projection."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        n_components: int,
+        *,
+        random_state: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            task_feature=task_feature,
+            input_reducer=RandomProjectionInputReducer(
+                n_components=n_components,
+                random_state=random_state,
+            ),
+            **kwargs,
+        )
+
+
+class RandomProjectionKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
+    """Block-design Kronecker multi-task GP using a frozen random projection."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        n_components: int,
+        *,
+        random_state: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=RandomProjectionInputReducer(
+                n_components=n_components,
+                random_state=random_state,
+            ),
+            **kwargs,
+        )

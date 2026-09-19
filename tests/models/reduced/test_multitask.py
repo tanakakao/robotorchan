@@ -3,6 +3,10 @@
 import torch
 
 from robotorchan.models.reduced.multitask import (
+    PCAKroneckerMultiTaskGP,
+    PCAMultiTaskGP,
+    RandomProjectionKroneckerMultiTaskGP,
+    RandomProjectionMultiTaskGP,
     ReducedKroneckerMultiTaskGP,
     ReducedMultiTaskGP,
 )
@@ -92,3 +96,82 @@ def test_reduced_multitask_rejects_invalid_public_dimension() -> None:
         assert "Expected final input dimension" in str(error)
     else:
         raise AssertionError("Expected invalid public input dimension to fail.")
+
+
+def test_pca_multitask_convenience_model_preserves_task_feature() -> None:
+    dtype = torch.double
+    data = torch.rand(12, 5, dtype=dtype)
+    task = torch.tensor([0.0, 1.0] * 6, dtype=dtype).unsqueeze(-1)
+    train_X = torch.cat([data[:, :1], task, data[:, 1:]], dim=-1)
+    train_Y = data[:, :1] + task
+
+    model = PCAMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=1,
+        n_components=2,
+    )
+
+    prepared = model._prepare_inputs(train_X)
+    assert model.input_reducer.input_dim == 5
+    assert model.original_task_feature == 1
+    assert model.reduced_task_feature == 2
+    assert prepared.shape == torch.Size([12, 3])
+    assert torch.equal(prepared[:, -1], task.squeeze(-1))
+    assert model.make_mll() is not None
+
+
+def test_random_projection_multitask_is_seed_reproducible() -> None:
+    dtype = torch.double
+    data = torch.rand(10, 4, dtype=dtype)
+    task = torch.tensor([0.0, 1.0] * 5, dtype=dtype).unsqueeze(-1)
+    train_X = torch.cat([data, task], dim=-1)
+    train_Y = data[:, :1]
+
+    first = RandomProjectionMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=-1,
+        n_components=2,
+        random_state=7,
+    )
+    second = RandomProjectionMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=-1,
+        n_components=2,
+        random_state=7,
+    )
+
+    assert torch.equal(first.input_reducer.projection, second.input_reducer.projection)
+    assert torch.equal(first._prepare_inputs(train_X), second._prepare_inputs(train_X))
+
+
+def test_pca_kronecker_convenience_model_supports_posterior() -> None:
+    dtype = torch.double
+    train_X = torch.rand(8, 5, dtype=dtype)
+    train_Y = torch.stack([train_X[:, 0], train_X[:, 1]], dim=-1)
+    model = PCAKroneckerMultiTaskGP(train_X, train_Y, n_components=2)
+
+    posterior = model.posterior(train_X[:3])
+
+    assert model.reduced_input_dim == 2
+    assert posterior.mean.shape[-2:] == torch.Size([3, 2])
+    assert model.make_mll() is not None
+
+
+def test_random_projection_kronecker_supports_q_batch_posterior() -> None:
+    dtype = torch.double
+    train_X = torch.rand(8, 4, dtype=dtype)
+    train_Y = torch.stack([train_X[:, 0], train_X[:, 1]], dim=-1)
+    model = RandomProjectionKroneckerMultiTaskGP(
+        train_X,
+        train_Y,
+        n_components=2,
+        random_state=11,
+    )
+    candidates = torch.rand(2, 3, 4, dtype=dtype)
+
+    posterior = model.posterior(candidates)
+
+    assert posterior.mean.shape[-2:] == torch.Size([3, 2])
