@@ -42,6 +42,10 @@ public symbol or semantic decision changed by the phase. In particular:
    exports change.
 6. Verify that every changed semantic gate has a positive replacement test.
    Do not leave contradictory old tests in place.
+7. For every new or edited Python file, run Ruff's import organization and
+   formatter over the final file state. In particular, do not hand-tune blank
+   lines after import blocks: `ruff check .` and `ruff format --check .` are the
+   authoritative contract.
 
 This stale-contract sweep is mandatory because robotorchan develops in phases:
 an earlier phase may intentionally add a negative contract test that a later
