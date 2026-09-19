@@ -107,9 +107,9 @@ class MixedReducedMultiTaskGP(MixedMultiTaskGP):
             )
         data_X = X[..., list(self.data_dims)]
         reduced_data_X = self._mixed_reducer.transform(data_X)
-        task = X[
-            ..., self.original_task_feature : self.original_task_feature + 1
-        ].to(reduced_data_X)
+        task = X[..., self.original_task_feature : self.original_task_feature + 1].to(
+            reduced_data_X
+        )
         return torch.cat((reduced_data_X, task), dim=-1)
 
     def posterior(self, X: Tensor, *args: Any, **kwargs: Any):
