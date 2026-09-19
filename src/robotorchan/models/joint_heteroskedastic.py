@@ -134,7 +134,5 @@ class JointHeteroskedasticSingleTaskGP(RawDataMixin, nn.Module):
         response_kl = self.response_model.model.variational_strategy.kl_divergence().sum()
         noise_kl = self.noise_model.model.variational_strategy.kl_divergence().sum()
         return (
-            -expected_log_likelihood
-            + self.beta_response * response_kl
-            + self.beta_noise * noise_kl
+            -expected_log_likelihood + self.beta_response * response_kl + self.beta_noise * noise_kl
         ) / X.shape[-2]
