@@ -1,6 +1,6 @@
 # robotorchan モデル概要・使い所ガイド
 
-> 対象: `robotorchan` main ブランチ（2026-09-12 時点）  
+> 対象: `robotorchan.models` の現行 public API  
 > 方針: BoTorch のモデル挙動を維持しつつ、raw data の保持や `make_mll()` など robotorchan 共通 API を追加する。
 
 ## 1. このドキュメントの目的
@@ -30,6 +30,13 @@
 | 高次元・MAP-SAAS | `AdditiveMapSaasSingleTaskGP` / `EnsembleMapSaasSingleTaskGP` | [09](../examples/notebooks/09_map_saas_and_additive_gp.ipynb) |
 | 加法構造を仮定 | `OrthogonalAdditiveGP` | [09](../examples/notebooks/09_map_saas_and_additive_gp.ipynb) |
 | 外れ値の影響を抑えたい | `RobustRelevancePursuitSingleTaskGP` | [10](../examples/notebooks/10_robust_gp.ipynb) |
+| 裾の重い観測ノイズを扱いたい | `StudentTSingleTaskGP` | 個別ドキュメント参照 |
+| 一部の観測が汚染分布に由来する | `ContaminatedSingleTaskGP` | 個別ドキュメント参照 |
+| 入力位置で観測ノイズが変わる | `HeteroskedasticSingleTaskGP` / `JointHeteroskedasticSingleTaskGP` | 個別ドキュメント参照 |
+| 同一条件の反復測定からノイズを推定 | `ReplicateNoiseSingleTaskGP` | 個別ドキュメント参照 |
+| 入力空間で滑らかさが変化する | `NonstationarySingleTaskGP` | 個別ドキュメント参照 |
+| 連続入力自体に測定不確かさがある | `UncertainInputSingleTaskGP` | 個別ドキュメント参照 |
+| カテゴリ入力に確率的不確かさがある | `UncertainCategoricalSingleTaskGP` | 個別ドキュメント参照 |
 | テンソル出力 | `HigherOrderGP` | [11](../examples/notebooks/11_structured_output_gp.ipynb) |
 | 時間・波長・位置など明示的な出力軸 | `LatentKroneckerGP` | [11](../examples/notebooks/11_structured_output_gp.ipynb) |
 | 条件によって有効変数が変わる | `HierarchicalConditionalKernelGP` | [12](../examples/notebooks/12_hierarchical_gp.ipynb) |
@@ -189,7 +196,58 @@ MAP 推定を使う SAAS 系モデルです。Fully Bayesian SAAS より軽量�
 
 **Notebook:** [10_robust_gp.ipynb](../examples/notebooks/10_robust_gp.ipynb)
 
-## 10. 構造化出力
+## 10. Robust / Noise / Input Uncertainty
+
+通常の Gaussian observation noise では表現しにくい外れ値、入力依存ノイズ、反復測定、入力不確かさ、非定常性には専用モデルを使います。これらは同じ「robust GP」ではなく、**どの仮定が通常 GP から外れているか**で選択します。
+
+### 外れ値・汚染観測
+
+- `RobustRelevancePursuitSingleTaskGP`: 少数の異常観測を relevance pursuit で扱います。
+- `StudentTSingleTaskGP`: heavy-tailed な Student-t 観測モデルで大きな残差への感度を抑えます。
+- `ContaminatedSingleTaskGP`: 通常観測と汚染観測の mixture として外れ値をモデル化します。
+
+詳細: [Student-t GP](models/student_t_gp.md)、[Contaminated GP](models/contaminated_gp.md)
+
+### Heteroskedastic / replicate noise
+
+- `HeteroskedasticSingleTaskGP`: 応答 GP と推定された入力依存ノイズ過程を反復的に扱います。
+- `JointHeteroskedasticSingleTaskGP`: 応答と log-noise の潜在過程を joint に学習します。
+- `ReplicateNoiseSingleTaskGP`: 同一入力の反復測定から group mean と variance-of-the-mean を構成します。
+
+詳細: [Heteroskedastic feasibility](models/heteroskedastic_gp_feasibility.md)、[Joint heteroskedastic GP](models/joint_heteroskedastic_gp.md)、[Replicate-noise GP](models/replicate_noise_gp.md)
+
+### Input uncertainty
+
+- `UncertainInputSingleTaskGP`: 連続 training input の Gaussian uncertainty を covariance に反映します。
+- `UncertainCategoricalSingleTaskGP`: categorical input の不確かさをカテゴリ確率として扱います。
+- `MixedUncertainInputSingleTaskGP`: continuous uncertainty と deterministic nominal category を分離して扱います。
+
+カテゴリコードを連続量として Gaussian perturbation するモデルではありません。
+
+詳細: [Uncertain-input GP](models/uncertain_input_gp.md)、[Uncertain categorical GP](models/uncertain_categorical_gp.md)、[Mixed uncertain-input GP](models/mixed_uncertain_input_gp.md)
+
+### Nonstationary GP
+
+`NonstationarySingleTaskGP` は入力位置によって局所 lengthscale が変化する場合に使います。観測ノイズが場所によって変化する heteroskedastic GP とは対象とする非定常性が異なります。
+
+詳細: [Nonstationary GP](models/nonstationary_gp.md)
+
+### Mixed robust / noise models
+
+robotorchan には continuous 版の単純な alias ではなく、native categorical covariance を使う Mixed 実装があります。
+
+- `MixedStudentTSingleTaskGP`
+- `MixedContaminatedSingleTaskGP`
+- `MixedHeteroskedasticSingleTaskGP`
+- `MixedJointHeteroskedasticSingleTaskGP`
+- `MixedReplicateNoiseSingleTaskGP`
+- `MixedNonstationarySingleTaskGP`
+- `MixedUncertainInputSingleTaskGP`
+- `MixedRobustRelevancePursuitSingleTaskGP`
+
+設計上の対応範囲は [Robust × Mixed coverage](robust-mixed-coverage-audit.md) を参照してください。
+
+## 11. 構造化出力
 
 ### `HigherOrderGP`
 
@@ -207,7 +265,7 @@ MAP 推定を使う SAAS 系モデルです。Fully Bayesian SAAS より軽量�
 
 **Notebook:** [11_structured_output_gp.ipynb](../examples/notebooks/11_structured_output_gp.ipynb)
 
-## 11. 階層・条件付き探索空間
+## 12. 階層・条件付き探索空間
 
 ### `HierarchicalConditionalKernelGP`
 
@@ -227,7 +285,7 @@ MAP 推定を使う SAAS 系モデルです。Fully Bayesian SAAS より軽量�
 
 **Notebook:** [12_hierarchical_gp.ipynb](../examples/notebooks/12_hierarchical_gp.ipynb)
 
-## 12. Heterogeneous Multi-task
+## 13. Heterogeneous Multi-task
 
 ### `HeterogeneousMTGP`
 
@@ -237,7 +295,7 @@ MAP 推定を使う SAAS 系モデルです。Fully Bayesian SAAS より軽量�
 
 **Notebook:** [13_heterogeneous_multitask_gp.ipynb](../examples/notebooks/13_heterogeneous_multitask_gp.ipynb)
 
-## 13. Contextual GP
+## 14. Contextual GP
 
 ### `SACGP`
 
@@ -259,7 +317,7 @@ context / task を multi-output として扱い、context 特徴量や embedding
 
 **Notebook:** [14_contextual_gp.ipynb](../examples/notebooks/14_contextual_gp.ipynb)
 
-## 14. 実務的な選び方
+## 15. 実務的な選び方
 
 1. まず `SingleTaskGP` をベースラインにする。
 2. カテゴリがあるなら `MixedSingleTaskGP`。
@@ -268,14 +326,17 @@ context / task を multi-output として扱い、context 特徴量や embedding
 5. 複数目的を独立に学習するなら `ModelListGP`。
 6. データ量が大きければ `SingleTaskVariationalGP`。
 7. 高次元・少数有効変数なら SAAS / MAP-SAAS。
-8. 出力がスペクトル・画像・時系列なら structured-output GP。
-9. 条件によって変数の有効/無効が変わるなら hierarchical GP。
-10. task ごとに特徴量構造が異なるなら `HeterogeneousMTGP`。
-11. 明示的な context 構造があるときだけ contextual GP を選ぶ。
+8. 外れ値なら Student-t / Contaminated / Relevance Pursuit の仮定を比較する。
+9. 入力依存ノイズなら Heteroskedastic、反復測定があるなら Replicate Noise を検討する。
+10. 入力自体が不確かなら Uncertain Input、関数の滑らかさが場所で変わるなら Nonstationary GP を検討する。
+11. 出力がスペクトル・画像・時系列なら structured-output GP.
+12. 条件によって変数の有効/無効が変わるなら hierarchical GP。
+13. task ごとに特徴量構造が異なるなら `HeterogeneousMTGP`。
+14. 明示的な context 構造があるときだけ contextual GP を選ぶ。
 
 モデルの特殊性が高いほど、「使えるから選ぶ」のではなく、そのモデルが仮定するデータ構造が実問題に一致しているかを優先してください。
 
-## 15. 全Notebook一覧
+## 16. 全Notebook一覧
 
 1. [SingleTaskGP](../examples/notebooks/01_single_task_gp.ipynb)
 2. [MixedSingleTaskGP](../examples/notebooks/02_mixed_single_task_gp.ipynb)
