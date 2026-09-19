@@ -58,9 +58,7 @@ def test_mixed_uncertain_input_supports_multiple_categories() -> None:
 def test_mixed_uncertain_input_rejects_uncertainty_over_category_width() -> None:
     X, Y = _data()
     try:
-        MixedUncertainInputSingleTaskGP(
-            X, Y, cat_dims=[1], train_X_std=torch.full_like(X, 0.05)
-        )
+        MixedUncertainInputSingleTaskGP(X, Y, cat_dims=[1], train_X_std=torch.full_like(X, 0.05))
     except ValueError:
         pass
     else:
