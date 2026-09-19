@@ -14,7 +14,10 @@ def _data():
     return X, Y
 
 
-@pytest.mark.parametrize("model_cls", [MixedAdditiveMapSaasSingleTaskGP, MixedEnsembleMapSaasSingleTaskGP])
+@pytest.mark.parametrize(
+    "model_cls",
+    [MixedAdditiveMapSaasSingleTaskGP, MixedEnsembleMapSaasSingleTaskGP],
+)
 def test_mixed_map_saas_raw_api_and_encoding(model_cls):
     X, Y = _data()
     model = model_cls(X, Y, cat_dims=[-1], num_taus=2)
