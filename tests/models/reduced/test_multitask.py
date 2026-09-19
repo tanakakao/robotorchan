@@ -13,6 +13,10 @@ from robotorchan.models.reduced.multitask import (
     RandomProjectionMultiTaskGP,
     ReducedKroneckerMultiTaskGP,
     ReducedMultiTaskGP,
+    SupervisedAutoEncoderKroneckerMultiTaskGP,
+    SupervisedAutoEncoderMultiTaskGP,
+    SupervisedVAEKroneckerMultiTaskGP,
+    SupervisedVAEMultiTaskGP,
     VAEKroneckerMultiTaskGP,
     VAEMultiTaskGP,
 )
@@ -331,4 +335,84 @@ def test_vae_kronecker_supports_posterior_and_mll() -> None:
     posterior = model.posterior(train_X[:3])
 
     assert posterior.mean.shape[-2:] == torch.Size([3, 2])
+    assert model.make_mll() is not None
+
+
+def test_supervised_autoencoder_multitask_uses_rowwise_targets() -> None:
+    dtype = torch.double
+    data = torch.rand(10, 4, dtype=dtype)
+    task = torch.tensor([0.0, 1.0] * 5, dtype=dtype).unsqueeze(-1)
+    train_X = torch.cat([data[:, :2], task, data[:, 2:]], dim=-1)
+    train_Y = data[:, :1] + 0.4 * task
+    model = SupervisedAutoEncoderMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=2,
+        latent_dim=2,
+        hidden_dims=(6,),
+        epochs=2,
+        random_state=19,
+    )
+
+    assert model.input_reducer.y_mean is not None
+    assert model.input_reducer.y_mean.numel() == 1
+    prepared = model._prepare_inputs(train_X)
+    assert torch.equal(prepared[:, -1], task.squeeze(-1))
+
+
+def test_supervised_autoencoder_kronecker_uses_all_task_targets() -> None:
+    dtype = torch.double
+    train_X = torch.rand(8, 4, dtype=dtype)
+    train_Y = torch.stack([train_X[:, 0], train_X[:, 1]], dim=-1)
+    model = SupervisedAutoEncoderKroneckerMultiTaskGP(
+        train_X,
+        train_Y,
+        latent_dim=2,
+        hidden_dims=(6,),
+        epochs=2,
+        random_state=23,
+    )
+
+    assert model.input_reducer.y_mean is not None
+    assert model.input_reducer.y_mean.shape == torch.Size([2])
+    assert model.posterior(train_X[:3]).mean.shape[-2:] == torch.Size([3, 2])
+
+
+def test_supervised_vae_multitask_preserves_task_feature() -> None:
+    dtype = torch.double
+    data = torch.rand(10, 4, dtype=dtype)
+    task = torch.tensor([0.0, 1.0] * 5, dtype=dtype).unsqueeze(-1)
+    train_X = torch.cat([data, task], dim=-1)
+    train_Y = data[:, :1] - 0.2 * task
+    model = SupervisedVAEMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=-1,
+        latent_dim=2,
+        hidden_dims=(6,),
+        epochs=2,
+        random_state=29,
+    )
+
+    prepared = model._prepare_inputs(train_X)
+    assert torch.equal(prepared[:, -1], task.squeeze(-1))
+    assert model.input_reducer.y_mean is not None
+    assert model.input_reducer.y_mean.numel() == 1
+
+
+def test_supervised_vae_kronecker_uses_multioutput_auxiliary_head() -> None:
+    dtype = torch.double
+    train_X = torch.rand(8, 4, dtype=dtype)
+    train_Y = torch.stack([train_X[:, 0], train_X[:, 2]], dim=-1)
+    model = SupervisedVAEKroneckerMultiTaskGP(
+        train_X,
+        train_Y,
+        latent_dim=2,
+        hidden_dims=(6,),
+        epochs=2,
+        random_state=31,
+    )
+
+    assert model.input_reducer.supervised_head is not None
+    assert model.input_reducer.supervised_head.out_features == 2
     assert model.make_mll() is not None

@@ -32,6 +32,10 @@ from robotorchan.models.reduced.multitask import (
     RandomProjectionMultiTaskGP,
     ReducedKroneckerMultiTaskGP,
     ReducedMultiTaskGP,
+    SupervisedAutoEncoderKroneckerMultiTaskGP,
+    SupervisedAutoEncoderMultiTaskGP,
+    SupervisedVAEKroneckerMultiTaskGP,
+    SupervisedVAEMultiTaskGP,
     VAEKroneckerMultiTaskGP,
     VAEMultiTaskGP,
 )
@@ -80,7 +84,11 @@ __all__ = [
     "ReducedKroneckerMultiTaskGP",
     "ReducedMultiTaskGP",
     "SupervisedAutoEncoderGP",
+    "SupervisedAutoEncoderKroneckerMultiTaskGP",
+    "SupervisedAutoEncoderMultiTaskGP",
     "SupervisedVAEGP",
+    "SupervisedVAEKroneckerMultiTaskGP",
+    "SupervisedVAEMultiTaskGP",
     "VAEKroneckerMultiTaskGP",
     "VAEMultiTaskGP",
 ]
