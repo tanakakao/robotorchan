@@ -1,5 +1,6 @@
 """Tests for mixed iterative and joint heteroskedastic surrogates."""
 
+import pytest
 import torch
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 
@@ -44,3 +45,23 @@ def test_mixed_joint_heteroskedastic_training_and_acquisition() -> None:
     assert torch.isfinite(model.predicted_noise(X[:2])).all()
     acq = qUpperConfidenceBound(model=model, beta=0.2)
     assert torch.isfinite(acq(X[:2].unsqueeze(0))).all()
+
+
+def test_mixed_iterative_heteroskedastic_requires_fit_for_noise_posterior() -> None:
+    X, Y = _data()
+    model = MixedHeteroskedasticSingleTaskGP(X, Y, cat_dims=[1])
+    with pytest.raises(RuntimeError, match="fit_heteroskedastic"):
+        model.noise_posterior(X)
+
+
+def test_mixed_iterative_heteroskedastic_fits_mixed_noise_process() -> None:
+    X, Y = _data()
+    model = MixedHeteroskedasticSingleTaskGP(X, Y, cat_dims=[1])
+    returned = model.fit_heteroskedastic(iterations=1)
+    assert returned is model
+    assert model.noise_model is not None
+    assert model.noise_model.cat_dims == (1,)
+    noise = model.predicted_noise(X)
+    assert noise.shape == Y.shape
+    assert torch.all(noise >= model.noise_floor)
+    assert torch.isfinite(noise).all()
