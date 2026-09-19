@@ -7,6 +7,11 @@ import torch.nn.functional as F
 from gpytorch.kernels import Kernel, ScaleKernel
 from torch import Tensor, nn
 
+from robotorchan.models.base import (
+    continuous_feature_dims,
+    make_mixed_covar_module,
+    normalize_feature_dims,
+)
 from robotorchan.models.single_task import SingleTaskGP
 
 
@@ -97,3 +102,64 @@ class NonstationarySingleTaskGP(SingleTaskGP):
     def local_lengthscale(self, X: Tensor) -> Tensor:
         """Return learned input-dependent lengthscales."""
         return self.gibbs_kernel.local_lengthscale(X)
+
+
+class MixedNonstationarySingleTaskGP(SingleTaskGP):
+    """Mixed exact GP with Gibbs covariance restricted to continuous dimensions."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        cat_dims: list[int],
+        train_Yvar: Tensor | None = None,
+        lengthscale_floor: float = 1e-3,
+    ) -> None:
+        input_dim = train_X.shape[-1]
+        normalized_cat_dims = normalize_feature_dims(cat_dims, input_dim, name="cat_dims")
+        continuous_dims = continuous_feature_dims(input_dim, cat_dims=normalized_cat_dims)
+        if not continuous_dims:
+            raise ValueError(
+                "MixedNonstationarySingleTaskGP requires at least one continuous dimension."
+            )
+        _, aug_batch_shape = self.get_batch_dimensions(train_X=train_X, train_Y=train_Y)
+
+        def gibbs_factory(batch_shape, ard_num_dims, active_dims):
+            del batch_shape, ard_num_dims
+            return ScaleKernel(
+                GibbsKernel(len(active_dims), lengthscale_floor=lengthscale_floor),
+                active_dims=active_dims,
+            )
+
+        covar_module = make_mixed_covar_module(
+            input_dim=input_dim,
+            cat_dims=normalized_cat_dims,
+            batch_shape=aug_batch_shape,
+            cont_kernel_factory=gibbs_factory,
+        )
+        SingleTaskGP.__init__(
+            self,
+            train_X=train_X,
+            train_Y=train_Y,
+            train_Yvar=train_Yvar,
+            covar_module=covar_module,
+        )
+        self.cat_dims = normalized_cat_dims
+        self.continuous_dims = continuous_dims
+
+    def local_lengthscale(self, X: Tensor) -> tuple[Tensor, Tensor]:
+        """Return local lengthscales from the additive and interaction Gibbs kernels."""
+        continuous_X = X[..., list(self.continuous_dims)]
+        additive = self.covar_module.kernels[0]
+        interaction = self.covar_module.kernels[2].kernels[0]
+        additive_gibbs = additive.base_kernel
+        interaction_gibbs = interaction.base_kernel
+        if not isinstance(additive_gibbs, GibbsKernel) or not isinstance(
+            interaction_gibbs, GibbsKernel
+        ):
+            raise RuntimeError("Expected GibbsKernel in both continuous covariance branches.")
+        return (
+            additive_gibbs.local_lengthscale(continuous_X),
+            interaction_gibbs.local_lengthscale(continuous_X),
+        )

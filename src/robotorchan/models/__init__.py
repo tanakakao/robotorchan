@@ -41,7 +41,10 @@ from robotorchan.models.multitask import (
     MixedMultiTaskGP,
     MultiTaskGP,
 )
-from robotorchan.models.nonstationary import NonstationarySingleTaskGP
+from robotorchan.models.nonstationary import (
+    MixedNonstationarySingleTaskGP,
+    NonstationarySingleTaskGP,
+)
 from robotorchan.models.pairwise import PairwiseGP
 from robotorchan.models.reduced.base import (
     PCAGP,
@@ -168,6 +171,7 @@ __all__ = [
     "MixedLCEMGP",
     "MixedLatentKroneckerGP",
     "MixedMultiTaskGP",
+    "MixedNonstationarySingleTaskGP",
     "MixedOrthogonalAdditiveGP",
     "MixedPCAGP",
     "MixedPLSGP",
