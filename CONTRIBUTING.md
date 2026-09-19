@@ -34,7 +34,10 @@ pip install -e ".[dev,examples,fully-bayesian]"
 ```bash
 ruff check .
 ruff format --check .
-pytest
+pytest \
+  --ignore=tests/test_saas_fully_bayesian.py \
+  --ignore=tests/test_saas_fully_bayesian_multitask.py \
+  --ignore=tests/test_saas_fully_bayesian_mixed.py
 ```
 
 Fully Bayesian関連は専用依存関係を導入した環境で対象テストを実行してください。
