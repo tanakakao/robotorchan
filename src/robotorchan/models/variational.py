@@ -143,9 +143,7 @@ class MixedSingleTaskVariationalGP(SingleTaskVariationalGP):
     ) -> None:
         """Initialize a mixed-input variational GP."""
         input_dim = train_X.shape[-1]
-        normalized_cat_dims = normalize_feature_dims(
-            cat_dims, input_dim, name="cat_dims"
-        )
+        normalized_cat_dims = normalize_feature_dims(cat_dims, input_dim, name="cat_dims")
         covar_module = make_mixed_covar_module(
             input_dim=input_dim,
             cat_dims=normalized_cat_dims,
