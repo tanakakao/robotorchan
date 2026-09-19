@@ -212,9 +212,7 @@ class MixedHeterogeneousMTGP(HeterogeneousMTGP):
         outcome_transform: OutcomeTransform | None = None,
         validate_task_values: bool = True,
     ) -> None:
-        normalized_cat_dims = tuple(
-            normalize_feature_dims(cat_dims, input_dim=full_feature_dim)
-        )
+        normalized_cat_dims = tuple(normalize_feature_dims(cat_dims, input_dim=full_feature_dim))
         super().__init__(
             train_Xs=train_Xs,
             train_Ys=train_Ys,
