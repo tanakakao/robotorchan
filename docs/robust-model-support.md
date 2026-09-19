@@ -122,7 +122,7 @@ nominal `RobustALEBOGP` by mechanically combining names.
 The following surrogate capabilities remain materially distinct from the
 existing relevance-pursuit model and are candidates for later phases:
 
-1. Heteroskedastic observation modeling for input-dependent noise.
+1. Heteroskedastic observation modeling for input-dependent noise. Phase 6 found no maintained\n   BoTorch 0.18.1 exact-GP wrapper suitable for a truthful thin wrapper; see\n   `docs/models/heteroskedastic_gp_feasibility.md`.
 2. Heavy-tailed / Student-t observation modeling.
 3. Uncertain-input GP modeling when training inputs themselves are uncertain.
 
