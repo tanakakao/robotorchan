@@ -56,7 +56,7 @@
 | Optimization | 探索戦略、獲得・最適化側の実務ガイド |
 | Theory | なぜ使えるか、数式、統計的仮定 |
 | Benchmarks | 比較条件、評価方法、実験結果 |
-| Development | architecture、設計判断、audit、release |
+| Development | architecture、設計原則、training contract、release |
 
 ## 網羅性に関する方針
 
@@ -85,3 +85,9 @@ docs/
 ```
 
 旧パス維持のための互換文書や旧名エイリアスは作らず、参照側を現在の構造へ完全移行します。
+
+## Coverage status
+
+現在の `model_coverage.json` は public model 102件を登録し、全件に model-family guide、Theory、代表Notebookを割り当てています。Theory は21章、Notebook collection は23冊です。
+
+coverage は「ファイルが存在する」だけではなく、モデル選択 → 統計的仮定 → 実行例へ辿るためのナビゲーション契約として扱います。代表Notebookは同じモデルファミリーや学習契約を共有する複数variantを扱う場合があります。
