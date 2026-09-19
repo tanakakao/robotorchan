@@ -195,6 +195,30 @@ Structured / correlated output family
 
 `ReducedGP` は reducer composition を担当し、structured-output model はそれぞれ BoTorch 本来の covariance structure を保持します。
 
+## 9. SAAS と次元削減の関係
+
+SAAS は PCA / PLS / AE のように入力を低次元座標へ射影するモデルではありません。
+高次元の元入力空間を保ったまま、lengthscale に sparsity prior を置いて重要な入力次元を
+選択的に使う方針です。そのため、次元削減モデルとは相補的ですが、同じ問題への別アプローチです。
+
+robotorchan では次を基本方針とします。
+
+- 少数の元特徴だけが効くと考えられる高次元 X: `SaasFullyBayesianSingleTaskGP`
+- 同じ sparse high-dimensional X を複数 task で共有する long-format データ:
+  `SaasFullyBayesianMultiTaskGP`
+- 低次元 manifold / 線形部分空間を仮定したい X: `PCAGP`, `PLSGP`, AE/VAE 系
+- 高次元 X と task covariance の両方を扱いつつ明示的に圧縮したい:
+  `ReducedMultiTaskGP` / `ReducedKroneckerMultiTaskGP` 系
+
+SAAS の前段へ reducer を機械的に追加した `ReducedSaas...` クラスは作りません。SAAS prior が
+作用する座標が reducer 後の latent coordinate に変わるため、「元特徴の sparsity」という
+SAAS の解釈が失われるからです。必要な場合は独立した統計モデルとして設計・検証します。
+
+また、BoTorch の fully Bayesian multi-task SAAS は long-format task-feature 型です。
+現時点では `SaasFullyBayesianKroneckerMultiTaskGP` に相当するモデルを新設しません。
+block-design の `KroneckerMultiTaskGP` と SAAS を名前だけで合成せず、対応する inference / kernel
+設計が明確になった場合に別機能として追加します。
+
 ## 9. MultiTask と output reduction の関係
 
 Phase 9 の監査では、output reduction と MultiTask / KroneckerMultiTask を単純に合成する
