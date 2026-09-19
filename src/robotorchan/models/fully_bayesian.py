@@ -161,12 +161,8 @@ class MixedSaasFullyBayesianSingleTaskGP(SaasFullyBayesianSingleTaskGP):
                 )
                 overlap = set(raw_warp_dims).intersection(transform.cat_dims)
                 if overlap:
-                    raise ValueError(
-                        "indices_to_warp must not include categorical features."
-                    )
-                indices_to_warp = [
-                    transform.encoded_scalar_index(dim) for dim in raw_warp_dims
-                ]
+                    raise ValueError("indices_to_warp must not include categorical features.")
+                indices_to_warp = [transform.encoded_scalar_index(dim) for dim in raw_warp_dims]
         super().__init__(
             train_X=encoded_train_X,
             train_Y=train_Y,
@@ -273,9 +269,7 @@ class MixedSaasFullyBayesianMultiTaskGP(SaasFullyBayesianMultiTaskGP):
             shape = (1,) * (X.ndim - 1) + (values.numel(),)
             encoded = X[..., dim : dim + 1] == values.reshape(shape)
             if not torch.all(encoded.sum(dim=-1) == 1):
-                raise ValueError(
-                    f"Input contains an unseen category in categorical feature {dim}."
-                )
+                raise ValueError(f"Input contains an unseen category in categorical feature {dim}.")
             parts.append(encoded.to(dtype=X.dtype))
         encoded_X = torch.cat(parts, dim=-1)
         return super().posterior(encoded_X, *args, **kwargs)
