@@ -18,6 +18,7 @@ from robotorchan.models.hierarchical import (
     MixedHierarchicalConditionalKernelMultiTaskGP,
 )
 from robotorchan.models.higher_order import HigherOrderGP, MixedHigherOrderGP
+from robotorchan.models.joint_heteroskedastic import JointHeteroskedasticSingleTaskGP
 from robotorchan.models.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
 from robotorchan.models.map_saas import (
     AdditiveMapSaasSingleTaskGP,
@@ -110,6 +111,7 @@ from robotorchan.models.variational import (
 )
 
 __all__ = [
+    "JointHeteroskedasticSingleTaskGP",
     "ALEBOGP",
     "LCEAGP",
     "LCEMGP",
