@@ -359,3 +359,17 @@ SACGP and LCEAGP do not receive generic Mixed wrappers in this phase: their
 contextual decomposition / embedding semantics already assign special meaning
 to contextual categorical information, so treating those coordinates as
 ordinary categorical design variables would conflate two different roles.
+
+
+## Phase 10 ALEBO / specialized high-dimensional status
+
+ALEBO remains intentionally continuous-only. The current surrogate operates in
+continuous embedded coordinates and the current search strategy optimizes a
+continuous feasible polytope followed by linear reconstruction. A nominal
+`MixedALEBOGP` would therefore be misleading: a categorical kernel in the
+surrogate alone cannot keep reconstructed raw categories discrete.
+
+See `docs/mixed-alebo-design.md` for the required end-to-end design boundary.
+`PairwiseGP` also remains without a generic Mixed wrapper pending a dedicated
+preference-model design that verifies categorical covariance together with
+Laplace inference and datapoint consolidation semantics.
