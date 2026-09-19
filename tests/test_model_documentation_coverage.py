@@ -43,3 +43,12 @@ def test_exclusions_are_real_public_non_model_exports() -> None:
 
     assert excluded <= set(models.__all__)
     assert excluded == {"UnsupportedModelOperationError"}
+
+
+def test_model_guide_names_every_public_model() -> None:
+    """The durable selection guide must name every public model explicitly."""
+    manifest = _load_manifest()
+    guide_text = (ROOT / "docs" / "models.md").read_text(encoding="utf-8")
+
+    missing = sorted(name for name in manifest["models"] if f"`{name}`" not in guide_text)
+    assert not missing, f"models missing from docs/models.md: {missing}"
