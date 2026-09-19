@@ -90,7 +90,7 @@ class ReducedMultiTaskGP(MultiTaskGP):
         self._original_input_dim_value = input_dim
         self._store_supervised_training_data(train_X, train_Y, train_Yvar)
 
-    @property
+    def load_state_dict(\n        self,\n        state_dict: dict[str, Tensor],\n        strict: bool = True,\n        assign: bool = False,\n    ):\n        """Load reducer state and rebuild reducer-dependent GP training inputs."""\n        result = super().load_state_dict(state_dict, strict=strict, assign=assign)\n        train_X = self._prepare_inputs(self.raw_train_X)\n        if hasattr(self, "input_transform"):\n            train_X = self.transform_inputs(train_X)\n        self.set_train_data(inputs=train_X, targets=self.train_targets, strict=False)\n        return result\n\n    @property
     def original_input_dim(self) -> int:
         return self._original_input_dim_value
 
@@ -154,7 +154,7 @@ class ReducedKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         self._original_input_dim_value = train_X.shape[-1]
         self._store_supervised_training_data(train_X, train_Y, None)
 
-    @property
+    def load_state_dict(\n        self,\n        state_dict: dict[str, Tensor],\n        strict: bool = True,\n        assign: bool = False,\n    ):\n        """Load reducer state and rebuild reducer-dependent GP training inputs."""\n        result = super().load_state_dict(state_dict, strict=strict, assign=assign)\n        train_X = self._prepare_inputs(self.raw_train_X)\n        if hasattr(self, "input_transform"):\n            train_X = self.transform_inputs(train_X)\n        self.set_train_data(inputs=train_X, targets=self.train_targets, strict=False)\n        return result\n\n    @property
     def original_input_dim(self) -> int:
         return self._original_input_dim_value
 
