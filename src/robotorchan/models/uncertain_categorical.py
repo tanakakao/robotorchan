@@ -80,9 +80,7 @@ class AugmentedUncertainCategoricalKernel(Kernel):
         self.continuous_kernel = (
             None
             if continuous_dim == 0
-            else ScaleKernel(
-                get_covar_module_with_dim_scaled_prior(ard_num_dims=continuous_dim)
-            )
+            else ScaleKernel(get_covar_module_with_dim_scaled_prior(ard_num_dims=continuous_dim))
         )
 
     def forward(
