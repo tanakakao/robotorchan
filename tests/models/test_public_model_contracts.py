@@ -52,6 +52,7 @@ PUBLIC_MODEL_NAMES = {
     "MixedPCAGP",
     "MixedPLSGP",
     "MixedRandomProjectionGP",
+    "MixedReplicateNoiseSingleTaskGP",
     "MixedRobustRelevancePursuitSingleTaskGP",
     "MixedSaasFullyBayesianMultiTaskGP",
     "MixedSaasFullyBayesianSingleTaskGP",

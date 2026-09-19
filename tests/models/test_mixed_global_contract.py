@@ -25,6 +25,7 @@ EXPECTED_MIXED_MODELS = {
     "MixedPCAGP",
     "MixedPLSGP",
     "MixedRandomProjectionGP",
+    "MixedReplicateNoiseSingleTaskGP",
     "MixedReducedGP",
     "MixedReducedKroneckerMultiTaskGP",
     "MixedReducedMultiTaskGP",
