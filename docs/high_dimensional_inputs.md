@@ -98,6 +98,18 @@ latent GP posterior
 - Joint系は `training_loss()` でencoderとGPを共同最適化できる。
 - JointVAEGPはlatent uncertainty-aware posteriorを提供する。
 
+## Mixed / MultiTask との組合せ
+
+public API は「すべての reducer × すべての task/mixed 形式」の機械的な直積ではありません。
+
+- SingleTask の frozen / neural reduction は named wrapper を提供します。
+- MultiTask / KroneckerMultiTask では PCA / PLS / Random Projection / AE / VAE / supervised / joint 系を task identity を保持する形で提供します。
+- Mixed SingleTask では continuous feature だけを reducer へ通し、categorical feature を bypass します。
+- Mixed + MultiTask の共通基盤は `MixedReducedMultiTaskGP` /
+  `MixedReducedKroneckerMultiTaskGP` です。存在しない named cross-product をドキュメント上で仮定しません。
+
+詳細は [高次元 MultiTask GP](high_dimensional_multitask.md) を参照してください。
+
 ## 高次元入力・MultiTask 拡張の実装状況
 
 高次元入力モデルに加え、入力削減とMultiTask GPを組み合わせる基盤まで実装済みです。
@@ -120,7 +132,7 @@ latent GP posterior
 
 ## 次の拡張候補
 
-Phase 1-11完了後の拡張は、モデル追加よりも以下を独立テーマとして扱います。
+現在の拡張候補は、モデル名の直積追加ではなく以下を独立テーマとして扱います。
 
 - 連続高次元空間での acquisition optimization benchmark。
 - REMBO / BAxUS / TuRBOなど探索戦略との統合。
