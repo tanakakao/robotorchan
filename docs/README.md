@@ -15,7 +15,7 @@
 5. [理論ガイド](theory/README.md) でモデルの仮定と理論的背景を確認する
 6. [Notebook 一覧](../examples/README.md) から対応する実行例を試す
 
-現時点では既存文書へのリンクを維持しています。今後の再編では、内容を削減せず、モデルファミリーごとの利用ガイドへ段階的に整理します。
+モデルファミリー別の詳細は [Model guides](models/README.md) に整理しています。内容を削減せず、利用ガイド・Theory・Notebookを相互に辿れる構成を維持します。
 
 ### 理論を学びたい
 
@@ -43,11 +43,11 @@
 - [Training API](development/training_api.md)
 - [Release procedure](development/releasing.md)
 
-設計記録、coverage audit、feasibility 文書は、後続Phaseで利用者向け文書と分離します。
+開発文書には現在も有効な設計原則・公開契約・リリース手順だけを残し、Phase記録や解消済みauditはGit/PR履歴で追跡します。
 
 ## 情報設計
 
-ドキュメントは最終的に次の責務へ整理します。
+ドキュメントは次の責務で整理しています。
 
 | 区分 | 責務 |
 |---|---|
@@ -71,7 +71,7 @@
 
 現在の機械可読な対応表は [model_coverage.json](model_coverage.json) です。
 
-## 再編後の目標構造
+## 現在の構造
 
 ```text
 docs/
@@ -84,4 +84,4 @@ docs/
 └── development/
 ```
 
-物理的な移動は、リンク・coverage・Notebook参照を同時に更新できる後続Phaseで実施します。旧パス維持のための互換文書や旧名エイリアスは作らず、参照側を新構造へ完全移行します。
+旧パス維持のための互換文書や旧名エイリアスは作らず、参照側を現在の構造へ完全移行します。
