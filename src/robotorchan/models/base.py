@@ -7,6 +7,7 @@ from typing import ClassVar
 
 import torch
 from botorch.models.kernels.categorical import CategoricalKernel
+from botorch.models.transforms.input import InputTransform
 from botorch.models.utils.gpytorch_modules import get_covar_module_with_dim_scaled_prior
 from gpytorch.kernels import AdditiveKernel, Kernel, ProductKernel, ScaleKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood, MarginalLogLikelihood
@@ -127,6 +128,89 @@ def make_mixed_covar_module(
         categorical_kernel(scaled=True),
         ProductKernel(continuous_kernel(), categorical_kernel(scaled=False)),
     )
+
+
+class CategoricalOneHotInputTransform(InputTransform):
+    """Model-owned one-hot transform for mixed models that need numeric inputs."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        cat_dims: Sequence[int],
+        *,
+        excluded_dims: Sequence[int] = (),
+    ) -> None:
+        super().__init__()
+        self.transform_on_train = True
+        self.transform_on_eval = True
+        self.transform_on_fantasize = True
+        self.raw_input_dim = train_X.shape[-1]
+        self.cat_dims = normalize_feature_dims(
+            cat_dims,
+            self.raw_input_dim,
+            name="cat_dims",
+            excluded_dims=excluded_dims,
+        )
+        self._category_buffer_names = tuple(
+            f"_category_values_{index}" for index in range(len(self.cat_dims))
+        )
+        encoded_input_dim = self.raw_input_dim
+        for name, dim in zip(self._category_buffer_names, self.cat_dims, strict=True):
+            values = torch.unique(train_X[..., dim]).sort().values.detach().clone()
+            self.register_buffer(name, values)
+            encoded_input_dim += values.numel() - 1
+        self.encoded_input_dim = encoded_input_dim
+
+    @property
+    def category_values(self) -> tuple[Tensor, ...]:
+        """Observed category values in normalized cat_dims order."""
+        return tuple(getattr(self, name) for name in self._category_buffer_names)
+
+    def transform(self, X: Tensor) -> Tensor:
+        """One-hot encode categorical columns in a raw mixed-space tensor."""
+        if X.shape[-1] != self.raw_input_dim:
+            raise ValueError(
+                f"Expected inputs with {self.raw_input_dim} features, got {X.shape[-1]}."
+            )
+        value_by_dim = dict(zip(self.cat_dims, self.category_values, strict=True))
+        parts: list[Tensor] = []
+        for dim in range(self.raw_input_dim):
+            if dim not in value_by_dim:
+                parts.append(X[..., dim : dim + 1])
+                continue
+            values = value_by_dim[dim].to(device=X.device, dtype=X.dtype)
+            shape = (1,) * (X.ndim - 1) + (values.numel(),)
+            encoded = X[..., dim : dim + 1] == values.reshape(shape)
+            if not torch.all(encoded.sum(dim=-1) == 1):
+                raise ValueError(
+                    f"Input contains an unseen category in categorical feature {dim}."
+                )
+            parts.append(encoded.to(dtype=X.dtype))
+        return torch.cat(parts, dim=-1)
+
+    def encoded_scalar_index(self, raw_dim: int) -> int:
+        """Map one non-categorical raw feature to its encoded scalar index."""
+        normalized = normalize_feature_dims(
+            [raw_dim], self.raw_input_dim, name="raw_dim"
+        )[0]
+        if normalized in self.cat_dims:
+            raise ValueError("Categorical features do not map to one scalar index.")
+        value_by_dim = dict(zip(self.cat_dims, self.category_values, strict=True))
+        offset = 0
+        for dim in range(self.raw_input_dim):
+            if dim == normalized:
+                return offset
+            offset += value_by_dim[dim].numel() if dim in value_by_dim else 1
+        raise RuntimeError("Failed to map raw feature index.")
+
+    def equals(self, other: InputTransform) -> bool:
+        """Return whether another transform has the same encoding contract."""
+        return (
+            isinstance(other, CategoricalOneHotInputTransform)
+            and self.raw_input_dim == other.raw_input_dim
+            and self.cat_dims == other.cat_dims
+            and super().equals(other)
+        )
 
 
 class UnsupportedModelOperationError(RuntimeError):
