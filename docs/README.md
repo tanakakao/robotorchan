@@ -8,9 +8,12 @@
 
 ### robotorchan を使いたい
 
-1. [モデル概要・使い所](models.md) で問題設定に合うモデル候補を確認する
-2. [理論ガイド](theory/README.md) でモデルの仮定と理論的背景を確認する
-3. [Notebook 一覧](../examples/README.md) から対応する実行例を試す
+1. [Installation](getting_started/installation.md) で利用環境を準備する
+2. [Quickstart](getting_started/quickstart.md) で共通 API を確認する
+3. [Model selection](getting_started/model_selection.md) で問題設定に合うモデル候補を絞る
+4. [モデル概要・使い所](models.md) で個別モデルの用途と制約を確認する
+5. [理論ガイド](theory/README.md) でモデルの仮定と理論的背景を確認する
+6. [Notebook 一覧](../examples/README.md) から対応する実行例を試す
 
 現時点では既存文書へのリンクを維持しています。今後の再編では、内容を削減せず、モデルファミリーごとの利用ガイドへ段階的に整理します。
 
