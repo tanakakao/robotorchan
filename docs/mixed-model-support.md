@@ -333,3 +333,29 @@ All public prediction and training interfaces remain in original raw mixed
 space, negative cat_dims are normalized there, and raw training data are
 retained. These classes are intentionally distinct from the frozen neural
 Mixed models in Phase 7.
+
+
+## Phase 9 structured GP status
+
+Structured Mixed support is restored against the current shared Mixed
+infrastructure rather than by reviving historical private helper APIs.
+
+- `MixedLatentKroneckerGP`: native categorical covariance is applied only to
+  the design `X` factor; the `T` factor keeps LatentKroneckerGP semantics.
+- `MixedHeterogeneousMTGP`: each heterogeneous feature subset receives a
+  native continuous/categorical/mixed kernel according to its active features.
+- `MixedHigherOrderGP`: only the design-input covariance factor is mixed;
+  tensor-output Kronecker factors are unchanged.
+- `MixedOrthogonalAdditiveGP`: model-owned one-hot fallback is used because
+  the continuous Gauss-Legendre orthogonalization measure of OAK is not a
+  categorical measure.
+- `MixedLCEMGP`: ordinary design categories use native mixed covariance;
+  task/context embedding features remain structural and separate.
+- hierarchical single-task and multitask Mixed variants preserve hierarchical
+  parent selectors as structural dimensions and reject overlap with
+  `cat_dims`.
+
+SACGP and LCEAGP do not receive generic Mixed wrappers in this phase: their
+contextual decomposition / embedding semantics already assign special meaning
+to contextual categorical information, so treating those coordinates as
+ordinary categorical design variables would conflate two different roles.
