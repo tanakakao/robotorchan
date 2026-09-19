@@ -99,6 +99,7 @@ from robotorchan.models.reduced.vae import (
     MixedVAEGP,
     SupervisedVAEGP,
 )
+from robotorchan.models.replicate_noise import ReplicateNoiseSingleTaskGP
 from robotorchan.models.robust import (
     HeteroskedasticSingleTaskGP,
     MixedRobustRelevancePursuitSingleTaskGP,
@@ -188,6 +189,7 @@ __all__ = [
     "ReducedGP",
     "ReducedKroneckerMultiTaskGP",
     "ReducedMultiTaskGP",
+    "ReplicateNoiseSingleTaskGP",
     "RobustRelevancePursuitSingleTaskGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
