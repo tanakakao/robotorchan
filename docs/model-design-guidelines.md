@@ -149,3 +149,12 @@ After any Python edit, run both `ruff check .` and `ruff format --check .` (or a
 `ruff format`) before pushing. A lint-clean file is not necessarily formatter-clean;
 CI treats these as separate gates. When CI prints an exact formatter diff, apply that
 diff verbatim instead of manually approximating line wrapping.
+
+
+### Explicit base-initializer and MRO safety
+
+Do not call a wrapper class's `__init__` explicitly on an object that is not a subclass of that
+wrapper. Wrapper initializers use `super()`, so bypassing the declared MRO can raise
+`TypeError: super(type, obj)`. When a specialized model needs a custom covariance, either
+inherit from the wrapper whose initializer is called or factor shared construction into a helper.
+Check this before opening a PR for every model that manually delegates initialization.
