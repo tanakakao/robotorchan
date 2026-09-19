@@ -23,11 +23,6 @@ from robotorchan.reduction import (
     VAEInputReducer,
 )
 from robotorchan.reduction.base import InputReducer
-from robotorchan.reduction.input import (
-    PCAInputReducer,
-    PLSInputReducer,
-    RandomProjectionInputReducer,
-)
 
 
 @dataclass(frozen=True)
