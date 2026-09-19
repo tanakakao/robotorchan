@@ -3,6 +3,7 @@
 from robotorchan.models.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
 from robotorchan.models.alebo import ALEBOGP
 from robotorchan.models.base import UnsupportedModelOperationError
+from robotorchan.models.contaminated import ContaminatedSingleTaskGP
 from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
 from robotorchan.models.fully_bayesian import (
     MixedSaasFullyBayesianMultiTaskGP,
@@ -125,6 +126,7 @@ __all__ = [
     "AutoEncoderGP",
     "AutoEncoderKroneckerMultiTaskGP",
     "AutoEncoderMultiTaskGP",
+    "ContaminatedSingleTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "HeterogeneousMTGP",
     "HeteroskedasticSingleTaskGP",
