@@ -48,7 +48,26 @@ Kronecker MultiTaskではtaskがY列に対応するため、Xにtask featureを�
 
 ## Mixed入力
 
-Mixed版ではcontinuous featureのみを削減し、categorical featureはそのまま保持します。long-formatの場合はさらにtask featureも保持します。
+Mixed版では continuous feature のみを削減し、categorical feature はそのまま保持します。long-format の場合はさらに task feature も保持します。
+
+現在 public な共通基盤は `MixedReducedMultiTaskGP` と
+`MixedReducedKroneckerMultiTaskGP` です。SingleTask 側に
+`MixedPCAGP` / `MixedPLSGP` / `MixedRandomProjectionGP` などの named wrapper が
+存在しても、それを根拠に `MixedPCAMultiTaskGP` のような未実装 class が存在すると
+解釈してはいけません。必要な reducer は共通 Mixed MultiTask 基盤へ明示的に構成します。
+
+## 実装対応表
+
+| reducer family | SingleTask | MultiTask | Kronecker | Mixed SingleTask | Mixed MultiTask |
+| --- | --- | --- | --- | --- | --- |
+| PCA / PLS / Random Projection | named | named | named | named | common reduced base |
+| AE / VAE | named | named | named | named | common reduced base |
+| Supervised AE / VAE | named | named | named | named | common reduced base |
+| Joint Encoder / Hybrid AE / Joint VAE | named | named | named | named | common reduced base |
+
+ここで `named` は public class があること、`common reduced base` は
+`MixedReducedMultiTaskGP` / `MixedReducedKroneckerMultiTaskGP` で構成することを表します。
+ドキュメントの便宜のためだけに named cross-product class は追加しません。
 
 ## モデル選択
 
