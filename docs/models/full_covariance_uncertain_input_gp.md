@@ -1,10 +1,8 @@
-# Phase 10: full-covariance uncertain training inputs
+# Full-covariance uncertain training inputs
 
 ## Purpose
 
-Phase 8 introduced diagonal Gaussian uncertainty for observed training inputs.
-Phase 10 extends the same statistical model to **correlated uncertainty between
-input dimensions**.
+`UncertainInputSingleTaskGP` supports diagonal Gaussian uncertainty and **correlated uncertainty between input dimensions** for observed training inputs.
 
 For observation `i`:
 
@@ -108,7 +106,7 @@ silently redefine invalid covariance matrices as valid.
 
 ## Scope boundaries
 
-Phase 10 does not add:
+This model does not add:
 
 - mixed categorical uncertain-input models;
 - Reduced/PCA/PLS uncertain-input wrappers;

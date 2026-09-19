@@ -226,7 +226,7 @@ MAP 推定を使う SAAS 系モデルです。Fully Bayesian SAAS より軽量�
 - `JointHeteroskedasticSingleTaskGP`: 応答と log-noise の潜在過程を joint に学習します。
 - `ReplicateNoiseSingleTaskGP`: 同一入力の反復測定から group mean と variance-of-the-mean を構成します。
 
-詳細: [Heteroskedastic feasibility](models/heteroskedastic_gp_feasibility.md)、[Joint heteroskedastic GP](models/joint_heteroskedastic_gp.md)、[Replicate-noise GP](models/replicate_noise_gp.md)
+詳細: [Heteroskedastic feasibility](models/heteroskedastic_gp.md)、[Joint heteroskedastic GP](models/joint_heteroskedastic_gp.md)、[Replicate-noise GP](models/replicate_noise_gp.md)
 
 ### Input uncertainty
 

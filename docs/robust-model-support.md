@@ -5,8 +5,7 @@
 surrogate と BO-layer の機能を選びます。
 
 モデル選択全体は [models.md](models.md)、個別の数理・API 契約は
-[models/](models/) を参照してください。実装経緯を記録した audit 文書は設計判断の履歴であり、
-このガイドを置き換えるものではありません。
+[models/](models/) を参照してください。モデル選択の詳細は [models/robust_noise.md](models/robust_noise.md) を参照してください。
 
 ## 問題設定から選ぶ
 
@@ -53,7 +52,7 @@ joint objective で学習します。
 variance から group mean の observation variance を構成します。
 
 詳細:
-[heteroskedastic feasibility](models/heteroskedastic_gp_feasibility.md)、
+[heteroskedastic feasibility](models/heteroskedastic_gp.md)、
 [joint heteroskedastic GP](models/joint_heteroskedastic_gp.md)、
 [replicate-noise GP](models/replicate_noise_gp.md)。
 
@@ -94,8 +93,7 @@ Mixed 版が必要なのは、categorical design variable が covariance また�
 `UncertainCategoricalSingleTaskGP` は categorical uncertainty 自体を直接モデル化するため、
 単純な Mixed counterpart は設けません。
 
-実装範囲と設計判断の記録は
-[Robust × Mixed coverage audit](robust-mixed-coverage-audit.md) を参照してください。
+Mixed 対応の現在値は [models/robust_noise.md](models/robust_noise.md) と実装を正とします。
 
 ## Compositional robust BO
 
@@ -117,7 +115,7 @@ SAAS も original-coordinate surrogate なので scenario/risk layer を外側�
 ALEBO は generic reducer ではなく embedded search strategy であるため、robust composition は
 strategy geometry を考慮して扱います。
 
-詳細は [robust integration](robust_integration.md) を参照してください。
+候補側 uncertainty / scenario と surrogate の責務を分離するこの構成を公開契約とします。
 
 ## Cross-product model を作らない基準
 
@@ -133,12 +131,13 @@ strategy geometry を考慮して扱います。
 必要な場合に限ります。Mixed / reduced / MultiTask / robust の全組合せを機械的に作る設計には
 しません。
 
-## Audit documents
+## 関連ガイド
 
-次の文書は実装・設計の履歴を保存する audit / closeout record です。
+- [Robust / Noise models](models/robust_noise.md)
+- [Input uncertainty](models/uncertain_input.md)
+- [Robust GP theory](theory/14_robust_gaussian_process.md)
+- [Heteroskedastic noise theory](theory/15_heteroskedastic_noise.md)
+- [Uncertain-input GP theory](theory/16_uncertain_input_gp.md)
+- [Nonstationary GP theory](theory/17_nonstationary_gp.md)
 
-- [robust surrogate coverage audit](robust-model-coverage-audit.md)
-- [Robust × Mixed coverage audit](robust-mixed-coverage-audit.md)
-- [robust composition integration audit](robust_integration.md)
-
-新しい利用者はまず本ガイドと [models.md](models.md) を参照してください。
+開発フェーズ番号や closeout 記録ではなく、現在の実装と上記の恒久ドキュメントを仕様の正とします。
