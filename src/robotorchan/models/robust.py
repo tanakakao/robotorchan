@@ -167,6 +167,7 @@ class HeteroskedasticSingleTaskGP(ExactGPModelMixin, BoTorchRobustRelevancePursu
         """Return the latent posterior for log observation variance."""
         if self.noise_model is None or not self._noise_model_fitted:
             raise RuntimeError("fit_heteroskedastic must be called before noise_posterior.")
+        self.noise_model.prediction_strategy = None
         return self.noise_model.posterior(X)
 
     def predicted_noise(self, X: Tensor) -> Tensor:
