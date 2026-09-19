@@ -210,3 +210,23 @@ mixed covariance (continuous + categorical + interaction), accept negative raw-s
 
 The existing `MixedSingleTaskGP` remains a thin wrapper over BoTorch's native
 `MixedSingleTaskGP`; Phase 3 does not duplicate that upstream implementation.
+
+
+## Phase 4 multi-fidelity / variational status
+
+Phase 4 replaces the semantically weaker mixed multi-fidelity approximation with a
+family-colocated implementation in `models/multi_fidelity.py`. Categorical design
+variables use the shared native mixed covariance, while iteration/data fidelity
+columns remain structural and are modeled by BoTorch's native fidelity kernels.
+Categorical/fidelity overlap is rejected after raw-space negative-index normalization.
+The mixed model deliberately requires `linear_truncated=False`: the linear-truncated
+kernel owns the complete input covariance and cannot preserve a separate mixed design
+covariance without changing the model semantics.
+
+`MixedSingleTaskVariationalGP` is colocated in `models/variational.py` and injects the
+shared native mixed covariance through the existing BoTorch covariance hook. Inducing
+point allocation, variational strategy, likelihood, posterior behavior, raw-data
+retention, and the `VariationalELBO` `make_mll()` contract remain owned by the standard
+variational wrapper / BoTorch implementation. Both Phase 4 models accept raw mixed
+inputs and Python-style negative `cat_dims`; no compatibility alias or deprecated
+wrapper is retained.
