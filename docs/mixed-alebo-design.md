@@ -1,8 +1,8 @@
-# Phase 10: ALEBO and specialized high-dimensional Mixed audit
+# ALEBO and specialized high-dimensional Mixed design boundary
 
 ## Decision
 
-Phase 10 does **not** introduce a nominal `MixedALEBOGP`.
+The current design does **not** introduce a nominal `MixedALEBOGP`.
 
 The current ALEBO implementation has two coupled pieces:
 
@@ -33,7 +33,7 @@ Consequently, `ALEBOGP` and `ALEBOStrategy` remain continuous-only.
 ## PairwiseGP
 
 `PairwiseGP` is not a high-dimensional embedding method, but it was left as
-an investigation item in the repository-wide Mixed audit. Phase 10 keeps it
+an investigation item in the repository-wide Mixed audit. The current design keeps it
 without a nominal Mixed wrapper. Pairwise preference inference includes
 datapoint consolidation and a Laplace approximation; a Mixed variant requires
 an explicit design and tests for categorical covariance together with
