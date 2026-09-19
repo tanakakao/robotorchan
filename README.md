@@ -104,6 +104,7 @@ model.make_mll()
 - `SingleTaskGP`
 - `MixedSingleTaskGP`
 - `SingleTaskMultiFidelityGP`
+- `MixedSingleTaskMultiFidelityGP`
 
 ### Multi-task / Multi-output
 
@@ -111,6 +112,9 @@ model.make_mll()
 - `KroneckerMultiTaskGP`
 - `ModelListGP`
 - `HeterogeneousMTGP`
+- `MixedMultiTaskGP`
+- `MixedKroneckerMultiTaskGP`
+- `MixedHeterogeneousMTGP`
 
 ### 次元削減・高次元入出力
 
@@ -120,6 +124,10 @@ model.make_mll()
 - `RandomProjectionGP`
 - `OutputPCAGP`
 - `OutputPLSGP`
+- `MixedPCAGP`, `MixedPLSGP`, `MixedRandomProjectionGP`
+- `MixedAutoEncoderGP`, `MixedVAEGP`
+- `MixedSupervisedAutoEncoderGP`, `MixedSupervisedVAEGP`
+- `MixedJointEncoderGP`, `MixedHybridAutoEncoderGP`, `MixedJointVAEGP`
 
 `ReducedGP` は input reducer / output reducer を組み合わせる共通実装です。named wrapper は代表的な reducer 構成を簡潔に使うための薄いラッパーです。高次元出力の構造化モデルとの使い分けは [`docs/high_dimensional_outputs.md`](docs/high_dimensional_outputs.md) を参照してください。
 
@@ -132,12 +140,19 @@ model.make_mll()
 - `EnsembleMapSaasSingleTaskGP`
 - `OrthogonalAdditiveGP`
 - `RobustRelevancePursuitSingleTaskGP`
+- `MixedSingleTaskVariationalGP`
+- `MixedSaasFullyBayesianSingleTaskGP`, `MixedSaasFullyBayesianMultiTaskGP`
+- `MixedAdditiveMapSaasSingleTaskGP`, `MixedEnsembleMapSaasSingleTaskGP`
+- `MixedOrthogonalAdditiveGP`
+- `MixedRobustRelevancePursuitSingleTaskGP`
 
 ### Preference / Structured output
 
 - `PairwiseGP`
 - `HigherOrderGP`
 - `LatentKroneckerGP`
+- `MixedHigherOrderGP`
+- `MixedLatentKroneckerGP`
 
 ### 階層・Contextual
 
@@ -146,6 +161,9 @@ model.make_mll()
 - `SACGP`
 - `LCEAGP`
 - `LCEMGP`
+- `MixedHierarchicalConditionalKernelGP`
+- `MixedHierarchicalConditionalKernelMultiTaskGP`
+- `MixedLCEMGP`
 
 詳しい使い分けと各Notebookへのリンクは [`docs/models.md`](docs/models.md) を参照してください。
 
