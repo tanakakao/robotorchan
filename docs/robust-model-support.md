@@ -167,3 +167,12 @@ contract.
 
 The audit intentionally adds no compatibility alias, deprecated wrapper, or
 placeholder public API.
+
+
+## Phase 6C — joint heteroskedastic inference
+
+The iterative model remains the practical baseline. The next heteroskedastic
+surrogate is a two-latent variational model with jointly optimized response and
+log-noise processes. See `docs/models/joint_heteroskedastic_gp.md` for the
+inference objective, public API target, compatibility gates, and cross-product
+boundaries.
