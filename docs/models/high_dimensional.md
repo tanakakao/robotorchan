@@ -1,6 +1,6 @@
 # High-dimensional models
 
-高次元問題では、surrogate の仮定と candidate search strategy を分けて考えます。このページは surrogate 側を扱います。REMBO / HeSBO / ALEBO / TuRBO / BAxUS などの探索側は [高次元探索戦略](../high_dimensional_search_strategies.md) を参照してください。
+高次元問題では、surrogate の仮定と candidate search strategy を分けて考えます。このページは surrogate 側を扱います。REMBO / HeSBO / ALEBO / TuRBO / BAxUS などの探索側は [高次元探索戦略](../optimization/high_dimensional_search.md) を参照してください。
 
 ## Fully Bayesian SAAS
 
