@@ -259,7 +259,9 @@ def test_autoencoder_multitask_freezes_reducer_and_preserves_task_feature() -> N
     assert prepared.shape == torch.Size([12, 3])
     assert torch.equal(prepared[:, -1], task.squeeze(-1))
     assert model.input_reducer.encoder is not None
-    assert all(not parameter.requires_grad for parameter in model.input_reducer.encoder.parameters())
+    assert all(
+        not parameter.requires_grad for parameter in model.input_reducer.encoder.parameters()
+    )
     assert model.make_mll() is not None
 
 
@@ -306,7 +308,9 @@ def test_vae_multitask_uses_deterministic_posterior_mean_latent() -> None:
     assert torch.equal(first, second)
     assert torch.equal(first[:, -1], task.squeeze(-1))
     assert model.input_reducer.mu_head is not None
-    assert all(not parameter.requires_grad for parameter in model.input_reducer.mu_head.parameters())
+    assert all(
+        not parameter.requires_grad for parameter in model.input_reducer.mu_head.parameters()
+    )
 
 
 def test_vae_kronecker_supports_posterior_and_mll() -> None:
