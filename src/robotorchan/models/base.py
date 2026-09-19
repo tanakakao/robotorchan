@@ -182,17 +182,13 @@ class CategoricalOneHotInputTransform(InputTransform):
             shape = (1,) * (X.ndim - 1) + (values.numel(),)
             encoded = X[..., dim : dim + 1] == values.reshape(shape)
             if not torch.all(encoded.sum(dim=-1) == 1):
-                raise ValueError(
-                    f"Input contains an unseen category in categorical feature {dim}."
-                )
+                raise ValueError(f"Input contains an unseen category in categorical feature {dim}.")
             parts.append(encoded.to(dtype=X.dtype))
         return torch.cat(parts, dim=-1)
 
     def encoded_scalar_index(self, raw_dim: int) -> int:
         """Map one non-categorical raw feature to its encoded scalar index."""
-        normalized = normalize_feature_dims(
-            [raw_dim], self.raw_input_dim, name="raw_dim"
-        )[0]
+        normalized = normalize_feature_dims([raw_dim], self.raw_input_dim, name="raw_dim")[0]
         if normalized in self.cat_dims:
             raise ValueError("Categorical features do not map to one scalar index.")
         value_by_dim = dict(zip(self.cat_dims, self.category_values, strict=True))
