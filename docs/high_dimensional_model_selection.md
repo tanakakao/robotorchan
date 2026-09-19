@@ -27,7 +27,7 @@ robotorchan の高次元入力モデルは、**次元削減の目的**、**デ�
 
 予測RMSEが低いモデルが必ずしもBOで最も早く良い点を発見するとは限らないため、BO用途では3段階目を重視します。
 
-## Phase 11 ベンチマーク構成
+## ベンチマーク構成
 
 ### 1. 予測性能と acquisition 評価
 
@@ -109,7 +109,7 @@ latent dimension 自体を大量にチューニングするとBO benchmarkへの
 
 現在のReducedGP系は、GP内部の入力次元を削減しますが、獲得関数の最適化自体は元のD次元空間で行います。そのため、高次元化によるGP modeling負荷は軽減できても、`optimize_acqf` の探索難易度そのものは残ります。
 
-Phase 11 の sequential benchmark は、この影響を surrogate 比較から分離するため、まず有限の共通候補プール上で acquisition を評価しています。したがって、このbenchmarkで良い結果でも、連続高次元空間での `optimize_acqf` が容易であることまでは意味しません。
+Sequential benchmark は、この影響を surrogate 比較から分離するため、まず有限の共通候補プール上で acquisition を評価しています。したがって、このbenchmarkで良い結果でも、連続高次元空間での `optimize_acqf` が容易であることまでは意味しません。
 
 非常に高いDでacquisition optimizationがボトルネックになる場合は、REMBO / BAxUS / TuRBOのような**探索戦略側の高次元対応**を別レイヤーとして検討します。これはPCA-GPやVAE-GPなどのsurrogate reductionとは別問題です。
 
@@ -118,3 +118,33 @@ Phase 11 の sequential benchmark は、この影響を surrogate 比較から�
 最初から全モデルを本番BOで比較する必要はありません。まず同一train/test splitで予測benchmarkを行い、明らかに弱いモデルを除外します。残ったモデルについて複数seedのBO replayまたは候補プールbenchmarkを行い、simple regretと計算コストを比較します。
 
 材料・製造データでは入力変数間の強い相関、制約、組成比、カテゴリ変数が存在することがあります。その場合、synthetic benchmarkの順位をそのまま実データへ適用せず、問題構造に合う変換・モデル・探索戦略を選んでください。
+
+
+## 高次元入力 × MultiTask
+
+複数タスク間の相関も利用したい場合は、入力削減とMultiTask GPを組み合わせたモデルを使います。
+
+| データ構造 | 主な候補 | taskの扱い |
+| --- | --- | --- |
+| long-format | `PCAMultiTaskGP` / `PLSMultiTaskGP` / `RandomProjectionMultiTaskGP` | task featureを削減対象から除外 |
+| block design | PCA/PLS/RP の Kronecker MultiTask版 | taskはY列として保持 |
+| 非線形表現 | AE/VAE/Supervised/Joint系 MultiTask版 | reducerはdata featureだけを表現学習 |
+| mixed input | `MixedReducedMultiTaskGP` 系 | continuousのみ削減しcategoryとtaskを保持 |
+
+long-formatではtask featureをPCAやAEへ入力しません。task IDまで圧縮すると、MultiTask kernelが必要とする明示的なtask identityを失うためです。Kronecker形式ではtask identityがYの列にあるため、X全体をreducerへ渡せます。
+
+高次元出力を圧縮する `OutputPCAGP` / `OutputPLSGP` とMultiTask GPは同じ出力軸に異なる意味を与えるため、機械的なcross-productモデルにはしていません。高次元Yが単に圧縮可能ならOutputPCA/PLS、列が明示的なtaskならMultiTask/Kronecker、座標やtensor構造を持つなら `LatentKroneckerGP` / `HigherOrderGP` を選びます。
+
+### MultiTask benchmark
+
+`benchmarks/high_dimensional_multitask.py` は、同じ低次元信号を共有する2タスクlong-format問題で、通常の `MultiTaskGP` とPCA/PLS/Random Projection版を比較します。
+
+```bash
+python benchmarks/high_dimensional_multitask.py \
+  --n-train-per-task 24 \
+  --n-test-per-task 48 \
+  --input-dim 40 \
+  --latent-dim 5
+```
+
+出力は `benchmark_results/high_dimensional_multitask.csv` です。RMSEだけでなくtraining timeとposterior timeも確認し、次元削減による精度と計算量のトレードオフを評価します。
