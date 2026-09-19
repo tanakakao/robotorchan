@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import torch
 from botorch.posteriors.gpytorch import GPyTorchPosterior
 from gpytorch.likelihoods import StudentTLikelihood
 from torch import Tensor, nn
