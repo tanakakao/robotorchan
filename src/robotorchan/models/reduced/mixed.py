@@ -16,12 +16,6 @@ from gpytorch.likelihoods import Likelihood
 from torch import Tensor
 
 from robotorchan.models.base import ExactGPModelMixin, normalize_feature_dims
-from robotorchan.reduction import (
-    AutoEncoderInputReducer,
-    SupervisedAutoEncoderInputReducer,
-    SupervisedVAEInputReducer,
-    VAEInputReducer,
-)
 from robotorchan.reduction.base import InputReducer
 
 
