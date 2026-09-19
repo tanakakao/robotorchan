@@ -122,7 +122,7 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         return torch.cat([latent, task], dim=-1)
 
     def forward(self, X: Tensor) -> MultivariateNormal:
-        if X.shape[-1] == self.latent_dim + 1:
+        if X.shape[-1] == self.latent_dim:
             return super().forward(X)
         return super().forward(self.encode(X))
 
@@ -133,8 +133,9 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         self.train()
         self.likelihood.train()
         encoded_X = self.encode(self.raw_train_X)
-        self.set_train_data(inputs=encoded_X, targets=self.train_targets, strict=False)
-        return -self.make_mll()(self(encoded_X), self.train_targets)
+        data_X = encoded_X[..., : self.latent_dim]
+        self.set_train_data(inputs=data_X, targets=self.train_targets, strict=False)
+        return -self.make_mll()(self(data_X), self.train_targets)
 
 
 class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
