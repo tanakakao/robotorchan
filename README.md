@@ -58,11 +58,11 @@ print(posterior.mean)
 
 - **理論から理解する:** [`docs/theory/README.md`](docs/theory/README.md)
 - **どのモデルを選ぶか:** [`docs/models.md`](docs/models.md)
-- **高次元モデルを選ぶ:** [`docs/high_dimensional_model_selection.md`](docs/high_dimensional_model_selection.md)
+- **高次元モデルを選ぶ:** [`docs/models/models/high_dimensional_model_selection.md`](docs/models/models/high_dimensional_model_selection.md)
 - **Robust / Noise / Uncertaintyを選ぶ:** [`docs/robust-model-support.md`](docs/robust-model-support.md)
-- **高次元出力モデルを選ぶ:** [`docs/high_dimensional_outputs.md`](docs/high_dimensional_outputs.md)
+- **高次元出力モデルを選ぶ:** [`docs/models/models/high_dimensional_outputs.md`](docs/models/models/high_dimensional_outputs.md)
 - **実際にどう使うか:** [`examples/README.md`](examples/README.md)
-- **高次元の探索戦略:** [`docs/high_dimensional_search_strategies.md`](docs/high_dimensional_search_strategies.md)
+- **高次元の探索戦略:** [`docs/optimization/high_dimensional_search.md`](docs/optimization/high_dimensional_search.md)
 - **設計方針・内部構造:** [`docs/architecture.md`](docs/architecture.md)
 - **リリース手順:** [`docs/releasing.md`](docs/releasing.md)
 
@@ -152,7 +152,7 @@ model.make_mll()
 - `MixedSupervisedAutoEncoderGP`, `MixedSupervisedVAEGP`
 - `MixedJointEncoderGP`, `MixedHybridAutoEncoderGP`, `MixedJointVAEGP`
 
-`ReducedGP` は input reducer / output reducer を組み合わせる共通実装です。named wrapper は代表的な reducer 構成を簡潔に使うための薄いラッパーです。高次元出力の構造化モデルとの使い分けは [`docs/high_dimensional_outputs.md`](docs/high_dimensional_outputs.md) を参照してください。
+`ReducedGP` は input reducer / output reducer を組み合わせる共通実装です。named wrapper は代表的な reducer 構成を簡潔に使うための薄いラッパーです。高次元出力の構造化モデルとの使い分けは [`docs/models/models/high_dimensional_outputs.md`](docs/models/models/high_dimensional_outputs.md) を参照してください。
 
 ### Robust / Noise / Input uncertainty
 
@@ -253,7 +253,7 @@ acquisition_value = result.acquisition_value
 
 `SearchResult.candidates` は常に public/original input space の候補を返します。`acquisition_value` は選択された joint q-batch に対する scalar tensor です。TuRBO / BAxUS は stateful strategy のため、目的関数を評価した後に観測値を strategy へ戻します。
 
-詳細、各 strategy の役割、BAxUS の state 更新、benchmark の設計は [`docs/high_dimensional_search_strategies.md`](docs/high_dimensional_search_strategies.md) を参照してください。
+詳細、各 strategy の役割、BAxUS の state 更新、benchmark の設計は [`docs/optimization/high_dimensional_search.md`](docs/optimization/high_dimensional_search.md) を参照してください。
 
 ## 設計目標
 
