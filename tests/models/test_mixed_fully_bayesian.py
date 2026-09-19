@@ -29,9 +29,7 @@ def test_mixed_saas_single_task_encodes_before_pyro_and_accepts_raw_posterior():
 
 
 def test_mixed_saas_multitask_keeps_task_feature_structural():
-    design = torch.tensor(
-        [[0.1, 10.0], [0.3, 20.0], [0.6, 10.0], [0.9, 20.0]], dtype=torch.double
-    )
+    design = torch.tensor([[0.1, 10.0], [0.3, 20.0], [0.6, 10.0], [0.9, 20.0]], dtype=torch.double)
     X = torch.cat(
         [
             design.repeat(2, 1),
