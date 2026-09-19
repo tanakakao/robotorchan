@@ -105,6 +105,7 @@ from robotorchan.models.robust import (
     RobustRelevancePursuitSingleTaskGP,
 )
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
+from robotorchan.models.student_t import StudentTSingleTaskGP
 from robotorchan.models.variational import (
     MixedSingleTaskVariationalGP,
     SingleTaskVariationalGP,
@@ -192,6 +193,7 @@ __all__ = [
     "SingleTaskGP",
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
+    "StudentTSingleTaskGP",
     "SupervisedAutoEncoderGP",
     "SupervisedAutoEncoderKroneckerMultiTaskGP",
     "SupervisedAutoEncoderMultiTaskGP",

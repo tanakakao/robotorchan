@@ -90,6 +90,7 @@ PUBLIC_MODEL_NAMES = {
     "SupervisedVAEGP",
     "SupervisedVAEKroneckerMultiTaskGP",
     "SupervisedVAEMultiTaskGP",
+    "StudentTSingleTaskGP",
     "VAEGP",
     "VAEKroneckerMultiTaskGP",
     "VAEMultiTaskGP",
@@ -97,6 +98,7 @@ PUBLIC_MODEL_NAMES = {
 
 NON_MLL_MODELS = {
     "JointHeteroskedasticSingleTaskGP",
+    "StudentTSingleTaskGP",
     "MixedSaasFullyBayesianMultiTaskGP",
     "MixedSaasFullyBayesianSingleTaskGP",
     "SaasFullyBayesianMultiTaskGP",
