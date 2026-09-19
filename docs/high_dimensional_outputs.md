@@ -215,12 +215,12 @@ ALEBO は `PCAGP` や AE 系のようなデータ駆動 reducer ではなく、B
 - 元特徴の少数だけが重要だと仮定する: SAAS family
 - task 相関も同時に必要: `ReducedMultiTaskGP` family または SAAS MultiTask
 
-現行 ALEBO は single-output の embedded surrogate を明示的なスコープとします。
+現行 ALEBO は single-output の embedded surrogate を明示的なスコープとします。ALEBO は高次元 **search strategy** と専用 embedded surrogate の組であり、output reduction の一種ではありません。
 `ALEBOMultiTaskGP`、`MixedALEBOGP`、`ReducedALEBOGP` のような名前だけの直積モデルは
 追加しません。multi-task / mixed ALEBO は embedding、task/categorical structure、
 feasible polytope、acquisition optimization を一体として定義できる場合に独立拡張として扱います。
 
-## 9. SAAS と次元削減の関係
+## 10. SAAS と次元削減の関係
 
 SAAS は PCA / PLS / AE のように入力を低次元座標へ射影するモデルではありません。
 高次元の元入力空間を保ったまま、lengthscale に sparsity prior を置いて重要な入力次元を
@@ -244,7 +244,7 @@ SAAS の解釈が失われるからです。必要な場合は独立した統計
 block-design の `KroneckerMultiTaskGP` と SAAS を名前だけで合成せず、対応する inference / kernel
 設計が明確になった場合に別機能として追加します。
 
-## 9. MultiTask と output reduction の関係
+## 11. MultiTask と output reduction の関係
 
 Phase 9 の監査では、output reduction と MultiTask / KroneckerMultiTask を単純に合成する
 専用モデルは追加しません。
@@ -280,7 +280,7 @@ structured Y with coordinates / tensor axes
 output reduction と task covariance の同時利用は、明確な統計モデルと posterior 復元則を
 定義できる場合にのみ将来の独立機能として追加します。単なるクラス直積としては追加しません。
 
-## 9. Reducer の lifecycle
+## 12. Reducer の lifecycle
 
 入力・出力 reducer はモデル構築時に学習し、その後は同じ基底を固定して使います。
 
@@ -298,7 +298,7 @@ BO iteration ごとに PCA / PLS 基底を学習し直すと latent 座標系自
 
 `condition_on_observations()` でも reducer は再学習せず、新しい `X` / `Y` を既存の基底へ投影します。
 
-## 10. 変換順序
+## 13. 変換順序
 
 現行の `ReducedGP` では reducer と BoTorch transform の順序は次の通りです。
 
@@ -326,7 +326,7 @@ posterior では逆方向に戻し、公開される出力は元の `Y` 空間�
 
 したがって `Normalize` や `Standardize` を指定する場合、それらは reducer 後の latent 次元に対して設定します。元の物理量空間でのスケーリングを PCA 前に適用したい場合は、学習データを事前にスケーリングするか、将来の raw-space preprocessing 層を利用する設計とします。
 
-## 11. 保存と再利用
+## 14. 保存と再利用
 
 Reducer の学習済み基底と fit metadata は PyTorch の `state_dict` に含まれます。
 
@@ -355,7 +355,7 @@ Z = restored.transform(X)
 
 モデル全体を復元する場合は、同じモデル構成を生成してから `load_state_dict()` を使う PyTorch 標準の方式を前提とします。
 
-## 12. 現時点の制約
+## 15. 現時点の制約
 
 Output reduction では次の機能を明示的に制限しています。
 

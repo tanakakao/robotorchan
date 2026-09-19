@@ -129,11 +129,11 @@ Sequential benchmark は、この影響を surrogate 比較から分離するた
 | long-format | `PCAMultiTaskGP` / `PLSMultiTaskGP` / `RandomProjectionMultiTaskGP` | task featureを削減対象から除外 |
 | block design | PCA/PLS/RP の Kronecker MultiTask版 | taskはY列として保持 |
 | 非線形表現 | AE/VAE/Supervised/Joint系 MultiTask版 | reducerはdata featureだけを表現学習 |
-| mixed input | `MixedReducedMultiTaskGP` 系 | continuousのみ削減しcategoryとtaskを保持 |
+| mixed input | `MixedReducedMultiTaskGP` / `MixedReducedKroneckerMultiTaskGP` | continuousのみ削減しcategoryとtaskを保持 |
 
 long-formatではtask featureをPCAやAEへ入力しません。task IDまで圧縮すると、MultiTask kernelが必要とする明示的なtask identityを失うためです。Kronecker形式ではtask identityがYの列にあるため、X全体をreducerへ渡せます。
 
-高次元出力を圧縮する `OutputPCAGP` / `OutputPLSGP` とMultiTask GPは同じ出力軸に異なる意味を与えるため、機械的なcross-productモデルにはしていません。高次元Yが単に圧縮可能ならOutputPCA/PLS、列が明示的なtaskならMultiTask/Kronecker、座標やtensor構造を持つなら `LatentKroneckerGP` / `HigherOrderGP` を選びます。
+高次元出力を圧縮する `OutputPCAGP` / `OutputPLSGP` とMultiTask GPは同じ出力軸に異なる意味を与えるため、機械的なcross-productモデルにはしていません。また Mixed MultiTask についても named reducer wrapper の全直積は作らず、共通 `MixedReducedMultiTaskGP` / `MixedReducedKroneckerMultiTaskGP` を使います。高次元Yが単に圧縮可能ならOutputPCA/PLS、列が明示的なtaskならMultiTask/Kronecker、座標やtensor構造を持つなら `LatentKroneckerGP` / `HigherOrderGP` を選びます。
 
 ### MultiTask benchmark
 
