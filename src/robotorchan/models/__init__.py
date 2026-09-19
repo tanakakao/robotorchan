@@ -3,7 +3,7 @@
 from robotorchan.models.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
 from robotorchan.models.alebo import ALEBOGP
 from robotorchan.models.base import UnsupportedModelOperationError
-from robotorchan.models.contextual import LCEAGP, LCEMGP, MixedLCEMGP, SACGP
+from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
 from robotorchan.models.fully_bayesian import (
     MixedSaasFullyBayesianMultiTaskGP,
     MixedSaasFullyBayesianSingleTaskGP,
@@ -79,6 +79,12 @@ from robotorchan.models.variational import (
 )
 
 __all__ = [
+    "LCEAGP",
+    "LCEMGP",
+    "PCAGP",
+    "PLSGP",
+    "SACGP",
+    "VAEGP",
     "ALEBOGP",
     "AdditiveMapSaasSingleTaskGP",
     "AutoEncoderGP",
@@ -91,8 +97,6 @@ __all__ = [
     "JointEncoderGP",
     "JointVAEGP",
     "KroneckerMultiTaskGP",
-    "LCEAGP",
-    "LCEMGP",
     "LatentKroneckerGP",
     "MixedAdditiveMapSaasSingleTaskGP",
     "MixedAutoEncoderGP",
@@ -127,13 +131,10 @@ __all__ = [
     "OrthogonalAdditiveGP",
     "OutputPCAGP",
     "OutputPLSGP",
-    "PCAGP",
-    "PLSGP",
     "PairwiseGP",
     "RandomProjectionGP",
     "ReducedGP",
     "RobustRelevancePursuitSingleTaskGP",
-    "SACGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
     "SingleTaskGP",
@@ -142,5 +143,4 @@ __all__ = [
     "SupervisedAutoEncoderGP",
     "SupervisedVAEGP",
     "UnsupportedModelOperationError",
-    "VAEGP",
 ]
