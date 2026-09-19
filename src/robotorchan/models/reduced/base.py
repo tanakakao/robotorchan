@@ -456,6 +456,47 @@ class AutoEncoderGP(ReducedGP):
         )
 
 
+class MixedAutoEncoderGP(MixedReducedGP):
+    """Mixed GP with a frozen autoencoder over continuous inputs only."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        latent_dim: int,
+        cat_dims: list[int],
+        *,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        epochs: int = 200,
+        learning_rate: float = 1e-3,
+        weight_decay: float = 0.0,
+        batch_size: int | None = None,
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            input_reducer=AutoEncoderInputReducer(
+                latent_dim=latent_dim,
+                hidden_dims=hidden_dims,
+                activation=activation,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                weight_decay=weight_decay,
+                batch_size=batch_size,
+                standardize=standardize,
+                eps=eps,
+                random_state=random_state,
+            ),
+            cat_dims=cat_dims,
+            **kwargs,
+        )
+
+
 class OutputPCAGP(ReducedGP):
     """Single-task GP modeling a PCA-compressed high-dimensional output space."""
 
