@@ -22,5 +22,7 @@
 
 `RobustRelevancePursuitSingleTaskGP` と Mixed 版は robust observation のためのモデルであり、「高次元」という理由だけで選ぶモデルではありません。robust性の詳細は [Robust / Noise](robust_noise.md) を参照してください。
 
+Notebookは代表例を共有します。ALEBOは独立したNotebookを持たず、現在は高次元モデル/探索ガイドと benchmark を主な実行導線とします。
+
 Notebook: [SAAS](../../examples/notebooks/08_saas_gp.ipynb)、[MAP-SAAS / Additive](../../examples/notebooks/09_map_saas_and_additive_gp.ipynb)  
 Theory: [High-dimensional GP](../theory/08_high_dimensional_gp.md)、[Advanced high-dimensional models](../theory/21_advanced_high_dimensional_models.md)

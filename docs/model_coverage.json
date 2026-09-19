@@ -1,519 +1,524 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "source_of_truth": "robotorchan.models.__all__",
   "excluded_public_exports": [
     "UnsupportedModelOperationError"
   ],
   "models": {
     "ALEBOGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/09_map_saas_and_additive_gp.ipynb"
     },
     "LCEAGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/hierarchical_contextual.md",
       "theory": "docs/theory/12_hierarchical_contextual_gp.md",
       "notebook": "examples/notebooks/14_contextual_gp.ipynb"
     },
     "LCEMGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/hierarchical_contextual.md",
       "theory": "docs/theory/12_hierarchical_contextual_gp.md",
       "notebook": "examples/notebooks/14_contextual_gp.ipynb"
     },
     "PCAGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/19_reduced_gp.ipynb"
     },
     "PLSGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/19_reduced_gp.ipynb"
     },
     "SACGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/hierarchical_contextual.md",
       "theory": "docs/theory/12_hierarchical_contextual_gp.md",
       "notebook": "examples/notebooks/14_contextual_gp.ipynb"
     },
     "VAEGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/20_neural_reduction_gp.ipynb"
     },
     "AdditiveMapSaasSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/09_map_saas_and_additive_gp.ipynb"
     },
     "AutoEncoderGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/20_neural_reduction_gp.ipynb"
     },
     "AutoEncoderKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "AutoEncoderMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "ContaminatedSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/14_robust_gaussian_process.md",
       "notebook": "examples/notebooks/15_robust_observation_models.ipynb"
     },
     "EnsembleMapSaasSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/09_map_saas_and_additive_gp.ipynb"
     },
     "HeterogeneousMTGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/13_heterogeneous_multitask_gp.ipynb"
     },
     "HeteroskedasticSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/15_heteroskedastic_noise.md",
       "notebook": "examples/notebooks/16_noise_models.ipynb"
     },
     "HierarchicalConditionalKernelGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/hierarchical_contextual.md",
       "theory": "docs/theory/12_hierarchical_contextual_gp.md",
       "notebook": "examples/notebooks/12_hierarchical_gp.ipynb"
     },
     "HierarchicalConditionalKernelMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/12_hierarchical_contextual_gp.md",
       "notebook": "examples/notebooks/12_hierarchical_gp.ipynb"
     },
     "HigherOrderGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/structured_output.md",
       "theory": "docs/theory/11_structured_output.md",
       "notebook": "examples/notebooks/11_structured_output_gp.ipynb"
     },
     "HybridAutoEncoderGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/20_neural_reduction_gp.ipynb"
     },
     "HybridAutoEncoderKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "HybridAutoEncoderMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "JointEncoderGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/20_neural_reduction_gp.ipynb"
     },
     "JointEncoderKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "JointEncoderMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "JointHeteroskedasticSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/15_heteroskedastic_noise.md",
       "notebook": "examples/notebooks/16_noise_models.ipynb"
     },
     "JointVAEGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/20_neural_reduction_gp.ipynb"
     },
     "JointVAEKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "JointVAEMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "KroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/04_multitask_gp.ipynb"
     },
     "LatentKroneckerGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/11_structured_output.md",
       "notebook": "examples/notebooks/11_structured_output_gp.ipynb"
     },
     "MixedAdditiveMapSaasSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/09_map_saas_and_additive_gp.ipynb"
     },
     "MixedAutoEncoderGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
     },
     "MixedContaminatedSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/14_robust_gaussian_process.md",
       "notebook": "examples/notebooks/15_robust_observation_models.ipynb"
     },
     "MixedEnsembleMapSaasSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/09_map_saas_and_additive_gp.ipynb"
     },
     "MixedHeterogeneousMTGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/13_heterogeneous_multitask_gp.ipynb"
     },
     "MixedHeteroskedasticSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/15_heteroskedastic_noise.md",
       "notebook": "examples/notebooks/16_noise_models.ipynb"
     },
     "MixedHierarchicalConditionalKernelGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/hierarchical_contextual.md",
       "theory": "docs/theory/12_hierarchical_contextual_gp.md",
       "notebook": "examples/notebooks/12_hierarchical_gp.ipynb"
     },
     "MixedHierarchicalConditionalKernelMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/12_hierarchical_contextual_gp.md",
       "notebook": "examples/notebooks/12_hierarchical_gp.ipynb"
     },
     "MixedHigherOrderGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/structured_output.md",
       "theory": "docs/theory/11_structured_output.md",
       "notebook": "examples/notebooks/11_structured_output_gp.ipynb"
     },
     "MixedHybridAutoEncoderGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
     },
     "MixedJointEncoderGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
     },
     "MixedJointHeteroskedasticSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/15_heteroskedastic_noise.md",
       "notebook": "examples/notebooks/16_noise_models.ipynb"
     },
     "MixedJointVAEGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
     },
     "MixedKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/04_multitask_gp.ipynb"
     },
     "MixedLCEMGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/hierarchical_contextual.md",
       "theory": "docs/theory/12_hierarchical_contextual_gp.md",
       "notebook": "examples/notebooks/14_contextual_gp.ipynb"
     },
     "MixedLatentKroneckerGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/11_structured_output.md",
       "notebook": "examples/notebooks/11_structured_output_gp.ipynb"
     },
     "MixedMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/04_multitask_gp.ipynb"
     },
     "MixedNonstationarySingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/17_nonstationary_gp.md",
       "notebook": "examples/notebooks/18_nonstationary_gp.ipynb"
     },
     "MixedOrthogonalAdditiveGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/09_map_saas_and_additive_gp.ipynb"
     },
     "MixedPCAGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
     },
     "MixedPLSGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
     },
     "MixedRandomProjectionGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
     },
     "MixedReducedGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
     },
     "MixedReducedKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "MixedReducedMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "MixedReplicateNoiseSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/15_heteroskedastic_noise.md",
       "notebook": "examples/notebooks/16_noise_models.ipynb"
     },
     "MixedRobustRelevancePursuitSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/14_robust_gaussian_process.md",
       "notebook": "examples/notebooks/10_robust_gp.ipynb"
     },
     "MixedSaasFullyBayesianMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/08_saas_gp.ipynb"
     },
     "MixedSaasFullyBayesianSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/08_saas_gp.ipynb"
     },
     "MixedSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/standard.md",
       "theory": "docs/theory/05_mixed_variables.md",
       "notebook": "examples/notebooks/02_mixed_single_task_gp.ipynb"
     },
     "MixedSingleTaskMultiFidelityGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/standard.md",
       "theory": "docs/theory/06_multi_fidelity.md",
       "notebook": "examples/notebooks/03_multi_fidelity_gp.ipynb"
     },
     "MixedSingleTaskVariationalGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/standard.md",
       "theory": "docs/theory/09_variational_gp.md",
       "notebook": "examples/notebooks/06_variational_gp.ipynb"
     },
     "MixedStudentTSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/14_robust_gaussian_process.md",
       "notebook": "examples/notebooks/15_robust_observation_models.ipynb"
     },
     "MixedSupervisedAutoEncoderGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
     },
     "MixedSupervisedVAEGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
     },
     "MixedUncertainInputSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/uncertain_input.md",
       "theory": "docs/theory/16_uncertain_input_gp.md",
       "notebook": "examples/notebooks/17_uncertain_input_gp.ipynb"
     },
     "MixedVAEGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
     },
     "ModelListGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/05_model_list_gp.ipynb"
     },
     "MultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/04_multitask_gp.ipynb"
     },
     "NonstationarySingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/17_nonstationary_gp.md",
       "notebook": "examples/notebooks/18_nonstationary_gp.ipynb"
     },
     "OrthogonalAdditiveGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/09_map_saas_and_additive_gp.ipynb"
     },
     "OutputPCAGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/19_reduced_gp.ipynb"
     },
     "OutputPLSGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/19_reduced_gp.ipynb"
     },
     "PCAKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "PCAMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "PLSKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "PLSMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "PairwiseGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/preference.md",
       "theory": "docs/theory/10_preference_learning.md",
       "notebook": "examples/notebooks/07_pairwise_gp.ipynb"
     },
     "RandomProjectionGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/19_reduced_gp.ipynb"
     },
     "RandomProjectionKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "RandomProjectionMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "ReducedGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/19_reduced_gp.ipynb"
     },
     "ReducedKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "ReducedMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "ReplicateNoiseSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/15_heteroskedastic_noise.md",
       "notebook": "examples/notebooks/16_noise_models.ipynb"
     },
     "RobustRelevancePursuitSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/14_robust_gaussian_process.md",
       "notebook": "examples/notebooks/10_robust_gp.ipynb"
     },
     "SaasFullyBayesianMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/08_saas_gp.ipynb"
     },
     "SaasFullyBayesianSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/08_saas_gp.ipynb"
     },
     "SingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/standard.md",
       "theory": "docs/theory/02_gaussian_process.md",
       "notebook": "examples/notebooks/01_single_task_gp.ipynb"
     },
     "SingleTaskMultiFidelityGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/standard.md",
       "theory": "docs/theory/06_multi_fidelity.md",
       "notebook": "examples/notebooks/03_multi_fidelity_gp.ipynb"
     },
     "SingleTaskVariationalGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/standard.md",
       "theory": "docs/theory/09_variational_gp.md",
       "notebook": "examples/notebooks/06_variational_gp.ipynb"
     },
     "StudentTSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/14_robust_gaussian_process.md",
       "notebook": "examples/notebooks/15_robust_observation_models.ipynb"
     },
     "SupervisedAutoEncoderGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/20_neural_reduction_gp.ipynb"
     },
     "SupervisedAutoEncoderKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "SupervisedAutoEncoderMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "SupervisedVAEGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/20_neural_reduction_gp.ipynb"
     },
     "SupervisedVAEKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "SupervisedVAEMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "UncertainCategoricalSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/uncertain_input.md",
       "theory": "docs/theory/16_uncertain_input_gp.md",
       "notebook": "examples/notebooks/17_uncertain_input_gp.ipynb"
     },
     "UncertainInputSingleTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/uncertain_input.md",
       "theory": "docs/theory/16_uncertain_input_gp.md",
       "notebook": "examples/notebooks/17_uncertain_input_gp.ipynb"
     },
     "VAEKroneckerMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "VAEMultiTaskGP": {
-      "guide": "docs/models.md",
+      "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     }
+  },
+  "coverage_contract": {
+    "guide": "model-family guide that names or covers the public model family",
+    "theory": "statistical or optimization theory shared by the model",
+    "notebook": "representative runnable example; one notebook may cover multiple variants"
   }
 }
