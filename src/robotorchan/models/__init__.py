@@ -3,7 +3,7 @@
 from robotorchan.models.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
 from robotorchan.models.alebo import ALEBOGP
 from robotorchan.models.base import UnsupportedModelOperationError
-from robotorchan.models.contaminated import ContaminatedSingleTaskGP
+from robotorchan.models.contaminated import ContaminatedSingleTaskGP, MixedContaminatedSingleTaskGP
 from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
 from robotorchan.models.fully_bayesian import (
     MixedSaasFullyBayesianMultiTaskGP,
@@ -108,7 +108,7 @@ from robotorchan.models.robust import (
     RobustRelevancePursuitSingleTaskGP,
 )
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
-from robotorchan.models.student_t import StudentTSingleTaskGP
+from robotorchan.models.student_t import MixedStudentTSingleTaskGP, StudentTSingleTaskGP
 from robotorchan.models.uncertain_categorical import UncertainCategoricalSingleTaskGP
 from robotorchan.models.uncertain_input import UncertainInputSingleTaskGP
 from robotorchan.models.variational import (
@@ -149,6 +149,7 @@ __all__ = [
     "LatentKroneckerGP",
     "MixedAdditiveMapSaasSingleTaskGP",
     "MixedAutoEncoderGP",
+    "MixedContaminatedSingleTaskGP",
     "MixedEnsembleMapSaasSingleTaskGP",
     "MixedHeterogeneousMTGP",
     "MixedHierarchicalConditionalKernelGP",
@@ -174,6 +175,7 @@ __all__ = [
     "MixedSingleTaskGP",
     "MixedSingleTaskMultiFidelityGP",
     "MixedSingleTaskVariationalGP",
+    "MixedStudentTSingleTaskGP",
     "MixedSupervisedAutoEncoderGP",
     "MixedSupervisedVAEGP",
     "MixedVAEGP",
