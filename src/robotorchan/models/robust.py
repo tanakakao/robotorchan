@@ -244,3 +244,14 @@ class MixedHeteroskedasticSingleTaskGP(RobustRelevancePursuitSingleTaskGP):
             self.noise_model = noise_model
             self._noise_model_fitted = True
         return self
+
+    def noise_posterior(self, X: Tensor):
+        """Return the mixed latent posterior for log observation variance."""
+        if self.noise_model is None or not self._noise_model_fitted:
+            raise RuntimeError("fit_heteroskedastic must be called before noise_posterior.")
+        self.noise_model.prediction_strategy = None
+        return self.noise_model.posterior(X)
+
+    def predicted_noise(self, X: Tensor) -> Tensor:
+        """Return mixed input-dependent observation variance on the original scale."""
+        return self.noise_posterior(X).mean.exp().clamp_min(self.noise_floor)
