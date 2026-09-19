@@ -151,6 +151,7 @@ class MixedReplicateNoiseSingleTaskGP(MixedSingleTaskGP):
             cat_dims=cat_dims,
             train_Yvar=train_Yvar,
         )
+        self.cat_dims = list(cat_dims)
         self._store_raw_tensor("replicate_X", raw_replicate_X)
         self._store_raw_tensor("replicate_Y", raw_replicate_Y)
         self._store_raw_tensor("replicate_counts", replicate_counts)
