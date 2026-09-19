@@ -12,7 +12,7 @@ from robotorchan.models.base import (
     make_mixed_covar_module,
     normalize_feature_dims,
 )
-from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
+from robotorchan.models.single_task import SingleTaskGP
 
 
 class GibbsKernel(Kernel):
@@ -104,7 +104,7 @@ class NonstationarySingleTaskGP(SingleTaskGP):
         return self.gibbs_kernel.local_lengthscale(X)
 
 
-class MixedNonstationarySingleTaskGP(MixedSingleTaskGP):
+class MixedNonstationarySingleTaskGP(SingleTaskGP):
     """Mixed exact GP with Gibbs covariance restricted to continuous dimensions."""
 
     def __init__(
