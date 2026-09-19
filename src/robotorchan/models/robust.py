@@ -121,6 +121,7 @@ class HeteroskedasticSingleTaskGP(ExactGPModelMixin, BoTorchRobustRelevancePursu
         if noise_floor <= 0:
             raise ValueError("noise_floor must be positive.")
         self.noise_floor = noise_floor
+        self._noise_model_fitted = False
         initial_noise = torch.full_like(train_Y, noise_floor)
         likelihood = FixedNoiseGaussianLikelihood(
             noise=initial_noise.squeeze(-1),
@@ -159,11 +160,12 @@ class HeteroskedasticSingleTaskGP(ExactGPModelMixin, BoTorchRobustRelevancePursu
                 predicted_noise = predicted_noise.clamp_min(self.noise_floor)
             self.likelihood.noise_covar.noise = predicted_noise.squeeze(-1)
             self.noise_model = noise_model
+            self._noise_model_fitted = True
         return self
 
     def noise_posterior(self, X: Tensor):
         """Return the latent posterior for log observation variance."""
-        if self.noise_model is None:
+        if self.noise_model is None or not self._noise_model_fitted:
             raise RuntimeError("fit_heteroskedastic must be called before noise_posterior.")
         return self.noise_model.posterior(X)
 
