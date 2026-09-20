@@ -2,10 +2,11 @@
 
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.acquisition.objective import GenericMCObjective
 from botorch.optim import optimize_acqf
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models import InfiniteWidthBNNGP
+from robotorchan.models import InfiniteWidthBNNGP, InfiniteWidthBNNMultiTaskGP
 from robotorchan.models.infinite_width_bnn import InfiniteWidthReLUKernel
 
 
@@ -46,7 +47,8 @@ def test_infinite_width_bnn_gp_posterior_and_qlogei_are_finite() -> None:
     model.eval()
 
     posterior = model.posterior(X[:3])
-    acquisition = qLogExpectedImprovement(model=model, best_f=Y.max())
+    objective = GenericMCObjective(lambda samples, X=None: samples.squeeze(-1))
+    acquisition = qLogExpectedImprovement(model=model, best_f=Y.max(), objective=objective)
     value = acquisition(X[:2].unsqueeze(0))
 
     assert posterior.mean.shape == (3, 1)
@@ -88,3 +90,52 @@ def test_infinite_width_bnn_kernel_validates_hyperparameters() -> None:
         except ValueError:
             continue
         raise AssertionError(f"Expected ValueError for {kwargs}.")
+
+
+def _multitask_data() -> tuple[torch.Tensor, torch.Tensor]:
+    torch.manual_seed(37)
+    data_X = torch.rand(12, 2, dtype=torch.double)
+    tasks = torch.arange(12, dtype=torch.double).remainder(3).unsqueeze(-1)
+    train_X = torch.cat((data_X[:, :1], tasks, data_X[:, 1:]), dim=-1)
+    train_Y = torch.sin(4.0 * data_X[:, :1]) + 0.3 * data_X[:, 1:] + 0.2 * tasks
+    return train_X, train_Y
+
+
+def test_infinite_width_bnn_multitask_uses_common_contract() -> None:
+    X, Y = _multitask_data()
+    model = InfiniteWidthBNNMultiTaskGP(X, Y, task_feature=1, depth=2)
+
+    torch.testing.assert_close(model.raw_train_X, X)
+    torch.testing.assert_close(model.raw_train_Y, Y)
+    assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
+    assert model.depth == 2
+    data_kernel = model.covar_module.kernels[0]
+    assert data_kernel.base_kernel.active_dims.tolist() == [0, 2]
+
+
+def test_infinite_width_bnn_multitask_posterior_is_finite() -> None:
+    X, Y = _multitask_data()
+    model = InfiniteWidthBNNMultiTaskGP(X, Y, task_feature=1, depth=2)
+    model.eval()
+
+    posterior = model.posterior(X[:4])
+
+    assert posterior.mean.shape == (4, 1)
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+
+
+def test_infinite_width_bnn_multitask_qlogei_runs() -> None:
+    X, Y = _multitask_data()
+    model = InfiniteWidthBNNMultiTaskGP(X, Y, task_feature=1, depth=2)
+    model.eval()
+    objective = GenericMCObjective(lambda samples, X=None: samples.squeeze(-1))
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=Y.max(),
+        objective=objective,
+    )
+
+    value = acquisition(X[:2].unsqueeze(0))
+
+    assert torch.isfinite(value).all()
