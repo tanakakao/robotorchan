@@ -320,6 +320,11 @@
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/08_saas_gp.ipynb"
     },
+    "MixedSingleTaskDeepGP": {
+      "guide": "docs/models/expressive.md",
+      "theory": "docs/theory/22_expressive_gp.md",
+      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
+    },
     "MixedSingleTaskGP": {
       "guide": "docs/models/standard.md",
       "theory": "docs/theory/05_mixed_variables.md",
