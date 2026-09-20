@@ -92,6 +92,7 @@ PUBLIC_MODEL_NAMES = {
     "SACGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
+    "SingleTaskDeepGP",
     "SingleTaskGP",
     "SpectralMixtureGP",
     "SingleTaskMultiFidelityGP",
