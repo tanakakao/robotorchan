@@ -239,4 +239,3 @@ class SingleTaskDeepGP(
         with gpytorch.settings.num_likelihood_samples(num_likelihood_samples):
             output = self(X)
             return -mll(output, Y.squeeze(-1))
-
