@@ -10,9 +10,7 @@ def _data() -> tuple[torch.Tensor, torch.Tensor]:
     torch.manual_seed(7)
     train_X = torch.rand(12, 3, dtype=torch.double)
     train_Y = (
-        torch.sin(4.0 * train_X[:, :1])
-        + 0.4 * train_X[:, 1:2].square()
-        - 0.2 * train_X[:, 2:3]
+        torch.sin(4.0 * train_X[:, :1]) + 0.4 * train_X[:, 1:2].square() - 0.2 * train_X[:, 2:3]
     )
     return train_X, train_Y
 
