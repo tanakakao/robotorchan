@@ -15,7 +15,7 @@ from gpytorch.models.deep_gps import DeepGP, DeepGPLayer
 from gpytorch.variational import CholeskyVariationalDistribution, VariationalStrategy
 from torch import Tensor
 
-from robotorchan.models.base import (\n    ModelTrainingMixin,\n    SupervisedTrainingDataMixin,\n)
+from robotorchan.models.base import ModelTrainingMixin, SupervisedTrainingDataMixin
 from robotorchan.models.deep_gp_posterior import DeepGPPosterior
 
 
