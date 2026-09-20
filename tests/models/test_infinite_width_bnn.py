@@ -129,7 +129,12 @@ def test_infinite_width_bnn_multitask_qlogei_runs() -> None:
     X, Y = _multitask_data()
     model = InfiniteWidthBNNMultiTaskGP(X, Y, task_feature=1, depth=2)
     model.eval()
-    acquisition = qLogExpectedImprovement(model=model, best_f=Y.max())
+    objective = GenericMCObjective(lambda samples, X=None: samples.squeeze(-1))
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=Y.max(),
+        objective=objective,
+    )
 
     value = acquisition(X[:2].unsqueeze(0))
 
