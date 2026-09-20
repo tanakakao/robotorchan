@@ -60,9 +60,9 @@ class InfiniteWidthReLUKernel(Kernel):
         x2 = self._scaled(x2)
         input_dim = x1.shape[-1]
 
-        covariance = self.bias_variance + self.weight_variance * (
-            x1 @ x2.transpose(-1, -2)
-        ) / input_dim
+        covariance = (
+            self.bias_variance + self.weight_variance * (x1 @ x2.transpose(-1, -2)) / input_dim
+        )
         variance1 = self.bias_variance + self.weight_variance * x1.square().mean(dim=-1)
         variance2 = self.bias_variance + self.weight_variance * x2.square().mean(dim=-1)
 
@@ -70,7 +70,7 @@ class InfiniteWidthReLUKernel(Kernel):
             denominator = torch.sqrt(variance1.unsqueeze(-1) * variance2.unsqueeze(-2)).clamp_min(
                 self.eps
             )
-            cosine = (covariance / denominator).clamp(-1.0 + self.eps, 1.0 - self.eps)
+            cosine = (covariance / denominator).clamp(-1.0, 1.0)
             theta = torch.acos(cosine)
             relu_covariance = (
                 denominator * (torch.sin(theta) + (math.pi - theta) * cosine) / (2.0 * math.pi)
