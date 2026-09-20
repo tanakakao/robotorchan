@@ -10,7 +10,7 @@ from robotorchan.models.contaminated import (
     MixedContaminatedSingleTaskGP,
 )
 from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
-from robotorchan.models.deep_gp import MultiTaskDeepGP, SingleTaskDeepGP
+from robotorchan.models.deep_gp import MixedSingleTaskDeepGP, MultiTaskDeepGP, SingleTaskDeepGP
 from robotorchan.models.fully_bayesian import (
     MixedSaasFullyBayesianMultiTaskGP,
     MixedSaasFullyBayesianSingleTaskGP,
@@ -217,6 +217,7 @@ __all__ = [
     "MixedRobustRelevancePursuitSingleTaskGP",
     "MixedSaasFullyBayesianMultiTaskGP",
     "MixedSaasFullyBayesianSingleTaskGP",
+    "MixedSingleTaskDeepGP",
     "MixedSingleTaskGP",
     "MixedSingleTaskMultiFidelityGP",
     "MixedSingleTaskVariationalGP",
