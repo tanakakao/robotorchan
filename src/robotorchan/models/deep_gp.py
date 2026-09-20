@@ -65,6 +65,7 @@ class _DeepGPLayer(DeepGPLayer):
             RBFKernel(batch_shape=batch_shape, ard_num_dims=input_dim),
             batch_shape=batch_shape,
         )
+        self.to(device=reference.device, dtype=reference.dtype)
 
     def forward(self, X: Tensor) -> MultivariateNormal:
         """Evaluate this stochastic GP mapping."""
