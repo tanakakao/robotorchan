@@ -71,7 +71,7 @@ class DeepGPPosterior(Posterior):
 
         flat_batch = int(torch.tensor(batch_shape).prod().item())
         stored = stored.reshape(stored.shape[0], flat_batch, *stored.shape[-2:])
-        indices = indices.reshape(*indices.shape[:-len(batch_shape)], flat_batch)
+        indices = indices.reshape(*indices.shape[: -len(batch_shape)], flat_batch)
         batch_indices = torch.arange(flat_batch, device=self.device)
         selected = stored[indices, batch_indices]
         return selected.reshape(*indices.shape[:-1], *batch_shape, *stored.shape[-2:])
