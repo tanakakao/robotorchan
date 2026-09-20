@@ -330,19 +330,15 @@ class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
         if latent_dim > continuous_X.shape[-1]:
             raise ValueError("latent_dim cannot exceed the continuous input dimension.")
 
-        reduced_train_X = torch.cat(
-            (
-                continuous_X,
-                train_X[..., list(cats)],
-                train_X[..., task_dim : task_dim + 1],
-            ),
+        parent_train_X = torch.cat(
+            (continuous_X, train_X[..., task_dim : task_dim + 1]),
             dim=-1,
         )
-        reduced_task_feature = reduced_train_X.shape[-1] - 1
+        parent_task_feature = parent_train_X.shape[-1] - 1
         super().__init__(
-            reduced_train_X,
+            parent_train_X,
             train_Y,
-            task_feature=reduced_task_feature,
+            task_feature=parent_task_feature,
             latent_dim=latent_dim,
             **kwargs,
         )
@@ -372,6 +368,13 @@ class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
                 dtype=train_X.dtype,
             )
         self._store_supervised_training_data(train_X, train_Y)
+        encoded_train_X = self.encode(train_X).detach()
+        self.set_train_data(
+            inputs=encoded_train_X,
+            targets=self.train_targets,
+            strict=False,
+        )
+        self._task_feature = encoded_train_X.shape[-1] - 1
 
         reduced_cat_dims = list(range(latent_dim, latent_dim + len(cats)))
         data_covar = make_mixed_covar_module(
