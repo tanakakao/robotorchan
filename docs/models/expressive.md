@@ -17,8 +17,8 @@ Spectral Mixture GPを扱います。これらは同じ問題を別名で実装�
 GPの学習目的からjoint trainingされ、`posterior()` には元入力空間のXを渡します。
 
 一方、`MixedReducedMultiTaskGP` はfitted reducerを使うreduction基盤であり、
-joint-training DKLのMixed MultiTask実装ではありません。Mixed × MultiTask DKLは別途
-明示的なモデル契約として扱います。
+joint-training DKLのMixed MultiTask実装ではありません。Mixed × MultiTask DKLには `MixedJointEncoderMultiTaskGP` を使用します。continuous data featureだけを
+encoderで潜在表現へ写像し、categorical featureとtask identityは変換せずGPへ渡します。
 
 `SingleTaskDeepGP` は確率的なGP階層を使います。DKLより推論が重く、
 Monte Carlo posteriorを使うため、階層的な確率表現が必要な場合に比較対象とします。
