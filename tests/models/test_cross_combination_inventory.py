@@ -1,9 +1,6 @@
 """Cross-combination inventory checks for intentionally supported model axes."""
 
-import importlib
-
-
-MODELS = importlib.import_module("robotorchan.models")
+import robotorchan.models as MODELS
 
 EXPRESSIVE_COVERAGE = {
     "deep_gp": {
