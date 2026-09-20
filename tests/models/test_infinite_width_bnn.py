@@ -5,7 +5,7 @@ from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.optim import optimize_acqf
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models.infinite_width_bnn import InfiniteWidthBNNGP, InfiniteWidthReLUKernel
+from robotorchan.models import InfiniteWidthBNNGP\nfrom robotorchan.models.infinite_width_bnn import InfiniteWidthReLUKernel
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
@@ -25,6 +25,8 @@ def test_infinite_width_relu_kernel_is_symmetric_and_finite() -> None:
     assert torch.allclose(covariance, covariance.transpose(-1, -2), atol=1e-10)
     assert torch.isfinite(covariance).all()
     assert torch.all(covariance.diagonal() > 0)
+    eigenvalues = torch.linalg.eigvalsh(covariance)
+    assert eigenvalues.min() >= -1e-8
 
 
 def test_infinite_width_bnn_gp_uses_common_exact_gp_contract() -> None:
