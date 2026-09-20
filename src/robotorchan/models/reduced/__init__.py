@@ -18,9 +18,9 @@ from robotorchan.models.reduced.joint_multitask import (
     HybridAutoEncoderMultiTaskGP,
     JointEncoderKroneckerMultiTaskGP,
     JointEncoderMultiTaskGP,
-    MixedJointEncoderMultiTaskGP,
     JointVAEKroneckerMultiTaskGP,
     JointVAEMultiTaskGP,
+    MixedJointEncoderMultiTaskGP,
 )
 from robotorchan.models.reduced.joint_neural import (
     HybridAutoEncoderGP,
@@ -64,9 +64,6 @@ from robotorchan.models.reduced.vae import (
 )
 
 __all__ = [
-    "PCAGP",
-    "PLSGP",
-    "VAEGP",
     "AutoEncoderGP",
     "AutoEncoderKroneckerMultiTaskGP",
     "AutoEncoderMultiTaskGP",
@@ -76,13 +73,13 @@ __all__ = [
     "JointEncoderGP",
     "JointEncoderKroneckerMultiTaskGP",
     "JointEncoderMultiTaskGP",
-    "MixedJointEncoderMultiTaskGP",
     "JointVAEGP",
     "JointVAEKroneckerMultiTaskGP",
     "JointVAEMultiTaskGP",
     "MixedAutoEncoderGP",
     "MixedHybridAutoEncoderGP",
     "MixedJointEncoderGP",
+    "MixedJointEncoderMultiTaskGP",
     "MixedJointVAEGP",
     "MixedPCAGP",
     "MixedPLSGP",
@@ -95,8 +92,10 @@ __all__ = [
     "MixedVAEGP",
     "OutputPCAGP",
     "OutputPLSGP",
+    "PCAGP",
     "PCAKroneckerMultiTaskGP",
     "PCAMultiTaskGP",
+    "PLSGP",
     "PLSKroneckerMultiTaskGP",
     "PLSMultiTaskGP",
     "RandomProjectionGP",
@@ -111,6 +110,7 @@ __all__ = [
     "SupervisedVAEGP",
     "SupervisedVAEKroneckerMultiTaskGP",
     "SupervisedVAEMultiTaskGP",
+    "VAEGP",
     "VAEKroneckerMultiTaskGP",
     "VAEMultiTaskGP",
 ]
