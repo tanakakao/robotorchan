@@ -2,6 +2,10 @@
 
 robotorchan のモデル・探索戦略を、再現可能な条件で比較するためのベンチマーク文書です。
 
+## Expressive surrogate models
+
+- [Predictive benchmark](expressive_predictive.md)
+
 ## High-dimensional Bayesian optimization
 
 - [Sequential BO](high_dimensional/sequential_bo.md)
