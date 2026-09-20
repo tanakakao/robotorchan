@@ -181,7 +181,7 @@ class NonstationaryMultiTaskGP(MultiTaskGP):
         input_dim = train_X.shape[-1]
         task_dim = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
         data_dims = continuous_feature_dims(input_dim, cat_dims=[task_dim])
-        gibbs_kernel = GibbsKernel(len(data_dims), lengthscale_floor=lengthscale_floor)
+        gibbs_kernel = GibbsKernel(input_dim, lengthscale_floor=lengthscale_floor)
         data_covar = ScaleKernel(gibbs_kernel, active_dims=data_dims)
         data_covar.active_dims = torch.arange(input_dim, device=train_X.device)
         super().__init__(
@@ -205,7 +205,8 @@ class NonstationaryMultiTaskGP(MultiTaskGP):
 
     def local_lengthscale(self, X: Tensor) -> Tensor:
         """Return local lengthscales for data features, excluding task identity."""
-        return self.gibbs_kernel.local_lengthscale(X[..., list(self.continuous_dims)])
+        lengthscale = self.gibbs_kernel.local_lengthscale(X)
+        return lengthscale[..., list(self.continuous_dims)]
 
 
 class MixedNonstationaryMultiTaskGP(MultiTaskGP):
