@@ -62,7 +62,7 @@ def test_mixed_heteroskedastic_multitask_preserves_task_feature() -> None:
 
 def test_mixed_heteroskedastic_multitask_rejects_task_as_category() -> None:
     train_x, train_y = _long_format_data()
-    with pytest.raises(ValueError, match="task_feature"):
+    with pytest.raises(ValueError, match="cat_dims must not overlap structural dimensions"):
         MixedHeteroskedasticMultiTaskGP(
             train_x,
             train_y,
