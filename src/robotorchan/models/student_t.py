@@ -133,7 +133,6 @@ class MixedStudentTSingleTaskGP(_StudentTGPBase):
         self._store_raw_tensor("train_Yvar", None)
 
 
-
 def _multitask_covar_module(
     train_X: Tensor,
     task_feature: int,
@@ -217,9 +216,7 @@ class MixedStudentTMultiTaskGP(StudentTMultiTaskGP):
             raise ValueError("num_inducing must be positive.")
         if df <= 2:
             raise ValueError("df must be greater than 2 for finite observation variance.")
-        covar_module, task_dim = _multitask_covar_module(
-            train_X, task_feature, cat_dims=cat_dims
-        )
+        covar_module, task_dim = _multitask_covar_module(train_X, task_feature, cat_dims=cat_dims)
         likelihood = StudentTLikelihood()
         likelihood.initialize(deg_free=df)
         self.response_model = SingleTaskVariationalGP(
