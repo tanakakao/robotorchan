@@ -94,6 +94,7 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`21_reduced_multitask_gp.ipynb`](notebooks/21_reduced_multitask_gp.ipynb) | Reduced MultiTask | 利用可能 |
 | [`22_mixed_reduced_gp.ipynb`](notebooks/22_mixed_reduced_gp.ipynb) | Mixed PCA / PLS | 利用可能 |
 | [`23_high_dimensional_bo_benchmark.ipynb`](notebooks/23_high_dimensional_bo_benchmark.ipynb) | 高次元BO benchmark | 利用可能 / benchmark解説 |
+| [`24_expressive_surrogate_gp.ipynb`](notebooks/24_expressive_surrogate_gp.ipynb) | DKL / I-BNN / Spectral Mixture / DeepGP | 利用可能 / 解説中心 |
 
 ## Benchmark
 
