@@ -91,3 +91,14 @@ model = JointEncoderGP(
 Phase 3では、posteriorだけでなく `qLogExpectedImprovement`、`qLogNoisyExpectedImprovement`、`qUpperConfidenceBound` と `optimize_acqf` の元入力空間での動作をintegration testで固定しています。また、sequential BOで重要な `condition_on_observations()` と `fantasize()` についても元入力次元を維持する契約をテストします。
 
 したがってBO loopでは通常のBoTorch modelと同様にmodelを獲得関数へ直接渡します。encoderを外側から呼び出して候補点を変換しないでください。
+
+
+## DKL variant coverage
+
+DKLの基本契約はsingle-outputの `JointEncoderGP` だけでなく、既存のjoint representation系へ揃えています。
+
+- `MixedJointEncoderGP`: continuous featuresのみをencoderへ渡し、categorical featuresはnative mixed kernelへ保持します。
+- `JointEncoderMultiTaskGP`: task featureをencoderから除外し、data featuresだけを学習表現へ写像します。
+- `JointEncoderKroneckerMultiTaskGP`: block-design multi-output / multitask dataをjoint neural representationで扱います。
+
+MultiTask系でも `feature_extractor` に任意の `nn.Module` を指定でき、`latent_dim` は圧縮に限定されません。task identityやcategorical identityをニューラルencoderへ無条件に埋め込まず、GP側の構造として保持することをrobotorchanのDKL variant共通方針とします。

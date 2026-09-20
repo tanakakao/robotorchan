@@ -47,8 +47,8 @@ def _validate_config(
     activation: str,
     eps: float,
 ) -> None:
-    if latent_dim <= 0 or latent_dim > input_dim:
-        raise ValueError("latent_dim must be positive and not exceed the encoded input dimension.")
+    if latent_dim <= 0:
+        raise ValueError("latent_dim must be a positive integer.")
     if any(width <= 0 for width in hidden_dims):
         raise ValueError("hidden_dims must contain only positive integers.")
     if activation not in _ACTIVATIONS:
@@ -72,6 +72,7 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         standardize: bool = True,
         eps: float = 1e-8,
         random_state: int = 0,
+        feature_extractor: nn.Module | None = None,
         **kwargs: Any,
     ) -> None:
         input_dim = train_X.shape[-1]
@@ -87,16 +88,25 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         )
         with torch.random.fork_rng():
             torch.manual_seed(random_state)
-            encoder = _make_network(
-                len(data_dims),
-                latent_dim,
-                hidden_dims,
-                activation,
-                reverse=False,
-                device=train_X.device,
-                dtype=train_X.dtype,
+            encoder = (
+                _make_network(
+                    len(data_dims),
+                    latent_dim,
+                    hidden_dims,
+                    activation,
+                    reverse=False,
+                    device=train_X.device,
+                    dtype=train_X.dtype,
+                )
+                if feature_extractor is None
+                else feature_extractor.to(device=train_X.device, dtype=train_X.dtype)
             )
-        latent = encoder((data_X - x_mean) / x_scale).detach()
+        latent = encoder((data_X - x_mean) / x_scale)
+        if latent.shape[:-1] != data_X.shape[:-1] or latent.shape[-1] != latent_dim:
+            raise ValueError(
+                "feature_extractor must preserve batch dimensions and output latent_dim."
+            )
+        latent = latent.detach()
         reduced_X = torch.cat([latent, train_X[..., task_feature : task_feature + 1]], dim=-1)
         super().__init__(reduced_X, train_Y, task_feature=latent_dim, **kwargs)
         self.encoder = encoder
@@ -151,6 +161,7 @@ class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         standardize: bool = True,
         eps: float = 1e-8,
         random_state: int = 0,
+        feature_extractor: nn.Module | None = None,
         **kwargs: Any,
     ) -> None:
         input_dim = train_X.shape[-1]
@@ -163,16 +174,25 @@ class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         )
         with torch.random.fork_rng():
             torch.manual_seed(random_state)
-            encoder = _make_network(
-                input_dim,
-                latent_dim,
-                hidden_dims,
-                activation,
-                reverse=False,
-                device=train_X.device,
-                dtype=train_X.dtype,
+            encoder = (
+                _make_network(
+                    input_dim,
+                    latent_dim,
+                    hidden_dims,
+                    activation,
+                    reverse=False,
+                    device=train_X.device,
+                    dtype=train_X.dtype,
+                )
+                if feature_extractor is None
+                else feature_extractor.to(device=train_X.device, dtype=train_X.dtype)
             )
-        latent = encoder((train_X - x_mean) / x_scale).detach()
+        latent = encoder((train_X - x_mean) / x_scale)
+        if latent.shape[:-1] != train_X.shape[:-1] or latent.shape[-1] != latent_dim:
+            raise ValueError(
+                "feature_extractor must preserve batch dimensions and output latent_dim."
+            )
+        latent = latent.detach()
         super().__init__(latent, train_Y, **kwargs)
         self.encoder = encoder
         self.latent_dim = latent_dim
