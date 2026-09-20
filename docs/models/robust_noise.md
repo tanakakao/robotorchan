@@ -20,7 +20,7 @@
 
 ## Heteroskedastic noise
 
-`HeteroskedasticSingleTaskGP` / `MixedHeteroskedasticSingleTaskGP` は入力依存 noise を扱います。`JointHeteroskedasticSingleTaskGP` / Mixed版は response と log-noise の潜在過程を joint に扱います。
+`HeteroskedasticSingleTaskGP` / `MixedHeteroskedasticSingleTaskGP` は入力依存 noise を扱います。long-format の複数タスクには `HeteroskedasticMultiTaskGP`、Mixed入力を含む場合は `MixedHeteroskedasticMultiTaskGP` を使用します。task feature は noise GP を含む両方の MultiTaskGP で task covariance として扱い、`cat_dims` には含めません。`JointHeteroskedasticSingleTaskGP` / Mixed版は response と log-noise の潜在過程を joint に扱います。
 
 詳細: [Joint heteroskedastic](joint_heteroskedastic_gp.md)
 

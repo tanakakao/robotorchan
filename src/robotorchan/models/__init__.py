@@ -114,7 +114,9 @@ from robotorchan.models.replicate_noise import (
     ReplicateNoiseSingleTaskGP,
 )
 from robotorchan.models.robust import (
+    HeteroskedasticMultiTaskGP,
     HeteroskedasticSingleTaskGP,
+    MixedHeteroskedasticMultiTaskGP,
     MixedHeteroskedasticSingleTaskGP,
     MixedRobustRelevancePursuitMultiTaskGP,
     MixedRobustRelevancePursuitSingleTaskGP,
@@ -149,6 +151,7 @@ __all__ = [
     "ContaminatedSingleTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "HeterogeneousMTGP",
+    "HeteroskedasticMultiTaskGP",
     "HeteroskedasticSingleTaskGP",
     "HierarchicalConditionalKernelGP",
     "HierarchicalConditionalKernelMultiTaskGP",
@@ -171,6 +174,7 @@ __all__ = [
     "MixedContaminatedSingleTaskGP",
     "MixedEnsembleMapSaasSingleTaskGP",
     "MixedHeterogeneousMTGP",
+    "MixedHeteroskedasticMultiTaskGP",
     "MixedHeteroskedasticSingleTaskGP",
     "MixedHierarchicalConditionalKernelGP",
     "MixedHierarchicalConditionalKernelMultiTaskGP",
