@@ -70,6 +70,7 @@ PUBLIC_MODEL_NAMES = {
     "MixedSupervisedAutoEncoderGP",
     "MixedSupervisedVAEGP",
     "MixedUncertainInputSingleTaskGP",
+    "MixedSingleTaskDeepGP",
     "MixedSingleTaskGP",
     "MixedStudentTMultiTaskGP",
     "MixedStudentTSingleTaskGP",
