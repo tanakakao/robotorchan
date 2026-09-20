@@ -6,14 +6,17 @@ robotorchanの表現力モデルは内部構造が異なっていても、ベイ
 ## 対象モデル
 
 - `JointEncoderGP`: 決定論的なニューラル特徴抽出器とExact GPを結合するDKL
+- `JointEncoderMultiTaskGP`: long-format DKL。task featureをencoderから分離
+- `JointEncoderKroneckerMultiTaskGP`: block-design DKL
 - `SingleTaskDeepGP`: 確率的なGP階層を持つDeep GP
 - `InfiniteWidthBNNGP`: 無限幅ReLUネットワークに対応するNNGP kernelのExact GP
 - `SpectralMixtureGP`: スペクトル混合kernelのExact GP
 
 ## 共通して確認する契約
 
-Exact GP系の3モデルでは、元の入力空間 `X` をそのまま `posterior()` と獲得関数へ
-渡せます。候補点に対する勾配も元入力空間まで伝播するため、`optimize_acqf` に
+Exact GP系では、元の入力空間 `X` をそのまま `posterior()` と獲得関数へ
+渡せます。DKL MultiTaskでも公開APIは元入力空間を受け取り、long-format版ではtask featureを
+保持したままdata featureだけをencodeします。候補点に対する勾配も元入力空間まで伝播するため、`optimize_acqf` に
 手動の潜在変換や逆変換を挟む必要はありません。
 
 Phase 11の統合テストでは、Exact GP系について以下を同じ条件で確認します。
