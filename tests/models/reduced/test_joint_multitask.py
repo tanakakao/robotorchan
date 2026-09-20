@@ -7,6 +7,7 @@ from robotorchan.models.reduced.joint_multitask import (
     HybridAutoEncoderMultiTaskGP,
     JointEncoderKroneckerMultiTaskGP,
     JointEncoderMultiTaskGP,
+    MixedJointEncoderMultiTaskGP,
     JointVAEKroneckerMultiTaskGP,
     JointVAEMultiTaskGP,
 )
@@ -176,3 +177,84 @@ def test_joint_encoder_kronecker_posterior_accepts_original_space() -> None:
     posterior.mean.sum().backward()
     assert test_X.grad is not None
     assert torch.isfinite(test_X.grad).all()
+
+
+
+def test_mixed_joint_encoder_multitask_preserves_categories_and_task() -> None:
+    continuous = torch.rand(12, 4, dtype=torch.double)
+    category = (torch.arange(12) % 3).double().unsqueeze(-1)
+    task = (torch.arange(12) % 2).double().unsqueeze(-1)
+    train_X = torch.cat(
+        (continuous[:, :2], category, continuous[:, 2:], task),
+        dim=-1,
+    )
+    train_Y = continuous[:, :1] + 0.2 * task
+    model = MixedJointEncoderMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=-1,
+        latent_dim=2,
+        cat_dims=[2],
+        hidden_dims=(6,),
+    )
+
+    encoded = model.encode(train_X)
+
+    assert model.cat_dims == (2,)
+    assert model.continuous_dims == (0, 1, 3, 4)
+    assert encoded.shape == torch.Size([12, 4])
+    torch.testing.assert_close(encoded[:, 2], category.squeeze(-1))
+    torch.testing.assert_close(encoded[:, 3], task.squeeze(-1))
+
+
+def test_mixed_joint_encoder_multitask_posterior_uses_original_space() -> None:
+    continuous = torch.rand(12, 4, dtype=torch.double)
+    category = (torch.arange(12) % 3).double().unsqueeze(-1)
+    task = (torch.arange(12) % 2).double().unsqueeze(-1)
+    train_X = torch.cat(
+        (continuous[:, :2], category, continuous[:, 2:], task),
+        dim=-1,
+    )
+    train_Y = continuous[:, :1] + 0.2 * task
+    model = MixedJointEncoderMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=-1,
+        latent_dim=2,
+        cat_dims=[2],
+        hidden_dims=(6,),
+    )
+    model.eval()
+    model.likelihood.eval()
+    test_X = train_X[:3].detach().clone().requires_grad_(True)
+
+    posterior = model.posterior(test_X)
+    posterior.mean.sum().backward()
+
+    assert posterior.mean.shape[-2:] == torch.Size([3, 1])
+    assert test_X.grad is not None
+    assert torch.isfinite(test_X.grad).all()
+
+
+def test_mixed_joint_encoder_multitask_training_loss_updates_encoder() -> None:
+    continuous = torch.rand(12, 4, dtype=torch.double)
+    category = (torch.arange(12) % 3).double().unsqueeze(-1)
+    task = (torch.arange(12) % 2).double().unsqueeze(-1)
+    train_X = torch.cat(
+        (continuous[:, :2], category, continuous[:, 2:], task),
+        dim=-1,
+    )
+    train_Y = continuous[:, :1] + 0.2 * task
+    model = MixedJointEncoderMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=-1,
+        latent_dim=2,
+        cat_dims=[2],
+        hidden_dims=(6,),
+    )
+
+    loss = model.training_loss()
+    loss.backward()
+
+    assert any(parameter.grad is not None for parameter in model.encoder.parameters())
