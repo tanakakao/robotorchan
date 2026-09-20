@@ -30,6 +30,11 @@
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
+    "ContaminatedMultiTaskGP": {
+      "guide": "docs/models/robust_noise.md",
+      "theory": "docs/theory/14_robust_gaussian_process.md",
+      "notebook": "examples/notebooks/15_robust_observation_models.ipynb"
+    },
     "ContaminatedSingleTaskGP": {
       "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/14_robust_gaussian_process.md",
@@ -154,6 +159,11 @@
       "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
+    },
+    "MixedContaminatedMultiTaskGP": {
+      "guide": "docs/models/robust_noise.md",
+      "theory": "docs/theory/14_robust_gaussian_process.md",
+      "notebook": "examples/notebooks/15_robust_observation_models.ipynb"
     },
     "MixedContaminatedSingleTaskGP": {
       "guide": "docs/models/robust_noise.md",
@@ -314,6 +324,11 @@
       "guide": "docs/models/standard.md",
       "theory": "docs/theory/09_variational_gp.md",
       "notebook": "examples/notebooks/06_variational_gp.ipynb"
+    },
+    "MixedStudentTMultiTaskGP": {
+      "guide": "docs/models/robust_noise.md",
+      "theory": "docs/theory/14_robust_gaussian_process.md",
+      "notebook": "examples/notebooks/15_robust_observation_models.ipynb"
     },
     "MixedStudentTSingleTaskGP": {
       "guide": "docs/models/robust_noise.md",
@@ -489,6 +504,11 @@
       "guide": "docs/models/expressive.md",
       "theory": "docs/theory/22_expressive_gp.md",
       "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
+    },
+    "StudentTMultiTaskGP": {
+      "guide": "docs/models/robust_noise.md",
+      "theory": "docs/theory/14_robust_gaussian_process.md",
+      "notebook": "examples/notebooks/15_robust_observation_models.ipynb"
     },
     "StudentTSingleTaskGP": {
       "guide": "docs/models/robust_noise.md",

@@ -3,7 +3,12 @@
 from robotorchan.models.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
 from robotorchan.models.alebo import ALEBOGP
 from robotorchan.models.base import UnsupportedModelOperationError
-from robotorchan.models.contaminated import ContaminatedSingleTaskGP, MixedContaminatedSingleTaskGP
+from robotorchan.models.contaminated import (
+    ContaminatedMultiTaskGP,
+    ContaminatedSingleTaskGP,
+    MixedContaminatedMultiTaskGP,
+    MixedContaminatedSingleTaskGP,
+)
 from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
 from robotorchan.models.deep_gp import SingleTaskDeepGP
 from robotorchan.models.fully_bayesian import (
@@ -125,7 +130,12 @@ from robotorchan.models.robust import (
 )
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
 from robotorchan.models.spectral_mixture import SpectralMixtureGP
-from robotorchan.models.student_t import MixedStudentTSingleTaskGP, StudentTSingleTaskGP
+from robotorchan.models.student_t import (
+    MixedStudentTMultiTaskGP,
+    MixedStudentTSingleTaskGP,
+    StudentTMultiTaskGP,
+    StudentTSingleTaskGP,
+)
 from robotorchan.models.uncertain_categorical import UncertainCategoricalSingleTaskGP
 from robotorchan.models.uncertain_input import (
     MixedUncertainInputSingleTaskGP,
@@ -148,6 +158,7 @@ __all__ = [
     "AutoEncoderGP",
     "AutoEncoderKroneckerMultiTaskGP",
     "AutoEncoderMultiTaskGP",
+    "ContaminatedMultiTaskGP",
     "ContaminatedSingleTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "HeterogeneousMTGP",
@@ -171,6 +182,7 @@ __all__ = [
     "LatentKroneckerGP",
     "MixedAdditiveMapSaasSingleTaskGP",
     "MixedAutoEncoderGP",
+    "MixedContaminatedMultiTaskGP",
     "MixedContaminatedSingleTaskGP",
     "MixedEnsembleMapSaasSingleTaskGP",
     "MixedHeterogeneousMTGP",
@@ -203,6 +215,7 @@ __all__ = [
     "MixedSingleTaskGP",
     "MixedSingleTaskMultiFidelityGP",
     "MixedSingleTaskVariationalGP",
+    "MixedStudentTMultiTaskGP",
     "MixedStudentTSingleTaskGP",
     "MixedSupervisedAutoEncoderGP",
     "MixedSupervisedVAEGP",
@@ -235,6 +248,7 @@ __all__ = [
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
     "SpectralMixtureGP",
+    "StudentTMultiTaskGP",
     "StudentTSingleTaskGP",
     "SupervisedAutoEncoderGP",
     "SupervisedAutoEncoderKroneckerMultiTaskGP",

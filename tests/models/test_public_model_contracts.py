@@ -9,6 +9,7 @@ PUBLIC_MODEL_NAMES = {
     "AutoEncoderGP",
     "AutoEncoderKroneckerMultiTaskGP",
     "AutoEncoderMultiTaskGP",
+    "ContaminatedMultiTaskGP",
     "ContaminatedSingleTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "HeterogeneousMTGP",
@@ -34,6 +35,7 @@ PUBLIC_MODEL_NAMES = {
     "LatentKroneckerGP",
     "MixedAdditiveMapSaasSingleTaskGP",
     "MixedAutoEncoderGP",
+    "MixedContaminatedMultiTaskGP",
     "MixedContaminatedSingleTaskGP",
     "MixedEnsembleMapSaasSingleTaskGP",
     "MixedHybridAutoEncoderGP",
@@ -67,6 +69,7 @@ PUBLIC_MODEL_NAMES = {
     "MixedSupervisedVAEGP",
     "MixedUncertainInputSingleTaskGP",
     "MixedSingleTaskGP",
+    "MixedStudentTMultiTaskGP",
     "MixedStudentTSingleTaskGP",
     "MixedSingleTaskMultiFidelityGP",
     "MixedSingleTaskVariationalGP",
@@ -107,6 +110,7 @@ PUBLIC_MODEL_NAMES = {
     "SupervisedVAEGP",
     "SupervisedVAEKroneckerMultiTaskGP",
     "SupervisedVAEMultiTaskGP",
+    "StudentTMultiTaskGP",
     "StudentTSingleTaskGP",
     "UncertainCategoricalSingleTaskGP",
     "UncertainInputSingleTaskGP",
@@ -116,6 +120,10 @@ PUBLIC_MODEL_NAMES = {
 }
 
 NON_MLL_MODELS = {
+    "StudentTMultiTaskGP",
+    "MixedStudentTMultiTaskGP",
+    "MixedContaminatedMultiTaskGP",
+    "ContaminatedMultiTaskGP",
     "ContaminatedSingleTaskGP",
     "MixedContaminatedSingleTaskGP",
     "JointHeteroskedasticSingleTaskGP",
