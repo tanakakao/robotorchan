@@ -403,7 +403,10 @@ class MixedSingleTaskDeepGP(SingleTaskDeepGP):
                     for size in category_sizes
                 ]
             )
-            embedded = [embedding(indices) for embedding, indices in zip(embeddings, category_indices)]
+            embedded = [
+                embedding(indices)
+                for embedding, indices in zip(embeddings, category_indices, strict=True)
+            ]
         deep_X = torch.cat((continuous_X, *(item.detach() for item in embedded)), dim=-1)
 
         super().__init__(
@@ -440,7 +443,12 @@ class MixedSingleTaskDeepGP(SingleTaskDeepGP):
         continuous = X[..., list(self._continuous_dims)]
         continuous = (continuous - self.continuous_mean) / self.continuous_scale
         embedded = []
-        for dim, size, embedding in zip(self.cat_dims, self.category_sizes, self.category_embeddings):
+        for dim, size, embedding in zip(
+            self.cat_dims,
+            self.category_sizes,
+            self.category_embeddings,
+            strict=True,
+        ):
             values = X[..., dim]
             if not torch.allclose(values, values.round()):
                 raise ValueError("categorical feature values must be integer-valued.")
