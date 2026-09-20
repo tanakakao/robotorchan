@@ -64,6 +64,9 @@ from robotorchan.models.reduced.vae import (
 )
 
 __all__ = [
+    "PCAGP",
+    "PLSGP",
+    "VAEGP",
     "AutoEncoderGP",
     "AutoEncoderKroneckerMultiTaskGP",
     "AutoEncoderMultiTaskGP",
@@ -78,8 +81,7 @@ __all__ = [
     "JointVAEMultiTaskGP",
     "MixedAutoEncoderGP",
     "MixedHybridAutoEncoderGP",
-    "MixedJointEncoderGP",
-    "MixedJointEncoderMultiTaskGP",
+    "MixedJointEncoderGP",\n    "MixedJointEncoderMultiTaskGP",
     "MixedJointVAEGP",
     "MixedPCAGP",
     "MixedPLSGP",
@@ -92,10 +94,8 @@ __all__ = [
     "MixedVAEGP",
     "OutputPCAGP",
     "OutputPLSGP",
-    "PCAGP",
     "PCAKroneckerMultiTaskGP",
     "PCAMultiTaskGP",
-    "PLSGP",
     "PLSKroneckerMultiTaskGP",
     "PLSMultiTaskGP",
     "RandomProjectionGP",
@@ -110,7 +110,6 @@ __all__ = [
     "SupervisedVAEGP",
     "SupervisedVAEKroneckerMultiTaskGP",
     "SupervisedVAEMultiTaskGP",
-    "VAEGP",
     "VAEKroneckerMultiTaskGP",
     "VAEMultiTaskGP",
 ]
