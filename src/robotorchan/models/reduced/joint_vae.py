@@ -7,11 +7,8 @@ from botorch.posteriors.gpytorch import GPyTorchPosterior
 from gpytorch.distributions import MultivariateNormal
 from torch import Tensor, nn
 
-from robotorchan.models.reduced.joint_neural import (
-    _ACTIVATIONS,
-    JointEncoderGP,
-    MixedJointEncoderGP,
-)
+from robotorchan.models.neural_features import make_feature_network
+from robotorchan.models.reduced.joint_neural import JointEncoderGP, MixedJointEncoderGP
 
 
 class JointVAEGP(JointEncoderGP):
@@ -69,7 +66,7 @@ class JointVAEGP(JointEncoderGP):
         layers: list[nn.Module] = []
         previous = self.latent_dim
         for width in reversed(self.hidden_dims):
-            layers.extend([nn.Linear(previous, width), _ACTIVATIONS[self.activation]()])
+            layers.extend([nn.Linear(previous, width), ACTIVATION_PLACEHOLDER])
             previous = width
         layers.append(nn.Linear(previous, output_dim))
         return nn.Sequential(*layers).to(device=device, dtype=dtype)
@@ -278,7 +275,7 @@ class MixedJointVAEGP(MixedJointEncoderGP):
         layers: list[nn.Module] = []
         previous = self.latent_dim
         for width in reversed(self.hidden_dims):
-            layers.extend([nn.Linear(previous, width), _ACTIVATIONS[self.activation]()])
+            layers.extend([nn.Linear(previous, width), ACTIVATION_PLACEHOLDER])
             previous = width
         layers.append(nn.Linear(previous, output_dim))
         return nn.Sequential(*layers).to(device=device, dtype=dtype)
