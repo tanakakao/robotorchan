@@ -22,6 +22,7 @@ EXPECTED_MIXED_MODELS = {
     "MixedLCEMGP",
     "MixedLatentKroneckerGP",
     "MixedMultiTaskGP",
+    "MixedNonstationaryMultiTaskGP",
     "MixedNonstationarySingleTaskGP",
     "MixedOrthogonalAdditiveGP",
     "MixedPCAGP",
