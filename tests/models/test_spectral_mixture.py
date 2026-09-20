@@ -2,11 +2,12 @@
 
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.acquisition.objective import GenericMCObjective
 from botorch.optim import optimize_acqf
 from gpytorch.kernels import ScaleKernel, SpectralMixtureKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models.spectral_mixture import SpectralMixtureGP
+from robotorchan.models.spectral_mixture import SpectralMixtureGP, SpectralMixtureMultiTaskGP
 
 
 def _periodic_data() -> tuple[torch.Tensor, torch.Tensor]:
@@ -82,3 +83,51 @@ def test_spectral_mixture_gp_validates_configuration() -> None:
         except ValueError:
             continue
         raise AssertionError(f"Expected ValueError for {kwargs}.")
+
+
+def _multitask_periodic_data() -> tuple[torch.Tensor, torch.Tensor]:
+    base = torch.linspace(0.0, 1.0, 24, dtype=torch.double).unsqueeze(-1)
+    tasks = torch.arange(24, dtype=torch.double).remainder(2).unsqueeze(-1)
+    X = torch.cat((base, tasks), dim=-1)
+    Y = torch.sin(2.0 * torch.pi * 3.0 * base) + 0.3 * tasks
+    return X, Y
+
+
+def test_spectral_mixture_multitask_preserves_task_structure() -> None:
+    X, Y = _multitask_periodic_data()
+    model = SpectralMixtureMultiTaskGP(X, Y, task_feature=1, num_mixtures=2)
+
+    torch.testing.assert_close(model.raw_train_X, X)
+    torch.testing.assert_close(model.raw_train_Y, Y)
+    assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
+    data_kernel = model.covar_module.kernels[0]
+    assert data_kernel.base_kernel.active_dims.tolist() == [0]
+    assert data_kernel.base_kernel.num_mixtures == 2
+
+
+def test_spectral_mixture_multitask_posterior_is_finite() -> None:
+    X, Y = _multitask_periodic_data()
+    model = SpectralMixtureMultiTaskGP(X, Y, task_feature=1, num_mixtures=2)
+    model.eval()
+
+    posterior = model.posterior(X[:4])
+
+    assert posterior.mean.shape == (4, 1)
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+
+
+def test_spectral_mixture_multitask_qlogei_runs() -> None:
+    X, Y = _multitask_periodic_data()
+    model = SpectralMixtureMultiTaskGP(X, Y, task_feature=1, num_mixtures=2)
+    model.eval()
+    objective = GenericMCObjective(lambda samples, X=None: samples.squeeze(-1))
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=Y.max(),
+        objective=objective,
+    )
+
+    value = acquisition(X[:2].unsqueeze(0))
+
+    assert torch.isfinite(value).all()

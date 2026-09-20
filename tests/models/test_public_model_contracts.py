@@ -108,6 +108,7 @@ PUBLIC_MODEL_NAMES = {
     "SingleTaskDeepGP",
     "SingleTaskGP",
     "SpectralMixtureGP",
+    "SpectralMixtureMultiTaskGP",
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
     "SupervisedAutoEncoderGP",

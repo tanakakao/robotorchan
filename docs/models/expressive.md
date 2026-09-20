@@ -45,3 +45,8 @@ DeepGPはvariational objectiveを用いるため学習方法が異なります�
 Theory: [Expressive GP models](../theory/22_expressive_gp.md)  
 Notebook: [Expressive surrogate GP](../../examples/notebooks/24_expressive_surrogate_gp.ipynb)  
 Benchmark: [Predictive benchmark](../benchmarks/expressive_predictive.md)
+
+
+### SpectralMixtureMultiTaskGP
+
+`SpectralMixtureMultiTaskGP` はlong-format複数タスク向けです。task featureはspectral-mixture data kernelから除外し、BoTorchのtask covarianceでタスク間相関を扱います。周期・準周期・複数周波数構造をタスク間で共有しつつ、元のlong-format入力空間でposterior/acquisitionを利用できます。
