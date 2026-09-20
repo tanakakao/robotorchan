@@ -35,6 +35,7 @@
 19. [Neural Representation Learning for GP](19_neural_reduction_gp.md)
 20. [High-dimensional Search Strategies](20_high_dimensional_search.md)
 21. [Advanced High-dimensional GP Models](21_advanced_high_dimensional_models.md)
+22. [Expressive GP Models](22_expressive_gp.md)
 
 ## このガイドの構成方針
 
@@ -71,6 +72,7 @@
 | Hierarchical search space | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` |
 | Heterogeneous Multi-task | `HeterogeneousMTGP` |
 | Contextual GP | `SACGP`, `LCEAGP`, `LCEMGP` |
+| Expressive GP | `JointEncoderGP`, `InfiniteWidthBNNGP`, `SpectralMixtureGP` |
 
 ## 関連ドキュメント
 
