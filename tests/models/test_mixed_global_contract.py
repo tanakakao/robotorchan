@@ -29,6 +29,7 @@ EXPECTED_MIXED_MODELS = {
     "MixedReducedGP",
     "MixedReducedKroneckerMultiTaskGP",
     "MixedReducedMultiTaskGP",
+    "MixedRobustRelevancePursuitMultiTaskGP",
     "MixedRobustRelevancePursuitSingleTaskGP",
     "MixedSaasFullyBayesianMultiTaskGP",
     "MixedSaasFullyBayesianSingleTaskGP",

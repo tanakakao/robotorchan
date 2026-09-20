@@ -4,7 +4,7 @@
 
 ## Sparse outliers
 
-`RobustRelevancePursuitSingleTaskGP` と `MixedRobustRelevancePursuitSingleTaskGP` は、少数の異常観測を relevance pursuit で扱います。
+`RobustRelevancePursuitSingleTaskGP` と `MixedRobustRelevancePursuitSingleTaskGP` は、少数の異常観測を relevance pursuit で扱います。long-format の複数タスクには `RobustRelevancePursuitMultiTaskGP`、Mixed入力を含む場合は `MixedRobustRelevancePursuitMultiTaskGP` を使用します。task feature は task covariance が扱い、Mixed版の `cat_dims` には含めません。
 
 ## Heavy-tailed residuals
 
