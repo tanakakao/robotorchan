@@ -1,0 +1,37 @@
+# Expressive GP family
+
+表現力を高めたsurrogateとして、robotorchanではDKL、DeepGP、Infinite-width BNN GP、
+Spectral Mixture GPを扱います。これらは同じ問題を別名で実装したものではなく、
+「何を学習可能な表現とするか」「posteriorをどう構成するか」が異なります。
+
+## モデル選択
+
+`JointEncoderGP` はneural feature extractorとExact GPをjoint trainingするDKLです。
+入力に有用な非線形表現が存在すると考える場合に候補になります。Mixed入力には
+`MixedJointEncoderGP` を使用し、カテゴリ変数を連続encoderへそのまま通しません。
+
+`SingleTaskDeepGP` は確率的なGP階層を使います。DKLより推論が重く、
+Monte Carlo posteriorを使うため、階層的な確率表現が必要な場合に比較対象とします。
+現在はsingle-output continuous inputを明示的な対応範囲とします。
+
+`InfiniteWidthBNNGP` は無限幅ReLU networkに対応するNNGP kernelをExact GPとして
+利用します。neural-network由来のpriorを使いつつ、Exact GPの学習・posterior contractを
+維持したい場合に候補になります。
+
+`SpectralMixtureGP` は周期、準周期、複数周波数を持つ定常関数に適しています。
+`num_mixtures` と初期化への感度があるため、標準kernelとの比較を推奨します。
+
+## 学習とBoTorch
+
+DKL、Infinite-width BNN GP、Spectral Mixture GPはExact MLLを使います。
+DeepGPはvariational objectiveを用いるため学習方法が異なります。
+
+いずれも候補点は元入力空間で与えます。対応するMC acquisitionと
+`optimize_acqf` の統合範囲は [BoTorch統合契約](expressive_botorch_integration.md) を
+参照してください。
+
+## 関連資料
+
+Theory: [Expressive GP models](../theory/22_expressive_gp.md)  
+Notebook: [Expressive surrogate GP](../../examples/notebooks/24_expressive_surrogate_gp.ipynb)  
+Benchmark: [Predictive benchmark](../benchmarks/expressive_predictive.md)
