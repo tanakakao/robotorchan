@@ -139,3 +139,41 @@ def test_joint_encoder_kronecker_supports_custom_expansive_feature_extractor() -
     loss = model.training_loss()
     loss.backward()
     assert extractor[0].weight.grad is not None
+
+
+
+def test_joint_encoder_multitask_posterior_accepts_original_space() -> None:
+    train_X, train_Y = _long_data()
+    model = JointEncoderMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=2,
+        latent_dim=2,
+        hidden_dims=(6,),
+    )
+    model.eval()
+    model.likelihood.eval()
+    test_X = train_X[:3].detach().clone().requires_grad_(True)
+    posterior = model.posterior(test_X)
+    assert posterior.mean.shape[-2:] == torch.Size([3, 1])
+    posterior.mean.sum().backward()
+    assert test_X.grad is not None
+    assert torch.isfinite(test_X.grad).all()
+
+
+def test_joint_encoder_kronecker_posterior_accepts_original_space() -> None:
+    train_X, train_Y = _block_data()
+    model = JointEncoderKroneckerMultiTaskGP(
+        train_X,
+        train_Y,
+        latent_dim=2,
+        hidden_dims=(6,),
+    )
+    model.eval()
+    model.likelihood.eval()
+    test_X = train_X[:3].detach().clone().requires_grad_(True)
+    posterior = model.posterior(test_X)
+    assert posterior.mean.shape[-2:] == torch.Size([3, 2])
+    posterior.mean.sum().backward()
+    assert test_X.grad is not None
+    assert torch.isfinite(test_X.grad).all()
