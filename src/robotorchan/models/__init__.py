@@ -73,6 +73,7 @@ from robotorchan.models.reduced.joint_multitask import (
     HybridAutoEncoderMultiTaskGP,
     JointEncoderKroneckerMultiTaskGP,
     JointEncoderMultiTaskGP,
+    MixedJointEncoderMultiTaskGP,
     JointVAEKroneckerMultiTaskGP,
     JointVAEMultiTaskGP,
 )
@@ -176,6 +177,7 @@ __all__ = [
     "JointEncoderGP",
     "JointEncoderKroneckerMultiTaskGP",
     "JointEncoderMultiTaskGP",
+    "MixedJointEncoderMultiTaskGP",
     "JointHeteroskedasticSingleTaskGP",
     "JointVAEGP",
     "JointVAEKroneckerMultiTaskGP",
