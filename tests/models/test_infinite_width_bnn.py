@@ -6,7 +6,11 @@ from botorch.acquisition.objective import GenericMCObjective
 from botorch.optim import optimize_acqf
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models import InfiniteWidthBNNGP, InfiniteWidthBNNMultiTaskGP, MixedInfiniteWidthBNNGP
+from robotorchan.models import (
+    InfiniteWidthBNNGP,
+    InfiniteWidthBNNMultiTaskGP,
+    MixedInfiniteWidthBNNGP,
+)
 from robotorchan.models.infinite_width_bnn import InfiniteWidthReLUKernel
 
 
