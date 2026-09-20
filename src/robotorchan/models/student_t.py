@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from botorch.posteriors.gpytorch import GPyTorchPosterior
+from gpytorch.kernels import IndexKernel, MaternKernel, ProductKernel
 from gpytorch.likelihoods import StudentTLikelihood
 from torch import Tensor, nn
 
-from robotorchan.models.base import RawDataMixin
+from robotorchan.models.base import RawDataMixin, make_mixed_covar_module, normalize_feature_dims
 from robotorchan.models.variational import MixedSingleTaskVariationalGP, SingleTaskVariationalGP
 
 
@@ -129,4 +130,114 @@ class MixedStudentTSingleTaskGP(_StudentTGPBase):
         self.cat_dims = self.response_model.cat_dims
         self._store_raw_tensor("train_X", train_X)
         self._store_raw_tensor("train_Y", train_Y)
+        self._store_raw_tensor("train_Yvar", None)
+
+
+
+def _multitask_covar_module(
+    train_X: Tensor,
+    task_feature: int,
+    *,
+    cat_dims: list[int] | None = None,
+):
+    """Build an ICM-style covariance for long-format variational models."""
+    input_dim = train_X.shape[-1]
+    task_dim = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
+    data_dims = [dim for dim in range(input_dim) if dim != task_dim]
+    if cat_dims is None:
+        data_covar = MaternKernel(nu=2.5, active_dims=data_dims)
+    else:
+        normalized_cat_dims = normalize_feature_dims(
+            cat_dims, input_dim, name="cat_dims", excluded_dims=[task_dim]
+        )
+        data_covar = make_mixed_covar_module(
+            input_dim=input_dim,
+            cat_dims=normalized_cat_dims,
+            excluded_dims=[task_dim],
+            batch_shape=train_X.shape[:-2],
+        )
+    task_values = train_X[..., task_dim].long()
+    num_tasks = int(task_values.max().item()) + 1
+    task_covar = IndexKernel(num_tasks=num_tasks, active_dims=[task_dim])
+    return ProductKernel(data_covar, task_covar), task_dim
+
+
+class StudentTMultiTaskGP(_StudentTGPBase):
+    """Long-format multi-task variational GP with Student-t observations."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        *,
+        num_inducing: int = 32,
+        df: float = 4.0,
+    ) -> None:
+        super().__init__()
+        if train_Y.shape[-1] != 1:
+            raise ValueError("train_Y must have a single output.")
+        if num_inducing < 1:
+            raise ValueError("num_inducing must be positive.")
+        if df <= 2:
+            raise ValueError("df must be greater than 2 for finite observation variance.")
+        covar_module, task_dim = _multitask_covar_module(train_X, task_feature)
+        likelihood = StudentTLikelihood()
+        likelihood.initialize(deg_free=df)
+        self.response_model = SingleTaskVariationalGP(
+            train_X,
+            train_Y,
+            likelihood=likelihood,
+            covar_module=covar_module,
+            inducing_points=min(int(num_inducing), train_X.shape[-2]),
+        )
+        self.task_feature = task_dim
+        self._store_raw_tensor("train_X", train_X.detach().clone())
+        self._store_raw_tensor("train_Y", train_Y.detach().clone())
+        self._store_raw_tensor("train_Yvar", None)
+
+
+class MixedStudentTMultiTaskGP(StudentTMultiTaskGP):
+    """Student-t multi-task GP with mixed data covariance and task covariance."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        *,
+        cat_dims: list[int],
+        num_inducing: int = 32,
+        df: float = 4.0,
+    ) -> None:
+        _StudentTGPBase.__init__(self)
+        if train_Y.shape[-1] != 1:
+            raise ValueError("train_Y must have a single output.")
+        if num_inducing < 1:
+            raise ValueError("num_inducing must be positive.")
+        if df <= 2:
+            raise ValueError("df must be greater than 2 for finite observation variance.")
+        covar_module, task_dim = _multitask_covar_module(
+            train_X, task_feature, cat_dims=cat_dims
+        )
+        likelihood = StudentTLikelihood()
+        likelihood.initialize(deg_free=df)
+        self.response_model = SingleTaskVariationalGP(
+            train_X,
+            train_Y,
+            likelihood=likelihood,
+            covar_module=covar_module,
+            inducing_points=min(int(num_inducing), train_X.shape[-2]),
+        )
+        self.task_feature = task_dim
+        self.cat_dims = tuple(
+            normalize_feature_dims(
+                cat_dims,
+                train_X.shape[-1],
+                name="cat_dims",
+                excluded_dims=[task_dim],
+            )
+        )
+        self._store_raw_tensor("train_X", train_X.detach().clone())
+        self._store_raw_tensor("train_Y", train_Y.detach().clone())
         self._store_raw_tensor("train_Yvar", None)
