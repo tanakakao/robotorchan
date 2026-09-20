@@ -1,7 +1,7 @@
 import pytest
 import torch
 from botorch.models.likelihoods.sparse_outlier_noise import SparseOutlierGaussianLikelihood
-from gpytorch.kernels import AdditiveKernel
+from gpytorch.kernels import AdditiveKernel, ProductKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import (
@@ -33,7 +33,7 @@ def test_robust_multitask_preserves_public_contract() -> None:
 
     model.eval()
     model.likelihood.eval()
-    posterior = model.posterior(train_x[:2], output_indices=[0])
+    posterior = model.posterior(train_x[:2])
     assert posterior.mean.shape[-1] == 1
     assert torch.isfinite(posterior.mean).all()
 
@@ -69,7 +69,7 @@ def test_mixed_robust_multitask_preserves_task_feature() -> None:
     )
 
     assert model.cat_dims == (1,)
-    assert isinstance(model.covar_module, AdditiveKernel)
+    assert isinstance(model.covar_module, ProductKernel)\n    assert isinstance(model.covar_module.kernels[0], AdditiveKernel)
     assert isinstance(model.likelihood, SparseOutlierGaussianLikelihood)
     torch.testing.assert_close(model.raw_train_X, train_x)
 
