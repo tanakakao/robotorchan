@@ -105,3 +105,37 @@ def test_joint_vae_kronecker_adds_kl_loss() -> None:
     )
     assert model.kl_loss().ndim == 0
     assert model.training_loss().ndim == 0
+
+
+def test_joint_encoder_multitask_supports_custom_expansive_feature_extractor() -> None:
+    train_X, train_Y = _long_data()
+    extractor = torch.nn.Sequential(torch.nn.Linear(4, 7), torch.nn.Tanh())
+    model = JointEncoderMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=2,
+        latent_dim=7,
+        feature_extractor=extractor,
+    )
+
+    encoded = model.encode(train_X)
+    assert encoded.shape == torch.Size([10, 8])
+    assert model.encoder is extractor
+    torch.testing.assert_close(encoded[:, -1], train_X[:, 2])
+
+
+def test_joint_encoder_kronecker_supports_custom_expansive_feature_extractor() -> None:
+    train_X, train_Y = _block_data()
+    extractor = torch.nn.Sequential(torch.nn.Linear(4, 6), torch.nn.GELU())
+    model = JointEncoderKroneckerMultiTaskGP(
+        train_X,
+        train_Y,
+        latent_dim=6,
+        feature_extractor=extractor,
+    )
+
+    assert model.encoder is extractor
+    assert model.encode(train_X).shape == torch.Size([8, 6])
+    loss = model.training_loss()
+    loss.backward()
+    assert extractor[0].weight.grad is not None
