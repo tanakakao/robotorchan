@@ -3,7 +3,7 @@
 import torch
 from gpytorch.mlls import DeepApproximateMLL
 
-from robotorchan.models.deep_gp import MultiTaskDeepGP, SingleTaskDeepGP
+from robotorchan.models.deep_gp import MixedSingleTaskDeepGP, MultiTaskDeepGP, SingleTaskDeepGP
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
@@ -198,3 +198,82 @@ def test_multitask_deep_gp_rejects_invalid_task_encoding() -> None:
         pass
     else:
         raise AssertionError("non-contiguous task indices must raise ValueError")
+
+
+def _mixed_data() -> tuple[torch.Tensor, torch.Tensor]:
+    torch.manual_seed(13)
+    continuous = torch.rand(12, 2, dtype=torch.double)
+    category = torch.arange(12, dtype=torch.double).remainder(3).unsqueeze(-1)
+    train_X = torch.cat((continuous[:, :1], category, continuous[:, 1:]), dim=-1)
+    train_Y = torch.sin(3.0 * continuous[:, :1]) + 0.2 * continuous[:, 1:] + 0.25 * category
+    return train_X, train_Y
+
+
+def test_mixed_deep_gp_preserves_original_training_data_and_categories() -> None:
+    train_X, train_Y = _mixed_data()
+    model = MixedSingleTaskDeepGP(
+        train_X,
+        train_Y,
+        cat_dims=(1,),
+        categorical_embedding_dim=2,
+        hidden_dims=(4,),
+        num_inducing=5,
+    )
+
+    torch.testing.assert_close(model.raw_train_X, train_X)
+    torch.testing.assert_close(model.raw_train_Y, train_Y)
+    assert model.cat_dims == (1,)
+    assert model.category_sizes == (3,)
+    assert model.category_embeddings[0].embedding_dim == 2
+
+
+def test_mixed_deep_gp_posterior_accepts_original_mixed_inputs() -> None:
+    train_X, train_Y = _mixed_data()
+    model = MixedSingleTaskDeepGP(
+        train_X,
+        train_Y,
+        cat_dims=(1,),
+        hidden_dims=(4,),
+        num_inducing=5,
+        posterior_samples=8,
+    )
+
+    posterior = model.posterior(train_X[:4], num_samples=8)
+
+    assert posterior.mean.shape == torch.Size([4, 1])
+    assert posterior.variance.shape == torch.Size([4, 1])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+
+
+def test_mixed_deep_gp_training_loss_updates_category_embedding() -> None:
+    train_X, train_Y = _mixed_data()
+    model = MixedSingleTaskDeepGP(
+        train_X,
+        train_Y,
+        cat_dims=(1,),
+        hidden_dims=(4,),
+        num_inducing=5,
+    )
+
+    loss = model.training_loss(num_likelihood_samples=3)
+    loss.backward()
+
+    gradient = model.category_embeddings[0].weight.grad
+    assert gradient is not None
+    assert torch.isfinite(gradient).all()
+    assert torch.count_nonzero(gradient) > 0
+
+
+def test_mixed_deep_gp_rejects_unknown_category() -> None:
+    train_X, train_Y = _mixed_data()
+    model = MixedSingleTaskDeepGP(train_X, train_Y, cat_dims=(1,), hidden_dims=(4,), num_inducing=5)
+    test_X = train_X[:2].clone()
+    test_X[0, 1] = 4.0
+
+    try:
+        model.posterior(test_X, num_samples=4)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("unknown category indices must raise ValueError")
