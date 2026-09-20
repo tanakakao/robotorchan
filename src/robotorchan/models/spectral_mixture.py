@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Literal
 
 import torch
-
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
