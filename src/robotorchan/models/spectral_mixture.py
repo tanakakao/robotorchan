@@ -201,9 +201,7 @@ class MixedSpectralMixtureMultiTaskGP(MultiTaskGP):
             name="cat_dims",
             excluded_dims=[task_dim],
         )
-        continuous_dims = [
-            dim for dim in range(input_dim) if dim != task_dim and dim not in cats
-        ]
+        continuous_dims = [dim for dim in range(input_dim) if dim != task_dim and dim not in cats]
         if not continuous_dims:
             raise ValueError(
                 "MixedSpectralMixtureMultiTaskGP requires at least one continuous feature."
