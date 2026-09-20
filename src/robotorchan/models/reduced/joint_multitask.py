@@ -369,11 +369,6 @@ class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
             )
         self._store_supervised_training_data(train_X, train_Y)
         encoded_train_X = self.encode(train_X).detach()
-        self.set_train_data(
-            inputs=encoded_train_X,
-            targets=self.train_targets,
-            strict=False,
-        )
         self._task_feature = encoded_train_X.shape[-1] - 1
 
         reduced_cat_dims = list(range(latent_dim, latent_dim + len(cats)))
@@ -386,6 +381,11 @@ class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
             device=train_X.device,
         )
         self.covar_module.kernels[0] = data_covar
+        self.set_train_data(
+            inputs=encoded_train_X,
+            targets=self.train_targets,
+            strict=False,
+        )
 
     @property
     def cat_dims(self) -> tuple[int, ...]:
