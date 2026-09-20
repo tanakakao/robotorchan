@@ -8,7 +8,7 @@ import torch
 from gpytorch.kernels import Kernel, ScaleKernel
 from torch import Tensor
 
-from robotorchan.models.base import normalize_feature_dims
+from robotorchan.models.base import make_mixed_covar_module, normalize_feature_dims
 from robotorchan.models.multitask import MultiTaskGP
 from robotorchan.models.single_task import SingleTaskGP
 
@@ -166,6 +166,57 @@ class InfiniteWidthBNNMultiTaskGP(MultiTaskGP):
             covar_module=covar_module,
             rank=rank,
         )
+        self.depth = int(depth)
+        self.weight_variance = float(weight_variance)
+        self.bias_variance = float(bias_variance)
+
+
+class MixedInfiniteWidthBNNGP(SingleTaskGP):
+    """Mixed-input exact GP using an infinite-width ReLU continuous kernel."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        cat_dims: list[int],
+        train_Yvar: Tensor | None = None,
+        *,
+        depth: int = 2,
+        weight_variance: float = 1.0,
+        bias_variance: float = 0.1,
+        ard: bool = True,
+        eps: float = 1e-7,
+    ) -> None:
+        input_dim = train_X.shape[-1]
+        normalized_cat_dims = normalize_feature_dims(cat_dims, input_dim, name="cat_dims")
+
+        def continuous_kernel_factory(batch_shape, num_dims, active_dims):
+            return ScaleKernel(
+                InfiniteWidthReLUKernel(
+                    depth=depth,
+                    weight_variance=weight_variance,
+                    bias_variance=bias_variance,
+                    eps=eps,
+                    ard_num_dims=num_dims if ard else None,
+                    active_dims=active_dims,
+                    batch_shape=batch_shape,
+                ),
+                batch_shape=batch_shape,
+            )
+
+        covar_module = make_mixed_covar_module(
+            input_dim=input_dim,
+            cat_dims=normalized_cat_dims,
+            batch_shape=train_X.shape[:-2],
+            cont_kernel_factory=continuous_kernel_factory,
+        )
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            train_Yvar=train_Yvar,
+            covar_module=covar_module,
+        )
+        self.cat_dims = tuple(normalized_cat_dims)
         self.depth = int(depth)
         self.weight_variance = float(weight_variance)
         self.bias_variance = float(bias_variance)

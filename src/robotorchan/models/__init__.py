@@ -25,7 +25,11 @@ from robotorchan.models.hierarchical import (
     MixedHierarchicalConditionalKernelMultiTaskGP,
 )
 from robotorchan.models.higher_order import HigherOrderGP, MixedHigherOrderGP
-from robotorchan.models.infinite_width_bnn import InfiniteWidthBNNGP, InfiniteWidthBNNMultiTaskGP
+from robotorchan.models.infinite_width_bnn import (
+    InfiniteWidthBNNGP,
+    InfiniteWidthBNNMultiTaskGP,
+    MixedInfiniteWidthBNNGP,
+)
 from robotorchan.models.joint_heteroskedastic import (
     JointHeteroskedasticSingleTaskGP,
     MixedJointHeteroskedasticSingleTaskGP,
@@ -132,7 +136,11 @@ from robotorchan.models.robust import (
     RobustRelevancePursuitSingleTaskGP,
 )
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
-from robotorchan.models.spectral_mixture import SpectralMixtureGP, SpectralMixtureMultiTaskGP
+from robotorchan.models.spectral_mixture import (
+    MixedSpectralMixtureGP,
+    SpectralMixtureGP,
+    SpectralMixtureMultiTaskGP,
+)
 from robotorchan.models.student_t import (
     MixedStudentTMultiTaskGP,
     MixedStudentTSingleTaskGP,
@@ -196,6 +204,7 @@ __all__ = [
     "MixedHierarchicalConditionalKernelMultiTaskGP",
     "MixedHigherOrderGP",
     "MixedHybridAutoEncoderGP",
+    "MixedInfiniteWidthBNNGP",
     "MixedJointEncoderGP",
     "MixedJointEncoderMultiTaskGP",
     "MixedJointHeteroskedasticSingleTaskGP",
@@ -222,6 +231,7 @@ __all__ = [
     "MixedSingleTaskGP",
     "MixedSingleTaskMultiFidelityGP",
     "MixedSingleTaskVariationalGP",
+    "MixedSpectralMixtureGP",
     "MixedStudentTMultiTaskGP",
     "MixedStudentTSingleTaskGP",
     "MixedSupervisedAutoEncoderGP",

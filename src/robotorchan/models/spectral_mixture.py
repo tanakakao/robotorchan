@@ -11,7 +11,7 @@ from gpytorch.kernels import ScaleKernel, SpectralMixtureKernel
 from gpytorch.likelihoods import Likelihood
 from torch import Tensor
 
-from robotorchan.models.base import normalize_feature_dims
+from robotorchan.models.base import make_mixed_covar_module, normalize_feature_dims
 from robotorchan.models.multitask import MultiTaskGP
 from robotorchan.models.single_task import SingleTaskGP
 
@@ -115,5 +115,59 @@ class SpectralMixtureMultiTaskGP(MultiTaskGP):
             covar_module=ScaleKernel(spectral_kernel).to(train_X),
             rank=rank,
         )
+        self.num_mixtures = num_mixtures
+        self.initialization = initialization
+
+
+class MixedSpectralMixtureGP(SingleTaskGP):
+    """Mixed-input exact GP with a spectral-mixture continuous kernel."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        cat_dims: list[int],
+        train_Yvar: Tensor | None = None,
+        *,
+        num_mixtures: int = 4,
+        initialization: Literal["data", "empspect"] = "data",
+    ) -> None:
+        if num_mixtures <= 0:
+            raise ValueError("num_mixtures must be positive.")
+        if initialization not in {"data", "empspect"}:
+            raise ValueError("initialization must be 'data' or 'empspect'.")
+        input_dim = train_X.shape[-1]
+        normalized_cat_dims = normalize_feature_dims(cat_dims, input_dim, name="cat_dims")
+        continuous_dims = [dim for dim in range(input_dim) if dim not in normalized_cat_dims]
+        if not continuous_dims:
+            raise ValueError("MixedSpectralMixtureGP requires at least one continuous feature.")
+        data_X = train_X[..., continuous_dims]
+
+        def continuous_kernel_factory(batch_shape, num_dims, active_dims):
+            kernel = SpectralMixtureKernel(
+                num_mixtures=num_mixtures,
+                ard_num_dims=num_dims,
+                active_dims=active_dims,
+                batch_shape=batch_shape,
+            ).to(train_X)
+            if initialization == "data":
+                kernel.initialize_from_data(data_X, train_Y.squeeze(-1))
+            else:
+                kernel.initialize_from_data_empspect(data_X, train_Y.squeeze(-1))
+            return ScaleKernel(kernel, batch_shape=batch_shape).to(train_X)
+
+        covar_module = make_mixed_covar_module(
+            input_dim=input_dim,
+            cat_dims=normalized_cat_dims,
+            batch_shape=train_X.shape[:-2],
+            cont_kernel_factory=continuous_kernel_factory,
+        )
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            train_Yvar=train_Yvar,
+            covar_module=covar_module,
+        )
+        self.cat_dims = tuple(normalized_cat_dims)
         self.num_mixtures = num_mixtures
         self.initialization = initialization

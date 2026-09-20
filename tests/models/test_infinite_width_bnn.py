@@ -6,7 +6,11 @@ from botorch.acquisition.objective import GenericMCObjective
 from botorch.optim import optimize_acqf
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models import InfiniteWidthBNNGP, InfiniteWidthBNNMultiTaskGP
+from robotorchan.models import (
+    InfiniteWidthBNNGP,
+    InfiniteWidthBNNMultiTaskGP,
+    MixedInfiniteWidthBNNGP,
+)
 from robotorchan.models.infinite_width_bnn import InfiniteWidthReLUKernel
 
 
@@ -139,3 +143,16 @@ def test_infinite_width_bnn_multitask_qlogei_runs() -> None:
     value = acquisition(X[:2].unsqueeze(0))
 
     assert torch.isfinite(value).all()
+
+
+def test_mixed_infinite_width_bnn_supports_posterior() -> None:
+    X = torch.tensor([[0.0, 0.0], [0.2, 1.0], [0.6, 0.0], [1.0, 1.0]], dtype=torch.double)
+    Y = (X[:, :1] + 0.4 * X[:, 1:2]).sin()
+    model = MixedInfiniteWidthBNNGP(X, Y, cat_dims=[1], depth=2)
+    model.eval()
+
+    posterior = model.posterior(X[:2])
+
+    assert model.cat_dims == (1,)
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
