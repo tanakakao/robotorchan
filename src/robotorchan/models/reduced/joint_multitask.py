@@ -98,7 +98,9 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
             )
         latent = encoder((data_X - x_mean) / x_scale)
         if latent.shape[:-1] != data_X.shape[:-1] or latent.shape[-1] != latent_dim:
-            raise ValueError(\n                "feature_extractor must preserve batch dimensions and output latent_dim."\n            )
+            raise ValueError(
+                "feature_extractor must preserve batch dimensions and output latent_dim."
+            )
         latent = latent.detach()
         reduced_X = torch.cat([latent, train_X[..., task_feature : task_feature + 1]], dim=-1)
         super().__init__(reduced_X, train_Y, task_feature=latent_dim, **kwargs)
@@ -177,7 +179,9 @@ class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
             )
         latent = encoder((train_X - x_mean) / x_scale)
         if latent.shape[:-1] != train_X.shape[:-1] or latent.shape[-1] != latent_dim:
-            raise ValueError(\n                "feature_extractor must preserve batch dimensions and output latent_dim."\n            )
+            raise ValueError(
+                "feature_extractor must preserve batch dimensions and output latent_dim."
+            )
         latent = latent.detach()
         super().__init__(latent, train_Y, **kwargs)
         self.encoder = encoder
