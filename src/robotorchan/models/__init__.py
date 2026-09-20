@@ -158,6 +158,12 @@ from robotorchan.models.variational import (
 )
 
 __all__ = [
+    "LCEAGP",
+    "LCEMGP",
+    "PCAGP",
+    "PLSGP",
+    "SACGP",
+    "VAEGP",
     "ALEBOGP",
     "AdditiveMapSaasSingleTaskGP",
     "AutoEncoderGP",
@@ -185,8 +191,6 @@ __all__ = [
     "JointVAEKroneckerMultiTaskGP",
     "JointVAEMultiTaskGP",
     "KroneckerMultiTaskGP",
-    "LCEAGP",
-    "LCEMGP",
     "LatentKroneckerGP",
     "MixedAdditiveMapSaasSingleTaskGP",
     "MixedAutoEncoderGP",
@@ -242,10 +246,8 @@ __all__ = [
     "OrthogonalAdditiveGP",
     "OutputPCAGP",
     "OutputPLSGP",
-    "PCAGP",
     "PCAKroneckerMultiTaskGP",
     "PCAMultiTaskGP",
-    "PLSGP",
     "PLSKroneckerMultiTaskGP",
     "PLSMultiTaskGP",
     "PairwiseGP",
@@ -258,7 +260,6 @@ __all__ = [
     "ReplicateNoiseSingleTaskGP",
     "RobustRelevancePursuitMultiTaskGP",
     "RobustRelevancePursuitSingleTaskGP",
-    "SACGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
     "SingleTaskDeepGP",
@@ -278,7 +279,6 @@ __all__ = [
     "UncertainCategoricalSingleTaskGP",
     "UncertainInputSingleTaskGP",
     "UnsupportedModelOperationError",
-    "VAEGP",
     "VAEKroneckerMultiTaskGP",
     "VAEMultiTaskGP",
 ]
