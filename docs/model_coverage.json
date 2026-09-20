@@ -445,6 +445,11 @@
       "theory": "docs/theory/12_hierarchical_contextual_gp.md",
       "notebook": "examples/notebooks/14_contextual_gp.ipynb"
     },
+    "SingleTaskDeepGP": {
+      "guide": "docs/models/expressive.md",
+      "theory": "docs/theory/22_expressive_gp.md",
+      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
+    },
     "SingleTaskGP": {
       "guide": "docs/models/standard.md",
       "theory": "docs/theory/02_gaussian_process.md",

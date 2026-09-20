@@ -5,6 +5,7 @@ from robotorchan.models.alebo import ALEBOGP
 from robotorchan.models.base import UnsupportedModelOperationError
 from robotorchan.models.contaminated import ContaminatedSingleTaskGP, MixedContaminatedSingleTaskGP
 from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
+from robotorchan.models.deep_gp import SingleTaskDeepGP
 from robotorchan.models.fully_bayesian import (
     MixedSaasFullyBayesianMultiTaskGP,
     MixedSaasFullyBayesianSingleTaskGP,
@@ -221,6 +222,7 @@ __all__ = [
     "RobustRelevancePursuitSingleTaskGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
+    "SingleTaskDeepGP",
     "SingleTaskGP",
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
