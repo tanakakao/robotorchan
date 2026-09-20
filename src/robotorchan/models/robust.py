@@ -324,7 +324,6 @@ class HeteroskedasticSingleTaskGP(ExactGPModelMixin, BoTorchRobustRelevancePursu
         return self.noise_posterior(X).mean.exp().clamp_min(self.noise_floor)
 
 
-
 class HeteroskedasticMultiTaskGP(MultiTaskGP):
     """Iterative long-format multi-task GP for input-dependent observation noise."""
 
