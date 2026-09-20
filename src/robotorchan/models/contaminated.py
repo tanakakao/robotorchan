@@ -193,7 +193,6 @@ class MixedContaminatedSingleTaskGP(ContaminatedSingleTaskGP):
         self._store_raw_tensor("train_Yvar", None)
 
 
-
 class ContaminatedMultiTaskGP(ContaminatedSingleTaskGP):
     """Long-format multi-task GP with an explicit Gaussian contamination mixture."""
 
@@ -248,9 +247,7 @@ class ContaminatedMultiTaskGP(ContaminatedSingleTaskGP):
             raise ValueError("num_inducing and num_likelihood_samples must be positive.")
         if beta <= 0:
             raise ValueError("beta must be positive.")
-        covar_module, task_dim = _multitask_covar_module(
-            train_X, task_feature, cat_dims=cat_dims
-        )
+        covar_module, task_dim = _multitask_covar_module(train_X, task_feature, cat_dims=cat_dims)
         self.contamination_probability = float(contamination_probability)
         self.inlier_scale = float(inlier_scale)
         self.outlier_scale = float(outlier_scale)
