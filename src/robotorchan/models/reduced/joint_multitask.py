@@ -90,8 +90,13 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
             torch.manual_seed(random_state)
             encoder = (
                 _make_network(
-                    len(data_dims), latent_dim, hidden_dims, activation, reverse=False,
-                    device=train_X.device, dtype=train_X.dtype,
+                    len(data_dims),
+                    latent_dim,
+                    hidden_dims,
+                    activation,
+                    reverse=False,
+                    device=train_X.device,
+                    dtype=train_X.dtype,
                 )
                 if feature_extractor is None
                 else feature_extractor.to(device=train_X.device, dtype=train_X.dtype)
@@ -171,8 +176,13 @@ class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
             torch.manual_seed(random_state)
             encoder = (
                 _make_network(
-                    input_dim, latent_dim, hidden_dims, activation, reverse=False,
-                    device=train_X.device, dtype=train_X.dtype,
+                    input_dim,
+                    latent_dim,
+                    hidden_dims,
+                    activation,
+                    reverse=False,
+                    device=train_X.device,
+                    dtype=train_X.dtype,
                 )
                 if feature_extractor is None
                 else feature_extractor.to(device=train_X.device, dtype=train_X.dtype)
