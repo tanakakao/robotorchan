@@ -1,0 +1,84 @@
+"""Tests for the spectral-mixture Gaussian process model."""
+
+import torch
+from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.optim import optimize_acqf
+from gpytorch.kernels import ScaleKernel, SpectralMixtureKernel
+from gpytorch.mlls import ExactMarginalLogLikelihood
+
+from robotorchan.models.spectral_mixture import SpectralMixtureGP
+
+
+def _periodic_data() -> tuple[torch.Tensor, torch.Tensor]:
+    X = torch.linspace(0.0, 1.0, 24, dtype=torch.double).unsqueeze(-1)
+    Y = torch.sin(2.0 * torch.pi * 3.0 * X) + 0.25 * torch.sin(2.0 * torch.pi * 7.0 * X)
+    return X, Y
+
+
+def test_spectral_mixture_gp_initializes_finite_kernel_parameters() -> None:
+    X, Y = _periodic_data()
+    model = SpectralMixtureGP(X, Y, num_mixtures=3)
+
+    assert isinstance(model.covar_module, ScaleKernel)
+    kernel = model.covar_module.base_kernel
+    assert isinstance(kernel, SpectralMixtureKernel)
+    assert kernel.num_mixtures == 3
+    assert torch.isfinite(kernel.mixture_weights).all()
+    assert torch.isfinite(kernel.mixture_means).all()
+    assert torch.isfinite(kernel.mixture_scales).all()
+
+
+def test_spectral_mixture_gp_retains_data_and_mll_contract() -> None:
+    X, Y = _periodic_data()
+    model = SpectralMixtureGP(X, Y)
+
+    assert torch.equal(model.raw_train_X, X)
+    assert torch.equal(model.raw_train_Y, Y)
+    assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
+
+
+def test_spectral_mixture_gp_supports_posterior_and_qlogei() -> None:
+    X, Y = _periodic_data()
+    model = SpectralMixtureGP(X, Y, num_mixtures=2)
+    model.eval()
+    model.likelihood.eval()
+
+    candidates = torch.tensor([[0.15], [0.55]], dtype=torch.double)
+    posterior = model.posterior(candidates)
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+
+    acquisition = qLogExpectedImprovement(model=model, best_f=Y.max())
+    values = acquisition(candidates.unsqueeze(-2))
+    assert torch.isfinite(values).all()
+
+
+def test_spectral_mixture_gp_optimize_acqf_uses_original_space() -> None:
+    X, Y = _periodic_data()
+    model = SpectralMixtureGP(X, Y, num_mixtures=2)
+    model.eval()
+    model.likelihood.eval()
+
+    acquisition = qLogExpectedImprovement(model=model, best_f=Y.max())
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    candidate, _ = optimize_acqf(
+        acquisition,
+        bounds=bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+    )
+    assert candidate.shape == (1, 1)
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
+
+
+def test_spectral_mixture_gp_validates_configuration() -> None:
+    X, Y = _periodic_data()
+
+    for kwargs in ({"num_mixtures": 0}, {"initialization": "invalid"}):
+        try:
+            SpectralMixtureGP(X, Y, **kwargs)
+        except ValueError:
+            continue
+        raise AssertionError(f"Expected ValueError for {kwargs}.")
