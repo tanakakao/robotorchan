@@ -14,9 +14,7 @@ def _long_format_data() -> tuple[torch.Tensor, torch.Tensor]:
     data_x = torch.tensor([[0.1], [0.4], [0.7], [0.9]], dtype=torch.double)
     task0 = torch.zeros(4, 1, dtype=torch.double)
     task1 = torch.ones(4, 1, dtype=torch.double)
-    train_x = torch.cat(
-        (torch.cat((data_x, task0), dim=-1), torch.cat((data_x, task1), dim=-1))
-    )
+    train_x = torch.cat((torch.cat((data_x, task0), dim=-1), torch.cat((data_x, task1), dim=-1)))
     base = torch.sin(data_x[:, 0])
     train_y = torch.cat((base, 0.8 * base + 0.1)).unsqueeze(-1)
     return train_x, train_y
@@ -55,9 +53,7 @@ def test_mixed_robust_multitask_preserves_task_feature() -> None:
     )
     task0 = torch.zeros(4, 1, dtype=torch.double)
     task1 = torch.ones(4, 1, dtype=torch.double)
-    train_x = torch.cat(
-        (torch.cat((data_x, task0), dim=-1), torch.cat((data_x, task1), dim=-1))
-    )
+    train_x = torch.cat((torch.cat((data_x, task0), dim=-1), torch.cat((data_x, task1), dim=-1)))
     base = torch.sin(data_x[:, 0])
     train_y = torch.cat((base, 0.8 * base + 0.1)).unsqueeze(-1)
 
