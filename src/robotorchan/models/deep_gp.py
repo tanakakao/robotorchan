@@ -1,4 +1,4 @@
-"""Single-output deep Gaussian process foundation."""
+"""Deep Gaussian process surrogates for single-task and long-format multi-task data."""
 
 from __future__ import annotations
 
@@ -239,3 +239,106 @@ class SingleTaskDeepGP(
         with gpytorch.settings.num_likelihood_samples(num_likelihood_samples):
             output = self(X)
             return -mll(output, Y.squeeze(-1))
+
+
+class MultiTaskDeepGP(SingleTaskDeepGP):
+    """Long-format DeepGP with an explicit task feature.
+
+    The task feature is represented by a learned embedding and is not
+    standardized as a continuous data feature. The public posterior accepts
+    the original long-format input including the task column.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        task_feature: int,
+        task_embedding_dim: int = 2,
+        hidden_dims: Sequence[int] = (4,),
+        num_inducing: int = 16,
+        standardize_inputs: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        posterior_samples: int = 64,
+    ) -> None:
+        if train_X.ndim != 2:
+            raise ValueError("train_X must have shape n x d.")
+        input_dim = train_X.shape[-1]
+        task_dim = int(task_feature)
+        if task_dim < 0:
+            task_dim += input_dim
+        if task_dim < 0 or task_dim >= input_dim:
+            raise ValueError("task_feature is out of range.")
+        if task_embedding_dim <= 0:
+            raise ValueError("task_embedding_dim must be positive.")
+
+        task_values = train_X[..., task_dim]
+        if not torch.allclose(task_values, task_values.round()):
+            raise ValueError("task feature values must be integer-valued.")
+        task_indices = task_values.long()
+        if torch.any(task_indices < 0):
+            raise ValueError("task feature values must be non-negative.")
+        unique_tasks = torch.unique(task_indices, sorted=True)
+        expected = torch.arange(unique_tasks.numel(), device=train_X.device)
+        if not torch.equal(unique_tasks, expected):
+            raise ValueError("task feature values must be contiguous and zero-based.")
+
+        data_dims = tuple(i for i in range(input_dim) if i != task_dim)
+        data_X = train_X[..., list(data_dims)]
+        num_tasks = int(unique_tasks.numel())
+        with torch.random.fork_rng():
+            torch.manual_seed(random_state)
+            task_embedding = torch.nn.Embedding(num_tasks, int(task_embedding_dim)).to(train_X)
+            embedded_tasks = task_embedding(task_indices)
+        deep_X = torch.cat((data_X, embedded_tasks.detach()), dim=-1)
+
+        super().__init__(
+            deep_X,
+            train_Y,
+            hidden_dims=hidden_dims,
+            num_inducing=num_inducing,
+            standardize_inputs=False,
+            eps=eps,
+            random_state=random_state,
+            posterior_samples=posterior_samples,
+        )
+        self.task_embedding = task_embedding
+        self.task_feature = task_dim
+        self.task_embedding_dim = int(task_embedding_dim)
+        self.num_tasks = num_tasks
+        self._data_dims = data_dims
+        self.standardize_inputs = bool(standardize_inputs)
+
+        data_mean = data_X.mean(dim=-2, keepdim=True)
+        data_scale = data_X.std(dim=-2, keepdim=True, correction=0).clamp_min(eps)
+        if not standardize_inputs:
+            data_mean = torch.zeros_like(data_mean)
+            data_scale = torch.ones_like(data_scale)
+        self.register_buffer("data_mean", data_mean)
+        self.register_buffer("data_scale", data_scale)
+        self._store_supervised_training_data(train_X, train_Y)
+
+    def transform_inputs(self, X: Tensor) -> Tensor:
+        """Encode original long-format inputs for the DeepGP hierarchy."""
+        if X.shape[-1] != self.raw_train_X.shape[-1]:
+            raise ValueError(
+                f"Expected {self.raw_train_X.shape[-1]} input features, got {X.shape[-1]}."
+            )
+        data = X[..., list(self._data_dims)]
+        data = (data - self.data_mean) / self.data_scale
+        task_values = X[..., self.task_feature]
+        if not torch.allclose(task_values, task_values.round()):
+            raise ValueError("task feature values must be integer-valued.")
+        task_indices = task_values.long()
+        if torch.any(task_indices < 0) or torch.any(task_indices >= self.num_tasks):
+            raise ValueError("task feature contains an unknown task index.")
+        return torch.cat((data, self.task_embedding(task_indices)), dim=-1)
+
+    def forward(self, X: Tensor) -> MultivariateNormal:
+        """Propagate original long-format inputs through the DeepGP."""
+        hidden = self.transform_inputs(X)
+        for layer in self.hidden_layers:
+            hidden = layer(hidden)
+        return self.output_layer(hidden)
