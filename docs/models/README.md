@@ -17,6 +17,7 @@
 | [Structured output](structured_output.md) | HigherOrder、LatentKronecker |
 | [Hierarchical / Contextual](hierarchical_contextual.md) | conditional space、heterogeneous task、context |
 | [Preference](preference.md) | pairwise preference learning |
+| [Expressive GP](expressive.md) | DKL、DeepGP、NNGP、Spectral Mixture |
 
 ## 共通規約
 

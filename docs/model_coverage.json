@@ -81,14 +81,14 @@
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "InfiniteWidthBNNGP": {
-      "guide": "docs/models/infinite_width_bnn.md",
-      "theory": "docs/models/infinite_width_bnn.md",
-      "notebook": "examples/notebooks/01_single_task_gp.ipynb"
+      "guide": "docs/models/expressive.md",
+      "theory": "docs/theory/22_expressive_gp.md",
+      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
     },
     "JointEncoderGP": {
-      "guide": "docs/models/reduced.md",
-      "theory": "docs/theory/19_neural_reduction_gp.md",
-      "notebook": "examples/notebooks/20_neural_reduction_gp.ipynb"
+      "guide": "docs/models/expressive.md",
+      "theory": "docs/theory/22_expressive_gp.md",
+      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
     },
     "JointEncoderKroneckerMultiTaskGP": {
       "guide": "docs/models/reduced.md",
@@ -461,9 +461,9 @@
       "notebook": "examples/notebooks/06_variational_gp.ipynb"
     },
     "SpectralMixtureGP": {
-      "guide": "docs/models/spectral_mixture.md",
-      "theory": "docs/models/spectral_mixture.md",
-      "notebook": "examples/notebooks/01_single_task_gp.ipynb"
+      "guide": "docs/models/expressive.md",
+      "theory": "docs/theory/22_expressive_gp.md",
+      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
     },
     "StudentTSingleTaskGP": {
       "guide": "docs/models/robust_noise.md",
