@@ -22,6 +22,7 @@ PUBLIC_MODEL_NAMES = {
     "HybridAutoEncoderKroneckerMultiTaskGP",
     "HybridAutoEncoderMultiTaskGP",
     "InfiniteWidthBNNGP",
+    "InfiniteWidthBNNMultiTaskGP",
     "JointHeteroskedasticSingleTaskGP",
     "JointEncoderGP",
     "JointEncoderKroneckerMultiTaskGP",
