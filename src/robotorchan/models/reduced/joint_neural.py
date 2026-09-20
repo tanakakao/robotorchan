@@ -184,13 +184,15 @@ class HybridAutoEncoderGP(JointEncoderGP):
         device: torch.device,
         dtype: torch.dtype,
     ) -> nn.Sequential:
-        layers: list[nn.Module] = []
-        previous = self.latent_dim
-        for width in reversed(self.hidden_dims):
-            layers.extend([nn.Linear(previous, width), nn.GELU()])
-            previous = width
-        layers.append(nn.Linear(previous, output_dim))
-        return nn.Sequential(*layers).to(device=device, dtype=dtype)
+        return make_feature_network(
+            self.latent_dim,
+            output_dim,
+            self.hidden_dims,
+            self.activation,
+            reverse=True,
+            device=device,
+            dtype=dtype,
+        )
 
     def reconstruct(self, X: Tensor) -> Tensor:
         """Reconstruct original-scale inputs from their latent representation."""
