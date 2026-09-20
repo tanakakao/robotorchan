@@ -355,8 +355,8 @@ class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
         self.data_dims = tuple(i for i in range(input_dim) if i != task_dim)
         self._original_input_dim = input_dim
         continuous_mean = continuous_X.mean(dim=0)
-        continuous_scale = continuous_X.std(dim=0, unbiased=False).clamp_min(self.eps)
-        if not self.standardize:
+        continuous_scale = continuous_X.std(dim=0, unbiased=False).clamp_min(float(kwargs.get("eps", 1e-8)))
+        if not bool(kwargs.get("standardize", True)):
             continuous_mean = torch.zeros_like(continuous_X[0])
             continuous_scale = torch.ones_like(continuous_X[0])
         self.x_mean = continuous_mean.detach().clone()
