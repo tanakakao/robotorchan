@@ -8,13 +8,13 @@
 
 ## Heavy-tailed residuals
 
-`StudentTSingleTaskGP` と `MixedStudentTSingleTaskGP` は Student-t observation model を使い、大きな residual に Gaussian likelihood より頑健です。
+`StudentTSingleTaskGP` と `MixedStudentTSingleTaskGP` は Student-t observation model を使い、大きな residual に Gaussian likelihood より頑健です。long-format 複数タスクには `StudentTMultiTaskGP`、Mixed入力には `MixedStudentTMultiTaskGP` を使用します。複数タスク版は data covariance と task covariance の積による ICM-style covariance を variational GP に適用します。
 
 詳細: [Student-t GP](student_t_gp.md)
 
 ## Contaminated observations
 
-`ContaminatedSingleTaskGP` と `MixedContaminatedSingleTaskGP` は、通常観測と汚染観測の mixture としてモデル化します。heavy tail を一様に仮定する Student-t と生成仮定が異なります。
+`ContaminatedSingleTaskGP` と `MixedContaminatedSingleTaskGP` は、通常観測と汚染観測の mixture としてモデル化します。複数タスクには `ContaminatedMultiTaskGP`、Mixed入力には `MixedContaminatedMultiTaskGP` を使用し、task covariance を保持したまま contamination mixture loss を適用します。heavy tail を一様に仮定する Student-t と生成仮定が異なります。
 
 詳細: [Contaminated GP](contaminated_gp.md)
 
