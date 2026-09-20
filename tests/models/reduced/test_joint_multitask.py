@@ -141,7 +141,6 @@ def test_joint_encoder_kronecker_supports_custom_expansive_feature_extractor() -
     assert extractor[0].weight.grad is not None
 
 
-
 def test_joint_encoder_multitask_posterior_accepts_original_space() -> None:
     train_X, train_Y = _long_data()
     model = JointEncoderMultiTaskGP(
