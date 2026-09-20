@@ -1,5 +1,7 @@
 import pytest
 import torch
+from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.acquisition.objective import GenericMCObjective
 from botorch.models.likelihoods.sparse_outlier_noise import SparseOutlierGaussianLikelihood
 from gpytorch.kernels import AdditiveKernel, ProductKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
@@ -81,3 +83,31 @@ def test_mixed_robust_multitask_rejects_task_as_category() -> None:
             task_feature=-1,
             cat_dims=[-1],
         )
+
+
+def _assert_robust_posterior_and_acquisition(
+    model: RobustRelevancePursuitMultiTaskGP,
+    train_x: torch.Tensor,
+    train_y: torch.Tensor,
+) -> None:
+    model.eval()
+    test_x = train_x[:2].clone()
+    posterior = model.posterior(test_x)
+    assert posterior.mean.shape == torch.Size([2, 1])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+
+    objective = GenericMCObjective(lambda samples, X=None: samples.squeeze(-1))
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        objective=objective,
+    )
+    value = acquisition(test_x.unsqueeze(0))
+    assert torch.isfinite(value).all()
+
+
+def test_robust_multitask_posterior_and_acquisition() -> None:
+    train_x, train_y = _long_format_data()
+    model = RobustRelevancePursuitMultiTaskGP(train_x, train_y, task_feature=-1)
+    _assert_robust_posterior_and_acquisition(model, train_x, train_y)
