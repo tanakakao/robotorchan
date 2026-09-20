@@ -20,7 +20,7 @@ EXPRESSIVE_COVERAGE = {
     },
 }
 
-INTENTIONALLY_DEFERRED_EXPRESSIVE = {
+IMPLEMENTED_EXPRESSIVE_MIXED_MULTITASK = {
     "MixedMultiTaskDeepGP",
     "MixedInfiniteWidthBNNMultiTaskGP",
     "MixedSpectralMixtureMultiTaskGP",
@@ -33,6 +33,6 @@ def test_expressive_single_mixed_and_multitask_axes_are_explicit() -> None:
         assert set(family.values()) <= exported
 
 
-def test_expressive_mixed_multitask_cross_products_are_not_accidental_exports() -> None:
+def test_expressive_mixed_multitask_cross_products_are_explicit_exports() -> None:
     exported = set(MODELS.__all__)
-    assert exported.isdisjoint(INTENTIONALLY_DEFERRED_EXPRESSIVE)
+    assert exported >= IMPLEMENTED_EXPRESSIVE_MIXED_MULTITASK

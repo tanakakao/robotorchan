@@ -10,7 +10,12 @@ from robotorchan.models.contaminated import (
     MixedContaminatedSingleTaskGP,
 )
 from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
-from robotorchan.models.deep_gp import MixedSingleTaskDeepGP, MultiTaskDeepGP, SingleTaskDeepGP
+from robotorchan.models.deep_gp import (
+    MixedMultiTaskDeepGP,
+    MixedSingleTaskDeepGP,
+    MultiTaskDeepGP,
+    SingleTaskDeepGP,
+)
 from robotorchan.models.fully_bayesian import (
     MixedSaasFullyBayesianMultiTaskGP,
     MixedSaasFullyBayesianSingleTaskGP,
@@ -29,6 +34,7 @@ from robotorchan.models.infinite_width_bnn import (
     InfiniteWidthBNNGP,
     InfiniteWidthBNNMultiTaskGP,
     MixedInfiniteWidthBNNGP,
+    MixedInfiniteWidthBNNMultiTaskGP,
 )
 from robotorchan.models.joint_heteroskedastic import (
     JointHeteroskedasticSingleTaskGP,
@@ -138,6 +144,7 @@ from robotorchan.models.robust import (
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
 from robotorchan.models.spectral_mixture import (
     MixedSpectralMixtureGP,
+    MixedSpectralMixtureMultiTaskGP,
     SpectralMixtureGP,
     SpectralMixtureMultiTaskGP,
 )
@@ -205,6 +212,7 @@ __all__ = [
     "MixedHigherOrderGP",
     "MixedHybridAutoEncoderGP",
     "MixedInfiniteWidthBNNGP",
+    "MixedInfiniteWidthBNNMultiTaskGP",
     "MixedJointEncoderGP",
     "MixedJointEncoderMultiTaskGP",
     "MixedJointHeteroskedasticSingleTaskGP",
@@ -212,6 +220,7 @@ __all__ = [
     "MixedKroneckerMultiTaskGP",
     "MixedLCEMGP",
     "MixedLatentKroneckerGP",
+    "MixedMultiTaskDeepGP",
     "MixedMultiTaskGP",
     "MixedNonstationaryMultiTaskGP",
     "MixedNonstationarySingleTaskGP",
@@ -232,6 +241,7 @@ __all__ = [
     "MixedSingleTaskMultiFidelityGP",
     "MixedSingleTaskVariationalGP",
     "MixedSpectralMixtureGP",
+    "MixedSpectralMixtureMultiTaskGP",
     "MixedStudentTMultiTaskGP",
     "MixedStudentTSingleTaskGP",
     "MixedSupervisedAutoEncoderGP",

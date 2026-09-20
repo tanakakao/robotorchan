@@ -464,3 +464,148 @@ class MixedSingleTaskDeepGP(SingleTaskDeepGP):
         for layer in self.hidden_layers:
             hidden = layer(hidden)
         return self.output_layer(hidden)
+
+
+class MixedMultiTaskDeepGP(SingleTaskDeepGP):
+    """DeepGP for mixed continuous/categorical long-format multi-task inputs."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        task_feature: int,
+        cat_dims: Sequence[int],
+        task_embedding_dim: int = 2,
+        categorical_embedding_dim: int = 2,
+        hidden_dims: Sequence[int] = (4,),
+        num_inducing: int = 16,
+        standardize_inputs: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        posterior_samples: int = 64,
+    ) -> None:
+        if train_X.ndim != 2:
+            raise ValueError("train_X must have shape n x d.")
+        input_dim = train_X.shape[-1]
+        task_dim = task_feature + input_dim if task_feature < 0 else task_feature
+        if task_dim < 0 or task_dim >= input_dim:
+            raise ValueError("task_feature is out of range.")
+        cats = tuple(sorted({dim + input_dim if dim < 0 else dim for dim in cat_dims}))
+        if not cats or any(dim < 0 or dim >= input_dim for dim in cats):
+            raise ValueError("cat_dims must contain valid categorical feature indices.")
+        if task_dim in cats:
+            raise ValueError("cat_dims must not contain task_feature.")
+        if task_embedding_dim <= 0 or categorical_embedding_dim <= 0:
+            raise ValueError("embedding dimensions must be positive.")
+        continuous_dims = tuple(i for i in range(input_dim) if i != task_dim and i not in cats)
+        if not continuous_dims:
+            raise ValueError("MixedMultiTaskDeepGP requires at least one continuous feature.")
+
+        task_indices = self._validated_indices(train_X[..., task_dim], "task feature")
+        unique_tasks = torch.unique(task_indices, sorted=True)
+        expected_tasks = torch.arange(unique_tasks.numel(), device=train_X.device)
+        if not torch.equal(unique_tasks, expected_tasks):
+            raise ValueError("task feature values must be contiguous and zero-based.")
+        category_indices = []
+        category_sizes = []
+        for dim in cats:
+            indices = self._validated_indices(train_X[..., dim], "categorical feature")
+            unique = torch.unique(indices, sorted=True)
+            expected = torch.arange(unique.numel(), device=train_X.device)
+            if not torch.equal(unique, expected):
+                raise ValueError("categorical values must be contiguous and zero-based.")
+            category_indices.append(indices)
+            category_sizes.append(int(unique.numel()))
+
+        continuous_X = train_X[..., list(continuous_dims)]
+        with torch.random.fork_rng():
+            torch.manual_seed(random_state)
+            task_embedding = torch.nn.Embedding(
+                int(unique_tasks.numel()), int(task_embedding_dim)
+            ).to(train_X)
+            category_embeddings = torch.nn.ModuleList(
+                [
+                    torch.nn.Embedding(size, int(categorical_embedding_dim)).to(train_X)
+                    for size in category_sizes
+                ]
+            )
+            embedded_categories = [
+                embedding(indices)
+                for embedding, indices in zip(category_embeddings, category_indices, strict=True)
+            ]
+            deep_X = torch.cat(
+                (
+                    continuous_X,
+                    *(item.detach() for item in embedded_categories),
+                    task_embedding(task_indices).detach(),
+                ),
+                dim=-1,
+            )
+
+        super().__init__(
+            deep_X,
+            train_Y,
+            hidden_dims=hidden_dims,
+            num_inducing=num_inducing,
+            standardize_inputs=False,
+            eps=eps,
+            random_state=random_state,
+            posterior_samples=posterior_samples,
+        )
+        self.task_embedding = task_embedding
+        self.category_embeddings = category_embeddings
+        self.task_feature = task_dim
+        self.cat_dims = cats
+        self.num_tasks = int(unique_tasks.numel())
+        self.task_embedding_dim = int(task_embedding_dim)
+        self.categorical_embedding_dim = int(categorical_embedding_dim)
+        self.category_sizes = tuple(category_sizes)
+        self._continuous_dims = continuous_dims
+        self.standardize_inputs = bool(standardize_inputs)
+        mean = continuous_X.mean(dim=-2, keepdim=True)
+        scale = continuous_X.std(dim=-2, keepdim=True, correction=0).clamp_min(eps)
+        if not standardize_inputs:
+            mean = torch.zeros_like(mean)
+            scale = torch.ones_like(scale)
+        self.register_buffer("continuous_mean", mean)
+        self.register_buffer("continuous_scale", scale)
+        self._store_supervised_training_data(train_X, train_Y)
+
+    @staticmethod
+    def _validated_indices(values: Tensor, name: str) -> Tensor:
+        if not torch.allclose(values, values.round()):
+            raise ValueError(f"{name} values must be integer-valued.")
+        indices = values.long()
+        if torch.any(indices < 0):
+            raise ValueError(f"{name} values must be non-negative.")
+        return indices
+
+    def transform_inputs(self, X: Tensor) -> Tensor:
+        """Encode continuous, categorical, and task structure independently."""
+        if X.shape[-1] != self.raw_train_X.shape[-1]:
+            raise ValueError(
+                f"Expected {self.raw_train_X.shape[-1]} input features, got {X.shape[-1]}."
+            )
+        continuous = X[..., list(self._continuous_dims)]
+        continuous = (continuous - self.continuous_mean) / self.continuous_scale
+        parts = [continuous]
+        for dim, size, embedding in zip(
+            self.cat_dims, self.category_sizes, self.category_embeddings, strict=True
+        ):
+            indices = self._validated_indices(X[..., dim], "categorical feature")
+            if torch.any(indices >= size):
+                raise ValueError("categorical feature contains an unknown category index.")
+            parts.append(embedding(indices))
+        task_indices = self._validated_indices(X[..., self.task_feature], "task feature")
+        if torch.any(task_indices >= self.num_tasks):
+            raise ValueError("task feature contains an unknown task index.")
+        parts.append(self.task_embedding(task_indices))
+        return torch.cat(parts, dim=-1)
+
+    def forward(self, X: Tensor) -> MultivariateNormal:
+        """Propagate original mixed long-format inputs through the DeepGP."""
+        hidden = self.transform_inputs(X)
+        for layer in self.hidden_layers:
+            hidden = layer(hidden)
+        return self.output_layer(hidden)
