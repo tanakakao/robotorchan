@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
 import torch
 from botorch.models import SingleTaskGP as BoTorchSingleTaskGP
 from botorch.models.transforms.outcome import OutcomeTransform
@@ -17,13 +15,11 @@ from robotorchan.models.base import (
     make_mixed_covar_module,
     normalize_feature_dims,
 )
-
-_ACTIVATIONS: dict[str, Callable[[], nn.Module]] = {
-    "gelu": nn.GELU,
-    "relu": nn.ReLU,
-    "silu": nn.SiLU,
-    "tanh": nn.Tanh,
-}
+from robotorchan.models.neural_features import (
+    make_feature_network,
+    validate_feature_output,
+    validate_neural_feature_config,
+)
 
 
 class JointEncoderGP(ExactGPModelMixin, BoTorchSingleTaskGP):
@@ -50,16 +46,7 @@ class JointEncoderGP(ExactGPModelMixin, BoTorchSingleTaskGP):
         outcome_transform: OutcomeTransform | _DefaultType | None = DEFAULT,
         feature_extractor: nn.Module | None = None,
     ) -> None:
-        if latent_dim <= 0:
-            raise ValueError("latent_dim must be a positive integer.")
-        if any(width <= 0 for width in hidden_dims):
-            raise ValueError("hidden_dims must contain only positive integers.")
-        if activation not in _ACTIVATIONS:
-            raise ValueError(
-                f"Unsupported activation {activation!r}. Choose from {sorted(_ACTIVATIONS)}."
-            )
-        if eps <= 0:
-            raise ValueError("eps must be positive.")
+        validate_neural_feature_config(latent_dim, hidden_dims, activation, eps)
 
         raw_train_X = train_X.detach().clone()
         raw_train_Y = train_Y.detach().clone()
@@ -99,13 +86,7 @@ class JointEncoderGP(ExactGPModelMixin, BoTorchSingleTaskGP):
 
         standardized_X = (train_X - x_mean) / x_scale
         latent_X = encoder(standardized_X)
-        if latent_X.shape[:-1] != standardized_X.shape[:-1]:
-            raise ValueError("feature_extractor must preserve all non-feature input dimensions.")
-        if latent_X.shape[-1] != self.latent_dim:
-            raise ValueError(
-                "feature_extractor output dimension must equal latent_dim; "
-                f"expected {self.latent_dim}, got {latent_X.shape[-1]}."
-            )
+        validate_feature_output(latent_X, standardized_X, self.latent_dim)
         latent_X = latent_X.detach()
         super().__init__(
             train_X=latent_X,
@@ -132,13 +113,14 @@ class JointEncoderGP(ExactGPModelMixin, BoTorchSingleTaskGP):
         device: torch.device,
         dtype: torch.dtype,
     ) -> nn.Sequential:
-        layers: list[nn.Module] = []
-        previous = input_dim
-        for width in self.hidden_dims:
-            layers.extend([nn.Linear(previous, width), _ACTIVATIONS[self.activation]()])
-            previous = width
-        layers.append(nn.Linear(previous, self.latent_dim))
-        return nn.Sequential(*layers).to(device=device, dtype=dtype)
+        return make_feature_network(
+            input_dim,
+            self.latent_dim,
+            self.hidden_dims,
+            self.activation,
+            device=device,
+            dtype=dtype,
+        )
 
     def encode(self, X: Tensor) -> Tensor:
         """Map original-space inputs to the jointly learned latent space."""
@@ -205,7 +187,7 @@ class HybridAutoEncoderGP(JointEncoderGP):
         layers: list[nn.Module] = []
         previous = self.latent_dim
         for width in reversed(self.hidden_dims):
-            layers.extend([nn.Linear(previous, width), _ACTIVATIONS[self.activation]()])
+            layers.extend([nn.Linear(previous, width), nn.GELU()])
             previous = width
         layers.append(nn.Linear(previous, output_dim))
         return nn.Sequential(*layers).to(device=device, dtype=dtype)
