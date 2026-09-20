@@ -87,3 +87,5 @@ def test_infinite_width_bnn_kernel_validates_hyperparameters() -> None:
         except ValueError:
             continue
         raise AssertionError(f"Expected ValueError for {kwargs}.")
+from robotorchan.models import InfiniteWidthBNNGP
+from robotorchan.models.infinite_width_bnn import InfiniteWidthReLUKernel
