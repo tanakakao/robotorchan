@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import Any
 
 import torch
@@ -10,52 +9,12 @@ from gpytorch.distributions import MultivariateNormal
 from torch import Tensor, nn
 
 from robotorchan.models.base import normalize_feature_dims
+from robotorchan.models.neural_features import (
+    make_feature_network,
+    validate_feature_output,
+    validate_neural_feature_config,
+)
 from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
-
-_ACTIVATIONS: dict[str, Callable[[], nn.Module]] = {
-    "gelu": nn.GELU,
-    "relu": nn.ReLU,
-    "silu": nn.SiLU,
-    "tanh": nn.Tanh,
-}
-
-
-def _make_network(
-    input_dim: int,
-    output_dim: int,
-    hidden_dims: tuple[int, ...],
-    activation: str,
-    *,
-    reverse: bool,
-    device: torch.device,
-    dtype: torch.dtype,
-) -> nn.Sequential:
-    widths = tuple(reversed(hidden_dims)) if reverse else hidden_dims
-    layers: list[nn.Module] = []
-    previous = input_dim
-    for width in widths:
-        layers.extend([nn.Linear(previous, width), _ACTIVATIONS[activation]()])
-        previous = width
-    layers.append(nn.Linear(previous, output_dim))
-    return nn.Sequential(*layers).to(device=device, dtype=dtype)
-
-
-def _validate_config(
-    input_dim: int,
-    latent_dim: int,
-    hidden_dims: tuple[int, ...],
-    activation: str,
-    eps: float,
-) -> None:
-    if latent_dim <= 0:
-        raise ValueError("latent_dim must be a positive integer.")
-    if any(width <= 0 for width in hidden_dims):
-        raise ValueError("hidden_dims must contain only positive integers.")
-    if activation not in _ACTIVATIONS:
-        raise ValueError(f"Unsupported activation {activation!r}.")
-    if eps <= 0:
-        raise ValueError("eps must be positive.")
-
 
 class JointEncoderMultiTaskGP(MultiTaskGP):
     """Long-format multi-task GP with a GP-MLL-trained neural encoder."""
@@ -78,7 +37,7 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         input_dim = train_X.shape[-1]
         task_feature = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
         data_dims = tuple(i for i in range(input_dim) if i != task_feature)
-        _validate_config(len(data_dims), latent_dim, hidden_dims, activation, eps)
+        validate_neural_feature_config(len(data_dims), latent_dim, hidden_dims, activation, eps)
         data_X = train_X[..., list(data_dims)]
         x_mean = data_X.mean(dim=0) if standardize else torch.zeros_like(data_X[0])
         x_scale = (
@@ -89,12 +48,11 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         with torch.random.fork_rng():
             torch.manual_seed(random_state)
             encoder = (
-                _make_network(
+                make_feature_network(
                     len(data_dims),
                     latent_dim,
                     hidden_dims,
                     activation,
-                    reverse=False,
                     device=train_X.device,
                     dtype=train_X.dtype,
                 )
@@ -102,10 +60,7 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
                 else feature_extractor.to(device=train_X.device, dtype=train_X.dtype)
             )
         latent = encoder((data_X - x_mean) / x_scale)
-        if latent.shape[:-1] != data_X.shape[:-1] or latent.shape[-1] != latent_dim:
-            raise ValueError(
-                "feature_extractor must preserve batch dimensions and output latent_dim."
-            )
+        validate_feature_output(latent, data_X, latent_dim)
         latent = latent.detach()
         reduced_X = torch.cat([latent, train_X[..., task_feature : task_feature + 1]], dim=-1)
         super().__init__(reduced_X, train_Y, task_feature=latent_dim, **kwargs)
@@ -165,7 +120,7 @@ class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         **kwargs: Any,
     ) -> None:
         input_dim = train_X.shape[-1]
-        _validate_config(input_dim, latent_dim, hidden_dims, activation, eps)
+        validate_neural_feature_config(latent_dim, latent_dim, hidden_dims, activation, eps)
         x_mean = train_X.mean(dim=0) if standardize else torch.zeros_like(train_X[0])
         x_scale = (
             train_X.std(dim=0, unbiased=False).clamp_min(eps)
@@ -175,12 +130,11 @@ class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         with torch.random.fork_rng():
             torch.manual_seed(random_state)
             encoder = (
-                _make_network(
+                make_feature_network(
                     input_dim,
                     latent_dim,
                     hidden_dims,
                     activation,
-                    reverse=False,
                     device=train_X.device,
                     dtype=train_X.dtype,
                 )
@@ -188,10 +142,7 @@ class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
                 else feature_extractor.to(device=train_X.device, dtype=train_X.dtype)
             )
         latent = encoder((train_X - x_mean) / x_scale)
-        if latent.shape[:-1] != train_X.shape[:-1] or latent.shape[-1] != latent_dim:
-            raise ValueError(
-                "feature_extractor must preserve batch dimensions and output latent_dim."
-            )
+        validate_feature_output(latent, train_X, latent_dim)
         latent = latent.detach()
         super().__init__(latent, train_Y, **kwargs)
         self.encoder = encoder
