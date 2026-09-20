@@ -7,7 +7,11 @@ from botorch.optim import optimize_acqf
 from gpytorch.kernels import ScaleKernel, SpectralMixtureKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models.spectral_mixture import MixedSpectralMixtureGP, SpectralMixtureGP, SpectralMixtureMultiTaskGP
+from robotorchan.models.spectral_mixture import (
+    MixedSpectralMixtureGP,
+    SpectralMixtureGP,
+    SpectralMixtureMultiTaskGP,
+)
 
 
 def _periodic_data() -> tuple[torch.Tensor, torch.Tensor]:
@@ -134,7 +138,10 @@ def test_spectral_mixture_multitask_qlogei_runs() -> None:
 
 
 def test_mixed_spectral_mixture_supports_posterior() -> None:
-    X = torch.tensor([[0.0, 0.0], [0.2, 1.0], [0.4, 0.0], [0.6, 1.0], [0.8, 0.0], [1.0, 1.0]], dtype=torch.double)
+    X = torch.tensor(
+        [[0.0, 0.0], [0.2, 1.0], [0.4, 0.0], [0.6, 1.0], [0.8, 0.0], [1.0, 1.0]],
+        dtype=torch.double,
+    )
     Y = torch.sin(2.0 * torch.pi * X[:, :1]) + 0.2 * X[:, 1:2]
     model = MixedSpectralMixtureGP(X, Y, cat_dims=[1], num_mixtures=2)
     model.eval()
