@@ -1,6 +1,7 @@
 """Cross-combination inventory checks for intentionally supported model axes."""
 
-import importlib  # noqa: I001
+import importlib
+
 
 MODELS = importlib.import_module("robotorchan.models")
 
