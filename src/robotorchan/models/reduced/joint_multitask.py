@@ -16,6 +16,7 @@ from robotorchan.models.neural_features import (
 )
 from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
 
+
 class JointEncoderMultiTaskGP(MultiTaskGP):
     """Long-format multi-task GP with a GP-MLL-trained neural encoder."""
 
@@ -37,7 +38,7 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         input_dim = train_X.shape[-1]
         task_feature = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
         data_dims = tuple(i for i in range(input_dim) if i != task_feature)
-        validate_neural_feature_config(len(data_dims), latent_dim, hidden_dims, activation, eps)
+        validate_neural_feature_config(latent_dim, hidden_dims, activation, eps)
         data_X = train_X[..., list(data_dims)]
         x_mean = data_X.mean(dim=0) if standardize else torch.zeros_like(data_X[0])
         x_scale = (
@@ -120,7 +121,7 @@ class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         **kwargs: Any,
     ) -> None:
         input_dim = train_X.shape[-1]
-        validate_neural_feature_config(latent_dim, latent_dim, hidden_dims, activation, eps)
+        validate_neural_feature_config(latent_dim, hidden_dims, activation, eps)
         x_mean = train_X.mean(dim=0) if standardize else torch.zeros_like(train_X[0])
         x_scale = (
             train_X.std(dim=0, unbiased=False).clamp_min(eps)
