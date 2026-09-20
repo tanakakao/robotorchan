@@ -303,7 +303,6 @@ class JointVAEKroneckerMultiTaskGP(_JointVAEMixin, HybridAutoEncoderKroneckerMul
         )
 
 
-
 class MixedJointEncoderMultiTaskGP(MixedMultiTaskGP):
     """Long-format mixed-input DKL preserving categories and task identity."""
 
@@ -328,9 +327,7 @@ class MixedJointEncoderMultiTaskGP(MixedMultiTaskGP):
             cat_dims, input_dim, name="cat_dims", excluded_dims=[task_dim]
         )
         cat_set = set(cats)
-        continuous_dims = tuple(
-            i for i in range(input_dim) if i != task_dim and i not in cat_set
-        )
+        continuous_dims = tuple(i for i in range(input_dim) if i != task_dim and i not in cat_set)
         if not continuous_dims:
             raise ValueError("Mixed DKL multi-task model requires a continuous data dimension.")
         if latent_dim > len(continuous_dims):
@@ -397,9 +394,9 @@ class MixedJointEncoderMultiTaskGP(MixedMultiTaskGP):
         continuous = X[..., list(self._mixed_continuous_dims)]
         latent = self.encoder((continuous - self.x_mean) / self.x_scale)
         categorical = X[..., list(self._mixed_cat_dims)].to(latent)
-        task = X[
-            ..., self._mixed_original_task_feature : self._mixed_original_task_feature + 1
-        ].to(latent)
+        task = X[..., self._mixed_original_task_feature : self._mixed_original_task_feature + 1].to(
+            latent
+        )
         return torch.cat((latent, categorical, task), dim=-1)
 
     def posterior(self, X: Tensor, *args: Any, **kwargs: Any):
