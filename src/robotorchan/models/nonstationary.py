@@ -166,7 +166,6 @@ class MixedNonstationarySingleTaskGP(SingleTaskGP):
         )
 
 
-
 class NonstationaryMultiTaskGP(MultiTaskGP):
     """Long-format multi-task GP with nonstationary data covariance."""
 
