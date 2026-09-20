@@ -354,6 +354,13 @@ class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
         self.original_task_feature = task_dim
         self.data_dims = tuple(i for i in range(input_dim) if i != task_dim)
         self._original_input_dim = input_dim
+        continuous_mean = continuous_X.mean(dim=0)
+        continuous_scale = continuous_X.std(dim=0, unbiased=False).clamp_min(self.eps)
+        if not self.standardize:
+            continuous_mean = torch.zeros_like(continuous_X[0])
+            continuous_scale = torch.ones_like(continuous_X[0])
+        self.x_mean = continuous_mean.detach().clone()
+        self.x_scale = continuous_scale.detach().clone()
         self._store_supervised_training_data(train_X, train_Y)
 
         reduced_cat_dims = list(range(latent_dim, latent_dim + len(cats)))
