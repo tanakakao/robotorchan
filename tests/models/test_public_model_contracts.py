@@ -26,6 +26,7 @@ PUBLIC_MODEL_NAMES = {
     "JointEncoderGP",
     "JointEncoderKroneckerMultiTaskGP",
     "JointEncoderMultiTaskGP",
+    "MixedJointEncoderMultiTaskGP",
     "JointVAEGP",
     "JointVAEKroneckerMultiTaskGP",
     "JointVAEMultiTaskGP",

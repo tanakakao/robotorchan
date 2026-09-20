@@ -9,7 +9,11 @@ from gpytorch.distributions import MultivariateNormal
 from torch import Tensor, nn
 
 from robotorchan.models.base import normalize_feature_dims
-from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
+from robotorchan.models.multitask import (
+    KroneckerMultiTaskGP,
+    MixedMultiTaskGP,
+    MultiTaskGP,
+)
 from robotorchan.models.neural_features import (
     make_feature_network,
     validate_feature_output,
@@ -297,3 +301,112 @@ class JointVAEKroneckerMultiTaskGP(_JointVAEMixin, HybridAutoEncoderKroneckerMul
             device=self.raw_train_X.device,
             dtype=self.raw_train_X.dtype,
         )
+
+
+class MixedJointEncoderMultiTaskGP(MixedMultiTaskGP):
+    """Long-format mixed-input DKL preserving categories and task identity."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        latent_dim: int,
+        cat_dims: list[int],
+        *,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        **kwargs: Any,
+    ) -> None:
+        input_dim = train_X.shape[-1]
+        task_dim = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
+        cats = normalize_feature_dims(
+            cat_dims, input_dim, name="cat_dims", excluded_dims=[task_dim]
+        )
+        cat_set = set(cats)
+        continuous_dims = tuple(i for i in range(input_dim) if i != task_dim and i not in cat_set)
+        if not continuous_dims:
+            raise ValueError("Mixed DKL multi-task model requires a continuous data dimension.")
+        if latent_dim > len(continuous_dims):
+            raise ValueError("latent_dim cannot exceed the continuous input dimension.")
+        validate_neural_feature_config(latent_dim, hidden_dims, activation, eps)
+
+        continuous_X = train_X[..., list(continuous_dims)]
+        x_mean = continuous_X.mean(dim=0) if standardize else torch.zeros_like(continuous_X[0])
+        x_scale = (
+            continuous_X.std(dim=0, unbiased=False).clamp_min(eps)
+            if standardize
+            else torch.ones_like(continuous_X[0])
+        )
+        with torch.random.fork_rng():
+            torch.manual_seed(random_state)
+            encoder = make_feature_network(
+                len(continuous_dims),
+                latent_dim,
+                hidden_dims,
+                activation,
+                device=train_X.device,
+                dtype=train_X.dtype,
+            )
+        latent = encoder((continuous_X - x_mean) / x_scale)
+        validate_feature_output(latent, continuous_X, latent_dim)
+        reduced_X = torch.cat(
+            [
+                latent.detach(),
+                train_X[..., list(cats)],
+                train_X[..., task_dim : task_dim + 1],
+            ],
+            dim=-1,
+        )
+        reduced_cat_dims = list(range(latent_dim, latent_dim + len(cats)))
+        reduced_task_feature = reduced_X.shape[-1] - 1
+        super().__init__(
+            reduced_X,
+            train_Y,
+            task_feature=reduced_task_feature,
+            cat_dims=reduced_cat_dims,
+            **kwargs,
+        )
+        self.encoder = encoder
+        self.latent_dim = latent_dim
+        self.hidden_dims = hidden_dims
+        self.activation = activation
+        self._mixed_original_input_dim = input_dim
+        self._mixed_original_task_feature = task_dim
+        self._mixed_cat_dims = tuple(cats)
+        self._mixed_continuous_dims = continuous_dims
+        self.register_buffer("x_mean", x_mean.detach().clone())
+        self.register_buffer("x_scale", x_scale.detach().clone())
+        self._store_supervised_training_data(train_X, train_Y)
+
+    @property
+    def continuous_dims(self) -> tuple[int, ...]:
+        return self._mixed_continuous_dims
+
+    def encode(self, X: Tensor) -> Tensor:
+        if X.shape[-1] != self._mixed_original_input_dim:
+            raise ValueError(
+                f"Expected final dimension {self._mixed_original_input_dim}, got {X.shape[-1]}."
+            )
+        continuous = X[..., list(self._mixed_continuous_dims)]
+        latent = self.encoder((continuous - self.x_mean) / self.x_scale)
+        categorical = X[..., list(self._mixed_cat_dims)].to(latent)
+        task = X[..., self._mixed_original_task_feature : self._mixed_original_task_feature + 1].to(
+            latent
+        )
+        return torch.cat((latent, categorical, task), dim=-1)
+
+    def posterior(self, X: Tensor, *args: Any, **kwargs: Any):
+        return MultiTaskGP.posterior(self, self.encode(X), *args, **kwargs)
+
+    def training_loss(self) -> Tensor:
+        self.train()
+        self.likelihood.train()
+        encoded_X = self.encode(self.raw_train_X)
+        self.set_train_data(inputs=encoded_X, targets=self.train_targets, strict=False)
+        function_dist = MultiTaskGP.forward(self, encoded_X)
+        task_indices = encoded_X[..., -1:].long()
+        return -self.make_mll()(function_dist, self.train_targets, task_indices)

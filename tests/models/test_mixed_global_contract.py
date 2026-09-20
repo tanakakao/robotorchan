@@ -16,6 +16,7 @@ EXPECTED_MIXED_MODELS = {
     "MixedHigherOrderGP",
     "MixedHybridAutoEncoderGP",
     "MixedJointEncoderGP",
+    "MixedJointEncoderMultiTaskGP",
     "MixedJointHeteroskedasticSingleTaskGP",
     "MixedJointVAEGP",
     "MixedKroneckerMultiTaskGP",
