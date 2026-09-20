@@ -50,3 +50,10 @@ Benchmark: [Predictive benchmark](../benchmarks/expressive_predictive.md)
 ### SpectralMixtureMultiTaskGP
 
 `SpectralMixtureMultiTaskGP` はlong-format複数タスク向けです。task featureはspectral-mixture data kernelから除外し、BoTorchのtask covarianceでタスク間相関を扱います。周期・準周期・複数周波数構造をタスク間で共有しつつ、元のlong-format入力空間でposterior/acquisitionを利用できます。
+
+
+### Mixed expressive kernels
+
+`MixedInfiniteWidthBNNGP` は連続特徴にinfinite-width ReLU NNGP kernel、カテゴリ特徴にrobotorchan共通categorical kernelを使い、加法項とinteraction項を組み合わせます。
+
+`MixedSpectralMixtureGP` は連続特徴にspectral-mixture kernel、カテゴリ特徴に共通categorical kernelを使います。spectral parametersの初期化には連続特徴だけを使用し、カテゴリIDを連続値として補間しません。
