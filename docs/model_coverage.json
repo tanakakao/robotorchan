@@ -215,6 +215,11 @@
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/22_mixed_reduced_gp.ipynb"
     },
+    "MixedInfiniteWidthBNNGP": {
+      "guide": "docs/models/expressive.md",
+      "theory": "docs/theory/22_expressive_gp.md",
+      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
+    },
     "MixedJointEncoderGP": {
       "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
@@ -344,6 +349,11 @@
       "guide": "docs/models/standard.md",
       "theory": "docs/theory/09_variational_gp.md",
       "notebook": "examples/notebooks/06_variational_gp.ipynb"
+    },
+    "MixedSpectralMixtureGP": {
+      "guide": "docs/models/expressive.md",
+      "theory": "docs/theory/22_expressive_gp.md",
+      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
     },
     "MixedStudentTMultiTaskGP": {
       "guide": "docs/models/robust_noise.md",
