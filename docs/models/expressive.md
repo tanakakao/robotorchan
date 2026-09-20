@@ -26,7 +26,7 @@ Monte Carlo posteriorを使うため、階層的な確率表現が必要な場�
 
 `InfiniteWidthBNNGP` は無限幅ReLU networkに対応するNNGP kernelをExact GPとして
 利用します。neural-network由来のpriorを使いつつ、Exact GPの学習・posterior contractを
-維持したい場合に候補になります。
+維持したい場合に候補になります。long-format複数タスクには `InfiniteWidthBNNMultiTaskGP` を使用し、task featureをNNGP data kernelから除外してtask covarianceで扱います。
 
 `SpectralMixtureGP` は周期、準周期、複数周波数を持つ定常関数に適しています。
 `num_mixtures` と初期化への感度があるため、標準kernelとの比較を推奨します。
