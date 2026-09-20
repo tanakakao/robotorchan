@@ -16,6 +16,7 @@ from gpytorch.variational import CholeskyVariationalDistribution, VariationalStr
 from torch import Tensor
 
 from robotorchan.models.base import ModelTrainingMixin, SupervisedTrainingDataMixin
+from robotorchan.models.deep_gp_posterior import DeepGPPosterior
 
 
 class _DeepGPLayer(DeepGPLayer):
@@ -96,6 +97,7 @@ class SingleTaskDeepGP(
         standardize_inputs: bool = True,
         eps: float = 1e-8,
         random_state: int = 0,
+        posterior_samples: int = 64,
     ) -> None:
         if train_X.ndim != 2:
             raise ValueError("train_X must have shape n x d.")
@@ -110,6 +112,8 @@ class SingleTaskDeepGP(
             raise ValueError("num_inducing must be positive.")
         if eps <= 0:
             raise ValueError("eps must be positive.")
+        if posterior_samples <= 1:
+            raise ValueError("posterior_samples must be greater than one.")
 
         super().__init__()
         self._store_supervised_training_data(train_X, train_Y)
@@ -117,9 +121,10 @@ class SingleTaskDeepGP(
         self.num_inducing = int(num_inducing)
         self.standardize_inputs = bool(standardize_inputs)
         self.eps = float(eps)
+        self.posterior_samples = int(posterior_samples)
 
         x_mean = train_X.mean(dim=-2, keepdim=True)
-        x_scale = train_X.std(dim=-2, keepdim=True).clamp_min(eps)
+        x_scale = train_X.std(dim=-2, keepdim=True, correction=0).clamp_min(eps)
         if not standardize_inputs:
             x_mean = torch.zeros_like(x_mean)
             x_scale = torch.ones_like(x_scale)
@@ -165,6 +170,38 @@ class SingleTaskDeepGP(
         for layer in self.hidden_layers:
             hidden = layer(hidden)
         return self.output_layer(hidden)
+
+    @property
+    def num_outputs(self) -> int:
+        """Return the number of modeled outputs."""
+        return 1
+
+    def posterior(
+        self,
+        X: Tensor,
+        *,
+        observation_noise: bool | Tensor = False,
+        posterior_transform=None,
+        num_samples: int | None = None,
+    ) -> DeepGPPosterior:
+        """Return a BoTorch-compatible Monte Carlo DeepGP posterior."""
+        if isinstance(observation_noise, Tensor):
+            raise NotImplementedError("Tensor-valued observation_noise is not supported.")
+        num_samples = self.posterior_samples if num_samples is None else int(num_samples)
+        if num_samples <= 1:
+            raise ValueError("num_samples must be greater than one.")
+
+        with gpytorch.settings.num_likelihood_samples(num_samples):
+            distribution = self(X)
+            if observation_noise:
+                distribution = self.likelihood(distribution)
+            samples = distribution.rsample()
+        if samples.shape[0] != num_samples:
+            samples = samples.unsqueeze(0).expand(num_samples, *samples.shape)
+        posterior = DeepGPPosterior(samples.unsqueeze(-1))
+        if posterior_transform is not None:
+            posterior = posterior_transform(posterior)
+        return posterior
 
     def make_mll(self, num_data: int | None = None) -> DeepApproximateMLL:
         """Construct the DeepGP variational ELBO objective."""
