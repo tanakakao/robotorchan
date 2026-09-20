@@ -7,9 +7,9 @@ from robotorchan.models.reduced.joint_multitask import (
     HybridAutoEncoderMultiTaskGP,
     JointEncoderKroneckerMultiTaskGP,
     JointEncoderMultiTaskGP,
-    MixedJointEncoderMultiTaskGP,
     JointVAEKroneckerMultiTaskGP,
     JointVAEMultiTaskGP,
+    MixedJointEncoderMultiTaskGP,
 )
 
 
