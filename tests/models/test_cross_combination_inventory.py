@@ -35,4 +35,4 @@ def test_expressive_single_mixed_and_multitask_axes_are_explicit() -> None:
 
 def test_expressive_mixed_multitask_cross_products_are_explicit_exports() -> None:
     exported = set(MODELS.__all__)
-    assert IMPLEMENTED_EXPRESSIVE_MIXED_MULTITASK <= exported
+    assert exported >= IMPLEMENTED_EXPRESSIVE_MIXED_MULTITASK
