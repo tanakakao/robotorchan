@@ -36,8 +36,7 @@ x -> GP_1 -> h_1 -> GP_2 -> ... -> y
 `SingleTaskDeepGP` はvariational inferenceとMonte Carlo posteriorを使用します。
 
 Exact GPより推論コストと最適化難度が高くなります。現在のrobotorchanでは、
-数学的意味を保てるsingle-output continuous-input版を提供し、API対称性だけを目的とした
-Mixed / multi-output wrapperは作りません。
+single-task、long-format multi-task、Mixed single-taskを提供します。`MultiTaskDeepGP` はtask identityを学習可能なembeddingとして階層へ結合し、`MixedSingleTaskDeepGP` はcategorical featureを学習可能なembeddingとして扱います。Mixed × MultiTaskは独立した2種類の構造を同時に扱うため、単なるAPI対称性では追加せずcross-combination auditで明示的に評価します。
 
 ## Infinite-width neural network GP
 
