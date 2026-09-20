@@ -2,7 +2,6 @@
 
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
-from botorch.acquisition.objective import ScalarizedPosteriorTransform
 from botorch.optim import optimize_acqf
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
@@ -128,14 +127,7 @@ def test_infinite_width_bnn_multitask_qlogei_runs() -> None:
     X, Y = _multitask_data()
     model = InfiniteWidthBNNMultiTaskGP(X, Y, task_feature=1, depth=2)
     model.eval()
-    posterior_transform = ScalarizedPosteriorTransform(
-        weights=torch.tensor([1.0, 0.0, 0.0], dtype=X.dtype)
-    )
-    acquisition = qLogExpectedImprovement(
-        model=model,
-        best_f=Y.max(),
-        posterior_transform=posterior_transform,
-    )
+    acquisition = qLogExpectedImprovement(model=model, best_f=Y.max())
 
     value = acquisition(X[:2].unsqueeze(0))
 
