@@ -72,7 +72,7 @@
 | Hierarchical search space | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` |
 | Heterogeneous Multi-task | `HeterogeneousMTGP` |
 | Contextual GP | `SACGP`, `LCEAGP`, `LCEMGP` |
-| Expressive GP | `JointEncoderGP`, `InfiniteWidthBNNGP`, `SpectralMixtureGP` |
+| Expressive GP | `JointEncoderGP`, `SingleTaskDeepGP`, `InfiniteWidthBNNGP`, `SpectralMixtureGP` |
 
 ## 関連ドキュメント
 
