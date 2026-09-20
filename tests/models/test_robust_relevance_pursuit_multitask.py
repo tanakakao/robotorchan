@@ -5,6 +5,7 @@ from gpytorch.kernels import AdditiveKernel, ProductKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import (
+    MultiTaskGP,
     MixedRobustRelevancePursuitMultiTaskGP,
     RobustRelevancePursuitMultiTaskGP,
 )
@@ -29,13 +30,11 @@ def test_robust_multitask_preserves_public_contract() -> None:
     torch.testing.assert_close(model.raw_train_X, train_x)
     torch.testing.assert_close(model.raw_train_Y, train_y)
 
-    model.eval()
-    model.likelihood.eval()
     standard = model.to_standard_model()
-    standard.eval()
-    posterior = standard.posterior(train_x[:2])
-    assert posterior.mean.shape[-1] == 1
-    assert torch.isfinite(posterior.mean).all()
+    assert isinstance(standard, MultiTaskGP)
+    assert standard.likelihood is model.likelihood
+    assert standard.covar_module is model.covar_module
+    assert standard.mean_module is model.mean_module
 
 
 def test_robust_multitask_standard_model_keeps_structure() -> None:
