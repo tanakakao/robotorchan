@@ -5,7 +5,8 @@ from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.optim import optimize_acqf
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models import InfiniteWidthBNNGP\nfrom robotorchan.models.infinite_width_bnn import InfiniteWidthReLUKernel
+from robotorchan.models import InfiniteWidthBNNGP
+from robotorchan.models.infinite_width_bnn import InfiniteWidthReLUKernel
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
