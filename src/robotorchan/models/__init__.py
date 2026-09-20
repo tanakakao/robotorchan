@@ -19,6 +19,7 @@ from robotorchan.models.hierarchical import (
     MixedHierarchicalConditionalKernelMultiTaskGP,
 )
 from robotorchan.models.higher_order import HigherOrderGP, MixedHigherOrderGP
+from robotorchan.models.infinite_width_bnn import InfiniteWidthBNNGP
 from robotorchan.models.joint_heteroskedastic import (
     JointHeteroskedasticSingleTaskGP,
     MixedJointHeteroskedasticSingleTaskGP,
@@ -151,6 +152,7 @@ __all__ = [
     "HybridAutoEncoderGP",
     "HybridAutoEncoderKroneckerMultiTaskGP",
     "HybridAutoEncoderMultiTaskGP",
+    "InfiniteWidthBNNGP",
     "JointEncoderGP",
     "JointEncoderKroneckerMultiTaskGP",
     "JointEncoderMultiTaskGP",
