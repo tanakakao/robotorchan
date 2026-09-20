@@ -32,7 +32,7 @@
 
 ## Nonstationary latent process
 
-`NonstationarySingleTaskGP` と `MixedNonstationarySingleTaskGP` は入力位置によって latent function の局所 smoothness が変わる場合を扱います。観測 variance が変わる heteroskedastic noise とは区別します。
+`NonstationarySingleTaskGP` / `MixedNonstationarySingleTaskGP`、および long-format 複数タスク向け `NonstationaryMultiTaskGP` / `MixedNonstationaryMultiTaskGP` は入力位置によって latent function の局所 smoothness が変わる場合を扱います。観測 variance が変わる heteroskedastic noise とは区別します。
 
 詳細: [Nonstationary GP](nonstationary_gp.md)
 
