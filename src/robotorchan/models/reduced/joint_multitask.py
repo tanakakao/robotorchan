@@ -208,7 +208,7 @@ class HybridAutoEncoderMultiTaskGP(_HybridMixin, JointEncoderMultiTaskGP):
             raise ValueError("reconstruction_weight must be non-negative.")
         super().__init__(*args, **kwargs)
         self.reconstruction_weight = float(reconstruction_weight)
-        self.decoder = _make_network(
+        self.decoder = make_feature_network(
             self.latent_dim,
             len(self.data_dims),
             self.hidden_dims,
@@ -227,7 +227,7 @@ class HybridAutoEncoderKroneckerMultiTaskGP(_HybridMixin, JointEncoderKroneckerM
             raise ValueError("reconstruction_weight must be non-negative.")
         super().__init__(*args, **kwargs)
         self.reconstruction_weight = float(reconstruction_weight)
-        self.decoder = _make_network(
+        self.decoder = make_feature_network(
             self.latent_dim,
             self._original_input_dim,
             self.hidden_dims,
