@@ -8,6 +8,8 @@ import torch
 from gpytorch.kernels import Kernel, ScaleKernel
 from torch import Tensor
 
+from robotorchan.models.base import normalize_feature_dims
+from robotorchan.models.multitask import MultiTaskGP
 from robotorchan.models.single_task import SingleTaskGP
 
 
@@ -113,6 +115,56 @@ class InfiniteWidthBNNGP(SingleTaskGP):
             train_Y=train_Y,
             train_Yvar=train_Yvar,
             covar_module=covar_module,
+        )
+        self.depth = int(depth)
+        self.weight_variance = float(weight_variance)
+        self.bias_variance = float(bias_variance)
+
+
+class InfiniteWidthBNNMultiTaskGP(MultiTaskGP):
+    """Long-format multi-task GP with an infinite-width ReLU data kernel.
+
+    The task feature is handled by BoTorch's task covariance and is excluded
+    from the NNGP data kernel. The public input remains the original
+    long-format representation.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        train_Yvar: Tensor | None = None,
+        *,
+        depth: int = 2,
+        weight_variance: float = 1.0,
+        bias_variance: float = 0.1,
+        ard: bool = True,
+        eps: float = 1e-7,
+        rank: int | None = None,
+    ) -> None:
+        input_dim = train_X.shape[-1]
+        resolved_task_feature = normalize_feature_dims(
+            [task_feature], input_dim, name="task_feature"
+        )[0]
+        data_dims = [i for i in range(input_dim) if i != resolved_task_feature]
+        ard_num_dims = len(data_dims) if ard else None
+        base_kernel = InfiniteWidthReLUKernel(
+            depth=depth,
+            weight_variance=weight_variance,
+            bias_variance=bias_variance,
+            eps=eps,
+            ard_num_dims=ard_num_dims,
+            active_dims=data_dims,
+        )
+        covar_module = ScaleKernel(base_kernel)
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            task_feature=task_feature,
+            train_Yvar=train_Yvar,
+            covar_module=covar_module,
+            rank=rank,
         )
         self.depth = int(depth)
         self.weight_variance = float(weight_variance)
