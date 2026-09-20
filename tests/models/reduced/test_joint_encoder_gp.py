@@ -189,6 +189,8 @@ def test_joint_encoder_gp_condition_on_observations_keeps_original_space():
     X_new = torch.rand(2, 7, dtype=X.dtype)
     Y_new = X_new[:, :1] - 0.5 * X_new[:, 1:2]
 
+    # ExactGP fantasy conditioning requires prediction caches to exist first.
+    model.posterior(X_new)
     conditioned = model.condition_on_observations(X=X_new, Y=Y_new)
     posterior = conditioned.posterior(X_new)
 
