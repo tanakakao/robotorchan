@@ -376,10 +376,6 @@ class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
             input_dim=latent_dim + len(cats),
             cat_dims=reduced_cat_dims,
         )
-        data_covar.active_dims = torch.arange(
-            latent_dim + len(cats) + 1,
-            device=train_X.device,
-        )
         self.covar_module.kernels[0] = data_covar
         self.set_train_data(
             inputs=encoded_train_X,
@@ -407,6 +403,9 @@ class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
             ..., self._mixed_original_task_feature : self._mixed_original_task_feature + 1
         ].to(latent)
         return torch.cat((latent, categorical, task), dim=-1)
+
+    def posterior(self, X: Tensor, *args: Any, **kwargs: Any):
+        return MultiTaskGP.posterior(self, self.encode(X), *args, **kwargs)
 
     def training_loss(self) -> Tensor:
         self.train()
