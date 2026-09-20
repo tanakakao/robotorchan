@@ -9,6 +9,7 @@ from botorch.posteriors.gpytorch import GPyTorchPosterior
 from torch import Tensor, nn
 
 from robotorchan.models.base import RawDataMixin
+from robotorchan.models.student_t import _multitask_covar_module
 from robotorchan.models.variational import MixedSingleTaskVariationalGP, SingleTaskVariationalGP
 
 
@@ -190,3 +191,120 @@ class MixedContaminatedSingleTaskGP(ContaminatedSingleTaskGP):
         self._store_raw_tensor("train_X", train_X)
         self._store_raw_tensor("train_Y", train_Y)
         self._store_raw_tensor("train_Yvar", None)
+
+
+
+class ContaminatedMultiTaskGP(ContaminatedSingleTaskGP):
+    """Long-format multi-task GP with an explicit Gaussian contamination mixture."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        *,
+        contamination_probability: float = 0.05,
+        inlier_scale: float = 0.05,
+        outlier_scale: float = 0.5,
+        num_inducing: int = 32,
+        num_likelihood_samples: int = 16,
+        beta: float = 1.0,
+    ) -> None:
+        nn.Module.__init__(self)
+        self._initialize_multitask(
+            train_X,
+            train_Y,
+            task_feature,
+            cat_dims=None,
+            contamination_probability=contamination_probability,
+            inlier_scale=inlier_scale,
+            outlier_scale=outlier_scale,
+            num_inducing=num_inducing,
+            num_likelihood_samples=num_likelihood_samples,
+            beta=beta,
+        )
+
+    def _initialize_multitask(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        *,
+        cat_dims: list[int] | None,
+        contamination_probability: float,
+        inlier_scale: float,
+        outlier_scale: float,
+        num_inducing: int,
+        num_likelihood_samples: int,
+        beta: float,
+    ) -> None:
+        if train_Y.shape[-1] != 1:
+            raise ValueError("train_Y must have a single output.")
+        if not 0 < contamination_probability < 1:
+            raise ValueError("contamination_probability must be strictly between 0 and 1.")
+        if inlier_scale <= 0 or outlier_scale <= inlier_scale:
+            raise ValueError("Scales must satisfy 0 < inlier_scale < outlier_scale.")
+        if num_inducing < 1 or num_likelihood_samples < 1:
+            raise ValueError("num_inducing and num_likelihood_samples must be positive.")
+        if beta <= 0:
+            raise ValueError("beta must be positive.")
+        covar_module, task_dim = _multitask_covar_module(
+            train_X, task_feature, cat_dims=cat_dims
+        )
+        self.contamination_probability = float(contamination_probability)
+        self.inlier_scale = float(inlier_scale)
+        self.outlier_scale = float(outlier_scale)
+        self.num_likelihood_samples = int(num_likelihood_samples)
+        self.beta = float(beta)
+        self.task_feature = task_dim
+        self.response_model = SingleTaskVariationalGP(
+            train_X,
+            train_Y,
+            covar_module=covar_module,
+            inducing_points=min(int(num_inducing), train_X.shape[-2]),
+        )
+        self._store_raw_tensor("train_X", train_X.detach().clone())
+        self._store_raw_tensor("train_Y", train_Y.detach().clone())
+        self._store_raw_tensor("train_Yvar", None)
+
+
+class MixedContaminatedMultiTaskGP(ContaminatedMultiTaskGP):
+    """Contamination-mixture multi-task GP for mixed data features."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        *,
+        cat_dims: list[int],
+        contamination_probability: float = 0.05,
+        inlier_scale: float = 0.05,
+        outlier_scale: float = 0.5,
+        num_inducing: int = 32,
+        num_likelihood_samples: int = 16,
+        beta: float = 1.0,
+    ) -> None:
+        nn.Module.__init__(self)
+        self._initialize_multitask(
+            train_X,
+            train_Y,
+            task_feature,
+            cat_dims=cat_dims,
+            contamination_probability=contamination_probability,
+            inlier_scale=inlier_scale,
+            outlier_scale=outlier_scale,
+            num_inducing=num_inducing,
+            num_likelihood_samples=num_likelihood_samples,
+            beta=beta,
+        )
+        from robotorchan.models.base import normalize_feature_dims
+
+        self.cat_dims = tuple(
+            normalize_feature_dims(
+                cat_dims,
+                train_X.shape[-1],
+                name="cat_dims",
+                excluded_dims=[self.task_feature],
+            )
+        )
