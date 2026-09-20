@@ -49,7 +49,9 @@ from robotorchan.models.multitask import (
     MultiTaskGP,
 )
 from robotorchan.models.nonstationary import (
+    MixedNonstationaryMultiTaskGP,
     MixedNonstationarySingleTaskGP,
+    NonstationaryMultiTaskGP,
     NonstationarySingleTaskGP,
 )
 from robotorchan.models.pairwise import PairwiseGP
