@@ -5,8 +5,8 @@ from gpytorch.kernels import AdditiveKernel, ProductKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import (
-    MultiTaskGP,
     MixedRobustRelevancePursuitMultiTaskGP,
+    MultiTaskGP,
     RobustRelevancePursuitMultiTaskGP,
 )
 
