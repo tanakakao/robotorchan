@@ -82,3 +82,12 @@ model = JointEncoderGP(
 このmoduleはmodelのsubmoduleとして登録されるため、`model.parameters()` を使った `training_loss()` の最適化でGPと同時に更新されます。入力標準化はmodel側で行い、その後のテンソルがfeature extractorへ渡されます。
 
 この設計により、DKLのためだけに別の互換APIを増やさず、将来CNNやTransformerなど別の特徴抽出器を接続する場合も同じ学習契約を維持できます。
+
+
+## BoTorch acquisitionとの統合
+
+`JointEncoderGP` は候補点を元の入力空間で受け取り、内部で特徴写像を適用します。そのため、獲得関数側でlatent空間へ手動変換する必要はありません。
+
+Phase 3では、posteriorだけでなく `qLogExpectedImprovement`、`qLogNoisyExpectedImprovement`、`qUpperConfidenceBound` と `optimize_acqf` の元入力空間での動作をintegration testで固定しています。また、sequential BOで重要な `condition_on_observations()` と `fantasize()` についても元入力次元を維持する契約をテストします。
+
+したがってBO loopでは通常のBoTorch modelと同様にmodelを獲得関数へ直接渡します。encoderを外側から呼び出して候補点を変換しないでください。
