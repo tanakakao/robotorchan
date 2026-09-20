@@ -532,9 +532,7 @@ class MixedMultiTaskDeepGP(SingleTaskDeepGP):
             )
             embedded_categories = [
                 embedding(indices)
-                for embedding, indices in zip(
-                    category_embeddings, category_indices, strict=True
-                )
+                for embedding, indices in zip(category_embeddings, category_indices, strict=True)
             ]
             deep_X = torch.cat(
                 (
