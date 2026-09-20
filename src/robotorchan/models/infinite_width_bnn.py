@@ -220,3 +220,66 @@ class MixedInfiniteWidthBNNGP(SingleTaskGP):
         self.depth = int(depth)
         self.weight_variance = float(weight_variance)
         self.bias_variance = float(bias_variance)
+
+
+class MixedInfiniteWidthBNNMultiTaskGP(MultiTaskGP):
+    """Mixed long-format multi-task GP with an infinite-width ReLU data kernel."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        cat_dims: list[int],
+        train_Yvar: Tensor | None = None,
+        *,
+        depth: int = 2,
+        weight_variance: float = 1.0,
+        bias_variance: float = 0.1,
+        ard: bool = True,
+        eps: float = 1e-7,
+        rank: int | None = None,
+    ) -> None:
+        input_dim = train_X.shape[-1]
+        task_dim = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
+        cats = normalize_feature_dims(
+            cat_dims,
+            input_dim,
+            name="cat_dims",
+            excluded_dims=[task_dim],
+        )
+
+        def continuous_kernel_factory(batch_shape, num_dims, active_dims):
+            return ScaleKernel(
+                InfiniteWidthReLUKernel(
+                    depth=depth,
+                    weight_variance=weight_variance,
+                    bias_variance=bias_variance,
+                    eps=eps,
+                    ard_num_dims=num_dims if ard else None,
+                    active_dims=active_dims,
+                    batch_shape=batch_shape,
+                ),
+                batch_shape=batch_shape,
+            )
+
+        covar_module = make_mixed_covar_module(
+            input_dim=input_dim,
+            cat_dims=cats,
+            excluded_dims=[task_dim],
+            batch_shape=train_X.shape[:-2],
+            cont_kernel_factory=continuous_kernel_factory,
+        )
+        covar_module.active_dims = torch.arange(input_dim, device=train_X.device)
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            task_feature=task_feature,
+            train_Yvar=train_Yvar,
+            covar_module=covar_module,
+            rank=rank,
+        )
+        self.cat_dims = tuple(cats)
+        self.depth = int(depth)
+        self.weight_variance = float(weight_variance)
+        self.bias_variance = float(bias_variance)
