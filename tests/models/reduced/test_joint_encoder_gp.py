@@ -1,5 +1,7 @@
 import torch
-from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.acquisition.logei import qLogExpectedImprovement, qLogNoisyExpectedImprovement
+from botorch.acquisition.monte_carlo import qUpperConfidenceBound
+from botorch.optim import optimize_acqf
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import JointEncoderGP
@@ -134,3 +136,77 @@ def test_joint_encoder_gp_rejects_custom_feature_dimension_mismatch():
         assert "output dimension must equal latent_dim" in str(error)
     else:
         raise AssertionError("Expected a feature-extractor dimension validation error.")
+
+
+def test_joint_encoder_gp_mc_acquisitions_support_original_space():
+    X, Y = _data()
+    model = _make_model(X, Y)
+    model.eval()
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([16]))
+    candidates = X[:2].unsqueeze(0)
+
+    acquisitions = [
+        qLogExpectedImprovement(model=model, best_f=Y.max(), sampler=sampler),
+        qLogNoisyExpectedImprovement(model=model, X_baseline=X, sampler=sampler),
+        qUpperConfidenceBound(model=model, beta=0.2, sampler=sampler),
+    ]
+
+    for acquisition in acquisitions:
+        value = acquisition(candidates)
+        assert value.shape == torch.Size([1])
+        assert torch.isfinite(value).all()
+
+
+def test_joint_encoder_gp_optimize_acqf_runs_in_original_space():
+    X, Y = _data()
+    model = _make_model(X, Y)
+    model.eval()
+    acquisition = qUpperConfidenceBound(
+        model=model,
+        beta=0.2,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+    )
+    bounds = torch.stack((torch.zeros(7, dtype=X.dtype), torch.ones(7, dtype=X.dtype)))
+
+    candidate, value = optimize_acqf(
+        acquisition,
+        bounds=bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+        options={"maxiter": 20},
+    )
+
+    assert candidate.shape == (1, 7)
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+
+
+def test_joint_encoder_gp_condition_on_observations_keeps_original_space():
+    X, Y = _data()
+    model = _make_model(X, Y)
+    model.eval()
+    X_new = torch.rand(2, 7, dtype=X.dtype)
+    Y_new = X_new[:, :1] - 0.5 * X_new[:, 1:2]
+
+    conditioned = model.condition_on_observations(X=X_new, Y=Y_new)
+    posterior = conditioned.posterior(X_new)
+
+    assert conditioned.train_inputs[0].shape[-1] == 7
+    assert posterior.mean.shape == (2, 1)
+    assert torch.isfinite(posterior.mean).all()
+
+
+def test_joint_encoder_gp_fantasize_keeps_original_space():
+    X, Y = _data()
+    model = _make_model(X, Y)
+    model.eval()
+    X_new = torch.rand(2, 7, dtype=X.dtype)
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([3]))
+
+    fantasy = model.fantasize(X_new, sampler=sampler)
+    posterior = fantasy.posterior(X_new)
+
+    assert fantasy.train_inputs[0].shape[-1] == 7
+    assert posterior.mean.shape[-2:] == (2, 1)
+    assert torch.isfinite(posterior.mean).all()
