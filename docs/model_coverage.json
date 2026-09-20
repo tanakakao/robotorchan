@@ -101,13 +101,13 @@
       "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
     },
     "JointEncoderKroneckerMultiTaskGP": {
-      "guide": "docs/models/reduced.md",
-      "theory": "docs/theory/19_neural_reduction_gp.md",
+      "guide": "docs/models/expressive.md",
+      "theory": "docs/theory/22_expressive_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "JointEncoderMultiTaskGP": {
-      "guide": "docs/models/reduced.md",
-      "theory": "docs/theory/19_neural_reduction_gp.md",
+      "guide": "docs/models/expressive.md",
+      "theory": "docs/theory/22_expressive_gp.md",
       "notebook": "examples/notebooks/21_reduced_multitask_gp.ipynb"
     },
     "JointHeteroskedasticSingleTaskGP": {

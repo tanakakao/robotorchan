@@ -10,6 +10,16 @@ Spectral Mixture GPを扱います。これらは同じ問題を別名で実装�
 入力に有用な非線形表現が存在すると考える場合に候補になります。Mixed入力には
 `MixedJointEncoderGP` を使用し、カテゴリ変数を連続encoderへそのまま通しません。
 
+複数タスクでは、long-formatの `JointEncoderMultiTaskGP` とblock-designの
+`JointEncoderKroneckerMultiTaskGP` が既にpublic APIです。前者はtask featureをencoderへ
+入れず、data featureだけを潜在表現へ写像してtask identityを再結合します。後者はtask identityが
+`train_Y` の出力列にあるため、`train_X` 全体をencoderへ通します。どちらもencoderは
+GPの学習目的からjoint trainingされ、`posterior()` には元入力空間のXを渡します。
+
+一方、`MixedReducedMultiTaskGP` はfitted reducerを使うreduction基盤であり、
+joint-training DKLのMixed MultiTask実装ではありません。Mixed × MultiTask DKLは別途
+明示的なモデル契約として扱います。
+
 `SingleTaskDeepGP` は確率的なGP階層を使います。DKLより推論が重く、
 Monte Carlo posteriorを使うため、階層的な確率表現が必要な場合に比較対象とします。
 現在はsingle-output continuous inputを明示的な対応範囲とします。

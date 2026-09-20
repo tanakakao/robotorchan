@@ -63,11 +63,13 @@ Mixed版では continuous feature のみを削減し、categorical feature は�
 | PCA / PLS / Random Projection | named | named | named | named | common reduced base |
 | AE / VAE | named | named | named | named | common reduced base |
 | Supervised AE / VAE | named | named | named | named | common reduced base |
-| Joint Encoder / Hybrid AE / Joint VAE | named | named | named | named | common reduced base |
+| Joint Encoder / Hybrid AE / Joint VAE | named | named | named | named | separate Mixed × MultiTask contract |
 
 ここで `named` は public class があること、`common reduced base` は
 `MixedReducedMultiTaskGP` / `MixedReducedKroneckerMultiTaskGP` で構成することを表します。
-ドキュメントの便宜のためだけに named cross-product class は追加しません。
+ただしJoint Encoder系はGP目的からencoder自体をjoint trainingするDKLなので、fitted reducerを
+前提とするcommon reduced baseと同一視しません。Mixed × MultiTask DKLは専用契約で扱います。
+ドキュメントの便宜のためだけに不正確なnamed cross-product classは追加しません。
 
 ## モデル選択
 

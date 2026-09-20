@@ -154,9 +154,6 @@ class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         self.register_buffer("x_mean", x_mean.detach().clone())
         self.register_buffer("x_scale", x_scale.detach().clone())
         self._store_supervised_training_data(train_X, train_Y)
-        self.set_train_data(
-            inputs=train_X.detach().clone(), targets=self.train_targets, strict=False
-        )
 
     def encode(self, X: Tensor) -> Tensor:
         if X.shape[-1] != self._original_input_dim:
@@ -174,7 +171,13 @@ class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
     def training_loss(self) -> Tensor:
         self.train()
         self.likelihood.train()
-        return -self.make_mll()(self(self.raw_train_X), self.train_targets)
+        latent = self.encode(self.raw_train_X)
+        self.set_train_data(
+            inputs=latent.detach().clone(),
+            targets=self.train_targets,
+            strict=False,
+        )
+        return -self.make_mll()(super().forward(latent), self.train_targets)
 
 
 class _HybridMixin:
