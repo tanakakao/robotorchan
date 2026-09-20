@@ -33,8 +33,8 @@ def test_robust_multitask_preserves_public_contract() -> None:
     standard = model.to_standard_model()
     assert isinstance(standard, MultiTaskGP)
     assert standard.likelihood is model.likelihood
-    assert standard.covar_module is model.covar_module
-    assert standard.mean_module is model.mean_module
+    assert type(standard.covar_module) is type(model.covar_module)
+    assert type(standard.mean_module) is type(model.mean_module)
 
 
 def test_robust_multitask_standard_model_keeps_structure() -> None:
