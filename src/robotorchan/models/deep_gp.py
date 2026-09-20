@@ -342,3 +342,117 @@ class MultiTaskDeepGP(SingleTaskDeepGP):
         for layer in self.hidden_layers:
             hidden = layer(hidden)
         return self.output_layer(hidden)
+
+
+class MixedSingleTaskDeepGP(SingleTaskDeepGP):
+    """DeepGP for mixed continuous and categorical single-task inputs.
+
+    Continuous features are standardized while categorical features are
+    represented by learned embeddings. The public API always uses the original
+    mixed input space.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        cat_dims: Sequence[int],
+        categorical_embedding_dim: int = 2,
+        hidden_dims: Sequence[int] = (4,),
+        num_inducing: int = 16,
+        standardize_inputs: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        posterior_samples: int = 64,
+    ) -> None:
+        if train_X.ndim != 2:
+            raise ValueError("train_X must have shape n x d.")
+        input_dim = train_X.shape[-1]
+        cats = tuple(sorted({dim + input_dim if dim < 0 else dim for dim in cat_dims}))
+        if not cats or any(dim < 0 or dim >= input_dim for dim in cats):
+            raise ValueError("cat_dims must contain valid categorical feature indices.")
+        if categorical_embedding_dim <= 0:
+            raise ValueError("categorical_embedding_dim must be positive.")
+        continuous_dims = tuple(i for i in range(input_dim) if i not in set(cats))
+        if not continuous_dims:
+            raise ValueError("MixedSingleTaskDeepGP requires at least one continuous feature.")
+
+        continuous_X = train_X[..., list(continuous_dims)]
+        category_sizes = []
+        category_indices = []
+        for dim in cats:
+            values = train_X[..., dim]
+            if not torch.allclose(values, values.round()):
+                raise ValueError("categorical feature values must be integer-valued.")
+            indices = values.long()
+            if torch.any(indices < 0):
+                raise ValueError("categorical feature values must be non-negative.")
+            unique = torch.unique(indices, sorted=True)
+            expected = torch.arange(unique.numel(), device=train_X.device)
+            if not torch.equal(unique, expected):
+                raise ValueError("categorical values must be contiguous and zero-based.")
+            category_sizes.append(int(unique.numel()))
+            category_indices.append(indices)
+
+        with torch.random.fork_rng():
+            torch.manual_seed(random_state)
+            embeddings = torch.nn.ModuleList(
+                [
+                    torch.nn.Embedding(size, int(categorical_embedding_dim)).to(train_X)
+                    for size in category_sizes
+                ]
+            )
+            embedded = [embedding(indices) for embedding, indices in zip(embeddings, category_indices)]
+        deep_X = torch.cat((continuous_X, *(item.detach() for item in embedded)), dim=-1)
+
+        super().__init__(
+            deep_X,
+            train_Y,
+            hidden_dims=hidden_dims,
+            num_inducing=num_inducing,
+            standardize_inputs=False,
+            eps=eps,
+            random_state=random_state,
+            posterior_samples=posterior_samples,
+        )
+        self.category_embeddings = embeddings
+        self.cat_dims = cats
+        self.categorical_embedding_dim = int(categorical_embedding_dim)
+        self.category_sizes = tuple(category_sizes)
+        self._continuous_dims = continuous_dims
+        self.standardize_inputs = bool(standardize_inputs)
+        continuous_mean = continuous_X.mean(dim=-2, keepdim=True)
+        continuous_scale = continuous_X.std(dim=-2, keepdim=True, correction=0).clamp_min(eps)
+        if not standardize_inputs:
+            continuous_mean = torch.zeros_like(continuous_mean)
+            continuous_scale = torch.ones_like(continuous_scale)
+        self.register_buffer("continuous_mean", continuous_mean)
+        self.register_buffer("continuous_scale", continuous_scale)
+        self._store_supervised_training_data(train_X, train_Y)
+
+    def transform_inputs(self, X: Tensor) -> Tensor:
+        """Encode original mixed inputs for the DeepGP hierarchy."""
+        if X.shape[-1] != self.raw_train_X.shape[-1]:
+            raise ValueError(
+                f"Expected {self.raw_train_X.shape[-1]} input features, got {X.shape[-1]}."
+            )
+        continuous = X[..., list(self._continuous_dims)]
+        continuous = (continuous - self.continuous_mean) / self.continuous_scale
+        embedded = []
+        for dim, size, embedding in zip(self.cat_dims, self.category_sizes, self.category_embeddings):
+            values = X[..., dim]
+            if not torch.allclose(values, values.round()):
+                raise ValueError("categorical feature values must be integer-valued.")
+            indices = values.long()
+            if torch.any(indices < 0) or torch.any(indices >= size):
+                raise ValueError("categorical feature contains an unknown category index.")
+            embedded.append(embedding(indices))
+        return torch.cat((continuous, *embedded), dim=-1)
+
+    def forward(self, X: Tensor) -> MultivariateNormal:
+        """Propagate original mixed inputs through the DeepGP."""
+        hidden = self.transform_inputs(X)
+        for layer in self.hidden_layers:
+            hidden = layer(hidden)
+        return self.output_layer(hidden)
