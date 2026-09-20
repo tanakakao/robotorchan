@@ -69,7 +69,8 @@ def test_mixed_robust_multitask_preserves_task_feature() -> None:
     )
 
     assert model.cat_dims == (1,)
-    assert isinstance(model.covar_module, ProductKernel)\n    assert isinstance(model.covar_module.kernels[0], AdditiveKernel)
+    assert isinstance(model.covar_module, ProductKernel)
+    assert isinstance(model.covar_module.kernels[0], AdditiveKernel)
     assert isinstance(model.likelihood, SparseOutlierGaussianLikelihood)
     torch.testing.assert_close(model.raw_train_X, train_x)
 
