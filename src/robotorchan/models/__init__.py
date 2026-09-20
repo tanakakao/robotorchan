@@ -119,6 +119,7 @@ from robotorchan.models.robust import (
     RobustRelevancePursuitSingleTaskGP,
 )
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
+from robotorchan.models.spectral_mixture import SpectralMixtureGP
 from robotorchan.models.student_t import MixedStudentTSingleTaskGP, StudentTSingleTaskGP
 from robotorchan.models.uncertain_categorical import UncertainCategoricalSingleTaskGP
 from robotorchan.models.uncertain_input import (
@@ -223,6 +224,7 @@ __all__ = [
     "SingleTaskGP",
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
+    "SpectralMixtureGP",
     "StudentTSingleTaskGP",
     "SupervisedAutoEncoderGP",
     "SupervisedAutoEncoderKroneckerMultiTaskGP",

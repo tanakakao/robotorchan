@@ -460,6 +460,11 @@
       "theory": "docs/theory/09_variational_gp.md",
       "notebook": "examples/notebooks/06_variational_gp.ipynb"
     },
+    "SpectralMixtureGP": {
+      "guide": "docs/models/spectral_mixture.md",
+      "theory": "docs/models/spectral_mixture.md",
+      "notebook": "examples/notebooks/01_single_task_gp.ipynb"
+    },
     "StudentTSingleTaskGP": {
       "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/14_robust_gaussian_process.md",

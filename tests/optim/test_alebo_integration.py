@@ -49,10 +49,7 @@ def test_alebo_metric_marginal_model_supports_batch_qlogei() -> None:
         num_restarts=2,
         sequential=False,
     )
-    train_Z = torch.tensor(
-        [[0.0, 0.0], [0.2, -0.1], [-0.15, 0.2], [0.1, 0.25]],
-        dtype=torch.double,
-    )
+    train_Z = strategy.sample_feasible(4, seed=17)
     train_X = strategy.project(train_Z)
     train_Y = -((train_X - 0.5) ** 2).sum(dim=-1, keepdim=True)
     model = ALEBOGP(
