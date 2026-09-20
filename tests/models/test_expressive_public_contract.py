@@ -11,7 +11,7 @@ EXPRESSIVE_PUBLIC_MODELS = {
 
 
 def test_expressive_models_are_public_exports() -> None:
-    assert EXPRESSIVE_PUBLIC_MODELS <= set(models.__all__)
+    assert set(models.__all__) >= EXPRESSIVE_PUBLIC_MODELS
     for name in EXPRESSIVE_PUBLIC_MODELS:
         assert getattr(models, name).__name__ == name
 
