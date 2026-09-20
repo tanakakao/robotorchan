@@ -5,6 +5,7 @@ MODELS = importlib.import_module("robotorchan.models")
 EXPECTED_MIXED_MODELS = {
     "MixedAdditiveMapSaasSingleTaskGP",
     "MixedAutoEncoderGP",
+    "MixedContaminatedMultiTaskGP",
     "MixedContaminatedSingleTaskGP",
     "MixedEnsembleMapSaasSingleTaskGP",
     "MixedHeterogeneousMTGP",
@@ -37,6 +38,7 @@ EXPECTED_MIXED_MODELS = {
     "MixedSingleTaskGP",
     "MixedSingleTaskMultiFidelityGP",
     "MixedSingleTaskVariationalGP",
+    "MixedStudentTMultiTaskGP",
     "MixedStudentTSingleTaskGP",
     "MixedSupervisedAutoEncoderGP",
     "MixedSupervisedVAEGP",
