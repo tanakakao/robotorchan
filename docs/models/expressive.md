@@ -6,17 +6,17 @@ Spectral Mixture GPを扱います。これらは同じ問題を別名で実装�
 
 ## モデル選択
 
-\`JointEncoderGP\` はneural feature extractorとExact GPをjoint trainingするDKLです。
+`JointEncoderGP` はneural feature extractorとExact GPをjoint trainingするDKLです。
 入力に有用な非線形表現が存在すると考える場合に候補になります。Mixed入力には
-\`MixedJointEncoderGP\` を使用し、カテゴリ変数を連続encoderへそのまま通しません。
+`MixedJointEncoderGP` を使用し、カテゴリ変数を連続encoderへそのまま通しません。
 
-複数タスクでは、long-formatの \`JointEncoderMultiTaskGP\` とblock-designの
-\`JointEncoderKroneckerMultiTaskGP\` が既にpublic APIです。前者はtask featureをencoderへ
+複数タスクでは、long-formatの `JointEncoderMultiTaskGP` とblock-designの
+`JointEncoderKroneckerMultiTaskGP` が既にpublic APIです。前者はtask featureをencoderへ
 入れず、data featureだけを潜在表現へ写像してtask identityを再結合します。後者はtask identityが
-\`train_Y\` の出力列にあるため、\`train_X\` 全体をencoderへ通します。どちらもencoderは
-GPの学習目的からjoint trainingされ、\`posterior()\` には元入力空間のXを渡します。
+`train_Y` の出力列にあるため、`train_X` 全体をencoderへ通します。どちらもencoderは
+GPの学習目的からjoint trainingされ、`posterior()` には元入力空間のXを渡します。
 
-一方、\`MixedReducedMultiTaskGP\` はfitted reducerを使うreduction基盤であり、
+一方、`MixedReducedMultiTaskGP` はfitted reducerを使うreduction基盤であり、
 joint-training DKLのMixed MultiTask実装ではありません。Mixed × MultiTask DKLは別途
 明示的なモデル契約として扱います。
 
