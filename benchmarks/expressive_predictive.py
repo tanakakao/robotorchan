@@ -126,9 +126,7 @@ def evaluate_model(
 
     error = test_Y - mean
     rmse = error.square().mean().sqrt()
-    gaussian_nll = 0.5 * (
-        torch.log(2.0 * torch.pi * variance) + error.square() / variance
-    ).mean()
+    gaussian_nll = 0.5 * (torch.log(2.0 * torch.pi * variance) + error.square() / variance).mean()
     standard_deviation = variance.sqrt()
     covered = (error.abs() <= 1.96 * standard_deviation).double().mean()
 
