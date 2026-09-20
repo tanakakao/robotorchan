@@ -245,6 +245,11 @@
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/04_multitask_gp.ipynb"
     },
+    "MixedNonstationaryMultiTaskGP": {
+      "guide": "docs/models/robust_noise.md",
+      "theory": "docs/theory/17_nonstationary_gp.md",
+      "notebook": "examples/notebooks/18_nonstationary_gp.ipynb"
+    },
     "MixedNonstationarySingleTaskGP": {
       "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/17_nonstationary_gp.md",
@@ -364,6 +369,11 @@
       "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/04_multitask_gp.ipynb"
+    },
+    "NonstationaryMultiTaskGP": {
+      "guide": "docs/models/robust_noise.md",
+      "theory": "docs/theory/17_nonstationary_gp.md",
+      "notebook": "examples/notebooks/18_nonstationary_gp.ipynb"
     },
     "NonstationarySingleTaskGP": {
       "guide": "docs/models/robust_noise.md",
