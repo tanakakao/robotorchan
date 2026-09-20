@@ -9,12 +9,12 @@ from gpytorch.distributions import MultivariateNormal
 from torch import Tensor, nn
 
 from robotorchan.models.base import normalize_feature_dims
+from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.neural_features import (
     make_feature_network,
     validate_feature_output,
     validate_neural_feature_config,
 )
-from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
 
 
 class JointEncoderMultiTaskGP(MultiTaskGP):
