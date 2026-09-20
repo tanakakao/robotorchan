@@ -77,6 +77,7 @@ PUBLIC_MODEL_NAMES = {
     "MixedSingleTaskVariationalGP",
     "MixedVAEGP",
     "ModelListGP",
+    "MultiTaskDeepGP",
     "MultiTaskGP",
     "NonstationaryMultiTaskGP",
     "NonstationarySingleTaskGP",
