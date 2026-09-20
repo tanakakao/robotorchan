@@ -361,6 +361,16 @@ class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
             continuous_scale = torch.ones_like(continuous_X[0])
         self.x_mean = continuous_mean.detach().clone()
         self.x_scale = continuous_scale.detach().clone()
+        with torch.random.fork_rng():
+            torch.manual_seed(int(kwargs.get("random_state", 0)))
+            self.encoder = make_feature_network(
+                len(continuous_dims),
+                latent_dim,
+                tuple(kwargs.get("hidden_dims", (64, 32))),
+                str(kwargs.get("activation", "gelu")),
+                device=train_X.device,
+                dtype=train_X.dtype,
+            )
         self._store_supervised_training_data(train_X, train_Y)
 
         reduced_cat_dims = list(range(latent_dim, latent_dim + len(cats)))
