@@ -179,7 +179,6 @@ def test_joint_encoder_kronecker_posterior_accepts_original_space() -> None:
     assert torch.isfinite(test_X.grad).all()
 
 
-
 def test_mixed_joint_encoder_multitask_preserves_categories_and_task() -> None:
     continuous = torch.rand(12, 4, dtype=torch.double)
     category = (torch.arange(12) % 3).double().unsqueeze(-1)
