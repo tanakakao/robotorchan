@@ -132,7 +132,7 @@ from robotorchan.models.robust import (
     RobustRelevancePursuitSingleTaskGP,
 )
 from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
-from robotorchan.models.spectral_mixture import SpectralMixtureGP, SpectralMixtureMultiTaskGP
+from robotorchan.models.spectral_mixture import MixedSpectralMixtureGP, SpectralMixtureGP, SpectralMixtureMultiTaskGP
 from robotorchan.models.student_t import (
     MixedStudentTMultiTaskGP,
     MixedStudentTSingleTaskGP,
@@ -175,6 +175,7 @@ __all__ = [
     "HybridAutoEncoderMultiTaskGP",
     "InfiniteWidthBNNGP",
     "InfiniteWidthBNNMultiTaskGP",
+    "MixedInfiniteWidthBNNGP",
     "JointEncoderGP",
     "JointEncoderKroneckerMultiTaskGP",
     "JointEncoderMultiTaskGP",
@@ -258,6 +259,7 @@ __all__ = [
     "SingleTaskVariationalGP",
     "SpectralMixtureGP",
     "SpectralMixtureMultiTaskGP",
+    "MixedSpectralMixtureGP",
     "StudentTMultiTaskGP",
     "StudentTSingleTaskGP",
     "SupervisedAutoEncoderGP",
