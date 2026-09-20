@@ -15,7 +15,7 @@ from gpytorch.models.deep_gps import DeepGP, DeepGPLayer
 from gpytorch.variational import CholeskyVariationalDistribution, VariationalStrategy
 from torch import Tensor
 
-from robotorchan.models.base import ModelTrainingMixin, SupervisedTrainingDataMixin
+from robotorchan.models.base import (\n    ModelTrainingMixin,\n    SupervisedTrainingDataMixin,\n    continuous_feature_dims,\n    make_mixed_covar_module,\n    normalize_feature_dims,\n)
 from robotorchan.models.deep_gp_posterior import DeepGPPosterior
 
 
@@ -239,3 +239,62 @@ class SingleTaskDeepGP(
         with gpytorch.settings.num_likelihood_samples(num_likelihood_samples):
             output = self(X)
             return -mll(output, Y.squeeze(-1))
+
+
+class MixedSingleTaskDeepGP(SingleTaskDeepGP):
+    """DeepGP for mixed continuous and categorical inputs.
+
+    Continuous variables are modeled by the stochastic hidden hierarchy.
+    Categorical variables are retained explicitly in the output-layer mixed
+    covariance rather than being treated as continuous coordinates.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        cat_dims: Sequence[int],
+        hidden_dims: Sequence[int] = (4,),
+        num_inducing: int = 16,
+        standardize_inputs: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
+        posterior_samples: int = 64,
+    ) -> None:
+        input_dim = train_X.shape[-1]
+        self.cat_dims = tuple(normalize_feature_dims(cat_dims, input_dim, name="cat_dims"))
+        self.cont_dims = tuple(continuous_feature_dims(input_dim, self.cat_dims))
+        if not self.cont_dims:
+            raise ValueError("MixedSingleTaskDeepGP requires at least one continuous feature.")
+
+        super().__init__(
+            train_X=train_X[:, self.cont_dims],
+            train_Y=train_Y,
+            hidden_dims=hidden_dims,
+            num_inducing=num_inducing,
+            standardize_inputs=standardize_inputs,
+            eps=eps,
+            random_state=random_state,
+            posterior_samples=posterior_samples,
+        )
+        self._mixed_raw_train_X = train_X.detach().clone()
+
+    @property
+    def raw_train_X(self) -> Tensor:
+        """Return the original mixed training inputs."""
+        if hasattr(self, "_mixed_raw_train_X"):
+            return self._mixed_raw_train_X
+        return super().raw_train_X
+
+    def transform_inputs(self, X: Tensor) -> Tensor:
+        """Standardize continuous coordinates from mixed inputs."""
+        continuous = X[..., self.cont_dims]
+        return (continuous - self.input_mean) / self.input_scale
+
+    def forward(self, X: Tensor) -> MultivariateNormal:
+        """Propagate continuous inputs through the stochastic hierarchy."""
+        hidden = self.transform_inputs(X)
+        for layer in self.hidden_layers:
+            hidden = layer(hidden)
+        return self.output_layer(hidden)
