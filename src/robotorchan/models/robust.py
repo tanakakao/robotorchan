@@ -324,6 +324,177 @@ class HeteroskedasticSingleTaskGP(ExactGPModelMixin, BoTorchRobustRelevancePursu
         return self.noise_posterior(X).mean.exp().clamp_min(self.noise_floor)
 
 
+
+
+class HeteroskedasticMultiTaskGP(MultiTaskGP):
+    """Iterative long-format multi-task GP for input-dependent observation noise."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        *,
+        noise_floor: float = 1e-6,
+        task_covar_prior: Prior | _DefaultType | None = DEFAULT,
+        output_tasks: list[int] | None = None,
+        rank: int | None = None,
+        all_tasks: list[int] | None = None,
+        outcome_transform: OutcomeTransform | _DefaultType | None = DEFAULT,
+        input_transform: InputTransform | None = None,
+        validate_task_values: bool = True,
+    ) -> None:
+        if noise_floor <= 0:
+            raise ValueError("noise_floor must be positive.")
+        self.noise_floor = noise_floor
+        self._noise_model_fitted = False
+        self._heteroskedastic_task_feature = task_feature
+        initial_noise = torch.full_like(train_Y, noise_floor)
+        likelihood = FixedNoiseGaussianLikelihood(
+            noise=initial_noise.squeeze(-1),
+            learn_additional_noise=False,
+        )
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            task_feature=task_feature,
+            train_Yvar=initial_noise,
+            likelihood=likelihood,
+            task_covar_prior=task_covar_prior,
+            output_tasks=output_tasks,
+            rank=rank,
+            all_tasks=all_tasks,
+            outcome_transform=outcome_transform,
+            input_transform=input_transform,
+            validate_task_values=validate_task_values,
+        )
+        self.noise_model = None
+
+    def fit_heteroskedastic(self, *, iterations: int = 3) -> HeteroskedasticMultiTaskGP:
+        """Alternately fit the response GP and a multi-task log-noise GP."""
+        from botorch.fit import fit_gpytorch_mll
+
+        if iterations < 1:
+            raise ValueError("iterations must be at least 1.")
+        train_X = self.raw_train_X
+        train_Y = self.raw_train_Y
+        for _ in range(iterations):
+            fit_gpytorch_mll(self.make_mll())
+            with torch.no_grad():
+                latent = self(train_X).mean.unsqueeze(-1)
+                residual = train_Y - latent
+                log_noise = torch.log(residual.square().clamp_min(self.noise_floor))
+            noise_model = MultiTaskGP(
+                train_X,
+                log_noise,
+                task_feature=self._heteroskedastic_task_feature,
+            )
+            fit_gpytorch_mll(noise_model.make_mll())
+            with torch.no_grad():
+                predicted_noise = noise_model(train_X).mean.unsqueeze(-1).exp()
+                predicted_noise = predicted_noise.clamp_min(self.noise_floor)
+            self.likelihood.noise_covar.noise = predicted_noise.squeeze(-1)
+            self.noise_model = noise_model
+            self._noise_model_fitted = True
+        return self
+
+    def noise_posterior(self, X: Tensor):
+        """Return the latent posterior for long-format log observation variance."""
+        if self.noise_model is None or not self._noise_model_fitted:
+            raise RuntimeError("fit_heteroskedastic must be called before noise_posterior.")
+        self.noise_model.prediction_strategy = None
+        return self.noise_model(X)
+
+    def predicted_noise(self, X: Tensor) -> Tensor:
+        """Return long-format observation variance on the original scale."""
+        return self.noise_posterior(X).mean.unsqueeze(-1).exp().clamp_min(self.noise_floor)
+
+
+class MixedHeteroskedasticMultiTaskGP(HeteroskedasticMultiTaskGP):
+    """Heteroskedastic long-format multi-task GP for mixed data features."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        *,
+        cat_dims: list[int],
+        noise_floor: float = 1e-6,
+        cont_kernel_factory: ContinuousKernelFactory | None = None,
+        task_covar_prior: Prior | _DefaultType | None = DEFAULT,
+        output_tasks: list[int] | None = None,
+        rank: int | None = None,
+        all_tasks: list[int] | None = None,
+        outcome_transform: OutcomeTransform | _DefaultType | None = DEFAULT,
+        input_transform: InputTransform | None = None,
+        validate_task_values: bool = True,
+    ) -> None:
+        input_dim = train_X.shape[-1]
+        resolved_task_feature = normalize_feature_dims(
+            [task_feature], input_dim, name="task_feature"
+        )[0]
+        normalized_cat_dims = normalize_feature_dims(
+            cat_dims, input_dim, name="cat_dims", excluded_dims=[resolved_task_feature]
+        )
+        self.cat_dims = tuple(normalized_cat_dims)
+        self._cont_kernel_factory = cont_kernel_factory
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            task_feature=task_feature,
+            noise_floor=noise_floor,
+            task_covar_prior=task_covar_prior,
+            output_tasks=output_tasks,
+            rank=rank,
+            all_tasks=all_tasks,
+            outcome_transform=outcome_transform,
+            input_transform=input_transform,
+            validate_task_values=validate_task_values,
+        )
+        data_covar_module = make_mixed_covar_module(
+            input_dim=input_dim,
+            cat_dims=normalized_cat_dims,
+            excluded_dims=[resolved_task_feature],
+            batch_shape=train_X.shape[:-2],
+            cont_kernel_factory=cont_kernel_factory,
+        )
+        data_covar_module.active_dims = torch.arange(input_dim, device=train_X.device)
+        self.covar_module.kernels[0] = data_covar_module
+
+    def fit_heteroskedastic(self, *, iterations: int = 3) -> MixedHeteroskedasticMultiTaskGP:
+        """Alternately fit mixed response and mixed multi-task log-noise GPs."""
+        from botorch.fit import fit_gpytorch_mll
+
+        from robotorchan.models.multitask import MixedMultiTaskGP
+
+        if iterations < 1:
+            raise ValueError("iterations must be at least 1.")
+        train_X = self.raw_train_X
+        train_Y = self.raw_train_Y
+        for _ in range(iterations):
+            fit_gpytorch_mll(self.make_mll())
+            with torch.no_grad():
+                latent = self(train_X).mean.unsqueeze(-1)
+                residual = train_Y - latent
+                log_noise = torch.log(residual.square().clamp_min(self.noise_floor))
+            noise_model = MixedMultiTaskGP(
+                train_X,
+                log_noise,
+                task_feature=self._heteroskedastic_task_feature,
+                cat_dims=list(self.cat_dims),
+                cont_kernel_factory=self._cont_kernel_factory,
+            )
+            fit_gpytorch_mll(noise_model.make_mll())
+            with torch.no_grad():
+                predicted_noise = noise_model(train_X).mean.unsqueeze(-1).exp()
+                predicted_noise = predicted_noise.clamp_min(self.noise_floor)
+            self.likelihood.noise_covar.noise = predicted_noise.squeeze(-1)
+            self.noise_model = noise_model
+            self._noise_model_fitted = True
+        return self
+
+
 class MixedHeteroskedasticSingleTaskGP(RobustRelevancePursuitSingleTaskGP):
     """Iterative heteroskedastic GP with native mixed categorical covariance."""
 
