@@ -59,9 +59,19 @@ class DeepGPPosterior(Posterior):
     ) -> Tensor:
         """Map normal base samples deterministically to stored trajectories."""
         del sample_shape
-        scores = torch.sigmoid(base_samples[..., 0, 0])
+        scores = torch.special.ndtr(base_samples[..., 0, 0])
         indices = torch.clamp(
             (scores * self._samples.shape[0]).long(),
             max=self._samples.shape[0] - 1,
         )
-        return self._samples[indices]
+        stored = self._samples
+        batch_shape = stored.shape[1:-2]
+        if not batch_shape:
+            return stored[indices]
+
+        flat_batch = int(torch.tensor(batch_shape).prod().item())
+        stored = stored.reshape(stored.shape[0], flat_batch, *stored.shape[-2:])
+        indices = indices.reshape(*indices.shape[:-len(batch_shape)], flat_batch)
+        batch_indices = torch.arange(flat_batch, device=self.device)
+        selected = stored[indices, batch_indices]
+        return selected.reshape(*indices.shape[:-1], *batch_shape, *stored.shape[-2:])
