@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import torch
+from botorch.models.robust_relevance_pursuit_model import RobustRelevancePursuitMixin
 from botorch.models.robust_relevance_pursuit_model import (
-    RobustRelevancePursuitMixin,
     RobustRelevancePursuitSingleTaskGP as BoTorchRobustRelevancePursuitSingleTaskGP,
 )
 from botorch.models.transforms.input import InputTransform
