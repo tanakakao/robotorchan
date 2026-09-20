@@ -325,7 +325,6 @@ class HeteroskedasticSingleTaskGP(ExactGPModelMixin, BoTorchRobustRelevancePursu
 
 
 
-
 class HeteroskedasticMultiTaskGP(MultiTaskGP):
     """Iterative long-format multi-task GP for input-dependent observation noise."""
 
