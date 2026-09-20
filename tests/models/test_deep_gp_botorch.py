@@ -71,9 +71,7 @@ def test_deep_gp_optimize_acqf_runs_in_original_space() -> None:
         beta=0.2,
         sampler=StochasticSampler(sample_shape=torch.Size([8])),
     )
-    bounds = torch.stack(
-        (torch.zeros(2, dtype=X.dtype), torch.ones(2, dtype=X.dtype))
-    )
+    bounds = torch.stack((torch.zeros(2, dtype=X.dtype), torch.ones(2, dtype=X.dtype)))
 
     candidate, value = optimize_acqf(
         acquisition,
