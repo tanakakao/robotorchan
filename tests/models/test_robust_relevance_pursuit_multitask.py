@@ -31,7 +31,9 @@ def test_robust_multitask_preserves_public_contract() -> None:
 
     model.eval()
     model.likelihood.eval()
-    posterior = model.posterior(train_x[:2])
+    standard = model.to_standard_model()
+    standard.eval()
+    posterior = standard.posterior(train_x[:2])
     assert posterior.mean.shape[-1] == 1
     assert torch.isfinite(posterior.mean).all()
 
