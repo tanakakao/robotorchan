@@ -3,7 +3,7 @@
 import torch
 from gpytorch.mlls import DeepApproximateMLL
 
-from robotorchan.models.deep_gp import SingleTaskDeepGP
+from robotorchan.models.deep_gp import MultiTaskDeepGP, SingleTaskDeepGP
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
@@ -119,3 +119,82 @@ def test_deep_gp_rejects_invalid_configuration() -> None:
         pass
     else:
         raise AssertionError("non-positive num_inducing must raise ValueError")
+
+
+def _multitask_data() -> tuple[torch.Tensor, torch.Tensor]:
+    torch.manual_seed(11)
+    data_X = torch.rand(12, 2, dtype=torch.double)
+    tasks = torch.arange(12, dtype=torch.double).remainder(3).unsqueeze(-1)
+    train_X = torch.cat((data_X[:, :1], tasks, data_X[:, 1:]), dim=-1)
+    train_Y = torch.sin(3.0 * data_X[:, :1]) + 0.2 * data_X[:, 1:] + 0.3 * tasks
+    return train_X, train_Y
+
+
+def test_multitask_deep_gp_preserves_original_training_data_and_task_structure() -> None:
+    train_X, train_Y = _multitask_data()
+    model = MultiTaskDeepGP(
+        train_X,
+        train_Y,
+        task_feature=1,
+        task_embedding_dim=2,
+        hidden_dims=(4,),
+        num_inducing=5,
+    )
+
+    torch.testing.assert_close(model.raw_train_X, train_X)
+    torch.testing.assert_close(model.raw_train_Y, train_Y)
+    assert model.task_feature == 1
+    assert model.num_tasks == 3
+    assert model.task_embedding.num_embeddings == 3
+    assert model.task_embedding.embedding_dim == 2
+
+
+def test_multitask_deep_gp_posterior_accepts_original_long_format_inputs() -> None:
+    train_X, train_Y = _multitask_data()
+    model = MultiTaskDeepGP(
+        train_X,
+        train_Y,
+        task_feature=1,
+        hidden_dims=(4,),
+        num_inducing=5,
+        posterior_samples=8,
+    )
+
+    posterior = model.posterior(train_X[:4], num_samples=8)
+
+    assert posterior.mean.shape == torch.Size([4, 1])
+    assert posterior.variance.shape == torch.Size([4, 1])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+
+
+def test_multitask_deep_gp_training_loss_updates_task_embedding() -> None:
+    train_X, train_Y = _multitask_data()
+    model = MultiTaskDeepGP(
+        train_X,
+        train_Y,
+        task_feature=1,
+        hidden_dims=(4,),
+        num_inducing=5,
+    )
+
+    loss = model.training_loss(num_likelihood_samples=3)
+    loss.backward()
+
+    gradient = model.task_embedding.weight.grad
+    assert gradient is not None
+    assert torch.isfinite(gradient).all()
+    assert torch.count_nonzero(gradient) > 0
+
+
+def test_multitask_deep_gp_rejects_invalid_task_encoding() -> None:
+    train_X, train_Y = _multitask_data()
+    invalid_X = train_X.clone()
+    invalid_X[0, 1] = 4.0
+
+    try:
+        MultiTaskDeepGP(invalid_X, train_Y, task_feature=1)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("non-contiguous task indices must raise ValueError")

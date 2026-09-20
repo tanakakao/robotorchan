@@ -22,7 +22,7 @@ encoderで潜在表現へ写像し、categorical featureとtask identityは変�
 
 `SingleTaskDeepGP` は確率的なGP階層を使います。DKLより推論が重く、
 Monte Carlo posteriorを使うため、階層的な確率表現が必要な場合に比較対象とします。
-現在はsingle-output continuous inputを明示的な対応範囲とします。
+`MultiTaskDeepGP` はlong-formatのtask featureを明示的に受け取り、data featureを標準化しつつtask identityを学習可能なembeddingとしてDeepGPへ結合します。`posterior()` と `training_loss()` には元のlong-format入力を渡します。Mixed入力はPhase 10で別契約として扱います。
 
 `InfiniteWidthBNNGP` は無限幅ReLU networkに対応するNNGP kernelをExact GPとして
 利用します。neural-network由来のpriorを使いつつ、Exact GPの学習・posterior contractを
