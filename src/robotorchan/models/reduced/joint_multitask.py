@@ -9,7 +9,7 @@ from gpytorch.distributions import MultivariateNormal
 from torch import Tensor, nn
 
 from robotorchan.models.base import make_mixed_covar_module, normalize_feature_dims
-from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
+from robotorchan.models.multitask import KroneckerMultiTaskGP, MixedMultiTaskGP, MultiTaskGP
 from robotorchan.models.neural_features import (
     make_feature_network,
     validate_feature_output,
@@ -300,7 +300,7 @@ class JointVAEKroneckerMultiTaskGP(_JointVAEMixin, HybridAutoEncoderKroneckerMul
 
 
 
-class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
+class MixedJointEncoderMultiTaskGP(MixedMultiTaskGP):
     """Long-format mixed-input DKL preserving categories and task identity."""
 
     def __init__(
@@ -310,15 +310,18 @@ class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
         task_feature: int,
         latent_dim: int,
         cat_dims: list[int],
+        *,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
         **kwargs: Any,
     ) -> None:
         input_dim = train_X.shape[-1]
         task_dim = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
         cats = normalize_feature_dims(
-            cat_dims,
-            input_dim,
-            name="cat_dims",
-            excluded_dims=[task_dim],
+            cat_dims, input_dim, name="cat_dims", excluded_dims=[task_dim]
         )
         cat_set = set(cats)
         continuous_dims = tuple(
@@ -326,66 +329,57 @@ class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
         )
         if not continuous_dims:
             raise ValueError("Mixed DKL multi-task model requires a continuous data dimension.")
-        continuous_X = train_X[..., list(continuous_dims)]
-        if latent_dim > continuous_X.shape[-1]:
+        if latent_dim > len(continuous_dims):
             raise ValueError("latent_dim cannot exceed the continuous input dimension.")
+        validate_neural_feature_config(latent_dim, hidden_dims, activation, eps)
 
-        parent_train_X = torch.cat(
-            (continuous_X, train_X[..., task_dim : task_dim + 1]),
+        continuous_X = train_X[..., list(continuous_dims)]
+        x_mean = continuous_X.mean(dim=0) if standardize else torch.zeros_like(continuous_X[0])
+        x_scale = (
+            continuous_X.std(dim=0, unbiased=False).clamp_min(eps)
+            if standardize
+            else torch.ones_like(continuous_X[0])
+        )
+        with torch.random.fork_rng():
+            torch.manual_seed(random_state)
+            encoder = make_feature_network(
+                len(continuous_dims),
+                latent_dim,
+                hidden_dims,
+                activation,
+                device=train_X.device,
+                dtype=train_X.dtype,
+            )
+        latent = encoder((continuous_X - x_mean) / x_scale)
+        validate_feature_output(latent, continuous_X, latent_dim)
+        reduced_X = torch.cat(
+            [
+                latent.detach(),
+                train_X[..., list(cats)],
+                train_X[..., task_dim : task_dim + 1],
+            ],
             dim=-1,
         )
-        parent_task_feature = parent_train_X.shape[-1] - 1
+        reduced_cat_dims = list(range(latent_dim, latent_dim + len(cats)))
+        reduced_task_feature = reduced_X.shape[-1] - 1
         super().__init__(
-            parent_train_X,
+            reduced_X,
             train_Y,
-            task_feature=parent_task_feature,
-            latent_dim=latent_dim,
+            task_feature=reduced_task_feature,
+            cat_dims=reduced_cat_dims,
             **kwargs,
         )
-
+        self.encoder = encoder
+        self.latent_dim = latent_dim
+        self.hidden_dims = hidden_dims
+        self.activation = activation
         self._mixed_original_input_dim = input_dim
         self._mixed_original_task_feature = task_dim
         self._mixed_cat_dims = tuple(cats)
         self._mixed_continuous_dims = continuous_dims
-        self.original_task_feature = task_dim
-        self.data_dims = tuple(i for i in range(input_dim) if i != task_dim)
-        self._original_input_dim = input_dim
-        continuous_mean = continuous_X.mean(dim=0)
-        continuous_scale = continuous_X.std(dim=0, unbiased=False).clamp_min(float(kwargs.get("eps", 1e-8)))
-        if not bool(kwargs.get("standardize", True)):
-            continuous_mean = torch.zeros_like(continuous_X[0])
-            continuous_scale = torch.ones_like(continuous_X[0])
-        self.x_mean = continuous_mean.detach().clone()
-        self.x_scale = continuous_scale.detach().clone()
-        with torch.random.fork_rng():
-            torch.manual_seed(int(kwargs.get("random_state", 0)))
-            self.encoder = make_feature_network(
-                len(continuous_dims),
-                latent_dim,
-                tuple(kwargs.get("hidden_dims", (64, 32))),
-                str(kwargs.get("activation", "gelu")),
-                device=train_X.device,
-                dtype=train_X.dtype,
-            )
+        self.register_buffer("x_mean", x_mean.detach().clone())
+        self.register_buffer("x_scale", x_scale.detach().clone())
         self._store_supervised_training_data(train_X, train_Y)
-        encoded_train_X = self.encode(train_X).detach()
-        self._task_feature = encoded_train_X.shape[-1] - 1
-
-        reduced_cat_dims = list(range(latent_dim, latent_dim + len(cats)))
-        data_covar = make_mixed_covar_module(
-            input_dim=latent_dim + len(cats),
-            cat_dims=reduced_cat_dims,
-        )
-        self.covar_module.kernels[0] = data_covar
-        self.set_train_data(
-            inputs=encoded_train_X,
-            targets=self.train_targets,
-            strict=False,
-        )
-
-    @property
-    def cat_dims(self) -> tuple[int, ...]:
-        return self._mixed_cat_dims
 
     @property
     def continuous_dims(self) -> tuple[int, ...]:
