@@ -8,7 +8,7 @@ import torch
 from gpytorch.distributions import MultivariateNormal
 from torch import Tensor, nn
 
-from robotorchan.models.base import normalize_feature_dims
+from robotorchan.models.base import make_mixed_covar_module, normalize_feature_dims
 from robotorchan.models.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.neural_features import (
     make_feature_network,
@@ -297,3 +297,102 @@ class JointVAEKroneckerMultiTaskGP(_JointVAEMixin, HybridAutoEncoderKroneckerMul
             device=self.raw_train_X.device,
             dtype=self.raw_train_X.dtype,
         )
+
+
+
+class MixedJointEncoderMultiTaskGP(JointEncoderMultiTaskGP):
+    """Long-format mixed-input DKL preserving categories and task identity."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        latent_dim: int,
+        cat_dims: list[int],
+        **kwargs: Any,
+    ) -> None:
+        input_dim = train_X.shape[-1]
+        task_dim = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
+        cats = normalize_feature_dims(
+            cat_dims,
+            input_dim,
+            name="cat_dims",
+            excluded_dims=[task_dim],
+        )
+        cat_set = set(cats)
+        continuous_dims = tuple(
+            i for i in range(input_dim) if i != task_dim and i not in cat_set
+        )
+        if not continuous_dims:
+            raise ValueError("Mixed DKL multi-task model requires a continuous data dimension.")
+        continuous_X = train_X[..., list(continuous_dims)]
+        if latent_dim > continuous_X.shape[-1]:
+            raise ValueError("latent_dim cannot exceed the continuous input dimension.")
+
+        reduced_train_X = torch.cat(
+            (
+                continuous_X,
+                train_X[..., list(cats)],
+                train_X[..., task_dim : task_dim + 1],
+            ),
+            dim=-1,
+        )
+        reduced_task_feature = reduced_train_X.shape[-1] - 1
+        super().__init__(
+            reduced_train_X,
+            train_Y,
+            task_feature=reduced_task_feature,
+            latent_dim=latent_dim,
+            **kwargs,
+        )
+
+        self._mixed_original_input_dim = input_dim
+        self._mixed_original_task_feature = task_dim
+        self._mixed_cat_dims = tuple(cats)
+        self._mixed_continuous_dims = continuous_dims
+        self.original_task_feature = task_dim
+        self.data_dims = tuple(i for i in range(input_dim) if i != task_dim)
+        self._original_input_dim = input_dim
+        self._store_supervised_training_data(train_X, train_Y)
+
+        reduced_cat_dims = list(range(latent_dim, latent_dim + len(cats)))
+        data_covar = make_mixed_covar_module(
+            input_dim=latent_dim + len(cats),
+            cat_dims=reduced_cat_dims,
+        )
+        data_covar.active_dims = torch.arange(
+            latent_dim + len(cats) + 1,
+            device=train_X.device,
+        )
+        self.covar_module.kernels[0] = data_covar
+
+    @property
+    def cat_dims(self) -> tuple[int, ...]:
+        return self._mixed_cat_dims
+
+    @property
+    def continuous_dims(self) -> tuple[int, ...]:
+        return self._mixed_continuous_dims
+
+    def encode(self, X: Tensor) -> Tensor:
+        if X.shape[-1] != self._mixed_original_input_dim:
+            raise ValueError(
+                f"Expected final dimension {self._mixed_original_input_dim}, got {X.shape[-1]}."
+            )
+        continuous = X[..., list(self._mixed_continuous_dims)]
+        latent = self.encoder((continuous - self.x_mean) / self.x_scale)
+        categorical = X[..., list(self._mixed_cat_dims)].to(latent)
+        task = X[
+            ..., self._mixed_original_task_feature : self._mixed_original_task_feature + 1
+        ].to(latent)
+        return torch.cat((latent, categorical, task), dim=-1)
+
+    def training_loss(self) -> Tensor:
+        self.train()
+        self.likelihood.train()
+        encoded_X = self.encode(self.raw_train_X)
+        self.set_train_data(inputs=encoded_X, targets=self.train_targets, strict=False)
+        function_dist = MultiTaskGP.forward(self, encoded_X)
+        task_indices = encoded_X[..., -1:].long()
+        return -self.make_mll()(function_dist, self.train_targets, task_indices)
