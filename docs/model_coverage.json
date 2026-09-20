@@ -83,7 +83,7 @@
     "InfiniteWidthBNNGP": {
       "guide": "docs/models/infinite_width_bnn.md",
       "theory": "docs/models/infinite_width_bnn.md",
-      "notebook": null
+      "notebook": "examples/notebooks/01_single_task_gp.ipynb"
     },
     "JointEncoderGP": {
       "guide": "docs/models/reduced.md",
