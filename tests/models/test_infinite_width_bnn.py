@@ -2,6 +2,7 @@
 
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.acquisition.objective import GenericMCObjective
 from botorch.optim import optimize_acqf
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
@@ -46,7 +47,8 @@ def test_infinite_width_bnn_gp_posterior_and_qlogei_are_finite() -> None:
     model.eval()
 
     posterior = model.posterior(X[:3])
-    acquisition = qLogExpectedImprovement(model=model, best_f=Y.max())
+    objective = GenericMCObjective(lambda samples, X=None: samples.squeeze(-1))
+    acquisition = qLogExpectedImprovement(model=model, best_f=Y.max(), objective=objective)
     value = acquisition(X[:2].unsqueeze(0))
 
     assert posterior.mean.shape == (3, 1)
