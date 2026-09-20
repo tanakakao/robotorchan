@@ -182,7 +182,8 @@ class NonstationaryMultiTaskGP(MultiTaskGP):
         task_dim = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
         data_dims = continuous_feature_dims(input_dim, cat_dims=[task_dim])
         gibbs_kernel = GibbsKernel(len(data_dims), lengthscale_floor=lengthscale_floor)
-        data_covar = ScaleKernel(gibbs_kernel, active_dims=data_dims)
+        gibbs_kernel.active_dims = torch.tensor(data_dims, device=train_X.device)
+        data_covar = ScaleKernel(gibbs_kernel)
         data_covar.active_dims = torch.arange(input_dim, device=train_X.device)
         super().__init__(
             train_X=train_X,
