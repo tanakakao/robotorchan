@@ -47,12 +47,12 @@ from robotorchan.models.map_saas import (
     MixedAdditiveMapSaasSingleTaskGP,
     MixedEnsembleMapSaasSingleTaskGP,
 )
-from robotorchan.models.model_list import ModelListGP
-from robotorchan.models.multi_fidelity import (
+from robotorchan.models.standard.model_list import ModelListGP
+from robotorchan.models.standard.multi_fidelity import (
     MixedSingleTaskMultiFidelityGP,
     SingleTaskMultiFidelityGP,
 )
-from robotorchan.models.multitask import (
+from robotorchan.models.standard.multitask import (
     KroneckerMultiTaskGP,
     MixedKroneckerMultiTaskGP,
     MixedMultiTaskGP,
@@ -141,7 +141,7 @@ from robotorchan.models.robust import (
     RobustRelevancePursuitMultiTaskGP,
     RobustRelevancePursuitSingleTaskGP,
 )
-from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
+from robotorchan.models.standard.single_task import MixedSingleTaskGP, SingleTaskGP
 from robotorchan.models.spectral_mixture import (
     MixedSpectralMixtureGP,
     MixedSpectralMixtureMultiTaskGP,
@@ -159,7 +159,7 @@ from robotorchan.models.uncertain_input import (
     MixedUncertainInputSingleTaskGP,
     UncertainInputSingleTaskGP,
 )
-from robotorchan.models.variational import (
+from robotorchan.models.standard.variational import (
     MixedSingleTaskVariationalGP,
     SingleTaskVariationalGP,
 )
