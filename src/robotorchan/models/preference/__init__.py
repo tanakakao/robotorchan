@@ -1,3 +1,5 @@
 """Preference and pairwise-comparison surrogate models."""
 
-__all__: list[str] = []
+from robotorchan.models.preference.pairwise import PairwiseGP
+
+__all__ = ["PairwiseGP"]
