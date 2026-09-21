@@ -32,7 +32,9 @@ class RandomizedStraddle(Straddle):
     def _beta_for(self, reference: Tensor) -> Tensor:
         if torch.isnan(self._random_beta):
             sample_device = (
-                torch.device(self.generator.device) if self.generator is not None else reference.device
+                torch.device(self.generator.device)
+                if self.generator is not None
+                else reference.device
             )
             uniform = torch.rand(
                 (),
