@@ -52,7 +52,7 @@ class ExpectedPredictiveInformationGain(AcquisitionFunction):
         expanded_target = target_X.expand(*candidate.shape[:-1], n_target, target_X.shape[-1])
         pair_X = torch.stack((expanded_candidate, expanded_target), dim=-2)
         posterior = self.model.posterior(pair_X)
-        if isinstance(posterior, EnsemblePosterior):
+        if getattr(self.model, "_is_ensemble", False) or isinstance(posterior, EnsemblePosterior):
             raise ValueError(
                 "ExpectedPredictiveInformationGain does not yet support ensemble posteriors."
             )
