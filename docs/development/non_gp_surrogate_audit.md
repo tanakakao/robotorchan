@@ -264,3 +264,8 @@ The initial implementation remains numeric and single-output, exposes explicit `
 ## Phase 11: shared bootstrap boosting infrastructure
 
 `BootstrapEnsembleSurrogate` centralizes the empirical-posterior contract introduced for gradient boosting. Subclasses construct complete estimators, while the base owns raw-data validation, bootstrap resampling, explicit fitting, posterior construction, output-index validation, and observation-noise rejection. `GradientBoostingSurrogate` and `HistGradientBoostingSurrogate` now use this base without changing their public API. The base remains internal so implementation infrastructure is not accidentally promoted to the public model catalog.
+
+
+## Phase 12: multi-output objectives and constraints
+
+The shared bootstrap ensemble now preserves an arbitrary output dimension `m` and supports BoTorch `output_indices`. Gradient boosting backends use sklearn `MultiOutputRegressor` when `m > 1`, while retaining the direct regressor for scalar outputs. This enables one empirical posterior to represent multiple objectives or objective/constraint outputs. Integration is tested with BoTorch qEHVI. Constraint semantics remain acquisition-level: callers may select or transform posterior outputs with the normal BoTorch objective/constraint machinery rather than embedding feasibility rules in the surrogate.
