@@ -168,5 +168,6 @@ def test_all_public_models_expose_training_capability_contract() -> None:
         model_class = getattr(MODELS, name)
 
         assert hasattr(model_class, "supports_mll")
+        assert hasattr(model_class, "supports_fit")
         assert hasattr(model_class, "make_mll")
         assert model_class.supports_mll is (name not in NON_MLL_MODELS)
