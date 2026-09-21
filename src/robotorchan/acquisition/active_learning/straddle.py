@@ -50,8 +50,10 @@ class Straddle(AcquisitionFunction):
         """Evaluate the straddle score for q=1 candidates."""
         if X.shape[-2] != 1:
             raise ValueError("Straddle supports q=1.")
+        if getattr(self.model, "_is_ensemble", False):
+            raise ValueError("Straddle does not yet support ensemble posteriors.")
         posterior = self.model.posterior(X)
-        if getattr(self.model, "_is_ensemble", False) or isinstance(posterior, EnsemblePosterior):
+        if isinstance(posterior, EnsemblePosterior):
             raise ValueError("Straddle does not yet support ensemble posteriors.")
         mean = self._select_output(posterior.mean, X)
         variance = self._select_output(posterior.variance, X)
@@ -69,8 +71,10 @@ class BoundaryVariance(Straddle):
         """Evaluate variance divided by target-distance uncertainty."""
         if X.shape[-2] != 1:
             raise ValueError("BoundaryVariance supports q=1.")
+        if getattr(self.model, "_is_ensemble", False):
+            raise ValueError("BoundaryVariance does not yet support ensemble posteriors.")
         posterior = self.model.posterior(X)
-        if getattr(self.model, "_is_ensemble", False) or isinstance(posterior, EnsemblePosterior):
+        if isinstance(posterior, EnsemblePosterior):
             raise ValueError("BoundaryVariance does not yet support ensemble posteriors.")
         mean = self._select_output(posterior.mean, X)
         variance = self._select_output(posterior.variance, X).clamp_min(0.0)
