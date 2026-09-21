@@ -83,3 +83,28 @@ def test_model_family_exports_are_canonical() -> None:
         canonical_names = set(family.__all__) & set(models.__all__)
         for name in canonical_names:
             assert getattr(models, name) is getattr(family, name)
+
+
+def test_all_top_level_models_are_owned_by_a_family_package() -> None:
+    family_modules = (
+        "robotorchan.models.expressive",
+        "robotorchan.models.high_dimensional",
+        "robotorchan.models.preference",
+        "robotorchan.models.robust",
+        "robotorchan.models.standard",
+        "robotorchan.models.structured",
+        "robotorchan.models.uncertain",
+    )
+    family_names: set[str] = set()
+    for module_name in family_modules:
+        family = importlib.import_module(module_name)
+        family_names.update(
+            name for name in family.__all__ if isinstance(getattr(family, name), type)
+        )
+
+    top_level_model_names = {
+        name for name in models.__all__ if isinstance(getattr(models, name), type)
+    }
+    top_level_model_names.discard("UnsupportedModelOperationError")
+
+    assert top_level_model_names <= family_names
