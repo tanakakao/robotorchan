@@ -5,6 +5,7 @@ from __future__ import annotations
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.models.model import Model
+from botorch.posteriors.ensemble import EnsemblePosterior
 from botorch.utils.transforms import average_over_ensemble_models
 from torch import Tensor
 
@@ -24,7 +25,10 @@ class PosteriorVariance(AcquisitionFunction):
                 "PosteriorVariance supports q=1; use qNegIntegratedPosteriorVariance for batch AL."
             )
 
-        variance = self.model.posterior(X).variance
+        posterior = self.model.posterior(X)
+        if getattr(self.model, "_is_ensemble", False) or isinstance(posterior, EnsemblePosterior):
+            raise ValueError("PosteriorVariance does not yet support ensemble posteriors.")
+        variance = posterior.variance
         if variance.ndim != X.ndim:
             raise ValueError(
                 "PosteriorVariance does not support structured-output posteriors; "
