@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from sklearn.multioutput import MultiOutputRegressor
+
 from torch import Tensor
 
 from robotorchan.models.non_gp.bootstrap import BootstrapEnsembleSurrogate
@@ -42,8 +44,11 @@ class GradientBoostingSurrogate(BootstrapEnsembleSurrogate):
         )
         self.boosting_kwargs = self.estimator_kwargs
 
-    def _make_estimator(self, member_index: int) -> GradientBoostingRegressor:
-        return GradientBoostingRegressor(
+    def _make_estimator(self, member_index: int) -> Any:
+        estimator = GradientBoostingRegressor(
             random_state=None if self.random_state is None else self.random_state + member_index,
             **self.estimator_kwargs,
         )
+        if self.num_outputs == 1:
+            return estimator
+        return MultiOutputRegressor(estimator)
