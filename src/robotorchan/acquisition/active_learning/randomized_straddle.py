@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import torch
 from botorch.models.model import Model
+from botorch.posteriors.ensemble import EnsemblePosterior
 from botorch.utils.transforms import average_over_ensemble_models
 from torch import Tensor
 
@@ -23,14 +24,14 @@ class RandomizedStraddle(Straddle):
     ) -> None:
         super().__init__(model=model, target=target, beta=0.0, output_index=output_index)
         self.generator = generator
-        self.register_buffer("_random_beta", torch.tensor(float("nan")))
+        self.register_buffer("_random_beta", None)
 
     def resample(self) -> None:
         """Invalidate the coefficient so the next evaluation starts a new round."""
-        self._random_beta.fill_(float("nan"))
+        self._random_beta = None
 
     def _beta_for(self, reference: Tensor) -> Tensor:
-        if torch.isnan(self._random_beta):
+        if self._random_beta is None:
             sample_device = (
                 torch.device(self.generator.device)
                 if self.generator is not None
@@ -45,7 +46,10 @@ class RandomizedStraddle(Straddle):
             uniform = uniform.to(reference.device)
             eps = torch.finfo(reference.dtype).eps
             beta = -2.0 * torch.log1p(-uniform.clamp_max(1.0 - eps))
-            self._random_beta.copy_(beta.to(self._random_beta.device))
+            self._random_beta = beta.detach().to(
+                dtype=reference.dtype,
+                device=reference.device,
+            )
         return self._random_beta.to(dtype=reference.dtype, device=reference.device)
 
     @average_over_ensemble_models
@@ -53,7 +57,11 @@ class RandomizedStraddle(Straddle):
         """Evaluate one fixed randomized Straddle surface."""
         if X.shape[-2] != 1:
             raise ValueError("RandomizedStraddle supports q=1.")
+        if getattr(self.model, "_is_ensemble", False):
+            raise ValueError("RandomizedStraddle does not yet support ensemble posteriors.")
         posterior = self.model.posterior(X)
+        if isinstance(posterior, EnsemblePosterior):
+            raise ValueError("RandomizedStraddle does not yet support ensemble posteriors.")
         mean = self._select_output(posterior.mean, X)
         variance = self._select_output(posterior.variance, X)
         std = variance.clamp_min(0.0).sqrt()
