@@ -147,6 +147,7 @@ NON_MLL_MODELS = {
     "MixedSaasFullyBayesianSingleTaskGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
+    "RandomForestSurrogate",
 }
 
 
