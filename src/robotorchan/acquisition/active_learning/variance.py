@@ -21,8 +21,7 @@ class PosteriorVariance(AcquisitionFunction):
         """Evaluate posterior variance for q=1 scalar-output candidates."""
         if X.shape[-2] != 1:
             raise ValueError(
-                "PosteriorVariance supports q=1; "
-                "use qNegIntegratedPosteriorVariance for batch AL."
+                "PosteriorVariance supports q=1; use qNegIntegratedPosteriorVariance for batch AL."
             )
 
         variance = self.model.posterior(X).variance
