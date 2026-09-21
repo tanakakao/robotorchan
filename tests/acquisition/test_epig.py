@@ -47,3 +47,22 @@ def test_epig_rejects_q_greater_than_one() -> None:
         assert "q=1" in str(error)
     else:
         raise AssertionError("Expected q=1 validation.")
+
+
+def test_epig_rejects_empty_target_distribution() -> None:
+    try:
+        ExpectedPredictiveInformationGain(_model(), torch.empty(0, 1, dtype=torch.double))
+    except ValueError as error:
+        assert "at least one" in str(error)
+    else:
+        raise AssertionError("Expected empty-target validation.")
+
+
+def test_epig_rejects_batched_target_distribution() -> None:
+    target_X = torch.rand(2, 5, 1, dtype=torch.double)
+    try:
+        ExpectedPredictiveInformationGain(_model(), target_X)
+    except ValueError as error:
+        assert "(n_target, d)" in str(error)
+    else:
+        raise AssertionError("Expected batched-target validation.")
