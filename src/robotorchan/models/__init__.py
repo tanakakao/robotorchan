@@ -1,7 +1,7 @@
 """Surrogate-model extensions and BoTorch-compatible wrappers."""
 
 from robotorchan.models.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
-from robotorchan.models.alebo import ALEBOGP
+from robotorchan.models.high_dimensional.alebo import ALEBOGP
 from robotorchan.models.base import UnsupportedModelOperationError
 from robotorchan.models.contaminated import (
     ContaminatedMultiTaskGP,
@@ -16,7 +16,7 @@ from robotorchan.models.deep_gp import (
     MultiTaskDeepGP,
     SingleTaskDeepGP,
 )
-from robotorchan.models.fully_bayesian import (
+from robotorchan.models.high_dimensional.fully_bayesian import (
     MixedSaasFullyBayesianMultiTaskGP,
     MixedSaasFullyBayesianSingleTaskGP,
     SaasFullyBayesianMultiTaskGP,
@@ -41,7 +41,7 @@ from robotorchan.models.joint_heteroskedastic import (
     MixedJointHeteroskedasticSingleTaskGP,
 )
 from robotorchan.models.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
-from robotorchan.models.map_saas import (
+from robotorchan.models.high_dimensional.map_saas import (
     AdditiveMapSaasSingleTaskGP,
     EnsembleMapSaasSingleTaskGP,
     MixedAdditiveMapSaasSingleTaskGP,
@@ -65,7 +65,7 @@ from robotorchan.models.nonstationary import (
     NonstationarySingleTaskGP,
 )
 from robotorchan.models.pairwise import PairwiseGP
-from robotorchan.models.reduced.base import (
+from robotorchan.models.high_dimensional.reduced.base import (
     PCAGP,
     PLSGP,
     AutoEncoderGP,
@@ -78,7 +78,7 @@ from robotorchan.models.reduced.base import (
     RandomProjectionGP,
     ReducedGP,
 )
-from robotorchan.models.reduced.joint_multitask import (
+from robotorchan.models.high_dimensional.reduced.joint_multitask import (
     HybridAutoEncoderKroneckerMultiTaskGP,
     HybridAutoEncoderMultiTaskGP,
     JointEncoderKroneckerMultiTaskGP,
@@ -87,19 +87,19 @@ from robotorchan.models.reduced.joint_multitask import (
     JointVAEMultiTaskGP,
     MixedJointEncoderMultiTaskGP,
 )
-from robotorchan.models.reduced.joint_neural import (
+from robotorchan.models.high_dimensional.reduced.joint_neural import (
     HybridAutoEncoderGP,
     JointEncoderGP,
     MixedHybridAutoEncoderGP,
     MixedJointEncoderGP,
 )
-from robotorchan.models.reduced.joint_vae import JointVAEGP, MixedJointVAEGP
-from robotorchan.models.reduced.mixed import MixedReducedGP
-from robotorchan.models.reduced.mixed_multitask import (
+from robotorchan.models.high_dimensional.reduced.joint_vae import JointVAEGP, MixedJointVAEGP
+from robotorchan.models.high_dimensional.reduced.mixed import MixedReducedGP
+from robotorchan.models.high_dimensional.reduced.mixed_multitask import (
     MixedReducedKroneckerMultiTaskGP,
     MixedReducedMultiTaskGP,
 )
-from robotorchan.models.reduced.multitask import (
+from robotorchan.models.high_dimensional.reduced.multitask import (
     AutoEncoderKroneckerMultiTaskGP,
     AutoEncoderMultiTaskGP,
     PCAKroneckerMultiTaskGP,
@@ -117,11 +117,11 @@ from robotorchan.models.reduced.multitask import (
     VAEKroneckerMultiTaskGP,
     VAEMultiTaskGP,
 )
-from robotorchan.models.reduced.supervised_neural import (
+from robotorchan.models.high_dimensional.reduced.supervised_neural import (
     MixedSupervisedAutoEncoderGP,
     SupervisedAutoEncoderGP,
 )
-from robotorchan.models.reduced.vae import (
+from robotorchan.models.high_dimensional.reduced.vae import (
     VAEGP,
     MixedSupervisedVAEGP,
     MixedVAEGP,
