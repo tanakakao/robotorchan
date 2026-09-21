@@ -8,7 +8,10 @@ from gpytorch.distributions import MultivariateNormal
 from torch import Tensor, nn
 
 from robotorchan.models.expressive.neural_features import make_feature_network
-from robotorchan.models.high_dimensional.reduced.joint_neural import JointEncoderGP, MixedJointEncoderGP
+from robotorchan.models.high_dimensional.reduced.joint_neural import (
+    JointEncoderGP,
+    MixedJointEncoderGP,
+)
 
 
 class JointVAEGP(JointEncoderGP):
