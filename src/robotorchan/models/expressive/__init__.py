@@ -1,3 +1,4 @@
+# ruff: noqa: F401
 """Expressive surrogate models with learned or flexible representations."""
 
 from robotorchan.models.expressive.deep_gp import (
