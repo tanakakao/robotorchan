@@ -5,7 +5,7 @@ import torch
 from botorch.posteriors import Posterior
 from torch import Tensor
 
-from robotorchan.models.reduced.base import ReductionMixin
+from robotorchan.models.high_dimensional.reduced.base import ReductionMixin
 from robotorchan.reduction import (
     InputReducer,
     OutputPCAReducer,
