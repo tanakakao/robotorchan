@@ -3,7 +3,7 @@
 import torch
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 
-from robotorchan.models.uncertain_input import UncertainInputSingleTaskGP
+from robotorchan.models.uncertain.uncertain_input import UncertainInputSingleTaskGP
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:

@@ -94,28 +94,28 @@ from robotorchan.models.high_dimensional.reduced.vae import (
     MixedVAEGP,
     SupervisedVAEGP,
 )
-from robotorchan.models.pairwise import PairwiseGP
-from robotorchan.models.robust_models.contaminated import (
+from robotorchan.models.preference.pairwise import PairwiseGP
+from robotorchan.models.robust.contaminated import (
     ContaminatedMultiTaskGP,
     ContaminatedSingleTaskGP,
     MixedContaminatedMultiTaskGP,
     MixedContaminatedSingleTaskGP,
 )
-from robotorchan.models.robust_models.joint_heteroskedastic import (
+from robotorchan.models.robust.joint_heteroskedastic import (
     JointHeteroskedasticSingleTaskGP,
     MixedJointHeteroskedasticSingleTaskGP,
 )
-from robotorchan.models.robust_models.nonstationary import (
+from robotorchan.models.robust.nonstationary import (
     MixedNonstationaryMultiTaskGP,
     MixedNonstationarySingleTaskGP,
     NonstationaryMultiTaskGP,
     NonstationarySingleTaskGP,
 )
-from robotorchan.models.robust_models.replicate_noise import (
+from robotorchan.models.robust.replicate_noise import (
     MixedReplicateNoiseSingleTaskGP,
     ReplicateNoiseSingleTaskGP,
 )
-from robotorchan.models.robust_models.robust import (
+from robotorchan.models.robust.robust import (
     HeteroskedasticMultiTaskGP,
     HeteroskedasticSingleTaskGP,
     MixedHeteroskedasticMultiTaskGP,
@@ -125,7 +125,7 @@ from robotorchan.models.robust_models.robust import (
     RobustRelevancePursuitMultiTaskGP,
     RobustRelevancePursuitSingleTaskGP,
 )
-from robotorchan.models.robust_models.student_t import (
+from robotorchan.models.robust.student_t import (
     MixedStudentTMultiTaskGP,
     MixedStudentTSingleTaskGP,
     StudentTMultiTaskGP,
@@ -158,8 +158,8 @@ from robotorchan.models.structured.hierarchical import (
 )
 from robotorchan.models.structured.higher_order import HigherOrderGP, MixedHigherOrderGP
 from robotorchan.models.structured.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
-from robotorchan.models.uncertain_categorical import UncertainCategoricalSingleTaskGP
-from robotorchan.models.uncertain_input import (
+from robotorchan.models.uncertain.uncertain_categorical import UncertainCategoricalSingleTaskGP
+from robotorchan.models.uncertain.uncertain_input import (
     MixedUncertainInputSingleTaskGP,
     UncertainInputSingleTaskGP,
 )

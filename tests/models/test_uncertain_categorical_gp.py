@@ -4,7 +4,7 @@ import pytest
 import torch
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 
-from robotorchan.models.uncertain_categorical import (
+from robotorchan.models.uncertain.uncertain_categorical import (
     ExpectedCategoricalKernel,
     UncertainCategoricalSingleTaskGP,
 )
