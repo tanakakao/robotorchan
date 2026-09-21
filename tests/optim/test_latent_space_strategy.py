@@ -3,7 +3,7 @@ import torch
 from botorch.acquisition.analytic import PosteriorMean
 from torch import Tensor
 
-from robotorchan.models.reduced import PCAGP, RandomProjectionGP
+from robotorchan.models.high_dimensional.reduced import PCAGP, RandomProjectionGP
 from robotorchan.optim import (
     LatentSpaceStrategy,
     PCAReconstruction,
