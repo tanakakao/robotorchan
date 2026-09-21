@@ -1,5 +1,6 @@
 from typing import Any
 
+import pytest
 import torch
 
 from robotorchan.models.non_gp.bootstrap import BootstrapEnsembleSurrogate
@@ -60,3 +61,23 @@ def test_bootstrap_base_members_can_express_uncertainty() -> None:
 
     assert posterior.values.shape == torch.Size([8, 1, 1])
     assert posterior.values.std() > 0
+
+
+def test_bootstrap_base_passes_scalar_target_to_single_output_estimator() -> None:
+    train_X = torch.arange(12, dtype=torch.double).reshape(6, 2)
+    train_Y = torch.arange(6, dtype=torch.double).unsqueeze(-1)
+    model = DummyBootstrapSurrogate(train_X, train_Y, n_members=3, random_state=2)
+
+    model.fit()
+
+    assert all(isinstance(member.mean, float) for member in model._members)
+
+
+def test_bootstrap_base_rejects_duplicate_output_indices() -> None:
+    train_X = torch.arange(12, dtype=torch.double).reshape(6, 2)
+    train_Y = torch.arange(6, dtype=torch.double).unsqueeze(-1)
+    model = DummyBootstrapSurrogate(train_X, train_Y, n_members=3, random_state=2)
+    model.fit()
+
+    with pytest.raises(ValueError, match="duplicate"):
+        model.posterior(train_X[:2], output_indices=[0, 0])
