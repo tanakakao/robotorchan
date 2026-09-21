@@ -7,7 +7,7 @@ from botorch.models.utils.gpytorch_modules import get_covar_module_with_dim_scal
 from gpytorch.kernels import Kernel, ScaleKernel
 from torch import Tensor, nn
 
-from robotorchan.models.single_task import SingleTaskGP
+from robotorchan.models.standard.single_task import SingleTaskGP
 
 
 def _validate_category_probabilities(probabilities: Tensor, *, num_categories: int) -> None:
