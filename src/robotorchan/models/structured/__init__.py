@@ -1,3 +1,4 @@
+# ruff: noqa: F401
 """Structured-input, structured-output, and contextual surrogate models."""
 
 from robotorchan.models.structured.additive import OrthogonalAdditiveGP
