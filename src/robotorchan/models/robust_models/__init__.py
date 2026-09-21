@@ -1,4 +1,3 @@
-# ruff: noqa: F401
 """Robust, noisy-observation, and nonstationary surrogate models."""
 
 from robotorchan.models.robust_models.contaminated import (
@@ -26,4 +25,4 @@ from robotorchan.models.robust_models.student_t import (
     StudentTMultiTaskGP, StudentTSingleTaskGP,
 )
 
-__all__ = [name for name in globals() if name.endswith("GP")]  # noqa: F401
+__all__ = [name for name in globals() if name.endswith("GP")]
