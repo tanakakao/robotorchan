@@ -12,6 +12,7 @@ PUBLIC_MODEL_NAMES = {
     "ContaminatedMultiTaskGP",
     "ContaminatedSingleTaskGP",
     "EnsembleMapSaasSingleTaskGP",
+    "ExtraTreesSurrogate",
     "HeterogeneousMTGP",
     "HeteroskedasticMultiTaskGP",
     "HeteroskedasticSingleTaskGP",
@@ -148,6 +149,7 @@ NON_MLL_MODELS = {
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
     "RandomForestSurrogate",
+    "ExtraTreesSurrogate",
 }
 
 
