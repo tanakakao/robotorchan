@@ -2,6 +2,7 @@ import torch
 from torch import nn
 
 from robotorchan.models.base import (
+    ModelTrainingMixin,
     NonGPModelMixin,
     UnsupportedModelOperationError,
 )
@@ -29,6 +30,10 @@ def test_non_gp_model_preserves_raw_supervised_training_data() -> None:
     assert model.raw_train_Yvar is None
     assert model.raw_train_X.data_ptr() != train_X.data_ptr()
     assert model.raw_train_Y.data_ptr() != train_Y.data_ptr()
+
+
+def test_training_capability_defaults_do_not_change_existing_models() -> None:
+    assert ModelTrainingMixin.supports_fit is False
 
 
 def test_non_gp_model_has_explicit_fit_capability_without_mll() -> None:
