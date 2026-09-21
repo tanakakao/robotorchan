@@ -18,6 +18,7 @@ from robotorchan.optim.latent import (
 )
 from robotorchan.optim.original import OriginalSpaceStrategy
 from robotorchan.optim.random import RandomSearchStrategy
+from robotorchan.optim.tree import TreeEnsembleSearchStrategy
 from robotorchan.optim.trust_region import TuRBOState, TuRBOStrategy, update_turbo_state
 
 __all__ = [
@@ -35,6 +36,7 @@ __all__ = [
     "RandomSearchStrategy",
     "SearchResult",
     "SearchStrategy",
+    "TreeEnsembleSearchStrategy",
     "TuRBOState",
     "TuRBOStrategy",
     "update_baxus_state",
