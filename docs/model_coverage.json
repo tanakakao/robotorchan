@@ -634,6 +634,11 @@
       "guide": "docs/models/standard.md",
       "theory": "docs/theory/02_gaussian_process.md",
       "notebook": "examples/notebooks/01_single_task_gp.ipynb"
+    },
+    "ExtraTreesSurrogate": {
+      "guide": "docs/models/standard.md",
+      "theory": "docs/theory/02_gaussian_process.md",
+      "notebook": "examples/notebooks/01_single_task_gp.ipynb"
     }
   },
   "coverage_contract": {

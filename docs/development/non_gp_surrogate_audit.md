@@ -219,3 +219,10 @@ Phase 4 introduces the first concrete non-GP surrogate: `RandomForestSurrogate`.
 - scikit-learn is an optional `tree` dependency rather than a core dependency.
 
 Phase 5 can add Extra Trees on the same posterior/training contract without changing these semantics.
+
+
+## Phase 5: Extra Trees surrogate
+
+`ExtraTreesSurrogate` extends the empirical tree-ensemble path established by the random-forest surrogate. Each fitted tree contributes one predictive function sample to BoTorch `EnsemblePosterior`; tree disagreement is therefore treated as empirical ensemble uncertainty, not as an exact Gaussian posterior variance.
+
+Phase 5 keeps the same deliberate scope as Phase 4: numeric inputs and one output. Mixed/categorical handling, multi-output support, and a dedicated nonsmooth acquisition optimizer remain later phases. The model uses the optional `tree` dependency and does not expose MLL training or candidate-input gradients.
