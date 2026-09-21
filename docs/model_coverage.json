@@ -631,8 +631,8 @@
       "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
     },
     "RandomForestSurrogate": {
-      "guide": "docs/development/non_gp_surrogate_audit.md",
-      "theory": "docs/development/non_gp_surrogate_audit.md",
+      "guide": "docs/models/standard.md",
+      "theory": "docs/theory/03_gaussian_process.md",
       "notebook": "examples/notebooks/01_single_task_gp.ipynb"
     }
   },
