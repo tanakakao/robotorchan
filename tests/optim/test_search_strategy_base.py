@@ -138,6 +138,7 @@ def test_public_optim_exports_are_complete() -> None:
         "RandomProjectionReconstruction",
         "REMBOStrategy",
         "HeSBOStrategy",
+        "TreeEnsembleSearchStrategy",
         "TuRBOState",
         "TuRBOStrategy",
         "update_turbo_state",
