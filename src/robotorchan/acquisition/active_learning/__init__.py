@@ -4,4 +4,10 @@ from robotorchan.acquisition.active_learning.randomized_straddle import Randomiz
 from robotorchan.acquisition.active_learning.straddle import BoundaryVariance, Straddle
 from robotorchan.acquisition.active_learning.variance import PosteriorStd, PosteriorVariance
 
-__all__ = ["BoundaryVariance", "PosteriorStd", "PosteriorVariance", "RandomizedStraddle", "Straddle"]
+__all__ = [
+    "BoundaryVariance",
+    "PosteriorStd",
+    "PosteriorVariance",
+    "RandomizedStraddle",
+    "Straddle",
+]
