@@ -2,6 +2,7 @@
 
 from robotorchan.acquisition.active_learning import (
     BoundaryVariance,
+    ExpectedPredictiveInformationGain,
     PosteriorStd,
     PosteriorVariance,
     RandomizedStraddle,
@@ -12,6 +13,7 @@ from robotorchan.acquisition.sampling import select_thompson_candidates
 
 __all__ = [
     "BoundaryVariance",
+    "ExpectedPredictiveInformationGain",
     "PosteriorStd",
     "PosteriorVariance",
     "RandomizedStraddle",
