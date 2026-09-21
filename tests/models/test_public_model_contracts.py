@@ -14,6 +14,7 @@ PUBLIC_MODEL_NAMES = {
     "EnsembleMapSaasSingleTaskGP",
     "ExtraTreesSurrogate",
     "GradientBoostingSurrogate",
+    "HistGradientBoostingSurrogate",
     "HeterogeneousMTGP",
     "HeteroskedasticMultiTaskGP",
     "HeteroskedasticSingleTaskGP",
@@ -152,6 +153,7 @@ NON_MLL_MODELS = {
     "RandomForestSurrogate",
     "ExtraTreesSurrogate",
     "GradientBoostingSurrogate",
+    "HistGradientBoostingSurrogate",
 }
 
 
