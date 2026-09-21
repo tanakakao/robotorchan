@@ -1,5 +1,9 @@
 import torch
-from botorch.acquisition.analytic import LogExpectedImprovement, LogProbabilityOfImprovement, UpperConfidenceBound
+from botorch.acquisition.analytic import (
+    LogExpectedImprovement,
+    LogProbabilityOfImprovement,
+    UpperConfidenceBound,
+)
 from botorch.acquisition.logei import qLogExpectedImprovement, qLogNoisyExpectedImprovement
 from botorch.acquisition.monte_carlo import qSimpleRegret, qUpperConfidenceBound
 from botorch.sampling.normal import SobolQMCNormalSampler
