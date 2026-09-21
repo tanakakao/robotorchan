@@ -98,7 +98,11 @@ def test_all_top_level_models_are_owned_by_a_family_package() -> None:
     family_names: set[str] = set()
     for module_name in family_modules:
         family = importlib.import_module(module_name)
-        family_names.update(name for name in family.__all__ if isinstance(getattr(family, name), type))
+        family_names.update(
+            name
+            for name in family.__all__
+            if isinstance(getattr(family, name), type)
+        )
 
     top_level_model_names = {
         name
