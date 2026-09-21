@@ -8,7 +8,7 @@ from gpytorch.kernels import Kernel
 from torch import Tensor
 
 from robotorchan.models.base import continuous_feature_dims, normalize_feature_dims
-from robotorchan.models.single_task import SingleTaskGP
+from robotorchan.models.standard.single_task import SingleTaskGP
 
 
 class GaussianUncertainInputKernel(Kernel):
