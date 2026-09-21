@@ -281,3 +281,18 @@ Phase 14 replaces the temporary GP documentation mappings used while the non-GP 
 - `docs/model_coverage.json` now maps all four public sklearn-backed surrogates to these non-GP resources rather than GP documentation.
 
 The documentation intentionally does not claim calibrated uncertainty, analytic Gaussian acquisition compatibility, or posterior semantics for individual boosting stages.
+
+
+## Phase 15: external backend extension boundary
+
+Phase 15 defines the extension contract for NGBoost, XGBoost, LightGBM, and CatBoost in
+`docs/development/external_non_gp_surrogates.md`.
+
+The phase intentionally adds no placeholder model classes or hard dependencies. XGBoost, LightGBM,
+and CatBoost are targeted first through complete-model bootstrap ensembles; individual boosting
+stages remain invalid posterior members. NGBoost is kept on a separate distribution-aware posterior
+path so its native predictive law is not collapsed into empirical tree disagreement. Quantile output
+is explicitly not treated as posterior sampling.
+
+CatBoost is the preferred first implementation target for native categorical inputs. All external
+backends remain optional and must preserve base-package importability when absent.
