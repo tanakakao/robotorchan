@@ -86,7 +86,7 @@ class BootstrapEnsembleSurrogate(NonGPModelMixin, Model, nn.Module, ABC):
         del kwargs
         if not self._is_fitted:
             raise RuntimeError("Call fit() before posterior().")
-        selected_outputs = list(range(self.num_outputs)) if output_indices is None else output_indices
+        selected_outputs = (\n            list(range(self.num_outputs)) if output_indices is None else output_indices\n        )
         if not selected_outputs or any(
             index < 0 or index >= self.num_outputs for index in selected_outputs
         ):
