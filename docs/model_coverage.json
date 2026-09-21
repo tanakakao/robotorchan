@@ -631,24 +631,24 @@
       "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
     },
     "RandomForestSurrogate": {
-      "guide": "docs/models/standard.md",
-      "theory": "docs/theory/02_gaussian_process.md",
-      "notebook": "examples/notebooks/01_single_task_gp.ipynb"
+      "guide": "docs/models/non_gp.md",
+      "theory": "docs/theory/23_non_gp_surrogates.md",
+      "notebook": "examples/notebooks/25_non_gp_surrogates.ipynb"
     },
     "ExtraTreesSurrogate": {
-      "guide": "docs/models/standard.md",
-      "theory": "docs/theory/02_gaussian_process.md",
-      "notebook": "examples/notebooks/01_single_task_gp.ipynb"
+      "guide": "docs/models/non_gp.md",
+      "theory": "docs/theory/23_non_gp_surrogates.md",
+      "notebook": "examples/notebooks/25_non_gp_surrogates.ipynb"
     },
     "GradientBoostingSurrogate": {
-      "guide": "docs/models/standard.md",
-      "theory": "docs/theory/02_gaussian_process.md",
-      "notebook": "examples/notebooks/01_single_task_gp.ipynb"
+      "guide": "docs/models/non_gp.md",
+      "theory": "docs/theory/23_non_gp_surrogates.md",
+      "notebook": "examples/notebooks/25_non_gp_surrogates.ipynb"
     },
     "HistGradientBoostingSurrogate": {
-      "guide": "docs/models/standard.md",
-      "theory": "docs/theory/02_gaussian_process.md",
-      "notebook": "examples/notebooks/01_single_task_gp.ipynb"
+      "guide": "docs/models/non_gp.md",
+      "theory": "docs/theory/23_non_gp_surrogates.md",
+      "notebook": "examples/notebooks/25_non_gp_surrogates.ipynb"
     }
   },
   "coverage_contract": {
