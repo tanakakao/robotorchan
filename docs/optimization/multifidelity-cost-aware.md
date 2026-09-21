@@ -37,8 +37,9 @@ factory.
 
 `AffineFidelityCostModel` is appropriate when evaluation cost is known approximately as an
 affine function of fidelity. When cost must be learned, a positive cost surrogate can be used
-with `InverseCostWeightedUtility`. BoTorch interprets GP cost-model outputs in log-cost space
-for this utility, so training targets and transforms must match that contract.
+with `InverseCostWeightedUtility`. The cost objective passed to `InverseCostWeightedUtility` must be strictly positive. A learned
+cost surrogate therefore needs predictions on a positive cost scale, or an explicit positive
+cost objective / transform before inverse weighting.
 
 ## Discrete fidelity
 
