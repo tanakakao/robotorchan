@@ -645,5 +645,10 @@
     "guide": "model-family guide that names or covers the public model family",
     "theory": "statistical or optimization theory shared by the model",
     "notebook": "representative runnable example; one notebook may cover multiple variants"
+  },
+  "GradientBoostingSurrogate": {
+    "guide": "docs/models/standard.md",
+    "theory": "docs/theory/02_gaussian_process.md",
+    "notebook": "examples/notebooks/01_single_task_gp.ipynb"
   }
 }
