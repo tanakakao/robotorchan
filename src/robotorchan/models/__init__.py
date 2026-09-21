@@ -182,6 +182,7 @@ __all__ = [
     "ContaminatedSingleTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "ExtraTreesSurrogate",
+    "GradientBoostingSurrogate",
     "HeterogeneousMTGP",
     "HeteroskedasticMultiTaskGP",
     "HeteroskedasticSingleTaskGP",
