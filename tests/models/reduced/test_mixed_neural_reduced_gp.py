@@ -20,7 +20,7 @@ def _data() -> tuple[torch.Tensor, torch.Tensor]:
 
 
 def test_neural_mixed_wrappers_are_colocated_with_standard_families() -> None:
-    from robotorchan.models.reduced import base, supervised_neural, vae
+    from robotorchan.models.high_dimensional.reduced import base, supervised_neural, vae
 
     assert MixedAutoEncoderGP.__module__ == base.__name__
     assert MixedSupervisedAutoEncoderGP.__module__ == supervised_neural.__name__
