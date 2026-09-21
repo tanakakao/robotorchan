@@ -5,14 +5,13 @@ import pytest
 pytest.importorskip("sklearn")
 
 import importlib.util
+import sys
 from pathlib import Path
 
 _BENCHMARK_PATH = Path(__file__).parents[2] / "benchmarks" / "non_gp_surrogates.py"
 _SPEC = importlib.util.spec_from_file_location("non_gp_surrogates_benchmark", _BENCHMARK_PATH)
 assert _SPEC is not None and _SPEC.loader is not None
 _MODULE = importlib.util.module_from_spec(_SPEC)
-import sys
-
 sys.modules[_SPEC.name] = _MODULE
 _SPEC.loader.exec_module(_MODULE)
 make_data = _MODULE.make_data
