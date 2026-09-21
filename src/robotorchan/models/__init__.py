@@ -1,6 +1,6 @@
 """Surrogate-model extensions and BoTorch-compatible wrappers."""
 
-from robotorchan.models.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
+from robotorchan.models.structured.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
 from robotorchan.models.high_dimensional.alebo import ALEBOGP
 from robotorchan.models.base import UnsupportedModelOperationError
 from robotorchan.models.robust_models.contaminated import (
@@ -9,7 +9,7 @@ from robotorchan.models.robust_models.contaminated import (
     MixedContaminatedMultiTaskGP,
     MixedContaminatedSingleTaskGP,
 )
-from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
+from robotorchan.models.structured.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
 from robotorchan.models.expressive.deep_gp import (
     MixedMultiTaskDeepGP,
     MixedSingleTaskDeepGP,
@@ -22,14 +22,14 @@ from robotorchan.models.high_dimensional.fully_bayesian import (
     SaasFullyBayesianMultiTaskGP,
     SaasFullyBayesianSingleTaskGP,
 )
-from robotorchan.models.heterogeneous import HeterogeneousMTGP, MixedHeterogeneousMTGP
-from robotorchan.models.hierarchical import (
+from robotorchan.models.structured.heterogeneous import HeterogeneousMTGP, MixedHeterogeneousMTGP
+from robotorchan.models.structured.hierarchical import (
     HierarchicalConditionalKernelGP,
     HierarchicalConditionalKernelMultiTaskGP,
     MixedHierarchicalConditionalKernelGP,
     MixedHierarchicalConditionalKernelMultiTaskGP,
 )
-from robotorchan.models.higher_order import HigherOrderGP, MixedHigherOrderGP
+from robotorchan.models.structured.higher_order import HigherOrderGP, MixedHigherOrderGP
 from robotorchan.models.expressive.infinite_width_bnn import (
     InfiniteWidthBNNGP,
     InfiniteWidthBNNMultiTaskGP,
@@ -40,7 +40,7 @@ from robotorchan.models.robust_models.joint_heteroskedastic import (
     JointHeteroskedasticSingleTaskGP,
     MixedJointHeteroskedasticSingleTaskGP,
 )
-from robotorchan.models.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
+from robotorchan.models.structured.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
 from robotorchan.models.high_dimensional.map_saas import (
     AdditiveMapSaasSingleTaskGP,
     EnsembleMapSaasSingleTaskGP,
