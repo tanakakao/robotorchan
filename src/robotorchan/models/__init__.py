@@ -1,70 +1,37 @@
 """Surrogate-model extensions and BoTorch-compatible wrappers."""
 
-from robotorchan.models.structured.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
-from robotorchan.models.high_dimensional.alebo import ALEBOGP
 from robotorchan.models.base import UnsupportedModelOperationError
-from robotorchan.models.robust_models.contaminated import (
-    ContaminatedMultiTaskGP,
-    ContaminatedSingleTaskGP,
-    MixedContaminatedMultiTaskGP,
-    MixedContaminatedSingleTaskGP,
-)
-from robotorchan.models.structured.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
 from robotorchan.models.expressive.deep_gp import (
     MixedMultiTaskDeepGP,
     MixedSingleTaskDeepGP,
     MultiTaskDeepGP,
     SingleTaskDeepGP,
 )
-from robotorchan.models.high_dimensional.fully_bayesian import (
-    MixedSaasFullyBayesianMultiTaskGP,
-    MixedSaasFullyBayesianSingleTaskGP,
-    SaasFullyBayesianMultiTaskGP,
-    SaasFullyBayesianSingleTaskGP,
-)
-from robotorchan.models.structured.heterogeneous import HeterogeneousMTGP, MixedHeterogeneousMTGP
-from robotorchan.models.structured.hierarchical import (
-    HierarchicalConditionalKernelGP,
-    HierarchicalConditionalKernelMultiTaskGP,
-    MixedHierarchicalConditionalKernelGP,
-    MixedHierarchicalConditionalKernelMultiTaskGP,
-)
-from robotorchan.models.structured.higher_order import HigherOrderGP, MixedHigherOrderGP
 from robotorchan.models.expressive.infinite_width_bnn import (
     InfiniteWidthBNNGP,
     InfiniteWidthBNNMultiTaskGP,
     MixedInfiniteWidthBNNGP,
     MixedInfiniteWidthBNNMultiTaskGP,
 )
-from robotorchan.models.robust_models.joint_heteroskedastic import (
-    JointHeteroskedasticSingleTaskGP,
-    MixedJointHeteroskedasticSingleTaskGP,
+from robotorchan.models.expressive.spectral_mixture import (
+    MixedSpectralMixtureGP,
+    MixedSpectralMixtureMultiTaskGP,
+    SpectralMixtureGP,
+    SpectralMixtureMultiTaskGP,
 )
-from robotorchan.models.structured.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
+from robotorchan.models.high_dimensional.alebo import ALEBOGP
+from robotorchan.models.high_dimensional.fully_bayesian import (
+    MixedSaasFullyBayesianMultiTaskGP,
+    MixedSaasFullyBayesianSingleTaskGP,
+    SaasFullyBayesianMultiTaskGP,
+    SaasFullyBayesianSingleTaskGP,
+)
 from robotorchan.models.high_dimensional.map_saas import (
     AdditiveMapSaasSingleTaskGP,
     EnsembleMapSaasSingleTaskGP,
     MixedAdditiveMapSaasSingleTaskGP,
     MixedEnsembleMapSaasSingleTaskGP,
 )
-from robotorchan.models.standard.model_list import ModelListGP
-from robotorchan.models.standard.multi_fidelity import (
-    MixedSingleTaskMultiFidelityGP,
-    SingleTaskMultiFidelityGP,
-)
-from robotorchan.models.standard.multitask import (
-    KroneckerMultiTaskGP,
-    MixedKroneckerMultiTaskGP,
-    MixedMultiTaskGP,
-    MultiTaskGP,
-)
-from robotorchan.models.robust_models.nonstationary import (
-    MixedNonstationaryMultiTaskGP,
-    MixedNonstationarySingleTaskGP,
-    NonstationaryMultiTaskGP,
-    NonstationarySingleTaskGP,
-)
-from robotorchan.models.pairwise import PairwiseGP
 from robotorchan.models.high_dimensional.reduced.base import (
     PCAGP,
     PLSGP,
@@ -127,6 +94,23 @@ from robotorchan.models.high_dimensional.reduced.vae import (
     MixedVAEGP,
     SupervisedVAEGP,
 )
+from robotorchan.models.pairwise import PairwiseGP
+from robotorchan.models.robust_models.contaminated import (
+    ContaminatedMultiTaskGP,
+    ContaminatedSingleTaskGP,
+    MixedContaminatedMultiTaskGP,
+    MixedContaminatedSingleTaskGP,
+)
+from robotorchan.models.robust_models.joint_heteroskedastic import (
+    JointHeteroskedasticSingleTaskGP,
+    MixedJointHeteroskedasticSingleTaskGP,
+)
+from robotorchan.models.robust_models.nonstationary import (
+    MixedNonstationaryMultiTaskGP,
+    MixedNonstationarySingleTaskGP,
+    NonstationaryMultiTaskGP,
+    NonstationarySingleTaskGP,
+)
 from robotorchan.models.robust_models.replicate_noise import (
     MixedReplicateNoiseSingleTaskGP,
     ReplicateNoiseSingleTaskGP,
@@ -141,27 +125,43 @@ from robotorchan.models.robust_models.robust import (
     RobustRelevancePursuitMultiTaskGP,
     RobustRelevancePursuitSingleTaskGP,
 )
-from robotorchan.models.standard.single_task import MixedSingleTaskGP, SingleTaskGP
-from robotorchan.models.expressive.spectral_mixture import (
-    MixedSpectralMixtureGP,
-    MixedSpectralMixtureMultiTaskGP,
-    SpectralMixtureGP,
-    SpectralMixtureMultiTaskGP,
-)
 from robotorchan.models.robust_models.student_t import (
     MixedStudentTMultiTaskGP,
     MixedStudentTSingleTaskGP,
     StudentTMultiTaskGP,
     StudentTSingleTaskGP,
 )
+from robotorchan.models.standard.model_list import ModelListGP
+from robotorchan.models.standard.multi_fidelity import (
+    MixedSingleTaskMultiFidelityGP,
+    SingleTaskMultiFidelityGP,
+)
+from robotorchan.models.standard.multitask import (
+    KroneckerMultiTaskGP,
+    MixedKroneckerMultiTaskGP,
+    MixedMultiTaskGP,
+    MultiTaskGP,
+)
+from robotorchan.models.standard.single_task import MixedSingleTaskGP, SingleTaskGP
+from robotorchan.models.standard.variational import (
+    MixedSingleTaskVariationalGP,
+    SingleTaskVariationalGP,
+)
+from robotorchan.models.structured.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
+from robotorchan.models.structured.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
+from robotorchan.models.structured.heterogeneous import HeterogeneousMTGP, MixedHeterogeneousMTGP
+from robotorchan.models.structured.hierarchical import (
+    HierarchicalConditionalKernelGP,
+    HierarchicalConditionalKernelMultiTaskGP,
+    MixedHierarchicalConditionalKernelGP,
+    MixedHierarchicalConditionalKernelMultiTaskGP,
+)
+from robotorchan.models.structured.higher_order import HigherOrderGP, MixedHigherOrderGP
+from robotorchan.models.structured.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
 from robotorchan.models.uncertain_categorical import UncertainCategoricalSingleTaskGP
 from robotorchan.models.uncertain_input import (
     MixedUncertainInputSingleTaskGP,
     UncertainInputSingleTaskGP,
-)
-from robotorchan.models.standard.variational import (
-    MixedSingleTaskVariationalGP,
-    SingleTaskVariationalGP,
 )
 
 __all__ = [
