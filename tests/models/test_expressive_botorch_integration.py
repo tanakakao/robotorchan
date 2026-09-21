@@ -8,7 +8,7 @@ from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.sampling.stochastic_samplers import StochasticSampler
 
 from robotorchan.models import InfiniteWidthBNNGP, JointEncoderGP, SpectralMixtureGP
-from robotorchan.models.deep_gp import SingleTaskDeepGP
+from robotorchan.models.expressive.deep_gp import SingleTaskDeepGP
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
