@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from sklearn.multioutput import MultiOutputRegressor
-
 from torch import Tensor
 
 from robotorchan.models.non_gp.bootstrap import BootstrapEnsembleSurrogate
