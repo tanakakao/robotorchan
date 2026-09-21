@@ -9,6 +9,7 @@ surrogate model とは独立した candidate search / optimization の利用者�
 - [Information-theoretic acquisitions](information_theoretic.md): MES、GIBBON、Randomized Straddle
 - [Lookahead acquisitions](lookahead.md): Knowledge Gradientとmulti-step lookahead
 - [Multi-objective acquisitions](multiobjective.md): qLogEHVI、qLogNEHVI、qLogNParEGO
+- [Multi-fidelity and cost-aware acquisitions](multifidelity-cost-aware.md): MF-KGとcost-aware utility
 - [High-dimensional search](high_dimensional_search.md): Original space、Random Search、latent search、REMBO、HeSBO、ALEBO、TuRBO、BAxUS
 - [TuRBO](turbo.md): stateful trust-region strategy の詳細
 
