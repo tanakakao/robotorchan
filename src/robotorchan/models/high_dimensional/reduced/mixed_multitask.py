@@ -15,7 +15,7 @@ from gpytorch.priors import Prior
 from torch import Tensor
 
 from robotorchan.models.base import normalize_feature_dims
-from robotorchan.models.multitask import MixedKroneckerMultiTaskGP, MixedMultiTaskGP
+from robotorchan.models.standard.multitask import MixedKroneckerMultiTaskGP, MixedMultiTaskGP
 from robotorchan.models.high_dimensional.reduced.mixed import MixedInputReducer
 from robotorchan.reduction.base import InputReducer
 
