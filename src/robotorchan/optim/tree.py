@@ -39,7 +39,6 @@ class TreeEnsembleSearchStrategy(RandomSearchStrategy):
             dim: raw_categorical[raw_dim]
             for dim, raw_dim in zip(normalized_categorical, raw_categorical, strict=True)
         }
-        structured = set(self.integer_dims) | set(self.categorical_values)
         if set(self.integer_dims) & set(self.categorical_values):
             raise ValueError("A dimension cannot be both integer and categorical.")
         if any(len(values) == 0 for values in self.categorical_values.values()):
