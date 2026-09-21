@@ -101,7 +101,9 @@ def test_all_top_level_models_are_owned_by_a_family_package() -> None:
         family_names.update(name for name in family.__all__ if isinstance(getattr(family, name), type))
 
     top_level_model_names = {
-        name for name in models.__all__ if isinstance(getattr(models, name), type)
+        name
+        for name in models.__all__
+        if isinstance(getattr(models, name), type)
     }
     top_level_model_names.discard("UnsupportedModelOperationError")
 
