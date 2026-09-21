@@ -78,3 +78,24 @@ def test_tree_search_rejects_gp_surrogate() -> None:
 
     with pytest.raises(TypeError, match="non-GP"):
         strategy.optimize(acqf)
+
+
+def test_tree_search_normalizes_negative_dims_and_respects_integer_bounds() -> None:
+    bounds = torch.tensor([[0.2, 0.0], [2.8, 1.0]], dtype=torch.double)
+    strategy = TreeEnsembleSearchStrategy(bounds, num_samples=128, seed=5, integer_dims=[-2])
+
+    samples = strategy._sample_candidate_batches(q=1)
+
+    assert strategy.integer_dims == (0,)
+    assert torch.all(samples[..., 0] >= 1)
+    assert torch.all(samples[..., 0] <= 2)
+    assert torch.equal(samples[..., 0], samples[..., 0].round())
+
+
+def test_tree_search_validates_categorical_domain() -> None:
+    bounds = torch.tensor([[0.0], [2.0]], dtype=torch.double)
+
+    with pytest.raises(ValueError, match="finite and unique"):
+        TreeEnsembleSearchStrategy(bounds, categorical_values={0: [0.0, float("nan")]})
+    with pytest.raises(ValueError, match="within bounds"):
+        TreeEnsembleSearchStrategy(bounds, categorical_values={0: [0.0, 3.0]})
