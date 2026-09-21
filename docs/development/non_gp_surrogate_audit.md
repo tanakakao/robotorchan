@@ -240,3 +240,10 @@ This layer does not wrap or replace BoTorch acquisition functions. It validates 
 `TreeEnsembleSearchStrategy` provides the dedicated gradient-free acquisition-search path for Random Forest and Extra Trees. It deliberately reuses `RandomSearchStrategy` for the actual box sampling and scoring, adding non-GP/MC-acquisition and no-input-gradient capability checks rather than duplicating search logic.
 
 The strategy evaluates complete q-batches, returns candidates in the public input space, and never calls a gradient-based BoTorch optimizer. This is the baseline tree optimizer; mixed/integer/categorical candidate generation is deferred to Phase 8.
+
+
+## Phase 8: mixed, integer, and categorical tree inputs
+
+Random Forest and Extra Trees now accept raw numeric mixed inputs through `cat_dims`, including negative categorical indices. Categorical coordinates remain in the public/raw tensor representation and are validated as integer-valued labels; callers are not required to provide one-hot encoded data.
+
+`TreeEnsembleSearchStrategy` can additionally sample integer dimensions and categorical dimensions with explicit allowed values. Continuous dimensions retain uniform box sampling, integer dimensions are projected to integer grid points, and categorical dimensions are sampled only from their declared domains. Mixed candidate generation remains gradient-free and returns candidates in the same public input space used by the surrogate.
