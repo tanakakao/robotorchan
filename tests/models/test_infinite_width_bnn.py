@@ -11,7 +11,7 @@ from robotorchan.models import (
     InfiniteWidthBNNMultiTaskGP,
     MixedInfiniteWidthBNNGP,
 )
-from robotorchan.models.infinite_width_bnn import InfiniteWidthReLUKernel
+from robotorchan.models.expressive.infinite_width_bnn import InfiniteWidthReLUKernel
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
