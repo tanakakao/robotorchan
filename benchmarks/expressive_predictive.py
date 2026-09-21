@@ -18,7 +18,7 @@ from robotorchan.models import (
     SingleTaskGP,
     SpectralMixtureGP,
 )
-from robotorchan.models.deep_gp import SingleTaskDeepGP
+from robotorchan.models.expressive.deep_gp import SingleTaskDeepGP
 
 MODEL_NAMES = ("SingleTaskGP", "DKL", "DeepGP", "InfiniteWidthBNNGP", "SpectralMixtureGP")
 
