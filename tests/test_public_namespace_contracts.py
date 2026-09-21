@@ -13,7 +13,7 @@ def test_public_namespaces_import() -> None:
     for module_name in (
         "robotorchan.acquisition",
         "robotorchan.models",
-        "robotorchan.models.reduced",
+        "robotorchan.models.high_dimensional.reduced",
         "robotorchan.objectives",
         "robotorchan.optim",
         "robotorchan.reduction",
@@ -22,7 +22,7 @@ def test_public_namespaces_import() -> None:
 
 
 def test_reduced_models_are_canonical_model_exports() -> None:
-    reduced = importlib.import_module("robotorchan.models.reduced")
+    reduced = importlib.import_module("robotorchan.models.high_dimensional.reduced")
 
     for name in reduced.__all__:
         assert getattr(models, name) is getattr(reduced, name)
