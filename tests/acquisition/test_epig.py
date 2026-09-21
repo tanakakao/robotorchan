@@ -66,3 +66,27 @@ def test_epig_rejects_batched_target_distribution() -> None:
         assert "(n_target, d)" in str(error)
     else:
         raise AssertionError("Expected batched-target validation.")
+
+
+class _EnsembleModel:
+    num_outputs = 1
+
+    def posterior(self, X: torch.Tensor):
+        from botorch.posteriors.ensemble import EnsemblePosterior
+
+        values = torch.stack((X[..., 0], X[..., 0] + 0.1), dim=-1).unsqueeze(-1)
+        return EnsemblePosterior(values=values)
+
+
+def test_epig_rejects_ensemble_posterior_explicitly() -> None:
+    acquisition = ExpectedPredictiveInformationGain(
+        _EnsembleModel(),
+        torch.linspace(0.0, 1.0, 5, dtype=torch.double).unsqueeze(-1),
+    )
+
+    try:
+        acquisition(torch.tensor([[[0.2]]], dtype=torch.double))
+    except ValueError as error:
+        assert "ensemble posteriors" in str(error)
+    else:
+        raise AssertionError("Expected ensemble-posterior validation.")

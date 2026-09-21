@@ -5,6 +5,7 @@ from __future__ import annotations
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.models.model import Model
+from botorch.posteriors.ensemble import EnsemblePosterior
 from torch import Tensor
 
 
@@ -44,11 +45,6 @@ class ExpectedPredictiveInformationGain(AcquisitionFunction):
             raise ValueError("ExpectedPredictiveInformationGain supports q=1.")
         if self.model.num_outputs != 1:
             raise ValueError("ExpectedPredictiveInformationGain requires a single-output model.")
-        if getattr(self.model, "_is_ensemble", False):
-            raise ValueError(
-                "ExpectedPredictiveInformationGain does not yet support ensemble posteriors."
-            )
-
         target_X = self.target_X.to(dtype=X.dtype, device=X.device)
         n_target = target_X.shape[-2]
         candidate = X.squeeze(-2)
@@ -56,6 +52,10 @@ class ExpectedPredictiveInformationGain(AcquisitionFunction):
         expanded_target = target_X.expand(*candidate.shape[:-1], n_target, target_X.shape[-1])
         pair_X = torch.stack((expanded_candidate, expanded_target), dim=-2)
         posterior = self.model.posterior(pair_X)
+        if isinstance(posterior, EnsemblePosterior):
+            raise ValueError(
+                "ExpectedPredictiveInformationGain does not yet support ensemble posteriors."
+            )
         covariance = posterior.mvn.covariance_matrix
 
         noise = self.observation_noise.to(dtype=X.dtype, device=X.device).clamp_min(0.0)
