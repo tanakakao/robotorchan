@@ -632,7 +632,7 @@
     },
     "RandomForestSurrogate": {
       "guide": "docs/models/standard.md",
-      "theory": "docs/theory/03_gaussian_process.md",
+      "theory": "docs/theory/02_gaussian_process.md",
       "notebook": "examples/notebooks/01_single_task_gp.ipynb"
     }
   },
