@@ -7,7 +7,7 @@ from botorch.optim import optimize_acqf
 from gpytorch.kernels import ScaleKernel, SpectralMixtureKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models.spectral_mixture import (
+from robotorchan.models.expressive.spectral_mixture import (
     MixedSpectralMixtureGP,
     SpectralMixtureGP,
     SpectralMixtureMultiTaskGP,

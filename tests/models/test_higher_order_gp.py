@@ -5,7 +5,7 @@ from botorch.models.higher_order_gp import HigherOrderGP as BoTorchHigherOrderGP
 from botorch.models.transforms.input import Normalize
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models.higher_order import HigherOrderGP
+from robotorchan.models.structured.higher_order import HigherOrderGP
 
 
 def _training_data() -> tuple[torch.Tensor, torch.Tensor]:

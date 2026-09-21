@@ -9,8 +9,11 @@ from botorch.posteriors.gpytorch import GPyTorchPosterior
 from torch import Tensor, nn
 
 from robotorchan.models.base import RawDataMixin
-from robotorchan.models.student_t import _multitask_covar_module
-from robotorchan.models.variational import MixedSingleTaskVariationalGP, SingleTaskVariationalGP
+from robotorchan.models.robust_models.student_t import _multitask_covar_module
+from robotorchan.models.standard.variational import (
+    MixedSingleTaskVariationalGP,
+    SingleTaskVariationalGP,
+)
 
 
 class ContaminatedSingleTaskGP(RawDataMixin, nn.Module):

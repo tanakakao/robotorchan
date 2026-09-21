@@ -6,7 +6,7 @@ from botorch.acquisition.analytic import LogExpectedImprovement
 from gpytorch.kernels import ScaleKernel
 
 from robotorchan.models import ALEBOGP
-from robotorchan.models.alebo import ALEBOMetricMarginalModel, MahalanobisRBFKernel
+from robotorchan.models.high_dimensional.alebo import ALEBOMetricMarginalModel, MahalanobisRBFKernel
 
 
 def test_mahalanobis_metric_is_symmetric_positive_semidefinite() -> None:
@@ -151,7 +151,7 @@ def test_alebo_gp_fit_returns_same_model(monkeypatch) -> None:
         captured["kwargs"] = kwargs
         return mll
 
-    monkeypatch.setattr("robotorchan.models.alebo.fit_gpytorch_mll", fake_fit)
+    monkeypatch.setattr("robotorchan.models.high_dimensional.alebo.fit_gpytorch_mll", fake_fit)
 
     fitted = model.fit(optimizer_kwargs={"options": {"maxiter": 3}})
 
@@ -175,7 +175,7 @@ def test_alebo_fit_warm_starts_first_restart(monkeypatch: pytest.MonkeyPatch) ->
         seen_means.append(mll.model.mean_module.constant.detach().clone())
         return mll
 
-    monkeypatch.setattr("robotorchan.models.alebo.fit_gpytorch_mll", fake_fit)
+    monkeypatch.setattr("robotorchan.models.high_dimensional.alebo.fit_gpytorch_mll", fake_fit)
 
     model.fit(restarts=2)
 
@@ -196,7 +196,7 @@ def test_alebo_fit_can_disable_warm_start(monkeypatch: pytest.MonkeyPatch) -> No
         seen_means.append(mll.model.mean_module.constant.detach().clone())
         return mll
 
-    monkeypatch.setattr("robotorchan.models.alebo.fit_gpytorch_mll", fake_fit)
+    monkeypatch.setattr("robotorchan.models.high_dimensional.alebo.fit_gpytorch_mll", fake_fit)
 
     model.fit(restarts=1, warm_start=False)
 

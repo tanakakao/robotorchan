@@ -4,7 +4,7 @@ import torch
 from botorch.models import MultiTaskGP as BoTorchMultiTaskGP
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models.multitask import MultiTaskGP
+from robotorchan.models.standard.multitask import MultiTaskGP
 
 
 def _make_data() -> tuple[torch.Tensor, torch.Tensor]:

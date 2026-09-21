@@ -7,7 +7,7 @@ from botorch.models.latent_kronecker_gp import (
 from botorch.models.transforms.input import Normalize
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models.latent_kronecker import LatentKroneckerGP
+from robotorchan.models.structured.latent_kronecker import LatentKroneckerGP
 
 
 def _training_data() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:

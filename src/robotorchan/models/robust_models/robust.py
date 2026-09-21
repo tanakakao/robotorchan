@@ -22,7 +22,7 @@ from robotorchan.models.base import (
     make_mixed_covar_module,
     normalize_feature_dims,
 )
-from robotorchan.models.multitask import MultiTaskGP
+from robotorchan.models.standard.multitask import MultiTaskGP
 
 
 class RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin):
@@ -291,7 +291,7 @@ class HeteroskedasticSingleTaskGP(ExactGPModelMixin, BoTorchRobustRelevancePursu
         """Alternately fit the mean GP and a GP for log residual variance."""
         from botorch.fit import fit_gpytorch_mll
 
-        from robotorchan.models.single_task import SingleTaskGP
+        from robotorchan.models.standard.single_task import SingleTaskGP
 
         if iterations < 1:
             raise ValueError("iterations must be at least 1.")
@@ -464,7 +464,7 @@ class MixedHeteroskedasticMultiTaskGP(HeteroskedasticMultiTaskGP):
         """Alternately fit mixed response and mixed multi-task log-noise GPs."""
         from botorch.fit import fit_gpytorch_mll
 
-        from robotorchan.models.multitask import MixedMultiTaskGP
+        from robotorchan.models.standard.multitask import MixedMultiTaskGP
 
         if iterations < 1:
             raise ValueError("iterations must be at least 1.")
@@ -542,7 +542,7 @@ class MixedHeteroskedasticSingleTaskGP(RobustRelevancePursuitSingleTaskGP):
         """Alternately fit mixed response and mixed log-noise GPs."""
         from botorch.fit import fit_gpytorch_mll
 
-        from robotorchan.models.single_task import MixedSingleTaskGP
+        from robotorchan.models.standard.single_task import MixedSingleTaskGP
 
         if iterations < 1:
             raise ValueError("iterations must be at least 1.")

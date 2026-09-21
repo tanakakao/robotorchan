@@ -3,7 +3,7 @@
 import pytest
 import torch
 
-from robotorchan.models.reduced.mixed import MixedInputLayout, MixedInputReducer
+from robotorchan.models.high_dimensional.reduced.mixed import MixedInputLayout, MixedInputReducer
 from robotorchan.reduction.input import PCAInputReducer
 
 

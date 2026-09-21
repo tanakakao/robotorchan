@@ -2,7 +2,7 @@
 
 import torch
 
-from robotorchan.models.reduced.mixed_multitask import (
+from robotorchan.models.high_dimensional.reduced.mixed_multitask import (
     MixedReducedKroneckerMultiTaskGP,
     MixedReducedMultiTaskGP,
 )

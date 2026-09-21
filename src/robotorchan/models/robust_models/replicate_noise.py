@@ -5,7 +5,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from robotorchan.models.single_task import MixedSingleTaskGP, SingleTaskGP
+from robotorchan.models.standard.single_task import MixedSingleTaskGP, SingleTaskGP
 
 
 def _aggregate_replicates(

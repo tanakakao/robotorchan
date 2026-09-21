@@ -15,7 +15,7 @@ from gpytorch.module import Module
 from torch import Tensor
 
 from robotorchan.models.base import ExactGPModelMixin
-from robotorchan.models.reduced.mixed import MixedReducedGP
+from robotorchan.models.high_dimensional.reduced.mixed import MixedReducedGP
 from robotorchan.reduction.base import InputReducer, OutputReducer
 from robotorchan.reduction.input import (
     PCAInputReducer,

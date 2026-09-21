@@ -188,7 +188,7 @@ def test_mixed_reduced_gp_normalizes_negative_cat_dims_in_raw_space() -> None:
 
 
 def test_classical_mixed_wrappers_are_colocated_with_standard_families() -> None:
-    from robotorchan.models.reduced import base as reduced_base
+    from robotorchan.models.high_dimensional.reduced import base as reduced_base
 
     assert MixedPCAGP.__module__ == reduced_base.__name__
     assert MixedPLSGP.__module__ == reduced_base.__name__

@@ -1,6 +1,6 @@
 """Dimensionality-reduced Gaussian-process models."""
 
-from robotorchan.models.reduced.base import (
+from robotorchan.models.high_dimensional.reduced.base import (
     PCAGP,
     PLSGP,
     AutoEncoderGP,
@@ -13,7 +13,7 @@ from robotorchan.models.reduced.base import (
     RandomProjectionGP,
     ReducedGP,
 )
-from robotorchan.models.reduced.joint_multitask import (
+from robotorchan.models.high_dimensional.reduced.joint_multitask import (
     HybridAutoEncoderKroneckerMultiTaskGP,
     HybridAutoEncoderMultiTaskGP,
     JointEncoderKroneckerMultiTaskGP,
@@ -22,19 +22,19 @@ from robotorchan.models.reduced.joint_multitask import (
     JointVAEMultiTaskGP,
     MixedJointEncoderMultiTaskGP,
 )
-from robotorchan.models.reduced.joint_neural import (
+from robotorchan.models.high_dimensional.reduced.joint_neural import (
     HybridAutoEncoderGP,
     JointEncoderGP,
     MixedHybridAutoEncoderGP,
     MixedJointEncoderGP,
 )
-from robotorchan.models.reduced.joint_vae import JointVAEGP, MixedJointVAEGP
-from robotorchan.models.reduced.mixed import MixedReducedGP
-from robotorchan.models.reduced.mixed_multitask import (
+from robotorchan.models.high_dimensional.reduced.joint_vae import JointVAEGP, MixedJointVAEGP
+from robotorchan.models.high_dimensional.reduced.mixed import MixedReducedGP
+from robotorchan.models.high_dimensional.reduced.mixed_multitask import (
     MixedReducedKroneckerMultiTaskGP,
     MixedReducedMultiTaskGP,
 )
-from robotorchan.models.reduced.multitask import (
+from robotorchan.models.high_dimensional.reduced.multitask import (
     AutoEncoderKroneckerMultiTaskGP,
     AutoEncoderMultiTaskGP,
     PCAKroneckerMultiTaskGP,
@@ -52,11 +52,11 @@ from robotorchan.models.reduced.multitask import (
     VAEKroneckerMultiTaskGP,
     VAEMultiTaskGP,
 )
-from robotorchan.models.reduced.supervised_neural import (
+from robotorchan.models.high_dimensional.reduced.supervised_neural import (
     MixedSupervisedAutoEncoderGP,
     SupervisedAutoEncoderGP,
 )
-from robotorchan.models.reduced.vae import (
+from robotorchan.models.high_dimensional.reduced.vae import (
     VAEGP,
     MixedSupervisedVAEGP,
     MixedVAEGP,

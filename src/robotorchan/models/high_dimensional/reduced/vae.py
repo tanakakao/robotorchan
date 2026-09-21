@@ -6,8 +6,8 @@ from typing import Any
 
 from torch import Tensor
 
-from robotorchan.models.reduced.base import ReducedGP
-from robotorchan.models.reduced.mixed import MixedReducedGP
+from robotorchan.models.high_dimensional.reduced.base import ReducedGP
+from robotorchan.models.high_dimensional.reduced.mixed import MixedReducedGP
 from robotorchan.reduction import SupervisedVAEInputReducer, VAEInputReducer
 
 

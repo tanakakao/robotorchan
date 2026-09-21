@@ -15,7 +15,7 @@ from robotorchan.models.base import (
     make_mixed_covar_module,
     normalize_feature_dims,
 )
-from robotorchan.models.neural_features import (
+from robotorchan.models.expressive.neural_features import (
     make_feature_network,
     validate_feature_output,
     validate_neural_feature_config,

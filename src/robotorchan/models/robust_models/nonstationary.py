@@ -12,8 +12,8 @@ from robotorchan.models.base import (
     make_mixed_covar_module,
     normalize_feature_dims,
 )
-from robotorchan.models.multitask import MultiTaskGP
-from robotorchan.models.single_task import SingleTaskGP
+from robotorchan.models.standard.multitask import MultiTaskGP
+from robotorchan.models.standard.single_task import SingleTaskGP
 
 
 class GibbsKernel(Kernel):

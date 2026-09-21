@@ -3,7 +3,7 @@
 import torch
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 
-from robotorchan.models.replicate_noise import ReplicateNoiseSingleTaskGP
+from robotorchan.models.robust_models.replicate_noise import ReplicateNoiseSingleTaskGP
 
 
 def _replicates() -> tuple[torch.Tensor, torch.Tensor]:

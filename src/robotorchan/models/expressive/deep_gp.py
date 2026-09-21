@@ -16,7 +16,7 @@ from gpytorch.variational import CholeskyVariationalDistribution, VariationalStr
 from torch import Tensor
 
 from robotorchan.models.base import ModelTrainingMixin, SupervisedTrainingDataMixin
-from robotorchan.models.deep_gp_posterior import DeepGPPosterior
+from robotorchan.models.expressive.deep_gp_posterior import DeepGPPosterior
 
 
 class _DeepGPLayer(DeepGPLayer):

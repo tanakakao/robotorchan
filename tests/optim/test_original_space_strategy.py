@@ -4,8 +4,8 @@ import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
 
-from robotorchan.models.reduced import PCAGP
-from robotorchan.models.single_task import SingleTaskGP
+from robotorchan.models.high_dimensional.reduced import PCAGP
+from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim import OriginalSpaceStrategy
 
 

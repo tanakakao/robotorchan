@@ -2,7 +2,7 @@
 
 import torch
 
-from robotorchan.models.deep_gp_posterior import DeepGPPosterior
+from robotorchan.models.expressive.deep_gp_posterior import DeepGPPosterior
 
 
 def test_base_samples_preserve_t_batch_dimensions() -> None:

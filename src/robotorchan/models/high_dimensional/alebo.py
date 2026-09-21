@@ -12,7 +12,7 @@ from gpytorch.distributions import MultivariateNormal
 from gpytorch.kernels import Kernel, ScaleKernel
 from torch import Tensor
 
-from robotorchan.models.single_task import SingleTaskGP
+from robotorchan.models.standard.single_task import SingleTaskGP
 
 
 class MahalanobisRBFKernel(Kernel):

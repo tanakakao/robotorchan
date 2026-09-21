@@ -3,7 +3,11 @@
 import torch
 from gpytorch.mlls import DeepApproximateMLL
 
-from robotorchan.models.deep_gp import MixedSingleTaskDeepGP, MultiTaskDeepGP, SingleTaskDeepGP
+from robotorchan.models.expressive.deep_gp import (
+    MixedSingleTaskDeepGP,
+    MultiTaskDeepGP,
+    SingleTaskDeepGP,
+)
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
