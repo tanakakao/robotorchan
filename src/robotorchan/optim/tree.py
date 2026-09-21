@@ -32,20 +32,52 @@ class TreeEnsembleSearchStrategy(RandomSearchStrategy):
         categorical_values: Mapping[int, Sequence[float]] | None = None,
     ) -> None:
         super().__init__(bounds, num_samples=num_samples, seed=seed)
-        self.integer_dims = tuple(integer_dims)
-        self.categorical_values = dict(categorical_values or {})
+        self.integer_dims = self._normalize_dims(integer_dims)
+        raw_categorical = dict(categorical_values or {})
+        normalized_categorical = self._normalize_dims(raw_categorical)
+        self.categorical_values = {
+            dim: raw_categorical[raw_dim]
+            for dim, raw_dim in zip(normalized_categorical, raw_categorical, strict=True)
+        }
         structured = set(self.integer_dims) | set(self.categorical_values)
-        if any(dim < 0 or dim >= self.input_dim for dim in structured):
-            raise ValueError("Structured search dimensions must be valid non-negative indices.")
         if set(self.integer_dims) & set(self.categorical_values):
             raise ValueError("A dimension cannot be both integer and categorical.")
         if any(len(values) == 0 for values in self.categorical_values.values()):
             raise ValueError("Each categorical dimension must provide at least one value.")
+        for dim, values in self.categorical_values.items():
+            tensor = torch.as_tensor(values, dtype=self.bounds.dtype, device=self.bounds.device)
+            if not torch.isfinite(tensor).all() or tensor.unique().numel() != tensor.numel():
+                raise ValueError("Categorical values must be finite and unique.")
+            if (tensor < self.bounds[0, dim]).any() or (tensor > self.bounds[1, dim]).any():
+                raise ValueError("Categorical values must lie within bounds.")
+        for dim in self.integer_dims:
+            if torch.ceil(self.bounds[0, dim]) > torch.floor(self.bounds[1, dim]):
+                raise ValueError("Integer dimensions must contain at least one feasible integer.")
+
+    def _normalize_dims(self, dims: Sequence[int] | Mapping[int, object]) -> tuple[int, ...]:
+        normalized = tuple(dim % self.input_dim if dim < 0 else dim for dim in dims)
+        if any(dim < 0 or dim >= self.input_dim for dim in normalized):
+            raise ValueError("Structured search dimensions contain an invalid index.")
+        if len(set(normalized)) != len(normalized):
+            raise ValueError("Structured search dimensions must not contain duplicates.")
+        return normalized
 
     def _sample_candidate_batches(self, q: int) -> Tensor:
         samples = super()._sample_candidate_batches(q)
         for dim in self.integer_dims:
-            samples[..., dim] = samples[..., dim].round()
+            lower = torch.ceil(self.bounds[0, dim]).to(torch.long)
+            upper = torch.floor(self.bounds[1, dim]).to(torch.long)
+            generator = None
+            if self.seed is not None:
+                generator = torch.Generator(device=samples.device)
+                generator.manual_seed(self.seed + dim + 1)
+            samples[..., dim] = torch.randint(
+                int(lower),
+                int(upper) + 1,
+                samples.shape[:-1],
+                device=samples.device,
+                generator=generator,
+            ).to(samples.dtype)
         for dim, allowed in self.categorical_values.items():
             values = torch.as_tensor(allowed, dtype=samples.dtype, device=samples.device)
             generator = None
