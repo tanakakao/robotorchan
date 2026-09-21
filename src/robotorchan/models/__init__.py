@@ -95,6 +95,7 @@ from robotorchan.models.high_dimensional.reduced.vae import (
     SupervisedVAEGP,
 )
 from robotorchan.models.non_gp.extra_trees import ExtraTreesSurrogate
+from robotorchan.models.non_gp.gradient_boosting import GradientBoostingSurrogate
 from robotorchan.models.non_gp.random_forest import RandomForestSurrogate
 from robotorchan.models.preference.pairwise import PairwiseGP
 from robotorchan.models.robust.contaminated import (
@@ -182,6 +183,7 @@ __all__ = [
     "ContaminatedSingleTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "ExtraTreesSurrogate",
+    "GradientBoostingSurrogate",
     "HeterogeneousMTGP",
     "HeteroskedasticMultiTaskGP",
     "HeteroskedasticSingleTaskGP",
