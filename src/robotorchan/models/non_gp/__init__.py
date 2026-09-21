@@ -6,4 +6,8 @@ from robotorchan.models.non_gp.posterior import make_ensemble_posterior
 from robotorchan.models.non_gp.random_forest import RandomForestSurrogate
 
 __all__ = [
-    "GradientBoostingSurrogate","ExtraTreesSurrogate", "RandomForestSurrogate", "make_ensemble_posterior"]
+    "ExtraTreesSurrogate",
+    "GradientBoostingSurrogate",
+    "RandomForestSurrogate",
+    "make_ensemble_posterior",
+]
