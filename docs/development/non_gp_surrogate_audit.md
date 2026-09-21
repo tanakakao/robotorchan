@@ -269,3 +269,15 @@ The initial implementation remains numeric and single-output, exposes explicit `
 ## Phase 12: multi-output objectives and constraints
 
 The shared bootstrap ensemble now preserves an arbitrary output dimension `m` and supports BoTorch `output_indices`. Gradient boosting backends use sklearn `MultiOutputRegressor` when `m > 1`, while retaining the direct regressor for scalar outputs. This enables one empirical posterior to represent multiple objectives or objective/constraint outputs. Integration is tested with BoTorch qEHVI. Constraint semantics remain acquisition-level: callers may select or transform posterior outputs with the normal BoTorch objective/constraint machinery rather than embedding feasibility rules in the surrogate.
+
+
+## Phase 14: documentation closure
+
+Phase 14 replaces the temporary GP documentation mappings used while the non-GP implementation was evolving.
+
+- `docs/models/non_gp.md` documents the public non-GP training, posterior, acquisition, mixed-input, and uncertainty contracts.
+- `docs/theory/23_non_gp_surrogates.md` records the statistical distinction between tree disagreement, bootstrap complete-model samples, and a Gaussian posterior.
+- `examples/notebooks/25_non_gp_surrogates.ipynb` provides an executable Random Forest posterior and MC acquisition example.
+- `docs/model_coverage.json` now maps all four public sklearn-backed surrogates to these non-GP resources rather than GP documentation.
+
+The documentation intentionally does not claim calibrated uncertainty, analytic Gaussian acquisition compatibility, or posterior semantics for individual boosting stages.
