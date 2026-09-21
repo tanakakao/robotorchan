@@ -203,3 +203,19 @@ Phase 3 validates the empirical-ensemble posterior boundary before introducing s
 - Differentiability is preserved by the adapter; individual surrogate implementations decide whether their prediction path actually supports candidate-input gradients.
 
 Phase 4 can therefore introduce the first sklearn-backed tree surrogate without changing the posterior abstraction.
+
+## Phase 4 result
+
+Phase 4 introduces the first concrete non-GP surrogate: `RandomForestSurrogate`.
+
+- Training uses the explicit `fit()` contract and never fabricates an MLL.
+- Raw constructor tensors remain available through the common provenance contract.
+- Every fitted decision tree contributes one empirical function sample to
+  `EnsemblePosterior`; tree disagreement is not described as Gaussian posterior variance.
+- The initial public model is intentionally single-output and continuous/numeric-input only.
+  Multi-output and mixed categorical support remain later phases.
+- Candidate-input gradients are explicitly unsupported because sklearn prediction detaches to CPU.
+- BoTorch MC acquisition compatibility is covered directly with qEI.
+- scikit-learn is an optional `tree` dependency rather than a core dependency.
+
+Phase 5 can add Extra Trees on the same posterior/training contract without changing these semantics.
