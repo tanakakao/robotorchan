@@ -3,7 +3,7 @@
 import torch
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 
-from robotorchan.models.contaminated import ContaminatedSingleTaskGP
+from robotorchan.models.robust_models.contaminated import ContaminatedSingleTaskGP
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
