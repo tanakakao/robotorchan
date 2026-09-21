@@ -247,3 +247,10 @@ The strategy evaluates complete q-batches, returns candidates in the public inpu
 Random Forest and Extra Trees now accept raw numeric mixed inputs through `cat_dims`, including negative categorical indices. Categorical coordinates remain in the public/raw tensor representation and are validated as integer-valued labels; callers are not required to provide one-hot encoded data.
 
 `TreeEnsembleSearchStrategy` can additionally sample integer dimensions and categorical dimensions with explicit allowed values. Continuous dimensions retain uniform box sampling, integer dimensions are projected to integer grid points, and categorical dimensions are sampled only from their declared domains. Mixed candidate generation remains gradient-free and returns candidates in the same public input space used by the surrogate.
+
+
+## Phase 9: Gradient Boosting surrogate
+
+`GradientBoostingSurrogate` adds sklearn gradient boosting without treating boosting stages as posterior members. A posterior member is instead one complete boosting model fitted on an independent bootstrap resample. The resulting empirical distribution therefore represents bootstrap model uncertainty and can be consumed by BoTorch Monte Carlo acquisitions through `EnsemblePosterior`.
+
+The initial implementation remains numeric and single-output, exposes explicit `fit()`, has no MLL, and does not support candidate-input gradients. Histogram gradient boosting and a more explicit bootstrap-boosting family are handled in subsequent phases.
