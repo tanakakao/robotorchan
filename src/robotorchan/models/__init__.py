@@ -10,7 +10,7 @@ from robotorchan.models.robust_models.contaminated import (
     MixedContaminatedSingleTaskGP,
 )
 from robotorchan.models.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
-from robotorchan.models.deep_gp import (
+from robotorchan.models.expressive.deep_gp import (
     MixedMultiTaskDeepGP,
     MixedSingleTaskDeepGP,
     MultiTaskDeepGP,
@@ -30,7 +30,7 @@ from robotorchan.models.hierarchical import (
     MixedHierarchicalConditionalKernelMultiTaskGP,
 )
 from robotorchan.models.higher_order import HigherOrderGP, MixedHigherOrderGP
-from robotorchan.models.infinite_width_bnn import (
+from robotorchan.models.expressive.infinite_width_bnn import (
     InfiniteWidthBNNGP,
     InfiniteWidthBNNMultiTaskGP,
     MixedInfiniteWidthBNNGP,
@@ -142,7 +142,7 @@ from robotorchan.models.robust_models.robust import (
     RobustRelevancePursuitSingleTaskGP,
 )
 from robotorchan.models.standard.single_task import MixedSingleTaskGP, SingleTaskGP
-from robotorchan.models.spectral_mixture import (
+from robotorchan.models.expressive.spectral_mixture import (
     MixedSpectralMixtureGP,
     MixedSpectralMixtureMultiTaskGP,
     SpectralMixtureGP,
