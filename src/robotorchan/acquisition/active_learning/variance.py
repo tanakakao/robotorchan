@@ -25,8 +25,10 @@ class PosteriorVariance(AcquisitionFunction):
                 "PosteriorVariance supports q=1; use qNegIntegratedPosteriorVariance for batch AL."
             )
 
+        if getattr(self.model, "_is_ensemble", False):
+            raise ValueError("PosteriorVariance does not yet support ensemble posteriors.")
         posterior = self.model.posterior(X)
-        if getattr(self.model, "_is_ensemble", False) or isinstance(posterior, EnsemblePosterior):
+        if isinstance(posterior, EnsemblePosterior):
             raise ValueError("PosteriorVariance does not yet support ensemble posteriors.")
         variance = posterior.variance
         if variance.ndim != X.ndim:
