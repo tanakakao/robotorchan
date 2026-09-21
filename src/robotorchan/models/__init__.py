@@ -94,6 +94,7 @@ from robotorchan.models.high_dimensional.reduced.vae import (
     MixedVAEGP,
     SupervisedVAEGP,
 )
+from robotorchan.models.non_gp.random_forest import RandomForestSurrogate
 from robotorchan.models.preference.pairwise import PairwiseGP
 from robotorchan.models.robust.contaminated import (
     ContaminatedMultiTaskGP,
@@ -261,6 +262,7 @@ __all__ = [
     "PLSKroneckerMultiTaskGP",
     "PLSMultiTaskGP",
     "PairwiseGP",
+    "RandomForestSurrogate",
     "RandomProjectionGP",
     "RandomProjectionKroneckerMultiTaskGP",
     "RandomProjectionMultiTaskGP",

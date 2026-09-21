@@ -96,6 +96,7 @@ PUBLIC_MODEL_NAMES = {
     "PLSKroneckerMultiTaskGP",
     "PLSMultiTaskGP",
     "PairwiseGP",
+    "RandomForestSurrogate",
     "RandomProjectionGP",
     "RandomProjectionKroneckerMultiTaskGP",
     "RandomProjectionMultiTaskGP",
@@ -146,6 +147,7 @@ NON_MLL_MODELS = {
     "MixedSaasFullyBayesianSingleTaskGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
+    "RandomForestSurrogate",
 }
 
 

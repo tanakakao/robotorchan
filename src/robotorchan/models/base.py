@@ -327,6 +327,7 @@ class ModelTrainingMixin:
     """Describe common training-objective capabilities of a wrapper."""
 
     supports_mll: ClassVar[bool] = False
+    supports_fit: ClassVar[bool] = False
 
     def make_mll(self) -> MarginalLogLikelihood:
         """Construct this model's marginal-likelihood training objective.
@@ -336,6 +337,23 @@ class ModelTrainingMixin:
                 style training objective.
         """
         raise UnsupportedModelOperationError(f"{type(self).__name__} does not support make_mll().")
+
+
+class FittableModelMixin(ModelTrainingMixin):
+    """Capability contract for models trained through an explicit fit step."""
+
+    supports_fit: ClassVar[bool] = True
+
+    def fit(self) -> None:
+        """Fit model-specific parameters from constructor-level training data."""
+        raise NotImplementedError
+
+
+class NonGPModelMixin(SupervisedTrainingDataMixin, FittableModelMixin):
+    """Common capability contract for supervised non-GP BoTorch surrogates."""
+
+    supports_mll: ClassVar[bool] = False
+    supports_input_gradients: ClassVar[bool] = False
 
 
 class ExactGPModelMixin(SupervisedTrainingDataMixin, ModelTrainingMixin):
