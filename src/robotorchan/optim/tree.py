@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
@@ -46,12 +47,12 @@ class TreeEnsembleSearchStrategy(RandomSearchStrategy):
         for dim in self.integer_dims:
             samples[..., dim] = samples[..., dim].round()
         for dim, allowed in self.categorical_values.items():
-            values = Tensor(allowed).to(dtype=samples.dtype, device=samples.device)
+            values = torch.as_tensor(allowed, dtype=samples.dtype, device=samples.device)
             generator = None
             if self.seed is not None:
-                generator = __import__("torch").Generator(device=samples.device)
+                generator = torch.Generator(device=samples.device)
                 generator.manual_seed(self.seed + dim + 1)
-            indices = __import__("torch").randint(
+            indices = torch.randint(
                 len(allowed),
                 samples.shape[:-1],
                 device=samples.device,
