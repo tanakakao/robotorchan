@@ -13,6 +13,7 @@ PUBLIC_MODEL_NAMES = {
     "ContaminatedSingleTaskGP",
     "EnsembleMapSaasSingleTaskGP",
     "ExtraTreesSurrogate",
+    "GradientBoostingSurrogate",
     "HeterogeneousMTGP",
     "HeteroskedasticMultiTaskGP",
     "HeteroskedasticSingleTaskGP",
