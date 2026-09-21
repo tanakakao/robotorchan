@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
+
+import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
@@ -25,8 +28,38 @@ class TreeEnsembleSearchStrategy(RandomSearchStrategy):
         *,
         num_samples: int = 4096,
         seed: int | None = None,
+        integer_dims: Sequence[int] = (),
+        categorical_values: Mapping[int, Sequence[float]] | None = None,
     ) -> None:
         super().__init__(bounds, num_samples=num_samples, seed=seed)
+        self.integer_dims = tuple(integer_dims)
+        self.categorical_values = dict(categorical_values or {})
+        structured = set(self.integer_dims) | set(self.categorical_values)
+        if any(dim < 0 or dim >= self.input_dim for dim in structured):
+            raise ValueError("Structured search dimensions must be valid non-negative indices.")
+        if set(self.integer_dims) & set(self.categorical_values):
+            raise ValueError("A dimension cannot be both integer and categorical.")
+        if any(len(values) == 0 for values in self.categorical_values.values()):
+            raise ValueError("Each categorical dimension must provide at least one value.")
+
+    def _sample_candidate_batches(self, q: int) -> Tensor:
+        samples = super()._sample_candidate_batches(q)
+        for dim in self.integer_dims:
+            samples[..., dim] = samples[..., dim].round()
+        for dim, allowed in self.categorical_values.items():
+            values = torch.as_tensor(allowed, dtype=samples.dtype, device=samples.device)
+            generator = None
+            if self.seed is not None:
+                generator = torch.Generator(device=samples.device)
+                generator.manual_seed(self.seed + dim + 1)
+            indices = torch.randint(
+                len(allowed),
+                samples.shape[:-1],
+                device=samples.device,
+                generator=generator,
+            )
+            samples[..., dim] = values[indices]
+        return samples
 
     def optimize(
         self,
@@ -44,6 +77,10 @@ class TreeEnsembleSearchStrategy(RandomSearchStrategy):
         result = super().optimize(acq_function, q=q)
         metadata = dict(result.metadata)
         metadata["strategy"] = "tree_ensemble_random_search"
+        if self.integer_dims:
+            metadata["integer_dims"] = self.integer_dims
+        if self.categorical_values:
+            metadata["categorical_dims"] = tuple(sorted(self.categorical_values))
         return SearchResult(
             candidates=result.candidates,
             acquisition_value=result.acquisition_value,
