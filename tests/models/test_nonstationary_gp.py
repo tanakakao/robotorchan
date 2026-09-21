@@ -3,7 +3,7 @@
 import torch
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 
-from robotorchan.models.robust_models.nonstationary import GibbsKernel, NonstationarySingleTaskGP
+from robotorchan.models.robust.nonstationary import GibbsKernel, NonstationarySingleTaskGP
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
