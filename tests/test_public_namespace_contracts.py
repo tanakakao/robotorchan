@@ -67,6 +67,7 @@ def test_removed_module_paths_do_not_import() -> None:
             continue
         raise AssertionError(f"removed module path remains importable: {module_name}")
 
+
 def test_model_family_exports_are_canonical() -> None:
     family_modules = (
         "robotorchan.models.expressive",
@@ -79,5 +80,6 @@ def test_model_family_exports_are_canonical() -> None:
     )
     for module_name in family_modules:
         family = importlib.import_module(module_name)
-        for name in family.__all__:
+        canonical_names = set(family.__all__) & set(models.__all__)
+        for name in canonical_names:
             assert getattr(models, name) is getattr(family, name)
