@@ -4,6 +4,7 @@ from robotorchan.acquisition.active_learning import (
     BoundaryVariance,
     PosteriorStd,
     PosteriorVariance,
+    RandomizedStraddle,
     Straddle,
 )
 from robotorchan.acquisition.non_gp import make_non_gp_acquisition, validate_non_gp_acquisition
@@ -13,6 +14,7 @@ __all__ = [
     "BoundaryVariance",
     "PosteriorStd",
     "PosteriorVariance",
+    "RandomizedStraddle",
     "Straddle",
     "make_non_gp_acquisition",
     "select_thompson_candidates",
