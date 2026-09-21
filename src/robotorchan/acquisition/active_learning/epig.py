@@ -25,8 +25,10 @@ class ExpectedPredictiveInformationGain(AcquisitionFunction):
         target_weights: Tensor | None = None,
     ) -> None:
         super().__init__(model=model)
-        if target_X.ndim < 2:
-            raise ValueError("target_X must have shape (..., n_target, d).")
+        if target_X.ndim != 2:
+            raise ValueError("target_X must have shape (n_target, d).")
+        if target_X.shape[-2] == 0:
+            raise ValueError("target_X must contain at least one target point.")
         self.register_buffer("target_X", target_X)
         self.register_buffer("observation_noise", torch.as_tensor(observation_noise))
         if target_weights is not None:
@@ -42,6 +44,10 @@ class ExpectedPredictiveInformationGain(AcquisitionFunction):
             raise ValueError("ExpectedPredictiveInformationGain supports q=1.")
         if self.model.num_outputs != 1:
             raise ValueError("ExpectedPredictiveInformationGain requires a single-output model.")
+        if getattr(self.model, "_is_ensemble", False):
+            raise ValueError(
+                "ExpectedPredictiveInformationGain does not yet support ensemble posteriors."
+            )
 
         target_X = self.target_X.to(dtype=X.dtype, device=X.device)
         n_target = target_X.shape[-2]
