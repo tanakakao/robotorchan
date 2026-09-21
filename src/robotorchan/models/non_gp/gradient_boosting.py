@@ -77,7 +77,9 @@ class GradientBoostingSurrogate(NonGPModelMixin, Model, nn.Module):
         for member_index in range(self.n_members):
             indices = torch.randint(len(X), (len(X),), generator=generator).numpy()
             member = GradientBoostingRegressor(
-                random_state=None if self.random_state is None else self.random_state + member_index,
+                random_state=(
+                    None if self.random_state is None else self.random_state + member_index
+                ),
                 **self.boosting_kwargs,
             )
             member.fit(X[indices], y[indices])
