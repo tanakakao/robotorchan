@@ -190,3 +190,16 @@ test:
 - capability reporting needed by acquisition/search integration.
 
 No compatibility aliases or deprecated wrappers are to be introduced.
+
+## Phase 3 result
+
+Phase 3 validates the empirical-ensemble posterior boundary before introducing sklearn.
+
+- `make_ensemble_posterior(values)` accepts the BoTorch-native `... x s x q x m` layout.
+- It returns upstream `EnsemblePosterior` directly; robotorchan does not duplicate posterior semantics.
+- Tests cover posterior mean / variance, `rsample`, dtype/device preservation, and candidate-input autograd.
+- A dependency-free deterministic ensemble is exercised through BoTorch MC `qExpectedImprovement`.
+- The same posterior adapter is intended for Random Forest / Extra Trees, bootstrap boosting, deep ensembles, and sampled finite-BNN predictions when their sample semantics match.
+- Differentiability is preserved by the adapter; individual surrogate implementations decide whether their prediction path actually supports candidate-input gradients.
+
+Phase 4 can therefore introduce the first sklearn-backed tree surrogate without changing the posterior abstraction.
