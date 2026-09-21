@@ -64,11 +64,26 @@ class Straddle(AcquisitionFunction):
 
 
 class BoundaryVariance(Straddle):
-    """Weight posterior variance by proximity to a target boundary."""
+    """Weight posterior variance by proximity to a target boundary.
+
+    This is a robotorchan-specific heuristic rather than a named BoTorch or
+    literature acquisition. Unlike Straddle, it has no exploration multiplier.
+    """
+
+    def __init__(
+        self,
+        model: Model,
+        *,
+        target: float | Tensor,
+        output_index: int | None = None,
+    ) -> None:
+        AcquisitionFunction.__init__(self, model=model)
+        self.target = target
+        self.output_index = output_index
 
     @average_over_ensemble_models
     def forward(self, X: Tensor) -> Tensor:
-        """Evaluate variance divided by target-distance uncertainty."""
+        """Evaluate variance weighted by Gaussian target proximity."""
         if X.shape[-2] != 1:
             raise ValueError("BoundaryVariance supports q=1.")
         if getattr(self.model, "_is_ensemble", False):
