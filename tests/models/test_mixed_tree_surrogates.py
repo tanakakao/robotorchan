@@ -14,7 +14,7 @@ def test_tree_surrogate_accepts_raw_categorical_dimensions(model_class) -> None:
         [[0.0, 0.0], [0.2, 1.0], [0.4, 2.0], [0.6, 0.0], [0.8, 1.0], [1.0, 2.0]],
         dtype=torch.double,
     )
-    train_Y = (train_X[:, :1] + train_X[:, 1:] * 0.2)
+    train_Y = train_X[:, :1] + train_X[:, 1:] * 0.2
     model = model_class(train_X, train_Y, cat_dims=[-1], n_estimators=8, random_state=0)
     model.fit()
 
