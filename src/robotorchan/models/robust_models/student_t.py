@@ -8,7 +8,7 @@ from gpytorch.likelihoods import StudentTLikelihood
 from torch import Tensor, nn
 
 from robotorchan.models.base import RawDataMixin, make_mixed_covar_module, normalize_feature_dims
-from robotorchan.models.variational import MixedSingleTaskVariationalGP, SingleTaskVariationalGP
+from robotorchan.models.standard.variational import MixedSingleTaskVariationalGP, SingleTaskVariationalGP
 
 
 class _StudentTGPBase(RawDataMixin, nn.Module):
