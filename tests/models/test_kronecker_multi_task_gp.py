@@ -5,7 +5,7 @@ from botorch.models import KroneckerMultiTaskGP as BoTorchKroneckerMultiTaskGP
 from gpytorch.kernels import AdditiveKernel, ScaleKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models.multitask import KroneckerMultiTaskGP, MixedKroneckerMultiTaskGP
+from robotorchan.models.standard.multitask import KroneckerMultiTaskGP, MixedKroneckerMultiTaskGP
 
 
 def _make_data() -> tuple[torch.Tensor, torch.Tensor]:
