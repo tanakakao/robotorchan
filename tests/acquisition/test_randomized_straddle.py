@@ -71,3 +71,26 @@ def test_randomized_straddle_rejects_flagged_ensemble_before_posterior() -> None
         assert "ensemble posteriors" in str(error)
     else:
         raise AssertionError("Expected flagged-ensemble validation.")
+
+
+def test_randomized_straddle_beta_is_transient_state() -> None:
+    train_X = torch.linspace(0.0, 1.0, 8, dtype=torch.double).unsqueeze(-1)
+    train_Y = torch.sin(train_X * 5.0)
+    model = SingleTaskGP(train_X, train_Y)
+    acquisition = RandomizedStraddle(
+        model,
+        target=0.0,
+        generator=torch.Generator().manual_seed(23),
+    )
+    acquisition(torch.tensor([[[0.3]]], dtype=torch.double))
+
+    state = acquisition.state_dict()
+
+    assert "_random_beta" not in state
+
+    fresh = RandomizedStraddle(
+        model,
+        target=0.0,
+        generator=torch.Generator().manual_seed(23),
+    )
+    fresh.load_state_dict(state, strict=True)
