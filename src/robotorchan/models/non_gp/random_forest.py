@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 import torch
@@ -10,6 +11,7 @@ from botorch.posteriors.posterior import Posterior
 from torch import Tensor, nn
 
 from robotorchan.models.base import NonGPModelMixin
+from robotorchan.models.non_gp.mixed import normalize_cat_dims, validate_categorical_values
 from robotorchan.models.non_gp.posterior import make_ensemble_posterior
 
 try:
@@ -28,6 +30,7 @@ class RandomForestSurrogate(NonGPModelMixin, Model, nn.Module):
         *,
         n_estimators: int = 100,
         random_state: int | None = None,
+        cat_dims: Sequence[int] = (),
         **forest_kwargs: Any,
     ) -> None:
         super().__init__()
@@ -43,6 +46,8 @@ class RandomForestSurrogate(NonGPModelMixin, Model, nn.Module):
             raise ValueError("Phase 4 RandomForestSurrogate supports one output only.")
         if train_X.shape[0] != train_Y.shape[0]:
             raise ValueError("train_X and train_Y must contain the same number of observations.")
+        self.cat_dims = normalize_cat_dims(cat_dims, train_X.shape[-1])
+        validate_categorical_values(train_X, self.cat_dims)
         self._store_supervised_training_data(train_X, train_Y)
         self._forest = RandomForestRegressor(
             n_estimators=n_estimators,
@@ -85,6 +90,7 @@ class RandomForestSurrogate(NonGPModelMixin, Model, nn.Module):
         if observation_noise is not False:
             raise NotImplementedError("RandomForestSurrogate does not model observation noise.")
 
+        validate_categorical_values(X, self.cat_dims)
         original_shape = X.shape[:-1]
         flat_X = X.detach().cpu().reshape(-1, X.shape[-1]).numpy()
         tree_predictions = [tree.predict(flat_X) for tree in self._forest.estimators_]
