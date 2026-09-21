@@ -1,4 +1,3 @@
-# ruff: noqa: F401
 """High-dimensional surrogate models and dimension-reduction extensions."""
 
 from robotorchan.models.high_dimensional.alebo import ALEBOGP
