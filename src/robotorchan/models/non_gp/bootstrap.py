@@ -33,8 +33,8 @@ class BootstrapEnsembleSurrogate(NonGPModelMixin, Model, nn.Module, ABC):
             raise ValueError("train_X must have shape n x d.")
         if train_Y.ndim == 1:
             train_Y = train_Y.unsqueeze(-1)
-        if train_Y.ndim != 2 or train_Y.shape[-1] != 1:
-            raise ValueError(f"{self.model_name} supports one output only.")
+        if train_Y.ndim != 2 or train_Y.shape[-1] < 1:
+            raise ValueError("train_Y must have shape n x m with at least one output.")
         if train_X.shape[0] != train_Y.shape[0]:
             raise ValueError("train_X and train_Y must contain the same number of observations.")
         if n_members < 2:
@@ -54,7 +54,7 @@ class BootstrapEnsembleSurrogate(NonGPModelMixin, Model, nn.Module, ABC):
     @property
     def num_outputs(self) -> int:
         """Number of modeled outputs."""
-        return 1
+        return self.raw_train_Y.shape[-1]
 
     @property
     def is_fitted(self) -> bool:
@@ -64,7 +64,7 @@ class BootstrapEnsembleSurrogate(NonGPModelMixin, Model, nn.Module, ABC):
     def fit(self) -> None:
         """Fit complete estimators on independent bootstrap resamples."""
         X = self.raw_train_X.detach().cpu().numpy()
-        y = self.raw_train_Y.squeeze(-1).detach().cpu().numpy()
+        y = self.raw_train_Y.detach().cpu().numpy()
         generator = torch.Generator().manual_seed(self.random_state or 0)
         self._members = []
         for member_index in range(self.n_members):
@@ -86,16 +86,24 @@ class BootstrapEnsembleSurrogate(NonGPModelMixin, Model, nn.Module, ABC):
         del kwargs
         if not self._is_fitted:
             raise RuntimeError("Call fit() before posterior().")
-        if output_indices not in (None, [0]):
-            raise ValueError(f"{self.model_name} has only output index 0.")
+        selected_outputs = list(range(self.num_outputs)) if output_indices is None else output_indices
+        if not selected_outputs or any(
+            index < 0 or index >= self.num_outputs for index in selected_outputs
+        ):
+            raise ValueError("output_indices contains an invalid output index.")
         if observation_noise is not False:
             raise NotImplementedError(f"{self.model_name} does not model observation noise.")
 
         original_shape = X.shape[:-1]
         flat_X = X.detach().cpu().reshape(-1, X.shape[-1]).numpy()
-        predictions = [member.predict(flat_X) for member in self._members]
-        values = torch.as_tensor(predictions, dtype=X.dtype, device=X.device)
-        values = values.reshape(self.n_members, *original_shape, 1)
+        predictions = []
+        for member in self._members:
+            prediction = torch.as_tensor(member.predict(flat_X))
+            if prediction.ndim == 1:
+                prediction = prediction.unsqueeze(-1)
+            predictions.append(prediction[..., selected_outputs])
+        values = torch.stack(predictions).to(dtype=X.dtype, device=X.device)
+        values = values.reshape(self.n_members, *original_shape, len(selected_outputs))
         values = values.movedim(0, len(original_shape) - 1)
         posterior = make_ensemble_posterior(values)
         return posterior_transform(posterior) if posterior_transform is not None else posterior
