@@ -296,3 +296,19 @@ is explicitly not treated as posterior sampling.
 
 CatBoost is the preferred first implementation target for native categorical inputs. All external
 backends remain optional and must preserve base-package importability when absent.
+
+
+## Phase 16: final audit
+
+The final implementation audit closed several concrete edge cases rather than hiding them behind documentation.
+
+- bootstrap single-output estimators now receive a one-dimensional target, matching sklearn scalar-regressor contracts;
+- `random_state=None` no longer aliases seed zero, while explicit seeds remain reproducible;
+- duplicate `output_indices` are rejected;
+- tree acquisition search normalizes negative structured dimensions and rejects duplicate/out-of-range dimensions;
+- integer search samples only feasible integers between `ceil(lower)` and `floor(upper)` instead of rounding continuous samples outside non-integer bounds;
+- categorical candidate domains must be non-empty, finite, unique, and inside the optimization bounds.
+
+Remaining deliberate limitations are not silently repaired in Phase 16. RF / Extra Trees currently consume integer-coded categorical columns through sklearn numeric trees rather than a native nominal split mechanism. They therefore retain raw mixed-space API support but must not be described as statistically equivalent to native categorical models. RF / Extra Trees also remain single-output, while bootstrap boosting owns the current multi-output path. The Phase 15 external-backend plan identifies CatBoost as the preferred future native-categorical implementation.
+
+The non-GP acquisition helper currently uses `supports_mll = False` as its capability gate. This is sufficient for the current public non-GP family, but a future non-GP model with different acquisition semantics should introduce a more specific capability rather than broadening this proxy implicitly.
