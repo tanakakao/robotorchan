@@ -629,6 +629,11 @@
       "guide": "docs/models/expressive.md",
       "theory": "docs/theory/22_expressive_gp.md",
       "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
+    },
+    "RandomForestSurrogate": {
+      "guide": "docs/development/non_gp_surrogate_audit.md",
+      "theory": "docs/development/non_gp_surrogate_audit.md",
+      "notebook": "examples/notebooks/01_single_task_gp.ipynb"
     }
   },
   "coverage_contract": {
