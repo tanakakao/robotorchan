@@ -38,7 +38,7 @@
 
 現在は次の文書があります。
 
-- [Architecture](development/architecture.md)
+- [Acquisition architecture](development/acquisition-architecture.md)\n- [Architecture](development/architecture.md)
 - [Model design guidelines](development/model_design_guidelines.md)
 - [Training API](development/training_api.md)
 - [Release procedure](development/releasing.md)

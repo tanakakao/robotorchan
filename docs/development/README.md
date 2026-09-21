@@ -2,7 +2,7 @@
 
 このディレクトリは robotorchan の**現在も有効な開発契約**をまとめます。Phase進行記録、closeout、解消済み feasibility audit は恒久ドキュメントとして保存しません。
 
-- [Architecture](architecture.md): BoTorch extension としての責務、wrapper policy、package/API設計
+- [Acquisition architecture](acquisition-architecture.md): BoTorch-first acquisition ownership、custom実装境界、classification延期方針\n- [Architecture](architecture.md): BoTorch extension としての責務、wrapper policy、package/API設計
 - [Model design guidelines](model_design_guidelines.md): model追加・変更時の設計原則、Mixed/robust semantics、CI preflight
 - [Training API](training_api.md): `make_mll()` と joint neural `training_loss()` の契約
 - [Releasing](releasing.md): version、GitHub Release、PyPI Trusted Publishing

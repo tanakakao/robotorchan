@@ -1,8 +1,11 @@
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 def test_acquisition_architecture_documents_botorch_first_contract() -> None:
-    text = Path("docs/development/acquisition-architecture.md").read_text(encoding="utf-8")
+    path = REPO_ROOT / "docs" / "development" / "acquisition-architecture.md"
+    text = path.read_text(encoding="utf-8")
 
     assert "BoTorch-first" in text
     assert "not re-exported" in text
