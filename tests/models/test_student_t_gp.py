@@ -3,7 +3,7 @@
 import torch
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 
-from robotorchan.models.robust_models.student_t import StudentTSingleTaskGP
+from robotorchan.models.robust.student_t import StudentTSingleTaskGP
 
 
 def _data(dtype: torch.dtype = torch.double) -> tuple[torch.Tensor, torch.Tensor]:
