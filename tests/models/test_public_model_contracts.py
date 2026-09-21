@@ -96,7 +96,7 @@ PUBLIC_MODEL_NAMES = {
     "PLSKroneckerMultiTaskGP",
     "PLSMultiTaskGP",
     "PairwiseGP",
-    "RandomProjectionGP",
+    "RandomForestSurrogate",\n    "RandomProjectionGP",
     "RandomProjectionKroneckerMultiTaskGP",
     "RandomProjectionMultiTaskGP",
     "ReducedGP",
