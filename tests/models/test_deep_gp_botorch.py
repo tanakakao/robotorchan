@@ -6,7 +6,7 @@ from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 from botorch.optim import optimize_acqf
 from botorch.sampling.stochastic_samplers import StochasticSampler
 
-from robotorchan.models.deep_gp import SingleTaskDeepGP
+from robotorchan.models.expressive.deep_gp import SingleTaskDeepGP
 
 
 def _model() -> tuple[SingleTaskDeepGP, torch.Tensor, torch.Tensor]:
