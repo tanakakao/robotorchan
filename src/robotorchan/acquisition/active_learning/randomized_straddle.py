@@ -24,7 +24,7 @@ class RandomizedStraddle(Straddle):
     ) -> None:
         super().__init__(model=model, target=target, beta=0.0, output_index=output_index)
         self.generator = generator
-        self.register_buffer("_random_beta", None)
+        self.register_buffer("_random_beta", None, persistent=False)
 
     def resample(self) -> None:
         """Invalidate the coefficient so the next evaluation starts a new round."""
