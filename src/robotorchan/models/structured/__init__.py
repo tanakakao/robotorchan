@@ -11,12 +11,12 @@ from robotorchan.models.structured.higher_order import HigherOrderGP
 from robotorchan.models.structured.latent_kronecker import LatentKroneckerGP
 
 __all__ = [
+    "LCEAGP",
+    "SACGP",
     "HeterogeneousMTGP",
     "HierarchicalConditionalKernelGP",
     "HierarchicalConditionalKernelMultiTaskGP",
     "HigherOrderGP",
-    "LCEAGP",
     "LatentKroneckerGP",
     "OrthogonalAdditiveGP",
-    "SACGP",
 ]
