@@ -40,3 +40,28 @@ def test_boundary_variance_rejects_ensemble_posterior() -> None:
         assert "ensemble posteriors" in str(error)
     else:
         raise AssertionError("Expected ensemble-posterior validation.")
+
+
+class _FlaggedEnsembleModel:
+    num_outputs = 1
+    _is_ensemble = True
+
+    def posterior(self, X: torch.Tensor):
+        raise AssertionError("posterior should not be evaluated for flagged ensemble models")
+
+
+def test_active_learning_rejects_flagged_ensemble_before_posterior() -> None:
+    acquisitions = [
+        PosteriorVariance(_FlaggedEnsembleModel()),
+        Straddle(_FlaggedEnsembleModel(), target=0.0),
+        BoundaryVariance(_FlaggedEnsembleModel(), target=0.0),
+    ]
+    X = torch.tensor([[[0.2]]], dtype=torch.double)
+
+    for acquisition in acquisitions:
+        try:
+            acquisition(X)
+        except ValueError as error:
+            assert "ensemble posteriors" in str(error)
+        else:
+            raise AssertionError("Expected flagged-ensemble validation.")
