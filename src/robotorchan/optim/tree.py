@@ -77,8 +77,10 @@ class TreeEnsembleSearchStrategy(RandomSearchStrategy):
         result = super().optimize(acq_function, q=q)
         metadata = dict(result.metadata)
         metadata["strategy"] = "tree_ensemble_random_search"
-        metadata["integer_dims"] = self.integer_dims
-        metadata["categorical_dims"] = tuple(sorted(self.categorical_values))
+        if self.integer_dims:
+            metadata["integer_dims"] = self.integer_dims
+        if self.categorical_values:
+            metadata["categorical_dims"] = tuple(sorted(self.categorical_values))
         return SearchResult(
             candidates=result.candidates,
             acquisition_value=result.acquisition_value,
