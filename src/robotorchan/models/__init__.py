@@ -94,7 +94,7 @@ from robotorchan.models.high_dimensional.reduced.vae import (
     MixedVAEGP,
     SupervisedVAEGP,
 )
-from robotorchan.models.pairwise import PairwiseGP
+from robotorchan.models.preference.pairwise import PairwiseGP
 from robotorchan.models.robust_models.contaminated import (
     ContaminatedMultiTaskGP,
     ContaminatedSingleTaskGP,
@@ -158,8 +158,8 @@ from robotorchan.models.structured.hierarchical import (
 )
 from robotorchan.models.structured.higher_order import HigherOrderGP, MixedHigherOrderGP
 from robotorchan.models.structured.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
-from robotorchan.models.uncertain_categorical import UncertainCategoricalSingleTaskGP
-from robotorchan.models.uncertain_input import (
+from robotorchan.models.uncertain.uncertain_categorical import UncertainCategoricalSingleTaskGP
+from robotorchan.models.uncertain.uncertain_input import (
     MixedUncertainInputSingleTaskGP,
     UncertainInputSingleTaskGP,
 )
