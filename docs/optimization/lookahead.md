@@ -24,6 +24,7 @@ tensor.
 For explicit non-myopic decision trees, use `qMultiStepLookahead`.
 
 ```python
+import torch
 from botorch.acquisition.multi_step_lookahead import qMultiStepLookahead
 from botorch.sampling.normal import SobolQMCNormalSampler
 

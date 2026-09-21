@@ -8,6 +8,7 @@ surrogate model とは独立した candidate search / optimization の利用者�
 - [Level-set and boundary learning](level_set_learning.md): Straddleと境界推定
 - [Information-theoretic acquisitions](information_theoretic.md): MES、GIBBON、Randomized Straddle
 - [Lookahead acquisitions](lookahead.md): Knowledge Gradientとmulti-step lookahead
+- [Multi-objective acquisitions](multiobjective.md): qLogEHVI、qLogNEHVI、qLogNParEGO
 - [High-dimensional search](high_dimensional_search.md): Original space、Random Search、latent search、REMBO、HeSBO、ALEBO、TuRBO、BAxUS
 - [TuRBO](turbo.md): stateful trust-region strategy の詳細
 
