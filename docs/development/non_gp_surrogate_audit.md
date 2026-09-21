@@ -190,3 +190,23 @@ test:
 - capability reporting needed by acquisition/search integration.
 
 No compatibility aliases or deprecated wrappers are to be introduced.
+
+## Phase 2 result
+
+Phase 2 established the shared training capability contract without adding a
+public Random Forest, Extra Trees, boosting, deep-ensemble, or finite-BNN class.
+
+- `ModelTrainingMixin.supports_fit` defaults to `False`.
+- `FittableModelMixin` declares an explicit model-owned `fit()` capability.
+- `NonGPModelMixin` combines supervised raw-data provenance with explicit
+  fitting and keeps `supports_mll = False`.
+- `NonGPModelMixin.supports_input_gradients` defaults to `False`; concrete
+  differentiable neural surrogates must opt in deliberately.
+- raw training snapshots remain non-persistent buffers: they follow module
+  dtype/device conversions but are excluded from `state_dict`.
+- existing public GP model behavior is unchanged; public models merely inherit
+  the default `supports_fit = False` capability marker.
+
+Phase 3 can now validate BoTorch `EnsemblePosterior` shape, sampling, posterior
+transform, and MC-acquisition behavior with a dependency-free deterministic
+ensemble before sklearn-backed tree models are introduced.
