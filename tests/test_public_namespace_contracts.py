@@ -73,6 +73,7 @@ def test_model_family_exports_are_canonical() -> None:
     family_modules = (
         "robotorchan.models.expressive",
         "robotorchan.models.high_dimensional",
+        "robotorchan.models.non_gp",
         "robotorchan.models.preference",
         "robotorchan.models.robust",
         "robotorchan.models.standard",
@@ -90,6 +91,7 @@ def test_all_top_level_models_are_owned_by_a_family_package() -> None:
     family_modules = (
         "robotorchan.models.expressive",
         "robotorchan.models.high_dimensional",
+        "robotorchan.models.non_gp",
         "robotorchan.models.preference",
         "robotorchan.models.robust",
         "robotorchan.models.standard",
