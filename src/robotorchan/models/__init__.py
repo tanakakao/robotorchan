@@ -3,7 +3,7 @@
 from robotorchan.models.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
 from robotorchan.models.high_dimensional.alebo import ALEBOGP
 from robotorchan.models.base import UnsupportedModelOperationError
-from robotorchan.models.contaminated import (
+from robotorchan.models.robust_models.contaminated import (
     ContaminatedMultiTaskGP,
     ContaminatedSingleTaskGP,
     MixedContaminatedMultiTaskGP,
@@ -36,7 +36,7 @@ from robotorchan.models.infinite_width_bnn import (
     MixedInfiniteWidthBNNGP,
     MixedInfiniteWidthBNNMultiTaskGP,
 )
-from robotorchan.models.joint_heteroskedastic import (
+from robotorchan.models.robust_models.joint_heteroskedastic import (
     JointHeteroskedasticSingleTaskGP,
     MixedJointHeteroskedasticSingleTaskGP,
 )
@@ -58,7 +58,7 @@ from robotorchan.models.standard.multitask import (
     MixedMultiTaskGP,
     MultiTaskGP,
 )
-from robotorchan.models.nonstationary import (
+from robotorchan.models.robust_models.nonstationary import (
     MixedNonstationaryMultiTaskGP,
     MixedNonstationarySingleTaskGP,
     NonstationaryMultiTaskGP,
@@ -127,11 +127,11 @@ from robotorchan.models.high_dimensional.reduced.vae import (
     MixedVAEGP,
     SupervisedVAEGP,
 )
-from robotorchan.models.replicate_noise import (
+from robotorchan.models.robust_models.replicate_noise import (
     MixedReplicateNoiseSingleTaskGP,
     ReplicateNoiseSingleTaskGP,
 )
-from robotorchan.models.robust import (
+from robotorchan.models.robust_models.robust import (
     HeteroskedasticMultiTaskGP,
     HeteroskedasticSingleTaskGP,
     MixedHeteroskedasticMultiTaskGP,
@@ -148,7 +148,7 @@ from robotorchan.models.spectral_mixture import (
     SpectralMixtureGP,
     SpectralMixtureMultiTaskGP,
 )
-from robotorchan.models.student_t import (
+from robotorchan.models.robust_models.student_t import (
     MixedStudentTMultiTaskGP,
     MixedStudentTSingleTaskGP,
     StudentTMultiTaskGP,
