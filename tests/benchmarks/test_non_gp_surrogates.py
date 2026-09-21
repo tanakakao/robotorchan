@@ -4,7 +4,16 @@ import pytest
 
 pytest.importorskip("sklearn")
 
-from benchmarks.non_gp_surrogates import make_data, run_benchmark
+import importlib.util
+from pathlib import Path
+
+_BENCHMARK_PATH = Path(__file__).parents[2] / "benchmarks" / "non_gp_surrogates.py"
+_SPEC = importlib.util.spec_from_file_location("non_gp_surrogates_benchmark", _BENCHMARK_PATH)
+assert _SPEC is not None and _SPEC.loader is not None
+_MODULE = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(_MODULE)
+make_data = _MODULE.make_data
+run_benchmark = _MODULE.run_benchmark
 
 
 def test_non_gp_benchmark_data_is_reproducible() -> None:
