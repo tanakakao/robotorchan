@@ -233,3 +233,10 @@ Phase 5 keeps the same deliberate scope as Phase 4: numeric inputs and one outpu
 Non-GP empirical ensemble surrogates now have an explicit acquisition compatibility gate. `make_non_gp_acquisition` constructs BoTorch Monte Carlo acquisitions, while `validate_non_gp_acquisition` rejects analytic acquisition functions whose Gaussian posterior assumptions are not guaranteed by Random Forest or Extra Trees.
 
 This layer does not wrap or replace BoTorch acquisition functions. It validates their statistical compatibility and leaves acquisition evaluation to upstream BoTorch. Candidate optimization is intentionally separate: sklearn tree predictions are non-differentiable with respect to candidate inputs, so Phase 7 provides the dedicated gradient-free acquisition search path.
+
+
+## Phase 7: tree acquisition search
+
+`TreeEnsembleSearchStrategy` provides the dedicated gradient-free acquisition-search path for Random Forest and Extra Trees. It deliberately reuses `RandomSearchStrategy` for the actual box sampling and scoring, adding non-GP/MC-acquisition and no-input-gradient capability checks rather than duplicating search logic.
+
+The strategy evaluates complete q-batches, returns candidates in the public input space, and never calls a gradient-based BoTorch optimizer. This is the baseline tree optimizer; mixed/integer/categorical candidate generation is deferred to Phase 8.
