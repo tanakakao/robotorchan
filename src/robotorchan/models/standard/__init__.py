@@ -1,4 +1,3 @@
-# ruff: noqa: F401
 """Standard BoTorch-compatible surrogate models."""
 
 from robotorchan.models.standard.model_list import ModelListGP
