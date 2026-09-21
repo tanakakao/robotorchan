@@ -45,6 +45,11 @@ class ExpectedPredictiveInformationGain(AcquisitionFunction):
             raise ValueError("ExpectedPredictiveInformationGain supports q=1.")
         if self.model.num_outputs != 1:
             raise ValueError("ExpectedPredictiveInformationGain requires a single-output model.")
+        if getattr(self.model, "_is_ensemble", False):
+            raise ValueError(
+                "ExpectedPredictiveInformationGain does not yet support ensemble posteriors."
+            )
+
         target_X = self.target_X.to(dtype=X.dtype, device=X.device)
         n_target = target_X.shape[-2]
         candidate = X.squeeze(-2)

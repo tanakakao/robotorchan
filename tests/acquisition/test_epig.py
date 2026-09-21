@@ -90,3 +90,25 @@ def test_epig_rejects_ensemble_posterior_explicitly() -> None:
         assert "ensemble posteriors" in str(error)
     else:
         raise AssertionError("Expected ensemble-posterior validation.")
+
+
+class _ModelBatchPosteriorModel:
+    num_outputs = 1
+    _is_ensemble = True
+
+    def posterior(self, X: torch.Tensor):
+        raise AssertionError("posterior should not be evaluated for flagged ensemble models")
+
+
+def test_epig_rejects_flagged_model_batch_before_posterior_evaluation() -> None:
+    acquisition = ExpectedPredictiveInformationGain(
+        _ModelBatchPosteriorModel(),
+        torch.linspace(0.0, 1.0, 5, dtype=torch.double).unsqueeze(-1),
+    )
+
+    try:
+        acquisition(torch.tensor([[[0.2]]], dtype=torch.double))
+    except ValueError as error:
+        assert "ensemble posteriors" in str(error)
+    else:
+        raise AssertionError("Expected model-batch ensemble validation.")
