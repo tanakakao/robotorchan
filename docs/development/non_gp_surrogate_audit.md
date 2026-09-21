@@ -254,3 +254,8 @@ Random Forest and Extra Trees now accept raw numeric mixed inputs through `cat_d
 `GradientBoostingSurrogate` adds sklearn gradient boosting without treating boosting stages as posterior members. A posterior member is instead one complete boosting model fitted on an independent bootstrap resample. The resulting empirical distribution therefore represents bootstrap model uncertainty and can be consumed by BoTorch Monte Carlo acquisitions through `EnsemblePosterior`.
 
 The initial implementation remains numeric and single-output, exposes explicit `fit()`, has no MLL, and does not support candidate-input gradients. Histogram gradient boosting and a more explicit bootstrap-boosting family are handled in subsequent phases.
+
+
+## Phase 10: Histogram Gradient Boosting
+
+`HistGradientBoostingSurrogate` applies the same uncertainty contract as Phase 9 to sklearn's histogram gradient boosting implementation. Each empirical posterior member is a complete model trained on a bootstrap resample; internal boosting iterations are not posterior samples. The model is numeric, single-output, explicitly fitted, non-MLL, and nondifferentiable with respect to candidate inputs.

@@ -96,6 +96,7 @@ from robotorchan.models.high_dimensional.reduced.vae import (
 )
 from robotorchan.models.non_gp.extra_trees import ExtraTreesSurrogate
 from robotorchan.models.non_gp.gradient_boosting import GradientBoostingSurrogate
+from robotorchan.models.non_gp.hist_gradient_boosting import HistGradientBoostingSurrogate
 from robotorchan.models.non_gp.random_forest import RandomForestSurrogate
 from robotorchan.models.preference.pairwise import PairwiseGP
 from robotorchan.models.robust.contaminated import (
@@ -190,6 +191,7 @@ __all__ = [
     "HierarchicalConditionalKernelGP",
     "HierarchicalConditionalKernelMultiTaskGP",
     "HigherOrderGP",
+    "HistGradientBoostingSurrogate",
     "HybridAutoEncoderGP",
     "HybridAutoEncoderKroneckerMultiTaskGP",
     "HybridAutoEncoderMultiTaskGP",
