@@ -226,3 +226,10 @@ Phase 5 can add Extra Trees on the same posterior/training contract without chan
 `ExtraTreesSurrogate` extends the empirical tree-ensemble path established by the random-forest surrogate. Each fitted tree contributes one predictive function sample to BoTorch `EnsemblePosterior`; tree disagreement is therefore treated as empirical ensemble uncertainty, not as an exact Gaussian posterior variance.
 
 Phase 5 keeps the same deliberate scope as Phase 4: numeric inputs and one output. Mixed/categorical handling, multi-output support, and a dedicated nonsmooth acquisition optimizer remain later phases. The model uses the optional `tree` dependency and does not expose MLL training or candidate-input gradients.
+
+
+## Phase 6: acquisition integration
+
+Non-GP empirical ensemble surrogates now have an explicit acquisition compatibility gate. `make_non_gp_acquisition` constructs BoTorch Monte Carlo acquisitions, while `validate_non_gp_acquisition` rejects analytic acquisition functions whose Gaussian posterior assumptions are not guaranteed by Random Forest or Extra Trees.
+
+This layer does not wrap or replace BoTorch acquisition functions. It validates their statistical compatibility and leaves acquisition evaluation to upstream BoTorch. Candidate optimization is intentionally separate: sklearn tree predictions are non-differentiable with respect to candidate inputs, so Phase 7 provides the dedicated gradient-free acquisition search path.
