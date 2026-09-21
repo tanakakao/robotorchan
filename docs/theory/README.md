@@ -18,6 +18,7 @@
 2. [Gaussian Process](02_gaussian_process.md)
 3. [Kernel](03_kernel.md)
 4. [Acquisition Function](04_acquisition_function.md)
+   - [Acquisition Function Theory](acquisition/README.md) — 詳細理論（Improvement、情報理論、Lookahead、Multi-objective、Active Learning、Level-set、Multi-Fidelity）
 5. [Mixed Variables](05_mixed_variables.md)
 6. [Multi-Fidelity](06_multi_fidelity.md)
 7. [Multi-task / Multi-output](07_multitask_multioutput.md)
