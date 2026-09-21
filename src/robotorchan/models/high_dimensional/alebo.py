@@ -1,0 +1,468 @@
+"""Mahalanobis GP components for ALEBO."""
+
+from __future__ import annotations
+
+from copy import deepcopy
+
+import torch
+from botorch.fit import fit_gpytorch_mll
+from botorch.models.model import Model
+from botorch.posteriors.gpytorch import GPyTorchPosterior
+from gpytorch.distributions import MultivariateNormal
+from gpytorch.kernels import Kernel, ScaleKernel
+from torch import Tensor
+
+from robotorchan.models.standard.single_task import SingleTaskGP
+
+
+class MahalanobisRBFKernel(Kernel):
+    """ALEBO RBF kernel parameterized by an unconstrained triangular factor."""
+
+    has_lengthscale = False
+
+    def __init__(
+        self,
+        ard_num_dims: int,
+        *,
+        projection: Tensor | None = None,
+        **kwargs: object,
+    ) -> None:
+        super().__init__(**kwargs)
+        if ard_num_dims < 1:
+            raise ValueError("ard_num_dims must be positive.")
+        self.ard_num_dims = ard_num_dims
+        self.register_buffer("projection", projection, persistent=False)
+        rows, cols = torch.triu_indices(ard_num_dims, ard_num_dims)
+        initial = torch.zeros(rows.numel())
+        if projection is not None:
+            if projection.ndim != 2 or projection.shape[0] != ard_num_dims:
+                raise ValueError("projection must have shape [ard_num_dims, input_dim].")
+            ambient_dim = projection.shape[1]
+            random_basis = torch.linalg.qr(
+                torch.randn(
+                    ambient_dim,
+                    ambient_dim,
+                    dtype=projection.dtype,
+                    device=projection.device,
+                )
+            ).Q
+            transformed = random_basis[:ard_num_dims] @ torch.linalg.pinv(projection)
+            metric = transformed.transpose(-2, -1) @ transformed
+            factor = torch.linalg.cholesky(metric).transpose(-2, -1)
+            rows, cols = torch.triu_indices(
+                ard_num_dims,
+                ard_num_dims,
+                device=projection.device,
+            )
+            initial = factor[rows, cols]
+        self.register_parameter(
+            name="raw_triu",
+            parameter=torch.nn.Parameter(initial),
+        )
+        self.register_buffer("triu_rows", rows, persistent=False)
+        self.register_buffer("triu_cols", cols, persistent=False)
+
+    @property
+    def metric_factor(self) -> Tensor:
+        """Return the upper-triangular ALEBO Cholesky factor U."""
+        factor = self.raw_triu.new_zeros(self.ard_num_dims, self.ard_num_dims)
+        factor[self.triu_rows, self.triu_cols] = self.raw_triu
+        return factor
+
+    @property
+    def metric(self) -> Tensor:
+        """Positive-semidefinite Mahalanobis metric induced by the ALEBO factor."""
+        factor = self.metric_factor
+        return factor.transpose(-2, -1) @ factor
+
+    def forward(
+        self,
+        x1: Tensor,
+        x2: Tensor,
+        diag: bool = False,
+        **params: object,
+    ) -> Tensor:
+        """Evaluate exp(-0.5 * Mahalanobis squared distance)."""
+        del params
+        transform = self.metric_factor.transpose(-2, -1)
+        transformed_x1 = x1 @ transform
+        transformed_x2 = x2 @ transform
+        if diag:
+            squared_distance = (transformed_x1 - transformed_x2).square().sum(dim=-1)
+        else:
+            difference = transformed_x1.unsqueeze(-2) - transformed_x2.unsqueeze(-3)
+            squared_distance = difference.square().sum(dim=-1)
+        return torch.exp(-0.5 * squared_distance)
+
+
+class ALEBOMetricMarginalModel(Model):
+    """BoTorch model surface backed by ALEBO metric-marginal predictions."""
+
+    def __init__(
+        self,
+        base_model: ALEBOGP,
+        *,
+        metric_samples: Tensor,
+    ) -> None:
+        super().__init__()
+        self.base_model = base_model
+        self.register_buffer("metric_samples", metric_samples.detach().clone())
+
+    @property
+    def num_outputs(self) -> int:
+        """Return the number of modeled outputs."""
+        return 1
+
+    def posterior(
+        self,
+        X: Tensor,
+        output_indices: list[int] | None = None,
+        observation_noise: bool | Tensor = False,
+        posterior_transform: object | None = None,
+        **kwargs: object,
+    ) -> GPyTorchPosterior:
+        """Return the metric-marginal Gaussian posterior."""
+        del kwargs
+        if output_indices not in (None, [0]):
+            raise NotImplementedError("ALEBO metric marginalization supports one output.")
+        if posterior_transform is not None:
+            raise NotImplementedError("posterior_transform is not supported yet.")
+        if not isinstance(observation_noise, bool):
+            raise NotImplementedError("Tensor observation_noise is not supported yet.")
+        return self.base_model._metric_marginal_posterior_from_samples(
+            X,
+            metric_samples=self.metric_samples,
+            observation_noise=observation_noise,
+        )
+
+
+class ALEBOGP(SingleTaskGP):
+    """Single-task GP using ALEBO's full Mahalanobis RBF geometry."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        train_Yvar: Tensor,
+        *,
+        projection: Tensor | None = None,
+    ) -> None:
+        if train_X.ndim < 2:
+            raise ValueError("train_X must have at least two dimensions.")
+        covar_module = ScaleKernel(
+            MahalanobisRBFKernel(
+                ard_num_dims=train_X.shape[-1],
+                projection=projection,
+            )
+        )
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            train_Yvar=train_Yvar,
+            covar_module=covar_module,
+        )
+
+    @property
+    def mahalanobis_kernel(self) -> MahalanobisRBFKernel:
+        """Return the ALEBO Mahalanobis base kernel."""
+        if not isinstance(self.covar_module, ScaleKernel) or not isinstance(
+            self.covar_module.base_kernel, MahalanobisRBFKernel
+        ):
+            raise TypeError("ALEBOGP requires a ScaleKernel wrapping MahalanobisRBFKernel.")
+        return self.covar_module.base_kernel
+
+    @property
+    def metric(self) -> Tensor:
+        """Return the current learned Mahalanobis metric."""
+        return self.mahalanobis_kernel.metric
+
+    def metric_parameter_vector(self) -> Tensor:
+        """Return the unconstrained Mahalanobis parameters as a flat vector."""
+        return self.mahalanobis_kernel.raw_triu.detach().clone()
+
+    def metric_log_posterior(self) -> Tensor:
+        """Return the exact MLL used as the metric log-posterior objective."""
+        mll = self.make_mll()
+        output = self(*self.train_inputs)
+        target = self.train_targets
+        value = mll(output, target)
+        return value.sum() if value.ndim else value
+
+    def metric_hessian_diagonal(
+        self,
+        *,
+        relative_step: float = 1e-3,
+        absolute_step: float = 1e-4,
+    ) -> Tensor:
+        """Estimate ALEBO metric Hessian diagonal with the reference forward difference."""
+        if relative_step <= 0 or absolute_step <= 0:
+            raise ValueError("finite-difference steps must be positive.")
+        parameter = self.mahalanobis_kernel.raw_triu
+        original = parameter.detach().clone()
+        diagonal = []
+        try:
+            for index in range(parameter.numel()):
+                step = absolute_step + relative_step * original[index].abs()
+                with torch.no_grad():
+                    parameter.copy_(original)
+                base = torch.autograd.grad(self.metric_log_posterior(), parameter)[0][index]
+                with torch.no_grad():
+                    parameter.copy_(original)
+                    parameter[index] = original[index] + step
+                plus = torch.autograd.grad(self.metric_log_posterior(), parameter)[0][index]
+                diagonal.append((plus - base) / step)
+        finally:
+            with torch.no_grad():
+                parameter.copy_(original)
+        return torch.stack(diagonal).detach()
+
+    def estimate_metric_laplace_covariance(
+        self,
+        *,
+        nugget: float = 1e-3,
+    ) -> Tensor:
+        """Estimate ALEBO's reference diagonal Laplace covariance at the MAP state."""
+        return self.metric_laplace_covariance(
+            hessian_diagonal=self.metric_hessian_diagonal(),
+            nugget=nugget,
+        )
+
+    def metric_laplace_covariance(
+        self,
+        *,
+        hessian_diagonal: Tensor,
+        nugget: float = 1e-3,
+    ) -> Tensor:
+        """Construct ALEBO's reference diagonal Laplace covariance for metric parameters."""
+        mean = self.metric_parameter_vector()
+        if hessian_diagonal.shape != mean.shape:
+            raise ValueError(f"hessian_diagonal must have shape {tuple(mean.shape)}.")
+        if nugget <= 0:
+            raise ValueError("nugget must be positive.")
+        stabilized_hessian = hessian_diagonal.to(dtype=mean.dtype, device=mean.device) - nugget
+        covariance_diagonal = (-stabilized_hessian).reciprocal()
+        if bool((covariance_diagonal <= 0).any()) or not bool(
+            torch.isfinite(covariance_diagonal).all()
+        ):
+            raise ValueError("stabilized ALEBO Hessian must imply positive finite covariance.")
+        return torch.diag(covariance_diagonal)
+
+    def sample_metric_parameters(
+        self,
+        n_samples: int,
+        *,
+        covariance: Tensor,
+        generator: torch.Generator | None = None,
+    ) -> Tensor:
+        """Sample metric parameters from a Gaussian Laplace approximation."""
+        if n_samples < 1:
+            raise ValueError("n_samples must be positive.")
+        mean = self.metric_parameter_vector()
+        expected_shape = (mean.numel(), mean.numel())
+        if covariance.shape != expected_shape:
+            raise ValueError(f"covariance must have shape {expected_shape}.")
+        covariance = covariance.to(dtype=mean.dtype, device=mean.device)
+        chol = torch.linalg.cholesky(covariance)
+        noise = torch.randn(
+            n_samples,
+            mean.numel(),
+            dtype=mean.dtype,
+            device=mean.device,
+            generator=generator,
+        )
+        samples = mean.unsqueeze(0) + noise @ chol.transpose(-2, -1)
+        samples[0] = mean
+        return samples
+
+    def metric_sample_predictions(
+        self,
+        X: Tensor,
+        *,
+        metric_samples: Tensor,
+        observation_noise: bool = False,
+    ) -> tuple[Tensor, Tensor]:
+        """Evaluate conditional GP moments for sampled metric parameters."""
+        parameter = self.mahalanobis_kernel.raw_triu
+        expected_shape = (parameter.numel(),)
+        if metric_samples.ndim != 2 or metric_samples.shape[1:] != expected_shape:
+            raise ValueError(f"metric_samples must have shape [n_samples, {parameter.numel()}].")
+        if metric_samples.shape[0] < 1:
+            raise ValueError("metric_samples must contain at least one sample.")
+
+        original = parameter.detach().clone()
+        means = []
+        covariances = []
+        try:
+            for sample in metric_samples:
+                with torch.no_grad():
+                    parameter.copy_(sample.to(dtype=parameter.dtype, device=parameter.device))
+                posterior = super().posterior(X, observation_noise=observation_noise)
+                means.append(posterior.mean)
+                covariances.append(posterior.distribution.covariance_matrix)
+        finally:
+            with torch.no_grad():
+                parameter.copy_(original)
+        return torch.stack(means), torch.stack(covariances)
+
+    @staticmethod
+    def _moment_match_metric_covariance(
+        means: Tensor,
+        covariances: Tensor,
+    ) -> tuple[Tensor, Tensor]:
+        """Moment-match conditional Gaussian predictions over metric samples."""
+        if means.shape[-1] != 1:
+            raise NotImplementedError("ALEBO metric marginalization currently supports one output.")
+        event_means = means.squeeze(-1)
+        mean = event_means.mean(dim=0)
+        centered = event_means - mean
+        between_metric = torch.einsum("...i,...j->...ij", centered, centered).mean(dim=0)
+        predictive_covariance = covariances.mean(dim=0) + between_metric
+        predictive_covariance = 0.5 * (
+            predictive_covariance + predictive_covariance.transpose(-2, -1)
+        )
+        eigenvalues = torch.linalg.eigvalsh(predictive_covariance)
+        scale = torch.diagonal(predictive_covariance, dim1=-2, dim2=-1).abs().amax(dim=-1)
+        floor = torch.finfo(predictive_covariance.dtype).eps * scale.clamp_min(1.0) * 100
+        correction = (floor - eigenvalues[..., 0]).clamp_min(0.0)
+        identity = torch.eye(
+            predictive_covariance.shape[-1],
+            dtype=predictive_covariance.dtype,
+            device=predictive_covariance.device,
+        )
+        predictive_covariance = predictive_covariance + correction[..., None, None] * identity
+        return mean.unsqueeze(-1), predictive_covariance
+
+    def marginal_metric_moments(
+        self,
+        X: Tensor,
+        *,
+        n_metric_samples: int,
+        covariance: Tensor | None = None,
+        observation_noise: bool = False,
+        generator: torch.Generator | None = None,
+    ) -> tuple[Tensor, Tensor]:
+        """Moment-match predictive mean and full covariance over metric samples."""
+        if covariance is None:
+            covariance = self.estimate_metric_laplace_covariance()
+        samples = self.sample_metric_parameters(
+            n_metric_samples,
+            covariance=covariance,
+            generator=generator,
+        )
+        means, covariances = self.metric_sample_predictions(
+            X,
+            metric_samples=samples,
+            observation_noise=observation_noise,
+        )
+        return self._moment_match_metric_covariance(means, covariances)
+
+    def _metric_marginal_posterior_from_samples(
+        self,
+        X: Tensor,
+        *,
+        metric_samples: Tensor,
+        observation_noise: bool = False,
+    ) -> GPyTorchPosterior:
+        """Return a moment-matched posterior for fixed metric samples."""
+        means, covariances = self.metric_sample_predictions(
+            X,
+            metric_samples=metric_samples,
+            observation_noise=observation_noise,
+        )
+        mean, predictive_covariance = self._moment_match_metric_covariance(means, covariances)
+        distribution = MultivariateNormal(mean.squeeze(-1), predictive_covariance)
+        return GPyTorchPosterior(distribution)
+
+    def marginal_metric_posterior(
+        self,
+        X: Tensor,
+        *,
+        n_metric_samples: int,
+        covariance: Tensor | None = None,
+        observation_noise: bool = False,
+        generator: torch.Generator | None = None,
+    ) -> GPyTorchPosterior:
+        """Return a BoTorch Gaussian posterior marginalized over metric uncertainty."""
+        if covariance is None:
+            covariance = self.estimate_metric_laplace_covariance()
+        samples = self.sample_metric_parameters(
+            n_metric_samples,
+            covariance=covariance,
+            generator=generator,
+        )
+        return self._metric_marginal_posterior_from_samples(
+            X,
+            metric_samples=samples,
+            observation_noise=observation_noise,
+        )
+
+    def acquisition_model(
+        self,
+        *,
+        n_metric_samples: int,
+        covariance: Tensor | None = None,
+        generator: torch.Generator | None = None,
+    ) -> ALEBOMetricMarginalModel:
+        """Return a BoTorch model whose posterior includes metric uncertainty."""
+        if covariance is None:
+            covariance = self.estimate_metric_laplace_covariance()
+        metric_samples = self.sample_metric_parameters(
+            n_metric_samples,
+            covariance=covariance,
+            generator=generator,
+        )
+        return ALEBOMetricMarginalModel(self, metric_samples=metric_samples)
+
+    def fit_acquisition_model(
+        self,
+        *,
+        n_metric_samples: int,
+        restarts: int = 10,
+        warm_start: bool = True,
+        generator: torch.Generator | None = None,
+        **fit_kwargs: object,
+    ) -> ALEBOMetricMarginalModel:
+        """Fit ALEBO MAP state and return its fixed Laplace-marginal acquisition model."""
+        self.fit(restarts=restarts, warm_start=warm_start, **fit_kwargs)
+        covariance = self.estimate_metric_laplace_covariance()
+        return self.acquisition_model(
+            n_metric_samples=n_metric_samples,
+            covariance=covariance,
+            generator=generator,
+        )
+
+    def fit(
+        self,
+        *,
+        restarts: int = 10,
+        warm_start: bool = True,
+        **fit_kwargs: object,
+    ) -> ALEBOGP:
+        """Fit ALEBO by multi-start MAP optimization, optionally warm-starting once."""
+        if restarts < 1:
+            raise ValueError("restarts must be positive.")
+        projection = self.mahalanobis_kernel.projection
+        warm_state = deepcopy(self.state_dict()) if warm_start else None
+        best_state = None
+        best_objective = float("-inf")
+        for restart in range(restarts):
+            restart_model = ALEBOGP(
+                self.raw_train_X,
+                self.raw_train_Y,
+                self.raw_train_Yvar,
+                projection=projection,
+            )
+            if restart == 0 and warm_state is not None:
+                restart_model.load_state_dict(warm_state)
+            fit_gpytorch_mll(restart_model.make_mll(), **fit_kwargs)
+            restart_model.eval()
+            with torch.no_grad():
+                objective = float(restart_model.metric_log_posterior().detach())
+            if objective > best_objective:
+                best_objective = objective
+                best_state = deepcopy(restart_model.state_dict())
+        if best_state is None:
+            raise RuntimeError("ALEBO MAP fitting did not produce a valid state.")
+        self.load_state_dict(best_state)
+        self.eval()
+        return self
