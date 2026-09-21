@@ -12,10 +12,7 @@ def _multifidelity_model() -> tuple[SingleTaskMultiFidelityGP, torch.Tensor]:
     low = torch.stack((x, torch.full_like(x, 0.5)), dim=-1)
     high = torch.stack((x, torch.ones_like(x)), dim=-1)
     train_X = torch.cat((low, high), dim=0)
-    train_Y = (
-        torch.sin(train_X[:, :1] * 5.0)
-        + 0.2 * (1.0 - train_X[:, 1:])
-    )
+    train_Y = torch.sin(train_X[:, :1] * 5.0) + 0.2 * (1.0 - train_X[:, 1:])
     model = SingleTaskMultiFidelityGP(train_X, train_Y, data_fidelities=[1])
     return model, train_X
 
@@ -59,7 +56,7 @@ def test_cost_utility_accepts_robotorchan_cost_surrogate() -> None:
         [[0.0, 0.5], [0.5, 0.5], [1.0, 0.5], [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]],
         dtype=torch.double,
     )
-    train_cost = (0.1 + train_X[:, 1:]).log()
+    train_cost = 0.1 + train_X[:, 1:]
     cost_model = SingleTaskGP(train_X, train_cost)
     utility = InverseCostWeightedUtility(cost_model=cost_model, use_mean=True)
     X = torch.tensor([[[0.3, 0.5]]], dtype=torch.double)
