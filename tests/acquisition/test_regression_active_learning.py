@@ -42,3 +42,11 @@ def test_native_negative_integrated_posterior_variance() -> None:
 
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
+
+
+def test_posterior_variance_validates_output_index() -> None:
+    model = _model()
+    X = torch.tensor([[[0.5]]], dtype=torch.double)
+
+    with pytest.raises(ValueError, match="output_index"):
+        PosteriorVariance(model, output_index=1)(X)
