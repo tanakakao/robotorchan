@@ -9,7 +9,10 @@ from botorch.posteriors.gpytorch import GPyTorchPosterior
 from torch import Tensor, nn
 
 from robotorchan.models.base import RawDataMixin
-from robotorchan.models.standard.variational import MixedSingleTaskVariationalGP, SingleTaskVariationalGP
+from robotorchan.models.standard.variational import (
+    MixedSingleTaskVariationalGP,
+    SingleTaskVariationalGP,
+)
 
 
 class JointHeteroskedasticSingleTaskGP(RawDataMixin, nn.Module):
