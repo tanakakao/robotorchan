@@ -259,3 +259,8 @@ The initial implementation remains numeric and single-output, exposes explicit `
 ## Phase 10: Histogram Gradient Boosting
 
 `HistGradientBoostingSurrogate` applies the same uncertainty contract as Phase 9 to sklearn's histogram gradient boosting implementation. Each empirical posterior member is a complete model trained on a bootstrap resample; internal boosting iterations are not posterior samples. The model is numeric, single-output, explicitly fitted, non-MLL, and nondifferentiable with respect to candidate inputs.
+
+
+## Phase 11: shared bootstrap boosting infrastructure
+
+`BootstrapEnsembleSurrogate` centralizes the empirical-posterior contract introduced for gradient boosting. Subclasses construct complete estimators, while the base owns raw-data validation, bootstrap resampling, explicit fitting, posterior construction, output-index validation, and observation-noise rejection. `GradientBoostingSurrogate` and `HistGradientBoostingSurrogate` now use this base without changing their public API. The base remains internal so implementation infrastructure is not accidentally promoted to the public model catalog.
