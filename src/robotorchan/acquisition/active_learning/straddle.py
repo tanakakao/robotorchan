@@ -5,6 +5,7 @@ from __future__ import annotations
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.models.model import Model
+from botorch.posteriors.ensemble import EnsemblePosterior
 from botorch.utils.transforms import average_over_ensemble_models
 from torch import Tensor
 
@@ -50,6 +51,8 @@ class Straddle(AcquisitionFunction):
         if X.shape[-2] != 1:
             raise ValueError("Straddle supports q=1.")
         posterior = self.model.posterior(X)
+        if getattr(self.model, "_is_ensemble", False) or isinstance(posterior, EnsemblePosterior):
+            raise ValueError("Straddle does not yet support ensemble posteriors.")
         mean = self._select_output(posterior.mean, X)
         variance = self._select_output(posterior.variance, X)
         std = variance.clamp_min(0.0).sqrt()
@@ -67,6 +70,8 @@ class BoundaryVariance(Straddle):
         if X.shape[-2] != 1:
             raise ValueError("BoundaryVariance supports q=1.")
         posterior = self.model.posterior(X)
+        if getattr(self.model, "_is_ensemble", False) or isinstance(posterior, EnsemblePosterior):
+            raise ValueError("BoundaryVariance does not yet support ensemble posteriors.")
         mean = self._select_output(posterior.mean, X)
         variance = self._select_output(posterior.variance, X).clamp_min(0.0)
         target = torch.as_tensor(self.target, dtype=mean.dtype, device=mean.device)
