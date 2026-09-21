@@ -1,8 +1,14 @@
 """Structured-input, structured-output, and contextual surrogate models."""
 
-from robotorchan.models.structured.additive import MixedOrthogonalAdditiveGP, OrthogonalAdditiveGP
-from robotorchan.models.structured.contextual import LCEAGP, LCEMGP, MixedLCEMGP, SACGP
-from robotorchan.models.structured.heterogeneous import HeterogeneousMTGP, MixedHeterogeneousMTGP
+from robotorchan.models.structured.additive import (
+    MixedOrthogonalAdditiveGP,
+    OrthogonalAdditiveGP,
+)
+from robotorchan.models.structured.contextual import LCEAGP, LCEMGP, SACGP, MixedLCEMGP
+from robotorchan.models.structured.heterogeneous import (
+    HeterogeneousMTGP,
+    MixedHeterogeneousMTGP,
+)
 from robotorchan.models.structured.hierarchical import (
     HierarchicalConditionalKernelGP,
     HierarchicalConditionalKernelMultiTaskGP,
@@ -10,15 +16,19 @@ from robotorchan.models.structured.hierarchical import (
     MixedHierarchicalConditionalKernelMultiTaskGP,
 )
 from robotorchan.models.structured.higher_order import HigherOrderGP, MixedHigherOrderGP
-from robotorchan.models.structured.latent_kronecker import LatentKroneckerGP, MixedLatentKroneckerGP
+from robotorchan.models.structured.latent_kronecker import (
+    LatentKroneckerGP,
+    MixedLatentKroneckerGP,
+)
 
 __all__ = [
+    "LCEAGP",
+    "LCEMGP",
+    "SACGP",
     "HeterogeneousMTGP",
     "HierarchicalConditionalKernelGP",
     "HierarchicalConditionalKernelMultiTaskGP",
     "HigherOrderGP",
-    "LCEAGP",
-    "LCEMGP",
     "LatentKroneckerGP",
     "MixedHeterogeneousMTGP",
     "MixedHierarchicalConditionalKernelGP",
@@ -28,5 +38,4 @@ __all__ = [
     "MixedLatentKroneckerGP",
     "MixedOrthogonalAdditiveGP",
     "OrthogonalAdditiveGP",
-    "SACGP",
 ]
