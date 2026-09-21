@@ -15,6 +15,7 @@ def test_public_namespaces_import() -> None:
         "robotorchan.models",
         "robotorchan.models.expressive",
         "robotorchan.models.high_dimensional",
+        "robotorchan.models.non_gp",
         "robotorchan.models.high_dimensional.reduced",
         "robotorchan.models.preference",
         "robotorchan.models.robust",
