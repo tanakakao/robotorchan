@@ -33,6 +33,17 @@ When an algorithm is derived from a paper, its implementation should document th
 
 - `robotorchan.acquisition`: acquisition functions and active-learning criteria.
 - `robotorchan.models`: BoTorch-compatible surrogate models and thin wrappers that implement robotorchan model conventions.
+
+  Model implementations are grouped by responsibility while the canonical user-facing imports remain available from `robotorchan.models`:
+  - `models.standard`: standard exact, mixed, multitask, multi-fidelity, variational, and model-list wrappers;
+  - `models.high_dimensional`: SAAS / MAP-SAAS / ALEBO and reduced-input/output model families;
+  - `models.robust`: robust, heavy-tailed, heteroskedastic, replicate-noise, and nonstationary models;
+  - `models.expressive`: DeepGP, infinite-width BNN GP, spectral-mixture, and learned feature components;
+  - `models.structured`: additive, contextual, hierarchical, heterogeneous-task, higher-order, and latent-Kronecker models;
+  - `models.uncertain`: uncertain continuous and categorical input models;
+  - `models.preference`: pairwise preference models.
+
+  These family packages describe implementation responsibility, not separate compatibility APIs. Removed flat module paths are not forwarded or aliased.
 - `robotorchan.objectives`: objectives, posterior transforms, and constraint-related helpers when BoTorch does not already provide them.
 - `robotorchan.optim`: acquisition optimization and search-space utilities that extend, rather than duplicate, `botorch.optim`.
 

@@ -13,7 +13,14 @@ def test_public_namespaces_import() -> None:
     for module_name in (
         "robotorchan.acquisition",
         "robotorchan.models",
+        "robotorchan.models.expressive",
+        "robotorchan.models.high_dimensional",
         "robotorchan.models.high_dimensional.reduced",
+        "robotorchan.models.preference",
+        "robotorchan.models.robust",
+        "robotorchan.models.standard",
+        "robotorchan.models.structured",
+        "robotorchan.models.uncertain",
         "robotorchan.objectives",
         "robotorchan.optim",
         "robotorchan.reduction",
@@ -48,6 +55,10 @@ def test_removed_module_paths_do_not_import() -> None:
         "robotorchan.models.joint_neural",
         "robotorchan.models.joint_vae",
         "robotorchan.models.vae",
+        "robotorchan.models.pairwise",
+        "robotorchan.models.robust_models",
+        "robotorchan.models.uncertain_categorical",
+        "robotorchan.models.uncertain_input",
     )
     for module_name in removed_modules:
         try:
@@ -55,3 +66,20 @@ def test_removed_module_paths_do_not_import() -> None:
         except ModuleNotFoundError:
             continue
         raise AssertionError(f"removed module path remains importable: {module_name}")
+
+
+def test_model_family_exports_are_canonical() -> None:
+    family_modules = (
+        "robotorchan.models.expressive",
+        "robotorchan.models.high_dimensional",
+        "robotorchan.models.preference",
+        "robotorchan.models.robust",
+        "robotorchan.models.standard",
+        "robotorchan.models.structured",
+        "robotorchan.models.uncertain",
+    )
+    for module_name in family_modules:
+        family = importlib.import_module(module_name)
+        canonical_names = set(family.__all__) & set(models.__all__)
+        for name in canonical_names:
+            assert getattr(models, name) is getattr(family, name)
