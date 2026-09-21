@@ -65,12 +65,19 @@ class BootstrapEnsembleSurrogate(NonGPModelMixin, Model, nn.Module, ABC):
         """Fit complete estimators on independent bootstrap resamples."""
         X = self.raw_train_X.detach().cpu().numpy()
         y = self.raw_train_Y.detach().cpu().numpy()
-        generator = torch.Generator().manual_seed(self.random_state or 0)
+        generator = torch.Generator()
+        if self.random_state is None:
+            generator.seed()
+        else:
+            generator.manual_seed(self.random_state)
         self._members = []
         for member_index in range(self.n_members):
             indices = torch.randint(len(X), (len(X),), generator=generator).numpy()
             member = self._make_estimator(member_index)
-            member.fit(X[indices], y[indices])
+            member_y = y[indices]
+            if self.num_outputs == 1:
+                member_y = member_y[:, 0]
+            member.fit(X[indices], member_y)
             self._members.append(member)
         self._is_fitted = True
 
@@ -93,6 +100,8 @@ class BootstrapEnsembleSurrogate(NonGPModelMixin, Model, nn.Module, ABC):
             index < 0 or index >= self.num_outputs for index in selected_outputs
         ):
             raise ValueError("output_indices contains an invalid output index.")
+        if len(set(selected_outputs)) != len(selected_outputs):
+            raise ValueError("output_indices must not contain duplicate indices.")
         if observation_noise is not False:
             raise NotImplementedError(f"{self.model_name} does not model observation noise.")
 
