@@ -26,9 +26,7 @@ class DeterministicEnsembleModel(Model, nn.Module):
 
 
 def test_make_ensemble_posterior_preserves_shape_dtype_device_and_statistics() -> None:
-    values = torch.tensor(
-        [[[1.0], [2.0]], [[3.0], [4.0]], [[5.0], [6.0]]], dtype=torch.double
-    )
+    values = torch.tensor([[[1.0], [2.0]], [[3.0], [4.0]], [[5.0], [6.0]]], dtype=torch.double)
 
     posterior = make_ensemble_posterior(values)
 
