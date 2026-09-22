@@ -31,7 +31,6 @@ def test_single_task_gp_runtime_supports_mc_acquisition() -> None:
     assert torch.isfinite(value).all()
 
 
-
 def test_mixed_single_task_gp_runtime_supports_mc_acquisition() -> None:
     train_x = torch.tensor(
         [
@@ -44,10 +43,7 @@ def test_mixed_single_task_gp_runtime_supports_mc_acquisition() -> None:
         ],
         dtype=torch.double,
     )
-    train_y = (
-        torch.sin(train_x[:, :1] * 3.0)
-        + 0.2 * train_x[:, 1:].eq(1.0).to(dtype=torch.double)
-    )
+    train_y = torch.sin(train_x[:, :1] * 3.0) + 0.2 * train_x[:, 1:].eq(1.0).to(dtype=torch.double)
 
     model = MixedSingleTaskGP(train_x, train_y, cat_dims=[1])
     model.eval()
