@@ -47,7 +47,7 @@ recommend_compatible_workflows() は互換候補を返しますが、モデル�
 
 Active Learning では robotorchan の acquisition registry と model-acquisition compatibility を組み合わせます。multi-output 問題では single-output 限定 acquisition を除外します。
 
-Bayesian Optimization では BoTorch 標準 acquisition を robotorchan 側で再実装しません。代表的な BoTorch-native acquisition を metadata-only entry として registry に保持し、objective_type、output_type、constrained、q、ensemble posterior、fantasy-model requirement を Recommendation で照合します。実際の acquisition 実装は BoTorch のクラスを使用します。
+Bayesian Optimization では BoTorch 標準 acquisition を robotorchan 側で再実装しません。代表的な BoTorch-native acquisition を metadata-only entry として registry に保持し、objective_type、output_type、constrained、q、ensemble posterior、fantasy-model requirement を Recommendation で照合します。実際の acquisition 実装は BoTorch のクラスを使用します。q 系の Monte Carlo acquisition は posterior mean / variance だけでなく posterior sample を利用するため、registry でも posterior_samples requirement として明示します。
 
 ## Benchmark
 
