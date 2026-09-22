@@ -2,10 +2,10 @@
 
 from dataclasses import dataclass
 
+from robotorchan.acquisition.capabilities import AcquisitionPurpose
 from robotorchan.acquisition.compatibility import (
     check_model_acquisition_compatibility,
 )
-from robotorchan.acquisition.capabilities import AcquisitionPurpose
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.selector import select_compatible_models
