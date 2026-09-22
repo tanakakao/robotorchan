@@ -39,3 +39,15 @@ def test_qkg_rejects_non_fantasizing_non_gp_model() -> None:
 
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "acquisition requires fantasy-model support" in result.reasons
+
+
+
+def test_posterior_sampling_requirement_is_checked_explicitly() -> None:
+    from dataclasses import replace
+
+    from robotorchan.models.registry import MODEL_REGISTRY
+
+    entry = MODEL_REGISTRY["SingleTaskGP"]
+    original = entry.capabilities
+    assert original.supports_posterior_samples
+    assert original.supports_fantasize
