@@ -1,7 +1,5 @@
 """Tests for the declarative problem specification."""
 
-import pytest
-
 from robotorchan.models.capabilities import InputType, TaskType
 from robotorchan.problem import ObjectiveType, ProblemPurpose, ProblemSpec
 
@@ -39,9 +37,11 @@ def test_problem_spec_preserves_explicit_requirements() -> None:
     assert spec.robust
 
 
-def test_active_learning_rejects_multi_objective_optimization() -> None:
-    with pytest.raises(ValueError, match="multi-objective"):
-        ProblemSpec(
-            purpose=ProblemPurpose.ACTIVE_LEARNING,
-            objective_type=ObjectiveType.MULTI,
-        )
+
+def test_active_learning_can_describe_multiple_outputs() -> None:
+    spec = ProblemSpec(
+        purpose=ProblemPurpose.ACTIVE_LEARNING,
+        objective_type=ObjectiveType.MULTI,
+    )
+
+    assert spec.objective_type is ObjectiveType.MULTI
