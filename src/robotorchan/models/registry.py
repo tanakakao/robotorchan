@@ -446,7 +446,9 @@ def _register_family(
                     structured_output=structured_output,
                     preference=preference,
                     non_gp=non_gp,
-                    ensemble_posterior=name in _ENSEMBLE_POSTERIOR_MODELS,
+                    ensemble_posterior=name in (
+                        _GAUSSIAN_ENSEMBLE_MODELS | _ENSEMBLE_POSTERIOR_MODELS
+                    ),
                     supports_multi_output=name in _MULTI_OUTPUT_MODELS,
                     supports_posterior_samples=name in _POSTERIOR_SAMPLING_MODELS,
                     posterior_sampling_type=(
