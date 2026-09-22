@@ -42,3 +42,21 @@ def test_multi_output_active_learning_excludes_single_output_acquisitions() -> N
     names = {item.acquisition_name for item in recommend_compatible_workflows(spec)}
 
     assert "ExpectedPredictiveInformationGain" not in names
+
+
+def test_multifidelity_kg_is_only_recommended_for_multifidelity_problems() -> None:
+    standard = ProblemSpec(purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION)
+    multifidelity = ProblemSpec(
+        purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION,
+        multi_fidelity=True,
+    )
+
+    standard_acquisitions = {
+        item.acquisition_name for item in recommend_compatible_workflows(standard)
+    }
+    multifidelity_acquisitions = {
+        item.acquisition_name for item in recommend_compatible_workflows(multifidelity)
+    }
+
+    assert "qMultiFidelityKnowledgeGradient" not in standard_acquisitions
+    assert "qMultiFidelityKnowledgeGradient" in multifidelity_acquisitions
