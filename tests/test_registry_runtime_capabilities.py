@@ -1,6 +1,6 @@
 """Regression tests for explicit runtime capability metadata."""
 
-from robotorchan.models.capabilities import InputType
+from robotorchan.models.capabilities import InputType, PosteriorSamplingType
 from robotorchan.models.registry import MODEL_REGISTRY
 
 
@@ -49,3 +49,21 @@ def test_runtime_validated_reduced_models_support_fantasize() -> None:
         "MixedRandomProjectionGP",
     ):
         assert MODEL_REGISTRY[name].capabilities.supports_fantasize
+
+
+def test_posterior_sampling_type_distinguishes_gaussian_and_ensemble_models() -> None:
+    assert (
+        MODEL_REGISTRY["SingleTaskGP"].capabilities.posterior_sampling_type
+        is PosteriorSamplingType.GAUSSIAN
+    )
+    assert (
+        MODEL_REGISTRY["RandomForestSurrogate"].capabilities.posterior_sampling_type
+        is PosteriorSamplingType.ENSEMBLE
+    )
+
+
+def test_sampling_type_is_none_when_posterior_sampling_is_disabled() -> None:
+    for entry in MODEL_REGISTRY.values():
+        capabilities = entry.capabilities
+        if not capabilities.supports_posterior_samples:
+            assert capabilities.posterior_sampling_type is PosteriorSamplingType.NONE
