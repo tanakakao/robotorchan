@@ -45,10 +45,20 @@ def test_posterior_sampling_is_opt_in() -> None:
     assert not ModelCapabilities().supports_posterior_samples
 
 
-def test_registered_gp_declares_posterior_sampling_support() -> None:
+def test_fantasy_support_is_opt_in() -> None:
+    assert not ModelCapabilities().supports_fantasize
+
+
+def test_registered_gp_declares_sampling_and_fantasy_support() -> None:
     from robotorchan.models.registry import MODEL_REGISTRY
 
     entry = MODEL_REGISTRY["SingleTaskGP"]
     original = entry.capabilities
     assert original.supports_posterior_samples
     assert original.supports_fantasize
+
+
+def test_single_task_gp_supports_qkg_fantasy_requirement() -> None:
+    result = check_model_acquisition_compatibility("SingleTaskGP", "qKnowledgeGradient")
+
+    assert result.status is CompatibilityStatus.COMPATIBLE

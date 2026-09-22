@@ -19,7 +19,10 @@ def _docs(guide: str, theory: str, notebook: str) -> DocumentationLinks:
 MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
     "SingleTaskGP": ModelRegistryEntry(
         "SingleTaskGP",
-        ModelCapabilities(supports_posterior_samples=True),
+        ModelCapabilities(
+            supports_posterior_samples=True,
+            supports_fantasize=True,
+        ),
         _docs(
             "docs/models/standard.md",
             "docs/theory/02_gaussian_process.md",
@@ -32,6 +35,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         ModelCapabilities(
             input_type=InputType.MIXED,
             supports_posterior_samples=True,
+            supports_fantasize=True,
         ),
         _docs(
             "docs/models/standard.md",
@@ -46,6 +50,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             task_type=TaskType.MULTITASK,
             supports_multi_output=True,
             supports_posterior_samples=True,
+            supports_fantasize=True,
         ),
         _docs(
             "docs/models/multitask_multioutput.md",
@@ -63,6 +68,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             high_dimensional=HighDimensionalStrategy.SAAS,
             supports_multi_output=True,
             supports_posterior_samples=True,
+            supports_fantasize=True,
         ),
         _docs(
             "docs/models/multitask_multioutput.md",
@@ -76,6 +82,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         ModelCapabilities(
             high_dimensional=HighDimensionalStrategy.REDUCTION,
             supports_posterior_samples=True,
+            supports_fantasize=True,
         ),
         _docs(
             "docs/models/reduced.md",
@@ -92,6 +99,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             robustness=frozenset({RobustnessType.RELEVANCE_PURSUIT}),
             supports_multi_output=True,
             supports_posterior_samples=True,
+            supports_fantasize=True,
         ),
         _docs(
             "docs/models/robust_noise.md",
@@ -105,6 +113,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         ModelCapabilities(
             multi_fidelity=True,
             supports_posterior_samples=True,
+            supports_fantasize=True,
         ),
         _docs(
             "docs/models/standard.md",
@@ -118,6 +127,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         ModelCapabilities(
             inference=InferenceType.VARIATIONAL,
             supports_posterior_samples=True,
+            supports_fantasize=True,
         ),
         _docs(
             "docs/models/standard.md",

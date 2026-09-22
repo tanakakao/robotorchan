@@ -55,7 +55,7 @@ class ModelCapabilities:
     ensemble_posterior: bool = False
     supports_multi_output: bool = False
     supports_posterior_samples: bool = False
-    supports_fantasize: bool = True
+    supports_fantasize: bool = False
 
 
 @dataclass(frozen=True, slots=True)
