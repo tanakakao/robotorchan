@@ -233,6 +233,7 @@ _MULTITASK_MODELS = frozenset(
         "JointVAEKroneckerMultiTaskGP",
         "MixedJointEncoderMultiTaskGP",
         "RobustRelevancePursuitMultiTaskGP",
+        "RobustRelevancePursuitKroneckerMultiTaskGP",
         "ContaminatedMultiTaskGP",
         "MixedContaminatedMultiTaskGP",
         "StudentTMultiTaskGP",
@@ -327,6 +328,7 @@ _MULTI_OUTPUT_MODELS = frozenset(
         "ReducedKroneckerMultiTaskGP",
         "ReducedMultiTaskGP",
         "RobustRelevancePursuitMultiTaskGP",
+        "RobustRelevancePursuitKroneckerMultiTaskGP",
         "SaasFullyBayesianMultiTaskGP",
         "SpectralMixtureMultiTaskGP",
         "StudentTMultiTaskGP",
@@ -368,6 +370,7 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         "PCAGP",
         "PLSGP",
         "RandomProjectionGP",
+        "RobustRelevancePursuitKroneckerMultiTaskGP",
     }
 )
 
@@ -605,6 +608,7 @@ _register_family(
     (
         "RobustRelevancePursuitSingleTaskGP",
         "RobustRelevancePursuitMultiTaskGP",
+        "RobustRelevancePursuitKroneckerMultiTaskGP",
         "MixedRobustRelevancePursuitSingleTaskGP",
     ),
     guide="docs/models/robust_noise.md",
