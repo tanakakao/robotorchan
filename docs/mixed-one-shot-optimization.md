@@ -51,3 +51,39 @@ where the selected candidate category and at least one fantasy optimum category 
 
 Until these requirements are satisfied, mixed qKG and qMFKG should be treated as
 evaluation-compatible but not as having a general-purpose mixed candidate optimizer.
+
+
+## Optimizer design
+
+The mixed one-shot optimizer will treat categorical assignments as part of the augmented
+batch state rather than as global fixed features.
+
+For an acquisition with actual batch size `q` and augmented size `q_aug`, define a
+categorical assignment matrix with one assignment per augmented row. The optimizer must:
+
+1. enumerate feasible categorical assignments for the actual candidate rows;
+2. allow fantasy rows to use assignments independently from the actual rows;
+3. optimize continuous coordinates conditionally on each augmented categorical assignment;
+4. compare acquisition values across the resulting conditional optima;
+5. return only the actual candidates using the acquisition's one-shot extraction semantics.
+
+The first implementation will target `q=1` and finite categorical alternatives. This keeps
+the combinatorial search explicit and correct before introducing pruning or approximate
+search. Multi-category and larger-`q` acceleration are future performance extensions, not
+requirements for semantic correctness.
+
+### Correctness invariants
+
+The implementation must satisfy all of the following:
+
+- a fantasy row may select a different category from the observed candidate;
+- categorical coordinates remain fixed during conditional continuous optimization;
+- fidelity coordinates remain optimizable unless explicitly fixed by the caller;
+- the acquisition receives the complete augmented batch;
+- returned candidates exclude fantasy decision rows;
+- the reported acquisition value corresponds to the optimized augmented batch;
+- ordinary non-one-shot mixed acquisitions continue to use BoTorch's native mixed optimizer.
+
+The implementation must fail explicitly when the categorical assignment space is too large
+for the exact enumeration path rather than silently falling back to a semantically
+restricted optimizer.
