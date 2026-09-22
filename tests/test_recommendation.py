@@ -82,7 +82,6 @@ def test_multifidelity_kg_is_not_paired_with_standard_models() -> None:
     assert all(MODEL_REGISTRY[name].capabilities.multi_fidelity for name in mfkg_models)
 
 
-
 def test_multifidelity_kg_directly_rejects_standard_model() -> None:
     result = check_model_acquisition_compatibility(
         "SingleTaskGP",
