@@ -34,8 +34,10 @@ def test_non_gp_inference_is_not_applicable() -> None:
     )
 
     assert all(
-        MODEL_REGISTRY[name].capabilities.inference is InferenceType.NOT_APPLICABLE for name in names
+        MODEL_REGISTRY[name].capabilities.inference is InferenceType.NOT_APPLICABLE
+        for name in names
     )
+    assert all(MODEL_REGISTRY[name].capabilities.ensemble_posterior for name in names)
 
 
 def test_map_saas_ensemble_is_rejected_by_non_ensemble_acquisition() -> None:
