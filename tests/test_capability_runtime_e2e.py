@@ -1,6 +1,7 @@
 """Runtime smoke tests for capability-advertised BoTorch workflows."""
 
 import torch
+from botorch.acquisition.analytic import PosteriorMean
 from botorch.acquisition.cost_aware import InverseCostWeightedUtility
 from botorch.acquisition.knowledge_gradient import (
     qKnowledgeGradient,
@@ -12,7 +13,6 @@ from botorch.acquisition.multi_objective.logei import (
     qLogNoisyExpectedHypervolumeImprovement,
 )
 from botorch.acquisition.objective import GenericMCObjective
-from botorch.acquisition.analytic import PosteriorMean
 from botorch.acquisition.utils import project_to_target_fidelity
 from botorch.models.cost import AffineFidelityCostModel
 from botorch.optim import optimize_acqf
