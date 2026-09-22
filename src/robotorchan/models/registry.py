@@ -39,7 +39,10 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
     ),
     "KroneckerMultiTaskGP": ModelRegistryEntry(
         "KroneckerMultiTaskGP",
-        ModelCapabilities(task_type=TaskType.MULTITASK),
+        ModelCapabilities(
+            task_type=TaskType.MULTITASK,
+            supports_multi_output=True,
+        ),
         _docs(
             "docs/models/multitask_multioutput.md",
             "docs/theory/07_multitask_multioutput.md",
@@ -54,6 +57,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             task_type=TaskType.MULTITASK,
             inference=InferenceType.FULLY_BAYESIAN,
             high_dimensional=HighDimensionalStrategy.SAAS,
+            supports_multi_output=True,
         ),
         _docs(
             "docs/models/multitask_multioutput.md",
@@ -242,6 +246,21 @@ _FULLY_BAYESIAN_MODELS = frozenset(
         "MixedSaasFullyBayesianSingleTaskGP",
     }
 )
+_MULTI_OUTPUT_MODELS = frozenset(
+    {
+        "KroneckerMultiTaskGP",
+        "MultiTaskGP",
+        "MixedMultiTaskGP",
+        "MixedKroneckerMultiTaskGP",
+        "ModelListGP",
+        "SaasFullyBayesianMultiTaskGP",
+        "MixedSaasFullyBayesianMultiTaskGP",
+        "LCEMGP",
+        "MixedLCEMGP",
+    }
+)
+
+
 _ENSEMBLE_POSTERIOR_MODELS = frozenset(
     {
         "EnsembleMapSaasSingleTaskGP",
@@ -291,6 +310,8 @@ def _register_family(
                     preference=preference,
                     non_gp=non_gp,
                     ensemble_posterior=name in _ENSEMBLE_POSTERIOR_MODELS,
+                    supports_multi_output=name in _MULTI_OUTPUT_MODELS,
+                    supports_fantasize=not non_gp,
                 ),
                 _docs(guide, theory, notebook),
                 strategy,
