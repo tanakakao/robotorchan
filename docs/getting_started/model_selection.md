@@ -27,6 +27,8 @@ robotorchan では、モデルの複雑さではなく **データ生成過程�
 | 条件付き探索空間 | Hierarchical GP | 親変数で有効次元が変化 |
 | Context 構造 | SAC / LCEA / LCEM | context の意味と観測形式を確認 |
 | Preference data | `PairwiseGP` | 絶対値ではなく比較を学習 |
+| 強い非線形表現・特殊な共分散構造 | DeepGP / Infinite-width BNN GP / Spectral Mixture GP | 標準GPとの差と計算量を確認 |
+| 非平滑な tabular surrogate | Random Forest / Extra Trees / Gradient Boosting | GP posterior前提の獲得関数をそのまま適用しない |
 
 ## Mixed は独立した問題軸
 
@@ -64,5 +66,6 @@ BAxUS は主に探索側の選択肢です。
 
 このページはモデル選択の入口であり、個別モデルの説明を置き換えるものではありません。
 各モデルの用途、API、制約、Mixed 対応、Notebook は [モデル概要・使い所](../models.md)、
+Expressive GP は [Expressive models](../models/expressive.md)、Non-GP は [Non-GP surrogates](../models/non_gp.md)、
 理論的背景は [Theory](../theory/README.md)、実行例は
 [Examples](../../examples/README.md) を参照してください。
