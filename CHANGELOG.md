@@ -16,5 +16,7 @@ robotorchanの主な変更を記録します。
 
 Initial public release. The final release date and release notes will be fixed when `v0.1.0` is published.
 
-[Unreleased]: https://github.com/tanakakao/robotorchan/compare/v0.1.0...HEAD
+Until `v0.1.0` exists, the Unreleased section intentionally has no compare link that assumes the
+tag has already been created.
+
 [0.1.0]: https://github.com/tanakakao/robotorchan/releases/tag/v0.1.0
