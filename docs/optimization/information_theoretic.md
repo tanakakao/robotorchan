@@ -1,6 +1,6 @@
 # Information-theoretic acquisition functions
 
-Phase 7 uses BoTorch's native information-theoretic Bayesian-optimization acquisitions rather
+This guide uses BoTorch's native information-theoretic Bayesian-optimization acquisitions rather
 than wrapping or re-exporting them.
 
 ## Max-value Entropy Search
@@ -43,8 +43,15 @@ generator = torch.Generator().manual_seed(0)
 acqf = RandomizedStraddle(model, target=0.0, generator=generator)
 ```
 
-Supplying a generator makes experiments reproducible. A new random confidence coefficient is
-drawn on each evaluation.
+Supplying a generator makes experiments reproducible. One random confidence coefficient is held fixed throughout a candidate-selection round so
+acquisition optimization sees a stable objective. Call `resample()` to start a new round with a
+new coefficient.
 
-Phase 7 does not add a local MES/PES/JES implementation when BoTorch already provides the
+robotorchan does not add a local MES/PES/JES implementation when BoTorch already provides the
 required information-theoretic BO machinery.
+
+
+For entropy, mutual information, MES, and GIBBON theory, see
+[Information-theoretic Acquisition](../theory/acquisition/05_information_theoretic.md).
+`RandomizedStraddle` itself is covered in
+[Level-set Acquisition](../theory/acquisition/10_level_set.md).

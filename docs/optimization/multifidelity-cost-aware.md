@@ -1,6 +1,6 @@
 # Multi-fidelity and cost-aware acquisition functions
 
-Phase 10 uses BoTorch's native multi-fidelity and cost-aware acquisition infrastructure.
+This guide uses BoTorch's native multi-fidelity and cost-aware acquisition infrastructure.
 robotorchan does not add aliases around these APIs.
 
 ## Multi-fidelity Knowledge Gradient
@@ -50,6 +50,10 @@ variable accidentally.
 
 ## Scope
 
-This phase validates acquisition integration and cost-aware utilities. The surrogate-model
+This guide documents the validated acquisition integration and cost-aware utilities. The surrogate-model
 layer remains responsible for choosing an appropriate multi-fidelity model and declaring the
 fidelity dimensions. Multi-objective multi-fidelity lookahead is intentionally not wrapped.
+
+
+For the broader theory and method relationships, see
+[Acquisition theory](../theory/acquisition/11_multifidelity_cost_aware.md).

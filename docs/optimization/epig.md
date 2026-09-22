@@ -1,6 +1,6 @@
 # Expected Predictive Information Gain
 
-Phase 11 adds regression EPIG as a robotorchan-specific active-learning acquisition.
+This guide adds regression EPIG as a robotorchan-specific active-learning acquisition.
 EPIG targets predictive usefulness: a candidate is valuable when observing it is expected to
 reduce uncertainty for predictions drawn from a target input distribution.
 
@@ -28,3 +28,7 @@ extension rather than an independent-score approximation.
 The target set is part of the acquisition definition. Using a representative deployment/test
 distribution makes EPIG prediction-oriented; using an arbitrary pool changes the question the
 acquisition optimizes.
+
+
+For the broader theory and method relationships, see
+[Acquisition theory](../theory/acquisition/09_active_learning.md).

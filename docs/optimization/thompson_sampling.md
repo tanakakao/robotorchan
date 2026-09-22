@@ -1,6 +1,6 @@
 # Thompson sampling and posterior sampling
 
-Phase 4 separates **finite candidate-set selection** from continuous acquisition optimization.
+This guide separates **finite candidate-set selection** from continuous acquisition optimization.
 
 For a finite candidate pool, robotorchan provides `select_thompson_candidates`. It delegates
 posterior sampling and maximization to BoTorch's `MaxPosteriorSampling` and only adds a small,
@@ -35,3 +35,7 @@ The helper requires a BoTorch-compatible model posterior. Compatibility therefor
 the model/posterior contract rather than a GP-specific type check. Model families with
 special posterior semantics should be validated by focused integration tests before being
 listed as supported.
+
+
+For the broader theory and method relationships, see
+[Acquisition theory](../theory/acquisition/12_selection_guide.md).

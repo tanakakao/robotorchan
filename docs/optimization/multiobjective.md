@@ -1,6 +1,6 @@
 # Multi-objective acquisition functions
 
-Phase 9 keeps standard multi-objective Bayesian optimization on BoTorch's native acquisition
+This guide keeps standard multi-objective Bayesian optimization on BoTorch's native acquisition
 APIs. robotorchan models are tested against these APIs rather than hidden behind local aliases.
 
 ## Hypervolume improvement
@@ -55,3 +55,7 @@ justifies the additional cost.
 Phase 9 covers the standard multi-objective acquisition interface. Constraint composition,
 custom objectives, and multi-fidelity hypervolume lookahead are orthogonal concerns and remain
 with their dedicated integration paths.
+
+
+For the broader theory and method relationships, see
+[Acquisition theory](../theory/acquisition/07_multiobjective.md).

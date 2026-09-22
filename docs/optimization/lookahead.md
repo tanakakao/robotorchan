@@ -1,6 +1,6 @@
 # Lookahead acquisition functions
 
-Phase 8 keeps lookahead Bayesian optimization on BoTorch's native APIs. robotorchan does not
+This guide keeps lookahead Bayesian optimization on BoTorch's native APIs. robotorchan does not
 wrap or re-export these acquisition classes because the surrogate models already satisfy the
 BoTorch model contract.
 
@@ -48,4 +48,8 @@ substantially higher optimization cost.
 
 Phase 8 validates the native BoTorch lookahead path rather than adding a robotorchan-specific
 lookahead abstraction. Multi-objective and multi-fidelity lookahead variants belong to their
-respective later phases.
+respective dedicated integration paths.
+
+
+For the broader theory and method relationships, see
+[Acquisition theory](../theory/acquisition/06_lookahead.md).

@@ -38,7 +38,7 @@ The returned object is a BoTorch acquisition function and can be passed directly
 
 Standard GP-like robotorchan models expose BoTorch-compatible posteriors, so acquisition
 compatibility is a property of the model/posterior contract rather than a robotorchan
-wrapper. Phase 3 includes an integration test with `SingleTaskGP` for analytic and Monte
+wrapper. The integration suite includes a test with `SingleTaskGP` for analytic and Monte
 Carlo acquisitions.
 
 Non-GP empirical ensemble surrogates are different: use the validation helpers documented
@@ -46,4 +46,8 @@ in the acquisition architecture because analytic Gaussian acquisitions are not v
 those empirical posteriors.
 
 Multi-objective, multi-fidelity, information-theoretic, lookahead, active-learning, and
-level-set acquisitions are covered by later phases.
+level-set acquisitions are covered by dedicated guides.
+
+
+For the broader theory and method relationships, see
+[Acquisition theory](../theory/acquisition/12_selection_guide.md).
