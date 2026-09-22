@@ -68,6 +68,7 @@ def _botorch_bo(
     *,
     supports_constraints: bool = False,
     supports_multi_objective: bool = False,
+    supports_multi_output: bool = True,
 ) -> AcquisitionRegistryEntry:
     return AcquisitionRegistryEntry(
         acquisition_name=name,
@@ -75,9 +76,11 @@ def _botorch_bo(
             purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
             posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
             max_q=None,
-            supports_multi_output=supports_multi_objective,
+            supports_multi_output=supports_multi_output,
+            supports_ensemble=True,
             supports_constraints=supports_constraints,
             supports_multi_objective=supports_multi_objective,
+            monte_carlo=True,
         ),
         implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
     )
@@ -85,13 +88,19 @@ def _botorch_bo(
 
 ACQUISITION_REGISTRY.update(
     {
-        "qLogExpectedImprovement": _botorch_bo("qLogExpectedImprovement"),
+        "qLogExpectedImprovement": _botorch_bo(
+            "qLogExpectedImprovement",
+            supports_constraints=True,
+        ),
         "qLogNoisyExpectedImprovement": _botorch_bo(
             "qLogNoisyExpectedImprovement",
             supports_constraints=True,
         ),
         "qUpperConfidenceBound": _botorch_bo("qUpperConfidenceBound"),
-        "qKnowledgeGradient": _botorch_bo("qKnowledgeGradient"),
+        "qKnowledgeGradient": _botorch_bo(
+            "qKnowledgeGradient",
+            supports_multi_output=False,
+        ),
         "qLogExpectedHypervolumeImprovement": _botorch_bo(
             "qLogExpectedHypervolumeImprovement",
             supports_constraints=True,
