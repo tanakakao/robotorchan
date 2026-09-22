@@ -283,9 +283,7 @@ def test_mixed_single_task_multifidelity_gp_runtime_supports_mc_acquisition() ->
     category = torch.tensor([0.0, 1.0] * 4, dtype=torch.double)
     fidelity = torch.tensor([0.25, 0.5, 0.75, 1.0] * 2, dtype=torch.double)
     train_x = torch.stack([design, category, fidelity], dim=-1)
-    train_y = (
-        torch.sin(design * 3.0) + 0.15 * category + 0.2 * fidelity
-    ).unsqueeze(-1)
+    train_y = (torch.sin(design * 3.0) + 0.15 * category + 0.2 * fidelity).unsqueeze(-1)
 
     model = MixedSingleTaskMultiFidelityGP(
         train_x,
