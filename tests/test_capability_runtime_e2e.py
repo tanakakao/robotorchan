@@ -4,10 +4,10 @@ import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.multi_objective.logei import qLogExpectedHypervolumeImprovement
 from botorch.acquisition.objective import GenericMCObjective
+from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import (
     FastNondominatedPartitioning,
 )
-from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import KroneckerMultiTaskGP, MixedSingleTaskGP, SingleTaskGP
 
