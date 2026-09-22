@@ -13,24 +13,26 @@ Semantic Versioningを基本とし、Git tag / GitHub Releaseは `v{version}` �
 - GitHub Release: `v0.1.0`
 - PyPI version: `0.1.0`
 
-公開workflowは、Release tagと `pyproject.toml` のversionが一致しない場合は停止します。
+公開workflowは、Release tagと `pyproject.toml` のversionが一致しない場合は停止します。\n`pyproject.toml`、`CITATION.cff`、`CHANGELOG.md` のrelease情報も同じversionに揃えます。
 
 ## リリース前チェック
 
 1. `main` が最新で、CIが成功していることを確認します。
 2. `pyproject.toml` の `project.version` を次のversionへ更新します。
-3. version変更をPull Request経由で `main` にマージします。
-4. 必要に応じてローカルでも配布物を確認します。
+3. `CITATION.cff` の `version` も同じversionへ更新します。
+4. `CHANGELOG.md` の対象versionを確定し、リリース日を記録します。
+5. version変更をPull Request経由で `main` にマージします。
+6. 必要に応じてローカルでも配布物を確認します.
 
 ```bash
 python -m build
 python -m twine check dist/*
 ```
 
-5. `main` の対象commitに `v{version}` tagを作成します。
-6. 同じtagからGitHub Releaseを公開します。
-7. `Publish to PyPI` workflowの成功を確認します。
-8. PyPIから通常インストールできることを確認します。
+7. `main` の対象commitに `v{version}` tagを作成します。
+8. 同じtagからGitHub Releaseを公開します。
+9. `Publish to PyPI` workflowの成功を確認します。
+10. PyPIから通常インストールできることを確認します。
 
 ```bash
 pip install robotorchan
