@@ -530,7 +530,12 @@
       "theory": "docs/theory/15_heteroskedastic_noise.md",
       "notebook": "examples/notebooks/16_noise_models.ipynb"
     },
-    "RobustRelevancePursuitMultiTaskGP": {
+    "RobustRelevancePursuitKroneckerMultiTaskGP": {
+    "guide": "docs/models/robust_noise.md",
+    "theory": "docs/theory/14_robust_gaussian_process.md",
+    "notebook": "examples/notebooks/10_robust_gp.ipynb"
+  },
+  "RobustRelevancePursuitMultiTaskGP": {
       "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/14_robust_gaussian_process.md",
       "notebook": "examples/notebooks/10_robust_gp.ipynb"
