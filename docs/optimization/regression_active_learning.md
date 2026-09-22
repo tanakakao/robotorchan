@@ -1,6 +1,6 @@
 # Regression active learning
 
-Phase 5 adds uncertainty-based active learning for **continuous regression outputs**.
+This guide adds uncertainty-based active learning for **continuous regression outputs**.
 Classification-specific acquisitions remain outside the current scope.
 
 ## Pointwise uncertainty
@@ -39,5 +39,8 @@ integration points. robotorchan does not wrap or re-export it.
 ## Scope
 
 These acquisitions are regression active-learning tools. Level-set and boundary learning
-are handled separately, while predictive-information methods such as EPIG are introduced in
-later phases.
+are handled separately, while predictive-information methods such as EPIG are documented separately.
+
+
+For the broader theory and method relationships, see
+[Acquisition theory](../theory/acquisition/09_active_learning.md).
