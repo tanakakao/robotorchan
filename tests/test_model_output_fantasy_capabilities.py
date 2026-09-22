@@ -58,7 +58,6 @@ def test_registered_gp_declares_sampling_and_fantasy_support() -> None:
     assert original.supports_fantasize
 
 
-
 def test_single_task_gp_supports_qkg_fantasy_requirement() -> None:
     result = check_model_acquisition_compatibility("SingleTaskGP", "qKnowledgeGradient")
 
