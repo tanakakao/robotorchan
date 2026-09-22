@@ -2,6 +2,7 @@
 
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.acquisition.objective import GenericMCObjective
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import KroneckerMultiTaskGP, MixedSingleTaskGP, SingleTaskGP
@@ -85,3 +86,31 @@ def test_kronecker_multitask_gp_runtime_supports_multi_output_sampling() -> None
     assert posterior.mean.shape == torch.Size([2, 2])
     assert samples.shape == torch.Size([4, 2, 2])
     assert torch.isfinite(samples).all()
+
+
+def test_kronecker_multitask_gp_runtime_supports_scalarized_mc_acquisition() -> None:
+    train_x = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
+    train_y = torch.cat(
+        [
+            torch.sin(train_x * 3.0),
+            torch.cos(train_x * 3.0),
+        ],
+        dim=-1,
+    )
+
+    model = KroneckerMultiTaskGP(train_x, train_y)
+    model.eval()
+
+    weights = torch.tensor([0.7, 0.3], dtype=torch.double)
+    objective = GenericMCObjective(lambda samples, X=None: samples @ weights)
+    best_f = (train_y @ weights).max()
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=best_f,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+        objective=objective,
+    )
+    value = acquisition(torch.tensor([[[0.5]]], dtype=torch.double))
+
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
