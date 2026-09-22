@@ -19,6 +19,7 @@ from robotorchan.models import (
     MixedSingleTaskGP,
     RandomForestSurrogate,
     SingleTaskGP,
+    SingleTaskMultiFidelityGP,
 )
 
 
@@ -231,5 +232,37 @@ def test_single_task_gp_runtime_supports_knowledge_gradient_fantasies() -> None:
     value = acquisition(augmented_x)
 
     assert fantasy_points == 5
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_single_task_multifidelity_gp_runtime_supports_mc_acquisition() -> None:
+    design = torch.linspace(0.0, 1.0, 8, dtype=torch.double)
+    fidelity = torch.tensor([0.25, 0.5, 0.75, 1.0] * 2, dtype=torch.double)
+    train_x = torch.stack([design, fidelity], dim=-1)
+    train_y = (torch.sin(design * 3.0) + 0.2 * fidelity).unsqueeze(-1)
+
+    model = SingleTaskMultiFidelityGP(
+        train_x,
+        train_y,
+        data_fidelities=[1],
+        linear_truncated=False,
+    )
+    model.eval()
+
+    test_x = torch.tensor([[0.25, 1.0], [0.75, 1.0]], dtype=torch.double)
+    posterior = model.posterior(test_x)
+    samples = posterior.rsample(torch.Size([4]))
+
+    assert samples.shape == torch.Size([4, 2, 1])
+    assert torch.isfinite(samples).all()
+
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+    )
+    value = acquisition(torch.tensor([[[0.5, 1.0]]], dtype=torch.double))
+
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
