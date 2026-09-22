@@ -7,7 +7,7 @@ def test_runtime_capabilities_are_not_blanket_enabled() -> None:
     random_forest = MODEL_REGISTRY["RandomForestSurrogate"].capabilities
     variational = MODEL_REGISTRY["MixedSingleTaskVariationalGP"].capabilities
 
-    assert not random_forest.supports_posterior_samples
+    assert random_forest.supports_posterior_samples
     assert not random_forest.supports_fantasize
     assert variational.supports_posterior_samples
     assert not variational.supports_fantasize
