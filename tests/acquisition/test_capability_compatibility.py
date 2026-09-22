@@ -67,3 +67,21 @@ def test_non_gp_model_accepts_registered_monte_carlo_bo_acquisition() -> None:
     )
     assert result.status is CompatibilityStatus.COMPATIBLE
     assert result.compatible
+
+
+def test_qkg_rejects_multi_output_model() -> None:
+    result = check_model_acquisition_compatibility(
+        "KroneckerMultiTaskGP",
+        "qKnowledgeGradient",
+    )
+    assert result.status is CompatibilityStatus.INCOMPATIBLE
+    assert "acquisition does not support multi-output posteriors" in result.reasons
+
+
+def test_epig_rejects_model_list_multi_output_model() -> None:
+    result = check_model_acquisition_compatibility(
+        "ModelListGP",
+        "ExpectedPredictiveInformationGain",
+    )
+    assert result.status is CompatibilityStatus.INCOMPATIBLE
+    assert "acquisition requires a single-output posterior" in result.reasons
