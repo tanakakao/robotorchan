@@ -45,6 +45,9 @@ Kronecker 形式は task identity が `train_Y` の出力列にあります。
 long-format と observation model の意味が異なるため、通常 MultiTask 版が存在することを
 理由に Kronecker 版を自動的に追加しません。
 
+Phase 5 の具体的な採否と受入条件は
+[`robust_kronecker_design.md`](robust_kronecker_design.md) に記録します。
+
 各 robust/noise family について、
 
 - likelihood / observation model が block design と整合するか
