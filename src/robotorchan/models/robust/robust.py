@@ -10,7 +10,11 @@ from botorch.models.robust_relevance_pursuit_model import (
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
-from gpytorch.likelihoods import FixedNoiseGaussianLikelihood, Likelihood, MultitaskGaussianLikelihood
+from gpytorch.likelihoods import (
+    FixedNoiseGaussianLikelihood,
+    Likelihood,
+    MultitaskGaussianLikelihood,
+)
 from gpytorch.means import Mean
 from gpytorch.module import Module
 from gpytorch.priors import Prior
@@ -25,7 +29,80 @@ from robotorchan.models.base import (
 from robotorchan.models.standard.multitask import KroneckerMultiTaskGP, MultiTaskGP
 
 
-class RobustRelevancePursuitKroneckerMultiTaskGP(\n    KroneckerMultiTaskGP,\n    RobustRelevancePursuitMixin,\n):\n    """Block-design Kronecker GP with sparse cell-wise outlier noise.\n\n    Relevance-pursuit support is defined over the flattened n * m observation\n    cells while the latent response keeps the native Kronecker input-task\n    covariance. The training data are never converted to long format.\n    """\n\n    def __init__(\n        self,\n        train_X: Tensor,\n        train_Y: Tensor,\n        likelihood: MultitaskGaussianLikelihood | None = None,\n        data_covar_module: Module | None = None,\n        task_covar_prior: Prior | None = None,\n        rank: int | None = None,\n        outcome_transform: OutcomeTransform | None = None,\n        input_transform: InputTransform | None = None,\n        convex_parameterization: bool = True,\n        prior_mean_of_support: float | None = None,\n        cache_model_trace: bool = False,\n    ) -> None:\n        """Initialize the block-design response and sparse outlier likelihood."""\n        if train_Y.ndim < 2 or train_Y.shape[-2] != train_X.shape[-2]:\n            raise ValueError(\n                "train_Y must have shape batch_shape x n x m aligned with train_X."\n            )\n        self._original_X = train_X.detach().clone()\n        self._original_Y = train_Y.detach().clone()\n        self._robust_rank = rank\n        self._robust_task_covar_prior = task_covar_prior\n\n        KroneckerMultiTaskGP.__init__(\n            self,\n            train_X=train_X,\n            train_Y=train_Y,\n            likelihood=likelihood,\n            data_covar_module=data_covar_module,\n            task_covar_prior=task_covar_prior,\n            rank=rank,\n            outcome_transform=outcome_transform,\n            input_transform=input_transform,\n        )\n        RobustRelevancePursuitMixin.__init__(\n            self,\n            base_likelihood=self.likelihood,\n            dim=train_X.shape[-2] * train_Y.shape[-1],\n            prior_mean_of_support=prior_mean_of_support,\n            convex_parameterization=convex_parameterization,\n            cache_model_trace=cache_model_trace,\n        )\n\n    def to_standard_model(self) -> KroneckerMultiTaskGP:\n        """Return the equivalent Kronecker model for fixed-support fitting."""\n        is_training = self.training\n        model = KroneckerMultiTaskGP(\n            train_X=self._original_X,\n            train_Y=self._original_Y,\n            likelihood=self.likelihood,\n            data_covar_module=self.covar_module.data_covar_module,\n            task_covar_prior=self._robust_task_covar_prior,\n            rank=self._robust_rank,\n            outcome_transform=getattr(self, "outcome_transform", None),\n            input_transform=getattr(self, "input_transform", None),\n        )\n        if not is_training:\n            model.eval()\n        return model\n\n\nclass RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin):
+class RobustRelevancePursuitKroneckerMultiTaskGP(
+    KroneckerMultiTaskGP,
+    RobustRelevancePursuitMixin,
+):
+    """Block-design Kronecker GP with sparse cell-wise outlier noise.
+
+    Relevance-pursuit support is defined over the flattened n * m observation
+    cells while the latent response keeps the native Kronecker input-task
+    covariance. The training data are never converted to long format.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        likelihood: MultitaskGaussianLikelihood | None = None,
+        data_covar_module: Module | None = None,
+        task_covar_prior: Prior | None = None,
+        rank: int | None = None,
+        outcome_transform: OutcomeTransform | None = None,
+        input_transform: InputTransform | None = None,
+        convex_parameterization: bool = True,
+        prior_mean_of_support: float | None = None,
+        cache_model_trace: bool = False,
+    ) -> None:
+        """Initialize the block-design response and sparse outlier likelihood."""
+        if train_Y.ndim < 2 or train_Y.shape[-2] != train_X.shape[-2]:
+            raise ValueError(
+                "train_Y must have shape batch_shape x n x m aligned with train_X."
+            )
+        self._original_X = train_X.detach().clone()
+        self._original_Y = train_Y.detach().clone()
+        self._robust_rank = rank
+        self._robust_task_covar_prior = task_covar_prior
+
+        KroneckerMultiTaskGP.__init__(
+            self,
+            train_X=train_X,
+            train_Y=train_Y,
+            likelihood=likelihood,
+            data_covar_module=data_covar_module,
+            task_covar_prior=task_covar_prior,
+            rank=rank,
+            outcome_transform=outcome_transform,
+            input_transform=input_transform,
+        )
+        RobustRelevancePursuitMixin.__init__(
+            self,
+            base_likelihood=self.likelihood,
+            dim=train_X.shape[-2] * train_Y.shape[-1],
+            prior_mean_of_support=prior_mean_of_support,
+            convex_parameterization=convex_parameterization,
+            cache_model_trace=cache_model_trace,
+        )
+
+    def to_standard_model(self) -> KroneckerMultiTaskGP:
+        """Return the equivalent Kronecker model for fixed-support fitting."""
+        is_training = self.training
+        model = KroneckerMultiTaskGP(
+            train_X=self._original_X,
+            train_Y=self._original_Y,
+            likelihood=self.likelihood,
+            data_covar_module=self.covar_module.data_covar_module,
+            task_covar_prior=self._robust_task_covar_prior,
+            rank=self._robust_rank,
+            outcome_transform=getattr(self, "outcome_transform", None),
+            input_transform=getattr(self, "input_transform", None),
+        )
+        if not is_training:
+            model.eval()
+        return model
+
+
+class RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin):
     """Long-format multi-task GP with sparse outlier relevance pursuit."""
 
     def __init__(
