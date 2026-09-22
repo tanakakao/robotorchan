@@ -36,6 +36,8 @@ def recommend_compatible_workflows(spec: ProblemSpec) -> tuple[Recommendation, .
     for model_name in models:
         for acquisition_name, entry in ACQUISITION_REGISTRY.items():
             capabilities = entry.capabilities
+            if capabilities.max_q is not None and spec.q > capabilities.max_q:
+                continue
             if spec.output_type is OutputType.MULTI and not capabilities.supports_multi_output:
                 continue
             if spec.output_type is OutputType.MULTI and capabilities.requires_single_output:
