@@ -38,9 +38,6 @@ def test_multi_output_active_learning_excludes_single_output_acquisitions() -> N
         output_type=OutputType.MULTI,
     )
 
-    names = {
-        item.acquisition_name
-        for item in recommend_compatible_workflows(spec)
-    }
+    names = {item.acquisition_name for item in recommend_compatible_workflows(spec)}
 
     assert "ExpectedPredictiveInformationGain" not in names
