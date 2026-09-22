@@ -1,6 +1,7 @@
 """Runtime smoke tests for capability-advertised BoTorch workflows."""
 
 import torch
+from robotorchan.reduction.input import PCAInputReducer
 from botorch.acquisition.knowledge_gradient import qKnowledgeGradient
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.multi_objective.logei import (
@@ -16,8 +17,14 @@ from botorch.utils.multi_objective.box_decompositions.non_dominated import (
 
 from robotorchan.models import (
     PCAGP,
+    PLSGP,
+    RandomProjectionGP,
+    ReducedGP,
     KroneckerMultiTaskGP,
     MixedPCAGP,
+    MixedPLSGP,
+    MixedRandomProjectionGP,
+    MixedReducedGP,
     MixedSingleTaskGP,
     RandomForestSurrogate,
     SingleTaskGP,
@@ -384,3 +391,61 @@ def test_mixed_pca_gp_runtime_supports_knowledge_gradient() -> None:
     assert fantasy_points == 5
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
+
+
+def _assert_reduced_model_supports_knowledge_gradient(model, candidate: torch.Tensor) -> None:
+    model.eval()
+    acquisition = qKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([4])),
+    )
+    fantasy_points = acquisition.get_augmented_q_batch_size(q=1)
+    value = acquisition(candidate.expand(1, fantasy_points, candidate.shape[-1]).clone())
+
+    assert fantasy_points == 5
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_remaining_continuous_reduced_models_support_knowledge_gradient() -> None:
+    train_x = torch.stack(
+        [
+            torch.linspace(0.0, 1.0, 8, dtype=torch.double),
+            torch.linspace(1.0, 0.0, 8, dtype=torch.double),
+            torch.linspace(0.2, 0.9, 8, dtype=torch.double),
+        ],
+        dim=-1,
+    )
+    train_y = torch.sin(train_x[:, :1] * 3.0)
+    candidate = torch.tensor([[[0.5, 0.5, 0.55]]], dtype=torch.double)
+
+    models = (
+        ReducedGP(train_x, train_y),
+        PLSGP(train_x, train_y, n_components=2),
+        RandomProjectionGP(train_x, train_y, n_components=2),
+    )
+    for model in models:
+        _assert_reduced_model_supports_knowledge_gradient(model, candidate)
+
+
+def test_remaining_mixed_reduced_models_support_knowledge_gradient() -> None:
+    continuous_a = torch.linspace(0.0, 1.0, 8, dtype=torch.double)
+    categorical = torch.tensor([0.0, 1.0] * 4, dtype=torch.double)
+    continuous_b = torch.linspace(1.0, 0.0, 8, dtype=torch.double)
+    train_x = torch.stack([continuous_a, categorical, continuous_b], dim=-1)
+    train_y = (torch.sin(continuous_a * 3.0) + 0.1 * categorical).unsqueeze(-1)
+    candidate = torch.tensor([[[0.5, 1.0, 0.5]]], dtype=torch.double)
+
+    models = (
+        MixedReducedGP(
+            train_x,
+            train_y,
+            input_reducer=PCAInputReducer(n_components=1),
+            cat_dims=[1],
+        ),
+        MixedPLSGP(train_x, train_y, n_components=1, cat_dims=[1]),
+        MixedRandomProjectionGP(train_x, train_y, n_components=1, cat_dims=[1]),
+    )
+    for model in models:
+        _assert_reduced_model_supports_knowledge_gradient(model, candidate)
