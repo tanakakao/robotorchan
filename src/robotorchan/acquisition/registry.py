@@ -70,6 +70,7 @@ def _botorch_bo(
     supports_multi_objective: bool = False,
     supports_multi_output: bool = True,
     requires_fantasize: bool = False,
+    requires_multi_fidelity: bool = False,
 ) -> AcquisitionRegistryEntry:
     return AcquisitionRegistryEntry(
         acquisition_name=name,
@@ -83,6 +84,7 @@ def _botorch_bo(
             supports_multi_objective=supports_multi_objective,
             monte_carlo=True,
             requires_fantasize=requires_fantasize,
+            requires_multi_fidelity=requires_multi_fidelity,
         ),
         implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
     )
@@ -103,6 +105,12 @@ ACQUISITION_REGISTRY.update(
             "qKnowledgeGradient",
             supports_multi_output=False,
             requires_fantasize=True,
+        ),
+        "qMultiFidelityKnowledgeGradient": _botorch_bo(
+            "qMultiFidelityKnowledgeGradient",
+            supports_multi_output=False,
+            requires_fantasize=True,
+            requires_multi_fidelity=True,
         ),
         "qLogExpectedHypervolumeImprovement": _botorch_bo(
             "qLogExpectedHypervolumeImprovement",
