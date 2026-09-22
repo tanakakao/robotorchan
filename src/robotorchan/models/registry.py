@@ -152,10 +152,7 @@ _MIXED_MODELS = frozenset(
         "MixedAdditiveMapSaasSingleTaskGP",
         "MixedEnsembleMapSaasSingleTaskGP",
         "MixedOrthogonalAdditiveGP",
-        "MixedReducedGP",
         "MixedPCAGP",
-        "MixedPLSGP",
-        "MixedRandomProjectionGP",
         "MixedReducedMultiTaskGP",
         "MixedReducedKroneckerMultiTaskGP",
         "MixedAutoEncoderGP",
@@ -355,10 +352,7 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         "MixedPLSGP",
         "MixedRandomProjectionGP",
         "MixedReducedGP",
-        "ReducedGP",
         "PCAGP",
-        "PLSGP",
-        "RandomProjectionGP",
     }
 )
 
