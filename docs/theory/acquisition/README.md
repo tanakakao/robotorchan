@@ -162,3 +162,22 @@ EI、UCB、KG、EHVI などの詳細な式・導出・比較は、それぞれ�
 実際の問題から獲得関数を選びたい場合は、先に [Selection Guide](12_selection_guide.md) を読み、必要な詳細章へ移動してください。
 
 実装方法を確認したい場合は [Optimization guide](../../optimization/README.md)、現在の対応範囲だけを確認したい場合は [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
+
+
+## Documentation QA contract
+
+この acquisition theory hierarchy は次の整合性を維持します。
+
+- chapter number と filename は 01〜12 で一致させる。
+- theory から implementation support を推測しない。現在の対応範囲は
+  [Acquisition integration status](../../optimization/acquisition-status.md) を正とする。
+- practical API の説明は [Optimization guide](../../optimization/README.md) に置き、Theory へ
+  implementation-specific usage を重複させない。
+- BoTorch native acquisition は、robotorchan 固有 contract がない限り local alias として
+  再公開しない。
+- literature method と robotorchan-specific heuristic の provenance を混同しない。
+- q=1、multi-output、structured output、ensemble posterior などの制約を Theory の一般形から
+  自動的に拡張しない。
+
+Phase 15 の横断 QA では、01〜12 の章番号、主要 navigation、開発履歴表現、RandomizedStraddle
+の旧 semantics、Theory / Optimization / Status の責務分離を再確認しています。
