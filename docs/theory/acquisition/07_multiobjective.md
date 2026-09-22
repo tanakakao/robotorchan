@@ -251,3 +251,10 @@ HVKG
 を区別することが重要です。
 
 reference point は hypervolume criterion の一部であり、noise がある場合は observed front と latent front の違いも考慮する必要があります。
+
+
+## References
+
+- Daulton, S., Balandat, M., and Bakshy, E. (2020), *Differentiable Expected Hypervolume Improvement for Parallel Multi-Objective Bayesian Optimization*. NeurIPS.
+- Daulton, S., Balandat, M., and Bakshy, E. (2021), *Parallel Bayesian Optimization of Multiple Noisy Objectives with Expected Hypervolume Improvement*. NeurIPS.
+- Ament, S. et al. (2023), *Unexpected Improvements to Expected Improvement for Bayesian Optimization*, for log-space improvement formulations used by modern BoTorch APIs.
