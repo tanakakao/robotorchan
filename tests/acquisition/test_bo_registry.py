@@ -61,7 +61,6 @@ def test_single_objective_multi_output_bo_keeps_scalarizable_mc_acquisitions() -
     assert "qUpperConfidenceBound" in names
 
 
-
 def test_botorch_q_acquisitions_require_posterior_samples() -> None:
     entries = (
         entry
