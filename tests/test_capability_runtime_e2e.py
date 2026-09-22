@@ -430,6 +430,7 @@ def test_multifidelity_knowledge_gradient_runtime_with_cost_and_projection() -> 
         num_fantasies=4,
         sampler=SobolQMCNormalSampler(sample_shape=torch.Size([4])),
         cost_aware_utility=InverseCostWeightedUtility(cost_model=cost_model),
+        current_value=train_y.max(),
         project=project,
     )
     fantasy_points = acquisition.get_augmented_q_batch_size(q=1)
