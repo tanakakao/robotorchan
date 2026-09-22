@@ -67,3 +67,22 @@ def test_sampling_type_is_none_when_posterior_sampling_is_disabled() -> None:
         capabilities = entry.capabilities
         if not capabilities.supports_posterior_samples:
             assert capabilities.posterior_sampling_type is PosteriorSamplingType.NONE
+
+
+def test_map_saas_ensembles_use_gaussian_sampling_metadata() -> None:
+    for name in ("EnsembleMapSaasSingleTaskGP", "MixedEnsembleMapSaasSingleTaskGP"):
+        capabilities = MODEL_REGISTRY[name].capabilities
+        assert capabilities.ensemble_posterior
+        assert capabilities.posterior_sampling_type is PosteriorSamplingType.GAUSSIAN
+
+
+def test_empirical_tree_ensembles_use_index_sampling_metadata() -> None:
+    for name in (
+        "RandomForestSurrogate",
+        "ExtraTreesSurrogate",
+        "GradientBoostingSurrogate",
+        "HistGradientBoostingSurrogate",
+    ):
+        capabilities = MODEL_REGISTRY[name].capabilities
+        assert capabilities.ensemble_posterior
+        assert capabilities.posterior_sampling_type is PosteriorSamplingType.ENSEMBLE
