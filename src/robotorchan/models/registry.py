@@ -90,6 +90,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             input_type=InputType.MIXED,
             task_type=TaskType.MULTITASK,
             robustness=frozenset({RobustnessType.RELEVANCE_PURSUIT}),
+            supports_multi_output=True,
             supports_posterior_samples=True,
         ),
         _docs(
