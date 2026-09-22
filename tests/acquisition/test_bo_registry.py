@@ -2,7 +2,7 @@
 
 from robotorchan.acquisition.capabilities import AcquisitionPurpose
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
-from robotorchan.problem import ObjectiveType, ProblemPurpose, ProblemSpec
+from robotorchan.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.recommendation import recommend_compatible_workflows
 
 
@@ -26,6 +26,7 @@ def test_multi_objective_bo_selects_hypervolume_acquisitions() -> None:
     spec = ProblemSpec(
         purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION,
         objective_type=ObjectiveType.MULTI,
+        output_type=OutputType.MULTI,
     )
 
     names = {item.acquisition_name for item in recommend_compatible_workflows(spec)}
@@ -49,8 +50,6 @@ def test_constrained_bo_filters_acquisition_metadata() -> None:
 
 
 def test_single_objective_multi_output_bo_keeps_scalarizable_mc_acquisitions() -> None:
-    from robotorchan.problem import OutputType
-
     spec = ProblemSpec(
         purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION,
         output_type=OutputType.MULTI,
