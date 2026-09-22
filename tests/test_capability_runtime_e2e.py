@@ -1,6 +1,7 @@
 """Runtime smoke tests for capability-advertised BoTorch workflows."""
 
 import torch
+from botorch.acquisition.cost_aware import InverseCostWeightedUtility
 from botorch.acquisition.knowledge_gradient import qKnowledgeGradient
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.multi_objective.logei import (
@@ -8,6 +9,8 @@ from botorch.acquisition.multi_objective.logei import (
     qLogNoisyExpectedHypervolumeImprovement,
 )
 from botorch.acquisition.objective import GenericMCObjective
+from botorch.acquisition.utils import project_to_target_fidelity
+from botorch.models.cost import AffineFidelityCostModel
 from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import (
@@ -358,6 +361,41 @@ def test_multifidelity_models_runtime_support_knowledge_gradient_fantasies() -> 
         mixed_model,
         torch.tensor([[0.5, 1.0, 1.0]], dtype=torch.double),
     )
+
+
+def test_multifidelity_projection_and_cost_utility_runtime() -> None:
+    design = torch.linspace(0.0, 1.0, 8, dtype=torch.double)
+    fidelity = torch.tensor([0.25, 0.5, 0.75, 1.0] * 2, dtype=torch.double)
+    train_x = torch.stack([design, fidelity], dim=-1)
+    train_y = (torch.sin(design * 3.0) + 0.2 * fidelity).unsqueeze(-1)
+
+    model = SingleTaskMultiFidelityGP(
+        train_x,
+        train_y,
+        data_fidelities=[1],
+        linear_truncated=False,
+    )
+    model.eval()
+
+    candidate = torch.tensor([[[0.5, 0.5]]], dtype=torch.double)
+    projected = project_to_target_fidelity(
+        candidate,
+        d=candidate.shape[-1],
+        target_fidelities={1: 1.0},
+    )
+    cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
+    cost_utility = InverseCostWeightedUtility(cost_model=cost_model)
+
+    assert projected.shape == candidate.shape
+    assert torch.equal(projected[..., 0], candidate[..., 0])
+    assert torch.all(projected[..., 1] == 1.0)
+
+    deltas = torch.ones(torch.Size([4, 1, 1]), dtype=torch.double)
+    weighted = cost_utility(candidate, deltas=deltas)
+
+    assert weighted.shape == deltas.shape
+    assert torch.isfinite(weighted).all()
+    assert torch.all(weighted > 0)
 
 
 def test_pca_gp_runtime_supports_mc_acquisition() -> None:
