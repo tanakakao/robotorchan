@@ -20,8 +20,9 @@ def test_mixed_high_dimensional_bo_flows_end_to_end() -> None:
     recommended = {item.model_name for item in recommendations}
 
     assert compatible
-    assert recommended == compatible
-    assert all(item.acquisition_name is None for item in recommendations)
+    assert recommended <= compatible
+    assert recommended
+    assert all(item.acquisition_name is not None for item in recommendations)
 
 
 def test_multi_output_active_learning_flows_end_to_end() -> None:

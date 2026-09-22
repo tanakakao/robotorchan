@@ -5,6 +5,7 @@ from enum import StrEnum
 
 
 class AcquisitionPurpose(StrEnum):
+    BAYESIAN_OPTIMIZATION = "bayesian_optimization"
     ACTIVE_LEARNING = "active_learning"
 
 
@@ -22,6 +23,8 @@ class AcquisitionCapabilities:
     supports_structured_output: bool = False
     supports_ensemble: bool = False
     requires_single_output: bool = False
+    supports_constraints: bool = False
+    supports_multi_objective: bool = False
 
 
 @dataclass(frozen=True, slots=True)

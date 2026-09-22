@@ -1,16 +1,17 @@
 """Tests for explainable capability-based recommendations."""
 
+from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.recommendation import recommend_compatible_workflows
 
 
-def test_bo_recommendations_do_not_invent_unregistered_bo_acquisitions() -> None:
+def test_bo_recommendations_use_registered_botorch_metadata() -> None:
     spec = ProblemSpec(purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION)
 
     recommendations = recommend_compatible_workflows(spec)
 
     assert recommendations
-    assert all(item.acquisition_name is None for item in recommendations)
+    assert all(item.acquisition_name in ACQUISITION_REGISTRY for item in recommendations)
 
 
 def test_active_learning_recommendations_respect_model_acquisition_compatibility() -> None:

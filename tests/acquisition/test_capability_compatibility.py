@@ -1,6 +1,7 @@
 """Tests for acquisition capability metadata and model compatibility."""
 
 import robotorchan.acquisition as acquisition
+from robotorchan.acquisition.capabilities import AcquisitionPurpose
 from robotorchan.acquisition.compatibility import (
     CompatibilityStatus,
     check_model_acquisition_compatibility,
@@ -15,7 +16,12 @@ def test_registry_covers_public_acquisition_classes() -> None:
         "validate_non_gp_acquisition",
     }
     expected = set(acquisition.__all__) - helpers
-    assert set(ACQUISITION_REGISTRY) == expected
+    public_extensions = {
+        name
+        for name, entry in ACQUISITION_REGISTRY.items()
+        if entry.capabilities.purpose is AcquisitionPurpose.ACTIVE_LEARNING
+    }
+    assert public_extensions == expected
 
 
 def test_single_task_gp_supports_scalar_active_learning() -> None:
