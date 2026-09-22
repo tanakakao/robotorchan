@@ -69,3 +69,10 @@ Pull Requestには次を簡潔に記載してください。
 - ドキュメントやNotebookへの影響
 
 変更は可能な限り1つの目的に絞ってください。
+
+
+## Capability metadata
+
+モデルや acquisition の public capability を変更した場合は、実装だけでなく registry metadata と対応する contract test も同じ変更で更新してください。モデル名の文字列解析から capability を推測する実装は追加しません。
+
+モデル registry を変更した場合、生成物である `docs/model_coverage.json` を直接編集せず、既存の生成スクリプトを使用してください。
