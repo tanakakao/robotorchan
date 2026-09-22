@@ -507,3 +507,9 @@ Acquisition optimizer
 を分離して理解することが重要です。
 
 次章 [Selection Guide](12_selection_guide.md) では、ここまでの acquisition families を problem setting から選択するための整理を行います。
+
+
+## References
+
+- Wu, J., Toscano-Palmerin, S., Frazier, P. I., and Wilson, A. G. (2020), *Practical Multi-fidelity Bayesian Optimization for Hyperparameter Tuning*. UAI.
+- BoTorch documentation and tutorials for `qMultiFidelityKnowledgeGradient`, target-fidelity projection, `AffineFidelityCostModel`, and `InverseCostWeightedUtility`.
