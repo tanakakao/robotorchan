@@ -61,3 +61,46 @@ ACQUISITION_REGISTRY["ExpectedPredictiveInformationGain"] = _active_learning(
 def get_acquisition_registry_entry(acquisition_name: str) -> AcquisitionRegistryEntry:
     """Return capability metadata for a registered acquisition extension."""
     return ACQUISITION_REGISTRY[acquisition_name]
+
+
+def _botorch_bo(
+    name: str,
+    *,
+    supports_constraints: bool = False,
+    supports_multi_objective: bool = False,
+) -> AcquisitionRegistryEntry:
+    return AcquisitionRegistryEntry(
+        acquisition_name=name,
+        capabilities=AcquisitionCapabilities(
+            purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+            posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+            max_q=None,
+            supports_multi_output=supports_multi_objective,
+            supports_constraints=supports_constraints,
+            supports_multi_objective=supports_multi_objective,
+        ),
+        implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    )
+
+
+ACQUISITION_REGISTRY.update(
+    {
+        "qLogExpectedImprovement": _botorch_bo("qLogExpectedImprovement"),
+        "qLogNoisyExpectedImprovement": _botorch_bo(
+            "qLogNoisyExpectedImprovement",
+            supports_constraints=True,
+        ),
+        "qUpperConfidenceBound": _botorch_bo("qUpperConfidenceBound"),
+        "qKnowledgeGradient": _botorch_bo("qKnowledgeGradient"),
+        "qLogExpectedHypervolumeImprovement": _botorch_bo(
+            "qLogExpectedHypervolumeImprovement",
+            supports_constraints=True,
+            supports_multi_objective=True,
+        ),
+        "qLogNoisyExpectedHypervolumeImprovement": _botorch_bo(
+            "qLogNoisyExpectedHypervolumeImprovement",
+            supports_constraints=True,
+            supports_multi_objective=True,
+        ),
+    }
+)
