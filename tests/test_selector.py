@@ -68,7 +68,7 @@ def test_evaluation_explains_unmet_requirements() -> None:
 
     assert not result.compatible
     assert result.reasons == (
-        "requires multi-fidelity support",
+        "multi-fidelity structure does not match the problem",
         "requires structured-output support",
         "requires a high-dimensional strategy",
         "requires an explicit robustness strategy",
