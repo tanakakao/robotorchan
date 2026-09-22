@@ -378,7 +378,11 @@ def test_multifidelity_projection_and_cost_utility_runtime() -> None:
     model.eval()
 
     candidate = torch.tensor([[[0.5, 0.5]]], dtype=torch.double)
-    projected = project_to_target_fidelity(candidate, d=candidate.shape[-1], target_fidelities={1: 1.0})
+    projected = project_to_target_fidelity(
+        candidate,
+        d=candidate.shape[-1],
+        target_fidelities={1: 1.0},
+    )
     cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
     cost_utility = InverseCostWeightedUtility(cost_model=cost_model)
 
