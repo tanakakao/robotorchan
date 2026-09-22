@@ -49,7 +49,6 @@ def test_non_gp_model_requires_mc_acquisition_path() -> None:
 
 
 def test_registry_keys_match_acquisition_names() -> None:
-    registered_names = {
-        entry.acquisition_name for entry in ACQUISITION_REGISTRY.values()
-    }
+    entries = ACQUISITION_REGISTRY.values()
+    registered_names = {entry.acquisition_name for entry in entries}
     assert registered_names == set(ACQUISITION_REGISTRY)
