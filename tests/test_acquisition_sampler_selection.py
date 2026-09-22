@@ -5,9 +5,8 @@ import torch
 from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
 
-from robotorchan.models import EnsembleMapSaasSingleTaskGP, MixedEnsembleMapSaasSingleTaskGP
-
 from robotorchan.acquisition.samplers import make_model_sampler
+from robotorchan.models import EnsembleMapSaasSingleTaskGP, MixedEnsembleMapSaasSingleTaskGP
 
 
 def test_make_model_sampler_selects_gaussian_sampler() -> None:
