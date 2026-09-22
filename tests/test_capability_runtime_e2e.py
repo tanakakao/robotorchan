@@ -7,12 +7,18 @@ from botorch.acquisition.multi_objective.logei import (
     qLogNoisyExpectedHypervolumeImprovement,
 )
 from botorch.acquisition.objective import GenericMCObjective
+from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import (
     FastNondominatedPartitioning,
 )
 
-from robotorchan.models import KroneckerMultiTaskGP, MixedSingleTaskGP, SingleTaskGP
+from robotorchan.models import (
+    KroneckerMultiTaskGP,
+    MixedSingleTaskGP,
+    RandomForestSurrogate,
+    SingleTaskGP,
+)
 
 
 def test_single_task_gp_runtime_supports_mc_acquisition() -> None:
@@ -170,6 +176,35 @@ def test_kronecker_multitask_gp_runtime_supports_noisy_multi_objective_acquisiti
         X_baseline=train_x,
         sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
         prune_baseline=False,
+    )
+    value = acquisition(torch.tensor([[[0.5]]], dtype=torch.double))
+
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_random_forest_runtime_supports_mc_acquisition() -> None:
+    train_x = torch.linspace(0.0, 1.0, 12, dtype=torch.double).unsqueeze(-1)
+    train_y = torch.sin(train_x * 3.0)
+
+    model = RandomForestSurrogate(
+        train_x,
+        train_y,
+        n_estimators=16,
+        random_state=0,
+    )
+    model.fit()
+
+    posterior = model.posterior(torch.tensor([[0.25], [0.75]], dtype=torch.double))
+    samples = posterior.rsample(torch.Size([4]))
+
+    assert samples.shape == torch.Size([4, 2, 1])
+    assert torch.isfinite(samples).all()
+
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=IndexSampler(sample_shape=torch.Size([8])),
     )
     value = acquisition(torch.tensor([[[0.5]]], dtype=torch.double))
 
