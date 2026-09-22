@@ -1,8 +1,14 @@
 """Initial model capability registry."""
 
 from robotorchan.models.capabilities import (
-    DocumentationLinks, HighDimensionalStrategy, InferenceType, InputType,
-    ModelCapabilities, ModelRegistryEntry, RobustnessType, TaskType,
+    DocumentationLinks,
+    HighDimensionalStrategy,
+    InferenceType,
+    InputType,
+    ModelCapabilities,
+    ModelRegistryEntry,
+    RobustnessType,
+    TaskType,
 )
 
 
@@ -23,7 +29,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         "native mixed-variable GP path"),
     "KroneckerMultiTaskGP": ModelRegistryEntry(
         "KroneckerMultiTaskGP",
-        ModelCapabilities(task_type=TaskType.MULTITASK, structured_output=True),
+        ModelCapabilities(task_type=TaskType.MULTITASK),
         _docs("docs/models/multitask_multioutput.md", "docs/theory/07_multitask_multioutput.md",
               "examples/notebooks/04_multitask_gp.ipynb"),
         "Kronecker-structured exact multitask GP"),
