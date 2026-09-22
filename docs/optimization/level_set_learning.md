@@ -1,6 +1,6 @@
 # Level-set and boundary learning
 
-Phase 6 separates **continuous-response level-set estimation** from generic regression active
+This guide separates **continuous-response level-set estimation** from generic regression active
 learning and from classification.
 
 The task is to learn the input-space boundary where a continuous latent response reaches a
@@ -36,11 +36,15 @@ from robotorchan.acquisition import BoundaryVariance
 acqf = BoundaryVariance(model, target=critical_value)
 ```
 
-Both acquisitions currently support q=1. For multi-output posteriors, `output_index` must be
+`Straddle`, `BoundaryVariance`, and `RandomizedStraddle` currently support q=1. For multi-output posteriors, `output_index` must be
 specified explicitly. Structured tensor outputs must be scalarized before use.
 
 ## Scope
 
 These methods operate on continuous regression posteriors. They do not introduce a classifier
-or classification-specific uncertainty criterion. Randomized Straddle remains an advanced
-extension rather than being folded into the deterministic core prematurely.
+or classification-specific uncertainty criterion. `RandomizedStraddle` is a public randomized level-set acquisition; `BoundaryVariance` remains
+explicitly identified as a robotorchan-specific heuristic.
+
+
+For the underlying theory and provenance distinctions, see
+[Level-set Acquisition](../theory/acquisition/10_level_set.md).
