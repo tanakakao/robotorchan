@@ -35,6 +35,5 @@ def test_multi_output_active_learning_flows_end_to_end() -> None:
     assert recommendations
     assert all(item.acquisition_name is not None for item in recommendations)
     assert all(
-        item.acquisition_name != "ExpectedPredictiveInformationGain"
-        for item in recommendations
+        item.acquisition_name != "ExpectedPredictiveInformationGain" for item in recommendations
     )
