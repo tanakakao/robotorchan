@@ -126,6 +126,7 @@ from robotorchan.models.robust.robust import (
     MixedHeteroskedasticSingleTaskGP,
     MixedRobustRelevancePursuitMultiTaskGP,
     MixedRobustRelevancePursuitSingleTaskGP,
+    RobustRelevancePursuitKroneckerMultiTaskGP,
     RobustRelevancePursuitMultiTaskGP,
     RobustRelevancePursuitSingleTaskGP,
 )
@@ -276,6 +277,7 @@ __all__ = [
     "ReducedKroneckerMultiTaskGP",
     "ReducedMultiTaskGP",
     "ReplicateNoiseSingleTaskGP",
+    "RobustRelevancePursuitKroneckerMultiTaskGP",
     "RobustRelevancePursuitMultiTaskGP",
     "RobustRelevancePursuitSingleTaskGP",
     "SaasFullyBayesianMultiTaskGP",
