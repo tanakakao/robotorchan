@@ -48,6 +48,8 @@ def recommend_compatible_workflows(spec: ProblemSpec) -> tuple[Recommendation, .
                 continue
             if spec.constrained and not capabilities.supports_constraints:
                 continue
+            if capabilities.requires_multi_fidelity and not spec.multi_fidelity:
+                continue
             if capabilities.max_q is not None and spec.q > capabilities.max_q:
                 continue
             if spec.output_type is OutputType.MULTI and not capabilities.supports_multi_output:
