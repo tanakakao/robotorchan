@@ -3,6 +3,7 @@
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.recommendation import recommend_compatible_workflows
+from robotorchan.models.registry import MODEL_REGISTRY
 
 
 def test_bo_recommendations_use_registered_botorch_metadata() -> None:
@@ -77,8 +78,4 @@ def test_multifidelity_kg_is_not_paired_with_standard_models() -> None:
 
     assert mfkg_models
     assert "SingleTaskGP" not in mfkg_models
-    assert all(
-        ACQUISITION_REGISTRY["qMultiFidelityKnowledgeGradient"]
-        .capabilities.requires_multi_fidelity
-        for _ in mfkg_models
-    )
+    assert all(MODEL_REGISTRY[name].capabilities.multi_fidelity for name in mfkg_models)
