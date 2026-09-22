@@ -1,6 +1,6 @@
 """Tests for explainable capability-based recommendations."""
 
-from robotorchan.problem import ProblemPurpose, ProblemSpec
+from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.recommendation import recommend_compatible_workflows
 
 
@@ -30,3 +30,17 @@ def test_default_problem_excludes_special_structural_models() -> None:
 
     assert "SingleTaskMultiFidelityGP" not in names
     assert "PairwiseGP" not in names
+
+
+def test_multi_output_active_learning_excludes_single_output_acquisitions() -> None:
+    spec = ProblemSpec(
+        purpose=ProblemPurpose.ACTIVE_LEARNING,
+        output_type=OutputType.MULTI,
+    )
+
+    names = {
+        item.acquisition_name
+        for item in recommend_compatible_workflows(spec)
+    }
+
+    assert "ExpectedPredictiveInformationGain" not in names
