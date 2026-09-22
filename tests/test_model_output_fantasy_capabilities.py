@@ -4,7 +4,7 @@ from robotorchan.acquisition.compatibility import (
     CompatibilityStatus,
     check_model_acquisition_compatibility,
 )
-from robotorchan.models.capabilities import TaskType
+from robotorchan.models.capabilities import ModelCapabilities, TaskType
 from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.selector import select_compatible_models
 
