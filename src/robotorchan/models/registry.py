@@ -111,6 +111,84 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
 
 # Phase 3 expands the registry to every public model family. Metadata here is
 # explicit and reviewed; helpers only remove repetition inside a verified family.
+# Capability groups are explicit metadata. Do not derive them from class names.
+_MIXED_MODELS = frozenset(
+    {
+        "MixedSingleTaskMultiFidelityGP", "MixedSingleTaskVariationalGP",
+        "MixedMultiTaskGP", "MixedKroneckerMultiTaskGP",
+        "MixedSaasFullyBayesianSingleTaskGP",
+        "MixedAdditiveMapSaasSingleTaskGP", "MixedEnsembleMapSaasSingleTaskGP",
+        "MixedOrthogonalAdditiveGP",
+        "MixedReducedGP", "MixedPCAGP", "MixedPLSGP", "MixedRandomProjectionGP",
+        "MixedReducedMultiTaskGP", "MixedReducedKroneckerMultiTaskGP",
+        "MixedAutoEncoderGP", "MixedVAEGP", "MixedSupervisedAutoEncoderGP",
+        "MixedSupervisedVAEGP", "MixedHybridAutoEncoderGP", "MixedJointEncoderGP",
+        "MixedJointVAEGP", "MixedJointEncoderMultiTaskGP",
+        "MixedRobustRelevancePursuitSingleTaskGP",
+        "MixedContaminatedSingleTaskGP", "MixedContaminatedMultiTaskGP",
+        "MixedStudentTSingleTaskGP", "MixedStudentTMultiTaskGP",
+        "MixedHeteroskedasticSingleTaskGP", "MixedHeteroskedasticMultiTaskGP",
+        "MixedJointHeteroskedasticSingleTaskGP", "MixedReplicateNoiseSingleTaskGP",
+        "MixedNonstationarySingleTaskGP", "MixedNonstationaryMultiTaskGP",
+        "MixedUncertainInputSingleTaskGP", "MixedHigherOrderGP",
+        "MixedLatentKroneckerGP", "MixedHeterogeneousMTGP",
+        "MixedHierarchicalConditionalKernelMultiTaskGP",
+        "MixedHierarchicalConditionalKernelGP", "MixedLCEMGP",
+        "MixedSingleTaskDeepGP", "MixedMultiTaskDeepGP",
+        "MixedInfiniteWidthBNNGP", "MixedInfiniteWidthBNNMultiTaskGP",
+        "MixedSpectralMixtureGP", "MixedSpectralMixtureMultiTaskGP",
+    }
+)
+_MULTITASK_MODELS = frozenset(
+    {
+        "MultiTaskGP", "MixedMultiTaskGP", "MixedKroneckerMultiTaskGP",
+        "SaasFullyBayesianMultiTaskGP",
+        "ReducedMultiTaskGP", "ReducedKroneckerMultiTaskGP", "PCAMultiTaskGP",
+        "PCAKroneckerMultiTaskGP", "PLSMultiTaskGP", "PLSKroneckerMultiTaskGP",
+        "RandomProjectionMultiTaskGP", "RandomProjectionKroneckerMultiTaskGP",
+        "MixedReducedMultiTaskGP", "MixedReducedKroneckerMultiTaskGP",
+        "AutoEncoderMultiTaskGP", "AutoEncoderKroneckerMultiTaskGP",
+        "VAEKroneckerMultiTaskGP", "VAEMultiTaskGP",
+        "SupervisedAutoEncoderMultiTaskGP", "SupervisedAutoEncoderKroneckerMultiTaskGP",
+        "SupervisedVAEMultiTaskGP", "SupervisedVAEKroneckerMultiTaskGP",
+        "HybridAutoEncoderMultiTaskGP", "HybridAutoEncoderKroneckerMultiTaskGP",
+        "JointEncoderMultiTaskGP", "JointEncoderKroneckerMultiTaskGP",
+        "JointVAEMultiTaskGP", "JointVAEKroneckerMultiTaskGP",
+        "MixedJointEncoderMultiTaskGP", "RobustRelevancePursuitMultiTaskGP",
+        "ContaminatedMultiTaskGP", "MixedContaminatedMultiTaskGP",
+        "StudentTMultiTaskGP", "MixedStudentTMultiTaskGP",
+        "HeteroskedasticMultiTaskGP", "MixedHeteroskedasticMultiTaskGP",
+        "NonstationaryMultiTaskGP", "MixedNonstationaryMultiTaskGP",
+        "HeterogeneousMTGP", "MixedHeterogeneousMTGP",
+        "HierarchicalConditionalKernelMultiTaskGP",
+        "MixedHierarchicalConditionalKernelMultiTaskGP",
+        "LCEMGP", "MixedLCEMGP", "MultiTaskDeepGP", "MixedMultiTaskDeepGP",
+        "InfiniteWidthBNNMultiTaskGP", "MixedInfiniteWidthBNNMultiTaskGP",
+        "SpectralMixtureMultiTaskGP", "MixedSpectralMixtureMultiTaskGP",
+    }
+)
+_VARIATIONAL_MODELS = frozenset(
+    {
+        "MixedSingleTaskVariationalGP", "SingleTaskDeepGP", "MultiTaskDeepGP",
+        "MixedSingleTaskDeepGP", "MixedMultiTaskDeepGP",
+        "ContaminatedSingleTaskGP", "ContaminatedMultiTaskGP",
+        "MixedContaminatedSingleTaskGP", "MixedContaminatedMultiTaskGP",
+        "StudentTSingleTaskGP", "StudentTMultiTaskGP",
+        "MixedStudentTSingleTaskGP", "MixedStudentTMultiTaskGP",
+        "JointHeteroskedasticSingleTaskGP", "MixedJointHeteroskedasticSingleTaskGP",
+    }
+)
+_FULLY_BAYESIAN_MODELS = frozenset(
+    {
+        "SaasFullyBayesianSingleTaskGP", "SaasFullyBayesianMultiTaskGP",
+        "MixedSaasFullyBayesianSingleTaskGP",
+    }
+)
+_ENSEMBLE_POSTERIOR_MODELS = frozenset(
+    {"EnsembleMapSaasSingleTaskGP", "MixedEnsembleMapSaasSingleTaskGP"}
+)
+
+
 def _register_family(
     names: tuple[str, ...],
     *,
@@ -126,30 +204,28 @@ def _register_family(
     non_gp: bool = False,
 ) -> None:
     for name in names:
-        input_type = InputType.MIXED if name.startswith("Mixed") else InputType.CONTINUOUS
+        inference = InferenceType.EXACT
+        if name in _VARIATIONAL_MODELS:
+            inference = InferenceType.VARIATIONAL
+        elif name in _FULLY_BAYESIAN_MODELS:
+            inference = InferenceType.FULLY_BAYESIAN
+        elif non_gp:
+            inference = InferenceType.NOT_APPLICABLE
         MODEL_REGISTRY.setdefault(
             name,
             ModelRegistryEntry(
                 name,
                 ModelCapabilities(
-                    input_type=input_type,
-                    task_type=TaskType.MULTITASK
-                    if (
-                        "MultiTask" in name
-                        or name in {"HeterogeneousMTGP", "MixedHeterogeneousMTGP"}
-                    )
-                    else TaskType.SINGLE,
-                    inference=InferenceType.FULLY_BAYESIAN
-                    if "FullyBayesian" in name
-                    else InferenceType.VARIATIONAL
-                    if "Variational" in name
-                    else InferenceType.EXACT,
+                    input_type=InputType.MIXED if name in _MIXED_MODELS else InputType.CONTINUOUS,
+                    task_type=TaskType.MULTITASK if name in _MULTITASK_MODELS else TaskType.SINGLE,
+                    inference=inference,
                     high_dimensional=high_dimensional,
                     robustness=robustness,
                     multi_fidelity=multi_fidelity,
                     structured_output=structured_output,
                     preference=preference,
                     non_gp=non_gp,
+                    ensemble_posterior=name in _ENSEMBLE_POSTERIOR_MODELS,
                 ),
                 _docs(guide, theory, notebook),
                 strategy,
