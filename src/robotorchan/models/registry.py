@@ -7,6 +7,7 @@ from robotorchan.models.capabilities import (
     InputType,
     ModelCapabilities,
     ModelRegistryEntry,
+    PosteriorSamplingType,
     RobustnessType,
     TaskType,
 )
@@ -21,6 +22,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         "SingleTaskGP",
         ModelCapabilities(
             supports_posterior_samples=True,
+            posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
             supports_fantasize=True,
         ),
         _docs(
@@ -35,6 +37,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         ModelCapabilities(
             input_type=InputType.MIXED,
             supports_posterior_samples=True,
+            posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
             supports_fantasize=True,
         ),
         _docs(
@@ -50,6 +53,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             task_type=TaskType.MULTITASK,
             supports_multi_output=True,
             supports_posterior_samples=True,
+            posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
             supports_fantasize=True,
         ),
         _docs(
@@ -68,6 +72,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             high_dimensional=HighDimensionalStrategy.SAAS,
             supports_multi_output=True,
             supports_posterior_samples=True,
+            posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
             supports_fantasize=True,
         ),
         _docs(
@@ -82,6 +87,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         ModelCapabilities(
             high_dimensional=HighDimensionalStrategy.REDUCTION,
             supports_posterior_samples=True,
+            posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
             supports_fantasize=True,
         ),
         _docs(
@@ -99,6 +105,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             robustness=frozenset({RobustnessType.RELEVANCE_PURSUIT}),
             supports_multi_output=True,
             supports_posterior_samples=True,
+            posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
             supports_fantasize=True,
         ),
         _docs(
@@ -113,6 +120,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         ModelCapabilities(
             multi_fidelity=True,
             supports_posterior_samples=True,
+            posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
             supports_fantasize=True,
         ),
         _docs(
@@ -127,6 +135,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         ModelCapabilities(
             inference=InferenceType.VARIATIONAL,
             supports_posterior_samples=True,
+            posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
             supports_fantasize=True,
         ),
         _docs(
@@ -434,6 +443,15 @@ def _register_family(
                     ensemble_posterior=name in _ENSEMBLE_POSTERIOR_MODELS,
                     supports_multi_output=name in _MULTI_OUTPUT_MODELS,
                     supports_posterior_samples=name in _POSTERIOR_SAMPLING_MODELS,
+                    posterior_sampling_type=(
+                        PosteriorSamplingType.ENSEMBLE
+                        if name in _ENSEMBLE_POSTERIOR_MODELS
+                        else (
+                            PosteriorSamplingType.GAUSSIAN
+                            if name in _POSTERIOR_SAMPLING_MODELS
+                            else PosteriorSamplingType.NONE
+                        )
+                    ),
                     supports_fantasize=name in _FANTASIZE_MODELS,
                 ),
                 _docs(guide, theory, notebook),
