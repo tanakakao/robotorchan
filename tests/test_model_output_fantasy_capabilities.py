@@ -41,7 +41,6 @@ def test_qkg_rejects_non_fantasizing_non_gp_model() -> None:
     assert "acquisition requires fantasy-model support" in result.reasons
 
 
-
 def test_registered_gp_declares_posterior_sampling_support() -> None:
     from robotorchan.models.registry import MODEL_REGISTRY
 
