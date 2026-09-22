@@ -1,0 +1,32 @@
+"""Tests for explainable capability-based recommendations."""
+
+from robotorchan.problem import ProblemPurpose, ProblemSpec
+from robotorchan.recommendation import recommend_compatible_workflows
+
+
+def test_bo_recommendations_do_not_invent_unregistered_bo_acquisitions() -> None:
+    spec = ProblemSpec(purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION)
+
+    recommendations = recommend_compatible_workflows(spec)
+
+    assert recommendations
+    assert all(item.acquisition_name is None for item in recommendations)
+
+
+def test_active_learning_recommendations_respect_model_acquisition_compatibility() -> None:
+    spec = ProblemSpec(purpose=ProblemPurpose.ACTIVE_LEARNING)
+
+    recommendations = recommend_compatible_workflows(spec)
+
+    assert recommendations
+    assert all(item.acquisition_name is not None for item in recommendations)
+    assert all(item.rationale for item in recommendations)
+
+
+def test_default_problem_excludes_special_structural_models() -> None:
+    spec = ProblemSpec(purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION)
+
+    names = {item.model_name for item in recommend_compatible_workflows(spec)}
+
+    assert "SingleTaskMultiFidelityGP" not in names
+    assert "PairwiseGP" not in names

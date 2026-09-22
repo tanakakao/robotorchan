@@ -27,8 +27,8 @@ def _check_model(spec: ProblemSpec, entry: ModelRegistryEntry) -> ModelSelection
         reasons.append(f"requires {spec.input_type.value} inputs")
     if capabilities.task_type is not spec.task_type:
         reasons.append(f"requires {spec.task_type.value} task structure")
-    if spec.multi_fidelity and not capabilities.multi_fidelity:
-        reasons.append("requires multi-fidelity support")
+    if capabilities.multi_fidelity is not spec.multi_fidelity:
+        reasons.append("multi-fidelity structure does not match the problem")
     if spec.structured_output and not capabilities.structured_output:
         reasons.append("requires structured-output support")
     high_dimensional = capabilities.high_dimensional is not HighDimensionalStrategy.NONE
@@ -36,6 +36,8 @@ def _check_model(spec: ProblemSpec, entry: ModelRegistryEntry) -> ModelSelection
         reasons.append("requires a high-dimensional strategy")
     if spec.robust and not capabilities.robustness:
         reasons.append("requires an explicit robustness strategy")
+    if capabilities.preference is not spec.preference:
+        reasons.append("preference-observation structure does not match the problem")
 
     return ModelSelectionResult(entry.model_name, not reasons, tuple(reasons))
 
