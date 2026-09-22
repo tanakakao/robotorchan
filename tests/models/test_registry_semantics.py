@@ -48,3 +48,21 @@ def test_map_saas_ensemble_is_rejected_by_non_ensemble_acquisition() -> None:
 
     assert not result.compatible
     assert "acquisition does not support ensemble posteriors" in result.reasons
+
+
+def test_registered_multitask_models_support_multi_output() -> None:
+    names = {
+        name
+        for name, entry in MODEL_REGISTRY.items()
+        if entry.capabilities.task_type is TaskType.MULTITASK
+    }
+
+    assert names
+    assert all(MODEL_REGISTRY[name].capabilities.supports_multi_output for name in names)
+
+
+def test_model_list_is_multi_output_without_being_multitask() -> None:
+    capabilities = MODEL_REGISTRY["ModelListGP"].capabilities
+
+    assert capabilities.task_type is TaskType.SINGLE
+    assert capabilities.supports_multi_output
