@@ -49,6 +49,12 @@ print(posterior.mean)
 
 より詳しいモデル選択と実行例は [モデルガイド](docs/models.md) と [examples](examples/README.md) を参照してください。
 
+## Capability-aware workflow
+
+問題要件を `ProblemSpec` で宣言し、model registry、selector、model-acquisition compatibility、recommendation、capability benchmark を一貫した metadata で接続します。モデル名から能力を推測せず、互換候補と不適合理由を明示的に扱います。
+
+詳細は [Capability-aware workflow](docs/capability_workflow.md) を参照してください。
+
 ## ドキュメント
 
 目的に応じて次の順に進むと、モデル選択から理論、実行例まで辿れます。
