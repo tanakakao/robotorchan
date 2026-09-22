@@ -73,8 +73,9 @@ The following are validation gaps, not known correctness defects:
 - Multi-fidelity combined with high-dimensional or robust modeling is not part of the current
   public model surface.
 
-These gaps should be prioritized by workflow importance in the Phase 9 runtime E2E audit rather
-than represented as model-wide booleans.
+These gaps should be prioritized by workflow importance rather than represented as model-wide
+booleans. The regression-specific validation plan and acceptance criteria are maintained in
+[`regression_validation_matrix.md`](regression_validation_matrix.md).
 
 ## Capability-schema decision
 
