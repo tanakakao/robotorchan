@@ -69,3 +69,18 @@ def test_non_gp_acquisition_rejects_gaussian_sampler() -> None:
 
     with pytest.raises(TypeError, match="IndexSampler"):
         validate_non_gp_acquisition(model, acqf)
+
+
+def test_non_gp_acquisition_allows_lazy_sampler_initialization() -> None:
+    train_X = torch.linspace(0.0, 1.0, 10, dtype=torch.double).unsqueeze(-1)
+    train_Y = torch.sin(train_X * 5.0)
+    model = RandomForestSurrogate(train_X, train_Y, n_estimators=8, random_state=3)
+    model.fit()
+    acqf = qExpectedImprovement(model=model, best_f=train_Y.max())
+
+    assert acqf.sampler is None
+    validate_non_gp_acquisition(model, acqf)
+
+    value = acqf(torch.tensor([[[0.25], [0.75]]], dtype=torch.double))
+    assert isinstance(acqf.sampler, IndexSampler)
+    assert torch.isfinite(value).all()
