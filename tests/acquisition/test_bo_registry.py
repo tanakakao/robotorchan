@@ -42,4 +42,22 @@ def test_constrained_bo_filters_acquisition_metadata() -> None:
 
     names = {item.acquisition_name for item in recommend_compatible_workflows(spec)}
 
-    assert names == {"qLogNoisyExpectedImprovement"}
+    assert names == {
+        "qLogExpectedImprovement",
+        "qLogNoisyExpectedImprovement",
+    }
+
+
+def test_single_objective_multi_output_bo_keeps_scalarizable_mc_acquisitions() -> None:
+    from robotorchan.problem import OutputType
+
+    spec = ProblemSpec(
+        purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION,
+        output_type=OutputType.MULTI,
+    )
+
+    names = {item.acquisition_name for item in recommend_compatible_workflows(spec)}
+
+    assert "qLogExpectedImprovement" in names
+    assert "qUpperConfidenceBound" in names
+
