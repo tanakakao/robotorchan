@@ -52,12 +52,11 @@ def test_map_saas_ensemble_is_rejected_by_non_ensemble_acquisition() -> None:
 
 
 def test_registered_multitask_models_support_multi_output() -> None:
-    excluded = {"MixedRobustRelevancePursuitMultiTaskGP"}
     names = {
         name
         for name, entry in MODEL_REGISTRY.items()
         if entry.capabilities.task_type is TaskType.MULTITASK
-    } - excluded
+    }
 
     assert names
     assert all(MODEL_REGISTRY[name].capabilities.supports_multi_output for name in names)
