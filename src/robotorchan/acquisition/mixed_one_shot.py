@@ -3,7 +3,6 @@
 from collections.abc import Sequence
 from itertools import product
 
-import torch
 from botorch.acquisition.acquisition import OneShotAcquisitionFunction
 from botorch.optim import optimize_acqf
 from torch import Tensor
