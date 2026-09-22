@@ -1,6 +1,8 @@
 import torch
 from botorch.acquisition.cost_aware import InverseCostWeightedUtility
 from botorch.acquisition.knowledge_gradient import qMultiFidelityKnowledgeGradient
+from botorch.acquisition.monte_carlo import PosteriorMean
+from botorch.optim import optimize_acqf
 from botorch.models.cost import AffineFidelityCostModel
 from botorch.models.gp_regression_fidelity import SingleTaskMultiFidelityGP
 
@@ -28,8 +30,15 @@ def test_native_multifidelity_kg_is_compatible() -> None:
         projected[..., 1] = target_fidelities[1]
         return projected
 
-    with torch.no_grad():
-        current_value = model.posterior(project(train_X)).mean.max()
+    target_mean = PosteriorMean(model)
+    _, current_value = optimize_acqf(
+        acq_function=target_mean,
+        bounds=torch.tensor([[0.0, 1.0], [1.0, 1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=3,
+        raw_samples=16,
+        fixed_features={1: 1.0},
+    )
     acquisition = qMultiFidelityKnowledgeGradient(
         model=model,
         num_fantasies=4,
