@@ -60,3 +60,19 @@ robotorchan.benchmarks.capability は予測精度 benchmark ではなく、capab
 モデル capability の source of truth は robotorchan.models.registry.MODEL_REGISTRY です。docs/model_coverage.json はそこから生成されます。Acquisition extension の metadata は robotorchan.acquisition.registry.ACQUISITION_REGISTRY が保持します。
 
 新しいモデルや acquisition を追加するときは、実装だけでなく対応する capability metadata と contract test も更新してください。
+
+
+## Runtime validation
+
+Capability metadata describes structural support. It is not a model-wide claim that every
+compatible workflow has been executed end to end. Representative executable coverage is tracked
+separately in [Runtime end-to-end validation matrix](development/runtime-e2e-matrix.md).
+
+When extending the library, keep these layers distinct:
+
+- registry capability: the model or acquisition exposes the required structural behavior;
+- compatibility: the model and acquisition contracts are not known to conflict;
+- runtime validation: a representative executable workflow has been tested;
+- benchmark evidence: comparative quality or performance has been measured.
+
+Do not infer runtime validation or benchmark superiority from registry membership alone.
