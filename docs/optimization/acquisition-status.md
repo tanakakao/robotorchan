@@ -35,6 +35,30 @@ explicitly unsupported. See [Mixed one-shot optimization](../mixed-one-shot-opti
 These restrictions are deliberate: unsupported posterior shapes should fail clearly rather than
 silently reducing the wrong dimension.
 
+
+## Phase 4 compatibility audit
+
+The acquisition registry is intentionally a compatibility surface, not a catalog of every
+BoTorch acquisition. Registered BoTorch entries cover representative standard MC, lookahead,
+multi-objective, constrained, and multi-fidelity workflows. Native acquisitions documented above
+but absent from the registry remain BoTorch-owned and are not implicitly recommended by the
+capability selector.
+
+Static compatibility enforces posterior sampling, fantasy, multi-fidelity, ensemble,
+structured-output, and output-arity requirements. In particular, an acquisition that does not
+support multi-output posteriors must reject a model whose public contract is multi-output-capable;
+checking only `TaskType.MULTITASK` is insufficient because `ModelListGP` is multi-output without
+being a multitask model.
+
+The current metadata remains deliberately conservative for qKG and qMFKG: they are registered as
+single-output acquisition workflows. Scalarized or custom-objective extensions should be added
+only with executable integration tests and corresponding metadata changes.
+
+Constraint support in the registry means the acquisition has a supported BoTorch composition
+path; it does not mean robotorchan constructs constraint callables or objectives automatically.
+Likewise, `supports_ensemble` means a compatible sampler/composition can be supplied, not that
+every acquisition uses an empirical-ensemble sampler by default.
+
 ## Final integration rule
 
 New acquisition functionality should first check whether BoTorch already exposes the required
