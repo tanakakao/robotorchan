@@ -65,7 +65,6 @@ def test_mixed_single_task_gp_runtime_supports_mc_acquisition() -> None:
     assert torch.isfinite(value).all()
 
 
-
 def test_kronecker_multitask_gp_runtime_supports_multi_output_sampling() -> None:
     train_x = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
     train_y = torch.cat(
