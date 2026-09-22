@@ -45,6 +45,11 @@ class ProblemSpec:
         if self.purpose is ProblemPurpose.BAYESIAN_OPTIMIZATION:
             if self.objective_type is None:
                 object.__setattr__(self, "objective_type", ObjectiveType.SINGLE)
+            if (
+                self.objective_type is ObjectiveType.MULTI
+                and self.output_type is not OutputType.MULTI
+            ):
+                raise ValueError("multi-objective optimization requires multi-output observations")
             return
         if self.objective_type is not None:
             raise ValueError("objective_type is only defined for Bayesian optimization")
