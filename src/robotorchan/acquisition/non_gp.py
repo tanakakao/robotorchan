@@ -7,6 +7,7 @@ from collections.abc import Callable
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import MCAcquisitionFunction
 from botorch.models.model import Model
+from botorch.sampling.index_sampler import IndexSampler
 
 
 def validate_non_gp_acquisition(
@@ -25,6 +26,10 @@ def validate_non_gp_acquisition(
     if not isinstance(acquisition, MCAcquisitionFunction):
         raise TypeError(
             "Non-GP empirical ensemble surrogates require a Monte Carlo acquisition function."
+        )
+    if not isinstance(acquisition.sampler, IndexSampler):
+        raise TypeError(
+            "Non-GP empirical ensemble surrogates require IndexSampler for Monte Carlo sampling."
         )
 
 
