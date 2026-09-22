@@ -1,11 +1,11 @@
 """Tests for acquisition capability metadata and model compatibility."""
 
 import robotorchan.acquisition as acquisition
+from robotorchan.acquisition.capabilities import AcquisitionPurpose
 from robotorchan.acquisition.compatibility import (
     CompatibilityStatus,
     check_model_acquisition_compatibility,
 )
-from robotorchan.acquisition.capabilities import AcquisitionPurpose
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 
 
