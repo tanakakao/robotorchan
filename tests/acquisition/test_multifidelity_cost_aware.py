@@ -31,7 +31,7 @@ def test_native_multifidelity_kg_is_compatible() -> None:
         return projected
 
     target_mean = PosteriorMean(model)
-    _, current_value = optimize_acqf(
+    incumbent, current_value = optimize_acqf(
         acq_function=target_mean,
         bounds=torch.tensor([[0.0, 1.0], [1.0, 1.0]], dtype=torch.double),
         q=1,
@@ -39,6 +39,8 @@ def test_native_multifidelity_kg_is_compatible() -> None:
         raw_samples=16,
         fixed_features={1: 1.0},
     )
+    assert torch.allclose(incumbent[..., 1], torch.ones_like(incumbent[..., 1]))
+
     acquisition = qMultiFidelityKnowledgeGradient(
         model=model,
         num_fantasies=4,
@@ -53,6 +55,10 @@ def test_native_multifidelity_kg_is_compatible() -> None:
         dtype=torch.double,
     )
     X[..., 1] = 0.5
+    projected = project(X)
+
+    assert torch.all(X[..., 1] == 0.5)
+    assert torch.all(projected[..., 1] == 1.0)
 
     value = acquisition(X)
 
