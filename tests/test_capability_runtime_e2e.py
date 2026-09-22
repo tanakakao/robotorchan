@@ -2,7 +2,11 @@
 
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.acquisition.multi_objective.logei import qLogExpectedHypervolumeImprovement
 from botorch.acquisition.objective import GenericMCObjective
+from botorch.utils.multi_objective.box_decompositions.non_dominated import (
+    FastNondominatedPartitioning,
+)
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import KroneckerMultiTaskGP, MixedSingleTaskGP, SingleTaskGP
@@ -109,6 +113,33 @@ def test_kronecker_multitask_gp_runtime_supports_scalarized_mc_acquisition() -> 
         best_f=best_f,
         sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
         objective=objective,
+    )
+    value = acquisition(torch.tensor([[[0.5]]], dtype=torch.double))
+
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_kronecker_multitask_gp_runtime_supports_multi_objective_acquisition() -> None:
+    train_x = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
+    train_y = torch.cat(
+        [
+            torch.sin(train_x * 3.0),
+            torch.cos(train_x * 3.0),
+        ],
+        dim=-1,
+    )
+
+    model = KroneckerMultiTaskGP(train_x, train_y)
+    model.eval()
+
+    ref_point = train_y.min(dim=0).values - 0.1
+    partitioning = FastNondominatedPartitioning(ref_point=ref_point, Y=train_y)
+    acquisition = qLogExpectedHypervolumeImprovement(
+        model=model,
+        ref_point=ref_point.tolist(),
+        partitioning=partitioning,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
     )
     value = acquisition(torch.tensor([[[0.5]]], dtype=torch.double))
 
