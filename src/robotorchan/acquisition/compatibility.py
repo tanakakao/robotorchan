@@ -49,10 +49,8 @@ def check_model_acquisition_compatibility(
     ):
         reasons.append("acquisition requires a single-output posterior")
     posterior_requirement = acquisition_capabilities.posterior_requirement
-    if (
-        posterior_requirement is PosteriorRequirement.JOINT_GAUSSIAN
-        and model_capabilities.non_gp
-    ):
+    joint_gaussian = posterior_requirement is PosteriorRequirement.JOINT_GAUSSIAN
+    if joint_gaussian and model_capabilities.non_gp:
         reasons.append("acquisition requires a joint Gaussian posterior")
 
     if reasons:
