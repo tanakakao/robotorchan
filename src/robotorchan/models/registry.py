@@ -334,9 +334,7 @@ _MULTI_OUTPUT_MODELS = frozenset(
 
 _POSTERIOR_SAMPLING_MODELS = frozenset(
     {
-        name
-        for name in MODEL_REGISTRY
-        if MODEL_REGISTRY[name].capabilities.supports_posterior_samples
+        name for name in MODEL_REGISTRY if MODEL_REGISTRY[name].capabilities.supports_posterior_samples
     }
     | {
         "MixedSingleTaskMultiFidelityGP",
@@ -345,15 +343,23 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         "MixedMultiTaskGP",
         "MixedKroneckerMultiTaskGP",
         "ModelListGP",
+        "RandomForestSurrogate",
+        "ExtraTreesSurrogate",
+        "GradientBoostingSurrogate",
+        "HistGradientBoostingSurrogate",
+        "EnsembleMapSaasSingleTaskGP",
+        "MixedEnsembleMapSaasSingleTaskGP",
+        "MixedPCAGP",
+        "MixedPLSGP",
+        "MixedRandomProjectionGP",
+        "MixedReducedGP",
     }
 )
 
 
 _FANTASIZE_MODELS = frozenset(
     {
-        name
-        for name in MODEL_REGISTRY
-        if MODEL_REGISTRY[name].capabilities.supports_fantasize
+        name for name in MODEL_REGISTRY if MODEL_REGISTRY[name].capabilities.supports_fantasize
     }
     | {
         "MixedSingleTaskMultiFidelityGP",
