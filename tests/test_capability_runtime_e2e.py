@@ -23,6 +23,7 @@ from robotorchan.models import (
     MixedRandomProjectionGP,
     MixedReducedGP,
     MixedSingleTaskGP,
+    MixedSingleTaskMultiFidelityGP,
     RandomForestSurrogate,
     RandomProjectionGP,
     ReducedGP,
@@ -272,6 +273,38 @@ def test_single_task_multifidelity_gp_runtime_supports_mc_acquisition() -> None:
         sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
     )
     value = acquisition(torch.tensor([[[0.5, 1.0]]], dtype=torch.double))
+
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_mixed_single_task_multifidelity_gp_runtime_supports_mc_acquisition() -> None:
+    design = torch.linspace(0.0, 1.0, 8, dtype=torch.double)
+    category = torch.tensor([0.0, 1.0] * 4, dtype=torch.double)
+    fidelity = torch.tensor([0.25, 0.5, 0.75, 1.0] * 2, dtype=torch.double)
+    train_x = torch.stack([design, category, fidelity], dim=-1)
+    train_y = (torch.sin(design * 3.0) + 0.15 * category + 0.2 * fidelity).unsqueeze(-1)
+
+    model = MixedSingleTaskMultiFidelityGP(
+        train_x,
+        train_y,
+        cat_dims=[1],
+        data_fidelities=[2],
+    )
+    model.eval()
+
+    test_x = torch.tensor([[0.25, 0.0, 1.0], [0.75, 1.0, 1.0]], dtype=torch.double)
+    samples = model.posterior(test_x).rsample(torch.Size([4]))
+
+    assert samples.shape == torch.Size([4, 2, 1])
+    assert torch.isfinite(samples).all()
+
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+    )
+    value = acquisition(torch.tensor([[[0.5, 1.0, 1.0]]], dtype=torch.double))
 
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
