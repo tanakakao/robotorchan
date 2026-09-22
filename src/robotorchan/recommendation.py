@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from robotorchan.acquisition.capabilities import AcquisitionPurpose
 from robotorchan.acquisition.compatibility import (
     check_model_acquisition_compatibility,
 )
@@ -26,7 +27,12 @@ def recommend_compatible_workflows(spec: ProblemSpec) -> tuple[Recommendation, .
     for model_name in models:
         for acquisition_name, entry in ACQUISITION_REGISTRY.items():
             capabilities = entry.capabilities
-            if capabilities.purpose.value != spec.purpose.value:
+            expected_purpose = (
+                AcquisitionPurpose.BAYESIAN_OPTIMIZATION
+                if spec.purpose is ProblemPurpose.BAYESIAN_OPTIMIZATION
+                else AcquisitionPurpose.ACTIVE_LEARNING
+            )
+            if capabilities.purpose is not expected_purpose:
                 continue
             if (
                 spec.purpose is ProblemPurpose.BAYESIAN_OPTIMIZATION

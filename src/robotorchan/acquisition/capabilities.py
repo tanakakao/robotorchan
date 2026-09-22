@@ -12,6 +12,7 @@ class AcquisitionPurpose(StrEnum):
 class PosteriorRequirement(StrEnum):
     MARGINAL_MOMENTS = "marginal_moments"
     JOINT_GAUSSIAN = "joint_gaussian"
+    POSTERIOR_SAMPLES = "posterior_samples"
 
 
 @dataclass(frozen=True, slots=True)

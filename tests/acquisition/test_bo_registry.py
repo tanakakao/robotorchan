@@ -1,6 +1,6 @@
 """Contracts for BoTorch-native Bayesian optimization acquisition metadata."""
 
-from robotorchan.acquisition.capabilities import AcquisitionPurpose
+from robotorchan.acquisition.capabilities import AcquisitionPurpose, PosteriorRequirement
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.recommendation import recommend_compatible_workflows
@@ -59,3 +59,16 @@ def test_single_objective_multi_output_bo_keeps_scalarizable_mc_acquisitions() -
 
     assert "qLogExpectedImprovement" in names
     assert "qUpperConfidenceBound" in names
+
+
+def test_botorch_q_acquisitions_require_posterior_samples() -> None:
+    entries = (
+        entry
+        for entry in ACQUISITION_REGISTRY.values()
+        if entry.capabilities.purpose is AcquisitionPurpose.BAYESIAN_OPTIMIZATION
+    )
+
+    assert all(
+        entry.capabilities.posterior_requirement is PosteriorRequirement.POSTERIOR_SAMPLES
+        for entry in entries
+    )
