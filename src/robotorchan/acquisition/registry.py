@@ -33,7 +33,10 @@ def _active_learning(
 ACQUISITION_REGISTRY: dict[str, AcquisitionRegistryEntry] = {
     name: _active_learning(
         name,
-        limitations=("ensemble posteriors are not supported", "structured outputs require scalarization"),
+        limitations=(
+            "ensemble posteriors are not supported",
+            "structured outputs require scalarization",
+        ),
     )
     for name in (
         "BoundaryVariance",
