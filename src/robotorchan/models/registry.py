@@ -352,7 +352,10 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         "MixedPLSGP",
         "MixedRandomProjectionGP",
         "MixedReducedGP",
+        "ReducedGP",
         "PCAGP",
+        "PLSGP",
+        "RandomProjectionGP",
     }
 )
 
