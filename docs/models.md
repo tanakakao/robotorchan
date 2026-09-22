@@ -23,7 +23,7 @@
 このページは全体の索引として維持します。モデルファミリーごとの詳細は
 [Model guides](models/README.md) に分離しています。Standard / Multi-task /
 High-dimensional / Reduced / Robust / Input uncertainty / Structured output /
-Hierarchical / Preference の各ガイドから、個別モデル、Theory、Notebookへ辿れます。
+Hierarchical / Preference / Expressive GP / Non-GP の各ガイドから、個別モデル、Theory、Notebookへ辿れます。
 
 ## 2. モデル選択早見表
 
@@ -57,6 +57,11 @@ Hierarchical / Preference の各ガイドから、個別モデル、Theory、Not
 | Context ごとの加法構造 | `SACGP` | [14](../examples/notebooks/14_contextual_gp.ipynb) |
 | Context 間の潜在関係を学習 | `LCEAGP` | [14](../examples/notebooks/14_contextual_gp.ipynb) |
 | Context / Task を multi-output として扱う | `LCEMGP` | [14](../examples/notebooks/14_contextual_gp.ipynb) |
+| 非線形表現を GP と joint learning | `JointEncoderGP` | [24](../examples/notebooks/24_expressive_surrogate_gp.ipynb) |
+| 階層的な確率表現 | `SingleTaskDeepGP` | [24](../examples/notebooks/24_expressive_surrogate_gp.ipynb) |
+| neural-network prior を Exact GP として使う | `InfiniteWidthBNNGP` | [24](../examples/notebooks/24_expressive_surrogate_gp.ipynb) |
+| 周期・準周期・複数周波数 | `SpectralMixtureGP` | [24](../examples/notebooks/24_expressive_surrogate_gp.ipynb) |
+| 表形式の non-GP ensemble surrogate | `RandomForestSurrogate` / `ExtraTreesSurrogate` | [25](../examples/notebooks/25_non_gp_surrogates.ipynb) |
 
 ## 3. robotorchan 共通 API
 
@@ -345,6 +350,8 @@ context / task を multi-output として扱い、context 特徴量や embedding
 12. 条件によって変数の有効/無効が変わるなら hierarchical GP。
 13. task ごとに特徴量構造が異なるなら `HeterogeneousMTGP`。
 14. 明示的な context 構造があるときだけ contextual GP を選ぶ。
+15. 非線形表現や特殊な kernel 構造が必要なら Expressive GP を標準 GP と比較する。
+16. non-smooth な表形式問題では Non-GP ensemble surrogate も比較対象にする。
 
 モデルの特殊性が高いほど、「使えるから選ぶ」のではなく、そのモデルが仮定するデータ構造が実問題に一致しているかを優先してください。
 
@@ -373,3 +380,5 @@ context / task を multi-output として扱い、context 特徴量や embedding
 21. [Reduced MultiTask GP](../examples/notebooks/21_reduced_multitask_gp.ipynb)
 22. [Mixed Reduced GP](../examples/notebooks/22_mixed_reduced_gp.ipynb)
 23. [High-dimensional BO benchmark](../examples/notebooks/23_high_dimensional_bo_benchmark.ipynb)
+24. [Expressive surrogate GP](../examples/notebooks/24_expressive_surrogate_gp.ipynb)
+25. [Non-GP surrogates](../examples/notebooks/25_non_gp_surrogates.ipynb)
