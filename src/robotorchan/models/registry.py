@@ -392,10 +392,16 @@ _FANTASIZE_MODELS = frozenset(
 )
 
 
-_ENSEMBLE_POSTERIOR_MODELS = frozenset(
+_GAUSSIAN_ENSEMBLE_MODELS = frozenset(
     {
         "EnsembleMapSaasSingleTaskGP",
         "MixedEnsembleMapSaasSingleTaskGP",
+    }
+)
+
+
+_ENSEMBLE_POSTERIOR_MODELS = frozenset(
+    {
         "RandomForestSurrogate",
         "ExtraTreesSurrogate",
         "GradientBoostingSurrogate",
