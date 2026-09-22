@@ -40,6 +40,7 @@
 20. [High-dimensional Search Strategies](20_high_dimensional_search.md)
 21. [Advanced High-dimensional GP Models](21_advanced_high_dimensional_models.md)
 22. [Expressive GP Models](22_expressive_gp.md)
+23. [Non-GP Surrogates](23_non_gp_surrogates.md)
 
 ## このガイドの構成方針
 
@@ -77,6 +78,7 @@
 | Heterogeneous Multi-task | `HeterogeneousMTGP` |
 | Contextual GP | `SACGP`, `LCEAGP`, `LCEMGP` |
 | Expressive GP | `JointEncoderGP`, `SingleTaskDeepGP`, `InfiniteWidthBNNGP`, `SpectralMixtureGP` |
+| Empirical ensemble / Non-GP surrogate | `RandomForestSurrogate`, `ExtraTreesSurrogate`, `GradientBoostingSurrogate`, `HistGradientBoostingSurrogate` |
 
 ## 関連ドキュメント
 
