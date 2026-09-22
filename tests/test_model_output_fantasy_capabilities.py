@@ -42,9 +42,7 @@ def test_qkg_rejects_non_fantasizing_non_gp_model() -> None:
 
 
 
-def test_posterior_sampling_requirement_is_checked_explicitly() -> None:
-    from dataclasses import replace
-
+def test_registered_gp_declares_posterior_sampling_support() -> None:
     from robotorchan.models.registry import MODEL_REGISTRY
 
     entry = MODEL_REGISTRY["SingleTaskGP"]
