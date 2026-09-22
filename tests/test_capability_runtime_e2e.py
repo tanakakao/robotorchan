@@ -7,6 +7,7 @@ from botorch.acquisition.multi_objective.logei import (
     qLogNoisyExpectedHypervolumeImprovement,
 )
 from botorch.acquisition.objective import GenericMCObjective
+from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import (
     FastNondominatedPartitioning,
@@ -203,7 +204,7 @@ def test_random_forest_runtime_supports_mc_acquisition() -> None:
     acquisition = qLogExpectedImprovement(
         model=model,
         best_f=train_y.max(),
-        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+        sampler=IndexSampler(sample_shape=torch.Size([8])),
     )
     value = acquisition(torch.tensor([[[0.5]]], dtype=torch.double))
 
