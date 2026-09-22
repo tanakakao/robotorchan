@@ -19,7 +19,7 @@
 
 ### 理論を学びたい
 
-[理論ガイド](theory/README.md) は、ベイズ最適化、Gaussian Process、獲得関数から、高次元・ロバスト・入力不確かさ・次元削減までを扱います。
+[理論ガイド](theory/README.md) は、ベイズ最適化、Gaussian Process、獲得関数から、高次元・ロバスト・入力不確かさ・次元削減・Expressive GP・Non-GP surrogateまでを扱います。獲得関数の詳細理論は [Acquisition Function Theory](theory/acquisition/README.md)、実務ガイドは [Optimization guides](optimization/README.md) に分離しています。
 
 ### 高次元問題を扱いたい
 
@@ -38,7 +38,8 @@
 
 現在は次の文書があります。
 
-- [Acquisition architecture](development/acquisition-architecture.md)\n- [Architecture](development/architecture.md)
+- [Acquisition architecture](development/acquisition-architecture.md)
+- [Architecture](development/architecture.md)
 - [Model design guidelines](development/model_design_guidelines.md)
 - [Training API](development/training_api.md)
 - [Release procedure](development/releasing.md)
@@ -88,6 +89,8 @@ docs/
 
 ## Coverage status
 
-現在の `model_coverage.json` は public model 102件を登録し、全件に model-family guide、Theory、代表Notebookを割り当てています。Theory は21章、Notebook collection は23冊です。
+現在の `model_coverage.json` は `robotorchan.models.__all__` を source of truth とし、例外型を除く public model **129件**を登録しています。全件に model-family guide、Theory、代表Notebookを割り当てています。Theory の主要章は **23章**、Notebook collection は **25冊**です。
+
+獲得関数の詳細理論は主要23章とは別に `docs/theory/acquisition/` へ独立させています。モデル数などの coverage 値は固定的な製品仕様ではないため、実装追加時は `robotorchan.models.__all__` と `model_coverage.json` の同期を優先します。
 
 coverage は「ファイルが存在する」だけではなく、モデル選択 → 統計的仮定 → 実行例へ辿るためのナビゲーション契約として扱います。代表Notebookは同じモデルファミリーや学習契約を共有する複数variantを扱う場合があります。
