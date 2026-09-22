@@ -34,6 +34,7 @@ class ProblemSpec:
     structured_output: bool = False
     high_dimensional: bool = False
     robust: bool = False
+    preference: bool = False
 
     def __post_init__(self) -> None:
         """Validate purpose-specific fields."""
