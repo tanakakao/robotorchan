@@ -126,5 +126,10 @@ ACQUISITION_REGISTRY.update(
             supports_constraints=True,
             supports_multi_objective=True,
         ),
+        "qLogNParEGO": _botorch_bo(
+            "qLogNParEGO",
+            supports_constraints=True,
+            supports_multi_objective=True,
+        ),
     }
 )
