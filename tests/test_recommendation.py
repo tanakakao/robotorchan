@@ -1,5 +1,6 @@
 """Tests for explainable capability-based recommendations."""
 
+from robotorchan.acquisition.compatibility import check_model_acquisition_compatibility
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.models.registry import MODEL_REGISTRY
 from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
@@ -79,3 +80,24 @@ def test_multifidelity_kg_is_not_paired_with_standard_models() -> None:
     assert mfkg_models
     assert "SingleTaskGP" not in mfkg_models
     assert all(MODEL_REGISTRY[name].capabilities.multi_fidelity for name in mfkg_models)
+
+
+
+def test_multifidelity_kg_directly_rejects_standard_model() -> None:
+    result = check_model_acquisition_compatibility(
+        "SingleTaskGP",
+        "qMultiFidelityKnowledgeGradient",
+    )
+
+    assert not result.compatible
+    assert "acquisition requires multi-fidelity model support" in result.reasons
+
+
+def test_multifidelity_kg_directly_accepts_multifidelity_model() -> None:
+    result = check_model_acquisition_compatibility(
+        "SingleTaskMultiFidelityGP",
+        "qMultiFidelityKnowledgeGradient",
+    )
+
+    assert result.compatible
+    assert result.reasons == ()
