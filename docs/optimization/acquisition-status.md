@@ -57,7 +57,10 @@ only with executable integration tests and corresponding metadata changes.
 Constraint support in the registry means the acquisition has a supported BoTorch composition
 path; it does not mean robotorchan constructs constraint callables or objectives automatically.
 Likewise, `supports_ensemble` means a compatible sampler/composition can be supplied, not that
-every acquisition uses an empirical-ensemble sampler by default.
+every acquisition uses an empirical-ensemble sampler by default. Empirical non-GP ensemble
+posteriors require `IndexSampler`; Gaussian posteriors, including MAP-SAAS model ensembles that
+still expose a Gaussian posterior, use `SobolQMCNormalSampler`. The non-GP acquisition validator
+enforces this distinction rather than accepting any Monte Carlo acquisition indiscriminately.
 
 ## Final integration rule
 
@@ -81,6 +84,19 @@ Useful future extensions are intentionally left as separate work rather than imp
 - optional multi-fidelity MES coverage where it provides value beyond MF-KG.
 
 These are extension items, not compatibility gaps in the documented current contracts.
+
+### Phase 7 ensemble / non-GP audit
+
+Posterior sampling type, not the word "ensemble" in a model name, controls sampler selection.
+`make_model_sampler` maps Gaussian posteriors to `SobolQMCNormalSampler` and empirical ensemble
+posteriors to `IndexSampler`. Runtime coverage includes both MAP-SAAS Gaussian ensembles and
+tree-based empirical ensembles.
+
+Robotorchan-specific active-learning acquisitions continue to reject empirical ensemble
+posteriors explicitly. Defining variance, boundary, or predictive-information scores across
+ensemble members requires an intentional reduction semantics; silently treating empirical
+spread as Gaussian posterior variance would change the acquisition meaning. Ensemble AL remains
+a future extension until that semantics is specified and tested.
 
 
 ## Theory-to-implementation correspondence
