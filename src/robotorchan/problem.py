@@ -16,6 +16,11 @@ class ObjectiveType(StrEnum):
     MULTI = "multi"
 
 
+class OutputType(StrEnum):
+    SINGLE = "single"
+    MULTI = "multi"
+
+
 @dataclass(frozen=True, slots=True)
 class ProblemSpec:
     """Describe problem requirements without selecting an implementation."""
@@ -23,11 +28,18 @@ class ProblemSpec:
     purpose: ProblemPurpose
     input_type: InputType = InputType.CONTINUOUS
     task_type: TaskType = TaskType.SINGLE
-    objective_type: ObjectiveType = ObjectiveType.SINGLE
+    output_type: OutputType = OutputType.SINGLE
+    objective_type: ObjectiveType | None = None
     multi_fidelity: bool = False
     structured_output: bool = False
     high_dimensional: bool = False
     robust: bool = False
 
     def __post_init__(self) -> None:
-        """Validate the shape of the declarative specification."""
+        """Validate purpose-specific fields."""
+        if self.purpose is ProblemPurpose.BAYESIAN_OPTIMIZATION:
+            if self.objective_type is None:
+                object.__setattr__(self, "objective_type", ObjectiveType.SINGLE)
+            return
+        if self.objective_type is not None:
+            raise ValueError("objective_type is only defined for Bayesian optimization")
