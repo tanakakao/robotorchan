@@ -332,6 +332,45 @@ _MULTI_OUTPUT_MODELS = frozenset(
 )
 
 
+_POSTERIOR_SAMPLING_MODELS = frozenset(
+    {
+        name
+        for name in MODEL_REGISTRY
+        if MODEL_REGISTRY[name].capabilities.supports_posterior_samples
+    }
+    | {
+        "MixedSingleTaskMultiFidelityGP",
+        "MixedSingleTaskVariationalGP",
+        "MultiTaskGP",
+        "MixedMultiTaskGP",
+        "MixedKroneckerMultiTaskGP",
+        "ModelListGP",
+        "RandomForestSurrogate",
+        "ExtraTreesSurrogate",
+        "GradientBoostingSurrogate",
+        "HistGradientBoostingSurrogate",
+        "EnsembleMapSaasSingleTaskGP",
+        "MixedEnsembleMapSaasSingleTaskGP",
+        "MixedPCAGP",
+        "MixedPLSGP",
+        "MixedRandomProjectionGP",
+        "MixedReducedGP",
+    }
+)
+
+
+_FANTASIZE_MODELS = frozenset(
+    {name for name in MODEL_REGISTRY if MODEL_REGISTRY[name].capabilities.supports_fantasize}
+    | {
+        "MixedSingleTaskMultiFidelityGP",
+        "MultiTaskGP",
+        "MixedMultiTaskGP",
+        "MixedKroneckerMultiTaskGP",
+        "ModelListGP",
+    }
+)
+
+
 _ENSEMBLE_POSTERIOR_MODELS = frozenset(
     {
         "EnsembleMapSaasSingleTaskGP",
@@ -382,8 +421,8 @@ def _register_family(
                     non_gp=non_gp,
                     ensemble_posterior=name in _ENSEMBLE_POSTERIOR_MODELS,
                     supports_multi_output=name in _MULTI_OUTPUT_MODELS,
-                    supports_posterior_samples=True,
-                    supports_fantasize=not non_gp,
+                    supports_posterior_samples=name in _POSTERIOR_SAMPLING_MODELS,
+                    supports_fantasize=name in _FANTASIZE_MODELS,
                 ),
                 _docs(guide, theory, notebook),
                 strategy,
