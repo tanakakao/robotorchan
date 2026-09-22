@@ -75,7 +75,7 @@ def _botorch_bo(
         acquisition_name=name,
         capabilities=AcquisitionCapabilities(
             purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
-            posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+            posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
             max_q=None,
             supports_multi_output=supports_multi_output,
             supports_ensemble=True,
