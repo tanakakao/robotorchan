@@ -37,16 +37,15 @@ def test_mixed_reduced_models_keep_mixed_input_metadata() -> None:
         assert MODEL_REGISTRY[name].capabilities.input_type is InputType.MIXED
 
 
-def test_unaudited_reduced_fantasy_support_stays_disabled() -> None:
+def test_runtime_validated_reduced_models_support_fantasize() -> None:
     for name in (
         "ReducedGP",
+        "PCAGP",
         "PLSGP",
         "RandomProjectionGP",
         "MixedReducedGP",
+        "MixedPCAGP",
         "MixedPLSGP",
         "MixedRandomProjectionGP",
     ):
-        assert not MODEL_REGISTRY[name].capabilities.supports_fantasize
-
-    assert MODEL_REGISTRY["PCAGP"].capabilities.supports_fantasize
-    assert MODEL_REGISTRY["MixedPCAGP"].capabilities.supports_fantasize
+        assert MODEL_REGISTRY[name].capabilities.supports_fantasize
