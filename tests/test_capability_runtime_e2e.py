@@ -3,15 +3,15 @@
 import torch
 from botorch.acquisition.cost_aware import InverseCostWeightedUtility
 from botorch.acquisition.knowledge_gradient import qKnowledgeGradient
-from botorch.acquisition.utils import project_to_target_fidelity
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.multi_objective.logei import (
     qLogExpectedHypervolumeImprovement,
     qLogNoisyExpectedHypervolumeImprovement,
 )
 from botorch.acquisition.objective import GenericMCObjective
-from botorch.sampling.index_sampler import IndexSampler
+from botorch.acquisition.utils import project_to_target_fidelity
 from botorch.models.cost import AffineFidelityCostModel
+from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import (
     FastNondominatedPartitioning,
@@ -378,7 +378,7 @@ def test_multifidelity_projection_and_cost_utility_runtime() -> None:
     model.eval()
 
     candidate = torch.tensor([[[0.5, 0.5]]], dtype=torch.double)
-    projected = project_to_target_fidelity(candidate, target_fidelities={1: 1.0})
+    projected = project_to_target_fidelity(candidate, d=candidate.shape[-1], target_fidelities={1: 1.0})
     cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
     cost_utility = InverseCostWeightedUtility(cost_model=cost_model)
 
