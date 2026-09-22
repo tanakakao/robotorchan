@@ -1,0 +1,31 @@
+"""Runtime smoke tests for capability-advertised BoTorch workflows."""
+
+import torch
+from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.sampling.normal import SobolQMCNormalSampler
+
+from robotorchan.models import SingleTaskGP
+
+
+def test_single_task_gp_runtime_supports_mc_acquisition() -> None:
+    train_x = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
+    train_y = torch.sin(train_x * 3.0)
+
+    model = SingleTaskGP(train_x, train_y)
+    model.eval()
+
+    posterior = model.posterior(torch.tensor([[0.25], [0.75]], dtype=torch.double))
+    samples = posterior.rsample(torch.Size([4]))
+
+    assert samples.shape == torch.Size([4, 2, 1])
+    assert torch.isfinite(samples).all()
+
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+    )
+    value = acquisition(torch.tensor([[[0.5]]], dtype=torch.double))
+
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
