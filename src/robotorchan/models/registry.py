@@ -371,8 +371,14 @@ _FANTASIZE_MODELS = frozenset(
         "MixedMultiTaskGP",
         "MixedKroneckerMultiTaskGP",
         "ModelListGP",
+        "MixedReducedGP",
         "MixedPCAGP",
+        "MixedPLSGP",
+        "MixedRandomProjectionGP",
+        "ReducedGP",
         "PCAGP",
+        "PLSGP",
+        "RandomProjectionGP",
     }
 )
 
