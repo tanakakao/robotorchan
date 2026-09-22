@@ -6,7 +6,7 @@ from robotorchan.acquisition.compatibility import (
     check_model_acquisition_compatibility,
 )
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
-from robotorchan.problem import ProblemPurpose, ProblemSpec
+from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.selector import select_compatible_models
 
 
@@ -34,7 +34,12 @@ def recommend_compatible_workflows(spec: ProblemSpec) -> tuple[Recommendation, .
 
     recommendations: list[Recommendation] = []
     for model_name in models:
-        for acquisition_name in ACQUISITION_REGISTRY:
+        for acquisition_name, entry in ACQUISITION_REGISTRY.items():
+            capabilities = entry.capabilities
+            if spec.output_type is OutputType.MULTI and not capabilities.supports_multi_output:
+                continue
+            if spec.output_type is OutputType.MULTI and capabilities.requires_single_output:
+                continue
             result = check_model_acquisition_compatibility(model_name, acquisition_name)
             if not result.compatible:
                 continue
