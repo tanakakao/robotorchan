@@ -24,13 +24,16 @@ def optimize_mixed_one_shot_acqf(
     augmented_q = acq_function.get_augmented_q_batch_size(q)
     dimensions = sorted(categorical_features)
     choices = [tuple(categorical_features[index]) for index in dimensions]
-    row_assignments = list(product(*choices))
-    assignment_count = len(row_assignments) ** augmented_q
+    row_assignment_count = 1
+    for values in choices:
+        row_assignment_count *= len(values)
+    assignment_count = row_assignment_count**augmented_q
     if assignment_count > max_assignments:
         raise ValueError(
             f"mixed one-shot assignment space has {assignment_count} combinations; "
             f"limit is {max_assignments}"
         )
+    row_assignments = list(product(*choices))
 
     best_augmented: Tensor | None = None
     best_value: Tensor | None = None
