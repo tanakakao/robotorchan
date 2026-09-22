@@ -4,7 +4,7 @@ import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.sampling.normal import SobolQMCNormalSampler
 
-from robotorchan.models import SingleTaskGP
+from robotorchan.models import MixedSingleTaskGP, SingleTaskGP
 
 
 def test_single_task_gp_runtime_supports_mc_acquisition() -> None:
@@ -26,6 +26,44 @@ def test_single_task_gp_runtime_supports_mc_acquisition() -> None:
         sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
     )
     value = acquisition(torch.tensor([[[0.5]]], dtype=torch.double))
+
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+
+def test_mixed_single_task_gp_runtime_supports_mc_acquisition() -> None:
+    train_x = torch.tensor(
+        [
+            [0.0, 0.0],
+            [0.2, 1.0],
+            [0.4, 0.0],
+            [0.6, 1.0],
+            [0.8, 0.0],
+            [1.0, 1.0],
+        ],
+        dtype=torch.double,
+    )
+    train_y = (
+        torch.sin(train_x[:, :1] * 3.0)
+        + 0.2 * train_x[:, 1:].eq(1.0).to(dtype=torch.double)
+    )
+
+    model = MixedSingleTaskGP(train_x, train_y, cat_dims=[1])
+    model.eval()
+
+    test_x = torch.tensor([[0.25, 0.0], [0.75, 1.0]], dtype=torch.double)
+    samples = model.posterior(test_x).rsample(torch.Size([4]))
+
+    assert samples.shape == torch.Size([4, 2, 1])
+    assert torch.isfinite(samples).all()
+
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+    )
+    value = acquisition(torch.tensor([[[0.5, 1.0]]], dtype=torch.double))
 
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
