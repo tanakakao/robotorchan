@@ -38,7 +38,8 @@
 
 現在は次の文書があります。
 
-- [Acquisition architecture](development/acquisition-architecture.md)\n- [Architecture](development/architecture.md)
+- [Acquisition architecture](development/acquisition-architecture.md)
+- [Architecture](development/architecture.md)
 - [Model design guidelines](development/model_design_guidelines.md)
 - [Training API](development/training_api.md)
 - [Release procedure](development/releasing.md)
@@ -88,6 +89,6 @@ docs/
 
 ## Coverage status
 
-現在の `model_coverage.json` は public model 102件を登録し、全件に model-family guide、Theory、代表Notebookを割り当てています。Theory は21章、Notebook collection は23冊です。
+現在の public model 件数や各ドキュメント対応は `model_coverage.json` を参照してください。\nこのファイルは `MODEL_REGISTRY` から生成されるため、README に件数を重複して固定しません。
 
 coverage は「ファイルが存在する」だけではなく、モデル選択 → 統計的仮定 → 実行例へ辿るためのナビゲーション契約として扱います。代表Notebookは同じモデルファミリーや学習契約を共有する複数variantを扱う場合があります。
