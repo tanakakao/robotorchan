@@ -290,3 +290,10 @@ Lookahead acquisition の中心は
 KG は one-step の代表例で、multi-step lookahead は future observation に応じて後段の decision が変わる adaptive policy を扱います。
 
 batch candidate selection と multi-step adaptive decision は別の概念であり、fantasy model は未知の将来観測を現在の時点で評価するための中核的な仕組みです。
+
+
+## References
+
+- Frazier, P. I., Powell, W. B., and Dayanik, S. (2008), *A Knowledge-Gradient Policy for Sequential Information Collection*. SIAM Journal on Control and Optimization.
+- Jiang, S. et al. (2020), *Efficient Nonmyopic Bayesian Optimization via One-Shot Multi-Step Trees*. NeurIPS.
+- BoTorch documentation, *Acquisition Functions*, for current Knowledge Gradient and multi-step lookahead APIs.

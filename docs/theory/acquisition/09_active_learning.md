@@ -425,3 +425,9 @@ EPIG
 target distribution を明示すると、単なる空間充填ではなく deployment に必要な prediction quality を直接意識できます。
 
 次章 [Level-set](10_level_set.md) では、関数全体ではなく指定した response level の境界を学ぶ acquisition を扱います。
+
+
+## References
+
+- Bickford Smith, F. et al. (2023), *Prediction-Oriented Bayesian Active Learning*. AISTATS. EPIG measures information gained about predictions at target inputs rather than information about model parameters.
+- Kirsch, A., Rainforth, T., and Gal, Y. (2021), *Test Distribution-Aware Active Learning: A Principled Approach Against Distribution Shift and Outliers*. arXiv:2106.11719, for target-distribution-aware predictive information gain.

@@ -242,3 +242,10 @@ Information-theoretic acquisition を理解するときは、必ず
 MES は optimum value、PES は optimizer location、predictive AL は prediction についての情報を扱います。
 
 「uncertainty が大きい点を選ぶ」ことと「意思決定対象について情報を最大化する」ことは同じではありません。
+
+
+## References
+
+- Wang, Z. and Jegelka, S. (2017), *Max-value Entropy Search for Efficient Bayesian Optimization*. ICML.
+- Moss, H. B. et al. (2021), *GIBBON: General-purpose Information-Based Bayesian Optimisation*. JMLR.
+- BoTorch documentation, *Acquisition Functions*, for the current native MES and lower-bound max-value entropy interfaces.

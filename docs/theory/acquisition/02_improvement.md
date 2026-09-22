@@ -176,3 +176,9 @@ EI
 です。
 
 Log formulation は別の意思決定原理ではなく、数値安定性を改善する実装上重要な formulation です。batch と noise はさらに joint posterior と latent baseline uncertainty を導入するため、q / noisy variants を独立に理解する必要があります。
+
+
+## References
+
+- Ament, S. et al. (2023), *Unexpected Improvements to Expected Improvement for Bayesian Optimization*. arXiv:2310.20708. BoTorch's log-EI family follows this numerically robust formulation.
+- BoTorch documentation, *Acquisition Functions*, for the current analytic / Monte Carlo acquisition interfaces and log-space EI variants.

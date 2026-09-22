@@ -489,3 +489,11 @@ BoundaryVariance
 という provenance と数式上の違いを明確にすることが重要です。
 
 また、Level-set estimation、Constrained BO、Classification AL は boundary という共通要素を持ちますが、最終的な意思決定目的は異なります。
+
+
+## References
+
+- Bryan, B. et al. (2006), *Active Learning for Identifying Function Threshold Boundaries*, for the Straddle level-set heuristic.
+- Inatsu, Y., Takeno, S., Kutsukake, K., and Takeuchi, I. (2024), *Active Learning for Level Set Estimation Using Randomized Straddle Algorithms*. Transactions on Machine Learning Research. The paper samples `beta_t` from a chi-squared distribution with two degrees of freedom and uses `sqrt(beta_t)` as the confidence coefficient.
+
+`BoundaryVariance` is robotorchan-specific and therefore has no literature citation as a named acquisition method.
