@@ -89,6 +89,7 @@ docs/
 
 ## Coverage status
 
-現在の public model 件数や各ドキュメント対応は `model_coverage.json` を参照してください。\nこのファイルは `MODEL_REGISTRY` から生成されるため、README に件数を重複して固定しません。
+現在の public model 件数や各ドキュメント対応は `model_coverage.json` を参照してください。
+このファイルは `MODEL_REGISTRY` から生成されるため、README に件数を重複して固定しません。
 
 coverage は「ファイルが存在する」だけではなく、モデル選択 → 統計的仮定 → 実行例へ辿るためのナビゲーション契約として扱います。代表Notebookは同じモデルファミリーや学習契約を共有する複数variantを扱う場合があります。
