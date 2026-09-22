@@ -29,7 +29,8 @@ def test_coverage_references_existing_files() -> None:
     """Coverage entries must point to durable guide, theory, and example files."""
     manifest = _load_manifest()
 
-    assert manifest["schema_version"] == 2
+    assert manifest["schema_version"] == 3
+    assert manifest["source_of_truth"] == "robotorchan.models.registry.MODEL_REGISTRY"
     assert set(manifest["coverage_contract"]) == {"guide", "theory", "notebook"}
 
     for model_name, coverage in manifest["models"].items():
