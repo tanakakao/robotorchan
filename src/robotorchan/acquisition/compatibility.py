@@ -38,6 +38,8 @@ def check_model_acquisition_compatibility(
     if model_capabilities.non_gp:
         reason = "non-GP empirical ensembles require BoTorch Monte Carlo acquisitions"
         reasons.append(reason)
+    if model_capabilities.ensemble_posterior and not acquisition_capabilities.supports_ensemble:
+        reasons.append("acquisition does not support ensemble posteriors")
     if (
         model_capabilities.structured_output
         and not acquisition_capabilities.supports_structured_output
