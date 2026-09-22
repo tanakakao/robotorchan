@@ -50,9 +50,11 @@ def check_model_acquisition_compatibility(
     ):
         reasons.append("structured-output posteriors require scalarization")
     if (
-        model_capabilities.task_type.value == "multitask"
-        and acquisition_capabilities.requires_single_output
+        model_capabilities.supports_multi_output
+        and not acquisition_capabilities.supports_multi_output
     ):
+        reasons.append("acquisition does not support multi-output posteriors")
+    if model_capabilities.supports_multi_output and acquisition_capabilities.requires_single_output:
         reasons.append("acquisition requires a single-output posterior")
     posterior_requirement = acquisition_capabilities.posterior_requirement
     joint_gaussian = posterior_requirement is PosteriorRequirement.JOINT_GAUSSIAN
