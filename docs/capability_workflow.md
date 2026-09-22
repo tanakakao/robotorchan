@@ -30,6 +30,10 @@ ProblemSpec は問題の構造を宣言します。モデル名を直接指定�
 - high_dimensional: 高次元向け戦略を必要とするか
 - robust: robustness strategy を必要とするか
 - preference: pairwise preference observation を使うか
+- q: 同時に評価する候補数。1以上
+- constrained: BOで制約付き最適化を宣言するか
+
+q と constrained は ProblemSpec の契約として保持します。Active Learning acquisition の q 制約は Recommendation で検証します。BO acquisition registry はまだ追加していないため、constrained は現時点では問題定義の明示に使います。
 
 output_type, objective_type, task_type は別概念です。Active Learning の multi-output を multi-objective BO として扱いません。
 
