@@ -36,9 +36,8 @@ def check_model_acquisition_compatibility(
     reasons: list[str] = []
 
     if model_capabilities.non_gp:
-        reasons.append(
-            "non-GP empirical ensembles require BoTorch Monte Carlo acquisitions"
-        )
+        reason = "non-GP empirical ensembles require BoTorch Monte Carlo acquisitions"
+        reasons.append(reason)
     if (
         model_capabilities.structured_output
         and not acquisition_capabilities.supports_structured_output
@@ -49,9 +48,9 @@ def check_model_acquisition_compatibility(
         and acquisition_capabilities.requires_single_output
     ):
         reasons.append("acquisition requires a single-output posterior")
+    posterior_requirement = acquisition_capabilities.posterior_requirement
     if (
-        acquisition_capabilities.posterior_requirement
-        is PosteriorRequirement.JOINT_GAUSSIAN
+        posterior_requirement is PosteriorRequirement.JOINT_GAUSSIAN
         and model_capabilities.non_gp
     ):
         reasons.append("acquisition requires a joint Gaussian posterior")
