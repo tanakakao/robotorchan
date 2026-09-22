@@ -30,10 +30,4 @@ class ProblemSpec:
     robust: bool = False
 
     def __post_init__(self) -> None:
-        if (
-            self.purpose is ProblemPurpose.ACTIVE_LEARNING
-            and self.objective_type is ObjectiveType.MULTI
-        ):
-            raise ValueError(
-                "multi-objective optimization is not an active-learning requirement"
-            )
+        """Validate the shape of the declarative specification."""
