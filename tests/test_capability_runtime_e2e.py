@@ -22,6 +22,7 @@ from botorch.utils.multi_objective.box_decompositions.non_dominated import (
     FastNondominatedPartitioning,
 )
 
+from robotorchan.acquisition.mixed_one_shot import optimize_mixed_one_shot_acqf
 from robotorchan.models import (
     PCAGP,
     PLSGP,
@@ -693,3 +694,100 @@ def test_remaining_mixed_reduced_models_support_knowledge_gradient() -> None:
     )
     for model in models:
         _assert_reduced_model_supports_knowledge_gradient(model, candidate)
+
+
+def test_mixed_qkg_candidate_generation_runtime() -> None:
+    train_x = torch.tensor(
+        [
+            [0.0, 0.0],
+            [0.2, 1.0],
+            [0.4, 0.0],
+            [0.6, 1.0],
+            [0.8, 0.0],
+            [1.0, 1.0],
+        ],
+        dtype=torch.double,
+    )
+    train_y = (torch.sin(train_x[:, :1] * 3.0) + 0.2 * train_x[:, 1:]).contiguous()
+    model = MixedSingleTaskGP(train_x, train_y, cat_dims=[1])
+    model.eval()
+    acquisition = qKnowledgeGradient(
+        model=model,
+        num_fantasies=1,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([1])),
+    )
+
+    candidate, value = optimize_mixed_one_shot_acqf(
+        acquisition,
+        torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
+        categorical_features={1: [0.0, 1.0]},
+        num_restarts=2,
+        raw_samples=8,
+        max_assignments=4,
+    )
+
+    assert candidate.shape == torch.Size([1, 2])
+    assert candidate[0, 1].item() in {0.0, 1.0}
+    assert torch.isfinite(value).all()
+
+
+def test_mixed_qmfkg_candidate_generation_runtime() -> None:
+    design = torch.linspace(0.0, 1.0, 8, dtype=torch.double)
+    category = torch.tensor([0.0, 1.0] * 4, dtype=torch.double)
+    fidelity = torch.tensor([0.25, 0.5, 0.75, 1.0] * 2, dtype=torch.double)
+    train_x = torch.stack([design, category, fidelity], dim=-1)
+    train_y = (torch.sin(design * 3.0) + 0.15 * category + 0.2 * fidelity).unsqueeze(-1)
+    model = MixedSingleTaskMultiFidelityGP(
+        train_x,
+        train_y,
+        cat_dims=[1],
+        data_fidelities=[2],
+    )
+    model.eval()
+
+    def project(x: torch.Tensor) -> torch.Tensor:
+        return project_to_target_fidelity(
+            x,
+            d=x.shape[-1],
+            target_fidelities={2: 1.0},
+        )
+
+    target_mean = PosteriorMean(model)
+    current_values = []
+    for category_value in (0.0, 1.0):
+        _, current = optimize_acqf(
+            acq_function=target_mean,
+            bounds=torch.tensor(
+                [[0.0, category_value, 1.0], [1.0, category_value, 1.0]],
+                dtype=torch.double,
+            ),
+            q=1,
+            num_restarts=2,
+            raw_samples=8,
+            fixed_features={1: category_value, 2: 1.0},
+        )
+        current_values.append(current)
+    current_value = torch.stack(current_values).max()
+    cost_model = AffineFidelityCostModel(fidelity_weights={2: 1.0}, fixed_cost=0.1)
+    acquisition = qMultiFidelityKnowledgeGradient(
+        model=model,
+        num_fantasies=1,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([1])),
+        cost_aware_utility=InverseCostWeightedUtility(cost_model=cost_model),
+        current_value=current_value,
+        project=project,
+    )
+
+    candidate, value = optimize_mixed_one_shot_acqf(
+        acquisition,
+        torch.tensor([[0.0, 0.0, 0.25], [1.0, 1.0, 1.0]], dtype=torch.double),
+        categorical_features={1: [0.0, 1.0]},
+        num_restarts=2,
+        raw_samples=8,
+        max_assignments=4,
+    )
+
+    assert candidate.shape == torch.Size([1, 3])
+    assert candidate[0, 1].item() in {0.0, 1.0}
+    assert 0.25 <= candidate[0, 2].item() <= 1.0
+    assert torch.isfinite(value).all()
