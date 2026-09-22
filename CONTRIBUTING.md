@@ -27,7 +27,8 @@ pip install -e ".[dev,examples,fully-bayesian]"
 - 公開モデルを追加・変更した場合は、モデルガイド、理論ドキュメント、Notebookの対応範囲も確認してください。
   `models.__all__` とpublic model contract testも同じ変更で同期してください。
   ドキュメント対応情報は `MODEL_REGISTRY` を正とし、`docs/model_coverage.json` を手編集せず、
-  `python scripts/generate_model_coverage.py` で再生成してください。生成物を更新し忘れないよう、\n  CIでも再生成結果とcommit済みファイルの一致を検証します。
+  `python scripts/generate_model_coverage.py` で再生成してください。生成物を更新し忘れないよう、
+  CIでも再生成結果とcommit済みファイルの一致を検証します。
 - 新しいCI jobは、既存CIでは検証できない明確な理由がある場合だけ追加してください。
 - GitHub APIや自動編集で複数行コードを書き換えた場合は、更新後の実ファイルを再取得し、
   エスケープ文字（特にリテラルの `\\n`）がコードへ混入していないことを確認してください。
