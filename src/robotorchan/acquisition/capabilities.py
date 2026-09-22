@@ -25,6 +25,7 @@ class AcquisitionCapabilities:
     requires_single_output: bool = False
     supports_constraints: bool = False
     supports_multi_objective: bool = False
+    monte_carlo: bool = False
 
 
 @dataclass(frozen=True, slots=True)

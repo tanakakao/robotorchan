@@ -58,3 +58,12 @@ def test_registry_keys_match_acquisition_names() -> None:
     entries = ACQUISITION_REGISTRY.values()
     registered_names = {entry.acquisition_name for entry in entries}
     assert registered_names == set(ACQUISITION_REGISTRY)
+
+
+def test_non_gp_model_accepts_registered_monte_carlo_bo_acquisition() -> None:
+    result = check_model_acquisition_compatibility(
+        "RandomForestSurrogate",
+        "qLogExpectedImprovement",
+    )
+    assert result.status is CompatibilityStatus.COMPATIBLE
+    assert result.compatible
