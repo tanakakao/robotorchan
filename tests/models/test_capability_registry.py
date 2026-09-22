@@ -1,4 +1,7 @@
-"""Tests for the initial capability registry schema."""
+"""Tests for the model capability registry schema."""
+
+import json
+from pathlib import Path
 
 from robotorchan.models.capabilities import (
     HighDimensionalStrategy,
@@ -51,3 +54,25 @@ def test_structured_output_is_not_ordinary_multitask() -> None:
 
 def test_registry_model_names_match_keys() -> None:
     assert all(name == entry.model_name for name, entry in MODEL_REGISTRY.items())
+
+
+def test_model_coverage_is_generated_from_registry() -> None:
+    coverage_path = Path(__file__).resolve().parents[2] / "docs" / "model_coverage.json"
+    coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+
+    assert coverage["source_of_truth"] == "robotorchan.models.registry.MODEL_REGISTRY"
+    assert set(coverage["models"]) == set(MODEL_REGISTRY)
+    for name, entry in MODEL_REGISTRY.items():
+        assert coverage["models"][name] == {
+            "guide": entry.documentation.guide,
+            "theory": entry.documentation.theory,
+            "notebook": entry.documentation.notebook,
+        }
+
+
+def test_registry_documentation_targets_exist() -> None:
+    root = Path(__file__).resolve().parents[2]
+    for entry in MODEL_REGISTRY.values():
+        assert (root / entry.documentation.guide).is_file()
+        assert (root / entry.documentation.theory).is_file()
+        assert (root / entry.documentation.notebook).is_file()
