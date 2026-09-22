@@ -33,9 +33,9 @@ ProblemSpec は問題の構造を宣言します。モデル名を直接指定�
 - q: 同時に評価する候補数。1以上
 - constrained: BOで制約付き最適化を宣言するか
 
-q と constrained は ProblemSpec の契約として保持します。Active Learning acquisition の q 制約は Recommendation で検証します。BO acquisition registry はまだ追加していないため、constrained は現時点では問題定義の明示に使います。
+q と constrained は ProblemSpec の契約として保持します。Active Learning / Bayesian Optimization の acquisition metadata と Recommendation が q、制約、目的数を照合します。
 
-output_type, objective_type, task_type は別概念です。Active Learning の multi-output を multi-objective BO として扱いません。
+output_type, objective_type, task_type は別概念です。Active Learning の multi-output を multi-objective BO として扱いません。BO で objective_type=multi を指定する場合は output_type=multi が必須です。単目的 BO では multi-output posterior を scalarizing objective で単一目的へ写像する構成も扱えます。
 
 ## Selector
 
@@ -47,7 +47,7 @@ recommend_compatible_workflows() は互換候補を返しますが、モデル�
 
 Active Learning では robotorchan の acquisition registry と model-acquisition compatibility を組み合わせます。multi-output 問題では single-output 限定 acquisition を除外します。
 
-Bayesian Optimization では現在、BoTorch 標準 acquisition を robotorchan 側で再実装・複製していないため、Recommendation は互換モデルまでを返します。
+Bayesian Optimization では BoTorch 標準 acquisition を robotorchan 側で再実装しません。代表的な BoTorch-native acquisition を metadata-only entry として registry に保持し、objective_type、output_type、constrained、q、ensemble posterior、fantasy-model requirement を Recommendation で照合します。実際の acquisition 実装は BoTorch のクラスを使用します。
 
 ## Benchmark
 
