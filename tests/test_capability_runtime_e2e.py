@@ -1,7 +1,6 @@
 """Runtime smoke tests for capability-advertised BoTorch workflows."""
 
 import torch
-from robotorchan.reduction.input import PCAInputReducer
 from botorch.acquisition.knowledge_gradient import qKnowledgeGradient
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.multi_objective.logei import (
@@ -18,8 +17,6 @@ from botorch.utils.multi_objective.box_decompositions.non_dominated import (
 from robotorchan.models import (
     PCAGP,
     PLSGP,
-    RandomProjectionGP,
-    ReducedGP,
     KroneckerMultiTaskGP,
     MixedPCAGP,
     MixedPLSGP,
@@ -27,9 +24,12 @@ from robotorchan.models import (
     MixedReducedGP,
     MixedSingleTaskGP,
     RandomForestSurrogate,
+    RandomProjectionGP,
+    ReducedGP,
     SingleTaskGP,
     SingleTaskMultiFidelityGP,
 )
+from robotorchan.reduction.input import PCAInputReducer
 
 
 def test_single_task_gp_runtime_supports_mc_acquisition() -> None:
@@ -422,7 +422,7 @@ def test_remaining_continuous_reduced_models_support_knowledge_gradient() -> Non
 
     models = (
         ReducedGP(train_x, train_y),
-        PLSGP(train_x, train_y, n_components=2),
+        PLSGP(train_x, train_y, n_components=1),
         RandomProjectionGP(train_x, train_y, n_components=2),
     )
     for model in models:
