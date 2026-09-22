@@ -183,8 +183,11 @@ _register_family(
     strategy="multitask or multi-output GP",
 )
 _register_family(
-    ("SaasFullyBayesianSingleTaskGP", "SaasFullyBayesianMultiTaskGP",
-     "MixedSaasFullyBayesianSingleTaskGP"),
+    (
+        "SaasFullyBayesianSingleTaskGP",
+        "SaasFullyBayesianMultiTaskGP",
+        "MixedSaasFullyBayesianSingleTaskGP",
+    ),
     guide="docs/models/high_dimensional.md",
     theory="docs/theory/21_advanced_high_dimensional_models.md",
     notebook="examples/notebooks/08_saas_gp.ipynb",
@@ -192,8 +195,12 @@ _register_family(
     high_dimensional=HighDimensionalStrategy.SAAS,
 )
 _register_family(
-    ("AdditiveMapSaasSingleTaskGP", "EnsembleMapSaasSingleTaskGP",
-     "MixedAdditiveMapSaasSingleTaskGP", "MixedEnsembleMapSaasSingleTaskGP"),
+    (
+        "AdditiveMapSaasSingleTaskGP",
+        "EnsembleMapSaasSingleTaskGP",
+        "MixedAdditiveMapSaasSingleTaskGP",
+        "MixedEnsembleMapSaasSingleTaskGP",
+    ),
     guide="docs/models/high_dimensional.md",
     theory="docs/theory/21_advanced_high_dimensional_models.md",
     notebook="examples/notebooks/09_map_saas_and_additive_gp.ipynb",
@@ -225,15 +232,19 @@ _REDUCED = (
     "OutputPCAGP",
     "OutputPLSGP",
     "MixedReducedGP",
-"MixedPCAGP", "MixedPLSGP", "MixedRandomProjectionGP",
+    "MixedPCAGP",
+    "MixedPLSGP",
+    "MixedRandomProjectionGP",
     "ReducedMultiTaskGP",
-"ReducedKroneckerMultiTaskGP", "PCAMultiTaskGP",
+    "ReducedKroneckerMultiTaskGP",
+    "PCAMultiTaskGP",
     "PCAKroneckerMultiTaskGP",
-"PLSMultiTaskGP", "PLSKroneckerMultiTaskGP",
+    "PLSMultiTaskGP",
+    "PLSKroneckerMultiTaskGP",
     "RandomProjectionMultiTaskGP",
-"RandomProjectionKroneckerMultiTaskGP",
+    "RandomProjectionKroneckerMultiTaskGP",
     "MixedReducedMultiTaskGP",
-"MixedReducedKroneckerMultiTaskGP",
+    "MixedReducedKroneckerMultiTaskGP",
 )
 _register_family(
     _REDUCED,
@@ -250,21 +261,28 @@ _NEURAL_REDUCED = (
     "SupervisedVAEGP",
     "HybridAutoEncoderGP",
     "JointEncoderGP",
-"JointVAEGP", "MixedAutoEncoderGP", "MixedVAEGP",
+    "JointVAEGP",
+    "MixedAutoEncoderGP",
+    "MixedVAEGP",
     "MixedSupervisedAutoEncoderGP",
-"MixedSupervisedVAEGP", "MixedHybridAutoEncoderGP",
+    "MixedSupervisedVAEGP",
+    "MixedHybridAutoEncoderGP",
     "MixedJointEncoderGP",
-"MixedJointVAEGP", "AutoEncoderMultiTaskGP",
+    "MixedJointVAEGP",
+    "AutoEncoderMultiTaskGP",
     "AutoEncoderKroneckerMultiTaskGP",
-"VAEKroneckerMultiTaskGP", "VAEMultiTaskGP",
+    "VAEKroneckerMultiTaskGP",
+    "VAEMultiTaskGP",
     "SupervisedAutoEncoderMultiTaskGP",
-"SupervisedAutoEncoderKroneckerMultiTaskGP",
+    "SupervisedAutoEncoderKroneckerMultiTaskGP",
     "SupervisedVAEMultiTaskGP",
-"SupervisedVAEKroneckerMultiTaskGP", "HybridAutoEncoderMultiTaskGP",
+    "SupervisedVAEKroneckerMultiTaskGP",
+    "HybridAutoEncoderMultiTaskGP",
     "HybridAutoEncoderKroneckerMultiTaskGP",
-"JointEncoderMultiTaskGP",
+    "JointEncoderMultiTaskGP",
     "JointEncoderKroneckerMultiTaskGP",
-"JointVAEMultiTaskGP", "JointVAEKroneckerMultiTaskGP",
+    "JointVAEMultiTaskGP",
+    "JointVAEKroneckerMultiTaskGP",
     "MixedJointEncoderMultiTaskGP",
 )
 _register_family(
@@ -277,8 +295,11 @@ _register_family(
 )
 
 _register_family(
-    ("RobustRelevancePursuitSingleTaskGP", "RobustRelevancePursuitMultiTaskGP",
-     "MixedRobustRelevancePursuitSingleTaskGP"),
+    (
+        "RobustRelevancePursuitSingleTaskGP",
+        "RobustRelevancePursuitMultiTaskGP",
+        "MixedRobustRelevancePursuitSingleTaskGP",
+    ),
     guide="docs/models/robust_noise.md",
     theory="docs/theory/14_robust_gaussian_process.md",
     notebook="examples/notebooks/10_robust_gp.ipynb",
@@ -286,8 +307,12 @@ _register_family(
     robustness=frozenset({RobustnessType.RELEVANCE_PURSUIT}),
 )
 _register_family(
-    ("ContaminatedSingleTaskGP", "ContaminatedMultiTaskGP", "MixedContaminatedSingleTaskGP",
-     "MixedContaminatedMultiTaskGP"),
+    (
+        "ContaminatedSingleTaskGP",
+        "ContaminatedMultiTaskGP",
+        "MixedContaminatedSingleTaskGP",
+        "MixedContaminatedMultiTaskGP",
+    ),
     guide="docs/models/robust_noise.md",
     theory="docs/theory/14_robust_gaussian_process.md",
     notebook="examples/notebooks/15_robust_observation_models.ipynb",
@@ -295,8 +320,12 @@ _register_family(
     robustness=frozenset({RobustnessType.CONTAMINATION}),
 )
 _register_family(
-    ("StudentTSingleTaskGP", "StudentTMultiTaskGP", "MixedStudentTSingleTaskGP",
-     "MixedStudentTMultiTaskGP"),
+    (
+        "StudentTSingleTaskGP",
+        "StudentTMultiTaskGP",
+        "MixedStudentTSingleTaskGP",
+        "MixedStudentTMultiTaskGP",
+    ),
     guide="docs/models/robust_noise.md",
     theory="docs/theory/14_robust_gaussian_process.md",
     notebook="examples/notebooks/15_robust_observation_models.ipynb",
@@ -308,9 +337,12 @@ _register_family(
         "HeteroskedasticSingleTaskGP",
         "HeteroskedasticMultiTaskGP",
         "MixedHeteroskedasticSingleTaskGP",
-     "MixedHeteroskedasticMultiTaskGP", "JointHeteroskedasticSingleTaskGP",
-     "MixedJointHeteroskedasticSingleTaskGP", "ReplicateNoiseSingleTaskGP",
-     "MixedReplicateNoiseSingleTaskGP"),
+        "MixedHeteroskedasticMultiTaskGP",
+        "JointHeteroskedasticSingleTaskGP",
+        "MixedJointHeteroskedasticSingleTaskGP",
+        "ReplicateNoiseSingleTaskGP",
+        "MixedReplicateNoiseSingleTaskGP",
+    ),
     guide="docs/models/robust_noise.md",
     theory="docs/theory/15_heteroskedastic_noise.md",
     notebook="examples/notebooks/16_noise_models.ipynb",
@@ -318,8 +350,12 @@ _register_family(
     robustness=frozenset({RobustnessType.HETEROSKEDASTIC}),
 )
 _register_family(
-    ("NonstationarySingleTaskGP", "NonstationaryMultiTaskGP", "MixedNonstationarySingleTaskGP",
-     "MixedNonstationaryMultiTaskGP"),
+    (
+        "NonstationarySingleTaskGP",
+        "NonstationaryMultiTaskGP",
+        "MixedNonstationarySingleTaskGP",
+        "MixedNonstationaryMultiTaskGP",
+    ),
     guide="docs/models/robust_noise.md",
     theory="docs/theory/17_nonstationary_gp.md",
     notebook="examples/notebooks/18_nonstationary_gp.ipynb",
@@ -340,7 +376,12 @@ _register_family(
 )
 
 _register_family(
-    ("HigherOrderGP", "MixedHigherOrderGP", "LatentKroneckerGP", "MixedLatentKroneckerGP"),
+    (
+        "HigherOrderGP",
+        "MixedHigherOrderGP",
+        "LatentKroneckerGP",
+        "MixedLatentKroneckerGP",
+    ),
     guide="docs/models/structured_output.md",
     theory="docs/theory/11_structured_output.md",
     notebook="examples/notebooks/11_structured_output_gp.ipynb",
@@ -348,8 +389,12 @@ _register_family(
     structured_output=True,
 )
 _register_family(
-    ("HeterogeneousMTGP", "MixedHeterogeneousMTGP", "HierarchicalConditionalKernelMultiTaskGP",
-     "MixedHierarchicalConditionalKernelMultiTaskGP"),
+    (
+        "HeterogeneousMTGP",
+        "MixedHeterogeneousMTGP",
+        "HierarchicalConditionalKernelMultiTaskGP",
+        "MixedHierarchicalConditionalKernelMultiTaskGP",
+    ),
     guide="docs/models/multitask_multioutput.md",
     theory="docs/theory/07_multitask_multioutput.md",
     notebook="examples/notebooks/13_heterogeneous_multitask_gp.ipynb",
@@ -361,7 +406,9 @@ _register_family(
         "MixedHierarchicalConditionalKernelGP",
         "LCEAGP",
         "LCEMGP",
-     "MixedLCEMGP", "SACGP"),
+        "MixedLCEMGP",
+        "SACGP",
+    ),
     guide="docs/models/hierarchical_contextual.md",
     theory="docs/theory/12_hierarchical_contextual_gp.md",
     notebook="examples/notebooks/14_contextual_gp.ipynb",
@@ -377,7 +424,12 @@ _register_family(
 )
 
 _register_family(
-    ("SingleTaskDeepGP", "MultiTaskDeepGP", "MixedSingleTaskDeepGP", "MixedMultiTaskDeepGP"),
+    (
+        "SingleTaskDeepGP",
+        "MultiTaskDeepGP",
+        "MixedSingleTaskDeepGP",
+        "MixedMultiTaskDeepGP",
+    ),
     guide="docs/models/expressive.md",
     theory="docs/theory/22_expressive_gp.md",
     notebook="examples/notebooks/24_expressive_surrogate_gp.ipynb",
@@ -385,17 +437,28 @@ _register_family(
     high_dimensional=HighDimensionalStrategy.DEEP,
 )
 _register_family(
-    ("InfiniteWidthBNNGP", "InfiniteWidthBNNMultiTaskGP", "MixedInfiniteWidthBNNGP",
-     "MixedInfiniteWidthBNNMultiTaskGP", "SpectralMixtureGP", "SpectralMixtureMultiTaskGP",
-     "MixedSpectralMixtureGP", "MixedSpectralMixtureMultiTaskGP"),
+    (
+        "InfiniteWidthBNNGP",
+        "InfiniteWidthBNNMultiTaskGP",
+        "MixedInfiniteWidthBNNGP",
+        "MixedInfiniteWidthBNNMultiTaskGP",
+        "SpectralMixtureGP",
+        "SpectralMixtureMultiTaskGP",
+        "MixedSpectralMixtureGP",
+        "MixedSpectralMixtureMultiTaskGP",
+    ),
     guide="docs/models/expressive.md",
     theory="docs/theory/22_expressive_gp.md",
     notebook="examples/notebooks/24_expressive_surrogate_gp.ipynb",
     strategy="expressive GP surrogate",
 )
 _register_family(
-    ("RandomForestSurrogate", "ExtraTreesSurrogate", "GradientBoostingSurrogate",
-     "HistGradientBoostingSurrogate"),
+    (
+        "RandomForestSurrogate",
+        "ExtraTreesSurrogate",
+        "GradientBoostingSurrogate",
+        "HistGradientBoostingSurrogate",
+    ),
     guide="docs/models/non_gp.md",
     theory="docs/theory/23_non_gp_surrogates.md",
     notebook="examples/notebooks/25_non_gp_surrogates.ipynb",
