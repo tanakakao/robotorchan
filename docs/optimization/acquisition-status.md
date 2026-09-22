@@ -24,6 +24,13 @@ posteriors explicitly. `PosteriorVariance`, `PosteriorStd`, `Straddle`, `Boundar
 Thompson sampling requires an explicit objective for multi-output models.
 `BoundaryVariance` is a robotorchan-specific heuristic rather than a named literature method.
 
+Mixed qKG and qMFKG support currently covers model construction, fantasy-aware acquisition
+evaluation, and cross-category fantasy decision points. General mixed one-shot candidate
+optimization is not yet supported: ordinary `optimize_acqf_mixed` applies a categorical fixed
+feature to the complete augmented one-shot batch and can therefore over-restrict fantasy
+maximizers. See [Mixed one-shot optimization](../mixed-one-shot-optimization.md) for the
+runtime boundary and requirements for a future row-aware optimizer.
+
 These restrictions are deliberate: unsupported posterior shapes should fail clearly rather than
 silently reducing the wrong dimension.
 
