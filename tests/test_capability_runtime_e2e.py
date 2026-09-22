@@ -1,6 +1,7 @@
 """Runtime smoke tests for capability-advertised BoTorch workflows."""
 
 import torch
+from botorch.acquisition.analytic import PosteriorMean
 from botorch.acquisition.cost_aware import InverseCostWeightedUtility
 from botorch.acquisition.knowledge_gradient import (
     qKnowledgeGradient,
@@ -14,6 +15,7 @@ from botorch.acquisition.multi_objective.logei import (
 from botorch.acquisition.objective import GenericMCObjective
 from botorch.acquisition.utils import project_to_target_fidelity
 from botorch.models.cost import AffineFidelityCostModel
+from botorch.optim import optimize_acqf
 from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import (
@@ -425,8 +427,15 @@ def test_multifidelity_knowledge_gradient_runtime_with_cost_and_projection() -> 
         )
 
     cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
-    with torch.no_grad():
-        current_value = model.posterior(project(train_x)).mean.max()
+    target_mean = PosteriorMean(model)
+    _, current_value = optimize_acqf(
+        acq_function=target_mean,
+        bounds=torch.tensor([[0.0, 1.0], [1.0, 1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=3,
+        raw_samples=16,
+        fixed_features={1: 1.0},
+    )
     acquisition = qMultiFidelityKnowledgeGradient(
         model=model,
         num_fantasies=4,
