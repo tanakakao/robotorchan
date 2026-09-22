@@ -50,11 +50,29 @@ It remains a native BoTorch path rather than a robotorchan wrapper. Because its 
 optimization is materially heavier than EHVI/NEHVI, use it when the value of lookahead
 justifies the additional cost.
 
+## Constraints and custom objectives
+
+The registry's `supports_constraints` flag describes a supported BoTorch composition path. It
+does not mean robotorchan creates constraint callables, feasibility conventions, objectives, or
+reference points automatically. These remain problem-specific BoTorch inputs.
+
+qLogEHVI, qLogNEHVI, and qLogNParEGO are registered as multi-objective paths. qLogNParEGO was
+already runtime-tested in robotorchan and is now represented in the capability registry as well,
+so documentation, executable coverage, and recommendation metadata agree.
+
+## Hypervolume Knowledge Gradient
+
+Hypervolume Knowledge Gradient remains a BoTorch-native future integration item. The current
+repository does not contain executable HVKG integration coverage, so robotorchan must not present
+it as runtime-validated merely because BoTorch exposes the algorithm. Adding it should include
+model compatibility, fantasy semantics, and candidate-optimization tests before registry support
+is declared.
+
 ## Scope
 
-Phase 9 covers the standard multi-objective acquisition interface. Constraint composition,
-custom objectives, and multi-fidelity hypervolume lookahead are orthogonal concerns and remain
-with their dedicated integration paths.
+The validated standard multi-objective surface covers qLogEHVI, qLogNEHVI, and qLogNParEGO.
+Constraint composition and custom objectives remain explicit BoTorch inputs. Multi-fidelity
+hypervolume lookahead and HVKG are not part of the current validated contract.
 
 
 For the broader theory and method relationships, see

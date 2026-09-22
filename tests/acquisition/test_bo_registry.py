@@ -32,6 +32,7 @@ def test_multi_objective_bo_selects_hypervolume_acquisitions() -> None:
     names = {item.acquisition_name for item in recommend_compatible_workflows(spec)}
 
     assert "qLogExpectedHypervolumeImprovement" in names
+    assert "qLogNParEGO" in names
     assert "qLogExpectedImprovement" not in names
 
 
@@ -72,3 +73,20 @@ def test_botorch_q_acquisitions_require_posterior_samples() -> None:
         entry.capabilities.posterior_requirement is PosteriorRequirement.POSTERIOR_SAMPLES
         for entry in entries
     )
+
+
+def test_constrained_multi_objective_bo_keeps_registered_native_paths() -> None:
+    spec = ProblemSpec(
+        purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION,
+        objective_type=ObjectiveType.MULTI,
+        output_type=OutputType.MULTI,
+        constrained=True,
+    )
+
+    names = {item.acquisition_name for item in recommend_compatible_workflows(spec)}
+
+    assert names == {
+        "qLogExpectedHypervolumeImprovement",
+        "qLogNoisyExpectedHypervolumeImprovement",
+        "qLogNParEGO",
+    }
