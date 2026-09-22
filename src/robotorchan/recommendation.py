@@ -6,7 +6,7 @@ from robotorchan.acquisition.compatibility import (
     check_model_acquisition_compatibility,
 )
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
-from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
+from robotorchan.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.selector import select_compatible_models
 
 
@@ -22,20 +22,26 @@ class Recommendation:
 def recommend_compatible_workflows(spec: ProblemSpec) -> tuple[Recommendation, ...]:
     """Return compatible workflows without scoring or ranking candidates."""
     models = select_compatible_models(spec)
-    if spec.purpose is ProblemPurpose.BAYESIAN_OPTIMIZATION:
-        return tuple(
-            Recommendation(
-                model_name=name,
-                acquisition_name=None,
-                rationale=("model satisfies the declared problem capabilities",),
-            )
-            for name in models
-        )
-
     recommendations: list[Recommendation] = []
     for model_name in models:
         for acquisition_name, entry in ACQUISITION_REGISTRY.items():
             capabilities = entry.capabilities
+            if capabilities.purpose.value != spec.purpose.value:
+                continue
+            if (
+                spec.purpose is ProblemPurpose.BAYESIAN_OPTIMIZATION
+                and spec.objective_type is ObjectiveType.MULTI
+                and not capabilities.supports_multi_objective
+            ):
+                continue
+            if (
+                spec.purpose is ProblemPurpose.BAYESIAN_OPTIMIZATION
+                and spec.objective_type is ObjectiveType.SINGLE
+                and capabilities.supports_multi_objective
+            ):
+                continue
+            if spec.constrained and not capabilities.supports_constraints:
+                continue
             if capabilities.max_q is not None and spec.q > capabilities.max_q:
                 continue
             if spec.output_type is OutputType.MULTI and not capabilities.supports_multi_output:
