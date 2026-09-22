@@ -30,10 +30,7 @@ jobs:
         run: ruff format --check .
       - name: Verify generated model coverage
         if: matrix.python-version == '3.11'
-        run: |
-          cp docs/model_coverage.json /tmp/model_coverage.json
-          python scripts/generate_model_coverage.py
-          diff -u /tmp/model_coverage.json docs/model_coverage.json
+        run: python scripts/generate_model_coverage.py --check
       - name: Test core wrappers
         run: >-
           pytest
