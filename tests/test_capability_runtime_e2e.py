@@ -425,12 +425,14 @@ def test_multifidelity_knowledge_gradient_runtime_with_cost_and_projection() -> 
         )
 
     cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
+    with torch.no_grad():
+        current_value = model.posterior(project(train_x)).mean.max()
     acquisition = qMultiFidelityKnowledgeGradient(
         model=model,
         num_fantasies=4,
         sampler=SobolQMCNormalSampler(sample_shape=torch.Size([4])),
         cost_aware_utility=InverseCostWeightedUtility(cost_model=cost_model),
-        current_value=train_y.max(),
+        current_value=current_value,
         project=project,
     )
     fantasy_points = acquisition.get_augmented_q_batch_size(q=1)
