@@ -1,3 +1,4 @@
+import pytest
 import torch
 from botorch.acquisition.acquisition import OneShotAcquisitionFunction
 
@@ -53,3 +54,28 @@ def test_mixed_one_shot_optimizer_rejects_large_assignment_space() -> None:
         assert "assignment space" in str(error)
     else:
         raise AssertionError("expected assignment-space guard")
+
+
+@pytest.mark.parametrize(
+    ("categorical_features", "match"),
+    [
+        ({-1: [0.0, 1.0]}, "outside"),
+        ({2: [0.0, 1.0]}, "outside"),
+        ({1: []}, "no candidate values"),
+        ({1: [-1.0, 0.0]}, "outside bounds"),
+        ({1: [0.0, 2.0]}, "outside bounds"),
+    ],
+)
+def test_mixed_one_shot_optimizer_validates_categorical_domain(
+    categorical_features: dict[int, list[float]],
+    match: str,
+) -> None:
+    acquisition = _CrossCategoryOneShot()
+
+    with pytest.raises(ValueError, match=match):
+        optimize_mixed_one_shot_acqf(
+            acquisition,
+            torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
+            categorical_features=categorical_features,
+            max_assignments=4,
+        )
