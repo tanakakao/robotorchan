@@ -23,7 +23,23 @@ def optimize_mixed_one_shot_acqf(
         raise NotImplementedError("mixed one-shot optimization currently supports q=1 only")
     augmented_q = acq_function.get_augmented_q_batch_size(q)
     dimensions = sorted(categorical_features)
+    feature_count = bounds.shape[-1]
+    for dimension in dimensions:
+        if dimension < 0 or dimension >= feature_count:
+            raise ValueError(
+                f"categorical feature index {dimension} is outside [0, {feature_count})"
+            )
     choices = [tuple(categorical_features[index]) for index in dimensions]
+    for dimension, values in zip(dimensions, choices, strict=True):
+        if not values:
+            raise ValueError(f"categorical feature {dimension} has no candidate values")
+        lower = bounds[0, dimension].item()
+        upper = bounds[1, dimension].item()
+        if any(value < lower or value > upper for value in values):
+            raise ValueError(
+                f"categorical feature {dimension} contains a value outside bounds "
+                f"[{lower}, {upper}]"
+            )
     row_assignment_count = 1
     for values in choices:
         row_assignment_count *= len(values)

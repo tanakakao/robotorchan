@@ -80,7 +80,7 @@ The implementation must satisfy all of the following:
 
 - a fantasy row may select a different category from the observed candidate;
 - categorical coordinates remain fixed during conditional continuous optimization;
-- fidelity coordinates remain optimizable unless explicitly fixed by the caller;
+- fidelity coordinates remain optimizable; target-fidelity projection remains an acquisition-level concern;
 - the acquisition receives the complete augmented batch;
 - returned candidates exclude fantasy decision rows;
 - the reported acquisition value corresponds to the optimized augmented batch;
@@ -88,4 +88,28 @@ The implementation must satisfy all of the following:
 
 The implementation must fail explicitly when the categorical assignment space is too large
 for the exact enumeration path rather than silently falling back to a semantically
-restricted optimizer.
+restricted optimizer. Categorical feature indices, non-empty value sets, and categorical values
+inside the supplied bounds are validated before enumeration; invalid fixed categorical values
+must not be allowed to escape the candidate bounds.
+
+## Phase 5 candidate-optimizer audit
+
+The candidate-optimization paths remain intentionally separate:
+
+- ordinary continuous acquisitions use BoTorch `optimize_acqf`;
+- ordinary mixed acquisitions use BoTorch `optimize_acqf_mixed`;
+- mixed one-shot qKG/qMFKG use `optimize_mixed_one_shot_acqf`.
+
+The dedicated one-shot path flattens the augmented batch only for conditional continuous
+optimization. Categorical fixed-feature indices are constructed per augmented row, so actual and
+fantasy rows remain independent. Candidate extraction is delegated back to the one-shot
+acquisition through `extract_candidates`.
+
+For qMFKG, the observed candidate fidelity remains an optimization variable within the supplied
+bounds. Target-fidelity projection and cost-aware semantics belong to the acquisition itself and
+are not implemented by pinning every augmented row to a target fidelity.
+
+The exact enumeration guard is computed over the full augmented categorical state:
+`row_assignment_count ** augmented_q`. The current `q=1` contract and
+`max_assignments` guard therefore bound the correctness-first combinatorial path explicitly.
+Larger batches and scalable categorical search remain future extensions, not implicit fallbacks.
