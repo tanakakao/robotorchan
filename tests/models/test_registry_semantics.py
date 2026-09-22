@@ -50,7 +50,6 @@ def test_map_saas_ensemble_is_rejected_by_non_ensemble_acquisition() -> None:
     assert "acquisition does not support ensemble posteriors" in result.reasons
 
 
-
 def test_registered_multitask_models_support_multi_output() -> None:
     names = {
         name
