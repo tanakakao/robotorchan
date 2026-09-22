@@ -15,7 +15,7 @@ from botorch.acquisition.multi_objective.logei import (
 from botorch.acquisition.objective import GenericMCObjective
 from botorch.acquisition.utils import project_to_target_fidelity
 from botorch.models.cost import AffineFidelityCostModel
-from botorch.optim import optimize_acqf
+from botorch.optim import optimize_acqf, optimize_acqf_mixed
 from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import (
@@ -501,12 +501,22 @@ def test_mixed_multifidelity_knowledge_gradient_runtime() -> None:
         current_value=current_value,
         project=project,
     )
-    fantasy_points = acquisition.get_augmented_q_batch_size(q=1)
-    candidate = torch.tensor([[0.5, 1.0, 0.5]], dtype=torch.double)
-    value = acquisition(candidate.expand(1, fantasy_points, 3).clone())
+    candidate, value = optimize_acqf_mixed(
+        acq_function=acquisition,
+        bounds=torch.tensor(
+            [[0.0, 0.0, 0.25], [1.0, 1.0, 1.0]],
+            dtype=torch.double,
+        ),
+        q=1,
+        num_restarts=2,
+        raw_samples=8,
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+    )
 
-    assert fantasy_points == 5
-    assert value.shape == torch.Size([1])
+    assert candidate.shape == torch.Size([1, 3])
+    assert candidate[0, 1].item() in (0.0, 1.0)
+    assert 0.25 <= candidate[0, 2].item() <= 1.0
+    assert value.numel() == 1
     assert torch.isfinite(value).all()
 
 
