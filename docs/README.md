@@ -43,6 +43,7 @@
 - [Model design guidelines](development/model_design_guidelines.md)
 - [Training API](development/training_api.md)
 - [Release procedure](development/releasing.md)
+- [Final gap classification](development/final-gap-classification.md)
 
 開発文書には現在も有効な設計原則・公開契約・リリース手順だけを残し、Phase記録や解消済みauditはGit/PR履歴で追跡します。
 
@@ -89,6 +90,7 @@ docs/
 
 ## Coverage status
 
-現在の public model 件数や各ドキュメント対応は `model_coverage.json` を参照してください。\nこのファイルは `MODEL_REGISTRY` から生成されるため、README に件数を重複して固定しません。
+現在の public model 件数や各ドキュメント対応は `model_coverage.json` を参照してください。
+このファイルは `MODEL_REGISTRY` から生成されるため、README に件数を重複して固定しません。
 
 coverage は「ファイルが存在する」だけではなく、モデル選択 → 統計的仮定 → 実行例へ辿るためのナビゲーション契約として扱います。代表Notebookは同じモデルファミリーや学習契約を共有する複数variantを扱う場合があります。
