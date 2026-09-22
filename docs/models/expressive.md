@@ -22,14 +22,14 @@ encoderで潜在表現へ写像し、categorical featureとtask identityは変�
 
 `SingleTaskDeepGP` は確率的なGP階層を使います。DKLより推論が重く、
 Monte Carlo posteriorを使うため、階層的な確率表現が必要な場合に比較対象とします。
-`MultiTaskDeepGP` はlong-formatのtask featureを明示的に受け取り、data featureを標準化しつつtask identityを学習可能なembeddingとしてDeepGPへ結合します。`posterior()` と `training_loss()` には元のlong-format入力を渡します。Mixed single-task入力には `MixedSingleTaskDeepGP` を使用します。連続featureだけを標準化し、categorical featureは学習可能なembeddingへ変換してDeepGPへ結合します。カテゴリ値を連続量として補間しないことを明示的な契約としています。Mixed × MultiTaskはcross-combination auditで必要性とAPIを評価します。
+`MultiTaskDeepGP` はlong-formatのtask featureを明示的に受け取り、data featureを標準化しつつtask identityを学習可能なembeddingとしてDeepGPへ結合します。`posterior()` と `training_loss()` には元のlong-format入力を渡します。Mixed single-task入力には `MixedSingleTaskDeepGP` を使用します。連続featureだけを標準化し、categorical featureは学習可能なembeddingへ変換してDeepGPへ結合します。カテゴリ値を連続量として補間しないことを明示的な契約としています。Mixed × MultiTask には `MixedMultiTaskDeepGP` を使用します。連続 feature とカテゴリ feature を分離し、task identity を構造列として扱います。
 
 `InfiniteWidthBNNGP` は無限幅ReLU networkに対応するNNGP kernelをExact GPとして
 利用します。neural-network由来のpriorを使いつつ、Exact GPの学習・posterior contractを
-維持したい場合に候補になります。long-format複数タスクには `InfiniteWidthBNNMultiTaskGP` を使用し、task featureをNNGP data kernelから除外してtask covarianceで扱います。Mixed single-task入力には `MixedInfiniteWidthBNNGP` を使用します。
+維持したい場合に候補になります。long-format複数タスクには `InfiniteWidthBNNMultiTaskGP` を使用し、task featureをNNGP data kernelから除外してtask covarianceで扱います。Mixed single-task入力には `MixedInfiniteWidthBNNGP`、Mixed × MultiTask には `MixedInfiniteWidthBNNMultiTaskGP` を使用します。
 
 `SpectralMixtureGP` は周期、準周期、複数周波数を持つ定常関数に適しています。
-`num_mixtures` と初期化への感度があるため、標準kernelとの比較を推奨します。long-format複数タスクには `SpectralMixtureMultiTaskGP`、Mixed single-task入力には `MixedSpectralMixtureGP` を使用します。
+`num_mixtures` と初期化への感度があるため、標準kernelとの比較を推奨します。long-format複数タスクには `SpectralMixtureMultiTaskGP`、Mixed single-task入力には `MixedSpectralMixtureGP`、Mixed × MultiTask には `MixedSpectralMixtureMultiTaskGP` を使用します。
 
 ## 学習とBoTorch
 
