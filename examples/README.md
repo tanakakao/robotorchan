@@ -65,7 +65,7 @@ model.make_mll()
 
 ## 現在の coverage
 
-Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary、linear / neural reduction、Reduced MultiTask、Mixed reduction までを概念単位でカバーします。1 public class = 1 Notebook にはせず、同じ統計的仮定や学習契約を共有するモデルは同じ Notebook で比較します。
+Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary、linear / neural reduction、Reduced MultiTask、Mixed reduction、Expressive GP、Non-GP surrogate までを概念単位でカバーします。1 public class = 1 Notebook にはせず、同じ統計的仮定や学習契約を共有するモデルは同じ Notebook で比較します。
 
 ## Notebook 一覧
 
@@ -95,12 +95,13 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`22_mixed_reduced_gp.ipynb`](notebooks/22_mixed_reduced_gp.ipynb) | Mixed PCA / PLS | 利用可能 |
 | [`23_high_dimensional_bo_benchmark.ipynb`](notebooks/23_high_dimensional_bo_benchmark.ipynb) | 高次元BO benchmark | 利用可能 / benchmark解説 |
 | [`24_expressive_surrogate_gp.ipynb`](notebooks/24_expressive_surrogate_gp.ipynb) | DKL / I-BNN / Spectral Mixture / DeepGP | 利用可能 / 解説中心 |
+| [`25_non_gp_surrogates.ipynb`](notebooks/25_non_gp_surrogates.ipynb) | Random Forest / Extra Trees / Gradient Boosting | 利用可能 / 解説中心 |
 
 ## Benchmark
 
 再現可能な性能比較・探索戦略比較は `benchmarks/` に配置します。Notebook は利用方法や結果の読み方を説明する役割とし、benchmark本体のロジックをNotebookへ重複実装しません。高次元入力モデル・高次元MultiTask・acquisition optimization・sequential BO・batch BO の実行コードは `benchmarks/`、その契約テストは `tests/benchmarks/` に集約します。
 
-高次元MultiTaskの実行方法は [`docs/models/models/high_dimensional_multitask.md`](../docs/models/high_dimensional_multitask.md)、モデル選択は [`docs/models/models/high_dimensional_model_selection.md`](../docs/models/high_dimensional_model_selection.md) を参照してください。
+高次元MultiTaskの実行方法は [`docs/models/high_dimensional_multitask.md`](../docs/models/high_dimensional_multitask.md)、モデル選択は [`docs/models/high_dimensional_model_selection.md`](../docs/models/high_dimensional_model_selection.md) を参照してください。
 
 ## Notebook の一括実行
 
@@ -134,7 +135,9 @@ GitHub Actions の `notebooks` job では Python 3.11 / CPU 環境を使用し�
 19, 20, 21, 22
 ```
 
-以下は通常の Pull Request CI から除外します。
+`23_high_dimensional_bo_benchmark.ipynb`、`24_expressive_surrogate_gp.ipynb`、`25_non_gp_surrogates.ipynb` は解説・benchmark 用 Notebook であり、現在の `examples/run_notebooks.py` の通常実行対象には含めていません。
+
+以下は `--include-slow` で明示的に追加実行できる Notebook です。
 
 - `08_saas_gp.ipynb`: NUTS / MCMC を使うため実行時間の変動が大きい
 - `11_structured_output_gp.ipynb`: HOGP / LatentKroneckerGP の学習が比較的重く、通常の軽量CIから分離した方が安定する
