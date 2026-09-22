@@ -133,7 +133,10 @@ def _register_family(
                 ModelCapabilities(
                     input_type=InputType.MIXED if name.startswith("Mixed") else InputType.CONTINUOUS,
                     task_type=TaskType.MULTITASK
-                    if (\n                        "MultiTask" in name\n                        or name in {"HeterogeneousMTGP", "MixedHeterogeneousMTGP"}\n                    )
+                    if (
+                        "MultiTask" in name
+                        or name in {"HeterogeneousMTGP", "MixedHeterogeneousMTGP"}
+                    )
                     else TaskType.SINGLE,
                     inference=InferenceType.FULLY_BAYESIAN
                     if "FullyBayesian" in name
@@ -209,7 +212,12 @@ _register_family(
 )
 
 _REDUCED = (
-    "ReducedGP",\n    "PCAGP",\n    "PLSGP",\n    "RandomProjectionGP",\n    "OutputPCAGP",\n    "OutputPLSGP",
+    "ReducedGP",
+    "PCAGP",
+    "PLSGP",
+    "RandomProjectionGP",
+    "OutputPCAGP",
+    "OutputPLSGP",
     "MixedReducedGP", "MixedPCAGP", "MixedPLSGP", "MixedRandomProjectionGP",
     "ReducedMultiTaskGP", "ReducedKroneckerMultiTaskGP", "PCAMultiTaskGP",
     "PCAKroneckerMultiTaskGP", "PLSMultiTaskGP", "PLSKroneckerMultiTaskGP",
@@ -224,7 +232,11 @@ _register_family(
     high_dimensional=HighDimensionalStrategy.REDUCTION,
 )
 _NEURAL_REDUCED = (
-    "AutoEncoderGP",\n    "VAEGP",\n    "SupervisedAutoEncoderGP",\n    "SupervisedVAEGP",\n    "HybridAutoEncoderGP",
+    "AutoEncoderGP",
+    "VAEGP",
+    "SupervisedAutoEncoderGP",
+    "SupervisedVAEGP",
+    "HybridAutoEncoderGP",
     "JointEncoderGP", "JointVAEGP", "MixedAutoEncoderGP", "MixedVAEGP",
     "MixedSupervisedAutoEncoderGP", "MixedSupervisedVAEGP", "MixedHybridAutoEncoderGP",
     "MixedJointEncoderGP", "MixedJointVAEGP", "AutoEncoderMultiTaskGP",
@@ -271,7 +283,10 @@ _register_family(
     robustness=frozenset({RobustnessType.STUDENT_T}),
 )
 _register_family(
-    (\n        "HeteroskedasticSingleTaskGP",\n        "HeteroskedasticMultiTaskGP",\n        "MixedHeteroskedasticSingleTaskGP",
+    (
+        "HeteroskedasticSingleTaskGP",
+        "HeteroskedasticMultiTaskGP",
+        "MixedHeteroskedasticSingleTaskGP",
      "MixedHeteroskedasticMultiTaskGP", "JointHeteroskedasticSingleTaskGP",
      "MixedJointHeteroskedasticSingleTaskGP", "ReplicateNoiseSingleTaskGP",
      "MixedReplicateNoiseSingleTaskGP"),
@@ -291,7 +306,11 @@ _register_family(
     robustness=frozenset({RobustnessType.NONSTATIONARY}),
 )
 _register_family(
-    (\n        "UncertainInputSingleTaskGP",\n        "MixedUncertainInputSingleTaskGP",\n        "UncertainCategoricalSingleTaskGP",\n    ),
+    (
+        "UncertainInputSingleTaskGP",
+        "MixedUncertainInputSingleTaskGP",
+        "UncertainCategoricalSingleTaskGP",
+    ),
     guide="docs/models/uncertain_input.md",
     theory="docs/theory/16_uncertain_input_gp.md",
     notebook="examples/notebooks/17_uncertain_input_gp.ipynb",
@@ -316,7 +335,11 @@ _register_family(
     strategy="structured multitask GP",
 )
 _register_family(
-    (\n        "HierarchicalConditionalKernelGP",\n        "MixedHierarchicalConditionalKernelGP",\n        "LCEAGP",\n        "LCEMGP",
+    (
+        "HierarchicalConditionalKernelGP",
+        "MixedHierarchicalConditionalKernelGP",
+        "LCEAGP",
+        "LCEMGP",
      "MixedLCEMGP", "SACGP"),
     guide="docs/models/hierarchical_contextual.md",
     theory="docs/theory/12_hierarchical_contextual_gp.md",
@@ -324,7 +347,8 @@ _register_family(
     strategy="hierarchical or contextual GP",
 )
 _register_family(
-    ("PairwiseGP",),\n    guide="docs/models/preference.md",
+    ("PairwiseGP",),
+    guide="docs/models/preference.md",
     theory="docs/theory/10_preference_learning.md",
     notebook="examples/notebooks/07_pairwise_gp.ipynb",
     strategy="pairwise preference GP", preference=True,
