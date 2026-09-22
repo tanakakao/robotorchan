@@ -7,7 +7,7 @@ from robotorchan.models.capabilities import (
     ModelRegistryEntry,
 )
 from robotorchan.models.registry import MODEL_REGISTRY
-from robotorchan.problem import ProblemSpec
+from robotorchan.problem import OutputType, ProblemSpec
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +27,8 @@ def _check_model(spec: ProblemSpec, entry: ModelRegistryEntry) -> ModelSelection
         reasons.append(f"requires {spec.input_type.value} inputs")
     if capabilities.task_type is not spec.task_type:
         reasons.append(f"requires {spec.task_type.value} task structure")
+    if spec.output_type is OutputType.MULTI and not capabilities.supports_multi_output:
+        reasons.append("requires multi-output model support")
     if capabilities.multi_fidelity is not spec.multi_fidelity:
         reasons.append("multi-fidelity structure does not match the problem")
     if spec.structured_output and not capabilities.structured_output:
