@@ -59,8 +59,8 @@ path; it does not mean robotorchan constructs constraint callables or objectives
 Likewise, `supports_ensemble` means a compatible sampler/composition can be supplied, not that
 every acquisition uses an empirical-ensemble sampler by default. Empirical non-GP ensemble
 posteriors require `IndexSampler`; Gaussian posteriors, including MAP-SAAS model ensembles that
-still expose a Gaussian posterior, use `SobolQMCNormalSampler`. The non-GP acquisition validator
-enforces this distinction rather than accepting any Monte Carlo acquisition indiscriminately.
+still expose a Gaussian posterior, use `SobolQMCNormalSampler`. The non-GP acquisition validator enforces this distinction for explicitly supplied samplers, while
+preserving BoTorch's lazy `IndexSampler` initialization when the acquisition sampler is `None`.
 
 ## Final integration rule
 
