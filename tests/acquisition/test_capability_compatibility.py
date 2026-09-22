@@ -49,7 +49,9 @@ def test_non_gp_model_requires_mc_acquisition_path() -> None:
 
 
 def test_registry_keys_match_acquisition_names() -> None:
-    assert all(
-        name == entry.acquisition_name
+    mismatches = [
+        name
         for name, entry in ACQUISITION_REGISTRY.items()
-    )
+        if name != entry.acquisition_name
+    ]
+    assert not mismatches
