@@ -17,6 +17,7 @@ from botorch.utils.multi_objective.box_decompositions.non_dominated import (
 from robotorchan.models import (
     PCAGP,
     KroneckerMultiTaskGP,
+    MixedPCAGP,
     MixedSingleTaskGP,
     RandomForestSurrogate,
     SingleTaskGP,
@@ -299,6 +300,37 @@ def test_pca_gp_runtime_supports_mc_acquisition() -> None:
         sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
     )
     value = acquisition(torch.tensor([[[0.5, 0.5, 0.55]]], dtype=torch.double))
+
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_mixed_pca_gp_runtime_supports_mc_acquisition() -> None:
+    continuous_a = torch.linspace(0.0, 1.0, 8, dtype=torch.double)
+    categorical = torch.tensor([0.0, 1.0] * 4, dtype=torch.double)
+    continuous_b = torch.linspace(1.0, 0.0, 8, dtype=torch.double)
+    train_x = torch.stack([continuous_a, categorical, continuous_b], dim=-1)
+    train_y = (torch.sin(continuous_a * 3.0) + 0.1 * categorical).unsqueeze(-1)
+
+    model = MixedPCAGP(train_x, train_y, n_components=1, cat_dims=[1])
+    model.eval()
+
+    test_x = torch.tensor(
+        [[0.25, 0.0, 0.75], [0.75, 1.0, 0.25]],
+        dtype=torch.double,
+    )
+    posterior = model.posterior(test_x)
+    samples = posterior.rsample(torch.Size([4]))
+
+    assert samples.shape == torch.Size([4, 2, 1])
+    assert torch.isfinite(samples).all()
+
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+    )
+    value = acquisition(torch.tensor([[[0.5, 1.0, 0.5]]], dtype=torch.double))
 
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
