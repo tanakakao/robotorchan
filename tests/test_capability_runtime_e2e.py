@@ -16,8 +16,8 @@ from botorch.utils.multi_objective.box_decompositions.non_dominated import (
 
 from robotorchan.models import (
     PCAGP,
-    KroneckerMultiTaskGP,
     PLSGP,
+    KroneckerMultiTaskGP,
     MixedPCAGP,
     MixedPLSGP,
     MixedRandomProjectionGP,
