@@ -28,6 +28,9 @@ jobs:
       - name: Format check
         if: matrix.python-version == '3.11'
         run: ruff format --check .
+      - name: Verify generated model coverage
+        if: matrix.python-version == '3.11'
+        run: python scripts/generate_model_coverage.py --check
       - name: Test core wrappers
         run: >-
           pytest
