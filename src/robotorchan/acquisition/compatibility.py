@@ -35,7 +35,7 @@ def check_model_acquisition_compatibility(
     acquisition_capabilities = acquisition.capabilities
     reasons: list[str] = []
 
-    if model_capabilities.non_gp:
+    if model_capabilities.non_gp and not acquisition_capabilities.monte_carlo:
         reason = "non-GP empirical ensembles require BoTorch Monte Carlo acquisitions"
         reasons.append(reason)
     if model_capabilities.ensemble_posterior and not acquisition_capabilities.supports_ensemble:
