@@ -27,7 +27,7 @@ def validate_non_gp_acquisition(
         raise TypeError(
             "Non-GP empirical ensemble surrogates require a Monte Carlo acquisition function."
         )
-    if not isinstance(acquisition.sampler, IndexSampler):
+    if acquisition.sampler is not None and not isinstance(acquisition.sampler, IndexSampler):
         raise TypeError(
             "Non-GP empirical ensemble surrogates require IndexSampler for Monte Carlo sampling."
         )
