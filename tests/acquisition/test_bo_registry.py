@@ -60,4 +60,3 @@ def test_single_objective_multi_output_bo_keeps_scalarizable_mc_acquisitions() -
 
     assert "qLogExpectedImprovement" in names
     assert "qUpperConfidenceBound" in names
-
