@@ -35,12 +35,18 @@ class ProblemSpec:
     high_dimensional: bool = False
     robust: bool = False
     preference: bool = False
+    q: int = 1
+    constrained: bool = False
 
     def __post_init__(self) -> None:
         """Validate purpose-specific fields."""
+        if self.q < 1:
+            raise ValueError("q must be at least 1")
         if self.purpose is ProblemPurpose.BAYESIAN_OPTIMIZATION:
             if self.objective_type is None:
                 object.__setattr__(self, "objective_type", ObjectiveType.SINGLE)
             return
         if self.objective_type is not None:
             raise ValueError("objective_type is only defined for Bayesian optimization")
+        if self.constrained:
+            raise ValueError("constrained is only defined for Bayesian optimization")
