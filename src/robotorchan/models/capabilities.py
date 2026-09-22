@@ -18,6 +18,7 @@ class InferenceType(StrEnum):
     EXACT = "exact"
     VARIATIONAL = "variational"
     FULLY_BAYESIAN = "fully_bayesian"
+    NOT_APPLICABLE = "not_applicable"
 
 
 class HighDimensionalStrategy(StrEnum):
@@ -51,6 +52,7 @@ class ModelCapabilities:
     structured_output: bool = False
     preference: bool = False
     non_gp: bool = False
+    ensemble_posterior: bool = False
 
 
 @dataclass(frozen=True, slots=True)
