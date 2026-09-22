@@ -191,7 +191,7 @@ scalarization で Pareto front を探索
     → qLogNParEGO
 
 将来の multi-objective decision value
-    → HVKG
+    → HVKG（理論上の選択肢。現在の robotorchan runtime-validated integration 外）
 ```
 
 reference point、目的数、noise、計算量によって選択肢が変わります。
