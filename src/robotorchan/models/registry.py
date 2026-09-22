@@ -233,7 +233,14 @@ _FULLY_BAYESIAN_MODELS = frozenset(
     }
 )
 _ENSEMBLE_POSTERIOR_MODELS = frozenset(
-    {"EnsembleMapSaasSingleTaskGP", "MixedEnsembleMapSaasSingleTaskGP"}
+    {
+        "EnsembleMapSaasSingleTaskGP",
+        "MixedEnsembleMapSaasSingleTaskGP",
+        "RandomForestSurrogate",
+        "ExtraTreesSurrogate",
+        "GradientBoostingSurrogate",
+        "HistGradientBoostingSurrogate",
+    }
 )
 
 
