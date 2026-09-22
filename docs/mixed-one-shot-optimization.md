@@ -2,12 +2,10 @@
 
 ## Scope
 
-robotorchan supports runtime evaluation of mixed one-shot acquisition functions when the
-underlying model supports the required fantasy operation. This includes mixed
-multi-fidelity qKG evaluation with categorical values that differ between the observed
-candidate and fantasy decision points.
-
-Candidate optimization is a separate capability.
+robotorchan supports runtime evaluation and correctness-first candidate optimization of
+mixed one-shot acquisition functions when the underlying model supports the required
+fantasy operation. This includes mixed qKG and mixed multi-fidelity qMFKG with categorical
+values that may differ between the observed candidate and fantasy decision points.
 
 ## Why `optimize_acqf_mixed` is not sufficient for qKG
 
@@ -34,23 +32,27 @@ The current runtime contract is:
 - cost-aware utility and target-fidelity projection: supported;
 - one-shot acquisition evaluation: supported;
 - different categories across fantasy decision points: supported;
-- general mixed one-shot candidate optimization: not yet implemented.
+- mixed one-shot candidate optimization for `q=1`: supported by
+  `optimize_mixed_one_shot_acqf` using exact row-wise categorical enumeration;
+- larger `q` and categorical assignment spaces above the configured exact-enumeration limit:
+  intentionally unsupported.
 
-The runtime test intentionally constructs the augmented batch explicitly so that fantasy
-decision points exercise categories independently from the observed candidate.
+Runtime coverage includes both explicit cross-category augmented batches and candidate
+generation with real mixed qKG and mixed qMFKG acquisitions.
 
-## Requirements for a future optimizer
+## Optimizer contract
 
-A future mixed one-shot optimizer must preserve the distinction between actual candidates
+The mixed one-shot optimizer preserves the distinction between actual candidates
 and fantasy decision points. In particular, it must allow categorical assignments to vary
 by augmented-batch row rather than applying one fixed assignment to every row.
 
-An implementation should also preserve BoTorch one-shot semantics for extracting the
+The implementation also preserves BoTorch one-shot semantics for extracting the
 actual candidates from the optimized augmented batch. Runtime tests must include a case
 where the selected candidate category and at least one fantasy optimum category differ.
 
-Until these requirements are satisfied, mixed qKG and qMFKG should be treated as
-evaluation-compatible but not as having a general-purpose mixed candidate optimizer.
+The current exact implementation is deliberately scoped to `q=1` and bounded finite
+categorical assignment spaces. It fails explicitly outside that contract rather than
+falling back to ordinary `optimize_acqf_mixed`.
 
 
 ## Optimizer design
