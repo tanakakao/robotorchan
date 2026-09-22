@@ -40,6 +40,8 @@ def check_model_acquisition_compatibility(
         reasons.append(reason)
     if acquisition_capabilities.requires_fantasize and not model_capabilities.supports_fantasize:
         reasons.append("acquisition requires fantasy-model support")
+    if acquisition_capabilities.requires_multi_fidelity and not model_capabilities.multi_fidelity:
+        reasons.append("acquisition requires multi-fidelity model support")
     if model_capabilities.ensemble_posterior and not acquisition_capabilities.supports_ensemble:
         reasons.append("acquisition does not support ensemble posteriors")
     if (

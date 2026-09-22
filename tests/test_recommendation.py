@@ -1,6 +1,7 @@
 """Tests for explainable capability-based recommendations."""
 
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
+from robotorchan.models.registry import MODEL_REGISTRY
 from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.recommendation import recommend_compatible_workflows
 
@@ -60,3 +61,21 @@ def test_multifidelity_kg_is_only_recommended_for_multifidelity_problems() -> No
 
     assert "qMultiFidelityKnowledgeGradient" not in standard_acquisitions
     assert "qMultiFidelityKnowledgeGradient" in multifidelity_acquisitions
+
+
+def test_multifidelity_kg_is_not_paired_with_standard_models() -> None:
+    spec = ProblemSpec(
+        purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION,
+        multi_fidelity=True,
+    )
+
+    workflows = recommend_compatible_workflows(spec)
+    mfkg_models = {
+        item.model_name
+        for item in workflows
+        if item.acquisition_name == "qMultiFidelityKnowledgeGradient"
+    }
+
+    assert mfkg_models
+    assert "SingleTaskGP" not in mfkg_models
+    assert all(MODEL_REGISTRY[name].capabilities.multi_fidelity for name in mfkg_models)
