@@ -1,6 +1,7 @@
 """Runtime smoke tests for capability-advertised BoTorch workflows."""
 
 import torch
+from botorch.acquisition.knowledge_gradient import qKnowledgeGradient
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.multi_objective.logei import (
     qLogExpectedHypervolumeImprovement,
@@ -208,5 +209,27 @@ def test_random_forest_runtime_supports_mc_acquisition() -> None:
     )
     value = acquisition(torch.tensor([[[0.5]]], dtype=torch.double))
 
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_single_task_gp_runtime_supports_knowledge_gradient_fantasies() -> None:
+    train_x = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
+    train_y = torch.sin(train_x * 3.0)
+
+    model = SingleTaskGP(train_x, train_y)
+    model.eval()
+
+    acquisition = qKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([4])),
+    )
+    candidate = torch.tensor([[[0.5]]], dtype=torch.double)
+    fantasy_points = acquisition.get_augmented_q_batch_size(q=1)
+    augmented_x = candidate.expand(1, fantasy_points, 1).clone()
+    value = acquisition(augmented_x)
+
+    assert fantasy_points == 5
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
