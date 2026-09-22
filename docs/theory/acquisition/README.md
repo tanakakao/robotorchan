@@ -31,18 +31,18 @@ Theory に掲載されていることは robotorchan での実装を意味しま
 
 | 章 | 主題 | 主な内容 |
 | --- | --- | --- |
-| 01 | Foundations | posterior、utility、exploration / exploitation、analytic / MC、acquisition optimization |
-| 02 | Improvement | EI、LogEI、PI、LogPI と improvement-based utility |
-| 03 | Confidence Bound | UCB、qUCB、confidence parameter |
-| 04 | Batch / Noisy | q-acquisition、joint utility、posterior correlation、NEI、pending points |
-| 05 | Information Theory | entropy、mutual information、MES、GIBBON |
-| 06 | Lookahead | KG、qKG、fantasy model、multi-step lookahead |
-| 07 | Multi-objective | Pareto dominance、hypervolume、EHVI、NEHVI、NParEGO、HVKG |
-| 08 | Constraints | feasibility、constraint-aware acquisition、objective / posterior transform |
-| 09 | Active Learning | posterior variance / std、integrated variance、qNIPV、EPIG |
-| 10 | Level-set | level-set estimation、Straddle、Randomized Straddle、BoundaryVariance |
-| 11 | Multi-Fidelity / Cost-aware | fidelity、value of information、MF-KG、cost-aware utility |
-| 12 | Selection Guide | 問題設定と獲得関数ファミリーの対応、各詳細章への導線 |
+| [01](01_foundations.md) | Foundations | posterior、utility、exploration / exploitation、analytic / MC、acquisition optimization |
+| [02](02_improvement.md) | Improvement | EI、LogEI、PI、LogPI と improvement-based utility |
+| [03](03_confidence_bound.md) | Confidence Bound | UCB、qUCB、confidence parameter |
+| [04](04_batch_noisy.md) | Batch / Noisy | q-acquisition、joint utility、posterior correlation、NEI、pending points |
+| [05](05_information_theoretic.md) | Information Theory | entropy、mutual information、MES、GIBBON |
+| [06](06_lookahead.md) | Lookahead | KG、qKG、fantasy model、multi-step lookahead |
+| [07](07_multiobjective.md) | Multi-objective | Pareto dominance、hypervolume、EHVI、NEHVI、NParEGO、HVKG |
+| [08](08_constraints.md) | Constraints | feasibility、constraint-aware acquisition、objective / posterior transform |
+| [09](09_active_learning.md) | Active Learning | posterior variance / std、integrated variance、qNIPV、EPIG |
+| [10](10_level_set.md) | Level-set | level-set estimation、Straddle、Randomized Straddle、BoundaryVariance |
+| [11](11_multifidelity_cost_aware.md) | Multi-Fidelity / Cost-aware | fidelity、value of information、MF-KG、cost-aware utility |
+| [12](12_selection_guide.md) | Selection Guide | 問題設定と獲得関数ファミリーの対応、各詳細章への導線 |
 
 ## 共通記述方針
 
@@ -155,6 +155,10 @@ EI、UCB、KG、EHVI などの詳細な式・導出・比較は、それぞれ�
 
 同じ数式や理論説明を両方へ複製せず、Optimization guide から対応する Theory 章へリンクします。
 
-## 次の作業
+## 読み方
 
-この情報設計を基準として、まず [04 Acquisition Function](../04_acquisition_function.md) を概要章へ再構成します。その後、詳細章を順次作成し、既存の理論内容を失わずに移行・拡張します。
+初めて読む場合は [Foundations](01_foundations.md) から順に進むと、標準 BO から高度な意思決定問題まで段階的に理解できます。
+
+実際の問題から獲得関数を選びたい場合は、先に [Selection Guide](12_selection_guide.md) を読み、必要な詳細章へ移動してください。
+
+実装方法を確認したい場合は [Optimization guide](../../optimization/README.md)、現在の対応範囲だけを確認したい場合は [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。

@@ -17,3 +17,9 @@ surrogate model とは独立した candidate search / optimization の利用者�
 - [TuRBO](turbo.md): stateful trust-region strategy の詳細
 
 高次元 surrogate の選択は [High-dimensional models](../models/high_dimensional.md) を参照してください。
+
+## Theory / status navigation
+
+獲得関数の数式・仮定・手法間の関係は [Acquisition Function Theory](../theory/acquisition/README.md) に分離しています。問題設定から手法を選ぶ場合は [Acquisition Selection Guide](../theory/acquisition/12_selection_guide.md) を入口にしてください。
+
+現在の robotorchan / BoTorch integration と明示的な制約は [Acquisition integration status](acquisition-status.md) を正とします。Theory に掲載されていること自体は robotorchan 固有実装を意味しません。
