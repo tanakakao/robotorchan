@@ -4,7 +4,7 @@ from robotorchan.acquisition.compatibility import (
     CompatibilityStatus,
     check_model_acquisition_compatibility,
 )
-from robotorchan.models.capabilities import TaskType
+from robotorchan.models.capabilities import ModelCapabilities, TaskType
 from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.selector import select_compatible_models
 
@@ -39,3 +39,16 @@ def test_qkg_rejects_non_fantasizing_non_gp_model() -> None:
 
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "acquisition requires fantasy-model support" in result.reasons
+
+
+def test_posterior_sampling_is_opt_in() -> None:
+    assert not ModelCapabilities().supports_posterior_samples
+
+
+def test_registered_gp_declares_posterior_sampling_support() -> None:
+    from robotorchan.models.registry import MODEL_REGISTRY
+
+    entry = MODEL_REGISTRY["SingleTaskGP"]
+    original = entry.capabilities
+    assert original.supports_posterior_samples
+    assert original.supports_fantasize

@@ -19,7 +19,7 @@ def _docs(guide: str, theory: str, notebook: str) -> DocumentationLinks:
 MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
     "SingleTaskGP": ModelRegistryEntry(
         "SingleTaskGP",
-        ModelCapabilities(),
+        ModelCapabilities(supports_posterior_samples=True),
         _docs(
             "docs/models/standard.md",
             "docs/theory/02_gaussian_process.md",
@@ -29,7 +29,10 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
     ),
     "MixedSingleTaskGP": ModelRegistryEntry(
         "MixedSingleTaskGP",
-        ModelCapabilities(input_type=InputType.MIXED),
+        ModelCapabilities(
+            input_type=InputType.MIXED,
+            supports_posterior_samples=True,
+        ),
         _docs(
             "docs/models/standard.md",
             "docs/theory/05_mixed_variables.md",
@@ -42,6 +45,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         ModelCapabilities(
             task_type=TaskType.MULTITASK,
             supports_multi_output=True,
+            supports_posterior_samples=True,
         ),
         _docs(
             "docs/models/multitask_multioutput.md",
@@ -58,6 +62,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             inference=InferenceType.FULLY_BAYESIAN,
             high_dimensional=HighDimensionalStrategy.SAAS,
             supports_multi_output=True,
+            supports_posterior_samples=True,
         ),
         _docs(
             "docs/models/multitask_multioutput.md",
@@ -68,7 +73,10 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
     ),
     "PCAGP": ModelRegistryEntry(
         "PCAGP",
-        ModelCapabilities(high_dimensional=HighDimensionalStrategy.REDUCTION),
+        ModelCapabilities(
+            high_dimensional=HighDimensionalStrategy.REDUCTION,
+            supports_posterior_samples=True,
+        ),
         _docs(
             "docs/models/reduced.md",
             "docs/theory/18_dimensionality_reduction_gp.md",
@@ -82,6 +90,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             input_type=InputType.MIXED,
             task_type=TaskType.MULTITASK,
             robustness=frozenset({RobustnessType.RELEVANCE_PURSUIT}),
+            supports_posterior_samples=True,
         ),
         _docs(
             "docs/models/robust_noise.md",
@@ -92,7 +101,10 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
     ),
     "SingleTaskMultiFidelityGP": ModelRegistryEntry(
         "SingleTaskMultiFidelityGP",
-        ModelCapabilities(multi_fidelity=True),
+        ModelCapabilities(
+            multi_fidelity=True,
+            supports_posterior_samples=True,
+        ),
         _docs(
             "docs/models/standard.md",
             "docs/theory/06_multi_fidelity.md",
@@ -102,7 +114,10 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
     ),
     "SingleTaskVariationalGP": ModelRegistryEntry(
         "SingleTaskVariationalGP",
-        ModelCapabilities(inference=InferenceType.VARIATIONAL),
+        ModelCapabilities(
+            inference=InferenceType.VARIATIONAL,
+            supports_posterior_samples=True,
+        ),
         _docs(
             "docs/models/standard.md",
             "docs/theory/09_variational_gp.md",
@@ -311,6 +326,7 @@ def _register_family(
                     non_gp=non_gp,
                     ensemble_posterior=name in _ENSEMBLE_POSTERIOR_MODELS,
                     supports_multi_output=name in _MULTI_OUTPUT_MODELS,
+                    supports_posterior_samples=True,
                     supports_fantasize=not non_gp,
                 ),
                 _docs(guide, theory, notebook),

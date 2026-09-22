@@ -54,6 +54,7 @@ class ModelCapabilities:
     non_gp: bool = False
     ensemble_posterior: bool = False
     supports_multi_output: bool = False
+    supports_posterior_samples: bool = False
     supports_fantasize: bool = True
 
 

@@ -56,6 +56,9 @@ def check_model_acquisition_compatibility(
     joint_gaussian = posterior_requirement is PosteriorRequirement.JOINT_GAUSSIAN
     if joint_gaussian and model_capabilities.non_gp:
         reasons.append("acquisition requires a joint Gaussian posterior")
+    posterior_samples = posterior_requirement is PosteriorRequirement.POSTERIOR_SAMPLES
+    if posterior_samples and not model_capabilities.supports_posterior_samples:
+        reasons.append("acquisition requires posterior sampling support")
 
     if reasons:
         return CompatibilityResult(CompatibilityStatus.INCOMPATIBLE, tuple(reasons))
