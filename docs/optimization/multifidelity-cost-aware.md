@@ -48,11 +48,33 @@ allowed fidelity choices in candidate optimization, for example with BoTorch mix
 optimization utilities. Do not relax a categorical fidelity into an unconstrained continuous
 variable accidentally.
 
+## Runtime-validated contract
+
+The current integration coverage includes:
+
+- `SingleTaskMultiFidelityGP` and `MixedSingleTaskMultiFidelityGP`;
+- target-fidelity projection used by qMFKG;
+- target-fidelity incumbent optimization for `current_value`;
+- `AffineFidelityCostModel` with `InverseCostWeightedUtility`;
+- learned robotorchan cost surrogates used by `InverseCostWeightedUtility`;
+- continuous qMFKG evaluation and mixed qMFKG candidate generation.
+
+The actual candidate fidelity remains an optimization variable. Projection to target fidelity is
+used to value the terminal decision and must not silently fix the evaluated candidate itself.
+
+## Multi-fidelity max-value entropy
+
+Multi-fidelity MES is not part of the current runtime-validated contract. MF-KG already covers the
+validated non-myopic cost-aware workflow, while adding MF-MES would require a separate executable
+integration for its candidate set, fidelity semantics, cost-aware composition, and optimizer
+behavior. It remains a future extension rather than a missing correctness requirement.
+
 ## Scope
 
-This guide documents the validated acquisition integration and cost-aware utilities. The surrogate-model
-layer remains responsible for choosing an appropriate multi-fidelity model and declaring the
-fidelity dimensions. Multi-objective multi-fidelity lookahead is intentionally not wrapped.
+This guide documents the validated acquisition integration and cost-aware utilities. The
+surrogate-model layer remains responsible for choosing an appropriate multi-fidelity model and
+declaring the fidelity dimensions. Multi-objective multi-fidelity lookahead and MF-MES are
+intentionally not presented as validated robotorchan integration paths.
 
 
 For the broader theory and method relationships, see
