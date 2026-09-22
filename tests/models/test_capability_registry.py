@@ -34,3 +34,20 @@ def test_registry_documentation_paths_are_repository_relative() -> None:
         assert entry.documentation.guide.startswith("docs/")
         assert entry.documentation.theory.startswith("docs/theory/")
         assert entry.documentation.notebook.startswith("examples/notebooks/")
+
+
+def test_registry_covers_every_public_model() -> None:
+    import robotorchan.models as models
+
+    expected = set(models.__all__) - {"UnsupportedModelOperationError"}
+    assert set(MODEL_REGISTRY) == expected
+
+
+def test_structured_output_is_not_ordinary_multitask() -> None:
+    assert not MODEL_REGISTRY["KroneckerMultiTaskGP"].capabilities.structured_output
+    assert MODEL_REGISTRY["HigherOrderGP"].capabilities.structured_output
+    assert MODEL_REGISTRY["LatentKroneckerGP"].capabilities.structured_output
+
+
+def test_registry_model_names_match_keys() -> None:
+    assert all(name == entry.model_name for name, entry in MODEL_REGISTRY.items())

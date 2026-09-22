@@ -23,9 +23,12 @@ class InferenceType(StrEnum):
 class HighDimensionalStrategy(StrEnum):
     NONE = "none"
     REDUCTION = "reduction"
+    NEURAL_REDUCTION = "neural_reduction"
     SAAS = "saas"
+    MAP_SAAS = "map_saas"
     ADDITIVE = "additive"
     RANDOM_EMBEDDING = "random_embedding"
+    DEEP = "deep"
 
 
 class RobustnessType(StrEnum):
