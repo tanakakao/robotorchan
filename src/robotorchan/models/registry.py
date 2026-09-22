@@ -19,7 +19,10 @@ def _docs(guide: str, theory: str, notebook: str) -> DocumentationLinks:
 MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
     "SingleTaskGP": ModelRegistryEntry(
         "SingleTaskGP",
-        ModelCapabilities(supports_posterior_samples=True),
+        ModelCapabilities(
+            supports_posterior_samples=True,
+            supports_fantasize=True,
+        ),
         _docs(
             "docs/models/standard.md",
             "docs/theory/02_gaussian_process.md",
