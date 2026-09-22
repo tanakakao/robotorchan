@@ -179,5 +179,28 @@ EI、UCB、KG、EHVI などの詳細な式・導出・比較は、それぞれ�
 - q=1、multi-output、structured output、ensemble posterior などの制約を Theory の一般形から
   自動的に拡張しない。
 
-Phase 15 の横断 QA では、01〜12 の章番号、主要 navigation、開発履歴表現、RandomizedStraddle
-の旧 semantics、Theory / Optimization / Status の責務分離を再確認しています。
+
+
+## Maintenance state
+
+Acquisition theory の初期体系化は完了しています。以後は phase-based な構築履歴ではなく、
+通常の保守対象として扱います。
+
+変更時は、必要な層だけを更新します。
+
+```text
+theory / equations / provenance
+    -> docs/theory/acquisition/
+
+usage / API / examples
+    -> docs/optimization/
+
+current support / explicit limitations
+    -> docs/optimization/acquisition-status.md
+
+robotorchan-owned behavior
+    -> src/robotorchan/acquisition/ + tests
+```
+
+新しい獲得関数を検討するときは、まず BoTorch native path の有無を確認し、Theory 掲載、
+integration coverage、robotorchan-owned implementation を別々の判断として扱います。
