@@ -59,7 +59,7 @@ BAxUS は主に探索側の選択肢です。
 外れ値、heavy-tailed residual、入力依存ノイズ、反復測定、入力不確かさ、非定常性は
 似た予測誤差を生むことがありますが、モデルが仮定する生成機構は異なります。
 
-詳細は [Robust model support](../robust-model-support.md) と
+詳細は [Robust / Noise models](../models/robust_noise.md) と
 [モデル概要](../models.md) を参照してください。
 
 ## 詳細へ進む
