@@ -29,6 +29,7 @@ class AcquisitionCapabilities:
     monte_carlo: bool = False
     requires_fantasize: bool = False
     requires_multi_fidelity: bool = False
+    one_shot: bool = False
 
 
 @dataclass(frozen=True, slots=True)

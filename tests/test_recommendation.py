@@ -100,3 +100,13 @@ def test_multifidelity_kg_directly_accepts_multifidelity_model() -> None:
 
     assert result.compatible
     assert result.reasons == ()
+
+
+def test_knowledge_gradient_acquisitions_advertise_one_shot_semantics() -> None:
+    qkg = ACQUISITION_REGISTRY["qKnowledgeGradient"].capabilities
+    qmfkg = ACQUISITION_REGISTRY["qMultiFidelityKnowledgeGradient"].capabilities
+    qlogei = ACQUISITION_REGISTRY["qLogExpectedImprovement"].capabilities
+
+    assert qkg.one_shot
+    assert qmfkg.one_shot
+    assert not qlogei.one_shot
