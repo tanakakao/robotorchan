@@ -453,6 +453,63 @@ def test_multifidelity_knowledge_gradient_runtime_with_cost_and_projection() -> 
     assert torch.isfinite(value).all()
 
 
+def test_mixed_multifidelity_knowledge_gradient_runtime() -> None:
+    design = torch.linspace(0.0, 1.0, 8, dtype=torch.double)
+    category = torch.tensor([0.0, 1.0] * 4, dtype=torch.double)
+    fidelity = torch.tensor([0.25, 0.5, 0.75, 1.0] * 2, dtype=torch.double)
+    train_x = torch.stack([design, category, fidelity], dim=-1)
+    train_y = (torch.sin(design * 3.0) + 0.15 * category + 0.2 * fidelity).unsqueeze(-1)
+
+    model = MixedSingleTaskMultiFidelityGP(
+        train_x,
+        train_y,
+        cat_dims=[1],
+        data_fidelities=[2],
+    )
+    model.eval()
+
+    def project(x: torch.Tensor) -> torch.Tensor:
+        return project_to_target_fidelity(
+            x,
+            d=x.shape[-1],
+            target_fidelities={2: 1.0},
+        )
+
+    target_mean = PosteriorMean(model)
+    current_values = []
+    for category_value in (0.0, 1.0):
+        _, value = optimize_acqf(
+            acq_function=target_mean,
+            bounds=torch.tensor(
+                [[0.0, category_value, 1.0], [1.0, category_value, 1.0]],
+                dtype=torch.double,
+            ),
+            q=1,
+            num_restarts=3,
+            raw_samples=16,
+            fixed_features={1: category_value, 2: 1.0},
+        )
+        current_values.append(value)
+    current_value = torch.stack(current_values).max()
+
+    cost_model = AffineFidelityCostModel(fidelity_weights={2: 1.0}, fixed_cost=0.1)
+    acquisition = qMultiFidelityKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([4])),
+        cost_aware_utility=InverseCostWeightedUtility(cost_model=cost_model),
+        current_value=current_value,
+        project=project,
+    )
+    fantasy_points = acquisition.get_augmented_q_batch_size(q=1)
+    candidate = torch.tensor([[0.5, 1.0, 0.5]], dtype=torch.double)
+    value = acquisition(candidate.expand(1, fantasy_points, 3).clone())
+
+    assert fantasy_points == 5
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
 def test_pca_gp_runtime_supports_mc_acquisition() -> None:
     train_x = torch.stack(
         [
