@@ -165,7 +165,7 @@ _register_family(
     guide="docs/models/standard.md",
     theory="docs/theory/06_multi_fidelity.md",
     notebook="examples/notebooks/03_multi_fidelity_gp.ipynb",
-    strategy="mixed multi-fidelity GP", multi_fidelity=True,
+    strategy="mixed multi-fidelity GP",\n    multi_fidelity=True,
 )
 _register_family(
     ("MixedSingleTaskVariationalGP",),
@@ -200,7 +200,7 @@ _register_family(
     high_dimensional=HighDimensionalStrategy.MAP_SAAS,
 )
 _register_family(
-    ("ALEBOGP",), guide="docs/models/high_dimensional.md",
+    ("ALEBOGP",),\n    guide="docs/models/high_dimensional.md",
     theory="docs/theory/21_advanced_high_dimensional_models.md",
     notebook="examples/notebooks/09_map_saas_and_additive_gp.ipynb",
     strategy="ALEBO random embedding",
@@ -222,14 +222,14 @@ _REDUCED = (
     "RandomProjectionGP",
     "OutputPCAGP",
     "OutputPLSGP",
-    "MixedReducedGP", "MixedPCAGP", "MixedPLSGP", "MixedRandomProjectionGP",
-    "ReducedMultiTaskGP", "ReducedKroneckerMultiTaskGP", "PCAMultiTaskGP",
-    "PCAKroneckerMultiTaskGP", "PLSMultiTaskGP", "PLSKroneckerMultiTaskGP",
-    "RandomProjectionMultiTaskGP", "RandomProjectionKroneckerMultiTaskGP",
-    "MixedReducedMultiTaskGP", "MixedReducedKroneckerMultiTaskGP",
+    "MixedReducedGP",\n"MixedPCAGP", "MixedPLSGP", "MixedRandomProjectionGP",
+    "ReducedMultiTaskGP",\n"ReducedKroneckerMultiTaskGP", "PCAMultiTaskGP",
+    "PCAKroneckerMultiTaskGP",\n"PLSMultiTaskGP", "PLSKroneckerMultiTaskGP",
+    "RandomProjectionMultiTaskGP",\n"RandomProjectionKroneckerMultiTaskGP",
+    "MixedReducedMultiTaskGP",\n"MixedReducedKroneckerMultiTaskGP",
 )
 _register_family(
-    _REDUCED, guide="docs/models/reduced.md",
+    _REDUCED,\n    guide="docs/models/reduced.md",
     theory="docs/theory/18_dimensionality_reduction_gp.md",
     notebook="examples/notebooks/19_reduced_gp.ipynb",
     strategy="explicit dimensionality reduction GP",
@@ -241,18 +241,18 @@ _NEURAL_REDUCED = (
     "SupervisedAutoEncoderGP",
     "SupervisedVAEGP",
     "HybridAutoEncoderGP",
-    "JointEncoderGP", "JointVAEGP", "MixedAutoEncoderGP", "MixedVAEGP",
-    "MixedSupervisedAutoEncoderGP", "MixedSupervisedVAEGP", "MixedHybridAutoEncoderGP",
-    "MixedJointEncoderGP", "MixedJointVAEGP", "AutoEncoderMultiTaskGP",
-    "AutoEncoderKroneckerMultiTaskGP", "VAEKroneckerMultiTaskGP", "VAEMultiTaskGP",
-    "SupervisedAutoEncoderMultiTaskGP", "SupervisedAutoEncoderKroneckerMultiTaskGP",
-    "SupervisedVAEMultiTaskGP", "SupervisedVAEKroneckerMultiTaskGP", "HybridAutoEncoderMultiTaskGP",
-    "HybridAutoEncoderKroneckerMultiTaskGP", "JointEncoderMultiTaskGP",
-    "JointEncoderKroneckerMultiTaskGP", "JointVAEMultiTaskGP", "JointVAEKroneckerMultiTaskGP",
+    "JointEncoderGP",\n"JointVAEGP", "MixedAutoEncoderGP", "MixedVAEGP",
+    "MixedSupervisedAutoEncoderGP",\n"MixedSupervisedVAEGP", "MixedHybridAutoEncoderGP",
+    "MixedJointEncoderGP",\n"MixedJointVAEGP", "AutoEncoderMultiTaskGP",
+    "AutoEncoderKroneckerMultiTaskGP",\n"VAEKroneckerMultiTaskGP", "VAEMultiTaskGP",
+    "SupervisedAutoEncoderMultiTaskGP",\n"SupervisedAutoEncoderKroneckerMultiTaskGP",
+    "SupervisedVAEMultiTaskGP",\n"SupervisedVAEKroneckerMultiTaskGP", "HybridAutoEncoderMultiTaskGP",
+    "HybridAutoEncoderKroneckerMultiTaskGP",\n"JointEncoderMultiTaskGP",
+    "JointEncoderKroneckerMultiTaskGP",\n"JointVAEMultiTaskGP", "JointVAEKroneckerMultiTaskGP",
     "MixedJointEncoderMultiTaskGP",
 )
 _register_family(
-    _NEURAL_REDUCED, guide="docs/models/reduced.md",
+    _NEURAL_REDUCED,\n    guide="docs/models/reduced.md",
     theory="docs/theory/19_neural_reduction_gp.md",
     notebook="examples/notebooks/20_neural_reduction_gp.ipynb",
     strategy="neural dimensionality reduction GP",
@@ -355,7 +355,7 @@ _register_family(
     guide="docs/models/preference.md",
     theory="docs/theory/10_preference_learning.md",
     notebook="examples/notebooks/07_pairwise_gp.ipynb",
-    strategy="pairwise preference GP", preference=True,
+    strategy="pairwise preference GP",\n    preference=True,
 )
 
 _register_family(
