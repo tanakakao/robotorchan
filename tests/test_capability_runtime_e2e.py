@@ -310,6 +310,56 @@ def test_mixed_single_task_multifidelity_gp_runtime_supports_mc_acquisition() ->
     assert torch.isfinite(value).all()
 
 
+def _assert_multifidelity_model_supports_knowledge_gradient(
+    model,
+    candidate: torch.Tensor,
+) -> None:
+    model.eval()
+    acquisition = qKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([4])),
+    )
+    fantasy_points = acquisition.get_augmented_q_batch_size(q=1)
+    value = acquisition(candidate.expand(1, fantasy_points, candidate.shape[-1]).clone())
+
+    assert fantasy_points == 5
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_multifidelity_models_runtime_support_knowledge_gradient_fantasies() -> None:
+    design = torch.linspace(0.0, 1.0, 8, dtype=torch.double)
+    fidelity = torch.tensor([0.25, 0.5, 0.75, 1.0] * 2, dtype=torch.double)
+
+    continuous_x = torch.stack([design, fidelity], dim=-1)
+    continuous_y = (torch.sin(design * 3.0) + 0.2 * fidelity).unsqueeze(-1)
+    continuous_model = SingleTaskMultiFidelityGP(
+        continuous_x,
+        continuous_y,
+        data_fidelities=[1],
+        linear_truncated=False,
+    )
+    _assert_multifidelity_model_supports_knowledge_gradient(
+        continuous_model,
+        torch.tensor([[0.5, 1.0]], dtype=torch.double),
+    )
+
+    category = torch.tensor([0.0, 1.0] * 4, dtype=torch.double)
+    mixed_x = torch.stack([design, category, fidelity], dim=-1)
+    mixed_y = (torch.sin(design * 3.0) + 0.15 * category + 0.2 * fidelity).unsqueeze(-1)
+    mixed_model = MixedSingleTaskMultiFidelityGP(
+        mixed_x,
+        mixed_y,
+        cat_dims=[1],
+        data_fidelities=[2],
+    )
+    _assert_multifidelity_model_supports_knowledge_gradient(
+        mixed_model,
+        torch.tensor([[0.5, 1.0, 1.0]], dtype=torch.double),
+    )
+
+
 def test_pca_gp_runtime_supports_mc_acquisition() -> None:
     train_x = torch.stack(
         [
