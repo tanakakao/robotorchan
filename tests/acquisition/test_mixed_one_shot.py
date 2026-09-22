@@ -5,6 +5,9 @@ from robotorchan.acquisition.mixed_one_shot import optimize_mixed_one_shot_acqf
 
 
 class _CrossCategoryOneShot(OneShotAcquisitionFunction):
+    def __init__(self) -> None:
+        super().__init__(model=None)
+
     def get_augmented_q_batch_size(self, q: int) -> int:
         return q + 1
 
