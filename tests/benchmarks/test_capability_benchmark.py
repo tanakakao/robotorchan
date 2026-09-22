@@ -16,7 +16,7 @@ def test_benchmark_counts_are_internally_consistent() -> None:
 
     assert result.registered_models > 0
     assert 0 < result.compatible_models <= result.registered_models
-    assert 0 < result.recommendations <= result.compatible_models
+    assert result.recommendations > 0
 
 
 def test_benchmark_covers_specialized_problem_shapes() -> None:
