@@ -334,3 +334,53 @@ def test_mixed_pca_gp_runtime_supports_mc_acquisition() -> None:
 
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
+
+
+def test_pca_gp_runtime_supports_knowledge_gradient() -> None:
+    train_x = torch.stack(
+        [
+            torch.linspace(0.0, 1.0, 8, dtype=torch.double),
+            torch.linspace(1.0, 0.0, 8, dtype=torch.double),
+            torch.linspace(0.2, 0.9, 8, dtype=torch.double),
+        ],
+        dim=-1,
+    )
+    train_y = torch.sin(train_x[:, :1] * 3.0)
+    model = PCAGP(train_x, train_y, n_components=2)
+    model.eval()
+
+    acquisition = qKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([4])),
+    )
+    candidate = torch.tensor([[[0.5, 0.5, 0.55]]], dtype=torch.double)
+    fantasy_points = acquisition.get_augmented_q_batch_size(q=1)
+    value = acquisition(candidate.expand(1, fantasy_points, 3).clone())
+
+    assert fantasy_points == 5
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_mixed_pca_gp_runtime_supports_knowledge_gradient() -> None:
+    continuous_a = torch.linspace(0.0, 1.0, 8, dtype=torch.double)
+    categorical = torch.tensor([0.0, 1.0] * 4, dtype=torch.double)
+    continuous_b = torch.linspace(1.0, 0.0, 8, dtype=torch.double)
+    train_x = torch.stack([continuous_a, categorical, continuous_b], dim=-1)
+    train_y = (torch.sin(continuous_a * 3.0) + 0.1 * categorical).unsqueeze(-1)
+    model = MixedPCAGP(train_x, train_y, n_components=1, cat_dims=[1])
+    model.eval()
+
+    acquisition = qKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([4])),
+    )
+    candidate = torch.tensor([[[0.5, 1.0, 0.5]]], dtype=torch.double)
+    fantasy_points = acquisition.get_augmented_q_batch_size(q=1)
+    value = acquisition(candidate.expand(1, fantasy_points, 3).clone())
+
+    assert fantasy_points == 5
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
