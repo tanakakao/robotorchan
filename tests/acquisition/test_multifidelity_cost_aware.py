@@ -1,10 +1,10 @@
 import torch
+from botorch.acquisition.analytic import PosteriorMean
 from botorch.acquisition.cost_aware import InverseCostWeightedUtility
 from botorch.acquisition.knowledge_gradient import qMultiFidelityKnowledgeGradient
-from botorch.acquisition.monte_carlo import PosteriorMean
-from botorch.optim import optimize_acqf
 from botorch.models.cost import AffineFidelityCostModel
 from botorch.models.gp_regression_fidelity import SingleTaskMultiFidelityGP
+from botorch.optim import optimize_acqf
 
 from robotorchan.models import SingleTaskGP
 
@@ -20,7 +20,7 @@ def _multifidelity_model() -> tuple[SingleTaskMultiFidelityGP, torch.Tensor]:
 
 
 def test_native_multifidelity_kg_is_compatible() -> None:
-    model, train_X = _multifidelity_model()
+    model, _ = _multifidelity_model()
     cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
     cost_utility = InverseCostWeightedUtility(cost_model=cost_model)
     target_fidelities = {1: 1.0}
