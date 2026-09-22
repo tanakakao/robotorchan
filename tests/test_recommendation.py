@@ -1,9 +1,9 @@
 """Tests for explainable capability-based recommendations."""
 
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
+from robotorchan.models.registry import MODEL_REGISTRY
 from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.recommendation import recommend_compatible_workflows
-from robotorchan.models.registry import MODEL_REGISTRY
 
 
 def test_bo_recommendations_use_registered_botorch_metadata() -> None:
