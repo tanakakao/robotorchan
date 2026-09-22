@@ -86,3 +86,26 @@ def test_empirical_tree_ensembles_use_index_sampling_metadata() -> None:
         capabilities = MODEL_REGISTRY[name].capabilities
         assert capabilities.ensemble_posterior
         assert capabilities.posterior_sampling_type is PosteriorSamplingType.ENSEMBLE
+
+
+def test_posterior_sampling_support_and_type_are_bidirectionally_consistent() -> None:
+    for entry in MODEL_REGISTRY.values():
+        capabilities = entry.capabilities
+        if capabilities.supports_posterior_samples:
+            assert capabilities.posterior_sampling_type is not PosteriorSamplingType.NONE
+        else:
+            assert capabilities.posterior_sampling_type is PosteriorSamplingType.NONE
+
+
+def test_ensemble_sampling_type_is_reserved_for_empirical_ensemble_posteriors() -> None:
+    ensemble_sampling_models = {
+        name
+        for name, entry in MODEL_REGISTRY.items()
+        if entry.capabilities.posterior_sampling_type is PosteriorSamplingType.ENSEMBLE
+    }
+    assert ensemble_sampling_models == {
+        "RandomForestSurrogate",
+        "ExtraTreesSurrogate",
+        "GradientBoostingSurrogate",
+        "HistGradientBoostingSurrogate",
+    }
