@@ -53,6 +53,8 @@ class ModelCapabilities:
     preference: bool = False
     non_gp: bool = False
     ensemble_posterior: bool = False
+    supports_multi_output: bool = False
+    supports_fantasize: bool = True
 
 
 @dataclass(frozen=True, slots=True)
