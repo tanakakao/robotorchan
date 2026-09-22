@@ -126,12 +126,13 @@ def _register_family(
     non_gp: bool = False,
 ) -> None:
     for name in names:
+        input_type = InputType.MIXED if name.startswith("Mixed") else InputType.CONTINUOUS
         MODEL_REGISTRY.setdefault(
             name,
             ModelRegistryEntry(
                 name,
                 ModelCapabilities(
-                    input_type=(InputType.MIXED if name.startswith("Mixed") else InputType.CONTINUOUS),
+                    input_type=input_type,
                     task_type=TaskType.MULTITASK
                     if (
                         "MultiTask" in name
