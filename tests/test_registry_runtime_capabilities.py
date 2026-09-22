@@ -1,5 +1,6 @@
 """Regression tests for explicit runtime capability metadata."""
 
+from robotorchan.models.capabilities import InputType
 from robotorchan.models.registry import MODEL_REGISTRY
 
 
@@ -33,7 +34,7 @@ def test_mixed_reduced_models_keep_mixed_input_metadata() -> None:
         "MixedPLSGP",
         "MixedRandomProjectionGP",
     ):
-        assert MODEL_REGISTRY[name].capabilities.input_type.value == "mixed"
+        assert MODEL_REGISTRY[name].capabilities.input_type is InputType.MIXED
 
 
 def test_unaudited_reduced_fantasy_support_stays_disabled() -> None:
