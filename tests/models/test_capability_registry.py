@@ -1,7 +1,11 @@
 """Tests for the initial capability registry schema."""
 
 from robotorchan.models.capabilities import (
-    HighDimensionalStrategy, InferenceType, InputType, RobustnessType, TaskType,
+    HighDimensionalStrategy,
+    InferenceType,
+    InputType,
+    RobustnessType,
+    TaskType,
 )
 from robotorchan.models.registry import MODEL_REGISTRY, get_model_registry_entry
 
@@ -21,7 +25,8 @@ def test_registry_covers_cross_cutting_capabilities() -> None:
     robust = MODEL_REGISTRY["MixedRobustRelevancePursuitMultiTaskGP"].capabilities
     assert robust.robustness == frozenset({RobustnessType.RELEVANCE_PURSUIT})
     assert MODEL_REGISTRY["SingleTaskMultiFidelityGP"].capabilities.multi_fidelity
-    assert MODEL_REGISTRY["SingleTaskVariationalGP"].capabilities.inference is InferenceType.VARIATIONAL
+    variational = MODEL_REGISTRY["SingleTaskVariationalGP"].capabilities
+    assert variational.inference is InferenceType.VARIATIONAL
 
 
 def test_registry_documentation_paths_are_repository_relative() -> None:
