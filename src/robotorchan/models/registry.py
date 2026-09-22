@@ -344,6 +344,14 @@ _ENSEMBLE_POSTERIOR_MODELS = frozenset(
 )
 
 
+# Posterior sampling is explicit capability metadata. The current public
+# surrogate families expose sampleable BoTorch posteriors; keep this set
+# separate so future models do not inherit that capability accidentally.
+_POSTERIOR_SAMPLING_MODELS = frozenset(
+    name for name in MODEL_REGISTRY if MODEL_REGISTRY[name].capabilities.supports_posterior_samples
+)
+
+
 def _register_family(
     names: tuple[str, ...],
     *,
@@ -382,7 +390,7 @@ def _register_family(
                     non_gp=non_gp,
                     ensemble_posterior=name in _ENSEMBLE_POSTERIOR_MODELS,
                     supports_multi_output=name in _MULTI_OUTPUT_MODELS,
-                    supports_posterior_samples=True,
+                    supports_posterior_samples=name in _POSTERIOR_SAMPLING_MODELS,
                     supports_fantasize=not non_gp,
                 ),
                 _docs(guide, theory, notebook),
