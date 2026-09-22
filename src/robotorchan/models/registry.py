@@ -334,7 +334,9 @@ _MULTI_OUTPUT_MODELS = frozenset(
 
 _POSTERIOR_SAMPLING_MODELS = frozenset(
     {
-        name for name in MODEL_REGISTRY if MODEL_REGISTRY[name].capabilities.supports_posterior_samples
+        name
+        for name in MODEL_REGISTRY
+        if MODEL_REGISTRY[name].capabilities.supports_posterior_samples
     }
     | {
         "MixedSingleTaskMultiFidelityGP",
