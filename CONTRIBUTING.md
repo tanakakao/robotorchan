@@ -25,7 +25,9 @@ pip install -e ".[dev,examples,fully-bayesian]"
 - API変更時に旧名alias、deprecated wrapper、互換関数を追加して残さないでください。
   呼び出し側、テスト、example、Notebook、ドキュメントを新仕様へ完全に移行してください。
 - 公開モデルを追加・変更した場合は、モデルガイド、理論ドキュメント、Notebookの対応範囲も確認してください。
-  `models.__all__` とpublic model contract testも同じ変更で同期してください。\n  ドキュメント対応情報は `MODEL_REGISTRY` を正とし、`docs/model_coverage.json` を手編集せず、\n  `python scripts/generate_model_coverage.py` で再生成してください。
+  `models.__all__` とpublic model contract testも同じ変更で同期してください。
+  ドキュメント対応情報は `MODEL_REGISTRY` を正とし、`docs/model_coverage.json` を手編集せず、
+  `python scripts/generate_model_coverage.py` で再生成してください。
 - 新しいCI jobは、既存CIでは検証できない明確な理由がある場合だけ追加してください。
 - GitHub APIや自動編集で複数行コードを書き換えた場合は、更新後の実ファイルを再取得し、
   エスケープ文字（特にリテラルの `\\n`）がコードへ混入していないことを確認してください。
@@ -69,3 +71,10 @@ Pull Requestには次を簡潔に記載してください。
 - ドキュメントやNotebookへの影響
 
 変更は可能な限り1つの目的に絞ってください。
+
+
+## Capability metadata
+
+モデルや acquisition の public capability を変更した場合は、実装だけでなく registry metadata と対応する contract test も同じ変更で更新してください。モデル名の文字列解析から capability を推測する実装は追加しません。
+
+モデル registry を変更した場合、生成物である `docs/model_coverage.json` を直接編集せず、既存の生成スクリプトを使用してください。
