@@ -2,7 +2,10 @@
 
 import torch
 from botorch.acquisition.cost_aware import InverseCostWeightedUtility
-from botorch.acquisition.knowledge_gradient import qKnowledgeGradient
+from botorch.acquisition.knowledge_gradient import (
+    qKnowledgeGradient,
+    qMultiFidelityKnowledgeGradient,
+)
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.multi_objective.logei import (
     qLogExpectedHypervolumeImprovement,
@@ -396,6 +399,46 @@ def test_multifidelity_projection_and_cost_utility_runtime() -> None:
     assert weighted.shape == deltas.shape
     assert torch.isfinite(weighted).all()
     assert torch.all(weighted > 0)
+
+
+def test_multifidelity_knowledge_gradient_runtime_with_cost_and_projection() -> None:
+    design = torch.linspace(0.0, 1.0, 8, dtype=torch.double)
+    fidelity = torch.tensor([0.25, 0.5, 0.75, 1.0] * 2, dtype=torch.double)
+    train_x = torch.stack([design, fidelity], dim=-1)
+    train_y = (torch.sin(design * 3.0) + 0.2 * fidelity).unsqueeze(-1)
+
+    model = SingleTaskMultiFidelityGP(
+        train_x,
+        train_y,
+        data_fidelities=[1],
+        linear_truncated=False,
+    )
+    model.eval()
+
+    target_fidelities = {1: 1.0}
+
+    def project(x: torch.Tensor) -> torch.Tensor:
+        return project_to_target_fidelity(
+            x,
+            d=x.shape[-1],
+            target_fidelities=target_fidelities,
+        )
+
+    cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
+    acquisition = qMultiFidelityKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([4])),
+        cost_aware_utility=InverseCostWeightedUtility(cost_model=cost_model),
+        project=project,
+    )
+    fantasy_points = acquisition.get_augmented_q_batch_size(q=1)
+    candidate = torch.tensor([[0.5, 0.5]], dtype=torch.double)
+    value = acquisition(candidate.expand(1, fantasy_points, 2).clone())
+
+    assert fantasy_points == 5
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
 
 
 def test_pca_gp_runtime_supports_mc_acquisition() -> None:
