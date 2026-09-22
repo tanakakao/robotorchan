@@ -502,10 +502,21 @@ def test_mixed_multifidelity_knowledge_gradient_runtime() -> None:
         project=project,
     )
     fantasy_points = acquisition.get_augmented_q_batch_size(q=1)
-    candidate = torch.tensor([[0.5, 1.0, 0.5]], dtype=torch.double)
-    value = acquisition(candidate.expand(1, fantasy_points, 3).clone())
+    augmented_batch = torch.tensor(
+        [
+            [0.5, 1.0, 0.5],
+            [0.2, 0.0, 1.0],
+            [0.4, 1.0, 1.0],
+            [0.6, 0.0, 1.0],
+            [0.8, 1.0, 1.0],
+        ],
+        dtype=torch.double,
+    ).unsqueeze(0)
+    value = acquisition(augmented_batch)
 
-    assert fantasy_points == 5
+    assert fantasy_points == augmented_batch.shape[-2]
+    assert augmented_batch[0, 0, 1].item() == 1.0
+    assert augmented_batch[0, 1:, 1].tolist() == [0.0, 1.0, 0.0, 1.0]
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
 
