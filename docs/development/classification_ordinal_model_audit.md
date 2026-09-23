@@ -150,23 +150,33 @@ introduced.
 The missing binary probabilistic GP classifier is a genuine **future model
 capability**, not a regression correctness defect.
 
-It is the next model implementation candidate because it unlocks a coherent
-classification Active Learning stack: predictive entropy, margin uncertainty,
-probability-space uncertainty, BALD, and latent straddle.
+Classification and ordinal modeling are explicitly **out of scope for the
+current development program**. This audit records the future statistical
+boundary only; it does not authorize implementation work in the following
+phases.
 
-Ordinal GP remains a subsequent candidate after the binary latent/probability
-contract is validated.
+The current program remains focused on:
 
-### Proposed next phase
+1. validation of existing regression models, including acquisition integration;
+2. practical Kronecker extensions;
+3. meaningful Mixed × Kronecker combinations;
+4. probabilistic external non-GP models, with NGBoost as the primary candidate;
+5. practical MultiFidelity × High-dimensional combinations;
+6. MultiFidelity × Robust combinations selected from meaningful noise / outlier
+   structures.
 
-Phase 40 should design the concrete binary variational GP classifier API before
-implementation. It should resolve:
+Ordinal GP is likewise deferred. No binary classifier, classification
+acquisition, Mixed classifier, multi-class classifier, or ordinal model should
+be added under the current scope.
 
-- class name and constructor;
-- label shape and accepted values;
-- latent `posterior` versus `predict_proba`;
-- Bernoulli link;
-- variational strategy / inducing-point ownership;
-- training objective and `make_mll` contract;
-- registry capability fields;
-- exact tests required before any classification acquisition is exported.
+### Next phase
+
+Phase 40 must return to the current program's highest-priority item: audit the
+existing regression model validation matrix together with acquisition
+compatibility and runtime evidence.
+
+The audit should identify only remaining gaps inside the six in-scope areas
+above and classify them as correctness issues, contract inconsistencies,
+validation gaps, explicit limitations, or future extensions. Classification /
+ordinal items must remain future extensions and must not be selected for
+implementation during this program.
