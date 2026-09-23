@@ -208,3 +208,49 @@ training inputs, and returns finite positive noise predictions at multiple fidel
 test deliberately does not require two finite-data posterior means to differ: a fitted noise GP may
 legitimately regress both predictions to the configured noise floor. Existing native MF-KG workflow
 coverage remains unchanged.
+
+
+## Phase 40: in-scope regression validation re-audit
+
+Phase 40 returns to the agreed regression-only program after the classification / ordinal boundary
+was recorded in Phase 39. Classification and ordinal work is intentionally deferred to a separate
+development stream.
+
+The current source of truth shows that the six in-scope work areas are no longer at the same
+maturity level they had when this matrix was introduced:
+
+| In-scope area | Current state | Remaining work |
+| --- | --- | --- |
+| Existing regression validation | Representative core workflows are executable | close remaining robust / high-dimensional MultiTask depth gaps |
+| Kronecker extensions | baseline plus practical nonstationary Kronecker path exists | validate acquisition/runtime evidence before adding any further model |
+| Mixed × Kronecker | public MixedKroneckerMultiTaskGP exists | strengthen representative acquisition evidence only where missing |
+| Probabilistic external non-GP | NGBoost posterior, MC BO, and regression AL paths exist | retain explicit distributional semantics; no new external model required now |
+| MultiFidelity × High-dimensional | PCA, PLS, random projection, MAP-SAAS, and additive MAP-SAAS MF paths exist | keep ensemble MAP-SAAS MF research-gated; validation takes priority over more classes |
+| MultiFidelity × Robust | replicate-noise and heteroskedastic MF paths have native MF-KG evidence | keep RRP × MF research-gated; validate existing public models rather than force composition |
+
+### Source-of-truth corrections
+
+Two older statements in the runtime documentation are now stale and must not guide new work:
+
+- MultiFidelity × High-dimensional is now a public model surface.
+- MultiFidelity × Robust is now a public model surface.
+
+Their absence was true earlier in the audit but was closed by later implementation phases. Future
+reviews must use the current registry, public exports, tests, and this matrix rather than historical
+phase text.
+
+### Priority after Phase 40
+
+The highest-value remaining validation work is representative acquisition coverage for model
+families still marked partial, not another broad model expansion. The next phase should inspect the
+actual tests for:
+
+1. high-dimensional MultiTask representatives, separated into deterministic reduction, learned
+   neural reduction, fully Bayesian SAAS, and expressive / variational paths;
+2. robust MultiTask and Mixed robust representatives with posterior sampling and one compatible MC
+   acquisition;
+3. Kronecker and Mixed × Kronecker acquisition evidence, adding tests only if the existing suite
+   does not already establish the contract.
+
+A missing Cartesian-product test is not by itself a gap. New tests should be added only when they
+protect a materially different posterior, transform, sampler, or optimizer contract.

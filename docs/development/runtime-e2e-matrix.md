@@ -36,8 +36,20 @@ The remaining gaps are validation-depth items rather than known correctness defe
 - robust MultiTask and Mixed robust families are not exhaustively exercised through optimizers;
 - multi-output acquisition coverage is representative rather than exhaustive across all models;
 - empirical ensemble active-learning reduction semantics are intentionally unsupported;
-- multi-fidelity combined with high-dimensional or robust model families is not a public model
-  surface;
+- multi-fidelity high-dimensional and robust public surfaces now have representative runtime
+  evidence; specialized research-gated combinations remain intentionally excluded;
 - q > 1 mixed one-shot optimization remains intentionally unsupported.
 
 These gaps must not be converted into capability claims without executable tests.
+
+
+## Phase 40 scope refresh
+
+The multi-fidelity cross-capability statement above is updated from the historical audit state.
+Public high-dimensional MF models now include deterministic reductions and MAP-SAAS variants, and
+public robust MF models include replicate-noise and heteroskedastic variants. These families have
+representative native MF-KG evidence.
+
+The remaining validation-depth priority is therefore robust / high-dimensional MultiTask and
+Kronecker acquisition coverage. Classification and ordinal models are not part of this runtime
+program and will be developed separately.
