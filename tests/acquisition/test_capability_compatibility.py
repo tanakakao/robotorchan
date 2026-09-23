@@ -51,7 +51,7 @@ def test_non_gp_model_requires_mc_acquisition_path() -> None:
         "PosteriorVariance",
     )
     assert result.status is CompatibilityStatus.INCOMPATIBLE
-    assert "non-GP empirical ensembles require BoTorch Monte Carlo acquisitions" in result.reasons
+    assert "acquisition does not support ensemble posteriors" in result.reasons
 
 
 def test_registry_keys_match_acquisition_names() -> None:
@@ -98,4 +98,4 @@ def test_ngboost_rejects_joint_gaussian_information_gain() -> None:
         "ExpectedPredictiveInformationGain",
     )
     assert result.status is CompatibilityStatus.INCOMPATIBLE
-    assert "joint Gaussian posterior" in result.reasons
+    assert "acquisition requires a joint Gaussian posterior" in result.reasons
