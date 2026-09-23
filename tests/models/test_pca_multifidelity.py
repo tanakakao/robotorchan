@@ -265,6 +265,7 @@ def test_reduced_multifidelity_conditioning_accepts_raw_inputs() -> None:
         model.eval()
         new_x = train_x[:2].clone()
         new_y = train_y[:2].clone()
+        _ = model.posterior(new_x)
         conditioned = model.condition_on_observations(X=new_x, Y=new_y)
 
         assert conditioned.train_inputs[0].shape[-1] == 3
