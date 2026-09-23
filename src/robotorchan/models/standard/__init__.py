@@ -23,6 +23,7 @@ from robotorchan.models.standard.variational import (
 )
 
 __all__ = [
+    "AdditiveMapSaasMultiFidelityGP",
     "KroneckerMultiTaskGP",
     "MapSaasMultiFidelityGP",
     "MixedKroneckerMultiTaskGP",
