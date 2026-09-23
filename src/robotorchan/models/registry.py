@@ -276,6 +276,7 @@ _MIXED_MODELS = frozenset(
         "MixedSingleTaskDeepGP",
         "MixedMultiTaskDeepGP",
         "MixedInfiniteWidthBNNGP",
+        "MixedInfiniteWidthBNNKroneckerMultiTaskGP",
         "MixedInfiniteWidthBNNMultiTaskGP",
         "MixedSpectralMixtureGP",
         "MixedSpectralMixtureKroneckerMultiTaskGP",
@@ -332,6 +333,7 @@ _MULTITASK_MODELS = frozenset(
         "MixedMultiTaskDeepGP",
         "InfiniteWidthBNNMultiTaskGP",
         "InfiniteWidthBNNKroneckerMultiTaskGP",
+        "MixedInfiniteWidthBNNKroneckerMultiTaskGP",
         "MixedInfiniteWidthBNNMultiTaskGP",
         "SpectralMixtureMultiTaskGP",
         "SpectralMixtureKroneckerMultiTaskGP",
@@ -390,6 +392,7 @@ _MULTI_OUTPUT_MODELS = frozenset(
         "MixedHeteroskedasticMultiTaskGP",
         "MixedHierarchicalConditionalKernelMultiTaskGP",
         "MixedInfiniteWidthBNNMultiTaskGP",
+        "MixedInfiniteWidthBNNKroneckerMultiTaskGP",
         "MixedJointEncoderMultiTaskGP",
         "MixedKroneckerMultiTaskGP",
         "MixedLCEMGP",
@@ -879,6 +882,14 @@ _register_family(
     theory="docs/theory/22_expressive_gp.md",
     notebook="examples/notebooks/24_expressive_surrogate_gp.ipynb",
     strategy="Kronecker multitask GP with infinite-width ReLU data covariance",
+)
+
+_register_family(
+    ("MixedInfiniteWidthBNNKroneckerMultiTaskGP",),
+    guide="docs/models/expressive.md",
+    theory="docs/theory/22_expressive_gp.md",
+    notebook="examples/notebooks/24_expressive_surrogate_gp.ipynb",
+    strategy="mixed Kronecker multitask GP with infinite-width ReLU data covariance",
 )
 
 _register_family(

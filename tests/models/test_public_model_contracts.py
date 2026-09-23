@@ -30,6 +30,7 @@ PUBLIC_MODEL_NAMES = {
     "InfiniteWidthBNNKroneckerMultiTaskGP",
     "InfiniteWidthBNNMultiTaskGP",
     "MixedInfiniteWidthBNNGP",
+    "MixedInfiniteWidthBNNKroneckerMultiTaskGP",
     "MixedInfiniteWidthBNNMultiTaskGP",
     "JointHeteroskedasticSingleTaskGP",
     "JointEncoderGP",

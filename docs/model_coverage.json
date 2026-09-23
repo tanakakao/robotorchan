@@ -255,6 +255,11 @@
       "theory": "docs/theory/22_expressive_gp.md",
       "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
     },
+    "MixedInfiniteWidthBNNKroneckerMultiTaskGP": {
+      "guide": "docs/models/expressive.md",
+      "theory": "docs/theory/22_expressive_gp.md",
+      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
+    },
     "MixedInfiniteWidthBNNMultiTaskGP": {
       "guide": "docs/models/expressive.md",
       "theory": "docs/theory/22_expressive_gp.md",

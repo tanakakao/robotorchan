@@ -3,7 +3,7 @@
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.objective import GenericMCObjective
-from botorch.optim import optimize_acqf
+from botorch.optim import optimize_acqf, optimize_acqf_mixed
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import (
@@ -11,6 +11,7 @@ from robotorchan.models import (
     InfiniteWidthBNNKroneckerMultiTaskGP,
     InfiniteWidthBNNMultiTaskGP,
     MixedInfiniteWidthBNNGP,
+    MixedInfiniteWidthBNNKroneckerMultiTaskGP,
 )
 from robotorchan.models.expressive.infinite_width_bnn import InfiniteWidthReLUKernel
 
@@ -225,5 +226,81 @@ def test_infinite_width_bnn_kronecker_optimize_acqf_runs() -> None:
     )
 
     assert candidate.shape == (1, 1)
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+
+
+def _mixed_kronecker_data() -> tuple[torch.Tensor, torch.Tensor]:
+    X = torch.tensor(
+        [[0.15, 0.0], [0.30, 1.0], [0.45, 0.0], [0.60, 1.0], [0.75, 0.0], [0.85, 1.0]],
+        dtype=torch.double,
+    )
+    Y = torch.stack((torch.sin(4.0 * X[:, 0]), torch.cos(3.0 * X[:, 0])), dim=-1)
+    return X, Y
+
+
+def test_mixed_infinite_width_bnn_kronecker_contract_and_negative_cat_dims() -> None:
+    X, Y = _mixed_kronecker_data()
+    model = MixedInfiniteWidthBNNKroneckerMultiTaskGP(X, Y, cat_dims=[-1], depth=3)
+
+    torch.testing.assert_close(model.raw_train_X, X)
+    torch.testing.assert_close(model.raw_train_Y, Y)
+    assert model.cat_dims == (1,)
+    assert model.depth == 3
+    assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
+
+
+def test_mixed_infinite_width_bnn_kronecker_posterior_and_sampling_are_finite() -> None:
+    X, Y = _mixed_kronecker_data()
+    model = MixedInfiniteWidthBNNKroneckerMultiTaskGP(X, Y, cat_dims=[1])
+    model.eval()
+    model.likelihood.eval()
+
+    posterior = model.posterior(X[:3])
+    samples = posterior.rsample(torch.Size([4]))
+
+    assert posterior.mean.shape == (3, 2)
+    assert samples.shape == (4, 3, 2)
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert torch.isfinite(samples).all()
+
+
+def test_mixed_infinite_width_bnn_kronecker_categorical_path_changes_covariance() -> None:
+    X, Y = _mixed_kronecker_data()
+    model = MixedInfiniteWidthBNNKroneckerMultiTaskGP(X, Y, cat_dims=[1])
+    kernel = model.covar_module.data_covar_module
+    same = torch.tensor([[0.4, 0.0], [0.4, 0.0]], dtype=torch.double)
+    changed = torch.tensor([[0.4, 0.0], [0.4, 1.0]], dtype=torch.double)
+
+    same_covariance = kernel(same, same).to_dense()[0, 1]
+    changed_covariance = kernel(changed, changed).to_dense()[0, 1]
+
+    assert not torch.allclose(same_covariance, changed_covariance)
+
+
+def test_mixed_infinite_width_bnn_kronecker_qlogei_and_mixed_optimizer_run() -> None:
+    X, Y = _mixed_kronecker_data()
+    model = MixedInfiniteWidthBNNKroneckerMultiTaskGP(X, Y, cat_dims=[1])
+    model.eval()
+    model.likelihood.eval()
+    objective = GenericMCObjective(lambda values, X=None: values.mean(dim=-1))
+    acquisition = qLogExpectedImprovement(
+        model=model, best_f=Y.mean(dim=-1).max(), objective=objective
+    )
+    bounds = torch.tensor([[0.2, 0.0], [0.8, 1.0]], dtype=torch.double)
+
+    candidate, value = optimize_acqf_mixed(
+        acquisition,
+        bounds=bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=12,
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+        options={"maxiter": 12},
+    )
+
+    assert candidate.shape == (1, 2)
+    assert candidate[0, 1].item() in {0.0, 1.0}
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()

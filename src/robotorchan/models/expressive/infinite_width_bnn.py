@@ -215,6 +215,65 @@ class InfiniteWidthBNNKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         self.eps = float(eps)
 
 
+class MixedInfiniteWidthBNNKroneckerMultiTaskGP(KroneckerMultiTaskGP):
+    """Mixed block-design Kronecker GP with an infinite-width ReLU data kernel."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        cat_dims: list[int],
+        *,
+        depth: int = 2,
+        weight_variance: float = 1.0,
+        bias_variance: float = 0.1,
+        ard: bool = True,
+        eps: float = 1e-7,
+        rank: int | None = None,
+    ) -> None:
+        if train_X.ndim < 2:
+            raise ValueError("train_X must have shape (..., n, d).")
+        if train_Y.ndim < 2:
+            raise ValueError("train_Y must have shape (..., n, m).")
+        if train_X.shape[-2] != train_Y.shape[-2]:
+            raise ValueError("train_X and train_Y must share the observation dimension.")
+        input_dim = train_X.shape[-1]
+        cats = normalize_feature_dims(cat_dims, input_dim, name="cat_dims")
+
+        def continuous_kernel_factory(batch_shape, num_dims, active_dims):
+            return ScaleKernel(
+                InfiniteWidthReLUKernel(
+                    depth=depth,
+                    weight_variance=weight_variance,
+                    bias_variance=bias_variance,
+                    eps=eps,
+                    ard_num_dims=num_dims if ard else None,
+                    active_dims=active_dims,
+                    batch_shape=batch_shape,
+                ),
+                batch_shape=batch_shape,
+            )
+
+        data_covar_module = make_mixed_covar_module(
+            input_dim=input_dim,
+            cat_dims=cats,
+            batch_shape=train_X.shape[:-2],
+            cont_kernel_factory=continuous_kernel_factory,
+        )
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            data_covar_module=data_covar_module,
+            rank=rank,
+        )
+        self.cat_dims = tuple(cats)
+        self.depth = int(depth)
+        self.weight_variance = float(weight_variance)
+        self.bias_variance = float(bias_variance)
+        self.ard = bool(ard)
+        self.eps = float(eps)
+
+
 class MixedInfiniteWidthBNNGP(SingleTaskGP):
     """Mixed-input exact GP using an infinite-width ReLU continuous kernel."""
 
