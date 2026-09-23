@@ -25,6 +25,7 @@ from robotorchan.models.base import (
     make_mixed_covar_module,
     normalize_feature_dims,
 )
+from robotorchan.models.standard.multi_fidelity import SingleTaskMultiFidelityGP
 from robotorchan.models.standard.multitask import MultiTaskGP
 
 
@@ -324,6 +325,83 @@ class HeteroskedasticSingleTaskGP(ExactGPModelMixin, BoTorchRobustRelevancePursu
 
     def predicted_noise(self, X: Tensor) -> Tensor:
         """Return input-dependent observation variance on the original scale."""
+        return self.noise_posterior(X).mean.exp().clamp_min(self.noise_floor)
+
+
+class HeteroskedasticMultiFidelityGP(SingleTaskMultiFidelityGP):
+    """Iterative multi-fidelity GP with fidelity-dependent observation noise."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        iteration_fidelity: int | None = None,
+        data_fidelities: list[int] | None = None,
+        noise_floor: float = 1e-6,
+        outcome_transform: OutcomeTransform | _DefaultType | None = DEFAULT,
+        input_transform: InputTransform | None = None,
+    ) -> None:
+        if noise_floor <= 0:
+            raise ValueError("noise_floor must be positive.")
+        self.noise_floor = noise_floor
+        self._noise_model_fitted = False
+        self._iteration_fidelity = iteration_fidelity
+        self._data_fidelities = data_fidelities
+        initial_noise = torch.full_like(train_Y, noise_floor)
+        likelihood = FixedNoiseGaussianLikelihood(
+            noise=initial_noise.squeeze(-1),
+            learn_additional_noise=False,
+        )
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            train_Yvar=initial_noise,
+            iteration_fidelity=iteration_fidelity,
+            data_fidelities=data_fidelities,
+            likelihood=likelihood,
+            outcome_transform=outcome_transform,
+            input_transform=input_transform,
+        )
+        self.noise_model = None
+
+    def fit_heteroskedastic(self, *, iterations: int = 3) -> HeteroskedasticMultiFidelityGP:
+        """Alternately fit response and multi-fidelity log-noise GPs."""
+        from botorch.fit import fit_gpytorch_mll
+
+        if iterations < 1:
+            raise ValueError("iterations must be at least 1.")
+        train_X = self.raw_train_X
+        train_Y = self.raw_train_Y
+        for _ in range(iterations):
+            fit_gpytorch_mll(self.make_mll())
+            with torch.no_grad():
+                residual = train_Y - self.posterior(train_X).mean
+                log_noise = torch.log(residual.square().clamp_min(self.noise_floor))
+            noise_model = SingleTaskMultiFidelityGP(
+                train_X=train_X,
+                train_Y=log_noise,
+                iteration_fidelity=self._iteration_fidelity,
+                data_fidelities=self._data_fidelities,
+            )
+            fit_gpytorch_mll(noise_model.make_mll())
+            with torch.no_grad():
+                predicted_noise = noise_model.posterior(train_X).mean.exp()
+                predicted_noise = predicted_noise.clamp_min(self.noise_floor)
+            self.likelihood.noise_covar.noise = predicted_noise.squeeze(-1)
+            self.noise_model = noise_model
+            self._noise_model_fitted = True
+        return self
+
+    def noise_posterior(self, X: Tensor):
+        """Return the latent multi-fidelity posterior for log observation variance."""
+        if self.noise_model is None or not self._noise_model_fitted:
+            raise RuntimeError("fit_heteroskedastic must be called before noise_posterior.")
+        self.noise_model.prediction_strategy = None
+        return self.noise_model.posterior(X)
+
+    def predicted_noise(self, X: Tensor) -> Tensor:
+        """Return fidelity-dependent observation variance on the original scale."""
         return self.noise_posterior(X).mean.exp().clamp_min(self.noise_floor)
 
 
