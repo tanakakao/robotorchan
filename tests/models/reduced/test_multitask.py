@@ -1,6 +1,10 @@
 """Tests for multi-task input-reduction foundations."""
 
 import torch
+from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.acquisition.objective import GenericMCObjective
+from botorch.optim import optimize_acqf
+from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models.high_dimensional.reduced.multitask import (
     AutoEncoderKroneckerMultiTaskGP,
@@ -458,3 +462,93 @@ def test_reduced_kronecker_load_state_resynchronizes_projection() -> None:
         restored.posterior(train_X[:2]).mean,
         source.posterior(train_X[:2]).mean,
     )
+
+
+def _high_dimensional_multitask_data() -> tuple[torch.Tensor, torch.Tensor]:
+    dtype = torch.double
+    base = torch.linspace(0.0, 1.0, 12, dtype=dtype)
+    data = torch.stack(
+        (base, base.square(), torch.sin(base * 3.0), torch.cos(base * 2.0)),
+        dim=-1,
+    )
+    task = torch.arange(12, dtype=dtype).remainder(2).unsqueeze(-1)
+    train_X = torch.cat((data, task), dim=-1)
+    train_Y = (data[:, :1] + 0.25 * data[:, 1:2] + 0.2 * task).sin()
+    return train_X, train_Y
+
+
+def _assert_multitask_mc_acquisition(model, train_X: torch.Tensor, train_Y: torch.Tensor) -> None:
+    model.eval()
+    candidates = train_X[:2].unsqueeze(0)
+    posterior = model.posterior(train_X[:3])
+    samples = posterior.rsample(torch.Size([4]))
+    objective = GenericMCObjective(lambda values, X=None: values.squeeze(-1))
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_Y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+        objective=objective,
+    )
+    value = acquisition(candidates)
+
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert torch.isfinite(samples).all()
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_pca_multitask_supports_sampling_and_mc_acquisition() -> None:
+    train_X, train_Y = _high_dimensional_multitask_data()
+    model = PCAMultiTaskGP(train_X, train_Y, task_feature=-1, n_components=2)
+
+    _assert_multitask_mc_acquisition(model, train_X, train_Y)
+
+
+def test_autoencoder_multitask_supports_sampling_and_mc_acquisition() -> None:
+    train_X, train_Y = _high_dimensional_multitask_data()
+    model = AutoEncoderMultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=-1,
+        latent_dim=2,
+        hidden_dims=(6,),
+        epochs=2,
+        random_state=41,
+    )
+
+    _assert_multitask_mc_acquisition(model, train_X, train_Y)
+
+
+def test_pca_multitask_optimize_acqf_runs_in_raw_space() -> None:
+    train_X, train_Y = _high_dimensional_multitask_data()
+    model = PCAMultiTaskGP(train_X, train_Y, task_feature=-1, n_components=2)
+    model.eval()
+    objective = GenericMCObjective(lambda values, X=None: values.squeeze(-1))
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_Y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+        objective=objective,
+    )
+    bounds = torch.stack(
+        (
+            torch.zeros(train_X.shape[-1], dtype=train_X.dtype),
+            torch.ones(train_X.shape[-1], dtype=train_X.dtype),
+        )
+    )
+
+    candidate, value = optimize_acqf(
+        acquisition,
+        bounds=bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=12,
+        fixed_features={train_X.shape[-1] - 1: 0.0},
+        options={"maxiter": 12},
+    )
+
+    assert candidate.shape == torch.Size([1, train_X.shape[-1]])
+    assert candidate[0, -1] == 0.0
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
