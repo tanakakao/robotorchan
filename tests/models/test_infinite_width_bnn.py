@@ -213,7 +213,7 @@ def test_infinite_width_bnn_kronecker_optimize_acqf_runs() -> None:
     acquisition = qLogExpectedImprovement(
         model=model, best_f=Y.mean(dim=-1).max(), objective=objective
     )
-    bounds = torch.tensor([[0.1], [0.9]], dtype=torch.double)
+    bounds = torch.tensor([[0.2], [0.8]], dtype=torch.double)
 
     candidate, value = optimize_acqf(
         acquisition,
