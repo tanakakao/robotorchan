@@ -89,3 +89,10 @@ implementation is not evidence that the fully Bayesian variant is supported.
 The next implementation phase should inspect BoTorch's exact fidelity covariance construction and
 prototype a design-only SAAS prior composition. Public export should occur only after proving that
 fidelity parameters are excluded from SAAS shrinkage.
+
+## Phase 23 follow-up
+
+The covariance prototype is documented in `map_saas_multifidelity_prototype.md`. The audit found
+a sound implementation seam for `linear_truncated=False`: attach SAAS only to the non-fidelity
+design covariance passed through BoTorch's `covar_module` argument, while leaving native fidelity
+kernels untouched. The linear-truncated path remains outside the first implementation contract.
