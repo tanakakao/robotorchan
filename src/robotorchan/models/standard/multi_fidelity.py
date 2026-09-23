@@ -257,7 +257,7 @@ class PCAMultiFidelityGP(SingleTaskMultiFidelityGP):
             raise ValueError("Fidelity dimensions must not contain duplicates.")
         if linear_truncated:
             raise ValueError(
-                "PCAMultiFidelityGP requires linear_truncated=False so PLS can remain "
+                "PCAMultiFidelityGP requires linear_truncated=False so PCA can remain "
                 "separate from fidelity covariance."
             )
 
@@ -507,7 +507,7 @@ class PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
             raise ValueError("Fidelity dimensions must not contain duplicates.")
         if linear_truncated:
             raise ValueError(
-                "PLSMultiFidelityGP requires linear_truncated=False so PCA can remain "
+                "PLSMultiFidelityGP requires linear_truncated=False so PLS can remain "
                 "separate from fidelity covariance."
             )
 
