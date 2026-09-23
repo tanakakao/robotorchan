@@ -1,5 +1,8 @@
 import pytest
 import torch
+from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.acquisition.objective import GenericMCObjective
+from botorch.sampling.normal import SobolQMCNormalSampler
 from gpytorch.kernels import ProductKernel
 
 from robotorchan.models import (
@@ -63,3 +66,64 @@ def test_mixed_heavy_tail_rejects_task_as_category(model_class) -> None:
     train_x, train_y = _data()
     with pytest.raises(ValueError, match="cat_dims must not overlap structural dimensions"):
         model_class(train_x, train_y, task_feature=-1, cat_dims=[-1])
+
+
+@pytest.mark.parametrize("model_class", [StudentTMultiTaskGP, ContaminatedMultiTaskGP])
+def test_heavy_tail_multitask_supports_sampling_and_mc_acquisition(model_class) -> None:
+    train_x, train_y = _data()
+    model = model_class(train_x, train_y, task_feature=-1, num_inducing=4)
+    model.eval()
+
+    candidates = train_x[:2]
+    posterior = model.posterior(candidates)
+    samples = posterior.rsample(torch.Size([4]))
+    objective = GenericMCObjective(lambda values, X=None: values.squeeze(-1))
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+        objective=objective,
+    )
+    value = acquisition(candidates.unsqueeze(0))
+
+    assert posterior.mean.shape == torch.Size([2, 1])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert samples.shape == torch.Size([4, 2, 1])
+    assert torch.isfinite(samples).all()
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+@pytest.mark.parametrize(
+    "model_class",
+    [MixedStudentTMultiTaskGP, MixedContaminatedMultiTaskGP],
+)
+def test_mixed_heavy_tail_supports_sampling_and_mc_acquisition(model_class) -> None:
+    train_x, train_y = _data(mixed=True)
+    model = model_class(
+        train_x,
+        train_y,
+        task_feature=-1,
+        cat_dims=[1],
+        num_inducing=4,
+    )
+    model.eval()
+
+    candidates = train_x[:2]
+    posterior = model.posterior(candidates)
+    samples = posterior.rsample(torch.Size([4]))
+    objective = GenericMCObjective(lambda values, X=None: values.squeeze(-1))
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+        objective=objective,
+    )
+    value = acquisition(candidates.unsqueeze(0))
+
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert torch.isfinite(samples).all()
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()

@@ -1,7 +1,11 @@
 import pytest
 import torch
+from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.acquisition.objective import GenericMCObjective
 from botorch.models.likelihoods.sparse_outlier_noise import SparseOutlierGaussianLikelihood
+from botorch.sampling.normal import SobolQMCNormalSampler
 from gpytorch.kernels import AdditiveKernel, ProductKernel
+from gpytorch.likelihoods import GaussianLikelihood
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import (
@@ -26,6 +30,8 @@ def test_robust_multitask_preserves_public_contract() -> None:
     model = RobustRelevancePursuitMultiTaskGP(train_x, train_y, task_feature=-1)
 
     assert isinstance(model.likelihood, SparseOutlierGaussianLikelihood)
+    base_noise_type = GaussianLikelihood().noise_covar.__class__
+    assert isinstance(model.likelihood.noise_covar.base_noise, base_noise_type)
     assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
     torch.testing.assert_close(model.raw_train_X, train_x)
     torch.testing.assert_close(model.raw_train_Y, train_y)
@@ -81,3 +87,29 @@ def test_mixed_robust_multitask_rejects_task_as_category() -> None:
             task_feature=-1,
             cat_dims=[-1],
         )
+
+
+def test_robust_relevance_pursuit_multitask_supports_mc_acquisition() -> None:
+    train_x, train_y = _long_format_data()
+    model = RobustRelevancePursuitMultiTaskGP(train_x, train_y, task_feature=-1)
+    model.eval()
+    acquisition_model = model.to_standard_model()
+    acquisition_model.eval()
+
+    candidates = train_x[:2]
+    posterior = acquisition_model.posterior(candidates)
+    samples = posterior.rsample(torch.Size([4]))
+    objective = GenericMCObjective(lambda values, X=None: values.squeeze(-1))
+    acquisition = qLogExpectedImprovement(
+        model=acquisition_model,
+        best_f=train_y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+        objective=objective,
+    )
+    value = acquisition(candidates.unsqueeze(0))
+
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert torch.isfinite(samples).all()
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
