@@ -115,6 +115,22 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         ),
         "robust relevance-pursuit multitask GP with mixed inputs",
     ),
+    "PCAMultiFidelityGP": ModelRegistryEntry(
+        "PCAMultiFidelityGP",
+        ModelCapabilities(
+            high_dimensional=HighDimensionalStrategy.REDUCTION,
+            multi_fidelity=True,
+            supports_posterior_samples=True,
+            posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
+            supports_fantasize=True,
+        ),
+        _docs(
+            "docs/models/reduced.md",
+            "docs/theory/06_multi_fidelity.md",
+            "examples/notebooks/03_multi_fidelity_gp.ipynb",
+        ),
+        "PCA design reduction with BoTorch multi-fidelity covariance",
+    ),
     "SingleTaskMultiFidelityGP": ModelRegistryEntry(
         "SingleTaskMultiFidelityGP",
         ModelCapabilities(
