@@ -124,6 +124,7 @@ PUBLIC_MODEL_NAMES = {
     "SingleTaskDeepGP",
     "SingleTaskGP",
     "SpectralMixtureGP",
+    "SpectralMixtureKroneckerMultiTaskGP",
     "SpectralMixtureMultiTaskGP",
     "MixedSpectralMixtureGP",
     "MixedSpectralMixtureMultiTaskGP",
