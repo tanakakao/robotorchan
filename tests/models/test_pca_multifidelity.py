@@ -4,7 +4,11 @@ import torch
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 from botorch.sampling.normal import IIDNormalSampler
 
-from robotorchan.models import (\n    PCAMultiFidelityGP,\n    PLSMultiFidelityGP,\n    RandomProjectionMultiFidelityGP,\n)
+from robotorchan.models import (
+    PCAMultiFidelityGP,
+    PLSMultiFidelityGP,
+    RandomProjectionMultiFidelityGP,
+)
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
