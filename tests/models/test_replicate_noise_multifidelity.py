@@ -148,3 +148,29 @@ def test_replicate_noise_multifidelity_supports_native_mf_kg() -> None:
 
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
+
+
+def test_replicate_noise_multifidelity_optimizes_candidate() -> None:
+    train_x, train_y = _replicates()
+    model = ReplicateNoiseMultiFidelityGP.from_replicates(
+        train_x,
+        train_y,
+        data_fidelities=[-1],
+    )
+    model.eval()
+    acquisition = qUpperConfidenceBound(
+        model=model,
+        beta=0.2,
+        sampler=IIDNormalSampler(sample_shape=torch.Size([16])),
+    )
+    candidate, value = optimize_acqf(
+        acq_function=acquisition,
+        bounds=torch.tensor([[0.0, 0.2], [1.0, 1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+    )
+    assert candidate.shape == torch.Size([1, 2])
+    assert 0.0 <= candidate[0, 0] <= 1.0
+    assert 0.2 <= candidate[0, 1] <= 1.0
+    assert torch.isfinite(value).all()
