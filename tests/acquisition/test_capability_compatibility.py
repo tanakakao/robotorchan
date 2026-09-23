@@ -45,13 +45,13 @@ def test_epig_rejects_multitask_model() -> None:
     assert "acquisition requires a single-output posterior" in result.reasons
 
 
-def test_non_gp_model_requires_mc_acquisition_path() -> None:
+def test_random_forest_supports_variance_active_learning() -> None:
     result = check_model_acquisition_compatibility(
         "RandomForestSurrogate",
         "PosteriorVariance",
     )
-    assert result.status is CompatibilityStatus.INCOMPATIBLE
-    assert "acquisition does not support ensemble posteriors" in result.reasons
+    assert result.status is CompatibilityStatus.COMPATIBLE
+    assert result.compatible
 
 
 def test_registry_keys_match_acquisition_names() -> None:
