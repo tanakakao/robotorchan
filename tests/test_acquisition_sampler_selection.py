@@ -50,3 +50,17 @@ def test_mixed_map_saas_ensemble_sampler_runs_against_gaussian_posterior() -> No
     samples = sampler(model.posterior(candidate))
     assert isinstance(sampler, SobolQMCNormalSampler)
     assert torch.isfinite(samples).all()
+
+
+def test_ngboost_sampler_matches_distribution_posterior_contract() -> None:
+    sampler = make_model_sampler("NGBoostSurrogate", torch.Size([8]))
+    assert isinstance(sampler, SobolQMCNormalSampler)
+
+
+def test_robust_multifidelity_sampler_uses_gaussian_path() -> None:
+    for model_name in (
+        "ReplicateNoiseMultiFidelityGP",
+        "HeteroskedasticMultiFidelityGP",
+    ):
+        sampler = make_model_sampler(model_name, torch.Size([8]))
+        assert isinstance(sampler, SobolQMCNormalSampler)
