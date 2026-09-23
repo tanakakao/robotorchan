@@ -440,7 +440,7 @@ class HeteroskedasticKroneckerMultiTaskGP(KroneckerMultiTaskGP):
             initial_noise = train_Yvar.clamp_min(noise_floor)
         super().__init__(train_X=train_X, train_Y=train_Y, rank=rank)
         self.noise_floor = float(noise_floor)
-        self.raw_train_Yvar = initial_noise.detach().clone()
+        self._store_supervised_training_data(train_X, train_Y, initial_noise)
         self.noise_model: KroneckerMultiTaskGP | None = None
         self._noise_model_fitted = False
 
