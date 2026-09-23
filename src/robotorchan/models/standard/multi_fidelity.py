@@ -184,7 +184,20 @@ class PCAMultiFidelityGP(SingleTaskMultiFidelityGP):
                 "separate from fidelity covariance."
             )
 
+        normalized_iteration = (
+            None
+            if iteration_fidelity is None
+            else normalize_feature_dims([iteration_fidelity], input_dim, name="iteration_fidelity")[
+                0
+            ]
+        )
+        normalized_data = tuple(
+            normalize_feature_dims(data_fidelities or (), input_dim, name="data_fidelities")
+        )
+
         self.raw_input_dim = input_dim
+        self.iteration_fidelity = normalized_iteration
+        self.data_fidelities = normalized_data
         self.fidelity_dims = tuple(sorted(fidelity_dims))
         self.design_dims = tuple(dim for dim in range(input_dim) if dim not in self.fidelity_dims)
         if not self.design_dims:
@@ -198,12 +211,18 @@ class PCAMultiFidelityGP(SingleTaskMultiFidelityGP):
             train_X[..., list(self.fidelity_dims)],
         )
         encoded_fidelity_dims = list(range(reduced_design_X.shape[-1], encoded_train_X.shape[-1]))
+        raw_to_encoded = dict(zip(self.fidelity_dims, encoded_fidelity_dims, strict=True))
+        encoded_iteration = (
+            None if normalized_iteration is None else raw_to_encoded[normalized_iteration]
+        )
+        encoded_data = [raw_to_encoded[dim] for dim in normalized_data]
 
         super().__init__(
             train_X=encoded_train_X,
             train_Y=train_Y,
             train_Yvar=train_Yvar,
-            data_fidelities=encoded_fidelity_dims,
+            iteration_fidelity=encoded_iteration,
+            data_fidelities=encoded_data,
             linear_truncated=False,
             nu=nu,
             likelihood=likelihood,

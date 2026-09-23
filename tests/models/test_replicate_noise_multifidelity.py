@@ -73,3 +73,28 @@ def test_replicate_noise_multifidelity_make_mll() -> None:
         data_fidelities=[-1],
     )
     assert model.make_mll().model is model
+
+
+def test_replicate_noise_multifidelity_uses_variance_of_mean() -> None:
+    train_x, train_y = _replicates()
+    model = ReplicateNoiseMultiFidelityGP.from_replicates(
+        train_x,
+        train_y,
+        data_fidelities=[-1],
+    )
+
+    expected_observation_variance = torch.full((4, 1), 0.02, dtype=torch.double)
+    expected_mean_variance = expected_observation_variance / 2.0
+    assert torch.allclose(model.replicate_variance, expected_observation_variance)
+    assert torch.allclose(model.raw_train_Yvar, expected_mean_variance)
+
+
+def test_replicate_noise_multifidelity_accepts_iteration_fidelity() -> None:
+    train_x, train_y = _replicates()
+    model = ReplicateNoiseMultiFidelityGP.from_replicates(
+        train_x,
+        train_y,
+        iteration_fidelity=-1,
+    )
+    assert torch.equal(model.raw_replicate_X, train_x)
+    assert torch.isfinite(model.posterior(model.raw_train_X[:2]).mean).all()

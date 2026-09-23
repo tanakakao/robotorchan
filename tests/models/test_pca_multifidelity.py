@@ -75,3 +75,44 @@ def test_pca_multifidelity_make_mll() -> None:
 
     mll = model.make_mll()
     assert mll.model is model
+
+
+def test_pca_multifidelity_preserves_iteration_and_data_roles() -> None:
+    torch.manual_seed(0)
+    design = torch.rand(10, 4, dtype=torch.double)
+    iteration = torch.linspace(0.1, 1.0, 10, dtype=torch.double).unsqueeze(-1)
+    data = torch.linspace(0.2, 1.0, 10, dtype=torch.double).unsqueeze(-1)
+    train_x = torch.cat((design, iteration, data), dim=-1)
+    train_y = design[:, :2].sum(dim=-1, keepdim=True) + 0.1 * iteration + 0.2 * data
+
+    model = PCAMultiFidelityGP(
+        train_x,
+        train_y,
+        n_components=2,
+        iteration_fidelity=-2,
+        data_fidelities=[-1],
+    )
+
+    assert model.iteration_fidelity == 4
+    assert model.data_fidelities == (5,)
+    assert model.fidelity_dims == (4, 5)
+    assert model.encoded_fidelity_dims == (2, 3)
+    encoded = model._encode_inputs(train_x)
+    assert torch.equal(encoded[..., 2], train_x[..., 4])
+    assert torch.equal(encoded[..., 3], train_x[..., 5])
+
+
+def test_pca_multifidelity_rejects_overlapping_fidelity_roles() -> None:
+    train_x, train_y = _data()
+    try:
+        PCAMultiFidelityGP(
+            train_x,
+            train_y,
+            n_components=2,
+            iteration_fidelity=-1,
+            data_fidelities=[-1],
+        )
+    except ValueError as error:
+        assert "duplicates" in str(error)
+    else:
+        raise AssertionError("Expected overlapping fidelity dimensions to be rejected.")
