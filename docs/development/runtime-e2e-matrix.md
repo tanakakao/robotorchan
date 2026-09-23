@@ -71,3 +71,22 @@ Executable compatibility assertions now cover:
 This separates two meanings that should not be conflated: a model may provide a sampleable
 predictive distribution while still lacking the fantasy-model lifecycle required by KG-style
 lookahead acquisitions.
+
+
+## Phase 14 optimizer E2E closure
+
+Phase 14 extends robust multi-fidelity coverage from acquisition evaluation to actual candidate
+generation. Both public robust MF reference families now execute
+`optimize_acqf` with a sample-based acquisition over joint design/fidelity bounds:
+
+- `ReplicateNoiseMultiFidelityGP`;
+- `HeteroskedasticMultiFidelityGP`.
+
+The tests assert finite optimized values, valid candidate shapes, and candidates inside both design
+and fidelity bounds. This complements their native cost-aware MF-KG evaluation: the latter proves
+multi-fidelity acquisition semantics, while the new optimizer tests prove ordinary differentiable
+candidate generation remains usable through the robust response posterior.
+
+NGBoost remains on the intentionally different gradient-free path established in Phase 12; it is
+not routed through `optimize_acqf` because backend prediction does not preserve candidate-input
+autograd.
