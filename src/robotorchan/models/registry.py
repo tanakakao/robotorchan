@@ -331,6 +331,7 @@ _MULTITASK_MODELS = frozenset(
         "MultiTaskDeepGP",
         "MixedMultiTaskDeepGP",
         "InfiniteWidthBNNMultiTaskGP",
+        "InfiniteWidthBNNKroneckerMultiTaskGP",
         "MixedInfiniteWidthBNNMultiTaskGP",
         "SpectralMixtureMultiTaskGP",
         "SpectralMixtureKroneckerMultiTaskGP",
@@ -869,6 +870,14 @@ _register_family(
     notebook="examples/notebooks/25_non_gp_surrogates.ipynb",
     strategy="optional NGBoost Gaussian predictive-distribution adapter",
     non_gp=True,
+)
+
+_register_family(
+    ("InfiniteWidthBNNKroneckerMultiTaskGP",),
+    guide="docs/models/expressive.md",
+    theory="docs/theory/22_expressive_gp.md",
+    notebook="examples/notebooks/24_expressive_surrogate_gp.ipynb",
+    description="Kronecker multitask GP with infinite-width ReLU data covariance",
 )
 
 _register_family(
