@@ -124,8 +124,9 @@ def test_heteroskedastic_multifidelity_noise_model_uses_fidelity_coordinate() ->
     ).fit_heteroskedastic(iterations=1)
 
     assert model.noise_model is not None
-    assert model.noise_model.data_fidelities == [1]
+    assert model._data_fidelities == [-1]
     assert torch.equal(model.noise_model.raw_train_X[..., 1], train_x[..., 1])
+    assert model.noise_model.covar_module is not None
 
     probe = torch.tensor([[0.5, 0.25], [0.5, 1.0]], dtype=torch.double)
     predicted_noise = model.predicted_noise(probe)
