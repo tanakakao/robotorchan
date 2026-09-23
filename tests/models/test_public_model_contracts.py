@@ -159,6 +159,7 @@ NON_MLL_MODELS = {
     "ExtraTreesSurrogate",
     "GradientBoostingSurrogate",
     "HistGradientBoostingSurrogate",
+    "NGBoostSurrogate",
 }
 
 
