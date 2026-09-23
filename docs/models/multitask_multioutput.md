@@ -15,6 +15,14 @@ train_X: [n, d]
 train_Y: [n, m]
 ```
 
+## Kronecker extensions
+
+Kronecker 系は long-format MultiTask の別名ではありません。block design を前提として、task covariance と入力側の構造を組み合わせます。
+
+現在は `MixedKroneckerMultiTaskGP` に加え、PCA / PLS / Random Projection / neural encoder などの高次元 Kronecker variants と `NonstationaryKroneckerMultiTaskGP` を公開しています。新しい組合せは「MultiTask版があるから」という理由では追加せず、block-designで利用価値があり、posterior / sampling / acquisition contract を検証できる場合に実装します。
+
+Robust Relevance Pursuitなど既存likelihoodとの単純合成が成立しない候補についても直ちに除外せず、専用設計の規模と実務価値を比較して Implement / Prototype / Hold / Reject を判断します。
+
 ## Independent outputs
 
 `ModelListGP` は複数の GP をまとめる構成です。複数目的 BO だから task covariance が必要とは限りません。目的ごとに独立 surrogate を置く場合に自然です。

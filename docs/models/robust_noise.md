@@ -36,5 +36,13 @@
 
 詳細: [Nonstationary GP](nonstationary_gp.md)
 
+### Kronecker / Multi-Fidelity robust variants
+
+`NonstationaryKroneckerMultiTaskGP` は、同じ入力点で全タスクを観測する block-design Kronecker 構造と nonstationary latent process を組み合わせます。long-format の `NonstationaryMultiTaskGP` とは観測設計が異なります。
+
+Multi-Fidelity では、`ReplicateNoiseMultiFidelityGP` と `HeteroskedasticMultiFidelityGP` が public model です。前者は反復測定から variance-of-the-mean を構成し、後者は fidelity coordinate を保持する noise process を学習します。両者とも代表的な native Multi-Fidelity KG workflow を検証しています。
+
+Relevance Pursuit × Kronecker / Multi-Fidelity は、既存 single-task likelihood mixin をそのまま再利用できないため専用設計が必要です。実装不能という意味ではなく、専用 likelihood / outlier structure の設計価値と保守コストを評価してから prototype する候補です。
+
 Notebook: [Robust GP](../../examples/notebooks/10_robust_gp.ipynb)、[Robust observation](../../examples/notebooks/15_robust_observation_models.ipynb)、[Noise models](../../examples/notebooks/16_noise_models.ipynb)、[Nonstationary](../../examples/notebooks/18_nonstationary_gp.ipynb)  
 Theory: [Robust GP](../theory/14_robust_gaussian_process.md)、[Heteroskedastic noise](../theory/15_heteroskedastic_noise.md)、[Nonstationary GP](../theory/17_nonstationary_gp.md)
