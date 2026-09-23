@@ -256,7 +256,7 @@ class ReplicateNoiseMultiFidelityGP(SingleTaskMultiFidelityGP):
         iteration_fidelity: int | None = None,
         data_fidelities: list[int] | None = None,
         noise_floor: float = 1e-6,
-    ) -> "ReplicateNoiseMultiFidelityGP":
+    ) -> ReplicateNoiseMultiFidelityGP:
         """Aggregate exact raw rows while preserving fidelity as part of each condition."""
         (
             unique_X,
