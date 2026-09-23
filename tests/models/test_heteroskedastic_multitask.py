@@ -21,7 +21,6 @@ def _long_format_data() -> tuple[torch.Tensor, torch.Tensor]:
     train_y = torch.cat((torch.sin(x), torch.cos(x)))
     return train_x, train_y
 
-
 def test_heteroskedastic_multitask_public_contract() -> None:
     train_x, train_y = _long_format_data()
     model = HeteroskedasticMultiTaskGP(train_x, train_y, task_feature=-1)
@@ -35,7 +34,6 @@ def test_heteroskedastic_multitask_public_contract() -> None:
 
     with pytest.raises(RuntimeError, match="fit_heteroskedastic"):
         model.predicted_noise(train_x)
-
 
 def test_heteroskedastic_multitask_validates_noise_floor() -> None:
     train_x, train_y = _long_format_data()
@@ -72,7 +70,6 @@ def test_mixed_heteroskedastic_multitask_rejects_task_as_category() -> None:
             task_feature=-1,
             cat_dims=[-1],
         )
-
 
 
 def test_heteroskedastic_multitask_supports_sampling_and_mc_acquisition() -> None:
