@@ -269,6 +269,6 @@ def test_reduced_multifidelity_conditioning_accepts_raw_inputs() -> None:
         conditioned = model.condition_on_observations(X=new_x, Y=new_y)
 
         assert conditioned.train_inputs[0].shape[-1] == 3
-        posterior = conditioned.posterior(model._encode_inputs(new_x))
+        posterior = super(model_class, conditioned).posterior(model._encode_inputs(new_x))
         assert torch.isfinite(posterior.mean).all()
         assert torch.isfinite(posterior.variance).all()
