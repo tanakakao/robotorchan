@@ -46,7 +46,7 @@ ACQUISITION_REGISTRY: dict[str, AcquisitionRegistryEntry] = {
         "Straddle",
     )
 }
-ACQUISITION_REGISTRY["ExpectedPredictiveInformationGain"] = _active_learning(
+for name in ("PosteriorStd", "PosteriorVariance"):\n    entry = ACQUISITION_REGISTRY[name]\n    ACQUISITION_REGISTRY[name] = AcquisitionRegistryEntry(\n        acquisition_name=name,\n        capabilities=AcquisitionCapabilities(\n            purpose=AcquisitionPurpose.ACTIVE_LEARNING,\n            posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,\n            max_q=1,\n            supports_multi_output=True,\n            supports_ensemble=True,\n        ),\n        implementation_strategy="robotorchan active-learning acquisition",\n        limitations=("structured outputs require scalarization",),\n    )\n\n\nACQUISITION_REGISTRY["ExpectedPredictiveInformationGain"] = _active_learning(
     "ExpectedPredictiveInformationGain",
     posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
     supports_multi_output=False,
