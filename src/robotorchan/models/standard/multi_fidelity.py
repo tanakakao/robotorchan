@@ -337,7 +337,10 @@ class PCAMultiFidelityGP(SingleTaskMultiFidelityGP):
 
     def fantasize(self, X: Tensor, sampler: Any, **kwargs: Any) -> Any:
         """Construct fantasy models from candidate inputs supplied in raw coordinates."""
-        return super().fantasize(X=self._encode_inputs(X), sampler=sampler, **kwargs)
+        encoded_X = self._encode_inputs(X)
+        posterior = super().posterior(encoded_X, observation_noise=True)
+        fantasy_Y = sampler(posterior)
+        return super().condition_on_observations(X=encoded_X, Y=fantasy_Y, **kwargs)
 
 
 class RandomProjectionMultiFidelityGP(SingleTaskMultiFidelityGP):
@@ -455,7 +458,10 @@ class RandomProjectionMultiFidelityGP(SingleTaskMultiFidelityGP):
 
     def fantasize(self, X: Tensor, sampler: Any, **kwargs: Any) -> Any:
         """Construct fantasy models from candidate inputs supplied in raw coordinates."""
-        return super().fantasize(X=self._encode_inputs(X), sampler=sampler, **kwargs)
+        encoded_X = self._encode_inputs(X)
+        posterior = super().posterior(encoded_X, observation_noise=True)
+        fantasy_Y = sampler(posterior)
+        return super().condition_on_observations(X=encoded_X, Y=fantasy_Y, **kwargs)
 
 
 class PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
@@ -573,4 +579,7 @@ class PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
 
     def fantasize(self, X: Tensor, sampler: Any, **kwargs: Any) -> Any:
         """Construct fantasy models from candidate inputs supplied in raw coordinates."""
-        return super().fantasize(X=self._encode_inputs(X), sampler=sampler, **kwargs)
+        encoded_X = self._encode_inputs(X)
+        posterior = super().posterior(encoded_X, observation_noise=True)
+        fantasy_Y = sampler(posterior)
+        return super().condition_on_observations(X=encoded_X, Y=fantasy_Y, **kwargs)
