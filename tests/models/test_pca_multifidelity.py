@@ -295,7 +295,10 @@ def test_reduced_multifidelity_fantasize_accepts_raw_inputs() -> None:
         fantasy = model.fantasize(X=candidates, sampler=sampler)
 
         assert fantasy.train_inputs[0].shape[-1] == 3
-        assert fantasy.input_reducer is model.input_reducer
+        assert type(fantasy.input_reducer) is type(model.input_reducer)
+        assert fantasy.input_reducer.state_dict().keys() == model.input_reducer.state_dict().keys()
+        for key, value in model.input_reducer.state_dict().items():
+            torch.testing.assert_close(fantasy.input_reducer.state_dict()[key], value)
         posterior = super(model_class, fantasy).posterior(model._encode_inputs(candidates))
         assert torch.isfinite(posterior.mean).all()
         assert torch.isfinite(posterior.variance).all()
