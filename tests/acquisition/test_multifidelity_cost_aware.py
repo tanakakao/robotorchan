@@ -6,7 +6,7 @@ from botorch.models.cost import AffineFidelityCostModel
 from botorch.models.gp_regression_fidelity import SingleTaskMultiFidelityGP
 from botorch.optim import optimize_acqf
 
-from robotorchan.models import SingleTaskGP
+from robotorchan.models import MapSaasMultiFidelityGP, SingleTaskGP
 
 
 def _multifidelity_model() -> tuple[SingleTaskMultiFidelityGP, torch.Tensor]:
@@ -79,4 +79,50 @@ def test_cost_utility_accepts_robotorchan_cost_surrogate() -> None:
 
     value = utility(X=X, deltas=deltas)
 
+    assert torch.isfinite(value).all()
+
+
+def test_map_saas_multifidelity_supports_native_mf_kg() -> None:
+    x = torch.linspace(0.0, 1.0, 8, dtype=torch.double)
+    low = torch.stack((x, torch.full_like(x, 0.5)), dim=-1)
+    high = torch.stack((x, torch.ones_like(x)), dim=-1)
+    train_X = torch.cat((low, high), dim=0)
+    train_Y = torch.sin(train_X[:, :1] * 5.0) + 0.2 * (1.0 - train_X[:, 1:])
+    model = MapSaasMultiFidelityGP(train_X, train_Y, data_fidelities=[1])
+    model.eval()
+
+    cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
+    cost_utility = InverseCostWeightedUtility(cost_model=cost_model)
+
+    def project(X: torch.Tensor) -> torch.Tensor:
+        projected = X.clone()
+        projected[..., 1] = 1.0
+        return projected
+
+    target_mean = PosteriorMean(model)
+    _, current_value = optimize_acqf(
+        acq_function=target_mean,
+        bounds=torch.tensor([[0.0, 1.0], [1.0, 1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=8,
+        fixed_features={1: 1.0},
+    )
+    acquisition = qMultiFidelityKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        current_value=current_value,
+        cost_aware_utility=cost_utility,
+        project=project,
+    )
+    X = torch.rand(
+        1,
+        acquisition.get_augmented_q_batch_size(q=1),
+        2,
+        dtype=torch.double,
+    )
+    X[..., 1] = 0.5
+    value = acquisition(X)
+
+    assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
