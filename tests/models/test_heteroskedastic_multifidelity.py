@@ -133,3 +133,22 @@ def test_heteroskedastic_multifidelity_noise_model_uses_fidelity_coordinate() ->
     assert predicted_noise.shape == torch.Size([2, 1])
     assert torch.isfinite(predicted_noise).all()
     assert torch.all(predicted_noise >= model.noise_floor)
+
+
+def test_heteroskedastic_multifidelity_updates_response_noise_after_fit() -> None:
+    train_x, train_y = _data()
+    model = HeteroskedasticMultiFidelityGP(
+        train_x,
+        train_y,
+        data_fidelities=[-1],
+    )
+    initial_noise = model.likelihood.noise.detach().clone()
+    model.fit_heteroskedastic(iterations=1)
+
+    fitted_noise = model.likelihood.noise.detach()
+    predicted_train_noise = model.predicted_noise(train_x).detach().squeeze(-1)
+
+    assert torch.isfinite(fitted_noise).all()
+    assert torch.all(fitted_noise >= model.noise_floor)
+    torch.testing.assert_close(fitted_noise, predicted_train_noise)
+    assert torch.equal(model.raw_train_Yvar, initial_noise.unsqueeze(-1))

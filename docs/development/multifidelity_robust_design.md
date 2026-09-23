@@ -119,3 +119,24 @@ Phase 10 does not:
 MultiFidelity × Robust moves from blanket unsupported status to a staged regression plan with two
 statistically clear implementation candidates. Phase 11 should start with replicate-noise
 multi-fidelity because it provides the simplest executable reference contract.
+
+
+## Phase 11 runtime closure
+
+The two public robust multi-fidelity reference families now have native multi-fidelity acquisition
+evidence:
+
+- `ReplicateNoiseMultiFidelityGP`: replicate grouping, variance-of-the-mean fixed noise,
+  posterior sampling, and cost-aware qMultiFidelityKnowledgeGradient;
+- `HeteroskedasticMultiFidelityGP`: two-GP fidelity-aware noise model, posterior sampling,
+  cost-aware qMultiFidelityKnowledgeGradient, and an explicit assertion that
+  `fit_heteroskedastic` replaces the response model's fixed observation noise with the predicted
+  training-point noise.
+
+The last assertion is important: an auxiliary noise GP alone would not constitute a
+heteroskedastic response model. Runtime evidence now checks that the fitted noise is actually
+consumed by the response likelihood.
+
+RRP, Student-t, and contaminated multi-fidelity variants remain separate implementation candidates.
+They are not represented by reshaping or multiple inheritance because their likelihood and
+inference contracts require dedicated composition evidence.
