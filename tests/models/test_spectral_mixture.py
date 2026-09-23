@@ -3,12 +3,13 @@
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.objective import GenericMCObjective
-from botorch.optim import optimize_acqf
+from botorch.optim import optimize_acqf, optimize_acqf_mixed
 from gpytorch.kernels import ScaleKernel, SpectralMixtureKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models.expressive.spectral_mixture import (
     MixedSpectralMixtureGP,
+    MixedSpectralMixtureKroneckerMultiTaskGP,
     SpectralMixtureGP,
     SpectralMixtureKroneckerMultiTaskGP,
     SpectralMixtureMultiTaskGP,
@@ -212,5 +213,74 @@ def test_spectral_mixture_kronecker_scalarized_mc_and_optimizer_run() -> None:
         options={"maxiter": 12},
     )
     assert candidate.shape == (1, 1)
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+
+
+def _mixed_kronecker_periodic_data() -> tuple[torch.Tensor, torch.Tensor]:
+    x = torch.linspace(0.05, 0.95, 16, dtype=torch.double)
+    category = torch.tensor([0.0, 1.0] * 8, dtype=torch.double)
+    X = torch.stack((x, category), dim=-1)
+    base = torch.sin(2.0 * torch.pi * 2.0 * x) + 0.25 * category
+    other = 0.5 * base + 0.2 * torch.cos(2.0 * torch.pi * x)
+    return X, torch.stack((base, other), dim=-1)
+
+
+def test_mixed_spectral_kronecker_preserves_raw_block_design() -> None:
+    X, Y = _mixed_kronecker_periodic_data()
+    model = MixedSpectralMixtureKroneckerMultiTaskGP(X, Y, cat_dims=[-1], num_mixtures=2)
+    torch.testing.assert_close(model.raw_train_X, X)
+    torch.testing.assert_close(model.raw_train_Y, Y)
+    assert model.cat_dims == (1,)
+    assert model.covar_module.data_covar_module is not None
+    assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
+
+
+def test_mixed_spectral_kronecker_categorical_path_changes_covariance() -> None:
+    X, Y = _mixed_kronecker_periodic_data()
+    model = MixedSpectralMixtureKroneckerMultiTaskGP(X, Y, cat_dims=[1], num_mixtures=2)
+    data_kernel = model.covar_module.data_covar_module
+    same = torch.tensor([[0.4, 0.0], [0.4, 0.0]], dtype=torch.double)
+    changed = torch.tensor([[0.4, 0.0], [0.4, 1.0]], dtype=torch.double)
+    same_cov = data_kernel(same).to_dense()[0, 1]
+    changed_cov = data_kernel(changed).to_dense()[0, 1]
+    assert not torch.isclose(same_cov, changed_cov)
+
+
+def test_mixed_spectral_kronecker_posterior_sampling_is_finite() -> None:
+    X, Y = _mixed_kronecker_periodic_data()
+    model = MixedSpectralMixtureKroneckerMultiTaskGP(X, Y, cat_dims=[1], num_mixtures=2)
+    model.eval()
+    model.likelihood.eval()
+    posterior = model.posterior(X[:3])
+    samples = posterior.rsample(torch.Size([4]))
+    assert posterior.mean.shape == (3, 2)
+    assert samples.shape == (4, 3, 2)
+    assert torch.isfinite(samples).all()
+
+
+def test_mixed_spectral_kronecker_mixed_optimizer_runs() -> None:
+    X, Y = _mixed_kronecker_periodic_data()
+    model = MixedSpectralMixtureKroneckerMultiTaskGP(X, Y, cat_dims=[1], num_mixtures=2)
+    model.eval()
+    model.likelihood.eval()
+    objective = GenericMCObjective(lambda samples, X=None: samples.mean(dim=-1))
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=Y.mean(dim=-1).max(),
+        objective=objective,
+    )
+    bounds = torch.tensor([[0.05, 0.0], [0.95, 1.0]], dtype=torch.double)
+    candidate, value = optimize_acqf_mixed(
+        acquisition,
+        bounds=bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+        options={"maxiter": 12},
+    )
+    assert candidate.shape == (1, 2)
+    assert candidate[0, 1].item() in {0.0, 1.0}
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()
