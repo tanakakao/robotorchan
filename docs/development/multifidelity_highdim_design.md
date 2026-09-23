@@ -138,3 +138,16 @@ replaced by a staged implementation plan:
 3. MAP-SAAS covariance-composition audit (completed in Phase 22; see `map_saas_multifidelity_audit.md`);
 4. learned reduction only when fidelity exclusion is explicit;
 5. fully Bayesian SAAS only through a dedicated fidelity-aware probabilistic model.
+
+
+## Phase 9 runtime extension
+
+The deterministic reduction family and the MAP-SAAS family are now validated beyond posterior
+construction. PCA, PLS, and random projection already exercise native multi-fidelity knowledge
+gradient. Phase 9 adds the same cost-aware qMultiFidelityKnowledgeGradient path for
+`MapSaasMultiFidelityGP` and `AdditiveMapSaasMultiFidelityGP`.
+
+This closes the practical acquisition-validation gap for the currently public high-dimensional
+multi-fidelity models without inventing a new covariance family. Fully Bayesian SAAS and learned
+encoder multi-fidelity models remain separate implementation candidates because they require
+fidelity-aware probabilistic or transform ownership rather than additional runtime tests.

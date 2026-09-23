@@ -10,6 +10,7 @@ from botorch.optim import optimize_acqf
 from botorch.sampling.normal import IIDNormalSampler, SobolQMCNormalSampler
 
 from robotorchan.models import (
+    AdditiveMapSaasMultiFidelityGP,
     MapSaasMultiFidelityGP,
     PCAMultiFidelityGP,
     PLSMultiFidelityGP,
@@ -450,3 +451,108 @@ def test_all_reduced_multifidelity_models_reject_linear_truncated() -> None:
             assert "linear_truncated=False" in str(error)
         else:
             raise AssertionError(f"Expected {model_class.__name__} to reject linear truncation.")
+
+
+def test_map_saas_multifidelity_supports_native_mf_kg() -> None:
+    torch.manual_seed(0)
+    train_x, train_y = _data()
+    model = MapSaasMultiFidelityGP(train_x, train_y, data_fidelities=[-1])
+    model.eval()
+
+    cost_model = AffineFidelityCostModel(fidelity_weights={5: 1.0}, fixed_cost=0.1)
+    cost_utility = InverseCostWeightedUtility(cost_model=cost_model)
+
+    def project(X: torch.Tensor) -> torch.Tensor:
+        projected = X.clone()
+        projected[..., 5] = 1.0
+        return projected
+
+    bounds = torch.stack((train_x.min(dim=0).values, train_x.max(dim=0).values))
+    bounds[:, 5] = 1.0
+    _, current_value = optimize_acqf(
+        acq_function=PosteriorMean(model),
+        bounds=bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=8,
+        fixed_features={5: 1.0},
+    )
+    acquisition = qMultiFidelityKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        current_value=current_value,
+        cost_aware_utility=cost_utility,
+        project=project,
+    )
+    X = torch.rand(
+        1,
+        acquisition.get_augmented_q_batch_size(q=1),
+        train_x.shape[-1],
+        dtype=torch.double,
+    )
+    X[..., 5] = 0.2
+    value = acquisition(X)
+
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_additive_map_saas_multifidelity_runtime_and_native_mf_kg() -> None:
+    torch.manual_seed(0)
+    train_x, train_y = _data()
+    model = AdditiveMapSaasMultiFidelityGP(
+        train_x,
+        train_y,
+        data_fidelities=[-1],
+        num_taus=2,
+    )
+
+    assert torch.equal(model.raw_train_X, train_x)
+    assert torch.equal(model.raw_train_Y, train_y)
+    assert model.design_dims == (0, 1, 2, 3, 4)
+    assert model.fidelity_dims == (5,)
+    assert model.num_taus == 2
+    assert model.make_mll().model is model
+
+    model.eval()
+    posterior = model.posterior(train_x[:2])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert torch.isfinite(posterior.rsample(torch.Size([3]))).all()
+
+    cost_model = AffineFidelityCostModel(fidelity_weights={5: 1.0}, fixed_cost=0.1)
+    cost_utility = InverseCostWeightedUtility(cost_model=cost_model)
+
+    def project(X: torch.Tensor) -> torch.Tensor:
+        projected = X.clone()
+        projected[..., 5] = 1.0
+        return projected
+
+    bounds = torch.stack((train_x.min(dim=0).values, train_x.max(dim=0).values))
+    bounds[:, 5] = 1.0
+    _, current_value = optimize_acqf(
+        acq_function=PosteriorMean(model),
+        bounds=bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=8,
+        fixed_features={5: 1.0},
+    )
+    acquisition = qMultiFidelityKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        current_value=current_value,
+        cost_aware_utility=cost_utility,
+        project=project,
+    )
+    X = torch.rand(
+        1,
+        acquisition.get_augmented_q_batch_size(q=1),
+        train_x.shape[-1],
+        dtype=torch.double,
+    )
+    X[..., 5] = 0.2
+    value = acquisition(X)
+
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
