@@ -30,7 +30,8 @@ def test_robust_multitask_preserves_public_contract() -> None:
     model = RobustRelevancePursuitMultiTaskGP(train_x, train_y, task_feature=-1)
 
     assert isinstance(model.likelihood, SparseOutlierGaussianLikelihood)
-    assert isinstance(model.likelihood.noise_covar.base_noise, GaussianLikelihood().noise_covar.__class__)
+    base_noise_type = GaussianLikelihood().noise_covar.__class__
+    assert isinstance(model.likelihood.noise_covar.base_noise, base_noise_type)
     assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
     torch.testing.assert_close(model.raw_train_X, train_x)
     torch.testing.assert_close(model.raw_train_Y, train_y)
