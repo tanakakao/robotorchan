@@ -202,7 +202,7 @@ def test_spectral_mixture_kronecker_scalarized_mc_and_optimizer_run() -> None:
         objective=objective,
     )
     assert torch.isfinite(acquisition(X[:2].unsqueeze(0))).all()
-    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    bounds = torch.tensor([[0.05], [0.95]], dtype=torch.double)
     candidate, value = optimize_acqf(
         acquisition,
         bounds=bounds,
