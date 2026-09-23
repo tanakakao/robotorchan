@@ -183,3 +183,11 @@ PCA, PLS, and random-projection multi-fidelity models are now exercised directly
 target-fidelity projection, and a target-fidelity `PosteriorMean` current value. This validates that
 the raw-space fantasy lifecycle from Phase 29 is sufficient for a native cost-aware multi-fidelity
 acquisition rather than only for direct `fantasize` calls.
+
+## Phase 31: reduced multi-fidelity constructor hardening
+
+PCA, PLS, and random-projection multi-fidelity constructors now distinguish `None` explicitly from
+provided `data_fidelities` instead of relying on container truthiness. This keeps tensor-like
+fidelity specifications valid and avoids PyTorch's ambiguous Boolean evaluation for multi-element
+tensors. Runtime coverage verifies negative tensor indices normalize to the expected structural
+fidelity coordinate without changing the reduced design-space mapping.
