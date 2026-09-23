@@ -123,14 +123,10 @@ def test_mixed_robust_relevance_pursuit_supports_mixed_optimizer() -> None:
     )
     task0 = torch.zeros(4, 1, dtype=torch.double)
     task1 = torch.ones(4, 1, dtype=torch.double)
-    train_x = torch.cat(
-        (torch.cat((data_x, task0), dim=-1), torch.cat((data_x, task1), dim=-1))
-    )
+    train_x = torch.cat((torch.cat((data_x, task0), dim=-1), torch.cat((data_x, task1), dim=-1)))
     base = torch.sin(data_x[:, 0])
     train_y = torch.cat((base, 0.8 * base + 0.1)).unsqueeze(-1)
-    model = MixedRobustRelevancePursuitMultiTaskGP(
-        train_x, train_y, task_feature=-1, cat_dims=[1]
-    )
+    model = MixedRobustRelevancePursuitMultiTaskGP(train_x, train_y, task_feature=-1, cat_dims=[1])
     model.eval()
     acquisition_model = model.to_standard_model()
     acquisition_model.eval()
@@ -149,9 +145,7 @@ def test_mixed_robust_relevance_pursuit_supports_mixed_optimizer() -> None:
         num_restarts=2,
         raw_samples=8,
         fixed_features_list=[
-            {1: category, 2: task}
-            for category in (0.0, 1.0)
-            for task in (0.0, 1.0)
+            {1: category, 2: task} for category in (0.0, 1.0) for task in (0.0, 1.0)
         ],
     )
 
