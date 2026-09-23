@@ -43,6 +43,7 @@ class RobustnessType(StrEnum):
     HETEROSKEDASTIC = "heteroskedastic"
     NONSTATIONARY = "nonstationary"
     RELEVANCE_PURSUIT = "relevance_pursuit"
+    REPLICATE_NOISE = "replicate_noise"
     STUDENT_T = "student_t"
     UNCERTAIN_INPUT = "uncertain_input"
 
