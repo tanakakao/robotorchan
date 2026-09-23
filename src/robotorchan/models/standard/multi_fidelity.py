@@ -318,9 +318,7 @@ class RandomProjectionMultiFidelityGP(SingleTaskMultiFidelityGP):
             raise ValueError("Random projection requires at least one non-fidelity design feature.")
 
         design_X = train_X[..., list(self.design_dims)]
-        reducer = RandomProjectionInputReducer(
-            n_components=n_components, random_state=random_state
-        )
+        reducer = RandomProjectionInputReducer(n_components=n_components, random_state=random_state)
         reduced_design_X = reducer.fit_transform(design_X, train_Y)
         encoded_train_X = self._join_design_and_fidelity(
             reduced_design_X,
