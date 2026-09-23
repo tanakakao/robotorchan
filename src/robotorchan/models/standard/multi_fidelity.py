@@ -369,8 +369,6 @@ class RandomProjectionMultiFidelityGP(SingleTaskMultiFidelityGP):
         return super().posterior(self._encode_inputs(X), *args, **kwargs)
 
 
-
-
 class PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
     """Multi-fidelity GP with PLS restricted to non-fidelity design features."""
 
