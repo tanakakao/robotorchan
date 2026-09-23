@@ -469,7 +469,8 @@ class HeteroskedasticKroneckerMultiTaskGP(KroneckerMultiTaskGP):
 
     def observation_covariance_diagonal(self, X: Tensor) -> Tensor:
         """Return the explicit task-specific diagonal observation-noise term."""
-        return self.predicted_noise(X).reshape(*self.predicted_noise(X).shape[:-2], -1)
+        noise = self.predicted_noise(X)
+        return noise.reshape(*noise.shape[:-2], -1)
 
 
 class HeteroskedasticMultiTaskGP(MultiTaskGP):
