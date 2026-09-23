@@ -191,3 +191,11 @@ provided `data_fidelities` instead of relying on container truthiness. This keep
 fidelity specifications valid and avoids PyTorch's ambiguous Boolean evaluation for multi-element
 tensors. Runtime coverage verifies negative tensor indices normalize to the expected structural
 fidelity coordinate without changing the reduced design-space mapping.
+
+## Phase 32: reduced multi-fidelity structural edge contracts
+
+The structural contracts are now exercised uniformly across PCA, PLS, and random-projection
+multi-fidelity models. Runtime coverage verifies simultaneous iteration/data fidelity roles, exact
+raw-to-encoded fidelity placement, rejection of overlapping structural roles, and rejection of the
+`linear_truncated=True` path. The PCA/PLS linear-truncation diagnostics were also corrected so each
+model names its own reducer rather than the sibling reducer.

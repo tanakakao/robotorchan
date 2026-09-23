@@ -380,3 +380,73 @@ def test_reduced_multifidelity_accepts_tensor_like_data_fidelities() -> None:
         assert model.fidelity_dims == (5,)
         assert model.encoded_fidelity_dims == (2,)
         assert torch.isfinite(model.posterior(train_x[:2]).mean).all()
+
+
+def test_all_reduced_multifidelity_models_preserve_iteration_and_data_roles() -> None:
+    torch.manual_seed(0)
+    design = torch.rand(10, 4, dtype=torch.double)
+    iteration = torch.linspace(0.1, 1.0, 10, dtype=torch.double).unsqueeze(-1)
+    data = torch.linspace(0.2, 1.0, 10, dtype=torch.double).unsqueeze(-1)
+    train_x = torch.cat((design, iteration, data), dim=-1)
+    train_y = design[:, :2].sum(dim=-1, keepdim=True) + iteration + data
+    model_classes = (PCAMultiFidelityGP, PLSMultiFidelityGP, RandomProjectionMultiFidelityGP)
+
+    for model_class in model_classes:
+        kwargs = {"random_state": 7} if model_class is RandomProjectionMultiFidelityGP else {}
+        model = model_class(
+            train_x,
+            train_y,
+            n_components=2,
+            iteration_fidelity=-2,
+            data_fidelities=[-1],
+            **kwargs,
+        )
+        encoded = model._encode_inputs(train_x)
+        assert model.iteration_fidelity == 4
+        assert model.data_fidelities == (5,)
+        assert model.fidelity_dims == (4, 5)
+        assert model.encoded_fidelity_dims == (2, 3)
+        torch.testing.assert_close(encoded[..., 2], train_x[..., 4])
+        torch.testing.assert_close(encoded[..., 3], train_x[..., 5])
+
+
+def test_all_reduced_multifidelity_models_reject_overlapping_roles() -> None:
+    train_x, train_y = _data()
+    model_classes = (PCAMultiFidelityGP, PLSMultiFidelityGP, RandomProjectionMultiFidelityGP)
+
+    for model_class in model_classes:
+        kwargs = {"random_state": 7} if model_class is RandomProjectionMultiFidelityGP else {}
+        try:
+            model_class(
+                train_x,
+                train_y,
+                n_components=2,
+                iteration_fidelity=-1,
+                data_fidelities=[-1],
+                **kwargs,
+            )
+        except ValueError as error:
+            assert "duplicates" in str(error)
+        else:
+            raise AssertionError(f"Expected {model_class.__name__} to reject overlapping roles.")
+
+
+def test_all_reduced_multifidelity_models_reject_linear_truncated() -> None:
+    train_x, train_y = _data()
+    model_classes = (PCAMultiFidelityGP, PLSMultiFidelityGP, RandomProjectionMultiFidelityGP)
+
+    for model_class in model_classes:
+        kwargs = {"random_state": 7} if model_class is RandomProjectionMultiFidelityGP else {}
+        try:
+            model_class(
+                train_x,
+                train_y,
+                n_components=2,
+                data_fidelities=[-1],
+                linear_truncated=True,
+                **kwargs,
+            )
+        except ValueError as error:
+            assert "linear_truncated=False" in str(error)
+        else:
+            raise AssertionError(f"Expected {model_class.__name__} to reject linear truncation.")
