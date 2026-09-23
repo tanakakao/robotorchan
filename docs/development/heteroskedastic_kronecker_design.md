@@ -143,3 +143,22 @@ Proceed with a public Phase 7 model only if the implementation can satisfy all t
 
 If any condition fails, keep the work as a documented prototype and record the blocking upstream
 contract instead of shipping a pseudo-heteroskedastic model.
+
+
+## Phase 8 mixed prototype result
+
+The mixed prototype uses the same raw `cat_dims` in both covariance paths:
+
+- the response data factor uses `make_mixed_covar_module`;
+- the log-noise surrogate is `MixedKroneckerMultiTaskGP` with matching `cat_dims`;
+- negative categorical indices are normalized once in raw-input coordinates;
+- a non-mixed noise model or a mixed model with different categorical coordinates is rejected.
+
+The output task axis remains separate from categorical data features. No task index is appended to
+`train_X`, and the `n × m` noise contract from Phase 7 is unchanged.
+
+This remains a prototype for the same upstream reason as the continuous Phase 7 model: the current
+Kronecker observation path does not expose a public hook for input-dependent task-specific fixed
+noise at posterior query points. The mixed variant must therefore not enter public exports,
+registry metadata, or generated model coverage before the observation-posterior integration is
+resolved.
