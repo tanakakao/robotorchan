@@ -57,6 +57,7 @@ PUBLIC_MODEL_NAMES = {
     "MixedHierarchicalConditionalKernelMultiTaskGP",
     "MixedHierarchicalConditionalKernelGP",
     "MixedHeterogeneousMTGP",
+    "MixedHeteroskedasticKroneckerMultiTaskGP",
     "MixedHeteroskedasticMultiTaskGP",
     "MixedHeteroskedasticSingleTaskGP",
     "MixedJointEncoderGP",
