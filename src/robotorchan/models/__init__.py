@@ -142,7 +142,7 @@ from robotorchan.models.robust.student_t import (
 from robotorchan.models.standard.model_list import ModelListGP
 from robotorchan.models.standard.multi_fidelity import (
     MixedSingleTaskMultiFidelityGP,
-    PCAMultiFidelityGP,
+    PCAMultiFidelityGP,\n    PLSMultiFidelityGP,
     SingleTaskMultiFidelityGP,
 )
 from robotorchan.models.standard.multitask import (
@@ -272,7 +272,7 @@ __all__ = [
     "OutputPCAGP",
     "OutputPLSGP",
     "PCAKroneckerMultiTaskGP",
-    "PCAMultiFidelityGP",
+    "PCAMultiFidelityGP",\n    "PLSMultiFidelityGP",
     "PCAMultiTaskGP",
     "PLSKroneckerMultiTaskGP",
     "PLSMultiTaskGP",
