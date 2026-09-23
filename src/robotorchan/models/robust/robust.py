@@ -26,7 +26,7 @@ from robotorchan.models.base import (
     normalize_feature_dims,
 )
 from robotorchan.models.standard.multi_fidelity import SingleTaskMultiFidelityGP
-from robotorchan.models.standard.multitask import MultiTaskGP
+from robotorchan.models.standard.multitask import KroneckerMultiTaskGP, MultiTaskGP
 
 
 class RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin):
@@ -403,6 +403,74 @@ class HeteroskedasticMultiFidelityGP(SingleTaskMultiFidelityGP):
     def predicted_noise(self, X: Tensor) -> Tensor:
         """Return fidelity-dependent observation variance on the original scale."""
         return self.noise_posterior(X).mean.exp().clamp_min(self.noise_floor)
+
+
+class HeteroskedasticKroneckerMultiTaskGP(KroneckerMultiTaskGP):
+    """Prototype block-design GP with task-specific input-dependent noise.
+
+    The latent response covariance remains Kronecker structured. A second
+    block-design Kronecker GP models task-specific log observation variance.
+    The prototype intentionally does not advertise public observation-posterior
+    semantics until BoTorch exposes a compatible input-dependent multitask
+    observation-noise hook.
+    """
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        train_Yvar: Tensor | None = None,
+        noise_floor: float = 1e-6,
+        rank: int | None = None,
+    ) -> None:
+        if noise_floor <= 0:
+            raise ValueError("noise_floor must be positive.")
+        if train_X.ndim < 2 or train_Y.ndim < 2:
+            raise ValueError("Expected train_X (..., n, d) and train_Y (..., n, m).")
+        if train_X.shape[-2] != train_Y.shape[-2]:
+            raise ValueError("train_X and train_Y must share the observation dimension.")
+        if train_Yvar is None:
+            initial_noise = torch.full_like(train_Y, noise_floor)
+        else:
+            if train_Yvar.shape != train_Y.shape:
+                raise ValueError("train_Yvar must have exactly the same shape as train_Y.")
+            if not torch.isfinite(train_Yvar).all() or torch.any(train_Yvar < 0):
+                raise ValueError("train_Yvar must contain finite non-negative variances.")
+            initial_noise = train_Yvar.clamp_min(noise_floor)
+        super().__init__(train_X=train_X, train_Y=train_Y, rank=rank)
+        self.noise_floor = float(noise_floor)
+        self._store_supervised_training_data(train_X, train_Y, initial_noise)
+        self.noise_model: KroneckerMultiTaskGP | None = None
+        self._noise_model_fitted = False
+
+    def build_noise_model(self, log_noise: Tensor) -> KroneckerMultiTaskGP:
+        """Build the task-specific block-design log-noise surrogate."""
+        if log_noise.shape != self.raw_train_Y.shape:
+            raise ValueError("log_noise must have exactly the same shape as train_Y.")
+        return KroneckerMultiTaskGP(self.raw_train_X, log_noise)
+
+    def set_noise_model(self, noise_model: KroneckerMultiTaskGP) -> None:
+        """Attach a fitted block-design noise surrogate for prototype evaluation."""
+        if noise_model.raw_train_Y.shape != self.raw_train_Y.shape:
+            raise ValueError("noise model outputs must match the response task axis.")
+        self.noise_model = noise_model
+        self._noise_model_fitted = True
+
+    def noise_posterior(self, X: Tensor):
+        """Return the task-specific log-variance posterior."""
+        if self.noise_model is None or not self._noise_model_fitted:
+            raise RuntimeError("A fitted noise model is required before noise_posterior.")
+        return self.noise_model.posterior(X)
+
+    def predicted_noise(self, X: Tensor) -> Tensor:
+        """Return task-specific observation variance with shape (..., q, m)."""
+        return self.noise_posterior(X).mean.exp().clamp_min(self.noise_floor)
+
+    def observation_covariance_diagonal(self, X: Tensor) -> Tensor:
+        """Return the explicit task-specific diagonal observation-noise term."""
+        noise = self.predicted_noise(X)
+        return noise.reshape(*noise.shape[:-2], -1)
 
 
 class HeteroskedasticMultiTaskGP(MultiTaskGP):
