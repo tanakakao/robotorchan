@@ -12,9 +12,7 @@ from robotorchan.models import AdditiveMapSaasMultiFidelityGP
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
     train_x = torch.rand(12, 5, dtype=torch.double)
-    train_y = (
-        torch.sin(train_x[:, :1] * 3.0) + 0.2 * train_x[:, 1:2] + 0.1 * train_x[:, 4:5]
-    )
+    train_y = torch.sin(train_x[:, :1] * 3.0) + 0.2 * train_x[:, 1:2] + 0.1 * train_x[:, 4:5]
     return train_x, train_y
 
 
