@@ -40,14 +40,13 @@ def test_non_gp_inference_is_not_applicable() -> None:
     assert all(MODEL_REGISTRY[name].capabilities.ensemble_posterior for name in names)
 
 
-def test_map_saas_ensemble_is_rejected_by_non_ensemble_acquisition() -> None:
+def test_map_saas_ensemble_supports_variance_active_learning() -> None:
     result = check_model_acquisition_compatibility(
         "EnsembleMapSaasSingleTaskGP",
         "PosteriorVariance",
     )
 
-    assert not result.compatible
-    assert "acquisition does not support ensemble posteriors" in result.reasons
+    assert result.compatible
 
 
 def test_registered_multitask_models_support_multi_output() -> None:
