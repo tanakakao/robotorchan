@@ -12,6 +12,7 @@ from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
 from gpytorch.likelihoods import (
     FixedNoiseGaussianLikelihood,
+    GaussianLikelihood,
     Likelihood,
 )
 from gpytorch.means import Mean
@@ -60,6 +61,13 @@ class RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin
         self._robust_rank = rank
         self._robust_all_tasks = all_tasks
         self._robust_validate_task_values = validate_task_values
+
+        # RobustRelevancePursuitMixin expects scalar-observation Gaussian noise.
+        # BoTorch MultiTaskGP otherwise defaults to HadamardGaussianLikelihood,
+        # whose task-expanded noise covariance is incompatible with sparse
+        # observation-level outlier variances.
+        if likelihood is None and train_Yvar is None:
+            likelihood = GaussianLikelihood()
 
         MultiTaskGP.__init__(
             self,
