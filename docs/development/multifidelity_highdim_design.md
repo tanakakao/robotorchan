@@ -135,6 +135,6 @@ replaced by a staged implementation plan:
 
 1. deterministic reduction reference path;
 2. PLS / random-projection variants if the reference path is stable;
-3. MAP-SAAS covariance-composition audit;
+3. MAP-SAAS covariance-composition audit (completed in Phase 22; see `map_saas_multifidelity_audit.md`);
 4. learned reduction only when fidelity exclusion is explicit;
 5. fully Bayesian SAAS only through a dedicated fidelity-aware probabilistic model.
