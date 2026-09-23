@@ -124,7 +124,12 @@
       "guide": "docs/models/expressive.md",
       "theory": "docs/theory/22_expressive_gp.md",
       "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
-    },
+    },,
+    "InfiniteWidthBNNKroneckerMultiTaskGP": {
+      "guide": "docs/models/expressive.md",
+      "theory": "docs/theory/22_expressive_gp.md",
+      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
+    }
     "JointEncoderGP": {
       "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
@@ -705,18 +710,7 @@
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/20_neural_reduction_gp.ipynb"
     }
-  },,
-  "InfiniteWidthBNNKroneckerMultiTaskGP": {
-      "guide": "docs/models/expressive.md",
-      "theory": "docs/theory/22_expressive_gp.md",
-      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
-    },
-    "InfiniteWidthBNNMultiTaskGP": {
-      "guide": "docs/models/expressive.md",
-      "theory": "docs/theory/22_expressive_gp.md",
-      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
-    },
-    "JointEncoderGP": {
+  },    "JointEncoderGP": {
       "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/20_neural_reduction_gp.ipynb"
