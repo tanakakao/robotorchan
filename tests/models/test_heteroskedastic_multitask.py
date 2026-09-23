@@ -9,6 +9,7 @@ from gpytorch.likelihoods import FixedNoiseGaussianLikelihood
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import (
+    HeteroskedasticKroneckerMultiTaskGP,
     HeteroskedasticMultiTaskGP,
     MixedHeteroskedasticMultiTaskGP,
 )
@@ -129,4 +130,45 @@ def test_mixed_heteroskedastic_multitask_supports_mixed_optimizer() -> None:
     assert candidate.shape == torch.Size([1, 3])
     assert candidate[0, 1].item() in {0.0, 1.0}
     assert candidate[0, 2].item() in {0.0, 1.0}
+    assert torch.isfinite(value).all()
+
+
+def test_heteroskedastic_kronecker_preserves_block_design_contract() -> None:
+    train_x = torch.tensor([[0.1], [0.4], [0.7], [0.9]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    model = HeteroskedasticKroneckerMultiTaskGP(train_x, train_y)
+
+    torch.testing.assert_close(model.raw_train_X, train_x)
+    torch.testing.assert_close(model.raw_train_Y, train_y)
+    assert model.noise_model is None
+    assert model.make_mll() is not None
+    with pytest.raises(RuntimeError, match="fit_heteroskedastic"):
+        model.predicted_noise(train_x)
+
+
+def test_heteroskedastic_kronecker_supports_sampling_and_mc_acquisition() -> None:
+    train_x = torch.tensor([[0.1], [0.4], [0.7], [0.9]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    model = HeteroskedasticKroneckerMultiTaskGP(train_x, train_y)
+    model.eval()
+
+    test_x = torch.tensor([[0.25], [0.75]], dtype=torch.double)
+    posterior = model.posterior(test_x)
+    samples = posterior.rsample(torch.Size([4]))
+    weights = torch.tensor([0.6, 0.4], dtype=torch.double)
+    objective = GenericMCObjective(lambda values, X=None: values @ weights)
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=(train_y @ weights).max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+        objective=objective,
+    )
+    value = acquisition(test_x.unsqueeze(0))
+
+    assert posterior.mean.shape == torch.Size([2, 2])
+    assert samples.shape == torch.Size([4, 2, 2])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert torch.isfinite(samples).all()
+    assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
