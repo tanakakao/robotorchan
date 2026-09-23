@@ -65,3 +65,45 @@ def test_mixed_iterative_heteroskedastic_fits_mixed_noise_process() -> None:
     assert noise.shape == Y.shape
     assert torch.all(noise >= model.noise_floor)
     assert torch.isfinite(noise).all()
+
+
+def test_mixed_heteroskedastic_kronecker_prototype_uses_mixed_response_and_noise() -> None:
+    from robotorchan.models.robust.robust import MixedHeteroskedasticKroneckerMultiTaskGP
+
+    X = torch.tensor(
+        [[0.15, 0.0], [0.30, 1.0], [0.45, 0.0], [0.60, 1.0], [0.75, 0.0], [0.85, 1.0]],
+        dtype=torch.double,
+    )
+    Y = torch.stack((torch.sin(4.0 * X[:, 0]), torch.cos(3.0 * X[:, 0])), dim=-1)
+    model = MixedHeteroskedasticKroneckerMultiTaskGP(X, Y, cat_dims=[-1])
+    log_noise = torch.stack(
+        (torch.linspace(-4.0, -3.0, 6), torch.linspace(-2.0, -1.0, 6)), dim=-1
+    ).to(dtype=torch.double)
+    noise_model = model.build_noise_model(log_noise)
+    model.set_noise_model(noise_model)
+    model.eval()
+    model.likelihood.eval()
+    noise_model.eval()
+    noise_model.likelihood.eval()
+
+    assert model.cat_dims == (1,)
+    assert noise_model.cat_dims == (1,)
+    assert model.covar_module.data_covar_module is not None
+    noise = model.predicted_noise(X[:2])
+    assert noise.shape == (2, 2)
+    assert torch.isfinite(noise).all()
+
+
+def test_mixed_heteroskedastic_kronecker_rejects_mismatched_noise_categories() -> None:
+    from robotorchan.models.robust.robust import MixedHeteroskedasticKroneckerMultiTaskGP
+    from robotorchan.models.standard.multitask import MixedKroneckerMultiTaskGP
+
+    X = torch.tensor(
+        [[0.15, 0.0], [0.30, 1.0], [0.45, 0.0], [0.60, 1.0]], dtype=torch.double
+    )
+    Y = torch.stack((torch.sin(4.0 * X[:, 0]), torch.cos(3.0 * X[:, 0])), dim=-1)
+    model = MixedHeteroskedasticKroneckerMultiTaskGP(X, Y, cat_dims=[1])
+    wrong_noise_model = MixedKroneckerMultiTaskGP(X, torch.log(Y.square() + 0.1), cat_dims=[0])
+
+    with pytest.raises(ValueError, match="cat_dims"):
+        model.set_noise_model(wrong_noise_model)
