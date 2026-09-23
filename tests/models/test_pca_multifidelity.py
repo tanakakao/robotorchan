@@ -361,3 +361,22 @@ def test_reduced_multifidelity_models_support_native_mf_kg() -> None:
 
         assert value.shape == torch.Size([1])
         assert torch.isfinite(value).all()
+
+
+def test_reduced_multifidelity_accepts_tensor_like_data_fidelities() -> None:
+    train_x, train_y = _data()
+    fidelity_dims = torch.tensor([-1], dtype=torch.long)
+    model_classes = (PCAMultiFidelityGP, PLSMultiFidelityGP, RandomProjectionMultiFidelityGP)
+
+    for model_class in model_classes:
+        kwargs = {"random_state": 7} if model_class is RandomProjectionMultiFidelityGP else {}
+        model = model_class(
+            train_x,
+            train_y,
+            n_components=2,
+            data_fidelities=fidelity_dims,
+            **kwargs,
+        )
+        assert model.fidelity_dims == (5,)
+        assert model.encoded_fidelity_dims == (2,)
+        assert torch.isfinite(model.posterior(train_x[:2]).mean).all()
