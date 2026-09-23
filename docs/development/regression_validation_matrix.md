@@ -199,3 +199,11 @@ multi-fidelity models. Runtime coverage verifies simultaneous iteration/data fid
 raw-to-encoded fidelity placement, rejection of overlapping structural roles, and rejection of the
 `linear_truncated=True` path. The PCA/PLS linear-truncation diagnostics were also corrected so each
 model names its own reducer rather than the sibling reducer.
+
+## Phase 33: heteroskedastic multi-fidelity noise semantics
+
+`HeteroskedasticMultiFidelityGP` now has direct runtime evidence that its learned noise process is
+not merely positive and finite: predictions at a shared design coordinate but different fidelity
+levels are required to differ on a synthetic fidelity-dependent-noise problem. This closes the
+remaining numerical semantics gap for the robust multi-fidelity reference implementation while
+retaining the existing native MF-KG workflow coverage.
