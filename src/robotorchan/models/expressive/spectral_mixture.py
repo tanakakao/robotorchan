@@ -9,7 +9,7 @@ from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
 from gpytorch.kernels import ScaleKernel, SpectralMixtureKernel
-from gpytorch.likelihoods import Likelihood
+from gpytorch.likelihoods import Likelihood, MultitaskGaussianLikelihood
 from torch import Tensor
 
 from robotorchan.models.base import make_mixed_covar_module, normalize_feature_dims
@@ -130,7 +130,7 @@ class SpectralMixtureKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         *,
         num_mixtures: int = 4,
         initialization: Literal["data", "empspect"] = "data",
-        likelihood: Likelihood | None = None,
+        likelihood: MultitaskGaussianLikelihood | None = None,
         rank: int | None = None,
         outcome_transform: OutcomeTransform | None = None,
         input_transform: InputTransform | None = None,
