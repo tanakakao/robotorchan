@@ -583,7 +583,7 @@ _register_family(
     high_dimensional=HighDimensionalStrategy.SAAS,
 )
 _register_family(
-    ("MapSaasMultiFidelityGP",),
+    ("MapSaasMultiFidelityGP", "AdditiveMapSaasMultiFidelityGP"),
     guide="docs/models/high_dimensional.md",
     theory="docs/theory/06_multi_fidelity.md",
     notebook="examples/notebooks/03_multi_fidelity_gp.ipynb",

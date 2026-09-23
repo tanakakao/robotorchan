@@ -10,6 +10,11 @@
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/09_map_saas_and_additive_gp.ipynb"
     },
+    "AdditiveMapSaasMultiFidelityGP": {
+      "guide": "docs/models/high_dimensional.md",
+      "theory": "docs/theory/06_multi_fidelity.md",
+      "notebook": "examples/notebooks/03_multi_fidelity_gp.ipynb"
+    },
     "AdditiveMapSaasSingleTaskGP": {
       "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
