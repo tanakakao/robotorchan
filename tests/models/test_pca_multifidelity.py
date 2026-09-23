@@ -4,7 +4,11 @@ import torch
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 from botorch.sampling.normal import IIDNormalSampler
 
-from robotorchan.models import PCAMultiFidelityGP, PLSMultiFidelityGP
+from robotorchan.models import (
+    PCAMultiFidelityGP,
+    PLSMultiFidelityGP,
+    RandomProjectionMultiFidelityGP,
+)
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
@@ -136,6 +140,35 @@ def test_pls_multifidelity_preserves_structural_fidelity() -> None:
     assert encoded.shape[-1] == 3
     assert torch.equal(encoded[..., -1], train_x[..., -1])
 
+    model.eval()
+    posterior = model.posterior(train_x[:2])
+    assert posterior.mean.shape == torch.Size([2, 1])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.rsample(torch.Size([3]))).all()
+    assert model.make_mll().model is model
+
+
+def test_random_projection_multifidelity_preserves_structural_fidelity() -> None:
+    torch.manual_seed(0)
+    train_x, train_y = _data()
+    model = RandomProjectionMultiFidelityGP(
+        train_x,
+        train_y,
+        n_components=2,
+        data_fidelities=[-1],
+        random_state=7,
+    )
+
+    assert torch.equal(model.raw_train_X, train_x)
+    assert torch.equal(model.raw_train_Y, train_y)
+    assert model.fidelity_dims == (5,)
+    assert model.design_dims == (0, 1, 2, 3, 4)
+    encoded = model._encode_inputs(train_x)
+    assert encoded.shape[-1] == 3
+    assert torch.equal(encoded[..., -1], train_x[..., -1])
+
+    repeated = model._encode_inputs(train_x)
+    assert torch.equal(encoded, repeated)
     model.eval()
     posterior = model.posterior(train_x[:2])
     assert posterior.mean.shape == torch.Size([2, 1])

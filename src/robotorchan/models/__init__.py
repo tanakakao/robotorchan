@@ -144,6 +144,7 @@ from robotorchan.models.standard.multi_fidelity import (
     MixedSingleTaskMultiFidelityGP,
     PCAMultiFidelityGP,
     PLSMultiFidelityGP,
+    RandomProjectionMultiFidelityGP,
     SingleTaskMultiFidelityGP,
 )
 from robotorchan.models.standard.multitask import (
@@ -282,6 +283,7 @@ __all__ = [
     "RandomForestSurrogate",
     "RandomProjectionGP",
     "RandomProjectionKroneckerMultiTaskGP",
+    "RandomProjectionMultiFidelityGP",
     "RandomProjectionMultiTaskGP",
     "ReducedGP",
     "ReducedKroneckerMultiTaskGP",

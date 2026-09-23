@@ -107,6 +107,7 @@ PUBLIC_MODEL_NAMES = {
     "RandomForestSurrogate",
     "RandomProjectionGP",
     "RandomProjectionKroneckerMultiTaskGP",
+    "RandomProjectionMultiFidelityGP",
     "RandomProjectionMultiTaskGP",
     "ReducedGP",
     "ReducedKroneckerMultiTaskGP",
