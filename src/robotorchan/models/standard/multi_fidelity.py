@@ -269,7 +269,11 @@ class PCAMultiFidelityGP(SingleTaskMultiFidelityGP):
             ]
         )
         normalized_data = tuple(
-            normalize_feature_dims(data_fidelities or (), input_dim, name="data_fidelities")
+            normalize_feature_dims(
+                () if data_fidelities is None else data_fidelities,
+                input_dim,
+                name="data_fidelities",
+            )
         )
 
         self.raw_input_dim = input_dim
@@ -390,7 +394,11 @@ class RandomProjectionMultiFidelityGP(SingleTaskMultiFidelityGP):
             ]
         )
         normalized_data = tuple(
-            normalize_feature_dims(data_fidelities or (), input_dim, name="data_fidelities")
+            normalize_feature_dims(
+                () if data_fidelities is None else data_fidelities,
+                input_dim,
+                name="data_fidelities",
+            )
         )
 
         self.raw_input_dim = input_dim
@@ -511,7 +519,11 @@ class PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
             ]
         )
         normalized_data = tuple(
-            normalize_feature_dims(data_fidelities or (), input_dim, name="data_fidelities")
+            normalize_feature_dims(
+                () if data_fidelities is None else data_fidelities,
+                input_dim,
+                name="data_fidelities",
+            )
         )
 
         self.raw_input_dim = input_dim
