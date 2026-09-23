@@ -131,3 +131,38 @@ preserved explicitly.
 The next implementation phase should not create this public model unless the
 project intentionally accepts ownership of the missing ensemble covariance
 builder and validates mixture-posterior acquisition semantics.
+
+
+## Phase 10 re-evaluation
+
+Phase 10 re-evaluated this gate after the public
+`AdditiveMapSaasMultiFidelityGP` received native cost-aware MF-KG runtime evidence in Phase 9.
+That result strengthens the covariance-composition precedent, but it does not remove the ensemble
+posterior boundary.
+
+The current source still exposes `EnsembleMapSaasSingleTaskGP` as a complete model rather than a
+public ensemble-design-covariance factory. Robotorchan could own such a builder, but doing so would
+also require explicit ownership of batched likelihood, member-wise tau state, and
+`GaussianMixturePosterior` lifecycle. That is a materially larger contract than the additive
+model and would duplicate upstream construction logic.
+
+### Phase 10 prototype decision
+
+Status: **Prototype / Hold public export**.
+
+The candidate remains worthwhile because ensemble MAP-SAAS can represent uncertainty over several
+MAP shrinkage scales while retaining native fidelity structure. It is not rejected. The next
+implementation attempt is gated on a small robotorchan-owned ensemble covariance builder whose
+tests first establish:
+
+1. design-only SAAS ARD dimensions;
+2. one stable tau per ensemble member;
+3. fidelity kernels with the same model batch shape;
+4. `GaussianMixturePosterior` preservation;
+5. finite posterior samples and an ensemble-compatible MC acquisition;
+6. conditioning / fantasize behavior;
+7. only then, cost-aware multi-fidelity acquisition compatibility.
+
+Until those gates pass, exporting a class named `EnsembleMapSaasMultiFidelityGP` would overstate
+runtime support. Phase 10 therefore records the prototype boundary rather than introducing a
+statistically misleading public model.
