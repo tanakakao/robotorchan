@@ -60,3 +60,10 @@ The next code phase may prototype additive design covariance × native fidelity 
 must remain non-public until covariance ownership, raw-space posterior behavior, and native MF
 acquisition execution are demonstrated. Ensemble MAP-SAAS × MF should not be implemented by
 inheritance from that prototype unless ensemble posterior semantics are independently preserved.
+
+## Phase 35 follow-up
+
+The additive branch has now been reduced to a concrete covariance prototype contract. Current
+public wrappers do not expose an additive design-kernel factory, so no implementation is promoted
+by copying private BoTorch construction details. See
+`additive_map_saas_multifidelity_prototype.md` for the required ownership and executable gates.
