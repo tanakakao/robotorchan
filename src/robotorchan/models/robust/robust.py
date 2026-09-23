@@ -27,7 +27,11 @@ from robotorchan.models.base import (
     normalize_feature_dims,
 )
 from robotorchan.models.standard.multi_fidelity import SingleTaskMultiFidelityGP
-from robotorchan.models.standard.multitask import KroneckerMultiTaskGP, MultiTaskGP
+from robotorchan.models.standard.multitask import (
+    KroneckerMultiTaskGP,
+    MixedKroneckerMultiTaskGP,
+    MultiTaskGP,
+)
 
 
 class RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin):
@@ -462,6 +466,72 @@ class HeteroskedasticKroneckerMultiTaskGP(KroneckerMultiTaskGP):
 
     def noise_posterior(self, X: Tensor):
         """Return the block-design latent posterior for log observation variance."""
+        if self.noise_model is None or not self._noise_model_fitted:
+            raise RuntimeError("fit_heteroskedastic must be called before noise_posterior.")
+        return self.noise_model.posterior(X)
+
+    def predicted_noise(self, X: Tensor) -> Tensor:
+        """Return task-specific observation variance on the original scale."""
+        return self.noise_posterior(X).mean.exp().clamp_min(self.noise_floor)
+
+
+class MixedHeteroskedasticKroneckerMultiTaskGP(MixedKroneckerMultiTaskGP):
+    """Mixed-input block-design GP with task-specific heteroskedastic noise."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        cat_dims: list[int],
+        noise_floor: float = 1e-6,
+        rank: int | None = None,
+        outcome_transform: OutcomeTransform | None = None,
+        input_transform: InputTransform | None = None,
+    ) -> None:
+        if noise_floor <= 0:
+            raise ValueError("noise_floor must be positive.")
+        if train_Y.ndim < 2:
+            raise ValueError("train_Y must include an output-task dimension.")
+        self.noise_floor = noise_floor
+        self._noise_model_fitted = False
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            cat_dims=cat_dims,
+            rank=rank,
+            outcome_transform=outcome_transform,
+            input_transform=input_transform,
+        )
+        self.noise_model = None
+
+    def fit_heteroskedastic(
+        self, *, iterations: int = 3
+    ) -> MixedHeteroskedasticKroneckerMultiTaskGP:
+        """Alternately fit mixed response and mixed block-design log-noise GPs."""
+        from botorch.fit import fit_gpytorch_mll
+
+        if iterations < 1:
+            raise ValueError("iterations must be at least 1.")
+        train_X = self.raw_train_X
+        train_Y = self.raw_train_Y
+        for _ in range(iterations):
+            fit_gpytorch_mll(self.make_mll())
+            with torch.no_grad():
+                residual = train_Y - self.posterior(train_X).mean
+                log_noise = torch.log(residual.square().clamp_min(self.noise_floor))
+            noise_model = MixedKroneckerMultiTaskGP(
+                train_X=train_X,
+                train_Y=log_noise,
+                cat_dims=list(self.cat_dims),
+            )
+            fit_gpytorch_mll(noise_model.make_mll())
+            self.noise_model = noise_model
+            self._noise_model_fitted = True
+        return self
+
+    def noise_posterior(self, X: Tensor):
+        """Return the mixed block-design latent posterior for log observation variance."""
         if self.noise_model is None or not self._noise_model_fitted:
             raise RuntimeError("fit_heteroskedastic must be called before noise_posterior.")
         return self.noise_model.posterior(X)

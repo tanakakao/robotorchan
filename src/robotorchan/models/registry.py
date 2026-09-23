@@ -163,6 +163,24 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         ),
         "random-projection design reduction with BoTorch multi-fidelity covariance",
     ),
+    "MixedHeteroskedasticKroneckerMultiTaskGP": ModelRegistryEntry(
+        "MixedHeteroskedasticKroneckerMultiTaskGP",
+        ModelCapabilities(
+            input_type=InputType.MIXED,
+            task_type=TaskType.MULTITASK,
+            robustness=frozenset({RobustnessType.HETEROSKEDASTIC}),
+            supports_multi_output=True,
+            supports_posterior_samples=True,
+            posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
+            supports_fantasize=True,
+        ),
+        _docs(
+            "docs/models/robust_noise.md",
+            "docs/theory/15_heteroskedastic_noise.md",
+            "examples/notebooks/16_noise_models.ipynb",
+        ),
+        "mixed block-design Kronecker GP with task-specific heteroskedastic noise",
+    ),
     "HeteroskedasticKroneckerMultiTaskGP": ModelRegistryEntry(
         "HeteroskedasticKroneckerMultiTaskGP",
         ModelCapabilities(

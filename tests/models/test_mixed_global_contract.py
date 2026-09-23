@@ -9,6 +9,7 @@ EXPECTED_MIXED_MODELS = {
     "MixedContaminatedSingleTaskGP",
     "MixedEnsembleMapSaasSingleTaskGP",
     "MixedHeterogeneousMTGP",
+    "MixedHeteroskedasticKroneckerMultiTaskGP",
     "MixedHeteroskedasticMultiTaskGP",
     "MixedHeteroskedasticSingleTaskGP",
     "MixedHierarchicalConditionalKernelGP",
