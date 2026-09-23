@@ -16,6 +16,7 @@ PUBLIC_MODEL_NAMES = {
     "GradientBoostingSurrogate",
     "HistGradientBoostingSurrogate",
     "HeterogeneousMTGP",
+    "HeteroskedasticMultiFidelityGP",
     "HeteroskedasticMultiTaskGP",
     "HeteroskedasticSingleTaskGP",
     "HierarchicalConditionalKernelGP",
