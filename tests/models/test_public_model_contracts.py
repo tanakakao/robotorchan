@@ -87,6 +87,7 @@ PUBLIC_MODEL_NAMES = {
     "ModelListGP",
     "MultiTaskDeepGP",
     "MultiTaskGP",
+    "NonstationaryKroneckerMultiTaskGP",
     "NonstationaryMultiTaskGP",
     "NonstationarySingleTaskGP",
     "OrthogonalAdditiveGP",
