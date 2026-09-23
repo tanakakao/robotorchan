@@ -2,7 +2,7 @@
 
 import torch
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
-from botorch.sampling.normal import IIDNormalSampler
+from botorch.sampling.normal import IIDNormalSampler, SobolQMCNormalSampler
 
 from robotorchan.models import (
     MapSaasMultiFidelityGP,
@@ -270,5 +270,35 @@ def test_reduced_multifidelity_conditioning_accepts_raw_inputs() -> None:
 
         assert conditioned.train_inputs[0].shape[-1] == 3
         posterior = super(model_class, conditioned).posterior(model._encode_inputs(new_x))
+        assert torch.isfinite(posterior.mean).all()
+        assert torch.isfinite(posterior.variance).all()
+
+
+def test_reduced_multifidelity_fantasize_accepts_raw_inputs() -> None:
+    torch.manual_seed(0)
+    train_x, train_y = _data()
+    model_classes = (PCAMultiFidelityGP, PLSMultiFidelityGP, RandomProjectionMultiFidelityGP)
+
+    for model_class in model_classes:
+        kwargs = {"random_state": 7} if model_class is RandomProjectionMultiFidelityGP else {}
+        model = model_class(
+            train_x,
+            train_y,
+            n_components=2,
+            data_fidelities=[-1],
+            **kwargs,
+        )
+        model.eval()
+        model.likelihood.eval()
+        candidates = train_x[:2].clone()
+        sampler = SobolQMCNormalSampler(sample_shape=torch.Size([3]), seed=11)
+        fantasy = model.fantasize(X=candidates, sampler=sampler)
+
+        assert fantasy.train_inputs[0].shape[-1] == 3
+        assert type(fantasy.input_reducer) is type(model.input_reducer)
+        assert fantasy.input_reducer.state_dict().keys() == model.input_reducer.state_dict().keys()
+        for key, value in model.input_reducer.state_dict().items():
+            torch.testing.assert_close(fantasy.input_reducer.state_dict()[key], value)
+        posterior = super(model_class, fantasy).posterior(model._encode_inputs(candidates))
         assert torch.isfinite(posterior.mean).all()
         assert torch.isfinite(posterior.variance).all()

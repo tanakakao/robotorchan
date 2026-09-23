@@ -335,6 +335,13 @@ class PCAMultiFidelityGP(SingleTaskMultiFidelityGP):
         """Condition the encoded GP using observations supplied in raw coordinates."""
         return super().condition_on_observations(X=self._encode_inputs(X), Y=Y, **kwargs)
 
+    def fantasize(self, X: Tensor, sampler: Any, **kwargs: Any) -> Any:
+        """Construct fantasy models from candidate inputs supplied in raw coordinates."""
+        encoded_X = self._encode_inputs(X)
+        posterior = super().posterior(encoded_X, observation_noise=True)
+        fantasy_Y = sampler(posterior)
+        return super().condition_on_observations(X=encoded_X, Y=fantasy_Y, **kwargs)
+
 
 class RandomProjectionMultiFidelityGP(SingleTaskMultiFidelityGP):
     """Multi-fidelity GP with random projection restricted to non-fidelity design features."""
@@ -449,6 +456,13 @@ class RandomProjectionMultiFidelityGP(SingleTaskMultiFidelityGP):
         """Condition the encoded GP using observations supplied in raw coordinates."""
         return super().condition_on_observations(X=self._encode_inputs(X), Y=Y, **kwargs)
 
+    def fantasize(self, X: Tensor, sampler: Any, **kwargs: Any) -> Any:
+        """Construct fantasy models from candidate inputs supplied in raw coordinates."""
+        encoded_X = self._encode_inputs(X)
+        posterior = super().posterior(encoded_X, observation_noise=True)
+        fantasy_Y = sampler(posterior)
+        return super().condition_on_observations(X=encoded_X, Y=fantasy_Y, **kwargs)
+
 
 class PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
     """Multi-fidelity GP with PLS restricted to non-fidelity design features."""
@@ -562,3 +576,10 @@ class PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
     def condition_on_observations(self, X: Tensor, Y: Tensor, **kwargs: Any) -> Any:
         """Condition the encoded GP using observations supplied in raw coordinates."""
         return super().condition_on_observations(X=self._encode_inputs(X), Y=Y, **kwargs)
+
+    def fantasize(self, X: Tensor, sampler: Any, **kwargs: Any) -> Any:
+        """Construct fantasy models from candidate inputs supplied in raw coordinates."""
+        encoded_X = self._encode_inputs(X)
+        posterior = super().posterior(encoded_X, observation_noise=True)
+        fantasy_Y = sampler(posterior)
+        return super().condition_on_observations(X=encoded_X, Y=fantasy_Y, **kwargs)

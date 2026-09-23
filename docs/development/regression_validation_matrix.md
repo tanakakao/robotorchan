@@ -164,3 +164,14 @@ stores encoded inputs with finite posterior moments.
 This closes the conditioning half of the Phase 27 gap. `supports_fantasize` remains false until the
 full BoTorch fantasy path is exercised directly with a sampler and raw-space candidates; capability
 metadata is not restored from conditioning evidence alone.
+
+## Phase 29: reduced multi-fidelity fantasize lifecycle
+
+PCA, PLS, and random-projection multi-fidelity models now encode raw candidate coordinates before
+delegating to the native BoTorch fantasy path. Runtime coverage exercises `fantasize` with a
+Sobol QMC normal sampler for all three reducer families and verifies finite fantasy posterior
+moments in the encoded GP space.
+
+The reducer is reused rather than refitted during fantasy construction, so design coordinates stay
+in the same latent system while fidelity coordinates remain structural. With direct fantasy-path
+evidence in place, these three models again advertise `supports_fantasize=True`.

@@ -122,7 +122,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             multi_fidelity=True,
             supports_posterior_samples=True,
             posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
-            supports_fantasize=False,
+            supports_fantasize=True,
         ),
         _docs(
             "docs/models/reduced.md",
@@ -138,7 +138,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             multi_fidelity=True,
             supports_posterior_samples=True,
             posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
-            supports_fantasize=False,
+            supports_fantasize=True,
         ),
         _docs(
             "docs/models/reduced.md",
@@ -154,7 +154,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             multi_fidelity=True,
             supports_posterior_samples=True,
             posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
-            supports_fantasize=False,
+            supports_fantasize=True,
         ),
         _docs(
             "docs/models/reduced.md",
