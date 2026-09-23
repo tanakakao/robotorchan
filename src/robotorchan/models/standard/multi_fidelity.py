@@ -20,7 +20,11 @@ from robotorchan.models.base import (
     make_mixed_covar_module,
     normalize_feature_dims,
 )
-from robotorchan.reduction.input import (\n    PCAInputReducer,\n    PLSInputReducer,\n    RandomProjectionInputReducer,\n)
+from robotorchan.reduction.input import (
+    PCAInputReducer,
+    PLSInputReducer,
+    RandomProjectionInputReducer,
+)
 
 
 class SingleTaskMultiFidelityGP(ExactGPModelMixin, BoTorchSingleTaskMultiFidelityGP):
@@ -290,8 +294,8 @@ class RandomProjectionMultiFidelityGP(SingleTaskMultiFidelityGP):
             raise ValueError("Fidelity dimensions must not contain duplicates.")
         if linear_truncated:
             raise ValueError(
-                "RandomProjectionMultiFidelityGP requires linear_truncated=False so random projection can remain "
-                "separate from fidelity covariance."
+                "RandomProjectionMultiFidelityGP requires linear_truncated=False so "
+                "random projection can remain separate from fidelity covariance."
             )
 
         normalized_iteration = (
@@ -314,7 +318,9 @@ class RandomProjectionMultiFidelityGP(SingleTaskMultiFidelityGP):
             raise ValueError("Random projection requires at least one non-fidelity design feature.")
 
         design_X = train_X[..., list(self.design_dims)]
-        reducer = RandomProjectionInputReducer(\n            n_components=n_components, random_state=random_state\n        )
+        reducer = RandomProjectionInputReducer(
+            n_components=n_components, random_state=random_state
+        )
         reduced_design_X = reducer.fit_transform(design_X, train_Y)
         encoded_train_X = self._join_design_and_fidelity(
             reduced_design_X,
@@ -365,7 +371,9 @@ class RandomProjectionMultiFidelityGP(SingleTaskMultiFidelityGP):
         return super().posterior(self._encode_inputs(X), *args, **kwargs)
 
 
-\n\nclass PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
+
+
+class PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
     """Multi-fidelity GP with PLS restricted to non-fidelity design features."""
 
     def __init__(
