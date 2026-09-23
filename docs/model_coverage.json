@@ -709,8 +709,8 @@
       "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/20_neural_reduction_gp.ipynb"
-    }
-  },    "JointEncoderGP": {
+    },
+    "JointEncoderGP": {
       "guide": "docs/models/reduced.md",
       "theory": "docs/theory/19_neural_reduction_gp.md",
       "notebook": "examples/notebooks/20_neural_reduction_gp.ipynb"
