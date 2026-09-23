@@ -38,7 +38,7 @@ capabilities.
 | Mixed robust | robust mixed families | yes | family-dependent | partial | not required | not required here | validation-depth gap |
 | MultiTask robust | robust multitask families | yes | family-dependent | partial | not required | not required here | validation-depth gap |
 | Empirical tree ensemble | RF / ExtraTrees / boosting | yes | yes | yes | no | partial / unproven | regression AL gap |
-| Multi-fidelity high-dimensional | none public yet | no | no | no | no | no | implementation candidate |
+| Multi-fidelity high-dimensional | none public yet | no | no | no | no | no | Phase 8 design complete; PCA reference implementation next |
 | Multi-fidelity robust | none public yet | no | no | no | no | no | implementation candidate |
 
 “Yes” means representative executable evidence exists in the repository. “Partial” means the family
@@ -79,6 +79,11 @@ test is not sufficient evidence. Each new statistical family must prove block-de
 shape, finite sampling, and a representative multi-output acquisition path.
 
 ### Multi-fidelity cross-capability models
+
+The high-dimensional branch is specified in
+[`multifidelity_highdim_design.md`](multifidelity_highdim_design.md). Deterministic reduction is
+the first implementation path; fully Bayesian SAAS remains research-gated until a fidelity-aware
+probabilistic model is designed.
 
 Future high-dimensional or robust multi-fidelity models must preserve the fidelity feature as a
 structural dimension. Reduction or learned encoders must not silently consume the fidelity column.
