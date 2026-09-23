@@ -625,7 +625,12 @@
       "theory": "docs/theory/22_expressive_gp.md",
       "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
     },
-    "SpectralMixtureKroneckerMultiTaskGP": {\n      "guide": "docs/models/expressive.md",\n      "theory": "docs/theory/22_expressive_gp.md",\n      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"\n    },\n    "SpectralMixtureMultiTaskGP": {
+    "SpectralMixtureKroneckerMultiTaskGP": {
+      "guide": "docs/models/expressive.md",
+      "theory": "docs/theory/22_expressive_gp.md",
+      "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
+    },
+    "SpectralMixtureMultiTaskGP": {
       "guide": "docs/models/expressive.md",
       "theory": "docs/theory/22_expressive_gp.md",
       "notebook": "examples/notebooks/24_expressive_surrogate_gp.ipynb"
