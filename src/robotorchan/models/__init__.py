@@ -17,6 +17,7 @@ from robotorchan.models.expressive.spectral_mixture import (
     MixedSpectralMixtureGP,
     MixedSpectralMixtureMultiTaskGP,
     SpectralMixtureGP,
+    SpectralMixtureKroneckerMultiTaskGP,
     SpectralMixtureMultiTaskGP,
 )
 from robotorchan.models.high_dimensional.alebo import ALEBOGP
@@ -303,6 +304,7 @@ __all__ = [
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
     "SpectralMixtureGP",
+    "SpectralMixtureKroneckerMultiTaskGP",
     "SpectralMixtureMultiTaskGP",
     "StudentTMultiTaskGP",
     "StudentTSingleTaskGP",

@@ -16,6 +16,7 @@ from robotorchan.models.expressive.spectral_mixture import (
     MixedSpectralMixtureGP,
     MixedSpectralMixtureMultiTaskGP,
     SpectralMixtureGP,
+    SpectralMixtureKroneckerMultiTaskGP,
     SpectralMixtureMultiTaskGP,
 )
 
@@ -31,5 +32,6 @@ __all__ = [
     "MultiTaskDeepGP",
     "SingleTaskDeepGP",
     "SpectralMixtureGP",
+    "SpectralMixtureKroneckerMultiTaskGP",
     "SpectralMixtureMultiTaskGP",
 ]
