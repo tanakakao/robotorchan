@@ -39,7 +39,7 @@ capabilities.
 | MultiTask robust | robust multitask families | yes | family-dependent | partial | not required | not required here | validation-depth gap |
 | Empirical tree ensemble | RF / ExtraTrees / boosting | yes | yes | yes | no | partial / unproven | regression AL gap |
 | Multi-fidelity high-dimensional | none public yet | no | no | no | no | no | Phase 8 design complete; PCA reference implementation next |
-| Multi-fidelity robust | none public yet | no | no | no | no | no | implementation candidate |
+| Multi-fidelity robust | none public yet | no | no | no | no | no | Phase 10 design complete; replicate-noise reference next |
 
 “Yes” means representative executable evidence exists in the repository. “Partial” means the family
 is structurally broad but evidence is not uniform enough to claim family-wide workflow validation.
@@ -95,6 +95,11 @@ Required evidence is:
 3. posterior and sampling;
 4. a multi-fidelity acquisition such as qMFKG where semantically supported;
 5. candidate generation preserving fidelity semantics.
+
+
+The robust branch is specified in [`multifidelity_robust_design.md`](multifidelity_robust_design.md).
+Replicate-noise and heteroskedastic multi-fidelity models are the first statistically explicit
+implementation targets; relevance pursuit remains research-gated pending likelihood composition.
 
 ### Probabilistic non-GP and regression AL
 
