@@ -2,6 +2,7 @@
 
 from robotorchan.models.standard.model_list import ModelListGP
 from robotorchan.models.standard.multi_fidelity import (
+    AdditiveMapSaasMultiFidelityGP,
     MapSaasMultiFidelityGP,
     MixedSingleTaskMultiFidelityGP,
     PCAMultiFidelityGP,
