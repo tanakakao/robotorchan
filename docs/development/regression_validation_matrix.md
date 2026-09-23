@@ -365,8 +365,8 @@ product is not automatically a defect.
 | Random Projection | Implemented | `RandomProjectionKroneckerMultiTaskGP` is public, registered, documented, and tested. |
 | AE / VAE | Implemented | Frozen AE/VAE Kronecker variants exist; joint encoder/VAE block-design variants also exist. |
 | Nonstationary | Implemented | `NonstationaryKroneckerMultiTaskGP` replaces only the data covariance with a Gibbs kernel. |
-| Spectral Mixture | Missing -> Implement | Single-task, Mixed, and long-format MultiTask kernels exist; a block-design data-kernel variant is a clean extension. |
-| Infinite-width BNN | Missing -> Implement | The NNGP is already a reusable exact-GP kernel; composing it with Kronecker task covariance has clear semantics. |
+| Spectral Mixture | Implemented | `SpectralMixtureKroneckerMultiTaskGP` is public; the Mixed block-design variant is also implemented. |
+| Infinite-width BNN | Implemented | `InfiniteWidthBNNKroneckerMultiTaskGP` is public; the Mixed block-design variant is also implemented. |
 | Fully Bayesian SAAS | Hold | Phase 9 found no stable block-design Pyro/sample-loading path; a custom implementation would own substantial fully Bayesian internals. |
 | Heteroskedastic | Prototype | Design documentation exists, but no public Kronecker implementation exists. Predicted noise must alter response observation covariance with an explicit task axis. |
 | Robust Relevance Pursuit | Prototype | A dedicated block-design sparse observation/outlier model is required; the single-task `noise_covar` mixin is not a valid shortcut. |
@@ -404,3 +404,21 @@ Phase 2 may proceed with `SpectralMixtureKroneckerMultiTaskGP`. It must preserve
 `train_X[..., n, d]` / `train_Y[..., n, m]`, use spectral mixture only for the data covariance,
 retain the existing raw-data and MLL contracts, and prove posterior sampling plus representative
 scalarized MC acquisition and `optimize_acqf` execution before public registration.
+
+
+### Phase 10 SAAS Kronecker disposition
+
+Phase 10 closes the planned SAAS implementation slot without adding a runtime model. Phase 9's
+`Hold` decision is the accepted implementation result under the current BoTorch dependency.
+
+No public symbol, registry entry, capability flag, generated model-coverage entry, or compatibility
+alias named `SaasFullyBayesianKroneckerMultiTaskGP` is introduced. This prevents documentation
+from implying a block-design fully Bayesian capability that the runtime does not provide.
+
+The extension matrix also records the expressive Kronecker work completed after the original Phase
+1 snapshot: Spectral Mixture and Infinite-width BNN now have public continuous and Mixed
+block-design implementations.
+
+A future SAAS Kronecker phase may reopen only under the triggers documented in
+`saas_kronecker_design.md`. Until then, ordinary fully Bayesian SAAS support remains the existing
+single-task and long-format multi-task families; it must not be presented as Kronecker support.
