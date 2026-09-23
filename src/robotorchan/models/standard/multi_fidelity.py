@@ -331,6 +331,10 @@ class PCAMultiFidelityGP(SingleTaskMultiFidelityGP):
         """Evaluate the BoTorch multi-fidelity posterior from raw-space inputs."""
         return super().posterior(self._encode_inputs(X), *args, **kwargs)
 
+    def condition_on_observations(self, X: Tensor, Y: Tensor, **kwargs: Any) -> Any:
+        """Condition the encoded GP using observations supplied in raw coordinates."""
+        return super().condition_on_observations(X=self._encode_inputs(X), Y=Y, **kwargs)
+
 
 class RandomProjectionMultiFidelityGP(SingleTaskMultiFidelityGP):
     """Multi-fidelity GP with random projection restricted to non-fidelity design features."""
@@ -441,6 +445,10 @@ class RandomProjectionMultiFidelityGP(SingleTaskMultiFidelityGP):
         """Evaluate the BoTorch multi-fidelity posterior from raw-space inputs."""
         return super().posterior(self._encode_inputs(X), *args, **kwargs)
 
+    def condition_on_observations(self, X: Tensor, Y: Tensor, **kwargs: Any) -> Any:
+        """Condition the encoded GP using observations supplied in raw coordinates."""
+        return super().condition_on_observations(X=self._encode_inputs(X), Y=Y, **kwargs)
+
 
 class PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
     """Multi-fidelity GP with PLS restricted to non-fidelity design features."""
@@ -550,3 +558,7 @@ class PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
     def posterior(self, X: Tensor, *args: Any, **kwargs: Any) -> Any:
         """Evaluate the BoTorch multi-fidelity posterior from raw-space inputs."""
         return super().posterior(self._encode_inputs(X), *args, **kwargs)
+
+    def condition_on_observations(self, X: Tensor, Y: Tensor, **kwargs: Any) -> Any:
+        """Condition the encoded GP using observations supplied in raw coordinates."""
+        return super().condition_on_observations(X=self._encode_inputs(X), Y=Y, **kwargs)
