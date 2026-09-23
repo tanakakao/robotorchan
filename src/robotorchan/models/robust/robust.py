@@ -26,7 +26,11 @@ from robotorchan.models.base import (
     normalize_feature_dims,
 )
 from robotorchan.models.standard.multi_fidelity import SingleTaskMultiFidelityGP
-from robotorchan.models.standard.multitask import KroneckerMultiTaskGP, MultiTaskGP
+from robotorchan.models.standard.multitask import (
+    KroneckerMultiTaskGP,
+    MixedKroneckerMultiTaskGP,
+    MultiTaskGP,
+)
 
 
 class RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin):
@@ -471,6 +475,58 @@ class HeteroskedasticKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         """Return the explicit task-specific diagonal observation-noise term."""
         noise = self.predicted_noise(X)
         return noise.reshape(*noise.shape[:-2], -1)
+
+
+class MixedHeteroskedasticKroneckerMultiTaskGP(HeteroskedasticKroneckerMultiTaskGP):
+    """Prototype mixed-input block-design GP with task-specific noise."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        cat_dims: list[int],
+        train_Yvar: Tensor | None = None,
+        noise_floor: float = 1e-6,
+        cont_kernel_factory: ContinuousKernelFactory | None = None,
+        rank: int | None = None,
+    ) -> None:
+        input_dim = train_X.shape[-1]
+        normalized_cat_dims = normalize_feature_dims(cat_dims, input_dim, name="cat_dims")
+        self.cat_dims = tuple(normalized_cat_dims)
+        self._cont_kernel_factory = cont_kernel_factory
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            train_Yvar=train_Yvar,
+            noise_floor=noise_floor,
+            rank=rank,
+        )
+        self.covar_module.data_covar_module = make_mixed_covar_module(
+            input_dim=input_dim,
+            cat_dims=normalized_cat_dims,
+            batch_shape=train_X.shape[:-2],
+            cont_kernel_factory=cont_kernel_factory,
+        )
+
+    def build_noise_model(self, log_noise: Tensor) -> MixedKroneckerMultiTaskGP:
+        """Build a mixed block-design log-noise surrogate using the same categories."""
+        if log_noise.shape != self.raw_train_Y.shape:
+            raise ValueError("log_noise must have exactly the same shape as train_Y.")
+        return MixedKroneckerMultiTaskGP(
+            self.raw_train_X,
+            log_noise,
+            cat_dims=list(self.cat_dims),
+            cont_kernel_factory=self._cont_kernel_factory,
+        )
+
+    def set_noise_model(self, noise_model: KroneckerMultiTaskGP) -> None:
+        """Require a mixed noise surrogate with the same categorical coordinates."""
+        if not isinstance(noise_model, MixedKroneckerMultiTaskGP):
+            raise TypeError("Mixed heteroskedastic Kronecker requires a mixed noise model.")
+        if noise_model.cat_dims != self.cat_dims:
+            raise ValueError("noise model cat_dims must match the response model.")
+        super().set_noise_model(noise_model)
 
 
 class HeteroskedasticMultiTaskGP(MultiTaskGP):
