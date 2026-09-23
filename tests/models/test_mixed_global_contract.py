@@ -20,6 +20,7 @@ EXPECTED_MIXED_MODELS = {
     "MixedJointHeteroskedasticSingleTaskGP",
     "MixedJointVAEGP",
     "MixedInfiniteWidthBNNGP",
+    "MixedInfiniteWidthBNNKroneckerMultiTaskGP",
     "MixedInfiniteWidthBNNMultiTaskGP",
     "MixedKroneckerMultiTaskGP",
     "MixedLCEMGP",
