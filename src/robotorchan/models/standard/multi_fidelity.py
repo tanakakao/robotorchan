@@ -7,9 +7,11 @@ from typing import Any
 
 import torch
 from botorch.models import SingleTaskMultiFidelityGP as BoTorchSingleTaskMultiFidelityGP
+from botorch.models.map_saas import add_saas_prior
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
+from gpytorch.kernels import MaternKernel, ScaleKernel
 from gpytorch.likelihoods import Likelihood
 from gpytorch.module import Module
 from torch import Tensor
@@ -147,6 +149,77 @@ class MixedSingleTaskMultiFidelityGP(SingleTaskMultiFidelityGP):
         )
         self.cat_dims = tuple(normalized_cat_dims)
         self.fidelity_dims = tuple(sorted(fidelity_dims))
+
+
+class MapSaasMultiFidelityGP(SingleTaskMultiFidelityGP):
+    """Exact multi-fidelity GP with SAAS shrinkage on design dimensions only."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        train_Yvar: Tensor | None = None,
+        iteration_fidelity: int | None = None,
+        data_fidelities: Sequence[int] | None = None,
+        linear_truncated: bool = False,
+        nu: float = 2.5,
+        likelihood: Likelihood | None = None,
+        outcome_transform: OutcomeTransform | _DefaultType | None = DEFAULT,
+        input_transform: InputTransform | None = None,
+    ) -> None:
+        """Initialize design-only MAP-SAAS with native BoTorch fidelity kernels."""
+        if linear_truncated:
+            raise ValueError("MapSaasMultiFidelityGP requires linear_truncated=False.")
+
+        input_dim = train_X.shape[-1]
+        fidelity_dims: list[int] = []
+        normalized_iteration: int | None = None
+        if iteration_fidelity is not None:
+            normalized_iteration = normalize_feature_dims(
+                [iteration_fidelity], input_dim, name="iteration_fidelity"
+            )[0]
+            fidelity_dims.append(normalized_iteration)
+        normalized_data = tuple(
+            normalize_feature_dims(
+                () if data_fidelities is None else data_fidelities,
+                input_dim,
+                name="data_fidelities",
+            )
+        )
+        fidelity_dims.extend(normalized_data)
+        if len(set(fidelity_dims)) != len(fidelity_dims):
+            raise ValueError("Fidelity dimensions must not contain duplicates.")
+
+        design_dims = tuple(dim for dim in range(input_dim) if dim not in fidelity_dims)
+        if not design_dims:
+            raise ValueError("MapSaasMultiFidelityGP requires at least one design dimension.")
+
+        design_kernel = MaternKernel(
+            nu=nu,
+            ard_num_dims=len(design_dims),
+            active_dims=list(design_dims),
+        )
+        add_saas_prior(design_kernel)
+        data_covar_module = ScaleKernel(design_kernel)
+
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            train_Yvar=train_Yvar,
+            iteration_fidelity=normalized_iteration,
+            data_fidelities=normalized_data,
+            linear_truncated=False,
+            nu=nu,
+            covar_module=data_covar_module,
+            likelihood=likelihood,
+            outcome_transform=outcome_transform,
+            input_transform=input_transform,
+        )
+        self.design_dims = design_dims
+        self.fidelity_dims = tuple(fidelity_dims)
+        self.iteration_fidelity = normalized_iteration
+        self.data_fidelities = normalized_data
+        self.saas_design_kernel = design_kernel
 
 
 class PCAMultiFidelityGP(SingleTaskMultiFidelityGP):
