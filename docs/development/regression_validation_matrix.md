@@ -136,3 +136,20 @@ Later phases should update this matrix only when executable evidence is added.
 
 The RRP composition boundary is audited in [`rrp_multifidelity_audit.md`](rrp_multifidelity_audit.md).
 It remains research-gated rather than being forced through multiple inheritance.
+
+## Phase 27: reduced multi-fidelity fantasize boundary
+
+PCA, PLS, and random-projection multi-fidelity models own a raw-to-encoded input mapping and
+currently override `posterior` only. BoTorch fantasy construction conditions the underlying exact
+GP on new observations; without an explicit raw-space `condition_on_observations` / `fantasize`
+contract, advertising generic fantasize support would imply that raw candidate tensors are safely
+encoded on every conditioning path. That has not been established.
+
+Accordingly, these three reduced multi-fidelity models no longer advertise `supports_fantasize`.
+Their posterior, sampling, and ordinary MC evidence remains valid. A future implementation may
+restore the capability only after the reducer is frozen and both conditioning and fantasy paths
+are tested in raw coordinates.
+
+This restriction does not apply automatically to `MapSaasMultiFidelityGP`, replicate-noise MF, or
+heteroskedastic MF because those models keep the BoTorch multi-fidelity input coordinates rather
+than introducing a private reduced coordinate system.
