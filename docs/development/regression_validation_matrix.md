@@ -175,3 +175,11 @@ moments in the encoded GP space.
 The reducer is reused rather than refitted during fantasy construction, so design coordinates stay
 in the same latent system while fidelity coordinates remain structural. With direct fantasy-path
 evidence in place, these three models again advertise `supports_fantasize=True`.
+
+## Phase 30: reduced multi-fidelity native MF-KG validation
+
+PCA, PLS, and random-projection multi-fidelity models are now exercised directly with BoTorch
+`qMultiFidelityKnowledgeGradient`, including an affine fidelity cost model, inverse-cost utility,
+target-fidelity projection, and a target-fidelity `PosteriorMean` current value. This validates that
+the raw-space fantasy lifecycle from Phase 29 is sufficient for a native cost-aware multi-fidelity
+acquisition rather than only for direct `fantasize` calls.
