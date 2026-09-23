@@ -98,9 +98,7 @@ def test_mixed_heteroskedastic_kronecker_rejects_mismatched_noise_categories() -
     from robotorchan.models.robust.robust import MixedHeteroskedasticKroneckerMultiTaskGP
     from robotorchan.models.standard.multitask import MixedKroneckerMultiTaskGP
 
-    X = torch.tensor(
-        [[0.15, 0.0], [0.30, 1.0], [0.45, 0.0], [0.60, 1.0]], dtype=torch.double
-    )
+    X = torch.tensor([[0.15, 0.0], [0.30, 1.0], [0.45, 0.0], [0.60, 1.0]], dtype=torch.double)
     Y = torch.stack((torch.sin(4.0 * X[:, 0]), torch.cos(3.0 * X[:, 0])), dim=-1)
     model = MixedHeteroskedasticKroneckerMultiTaskGP(X, Y, cat_dims=[1])
     wrong_noise_model = MixedKroneckerMultiTaskGP(X, torch.log(Y.square() + 0.1), cat_dims=[0])
