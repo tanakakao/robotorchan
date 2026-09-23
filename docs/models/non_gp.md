@@ -3,7 +3,7 @@
 robotorchan の non-GP surrogate は、Gaussian Process を装うのではなく、各モデルが持つ
 予測サンプルの意味を BoTorch の `Posterior` contract に接続します。現在の公開モデルは
 `RandomForestSurrogate`、`ExtraTreesSurrogate`、`GradientBoostingSurrogate`、
-`HistGradientBoostingSurrogate` です。
+`HistGradientBoostingSurrogate` に加え、オプション依存の `NGBoostSurrogate` です。
 
 ## 共通 contract
 
@@ -57,3 +57,13 @@ credible interval を意味しません。
 
 Notebook: [Non-GP surrogate](../../examples/notebooks/25_non_gp_surrogates.ipynb)  
 Theory: [Empirical ensemble surrogate](../theory/23_non_gp_surrogates.md)
+
+
+## NGBoostSurrogate
+
+`NGBoostSurrogate` は boosting stage を ensemble member とみなさず、NGBoost が返す Gaussian
+予測分布を sampleable な BoTorch `Posterior` に変換します。初期 contract は単一出力の数値回帰
+のみです。候補点予測は CPU/numpy backend を通るため入力勾配はサポートせず、MC acquisition と
+勾配不要探索を使用します。予測分散を使う回帰 active learning は適用可能ですが、通常の
+NGBoost 予測分布だけでは epistemic / aleatoric uncertainty を分離できないため BALD 対応は
+主張しません。
