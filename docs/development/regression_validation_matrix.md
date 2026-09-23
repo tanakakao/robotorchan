@@ -279,3 +279,70 @@ implementation remain undesirable maintenance coupling.
 Classification and ordinal models are intentionally developed in a separate stream. They must not
 be pulled into this regression program merely because an acquisition or model audit discovers a
 related future opportunity.
+
+
+## Phase 2: validation-gap classification
+
+This re-audit classifies missing evidence separately from missing model capability. It also restores
+the intended Kronecker policy: practical Kronecker extensions remain an active implementation
+target, while statistically weak Cartesian products are not added merely for symmetry.
+
+The evidence codes used below are:
+
+- **P**: posterior shape and finite moments or samples;
+- **S**: posterior sampling through the model's supported sampler path;
+- **MC**: representative Monte Carlo acquisition evaluation;
+- **F**: fantasy-dependent workflow;
+- **MF**: native multi-fidelity acquisition workflow;
+- **AL**: regression Active Learning workflow;
+- **OPT**: candidate optimization through the appropriate optimizer.
+
+| Family | P | S | MC | F / MF | AL | OPT | Gap classification |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Standard exact / Mixed exact | yes | yes | yes | yes | representative | yes | no material gap |
+| Kronecker baseline | yes | yes | yes | acquisition-specific | not required | partial | validation gap |
+| Mixed Kronecker | yes | partial | partial | acquisition-specific | not required | partial | validation gap |
+| Nonstationary Kronecker | yes | yes | yes | not established | not required | not established | validation gap |
+| High-dimensional MultiTask | yes | family-dependent | partial | partial | not required | partial | validation gap |
+| Robust MultiTask | yes | family-dependent | partial | not generally required | not required | partial | validation gap |
+| Mixed robust | yes | family-dependent | partial | not generally required | not required | partial | validation gap |
+| Multi-fidelity high-dimensional | yes | yes | yes | yes | not required | representative | no core correctness gap |
+| Multi-fidelity robust | yes | yes | yes | yes | not required | representative | no core correctness gap |
+| Empirical non-GP ensemble | yes | yes | yes | unsupported | partial | partial | intentional AL limitation |
+| NGBoost probabilistic surrogate | yes | yes | yes | unsupported | yes | acquisition path | no new model required |
+
+### Gap categories
+
+No current evidence establishes a major regression correctness defect. The actionable findings are
+therefore validation and extension gaps rather than known numerical-correctness failures.
+
+**Contract gaps.** No broad public-contract rewrite is justified in this phase. Capability metadata
+must continue to describe structural support, while this matrix records executable evidence.
+
+**Validation gaps.** High-dimensional MultiTask, robust MultiTask, Mixed robust, and the extended
+Kronecker family need deeper representative acquisition and optimizer evidence. The missing tests
+must be chosen by distinct posterior, transform, sampler, or optimizer semantics rather than by
+class-name Cartesian products.
+
+**Useful missing capability.** Kronecker is intentionally different from the other families. The
+project goal is to provide a useful set of block-design Kronecker models, so later phases must audit
+robust, high-dimensional, Mixed, and expressive Kronecker coverage for practical omissions. A
+missing Kronecker extension may therefore become an implementation target when it preserves
+block-design semantics and provides a use case not already served by an existing public model.
+
+**Intentional limitations.** Ensemble Active Learning reductions that require an unsupported
+epistemic / aleatoric decomposition remain unsupported. Research-gated multi-fidelity combinations
+also remain outside the public surface until their statistical model is explicit.
+
+### Phase 3 hand-off
+
+Phase 3 should validate high-dimensional MultiTask representatives in four groups: deterministic
+reduction, learned neural reduction, fully Bayesian SAAS, and expressive / variational models.
+Posterior and sampler checks alone are insufficient where a representative MC acquisition or
+candidate-optimization path is materially different.
+
+The later Kronecker phases must not interpret this validation-first ordering as a freeze on model
+development. They should actively identify practical missing Kronecker models, but use
+**Implement**, **Prototype**, **Hold**, or **Reject** according to statistical value and maintenance
+cost. Large copies of BoTorch private implementation are not an acceptable way to complete a
+matrix cell.
