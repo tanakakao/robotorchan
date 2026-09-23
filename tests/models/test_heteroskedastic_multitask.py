@@ -105,9 +105,7 @@ def test_mixed_heteroskedastic_multitask_supports_mixed_optimizer() -> None:
     task1 = torch.ones(3, 1, dtype=torch.double)
     train_x = torch.cat((torch.cat((x, task0), dim=-1), torch.cat((x, task1), dim=-1)))
     train_y = torch.cat((torch.sin(x[:, :1]), torch.cos(x[:, :1])))
-    model = MixedHeteroskedasticMultiTaskGP(
-        train_x, train_y, task_feature=-1, cat_dims=[1]
-    )
+    model = MixedHeteroskedasticMultiTaskGP(train_x, train_y, task_feature=-1, cat_dims=[1])
     model.eval()
 
     objective = GenericMCObjective(lambda values, X=None: values.squeeze(-1))
@@ -124,9 +122,7 @@ def test_mixed_heteroskedastic_multitask_supports_mixed_optimizer() -> None:
         num_restarts=2,
         raw_samples=8,
         fixed_features_list=[
-            {1: category, 2: task}
-            for category in (0.0, 1.0)
-            for task in (0.0, 1.0)
+            {1: category, 2: task} for category in (0.0, 1.0) for task in (0.0, 1.0)
         ],
     )
 
