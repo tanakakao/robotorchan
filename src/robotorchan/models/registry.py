@@ -451,6 +451,7 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         "PCAGP",
         "PLSGP",
         "RandomProjectionGP",
+        "SpectralMixtureKroneckerMultiTaskGP",
     }
 )
 
@@ -471,6 +472,7 @@ _FANTASIZE_MODELS = frozenset(
         "PCAGP",
         "PLSGP",
         "RandomProjectionGP",
+        "SpectralMixtureKroneckerMultiTaskGP",
     }
 )
 
