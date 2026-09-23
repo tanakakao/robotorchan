@@ -66,7 +66,7 @@ def test_spectral_mixture_gp_optimize_acqf_uses_original_space() -> None:
     model.likelihood.eval()
 
     acquisition = qLogExpectedImprovement(model=model, best_f=Y.max())
-    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    bounds = torch.tensor([[0.05], [0.95]], dtype=torch.double)
     candidate, _ = optimize_acqf(
         acquisition,
         bounds=bounds,
@@ -210,7 +210,6 @@ def test_spectral_mixture_kronecker_scalarized_mc_and_optimizer_run() -> None:
         num_restarts=2,
         raw_samples=16,
         options={"maxiter": 12},
-        gen_candidates=None,
     )
     assert candidate.shape == (1, 1)
     assert torch.isfinite(candidate).all()
