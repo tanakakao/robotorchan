@@ -101,7 +101,8 @@ embed a feasibility decision rule.
 2. Implement CatBoost first for the strongest native mixed/categorical value.
 3. Implement LightGBM and XGBoost complete-model bootstrap adapters.
 4. Implement NGBoost with a distribution-aware posterior rather than forcing it into the empirical
-   ensemble abstraction.
+   ensemble abstraction. The Phase 14 contract is defined in
+   [`ngboost_surrogate_design.md`](ngboost_surrogate_design.md).
 5. Add backend-specific multi-output tests only after each backend's current API is audited.
 6. Add MC acquisition and gradient-free optimizer integration tests.
 7. Add optional-dependency smoke tests that verify base robotorchan imports without any backend.
@@ -116,3 +117,11 @@ that the adapter publicly claims.
 Documentation must state whether uncertainty comes from a native predictive distribution, bootstrap
 complete-model disagreement, or another mechanism. These mechanisms must not be described
 interchangeably.
+
+
+## Phase 14 NGBoost decision
+
+NGBoost is the next external probabilistic surrogate target. The first public adapter is intentionally
+Gaussian-regression-only and must remain an optional dependency. Predictive variance / sample-based
+regression AL is in scope; BALD is explicitly out of scope until an epistemic / aleatoric decomposition
+is implemented and validated.
