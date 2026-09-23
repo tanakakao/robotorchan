@@ -13,7 +13,7 @@ from gpytorch.likelihoods import Likelihood
 from torch import Tensor
 
 from robotorchan.models.base import make_mixed_covar_module, normalize_feature_dims
-from robotorchan.models.standard.multitask import MultiTaskGP
+from robotorchan.models.standard.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.standard.single_task import SingleTaskGP
 
 
@@ -115,6 +115,53 @@ class SpectralMixtureMultiTaskGP(MultiTaskGP):
             train_Yvar=train_Yvar,
             covar_module=ScaleKernel(spectral_kernel).to(train_X),
             rank=rank,
+        )
+        self.num_mixtures = num_mixtures
+        self.initialization = initialization
+
+
+class SpectralMixtureKroneckerMultiTaskGP(KroneckerMultiTaskGP):
+    """Block-design Kronecker multi-task GP with spectral data covariance."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_mixtures: int = 4,
+        initialization: Literal["data", "empspect"] = "data",
+        likelihood: Likelihood | None = None,
+        rank: int | None = None,
+        outcome_transform: OutcomeTransform | None = None,
+        input_transform: InputTransform | None = None,
+    ) -> None:
+        if num_mixtures <= 0:
+            raise ValueError("num_mixtures must be positive.")
+        if initialization not in {"data", "empspect"}:
+            raise ValueError("initialization must be 'data' or 'empspect'.")
+        if train_X.ndim != 2:
+            raise ValueError("train_X must have shape n x d.")
+        if train_Y.ndim != 2 or train_Y.shape[0] != train_X.shape[0]:
+            raise ValueError("train_Y must have shape n x m.")
+
+        spectral_kernel = SpectralMixtureKernel(
+            num_mixtures=num_mixtures,
+            ard_num_dims=train_X.shape[-1],
+        ).to(train_X)
+        initialization_target = train_Y.mean(dim=-1)
+        if initialization == "data":
+            spectral_kernel.initialize_from_data(train_X, initialization_target)
+        else:
+            spectral_kernel.initialize_from_data_empspect(train_X, initialization_target)
+
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            likelihood=likelihood,
+            data_covar_module=ScaleKernel(spectral_kernel).to(train_X),
+            rank=rank,
+            outcome_transform=outcome_transform,
+            input_transform=input_transform,
         )
         self.num_mixtures = num_mixtures
         self.initialization = initialization
