@@ -8,6 +8,7 @@ from robotorchan.models.expressive.deep_gp import (
 )
 from robotorchan.models.expressive.infinite_width_bnn import (
     InfiniteWidthBNNGP,
+    InfiniteWidthBNNKroneckerMultiTaskGP,
     InfiniteWidthBNNMultiTaskGP,
     MixedInfiniteWidthBNNGP,
     MixedInfiniteWidthBNNMultiTaskGP,
@@ -23,6 +24,7 @@ from robotorchan.models.expressive.spectral_mixture import (
 
 __all__ = [
     "InfiniteWidthBNNGP",
+    "InfiniteWidthBNNKroneckerMultiTaskGP",
     "InfiniteWidthBNNMultiTaskGP",
     "MixedInfiniteWidthBNNGP",
     "MixedInfiniteWidthBNNMultiTaskGP",
