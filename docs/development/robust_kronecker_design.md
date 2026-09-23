@@ -112,3 +112,23 @@ Phase 6 must not:
 After the first-wave runtime tests pass, revisit Student-t and contaminated models using evidence
 from the implemented Kronecker posterior contract. They remain valid future candidates, not
 rejected model families.
+
+
+## Phase 15 public-API correction
+
+The public API audit found that the Phase 7/8 heteroskedastic Kronecker implementations did not yet
+satisfy the observation-model contract stated above. They fit an auxiliary block-design log-noise
+GP and expose `predicted_noise`, but the predicted task-specific noise is not injected into the
+response model's observation likelihood. A sampleable response posterior therefore does not prove
+heteroskedastic response semantics.
+
+Accordingly, `HeteroskedasticKroneckerMultiTaskGP` and
+`MixedHeteroskedasticKroneckerMultiTaskGP` are removed from the public exports, model registry,
+and generated coverage surface. Their implementation and focused internal tests remain available
+as prototypes while a shaped task-specific observation-noise likelihood/covariance path is
+designed.
+
+Re-publication requires executable evidence that fitted noise changes the response observation
+model while preserving block-design Kronecker covariance, posterior sampling, acquisition
+compatibility, and the raw-data contract. This correction intentionally prefers a smaller truthful
+public surface over capability metadata that overstates the statistical model.
