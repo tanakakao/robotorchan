@@ -38,8 +38,8 @@ capabilities.
 | Mixed robust | robust mixed families | yes | family-dependent | partial | not required | not required here | validation-depth gap |
 | MultiTask robust | robust multitask families | yes | family-dependent | partial | not required | not required here | validation-depth gap |
 | Empirical tree ensemble | RF / ExtraTrees / boosting | yes | yes | yes | no | partial / unproven | regression AL gap |
-| Multi-fidelity high-dimensional | none public yet | no | no | no | no | no | Phase 8 design complete; PCA reference implementation next |
-| Multi-fidelity robust | none public yet | no | no | no | no | no | Phase 10 design complete; replicate-noise reference next |
+| Multi-fidelity high-dimensional | PCA / PLS / RP / MAP-SAAS MF | yes | yes | yes | yes | not required here | deterministic reduction implemented; MAP-SAAS MF has native MF-KG evidence |
+| Multi-fidelity robust | ReplicateNoiseMultiFidelityGP / HeteroskedasticMultiFidelityGP | yes | yes | partial | partial | no | public models exist; true MF workflow validation remains a gap |
 
 “Yes” means representative executable evidence exists in the repository. “Partial” means the family
 is structurally broad but evidence is not uniform enough to claim family-wide workflow validation.
