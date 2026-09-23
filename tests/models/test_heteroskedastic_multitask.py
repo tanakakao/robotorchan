@@ -2,6 +2,7 @@ import pytest
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.objective import GenericMCObjective
+from botorch.optim import optimize_acqf_mixed
 from botorch.sampling.normal import SobolQMCNormalSampler
 from gpytorch.kernels import AdditiveKernel, ProductKernel
 from gpytorch.likelihoods import FixedNoiseGaussianLikelihood
@@ -95,4 +96,41 @@ def test_heteroskedastic_multitask_supports_sampling_and_mc_acquisition() -> Non
     assert torch.isfinite(posterior.variance).all()
     assert torch.isfinite(samples).all()
     assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_mixed_heteroskedastic_multitask_supports_mixed_optimizer() -> None:
+    x = torch.tensor([[0.1, 0.0], [0.4, 1.0], [0.7, 0.0]], dtype=torch.double)
+    task0 = torch.zeros(3, 1, dtype=torch.double)
+    task1 = torch.ones(3, 1, dtype=torch.double)
+    train_x = torch.cat((torch.cat((x, task0), dim=-1), torch.cat((x, task1), dim=-1)))
+    train_y = torch.cat((torch.sin(x[:, :1]), torch.cos(x[:, :1])))
+    model = MixedHeteroskedasticMultiTaskGP(
+        train_x, train_y, task_feature=-1, cat_dims=[1]
+    )
+    model.eval()
+
+    objective = GenericMCObjective(lambda values, X=None: values.squeeze(-1))
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+        objective=objective,
+    )
+    candidate, value = optimize_acqf_mixed(
+        acq_function=acquisition,
+        bounds=torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=8,
+        fixed_features_list=[
+            {1: category, 2: task}
+            for category in (0.0, 1.0)
+            for task in (0.0, 1.0)
+        ],
+    )
+
+    assert candidate.shape == torch.Size([1, 3])
+    assert candidate[0, 1].item() in {0.0, 1.0}
+    assert candidate[0, 2].item() in {0.0, 1.0}
     assert torch.isfinite(value).all()
