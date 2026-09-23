@@ -122,6 +122,7 @@ from robotorchan.models.robust.replicate_noise import (
     ReplicateNoiseSingleTaskGP,
 )
 from robotorchan.models.robust.robust import (
+    HeteroskedasticMultiFidelityGP,
     HeteroskedasticMultiTaskGP,
     HeteroskedasticSingleTaskGP,
     MixedHeteroskedasticMultiTaskGP,
@@ -189,6 +190,7 @@ __all__ = [
     "ExtraTreesSurrogate",
     "GradientBoostingSurrogate",
     "HeterogeneousMTGP",
+    "HeteroskedasticMultiFidelityGP",
     "HeteroskedasticMultiTaskGP",
     "HeteroskedasticSingleTaskGP",
     "HierarchicalConditionalKernelGP",

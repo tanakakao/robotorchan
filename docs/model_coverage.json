@@ -60,6 +60,11 @@
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/13_heterogeneous_multitask_gp.ipynb"
     },
+    "HeteroskedasticMultiFidelityGP": {
+      "guide": "docs/models/robust_noise.md",
+      "theory": "docs/theory/15_heteroskedastic_noise.md",
+      "notebook": "examples/notebooks/16_noise_models.ipynb"
+    },
     "HeteroskedasticMultiTaskGP": {
       "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/15_heteroskedastic_noise.md",
