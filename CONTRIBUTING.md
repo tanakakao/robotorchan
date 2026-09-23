@@ -21,7 +21,11 @@ pip install -e ".[dev,examples,fully-bayesian]"
 ## 変更方針
 
 - BoTorch-nativeな挙動とacquisition function互換性を維持してください。
-- BoTorchに対応するモデル・likelihood・acquisition・utilityが存在する場合は、独自再実装よりBoTorchのwrapperを優先してください。BoTorchに対応実装がない、またはBoTorchの契約では必要な統計的意味を表現できない場合は、独自実装を検討してください。その場合は既存BoTorch APIへの無理なalias・monkey patch・意味の異なる流用を避け、独自実装が必要な理由と統計的契約を設計文書・テストで明示してください。
+- BoTorchに対応するモデル・likelihood・acquisition・utilityが存在する場合は、
+  独自再実装よりBoTorchのwrapperを優先してください。BoTorchに対応実装がない、または
+  BoTorchの契約では必要な統計的意味を表現できない場合は、独自実装を検討してください。
+  その場合は既存BoTorch APIへの無理なalias・monkey patch・意味の異なる流用を避け、
+  独自実装が必要な理由と統計的契約を設計文書・テストで明示してください。
 - 共通wrapperではraw training dataと共通インターフェースの一貫性を維持してください。
 - API変更時に旧名alias、deprecated wrapper、互換関数を追加して残さないでください。
   呼び出し側、テスト、example、Notebook、ドキュメントを新仕様へ完全に移行してください。
