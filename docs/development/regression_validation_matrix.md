@@ -346,3 +346,61 @@ development. They should actively identify practical missing Kronecker models, b
 **Implement**, **Prototype**, **Hold**, or **Reject** according to statistical value and maintenance
 cost. Large copies of BoTorch private implementation are not an acceptable way to complete a
 matrix cell.
+
+
+## Next regression extension Phase 1: Kronecker extension matrix
+
+This audit is based on main commit `1ee80b152e3f85203f442d3dbd549bad314dcd77`. The corresponding
+main-branch CI push run completed successfully. This matrix distinguishes an existing public
+implementation from a statistically meaningful future implementation target. A missing Cartesian
+product is not automatically a defect.
+
+| Kronecker family | Status | Evidence / decision |
+| --- | --- | --- |
+| Standard | Implemented | `KroneckerMultiTaskGP` preserves the BoTorch block-design contract. |
+| Mixed | Implemented | `MixedKroneckerMultiTaskGP` keeps categorical data covariance separate from the output-task axis. |
+| Reduced | Implemented | Shared `ReducedKroneckerMultiTaskGP` infrastructure is present. |
+| PCA | Implemented | `PCAKroneckerMultiTaskGP` is public, registered, documented, and tested. |
+| PLS | Implemented | `PLSKroneckerMultiTaskGP` is public, registered, documented, and tested. |
+| Random Projection | Implemented | `RandomProjectionKroneckerMultiTaskGP` is public, registered, documented, and tested. |
+| AE / VAE | Implemented | Frozen AE/VAE Kronecker variants exist; joint encoder/VAE block-design variants also exist. |
+| Nonstationary | Implemented | `NonstationaryKroneckerMultiTaskGP` replaces only the data covariance with a Gibbs kernel. |
+| Spectral Mixture | Missing -> Implement | Single-task, Mixed, and long-format MultiTask kernels exist; a block-design data-kernel variant is a clean extension. |
+| Infinite-width BNN | Missing -> Implement | The NNGP is already a reusable exact-GP kernel; composing it with Kronecker task covariance has clear semantics. |
+| Fully Bayesian SAAS | Prototype | Requires an explicit MCMC-batch / output-task contract and a Kronecker-aware Pyro model rather than a long-format wrapper. |
+| Heteroskedastic | Prototype | Design documentation exists, but no public Kronecker implementation exists. Predicted noise must alter response observation covariance with an explicit task axis. |
+| Robust Relevance Pursuit | Prototype | A dedicated block-design sparse observation/outlier model is required; the single-task `noise_covar` mixin is not a valid shortcut. |
+| Student-t | Prototype | Meaningful heavy-tail extension, but it needs a block-design variational likelihood/posterior contract. |
+| Contaminated | Prototype | Requires an explicit choice between shared and task-specific contamination parameters. |
+| Replicate Noise | Prototype | Requires aligned replicate-group × task aggregation and variance-of-the-mean semantics. |
+| DeepGP | Hold | A probabilistic hierarchy does not reduce to a data-kernel substitution; a dedicated block-design variational architecture would be disproportionately complex now. |
+
+### Phase 1 conclusions
+
+The high-dimensional Kronecker surface is substantially more complete than a family-name-only audit
+suggests: deterministic reduction, frozen neural reduction, and joint learned representations are
+already present. The next implementation gap is therefore expressive covariance rather than generic
+high-dimensional coverage.
+
+`SpectralMixtureKroneckerMultiTaskGP` is the first implementation target. The existing spectral
+mixture family already isolates the data kernel from long-format task covariance, so the Kronecker
+variant should inject the same spectral data covariance into `KroneckerMultiTaskGP` without
+encoding task identity in `train_X`.
+
+`InfiniteWidthBNNKroneckerMultiTaskGP` is the second implementation target. Its
+`InfiniteWidthReLUKernel` is already a reusable covariance module, making the intended model
+`K_NNGP(X, X') × K_task` rather than a new neural inference architecture.
+
+Robust extensions remain prototypes until their observation models are explicit. In particular,
+heteroskedastic acceptance requires executable evidence that learned task-specific input-dependent
+noise changes the response observation covariance. RRP, Student-t, contaminated, and replicate-noise
+variants must not be produced by flattening block-design observations into long-format data.
+
+DeepGP × Kronecker remains Hold. This is an implementation-cost decision, not a statistical rejection.
+
+### Phase 2 gate
+
+Phase 2 may proceed with `SpectralMixtureKroneckerMultiTaskGP`. It must preserve
+`train_X[..., n, d]` / `train_Y[..., n, m]`, use spectral mixture only for the data covariance,
+retain the existing raw-data and MLL contracts, and prove posterior sampling plus representative
+scalarized MC acquisition and `optimize_acqf` execution before public registration.
