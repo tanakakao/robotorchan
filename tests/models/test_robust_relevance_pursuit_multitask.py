@@ -86,7 +86,6 @@ def test_mixed_robust_multitask_rejects_task_as_category() -> None:
         )
 
 
-
 def test_robust_relevance_pursuit_multitask_supports_mc_acquisition() -> None:
     train_x, train_y = _long_format_data()
     model = RobustRelevancePursuitMultiTaskGP(train_x, train_y, task_feature=-1)
