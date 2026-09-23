@@ -13,6 +13,7 @@ from robotorchan.models.robust.joint_heteroskedastic import (
 from robotorchan.models.robust.nonstationary import (
     MixedNonstationaryMultiTaskGP,
     MixedNonstationarySingleTaskGP,
+    NonstationaryKroneckerMultiTaskGP,
     NonstationaryMultiTaskGP,
     NonstationarySingleTaskGP,
 )
@@ -55,6 +56,7 @@ __all__ = [
     "MixedRobustRelevancePursuitSingleTaskGP",
     "MixedStudentTMultiTaskGP",
     "MixedStudentTSingleTaskGP",
+    "NonstationaryKroneckerMultiTaskGP",
     "NonstationaryMultiTaskGP",
     "NonstationarySingleTaskGP",
     "ReplicateNoiseSingleTaskGP",
