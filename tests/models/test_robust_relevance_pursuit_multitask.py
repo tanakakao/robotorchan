@@ -91,6 +91,7 @@ def test_robust_relevance_pursuit_multitask_supports_mc_acquisition() -> None:
     model = RobustRelevancePursuitMultiTaskGP(train_x, train_y, task_feature=-1)
     model.eval()
     acquisition_model = model.to_standard_model()
+    acquisition_model.likelihood = acquisition_model.likelihood.noise_covar.base_noise
     acquisition_model.eval()
 
     candidates = train_x[:2]
