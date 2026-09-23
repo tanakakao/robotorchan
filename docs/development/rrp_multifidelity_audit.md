@@ -32,8 +32,7 @@ A class such as
 class RobustRelevancePursuitMultiFidelityGP(
     SingleTaskMultiFidelityGP,
     RobustRelevancePursuitMixin,
-):
-    ...
+): ...
 ```
 
 is not accepted merely because both parents are exact single-task GPs.
