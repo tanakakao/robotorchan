@@ -10,6 +10,7 @@ from gpytorch.mlls import ExactMarginalLogLikelihood
 from robotorchan.models.expressive.spectral_mixture import (
     MixedSpectralMixtureGP,
     SpectralMixtureGP,
+    SpectralMixtureKroneckerMultiTaskGP,
     SpectralMixtureMultiTaskGP,
 )
 
@@ -151,3 +152,64 @@ def test_mixed_spectral_mixture_supports_posterior() -> None:
     assert model.cat_dims == (1,)
     assert torch.isfinite(posterior.mean).all()
     assert torch.isfinite(posterior.variance).all()
+
+
+def _kronecker_periodic_data() -> tuple[torch.Tensor, torch.Tensor]:
+    X, base = _periodic_data()
+    other = 0.6 * base + 0.2 * torch.cos(2.0 * torch.pi * X)
+    return X, torch.cat((base, other), dim=-1)
+
+
+def test_spectral_mixture_kronecker_preserves_block_design_and_kernel() -> None:
+    X, Y = _kronecker_periodic_data()
+    model = SpectralMixtureKroneckerMultiTaskGP(X, Y, num_mixtures=2)
+    torch.testing.assert_close(model.raw_train_X, X)
+    torch.testing.assert_close(model.raw_train_Y, Y)
+    assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
+    assert isinstance(model.covar_module, ScaleKernel)
+    kernel = model.covar_module.base_kernel
+    assert isinstance(kernel, SpectralMixtureKernel)
+    assert kernel.num_mixtures == 2
+    assert torch.isfinite(kernel.mixture_weights).all()
+    assert torch.isfinite(kernel.mixture_means).all()
+    assert torch.isfinite(kernel.mixture_scales).all()
+
+
+def test_spectral_mixture_kronecker_posterior_sampling_is_finite() -> None:
+    X, Y = _kronecker_periodic_data()
+    model = SpectralMixtureKroneckerMultiTaskGP(X, Y, num_mixtures=2)
+    model.eval()
+    model.likelihood.eval()
+    posterior = model.posterior(X[:3])
+    samples = posterior.rsample(torch.Size([4]))
+    assert posterior.mean.shape == (3, 2)
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert samples.shape == (4, 3, 2)
+    assert torch.isfinite(samples).all()
+
+
+def test_spectral_mixture_kronecker_scalarized_mc_and_optimizer_run() -> None:
+    X, Y = _kronecker_periodic_data()
+    model = SpectralMixtureKroneckerMultiTaskGP(X, Y, num_mixtures=2)
+    model.eval()
+    model.likelihood.eval()
+    objective = GenericMCObjective(lambda samples, X=None: samples.mean(dim=-1))
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=Y.mean(dim=-1).max(),
+        objective=objective,
+    )
+    assert torch.isfinite(acquisition(X[:2].unsqueeze(0))).all()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    candidate, value = optimize_acqf(
+        acquisition,
+        bounds=bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+        options={"maxiter": 12},
+    )
+    assert candidate.shape == (1, 1)
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
