@@ -5,12 +5,12 @@
     "UnsupportedModelOperationError"
   ],
   "models": {
-    "ALEBOGP": {
+    "AdditiveMapSaasSingleTaskGP": {
       "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/09_map_saas_and_additive_gp.ipynb"
     },
-    "AdditiveMapSaasSingleTaskGP": {
+    "ALEBOGP": {
       "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/09_map_saas_and_additive_gp.ipynb"
@@ -160,6 +160,11 @@
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/04_multitask_gp.ipynb"
     },
+    "LatentKroneckerGP": {
+      "guide": "docs/models/structured_output.md",
+      "theory": "docs/theory/11_structured_output.md",
+      "notebook": "examples/notebooks/11_structured_output_gp.ipynb"
+    },
     "LCEAGP": {
       "guide": "docs/models/hierarchical_contextual.md",
       "theory": "docs/theory/12_hierarchical_contextual_gp.md",
@@ -169,11 +174,6 @@
       "guide": "docs/models/hierarchical_contextual.md",
       "theory": "docs/theory/12_hierarchical_contextual_gp.md",
       "notebook": "examples/notebooks/14_contextual_gp.ipynb"
-    },
-    "LatentKroneckerGP": {
-      "guide": "docs/models/structured_output.md",
-      "theory": "docs/theory/11_structured_output.md",
-      "notebook": "examples/notebooks/11_structured_output_gp.ipynb"
     },
     "MixedAdditiveMapSaasSingleTaskGP": {
       "guide": "docs/models/high_dimensional.md",
@@ -270,15 +270,15 @@
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/04_multitask_gp.ipynb"
     },
-    "MixedLCEMGP": {
-      "guide": "docs/models/hierarchical_contextual.md",
-      "theory": "docs/theory/12_hierarchical_contextual_gp.md",
-      "notebook": "examples/notebooks/14_contextual_gp.ipynb"
-    },
     "MixedLatentKroneckerGP": {
       "guide": "docs/models/structured_output.md",
       "theory": "docs/theory/11_structured_output.md",
       "notebook": "examples/notebooks/11_structured_output_gp.ipynb"
+    },
+    "MixedLCEMGP": {
+      "guide": "docs/models/hierarchical_contextual.md",
+      "theory": "docs/theory/12_hierarchical_contextual_gp.md",
+      "notebook": "examples/notebooks/14_contextual_gp.ipynb"
     },
     "MixedMultiTaskDeepGP": {
       "guide": "docs/models/expressive.md",
@@ -470,6 +470,11 @@
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/19_reduced_gp.ipynb"
     },
+    "PairwiseGP": {
+      "guide": "docs/models/preference.md",
+      "theory": "docs/theory/10_preference_learning.md",
+      "notebook": "examples/notebooks/07_pairwise_gp.ipynb"
+    },
     "PCAGP": {
       "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
@@ -510,11 +515,6 @@
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/19_reduced_gp.ipynb"
     },
-    "PairwiseGP": {
-      "guide": "docs/models/preference.md",
-      "theory": "docs/theory/10_preference_learning.md",
-      "notebook": "examples/notebooks/07_pairwise_gp.ipynb"
-    },
     "RandomForestSurrogate": {
       "guide": "docs/models/non_gp.md",
       "theory": "docs/theory/23_non_gp_surrogates.md",
@@ -529,6 +529,11 @@
       "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/19_reduced_gp.ipynb"
+    },
+    "RandomProjectionMultiFidelityGP": {
+      "guide": "docs/models/reduced.md",
+      "theory": "docs/theory/06_multi_fidelity.md",
+      "notebook": "examples/notebooks/03_multi_fidelity_gp.ipynb"
     },
     "RandomProjectionMultiTaskGP": {
       "guide": "docs/models/reduced.md",
@@ -570,11 +575,6 @@
       "theory": "docs/theory/14_robust_gaussian_process.md",
       "notebook": "examples/notebooks/10_robust_gp.ipynb"
     },
-    "SACGP": {
-      "guide": "docs/models/hierarchical_contextual.md",
-      "theory": "docs/theory/12_hierarchical_contextual_gp.md",
-      "notebook": "examples/notebooks/14_contextual_gp.ipynb"
-    },
     "SaasFullyBayesianMultiTaskGP": {
       "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
@@ -584,6 +584,11 @@
       "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",
       "notebook": "examples/notebooks/08_saas_gp.ipynb"
+    },
+    "SACGP": {
+      "guide": "docs/models/hierarchical_contextual.md",
+      "theory": "docs/theory/12_hierarchical_contextual_gp.md",
+      "notebook": "examples/notebooks/14_contextual_gp.ipynb"
     },
     "SingleTaskDeepGP": {
       "guide": "docs/models/expressive.md",
