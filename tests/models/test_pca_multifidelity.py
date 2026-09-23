@@ -11,10 +11,7 @@ def _data() -> tuple[torch.Tensor, torch.Tensor]:
     design = torch.rand(10, 5, dtype=torch.double)
     fidelity = torch.linspace(0.2, 1.0, 10, dtype=torch.double).unsqueeze(-1)
     train_x = torch.cat((design, fidelity), dim=-1)
-    train_y = (
-        design[:, :2].sum(dim=-1, keepdim=True)
-        + 0.2 * fidelity
-    )
+    train_y = design[:, :2].sum(dim=-1, keepdim=True) + 0.2 * fidelity
     return train_x, train_y
 
 
