@@ -53,3 +53,21 @@ representative native MF-KG evidence.
 The remaining validation-depth priority is therefore robust / high-dimensional MultiTask and
 Kronecker acquisition coverage. Classification and ordinal models are not part of this runtime
 program and will be developed separately.
+
+
+## Phase 13 acquisition compatibility closure
+
+Phase 13 cross-checks the recently strengthened regression families against registry-driven
+acquisition and sampler selection rather than relying only on family-local runtime tests.
+
+Executable compatibility assertions now cover:
+
+- replicate-noise and heteroskedastic multi-fidelity models with
+  `qMultiFidelityKnowledgeGradient`;
+- Gaussian sampler selection for those robust multi-fidelity posteriors;
+- NGBoost with sample-based `qLogExpectedImprovement` and a Gaussian-distribution sampler;
+- explicit rejection of fantasy-dependent `qKnowledgeGradient` for NGBoost.
+
+This separates two meanings that should not be conflated: a model may provide a sampleable
+predictive distribution while still lacking the fantasy-model lifecycle required by KG-style
+lookahead acquisitions.
