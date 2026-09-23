@@ -6,6 +6,7 @@ from gpytorch.kernels import ProductKernel
 
 from robotorchan.models import (
     MixedNonstationaryMultiTaskGP,
+    NonstationaryKroneckerMultiTaskGP,
     NonstationaryMultiTaskGP,
 )
 
@@ -97,3 +98,30 @@ def test_mixed_nonstationary_multitask_posterior_and_acquisition() -> None:
         cat_dims=[1],
     )
     _assert_posterior_and_acquisition(model, train_x, train_y)
+
+
+def test_nonstationary_kronecker_supports_sampling_and_mc_acquisition() -> None:
+    train_x = torch.tensor([[0.1], [0.4], [0.7], [0.9]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    model = NonstationaryKroneckerMultiTaskGP(train_x, train_y)
+    model.eval()
+
+    test_x = torch.tensor([[0.25], [0.75]], dtype=torch.double)
+    posterior = model.posterior(test_x)
+    samples = posterior.rsample(torch.Size([4]))
+    weights = torch.tensor([0.6, 0.4], dtype=torch.double)
+    objective = GenericMCObjective(lambda values, X=None: values @ weights)
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=(train_y @ weights).max(),
+        objective=objective,
+    )
+    value = acquisition(test_x.unsqueeze(0))
+
+    assert posterior.mean.shape == torch.Size([2, 2])
+    assert samples.shape == torch.Size([4, 2, 2])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert torch.isfinite(samples).all()
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
