@@ -91,3 +91,15 @@ covariance remains separate. Task identity is therefore not encoded in `train_X`
 The model exposes `depth`, `weight_variance`, `bias_variance`, and optional ARD
 for the NNGP data kernel. It supports the common exact-GP MLL, posterior sampling,
 scalarized Monte Carlo acquisition, and continuous `optimize_acqf` workflows.
+
+
+### Mixed Infinite-width BNN × Kronecker multi-task
+
+`MixedInfiniteWidthBNNKroneckerMultiTaskGP` preserves raw block-design inputs
+`train_X[..., n, d]` and outputs `train_Y[..., n, m]`. Continuous dimensions use the
+infinite-width ReLU NNGP covariance, categorical dimensions use the shared mixed categorical
+covariance and interaction path, and the task covariance remains a separate Kronecker factor.
+Task identity is not inserted into X.
+
+`cat_dims` uses raw-input coordinates and accepts negative indices. Mixed candidate optimization
+uses `optimize_acqf_mixed` with explicit categorical fixed-feature configurations.
