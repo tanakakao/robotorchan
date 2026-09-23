@@ -346,3 +346,22 @@ development. They should actively identify practical missing Kronecker models, b
 **Implement**, **Prototype**, **Hold**, or **Reject** according to statistical value and maintenance
 cost. Large copies of BoTorch private implementation are not an acceptable way to complete a
 matrix cell.
+
+
+## Phase 16 documentation alignment
+
+The regression documentation now reflects the runtime and public-API decisions made in Phases
+3–15.
+
+- High-dimensional and robust MultiTask families have representative posterior / sampling / MC
+  acquisition evidence.
+- Robust MultiFidelity reference models additionally have candidate-optimization evidence.
+- NGBoost has predictive-distribution sampling, MC BO, predictive-variance AL, and gradient-free
+  candidate selection, while fantasy-dependent acquisitions remain unsupported.
+- Heteroskedastic Kronecker and Mixed heteroskedastic Kronecker are prototypes rather than public
+  capabilities until their learned task-specific noise is coupled into the response likelihood.
+- Nonstationary Kronecker remains the public robust block-design extension.
+
+Historical phase sections are retained as development records. When an older statement conflicts
+with this section, current public exports, `MODEL_REGISTRY`, executable tests, and generated model
+coverage are the source of truth.
