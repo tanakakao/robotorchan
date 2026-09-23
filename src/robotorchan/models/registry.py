@@ -376,6 +376,7 @@ _MULTI_OUTPUT_MODELS = frozenset(
         "HybridAutoEncoderKroneckerMultiTaskGP",
         "HybridAutoEncoderMultiTaskGP",
         "InfiniteWidthBNNMultiTaskGP",
+        "InfiniteWidthBNNKroneckerMultiTaskGP",
         "JointEncoderKroneckerMultiTaskGP",
         "JointEncoderMultiTaskGP",
         "JointVAEKroneckerMultiTaskGP",
