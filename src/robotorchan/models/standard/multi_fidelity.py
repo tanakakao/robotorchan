@@ -197,9 +197,7 @@ class PCAMultiFidelityGP(SingleTaskMultiFidelityGP):
             reduced_design_X,
             train_X[..., list(self.fidelity_dims)],
         )
-        encoded_fidelity_dims = list(
-            range(reduced_design_X.shape[-1], encoded_train_X.shape[-1])
-        )
+        encoded_fidelity_dims = list(range(reduced_design_X.shape[-1], encoded_train_X.shape[-1]))
 
         super().__init__(
             train_X=encoded_train_X,
