@@ -810,6 +810,17 @@ _register_family(
     strategy="expressive GP surrogate",
 )
 _register_family(
+    ("NGBoostSurrogate",),
+    guide="docs/models/non_gp.md",
+    theory="docs/theory/23_non_gp_surrogates.md",
+    notebook="examples/notebooks/25_non_gp_surrogates.ipynb",
+    strategy="optional NGBoost Gaussian predictive-distribution adapter",
+    non_gp=True,
+    supports_posterior_samples=True,
+    posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
+)
+
+_register_family(
     (
         "RandomForestSurrogate",
         "ExtraTreesSurrogate",
