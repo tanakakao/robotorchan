@@ -44,6 +44,7 @@ EXPECTED_MIXED_MODELS = {
     "MixedSingleTaskGP",
     "MixedSingleTaskMultiFidelityGP",
     "MixedSpectralMixtureGP",
+    "MixedSpectralMixtureKroneckerMultiTaskGP",
     "MixedSpectralMixtureMultiTaskGP",
     "MixedSingleTaskVariationalGP",
     "MixedStudentTMultiTaskGP",
