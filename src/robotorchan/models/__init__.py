@@ -141,6 +141,7 @@ from robotorchan.models.robust.student_t import (
 )
 from robotorchan.models.standard.model_list import ModelListGP
 from robotorchan.models.standard.multi_fidelity import (
+    MapSaasMultiFidelityGP,
     MixedSingleTaskMultiFidelityGP,
     PCAMultiFidelityGP,
     PLSMultiFidelityGP,
@@ -214,6 +215,7 @@ __all__ = [
     "JointVAEMultiTaskGP",
     "KroneckerMultiTaskGP",
     "LatentKroneckerGP",
+    "MapSaasMultiFidelityGP",
     "MixedAdditiveMapSaasSingleTaskGP",
     "MixedAutoEncoderGP",
     "MixedContaminatedMultiTaskGP",
