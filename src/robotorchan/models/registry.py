@@ -406,6 +406,7 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         "ExtraTreesSurrogate",
         "GradientBoostingSurrogate",
         "HistGradientBoostingSurrogate",
+        "NGBoostSurrogate",
         "EnsembleMapSaasSingleTaskGP",
         "MixedEnsembleMapSaasSingleTaskGP",
         "MixedPCAGP",
@@ -816,8 +817,6 @@ _register_family(
     notebook="examples/notebooks/25_non_gp_surrogates.ipynb",
     strategy="optional NGBoost Gaussian predictive-distribution adapter",
     non_gp=True,
-    supports_posterior_samples=True,
-    posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
 )
 
 _register_family(
