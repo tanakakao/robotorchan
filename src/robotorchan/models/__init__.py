@@ -179,13 +179,13 @@ from robotorchan.models.uncertain.uncertain_input import (
 
 __all__ = [
     "ALEBOGP",
-    "AdditiveMapSaasMultiFidelityGP",
     "LCEAGP",
     "LCEMGP",
     "PCAGP",
     "PLSGP",
     "SACGP",
     "VAEGP",
+    "AdditiveMapSaasMultiFidelityGP",
     "AdditiveMapSaasSingleTaskGP",
     "AutoEncoderGP",
     "AutoEncoderKroneckerMultiTaskGP",
