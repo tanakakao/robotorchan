@@ -406,6 +406,7 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         "ExtraTreesSurrogate",
         "GradientBoostingSurrogate",
         "HistGradientBoostingSurrogate",
+        "NGBoostSurrogate",
         "EnsembleMapSaasSingleTaskGP",
         "MixedEnsembleMapSaasSingleTaskGP",
         "MixedPCAGP",
@@ -809,6 +810,15 @@ _register_family(
     notebook="examples/notebooks/24_expressive_surrogate_gp.ipynb",
     strategy="expressive GP surrogate",
 )
+_register_family(
+    ("NGBoostSurrogate",),
+    guide="docs/models/non_gp.md",
+    theory="docs/theory/23_non_gp_surrogates.md",
+    notebook="examples/notebooks/25_non_gp_surrogates.ipynb",
+    strategy="optional NGBoost Gaussian predictive-distribution adapter",
+    non_gp=True,
+)
+
 _register_family(
     (
         "RandomForestSurrogate",

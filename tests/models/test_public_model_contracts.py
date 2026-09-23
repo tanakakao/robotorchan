@@ -102,6 +102,7 @@ PUBLIC_MODEL_NAMES = {
     "PLSKroneckerMultiTaskGP",
     "PLSMultiTaskGP",
     "PairwiseGP",
+    "NGBoostSurrogate",
     "RandomForestSurrogate",
     "RandomProjectionGP",
     "RandomProjectionKroneckerMultiTaskGP",
@@ -158,6 +159,7 @@ NON_MLL_MODELS = {
     "ExtraTreesSurrogate",
     "GradientBoostingSurrogate",
     "HistGradientBoostingSurrogate",
+    "NGBoostSurrogate",
 }
 
 

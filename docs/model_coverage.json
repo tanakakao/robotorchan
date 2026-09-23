@@ -435,6 +435,11 @@
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/04_multitask_gp.ipynb"
     },
+    "NGBoostSurrogate": {
+      "guide": "docs/models/non_gp.md",
+      "theory": "docs/theory/23_non_gp_surrogates.md",
+      "notebook": "examples/notebooks/25_non_gp_surrogates.ipynb"
+    },
     "NonstationaryKroneckerMultiTaskGP": {
       "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/17_nonstationary_gp.md",
