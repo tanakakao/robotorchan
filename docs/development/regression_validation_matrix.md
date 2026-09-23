@@ -372,7 +372,7 @@ product is not automatically a defect.
 | Robust Relevance Pursuit | Prototype | A dedicated block-design sparse observation/outlier model is required; the single-task `noise_covar` mixin is not a valid shortcut. |
 | Student-t | Prototype | Meaningful heavy-tail extension, but it needs a block-design variational likelihood/posterior contract. |
 | Contaminated | Prototype | Requires an explicit choice between shared and task-specific contamination parameters. |
-| Replicate Noise | Prototype | Requires aligned replicate-group × task aggregation and variance-of-the-mean semantics. |
+| Replicate Noise | Prototype | Phase 11 validated aligned group × task variance-of-mean semantics; public implementation remains blocked on explicit fixed `G × m` Kronecker observation noise. |
 | DeepGP | Hold | A probabilistic hierarchy does not reduce to a data-kernel substitution; a dedicated block-design variational architecture would be disproportionately complex now. |
 
 ### Phase 1 conclusions
