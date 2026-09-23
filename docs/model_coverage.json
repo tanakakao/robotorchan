@@ -65,11 +65,6 @@
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/13_heterogeneous_multitask_gp.ipynb"
     },
-    "HeteroskedasticKroneckerMultiTaskGP": {
-      "guide": "docs/models/robust_noise.md",
-      "theory": "docs/theory/15_heteroskedastic_noise.md",
-      "notebook": "examples/notebooks/16_noise_models.ipynb"
-    },
     "HeteroskedasticMultiFidelityGP": {
       "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/15_heteroskedastic_noise.md",
@@ -219,11 +214,6 @@
       "guide": "docs/models/multitask_multioutput.md",
       "theory": "docs/theory/07_multitask_multioutput.md",
       "notebook": "examples/notebooks/13_heterogeneous_multitask_gp.ipynb"
-    },
-    "MixedHeteroskedasticKroneckerMultiTaskGP": {
-      "guide": "docs/models/robust_noise.md",
-      "theory": "docs/theory/15_heteroskedastic_noise.md",
-      "notebook": "examples/notebooks/16_noise_models.ipynb"
     },
     "MixedHeteroskedasticMultiTaskGP": {
       "guide": "docs/models/robust_noise.md",
