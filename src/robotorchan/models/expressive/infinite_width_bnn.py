@@ -9,7 +9,7 @@ from gpytorch.kernels import Kernel, ScaleKernel
 from torch import Tensor
 
 from robotorchan.models.base import make_mixed_covar_module, normalize_feature_dims
-from robotorchan.models.standard.multitask import MultiTaskGP
+from robotorchan.models.standard.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.standard.single_task import SingleTaskGP
 
 
@@ -169,6 +169,50 @@ class InfiniteWidthBNNMultiTaskGP(MultiTaskGP):
         self.depth = int(depth)
         self.weight_variance = float(weight_variance)
         self.bias_variance = float(bias_variance)
+
+
+class InfiniteWidthBNNKroneckerMultiTaskGP(KroneckerMultiTaskGP):
+    """Block-design Kronecker GP with an infinite-width ReLU data kernel."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        depth: int = 2,
+        weight_variance: float = 1.0,
+        bias_variance: float = 0.1,
+        ard: bool = True,
+        eps: float = 1e-7,
+        rank: int | None = None,
+    ) -> None:
+        if train_X.ndim < 2:
+            raise ValueError("train_X must have shape (..., n, d).")
+        if train_Y.ndim < 2:
+            raise ValueError("train_Y must have shape (..., n, m).")
+        if train_X.shape[-2] != train_Y.shape[-2]:
+            raise ValueError("train_X and train_Y must share the observation dimension.")
+        input_dim = train_X.shape[-1]
+        base_kernel = InfiniteWidthReLUKernel(
+            depth=depth,
+            weight_variance=weight_variance,
+            bias_variance=bias_variance,
+            eps=eps,
+            ard_num_dims=input_dim if ard else None,
+            batch_shape=train_X.shape[:-2],
+        )
+        data_covar_module = ScaleKernel(base_kernel, batch_shape=train_X.shape[:-2])
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            data_covar_module=data_covar_module,
+            rank=rank,
+        )
+        self.depth = int(depth)
+        self.weight_variance = float(weight_variance)
+        self.bias_variance = float(bias_variance)
+        self.ard = bool(ard)
+        self.eps = float(eps)
 
 
 class MixedInfiniteWidthBNNGP(SingleTaskGP):

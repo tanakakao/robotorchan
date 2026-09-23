@@ -9,6 +9,7 @@ from robotorchan.models.expressive.deep_gp import (
 )
 from robotorchan.models.expressive.infinite_width_bnn import (
     InfiniteWidthBNNGP,
+    InfiniteWidthBNNKroneckerMultiTaskGP,
     InfiniteWidthBNNMultiTaskGP,
     MixedInfiniteWidthBNNGP,
     MixedInfiniteWidthBNNMultiTaskGP,
@@ -209,6 +210,7 @@ __all__ = [
     "HybridAutoEncoderKroneckerMultiTaskGP",
     "HybridAutoEncoderMultiTaskGP",
     "InfiniteWidthBNNGP",
+    "InfiniteWidthBNNKroneckerMultiTaskGP",
     "InfiniteWidthBNNMultiTaskGP",
     "JointEncoderGP",
     "JointEncoderKroneckerMultiTaskGP",

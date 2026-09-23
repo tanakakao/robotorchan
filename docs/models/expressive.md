@@ -79,3 +79,15 @@ not inserted into X; the task covariance remains the independent Kronecker task 
 
 Negative \`cat_dims\` are normalized in raw-input coordinates. Candidate optimization should use
 \`optimize_acqf_mixed\` with explicit categorical fixed-feature configurations.
+
+
+## Infinite-width BNN × Kronecker multi-task
+
+`InfiniteWidthBNNKroneckerMultiTaskGP` keeps the block-design contract
+`train_X[..., n, d]` and `train_Y[..., n, m]`. The infinite-width ReLU NNGP
+kernel defines only the data covariance factor, while the Kronecker task
+covariance remains separate. Task identity is therefore not encoded in `train_X`.
+
+The model exposes `depth`, `weight_variance`, `bias_variance`, and optional ARD
+for the NNGP data kernel. It supports the common exact-GP MLL, posterior sampling,
+scalarized Monte Carlo acquisition, and continuous `optimize_acqf` workflows.
