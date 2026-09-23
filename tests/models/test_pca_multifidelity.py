@@ -1,7 +1,12 @@
 """Runtime contracts for PCA multi-fidelity regression."""
 
 import torch
+from botorch.acquisition.analytic import PosteriorMean
+from botorch.acquisition.cost_aware import InverseCostWeightedUtility
+from botorch.acquisition.knowledge_gradient import qMultiFidelityKnowledgeGradient
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
+from botorch.models.cost import AffineFidelityCostModel
+from botorch.optim import optimize_acqf
 from botorch.sampling.normal import IIDNormalSampler, SobolQMCNormalSampler
 
 from robotorchan.models import (
@@ -302,3 +307,57 @@ def test_reduced_multifidelity_fantasize_accepts_raw_inputs() -> None:
         posterior = super(model_class, fantasy).posterior(model._encode_inputs(candidates))
         assert torch.isfinite(posterior.mean).all()
         assert torch.isfinite(posterior.variance).all()
+
+
+def test_reduced_multifidelity_models_support_native_mf_kg() -> None:
+    torch.manual_seed(0)
+    train_x, train_y = _data()
+    model_classes = (PCAMultiFidelityGP, PLSMultiFidelityGP, RandomProjectionMultiFidelityGP)
+
+    for model_class in model_classes:
+        kwargs = {"random_state": 7} if model_class is RandomProjectionMultiFidelityGP else {}
+        model = model_class(
+            train_x,
+            train_y,
+            n_components=2,
+            data_fidelities=[-1],
+            **kwargs,
+        )
+        model.eval()
+
+        cost_model = AffineFidelityCostModel(fidelity_weights={5: 1.0}, fixed_cost=0.1)
+        cost_utility = InverseCostWeightedUtility(cost_model=cost_model)
+
+        def project(X: torch.Tensor) -> torch.Tensor:
+            projected = X.clone()
+            projected[..., 5] = 1.0
+            return projected
+
+        bounds = torch.stack((train_x.min(dim=0).values, train_x.max(dim=0).values))
+        bounds[:, 5] = 1.0
+        _, current_value = optimize_acqf(
+            acq_function=PosteriorMean(model),
+            bounds=bounds,
+            q=1,
+            num_restarts=2,
+            raw_samples=8,
+            fixed_features={5: 1.0},
+        )
+        acquisition = qMultiFidelityKnowledgeGradient(
+            model=model,
+            num_fantasies=4,
+            current_value=current_value,
+            cost_aware_utility=cost_utility,
+            project=project,
+        )
+        X = torch.rand(
+            1,
+            acquisition.get_augmented_q_batch_size(q=1),
+            train_x.shape[-1],
+            dtype=torch.double,
+        )
+        X[..., 5] = 0.2
+        value = acquisition(X)
+
+        assert value.shape == torch.Size([1])
+        assert torch.isfinite(value).all()
