@@ -4,6 +4,7 @@ from robotorchan.models.standard.model_list import ModelListGP
 from robotorchan.models.standard.multi_fidelity import (
     MixedSingleTaskMultiFidelityGP,
     PCAMultiFidelityGP,
+    PLSMultiFidelityGP,
     SingleTaskMultiFidelityGP,
 )
 from robotorchan.models.standard.multitask import (
@@ -28,6 +29,7 @@ __all__ = [
     "ModelListGP",
     "MultiTaskGP",
     "PCAMultiFidelityGP",
+    "PLSMultiFidelityGP",
     "SingleTaskGP",
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",

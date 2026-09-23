@@ -96,6 +96,7 @@ PUBLIC_MODEL_NAMES = {
     "OutputPLSGP",
     "PCAGP",
     "PCAMultiFidelityGP",
+    "PLSMultiFidelityGP",
     "PCAKroneckerMultiTaskGP",
     "PCAMultiTaskGP",
     "PLSGP",
