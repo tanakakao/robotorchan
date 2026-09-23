@@ -167,6 +167,74 @@ class SpectralMixtureKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         self.initialization = initialization
 
 
+class MixedSpectralMixtureKroneckerMultiTaskGP(KroneckerMultiTaskGP):
+    """Mixed block-design Kronecker GP with spectral continuous covariance."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        cat_dims: list[int],
+        *,
+        num_mixtures: int = 4,
+        initialization: Literal["data", "empspect"] = "data",
+        likelihood: MultitaskGaussianLikelihood | None = None,
+        rank: int | None = None,
+        outcome_transform: OutcomeTransform | None = None,
+        input_transform: InputTransform | None = None,
+    ) -> None:
+        if num_mixtures <= 0:
+            raise ValueError("num_mixtures must be positive.")
+        if initialization not in {"data", "empspect"}:
+            raise ValueError("initialization must be 'data' or 'empspect'.")
+        if train_X.ndim != 2:
+            raise ValueError("train_X must have shape n x d.")
+        if train_Y.ndim != 2 or train_Y.shape[0] != train_X.shape[0]:
+            raise ValueError("train_Y must have shape n x m.")
+
+        input_dim = train_X.shape[-1]
+        cats = normalize_feature_dims(cat_dims, input_dim, name="cat_dims")
+        continuous_dims = [dim for dim in range(input_dim) if dim not in cats]
+        if not continuous_dims:
+            raise ValueError(
+                "MixedSpectralMixtureKroneckerMultiTaskGP requires a continuous feature."
+            )
+        data_X = train_X[..., continuous_dims]
+        initialization_target = train_Y.mean(dim=-1)
+
+        def continuous_kernel_factory(batch_shape, num_dims, active_dims):
+            kernel = SpectralMixtureKernel(
+                num_mixtures=num_mixtures,
+                ard_num_dims=num_dims,
+                active_dims=active_dims,
+                batch_shape=batch_shape,
+            ).to(train_X)
+            if initialization == "data":
+                kernel.initialize_from_data(data_X, initialization_target)
+            else:
+                kernel.initialize_from_data_empspect(data_X, initialization_target)
+            return ScaleKernel(kernel, batch_shape=batch_shape).to(train_X)
+
+        data_covar_module = make_mixed_covar_module(
+            input_dim=input_dim,
+            cat_dims=cats,
+            batch_shape=train_X.shape[:-2],
+            cont_kernel_factory=continuous_kernel_factory,
+        )
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            likelihood=likelihood,
+            data_covar_module=data_covar_module,
+            rank=rank,
+            outcome_transform=outcome_transform,
+            input_transform=input_transform,
+        )
+        self.cat_dims = tuple(cats)
+        self.num_mixtures = num_mixtures
+        self.initialization = initialization
+
+
 class MixedSpectralMixtureGP(SingleTaskGP):
     """Mixed-input exact GP with a spectral-mixture continuous kernel."""
 

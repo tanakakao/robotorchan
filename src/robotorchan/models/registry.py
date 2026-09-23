@@ -278,6 +278,7 @@ _MIXED_MODELS = frozenset(
         "MixedInfiniteWidthBNNGP",
         "MixedInfiniteWidthBNNMultiTaskGP",
         "MixedSpectralMixtureGP",
+        "MixedSpectralMixtureKroneckerMultiTaskGP",
         "MixedSpectralMixtureMultiTaskGP",
     }
 )
@@ -333,6 +334,7 @@ _MULTITASK_MODELS = frozenset(
         "MixedInfiniteWidthBNNMultiTaskGP",
         "SpectralMixtureMultiTaskGP",
         "SpectralMixtureKroneckerMultiTaskGP",
+        "MixedSpectralMixtureKroneckerMultiTaskGP",
         "MixedSpectralMixtureMultiTaskGP",
     }
 )
@@ -396,6 +398,7 @@ _MULTI_OUTPUT_MODELS = frozenset(
         "MixedReducedMultiTaskGP",
         "MixedRobustRelevancePursuitMultiTaskGP",
         "MixedSaasFullyBayesianMultiTaskGP",
+        "MixedSpectralMixtureKroneckerMultiTaskGP",
         "MixedSpectralMixtureMultiTaskGP",
         "MixedStudentTMultiTaskGP",
         "NonstationaryMultiTaskGP",
@@ -452,6 +455,7 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         "PLSGP",
         "RandomProjectionGP",
         "SpectralMixtureKroneckerMultiTaskGP",
+        "MixedSpectralMixtureKroneckerMultiTaskGP",
     }
 )
 
@@ -473,6 +477,7 @@ _FANTASIZE_MODELS = frozenset(
         "PLSGP",
         "RandomProjectionGP",
         "SpectralMixtureKroneckerMultiTaskGP",
+        "MixedSpectralMixtureKroneckerMultiTaskGP",
     }
 )
 
@@ -848,6 +853,7 @@ _register_family(
         "SpectralMixtureGP",
         "SpectralMixtureMultiTaskGP",
         "SpectralMixtureKroneckerMultiTaskGP",
+        "MixedSpectralMixtureKroneckerMultiTaskGP",
         "MixedSpectralMixtureGP",
         "MixedSpectralMixtureMultiTaskGP",
     ),

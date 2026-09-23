@@ -68,3 +68,14 @@ task identityを入力へ追加せず、task covarianceはKronecker multi-task�
 
 `num_mixtures` と `initialization={"data", "empspect"}` を指定できます。周期・準周期・
 複数スケールのstationary structureを複数taskで共有したいblock-design問題を対象とします。
+
+
+### Mixed Spectral Mixture × Kronecker multi-task
+
+\`MixedSpectralMixtureKroneckerMultiTaskGP\` keeps raw block-design inputs and applies the
+Spectral Mixture kernel only to continuous design dimensions. Categorical dimensions use the
+native mixed categorical covariance and its continuous-categorical interaction. Task identity is
+not inserted into X; the task covariance remains the independent Kronecker task factor.
+
+Negative \`cat_dims\` are normalized in raw-input coordinates. Candidate optimization should use
+\`optimize_acqf_mixed\` with explicit categorical fixed-feature configurations.
