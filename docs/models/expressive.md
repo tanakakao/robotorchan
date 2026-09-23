@@ -57,3 +57,14 @@ Benchmark: [Predictive benchmark](../benchmarks/expressive_predictive.md)
 `MixedInfiniteWidthBNNGP` は連続特徴にinfinite-width ReLU NNGP kernel、カテゴリ特徴にrobotorchan共通categorical kernelを使い、加法項とinteraction項を組み合わせます。
 
 `MixedSpectralMixtureGP` は連続特徴にspectral-mixture kernel、カテゴリ特徴に共通categorical kernelを使います。spectral parametersの初期化には連続特徴だけを使用し、カテゴリIDを連続値として補間しません。
+
+
+### Spectral Mixture × Kronecker multi-task
+
+`SpectralMixtureKroneckerMultiTaskGP` はblock-designの `train_X[n, d]` と
+`train_Y[n, m]` を保持し、Spectral Mixture kernelをdata covarianceにのみ適用します。
+task identityを入力へ追加せず、task covarianceはKronecker multi-task側で独立に学習します。
+したがって共分散構造は概念的に `K_SM(X, X') × K_task` です。
+
+`num_mixtures` と `initialization={"data", "empspect"}` を指定できます。周期・準周期・
+複数スケールのstationary structureを複数taskで共有したいblock-design問題を対象とします。
