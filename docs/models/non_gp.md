@@ -67,3 +67,15 @@ Theory: [Empirical ensemble surrogate](../theory/23_non_gp_surrogates.md)
 勾配不要探索を使用します。予測分散を使う回帰 active learning は適用可能ですが、通常の
 NGBoost 予測分布だけでは epistemic / aleatoric uncertainty を分離できないため BALD 対応は
 主張しません。
+
+
+## Candidate optimization contract
+
+`NGBoostSurrogate` exposes a sampleable Gaussian predictive distribution, so sample-based MC
+acquisitions such as qLogEI are usable. Candidate generation must remain gradient-free because the
+backend prediction path crosses the torch to NumPy boundary. Grid, enumerated, evolutionary, or
+other derivative-free search is therefore the supported optimization family.
+
+This sampling support does not imply `fantasize` support. Lookahead acquisitions such as
+Knowledge Gradient require a fantasy-model lifecycle and are not part of the current NGBoost
+contract.
