@@ -485,11 +485,6 @@
       "theory": "docs/theory/06_multi_fidelity.md",
       "notebook": "examples/notebooks/03_multi_fidelity_gp.ipynb"
     },
-    "PLSMultiFidelityGP": {
-      "guide": "docs/models/reduced.md",
-      "theory": "docs/theory/06_multi_fidelity.md",
-      "notebook": "examples/notebooks/03_multi_fidelity_gp.ipynb"
-    },
     "PCAMultiTaskGP": {
       "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
@@ -504,6 +499,11 @@
       "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/19_reduced_gp.ipynb"
+    },
+    "PLSMultiFidelityGP": {
+      "guide": "docs/models/reduced.md",
+      "theory": "docs/theory/06_multi_fidelity.md",
+      "notebook": "examples/notebooks/03_multi_fidelity_gp.ipynb"
     },
     "PLSMultiTaskGP": {
       "guide": "docs/models/reduced.md",
