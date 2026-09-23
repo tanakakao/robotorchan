@@ -57,3 +57,15 @@ This does not make every Gaussian-posterior acquisition valid. In particular,
 `ExpectedPredictiveInformationGain` requires the joint Gaussian covariance contract, while plain
 NGBoost only exposes independent predictive marginals. BALD is also outside this contract because
 predictive variance alone does not identify epistemic and aleatoric uncertainty separately.
+
+
+## Empirical ensemble surrogates
+
+`PosteriorVariance` and `PosteriorStd` also accept BoTorch `EnsemblePosterior` objects. For
+`RandomForestSurrogate` and `ExtraTreesSurrogate`, the variance is the empirical spread of the
+individual tree predictions. This gives a practical regression-AL uncertainty score without
+pretending that the forest posterior is Gaussian.
+
+This support is intentionally limited to marginal-moment AL. Straddle and boundary-oriented
+criteria retain their existing ensemble restrictions, and a tree ensemble is not assigned a
+joint-Gaussian or epistemic/aleatoric decomposition merely because empirical variance is available.
