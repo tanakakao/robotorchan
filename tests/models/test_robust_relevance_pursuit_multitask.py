@@ -2,8 +2,8 @@ import pytest
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.objective import GenericMCObjective
-from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.models.likelihoods.sparse_outlier_noise import SparseOutlierGaussianLikelihood
+from botorch.sampling.normal import SobolQMCNormalSampler
 from gpytorch.kernels import AdditiveKernel, ProductKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
