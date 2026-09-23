@@ -96,3 +96,11 @@ The covariance prototype is documented in `map_saas_multifidelity_prototype.md`.
 a sound implementation seam for `linear_truncated=False`: attach SAAS only to the non-fidelity
 design covariance passed through BoTorch's `covar_module` argument, while leaving native fidelity
 kernels untouched. The linear-truncated path remains outside the first implementation contract.
+
+## Phase 34 follow-up
+
+The specialized additive and ensemble families were re-audited after the reference
+`MapSaasMultiFidelityGP` implementation and runtime stabilization. The reference implementation
+does not collapse the remaining distinction: additive covariance composition and ensemble
+posterior semantics still require independent evidence. See
+`additive_ensemble_map_saas_multifidelity_audit.md` for the implementation gates.
