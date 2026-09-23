@@ -79,3 +79,11 @@ public wrapper surface does not provide a justified thin-wrapper implementation 
 phase should inspect the installed/upstream BoTorch public MAP-SAAS utilities specifically for a
 stable additive covariance factory. If none exists, decide explicitly whether a robotorchan-owned
 kernel implementation is worth the maintenance cost.
+
+## Phase 36 resolution
+
+The public-seam question is resolved. Current BoTorch exposes
+`get_additive_map_saas_covar_module`, including an `active_dims` argument, so robotorchan does not
+need to copy private additive-kernel construction or own a duplicate kernel implementation. The
+next phase may implement a BoTorch-first `AdditiveMapSaasMultiFidelityGP`; ensemble semantics remain
+separately gated. See `additive_map_saas_multifidelity_public_seam.md`.
