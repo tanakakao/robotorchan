@@ -107,7 +107,6 @@ PUBLIC_MODEL_NAMES = {
     "ReducedKroneckerMultiTaskGP",
     "ReducedMultiTaskGP",
     "ReplicateNoiseSingleTaskGP",
-    "RobustRelevancePursuitKroneckerMultiTaskGP",
     "RobustRelevancePursuitMultiTaskGP",
     "RobustRelevancePursuitSingleTaskGP",
     "SACGP",
