@@ -5,6 +5,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
+from robotorchan.models.standard.multi_fidelity import SingleTaskMultiFidelityGP
 from robotorchan.models.standard.single_task import MixedSingleTaskGP, SingleTaskGP
 
 
@@ -204,6 +205,97 @@ class MixedReplicateNoiseSingleTaskGP(MixedSingleTaskGP):
     @property
     def replicate_counts(self) -> Tensor:
         """Number of observations contributing to each aggregated mixed row."""
+        value = self._get_raw_tensor("replicate_counts")
+        if value is None:
+            raise RuntimeError("replicate_counts was unexpectedly stored as None.")
+        return value
+
+    @property
+    def replicate_variance(self) -> Tensor:
+        """Unbiased empirical observation variance within each replicate group."""
+        value = self._get_raw_tensor("replicate_variance")
+        if value is None:
+            raise RuntimeError("replicate_variance was unexpectedly stored as None.")
+        return value
+
+
+class ReplicateNoiseMultiFidelityGP(SingleTaskMultiFidelityGP):
+    """Multi-fidelity GP trained on replicate means with empirical mean variance."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        train_Yvar: Tensor,
+        *,
+        raw_replicate_X: Tensor,
+        raw_replicate_Y: Tensor,
+        replicate_counts: Tensor,
+        replicate_variance: Tensor,
+        iteration_fidelity: int | None = None,
+        data_fidelities: list[int] | None = None,
+    ) -> None:
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            train_Yvar=train_Yvar,
+            iteration_fidelity=iteration_fidelity,
+            data_fidelities=data_fidelities,
+        )
+        self._store_raw_tensor("replicate_X", raw_replicate_X.detach().clone())
+        self._store_raw_tensor("replicate_Y", raw_replicate_Y.detach().clone())
+        self._store_raw_tensor("replicate_counts", replicate_counts.detach().clone())
+        self._store_raw_tensor("replicate_variance", replicate_variance.detach().clone())
+
+    @classmethod
+    def from_replicates(
+        cls,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        iteration_fidelity: int | None = None,
+        data_fidelities: list[int] | None = None,
+        noise_floor: float = 1e-6,
+    ) -> ReplicateNoiseMultiFidelityGP:
+        """Aggregate exact raw rows while preserving fidelity as part of each condition."""
+        (
+            unique_X,
+            group_mean,
+            mean_variance,
+            counts,
+            replicate_variance,
+        ) = _aggregate_replicates(train_X, train_Y, noise_floor=noise_floor)
+        return cls(
+            train_X=unique_X,
+            train_Y=group_mean,
+            train_Yvar=mean_variance,
+            raw_replicate_X=train_X,
+            raw_replicate_Y=train_Y,
+            replicate_counts=counts,
+            replicate_variance=replicate_variance,
+            iteration_fidelity=iteration_fidelity,
+            data_fidelities=data_fidelities,
+        )
+
+    @property
+    def raw_replicate_X(self) -> Tensor:
+        """Unaggregated multi-fidelity replicate rows."""
+        value = self._get_raw_tensor("replicate_X")
+        if value is None:
+            raise RuntimeError("raw_replicate_X was unexpectedly stored as None.")
+        return value
+
+    @property
+    def raw_replicate_Y(self) -> Tensor:
+        """Unaggregated replicate observations."""
+        value = self._get_raw_tensor("replicate_Y")
+        if value is None:
+            raise RuntimeError("raw_replicate_Y was unexpectedly stored as None.")
+        return value
+
+    @property
+    def replicate_counts(self) -> Tensor:
+        """Number of observations contributing to each aggregated condition."""
         value = self._get_raw_tensor("replicate_counts")
         if value is None:
             raise RuntimeError("replicate_counts was unexpectedly stored as None.")

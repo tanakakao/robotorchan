@@ -131,6 +131,22 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         ),
         "PCA design reduction with BoTorch multi-fidelity covariance",
     ),
+    "ReplicateNoiseMultiFidelityGP": ModelRegistryEntry(
+        "ReplicateNoiseMultiFidelityGP",
+        ModelCapabilities(
+            robustness=frozenset({RobustnessType.REPLICATE_NOISE}),
+            multi_fidelity=True,
+            supports_posterior_samples=True,
+            posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
+            supports_fantasize=True,
+        ),
+        _docs(
+            "docs/models/robust_noise.md",
+            "docs/theory/15_heteroskedastic_noise.md",
+            "examples/notebooks/16_noise_models.ipynb",
+        ),
+        "multi-fidelity GP with empirical replicate observation noise",
+    ),
     "SingleTaskMultiFidelityGP": ModelRegistryEntry(
         "SingleTaskMultiFidelityGP",
         ModelCapabilities(

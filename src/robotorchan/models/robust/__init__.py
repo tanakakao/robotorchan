@@ -19,6 +19,7 @@ from robotorchan.models.robust.nonstationary import (
 )
 from robotorchan.models.robust.replicate_noise import (
     MixedReplicateNoiseSingleTaskGP,
+    ReplicateNoiseMultiFidelityGP,
     ReplicateNoiseSingleTaskGP,
 )
 from robotorchan.models.robust.robust import (
@@ -59,6 +60,7 @@ __all__ = [
     "NonstationaryKroneckerMultiTaskGP",
     "NonstationaryMultiTaskGP",
     "NonstationarySingleTaskGP",
+    "ReplicateNoiseMultiFidelityGP",
     "ReplicateNoiseSingleTaskGP",
     "RobustRelevancePursuitMultiTaskGP",
     "RobustRelevancePursuitSingleTaskGP",
