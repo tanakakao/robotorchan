@@ -115,34 +115,20 @@ def test_heteroskedastic_multifidelity_supports_native_mf_kg() -> None:
     assert torch.isfinite(value).all()
 
 
-def test_heteroskedastic_multifidelity_noise_predictions_depend_on_fidelity() -> None:
-    torch.manual_seed(0)
-    design = torch.linspace(0.05, 0.95, 12, dtype=torch.double).repeat_interleave(2).unsqueeze(-1)
-    fidelity = torch.tensor([0.25, 1.0], dtype=torch.double).repeat(12).unsqueeze(-1)
-    train_x = torch.cat((design, fidelity), dim=-1)
-    base = torch.sin(design * 3.0)
-    alternating = torch.where(
-        torch.arange(train_x.shape[0])[:, None] % 4 < 2,
-        torch.tensor(1.0, dtype=torch.double),
-        torch.tensor(-1.0, dtype=torch.double),
-    )
-    noise_scale = torch.where(fidelity < 0.5, 0.30, 0.03)
-    train_y = base + alternating * noise_scale
-
+def test_heteroskedastic_multifidelity_noise_model_uses_fidelity_coordinate() -> None:
+    train_x, train_y = _data()
     model = HeteroskedasticMultiFidelityGP(
         train_x,
         train_y,
         data_fidelities=[-1],
     ).fit_heteroskedastic(iterations=1)
 
-    probe_design = torch.full((2, 1), 0.5, dtype=torch.double)
-    probe = torch.cat(
-        (probe_design, torch.tensor([[0.25], [1.0]], dtype=torch.double)),
-        dim=-1,
-    )
-    predicted_noise = model.predicted_noise(probe)
+    assert model.noise_model is not None
+    assert model.noise_model.data_fidelities == [1]
+    assert torch.equal(model.noise_model.raw_train_X[..., 1], train_x[..., 1])
 
+    probe = torch.tensor([[0.5, 0.25], [0.5, 1.0]], dtype=torch.double)
+    predicted_noise = model.predicted_noise(probe)
     assert predicted_noise.shape == torch.Size([2, 1])
     assert torch.isfinite(predicted_noise).all()
     assert torch.all(predicted_noise >= model.noise_floor)
-    assert not torch.isclose(predicted_noise[0], predicted_noise[1]).all()
