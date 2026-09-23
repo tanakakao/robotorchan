@@ -46,3 +46,15 @@ Relevance Pursuit × Kronecker / Multi-Fidelity は、既存 single-task likelih
 
 Notebook: [Robust GP](../../examples/notebooks/10_robust_gp.ipynb)、[Robust observation](../../examples/notebooks/15_robust_observation_models.ipynb)、[Noise models](../../examples/notebooks/16_noise_models.ipynb)、[Nonstationary](../../examples/notebooks/18_nonstationary_gp.ipynb)  
 Theory: [Robust GP](../theory/14_robust_gaussian_process.md)、[Heteroskedastic noise](../theory/15_heteroskedastic_noise.md)、[Nonstationary GP](../theory/17_nonstationary_gp.md)
+
+
+## Current Kronecker heteroskedastic boundary
+
+`HeteroskedasticKroneckerMultiTaskGP` and its Mixed prototype are intentionally not public models.
+The current prototypes can learn an auxiliary task-specific log-noise process, but that predicted
+noise is not yet coupled back into the response observation likelihood. They therefore must not be
+used as if the response posterior already represented input-dependent observation noise.
+
+The public block-design robust path is currently `NonstationaryKroneckerMultiTaskGP` for latent
+nonstationarity. Heteroskedastic Kronecker will return to the public API only after a shaped
+task-specific observation-noise path is implemented and runtime-validated.
