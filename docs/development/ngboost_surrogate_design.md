@@ -152,3 +152,21 @@ After the base adapter is executable:
 5. consider bootstrap-NGBoost only if epistemic decomposition is practically required.
 
 This keeps the non-GP path BoTorch-compatible without overstating the uncertainty semantics.
+
+
+## Phase 12 regression-stream validation
+
+The Gaussian NGBoost adapter is now exercised through all initial regression workflows:
+
+- predictive mean / variance and sampleable posterior;
+- MC Bayesian optimization;
+- predictive-variance active learning;
+- explicit gradient-free candidate selection over a raw-space candidate grid.
+
+The candidate-search test is intentional. NGBoost prediction crosses the torch to CPU / NumPy
+boundary, so robotorchan does not claim candidate-input gradients or use gradient-based
+`optimize_acqf` as if this were a differentiable GP surrogate. MC acquisition values remain useful
+for discrete, enumerated, evolutionary, or other gradient-free search strategies.
+
+This completes the initial external probabilistic non-GP regression contract without expanding into
+classification, BALD, mixed inputs, or multi-output semantics.

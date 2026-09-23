@@ -81,3 +81,36 @@ def test_ngboost_supports_posterior_variance_active_learning() -> None:
     assert torch.isfinite(variance).all()
     assert torch.all(variance >= 0)
     assert torch.allclose(std.square(), variance, rtol=1e-6, atol=1e-8)
+
+
+@pytest.mark.skipif(not NGBOOST_AVAILABLE, reason="optional ngboost dependency is not installed")
+def test_ngboost_supports_gradient_free_bo_candidate_search() -> None:
+    from botorch.acquisition.logei import qLogExpectedImprovement
+    from botorch.sampling.normal import IIDNormalSampler
+
+    from robotorchan.models import NGBoostSurrogate
+
+    train_x = torch.linspace(0, 1, 12, dtype=torch.double).unsqueeze(-1)
+    train_y = torch.sin(train_x * 4.0)
+    model = NGBoostSurrogate(
+        train_x,
+        train_y,
+        random_state=0,
+        n_estimators=20,
+        verbose=False,
+    )
+    model.fit()
+
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=IIDNormalSampler(sample_shape=torch.Size([16])),
+    )
+    candidates = torch.linspace(0, 1, 41, dtype=torch.double).view(-1, 1, 1)
+    values = acquisition(candidates)
+
+    best_index = torch.argmax(values)
+    best_candidate = candidates[best_index]
+    assert best_candidate.shape == torch.Size([1, 1])
+    assert torch.isfinite(best_candidate).all()
+    assert torch.isfinite(values).all()
