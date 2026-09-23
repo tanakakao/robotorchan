@@ -99,3 +99,31 @@ def test_ngboost_rejects_joint_gaussian_information_gain() -> None:
     )
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "acquisition requires a joint Gaussian posterior" in result.reasons
+
+
+def test_robust_multifidelity_supports_mf_knowledge_gradient() -> None:
+    for model_name in (
+        "ReplicateNoiseMultiFidelityGP",
+        "HeteroskedasticMultiFidelityGP",
+    ):
+        result = check_model_acquisition_compatibility(
+            model_name,
+            "qMultiFidelityKnowledgeGradient",
+        )
+        assert result.status is CompatibilityStatus.COMPATIBLE
+        assert result.compatible
+
+
+def test_ngboost_supports_sample_based_bo_but_not_fantasy_acquisition() -> None:
+    qlogei = check_model_acquisition_compatibility(
+        "NGBoostSurrogate",
+        "qLogExpectedImprovement",
+    )
+    assert qlogei.status is CompatibilityStatus.COMPATIBLE
+
+    qkg = check_model_acquisition_compatibility(
+        "NGBoostSurrogate",
+        "qKnowledgeGradient",
+    )
+    assert qkg.status is CompatibilityStatus.INCOMPATIBLE
+    assert "acquisition requires fantasy-model support" in qkg.reasons
