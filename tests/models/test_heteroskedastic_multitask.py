@@ -11,6 +11,7 @@ from gpytorch.mlls import ExactMarginalLogLikelihood
 from robotorchan.models import (
     HeteroskedasticKroneckerMultiTaskGP,
     HeteroskedasticMultiTaskGP,
+    MixedHeteroskedasticKroneckerMultiTaskGP,
     MixedHeteroskedasticMultiTaskGP,
 )
 
@@ -170,5 +171,52 @@ def test_heteroskedastic_kronecker_supports_sampling_and_mc_acquisition() -> Non
     assert torch.isfinite(posterior.mean).all()
     assert torch.isfinite(posterior.variance).all()
     assert torch.isfinite(samples).all()
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_mixed_heteroskedastic_kronecker_preserves_mixed_block_design() -> None:
+    train_x = torch.tensor(
+        [[0.1, 0.0], [0.4, 1.0], [0.7, 0.0], [0.9, 1.0]],
+        dtype=torch.double,
+    )
+    train_y = torch.cat((torch.sin(train_x[:, :1]), torch.cos(train_x[:, :1])), dim=-1)
+    model = MixedHeteroskedasticKroneckerMultiTaskGP(
+        train_x,
+        train_y,
+        cat_dims=[-1],
+    )
+    model.eval()
+
+    posterior = model.posterior(train_x[:2])
+    samples = posterior.rsample(torch.Size([4]))
+
+    assert model.cat_dims == (1,)
+    torch.testing.assert_close(model.raw_train_X, train_x)
+    torch.testing.assert_close(model.raw_train_Y, train_y)
+    assert posterior.mean.shape == torch.Size([2, 2])
+    assert samples.shape == torch.Size([4, 2, 2])
+    assert torch.isfinite(samples).all()
+
+
+def test_mixed_heteroskedastic_kronecker_supports_mc_acquisition() -> None:
+    train_x = torch.tensor(
+        [[0.1, 0.0], [0.4, 1.0], [0.7, 0.0], [0.9, 1.0]],
+        dtype=torch.double,
+    )
+    train_y = torch.cat((torch.sin(train_x[:, :1]), torch.cos(train_x[:, :1])), dim=-1)
+    model = MixedHeteroskedasticKroneckerMultiTaskGP(train_x, train_y, cat_dims=[1])
+    model.eval()
+
+    weights = torch.tensor([0.6, 0.4], dtype=torch.double)
+    objective = GenericMCObjective(lambda values, X=None: values @ weights)
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=(train_y @ weights).max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+        objective=objective,
+    )
+    value = acquisition(train_x[:2].unsqueeze(0))
+
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
