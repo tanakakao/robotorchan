@@ -254,3 +254,28 @@ actual tests for:
 
 A missing Cartesian-product test is not by itself a gap. New tests should be added only when they
 protect a materially different posterior, transform, sampler, or optimizer contract.
+
+
+## Development-stream boundary and extension policy
+
+This regression stream may add new regression models when an audit identifies a statistically
+meaningful and practically useful gap. Validation is the first priority, not the terminal goal.
+Candidates are evaluated by practical value, differentiation from existing models, statistical
+contract, acquisition integration, reuse of public BoTorch APIs, implementation cost, maintenance
+cost, and testability.
+
+Use four decisions for expensive cross-capability candidates:
+
+- **Implement**: value is high and implementation / maintenance cost is proportionate.
+- **Prototype**: value is promising but statistical design or cost is still uncertain.
+- **Hold**: useful, but current implementation or maintenance cost is disproportionate.
+- **Reject**: insufficient statistical meaning, differentiation, or practical value.
+
+A missing BoTorch public seam is not by itself a reason to reject a model. A small robotorchan-owned
+kernel, likelihood, posterior adapter, transform, or covariance builder is acceptable when its
+statistical contract is explicit and independently testable. Large copies of BoTorch private
+implementation remain undesirable maintenance coupling.
+
+Classification and ordinal models are intentionally developed in a separate stream. They must not
+be pulled into this regression program merely because an acquisition or model audit discovers a
+related future opportunity.
