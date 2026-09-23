@@ -9,10 +9,12 @@ from gpytorch.likelihoods import FixedNoiseGaussianLikelihood
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import (
-    HeteroskedasticKroneckerMultiTaskGP,
     HeteroskedasticMultiTaskGP,
-    MixedHeteroskedasticKroneckerMultiTaskGP,
     MixedHeteroskedasticMultiTaskGP,
+)
+from robotorchan.models.robust.robust import (
+    HeteroskedasticKroneckerMultiTaskGP,
+    MixedHeteroskedasticKroneckerMultiTaskGP,
 )
 
 
