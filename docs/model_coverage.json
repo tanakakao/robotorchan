@@ -535,6 +535,11 @@
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/19_reduced_gp.ipynb"
     },
+    "ReplicateNoiseMultiFidelityGP": {
+      "guide": "docs/models/robust_noise.md",
+      "theory": "docs/theory/15_heteroskedastic_noise.md",
+      "notebook": "examples/notebooks/16_noise_models.ipynb"
+    },
     "ReplicateNoiseSingleTaskGP": {
       "guide": "docs/models/robust_noise.md",
       "theory": "docs/theory/15_heteroskedastic_noise.md",
