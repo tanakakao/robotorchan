@@ -253,7 +253,9 @@ class PCAMultiFidelityGP(SingleTaskMultiFidelityGP):
     def posterior(self, X: Tensor, *args: Any, **kwargs: Any) -> Any:
         """Evaluate the BoTorch multi-fidelity posterior from raw-space inputs."""
         return super().posterior(self._encode_inputs(X), *args, **kwargs)
-\n\nclass PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
+
+
+class PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
     """Multi-fidelity GP with PLS restricted to non-fidelity design features."""
 
     def __init__(
