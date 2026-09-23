@@ -187,9 +187,9 @@ class PCAMultiFidelityGP(SingleTaskMultiFidelityGP):
         normalized_iteration = (
             None
             if iteration_fidelity is None
-            else normalize_feature_dims(
-                [iteration_fidelity], input_dim, name="iteration_fidelity"
-            )[0]
+            else normalize_feature_dims([iteration_fidelity], input_dim, name="iteration_fidelity")[
+                0
+            ]
         )
         normalized_data = tuple(
             normalize_feature_dims(data_fidelities or (), input_dim, name="data_fidelities")
