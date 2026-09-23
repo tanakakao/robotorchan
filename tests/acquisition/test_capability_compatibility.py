@@ -85,3 +85,17 @@ def test_epig_rejects_model_list_multi_output_model() -> None:
     )
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "acquisition requires a single-output posterior" in result.reasons
+
+
+def test_ngboost_supports_marginal_variance_active_learning() -> None:
+    result = check_model_acquisition_compatibility("NGBoostSurrogate", "PosteriorVariance")
+    assert result.status is CompatibilityStatus.COMPATIBLE
+
+
+def test_ngboost_rejects_joint_gaussian_information_gain() -> None:
+    result = check_model_acquisition_compatibility(
+        "NGBoostSurrogate",
+        "ExpectedPredictiveInformationGain",
+    )
+    assert result.status is CompatibilityStatus.INCOMPATIBLE
+    assert "joint Gaussian posterior" in result.reasons
