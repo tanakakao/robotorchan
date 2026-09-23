@@ -332,6 +332,7 @@ _MULTITASK_MODELS = frozenset(
         "InfiniteWidthBNNMultiTaskGP",
         "MixedInfiniteWidthBNNMultiTaskGP",
         "SpectralMixtureMultiTaskGP",
+        "SpectralMixtureKroneckerMultiTaskGP",
         "MixedSpectralMixtureMultiTaskGP",
     }
 )
@@ -409,6 +410,7 @@ _MULTI_OUTPUT_MODELS = frozenset(
         "RobustRelevancePursuitMultiTaskGP",
         "SaasFullyBayesianMultiTaskGP",
         "SpectralMixtureMultiTaskGP",
+        "SpectralMixtureKroneckerMultiTaskGP",
         "StudentTMultiTaskGP",
         "SupervisedAutoEncoderKroneckerMultiTaskGP",
         "SupervisedAutoEncoderMultiTaskGP",
@@ -843,6 +845,7 @@ _register_family(
         "MixedInfiniteWidthBNNMultiTaskGP",
         "SpectralMixtureGP",
         "SpectralMixtureMultiTaskGP",
+        "SpectralMixtureKroneckerMultiTaskGP",
         "MixedSpectralMixtureGP",
         "MixedSpectralMixtureMultiTaskGP",
     ),
