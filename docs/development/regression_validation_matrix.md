@@ -130,3 +130,9 @@ Phase 4 is complete when:
 - no model-wide `runtime_validated` capability is introduced.
 
 Later phases should update this matrix only when executable evidence is added.
+
+
+### RRP × multi-fidelity
+
+The RRP composition boundary is audited in [`rrp_multifidelity_audit.md`](rrp_multifidelity_audit.md).
+It remains research-gated rather than being forced through multiple inheritance.
