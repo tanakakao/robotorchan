@@ -20,7 +20,7 @@ variant unless categorical data covariance can remain independent of output-task
 
 | Family | Kronecker decision | Mixed Kronecker | Priority | Reason |
 | --- | --- | --- | --- | --- |
-| Robust Relevance Pursuit | implement | implement after reference path | high | Sparse observation outliers are meaningful for aligned multi-output experiments; use as reference implementation. |
+| Robust Relevance Pursuit | research-gated | defer | medium | BoTorch's relevance-pursuit mixin requires a single-task `noise_covar`; Kronecker uses `MultitaskGaussianLikelihood` with task-noise semantics. A dedicated multitask sparse-noise likelihood is required. |
 | Heteroskedastic | implement | evaluate after continuous version | high | Input-dependent noise is common in block-design measurements, but task-specific noise semantics must be explicit. |
 | Nonstationary | implement | evaluate after continuous version | high | Nonstationary data covariance is orthogonal to the output task covariance and has clear practical value. |
 | Student-t | defer | defer | medium | Heavy-tail likelihood is meaningful, but the current implementation is variational and long-format; a block-design variational posterior needs a dedicated design rather than a wrapper. |
@@ -32,17 +32,13 @@ variant unless categorical data covariance can remain independent of output-task
 
 Phase 6 should start with:
 
-- `RobustRelevancePursuitKroneckerMultiTaskGP`;
 - `HeteroskedasticKroneckerMultiTaskGP`;
 - `NonstationaryKroneckerMultiTaskGP`.
 
-The first Mixed candidate is:
-
-- `MixedRobustRelevancePursuitKroneckerMultiTaskGP`.
-
 Mixed heteroskedastic and nonstationary variants should only be added after the continuous
 Kronecker implementations demonstrate that data covariance, task covariance, and observation
-noise remain cleanly separated.
+noise remain cleanly separated. Relevance-pursuit Mixed Kronecker remains research-gated with
+the continuous variant.
 
 ## Input and output contract
 
@@ -62,11 +58,12 @@ categorical dimensions.
 
 ### Robust relevance pursuit
 
-Use block-design response covariance from the Kronecker model while applying relevance-pursuit
-observation-noise semantics to aligned observations. The implementation must define whether the
-support is per observation-output cell or shared across outputs at an input location. Phase 6
-should prefer the representation supported naturally by the underlying likelihood and must expose
-that choice in the docstring and tests.
+The direct wrapper path is unsupported by the current BoTorch contracts. `RobustRelevancePursuitMixin`
+expects `base_likelihood.noise_covar`, while `KroneckerMultiTaskGP` uses
+`MultitaskGaussianLikelihood` and task-noise structure. Do not emulate compatibility by aliasing
+`task_noise_covar` or flattening block-design observations. Revisit only with a dedicated
+multitask sparse-outlier likelihood whose shaped-noise contract is compatible with the Kronecker
+posterior.
 
 ### Heteroskedastic
 

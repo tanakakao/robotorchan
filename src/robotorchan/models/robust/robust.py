@@ -10,7 +10,10 @@ from botorch.models.robust_relevance_pursuit_model import (
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
-from gpytorch.likelihoods import FixedNoiseGaussianLikelihood, Likelihood
+from gpytorch.likelihoods import (
+    FixedNoiseGaussianLikelihood,
+    Likelihood,
+)
 from gpytorch.means import Mean
 from gpytorch.module import Module
 from gpytorch.priors import Prior
