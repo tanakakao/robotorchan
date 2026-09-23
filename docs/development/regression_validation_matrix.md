@@ -153,3 +153,14 @@ are tested in raw coordinates.
 This restriction does not apply automatically to `MapSaasMultiFidelityGP`, replicate-noise MF, or
 heteroskedastic MF because those models keep the BoTorch multi-fidelity input coordinates rather
 than introducing a private reduced coordinate system.
+
+## Phase 28: reduced multi-fidelity conditioning
+
+PCA, PLS, and random-projection multi-fidelity models now encode raw candidate coordinates before
+`condition_on_observations`, matching the raw-space lifecycle contract already used by the general
+reduced GP family. Runtime tests cover all three reducers and verify that the conditioned model
+stores encoded inputs with finite posterior moments.
+
+This closes the conditioning half of the Phase 27 gap. `supports_fantasize` remains false until the
+full BoTorch fantasy path is exercised directly with a sampler and raw-space candidates; capability
+metadata is not restored from conditioning evidence alone.
