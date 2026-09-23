@@ -367,7 +367,7 @@ product is not automatically a defect.
 | Nonstationary | Implemented | `NonstationaryKroneckerMultiTaskGP` replaces only the data covariance with a Gibbs kernel. |
 | Spectral Mixture | Missing -> Implement | Single-task, Mixed, and long-format MultiTask kernels exist; a block-design data-kernel variant is a clean extension. |
 | Infinite-width BNN | Missing -> Implement | The NNGP is already a reusable exact-GP kernel; composing it with Kronecker task covariance has clear semantics. |
-| Fully Bayesian SAAS | Prototype | Requires an explicit MCMC-batch / output-task contract and a Kronecker-aware Pyro model rather than a long-format wrapper. |
+| Fully Bayesian SAAS | Hold | Phase 9 found no stable block-design Pyro/sample-loading path; a custom implementation would own substantial fully Bayesian internals. |
 | Heteroskedastic | Prototype | Design documentation exists, but no public Kronecker implementation exists. Predicted noise must alter response observation covariance with an explicit task axis. |
 | Robust Relevance Pursuit | Prototype | A dedicated block-design sparse observation/outlier model is required; the single-task `noise_covar` mixin is not a valid shortcut. |
 | Student-t | Prototype | Meaningful heavy-tail extension, but it needs a block-design variational likelihood/posterior contract. |
