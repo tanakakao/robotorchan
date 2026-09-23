@@ -277,7 +277,6 @@ __all__ = [
     "PCAMultiTaskGP",
     "PLSKroneckerMultiTaskGP",
     "PLSMultiFidelityGP",
-    "PLSKroneckerMultiTaskGP",
     "PLSMultiTaskGP",
     "PairwiseGP",
     "RandomForestSurrogate",
