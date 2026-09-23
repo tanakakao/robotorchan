@@ -3,6 +3,7 @@
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.objective import GenericMCObjective
+from botorch.generation.gen import gen_candidates_torch
 from botorch.optim import optimize_acqf, optimize_acqf_mixed
 from gpytorch.kernels import ScaleKernel, SpectralMixtureKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
@@ -279,6 +280,7 @@ def test_mixed_spectral_kronecker_mixed_optimizer_runs() -> None:
         raw_samples=16,
         fixed_features_list=[{1: 0.0}, {1: 1.0}],
         options={"maxiter": 12},
+        gen_candidates=gen_candidates_torch,
     )
     assert candidate.shape == (1, 2)
     assert candidate[0, 1].item() in {0.0, 1.0}
