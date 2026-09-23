@@ -44,3 +44,16 @@ are handled separately, while predictive-information methods such as EPIG are do
 
 For the broader theory and method relationships, see
 [Acquisition theory](../theory/acquisition/09_active_learning.md).
+
+
+## Probabilistic non-GP surrogates
+
+Moment-based regression AL is not restricted to Gaussian processes. A non-GP model may use
+`PosteriorVariance` and `PosteriorStd` when its BoTorch posterior exposes statistically meaningful
+marginal moments. `NGBoostSurrogate` is the reference distributional non-GP path: its Gaussian
+predictive distribution supplies these moments directly.
+
+This does not make every Gaussian-posterior acquisition valid. In particular,
+`ExpectedPredictiveInformationGain` requires the joint Gaussian covariance contract, while plain
+NGBoost only exposes independent predictive marginals. BALD is also outside this contract because
+predictive variance alone does not identify epistemic and aleatoric uncertainty separately.

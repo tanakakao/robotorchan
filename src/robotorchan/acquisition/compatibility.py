@@ -36,8 +36,9 @@ def check_model_acquisition_compatibility(
     reasons: list[str] = []
 
     if model_capabilities.non_gp and not acquisition_capabilities.monte_carlo:
-        reason = "non-GP empirical ensembles require BoTorch Monte Carlo acquisitions"
-        reasons.append(reason)
+        posterior_requirement = acquisition_capabilities.posterior_requirement
+        if posterior_requirement is not PosteriorRequirement.MARGINAL_MOMENTS:
+            reasons.append("non-GP models require BoTorch Monte Carlo acquisitions")
     if acquisition_capabilities.requires_fantasize and not model_capabilities.supports_fantasize:
         reasons.append("acquisition requires fantasy-model support")
     if acquisition_capabilities.requires_multi_fidelity and not model_capabilities.multi_fidelity:
