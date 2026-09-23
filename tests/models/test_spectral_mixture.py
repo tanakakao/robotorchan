@@ -166,8 +166,9 @@ def test_spectral_mixture_kronecker_preserves_block_design_and_kernel() -> None:
     torch.testing.assert_close(model.raw_train_X, X)
     torch.testing.assert_close(model.raw_train_Y, Y)
     assert isinstance(model.make_mll(), ExactMarginalLogLikelihood)
-    assert isinstance(model.covar_module, ScaleKernel)
-    kernel = model.covar_module.base_kernel
+    data_kernel = model.covar_module.data_covar_module
+    assert isinstance(data_kernel, ScaleKernel)
+    kernel = data_kernel.base_kernel
     assert isinstance(kernel, SpectralMixtureKernel)
     assert kernel.num_mixtures == 2
     assert torch.isfinite(kernel.mixture_weights).all()
@@ -209,6 +210,7 @@ def test_spectral_mixture_kronecker_scalarized_mc_and_optimizer_run() -> None:
         num_restarts=2,
         raw_samples=16,
         options={"maxiter": 12},
+        gen_candidates=None,
     )
     assert candidate.shape == (1, 1)
     assert torch.isfinite(candidate).all()
