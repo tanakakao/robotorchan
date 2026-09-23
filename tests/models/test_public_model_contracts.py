@@ -102,6 +102,7 @@ PUBLIC_MODEL_NAMES = {
     "PLSKroneckerMultiTaskGP",
     "PLSMultiTaskGP",
     "PairwiseGP",
+    "NGBoostSurrogate",
     "RandomForestSurrogate",
     "RandomProjectionGP",
     "RandomProjectionKroneckerMultiTaskGP",
