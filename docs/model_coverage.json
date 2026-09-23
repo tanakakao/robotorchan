@@ -175,6 +175,11 @@
       "theory": "docs/theory/11_structured_output.md",
       "notebook": "examples/notebooks/11_structured_output_gp.ipynb"
     },
+    "MapSaasMultiFidelityGP": {
+      "guide": "docs/models/high_dimensional.md",
+      "theory": "docs/theory/06_multi_fidelity.md",
+      "notebook": "examples/notebooks/03_multi_fidelity_gp.ipynb"
+    },
     "MixedAdditiveMapSaasSingleTaskGP": {
       "guide": "docs/models/high_dimensional.md",
       "theory": "docs/theory/21_advanced_high_dimensional_models.md",

@@ -5,6 +5,7 @@ from botorch.acquisition.monte_carlo import qUpperConfidenceBound
 from botorch.sampling.normal import IIDNormalSampler
 
 from robotorchan.models import (
+    MapSaasMultiFidelityGP,
     PCAMultiFidelityGP,
     PLSMultiFidelityGP,
     RandomProjectionMultiFidelityGP,
@@ -175,3 +176,73 @@ def test_random_projection_multifidelity_preserves_structural_fidelity() -> None
     assert torch.isfinite(posterior.mean).all()
     assert torch.isfinite(posterior.rsample(torch.Size([3]))).all()
     assert model.make_mll().model is model
+
+
+def test_map_saas_multifidelity_keeps_saas_on_design_kernel() -> None:
+    torch.manual_seed(0)
+    train_x, train_y = _data()
+    model = MapSaasMultiFidelityGP(train_x, train_y, data_fidelities=[-1])
+
+    assert torch.equal(model.raw_train_X, train_x)
+    assert torch.equal(model.raw_train_Y, train_y)
+    assert model.design_dims == (0, 1, 2, 3, 4)
+    assert model.fidelity_dims == (5,)
+    assert model.data_fidelities == (5,)
+    assert model.saas_design_kernel.ard_num_dims == 5
+    assert tuple(model.saas_design_kernel.active_dims.tolist()) == model.design_dims
+    prior_names = {name for name, *_ in model.saas_design_kernel.named_priors()}
+    assert "tau_prior" in prior_names
+    assert model.make_mll().model is model
+
+    model.eval()
+    posterior = model.posterior(train_x[:2])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert torch.isfinite(posterior.rsample(torch.Size([3]))).all()
+
+
+def test_map_saas_multifidelity_preserves_fidelity_roles_and_rejects_overlap() -> None:
+    torch.manual_seed(0)
+    design = torch.rand(10, 4, dtype=torch.double)
+    iteration = torch.linspace(0.1, 1.0, 10, dtype=torch.double).unsqueeze(-1)
+    data = torch.linspace(0.2, 1.0, 10, dtype=torch.double).unsqueeze(-1)
+    train_x = torch.cat((design, iteration, data), dim=-1)
+    train_y = design[:, :2].sum(dim=-1, keepdim=True) + iteration + data
+
+    model = MapSaasMultiFidelityGP(
+        train_x,
+        train_y,
+        iteration_fidelity=-2,
+        data_fidelities=[-1],
+    )
+    assert model.iteration_fidelity == 4
+    assert model.data_fidelities == (5,)
+    assert model.design_dims == (0, 1, 2, 3)
+    assert model.saas_design_kernel.ard_num_dims == 4
+
+    try:
+        MapSaasMultiFidelityGP(
+            train_x,
+            train_y,
+            iteration_fidelity=-1,
+            data_fidelities=[-1],
+        )
+    except ValueError as error:
+        assert "duplicates" in str(error)
+    else:
+        raise AssertionError("Expected overlapping fidelity dimensions to be rejected.")
+
+
+def test_map_saas_multifidelity_rejects_linear_truncated_path() -> None:
+    train_x, train_y = _data()
+    try:
+        MapSaasMultiFidelityGP(
+            train_x,
+            train_y,
+            data_fidelities=[-1],
+            linear_truncated=True,
+        )
+    except ValueError as error:
+        assert "linear_truncated=False" in str(error)
+    else:
+        raise AssertionError("Expected linear-truncated covariance to be rejected.")

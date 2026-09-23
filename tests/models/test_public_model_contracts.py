@@ -39,6 +39,7 @@ PUBLIC_MODEL_NAMES = {
     "JointVAEMultiTaskGP",
     "KroneckerMultiTaskGP",
     "LCEAGP",
+    "MapSaasMultiFidelityGP",
     "LCEMGP",
     "LatentKroneckerGP",
     "MixedAdditiveMapSaasSingleTaskGP",

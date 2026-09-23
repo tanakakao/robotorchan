@@ -583,6 +583,15 @@ _register_family(
     high_dimensional=HighDimensionalStrategy.SAAS,
 )
 _register_family(
+    ("MapSaasMultiFidelityGP",),
+    guide="docs/models/high_dimensional.md",
+    theory="docs/theory/06_multi_fidelity.md",
+    notebook="examples/notebooks/03_multi_fidelity_gp.ipynb",
+    strategy="design-only MAP-SAAS with BoTorch multi-fidelity covariance",
+    high_dimensional=HighDimensionalStrategy.MAP_SAAS,
+    multi_fidelity=True,
+)
+_register_family(
     (
         "AdditiveMapSaasSingleTaskGP",
         "EnsembleMapSaasSingleTaskGP",
