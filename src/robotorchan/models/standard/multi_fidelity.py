@@ -20,7 +20,7 @@ from robotorchan.models.base import (
     make_mixed_covar_module,
     normalize_feature_dims,
 )
-from robotorchan.reduction.input import PCAInputReducer
+from robotorchan.reduction.input import PCAInputReducer, PLSInputReducer
 
 
 class SingleTaskMultiFidelityGP(ExactGPModelMixin, BoTorchSingleTaskMultiFidelityGP):
@@ -205,6 +205,114 @@ class PCAMultiFidelityGP(SingleTaskMultiFidelityGP):
 
         design_X = train_X[..., list(self.design_dims)]
         reducer = PCAInputReducer(n_components=n_components, center=center)
+        reduced_design_X = reducer.fit_transform(design_X, train_Y)
+        encoded_train_X = self._join_design_and_fidelity(
+            reduced_design_X,
+            train_X[..., list(self.fidelity_dims)],
+        )
+        encoded_fidelity_dims = list(range(reduced_design_X.shape[-1], encoded_train_X.shape[-1]))
+        raw_to_encoded = dict(zip(self.fidelity_dims, encoded_fidelity_dims, strict=True))
+        encoded_iteration = (
+            None if normalized_iteration is None else raw_to_encoded[normalized_iteration]
+        )
+        encoded_data = [raw_to_encoded[dim] for dim in normalized_data]
+
+        super().__init__(
+            train_X=encoded_train_X,
+            train_Y=train_Y,
+            train_Yvar=train_Yvar,
+            iteration_fidelity=encoded_iteration,
+            data_fidelities=encoded_data,
+            linear_truncated=False,
+            nu=nu,
+            likelihood=likelihood,
+            outcome_transform=outcome_transform,
+            input_transform=input_transform,
+        )
+        self.input_reducer = reducer
+        self.reduced_design_dim = reduced_design_X.shape[-1]
+        self.encoded_fidelity_dims = tuple(encoded_fidelity_dims)
+        self._store_supervised_training_data(train_X, train_Y, train_Yvar)
+
+    @staticmethod
+    def _join_design_and_fidelity(design_X: Tensor, fidelity_X: Tensor) -> Tensor:
+        return torch.cat((design_X, fidelity_X), dim=-1)
+
+    def _encode_inputs(self, X: Tensor) -> Tensor:
+        if X.shape[-1] != self.raw_input_dim:
+            raise ValueError(
+                f"Expected final input dimension {self.raw_input_dim}, got {X.shape[-1]}."
+            )
+        design_X = X[..., list(self.design_dims)]
+        fidelity_X = X[..., list(self.fidelity_dims)]
+        return self._join_design_and_fidelity(
+            self.input_reducer.transform(design_X),
+            fidelity_X,
+        )
+
+    def posterior(self, X: Tensor, *args: Any, **kwargs: Any) -> Any:
+        """Evaluate the BoTorch multi-fidelity posterior from raw-space inputs."""
+        return super().posterior(self._encode_inputs(X), *args, **kwargs)
+\n\nclass PLSMultiFidelityGP(SingleTaskMultiFidelityGP):
+    """Multi-fidelity GP with PLS restricted to non-fidelity design features."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        n_components: int,
+        train_Yvar: Tensor | None = None,
+        iteration_fidelity: int | None = None,
+        data_fidelities: Sequence[int] | None = None,
+        *,
+        center: bool = True,
+        linear_truncated: bool = False,
+        nu: float = 2.5,
+        likelihood: Likelihood | None = None,
+        outcome_transform: OutcomeTransform | _DefaultType | None = DEFAULT,
+        input_transform: InputTransform | None = None,
+    ) -> None:
+        input_dim = train_X.shape[-1]
+        fidelity_dims: list[int] = []
+        if iteration_fidelity is not None:
+            fidelity_dims.extend(
+                normalize_feature_dims([iteration_fidelity], input_dim, name="iteration_fidelity")
+            )
+        if data_fidelities is not None:
+            fidelity_dims.extend(
+                normalize_feature_dims(data_fidelities, input_dim, name="data_fidelities")
+            )
+        if not fidelity_dims:
+            raise ValueError("At least one fidelity feature must be specified.")
+        if len(set(fidelity_dims)) != len(fidelity_dims):
+            raise ValueError("Fidelity dimensions must not contain duplicates.")
+        if linear_truncated:
+            raise ValueError(
+                "PLSMultiFidelityGP requires linear_truncated=False so PCA can remain "
+                "separate from fidelity covariance."
+            )
+
+        normalized_iteration = (
+            None
+            if iteration_fidelity is None
+            else normalize_feature_dims([iteration_fidelity], input_dim, name="iteration_fidelity")[
+                0
+            ]
+        )
+        normalized_data = tuple(
+            normalize_feature_dims(data_fidelities or (), input_dim, name="data_fidelities")
+        )
+
+        self.raw_input_dim = input_dim
+        self.iteration_fidelity = normalized_iteration
+        self.data_fidelities = normalized_data
+        self.fidelity_dims = tuple(sorted(fidelity_dims))
+        self.design_dims = tuple(dim for dim in range(input_dim) if dim not in self.fidelity_dims)
+        if not self.design_dims:
+            raise ValueError("PLS requires at least one non-fidelity design feature.")
+
+        design_X = train_X[..., list(self.design_dims)]
+        reducer = PLSInputReducer(n_components=n_components, center=center)
         reduced_design_X = reducer.fit_transform(design_X, train_Y)
         encoded_train_X = self._join_design_and_fidelity(
             reduced_design_X,
