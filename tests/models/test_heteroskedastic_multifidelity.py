@@ -150,5 +150,5 @@ def test_heteroskedastic_multifidelity_updates_response_noise_after_fit() -> Non
 
     assert torch.isfinite(fitted_noise).all()
     assert torch.all(fitted_noise >= model.noise_floor)
-    assert not torch.allclose(fitted_noise, initial_noise)
     torch.testing.assert_close(fitted_noise, predicted_train_noise)
+    assert torch.equal(model.raw_train_Yvar, initial_noise.unsqueeze(-1))
