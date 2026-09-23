@@ -1,7 +1,12 @@
 """Runtime contracts for heteroskedastic multi-fidelity regression."""
 
 import torch
+from botorch.acquisition.analytic import PosteriorMean
+from botorch.acquisition.cost_aware import InverseCostWeightedUtility
+from botorch.acquisition.knowledge_gradient import qMultiFidelityKnowledgeGradient
 from botorch.acquisition.monte_carlo import qUpperConfidenceBound
+from botorch.models.cost import AffineFidelityCostModel
+from botorch.optim import optimize_acqf
 from botorch.sampling.normal import IIDNormalSampler
 
 from robotorchan.models import HeteroskedasticMultiFidelityGP
@@ -67,3 +72,44 @@ def test_heteroskedastic_multifidelity_noise_model_retains_fidelity_contract() -
     assert predicted_noise.shape == torch.Size([2, 1])
     assert torch.isfinite(predicted_noise).all()
     assert torch.all(predicted_noise > 0)
+
+
+def test_heteroskedastic_multifidelity_supports_native_mf_kg() -> None:
+    train_x, train_y = _data()
+    model = HeteroskedasticMultiFidelityGP(train_x, train_y, data_fidelities=[-1])
+    model.eval()
+
+    cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
+    cost_utility = InverseCostWeightedUtility(cost_model=cost_model)
+
+    def project(X: torch.Tensor) -> torch.Tensor:
+        projected = X.clone()
+        projected[..., 1] = 1.0
+        return projected
+
+    _, current_value = optimize_acqf(
+        acq_function=PosteriorMean(model),
+        bounds=torch.tensor([[0.0, 1.0], [1.0, 1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=8,
+        fixed_features={1: 1.0},
+    )
+    acquisition = qMultiFidelityKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        current_value=current_value,
+        cost_aware_utility=cost_utility,
+        project=project,
+    )
+    X = torch.rand(
+        1,
+        acquisition.get_augmented_q_batch_size(q=1),
+        2,
+        dtype=torch.double,
+    )
+    X[..., 1] = 0.5
+    value = acquisition(X)
+
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
