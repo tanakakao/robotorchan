@@ -877,7 +877,7 @@ _register_family(
     guide="docs/models/expressive.md",
     theory="docs/theory/22_expressive_gp.md",
     notebook="examples/notebooks/24_expressive_surrogate_gp.ipynb",
-    description="Kronecker multitask GP with infinite-width ReLU data covariance",
+    strategy="Kronecker multitask GP with infinite-width ReLU data covariance",
 )
 
 _register_family(
