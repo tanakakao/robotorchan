@@ -12,7 +12,7 @@ from robotorchan.models.base import (
     make_mixed_covar_module,
     normalize_feature_dims,
 )
-from robotorchan.models.standard.multitask import MultiTaskGP
+from robotorchan.models.standard.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.standard.single_task import SingleTaskGP
 
 
@@ -164,6 +164,40 @@ class MixedNonstationarySingleTaskGP(SingleTaskGP):
             additive_gibbs.local_lengthscale(continuous_X),
             interaction_gibbs.local_lengthscale(continuous_X),
         )
+
+
+class NonstationaryKroneckerMultiTaskGP(KroneckerMultiTaskGP):
+    """Block-design Kronecker GP with nonstationary data covariance."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        train_Yvar: Tensor | None = None,
+        *,
+        lengthscale_floor: float = 1e-3,
+    ) -> None:
+        input_dim = train_X.shape[-1]
+        gibbs_kernel = GibbsKernel(input_dim, lengthscale_floor=lengthscale_floor)
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            train_Yvar=train_Yvar,
+            data_covar_module=ScaleKernel(gibbs_kernel),
+        )
+
+    @property
+    def gibbs_kernel(self) -> GibbsKernel:
+        """Nonstationary kernel used by the Kronecker data covariance."""
+        data_covar = self.covar_module.data_covar_module
+        kernel = data_covar.base_kernel
+        if not isinstance(kernel, GibbsKernel):
+            raise RuntimeError("Expected GibbsKernel as the data covariance base kernel.")
+        return kernel
+
+    def local_lengthscale(self, X: Tensor) -> Tensor:
+        """Return local lengthscales for the block-design data features."""
+        return self.gibbs_kernel.local_lengthscale(X)
 
 
 class NonstationaryMultiTaskGP(MultiTaskGP):
