@@ -113,3 +113,23 @@ def test_heteroskedastic_multifidelity_supports_native_mf_kg() -> None:
 
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
+
+
+def test_heteroskedastic_multifidelity_noise_model_uses_fidelity_coordinate() -> None:
+    train_x, train_y = _data()
+    model = HeteroskedasticMultiFidelityGP(
+        train_x,
+        train_y,
+        data_fidelities=[-1],
+    ).fit_heteroskedastic(iterations=1)
+
+    assert model.noise_model is not None
+    assert model._data_fidelities == [-1]
+    assert torch.equal(model.noise_model.raw_train_X[..., 1], train_x[..., 1])
+    assert model.noise_model.covar_module is not None
+
+    probe = torch.tensor([[0.5, 0.25], [0.5, 1.0]], dtype=torch.double)
+    predicted_noise = model.predicted_noise(probe)
+    assert predicted_noise.shape == torch.Size([2, 1])
+    assert torch.isfinite(predicted_noise).all()
+    assert torch.all(predicted_noise >= model.noise_floor)
