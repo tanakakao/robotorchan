@@ -2,10 +2,11 @@
 
 ## Scope
 
-This document defines the integration boundary for NGBoost, XGBoost, LightGBM, and CatBoost.
-Phase 15 does not make these libraries core dependencies and does not expose placeholder public
-surrogate classes. Adapters should be added only when their predictive semantics are implemented and
-tested against the BoTorch posterior contract.
+This document defines the active integration boundary for external non-GP surrogate backends.
+`NGBoostSurrogate` is already implemented as an optional distributional surrogate; the remaining
+extension targets are XGBoost, LightGBM, and CatBoost. None of these backends are core dependencies,
+and adapters are added only when their predictive semantics are implemented and tested against the
+BoTorch posterior contract.
 
 ## Common rules
 
@@ -35,13 +36,10 @@ than copy fitting and posterior-shape logic into each adapter.
 
 ### Native distributional prediction
 
-NGBoost is distributional and should use its fitted predictive distribution rather than wrapping
-individual boosting stages. Its adapter needs a posterior capable of sampling the backend predictive
-distribution while preserving BoTorch `... x sample x q x m` semantics.
-
-A Gaussian NGBoost distribution does not justify declaring all NGBoost configurations Gaussian:
-the selected NGBoost distribution determines the predictive law. The adapter must inspect and
-represent the configured distribution truthfully.
+The implemented `NGBoostSurrogate` uses the fitted NGBoost predictive distribution rather than
+wrapping individual boosting stages. Its initial public contract is Gaussian regression and exposes
+a sampleable BoTorch-compatible posterior. Broader NGBoost distribution families require a separate
+implementation and validation before the public contract is expanded.
 
 ### Quantile prediction
 
@@ -54,7 +52,7 @@ is deliberately defined.
 
 | Backend | Initial posterior route | Mixed/categorical route | Multi-output route | Dependency |
 | --- | --- | --- | --- | --- |
-| NGBoost | native predictive distribution | numeric first | explicit audit required | `ngboost` |
+| NGBoost | native Gaussian predictive distribution | numeric | independent outputs | `ngboost` |
 | XGBoost | complete-model bootstrap | encoded numeric first | explicit audit required | `xgboost` |
 | LightGBM | complete-model bootstrap | native categorical where stable | explicit audit required | `lightgbm` |
 | CatBoost | complete-model bootstrap | native categorical preferred | explicit audit required | `catboost` |
@@ -94,18 +92,15 @@ Native joint-output behavior should be represented separately when available.
 Constraints remain an acquisition/objective concern. External adapters model outputs; they do not
 embed a feasibility decision rule.
 
-## Proposed implementation order
+## Remaining implementation order
 
-1. Generalize internal complete-model bootstrap infrastructure so estimator construction and tensor
-   conversion can be reused without exposing backend-specific compatibility layers.
-2. Implement CatBoost first for the strongest native mixed/categorical value.
+1. Generalize or reuse the complete-model bootstrap infrastructure where it reduces backend-specific
+   duplication without changing posterior semantics.
+2. Implement CatBoost for the strongest native mixed/categorical value.
 3. Implement LightGBM and XGBoost complete-model bootstrap adapters.
-4. Implement NGBoost with a distribution-aware posterior rather than forcing it into the empirical
-   ensemble abstraction. The Phase 14 contract is defined in
-   [`ngboost_surrogate_design.md`](ngboost_surrogate_design.md).
-5. Add backend-specific multi-output tests only after each backend's current API is audited.
-6. Add MC acquisition and gradient-free optimizer integration tests.
-7. Add optional-dependency smoke tests that verify base robotorchan imports without any backend.
+4. Add backend-specific multi-output tests only after each backend's current API is audited.
+5. Add MC acquisition and gradient-free optimizer integration tests.
+6. Add optional-dependency smoke tests that verify base robotorchan imports without each backend.
 
 ## Acceptance criteria
 
@@ -117,11 +112,3 @@ that the adapter publicly claims.
 Documentation must state whether uncertainty comes from a native predictive distribution, bootstrap
 complete-model disagreement, or another mechanism. These mechanisms must not be described
 interchangeably.
-
-
-## Phase 14 NGBoost decision
-
-NGBoost is the next external probabilistic surrogate target. The first public adapter is intentionally
-Gaussian-regression-only and must remain an optional dependency. Predictive variance / sample-based
-regression AL is in scope; BALD is explicitly out of scope until an epistemic / aleatoric decomposition
-is implemented and validated.
