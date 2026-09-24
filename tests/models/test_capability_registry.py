@@ -86,7 +86,7 @@ def test_input_perturbation_audit_states_are_explicit() -> None:
     )
     assert (
         MODEL_REGISTRY["MixedSingleTaskGP"].capabilities.input_perturbation
-        is InputPerturbationSupport.CONDITIONAL
+        is InputPerturbationSupport.SUPPORTED
     )
     assert (
         MODEL_REGISTRY["KroneckerMultiTaskGP"].capabilities.input_perturbation
