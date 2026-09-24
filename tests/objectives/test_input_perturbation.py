@@ -22,9 +22,7 @@ def test_single_task_gp_input_perturbation_e2e() -> None:
     fit_gpytorch_mll(model.make_mll())
 
     objective = make_input_perturbation_objective("expectation", n_w=3)
-    acqf = qLogExpectedImprovement(
-        model=model, best_f=train_Y.max(), objective=objective
-    )
+    acqf = qLogExpectedImprovement(model=model, best_f=train_Y.max(), objective=objective)
     X = torch.tensor([[[0.5]]], dtype=dtype, requires_grad=True)
     value = acqf(X)
     assert torch.isfinite(value).all()
