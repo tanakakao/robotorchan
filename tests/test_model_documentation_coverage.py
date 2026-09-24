@@ -68,3 +68,25 @@ def test_notebook_coverage_uses_registered_example_notebooks() -> None:
         notebook = coverage["notebook"]
         assert notebook.startswith(notebook_root), model_name
         assert notebook.endswith(".ipynb"), model_name
+
+
+def test_coverage_files_are_registered_in_navigation() -> None:
+    """Coverage targets must remain discoverable from their public navigation indexes."""
+    manifest = _load_manifest()
+    model_index = (ROOT / "docs" / "models" / "README.md").read_text(encoding="utf-8")
+    theory_index = (ROOT / "docs" / "theory" / "README.md").read_text(encoding="utf-8")
+    example_index = (ROOT / "examples" / "README.md").read_text(encoding="utf-8")
+
+    guides = {coverage["guide"] for coverage in manifest["models"].values()}
+    theories = {coverage["theory"] for coverage in manifest["models"].values()}
+    notebooks = {coverage["notebook"] for coverage in manifest["models"].values()}
+
+    for relative_path in guides:
+        name = Path(relative_path).name
+        assert name in model_index, f"guide missing from model index: {relative_path}"
+    for relative_path in theories:
+        name = Path(relative_path).name
+        assert name in theory_index, f"theory missing from theory index: {relative_path}"
+    for relative_path in notebooks:
+        name = Path(relative_path).name
+        assert name in example_index, f"notebook missing from example index: {relative_path}"
