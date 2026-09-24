@@ -371,7 +371,7 @@ product is not automatically a defect.
 | Heteroskedastic | Prototype | Design documentation exists, but no public Kronecker implementation exists. Predicted noise must alter response observation covariance with an explicit task axis. |
 | Robust Relevance Pursuit | Prototype | Phase 12 selects observation-task sparse support as the target; a dedicated block-aware RRP operator is still required, so long-format or single-task mixin reuse is rejected. |
 | Student-t | Prototype | Phase 13 confirms a non-conjugate block-design variational model is required; long-format reshaping and independent per-task variational GPs are rejected. |
-| Contaminated | Prototype | Requires an explicit choice between shared and task-specific contamination parameters. |
+| Contaminated | Prototype | Phase 14 selects shared contamination probability with task-specific component scales; implementation awaits the shared block-design variational Kronecker primitive. |
 | Replicate Noise | Prototype | Phase 11 validated aligned group × task variance-of-mean semantics; public implementation remains blocked on explicit fixed `G × m` Kronecker observation noise. |
 | DeepGP | Hold | A probabilistic hierarchy does not reduce to a data-kernel substitution; a dedicated block-design variational architecture would be disproportionately complex now. |
 
