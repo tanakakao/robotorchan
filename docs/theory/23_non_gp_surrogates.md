@@ -1,4 +1,4 @@
-# Empirical ensemble surrogates for Bayesian optimization
+# Non-GP surrogates for Bayesian optimization
 
 ## 1. Posterior interface without a Gaussian process
 
@@ -68,9 +68,22 @@ constraint, feasibility can be defined by a callable such as \(g(x)\leq0\) while
 continues to model outputs. This separation permits the same fitted surrogate to support different
 decision policies.
 
-## 7. Calibration and benchmarking
+## 7. Distributional surrogate: NGBoost
+
+`NGBoostSurrogate` differs from empirical tree ensembles. It predicts a conditional probability
+distribution rather than treating boosting stages as posterior members. The initial robotorchan
+adapter uses a Gaussian NGBoost predictive law and exposes its mean, variance, and samples through
+the BoTorch posterior interface.
+
+This predictive distribution represents total conditional predictive uncertainty. It must not be
+called a Gaussian Process posterior, and it does not by itself provide the epistemic / aleatoric
+decomposition required by BALD. MC BO and moment-based regression Active Learning can use the
+sampleable distribution when their assumptions are satisfied; analytic GP acquisition compatibility
+must not be inferred merely from Gaussian marginal predictions.
+
+## 8. Calibration and benchmarking
 
 An empirical ensemble standard deviation is useful only after checking its behavior on the target
 problem. Useful diagnostics include predictive RMSE, interval coverage after defining an interval
-construction rule, BO simple regret, and computational cost. Phase 13 provides a deterministic
-predictive benchmark but intentionally does not claim that its raw ensemble spread is calibrated.
+construction rule, BO simple regret, and computational cost. A deterministic predictive benchmark can provide regression diagnostics, but it must not claim that
+raw ensemble spread is calibrated without a dedicated calibration study.
