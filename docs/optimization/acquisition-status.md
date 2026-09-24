@@ -36,7 +36,7 @@ These restrictions are deliberate: unsupported posterior shapes should fail clea
 silently reducing the wrong dimension.
 
 
-## Phase 4 compatibility audit
+## Compatibility contract
 
 The acquisition registry is intentionally a compatibility surface, not a catalog of every
 BoTorch acquisition. Registered BoTorch entries cover representative standard MC, lookahead,
@@ -70,9 +70,9 @@ A robotorchan implementation is justified when it supplies a genuinely missing a
 robotorchan-specific contract.
 
 
-## Audit follow-ups
+## Future extensions
 
-The current acquisition milestone is feature-complete for the scoped single-objective BO,
+The current integration surface covers the scoped single-objective BO,
 regression active learning, level-set learning, information-theoretic BO, lookahead,
 multi-objective BO, and multi-fidelity/cost-aware integration.
 
@@ -85,7 +85,7 @@ Useful future extensions are intentionally left as separate work rather than imp
 
 These are extension items, not compatibility gaps in the documented current contracts.
 
-### Phase 7 ensemble / non-GP audit
+### Ensemble / non-GP contract
 
 Posterior sampling type, not the word "ensemble" in a model name, controls sampler selection.
 `make_model_sampler` maps Gaussian posteriors to `SobolQMCNormalSampler` and empirical ensemble
@@ -141,7 +141,7 @@ validate_non_gp_acquisition
 `tests/acquisition/test_public_api.py` locks this list explicitly. Additions require a distinct
 robotorchan algorithm or contract; documentation coverage alone is not sufficient justification.
 
-### Correspondence audit result
+### Correspondence status
 
 The theory chapters, practical optimization guides, status table, package exports, and public-API
 test are consistent with the current ownership policy. Remaining items listed under
