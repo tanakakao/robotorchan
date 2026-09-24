@@ -115,3 +115,12 @@ compatibility claims.
 - `supported`: reserved for models that pass the runtime certification path.
 
 Phase 2 intentionally assigns no model to `supported`. Later phases must promote models only after runtime evidence.
+
+
+## Phase 3: SingleTaskGP runtime certification
+
+`SingleTaskGP` is the first model promoted to `supported`. The certification covers the native BoTorch `InputPerturbation` path with fixed additive scenarios, posterior sampling through an MC acquisition, scenario aggregation, candidate gradients, and continuous `optimize_acqf` optimization.
+
+The certified risk-objective adapter currently exposes `expectation`, `worst_case`, `var`, and `cvar` through BoTorch risk-measure objectives. `mean_variance` and `sn_ratio` remain available as generic scenario reducers but are intentionally rejected by the input-perturbation adapter until their MC acquisition shape and optimization contracts are validated.
+
+This phase certifies continuous `SingleTaskGP` only. It does not promote Mixed, MultiTask, Kronecker, MultiFidelity, structured, reduced-space, uncertain-input, or non-GP families. Those retain the Phase-2 audit state until their protected-dimension and runtime contracts are tested.

@@ -82,7 +82,7 @@ def test_registry_documentation_targets_exist() -> None:
 def test_input_perturbation_audit_states_are_explicit() -> None:
     assert (
         MODEL_REGISTRY["SingleTaskGP"].capabilities.input_perturbation
-        is InputPerturbationSupport.UNVERIFIED
+        is InputPerturbationSupport.SUPPORTED
     )
     assert (
         MODEL_REGISTRY["MixedSingleTaskGP"].capabilities.input_perturbation
@@ -130,8 +130,10 @@ def test_input_perturbation_audit_states_are_explicit() -> None:
         )
 
 
-def test_phase2_does_not_claim_runtime_certification() -> None:
-    assert all(
-        entry.capabilities.input_perturbation is not InputPerturbationSupport.SUPPORTED
-        for entry in MODEL_REGISTRY.values()
-    )
+def test_phase3_certifies_only_single_task_gp() -> None:
+    supported = {
+        name
+        for name, entry in MODEL_REGISTRY.items()
+        if entry.capabilities.input_perturbation is InputPerturbationSupport.SUPPORTED
+    }
+    assert supported == {"SingleTaskGP"}
