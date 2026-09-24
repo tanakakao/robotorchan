@@ -31,9 +31,7 @@ def make_input_perturbation_objective(
     if risk_type == "cvar":
         return CVaR(alpha=alpha, n_w=n_w)
     if risk_type == "mean_variance":
-        raise ValueError(
-            "mean_variance is not yet certified for the InputPerturbation MC path."
-        )
+        raise ValueError("mean_variance is not yet certified for the InputPerturbation MC path.")
     if risk_type == "sn_ratio":
         raise ValueError("sn_ratio is not yet certified for the InputPerturbation MC path.")
     raise ValueError(f"Unsupported risk_type: {risk_type}")
