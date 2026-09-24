@@ -540,7 +540,6 @@ _INPUT_PERTURBATION_CONDITIONAL_NAMES = frozenset(
 )
 
 
-
 def _input_perturbation_support(name: str) -> InputPerturbationSupport:
     """Return the Phase-2 audit state; runtime certification happens later."""
     if name in _INPUT_PERTURBATION_SEPARATE:
