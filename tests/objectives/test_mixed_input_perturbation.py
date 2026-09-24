@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.fit import fit_gpytorch_mll
@@ -20,6 +21,17 @@ def test_protected_perturbation_set_preserves_categorical_dimension() -> None:
     )
     torch.testing.assert_close(expanded[:, 0], perturbations[:, 0])
     assert torch.count_nonzero(expanded[:, 1]) == 0
+
+
+@pytest.mark.parametrize("protected_dims", [[2], [-3]])
+def test_protected_perturbation_set_rejects_out_of_range_dims(
+    protected_dims: list[int],
+) -> None:
+    perturbations = torch.tensor([[0.0]], dtype=torch.double)
+    with pytest.raises(ValueError, match="outside the input dimension range"):
+        make_protected_perturbation_set(
+            perturbations, input_dim=2, protected_dims=protected_dims
+        )
 
 
 def test_mixed_single_task_gp_input_perturbation_e2e() -> None:
