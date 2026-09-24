@@ -285,7 +285,6 @@ def test_kronecker_multitask_gp_runtime_supports_noisy_multi_objective_acquisiti
     assert torch.isfinite(value).all()
 
 
-
 def test_mixed_kronecker_multitask_gp_runtime_optimizes_scalarized_qlogei() -> None:
     train_x = torch.tensor(
         [
@@ -332,7 +331,6 @@ def test_mixed_kronecker_multitask_gp_runtime_optimizes_scalarized_qlogei() -> N
     assert candidate[0, 1].item() in {0.0, 1.0}
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()
-
 
 
 def test_random_forest_runtime_supports_mc_acquisition() -> None:
