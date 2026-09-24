@@ -1,9 +1,12 @@
 """Initial model capability registry."""
 
+from dataclasses import replace
+
 from robotorchan.models.capabilities import (
     DocumentationLinks,
     HighDimensionalStrategy,
     InferenceType,
+    InputPerturbationSupport,
     InputType,
     ModelCapabilities,
     ModelRegistryEntry,
@@ -509,6 +512,62 @@ _ENSEMBLE_POSTERIOR_MODELS = frozenset(
 )
 
 
+_INPUT_PERTURBATION_SEPARATE = frozenset(
+    {
+        "UncertainInputSingleTaskGP",
+        "MixedUncertainInputSingleTaskGP",
+        "UncertainCategoricalSingleTaskGP",
+    }
+)
+_INPUT_PERTURBATION_UNSUPPORTED = frozenset(
+    {
+        "PairwiseGP",
+        "RandomForestSurrogate",
+        "ExtraTreesSurrogate",
+        "GradientBoostingSurrogate",
+        "HistGradientBoostingSurrogate",
+    }
+)
+_INPUT_PERTURBATION_CONDITIONAL_NAMES = frozenset(
+    {
+        "NGBoostSurrogate",
+        "ModelListGP",
+        "HierarchicalConditionalKernelGP",
+        "LCEAGP",
+        "LCEMGP",
+        "SACGP",
+    }
+)
+
+
+def _input_perturbation_support(name: str) -> InputPerturbationSupport:
+    """Return the Phase-2 audit state; runtime certification happens later."""
+    if name in _INPUT_PERTURBATION_SEPARATE:
+        return InputPerturbationSupport.SEPARATE_MECHANISM
+    if name in _INPUT_PERTURBATION_UNSUPPORTED:
+        return InputPerturbationSupport.UNSUPPORTED
+    entry = MODEL_REGISTRY.get(name)
+    if entry is not None:
+        capabilities = entry.capabilities
+        requires_protected_dimensions = (
+            capabilities.input_type is InputType.MIXED
+            or capabilities.task_type is TaskType.MULTITASK
+            or capabilities.multi_fidelity
+            or capabilities.structured_output
+            or capabilities.high_dimensional
+            in {
+                HighDimensionalStrategy.REDUCTION,
+                HighDimensionalStrategy.NEURAL_REDUCTION,
+                HighDimensionalStrategy.RANDOM_EMBEDDING,
+            }
+        )
+        if requires_protected_dimensions:
+            return InputPerturbationSupport.CONDITIONAL
+    if name in _INPUT_PERTURBATION_CONDITIONAL_NAMES:
+        return InputPerturbationSupport.CONDITIONAL
+    return InputPerturbationSupport.UNVERIFIED
+
+
 def _register_family(
     names: tuple[str, ...],
     *,
@@ -559,6 +618,7 @@ def _register_family(
                         )
                     ),
                     supports_fantasize=name in _FANTASIZE_MODELS,
+                    input_perturbation=_input_perturbation_support(name),
                 ),
                 _docs(guide, theory, notebook),
                 strategy,
@@ -909,6 +969,18 @@ _register_family(
     strategy="non-GP tree ensemble surrogate",
     non_gp=True,
 )
+
+
+# Apply the Phase-2 audit state to bootstrap entries as well as family entries.
+# Runtime phases may promote individual models to SUPPORTED after E2E certification.
+for _name, _entry in tuple(MODEL_REGISTRY.items()):
+    MODEL_REGISTRY[_name] = replace(
+        _entry,
+        capabilities=replace(
+            _entry.capabilities,
+            input_perturbation=_input_perturbation_support(_name),
+        ),
+    )
 
 
 def get_model_registry_entry(model_name: str) -> ModelRegistryEntry:

@@ -102,3 +102,16 @@ also prove that protected coordinates remain unchanged.
 
 Phase 1 intentionally adds no model implementation and makes no unsupported
 compatibility claims.
+
+
+## Phase 2 capability contract
+
+`ModelCapabilities.input_perturbation` now records the audit/certification state:
+
+- `unverified`: plausible path, but no E2E certification yet,
+- `conditional`: structural/protected-dimension or adapter constraints apply,
+- `unsupported`: the generic regression perturbation contract does not apply,
+- `separate_mechanism`: the model addresses uncertain inputs through a different modelling contract,
+- `supported`: reserved for models that pass the runtime certification path.
+
+Phase 2 intentionally assigns no model to `supported`. Later phases must promote models only after runtime evidence.

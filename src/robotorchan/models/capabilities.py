@@ -32,6 +32,16 @@ class HighDimensionalStrategy(StrEnum):
     DEEP = "deep"
 
 
+class InputPerturbationSupport(StrEnum):
+    """Certification state for decision-time input perturbation."""
+
+    UNVERIFIED = "unverified"
+    CONDITIONAL = "conditional"
+    UNSUPPORTED = "unsupported"
+    SEPARATE_MECHANISM = "separate_mechanism"
+    SUPPORTED = "supported"
+
+
 class PosteriorSamplingType(StrEnum):
     NONE = "none"
     GAUSSIAN = "gaussian"
@@ -64,6 +74,7 @@ class ModelCapabilities:
     supports_posterior_samples: bool = False
     posterior_sampling_type: PosteriorSamplingType = PosteriorSamplingType.NONE
     supports_fantasize: bool = False
+    input_perturbation: InputPerturbationSupport = InputPerturbationSupport.UNVERIFIED
 
 
 @dataclass(frozen=True, slots=True)

@@ -6,6 +6,7 @@ from pathlib import Path
 from robotorchan.models.capabilities import (
     HighDimensionalStrategy,
     InferenceType,
+    InputPerturbationSupport,
     InputType,
     RobustnessType,
     TaskType,
@@ -76,3 +77,61 @@ def test_registry_documentation_targets_exist() -> None:
         assert (root / entry.documentation.guide).is_file()
         assert (root / entry.documentation.theory).is_file()
         assert (root / entry.documentation.notebook).is_file()
+
+
+def test_input_perturbation_audit_states_are_explicit() -> None:
+    assert (
+        MODEL_REGISTRY["SingleTaskGP"].capabilities.input_perturbation
+        is InputPerturbationSupport.UNVERIFIED
+    )
+    assert (
+        MODEL_REGISTRY["MixedSingleTaskGP"].capabilities.input_perturbation
+        is InputPerturbationSupport.CONDITIONAL
+    )
+    assert (
+        MODEL_REGISTRY["KroneckerMultiTaskGP"].capabilities.input_perturbation
+        is InputPerturbationSupport.CONDITIONAL
+    )
+    assert (
+        MODEL_REGISTRY["SingleTaskMultiFidelityGP"].capabilities.input_perturbation
+        is InputPerturbationSupport.CONDITIONAL
+    )
+    assert (
+        MODEL_REGISTRY["PCAGP"].capabilities.input_perturbation
+        is InputPerturbationSupport.CONDITIONAL
+    )
+    assert (
+        MODEL_REGISTRY["UncertainInputSingleTaskGP"].capabilities.input_perturbation
+        is InputPerturbationSupport.SEPARATE_MECHANISM
+    )
+    assert (
+        MODEL_REGISTRY["PairwiseGP"].capabilities.input_perturbation
+        is InputPerturbationSupport.UNSUPPORTED
+    )
+    assert (
+        MODEL_REGISTRY["RandomForestSurrogate"].capabilities.input_perturbation
+        is InputPerturbationSupport.UNSUPPORTED
+    )
+    assert (
+        MODEL_REGISTRY["NGBoostSurrogate"].capabilities.input_perturbation
+        is InputPerturbationSupport.CONDITIONAL
+    )
+    for name in (
+        "ReducedGP",
+        "AutoEncoderGP",
+        "ALEBOGP",
+        "MapSaasMultiFidelityGP",
+        "HigherOrderGP",
+        "LatentKroneckerGP",
+    ):
+        assert (
+            MODEL_REGISTRY[name].capabilities.input_perturbation
+            is InputPerturbationSupport.CONDITIONAL
+        )
+
+
+def test_phase2_does_not_claim_runtime_certification() -> None:
+    assert all(
+        entry.capabilities.input_perturbation is not InputPerturbationSupport.SUPPORTED
+        for entry in MODEL_REGISTRY.values()
+    )
