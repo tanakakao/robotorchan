@@ -422,3 +422,21 @@ block-design implementations.
 A future SAAS Kronecker phase may reopen only under the triggers documented in
 `saas_kronecker_design.md`. Until then, ordinary fully Bayesian SAAS support remains the existing
 single-task and long-format multi-task families; it must not be presented as Kronecker support.
+
+
+### Phase 15 Kronecker acquisition compatibility
+
+Runtime coverage now explicitly verifies the public `KroneckerMultiTaskGP` path for multi-output
+posterior sampling, scalarized `qLogExpectedImprovement`, scalarized
+`qUpperConfidenceBound`, continuous `optimize_acqf`, `qLogExpectedHypervolumeImprovement`, and
+`qLogNoisyExpectedHypervolumeImprovement`.
+
+The scalar acquisitions use an explicit `GenericMCObjective`; the task axis is not silently reduced
+by the model. Multi-objective acquisitions consume the native `q × m` posterior.
+
+This evidence applies to the implemented exact Kronecker family. Prototype/Hold models from Phases
+6-14 do not inherit acquisition capability merely from their design documents. Their individual
+runtime gates remain required before public registration.
+
+Knowledge-gradient and fantasize workflows remain separate compatibility gates. Phase 15 does not
+infer them from posterior sampling or qEI/qUCB success.
