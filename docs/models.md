@@ -18,6 +18,13 @@
 - 正しさの検証: `tests/`
 - Public model のドキュメント対応表: [`docs/model_coverage.json`](model_coverage.json)
 
+## 文書の責務
+
+このページは public model 全体を横断する索引と共通 API の入口です。family 固有の詳細仕様は
+[`docs/models/`](models/README.md) を source of truth とし、このページへ同じ詳細説明を重複して
+増やしません。既存の個別モデル説明は検索性と入口として維持し、今後の詳細更新は family guide
+を優先します。
+
 ## モデルファミリー別ガイド
 
 このページは全体の索引として維持します。モデルファミリーごとの詳細は

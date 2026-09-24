@@ -57,12 +57,13 @@ BAxUS は主に探索側の選択肢です。
 外れ値、heavy-tailed residual、入力依存ノイズ、反復測定、入力不確かさ、非定常性は
 似た予測誤差を生むことがありますが、モデルが仮定する生成機構は異なります。
 
-詳細は [Robust model support](../robust-model-support.md) と
-[モデル概要](../models.md) を参照してください。
+詳細は [Robust / Noise model guide](../models/robust_noise.md) と
+[モデルファミリー別ガイド](../models/README.md) を参照してください。
 
 ## 詳細へ進む
 
 このページはモデル選択の入口であり、個別モデルの説明を置き換えるものではありません。
-各モデルの用途、API、制約、Mixed 対応、Notebook は [モデル概要・使い所](../models.md)、
+各モデルファミリーの用途、API、制約、Mixed 対応、Notebook は
+[Model guides](../models/README.md)、全体索引は [モデル概要・使い所](../models.md)、
 理論的背景は [Theory](../theory/README.md)、実行例は
 [Examples](../../examples/README.md) を参照してください。
