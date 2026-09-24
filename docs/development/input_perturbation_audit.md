@@ -133,3 +133,12 @@ This phase certifies continuous `SingleTaskGP` only. It does not promote Mixed, 
 The E2E certification uses BoTorch `InputPerturbation`, the scenario-risk objective, and `optimize_acqf_mixed`. Categorical values are enumerated through `fixed_features_list` rather than optimized as continuous coordinates. The test verifies that perturbation scenarios leave the categorical coordinate unchanged and that the optimized candidate retains a valid category.
 
 This certification is intentionally limited to `MixedSingleTaskGP`. Mixed multitask, multi-fidelity, reduced, structured, robust, and uncertain-input models remain conditional or separate until their additional structural coordinates and posterior contracts are validated.
+
+
+## Phase 5: MultiTaskGP task-feature protection
+
+`MultiTaskGP` is promoted to `supported` for decision-time input perturbation under an explicit task-feature protection contract. Perturbations are applied only to ordinary design coordinates; the long-format `task_feature` receives zero displacement. Candidate optimization fixes the task feature to the target task rather than relaxing task identity into a continuous optimization variable.
+
+The E2E certification fits a two-task `MultiTaskGP`, targets one output task, evaluates the scenario-risk acquisition through BoTorch `InputPerturbation`, and optimizes a nominal candidate with the task feature fixed. The optimized candidate is checked to retain the requested task identity and finite acquisition value.
+
+This phase does not certify `KroneckerMultiTaskGP`: its task identity is represented in the output dimension rather than as an input task feature and therefore requires a separate multi-output acquisition/objective validation. Mixed multitask and other specialized multitask families also remain conditional.
