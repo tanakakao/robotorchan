@@ -10,7 +10,6 @@ from botorch.acquisition.risk_measures import (
     VaR,
     WorstCase,
 )
-
 from torch import Tensor
 
 from .risk import RiskType
@@ -49,6 +48,8 @@ def make_protected_perturbation_set(
     """Expand design perturbations while keeping structural dimensions fixed."""
     if input_dim < 1:
         raise ValueError("input_dim must be positive.")
+    if any(dim < -input_dim or dim >= input_dim for dim in protected_dims):
+        raise ValueError("protected_dims contains an index outside the input dimension range.")
     normalized = tuple(dim % input_dim for dim in protected_dims)
     if len(set(normalized)) != len(normalized):
         raise ValueError("protected_dims must be unique after normalizing negative indices.")
