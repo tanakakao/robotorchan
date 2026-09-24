@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from botorch.acquisition.risk_measures import (\n    CVaR,\n    Expectation,\n    RiskMeasureMCObjective,\n    VaR,\n    WorstCase,\n)
+from botorch.acquisition.risk_measures import (
+    CVaR,
+    Expectation,
+    RiskMeasureMCObjective,
+    VaR,
+    WorstCase,
+)
 
 from .risk import RiskType
 
