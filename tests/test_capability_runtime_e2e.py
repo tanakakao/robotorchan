@@ -28,6 +28,7 @@ from robotorchan.models import (
     PCAGP,
     PLSGP,
     KroneckerMultiTaskGP,
+    MixedKroneckerMultiTaskGP,
     MixedPCAGP,
     MixedPLSGP,
     MixedRandomProjectionGP,
@@ -282,6 +283,56 @@ def test_kronecker_multitask_gp_runtime_supports_noisy_multi_objective_acquisiti
 
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
+
+
+
+def test_mixed_kronecker_multitask_gp_runtime_optimizes_scalarized_qlogei() -> None:
+    train_x = torch.tensor(
+        [
+            [0.1, 0.0],
+            [0.25, 1.0],
+            [0.4, 0.0],
+            [0.6, 1.0],
+            [0.75, 0.0],
+            [0.9, 1.0],
+        ],
+        dtype=torch.double,
+    )
+    continuous = train_x[:, :1]
+    category = train_x[:, 1:2]
+    train_y = torch.cat(
+        [
+            torch.sin(continuous * 3.0) + 0.1 * category,
+            torch.cos(continuous * 3.0) - 0.1 * category,
+        ],
+        dim=-1,
+    )
+    model = MixedKroneckerMultiTaskGP(train_x, train_y, cat_dims=[1])
+    model.eval()
+
+    weights = torch.tensor([0.7, 0.3], dtype=torch.double)
+    objective = GenericMCObjective(lambda samples, X=None: samples @ weights)
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=(train_y @ weights).max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+        objective=objective,
+    )
+    candidate, value = optimize_acqf_mixed(
+        acq_function=acquisition,
+        bounds=torch.tensor([[0.1, 0.0], [0.9, 1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=8,
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+    )
+
+    assert candidate.shape == torch.Size([1, 2])
+    assert 0.1 <= candidate[0, 0].item() <= 0.9
+    assert candidate[0, 1].item() in {0.0, 1.0}
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+
 
 
 def test_random_forest_runtime_supports_mc_acquisition() -> None:
