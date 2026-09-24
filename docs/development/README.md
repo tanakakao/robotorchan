@@ -10,6 +10,9 @@
 - `architecture.md`: BoTorch extension としての package / API 設計
 - `model_design_guidelines.md`: model 追加・変更時の設計原則
 - `kronecker_research_gates.md`: 未実装 Kronecker 拡張の統計・実装ゲート
+- `classification_ordinal_research_gates.md`: 分類・ordinal model / AL の統計・実装ゲート
+- `input_perturbation_contract.md`: decision-time input perturbation の認定契約
+- `external_non_gp_surrogates.md`: 未実装 external non-GP adapter の統合契約
 - `training_api.md`: `make_mll()` と training API の契約
 - `releasing.md`: version、GitHub Release、PyPI 公開手順
 
