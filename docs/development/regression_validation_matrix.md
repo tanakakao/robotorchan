@@ -369,7 +369,7 @@ product is not automatically a defect.
 | Infinite-width BNN | Implemented | `InfiniteWidthBNNKroneckerMultiTaskGP` is public; the Mixed block-design variant is also implemented. |
 | Fully Bayesian SAAS | Hold | Phase 9 found no stable block-design Pyro/sample-loading path; a custom implementation would own substantial fully Bayesian internals. |
 | Heteroskedastic | Prototype | Design documentation exists, but no public Kronecker implementation exists. Predicted noise must alter response observation covariance with an explicit task axis. |
-| Robust Relevance Pursuit | Prototype | A dedicated block-design sparse observation/outlier model is required; the single-task `noise_covar` mixin is not a valid shortcut. |
+| Robust Relevance Pursuit | Prototype | Phase 12 selects observation-task sparse support as the target; a dedicated block-aware RRP operator is still required, so long-format or single-task mixin reuse is rejected. |
 | Student-t | Prototype | Meaningful heavy-tail extension, but it needs a block-design variational likelihood/posterior contract. |
 | Contaminated | Prototype | Requires an explicit choice between shared and task-specific contamination parameters. |
 | Replicate Noise | Prototype | Phase 11 validated aligned group × task variance-of-mean semantics; public implementation remains blocked on explicit fixed `G × m` Kronecker observation noise. |
