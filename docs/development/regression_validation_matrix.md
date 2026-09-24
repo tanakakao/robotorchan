@@ -440,3 +440,18 @@ runtime gates remain required before public registration.
 
 Knowledge-gradient and fantasize workflows remain separate compatibility gates. Phase 15 does not
 infer them from posterior sampling or qEI/qUCB success.
+
+
+### Phase 16 Kronecker optimizer E2E
+
+The base continuous `KroneckerMultiTaskGP` now has explicit scalarized qLogEI
+`optimize_acqf` coverage from Phase 15. Phase 16 adds an end-to-end
+`MixedKroneckerMultiTaskGP` path through `optimize_acqf_mixed`.
+
+The Mixed test keeps the block-design task axis in `train_Y[n, m]`, supplies categorical choices
+through `fixed_features_list`, and optimizes only the raw continuous coordinate inside interior
+bounds. The returned candidate is checked for finite values and an allowed categorical level.
+
+This is optimizer evidence for the implemented standard Mixed Kronecker model. Expressive Mixed
+Kronecker variants retain their own focused tests, and Prototype/Hold robust variants are not
+promoted by this result.
