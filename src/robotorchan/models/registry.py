@@ -528,21 +528,8 @@ _INPUT_PERTURBATION_UNSUPPORTED = frozenset(
         "HistGradientBoostingSurrogate",
     }
 )
-_INPUT_PERTURBATION_CONDITIONAL = frozenset(
-    (_MIXED_MODELS | _MULTITASK_MODELS)
-    | {
-        name
-        for name, entry in MODEL_REGISTRY.items()
-        if entry.capabilities.multi_fidelity
-        or entry.capabilities.structured_output
-        or entry.capabilities.high_dimensional
-        in {
-            HighDimensionalStrategy.REDUCTION,
-            HighDimensionalStrategy.NEURAL_REDUCTION,
-            HighDimensionalStrategy.RANDOM_EMBEDDING,
-        }
-    }
-    | {
+_INPUT_PERTURBATION_CONDITIONAL_NAMES = frozenset(
+    {
         "NGBoostSurrogate",
         "ModelListGP",
         "HierarchicalConditionalKernelGP",
@@ -553,13 +540,31 @@ _INPUT_PERTURBATION_CONDITIONAL = frozenset(
 )
 
 
+
 def _input_perturbation_support(name: str) -> InputPerturbationSupport:
     """Return the Phase-2 audit state; runtime certification happens later."""
     if name in _INPUT_PERTURBATION_SEPARATE:
         return InputPerturbationSupport.SEPARATE_MECHANISM
     if name in _INPUT_PERTURBATION_UNSUPPORTED:
         return InputPerturbationSupport.UNSUPPORTED
-    if name in _INPUT_PERTURBATION_CONDITIONAL:
+    entry = MODEL_REGISTRY.get(name)
+    if entry is not None:
+        capabilities = entry.capabilities
+        requires_protected_dimensions = (
+            capabilities.input_type is InputType.MIXED
+            or capabilities.task_type is TaskType.MULTITASK
+            or capabilities.multi_fidelity
+            or capabilities.structured_output
+            or capabilities.high_dimensional
+            in {
+                HighDimensionalStrategy.REDUCTION,
+                HighDimensionalStrategy.NEURAL_REDUCTION,
+                HighDimensionalStrategy.RANDOM_EMBEDDING,
+            }
+        )
+        if requires_protected_dimensions:
+            return InputPerturbationSupport.CONDITIONAL
+    if name in _INPUT_PERTURBATION_CONDITIONAL_NAMES:
         return InputPerturbationSupport.CONDITIONAL
     return InputPerturbationSupport.UNVERIFIED
 
