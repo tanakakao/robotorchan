@@ -1,5 +1,7 @@
 """Initial model capability registry."""
 
+from dataclasses import replace
+
 from robotorchan.models.capabilities import (
     DocumentationLinks,
     HighDimensionalStrategy,
@@ -963,6 +965,18 @@ _register_family(
     strategy="non-GP tree ensemble surrogate",
     non_gp=True,
 )
+
+
+# Apply the Phase-2 audit state to bootstrap entries as well as family entries.
+# Runtime phases may promote individual models to SUPPORTED after E2E certification.
+for _name, _entry in tuple(MODEL_REGISTRY.items()):
+    MODEL_REGISTRY[_name] = replace(
+        _entry,
+        capabilities=replace(
+            _entry.capabilities,
+            input_perturbation=_input_perturbation_support(_name),
+        ),
+    )
 
 
 def get_model_registry_entry(model_name: str) -> ModelRegistryEntry:
