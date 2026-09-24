@@ -16,9 +16,7 @@ from robotorchan.objectives import (
 
 def test_protected_perturbation_set_preserves_categorical_dimension() -> None:
     perturbations = torch.tensor([[-0.03], [0.0], [0.03]], dtype=torch.double)
-    expanded = make_protected_perturbation_set(
-        perturbations, input_dim=2, protected_dims=[-1]
-    )
+    expanded = make_protected_perturbation_set(perturbations, input_dim=2, protected_dims=[-1])
     torch.testing.assert_close(expanded[:, 0], perturbations[:, 0])
     assert torch.count_nonzero(expanded[:, 1]) == 0
 
@@ -29,9 +27,7 @@ def test_protected_perturbation_set_rejects_out_of_range_dims(
 ) -> None:
     perturbations = torch.tensor([[0.0]], dtype=torch.double)
     with pytest.raises(ValueError, match="outside the input dimension range"):
-        make_protected_perturbation_set(
-            perturbations, input_dim=2, protected_dims=protected_dims
-        )
+        make_protected_perturbation_set(perturbations, input_dim=2, protected_dims=protected_dims)
 
 
 def test_mixed_single_task_gp_input_perturbation_e2e() -> None:
@@ -48,7 +44,7 @@ def test_mixed_single_task_gp_input_perturbation_e2e() -> None:
         ],
         dtype=dtype,
     )
-    train_Y = (torch.sin(train_X[:, :1] * 6.0) + 0.2 * train_X[:, 1:2])
+    train_Y = torch.sin(train_X[:, :1] * 6.0) + 0.2 * train_X[:, 1:2]
     perturbation_set = make_protected_perturbation_set(
         torch.tensor([[-0.03], [0.0], [0.03]], dtype=dtype),
         input_dim=2,
@@ -63,9 +59,7 @@ def test_mixed_single_task_gp_input_perturbation_e2e() -> None:
     fit_gpytorch_mll(model.make_mll())
 
     objective = make_input_perturbation_objective("expectation", n_w=3)
-    acquisition = qLogExpectedImprovement(
-        model=model, best_f=train_Y.max(), objective=objective
-    )
+    acquisition = qLogExpectedImprovement(model=model, best_f=train_Y.max(), objective=objective)
     candidate, value = optimize_acqf_mixed(
         acq_function=acquisition,
         bounds=torch.tensor([[0.1, 0.0], [0.9, 1.0]], dtype=dtype),
