@@ -455,3 +455,17 @@ bounds. The returned candidate is checked for finite values and an allowed categ
 This is optimizer evidence for the implemented standard Mixed Kronecker model. Expressive Mixed
 Kronecker variants retain their own focused tests, and Prototype/Hold robust variants are not
 promoted by this result.
+
+
+### Phase 17 Kronecker public API and capability audit
+
+The public Kronecker surface was re-audited against `models.__all__`, `MODEL_REGISTRY`, generated
+coverage, posterior sampling metadata, and fantasize metadata. Prototype/Hold models from the
+robust and fully Bayesian design phases remain internal or documentation-only and are not added to
+the public registry.
+
+A metadata gap was found for the two infinite-width ReLU Kronecker models: their exact-GP runtime
+surface supports Gaussian posterior sampling and fantasize, but they were missing from the explicit
+runtime capability sets used when the registry is assembled. Both standard and Mixed variants are
+now aligned with the Spectral Mixture Kronecker models, and a regression test guards posterior
+sampling, fantasize, and Gaussian sampling type for all four expressive Kronecker variants.
