@@ -23,6 +23,40 @@ Kronecker 系は long-format MultiTask の別名ではありません。block de
 
 Robust Relevance Pursuitなど既存likelihoodとの単純合成が成立しない候補についても直ちに除外せず、専用設計の規模と実務価値を比較して Implement / Prototype / Hold / Reject を判断します。
 
+### Kronecker extension responsibility
+
+すべての公開Kronecker variantで維持する基本契約は
+
+```text
+train_X: [..., n, d]
+train_Y: [..., n, m]
+task identity: train_Y の出力軸
+```
+
+です。基本共分散を
+
+\[
+K_f = K_{data} \otimes K_{task}
+\]
+
+と書くと、各extensionが変更する責務は次のように整理できます。
+
+| extension | 変更する要素 | task factor |
+|---|---|---|
+| Mixed | `K_data` のcontinuous/categorical構造 | 維持 |
+| PCA / PLS / Random Projection | `K_data` へ入る連続表現 | 維持 |
+| AE / VAE / joint encoder | `K_data` へ入る学習表現 | 維持 |
+| Nonstationary | `K_data` の定常性仮定 | 維持 |
+| Spectral Mixture | `K_data` を周波数混合kernelへ変更 | 維持 |
+| Infinite-width BNN | `K_data` をReLU NNGP kernelへ変更 | 維持 |
+
+task identityを`train_X`へ埋め込んでlong-formatへ変換することは、Kronecker extensionの
+実装方法ではありません。
+
+Heteroskedastic / Replicate Noise / RRP / Student-t / Contaminatedは観測モデル側にも
+専用設計が必要なため、現時点ではpublic Kronecker modelではありません。SAAS Kroneckerと
+DeepGP KroneckerもHoldであり、公開済みモデルとして扱いません。
+
 ## Independent outputs
 
 `ModelListGP` は複数の GP をまとめる構成です。複数目的 BO だから task covariance が必要とは限りません。目的ごとに独立 surrogate を置く場合に自然です。
