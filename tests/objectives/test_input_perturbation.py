@@ -8,7 +8,7 @@ from botorch.models.transforms.input import InputPerturbation
 from botorch.optim import optimize_acqf
 
 from robotorchan.models import SingleTaskGP
-from robotorchan.objectives.input_perturbation import make_input_perturbation_objective
+from robotorchan.objectives import make_input_perturbation_objective
 
 
 def test_single_task_gp_input_perturbation_e2e() -> None:
