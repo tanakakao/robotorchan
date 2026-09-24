@@ -116,6 +116,18 @@ def test_input_perturbation_audit_states_are_explicit() -> None:
         MODEL_REGISTRY["NGBoostSurrogate"].capabilities.input_perturbation
         is InputPerturbationSupport.CONDITIONAL
     )
+    for name in (
+        "ReducedGP",
+        "AutoEncoderGP",
+        "ALEBOGP",
+        "MapSaasMultiFidelityGP",
+        "HigherOrderGP",
+        "LatentKroneckerGP",
+    ):
+        assert (
+            MODEL_REGISTRY[name].capabilities.input_perturbation
+            is InputPerturbationSupport.CONDITIONAL
+        )
 
 
 def test_phase2_does_not_claim_runtime_certification() -> None:
