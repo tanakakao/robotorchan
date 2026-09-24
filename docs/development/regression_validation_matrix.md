@@ -370,7 +370,7 @@ product is not automatically a defect.
 | Fully Bayesian SAAS | Hold | Phase 9 found no stable block-design Pyro/sample-loading path; a custom implementation would own substantial fully Bayesian internals. |
 | Heteroskedastic | Prototype | Design documentation exists, but no public Kronecker implementation exists. Predicted noise must alter response observation covariance with an explicit task axis. |
 | Robust Relevance Pursuit | Prototype | Phase 12 selects observation-task sparse support as the target; a dedicated block-aware RRP operator is still required, so long-format or single-task mixin reuse is rejected. |
-| Student-t | Prototype | Meaningful heavy-tail extension, but it needs a block-design variational likelihood/posterior contract. |
+| Student-t | Prototype | Phase 13 confirms a non-conjugate block-design variational model is required; long-format reshaping and independent per-task variational GPs are rejected. |
 | Contaminated | Prototype | Requires an explicit choice between shared and task-specific contamination parameters. |
 | Replicate Noise | Prototype | Phase 11 validated aligned group × task variance-of-mean semantics; public implementation remains blocked on explicit fixed `G × m` Kronecker observation noise. |
 | DeepGP | Hold | A probabilistic hierarchy does not reduce to a data-kernel substitution; a dedicated block-design variational architecture would be disproportionately complex now. |
