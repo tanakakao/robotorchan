@@ -512,7 +512,7 @@ _ENSEMBLE_POSTERIOR_MODELS = frozenset(
 )
 
 
-_INPUT_PERTURBATION_SUPPORTED = frozenset({"MixedSingleTaskGP", "SingleTaskGP"})
+_INPUT_PERTURBATION_SUPPORTED = frozenset({"MixedSingleTaskGP", "MultiTaskGP", "SingleTaskGP"})
 
 _INPUT_PERTURBATION_SEPARATE = frozenset(
     {
