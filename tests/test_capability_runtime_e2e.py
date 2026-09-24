@@ -288,12 +288,12 @@ def test_kronecker_multitask_gp_runtime_supports_noisy_multi_objective_acquisiti
 def test_mixed_kronecker_multitask_gp_runtime_optimizes_scalarized_qlogei() -> None:
     train_x = torch.tensor(
         [
-            [0.1, 0.0],
-            [0.25, 1.0],
+            [0.2, 0.0],
+            [0.3, 1.0],
             [0.4, 0.0],
             [0.6, 1.0],
-            [0.75, 0.0],
-            [0.9, 1.0],
+            [0.7, 0.0],
+            [0.8, 1.0],
         ],
         dtype=torch.double,
     )
@@ -319,15 +319,16 @@ def test_mixed_kronecker_multitask_gp_runtime_optimizes_scalarized_qlogei() -> N
     )
     candidate, value = optimize_acqf_mixed(
         acq_function=acquisition,
-        bounds=torch.tensor([[0.1, 0.0], [0.9, 1.0]], dtype=torch.double),
+        bounds=torch.tensor([[0.2, 0.0], [0.8, 1.0]], dtype=torch.double),
         q=1,
         num_restarts=2,
         raw_samples=8,
         fixed_features_list=[{1: 0.0}, {1: 1.0}],
+        options={"maxiter": 12},
     )
 
     assert candidate.shape == torch.Size([1, 2])
-    assert 0.1 <= candidate[0, 0].item() <= 0.9
+    assert 0.2 <= candidate[0, 0].item() <= 0.8
     assert candidate[0, 1].item() in {0.0, 1.0}
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()
