@@ -469,3 +469,13 @@ surface supports Gaussian posterior sampling and fantasize, but they were missin
 runtime capability sets used when the registry is assembled. Both standard and Mixed variants are
 now aligned with the Spectral Mixture Kronecker models, and a regression test guards posterior
 sampling, fantasize, and Gaussian sampling type for all four expressive Kronecker variants.
+
+
+### Phase 18 Kronecker documentation and theory alignment
+
+The user-facing model guide and multitask theory now state the shared block-design contract and
+`K_data ⊗ K_task` decomposition explicitly. The documentation distinguishes data-factor extensions
+from observation-model and inference-architecture extensions, so Prototype/Hold work is not
+presented as a public runtime capability. Spectral Mixture and infinite-width BNN Kronecker variants
+are documented as data-factor replacements with a separate task covariance factor. Expressive Mixed
+Kronecker markup was also normalized.
