@@ -1,6 +1,9 @@
 """Risk and quality aggregations for robust Bayesian optimization."""
 
-from robotorchan.objectives.input_perturbation import make_input_perturbation_objective
+from robotorchan.objectives.input_perturbation import (
+    make_input_perturbation_objective,
+    make_protected_perturbation_set,
+)
 from robotorchan.objectives.risk import (
     CVaR,
     Expectation,
@@ -19,5 +22,6 @@ __all__ = [
     "VaR",
     "WorstCase",
     "make_input_perturbation_objective",
+    "make_protected_perturbation_set",
     "make_risk_measure",
 ]

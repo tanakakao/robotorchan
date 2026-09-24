@@ -86,7 +86,7 @@ def test_input_perturbation_audit_states_are_explicit() -> None:
     )
     assert (
         MODEL_REGISTRY["MixedSingleTaskGP"].capabilities.input_perturbation
-        is InputPerturbationSupport.CONDITIONAL
+        is InputPerturbationSupport.SUPPORTED
     )
     assert (
         MODEL_REGISTRY["KroneckerMultiTaskGP"].capabilities.input_perturbation
@@ -130,10 +130,10 @@ def test_input_perturbation_audit_states_are_explicit() -> None:
         )
 
 
-def test_phase3_certifies_only_single_task_gp() -> None:
+def test_phase4_certifies_single_task_and_mixed_single_task_gp() -> None:
     supported = {
         name
         for name, entry in MODEL_REGISTRY.items()
         if entry.capabilities.input_perturbation is InputPerturbationSupport.SUPPORTED
     }
-    assert supported == {"SingleTaskGP"}
+    assert supported == {"MixedSingleTaskGP", "SingleTaskGP"}

@@ -124,3 +124,12 @@ Phase 2 intentionally assigns no model to `supported`. Later phases must promote
 The certified risk-objective adapter currently exposes `expectation`, `worst_case`, `var`, and `cvar` through BoTorch risk-measure objectives. `mean_variance` and `sn_ratio` remain available as generic scenario reducers but are intentionally rejected by the input-perturbation adapter until their MC acquisition shape and optimization contracts are validated.
 
 This phase certifies continuous `SingleTaskGP` only. It does not promote Mixed, MultiTask, Kronecker, MultiFidelity, structured, reduced-space, uncertain-input, or non-GP families. Those retain the Phase-2 audit state until their protected-dimension and runtime contracts are tested.
+
+
+## Phase 4: MixedSingleTaskGP protected-dimension certification
+
+`MixedSingleTaskGP` is promoted to `supported` for decision-time input perturbation when categorical coordinates are protected. A public helper expands perturbations defined only over unprotected design coordinates into the full raw input space, with zero displacement on protected dimensions. Negative protected indices are normalized against the raw input dimension.
+
+The E2E certification uses BoTorch `InputPerturbation`, the scenario-risk objective, and `optimize_acqf_mixed`. Categorical values are enumerated through `fixed_features_list` rather than optimized as continuous coordinates. The test verifies that perturbation scenarios leave the categorical coordinate unchanged and that the optimized candidate retains a valid category.
+
+This certification is intentionally limited to `MixedSingleTaskGP`. Mixed multitask, multi-fidelity, reduced, structured, robust, and uncertain-input models remain conditional or separate until their additional structural coordinates and posterior contracts are validated.
