@@ -9,6 +9,7 @@
 - `acquisition-architecture.md`: acquisition の責務と custom 実装境界
 - `architecture.md`: BoTorch extension としての package / API 設計
 - `model_design_guidelines.md`: model 追加・変更時の設計原則
+- `kronecker_research_gates.md`: 未実装 Kronecker 拡張の統計・実装ゲート
 - `training_api.md`: `make_mll()` と training API の契約
 - `releasing.md`: version、GitHub Release、PyPI 公開手順
 
