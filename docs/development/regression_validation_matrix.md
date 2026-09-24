@@ -527,3 +527,44 @@ next phase should return to the regression library as a whole and audit whether 
 Kronecker work exposed any cross-family correctness, capability, registry, optimizer, or
 documentation gap. New Kronecker work remains appropriate when a concrete statistical use case and
 a maintainable BoTorch-compatible implementation seam are established.
+
+
+## Phase 20: regression library final audit
+
+Phase 20 re-audits the regression library after closing the dedicated Kronecker block. The current
+source of truth does not show a new broad correctness defect. Public API, registry, generated model
+coverage, MLL contracts, posterior/fantasy capability metadata, and the regression-only scope remain
+structurally aligned by executable contract tests.
+
+The audit did find stale cross-capability documentation. The cross-combination matrix still marked
+Nonstationary, Spectral Mixture, and infinite-width BNN as lacking Kronecker variants, and still
+marked MultiFidelity × high-dimensional and MultiFidelity × robust as intentionally unsupported.
+Those statements predate the current public implementations and have been corrected in the
+cross-combination audit.
+
+### Final regression status
+
+| Area | Phase 20 status | Remaining boundary |
+| --- | --- | --- |
+| Standard / Mixed exact GP | Mature | maintain representative acquisition and optimizer regression tests |
+| Kronecker | Mature implemented core | robust / fully Bayesian candidates reopen only through their explicit design gates |
+| High-dimensional | Broad public coverage | validate new reducers/encoders by workflow rather than class symmetry |
+| Robust regression | Broad public coverage | MultiTask/Mixed validation depth remains family-dependent |
+| Multi-fidelity × high-dimensional | Public and runtime validated | research-gated ensemble combinations remain optional future work |
+| Multi-fidelity × robust | Public and runtime validated | RRP × MF remains research-gated |
+| Expressive GP | Broad public coverage | DeepGP uses variational semantics and should not inherit exact-GP claims |
+| Probabilistic non-GP | Representative public coverage | preserve empirical-ensemble vs parametric-distribution uncertainty semantics |
+| Acquisition / optimizer integration | Representative E2E coverage | compatibility remains model/workflow specific, not a blanket family flag |
+| Classification / ordinal | Separate stream | intentionally outside this regression audit |
+
+### Disposition
+
+The planned regression/Kronecker program can close at Phase 20 without adding another model. This is
+not a claim that every Cartesian product is implemented or that future regression work is complete.
+The remaining items are either family-specific validation depth or explicitly research-gated model
+compositions. They should become new work only when a concrete workflow, statistical contract, or
+upstream BoTorch seam justifies them.
+
+If future audits discover a correctness defect, public capability mismatch, or a practically useful
+missing regression model, additional phases should be opened from the then-current `main` rather
+than treating this Phase 20 snapshot as permanently complete.
