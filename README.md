@@ -59,16 +59,22 @@ print(posterior.mean)
 
 目的に応じて次の順に進むと、モデル選択から理論、実行例まで辿れます。
 
-1. **モデルを選ぶ:** [モデル概要・使い所ガイド](docs/models.md)
-2. **理論を確認する:** [理論ガイド](docs/theory/README.md)
-3. **コードを動かす:** [Examples / Notebook一覧](examples/README.md)
+1. **環境を準備する:** [Installation](docs/getting_started/installation.md)
+2. **最小例を動かす:** [Quickstart](docs/getting_started/quickstart.md)
+3. **問題構造から候補を絞る:** [Model selection](docs/getting_started/model_selection.md)
+4. **モデル詳細を確認する:** [Model guides](docs/models/README.md)
+5. **理論を確認する:** [Theory](docs/theory/README.md)
+6. **獲得関数・探索を確認する:** [Optimization guides](docs/optimization/README.md)
+7. **コードを動かす:** [Examples / Notebook一覧](examples/README.md)
 
 より専門的な課題では次のドキュメントを参照してください。
 
 - **理論から理解する:** [`docs/theory/README.md`](docs/theory/README.md)
 - **獲得関数を理解する:** [`docs/theory/acquisition/README.md`](docs/theory/acquisition/README.md)
 - **獲得関数・探索を使う:** [`docs/optimization/README.md`](docs/optimization/README.md)
-- **どのモデルを選ぶか:** [`docs/models.md`](docs/models.md)
+- **最初のモデル選択:** [`docs/getting_started/model_selection.md`](docs/getting_started/model_selection.md)
+- **モデル全体索引:** [`docs/models.md`](docs/models.md)
+- **モデルファミリー詳細:** [`docs/models/README.md`](docs/models/README.md)
 - **高次元モデルを選ぶ:** [`docs/models/high_dimensional_model_selection.md`](docs/models/high_dimensional_model_selection.md)
 - **Robust / Noise / Uncertaintyを選ぶ:** [`docs/models/robust_noise.md`](docs/models/robust_noise.md)
 - **高次元出力モデルを選ぶ:** [`docs/models/high_dimensional_outputs.md`](docs/models/high_dimensional_outputs.md)

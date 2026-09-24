@@ -4,7 +4,9 @@
 
 中心となるサンプルは `examples/notebooks/` 以下の Jupyter Notebook です。モデルの選び方は [`docs/models.md`](../docs/models.md)、具体的な使い方は本ディレクトリ、実装の正しさは `tests/` を参照してください。
 
-ドキュメント全体では、[プロジェクトREADME](../README.md) → [モデル選択](../docs/models.md) → [理論確認](../docs/theory/README.md) → **実行例（現在地）**、という導線を想定しています。モデルの背景を確認したい場合は対応する理論章へ戻り、実装詳細が必要な場合は [architecture](../docs/development/architecture.md) を参照してください。
+ドキュメント全体では、[プロジェクトREADME](../README.md) → [Getting Started](../docs/README.md) →
+[モデル選択](../docs/getting_started/model_selection.md) → [Model guides](../docs/models/README.md) →
+[理論確認](../docs/theory/README.md) → **実行例（現在地）**、という導線を想定しています。モデルの背景を確認したい場合は対応する理論章へ戻り、実装詳細が必要な場合は [architecture](../docs/development/architecture.md) を参照してください。
 
 ## インストール
 
@@ -100,7 +102,7 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 
 再現可能な性能比較・探索戦略比較は `benchmarks/` に配置します。Notebook は利用方法や結果の読み方を説明する役割とし、benchmark本体のロジックをNotebookへ重複実装しません。高次元入力モデル・高次元MultiTask・acquisition optimization・sequential BO・batch BO の実行コードは `benchmarks/`、その契約テストは `tests/benchmarks/` に集約します。
 
-高次元MultiTaskの実行方法は [`docs/models/models/high_dimensional_multitask.md`](../docs/models/high_dimensional_multitask.md)、モデル選択は [`docs/models/models/high_dimensional_model_selection.md`](../docs/models/high_dimensional_model_selection.md) を参照してください。
+高次元MultiTaskの実行方法は [`docs/models/high_dimensional_multitask.md`](../docs/models/high_dimensional_multitask.md)、モデル選択は [`docs/models/high_dimensional_model_selection.md`](../docs/models/high_dimensional_model_selection.md) を参照してください。
 
 ## Notebook の一括実行
 
