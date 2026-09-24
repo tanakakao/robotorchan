@@ -461,6 +461,8 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         "RandomProjectionGP",
         "SpectralMixtureKroneckerMultiTaskGP",
         "MixedSpectralMixtureKroneckerMultiTaskGP",
+        "InfiniteWidthBNNKroneckerMultiTaskGP",
+        "MixedInfiniteWidthBNNKroneckerMultiTaskGP",
     }
 )
 
@@ -483,6 +485,8 @@ _FANTASIZE_MODELS = frozenset(
         "RandomProjectionGP",
         "SpectralMixtureKroneckerMultiTaskGP",
         "MixedSpectralMixtureKroneckerMultiTaskGP",
+        "InfiniteWidthBNNKroneckerMultiTaskGP",
+        "MixedInfiniteWidthBNNKroneckerMultiTaskGP",
     }
 )
 
