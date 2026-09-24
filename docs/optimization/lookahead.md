@@ -46,7 +46,7 @@ substantially higher optimization cost.
 
 ## Scope
 
-Phase 8 validates the native BoTorch lookahead path rather than adding a robotorchan-specific
+robotorchan validates the native BoTorch lookahead path rather than adding a robotorchan-specific
 lookahead abstraction. Multi-objective and multi-fidelity lookahead variants belong to their
 respective dedicated integration paths.
 
