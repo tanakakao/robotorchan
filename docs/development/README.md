@@ -1,20 +1,46 @@
 # Development documentation
 
-このディレクトリは robotorchan の**現在も有効な開発契約**をまとめます。Phase進行記録、closeout、解消済み feasibility audit は恒久ドキュメントとして保存しません。
+このディレクトリでは、robotorchan の現在も有効な開発契約を管理します。
 
-- [Acquisition architecture](acquisition-architecture.md): BoTorch-first acquisition ownership、custom実装境界、classification延期方針\n- [Architecture](architecture.md): BoTorch extension としての責務、wrapper policy、package/API設計
-- [Model design guidelines](model_design_guidelines.md): model追加・変更時の設計原則、Mixed/robust semantics、CI preflight
-- [Training API](training_api.md): `make_mll()` と joint neural `training_loss()` の契約
-- [Releasing](releasing.md): version、GitHub Release、PyPI Trusted Publishing
+## Current contracts
 
-## 保存基準
+現在仕様の source of truth として扱う恒久文書は次のとおりです。
 
-開発文書として残すのは、今後の変更でも判断基準になる設計原則・公開契約・運用手順です。特定Phaseの進捗、実装前のgap分析、すでに解消されたfeasibility判断、closeout時点の件数スナップショットは削除します。
+- `acquisition-architecture.md`: acquisition の責務と custom 実装境界
+- `architecture.md`: BoTorch extension としての package / API 設計
+- `model_design_guidelines.md`: model 追加・変更時の設計原則
+- `training_api.md`: `make_mll()` と training API の契約
+- `releasing.md`: version、GitHub Release、PyPI 公開手順
 
-過去の実装経緯が必要な場合はGit履歴とPull Requestを参照し、現在仕様の文書へ履歴を混在させません。
+## Temporary design records
 
-## 変更時の原則
+audit、prototype、feasibility、gap、個別 model design の文書は恒久仕様ではありません。
+現在も必要な判断は、対応する model guide、theory、または上記の恒久文書へ統合します。
+統合後の一時文書は削除し、実装経緯は Git 履歴と Pull Request に残します。
 
-API変更時に旧alias、deprecated wrapper、互換関数、互換Markdownを追加して残しません。実装、呼び出し側、テスト、Notebook、ドキュメントを同じ現行仕様へ完全移行します。
+次の情報は恒久文書として新規追加しません。
 
-public model のドキュメントcoverageは [model_coverage.json](../model_coverage.json) と対応テストを正とします。
+- Phase ごとの進行記録や closeout
+- 特定時点の実装件数や gap のスナップショット
+- 解消済み feasibility audit
+- 実装前 prototype の結果だけを記録した文書
+- 現行コードと重複する public seam / runtime contract の確認記録
+
+## Documentation ownership
+
+公開モデルの利用方法は `docs/models/`、理論的背景は `docs/theory/`、
+最適化手順は `docs/optimization/` を正とします。
+
+public model の documentation coverage は
+`docs/model_coverage.json` と対応する coverage test を正とします。
+
+利用者に必要な現行仕様を development 文書だけに置かないことを原則とします。
+このディレクトリには、開発者が継続的に守る必要がある契約だけを残します。
+
+## Change policy
+
+API 変更時に旧 alias、deprecated wrapper、互換関数、互換 Markdown を残しません。
+実装、呼び出し側、テスト、Notebook、ドキュメントを同じ現行仕様へ完全移行します。
+
+過去の実装経緯が必要な場合は Git 履歴と Pull Request を参照し、
+現在仕様の文書へ履歴を混在させません。
