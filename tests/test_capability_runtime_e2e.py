@@ -171,7 +171,6 @@ def test_kronecker_multitask_gp_runtime_supports_scalarized_mc_acquisition() -> 
     assert torch.isfinite(value).all()
 
 
-
 def test_kronecker_multitask_gp_runtime_supports_scalarized_qucb() -> None:
     train_x = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
     train_y = torch.cat(
