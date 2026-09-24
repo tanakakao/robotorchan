@@ -72,13 +72,13 @@ task identityを入力へ追加せず、task covarianceはKronecker multi-task�
 
 ### Mixed Spectral Mixture × Kronecker multi-task
 
-\`MixedSpectralMixtureKroneckerMultiTaskGP\` keeps raw block-design inputs and applies the
+`MixedSpectralMixtureKroneckerMultiTaskGP` keeps raw block-design inputs and applies the
 Spectral Mixture kernel only to continuous design dimensions. Categorical dimensions use the
 native mixed categorical covariance and its continuous-categorical interaction. Task identity is
 not inserted into X; the task covariance remains the independent Kronecker task factor.
 
-Negative \`cat_dims\` are normalized in raw-input coordinates. Candidate optimization should use
-\`optimize_acqf_mixed\` with explicit categorical fixed-feature configurations.
+Negative `cat_dims` are normalized in raw-input coordinates. Candidate optimization should use
+`optimize_acqf_mixed` with explicit categorical fixed-feature configurations.
 
 
 ## Infinite-width BNN × Kronecker multi-task
