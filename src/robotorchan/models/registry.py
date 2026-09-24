@@ -4,6 +4,7 @@ from robotorchan.models.capabilities import (
     DocumentationLinks,
     HighDimensionalStrategy,
     InferenceType,
+    InputPerturbationSupport,
     InputType,
     ModelCapabilities,
     ModelRegistryEntry,
@@ -509,6 +510,58 @@ _ENSEMBLE_POSTERIOR_MODELS = frozenset(
 )
 
 
+_INPUT_PERTURBATION_SEPARATE = frozenset(
+    {
+        "UncertainInputSingleTaskGP",
+        "MixedUncertainInputSingleTaskGP",
+        "UncertainCategoricalSingleTaskGP",
+    }
+)
+_INPUT_PERTURBATION_UNSUPPORTED = frozenset(
+    {
+        "PairwiseGP",
+        "RandomForestSurrogate",
+        "ExtraTreesSurrogate",
+        "GradientBoostingSurrogate",
+        "HistGradientBoostingSurrogate",
+    }
+)
+_INPUT_PERTURBATION_CONDITIONAL = frozenset(
+    (_MIXED_MODELS | _MULTITASK_MODELS)
+    | {
+        name
+        for name, entry in MODEL_REGISTRY.items()
+        if entry.capabilities.multi_fidelity
+        or entry.capabilities.structured_output
+        or entry.capabilities.high_dimensional
+        in {
+            HighDimensionalStrategy.REDUCTION,
+            HighDimensionalStrategy.NEURAL_REDUCTION,
+            HighDimensionalStrategy.RANDOM_EMBEDDING,
+        }
+    }
+    | {
+        "NGBoostSurrogate",
+        "ModelListGP",
+        "HierarchicalConditionalKernelGP",
+        "LCEAGP",
+        "LCEMGP",
+        "SACGP",
+    }
+)
+
+
+def _input_perturbation_support(name: str) -> InputPerturbationSupport:
+    """Return the Phase-2 audit state; runtime certification happens later."""
+    if name in _INPUT_PERTURBATION_SEPARATE:
+        return InputPerturbationSupport.SEPARATE_MECHANISM
+    if name in _INPUT_PERTURBATION_UNSUPPORTED:
+        return InputPerturbationSupport.UNSUPPORTED
+    if name in _INPUT_PERTURBATION_CONDITIONAL:
+        return InputPerturbationSupport.CONDITIONAL
+    return InputPerturbationSupport.UNVERIFIED
+
+
 def _register_family(
     names: tuple[str, ...],
     *,
@@ -559,6 +612,7 @@ def _register_family(
                         )
                     ),
                     supports_fantasize=name in _FANTASIZE_MODELS,
+                    input_perturbation=_input_perturbation_support(name),
                 ),
                 _docs(guide, theory, notebook),
                 strategy,
