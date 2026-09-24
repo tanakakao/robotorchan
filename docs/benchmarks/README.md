@@ -6,6 +6,13 @@ robotorchan のモデル・探索戦略を、再現可能な条件で比較す�
 
 - [Predictive benchmark](expressive_predictive.md)
 
+## Non-GP surrogates
+
+`benchmarks/non_gp_surrogates.py` provides a deterministic predictive diagnostic for the
+implemented empirical non-GP surrogates. It is an executable benchmark rather than a permanent
+performance ranking: raw ensemble spread is not treated as calibrated uncertainty without a
+separate calibration study.
+
 ## High-dimensional Bayesian optimization
 
 - [Sequential BO](high_dimensional/sequential_bo.md)
@@ -16,3 +23,9 @@ robotorchan のモデル・探索戦略を、再現可能な条件で比較す�
 ## 文書の責務
 
 `docs/benchmarks/` は実験条件と結果の解釈契約を置く場所です。モデル理論、APIリファレンス、開発時の Phase 記録はここへ混在させません。benchmark script の一時的な実装メモではなく、再現に必要な恒久条件を記録します。
+
+## Capability benchmark
+
+`robotorchan.benchmarks.capability` is a library-level structural benchmark for registry filtering
+and recommendation consistency. It is intentionally separate from predictive or BO-performance
+benchmarks: counts of compatible models or recommendations are not measures of model quality.
