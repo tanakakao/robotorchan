@@ -413,6 +413,49 @@ K_X\otimes K_T
 
 Kronecker構造を利用すると、巨大な `(nm) × (nm)` covariance matrixを常に密行列として直接扱うより、線形代数上の構造を利用できる場合があります。
 
+
+### 7.15.1 Kronecker extensionで何を変更するか
+
+robotorchanのKronecker extensionでは、block designとtask covarianceを固定したまま、
+主にdata covariance factorを拡張します。基準となるlatent covarianceは
+
+\[
+K_f = K_{data} \otimes K_{task}
+\]
+
+です。
+
+Spectral Mixture variantでは
+
+\[
+K_{data}=K_{SM}
+\]
+
+Infinite-width BNN variantでは
+
+\[
+K_{data}=K_{NNGP}
+\]
+
+とし、task covariance factorは別に維持します。Mixed variantでもcategorical covarianceは
+data factor側の構造であり、task identityとは異なります。
+
+この分離は重要です。task indexを入力特徴へ追加してlong-format modelへ変形すると、
+block-design Kronecker modelとは異なる統計モデルになります。同様に、入力依存noiseや
+heavy-tailed likelihoodは単なるdata kernel交換ではありません。latent covariance
+`K_data ⊗ K_task` に加えてobservation modelを定義する必要があります。
+
+したがって、robotorchanではKronecker extensionを次の3種類に区別します。
+
+1. **data-factor extension**: Mixed、reduction、Nonstationary、Spectral Mixture、NNGP。
+2. **observation-model extension**: heteroskedastic、replicate noise、RRP、Student-t、
+   contaminated。専用のblock-design observation semanticsが必要です。
+3. **inference-architecture extension**: SAAS fully BayesianやDeepGP。kernel交換だけでは
+   成立せず、Pyro/variational inferenceのownershipまで含む設計が必要です。
+
+この区別により、「別のMultiTask版が存在する」ことだけを理由にKronecker版を追加することを
+避けます。
+
 ---
 
 ## 7.16 MultiTaskGPとKroneckerMultiTaskGPの違い
