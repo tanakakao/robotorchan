@@ -27,10 +27,10 @@ while remaining unvalidated for a particular acquisition or optimizer.
 | Robust relevance pursuit | yes | yes | yes | no | supported |
 | Heteroskedastic | yes | yes | yes | no | supported |
 | Student-t / contaminated | yes | yes | yes | no | supported |
-| Nonstationary | yes | yes | yes | no | supported |
+| Nonstationary | yes | yes | yes | yes | supported |
 | DeepGP | yes | yes | yes | no | supported |
-| Infinite-width BNN | yes | yes | yes | no | supported |
-| Spectral mixture | yes | yes | yes | no | supported |
+| Infinite-width BNN | yes | yes | yes | yes | supported |
+| Spectral mixture | yes | yes | yes | yes | supported |
 
 Kronecker variants require aligned multi-output observations and are not aliases for long-format
 MultiTask models. Their absence from a family is not automatically a missing implementation.
@@ -49,8 +49,8 @@ The expressive Mixed × MultiTask gap recorded by the earlier audit has been clo
 | Mixed × robust | Supported | Multiple public robust mixed models exist; runtime depth varies by robust family. |
 | MultiTask × high-dimensional | Supported | Reduced, neural-reduced, SAAS, and expressive multitask implementations exist; validation depth varies by family. |
 | MultiTask × robust | Supported | Relevance-pursuit, heteroskedastic, Student-t/contaminated, and nonstationary multitask implementations exist; runtime depth varies. |
-| MultiFidelity × high-dimensional | Intentionally unsupported | No public combined model is declared; do not infer support from independent capabilities. |
-| MultiFidelity × robust | Intentionally unsupported | No public combined model is declared; do not infer support from independent capabilities. |
+| MultiFidelity × high-dimensional | Runtime validated | PCA, PLS, Random Projection, MAP-SAAS, and additive MAP-SAAS multi-fidelity paths are public; representative native MF-KG evidence exists. |
+| MultiFidelity × robust | Runtime validated | Replicate-noise and heteroskedastic multi-fidelity models are public and have representative native MF-KG evidence. |
 | multi-output × acquisition | Runtime validated | Kronecker MultiTask GP has scalarized MC and log-EHVI/log-NEHVI runtime coverage. Broader model-family coverage is acquisition-specific. |
 | ensemble × acquisition | Runtime validated in representative path | Tree empirical ensemble posterior is exercised with `IndexSampler` and MC acquisition. Gaussian ensemble semantics remain distinct. |
 | Reduced GP × fantasy | Runtime validated | Continuous reduced models have qKG runtime coverage. |
@@ -70,8 +70,9 @@ The following are validation gaps, not known correctness defects:
   exhaustive across reduction, neural reduction, SAAS, and expressive families.
 - Ensemble validation currently proves a representative empirical-tree MC path, not arbitrary
   Active Learning acquisition semantics.
-- Multi-fidelity combined with high-dimensional or robust modeling is not part of the current
-  public model surface.
+- Multi-fidelity × high-dimensional and MultiFidelity × robust now have public representative
+  implementations. Research-gated combinations such as ensemble MAP-SAAS MF or RRP × MF remain
+  intentionally outside the public surface.
 
 These gaps should be prioritized by workflow importance rather than represented as model-wide
 booleans. The regression-specific validation plan and acceptance criteria are maintained in
