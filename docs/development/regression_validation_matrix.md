@@ -479,3 +479,51 @@ from observation-model and inference-architecture extensions, so Prototype/Hold 
 presented as a public runtime capability. Spectral Mixture and infinite-width BNN Kronecker variants
 are documented as data-factor replacements with a separate task covariance factor. Expressive Mixed
 Kronecker markup was also normalized.
+
+
+### Phase 19 final Kronecker audit
+
+The Kronecker development block is closed with the following source-of-truth status. This audit does
+not promote design prototypes to public models and does not infer support from similarly named
+long-format MultiTask models.
+
+| Area | Final status | Runtime / design evidence |
+| --- | --- | --- |
+| Standard block-design GP | Implemented | public, registered, sampled, scalarized MC and multi-objective acquisition coverage |
+| Mixed block-design GP | Implemented | raw categorical coordinates, mixed covariance, `optimize_acqf_mixed` E2E |
+| Deterministic reduction | Implemented | Reduced, PCA, PLS, Random Projection Kronecker families |
+| Neural reduction | Implemented | AE/VAE, supervised, hybrid, and joint block-design variants |
+| Nonstationary covariance | Implemented | Gibbs data covariance with separate task covariance |
+| Spectral Mixture covariance | Implemented | continuous and Mixed public variants with focused optimizer coverage |
+| Infinite-width BNN covariance | Implemented | continuous and Mixed public variants; sampling/fantasize metadata audited |
+| Heteroskedastic observation model | Prototype | internal block-design noise prototype; response observation covariance integration remains the blocker |
+| Replicate-noise observation model | Prototype | aligned group × task variance semantics designed; explicit fixed `G × m` observation noise remains the blocker |
+| Robust Relevance Pursuit | Prototype | observation-task sparse support selected; dedicated block-aware operator required |
+| Student-t likelihood | Prototype | shared block-design variational Kronecker latent architecture required |
+| Contaminated likelihood | Prototype | shares the same future variational Kronecker latent requirement as Student-t |
+| Fully Bayesian SAAS | Hold | no maintainable BoTorch-first block-design Pyro/sample-loading seam |
+| DeepGP | Hold | dedicated probabilistic block-design hierarchy is not justified by current maintenance cost |
+
+#### Final invariants
+
+All implemented Kronecker models retain the block-design contract
+`train_X[..., n, d]` / `train_Y[..., n, m]`; task identity remains the output axis. Data-factor
+extensions preserve the conceptual decomposition `K_data ⊗ K_task`. Mixed categorical dimensions
+belong to the data factor and are never reused as task identity.
+
+Public capability claims are constrained by executable evidence. The base family has posterior
+sampling, scalarized qLogEI/qUCB, qLogEHVI/qLogNEHVI, continuous optimization, and Mixed optimizer
+coverage. Expressive Spectral Mixture and infinite-width BNN variants have focused runtime tests;
+their registry sampling/fantasize metadata was aligned in Phase 17.
+
+No public SAAS, heteroskedastic, replicate-noise, RRP, Student-t, contaminated, or DeepGP Kronecker
+class is claimed by this audit. Reopening those families requires satisfying their design-specific
+runtime gates rather than reusing long-format implementations or flattening the task axis.
+
+#### Phase 19 disposition
+
+There is no remaining Kronecker gap that justifies another model solely for family symmetry. The
+next phase should return to the regression library as a whole and audit whether the completed
+Kronecker work exposed any cross-family correctness, capability, registry, optimizer, or
+documentation gap. New Kronecker work remains appropriate when a concrete statistical use case and
+a maintainable BoTorch-compatible implementation seam are established.
