@@ -1,6 +1,7 @@
 # Model guides
 
-このディレクトリは、robotorchan の public model を問題設定・モデルファミリー単位で説明する利用者向けガイドです。
+このディレクトリは、robotorchan の public model を問題設定・モデルファミリー単位で説明する利用者向け詳細ガイドです。
+`docs/models.md` は全体索引と共通APIの入口、このディレクトリは family 固有の用途・仮定・制約・variant 差分の source of truth とします。
 
 [Getting Started のモデル選択](../getting_started/model_selection.md) で候補を絞り、このディレクトリで個別モデルの違いを確認し、[Theory](../theory/README.md) で統計的仮定を確認してください。
 
