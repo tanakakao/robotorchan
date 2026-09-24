@@ -512,6 +512,8 @@ _ENSEMBLE_POSTERIOR_MODELS = frozenset(
 )
 
 
+_INPUT_PERTURBATION_SUPPORTED = frozenset({"SingleTaskGP"})
+
 _INPUT_PERTURBATION_SEPARATE = frozenset(
     {
         "UncertainInputSingleTaskGP",
@@ -542,6 +544,8 @@ _INPUT_PERTURBATION_CONDITIONAL_NAMES = frozenset(
 
 def _input_perturbation_support(name: str) -> InputPerturbationSupport:
     """Return the Phase-2 audit state; runtime certification happens later."""
+    if name in _INPUT_PERTURBATION_SUPPORTED:
+        return InputPerturbationSupport.SUPPORTED
     if name in _INPUT_PERTURBATION_SEPARATE:
         return InputPerturbationSupport.SEPARATE_MECHANISM
     if name in _INPUT_PERTURBATION_UNSUPPORTED:
