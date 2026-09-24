@@ -65,8 +65,8 @@ robotorchan.benchmarks.capability は予測精度 benchmark ではなく、capab
 ## Runtime validation
 
 Capability metadata describes structural support. It is not a model-wide claim that every
-compatible workflow has been executed end to end. Representative executable coverage is tracked
-separately in [Runtime end-to-end validation matrix](development/runtime-e2e-matrix.md).
+compatible workflow has been executed end to end. Representative executable coverage is tracked by executable tests and benchmark harnesses rather
+than a point-in-time development matrix.
 
 When extending the library, keep these layers distinct:
 

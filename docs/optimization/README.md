@@ -13,7 +13,7 @@ surrogate model とは独立した candidate search / optimization の利用者�
 - [Expected Predictive Information Gain](epig.md): 予測指向の回帰Active Learning
 - [BoundaryVariance](boundary-variance.md): robotorchan固有の境界探索ヒューリスティック
 - [Acquisition integration status](acquisition-status.md): 対応範囲と制約
-- [Mixed one-shot optimization](../mixed-one-shot-optimization.md): qKG / qMFKG のmixed候補最適化境界
+- [Mixed one-shot optimization](mixed-one-shot-optimization.md): qKG / qMFKG のmixed候補最適化境界
 - [High-dimensional search](high_dimensional_search.md): Original space、Random Search、latent search、REMBO、HeSBO、ALEBO、TuRBO、BAxUS
 - [TuRBO](turbo.md): stateful trust-region strategy の詳細
 

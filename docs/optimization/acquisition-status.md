@@ -30,7 +30,7 @@ cross-category fantasy decision points, and correctness-first candidate generati
 choose categories independently from the actual candidate. Ordinary `optimize_acqf_mixed`
 remains invalid for this one-shot case because it fixes categorical features across the complete
 augmented batch. Larger `q` and assignment spaces beyond the configured enumeration limit are
-explicitly unsupported. See [Mixed one-shot optimization](../mixed-one-shot-optimization.md).
+explicitly unsupported. See [Mixed one-shot optimization](mixed-one-shot-optimization.md).
 
 These restrictions are deliberate: unsupported posterior shapes should fail clearly rather than
 silently reducing the wrong dimension.
