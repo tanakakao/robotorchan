@@ -19,6 +19,7 @@
 | [Hierarchical / Contextual](hierarchical_contextual.md) | conditional space、heterogeneous task、context |
 | [Preference](preference.md) | pairwise preference learning |
 | [Expressive GP](expressive.md) | DKL、DeepGP、NNGP、Spectral Mixture |
+| [Non-GP surrogates](non_gp.md) | Random Forest、Extra Trees、Gradient Boosting、NGBoost |
 
 ## 共通規約
 
