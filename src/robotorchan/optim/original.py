@@ -26,8 +26,8 @@ class OriginalSpaceStrategy(SearchStrategy):
         raw_samples: Number of raw samples used to initialize the restarts.
         options: Optional optimizer options forwarded to ``optimize_acqf``.
         sequential: Whether to optimize a q-batch sequentially.
-        constraints: Optional linear candidate-space constraints using the
-            BoTorch optimizer tuple format.
+        constraints: Optional candidate-space constraints using BoTorch-native
+            optimizer contracts.
         fixed_features: Optional feature values fixed during optimization. This is
             suitable for target-fidelity optimization without changing the public
             candidate coordinates.
@@ -83,6 +83,11 @@ class OriginalSpaceStrategy(SearchStrategy):
             equality_constraints=(
                 list(self.constraints.equality_constraints)
                 if self.constraints.equality_constraints
+                else None
+            ),
+            nonlinear_inequality_constraints=(
+                list(self.constraints.nonlinear_inequality_constraints)
+                if self.constraints.nonlinear_inequality_constraints
                 else None
             ),
         )
