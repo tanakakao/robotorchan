@@ -10,6 +10,10 @@ from botorch.optim import optimize_acqf
 from torch import Tensor
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
+from robotorchan.optim.constraints import (
+    CandidateConstraints,
+    reject_unmapped_candidate_constraints,
+)
 
 
 def _project_to_original_box(Z: Tensor, embedding: Tensor, bounds: Tensor) -> tuple[Tensor, Tensor]:
@@ -69,8 +73,13 @@ class REMBOStrategy(SearchStrategy):
         raw_samples: int = 512,
         options: dict[str, Any] | None = None,
         sequential: bool = False,
+        constraints: CandidateConstraints | None = None,
     ) -> None:
         super().__init__(bounds)
+        reject_unmapped_candidate_constraints(
+            constraints,
+            strategy_name=self.__class__.__name__,
+        )
         if embedding_dim < 1 or embedding_dim > self.input_dim:
             raise ValueError("embedding_dim must be between 1 and input_dim.")
         if embedded_bound <= 0:
