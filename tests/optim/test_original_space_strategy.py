@@ -295,3 +295,51 @@ def test_intrapoint_nonlinear_constraint_preserves_autograd() -> None:
 
     assert x.grad is not None
     assert torch.allclose(x.grad, -2.0 * x.detach())
+
+def _minimum_pair_distance_constraint(X: torch.Tensor) -> torch.Tensor:
+    return (X[0] - X[1]).square().sum() - X.new_tensor(0.25)
+
+
+def test_original_space_strategy_optimizes_interpoint_nonlinear_constraint() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    initial_conditions = torch.tensor(
+        [
+            [[0.1, 0.1], [0.9, 0.9]],
+            [[0.1, 0.2], [0.8, 0.9]],
+            [[0.2, 0.1], [0.9, 0.8]],
+            [[0.2, 0.2], [0.8, 0.8]],
+        ],
+        dtype=torch.double,
+    )
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((_minimum_pair_distance_constraint, False),),
+    )
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=4,
+        raw_samples=32,
+        constraints=constraints,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    result = strategy.optimize(_LinearCandidateAcquisition(), q=2)  # type: ignore[arg-type]
+
+    assert result.candidates.shape == torch.Size([2, 2])
+    assert _minimum_pair_distance_constraint(result.candidates) >= -1e-6
+
+
+def test_interpoint_nonlinear_constraint_preserves_qbatch_autograd() -> None:
+    X = torch.tensor(
+        [[0.1, 0.2], [0.8, 0.9]],
+        dtype=torch.double,
+        requires_grad=True,
+    )
+
+    value = _minimum_pair_distance_constraint(X)
+    value.backward()
+
+    assert X.grad is not None
+    assert X.grad.shape == X.shape
+    assert torch.allclose(X.grad[0], 2.0 * (X[0] - X[1]).detach())
+    assert torch.allclose(X.grad[1], -X.grad[0])
+
