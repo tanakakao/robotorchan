@@ -226,9 +226,14 @@ def test_original_space_strategy_forwards_nonlinear_constraints(monkeypatch) -> 
     def constraint(x: torch.Tensor) -> torch.Tensor:
         return 0.25 - x.square().sum()
 
+    initial_conditions = torch.tensor([[[0.1, 0.1]]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((constraint, True),),
+    )
     strategy = OriginalSpaceStrategy(
         bounds,
-        constraints=CandidateConstraints(nonlinear_inequality_constraints=((constraint, True),)),
+        constraints=constraints,
+        batch_initial_conditions=initial_conditions,
     )
     captured = {}
 
@@ -240,3 +245,5 @@ def test_original_space_strategy_forwards_nonlinear_constraints(monkeypatch) -> 
     strategy.optimize(None)  # type: ignore[arg-type]
 
     assert captured["nonlinear_inequality_constraints"] == [(constraint, True)]
+    assert captured["batch_initial_conditions"] is initial_conditions
+

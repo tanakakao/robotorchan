@@ -31,6 +31,9 @@ class OriginalSpaceStrategy(SearchStrategy):
         fixed_features: Optional feature values fixed during optimization. This is
             suitable for target-fidelity optimization without changing the public
             candidate coordinates.
+        batch_initial_conditions: Optional BoTorch initial conditions with shape
+            ``[num_restarts, q, d]``. BoTorch requires feasible initial conditions
+            when nonlinear inequality constraints are used.
     """
 
     def __init__(
@@ -43,6 +46,7 @@ class OriginalSpaceStrategy(SearchStrategy):
         sequential: bool = False,
         constraints: CandidateConstraints | None = None,
         fixed_features: dict[int, float] | None = None,
+        batch_initial_conditions: Tensor | None = None,
     ) -> None:
         super().__init__(bounds)
         if num_restarts < 1:
@@ -55,6 +59,7 @@ class OriginalSpaceStrategy(SearchStrategy):
         self.sequential = sequential
         self.constraints = constraints or CandidateConstraints()
         self.fixed_features = None if fixed_features is None else dict(fixed_features)
+        self.batch_initial_conditions = batch_initial_conditions
 
     def optimize(
         self,
@@ -65,6 +70,11 @@ class OriginalSpaceStrategy(SearchStrategy):
         """Optimize ``acq_function`` within the configured original-space bounds."""
         if q < 1:
             raise ValueError("q must be at least 1.")
+        if self.constraints.has_nonlinear_constraints and self.batch_initial_conditions is None:
+            raise ValueError(
+                "Nonlinear candidate constraints require feasible "
+                "batch_initial_conditions."
+            )
 
         candidates, acquisition_value = optimize_acqf(
             acq_function=acq_function,
@@ -85,6 +95,7 @@ class OriginalSpaceStrategy(SearchStrategy):
                 if self.constraints.equality_constraints
                 else None
             ),
+            batch_initial_conditions=self.batch_initial_conditions,
             nonlinear_inequality_constraints=(
                 list(self.constraints.nonlinear_inequality_constraints)
                 if self.constraints.nonlinear_inequality_constraints
