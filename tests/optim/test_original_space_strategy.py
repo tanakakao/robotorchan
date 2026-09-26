@@ -294,4 +294,3 @@ def test_intrapoint_nonlinear_constraint_preserves_autograd() -> None:
 
     assert x.grad is not None
     assert torch.allclose(x.grad, -2.0 * x.detach())
-
