@@ -189,3 +189,32 @@ def test_original_space_strategy_satisfies_qbatch_intrapoint_constraint() -> Non
 
     assert result.candidates.shape == torch.Size([2, 2])
     assert torch.all(result.candidates.sum(dim=-1) <= 0.8 + 1e-6)
+
+
+def test_original_space_strategy_combines_fixed_fidelity_and_constraint() -> None:
+    train_X, train_Y = _training_data()
+    model = SingleTaskGP(train_X, train_Y)
+    acquisition = PosteriorMean(model)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([0]),
+                torch.tensor([-1.0], dtype=torch.double),
+                -0.6,
+            ),
+        ),
+    )
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=4,
+        raw_samples=64,
+        constraints=constraints,
+        fixed_features={1: 1.0},
+    )
+
+    result = strategy.optimize(acquisition)
+
+    assert result.candidates.shape == torch.Size([1, 2])
+    assert result.candidates[0, 0] <= 0.6 + 1e-6
+    assert result.candidates[0, 1] == 1.0

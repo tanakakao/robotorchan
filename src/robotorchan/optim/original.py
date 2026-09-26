@@ -28,6 +28,9 @@ class OriginalSpaceStrategy(SearchStrategy):
         sequential: Whether to optimize a q-batch sequentially.
         constraints: Optional linear candidate-space constraints using the
             BoTorch optimizer tuple format.
+        fixed_features: Optional feature values fixed during optimization. This is
+            suitable for target-fidelity optimization without changing the public
+            candidate coordinates.
     """
 
     def __init__(
@@ -39,6 +42,7 @@ class OriginalSpaceStrategy(SearchStrategy):
         options: dict[str, Any] | None = None,
         sequential: bool = False,
         constraints: CandidateConstraints | None = None,
+        fixed_features: dict[int, float] | None = None,
     ) -> None:
         super().__init__(bounds)
         if num_restarts < 1:
@@ -50,6 +54,7 @@ class OriginalSpaceStrategy(SearchStrategy):
         self.options = None if options is None else dict(options)
         self.sequential = sequential
         self.constraints = constraints or CandidateConstraints()
+        self.fixed_features = None if fixed_features is None else dict(fixed_features)
 
     def optimize(
         self,
@@ -69,6 +74,7 @@ class OriginalSpaceStrategy(SearchStrategy):
             raw_samples=self.raw_samples,
             options=self.options,
             sequential=self.sequential,
+            fixed_features=self.fixed_features,
             inequality_constraints=(
                 list(self.constraints.inequality_constraints)
                 if self.constraints.inequality_constraints
