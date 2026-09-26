@@ -1,6 +1,7 @@
 """Acquisition-function optimization and search-strategy interfaces."""
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
+from robotorchan.optim.constraints import CandidateConstraints, LinearConstraint
 from robotorchan.optim.embedding import (
     ALEBOStrategy,
     BAxUSState,
@@ -27,6 +28,8 @@ __all__ = [
     "BAxUSStrategy",
     "BAxUSThompsonSamplingStrategy",
     "HeSBOStrategy",
+    "CandidateConstraints",
+    "LinearConstraint",
     "LatentReconstruction",
     "LatentSpaceStrategy",
     "OriginalSpaceStrategy",
