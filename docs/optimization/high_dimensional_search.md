@@ -20,7 +20,9 @@ search strategy は surrogate の posterior API や reducer lifecycle を変更�
 BoTorch が区別する intra-point / inter-point q-batch constraint を保持できる。
 
 Phase 2 では共通 contract のみを導入し、全 strategy が対応済みとはみなさない。
-`OriginalSpaceStrategy` への実際の forwarding と validation は次 Phase で行う。
+`OriginalSpaceStrategy` は `CandidateConstraints` の線形不等式・線形等式を
+`optimize_acqf` へそのまま forwarding する。したがって original/public input space
+上の線形制約は BoTorch と同じ意味で利用できる。
 非線形 candidate constraint は初期値生成や q-batch semantics が異なるため、
 線形制約と同時に曖昧な API を公開せず後続 Phase で個別に扱う。
 
