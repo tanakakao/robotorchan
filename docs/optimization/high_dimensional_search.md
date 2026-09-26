@@ -214,3 +214,19 @@ ALEBOの公開参照実装では、MAP推定後にMahalanobis kernelのCholesky�
 Candidate constraints are defined in public/original input coordinates. They must not be forwarded unchanged to an optimizer operating in REMBO, HeSBO, BAxUS, or learned latent coordinates, because the tuple indices and coefficients would then describe a different constraint. These strategies therefore reject non-empty `CandidateConstraints` until an exact strategy-specific mapping is implemented. This is intentional capability validation rather than silent approximate feasibility.
 
 ALEBO is different: its existing linear inequalities describe the **internal ALEBO embedding polytope** that keeps projected candidates inside the public box. Those internal inequalities are not user process constraints and must not be interpreted as general `CandidateConstraints` support.
+
+
+### Candidate-constraint support matrix
+
+| Search strategy | Linear candidate constraints | Notes |
+| --- | --- | --- |
+| `OriginalSpaceStrategy` | supported | inequality/equality; intra-point and inter-point q-batch tuples follow BoTorch semantics |
+| `OriginalSpaceStrategy` + `fixed_features` | supported | suitable for fixing target fidelity while preserving raw/public-coordinate constraints |
+| `MixedSpaceStrategy` | supported | continuous linear constraints are combined with enumerated `fixed_features_list` assignments |
+| `REMBO` / `HeSBO` | explicitly rejected | public constraints are not silently reinterpreted in embedded coordinates |
+| `BAxUS` | explicitly rejected | target-space mapping requires a strategy-specific feasibility design |
+| `LatentSpaceStrategy` | explicitly rejected | learned reconstruction/clamping does not preserve arbitrary public linear constraints |
+| `ALEBOStrategy` | internal polytope only | ALEBO feasibility inequalities are internal and are not user `CandidateConstraints` |
+| `RandomSearchStrategy` / `TreeEnsembleSearchStrategy` / `TuRBOStrategy` | not exposed | no general candidate-constraint contract is currently claimed |
+
+`CandidateConstraints` currently covers linear equality and inequality constraints only. Nonlinear candidate constraints remain intentionally outside the public contract. This matrix describes optimizer feasibility only; it is independent of acquisition-level output/black-box constraint support.
