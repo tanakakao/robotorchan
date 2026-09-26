@@ -64,7 +64,7 @@ Mixed、MultiTask、MultiFidelity、Kroneckerなどの横断capabilityだけを�
 runtime flowは `tests/models/integration/` に配置してください。
 
 テストを移動する場合は、commit前に `.github/workflows/` の明示的pytest path、
-リポジトリ内の旧path参照、`__file__` / `Path(...).parents[...]\` による
+リポジトリ内の旧path参照、`__file__` / `Path(...).parents[...]` による
 path-depth依存を検索し、移動と同じ変更で更新してください。
 
 ## 品質確認
