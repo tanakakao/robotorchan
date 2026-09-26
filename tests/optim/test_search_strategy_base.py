@@ -177,7 +177,12 @@ def test_candidate_constraints_preserve_botorch_linear_format() -> None:
 
 
 def test_embedded_strategies_reject_unmapped_candidate_constraints() -> None:
-    from robotorchan.optim import BAxUSState, BAxUSStrategy, HeSBOStrategy, REMBOStrategy
+    from robotorchan.optim import (
+        BAxUSState,
+        BAxUSStrategy,
+        HeSBOStrategy,
+        REMBOStrategy,
+    )
 
     bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
