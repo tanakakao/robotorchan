@@ -9,6 +9,7 @@ from botorch.optim import optimize_acqf
 from torch import Tensor
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
+from robotorchan.optim.constraints import CandidateConstraints
 
 
 class OriginalSpaceStrategy(SearchStrategy):
@@ -25,6 +26,8 @@ class OriginalSpaceStrategy(SearchStrategy):
         raw_samples: Number of raw samples used to initialize the restarts.
         options: Optional optimizer options forwarded to ``optimize_acqf``.
         sequential: Whether to optimize a q-batch sequentially.
+        constraints: Optional linear candidate-space constraints using the
+            BoTorch optimizer tuple format.
     """
 
     def __init__(
@@ -35,6 +38,7 @@ class OriginalSpaceStrategy(SearchStrategy):
         raw_samples: int = 512,
         options: dict[str, Any] | None = None,
         sequential: bool = False,
+        constraints: CandidateConstraints | None = None,
     ) -> None:
         super().__init__(bounds)
         if num_restarts < 1:
@@ -45,6 +49,7 @@ class OriginalSpaceStrategy(SearchStrategy):
         self.raw_samples = raw_samples
         self.options = None if options is None else dict(options)
         self.sequential = sequential
+        self.constraints = constraints or CandidateConstraints()
 
     def optimize(
         self,
@@ -64,6 +69,16 @@ class OriginalSpaceStrategy(SearchStrategy):
             raw_samples=self.raw_samples,
             options=self.options,
             sequential=self.sequential,
+            inequality_constraints=(
+                list(self.constraints.inequality_constraints)
+                if self.constraints.inequality_constraints
+                else None
+            ),
+            equality_constraints=(
+                list(self.constraints.equality_constraints)
+                if self.constraints.equality_constraints
+                else None
+            ),
         )
 
         return SearchResult(
