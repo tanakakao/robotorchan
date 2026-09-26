@@ -161,4 +161,4 @@ jobs:
       - name: Optional dependency smoke test
         run: python -c "import ngboost; from robotorchan.models import NGBoostSurrogate; print(NGBoostSurrogate)"
       - name: NGBoost surrogate tests
-        run: pytest tests/models/test_ngboost_surrogate.py
+        run: pytest tests/models/non_gp/test_ngboost_surrogate.py
