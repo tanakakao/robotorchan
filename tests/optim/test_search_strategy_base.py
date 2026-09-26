@@ -186,9 +186,7 @@ def test_embedded_strategies_reject_unmapped_candidate_constraints() -> None:
 
     bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
-        inequality_constraints=(
-            (torch.tensor([0]), torch.tensor([1.0], dtype=torch.double), 0.2),
-        )
+        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0], dtype=torch.double), 0.2),)
     )
 
     factories = (
