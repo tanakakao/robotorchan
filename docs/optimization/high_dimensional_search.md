@@ -202,3 +202,8 @@ BoTorch の数値安定性を考慮し、通常の GP ベース BO では `torch
 ### ALEBO原実装との対応
 
 ALEBOの公開参照実装では、MAP推定後にMahalanobis kernelのCholeskyパラメータだけをLaplace近似でサンプリングし、mean constantとoutput scaleはMAP値に固定する。さらにmetric sampleの先頭にはMAP値そのものを含める。robotorchanもmetric uncertaintyについてこのMAP-first sampling規約を採用する。なお、現実装はBoTorchの現行APIに合わせた構成であり、旧Axクラスの互換APIは提供しない。
+
+
+### Multi-fidelity candidate constraints
+
+`OriginalSpaceStrategy` can combine `CandidateConstraints` with `fixed_features`. A target fidelity can therefore be fixed with, for example, `fixed_features={fidelity_dim: 1.0}` while linear equality or inequality constraints remain expressed in the same raw/public input coordinates. This delegates both mechanisms to BoTorch `optimize_acqf`; output/black-box constraints remain a separate acquisition-level concern.
