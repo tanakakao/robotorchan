@@ -174,3 +174,30 @@ def test_candidate_constraints_preserve_botorch_linear_format() -> None:
     assert constraints.inequality_constraints == (inequality,)
     assert constraints.equality_constraints == (equality,)
     assert constraints.has_linear_constraints
+
+
+def test_embedded_strategies_reject_unmapped_candidate_constraints() -> None:
+    from robotorchan.optim import (
+        BAxUSState,
+        BAxUSStrategy,
+        HeSBOStrategy,
+        REMBOStrategy,
+    )
+
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0], dtype=torch.double), 0.2),)
+    )
+
+    factories = (
+        lambda: REMBOStrategy(bounds, embedding_dim=1, constraints=constraints),
+        lambda: HeSBOStrategy(bounds, embedding_dim=1, constraints=constraints),
+        lambda: BAxUSStrategy(
+            bounds,
+            state=BAxUSState(dim=2, eval_budget=10),
+            constraints=constraints,
+        ),
+    )
+    for factory in factories:
+        with pytest.raises(NotImplementedError, match="does not map public-space"):
+            factory()

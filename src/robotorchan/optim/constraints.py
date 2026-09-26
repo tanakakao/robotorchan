@@ -41,3 +41,23 @@ class CandidateConstraints:
     def has_linear_constraints(self) -> bool:
         """Whether at least one linear candidate constraint is configured."""
         return bool(self.inequality_constraints or self.equality_constraints)
+
+
+def reject_unmapped_candidate_constraints(
+    constraints: CandidateConstraints | None,
+    *,
+    strategy_name: str,
+) -> None:
+    """Reject original-space constraints when a strategy changes search coordinates.
+
+    Embedding and latent strategies optimize coordinates that are not the public
+    candidate coordinates. Forwarding public-space linear tuples directly to their
+    internal optimizer would therefore impose a different mathematical constraint.
+    Strategies may opt into constraints only after implementing an exact mapping.
+    """
+    if constraints is not None and constraints.has_linear_constraints:
+        raise NotImplementedError(
+            f"{strategy_name} does not map public-space CandidateConstraints into "
+            "its internal search coordinates. Use OriginalSpaceStrategy or an "
+            "explicitly constraint-aware strategy instead."
+        )
