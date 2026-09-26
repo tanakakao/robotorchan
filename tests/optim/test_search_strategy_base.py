@@ -153,6 +153,7 @@ def test_public_optim_exports_are_complete() -> None:
     assert set(optim.__all__) == expected
     assert all(hasattr(optim, name) for name in expected)
 
+
 def test_candidate_constraints_default_to_unconstrained() -> None:
     constraints = CandidateConstraints()
 
