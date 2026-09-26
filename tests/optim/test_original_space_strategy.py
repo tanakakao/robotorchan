@@ -226,10 +226,10 @@ def test_original_space_strategy_forwards_nonlinear_constraints(monkeypatch) -> 
     def constraint(x: torch.Tensor) -> torch.Tensor:
         return 0.25 - x.square().sum()
 
-    strategy = OriginalSpaceStrategy(
+    initial_conditions = torch.tensor([[[0.1, 0.1]]], dtype=torch.double)\n    strategy = OriginalSpaceStrategy(
         bounds,
         constraints=CandidateConstraints(nonlinear_inequality_constraints=((constraint, True),)),
-    )
+            batch_initial_conditions=initial_conditions,\n)
     captured = {}
 
     def fake_optimize_acqf(**kwargs):
