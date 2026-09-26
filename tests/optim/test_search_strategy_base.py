@@ -4,7 +4,14 @@ import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 
-from robotorchan.optim import CandidateConstraints, LinearConstraint, SearchResult, SearchStrategy
+from robotorchan.optim import (
+    CandidateConstraints,
+    LinearConstraint,
+    NonlinearConstraint,
+    NonlinearConstraintCallable,
+    SearchResult,
+    SearchStrategy,
+)
 
 
 class DummySearchStrategy(SearchStrategy):
@@ -148,6 +155,8 @@ def test_public_optim_exports_are_complete() -> None:
         "CandidateConstraints",
         "LinearConstraint",
         "MixedSpaceStrategy",
+        "NonlinearConstraint",
+        "NonlinearConstraintCallable",
         "update_baxus_state",
     }
 
@@ -160,7 +169,10 @@ def test_candidate_constraints_default_to_unconstrained() -> None:
 
     assert constraints.inequality_constraints == ()
     assert constraints.equality_constraints == ()
+    assert constraints.nonlinear_inequality_constraints == ()
     assert not constraints.has_linear_constraints
+    assert not constraints.has_nonlinear_constraints
+    assert not constraints.has_constraints
 
 
 def test_candidate_constraints_preserve_botorch_linear_format() -> None:
@@ -213,3 +225,29 @@ def test_candidate_constraint_public_types_remain_distinct_from_acquisition_capa
 
     assert candidate_constraints.has_linear_constraints
     assert CandidateConstraints.__module__ == "robotorchan.optim.constraints"
+
+
+def test_candidate_constraints_preserve_botorch_nonlinear_format() -> None:
+    def disk_constraint(x: torch.Tensor) -> torch.Tensor:
+        return 0.25 - x.square().sum()
+
+    callable_constraint: NonlinearConstraintCallable = disk_constraint
+    constraint: NonlinearConstraint = (callable_constraint, True)
+    constraints = CandidateConstraints(nonlinear_inequality_constraints=(constraint,))
+
+    assert constraints.nonlinear_inequality_constraints == (constraint,)
+    assert constraints.has_nonlinear_constraints
+    assert constraints.has_constraints
+    assert not constraints.has_linear_constraints
+
+
+def test_embedded_strategies_reject_unmapped_nonlinear_constraints() -> None:
+    from robotorchan.optim import REMBOStrategy
+
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.25 - x.square().sum(), True),)
+    )
+
+    with pytest.raises(NotImplementedError, match="does not map public-space"):
+        REMBOStrategy(bounds, embedding_dim=1, constraints=constraints)
