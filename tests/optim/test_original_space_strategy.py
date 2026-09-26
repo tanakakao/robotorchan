@@ -3,6 +3,7 @@
 import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
+from botorch.acquisition.monte_carlo import qSimpleRegret
 
 from robotorchan.models.high_dimensional.reduced import PCAGP
 from robotorchan.models.standard.single_task import SingleTaskGP
@@ -134,3 +135,57 @@ def test_original_space_strategy_satisfies_linear_equality_constraint() -> None:
         torch.tensor(1.0, dtype=torch.double),
         atol=1e-6,
     )
+
+
+def test_original_space_strategy_satisfies_qbatch_interpoint_constraint() -> None:
+    train_X, train_Y = _training_data()
+    model = SingleTaskGP(train_X, train_Y)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    # Inter-point constraint: x[0, 0] + x[1, 0] <= 0.75.
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([[0, 0], [1, 0]]),
+                torch.tensor([-1.0, -1.0], dtype=torch.double),
+                -0.75,
+            ),
+        ),
+    )
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=4,
+        raw_samples=64,
+        constraints=constraints,
+    )
+
+    result = strategy.optimize(qSimpleRegret(model), q=2)
+
+    assert result.candidates.shape == torch.Size([2, 2])
+    assert result.candidates[:, 0].sum() <= 0.75 + 1e-6
+
+
+def test_original_space_strategy_satisfies_qbatch_intrapoint_constraint() -> None:
+    train_X, train_Y = _training_data()
+    model = SingleTaskGP(train_X, train_Y)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    # Intra-point constraint is broadcast to every member of the q-batch.
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([0, 1]),
+                torch.tensor([-1.0, -1.0], dtype=torch.double),
+                -0.8,
+            ),
+        ),
+    )
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=4,
+        raw_samples=64,
+        constraints=constraints,
+    )
+
+    result = strategy.optimize(qSimpleRegret(model), q=2)
+
+    assert result.candidates.shape == torch.Size([2, 2])
+    assert torch.all(result.candidates.sum(dim=-1) <= 0.8 + 1e-6)

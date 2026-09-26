@@ -23,6 +23,10 @@ Phase 2 では共通 contract のみを導入し、全 strategy が対応済み�
 `OriginalSpaceStrategy` は `CandidateConstraints` の線形不等式・線形等式を
 `optimize_acqf` へそのまま forwarding する。したがって original/public input space
 上の線形制約は BoTorch と同じ意味で利用できる。
+1 次元 `indices` の intra-point constraint は q-batch の各候補へ適用され、2 次元
+`indices` の inter-point constraint は候補間の関係を表現できる。`OriginalSpaceStrategy`
+はこの表現を変換せず保持するため、`q > 1` でも BoTorch の線形 q-batch constraint
+semantics をそのまま利用できる。
 非線形 candidate constraint は初期値生成や q-batch semantics が異なるため、
 線形制約と同時に曖昧な API を公開せず後続 Phase で個別に扱う。
 
