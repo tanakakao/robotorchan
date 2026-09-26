@@ -10,6 +10,10 @@ from botorch.optim import optimize_acqf
 from torch import Tensor
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
+from robotorchan.optim.constraints import (
+    CandidateConstraints,
+    reject_unmapped_candidate_constraints,
+)
 from robotorchan.optim.latent.reconstruction import LatentReconstruction
 
 
@@ -52,8 +56,13 @@ class LatentSpaceStrategy(SearchStrategy):
         raw_samples: int = 512,
         options: dict[str, Any] | None = None,
         sequential: bool = False,
+        constraints: CandidateConstraints | None = None,
     ) -> None:
         super().__init__(bounds)
+        reject_unmapped_candidate_constraints(
+            constraints,
+            strategy_name=self.__class__.__name__,
+        )
         if reconstruction.input_dim != self.input_dim:
             raise ValueError(
                 "Reconstruction input dimension must match the original bounds dimension."
