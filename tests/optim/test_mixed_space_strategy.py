@@ -2,7 +2,7 @@
 
 import torch
 from botorch.acquisition.analytic import PosteriorMean
-from robotorchan.models.standard.mixed import MixedSingleTaskGP
+from robotorchan.models.standard.single_task import MixedSingleTaskGP
 
 from robotorchan.optim import CandidateConstraints, MixedSpaceStrategy
 
