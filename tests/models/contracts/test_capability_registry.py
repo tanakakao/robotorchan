@@ -57,7 +57,7 @@ def test_registry_model_names_match_keys() -> None:
 
 
 def test_model_coverage_is_generated_from_registry() -> None:
-    coverage_path = Path(__file__).resolve().parents[2] / "docs" / "model_coverage.json"
+    coverage_path = Path(__file__).resolve().parents[3] / "docs" / "model_coverage.json"
     coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
 
     assert coverage["source_of_truth"] == "robotorchan.models.registry.MODEL_REGISTRY"
@@ -71,7 +71,7 @@ def test_model_coverage_is_generated_from_registry() -> None:
 
 
 def test_registry_documentation_targets_exist() -> None:
-    root = Path(__file__).resolve().parents[2]
+    root = Path(__file__).resolve().parents[3]
     for entry in MODEL_REGISTRY.values():
         assert (root / entry.documentation.guide).is_file()
         assert (root / entry.documentation.theory).is_file()
