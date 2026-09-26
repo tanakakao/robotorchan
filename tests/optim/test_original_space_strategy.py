@@ -240,3 +240,40 @@ def test_original_space_strategy_forwards_nonlinear_constraints(monkeypatch) -> 
     strategy.optimize(None)  # type: ignore[arg-type]
 
     assert captured["nonlinear_inequality_constraints"] == [(constraint, True)]
+
+
+def test_original_space_strategy_requires_nonlinear_initial_conditions() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.25 - x.square().sum(), True),)
+    )
+    strategy = OriginalSpaceStrategy(bounds, constraints=constraints)
+
+    with pytest.raises(ValueError, match="batch_initial_conditions"):
+        strategy.optimize(None)  # type: ignore[arg-type]
+
+
+def test_original_space_strategy_forwards_nonlinear_initial_conditions(monkeypatch) -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+
+    def constraint(x: torch.Tensor) -> torch.Tensor:
+        return 0.25 - x.square().sum()
+
+    initial_conditions = torch.tensor([[[0.1, 0.1]], [[0.2, 0.1]]], dtype=torch.double)
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=2,
+        constraints=CandidateConstraints(nonlinear_inequality_constraints=((constraint, True),)),
+        batch_initial_conditions=initial_conditions,
+    )
+    captured = {}
+
+    def fake_optimize_acqf(**kwargs):
+        captured.update(kwargs)
+        return torch.zeros(1, 2, dtype=torch.double), torch.tensor(0.0, dtype=torch.double)
+
+    monkeypatch.setattr("robotorchan.optim.original.optimize_acqf", fake_optimize_acqf)
+    strategy.optimize(None)  # type: ignore[arg-type]
+
+    assert captured["batch_initial_conditions"] is initial_conditions
+    assert captured["nonlinear_inequality_constraints"] == [(constraint, True)]
