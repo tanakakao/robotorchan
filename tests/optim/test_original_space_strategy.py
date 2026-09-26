@@ -246,4 +246,3 @@ def test_original_space_strategy_forwards_nonlinear_constraints(monkeypatch) -> 
 
     assert captured["nonlinear_inequality_constraints"] == [(constraint, True)]
     assert captured["batch_initial_conditions"] is initial_conditions
-
