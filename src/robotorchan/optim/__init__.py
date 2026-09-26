@@ -17,6 +17,7 @@ from robotorchan.optim.latent import (
     PCAReconstruction,
     RandomProjectionReconstruction,
 )
+from robotorchan.optim.mixed import MixedSpaceStrategy
 from robotorchan.optim.original import OriginalSpaceStrategy
 from robotorchan.optim.random import RandomSearchStrategy
 from robotorchan.optim.tree import TreeEnsembleSearchStrategy
@@ -32,6 +33,7 @@ __all__ = [
     "LatentReconstruction",
     "LatentSpaceStrategy",
     "LinearConstraint",
+    "MixedSpaceStrategy",
     "OriginalSpaceStrategy",
     "PCAReconstruction",
     "REMBOStrategy",
