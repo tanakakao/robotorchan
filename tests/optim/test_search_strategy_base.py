@@ -4,7 +4,7 @@ import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 
-from robotorchan.optim import CandidateConstraints, SearchResult, SearchStrategy
+from robotorchan.optim import CandidateConstraints, LinearConstraint, SearchResult, SearchStrategy
 
 
 class DummySearchStrategy(SearchStrategy):
@@ -201,3 +201,15 @@ def test_embedded_strategies_reject_unmapped_candidate_constraints() -> None:
     for factory in factories:
         with pytest.raises(NotImplementedError, match="does not map public-space"):
             factory()
+
+
+def test_candidate_constraint_public_types_remain_distinct_from_acquisition_capabilities() -> None:
+    constraint: LinearConstraint = (
+        torch.tensor([0]),
+        torch.tensor([1.0], dtype=torch.double),
+        0.0,
+    )
+    candidate_constraints = CandidateConstraints(inequality_constraints=(constraint,))
+
+    assert candidate_constraints.has_linear_constraints
+    assert CandidateConstraints.__module__ == "robotorchan.optim.constraints"
