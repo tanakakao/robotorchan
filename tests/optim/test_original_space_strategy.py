@@ -3,6 +3,7 @@
 import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
+from botorch.acquisition.monte_carlo import qSimpleRegret
 
 from robotorchan.models.high_dimensional.reduced import PCAGP
 from robotorchan.models.standard.single_task import SingleTaskGP
@@ -157,8 +158,6 @@ def test_original_space_strategy_satisfies_qbatch_interpoint_constraint() -> Non
         constraints=constraints,
     )
 
-    from botorch.acquisition.monte_carlo import qSimpleRegret
-
     result = strategy.optimize(qSimpleRegret(model), q=2)
 
     assert result.candidates.shape == torch.Size([2, 2])
@@ -185,8 +184,6 @@ def test_original_space_strategy_satisfies_qbatch_intrapoint_constraint() -> Non
         raw_samples=64,
         constraints=constraints,
     )
-
-    from botorch.acquisition.monte_carlo import qSimpleRegret
 
     result = strategy.optimize(qSimpleRegret(model), q=2)
 
