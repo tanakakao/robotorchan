@@ -207,3 +207,10 @@ ALEBOの公開参照実装では、MAP推定後にMahalanobis kernelのCholesky�
 ### Multi-fidelity candidate constraints
 
 `OriginalSpaceStrategy` can combine `CandidateConstraints` with `fixed_features`. A target fidelity can therefore be fixed with, for example, `fixed_features={fidelity_dim: 1.0}` while linear equality or inequality constraints remain expressed in the same raw/public input coordinates. This delegates both mechanisms to BoTorch `optimize_acqf`; output/black-box constraints remain a separate acquisition-level concern.
+
+
+### Constraints with embedding and latent search
+
+Candidate constraints are defined in public/original input coordinates. They must not be forwarded unchanged to an optimizer operating in REMBO, HeSBO, BAxUS, or learned latent coordinates, because the tuple indices and coefficients would then describe a different constraint. These strategies therefore reject non-empty `CandidateConstraints` until an exact strategy-specific mapping is implemented. This is intentional capability validation rather than silent approximate feasibility.
+
+ALEBO is different: its existing linear inequalities describe the **internal ALEBO embedding polytope** that keeps projected candidates inside the public box. Those internal inequalities are not user process constraints and must not be interpreted as general `CandidateConstraints` support.
