@@ -41,11 +41,15 @@ When an algorithm is derived from a paper, its implementation should document th
   - `models.expressive`: DeepGP, infinite-width BNN GP, spectral-mixture, and learned feature components;
   - `models.structured`: additive, contextual, hierarchical, heterogeneous-task, higher-order, and latent-Kronecker models;
   - `models.uncertain`: uncertain continuous and categorical input models;
-  - `models.preference`: pairwise preference models.
+  - `models.preference`: pairwise preference models;
+  - `models.non_gp`: probabilistic and ensemble non-GP surrogate models.
 
   These family packages describe implementation responsibility, not separate compatibility APIs. Removed flat module paths are not forwarded or aliased.
 - `robotorchan.objectives`: objectives, posterior transforms, and constraint-related helpers when BoTorch does not already provide them.
 - `robotorchan.optim`: acquisition optimization and search-space utilities that extend, rather than duplicate, `botorch.optim`.
+- `robotorchan.reduction`: reusable dimensionality-reduction components used by high-dimensional models.
+- `robotorchan.uncertainty`: input-perturbation and uncertainty utilities composed with models and objectives.
+- `robotorchan.benchmarks`: reusable structural benchmark APIs; executable empirical benchmarks remain in the repository-level `benchmarks/` directory.
 
 Additional top-level namespaces should only be introduced when a stable group of functionality exists.
 
@@ -127,58 +131,6 @@ Cross-model tests pin the public model export set and require every public wrapp
 
 Documentation-only changes should not create dedicated CI jobs unless an executable invariant is being enforced. Link, public-model coverage, theory-coverage, and example-coverage automation should be added only when the corresponding machine-readable contract exists; prose synchronization remains a review concern until then.
 
-## Roadmap
-
-### Phase 1 — wrapper foundation
-
-- generic raw-tensor storage;
-- supervised raw-data conventions;
-- explicit training-objective capability contract;
-- exact-GP MLL factory;
-- `SingleTaskGP` as the reference wrapper;
-- contract tests for raw-data ownership, transforms, dtype/device moves, serialization, and unsupported operations.
-
-### Phase 2 — core exact-GP wrappers
-
-Add `MixedSingleTaskGP` and `SingleTaskMultiFidelityGP` using the Phase 1 contract without reimplementing upstream predictive behavior.
-
-### Phase 3 — multitask wrappers
-
-Add `MultiTaskGP` and `KroneckerMultiTaskGP`, retaining the same supervised raw-data surface where the semantics match.
-
-### Phase 4 — model-list wrapper
-
-Add `ModelListGP` with grouped child raw-data access and `SumMarginalLogLikelihood` construction while preserving native BoTorch child-model interoperability.
-
-### Phase 5 — variational wrapper
-
-Add `SingleTaskVariationalGP` with raw-data retention and `VariationalELBO` construction, including an explicit total-data-size override for minibatch training.
-
-### Phase 6 — preference wrapper
-
-Add `PairwiseGP` with semantically correct `raw_datapoints` / `raw_comparisons` retention, prior-only compatibility, and `PairwiseLaplaceMarginalLogLikelihood` construction.
-
-### Phase 7 — fully Bayesian wrappers
-
-Add `SaasFullyBayesianSingleTaskGP` and `SaasFullyBayesianMultiTaskGP` with raw supervised data retention, explicit non-MLL training semantics, and direct compatibility with BoTorch's `fit_fully_bayesian_model_nuts`.
-
-### Phase 8 — structured advanced GP wrappers
-
-Add `HigherOrderGP` and `LatentKroneckerGP` with exact-MLL support, tensor-output raw retention, semantically correct `raw_train_T` handling, and upstream numerical parity while keeping BoTorch's specialized solver contexts explicit.
-
-### Phase 9 — specialized BoTorch model wrappers
-
-Add `OrthogonalAdditiveGP`, additive / ensemble MAP-SAAS, Robust Relevance Pursuit, hierarchical single- and multi-task GPs, `HeterogeneousMTGP`, and the contextual `SACGP`, `LCEAGP`, and `LCEMGP` models. Preserve specialized BoTorch kernels and fitting dispatch while applying robotorchan raw-data and MLL conventions only where semantically valid.
-
-### Phase 10 — API cleanup and comprehensive tests
-
-Finalize public exports and capability contracts, define constructor-level raw-data provenance across conditioning / fantasy operations, lock the supported BoTorch compatibility line, and streamline CI without changing predictive model behavior.
-
-### Later extension phases
-
-After the existing-model wrapper surface is complete, continue with robotorchan-specific acquisition functions, active-learning criteria, robust / risk-aware methods, ordinal methods, lookahead methods, and new surrogate-model families.
-
-
 ## Documentation coverage contract
 
 Public model documentation is tracked by `docs/model_coverage.json`.
@@ -190,11 +142,3 @@ Public model documentation is tracked by `docs/model_coverage.json`.
 - `tests/test_model_documentation_coverage.py` validates exact public-API coverage and referenced file existence.
 
 This contract intentionally does not require one Notebook per class. It detects documentation drift without creating compatibility aliases or a separate documentation-only CI job; the check runs in the existing pytest matrix.
-
-
-## Documentation completion
-
-モデルドキュメントの完成条件と今後の維持ルールは
-[`docs/documentation-closeout.md`](documentation-closeout.md) に固定します。
-新しい public model を追加するときは、coverage manifest、theory、representative
-Notebook、モデル選択ガイドの必要な更新を同じ変更で扱います。
