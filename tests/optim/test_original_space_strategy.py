@@ -246,3 +246,52 @@ def test_original_space_strategy_forwards_nonlinear_constraints(monkeypatch) -> 
 
     assert captured["nonlinear_inequality_constraints"] == [(constraint, True)]
     assert captured["batch_initial_conditions"] is initial_conditions
+
+
+class _LinearCandidateAcquisition(torch.nn.Module):
+    """Deterministic acquisition used to isolate candidate optimization."""
+
+    def forward(self, X: torch.Tensor) -> torch.Tensor:
+        return X.sum(dim=(-1, -2))
+
+
+def _circle_constraint(x: torch.Tensor) -> torch.Tensor:
+    return x.new_tensor(0.25) - x.square().sum()
+
+
+@pytest.mark.parametrize("q", [1, 2])
+def test_original_space_strategy_optimizes_intrapoint_nonlinear_constraint(q: int) -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    initial_conditions = torch.full((4, q, 2), 0.1, dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((_circle_constraint, True),),
+    )
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=4,
+        raw_samples=32,
+        constraints=constraints,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    result = strategy.optimize(_LinearCandidateAcquisition(), q=q)  # type: ignore[arg-type]
+
+    assert result.candidates.shape == torch.Size([q, 2])
+    feasibility = torch.stack([_circle_constraint(x) for x in result.candidates])
+    assert torch.all(feasibility >= -1e-6)
+    assert torch.allclose(
+        result.candidates.square().sum(dim=-1),
+        torch.full((q,), 0.25, dtype=torch.double),
+        atol=1e-5,
+        rtol=0.0,
+    )
+
+
+def test_intrapoint_nonlinear_constraint_preserves_autograd() -> None:
+    x = torch.tensor([0.2, 0.3], dtype=torch.double, requires_grad=True)
+
+    value = _circle_constraint(x)
+    value.backward()
+
+    assert x.grad is not None
+    assert torch.allclose(x.grad, -2.0 * x.detach())
