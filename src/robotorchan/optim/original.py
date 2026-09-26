@@ -72,8 +72,7 @@ class OriginalSpaceStrategy(SearchStrategy):
             raise ValueError("q must be at least 1.")
         if self.constraints.has_nonlinear_constraints and self.batch_initial_conditions is None:
             raise ValueError(
-                "Nonlinear candidate constraints require feasible "
-                "batch_initial_conditions."
+                "Nonlinear candidate constraints require feasible batch_initial_conditions."
             )
 
         candidates, acquisition_value = optimize_acqf(
