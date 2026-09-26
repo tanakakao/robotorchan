@@ -218,3 +218,54 @@ def test_original_space_strategy_combines_fixed_fidelity_and_constraint() -> Non
     assert result.candidates.shape == torch.Size([1, 2])
     assert result.candidates[0, 0] <= 0.6 + 1e-6
     assert result.candidates[0, 1] == 1.0
+
+
+def test_original_space_strategy_forwards_nonlinear_constraints(monkeypatch) -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+
+    def disk_constraint(x: torch.Tensor) -> torch.Tensor:
+        return 0.25 - x.square().sum()
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((disk_constraint, True),),
+    )
+    strategy = OriginalSpaceStrategy(bounds, constraints=constraints)
+    captured = {}
+
+    def fake_optimize_acqf(**kwargs):
+        captured.update(kwargs)
+        return torch.zeros(1, 2, dtype=torch.double), torch.tensor(0.0, dtype=torch.double)
+
+    monkeypatch.setattr("robotorchan.optim.original.optimize_acqf", fake_optimize_acqf)
+    strategy.optimize(None)  # type: ignore[arg-type]
+
+    assert captured["nonlinear_inequality_constraints"] == [(disk_constraint, True)]
+
+
+def test_original_space_strategy_forwards_linear_and_nonlinear_constraints(monkeypatch) -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    linear = (
+        torch.tensor([0, 1]),
+        torch.tensor([-1.0, -1.0], dtype=torch.double),
+        -1.0,
+    )
+
+    def disk_constraint(x: torch.Tensor) -> torch.Tensor:
+        return 0.5 - x.square().sum()
+
+    constraints = CandidateConstraints(
+        inequality_constraints=(linear,),
+        nonlinear_inequality_constraints=((disk_constraint, True),),
+    )
+    strategy = OriginalSpaceStrategy(bounds, constraints=constraints)
+    captured = {}
+
+    def fake_optimize_acqf(**kwargs):
+        captured.update(kwargs)
+        return torch.zeros(1, 2, dtype=torch.double), torch.tensor(0.0, dtype=torch.double)
+
+    monkeypatch.setattr("robotorchan.optim.original.optimize_acqf", fake_optimize_acqf)
+    strategy.optimize(None)  # type: ignore[arg-type]
+
+    assert captured["inequality_constraints"] == [linear]
+    assert captured["nonlinear_inequality_constraints"] == [(disk_constraint, True)]
