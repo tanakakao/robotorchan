@@ -296,6 +296,7 @@ def test_intrapoint_nonlinear_constraint_preserves_autograd() -> None:
     assert x.grad is not None
     assert torch.allclose(x.grad, -2.0 * x.detach())
 
+
 def _minimum_pair_distance_constraint(X: torch.Tensor) -> torch.Tensor:
     return (X[0] - X[1]).square().sum() - X.new_tensor(0.25)
 
@@ -342,4 +343,3 @@ def test_interpoint_nonlinear_constraint_preserves_qbatch_autograd() -> None:
     assert X.grad.shape == X.shape
     assert torch.allclose(X.grad[0], 2.0 * (X[0] - X[1]).detach())
     assert torch.allclose(X.grad[1], -X.grad[0])
-
