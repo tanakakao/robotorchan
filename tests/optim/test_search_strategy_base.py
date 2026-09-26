@@ -147,6 +147,7 @@ def test_public_optim_exports_are_complete() -> None:
         "BAxUSThompsonSamplingStrategy",
         "CandidateConstraints",
         "LinearConstraint",
+        "MixedSpaceStrategy",
         "update_baxus_state",
     }
 
