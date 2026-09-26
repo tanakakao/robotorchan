@@ -4,7 +4,7 @@ import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 
-from robotorchan.optim import SearchResult, SearchStrategy
+from robotorchan.optim import CandidateConstraints, SearchResult, SearchStrategy
 
 
 class DummySearchStrategy(SearchStrategy):
@@ -145,8 +145,30 @@ def test_public_optim_exports_are_complete() -> None:
         "BAxUSState",
         "BAxUSStrategy",
         "BAxUSThompsonSamplingStrategy",
+        "CandidateConstraints",
+        "LinearConstraint",
         "update_baxus_state",
     }
 
     assert set(optim.__all__) == expected
     assert all(hasattr(optim, name) for name in expected)
+
+def test_candidate_constraints_default_to_unconstrained() -> None:
+    constraints = CandidateConstraints()
+
+    assert constraints.inequality_constraints == ()
+    assert constraints.equality_constraints == ()
+    assert not constraints.has_linear_constraints
+
+
+def test_candidate_constraints_preserve_botorch_linear_format() -> None:
+    inequality = (torch.tensor([0, 1]), torch.tensor([-1.0, -1.0]), -0.8)
+    equality = (torch.tensor([0, 1]), torch.tensor([1.0, 1.0]), 1.0)
+    constraints = CandidateConstraints(
+        inequality_constraints=(inequality,),
+        equality_constraints=(equality,),
+    )
+
+    assert constraints.inequality_constraints == (inequality,)
+    assert constraints.equality_constraints == (equality,)
+    assert constraints.has_linear_constraints
