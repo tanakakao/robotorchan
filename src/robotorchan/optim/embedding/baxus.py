@@ -12,6 +12,10 @@ from botorch.optim import optimize_acqf
 from torch import Tensor
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
+from robotorchan.optim.constraints import (
+    CandidateConstraints,
+    reject_unmapped_candidate_constraints,
+)
 
 
 @dataclass(frozen=True)
@@ -140,8 +144,13 @@ class BAxUSStrategy(SearchStrategy):
         raw_samples: int = 512,
         options: dict[str, Any] | None = None,
         sequential: bool = False,
+        constraints: CandidateConstraints | None = None,
     ) -> None:
         super().__init__(bounds)
+        reject_unmapped_candidate_constraints(
+            constraints,
+            strategy_name=self.__class__.__name__,
+        )
         if state.dim != self.input_dim:
             raise ValueError("state.dim must equal input_dim.")
         if num_restarts < 1 or raw_samples < 1:
