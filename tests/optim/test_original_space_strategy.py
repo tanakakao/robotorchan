@@ -344,6 +344,7 @@ def test_interpoint_nonlinear_constraint_preserves_qbatch_autograd() -> None:
     assert torch.allclose(X.grad[0], 2.0 * (X[0] - X[1]).detach())
     assert torch.allclose(X.grad[1], -X.grad[0])
 
+
 def test_original_space_strategy_combines_fixed_feature_and_nonlinear_constraint() -> None:
     train_X, train_Y = _training_data()
     model = SingleTaskGP(train_X, train_Y)
@@ -410,4 +411,3 @@ def test_original_space_strategy_combines_linear_nonlinear_and_fixed_feature() -
     assert result.candidates[0, 0] <= 0.5 + 1e-6
     assert result.candidates[0, 1] == 1.0
     assert nonlinear_constraint(result.candidates[0]) >= -1e-6
-
