@@ -9,6 +9,21 @@ robotorchan では surrogate model と acquisition function と search strategy 
 
 search strategy は surrogate の posterior API や reducer lifecycle を変更しない。探索時間は `SearchResult` に含めず、benchmark / 呼び出し側で外部計測する。旧 API 名、deprecated wrapper、互換 alias は提供しない。
 
+## Candidate-space constraint contract
+
+`CandidateConstraints` は探索候補 `X` 自体に課す制約を表す。制約付き獲得関数が扱う
+`g(x) <= 0` のような probabilistic output constraint とは別の責務である。
+
+線形制約は BoTorch の `(indices, coefficients, rhs)` 表現をそのまま採用する。
+不等式は `sum(X[indices] * coefficients) >= rhs`、等式は
+`sum(X[indices] * coefficients) == rhs` と解釈する。独自の行列表現へ変換しないため、
+BoTorch が区別する intra-point / inter-point q-batch constraint を保持できる。
+
+Phase 2 では共通 contract のみを導入し、全 strategy が対応済みとはみなさない。
+`OriginalSpaceStrategy` への実際の forwarding と validation は次 Phase で行う。
+非線形 candidate constraint は初期値生成や q-batch semantics が異なるため、
+線形制約と同時に曖昧な API を公開せず後続 Phase で個別に扱う。
+
 ## 戦略
 
 | Strategy | 探索空間 | 状態 | 主な用途 |
