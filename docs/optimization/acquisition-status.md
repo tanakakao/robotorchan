@@ -54,8 +54,7 @@ The current metadata remains deliberately conservative for qKG and qMFKG: they a
 single-output acquisition workflows. Scalarized or custom-objective extensions should be added
 only with executable integration tests and corresponding metadata changes.
 
-Constraint support in the registry means the acquisition has a supported BoTorch composition
-path; it does not mean robotorchan constructs constraint callables or objectives automatically.
+`supports_constraints` in the acquisition registry means **output / black-box constrained BO** has a supported BoTorch composition path. It does not describe restrictions on candidate coordinates and does not mean robotorchan constructs constraint callables or objectives automatically. Candidate/input-space equality and inequality constraints belong to acquisition optimization and use `robotorchan.optim.CandidateConstraints` on compatible search strategies.
 Likewise, `supports_ensemble` means a compatible sampler/composition can be supplied, not that
 every acquisition uses an empirical-ensemble sampler by default. Empirical non-GP ensemble
 posteriors require `IndexSampler`; Gaussian posteriors, including MAP-SAAS model ensembles that
@@ -147,3 +146,15 @@ The theory chapters, practical optimization guides, status table, package export
 test are consistent with the current ownership policy. Remaining items listed under
 **Audit follow-ups** are intentionally unsupported or not yet integration-tested rather than
 silently implied by the theory documentation.
+
+
+## Constraint semantics: output vs candidate space
+
+Robotorchan keeps two different notions of constraints separate:
+
+| Constraint kind | Example | Runtime layer | Contract |
+| --- | --- | --- | --- |
+| Output / black-box | predicted process response `g(x) <= 0` | acquisition/objective composition | acquisition `supports_constraints` |
+| Candidate / input-space | composition sum, ordering, linear design rule | acquisition optimizer | `CandidateConstraints` |
+
+The acquisition registry must therefore never be used to infer candidate-space feasibility support. Conversely, a search strategy accepting `CandidateConstraints` says nothing about whether the selected acquisition models uncertain black-box feasibility.
