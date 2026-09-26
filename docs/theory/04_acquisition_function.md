@@ -220,6 +220,15 @@ acquisition value
 
 詳細は [Constrained acquisition](acquisition/08_constraints.md) で扱います。
 
+ここでいう制約は、未知の応答を surrogate model で推定する **output / black-box constraint** です。一方、組成和、変数間の大小関係、既知の線形設計則など、candidate の入力座標そのものに課す制約は acquisition function ではなく acquisition optimization の責務です。
+
+```text
+output constraint:     g(x) <= 0  → model / acquisition composition
+candidate constraint:  A x <= b   → acquisition optimizer
+```
+
+robotorchan では後者を対応strategyの `CandidateConstraints` で表現します。この二種類を同じ「constrained BO」として扱わないことが、APIと実装を読む際に重要です。
+
 ## 4.10 Bayesian Optimization だけが目的ではない
 
 posterior を使った逐次実験設計は、最適化だけに限定されません。
