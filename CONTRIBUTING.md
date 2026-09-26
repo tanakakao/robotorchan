@@ -51,6 +51,22 @@ pip install -e ".[dev,examples,fully-bayesian]"
   再発防止策を本ファイルの開発ルールへ追記してください。頻発する失敗をルール化すること
   自体を必須の開発手順とします。
 
+## テスト配置
+
+モデルテストは、capability名ではなく主たる実装責務に合わせて配置してください。
+`standard`、`high_dimensional`、`robust`、`expressive`、`structured`、
+`uncertain`、`preference`、`non_gp` をmodel familyとして使用します。
+Mixed、MultiTask、MultiFidelity、Kroneckerなどの横断capabilityだけを理由に
+新しいtop-level test familyを作成しません。
+
+複数familyに共通するpublic API・registry・raw-data・wrapper invariantsは
+`tests/models/contracts/`、acquisitionやoptimizerなどを含むcross-componentの
+runtime flowは `tests/models/integration/` に配置してください。
+
+テストを移動する場合は、commit前に `.github/workflows/` の明示的pytest path、
+リポジトリ内の旧path参照、`__file__` / `Path(...).parents[...]` による
+path-depth依存を検索し、移動と同じ変更で更新してください。
+
 ## 品質確認
 
 通常の変更では、少なくとも対象範囲のテストを実行してください。
@@ -59,9 +75,9 @@ pip install -e ".[dev,examples,fully-bayesian]"
 ruff check .
 ruff format --check .
 pytest \
-  --ignore=tests/models/test_fully_bayesian_single_task_gp.py \
-  --ignore=tests/models/test_fully_bayesian_multi_task_gp.py \
-  --ignore=tests/models/test_mixed_fully_bayesian.py
+  --ignore=tests/models/high_dimensional/test_fully_bayesian_single_task_gp.py \
+  --ignore=tests/models/high_dimensional/test_fully_bayesian_multi_task_gp.py \
+  --ignore=tests/models/high_dimensional/test_mixed_fully_bayesian.py
 ```
 
 Fully Bayesian関連は専用依存関係を導入した環境で対象テストを実行してください。

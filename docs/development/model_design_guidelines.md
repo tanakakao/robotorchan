@@ -69,7 +69,7 @@ public symbol or semantic decision changed by the phase. In particular:
    `ruff check .` and `ruff format --check .`. Do not rely on visual formatting.
 5. Check public `__all__` ordering and the public model contract tests whenever
    exports change.
-   Treat the export list and `tests/models/test_public_model_contracts.py` as
+   Treat the export list and `tests/models/contracts/test_public_model_contracts.py` as
    one atomic public-API change: every newly exported model must be added to
    `PUBLIC_MODEL_NAMES` in the same commit/phase, and removed models must be
    removed there at the same time.
