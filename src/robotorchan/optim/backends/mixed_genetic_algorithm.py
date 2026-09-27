@@ -120,7 +120,10 @@ def optimize_acqf_mixed_ga(
 
     if best_candidate is None or best_value is None:
         raise RuntimeError("Mixed Genetic Algorithm did not generate any candidate.")
-    return best_candidate.reshape(q, d), best_value.reshape(())
+    candidate = best_candidate.reshape(q, d)
+    with torch.no_grad():
+        value = acq_function(candidate.unsqueeze(0)).reshape(())
+    return candidate, value
 
 
 def _evaluate_population(
