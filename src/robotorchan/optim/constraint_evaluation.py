@@ -71,9 +71,7 @@ def feasibility_first_ranks(values: Tensor, violation: Tensor) -> Tensor:
 
     order = torch.cat([feasible_order, infeasible_order])
     ranks = torch.empty_like(values)
-    ranks[order] = torch.arange(
-        order.numel(), 0, -1, dtype=values.dtype, device=values.device
-    )
+    ranks[order] = torch.arange(order.numel(), 0, -1, dtype=values.dtype, device=values.device)
     return ranks
 
 
