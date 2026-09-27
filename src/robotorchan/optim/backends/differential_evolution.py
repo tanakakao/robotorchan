@@ -10,6 +10,7 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from scipy.optimize import differential_evolution
 from torch import Tensor
 
+from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints import CandidateConstraints
 
 
@@ -21,6 +22,8 @@ def optimize_acqf_de(
     options: dict[str, Any] | None = None,
     constraints: CandidateConstraints | None = None,
     seed: int | None = None,
+    constraint_penalty: float = 1e6,
+    equality_tolerance: float = 1e-6,
 ) -> tuple[Tensor, Tensor]:
     """Optimize an acquisition function with SciPy Differential Evolution.
 
@@ -34,10 +37,8 @@ def optimize_acqf_de(
     if bounds.ndim != 2 or bounds.shape[0] != 2:
         raise ValueError("bounds must have shape [2, d].")
     candidate_constraints = constraints or CandidateConstraints()
-    if candidate_constraints.has_constraints:
-        raise ValueError(
-            "The Differential Evolution backend does not support candidate constraints yet."
-        )
+    if constraint_penalty <= 0:
+        raise ValueError("constraint_penalty must be positive.")
 
     scipy_bounds = list(
         zip(
@@ -60,7 +61,14 @@ def optimize_acqf_de(
             raise ValueError(
                 "Differential Evolution requires a scalar acquisition value per q-batch."
             )
-        return -float(value.reshape(()).detach().cpu())
+        violation = candidate_constraint_violation(
+            candidate.unsqueeze(0),
+            candidate_constraints,
+            equality_tolerance=equality_tolerance,
+        ).reshape(())
+        return -float(value.reshape(()).detach().cpu()) + constraint_penalty * float(
+            violation.detach().cpu()
+        )
 
     result = differential_evolution(
         objective,

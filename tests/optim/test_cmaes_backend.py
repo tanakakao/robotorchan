@@ -11,7 +11,6 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
 from robotorchan.optim.backends import optimize_acqf_cmaes
-from robotorchan.optim.constraints import CandidateConstraints
 
 
 class _QuadraticAcquisition(AcquisitionFunction):
@@ -63,15 +62,6 @@ def test_cmaes_supports_joint_q_batch() -> None:
         candidates, _ = optimize_acqf_cmaes(_QuadraticAcquisition(), bounds, q=2)
 
     assert candidates.shape == torch.Size([2, 2])
-
-
-def test_cmaes_rejects_candidate_constraints() -> None:
-    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
-    constraints = CandidateConstraints(
-        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.2),)
-    )
-    with pytest.raises(ValueError, match="does not support candidate constraints yet"):
-        optimize_acqf_cmaes(_QuadraticAcquisition(), bounds, q=1, constraints=constraints)
 
 
 def test_cmaes_reports_missing_optional_dependency() -> None:

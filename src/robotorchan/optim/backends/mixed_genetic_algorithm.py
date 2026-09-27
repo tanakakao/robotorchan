@@ -8,6 +8,7 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
+from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints import CandidateConstraints
 
 
@@ -27,6 +28,8 @@ def optimize_acqf_mixed_ga(
     mutation_scale: float = 0.1,
     seed: int | None = None,
     constraints: CandidateConstraints | None = None,
+    constraint_penalty: float = 1e6,
+    equality_tolerance: float = 1e-6,
 ) -> tuple[Tensor, Tensor]:
     """Optimize an acquisition function over continuous, integer, and categorical inputs."""
     categorical_values = dict(categorical_values or {})
@@ -45,10 +48,8 @@ def optimize_acqf_mixed_ga(
         mutation_scale=mutation_scale,
     )
     candidate_constraints = constraints or CandidateConstraints()
-    if candidate_constraints.has_constraints:
-        raise ValueError(
-            "The mixed Genetic Algorithm backend does not support candidate constraints yet."
-        )
+    if constraint_penalty <= 0:
+        raise ValueError("constraint_penalty must be positive.")
 
     generator = torch.Generator(device=bounds.device)
     if seed is not None:
@@ -80,7 +81,15 @@ def optimize_acqf_mixed_ga(
     best_candidate: Tensor | None = None
     best_value: Tensor | None = None
     for generation in range(generations):
-        scores = _evaluate_population(acq_function, population, q, d)
+        scores = _evaluate_population(
+            acq_function,
+            population,
+            q,
+            d,
+            candidate_constraints,
+            constraint_penalty,
+            equality_tolerance,
+        )
         generation_best = scores.argmax()
         if best_value is None or scores[generation_best] > best_value:
             best_value = scores[generation_best].detach().clone()
@@ -115,15 +124,26 @@ def optimize_acqf_mixed_ga(
 
 
 def _evaluate_population(
-    acq_function: AcquisitionFunction, population: Tensor, q: int, d: int
+    acq_function: AcquisitionFunction,
+    population: Tensor,
+    q: int,
+    d: int,
+    constraints: CandidateConstraints,
+    constraint_penalty: float,
+    equality_tolerance: float,
 ) -> Tensor:
+    candidates = population.reshape(population.shape[0], q, d)
     with torch.no_grad():
-        values = acq_function(population.reshape(population.shape[0], q, d))
+        values = acq_function(candidates)
     if values.numel() != population.shape[0]:
         raise ValueError(
             "Mixed Genetic Algorithm requires one scalar acquisition value per population member."
         )
-    return values.reshape(population.shape[0])
+    scores = values.reshape(population.shape[0])
+    violation = candidate_constraint_violation(
+        candidates, constraints, equality_tolerance=equality_tolerance
+    )
+    return scores - constraint_penalty * violation
 
 
 def _tournament_select(
