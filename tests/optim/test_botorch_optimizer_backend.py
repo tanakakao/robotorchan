@@ -193,13 +193,13 @@ def test_mixed_backend_rejects_q_interpoint_nonlinear_before_botorch_call() -> N
         pytest.raises(ValueError, match="inter-point nonlinear"),
     ):
         optimize_acqf_mixed_botorch(
-                _DummyAcquisition(),
-                bounds,
-                q=2,
-                num_restarts=2,
-                fixed_features_list=[{}],
-                raw_samples=8,
-                constraints=constraints,
+            _DummyAcquisition(),
+            bounds,
+            q=2,
+            num_restarts=2,
+            fixed_features_list=[{}],
+            raw_samples=8,
+            constraints=constraints,
             batch_initial_conditions=torch.tensor(
                 [[[0.2], [0.3]], [[0.3], [0.2]]],
                 dtype=torch.double,
