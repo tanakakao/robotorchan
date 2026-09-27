@@ -149,10 +149,7 @@ def test_mixed_ga_supports_variable_dependent_nonlinear_constraint() -> None:
     constraints = CandidateConstraints(
         nonlinear_inequality_constraints=(
             (
-                lambda x: 0.55
-                + 0.10 * x[..., 1]
-                - 0.15 * x[..., 2]
-                - x[..., 0],
+                lambda x: 0.55 + 0.10 * x[..., 1] - 0.15 * x[..., 2] - x[..., 0],
                 True,
             ),
         )
@@ -179,9 +176,7 @@ def test_mixed_ga_supports_variable_dependent_nonlinear_constraint() -> None:
 def test_mixed_ga_supports_q_batch_interpoint_nonlinear_constraint() -> None:
     bounds = torch.tensor([[0.0, 0.0], [1.0, 3.0]], dtype=torch.double)
     constraints = CandidateConstraints(
-        nonlinear_inequality_constraints=(
-            (lambda x: 0.7 - x[:, 0].sum(), False),
-        )
+        nonlinear_inequality_constraints=((lambda x: 0.7 - x[:, 0].sum(), False),)
     )
 
     candidates, _ = optimize_acqf_mixed_ga(
