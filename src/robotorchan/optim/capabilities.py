@@ -151,3 +151,12 @@ HYBRID_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     gpu=False,
     batch_evaluation=False,
 )
+
+
+NSGA2_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    continuous=True,
+    requires_grad=False,
+    q_batch=False,
+    gpu=True,
+    batch_evaluation=True,
+)
