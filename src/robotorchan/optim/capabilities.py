@@ -62,3 +62,13 @@ BOTORCH_MIXED_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     fixed_features=True,
     gpu=False,
 )
+
+
+TORCH_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    continuous=True,
+    requires_grad=True,
+    q_batch=True,
+    fixed_features=True,
+    gpu=True,
+    batch_evaluation=True,
+)
