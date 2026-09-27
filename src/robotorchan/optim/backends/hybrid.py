@@ -47,6 +47,9 @@ def optimize_acqf_hybrid(
         raise ValueError("num_restarts must be at least 1.")
     if variable_space is not None:
         variable_space.validate_fixed_features(fixed_features)
+        if mixed_fixed_features_list is not None:
+            for config in mixed_fixed_features_list:
+                variable_space.validate_fixed_features(config)
         if variable_space.categorical_dims and mixed_fixed_features_list is None:
             raise ValueError(
                 "Categorical hybrid optimization requires mixed_fixed_features_list "
@@ -79,12 +82,15 @@ def optimize_acqf_hybrid(
         options.setdefault("batch_limit", 1)
 
     if variable_space is not None and variable_space.categorical_dims:
+        resolved_fixed_features_list = _merge_fixed_features_list(
+            mixed_fixed_features_list or [], fixed_features
+        )
         return optimize_acqf_mixed_botorch(
             acq_function=acq_function,
             bounds=bounds,
             q=q,
             num_restarts=num_restarts,
-            fixed_features_list=mixed_fixed_features_list or [],
+            fixed_features_list=resolved_fixed_features_list,
             raw_samples=None,
             options=options,
             constraints=candidate_constraints,
@@ -122,3 +128,27 @@ def _resolve_global_optimizer(
     raise ValueError(
         "global_optimizer must be 'de', 'cmaes', 'mixed_ga', or a compatible callable."
     )
+
+
+def _merge_fixed_features_list(
+    fixed_features_list: list[dict[int, float]],
+    fixed_features: dict[int, float | Tensor] | None,
+) -> list[dict[int, float | Tensor]]:
+    """Merge common fixed features into every mixed discrete configuration."""
+    if not fixed_features:
+        return [dict(config) for config in fixed_features_list]
+    merged: list[dict[int, float | Tensor]] = []
+    for config in fixed_features_list:
+        resolved: dict[int, float | Tensor] = dict(config)
+        for dim, value in fixed_features.items():
+            if dim in resolved:
+                scalar = (
+                    float(value.reshape(()).item()) if isinstance(value, Tensor) else float(value)
+                )
+                if float(resolved[dim]) != scalar:
+                    raise ValueError(
+                        f"fixed_features[{dim}] conflicts with mixed_fixed_features_list."
+                    )
+            resolved[dim] = value
+        merged.append(resolved)
+    return merged

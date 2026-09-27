@@ -166,3 +166,50 @@ def test_categorical_hybrid_requires_mixed_local_enumeration() -> None:
             global_optimizer="mixed_ga",
             variable_space=variable_space,
         )
+
+
+def test_hybrid_merges_common_fixed_features_into_mixed_local_configs() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(bounds, categorical_values={1: [0.0, 2.0]})
+    global_optimizer = Mock(
+        return_value=(torch.tensor([[0.4, 2.0]], dtype=torch.double), torch.tensor(1.0))
+    )
+    local_candidate = torch.tensor([[0.25, 2.0]], dtype=torch.double)
+
+    with patch(
+        "robotorchan.optim.backends.hybrid.optimize_acqf_mixed_botorch",
+        return_value=(local_candidate, torch.tensor(1.0)),
+    ) as local:
+        optimize_acqf_hybrid(
+            _Quadratic(),
+            bounds,
+            q=1,
+            global_optimizer=global_optimizer,
+            variable_space=variable_space,
+            fixed_features={0: 0.25},
+            mixed_fixed_features_list=[{1: 0.0}, {1: 2.0}],
+        )
+
+    assert local.call_args.kwargs["fixed_features_list"] == [
+        {1: 0.0, 0: 0.25},
+        {1: 2.0, 0: 0.25},
+    ]
+
+
+def test_hybrid_rejects_conflicting_common_and_mixed_fixed_features() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(bounds, categorical_values={1: [0.0, 2.0]})
+    global_optimizer = Mock(
+        return_value=(torch.tensor([[0.4, 2.0]], dtype=torch.double), torch.tensor(1.0))
+    )
+
+    with pytest.raises(ValueError, match="conflicts"):
+        optimize_acqf_hybrid(
+            _Quadratic(),
+            bounds,
+            q=1,
+            global_optimizer=global_optimizer,
+            variable_space=variable_space,
+            fixed_features={1: 2.0},
+            mixed_fixed_features_list=[{1: 0.0}, {1: 2.0}],
+        )
