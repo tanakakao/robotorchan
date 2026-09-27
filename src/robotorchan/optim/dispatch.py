@@ -13,11 +13,15 @@ from robotorchan.optim.backends import (
     optimize_acqf_de,
     optimize_acqf_ga,
     optimize_acqf_hybrid,
+    optimize_acqf_mixed_ga,
     optimize_acqf_pso,
     optimize_acqf_sampling,
     optimize_acqf_torch,
 )
-from robotorchan.optim.capabilities import get_optimizer_capabilities
+from robotorchan.optim.capabilities import (
+    MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+    get_optimizer_capabilities,
+)
 from robotorchan.optim.constraints import CandidateConstraints
 from robotorchan.optim.variable_space import MixedVariableSpace
 
@@ -57,15 +61,23 @@ def optimize_acqf(
     backend_options = dict(optimizer_options or {})
     name = optimizer.lower()
     capabilities = get_optimizer_capabilities(name)
+    if name == "ga" and variable_space is not None and variable_space.is_mixed:
+        capabilities = MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES
     _validate_requested_capabilities(
         name,
         capabilities,
         constraints=constraints,
         fixed_features=fixed_features,
         sequential=sequential,
+        variable_space=variable_space,
     )
 
     if name == "botorch":
+        if variable_space is not None and variable_space.is_mixed:
+            raise NotImplementedError(
+                "optimizer='botorch' does not consume MixedVariableSpace directly; "
+                "use the explicit BoTorch mixed backend or a mixed-capable named optimizer."
+            )
         _reject_backend_options(name, backend_options)
         return optimize_acqf_botorch(
             acq_function,
@@ -128,9 +140,21 @@ def optimize_acqf(
             seed=seed,
             constraints=constraints,
             fixed_features=fixed_features,
+            variable_space=variable_space,
             **backend_options,
         )
     if name == "ga":
+        if variable_space is not None and variable_space.is_mixed:
+            return optimize_acqf_mixed_ga(
+                acq_function,
+                bounds,
+                q,
+                seed=seed,
+                constraints=constraints,
+                fixed_features=fixed_features,
+                variable_space=variable_space,
+                **backend_options,
+            )
         return optimize_acqf_ga(
             acq_function,
             bounds,
@@ -148,6 +172,7 @@ def optimize_acqf(
             seed=seed,
             constraints=constraints,
             fixed_features=fixed_features,
+            variable_space=variable_space,
             **backend_options,
         )
     if name == "cmaes":
@@ -167,6 +192,7 @@ def optimize_acqf(
             seed=seed,
             constraints=constraints,
             fixed_features=fixed_features,
+            variable_space=variable_space,
             **backend_options,
         )
     supported = ", ".join(
@@ -224,7 +250,17 @@ def _validate_requested_capabilities(
     constraints: CandidateConstraints | None,
     fixed_features: dict[int, float | Tensor] | None,
     sequential: bool,
+    variable_space: MixedVariableSpace | None,
 ) -> None:
+    if variable_space is not None:
+        if variable_space.integer_dims and not capabilities.integer:
+            raise NotImplementedError(f"optimizer={name!r} does not support integer variables.")
+        if variable_space.categorical_dims and not capabilities.categorical:
+            raise NotImplementedError(f"optimizer={name!r} does not support categorical variables.")
+        if variable_space.is_mixed and not capabilities.mixed:
+            raise NotImplementedError(f"optimizer={name!r} does not support mixed variables.")
+        variable_space.validate_fixed_features(fixed_features)
+
     if fixed_features and not capabilities.fixed_features:
         raise NotImplementedError(f"optimizer={name!r} does not support fixed_features.")
     if sequential and not capabilities.sequential:
