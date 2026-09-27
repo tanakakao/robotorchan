@@ -28,3 +28,21 @@ candidates, value = optimize_acqf_de(
     options={"maxiter": 200, "popsize": 15},
 )
 ```
+
+
+## Integer and mixed continuous/integer variables
+
+Differential Evolution now supports continuous plus integer search spaces. Integer
+coordinates remain part of the DE decision vector, but every acquisition and
+constraint evaluation repairs those coordinates to the nearest legal integer and
+clips them to the integer domain defined by the bounds. The returned candidate is
+repaired with the same rule.
+
+This is intentionally limited to continuous and integer variables in this phase.
+Categorical variables are rejected rather than treating category labels as a
+numeric metric. Categorical-aware DE mutation is evaluated separately before it
+can be advertised as supported.
+
+Both the direct `integer_dims` backend argument and a `MixedVariableSpace`
+containing only continuous/integer variables are supported. Supplying both is
+rejected to keep a single source of search-space semantics.
