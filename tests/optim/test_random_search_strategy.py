@@ -61,7 +61,7 @@ def test_random_search_returns_best_sampled_point() -> None:
     assert result.candidates.shape == torch.Size([1, 1])
     assert torch.all(result.candidates >= bounds[0])
     assert torch.all(result.candidates <= bounds[1])
-    assert result.metadata == {"num_samples": 128, "q": 1, "sampler": "random"}
+    assert result.metadata == {"num_samples": 128, "q": 1}
 
 
 def test_random_search_optimizes_joint_q_batches() -> None:
@@ -80,7 +80,7 @@ def test_random_search_optimizes_joint_q_batches() -> None:
     assert torch.equal(result.acquisition_value, scores[expected_index])
     assert result.candidates.shape == torch.Size([3, 2])
     assert result.acquisition_value.ndim == 0
-    assert result.metadata == {"num_samples": 64, "q": 3, "sampler": "random"}
+    assert result.metadata == {"num_samples": 64, "q": 3}
 
 
 def test_random_search_preserves_float64_dtype_and_device() -> None:
