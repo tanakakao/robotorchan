@@ -239,8 +239,8 @@ def _repair_structured(
         repaired[:, index] = torch.maximum(
             torch.minimum(repaired[:, index], integer_upper), integer_lower
         )
-    if resample_categorical:
-        for dim, values in categorical_values.items():
+    for dim, values in categorical_values.items():
+        if resample_categorical:
             choices = torch.randint(
                 len(values),
                 (population.shape[0],),
@@ -248,6 +248,9 @@ def _repair_structured(
                 generator=generator,
             )
             repaired[:, dim] = values[choices]
+        else:
+            distances = (repaired[:, dim, None] - values[None, :]).abs()
+            repaired[:, dim] = values[distances.argmin(dim=-1)]
     return repaired
 
 
@@ -299,7 +302,9 @@ def _validate_configuration(
     for dim, values in categorical_values.items():
         tensor_values = torch.as_tensor(values, device=bounds.device, dtype=bounds.dtype)
         if tensor_values.ndim != 1 or tensor_values.numel() == 0:
-            raise ValueError(f"categorical_values[{dim}] must be a non-empty one-dimensional sequence.")
+            raise ValueError(
+                f"categorical_values[{dim}] must be a non-empty one-dimensional sequence."
+            )
         if not torch.isfinite(tensor_values).all():
             raise ValueError(f"categorical_values[{dim}] must contain only finite values.")
         if torch.unique(tensor_values).numel() != tensor_values.numel():
