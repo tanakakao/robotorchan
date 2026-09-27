@@ -106,11 +106,12 @@ def test_hybrid_rejects_duplicate_restarts() -> None:
         optimize_acqf_hybrid(
             _Quadratic(), bounds, q=1, global_optimizer=global_optimizer, num_restarts=2
         )
+
+
 def test_hybrid_rejects_unknown_global_optimizer() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     with pytest.raises(ValueError, match="global_optimizer"):
         optimize_acqf_hybrid(_Quadratic(), bounds, q=1, global_optimizer="unknown")  # type: ignore[arg-type]
-
 
 
 def test_hybrid_forwards_mixed_space_to_global_and_mixed_local_stage() -> None:
