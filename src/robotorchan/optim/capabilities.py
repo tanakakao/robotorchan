@@ -78,6 +78,7 @@ SAMPLING_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     continuous=True,
     requires_grad=False,
     q_batch=True,
+    fixed_features=True,
     gpu=True,
     batch_evaluation=True,
 )

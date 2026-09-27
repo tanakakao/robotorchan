@@ -17,6 +17,8 @@ def candidate_constraint_violation(
     """Return non-negative total violation for each candidate q-batch."""
     if candidates.ndim < 2:
         raise ValueError("candidates must end in [q, d].")
+    if equality_tolerance < 0:
+        raise ValueError("equality_tolerance must be non-negative.")
     batch_shape = candidates.shape[:-2]
     violation = torch.zeros(batch_shape, dtype=candidates.dtype, device=candidates.device)
     if constraints is None:
