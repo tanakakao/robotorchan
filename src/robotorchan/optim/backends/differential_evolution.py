@@ -38,7 +38,8 @@ def optimize_acqf_de(
     The joint ``q x d`` candidate batch is flattened into one DE decision
     vector. Acquisition evaluation is performed on the original tensor
     device and dtype. Integer coordinates are repaired before acquisition
-    and constraint evaluation. Unordered categorical coordinates are rejected rather than\n    assigned an artificial numeric geometry.
+    and constraint evaluation. Unordered categorical coordinates are rejected
+    rather than assigned an artificial numeric geometry.
     """
     validate_bounds(bounds)
     if variable_space is not None:
