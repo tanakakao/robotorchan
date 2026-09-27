@@ -30,10 +30,16 @@ def optimize_vector_nsga2(
     scalar BoTorch acquisition optimization: qEHVI/qNEHVI already produce
     scalar acquisition values and do not require NSGA-II.
     """
-    validate_bounds(bounds)\n    _validate(bounds, population_size, generations, crossover_rate, mutation_rate, mutation_scale)
-    generator = torch.Generator(device=bounds.device)
-    if seed is not None:
-        generator.manual_seed(seed)
+    validate_bounds(bounds)
+    _validate(
+        bounds,
+        population_size,
+        generations,
+        crossover_rate,
+        mutation_rate,
+        mutation_scale,
+    )
+    generator = make_generator(bounds, seed)
     lower, upper = bounds
     population = lower + (upper - lower) * torch.rand(
         population_size,
