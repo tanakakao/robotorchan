@@ -182,7 +182,7 @@ def test_alebo_rejects_unmapped_nonlinear_constraints() -> None:
     def constraint(x: torch.Tensor) -> torch.Tensor:
         return x.new_tensor(0.25) - x.square().sum()
 
-    with pytest.raises(ValueError, match="does not support candidate-space constraints"):
+    with pytest.raises(NotImplementedError, match="does not map public-space CandidateConstraints"):
         ALEBOStrategy(
             _bounds(),
             embedding_dim=2,
