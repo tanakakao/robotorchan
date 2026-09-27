@@ -281,7 +281,39 @@ robotorchan は BoTorch-first とし、標準的な constrained acquisition sema
 
 現在の対応状況は [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
 
-## 8.15 まとめ
+## 8.15 robotorchan の constraint responsibility boundary
+
+robotorchan では、同じ `constraint` という語でも runtime responsibility を明確に分けます。
+
+| 種類 | 既知/未知 | feasible convention | robotorchan の責務 |
+| --- | --- | --- | --- |
+| candidate linear inequality | 入力から既知 | BoTorch optimizer と同じ `sum(...) >= rhs` | `CandidateConstraints.inequality_constraints` |
+| candidate equality | 入力から既知 | `sum(...) = rhs` | `CandidateConstraints.equality_constraints` |
+| candidate nonlinear inequality | 入力から既知 | `callable(X) >= 0` | `CandidateConstraints.nonlinear_inequality_constraints` |
+| output / black-box constraint | 評価前は未知 | acquisition API の convention に従う | BoTorch constrained-acquisition composition |
+
+したがって、candidate nonlinear constraint の `>= 0` と、output constraint の例で使う
+`c(x) <= 0` は矛盾ではありません。異なる API layer の符号規約です。
+
+`AcquisitionCapabilities.supports_constraints` は **output / black-box constrained BO の
+composition support** のみを表します。これを candidate-space constraint の対応判定には
+使用しません。逆に、search strategy が `CandidateConstraints` を受け付けても、その
+acquisition が未知の制約出力をモデル化できることは意味しません。
+
+既知の入力制約と未知の出力制約を同時に持つ問題では、両者を併用できます。
+
+```text
+surrogate / constrained acquisition
+    unknown output feasibility を確率的に扱う
+                +
+CandidateConstraints / search strategy
+    known input feasibility を候補生成時に厳密に扱う
+```
+
+この場合も一方を他方へ変換せず、それぞれの layer に保持します。
+
+
+## 8.16 まとめ
 
 Constrained BO では、
 

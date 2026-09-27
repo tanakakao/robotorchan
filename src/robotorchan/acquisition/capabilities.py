@@ -24,8 +24,9 @@ class AcquisitionCapabilities:
     supports_structured_output: bool = False
     supports_ensemble: bool = False
     requires_single_output: bool = False
-    # Output / black-box constrained-BO composition support. Candidate/input-space
-    # feasibility is an optimizer concern represented by optim.CandidateConstraints.
+    # Output / black-box constrained-BO composition support only. This flag must
+    # never be used to infer candidate/input-space feasibility support; that is an
+    # optimizer concern represented independently by optim.CandidateConstraints.
     supports_constraints: bool = False
     supports_multi_objective: bool = False
     monte_carlo: bool = False
