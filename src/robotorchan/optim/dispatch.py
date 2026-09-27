@@ -13,11 +13,15 @@ from robotorchan.optim.backends import (
     optimize_acqf_de,
     optimize_acqf_ga,
     optimize_acqf_hybrid,
+    optimize_acqf_mixed_ga,
     optimize_acqf_pso,
     optimize_acqf_sampling,
     optimize_acqf_torch,
 )
-from robotorchan.optim.capabilities import get_optimizer_capabilities
+from robotorchan.optim.capabilities import (
+    MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+    get_optimizer_capabilities,
+)
 from robotorchan.optim.constraints import CandidateConstraints
 from robotorchan.optim.variable_space import MixedVariableSpace
 
@@ -57,6 +61,8 @@ def optimize_acqf(
     backend_options = dict(optimizer_options or {})
     name = optimizer.lower()
     capabilities = get_optimizer_capabilities(name)
+    if name == "ga" and variable_space is not None and variable_space.is_mixed:
+        capabilities = MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES
     _validate_requested_capabilities(
         name,
         capabilities,
@@ -138,6 +144,17 @@ def optimize_acqf(
             **backend_options,
         )
     if name == "ga":
+        if variable_space is not None and variable_space.is_mixed:
+            return optimize_acqf_mixed_ga(
+                acq_function,
+                bounds,
+                q,
+                seed=seed,
+                constraints=constraints,
+                fixed_features=fixed_features,
+                variable_space=variable_space,
+                **backend_options,
+            )
         return optimize_acqf_ga(
             acq_function,
             bounds,
@@ -145,7 +162,6 @@ def optimize_acqf(
             seed=seed,
             constraints=constraints,
             fixed_features=fixed_features,
-            variable_space=variable_space,
             **backend_options,
         )
     if name == "pso":
