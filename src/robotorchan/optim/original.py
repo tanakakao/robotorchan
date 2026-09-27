@@ -75,13 +75,18 @@ class OriginalSpaceStrategy(SearchStrategy):
                 "Nonlinear candidate constraints require feasible batch_initial_conditions."
             )
 
+        options = None if self.options is None else dict(self.options)
+        if self.constraints.has_nonlinear_constraints:
+            options = {} if options is None else options
+            options.setdefault("batch_limit", 1)
+
         candidates, acquisition_value = optimize_acqf(
             acq_function=acq_function,
             bounds=self.bounds,
             q=q,
             num_restarts=self.num_restarts,
             raw_samples=self.raw_samples,
-            options=self.options,
+            options=options,
             sequential=self.sequential,
             fixed_features=self.fixed_features,
             inequality_constraints=(
