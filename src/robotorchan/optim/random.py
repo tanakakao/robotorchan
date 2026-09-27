@@ -2,28 +2,15 @@
 
 from __future__ import annotations
 
+import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
-from robotorchan.optim.backends.sampling import optimize_acqf_sampling
 from robotorchan.optim.base import SearchResult, SearchStrategy
 
 
 class RandomSearchStrategy(SearchStrategy):
-    """Optimize an acquisition function over uniformly sampled candidate batches.
-
-    This strategy is intended as a simple high-dimensional acquisition-search
-    baseline. It samples ``num_samples`` independent q-batches uniformly inside
-    the configured public-space box, evaluates the acquisition function once per
-    batch, and returns the batch with the largest acquisition value. The true
-    objective is never evaluated by the strategy.
-
-    Args:
-        bounds: Continuous box bounds with shape ``[2, d]``.
-        num_samples: Number of random q-batches evaluated per search.
-        seed: Optional local random seed. A dedicated generator is used so the
-            strategy does not modify PyTorch's global random-number state.
-    """
+    """Optimize an acquisition function over uniformly sampled candidate batches."""
 
     def __init__(
         self,
@@ -48,18 +35,37 @@ class RandomSearchStrategy(SearchStrategy):
         if q < 1:
             raise ValueError("q must be at least 1.")
 
-        candidates, acquisition_value = optimize_acqf_sampling(
-            acq_function,
-            self.bounds,
-            q,
-            num_samples=self.num_samples,
-            method="random",
-            seed=self.seed,
-        )
+        samples = self._sample_candidate_batches(q)
+        with torch.no_grad():
+            values = acq_function(samples)
+        scores = self._as_batch_scores(values)
+        selected = scores.argmax()
 
         return SearchResult(
-            candidates=candidates,
-            acquisition_value=acquisition_value,
-            metadata={"num_samples": self.num_samples, "q": q, "sampler": "random"},
+            candidates=samples[selected],
+            acquisition_value=scores[selected],
+            metadata={"num_samples": self.num_samples, "q": q},
         )
 
+    def _sample_candidate_batches(self, q: int) -> Tensor:
+        generator = None
+        if self.seed is not None:
+            generator = torch.Generator(device=self.bounds.device)
+            generator.manual_seed(self.seed)
+        unit = torch.rand(
+            self.num_samples,
+            q,
+            self.input_dim,
+            dtype=self.bounds.dtype,
+            device=self.bounds.device,
+            generator=generator,
+        )
+        return self.bounds[0] + (self.bounds[1] - self.bounds[0]) * unit
+
+    def _as_batch_scores(self, values: Tensor) -> Tensor:
+        if values.numel() != self.num_samples:
+            raise ValueError(
+                "RandomSearchStrategy requires an acquisition function that returns "
+                "one scalar value per sampled q-batch."
+            )
+        return values.reshape(self.num_samples)
