@@ -8,8 +8,8 @@ from torch import Tensor
 
 from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints import CandidateConstraints
-from robotorchan.optim.runtime import make_generator, validate_bounds
 from robotorchan.optim.cross_cutting import apply_fixed_features
+from robotorchan.optim.runtime import make_generator, validate_bounds
 
 
 def optimize_acqf_pso(
@@ -29,13 +29,12 @@ def optimize_acqf_pso(
     equality_tolerance: float = 1e-6,
 ) -> tuple[Tensor, Tensor]:
     """Optimize a scalar acquisition function with particle swarm optimization."""
+    validate_bounds(bounds)
     _validate(bounds, q, swarm_size, iterations, inertia, cognitive, social)
     if constraint_penalty <= 0:
         raise ValueError("constraint_penalty must be positive.")
     candidate_constraints = constraints or CandidateConstraints()
-    generator = torch.Generator(device=bounds.device)
-    if seed is not None:
-        generator.manual_seed(seed)
+    generator = make_generator(bounds, seed)
 
     d = bounds.shape[-1]
     lower = bounds[0].repeat(q)
