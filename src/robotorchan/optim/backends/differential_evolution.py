@@ -8,7 +8,7 @@ from typing import Any
 import numpy as np
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
-from scipy.optimize import differential_evolution
+from scipy.optimize import NonlinearConstraint, differential_evolution
 from torch import Tensor
 
 from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
@@ -79,19 +79,33 @@ def optimize_acqf_de(
             raise ValueError(
                 "Differential Evolution requires a scalar acquisition value per q-batch."
             )
-        violation = candidate_constraint_violation(
-            candidate.unsqueeze(0),
-            candidate_constraints,
-            equality_tolerance=equality_tolerance,
-        ).reshape(())
-        acquisition = float(value.reshape(()).detach().cpu())
-        total_violation = float(violation.detach().cpu())
-        return _feasibility_first_scalar_objective(acquisition, total_violation)
+        return -float(value.reshape(()).detach().cpu())
+
+    scipy_constraints = ()
+    if candidate_constraints != CandidateConstraints():
+
+        def feasibility(flat_candidate: np.ndarray) -> float:
+            candidate = torch.as_tensor(
+                flat_candidate, dtype=bounds.dtype, device=bounds.device
+            ).reshape(q, bounds.shape[-1])
+            candidate = _repair_structured_dims(
+                candidate, integer_dims, categorical_values, bounds
+            )
+            candidate = apply_fixed_features(candidate, fixed_features)
+            violation = candidate_constraint_violation(
+                candidate.unsqueeze(0),
+                candidate_constraints,
+                equality_tolerance=equality_tolerance,
+            ).reshape(())
+            return -float(violation.detach().cpu())
+
+        scipy_constraints = (NonlinearConstraint(feasibility, 0.0, np.inf),)
 
     result = differential_evolution(
         objective,
         scipy_bounds,
         seed=seed,
+        constraints=scipy_constraints,
         **resolved_options,
     )
     candidates = torch.as_tensor(
@@ -157,16 +171,3 @@ def _repair_structured_dims(
 
 
 
-def _feasibility_first_scalar_objective(acquisition: float, violation: float) -> float:
-    """Map feasibility-first ordering to a scalar objective for SciPy DE.
-
-    Feasible candidates minimize the negative acquisition value. Infeasible
-    candidates receive an infinite objective so they can never replace a
-    feasible population member. SciPy's DE then compares infeasible candidates
-    through its native constraint machinery only when constraints are expressed
-    natively; robotorchan constraints therefore require an explicit finite
-    ordering and use violation magnitude until feasibility is reached.
-    """
-    if violation <= 0.0:
-        return -acquisition
-    return float("inf") + violation
