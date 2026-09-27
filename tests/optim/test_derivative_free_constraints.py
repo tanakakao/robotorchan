@@ -219,3 +219,37 @@ def test_mixed_ga_supports_q_batch_interpoint_linear_constraint() -> None:
 
     assert candidates[:, 0].sum() <= 0.7 + 1e-8
     assert torch.equal(candidates[:, 1], candidates[:, 1].round())
+
+
+def test_de_preserves_integer_domain_with_constraint() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 4.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=((torch.tensor([0]), torch.tensor([-1.0]), -0.4),)
+    )
+
+    candidates, _ = optimize_acqf_de(
+        _Target(),
+        bounds,
+        q=1,
+        integer_dims=[1],
+        seed=31,
+        options={"maxiter": 40, "popsize": 10},
+        constraints=constraints,
+    )
+
+    assert float(candidates[0, 0]) <= 0.4 + 1e-3
+    assert candidates[0, 1] == candidates[0, 1].round()
+
+
+def test_de_rejects_categorical_variable_space() -> None:
+    from robotorchan.optim.variable_space import MixedVariableSpace
+
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(bounds, categorical_values={1: [0.0, 1.0, 2.0]})
+
+    try:
+        optimize_acqf_de(_Target(), bounds, q=1, variable_space=variable_space)
+    except ValueError as error:
+        assert "does not support categorical" in str(error)
+    else:
+        raise AssertionError("Expected categorical Differential Evolution to be rejected.")
