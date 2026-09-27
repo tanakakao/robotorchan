@@ -315,7 +315,6 @@ def test_de_constraint_handling_is_independent_of_acquisition_scale() -> None:
     assert float(candidates[0, 0]) <= 0.4 + 1e-3
 
 
-
 def test_constraint_evaluation_supports_batched_q_interpoint_nonlinear() -> None:
     candidates = torch.tensor(
         [[[0.2], [0.3]], [[0.6], [0.5]]],
