@@ -8,10 +8,10 @@ AcquisitionFunction and operate on Tensor bounds and q-batches.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class ConstraintHandling(str, Enum):
+class ConstraintHandling(StrEnum):
     """How an optimizer enforces a supported candidate constraint."""
 
     NATIVE = "native"
