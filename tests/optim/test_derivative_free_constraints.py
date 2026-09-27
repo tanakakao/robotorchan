@@ -313,3 +313,79 @@ def test_de_constraint_handling_is_independent_of_acquisition_scale() -> None:
     )
 
     assert float(candidates[0, 0]) <= 0.4 + 1e-3
+
+
+def test_constraint_evaluation_supports_batched_q_interpoint_nonlinear() -> None:
+    candidates = torch.tensor(
+        [[[0.2], [0.3]], [[0.6], [0.5]]],
+        dtype=torch.double,
+    )
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.8 - x[:, 0].sum(), False),)
+    )
+
+    violation = candidate_constraint_violation(candidates, constraints)
+
+    assert violation.shape == torch.Size([2])
+    assert violation[0] == 0
+    assert violation[1] > 0
+
+
+def test_mixed_ga_supports_q_batch_fixed_features_and_interpoint_constraint() -> None:
+    from robotorchan.optim.variable_space import MixedVariableSpace
+
+    bounds = torch.tensor([[0.0, 0.0, 0.0], [1.0, 3.0, 2.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(
+        bounds,
+        integer_dims=(1,),
+        categorical_values={2: [0.0, 1.0, 2.0]},
+    )
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([[0, 0], [1, 0]]),
+                torch.tensor([-1.0, -1.0]),
+                -0.8,
+            ),
+        )
+    )
+
+    candidates, _ = optimize_acqf_mixed_ga(
+        _Target(target=0.9),
+        bounds,
+        q=2,
+        variable_space=variable_space,
+        fixed_features={2: 1.0},
+        population_size=140,
+        generations=60,
+        seed=47,
+        constraints=constraints,
+    )
+
+    assert candidates[:, 0].sum() <= 0.8 + 1e-8
+    assert torch.equal(candidates[:, 1], candidates[:, 1].round())
+    assert torch.equal(candidates[:, 2], torch.ones(2, dtype=torch.double))
+
+
+def test_de_supports_q_batch_integer_and_interpoint_nonlinear_constraint() -> None:
+    from robotorchan.optim.variable_space import MixedVariableSpace
+
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 3.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(bounds, integer_dims=(1,))
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.8 - x[:, 0].sum(), False),)
+    )
+
+    candidates, _ = optimize_acqf_de(
+        _Target(target=0.9),
+        bounds,
+        q=2,
+        variable_space=variable_space,
+        fixed_features={1: 2.0},
+        seed=53,
+        options={"maxiter": 50, "popsize": 12},
+        constraints=constraints,
+    )
+
+    assert candidates[:, 0].sum() <= 0.8 + 1e-3
+    assert torch.equal(candidates[:, 1], torch.full((2,), 2.0, dtype=torch.double))
