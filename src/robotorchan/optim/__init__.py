@@ -23,6 +23,7 @@ from robotorchan.optim.constraints import (
     NonlinearConstraintCallable,
 )
 from robotorchan.optim.cross_cutting import apply_fixed_features, optimize_acqf_sequential
+from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 from robotorchan.optim.embedding import (
     ALEBOStrategy,
     BAxUSState,
@@ -71,6 +72,7 @@ __all__ = [
     "NonlinearConstraint",
     "NonlinearConstraintCallable",
     "OptimizerCapabilities",
+    "OptimizerName",
     "OriginalSpaceStrategy",
     "PCAReconstruction",
     "REMBOStrategy",
@@ -85,6 +87,7 @@ __all__ = [
     "apply_fixed_features",
     "benchmark_optimizer",
     "benchmark_optimizers",
+    "optimize_acqf",
     "optimize_acqf_sequential",
     "update_baxus_state",
     "update_turbo_state",
