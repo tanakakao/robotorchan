@@ -48,12 +48,8 @@ def test_mixed_ga_supports_joint_q_batch_and_reproducibility() -> None:
         "generations": 10,
         "seed": 11,
     }
-    first, first_value = optimize_acqf_mixed_ga(
-        _MixedTargetAcquisition(), bounds, q=2, **kwargs
-    )
-    second, second_value = optimize_acqf_mixed_ga(
-        _MixedTargetAcquisition(), bounds, q=2, **kwargs
-    )
+    first, first_value = optimize_acqf_mixed_ga(_MixedTargetAcquisition(), bounds, q=2, **kwargs)
+    second, second_value = optimize_acqf_mixed_ga(_MixedTargetAcquisition(), bounds, q=2, **kwargs)
 
     assert first.shape == torch.Size([2, 3])
     assert torch.equal(first, second)
@@ -91,6 +87,4 @@ def test_mixed_ga_rejects_candidate_constraints() -> None:
         inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.2),)
     )
     with pytest.raises(ValueError, match="does not support candidate constraints yet"):
-        optimize_acqf_mixed_ga(
-            _MixedTargetAcquisition(), bounds, q=1, constraints=constraints
-        )
+        optimize_acqf_mixed_ga(_MixedTargetAcquisition(), bounds, q=1, constraints=constraints)
