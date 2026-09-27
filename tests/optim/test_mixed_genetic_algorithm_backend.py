@@ -78,5 +78,3 @@ def test_mixed_ga_rejects_out_of_bounds_categories() -> None:
             q=1,
             categorical_values={2: [40.0]},
         )
-
-
