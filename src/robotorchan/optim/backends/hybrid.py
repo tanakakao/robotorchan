@@ -143,8 +143,8 @@ def _merge_fixed_features_list(
         resolved: dict[int, float | Tensor] = dict(config)
         for dim, value in fixed_features.items():
             if dim in resolved:
-                config_value = Tensor.new_tensor(value, resolved[dim]) if isinstance(value, Tensor) else value
-                if float(resolved[dim]) != float(config_value):
+                scalar = float(value.reshape(()).item()) if isinstance(value, Tensor) else float(value)
+                if float(resolved[dim]) != scalar:
                     raise ValueError(
                         f"fixed_features[{dim}] conflicts with mixed_fixed_features_list."
                     )
