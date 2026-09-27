@@ -47,6 +47,7 @@ from robotorchan.optim.random import RandomSearchStrategy
 from robotorchan.optim.sobol import SobolSearchStrategy
 from robotorchan.optim.tree import TreeEnsembleSearchStrategy
 from robotorchan.optim.trust_region import TuRBOState, TuRBOStrategy, update_turbo_state
+from robotorchan.optim.variable_space import MixedVariableSpace
 
 __all__ = [
     "BOTORCH_MIXED_OPTIMIZER_CAPABILITIES",
@@ -72,6 +73,7 @@ __all__ = [
     "LatentSpaceStrategy",
     "LinearConstraint",
     "MixedSpaceStrategy",
+    "MixedVariableSpace",
     "NonlinearConstraint",
     "NonlinearConstraintCallable",
     "OptimizerCapabilities",
