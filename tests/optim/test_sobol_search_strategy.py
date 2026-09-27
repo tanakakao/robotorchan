@@ -31,9 +31,8 @@ def test_sobol_search_is_reproducible() -> None:
 
 def test_sobol_search_preserves_dtype_and_bounds() -> None:
     bounds = torch.tensor([[-2.0, 1.0], [3.0, 4.0]], dtype=torch.double)
-    result = SobolSearchStrategy(bounds, num_samples=32, seed=7).optimize(
-        _BatchSumAcquisition()
-    )
+    strategy = SobolSearchStrategy(bounds, num_samples=32, seed=7)
+    result = strategy.optimize(_BatchSumAcquisition())
 
     assert result.candidates.dtype == bounds.dtype
     assert torch.all(result.candidates >= bounds[0])
