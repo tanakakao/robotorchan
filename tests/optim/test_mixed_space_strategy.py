@@ -1,6 +1,5 @@
 """Tests for mixed-variable acquisition optimization."""
 
-import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
 
