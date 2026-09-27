@@ -114,7 +114,7 @@ def optimize_acqf_mixed_ga(
             expanded_integer_dims,
             expanded_categories,
             generator,
-            resample_categorical=True,
+            resample_categorical=False,
         )
         population = torch.cat([elites, offspring], dim=0)
 
@@ -233,9 +233,11 @@ def _repair_structured(
     repaired = population.clone()
     if integer_dims:
         index = torch.tensor(integer_dims, device=population.device)
+        integer_lower = torch.ceil(lower[index])
+        integer_upper = torch.floor(upper[index])
         repaired[:, index] = repaired[:, index].round()
         repaired[:, index] = torch.maximum(
-            torch.minimum(repaired[:, index], upper[index]), lower[index]
+            torch.minimum(repaired[:, index], integer_upper), integer_lower
         )
     if resample_categorical:
         for dim, values in categorical_values.items():
@@ -291,10 +293,17 @@ def _validate_configuration(
         raise ValueError("A dimension cannot be both integer and categorical.")
     if len(integer_dims) != len(set(integer_dims)):
         raise ValueError("integer_dims must not contain duplicates.")
+    for dim in integer_dims:
+        if torch.ceil(bounds[0, dim]) > torch.floor(bounds[1, dim]):
+            raise ValueError(f"integer dimension {dim} has no legal value within bounds.")
     for dim, values in categorical_values.items():
-        if not values:
-            raise ValueError(f"categorical_values[{dim}] must not be empty.")
         tensor_values = torch.as_tensor(values, device=bounds.device, dtype=bounds.dtype)
+        if tensor_values.ndim != 1 or tensor_values.numel() == 0:
+            raise ValueError(f"categorical_values[{dim}] must be a non-empty one-dimensional sequence.")
+        if not torch.isfinite(tensor_values).all():
+            raise ValueError(f"categorical_values[{dim}] must contain only finite values.")
+        if torch.unique(tensor_values).numel() != tensor_values.numel():
+            raise ValueError(f"categorical_values[{dim}] must not contain duplicates.")
         if torch.any(tensor_values < bounds[0, dim]) or torch.any(tensor_values > bounds[1, dim]):
             raise ValueError(f"categorical_values[{dim}] must lie within bounds.")
     if population_size < 2:
