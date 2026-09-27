@@ -7,6 +7,8 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 from torch.quasirandom import SobolEngine
 
+from robotorchan.optim.runtime import make_generator, validate_bounds
+
 
 def optimize_acqf_sampling(
     acq_function: AcquisitionFunction,
