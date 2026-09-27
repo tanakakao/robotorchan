@@ -10,6 +10,7 @@ from torch import Tensor
 
 from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.runtime import make_generator, validate_bounds
 
 
 def optimize_acqf_mixed_ga(
@@ -34,7 +35,7 @@ def optimize_acqf_mixed_ga(
     """Optimize an acquisition function over continuous, integer, and categorical inputs."""
     categorical_values = dict(categorical_values or {})
     integer_dims = tuple(integer_dims)
-    _validate_configuration(
+    validate_bounds(bounds)\n    _validate_configuration(
         q=q,
         bounds=bounds,
         integer_dims=integer_dims,
