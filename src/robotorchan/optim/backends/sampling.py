@@ -36,13 +36,11 @@ def optimize_acqf_sampling(
         if not torch.equal(variable_space.bounds, bounds):
             raise ValueError("variable_space bounds must match bounds.")
         variable_space.validate_fixed_features(fixed_features)
-        if method != "random" and (variable_space.integer_dims or variable_space.categorical_dims):
-            raise NotImplementedError(
-                "Mixed-variable Sobol sampling is not defined in Phase 4; use method='random'."
-            )
 
     if method == "sobol":
         samples = _draw_sobol(bounds, num_samples, q, seed)
+        if variable_space is not None:
+            samples = _apply_mixed_sobol_semantics(samples, variable_space)
     else:
         samples = _draw_random(bounds, num_samples, q, seed)
         if variable_space is not None:
@@ -125,4 +123,36 @@ def _apply_fixed_features(
         if dim < 0 or dim >= samples.shape[-1]:
             raise ValueError(f"fixed_features dimension {dim} is out of range.")
         samples[..., dim] = torch.as_tensor(value, dtype=samples.dtype, device=samples.device)
+    return samples
+
+
+def _apply_mixed_sobol_semantics(
+    samples: Tensor,
+    variable_space: MixedVariableSpace,
+) -> Tensor:
+    """Map Sobol coordinates monotonically onto finite structured domains.
+
+    Equal-width inverse-CDF bins preserve the stratification of each Sobol
+    coordinate without treating categorical values as an interpolated metric.
+    """
+    for dim in variable_space.integer_dims:
+        lower = int(torch.ceil(variable_space.bounds[0, dim]).item())
+        upper = int(torch.floor(variable_space.bounds[1, dim]).item())
+        count = upper - lower + 1
+        unit = (samples[..., dim] - variable_space.bounds[0, dim]) / (
+            variable_space.bounds[1, dim] - variable_space.bounds[0, dim]
+        )
+        indices = torch.floor(unit * count).clamp(max=count - 1).to(dtype=torch.long)
+        samples[..., dim] = (indices + lower).to(dtype=samples.dtype)
+    for dim in variable_space.categorical_dims:
+        values = torch.as_tensor(
+            variable_space.categorical_values[dim],
+            dtype=samples.dtype,
+            device=samples.device,
+        )
+        unit = (samples[..., dim] - variable_space.bounds[0, dim]) / (
+            variable_space.bounds[1, dim] - variable_space.bounds[0, dim]
+        )
+        indices = torch.floor(unit * values.numel()).clamp(max=values.numel() - 1)
+        samples[..., dim] = values[indices.to(dtype=torch.long)]
     return samples
