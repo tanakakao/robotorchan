@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import numpy as np
+import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from scipy.optimize import OptimizeResult
@@ -63,3 +64,15 @@ def test_de_does_not_mutate_options() -> None:
     optimize_acqf_de(_QuadraticAcquisition(), bounds, q=1, options=options, seed=1)
 
     assert options == original
+
+
+def test_de_rejects_unordered_categorical_variables() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
+
+    with pytest.raises(NotImplementedError, match="unordered categorical"):
+        optimize_acqf_de(
+            _QuadraticAcquisition(),
+            bounds,
+            q=1,
+            categorical_values={1: [0.0, 1.0, 2.0]},
+        )

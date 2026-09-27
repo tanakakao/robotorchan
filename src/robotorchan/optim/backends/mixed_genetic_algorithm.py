@@ -93,8 +93,9 @@ def optimize_acqf_mixed_ga(
 
     best_candidate: Tensor | None = None
     best_value: Tensor | None = None
+    best_violation: Tensor | None = None
     for generation in range(generations):
-        scores = _evaluate_population(
+        scores, values, violation = _evaluate_population(
             acq_function,
             population,
             q,
@@ -103,8 +104,16 @@ def optimize_acqf_mixed_ga(
             equality_tolerance,
         )
         generation_best = scores.argmax()
-        if best_value is None or scores[generation_best] > best_value:
-            best_value = scores[generation_best].detach().clone()
+        candidate_value = values[generation_best]
+        candidate_violation = violation[generation_best]
+        if best_candidate is None or _is_better_candidate(
+            candidate_value,
+            candidate_violation,
+            best_value,
+            best_violation,
+        ):
+            best_value = candidate_value.detach().clone()
+            best_violation = candidate_violation.detach().clone()
             best_candidate = population[generation_best].detach().clone()
         if generation == generations - 1:
             break
@@ -162,7 +171,7 @@ def _evaluate_population(
     d: int,
     constraints: CandidateConstraints,
     equality_tolerance: float,
-) -> Tensor:
+) -> tuple[Tensor, Tensor, Tensor]:
     candidates = population.reshape(population.shape[0], q, d)
     with torch.no_grad():
         values = acq_function(candidates)
@@ -174,7 +183,26 @@ def _evaluate_population(
     violation = candidate_constraint_violation(
         candidates, constraints, equality_tolerance=equality_tolerance
     )
-    return feasibility_first_ranks(scores, violation)
+    return feasibility_first_ranks(scores, violation), scores, violation
+
+
+def _is_better_candidate(
+    value: Tensor,
+    violation: Tensor,
+    best_value: Tensor | None,
+    best_violation: Tensor | None,
+) -> bool:
+    if best_value is None or best_violation is None:
+        return True
+    feasible = bool(violation <= 0)
+    best_feasible = bool(best_violation <= 0)
+    if feasible != best_feasible:
+        return feasible
+    if feasible:
+        return bool(value > best_value)
+    if violation != best_violation:
+        return bool(violation < best_violation)
+    return bool(value > best_value)
 
 
 def _tournament_select(

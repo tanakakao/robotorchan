@@ -7,6 +7,7 @@ from torch import Tensor
 
 from robotorchan.optim import MixedVariableSpace
 from robotorchan.optim.backends import optimize_acqf_mixed_ga
+from robotorchan.optim.constraints import CandidateConstraints
 
 
 class _MixedTargetAcquisition(AcquisitionFunction):
@@ -135,3 +136,36 @@ def test_mixed_ga_categorical_crossover_inherits_parent_values() -> None:
     )
 
     assert torch.equal(offspring[:, 1], parents_b[:, 1])
+
+
+class _IncreasingAcquisition(AcquisitionFunction):
+    def __init__(self) -> None:
+        torch.nn.Module.__init__(self)
+
+    def forward(self, X: Tensor) -> Tensor:
+        return X[..., 0].sum(dim=-1)
+
+
+def test_mixed_ga_tracks_best_candidate_across_generations_by_deb_order() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([0]),
+                torch.tensor([-1.0], dtype=torch.double),
+                -0.25,
+            ),
+        )
+    )
+
+    candidate, _ = optimize_acqf_mixed_ga(
+        _IncreasingAcquisition(),
+        bounds,
+        q=1,
+        population_size=24,
+        generations=8,
+        constraints=constraints,
+        seed=23,
+    )
+
+    assert candidate[0, 0] <= 0.25 + 1e-8

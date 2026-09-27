@@ -38,7 +38,8 @@ def optimize_acqf_de(
     The joint ``q x d`` candidate batch is flattened into one DE decision
     vector. Acquisition evaluation is performed on the original tensor
     device and dtype. Integer coordinates are repaired before acquisition
-    and constraint evaluation. Categorical coordinates are not supported.
+    and constraint evaluation. Unordered categorical coordinates are rejected
+    rather than assigned an artificial numeric geometry.
     """
     validate_bounds(bounds)
     if variable_space is not None:
@@ -53,6 +54,11 @@ def optimize_acqf_de(
         categorical_values = dict(categorical_values or {})
     integer_dims = tuple(integer_dims)
     _validate_structured_dims(integer_dims, categorical_values, bounds)
+    if categorical_values:
+        raise NotImplementedError(
+            "Differential Evolution does not support unordered categorical variables. "
+            "Use Mixed GA or a sampling backend instead."
+        )
     if q < 1:
         raise ValueError("q must be at least 1.")
     candidate_constraints = constraints or CandidateConstraints()
