@@ -3,14 +3,12 @@
 from unittest.mock import patch
 
 import numpy as np
-import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from scipy.optimize import OptimizeResult
 from torch import Tensor
 
 from robotorchan.optim.backends import optimize_acqf_de
-from robotorchan.optim.constraints import CandidateConstraints
 
 
 class _QuadraticAcquisition(AcquisitionFunction):
