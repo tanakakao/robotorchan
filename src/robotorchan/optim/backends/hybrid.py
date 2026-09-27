@@ -50,11 +50,22 @@ def optimize_acqf_hybrid(
         if mixed_fixed_features_list is not None:
             for config in mixed_fixed_features_list:
                 variable_space.validate_fixed_features(config)
-        if variable_space.categorical_dims and mixed_fixed_features_list is None:
-            raise ValueError(
-                "Categorical hybrid optimization requires mixed_fixed_features_list "
-                "for the BoTorch mixed local stage."
-            )
+        structured_dims = set(variable_space.integer_dims) | set(
+            variable_space.categorical_dims
+        )
+        if structured_dims:
+            if mixed_fixed_features_list is None:
+                raise ValueError(
+                    "Structured hybrid optimization requires mixed_fixed_features_list "
+                    "for the BoTorch mixed local stage."
+                )
+            for config in mixed_fixed_features_list:
+                missing = structured_dims - set(config) - set(fixed_features or {})
+                if missing:
+                    raise ValueError(
+                        "Each mixed_fixed_features_list entry must fix every structured "
+                        f"dimension; missing {sorted(missing)}."
+                    )
 
     optimizer = _resolve_global_optimizer(global_optimizer)
     resolved_global_options = dict(global_options or {})
@@ -81,7 +92,7 @@ def optimize_acqf_hybrid(
     if candidate_constraints.has_nonlinear_constraints:
         options.setdefault("batch_limit", 1)
 
-    if variable_space is not None and variable_space.categorical_dims:
+    if variable_space is not None and (variable_space.integer_dims or variable_space.categorical_dims):
         resolved_fixed_features_list = _merge_fixed_features_list(
             mixed_fixed_features_list or [], fixed_features
         )
