@@ -24,6 +24,7 @@ class MixedSpaceStrategy(SearchStrategy):
         raw_samples: int = 512,
         options: dict[str, Any] | None = None,
         constraints: CandidateConstraints | None = None,
+        batch_initial_conditions: Tensor | None = None,
     ) -> None:
         super().__init__(bounds)
         if not fixed_features_list:
@@ -37,6 +38,7 @@ class MixedSpaceStrategy(SearchStrategy):
         self.raw_samples = raw_samples
         self.options = None if options is None else dict(options)
         self.constraints = constraints or CandidateConstraints()
+        self.batch_initial_conditions = batch_initial_conditions
 
     def optimize(
         self,
@@ -47,6 +49,17 @@ class MixedSpaceStrategy(SearchStrategy):
         """Optimize the acquisition over the configured mixed search space."""
         if q < 1:
             raise ValueError("q must be at least 1.")
+        if any(
+            not is_intrapoint
+            for _, is_intrapoint in self.constraints.nonlinear_inequality_constraints
+        ):
+            raise ValueError(
+                "MixedSpaceStrategy does not support inter-point nonlinear constraints."
+            )
+        if self.constraints.has_nonlinear_constraints and self.batch_initial_conditions is None:
+            raise ValueError(
+                "Nonlinear candidate constraints require feasible batch_initial_conditions."
+            )
 
         candidates, acquisition_value = optimize_acqf_mixed(
             acq_function=acq_function,
@@ -66,6 +79,12 @@ class MixedSpaceStrategy(SearchStrategy):
                 if self.constraints.equality_constraints
                 else None
             ),
+            nonlinear_inequality_constraints=(
+                list(self.constraints.nonlinear_inequality_constraints)
+                if self.constraints.nonlinear_inequality_constraints
+                else None
+            ),
+            batch_initial_conditions=self.batch_initial_conditions,
         )
         return SearchResult(
             candidates=candidates,
