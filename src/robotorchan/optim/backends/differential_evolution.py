@@ -96,7 +96,6 @@ def optimize_acqf_de(
     return candidates, acquisition_value
 
 
-
 def _validate_integer_dims(integer_dims: tuple[int, ...], bounds: Tensor) -> None:
     if len(integer_dims) != len(set(integer_dims)):
         raise ValueError("integer_dims must not contain duplicates.")
