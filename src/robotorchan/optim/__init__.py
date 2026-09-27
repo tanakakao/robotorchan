@@ -44,6 +44,7 @@ from robotorchan.optim.latent import (
     RandomProjectionReconstruction,
 )
 from robotorchan.optim.mixed import MixedSpaceStrategy
+from robotorchan.optim.mixed_one_shot import optimize_mixed_one_shot_acqf
 from robotorchan.optim.original import OriginalSpaceStrategy
 from robotorchan.optim.random import RandomSearchStrategy
 from robotorchan.optim.sobol import SobolSearchStrategy
@@ -98,6 +99,7 @@ __all__ = [
     "benchmark_optimizers",
     "get_optimizer_capabilities",
     "optimize_acqf",
+    "optimize_mixed_one_shot_acqf",
     "optimize_acqf_sequential",
     "update_baxus_state",
     "update_turbo_state",
