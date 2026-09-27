@@ -70,7 +70,6 @@ def optimize_acqf_pso(
     scores, _ = _evaluate(
         acq_function,
         _repair_integer_positions(positions, integer_dims, bounds, q),
-
         q,
         d,
         candidate_constraints,
@@ -97,9 +96,7 @@ def optimize_acqf_pso(
             + social * r2 * (global_position - positions)
         )
         positions = torch.maximum(torch.minimum(positions + velocities, upper), lower)
-        repaired_positions = _repair_integer_positions(
-            positions, integer_dims, bounds, q
-        )
+        repaired_positions = _repair_integer_positions(positions, integer_dims, bounds, q)
         scores, _ = _evaluate(
             acq_function,
             repaired_positions,
@@ -173,7 +170,6 @@ def _validate(
         raise ValueError("PSO coefficients must be non-negative.")
 
 
-
 def _validate_integer_dims(integer_dims: tuple[int, ...], bounds: Tensor) -> None:
     if len(integer_dims) != len(set(integer_dims)):
         raise ValueError("integer_dims must not contain duplicates.")
@@ -199,7 +195,5 @@ def _repair_integer_positions(
     lower = torch.ceil(bounds[0, index])
     upper = torch.floor(bounds[1, index])
     candidates[..., index] = candidates[..., index].round()
-    candidates[..., index] = torch.maximum(
-        torch.minimum(candidates[..., index], upper), lower
-    )
+    candidates[..., index] = torch.maximum(torch.minimum(candidates[..., index], upper), lower)
     return candidates.reshape(positions.shape[0], q * d)
