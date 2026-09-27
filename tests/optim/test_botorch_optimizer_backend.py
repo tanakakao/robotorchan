@@ -189,20 +189,22 @@ def test_mixed_backend_rejects_q_interpoint_nonlinear_before_botorch_call() -> N
         nonlinear_inequality_constraints=((lambda x: 0.8 - x[:, 0].sum(), False),)
     )
 
-    with patch("robotorchan.optim.backends.botorch.botorch_optimize_acqf_mixed") as optimize:
-        with pytest.raises(ValueError, match="inter-point nonlinear"):
-            optimize_acqf_mixed_botorch(
-                _Quadratic(),
+    with (
+        patch("robotorchan.optim.backends.botorch.botorch_optimize_acqf_mixed") as optimize,
+        pytest.raises(ValueError, match="inter-point nonlinear"),
+    ):
+        optimize_acqf_mixed_botorch(
+                _DummyAcquisition(),
                 bounds,
                 q=2,
                 num_restarts=2,
                 fixed_features_list=[{}],
                 raw_samples=8,
                 constraints=constraints,
-                batch_initial_conditions=torch.tensor(
-                    [[[0.2], [0.3]], [[0.3], [0.2]]],
-                    dtype=torch.double,
-                ),
-            )
+            batch_initial_conditions=torch.tensor(
+                [[[0.2], [0.3]], [[0.3], [0.2]]],
+                dtype=torch.double,
+            ),
+        )
 
     optimize.assert_not_called()
