@@ -38,8 +38,7 @@ class MixedVariableSpace:
         structured_dims = integer_dims + tuple(categories)
         if len(structured_dims) != len(set(structured_dims)):
             raise ValueError(
-                "Each dimension must have exactly one continuous, integer, or "
-                "categorical owner."
+                "Each dimension must have exactly one continuous, integer, or categorical owner."
             )
         if any(dim < 0 or dim >= d for dim in structured_dims):
             raise ValueError("Variable dimensions must lie within the input dimension.")
@@ -48,9 +47,7 @@ class MixedVariableSpace:
             lower = torch.ceil(bounds[0, dim])
             upper = torch.floor(bounds[1, dim])
             if lower > upper:
-                raise ValueError(
-                    f"Integer dimension {dim} has no legal value within its bounds."
-                )
+                raise ValueError(f"Integer dimension {dim} has no legal value within its bounds.")
 
         normalized_categories: dict[int, tuple[float, ...]] = {}
         for dim, values in categories.items():
