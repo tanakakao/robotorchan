@@ -180,3 +180,29 @@ def test_mixed_backend_forwards_supported_constraints_unchanged() -> None:
     assert kwargs["equality_constraints"] == [equality]
     assert kwargs["nonlinear_inequality_constraints"] == [nonlinear]
     assert kwargs["options"]["batch_limit"] == 1
+
+
+
+def test_mixed_backend_rejects_q_interpoint_nonlinear_before_botorch_call() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.8 - x[:, 0].sum(), False),)
+    )
+
+    with patch("robotorchan.optim.backends.botorch.botorch_optimize_acqf_mixed") as optimize:
+        with pytest.raises(ValueError, match="inter-point nonlinear"):
+            optimize_acqf_mixed_botorch(
+                _Quadratic(),
+                bounds,
+                q=2,
+                num_restarts=2,
+                fixed_features_list=[{}],
+                raw_samples=8,
+                constraints=constraints,
+                batch_initial_conditions=torch.tensor(
+                    [[[0.2], [0.3]], [[0.3], [0.2]]],
+                    dtype=torch.double,
+                ),
+            )
+
+    optimize.assert_not_called()
