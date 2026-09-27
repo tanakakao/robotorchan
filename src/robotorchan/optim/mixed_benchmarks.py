@@ -45,7 +45,7 @@ class MixedInteractionAcquisition(AcquisitionFunction):
         return point_value.sum(dim=-1)
 
 
-def mixed_benchmark_scenarios(*, dtype: torch.dtype = torch.double) -> dict[str, MixedBenchmarkScenario]:
+def mixed_benchmark_scenarios(\n    *, dtype: torch.dtype = torch.double\n) -> dict[str, MixedBenchmarkScenario]:
     """Return canonical C+I, C+Cat, C+I+Cat, and constrained mixed scenarios."""
     ci_bounds = torch.tensor([[0.0, 0.0], [1.0, 4.0]], dtype=dtype)
     cic_bounds = torch.tensor([[0.0, 0.0, 0.0], [1.0, 4.0, 2.0]], dtype=dtype)
