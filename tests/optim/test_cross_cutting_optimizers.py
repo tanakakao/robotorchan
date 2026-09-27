@@ -40,9 +40,7 @@ def test_derivative_free_backends_honor_fixed_features() -> None:
         (optimize_acqf_pso, {"swarm_size": 32, "iterations": 10, "seed": 2}),
     ]
     for optimizer, kwargs in cases:
-        candidate, value = optimizer(
-            _Quadratic(), bounds, 1, fixed_features={1: 0.6}, **kwargs
-        )
+        candidate, value = optimizer(_Quadratic(), bounds, 1, fixed_features={1: 0.6}, **kwargs)
         assert candidate.shape == (1, 2)
         assert float(candidate[0, 1]) == 0.6
         expected = _Quadratic()(candidate.unsqueeze(0)).reshape(())
