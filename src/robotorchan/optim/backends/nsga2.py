@@ -99,8 +99,7 @@ def _rank_and_crowding(values: Tensor) -> tuple[Tensor, Tensor]:
             span = front_values[order[-1], objective_idx] - front_values[order[0], objective_idx]
             if span > 0:
                 crowding[sorted_indices[1:-1]] += (
-                    front_values[order[2:], objective_idx]
-                    - front_values[order[:-2], objective_idx]
+                    front_values[order[2:], objective_idx] - front_values[order[:-2], objective_idx]
                 ) / span
     return ranks, crowding
 
@@ -147,12 +146,7 @@ def _crossover(
     rate: float,
     generator: torch.Generator,
 ) -> Tensor:
-    mask = torch.rand(
-        parents_a.shape,
-        dtype=parents_a.dtype,
-        device=parents_a.device,
-        generator=generator,
-    ) < rate
+    mask = (\n        torch.rand(\n            parents_a.shape,\n            dtype=parents_a.dtype,\n            device=parents_a.device,\n            generator=generator,\n        )\n        < rate\n    )
     alpha = torch.rand(
         parents_a.shape,
         dtype=parents_a.dtype,
@@ -170,12 +164,7 @@ def _mutate(
     scale: float,
     generator: torch.Generator,
 ) -> Tensor:
-    mask = torch.rand(
-        offspring.shape,
-        dtype=offspring.dtype,
-        device=offspring.device,
-        generator=generator,
-    ) < rate
+    mask = (\n        torch.rand(\n            offspring.shape,\n            dtype=offspring.dtype,\n            device=offspring.device,\n            generator=generator,\n        )\n        < rate\n    )
     noise = torch.randn(
         offspring.shape,
         dtype=offspring.dtype,
