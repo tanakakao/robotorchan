@@ -38,9 +38,7 @@ def optimize_acqf_mixed_ga(
     """Optimize an acquisition function over continuous, integer, and categorical inputs."""
     if variable_space is not None:
         if integer_dims or categorical_values:
-            raise ValueError(
-                "Use variable_space or integer_dims/categorical_values, not both."
-            )
+            raise ValueError("Use variable_space or integer_dims/categorical_values, not both.")
         if not torch.equal(variable_space.bounds, bounds):
             raise ValueError("variable_space bounds must match bounds.")
         integer_dims = variable_space.integer_dims
@@ -209,12 +207,15 @@ def _crossover(
     categorical_dims: tuple[int, ...],
 ) -> Tensor:
     """Use arithmetic crossover only for continuous coordinates."""
-    mask = torch.rand(
-        parents_a.shape,
-        dtype=parents_a.dtype,
-        device=parents_a.device,
-        generator=generator,
-    ) < crossover_rate
+    mask = (
+        torch.rand(
+            parents_a.shape,
+            dtype=parents_a.dtype,
+            device=parents_a.device,
+            generator=generator,
+        )
+        < crossover_rate
+    )
     alpha = torch.rand(
         parents_a.shape,
         dtype=parents_a.dtype,
@@ -225,12 +226,15 @@ def _crossover(
     discrete_dims = integer_dims + categorical_dims
     if discrete_dims:
         index = torch.tensor(discrete_dims, device=parents_a.device)
-        inherit_b = torch.rand(
-            parents_a.shape[0],
-            len(discrete_dims),
-            device=parents_a.device,
-            generator=generator,
-        ) < crossover_rate
+        inherit_b = (
+            torch.rand(
+                parents_a.shape[0],
+                len(discrete_dims),
+                device=parents_a.device,
+                generator=generator,
+            )
+            < crossover_rate
+        )
         offspring[:, index] = torch.where(
             inherit_b,
             parents_b[:, index],
@@ -287,9 +291,10 @@ def _mutate(
         result[:, dim] = torch.where(mutate, result[:, dim] + step, result[:, dim])
         result[:, dim] = result[:, dim].clamp(lower[dim], upper[dim]).round()
     for dim, values in categorical_values.items():
-        mutate = torch.rand(
-            offspring.shape[0], device=offspring.device, generator=generator
-        ) < mutation_rate
+        mutate = (
+            torch.rand(offspring.shape[0], device=offspring.device, generator=generator)
+            < mutation_rate
+        )
         choices = torch.randint(
             len(values),
             (offspring.shape[0],),
