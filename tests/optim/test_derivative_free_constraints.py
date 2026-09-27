@@ -72,7 +72,12 @@ def test_de_returns_feasible_candidate_with_nonlinear_constraint() -> None:
     )
 
     candidates, _ = optimize_acqf_de(
-        _Target(), bounds, q=1, seed=3, options={"maxiter": 30, "popsize": 8}, constraints=constraints
+        _Target(),
+        bounds,
+        q=1,
+        seed=3,
+        options={"maxiter": 30, "popsize": 8},
+        constraints=constraints,
     )
 
     assert float(candidates[0, 0]) <= 0.4 + 1e-3
