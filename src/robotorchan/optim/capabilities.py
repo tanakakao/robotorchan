@@ -244,6 +244,8 @@ PSO_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
         interpoint_nonlinear=ConstraintHandling.PENALTY,
     ),
     continuous=True,
+    integer=True,
+    mixed=True,
     requires_grad=False,
     linear_inequality_constraints=True,
     linear_equality_constraints=True,
