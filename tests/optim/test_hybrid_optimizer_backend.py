@@ -213,3 +213,45 @@ def test_hybrid_rejects_conflicting_common_and_mixed_fixed_features() -> None:
             fixed_features={1: 2.0},
             mixed_fixed_features_list=[{1: 0.0}, {1: 2.0}],
         )
+
+
+def test_integer_hybrid_uses_mixed_local_refinement() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 3.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(bounds, integer_dims=(1,))
+    global_optimizer = Mock(
+        return_value=(torch.tensor([[0.4, 2.0]], dtype=torch.double), torch.tensor(-0.1))
+    )
+
+    with patch(
+        "robotorchan.optim.backends.hybrid.optimize_acqf_mixed_botorch",
+        return_value=(torch.tensor([[0.7, 2.0]], dtype=torch.double), torch.tensor(0.0)),
+    ) as local:
+        optimize_acqf_hybrid(
+            _Quadratic(),
+            bounds,
+            q=1,
+            global_optimizer=global_optimizer,
+            variable_space=variable_space,
+            mixed_fixed_features_list=[{1: 0.0}, {1: 1.0}, {1: 2.0}, {1: 3.0}],
+        )
+
+    assert local.called
+
+
+def test_hybrid_requires_every_structured_dimension_in_local_configs() -> None:
+    bounds = torch.tensor([[0.0, 0.0, 0.0], [1.0, 3.0, 2.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(
+        bounds,
+        integer_dims=(1,),
+        categorical_values={2: [0.0, 1.0, 2.0]},
+    )
+
+    with pytest.raises(ValueError, match="every structured dimension"):
+        optimize_acqf_hybrid(
+            _Quadratic(),
+            bounds,
+            q=1,
+            global_optimizer="mixed_ga",
+            variable_space=variable_space,
+            mixed_fixed_features_list=[{2: 0.0}],
+        )
