@@ -64,7 +64,7 @@ def optimize_acqf_cmaes(
 
     optimizer = CMA(mean=mean, sigma=resolved_sigma, **optimizer_options)
     best_candidate: np.ndarray | None = None
-    best_value = float("-inf")
+    best_penalized_objective = float("inf")
 
     for _ in range(max_generations):
         solutions: list[tuple[np.ndarray, float]] = []
@@ -81,8 +81,8 @@ def optimize_acqf_cmaes(
             ).reshape(())
             penalized_objective = -value + constraint_penalty * float(violation.detach().cpu())
             solutions.append((flat_candidate, penalized_objective))
-            if value > best_value:
-                best_value = value
+            if penalized_objective < best_penalized_objective:
+                best_penalized_objective = penalized_objective
                 best_candidate = flat_candidate.copy()
         optimizer.tell(solutions)
         if optimizer.should_stop():
