@@ -4,7 +4,7 @@ import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 
-from robotorchan.optim import ALEBOStrategy
+from robotorchan.optim import CandidateConstraints, ALEBOStrategy
 
 
 def _bounds(input_dim: int = 6) -> torch.Tensor:
@@ -176,3 +176,18 @@ def test_sample_feasible_is_reproducible_for_same_seed() -> None:
     second = strategy.sample_feasible(16, seed=19)
 
     torch.testing.assert_close(first, second)
+
+
+def test_alebo_rejects_unmapped_nonlinear_constraints() -> None:
+    def constraint(x: torch.Tensor) -> torch.Tensor:
+        return x.new_tensor(0.25) - x.square().sum()
+
+    with pytest.raises(ValueError, match="does not support candidate-space constraints"):
+        ALEBOStrategy(
+            _bounds(),
+            embedding_dim=2,
+            seed=3,
+            constraints=CandidateConstraints(
+                nonlinear_inequality_constraints=((constraint, True),),
+            ),
+        )
