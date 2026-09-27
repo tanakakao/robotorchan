@@ -21,6 +21,7 @@ from robotorchan.optim.constraints import (
     NonlinearConstraint,
     NonlinearConstraintCallable,
 )
+from robotorchan.optim.cross_cutting import apply_fixed_features, optimize_acqf_sequential
 from robotorchan.optim.embedding import (
     ALEBOStrategy,
     BAxUSState,
@@ -79,6 +80,8 @@ __all__ = [
     "TreeEnsembleSearchStrategy",
     "TuRBOState",
     "TuRBOStrategy",
+    "apply_fixed_features",
+    "optimize_acqf_sequential",
     "update_baxus_state",
     "update_turbo_state",
 ]

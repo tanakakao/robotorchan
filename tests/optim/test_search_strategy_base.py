@@ -166,6 +166,8 @@ def test_public_optim_exports_are_complete() -> None:
         "SAMPLING_OPTIMIZER_CAPABILITIES",
         "TORCH_OPTIMIZER_CAPABILITIES",
         "CandidateConstraints",
+        "apply_fixed_features",
+        "optimize_acqf_sequential",
         "LinearConstraint",
         "MixedSpaceStrategy",
         "NonlinearConstraint",

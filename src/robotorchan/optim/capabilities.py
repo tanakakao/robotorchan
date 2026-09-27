@@ -93,6 +93,7 @@ DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     q_batch=True,
     gpu=False,
     batch_evaluation=False,
+    fixed_features=True,
 )
 
 
@@ -119,6 +120,7 @@ GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     q_batch=True,
     gpu=True,
     batch_evaluation=True,
+    fixed_features=True,
 )
 
 
@@ -172,4 +174,5 @@ PSO_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     q_batch=True,
     gpu=True,
     batch_evaluation=True,
+    fixed_features=True,
 )

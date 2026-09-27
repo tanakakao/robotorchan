@@ -8,6 +8,7 @@ from torch import Tensor
 
 from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.cross_cutting import apply_fixed_features
 
 
 def optimize_acqf_pso(
@@ -22,6 +23,7 @@ def optimize_acqf_pso(
     social: float = 1.49618,
     seed: int | None = None,
     constraints: CandidateConstraints | None = None,
+    fixed_features: dict[int, float | Tensor] | None = None,
     constraint_penalty: float = 1e6,
     equality_tolerance: float = 1e-6,
 ) -> tuple[Tensor, Tensor]:
@@ -57,6 +59,7 @@ def optimize_acqf_pso(
         candidate_constraints,
         constraint_penalty,
         equality_tolerance,
+        fixed_features,
     )
     personal_positions = positions.clone()
     personal_scores = scores.clone()
@@ -85,6 +88,7 @@ def optimize_acqf_pso(
             candidate_constraints,
             constraint_penalty,
             equality_tolerance,
+            fixed_features,
         )
         improved = scores > personal_scores
         personal_positions[improved] = positions[improved]
@@ -94,7 +98,7 @@ def optimize_acqf_pso(
             global_score = personal_scores[best_index].clone()
             global_position = personal_positions[best_index].clone()
 
-    candidate = global_position.reshape(q, d)
+    candidate = apply_fixed_features(global_position.reshape(q, d), fixed_features)
     with torch.no_grad():
         value = acq_function(candidate.unsqueeze(0)).reshape(())
     return candidate, value
@@ -108,8 +112,10 @@ def _evaluate(
     constraints: CandidateConstraints,
     constraint_penalty: float,
     equality_tolerance: float,
+    fixed_features: dict[int, float | Tensor] | None,
 ) -> tuple[Tensor, Tensor]:
     candidates = positions.reshape(positions.shape[0], q, d)
+    candidates = apply_fixed_features(candidates, fixed_features)
     with torch.no_grad():
         values = acq_function(candidates)
     if values.numel() != positions.shape[0]:
