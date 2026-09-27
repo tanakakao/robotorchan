@@ -8,7 +8,7 @@ from typing import Any
 import numpy as np
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
-from scipy.optimize import differential_evolution
+from scipy.optimize import NonlinearConstraint, differential_evolution
 from torch import Tensor
 
 from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
@@ -56,9 +56,6 @@ def optimize_acqf_de(
     if q < 1:
         raise ValueError("q must be at least 1.")
     candidate_constraints = constraints or CandidateConstraints()
-    if constraint_penalty <= 0:
-        raise ValueError("constraint_penalty must be positive.")
-
     scipy_bounds = list(
         zip(
             bounds[0].detach().cpu().tolist() * q,
@@ -82,19 +79,31 @@ def optimize_acqf_de(
             raise ValueError(
                 "Differential Evolution requires a scalar acquisition value per q-batch."
             )
-        violation = candidate_constraint_violation(
-            candidate.unsqueeze(0),
-            candidate_constraints,
-            equality_tolerance=equality_tolerance,
-        ).reshape(())
-        return -float(value.reshape(()).detach().cpu()) + constraint_penalty * float(
-            violation.detach().cpu()
-        )
+        return -float(value.reshape(()).detach().cpu())
+
+    scipy_constraints = ()
+    if candidate_constraints != CandidateConstraints():
+
+        def feasibility(flat_candidate: np.ndarray) -> float:
+            candidate = torch.as_tensor(
+                flat_candidate, dtype=bounds.dtype, device=bounds.device
+            ).reshape(q, bounds.shape[-1])
+            candidate = _repair_structured_dims(candidate, integer_dims, categorical_values, bounds)
+            candidate = apply_fixed_features(candidate, fixed_features)
+            violation = candidate_constraint_violation(
+                candidate.unsqueeze(0),
+                candidate_constraints,
+                equality_tolerance=equality_tolerance,
+            ).reshape(())
+            return -float(violation.detach().cpu())
+
+        scipy_constraints = (NonlinearConstraint(feasibility, 0.0, np.inf),)
 
     result = differential_evolution(
         objective,
         scipy_bounds,
         seed=seed,
+        constraints=scipy_constraints,
         **resolved_options,
     )
     candidates = torch.as_tensor(

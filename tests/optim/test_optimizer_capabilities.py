@@ -46,7 +46,7 @@ def test_botorch_mixed_capabilities_are_explicit() -> None:
     assert not capabilities.interpoint_nonlinear_constraints
 
 
-def test_constraint_handling_distinguishes_native_and_penalty() -> None:
+def test_constraint_handling_distinguishes_native_and_feasibility_first() -> None:
     botorch = BOTORCH_OPTIMIZER_CAPABILITIES.constraint_handling
     de = DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES.constraint_handling
 
@@ -54,10 +54,10 @@ def test_constraint_handling_distinguishes_native_and_penalty() -> None:
     assert botorch.linear_equality is ConstraintHandling.NATIVE
     assert botorch.nonlinear_inequality is ConstraintHandling.NATIVE
     assert botorch.interpoint_nonlinear is ConstraintHandling.NATIVE
-    assert de.linear_inequality is ConstraintHandling.PENALTY
-    assert de.linear_equality is ConstraintHandling.PENALTY
-    assert de.nonlinear_inequality is ConstraintHandling.PENALTY
-    assert de.interpoint_nonlinear is ConstraintHandling.PENALTY
+    assert de.linear_inequality is ConstraintHandling.FEASIBILITY_FIRST
+    assert de.linear_equality is ConstraintHandling.FEASIBILITY_FIRST
+    assert de.nonlinear_inequality is ConstraintHandling.FEASIBILITY_FIRST
+    assert de.interpoint_nonlinear is ConstraintHandling.FEASIBILITY_FIRST
 
 
 def test_unsupported_constraint_handling_is_explicit() -> None:

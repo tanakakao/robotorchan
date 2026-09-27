@@ -288,3 +288,28 @@ def test_de_supports_full_mixed_space_with_nonlinear_constraint() -> None:
     assert residual >= -1e-3
     assert candidates[0, 1] == candidates[0, 1].round()
     assert float(candidates[0, 2]) in {0.0, 1.0, 2.0}
+
+
+def test_de_constraint_handling_is_independent_of_acquisition_scale() -> None:
+    class _HugeTarget(AcquisitionFunction):
+        def __init__(self) -> None:
+            torch.nn.Module.__init__(self)
+
+        def forward(self, X: Tensor) -> Tensor:
+            return 1.0e12 * X[..., 0, 0]
+
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=((torch.tensor([0]), torch.tensor([-1.0]), -0.4),)
+    )
+
+    candidates, _ = optimize_acqf_de(
+        _HugeTarget(),
+        bounds,
+        q=1,
+        seed=43,
+        options={"maxiter": 50, "popsize": 12},
+        constraints=constraints,
+    )
+
+    assert float(candidates[0, 0]) <= 0.4 + 1e-3
