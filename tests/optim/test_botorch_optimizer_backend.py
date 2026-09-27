@@ -103,7 +103,6 @@ def test_mixed_backend_rejects_interpoint_nonlinear_constraint() -> None:
         raise AssertionError("Expected mixed backend to reject inter-point constraints.")
 
 
-
 def test_botorch_backend_forwards_linear_constraint_kinds_unchanged() -> None:
     acq = _DummyAcquisition()
     bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]])
