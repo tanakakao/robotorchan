@@ -57,7 +57,7 @@ def optimize_acqf_mixed_ga(
     lower = bounds[0].repeat(q)
     upper = bounds[1].repeat(q)
     expanded_integer_dims = _expand_dims(integer_dims, q, d)
-    expanded_categories = _expand_categories(categorical_values, q, d)
+    expanded_categories = _expand_categories(categorical_values, q, d, bounds)
 
     population = lower + (upper - lower) * torch.rand(
         population_size,
@@ -233,12 +233,14 @@ def _expand_dims(dims: tuple[int, ...], q: int, d: int) -> tuple[int, ...]:
 
 
 def _expand_categories(
-    categories: dict[int, Sequence[float]], q: int, d: int
+    categories: dict[int, Sequence[float]], q: int, d: int, bounds: Tensor
 ) -> dict[int, Tensor]:
     expanded: dict[int, Tensor] = {}
     for batch in range(q):
         for dim, values in categories.items():
-            expanded[batch * d + dim] = torch.as_tensor(values)
+            expanded[batch * d + dim] = torch.as_tensor(
+                values, device=bounds.device, dtype=bounds.dtype
+            )
     return expanded
 
 
