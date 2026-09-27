@@ -4,6 +4,7 @@ from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.capabilities import (
     BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
     BOTORCH_OPTIMIZER_CAPABILITIES,
+    SAMPLING_OPTIMIZER_CAPABILITIES,
     TORCH_OPTIMIZER_CAPABILITIES,
     OptimizerCapabilities,
 )
@@ -31,13 +32,15 @@ from robotorchan.optim.latent import (
 from robotorchan.optim.mixed import MixedSpaceStrategy
 from robotorchan.optim.original import OriginalSpaceStrategy
 from robotorchan.optim.random import RandomSearchStrategy
+from robotorchan.optim.sobol import SobolSearchStrategy
 from robotorchan.optim.tree import TreeEnsembleSearchStrategy
 from robotorchan.optim.trust_region import TuRBOState, TuRBOStrategy, update_turbo_state
 
 __all__ = [
     "BOTORCH_MIXED_OPTIMIZER_CAPABILITIES",
     "BOTORCH_OPTIMIZER_CAPABILITIES",
-    "TORCH_OPTIMIZER_CAPABILITIES",
+    "SAMPLING_OPTIMIZER_CAPABILITIES",
+    "TORCH_OPTIMIZER_CAPABILITIES"
     "ALEBOStrategy",
     "BAxUSState",
     "BAxUSStrategy",
@@ -58,6 +61,7 @@ __all__ = [
     "RandomSearchStrategy",
     "SearchResult",
     "SearchStrategy",
+    "SobolSearchStrategy",
     "TreeEnsembleSearchStrategy",
     "TuRBOState",
     "TuRBOStrategy",
