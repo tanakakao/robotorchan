@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from botorch.acquisition.acquisition import AcquisitionFunction
-from botorch.optim import optimize_acqf
 from torch import Tensor
 
+from robotorchan.optim.backends import optimize_acqf_botorch
 from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.constraints import CandidateConstraints
 
@@ -70,45 +70,21 @@ class OriginalSpaceStrategy(SearchStrategy):
         """Optimize ``acq_function`` within the configured original-space bounds."""
         if q < 1:
             raise ValueError("q must be at least 1.")
-        if self.constraints.has_nonlinear_constraints and self.batch_initial_conditions is None:
-            raise ValueError(
-                "Nonlinear candidate constraints require feasible batch_initial_conditions."
-            )
-
-        options = None if self.options is None else dict(self.options)
-        if self.constraints.has_nonlinear_constraints:
-            options = {} if options is None else options
-            options.setdefault("batch_limit", 1)
-
-        candidates, acquisition_value = optimize_acqf(
+        candidates, acquisition_value = optimize_acqf_botorch(
             acq_function=acq_function,
             bounds=self.bounds,
             q=q,
             num_restarts=self.num_restarts,
             raw_samples=self.raw_samples,
-            options=options,
+            options=self.options,
             sequential=self.sequential,
+            constraints=self.constraints,
             fixed_features=self.fixed_features,
-            inequality_constraints=(
-                list(self.constraints.inequality_constraints)
-                if self.constraints.inequality_constraints
-                else None
-            ),
-            equality_constraints=(
-                list(self.constraints.equality_constraints)
-                if self.constraints.equality_constraints
-                else None
-            ),
             batch_initial_conditions=self.batch_initial_conditions,
-            nonlinear_inequality_constraints=(
-                list(self.constraints.nonlinear_inequality_constraints)
-                if self.constraints.nonlinear_inequality_constraints
-                else None
-            ),
         )
 
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
-            metadata={},
+            metadata={"optimizer": "botorch"},
         )
