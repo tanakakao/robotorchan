@@ -91,7 +91,8 @@ def test_mixed_space_strategy_rejects_interpoint_nonlinear_constraint() -> None:
         strategy.optimize(None, q=2)  # type: ignore[arg-type]
     except ValueError as error:
         assert str(error) == (
-            "BoTorch mixed acquisition optimization does not support inter-point nonlinear constraints."
+            "BoTorch mixed acquisition optimization does not support "
+            "inter-point nonlinear constraints."
         )
     else:
         raise AssertionError("Expected inter-point nonlinear constraints to be rejected.")
