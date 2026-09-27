@@ -52,9 +52,12 @@ def candidate_is_feasible(
     equality_tolerance: float = 1e-6,
 ) -> Tensor:
     """Return feasibility for each candidate q-batch."""
-    return candidate_constraint_violation(
-        candidates, constraints, equality_tolerance=equality_tolerance
-    ) <= 0
+    return (
+        candidate_constraint_violation(
+            candidates, constraints, equality_tolerance=equality_tolerance
+        )
+        <= 0
+    )
 
 
 def _linear_residual(candidates: Tensor, constraint: LinearConstraint) -> Tensor:
