@@ -1,5 +1,6 @@
 """Tests for candidate-constraint evaluation and derivative-free optimizers."""
 
+import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
