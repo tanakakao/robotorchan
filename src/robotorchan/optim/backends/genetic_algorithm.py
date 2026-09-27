@@ -8,6 +8,7 @@ from torch import Tensor
 
 from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.cross_cutting import apply_fixed_features
 
 
 def optimize_acqf_ga(
@@ -24,6 +25,7 @@ def optimize_acqf_ga(
     mutation_scale: float = 0.1,
     seed: int | None = None,
     constraints: CandidateConstraints | None = None,
+    fixed_features: dict[int, float | Tensor] | None = None,
     constraint_penalty: float = 1e6,
     equality_tolerance: float = 1e-6,
 ) -> tuple[Tensor, Tensor]:
@@ -69,6 +71,7 @@ def optimize_acqf_ga(
             candidate_constraints,
             constraint_penalty,
             equality_tolerance,
+            fixed_features,
         )
         generation_best = scores.argmax()
         if best_value is None or scores[generation_best] > best_value:
@@ -92,7 +95,12 @@ def optimize_acqf_ga(
 
     if best_candidate is None or best_value is None:
         raise RuntimeError("Genetic Algorithm did not generate any candidate.")
-    return best_candidate.reshape(q, bounds.shape[-1]), best_value.reshape(())
+    candidate = apply_fixed_features(
+        best_candidate.reshape(q, bounds.shape[-1]), fixed_features
+    )
+    with torch.no_grad():
+        value = acq_function(candidate.unsqueeze(0)).reshape(())
+    return candidate, value
 
 
 def _evaluate_population(
@@ -103,8 +111,10 @@ def _evaluate_population(
     constraints: CandidateConstraints,
     constraint_penalty: float,
     equality_tolerance: float,
+    fixed_features: dict[int, float | Tensor] | None,
 ) -> Tensor:
     candidates = population.reshape(population.shape[0], q, d)
+    candidates = apply_fixed_features(candidates, fixed_features)
     with torch.no_grad():
         values = acq_function(candidates)
     if values.numel() != population.shape[0]:
