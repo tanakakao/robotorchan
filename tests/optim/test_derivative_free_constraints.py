@@ -7,7 +7,7 @@ from torch import Tensor
 from robotorchan.optim.backends import optimize_acqf_de, optimize_acqf_ga, optimize_acqf_mixed_ga
 from robotorchan.optim.constraint_evaluation import (
     candidate_constraint_violation,
-    candidate_is_feasible,
+    candidate_is_feasible,\n    feasibility_first_ranks,
 )
 from robotorchan.optim.constraints import CandidateConstraints
 
@@ -91,6 +91,45 @@ def test_mixed_ga_preserves_domain_while_enforcing_constraint() -> None:
 
     candidates, _ = optimize_acqf_mixed_ga(
         _Target(),
+        bounds,
+        q=1,
+        integer_dims=[1],
+        population_size=80,
+        generations=30,
+        seed=8,
+        constraints=constraints,
+    )
+
+    assert float(candidates[0, 0]) <= 0.4 + 1e-6
+    assert candidates[0, 1] == candidates[0, 1].round()
+
+
+def test_feasibility_first_ranks_prioritize_feasibility_over_acquisition_scale() -> None:
+    values = torch.tensor([1.0e12, 3.0, 2.0, -1.0e12], dtype=torch.double)
+    violation = torch.tensor([0.2, 0.0, 0.0, 0.1], dtype=torch.double)
+
+    ranks = feasibility_first_ranks(values, violation)
+
+    assert ranks[1] > ranks[2]
+    assert ranks[2] > ranks[3]
+    assert ranks[3] > ranks[0]
+
+
+def test_mixed_ga_feasibility_first_is_independent_of_acquisition_scale() -> None:
+    class _HugeTarget(AcquisitionFunction):
+        def __init__(self) -> None:
+            torch.nn.Module.__init__(self)
+
+        def forward(self, X: Tensor) -> Tensor:
+            return 1.0e12 * X[..., 0, 0]
+
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 4.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=((torch.tensor([0]), torch.tensor([-1.0]), -0.4),)
+    )
+
+    candidates, _ = optimize_acqf_mixed_ga(
+        _HugeTarget(),
         bounds,
         q=1,
         integer_dims=[1],
