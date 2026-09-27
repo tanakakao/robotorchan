@@ -176,3 +176,29 @@ PSO_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     batch_evaluation=True,
     fixed_features=True,
 )
+
+
+OPTIMIZER_CAPABILITIES: dict[str, OptimizerCapabilities] = {
+    "botorch": BOTORCH_OPTIMIZER_CAPABILITIES,
+    "torch_adam": TORCH_OPTIMIZER_CAPABILITIES,
+    "torch_adamw": TORCH_OPTIMIZER_CAPABILITIES,
+    "torch_sgd": TORCH_OPTIMIZER_CAPABILITIES,
+    "random": SAMPLING_OPTIMIZER_CAPABILITIES,
+    "sobol": SAMPLING_OPTIMIZER_CAPABILITIES,
+    "de": DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES,
+    "cmaes": CMAES_OPTIMIZER_CAPABILITIES,
+    "ga": GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+    "pso": PSO_OPTIMIZER_CAPABILITIES,
+    "hybrid": HYBRID_OPTIMIZER_CAPABILITIES,
+}
+
+
+def get_optimizer_capabilities(name: str) -> OptimizerCapabilities:
+    """Return capabilities for a public scalar optimizer name."""
+    try:
+        return OPTIMIZER_CAPABILITIES[name.lower()]
+    except KeyError as error:
+        supported = ", ".join(sorted(OPTIMIZER_CAPABILITIES))
+        raise ValueError(
+            f"Unknown optimizer {name!r}. Supported optimizers: {supported}."
+        ) from error

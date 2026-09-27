@@ -11,10 +11,12 @@ from robotorchan.optim.capabilities import (
     HYBRID_OPTIMIZER_CAPABILITIES,
     MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
     NSGA2_OPTIMIZER_CAPABILITIES,
+    OPTIMIZER_CAPABILITIES,
     PSO_OPTIMIZER_CAPABILITIES,
     SAMPLING_OPTIMIZER_CAPABILITIES,
     TORCH_OPTIMIZER_CAPABILITIES,
     OptimizerCapabilities,
+    get_optimizer_capabilities,
 )
 from robotorchan.optim.constraints import (
     CandidateConstraints,
@@ -55,6 +57,7 @@ __all__ = [
     "HYBRID_OPTIMIZER_CAPABILITIES",
     "MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES",
     "NSGA2_OPTIMIZER_CAPABILITIES",
+    "OPTIMIZER_CAPABILITIES",
     "PSO_OPTIMIZER_CAPABILITIES",
     "SAMPLING_OPTIMIZER_CAPABILITIES",
     "TORCH_OPTIMIZER_CAPABILITIES",
@@ -87,6 +90,7 @@ __all__ = [
     "apply_fixed_features",
     "benchmark_optimizer",
     "benchmark_optimizers",
+    "get_optimizer_capabilities",
     "optimize_acqf",
     "optimize_acqf_sequential",
     "update_baxus_state",
