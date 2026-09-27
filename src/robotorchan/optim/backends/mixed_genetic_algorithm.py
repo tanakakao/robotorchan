@@ -11,6 +11,7 @@ from torch import Tensor
 from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints import CandidateConstraints
 from robotorchan.optim.runtime import make_generator, validate_bounds
+from robotorchan.optim.variable_space import MixedVariableSpace
 
 
 def optimize_acqf_mixed_ga(
@@ -31,10 +32,21 @@ def optimize_acqf_mixed_ga(
     constraints: CandidateConstraints | None = None,
     constraint_penalty: float = 1e6,
     equality_tolerance: float = 1e-6,
+    variable_space: MixedVariableSpace | None = None,
+    fixed_features: Mapping[int, float | Tensor] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Optimize an acquisition function over continuous, integer, and categorical inputs."""
-    categorical_values = dict(categorical_values or {})
-    integer_dims = tuple(integer_dims)
+    if variable_space is not None:
+        if integer_dims or categorical_values:
+            raise ValueError("Use variable_space or integer_dims/categorical_values, not both.")
+        if not torch.equal(variable_space.bounds, bounds):
+            raise ValueError("variable_space bounds must match bounds.")
+        integer_dims = variable_space.integer_dims
+        categorical_values = dict(variable_space.categorical_values)
+        variable_space.validate_fixed_features(fixed_features)
+    else:
+        categorical_values = dict(categorical_values or {})
+        integer_dims = tuple(integer_dims)
     validate_bounds(bounds)
     _validate_configuration(
         q=q,
@@ -59,6 +71,7 @@ def optimize_acqf_mixed_ga(
     upper = bounds[1].repeat(q)
     expanded_integer_dims = _expand_dims(integer_dims, q, d)
     expanded_categories = _expand_categories(categorical_values, q, d, bounds)
+    expanded_fixed = _expand_fixed_features(fixed_features, q, d, bounds)
 
     population = lower + (upper - lower) * torch.rand(
         population_size,
@@ -76,6 +89,7 @@ def optimize_acqf_mixed_ga(
         generator,
         resample_categorical=True,
     )
+    population = _apply_fixed_features(population, expanded_fixed)
     elite_count = max(1, int(population_size * elite_fraction))
 
     best_candidate: Tensor | None = None
@@ -105,8 +119,24 @@ def optimize_acqf_mixed_ga(
         parents_b = _tournament_select(
             population, scores, offspring_count, tournament_size, generator
         )
-        offspring = _crossover(parents_a, parents_b, crossover_rate, generator)
-        offspring = _mutate(offspring, lower, upper, mutation_rate, mutation_scale, generator)
+        offspring = _crossover(
+            parents_a,
+            parents_b,
+            crossover_rate,
+            generator,
+            expanded_integer_dims,
+            tuple(expanded_categories),
+        )
+        offspring = _mutate(
+            offspring,
+            lower,
+            upper,
+            mutation_rate,
+            mutation_scale,
+            generator,
+            expanded_integer_dims,
+            expanded_categories,
+        )
         offspring = _repair_structured(
             offspring,
             lower,
@@ -116,6 +146,7 @@ def optimize_acqf_mixed_ga(
             generator,
             resample_categorical=True,
         )
+        offspring = _apply_fixed_features(offspring, expanded_fixed)
         population = torch.cat([elites, offspring], dim=0)
 
     if best_candidate is None or best_value is None:
@@ -172,7 +203,10 @@ def _crossover(
     parents_b: Tensor,
     crossover_rate: float,
     generator: torch.Generator,
+    integer_dims: tuple[int, ...],
+    categorical_dims: tuple[int, ...],
 ) -> Tensor:
+    """Use arithmetic crossover only for continuous coordinates."""
     mask = (
         torch.rand(
             parents_a.shape,
@@ -188,7 +222,25 @@ def _crossover(
         device=parents_a.device,
         generator=generator,
     )
-    return torch.where(mask, alpha * parents_a + (1.0 - alpha) * parents_b, parents_a)
+    offspring = torch.where(mask, alpha * parents_a + (1.0 - alpha) * parents_b, parents_a)
+    discrete_dims = integer_dims + categorical_dims
+    if discrete_dims:
+        index = torch.tensor(discrete_dims, device=parents_a.device)
+        inherit_b = (
+            torch.rand(
+                parents_a.shape[0],
+                len(discrete_dims),
+                device=parents_a.device,
+                generator=generator,
+            )
+            < crossover_rate
+        )
+        offspring[:, index] = torch.where(
+            inherit_b,
+            parents_b[:, index],
+            parents_a[:, index],
+        )
+    return offspring
 
 
 def _mutate(
@@ -198,26 +250,59 @@ def _mutate(
     mutation_rate: float,
     mutation_scale: float,
     generator: torch.Generator,
+    integer_dims: tuple[int, ...],
+    categorical_values: dict[int, Tensor],
 ) -> Tensor:
-    mask = (
-        torch.rand(
-            offspring.shape,
+    """Mutate each variable kind without imposing a false categorical metric."""
+    result = offspring.clone()
+    structured = set(integer_dims) | set(categorical_values)
+    continuous_dims = tuple(dim for dim in range(offspring.shape[1]) if dim not in structured)
+    if continuous_dims:
+        index = torch.tensor(continuous_dims, device=offspring.device)
+        mask = (
+            torch.rand(
+                offspring.shape[0],
+                len(continuous_dims),
+                dtype=offspring.dtype,
+                device=offspring.device,
+                generator=generator,
+            )
+            < mutation_rate
+        )
+        noise = torch.randn(
+            offspring.shape[0],
+            len(continuous_dims),
             dtype=offspring.dtype,
             device=offspring.device,
             generator=generator,
         )
-        < mutation_rate
-    )
-    noise = torch.randn(
-        offspring.shape,
-        dtype=offspring.dtype,
-        device=offspring.device,
-        generator=generator,
-    )
-    return torch.maximum(
-        torch.minimum(offspring + mask * noise * mutation_scale * (upper - lower), upper),
-        lower,
-    )
+        mutated = result[:, index] + mask * noise * mutation_scale * (upper[index] - lower[index])
+        result[:, index] = torch.maximum(torch.minimum(mutated, upper[index]), lower[index])
+    for dim in integer_dims:
+        mutate = (
+            torch.rand(offspring.shape[0], device=offspring.device, generator=generator)
+            < mutation_rate
+        )
+        step = torch.where(
+            torch.rand(offspring.shape[0], device=offspring.device, generator=generator) < 0.5,
+            -torch.ones(offspring.shape[0], device=offspring.device, dtype=offspring.dtype),
+            torch.ones(offspring.shape[0], device=offspring.device, dtype=offspring.dtype),
+        )
+        result[:, dim] = torch.where(mutate, result[:, dim] + step, result[:, dim])
+        result[:, dim] = result[:, dim].clamp(lower[dim], upper[dim]).round()
+    for dim, values in categorical_values.items():
+        mutate = (
+            torch.rand(offspring.shape[0], device=offspring.device, generator=generator)
+            < mutation_rate
+        )
+        choices = torch.randint(
+            len(values),
+            (offspring.shape[0],),
+            device=offspring.device,
+            generator=generator,
+        )
+        result[:, dim] = torch.where(mutate, values[choices], result[:, dim])
+    return result
 
 
 def _repair_structured(
@@ -239,13 +324,15 @@ def _repair_structured(
         )
     if resample_categorical:
         for dim, values in categorical_values.items():
-            choices = torch.randint(
-                len(values),
-                (population.shape[0],),
-                device=population.device,
-                generator=generator,
-            )
-            repaired[:, dim] = values[choices]
+            legal = (repaired[:, dim, None] == values[None, :]).any(dim=1)
+            if not legal.all():
+                choices = torch.randint(
+                    len(values),
+                    (int((~legal).sum()),),
+                    device=population.device,
+                    generator=generator,
+                )
+                repaired[~legal, dim] = values[choices]
     return repaired
 
 
@@ -311,3 +398,29 @@ def _validate_configuration(
         raise ValueError("mutation_rate must lie between 0 and 1.")
     if mutation_scale < 0.0:
         raise ValueError("mutation_scale must be non-negative.")
+
+
+def _expand_fixed_features(
+    fixed_features: Mapping[int, float | Tensor] | None,
+    q: int,
+    d: int,
+    bounds: Tensor,
+) -> dict[int, Tensor]:
+    expanded: dict[int, Tensor] = {}
+    for batch in range(q):
+        for dim, value in (fixed_features or {}).items():
+            if dim < 0 or dim >= d:
+                raise ValueError(f"fixed_features dimension {dim} is out of range.")
+            expanded[batch * d + dim] = torch.as_tensor(
+                value, device=bounds.device, dtype=bounds.dtype
+            ).reshape(())
+    return expanded
+
+
+def _apply_fixed_features(population: Tensor, fixed_features: dict[int, Tensor]) -> Tensor:
+    if not fixed_features:
+        return population
+    result = population.clone()
+    for dim, value in fixed_features.items():
+        result[:, dim] = value
+    return result

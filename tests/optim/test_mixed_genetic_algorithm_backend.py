@@ -5,6 +5,7 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
+from robotorchan.optim import MixedVariableSpace
 from robotorchan.optim.backends import optimize_acqf_mixed_ga
 
 
@@ -78,3 +79,59 @@ def test_mixed_ga_rejects_out_of_bounds_categories() -> None:
             q=1,
             categorical_values={2: [40.0]},
         )
+
+
+def test_mixed_ga_accepts_shared_variable_space_and_fixed_features() -> None:
+    bounds = torch.tensor([[0.0, 0.0, 10.0], [1.0, 5.0, 30.0]], dtype=torch.double)
+    space = MixedVariableSpace(
+        bounds,
+        integer_dims=(1,),
+        categorical_values={2: (10.0, 20.0, 30.0)},
+    )
+
+    candidates, _ = optimize_acqf_mixed_ga(
+        _MixedTargetAcquisition(),
+        bounds,
+        q=2,
+        variable_space=space,
+        fixed_features={2: 20.0},
+        population_size=32,
+        generations=10,
+        seed=19,
+    )
+
+    assert torch.equal(candidates[:, 2], torch.full((2,), 20.0, dtype=torch.double))
+    assert torch.equal(candidates[:, 1], candidates[:, 1].round())
+
+
+def test_mixed_ga_rejects_duplicate_variable_contracts() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 3.0]], dtype=torch.double)
+    space = MixedVariableSpace(bounds, integer_dims=(1,))
+
+    with pytest.raises(ValueError, match="variable_space or integer_dims"):
+        optimize_acqf_mixed_ga(
+            _MixedTargetAcquisition(),
+            bounds,
+            q=1,
+            variable_space=space,
+            integer_dims=(1,),
+        )
+
+
+def test_mixed_ga_categorical_crossover_inherits_parent_values() -> None:
+    from robotorchan.optim.backends.mixed_genetic_algorithm import _crossover
+
+    parents_a = torch.tensor([[0.2, 10.0], [0.3, 20.0]], dtype=torch.double)
+    parents_b = torch.tensor([[0.8, 30.0], [0.7, 10.0]], dtype=torch.double)
+    generator = torch.Generator().manual_seed(5)
+
+    offspring = _crossover(
+        parents_a,
+        parents_b,
+        crossover_rate=1.0,
+        generator=generator,
+        integer_dims=(),
+        categorical_dims=(1,),
+    )
+
+    assert torch.equal(offspring[:, 1], parents_b[:, 1])
