@@ -23,7 +23,7 @@ from botorch.utils.multi_objective.box_decompositions.non_dominated import (
     FastNondominatedPartitioning,
 )
 
-from robotorchan.acquisition.mixed_one_shot import optimize_mixed_one_shot_acqf
+from robotorchan.optim import optimize_mixed_one_shot_acqf
 from robotorchan.models import (
     PCAGP,
     PLSGP,
