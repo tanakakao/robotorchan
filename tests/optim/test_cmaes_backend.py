@@ -80,6 +80,8 @@ def test_cmaes_rejects_candidate_constraints() -> None:
 
 def test_cmaes_reports_missing_optional_dependency() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
-    with patch.dict(sys.modules, {"cmaes": None}):
-        with pytest.raises(ImportError, match=r"robotorchan\[cmaes\]"):
-            optimize_acqf_cmaes(_QuadraticAcquisition(), bounds, q=1)
+    with (
+        patch.dict(sys.modules, {"cmaes": None}),
+        pytest.raises(ImportError, match=r"robotorchan\[cmaes\]"),
+    ):
+        optimize_acqf_cmaes(_QuadraticAcquisition(), bounds, q=1)
