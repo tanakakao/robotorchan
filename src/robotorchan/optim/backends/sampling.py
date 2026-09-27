@@ -7,6 +7,7 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 from torch.quasirandom import SobolEngine
 
+from robotorchan.optim.cross_cutting import apply_fixed_features
 from robotorchan.optim.runtime import make_generator, validate_bounds
 
 
@@ -18,6 +19,7 @@ def optimize_acqf_sampling(
     num_samples: int = 4096,
     method: str = "sobol",
     seed: int | None = None,
+    fixed_features: dict[int, float | Tensor] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Return the best acquisition-valued q-batch from sampled candidates."""
     validate_bounds(bounds)
@@ -34,6 +36,7 @@ def optimize_acqf_sampling(
     else:
         samples = _draw_random(bounds, num_samples, q, seed)
 
+    samples = apply_fixed_features(samples, fixed_features)
     with torch.no_grad():
         values = acq_function(samples)
     if values.numel() != num_samples:
