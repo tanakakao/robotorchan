@@ -57,7 +57,7 @@ def optimize_acqf_hybrid(
     resolved_global_options = dict(global_options or {})
     resolved_global_options.setdefault("constraints", constraints)
     resolved_global_options.setdefault("seed", seed)
-    if variable_space is not None and global_optimizer in {"de", "mixed_ga"}:
+    if variable_space is not None and global_optimizer != "cmaes":
         resolved_global_options.setdefault("variable_space", variable_space)
     if fixed_features is not None:
         resolved_global_options.setdefault("fixed_features", fixed_features)
