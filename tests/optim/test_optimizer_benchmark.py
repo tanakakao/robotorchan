@@ -94,12 +94,12 @@ def test_benchmark_reports_positive_violation_for_infeasible_result() -> None:
     )
 
     result = benchmark_optimizer(
-        "sampling",
-        optimize_acqf_sampling,
+        "ga",
+        optimize_acqf_ga,
         _Quadratic(),
         bounds,
         1,
-        optimizer_kwargs={"num_samples": 16, "method": "random"},
+        optimizer_kwargs={"population_size": 16, "generations": 3},
         constraints=constraints,
         seed=11,
     )
