@@ -99,3 +99,12 @@ CMAES_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     gpu=False,
     batch_evaluation=False,
 )
+
+
+GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    continuous=True,
+    requires_grad=False,
+    q_batch=True,
+    gpu=True,
+    batch_evaluation=True,
+)
