@@ -56,9 +56,11 @@ def optimize_acqf_hybrid(
         **resolved_global_options,
     )
 
-    initial_conditions = global_candidate.unsqueeze(0).expand(
-        num_restarts, *global_candidate.shape
-    ).clone()
+    initial_conditions = global_candidate.unsqueeze(0)
+    if num_restarts > 1:
+        raise ValueError(
+            "num_restarts > 1 requires distinct global seeds and is not supported yet."
+        )
     options = dict(local_options or {})
     candidate_constraints = constraints or CandidateConstraints()
     if candidate_constraints.has_nonlinear_constraints:
