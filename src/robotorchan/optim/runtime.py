@@ -10,6 +10,8 @@ def validate_bounds(bounds: Tensor) -> None:
     """Validate the common continuous bounds contract."""
     if bounds.ndim != 2 or bounds.shape[0] != 2:
         raise ValueError("bounds must have shape [2, d].")
+    if bounds.shape[1] == 0:
+        raise ValueError("bounds must contain at least one input dimension.")
     if not bounds.is_floating_point():
         raise TypeError("bounds must use a floating-point dtype.")
     if not torch.isfinite(bounds).all():
