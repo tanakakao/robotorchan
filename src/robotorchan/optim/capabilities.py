@@ -136,3 +136,18 @@ MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     gpu=True,
     batch_evaluation=True,
 )
+
+
+HYBRID_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    continuous=True,
+    requires_grad=True,
+    linear_inequality_constraints=True,
+    linear_equality_constraints=True,
+    nonlinear_inequality_constraints=True,
+    interpoint_nonlinear_constraints=True,
+    q_batch=True,
+    sequential=False,
+    fixed_features=False,
+    gpu=False,
+    batch_evaluation=False,
+)
