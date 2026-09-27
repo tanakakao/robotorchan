@@ -70,7 +70,6 @@ def test_unsupported_constraint_handling_is_explicit() -> None:
     assert capabilities.constraint_handling.interpoint_nonlinear is ConstraintHandling.UNSUPPORTED
 
 
-
 def test_pso_capabilities_do_not_overstate_categorical_mixed_support() -> None:
     capabilities = PSO_OPTIMIZER_CAPABILITIES
 
