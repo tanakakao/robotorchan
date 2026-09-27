@@ -16,7 +16,7 @@ from robotorchan.optim.backends import (
 
 def _fit_model() -> SingleTaskGP:
     train_x = torch.linspace(0.0, 1.0, 8, dtype=torch.double).unsqueeze(-1)
-    train_y = (-(train_x - 0.72).square() + 1.0)
+    train_y = -(train_x - 0.72).square() + 1.0
     model = SingleTaskGP(train_x, train_y)
     fit_gpytorch_mll(ExactMarginalLogLikelihood(model.likelihood, model))
     model.eval()
