@@ -74,9 +74,7 @@ def optimize_acqf_de(
         candidate = torch.as_tensor(
             flat_candidate, dtype=bounds.dtype, device=bounds.device
         ).reshape(q, bounds.shape[-1])
-        candidate = _repair_structured_dims(
-            candidate, integer_dims, categorical_values, bounds
-        )
+        candidate = _repair_structured_dims(candidate, integer_dims, categorical_values, bounds)
         candidate = apply_fixed_features(candidate, fixed_features)
         with torch.no_grad():
             value = acq_function(candidate.unsqueeze(0))
