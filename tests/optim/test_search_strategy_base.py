@@ -177,6 +177,7 @@ def test_public_optim_exports_are_complete() -> None:
         "optimize_acqf_sequential",
         "LinearConstraint",
         "MixedSpaceStrategy",
+        "MixedVariableSpace",
         "NonlinearConstraint",
         "NonlinearConstraintCallable",
         "update_baxus_state",
