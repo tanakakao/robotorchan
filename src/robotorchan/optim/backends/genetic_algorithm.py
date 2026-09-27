@@ -6,7 +6,7 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
-from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
+from robotorchan.optim.constraint_evaluation import (\n    candidate_constraint_violation,\n    feasibility_first_ranks,\n)
 from robotorchan.optim.constraints import CandidateConstraints
 from robotorchan.optim.cross_cutting import apply_fixed_features
 from robotorchan.optim.runtime import make_generator, validate_bounds
@@ -27,7 +27,6 @@ def optimize_acqf_ga(
     seed: int | None = None,
     constraints: CandidateConstraints | None = None,
     fixed_features: dict[int, float | Tensor] | None = None,
-    constraint_penalty: float = 1e6,
     equality_tolerance: float = 1e-6,
 ) -> tuple[Tensor, Tensor]:
     """Optimize an acquisition function with a real-valued genetic algorithm."""
@@ -68,9 +67,7 @@ def optimize_acqf_ga(
             population,
             q,
             bounds.shape[-1],
-            candidate_constraints,
-            constraint_penalty,
-            equality_tolerance,
+            candidate_constraints,\n            equality_tolerance,
             fixed_features,
         )
         generation_best = scores.argmax()
@@ -107,7 +104,6 @@ def _evaluate_population(
     q: int,
     d: int,
     constraints: CandidateConstraints,
-    constraint_penalty: float,
     equality_tolerance: float,
     fixed_features: dict[int, float | Tensor] | None,
 ) -> Tensor:
@@ -123,7 +119,7 @@ def _evaluate_population(
     violation = candidate_constraint_violation(
         candidates, constraints, equality_tolerance=equality_tolerance
     )
-    return scores - constraint_penalty * violation
+    return feasibility_first_ranks(scores, violation)
 
 
 def _tournament_select(
