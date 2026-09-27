@@ -255,13 +255,16 @@ def _mutate(
     continuous_dims = tuple(dim for dim in range(offspring.shape[1]) if dim not in structured)
     if continuous_dims:
         index = torch.tensor(continuous_dims, device=offspring.device)
-        mask = torch.rand(
-            offspring.shape[0],
-            len(continuous_dims),
-            dtype=offspring.dtype,
-            device=offspring.device,
-            generator=generator,
-        ) < mutation_rate
+        mask = (
+            torch.rand(
+                offspring.shape[0],
+                len(continuous_dims),
+                dtype=offspring.dtype,
+                device=offspring.device,
+                generator=generator,
+            )
+            < mutation_rate
+        )
         noise = torch.randn(
             offspring.shape[0],
             len(continuous_dims),
@@ -272,9 +275,10 @@ def _mutate(
         mutated = result[:, index] + mask * noise * mutation_scale * (upper[index] - lower[index])
         result[:, index] = torch.maximum(torch.minimum(mutated, upper[index]), lower[index])
     for dim in integer_dims:
-        mutate = torch.rand(
-            offspring.shape[0], device=offspring.device, generator=generator
-        ) < mutation_rate
+        mutate = (
+            torch.rand(offspring.shape[0], device=offspring.device, generator=generator)
+            < mutation_rate
+        )
         step = torch.where(
             torch.rand(offspring.shape[0], device=offspring.device, generator=generator) < 0.5,
             -torch.ones(offspring.shape[0], device=offspring.device, dtype=offspring.dtype),
