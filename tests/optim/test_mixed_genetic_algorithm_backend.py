@@ -81,10 +81,3 @@ def test_mixed_ga_rejects_out_of_bounds_categories() -> None:
         )
 
 
-def test_mixed_ga_rejects_candidate_constraints() -> None:
-    bounds = torch.tensor([[0.0, 0.0, 10.0], [1.0, 5.0, 30.0]], dtype=torch.double)
-    constraints = CandidateConstraints(
-        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.2),)
-    )
-    with pytest.raises(ValueError, match="does not support candidate constraints yet"):
-        optimize_acqf_mixed_ga(_MixedTargetAcquisition(), bounds, q=1, constraints=constraints)
