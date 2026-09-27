@@ -2,7 +2,7 @@
 
 import torch
 
-from robotorchan.optim.mixed_benchmarks import (
+from robotorchan.benchmarks.mixed_optimization import (
     MixedInteractionAcquisition,
     mixed_benchmark_scenarios,
 )
