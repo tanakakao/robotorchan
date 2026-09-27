@@ -162,6 +162,7 @@ def test_public_optim_exports_are_complete() -> None:
         "HYBRID_OPTIMIZER_CAPABILITIES",
         "MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES",
         "NSGA2_OPTIMIZER_CAPABILITIES",
+        "PSO_OPTIMIZER_CAPABILITIES",
         "SAMPLING_OPTIMIZER_CAPABILITIES",
         "TORCH_OPTIMIZER_CAPABILITIES",
         "CandidateConstraints",

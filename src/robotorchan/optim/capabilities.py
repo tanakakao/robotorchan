@@ -160,3 +160,16 @@ NSGA2_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     gpu=True,
     batch_evaluation=True,
 )
+
+
+PSO_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    continuous=True,
+    requires_grad=False,
+    linear_inequality_constraints=True,
+    linear_equality_constraints=True,
+    nonlinear_inequality_constraints=True,
+    interpoint_nonlinear_constraints=True,
+    q_batch=True,
+    gpu=True,
+    batch_evaluation=True,
+)
