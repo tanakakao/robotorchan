@@ -35,7 +35,8 @@ def optimize_acqf_mixed_ga(
     """Optimize an acquisition function over continuous, integer, and categorical inputs."""
     categorical_values = dict(categorical_values or {})
     integer_dims = tuple(integer_dims)
-    validate_bounds(bounds)\n    _validate_configuration(
+    validate_bounds(bounds)
+    _validate_configuration(
         q=q,
         bounds=bounds,
         integer_dims=integer_dims,
