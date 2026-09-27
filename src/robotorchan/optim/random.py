@@ -48,4 +48,18 @@ class RandomSearchStrategy(SearchStrategy):
         if q < 1:
             raise ValueError("q must be at least 1.")
 
-        candidates, acquisition_value = optimize_acqf_sampling(\n            acq_function,\n            self.bounds,\n            q,\n            num_samples=self.num_samples,\n            method="random",\n            seed=self.seed,\n        )\n\n        return SearchResult(\n            candidates=candidates,\n            acquisition_value=acquisition_value,\n            metadata={"num_samples": self.num_samples, "q": q, "sampler": "random"},\n        )\n
+        candidates, acquisition_value = optimize_acqf_sampling(
+            acq_function,
+            self.bounds,
+            q,
+            num_samples=self.num_samples,
+            method="random",
+            seed=self.seed,
+        )
+
+        return SearchResult(
+            candidates=candidates,
+            acquisition_value=acquisition_value,
+            metadata={"num_samples": self.num_samples, "q": q, "sampler": "random"},
+        )
+
