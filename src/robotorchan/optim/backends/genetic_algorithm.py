@@ -6,7 +6,10 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
-from robotorchan.optim.constraint_evaluation import (\n    candidate_constraint_violation,\n    feasibility_first_ranks,\n)
+from robotorchan.optim.constraint_evaluation import (
+    candidate_constraint_violation,
+    feasibility_first_ranks,
+)
 from robotorchan.optim.constraints import CandidateConstraints
 from robotorchan.optim.cross_cutting import apply_fixed_features
 from robotorchan.optim.runtime import make_generator, validate_bounds
@@ -64,7 +67,8 @@ def optimize_acqf_ga(
             population,
             q,
             bounds.shape[-1],
-            candidate_constraints,\n            equality_tolerance,
+            candidate_constraints,
+            equality_tolerance,
             fixed_features,
         )
         generation_best = scores.argmax()
