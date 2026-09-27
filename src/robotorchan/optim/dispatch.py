@@ -17,6 +17,7 @@ from robotorchan.optim.backends import (
     optimize_acqf_sampling,
     optimize_acqf_torch,
 )
+from robotorchan.optim.capabilities import get_optimizer_capabilities
 from robotorchan.optim.constraints import CandidateConstraints
 
 OptimizerName = Literal[
@@ -53,6 +54,14 @@ def optimize_acqf(
     """Optimize an acquisition function using a named robotorchan backend."""
     backend_options = dict(optimizer_options or {})
     name = optimizer.lower()
+    capabilities = get_optimizer_capabilities(name)
+    _validate_requested_capabilities(
+        name,
+        capabilities,
+        constraints=constraints,
+        fixed_features=fixed_features,
+        sequential=sequential,
+    )
 
     if name == "botorch":
         _reject_backend_options(name, backend_options)
@@ -139,8 +148,6 @@ def optimize_acqf(
             **backend_options,
         )
     if name == "cmaes":
-        if fixed_features:
-            raise NotImplementedError("CMA-ES does not support fixed_features yet.")
         return optimize_acqf_cmaes(
             acq_function,
             bounds,
@@ -205,3 +212,33 @@ def _reject_botorch_local_arguments(
         )
     if batch_initial_conditions is not None:
         raise ValueError(f"batch_initial_conditions are not used by optimizer={name!r}.")
+
+
+def _validate_requested_capabilities(
+    name: str,
+    capabilities: Any,
+    *,
+    constraints: CandidateConstraints | None,
+    fixed_features: dict[int, float | Tensor] | None,
+    sequential: bool,
+) -> None:
+    if fixed_features and not capabilities.fixed_features:
+        raise NotImplementedError(f"optimizer={name!r} does not support fixed_features.")
+    if sequential and not capabilities.sequential:
+        raise NotImplementedError(f"optimizer={name!r} does not support sequential optimization.")
+    if constraints is None:
+        return
+    if constraints.inequality_constraints and not capabilities.linear_inequality_constraints:
+        raise NotImplementedError(f"optimizer={name!r} does not support linear inequalities.")
+    if constraints.equality_constraints and not capabilities.linear_equality_constraints:
+        raise NotImplementedError(f"optimizer={name!r} does not support linear equalities.")
+    if constraints.nonlinear_inequality_constraints:
+        if not capabilities.nonlinear_inequality_constraints:
+            raise NotImplementedError(f"optimizer={name!r} does not support nonlinear constraints.")
+        if any(
+            not is_intrapoint
+            for _, is_intrapoint in constraints.nonlinear_inequality_constraints
+        ) and not capabilities.interpoint_nonlinear_constraints:
+            raise NotImplementedError(
+                f"optimizer={name!r} does not support inter-point nonlinear constraints."
+            )
