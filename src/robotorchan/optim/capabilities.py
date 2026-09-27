@@ -8,6 +8,29 @@ AcquisitionFunction and operate on Tensor bounds and q-batches.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
+
+
+class ConstraintHandling(StrEnum):
+    """How an optimizer enforces a supported candidate constraint."""
+
+    NATIVE = "native"
+    PENALTY = "penalty"
+    FEASIBILITY_FIRST = "feasibility_first"
+    REPAIR = "repair"
+    PROJECTION = "projection"
+    REJECTION = "rejection"
+    UNSUPPORTED = "unsupported"
+
+
+@dataclass(frozen=True)
+class ConstraintHandlingCapabilities:
+    """Constraint enforcement semantics for one optimizer backend."""
+
+    linear_inequality: ConstraintHandling = ConstraintHandling.UNSUPPORTED
+    linear_equality: ConstraintHandling = ConstraintHandling.UNSUPPORTED
+    nonlinear_inequality: ConstraintHandling = ConstraintHandling.UNSUPPORTED
+    interpoint_nonlinear: ConstraintHandling = ConstraintHandling.UNSUPPORTED
 
 
 @dataclass(frozen=True)
@@ -33,9 +56,16 @@ class OptimizerCapabilities:
     fixed_features: bool = False
     gpu: bool = False
     batch_evaluation: bool = False
+    constraint_handling: ConstraintHandlingCapabilities = ConstraintHandlingCapabilities()
 
 
 BOTORCH_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    constraint_handling=ConstraintHandlingCapabilities(
+        linear_inequality=ConstraintHandling.NATIVE,
+        linear_equality=ConstraintHandling.NATIVE,
+        nonlinear_inequality=ConstraintHandling.NATIVE,
+        interpoint_nonlinear=ConstraintHandling.NATIVE,
+    ),
     continuous=True,
     requires_grad=True,
     linear_inequality_constraints=True,
@@ -49,6 +79,11 @@ BOTORCH_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 )
 
 BOTORCH_MIXED_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    constraint_handling=ConstraintHandlingCapabilities(
+        linear_inequality=ConstraintHandling.NATIVE,
+        linear_equality=ConstraintHandling.NATIVE,
+        nonlinear_inequality=ConstraintHandling.NATIVE,
+    ),
     continuous=True,
     integer=True,
     categorical=True,
@@ -84,6 +119,12 @@ SAMPLING_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 
 DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    constraint_handling=ConstraintHandlingCapabilities(
+        linear_inequality=ConstraintHandling.PENALTY,
+        linear_equality=ConstraintHandling.PENALTY,
+        nonlinear_inequality=ConstraintHandling.PENALTY,
+        interpoint_nonlinear=ConstraintHandling.PENALTY,
+    ),
     continuous=True,
     requires_grad=False,
     linear_inequality_constraints=True,
@@ -98,6 +139,12 @@ DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 
 CMAES_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    constraint_handling=ConstraintHandlingCapabilities(
+        linear_inequality=ConstraintHandling.PENALTY,
+        linear_equality=ConstraintHandling.PENALTY,
+        nonlinear_inequality=ConstraintHandling.PENALTY,
+        interpoint_nonlinear=ConstraintHandling.PENALTY,
+    ),
     continuous=True,
     requires_grad=False,
     linear_inequality_constraints=True,
@@ -111,6 +158,12 @@ CMAES_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 
 GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    constraint_handling=ConstraintHandlingCapabilities(
+        linear_inequality=ConstraintHandling.PENALTY,
+        linear_equality=ConstraintHandling.PENALTY,
+        nonlinear_inequality=ConstraintHandling.PENALTY,
+        interpoint_nonlinear=ConstraintHandling.PENALTY,
+    ),
     continuous=True,
     requires_grad=False,
     linear_inequality_constraints=True,
@@ -125,6 +178,12 @@ GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 
 MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    constraint_handling=ConstraintHandlingCapabilities(
+        linear_inequality=ConstraintHandling.PENALTY,
+        linear_equality=ConstraintHandling.PENALTY,
+        nonlinear_inequality=ConstraintHandling.PENALTY,
+        interpoint_nonlinear=ConstraintHandling.PENALTY,
+    ),
     continuous=True,
     integer=True,
     categorical=True,
@@ -141,6 +200,12 @@ MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 
 HYBRID_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    constraint_handling=ConstraintHandlingCapabilities(
+        linear_inequality=ConstraintHandling.PENALTY,
+        linear_equality=ConstraintHandling.PENALTY,
+        nonlinear_inequality=ConstraintHandling.PENALTY,
+        interpoint_nonlinear=ConstraintHandling.PENALTY,
+    ),
     continuous=True,
     requires_grad=True,
     linear_inequality_constraints=True,
@@ -165,6 +230,12 @@ NSGA2_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 
 PSO_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    constraint_handling=ConstraintHandlingCapabilities(
+        linear_inequality=ConstraintHandling.PENALTY,
+        linear_equality=ConstraintHandling.PENALTY,
+        nonlinear_inequality=ConstraintHandling.PENALTY,
+        interpoint_nonlinear=ConstraintHandling.PENALTY,
+    ),
     continuous=True,
     requires_grad=False,
     linear_inequality_constraints=True,

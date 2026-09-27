@@ -15,6 +15,8 @@ from robotorchan.optim.capabilities import (
     PSO_OPTIMIZER_CAPABILITIES,
     SAMPLING_OPTIMIZER_CAPABILITIES,
     TORCH_OPTIMIZER_CAPABILITIES,
+    ConstraintHandling,
+    ConstraintHandlingCapabilities,
     OptimizerCapabilities,
     get_optimizer_capabilities,
 )
@@ -68,6 +70,8 @@ __all__ = [
     "BAxUSThompsonSamplingStrategy",
     "BenchmarkResult",
     "CandidateConstraints",
+    "ConstraintHandling",
+    "ConstraintHandlingCapabilities",
     "HeSBOStrategy",
     "LatentReconstruction",
     "LatentSpaceStrategy",
