@@ -34,12 +34,12 @@ from robotorchan.optim.tree import TreeEnsembleSearchStrategy
 from robotorchan.optim.trust_region import TuRBOState, TuRBOStrategy, update_turbo_state
 
 __all__ = [
+    "BOTORCH_MIXED_OPTIMIZER_CAPABILITIES",
+    "BOTORCH_OPTIMIZER_CAPABILITIES",
     "ALEBOStrategy",
     "BAxUSState",
     "BAxUSStrategy",
     "BAxUSThompsonSamplingStrategy",
-    "BOTORCH_MIXED_OPTIMIZER_CAPABILITIES",
-    "BOTORCH_OPTIMIZER_CAPABILITIES",
     "CandidateConstraints",
     "HeSBOStrategy",
     "LatentReconstruction",
