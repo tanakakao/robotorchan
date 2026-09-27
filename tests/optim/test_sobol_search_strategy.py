@@ -18,8 +18,10 @@ class _BatchSumAcquisition(AcquisitionFunction):
 def test_sobol_search_is_reproducible() -> None:
     bounds = torch.tensor([[0.0, -1.0], [1.0, 2.0]], dtype=torch.double)
     acq = _BatchSumAcquisition()
-    first = SobolSearchStrategy(bounds, num_samples=64, seed=11).optimize(acq, q=2)
-    second = SobolSearchStrategy(bounds, num_samples=64, seed=11).optimize(acq, q=2)
+    first_strategy = SobolSearchStrategy(bounds, num_samples=64, seed=11)
+    second_strategy = SobolSearchStrategy(bounds, num_samples=64, seed=11)
+    first = first_strategy.optimize(acq, q=2)
+    second = second_strategy.optimize(acq, q=2)
 
     assert torch.equal(first.candidates, second.candidates)
     assert torch.equal(first.acquisition_value, second.acquisition_value)
