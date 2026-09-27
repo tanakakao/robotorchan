@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from botorch.acquisition.acquisition import AcquisitionFunction
-from botorch.optim import optimize_acqf_mixed
 from torch import Tensor
 
+from robotorchan.optim.backends import optimize_acqf_mixed_botorch
 from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.constraints import CandidateConstraints
 
@@ -49,50 +49,20 @@ class MixedSpaceStrategy(SearchStrategy):
         """Optimize the acquisition over the configured mixed search space."""
         if q < 1:
             raise ValueError("q must be at least 1.")
-        if any(
-            not is_intrapoint
-            for _, is_intrapoint in self.constraints.nonlinear_inequality_constraints
-        ):
-            raise ValueError(
-                "MixedSpaceStrategy does not support inter-point nonlinear constraints."
-            )
-        if self.constraints.has_nonlinear_constraints and self.batch_initial_conditions is None:
-            raise ValueError(
-                "Nonlinear candidate constraints require feasible batch_initial_conditions."
-            )
-
-        options = None if self.options is None else dict(self.options)
-        if self.constraints.has_nonlinear_constraints:
-            options = {} if options is None else options
-            options.setdefault("batch_limit", 1)
-
-        candidates, acquisition_value = optimize_acqf_mixed(
+        candidates, acquisition_value = optimize_acqf_mixed_botorch(
             acq_function=acq_function,
             bounds=self.bounds,
             q=q,
             num_restarts=self.num_restarts,
             fixed_features_list=self.fixed_features_list,
             raw_samples=self.raw_samples,
-            options=options,
-            inequality_constraints=(
-                list(self.constraints.inequality_constraints)
-                if self.constraints.inequality_constraints
-                else None
-            ),
-            equality_constraints=(
-                list(self.constraints.equality_constraints)
-                if self.constraints.equality_constraints
-                else None
-            ),
-            nonlinear_inequality_constraints=(
-                list(self.constraints.nonlinear_inequality_constraints)
-                if self.constraints.nonlinear_inequality_constraints
-                else None
-            ),
+            options=self.options,
+            constraints=self.constraints,
             batch_initial_conditions=self.batch_initial_conditions,
         )
+
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
-            metadata={},
+            metadata={"optimizer": "botorch_mixed"},
         )
