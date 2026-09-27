@@ -92,7 +92,9 @@ def optimize_acqf_hybrid(
     if candidate_constraints.has_nonlinear_constraints:
         options.setdefault("batch_limit", 1)
 
-    if variable_space is not None and (variable_space.integer_dims or variable_space.categorical_dims):
+    if variable_space is not None and (
+        variable_space.integer_dims or variable_space.categorical_dims
+    ):
         resolved_fixed_features_list = _merge_fixed_features_list(
             mixed_fixed_features_list or [], fixed_features
         )
