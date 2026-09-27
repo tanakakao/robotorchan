@@ -138,7 +138,7 @@ def test_mixed_nonlinear_constraint_forwards_batch_limit(monkeypatch) -> None:
         captured.update(kwargs)
         return torch.zeros(1, 2, dtype=torch.double), torch.tensor(0.0, dtype=torch.double)
 
-    monkeypatch.setattr("robotorchan.optim.backends.botorch.botorch_optimize_acqf_mixed", fake_optimize_acqf_mixed)
+    monkeypatch.setattr(\n        "robotorchan.optim.backends.botorch.botorch_optimize_acqf_mixed",\n        fake_optimize_acqf_mixed,\n    )
     strategy.optimize(None)  # type: ignore[arg-type]
 
     assert captured["options"]["batch_limit"] == 1
