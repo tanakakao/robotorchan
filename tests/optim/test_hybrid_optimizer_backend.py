@@ -9,6 +9,7 @@ from torch import Tensor
 
 from robotorchan.optim.backends.hybrid import optimize_acqf_hybrid
 from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.variable_space import MixedVariableSpace
 
 
 class _Quadratic(AcquisitionFunction):
@@ -95,7 +96,7 @@ def test_hybrid_sets_batch_limit_for_nonlinear_constraints() -> None:
     assert local_optimizer.call_args.kwargs["options"]["batch_limit"] == 1
 
 
-def test_hybrid_rejects_duplicate_restarts_and_fixed_features() -> None:
+def test_hybrid_rejects_duplicate_restarts() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     global_optimizer = Mock(
         return_value=(torch.tensor([[0.3]], dtype=torch.double), torch.tensor(-0.1))
@@ -105,17 +106,62 @@ def test_hybrid_rejects_duplicate_restarts_and_fixed_features() -> None:
         optimize_acqf_hybrid(
             _Quadratic(), bounds, q=1, global_optimizer=global_optimizer, num_restarts=2
         )
-    with pytest.raises(NotImplementedError, match="fixed_features"):
-        optimize_acqf_hybrid(
-            _Quadratic(),
-            bounds,
-            q=1,
-            global_optimizer=global_optimizer,
-            fixed_features={0: 0.5},
-        )
-
-
 def test_hybrid_rejects_unknown_global_optimizer() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     with pytest.raises(ValueError, match="global_optimizer"):
         optimize_acqf_hybrid(_Quadratic(), bounds, q=1, global_optimizer="unknown")  # type: ignore[arg-type]
+
+
+
+def test_hybrid_forwards_mixed_space_to_global_and_mixed_local_stage() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(
+        bounds,
+        categorical_values={1: [0.0, 1.0, 2.0]},
+    )
+    global_optimizer = Mock(
+        return_value=(torch.tensor([[0.4, 1.0]], dtype=torch.double), torch.tensor(-0.1))
+    )
+    fixed_features_list = [{1: 0.0}, {1: 1.0}, {1: 2.0}]
+    local_candidate = torch.tensor([[0.7, 1.0]], dtype=torch.double)
+    local_value = torch.tensor(-0.01, dtype=torch.double)
+
+    with patch(
+        "robotorchan.optim.backends.hybrid.optimize_acqf_mixed_botorch",
+        return_value=(local_candidate, local_value),
+    ) as local_optimizer:
+        candidate, value = optimize_acqf_hybrid(
+            _Quadratic(),
+            bounds,
+            q=1,
+            global_optimizer=global_optimizer,
+            variable_space=variable_space,
+            mixed_fixed_features_list=fixed_features_list,
+        )
+
+    assert torch.equal(candidate, local_candidate)
+    assert torch.equal(value, local_value)
+    assert global_optimizer.call_args.kwargs["variable_space"] is variable_space
+    local_kwargs = local_optimizer.call_args.kwargs
+    assert local_kwargs["fixed_features_list"] == fixed_features_list
+    assert torch.equal(
+        local_kwargs["batch_initial_conditions"],
+        torch.tensor([[[0.4, 1.0]]], dtype=torch.double),
+    )
+
+
+def test_categorical_hybrid_requires_mixed_local_enumeration() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(
+        bounds,
+        categorical_values={1: [0.0, 1.0, 2.0]},
+    )
+
+    with pytest.raises(ValueError, match="mixed_fixed_features_list"):
+        optimize_acqf_hybrid(
+            _Quadratic(),
+            bounds,
+            q=1,
+            global_optimizer="mixed_ga",
+            variable_space=variable_space,
+        )
