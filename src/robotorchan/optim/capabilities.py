@@ -72,3 +72,12 @@ TORCH_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     gpu=True,
     batch_evaluation=True,
 )
+
+
+SAMPLING_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    continuous=True,
+    requires_grad=False,
+    q_batch=True,
+    gpu=True,
+    batch_evaluation=True,
+)
