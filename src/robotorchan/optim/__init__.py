@@ -15,6 +15,7 @@ from robotorchan.optim.capabilities import (
     TORCH_OPTIMIZER_CAPABILITIES,
     OptimizerCapabilities,
 )
+from robotorchan.optim.cross_cutting import apply_fixed_features, optimize_acqf_sequential
 from robotorchan.optim.constraints import (
     CandidateConstraints,
     LinearConstraint,
@@ -60,6 +61,8 @@ __all__ = [
     "BAxUSStrategy",
     "BAxUSThompsonSamplingStrategy",
     "CandidateConstraints",
+    "apply_fixed_features",
+    "optimize_acqf_sequential",
     "HeSBOStrategy",
     "LatentReconstruction",
     "LatentSpaceStrategy",
