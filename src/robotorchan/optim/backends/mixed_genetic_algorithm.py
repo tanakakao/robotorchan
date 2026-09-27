@@ -8,7 +8,7 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
-from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
+from robotorchan.optim.constraint_evaluation import (\n    candidate_constraint_violation,\n    feasibility_first_ranks,\n)
 from robotorchan.optim.constraints import CandidateConstraints
 from robotorchan.optim.runtime import make_generator, validate_bounds
 from robotorchan.optim.variable_space import MixedVariableSpace
@@ -30,7 +30,6 @@ def optimize_acqf_mixed_ga(
     mutation_scale: float = 0.1,
     seed: int | None = None,
     constraints: CandidateConstraints | None = None,
-    constraint_penalty: float = 1e6,
     equality_tolerance: float = 1e-6,
     variable_space: MixedVariableSpace | None = None,
     fixed_features: Mapping[int, float | Tensor] | None = None,
@@ -100,9 +99,7 @@ def optimize_acqf_mixed_ga(
             population,
             q,
             d,
-            candidate_constraints,
-            constraint_penalty,
-            equality_tolerance,
+            candidate_constraints,\n            equality_tolerance,
         )
         generation_best = scores.argmax()
         if best_value is None or scores[generation_best] > best_value:
@@ -163,7 +160,6 @@ def _evaluate_population(
     q: int,
     d: int,
     constraints: CandidateConstraints,
-    constraint_penalty: float,
     equality_tolerance: float,
 ) -> Tensor:
     candidates = population.reshape(population.shape[0], q, d)
@@ -177,7 +173,7 @@ def _evaluate_population(
     violation = candidate_constraint_violation(
         candidates, constraints, equality_tolerance=equality_tolerance
     )
-    return scores - constraint_penalty * violation
+    return feasibility_first_ranks(scores, violation)
 
 
 def _tournament_select(
