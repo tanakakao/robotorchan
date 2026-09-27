@@ -241,7 +241,7 @@ def test_original_space_strategy_forwards_nonlinear_constraints(monkeypatch) -> 
         captured.update(kwargs)
         return torch.zeros(1, 2, dtype=torch.double), torch.tensor(0.0, dtype=torch.double)
 
-    monkeypatch.setattr("robotorchan.optim.backends.botorch.botorch_optimize_acqf", fake_optimize_acqf)
+    monkeypatch.setattr(\n        "robotorchan.optim.backends.botorch.botorch_optimize_acqf",\n        fake_optimize_acqf,\n    )
     strategy.optimize(None)  # type: ignore[arg-type]
 
     assert captured["nonlinear_inequality_constraints"] == [(constraint, True)]
@@ -269,7 +269,7 @@ def test_nonlinear_constraint_preserves_explicit_optimizer_batch_limit(monkeypat
         captured.update(kwargs)
         return torch.zeros(1, 1, dtype=torch.double), torch.tensor(0.0, dtype=torch.double)
 
-    monkeypatch.setattr("robotorchan.optim.backends.botorch.botorch_optimize_acqf", fake_optimize_acqf)
+    monkeypatch.setattr(\n        "robotorchan.optim.backends.botorch.botorch_optimize_acqf",\n        fake_optimize_acqf,\n    )
     strategy.optimize(None)  # type: ignore[arg-type]
 
     assert captured["options"] == {"batch_limit": 1, "maxiter": 17}
