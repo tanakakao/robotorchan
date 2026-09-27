@@ -4,6 +4,7 @@ from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.capabilities import (
     BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
     BOTORCH_OPTIMIZER_CAPABILITIES,
+    TORCH_OPTIMIZER_CAPABILITIES,
     OptimizerCapabilities,
 )
 from robotorchan.optim.constraints import (
@@ -36,6 +37,7 @@ from robotorchan.optim.trust_region import TuRBOState, TuRBOStrategy, update_tur
 __all__ = [
     "BOTORCH_MIXED_OPTIMIZER_CAPABILITIES",
     "BOTORCH_OPTIMIZER_CAPABILITIES",
+    "TORCH_OPTIMIZER_CAPABILITIES",
     "ALEBOStrategy",
     "BAxUSState",
     "BAxUSStrategy",
