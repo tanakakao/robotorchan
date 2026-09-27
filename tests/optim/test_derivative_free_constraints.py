@@ -241,25 +241,23 @@ def test_de_preserves_integer_domain_with_constraint() -> None:
     assert candidates[0, 1] == candidates[0, 1].round()
 
 
-def test_de_supports_categorical_variable_space() -> None:
+def test_de_rejects_categorical_variable_space() -> None:
     from robotorchan.optim.variable_space import MixedVariableSpace
 
     bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
     variable_space = MixedVariableSpace(bounds, categorical_values={1: [0.0, 1.0, 2.0]})
 
-    candidates, _ = optimize_acqf_de(
-        _Target(),
-        bounds,
-        q=1,
-        variable_space=variable_space,
-        seed=37,
-        options={"maxiter": 30, "popsize": 8},
-    )
-
-    assert float(candidates[0, 1]) in {0.0, 1.0, 2.0}
+    with pytest.raises(NotImplementedError, match="unordered categorical"):
+        optimize_acqf_de(
+            _Target(),
+            bounds,
+            q=1,
+            variable_space=variable_space,
+            seed=37,
+        )
 
 
-def test_de_supports_full_mixed_space_with_nonlinear_constraint() -> None:
+def test_de_rejects_full_mixed_space_with_categorical_dimension() -> None:
     from robotorchan.optim.variable_space import MixedVariableSpace
 
     bounds = torch.tensor([[0.0, 0.0, 0.0], [1.0, 4.0, 2.0]], dtype=torch.double)
@@ -268,26 +266,15 @@ def test_de_supports_full_mixed_space_with_nonlinear_constraint() -> None:
         integer_dims=(1,),
         categorical_values={2: [0.0, 1.0, 2.0]},
     )
-    constraints = CandidateConstraints(
-        nonlinear_inequality_constraints=(
-            (lambda x: 0.55 + 0.10 * x[..., 1] - 0.15 * x[..., 2] - x[..., 0], True),
+
+    with pytest.raises(NotImplementedError, match="unordered categorical"):
+        optimize_acqf_de(
+            _Target(target=0.9),
+            bounds,
+            q=1,
+            variable_space=variable_space,
+            seed=41,
         )
-    )
-
-    candidates, _ = optimize_acqf_de(
-        _Target(target=0.9),
-        bounds,
-        q=1,
-        variable_space=variable_space,
-        seed=41,
-        options={"maxiter": 50, "popsize": 12},
-        constraints=constraints,
-    )
-
-    residual = 0.55 + 0.10 * candidates[0, 1] - 0.15 * candidates[0, 2] - candidates[0, 0]
-    assert residual >= -1e-3
-    assert candidates[0, 1] == candidates[0, 1].round()
-    assert float(candidates[0, 2]) in {0.0, 1.0, 2.0}
 
 
 def test_de_constraint_handling_is_independent_of_acquisition_scale() -> None:
