@@ -37,8 +37,9 @@ class CandidateConstraints:
     contract. The callable returns a scalar tensor and feasibility means
     ``callable(X) >= 0``. With ``is_intrapoint=True`` it receives ``[d]``;
     otherwise it receives the joint q-batch ``[q, d]``. The callable must
-    preserve device and floating dtype and remain differentiable with respect
-    to candidate coordinates. Python callables are runtime objects and have no
+    preserve device and floating dtype. Gradient-based optimizers additionally
+    require differentiability with respect to candidate coordinates; derivative-free
+    backends do not. Python callables are runtime objects and have no
     robotorchan-specific serialization format.
     """
 
