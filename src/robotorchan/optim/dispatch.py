@@ -235,10 +235,13 @@ def _validate_requested_capabilities(
     if constraints.nonlinear_inequality_constraints:
         if not capabilities.nonlinear_inequality_constraints:
             raise NotImplementedError(f"optimizer={name!r} does not support nonlinear constraints.")
-        if any(
-            not is_intrapoint
-            for _, is_intrapoint in constraints.nonlinear_inequality_constraints
-        ) and not capabilities.interpoint_nonlinear_constraints:
+        if (
+            any(
+                not is_intrapoint
+                for _, is_intrapoint in constraints.nonlinear_inequality_constraints
+            )
+            and not capabilities.interpoint_nonlinear_constraints
+        ):
             raise NotImplementedError(
                 f"optimizer={name!r} does not support inter-point nonlinear constraints."
             )
