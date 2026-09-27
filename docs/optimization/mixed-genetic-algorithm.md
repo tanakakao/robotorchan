@@ -49,3 +49,25 @@ strategies.
 Candidate constraints use the common penalty implementation described in
 `candidate-constraints.md`. Phase 7 separately evaluates penalty ranking against
 feasibility-first selection.
+
+
+## Mixed-variable constraints
+
+Constraints are evaluated in the raw candidate coordinates after mixed-variable
+repair and fixed-feature application. They may therefore depend jointly on
+continuous, integer, and categorical coordinates without introducing a separate
+mixed-variable constraint DSL.
+
+The backend supports the common `CandidateConstraints` contract for linear
+inequality/equality constraints and nonlinear inequality constraints. Because a
+population member represents the complete `q x d` candidate, both intra-point
+and inter-point constraints can be evaluated with their existing q-batch
+semantics.
+
+For example, a nonlinear constraint may change the legal continuous region
+according to an integer or categorical coordinate. Categorical values remain
+finite labels supplied by the caller; the optimizer does not interpolate them
+when evaluating or enforcing the constraint.
+
+Constraint handling remains feasibility-first: feasibility is preferred before
+acquisition value, and infeasible candidates are ordered by total violation.
