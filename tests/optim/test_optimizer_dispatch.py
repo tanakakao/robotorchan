@@ -5,7 +5,7 @@ from unittest.mock import patch
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 
-from robotorchan.optim import optimize_acqf
+from robotorchan.optim import MixedVariableSpace, optimize_acqf
 
 
 class _SumAcquisition(AcquisitionFunction):
@@ -54,3 +54,60 @@ def test_dispatch_rejects_unknown_optimizer() -> None:
         assert "Unknown optimizer" in str(exc)
     else:
         raise AssertionError("Unknown optimizer should fail explicitly.")
+
+
+def test_dispatch_forwards_variable_space_to_mixed_ga() -> None:
+    bounds = torch.tensor([[0.0, 0.0, 0.0], [1.0, 4.0, 2.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(
+        bounds,
+        integer_dims=(1,),
+        categorical_values={2: [0.0, 1.0, 2.0]},
+    )
+    with patch("robotorchan.optim.dispatch.optimize_acqf_ga") as mocked:
+        mocked.return_value = (torch.zeros(1, 3), torch.tensor(0.0))
+        optimize_acqf(
+            _SumAcquisition(),
+            bounds,
+            q=1,
+            optimizer="ga",
+            variable_space=variable_space,
+        )
+    assert mocked.call_args.kwargs["variable_space"] is variable_space
+
+
+def test_dispatch_rejects_categorical_space_for_pso_before_backend() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(bounds, categorical_values={1: [0.0, 1.0, 2.0]})
+    with patch("robotorchan.optim.dispatch.optimize_acqf_pso") as mocked:
+        try:
+            optimize_acqf(
+                _SumAcquisition(),
+                bounds,
+                q=1,
+                optimizer="pso",
+                variable_space=variable_space,
+            )
+        except NotImplementedError as exc:
+            assert "categorical variables" in str(exc)
+        else:
+            raise AssertionError("Categorical PSO should fail before backend execution.")
+    mocked.assert_not_called()
+
+
+def test_dispatch_rejects_structured_space_for_gradient_torch_optimizer() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 4.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(bounds, integer_dims=(1,))
+    with patch("robotorchan.optim.dispatch.optimize_acqf_torch") as mocked:
+        try:
+            optimize_acqf(
+                _SumAcquisition(),
+                bounds,
+                q=1,
+                optimizer="torch_adam",
+                variable_space=variable_space,
+            )
+        except NotImplementedError as exc:
+            assert "integer variables" in str(exc)
+        else:
+            raise AssertionError("Integer Adam should fail before backend execution.")
+    mocked.assert_not_called()
