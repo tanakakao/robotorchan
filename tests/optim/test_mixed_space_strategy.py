@@ -38,6 +38,7 @@ def test_mixed_space_strategy_respects_category_and_linear_constraint() -> None:
     assert result.candidates[0, 0] <= 0.6 + 1e-6
     assert result.candidates[0, 1].item() in {0.0, 1.0}
 
+
 def test_mixed_space_strategy_respects_intrapoint_nonlinear_constraint() -> None:
     train_X = torch.tensor(
         [[0.0, 0.0], [0.3, 0.0], [0.7, 1.0], [1.0, 1.0]],
@@ -116,4 +117,3 @@ def test_mixed_space_strategy_requires_initial_conditions_for_nonlinear_constrai
         )
     else:
         raise AssertionError("Expected nonlinear constraints without initial conditions to fail.")
-
