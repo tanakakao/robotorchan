@@ -48,9 +48,7 @@ def test_cmaes_selects_best_generated_candidate() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     module = SimpleNamespace(CMA=_FakeCMA)
     with patch.dict(sys.modules, {"cmaes": module}):
-        candidates, value = optimize_acqf_cmaes(
-            _QuadraticAcquisition(), bounds, q=1, seed=7
-        )
+        candidates, value = optimize_acqf_cmaes(_QuadraticAcquisition(), bounds, q=1, seed=7)
 
     assert candidates.shape == torch.Size([1, 1])
     assert candidates.dtype == bounds.dtype
@@ -73,9 +71,7 @@ def test_cmaes_rejects_candidate_constraints() -> None:
         inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.2),)
     )
     with pytest.raises(ValueError, match="does not support candidate constraints yet"):
-        optimize_acqf_cmaes(
-            _QuadraticAcquisition(), bounds, q=1, constraints=constraints
-        )
+        optimize_acqf_cmaes(_QuadraticAcquisition(), bounds, q=1, constraints=constraints)
 
 
 def test_cmaes_reports_missing_optional_dependency() -> None:
