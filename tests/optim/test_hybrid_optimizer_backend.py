@@ -168,7 +168,6 @@ def test_categorical_hybrid_requires_mixed_local_enumeration() -> None:
         )
 
 
-
 def test_hybrid_merges_common_fixed_features_into_mixed_local_configs() -> None:
     bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
     variable_space = MixedVariableSpace(bounds, categorical_values={1: [0.0, 2.0]})
