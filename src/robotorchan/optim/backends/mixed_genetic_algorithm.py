@@ -8,7 +8,10 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
-from robotorchan.optim.constraint_evaluation import (\n    candidate_constraint_violation,\n    feasibility_first_ranks,\n)
+from robotorchan.optim.constraint_evaluation import (
+    candidate_constraint_violation,
+    feasibility_first_ranks,
+)
 from robotorchan.optim.constraints import CandidateConstraints
 from robotorchan.optim.runtime import make_generator, validate_bounds
 from robotorchan.optim.variable_space import MixedVariableSpace
@@ -96,7 +99,8 @@ def optimize_acqf_mixed_ga(
             population,
             q,
             d,
-            candidate_constraints,\n            equality_tolerance,
+            candidate_constraints,
+            equality_tolerance,
         )
         generation_best = scores.argmax()
         if best_value is None or scores[generation_best] > best_value:
