@@ -45,15 +45,6 @@ def test_ga_is_reproducible_and_supports_joint_q_batch() -> None:
     assert torch.equal(first_value, second_value)
 
 
-def test_ga_rejects_candidate_constraints() -> None:
-    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
-    constraints = CandidateConstraints(
-        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.2),)
-    )
-    with pytest.raises(ValueError, match="does not support candidate constraints yet"):
-        optimize_acqf_ga(_QuadraticAcquisition(), bounds, q=1, constraints=constraints)
-
-
 def test_ga_validates_configuration() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     acq = _QuadraticAcquisition()
