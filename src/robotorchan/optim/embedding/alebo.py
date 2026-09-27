@@ -11,6 +11,10 @@ from botorch.utils.sampling import HitAndRunPolytopeSampler
 from torch import Tensor
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
+from robotorchan.optim.constraints import (
+    CandidateConstraints,
+    reject_unmapped_candidate_constraints,
+)
 
 
 def _make_alebo_embedding(
@@ -48,8 +52,13 @@ class ALEBOStrategy(SearchStrategy):
         num_restarts: int = 10,
         options: dict[str, Any] | None = None,
         sequential: bool = False,
+        constraints: CandidateConstraints | None = None,
     ) -> None:
         super().__init__(bounds)
+        reject_unmapped_candidate_constraints(
+            constraints,
+            strategy_name=self.__class__.__name__,
+        )
         if embedding_dim < 1 or embedding_dim > self.input_dim:
             raise ValueError("embedding_dim must be between 1 and input_dim.")
         if num_restarts < 1:
