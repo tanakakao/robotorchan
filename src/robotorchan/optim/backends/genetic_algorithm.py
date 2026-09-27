@@ -31,7 +31,8 @@ def optimize_acqf_ga(
     equality_tolerance: float = 1e-6,
 ) -> tuple[Tensor, Tensor]:
     """Optimize an acquisition function with a real-valued genetic algorithm."""
-    validate_bounds(bounds)\n    _validate_configuration(
+    validate_bounds(bounds)
+    _validate_configuration(
         q=q,
         bounds=bounds,
         population_size=population_size,
