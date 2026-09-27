@@ -5,6 +5,7 @@ from torch import Tensor
 
 from robotorchan.models.high_dimensional.reduced import PCAGP, RandomProjectionGP
 from robotorchan.optim import (
+    CandidateConstraints,
     LatentSpaceStrategy,
     PCAReconstruction,
     RandomProjectionReconstruction,
@@ -72,6 +73,25 @@ def test_random_projection_strategy_uses_original_acquisition_contract() -> None
     assert result.candidates.shape == (1, 4)
     assert result.acquisition_value is not None
     torch.testing.assert_close(result.acquisition_value, expected)
+
+
+def test_latent_strategy_rejects_unmapped_nonlinear_constraints() -> None:
+    train_X, train_Y = _training_data()
+    model = PCAGP(train_X, train_Y, n_components=2)
+    assert model.input_reducer is not None
+    reconstruction = PCAReconstruction(model.input_reducer)
+
+    def constraint(x: Tensor) -> Tensor:
+        return x.new_tensor(0.25) - x.square().sum()
+
+    with pytest.raises(ValueError, match="does not support candidate-space constraints"):
+        LatentSpaceStrategy(
+            _bounds(),
+            reconstruction,
+            constraints=CandidateConstraints(
+                nonlinear_inequality_constraints=((constraint, True),),
+            ),
+        )
 
 
 def test_strategy_validates_reconstruction_dimension() -> None:
