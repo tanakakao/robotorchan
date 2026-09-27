@@ -63,9 +63,7 @@ def test_de_rejects_candidate_constraints() -> None:
         inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.2),)
     )
     with pytest.raises(ValueError, match="does not support candidate constraints yet"):
-        optimize_acqf_de(
-            _QuadraticAcquisition(), bounds, q=1, constraints=constraints
-        )
+        optimize_acqf_de(_QuadraticAcquisition(), bounds, q=1, constraints=constraints)
 
 
 def test_de_does_not_mutate_options() -> None:
