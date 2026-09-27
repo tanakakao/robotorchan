@@ -170,6 +170,8 @@ def test_public_optim_exports_are_complete() -> None:
         "SAMPLING_OPTIMIZER_CAPABILITIES",
         "TORCH_OPTIMIZER_CAPABILITIES",
         "CandidateConstraints",
+        "ConstraintHandling",
+        "ConstraintHandlingCapabilities",
         "apply_fixed_features",
         "benchmark_optimizer",
         "benchmark_optimizers",
