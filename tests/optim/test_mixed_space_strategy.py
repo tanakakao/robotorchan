@@ -37,3 +37,83 @@ def test_mixed_space_strategy_respects_category_and_linear_constraint() -> None:
     assert result.candidates.shape == torch.Size([1, 2])
     assert result.candidates[0, 0] <= 0.6 + 1e-6
     assert result.candidates[0, 1].item() in {0.0, 1.0}
+
+
+def test_mixed_space_strategy_respects_intrapoint_nonlinear_constraint() -> None:
+    train_X = torch.tensor(
+        [[0.0, 0.0], [0.3, 0.0], [0.7, 1.0], [1.0, 1.0]],
+        dtype=torch.double,
+    )
+    train_Y = (train_X[:, :1] + 0.2 * train_X[:, 1:2]).sin()
+    model = MixedSingleTaskGP(train_X, train_Y, cat_dims=[1])
+    acquisition = PosteriorMean(model)
+
+    def constraint(x: torch.Tensor) -> torch.Tensor:
+        return x.new_tensor(0.36) - x[0].square()
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((constraint, True),),
+    )
+    initial_conditions = torch.tensor(
+        [[[0.1, 0.0]], [[0.2, 0.0]], [[0.3, 0.0]], [[0.4, 0.0]]],
+        dtype=torch.double,
+    )
+    strategy = MixedSpaceStrategy(
+        torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+        num_restarts=4,
+        raw_samples=32,
+        constraints=constraints,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    result = strategy.optimize(acquisition)
+
+    assert result.candidates.shape == torch.Size([1, 2])
+    assert result.candidates[0, 1].item() in {0.0, 1.0}
+    assert constraint(result.candidates[0]) >= -1e-6
+
+
+def test_mixed_space_strategy_rejects_interpoint_nonlinear_constraint() -> None:
+    def constraint(X: torch.Tensor) -> torch.Tensor:
+        return (X[0] - X[-1]).square().sum() - X.new_tensor(0.25)
+
+    strategy = MixedSpaceStrategy(
+        torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+        constraints=CandidateConstraints(
+            nonlinear_inequality_constraints=((constraint, False),),
+        ),
+        batch_initial_conditions=torch.tensor([[[0.1, 0.0]]], dtype=torch.double),
+    )
+
+    try:
+        strategy.optimize(None, q=2)  # type: ignore[arg-type]
+    except ValueError as error:
+        assert str(error) == (
+            "MixedSpaceStrategy does not support inter-point nonlinear constraints."
+        )
+    else:
+        raise AssertionError("Expected inter-point nonlinear constraints to be rejected.")
+
+
+def test_mixed_space_strategy_requires_initial_conditions_for_nonlinear_constraint() -> None:
+    def constraint(x: torch.Tensor) -> torch.Tensor:
+        return x.new_tensor(0.36) - x[0].square()
+
+    strategy = MixedSpaceStrategy(
+        torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+        constraints=CandidateConstraints(
+            nonlinear_inequality_constraints=((constraint, True),),
+        ),
+    )
+
+    try:
+        strategy.optimize(None)  # type: ignore[arg-type]
+    except ValueError as error:
+        assert str(error) == (
+            "Nonlinear candidate constraints require feasible batch_initial_conditions."
+        )
+    else:
+        raise AssertionError("Expected nonlinear constraints without initial conditions to fail.")
