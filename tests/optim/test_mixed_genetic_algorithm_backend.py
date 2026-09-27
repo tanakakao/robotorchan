@@ -6,7 +6,6 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
 from robotorchan.optim.backends import optimize_acqf_mixed_ga
-from robotorchan.optim.constraints import CandidateConstraints
 
 
 class _MixedTargetAcquisition(AcquisitionFunction):
