@@ -182,7 +182,6 @@ def test_mixed_backend_forwards_supported_constraints_unchanged() -> None:
     assert kwargs["options"]["batch_limit"] == 1
 
 
-
 def test_mixed_backend_rejects_q_interpoint_nonlinear_before_botorch_call() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
