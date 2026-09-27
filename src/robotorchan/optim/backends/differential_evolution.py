@@ -12,8 +12,8 @@ from torch import Tensor
 
 from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints import CandidateConstraints
-from robotorchan.optim.runtime import validate_bounds
 from robotorchan.optim.cross_cutting import apply_fixed_features
+from robotorchan.optim.runtime import validate_bounds
 
 
 def optimize_acqf_de(
@@ -35,10 +35,9 @@ def optimize_acqf_de(
     device and dtype. Candidate constraints are deliberately rejected until
     the dedicated cross-optimizer constraint phase.
     """
+    validate_bounds(bounds)
     if q < 1:
         raise ValueError("q must be at least 1.")
-    if bounds.ndim != 2 or bounds.shape[0] != 2:
-        raise ValueError("bounds must have shape [2, d].")
     candidate_constraints = constraints or CandidateConstraints()
     if constraint_penalty <= 0:
         raise ValueError("constraint_penalty must be positive.")
