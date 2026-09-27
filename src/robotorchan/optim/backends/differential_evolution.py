@@ -12,6 +12,7 @@ from torch import Tensor
 
 from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.cross_cutting import apply_fixed_features
 
 
 def optimize_acqf_de(
@@ -21,6 +22,7 @@ def optimize_acqf_de(
     *,
     options: dict[str, Any] | None = None,
     constraints: CandidateConstraints | None = None,
+    fixed_features: dict[int, float | Tensor] | None = None,
     seed: int | None = None,
     constraint_penalty: float = 1e6,
     equality_tolerance: float = 1e-6,
@@ -55,6 +57,7 @@ def optimize_acqf_de(
         candidate = torch.as_tensor(
             flat_candidate, dtype=bounds.dtype, device=bounds.device
         ).reshape(q, bounds.shape[-1])
+        candidate = apply_fixed_features(candidate, fixed_features)
         with torch.no_grad():
             value = acq_function(candidate.unsqueeze(0))
         if value.numel() != 1:
@@ -81,6 +84,7 @@ def optimize_acqf_de(
         dtype=bounds.dtype,
         device=bounds.device,
     ).reshape(q, bounds.shape[-1])
+    candidates = apply_fixed_features(candidates, fixed_features)
     with torch.no_grad():
         acquisition_value = acq_function(candidates.unsqueeze(0)).reshape(())
     return candidates, acquisition_value
