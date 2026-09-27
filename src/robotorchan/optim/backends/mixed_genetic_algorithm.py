@@ -61,9 +61,6 @@ def optimize_acqf_mixed_ga(
         mutation_scale=mutation_scale,
     )
     candidate_constraints = constraints or CandidateConstraints()
-    if constraint_penalty <= 0:
-        raise ValueError("constraint_penalty must be positive.")
-
     generator = make_generator(bounds, seed)
     d = bounds.shape[-1]
     lower = bounds[0].repeat(q)
