@@ -144,7 +144,7 @@ def _merge_fixed_features_list(
             if dim in resolved:
                 scalar = (
                     float(value.reshape(()).item()) if isinstance(value, Tensor) else float(value)
-                )  # noqa: E501
+                )
                 if float(resolved[dim]) != scalar:
                     raise ValueError(
                         f"fixed_features[{dim}] conflicts with mixed_fixed_features_list."
