@@ -29,10 +29,7 @@ def test_nsga2_returns_nondominated_pareto_approximation() -> None:
     assert candidates.shape[0] > 10
     assert float(candidates.min()) >= 0.0
     assert float(candidates.max()) <= 1.0
-    dominates = (
-        (values.unsqueeze(1) >= values.unsqueeze(0)).all(dim=-1)
-        & (values.unsqueeze(1) > values.unsqueeze(0)).any(dim=-1)
-    )
+    dominates = (values.unsqueeze(1) >= values.unsqueeze(0)).all(dim=-1) & (\n        values.unsqueeze(1) > values.unsqueeze(0)\n    ).any(dim=-1)
     assert not torch.any(dominates)
 
 
