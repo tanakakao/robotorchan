@@ -8,6 +8,7 @@ from torch import Tensor
 
 from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.runtime import make_generator, validate_bounds
 from robotorchan.optim.cross_cutting import apply_fixed_features
 
 
@@ -30,7 +31,7 @@ def optimize_acqf_ga(
     equality_tolerance: float = 1e-6,
 ) -> tuple[Tensor, Tensor]:
     """Optimize an acquisition function with a real-valued genetic algorithm."""
-    _validate_configuration(
+    validate_bounds(bounds)\n    _validate_configuration(
         q=q,
         bounds=bounds,
         population_size=population_size,
