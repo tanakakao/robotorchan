@@ -59,7 +59,7 @@ def test_benchmark_optimizer_reports_feasibility() -> None:
         seed=4,
     )
     assert result.feasible is True
-    assert result.acquisition_evaluations == 48
+    # GA evaluates 3 populations of 16 plus one final raw-value evaluation.\n    assert result.acquisition_evaluations == 49
 
 
 def test_benchmark_optimizers_runs_multiple_seeds() -> None:
