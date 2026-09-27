@@ -81,7 +81,6 @@ def test_benchmark_optimizers_runs_multiple_seeds() -> None:
     assert all(result.name == "random" for result in results)
 
 
-
 def test_benchmark_reports_positive_violation_for_infeasible_result() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
