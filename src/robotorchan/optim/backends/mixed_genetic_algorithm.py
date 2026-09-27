@@ -97,9 +97,7 @@ def optimize_acqf_mixed_ga(
             population, scores, offspring_count, tournament_size, generator
         )
         offspring = _crossover(parents_a, parents_b, crossover_rate, generator)
-        offspring = _mutate(
-            offspring, lower, upper, mutation_rate, mutation_scale, generator
-        )
+        offspring = _mutate(offspring, lower, upper, mutation_rate, mutation_scale, generator)
         offspring = _repair_structured(
             offspring,
             lower,
