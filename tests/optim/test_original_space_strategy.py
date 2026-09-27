@@ -343,3 +343,71 @@ def test_interpoint_nonlinear_constraint_preserves_qbatch_autograd() -> None:
     assert X.grad.shape == X.shape
     assert torch.allclose(X.grad[0], 2.0 * (X[0] - X[1]).detach())
     assert torch.allclose(X.grad[1], -X.grad[0])
+
+
+def test_original_space_strategy_combines_fixed_feature_and_nonlinear_constraint() -> None:
+    train_X, train_Y = _training_data()
+    model = SingleTaskGP(train_X, train_Y)
+    acquisition = PosteriorMean(model)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+
+    def constraint(x: torch.Tensor) -> torch.Tensor:
+        return x.new_tensor(0.36) - x[0].square()
+
+    initial_conditions = torch.tensor(
+        [[[0.1, 1.0]], [[0.2, 1.0]], [[0.3, 1.0]], [[0.4, 1.0]]],
+        dtype=torch.double,
+    )
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((constraint, True),),
+    )
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=4,
+        raw_samples=32,
+        constraints=constraints,
+        fixed_features={1: 1.0},
+        batch_initial_conditions=initial_conditions,
+    )
+
+    result = strategy.optimize(acquisition)
+
+    assert result.candidates.shape == torch.Size([1, 2])
+    assert result.candidates[0, 1] == 1.0
+    assert constraint(result.candidates[0]) >= -1e-6
+
+
+def test_original_space_strategy_combines_linear_nonlinear_and_fixed_feature() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+
+    def nonlinear_constraint(x: torch.Tensor) -> torch.Tensor:
+        return x.new_tensor(0.36) - x[0].square()
+
+    linear_constraint = (
+        torch.tensor([0]),
+        torch.tensor([-1.0], dtype=torch.double),
+        -0.5,
+    )
+    initial_conditions = torch.tensor(
+        [[[0.1, 1.0]], [[0.2, 1.0]], [[0.3, 1.0]], [[0.4, 1.0]]],
+        dtype=torch.double,
+    )
+    constraints = CandidateConstraints(
+        inequality_constraints=(linear_constraint,),
+        nonlinear_inequality_constraints=((nonlinear_constraint, True),),
+    )
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=4,
+        raw_samples=32,
+        constraints=constraints,
+        fixed_features={1: 1.0},
+        batch_initial_conditions=initial_conditions,
+    )
+
+    result = strategy.optimize(_LinearCandidateAcquisition())  # type: ignore[arg-type]
+
+    assert result.candidates.shape == torch.Size([1, 2])
+    assert result.candidates[0, 0] <= 0.5 + 1e-6
+    assert result.candidates[0, 1] == 1.0
+    assert nonlinear_constraint(result.candidates[0]) >= -1e-6
