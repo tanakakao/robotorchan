@@ -14,7 +14,9 @@ from robotorchan.optim.capabilities import (
     PSO_OPTIMIZER_CAPABILITIES,
     SAMPLING_OPTIMIZER_CAPABILITIES,
     TORCH_OPTIMIZER_CAPABILITIES,
+    OPTIMIZER_CAPABILITIES,
     OptimizerCapabilities,
+    get_optimizer_capabilities,
 )
 from robotorchan.optim.constraints import (
     CandidateConstraints,
@@ -71,8 +73,10 @@ __all__ = [
     "MixedSpaceStrategy",
     "NonlinearConstraint",
     "NonlinearConstraintCallable",
+    "OPTIMIZER_CAPABILITIES",
     "OptimizerCapabilities",
     "OptimizerName",
+    "get_optimizer_capabilities",
     "OriginalSpaceStrategy",
     "PCAReconstruction",
     "REMBOStrategy",
