@@ -9,8 +9,8 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.optim import optimize_acqf as botorch_optimize_acqf
 from torch import Tensor
 
-from robotorchan.optim.backends.cmaes import optimize_acqf_cmaes
 from robotorchan.optim.backends.botorch import optimize_acqf_mixed_botorch
+from robotorchan.optim.backends.cmaes import optimize_acqf_cmaes
 from robotorchan.optim.backends.differential_evolution import optimize_acqf_de
 from robotorchan.optim.backends.mixed_genetic_algorithm import optimize_acqf_mixed_ga
 from robotorchan.optim.constraints import CandidateConstraints
