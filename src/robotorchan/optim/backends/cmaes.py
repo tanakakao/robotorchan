@@ -9,6 +9,7 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
+from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints import CandidateConstraints
 
 
@@ -23,6 +24,8 @@ def optimize_acqf_cmaes(
     seed: int | None = None,
     options: dict[str, Any] | None = None,
     constraints: CandidateConstraints | None = None,
+    constraint_penalty: float = 1e6,
+    equality_tolerance: float = 1e-6,
 ) -> tuple[Tensor, Tensor]:
     """Optimize a BoTorch acquisition function with CMA-ES."""
     if q < 1:
@@ -34,8 +37,8 @@ def optimize_acqf_cmaes(
     if max_generations < 1:
         raise ValueError("max_generations must be at least 1.")
     candidate_constraints = constraints or CandidateConstraints()
-    if candidate_constraints.has_constraints:
-        raise ValueError("The CMA-ES backend does not support candidate constraints yet.")
+    if constraint_penalty <= 0:
+        raise ValueError("constraint_penalty must be positive.")
 
     try:
         from cmaes import CMA
@@ -68,7 +71,16 @@ def optimize_acqf_cmaes(
         for _ in range(optimizer.population_size):
             flat_candidate = optimizer.ask()
             value = _evaluate(acq_function, flat_candidate, bounds, q)
-            solutions.append((flat_candidate, -value))
+            candidate = torch.as_tensor(
+                flat_candidate, dtype=bounds.dtype, device=bounds.device
+            ).reshape(1, q, bounds.shape[-1])
+            violation = candidate_constraint_violation(
+                candidate,
+                candidate_constraints,
+                equality_tolerance=equality_tolerance,
+            ).reshape(())
+            penalized_objective = -value + constraint_penalty * float(violation.detach().cpu())
+            solutions.append((flat_candidate, penalized_objective))
             if value > best_value:
                 best_value = value
                 best_candidate = flat_candidate.copy()
