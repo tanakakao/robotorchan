@@ -246,6 +246,34 @@ def test_original_space_strategy_forwards_nonlinear_constraints(monkeypatch) -> 
 
     assert captured["nonlinear_inequality_constraints"] == [(constraint, True)]
     assert captured["batch_initial_conditions"] is initial_conditions
+    assert captured["options"]["batch_limit"] == 1
+
+
+def test_nonlinear_constraint_preserves_explicit_optimizer_batch_limit(monkeypatch) -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+
+    def constraint(x: torch.Tensor) -> torch.Tensor:
+        return x[0]
+
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        constraints=CandidateConstraints(
+            nonlinear_inequality_constraints=((constraint, True),),
+        ),
+        batch_initial_conditions=torch.tensor([[[0.5]]], dtype=torch.double),
+        options={"batch_limit": 1, "maxiter": 17},
+    )
+    captured = {}
+
+    def fake_optimize_acqf(**kwargs):
+        captured.update(kwargs)
+        return torch.zeros(1, 1, dtype=torch.double), torch.tensor(0.0, dtype=torch.double)
+
+    monkeypatch.setattr("robotorchan.optim.original.optimize_acqf", fake_optimize_acqf)
+    strategy.optimize(None)  # type: ignore[arg-type]
+
+    assert captured["options"] == {"batch_limit": 1, "maxiter": 17}
+    assert strategy.options == {"batch_limit": 1, "maxiter": 17}
 
 
 class _LinearCandidateAcquisition(torch.nn.Module):

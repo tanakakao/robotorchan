@@ -61,6 +61,11 @@ class MixedSpaceStrategy(SearchStrategy):
                 "Nonlinear candidate constraints require feasible batch_initial_conditions."
             )
 
+        options = None if self.options is None else dict(self.options)
+        if self.constraints.has_nonlinear_constraints:
+            options = {} if options is None else options
+            options.setdefault("batch_limit", 1)
+
         candidates, acquisition_value = optimize_acqf_mixed(
             acq_function=acq_function,
             bounds=self.bounds,
@@ -68,7 +73,7 @@ class MixedSpaceStrategy(SearchStrategy):
             num_restarts=self.num_restarts,
             fixed_features_list=self.fixed_features_list,
             raw_samples=self.raw_samples,
-            options=self.options,
+            options=options,
             inequality_constraints=(
                 list(self.constraints.inequality_constraints)
                 if self.constraints.inequality_constraints

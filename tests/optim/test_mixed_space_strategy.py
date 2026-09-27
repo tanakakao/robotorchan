@@ -117,3 +117,29 @@ def test_mixed_space_strategy_requires_initial_conditions_for_nonlinear_constrai
         )
     else:
         raise AssertionError("Expected nonlinear constraints without initial conditions to fail.")
+
+
+def test_mixed_nonlinear_constraint_forwards_batch_limit(monkeypatch) -> None:
+    def constraint(x: torch.Tensor) -> torch.Tensor:
+        return x[0]
+
+    initial_conditions = torch.tensor([[[0.5, 0.0]]], dtype=torch.double)
+    strategy = MixedSpaceStrategy(
+        torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+        constraints=CandidateConstraints(
+            nonlinear_inequality_constraints=((constraint, True),),
+        ),
+        batch_initial_conditions=initial_conditions,
+    )
+    captured = {}
+
+    def fake_optimize_acqf_mixed(**kwargs):
+        captured.update(kwargs)
+        return torch.zeros(1, 2, dtype=torch.double), torch.tensor(0.0, dtype=torch.double)
+
+    monkeypatch.setattr("robotorchan.optim.mixed.optimize_acqf_mixed", fake_optimize_acqf_mixed)
+    strategy.optimize(None)  # type: ignore[arg-type]
+
+    assert captured["options"]["batch_limit"] == 1
+    assert captured["batch_initial_conditions"] is initial_conditions
