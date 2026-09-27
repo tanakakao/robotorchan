@@ -46,3 +46,24 @@ can be advertised as supported.
 Both the direct `integer_dims` backend argument and a `MixedVariableSpace`
 containing only continuous/integer variables are supported. Supplying both is
 rejected to keep a single source of search-space semantics.
+
+
+## Categorical and full mixed-variable scope
+
+Phase 10 extends the structured repair rule to categorical coordinates. SciPy DE
+continues to evolve a numeric proposal vector, but categorical coordinates are
+never passed to the acquisition function or constraints as interpolated category
+values. Before every evaluation, each categorical proposal is mapped to the
+nearest legal value from the explicit category set. Integer coordinates are
+repaired independently by rounding and clipping.
+
+This makes the evaluated search domain discrete and legal for continuous,
+integer, categorical, and combined mixed spaces. The category labels are used
+only to partition the proposal coordinate into deterministic attraction regions;
+the acquisition function observes only legal category values. This is not a
+claim that category labels possess a meaningful metric or that SciPy's
+differential mutation itself is categorical.
+
+The same repair is applied to the returned candidate. Mixed-variable-dependent
+`CandidateConstraints` are evaluated only after repair, so their callable sees
+the same legal raw coordinates as the acquisition function.
