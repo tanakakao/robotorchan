@@ -40,7 +40,10 @@ class CountingAcquisition(AcquisitionFunction):
 
     def forward(self, X: Tensor) -> Tensor:
         batch_shape = X.shape[:-2]
-        self.evaluations += int(torch.tensor(batch_shape).prod().item()) if batch_shape else 1
+        evaluations = 1
+        for size in batch_shape:
+            evaluations *= size
+        self.evaluations += evaluations
         return self.acquisition(X)
 
 
