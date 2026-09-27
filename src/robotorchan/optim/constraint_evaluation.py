@@ -45,6 +45,38 @@ def candidate_constraint_violation(
     return violation
 
 
+def feasibility_first_ranks(values: Tensor, violation: Tensor) -> Tensor:
+    """Return ordinal scores implementing Deb-style feasibility-first ordering."""
+    if values.shape != violation.shape:
+        raise ValueError("values and violation must have the same shape.")
+    if values.ndim != 1:
+        raise ValueError("values and violation must be one-dimensional.")
+
+    feasible = violation <= 0
+    feasible_indices = torch.nonzero(feasible, as_tuple=False).flatten()
+    infeasible_indices = torch.nonzero(~feasible, as_tuple=False).flatten()
+
+    if feasible_indices.numel():
+        feasible_order = feasible_indices[
+            torch.argsort(values[feasible_indices], descending=True, stable=True)
+        ]
+    else:
+        feasible_order = feasible_indices
+    if infeasible_indices.numel():
+        infeasible_order = infeasible_indices[
+            torch.argsort(violation[infeasible_indices], stable=True)
+        ]
+    else:
+        infeasible_order = infeasible_indices
+
+    order = torch.cat([feasible_order, infeasible_order])
+    ranks = torch.empty_like(values)
+    ranks[order] = torch.arange(
+        order.numel(), 0, -1, dtype=values.dtype, device=values.device
+    )
+    return ranks
+
+
 def candidate_is_feasible(
     candidates: Tensor,
     constraints: CandidateConstraints | None,
