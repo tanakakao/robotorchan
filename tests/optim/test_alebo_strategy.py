@@ -4,7 +4,7 @@ import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 
-from robotorchan.optim import CandidateConstraints, ALEBOStrategy
+from robotorchan.optim import ALEBOStrategy, CandidateConstraints
 
 
 def _bounds(input_dim: int = 6) -> torch.Tensor:
