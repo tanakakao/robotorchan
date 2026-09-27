@@ -91,7 +91,7 @@ def test_mixed_space_strategy_rejects_interpoint_nonlinear_constraint() -> None:
         strategy.optimize(None, q=2)  # type: ignore[arg-type]
     except ValueError as error:
         assert str(error) == (
-            "MixedSpaceStrategy does not support inter-point nonlinear constraints."
+            "BoTorch mixed acquisition optimization does not support inter-point nonlinear constraints."
         )
     else:
         raise AssertionError("Expected inter-point nonlinear constraints to be rejected.")
@@ -138,7 +138,7 @@ def test_mixed_nonlinear_constraint_forwards_batch_limit(monkeypatch) -> None:
         captured.update(kwargs)
         return torch.zeros(1, 2, dtype=torch.double), torch.tensor(0.0, dtype=torch.double)
 
-    monkeypatch.setattr("robotorchan.optim.mixed.optimize_acqf_mixed", fake_optimize_acqf_mixed)
+    monkeypatch.setattr("robotorchan.optim.backends.botorch.botorch_optimize_acqf_mixed", fake_optimize_acqf_mixed)
     strategy.optimize(None)  # type: ignore[arg-type]
 
     assert captured["options"]["batch_limit"] == 1
