@@ -84,7 +84,7 @@ def test_latent_strategy_rejects_unmapped_nonlinear_constraints() -> None:
     def constraint(x: Tensor) -> Tensor:
         return x.new_tensor(0.25) - x.square().sum()
 
-    with pytest.raises(ValueError, match="does not support candidate-space constraints"):
+    with pytest.raises(NotImplementedError, match="does not map public-space CandidateConstraints"):
         LatentSpaceStrategy(
             _bounds(),
             reconstruction,
