@@ -99,8 +99,8 @@ __all__ = [
     "benchmark_optimizers",
     "get_optimizer_capabilities",
     "optimize_acqf",
-    "optimize_mixed_one_shot_acqf",
     "optimize_acqf_sequential",
+    "optimize_mixed_one_shot_acqf",
     "update_baxus_state",
     "update_turbo_state",
 ]
