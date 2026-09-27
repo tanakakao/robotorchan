@@ -155,6 +155,7 @@ def test_public_optim_exports_are_complete() -> None:
         "BAxUSThompsonSamplingStrategy",
         "BOTORCH_MIXED_OPTIMIZER_CAPABILITIES",
         "BOTORCH_OPTIMIZER_CAPABILITIES",
+        "TORCH_OPTIMIZER_CAPABILITIES",
         "CandidateConstraints",
         "LinearConstraint",
         "MixedSpaceStrategy",
