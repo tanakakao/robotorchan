@@ -78,9 +78,7 @@ def optimize_acqf_ga(
             population, scores, offspring_count, tournament_size, generator
         )
         offspring = _crossover(parents_a, parents_b, crossover_rate, generator)
-        offspring = _mutate(
-            offspring, lower, upper, mutation_rate, mutation_scale, generator
-        )
+        offspring = _mutate(offspring, lower, upper, mutation_rate, mutation_scale, generator)
         population = torch.cat([elites, offspring], dim=0)
 
     if best_candidate is None or best_value is None:
@@ -124,12 +122,15 @@ def _crossover(
     crossover_rate: float,
     generator: torch.Generator,
 ) -> Tensor:
-    mask = torch.rand(
-        parents_a.shape,
-        dtype=parents_a.dtype,
-        device=parents_a.device,
-        generator=generator,
-    ) < crossover_rate
+    mask = (
+        torch.rand(
+            parents_a.shape,
+            dtype=parents_a.dtype,
+            device=parents_a.device,
+            generator=generator,
+        )
+        < crossover_rate
+    )
     alpha = torch.rand(
         parents_a.shape,
         dtype=parents_a.dtype,
@@ -139,6 +140,7 @@ def _crossover(
     blended = alpha * parents_a + (1.0 - alpha) * parents_b
     return torch.where(mask, blended, parents_a)
 
+
 def _mutate(
     offspring: Tensor,
     lower: Tensor,
@@ -147,12 +149,15 @@ def _mutate(
     mutation_scale: float,
     generator: torch.Generator,
 ) -> Tensor:
-    mask = torch.rand(
-        offspring.shape,
-        dtype=offspring.dtype,
-        device=offspring.device,
-        generator=generator,
-    ) < mutation_rate
+    mask = (
+        torch.rand(
+            offspring.shape,
+            dtype=offspring.dtype,
+            device=offspring.device,
+            generator=generator,
+        )
+        < mutation_rate
+    )
     noise = torch.randn(
         offspring.shape,
         dtype=offspring.dtype,
