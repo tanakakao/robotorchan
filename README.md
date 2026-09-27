@@ -206,6 +206,8 @@ acquisition_value = result.acquisition_value
 
 詳細、各 strategy の役割、BAxUS の state 更新、benchmark の設計は [`docs/optimization/high_dimensional_search.md`](docs/optimization/high_dimensional_search.md) を参照してください。
 
+既知の入力制約は `CandidateConstraints` で search strategy へ渡せます。`OriginalSpaceStrategy` は線形不等式・等式に加えて BoTorch-native な非線形不等式 `(callable, is_intrapoint)` を扱い、`callable(X) >= 0` を feasible とします。Mixed や embedding / latent strategy では対応範囲が異なるため、詳細な support matrix は上記の高次元探索ガイドを参照してください。
+
 ## 設計目標
 
 - **BoTorch-native**: 可能な限り標準の BoTorch / PyTorch object を利用する

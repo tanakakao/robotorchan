@@ -19,16 +19,58 @@ search strategy は surrogate の posterior API や reducer lifecycle を変更�
 `sum(X[indices] * coefficients) == rhs` と解釈する。独自の行列表現へ変換しないため、
 BoTorch が区別する intra-point / inter-point q-batch constraint を保持できる。
 
-Phase 2 では共通 contract のみを導入し、全 strategy が対応済みとはみなさない。
-`OriginalSpaceStrategy` は `CandidateConstraints` の線形不等式・線形等式を
-`optimize_acqf` へそのまま forwarding する。したがって original/public input space
-上の線形制約は BoTorch と同じ意味で利用できる。
-1 次元 `indices` の intra-point constraint は q-batch の各候補へ適用され、2 次元
-`indices` の inter-point constraint は候補間の関係を表現できる。`OriginalSpaceStrategy`
-はこの表現を変換せず保持するため、`q > 1` でも BoTorch の線形 q-batch constraint
-semantics をそのまま利用できる。
-非線形 candidate constraint は初期値生成や q-batch semantics が異なるため、
-線形制約と同時に曖昧な API を公開せず後続 Phase で個別に扱う。
+`OriginalSpaceStrategy` は `CandidateConstraints` の線形不等式・線形等式と
+非線形不等式を BoTorch の `optimize_acqf` へ forwarding する。1 次元 `indices` の
+線形 intra-point constraint は q-batch の各候補へ適用され、2 次元 `indices` の
+inter-point constraint は候補間の関係を表現できる。
+
+非線形不等式は BoTorch と同じ `(callable, is_intrapoint)` contract を使い、
+`callable(X) >= 0` を feasible とする。`is_intrapoint=True` では callable は
+shape `[d]`、`False` では joint q-batch `[q, d]` を受け取る。callable は candidate
+座標に対する autograd を保持する必要がある。
+
+```python
+constraints = CandidateConstraints(
+    nonlinear_inequality_constraints=((lambda x: 0.25 - x.square().sum(), True),),
+)
+
+initial_conditions = torch.tensor(
+    [[[0.1, 0.1]], [[0.2, 0.1]], [[0.1, 0.2]], [[0.2, 0.2]]],
+    dtype=torch.double,
+)
+
+strategy = OriginalSpaceStrategy(
+    bounds,
+    num_restarts=4,
+    raw_samples=32,
+    constraints=constraints,
+    batch_initial_conditions=initial_conditions,
+)
+result = strategy.optimize(acq_function)
+```
+
+現在の robotorchan contract では nonlinear constraint 使用時に feasible な
+`batch_initial_conditions` を明示する。shape は `[num_restarts, q, d]` である。
+BoTorch 自体には custom `ic_generator` を使う経路もあるが、robotorchan の
+`SearchStrategy` API は現時点でその経路を公開していない。
+
+`fixed_features` と nonlinear constraint は `OriginalSpaceStrategy` で併用できる。
+`MixedSpaceStrategy` も BoTorch `optimize_acqf_mixed` に従い intra-point nonlinear
+constraint を扱えるが、inter-point nonlinear constraint は upstream が対応しないため
+明示的に拒否する。
+
+| Strategy | linear candidate constraints | nonlinear intra-point | nonlinear inter-point |
+| --- | --- | --- | --- |
+| `OriginalSpaceStrategy` | 対応 | 対応 | 対応 |
+| `MixedSpaceStrategy` | 対応 | 対応 | 非対応 |
+| `LatentSpaceStrategy` | unmapped のため拒否 | unmapped のため拒否 | unmapped のため拒否 |
+| `REMBOStrategy` | unmapped のため拒否 | unmapped のため拒否 | unmapped のため拒否 |
+| `HeSBOStrategy` | unmapped のため拒否 | unmapped のため拒否 | unmapped のため拒否 |
+| `ALEBOStrategy` | unmapped のため拒否 | unmapped のため拒否 | unmapped のため拒否 |
+| `BAxUSStrategy` | unmapped のため拒否 | unmapped のため拒否 | unmapped のため拒否 |
+
+embedding / latent strategy に original-space constraint をそのまま渡すと optimizer
+coordinate 上で別の数式になるため、暗黙変換は行わない。
 
 ## 戦略
 

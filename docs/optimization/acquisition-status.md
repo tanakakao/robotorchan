@@ -155,6 +155,6 @@ Robotorchan keeps two different notions of constraints separate:
 | Constraint kind | Example | Runtime layer | Contract |
 | --- | --- | --- | --- |
 | Output / black-box | predicted process response `g(x) <= 0` | acquisition/objective composition | acquisition `supports_constraints` |
-| Candidate / input-space | composition sum, ordering, linear design rule | acquisition optimizer | `CandidateConstraints` |
+| Candidate / input-space | composition sum, ordering, geometry, known nonlinear design rule | acquisition optimizer | `CandidateConstraints` |
 
-The acquisition registry must therefore never be used to infer candidate-space feasibility support. Conversely, a search strategy accepting `CandidateConstraints` says nothing about whether the selected acquisition models uncertain black-box feasibility.
+The acquisition registry must therefore never be used to infer candidate-space feasibility support. Conversely, a search strategy accepting `CandidateConstraints` says nothing about whether the selected acquisition models uncertain black-box feasibility. `CandidateConstraints` covers linear inequality/equality constraints and BoTorch-native nonlinear inequalities. Nonlinear feasibility uses `callable(X) >= 0`; this optimizer convention is intentionally independent from output-constraint sign conventions.
