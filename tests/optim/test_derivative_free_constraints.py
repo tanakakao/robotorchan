@@ -259,7 +259,6 @@ def test_de_supports_categorical_variable_space() -> None:
     assert float(candidates[0, 1]) in {0.0, 1.0, 2.0}
 
 
-
 def test_de_supports_full_mixed_space_with_nonlinear_constraint() -> None:
     from robotorchan.optim.variable_space import MixedVariableSpace
 
