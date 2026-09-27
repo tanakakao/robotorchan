@@ -7,6 +7,8 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 from torch.quasirandom import SobolEngine
 
+from robotorchan.optim.runtime import make_generator, validate_bounds
+
 
 def optimize_acqf_sampling(
     acq_function: AcquisitionFunction,
@@ -18,6 +20,7 @@ def optimize_acqf_sampling(
     seed: int | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Return the best acquisition-valued q-batch from sampled candidates."""
+    validate_bounds(bounds)
     if q < 1:
         raise ValueError("q must be at least 1.")
     if num_samples < 1:
@@ -43,10 +46,7 @@ def optimize_acqf_sampling(
 
 
 def _draw_random(bounds: Tensor, num_samples: int, q: int, seed: int | None) -> Tensor:
-    generator = None
-    if seed is not None:
-        generator = torch.Generator(device=bounds.device)
-        generator.manual_seed(seed)
+    generator = make_generator(bounds, seed)
     unit = torch.rand(
         num_samples,
         q,
