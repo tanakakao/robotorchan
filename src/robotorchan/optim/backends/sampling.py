@@ -8,6 +8,7 @@ from torch import Tensor
 from torch.quasirandom import SobolEngine
 
 from robotorchan.optim.runtime import make_generator, validate_bounds
+from robotorchan.optim.variable_space import MixedVariableSpace
 
 
 def optimize_acqf_sampling(
@@ -18,6 +19,8 @@ def optimize_acqf_sampling(
     num_samples: int = 4096,
     method: str = "sobol",
     seed: int | None = None,
+    variable_space: MixedVariableSpace | None = None,
+    fixed_features: dict[int, float | Tensor] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Return the best acquisition-valued q-batch from sampled candidates."""
     validate_bounds(bounds)
@@ -29,10 +32,22 @@ def optimize_acqf_sampling(
     if method not in {"random", "sobol"}:
         raise ValueError("method must be either 'random' or 'sobol'.")
 
+    if variable_space is not None:
+        if not torch.equal(variable_space.bounds, bounds):
+            raise ValueError("variable_space bounds must match bounds.")
+        variable_space.validate_fixed_features(fixed_features)
+        if method != "random" and (variable_space.integer_dims or variable_space.categorical_dims):
+            raise NotImplementedError(
+                "Mixed-variable Sobol sampling is not defined in Phase 4; use method='random'."
+            )
+
     if method == "sobol":
         samples = _draw_sobol(bounds, num_samples, q, seed)
     else:
         samples = _draw_random(bounds, num_samples, q, seed)
+        if variable_space is not None:
+            samples = _apply_mixed_random_semantics(samples, variable_space, seed)
+    samples = _apply_fixed_features(samples, fixed_features)
 
     with torch.no_grad():
         values = acq_function(samples)
@@ -64,3 +79,50 @@ def _draw_sobol(bounds: Tensor, num_samples: int, q: int, seed: int | None) -> T
     unit = engine.draw(num_samples, dtype=bounds.dtype).to(device=bounds.device)
     unit = unit.reshape(num_samples, q, bounds.shape[-1])
     return bounds[0] + (bounds[1] - bounds[0]) * unit
+
+
+def _apply_mixed_random_semantics(
+    samples: Tensor,
+    variable_space: MixedVariableSpace,
+    seed: int | None,
+) -> Tensor:
+    """Draw integer and categorical coordinates uniformly from their legal sets."""
+    generator = make_generator(variable_space.bounds, seed)
+    for dim in variable_space.integer_dims:
+        lower = int(torch.ceil(variable_space.bounds[0, dim]).item())
+        upper = int(torch.floor(variable_space.bounds[1, dim]).item())
+        samples[..., dim] = torch.randint(
+            lower,
+            upper + 1,
+            samples.shape[:-1],
+            device=samples.device,
+            generator=generator,
+        ).to(dtype=samples.dtype)
+    for dim in variable_space.categorical_dims:
+        values = torch.as_tensor(
+            variable_space.categorical_values[dim],
+            dtype=samples.dtype,
+            device=samples.device,
+        )
+        indices = torch.randint(
+            0,
+            values.numel(),
+            samples.shape[:-1],
+            device=samples.device,
+            generator=generator,
+        )
+        samples[..., dim] = values[indices]
+    return samples
+
+
+def _apply_fixed_features(
+    samples: Tensor,
+    fixed_features: dict[int, float | Tensor] | None,
+) -> Tensor:
+    if not fixed_features:
+        return samples
+    for dim, value in fixed_features.items():
+        if dim < 0 or dim >= samples.shape[-1]:
+            raise ValueError(f"fixed_features dimension {dim} is out of range.")
+        samples[..., dim] = torch.as_tensor(value, dtype=samples.dtype, device=samples.device)
+    return samples
