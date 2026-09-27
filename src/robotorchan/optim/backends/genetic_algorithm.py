@@ -8,8 +8,8 @@ from torch import Tensor
 
 from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints import CandidateConstraints
-from robotorchan.optim.runtime import make_generator, validate_bounds
 from robotorchan.optim.cross_cutting import apply_fixed_features
+from robotorchan.optim.runtime import make_generator, validate_bounds
 
 
 def optimize_acqf_ga(
