@@ -48,6 +48,7 @@ def test_optim_exports_resolve() -> None:
 
 def test_removed_module_paths_do_not_import() -> None:
     removed_modules = (
+        "robotorchan.acquisition.mixed_one_shot",
         "robotorchan.models.reduction",
         "robotorchan.models.neural_reduction",
         "robotorchan.models.output_reduction",

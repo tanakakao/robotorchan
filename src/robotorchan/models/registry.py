@@ -769,7 +769,6 @@ _register_family(
         "NonstationarySingleTaskGP",
         "NonstationaryMultiTaskGP",
         "NonstationaryKroneckerMultiTaskGP",
-        "NonstationaryKroneckerMultiTaskGP",
         "MixedNonstationarySingleTaskGP",
         "MixedNonstationaryMultiTaskGP",
     ),
