@@ -15,13 +15,13 @@ from robotorchan.optim.capabilities import (
     TORCH_OPTIMIZER_CAPABILITIES,
     OptimizerCapabilities,
 )
-from robotorchan.optim.cross_cutting import apply_fixed_features, optimize_acqf_sequential
 from robotorchan.optim.constraints import (
     CandidateConstraints,
     LinearConstraint,
     NonlinearConstraint,
     NonlinearConstraintCallable,
 )
+from robotorchan.optim.cross_cutting import apply_fixed_features, optimize_acqf_sequential
 from robotorchan.optim.embedding import (
     ALEBOStrategy,
     BAxUSState,
@@ -61,8 +61,6 @@ __all__ = [
     "BAxUSStrategy",
     "BAxUSThompsonSamplingStrategy",
     "CandidateConstraints",
-    "apply_fixed_features",
-    "optimize_acqf_sequential",
     "HeSBOStrategy",
     "LatentReconstruction",
     "LatentSpaceStrategy",
@@ -82,6 +80,8 @@ __all__ = [
     "TreeEnsembleSearchStrategy",
     "TuRBOState",
     "TuRBOStrategy",
+    "apply_fixed_features",
+    "optimize_acqf_sequential",
     "update_baxus_state",
     "update_turbo_state",
 ]
