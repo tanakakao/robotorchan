@@ -81,3 +81,12 @@ SAMPLING_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     gpu=True,
     batch_evaluation=True,
 )
+
+
+DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    continuous=True,
+    requires_grad=False,
+    q_batch=True,
+    gpu=False,
+    batch_evaluation=False,
+)
