@@ -7,7 +7,8 @@ from torch import Tensor
 from robotorchan.optim.backends import optimize_acqf_de, optimize_acqf_ga, optimize_acqf_mixed_ga
 from robotorchan.optim.constraint_evaluation import (
     candidate_constraint_violation,
-    candidate_is_feasible,\n    feasibility_first_ranks,
+    candidate_is_feasible,
+    feasibility_first_ranks,
 )
 from robotorchan.optim.constraints import CandidateConstraints
 
