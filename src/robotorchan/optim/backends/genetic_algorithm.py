@@ -47,9 +47,7 @@ def optimize_acqf_ga(
     if constraint_penalty <= 0:
         raise ValueError("constraint_penalty must be positive.")
 
-    generator = torch.Generator(device=bounds.device)
-    if seed is not None:
-        generator.manual_seed(seed)
+    generator = make_generator(bounds, seed)
     dimension = q * bounds.shape[-1]
     lower = bounds[0].repeat(q)
     upper = bounds[1].repeat(q)
