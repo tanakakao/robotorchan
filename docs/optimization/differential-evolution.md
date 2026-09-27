@@ -67,3 +67,19 @@ differential mutation itself is categorical.
 The same repair is applied to the returned candidate. Mixed-variable-dependent
 `CandidateConstraints` are evaluated only after repair, so their callable sees
 the same legal raw coordinates as the acquisition function.
+
+
+## Constraint handling
+
+Differential Evolution no longer combines acquisition value and constraint
+violation with a fixed penalty coefficient. Candidate constraints are exposed to
+SciPy DE through a nonlinear feasibility constraint built from robotorchan's
+common violation evaluator. The DE population therefore follows feasibility
+before objective quality rather than relying on an acquisition-scale-dependent
+penalty.
+
+Structured-domain repair and fixed-feature application happen before both
+acquisition and feasibility evaluation, so continuous/integer/categorical mixed
+candidates use identical raw coordinates in both paths. The public constraint
+contract remains `CandidateConstraints`; no DE-specific constraint DSL is
+introduced.
