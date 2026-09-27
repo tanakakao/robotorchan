@@ -290,7 +290,6 @@ def test_de_supports_full_mixed_space_with_nonlinear_constraint() -> None:
     assert float(candidates[0, 2]) in {0.0, 1.0, 2.0}
 
 
-
 def test_de_constraint_handling_is_independent_of_acquisition_scale() -> None:
     class _HugeTarget(AcquisitionFunction):
         def __init__(self) -> None:
