@@ -1,6 +1,11 @@
 """Acquisition-function optimization and search-strategy interfaces."""
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
+from robotorchan.optim.capabilities import (
+    BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
+    BOTORCH_OPTIMIZER_CAPABILITIES,
+    OptimizerCapabilities,
+)
 from robotorchan.optim.constraints import (
     CandidateConstraints,
     LinearConstraint,
@@ -33,6 +38,8 @@ __all__ = [
     "BAxUSState",
     "BAxUSStrategy",
     "BAxUSThompsonSamplingStrategy",
+    "BOTORCH_MIXED_OPTIMIZER_CAPABILITIES",
+    "BOTORCH_OPTIMIZER_CAPABILITIES",
     "CandidateConstraints",
     "HeSBOStrategy",
     "LatentReconstruction",
@@ -41,6 +48,7 @@ __all__ = [
     "MixedSpaceStrategy",
     "NonlinearConstraint",
     "NonlinearConstraintCallable",
+    "OptimizerCapabilities",
     "OriginalSpaceStrategy",
     "PCAReconstruction",
     "REMBOStrategy",
