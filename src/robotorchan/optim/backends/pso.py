@@ -49,7 +49,7 @@ def optimize_acqf_pso(
         - 1.0
     ) * span
 
-    scores, raw_values = _evaluate(
+    scores, _ = _evaluate(
         acq_function,
         positions,
         q,
@@ -77,7 +77,7 @@ def optimize_acqf_pso(
             + social * r2 * (global_position - positions)
         )
         positions = torch.maximum(torch.minimum(positions + velocities, upper), lower)
-        scores, raw_values = _evaluate(
+        scores, _ = _evaluate(
             acq_function,
             positions,
             q,
