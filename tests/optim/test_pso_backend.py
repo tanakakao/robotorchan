@@ -61,7 +61,6 @@ def test_pso_applies_candidate_constraint_penalty() -> None:
     assert torch.equal(value, expected)
 
 
-
 def test_pso_supports_continuous_integer_space() -> None:
     from robotorchan.optim.variable_space import MixedVariableSpace
 
