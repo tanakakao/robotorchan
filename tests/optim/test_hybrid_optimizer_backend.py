@@ -67,7 +67,8 @@ def test_hybrid_forwards_constraints_to_global_and_local_stages() -> None:
     assert global_optimizer.call_args.kwargs["constraints"] is constraints
     local_kwargs = local_optimizer.call_args.kwargs
     assert local_kwargs["inequality_constraints"] == list(constraints.inequality_constraints)
-    assert torch.equal(local_kwargs["batch_initial_conditions"], torch.tensor([[[0.3]]]))
+    expected_initial_conditions = torch.tensor([[[0.3]]], dtype=bounds.dtype)
+    assert torch.equal(local_kwargs["batch_initial_conditions"], expected_initial_conditions)
 
 
 def test_hybrid_sets_batch_limit_for_nonlinear_constraints() -> None:
