@@ -63,9 +63,15 @@ def optimize_acqf(
         constraints=constraints,
         fixed_features=fixed_features,
         sequential=sequential,
+        variable_space=variable_space,
     )
 
     if name == "botorch":
+        if variable_space is not None and variable_space.is_mixed:
+            raise NotImplementedError(
+                "optimizer='botorch' does not consume MixedVariableSpace directly; "
+                "use the explicit BoTorch mixed backend or a mixed-capable named optimizer."
+            )
         _reject_backend_options(name, backend_options)
         return optimize_acqf_botorch(
             acq_function,
@@ -128,6 +134,7 @@ def optimize_acqf(
             seed=seed,
             constraints=constraints,
             fixed_features=fixed_features,
+            variable_space=variable_space,
             **backend_options,
         )
     if name == "ga":
@@ -138,6 +145,7 @@ def optimize_acqf(
             seed=seed,
             constraints=constraints,
             fixed_features=fixed_features,
+            variable_space=variable_space,
             **backend_options,
         )
     if name == "pso":
@@ -148,6 +156,7 @@ def optimize_acqf(
             seed=seed,
             constraints=constraints,
             fixed_features=fixed_features,
+            variable_space=variable_space,
             **backend_options,
         )
     if name == "cmaes":
@@ -167,6 +176,7 @@ def optimize_acqf(
             seed=seed,
             constraints=constraints,
             fixed_features=fixed_features,
+            variable_space=variable_space,
             **backend_options,
         )
     supported = ", ".join(
@@ -224,7 +234,17 @@ def _validate_requested_capabilities(
     constraints: CandidateConstraints | None,
     fixed_features: dict[int, float | Tensor] | None,
     sequential: bool,
+    variable_space: MixedVariableSpace | None,
 ) -> None:
+    if variable_space is not None:
+        if variable_space.integer_dims and not capabilities.integer:
+            raise NotImplementedError(f"optimizer={name!r} does not support integer variables.")
+        if variable_space.categorical_dims and not capabilities.categorical:
+            raise NotImplementedError(f"optimizer={name!r} does not support categorical variables.")
+        if variable_space.is_mixed and not capabilities.mixed:
+            raise NotImplementedError(f"optimizer={name!r} does not support mixed variables.")
+        variable_space.validate_fixed_features(fixed_features)
+
     if fixed_features and not capabilities.fixed_features:
         raise NotImplementedError(f"optimizer={name!r} does not support fixed_features.")
     if sequential and not capabilities.sequential:
