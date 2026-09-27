@@ -36,10 +36,21 @@ def optimize_acqf_de(
 
     The joint ``q x d`` candidate batch is flattened into one DE decision
     vector. Acquisition evaluation is performed on the original tensor
-    device and dtype. Candidate constraints are deliberately rejected until
-    the dedicated cross-optimizer constraint phase.
+    device and dtype. Integer coordinates are repaired before acquisition
+    and constraint evaluation. Categorical coordinates are not supported.
     """
     validate_bounds(bounds)
+    if variable_space is not None:
+        if integer_dims:
+            raise ValueError("Use variable_space or integer_dims, not both.")
+        if variable_space.categorical_dims:
+            raise ValueError("Differential Evolution does not support categorical variables.")
+        if not torch.equal(variable_space.bounds, bounds):
+            raise ValueError("variable_space bounds must match bounds.")
+        integer_dims = variable_space.integer_dims
+        variable_space.validate_fixed_features(fixed_features)
+    integer_dims = tuple(integer_dims)
+    _validate_integer_dims(integer_dims, bounds)
     if q < 1:
         raise ValueError("q must be at least 1.")
     candidate_constraints = constraints or CandidateConstraints()
