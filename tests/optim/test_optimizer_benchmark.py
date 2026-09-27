@@ -79,3 +79,31 @@ def test_benchmark_optimizers_runs_multiple_seeds() -> None:
     )
     assert [result.seed for result in results] == [1, 2]
     assert all(result.name == "random" for result in results)
+
+
+def test_benchmark_reports_positive_violation_for_infeasible_result() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([0]),
+                torch.tensor([1.0], dtype=torch.double),
+                2.0,
+            ),
+        )
+    )
+
+    result = benchmark_optimizer(
+        "ga",
+        optimize_acqf_ga,
+        _Quadratic(),
+        bounds,
+        1,
+        optimizer_kwargs={"population_size": 16, "generations": 3},
+        constraints=constraints,
+        seed=11,
+    )
+
+    assert result.feasible is False
+    assert result.constraint_violation is not None
+    assert result.constraint_violation > 0

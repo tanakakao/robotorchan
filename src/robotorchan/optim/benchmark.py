@@ -11,7 +11,10 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
-from robotorchan.optim.constraint_evaluation import candidate_is_feasible
+from robotorchan.optim.constraint_evaluation import (
+    candidate_constraint_violation,
+    candidate_is_feasible,
+)
 from robotorchan.optim.constraints import CandidateConstraints
 
 Optimizer = Callable[..., tuple[Tensor, Tensor]]
@@ -27,6 +30,7 @@ class BenchmarkResult:
     wall_time_seconds: float
     acquisition_evaluations: int
     feasible: bool | None
+    constraint_violation: float | None
     seed: int | None
 
 
@@ -74,10 +78,19 @@ def benchmark_optimizer(
     with torch.no_grad():
         raw_value = acq_function(candidate.unsqueeze(0)).reshape(())
     feasible = None
+    constraint_violation = None
     if constraints is not None:
+        batched_candidate = candidate.unsqueeze(0)
         feasible = bool(
             candidate_is_feasible(
-                candidate.unsqueeze(0),
+                batched_candidate,
+                constraints,
+                equality_tolerance=equality_tolerance,
+            ).item()
+        )
+        constraint_violation = float(
+            candidate_constraint_violation(
+                batched_candidate,
                 constraints,
                 equality_tolerance=equality_tolerance,
             ).item()
@@ -89,6 +102,7 @@ def benchmark_optimizer(
         wall_time_seconds=elapsed,
         acquisition_evaluations=counted.evaluations,
         feasible=feasible,
+        constraint_violation=constraint_violation,
         seed=seed,
     )
 
