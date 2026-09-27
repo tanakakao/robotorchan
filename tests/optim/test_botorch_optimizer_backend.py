@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 
@@ -100,3 +101,83 @@ def test_mixed_backend_rejects_interpoint_nonlinear_constraint() -> None:
         assert "inter-point nonlinear constraints" in str(exc)
     else:
         raise AssertionError("Expected mixed backend to reject inter-point constraints.")
+
+
+
+def test_botorch_backend_forwards_linear_constraint_kinds_unchanged() -> None:
+    acq = _DummyAcquisition()
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]])
+    inequality = (torch.tensor([0]), torch.tensor([1.0]), 0.2)
+    equality = (torch.tensor([1]), torch.tensor([1.0]), 0.5)
+    constraints = CandidateConstraints(
+        inequality_constraints=(inequality,),
+        equality_constraints=(equality,),
+    )
+
+    with patch(
+        "robotorchan.optim.backends.botorch.botorch_optimize_acqf",
+        return_value=(torch.tensor([[0.5, 0.5]]), torch.tensor(1.0)),
+    ) as mocked:
+        optimize_acqf_botorch(
+            acq,
+            bounds,
+            q=1,
+            num_restarts=2,
+            raw_samples=8,
+            constraints=constraints,
+        )
+
+    kwargs = mocked.call_args.kwargs
+    assert kwargs["inequality_constraints"] == [inequality]
+    assert kwargs["equality_constraints"] == [equality]
+
+
+def test_botorch_backend_requires_initial_conditions_for_nonlinear_constraints() -> None:
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[..., 0] - 0.1, True),)
+    )
+
+    with pytest.raises(ValueError, match="feasible batch_initial_conditions"):
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            torch.tensor([[0.0], [1.0]]),
+            q=1,
+            num_restarts=2,
+            raw_samples=8,
+            constraints=constraints,
+        )
+
+
+def test_mixed_backend_forwards_supported_constraints_unchanged() -> None:
+    acq = _DummyAcquisition()
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]])
+    inequality = (torch.tensor([0]), torch.tensor([1.0]), 0.2)
+    equality = (torch.tensor([0]), torch.tensor([1.0]), 0.5)
+    nonlinear = (lambda x: x[..., 0] - 0.1, True)
+    constraints = CandidateConstraints(
+        inequality_constraints=(inequality,),
+        equality_constraints=(equality,),
+        nonlinear_inequality_constraints=(nonlinear,),
+    )
+    initial = torch.full((2, 1, 2), 0.5)
+
+    with patch(
+        "robotorchan.optim.backends.botorch.botorch_optimize_acqf_mixed",
+        return_value=(torch.tensor([[0.5, 1.0]]), torch.tensor(1.5)),
+    ) as mocked:
+        optimize_acqf_mixed_botorch(
+            acq,
+            bounds,
+            q=1,
+            num_restarts=2,
+            fixed_features_list=[{1: 0.0}, {1: 1.0}],
+            raw_samples=8,
+            constraints=constraints,
+            batch_initial_conditions=initial,
+        )
+
+    kwargs = mocked.call_args.kwargs
+    assert kwargs["inequality_constraints"] == [inequality]
+    assert kwargs["equality_constraints"] == [equality]
+    assert kwargs["nonlinear_inequality_constraints"] == [nonlinear]
+    assert kwargs["options"]["batch_limit"] == 1
