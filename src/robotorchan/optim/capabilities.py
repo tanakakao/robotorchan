@@ -111,8 +111,12 @@ TORCH_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 SAMPLING_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     continuous=True,
+    integer=True,
+    categorical=True,
+    mixed=True,
     requires_grad=False,
     q_batch=True,
+    fixed_features=True,
     gpu=True,
     batch_evaluation=True,
 )

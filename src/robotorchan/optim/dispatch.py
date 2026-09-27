@@ -19,6 +19,7 @@ from robotorchan.optim.backends import (
 )
 from robotorchan.optim.capabilities import get_optimizer_capabilities
 from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.variable_space import MixedVariableSpace
 
 OptimizerName = Literal[
     "botorch",
@@ -50,6 +51,7 @@ def optimize_acqf(
     sequential: bool = False,
     seed: int | None = None,
     optimizer_options: dict[str, Any] | None = None,
+    variable_space: MixedVariableSpace | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Optimize an acquisition function using a named robotorchan backend."""
     backend_options = dict(optimizer_options or {})
@@ -115,6 +117,7 @@ def optimize_acqf(
             method=name,
             seed=seed,
             fixed_features=fixed_features,
+            variable_space=variable_space,
             **backend_options,
         )
     if name == "de":
