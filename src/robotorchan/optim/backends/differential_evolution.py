@@ -56,9 +56,6 @@ def optimize_acqf_de(
     if q < 1:
         raise ValueError("q must be at least 1.")
     candidate_constraints = constraints or CandidateConstraints()
-    if constraint_penalty <= 0:
-        raise ValueError("constraint_penalty must be positive.")
-
     scipy_bounds = list(
         zip(
             bounds[0].detach().cpu().tolist() * q,
@@ -87,9 +84,9 @@ def optimize_acqf_de(
             candidate_constraints,
             equality_tolerance=equality_tolerance,
         ).reshape(())
-        return -float(value.reshape(()).detach().cpu()) + constraint_penalty * float(
-            violation.detach().cpu()
-        )
+        acquisition = float(value.reshape(()).detach().cpu())
+        total_violation = float(violation.detach().cpu())
+        return _feasibility_first_scalar_objective(acquisition, total_violation)
 
     result = differential_evolution(
         objective,
@@ -157,3 +154,19 @@ def _repair_structured_dims(
         distances = (result[..., dim, None] - legal_values).abs()
         result[..., dim] = legal_values[distances.argmin(dim=-1)]
     return result
+
+
+
+def _feasibility_first_scalar_objective(acquisition: float, violation: float) -> float:
+    """Map feasibility-first ordering to a scalar objective for SciPy DE.
+
+    Feasible candidates minimize the negative acquisition value. Infeasible
+    candidates receive an infinite objective so they can never replace a
+    feasible population member. SciPy's DE then compares infeasible candidates
+    through its native constraint machinery only when constraints are expressed
+    natively; robotorchan constraints therefore require an explicit finite
+    ordering and use violation magnitude until feasibility is reached.
+    """
+    if violation <= 0.0:
+        return -acquisition
+    return float("inf") + violation
