@@ -16,6 +16,25 @@ penalty adapter.
 The returned acquisition value is always the raw acquisition value, not the
 penalized ranking score.
 
+### Mixed-variable scope
+
+PSO supports continuous variables and continuous + integer spaces. Integer
+coordinates keep continuous particle dynamics internally, but are rounded and
+clipped to the legal integer domain before acquisition and constraint
+evaluation and before returning a candidate.
+
+Categorical variables are intentionally unsupported. A categorical coordinate
+has no meaningful velocity, Euclidean displacement, or arithmetic attraction
+toward a personal/global best. Encoding category labels as numbers and applying
+standard PSO followed by rounding or nearest-category repair would therefore
+make the result depend on arbitrary category labels and ordering.
+
+For that reason robotorchan does not advertise categorical or full mixed PSO.
+Use Mixed GA, a categorical-aware mixed optimizer, or BoTorch mixed
+optimization when categorical dimensions are present. A future categorical
+PSO should only be added with an explicit categorical particle/update rule and
+benchmarks showing value over those existing backends.
+
 ## NSGA-III
 
 Not implemented in this phase. NSGA-III mainly adds value for genuinely

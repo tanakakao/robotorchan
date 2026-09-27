@@ -2,6 +2,7 @@ from robotorchan.optim.capabilities import (
     BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
     BOTORCH_OPTIMIZER_CAPABILITIES,
     DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES,
+    PSO_OPTIMIZER_CAPABILITIES,
     ConstraintHandling,
     OptimizerCapabilities,
 )
@@ -67,3 +68,12 @@ def test_unsupported_constraint_handling_is_explicit() -> None:
     assert capabilities.constraint_handling.linear_equality is ConstraintHandling.UNSUPPORTED
     assert capabilities.constraint_handling.nonlinear_inequality is ConstraintHandling.UNSUPPORTED
     assert capabilities.constraint_handling.interpoint_nonlinear is ConstraintHandling.UNSUPPORTED
+
+
+def test_pso_capabilities_do_not_overstate_categorical_mixed_support() -> None:
+    capabilities = PSO_OPTIMIZER_CAPABILITIES
+
+    assert capabilities.continuous
+    assert capabilities.integer
+    assert not capabilities.categorical
+    assert not capabilities.mixed

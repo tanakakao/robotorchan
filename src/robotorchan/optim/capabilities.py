@@ -245,7 +245,6 @@ PSO_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     ),
     continuous=True,
     integer=True,
-    mixed=True,
     requires_grad=False,
     linear_inequality_constraints=True,
     linear_equality_constraints=True,
