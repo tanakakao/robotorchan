@@ -63,7 +63,7 @@ def test_dispatch_forwards_variable_space_to_mixed_ga() -> None:
         integer_dims=(1,),
         categorical_values={2: [0.0, 1.0, 2.0]},
     )
-    with patch("robotorchan.optim.dispatch.optimize_acqf_ga") as mocked:
+    with patch("robotorchan.optim.dispatch.optimize_acqf_mixed_ga") as mocked:
         mocked.return_value = (torch.zeros(1, 3), torch.tensor(0.0))
         optimize_acqf(
             _SumAcquisition(),
