@@ -90,3 +90,12 @@ DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     gpu=False,
     batch_evaluation=False,
 )
+
+
+CMAES_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    continuous=True,
+    requires_grad=False,
+    q_batch=True,
+    gpu=False,
+    batch_evaluation=False,
+)
