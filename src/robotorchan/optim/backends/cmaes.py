@@ -29,10 +29,9 @@ def optimize_acqf_cmaes(
     equality_tolerance: float = 1e-6,
 ) -> tuple[Tensor, Tensor]:
     """Optimize a BoTorch acquisition function with CMA-ES."""
+    validate_bounds(bounds)
     if q < 1:
         raise ValueError("q must be at least 1.")
-    if bounds.ndim != 2 or bounds.shape[0] != 2:
-        raise ValueError("bounds must have shape [2, d].")
     if sigma <= 0:
         raise ValueError("sigma must be positive.")
     if max_generations < 1:
