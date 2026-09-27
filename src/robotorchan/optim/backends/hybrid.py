@@ -50,9 +50,7 @@ def optimize_acqf_hybrid(
         if mixed_fixed_features_list is not None:
             for config in mixed_fixed_features_list:
                 variable_space.validate_fixed_features(config)
-        structured_dims = set(variable_space.integer_dims) | set(
-            variable_space.categorical_dims
-        )
+        structured_dims = set(variable_space.integer_dims) | set(variable_space.categorical_dims)
         if structured_dims:
             if mixed_fixed_features_list is None:
                 raise ValueError(
