@@ -38,7 +38,9 @@ def optimize_acqf_ga(
     )
     candidate_constraints = constraints or CandidateConstraints()
     if candidate_constraints.has_constraints:
-        raise ValueError("The Genetic Algorithm backend does not support candidate constraints yet.")
+        raise ValueError(
+            "The Genetic Algorithm backend does not support candidate constraints yet."
+        )
 
     generator = torch.Generator(device=bounds.device)
     if seed is not None:
