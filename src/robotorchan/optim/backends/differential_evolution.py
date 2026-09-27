@@ -69,7 +69,9 @@ def optimize_acqf_de(
         **resolved_options,
     )
     candidates = torch.as_tensor(
-        result.x, dtype=bounds.dtype, device=bounds.device
+        result.x,
+        dtype=bounds.dtype,
+        device=bounds.device,
     ).reshape(q, bounds.shape[-1])
     with torch.no_grad():
         acquisition_value = acq_function(candidates.unsqueeze(0)).reshape(())
