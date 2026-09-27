@@ -142,3 +142,80 @@ def test_mixed_ga_feasibility_first_is_independent_of_acquisition_scale() -> Non
 
     assert float(candidates[0, 0]) <= 0.4 + 1e-6
     assert candidates[0, 1] == candidates[0, 1].round()
+
+
+def test_mixed_ga_supports_variable_dependent_nonlinear_constraint() -> None:
+    bounds = torch.tensor([[0.0, 0.0, 0.0], [1.0, 4.0, 2.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=(
+            (
+                lambda x: 0.55 + 0.10 * x[..., 1] - 0.15 * x[..., 2] - x[..., 0],
+                True,
+            ),
+        )
+    )
+
+    candidates, _ = optimize_acqf_mixed_ga(
+        _Target(target=0.9),
+        bounds,
+        q=1,
+        integer_dims=[1],
+        categorical_values={2: [0.0, 1.0, 2.0]},
+        population_size=120,
+        generations=50,
+        seed=17,
+        constraints=constraints,
+    )
+
+    residual = 0.55 + 0.10 * candidates[0, 1] - 0.15 * candidates[0, 2] - candidates[0, 0]
+    assert residual >= -1e-8
+    assert candidates[0, 1] == candidates[0, 1].round()
+    assert float(candidates[0, 2]) in {0.0, 1.0, 2.0}
+
+
+def test_mixed_ga_supports_q_batch_interpoint_nonlinear_constraint() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 3.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.7 - x[:, 0].sum(), False),)
+    )
+
+    candidates, _ = optimize_acqf_mixed_ga(
+        _Target(target=0.9),
+        bounds,
+        q=2,
+        integer_dims=[1],
+        population_size=140,
+        generations=60,
+        seed=23,
+        constraints=constraints,
+    )
+
+    assert candidates[:, 0].sum() <= 0.7 + 1e-8
+    assert torch.equal(candidates[:, 1], candidates[:, 1].round())
+
+
+def test_mixed_ga_supports_q_batch_interpoint_linear_constraint() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 3.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([[0, 0], [1, 0]]),
+                torch.tensor([-1.0, -1.0]),
+                -0.7,
+            ),
+        )
+    )
+
+    candidates, _ = optimize_acqf_mixed_ga(
+        _Target(target=0.9),
+        bounds,
+        q=2,
+        integer_dims=[1],
+        population_size=140,
+        generations=60,
+        seed=29,
+        constraints=constraints,
+    )
+
+    assert candidates[:, 0].sum() <= 0.7 + 1e-8
+    assert torch.equal(candidates[:, 1], candidates[:, 1].round())
