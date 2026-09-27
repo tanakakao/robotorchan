@@ -31,9 +31,7 @@ shape `[d]`、`False` では joint q-batch `[q, d]` を受け取る。callable �
 
 ```python
 constraints = CandidateConstraints(
-    nonlinear_inequality_constraints=(
-        (lambda x: 0.25 - x.square().sum(), True),
-    ),
+    nonlinear_inequality_constraints=((lambda x: 0.25 - x.square().sum(), True),),
 )
 
 initial_conditions = torch.tensor(
