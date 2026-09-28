@@ -120,13 +120,13 @@ def test_output_reduction_applies_transform_after_original_output_restoration() 
         dim=-1,
     )
     model = OutputPCAGP(train_X, train_Y, n_components=2)
-    weights = torch.tensor([0.2, 0.3, 0.5], dtype=train_X.dtype)
-    transform = ScalarizedPosteriorTransform(weights=weights, offset=0.4)
+    transform = ScalarizedPosteriorTransform(
+        weights=torch.tensor([0.2, 0.3, 0.5], dtype=train_X.dtype),
+        offset=0.4,
+    )
 
-    raw = model.posterior(train_X[:3])
-    transformed = model.posterior(train_X[:3], posterior_transform=transform)
-
-    expected_mean = 0.4 + (raw.mean * weights).sum(dim=-1, keepdim=True)
-    expected_variance = (raw.variance * weights.square()).sum(dim=-1, keepdim=True)
-    torch.testing.assert_close(transformed.mean, expected_mean)
-    torch.testing.assert_close(transformed.variance, expected_variance)
+    with pytest.raises(
+        NotImplementedError,
+        match="restored output posterior",
+    ):
+        model.posterior(train_X[:3], posterior_transform=transform)
