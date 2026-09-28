@@ -3,6 +3,8 @@
 import json
 from pathlib import Path
 
+import robotorchan.models as models
+
 from robotorchan.models.capabilities import (
     HighDimensionalStrategy,
     InferenceType,
@@ -40,10 +42,17 @@ def test_registry_documentation_paths_are_repository_relative() -> None:
 
 
 def test_registry_covers_every_public_model() -> None:
-    import robotorchan.models as models
-
     expected = set(models.__all__) - {"UnsupportedModelOperationError"}
+
     assert set(MODEL_REGISTRY) == expected
+
+
+def test_registry_entries_resolve_to_public_model_classes() -> None:
+    for name, entry in MODEL_REGISTRY.items():
+        model_class = getattr(models, name)
+
+        assert isinstance(model_class, type)
+        assert model_class.__name__ == entry.model_name
 
 
 def test_structured_output_is_not_ordinary_multitask() -> None:
