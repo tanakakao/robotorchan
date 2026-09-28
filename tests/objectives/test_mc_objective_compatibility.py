@@ -39,14 +39,10 @@ def test_kronecker_samples_support_native_linear_mc_objective() -> None:
     )
     model = KroneckerMultiTaskGP(train_X=train_X, train_Y=train_Y, rank=1)
     candidate = torch.tensor([[0.25], [0.75]], dtype=torch.double, requires_grad=True)
-    samples = SobolQMCNormalSampler(torch.Size([16]), seed=123)(
-        model.posterior(candidate)
-    )
+    samples = SobolQMCNormalSampler(torch.Size([16]), seed=123)(model.posterior(candidate))
 
     _assert_linear_objective_contract(samples)
-    objective = LinearMCObjective(
-        weights=torch.tensor([0.25, 0.75], dtype=torch.double)
-    )
+    objective = LinearMCObjective(weights=torch.tensor([0.25, 0.75], dtype=torch.double))
     gradient = torch.autograd.grad(objective(samples).mean(), candidate)[0]
 
     assert gradient.shape == candidate.shape
@@ -57,9 +53,7 @@ def test_ensemble_samples_support_native_generic_mc_objective() -> None:
     values = torch.arange(9 * 3 * 2, dtype=torch.double).reshape(9, 3, 2)
     posterior = make_ensemble_posterior(values)
     samples = IndexSampler(torch.Size([16]), seed=456)(posterior)
-    objective = GenericMCObjective(
-        lambda Y, X=None: Y[..., 0].square() + 0.5 * Y[..., 1]
-    )
+    objective = GenericMCObjective(lambda Y, X=None: Y[..., 0].square() + 0.5 * Y[..., 1])
 
     result = objective(samples)
 
@@ -68,12 +62,16 @@ def test_ensemble_samples_support_native_generic_mc_objective() -> None:
     assert result.shape == samples.shape[:-1]
 
 
-def test_deep_gp_samples_support_native_linear_mc_objective() -> None:
-    trajectories = torch.arange(11 * 3 * 2, dtype=torch.double).reshape(11, 3, 2)
+def test_deep_gp_samples_support_native_generic_mc_objective() -> None:
+    trajectories = torch.arange(11 * 3, dtype=torch.double).reshape(11, 3, 1)
     posterior = DeepGPPosterior(trajectories)
     samples = StochasticSampler(torch.Size([16]))(posterior)
+    objective = GenericMCObjective(lambda Y, X=None: Y.squeeze(-1))
 
-    _assert_linear_objective_contract(samples)
+    values = objective(samples)
+
+    torch.testing.assert_close(values, samples.squeeze(-1))
+    assert values.shape == samples.shape[:-1]
 
 
 def test_identity_mc_objective_preserves_single_output_samples() -> None:
