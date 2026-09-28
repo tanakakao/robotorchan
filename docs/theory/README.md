@@ -21,7 +21,7 @@
    - [Acquisition Function Theory](acquisition/README.md) — 01〜12の詳細理論
    - [Acquisition Selection Guide](acquisition/12_selection_guide.md) — 問題設定から獲得関数を選ぶ入口
    - [Optimization guides](../optimization/README.md) — API・利用方法
-   - [Acquisition integration status](../optimization/acquisition-status.md) — 現在の対応範囲と制約
+   - [Acquisition integration status](../optimization/acquisition-integration.md) — 現在の対応範囲と制約
 5. [Mixed Variables](05_mixed_variables.md)
 6. [Multi-Fidelity](06_multi_fidelity.md)
 7. [Multi-task / Multi-output](07_multitask_multioutput.md)
