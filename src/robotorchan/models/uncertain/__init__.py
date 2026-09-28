@@ -1,4 +1,8 @@
-"""Surrogate models for uncertain continuous or categorical inputs."""
+"""Surrogate models that represent uncertain inputs internally.
+
+These are model implementations, not candidate input-perturbation scenarios.
+Scenario utilities for robust optimization live under ``robotorchan.uncertainty``.
+"""
 
 from robotorchan.models.uncertain.uncertain_categorical import (
     AugmentedUncertainCategoricalKernel,
