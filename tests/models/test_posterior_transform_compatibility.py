@@ -10,7 +10,7 @@ from robotorchan.models import (
     SingleTaskGP,
 )
 from robotorchan.models.expressive.deep_gp import SingleTaskDeepGP
-from robotorchan.models.high_dimensional.reduced.base import OutputPCAGP, PCAGP
+from robotorchan.models.high_dimensional.reduced.base import PCAGP, OutputPCAGP
 from robotorchan.models.non_gp.random_forest import RandomForestSurrogate
 
 
@@ -53,7 +53,7 @@ def test_mixed_gp_accepts_scalarized_posterior_transform() -> None:
     assert torch.isfinite(posterior.mean).all()
 
 
-def test_kronecker_accepts_multioutput_scalarized_posterior_transform() -> None:
+def test_kronecker_explicitly_rejects_scalarized_posterior_transform() -> None:
     train_X = torch.linspace(0.05, 0.95, 7, dtype=torch.double).unsqueeze(-1)
     train_Y = torch.cat(
         (
@@ -66,15 +66,11 @@ def test_kronecker_accepts_multioutput_scalarized_posterior_transform() -> None:
     weights = torch.tensor([0.25, 0.75], dtype=train_X.dtype)
     transform = ScalarizedPosteriorTransform(weights=weights)
 
-    posterior = model.posterior(train_X[:3], posterior_transform=transform)
-
-    assert posterior.mean.shape == torch.Size([3, 1])
-    assert posterior.variance.shape == torch.Size([3, 1])
-    assert torch.isfinite(posterior.mean).all()
-    assert torch.isfinite(posterior.variance).all()
+    with pytest.raises(NotImplementedError, match="Posterior transforms"):
+        model.posterior(train_X[:3], posterior_transform=transform)
 
 
-def test_random_forest_accepts_identity_scalarized_posterior_transform() -> None:
+def test_random_forest_rejects_scalarized_posterior_transform() -> None:
     pytest.importorskip("sklearn")
     train_X, train_Y = _single_output_data()
     model = RandomForestSurrogate(
@@ -88,13 +84,11 @@ def test_random_forest_accepts_identity_scalarized_posterior_transform() -> None
         weights=torch.ones(1, dtype=train_X.dtype),
     )
 
-    posterior = model.posterior(train_X[:3], posterior_transform=transform)
-
-    assert posterior.mean.shape == torch.Size([3, 1])
-    assert torch.isfinite(posterior.mean).all()
+    with pytest.raises(NotImplementedError, match="scalarize_posterior"):
+        model.posterior(train_X[:3], posterior_transform=transform)
 
 
-def test_deep_gp_accepts_identity_scalarized_posterior_transform() -> None:
+def test_deep_gp_rejects_scalarized_posterior_transform() -> None:
     train_X, train_Y = _single_output_data()
     model = SingleTaskDeepGP(
         train_X,
@@ -107,14 +101,12 @@ def test_deep_gp_accepts_identity_scalarized_posterior_transform() -> None:
         weights=torch.ones(1, dtype=train_X.dtype),
     )
 
-    posterior = model.posterior(
-        train_X[:3],
-        posterior_transform=transform,
-        num_samples=8,
-    )
-
-    assert posterior.mean.shape == torch.Size([3, 1])
-    assert torch.isfinite(posterior.mean).all()
+    with pytest.raises(NotImplementedError, match="scalarize_posterior"):
+        model.posterior(
+            train_X[:3],
+            posterior_transform=transform,
+            num_samples=8,
+        )
 
 
 def test_output_reduction_explicitly_rejects_posterior_transform() -> None:
