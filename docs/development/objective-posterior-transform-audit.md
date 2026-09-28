@@ -570,3 +570,47 @@ The common API is strengthened without claiming false universal capability:
 
 Exact support for additional posterior types is desirable, but only when their full covariance or
 sample semantics allow the requested transform to be implemented without approximation.
+
+
+## Phase 6: MC Objective compatibility
+
+Phase 6 verifies that robotorchan posterior families use BoTorch MC objectives in sample space
+without model-specific objective adapters.
+
+The canonical contract is:
+
+`Posterior -> Sampler -> samples[..., q, m] -> MCAcquisitionObjective -> values[..., q]`.
+
+Representative runtime coverage now includes:
+
+| Posterior family | Sampler | Native MC Objective | Status |
+| --- | --- | --- | --- |
+| Kronecker multi-task | `SobolQMCNormalSampler` | `LinearMCObjective` | supported |
+| empirical ensemble | `IndexSampler` | `GenericMCObjective` | supported |
+| DeepGP trajectory | `StochasticSampler` | `GenericMCObjective` | single-output supported |
+| single-output samples | sampler-independent | `IdentityMCObjective` | supported |
+| output-reduced GP | normal sampler | `GenericMCObjective` | already E2E covered |
+
+This distinction is important for models whose posterior representation cannot satisfy a
+distribution-level `ScalarizedPosteriorTransform`. Once those posteriors produce correctly
+shaped samples, MC objectives operate on tensors and therefore do not require a GPyTorch
+distribution.
+
+For Kronecker multi-task models, Phase 6 verifies linear scalarization in sample space and
+candidate-gradient propagation. This provides the BoTorch-native scalar-objective path while
+preserving the joint task covariance during posterior sampling.
+
+For empirical ensemble and DeepGP posteriors, the model-specific sampler remains responsible for
+drawing valid samples. The objective receives ordinary tensors and uses the same BoTorch API as
+Gaussian models. The current DeepGP contract is single-output (`m=1`); Phase 6 therefore verifies
+`GenericMCObjective` on that supported shape rather than implying unsupported multi-output
+DeepGP behavior.
+
+No robotorchan MC Objective wrapper, registry, conversion layer, or compatibility alias is added.
+`GenericMCObjective` remains the extension point for arbitrary differentiable sample-space
+objectives, and `LinearMCObjective` is preferred for ordinary weighted scalarization.
+
+Phase 6 found no production-code gap that requires a custom Objective implementation. The
+compatibility requirement is instead enforced by posterior sampling shape and sampler selection,
+which were established by the preceding Sampling / Posterior audit and are now connected
+explicitly to native MC Objective tests.
