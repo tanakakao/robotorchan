@@ -227,7 +227,7 @@ EPIG は [Active Learning](09_active_learning.md) で扱います。
 
 BoTorch は MES と GIBBON を含む information-theoretic acquisition を提供しています。robotorchan は BoTorch native で利用可能な標準手法を再実装しません。
 
-利用上の位置付けは [Information-theoretic optimization guide](../../optimization/information_theoretic.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
+利用上の位置付けは [Information-theoretic optimization guide](../../optimization/information_theoretic.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 5.14 まとめ
 
