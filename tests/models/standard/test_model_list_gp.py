@@ -3,6 +3,8 @@ import inspect
 import torch
 from botorch.models import ModelListGP as BoTorchModelListGP
 from botorch.models import SingleTaskGP as BoTorchSingleTaskGP
+from botorch.sampling.list_sampler import ListSampler
+from botorch.sampling.normal import IIDNormalSampler, SobolQMCNormalSampler
 from gpytorch.mlls import SumMarginalLogLikelihood
 
 from robotorchan.models import ModelListGP, SingleTaskGP
@@ -108,3 +110,46 @@ def test_model_list_gp_matches_upstream_posterior() -> None:
 
     torch.testing.assert_close(wrapper_posterior.mean, upstream_posterior.mean)
     torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
+
+
+def test_model_list_gp_list_sampler_preserves_multi_output_shape() -> None:
+    train_X1, train_Y1 = _make_child_data(8)
+    train_X2, train_Y2 = _make_child_data(9, offset=0.4)
+    model = ModelListGP(
+        SingleTaskGP(train_X=train_X1, train_Y=train_Y1),
+        SingleTaskGP(train_X=train_X2, train_Y=train_Y2),
+    )
+    candidate = torch.rand(3, 2, dtype=torch.double)
+    posterior = model.posterior(candidate)
+    sampler = ListSampler(
+        SobolQMCNormalSampler(torch.Size([16]), seed=123),
+        IIDNormalSampler(torch.Size([16]), seed=456),
+    )
+
+    samples = sampler(posterior)
+
+    assert samples.shape == torch.Size([16, 3, 2])
+    assert samples.dtype == candidate.dtype
+    assert samples.device == candidate.device
+    assert torch.isfinite(samples).all()
+
+
+def test_model_list_gp_list_sampler_preserves_candidate_gradient() -> None:
+    train_X1, train_Y1 = _make_child_data(8)
+    train_X2, train_Y2 = _make_child_data(8, offset=0.2)
+    model = ModelListGP(
+        SingleTaskGP(train_X=train_X1, train_Y=train_Y1),
+        SingleTaskGP(train_X=train_X2, train_Y=train_Y2),
+    )
+    candidate = torch.rand(2, 2, dtype=torch.double, requires_grad=True)
+    posterior = model.posterior(candidate)
+    sampler = ListSampler(
+        SobolQMCNormalSampler(torch.Size([8]), seed=321),
+        SobolQMCNormalSampler(torch.Size([8]), seed=654),
+    )
+
+    loss = sampler(posterior).mean()
+    gradient = torch.autograd.grad(loss, candidate)[0]
+
+    assert gradient.shape == candidate.shape
+    assert torch.isfinite(gradient).all()
