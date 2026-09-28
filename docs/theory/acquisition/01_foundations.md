@@ -144,7 +144,7 @@ uncertainty を過小評価すれば探索不足、過大評価すれば過剰�
 
 BoTorch は analytic / MC acquisition、objective、posterior transform、sampler、acquisition optimizer を分離した設計を採用しています。
 
-robotorchan も BoTorch-first とし、BoTorch native の acquisition が目的を満たす場合はローカル wrapper を作りません。現在の対応状況は [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
+robotorchan も BoTorch-first とし、BoTorch native の acquisition が目的を満たす場合はローカル wrapper を作りません。現在の対応状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 1.10 次に読む章
 
