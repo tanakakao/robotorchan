@@ -231,7 +231,7 @@ BoTorch は qLogEHVI、qLogNEHVI、qLogNParEGO、HVKG などの multi-objective 
 
 robotorchan は標準 MOBO acquisition をローカルに再実装せず、BoTorch native path を基本とします。
 
-実際の利用方法は [Multi-objective optimization guide](../../optimization/multiobjective.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
+実際の利用方法は [Multi-objective optimization guide](../../optimization/multiobjective.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 7.17 まとめ
 

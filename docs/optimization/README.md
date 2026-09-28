@@ -12,7 +12,7 @@ surrogate model とは独立した candidate search / optimization の利用者�
 - [Multi-fidelity and cost-aware acquisitions](multifidelity-cost-aware.md): MF-KGとcost-aware utility
 - [Expected Predictive Information Gain](epig.md): 予測指向の回帰Active Learning
 - [BoundaryVariance](boundary-variance.md): robotorchan固有の境界探索ヒューリスティック
-- [Acquisition integration status](acquisition-status.md): 対応範囲と制約
+- [Acquisition integration](acquisition-integration.md): 対応範囲と制約
 - [Mixed one-shot optimization](mixed-one-shot-optimization.md): qKG / qMFKG のmixed候補最適化境界
 - [High-dimensional search](high_dimensional_search.md): Original space、Random Search、latent search、REMBO、HeSBO、ALEBO、TuRBO、BAxUS
 - [TuRBO](turbo.md): stateful trust-region strategy の詳細
@@ -26,4 +26,4 @@ surrogate model とは独立した candidate search / optimization の利用者�
 
 獲得関数の数式・仮定・手法間の関係は [Acquisition Function Theory](../theory/acquisition/README.md) に分離しています。問題設定から手法を選ぶ場合は [Acquisition Selection Guide](../theory/acquisition/12_selection_guide.md) を入口にしてください。
 
-現在の robotorchan / BoTorch integration と明示的な制約は [Acquisition integration status](acquisition-status.md) を正とします。Theory に掲載されていること自体は robotorchan 固有実装を意味しません。
+現在の robotorchan / BoTorch integration と明示的な制約は [Acquisition integration](acquisition-integration.md) を正とします。Theory に掲載されていること自体は robotorchan 固有実装を意味しません。

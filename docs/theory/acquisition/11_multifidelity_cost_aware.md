@@ -468,7 +468,7 @@ BoTorch は Multi-Fidelity Knowledge Gradient、cost-aware utility、fidelity co
 
 robotorchan はこれらの標準機能を再実装せず、BoTorch native path を基本とします。
 
-利用上の位置付けは [Multi-Fidelity / Cost-aware optimization guide](../../optimization/multifidelity-cost-aware.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
+利用上の位置付けは [Multi-Fidelity / Cost-aware optimization guide](../../optimization/multifidelity-cost-aware.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 11.25 まとめ
 

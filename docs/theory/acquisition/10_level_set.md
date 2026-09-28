@@ -251,7 +251,7 @@ Randomized Straddle は robotorchan 固有の名称を付けた heuristic では
 
 一方、使用する random coefficient distribution、parameterization、round semantics は実装 contract として明示する必要があります。
 
-Theory では手法の原理を説明し、現在の具体的な実装挙動は [Level-set guide](../../optimization/level_set_learning.md) と [Acquisition integration status](../../optimization/acquisition-status.md) を正とします。
+Theory では手法の原理を説明し、現在の具体的な実装挙動は [Level-set guide](../../optimization/level_set_learning.md) と [Acquisition integration status](../../optimization/acquisition-integration.md) を正とします。
 
 ## 10.13 BoundaryVariance
 
@@ -462,7 +462,7 @@ Theory は将来の拡張可能性を説明できますが、現在の利用可�
 
 - [Level-set learning guide](../../optimization/level_set_learning.md)
 - [BoundaryVariance guide](../../optimization/boundary-variance.md)
-- [Acquisition integration status](../../optimization/acquisition-status.md)
+- [Acquisition integration status](../../optimization/acquisition-integration.md)
 
 ## 10.24 まとめ
 

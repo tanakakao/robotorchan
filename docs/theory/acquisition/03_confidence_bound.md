@@ -118,7 +118,7 @@ UCB は uncertainty を式へ直接入れるため、posterior scale の calibra
 
 BoTorch は analytic UCB と MC batch variant を提供しています。robotorchan は標準 UCB をローカルに再実装せず、BoTorch native path を利用します。
 
-利用方法は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の統合範囲は [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
+利用方法は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の統合範囲は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 3.10 まとめ
 

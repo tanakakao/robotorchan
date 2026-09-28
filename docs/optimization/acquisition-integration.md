@@ -1,4 +1,4 @@
-# Acquisition integration status
+# Acquisition integration
 
 The acquisition layer follows a BoTorch-first policy: native BoTorch acquisitions are used
 directly, while robotorchan owns only functionality that adds a distinct contract or algorithm.
@@ -144,7 +144,7 @@ robotorchan algorithm or contract; documentation coverage alone is not sufficien
 
 The theory chapters, practical optimization guides, status table, package exports, and public-API
 test are consistent with the current ownership policy. Remaining items listed under
-**Audit follow-ups** are intentionally unsupported or not yet integration-tested rather than
+**Future extensions** are intentionally unsupported or not yet integration-tested rather than
 silently implied by the theory documentation.
 
 
