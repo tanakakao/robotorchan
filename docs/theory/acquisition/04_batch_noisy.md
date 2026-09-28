@@ -182,7 +182,7 @@ q を増やすと候補集合の joint dimension が増え、MC sampling と acq
 
 BoTorch は qLogEI、qLogNEI などの batch / noisy acquisition と pending-point semantics を提供します。robotorchan は標準手法を再実装せず、BoTorch native path を利用します。
 
-具体的な API は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の対応状況は [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
+具体的な API は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の対応状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 4.13 まとめ
 
