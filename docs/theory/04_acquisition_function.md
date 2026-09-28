@@ -314,7 +314,7 @@ robotorchan では獲得関数関連の情報を次のように分離します�
 | 獲得関数全体の概要 | 本章 |
 | 数式、理論、仮定、手法間の関係 | [Acquisition Function Theory](acquisition/README.md) |
 | API、コード例、実際の利用方法 | [Optimization guide](../optimization/README.md) |
-| 現在の対応範囲と制約 | [Acquisition integration status](../optimization/acquisition-status.md) |
+| 現在の対応範囲と制約 | [Acquisition integration status](../optimization/acquisition-integration.md) |
 
 robotorchan は BoTorch-first を基本とします。Theory に掲載されている手法が
 robotorchan 固有実装であるとは限らず、BoTorch native の手法を直接利用する場合も
