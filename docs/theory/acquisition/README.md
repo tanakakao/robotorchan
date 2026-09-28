@@ -2,7 +2,7 @@
 
 このディレクトリでは、獲得関数を「実装の使い方」ではなく、意思決定基準としての理論から整理します。
 
-[Acquisition Function 概要](../04_acquisition_function.md) は獲得関数全体への入口です。個別手法の数式、仮定、手法間の関係はこのディレクトリで扱います。BoTorch / robotorchan の具体的な API、利用例、現在の対応範囲は [Optimization guide](../../optimization/README.md) と [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
+[Acquisition Function 概要](../04_acquisition_function.md) は獲得関数全体への入口です。個別手法の数式、仮定、手法間の関係はこのディレクトリで扱います。BoTorch / robotorchan の具体的な API、利用例、現在の対応範囲は [Optimization guide](../../optimization/README.md) と [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 責務
 
@@ -18,7 +18,7 @@ docs/theory/acquisition/
 docs/optimization/
     BoTorch / robotorchan での利用方法、API、実装上の制約
 
-docs/optimization/acquisition-status.md
+docs/optimization/acquisition-integration.md
     現在の実装・統合状況
 
 robotorchan/acquisition/
@@ -79,7 +79,7 @@ robotorchan: native BoTorch path を利用
 
 Theory は理論体系として構成します。robotorchan にローカル実装がない MES、GIBBON、qMultiStepLookahead なども、理論上の位置付けが重要なら扱います。
 
-現在の対応状況は Theory ではなく [Acquisition integration status](../../optimization/acquisition-status.md) を正とします。
+現在の対応状況は Theory ではなく [Acquisition integration status](../../optimization/acquisition-integration.md) を正とします。
 
 ### 原典を優先する
 
@@ -161,7 +161,7 @@ EI、UCB、KG、EHVI などの詳細な式・導出・比較は、それぞれ�
 
 実際の問題から獲得関数を選びたい場合は、先に [Selection Guide](12_selection_guide.md) を読み、必要な詳細章へ移動してください。
 
-実装方法を確認したい場合は [Optimization guide](../../optimization/README.md)、現在の対応範囲だけを確認したい場合は [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
+実装方法を確認したい場合は [Optimization guide](../../optimization/README.md)、現在の対応範囲だけを確認したい場合は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 
 ## Documentation QA contract
@@ -170,7 +170,7 @@ EI、UCB、KG、EHVI などの詳細な式・導出・比較は、それぞれ�
 
 - chapter number と filename は 01〜12 で一致させる。
 - theory から implementation support を推測しない。現在の対応範囲は
-  [Acquisition integration status](../../optimization/acquisition-status.md) を正とする。
+  [Acquisition integration status](../../optimization/acquisition-integration.md) を正とする。
 - practical API の説明は [Optimization guide](../../optimization/README.md) に置き、Theory へ
   implementation-specific usage を重複させない。
 - BoTorch native acquisition は、robotorchan 固有 contract がない限り local alias として
@@ -196,7 +196,7 @@ usage / API / examples
     -> docs/optimization/
 
 current support / explicit limitations
-    -> docs/optimization/acquisition-status.md
+    -> docs/optimization/acquisition-integration.md
 
 robotorchan-owned behavior
     -> src/robotorchan/acquisition/ + tests
