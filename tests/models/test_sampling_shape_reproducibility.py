@@ -51,7 +51,7 @@ def test_normal_sampler_seed_controls_base_samples() -> None:
 
 
 def test_index_sampler_supports_multidimensional_sample_shape() -> None:
-    values = torch.arange(7 * 2 * 3, dtype=torch.double).reshape(7, 2, 3, 1)
+    values = torch.arange(2 * 7 * 3, dtype=torch.double).reshape(2, 7, 3, 1)
     posterior = make_ensemble_posterior(values)
     sampler = IndexSampler(torch.Size([4, 5]), seed=789)
 
