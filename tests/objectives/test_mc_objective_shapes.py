@@ -10,6 +10,7 @@ from robotorchan.models.expressive.deep_gp_posterior import DeepGPPosterior
 from robotorchan.models.non_gp.distribution_posterior import GaussianDistributionPosterior
 from robotorchan.models.non_gp.posterior import make_ensemble_posterior
 from robotorchan.models.standard.multitask import KroneckerMultiTaskGP
+from robotorchan.reduction import OutputPCAReducer
 
 
 def test_gaussian_posterior_preserves_sample_batch_q_output_axes() -> None:
@@ -91,3 +92,18 @@ def test_kronecker_q_many_keeps_output_axis_distinct_from_q() -> None:
 
     assert samples.shape == torch.Size([5, 7, 3, 2])
     assert values.shape == torch.Size([5, 7, 3])
+
+
+def test_output_reducer_inverse_preserves_sample_batch_q_axes() -> None:
+    train_Y = torch.randn(20, 5, dtype=torch.double)
+    reducer = OutputPCAReducer(n_components=2).fit(train_Y)
+    latent_samples = torch.randn(5, 7, 2, 3, 2, dtype=torch.double)
+    restored = reducer.inverse_transform(latent_samples)
+    objective = LinearMCObjective(
+        weights=torch.tensor([0.1, 0.2, 0.3, 0.15, 0.25], dtype=torch.double)
+    )
+
+    values = objective(restored)
+
+    assert restored.shape == torch.Size([5, 7, 2, 3, 5])
+    assert values.shape == torch.Size([5, 7, 2, 3])
