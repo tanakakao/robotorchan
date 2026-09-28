@@ -405,7 +405,7 @@ robotorchan は regression AL 向けに PosteriorVariance、PosteriorStd、Expec
 
 - [Regression Active Learning guide](../../optimization/regression_active_learning.md)
 - [EPIG guide](../../optimization/epig.md)
-- [Acquisition integration status](../../optimization/acquisition-status.md)
+- [Acquisition integration status](../../optimization/acquisition-integration.md)
 
 ## 9.20 まとめ
 
