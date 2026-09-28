@@ -289,3 +289,144 @@ The following are design requirements for subsequent phases:
 
 Phase 2 changes documentation only. Runtime support remains unclaimed until the corresponding
 compatibility and E2E phases pass.
+
+
+## Phase 3: responsibility-boundary audit
+
+Phase 3 audits ownership rather than runtime compatibility. The current codebase keeps the major
+layers separate; no production boundary violation was found that requires an implementation
+change in this phase.
+
+### Canonical pipeline
+
+The audited composition is:
+
+`X -> candidate feasibility -> model.posterior(X) -> PosteriorTransform -> Posterior
+-> Sampler -> posterior samples -> MC Objective -> objective samples
+-> outcome feasibility / acquisition utility -> acquisition optimization`.
+
+For robust candidate evaluation, input scenarios are introduced before posterior evaluation:
+
+`X -> perturbation / environmental scenarios -> X' -> posterior -> sampling
+-> objective -> scenario risk aggregation -> acquisition utility`.
+
+The second pipeline does not make perturbation generation a responsibility of the model,
+posterior sampler, or generic objective.
+
+### Model and PosteriorTransform boundary
+
+`posterior_transform` belongs to the model-posterior boundary. A model may apply the supplied
+BoTorch transform to the posterior it constructs or may explicitly reject transforms whose
+semantics it cannot preserve.
+
+This boundary is currently visible in native-style posterior methods for non-GP adapters,
+DeepGP, uncertain-input models, and reduced-model delegation. ALEBO and active output reduction
+have explicit restrictions rather than silently changing transform semantics.
+
+A `PosteriorTransform` must not be used as a replacement for a nonlinear sample objective.
+Conversely, an MC objective must not be used to claim support for analytic posterior
+transformation.
+
+Phase 4 and Phase 5 will validate whether the current model-specific implementations satisfy the
+actual BoTorch transform contract.
+
+### Sampling and MC Objective boundary
+
+Posterior sampling produces samples without deciding their optimization meaning. A native
+`MCAcquisitionObjective` consumes those samples when an acquisition requires a scalar sample
+utility.
+
+The Thompson sampling path accepts a native `MCAcquisitionObjective | None`; it does not define a
+parallel robotorchan objective interface. Existing constrained-BO tests likewise construct
+`GenericMCObjective` directly.
+
+The classes in `robotorchan.objectives.risk` are scenario-axis aggregators. They are not currently
+`MCAcquisitionObjective` subclasses and must not be documented or passed as though they were
+drop-in values for an acquisition's `objective=` argument. Their relationship to BoTorch
+risk-measure objectives remains a Phase 12 question.
+
+### Outcome-constraint boundary
+
+Outcome constraints express unknown feasibility through modeled outcomes. They are evaluated on
+posterior-derived samples by compatible acquisition functions.
+
+The acquisition registry's `supports_constraints` capability refers to this output / black-box
+constraint composition. It does not describe candidate-space feasibility.
+
+The existing outcome-constrained E2E path correctly composes a model, posterior sampler,
+`GenericMCObjective`, outcome constraint callables, a constrained MC acquisition, and
+acquisition optimization without moving candidate constraints into the acquisition objective.
+
+### Candidate-constraint boundary
+
+Known candidate/input-space constraints belong to `robotorchan.optim`.
+`CandidateConstraints` explicitly describes candidate coordinates and separates itself from
+output constraints used by constrained acquisition functions.
+
+Linear equality, linear inequality, and nonlinear inequality constraints are therefore optimizer
+inputs. They must not be represented as posterior-sample constraints merely to reuse an
+acquisition API.
+
+This separation also applies to mixed-variable search: categorical/integer domain structure and
+candidate feasibility are optimization-space concerns, not MC-objective semantics.
+
+### Input-perturbation and uncertain-input-model boundary
+
+Two different uncertainty concepts remain separate:
+
+1. uncertain-input surrogate models represent input uncertainty inside the statistical model;
+2. candidate-time perturbation generates decision scenarios around candidate inputs.
+
+Candidate perturbation utilities live under `robotorchan.uncertainty`. The uncertain-input model
+package explicitly states that it does not own candidate perturbation scenarios.
+
+The robust workflow therefore remains compositional. An objective receives modeled outcomes; it
+does not generate perturbed candidate inputs.
+
+### Risk-aggregation boundary
+
+The current robust pipeline distinguishes posterior-sampling axes from scenario axes. Risk
+aggregation reduces the scenario dimension after objective evaluation.
+
+This is a useful semantic boundary, but the current risk API is not yet certified as the final
+public abstraction. BoTorch 0.18.x also has risk-measure MC-objective machinery. Phase 12 must
+decide whether the robotorchan classes are complementary, redundant, or should be adapted.
+
+Until then:
+
+- do not merge posterior sampling and scenario sampling,
+- do not make perturbation generation part of a generic objective,
+- do not advertise robotorchan risk aggregators as native MC objectives,
+- do not add a second risk-objective wrapper layer.
+
+### Boundary matrix
+
+| Concept | Owns | Must not own | Current status |
+| --- | --- | --- | --- |
+| Model / posterior | predictive posterior | optimization utility | separated |
+| PosteriorTransform | posterior-level transformation | candidate perturbation | separated |
+| Sampler | posterior sample generation | objective semantics | separated |
+| MC Objective | sample-to-utility transformation | known candidate feasibility | separated |
+| Outcome constraint | modeled unknown feasibility | input-space constraints | separated |
+| Candidate constraint | known feasibility of `X` | posterior-sample feasibility | separated |
+| Input perturbation | candidate scenario generation | posterior transformation | separated |
+| Risk aggregation | scenario utility aggregation | scenario generation | separated |
+| Acquisition | utility of candidate evaluations | optimizer feasibility mechanics | separated |
+| Optimizer | candidate search and known constraints | outcome-model semantics | separated |
+
+### Phase 3 findings
+
+No architectural boundary violation requiring production-code changes was found.
+
+The remaining risks are compatibility questions rather than ownership errors:
+
+1. whether specialized posterior implementations correctly support native
+   `PosteriorTransform`;
+2. whether sample, task, output, q, batch, and scenario dimensions remain unambiguous;
+3. whether robotorchan risk aggregation overlaps BoTorch risk-measure objectives;
+4. whether all documentation consistently uses `supports_constraints` only for outcome
+   constraints;
+5. whether full E2E paths preserve these boundaries under mixed and constrained optimization.
+
+These are carried into the dedicated later phases. Phase 3 introduces no wrapper, alias, or
+production API.
