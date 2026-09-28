@@ -12,9 +12,7 @@ def test_standard_gp_sample_gradient_reaches_candidate() -> None:
     model = SingleTaskGP(train_x, train_y)
     candidate = torch.rand(3, 2, dtype=torch.double, requires_grad=True)
 
-    samples = SobolQMCNormalSampler(torch.Size([16]), seed=123)(
-        model.posterior(candidate)
-    )
+    samples = SobolQMCNormalSampler(torch.Size([16]), seed=123)(model.posterior(candidate))
     gradient = torch.autograd.grad(samples.mean(), candidate)[0]
 
     assert gradient.shape == candidate.shape
