@@ -4,9 +4,11 @@ import pytest
 import torch
 from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
+from botorch.sampling.stochastic_samplers import StochasticSampler
 
 from robotorchan.acquisition.samplers import make_model_sampler
 from robotorchan.models import EnsembleMapSaasSingleTaskGP, MixedEnsembleMapSaasSingleTaskGP
+from robotorchan.models.expressive.deep_gp_posterior import DeepGPPosterior
 
 
 def test_make_model_sampler_selects_gaussian_sampler() -> None:
@@ -50,3 +52,15 @@ def test_mixed_map_saas_ensemble_sampler_runs_against_gaussian_posterior() -> No
     samples = sampler(model.posterior(candidate))
     assert isinstance(sampler, SobolQMCNormalSampler)
     assert torch.isfinite(samples).all()
+
+
+def test_make_model_sampler_selects_stochastic_sampler_for_deep_gp() -> None:
+    sampler = make_model_sampler("SingleTaskDeepGP", torch.Size([8]))
+    stored = torch.arange(13 * 3, dtype=torch.double).reshape(13, 3, 1)
+    posterior = DeepGPPosterior(stored)
+
+    samples = sampler(posterior)
+
+    assert isinstance(sampler, StochasticSampler)
+    assert samples.shape == torch.Size([8, 3, 1])
+    assert all(any(torch.equal(sample, trajectory) for trajectory in stored) for sample in samples)
