@@ -172,3 +172,120 @@ The main compatibility risk is not duplicate Objective wrappers. It is uneven
 shape semantics for MultiTask, Kronecker, structured-output, robust, and non-GP paths.
 
 No production behavior is changed in Phase 1.
+
+## Phase 2: BoTorch 0.18.1 API mapping
+
+robotorchan declares `botorch>=0.18.1,<0.19`. The compatibility target for this audit is
+therefore the public BoTorch 0.18.x API, with 0.18.1 as the minimum supported contract.
+
+The mapping below is normative for later phases: use the BoTorch object directly unless a
+robotorchan-specific semantic gap is demonstrated.
+
+| Concern | BoTorch-native surface | robotorchan status | Audit rule |
+| --- | --- | --- | --- |
+| MC objective base | `MCAcquisitionObjective` | accepted by Thompson selection | pass through |
+| ad-hoc scalar objective | `GenericMCObjective` | used directly in tests | do not wrap |
+| linear MC scalarization | `LinearMCObjective` | no duplicate found | use native API |
+| identity MC objective | `IdentityMCObjective` | implicit native acquisition behavior | use native API |
+| posterior transform | `PosteriorTransform` | model-dependent pass-through | validate per model |
+| affine posterior scalarization | `ScalarizedPosteriorTransform` | no duplicate found | use native API |
+| multi-output MC objective | `MCMultiOutputObjective` family | documented native usage | use native API |
+| output subset selection | `IdentityMCMultiOutputObjective` | documented directly | use native API |
+| constrained MC composition | acquisition `constraints` and native objective utilities | native path tested | do not merge with candidate constraints |
+| multi-objective BO | native qLogEHVI / qLogNEHVI / qLogNParEGO | native paths tested | preserve vector objective where required |
+| risk over environmental scenarios | BoTorch risk-measure MC objective APIs | robotorchan has scenario aggregators | compare semantics before retaining or replacing |
+| input perturbation | input/scenario transform responsibility | `robotorchan.uncertainty` | keep outside generic Objective |
+
+### PosteriorTransform versus MC Objective
+
+A `PosteriorTransform` transforms the posterior distribution before sampling or analytic
+acquisition evaluation. This makes it the appropriate standard mechanism when an acquisition
+needs a transformed posterior, including affine scalarization compatible with analytic
+acquisitions.
+
+An `MCAcquisitionObjective` transforms posterior samples. Its core shape contract is conceptually
+
+`sample_shape x batch_shape x q x m -> sample_shape x batch_shape x q`.
+
+Nonlinear sample objectives therefore belong on the MC-objective path rather than being presented
+as posterior transforms.
+
+robotorchan must not introduce an abstraction that hides this distinction.
+
+### Scalarization mapping
+
+For affine scalarization of a posterior, the preferred standard API is
+`ScalarizedPosteriorTransform`. It propagates the posterior mean and covariance under the linear
+map and can be consumed by compatible analytic as well as MC acquisition functions.
+
+For scalarization defined on posterior samples, use a native MC objective. For nonlinear
+scalarization, `GenericMCObjective` is the default extension point unless a reusable native
+BoTorch objective already expresses the operation.
+
+For multi-objective acquisitions, scalarization is not the default. qLogEHVI and qLogNEHVI retain
+the objective vector required for hypervolume calculations. qLogNParEGO is a distinct
+scalarization-based multi-objective strategy and should not be used as evidence that all
+multi-objective paths should be scalarized.
+
+### Constraint mapping
+
+Outcome constraints and candidate constraints remain separate.
+
+Outcome constraints are functions of modeled outcome samples and are composed with compatible
+BoTorch acquisitions. Their exact sign, sample shape, and feasibility semantics are deferred to
+the dedicated constraint phase.
+
+Candidate constraints are known functions of `X` and remain an acquisition-optimization
+responsibility under `robotorchan.optim`.
+
+No shared `constraints` abstraction should combine these two concepts.
+
+### Risk-measure mapping
+
+BoTorch provides risk-measure MC-objective machinery for robust BO with environmental variables.
+This overlaps conceptually with part of `robotorchan.objectives.risk`.
+
+Phase 2 does not replace the existing risk classes because API-name similarity is insufficient to
+establish semantic equivalence. Phase 12 must compare at least:
+
+- expected scenario-axis layout and `n_w` semantics,
+- maximization/minimization and tail conventions,
+- VaR/CVaR definitions and empirical estimators,
+- differentiability,
+- preprocessing / objective composition,
+- compatibility with native robust acquisition workflows,
+- whether `SNRatio` has a meaningful BoTorch-native equivalent.
+
+Until that comparison is complete, the robotorchan risk classes are classified as
+`robotorchan extension under review`, not as duplicates.
+
+### Pass-through policy established by Phase 2
+
+The following are design requirements for subsequent phases:
+
+1. Accept native BoTorch Objective objects where the target acquisition accepts them.
+2. Accept native BoTorch PosteriorTransform objects where the model posterior contract supports
+   them.
+3. Do not convert either object into a robotorchan-specific type.
+4. Do not add aliases for native BoTorch objective classes.
+5. Use `GenericMCObjective` as the ordinary custom-objective extension point.
+6. Preserve native multi-output objective classes for multi-objective acquisitions.
+7. Keep input perturbation generation outside generic MC objectives.
+8. Add a robotorchan-specific objective only when a demonstrated semantic gap survives the later
+   compatibility phases.
+
+### Phase 2 classification
+
+- **BoTorch standard:** Objective base classes, generic/linear MC objectives, posterior transforms,
+  scalarized posterior transforms, native multi-output objectives, and native constrained
+  acquisition composition.
+- **robotorchan extension:** current scenario-risk and Taguchi S/N aggregation.
+- **duplicate:** none confirmed in Phase 2.
+- **legacy:** none confirmed in Phase 2.
+- **conditional / model-specific:** PosteriorTransform support for specialized posterior
+  implementations.
+- **requires semantic comparison:** robotorchan risk aggregation versus BoTorch risk-measure
+  objectives.
+
+Phase 2 changes documentation only. Runtime support remains unclaimed until the corresponding
+compatibility and E2E phases pass.
