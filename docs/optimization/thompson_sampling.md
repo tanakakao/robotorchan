@@ -34,7 +34,8 @@ search may require different sampled-function optimization paths.
 The helper requires a BoTorch-compatible model posterior. Compatibility therefore follows
 the model/posterior contract rather than a GP-specific type check. Model families with
 special posterior semantics should be validated by focused integration tests before being
-listed as supported.
+listed as supported. This candidate-generation path is distinct from MC acquisition sampling;
+see [Posterior sampling](posterior-sampling.md) for the full sampler taxonomy.
 
 
 For the broader theory and method relationships, see

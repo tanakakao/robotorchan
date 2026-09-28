@@ -87,9 +87,10 @@ These are extension items, not compatibility gaps in the documented current cont
 ### Ensemble / non-GP contract
 
 Posterior sampling type, not the word "ensemble" in a model name, controls sampler selection.
-`make_model_sampler` maps Gaussian posteriors to `SobolQMCNormalSampler` and empirical ensemble
-posteriors to `IndexSampler`. Runtime coverage includes both MAP-SAAS Gaussian ensembles and
-tree-based empirical ensembles.
+`make_model_sampler` maps Gaussian posteriors to `SobolQMCNormalSampler`, empirical ensemble
+posteriors to `IndexSampler`, and DeepGP empirical trajectory posteriors to `StochasticSampler`.
+Runtime coverage includes MAP-SAAS Gaussian ensembles, tree-based empirical ensembles, and
+DeepGP stochastic posteriors. See [Posterior sampling](posterior-sampling.md).
 
 Robotorchan-specific active-learning acquisitions continue to reject empirical ensemble
 posteriors explicitly. Defining variance, boundary, or predictive-information scores across
