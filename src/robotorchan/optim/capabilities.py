@@ -257,6 +257,10 @@ PSO_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 )
 
 
+# This registry intentionally covers only scalar optimizer names accepted by
+# `robotorchan.optim.optimize_acqf`. Specialist capability descriptors such as
+# BoTorch mixed optimization, Mixed GA, and NSGA-II remain public constants but
+# are not dispatcher names and therefore do not belong in this mapping.
 OPTIMIZER_CAPABILITIES: dict[str, OptimizerCapabilities] = {
     "botorch": BOTORCH_OPTIMIZER_CAPABILITIES,
     "torch_adam": TORCH_OPTIMIZER_CAPABILITIES,
@@ -273,7 +277,7 @@ OPTIMIZER_CAPABILITIES: dict[str, OptimizerCapabilities] = {
 
 
 def get_optimizer_capabilities(name: str) -> OptimizerCapabilities:
-    """Return capabilities for a public scalar optimizer name."""
+    """Return capabilities for a scalar optimizer accepted by ``optimize_acqf``."""
     try:
         return OPTIMIZER_CAPABILITIES[name.lower()]
     except KeyError as error:
