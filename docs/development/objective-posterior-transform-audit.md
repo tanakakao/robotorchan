@@ -430,3 +430,48 @@ The remaining risks are compatibility questions rather than ownership errors:
 
 These are carried into the dedicated later phases. Phase 3 introduces no wrapper, alias, or
 production API.
+
+
+## Phase 4: PosteriorTransform compatibility
+
+Phase 4 adds runtime contract coverage for representative model families using BoTorch's native
+`ScalarizedPosteriorTransform`.
+
+The compatibility categories are:
+
+| Model path | Phase 4 status | Reason |
+| --- | --- | --- |
+| standard exact GP | supported | native BoTorch posterior path |
+| mixed exact GP | supported | native BoTorch posterior path |
+| Kronecker multi-task | explicitly restricted | BoTorch 0.18.1 rejects posterior transforms |
+| input-reduced GP | supported | transform is applied after input reduction |
+| empirical non-GP ensemble | transform-dependent | scalarized transform rejects EnsemblePosterior |
+| DeepGP empirical posterior | transform-dependent | scalarized transform rejects empirical posterior |
+| output-reduced GP | explicitly restricted | original-output reconstruction changes semantics |
+| ALEBO metric-marginal model | explicitly restricted | specialized posterior path not certified |
+
+The tests intentionally pass a BoTorch-created transform directly. No robotorchan adapter or
+conversion layer is introduced.
+
+For single-output Gaussian paths, the test also verifies the affine transform contract:
+`mean' = offset + w * mean` and `variance' = w^2 * variance`.
+
+BoTorch 0.18.1 explicitly rejects posterior transforms for `KroneckerMultiTaskGP`. robotorchan
+preserves that upstream restriction rather than introducing a compatibility implementation.
+
+The empirical non-GP and DeepGP posterior adapters still forward a supplied transform, but native
+`ScalarizedPosteriorTransform` rejects these posterior types because they do not expose the
+distribution structure required by BoTorch's scalarization utility. Phase 4 records that behavior
+as transform-dependent rather than claiming scalarized-transform support.
+
+Output reduction remains an explicit unsupported composition in this phase. Applying a transform
+in latent output coordinates would not generally equal applying the same transform after
+reconstruction in the original output coordinates. Supporting that composition requires a
+mathematically explicit original-output transform path rather than silently forwarding the
+transform.
+
+ALEBO remains explicit rather than falsely advertised as compatible. Its metric-marginal
+posterior path requires a separate design decision if transform support is later justified.
+
+Phase 4 therefore strengthens the compatibility contract with tests but does not add a wrapper or
+change production semantics.
