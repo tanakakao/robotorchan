@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 import robotorchan.models as models
-
 from robotorchan.models.capabilities import (
     HighDimensionalStrategy,
     InferenceType,
