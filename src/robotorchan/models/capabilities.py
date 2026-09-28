@@ -36,6 +36,7 @@ class PosteriorSamplingType(StrEnum):
     NONE = "none"
     GAUSSIAN = "gaussian"
     ENSEMBLE = "ensemble"
+    STOCHASTIC = "stochastic"
 
 
 class RobustnessType(StrEnum):
