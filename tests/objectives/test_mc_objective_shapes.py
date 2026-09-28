@@ -61,9 +61,7 @@ def test_kronecker_q_one_keeps_output_axis_distinct_from_q() -> None:
     )
     model = KroneckerMultiTaskGP(train_X=train_X, train_Y=train_Y, rank=1)
     candidate = torch.tensor([[0.4]], dtype=torch.double)
-    samples = SobolQMCNormalSampler(torch.Size([5, 7]), seed=17)(
-        model.posterior(candidate)
-    )
+    samples = SobolQMCNormalSampler(torch.Size([5, 7]), seed=17)(model.posterior(candidate))
     objective = LinearMCObjective(weights=torch.tensor([0.4, 0.6], dtype=torch.double))
 
     values = objective(samples)
@@ -83,9 +81,7 @@ def test_kronecker_q_many_keeps_output_axis_distinct_from_q() -> None:
     )
     model = KroneckerMultiTaskGP(train_X=train_X, train_Y=train_Y, rank=1)
     candidate = torch.tensor([[0.2], [0.5], [0.8]], dtype=torch.double)
-    samples = SobolQMCNormalSampler(torch.Size([5, 7]), seed=19)(
-        model.posterior(candidate)
-    )
+    samples = SobolQMCNormalSampler(torch.Size([5, 7]), seed=19)(model.posterior(candidate))
     objective = LinearMCObjective(weights=torch.tensor([0.4, 0.6], dtype=torch.double))
 
     values = objective(samples)
