@@ -3,7 +3,6 @@ import inspect
 import torch
 from botorch.models import ModelListGP as BoTorchModelListGP
 from botorch.models import SingleTaskGP as BoTorchSingleTaskGP
-from botorch.sampling.list_sampler import ListSampler
 from botorch.sampling.normal import IIDNormalSampler, SobolQMCNormalSampler
 from gpytorch.mlls import SumMarginalLogLikelihood
 
@@ -112,7 +111,7 @@ def test_model_list_gp_matches_upstream_posterior() -> None:
     torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
 
 
-def test_model_list_gp_list_sampler_preserves_multi_output_shape() -> None:
+def test_model_list_gp_normal_sampler_preserves_multi_output_shape() -> None:
     train_X1, train_Y1 = _make_child_data(8)
     train_X2, train_Y2 = _make_child_data(9, offset=0.4)
     model = ModelListGP(
@@ -121,10 +120,7 @@ def test_model_list_gp_list_sampler_preserves_multi_output_shape() -> None:
     )
     candidate = torch.rand(3, 2, dtype=torch.double)
     posterior = model.posterior(candidate)
-    sampler = ListSampler(
-        SobolQMCNormalSampler(torch.Size([16]), seed=123),
-        IIDNormalSampler(torch.Size([16]), seed=456),
-    )
+    sampler = SobolQMCNormalSampler(torch.Size([16]), seed=123)
 
     samples = sampler(posterior)
 
@@ -134,7 +130,7 @@ def test_model_list_gp_list_sampler_preserves_multi_output_shape() -> None:
     assert torch.isfinite(samples).all()
 
 
-def test_model_list_gp_list_sampler_preserves_candidate_gradient() -> None:
+def test_model_list_gp_iid_sampler_preserves_candidate_gradient() -> None:
     train_X1, train_Y1 = _make_child_data(8)
     train_X2, train_Y2 = _make_child_data(8, offset=0.2)
     model = ModelListGP(
@@ -143,10 +139,7 @@ def test_model_list_gp_list_sampler_preserves_candidate_gradient() -> None:
     )
     candidate = torch.rand(2, 2, dtype=torch.double, requires_grad=True)
     posterior = model.posterior(candidate)
-    sampler = ListSampler(
-        SobolQMCNormalSampler(torch.Size([8]), seed=321),
-        SobolQMCNormalSampler(torch.Size([8]), seed=654),
-    )
+    sampler = IIDNormalSampler(torch.Size([8]), seed=321)
 
     loss = sampler(posterior).mean()
     gradient = torch.autograd.grad(loss, candidate)[0]
