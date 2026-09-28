@@ -475,3 +475,98 @@ posterior path requires a separate design decision if transform support is later
 
 Phase 4 therefore strengthens the compatibility contract with tests but does not add a wrapper or
 change production semantics.
+
+
+## Phase 5: ScalarizedPosteriorTransform compatibility
+
+Phase 5 treats `posterior_transform=` as a common model API wherever the model can preserve the
+meaning of the supplied BoTorch transform. Uniform syntax does not imply that every posterior
+representation can support every transform.
+
+### Scalarization contract
+
+For a Gaussian multi-output posterior and affine scalarization
+
+`Z = offset + w^T Y`,
+
+the required moments are
+
+`E[Z] = offset + w^T E[Y]`
+
+and
+
+`Var[Z] = w^T Cov[Y] w`.
+
+The second expression requires cross-output covariance. Summing only marginal variances is valid
+only when the relevant outputs are independent. Phase 5 therefore does not manufacture
+scalarized posteriors from marginal means and variances alone.
+
+### API consistency policy
+
+Models should expose the standard `posterior_transform=` argument whenever their public
+`posterior()` API is under robotorchan control. The implementation should then:
+
+1. delegate directly to BoTorch when the underlying BoTorch model supports the transform;
+2. apply the transform only after any robotorchan-owned output reconstruction when the transform
+   is defined in the public/original output space;
+3. preserve the transform object unchanged;
+4. raise a clear unsupported error when the resulting Posterior type lacks the mathematical
+   information required by that transform.
+
+No robotorchan-specific transform DSL, alias, or compatibility wrapper is introduced.
+
+### Output reduction
+
+The previous output-reduction path rejected every non-null `posterior_transform` before
+constructing the public posterior. Phase 5 removes that API-level rejection.
+
+The new order is:
+
+`latent posterior -> original-output reconstruction -> supplied PosteriorTransform`.
+
+This order is necessary because public transform weights refer to original outputs, not latent
+PCA/PLS coordinates.
+
+The current `LinearOutputPosterior` preserves sampling through the latent posterior and exposes
+restored marginal moments, but it does not expose a GPyTorch distribution containing the complete
+joint covariance required by BoTorch's `ScalarizedPosteriorTransform`. Consequently the standard
+scalarized transform still raises an explicit unsupported error after reconstruction. This is a
+Posterior capability limitation, not an inconsistent model signature.
+
+A temporary empirical approximation was considered and rejected: replacing the transformed
+posterior with a finite ensemble would change the posterior representation and inject arbitrary
+Monte Carlo error into a deterministic affine transform.
+
+### Kronecker multi-task
+
+BoTorch 0.18.1 explicitly rejects `posterior_transform` in
+`KroneckerMultiTaskGP.posterior`. robotorchan does not bypass that guard in Phase 5. Correct
+scalarization requires preserving the joint task and q covariance, so an implementation must be
+based on that covariance structure rather than marginal moments.
+
+The public method signature remains BoTorch-compatible. This is a capability gap to revisit only
+if robotorchan can implement the exact transform without changing Kronecker semantics.
+
+### Empirical non-GP and DeepGP posteriors
+
+These models already expose `posterior_transform=` and pass the supplied object to the produced
+Posterior. This keeps the API uniform.
+
+BoTorch's current `ScalarizedPosteriorTransform` is distribution-oriented and does not
+scalarize `EnsemblePosterior` or `DeepGPPosterior`. Phase 5 does not special-case the transform
+inside each model. Sample-space scalarization remains naturally available through MC objectives,
+which is the correct path for empirical posterior representations.
+
+### Phase 5 decision
+
+The common API is strengthened without claiming false universal capability:
+
+- standard / mixed / compatible exact-GP posteriors: native scalarized transform;
+- input reduction: native scalarized transform after input mapping;
+- output reduction: common transform entry point, applied after output reconstruction;
+- Kronecker: common BoTorch signature, upstream scalarized transform unsupported;
+- ensemble non-GP: common entry point, transform-dependent;
+- DeepGP empirical posterior: common entry point, transform-dependent.
+
+Exact support for additional posterior types is desirable, but only when their full covariance or
+sample semantics allow the requested transform to be implemented without approximation.
