@@ -10,9 +10,9 @@ from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.sampling.stochastic_samplers import StochasticSampler
 
-from robotorchan.models.standard.multitask import KroneckerMultiTaskGP
-from robotorchan.models.non_gp.posterior import make_ensemble_posterior
 from robotorchan.models.expressive.deep_gp_posterior import DeepGPPosterior
+from robotorchan.models.non_gp.posterior import make_ensemble_posterior
+from robotorchan.models.standard.multitask import KroneckerMultiTaskGP
 
 
 def _assert_linear_objective_contract(samples: torch.Tensor) -> None:
