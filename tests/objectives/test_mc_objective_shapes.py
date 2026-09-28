@@ -27,7 +27,7 @@ def test_gaussian_posterior_preserves_sample_batch_q_output_axes() -> None:
 
 
 def test_ensemble_posterior_preserves_sample_batch_q_output_axes() -> None:
-    members = torch.arange(9 * 2 * 3 * 2, dtype=torch.double).reshape(9, 2, 3, 2)
+    members = torch.arange(2 * 9 * 3 * 2, dtype=torch.double).reshape(2, 9, 3, 2)
     posterior = make_ensemble_posterior(members)
     samples = IndexSampler(torch.Size([5, 7]), seed=13)(posterior)
     objective = LinearMCObjective(weights=torch.tensor([0.25, 0.75], dtype=torch.double))
