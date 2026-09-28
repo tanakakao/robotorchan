@@ -263,7 +263,13 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
         )
         posterior = self._restore_output_posterior(posterior)
         if self.output_reducer is not None and posterior_transform is not None:
-            posterior = posterior_transform(posterior)
+            try:
+                posterior = posterior_transform(posterior)
+            except NotImplementedError as error:
+                raise NotImplementedError(
+                    "The requested posterior_transform does not support the "
+                    "restored output posterior."
+                ) from error
         return posterior
 
     def condition_on_observations(self, X: Tensor, Y: Tensor, **kwargs: Any):
