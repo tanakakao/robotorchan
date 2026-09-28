@@ -622,7 +622,7 @@ docs/optimization/
     HOW
     API・使用例・現在の適用範囲
 
-docs/optimization/acquisition-status.md
+docs/optimization/acquisition-integration.md
     STATUS
     現在の integration / limitation
 
