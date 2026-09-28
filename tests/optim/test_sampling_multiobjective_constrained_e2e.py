@@ -3,7 +3,7 @@
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.multi_objective.logei import qLogExpectedHypervolumeImprovement
-from botorch.acquisition.objective import ConstrainedMCObjective
+from botorch.acquisition.objective import GenericMCObjective
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import (
     FastNondominatedPartitioning,
@@ -64,15 +64,13 @@ def test_outcome_constraint_sampling_runs_through_optimizer() -> None:
     )
     model.eval()
     sampler = SobolQMCNormalSampler(torch.Size([32]), seed=456)
-    objective = ConstrainedMCObjective(
-        objective=lambda samples, X=None: samples[..., 0],
-        constraints=[lambda samples: samples[..., 1]],
-    )
+    objective = GenericMCObjective(lambda samples, X=None: samples[..., 0])
     acquisition = qLogExpectedImprovement(
         model=model,
         best_f=objective_y.max(),
         sampler=sampler,
         objective=objective,
+        constraints=[lambda samples: samples[..., 1]],
     )
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
 
