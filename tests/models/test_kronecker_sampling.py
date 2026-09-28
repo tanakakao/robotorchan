@@ -66,6 +66,7 @@ def _make_latent_model() -> LatentKroneckerGP:
 
 def test_latent_kronecker_native_posterior_rsample_shape_and_finite() -> None:
     model = _make_latent_model()
+    model.eval()
     test_x = torch.tensor([[0.25], [0.75]], dtype=torch.double)
     test_t = torch.tensor([[0.25], [0.75]], dtype=torch.double)
 
@@ -81,6 +82,7 @@ def test_latent_kronecker_native_posterior_rsample_shape_and_finite() -> None:
 
 def test_latent_kronecker_native_sampling_preserves_candidate_gradient() -> None:
     model = _make_latent_model()
+    model.eval()
     test_x = torch.tensor([[0.3], [0.7]], dtype=torch.double, requires_grad=True)
     test_t = torch.tensor([[0.25], [0.75]], dtype=torch.double)
 
