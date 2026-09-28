@@ -14,7 +14,6 @@ from gpytorch.means import Mean
 from gpytorch.module import Module
 from torch import Tensor
 
-
 from robotorchan.models.base import ExactGPModelMixin
 from robotorchan.models.high_dimensional.reduced.mixed import MixedReducedGP
 from robotorchan.reduction.base import InputReducer, OutputReducer
