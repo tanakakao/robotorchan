@@ -250,7 +250,7 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
                 raise NotImplementedError(
                     "output_indices is not yet supported with output reduction."
                 )
-             if isinstance(observation_noise, Tensor):
+            if isinstance(observation_noise, Tensor):
                 raise NotImplementedError(
                     "Tensor-valued observation_noise is not supported with output reduction."
                 )
