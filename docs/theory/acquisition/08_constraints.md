@@ -279,7 +279,7 @@ BoTorch の MC acquisition は objective と constraints を組み合わせる�
 
 robotorchan は BoTorch-first とし、標準的な constrained acquisition semantics を独自 wrapper で置き換えません。
 
-現在の対応状況は [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
+現在の対応状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 8.15 robotorchan の constraint responsibility boundary
 
