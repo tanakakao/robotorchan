@@ -431,6 +431,16 @@ _MULTI_OUTPUT_MODELS = frozenset(
 )
 
 
+_STOCHASTIC_POSTERIOR_MODELS = frozenset(
+    {
+        "SingleTaskDeepGP",
+        "MultiTaskDeepGP",
+        "MixedSingleTaskDeepGP",
+        "MixedMultiTaskDeepGP",
+    }
+)
+
+
 _POSTERIOR_SAMPLING_MODELS = frozenset(
     {
         name
@@ -464,6 +474,7 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         "InfiniteWidthBNNKroneckerMultiTaskGP",
         "MixedInfiniteWidthBNNKroneckerMultiTaskGP",
     }
+    | _STOCHASTIC_POSTERIOR_MODELS
 )
 
 
@@ -553,9 +564,13 @@ def _register_family(
                         PosteriorSamplingType.ENSEMBLE
                         if name in _ENSEMBLE_POSTERIOR_MODELS
                         else (
-                            PosteriorSamplingType.GAUSSIAN
-                            if name in _POSTERIOR_SAMPLING_MODELS
-                            else PosteriorSamplingType.NONE
+                            PosteriorSamplingType.STOCHASTIC
+                            if name in _STOCHASTIC_POSTERIOR_MODELS
+                            else (
+                                PosteriorSamplingType.GAUSSIAN
+                                if name in _POSTERIOR_SAMPLING_MODELS
+                                else PosteriorSamplingType.NONE
+                            )
                         )
                     ),
                     supports_fantasize=name in _FANTASIZE_MODELS,

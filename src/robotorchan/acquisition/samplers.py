@@ -3,6 +3,7 @@
 from botorch.sampling.base import MCSampler
 from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
+from botorch.sampling.stochastic_samplers import StochasticSampler
 from torch import Size
 
 from robotorchan.models.capabilities import PosteriorSamplingType
@@ -17,4 +18,6 @@ def make_model_sampler(model_name: str, sample_shape: Size) -> MCSampler:
         return SobolQMCNormalSampler(sample_shape=sample_shape)
     if sampling_type is PosteriorSamplingType.ENSEMBLE:
         return IndexSampler(sample_shape=sample_shape)
+    if sampling_type is PosteriorSamplingType.STOCHASTIC:
+        return StochasticSampler(sample_shape=sample_shape)
     raise ValueError(f"{model_name} does not advertise posterior sampling support")
