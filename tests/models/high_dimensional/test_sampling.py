@@ -10,11 +10,9 @@ from robotorchan.models import ALEBOGP, PCAGP, PLSGP, RandomProjectionGP
 def _make_data() -> tuple[torch.Tensor, torch.Tensor]:
     torch.manual_seed(91)
     train_x = torch.rand(16, 6, dtype=torch.double)
-    train_y = (
-        torch.sin(train_x[:, :1] * 3.0)
-        + 0.4 * train_x[:, 1:2]
-        - 0.2 * train_x[:, 2:3]
-    )
+    signal = torch.sin(train_x[:, :1] * 3.0)
+    linear = 0.4 * train_x[:, 1:2] - 0.2 * train_x[:, 2:3]
+    train_y = signal + linear
     return train_x, train_y
 
 
