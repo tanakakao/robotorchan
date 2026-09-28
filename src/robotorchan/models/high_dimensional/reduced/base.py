@@ -249,11 +249,7 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
                 raise NotImplementedError(
                     "output_indices is not yet supported with output reduction."
                 )
-            if posterior_transform is not None:
-                raise NotImplementedError(
-                    "posterior_transform is not yet supported with output reduction."
-                )
-            if isinstance(observation_noise, Tensor):
+             if isinstance(observation_noise, Tensor):
                 raise NotImplementedError(
                     "Tensor-valued observation_noise is not supported with output reduction."
                 )
@@ -262,9 +258,12 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
             self._prepare_inputs(X),
             output_indices=output_indices,
             observation_noise=observation_noise,
-            posterior_transform=posterior_transform,
+            posterior_transform=None if self.output_reducer is not None else posterior_transform,
         )
-        return self._restore_output_posterior(posterior)
+        posterior = self._restore_output_posterior(posterior)
+        if self.output_reducer is not None and posterior_transform is not None:
+            posterior = posterior_transform(posterior)
+        return posterior
 
     def condition_on_observations(self, X: Tensor, Y: Tensor, **kwargs: Any):
         """Condition on observations in the original input and output spaces."""
