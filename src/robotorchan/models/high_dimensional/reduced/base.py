@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from botorch.acquisition.objective import ScalarizedPosteriorTransform
 from botorch.models import SingleTaskGP as BoTorchSingleTaskGP
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
@@ -13,6 +14,8 @@ from gpytorch.likelihoods import Likelihood
 from gpytorch.means import Mean
 from gpytorch.module import Module
 from torch import Tensor
+
+from robotorchan.models.posterior_transform import scalarize_linear_output_posterior
 
 from robotorchan.models.base import ExactGPModelMixin
 from robotorchan.models.high_dimensional.reduced.mixed import MixedReducedGP
@@ -262,7 +265,13 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
         )
         posterior = self._restore_output_posterior(posterior)
         if self.output_reducer is not None and posterior_transform is not None:
-            posterior = posterior_transform(posterior)
+            if isinstance(posterior_transform, ScalarizedPosteriorTransform):
+                posterior = scalarize_linear_output_posterior(
+                    posterior,
+                    posterior_transform,
+                )
+            else:
+                posterior = posterior_transform(posterior)
         return posterior
 
     def condition_on_observations(self, X: Tensor, Y: Tensor, **kwargs: Any):
