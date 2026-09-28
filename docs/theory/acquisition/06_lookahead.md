@@ -275,7 +275,7 @@ BoTorch は `qKnowledgeGradient` と `qMultiStepLookahead` を提供し、fantas
 
 robotorchan はこれらの標準手法を再実装せず、BoTorch native path を基本とします。
 
-利用上の位置付けは [Lookahead optimization guide](../../optimization/lookahead.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
+利用上の位置付けは [Lookahead optimization guide](../../optimization/lookahead.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 6.16 まとめ
 
