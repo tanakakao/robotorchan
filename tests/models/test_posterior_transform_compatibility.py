@@ -109,7 +109,7 @@ def test_deep_gp_rejects_scalarized_posterior_transform() -> None:
         )
 
 
-def test_output_reduction_explicitly_rejects_posterior_transform() -> None:
+def test_output_reduction_applies_transform_after_original_output_restoration() -> None:
     train_X = torch.linspace(0.05, 0.95, 8, dtype=torch.double).unsqueeze(-1)
     train_Y = torch.cat(
         (
@@ -120,9 +120,13 @@ def test_output_reduction_explicitly_rejects_posterior_transform() -> None:
         dim=-1,
     )
     model = OutputPCAGP(train_X, train_Y, n_components=2)
-    transform = ScalarizedPosteriorTransform(
-        weights=torch.ones(3, dtype=train_X.dtype),
-    )
+    weights = torch.tensor([0.2, 0.3, 0.5], dtype=train_X.dtype)
+    transform = ScalarizedPosteriorTransform(weights=weights, offset=0.4)
 
-    with pytest.raises(NotImplementedError, match="posterior_transform"):
-        model.posterior(train_X[:3], posterior_transform=transform)
+    raw = model.posterior(train_X[:3])
+    transformed = model.posterior(train_X[:3], posterior_transform=transform)
+
+    expected_mean = 0.4 + (raw.mean * weights).sum(dim=-1, keepdim=True)
+    expected_variance = (raw.variance * weights.square()).sum(dim=-1, keepdim=True)
+    torch.testing.assert_close(transformed.mean, expected_mean)
+    torch.testing.assert_close(transformed.variance, expected_variance)
