@@ -159,7 +159,7 @@ Noisy Expected Improvement（NEI）は baseline points の潜在関数値につ�
 
 BoTorch には EI / PI とその log formulation、q / noisy variants が用意されています。robotorchan はこれらを再実装せず、native path を利用します。
 
-実際の推奨 API と現在の統合状況は [Standard acquisition](../../optimization/standard_acquisition.md) と [Acquisition integration status](../../optimization/acquisition-status.md) を参照してください。
+実際の推奨 API と現在の統合状況は [Standard acquisition](../../optimization/standard_acquisition.md) と [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 2.11 使い分けの理解
 
