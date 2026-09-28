@@ -587,7 +587,7 @@ Representative runtime coverage now includes:
 | --- | --- | --- | --- |
 | Kronecker multi-task | `SobolQMCNormalSampler` | `LinearMCObjective` | supported |
 | empirical ensemble | `IndexSampler` | `GenericMCObjective` | supported |
-| DeepGP trajectory | `StochasticSampler` | `LinearMCObjective` | supported |
+| DeepGP trajectory | `StochasticSampler` | `GenericMCObjective` | single-output supported |
 | single-output samples | sampler-independent | `IdentityMCObjective` | supported |
 | output-reduced GP | normal sampler | `GenericMCObjective` | already E2E covered |
 
@@ -602,7 +602,9 @@ preserving the joint task covariance during posterior sampling.
 
 For empirical ensemble and DeepGP posteriors, the model-specific sampler remains responsible for
 drawing valid samples. The objective receives ordinary tensors and uses the same BoTorch API as
-Gaussian models.
+Gaussian models. The current DeepGP contract is single-output (`m=1`); Phase 6 therefore verifies
+`GenericMCObjective` on that supported shape rather than implying unsupported multi-output
+DeepGP behavior.
 
 No robotorchan MC Objective wrapper, registry, conversion layer, or compatibility alias is added.
 `GenericMCObjective` remains the extension point for arbitrary differentiable sample-space
