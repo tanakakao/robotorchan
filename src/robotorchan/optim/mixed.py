@@ -21,7 +21,7 @@ class MixedSpaceStrategy(SearchStrategy):
         *,
         fixed_features_list: list[dict[int, float]],
         num_restarts: int = 10,
-        raw_samples: int = 512,
+        raw_samples: int | None = 512,
         options: dict[str, Any] | None = None,
         constraints: CandidateConstraints | None = None,
         batch_initial_conditions: Tensor | None = None,
@@ -31,8 +31,8 @@ class MixedSpaceStrategy(SearchStrategy):
             raise ValueError("fixed_features_list must not be empty.")
         if num_restarts < 1:
             raise ValueError("num_restarts must be at least 1.")
-        if raw_samples < 1:
-            raise ValueError("raw_samples must be at least 1.")
+        if raw_samples is not None and raw_samples < 1:
+            raise ValueError("raw_samples must be at least 1 when provided.")
         self.fixed_features_list = [dict(features) for features in fixed_features_list]
         self.num_restarts = num_restarts
         self.raw_samples = raw_samples
