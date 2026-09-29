@@ -23,7 +23,8 @@ class OriginalSpaceStrategy(SearchStrategy):
     Args:
         bounds: Continuous box bounds with shape ``[2, d]``.
         num_restarts: Number of multistart optimization restarts.
-        raw_samples: Number of raw samples used to initialize the restarts.
+        raw_samples: Number of raw samples used to initialize the restarts. May be
+            ``None`` when ``batch_initial_conditions`` are provided.
         options: Optional optimizer options forwarded to ``optimize_acqf``.
         sequential: Whether to optimize a q-batch sequentially.
         constraints: Optional candidate-space constraints using BoTorch-native
@@ -41,7 +42,7 @@ class OriginalSpaceStrategy(SearchStrategy):
         bounds: Tensor,
         *,
         num_restarts: int = 10,
-        raw_samples: int = 512,
+        raw_samples: int | None = 512,
         options: dict[str, Any] | None = None,
         sequential: bool = False,
         constraints: CandidateConstraints | None = None,
@@ -51,8 +52,8 @@ class OriginalSpaceStrategy(SearchStrategy):
         super().__init__(bounds)
         if num_restarts < 1:
             raise ValueError("num_restarts must be at least 1.")
-        if raw_samples < 1:
-            raise ValueError("raw_samples must be at least 1.")
+        if raw_samples is not None and raw_samples < 1:
+            raise ValueError("raw_samples must be at least 1 when provided.")
         self.num_restarts = num_restarts
         self.raw_samples = raw_samples
         self.options = None if options is None else dict(options)
