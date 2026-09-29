@@ -2,6 +2,8 @@
 
 import torch
 from botorch.acquisition.analytic import PosteriorMean
+from botorch.acquisition.logei import qLogNoisyExpectedImprovement
+from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models.standard.single_task import MixedSingleTaskGP
 from robotorchan.optim import CandidateConstraints, MixedSpaceStrategy
@@ -147,3 +149,35 @@ def test_mixed_nonlinear_constraint_forwards_batch_limit(monkeypatch) -> None:
 
     assert captured["options"]["batch_limit"] == 1
     assert captured["batch_initial_conditions"] is initial_conditions
+
+
+def test_mixed_space_strategy_runs_q_batch_with_pending_candidate() -> None:
+    train_X = torch.tensor(
+        [[0.0, 0.0], [0.25, 0.0], [0.5, 1.0], [0.75, 1.0], [1.0, 0.0]],
+        dtype=torch.double,
+    )
+    train_Y = torch.sin(train_X[:, :1] * 3.0) + 0.15 * train_X[:, 1:2]
+    model = MixedSingleTaskGP(train_X, train_Y, cat_dims=[1])
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([32]), seed=23)
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_X,
+        sampler=sampler,
+    )
+    pending = torch.tensor([[0.4, 1.0]], dtype=torch.double)
+    acquisition.set_X_pending(pending)
+    strategy = MixedSpaceStrategy(
+        torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+        num_restarts=2,
+        raw_samples=16,
+    )
+
+    result = strategy.optimize(acquisition, q=2)
+
+    assert result.candidates.shape == torch.Size([2, 2])
+    assert torch.isfinite(result.candidates).all()
+    assert torch.isfinite(result.acquisition_value).all()
+    assert torch.all(result.candidates >= strategy.bounds[0])
+    assert torch.all(result.candidates <= strategy.bounds[1])
+    assert set(result.candidates[:, 1].tolist()) <= {0.0, 1.0}
