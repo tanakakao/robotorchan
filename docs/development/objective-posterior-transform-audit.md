@@ -1206,3 +1206,28 @@ optimization. Phase 17 adds the Objective-specific missing combinations instead 
 those model-level tests.
 
 No robotorchan Objective-to-optimizer adapter is required.
+
+
+## Phase 18: BoTorch object pass-through and custom Objective audit
+
+Phase 18 verifies that Objective compatibility is object-level compatibility, not merely matching
+tensor shapes.
+
+BoTorch-created objects pass through robotorchan workflows directly:
+
+- `ScalarizedPosteriorTransform` is passed to `model.posterior(..., posterior_transform=...)`,
+- `LinearMCObjective` is retained as the exact Objective instance owned by the acquisition,
+- `GenericMCObjective(user_function)` requires no robotorchan registration or conversion.
+
+The custom Objective test also verifies acquisition gradients back to candidate inputs.
+
+The source audit found no robotorchan Objective registry, Objective DSL, or conversion layer that
+users must opt into. The existing `robotorchan.objectives.risk` package remains a separate
+explicit-scenario aggregation utility as documented in Phase 12; it is not an Objective registry.
+
+Therefore the public extension point for arbitrary differentiable scalar MC objectives remains
+BoTorch's `GenericMCObjective`.
+
+PosteriorTransform support is still posterior-dependent. Pass-through does not imply that every
+BoTorch PosteriorTransform can operate on every posterior family; the unsupported combinations
+identified in Phases 4 and 5 remain explicit rather than being hidden behind adapters.
