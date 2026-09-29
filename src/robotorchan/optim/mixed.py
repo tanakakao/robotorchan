@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from botorch.acquisition.acquisition import AcquisitionFunction
+from botorch.optim.initializers import TGenInitialConditions
 from torch import Tensor
 
 from robotorchan.optim.backends import optimize_acqf_mixed_botorch
@@ -25,6 +26,8 @@ class MixedSpaceStrategy(SearchStrategy):
         options: dict[str, Any] | None = None,
         constraints: CandidateConstraints | None = None,
         batch_initial_conditions: Tensor | None = None,
+        ic_generator: TGenInitialConditions | None = None,
+        ic_gen_kwargs: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(bounds)
         if not fixed_features_list:
@@ -39,6 +42,8 @@ class MixedSpaceStrategy(SearchStrategy):
         self.options = None if options is None else dict(options)
         self.constraints = constraints or CandidateConstraints()
         self.batch_initial_conditions = batch_initial_conditions
+        self.ic_generator = ic_generator
+        self.ic_gen_kwargs = None if ic_gen_kwargs is None else dict(ic_gen_kwargs)
 
     def optimize(
         self,
@@ -59,6 +64,8 @@ class MixedSpaceStrategy(SearchStrategy):
             options=self.options,
             constraints=self.constraints,
             batch_initial_conditions=self.batch_initial_conditions,
+            ic_generator=self.ic_generator,
+            ic_gen_kwargs=self.ic_gen_kwargs,
         )
 
         return SearchResult(

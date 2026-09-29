@@ -14,6 +14,7 @@ from robotorchan.optim.constraints import CandidateConstraints
 class _DummyAcquisition(AcquisitionFunction):
     def __init__(self) -> None:
         super().__init__(model=None)
+        self.X_pending = None
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x.sum(dim=(-1, -2))
@@ -290,3 +291,96 @@ def test_botorch_backend_delegates_sequential_initialization_semantics() -> None
     kwargs = mocked.call_args.kwargs
     assert kwargs["batch_initial_conditions"] is initial
     assert kwargs["sequential"] is True
+
+
+def test_botorch_backend_accepts_ic_generator_for_nonlinear_constraints() -> None:
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[..., 0] - 0.1, True),)
+    )
+
+    def ic_generator(**kwargs):
+        return torch.full((2, 1, 1), 0.5)
+
+    with patch(
+        "robotorchan.optim.backends.botorch.botorch_optimize_acqf",
+        return_value=(torch.tensor([[0.5]]), torch.tensor(0.5)),
+    ) as mocked:
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            torch.tensor([[0.0], [1.0]]),
+            q=1,
+            num_restarts=2,
+            raw_samples=8,
+            constraints=constraints,
+            ic_generator=ic_generator,
+            ic_gen_kwargs={"custom_option": 3},
+        )
+
+    kwargs = mocked.call_args.kwargs
+    assert kwargs["ic_generator"] is ic_generator
+    assert kwargs["custom_option"] == 3
+    assert kwargs["options"]["batch_limit"] == 1
+
+
+def test_mixed_backend_accepts_ic_generator_for_nonlinear_constraints() -> None:
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[..., 0] - 0.1, True),)
+    )
+
+    def ic_generator(**kwargs):
+        return torch.full((2, 1, 2), 0.5)
+
+    with patch(
+        "robotorchan.optim.backends.botorch.botorch_optimize_acqf_mixed",
+        return_value=(torch.tensor([[0.5, 1.0]]), torch.tensor(1.5)),
+    ) as mocked:
+        optimize_acqf_mixed_botorch(
+            _DummyAcquisition(),
+            torch.tensor([[0.0, 0.0], [1.0, 1.0]]),
+            q=1,
+            num_restarts=2,
+            fixed_features_list=[{1: 0.0}, {1: 1.0}],
+            raw_samples=8,
+            constraints=constraints,
+            ic_generator=ic_generator,
+            ic_gen_kwargs={"custom_option": 3},
+        )
+
+    kwargs = mocked.call_args.kwargs
+    assert kwargs["ic_generator"] is ic_generator
+    assert kwargs["ic_gen_kwargs"] == {"custom_option": 3}
+    assert kwargs["options"]["batch_limit"] == 1
+
+
+def test_botorch_backend_runs_sequential_nonlinear_with_ic_generator() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[0] - 0.1, True),)
+    )
+    generated_q: list[int] = []
+
+    def ic_generator(*, q, num_restarts, **kwargs):
+        generated_q.append(q)
+        return torch.full(
+            (num_restarts, q, 1),
+            0.5,
+            dtype=bounds.dtype,
+            device=bounds.device,
+        )
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=2,
+        num_restarts=2,
+        raw_samples=8,
+        constraints=constraints,
+        sequential=True,
+        ic_generator=ic_generator,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate[:, 0] >= 0.1 - 1e-6)
+    assert generated_q == [1, 1]
