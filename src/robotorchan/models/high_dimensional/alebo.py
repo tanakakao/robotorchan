@@ -125,15 +125,14 @@ class ALEBOMetricMarginalModel(Model):
         del kwargs
         if output_indices not in (None, [0]):
             raise NotImplementedError("ALEBO metric marginalization supports one output.")
-        if posterior_transform is not None:
-            raise NotImplementedError("posterior_transform is not supported yet.")
         if not isinstance(observation_noise, bool):
             raise NotImplementedError("Tensor observation_noise is not supported yet.")
-        return self.base_model._metric_marginal_posterior_from_samples(
+        posterior = self.base_model._metric_marginal_posterior_from_samples(
             X,
             metric_samples=self.metric_samples,
             observation_noise=observation_noise,
         )
+        return posterior_transform(posterior) if posterior_transform is not None else posterior
 
 
 class ALEBOGP(SingleTaskGP):

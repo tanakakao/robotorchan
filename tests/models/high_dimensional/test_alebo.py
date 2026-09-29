@@ -3,6 +3,7 @@
 import pytest
 import torch
 from botorch.acquisition.analytic import LogExpectedImprovement
+from botorch.acquisition.objective import ScalarizedPosteriorTransform
 from gpytorch.kernels import ScaleKernel
 
 from robotorchan.models import ALEBOGP
@@ -525,3 +526,28 @@ def test_alebo_kernel_retains_projection_for_reference_restarts() -> None:
     model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6), projection=projection)
 
     torch.testing.assert_close(model.mahalanobis_kernel.projection, projection)
+
+
+def test_acquisition_model_accepts_botorch_posterior_transform() -> None:
+    train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
+    train_Y = train_X.square()
+    model = ALEBOGP(train_X, train_Y, torch.full_like(train_Y, 1e-6))
+    acquisition_model = model.acquisition_model(
+        n_metric_samples=3,
+        covariance=torch.eye(1, dtype=torch.double) * 0.01,
+        generator=torch.Generator().manual_seed(193),
+    )
+    transform = ScalarizedPosteriorTransform(
+        weights=torch.tensor([2.0], dtype=torch.double),
+        offset=0.5,
+    )
+
+    raw = acquisition_model.posterior(train_X)
+    transformed = acquisition_model.posterior(
+        train_X,
+        posterior_transform=transform,
+    )
+    expected = transform(raw)
+
+    torch.testing.assert_close(transformed.mean, expected.mean)
+    torch.testing.assert_close(transformed.variance, expected.variance)
