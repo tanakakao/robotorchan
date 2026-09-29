@@ -1256,3 +1256,79 @@ adapters:
 No custom Objective registry, scalarization DSL, posterior adapter, or compatibility alias is added.
 The Phase 19 implementation is therefore limited to the ALEBO pass-through gap that can be closed
 without changing posterior semantics.
+
+
+## Phase 20: final compatibility matrix and close audit
+
+Phase 20 closes the Objective / PosteriorTransform audit against the current public API, runtime
+tests, documentation, and CI.
+
+Legend: **O** supported, **C** conditional / representation-dependent, **X** intentionally
+unsupported, **N/A** not a distinct model-side concern.
+
+| Capability | Standard | Multi-output | MultiTask | Kronecker | Mixed | MultiFidelity | Robust |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| PosteriorTransform | O | O | O | C | O | O | C |
+| MC Objective | O | O | O | O | O | O | O |
+| Scalarization | O | O | O | C | O | O | C |
+| Outcome Constraint | O | O | O | O | O | O | O |
+| Risk Objective | O | O | O | O | O | O | O |
+
+The conditional PosteriorTransform / scalarization cells are deliberate:
+
+- Kronecker accepts MC sample-space Objectives, while native scalarized PosteriorTransform remains
+  limited by the upstream Kronecker posterior / transform contract.
+- empirical `EnsemblePosterior` and `DeepGPPosterior` representations do not pretend to be
+  Gaussian distributions; scalarization belongs in the MC Objective path.
+- restored `LinearOutputPosterior` supports sampling in original output space but does not expose
+  the complete joint GPyTorch distribution required by native posterior scalarization.
+- robust workflows may use either the BoTorch `InputPerturbation` /
+  `RiskMeasureMCObjective` contract or robotorchan's explicit scenario-axis contract. These
+  layouts are complementary, not interchangeable aliases.
+
+ALEBO is no longer an API gap: its metric-marginal acquisition model applies a supplied BoTorch
+PosteriorTransform after constructing the moment-matched `GPyTorchPosterior`.
+
+### Final responsibility boundaries
+
+The final supported composition is:
+
+`X -> model posterior -> PosteriorTransform -> sampler -> MC Objective -> outcome feasibility /
+risk aggregation -> acquisition -> candidate optimization`.
+
+Known candidate/input-space constraints remain optimizer responsibilities. Input perturbation /
+scenario generation remains upstream of posterior sampling and risk aggregation.
+
+### Final API decision
+
+No robotorchan Objective registry, Objective DSL, scalarization wrapper, PosteriorTransform alias,
+or compatibility conversion layer is required. Native BoTorch Objective and PosteriorTransform
+objects remain the primary public API.
+
+robotorchan-specific risk classes remain explicit scenario-axis aggregators rather than aliases for
+BoTorch `RiskMeasureMCObjective` implementations.
+
+Dedicated capability flags such as `supports_objective` or `supports_posterior_transform` are
+not added. Runtime behavior is sufficiently represented by posterior type, acquisition capability,
+and explicit compatibility tests; a broad boolean would hide transform-specific limitations.
+
+### Close conditions
+
+The audit is considered closed because:
+
+1. BoTorch Objective and PosteriorTransform APIs were mapped against the supported BoTorch version.
+2. Posterior, sampling, Objective, constraint, risk, acquisition, and optimizer responsibilities
+   are separated and tested.
+3. scalar, nonlinear, multi-output, multi-objective, MultiTask, Kronecker, Mixed, robust, and
+   constrained paths have representative runtime coverage.
+4. gradient, dtype, device, sample-shape, batch-shape, q, and output-axis contracts are covered.
+5. BoTorch-created objects pass through without robotorchan registration or conversion.
+6. the only justified model-side API gap found in Phase 19, ALEBO PosteriorTransform pass-through,
+   was implemented.
+7. remaining unsupported combinations have representation or upstream-contract reasons and are not
+   hidden behind approximate adapters.
+8. documentation, tests, and public API describe the same responsibility boundaries.
+9. the Phase 19 merged head passed the repository CI matrix before this final documentation audit.
+
+No major Objective / PosteriorTransform compatibility gap remains that justifies additional
+production code in this flow.
