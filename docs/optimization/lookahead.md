@@ -19,6 +19,12 @@ the fantasy points required by Knowledge Gradient. In normal optimization code, 
 BoTorch's dedicated KG optimization utilities rather than manually constructing that augmented
 tensor.
 
+During `optimize_acqf`, BoTorch detects qKG as a one-shot acquisition and generates initial
+conditions for the full augmented q-batch. robotorchan does not replace that initializer. An
+explicit `batch_initial_conditions` tensor must likewise use
+`acqf.get_augmented_q_batch_size(q)` rows, while the optimized result contains only the requested
+candidate rows after BoTorch applies `extract_candidates`.
+
 ## Multi-step lookahead
 
 For explicit non-myopic decision trees, use `qMultiStepLookahead`.
