@@ -261,4 +261,4 @@ def test_mixed_space_strategy_runs_qbatch_nonlinear_with_ic_generator() -> None:
     assert torch.isfinite(result.acquisition_value).all()
     assert torch.all(result.candidates[:, 0] <= 0.8 + 1e-6)
     assert set(result.candidates[:, 1].tolist()) <= {0.0, 1.0}
-    assert generated_q == [1, 1]
+    assert generated_q == [1, 1, 1, 1]
