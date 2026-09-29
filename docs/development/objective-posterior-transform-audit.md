@@ -1011,3 +1011,78 @@ scenario aggregators and quality-engineering utilities.
 
 No compatibility wrapper is introduced. In particular, VaR/CVaR numerical differences are
 documented and tested rather than hidden behind aliases.
+
+
+## Phase 13: Input Perturbation / Robust Objective compatibility
+
+Phase 13 separates scenario generation from robust Objective evaluation and verifies both the
+BoTorch-native and robotorchan explicit-axis pipelines end to end.
+
+### BoTorch-native pipeline
+
+BoTorch `InputPerturbation` is a one-to-many input transform. For
+`X: batch_shape x q x d` and `n_w` perturbations it produces
+
+`batch_shape x (q * n_w) x d`.
+
+The perturbations belonging to one candidate remain adjacent on the posterior q-batch. This
+layout is intentional: the environmental realizations are evaluated on the same GP sample path.
+
+A native `RiskMeasureMCObjective(n_w=n_w)` reconstructs the candidate/scenario structure from
+that flattened posterior-sample layout and reduces the environmental dimension.
+
+The verified native path is therefore:
+
+`X -> InputPerturbation -> posterior(q*n_w) -> sampler -> RiskMeasureMCObjective -> utility(q)`.
+
+The model's `posterior` applies its configured input transform. The risk Objective does not
+generate perturbations.
+
+### robotorchan explicit-axis pipeline
+
+robotorchan `ScenarioGenerator` uses a different, explicit representation:
+
+`X[..., q, d] -> scenarios[..., q, n_w, d]`.
+
+The posterior and sampler preserve the explicit candidate and scenario axes, after which the
+lightweight robotorchan risk aggregator reduces only the final scenario axis.
+
+The verified path is:
+
+`X -> ScenarioGenerator -> posterior(q,n_w) -> sampler -> objective values -> risk -> utility(q)`.
+
+This representation is useful when scenarios are generated externally or when callers want direct
+control over the scenario tensor. It is not shape-compatible with BoTorch `InputPerturbation`
+and must not be passed to a `RiskMeasureMCObjective` as though the layouts were identical.
+
+### Gradient contract
+
+Both paths preserve gradients from the final robust utility to the original candidate tensor in
+the Phase 13 E2E tests.
+
+The current Gaussian scenario generator constructs perturbations with PyTorch operations and adds
+them to an expanded clone of `X`; this preserves the derivative of the perturbed points with
+respect to the candidate.
+
+### Responsibility boundary
+
+The canonical robust decomposition is:
+
+1. perturbation / environmental scenario generation,
+2. posterior evaluation,
+3. posterior sampling,
+4. optional sample-space Objective transformation,
+5. risk aggregation,
+6. acquisition utility.
+
+A risk measure must not own random input perturbation generation. Conversely, a scenario
+generator must not choose or apply the risk measure.
+
+### API decision
+
+No robotorchan wrapper around BoTorch `InputPerturbation` or `RiskMeasureMCObjective` is
+introduced. Native BoTorch objects should be used directly when their flattened `q*n_w`
+contract is desired.
+
+The existing robotorchan scenario generators and explicit-axis risk aggregators remain a
+complementary lower-level path rather than compatibility aliases for the BoTorch classes.
