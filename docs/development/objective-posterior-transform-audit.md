@@ -789,3 +789,60 @@ case Kronecker model classes. Their contract starts at posterior samples.
 No production implementation change is required. robotorchan preserves BoTorch's distinct
 long-format and block-design representations while converging on the same native Objective
 interface after posterior construction.
+
+
+## Phase 10: multi-objective Objective compatibility
+
+Phase 10 verifies the boundary between model outputs, multi-output Objectives, reference points,
+Pareto partitioning, and acquisition-owned scalarization.
+
+### Hypervolume acquisitions operate in Objective space
+
+A surrogate may expose more outputs than the optimization problem uses. For example, a
+three-output model can optimize only outputs `[2, 0]` through
+`IdentityMCMultiOutputObjective(outcomes=[2, 0])`.
+
+For qLogEHVI/qLogNEHVI, all hypervolume geometry must then use that transformed Objective space:
+
+- posterior samples: model output space;
+- multi-output Objective: select/reorder the optimization objectives;
+- reference point: one entry per transformed objective;
+- partitioning Y: transformed objective values in the same order;
+- hypervolume utility: transformed Objective space.
+
+The reference point is therefore not defined by the raw model output count. Its dimension and
+ordering must match the final multi-output Objective.
+
+### Output ordering is part of the optimization problem
+
+If an Objective changes `[y0, y1, y2]` to `[y2, y0]`, both the reference point and
+partitioning observations must use `[y2, y0]`. Reordering only posterior samples while retaining
+a raw-output reference point would define inconsistent hypervolume geometry.
+
+Phase 10 adds a regression test that a three-dimensional reference point is rejected for a
+two-dimensional Objective/partitioning pair.
+
+### qLogEHVI and qLogNEHVI preserve vector objectives
+
+qLogEHVI and qLogNEHVI consume vector-valued multi-output Objectives. They must not be preceded
+by a scalar `LinearMCObjective` or `GenericMCObjective` when the intended problem is
+hypervolume-based multi-objective optimization.
+
+This is a semantic distinction rather than a robotorchan compatibility restriction.
+
+### qLogNParEGO owns its scalarization
+
+qLogNParEGO is a scalarization-based multi-objective acquisition. Its
+`scalarization_weights` are acquisition inputs and BoTorch constructs the scalarized utility
+internally.
+
+robotorchan therefore does not insert an additional scalar Objective in front of qLogNParEGO.
+Doing so would collapse the multi-output posterior before the acquisition applies its intended
+scalarization.
+
+### Result
+
+Native BoTorch multi-objective Objective composition is sufficient. No robotorchan Objective
+wrapper or multi-objective scalarization layer is required. The main contract is that reference
+points, partitioning observations, and vector Objectives all describe the same transformed
+Objective space.
