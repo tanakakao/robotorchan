@@ -25,7 +25,8 @@ class OriginalSpaceStrategy(SearchStrategy):
         bounds: Continuous box bounds with shape ``[2, d]``.
         num_restarts: Number of multistart optimization restarts.
         raw_samples: Number of raw samples used to initialize the restarts. May be
-            ``None`` when ``batch_initial_conditions`` are provided.
+            ``None`` when ``batch_initial_conditions`` are provided or a custom
+            ``ic_generator`` supplies the restart points.
         options: Optional optimizer options forwarded to ``optimize_acqf``.
         sequential: Whether to optimize a q-batch sequentially. For ``q > 1``,
             BoTorch greedily solves ``q`` single-candidate problems and generates
