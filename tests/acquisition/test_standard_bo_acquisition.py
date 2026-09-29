@@ -50,3 +50,36 @@ def test_native_mc_standard_bo_acquisitions() -> None:
         value = acquisition(X)
         assert value.shape == torch.Size([1])
         assert torch.isfinite(value).all()
+
+
+def test_qlognei_x_pending_lifecycle_with_q_batch() -> None:
+    model, train_X, _ = _model()
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_X,
+        sampler=SobolQMCNormalSampler(torch.Size([16]), seed=11),
+        prune_baseline=False,
+        cache_root=False,
+    )
+    X = torch.tensor([[[0.2], [0.8]]], dtype=torch.double)
+    single_pending = torch.tensor([[0.4]], dtype=torch.double)
+    multiple_pending = torch.tensor([[0.3], [0.6]], dtype=torch.double)
+
+    initial_value = acquisition(X)
+    assert initial_value.shape == torch.Size([1])
+    assert torch.isfinite(initial_value).all()
+
+    acquisition.set_X_pending(single_pending)
+    single_pending_value = acquisition(X)
+    assert single_pending_value.shape == torch.Size([1])
+    assert torch.isfinite(single_pending_value).all()
+
+    acquisition.set_X_pending(multiple_pending)
+    multiple_pending_value = acquisition(X)
+    assert multiple_pending_value.shape == torch.Size([1])
+    assert torch.isfinite(multiple_pending_value).all()
+
+    acquisition.set_X_pending(None)
+    value = acquisition(X)
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
