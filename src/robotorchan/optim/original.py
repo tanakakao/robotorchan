@@ -26,7 +26,9 @@ class OriginalSpaceStrategy(SearchStrategy):
         raw_samples: Number of raw samples used to initialize the restarts. May be
             ``None`` when ``batch_initial_conditions`` are provided.
         options: Optional optimizer options forwarded to ``optimize_acqf``.
-        sequential: Whether to optimize a q-batch sequentially.
+        sequential: Whether to optimize a q-batch sequentially. For ``q > 1``,
+            BoTorch greedily solves ``q`` single-candidate problems and generates
+            fresh initial conditions for each step.
         constraints: Optional candidate-space constraints using BoTorch-native
             optimizer contracts.
         fixed_features: Optional feature values fixed during optimization. This is
@@ -34,7 +36,9 @@ class OriginalSpaceStrategy(SearchStrategy):
             candidate coordinates.
         batch_initial_conditions: Optional BoTorch initial conditions with shape
             ``[num_restarts, q, d]``. BoTorch requires feasible initial conditions
-            when nonlinear inequality constraints are used.
+            when nonlinear inequality constraints are used. For joint optimization,
+            the standard shape is ``[num_restarts, q, d]``. BoTorch does not reuse
+            these conditions across greedy steps when ``sequential=True`` and ``q > 1``.
     """
 
     def __init__(
