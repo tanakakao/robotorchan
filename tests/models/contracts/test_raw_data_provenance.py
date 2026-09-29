@@ -1,7 +1,9 @@
 import torch
+from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import SingleTaskGP
+from robotorchan.optim.backends import optimize_acqf_botorch
 
 
 def _make_model() -> tuple[SingleTaskGP, torch.Tensor, torch.Tensor]:
@@ -64,3 +66,36 @@ def test_fantasy_model_posterior_preserves_fantasy_batch_contract() -> None:
     assert torch.isfinite(posterior.mean).all()
     assert torch.isfinite(posterior.variance).all()
     assert torch.isfinite(samples).all()
+
+
+def test_fantasy_model_runs_acquisition_and_qbatch_optimization() -> None:
+    model, _, train_Y = _make_model()
+    pending = torch.tensor([[0.25], [0.75]], dtype=torch.double)
+    fantasy_model = model.fantasize(
+        X=pending,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([1]), seed=5678),
+    )
+    acquisition = qLogExpectedImprovement(
+        model=fantasy_model,
+        best_f=train_Y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8]), seed=6789),
+    )
+    X = torch.tensor([[[0.3], [0.7]]], dtype=torch.double, requires_grad=True)
+    value = acquisition(X)
+    gradient = torch.autograd.grad(value.sum(), X)[0]
+    candidate, optimized_value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=2,
+        num_restarts=2,
+        raw_samples=16,
+    )
+
+    assert value.shape == torch.Size([1])
+    assert gradient.shape == X.shape
+    assert torch.isfinite(gradient).all()
+    assert candidate.shape == torch.Size([2, 1])
+    assert optimized_value.numel() == 1
+    assert candidate.dtype == torch.double
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(optimized_value).all()
