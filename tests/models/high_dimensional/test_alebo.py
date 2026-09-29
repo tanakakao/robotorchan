@@ -528,7 +528,6 @@ def test_alebo_kernel_retains_projection_for_reference_restarts() -> None:
     torch.testing.assert_close(model.mahalanobis_kernel.projection, projection)
 
 
-
 def test_acquisition_model_accepts_botorch_posterior_transform() -> None:
     train_X = torch.tensor([[-0.5], [0.0], [0.5]], dtype=torch.double)
     train_Y = train_X.square()
