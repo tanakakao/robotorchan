@@ -141,6 +141,7 @@ def test_public_optim_exports_are_complete() -> None:
         "OPTIMIZER_CAPABILITIES",
         "OptimizerCapabilities",
         "OptimizerName",
+        "gen_augmented_one_shot_initial_conditions",
         "get_optimizer_capabilities",
         "OriginalSpaceStrategy",
         "RandomSearchStrategy",
