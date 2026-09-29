@@ -50,6 +50,19 @@ The augmented q-batch therefore grows quickly with horizon and fantasy count. Mu
 lookahead should be reserved for cases where the additional non-myopic value justifies its
 substantially higher optimization cost.
 
+Unlike qKG, BoTorch does not automatically select a dedicated initializer for
+`qMultiStepLookahead`. The ordinary initializer receives the requested public `q`, while the
+acquisition evaluates the full augmented decision tree. Use
+`gen_augmented_one_shot_initial_conditions` as `ic_generator`, or provide explicit
+`batch_initial_conditions` with `acqf.get_augmented_q_batch_size(q)` rows. The helper only
+reuses BoTorch's standard `gen_batch_initial_conditions` over the augmented batch; it does not
+introduce a separate sampling heuristic.
+
+The same helper is appropriate for custom `OneShotAcquisitionFunction` implementations that
+use standard box / linear-constraint initialization but require an augmented q-batch and do not
+already have a specialized BoTorch initializer. Specialized acquisitions such as qKG should keep
+their native initializer instead.
+
 ## Scope
 
 robotorchan validates the native BoTorch lookahead path rather than adding a robotorchan-specific
