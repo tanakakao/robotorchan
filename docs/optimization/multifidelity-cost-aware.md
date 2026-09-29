@@ -62,6 +62,12 @@ The current integration coverage includes:
 The actual candidate fidelity remains an optimization variable. Projection to target fidelity is
 used to value the terminal decision and must not silently fix the evaluated candidate itself.
 
+MF-KG is a one-shot acquisition. BoTorch optimizes an augmented batch containing the requested
+candidate rows and fantasy rows, then extracts the requested candidates. With automatic
+initialization, robotorchan delegates this to BoTorch's one-shot initializer. If
+`batch_initial_conditions` is supplied explicitly, its q dimension must therefore match
+`acqf.get_augmented_q_batch_size(q)`, not the requested public q.
+
 ## Multi-fidelity max-value entropy
 
 Multi-fidelity MES is not part of the current runtime-validated contract. MF-KG already covers the
