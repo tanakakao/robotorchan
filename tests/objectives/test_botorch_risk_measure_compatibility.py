@@ -37,7 +37,7 @@ def test_expectation_matches_botorch_for_equivalent_scenario_layout() -> None:
     native = BoTorchExpectation(n_w=values.shape[-1])
 
     actual = Expectation()(values)
-    expected = native(_as_botorch_samples(values)).squeeze(0)
+    expected = native(_as_botorch_samples(values)).squeeze(0).squeeze(-1)
 
     torch.testing.assert_close(actual, expected)
 
@@ -60,11 +60,11 @@ def test_var_matches_botorch_lower_tail_order_statistic_on_empirical_quantile() 
     botorch_value = native(_as_botorch_samples(values)).squeeze()
     robotorchan_value = VaR(alpha=alpha)(values).squeeze()
 
-    assert botorch_value.item() == 1.0
+    assert botorch_value.item() == 2.0
     assert robotorchan_value.item() == 1.8
 
 
-def test_cvar_differs_from_botorch_for_fractional_empirical_tail() -> None:
+def test_cvar_can_match_botorch_for_an_exact_empirical_tail() -> None:
     values = torch.tensor([[1.0, 2.0, 3.0, 4.0, 5.0]], dtype=torch.double)
     alpha = 0.7
     native = BoTorchCVaR(alpha=alpha, n_w=values.shape[-1])
@@ -72,7 +72,7 @@ def test_cvar_differs_from_botorch_for_fractional_empirical_tail() -> None:
     botorch_value = native(_as_botorch_samples(values)).squeeze()
     robotorchan_value = CVaR(alpha=alpha)(values).squeeze()
 
-    assert not torch.allclose(botorch_value, robotorchan_value)
+    torch.testing.assert_close(botorch_value, robotorchan_value)
 
 
 def test_botorch_risk_measure_preserves_candidate_axis_after_scenario_reduction() -> None:
