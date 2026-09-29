@@ -207,3 +207,27 @@ def test_mixed_backend_rejects_q_interpoint_nonlinear_before_botorch_call() -> N
         )
 
     optimize.assert_not_called()
+
+
+def test_botorch_backend_solves_joint_q_batch_with_interpoint_linear_constraint() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    indices = torch.tensor([[0, 0], [1, 0]])
+    coefficients = torch.tensor([1.0, 1.0], dtype=torch.double)
+    constraints = CandidateConstraints(inequality_constraints=((indices, coefficients, 1.2),))
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=2,
+        num_restarts=4,
+        raw_samples=32,
+        constraints=constraints,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert candidate.sum() >= 1.2 - 1e-6
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
