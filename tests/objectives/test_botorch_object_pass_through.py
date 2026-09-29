@@ -38,7 +38,7 @@ def test_botorch_posterior_transform_instance_passes_through_unchanged() -> None
 
 
 def test_botorch_objective_instance_is_retained_by_acquisition() -> None:
-    model, _, _ = _two_output_model()
+    model, _, train_y = _two_output_model()
     weights = torch.tensor([0.7, 0.3], dtype=torch.double)
     objective = LinearMCObjective(weights=weights)
     acquisition = qLogExpectedImprovement(
