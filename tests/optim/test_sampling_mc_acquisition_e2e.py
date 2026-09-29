@@ -231,3 +231,43 @@ def test_input_perturbation_qbatch_runs_with_pending_candidate() -> None:
     assert torch.all(candidate >= bounds[0])
     assert torch.all(candidate <= bounds[1])
     assert torch.equal(model.train_inputs[0], train_x)
+
+
+def test_input_perturbation_accepts_design_space_batch_initial_conditions() -> None:
+    train_x, train_y = _training_data()
+    perturbations = torch.tensor([[0.0], [0.01], [-0.01]], dtype=torch.double)
+    model = SingleTaskGP(
+        train_x,
+        train_y,
+        input_transform=InputPerturbation(perturbation_set=perturbations),
+    )
+    model.eval()
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_x,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=753),
+        objective=Expectation(n_w=perturbations.shape[0]),
+        prune_baseline=False,
+    )
+    initial_conditions = torch.tensor(
+        [
+            [[0.2], [0.8]],
+            [[0.3], [0.7]],
+            [[0.4], [0.6]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.05], [0.95]], dtype=torch.double),
+        q=2,
+        num_restarts=3,
+        raw_samples=None,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    assert initial_conditions.shape == torch.Size([3, 2, 1])
+    assert candidate.shape == torch.Size([2, 1])
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
