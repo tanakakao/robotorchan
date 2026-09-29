@@ -94,7 +94,8 @@ The implementation must satisfy all of the following:
 
 - a fantasy row may select a different category from the observed candidate;
 - categorical coordinates remain fixed during conditional continuous optimization;
-- fidelity coordinates remain optimizable; target-fidelity projection remains an acquisition-level concern;
+- fidelity coordinates remain optimizable; target-fidelity projection remains an acquisition-level
+  concern;
 - the acquisition receives the complete augmented batch;
 - returned candidates exclude fantasy decision rows;
 - the reported acquisition value corresponds to the optimized augmented batch;
