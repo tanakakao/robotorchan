@@ -133,6 +133,7 @@ def test_kronecker_multi_task_gp_fantasize_produces_sampleable_posterior() -> No
     fantasy_X = torch.rand(2, 2, dtype=torch.double)
     sampler = SobolQMCNormalSampler(sample_shape=torch.Size([3]), seed=23)
 
+    model.posterior(fantasy_X)
     fantasy_model = model.fantasize(X=fantasy_X, sampler=sampler)
     posterior = fantasy_model.posterior(fantasy_X)
     samples = posterior.rsample(torch.Size([4]))
