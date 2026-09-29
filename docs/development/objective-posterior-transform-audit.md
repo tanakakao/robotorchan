@@ -670,3 +670,72 @@ No production implementation change is required by the audited representative pa
 existing posterior and reducer implementations preserve the BoTorch axis contract. Phase 7 adds
 regression coverage so future posterior adapters or objectives cannot accidentally collapse q,
 batch, or output dimensions.
+
+
+## Phase 8: multi-output Objective compatibility
+
+Phase 8 separates three operations that are easy to conflate:
+
+1. output selection while preserving a vector objective;
+2. component-wise weighting while preserving a vector objective;
+3. scalarization of multiple outputs into one MC utility.
+
+For BoTorch 0.18.1, robotorchan uses the native Objective APIs directly.
+
+| Intent | Native API | Output semantics |
+| --- | --- | --- |
+| select/reorder outputs | `IdentityMCMultiOutputObjective` | vector preserved |
+| select and weight outputs | `WeightedMCMultiOutputObjective` | vector preserved |
+| affine scalarization | `LinearMCObjective` | scalar |
+| nonlinear scalarization | `GenericMCObjective` | scalar |
+
+No robotorchan output-selection DSL, objective registry, adapter, or compatibility alias is
+required.
+
+### Output selection and ordering
+
+`IdentityMCMultiOutputObjective(outcomes=[...])` indexes the final posterior-sample output axis.
+The requested order is semantically meaningful and is preserved. Phase 8 tests this on
+Kronecker multi-task samples and empirical ensemble samples.
+
+For output-reduced models, selection occurs only after samples have been reconstructed into the
+original output space. Public outcome indices therefore refer to the original Y columns, not
+latent PCA/PLS coordinates.
+
+### Weighted vector objectives versus scalarization
+
+`WeightedMCMultiOutputObjective` performs component-wise weighting and retains a final objective
+dimension. It must not be treated as a scalar weighted sum.
+
+A true weighted scalar utility uses `LinearMCObjective`, which reduces the final output
+dimension. General nonlinear scalar utilities use `GenericMCObjective`.
+
+This distinction is important for acquisition compatibility: scalar MC acquisitions consume
+scalar objective samples, whereas hypervolume-based multi-objective acquisitions require vector
+objective samples.
+
+### Multi-objective preservation
+
+qEHVI/qNEHVI-style workflows must preserve the selected objective vector through the
+multi-output Objective. Scalarization before hypervolume computation would change the problem
+from multi-objective BO into scalar BO.
+
+qLogNParEGO is intentionally different: its scalarization is part of the acquisition strategy
+and is handled by BoTorch rather than by a robotorchan Objective wrapper.
+
+### Representative model coverage
+
+Phase 8 verifies the native API on:
+
+- Kronecker multi-task samples with three outputs;
+- empirical ensemble multi-output samples;
+- output-reduced samples restored from latent m=2 to original m=5.
+
+Existing acquisition tests additionally cover original-space output selection with
+`IdentityMCMultiOutputObjective` through qEHVI/qNEHVI on output-reduced GP models.
+
+### Result
+
+No production implementation gap was found. Multi-output Objective compatibility follows from
+the common posterior-sample contract established in Phases 6 and 7. The correct extension point
+remains the native BoTorch Objective API.
