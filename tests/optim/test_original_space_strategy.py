@@ -564,7 +564,7 @@ def test_original_space_strategy_satisfies_qbatch_interpoint_equality_constraint
         ),
     )
     strategy = OriginalSpaceStrategy(
-        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
         num_restarts=2,
         raw_samples=16,
         constraints=constraints,
@@ -572,7 +572,7 @@ def test_original_space_strategy_satisfies_qbatch_interpoint_equality_constraint
 
     result = strategy.optimize(acquisition, q=2)
 
-    assert result.candidates.shape == torch.Size([2, 1])
+    assert result.candidates.shape == torch.Size([2, 2])
     assert torch.isfinite(result.candidates).all()
     assert torch.isclose(
         result.candidates[:, 0].sum(),
