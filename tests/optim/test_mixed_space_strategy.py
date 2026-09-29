@@ -116,7 +116,8 @@ def test_mixed_space_strategy_requires_initial_conditions_for_nonlinear_constrai
         strategy.optimize(None)  # type: ignore[arg-type]
     except ValueError as error:
         assert str(error) == (
-            "Nonlinear candidate constraints require feasible batch_initial_conditions."
+            "Nonlinear candidate constraints require feasible batch_initial_conditions "
+            "or an ic_generator."
         )
     else:
         raise AssertionError("Expected nonlinear constraints without initial conditions to fail.")
