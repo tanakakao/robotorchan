@@ -3,6 +3,8 @@
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement, qLogNoisyExpectedImprovement
 from botorch.acquisition.monte_carlo import qExpectedImprovement
+from botorch.acquisition.risk_measures import Expectation
+from botorch.models.transforms.input import InputPerturbation
 from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
 
@@ -193,3 +195,39 @@ def test_gp_async_pending_lifecycle_runs_end_to_end() -> None:
     assert not torch.any(torch.all(updated_x == candidate_b, dim=-1))
     assert torch.isfinite(candidate_c).all()
     assert torch.isfinite(value_c).all()
+
+
+def test_input_perturbation_qbatch_runs_with_pending_candidate() -> None:
+    train_x, train_y = _training_data()
+    perturbations = torch.tensor([[0.0], [0.01], [-0.01]], dtype=torch.double)
+    model = SingleTaskGP(
+        train_x,
+        train_y,
+        input_transform=InputPerturbation(perturbation_set=perturbations),
+    )
+    model.eval()
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_x,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=159),
+        objective=Expectation(n_w=perturbations.shape[0]),
+        prune_baseline=False,
+    )
+    acquisition.set_X_pending(torch.tensor([[0.45]], dtype=torch.double))
+    bounds = torch.tensor([[0.05], [0.95]], dtype=torch.double)
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        bounds,
+        q=2,
+        num_restarts=3,
+        raw_samples=32,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
+    assert torch.equal(model.train_inputs[0], train_x)
