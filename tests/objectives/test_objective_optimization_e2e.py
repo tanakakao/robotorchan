@@ -6,7 +6,7 @@ from botorch.acquisition.objective import GenericMCObjective
 from botorch.optim import optimize_acqf, optimize_acqf_mixed
 from botorch.sampling.normal import SobolQMCNormalSampler
 
-from robotorchan.models import ModelListGP, MixedSingleTaskGP, SingleTaskGP
+from robotorchan.models import MixedSingleTaskGP, ModelListGP, SingleTaskGP
 
 
 def _two_output_model() -> tuple[ModelListGP, torch.Tensor, torch.Tensor]:
