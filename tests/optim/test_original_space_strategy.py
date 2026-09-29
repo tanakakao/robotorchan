@@ -250,7 +250,6 @@ def test_original_space_strategy_preserves_fixed_feature_across_qbatch() -> None
     assert torch.all(result.candidates[:, 1] == 0.75)
 
 
-
 def test_original_space_strategy_initializes_fixed_task_multitask_qbatch() -> None:
     data_x = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
     task_zero = torch.cat([data_x, torch.zeros_like(data_x)], dim=-1)
@@ -268,7 +267,9 @@ def test_original_space_strategy_initializes_fixed_task_multitask_qbatch() -> No
         fixed_features={1: 1.0},
     )
 
-    result = strategy.optimize(qSimpleRegret(model), q=2)
+    objective = GenericMCObjective(lambda samples, X=None: samples.squeeze(-1))
+    acquisition = qSimpleRegret(model, objective=objective)
+    result = strategy.optimize(acquisition, q=2)
 
     assert result.candidates.shape == torch.Size([2, 2])
     assert torch.isfinite(result.candidates).all()
