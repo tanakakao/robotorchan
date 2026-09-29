@@ -47,8 +47,11 @@ def test_outcome_constraint_nonpositive_values_are_feasible() -> None:
 
 def test_constraints_preserve_sample_batch_and_q_axes() -> None:
     samples = torch.randn(5, 7, 2, 3, 3, dtype=torch.double)
-    upper = lambda Y: Y[..., 1]
-    lower = lambda Y: Y[..., 2]
+    def upper(Y: torch.Tensor) -> torch.Tensor:
+        return Y[..., 1]
+
+    def lower(Y: torch.Tensor) -> torch.Tensor:
+        return Y[..., 2]
 
     assert upper(samples).shape == torch.Size([5, 7, 2, 3])
     assert lower(samples).shape == torch.Size([5, 7, 2, 3])
@@ -82,7 +85,8 @@ def test_scalar_objective_and_multiple_outcome_constraints_compose_natively() ->
 def test_outcome_constraints_receive_raw_model_samples_not_scalar_objective_values() -> None:
     samples = torch.randn(16, 2, 3, dtype=torch.double)
     objective = GenericMCObjective(lambda Y, X=None: Y[..., 0].square())
-    constraint = lambda Y: Y[..., 2]
+    def constraint(Y: torch.Tensor) -> torch.Tensor:
+        return Y[..., 2]
 
     objective_values = objective(samples)
     constraint_values = constraint(samples)
