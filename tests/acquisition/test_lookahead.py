@@ -4,6 +4,7 @@ from botorch.acquisition.multi_step_lookahead import qMultiStepLookahead
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import SingleTaskGP
+from robotorchan.optim.backends import optimize_acqf_botorch
 
 
 def _model() -> SingleTaskGP:
@@ -44,4 +45,23 @@ def test_native_qmulti_step_lookahead_is_compatible() -> None:
     value = acquisition(X)
 
     assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_qknowledge_gradient_optimizes_one_shot_augmented_batch() -> None:
+    model = _model()
+    acquisition = qKnowledgeGradient(model=model, num_fantasies=4)
+    augmented_q = acquisition.get_augmented_q_batch_size(q=1)
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+    )
+
+    assert augmented_q == 5
+    assert candidate.shape == torch.Size([1, 1])
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()
