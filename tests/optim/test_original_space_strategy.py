@@ -9,6 +9,7 @@ from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models.high_dimensional.reduced import PCAGP
 from robotorchan.models.standard.multi_fidelity import SingleTaskMultiFidelityGP
+from robotorchan.models.standard.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim import CandidateConstraints, OriginalSpaceStrategy
 
@@ -246,6 +247,59 @@ def test_original_space_strategy_preserves_fixed_feature_across_qbatch() -> None
     assert result.candidates.shape == torch.Size([2, 2])
     assert torch.isfinite(result.candidates).all()
     assert torch.all(result.candidates[:, 1] == 0.75)
+
+
+
+def test_original_space_strategy_initializes_fixed_task_multitask_qbatch() -> None:
+    data_x = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
+    task_zero = torch.cat([data_x, torch.zeros_like(data_x)], dim=-1)
+    task_one = torch.cat([data_x, torch.ones_like(data_x)], dim=-1)
+    train_X = torch.cat([task_zero, task_one], dim=0)
+    train_Y = torch.cat(
+        [torch.sin(data_x * 3.0), torch.cos(data_x * 3.0)],
+        dim=0,
+    )
+    model = MultiTaskGP(train_X, train_Y, task_feature=1)
+    strategy = OriginalSpaceStrategy(
+        torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
+        num_restarts=2,
+        raw_samples=16,
+        fixed_features={1: 1.0},
+    )
+
+    result = strategy.optimize(qSimpleRegret(model), q=2)
+
+    assert result.candidates.shape == torch.Size([2, 2])
+    assert torch.isfinite(result.candidates).all()
+    assert torch.all(result.candidates[:, 1] == 1.0)
+
+
+def test_original_space_strategy_initializes_kronecker_multitask_qbatch() -> None:
+    train_X = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
+    train_Y = torch.cat(
+        [torch.sin(train_X * 3.0), torch.cos(train_X * 3.0)],
+        dim=-1,
+    )
+    model = KroneckerMultiTaskGP(train_X, train_Y)
+    weights = torch.tensor([0.7, 0.3], dtype=torch.double)
+    objective = lambda samples, X=None: samples @ weights
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=(train_Y @ weights).max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8])),
+        objective=objective,
+    )
+    strategy = OriginalSpaceStrategy(
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        num_restarts=2,
+        raw_samples=16,
+    )
+
+    result = strategy.optimize(acquisition, q=2)
+
+    assert result.candidates.shape == torch.Size([2, 1])
+    assert torch.isfinite(result.candidates).all()
+    assert torch.isfinite(result.acquisition_value).all()
 
 
 def test_original_space_strategy_forwards_nonlinear_constraints(monkeypatch) -> None:
