@@ -1152,3 +1152,32 @@ Objective values back to candidate inputs.
 
 Sampler selection remains a posterior capability concern. The Objective consumes the resulting
 sample tensor and should not branch on the model, posterior, or sampler class.
+
+
+## Phase 16: Objective -> Acquisition integration
+
+Phase 16 verifies that native BoTorch Objective objects connect directly to representative
+acquisition families without a robotorchan adapter.
+
+The scalar MC Objective integration matrix now includes:
+
+- improvement: `qLogExpectedImprovement`,
+- noisy improvement: `qLogNoisyExpectedImprovement`,
+- confidence bound: `qUpperConfidenceBound`,
+- constrained improvement: scalar Objective plus raw-sample outcome constraints,
+- risk-aware noisy improvement: `InputPerturbation` plus native `Expectation`.
+
+The existing Phase 10 and Phase 11 tests provide the corresponding multi-objective and
+outcome-constraint coverage for qLogEHVI, qLogNEHVI, qLogNParEGO, and constrained qLogEI.
+
+The integration boundary remains:
+
+`samples -> Objective -> acquisition utility`.
+
+Outcome constraints continue to receive raw model samples according to BoTorch's acquisition
+contract; they are not evaluated on already scalarized Objective values.
+
+For differentiable improvement and risk-aware paths, Phase 16 also verifies gradients from the
+acquisition value back to candidate inputs.
+
+No acquisition-specific Objective wrapper or conversion registry is required.
