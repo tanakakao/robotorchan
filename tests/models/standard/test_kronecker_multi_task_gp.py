@@ -123,4 +123,3 @@ def test_mixed_kronecker_multi_task_gp_supports_categorical_only_inputs() -> Non
 
     assert model.cat_dims == (0, 1)
     assert isinstance(model.covar_module.data_covar_module, ScaleKernel)
-
