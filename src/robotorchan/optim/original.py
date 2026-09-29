@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from botorch.acquisition.acquisition import AcquisitionFunction
+from botorch.optim.initializers import TGenInitialConditions
 from torch import Tensor
 
 from robotorchan.optim.backends import optimize_acqf_botorch
@@ -39,6 +40,10 @@ class OriginalSpaceStrategy(SearchStrategy):
             when nonlinear inequality constraints are used. For joint optimization,
             the standard shape is ``[num_restarts, q, d]``. BoTorch does not reuse
             these conditions across greedy steps when ``sequential=True`` and ``q > 1``.
+        ic_generator: Optional BoTorch-compatible initial-condition generator. This is
+            required for nonlinear constraints when explicit initial conditions are
+            not supplied.
+        ic_gen_kwargs: Optional keyword arguments for ``ic_generator``.
     """
 
     def __init__(
@@ -52,6 +57,8 @@ class OriginalSpaceStrategy(SearchStrategy):
         constraints: CandidateConstraints | None = None,
         fixed_features: dict[int, float] | None = None,
         batch_initial_conditions: Tensor | None = None,
+        ic_generator: TGenInitialConditions | None = None,
+        ic_gen_kwargs: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(bounds)
         if num_restarts < 1:
@@ -65,6 +72,8 @@ class OriginalSpaceStrategy(SearchStrategy):
         self.constraints = constraints or CandidateConstraints()
         self.fixed_features = None if fixed_features is None else dict(fixed_features)
         self.batch_initial_conditions = batch_initial_conditions
+        self.ic_generator = ic_generator
+        self.ic_gen_kwargs = None if ic_gen_kwargs is None else dict(ic_gen_kwargs)
 
     def optimize(
         self,
@@ -86,6 +95,8 @@ class OriginalSpaceStrategy(SearchStrategy):
             constraints=self.constraints,
             fixed_features=self.fixed_features,
             batch_initial_conditions=self.batch_initial_conditions,
+            ic_generator=self.ic_generator,
+            ic_gen_kwargs=self.ic_gen_kwargs,
         )
 
         return SearchResult(
