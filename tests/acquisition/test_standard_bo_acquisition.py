@@ -60,6 +60,7 @@ def test_qlognei_x_pending_lifecycle_with_q_batch() -> None:
         sampler=SobolQMCNormalSampler(torch.Size([16]), seed=11),
         prune_baseline=False,
         cache_root=False,
+        cache_pending=False,
     )
     X = torch.tensor([[[0.2], [0.8]]], dtype=torch.double)
     single_pending = torch.tensor([[0.4]], dtype=torch.double)
