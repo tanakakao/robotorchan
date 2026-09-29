@@ -23,6 +23,17 @@ reduced / learned representation model でも、物理的 perturbation は原則
 space に適用し、その後 model-owned transform を通します。latent-space offset を
 物理的不確かさとして暗黙に扱いません。
 
+## Acquisition initialization
+
+Acquisition optimizer の initial conditions は nominal design space に留めます。
+標準 shape は `[num_restarts, q, d]` であり、perturbation scenario 数 `n_w` を
+initial-condition tensor に追加しません。`InputPerturbation` が posterior 評価時に
+nominal candidate を scenario axis へ展開し、risk objective がその axis を集約します。
+
+したがって robust candidate evaluation のために専用 initializer や
+`[num_restarts, q * n_w, d]` 形式を導入しません。candidate-space constraints も
+nominal design coordinates に対して適用します。
+
 ## Protected dimensions
 
 perturbation の対象は design / environmental continuous coordinates です。次の structural
