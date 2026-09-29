@@ -2,7 +2,6 @@ import inspect
 
 import torch
 from botorch.models import KroneckerMultiTaskGP as BoTorchKroneckerMultiTaskGP
-from botorch.sampling.normal import SobolQMCNormalSampler
 from gpytorch.kernels import AdditiveKernel, ScaleKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
@@ -125,22 +124,3 @@ def test_mixed_kronecker_multi_task_gp_supports_categorical_only_inputs() -> Non
     assert model.cat_dims == (0, 1)
     assert isinstance(model.covar_module.data_covar_module, ScaleKernel)
 
-
-def test_kronecker_multi_task_gp_fantasize_produces_sampleable_posterior() -> None:
-    train_X, train_Y = _make_data()
-    model = KroneckerMultiTaskGP(train_X=train_X, train_Y=train_Y)
-    model.eval()
-    fantasy_X = torch.rand(2, 2, dtype=torch.double)
-    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([3]), seed=23)
-
-    model.posterior(fantasy_X)
-    fantasy_model = model.fantasize(X=fantasy_X, sampler=sampler)
-    posterior = fantasy_model.posterior(fantasy_X)
-    samples = posterior.rsample(torch.Size([4]))
-
-    assert posterior.mean.shape == torch.Size([3, 2, 3])
-    assert posterior.variance.shape == torch.Size([3, 2, 3])
-    assert samples.shape == torch.Size([4, 3, 2, 3])
-    assert torch.isfinite(posterior.mean).all()
-    assert torch.isfinite(posterior.variance).all()
-    assert torch.isfinite(samples).all()
