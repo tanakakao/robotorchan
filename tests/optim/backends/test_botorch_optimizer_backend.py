@@ -14,6 +14,7 @@ from robotorchan.optim.constraints import CandidateConstraints
 class _DummyAcquisition(AcquisitionFunction):
     def __init__(self) -> None:
         super().__init__(model=None)
+        self.X_pending = None
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x.sum(dim=(-1, -2))
