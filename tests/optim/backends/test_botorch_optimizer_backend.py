@@ -231,3 +231,62 @@ def test_botorch_backend_solves_joint_q_batch_with_interpoint_linear_constraint(
     assert candidate.sum() >= 1.2 - 1e-6
     assert torch.all(candidate >= bounds[0])
     assert torch.all(candidate <= bounds[1])
+
+
+def test_botorch_backend_forwards_joint_qbatch_initial_conditions() -> None:
+    initial = torch.tensor(
+        [
+            [[0.1], [0.9]],
+            [[0.2], [0.8]],
+            [[0.3], [0.7]],
+        ],
+        dtype=torch.double,
+    )
+
+    with patch(
+        "robotorchan.optim.backends.botorch.botorch_optimize_acqf",
+        return_value=(torch.tensor([[0.2], [0.8]]), torch.tensor(1.0)),
+    ) as mocked:
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            torch.tensor([[0.0], [1.0]], dtype=torch.double),
+            q=2,
+            num_restarts=3,
+            raw_samples=None,
+            batch_initial_conditions=initial,
+        )
+
+    kwargs = mocked.call_args.kwargs
+    assert kwargs["q"] == 2
+    assert kwargs["num_restarts"] == 3
+    assert kwargs["raw_samples"] is None
+    assert kwargs["batch_initial_conditions"] is initial
+    assert kwargs["sequential"] is False
+
+
+def test_botorch_backend_delegates_sequential_initialization_semantics() -> None:
+    initial = torch.tensor(
+        [
+            [[0.1], [0.9]],
+            [[0.2], [0.8]],
+        ],
+        dtype=torch.double,
+    )
+
+    with patch(
+        "robotorchan.optim.backends.botorch.botorch_optimize_acqf",
+        return_value=(torch.tensor([[0.2], [0.8]]), torch.tensor([0.2, 0.8])),
+    ) as mocked:
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            torch.tensor([[0.0], [1.0]], dtype=torch.double),
+            q=2,
+            num_restarts=2,
+            raw_samples=16,
+            batch_initial_conditions=initial,
+            sequential=True,
+        )
+
+    kwargs = mocked.call_args.kwargs
+    assert kwargs["batch_initial_conditions"] is initial
+    assert kwargs["sequential"] is True
