@@ -63,9 +63,7 @@ def test_linear_mc_objective_scalarizes_all_selected_information() -> None:
 
 def test_generic_mc_objective_supports_nonlinear_multi_output_scalarization() -> None:
     samples = _kronecker_samples()
-    objective = GenericMCObjective(
-        lambda Y, X=None: Y[..., 0].square() + Y[..., 1] * Y[..., 2]
-    )
+    objective = GenericMCObjective(lambda Y, X=None: Y[..., 0].square() + Y[..., 1] * Y[..., 2])
 
     values = objective(samples)
 
