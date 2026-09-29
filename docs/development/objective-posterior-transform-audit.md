@@ -846,3 +846,67 @@ Native BoTorch multi-objective Objective composition is sufficient. No robotorch
 wrapper or multi-objective scalarization layer is required. The main contract is that reference
 points, partitioning observations, and vector Objectives all describe the same transformed
 Objective space.
+
+
+## Phase 11: outcome Constraint compatibility
+
+Phase 11 verifies unknown outcome constraints as sample-space acquisition inputs and keeps them
+strictly separate from known candidate/input-space constraints.
+
+### Feasibility sign convention
+
+BoTorch outcome-constraint callables follow the convention:
+
+`constraint(samples) <= 0`
+
+means feasible.
+
+For a physical requirement `g(x) <= limit`, a natural callable is therefore
+`g_sample - limit`. Reversing the sign silently reverses feasibility.
+
+### Shape contract
+
+Given posterior samples with shape
+
+`sample_shape x batch_shape x q x m`,
+
+each scalar outcome-constraint callable returns
+
+`sample_shape x batch_shape x q`.
+
+The callable removes only the output dimension used to compute that constraint. It must not
+reduce sample, t-batch, or q dimensions. Multiple constraints are represented by multiple
+callables rather than by reinterpreting one of these structural axes as a constraint axis.
+
+### Objective and constraint composition
+
+Scalar MC Objectives and outcome constraints consume the same raw posterior samples for different
+purposes:
+
+- Objective: raw model samples -> utility samples;
+- outcome constraint: raw model samples -> signed feasibility values.
+
+Outcome constraints do not consume the already scalarized Objective output. This permits a
+multi-output model to expose, for example, one utility output and multiple modeled constraint
+outputs without coupling their transformations.
+
+Phase 11 verifies native `qLogExpectedImprovement` composition with one scalar
+`GenericMCObjective` and two outcome constraints.
+
+### Candidate constraints remain separate
+
+Outcome constraints describe uncertain black-box quantities modeled by the surrogate and are
+integrated probabilistically by compatible acquisitions.
+
+`robotorchan.optim.CandidateConstraints` instead describes known feasibility in X-space and is
+owned by acquisition optimization. Candidate constraints do not receive posterior samples, and
+outcome constraints are not forwarded to optimizer constraint backends.
+
+The two APIs must not be merged merely because both use the word constraint.
+
+### Result
+
+The native BoTorch outcome-constraint callable contract is sufficient. No robotorchan
+`ConstrainedMCObjective` wrapper or second constraint language is required. The existing
+acquisition capability metadata meaning of `supports_constraints` remains output/black-box
+constraint compatibility, not candidate-space constraint support.
