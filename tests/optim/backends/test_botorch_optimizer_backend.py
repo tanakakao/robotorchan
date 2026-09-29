@@ -3,6 +3,7 @@ from unittest.mock import patch
 import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
+from botorch.exceptions.errors import UnsupportedError
 
 from robotorchan.optim.backends.botorch import (
     optimize_acqf_botorch,
@@ -384,3 +385,85 @@ def test_botorch_backend_runs_sequential_nonlinear_with_ic_generator() -> None:
     assert torch.isfinite(value).all()
     assert torch.all(candidate[:, 0] >= 0.1 - 1e-6)
     assert generated_q == [1, 1]
+
+
+def test_botorch_backend_runs_sequential_with_intrapoint_linear_constraint() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([0]),
+                torch.tensor([1.0], dtype=torch.double),
+                0.4,
+            ),
+        ),
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=2,
+        num_restarts=2,
+        raw_samples=16,
+        constraints=constraints,
+        sequential=True,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate[:, 0] >= 0.4 - 1e-6)
+
+
+@pytest.mark.parametrize("constraint_kind", ["inequality", "equality"])
+def test_botorch_backend_rejects_sequential_interpoint_linear_constraint(
+    constraint_kind: str,
+) -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraint = (
+        torch.tensor([[0, 0], [1, 0]]),
+        torch.tensor([1.0, 1.0], dtype=torch.double),
+        1.0,
+    )
+    constraints = CandidateConstraints(
+        inequality_constraints=(constraint,) if constraint_kind == "inequality" else (),
+        equality_constraints=(constraint,) if constraint_kind == "equality" else (),
+    )
+
+    with pytest.raises(UnsupportedError, match="inter-point"):
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            bounds,
+            q=2,
+            num_restarts=2,
+            raw_samples=16,
+            constraints=constraints,
+            sequential=True,
+        )
+
+
+def test_botorch_backend_rejects_sequential_interpoint_nonlinear_constraint() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda X: X[:, 0].sum() - 1.0, False),)
+    )
+
+    def ic_generator(*, q, num_restarts, **kwargs):
+        return torch.full(
+            (num_restarts, q, 1),
+            0.6,
+            dtype=bounds.dtype,
+            device=bounds.device,
+        )
+
+    with pytest.raises(UnsupportedError, match="inter-point"):
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            bounds,
+            q=2,
+            num_restarts=2,
+            raw_samples=16,
+            constraints=constraints,
+            sequential=True,
+            ic_generator=ic_generator,
+        )

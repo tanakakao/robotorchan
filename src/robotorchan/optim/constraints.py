@@ -36,10 +36,12 @@ class CandidateConstraints:
     Nonlinear inequalities use BoTorch's native ``(callable, is_intrapoint)``
     contract. The callable returns a scalar tensor and feasibility means
     ``callable(X) >= 0``. With ``is_intrapoint=True`` it receives ``[d]``;
-    otherwise it receives the joint q-batch ``[q, d]``. The callable must
+    otherwise it receives the joint q-batch ``[q, d]``. Inter-point constraints
+    therefore require joint q-batch optimization; BoTorch does not support them
+    for greedy sequential optimization. The callable must
     preserve device and floating dtype. Gradient-based optimizers additionally
-    require differentiability with respect to candidate coordinates; derivative-free
-    backends do not. Python callables are runtime objects and have no
+    require differentiability with respect to candidate coordinates;
+    derivative-free backends do not. Python callables are runtime objects and have no
     robotorchan-specific serialization format.
     """
 
