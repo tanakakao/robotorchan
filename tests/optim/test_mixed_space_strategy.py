@@ -213,7 +213,6 @@ def test_mixed_space_strategy_forwards_none_raw_samples_with_explicit_initial_co
     assert captured["batch_initial_conditions"] is initial_conditions
 
 
-
 def test_mixed_space_strategy_runs_qbatch_nonlinear_with_ic_generator() -> None:
     train_X = torch.tensor(
         [[0.0, 0.0], [0.3, 0.0], [0.7, 1.0], [1.0, 1.0]],
@@ -227,10 +226,9 @@ def test_mixed_space_strategy_runs_qbatch_nonlinear_with_ic_generator() -> None:
         sampler=SobolQMCNormalSampler(sample_shape=torch.Size([16]), seed=41),
     )
     bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    nonlinear_constraint = lambda x: x.new_tensor(0.64) - x[0].square()
     constraints = CandidateConstraints(
-        nonlinear_inequality_constraints=(
-            (lambda x: x.new_tensor(0.64) - x[0].square(), True),
-        ),
+        nonlinear_inequality_constraints=((nonlinear_constraint, True),),
     )
     generated_q: list[int] = []
 
