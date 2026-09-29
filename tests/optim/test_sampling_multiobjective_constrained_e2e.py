@@ -2,7 +2,10 @@
 
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
-from botorch.acquisition.multi_objective.logei import qLogExpectedHypervolumeImprovement
+from botorch.acquisition.multi_objective.logei import (
+    qLogExpectedHypervolumeImprovement,
+    qLogNoisyExpectedHypervolumeImprovement,
+)
 from botorch.acquisition.objective import GenericMCObjective
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import (
@@ -86,3 +89,31 @@ def test_outcome_constraint_sampling_runs_through_optimizer() -> None:
     assert value.numel() == 1
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()
+
+
+def test_noisy_multiobjective_qbatch_runs_with_pending_candidates() -> None:
+    model, train_x = _multi_output_model()
+    with torch.no_grad():
+        train_y = model.posterior(train_x).mean
+    ref_point = train_y.min(dim=0).values - 0.1
+    acquisition = qLogNoisyExpectedHypervolumeImprovement(
+        model=model,
+        ref_point=ref_point.tolist(),
+        X_baseline=train_x,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=789),
+    )
+    pending = torch.tensor([[0.35], [0.65]], dtype=torch.double)
+    acquisition.set_X_pending(pending)
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=2,
+        num_restarts=3,
+        raw_samples=32,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert all(torch.equal(submodel.train_inputs[0], train_x) for submodel in model.models)
