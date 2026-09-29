@@ -2,6 +2,7 @@ import inspect
 
 import torch
 from botorch.models import MultiTaskGP as BoTorchMultiTaskGP
+from botorch.sampling.normal import SobolQMCNormalSampler
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models.standard.multitask import MultiTaskGP
@@ -80,3 +81,25 @@ def test_multi_task_gp_matches_upstream_posterior() -> None:
 
     torch.testing.assert_close(wrapper_posterior.mean, upstream_posterior.mean)
     torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
+
+
+def test_multi_task_gp_fantasy_preserves_task_and_fantasy_dimensions() -> None:
+    train_X, train_Y = _make_data()
+    model = MultiTaskGP(train_X=train_X, train_Y=train_Y, task_feature=-1)
+    fantasy_X = torch.tensor([[0.2, 0.4], [0.7, 0.6]], dtype=torch.double)
+    test_X = torch.tensor([[0.3, 0.5], [0.8, 0.2]], dtype=torch.double)
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([3]), seed=17)
+
+    model.eval()
+    fantasy_model = model.fantasize(X=fantasy_X, sampler=sampler)
+    posterior = fantasy_model.posterior(test_X, output_indices=[0, 1])
+    samples = posterior.rsample(torch.Size([4]))
+
+    assert model.train_inputs[0].shape == train_X.shape
+    assert fantasy_model.train_inputs[0].shape[-2] == train_X.shape[-2] + 4
+    assert posterior.mean.shape == torch.Size([3, 2, 2])
+    assert posterior.variance.shape == torch.Size([3, 2, 2])
+    assert samples.shape == torch.Size([4, 3, 2, 2])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert torch.isfinite(samples).all()
