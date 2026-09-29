@@ -181,3 +181,32 @@ def test_mixed_space_strategy_runs_q_batch_with_pending_candidate() -> None:
     assert torch.all(result.candidates >= strategy.bounds[0])
     assert torch.all(result.candidates <= strategy.bounds[1])
     assert set(result.candidates[:, 1].tolist()) <= {0.0, 1.0}
+
+
+def test_mixed_space_strategy_forwards_none_raw_samples_with_explicit_initial_conditions(
+    monkeypatch,
+) -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    initial_conditions = torch.tensor([[[0.25, 0.0]], [[0.75, 1.0]]], dtype=torch.double)
+    strategy = MixedSpaceStrategy(
+        bounds,
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+        num_restarts=2,
+        raw_samples=None,
+        batch_initial_conditions=initial_conditions,
+    )
+    captured = {}
+
+    def fake_optimize_acqf_mixed(**kwargs):
+        captured.update(kwargs)
+        return torch.tensor([[0.75, 1.0]], dtype=torch.double), torch.tensor(1.75)
+
+    monkeypatch.setattr(
+        "robotorchan.optim.backends.botorch.botorch_optimize_acqf_mixed",
+        fake_optimize_acqf_mixed,
+    )
+    strategy.optimize(None)  # type: ignore[arg-type]
+
+    assert captured["raw_samples"] is None
+    assert captured["num_restarts"] == 2
+    assert captured["batch_initial_conditions"] is initial_conditions
