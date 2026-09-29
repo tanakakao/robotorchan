@@ -213,9 +213,7 @@ def test_botorch_backend_solves_joint_q_batch_with_interpoint_linear_constraint(
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     indices = torch.tensor([[0, 0], [1, 0]])
     coefficients = torch.tensor([1.0, 1.0], dtype=torch.double)
-    constraints = CandidateConstraints(
-        inequality_constraints=((indices, coefficients, 1.2),)
-    )
+    constraints = CandidateConstraints(inequality_constraints=((indices, coefficients, 1.2),))
 
     candidate, value = optimize_acqf_botorch(
         _DummyAcquisition(),
