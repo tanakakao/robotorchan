@@ -56,7 +56,7 @@ def test_botorch_objective_instance_is_retained_by_acquisition() -> None:
 
 
 def test_custom_generic_mc_objective_requires_no_robotorchan_registration() -> None:
-    model, _, train_y = _two_output_model()
+    model, _, _ = _two_output_model()
 
     def custom_objective(Y: torch.Tensor, X: torch.Tensor | None = None) -> torch.Tensor:
         del X
