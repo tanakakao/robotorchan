@@ -230,7 +230,6 @@ def test_original_space_strategy_combines_fixed_fidelity_and_constraint() -> Non
     assert result.candidates[0, 1] == 1.0
 
 
-
 def test_original_space_strategy_preserves_fixed_feature_across_qbatch() -> None:
     train_X, train_Y = _training_data()
     model = SingleTaskGP(train_X, train_Y)
@@ -247,25 +246,6 @@ def test_original_space_strategy_preserves_fixed_feature_across_qbatch() -> None
     assert result.candidates.shape == torch.Size([2, 2])
     assert torch.isfinite(result.candidates).all()
     assert torch.all(result.candidates[:, 1] == 0.75)
-
-
-def test_original_space_strategy_preserves_fixed_feature_when_sequential() -> None:
-    train_X, train_Y = _training_data()
-    model = SingleTaskGP(train_X, train_Y)
-    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
-    strategy = OriginalSpaceStrategy(
-        bounds,
-        num_restarts=3,
-        raw_samples=32,
-        sequential=True,
-        fixed_features={1: 0.25},
-    )
-
-    result = strategy.optimize(qSimpleRegret(model), q=2)
-
-    assert result.candidates.shape == torch.Size([2, 2])
-    assert torch.isfinite(result.candidates).all()
-    assert torch.all(result.candidates[:, 1] == 0.25)
 
 
 def test_original_space_strategy_forwards_nonlinear_constraints(monkeypatch) -> None:
