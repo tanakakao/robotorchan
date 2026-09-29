@@ -317,7 +317,7 @@ def test_botorch_backend_accepts_ic_generator_for_nonlinear_constraints() -> Non
 
     kwargs = mocked.call_args.kwargs
     assert kwargs["ic_generator"] is ic_generator
-    assert kwargs["custom_option"] == 3
+    assert kwargs["ic_gen_kwargs"] == {"custom_option": 3}
     assert kwargs["options"]["batch_limit"] == 1
 
 
