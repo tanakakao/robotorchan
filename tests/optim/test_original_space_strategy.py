@@ -5,6 +5,7 @@ import torch
 from botorch.acquisition.analytic import PosteriorMean
 from botorch.acquisition.logei import qLogExpectedImprovement, qLogNoisyExpectedImprovement
 from botorch.acquisition.monte_carlo import qSimpleRegret
+from botorch.acquisition.objective import GenericMCObjective
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models.high_dimensional.reduced import PCAGP
@@ -282,7 +283,7 @@ def test_original_space_strategy_initializes_kronecker_multitask_qbatch() -> Non
     )
     model = KroneckerMultiTaskGP(train_X, train_Y)
     weights = torch.tensor([0.7, 0.3], dtype=torch.double)
-    objective = lambda samples, X=None: samples @ weights
+    objective = GenericMCObjective(lambda samples, X=None: samples @ weights)
     acquisition = qLogExpectedImprovement(
         model=model,
         best_f=(train_Y @ weights).max(),
