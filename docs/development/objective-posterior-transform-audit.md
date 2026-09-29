@@ -1086,3 +1086,42 @@ contract is desired.
 
 The existing robotorchan scenario generators and explicit-axis risk aggregators remain a
 complementary lower-level path rather than compatibility aliases for the BoTorch classes.
+
+
+## Phase 14: Gradient / dtype / device audit
+
+Phase 14 audits the differentiable Objective and robust-Objective paths for accidental graph breaks,
+dtype coercion, and device migration.
+
+### Static audit
+
+The Objective/risk path does not require a `.detach()`, NumPy conversion, or CPU round trip.
+The explicit scenario generators construct random tensors using the input tensor's dtype and
+device and add them to an expanded clone of the candidate tensor, preserving candidate gradients.
+
+Repository-wide detach/CPU conversions found in non-differentiable external optimizers,
+scikit-learn-style estimators, persisted metadata, or fitted-state snapshots are separate
+responsibilities and are not Objective graph breaks.
+
+### Runtime contracts
+
+Phase 14 adds runtime coverage for both `torch.float32` and `torch.float64`:
+
+- posterior samples -> `GenericMCObjective` -> candidate gradient,
+- `GaussianPerturbation` -> posterior -> sampler -> robotorchan `Expectation`,
+- BoTorch `InputPerturbation` -> posterior -> sampler -> BoTorch `Expectation`.
+
+Each path must preserve the originating dtype and device through the final objective value and
+candidate gradient.
+
+A CUDA contract is also exercised when CUDA is available. CPU-only CI skips that test rather than
+pretending to validate CUDA behavior.
+
+### Construction rule
+
+New Objective, PosteriorTransform, perturbation, and risk code must prefer tensor-derived
+construction such as `new_tensor`, `zeros_like`, or explicit `dtype=X.dtype, device=X.device`
+when creating tensors that participate in the differentiable path.
+
+Using `torch.tensor(existing_tensor)`, implicit CPU constants, or an unconditional
+`.cpu().numpy()` conversion inside that path is incompatible with the contract.
