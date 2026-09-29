@@ -13,6 +13,7 @@ from botorch.utils.multi_objective.box_decompositions.non_dominated import (
 )
 
 from robotorchan.models import ModelListGP, SingleTaskGP
+from robotorchan.optim import CandidateConstraints
 from robotorchan.optim.backends import optimize_acqf_botorch
 
 
@@ -131,13 +132,15 @@ def test_joint_qlogehvi_initialization_respects_candidate_constraint() -> None:
         partitioning=partitioning,
         sampler=SobolQMCNormalSampler(torch.Size([32]), seed=321),
     )
-    inequality_constraints = [
-        (
-            torch.tensor([0]),
-            torch.tensor([1.0], dtype=torch.double),
-            0.2,
-        )
-    ]
+    constraints = CandidateConstraints(
+        inequality_constraints=[
+            (
+                torch.tensor([0]),
+                torch.tensor([1.0], dtype=torch.double),
+                0.2,
+            )
+        ]
+    )
 
     candidate, value = optimize_acqf_botorch(
         acquisition,
@@ -145,7 +148,7 @@ def test_joint_qlogehvi_initialization_respects_candidate_constraint() -> None:
         q=2,
         num_restarts=3,
         raw_samples=32,
-        inequality_constraints=inequality_constraints,
+        constraints=constraints,
     )
 
     assert candidate.shape == torch.Size([2, 1])
