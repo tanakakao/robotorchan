@@ -14,7 +14,15 @@ from robotorchan.optim.constraints import CandidateConstraints
 
 
 class MixedSpaceStrategy(SearchStrategy):
-    """Optimize over continuous variables and enumerated discrete assignments."""
+    """Optimize over continuous variables and enumerated discrete assignments.
+
+    Initial-condition generation remains BoTorch-native. ``fixed_features_list``
+    enumerates the discrete assignments, so categorical coordinates are fixed
+    during each continuous subproblem rather than relaxed into free variables.
+    For q > 1, BoTorch uses greedy sequential mixed optimization and regenerates
+    initial conditions for each q=1 step. Nonlinear constraints therefore need
+    an ``ic_generator`` for this sequential path.
+    """
 
     def __init__(
         self,

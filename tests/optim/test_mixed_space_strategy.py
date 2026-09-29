@@ -211,3 +211,55 @@ def test_mixed_space_strategy_forwards_none_raw_samples_with_explicit_initial_co
     assert captured["raw_samples"] is None
     assert captured["num_restarts"] == 2
     assert captured["batch_initial_conditions"] is initial_conditions
+
+
+def test_mixed_space_strategy_runs_qbatch_nonlinear_with_ic_generator() -> None:
+    train_X = torch.tensor(
+        [[0.0, 0.0], [0.3, 0.0], [0.7, 1.0], [1.0, 1.0]],
+        dtype=torch.double,
+    )
+    train_Y = (train_X[:, :1] + 0.2 * train_X[:, 1:2]).sin()
+    model = MixedSingleTaskGP(train_X, train_Y, cat_dims=[1])
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_X,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([16]), seed=41),
+    )
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+
+    def nonlinear_constraint(x: torch.Tensor) -> torch.Tensor:
+        return x.new_tensor(0.64) - x[0].square()
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((nonlinear_constraint, True),),
+    )
+    generated_q: list[int] = []
+
+    def ic_generator(*, q, num_restarts, **kwargs):
+        generated_q.append(q)
+        initial = torch.full(
+            (num_restarts, q, 2),
+            0.5,
+            dtype=bounds.dtype,
+            device=bounds.device,
+        )
+        initial[..., 1] = 0.0
+        return initial
+
+    strategy = MixedSpaceStrategy(
+        bounds,
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+        num_restarts=2,
+        raw_samples=16,
+        constraints=constraints,
+        ic_generator=ic_generator,
+    )
+
+    result = strategy.optimize(acquisition, q=2)
+
+    assert result.candidates.shape == torch.Size([2, 2])
+    assert torch.isfinite(result.candidates).all()
+    assert torch.isfinite(result.acquisition_value).all()
+    assert torch.all(result.candidates[:, 0] <= 0.8 + 1e-6)
+    assert set(result.candidates[:, 1].tolist()) <= {0.0, 1.0}
+    assert generated_q == [1, 1, 1, 1]
