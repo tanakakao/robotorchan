@@ -43,3 +43,24 @@ def test_fantasy_preserves_constructor_raw_snapshot() -> None:
     assert torch.equal(fantasy_model.raw_train_Y, train_Y)
     assert fantasy_model.raw_train_Yvar is None
     assert fantasy_model.train_inputs[0].shape[-2] == train_X.shape[-2] + fantasy_X.shape[-2]
+
+
+def test_fantasy_model_posterior_preserves_fantasy_batch_contract() -> None:
+    model, train_X, _ = _make_model()
+    fantasy_X = torch.tensor([[0.25], [0.75]], dtype=torch.double)
+    test_X = torch.tensor([[0.2], [0.5], [0.8]], dtype=torch.double)
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([2]), seed=4321)
+
+    model.eval()
+    fantasy_model = model.fantasize(X=fantasy_X, sampler=sampler)
+    posterior = fantasy_model.posterior(test_X)
+    samples = posterior.rsample(torch.Size([4]))
+
+    assert model.train_inputs[0].shape == train_X.shape
+    assert fantasy_model.train_inputs[0].shape == torch.Size([2, 10, 1])
+    assert posterior.mean.shape == torch.Size([2, 3, 1])
+    assert posterior.variance.shape == torch.Size([2, 3, 1])
+    assert samples.shape == torch.Size([4, 2, 3, 1])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
+    assert torch.isfinite(samples).all()
