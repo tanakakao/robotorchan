@@ -199,12 +199,13 @@ class ALEBOStrategy(SearchStrategy):
             ic_generator=initializer,
         )
         candidates = self.project(embedded_candidates)
+        if self.sequential:
+            with torch.no_grad():
+                acquisition_value = acq_function(embedded_candidates).reshape(())
 
         return SearchResult(
             candidates=candidates,
-            acquisition_value=(
-                acquisition_value if self.sequential else acquisition_value.reshape(())
-            ),
+            acquisition_value=acquisition_value.reshape(()),
             metadata={
                 "embedded_candidates": embedded_candidates.detach(),
                 "embedding": self.embedding.detach().clone(),
