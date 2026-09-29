@@ -86,7 +86,10 @@ def test_multi_task_gp_matches_upstream_posterior() -> None:
 def test_multi_task_gp_fantasy_preserves_task_and_fantasy_dimensions() -> None:
     train_X, train_Y = _make_data()
     model = MultiTaskGP(train_X=train_X, train_Y=train_Y, task_feature=-1)
-    fantasy_X = torch.tensor([[0.2, 0.4], [0.7, 0.6]], dtype=torch.double)
+    fantasy_X = torch.tensor(
+        [[0.2, 0.4, 0.0], [0.7, 0.6, 1.0]],
+        dtype=torch.double,
+    )
     test_X = torch.tensor([[0.3, 0.5], [0.8, 0.2]], dtype=torch.double)
     sampler = SobolQMCNormalSampler(sample_shape=torch.Size([3]), seed=17)
 
@@ -96,7 +99,7 @@ def test_multi_task_gp_fantasy_preserves_task_and_fantasy_dimensions() -> None:
     samples = posterior.rsample(torch.Size([4]))
 
     assert model.train_inputs[0].shape == train_X.shape
-    assert fantasy_model.train_inputs[0].shape[-2] == train_X.shape[-2] + 4
+    assert fantasy_model.train_inputs[0].shape[-2] == train_X.shape[-2] + fantasy_X.shape[-2]
     assert posterior.mean.shape == torch.Size([3, 2, 2])
     assert posterior.variance.shape == torch.Size([3, 2, 2])
     assert samples.shape == torch.Size([4, 3, 2, 2])
