@@ -142,7 +142,7 @@ result = strategy.optimize(acq, q=1)
 
 `fit_acquisition_model()` は multi-start MAP fitting、reference diagonal Laplace covariance、固定 metric sample、full predictive covariance の Gaussian moment matching を順に行い、BoTorch acquisition function に渡せる model を返す。個別の数値処理を検証・研究したい場合には `metric_hessian_diagonal()`、`metric_laplace_covariance()`、`sample_metric_parameters()`、`marginal_metric_posterior()` も利用できる。
 
-acquisition function は embedded space で評価され、`ALEBOStrategy.optimize()` が feasible polytope 内で最適化した後にだけ original/public input space へ戻す。`SearchResult.candidates` は original space、`metadata["embedded_candidates"]` は embedded space の候補である。joint q-batch は feasible embedded initial conditions を直接使い、sequential q-batch は各 q=1 step で feasible initial conditions を再生成する。
+acquisition function は embedded space で評価され、`ALEBOStrategy.optimize()` が feasible polytope 内で\n最適化した後にだけ original/public input space へ戻す。`SearchResult.candidates` は original space、\n`metadata["embedded_candidates"]` は embedded space の候補である。joint q-batch は feasible\nembedded initial conditions を直接使い、sequential q-batch は各 q=1 step で feasible initial\nconditions を再生成する。
 
 ### ALEBO 実装ステータス
 
