@@ -3,7 +3,7 @@
 import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
-from botorch.acquisition.logei import qLogNoisyExpectedImprovement
+from botorch.acquisition.logei import qLogExpectedImprovement, qLogNoisyExpectedImprovement
 from botorch.acquisition.monte_carlo import qSimpleRegret
 from botorch.sampling.normal import SobolQMCNormalSampler
 
