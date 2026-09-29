@@ -53,7 +53,6 @@ def test_botorch_backend_preserves_native_arguments() -> None:
     assert kwargs["sequential"] is True
 
 
-
 def test_botorch_backend_preserves_fixed_feature_when_sequential() -> None:
     acq = _DummyAcquisition()
     bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
