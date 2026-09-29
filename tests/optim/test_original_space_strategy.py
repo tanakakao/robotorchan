@@ -8,6 +8,7 @@ from botorch.acquisition.monte_carlo import qSimpleRegret
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models.high_dimensional.reduced import PCAGP
+from robotorchan.models.standard.multi_fidelity import SingleTaskMultiFidelityGP
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim import CandidateConstraints, OriginalSpaceStrategy
 
@@ -481,4 +482,34 @@ def test_qbatch_interpoint_constraint_with_pending_candidate() -> None:
     assert result.candidates[:, 0].sum() <= 0.75 + 1e-6
     assert torch.isfinite(result.candidates).all()
     assert torch.isfinite(result.acquisition_value).all()
+    assert torch.equal(model.train_inputs[0], train_X)
+
+
+def test_multifidelity_qbatch_preserves_pending_fidelity_context() -> None:
+    design = torch.linspace(0.0, 1.0, 6, dtype=torch.double)
+    low = torch.stack((design, torch.full_like(design, 0.5)), dim=-1)
+    high = torch.stack((design, torch.ones_like(design)), dim=-1)
+    train_X = torch.cat((low, high), dim=0)
+    train_Y = torch.sin(train_X[:, :1] * 4.0) + 0.2 * (1.0 - train_X[:, 1:])
+    model = SingleTaskMultiFidelityGP(train_X, train_Y, data_fidelities=[1])
+    pending = torch.tensor([[0.35, 0.5], [0.65, 1.0]], dtype=torch.double)
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_X,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([32]), seed=31),
+    )
+    acquisition.set_X_pending(pending)
+    strategy = OriginalSpaceStrategy(
+        torch.tensor([[0.0, 0.5], [1.0, 1.0]], dtype=torch.double),
+        num_restarts=4,
+        raw_samples=32,
+    )
+
+    result = strategy.optimize(acquisition, q=2)
+
+    assert result.candidates.shape == torch.Size([2, 2])
+    assert torch.isfinite(result.candidates).all()
+    assert torch.isfinite(result.acquisition_value).all()
+    assert torch.all(result.candidates[:, 1] >= 0.5)
+    assert torch.all(result.candidates[:, 1] <= 1.0)
     assert torch.equal(model.train_inputs[0], train_X)
