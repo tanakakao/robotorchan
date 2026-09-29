@@ -739,3 +739,53 @@ Existing acquisition tests additionally cover original-space output selection wi
 No production implementation gap was found. Multi-output Objective compatibility follows from
 the common posterior-sample contract established in Phases 6 and 7. The correct extension point
 remains the native BoTorch Objective API.
+
+
+## Phase 9: MultiTask and Kronecker Objective semantics
+
+Phase 9 verifies that Objective code consumes posterior outputs rather than interpreting model
+input conventions.
+
+### Long-format MultiTaskGP
+
+A long-format `MultiTaskGP` stores task identity in a structural input feature during training.
+For example, `[x, task]` identifies which task generated a scalar observation.
+
+When prediction X includes an explicit task feature, the returned posterior is single-output:
+the task feature chooses the modeled function but is not itself an Objective output dimension.
+
+When prediction X omits the task feature and `output_indices=[...]` requests tasks, BoTorch
+constructs those requested tasks on the final posterior output axis. Only at this point do
+multi-output Objectives index or scalarize the tasks.
+
+Therefore:
+
+`task feature in X != posterior output axis`.
+
+### Block-design KroneckerMultiTaskGP
+
+For `KroneckerMultiTaskGP`, task identity is represented directly by the final training-Y and
+posterior output dimension. With two tasks, a q=2 posterior has event/output shape `[2, 2]`
+without a task feature in candidate X.
+
+Thus:
+
+`Kronecker task axis == posterior output axis`.
+
+### Common Objective boundary
+
+Although the model representations differ, the Objective boundary is the same after posterior
+construction. If both posteriors expose two requested tasks as `[..., q, 2]`, the same native
+`LinearMCObjective(weights=[...])` can reduce both to `[..., q]`.
+
+Likewise, `IdentityMCMultiOutputObjective` can select/reorder tasks only when those tasks are
+actually present on the posterior sample output axis.
+
+Objective implementations must not inspect `task_feature`, infer task count from X, or special
+case Kronecker model classes. Their contract starts at posterior samples.
+
+### Result
+
+No production implementation change is required. robotorchan preserves BoTorch's distinct
+long-format and block-design representations while converging on the same native Objective
+interface after posterior construction.
