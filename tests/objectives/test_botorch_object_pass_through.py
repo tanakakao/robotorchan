@@ -65,12 +65,16 @@ def test_custom_generic_mc_objective_requires_no_robotorchan_registration() -> N
     objective = GenericMCObjective(custom_objective)
     sampler = SobolQMCNormalSampler(torch.Size([16]), seed=191)
     with torch.no_grad():
-        baseline_samples = sampler(model.posterior(torch.linspace(
-            0.0,
-            1.0,
-            10,
-            dtype=torch.double,
-        ).unsqueeze(-1)))
+        baseline_samples = sampler(
+            model.posterior(
+                torch.linspace(
+                    0.0,
+                    1.0,
+                    10,
+                    dtype=torch.double,
+                ).unsqueeze(-1)
+            )
+        )
         best_f = objective(baseline_samples).mean(dim=0).max()
     acquisition = qLogExpectedImprovement(
         model=model,
