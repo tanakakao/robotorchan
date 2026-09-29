@@ -152,3 +152,38 @@ def test_joint_qlogehvi_initialization_respects_candidate_constraint() -> None:
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()
     assert torch.all(candidate[:, 0] >= 0.2 - 1e-6)
+
+
+def test_joint_qlogehvi_accepts_explicit_batch_initial_conditions() -> None:
+    model, train_x = _multi_output_model()
+    with torch.no_grad():
+        train_y = model.posterior(train_x).mean
+    ref_point = train_y.min(dim=0).values - 0.1
+    partitioning = FastNondominatedPartitioning(ref_point=ref_point, Y=train_y)
+    acquisition = qLogExpectedHypervolumeImprovement(
+        model=model,
+        ref_point=ref_point.tolist(),
+        partitioning=partitioning,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=654),
+    )
+    initial_conditions = torch.tensor(
+        [
+            [[0.2], [0.8]],
+            [[0.3], [0.7]],
+            [[0.4], [0.6]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=2,
+        num_restarts=3,
+        raw_samples=None,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
