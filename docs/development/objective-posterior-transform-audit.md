@@ -910,3 +910,102 @@ The native BoTorch outcome-constraint callable contract is sufficient. No roboto
 `ConstrainedMCObjective` wrapper or second constraint language is required. The existing
 acquisition capability metadata meaning of `supports_constraints` remains output/black-box
 constraint compatibility, not candidate-space constraint support.
+
+
+## Phase 12: Risk Measure compatibility
+
+Phase 12 compares robotorchan's scenario aggregators with BoTorch's
+`RiskMeasureMCObjective` family. Similar names do not imply identical APIs or finite-sample
+estimators.
+
+### Two distinct contracts
+
+robotorchan currently provides lightweight scenario-axis aggregators:
+
+`values[..., n_w] -> robust_values[...]`
+
+They make the scenario axis explicit as the final tensor dimension and are used after
+robotorchan perturbation and posterior sampling.
+
+BoTorch risk measures are MC Objectives. With input perturbations, `n_w` environmental
+realizations are represented in the acquisition sample layout and the Objective reconstructs the
+candidate/scenario structure before reducing the environmental axis.
+
+The robotorchan classes therefore must not be advertised as drop-in replacements for
+`botorch.acquisition.risk_measures.RiskMeasureMCObjective`.
+
+### Equivalent measures
+
+For the same empirical scenarios and maximization convention:
+
+- `Expectation` agrees with BoTorch `Expectation`;
+- `WorstCase` agrees with BoTorch `WorstCase`.
+
+These are straightforward reductions and do not depend on quantile interpolation conventions.
+
+### VaR is not currently estimator-equivalent
+
+Both APIs use the lower tail for a maximization objective, but the finite-sample estimators differ.
+
+robotorchan `VaR` uses `torch.quantile(values, 1 - alpha)`, which linearly interpolates by
+default. BoTorch's risk Objective uses its empirical scenario/order-statistic convention.
+
+For scenarios `[1, 2, 3, 4, 5]` at `alpha=0.8`, the current robotorchan result is `1.8`,
+while the BoTorch empirical VaR is `1.0`.
+
+This difference is semantically material. The classes must not be treated as interchangeable
+merely because both are named VaR.
+
+### CVaR is also estimator-sensitive
+
+robotorchan `CVaR` first computes an interpolated quantile threshold and then averages scenario
+values at or below that threshold. BoTorch's `CVaR` follows its own empirical tail estimator
+within the `RiskMeasureMCObjective` contract.
+
+Fractional empirical tails can therefore differ. Phase 12 records this explicitly instead of
+silently changing existing robotorchan numerical behavior.
+
+A future API decision may choose to align the robotorchan scenario aggregators with BoTorch, but
+that would be a numerical contract change and must be handled deliberately rather than as a
+compatibility alias.
+
+### MeanVariance and SNRatio
+
+`MeanVariance` and `SNRatio` remain robotorchan scenario aggregators.
+
+- `MeanVariance` implements mean minus a configurable population-variance penalty.
+- `SNRatio` implements Taguchi larger-is-better, smaller-is-better, and nominal-is-best forms.
+
+They should be evaluated by their documented mathematical definitions, not mapped to a BoTorch
+class solely to obtain a common name.
+
+### Input perturbation responsibility
+
+Risk aggregation does not generate environmental scenarios.
+
+The robust pipeline remains:
+
+`X -> perturbation/scenario generation -> posterior -> posterior sampling -> objective -> risk`
+
+For the native BoTorch path, the input transform / perturbation layout and
+`RiskMeasureMCObjective(n_w=...)` must agree on `n_w`. For the robotorchan lightweight path,
+the scenario axis is already explicit and the aggregator reduces only that axis.
+
+### Gradient, dtype, and device
+
+The existing robotorchan E2E tests verify candidate gradients through perturbation, posterior
+sampling, and risk aggregation for Expectation, MeanVariance, and CVaR. The implementations use
+PyTorch tensor operations and preserve input dtype/device. SNRatio constructs its optional target
+with the values' dtype/device.
+
+Phase 14 will perform the cross-cutting gradient/dtype/device audit; Phase 12 establishes the
+risk-specific contract needed for it.
+
+### Result
+
+BoTorch-native risk Objectives are the preferred path when the acquisition uses BoTorch's
+environmental-scenario layout. robotorchan's existing risk classes remain useful explicit-axis
+scenario aggregators and quality-engineering utilities.
+
+No compatibility wrapper is introduced. In particular, VaR/CVaR numerical differences are
+documented and tested rather than hidden behind aliases.
