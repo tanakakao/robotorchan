@@ -178,6 +178,24 @@ def test_sample_feasible_is_reproducible_for_same_seed() -> None:
     torch.testing.assert_close(first, second)
 
 
+
+def test_alebo_sequential_qbatch_regenerates_feasible_initial_conditions() -> None:
+    strategy = ALEBOStrategy(
+        _bounds(),
+        embedding_dim=2,
+        num_restarts=2,
+        seed=17,
+        sequential=True,
+    )
+
+    result = strategy.optimize(_QuadraticAcquisition(), q=2)
+
+    assert result.candidates.shape == torch.Size([2, _bounds().shape[-1]])
+    embedded = result.metadata["embedded_candidates"]
+    assert embedded.shape == torch.Size([2, 2])
+    assert bool(strategy.is_feasible(embedded).all())
+
+
 def test_alebo_rejects_unmapped_nonlinear_constraints() -> None:
     def constraint(x: torch.Tensor) -> torch.Tensor:
         return x.new_tensor(0.25) - x.square().sum()
