@@ -40,6 +40,20 @@ The current runtime contract is:
 Runtime coverage includes both explicit cross-category augmented batches and candidate
 generation with real mixed qKG and mixed qMFKG acquisitions.
 
+## Initialization contract
+
+The mixed one-shot path does not use ordinary mixed initialization over the public q-batch.
+For each exact row-wise categorical assignment, it flattens the complete augmented batch into
+one conditional continuous optimization problem. BoTorch then generates standard initial
+conditions in that flattened space while the categorical coordinates are fixed for each
+augmented row. This preserves different categories for actual and fantasy rows without copying
+or replacing BoTorch's initialization heuristic.
+
+This is intentionally different from continuous qKG / qMFKG, where native `optimize_acqf`
+detects the one-shot acquisition and uses BoTorch's dedicated one-shot initializer. The mixed
+helper remains `q=1` and automatic-initialization only; it does not claim a public explicit
+augmented `batch_initial_conditions` contract.
+
 ## Optimizer contract
 
 The mixed one-shot optimizer preserves the distinction between actual candidates
@@ -80,7 +94,8 @@ The implementation must satisfy all of the following:
 
 - a fantasy row may select a different category from the observed candidate;
 - categorical coordinates remain fixed during conditional continuous optimization;
-- fidelity coordinates remain optimizable; target-fidelity projection remains an acquisition-level concern;
+- fidelity coordinates remain optimizable; target-fidelity projection remains an acquisition-level
+  concern;
 - the acquisition receives the complete augmented batch;
 - returned candidates exclude fantasy decision rows;
 - the reported acquisition value corresponds to the optimized augmented batch;

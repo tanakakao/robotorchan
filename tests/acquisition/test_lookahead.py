@@ -24,6 +24,32 @@ def test_native_qknowledge_gradient_is_compatible() -> None:
     assert torch.isfinite(value).all()
 
 
+def test_qknowledge_gradient_accepts_augmented_explicit_initial_conditions() -> None:
+    model = _model()
+    acquisition = qKnowledgeGradient(model=model, num_fantasies=4)
+    augmented_q = acquisition.get_augmented_q_batch_size(q=1)
+    initial_conditions = torch.linspace(
+        0.1,
+        0.9,
+        2 * augmented_q,
+        dtype=torch.double,
+    ).reshape(2, augmented_q, 1)
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=None,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    assert candidate.shape == torch.Size([1, 1])
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+
+
 def test_native_qmulti_step_lookahead_is_compatible() -> None:
     model = _model()
     samplers = [
