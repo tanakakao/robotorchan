@@ -7,6 +7,7 @@ from botorch.models.gp_regression_fidelity import SingleTaskMultiFidelityGP
 from botorch.optim import optimize_acqf
 
 from robotorchan.models import MapSaasMultiFidelityGP, SingleTaskGP
+from robotorchan.optim.backends import optimize_acqf_botorch
 
 
 def _multifidelity_model() -> tuple[SingleTaskMultiFidelityGP, torch.Tensor]:
@@ -63,6 +64,46 @@ def test_native_multifidelity_kg_is_compatible() -> None:
     value = acquisition(X)
 
     assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_native_multifidelity_kg_uses_one_shot_initialization() -> None:
+    model, _ = _multifidelity_model()
+    cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
+    cost_utility = InverseCostWeightedUtility(cost_model=cost_model)
+
+    def project(X: torch.Tensor) -> torch.Tensor:
+        projected = X.clone()
+        projected[..., 1] = 1.0
+        return projected
+
+    _, current_value = optimize_acqf(
+        acq_function=PosteriorMean(model),
+        bounds=torch.tensor([[0.0, 1.0], [1.0, 1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=8,
+        fixed_features={1: 1.0},
+    )
+    acquisition = qMultiFidelityKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        current_value=current_value,
+        cost_aware_utility=cost_utility,
+        project=project,
+    )
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0, 0.5], [1.0, 1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+    )
+
+    assert acquisition.get_augmented_q_batch_size(q=1) == 5
+    assert candidate.shape == torch.Size([1, 2])
+    assert 0.5 <= candidate[0, 1].item() <= 1.0
+    assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()
 
 
