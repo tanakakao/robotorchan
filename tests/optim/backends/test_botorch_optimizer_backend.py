@@ -349,3 +349,37 @@ def test_mixed_backend_accepts_ic_generator_for_nonlinear_constraints() -> None:
     assert kwargs["ic_generator"] is ic_generator
     assert kwargs["ic_gen_kwargs"] == {"custom_option": 3}
     assert kwargs["options"]["batch_limit"] == 1
+
+
+def test_botorch_backend_runs_sequential_nonlinear_with_ic_generator() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[0] - 0.1, True),)
+    )
+    generated_q: list[int] = []
+
+    def ic_generator(*, q, num_restarts, **kwargs):
+        generated_q.append(q)
+        return torch.full(
+            (num_restarts, q, 1),
+            0.5,
+            dtype=bounds.dtype,
+            device=bounds.device,
+        )
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=2,
+        num_restarts=2,
+        raw_samples=None,
+        constraints=constraints,
+        sequential=True,
+        ic_generator=ic_generator,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate[:, 0] >= 0.1 - 1e-6)
+    assert generated_q == [1, 1]
