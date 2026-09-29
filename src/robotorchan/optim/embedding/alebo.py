@@ -185,12 +185,13 @@ class ALEBOStrategy(SearchStrategy):
             )
             initializer = None
 
+        raw_samples = self.num_restarts if self.sequential else None
         embedded_candidates, acquisition_value = optimize_acqf(
             acq_function=acq_function,
             bounds=embedded_bounds,
             q=q,
             num_restarts=self.num_restarts,
-            raw_samples=None,
+            raw_samples=raw_samples,
             batch_initial_conditions=batch_initial_conditions,
             options=self.options,
             inequality_constraints=inequality_constraints,
