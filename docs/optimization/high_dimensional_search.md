@@ -49,10 +49,11 @@ strategy = OriginalSpaceStrategy(
 result = strategy.optimize(acq_function)
 ```
 
-現在の robotorchan contract では nonlinear constraint 使用時に feasible な
-`batch_initial_conditions` を明示する。shape は `[num_restarts, q, d]` である。
-BoTorch 自体には custom `ic_generator` を使う経路もあるが、robotorchan の
-`SearchStrategy` API は現時点でその経路を公開していない。
+`OriginalSpaceStrategy` と `MixedSpaceStrategy` は nonlinear constraint に対して、
+feasible な `batch_initial_conditions` または BoTorch-compatible な `ic_generator` を
+受け取る。explicit initial conditions の shape は `[num_restarts, q, d]` である。
+sequential q-batch では BoTorch が各 q=1 step の initial conditions を再生成するため、
+nonlinear constraint には `ic_generator` を使う。
 
 `fixed_features` と nonlinear constraint は `OriginalSpaceStrategy` で併用できる。
 `MixedSpaceStrategy` も BoTorch `optimize_acqf_mixed` に従い intra-point nonlinear
@@ -142,7 +143,12 @@ result = strategy.optimize(acq, q=1)
 
 `fit_acquisition_model()` は multi-start MAP fitting、reference diagonal Laplace covariance、固定 metric sample、full predictive covariance の Gaussian moment matching を順に行い、BoTorch acquisition function に渡せる model を返す。個別の数値処理を検証・研究したい場合には `metric_hessian_diagonal()`、`metric_laplace_covariance()`、`sample_metric_parameters()`、`marginal_metric_posterior()` も利用できる。
 
-acquisition function は embedded space で評価され、`ALEBOStrategy.optimize()` が feasible polytope 内で最適化した後にだけ original/public input space へ戻す。`SearchResult.candidates` は original space、`metadata["embedded_candidates"]` は embedded space の候補である。q-batch acquisition も同じ contract で扱う。
+acquisition function は embedded space で評価され、`ALEBOStrategy.optimize()` が feasible
+polytope 内で最適化した後にだけ original/public input space へ戻す。
+`SearchResult.candidates` は original space、
+`metadata["embedded_candidates"]` は embedded space の候補である。joint q-batch は
+feasible embedded initial conditions を直接使い、sequential q-batch は各 q=1 step で
+feasible initial conditions を再生成する。
 
 ### ALEBO 実装ステータス
 
@@ -271,4 +277,4 @@ ALEBO is different: its existing linear inequalities describe the **internal ALE
 | `ALEBOStrategy` | internal polytope only | ALEBO feasibility inequalities are internal and are not user `CandidateConstraints` |
 | `RandomSearchStrategy` / `TreeEnsembleSearchStrategy` / `TuRBOStrategy` | not exposed | no general candidate-constraint contract is currently claimed |
 
-`CandidateConstraints` currently covers linear equality and inequality constraints only. Nonlinear candidate constraints remain intentionally outside the public contract. This matrix describes optimizer feasibility only; it is independent of acquisition-level output/black-box constraint support.
+`CandidateConstraints` also covers BoTorch-compatible nonlinear inequality constraints where the selected strategy supports them. Embedded / latent strategies still reject unmapped public-space constraints. This matrix describes optimizer feasibility only; it is independent of acquisition-level output/black-box constraint support.

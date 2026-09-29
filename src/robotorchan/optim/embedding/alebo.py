@@ -164,22 +164,44 @@ class ALEBOStrategy(SearchStrategy):
                 self.bounds.new_full((self.embedding_dim,), radius),
             ]
         )
-        batch_initial_conditions = self.sample_feasible(
-            self.num_restarts * q,
-            seed=self.seed,
-        ).reshape(self.num_restarts, q, self.embedding_dim)
+
+        def ic_generator(
+            *,
+            q: int,
+            num_restarts: int,
+            **_: Any,
+        ) -> Tensor:
+            return self.sample_feasible(
+                num_restarts * q,
+                seed=self.seed,
+            ).reshape(num_restarts, q, self.embedding_dim)
+
+        batch_initial_conditions = None
+        initializer = ic_generator
+        if not self.sequential:
+            batch_initial_conditions = ic_generator(
+                q=q,
+                num_restarts=self.num_restarts,
+            )
+            initializer = None
+
+        raw_samples = self.num_restarts if self.sequential else None
         embedded_candidates, acquisition_value = optimize_acqf(
             acq_function=acq_function,
             bounds=embedded_bounds,
             q=q,
             num_restarts=self.num_restarts,
-            raw_samples=None,
+            raw_samples=raw_samples,
             batch_initial_conditions=batch_initial_conditions,
             options=self.options,
             inequality_constraints=inequality_constraints,
             sequential=self.sequential,
+            ic_generator=initializer,
         )
         candidates = self.project(embedded_candidates)
+        if self.sequential:
+            with torch.no_grad():
+                acquisition_value = acq_function(embedded_candidates).reshape(())
 
         return SearchResult(
             candidates=candidates,
