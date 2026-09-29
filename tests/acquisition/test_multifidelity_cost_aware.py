@@ -107,6 +107,49 @@ def test_native_multifidelity_kg_uses_one_shot_initialization() -> None:
     assert torch.isfinite(value).all()
 
 
+def test_multifidelity_kg_accepts_augmented_explicit_initial_conditions() -> None:
+    model, _ = _multifidelity_model()
+    cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
+    cost_utility = InverseCostWeightedUtility(cost_model=cost_model)
+
+    def project(X: torch.Tensor) -> torch.Tensor:
+        projected = X.clone()
+        projected[..., 1] = 1.0
+        return projected
+
+    _, current_value = optimize_acqf(
+        acq_function=PosteriorMean(model),
+        bounds=torch.tensor([[0.0, 1.0], [1.0, 1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=8,
+        fixed_features={1: 1.0},
+    )
+    acquisition = qMultiFidelityKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        current_value=current_value,
+        cost_aware_utility=cost_utility,
+        project=project,
+    )
+    augmented_q = acquisition.get_augmented_q_batch_size(q=1)
+    initial_conditions = torch.rand(2, augmented_q, 2, dtype=torch.double)
+    initial_conditions[..., 1] = 0.5 + 0.5 * initial_conditions[..., 1]
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0, 0.5], [1.0, 1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=None,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    assert candidate.shape == torch.Size([1, 2])
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+
+
 def test_cost_utility_accepts_robotorchan_cost_surrogate() -> None:
     train_X = torch.tensor(
         [[0.0, 0.5], [0.5, 0.5], [1.0, 0.5], [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]],
