@@ -202,7 +202,9 @@ class ALEBOStrategy(SearchStrategy):
 
         return SearchResult(
             candidates=candidates,
-            acquisition_value=acquisition_value.reshape(()),
+            acquisition_value=(
+                acquisition_value if self.sequential else acquisition_value.reshape(())
+            ),
             metadata={
                 "embedded_candidates": embedded_candidates.detach(),
                 "embedding": self.embedding.detach().clone(),
