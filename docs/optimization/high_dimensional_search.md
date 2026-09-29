@@ -49,10 +49,11 @@ strategy = OriginalSpaceStrategy(
 result = strategy.optimize(acq_function)
 ```
 
-現在の robotorchan contract では nonlinear constraint 使用時に feasible な
-`batch_initial_conditions` を明示する。shape は `[num_restarts, q, d]` である。
-BoTorch 自体には custom `ic_generator` を使う経路もあるが、robotorchan の
-`SearchStrategy` API は現時点でその経路を公開していない。
+`OriginalSpaceStrategy` と `MixedSpaceStrategy` は nonlinear constraint に対して、
+feasible な `batch_initial_conditions` または BoTorch-compatible な `ic_generator` を
+受け取る。explicit initial conditions の shape は `[num_restarts, q, d]` である。
+sequential q-batch では BoTorch が各 q=1 step の initial conditions を再生成するため、
+nonlinear constraint には `ic_generator` を使う。
 
 `fixed_features` と nonlinear constraint は `OriginalSpaceStrategy` で併用できる。
 `MixedSpaceStrategy` も BoTorch `optimize_acqf_mixed` に従い intra-point nonlinear
