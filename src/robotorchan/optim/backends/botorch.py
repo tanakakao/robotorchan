@@ -12,6 +12,7 @@ from typing import Any
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.optim import optimize_acqf as botorch_optimize_acqf
 from botorch.optim import optimize_acqf_mixed as botorch_optimize_acqf_mixed
+from botorch.optim.initializers import TGenInitialConditions
 from torch import Tensor
 
 from robotorchan.optim.constraints import CandidateConstraints
@@ -29,6 +30,8 @@ def optimize_acqf_botorch(
     fixed_features: dict[int, float] | None = None,
     batch_initial_conditions: Tensor | None = None,
     sequential: bool = False,
+    ic_generator: TGenInitialConditions | None = None,
+    ic_gen_kwargs: dict[str, Any] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Delegate original-space acquisition optimization to BoTorch."""
     candidate_constraints = constraints or CandidateConstraints()
@@ -36,6 +39,7 @@ def optimize_acqf_botorch(
         options,
         candidate_constraints,
         batch_initial_conditions,
+        ic_generator,
     )
     return botorch_optimize_acqf(
         acq_function=acq_function,
@@ -52,6 +56,8 @@ def optimize_acqf_botorch(
         fixed_features=fixed_features,
         batch_initial_conditions=batch_initial_conditions,
         sequential=sequential,
+        ic_generator=ic_generator,
+        **({} if ic_gen_kwargs is None else ic_gen_kwargs),
     )
 
 
@@ -66,6 +72,8 @@ def optimize_acqf_mixed_botorch(
     options: dict[str, Any] | None = None,
     constraints: CandidateConstraints | None = None,
     batch_initial_conditions: Tensor | None = None,
+    ic_generator: TGenInitialConditions | None = None,
+    ic_gen_kwargs: dict[str, Any] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Delegate enumerated mixed-space acquisition optimization to BoTorch."""
     candidate_constraints = constraints or CandidateConstraints()
@@ -81,6 +89,7 @@ def optimize_acqf_mixed_botorch(
         options,
         candidate_constraints,
         batch_initial_conditions,
+        ic_generator,
     )
     return botorch_optimize_acqf_mixed(
         acq_function=acq_function,
@@ -96,6 +105,8 @@ def optimize_acqf_mixed_botorch(
             candidate_constraints.nonlinear_inequality_constraints
         ),
         batch_initial_conditions=batch_initial_conditions,
+        ic_generator=ic_generator,
+        ic_gen_kwargs=ic_gen_kwargs,
     )
 
 
@@ -103,12 +114,14 @@ def _options_for_nonlinear_constraints(
     options: dict[str, Any] | None,
     constraints: CandidateConstraints,
     batch_initial_conditions: Tensor | None,
+    ic_generator: TGenInitialConditions | None,
 ) -> dict[str, Any] | None:
     if not constraints.has_nonlinear_constraints:
         return None if options is None else dict(options)
-    if batch_initial_conditions is None:
+    if batch_initial_conditions is None and ic_generator is None:
         raise ValueError(
-            "Nonlinear candidate constraints require feasible batch_initial_conditions."
+            "Nonlinear candidate constraints require feasible batch_initial_conditions "
+            "or an ic_generator."
         )
     resolved = {} if options is None else dict(options)
     resolved.setdefault("batch_limit", 1)
