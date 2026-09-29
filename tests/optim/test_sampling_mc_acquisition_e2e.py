@@ -1,7 +1,7 @@
 """End-to-end posterior sampling through MC acquisition optimization."""
 
 import torch
-from botorch.acquisition.logei import qLogExpectedImprovement
+from botorch.acquisition.logei import qLogExpectedImprovement, qLogNoisyExpectedImprovement
 from botorch.acquisition.monte_carlo import qExpectedImprovement
 from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
@@ -136,3 +136,60 @@ def test_gp_qlogei_runs_native_sequential_q_batch() -> None:
     assert torch.isfinite(value).all()
     assert torch.all(candidate >= bounds[0])
     assert torch.all(candidate <= bounds[1])
+
+
+def test_gp_async_pending_lifecycle_runs_end_to_end() -> None:
+    train_x, train_y = _training_data()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+
+    model = SingleTaskGP(train_x, train_y)
+    model.eval()
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_x,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=401),
+    )
+    candidate_a, _ = optimize_acqf_botorch(
+        acquisition,
+        bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+    )
+
+    acquisition.set_X_pending(candidate_a)
+    candidate_b, _ = optimize_acqf_botorch(
+        acquisition,
+        bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+    )
+
+    observed_a = -(candidate_a - 0.7).square() + 1.0
+    updated_x = torch.cat([train_x, candidate_a], dim=0)
+    updated_y = torch.cat([train_y, observed_a], dim=0)
+    updated_model = SingleTaskGP(updated_x, updated_y)
+    updated_model.eval()
+    updated_acquisition = qLogNoisyExpectedImprovement(
+        model=updated_model,
+        X_baseline=updated_x,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=402),
+        X_pending=candidate_b,
+    )
+    candidate_c, value_c = optimize_acqf_botorch(
+        updated_acquisition,
+        bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+    )
+
+    assert candidate_a.shape == torch.Size([1, 1])
+    assert candidate_b.shape == torch.Size([1, 1])
+    assert candidate_c.shape == torch.Size([1, 1])
+    assert updated_x.shape[0] == train_x.shape[0] + 1
+    assert torch.equal(updated_x[-1:], candidate_a)
+    assert not torch.any(torch.all(updated_x == candidate_b, dim=-1))
+    assert torch.isfinite(candidate_c).all()
+    assert torch.isfinite(value_c).all()
