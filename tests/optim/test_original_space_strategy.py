@@ -3,7 +3,9 @@
 import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
+from botorch.acquisition.logei import qLogNoisyExpectedImprovement
 from botorch.acquisition.monte_carlo import qSimpleRegret
+from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models.high_dimensional.reduced import PCAGP
 from robotorchan.models.standard.single_task import SingleTaskGP
@@ -445,3 +447,38 @@ def test_original_space_strategy_combines_linear_nonlinear_and_fixed_feature() -
     assert result.candidates[0, 0] <= 0.5 + 1e-6
     assert result.candidates[0, 1] == 1.0
     assert nonlinear_constraint(result.candidates[0]) >= -1e-6
+
+
+def test_qbatch_interpoint_constraint_with_pending_candidate() -> None:
+    train_X, train_Y = _training_data()
+    model = SingleTaskGP(train_X, train_Y)
+    pending = torch.tensor([[0.9, 0.9]], dtype=torch.double)
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_X,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([32]), seed=29),
+    )
+    acquisition.set_X_pending(pending)
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([[0, 0], [1, 0]]),
+                torch.tensor([-1.0, -1.0], dtype=torch.double),
+                -0.75,
+            ),
+        ),
+    )
+    strategy = OriginalSpaceStrategy(
+        torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
+        num_restarts=4,
+        raw_samples=32,
+        constraints=constraints,
+    )
+
+    result = strategy.optimize(acquisition, q=2)
+
+    assert result.candidates.shape == torch.Size([2, 2])
+    assert result.candidates[:, 0].sum() <= 0.75 + 1e-6
+    assert torch.isfinite(result.candidates).all()
+    assert torch.isfinite(result.acquisition_value).all()
+    assert torch.equal(model.train_inputs[0], train_X)
