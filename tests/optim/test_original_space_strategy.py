@@ -37,6 +37,13 @@ def test_original_space_strategy_validates_optimizer_configuration() -> None:
     with pytest.raises(ValueError, match="raw_samples"):
         OriginalSpaceStrategy(bounds, raw_samples=0)
 
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        raw_samples=None,
+        batch_initial_conditions=torch.full((2, 1, 2), 0.5),
+    )
+    assert strategy.raw_samples is None
+
 
 def test_original_space_strategy_rejects_invalid_q() -> None:
     train_X, train_Y = _training_data()
@@ -513,3 +520,31 @@ def test_multifidelity_qbatch_preserves_pending_fidelity_context() -> None:
     assert torch.all(result.candidates[:, 1] >= 0.5)
     assert torch.all(result.candidates[:, 1] <= 1.0)
     assert torch.equal(model.train_inputs[0], train_X)
+
+
+def test_original_space_strategy_forwards_none_raw_samples_with_explicit_initial_conditions(
+    monkeypatch,
+) -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    initial_conditions = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=2,
+        raw_samples=None,
+        batch_initial_conditions=initial_conditions,
+    )
+    captured = {}
+
+    def fake_optimize_acqf(**kwargs):
+        captured.update(kwargs)
+        return torch.tensor([[0.75]], dtype=torch.double), torch.tensor(0.75)
+
+    monkeypatch.setattr(
+        "robotorchan.optim.backends.botorch.botorch_optimize_acqf",
+        fake_optimize_acqf,
+    )
+    strategy.optimize(None)  # type: ignore[arg-type]
+
+    assert captured["raw_samples"] is None
+    assert captured["num_restarts"] == 2
+    assert captured["batch_initial_conditions"] is initial_conditions
