@@ -37,6 +37,7 @@ from robotorchan.optim.embedding import (
     REMBOStrategy,
     update_baxus_state,
 )
+from robotorchan.optim.initializers import gen_augmented_one_shot_initial_conditions
 from robotorchan.optim.latent import (
     LatentReconstruction,
     LatentSpaceStrategy,
@@ -97,6 +98,7 @@ __all__ = [
     "apply_fixed_features",
     "benchmark_optimizer",
     "benchmark_optimizers",
+    "gen_augmented_one_shot_initial_conditions",
     "get_optimizer_capabilities",
     "optimize_acqf",
     "optimize_acqf_sequential",
