@@ -1,5 +1,6 @@
 """Cross-cutting optimizer behavior tests."""
 
+import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
@@ -63,4 +64,30 @@ def test_sequential_helper_updates_and_restores_pending_points() -> None:
 
     assert candidates.shape == (3, 2)
     assert values.shape == (3,)
+    assert torch.equal(acq.X_pending, original)
+
+
+def test_sequential_helper_restores_pending_when_optimizer_fails() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    acq = _PendingAware()
+    original = torch.tensor([[0.1, 0.1]], dtype=torch.double)
+    acq.set_X_pending(original)
+    calls = 0
+
+    def failing_optimizer(
+        acq_function: AcquisitionFunction,
+        optimizer_bounds: Tensor,
+        q: int,
+    ) -> tuple[Tensor, Tensor]:
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise RuntimeError("optimizer failed")
+        candidate = torch.tensor([[0.4, 0.6]], dtype=optimizer_bounds.dtype)
+        return candidate, acq_function(candidate.unsqueeze(0)).reshape(())
+
+    with pytest.raises(RuntimeError, match="optimizer failed"):
+        optimize_acqf_sequential(failing_optimizer, acq, bounds, q=3)
+
+    assert calls == 2
     assert torch.equal(acq.X_pending, original)

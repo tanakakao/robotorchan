@@ -108,3 +108,31 @@ def test_gp_qlogei_preserves_q_contract_and_candidate_gradients() -> None:
         assert optimized_value.numel() == 1
         assert torch.isfinite(candidate).all()
         assert torch.isfinite(optimized_value).all()
+
+
+def test_gp_qlogei_runs_native_sequential_q_batch() -> None:
+    train_x, train_y = _training_data()
+    model = SingleTaskGP(train_x, train_y)
+    model.eval()
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=321),
+    )
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        bounds,
+        q=3,
+        num_restarts=2,
+        raw_samples=16,
+        sequential=True,
+    )
+
+    assert candidate.shape == torch.Size([3, 1])
+    assert value.shape == torch.Size([3])
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
