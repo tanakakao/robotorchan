@@ -1181,3 +1181,28 @@ For differentiable improvement and risk-aware paths, Phase 16 also verifies grad
 acquisition value back to candidate inputs.
 
 No acquisition-specific Objective wrapper or conversion registry is required.
+
+
+## Phase 17: Full E2E through acquisition optimization
+
+Phase 17 extends the integration boundary through candidate generation:
+
+`Model -> Posterior -> Sampler -> Objective -> Acquisition -> Acquisition Optimization -> Candidate`.
+
+Dedicated E2E tests cover:
+
+- a multi-output model with `GenericMCObjective` and `optimize_acqf`,
+- the same Objective path with a known linear candidate constraint,
+- a native categorical mixed model with `GenericMCObjective` and `optimize_acqf_mixed`.
+
+The constraint test deliberately keeps known candidate/input-space feasibility in the optimizer.
+It is not moved into the sample-space Objective or outcome-constraint layer.
+
+The mixed test likewise keeps categorical enumeration in `optimize_acqf_mixed`; the Objective
+continues to consume posterior samples without knowledge of categorical dimensions.
+
+Existing runtime E2E coverage already exercises standard, Kronecker, and Mixed Kronecker
+optimization. Phase 17 adds the Objective-specific missing combinations instead of duplicating
+those model-level tests.
+
+No robotorchan Objective-to-optimizer adapter is required.
