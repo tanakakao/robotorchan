@@ -54,7 +54,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
             supports_multi_output=True,
             supports_posterior_samples=True,
             posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
-            supports_fantasize=True,
+            supports_fantasize=False,
         ),
         _docs(
             "docs/models/multitask_multioutput.md",
@@ -452,7 +452,6 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         "MixedSingleTaskVariationalGP",
         "MultiTaskGP",
         "MixedMultiTaskGP",
-        "MixedKroneckerMultiTaskGP",
         "ModelListGP",
         "RandomForestSurrogate",
         "ExtraTreesSurrogate",
