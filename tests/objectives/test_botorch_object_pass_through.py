@@ -2,10 +2,13 @@
 
 import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
-from botorch.acquisition.objective import GenericMCObjective, LinearMCObjective
+from botorch.acquisition.objective import (
+    GenericMCObjective,
+    LinearMCObjective,
+    ScalarizedPosteriorTransform,
+)
 from botorch.acquisition.utils import get_infeasible_cost
 from botorch.models.transforms.outcome import Standardize
-from botorch.posteriors.transforms import ScalarizedPosteriorTransform
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import SingleTaskGP
@@ -35,7 +38,7 @@ def test_botorch_posterior_transform_instance_passes_through_unchanged() -> None
 
 
 def test_botorch_objective_instance_is_retained_by_acquisition() -> None:
-    model, _, train_y = _two_output_model()
+    model, _, _ = _two_output_model()
     weights = torch.tensor([0.7, 0.3], dtype=torch.double)
     objective = LinearMCObjective(weights=weights)
     acquisition = qLogExpectedImprovement(
