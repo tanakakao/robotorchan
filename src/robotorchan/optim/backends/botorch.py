@@ -57,7 +57,7 @@ def optimize_acqf_botorch(
         batch_initial_conditions=batch_initial_conditions,
         sequential=sequential,
         ic_generator=ic_generator,
-        ic_gen_kwargs=ic_gen_kwargs,
+        **({} if ic_gen_kwargs is None else ic_gen_kwargs),
     )
 
 
