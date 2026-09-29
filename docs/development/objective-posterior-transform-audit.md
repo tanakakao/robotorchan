@@ -951,7 +951,7 @@ robotorchan `VaR` uses `torch.quantile(values, 1 - alpha)`, which linearly inter
 default. BoTorch's risk Objective uses its empirical scenario/order-statistic convention.
 
 For scenarios `[1, 2, 3, 4, 5]` at `alpha=0.8`, the current robotorchan result is `1.8`,
-while the BoTorch empirical VaR is `1.0`.
+while BoTorch 0.18.1 returns `2.0` for its empirical VaR convention.
 
 This difference is semantically material. The classes must not be treated as interchangeable
 merely because both are named VaR.
@@ -959,11 +959,13 @@ merely because both are named VaR.
 ### CVaR is also estimator-sensitive
 
 robotorchan `CVaR` first computes an interpolated quantile threshold and then averages scenario
-values at or below that threshold. BoTorch's `CVaR` follows its own empirical tail estimator
-within the `RiskMeasureMCObjective` contract.
+values at or below that threshold. BoTorch's `CVaR` follows its empirical tail estimator within
+the `RiskMeasureMCObjective` contract.
 
-Fractional empirical tails can therefore differ. Phase 12 records this explicitly instead of
-silently changing existing robotorchan numerical behavior.
+These formulations are not API-equivalent, even though they can produce the same value for some
+finite scenario sets. For `[1, 2, 3, 4, 5]` at `alpha=0.7`, both currently return `1.5`.
+Phase 12 therefore tests the observed agreement without making the stronger and incorrect claim
+that the estimators must differ for every fractional empirical tail.
 
 A future API decision may choose to align the robotorchan scenario aggregators with BoTorch, but
 that would be a numerical contract change and must be handled deliberately rather than as a
