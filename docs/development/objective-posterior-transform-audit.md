@@ -614,3 +614,59 @@ Phase 6 found no production-code gap that requires a custom Objective implementa
 compatibility requirement is instead enforced by posterior sampling shape and sampler selection,
 which were established by the preceding Sampling / Posterior audit and are now connected
 explicitly to native MC Objective tests.
+
+
+## Phase 7: sample, batch, q, and output shape contract
+
+Phase 7 makes the MC Objective axis contract executable rather than relying on examples with only
+one sample dimension or no t-batch.
+
+The canonical tensor layout is:
+
+`sample_shape x batch_shape x q x m`.
+
+A scalar `MCAcquisitionObjective` removes only the final output dimension:
+
+`sample_shape x batch_shape x q x m -> sample_shape x batch_shape x q`.
+
+Neither the sampler nor the objective may silently flatten, squeeze, or reinterpret sample,
+t-batch, q, task, or output axes.
+
+### Audited cases
+
+- multi-dimensional `sample_shape=[5, 7]`, proving that sample shape is not assumed to be one
+  leading dimension;
+- t-batch shape `[2]`;
+- `q=1` and `q=3`;
+- `m=1` and `m=2`;
+- Kronecker task outputs, where the final task/output axis remains distinct from q;
+- independent Gaussian external posterior sampling;
+- empirical ensemble sampling;
+- DeepGP single-output trajectory sampling;
+- output-reducer inverse transforms from latent `m=2` to original `m=5`.
+
+For example, a two-dimensional sample shape, t-batch 2, q=3, and m=2 must remain
+`[5, 7, 2, 3, 2]` before scalarization and `[5, 7, 2, 3]` afterward.
+
+### Task and output semantics
+
+For block-design `KroneckerMultiTaskGP`, tasks occupy the final posterior output axis. A q=1
+query with two tasks is therefore `[..., 1, 2]`, not `[..., 2, 1]`. Phase 7 covers q=1 and
+q>1 separately to prevent accidental interchange of q and task/output axes.
+
+Long-format MultiTask models can encode task identity in X instead. Their task-feature input
+dimension is not itself an MC output axis. Downstream code must follow the returned Posterior
+shape rather than infer axes from the model family name.
+
+### Reduced outputs
+
+Output reconstruction operates only on the final latent-output dimension. All leading sample,
+batch, and q dimensions are preserved. MC objectives are then defined in the restored original
+output space.
+
+### Result
+
+No production implementation change is required by the audited representative paths. The
+existing posterior and reducer implementations preserve the BoTorch axis contract. Phase 7 adds
+regression coverage so future posterior adapters or objectives cannot accidentally collapse q,
+batch, or output dimensions.
