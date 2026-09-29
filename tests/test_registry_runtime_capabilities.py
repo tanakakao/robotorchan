@@ -18,7 +18,6 @@ def test_runtime_validated_exact_models_keep_required_capabilities() -> None:
     for name in (
         "SingleTaskGP",
         "MixedSingleTaskGP",
-        "KroneckerMultiTaskGP",
         "SingleTaskMultiFidelityGP",
         "MixedSingleTaskMultiFidelityGP",
     ):
@@ -27,8 +26,10 @@ def test_runtime_validated_exact_models_keep_required_capabilities() -> None:
         assert capabilities.supports_fantasize
 
 
-def test_runtime_validated_expressive_kronecker_models_keep_capabilities() -> None:
+def test_kronecker_models_do_not_advertise_unsupported_fantasize() -> None:
     for name in (
+        "KroneckerMultiTaskGP",
+        "MixedKroneckerMultiTaskGP",
         "SpectralMixtureKroneckerMultiTaskGP",
         "MixedSpectralMixtureKroneckerMultiTaskGP",
         "InfiniteWidthBNNKroneckerMultiTaskGP",
@@ -36,7 +37,7 @@ def test_runtime_validated_expressive_kronecker_models_keep_capabilities() -> No
     ):
         capabilities = MODEL_REGISTRY[name].capabilities
         assert capabilities.supports_posterior_samples
-        assert capabilities.supports_fantasize
+        assert not capabilities.supports_fantasize
         assert capabilities.posterior_sampling_type is PosteriorSamplingType.GAUSSIAN
 
 
