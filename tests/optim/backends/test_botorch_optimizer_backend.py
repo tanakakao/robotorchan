@@ -53,6 +53,26 @@ def test_botorch_backend_preserves_native_arguments() -> None:
     assert kwargs["sequential"] is True
 
 
+def test_botorch_backend_preserves_fixed_feature_when_sequential() -> None:
+    acq = _DummyAcquisition()
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+
+    candidates, values = optimize_acqf_botorch(
+        acq,
+        bounds,
+        q=2,
+        num_restarts=3,
+        raw_samples=32,
+        fixed_features={1: 0.25},
+        sequential=True,
+    )
+
+    assert candidates.shape == torch.Size([2, 2])
+    assert values.shape == torch.Size([2])
+    assert torch.isfinite(candidates).all()
+    assert torch.all(candidates[:, 1] == 0.25)
+
+
 def test_botorch_backend_applies_nonlinear_batch_limit_without_mutating_options() -> None:
     acq = _DummyAcquisition()
     bounds = torch.tensor([[0.0], [1.0]])

@@ -33,9 +33,11 @@ class OriginalSpaceStrategy(SearchStrategy):
             fresh initial conditions for each step.
         constraints: Optional candidate-space constraints using BoTorch-native
             optimizer contracts.
-        fixed_features: Optional feature values fixed during optimization. This is
-            suitable for target-fidelity optimization without changing the public
-            candidate coordinates.
+        fixed_features: Optional feature values fixed during optimization. BoTorch
+            applies the fixed coordinates throughout initialization and local
+            optimization, including every member of a joint or sequential q-batch.
+            This is suitable for target-fidelity or fixed-task optimization without
+            changing the public candidate coordinates.
         batch_initial_conditions: Optional BoTorch initial conditions with shape
             ``[num_restarts, q, d]``. BoTorch requires feasible initial conditions
             when nonlinear inequality constraints are used. For joint optimization,
