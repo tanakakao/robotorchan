@@ -226,6 +226,7 @@ def test_mixed_space_strategy_runs_qbatch_nonlinear_with_ic_generator() -> None:
         sampler=SobolQMCNormalSampler(sample_shape=torch.Size([16]), seed=41),
     )
     bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+
     def nonlinear_constraint(x: torch.Tensor) -> torch.Tensor:
         return x.new_tensor(0.64) - x[0].square()
 
