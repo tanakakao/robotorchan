@@ -22,6 +22,7 @@ def test_botorch_input_perturbation_flattens_q_and_scenario_axes() -> None:
         dtype=torch.double,
     )
     transform = InputPerturbation(perturbation_set=perturbations)
+    transform.eval()
     X = torch.rand(2, 4, 2, dtype=torch.double)
 
     transformed = transform(X)
