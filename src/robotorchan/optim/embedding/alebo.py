@@ -164,6 +164,7 @@ class ALEBOStrategy(SearchStrategy):
                 self.bounds.new_full((self.embedding_dim,), radius),
             ]
         )
+
         def ic_generator(
             *,
             q: int,
