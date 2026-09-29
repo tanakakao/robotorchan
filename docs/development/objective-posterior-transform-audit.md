@@ -1125,3 +1125,30 @@ when creating tensors that participate in the differentiable path.
 
 Using `torch.tensor(existing_tensor)`, implicit CPU constants, or an unconditional
 `.cpu().numpy()` conversion inside that path is incompatible with the contract.
+
+
+## Phase 15: Sampling -> Objective integration
+
+Phase 15 verifies the integration boundary between posterior sampling and MC Objectives.
+
+The contract is intentionally sampler-agnostic at the Objective boundary:
+
+`Posterior -> compatible BoTorch sampler -> samples[..., q, m] -> MC Objective`.
+
+No robotorchan conversion layer is required between a compatible sampler and the Objective.
+
+Representative integration tests cover:
+
+- Gaussian posterior + `SobolQMCNormalSampler`,
+- Kronecker multi-task posterior + `SobolQMCNormalSampler`,
+- ensemble posterior + `IndexSampler`,
+- DeepGP posterior + `StochasticSampler`.
+
+The tests use a multidimensional `sample_shape=[4, 5]` to ensure that Objective evaluation treats
+all leading sample dimensions transparently rather than assuming one Monte Carlo dimension.
+
+For differentiable Gaussian and Kronecker paths, gradients are also checked from the final
+Objective values back to candidate inputs.
+
+Sampler selection remains a posterior capability concern. The Objective consumes the resulting
+sample tensor and should not branch on the model, posterior, or sampler class.
