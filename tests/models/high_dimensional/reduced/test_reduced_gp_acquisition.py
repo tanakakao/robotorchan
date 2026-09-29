@@ -17,6 +17,7 @@ from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import NondominatedPartitioning
 
 from robotorchan.models import ReducedGP
+from robotorchan.optim.backends import optimize_acqf_botorch
 from robotorchan.reduction import OutputPCAReducer, PCAInputReducer
 
 
@@ -185,3 +186,30 @@ def test_multiobjective_acquisition_gradient_flows_through_both_reducers() -> No
     assert X.grad is not None
     assert X.grad.shape == X.shape
     assert torch.isfinite(X.grad).all()
+
+
+def test_reduced_gp_qbatch_runs_with_pending_in_original_space() -> None:
+    model, train_X, _ = _combined_model()
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_X,
+        sampler=_sampler(),
+        objective=_original_space_scalar_objective(),
+        prune_baseline=False,
+        cache_root=False,
+    )
+    pending = torch.rand(2, 6, dtype=torch.double)
+    acquisition.set_X_pending(pending)
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.stack((torch.zeros(6, dtype=torch.double), torch.ones(6, dtype=torch.double))),
+        q=2,
+        num_restarts=2,
+        raw_samples=16,
+    )
+
+    assert candidate.shape == torch.Size([2, 6])
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert model.raw_train_X.shape == train_X.shape
