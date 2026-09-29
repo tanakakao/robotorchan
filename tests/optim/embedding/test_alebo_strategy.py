@@ -114,6 +114,7 @@ def test_validates_embedding_dimension_and_projection_shape() -> None:
 class _QuadraticAcquisition(AcquisitionFunction):
     def __init__(self) -> None:
         super().__init__(model=None)
+        self.X_pending = None
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         return -X.square().sum(dim=(-1, -2))
@@ -176,7 +177,6 @@ def test_sample_feasible_is_reproducible_for_same_seed() -> None:
     second = strategy.sample_feasible(16, seed=19)
 
     torch.testing.assert_close(first, second)
-
 
 
 def test_alebo_sequential_qbatch_regenerates_feasible_initial_conditions() -> None:
