@@ -47,7 +47,7 @@ def test_worst_case_matches_botorch_for_maximization() -> None:
     native = BoTorchWorstCase(n_w=values.shape[-1])
 
     actual = WorstCase()(values)
-    expected = native(_as_botorch_samples(values)).squeeze(0)
+    expected = native(_as_botorch_samples(values)).squeeze(0).squeeze(-1)
 
     torch.testing.assert_close(actual, expected)
 
@@ -61,7 +61,7 @@ def test_var_matches_botorch_lower_tail_order_statistic_on_empirical_quantile() 
     robotorchan_value = VaR(alpha=alpha)(values).squeeze()
 
     assert botorch_value.item() == 2.0
-    assert robotorchan_value.item() == 1.8
+    torch.testing.assert_close(robotorchan_value, torch.tensor(1.8, dtype=torch.double))
 
 
 def test_cvar_can_match_botorch_for_an_exact_empirical_tail() -> None:
