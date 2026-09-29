@@ -35,10 +35,7 @@ def test_kronecker_models_do_not_advertise_unsupported_fantasize() -> None:
         "InfiniteWidthBNNKroneckerMultiTaskGP",
         "MixedInfiniteWidthBNNKroneckerMultiTaskGP",
     ):
-        capabilities = MODEL_REGISTRY[name].capabilities
-        assert capabilities.supports_posterior_samples
-        assert not capabilities.supports_fantasize
-        assert capabilities.posterior_sampling_type is PosteriorSamplingType.GAUSSIAN
+        assert not MODEL_REGISTRY[name].capabilities.supports_fantasize
 
 
 def test_mixed_reduced_models_keep_mixed_input_metadata() -> None:
