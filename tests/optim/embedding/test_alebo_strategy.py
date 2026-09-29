@@ -193,6 +193,8 @@ def test_alebo_sequential_qbatch_regenerates_feasible_initial_conditions() -> No
     assert result.candidates.shape == torch.Size([2, _bounds().shape[-1]])
     embedded = result.metadata["embedded_candidates"]
     assert embedded.shape == torch.Size([2, 2])
+    assert result.acquisition_value is not None
+    assert result.acquisition_value.shape == torch.Size([2])
     assert bool(strategy.is_feasible(embedded).all())
 
 
