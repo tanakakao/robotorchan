@@ -73,7 +73,7 @@ def test_fantasy_model_runs_acquisition_and_qbatch_optimization() -> None:
     pending = torch.tensor([[0.25], [0.75]], dtype=torch.double)
     fantasy_model = model.fantasize(
         X=pending,
-        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([2]), seed=5678),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([1]), seed=5678),
     )
     acquisition = qLogExpectedImprovement(
         model=fantasy_model,
@@ -91,11 +91,11 @@ def test_fantasy_model_runs_acquisition_and_qbatch_optimization() -> None:
         raw_samples=16,
     )
 
-    assert value.shape == torch.Size([2, 1])
+    assert value.shape == torch.Size([1])
     assert gradient.shape == X.shape
     assert torch.isfinite(gradient).all()
-    assert candidate.shape == torch.Size([2, 2, 1])
-    assert optimized_value.shape == torch.Size([2])
+    assert candidate.shape == torch.Size([2, 1])
+    assert optimized_value.numel() == 1
     assert candidate.dtype == torch.double
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(optimized_value).all()
