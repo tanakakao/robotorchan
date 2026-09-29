@@ -117,3 +117,38 @@ def test_noisy_multiobjective_qbatch_runs_with_pending_candidates() -> None:
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()
     assert all(torch.equal(submodel.train_inputs[0], train_x) for submodel in model.models)
+
+
+def test_joint_qlogehvi_initialization_respects_candidate_constraint() -> None:
+    model, train_x = _multi_output_model()
+    with torch.no_grad():
+        train_y = model.posterior(train_x).mean
+    ref_point = train_y.min(dim=0).values - 0.1
+    partitioning = FastNondominatedPartitioning(ref_point=ref_point, Y=train_y)
+    acquisition = qLogExpectedHypervolumeImprovement(
+        model=model,
+        ref_point=ref_point.tolist(),
+        partitioning=partitioning,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=321),
+    )
+    inequality_constraints = [
+        (
+            torch.tensor([0]),
+            torch.tensor([1.0], dtype=torch.double),
+            0.2,
+        )
+    ]
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=2,
+        num_restarts=3,
+        raw_samples=32,
+        inequality_constraints=inequality_constraints,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate[:, 0] >= 0.2 - 1e-6)
