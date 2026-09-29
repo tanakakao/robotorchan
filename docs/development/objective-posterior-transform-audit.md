@@ -1231,3 +1231,28 @@ BoTorch's `GenericMCObjective`.
 PosteriorTransform support is still posterior-dependent. Pass-through does not imply that every
 BoTorch PosteriorTransform can operate on every posterior family; the unsupported combinations
 identified in Phases 4 and 5 remain explicit rather than being hidden behind adapters.
+
+
+## Phase 19: gap implementation decision
+
+Phase 19 re-evaluated the remaining Objective and PosteriorTransform gaps using the implementation
+criteria defined by this audit.
+
+One concrete API gap is closed: `ALEBOMetricMarginalModel.posterior` now applies a supplied
+BoTorch `posterior_transform` after constructing its moment-matched `GPyTorchPosterior`. This is
+an exact pass-through at the model API boundary and introduces no additional approximation beyond
+ALEBO's existing metric-marginal moment matching.
+
+The other known scalarized PosteriorTransform gaps are deliberately not filled with robotorchan
+adapters:
+
+- `LinearOutputPosterior` preserves latent sampling and restored marginal moments but does not
+  expose the complete joint GPyTorch distribution required by the native scalarized transform.
+- `EnsemblePosterior` and `DeepGPPosterior` are empirical posterior representations. Scalar
+  sample-space objectives such as `LinearMCObjective` remain the natural path.
+- Kronecker scalarized PosteriorTransform support remains limited by the upstream posterior /
+  transform contract. robotorchan does not replace that contract with an approximate transform.
+
+No custom Objective registry, scalarization DSL, posterior adapter, or compatibility alias is added.
+The Phase 19 implementation is therefore limited to the ALEBO pass-through gap that can be closed
+without changing posterior semantics.
