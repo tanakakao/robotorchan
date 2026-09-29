@@ -36,8 +36,10 @@ class OriginalSpaceStrategy(SearchStrategy):
         fixed_features: Optional feature values fixed during optimization. BoTorch
             applies the fixed coordinates throughout initialization and local
             optimization, including every member of a joint or sequential q-batch.
-            This is suitable for target-fidelity or fixed-task optimization without
-            changing the public candidate coordinates.
+            This is suitable for target-fidelity or long-format fixed-task
+            optimization without changing the public candidate coordinates.
+            Kronecker multi-task models have no task-feature candidate coordinate;
+            their task structure remains in the posterior output dimension.
         batch_initial_conditions: Optional BoTorch initial conditions with shape
             ``[num_restarts, q, d]``. BoTorch requires feasible initial conditions
             when nonlinear inequality constraints are used. For joint optimization,
