@@ -373,7 +373,7 @@ def test_botorch_backend_runs_sequential_nonlinear_with_ic_generator() -> None:
         bounds,
         q=2,
         num_restarts=2,
-        raw_samples=None,
+        raw_samples=8,
         constraints=constraints,
         sequential=True,
         ic_generator=ic_generator,
