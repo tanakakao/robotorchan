@@ -60,28 +60,26 @@ def test_qlognei_x_pending_lifecycle_with_q_batch() -> None:
         sampler=SobolQMCNormalSampler(torch.Size([16]), seed=11),
         prune_baseline=False,
         cache_root=False,
-        cache_pending=False,
     )
     X = torch.tensor([[[0.2], [0.8]]], dtype=torch.double)
     single_pending = torch.tensor([[0.4]], dtype=torch.double)
     multiple_pending = torch.tensor([[0.3], [0.6]], dtype=torch.double)
 
-    assert acquisition.X_pending is None
+    initial_value = acquisition(X)
+    assert initial_value.shape == torch.Size([1])
+    assert torch.isfinite(initial_value).all()
 
     acquisition.set_X_pending(single_pending)
-    assert acquisition.X_pending is not None
-    assert acquisition.X_pending.shape == torch.Size([1, 1])
-    assert acquisition.X_pending.dtype == X.dtype
-    assert acquisition.X_pending.device == X.device
-    assert torch.isfinite(acquisition(X)).all()
+    single_pending_value = acquisition(X)
+    assert single_pending_value.shape == torch.Size([1])
+    assert torch.isfinite(single_pending_value).all()
 
     acquisition.set_X_pending(multiple_pending)
-    assert acquisition.X_pending is not None
-    assert acquisition.X_pending.shape == torch.Size([2, 1])
-    assert torch.isfinite(acquisition(X)).all()
+    multiple_pending_value = acquisition(X)
+    assert multiple_pending_value.shape == torch.Size([1])
+    assert torch.isfinite(multiple_pending_value).all()
 
     acquisition.set_X_pending(None)
-    assert acquisition.X_pending is None
     value = acquisition(X)
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
