@@ -3,7 +3,7 @@
 import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
-from botorch.acquisition.logei import qLogNoisyExpectedImprovement
+from botorch.acquisition.logei import qLogExpectedImprovement, qLogNoisyExpectedImprovement
 from botorch.acquisition.monte_carlo import qSimpleRegret
 from botorch.sampling.normal import SobolQMCNormalSampler
 
@@ -548,3 +548,34 @@ def test_original_space_strategy_forwards_none_raw_samples_with_explicit_initial
     assert captured["raw_samples"] is None
     assert captured["num_restarts"] == 2
     assert captured["batch_initial_conditions"] is initial_conditions
+
+
+def test_original_space_strategy_satisfies_qbatch_interpoint_equality_constraint() -> None:
+    train_X, train_Y = _training_data()
+    model = SingleTaskGP(train_X, train_Y)
+    acquisition = qLogExpectedImprovement(model=model, best_f=train_Y.max())
+    constraints = CandidateConstraints(
+        equality_constraints=(
+            (
+                torch.tensor([[0, 0], [1, 0]]),
+                torch.tensor([1.0, 1.0], dtype=torch.double),
+                1.0,
+            ),
+        ),
+    )
+    strategy = OriginalSpaceStrategy(
+        torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double),
+        num_restarts=2,
+        raw_samples=16,
+        constraints=constraints,
+    )
+
+    result = strategy.optimize(acquisition, q=2)
+
+    assert result.candidates.shape == torch.Size([2, 2])
+    assert torch.isfinite(result.candidates).all()
+    assert torch.isclose(
+        result.candidates[:, 0].sum(),
+        torch.tensor(1.0, dtype=torch.double),
+        atol=1e-5,
+    )
