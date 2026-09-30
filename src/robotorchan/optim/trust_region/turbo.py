@@ -169,6 +169,41 @@ def _normalized_dimension_weights(
     return torch.exp(log_weights - log_weights.mean())
 
 
+def turbo_dimension_weights_from_model(
+    model: Any,
+    *,
+    input_dim: int,
+    dtype: torch.dtype,
+    device: torch.device,
+    bounds: Tensor | None = None,
+) -> Tensor:
+    """Return TuRBO ARD weights from a model with one public-space lengthscale vector."""
+    covar_module = getattr(model, "covar_module", None)
+    lengthscale = getattr(covar_module, "lengthscale", None)
+    if lengthscale is None:
+        raise ValueError("model does not expose covar_module.lengthscale.")
+    lengthscale = lengthscale.detach().to(dtype=dtype, device=device)
+    if lengthscale.ndim < 1 or lengthscale.shape[-1] != input_dim:
+        raise ValueError("model lengthscale last dimension must match the public input dimension.")
+    lengthscale_samples = lengthscale.reshape(-1, input_dim)
+    if not torch.all(torch.isfinite(lengthscale_samples)) or torch.any(lengthscale_samples <= 0):
+        raise ValueError("model lengthscale must be finite and strictly positive.")
+    representative_lengthscale = lengthscale_samples.median(dim=0).values
+    if bounds is not None:
+        if bounds.shape != (2, input_dim):
+            raise ValueError("bounds must have shape (2, input_dim).")
+        widths = (bounds[1] - bounds[0]).to(dtype=dtype, device=device)
+        if not torch.all(torch.isfinite(widths)) or torch.any(widths <= 0):
+            raise ValueError("bounds must define finite, strictly positive widths.")
+        representative_lengthscale = representative_lengthscale / widths
+    return _normalized_dimension_weights(
+        representative_lengthscale,
+        dim=input_dim,
+        dtype=dtype,
+        device=device,
+    )
+
+
 def turbo_trust_region_bounds(
     center: Tensor,
     bounds: Tensor,
@@ -328,6 +363,17 @@ class TuRBOStrategy(SearchStrategy):
         if torch.any(center < self.bounds[0]) or torch.any(center > self.bounds[1]):
             raise ValueError("center must lie inside bounds.")
         return center.detach().clone()
+
+    def update_dimension_weights_from_model(self, model: Any) -> Tensor:
+        """Update trust-region geometry from a compatible public-space ARD model."""
+        self.dimension_weights = turbo_dimension_weights_from_model(
+            model,
+            input_dim=self.input_dim,
+            dtype=self.bounds.dtype,
+            device=self.bounds.device,
+            bounds=self.bounds,
+        )
+        return self.dimension_weights.detach().clone()
 
     def trust_region_bounds(self, center: Tensor | None = None) -> Tensor:
         """Return feasible trust-region bounds around the current incumbent."""

@@ -1,5 +1,7 @@
 """Tests for the stateful TuRBO acquisition search strategy."""
 
+from types import SimpleNamespace
+
 import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
@@ -11,6 +13,7 @@ from robotorchan.optim import (
     generate_turbo_restart_center,
     generate_turbo_thompson_choices,
     restart_turbo_state,
+    turbo_dimension_weights_from_model,
     turbo_trust_region_bounds,
     update_turbo_state,
 )
@@ -495,3 +498,100 @@ def test_strategy_restart_reenters_search_with_preserved_best_value() -> None:
     assert not restarted.restart_triggered
     assert torch.all(strategy.center >= bounds[0])
     assert torch.all(strategy.center <= bounds[1])
+
+
+def test_model_ard_lengthscales_define_turbo_dimension_weights() -> None:
+    train_X, train_Y, bounds = _problem(input_dim=4)
+    model = SingleTaskGP(train_X, train_Y)
+    lengthscales = torch.tensor([0.25, 0.5, 1.0, 2.0], dtype=torch.double)
+    model.covar_module.lengthscale = lengthscales
+
+    weights = turbo_dimension_weights_from_model(
+        model,
+        input_dim=4,
+        dtype=bounds.dtype,
+        device=bounds.device,
+        bounds=bounds,
+    )
+
+    expected = lengthscales / torch.exp(torch.log(lengthscales).mean())
+    torch.testing.assert_close(weights, expected)
+    torch.testing.assert_close(weights.prod(), torch.ones((), dtype=torch.double))
+
+
+def test_raw_model_lengthscales_are_scaled_by_bound_widths() -> None:
+    _, _, _ = _problem(input_dim=2)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 100.0]], dtype=torch.double)
+    lengthscales = torch.tensor([1.0, 100.0], dtype=torch.double)
+    model = SimpleNamespace(covar_module=SimpleNamespace(lengthscale=lengthscales))
+
+    weights = turbo_dimension_weights_from_model(
+        model,
+        input_dim=2,
+        dtype=bounds.dtype,
+        device=bounds.device,
+        bounds=bounds,
+    )
+
+    torch.testing.assert_close(weights, torch.ones(2, dtype=torch.double))
+
+
+def test_strategy_can_refresh_geometry_from_model_ard_lengthscales() -> None:
+    train_X, train_Y, bounds = _problem(input_dim=4)
+    model = SingleTaskGP(train_X, train_Y)
+    model.covar_module.lengthscale = torch.tensor(
+        [0.25, 0.5, 1.0, 2.0],
+        dtype=torch.double,
+    )
+    strategy = TuRBOStrategy(
+        bounds,
+        center=torch.full((4,), 0.5, dtype=torch.double),
+        state=TuRBOState(dim=4, length=0.2),
+    )
+
+    weights = strategy.update_dimension_weights_from_model(model)
+    trust_bounds = strategy.trust_region_bounds()
+
+    torch.testing.assert_close(weights, strategy.dimension_weights)
+    half_widths = (trust_bounds[1] - trust_bounds[0]) / 2.0
+    torch.testing.assert_close(half_widths, 0.1 * weights)
+
+
+def test_model_geometry_aggregates_batched_ard_lengthscales_by_median() -> None:
+    _, _, bounds = _problem(input_dim=4)
+    lengthscales = torch.tensor(
+        [
+            [0.2, 0.5, 1.0, 2.0],
+            [0.4, 1.0, 2.0, 4.0],
+            [0.8, 2.0, 4.0, 8.0],
+        ],
+        dtype=torch.double,
+    )
+    model = SimpleNamespace(covar_module=SimpleNamespace(lengthscale=lengthscales))
+
+    weights = turbo_dimension_weights_from_model(
+        model,
+        input_dim=4,
+        dtype=bounds.dtype,
+        device=bounds.device,
+        bounds=bounds,
+    )
+
+    median = lengthscales.median(dim=0).values
+    expected = median / torch.exp(torch.log(median).mean())
+    torch.testing.assert_close(weights, expected)
+
+
+def test_model_geometry_rejects_non_public_lengthscale_dimension() -> None:
+    _, _, bounds = _problem(input_dim=4)
+    model = SimpleNamespace(
+        covar_module=SimpleNamespace(lengthscale=torch.ones(3, dtype=torch.double))
+    )
+
+    with pytest.raises(ValueError, match="public input dimension"):
+        turbo_dimension_weights_from_model(
+            model,
+            input_dim=4,
+            dtype=bounds.dtype,
+            device=bounds.device,
+        )

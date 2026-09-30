@@ -5,7 +5,7 @@ import torch
 from botorch.acquisition.analytic import ExpectedImprovement, PosteriorMean
 from botorch.acquisition.monte_carlo import qExpectedImprovement
 
-from robotorchan.models import PCAGP, SingleTaskGP
+from robotorchan.models import PCAGP, EnsembleMapSaasSingleTaskGP, SingleTaskGP
 from robotorchan.optim import TuRBOState, TuRBOStrategy, update_turbo_state
 
 
@@ -223,3 +223,34 @@ def test_turbo_can_resume_candidate_generation_after_restart() -> None:
     assert result.metadata["restart_count"] == 1
     assert torch.all(result.candidates >= result.metadata["trust_region_bounds"][0])
     assert torch.all(result.candidates <= result.metadata["trust_region_bounds"][1])
+
+
+def test_turbo_high_dimensional_map_saas_thompson_path() -> None:
+    torch.manual_seed(47)
+    input_dim = 20
+    train_X = torch.rand(24, input_dim, dtype=torch.double)
+    train_Y = -((train_X[:, :3] - 0.7) ** 2).sum(dim=-1, keepdim=True)
+    bounds = torch.stack(
+        [
+            torch.zeros(input_dim, dtype=torch.double),
+            torch.ones(input_dim, dtype=torch.double),
+        ]
+    )
+    model = EnsembleMapSaasSingleTaskGP(train_X, train_Y, num_taus=2)
+    incumbent = train_X[train_Y.squeeze(-1).argmax()]
+    strategy = TuRBOStrategy(
+        bounds,
+        center=incumbent,
+        state=TuRBOState(
+            dim=input_dim,
+            best_value=float(train_Y.max().item()),
+        ),
+        seed=37,
+    )
+
+    result = strategy.thompson_sample(model, n_candidates=128)
+
+    assert result.candidates.shape == (1, input_dim)
+    trust_bounds = result.metadata["trust_region_bounds"]
+    assert torch.all(result.candidates >= trust_bounds[0])
+    assert torch.all(result.candidates <= trust_bounds[1])
