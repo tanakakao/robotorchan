@@ -9,8 +9,11 @@ ProblemSpec → Model Registry → Selector → Model × Acquisition Compatibili
 ProblemSpec は問題の構造を宣言します。モデル名を直接指定する設定ではありません。
 
     from robotorchan.models.capabilities import InputType
-    from robotorchan.problem import ProblemPurpose, ProblemSpec
-    from robotorchan.recommendation import recommend_compatible_workflows
+    from robotorchan.workflow import (
+        ProblemPurpose,
+        ProblemSpec,
+        recommend_compatible_workflows,
+    )
 
     spec = ProblemSpec(
         purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION,
