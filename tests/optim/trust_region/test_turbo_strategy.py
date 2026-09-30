@@ -1,5 +1,7 @@
 """Tests for the stateful TuRBO acquisition search strategy."""
 
+from types import SimpleNamespace
+
 import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
@@ -538,8 +540,7 @@ def test_strategy_can_refresh_geometry_from_model_ard_lengthscales() -> None:
 
 
 def test_model_geometry_aggregates_batched_ard_lengthscales_by_median() -> None:
-    train_X, train_Y, bounds = _problem(input_dim=4)
-    model = SingleTaskGP(train_X, train_Y)
+    _, _, bounds = _problem(input_dim=4)
     lengthscales = torch.tensor(
         [
             [0.2, 0.5, 1.0, 2.0],
@@ -548,7 +549,7 @@ def test_model_geometry_aggregates_batched_ard_lengthscales_by_median() -> None:
         ],
         dtype=torch.double,
     )
-    model.covar_module.lengthscale = lengthscales
+    model = SimpleNamespace(covar_module=SimpleNamespace(lengthscale=lengthscales))
 
     weights = turbo_dimension_weights_from_model(
         model,
@@ -563,9 +564,10 @@ def test_model_geometry_aggregates_batched_ard_lengthscales_by_median() -> None:
 
 
 def test_model_geometry_rejects_non_public_lengthscale_dimension() -> None:
-    train_X, train_Y, bounds = _problem(input_dim=4)
-    model = SingleTaskGP(train_X, train_Y)
-    model.covar_module.lengthscale = torch.ones(3, dtype=torch.double)
+    _, _, bounds = _problem(input_dim=4)
+    model = SimpleNamespace(
+        covar_module=SimpleNamespace(lengthscale=torch.ones(3, dtype=torch.double))
+    )
 
     with pytest.raises(ValueError, match="public input dimension"):
         turbo_dimension_weights_from_model(
