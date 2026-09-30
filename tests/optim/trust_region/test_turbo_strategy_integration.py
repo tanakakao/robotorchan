@@ -13,10 +13,12 @@ from robotorchan.models import (
     PCAGP,
     PLSGP,
     EnsembleMapSaasSingleTaskGP,
+    MixedSingleTaskGP,
     RandomProjectionGP,
     SingleTaskGP,
 )
 from robotorchan.optim import (
+    MixedVariableSpace,
     TuRBOState,
     TuRBOStrategy,
     generate_turbo_thompson_choices,
