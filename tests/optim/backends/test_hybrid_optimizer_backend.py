@@ -82,7 +82,7 @@ def test_hybrid_sets_batch_limit_for_nonlinear_constraints() -> None:
     )
 
     with patch(
-        "robotorchan.optim.backends.hybrid.botorch_optimize_acqf",
+        "robotorchan.optim.backends.hybrid.optimize_acqf_botorch",
         return_value=(torch.tensor([[0.3]]), torch.tensor(-0.1)),
     ) as local_optimizer:
         optimize_acqf_hybrid(
