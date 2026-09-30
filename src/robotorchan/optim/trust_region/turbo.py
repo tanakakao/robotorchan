@@ -182,15 +182,16 @@ def turbo_dimension_weights_from_model(
     if lengthscale is None:
         raise ValueError("model does not expose covar_module.lengthscale.")
     lengthscale = lengthscale.detach().to(dtype=dtype, device=device)
-    if lengthscale.numel() != input_dim:
+    if lengthscale.ndim < 1 or lengthscale.shape[-1] != input_dim:
         raise ValueError(
-            "model lengthscale must contain exactly one value per public input dimension."
+            "model lengthscale last dimension must match the public input dimension."
         )
-    lengthscale = lengthscale.reshape(input_dim)
-    if not torch.all(torch.isfinite(lengthscale)) or torch.any(lengthscale <= 0):
+    lengthscale_samples = lengthscale.reshape(-1, input_dim)
+    if not torch.all(torch.isfinite(lengthscale_samples)) or torch.any(lengthscale_samples <= 0):
         raise ValueError("model lengthscale must be finite and strictly positive.")
+    representative_lengthscale = lengthscale_samples.median(dim=0).values
     return _normalized_dimension_weights(
-        lengthscale,
+        representative_lengthscale,
         dim=input_dim,
         dtype=dtype,
         device=device,
@@ -356,7 +357,6 @@ class TuRBOStrategy(SearchStrategy):
         if torch.any(center < self.bounds[0]) or torch.any(center > self.bounds[1]):
             raise ValueError("center must lie inside bounds.")
         return center.detach().clone()
-
 
     def update_dimension_weights_from_model(self, model: Any) -> Tensor:
         """Update trust-region geometry from a compatible public-space ARD model."""
