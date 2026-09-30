@@ -190,3 +190,38 @@ def test_joint_qlogehvi_accepts_explicit_batch_initial_conditions() -> None:
     assert candidate.shape == torch.Size([2, 1])
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()
+
+
+def test_pending_candidates_do_not_change_explicit_initial_condition_shape() -> None:
+    model, train_x = _multi_output_model()
+    acquisition = qLogNoisyExpectedHypervolumeImprovement(
+        model=model,
+        ref_point=[-1.0, -1.0],
+        X_baseline=train_x,
+        sampler=SobolQMCNormalSampler(torch.Size([16]), seed=987),
+    )
+    pending = torch.tensor([[0.15], [0.85]], dtype=torch.double)
+    acquisition.set_X_pending(pending)
+    initial_conditions = torch.tensor(
+        [
+            [[0.2], [0.7]],
+            [[0.3], [0.8]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=2,
+        num_restarts=2,
+        raw_samples=None,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    assert initial_conditions.shape == torch.Size([2, 2, 1])
+    assert acquisition.X_pending is not None
+    assert acquisition.X_pending.shape == torch.Size([2, 1])
+    assert candidate.shape == torch.Size([2, 1])
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
