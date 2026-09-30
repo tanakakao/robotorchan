@@ -9,8 +9,8 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
-from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
 from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
 from robotorchan.optim.runtime import validate_bounds
 
 
