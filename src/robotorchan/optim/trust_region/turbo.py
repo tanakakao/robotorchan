@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Iterator
-from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from typing import Any
 
@@ -37,26 +35,6 @@ def _validate_pending_points(
 
 
 @contextmanager
-def _temporary_pending_points(
-    acq_function: AcquisitionFunction,
-    X_pending: Tensor | None,
-) -> Iterator[None]:
-    """Temporarily replace acquisition pending points and restore them afterwards."""
-    if X_pending is None:
-        yield
-        return
-    if not hasattr(acq_function, "set_X_pending"):
-        raise ValueError("X_pending requires an acquisition with set_X_pending.")
-    original_pending = getattr(acq_function, "X_pending", None)
-    if original_pending is not None:
-        original_pending = original_pending.detach().clone()
-    try:
-        acq_function.set_X_pending(X_pending)
-        yield
-    finally:
-        acq_function.set_X_pending(original_pending)
-
-
 @dataclass(frozen=True)
 class TuRBOState:
     """Persistent state controlling the TuRBO trust-region length."""
@@ -592,7 +570,6 @@ class TuRBOStrategy(SearchStrategy):
                 "n_candidates": candidate_count,
                 "batch_size": q,
                 "candidate_constraints": constraints is not None and constraints.has_constraints,
-                "n_pending": 0 if pending is None else pending.shape[0],
             },
         )
 
@@ -603,7 +580,6 @@ class TuRBOStrategy(SearchStrategy):
         q: int = 1,
         constraints: CandidateConstraints | None = None,
         batch_initial_conditions: Tensor | None = None,
-        X_pending: Tensor | None = None,
     ) -> SearchResult:
         """Optimize the acquisition inside the current trust region."""
         self._validate_batch_size(q)
@@ -611,29 +587,20 @@ class TuRBOStrategy(SearchStrategy):
             raise RuntimeError("TuRBO restart is required before further optimization.")
 
         trust_bounds = self.trust_region_bounds()
-        pending = None
-        if X_pending is not None:
-            pending = _validate_pending_points(
-                X_pending,
-                input_dim=self.input_dim,
-                dtype=self.bounds.dtype,
-                device=self.bounds.device,
-            )
-        with _temporary_pending_points(acq_function, pending):
-            candidates, acquisition_value = optimize_acqf(
-                acq_function=acq_function,
-                bounds=trust_bounds,
-                q=q,
-                optimizer=self.optimizer,
-                num_restarts=self.num_restarts,
-                raw_samples=self.raw_samples,
-                options=self.options,
-                constraints=constraints,
-                batch_initial_conditions=batch_initial_conditions,
-                sequential=self.sequential,
-                seed=self.seed,
-                optimizer_options=self.optimizer_options,
-            )
+        candidates, acquisition_value = optimize_acqf(
+            acq_function=acq_function,
+            bounds=trust_bounds,
+            q=q,
+            optimizer=self.optimizer,
+            num_restarts=self.num_restarts,
+            raw_samples=self.raw_samples,
+            options=self.options,
+            constraints=constraints,
+            batch_initial_conditions=batch_initial_conditions,
+            sequential=self.sequential,
+            seed=self.seed,
+            optimizer_options=self.optimizer_options,
+        )
 
         return SearchResult(
             candidates=candidates,
