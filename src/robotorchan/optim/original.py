@@ -8,7 +8,7 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.optim.initializers import TGenInitialConditions
 from torch import Tensor
 
-from robotorchan.optim.backends import optimize_acqf_botorch
+from robotorchan.optim.backends.botorch import optimize_acqf_botorch
 from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.constraints import CandidateConstraints
 

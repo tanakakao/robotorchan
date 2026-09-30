@@ -97,6 +97,18 @@ MultiTask, MultiFidelity, Kronecker, sampling, and fantasy behavior should remai
 owning model, acquisition, or optimization test family unless the test is genuinely
 cross-component.
 
+### Internal import direction
+
+Package `__init__.py` files are public export aggregators, not implementation dependency hubs.
+Implementation modules import symbols from their owning modules directly. This keeps adding or
+reordering public exports from changing the internal import graph. Aggregator modules may import
+implementation modules for re-export, but implementation modules must not import back through
+those aggregators.
+
+The implementation-module graph must remain acyclic. Cross-component dependencies should point
+toward narrow contracts such as capability metadata, base classes, or concrete utility modules;
+they must not be resolved by moving imports inside functions solely to hide a cycle.
+
 ## API rules
 
 1. Prefer subclassing or composing BoTorch abstractions over introducing parallel abstractions.
