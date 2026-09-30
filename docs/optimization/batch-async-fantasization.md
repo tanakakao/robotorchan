@@ -5,7 +5,8 @@ fantasization audit. It describes runtime evidence rather than adding a parallel
 
 ## Responsibility boundaries
 
-- Models own posterior sampling, conditioning, and `fantasize()` when their model contract supports it.
+- Models own posterior sampling, conditioning, and `fantasize()` when their model contract
+  supports it.
 - Acquisitions own pending-point semantics through BoTorch `set_X_pending()`.
 - Optimizers own joint q-batches, native sequential optimization, and search-space constraints.
 - Asynchronous BO is the composition of completed training observations and unresolved
