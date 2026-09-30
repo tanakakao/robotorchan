@@ -36,9 +36,7 @@ class TuRBOState:
         if self.batch_size < 1:
             raise ValueError("batch_size must be at least 1.")
         if self.failure_tolerance is None:
-            failure_tolerance = math.ceil(
-                max(4.0 / self.batch_size, self.dim / self.batch_size)
-            )
+            failure_tolerance = math.ceil(max(4.0 / self.batch_size, self.dim / self.batch_size))
             object.__setattr__(self, "failure_tolerance", failure_tolerance)
         if not 0 < self.length_min <= self.length_max:
             raise ValueError("TuRBO lengths must satisfy 0 < length_min <= length_max.")
@@ -50,7 +48,6 @@ class TuRBOState:
             raise ValueError("success_tolerance must be at least 1.")
         if self.failure_tolerance is None or self.failure_tolerance < 1:
             raise ValueError("failure_tolerance must be at least 1.")
-
 
 
 def _is_turbo_improvement(
@@ -131,11 +128,7 @@ class TuRBOStrategy(SearchStrategy):
         if raw_samples < 1:
             raise ValueError("raw_samples must be at least 1.")
         self.center = self._validate_center(center)
-        self.state = (
-            TuRBOState(dim=self.input_dim, batch_size=1)
-            if state is None
-            else state
-        )
+        self.state = TuRBOState(dim=self.input_dim, batch_size=1) if state is None else state
         if self.state.dim != self.input_dim:
             raise ValueError("state.dim must match the strategy input dimension.")
         self.num_restarts = num_restarts
