@@ -7,7 +7,7 @@ from collections.abc import Callable
 import torch
 from torch import Tensor
 
-from robotorchan.optim.runtime import make_generator, validate_bounds
+from robotorchan.optim.backend_support.runtime import make_generator, validate_bounds
 
 VectorObjective = Callable[[Tensor], Tensor]
 
