@@ -200,20 +200,23 @@ def generate_turbo_thompson_choices(
         dtype=trust_region_bounds.dtype,
         device=trust_region_bounds.device,
     )
-    perturbations = trust_region_bounds[0] + (
-        trust_region_bounds[1] - trust_region_bounds[0]
-    ) * perturbations
+    perturbations = (
+        trust_region_bounds[0] + (trust_region_bounds[1] - trust_region_bounds[0]) * perturbations
+    )
 
     generator = torch.Generator(device=trust_region_bounds.device)
     if seed is not None:
         generator.manual_seed(seed)
-    mask = torch.rand(
-        n_candidates,
-        dim,
-        dtype=trust_region_bounds.dtype,
-        device=trust_region_bounds.device,
-        generator=generator,
-    ) <= probability
+    mask = (
+        torch.rand(
+            n_candidates,
+            dim,
+            dtype=trust_region_bounds.dtype,
+            device=trust_region_bounds.device,
+            generator=generator,
+        )
+        <= probability
+    )
     empty_rows = torch.where(mask.sum(dim=1) == 0)[0]
     if empty_rows.numel() > 0:
         forced_dims = torch.randint(
@@ -337,9 +340,7 @@ class TuRBOStrategy(SearchStrategy):
         if self.state.restart_triggered:
             raise RuntimeError("TuRBO restart is required before further candidate generation.")
         candidate_count = (
-            min(5000, max(2000, 200 * self.input_dim))
-            if n_candidates is None
-            else n_candidates
+            min(5000, max(2000, 200 * self.input_dim)) if n_candidates is None else n_candidates
         )
         if candidate_count < q:
             raise ValueError("n_candidates must be at least q.")
