@@ -5,6 +5,8 @@ import torch
 from botorch.acquisition.analytic import ExpectedImprovement, PosteriorMean
 from botorch.acquisition.logei import qLogNoisyExpectedImprovement
 from botorch.acquisition.monte_carlo import qExpectedImprovement
+from botorch.acquisition.risk_measures import Expectation
+from botorch.models.transforms.input import InputPerturbation
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import (
@@ -418,3 +420,48 @@ def test_turbo_thompson_rejects_pending_pool_candidate() -> None:
             n_candidates=1,
             X_pending=pending,
         )
+
+
+def test_turbo_qlognei_runs_with_input_perturbation_in_nominal_space() -> None:
+    torch.manual_seed(79)
+    input_dim = 2
+    train_X = 0.1 + 0.8 * torch.rand(14, input_dim, dtype=torch.double)
+    train_Y = -((train_X - 0.65) ** 2).sum(dim=-1, keepdim=True)
+    bounds = torch.tensor([[0.1, 0.1], [0.9, 0.9]], dtype=torch.double)
+    perturbations = torch.tensor(
+        [[0.0, 0.0], [0.01, -0.01], [-0.01, 0.01]],
+        dtype=torch.double,
+    )
+    model = SingleTaskGP(
+        train_X,
+        train_Y,
+        input_transform=InputPerturbation(perturbation_set=perturbations),
+    )
+    model.eval()
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_X,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=791),
+        objective=Expectation(n_w=perturbations.shape[0]),
+        prune_baseline=False,
+    )
+    incumbent = train_X[train_Y.squeeze(-1).argmax()]
+    strategy = TuRBOStrategy(
+        bounds,
+        center=incumbent,
+        state=TuRBOState(
+            dim=input_dim,
+            best_value=float(train_Y.max().item()),
+            observed_best_value=float(train_Y.max().item()),
+        ),
+        num_restarts=2,
+        raw_samples=32,
+    )
+
+    result = strategy.optimize(acquisition)
+
+    assert result.candidates.shape == torch.Size([1, input_dim])
+    assert result.metadata["trust_region_center"].shape == torch.Size([input_dim])
+    assert result.metadata["trust_region_bounds"].shape == torch.Size([2, input_dim])
+    assert torch.all(result.candidates >= result.metadata["trust_region_bounds"][0])
+    assert torch.all(result.candidates <= result.metadata["trust_region_bounds"][1])
