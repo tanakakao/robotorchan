@@ -100,7 +100,9 @@ The following placement rules resolve common ambiguities:
 Tests follow implementation responsibility rather than every capability label. Mixed,
 MultiTask, MultiFidelity, Kronecker, sampling, and fantasy behavior should remain inside the
 owning model, acquisition, or optimization test family unless the test is genuinely
-cross-component.
+cross-component. Optimizer-wide base, dispatch, capability, and cross-backend regression
+contracts belong in `tests/optim/contracts/`; backend and strategy behavior stays with its
+owner.
 
 ### Internal import direction
 

@@ -1,6 +1,6 @@
 # Model × acquisition × optimizer E2E validation
 
-Phase 17 validates that optimizer backends operate with real BoTorch model
+Optimizer E2E validation confirms that backends operate with real BoTorch model
 posteriors and acquisition functions, rather than only synthetic acquisition
 modules.
 
@@ -21,8 +21,7 @@ shape, dtype preservation, and bounds.
 
 ## Constraint regressions
 
-The Phase 17 review also closes two correctness gaps discovered in the earlier
-constraint phases:
+Regression coverage preserves two important constraint-handling contracts:
 
 - mixed GA now returns the raw acquisition value, not its penalized ranking score;
 - CMA-ES tracks the best candidate by its constrained/penalized objective rather
@@ -32,8 +31,8 @@ CMA-ES regression coverage is conditional on the optional `cmaes` dependency.
 
 ## Scope boundaries
 
-This phase does not assert that one optimizer is universally superior. Runtime
-and candidate quality benchmarking belong to the Phase 16 benchmark harness.
+The E2E contract does not assert that one optimizer is universally superior.
+Runtime and candidate-quality comparisons belong to the benchmark harness.
 
 Vector-valued NSGA-II remains a separate contract because qEHVI/qNEHVI are
 scalar acquisition functions even though their underlying BO problem is

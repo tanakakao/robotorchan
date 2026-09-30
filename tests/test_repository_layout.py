@@ -77,3 +77,19 @@ def test_candidate_constraints_are_owned_by_constraint_package() -> None:
 
     constraint_modules = {path.name for path in (optim_root / "constraints").glob("*.py")}
     assert constraint_modules == {"__init__.py", "contracts.py", "evaluation.py"}
+
+
+def test_cross_backend_optimizer_contracts_have_dedicated_ownership() -> None:
+    contract_test_names = {
+        "test_optimizer_capability_validation.py",
+        "test_optimizer_correctness_regressions.py",
+        "test_optimizer_dispatch.py",
+        "test_search_strategy_base.py",
+    }
+    optim_test_root = REPOSITORY_ROOT / "tests" / "optim"
+    assert not any((optim_test_root / name).exists() for name in contract_test_names)
+
+    actual_contract_tests = set(
+        path.name for path in (optim_test_root / "contracts").glob("test_*.py")
+    )
+    assert contract_test_names <= actual_contract_tests
