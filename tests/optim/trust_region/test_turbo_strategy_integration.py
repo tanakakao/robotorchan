@@ -9,7 +9,7 @@ from robotorchan.optim import TuRBOState, TuRBOStrategy, update_turbo_state
 
 
 def test_first_observation_initializes_turbo_state_as_success() -> None:
-    state = update_turbo_state(TuRBOState(), torch.tensor([0.5]))
+    state = update_turbo_state(TuRBOState(dim=3), torch.tensor([0.5]))
 
     assert state.best_value == pytest.approx(0.5)
     assert state.success_counter == 1
@@ -50,7 +50,7 @@ def test_update_state_moves_incumbent_when_candidate_improves() -> None:
     strategy = TuRBOStrategy(
         bounds,
         center=initial,
-        state=TuRBOState(best_value=0.0),
+        state=TuRBOState(dim=3, best_value=0.0),
     )
 
     strategy.update_state(torch.tensor([1.0]), candidates=improved)
