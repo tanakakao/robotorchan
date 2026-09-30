@@ -15,6 +15,7 @@ from robotorchan.optim import (
     generate_turbo_thompson_choices,
     restart_turbo_state,
     turbo_dimension_weights_from_model,
+    turbo_mixed_trust_region_bounds,
     turbo_multifidelity_trust_region_bounds,
     turbo_trust_region_bounds,
     update_turbo_state,
@@ -882,3 +883,50 @@ def test_turbo_candidate_paths_share_stable_result_metadata() -> None:
     assert common_keys <= thompson_result.metadata.keys()
     assert acquisition_result.metadata["candidate_generation"] == "acquisition"
     assert thompson_result.metadata["candidate_generation"] == "thompson"
+
+
+def test_state_rejects_multioutput_values_even_when_numel_matches_batch() -> None:
+    state = TuRBOState(dim=2, batch_size=2)
+
+    with pytest.raises(ValueError, match="scalar per candidate"):
+        update_turbo_state(state, torch.tensor([[1.0, 2.0]]))
+    with pytest.raises(ValueError, match="state_values must be scalar per candidate"):
+        update_turbo_state(
+            state,
+            torch.tensor([1.0, 2.0]),
+            state_values=torch.tensor([[1.0, 2.0]]),
+        )
+
+
+def test_multifidelity_weights_are_normalized_over_design_dimensions_only() -> None:
+    bounds = torch.stack([torch.zeros(3), torch.ones(3)]).to(dtype=torch.double)
+    center = torch.full((3,), 0.5, dtype=torch.double)
+
+    trust_bounds = turbo_multifidelity_trust_region_bounds(
+        center,
+        bounds,
+        fidelity_dims=[2],
+        length=0.2,
+        dimension_weights=torch.tensor([1.0, 4.0, 1000.0], dtype=torch.double),
+    )
+
+    half_widths = (trust_bounds[1] - trust_bounds[0]) / 2.0
+    torch.testing.assert_close(half_widths[:2], torch.tensor([0.05, 0.2], dtype=torch.double))
+    torch.testing.assert_close(trust_bounds[:, 2], bounds[:, 2])
+
+
+def test_mixed_weights_are_normalized_over_continuous_dimensions_only() -> None:
+    bounds = torch.stack([torch.zeros(3), torch.ones(3)]).to(dtype=torch.double)
+    variable_space = MixedVariableSpace(bounds=bounds, integer_dims=(2,))
+    center = torch.full((3,), 0.5, dtype=torch.double)
+
+    trust_bounds = turbo_mixed_trust_region_bounds(
+        center,
+        variable_space,
+        length=0.2,
+        dimension_weights=torch.tensor([1.0, 4.0, 1000.0], dtype=torch.double),
+    )
+
+    half_widths = (trust_bounds[1] - trust_bounds[0]) / 2.0
+    torch.testing.assert_close(half_widths[:2], torch.tensor([0.05, 0.2], dtype=torch.double))
+    torch.testing.assert_close(trust_bounds[:, 2], bounds[:, 2])
