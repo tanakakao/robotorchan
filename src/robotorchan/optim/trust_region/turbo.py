@@ -449,8 +449,7 @@ def turbo_multifidelity_trust_region_bounds(
         raise ValueError("fidelity_dims must contain at least one dimension.")
     dim = bounds.shape[-1] if bounds.ndim == 2 else 0
     normalized_fidelity_dims = [
-        fidelity_dim if fidelity_dim >= 0 else dim + fidelity_dim
-        for fidelity_dim in fidelity_dims
+        fidelity_dim if fidelity_dim >= 0 else dim + fidelity_dim for fidelity_dim in fidelity_dims
     ]
     if any(fidelity_dim < 0 or fidelity_dim >= dim for fidelity_dim in normalized_fidelity_dims):
         raise ValueError("fidelity_dims must contain valid input dimensions.")
