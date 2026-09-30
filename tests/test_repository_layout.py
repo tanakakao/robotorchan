@@ -140,3 +140,27 @@ def test_candidate_domains_have_dedicated_ownership() -> None:
     optim_test_root = REPOSITORY_ROOT / "tests" / "optim"
     assert not (optim_test_root / "test_variable_space.py").exists()
     assert (optim_test_root / "domains" / "test_variable_space.py").is_file()
+
+
+def test_backend_support_has_dedicated_ownership() -> None:
+    optim_root = SOURCE_ROOT / "optim"
+    assert not (optim_root / "cross_cutting.py").exists()
+    assert not (optim_root / "runtime.py").exists()
+
+    support_root = optim_root / "backend_support"
+    assert {path.name for path in support_root.glob("*.py")} == {
+        "__init__.py",
+        "operations.py",
+        "runtime.py",
+    }
+
+    optim_test_root = REPOSITORY_ROOT / "tests" / "optim"
+    old_test_names = {
+        "test_cross_cutting_optimizers.py",
+        "test_optimizer_runtime_contract.py",
+    }
+    assert not any((optim_test_root / name).exists() for name in old_test_names)
+    actual_support_tests = set(
+        path.name for path in (optim_test_root / "backend_support").glob("test_*.py")
+    )
+    assert actual_support_tests == {"test_operations.py", "test_runtime.py"}
