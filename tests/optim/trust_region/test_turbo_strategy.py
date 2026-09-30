@@ -769,4 +769,3 @@ def test_thompson_sampling_rejects_interpoint_constraints() -> None:
 
     with pytest.raises(NotImplementedError, match="inter-point linear"):
         strategy.thompson_sample(model, q=2, n_candidates=32, constraints=constraints)
-
