@@ -2,8 +2,8 @@
 
 from robotorchan.acquisition.capabilities import AcquisitionPurpose, PosteriorRequirement
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
-from robotorchan.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
-from robotorchan.recommendation import recommend_compatible_workflows
+from robotorchan.workflow.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
+from robotorchan.workflow.recommendation import recommend_compatible_workflows
 
 
 def test_bo_acquisitions_are_metadata_only_botorch_entries() -> None:
