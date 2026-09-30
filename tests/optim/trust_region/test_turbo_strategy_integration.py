@@ -89,6 +89,7 @@ def test_frozen_reduced_models_optimize_turbo_in_public_space(
     assert torch.all(result.candidates <= bounds[1])
     torch.testing.assert_close(result.metadata["trust_region_center"], incumbent)
 
+
 def test_update_state_moves_incumbent_when_candidate_improves() -> None:
     bounds = torch.stack([torch.zeros(3), torch.ones(3)])
     initial = torch.tensor([0.2, 0.3, 0.4])
