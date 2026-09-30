@@ -47,11 +47,7 @@ def _resolve_import(
 def _import_graph() -> tuple[dict[str, set[str]], set[str]]:
     paths = sorted(SOURCE_ROOT.rglob("*.py"))
     modules = {_module_name(path) for path in paths}
-    packages = {
-        _module_name(path)
-        for path in paths
-        if path.name == "__init__.py"
-    }
+    packages = {_module_name(path) for path in paths if path.name == "__init__.py"}
     graph = {module: set() for module in modules}
 
     for path in paths:
