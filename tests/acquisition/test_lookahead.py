@@ -4,6 +4,7 @@ from botorch.acquisition.multi_step_lookahead import qMultiStepLookahead
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import SingleTaskGP
+from robotorchan.optim import gen_augmented_one_shot_initial_conditions
 from robotorchan.optim.backends import optimize_acqf_botorch
 
 
@@ -89,5 +90,61 @@ def test_qknowledge_gradient_optimizes_one_shot_augmented_batch() -> None:
     assert augmented_q == 5
     assert candidate.shape == torch.Size([1, 1])
     assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+
+
+def test_qmulti_step_lookahead_optimizes_with_augmented_initializer() -> None:
+    model = _model()
+    samplers = [
+        SobolQMCNormalSampler(sample_shape=torch.Size([2])),
+        SobolQMCNormalSampler(sample_shape=torch.Size([2])),
+    ]
+    acquisition = qMultiStepLookahead(
+        model=model,
+        batch_sizes=[1, 1],
+        samplers=samplers,
+    )
+    augmented_q = acquisition.get_augmented_q_batch_size(q=1)
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+        ic_generator=gen_augmented_one_shot_initial_conditions,
+    )
+
+    assert augmented_q > 1
+    assert candidate.shape == torch.Size([1, 1])
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+
+
+def test_qmulti_step_lookahead_accepts_augmented_explicit_initial_conditions() -> None:
+    model = _model()
+    samplers = [
+        SobolQMCNormalSampler(sample_shape=torch.Size([2])),
+        SobolQMCNormalSampler(sample_shape=torch.Size([2])),
+    ]
+    acquisition = qMultiStepLookahead(
+        model=model,
+        batch_sizes=[1, 1],
+        samplers=samplers,
+    )
+    augmented_q = acquisition.get_augmented_q_batch_size(q=1)
+    initial_conditions = torch.rand(2, augmented_q, 1, dtype=torch.double)
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=None,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    assert candidate.shape == torch.Size([1, 1])
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()
