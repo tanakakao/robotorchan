@@ -5,7 +5,7 @@ import torch
 from botorch.acquisition.analytic import ExpectedImprovement, PosteriorMean
 from botorch.acquisition.monte_carlo import qExpectedImprovement
 
-from robotorchan.models import EnsembleMapSaasSingleTaskGP, PCAGP, SingleTaskGP
+from robotorchan.models import PCAGP, EnsembleMapSaasSingleTaskGP, SingleTaskGP
 from robotorchan.optim import TuRBOState, TuRBOStrategy, update_turbo_state
 
 
