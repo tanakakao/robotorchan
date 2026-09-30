@@ -51,7 +51,7 @@ def test_hybrid_forwards_constraints_to_global_and_local_stages() -> None:
     local_value = torch.tensor(-0.01, dtype=torch.double)
 
     with patch(
-        "robotorchan.optim.backends.hybrid.botorch_optimize_acqf",
+        "robotorchan.optim.backends.hybrid.optimize_acqf_botorch",
         return_value=(local_candidate, local_value),
     ) as local_optimizer:
         candidate, value = optimize_acqf_hybrid(
@@ -67,7 +67,7 @@ def test_hybrid_forwards_constraints_to_global_and_local_stages() -> None:
     assert torch.equal(value, local_value)
     assert global_optimizer.call_args.kwargs["constraints"] is constraints
     local_kwargs = local_optimizer.call_args.kwargs
-    assert local_kwargs["inequality_constraints"] == list(constraints.inequality_constraints)
+    assert local_kwargs["constraints"] is constraints
     expected_initial_conditions = torch.tensor([[[0.3]]], dtype=bounds.dtype)
     assert torch.equal(local_kwargs["batch_initial_conditions"], expected_initial_conditions)
 
@@ -255,3 +255,28 @@ def test_hybrid_requires_every_structured_dimension_in_local_configs() -> None:
             variable_space=variable_space,
             mixed_fixed_features_list=[{2: 0.0}],
         )
+
+
+def test_hybrid_runtime_preserves_dtype_and_improves_qbatch() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    global_candidate = torch.tensor([[0.2], [0.4]], dtype=torch.double)
+
+    def global_optimizer(*args, **kwargs):
+        value = _Quadratic()(global_candidate.unsqueeze(0)).reshape(())
+        return global_candidate, value
+
+    candidate, value = optimize_acqf_hybrid(
+        _Quadratic(),
+        bounds,
+        q=2,
+        global_optimizer=global_optimizer,
+        local_options={"maxiter": 50},
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert candidate.dtype == bounds.dtype
+    assert candidate.device == bounds.device
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    initial_value = _Quadratic()(global_candidate.unsqueeze(0)).reshape(())
+    assert value >= initial_value
