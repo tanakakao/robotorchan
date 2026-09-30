@@ -6,6 +6,7 @@ from robotorchan.optim.trust_region.turbo import (
     generate_turbo_restart_center,
     generate_turbo_thompson_choices,
     restart_turbo_state,
+    turbo_dimension_weights_from_model,
     turbo_trust_region_bounds,
     update_turbo_state,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "generate_turbo_restart_center",
     "generate_turbo_thompson_choices",
     "restart_turbo_state",
+    "turbo_dimension_weights_from_model",
     "turbo_trust_region_bounds",
     "update_turbo_state",
 ]
