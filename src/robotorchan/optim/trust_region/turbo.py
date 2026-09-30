@@ -184,9 +184,7 @@ def turbo_dimension_weights_from_model(
         raise ValueError("model does not expose covar_module.lengthscale.")
     lengthscale = lengthscale.detach().to(dtype=dtype, device=device)
     if lengthscale.ndim < 1 or lengthscale.shape[-1] != input_dim:
-        raise ValueError(
-            "model lengthscale last dimension must match the public input dimension."
-        )
+        raise ValueError("model lengthscale last dimension must match the public input dimension.")
     lengthscale_samples = lengthscale.reshape(-1, input_dim)
     if not torch.all(torch.isfinite(lengthscale_samples)) or torch.any(lengthscale_samples <= 0):
         raise ValueError("model lengthscale must be finite and strictly positive.")
