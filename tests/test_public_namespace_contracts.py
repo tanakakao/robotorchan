@@ -95,6 +95,11 @@ def test_removed_module_paths_do_not_import() -> None:
         "robotorchan.models.robust_models",
         "robotorchan.models.uncertain_categorical",
         "robotorchan.models.uncertain_input",
+        "robotorchan.optim.mixed",
+        "robotorchan.optim.original",
+        "robotorchan.optim.random",
+        "robotorchan.optim.sobol",
+        "robotorchan.optim.tree",
     )
     for module_name in removed_modules:
         try:
