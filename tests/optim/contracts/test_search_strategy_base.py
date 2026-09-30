@@ -1,0 +1,284 @@
+"""Tests for the common search-strategy contracts."""
+
+import pytest
+import torch
+from botorch.acquisition.acquisition import AcquisitionFunction
+
+from robotorchan.optim import (
+    CandidateConstraints,
+    LinearConstraint,
+    NonlinearConstraint,
+    NonlinearConstraintCallable,
+    SearchResult,
+    SearchStrategy,
+)
+
+
+class DummySearchStrategy(SearchStrategy):
+    """Minimal concrete strategy used to test the base contract."""
+
+    def optimize(
+        self,
+        acq_function: AcquisitionFunction,
+        *,
+        q: int = 1,
+    ) -> SearchResult:
+        del acq_function
+        candidates = self.bounds[0].expand(q, -1).clone()
+        return SearchResult(
+            candidates=candidates,
+            acquisition_value=None,
+        )
+
+
+def test_search_strategy_stores_defensive_bounds_copy() -> None:
+    bounds = torch.tensor([[0.0, -1.0], [1.0, 2.0]])
+    strategy = DummySearchStrategy(bounds)
+
+    bounds[0, 0] = -10.0
+
+    assert torch.equal(strategy.bounds, torch.tensor([[0.0, -1.0], [1.0, 2.0]]))
+    assert strategy.input_dim == 2
+
+
+@pytest.mark.parametrize(
+    "bounds",
+    [
+        torch.zeros(2),
+        torch.zeros(3, 2),
+        torch.empty(2, 0),
+        torch.tensor([[0.0, 1.0], [0.0, 2.0]]),
+        torch.tensor([[1.0], [0.0]]),
+    ],
+)
+def test_search_strategy_rejects_invalid_bounds(bounds: torch.Tensor) -> None:
+    with pytest.raises(ValueError):
+        DummySearchStrategy(bounds)
+
+
+def test_search_result_requires_candidate_matrix() -> None:
+    with pytest.raises(ValueError, match="candidates"):
+        SearchResult(
+            candidates=torch.zeros(3),
+            acquisition_value=None,
+        )
+
+
+def test_search_result_accepts_scalar_joint_acquisition_value() -> None:
+    result = SearchResult(
+        candidates=torch.zeros(3, 2),
+        acquisition_value=torch.tensor(1.5),
+    )
+
+    assert result.acquisition_value is not None
+    assert result.acquisition_value.ndim == 0
+
+
+def test_search_result_rejects_per_candidate_acquisition_values() -> None:
+    with pytest.raises(ValueError, match="scalar"):
+        SearchResult(
+            candidates=torch.zeros(3, 2),
+            acquisition_value=torch.tensor([1.0, 2.0, 3.0]),
+        )
+
+
+def test_search_result_contains_only_search_outputs() -> None:
+    result = SearchResult(
+        candidates=torch.zeros(1, 3),
+        acquisition_value=None,
+    )
+
+    assert set(result.__dataclass_fields__) == {
+        "candidates",
+        "acquisition_value",
+        "metadata",
+    }
+
+
+def test_search_strategy_preserves_bounds_dtype_and_device() -> None:
+    bounds = torch.tensor(
+        [[0.0, -1.0], [1.0, 2.0]],
+        dtype=torch.float64,
+    )
+    strategy = DummySearchStrategy(bounds)
+
+    assert strategy.bounds.dtype == bounds.dtype
+    assert strategy.bounds.device == bounds.device
+
+
+def test_search_result_preserves_candidate_dtype_and_device() -> None:
+    candidates = torch.zeros(2, 3, dtype=torch.float64)
+    acquisition_value = torch.tensor(1.0, dtype=torch.float64)
+    result = SearchResult(
+        candidates=candidates,
+        acquisition_value=acquisition_value,
+    )
+
+    assert result.candidates.dtype == candidates.dtype
+    assert result.candidates.device == candidates.device
+    assert result.acquisition_value is not None
+    assert result.acquisition_value.dtype == acquisition_value.dtype
+    assert result.acquisition_value.device == acquisition_value.device
+
+
+def test_dummy_strategy_returns_public_space_candidates() -> None:
+    strategy = DummySearchStrategy(torch.tensor([[0.0, 0.0], [1.0, 1.0]]))
+
+    result = strategy.optimize(None, q=3)  # type: ignore[arg-type]
+
+    assert result.candidates.shape == torch.Size([3, 2])
+    assert result.metadata == {}
+
+
+def test_public_optim_exports_are_complete() -> None:
+    import robotorchan.optim as optim
+
+    expected = {
+        "ALEBOStrategy",
+        "SearchResult",
+        "SearchStrategy",
+        "SobolSearchStrategy",
+        "OPTIMIZER_CAPABILITIES",
+        "OptimizerCapabilities",
+        "OptimizerName",
+        "gen_augmented_one_shot_initial_conditions",
+        "get_optimizer_capabilities",
+        "OriginalSpaceStrategy",
+        "RandomSearchStrategy",
+        "LatentReconstruction",
+        "LatentSpaceStrategy",
+        "PCAReconstruction",
+        "RandomProjectionReconstruction",
+        "REMBOStrategy",
+        "HeSBOStrategy",
+        "TreeEnsembleSearchStrategy",
+        "TuRBOState",
+        "TuRBOStrategy",
+        "generate_turbo_restart_center",
+        "generate_turbo_thompson_choices",
+        "restart_turbo_state",
+        "turbo_dimension_weights_from_model",
+        "turbo_mixed_trust_region_bounds",
+        "turbo_multifidelity_trust_region_bounds",
+        "turbo_trust_region_bounds",
+        "update_turbo_state",
+        "BAxUSState",
+        "BAxUSStrategy",
+        "BAxUSThompsonSamplingStrategy",
+        "BOTORCH_MIXED_OPTIMIZER_CAPABILITIES",
+        "BOTORCH_OPTIMIZER_CAPABILITIES",
+        "CMAES_OPTIMIZER_CAPABILITIES",
+        "DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES",
+        "GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES",
+        "HYBRID_OPTIMIZER_CAPABILITIES",
+        "MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES",
+        "NSGA2_OPTIMIZER_CAPABILITIES",
+        "PSO_OPTIMIZER_CAPABILITIES",
+        "SAMPLING_OPTIMIZER_CAPABILITIES",
+        "TORCH_OPTIMIZER_CAPABILITIES",
+        "CandidateConstraints",
+        "ConstraintHandling",
+        "ConstraintHandlingCapabilities",
+        "apply_fixed_features",
+        "optimize_acqf",
+        "optimize_acqf_sequential",
+        "optimize_mixed_one_shot_acqf",
+        "LinearConstraint",
+        "MixedSpaceStrategy",
+        "MixedVariableSpace",
+        "NonlinearConstraint",
+        "NonlinearConstraintCallable",
+        "update_baxus_state",
+    }
+
+    assert set(optim.__all__) == expected
+    assert all(hasattr(optim, name) for name in expected)
+
+
+def test_candidate_constraints_default_to_unconstrained() -> None:
+    constraints = CandidateConstraints()
+
+    assert constraints.inequality_constraints == ()
+    assert constraints.equality_constraints == ()
+    assert constraints.nonlinear_inequality_constraints == ()
+    assert not constraints.has_linear_constraints
+    assert not constraints.has_nonlinear_constraints
+    assert not constraints.has_constraints
+
+
+def test_candidate_constraints_preserve_botorch_linear_format() -> None:
+    inequality = (torch.tensor([0, 1]), torch.tensor([-1.0, -1.0]), -0.8)
+    equality = (torch.tensor([0, 1]), torch.tensor([1.0, 1.0]), 1.0)
+    constraints = CandidateConstraints(
+        inequality_constraints=(inequality,),
+        equality_constraints=(equality,),
+    )
+
+    assert constraints.inequality_constraints == (inequality,)
+    assert constraints.equality_constraints == (equality,)
+    assert constraints.has_linear_constraints
+
+
+def test_embedded_strategies_reject_unmapped_candidate_constraints() -> None:
+    from robotorchan.optim import (
+        BAxUSState,
+        BAxUSStrategy,
+        HeSBOStrategy,
+        REMBOStrategy,
+    )
+
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0], dtype=torch.double), 0.2),)
+    )
+
+    factories = (
+        lambda: REMBOStrategy(bounds, embedding_dim=1, constraints=constraints),
+        lambda: HeSBOStrategy(bounds, embedding_dim=1, constraints=constraints),
+        lambda: BAxUSStrategy(
+            bounds,
+            state=BAxUSState(dim=2, eval_budget=10),
+            constraints=constraints,
+        ),
+    )
+    for factory in factories:
+        with pytest.raises(NotImplementedError, match="does not map public-space"):
+            factory()
+
+
+def test_candidate_constraint_public_types_remain_distinct_from_acquisition_capabilities() -> None:
+    constraint: LinearConstraint = (
+        torch.tensor([0]),
+        torch.tensor([1.0], dtype=torch.double),
+        0.0,
+    )
+    candidate_constraints = CandidateConstraints(inequality_constraints=(constraint,))
+
+    assert candidate_constraints.has_linear_constraints
+    assert CandidateConstraints.__module__ == "robotorchan.optim.constraints.contracts"
+
+
+def test_candidate_constraints_preserve_botorch_nonlinear_format() -> None:
+    def disk_constraint(x: torch.Tensor) -> torch.Tensor:
+        return 0.25 - x.square().sum()
+
+    callable_constraint: NonlinearConstraintCallable = disk_constraint
+    constraint: NonlinearConstraint = (callable_constraint, True)
+    constraints = CandidateConstraints(nonlinear_inequality_constraints=(constraint,))
+
+    assert constraints.nonlinear_inequality_constraints == (constraint,)
+    assert constraints.has_nonlinear_constraints
+    assert constraints.has_constraints
+    assert not constraints.has_linear_constraints
+
+
+def test_embedded_strategies_reject_unmapped_nonlinear_constraints() -> None:
+    from robotorchan.optim import REMBOStrategy
+
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.25 - x.square().sum(), True),)
+    )
+
+    with pytest.raises(NotImplementedError, match="does not map public-space"):
+        REMBOStrategy(bounds, embedding_dim=1, constraints=constraints)
