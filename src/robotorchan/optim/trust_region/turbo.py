@@ -18,17 +18,26 @@ from robotorchan.optim.base import SearchResult, SearchStrategy
 class TuRBOState:
     """Persistent state controlling the TuRBO trust-region length."""
 
+    dim: int = 1
+    batch_size: int = 1
     length: float = 0.8
     length_min: float = 0.5**7
     length_max: float = 1.6
     success_counter: int = 0
     failure_counter: int = 0
     success_tolerance: int = 3
-    failure_tolerance: int = 4
+    failure_tolerance: int | None = None
     best_value: float = float("-inf")
     restart_triggered: bool = False
 
     def __post_init__(self) -> None:
+        if self.dim < 1:
+            raise ValueError("dim must be at least 1.")
+        if self.batch_size < 1:
+            raise ValueError("batch_size must be at least 1.")
+        if self.failure_tolerance is None:
+            failure_tolerance = math.ceil(max(4.0 / self.batch_size, self.dim / self.batch_size))
+            object.__setattr__(self, "failure_tolerance", failure_tolerance)
         if not 0 < self.length_min <= self.length_max:
             raise ValueError("TuRBO lengths must satisfy 0 < length_min <= length_max.")
         if self.length <= 0 or self.length > self.length_max:
@@ -37,8 +46,21 @@ class TuRBOState:
             raise ValueError("length below length_min requires restart_triggered=True.")
         if self.success_tolerance < 1:
             raise ValueError("success_tolerance must be at least 1.")
-        if self.failure_tolerance < 1:
+        if self.failure_tolerance is None or self.failure_tolerance < 1:
             raise ValueError("failure_tolerance must be at least 1.")
+
+
+def _is_turbo_improvement(
+    candidate_best: float,
+    best_value: float,
+    *,
+    relative_improvement: float,
+) -> bool:
+    """Return whether an observation is a numerically meaningful improvement."""
+    if not math.isfinite(best_value):
+        return True
+    threshold = relative_improvement * max(1.0, abs(best_value))
+    return candidate_best > best_value + threshold
 
 
 def update_turbo_state(
@@ -54,11 +76,11 @@ def update_turbo_state(
         raise ValueError("relative_improvement must be non-negative.")
 
     candidate_best = float(values.max().item())
-    if math.isfinite(state.best_value):
-        threshold = relative_improvement * max(1.0, abs(state.best_value))
-        success = candidate_best > state.best_value + threshold
-    else:
-        success = True
+    success = _is_turbo_improvement(
+        candidate_best,
+        state.best_value,
+        relative_improvement=relative_improvement,
+    )
 
     success_counter = state.success_counter + 1 if success else 0
     failure_counter = 0 if success else state.failure_counter + 1
@@ -106,7 +128,9 @@ class TuRBOStrategy(SearchStrategy):
         if raw_samples < 1:
             raise ValueError("raw_samples must be at least 1.")
         self.center = self._validate_center(center)
-        self.state = TuRBOState() if state is None else state
+        self.state = TuRBOState(dim=self.input_dim, batch_size=1) if state is None else state
+        if self.state.dim != self.input_dim:
+            raise ValueError("state.dim must match the strategy input dimension.")
         self.num_restarts = num_restarts
         self.raw_samples = raw_samples
         self.options = None if options is None else dict(options)
@@ -147,7 +171,11 @@ class TuRBOStrategy(SearchStrategy):
                 raise ValueError("candidates must have shape [values.numel(), input_dim].")
             best_index = values.reshape(-1).argmax()
             candidate_best = float(values.reshape(-1)[best_index].item())
-            if candidate_best > previous_best:
+            if _is_turbo_improvement(
+                candidate_best,
+                previous_best,
+                relative_improvement=relative_improvement,
+            ):
                 self.center = self._validate_center(candidates[best_index])
         self.state = next_state
         return self.state

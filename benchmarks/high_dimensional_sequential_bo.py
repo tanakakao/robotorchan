@@ -159,7 +159,7 @@ def _make_strategy(
         return TuRBOStrategy(
             bounds,
             center=center,
-            state=TuRBOState(best_value=best_value),
+            state=TuRBOState(dim=bounds.shape[-1], best_value=best_value),
             num_restarts=num_restarts,
             raw_samples=raw_samples,
         )

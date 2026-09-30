@@ -98,7 +98,7 @@ def test_stateful_strategy_feedback_is_persisted() -> None:
     turbo = TuRBOStrategy(
         bounds,
         center=center,
-        state=benchmark.TuRBOState(best_value=best_value),
+        state=benchmark.TuRBOState(dim=6, best_value=best_value),
     )
     baxus = BAxUSStrategy(
         bounds,
