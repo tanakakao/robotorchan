@@ -13,13 +13,16 @@ from robotorchan.models import (
     PCAGP,
     PLSGP,
     EnsembleMapSaasSingleTaskGP,
+    MixedSingleTaskGP,
     RandomProjectionGP,
     SingleTaskGP,
 )
 from robotorchan.optim import (
+    MixedVariableSpace,
     TuRBOState,
     TuRBOStrategy,
     generate_turbo_thompson_choices,
+    turbo_mixed_trust_region_bounds,
     update_turbo_state,
 )
 
@@ -465,3 +468,54 @@ def test_turbo_qlognei_runs_with_input_perturbation_in_nominal_space() -> None:
     assert result.metadata["trust_region_bounds"].shape == torch.Size([2, input_dim])
     assert torch.all(result.candidates >= result.metadata["trust_region_bounds"][0])
     assert torch.all(result.candidates <= result.metadata["trust_region_bounds"][1])
+
+
+def test_turbo_mixed_optimizes_continuous_region_and_exact_categories() -> None:
+    torch.manual_seed(83)
+    train_X = torch.tensor(
+        [
+            [0.15, 0.0],
+            [0.35, 0.0],
+            [0.75, 0.0],
+            [0.20, 1.0],
+            [0.55, 1.0],
+            [0.85, 1.0],
+        ],
+        dtype=torch.double,
+    )
+    train_Y = -((train_X[:, :1] - 0.7) ** 2) + 0.15 * train_X[:, 1:]
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    model = MixedSingleTaskGP(train_X, train_Y, cat_dims=[1])
+    acquisition = PosteriorMean(model)
+    variable_space = MixedVariableSpace(bounds, categorical_values={1: [0.0, 1.0]})
+    strategy = TuRBOStrategy(
+        bounds,
+        center=torch.tensor([0.55, 1.0], dtype=torch.double),
+        state=TuRBOState(dim=2, length=0.4),
+        num_restarts=2,
+        raw_samples=32,
+    )
+
+    result = strategy.optimize_mixed(acquisition, variable_space)
+
+    trust_bounds = result.metadata["trust_region_bounds"]
+    assert result.candidates.shape == torch.Size([1, 2])
+    assert trust_bounds[0, 0] > bounds[0, 0]
+    assert trust_bounds[1, 0] < bounds[1, 0]
+    torch.testing.assert_close(trust_bounds[:, 1], bounds[:, 1])
+    assert result.candidates[0, 1].item() in {0.0, 1.0}
+    assert result.metadata["n_discrete_assignments"] == 2
+
+
+def test_turbo_mixed_enumerates_integer_values_without_numeric_shrinking() -> None:
+    bounds = torch.tensor([[0.0, 1.0], [1.0, 3.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(bounds, integer_dims=(1,))
+    local = turbo_mixed_trust_region_bounds(
+        torch.tensor([0.5, 2.0], dtype=torch.double),
+        variable_space,
+        length=0.2,
+    )
+
+    assert local[0, 0] > bounds[0, 0]
+    assert local[1, 0] < bounds[1, 0]
+    torch.testing.assert_close(local[:, 1], bounds[:, 1])

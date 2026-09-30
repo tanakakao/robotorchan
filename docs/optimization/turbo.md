@@ -227,3 +227,34 @@ strategy.update_state(
 
 `best_value` は trust-region decision utility のbest、`observed_best_value` はraw observationの
 bestです。この2つはノイズ・robust workflowでは一致しないことがあります。
+
+
+## Mixed and discrete search spaces
+
+Phase 13では、Mixed / discrete TuRBOを「カテゴリコードへ連続距離を導入する手法」には
+しません。`MixedVariableSpace`でcontinuous、integer、categoricalの所有権を明示し、
+trust regionのlengthによる局所化はcontinuous dimensionsだけに適用します。integerと
+categorical dimensionsはglobalな合法値集合を維持します。
+
+`TuRBOStrategy.optimize_mixed()`は、integerの全合法値とcategoricalの明示値集合の直積を
+`fixed_features_list`として列挙し、既存のBoTorch `optimize_acqf_mixed` backendへ渡します。
+各discrete assignmentの下でcontinuous coordinatesだけが現在のtrust region内で最適化されます。
+このためcategory 0と1がcategory 1と2より近い、といった人工的な順序や距離を導入しません。
+
+この実装はdiscrete assignment数が列挙可能な場合を対象にします。非常に大きな組合せ空間に
+対しては全列挙の計算量が支配的になるため、Phase 13では専用の離散trust-region、Hamming
+ball、COMBO系探索などを導入しません。その領域は別strategyとして設計すべきです。
+
+```python
+variable_space = MixedVariableSpace(
+    bounds,
+    integer_dims=(1,),
+    categorical_values={2: [0.0, 1.0, 2.0]},
+)
+result = strategy.optimize_mixed(acquisition, variable_space)
+```
+
+centerとcandidateは常にpublic/raw input coordinatesです。state updateも通常の
+`update_state(values, candidates=...)`を使い、改善したcandidateのdiscrete assignmentを含む
+完全なraw candidateが次のcenterになります。ただし次回もdiscrete dimensions自体は数値的に
+縮小せず、合法値集合全体を比較します。
