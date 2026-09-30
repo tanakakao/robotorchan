@@ -75,7 +75,5 @@ def test_candidate_constraints_are_owned_by_constraint_package() -> None:
     assert not (optim_root / "constraint_evaluation.py").exists()
     assert (optim_root / "constraints").is_dir()
 
-    constraint_modules = {
-        path.name for path in (optim_root / "constraints").glob("*.py")
-    }
+    constraint_modules = {path.name for path in (optim_root / "constraints").glob("*.py")}
     assert constraint_modules == {"__init__.py", "contracts.py", "evaluation.py"}
