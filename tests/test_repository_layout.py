@@ -31,3 +31,17 @@ def test_capability_workflow_is_owned_by_one_package() -> None:
         "recommendation.py",
         "selector.py",
     }
+
+    test_root = REPOSITORY_ROOT / "tests"
+    workflow_test_names = {
+        "test_capability_workflow.py",
+        "test_problem.py",
+        "test_problem_contracts.py",
+        "test_problem_objective_output_contract.py",
+        "test_recommendation.py",
+        "test_selector.py",
+    }
+    assert not any((test_root / name).exists() for name in workflow_test_names)
+    assert workflow_test_names <= {
+        path.name for path in (test_root / "workflow").glob("test_*.py")
+    }
