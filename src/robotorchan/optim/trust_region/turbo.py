@@ -48,6 +48,8 @@ def _temporary_pending_points(
     if not hasattr(acq_function, "set_X_pending"):
         raise ValueError("X_pending requires an acquisition with set_X_pending.")
     original_pending = getattr(acq_function, "X_pending", None)
+    if original_pending is not None:
+        original_pending = original_pending.detach().clone()
     try:
         acq_function.set_X_pending(X_pending)
         yield
