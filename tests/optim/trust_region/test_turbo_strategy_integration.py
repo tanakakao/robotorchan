@@ -661,8 +661,10 @@ def test_turbo_multifidelity_kg_keeps_fidelity_globally_selectable() -> None:
 
     trust_bounds = result.metadata["trust_region_bounds"]
     torch.testing.assert_close(trust_bounds[:, 1], bounds[:, 1])
-    assert trust_bounds[0, 0] > bounds[0, 0]
-    assert trust_bounds[1, 0] < bounds[1, 0]
+    torch.testing.assert_close(
+        trust_bounds[:, 0],
+        torch.tensor([0.2, 1.0], dtype=torch.double),
+    )
     assert result.candidates.shape == (1, 2)
     assert torch.all(result.candidates >= trust_bounds[0])
     assert torch.all(result.candidates <= trust_bounds[1])
