@@ -376,7 +376,6 @@ class TuRBOStrategy(SearchStrategy):
         self.state = next_state
         return self.state
 
-
     def restart(
         self,
         *,
