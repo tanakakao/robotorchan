@@ -19,6 +19,7 @@ surrogate model とは独立した candidate search / optimization の利用者�
 - [Optimizer architecture](optimizer-architecture.md): search strategy、backend、dispatch の責務境界
 - [Public optimizer API](public-optimizer-api.md): named backend と structured variable space の利用方法
 - [Constraint handling metadata](constraint-handling-metadata.md): backend ごとの制約処理 semantics
+- [Acquisition initialization](initialization.md): restart、q、constraints、one-shot、embedded search の初期条件契約
 
 高次元 surrogate の選択は [High-dimensional models](../models/high_dimensional.md) を参照してください。
 
