@@ -6,10 +6,12 @@ from collections.abc import Callable
 from typing import Any, Literal
 
 from botorch.acquisition.acquisition import AcquisitionFunction
-from botorch.optim import optimize_acqf as botorch_optimize_acqf
 from torch import Tensor
 
-from robotorchan.optim.backends.botorch import optimize_acqf_mixed_botorch
+from robotorchan.optim.backends.botorch import (
+    optimize_acqf_botorch,
+    optimize_acqf_mixed_botorch,
+)
 from robotorchan.optim.backends.cmaes import optimize_acqf_cmaes
 from robotorchan.optim.backends.differential_evolution import optimize_acqf_de
 from robotorchan.optim.backends.mixed_genetic_algorithm import optimize_acqf_mixed_ga
@@ -108,18 +110,14 @@ def optimize_acqf_hybrid(
             batch_initial_conditions=initial_conditions,
         )
 
-    return botorch_optimize_acqf(
+    return optimize_acqf_botorch(
         acq_function=acq_function,
         bounds=bounds,
         q=q,
         num_restarts=num_restarts,
         raw_samples=None,
         options=options,
-        inequality_constraints=list(candidate_constraints.inequality_constraints) or None,
-        equality_constraints=list(candidate_constraints.equality_constraints) or None,
-        nonlinear_inequality_constraints=(
-            list(candidate_constraints.nonlinear_inequality_constraints) or None
-        ),
+        constraints=candidate_constraints,
         fixed_features=fixed_features,
         batch_initial_conditions=initial_conditions,
     )
