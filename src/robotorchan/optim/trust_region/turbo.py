@@ -13,10 +13,10 @@ from torch import Tensor
 from torch.quasirandom import SobolEngine
 
 from robotorchan.acquisition.sampling import select_thompson_candidates
+from robotorchan.optim.backends import optimize_acqf_mixed_botorch
 from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.constraint_evaluation import candidate_is_feasible
 from robotorchan.optim.constraints import CandidateConstraints
-from robotorchan.optim.backends import optimize_acqf_mixed_botorch
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 from robotorchan.optim.variable_space import MixedVariableSpace
 
