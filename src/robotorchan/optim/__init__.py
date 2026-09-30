@@ -36,14 +36,16 @@ from robotorchan.optim.embedding import (
     REMBOStrategy,
     update_baxus_state,
 )
-from robotorchan.optim.initializers import gen_augmented_one_shot_initial_conditions
+from robotorchan.optim.one_shot import (
+    gen_augmented_one_shot_initial_conditions,
+    optimize_mixed_one_shot_acqf,
+)
 from robotorchan.optim.latent import (
     LatentReconstruction,
     LatentSpaceStrategy,
     PCAReconstruction,
     RandomProjectionReconstruction,
 )
-from robotorchan.optim.mixed_one_shot import optimize_mixed_one_shot_acqf
 from robotorchan.optim.strategies import (
     MixedSpaceStrategy,
     OriginalSpaceStrategy,
