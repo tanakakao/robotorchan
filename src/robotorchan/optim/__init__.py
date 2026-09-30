@@ -1,7 +1,7 @@
 """Acquisition-function optimization and search-strategy interfaces."""
 
-from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.backend_support import apply_fixed_features, optimize_acqf_sequential
+from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.capabilities import (
     BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
     BOTORCH_OPTIMIZER_CAPABILITIES,
