@@ -125,3 +125,18 @@ def test_one_shot_optimization_has_dedicated_ownership() -> None:
     optim_test_root = REPOSITORY_ROOT / "tests" / "optim"
     assert not (optim_test_root / "test_mixed_one_shot.py").exists()
     assert (optim_test_root / "one_shot" / "test_mixed.py").is_file()
+
+
+def test_candidate_domains_have_dedicated_ownership() -> None:
+    optim_root = SOURCE_ROOT / "optim"
+    assert not (optim_root / "variable_space.py").exists()
+
+    domain_root = optim_root / "domains"
+    assert {path.name for path in domain_root.glob("*.py")} == {
+        "__init__.py",
+        "variable_space.py",
+    }
+
+    optim_test_root = REPOSITORY_ROOT / "tests" / "optim"
+    assert not (optim_test_root / "test_variable_space.py").exists()
+    assert (optim_test_root / "domains" / "test_variable_space.py").is_file()

@@ -40,9 +40,10 @@ Concrete public-input-space strategies are implemented under
 `robotorchan.optim`. Embedding, latent-space, and trust-region strategies keep separate
 packages because they own additional state and coordinate transformations.
 
-Candidate-space constraint types and constraint evaluation helpers are owned by
-`robotorchan.optim.constraints`. These remain separate from probabilistic output constraints
-used by constrained acquisition functions.
+Candidate-domain contracts shared across optimizer backends are owned by
+`robotorchan.optim.domains`. Candidate-space constraint types and constraint evaluation
+helpers are owned separately by `robotorchan.optim.constraints`; these are distinct from
+probabilistic output constraints used by constrained acquisition functions.
 
 One-shot acquisition initialization and mixed-domain one-shot optimization are owned by
 `robotorchan.optim.one_shot`. Their canonical user-facing imports remain available from

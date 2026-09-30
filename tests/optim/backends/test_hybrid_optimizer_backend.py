@@ -9,7 +9,7 @@ from torch import Tensor
 
 from robotorchan.optim.backends.hybrid import optimize_acqf_hybrid
 from robotorchan.optim.constraints import CandidateConstraints
-from robotorchan.optim.variable_space import MixedVariableSpace
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 
 class _Quadratic(AcquisitionFunction):

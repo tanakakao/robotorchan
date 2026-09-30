@@ -21,7 +21,7 @@ from robotorchan.optim.capabilities import (
     get_optimizer_capabilities,
 )
 from robotorchan.optim.constraints.contracts import CandidateConstraints
-from robotorchan.optim.variable_space import MixedVariableSpace
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 OptimizerName = Literal[
     "botorch",

@@ -13,8 +13,8 @@ from robotorchan.optim.constraints.evaluation import (
     candidate_constraint_violation,
     feasibility_first_ranks,
 )
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.optim.runtime import make_generator, validate_bounds
-from robotorchan.optim.variable_space import MixedVariableSpace
 
 
 def optimize_acqf_mixed_ga(

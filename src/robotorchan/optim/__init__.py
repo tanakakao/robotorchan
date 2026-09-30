@@ -27,6 +27,7 @@ from robotorchan.optim.constraints.contracts import (
 )
 from robotorchan.optim.cross_cutting import apply_fixed_features, optimize_acqf_sequential
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
+from robotorchan.optim.domains import MixedVariableSpace
 from robotorchan.optim.embedding import (
     ALEBOStrategy,
     BAxUSState,
@@ -65,7 +66,6 @@ from robotorchan.optim.trust_region import (
     turbo_trust_region_bounds,
     update_turbo_state,
 )
-from robotorchan.optim.variable_space import MixedVariableSpace
 
 __all__ = [
     "BOTORCH_MIXED_OPTIMIZER_CAPABILITIES",

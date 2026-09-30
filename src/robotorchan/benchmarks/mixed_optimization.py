@@ -9,7 +9,7 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
 from robotorchan.optim.constraints.contracts import CandidateConstraints
-from robotorchan.optim.variable_space import MixedVariableSpace
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 
 @dataclass(frozen=True)
