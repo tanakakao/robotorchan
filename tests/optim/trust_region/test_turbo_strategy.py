@@ -8,6 +8,7 @@ from botorch.acquisition.analytic import PosteriorMean
 
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim import (
+    CandidateConstraints,
     TuRBOState,
     TuRBOStrategy,
     generate_turbo_restart_center,
@@ -618,3 +619,153 @@ def test_model_geometry_rejects_reduced_space_lengthscales() -> None:
             device=bounds.device,
             bounds=bounds,
         )
+
+
+def test_optimize_intersects_trust_region_with_linear_inequality() -> None:
+    train_X, train_Y, bounds = _problem()
+    acquisition = PosteriorMean(SingleTaskGP(train_X, train_Y))
+    strategy = TuRBOStrategy(
+        bounds,
+        center=torch.full((4,), 0.75, dtype=torch.double),
+        num_restarts=4,
+        raw_samples=64,
+    )
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([0]),
+                torch.tensor([1.0], dtype=torch.double),
+                0.7,
+            ),
+        )
+    )
+
+    result = strategy.optimize(acquisition, constraints=constraints)
+
+    assert result.candidates[0, 0] >= 0.7 - 1e-6
+    trust_bounds = result.metadata["trust_region_bounds"]
+    assert torch.all(result.candidates >= trust_bounds[0])
+    assert torch.all(result.candidates <= trust_bounds[1])
+    assert result.metadata["candidate_constraints"]
+
+
+def test_optimize_supports_linear_equality_inside_trust_region() -> None:
+    train_X, train_Y, bounds = _problem()
+    acquisition = PosteriorMean(SingleTaskGP(train_X, train_Y))
+    strategy = TuRBOStrategy(
+        bounds,
+        center=torch.full((4,), 0.5, dtype=torch.double),
+        num_restarts=4,
+        raw_samples=64,
+    )
+    constraints = CandidateConstraints(
+        equality_constraints=(
+            (
+                torch.tensor([0, 1]),
+                torch.tensor([1.0, 1.0], dtype=torch.double),
+                1.0,
+            ),
+        )
+    )
+
+    result = strategy.optimize(acquisition, constraints=constraints)
+
+    torch.testing.assert_close(
+        result.candidates[0, :2].sum(),
+        torch.tensor(1.0, dtype=torch.double),
+        atol=1e-5,
+        rtol=0.0,
+    )
+
+
+def test_optimize_supports_nonlinear_constraint_with_feasible_initial_conditions() -> None:
+    train_X, train_Y, bounds = _problem()
+    acquisition = PosteriorMean(SingleTaskGP(train_X, train_Y))
+    strategy = TuRBOStrategy(
+        bounds,
+        center=torch.full((4,), 0.7, dtype=torch.double),
+        num_restarts=2,
+        raw_samples=32,
+    )
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[0] - 0.6, True),)
+    )
+    initial = torch.full((2, 1, 4), 0.7, dtype=torch.double)
+
+    result = strategy.optimize(
+        acquisition,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    assert result.candidates[0, 0] >= 0.6 - 1e-6
+
+
+def test_thompson_sampling_filters_candidate_constraints() -> None:
+    train_X, train_Y, bounds = _problem()
+    model = SingleTaskGP(train_X, train_Y)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=torch.full((4,), 0.75, dtype=torch.double),
+        seed=53,
+    )
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([0]),
+                torch.tensor([1.0], dtype=torch.double),
+                0.7,
+            ),
+        ),
+        nonlinear_inequality_constraints=((lambda x: 0.9 - x[..., 1], True),),
+    )
+
+    result = strategy.thompson_sample(model, n_candidates=128, constraints=constraints)
+
+    assert result.candidates[0, 0] >= 0.7
+    assert result.candidates[0, 1] <= 0.9
+    assert result.metadata["candidate_constraints"]
+
+
+def test_thompson_sampling_rejects_infeasible_candidate_pool() -> None:
+    train_X, train_Y, bounds = _problem()
+    model = SingleTaskGP(train_X, train_Y)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=torch.full((4,), 0.5, dtype=torch.double),
+        seed=59,
+    )
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([0]),
+                torch.tensor([1.0], dtype=torch.double),
+                0.99,
+            ),
+        )
+    )
+
+    with pytest.raises(RuntimeError, match="fewer than q feasible points"):
+        strategy.thompson_sample(model, n_candidates=32, constraints=constraints)
+
+
+def test_thompson_sampling_rejects_interpoint_constraints() -> None:
+    train_X, train_Y, bounds = _problem()
+    model = SingleTaskGP(train_X, train_Y)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=_center(train_X, train_Y),
+        state=TuRBOState(dim=4, batch_size=2),
+    )
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (
+                torch.tensor([[0, 0], [1, 0]]),
+                torch.tensor([1.0, -1.0], dtype=torch.double),
+                0.0,
+            ),
+        )
+    )
+
+    with pytest.raises(NotImplementedError, match="inter-point linear"):
+        strategy.thompson_sample(model, q=2, n_candidates=32, constraints=constraints)
