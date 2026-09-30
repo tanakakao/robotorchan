@@ -42,6 +42,7 @@ def test_capability_workflow_is_owned_by_one_package() -> None:
         "test_selector.py",
     }
     assert not any((test_root / name).exists() for name in workflow_test_names)
-    assert workflow_test_names <= {
+    actual_workflow_tests = {
         path.name for path in (test_root / "workflow").glob("test_*.py")
     }
+    assert workflow_test_names <= actual_workflow_tests
