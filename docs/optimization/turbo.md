@@ -192,3 +192,38 @@ Fantasy batch dimensions are not TuRBO q-batch dimensions and never alter
 `TuRBOState.batch_size`. Kronecker models remain subject to their existing explicit
 fantasization limitation rather than receiving a TuRBO-specific workaround.
 
+
+
+## Noisy observations and robust objectives
+
+TuRBO の trust-region state は、raw observation と state decision utility を分離できます。
+`update_state(values, state_values=...)` の `values` は完了した生観測であり、
+`observed_best_value` を更新します。`state_values` は同じ nominal candidate に対応する
+posterior mean、denoised utility、または robust risk utility を渡すための任意引数です。
+これを指定した場合、success / failure、`best_value`、incumbent center の選択は
+`state_values` に基づきます。省略時は従来どおり `values` がそのまま使われます。
+
+この分離により、単発の noisy observation の上振れをそのまま trust region の拡張や
+center 移動として扱う必要がありません。TuRBO 自身は posterior mean や risk measure の
+計算方法を規定せず、model / objective 側で計算済みの utility を受け取ります。
+したがって qNEI / qLogNEI など acquisition 固有のノイズ処理を state logic に埋め込みません。
+
+Input perturbation を使う robust BO でも trust region は nominal public input space にあります。
+`InputPerturbation` が posterior 評価時に scenario axis を生成し、`Expectation`、CVaR などの
+risk objective がその軸を集約します。scenario 数 `n_w` は TuRBO の入力次元、q、center、
+trust-region bounds には追加されません。robust utility で state を更新する場合も、
+`state_values` は nominal candidate ごとに1値、つまり `state.batch_size` 個を渡します。
+
+```python
+result = strategy.optimize(qlognei)
+observed_y = evaluate(result.candidates)
+robust_utility = evaluate_posterior_risk(model, result.candidates)
+strategy.update_state(
+    observed_y,
+    candidates=result.candidates,
+    state_values=robust_utility,
+)
+```
+
+`best_value` は trust-region decision utility のbest、`observed_best_value` はraw observationの
+bestです。この2つはノイズ・robust workflowでは一致しないことがあります。
