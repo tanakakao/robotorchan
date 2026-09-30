@@ -1,0 +1,14 @@
+"""Repository layout contracts that do not require importing the package."""
+
+from pathlib import Path
+
+REPOSITORY_ROOT = Path(__file__).parents[1]
+
+
+def test_model_tests_are_owned_by_a_family_or_contract_directory() -> None:
+    model_test_root = REPOSITORY_ROOT / "tests" / "models"
+    misplaced = sorted(path.name for path in model_test_root.glob("test_*.py"))
+
+    assert not misplaced, (
+        f"Model tests must live in a model family, contracts, or integration directory: {misplaced}"
+    )
