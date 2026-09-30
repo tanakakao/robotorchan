@@ -18,5 +18,6 @@
 - `high_dimensional_acqf_optimization.py`: acquisition optimization benchmark
 - `expressive_predictive.py`: expressive surrogate predictive benchmark
 - `non_gp_surrogates.py`: empirical non-GP surrogate predictive diagnostics
+- `turbo.py`: Ackley / Rosenbrock / Levy で Global BO と TuRBO を比較する再現可能 benchmark
 
 実装の正は各スクリプトと `tests/benchmarks/` です。文書側には、再現に必要な条件と比較結果を誤解しないための境界を残します。
