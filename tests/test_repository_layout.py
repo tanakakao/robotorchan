@@ -52,18 +52,20 @@ def test_concrete_optimizer_strategies_are_owned_by_strategy_package() -> None:
     assert not any((optim_root / name).exists() for name in strategy_modules)
 
     strategy_root = optim_root / "strategies"
-    assert strategy_modules | {"__init__.py"} == {
-        path.name for path in strategy_root.glob("*.py")
-    }
+    assert strategy_modules | {"__init__.py"} == {path.name for path in strategy_root.glob("*.py")}
 
     optim_test_root = REPOSITORY_ROOT / "tests" / "optim"
-    strategy_tests = {f"test_{name[:-3]}_space_strategy.py" for name in ("mixed.py", "original.py")}
+    strategy_tests = {
+        f"test_{name.removesuffix('.py')}_space_strategy.py"
+        for name in ("mixed.py", "original.py")
+    }
     strategy_tests |= {
         "test_random_search_strategy.py",
         "test_sobol_search_strategy.py",
         "test_tree_ensemble_search_strategy.py",
     }
     assert not any((optim_test_root / name).exists() for name in strategy_tests)
-    assert strategy_tests <= {
+    actual_strategy_tests = set(
         path.name for path in (optim_test_root / "strategies").glob("test_*.py")
-    }
+    )
+    assert strategy_tests <= actual_strategy_tests
