@@ -14,12 +14,8 @@ from abc import ABC, abstractmethod
 import torch
 from torch import Tensor
 
-from robotorchan.reduction import (
-    InputReducer,
-    PCAInputReducer,
-    RandomProjectionInputReducer,
-    ReducerNotFittedError,
-)
+from robotorchan.reduction.base import InputReducer, ReducerNotFittedError
+from robotorchan.reduction.input import PCAInputReducer, RandomProjectionInputReducer
 
 
 class LatentReconstruction(ABC):
