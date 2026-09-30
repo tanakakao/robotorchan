@@ -378,3 +378,26 @@ The benchmark is intended for empirical comparison and regression investigation.
 objective contracts and short multi-iteration execution only; it does not assert that TuRBO
 must statistically outperform Global BO on a small or fixed random sample. Performance claims
 should be based on repeated benchmark runs and reported uncertainty, not a CI pass/fail rule.
+
+
+## Final support boundary
+
+The implemented strategy is a single-region, stateful TuRBO search layer. Continuous
+acquisition optimization, posterior-sampling candidate generation, synchronous q-batches,
+explicit pending-point filtering for Thompson sampling, candidate constraints, robust/noisy
+caller-owned state utilities, mixed search with exact discrete assignments, and multi-fidelity
+design-only trust regions are covered by dedicated tests.
+
+The following are deliberately not implied by `TuRBOStrategy`: MORBO-style multi-region
+multi-objective optimization, MF-MES, Hamming or graph trust regions for large discrete spaces,
+automatic schedulers for asynchronous workers, or latent-space trust regions for dimensionality
+reduction models. Reduced-space surrogate models continue to expose a public/raw-space TuRBO
+region unless a separate strategy explicitly owns latent geometry.
+
+For mixed and multi-fidelity geometry, integer/categorical/fidelity coordinates are structural.
+They retain their global domains and are excluded from ARD weight normalization. Only ordinary
+design dimensions determine the geometric-mean normalization used for local trust-region widths.
+
+The runnable minimal loop is `examples/turbo.py`. Empirical comparisons are available through
+`benchmarks/turbo.py`; benchmark results should be interpreted across repeated seeds rather than
+as a CI-enforced superiority claim.

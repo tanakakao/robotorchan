@@ -169,3 +169,11 @@ torch.manual_seed(0)
 - `tests/`: 実装挙動と互換性を検証します。
 
 Notebook は利用方法を示すドキュメントであり、unit test の代替ではありません。
+
+
+## TuRBO
+
+`examples/turbo.py` は `TuRBOStrategy` の最小 stateful loop です。モデルfit、acquisition
+生成、local candidate最適化、評価、`update_state()`、必要時の`restart()`という責務分離を
+そのまま示します。Mixed / MultiFidelity / constraints / robust utility の詳細は
+`docs/optimization/turbo.md` を参照してください。
