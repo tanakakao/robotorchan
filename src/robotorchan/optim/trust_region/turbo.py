@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from typing import Any
-from collections.abc import Iterator
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
