@@ -3,9 +3,11 @@
 from dataclasses import dataclass
 
 from robotorchan.models.registry import MODEL_REGISTRY
-from robotorchan.problem import ProblemSpec
-from robotorchan.recommendation import recommend_compatible_workflows
-from robotorchan.selector import evaluate_models
+from robotorchan.workflow import (
+    ProblemSpec,
+    evaluate_models,
+    recommend_compatible_workflows,
+)
 
 
 @dataclass(frozen=True, slots=True)
