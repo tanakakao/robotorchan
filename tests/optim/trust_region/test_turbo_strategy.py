@@ -537,7 +537,32 @@ def test_strategy_can_refresh_geometry_from_model_ard_lengthscales() -> None:
     torch.testing.assert_close(half_widths, 0.1 * weights)
 
 
-def test_model_geometry_rejects_non_public_or_batched_lengthscales() -> None:
+def test_model_geometry_aggregates_batched_ard_lengthscales_by_median() -> None:
+    train_X, train_Y, bounds = _problem(input_dim=4)
+    model = SingleTaskGP(train_X, train_Y)
+    lengthscales = torch.tensor(
+        [
+            [0.2, 0.5, 1.0, 2.0],
+            [0.4, 1.0, 2.0, 4.0],
+            [0.8, 2.0, 4.0, 8.0],
+        ],
+        dtype=torch.double,
+    )
+    model.covar_module.lengthscale = lengthscales
+
+    weights = turbo_dimension_weights_from_model(
+        model,
+        input_dim=4,
+        dtype=bounds.dtype,
+        device=bounds.device,
+    )
+
+    median = lengthscales.median(dim=0).values
+    expected = median / torch.exp(torch.log(median).mean())
+    torch.testing.assert_close(weights, expected)
+
+
+def test_model_geometry_rejects_non_public_lengthscale_dimension() -> None:
     train_X, train_Y, bounds = _problem(input_dim=4)
     model = SingleTaskGP(train_X, train_Y)
     model.covar_module.lengthscale = torch.ones(3, dtype=torch.double)
