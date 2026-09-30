@@ -511,11 +511,29 @@ def test_model_ard_lengthscales_define_turbo_dimension_weights() -> None:
         input_dim=4,
         dtype=bounds.dtype,
         device=bounds.device,
+        bounds=bounds,
     )
 
     expected = lengthscales / torch.exp(torch.log(lengthscales).mean())
     torch.testing.assert_close(weights, expected)
     torch.testing.assert_close(weights.prod(), torch.ones((), dtype=torch.double))
+
+
+def test_raw_model_lengthscales_are_scaled_by_bound_widths() -> None:
+    _, _, _ = _problem(input_dim=2)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 100.0]], dtype=torch.double)
+    lengthscales = torch.tensor([1.0, 100.0], dtype=torch.double)
+    model = SimpleNamespace(covar_module=SimpleNamespace(lengthscale=lengthscales))
+
+    weights = turbo_dimension_weights_from_model(
+        model,
+        input_dim=2,
+        dtype=bounds.dtype,
+        device=bounds.device,
+        bounds=bounds,
+    )
+
+    torch.testing.assert_close(weights, torch.ones(2, dtype=torch.double))
 
 
 def test_strategy_can_refresh_geometry_from_model_ard_lengthscales() -> None:
@@ -556,6 +574,7 @@ def test_model_geometry_aggregates_batched_ard_lengthscales_by_median() -> None:
         input_dim=4,
         dtype=bounds.dtype,
         device=bounds.device,
+        bounds=bounds,
     )
 
     median = lengthscales.median(dim=0).values
