@@ -140,3 +140,21 @@ TuRBOの既定search spaceは、surrogate内部のlatent spaceではなくpublic
 latent-space TuRBOは、latent candidateを実行可能なraw candidateへ戻す写像と、global bounds / candidate constraintsを保存するfeasibility contractが必要です。現在のInputReducer共通契約はforward `transform()` のみであるため、PCAだけを特別扱いして疑似逆変換する実装は採用しません。decoder / inverse mappingの共通契約が整うまで、latent-space candidate optimizationはunsupportedです。
 
 Mixed reduced modelsはcategorical passthroughを含むため、このcontinuous reduced-space方針とは分離し、Mixed / Discrete対応のPhase 13で扱います。jointly trained encoderのrepresentation driftもfrozen reducerとは異なるため、latent trust-regionを自動追従させません。
+
+## Candidate constraints
+
+TuRBOのtrust regionはcandidate/input-space constraintを置き換えません。acquisition optimizationでは、local trust-region boundsと `CandidateConstraints` の両方を同時に満たすcandidateを探索します。
+
+```python
+constraints = CandidateConstraints(
+    inequality_constraints=((indices, coefficients, rhs),),
+)
+result = strategy.optimize(acquisition, constraints=constraints)
+```
+
+線形不等式・線形等式は既存のrobotorchan optimizer contractをそのまま利用します。BoTorch backendではBoTorchの `optimize_acqf` へ制約を渡します。非線形candidate constraintも同じ契約を利用し、BoTorch backendではfeasibleな `batch_initial_conditions` または対応するinitial-condition generatorが必要です。TuRBOが不正な初期点を暗黙生成して制約を回避することはありません。
+
+Thompson samplingではlocal candidate poolを `CandidateConstraints` でfilterした後にposterior samplingします。feasible点が `q` 未満なら明示的に失敗し、unconstrained candidateへfallbackしません。現在この経路で保証するのは各candidateを独立に判定できるintra-point constraintです。q-batch全体を結ぶinter-point linear/nonlinear constraintは個別pool filteringでは数学的に保証できないためunsupportedです。
+
+candidate constraintは入力座標に対する既知制約です。constrained EIなどのoutcome constraintは未知の出力・制約モデルをacquisition側で扱う別概念であり、TuRBOのtrust-region geometryへ変換しません。Mixed / discrete constraint semanticsはPhase 13で別途扱います。
+
