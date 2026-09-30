@@ -5,7 +5,7 @@ from robotorchan.benchmarks.capability import (
     run_capability_benchmarks,
 )
 from robotorchan.models.capabilities import InputType, TaskType
-from robotorchan.problem import ProblemPurpose, ProblemSpec
+from robotorchan.workflow.problem import ProblemPurpose, ProblemSpec
 
 
 def test_benchmark_counts_are_internally_consistent() -> None:
