@@ -591,6 +591,20 @@ def test_turbo_optimizes_qlognehvi_inside_local_region() -> None:
     assert torch.all(result.candidates <= trust_bounds[1])
 
 
+def test_turbo_state_accepts_singleton_output_dimension() -> None:
+    strategy = TuRBOStrategy(
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        center=torch.tensor([0.5], dtype=torch.double),
+    )
+
+    state = strategy.update_state(
+        torch.tensor([[0.6]], dtype=torch.double),
+        candidates=torch.tensor([[0.55]], dtype=torch.double),
+    )
+
+    assert state.best_value == pytest.approx(0.6)
+
+
 def test_turbo_state_rejects_multiobjective_vectors_without_scalar_utility() -> None:
     strategy = TuRBOStrategy(
         torch.tensor([[0.0], [1.0]], dtype=torch.double),
