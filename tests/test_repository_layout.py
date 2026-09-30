@@ -172,3 +172,28 @@ def test_obsolete_phase_snapshot_is_not_permanent_documentation() -> None:
 
     optimization_readme = (optimization_docs / "README.md").read_text(encoding="utf-8")
     assert "turbo-phase1-research-inventory.md" not in optimization_readme
+
+
+def test_repository_contains_no_obsolete_structure_references() -> None:
+    forbidden_tokens = (
+        "robotorchan.optim." + "initializers",
+        "robotorchan.optim." + "mixed_one_shot",
+        "robotorchan.optim." + "variable_space",
+        "robotorchan.optim." + "cross_cutting",
+        "robotorchan.optim." + "runtime",
+        "turbo-" + "phase1-research-inventory.md",
+        "tests/optim/test_mixed_one_shot.py",
+        "tests/optim/test_variable_space.py",
+        "tests/optim/test_optimizer_runtime_contract.py",
+        "tests/optim/test_cross_cutting_optimizers.py",
+    )
+    ignored_directories = {".git", "__pycache__", ".pytest_cache"}
+    for path in REPOSITORY_ROOT.rglob("*"):
+        if not path.is_file() or ignored_directories.intersection(path.parts):
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        for token in forbidden_tokens:
+            assert token not in text, f"obsolete reference {token!r} remains in {path}"
