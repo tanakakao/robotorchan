@@ -112,7 +112,7 @@ def test_terminal_state_below_minimum_requires_restart_flag() -> None:
 def test_trust_region_is_clipped_to_public_bounds() -> None:
     _, _, bounds = _problem()
     center = torch.tensor([0.1, 0.9, 0.5, 0.5], dtype=torch.double)
-    strategy = TuRBOStrategy(bounds, center=center, state=TuRBOState(length=0.8))
+    strategy = TuRBOStrategy(bounds, center=center, state=TuRBOState(dim=4, length=0.8))
 
     trust_bounds = strategy.trust_region_bounds()
 
@@ -170,7 +170,6 @@ def test_validates_arguments_and_restart_state() -> None:
     acquisition = PosteriorMean(SingleTaskGP(train_X, train_Y))
     with pytest.raises(RuntimeError, match="restart is required"):
         strategy.optimize(acquisition)
-
 
 
 def test_strategy_rejects_state_dimension_mismatch() -> None:
