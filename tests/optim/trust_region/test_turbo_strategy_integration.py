@@ -5,15 +5,23 @@ import torch
 from botorch.acquisition.analytic import ExpectedImprovement, PosteriorMean
 from botorch.acquisition.logei import qLogNoisyExpectedImprovement
 from botorch.acquisition.monte_carlo import qExpectedImprovement
+from botorch.acquisition.multi_objective.logei import (
+    qLogExpectedHypervolumeImprovement,
+    qLogNoisyExpectedHypervolumeImprovement,
+)
 from botorch.acquisition.risk_measures import Expectation
 from botorch.models.transforms.input import InputPerturbation
 from botorch.sampling.normal import SobolQMCNormalSampler
+from botorch.utils.multi_objective.box_decompositions.non_dominated import (
+    FastNondominatedPartitioning,
+)
 
 from robotorchan.models import (
     PCAGP,
     PLSGP,
     EnsembleMapSaasSingleTaskGP,
     MixedSingleTaskGP,
+    ModelListGP,
     RandomProjectionGP,
     SingleTaskGP,
 )
@@ -519,3 +527,92 @@ def test_turbo_mixed_enumerates_integer_values_without_numeric_shrinking() -> No
     assert local[0, 0] > bounds[0, 0]
     assert local[1, 0] < bounds[1, 0]
     torch.testing.assert_close(local[:, 1], bounds[:, 1])
+
+
+def _multiobjective_turbo_problem() -> tuple[ModelListGP, torch.Tensor, torch.Tensor]:
+    train_X = torch.linspace(0.05, 0.95, 10, dtype=torch.double).unsqueeze(-1)
+    first = -((train_X - 0.25) ** 2)
+    second = -((train_X - 0.75) ** 2)
+    train_Y = torch.cat([first, second], dim=-1)
+    model = ModelListGP(
+        SingleTaskGP(train_X, first),
+        SingleTaskGP(train_X, second),
+    )
+    return model, train_X, train_Y
+
+
+def test_turbo_optimizes_qlogehvi_inside_local_region() -> None:
+    model, train_X, train_Y = _multiobjective_turbo_problem()
+    ref_point = train_Y.min(dim=0).values - 0.1
+    partitioning = FastNondominatedPartitioning(ref_point=ref_point, Y=train_Y)
+    acquisition = qLogExpectedHypervolumeImprovement(
+        model=model,
+        ref_point=ref_point.tolist(),
+        partitioning=partitioning,
+    )
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=train_X[4],
+        num_restarts=2,
+        raw_samples=32,
+    )
+
+    result = strategy.optimize(acquisition)
+
+    assert result.candidates.shape == torch.Size([1, 1])
+    trust_bounds = result.metadata["trust_region_bounds"]
+    assert torch.all(result.candidates >= trust_bounds[0])
+    assert torch.all(result.candidates <= trust_bounds[1])
+
+
+def test_turbo_optimizes_qlognehvi_inside_local_region() -> None:
+    model, train_X, train_Y = _multiobjective_turbo_problem()
+    ref_point = train_Y.min(dim=0).values - 0.1
+    acquisition = qLogNoisyExpectedHypervolumeImprovement(
+        model=model,
+        ref_point=ref_point.tolist(),
+        X_baseline=train_X,
+        prune_baseline=False,
+    )
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=train_X[5],
+        num_restarts=2,
+        raw_samples=32,
+    )
+
+    result = strategy.optimize(acquisition)
+
+    assert result.candidates.shape == torch.Size([1, 1])
+    trust_bounds = result.metadata["trust_region_bounds"]
+    assert torch.all(result.candidates >= trust_bounds[0])
+    assert torch.all(result.candidates <= trust_bounds[1])
+
+
+def test_turbo_state_accepts_singleton_output_dimension() -> None:
+    strategy = TuRBOStrategy(
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        center=torch.tensor([0.5], dtype=torch.double),
+    )
+
+    state = strategy.update_state(
+        torch.tensor([[0.6]], dtype=torch.double),
+        candidates=torch.tensor([[0.55]], dtype=torch.double),
+    )
+
+    assert state.best_value == pytest.approx(0.6)
+
+
+def test_turbo_state_rejects_multiobjective_vectors_without_scalar_utility() -> None:
+    strategy = TuRBOStrategy(
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        center=torch.tensor([0.5], dtype=torch.double),
+    )
+
+    with pytest.raises(ValueError, match="scalar utility"):
+        strategy.update_state(
+            torch.tensor([[0.4, 0.6]], dtype=torch.double),
+            candidates=torch.tensor([[0.55]], dtype=torch.double),
+        )

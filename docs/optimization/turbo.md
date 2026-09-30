@@ -258,3 +258,37 @@ centerとcandidateは常にpublic/raw input coordinatesです。state updateも�
 `update_state(values, candidates=...)`を使い、改善したcandidateのdiscrete assignmentを含む
 完全なraw candidateが次のcenterになります。ただし次回もdiscrete dimensions自体は数値的に
 縮小せず、合法値集合全体を比較します。
+
+
+## Multi-objective acquisition functions
+
+Phase 14では、TuRBOをMORBOのようなmulti-objective専用trust-region algorithmへ変更しません。
+robotorchanですでに利用できるBoTorch-nativeのqLogEHVI、qLogNEHVI、qLogNParEGOなどを、
+通常のacquisition functionとして現在のsingle trust region内で最適化します。Pareto partitioning、
+reference point、scalarizationはacquisition側の責務のままです。
+
+この構成ではcandidate generationはmulti-objectiveでも既存のstrategy.optimize(acquisition)を
+そのまま利用できます。qLogEHVIとqLogNEHVIについてlocal bounds内でcandidateを返すE2E regressionを
+持ちます。multi-output modelやMCMultiOutputObjectiveの出力選択もTuRBO側へ複製しません。
+
+一方、TuRBO-1のstate transitionには「改善したか」というscalar decisionが必要です。
+Pareto outcome vectorをupdate_state()へ直接渡すと、どの点がbest centerかを一意に決められません。
+そのためPhase 14では、valuesとstate_valuesはcandidateごとに1個のscalar utilityであることを
+明示的に要求します。multi-objective workflowでは呼び出し側がhypervolume contribution、固定した
+scalarization、または別の明示的なstate utilityを定義してからstateを更新します。
+
+```python
+result = strategy.optimize(qlogehvi)
+new_Y = evaluate(result.candidates)  # [q, m]
+state_utility = compute_state_utility(new_Y)  # [q]
+strategy.update_state(
+    state_utility,
+    candidates=result.candidates,
+)
+```
+
+重要なのは、acquisition utilityとstate utilityを同一概念として暗黙に扱わないことです。
+qLogEHVIの値そのものを観測objectiveとしてstateへ保存する必要はありません。Pareto archiveの管理、
+複数trust region、regionごとのlocal Pareto set、hypervolume-based region selectionなどを備えた
+MORBO相当の手法は、single-region TuRBO-1とは異なるalgorithmです。Phase 14ではその名称や保証を
+robotorchanのTuRBOStrategyへ持ち込みません。
