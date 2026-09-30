@@ -769,3 +769,43 @@ def test_thompson_sampling_rejects_interpoint_constraints() -> None:
 
     with pytest.raises(NotImplementedError, match="inter-point linear"):
         strategy.thompson_sample(model, q=2, n_candidates=32, constraints=constraints)
+
+
+def test_noise_aware_state_uses_state_values_for_success_decision() -> None:
+    state = TuRBOState(
+        dim=2,
+        best_value=1.0,
+        observed_best_value=1.0,
+    )
+
+    next_state = update_turbo_state(
+        state,
+        torch.tensor([2.5]),
+        state_values=torch.tensor([0.9]),
+    )
+
+    assert next_state.best_value == pytest.approx(1.0)
+    assert next_state.observed_best_value == pytest.approx(2.5)
+    assert next_state.success_counter == 0
+    assert next_state.failure_counter == 1
+
+
+def test_noise_aware_strategy_moves_center_by_state_utility() -> None:
+    bounds = torch.stack([torch.zeros(2), torch.ones(2)])
+    initial = torch.tensor([0.5, 0.5])
+    candidates = torch.tensor([[0.2, 0.2], [0.8, 0.8]])
+    strategy = TuRBOStrategy(
+        bounds,
+        center=initial,
+        state=TuRBOState(dim=2, batch_size=2, best_value=0.5),
+    )
+
+    next_state = strategy.update_state(
+        torch.tensor([10.0, 1.0]),
+        candidates=candidates,
+        state_values=torch.tensor([0.4, 0.8]),
+    )
+
+    torch.testing.assert_close(strategy.center, candidates[1])
+    assert next_state.best_value == pytest.approx(0.8)
+    assert next_state.observed_best_value == pytest.approx(10.0)
