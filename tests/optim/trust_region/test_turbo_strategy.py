@@ -25,8 +25,28 @@ def _center(train_X: torch.Tensor, train_Y: torch.Tensor) -> torch.Tensor:
     return train_X[train_Y.squeeze(-1).argmax()]
 
 
+def test_state_derives_failure_tolerance_from_dimension_and_batch_size() -> None:
+    state = TuRBOState(dim=20, batch_size=4)
+    assert state.failure_tolerance == 5
+
+    state = TuRBOState(dim=5, batch_size=2)
+    assert state.failure_tolerance == 2
+
+
+def test_explicit_failure_tolerance_overrides_derived_value() -> None:
+    state = TuRBOState(dim=20, batch_size=4, failure_tolerance=7)
+    assert state.failure_tolerance == 7
+
+
+def test_state_validates_dimension_and_batch_size() -> None:
+    with pytest.raises(ValueError, match="dim must be at least 1"):
+        TuRBOState(dim=0)
+    with pytest.raises(ValueError, match="batch_size must be at least 1"):
+        TuRBOState(batch_size=0)
+
+
 def test_state_expands_after_success_tolerance() -> None:
-    state = TuRBOState(length=0.4, success_tolerance=2, best_value=0.0)
+    state = TuRBOState(dim=4, length=0.4, success_tolerance=2, best_value=0.0)
     state = update_turbo_state(state, torch.tensor([1.0]))
     assert state.length == pytest.approx(0.4)
     assert state.success_counter == 1
@@ -39,7 +59,7 @@ def test_state_expands_after_success_tolerance() -> None:
 
 
 def test_state_shrinks_and_triggers_restart() -> None:
-    state = TuRBOState(length=0.2, length_min=0.15, failure_tolerance=2, best_value=1.0)
+    state = TuRBOState(dim=4, length=0.2, length_min=0.15, failure_tolerance=2, best_value=1.0)
     state = update_turbo_state(state, torch.tensor([0.0]))
     assert state.failure_counter == 1
 
@@ -47,6 +67,39 @@ def test_state_shrinks_and_triggers_restart() -> None:
     assert state.length == pytest.approx(0.1)
     assert state.failure_counter == 0
     assert state.restart_triggered
+
+
+def test_small_improvement_below_tolerance_counts_as_failure() -> None:
+    state = TuRBOState(dim=4, best_value=100.0, failure_tolerance=4)
+    next_state = update_turbo_state(
+        state,
+        torch.tensor([100.05]),
+        relative_improvement=1e-3,
+    )
+
+    assert next_state.success_counter == 0
+    assert next_state.failure_counter == 1
+    assert next_state.best_value == pytest.approx(100.05)
+
+
+def test_strategy_center_uses_same_improvement_tolerance_as_state() -> None:
+    _, _, bounds = _problem()
+    initial = torch.full((4,), 0.25, dtype=torch.double)
+    candidate = torch.full((1, 4), 0.75, dtype=torch.double)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=initial,
+        state=TuRBOState(dim=4, best_value=100.0),
+    )
+
+    next_state = strategy.update_state(
+        torch.tensor([100.05]),
+        candidates=candidate,
+        relative_improvement=1e-3,
+    )
+
+    torch.testing.assert_close(strategy.center, initial)
+    assert next_state.failure_counter == 1
 
 
 def test_terminal_state_below_minimum_requires_restart_flag() -> None:
@@ -90,7 +143,7 @@ def test_strategy_update_state_persists_state() -> None:
     strategy = TuRBOStrategy(
         bounds,
         center=bounds.mean(dim=0),
-        state=TuRBOState(success_tolerance=1, best_value=0.0),
+        state=TuRBOState(dim=4, success_tolerance=1, best_value=0.0),
     )
 
     state = strategy.update_state(torch.tensor([1.0]))
@@ -110,10 +163,21 @@ def test_validates_arguments_and_restart_state() -> None:
     with pytest.raises(ValueError, match="center must have shape"):
         TuRBOStrategy(bounds, center=torch.zeros(3, dtype=torch.double))
     with pytest.raises(ValueError, match="values must contain"):
-        update_turbo_state(TuRBOState(), torch.tensor([]))
+        update_turbo_state(TuRBOState(dim=4), torch.tensor([]))
 
-    state = TuRBOState(length=0.1, length_min=0.1, restart_triggered=True)
+    state = TuRBOState(dim=4, length=0.1, length_min=0.1, restart_triggered=True)
     strategy = TuRBOStrategy(bounds, center=center, state=state)
     acquisition = PosteriorMean(SingleTaskGP(train_X, train_Y))
     with pytest.raises(RuntimeError, match="restart is required"):
         strategy.optimize(acquisition)
+
+
+
+def test_strategy_rejects_state_dimension_mismatch() -> None:
+    _, _, bounds = _problem(input_dim=4)
+    with pytest.raises(ValueError, match="state.dim"):
+        TuRBOStrategy(
+            bounds,
+            center=bounds.mean(dim=0),
+            state=TuRBOState(dim=3),
+        )
