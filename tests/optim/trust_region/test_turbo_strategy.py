@@ -362,3 +362,67 @@ def test_thompson_choices_force_one_perturbation_when_mask_is_empty() -> None:
     )
 
     assert torch.all((choices != center).sum(dim=1) >= 1)
+
+
+def test_batch_state_update_uses_best_value_once_per_completed_batch() -> None:
+    state = TuRBOState(
+        dim=6,
+        batch_size=3,
+        success_tolerance=2,
+        best_value=0.0,
+    )
+
+    state = update_turbo_state(state, torch.tensor([-1.0, 0.5, 0.2]))
+    assert state.success_counter == 1
+    assert state.failure_counter == 0
+    assert state.best_value == pytest.approx(0.5)
+
+    state = update_turbo_state(state, torch.tensor([0.4, 0.8, 0.6]))
+    assert state.success_counter == 0
+    assert state.length == pytest.approx(1.6)
+    assert state.best_value == pytest.approx(0.8)
+
+
+def test_batch_state_update_rejects_partial_or_oversized_results() -> None:
+    state = TuRBOState(dim=6, batch_size=3)
+
+    with pytest.raises(ValueError, match=r"state\.batch_size"):
+        update_turbo_state(state, torch.tensor([0.1, 0.2]))
+    with pytest.raises(ValueError, match=r"state\.batch_size"):
+        update_turbo_state(state, torch.tensor([0.1, 0.2, 0.3, 0.4]))
+
+
+def test_strategy_requires_q_to_match_state_batch_size() -> None:
+    train_X, train_Y, bounds = _problem()
+    model = SingleTaskGP(train_X, train_Y)
+    acquisition = PosteriorMean(model)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=_center(train_X, train_Y),
+        state=TuRBOState(dim=4, batch_size=2),
+    )
+
+    with pytest.raises(ValueError, match=r"q must match state\.batch_size"):
+        strategy.optimize(acquisition, q=1)
+    with pytest.raises(ValueError, match=r"q must match state\.batch_size"):
+        strategy.thompson_sample(model, q=1, n_candidates=16)
+
+
+def test_batch_thompson_sampling_returns_distinct_local_candidates() -> None:
+    train_X, train_Y, bounds = _problem()
+    model = SingleTaskGP(train_X, train_Y)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=_center(train_X, train_Y),
+        state=TuRBOState(dim=4, batch_size=3),
+        seed=21,
+    )
+
+    result = strategy.thompson_sample(model, q=3, n_candidates=64)
+
+    assert result.candidates.shape == (3, 4)
+    assert result.metadata["batch_size"] == 3
+    assert torch.unique(result.candidates, dim=0).shape[0] == 3
+    trust_bounds = result.metadata["trust_region_bounds"]
+    assert torch.all(result.candidates >= trust_bounds[0])
+    assert torch.all(result.candidates <= trust_bounds[1])
