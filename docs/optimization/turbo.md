@@ -227,3 +227,38 @@ strategy.update_state(
 
 `best_value` は trust-region decision utility のbest、`observed_best_value` はraw observationの
 bestです。この2つはノイズ・robust workflowでは一致しないことがあります。
+
+
+## Mixed and discrete search spaces
+
+Phase 13 certifies a deliberately narrow mixed-variable TuRBO path for finite
+categorical assignments. `TuRBOStrategy.optimize_mixed(...)` accepts the public
+`MixedVariableSpace` contract plus a complete `fixed_features_list`, then delegates
+each categorical assignment to BoTorch mixed acquisition optimization.
+
+The trust region is local only in ordinary continuous coordinates. Categorical
+coordinates retain their global bounds and are fixed by enumeration for each
+continuous subproblem. A category code such as 0, 1, or 2 is therefore never
+interpreted as a numerical distance and is never narrowed by the TuRBO length.
+
+Every entry in `fixed_features_list` must fix all categorical dimensions and must
+not fix continuous dimensions. This makes the ownership boundary explicit:
+
+- TuRBO owns local continuous geometry and state transitions.
+- `MixedVariableSpace` owns public variable semantics.
+- `fixed_features_list` owns the finite categorical assignment set.
+- BoTorch `optimize_acqf_mixed` owns optimization across those assignments.
+- the mixed surrogate owns categorical covariance semantics.
+
+Integer variables are not certified in this phase. An integer trust region needs
+an explicit discrete-neighborhood policy, especially near small-cardinality
+domains and for batch generation. Treating integers as continuous coordinates
+followed by rounding would change TuRBO geometry and can invalidate acquisition
+optimization, so `optimize_mixed` rejects `integer_dims` explicitly.
+
+The Phase 13 path covers ordinary mixed acquisitions compatible with BoTorch
+`optimize_acqf_mixed`. One-shot acquisitions such as qKG have a different
+augmented-batch categorical contract and should continue to use the repository's
+dedicated mixed one-shot optimizer rather than this TuRBO path. Hierarchical or
+conditional activation semantics likewise require a dedicated feasible
+neighborhood definition before they can be certified.
