@@ -74,6 +74,8 @@ def update_turbo_state(
     """Return the next TuRBO state after observing objective values."""
     if values.numel() < 1:
         raise ValueError("values must contain at least one observation.")
+    if values.numel() != state.batch_size:
+        raise ValueError("values must contain exactly state.batch_size observations.")
     if relative_improvement < 0:
         raise ValueError("relative_improvement must be non-negative.")
 
@@ -296,6 +298,13 @@ class TuRBOStrategy(SearchStrategy):
             dimension_weights=self.dimension_weights,
         )
 
+    def _validate_batch_size(self, q: int) -> None:
+        """Validate candidate batch size against the persistent TuRBO state."""
+        if q < 1:
+            raise ValueError("q must be at least 1.")
+        if q != self.state.batch_size:
+            raise ValueError("q must match state.batch_size.")
+
     def update_state(
         self,
         values: Tensor,
@@ -303,7 +312,9 @@ class TuRBOStrategy(SearchStrategy):
         candidates: Tensor | None = None,
         relative_improvement: float = 1e-3,
     ) -> TuRBOState:
-        """Update state and move the incumbent to the best improving candidate."""
+        """Update state once for one completed candidate batch."""
+        if values.numel() != self.state.batch_size:
+            raise ValueError("values must contain exactly state.batch_size observations.")
         previous_best = self.state.best_value
         next_state = update_turbo_state(
             self.state,
@@ -334,8 +345,7 @@ class TuRBOStrategy(SearchStrategy):
         objective: Any | None = None,
     ) -> SearchResult:
         """Select TuRBO candidates by posterior sampling over a local Sobol pool."""
-        if q < 1:
-            raise ValueError("q must be at least 1.")
+        self._validate_batch_size(q)
         if self.state.restart_triggered:
             raise RuntimeError("TuRBO restart is required before further candidate generation.")
         candidate_count = (
@@ -370,6 +380,7 @@ class TuRBOStrategy(SearchStrategy):
                 "failure_counter": self.state.failure_counter,
                 "candidate_generation": "thompson",
                 "n_candidates": candidate_count,
+                "batch_size": q,
             },
         )
 
@@ -380,8 +391,7 @@ class TuRBOStrategy(SearchStrategy):
         q: int = 1,
     ) -> SearchResult:
         """Optimize the acquisition inside the current trust region."""
-        if q < 1:
-            raise ValueError("q must be at least 1.")
+        self._validate_batch_size(q)
         if self.state.restart_triggered:
             raise RuntimeError("TuRBO restart is required before further optimization.")
 
@@ -409,5 +419,6 @@ class TuRBOStrategy(SearchStrategy):
                 "success_counter": self.state.success_counter,
                 "failure_counter": self.state.failure_counter,
                 "optimizer": self.optimizer,
+                "batch_size": q,
             },
         )
