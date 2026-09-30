@@ -488,14 +488,18 @@ class TuRBOStrategy(SearchStrategy):
         value per completed candidate. Multi-objective outcome vectors must be
         reduced by an explicit caller-owned utility before this state update.
         """
-        if values.ndim > 1:
+        if values.ndim > 1 and values.shape[-1] != 1:
             raise ValueError(
                 "values must contain one scalar utility per candidate; "
                 "reduce multi-objective outcomes before updating TuRBO state."
             )
         if values.numel() != self.state.batch_size:
             raise ValueError("values must contain exactly state.batch_size observations.")
-        if state_values is not None and state_values.ndim > 1:
+        if (
+            state_values is not None
+            and state_values.ndim > 1
+            and state_values.shape[-1] != 1
+        ):
             raise ValueError("state_values must contain one scalar utility per candidate.")
         if state_values is not None and state_values.numel() != self.state.batch_size:
             raise ValueError("state_values must contain exactly state.batch_size values.")
