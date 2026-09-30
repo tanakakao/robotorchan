@@ -103,7 +103,6 @@ def update_turbo_state(
     )
 
 
-
 def _normalized_dimension_weights(
     dimension_weights: Tensor | None,
     *,
