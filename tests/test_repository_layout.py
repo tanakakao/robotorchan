@@ -93,3 +93,18 @@ def test_cross_backend_optimizer_contracts_have_dedicated_ownership() -> None:
         path.name for path in (optim_test_root / "contracts").glob("test_*.py")
     )
     assert contract_test_names <= actual_contract_tests
+
+
+def test_optimizer_e2e_tests_have_integration_ownership() -> None:
+    integration_test_names = {
+        "test_optimizer_model_acquisition_e2e.py",
+        "test_sampling_mc_acquisition_e2e.py",
+        "test_sampling_multiobjective_constrained_e2e.py",
+    }
+    optim_test_root = REPOSITORY_ROOT / "tests" / "optim"
+    assert not any((optim_test_root / name).exists() for name in integration_test_names)
+
+    actual_integration_tests = set(
+        path.name for path in (optim_test_root / "integration").glob("test_*.py")
+    )
+    assert integration_test_names <= actual_integration_tests
