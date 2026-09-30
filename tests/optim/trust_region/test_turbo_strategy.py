@@ -620,6 +620,7 @@ def test_model_geometry_rejects_reduced_space_lengthscales() -> None:
             bounds=bounds,
         )
 
+
 def test_optimize_intersects_trust_region_with_linear_inequality() -> None:
     train_X, train_Y, bounds = _problem()
     acquisition = PosteriorMean(SingleTaskGP(train_X, train_Y))
@@ -630,11 +631,13 @@ def test_optimize_intersects_trust_region_with_linear_inequality() -> None:
         raw_samples=64,
     )
     constraints = CandidateConstraints(
-        inequality_constraints=((
-            torch.tensor([0]),
-            torch.tensor([1.0], dtype=torch.double),
-            0.7,
-        ),)
+        inequality_constraints=(
+            (
+                torch.tensor([0]),
+                torch.tensor([1.0], dtype=torch.double),
+                0.7,
+            ),
+        )
     )
 
     result = strategy.optimize(acquisition, constraints=constraints)
@@ -656,11 +659,13 @@ def test_optimize_supports_linear_equality_inside_trust_region() -> None:
         raw_samples=64,
     )
     constraints = CandidateConstraints(
-        equality_constraints=((
-            torch.tensor([0, 1]),
-            torch.tensor([1.0, 1.0], dtype=torch.double),
-            1.0,
-        ),)
+        equality_constraints=(
+            (
+                torch.tensor([0, 1]),
+                torch.tensor([1.0, 1.0], dtype=torch.double),
+                1.0,
+            ),
+        )
     )
 
     result = strategy.optimize(acquisition, constraints=constraints)
@@ -705,11 +710,13 @@ def test_thompson_sampling_filters_candidate_constraints() -> None:
         seed=53,
     )
     constraints = CandidateConstraints(
-        inequality_constraints=((
-            torch.tensor([0]),
-            torch.tensor([1.0], dtype=torch.double),
-            0.7,
-        ),),
+        inequality_constraints=(
+            (
+                torch.tensor([0]),
+                torch.tensor([1.0], dtype=torch.double),
+                0.7,
+            ),
+        ),
         nonlinear_inequality_constraints=((lambda x: 0.9 - x[..., 1], True),),
     )
 
@@ -729,11 +736,13 @@ def test_thompson_sampling_rejects_infeasible_candidate_pool() -> None:
         seed=59,
     )
     constraints = CandidateConstraints(
-        inequality_constraints=((
-            torch.tensor([0]),
-            torch.tensor([1.0], dtype=torch.double),
-            0.99,
-        ),)
+        inequality_constraints=(
+            (
+                torch.tensor([0]),
+                torch.tensor([1.0], dtype=torch.double),
+                0.99,
+            ),
+        )
     )
 
     with pytest.raises(RuntimeError, match="fewer than q feasible points"):
@@ -749,11 +758,13 @@ def test_thompson_sampling_rejects_interpoint_constraints() -> None:
         state=TuRBOState(dim=4, batch_size=2),
     )
     constraints = CandidateConstraints(
-        inequality_constraints=((
-            torch.tensor([[0, 0], [1, 0]]),
-            torch.tensor([1.0, -1.0], dtype=torch.double),
-            0.0,
-        ),)
+        inequality_constraints=(
+            (
+                torch.tensor([[0, 0], [1, 0]]),
+                torch.tensor([1.0, -1.0], dtype=torch.double),
+                0.0,
+            ),
+        )
     )
 
     with pytest.raises(NotImplementedError, match="inter-point linear"):
