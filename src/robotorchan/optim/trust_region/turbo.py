@@ -102,10 +102,14 @@ def update_turbo_state(
     ``values`` update ``observed_best_value``. Optional ``state_values`` may
     contain denoised posterior or robust utilities for trust-region decisions.
     """
+    if values.ndim > 1 and values.shape[-1] != 1:
+        raise ValueError("values must be scalar per candidate with shape [q] or [q, 1].")
     if values.numel() < 1:
         raise ValueError("values must contain at least one observation.")
     if values.numel() != state.batch_size:
         raise ValueError("values must contain exactly state.batch_size observations.")
+    if state_values is not None and state_values.ndim > 1 and state_values.shape[-1] != 1:
+        raise ValueError("state_values must be scalar per candidate with shape [q] or [q, 1].")
     if state_values is not None and state_values.numel() != state.batch_size:
         raise ValueError("state_values must contain exactly state.batch_size values.")
     if relative_improvement < 0:
@@ -371,6 +375,49 @@ def _mixed_fixed_features_list(variable_space: MixedVariableSpace) -> list[dict[
     return [dict(zip(dims, assignment, strict=True)) for assignment in itertools.product(*values)]
 
 
+def _structured_trust_region_bounds(
+    center: Tensor,
+    bounds: Tensor,
+    *,
+    structured_dims: tuple[int, ...] | list[int],
+    length: float,
+    dimension_weights: Tensor | None,
+) -> Tensor:
+    """Shrink design dimensions with weights normalized over design dimensions only."""
+    dim = bounds.shape[-1] if bounds.ndim == 2 else 0
+    normalized_structured_dims: list[int] = []
+    for structured_dim in structured_dims:
+        normalized = structured_dim + dim if structured_dim < 0 else structured_dim
+        if normalized < 0 or normalized >= dim:
+            raise ValueError("structured dimensions must be valid input dimensions.")
+        normalized_structured_dims.append(normalized)
+    if len(set(normalized_structured_dims)) != len(normalized_structured_dims):
+        raise ValueError("structured dimensions must not contain duplicates.")
+
+    structured_set = set(normalized_structured_dims)
+    design_dims = [index for index in range(dim) if index not in structured_set]
+    if not design_dims:
+        raise ValueError("at least one non-structured design dimension is required.")
+
+    design_index = torch.as_tensor(design_dims, device=bounds.device)
+    design_weights: Tensor | None = None
+    if dimension_weights is not None:
+        weights = dimension_weights.to(dtype=bounds.dtype, device=bounds.device).reshape(-1)
+        if weights.shape != (dim,):
+            raise ValueError("dimension_weights must have shape [dim].")
+        design_weights = weights[design_index]
+
+    local_design = turbo_trust_region_bounds(
+        center[design_index],
+        bounds[:, design_index],
+        length=length,
+        dimension_weights=design_weights,
+    )
+    local = bounds.clone()
+    local[:, design_index] = local_design
+    return local
+
+
 def turbo_mixed_trust_region_bounds(
     center: Tensor,
     variable_space: MixedVariableSpace,
@@ -378,18 +425,15 @@ def turbo_mixed_trust_region_bounds(
     length: float,
     dimension_weights: Tensor | None = None,
 ) -> Tensor:
-    """Shrink only continuous dimensions of a mixed-variable search space."""
-    local = turbo_trust_region_bounds(
+    """Shrink continuous dimensions while leaving discrete dimensions global."""
+    structured_dims = variable_space.integer_dims + variable_space.categorical_dims
+    return _structured_trust_region_bounds(
         center,
         variable_space.bounds,
+        structured_dims=structured_dims,
         length=length,
         dimension_weights=dimension_weights,
     )
-    structured_dims = variable_space.integer_dims + variable_space.categorical_dims
-    if structured_dims:
-        index = torch.as_tensor(structured_dims, device=local.device)
-        local[:, index] = variable_space.bounds[:, index]
-    return local
 
 
 def turbo_multifidelity_trust_region_bounds(
@@ -401,30 +445,15 @@ def turbo_multifidelity_trust_region_bounds(
     dimension_weights: Tensor | None = None,
 ) -> Tensor:
     """Shrink design dimensions while leaving fidelity dimensions global."""
-    dim = bounds.shape[-1] if bounds.ndim == 2 else 0
-    normalized_fidelity_dims: list[int] = []
-    for fidelity_dim in fidelity_dims:
-        normalized = fidelity_dim + dim if fidelity_dim < 0 else fidelity_dim
-        if normalized < 0 or normalized >= dim:
-            raise ValueError("fidelity_dims must contain valid input dimensions.")
-        normalized_fidelity_dims.append(normalized)
-    if not normalized_fidelity_dims:
+    if not fidelity_dims:
         raise ValueError("fidelity_dims must contain at least one dimension.")
-    if len(set(normalized_fidelity_dims)) != len(normalized_fidelity_dims):
-        raise ValueError("fidelity_dims must not contain duplicates.")
-    if len(normalized_fidelity_dims) == dim:
-        raise ValueError("at least one non-fidelity design dimension is required.")
-
-    local = turbo_trust_region_bounds(
+    return _structured_trust_region_bounds(
         center,
         bounds,
+        structured_dims=fidelity_dims,
         length=length,
         dimension_weights=dimension_weights,
     )
-    index = torch.as_tensor(normalized_fidelity_dims, device=local.device)
-    local[:, index] = bounds[:, index]
-    return local
-
 
 class TuRBOStrategy(SearchStrategy):
     """Optimize an acquisition function inside a stateful TuRBO trust region.
