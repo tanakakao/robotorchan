@@ -100,7 +100,6 @@ __all__ = [
     "TreeEnsembleSearchStrategy",
     "TuRBOState",
     "TuRBOStrategy",
-    "turbo_trust_region_bounds",
     "apply_fixed_features",
     "benchmark_optimizer",
     "benchmark_optimizers",
@@ -109,6 +108,7 @@ __all__ = [
     "optimize_acqf",
     "optimize_acqf_sequential",
     "optimize_mixed_one_shot_acqf",
+    "turbo_trust_region_bounds",
     "update_baxus_state",
     "update_turbo_state",
 ]
