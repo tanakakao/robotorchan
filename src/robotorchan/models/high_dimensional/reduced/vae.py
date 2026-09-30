@@ -8,7 +8,7 @@ from torch import Tensor
 
 from robotorchan.models.high_dimensional.reduced.base import ReducedGP
 from robotorchan.models.high_dimensional.reduced.mixed import MixedReducedGP
-from robotorchan.reduction import SupervisedVAEInputReducer, VAEInputReducer
+from robotorchan.reduction.neural import SupervisedVAEInputReducer, VAEInputReducer
 
 
 class VAEGP(ReducedGP):
