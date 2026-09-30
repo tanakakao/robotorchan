@@ -18,10 +18,12 @@ SPEC.loader.exec_module(BENCHMARK)
 @pytest.mark.parametrize("name", ["ackley", "rosenbrock", "levy"])
 def test_objectives_have_known_zero_optimum(name: str) -> None:
     objective = BENCHMARK.OBJECTIVES[name]
-    if name == "ackley":
-        optimum = torch.full((1, 4), 0.5, dtype=torch.double)
-    else:
-        optimum = torch.full((1, 4), 0.75, dtype=torch.double)
+    optimum_coordinate = {
+        "ackley": 0.5,
+        "rosenbrock": 0.75,
+        "levy": 0.55,
+    }[name]
+    optimum = torch.full((1, 4), optimum_coordinate, dtype=torch.double)
 
     value = objective(optimum)
 
