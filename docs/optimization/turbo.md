@@ -164,10 +164,12 @@ TuRBO does not introduce a second asynchronous scheduler. Unresolved evaluations
 `X_pending` acquisition context, while `TuRBOState` is updated only from completed objective
 values.
 
-`TuRBOStrategy.optimize(..., X_pending=...)` temporarily installs the supplied public-space
-pending points on acquisitions exposing BoTorch `set_X_pending()`. Any pre-existing
-`X_pending` value is restored after optimization, including exceptional exits. Passing pending
-points to an acquisition without `set_X_pending()` fails explicitly.
+`TuRBOStrategy.optimize()` consumes the acquisition exactly as configured. Pending-point
+lifecycle remains native to the acquisition: configure `X_pending` through the acquisition
+constructor or BoTorch `set_X_pending()` before calling TuRBO. TuRBO does not snapshot and
+restore pending state because some acquisitions, including incremental noisy improvement,
+materialize pending points into acquisition-specific baseline state rather than a uniform
+`X_pending` attribute.
 
 This means an asynchronous worker loop can keep `batch_size=1`, update TuRBO when one evaluation
 finishes, rebuild the surrogate from completed observations, and generate the replacement
