@@ -158,3 +158,37 @@ Thompson samplingではlocal candidate poolを `CandidateConstraints` でfilter�
 
 candidate constraintは入力座標に対する既知制約です。constrained EIなどのoutcome constraintは未知の出力・制約モデルをacquisition側で扱う別概念であり、TuRBOのtrust-region geometryへ変換しません。Mixed / discrete constraint semanticsはPhase 13で別途扱います。
 
+## Asynchronous evaluations and fantasization
+
+TuRBO does not introduce a second asynchronous scheduler. Unresolved evaluations are
+`X_pending` acquisition context, while `TuRBOState` is updated only from completed objective
+values.
+
+`TuRBOStrategy.optimize()` consumes the acquisition exactly as configured. Pending-point
+lifecycle remains native to the acquisition: configure `X_pending` through the acquisition
+constructor or BoTorch `set_X_pending()` before calling TuRBO. TuRBO does not snapshot and
+restore pending state because some acquisitions, including incremental noisy improvement,
+materialize pending points into acquisition-specific baseline state rather than a uniform
+`X_pending` attribute.
+
+This means an asynchronous worker loop can keep `batch_size=1`, update TuRBO when one evaluation
+finishes, rebuild the surrogate from completed observations, and generate the replacement
+candidate while the other workers remain in `X_pending`. Pending evaluations themselves never
+increment the TuRBO success or failure counters.
+
+For Thompson sampling, `X_pending` is used to remove matching rows from the finite local
+candidate pool. This prevents redispatch of an unresolved pool point but does not pretend to
+provide fantasy-aware Thompson sampling. If posterior uncertainty should condition on unresolved
+evaluations, construct the appropriate fantasy model using the model's existing `fantasize()`
+contract and pass that model to `thompson_sample()`.
+
+Fantasization therefore remains a model/acquisition responsibility:
+
+- model `fantasize()` owns fantasy-model construction where the model advertises support;
+- acquisition `X_pending` owns pending-point semantics for compatible acquisitions;
+- TuRBO owns local trust-region geometry and completed-result state transitions.
+
+Fantasy batch dimensions are not TuRBO q-batch dimensions and never alter
+`TuRBOState.batch_size`. Kronecker models remain subject to their existing explicit
+fantasization limitation rather than receiving a TuRBO-specific workaround.
+
