@@ -16,7 +16,6 @@ surrogate model とは独立した candidate search / optimization の利用者�
 - [Mixed one-shot optimization](mixed-one-shot-optimization.md): qKG / qMFKG のmixed候補最適化境界
 - [High-dimensional search](high_dimensional_search.md): Original space、Random Search、latent search、REMBO、HeSBO、ALEBO、TuRBO、BAxUS
 - [TuRBO](turbo.md): stateful trust-region strategy の詳細
-- [TuRBO Phase 1 research / inventory](turbo-phase1-research-inventory.md): source-of-truth audit と今後の architecture
 - [Optimizer architecture](optimizer-architecture.md): search strategy、backend、dispatch の責務境界
 - [Public optimizer API](public-optimizer-api.md): named backend と structured variable space の利用方法
 - [Constraint handling metadata](constraint-handling-metadata.md): backend ごとの制約処理 semantics

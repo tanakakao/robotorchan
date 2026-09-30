@@ -164,3 +164,11 @@ def test_backend_support_has_dedicated_ownership() -> None:
         path.name for path in (optim_test_root / "backend_support").glob("test_*.py")
     )
     assert actual_support_tests == {"test_operations.py", "test_runtime.py"}
+
+
+def test_obsolete_phase_snapshot_is_not_permanent_documentation() -> None:
+    optimization_docs = REPOSITORY_ROOT / "docs" / "optimization"
+    assert not (optimization_docs / "turbo-phase1-research-inventory.md").exists()
+
+    optimization_readme = (optimization_docs / "README.md").read_text(encoding="utf-8")
+    assert "turbo-phase1-research-inventory.md" not in optimization_readme
