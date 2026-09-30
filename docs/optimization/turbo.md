@@ -217,7 +217,7 @@ trust-region bounds には追加されません。robust utility で state を�
 ```python
 result = strategy.optimize(qlognei)
 observed_y = evaluate(result.candidates)
-robust_utility = evaluate_posterior_risk(model, result.candidates)
+robust_utility = posterior_risk_values  # one utility per completed nominal candidate
 strategy.update_state(
     observed_y,
     candidates=result.candidates,
