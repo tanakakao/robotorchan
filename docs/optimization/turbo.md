@@ -123,7 +123,7 @@ TuRBOのtrust-region geometryと高次元surrogateは独立した責務です。
 strategy.update_dimension_weights_from_model(model)
 ```
 
-lengthscaleはgeometric meanが1になるよう正規化され、既存の `turbo_trust_region_bounds` に渡されます。これにより絶対scaleではなくARDの相対的な重要度だけがtrust-region shapeへ反映されます。
+raw-space lengthscaleはまずglobal bounds幅で割ってbound-relative scaleへ変換し、その後geometric meanが1になるよう正規化されます。これにより非正規化boundsでもrangeを二重反映せず、ARDの相対的なgeometryだけをtrust regionへ反映します。
 
 この自動連携は、`model.covar_module.lengthscale` の最終次元がpublic input dimensionと1対1に対応すると確認できるモデルを対象にします。SAASのMCMC sampleやensembleなどleading batch dimensionを持つ場合は、各public dimensionについてmedian lengthscaleを代表値に使います。Additive kernelのように単一lengthscale tensorを公開しない構造、Mixedモデルのencoded dimension、reduced/latent-space modelを暗黙に逆写像することはしません。
 
