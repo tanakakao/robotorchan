@@ -324,7 +324,6 @@ class TuRBOStrategy(SearchStrategy):
         self.state = next_state
         return self.state
 
-
     def thompson_sample(
         self,
         model: Any,
