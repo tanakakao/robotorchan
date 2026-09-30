@@ -447,10 +447,21 @@ def turbo_multifidelity_trust_region_bounds(
     """Shrink design dimensions while leaving fidelity dimensions global."""
     if not fidelity_dims:
         raise ValueError("fidelity_dims must contain at least one dimension.")
+    dim = bounds.shape[-1] if bounds.ndim == 2 else 0
+    normalized_fidelity_dims = [
+        fidelity_dim if fidelity_dim >= 0 else dim + fidelity_dim
+        for fidelity_dim in fidelity_dims
+    ]
+    if any(fidelity_dim < 0 or fidelity_dim >= dim for fidelity_dim in normalized_fidelity_dims):
+        raise ValueError("fidelity_dims must contain valid input dimensions.")
+    if len(set(normalized_fidelity_dims)) != len(normalized_fidelity_dims):
+        raise ValueError("fidelity_dims must not contain duplicates.")
+    if len(normalized_fidelity_dims) == dim:
+        raise ValueError("at least one non-fidelity design dimension is required.")
     return _structured_trust_region_bounds(
         center,
         bounds,
-        structured_dims=fidelity_dims,
+        structured_dims=normalized_fidelity_dims,
         length=length,
         dimension_weights=dimension_weights,
     )
