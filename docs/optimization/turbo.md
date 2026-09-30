@@ -77,3 +77,23 @@ candidate poolは現在のtrust region内にSobol点を生成し、各候補で�
 posterior samplingとsample maximizerの選択は既存の `select_thompson_candidates` に委譲し、TuRBO側では再実装しません。`seed` を指定したstrategyではSobol poolとperturbation maskを再現可能に生成します。
 
 この経路はcontinuous trust regionから有限candidate poolを構築する処理です。mixed/discrete search space、constraints、async pending pointsはそれぞれ後続Phaseで扱います。
+
+
+## Batch TuRBO
+
+Batch TuRBOでは `TuRBOState.batch_size` が1回の候補生成・評価で完了するbatch sizeを表します。候補生成時の `q` はこの値と一致する必要があります。
+
+```python
+state = TuRBOState(dim=d, batch_size=4, best_value=current_best)
+strategy = TuRBOStrategy(bounds, center=incumbent, state=state)
+
+result = strategy.optimize(acquisition, q=4)
+new_Y = objective(result.candidates)
+strategy.update_state(new_Y, candidates=result.candidates)
+```
+
+state transitionはcandidateごとではなく、完了したbatchごとに1回です。batch内の最大objective値を以前のbest valueと比較し、batch全体をsuccessまたはfailureとして1回だけcounterへ反映します。このため `failure_tolerance` のdimension/batch-size依存定義と実際の候補生成qが一致します。
+
+Thompson経路でも同じbatch contractを使用します。`replacement=False` でlocal candidate poolからq点を選ぶため、同一batch内で同じpool rowを重複選択しません。
+
+Phase 6では同期batchを対象とします。評価完了順が異なるasynchronous batch、`X_pending`、fantasizationはPhase 11で扱います。
