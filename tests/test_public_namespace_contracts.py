@@ -10,6 +10,7 @@ import robotorchan.models as models
 import robotorchan.optim as optim
 import robotorchan.reduction as reduction
 import robotorchan.uncertainty as uncertainty
+import robotorchan.workflow as workflow
 
 
 def test_public_namespaces_import() -> None:
@@ -30,6 +31,7 @@ def test_public_namespaces_import() -> None:
         "robotorchan.optim",
         "robotorchan.reduction",
         "robotorchan.uncertainty",
+        "robotorchan.workflow",
     ):
         assert importlib.import_module(module_name).__name__ == module_name
 
@@ -49,6 +51,11 @@ def test_acquisition_exports_resolve() -> None:
 def test_benchmark_exports_resolve() -> None:
     for name in benchmarks.__all__:
         assert getattr(benchmarks, name) is not None
+
+
+def test_workflow_exports_resolve() -> None:
+    for name in workflow.__all__:
+        assert getattr(workflow, name) is not None
 
 
 def test_uncertainty_exports_resolve() -> None:
