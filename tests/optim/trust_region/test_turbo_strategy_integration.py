@@ -394,9 +394,7 @@ def test_turbo_optimize_restores_preexisting_pending_points() -> None:
     torch.manual_seed(71)
     train_X = torch.rand(10, 2, dtype=torch.double)
     train_Y = -((train_X - 0.7) ** 2).sum(dim=-1, keepdim=True)
-    bounds = torch.stack(
-        [torch.zeros(2, dtype=torch.double), torch.ones(2, dtype=torch.double)]
-    )
+    bounds = torch.stack([torch.zeros(2, dtype=torch.double), torch.ones(2, dtype=torch.double)])
     model = SingleTaskGP(train_X, train_Y)
     acquisition = qLogNoisyExpectedImprovement(
         model=model,
@@ -447,4 +445,3 @@ def test_turbo_thompson_rejects_pending_pool_candidate() -> None:
             n_candidates=1,
             X_pending=pending,
         )
-
