@@ -18,7 +18,7 @@ from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.constraints.evaluation import candidate_is_feasible
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
-from robotorchan.optim.variable_space import MixedVariableSpace
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 
 def _validate_pending_points(
