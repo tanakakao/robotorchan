@@ -595,3 +595,26 @@ def test_model_geometry_rejects_non_public_lengthscale_dimension() -> None:
             dtype=bounds.dtype,
             device=bounds.device,
         )
+
+
+def test_model_geometry_rejects_reduced_space_lengthscales() -> None:
+    model = SimpleNamespace(
+        original_input_dim=8,
+        reduced_input_dim=3,
+        covar_module=SimpleNamespace(lengthscale=torch.ones(3, dtype=torch.double)),
+    )
+    bounds = torch.stack(
+        [
+            torch.zeros(8, dtype=torch.double),
+            torch.ones(8, dtype=torch.double),
+        ]
+    )
+
+    with pytest.raises(ValueError, match="reduced input space"):
+        turbo_dimension_weights_from_model(
+            model,
+            input_dim=8,
+            dtype=bounds.dtype,
+            device=bounds.device,
+            bounds=bounds,
+        )

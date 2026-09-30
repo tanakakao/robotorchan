@@ -5,7 +5,13 @@ import torch
 from botorch.acquisition.analytic import ExpectedImprovement, PosteriorMean
 from botorch.acquisition.monte_carlo import qExpectedImprovement
 
-from robotorchan.models import PCAGP, EnsembleMapSaasSingleTaskGP, SingleTaskGP
+from robotorchan.models import (
+    PCAGP,
+    PLSGP,
+    EnsembleMapSaasSingleTaskGP,
+    RandomProjectionGP,
+    SingleTaskGP,
+)
 from robotorchan.optim import TuRBOState, TuRBOStrategy, update_turbo_state
 
 
@@ -42,6 +48,46 @@ def test_reduced_gp_uses_explicit_public_space_incumbent() -> None:
 
     torch.testing.assert_close(result.metadata["trust_region_center"], incumbent)
     assert result.candidates.shape == (1, input_dim)
+
+
+@pytest.mark.parametrize(
+    ("model_cls", "model_kwargs"),
+    [
+        (PCAGP, {"n_components": 3}),
+        (PLSGP, {"n_components": 3}),
+        (RandomProjectionGP, {"n_components": 3, "random_state": 17}),
+    ],
+)
+def test_frozen_reduced_models_optimize_turbo_in_public_space(
+    model_cls,
+    model_kwargs,
+) -> None:
+    torch.manual_seed(47)
+    input_dim = 8
+    train_X = torch.rand(16, input_dim, dtype=torch.double)
+    train_Y = -((train_X[:, :3] - 0.6) ** 2).sum(dim=-1, keepdim=True)
+    bounds = torch.stack(
+        [
+            torch.zeros(input_dim, dtype=torch.double),
+            torch.ones(input_dim, dtype=torch.double),
+        ]
+    )
+    model = model_cls(train_X, train_Y, **model_kwargs)
+    acquisition = PosteriorMean(model)
+    incumbent = train_X[train_Y.squeeze(-1).argmax()]
+    strategy = TuRBOStrategy(
+        bounds,
+        center=incumbent,
+        num_restarts=2,
+        raw_samples=16,
+    )
+
+    result = strategy.optimize(acquisition)
+
+    assert result.candidates.shape == (1, input_dim)
+    assert torch.all(result.candidates >= bounds[0])
+    assert torch.all(result.candidates <= bounds[1])
+    torch.testing.assert_close(result.metadata["trust_region_center"], incumbent)
 
 
 def test_update_state_moves_incumbent_when_candidate_improves() -> None:

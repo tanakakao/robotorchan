@@ -6,6 +6,7 @@ import torch
 from botorch.acquisition.objective import MCAcquisitionObjective
 from botorch.generation.sampling import MaxPosteriorSampling
 from botorch.models.model import Model
+from botorch.utils.transforms import is_ensemble
 from torch import Tensor
 
 
@@ -50,4 +51,15 @@ def select_thompson_candidates(
         replacement=replacement,
     )
     with torch.no_grad():
-        return sampler(choices, num_samples=num_samples)
+        selected = sampler(choices, num_samples=num_samples)
+
+    if is_ensemble(model) and selected.ndim > 2:
+        ensemble_shape = selected.shape[:-2]
+        if len(ensemble_shape) != 1:
+            raise ValueError(
+                "ensemble Thompson sampling requires exactly one ensemble batch dimension."
+            )
+        member = torch.randint(ensemble_shape[0], (), device=selected.device)
+        selected = selected[member]
+
+    return selected
