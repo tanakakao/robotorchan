@@ -89,5 +89,7 @@ def test_cross_backend_optimizer_contracts_have_dedicated_ownership() -> None:
     optim_test_root = REPOSITORY_ROOT / "tests" / "optim"
     assert not any((optim_test_root / name).exists() for name in contract_test_names)
 
-    actual_contract_tests = {path.name for path in (optim_test_root / "contracts").glob("test_*.py")}
+    actual_contract_tests = set(
+        path.name for path in (optim_test_root / "contracts").glob("test_*.py")
+    )
     assert contract_test_names <= actual_contract_tests
