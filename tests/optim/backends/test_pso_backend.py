@@ -62,7 +62,7 @@ def test_pso_applies_candidate_constraint_penalty() -> None:
 
 
 def test_pso_supports_continuous_integer_space() -> None:
-    from robotorchan.optim.variable_space import MixedVariableSpace
+    from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
     bounds = torch.tensor([[0.0, 0.0], [1.0, 4.0]], dtype=torch.double)
     variable_space = MixedVariableSpace(bounds, integer_dims=(1,))
@@ -82,7 +82,7 @@ def test_pso_supports_continuous_integer_space() -> None:
 
 
 def test_pso_rejects_categorical_variable_space() -> None:
-    from robotorchan.optim.variable_space import MixedVariableSpace
+    from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
     bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
     variable_space = MixedVariableSpace(bounds, categorical_values={1: [0.0, 1.0, 2.0]})
