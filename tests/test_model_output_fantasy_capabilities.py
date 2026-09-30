@@ -5,8 +5,8 @@ from robotorchan.acquisition.compatibility import (
     check_model_acquisition_compatibility,
 )
 from robotorchan.models.capabilities import ModelCapabilities, TaskType
-from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
-from robotorchan.selector import select_compatible_models
+from robotorchan.workflow.problem import OutputType, ProblemPurpose, ProblemSpec
+from robotorchan.workflow.selector import select_compatible_models
 
 
 def test_multi_output_problem_excludes_single_output_non_gp_models() -> None:
