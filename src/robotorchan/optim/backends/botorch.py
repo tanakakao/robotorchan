@@ -15,7 +15,7 @@ from botorch.optim import optimize_acqf_mixed as botorch_optimize_acqf_mixed
 from botorch.optim.initializers import TGenInitialConditions
 from torch import Tensor
 
-from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 
 
 def optimize_acqf_botorch(
