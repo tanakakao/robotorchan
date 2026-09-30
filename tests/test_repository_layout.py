@@ -56,8 +56,7 @@ def test_concrete_optimizer_strategies_are_owned_by_strategy_package() -> None:
 
     optim_test_root = REPOSITORY_ROOT / "tests" / "optim"
     strategy_tests = {
-        f"test_{name.removesuffix('.py')}_space_strategy.py"
-        for name in ("mixed.py", "original.py")
+        f"test_{name.removesuffix('.py')}_space_strategy.py" for name in ("mixed.py", "original.py")
     }
     strategy_tests |= {
         "test_random_search_strategy.py",
