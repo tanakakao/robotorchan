@@ -9,6 +9,7 @@ from botorch.acquisition.analytic import PosteriorMean
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim import (
     CandidateConstraints,
+    MixedVariableSpace,
     TuRBOState,
     TuRBOStrategy,
     generate_turbo_restart_center,
