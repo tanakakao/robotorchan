@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import math
+from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from typing import Any
+from collections.abc import Iterator
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
@@ -16,6 +18,41 @@ from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.constraint_evaluation import candidate_is_feasible
 from robotorchan.optim.constraints import CandidateConstraints
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
+
+
+def _validate_pending_points(
+    X_pending: Tensor,
+    *,
+    input_dim: int,
+    dtype: torch.dtype,
+    device: torch.device,
+) -> Tensor:
+    """Validate unresolved candidates in public input coordinates."""
+    pending = X_pending.to(dtype=dtype, device=device)
+    if pending.ndim != 2 or pending.shape[-1] != input_dim:
+        raise ValueError("X_pending must have shape [n_pending, input_dim].")
+    if not torch.all(torch.isfinite(pending)):
+        raise ValueError("X_pending must be finite.")
+    return pending
+
+
+@contextmanager
+def _temporary_pending_points(
+    acq_function: AcquisitionFunction,
+    X_pending: Tensor | None,
+) -> Iterator[None]:
+    """Temporarily replace acquisition pending points and restore them afterwards."""
+    if X_pending is None:
+        yield
+        return
+    if not hasattr(acq_function, "set_X_pending"):
+        raise ValueError("X_pending requires an acquisition with set_X_pending.")
+    original_pending = getattr(acq_function, "X_pending", None)
+    try:
+        acq_function.set_X_pending(X_pending)
+        yield
+    finally:
+        acq_function.set_X_pending(original_pending)
 
 
 @dataclass(frozen=True)
@@ -465,6 +502,7 @@ class TuRBOStrategy(SearchStrategy):
         objective: Any | None = None,
         constraints: CandidateConstraints | None = None,
         equality_tolerance: float = 1e-6,
+        X_pending: Tensor | None = None,
     ) -> SearchResult:
         """Select feasible TuRBO candidates by posterior sampling over a local Sobol pool."""
         self._validate_batch_size(q)
@@ -477,6 +515,14 @@ class TuRBOStrategy(SearchStrategy):
             raise ValueError("n_candidates must be at least q.")
 
         trust_bounds = self.trust_region_bounds()
+        pending = None
+        if X_pending is not None:
+            pending = _validate_pending_points(
+                X_pending,
+                input_dim=self.input_dim,
+                dtype=self.bounds.dtype,
+                device=self.bounds.device,
+            )
         choices = generate_turbo_thompson_choices(
             self.center,
             trust_bounds,
@@ -484,6 +530,16 @@ class TuRBOStrategy(SearchStrategy):
             seed=self.seed,
             perturbation_probability=perturbation_probability,
         )
+        if pending is not None and pending.shape[0] > 0:
+            duplicate_pending = torch.isclose(
+                choices.unsqueeze(-2),
+                pending.unsqueeze(0),
+            ).all(dim=-1).any(dim=-1)
+            choices = choices[~duplicate_pending]
+            if choices.shape[0] < q:
+                raise RuntimeError(
+                    "TuRBO Thompson candidate pool contains fewer than q non-pending points."
+                )
         if constraints is not None and constraints.has_constraints:
             linear_constraints = (
                 constraints.inequality_constraints + constraints.equality_constraints
@@ -530,6 +586,7 @@ class TuRBOStrategy(SearchStrategy):
                 "n_candidates": candidate_count,
                 "batch_size": q,
                 "candidate_constraints": constraints is not None and constraints.has_constraints,
+                "n_pending": 0 if pending is None else pending.shape[0],
             },
         )
 
@@ -540,6 +597,7 @@ class TuRBOStrategy(SearchStrategy):
         q: int = 1,
         constraints: CandidateConstraints | None = None,
         batch_initial_conditions: Tensor | None = None,
+        X_pending: Tensor | None = None,
     ) -> SearchResult:
         """Optimize the acquisition inside the current trust region."""
         self._validate_batch_size(q)
@@ -547,20 +605,29 @@ class TuRBOStrategy(SearchStrategy):
             raise RuntimeError("TuRBO restart is required before further optimization.")
 
         trust_bounds = self.trust_region_bounds()
-        candidates, acquisition_value = optimize_acqf(
-            acq_function=acq_function,
-            bounds=trust_bounds,
-            q=q,
-            optimizer=self.optimizer,
-            num_restarts=self.num_restarts,
-            raw_samples=self.raw_samples,
-            options=self.options,
-            constraints=constraints,
-            batch_initial_conditions=batch_initial_conditions,
-            sequential=self.sequential,
-            seed=self.seed,
-            optimizer_options=self.optimizer_options,
-        )
+        pending = None
+        if X_pending is not None:
+            pending = _validate_pending_points(
+                X_pending,
+                input_dim=self.input_dim,
+                dtype=self.bounds.dtype,
+                device=self.bounds.device,
+            )
+        with _temporary_pending_points(acq_function, pending):
+            candidates, acquisition_value = optimize_acqf(
+                acq_function=acq_function,
+                bounds=trust_bounds,
+                q=q,
+                optimizer=self.optimizer,
+                num_restarts=self.num_restarts,
+                raw_samples=self.raw_samples,
+                options=self.options,
+                constraints=constraints,
+                batch_initial_conditions=batch_initial_conditions,
+                sequential=self.sequential,
+                seed=self.seed,
+                optimizer_options=self.optimizer_options,
+            )
 
         return SearchResult(
             candidates=candidates,
@@ -575,5 +642,6 @@ class TuRBOStrategy(SearchStrategy):
                 "optimizer": self.optimizer,
                 "batch_size": q,
                 "candidate_constraints": constraints is not None and constraints.has_constraints,
+                "n_pending": 0 if pending is None else pending.shape[0],
             },
         )
