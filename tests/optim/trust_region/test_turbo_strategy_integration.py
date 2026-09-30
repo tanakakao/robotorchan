@@ -50,7 +50,6 @@ def test_reduced_gp_uses_explicit_public_space_incumbent() -> None:
     assert result.candidates.shape == (1, input_dim)
 
 
-
 @pytest.mark.parametrize(
     ("model_cls", "model_kwargs"),
     [
