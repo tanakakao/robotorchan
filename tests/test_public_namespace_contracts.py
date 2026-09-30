@@ -8,6 +8,7 @@ import robotorchan.acquisition as acquisition
 import robotorchan.benchmarks as benchmarks
 import robotorchan.models as models
 import robotorchan.optim as optim
+import robotorchan.optim.backend_support as backend_support
 import robotorchan.optim.constraints as constraints
 import robotorchan.optim.domains as domains
 import robotorchan.optim.one_shot as one_shot
@@ -33,6 +34,7 @@ def test_public_namespaces_import() -> None:
         "robotorchan.models.uncertain",
         "robotorchan.objectives",
         "robotorchan.optim",
+        "robotorchan.optim.backend_support",
         "robotorchan.optim.constraints",
         "robotorchan.optim.domains",
         "robotorchan.optim.one_shot",
@@ -76,6 +78,11 @@ def test_reduction_exports_resolve() -> None:
         assert getattr(reduction, name) is not None
 
 
+def test_backend_support_exports_are_canonical() -> None:
+    for name in backend_support.__all__:
+        assert getattr(optim, name) is getattr(backend_support, name)
+
+
 def test_constraint_exports_are_canonical() -> None:
     for name in constraints.__all__:
         assert getattr(optim, name) is getattr(constraints, name)
@@ -117,11 +124,13 @@ def test_removed_module_paths_do_not_import() -> None:
         "robotorchan.models.uncertain_categorical",
         "robotorchan.models.uncertain_input",
         "robotorchan.optim.constraint_evaluation",
+        "robotorchan.optim.cross_cutting",
         "robotorchan.optim.initializers",
         "robotorchan.optim.variable_space",
         "robotorchan.optim.mixed",
         "robotorchan.optim.mixed_one_shot",
         "robotorchan.optim.original",
+        "robotorchan.optim.runtime",
         "robotorchan.optim.random",
         "robotorchan.optim.sobol",
         "robotorchan.optim.tree",

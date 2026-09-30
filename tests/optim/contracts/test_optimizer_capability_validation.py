@@ -3,8 +3,8 @@
 import torch
 
 from robotorchan.optim import get_optimizer_capabilities, optimize_acqf
+from robotorchan.optim.backend_support.runtime import make_generator, validate_bounds
 from robotorchan.optim.constraints import CandidateConstraints
-from robotorchan.optim.runtime import make_generator, validate_bounds
 
 
 def test_public_optimizer_names_have_capabilities() -> None:

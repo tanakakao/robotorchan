@@ -4,13 +4,13 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
+from robotorchan.optim.backend_support.runtime import validate_bounds
 from robotorchan.optim.backends import (
     optimize_acqf_ga,
     optimize_acqf_pso,
     optimize_acqf_sampling,
     optimize_vector_nsga2,
 )
-from robotorchan.optim.runtime import validate_bounds
 
 
 class _Quadratic(AcquisitionFunction):

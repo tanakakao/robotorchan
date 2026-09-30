@@ -1,4 +1,4 @@
-"""Runtime validation helpers shared by acquisition optimizer backends."""
+"""Runtime validation and random-state helpers shared by optimizer backends."""
 
 from __future__ import annotations
 

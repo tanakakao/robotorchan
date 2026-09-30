@@ -1,4 +1,4 @@
-"""Cross-optimizer helpers for q-batches and fixed features."""
+"""Shared q-batch and fixed-feature operations for optimizer backends."""
 
 from __future__ import annotations
 

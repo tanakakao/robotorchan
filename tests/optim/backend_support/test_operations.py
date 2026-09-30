@@ -5,8 +5,11 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
+from robotorchan.optim.backend_support.operations import (
+    apply_fixed_features,
+    optimize_acqf_sequential,
+)
 from robotorchan.optim.backends import optimize_acqf_de, optimize_acqf_ga, optimize_acqf_pso
-from robotorchan.optim.cross_cutting import apply_fixed_features, optimize_acqf_sequential
 
 
 class _Quadratic(AcquisitionFunction):
