@@ -12,7 +12,7 @@ from robotorchan.optim.constraints.evaluation import (
     feasibility_first_ranks,
 )
 from robotorchan.optim.cross_cutting import apply_fixed_features
-from robotorchan.optim.runtime import make_generator, validate_bounds
+from robotorchan.optim.backend_support.runtime import make_generator, validate_bounds
 
 
 def optimize_acqf_ga(
