@@ -354,7 +354,6 @@ class TuRBOStrategy(SearchStrategy):
             dim=self.input_dim,
             dtype=self.bounds.dtype,
             device=self.bounds.device,
-            bounds=self.bounds,
         )
 
     def _validate_center(self, center: Tensor) -> Tensor:
@@ -372,6 +371,7 @@ class TuRBOStrategy(SearchStrategy):
             input_dim=self.input_dim,
             dtype=self.bounds.dtype,
             device=self.bounds.device,
+            bounds=self.bounds,
         )
         return self.dimension_weights.detach().clone()
 
