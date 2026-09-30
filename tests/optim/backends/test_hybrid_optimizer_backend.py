@@ -118,6 +118,7 @@ def test_hybrid_rejects_unknown_global_optimizer() -> None:
             global_optimizer="unknown",  # type: ignore[arg-type]
         )
 
+
 def test_hybrid_forwards_mixed_space_to_global_and_mixed_local_stage() -> None:
     bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
     variable_space = MixedVariableSpace(
