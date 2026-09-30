@@ -99,3 +99,39 @@ def test_fantasy_model_runs_acquisition_and_qbatch_optimization() -> None:
     assert candidate.dtype == torch.double
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(optimized_value).all()
+
+
+def test_fantasy_batch_does_not_change_explicit_initial_condition_axes() -> None:
+    model, _, train_Y = _make_model()
+    pending = torch.tensor([[0.25], [0.75]], dtype=torch.double)
+    fantasy_model = model.fantasize(
+        X=pending,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([2]), seed=7890),
+    )
+    acquisition = qLogExpectedImprovement(
+        model=fantasy_model,
+        best_f=train_Y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8]), seed=8901),
+    )
+    initial_conditions = torch.tensor(
+        [
+            [[0.2], [0.8]],
+            [[0.3], [0.7]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=2,
+        num_restarts=2,
+        raw_samples=None,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    assert fantasy_model.train_inputs[0].shape[0] == 2
+    assert initial_conditions.shape == torch.Size([2, 2, 1])
+    assert candidate.shape == torch.Size([2, 1])
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
