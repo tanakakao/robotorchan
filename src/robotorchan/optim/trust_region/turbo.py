@@ -485,6 +485,13 @@ class TuRBOStrategy(SearchStrategy):
             perturbation_probability=perturbation_probability,
         )
         if constraints is not None and constraints.has_constraints:
+            linear_constraints = (
+                constraints.inequality_constraints + constraints.equality_constraints
+            )
+            if any(indices.ndim == 2 for indices, _, _ in linear_constraints):
+                raise NotImplementedError(
+                    "TuRBO Thompson sampling does not support inter-point linear constraints."
+                )
             if any(
                 not is_intrapoint
                 for _, is_intrapoint in constraints.nonlinear_inequality_constraints
