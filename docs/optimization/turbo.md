@@ -365,3 +365,16 @@ do not update the TuRBO state. Completed observations are applied explicitly wit
 `update_state(...)`, and a triggered restart is resolved explicitly with `restart(...)`. This
 keeps asynchronous completion order and caller-owned robust or multi-fidelity state utilities
 outside candidate-generation side effects.
+
+
+## Benchmark and validation
+
+`benchmarks/turbo.py` provides matched Global BO and TuRBO trajectories for Ackley,
+Rosenbrock, and Levy. The default dimensions are 20, 50, and 100, with repeated seeds.
+Both methods start from the same scrambled Sobol initialization for each function, dimension,
+and seed. The output records best observed value, simple regret, and TuRBO trust-region length.
+
+The benchmark is intended for empirical comparison and regression investigation. CI verifies
+objective contracts and short multi-iteration execution only; it does not assert that TuRBO
+must statistically outperform Global BO on a small or fixed random sample. Performance claims
+should be based on repeated benchmark runs and reported uncertainty, not a CI pass/fail rule.
