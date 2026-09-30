@@ -178,6 +178,18 @@ def turbo_dimension_weights_from_model(
     bounds: Tensor | None = None,
 ) -> Tensor:
     """Return TuRBO ARD weights from a model with one public-space lengthscale vector."""
+    original_input_dim = getattr(model, "original_input_dim", None)
+    reduced_input_dim = getattr(model, "reduced_input_dim", None)
+    if (
+        original_input_dim is not None
+        and reduced_input_dim is not None
+        and int(original_input_dim) != int(reduced_input_dim)
+    ):
+        raise ValueError(
+            "model lengthscales belong to a reduced input space and cannot define "
+            "public-space TuRBO geometry; supply explicit public-space dimension_weights."
+        )
+
     covar_module = getattr(model, "covar_module", None)
     lengthscale = getattr(covar_module, "lengthscale", None)
     if lengthscale is None:
