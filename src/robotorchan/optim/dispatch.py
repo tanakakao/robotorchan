@@ -7,17 +7,15 @@ from typing import Any, Literal
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
-from robotorchan.optim.backends import (
-    optimize_acqf_botorch,
-    optimize_acqf_cmaes,
-    optimize_acqf_de,
-    optimize_acqf_ga,
-    optimize_acqf_hybrid,
-    optimize_acqf_mixed_ga,
-    optimize_acqf_pso,
-    optimize_acqf_sampling,
-    optimize_acqf_torch,
-)
+from robotorchan.optim.backends.botorch import optimize_acqf_botorch
+from robotorchan.optim.backends.cmaes import optimize_acqf_cmaes
+from robotorchan.optim.backends.differential_evolution import optimize_acqf_de
+from robotorchan.optim.backends.genetic_algorithm import optimize_acqf_ga
+from robotorchan.optim.backends.hybrid import optimize_acqf_hybrid
+from robotorchan.optim.backends.mixed_genetic_algorithm import optimize_acqf_mixed_ga
+from robotorchan.optim.backends.pso import optimize_acqf_pso
+from robotorchan.optim.backends.sampling import optimize_acqf_sampling
+from robotorchan.optim.backends.torch import optimize_acqf_torch
 from robotorchan.optim.capabilities import (
     MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
     get_optimizer_capabilities,
