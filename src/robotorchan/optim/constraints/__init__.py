@@ -5,7 +5,6 @@ from robotorchan.optim.constraints.contracts import (
     LinearConstraint,
     NonlinearConstraint,
     NonlinearConstraintCallable,
-    reject_unmapped_candidate_constraints,
 )
 
 __all__ = [
@@ -13,5 +12,4 @@ __all__ = [
     "LinearConstraint",
     "NonlinearConstraint",
     "NonlinearConstraintCallable",
-    "reject_unmapped_candidate_constraints",
 ]
