@@ -10,7 +10,7 @@ from robotorchan.optim.backends import (
     optimize_acqf_sampling,
     optimize_vector_nsga2,
 )
-from robotorchan.optim.runtime import validate_bounds
+from robotorchan.optim.backend_support.runtime import validate_bounds
 
 
 class _Quadratic(AcquisitionFunction):
