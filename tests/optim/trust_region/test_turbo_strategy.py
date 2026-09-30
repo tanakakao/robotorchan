@@ -5,8 +5,12 @@ import torch
 from botorch.acquisition.analytic import PosteriorMean
 
 from robotorchan.models import SingleTaskGP
-from robotorchan.optim import TuRBOState, TuRBOStrategy, update_turbo_state
-from robotorchan.optim.trust_region.turbo import turbo_trust_region_bounds
+from robotorchan.optim import (
+    TuRBOState,
+    TuRBOStrategy,
+    turbo_trust_region_bounds,
+    update_turbo_state,
+)
 
 
 def _problem(input_dim: int = 4):
