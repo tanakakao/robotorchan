@@ -3,7 +3,9 @@
 from robotorchan.optim.trust_region.turbo import (
     TuRBOState,
     TuRBOStrategy,
+    generate_turbo_restart_center,
     generate_turbo_thompson_choices,
+    restart_turbo_state,
     turbo_trust_region_bounds,
     update_turbo_state,
 )
@@ -11,7 +13,9 @@ from robotorchan.optim.trust_region.turbo import (
 __all__ = [
     "TuRBOState",
     "TuRBOStrategy",
+    "generate_turbo_restart_center",
     "generate_turbo_thompson_choices",
+    "restart_turbo_state",
     "turbo_trust_region_bounds",
     "update_turbo_state",
 ]

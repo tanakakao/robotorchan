@@ -31,12 +31,15 @@ class TuRBOState:
     failure_tolerance: int | None = None
     best_value: float = float("-inf")
     restart_triggered: bool = False
+    restart_count: int = 0
 
     def __post_init__(self) -> None:
         if self.dim < 1:
             raise ValueError("dim must be at least 1.")
         if self.batch_size < 1:
             raise ValueError("batch_size must be at least 1.")
+        if self.restart_count < 0:
+            raise ValueError("restart_count must be non-negative.")
         if self.failure_tolerance is None:
             failure_tolerance = math.ceil(max(4.0 / self.batch_size, self.dim / self.batch_size))
             object.__setattr__(self, "failure_tolerance", failure_tolerance)
@@ -105,6 +108,44 @@ def update_turbo_state(
         best_value=max(state.best_value, candidate_best),
         restart_triggered=length < state.length_min,
     )
+
+
+def restart_turbo_state(
+    state: TuRBOState,
+    *,
+    length: float = 0.8,
+) -> TuRBOState:
+    """Reset local TuRBO counters while preserving the global best value."""
+    if not state.restart_triggered:
+        raise ValueError("state must have restart_triggered=True before restart.")
+    if not math.isfinite(length) or not state.length_min <= length <= state.length_max:
+        raise ValueError("restart length must satisfy length_min <= length <= length_max.")
+    return replace(
+        state,
+        length=length,
+        success_counter=0,
+        failure_counter=0,
+        restart_triggered=False,
+        restart_count=state.restart_count + 1,
+    )
+
+
+def generate_turbo_restart_center(
+    bounds: Tensor,
+    *,
+    seed: int | None = None,
+) -> Tensor:
+    """Generate one reproducible global Sobol center in public input space."""
+    if bounds.ndim != 2 or bounds.shape[0] != 2 or bounds.shape[1] < 1:
+        raise ValueError("bounds must have shape [2, dim] with dim >= 1.")
+    if not torch.all(torch.isfinite(bounds)):
+        raise ValueError("bounds must be finite.")
+    if torch.any(bounds[0] >= bounds[1]):
+        raise ValueError("bounds must satisfy lower < upper in every dimension.")
+
+    sobol = SobolEngine(dimension=bounds.shape[-1], scramble=True, seed=seed)
+    unit_center = sobol.draw(1).squeeze(0).to(dtype=bounds.dtype, device=bounds.device)
+    return bounds[0] + (bounds[1] - bounds[0]) * unit_center
 
 
 def _normalized_dimension_weights(
@@ -335,6 +376,25 @@ class TuRBOStrategy(SearchStrategy):
         self.state = next_state
         return self.state
 
+    def restart(
+        self,
+        *,
+        center: Tensor | None = None,
+        length: float = 0.8,
+        seed: int | None = None,
+    ) -> TuRBOState:
+        """Restart TuRBO from an explicit or reproducible global center."""
+        restart_seed = self.seed if seed is None else seed
+        next_center = (
+            generate_turbo_restart_center(self.bounds, seed=restart_seed)
+            if center is None
+            else self._validate_center(center)
+        )
+        next_state = restart_turbo_state(self.state, length=length)
+        self.center = self._validate_center(next_center)
+        self.state = next_state
+        return self.state
+
     def thompson_sample(
         self,
         model: Any,
@@ -378,6 +438,7 @@ class TuRBOStrategy(SearchStrategy):
                 "trust_region_length": self.state.length,
                 "success_counter": self.state.success_counter,
                 "failure_counter": self.state.failure_counter,
+                "restart_count": self.state.restart_count,
                 "candidate_generation": "thompson",
                 "n_candidates": candidate_count,
                 "batch_size": q,
@@ -418,6 +479,7 @@ class TuRBOStrategy(SearchStrategy):
                 "trust_region_length": self.state.length,
                 "success_counter": self.state.success_counter,
                 "failure_counter": self.state.failure_counter,
+                "restart_count": self.state.restart_count,
                 "optimizer": self.optimizer,
                 "batch_size": q,
             },

@@ -188,3 +188,38 @@ def test_batch_turbo_runs_joint_acquisition_and_state_update() -> None:
     trust_bounds = result.metadata["trust_region_bounds"]
     assert torch.all(new_X >= trust_bounds[0])
     assert torch.all(new_X <= trust_bounds[1])
+
+
+def test_turbo_can_resume_candidate_generation_after_restart() -> None:
+    torch.manual_seed(43)
+    input_dim = 3
+    train_X = torch.rand(10, input_dim, dtype=torch.double)
+    train_Y = -((train_X - 0.6) ** 2).sum(dim=-1, keepdim=True)
+    bounds = torch.stack(
+        [
+            torch.zeros(input_dim, dtype=torch.double),
+            torch.ones(input_dim, dtype=torch.double),
+        ]
+    )
+    model = SingleTaskGP(train_X, train_Y)
+    state = TuRBOState(
+        dim=input_dim,
+        length=0.1,
+        length_min=0.1,
+        best_value=float(train_Y.max().item()),
+        restart_triggered=True,
+    )
+    strategy = TuRBOStrategy(
+        bounds,
+        center=train_X[train_Y.squeeze(-1).argmax()],
+        state=state,
+        seed=31,
+    )
+
+    strategy.restart()
+    result = strategy.thompson_sample(model, n_candidates=64)
+
+    assert result.candidates.shape == (1, input_dim)
+    assert result.metadata["restart_count"] == 1
+    assert torch.all(result.candidates >= result.metadata["trust_region_bounds"][0])
+    assert torch.all(result.candidates <= result.metadata["trust_region_bounds"][1])

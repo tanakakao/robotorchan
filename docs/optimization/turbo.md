@@ -97,3 +97,19 @@ state transitionはcandidateごとではなく、完了したbatchごとに1回�
 Thompson経路でも同じbatch contractを使用します。`replacement=False` でlocal candidate poolからq点を選ぶため、同一batch内で同じpool rowを重複選択しません。
 
 Phase 6では同期batchを対象とします。評価完了順が異なるasynchronous batch、`X_pending`、fantasizationはPhase 11で扱います。
+
+
+## Restart strategy
+
+trust-region lengthが `length_min` を下回ると `restart_triggered=True` になり、通常のcandidate generationは停止します。restartは暗黙には実行されず、明示的に `strategy.restart()` を呼びます。
+
+```python
+if strategy.state.restart_triggered:
+    strategy.restart()
+```
+
+既定restartはglobal bounds上のscrambled Sobol点を新しいcenterとして選びます。`strategy.seed` またはrestart時の `seed` で再現可能です。明示的な `center` を指定して外部のglobal-search policyから再開することもできます。
+
+restartではlocalな `length`、success/failure counter、restart flagをリセットします。一方、既観測データに対するglobal bestである `best_value`、`dim`、`batch_size`、tolerance設定は保持します。新しいrestart centerは未評価点なので、それ自体をbest incumbentとして扱いません。
+
+`restart_count` はstateに保存され、benchmarkやresume時にrestart履歴を追跡できます。Phase 7の既定policyは単純なglobal Sobol re-entryです。model-based global restartや複数trust-regionの管理はこのbaseline restartとは区別します。
