@@ -31,7 +31,8 @@ CMA-ES regression coverage is conditional on the optional `cmaes` dependency.
 
 ## Scope boundaries
 
-This phase does not assert that one optimizer is universally superior. Runtime and candidate quality benchmarking belong to the benchmark harness.
+The E2E contract does not assert that one optimizer is universally superior.
+Runtime and candidate-quality comparisons belong to the benchmark harness.
 
 Vector-valued NSGA-II remains a separate contract because qEHVI/qNEHVI are
 scalar acquisition functions even though their underlying BO problem is
