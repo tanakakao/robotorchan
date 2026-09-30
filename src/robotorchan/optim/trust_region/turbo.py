@@ -15,8 +15,8 @@ from torch.quasirandom import SobolEngine
 from robotorchan.acquisition.sampling.thompson import select_thompson_candidates
 from robotorchan.optim.backends.botorch import optimize_acqf_mixed_botorch
 from robotorchan.optim.base import SearchResult, SearchStrategy
-from robotorchan.optim.constraints.evaluation import candidate_is_feasible
 from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.evaluation import candidate_is_feasible
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 from robotorchan.optim.variable_space import MixedVariableSpace
 
