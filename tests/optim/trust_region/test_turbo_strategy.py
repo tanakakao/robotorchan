@@ -251,6 +251,29 @@ def test_optimize_uses_explicit_incumbent_as_center() -> None:
     assert result.acquisition_value is not None
 
 
+def test_optimize_routes_through_named_optimizer_backend() -> None:
+    train_X, train_Y, bounds = _problem()
+    model = SingleTaskGP(train_X, train_Y)
+    acquisition = PosteriorMean(model)
+    center = _center(train_X, train_Y)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=center,
+        optimizer="sobol",
+        raw_samples=32,
+        seed=7,
+        optimizer_options={"num_samples": 32},
+    )
+
+    result = strategy.optimize(acquisition)
+
+    assert result.candidates.shape == (1, bounds.shape[-1])
+    assert result.metadata["optimizer"] == "sobol"
+    trust_bounds = result.metadata["trust_region_bounds"]
+    assert torch.all(result.candidates >= trust_bounds[0])
+    assert torch.all(result.candidates <= trust_bounds[1])
+
+
 def test_strategy_update_state_persists_state() -> None:
     _, _, bounds = _problem()
     strategy = TuRBOStrategy(

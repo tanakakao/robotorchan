@@ -8,10 +8,10 @@ from typing import Any
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
-from botorch.optim import optimize_acqf
 from torch import Tensor
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
+from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 
 
 @dataclass(frozen=True)
@@ -183,6 +183,9 @@ class TuRBOStrategy(SearchStrategy):
         options: dict[str, Any] | None = None,
         sequential: bool = False,
         dimension_weights: Tensor | None = None,
+        optimizer: OptimizerName = "botorch",
+        seed: int | None = None,
+        optimizer_options: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(bounds)
         if num_restarts < 1:
@@ -197,6 +200,9 @@ class TuRBOStrategy(SearchStrategy):
         self.raw_samples = raw_samples
         self.options = None if options is None else dict(options)
         self.sequential = sequential
+        self.optimizer = optimizer
+        self.seed = seed
+        self.optimizer_options = None if optimizer_options is None else dict(optimizer_options)
         self.dimension_weights = _normalized_dimension_weights(
             dimension_weights,
             dim=self.input_dim,
@@ -267,10 +273,13 @@ class TuRBOStrategy(SearchStrategy):
             acq_function=acq_function,
             bounds=trust_bounds,
             q=q,
+            optimizer=self.optimizer,
             num_restarts=self.num_restarts,
             raw_samples=self.raw_samples,
             options=self.options,
             sequential=self.sequential,
+            seed=self.seed,
+            optimizer_options=self.optimizer_options,
         )
 
         return SearchResult(
@@ -282,5 +291,6 @@ class TuRBOStrategy(SearchStrategy):
                 "trust_region_length": self.state.length,
                 "success_counter": self.state.success_counter,
                 "failure_counter": self.state.failure_counter,
+                "optimizer": self.optimizer,
             },
         )
