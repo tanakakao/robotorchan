@@ -127,7 +127,7 @@ raw-space lengthscaleはまずglobal bounds幅で割ってbound-relative scale�
 
 この自動連携は、`model.covar_module.lengthscale` の最終次元がpublic input dimensionと1対1に対応すると確認できるモデルを対象にします。SAASのMCMC sampleやensembleなどleading batch dimensionを持つ場合は、各public dimensionについてmedian lengthscaleを代表値に使います。Additive kernelのように単一lengthscale tensorを公開しない構造、Mixedモデルのencoded dimension、reduced/latent-space modelを暗黙に逆写像することはしません。
 
-一方、TuRBOのcandidate generation自体はsurrogate-specificではありません。高次元の `EnsembleMapSaasSingleTaskGP` について、20次元public spaceからlocal Thompson candidateを生成しposterior samplingへ渡すruntime regressionを持ちます。Fully Bayesian SAASはNUTS fittingを伴うため、通常CIとは分離されたモデル検証を前提とします。
+一方、TuRBOのcandidate generation自体はsurrogate-specificではありません。高次元の `EnsembleMapSaasSingleTaskGP` について、20次元public spaceからlocal Thompson candidateを生成しposterior samplingへ渡すruntime regressionを持ちます。ensemble posteriorのbatch dimensionは共通Thompson sampling層で処理し、TuRBOには常に `q x d` のpublic-space candidateを返します。Fully Bayesian SAASはNUTS fittingを伴うため、通常CIとは分離されたモデル検証を前提とします。
 
 Reduced-spaceモデル固有のraw/latent trust-region semanticsはPhase 9で扱います。
 
