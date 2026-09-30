@@ -9,7 +9,9 @@ from typing import Any
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
+from torch.quasirandom import SobolEngine
 
+from robotorchan.acquisition.sampling import select_thompson_candidates
 from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 
@@ -164,6 +166,69 @@ def turbo_trust_region_bounds(
     return torch.stack([lower, upper])
 
 
+def generate_turbo_thompson_choices(
+    center: Tensor,
+    trust_region_bounds: Tensor,
+    *,
+    n_candidates: int,
+    seed: int | None = None,
+    perturbation_probability: float | None = None,
+) -> Tensor:
+    """Generate a TuRBO Thompson-sampling candidate pool inside local bounds."""
+    if trust_region_bounds.ndim != 2 or trust_region_bounds.shape[0] != 2:
+        raise ValueError("trust_region_bounds must have shape [2, dim].")
+    dim = trust_region_bounds.shape[-1]
+    if center.shape != (dim,):
+        raise ValueError("center must have shape [dim].")
+    if n_candidates < 1:
+        raise ValueError("n_candidates must be at least 1.")
+    center = center.to(
+        dtype=trust_region_bounds.dtype,
+        device=trust_region_bounds.device,
+    )
+    if torch.any(center < trust_region_bounds[0]) or torch.any(center > trust_region_bounds[1]):
+        raise ValueError("center must lie inside trust_region_bounds.")
+
+    probability = min(20.0 / dim, 1.0)
+    if perturbation_probability is not None:
+        probability = perturbation_probability
+    if not 0.0 < probability <= 1.0:
+        raise ValueError("perturbation_probability must satisfy 0 < p <= 1.")
+
+    sobol = SobolEngine(dimension=dim, scramble=True, seed=seed)
+    perturbations = sobol.draw(n_candidates).to(
+        dtype=trust_region_bounds.dtype,
+        device=trust_region_bounds.device,
+    )
+    perturbations = trust_region_bounds[0] + (
+        trust_region_bounds[1] - trust_region_bounds[0]
+    ) * perturbations
+
+    generator = torch.Generator(device=trust_region_bounds.device)
+    if seed is not None:
+        generator.manual_seed(seed)
+    mask = torch.rand(
+        n_candidates,
+        dim,
+        dtype=trust_region_bounds.dtype,
+        device=trust_region_bounds.device,
+        generator=generator,
+    ) <= probability
+    empty_rows = torch.where(mask.sum(dim=1) == 0)[0]
+    if empty_rows.numel() > 0:
+        forced_dims = torch.randint(
+            dim,
+            (empty_rows.numel(),),
+            device=trust_region_bounds.device,
+            generator=generator,
+        )
+        mask[empty_rows, forced_dims] = True
+
+    choices = center.expand(n_candidates, dim).clone()
+    choices[mask] = perturbations[mask]
+    return choices
+
+
 class TuRBOStrategy(SearchStrategy):
     """Optimize an acquisition function inside a stateful TuRBO trust region.
 
@@ -255,6 +320,58 @@ class TuRBOStrategy(SearchStrategy):
                 self.center = self._validate_center(candidates[best_index])
         self.state = next_state
         return self.state
+
+
+    def thompson_sample(
+        self,
+        model: Any,
+        *,
+        q: int = 1,
+        n_candidates: int | None = None,
+        perturbation_probability: float | None = None,
+        objective: Any | None = None,
+    ) -> SearchResult:
+        """Select TuRBO candidates by posterior sampling over a local Sobol pool."""
+        if q < 1:
+            raise ValueError("q must be at least 1.")
+        if self.state.restart_triggered:
+            raise RuntimeError("TuRBO restart is required before further candidate generation.")
+        candidate_count = (
+            min(5000, max(2000, 200 * self.input_dim))
+            if n_candidates is None
+            else n_candidates
+        )
+        if candidate_count < q:
+            raise ValueError("n_candidates must be at least q.")
+
+        trust_bounds = self.trust_region_bounds()
+        choices = generate_turbo_thompson_choices(
+            self.center,
+            trust_bounds,
+            n_candidates=candidate_count,
+            seed=self.seed,
+            perturbation_probability=perturbation_probability,
+        )
+        candidates = select_thompson_candidates(
+            model,
+            choices,
+            num_samples=q,
+            replacement=False,
+            objective=objective,
+        )
+        return SearchResult(
+            candidates=candidates,
+            acquisition_value=None,
+            metadata={
+                "trust_region_center": self.center.detach().clone(),
+                "trust_region_bounds": trust_bounds.detach(),
+                "trust_region_length": self.state.length,
+                "success_counter": self.state.success_counter,
+                "failure_counter": self.state.failure_counter,
+                "candidate_generation": "thompson",
+                "n_candidates": candidate_count,
+            },
+        )
 
     def optimize(
         self,
