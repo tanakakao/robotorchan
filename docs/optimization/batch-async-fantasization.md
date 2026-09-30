@@ -50,6 +50,20 @@ another. In particular, a fantasy batch of size two does not imply `q=2`, and on
 rows must be removed through the acquisition's candidate-extraction semantics before returning
 real evaluation candidates.
 
+
+## Initialization contract
+
+Acquisition initialization remains a candidate-search concern. Real unresolved `X_pending` points
+are acquisition context and are not appended to `batch_initial_conditions`. For ordinary q-batch
+optimization, explicit initial conditions therefore keep shape `num_restarts x q x d` regardless
+of the number of pending evaluations.
+
+Likewise, a model fantasy batch is a model batch dimension, not an optimizer restart or candidate
+dimension. Standard initialization still uses `num_restarts x q x d`; BoTorch broadcasts the
+acquisition evaluation over compatible fantasy-model batch dimensions. One-shot acquisition
+fantasy rows are different: those are acquisition decision variables and follow the augmented-q
+initialization contract documented for KG and multi-step lookahead.
+
 ## Extension rule
 
 Add new Batch / Async / Fantasization functionality only when BoTorch primitives cannot express
