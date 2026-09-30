@@ -7,7 +7,12 @@ from botorch.acquisition.objective import GenericMCObjective
 pytest.importorskip("sklearn")
 
 from robotorchan.acquisition import select_thompson_candidates
-from robotorchan.models import ModelListGP, RandomForestSurrogate, SingleTaskGP
+from robotorchan.models import (
+    EnsembleMapSaasSingleTaskGP,
+    ModelListGP,
+    RandomForestSurrogate,
+    SingleTaskGP,
+)
 
 
 def _choices() -> torch.Tensor:
@@ -71,3 +76,15 @@ def test_tree_ensemble_max_posterior_sampling_selects_discrete_candidates() -> N
     selected = select_thompson_candidates(model, choices, num_samples=3)
 
     _assert_selected_from_choices(selected, choices, 3)
+
+def test_map_saas_ensemble_max_posterior_sampling_collapses_ensemble_batch() -> None:
+    torch.manual_seed(17)
+    train_x = torch.rand(12, 3, dtype=torch.double)
+    train_y = torch.sin(train_x[:, :1] * 5.0)
+    model = EnsembleMapSaasSingleTaskGP(train_x, train_y, num_taus=2)
+    choices = torch.rand(32, 3, dtype=torch.double)
+
+    selected = select_thompson_candidates(model, choices, num_samples=3)
+
+    _assert_selected_from_choices(selected, choices, 3)
+    assert torch.unique(selected, dim=0).shape[0] == 3
