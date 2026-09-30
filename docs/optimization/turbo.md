@@ -130,3 +130,13 @@ raw-space lengthscaleはまずglobal bounds幅で割ってbound-relative scale�
 一方、TuRBOのcandidate generation自体はsurrogate-specificではありません。高次元の `EnsembleMapSaasSingleTaskGP` について、20次元public spaceからlocal Thompson candidateを生成しposterior samplingへ渡すruntime regressionを持ちます。Fully Bayesian SAASはNUTS fittingを伴うため、通常CIとは分離されたモデル検証を前提とします。
 
 Reduced-spaceモデル固有のraw/latent trust-region semanticsはPhase 9で扱います。
+
+## Reduced-space surrogate integration
+
+TuRBOの既定search spaceは、surrogate内部のlatent spaceではなくpublic/original input spaceです。PCA、PLS、Random Projectionなどのfrozen input reducerを持つモデルでも、candidate、incumbent、bounds、trust-region stateはraw input dimensionで保持します。surrogateはposterior評価時にcandidateを内部latent representationへ変換します。
+
+この分離により、inverse transformを持たないreducerでもTuRBOを利用できます。また、latent GPのARD lengthscaleをraw input dimensionのtrust-region weightとして暗黙に利用することはありません。`original_input_dim != reduced_input_dim` のモデルに対して `update_dimension_weights_from_model()` を呼ぶと明示的にエラーにします。raw-spaceでanisotropic geometryが必要な場合は、public input dimensionに対応する `dimension_weights` を明示してください。
+
+latent-space TuRBOは、latent candidateを実行可能なraw candidateへ戻す写像と、global bounds / candidate constraintsを保存するfeasibility contractが必要です。現在のInputReducer共通契約はforward `transform()` のみであるため、PCAだけを特別扱いして疑似逆変換する実装は採用しません。decoder / inverse mappingの共通契約が整うまで、latent-space candidate optimizationはunsupportedです。
+
+Mixed reduced modelsはcategorical passthroughを含むため、このcontinuous reduced-space方針とは分離し、Mixed / Discrete対応のPhase 13で扱います。jointly trained encoderのrepresentation driftもfrozen reducerとは異なるため、latent trust-regionを自動追従させません。
