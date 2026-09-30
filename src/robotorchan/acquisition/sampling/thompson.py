@@ -57,7 +57,7 @@ def select_thompson_candidates(
         ensemble_shape = selected.shape[:-2]
         if len(ensemble_shape) != 1:
             raise ValueError(
-                "ensemble Thompson sampling currently requires exactly one ensemble batch dimension."
+                "ensemble Thompson sampling requires exactly one ensemble batch dimension."
             )
         member = torch.randint(ensemble_shape[0], (), device=selected.device)
         selected = selected[member]
