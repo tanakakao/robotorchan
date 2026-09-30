@@ -35,3 +35,26 @@ strategy = TuRBOStrategy(
 geometry自体は `turbo_trust_region_bounds` としてモデル非依存です。モデル固有のlengthscale抽出はこの関数の責務に含めません。これにより通常のARD GP、SAAS、reduced-space modelなどで異なる「どのlengthscaleを使うか」という規則を、trust-region geometryから分離できます。
 
 生成されたlocal boundsは常にglobal boundsでclipされます。現段階ではpublic input space上のbox geometryを定義しており、normalized `[0, 1]^d` 専用にはしていません。モデル側のinput transformを再適用しないため、二重normalizationも行いません。
+
+
+## Baseline TuRBO-1 loop
+
+Baseline TuRBO-1では、surrogate modelとacquisition functionの構築は呼び出し側が担当し、`TuRBOStrategy` は現在のtrust region内でcandidateを生成します。評価後の観測値を `update_state` に戻すことで、incumbentとtrust-region stateを次iterationへ引き継ぎます。
+
+```python
+for _ in range(n_iterations):
+    model = SingleTaskGP(train_X, train_Y)
+    acquisition = ExpectedImprovement(model, best_f=train_Y.max())
+    result = strategy.optimize(acquisition, q=1)
+
+    new_X = result.candidates
+    new_Y = objective(new_X)
+    strategy.update_state(new_Y, candidates=new_X)
+
+    train_X = torch.cat([train_X, new_X])
+    train_Y = torch.cat([train_Y, new_Y])
+```
+
+candidate optimizationはrobotorchanの `optimize_acqf` dispatchを経由します。既定値は `optimizer="botorch"` で、BoTorchのgradient-based acquisition optimizationを利用します。これによりTuRBO固有コードはlocal search regionの管理に集中し、optimizer実装を重複させません。
+
+Phase 4のbaselineはcontinuous single-objective TuRBO-1を対象とします。restartの実行、Thompson sampling、q-batch固有state semantics、constraints、async/fantasizationは後続Phaseで追加します。
