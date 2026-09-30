@@ -15,7 +15,7 @@ from robotorchan.optim.backends.botorch import (
 from robotorchan.optim.backends.cmaes import optimize_acqf_cmaes
 from robotorchan.optim.backends.differential_evolution import optimize_acqf_de
 from robotorchan.optim.backends.mixed_genetic_algorithm import optimize_acqf_mixed_ga
-from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.variable_space import MixedVariableSpace
 
 GlobalOptimizerName = Literal["de", "cmaes", "mixed_ga"]

@@ -8,7 +8,7 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
-from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.variable_space import MixedVariableSpace
 
 

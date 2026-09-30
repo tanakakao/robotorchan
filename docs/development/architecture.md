@@ -49,7 +49,8 @@ When an algorithm is derived from a paper, its implementation should document th
 - `robotorchan.optim`: acquisition optimization and search-space utilities that extend, rather
   than duplicate, `botorch.optim`. Concrete original-, mixed-, random-, Sobol-, and tree-search
   strategies live under `optim.strategies`; specialized embedding, latent-space, and trust-region
-  families retain their own packages.
+  families retain their own packages. Candidate-space constraint contracts and derivative-free
+  evaluation helpers live together under `optim.constraints`.
 - `robotorchan.reduction`: reusable dimensionality-reduction components used by high-dimensional models.
 - `robotorchan.uncertainty`: candidate input-perturbation scenario utilities for robust optimization. Surrogate models that represent uncertain inputs internally remain under `robotorchan.models.uncertain`.
 - `robotorchan.workflow`: capability-aware problem declarations, model selection, and explainable model/acquisition recommendations.

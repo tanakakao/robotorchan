@@ -5,7 +5,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from robotorchan.optim.constraints import CandidateConstraints, LinearConstraint
+from robotorchan.optim.constraints.contracts import CandidateConstraints, LinearConstraint
 
 
 def candidate_constraint_violation(

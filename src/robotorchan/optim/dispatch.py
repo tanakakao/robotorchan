@@ -20,7 +20,7 @@ from robotorchan.optim.capabilities import (
     MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
     get_optimizer_capabilities,
 )
-from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.variable_space import MixedVariableSpace
 
 OptimizerName = Literal[

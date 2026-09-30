@@ -40,6 +40,10 @@ Concrete public-input-space strategies are implemented under
 `robotorchan.optim`. Embedding, latent-space, and trust-region strategies keep separate
 packages because they own additional state and coordinate transformations.
 
+Candidate-space constraint types and constraint evaluation helpers are owned by
+`robotorchan.optim.constraints`. These remain separate from probabilistic output constraints
+used by constrained acquisition functions.
+
 ## BoTorch-first rule
 
 When BoTorch already provides the required behavior, robotorchan delegates to

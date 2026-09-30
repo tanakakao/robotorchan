@@ -19,7 +19,7 @@ from robotorchan.optim.capabilities import (
     OptimizerCapabilities,
     get_optimizer_capabilities,
 )
-from robotorchan.optim.constraints import (
+from robotorchan.optim.constraints.contracts import (
     CandidateConstraints,
     LinearConstraint,
     NonlinearConstraint,
