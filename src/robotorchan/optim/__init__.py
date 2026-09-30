@@ -53,6 +53,7 @@ from robotorchan.optim.tree import TreeEnsembleSearchStrategy
 from robotorchan.optim.trust_region import (
     TuRBOState,
     TuRBOStrategy,
+    generate_turbo_thompson_choices,
     turbo_trust_region_bounds,
     update_turbo_state,
 )
@@ -104,6 +105,7 @@ __all__ = [
     "benchmark_optimizer",
     "benchmark_optimizers",
     "gen_augmented_one_shot_initial_conditions",
+    "generate_turbo_thompson_choices",
     "get_optimizer_capabilities",
     "optimize_acqf",
     "optimize_acqf_sequential",

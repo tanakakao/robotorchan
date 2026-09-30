@@ -154,6 +154,7 @@ def test_public_optim_exports_are_complete() -> None:
         "TreeEnsembleSearchStrategy",
         "TuRBOState",
         "TuRBOStrategy",
+        "generate_turbo_thompson_choices",
         "turbo_trust_region_bounds",
         "update_turbo_state",
         "BAxUSState",

@@ -8,6 +8,7 @@ from robotorchan.models import SingleTaskGP
 from robotorchan.optim import (
     TuRBOState,
     TuRBOStrategy,
+    generate_turbo_thompson_choices,
     turbo_trust_region_bounds,
     update_turbo_state,
 )
@@ -316,3 +317,48 @@ def test_strategy_rejects_state_dimension_mismatch() -> None:
             center=bounds.mean(dim=0),
             state=TuRBOState(dim=3),
         )
+
+
+def test_thompson_choices_are_reproducible_and_inside_trust_region() -> None:
+    dim = 40
+    center = torch.full((dim,), 0.5, dtype=torch.double)
+    trust_bounds = torch.stack(
+        [
+            torch.full((dim,), 0.25, dtype=torch.double),
+            torch.full((dim,), 0.75, dtype=torch.double),
+        ]
+    )
+
+    choices_a = generate_turbo_thompson_choices(
+        center,
+        trust_bounds,
+        n_candidates=64,
+        seed=17,
+    )
+    choices_b = generate_turbo_thompson_choices(
+        center,
+        trust_bounds,
+        n_candidates=64,
+        seed=17,
+    )
+
+    torch.testing.assert_close(choices_a, choices_b)
+    assert torch.all(choices_a >= trust_bounds[0])
+    assert torch.all(choices_a <= trust_bounds[1])
+    assert torch.all((choices_a != center).sum(dim=1) >= 1)
+
+
+def test_thompson_choices_force_one_perturbation_when_mask_is_empty() -> None:
+    dim = 8
+    center = torch.full((dim,), 0.5)
+    trust_bounds = torch.stack([torch.zeros(dim), torch.ones(dim)])
+
+    choices = generate_turbo_thompson_choices(
+        center,
+        trust_bounds,
+        n_candidates=32,
+        seed=9,
+        perturbation_probability=1e-12,
+    )
+
+    assert torch.all((choices != center).sum(dim=1) >= 1)

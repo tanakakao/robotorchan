@@ -107,3 +107,36 @@ def test_baseline_turbo1_runs_multiple_local_bo_iterations() -> None:
     assert train_X.shape == (10, input_dim)
     assert strategy.state.best_value >= initial_best
     assert not strategy.state.restart_triggered
+
+
+def test_turbo_thompson_sampling_selects_local_candidate() -> None:
+    torch.manual_seed(37)
+    input_dim = 4
+    train_X = torch.rand(12, input_dim, dtype=torch.double)
+    train_Y = -((train_X - 0.65) ** 2).sum(dim=-1, keepdim=True)
+    bounds = torch.stack(
+        [
+            torch.zeros(input_dim, dtype=torch.double),
+            torch.ones(input_dim, dtype=torch.double),
+        ]
+    )
+    model = SingleTaskGP(train_X, train_Y)
+    incumbent = train_X[train_Y.squeeze(-1).argmax()]
+    strategy = TuRBOStrategy(
+        bounds,
+        center=incumbent,
+        state=TuRBOState(
+            dim=input_dim,
+            best_value=float(train_Y.max().item()),
+        ),
+        seed=13,
+    )
+
+    result = strategy.thompson_sample(model, n_candidates=64)
+
+    assert result.candidates.shape == (1, input_dim)
+    assert result.acquisition_value is None
+    assert result.metadata["candidate_generation"] == "thompson"
+    trust_bounds = result.metadata["trust_region_bounds"]
+    assert torch.all(result.candidates >= trust_bounds[0])
+    assert torch.all(result.candidates <= trust_bounds[1])

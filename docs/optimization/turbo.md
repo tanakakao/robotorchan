@@ -58,3 +58,22 @@ for _ in range(n_iterations):
 candidate optimizationはrobotorchanの `optimize_acqf` dispatchを経由します。既定値は `optimizer="botorch"` で、BoTorchのgradient-based acquisition optimizationを利用します。これによりTuRBO固有コードはlocal search regionの管理に集中し、optimizer実装を重複させません。
 
 Phase 4のbaselineはcontinuous single-objective TuRBO-1を対象とします。restartの実行、Thompson sampling、q-batch固有state semantics、constraints、async/fantasizationは後続Phaseで追加します。
+
+
+## Thompson candidate generation
+
+TuRBOではacquisition optimizationとは別に、local candidate pool上のThompson samplingを利用できます。
+
+```python
+result = strategy.thompson_sample(
+    model,
+    q=1,
+    n_candidates=2000,
+)
+```
+
+candidate poolは現在のtrust region内にSobol点を生成し、各候補では既定で `min(20 / d, 1)` の確率で次元をperturbします。全次元が未変更になった候補には少なくとも1次元のperturbationを強制します。この高次元maskはTuRBOの標準的なThompson sampling構成に対応します。
+
+posterior samplingとsample maximizerの選択は既存の `select_thompson_candidates` に委譲し、TuRBO側では再実装しません。`seed` を指定したstrategyではSobol poolとperturbation maskを再現可能に生成します。
+
+この経路はcontinuous trust regionから有限candidate poolを構築する処理です。mixed/discrete search space、constraints、async pending pointsはそれぞれ後続Phaseで扱います。
