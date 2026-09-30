@@ -531,10 +531,14 @@ class TuRBOStrategy(SearchStrategy):
             perturbation_probability=perturbation_probability,
         )
         if pending is not None and pending.shape[0] > 0:
-            duplicate_pending = torch.isclose(
-                choices.unsqueeze(-2),
-                pending.unsqueeze(0),
-            ).all(dim=-1).any(dim=-1)
+            duplicate_pending = (
+                torch.isclose(
+                    choices.unsqueeze(-2),
+                    pending.unsqueeze(0),
+                )
+                .all(dim=-1)
+                .any(dim=-1)
+            )
             choices = choices[~duplicate_pending]
             if choices.shape[0] < q:
                 raise RuntimeError(
