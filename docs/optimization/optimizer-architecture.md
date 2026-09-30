@@ -33,6 +33,13 @@ The optimization stack has three responsibilities.
 The numerical backends must not become surrogate-model abstractions. They
 consume an already constructed BoTorch acquisition function.
 
+## Package layout
+
+Concrete public-input-space strategies are implemented under
+`robotorchan.optim.strategies`. The canonical user-facing imports remain available from
+`robotorchan.optim`. Embedding, latent-space, and trust-region strategies keep separate
+packages because they own additional state and coordinate transformations.
+
 ## BoTorch-first rule
 
 When BoTorch already provides the required behavior, robotorchan delegates to
