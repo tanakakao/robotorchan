@@ -2,7 +2,7 @@
 
 import pytest
 import torch
-from botorch.acquisition.analytic import ExpectedImprovement, PosteriorMean
+from botorch.acquisition.analytic import ExpectedImprovement, PosteriorMean\nfrom botorch.acquisition.monte_carlo import qExpectedImprovement
 
 from robotorchan.models import PCAGP, SingleTaskGP
 from robotorchan.optim import TuRBOState, TuRBOStrategy, update_turbo_state
@@ -140,3 +140,50 @@ def test_turbo_thompson_sampling_selects_local_candidate() -> None:
     trust_bounds = result.metadata["trust_region_bounds"]
     assert torch.all(result.candidates >= trust_bounds[0])
     assert torch.all(result.candidates <= trust_bounds[1])
+
+
+def test_batch_turbo_runs_joint_acquisition_and_state_update() -> None:
+    torch.manual_seed(41)
+    input_dim = 3
+    batch_size = 2
+    bounds = torch.stack(
+        [
+            torch.zeros(input_dim, dtype=torch.double),
+            torch.ones(input_dim, dtype=torch.double),
+        ]
+    )
+
+    def objective(x: torch.Tensor) -> torch.Tensor:
+        return -((x - 0.68) ** 2).sum(dim=-1, keepdim=True)
+
+    train_X = torch.rand(10, input_dim, dtype=torch.double)
+    train_Y = objective(train_X)
+    best_index = train_Y.squeeze(-1).argmax()
+    strategy = TuRBOStrategy(
+        bounds,
+        center=train_X[best_index],
+        state=TuRBOState(
+            dim=input_dim,
+            batch_size=batch_size,
+            best_value=float(train_Y[best_index].item()),
+        ),
+        num_restarts=2,
+        raw_samples=32,
+    )
+    model = SingleTaskGP(train_X, train_Y)
+    acquisition = qExpectedImprovement(
+        model,
+        best_f=float(train_Y.max().item()),
+    )
+
+    result = strategy.optimize(acquisition, q=batch_size)
+    new_X = result.candidates.detach()
+    new_Y = objective(new_X)
+    next_state = strategy.update_state(new_Y, candidates=new_X)
+
+    assert new_X.shape == (batch_size, input_dim)
+    assert result.metadata["batch_size"] == batch_size
+    assert next_state.best_value >= float(train_Y.max().item())
+    trust_bounds = result.metadata["trust_region_bounds"]
+    assert torch.all(new_X >= trust_bounds[0])
+    assert torch.all(new_X <= trust_bounds[1])
