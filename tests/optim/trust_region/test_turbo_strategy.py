@@ -6,6 +6,9 @@ from botorch.acquisition.analytic import PosteriorMean
 
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim import (
+    (,
+    generate_turbo_thompson_choices,
+)
     TuRBOState,
     TuRBOStrategy,
     turbo_trust_region_bounds,
