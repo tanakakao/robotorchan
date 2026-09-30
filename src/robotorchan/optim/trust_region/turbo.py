@@ -15,7 +15,9 @@ from robotorchan.acquisition.sampling import select_thompson_candidates
 from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.constraint_evaluation import candidate_is_feasible
 from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.backends import optimize_acqf_mixed_botorch
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
+from robotorchan.optim.variable_space import MixedVariableSpace
 
 
 def _validate_pending_points(
@@ -589,6 +591,81 @@ class TuRBOStrategy(SearchStrategy):
                 "candidate_generation": "thompson",
                 "n_candidates": candidate_count,
                 "batch_size": q,
+                "candidate_constraints": constraints is not None and constraints.has_constraints,
+            },
+        )
+
+    def optimize_mixed(
+        self,
+        acq_function: AcquisitionFunction,
+        *,
+        variable_space: MixedVariableSpace,
+        fixed_features_list: list[dict[int, float]],
+        q: int = 1,
+        constraints: CandidateConstraints | None = None,
+        batch_initial_conditions: Tensor | None = None,
+    ) -> SearchResult:
+        """Optimize over categorical assignments inside a continuous TuRBO region.
+
+        Categorical coordinates are enumerated and fixed for each continuous
+        subproblem. They are never narrowed numerically by trust-region geometry.
+        Integer dimensions require a separate discrete neighborhood policy and
+        are intentionally unsupported here.
+        """
+        self._validate_batch_size(q)
+        if self.state.restart_triggered:
+            raise RuntimeError("TuRBO restart is required before further optimization.")
+        if variable_space.input_dim != self.input_dim:
+            raise ValueError("variable_space input dimension must match TuRBO bounds.")
+        if not torch.equal(variable_space.bounds, self.bounds):
+            raise ValueError("variable_space bounds must match TuRBO bounds.")
+        if variable_space.integer_dims:
+            raise NotImplementedError(
+                "TuRBO mixed optimization does not yet define integer trust-region neighborhoods."
+            )
+        if not variable_space.categorical_dims:
+            raise ValueError("variable_space must contain at least one categorical dimension.")
+        if not fixed_features_list:
+            raise ValueError("fixed_features_list must not be empty.")
+
+        categorical_dims = set(variable_space.categorical_dims)
+        for fixed_features in fixed_features_list:
+            variable_space.validate_fixed_features(fixed_features)
+            if set(fixed_features) != categorical_dims:
+                raise ValueError(
+                    "Each mixed TuRBO assignment must fix every categorical dimension "
+                    "and no continuous dimension."
+                )
+
+        trust_bounds = self.trust_region_bounds()
+        mixed_bounds = trust_bounds.clone()
+        for dim in variable_space.categorical_dims:
+            mixed_bounds[:, dim] = self.bounds[:, dim]
+
+        candidates, acquisition_value = optimize_acqf_mixed_botorch(
+            acq_function=acq_function,
+            bounds=mixed_bounds,
+            q=q,
+            num_restarts=self.num_restarts,
+            fixed_features_list=fixed_features_list,
+            raw_samples=self.raw_samples,
+            options=self.options,
+            constraints=constraints,
+            batch_initial_conditions=batch_initial_conditions,
+        )
+        return SearchResult(
+            candidates=candidates,
+            acquisition_value=acquisition_value,
+            metadata={
+                "trust_region_center": self.center.detach().clone(),
+                "trust_region_bounds": mixed_bounds.detach(),
+                "trust_region_length": self.state.length,
+                "success_counter": self.state.success_counter,
+                "failure_counter": self.state.failure_counter,
+                "restart_count": self.state.restart_count,
+                "optimizer": "botorch_mixed",
+                "batch_size": q,
+                "categorical_dims": tuple(variable_space.categorical_dims),
                 "candidate_constraints": constraints is not None and constraints.has_constraints,
             },
         )
