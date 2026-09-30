@@ -7,7 +7,7 @@
 現在仕様の source of truth として扱う恒久文書は次のとおりです。
 
 - `acquisition-architecture.md`: acquisition の責務と custom 実装境界
-- `architecture.md`: BoTorch extension としての package / API 設計
+- `architecture.md`: BoTorch extension としての package / API 設計、リポジトリ配置責務
 - `model_design_guidelines.md`: model 追加・変更時の設計原則
 - `kronecker_research_gates.md`: 未実装 Kronecker 拡張の統計・実装ゲート
 - `classification_ordinal_research_gates.md`: 分類・ordinal model / AL の統計・実装ゲート
