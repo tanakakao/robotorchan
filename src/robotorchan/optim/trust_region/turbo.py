@@ -455,6 +455,7 @@ def turbo_multifidelity_trust_region_bounds(
         dimension_weights=dimension_weights,
     )
 
+
 class TuRBOStrategy(SearchStrategy):
     """Optimize an acquisition function inside a stateful TuRBO trust region.
 
