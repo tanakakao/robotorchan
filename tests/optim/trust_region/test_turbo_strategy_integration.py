@@ -465,3 +465,86 @@ def test_turbo_qlognei_runs_with_input_perturbation_in_nominal_space() -> None:
     assert result.metadata["trust_region_bounds"].shape == torch.Size([2, input_dim])
     assert torch.all(result.candidates >= result.metadata["trust_region_bounds"][0])
     assert torch.all(result.candidates <= result.metadata["trust_region_bounds"][1])
+
+
+def test_turbo_mixed_optimizes_continuous_dims_without_shrinking_category() -> None:
+    train_X = torch.tensor(
+        [
+            [0.1, 0.0],
+            [0.3, 0.0],
+            [0.6, 1.0],
+            [0.85, 1.0],
+        ],
+        dtype=torch.double,
+    )
+    train_Y = -((train_X[:, :1] - 0.7) ** 2) + 0.15 * train_X[:, 1:2]
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    model = MixedSingleTaskGP(train_X, train_Y, cat_dims=[1])
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_X,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=811),
+    )
+    strategy = TuRBOStrategy(
+        bounds,
+        center=torch.tensor([0.6, 0.0], dtype=torch.double),
+        state=TuRBOState(
+            dim=2,
+            length=0.4,
+            best_value=float(train_Y.max().item()),
+        ),
+        num_restarts=2,
+        raw_samples=32,
+    )
+    variable_space = MixedVariableSpace(
+        bounds,
+        categorical_values={1: (0.0, 1.0)},
+    )
+
+    result = strategy.optimize_mixed(
+        acquisition,
+        variable_space=variable_space,
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+    )
+
+    assert result.candidates.shape == torch.Size([1, 2])
+    assert result.candidates[0, 1].item() in {0.0, 1.0}
+    assert result.metadata["trust_region_bounds"][0, 1] == 0.0
+    assert result.metadata["trust_region_bounds"][1, 1] == 1.0
+    assert result.metadata["trust_region_bounds"][0, 0] > 0.0
+    assert result.metadata["trust_region_bounds"][1, 0] < 1.0
+
+
+def test_turbo_mixed_rejects_integer_dimensions() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 3.0]], dtype=torch.double)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=torch.tensor([0.5, 1.0], dtype=torch.double),
+    )
+    variable_space = MixedVariableSpace(bounds, integer_dims=(1,))
+
+    with pytest.raises(NotImplementedError, match="integer trust-region neighborhoods"):
+        strategy.optimize_mixed(
+            None,  # type: ignore[arg-type]
+            variable_space=variable_space,
+            fixed_features_list=[{1: 1.0}],
+        )
+
+
+def test_turbo_mixed_requires_complete_categorical_assignments() -> None:
+    bounds = torch.tensor([[0.0, 0.0, 0.0], [1.0, 1.0, 2.0]], dtype=torch.double)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=torch.tensor([0.5, 0.0, 1.0], dtype=torch.double),
+    )
+    variable_space = MixedVariableSpace(
+        bounds,
+        categorical_values={1: (0.0, 1.0), 2: (0.0, 1.0, 2.0)},
+    )
+
+    with pytest.raises(ValueError, match="fix every categorical dimension"):
+        strategy.optimize_mixed(
+            None,  # type: ignore[arg-type]
+            variable_space=variable_space,
+            fixed_features_list=[{1: 0.0}],
+        )
