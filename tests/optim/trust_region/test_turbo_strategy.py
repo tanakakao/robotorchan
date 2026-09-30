@@ -30,7 +30,7 @@ def test_state_derives_failure_tolerance_from_dimension_and_batch_size() -> None
     assert state.failure_tolerance == 5
 
     state = TuRBOState(dim=5, batch_size=2)
-    assert state.failure_tolerance == 2
+    assert state.failure_tolerance == 3
 
 
 def test_explicit_failure_tolerance_overrides_derived_value() -> None:
@@ -174,7 +174,7 @@ def test_validates_arguments_and_restart_state() -> None:
 
 def test_strategy_rejects_state_dimension_mismatch() -> None:
     _, _, bounds = _problem(input_dim=4)
-    with pytest.raises(ValueError, match="state.dim"):
+    with pytest.raises(ValueError, match=r"state\.dim"):
         TuRBOStrategy(
             bounds,
             center=bounds.mean(dim=0),
