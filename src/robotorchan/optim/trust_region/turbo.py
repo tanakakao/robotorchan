@@ -34,7 +34,6 @@ def _validate_pending_points(
     return pending
 
 
-@contextmanager
 @dataclass(frozen=True)
 class TuRBOState:
     """Persistent state controlling the TuRBO trust-region length."""
@@ -615,6 +614,5 @@ class TuRBOStrategy(SearchStrategy):
                 "optimizer": self.optimizer,
                 "batch_size": q,
                 "candidate_constraints": constraints is not None and constraints.has_constraints,
-                "n_pending": 0 if pending is None else pending.shape[0],
             },
         )
