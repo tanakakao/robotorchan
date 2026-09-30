@@ -108,3 +108,20 @@ def test_optimizer_e2e_tests_have_integration_ownership() -> None:
         path.name for path in (optim_test_root / "integration").glob("test_*.py")
     )
     assert integration_test_names <= actual_integration_tests
+
+
+def test_one_shot_optimization_has_dedicated_ownership() -> None:
+    optim_root = SOURCE_ROOT / "optim"
+    assert not (optim_root / "initializers.py").exists()
+    assert not (optim_root / "mixed_one_shot.py").exists()
+
+    one_shot_root = optim_root / "one_shot"
+    assert {path.name for path in one_shot_root.glob("*.py")} == {
+        "__init__.py",
+        "initialization.py",
+        "mixed.py",
+    }
+
+    optim_test_root = REPOSITORY_ROOT / "tests" / "optim"
+    assert not (optim_test_root / "test_mixed_one_shot.py").exists()
+    assert (optim_test_root / "one_shot" / "test_mixed.py").is_file()
