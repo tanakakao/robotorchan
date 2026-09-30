@@ -596,6 +596,7 @@ def test_model_geometry_rejects_non_public_lengthscale_dimension() -> None:
             device=bounds.device,
         )
 
+
 def test_model_geometry_rejects_reduced_space_lengthscales() -> None:
     model = SimpleNamespace(
         original_input_dim=8,
