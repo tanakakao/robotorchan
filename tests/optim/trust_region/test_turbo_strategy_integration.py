@@ -3,6 +3,8 @@
 import pytest
 import torch
 from botorch.acquisition.analytic import ExpectedImprovement, PosteriorMean
+from botorch.acquisition.cost_aware import InverseCostWeightedUtility
+from botorch.acquisition.knowledge_gradient import qMultiFidelityKnowledgeGradient
 from botorch.acquisition.logei import qLogNoisyExpectedImprovement
 from botorch.acquisition.monte_carlo import qExpectedImprovement
 from botorch.acquisition.multi_objective.logei import (
@@ -10,6 +12,7 @@ from botorch.acquisition.multi_objective.logei import (
     qLogNoisyExpectedHypervolumeImprovement,
 )
 from botorch.acquisition.risk_measures import Expectation
+from botorch.models.cost import AffineFidelityCostModel
 from botorch.models.transforms.input import InputPerturbation
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import (
@@ -21,6 +24,7 @@ from robotorchan.models import (
     PLSGP,
     EnsembleMapSaasSingleTaskGP,
     MixedSingleTaskGP,
+    SingleTaskMultiFidelityGP,
     ModelListGP,
     RandomProjectionGP,
     SingleTaskGP,
@@ -616,3 +620,70 @@ def test_turbo_state_rejects_multiobjective_vectors_without_scalar_utility() -> 
             torch.tensor([[0.4, 0.6]], dtype=torch.double),
             candidates=torch.tensor([[0.55]], dtype=torch.double),
         )
+
+
+def test_turbo_multifidelity_kg_keeps_fidelity_globally_selectable() -> None:
+    design = torch.linspace(0.0, 1.0, 6, dtype=torch.double)
+    low = torch.stack((design, torch.full_like(design, 0.5)), dim=-1)
+    high = torch.stack((design, torch.ones_like(design)), dim=-1)
+    train_X = torch.cat((low, high), dim=0)
+    train_Y = -((train_X[:, :1] - 0.7) ** 2) + 0.1 * train_X[:, 1:]
+    model = SingleTaskMultiFidelityGP(train_X, train_Y, data_fidelities=[1])
+    bounds = torch.tensor([[0.0, 0.5], [1.0, 1.0]], dtype=torch.double)
+    center = torch.tensor([0.6, 1.0], dtype=torch.double)
+
+    target = PosteriorMean(model)
+    target_strategy = TuRBOStrategy(bounds, center=center, num_restarts=2, raw_samples=16)
+    target_result = target_strategy.optimize_multifidelity(
+        target,
+        fidelity_dims=[1],
+    )
+    current_value = target_result.acquisition_value
+    assert current_value is not None
+
+    cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
+    cost_utility = InverseCostWeightedUtility(cost_model=cost_model)
+
+    def project(X: torch.Tensor) -> torch.Tensor:
+        projected = X.clone()
+        projected[..., 1] = 1.0
+        return projected
+
+    acquisition = qMultiFidelityKnowledgeGradient(
+        model=model,
+        num_fantasies=4,
+        current_value=current_value,
+        cost_aware_utility=cost_utility,
+        project=project,
+    )
+    strategy = TuRBOStrategy(bounds, center=center, num_restarts=2, raw_samples=16)
+    result = strategy.optimize_multifidelity(acquisition, fidelity_dims=[1])
+
+    trust_bounds = result.metadata["trust_region_bounds"]
+    torch.testing.assert_close(trust_bounds[:, 1], bounds[:, 1])
+    assert trust_bounds[0, 0] > bounds[0, 0]
+    assert trust_bounds[1, 0] < bounds[1, 0]
+    assert result.candidates.shape == (1, 2)
+    assert torch.all(result.candidates >= trust_bounds[0])
+    assert torch.all(result.candidates <= trust_bounds[1])
+
+
+def test_multifidelity_state_utility_can_decouple_low_fidelity_observation() -> None:
+    bounds = torch.tensor([[0.0, 0.5], [1.0, 1.0]], dtype=torch.double)
+    center = torch.tensor([0.4, 1.0], dtype=torch.double)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=center,
+        state=TuRBOState(dim=2, best_value=0.8),
+    )
+    low_fidelity_candidate = torch.tensor([[0.7, 0.5]], dtype=torch.double)
+
+    state = strategy.update_state(
+        torch.tensor([[1.2]], dtype=torch.double),
+        state_values=torch.tensor([[0.7]], dtype=torch.double),
+        candidates=low_fidelity_candidate,
+    )
+
+    torch.testing.assert_close(strategy.center, center)
+    assert state.observed_best_value == pytest.approx(1.2)
+    assert state.best_value == pytest.approx(0.8)
