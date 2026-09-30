@@ -48,6 +48,7 @@ class TuRBOState:
     success_tolerance: int = 3
     failure_tolerance: int | None = None
     best_value: float = float("-inf")
+    observed_best_value: float = float("-inf")
     restart_triggered: bool = False
     restart_count: int = 0
 
@@ -90,17 +91,26 @@ def update_turbo_state(
     state: TuRBOState,
     values: Tensor,
     *,
+    state_values: Tensor | None = None,
     relative_improvement: float = 1e-3,
 ) -> TuRBOState:
-    """Return the next TuRBO state after observing objective values."""
+    """Return the next TuRBO state after one completed candidate batch.
+
+    ``values`` update ``observed_best_value``. Optional ``state_values`` may
+    contain denoised posterior or robust utilities for trust-region decisions.
+    """
     if values.numel() < 1:
         raise ValueError("values must contain at least one observation.")
     if values.numel() != state.batch_size:
         raise ValueError("values must contain exactly state.batch_size observations.")
+    if state_values is not None and state_values.numel() != state.batch_size:
+        raise ValueError("state_values must contain exactly state.batch_size values.")
     if relative_improvement < 0:
         raise ValueError("relative_improvement must be non-negative.")
 
-    candidate_best = float(values.max().item())
+    decision_values = values if state_values is None else state_values
+    candidate_best = float(decision_values.max().item())
+    observed_best = float(values.max().item())
     success = _is_turbo_improvement(
         candidate_best,
         state.best_value,
@@ -124,9 +134,9 @@ def update_turbo_state(
         success_counter=success_counter,
         failure_counter=failure_counter,
         best_value=max(state.best_value, candidate_best),
+        observed_best_value=max(state.observed_best_value, observed_best),
         restart_triggered=length < state.length_min,
     )
-
 
 def restart_turbo_state(
     state: TuRBOState,
@@ -427,22 +437,32 @@ class TuRBOStrategy(SearchStrategy):
         values: Tensor,
         *,
         candidates: Tensor | None = None,
+        state_values: Tensor | None = None,
         relative_improvement: float = 1e-3,
     ) -> TuRBOState:
-        """Update state once for one completed candidate batch."""
+        """Update state once for one completed candidate batch.
+
+        ``state_values`` decouples trust-region decisions from noisy raw
+        observations. It can contain posterior means or robust risk utilities
+        evaluated at the same nominal candidates.
+        """
         if values.numel() != self.state.batch_size:
             raise ValueError("values must contain exactly state.batch_size observations.")
+        if state_values is not None and state_values.numel() != self.state.batch_size:
+            raise ValueError("state_values must contain exactly state.batch_size values.")
+        decision_values = values if state_values is None else state_values
         previous_best = self.state.best_value
         next_state = update_turbo_state(
             self.state,
             values,
+            state_values=state_values,
             relative_improvement=relative_improvement,
         )
         if candidates is not None:
             if candidates.ndim != 2 or candidates.shape != (values.numel(), self.input_dim):
                 raise ValueError("candidates must have shape [values.numel(), input_dim].")
-            best_index = values.reshape(-1).argmax()
-            candidate_best = float(values.reshape(-1)[best_index].item())
+            best_index = decision_values.reshape(-1).argmax()
+            candidate_best = float(decision_values.reshape(-1)[best_index].item())
             if _is_turbo_improvement(
                 candidate_best,
                 previous_best,
