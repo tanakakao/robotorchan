@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 import math
 from dataclasses import dataclass, replace
 from typing import Any
@@ -15,7 +16,9 @@ from robotorchan.acquisition.sampling import select_thompson_candidates
 from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.constraint_evaluation import candidate_is_feasible
 from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.backends import optimize_acqf_mixed_botorch
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
+from robotorchan.optim.variable_space import MixedVariableSpace
 
 
 def _validate_pending_points(
@@ -351,6 +354,44 @@ def generate_turbo_thompson_choices(
     return choices
 
 
+def _mixed_fixed_features_list(variable_space: MixedVariableSpace) -> list[dict[int, float]]:
+    """Enumerate every legal integer and categorical assignment."""
+    dims: list[int] = []
+    values: list[tuple[float, ...]] = []
+    for dim in variable_space.integer_dims:
+        lower = int(torch.ceil(variable_space.bounds[0, dim]).item())
+        upper = int(torch.floor(variable_space.bounds[1, dim]).item())
+        dims.append(dim)
+        values.append(tuple(float(value) for value in range(lower, upper + 1)))
+    for dim in variable_space.categorical_dims:
+        dims.append(dim)
+        values.append(tuple(variable_space.categorical_values[dim]))
+    if not dims:
+        return [{}]
+    return [dict(zip(dims, assignment, strict=True)) for assignment in itertools.product(*values)]
+
+
+def turbo_mixed_trust_region_bounds(
+    center: Tensor,
+    variable_space: MixedVariableSpace,
+    *,
+    length: float,
+    dimension_weights: Tensor | None = None,
+) -> Tensor:
+    """Shrink only continuous dimensions of a mixed-variable search space."""
+    local = turbo_trust_region_bounds(
+        center,
+        variable_space.bounds,
+        length=length,
+        dimension_weights=dimension_weights,
+    )
+    structured_dims = variable_space.integer_dims + variable_space.categorical_dims
+    if structured_dims:
+        index = torch.as_tensor(structured_dims, device=local.device)
+        local[:, index] = variable_space.bounds[:, index]
+    return local
+
+
 class TuRBOStrategy(SearchStrategy):
     """Optimize an acquisition function inside a stateful TuRBO trust region.
 
@@ -491,6 +532,60 @@ class TuRBOStrategy(SearchStrategy):
         self.center = self._validate_center(next_center)
         self.state = next_state
         return self.state
+
+    def optimize_mixed(
+        self,
+        acq_function: AcquisitionFunction,
+        variable_space: MixedVariableSpace,
+        *,
+        q: int = 1,
+        constraints: CandidateConstraints | None = None,
+        batch_initial_conditions: Tensor | None = None,
+    ) -> SearchResult:
+        """Optimize over a continuous TuRBO region and exact discrete assignments."""
+        self._validate_batch_size(q)
+        if self.state.restart_triggered:
+            raise RuntimeError("TuRBO restart is required before further optimization.")
+        if variable_space.input_dim != self.input_dim:
+            raise ValueError("variable_space input dimension must match TuRBO bounds.")
+        if not torch.equal(variable_space.bounds, self.bounds):
+            raise ValueError("variable_space bounds must match TuRBO bounds.")
+        if not variable_space.integer_dims and not variable_space.categorical_dims:
+            raise ValueError("optimize_mixed requires integer or categorical dimensions.")
+
+        trust_bounds = turbo_mixed_trust_region_bounds(
+            self.center,
+            variable_space,
+            length=self.state.length,
+            dimension_weights=self.dimension_weights,
+        )
+        fixed_features_list = _mixed_fixed_features_list(variable_space)
+        candidates, acquisition_value = optimize_acqf_mixed_botorch(
+            acq_function=acq_function,
+            bounds=trust_bounds,
+            q=q,
+            num_restarts=self.num_restarts,
+            fixed_features_list=fixed_features_list,
+            raw_samples=self.raw_samples,
+            options=self.options,
+            constraints=constraints,
+            batch_initial_conditions=batch_initial_conditions,
+        )
+        return SearchResult(
+            candidates=candidates,
+            acquisition_value=acquisition_value,
+            metadata={
+                "trust_region_center": self.center.detach().clone(),
+                "trust_region_bounds": trust_bounds.detach(),
+                "trust_region_length": self.state.length,
+                "batch_size": q,
+                "candidate_generation": "mixed",
+                "continuous_dims": variable_space.continuous_dims,
+                "integer_dims": variable_space.integer_dims,
+                "categorical_dims": variable_space.categorical_dims,
+                "n_discrete_assignments": len(fixed_features_list),
+            },
+        )
 
     def thompson_sample(
         self,
