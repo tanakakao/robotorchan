@@ -10,7 +10,7 @@ from torch import Tensor
 
 from robotorchan.acquisition.non_gp import validate_non_gp_acquisition
 from robotorchan.optim.base import SearchResult
-from robotorchan.optim.random import RandomSearchStrategy
+from robotorchan.optim.strategies.random import RandomSearchStrategy
 
 
 class TreeEnsembleSearchStrategy(RandomSearchStrategy):
