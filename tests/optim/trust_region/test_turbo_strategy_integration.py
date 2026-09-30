@@ -24,10 +24,10 @@ from robotorchan.models import (
     PLSGP,
     EnsembleMapSaasSingleTaskGP,
     MixedSingleTaskGP,
-    SingleTaskMultiFidelityGP,
     ModelListGP,
     RandomProjectionGP,
     SingleTaskGP,
+    SingleTaskMultiFidelityGP,
 )
 from robotorchan.optim import (
     MixedVariableSpace,
