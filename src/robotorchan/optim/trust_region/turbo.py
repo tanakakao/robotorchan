@@ -273,8 +273,6 @@ class TuRBOStrategy(SearchStrategy):
             acq_function=acq_function,
             bounds=trust_bounds,
             q=q,
-            num_restarts=self.num_restarts,
-            raw_samples=self.raw_samples,
             optimizer=self.optimizer,
             num_restarts=self.num_restarts,
             raw_samples=self.raw_samples,
