@@ -5,9 +5,10 @@ models the objective and remains compatible with BoTorch acquisition functions;
 a search strategy decides how an acquisition function is optimized over a
 candidate domain.
 
-The initial contract is intentionally limited to continuous, box-constrained
-search. Later strategies may add latent embeddings, trust regions, or adaptive
-subspaces without changing model posterior APIs.
+The common contract is intentionally small: strategies consume an acquisition
+function and return public-space candidates. Specialized strategies may expose
+additional methods for mixed variables, trust regions, fidelity structure, or
+posterior-sampling candidate generation without changing model posterior APIs.
 """
 
 from __future__ import annotations
@@ -54,9 +55,10 @@ class SearchStrategy(ABC):
     strategy must not mutate the surrogate's posterior contract or reducer
     lifecycle.
 
-    Phase 1 defines only continuous box-constrained optimization. Constraint,
-    mixed-variable, and stateful strategy APIs are intentionally deferred until
-    their requirements are concrete.
+    ``optimize`` is the common acquisition-optimization entry point. Specialized
+    strategy methods may add explicit structure that cannot be represented by
+    this minimal signature. Such methods must still return ``SearchResult`` in
+    public input coordinates.
     """
 
     def __init__(self, bounds: Tensor) -> None:
