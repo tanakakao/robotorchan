@@ -5,8 +5,8 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
 from robotorchan.optim.backends import optimize_acqf_cmaes, optimize_acqf_mixed_ga
-from robotorchan.optim.constraints.evaluation import candidate_is_feasible
 from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.constraints.evaluation import candidate_is_feasible
 
 
 class _PreferZero(AcquisitionFunction):
