@@ -5,7 +5,7 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
 from robotorchan.optim.backends import optimize_acqf_ga, optimize_acqf_sampling
-from robotorchan.optim.benchmark import benchmark_optimizer, benchmark_optimizers
+from robotorchan.benchmarks import benchmark_optimizer, benchmark_optimizers
 from robotorchan.optim.constraints import CandidateConstraints
 
 
