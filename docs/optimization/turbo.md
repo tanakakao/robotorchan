@@ -292,3 +292,51 @@ qLogEHVIの値そのものを観測objectiveとしてstateへ保存する必要�
 複数trust region、regionごとのlocal Pareto set、hypervolume-based region selectionなどを備えた
 MORBO相当の手法は、single-region TuRBO-1とは異なるalgorithmです。Phase 14ではその名称や保証を
 robotorchanのTuRBOStrategyへ持ち込みません。
+
+
+## Multi-fidelity search
+
+Multi-fidelity coordinates are structural search variables, not ordinary TuRBO geometry
+coordinates. `TuRBOStrategy.optimize_multifidelity(...)` therefore shrinks only the design
+coordinates around the current incumbent and restores every declared fidelity coordinate to its
+global bounds. The acquisition remains responsible for deciding which fidelity is worth
+observing.
+
+This is compatible with BoTorch-native multi-fidelity acquisitions such as
+`qMultiFidelityKnowledgeGradient`. Target-fidelity projection and cost-aware utilities remain
+acquisition-owned; TuRBO does not fix the evaluated candidate to the target fidelity or duplicate
+BoTorch's multi-fidelity logic.
+
+For direct geometry use, `turbo_multifidelity_trust_region_bounds(...)` accepts positive or
+negative fidelity indices, rejects duplicates, and requires at least one non-fidelity design
+dimension.
+
+### State semantics across fidelities
+
+Raw observations from different fidelities are not automatically comparable as TuRBO incumbent
+utilities. A cheap low-fidelity observation can have a numerically larger raw value without being
+a better target-fidelity design. `update_state(..., state_values=...)` is the explicit mechanism
+for this distinction: `values` records the observed scalar result, while `state_values` supplies
+the caller-owned decision utility used for success/failure and center movement.
+
+For example, a workflow may use a target-fidelity posterior utility for `state_values`, or update
+the center only from completed target-fidelity evaluations. robotorchan does not silently infer a
+cross-fidelity scalar utility.
+
+```python
+result = strategy.optimize_multifidelity(
+    mfkg,
+    fidelity_dims=[fidelity_dim],
+)
+new_y = evaluate(result.candidates)
+state_utility = target_fidelity_utility(result.candidates, new_y)
+strategy.update_state(
+    new_y,
+    state_values=state_utility,
+    candidates=result.candidates,
+)
+```
+
+This Phase 15 integration is a single-region TuRBO strategy combined with native multi-fidelity
+acquisition semantics. It is not a separate multi-fidelity trust-region algorithm, and it does
+not add MF-MES or implicit fidelity scheduling.

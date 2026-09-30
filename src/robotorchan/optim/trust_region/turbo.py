@@ -392,6 +392,40 @@ def turbo_mixed_trust_region_bounds(
     return local
 
 
+def turbo_multifidelity_trust_region_bounds(
+    center: Tensor,
+    bounds: Tensor,
+    *,
+    fidelity_dims: tuple[int, ...] | list[int],
+    length: float,
+    dimension_weights: Tensor | None = None,
+) -> Tensor:
+    """Shrink design dimensions while leaving fidelity dimensions global."""
+    dim = bounds.shape[-1] if bounds.ndim == 2 else 0
+    normalized_fidelity_dims: list[int] = []
+    for fidelity_dim in fidelity_dims:
+        normalized = fidelity_dim + dim if fidelity_dim < 0 else fidelity_dim
+        if normalized < 0 or normalized >= dim:
+            raise ValueError("fidelity_dims must contain valid input dimensions.")
+        normalized_fidelity_dims.append(normalized)
+    if not normalized_fidelity_dims:
+        raise ValueError("fidelity_dims must contain at least one dimension.")
+    if len(set(normalized_fidelity_dims)) != len(normalized_fidelity_dims):
+        raise ValueError("fidelity_dims must not contain duplicates.")
+    if len(normalized_fidelity_dims) == dim:
+        raise ValueError("at least one non-fidelity design dimension is required.")
+
+    local = turbo_trust_region_bounds(
+        center,
+        bounds,
+        length=length,
+        dimension_weights=dimension_weights,
+    )
+    index = torch.as_tensor(normalized_fidelity_dims, device=local.device)
+    local[:, index] = bounds[:, index]
+    return local
+
+
 class TuRBOStrategy(SearchStrategy):
     """Optimize an acquisition function inside a stateful TuRBO trust region.
 
@@ -539,6 +573,55 @@ class TuRBOStrategy(SearchStrategy):
         self.center = self._validate_center(next_center)
         self.state = next_state
         return self.state
+
+    def optimize_multifidelity(
+        self,
+        acq_function: AcquisitionFunction,
+        *,
+        fidelity_dims: tuple[int, ...] | list[int],
+        q: int = 1,
+        constraints: CandidateConstraints | None = None,
+        batch_initial_conditions: Tensor | None = None,
+    ) -> SearchResult:
+        """Optimize locally in design space while keeping fidelity globally selectable."""
+        self._validate_batch_size(q)
+        if self.state.restart_triggered:
+            raise RuntimeError("TuRBO restart is required before further optimization.")
+
+        trust_bounds = turbo_multifidelity_trust_region_bounds(
+            self.center,
+            self.bounds,
+            fidelity_dims=fidelity_dims,
+            length=self.state.length,
+            dimension_weights=self.dimension_weights,
+        )
+        candidates, acquisition_value = optimize_acqf(
+            acq_function=acq_function,
+            bounds=trust_bounds,
+            q=q,
+            optimizer=self.optimizer,
+            num_restarts=self.num_restarts,
+            raw_samples=self.raw_samples,
+            options=self.options,
+            constraints=constraints,
+            batch_initial_conditions=batch_initial_conditions,
+            sequential=self.sequential,
+            seed=self.seed,
+            optimizer_options=self.optimizer_options,
+        )
+        return SearchResult(
+            candidates=candidates,
+            acquisition_value=acquisition_value,
+            metadata={
+                "trust_region_center": self.center.detach().clone(),
+                "trust_region_bounds": trust_bounds.detach(),
+                "trust_region_length": self.state.length,
+                "fidelity_dims": tuple(fidelity_dims),
+                "optimizer": self.optimizer,
+                "batch_size": q,
+                "candidate_constraints": constraints is not None and constraints.has_constraints,
+            },
+        )
 
     def optimize_mixed(
         self,

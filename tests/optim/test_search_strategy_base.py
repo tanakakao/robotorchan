@@ -159,6 +159,7 @@ def test_public_optim_exports_are_complete() -> None:
         "restart_turbo_state",
         "turbo_dimension_weights_from_model",
         "turbo_mixed_trust_region_bounds",
+        "turbo_multifidelity_trust_region_bounds",
         "turbo_trust_region_bounds",
         "update_turbo_state",
         "BAxUSState",
