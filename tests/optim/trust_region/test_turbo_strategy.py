@@ -618,4 +618,3 @@ def test_model_geometry_rejects_reduced_space_lengthscales() -> None:
             device=bounds.device,
             bounds=bounds,
         )
-
