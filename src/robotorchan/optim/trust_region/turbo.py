@@ -495,11 +495,7 @@ class TuRBOStrategy(SearchStrategy):
             )
         if values.numel() != self.state.batch_size:
             raise ValueError("values must contain exactly state.batch_size observations.")
-        if (
-            state_values is not None
-            and state_values.ndim > 1
-            and state_values.shape[-1] != 1
-        ):
+        if state_values is not None and state_values.ndim > 1 and state_values.shape[-1] != 1:
             raise ValueError("state_values must contain one scalar utility per candidate.")
         if state_values is not None and state_values.numel() != self.state.batch_size:
             raise ValueError("state_values must contain exactly state.batch_size values.")
