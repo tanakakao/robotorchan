@@ -55,6 +55,48 @@ Additional top-level namespaces should only be introduced when a stable group of
 
 Documentation follows the same separation of concerns. `docs/models.md` is the model-selection entry point, `docs/theory/` explains statistical and optimization theory, model-specific documents record specialized contracts, and `examples/` demonstrates executable usage. Audit or phase-closeout documents must not replace the permanent user-facing model-selection or theory guides.
 
+## Repository layout and ownership
+
+The repository-level directories have distinct ownership. New files belong in the narrowest
+directory that owns their runtime or maintenance responsibility.
+
+- `.github/workflows/`: repository automation only. Product behavior and reusable validation
+  logic must not be implemented in workflow YAML.
+- `src/robotorchan/`: installable library code. Importable runtime functionality must live
+  here rather than in repository-level scripts, examples, or benchmarks.
+- `tests/`: automated contracts and regressions. Its major directories should mirror the
+  installable package where practical. Cross-model invariants belong in
+  `tests/models/contracts/`; cross-component runtime flows belong in
+  `tests/models/integration/`.
+- `benchmarks/`: executable empirical benchmark entry points, experiment assembly, and
+  reporting. Reusable benchmark problem definitions belong in
+  `robotorchan.benchmarks`.
+- `examples/`: minimal user-facing examples and notebooks. Examples may assemble public APIs
+  but must not provide implementation helpers required by the library.
+- `docs/`: current user, theory, optimization, benchmark, and development documentation.
+  Phase logs and resolved audit snapshots are not permanent documentation.
+- `scripts/`: repository-maintenance commands such as deterministic generated-file updates.
+  A script must not become an alternative public API.
+- repository root: packaging metadata, project policy, license, citation, changelog, and the
+  primary README only.
+
+The following placement rules resolve common ambiguities:
+
+1. If production code imports it, place it under `src/robotorchan/`.
+2. If it defines a reusable benchmark problem or metric, place it under
+   `robotorchan.benchmarks`; if it runs an experiment, place it under `benchmarks/`.
+3. If it teaches public usage, place it under `examples/`; if it validates behavior, place it
+   under `tests/`.
+4. If it generates or verifies repository artifacts, place it under `scripts/` and keep the
+   generated artifact's source of truth explicit.
+5. A new top-level directory requires a stable responsibility that cannot be expressed by the
+   existing layout.
+
+Tests follow implementation responsibility rather than every capability label. Mixed,
+MultiTask, MultiFidelity, Kronecker, sampling, and fantasy behavior should remain inside the
+owning model, acquisition, or optimization test family unless the test is genuinely
+cross-component.
+
 ## API rules
 
 1. Prefer subclassing or composing BoTorch abstractions over introducing parallel abstractions.
