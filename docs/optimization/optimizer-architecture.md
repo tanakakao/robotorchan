@@ -44,6 +44,10 @@ Candidate-space constraint types and constraint evaluation helpers are owned by
 `robotorchan.optim.constraints`. These remain separate from probabilistic output constraints
 used by constrained acquisition functions.
 
+One-shot acquisition initialization and mixed-domain one-shot optimization are owned by
+`robotorchan.optim.one_shot`. Their canonical user-facing imports remain available from
+`robotorchan.optim`.
+
 ## BoTorch-first rule
 
 When BoTorch already provides the required behavior, robotorchan delegates to

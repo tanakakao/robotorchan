@@ -1,4 +1,4 @@
-"""Initial-condition helpers for acquisition optimization gaps."""
+"""Initial-condition helpers for one-shot acquisition optimization."""
 
 from __future__ import annotations
 
