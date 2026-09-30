@@ -213,3 +213,18 @@ def test_alebo_rejects_unmapped_nonlinear_constraints() -> None:
                 nonlinear_inequality_constraints=((constraint, True),),
             ),
         )
+
+
+def test_alebo_initialization_preserves_dtype_device_and_gradient_path() -> None:
+    bounds = _bounds()
+    strategy = ALEBOStrategy(bounds, embedding_dim=2, seed=23, num_restarts=2)
+    initial_conditions = strategy.sample_feasible(4, seed=29).reshape(2, 2, 2)
+    initial_conditions.requires_grad_(True)
+
+    value = _QuadraticAcquisition()(initial_conditions)
+    gradient = torch.autograd.grad(value.sum(), initial_conditions)[0]
+
+    assert initial_conditions.dtype == bounds.dtype
+    assert initial_conditions.device == bounds.device
+    assert gradient.shape == initial_conditions.shape
+    assert torch.isfinite(gradient).all()
