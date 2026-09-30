@@ -8,7 +8,9 @@ from robotorchan.models import SingleTaskGP
 from robotorchan.optim import (
     TuRBOState,
     TuRBOStrategy,
+    generate_turbo_restart_center,
     generate_turbo_thompson_choices,
+    restart_turbo_state,
     turbo_trust_region_bounds,
     update_turbo_state,
 )
@@ -426,3 +428,70 @@ def test_batch_thompson_sampling_returns_distinct_local_candidates() -> None:
     trust_bounds = result.metadata["trust_region_bounds"]
     assert torch.all(result.candidates >= trust_bounds[0])
     assert torch.all(result.candidates <= trust_bounds[1])
+
+
+def test_restart_state_preserves_best_and_resets_local_counters() -> None:
+    state = TuRBOState(
+        dim=5,
+        batch_size=2,
+        length=0.1,
+        length_min=0.1,
+        success_counter=2,
+        failure_counter=3,
+        best_value=4.2,
+        restart_triggered=True,
+        restart_count=1,
+    )
+
+    restarted = restart_turbo_state(state, length=0.8)
+
+    assert restarted.length == pytest.approx(0.8)
+    assert restarted.success_counter == 0
+    assert restarted.failure_counter == 0
+    assert restarted.best_value == pytest.approx(4.2)
+    assert not restarted.restart_triggered
+    assert restarted.restart_count == 2
+    assert restarted.batch_size == 2
+
+
+def test_restart_state_requires_trigger_and_valid_length() -> None:
+    with pytest.raises(ValueError, match="restart_triggered"):
+        restart_turbo_state(TuRBOState(dim=3))
+    state = TuRBOState(dim=3, length=0.1, length_min=0.1, restart_triggered=True)
+    with pytest.raises(ValueError, match="restart length"):
+        restart_turbo_state(state, length=2.0)
+
+
+def test_restart_center_is_reproducible_and_inside_global_bounds() -> None:
+    bounds = torch.tensor(
+        [[-2.0, 10.0, 100.0], [2.0, 30.0, 200.0]],
+        dtype=torch.double,
+    )
+
+    first = generate_turbo_restart_center(bounds, seed=27)
+    second = generate_turbo_restart_center(bounds, seed=27)
+
+    torch.testing.assert_close(first, second)
+    assert torch.all(first >= bounds[0])
+    assert torch.all(first <= bounds[1])
+
+
+def test_strategy_restart_reenters_search_with_preserved_best_value() -> None:
+    _, _, bounds = _problem()
+    state = TuRBOState(
+        dim=4,
+        length=0.1,
+        length_min=0.1,
+        best_value=3.5,
+        restart_triggered=True,
+    )
+    strategy = TuRBOStrategy(bounds, center=bounds.mean(dim=0), state=state, seed=29)
+
+    restarted = strategy.restart()
+
+    assert restarted.best_value == pytest.approx(3.5)
+    assert restarted.length == pytest.approx(0.8)
+    assert restarted.restart_count == 1
+    assert not restarted.restart_triggered
+    assert torch.all(strategy.center >= bounds[0])
+    assert torch.all(strategy.center <= bounds[1])
