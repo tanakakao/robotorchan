@@ -10,6 +10,5 @@ def test_model_tests_are_owned_by_a_family_or_contract_directory() -> None:
     misplaced = sorted(path.name for path in model_test_root.glob("test_*.py"))
 
     assert not misplaced, (
-        "Model tests must live in a model family, contracts, or integration directory: "
-        f"{misplaced}"
+        f"Model tests must live in a model family, contracts, or integration directory: {misplaced}"
     )
