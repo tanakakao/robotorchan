@@ -49,6 +49,7 @@ When an algorithm is derived from a paper, its implementation should document th
 - `robotorchan.optim`: acquisition optimization and search-space utilities that extend, rather than duplicate, `botorch.optim`.
 - `robotorchan.reduction`: reusable dimensionality-reduction components used by high-dimensional models.
 - `robotorchan.uncertainty`: candidate input-perturbation scenario utilities for robust optimization. Surrogate models that represent uncertain inputs internally remain under `robotorchan.models.uncertain`.
+- `robotorchan.workflow`: capability-aware problem declarations, model selection, and explainable model/acquisition recommendations.
 - `robotorchan.benchmarks`: reusable structural benchmark APIs; executable empirical benchmarks remain in the repository-level `benchmarks/` directory.
 
 Additional top-level namespaces should only be introduced when a stable group of functionality exists.

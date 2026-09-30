@@ -9,8 +9,8 @@ from robotorchan.models.capabilities import (
     RobustnessType,
     TaskType,
 )
-from robotorchan.problem import ProblemPurpose, ProblemSpec
-from robotorchan.selector import evaluate_models, select_compatible_models
+from robotorchan.workflow.problem import ProblemPurpose, ProblemSpec
+from robotorchan.workflow.selector import evaluate_models, select_compatible_models
 
 
 def _entry(name: str, capabilities: ModelCapabilities) -> ModelRegistryEntry:

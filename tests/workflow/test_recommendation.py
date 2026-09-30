@@ -3,8 +3,8 @@
 from robotorchan.acquisition.compatibility import check_model_acquisition_compatibility
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.models.registry import MODEL_REGISTRY
-from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
-from robotorchan.recommendation import recommend_compatible_workflows
+from robotorchan.workflow.problem import OutputType, ProblemPurpose, ProblemSpec
+from robotorchan.workflow.recommendation import recommend_compatible_workflows
 
 
 def test_bo_recommendations_use_registered_botorch_metadata() -> None:

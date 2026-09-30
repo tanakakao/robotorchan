@@ -2,7 +2,7 @@
 
 import pytest
 
-from robotorchan.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
+from robotorchan.workflow.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
 
 
 def test_multi_objective_bo_requires_multi_output_observations() -> None:

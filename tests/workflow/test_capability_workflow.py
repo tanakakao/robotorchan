@@ -1,9 +1,9 @@
 """End-to-end contracts for the capability-aware workflow."""
 
 from robotorchan.models.capabilities import InputType
-from robotorchan.problem import OutputType, ProblemPurpose, ProblemSpec
-from robotorchan.recommendation import recommend_compatible_workflows
-from robotorchan.selector import evaluate_models
+from robotorchan.workflow.problem import OutputType, ProblemPurpose, ProblemSpec
+from robotorchan.workflow.recommendation import recommend_compatible_workflows
+from robotorchan.workflow.selector import evaluate_models
 
 
 def test_mixed_high_dimensional_bo_flows_end_to_end() -> None:

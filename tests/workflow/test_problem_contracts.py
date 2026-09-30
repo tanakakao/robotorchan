@@ -2,8 +2,8 @@
 
 import pytest
 
-from robotorchan.problem import ProblemPurpose, ProblemSpec
-from robotorchan.recommendation import recommend_compatible_workflows
+from robotorchan.workflow.problem import ProblemPurpose, ProblemSpec
+from robotorchan.workflow.recommendation import recommend_compatible_workflows
 
 
 def test_problem_spec_rejects_non_positive_q() -> None:

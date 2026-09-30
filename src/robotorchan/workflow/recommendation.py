@@ -7,8 +7,8 @@ from robotorchan.acquisition.compatibility import (
     check_model_acquisition_compatibility,
 )
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
-from robotorchan.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
-from robotorchan.selector import select_compatible_models
+from robotorchan.workflow.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
+from robotorchan.workflow.selector import select_compatible_models
 
 
 @dataclass(frozen=True, slots=True)

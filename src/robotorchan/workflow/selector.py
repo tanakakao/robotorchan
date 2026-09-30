@@ -7,7 +7,7 @@ from robotorchan.models.capabilities import (
     ModelRegistryEntry,
 )
 from robotorchan.models.registry import MODEL_REGISTRY
-from robotorchan.problem import OutputType, ProblemSpec
+from robotorchan.workflow.problem import OutputType, ProblemSpec
 
 
 @dataclass(frozen=True, slots=True)

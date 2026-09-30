@@ -3,7 +3,7 @@
 import pytest
 
 from robotorchan.models.capabilities import InputType, TaskType
-from robotorchan.problem import (
+from robotorchan.workflow.problem import (
     ObjectiveType,
     OutputType,
     ProblemPurpose,
