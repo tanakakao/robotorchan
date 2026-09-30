@@ -5,7 +5,8 @@ posteriors and acquisition functions, rather than only synthetic acquisition
 modules.
 
 The E2E matrix intentionally follows optimizer capabilities instead of forcing
-every model/acquisition/backend combination.
+every model/acquisition/backend combination. Executable optimizer E2E coverage is owned by
+`tests/optim/integration/`.
 
 ## Continuous scalar path
 

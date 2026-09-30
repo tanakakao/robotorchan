@@ -102,7 +102,8 @@ MultiTask, MultiFidelity, Kronecker, sampling, and fantasy behavior should remai
 owning model, acquisition, or optimization test family unless the test is genuinely
 cross-component. Optimizer-wide base, dispatch, capability, and cross-backend regression
 contracts belong in `tests/optim/contracts/`; backend and strategy behavior stays with its
-owner.
+owner. Flows that construct real models and acquisitions before candidate generation belong in
+`tests/optim/integration/`.
 
 ### Internal import direction
 
