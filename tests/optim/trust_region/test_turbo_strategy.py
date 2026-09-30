@@ -15,6 +15,7 @@ from robotorchan.optim import (
     generate_turbo_thompson_choices,
     restart_turbo_state,
     turbo_dimension_weights_from_model,
+    turbo_multifidelity_trust_region_bounds,
     turbo_trust_region_bounds,
     update_turbo_state,
 )
@@ -220,6 +221,47 @@ def test_geometry_rejects_invalid_dimension_weights(
             bounds,
             length=0.4,
             dimension_weights=weights,
+        )
+
+
+def test_multifidelity_geometry_keeps_fidelity_bounds_global() -> None:
+    bounds = torch.tensor(
+        [[0.0, 0.0, 0.25], [1.0, 1.0, 1.0]],
+        dtype=torch.double,
+    )
+    center = torch.tensor([0.5, 0.5, 0.6], dtype=torch.double)
+
+    trust_bounds = turbo_multifidelity_trust_region_bounds(
+        center,
+        bounds,
+        fidelity_dims=[-1],
+        length=0.2,
+    )
+
+    torch.testing.assert_close(trust_bounds[:, 2], bounds[:, 2])
+    torch.testing.assert_close(
+        trust_bounds[:, :2],
+        torch.tensor([[0.4, 0.4], [0.6, 0.6]], dtype=torch.double),
+    )
+
+
+def test_multifidelity_geometry_rejects_invalid_fidelity_dims() -> None:
+    bounds = torch.stack([torch.zeros(3), torch.ones(3)])
+    center = torch.full((3,), 0.5)
+
+    with pytest.raises(ValueError, match="duplicates"):
+        turbo_multifidelity_trust_region_bounds(
+            center,
+            bounds,
+            fidelity_dims=[1, -2],
+            length=0.2,
+        )
+    with pytest.raises(ValueError, match="non-fidelity design dimension"):
+        turbo_multifidelity_trust_region_bounds(
+            center,
+            bounds,
+            fidelity_dims=[0, 1, 2],
+            length=0.2,
         )
 
 
