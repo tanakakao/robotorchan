@@ -24,7 +24,7 @@ def gen_augmented_one_shot_initial_conditions(
 
     This helper is for one-shot acquisitions without a dedicated BoTorch
     initializer, such as ``qMultiStepLookahead``. Knowledge Gradient should
-    continue to use BoTorch\'s specialized KG initializer.
+    continue to use BoTorch's specialized KG initializer.
 
     Args:
         acq_function: One-shot acquisition being optimized.
