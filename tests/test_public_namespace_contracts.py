@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 
 import robotorchan.acquisition as acquisition
+import robotorchan.benchmarks as benchmarks
 import robotorchan.models as models
 import robotorchan.optim as optim
 import robotorchan.reduction as reduction
@@ -14,6 +15,7 @@ import robotorchan.uncertainty as uncertainty
 def test_public_namespaces_import() -> None:
     for module_name in (
         "robotorchan.acquisition",
+        "robotorchan.benchmarks",
         "robotorchan.models",
         "robotorchan.models.expressive",
         "robotorchan.models.high_dimensional",
@@ -42,6 +44,11 @@ def test_reduced_models_are_canonical_model_exports() -> None:
 def test_acquisition_exports_resolve() -> None:
     for name in acquisition.__all__:
         assert getattr(acquisition, name) is not None
+
+
+def test_benchmark_exports_resolve() -> None:
+    for name in benchmarks.__all__:
+        assert getattr(benchmarks, name) is not None
 
 
 def test_uncertainty_exports_resolve() -> None:

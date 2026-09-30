@@ -1,9 +1,14 @@
 # Optimizer benchmark suite
 
-Phase 16 adds a common measurement harness for scalar acquisition optimizers.
+`robotorchan.benchmarks` provides a common measurement harness for scalar acquisition
+optimizers.
 
-The benchmark layer is deliberately separate from optimizer implementations. It
-does not choose a preferred optimizer and does not alter optimizer budgets.
+```python
+from robotorchan.benchmarks import benchmark_optimizer, benchmark_optimizers
+```
+
+The benchmark layer is deliberately separate from optimizer implementations. It does not choose
+a preferred optimizer and does not alter optimizer budgets.
 
 ## Common measurements
 
@@ -39,9 +44,8 @@ score as successful optimization.
 
 ## Intended benchmark problems
 
-Phase 16 provides the reusable harness. Phase 17 E2E coverage can build common
-problem suites around it, including smooth continuous, multimodal, q-batch,
-mixed/discrete, constrained, noisy, and higher-dimensional cases.
+The reusable harness can support common problem suites including smooth continuous,
+multimodal, q-batch, mixed/discrete, constrained, noisy, and higher-dimensional cases.
 
 Optional backends such as CMA-ES should only enter a benchmark matrix when
 their optional dependency is installed.

@@ -1,7 +1,6 @@
 """Acquisition-function optimization and search-strategy interfaces."""
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
-from robotorchan.optim.benchmark import BenchmarkResult, benchmark_optimizer, benchmark_optimizers
 from robotorchan.optim.capabilities import (
     BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
     BOTORCH_OPTIMIZER_CAPABILITIES,
@@ -81,7 +80,6 @@ __all__ = [
     "BAxUSState",
     "BAxUSStrategy",
     "BAxUSThompsonSamplingStrategy",
-    "BenchmarkResult",
     "CandidateConstraints",
     "ConstraintHandling",
     "ConstraintHandlingCapabilities",
@@ -107,8 +105,6 @@ __all__ = [
     "TuRBOState",
     "TuRBOStrategy",
     "apply_fixed_features",
-    "benchmark_optimizer",
-    "benchmark_optimizers",
     "gen_augmented_one_shot_initial_conditions",
     "generate_turbo_restart_center",
     "generate_turbo_thompson_choices",
