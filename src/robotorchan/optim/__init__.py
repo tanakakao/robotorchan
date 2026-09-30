@@ -65,7 +65,7 @@ from robotorchan.optim.trust_region import (
     turbo_trust_region_bounds,
     update_turbo_state,
 )
-from robotorchan.optim.variable_space import MixedVariableSpace
+from robotorchan.optim.domains import MixedVariableSpace
 
 __all__ = [
     "BOTORCH_MIXED_OPTIMIZER_CAPABILITIES",
