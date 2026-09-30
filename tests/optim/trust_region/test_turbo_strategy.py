@@ -136,12 +136,12 @@ def test_geometry_scales_ard_weights_to_geometric_mean_one() -> None:
     trust_bounds = turbo_trust_region_bounds(
         center,
         bounds,
-        length=0.4,
+        length=0.2,
         dimension_weights=raw_weights,
     )
 
     half_widths = (trust_bounds[1] - trust_bounds[0]) / 2.0
-    torch.testing.assert_close(half_widths, 0.2 * raw_weights)
+    torch.testing.assert_close(half_widths, 0.1 * raw_weights)
 
 
 def test_geometry_is_scale_invariant_for_dimension_weights() -> None:
@@ -218,7 +218,7 @@ def test_strategy_uses_dimension_weights_for_trust_region() -> None:
     strategy = TuRBOStrategy(
         bounds,
         center=center,
-        state=TuRBOState(dim=3, length=0.4),
+        state=TuRBOState(dim=3, length=0.2),
         dimension_weights=torch.tensor([0.25, 1.0, 4.0]),
     )
 
@@ -227,7 +227,7 @@ def test_strategy_uses_dimension_weights_for_trust_region() -> None:
     half_widths = (trust_bounds[1] - trust_bounds[0]) / 2.0
     torch.testing.assert_close(
         half_widths,
-        torch.tensor([0.05, 0.2, 0.5], dtype=torch.double),
+        torch.tensor([0.025, 0.1, 0.4], dtype=torch.double),
     )
 
 
