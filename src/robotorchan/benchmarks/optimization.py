@@ -11,11 +11,11 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
-from robotorchan.optim.constraint_evaluation import (
+from robotorchan.optim.constraints.evaluation import (
     candidate_constraint_violation,
     candidate_is_feasible,
 )
-from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 
 Optimizer = Callable[..., tuple[Tensor, Tensor]]
 
