@@ -2,7 +2,8 @@
 
 import pytest
 import torch
-from botorch.acquisition.analytic import ExpectedImprovement, PosteriorMean\nfrom botorch.acquisition.monte_carlo import qExpectedImprovement
+from botorch.acquisition.analytic import ExpectedImprovement, PosteriorMean
+from botorch.acquisition.monte_carlo import qExpectedImprovement
 
 from robotorchan.models import PCAGP, SingleTaskGP
 from robotorchan.optim import TuRBOState, TuRBOStrategy, update_turbo_state
