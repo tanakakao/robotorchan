@@ -7,25 +7,27 @@ BoTorch user expects: `raw_samples`, `num_restarts`, `batch_initial_conditions`,
 
 ## Compatibility matrix
 
-| Optimization case | Automatic initialization | Explicit initial conditions | Notes |
-| --- | --- | --- | --- |
-| Continuous q=1 / q-batch | BoTorch native | Supported | Standard `num_restarts x q x d` contract. |
-| Sequential q-batch | BoTorch native per step | Outer q-batch IC is not reused | Each greedy q=1 step initializes after pending-state update. |
-| Linear inequality / equality | BoTorch polytope path | Supported | Joint inter-point constraints are supported. |
-| Nonlinear inequality | Generator required when automatic feasible IC is needed | Supported | Uses BoTorch's nonlinear optimizer contract; `batch_limit=1`. |
-| Mixed continuous / categorical | BoTorch mixed path | Supported | Categorical assignments remain optimizer-space concepts. |
-| Fixed features / task / fidelity | BoTorch native | Supported | Fixed structural coordinates use `fixed_features`. |
-| MultiTask / Kronecker | BoTorch native | Supported | No model-specific initializer is required. |
-| Multi-objective | BoTorch native | Supported | Acquisition output structure does not change IC axes. |
-| Input perturbation / robust | BoTorch native | Supported | Scenario axes are not appended to candidate q. |
-| Model-owned dimension reduction | BoTorch native in public X | Supported | The model owns the transform; optimization remains in public X. |
-| REMBO / HeSBO | BoTorch native in embedded space | Strategy-owned | Initialization follows the optimizer's embedded coordinates. |
-| ALEBO | Feasible polytope sampler | Strategy-owned | Special initializer is required by the embedded polytope. |
-| qKG / qMFKG | BoTorch one-shot initializer | Augmented-q IC | Keep BoTorch's dedicated KG initialization. |
-| qMultiStepLookahead | robotorchan augmented-q helper | Augmented-q IC | Uses BoTorch standard initialization over the full tree batch. |
-| Async `X_pending` | Same as synchronous case | Same q-shape | Pending points are acquisition context, not IC rows. |
-| Fantasy model batch | Same as base acquisition | Same q-shape | Model fantasy batch is not a restart or q dimension. |
-| Hybrid local refinement | Shared BoTorch backend | Global result becomes IC | Continuous local refinement uses the common backend contract. |
+The standard continuous, constrained, mixed, MultiTask, Kronecker, multi-objective, robust, and
+model-owned dimension-reduction paths use BoTorch-native initialization. Explicit initial
+conditions use the ordinary `num_restarts x q x d` shape. Fixed task or fidelity coordinates are
+handled with `fixed_features`.
+
+Sequential q-batch optimization initializes each greedy q=1 step after the pending-state update;
+an outer joint-q initial-condition tensor is not reused. Joint inter-point linear constraints are
+supported, while sequential inter-point constraints are conditional as described below.
+
+Optimizer-owned embeddings initialize in their optimizer coordinates. REMBO and HeSBO use
+BoTorch-native box initialization in embedded space. ALEBO is the justified exception: its
+embedded feasible region is a polytope, so it uses a feasible polytope sampler.
+
+qKG and qMFKG keep BoTorch's dedicated one-shot initialization and use augmented-q explicit
+initial conditions. qMultiStepLookahead uses robotorchan's augmented-q helper because the public
+requested q differs from the full decision-tree batch evaluated by the acquisition.
+
+Async `X_pending` points remain acquisition context and are not appended to initial-condition
+rows. Likewise, a fantasy model batch is a model batch dimension, not a restart or candidate-q
+dimension. Hybrid continuous local refinement uses the shared BoTorch backend and receives the
+global-stage result as explicit initial conditions.
 
 ## Unsupported or conditional combinations
 
