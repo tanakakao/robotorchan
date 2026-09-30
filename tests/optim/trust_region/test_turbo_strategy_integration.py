@@ -331,20 +331,21 @@ def test_turbo_async_pending_is_acquisition_context_not_state_update() -> None:
         num_restarts=2,
         raw_samples=32,
     )
-    model = SingleTaskGP(train_X, train_Y)
+    pending = torch.tensor([[0.2, 0.8], [0.8, 0.2]], dtype=torch.double)
     acquisition = qLogNoisyExpectedImprovement(
-        model=model,
+        model=SingleTaskGP(train_X, train_Y),
         X_baseline=train_X,
         sampler=SobolQMCNormalSampler(torch.Size([32]), seed=611),
+        X_pending=pending,
     )
-    pending = torch.tensor([[0.2, 0.8], [0.8, 0.2]], dtype=torch.double)
     state_before = strategy.state
+    baseline_with_pending = acquisition.X_baseline.detach().clone()
 
-    result = strategy.optimize(acquisition, X_pending=pending)
+    result = strategy.optimize(acquisition)
 
     assert strategy.state is state_before
-    assert result.metadata["n_pending"] == 2
-    assert acquisition.X_pending is None
+    torch.testing.assert_close(acquisition.X_baseline, baseline_with_pending)
+    assert result.candidates.shape == torch.Size([1, input_dim])
 
 
 def test_turbo_async_completion_updates_only_completed_evaluation() -> None:
@@ -381,41 +382,13 @@ def test_turbo_async_completion_updates_only_completed_evaluation() -> None:
         model=SingleTaskGP(updated_X, updated_Y),
         X_baseline=updated_X,
         sampler=SobolQMCNormalSampler(torch.Size([32]), seed=671),
+        X_pending=pending,
     )
 
-    result = strategy.optimize(acquisition, X_pending=pending)
+    result = strategy.optimize(acquisition)
 
     assert strategy.state is state_after_completion
-    assert result.metadata["n_pending"] == 1
-    assert acquisition.X_pending is None
-
-
-def test_turbo_optimize_restores_preexisting_pending_points() -> None:
-    torch.manual_seed(71)
-    train_X = torch.rand(10, 2, dtype=torch.double)
-    train_Y = -((train_X - 0.7) ** 2).sum(dim=-1, keepdim=True)
-    bounds = torch.stack([torch.zeros(2, dtype=torch.double), torch.ones(2, dtype=torch.double)])
-    model = SingleTaskGP(train_X, train_Y)
-    acquisition = qLogNoisyExpectedImprovement(
-        model=model,
-        X_baseline=train_X,
-        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=711),
-    )
-    original_pending = torch.tensor([[0.1, 0.1]], dtype=torch.double)
-    acquisition.set_X_pending(original_pending)
-    strategy = TuRBOStrategy(
-        bounds,
-        center=train_X[train_Y.squeeze(-1).argmax()],
-        num_restarts=2,
-        raw_samples=32,
-    )
-
-    strategy.optimize(
-        acquisition,
-        X_pending=torch.tensor([[0.9, 0.9]], dtype=torch.double),
-    )
-
-    torch.testing.assert_close(acquisition.X_pending, original_pending)
+    assert result.candidates.shape == torch.Size([1, input_dim])
 
 
 def test_turbo_thompson_rejects_pending_pool_candidate() -> None:
