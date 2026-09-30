@@ -4,11 +4,11 @@ import pytest
 import torch
 from botorch.acquisition.analytic import ExpectedImprovement, PosteriorMean
 from botorch.acquisition.logei import qLogNoisyExpectedImprovement
+from botorch.acquisition.monte_carlo import qExpectedImprovement
 from botorch.acquisition.multi_objective.logei import (
     qLogExpectedHypervolumeImprovement,
     qLogNoisyExpectedHypervolumeImprovement,
 )
-from botorch.acquisition.monte_carlo import qExpectedImprovement
 from botorch.acquisition.risk_measures import Expectation
 from botorch.models.transforms.input import InputPerturbation
 from botorch.sampling.normal import SobolQMCNormalSampler
