@@ -243,7 +243,7 @@ def test_de_preserves_integer_domain_with_constraint() -> None:
 
 
 def test_de_rejects_categorical_variable_space() -> None:
-    from robotorchan.optim.variable_space import MixedVariableSpace
+    from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
     bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
     variable_space = MixedVariableSpace(bounds, categorical_values={1: [0.0, 1.0, 2.0]})
@@ -259,7 +259,7 @@ def test_de_rejects_categorical_variable_space() -> None:
 
 
 def test_de_rejects_full_mixed_space_with_categorical_dimension() -> None:
-    from robotorchan.optim.variable_space import MixedVariableSpace
+    from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
     bounds = torch.tensor([[0.0, 0.0, 0.0], [1.0, 4.0, 2.0]], dtype=torch.double)
     variable_space = MixedVariableSpace(
@@ -320,7 +320,7 @@ def test_constraint_evaluation_supports_batched_q_interpoint_nonlinear() -> None
 
 
 def test_mixed_ga_supports_q_batch_fixed_features_and_interpoint_constraint() -> None:
-    from robotorchan.optim.variable_space import MixedVariableSpace
+    from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
     bounds = torch.tensor([[0.0, 0.0, 0.0], [1.0, 3.0, 2.0]], dtype=torch.double)
     variable_space = MixedVariableSpace(
@@ -356,7 +356,7 @@ def test_mixed_ga_supports_q_batch_fixed_features_and_interpoint_constraint() ->
 
 
 def test_de_supports_q_batch_integer_and_interpoint_nonlinear_constraint() -> None:
-    from robotorchan.optim.variable_space import MixedVariableSpace
+    from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
     bounds = torch.tensor([[0.0, 0.0], [1.0, 3.0]], dtype=torch.double)
     variable_space = MixedVariableSpace(bounds, integer_dims=(1,))
