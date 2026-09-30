@@ -10,7 +10,7 @@ from torch import Tensor
 
 from robotorchan.optim.backends.botorch import optimize_acqf_botorch
 from robotorchan.optim.base import SearchResult, SearchStrategy
-from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 
 
 class OriginalSpaceStrategy(SearchStrategy):
