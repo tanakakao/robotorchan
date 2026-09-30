@@ -77,6 +77,7 @@ def test_tree_ensemble_max_posterior_sampling_selects_discrete_candidates() -> N
 
     _assert_selected_from_choices(selected, choices, 3)
 
+
 def test_map_saas_ensemble_max_posterior_sampling_collapses_ensemble_batch() -> None:
     torch.manual_seed(17)
     train_x = torch.rand(12, 3, dtype=torch.double)
