@@ -13,6 +13,8 @@ from torch.quasirandom import SobolEngine
 
 from robotorchan.acquisition.sampling import select_thompson_candidates
 from robotorchan.optim.base import SearchResult, SearchStrategy
+from robotorchan.optim.constraint_evaluation import candidate_is_feasible
+from robotorchan.optim.constraints import CandidateConstraints
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 
 
@@ -461,8 +463,10 @@ class TuRBOStrategy(SearchStrategy):
         n_candidates: int | None = None,
         perturbation_probability: float | None = None,
         objective: Any | None = None,
+        constraints: CandidateConstraints | None = None,
+        equality_tolerance: float = 1e-6,
     ) -> SearchResult:
-        """Select TuRBO candidates by posterior sampling over a local Sobol pool."""
+        """Select feasible TuRBO candidates by posterior sampling over a local Sobol pool."""
         self._validate_batch_size(q)
         if self.state.restart_triggered:
             raise RuntimeError("TuRBO restart is required before further candidate generation.")
@@ -480,6 +484,24 @@ class TuRBOStrategy(SearchStrategy):
             seed=self.seed,
             perturbation_probability=perturbation_probability,
         )
+        if constraints is not None and constraints.has_constraints:
+            if any(
+                not is_intrapoint
+                for _, is_intrapoint in constraints.nonlinear_inequality_constraints
+            ):
+                raise NotImplementedError(
+                    "TuRBO Thompson sampling does not support inter-point nonlinear constraints."
+                )
+            feasible = candidate_is_feasible(
+                choices.unsqueeze(-2),
+                constraints,
+                equality_tolerance=equality_tolerance,
+            )
+            choices = choices[feasible]
+            if choices.shape[0] < q:
+                raise RuntimeError(
+                    "TuRBO Thompson candidate pool contains fewer than q feasible points."
+                )
         candidates = select_thompson_candidates(
             model,
             choices,
@@ -500,6 +522,7 @@ class TuRBOStrategy(SearchStrategy):
                 "candidate_generation": "thompson",
                 "n_candidates": candidate_count,
                 "batch_size": q,
+                "candidate_constraints": constraints is not None and constraints.has_constraints,
             },
         )
 
@@ -508,6 +531,8 @@ class TuRBOStrategy(SearchStrategy):
         acq_function: AcquisitionFunction,
         *,
         q: int = 1,
+        constraints: CandidateConstraints | None = None,
+        batch_initial_conditions: Tensor | None = None,
     ) -> SearchResult:
         """Optimize the acquisition inside the current trust region."""
         self._validate_batch_size(q)
@@ -523,6 +548,8 @@ class TuRBOStrategy(SearchStrategy):
             num_restarts=self.num_restarts,
             raw_samples=self.raw_samples,
             options=self.options,
+            constraints=constraints,
+            batch_initial_conditions=batch_initial_conditions,
             sequential=self.sequential,
             seed=self.seed,
             optimizer_options=self.optimizer_options,
@@ -540,5 +567,6 @@ class TuRBOStrategy(SearchStrategy):
                 "restart_count": self.state.restart_count,
                 "optimizer": self.optimizer,
                 "batch_size": q,
+                "candidate_constraints": constraints is not None and constraints.has_constraints,
             },
         )
