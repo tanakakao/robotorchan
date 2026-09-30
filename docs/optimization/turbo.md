@@ -113,3 +113,20 @@ if strategy.state.restart_triggered:
 restartではlocalな `length`、success/failure counter、restart flagをリセットします。一方、既観測データに対するglobal bestである `best_value`、`dim`、`batch_size`、tolerance設定は保持します。新しいrestart centerは未評価点なので、それ自体をbest incumbentとして扱いません。
 
 `restart_count` はstateに保存され、benchmarkやresume時にrestart履歴を追跡できます。Phase 7の既定policyは単純なglobal Sobol re-entryです。model-based global restartや複数trust-regionの管理はこのbaseline restartとは区別します。
+
+
+## High-dimensional model integration
+
+TuRBOのtrust-region geometryと高次元surrogateは独立した責務です。モデルがpublic inputの各次元に対応する単一ARD lengthscale vectorを公開する場合、モデルからgeometry weightを更新できます。
+
+```python
+strategy.update_dimension_weights_from_model(model)
+```
+
+lengthscaleはgeometric meanが1になるよう正規化され、既存の `turbo_trust_region_bounds` に渡されます。これにより絶対scaleではなくARDの相対的な重要度だけがtrust-region shapeへ反映されます。
+
+この自動連携は、`model.covar_module.lengthscale` がpublic input dimensionと1対1に対応すると確認できるモデルだけを対象にします。Fully Bayesian SAASのMCMC batch、Additive MAP-SAASの複数component、Mixedモデルのencoded dimension、reduced/latent-space modelを暗黙に集約・逆写像することはしません。これらを単純平均するとpublic-space geometryの意味が変わるためです。
+
+一方、TuRBOのcandidate generation自体はsurrogate-specificではありません。高次元の `EnsembleMapSaasSingleTaskGP` について、20次元public spaceからlocal Thompson candidateを生成しposterior samplingへ渡すruntime regressionを持ちます。Fully Bayesian SAASはNUTS fittingを伴うため、通常CIとは分離されたモデル検証を前提とします。
+
+Reduced-spaceモデル固有のraw/latent trust-region semanticsはPhase 9で扱います。
