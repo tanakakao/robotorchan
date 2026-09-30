@@ -5,7 +5,12 @@ import torch
 from botorch.acquisition.analytic import PosteriorMean
 
 from robotorchan.models import SingleTaskGP
-from robotorchan.optim import TuRBOState, TuRBOStrategy, update_turbo_state
+from robotorchan.optim import (
+    TuRBOState,
+    TuRBOStrategy,
+    turbo_trust_region_bounds,
+    update_turbo_state,
+)
 
 
 def _problem(input_dim: int = 4):
@@ -120,6 +125,114 @@ def test_trust_region_is_clipped_to_public_bounds() -> None:
     assert torch.all(bounds[1] >= trust_bounds[1])
     torch.testing.assert_close(trust_bounds[0, :2], torch.tensor([0.0, 0.5], dtype=torch.double))
     torch.testing.assert_close(trust_bounds[1, :2], torch.tensor([0.5, 1.0], dtype=torch.double))
+
+
+def test_geometry_scales_ard_weights_to_geometric_mean_one() -> None:
+    bounds = torch.stack(
+        [
+            torch.zeros(3, dtype=torch.double),
+            torch.ones(3, dtype=torch.double),
+        ]
+    )
+    center = torch.full((3,), 0.5, dtype=torch.double)
+    raw_weights = torch.tensor([0.25, 1.0, 4.0], dtype=torch.double)
+
+    trust_bounds = turbo_trust_region_bounds(
+        center,
+        bounds,
+        length=0.2,
+        dimension_weights=raw_weights,
+    )
+
+    half_widths = (trust_bounds[1] - trust_bounds[0]) / 2.0
+    torch.testing.assert_close(half_widths, 0.1 * raw_weights)
+
+
+def test_geometry_is_scale_invariant_for_dimension_weights() -> None:
+    bounds = torch.tensor(
+        [[-2.0, 10.0, 100.0], [2.0, 30.0, 200.0]],
+        dtype=torch.double,
+    )
+    center = bounds.mean(dim=0)
+    weights = torch.tensor([0.5, 1.0, 2.0], dtype=torch.double)
+
+    first = turbo_trust_region_bounds(
+        center,
+        bounds,
+        length=0.2,
+        dimension_weights=weights,
+    )
+    second = turbo_trust_region_bounds(
+        center,
+        bounds,
+        length=0.2,
+        dimension_weights=10.0 * weights,
+    )
+
+    torch.testing.assert_close(first, second)
+
+
+def test_geometry_uses_global_ranges_and_clips_at_boundaries() -> None:
+    bounds = torch.tensor(
+        [[0.0, -10.0], [2.0, 10.0]],
+        dtype=torch.double,
+    )
+    center = torch.tensor([0.1, 9.0], dtype=torch.double)
+
+    trust_bounds = turbo_trust_region_bounds(center, bounds, length=0.5)
+
+    torch.testing.assert_close(
+        trust_bounds,
+        torch.tensor([[0.0, 4.0], [0.6, 10.0]], dtype=torch.double),
+    )
+
+
+@pytest.mark.parametrize(
+    ("weights", "message"),
+    [
+        (torch.tensor([1.0, 2.0]), "shape"),
+        (torch.tensor([1.0, 0.0, 2.0]), "strictly positive"),
+        (torch.tensor([1.0, float("inf"), 2.0]), "finite"),
+    ],
+)
+def test_geometry_rejects_invalid_dimension_weights(
+    weights: torch.Tensor,
+    message: str,
+) -> None:
+    bounds = torch.stack(
+        [
+            torch.zeros(3, dtype=torch.double),
+            torch.ones(3, dtype=torch.double),
+        ]
+    )
+    center = torch.full((3,), 0.5, dtype=torch.double)
+
+    with pytest.raises(ValueError, match=message):
+        turbo_trust_region_bounds(
+            center,
+            bounds,
+            length=0.4,
+            dimension_weights=weights,
+        )
+
+
+def test_strategy_uses_dimension_weights_for_trust_region() -> None:
+    _, _, bounds = _problem(input_dim=3)
+    center = torch.full((3,), 0.5, dtype=torch.double)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=center,
+        state=TuRBOState(dim=3, length=0.2),
+        dimension_weights=torch.tensor([0.25, 1.0, 4.0]),
+    )
+
+    trust_bounds = strategy.trust_region_bounds()
+
+    half_widths = (trust_bounds[1] - trust_bounds[0]) / 2.0
+    torch.testing.assert_close(
+        half_widths,
+        torch.tensor([0.025, 0.1, 0.4], dtype=torch.double),
+    )
 
 
 def test_optimize_uses_explicit_incumbent_as_center() -> None:
