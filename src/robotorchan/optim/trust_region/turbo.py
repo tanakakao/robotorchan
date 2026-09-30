@@ -103,6 +103,68 @@ def update_turbo_state(
     )
 
 
+
+def _normalized_dimension_weights(
+    dimension_weights: Tensor | None,
+    *,
+    dim: int,
+    dtype: torch.dtype,
+    device: torch.device,
+) -> Tensor:
+    """Return positive dimension weights with geometric mean one."""
+    if dimension_weights is None:
+        return torch.ones(dim, dtype=dtype, device=device)
+    weights = dimension_weights.to(dtype=dtype, device=device).reshape(-1)
+    if weights.shape != (dim,):
+        raise ValueError("dimension_weights must have shape [dim].")
+    if not torch.all(torch.isfinite(weights)):
+        raise ValueError("dimension_weights must be finite.")
+    if torch.any(weights <= 0):
+        raise ValueError("dimension_weights must be strictly positive.")
+    log_weights = torch.log(weights)
+    return torch.exp(log_weights - log_weights.mean())
+
+
+def turbo_trust_region_bounds(
+    center: Tensor,
+    bounds: Tensor,
+    *,
+    length: float,
+    dimension_weights: Tensor | None = None,
+) -> Tensor:
+    """Return clipped TuRBO bounds in the public input space.
+
+    Length is interpreted relative to each global input range. Optional
+    dimension weights are normalized to geometric mean one, matching TuRBO's
+    ARD geometry while keeping this function independent from model internals.
+    """
+    if bounds.ndim != 2 or bounds.shape[0] != 2:
+        raise ValueError("bounds must have shape [2, dim].")
+    if center.shape != (bounds.shape[-1],):
+        raise ValueError("center must have shape [dim].")
+    if not math.isfinite(length) or length <= 0:
+        raise ValueError("length must be finite and positive.")
+    if torch.any(bounds[0] >= bounds[1]):
+        raise ValueError("bounds must satisfy lower < upper in every dimension.")
+    if not torch.all(torch.isfinite(center)) or not torch.all(torch.isfinite(bounds)):
+        raise ValueError("center and bounds must be finite.")
+
+    center = center.to(dtype=bounds.dtype, device=bounds.device)
+    if torch.any(center < bounds[0]) or torch.any(center > bounds[1]):
+        raise ValueError("center must lie inside bounds.")
+
+    weights = _normalized_dimension_weights(
+        dimension_weights,
+        dim=bounds.shape[-1],
+        dtype=bounds.dtype,
+        device=bounds.device,
+    )
+    half_width = 0.5 * length * weights * (bounds[1] - bounds[0])
+    lower = torch.maximum(center - half_width, bounds[0])
+    upper = torch.minimum(center + half_width, bounds[1])
+    return torch.stack([lower, upper])
+
+
 class TuRBOStrategy(SearchStrategy):
     """Optimize an acquisition function inside a stateful TuRBO trust region.
 
@@ -121,6 +183,7 @@ class TuRBOStrategy(SearchStrategy):
         raw_samples: int = 512,
         options: dict[str, Any] | None = None,
         sequential: bool = False,
+        dimension_weights: Tensor | None = None,
     ) -> None:
         super().__init__(bounds)
         if num_restarts < 1:
@@ -135,6 +198,12 @@ class TuRBOStrategy(SearchStrategy):
         self.raw_samples = raw_samples
         self.options = None if options is None else dict(options)
         self.sequential = sequential
+        self.dimension_weights = _normalized_dimension_weights(
+            dimension_weights,
+            dim=self.input_dim,
+            dtype=self.bounds.dtype,
+            device=self.bounds.device,
+        )
 
     def _validate_center(self, center: Tensor) -> Tensor:
         center = center.to(dtype=self.bounds.dtype, device=self.bounds.device)
@@ -147,10 +216,12 @@ class TuRBOStrategy(SearchStrategy):
     def trust_region_bounds(self, center: Tensor | None = None) -> Tensor:
         """Return feasible trust-region bounds around the current incumbent."""
         current_center = self.center if center is None else self._validate_center(center)
-        half_width = 0.5 * self.state.length * (self.bounds[1] - self.bounds[0])
-        lower = torch.maximum(current_center - half_width, self.bounds[0])
-        upper = torch.minimum(current_center + half_width, self.bounds[1])
-        return torch.stack([lower, upper])
+        return turbo_trust_region_bounds(
+            current_center,
+            self.bounds,
+            length=self.state.length,
+            dimension_weights=self.dimension_weights,
+        )
 
     def update_state(
         self,
