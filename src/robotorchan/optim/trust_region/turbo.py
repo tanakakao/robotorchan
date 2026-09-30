@@ -501,6 +501,30 @@ class TuRBOStrategy(SearchStrategy):
             dimension_weights=self.dimension_weights,
         )
 
+    def _result_metadata(
+        self,
+        trust_bounds: Tensor,
+        *,
+        q: int,
+        candidate_generation: str,
+        constraints: CandidateConstraints | None = None,
+        **extra: Any,
+    ) -> dict[str, Any]:
+        """Return the stable TuRBO diagnostics shared by candidate-generation paths."""
+        metadata: dict[str, Any] = {
+            "trust_region_center": self.center.detach().clone(),
+            "trust_region_bounds": trust_bounds.detach().clone(),
+            "trust_region_length": self.state.length,
+            "success_counter": self.state.success_counter,
+            "failure_counter": self.state.failure_counter,
+            "restart_count": self.state.restart_count,
+            "batch_size": q,
+            "candidate_generation": candidate_generation,
+            "candidate_constraints": constraints is not None and constraints.has_constraints,
+        }
+        metadata.update(extra)
+        return metadata
+
     def _validate_batch_size(self, q: int) -> None:
         """Validate candidate batch size against the persistent TuRBO state."""
         if q < 1:
@@ -612,15 +636,14 @@ class TuRBOStrategy(SearchStrategy):
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
-            metadata={
-                "trust_region_center": self.center.detach().clone(),
-                "trust_region_bounds": trust_bounds.detach(),
-                "trust_region_length": self.state.length,
-                "fidelity_dims": tuple(fidelity_dims),
-                "optimizer": self.optimizer,
-                "batch_size": q,
-                "candidate_constraints": constraints is not None and constraints.has_constraints,
-            },
+            metadata=self._result_metadata(
+                trust_bounds,
+                q=q,
+                candidate_generation="multifidelity",
+                constraints=constraints,
+                fidelity_dims=tuple(fidelity_dims),
+                optimizer=self.optimizer,
+            ),
         )
 
     def optimize_mixed(
@@ -664,17 +687,17 @@ class TuRBOStrategy(SearchStrategy):
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
-            metadata={
-                "trust_region_center": self.center.detach().clone(),
-                "trust_region_bounds": trust_bounds.detach(),
-                "trust_region_length": self.state.length,
-                "batch_size": q,
-                "candidate_generation": "mixed",
-                "continuous_dims": variable_space.continuous_dims,
-                "integer_dims": variable_space.integer_dims,
-                "categorical_dims": variable_space.categorical_dims,
-                "n_discrete_assignments": len(fixed_features_list),
-            },
+            metadata=self._result_metadata(
+                trust_bounds,
+                q=q,
+                candidate_generation="mixed",
+                constraints=constraints,
+                optimizer="botorch_mixed",
+                continuous_dims=variable_space.continuous_dims,
+                integer_dims=variable_space.integer_dims,
+                categorical_dims=variable_space.categorical_dims,
+                n_discrete_assignments=len(fixed_features_list),
+            ),
         )
 
     def thompson_sample(
@@ -764,18 +787,13 @@ class TuRBOStrategy(SearchStrategy):
         return SearchResult(
             candidates=candidates,
             acquisition_value=None,
-            metadata={
-                "trust_region_center": self.center.detach().clone(),
-                "trust_region_bounds": trust_bounds.detach(),
-                "trust_region_length": self.state.length,
-                "success_counter": self.state.success_counter,
-                "failure_counter": self.state.failure_counter,
-                "restart_count": self.state.restart_count,
-                "candidate_generation": "thompson",
-                "n_candidates": candidate_count,
-                "batch_size": q,
-                "candidate_constraints": constraints is not None and constraints.has_constraints,
-            },
+            metadata=self._result_metadata(
+                trust_bounds,
+                q=q,
+                candidate_generation="thompson",
+                constraints=constraints,
+                n_candidates=candidate_count,
+            ),
         )
 
     def optimize(
@@ -810,15 +828,11 @@ class TuRBOStrategy(SearchStrategy):
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
-            metadata={
-                "trust_region_center": self.center.detach().clone(),
-                "trust_region_bounds": trust_bounds.detach(),
-                "trust_region_length": self.state.length,
-                "success_counter": self.state.success_counter,
-                "failure_counter": self.state.failure_counter,
-                "restart_count": self.state.restart_count,
-                "optimizer": self.optimizer,
-                "batch_size": q,
-                "candidate_constraints": constraints is not None and constraints.has_constraints,
-            },
+            metadata=self._result_metadata(
+                trust_bounds,
+                q=q,
+                candidate_generation="acquisition",
+                constraints=constraints,
+                optimizer=self.optimizer,
+            ),
         )
