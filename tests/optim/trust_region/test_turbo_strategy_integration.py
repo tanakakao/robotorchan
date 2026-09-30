@@ -308,6 +308,7 @@ def test_turbo_high_dimensional_map_saas_thompson_path() -> None:
     assert torch.all(result.candidates >= trust_bounds[0])
     assert torch.all(result.candidates <= trust_bounds[1])
 
+
 def test_turbo_async_pending_is_acquisition_context_not_state_update() -> None:
     torch.manual_seed(61)
     input_dim = 2
