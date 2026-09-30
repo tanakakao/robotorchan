@@ -10,7 +10,7 @@ from botorch.optim import optimize_acqf
 from torch import Tensor
 
 from robotorchan.optim.base import SearchResult, SearchStrategy
-from robotorchan.optim.constraints import (
+from robotorchan.optim.constraints.contracts import (
     CandidateConstraints,
     reject_unmapped_candidate_constraints,
 )
