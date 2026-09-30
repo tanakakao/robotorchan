@@ -168,10 +168,11 @@ def test_backend_support_has_dedicated_ownership() -> None:
 
 def test_obsolete_phase_snapshot_is_not_permanent_documentation() -> None:
     optimization_docs = REPOSITORY_ROOT / "docs" / "optimization"
-    assert not (optimization_docs / "turbo-" + "phase1-research-inventory.md").exists()
+    obsolete_snapshot = "turbo-" + "phase1-research-inventory.md"
+    assert not (optimization_docs / obsolete_snapshot).exists()
 
     optimization_readme = (optimization_docs / "README.md").read_text(encoding="utf-8")
-    assert "turbo-" + "phase1-research-inventory.md" not in optimization_readme
+    assert obsolete_snapshot not in optimization_readme
 
 
 def test_repository_contains_no_obsolete_structure_references() -> None:
