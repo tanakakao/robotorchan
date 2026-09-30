@@ -50,7 +50,12 @@ from robotorchan.optim.original import OriginalSpaceStrategy
 from robotorchan.optim.random import RandomSearchStrategy
 from robotorchan.optim.sobol import SobolSearchStrategy
 from robotorchan.optim.tree import TreeEnsembleSearchStrategy
-from robotorchan.optim.trust_region import TuRBOState, TuRBOStrategy, update_turbo_state
+from robotorchan.optim.trust_region import (
+    TuRBOState,
+    TuRBOStrategy,
+    turbo_trust_region_bounds,
+    update_turbo_state,
+)
 from robotorchan.optim.variable_space import MixedVariableSpace
 
 __all__ = [
@@ -95,6 +100,7 @@ __all__ = [
     "TreeEnsembleSearchStrategy",
     "TuRBOState",
     "TuRBOStrategy",
+    "turbo_trust_region_bounds",
     "apply_fixed_features",
     "benchmark_optimizer",
     "benchmark_optimizers",
