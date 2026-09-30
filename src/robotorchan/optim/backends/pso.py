@@ -10,7 +10,7 @@ from torch import Tensor
 
 from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
-from robotorchan.optim.cross_cutting import apply_fixed_features
+from robotorchan.optim.backend_support.operations import apply_fixed_features
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.optim.backend_support.runtime import make_generator, validate_bounds
 
