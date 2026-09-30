@@ -49,6 +49,9 @@ One-shot acquisition initialization and mixed-domain one-shot optimization are o
 `robotorchan.optim.one_shot`. Their canonical user-facing imports remain available from
 `robotorchan.optim`.
 
+Backend-independent runtime validation, local random generators, fixed-feature application,
+and sequential q-batch adaptation are owned by `robotorchan.optim.backend_support`.
+
 ## BoTorch-first rule
 
 When BoTorch already provides the required behavior, robotorchan delegates to
