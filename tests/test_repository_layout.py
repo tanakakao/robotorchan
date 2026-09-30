@@ -68,3 +68,14 @@ def test_concrete_optimizer_strategies_are_owned_by_strategy_package() -> None:
         path.name for path in (optim_test_root / "strategies").glob("test_*.py")
     )
     assert strategy_tests <= actual_strategy_tests
+
+
+def test_candidate_constraints_are_owned_by_constraint_package() -> None:
+    optim_root = SOURCE_ROOT / "optim"
+    assert not (optim_root / "constraint_evaluation.py").exists()
+    assert (optim_root / "constraints").is_dir()
+
+    constraint_modules = {
+        path.name for path in (optim_root / "constraints").glob("*.py")
+    }
+    assert constraint_modules == {"__init__.py", "contracts.py", "evaluation.py"}
