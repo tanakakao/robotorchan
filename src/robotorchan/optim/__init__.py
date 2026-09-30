@@ -25,7 +25,7 @@ from robotorchan.optim.constraints.contracts import (
     NonlinearConstraint,
     NonlinearConstraintCallable,
 )
-from robotorchan.optim.cross_cutting import apply_fixed_features, optimize_acqf_sequential
+from robotorchan.optim.backend_support import apply_fixed_features, optimize_acqf_sequential
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 from robotorchan.optim.domains import MixedVariableSpace
 from robotorchan.optim.embedding import (
