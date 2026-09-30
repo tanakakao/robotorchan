@@ -8,8 +8,8 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
-from robotorchan.optim.constraint_evaluation import candidate_constraint_violation
-from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.cross_cutting import apply_fixed_features
 from robotorchan.optim.runtime import make_generator, validate_bounds
 from robotorchan.optim.variable_space import MixedVariableSpace
