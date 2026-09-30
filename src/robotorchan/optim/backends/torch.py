@@ -15,7 +15,7 @@ from botorch.generation.gen import gen_candidates_torch
 from botorch.optim import optimize_acqf as botorch_optimize_acqf
 from torch import Tensor
 
-from robotorchan.optim.constraints import CandidateConstraints
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 
 TorchOptimizerName = Literal["adam", "adamw", "sgd"]
 
