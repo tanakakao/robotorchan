@@ -3,7 +3,9 @@
 import pytest
 import torch
 from botorch.acquisition.analytic import ExpectedImprovement, PosteriorMean
+from botorch.acquisition.logei import qLogNoisyExpectedImprovement
 from botorch.acquisition.monte_carlo import qExpectedImprovement
+from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.models import (
     PCAGP,
@@ -12,7 +14,12 @@ from robotorchan.models import (
     RandomProjectionGP,
     SingleTaskGP,
 )
-from robotorchan.optim import TuRBOState, TuRBOStrategy, update_turbo_state
+from robotorchan.optim import (
+    TuRBOState,
+    TuRBOStrategy,
+    generate_turbo_thompson_choices,
+    update_turbo_state,
+)
 
 
 def test_first_observation_initializes_turbo_state_as_success() -> None:
@@ -300,3 +307,143 @@ def test_turbo_high_dimensional_map_saas_thompson_path() -> None:
     trust_bounds = result.metadata["trust_region_bounds"]
     assert torch.all(result.candidates >= trust_bounds[0])
     assert torch.all(result.candidates <= trust_bounds[1])
+
+def test_turbo_async_pending_is_acquisition_context_not_state_update() -> None:
+    torch.manual_seed(61)
+    input_dim = 2
+    train_X = torch.rand(12, input_dim, dtype=torch.double)
+    train_Y = -((train_X - 0.65) ** 2).sum(dim=-1, keepdim=True)
+    bounds = torch.stack(
+        [
+            torch.zeros(input_dim, dtype=torch.double),
+            torch.ones(input_dim, dtype=torch.double),
+        ]
+    )
+    best_index = train_Y.squeeze(-1).argmax()
+    strategy = TuRBOStrategy(
+        bounds,
+        center=train_X[best_index],
+        state=TuRBOState(
+            dim=input_dim,
+            best_value=float(train_Y.max().item()),
+        ),
+        num_restarts=2,
+        raw_samples=32,
+    )
+    model = SingleTaskGP(train_X, train_Y)
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_X,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=611),
+    )
+    pending = torch.tensor([[0.2, 0.8], [0.8, 0.2]], dtype=torch.double)
+    state_before = strategy.state
+
+    result = strategy.optimize(acquisition, X_pending=pending)
+
+    assert strategy.state is state_before
+    assert result.metadata["n_pending"] == 2
+    assert acquisition.X_pending is None
+
+
+def test_turbo_async_completion_updates_only_completed_evaluation() -> None:
+    torch.manual_seed(67)
+    input_dim = 2
+    train_X = torch.rand(10, input_dim, dtype=torch.double)
+    train_Y = -((train_X - 0.6) ** 2).sum(dim=-1, keepdim=True)
+    bounds = torch.stack(
+        [
+            torch.zeros(input_dim, dtype=torch.double),
+            torch.ones(input_dim, dtype=torch.double),
+        ]
+    )
+    best_index = train_Y.squeeze(-1).argmax()
+    strategy = TuRBOStrategy(
+        bounds,
+        center=train_X[best_index],
+        state=TuRBOState(
+            dim=input_dim,
+            best_value=float(train_Y.max().item()),
+        ),
+        num_restarts=2,
+        raw_samples=32,
+    )
+    completed = torch.tensor([[0.6, 0.6]], dtype=torch.double)
+    completed_value = -((completed - 0.6) ** 2).sum(dim=-1)
+    pending = torch.tensor([[0.25, 0.75]], dtype=torch.double)
+
+    strategy.update_state(completed_value, candidates=completed)
+    state_after_completion = strategy.state
+    updated_X = torch.cat([train_X, completed], dim=0)
+    updated_Y = torch.cat([train_Y, completed_value.unsqueeze(-1)], dim=0)
+    acquisition = qLogNoisyExpectedImprovement(
+        model=SingleTaskGP(updated_X, updated_Y),
+        X_baseline=updated_X,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=671),
+    )
+
+    result = strategy.optimize(acquisition, X_pending=pending)
+
+    assert strategy.state is state_after_completion
+    assert result.metadata["n_pending"] == 1
+    assert acquisition.X_pending is None
+
+
+def test_turbo_optimize_restores_preexisting_pending_points() -> None:
+    torch.manual_seed(71)
+    train_X = torch.rand(10, 2, dtype=torch.double)
+    train_Y = -((train_X - 0.7) ** 2).sum(dim=-1, keepdim=True)
+    bounds = torch.stack(
+        [torch.zeros(2, dtype=torch.double), torch.ones(2, dtype=torch.double)]
+    )
+    model = SingleTaskGP(train_X, train_Y)
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_X,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=711),
+    )
+    original_pending = torch.tensor([[0.1, 0.1]], dtype=torch.double)
+    acquisition.set_X_pending(original_pending)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=train_X[train_Y.squeeze(-1).argmax()],
+        num_restarts=2,
+        raw_samples=32,
+    )
+
+    strategy.optimize(
+        acquisition,
+        X_pending=torch.tensor([[0.9, 0.9]], dtype=torch.double),
+    )
+
+    torch.testing.assert_close(acquisition.X_pending, original_pending)
+
+
+def test_turbo_thompson_rejects_pending_pool_candidate() -> None:
+    torch.manual_seed(73)
+    input_dim = 3
+    train_X = torch.rand(10, input_dim, dtype=torch.double)
+    train_Y = -((train_X - 0.6) ** 2).sum(dim=-1, keepdim=True)
+    bounds = torch.stack(
+        [
+            torch.zeros(input_dim, dtype=torch.double),
+            torch.ones(input_dim, dtype=torch.double),
+        ]
+    )
+    center = train_X[train_Y.squeeze(-1).argmax()]
+    strategy = TuRBOStrategy(bounds, center=center, seed=733)
+    trust_bounds = strategy.trust_region_bounds()
+    pending = generate_turbo_thompson_choices(
+        center,
+        trust_bounds,
+        n_candidates=1,
+        seed=733,
+    )
+
+    with pytest.raises(RuntimeError, match="non-pending"):
+        strategy.thompson_sample(
+            SingleTaskGP(train_X, train_Y),
+            n_candidates=1,
+            X_pending=pending,
+        )
+
