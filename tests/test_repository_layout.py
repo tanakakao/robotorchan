@@ -182,10 +182,10 @@ def test_repository_contains_no_obsolete_structure_references() -> None:
         "robotorchan.optim." + "cross_cutting",
         "robotorchan.optim." + "runtime",
         "turbo-" + "phase1-research-inventory.md",
-        "tests/optim/test_mixed_one_shot.py",
-        "tests/optim/test_variable_space.py",
-        "tests/optim/test_optimizer_runtime_contract.py",
-        "tests/optim/test_cross_cutting_optimizers.py",
+        "tests/optim/" + "test_mixed_one_shot.py",
+        "tests/optim/" + "test_variable_space.py",
+        "tests/optim/" + "test_optimizer_runtime_contract.py",
+        "tests/optim/" + "test_cross_cutting_optimizers.py",
     )
     ignored_directories = {".git", "__pycache__", ".pytest_cache"}
     for path in REPOSITORY_ROOT.rglob("*"):
