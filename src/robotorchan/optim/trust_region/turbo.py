@@ -138,6 +138,7 @@ def update_turbo_state(
         restart_triggered=length < state.length_min,
     )
 
+
 def restart_turbo_state(
     state: TuRBOState,
     *,
