@@ -8,6 +8,7 @@ import robotorchan.acquisition as acquisition
 import robotorchan.benchmarks as benchmarks
 import robotorchan.models as models
 import robotorchan.optim as optim
+import robotorchan.optim.constraints as constraints
 import robotorchan.optim.strategies as strategies
 import robotorchan.reduction as reduction
 import robotorchan.uncertainty as uncertainty
@@ -30,6 +31,7 @@ def test_public_namespaces_import() -> None:
         "robotorchan.models.uncertain",
         "robotorchan.objectives",
         "robotorchan.optim",
+        "robotorchan.optim.constraints",
         "robotorchan.optim.strategies",
         "robotorchan.reduction",
         "robotorchan.uncertainty",
@@ -70,6 +72,11 @@ def test_reduction_exports_resolve() -> None:
         assert getattr(reduction, name) is not None
 
 
+def test_constraint_exports_are_canonical() -> None:
+    for name in constraints.__all__:
+        assert getattr(optim, name) is getattr(constraints, name)
+
+
 def test_strategy_exports_are_canonical() -> None:
     for name in strategies.__all__:
         assert getattr(optim, name) is getattr(strategies, name)
@@ -95,6 +102,7 @@ def test_removed_module_paths_do_not_import() -> None:
         "robotorchan.models.robust_models",
         "robotorchan.models.uncertain_categorical",
         "robotorchan.models.uncertain_input",
+        "robotorchan.optim.constraint_evaluation",
         "robotorchan.optim.mixed",
         "robotorchan.optim.original",
         "robotorchan.optim.random",
