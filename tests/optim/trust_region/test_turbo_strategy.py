@@ -851,3 +851,34 @@ def test_noise_aware_strategy_moves_center_by_state_utility() -> None:
     torch.testing.assert_close(strategy.center, candidates[1])
     assert next_state.best_value == pytest.approx(0.8)
     assert next_state.observed_best_value == pytest.approx(10.0)
+
+
+def test_turbo_candidate_paths_share_stable_result_metadata() -> None:
+    train_X, train_Y, bounds = _problem()
+    model = SingleTaskGP(train_X, train_Y)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=_center(train_X, train_Y),
+        seed=67,
+        num_restarts=2,
+        raw_samples=16,
+    )
+
+    acquisition_result = strategy.optimize(PosteriorMean(model))
+    thompson_result = strategy.thompson_sample(model, n_candidates=32)
+    common_keys = {
+        "trust_region_center",
+        "trust_region_bounds",
+        "trust_region_length",
+        "success_counter",
+        "failure_counter",
+        "restart_count",
+        "batch_size",
+        "candidate_generation",
+        "candidate_constraints",
+    }
+
+    assert common_keys <= acquisition_result.metadata.keys()
+    assert common_keys <= thompson_result.metadata.keys()
+    assert acquisition_result.metadata["candidate_generation"] == "acquisition"
+    assert thompson_result.metadata["candidate_generation"] == "thompson"
