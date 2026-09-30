@@ -11,11 +11,11 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from scipy.optimize import NonlinearConstraint, differential_evolution
 from torch import Tensor
 
+from robotorchan.optim.backend_support.operations import apply_fixed_features
+from robotorchan.optim.backend_support.runtime import validate_bounds
 from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
-from robotorchan.optim.backend_support.operations import apply_fixed_features
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
-from robotorchan.optim.backend_support.runtime import validate_bounds
 
 
 def optimize_acqf_de(
