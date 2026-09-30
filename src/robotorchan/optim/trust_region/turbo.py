@@ -484,12 +484,19 @@ class TuRBOStrategy(SearchStrategy):
     ) -> TuRBOState:
         """Update state once for one completed candidate batch.
 
-        ``state_values`` decouples trust-region decisions from noisy raw
-        observations. It can contain posterior means or robust risk utilities
-        evaluated at the same nominal candidates.
+        ``values`` and optional ``state_values`` are scalar utilities with one
+        value per completed candidate. Multi-objective outcome vectors must be
+        reduced by an explicit caller-owned utility before this state update.
         """
+        if values.ndim > 1:
+            raise ValueError(
+                "values must contain one scalar utility per candidate; "
+                "reduce multi-objective outcomes before updating TuRBO state."
+            )
         if values.numel() != self.state.batch_size:
             raise ValueError("values must contain exactly state.batch_size observations.")
+        if state_values is not None and state_values.ndim > 1:
+            raise ValueError("state_values must contain one scalar utility per candidate.")
         if state_values is not None and state_values.numel() != self.state.batch_size:
             raise ValueError("state_values must contain exactly state.batch_size values.")
         decision_values = values if state_values is None else state_values
