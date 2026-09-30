@@ -255,7 +255,7 @@ def test_candidate_constraint_public_types_remain_distinct_from_acquisition_capa
     candidate_constraints = CandidateConstraints(inequality_constraints=(constraint,))
 
     assert candidate_constraints.has_linear_constraints
-    assert CandidateConstraints.__module__ == "robotorchan.optim.constraints"
+    assert CandidateConstraints.__module__ == "robotorchan.optim.constraints.contracts"
 
 
 def test_candidate_constraints_preserve_botorch_nonlinear_format() -> None:
