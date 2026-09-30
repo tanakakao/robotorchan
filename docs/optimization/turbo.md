@@ -340,3 +340,28 @@ strategy.update_state(
 This Phase 15 integration is a single-region TuRBO strategy combined with native multi-fidelity
 acquisition semantics. It is not a separate multi-fidelity trust-region algorithm, and it does
 not add MF-MES or implicit fidelity scheduling.
+
+
+## Strategy API contract
+
+`TuRBOStrategy` follows the common `SearchStrategy` contract for acquisition optimization:
+`optimize(acq_function, q=...)` returns a `SearchResult` whose candidates are always in public
+input coordinates. TuRBO-specific structure is exposed by explicit methods rather than a single
+catch-all optimizer signature.
+
+- `optimize(...)`: continuous acquisition optimization inside the current trust region.
+- `optimize_mixed(...)`: exact discrete assignments plus a local continuous region.
+- `optimize_multifidelity(...)`: local design coordinates with global fidelity coordinates.
+- `thompson_sample(...)`: posterior-sampling candidate generation from a local candidate pool.
+
+All four candidate-generation paths use the same core metadata keys: `trust_region_center`,
+`trust_region_bounds`, `trust_region_length`, `success_counter`, `failure_counter`,
+`restart_count`, `batch_size`, `candidate_generation`, and `candidate_constraints`. Additional
+path-specific diagnostics are additive; for example, mixed search reports discrete dimensions
+and multi-fidelity search reports `fidelity_dims`.
+
+State transitions remain separate from candidate generation. `optimize*` and `thompson_sample`
+do not update the TuRBO state. Completed observations are applied explicitly with
+`update_state(...)`, and a triggered restart is resolved explicitly with `restart(...)`. This
+keeps asynchronous completion order and caller-owned robust or multi-fidelity state utilities
+outside candidate-generation side effects.
