@@ -175,6 +175,7 @@ def turbo_dimension_weights_from_model(
     input_dim: int,
     dtype: torch.dtype,
     device: torch.device,
+    bounds: Tensor | None = None,
 ) -> Tensor:
     """Return TuRBO ARD weights from a model with one public-space lengthscale vector."""
     covar_module = getattr(model, "covar_module", None)
@@ -190,6 +191,13 @@ def turbo_dimension_weights_from_model(
     if not torch.all(torch.isfinite(lengthscale_samples)) or torch.any(lengthscale_samples <= 0):
         raise ValueError("model lengthscale must be finite and strictly positive.")
     representative_lengthscale = lengthscale_samples.median(dim=0).values
+    if bounds is not None:
+        if bounds.shape != (2, input_dim):
+            raise ValueError("bounds must have shape (2, input_dim).")
+        widths = (bounds[1] - bounds[0]).to(dtype=dtype, device=device)
+        if not torch.all(torch.isfinite(widths)) or torch.any(widths <= 0):
+            raise ValueError("bounds must define finite, strictly positive widths.")
+        representative_lengthscale = representative_lengthscale / widths
     return _normalized_dimension_weights(
         representative_lengthscale,
         dim=input_dim,
@@ -348,6 +356,7 @@ class TuRBOStrategy(SearchStrategy):
             dim=self.input_dim,
             dtype=self.bounds.dtype,
             device=self.bounds.device,
+            bounds=self.bounds,
         )
 
     def _validate_center(self, center: Tensor) -> Tensor:
