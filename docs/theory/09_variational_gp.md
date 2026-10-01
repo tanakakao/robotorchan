@@ -59,35 +59,54 @@ SingleTaskVariationalGP
 
 ---
 
+### まず「dが大きい」と「nが大きい」を分ける
+
+前章と本章の役割を図にすると、
+
+~~~text
+入力次元 d が大きい
+  → 関数構造・探索空間が難しい
+  → SAAS / additive / reduction / high-dimensional search
+
+観測数 n が大きい
+  → n × n covariance の線形代数が重い
+  → inducing-point variational approximation
+~~~
+
+です。
+
+もちろん $`d`$ と $`n`$ が同時に大きい問題もあります。その場合、
+Variational GPへ変えるだけでは入力次元側の難しさは解消されません。
+
 ## 9.2 Exact GP の基本計算
 
 通常の Gaussian Process regression では、学習データ
 
-\[
+$$
 X = [x_1, x_2, \dots, x_n]
-\]
+$$
 
 に対して共分散行列
 
-\[
+$$
 K_{XX}\in\mathbb{R}^{n\times n}
-\]
+$$
 
 を作ります。
 
 観測ノイズを含めると
 
-\[
+$$
 K_y = K_{XX} + \sigma_n^2 I
-\]
+$$
 
 です。
 
 posterior mean や marginal likelihood の計算では、典型的にこの行列の Cholesky 分解
 
-\[
+$$
 K_y = LL^\top
-\]
+$$
 
 を使います。
 
@@ -97,17 +116,17 @@ K_y = LL^\top
 
 密な `n x n` 共分散行列に対する Cholesky 分解は、概ね
 
-\[
+$$
 O(n^3)
-\]
+$$
 
 の計算量を必要とします。
 
 メモリも
 
-\[
+$$
 O(n^2)
-\]
+$$
 
 です。
 
@@ -161,27 +180,30 @@ BO は一般に「評価が高価でデータ数が少ない」問題に向い�
 
 大規模 GP では、全 `n` 点を同じ重さで直接扱う代わりに、少数の代表点を使って latent function を近似します。
 
-この代表点を **inducing points** と呼びます。
+この入力位置を **inducing points** と呼びます。
+
+ただし「代表的なtraining rows」という理解だけでは不十分です。重要なのは、
+その位置に対応する **inducing variables** を介してlatent GP posteriorを近似することです。
 
 入力位置を
 
-\[
+$$
 Z = [z_1, z_2, \dots, z_m]
-\]
+$$
 
 とし、通常
 
-\[
+$$
 m \ll n
-\]
+$$
 
 とします。
 
 対応する latent function value を
 
-\[
+$$
 u = f(Z)
-\]
+$$
 
 とします。
 
@@ -208,9 +230,9 @@ inducing point は、単に training data を `m` 点だけ残して残りを捨
 
 一方 Variational GP では、全観測データの likelihood を通じて
 
-\[
+$$
 q(u)
-\]
+$$
 
 という inducing variable の分布を学習します。
 
@@ -233,39 +255,39 @@ Variational GP
 
 inducing points `Z` に対応する latent values を
 
-\[
+$$
 u=f(Z)
-\]
+$$
 
 とします。
 
 GP prior から
 
-\[
+$$
 p(u)=\mathcal{N}(0,K_{ZZ})
-\]
+$$
 
 が得られます。
 
 また training latent values
 
-\[
+$$
 f=f(X)
-\]
+$$
 
 と `u` の joint distribution も Gaussian です。
 
 Variational GP では、難しい posterior
 
-\[
+$$
 p(u\mid y)
-\]
+$$
 
 の代わりに
 
-\[
+$$
 q(u)
-\]
+$$
 
 を導入します。
 
@@ -275,9 +297,9 @@ q(u)
 
 代表的には
 
-\[
+$$
 q(u)=\mathcal{N}(m,S)
-\]
+$$
 
 と置きます。
 
@@ -299,17 +321,17 @@ Exact GP では posterior が解析的に得られる Gaussian regression でも
 
 本当に欲しい posterior は
 
-\[
+$$
 p(u\mid y)
-\]
+$$
 
 ですが、これを直接扱う代わりに `q(u)` を近づけます。
 
 理想的には
 
-\[
+$$
 q(u) \approx p(u\mid y)
-\]
+$$
 
 となるように学習したいわけです。
 
@@ -321,29 +343,29 @@ q(u) \approx p(u\mid y)
 
 log marginal likelihood は
 
-\[
+$$
 \log p(y)
-\]
+$$
 
 ですが、Variational GP ではこれを直接最大化する代わりに下限
 
-\[
+$$
 \mathcal{L}_{ELBO}
 \le
 \log p(y)
-\]
+$$
 
 を最大化します。
 
 基本形は
 
-\[
+$$
 \mathcal{L}_{ELBO}
 =
 \mathbb{E}_{q(f)}[\log p(y\mid f)]
 -
 \operatorname{KL}(q(u)\|p(u))
-\]
+$$
 
 です。
 
@@ -363,12 +385,12 @@ KL divergence
 
 ## 9.11 ELBO を直感的に見る
 
-ELBO は概念的には
+ELBOは概念的には
 
 ```text
-データへの適合
+観測を説明する期待 log likelihood
     -
-近似 posterior の複雑さ
+q(u) を prior p(u) から動かすコスト
 ```
 
 です。
@@ -389,25 +411,25 @@ Occam's razor
 
 inducing point 数を `m`、観測数を `n` とすると、標準的な sparse variational GP では典型的に
 
-\[
+$$
 O(nm^2 + m^3)
-\]
+$$
 
 程度の計算が中心になります。
 
 `m << n` なら Exact GP の
 
-\[
+$$
 O(n^3)
-\]
+$$
 
 より大幅に軽くできます。
 
 mini-batch size を `b` とすると、1 step あたりのデータ依存部分は概ね
 
-\[
+$$
 O(bm^2)
-\]
+$$
 
 の形になり、全データを毎 step 使わずに学習できます。
 
@@ -421,7 +443,8 @@ O(bm^2)
 
 ## 9.13 `m` は重要な hyperparameter
 
-inducing point 数 `m` を増やすと、一般に近似精度は改善しやすくなります。
+inducing point 数 `m` を増やすとvariational familyの表現力は増えますが、実際の予測精度が
+単調に改善するとは限りません。inducing point配置やoptimizationも影響します。
 
 しかし
 
@@ -449,9 +472,9 @@ m 大
 
 upstream `SingleTaskVariationalGP` では、`inducing_points` を明示しない場合、heuristic として
 
-\[
+$$
 m \approx 0.25n
-\]
+$$
 
 つまり training points の 25% が使われます。
 
@@ -479,13 +502,9 @@ m = 100
 
 inducing point はどこに置くかも重要です。
 
-BoTorch の `SingleTaskVariationalGP` では、default allocator として
-
-```python
-GreedyVarianceReduction
-```
-
-が使われます。
+BoTorchの `SingleTaskVariationalGP` では、inducing point allocatorを通して
+初期配置を決められます。defaultの具体的なallocatorやheuristicはupstream versionに
+依存し得るため、固定仕様として覚えるより、利用中のBoTorch APIを確認します。
 
 これは GP posterior / kernel variance を効率よく表現するように inducing point を配置する考え方です。
 
@@ -813,6 +832,24 @@ model = SingleTaskVariationalGP(
 
 ---
 
+### Mixed入力でも「大規模化」と「カテゴリ構造」は別の責務
+
+robotorchanには `MixedSingleTaskVariationalGP` もあります。
+
+~~~text
+Variational approximation
+  → large nへのscalability
+
+native categorical covariance
+  → mixed inputの意味論
+~~~
+
+を組み合わせるモデルです。`cat_dims` はraw input上のcategorical design columnsを
+指定し、continuous部分とcategorical部分を分けたcovarianceを構築します。
+
+つまり「Variationalにしたからcategoryも扱える」のではなく、**近似推論と入力構造を
+別々に設計して組み合わせている**点が重要です。
+
 ## 9.28 Gaussian likelihood 以外
 
 BoTorch のドキュメントでは `SingleTaskVariationalGP` は大量データだけでなく、non-Gaussian response を扱う場合にも候補とされています。
@@ -865,7 +902,9 @@ VariationalStrategy
 
 で表現します。
 
-BoTorch の default は whitening を利用する `VariationalStrategy` です。
+default strategyの具体的なparameterizationはupstream BoTorch / GPyTorchの
+versionに依存し得ます。重要なのは、`variational_strategy` がinducing variablesと
+近似posteriorの構成方法を担うことです。
 
 whitening により variational optimization の conditioning を改善しやすくなります。
 
@@ -873,19 +912,15 @@ whitening により variational optimization の conditioning を改善しやす
 
 ## 9.31 Variational Distribution
 
-default では
-
-```python
-CholeskyVariationalDistribution
-```
-
-が使われます。
+代表的な構成では `CholeskyVariationalDistribution` のようなGaussian
+variational distributionを利用します。実際のdefaultは利用中のupstream versionと
+constructor contractを確認します。
 
 これは
 
-\[
+$$
 q(u)=\mathcal{N}(m,S)
-\]
+$$
 
 の full covariance `S` を Cholesky parameterization で表現します。
 
@@ -974,15 +1009,15 @@ Variational GP は近似モデルなので、Exact GP と比べて posterior が
 
 しかし BO では acquisition function が
 
-\[
+$$
 \mu(x)
-\]
+$$
 
 だけでなく
 
-\[
+$$
 \sigma(x)
-\]
+$$
 
 を使います。
 
@@ -1024,15 +1059,9 @@ BO では
 
 Active Learning では大量 pool に対して posterior uncertainty を計算することがあります。
 
-Variational GP は training data が大きい場合だけでなく、
-
-```text
-large training data
-    +
-large candidate pool
-```
-
-の組み合わせでも有用です。
+Variational GPはtraining dataが大きい場合のscalable surrogateとして利用できます。
+Active Learningでcandidate poolも大きい場合は、training scalabilityに加えて
+posterior evaluation自体のbatchingやmemoryも別途考えます。
 
 ただし posterior evaluation cost も inducing point 数に依存するため、pool size が非常に大きい場合は batch evaluation を使います。
 
@@ -1227,11 +1256,11 @@ Variational GP でも likelihood を通じて observation noise を学習しま�
 
 Gaussian likelihood なら概念的には
 
-\[
+$$
 y=f(x)+\epsilon,
 \quad
 \epsilon\sim\mathcal{N}(0,\sigma_n^2)
-\]
+$$
 
 です。
 
@@ -1378,17 +1407,17 @@ Yes → dimension structure の対策も別途必要
 
 ---
 
-## 9.54 実務上の比較表
+## 9.54 問題構造の比較表
 
-| 状況 | 第一候補 |
+| 問題 | 対応する考え方 |
 |---|---|
-| 小規模な通常回帰 | `SingleTaskGP` |
-| 高次元・少数データ | SAAS 系 |
-| 大規模データ | `SingleTaskVariationalGP` |
-| 大規模 + mini-batch 必須 | `SingleTaskVariationalGP` |
-| 多出力だが独立でよい | `SingleTaskVariationalGP(num_outputs=...)` |
-| 出力間相関を使いたい | Multi-task 系を検討 |
-| 大規模 + non-Gaussian likelihood | Variational GP 系を検討 |
+| Exact GPが十分軽い | Exact GPを維持できる |
+| large nでdense Exact GPがボトルネック | Variational GPを検討 |
+| high d + small n | 高次元構造の対策を検討 |
+| high d + large n | scalabilityとdimension structureの両方が必要 |
+| mixed input + large n | Mixed Variational GPを検討 |
+| independent multi-output | batched / independent output構成を検討 |
+| cross-output sharingが必要 | multi-task構造を別途検討 |
 
 ---
 
@@ -1474,27 +1503,27 @@ Variational GP を使う場合は少なくとも次を確認します。
 
 Variational GP の中心は、
 
-\[
+$$
 p(f\mid y)
-\]
+$$
 
 を直接扱う代わりに inducing variables `u` を導入し、
 
-\[
+$$
 q(u)=\mathcal{N}(m,S)
-\]
+$$
 
 を学習することです。
 
 その objective が
 
-\[
+$$
 \mathcal{L}_{ELBO}
 =
 \mathbb{E}_{q(f)}[\log p(y\mid f)]
 -
 \mathrm{KL}(q(u)\|p(u))
-\]
+$$
 
 です。
 
@@ -1502,7 +1531,7 @@ q(u)=\mathcal{N}(m,S)
 
 ---
 
-## 9.59 まとめ
+## 9.59 この章で覚えておくこと
 
 Variational GP は、**大量データに対して GP の probabilistic surrogate を維持しながら計算量を下げる方法**です。
 
