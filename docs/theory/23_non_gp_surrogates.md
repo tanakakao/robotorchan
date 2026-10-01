@@ -500,7 +500,7 @@ raw ensemble spread が calibrated uncertainty であると、benchmarkなしに
 
 | 項目 | Exact GP | Tree ensemble | Bootstrap boosting | NGBoost |
 | --- | --- | --- | --- | --- |
-| Predictive representation | joint Gaussian | empirical trees | empirical models | Gaussian marginals |
+| Representation | joint Gaussian | empirical trees | empirical models | Gaussian marginals |
 | Candidate covariance | explicit | sample-induced | sample-induced | independent |
 | MLL fitting | Yes | No | No | No |
 | Input gradients | Yes | No | No | No |
