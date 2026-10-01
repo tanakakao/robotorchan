@@ -116,10 +116,7 @@ def test_registry_capabilities_are_internally_consistent() -> None:
         if capabilities.one_shot:
             assert capabilities.requires_fantasize
         if capabilities.monte_carlo:
-            assert (
-                capabilities.posterior_requirement
-                is PosteriorRequirement.POSTERIOR_SAMPLES
-            )
+            assert capabilities.posterior_requirement is PosteriorRequirement.POSTERIOR_SAMPLES
 
 
 def test_static_compatibility_does_not_imply_runtime_validation() -> None:
