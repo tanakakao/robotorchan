@@ -472,6 +472,26 @@ data_fidelities: Sequence[int] | None
 
 ---
 
+## 6.14.1 Mixed × Multi-Fidelity の現在の実装境界
+
+現在の robotorchan には `MixedSingleTaskMultiFidelityGP` があります。
+
+このモデルでは categorical design feature と fidelity feature を同じ役割として扱いません。
+`cat_dims` は design-side categorical feature だけを表し、
+`iteration_fidelity` / `data_fidelities` と重複すると validation error になります。
+
+covariance も、
+
+- 非 fidelity design dimensions: continuous / categorical mixed covariance
+- fidelity dimensions: BoTorch の fidelity covariance
+
+という責務分離です。
+
+したがって「Mixed GP に fidelity 列を追加しただけ」ではありません。
+fidelity dimension は構造列として保持され、categorical kernel の対象外です。
+
+---
+
 ## 6.15 Fidelityを入力に含める意味
 
 例えば通常の設計変数が2次元なら
