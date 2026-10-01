@@ -322,7 +322,7 @@ BoundaryVariance は robotorchan-specific heuristic であり、literature named
 
 ## 12.17 Constraint boundary だけを学びたい場合
 
-未知 constraint c(x)\le0`$ の boundary を知りたいだけなら、問題は level-set estimation に近づきます。
+c(x)\le0`$ の boundary を知りたいだけなら、問題は level-set estimation に近づきます。
 
 しかし objective optimization も必要なら constrained BO です。
 
