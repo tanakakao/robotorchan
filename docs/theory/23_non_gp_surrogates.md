@@ -2,7 +2,8 @@
 
 ## 0. 最初に理解すること
 
-non-GP surrogateでもBayesian optimizationに参加できます。必要なのはGPであることではなく、acquisitionが必要とするpredictive representationを提供できることです。
+non-GP surrogateでもBayesian optimizationに参加できます。必要なのはGPであることではなく、
+acquisitionが必要とするpredictive representationを提供できることです。
 
 | Family | posteriorが表すもの | uncertaintyの主な意味 |
 | --- | --- | --- |
@@ -73,9 +74,11 @@ Bayesian cross-output covariance model.
 
 ## 5. Acquisition functions
 
-Compatible MC acquisitions can consume a sampleable posterior through the BoTorch interface. qEIやqEHVIも候補ですが、output数などacquisition固有のrequirementsを満たす必要があります。
+Compatible MC acquisitions can consume a sampleable posterior through the BoTorch interface.
+qEIやqEHVIも候補ですが、output数などacquisition固有のrequirementsを満たす必要があります。
 
-sampleableであることだけから全MC acquisition対応とは推論しません。Analytic Gaussian acquisitions are not generally justified for empirical ensemble posteriors.
+sampleableであることだけから全MC acquisition対応とは推論しません。
+Analytic Gaussian acquisitions are not generally justified for empirical ensemble posteriors.
 
 sklearn tree and boosting prediction is piecewise/non-differentiable with respect to candidate input
 and crosses a CPU/numpy boundary. Acquisition maximization therefore uses gradient-free candidate
@@ -95,7 +98,8 @@ distribution rather than treating boosting stages as posterior members. The init
 adapter uses a Gaussian NGBoost predictive law and exposes its mean, variance, and samples through
 the BoTorch posterior interface.
 
-このvarianceはNGBoostが学習したGaussian conditional predictive lawのscaleであり、GPのlatent-function posterior varianceへ読み替えません。
+このvarianceはNGBoostが学習したGaussian conditional predictive lawのscaleであり、
+GPのlatent-function posterior varianceへ読み替えません。
 
 This predictive distribution represents total conditional predictive uncertainty. It must not be
 called a Gaussian Process posterior, and it does not by itself provide the epistemic / aleatoric
@@ -105,7 +109,8 @@ must not be inferred merely from Gaussian marginal predictions.
 
 ## 8. uncertaintyの意味をmodel familyごとに読む
 
-forestではtree disagreement、bootstrap boostingではresampled complete-model disagreement、NGBoostではconditional predictive-law scaleです。GP posterior uncertaintyとは生成機構が異なります。
+forestではtree disagreement、bootstrap boostingではresampled complete-model disagreement、
+NGBoostではconditional predictive-law scaleです。GP posterior uncertaintyとは生成機構が異なります。
 
 uncertainty-based BO / Active Learningでは、scoreの式だけでなく、その入力となるuncertaintyの統計的意味を確認します。
 
@@ -290,9 +295,12 @@ high-dimensional / expressive という用途ラベルではなく predictive mo
 
 ## 22. candidate間のjoint uncertainty
 
-`GaussianDistributionPosterior` は各candidateのmean / varianceからGaussian sampleを生成します。現行NGBoost adapterはGPのようなcandidate間posterior covariance matrixを構築しません。
+`GaussianDistributionPosterior` は各candidateのmean / varianceからGaussian sampleを生成します。
+現行NGBoost adapterはGPのようなcandidate間posterior covariance matrixを構築しません。
 
-したがってGaussian marginal predictionだけからjoint Gaussian correlationを前提にするmethodとの互換性を推論しません。empirical ensembleでは同じmemberをcandidate batch全体へ適用するためprediction patternは保持されますが、これもGP covarianceと同じ意味ではありません。
+したがってGaussian marginal predictionだけからjoint Gaussian correlationを前提にするmethodとの
+互換性を推論しません。empirical ensembleでは同じmemberをcandidate batch全体へ適用するため
+prediction patternは保持されますが、これもGP covarianceと同じ意味ではありません。
 
 ## 23. 実装との対応
 
