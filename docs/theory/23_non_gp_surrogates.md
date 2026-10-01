@@ -312,7 +312,8 @@ prediction patternは保持されますが、これもGP covarianceと同じ意�
 - Gradient / HistGradient Boosting は complete bootstrap models を members にする
 - bootstrap boosting は multi-output を扱える
 - shared bootstrap index は full Bayesian cross-output covariance を意味しない
-- empirical MC acquisition の explicit sampler は `IndexSampler`
+- empirical ensemble MC acquisition の explicit sampler は `IndexSampler`
+- NGBoost Gaussian predictive posterior は Gaussian MC sampler を使う
 - analytic Gaussian acquisition を empirical ensemble に適用しない
 - TreeEnsembleSearchStrategy は gradient-free search を行う
 - integer / categorical candidate sampling は search strategy が扱う
