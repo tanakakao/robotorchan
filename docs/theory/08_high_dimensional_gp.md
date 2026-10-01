@@ -332,7 +332,8 @@ SAAS = Bayesian variable selection
 
 ## 8.11 Fully Bayesian inference
 
-`SaasFullyBayesianSingleTaskGP`では、通常のGPのように1組のhyperparameterをMAP推定するのではなく、hyperparameter posteriorをサンプリングします。
+`SaasFullyBayesianSingleTaskGP`では、通常のGPのように1組のhyperparameterをMAP推定するのではなく、hyperparameter
+posteriorをサンプリングします。
 
 通常のGPでは概念的に
 
