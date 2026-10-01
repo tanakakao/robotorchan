@@ -151,7 +151,160 @@ prediction qualityを改善したい場所は同一である必要がありま�
 
 ## 9.8 Integrated Posterior Variance
 
-関心領域または target distribution \(p_T(x)) に対する integrated posterior variance を
+関心領域または target distribution # 9. Active Learning Acquisition
+
+## 9.1 BOとALはdecision purposeが違う
+
+~~~text
+Bayesian Optimization
+    良いdecision / candidateを効率よく見つける
+
+Active Learning
+    未知関数やtarget predictionについて効率よく学ぶ
+~~~
+
+両者は同じposteriorやoptimizerを使えても、acquisition utilityの意味が違います。
+「explorationが強いBO」をそのままALと呼ぶのではなく、何を学習対象にするかを先に決めます。
+
+## 9.2 最適化ではなく学習を目的にする
+
+Bayesian Optimization（BO）と Active Learning（AL）は、どちらも surrogate posterior を使って次の観測点を選べますが、目的が異なります。
+
+```text
+Bayesian Optimization
+    良い入力・最適値を効率よく見つける
+
+Active Learning
+    未知関数や prediction を効率よく学習する
+```
+
+BO では objective optimum に関係する領域が重要です。一方、AL では prediction quality、posterior uncertainty、target
+distribution 上の情報量などが観測価値になります。
+
+したがって、AL acquisition を「改善量を使わない BO acquisition」と理解するのは不十分です。
+
+## 9.3 Pool-basedとcontinuous-domain AL
+
+候補集合が有限 pool
+
+$$
+\mathcal X_{\mathrm{pool}}
+=
+\{x^{(1)},\ldots,x^{(N)}\}
+$$
+
+として与えられる場合、acquisition score を pool 上で評価して選択できます。
+
+一方、連続空間 $`\mathcal X`$ では
+
+$$
+x^*
+\in
+\arg\max_{x\in\mathcal X}\alpha_{AL}(x)
+$$
+
+として acquisition optimization が必要です。
+
+理論上同じ acquisition criterion でも、finite-pool selection と continuous optimization では計算方法と重複候補処理が異なります。
+
+## 9.4 Posterior Variance Sampling
+
+最も直接的な uncertainty sampling は posterior variance
+
+$$
+\alpha_{\mathrm{Var}}(x)
+=
+\operatorname{Var}[f(x)\mid\mathcal D_n]
+=
+\sigma_n^2(x)
+$$
+
+を最大化する方法です。
+
+posterior variance が大きい点は、現在の surrogate がその latent function value を十分に知らない領域です。
+
+この基準は objective value の大小を使わないため、最適値探索ではなく function learning に自然です。
+
+## 9.5 Posterior Standard Deviation
+
+posterior standard deviation を使えば
+
+$$
+\alpha_{\mathrm{Std}}(x)
+=
+\sigma_n(x)
+$$
+
+です。
+
+variance と standard deviation は q=1 の単純 ranking では単調変換なので、同じ maximizer を持ちます。
+
+ただし acquisition value の scale は異なるため、
+
+- 他の score と加算する
+- penalty と組み合わせる
+- threshold を設ける
+- optimization landscape の scaling が影響する
+
+場合には完全に同じ実装的意味になるとは限りません。
+
+## 9.6 Aleatoric noise と epistemic uncertainty
+
+AL で重要なのは、uncertainty の種類を区別することです。
+
+観測モデルを
+
+$$
+y(x)=f(x)+\epsilon
+$$
+
+とすると、predictive variance は概念的に
+
+$$
+\operatorname{Var}[y(x)\mid\mathcal D_n]
+=
+\operatorname{Var}[f(x)\mid\mathcal D_n]
++
+\operatorname{Var}[\epsilon]
+$$
+
+と分解できます。
+
+追加データで減らしたいのは主に latent function に関する epistemic uncertainty です。
+
+irreducible observation noise が大きい場所を単純に predictive variance が高いという理由だけで選ぶと、何度観測しても十分には減らない
+aleatoric uncertainty を追い続ける可能性があります。
+
+したがって「どの posterior variance を acquisition が使っているか」を確認する必要があります。
+
+## 9.7 Pointwise uncertaintyからtarget-region reductionへ
+
+PosteriorVariance はその候補自身の uncertainty を評価します。
+
+しかし候補 $`x`$ を観測すると、GP の covariance structure により他の点 $`x'`$ の uncertainty も変化します。
+
+したがって、
+
+```text
+その点がどれだけ不確実か
+```
+
+と
+
+```text
+その点を観測すると領域全体の uncertainty がどれだけ減るか
+```
+
+は別の criterion です。
+
+後者を扱うのがintegrated variance reductionの考え方です。
+
+ここで重要なのはcandidate setとtarget / integration setを分けることです。観測可能な場所と、
+prediction qualityを改善したい場所は同一である必要がありません。
+
+## 9.8 Integrated Posterior Variance
+
+関心領域または target distribution p_T(x)`$ に対する integrated posterior variance を
 
 $$
 V_n
@@ -187,7 +340,349 @@ Gaussian models の条件によっては posterior covariance update が観測�
 
 AL の目的は「探索空間全体を均等に学ぶ」とは限りません。
 
-実運用で prediction する入力分布を \(p_T(x)\) とすれば、target distribution 上で重要な領域へ acquisition を集中できます。
+実運用で prediction する入力分布を # 9. Active Learning Acquisition
+
+## 9.1 BOとALはdecision purposeが違う
+
+~~~text
+Bayesian Optimization
+    良いdecision / candidateを効率よく見つける
+
+Active Learning
+    未知関数やtarget predictionについて効率よく学ぶ
+~~~
+
+両者は同じposteriorやoptimizerを使えても、acquisition utilityの意味が違います。
+「explorationが強いBO」をそのままALと呼ぶのではなく、何を学習対象にするかを先に決めます。
+
+## 9.2 最適化ではなく学習を目的にする
+
+Bayesian Optimization（BO）と Active Learning（AL）は、どちらも surrogate posterior を使って次の観測点を選べますが、目的が異なります。
+
+```text
+Bayesian Optimization
+    良い入力・最適値を効率よく見つける
+
+Active Learning
+    未知関数や prediction を効率よく学習する
+```
+
+BO では objective optimum に関係する領域が重要です。一方、AL では prediction quality、posterior uncertainty、target
+distribution 上の情報量などが観測価値になります。
+
+したがって、AL acquisition を「改善量を使わない BO acquisition」と理解するのは不十分です。
+
+## 9.3 Pool-basedとcontinuous-domain AL
+
+候補集合が有限 pool
+
+$$
+\mathcal X_{\mathrm{pool}}
+=
+\{x^{(1)},\ldots,x^{(N)}\}
+$$
+
+として与えられる場合、acquisition score を pool 上で評価して選択できます。
+
+一方、連続空間 $`\mathcal X`$ では
+
+$$
+x^*
+\in
+\arg\max_{x\in\mathcal X}\alpha_{AL}(x)
+$$
+
+として acquisition optimization が必要です。
+
+理論上同じ acquisition criterion でも、finite-pool selection と continuous optimization では計算方法と重複候補処理が異なります。
+
+## 9.4 Posterior Variance Sampling
+
+最も直接的な uncertainty sampling は posterior variance
+
+$$
+\alpha_{\mathrm{Var}}(x)
+=
+\operatorname{Var}[f(x)\mid\mathcal D_n]
+=
+\sigma_n^2(x)
+$$
+
+を最大化する方法です。
+
+posterior variance が大きい点は、現在の surrogate がその latent function value を十分に知らない領域です。
+
+この基準は objective value の大小を使わないため、最適値探索ではなく function learning に自然です。
+
+## 9.5 Posterior Standard Deviation
+
+posterior standard deviation を使えば
+
+$$
+\alpha_{\mathrm{Std}}(x)
+=
+\sigma_n(x)
+$$
+
+です。
+
+variance と standard deviation は q=1 の単純 ranking では単調変換なので、同じ maximizer を持ちます。
+
+ただし acquisition value の scale は異なるため、
+
+- 他の score と加算する
+- penalty と組み合わせる
+- threshold を設ける
+- optimization landscape の scaling が影響する
+
+場合には完全に同じ実装的意味になるとは限りません。
+
+## 9.6 Aleatoric noise と epistemic uncertainty
+
+AL で重要なのは、uncertainty の種類を区別することです。
+
+観測モデルを
+
+$$
+y(x)=f(x)+\epsilon
+$$
+
+とすると、predictive variance は概念的に
+
+$$
+\operatorname{Var}[y(x)\mid\mathcal D_n]
+=
+\operatorname{Var}[f(x)\mid\mathcal D_n]
++
+\operatorname{Var}[\epsilon]
+$$
+
+と分解できます。
+
+追加データで減らしたいのは主に latent function に関する epistemic uncertainty です。
+
+irreducible observation noise が大きい場所を単純に predictive variance が高いという理由だけで選ぶと、何度観測しても十分には減らない
+aleatoric uncertainty を追い続ける可能性があります。
+
+したがって「どの posterior variance を acquisition が使っているか」を確認する必要があります。
+
+## 9.7 Pointwise uncertaintyからtarget-region reductionへ
+
+PosteriorVariance はその候補自身の uncertainty を評価します。
+
+しかし候補 $`x`$ を観測すると、GP の covariance structure により他の点 $`x'`$ の uncertainty も変化します。
+
+したがって、
+
+```text
+その点がどれだけ不確実か
+```
+
+と
+
+```text
+その点を観測すると領域全体の uncertainty がどれだけ減るか
+```
+
+は別の criterion です。
+
+後者を扱うのがintegrated variance reductionの考え方です。
+
+ここで重要なのはcandidate setとtarget / integration setを分けることです。観測可能な場所と、
+prediction qualityを改善したい場所は同一である必要がありません。
+
+## 9.8 Integrated Posterior Variance
+
+関心領域または target distribution # 9. Active Learning Acquisition
+
+## 9.1 BOとALはdecision purposeが違う
+
+~~~text
+Bayesian Optimization
+    良いdecision / candidateを効率よく見つける
+
+Active Learning
+    未知関数やtarget predictionについて効率よく学ぶ
+~~~
+
+両者は同じposteriorやoptimizerを使えても、acquisition utilityの意味が違います。
+「explorationが強いBO」をそのままALと呼ぶのではなく、何を学習対象にするかを先に決めます。
+
+## 9.2 最適化ではなく学習を目的にする
+
+Bayesian Optimization（BO）と Active Learning（AL）は、どちらも surrogate posterior を使って次の観測点を選べますが、目的が異なります。
+
+```text
+Bayesian Optimization
+    良い入力・最適値を効率よく見つける
+
+Active Learning
+    未知関数や prediction を効率よく学習する
+```
+
+BO では objective optimum に関係する領域が重要です。一方、AL では prediction quality、posterior uncertainty、target
+distribution 上の情報量などが観測価値になります。
+
+したがって、AL acquisition を「改善量を使わない BO acquisition」と理解するのは不十分です。
+
+## 9.3 Pool-basedとcontinuous-domain AL
+
+候補集合が有限 pool
+
+$$
+\mathcal X_{\mathrm{pool}}
+=
+\{x^{(1)},\ldots,x^{(N)}\}
+$$
+
+として与えられる場合、acquisition score を pool 上で評価して選択できます。
+
+一方、連続空間 $`\mathcal X`$ では
+
+$$
+x^*
+\in
+\arg\max_{x\in\mathcal X}\alpha_{AL}(x)
+$$
+
+として acquisition optimization が必要です。
+
+理論上同じ acquisition criterion でも、finite-pool selection と continuous optimization では計算方法と重複候補処理が異なります。
+
+## 9.4 Posterior Variance Sampling
+
+最も直接的な uncertainty sampling は posterior variance
+
+$$
+\alpha_{\mathrm{Var}}(x)
+=
+\operatorname{Var}[f(x)\mid\mathcal D_n]
+=
+\sigma_n^2(x)
+$$
+
+を最大化する方法です。
+
+posterior variance が大きい点は、現在の surrogate がその latent function value を十分に知らない領域です。
+
+この基準は objective value の大小を使わないため、最適値探索ではなく function learning に自然です。
+
+## 9.5 Posterior Standard Deviation
+
+posterior standard deviation を使えば
+
+$$
+\alpha_{\mathrm{Std}}(x)
+=
+\sigma_n(x)
+$$
+
+です。
+
+variance と standard deviation は q=1 の単純 ranking では単調変換なので、同じ maximizer を持ちます。
+
+ただし acquisition value の scale は異なるため、
+
+- 他の score と加算する
+- penalty と組み合わせる
+- threshold を設ける
+- optimization landscape の scaling が影響する
+
+場合には完全に同じ実装的意味になるとは限りません。
+
+## 9.6 Aleatoric noise と epistemic uncertainty
+
+AL で重要なのは、uncertainty の種類を区別することです。
+
+観測モデルを
+
+$$
+y(x)=f(x)+\epsilon
+$$
+
+とすると、predictive variance は概念的に
+
+$$
+\operatorname{Var}[y(x)\mid\mathcal D_n]
+=
+\operatorname{Var}[f(x)\mid\mathcal D_n]
++
+\operatorname{Var}[\epsilon]
+$$
+
+と分解できます。
+
+追加データで減らしたいのは主に latent function に関する epistemic uncertainty です。
+
+irreducible observation noise が大きい場所を単純に predictive variance が高いという理由だけで選ぶと、何度観測しても十分には減らない
+aleatoric uncertainty を追い続ける可能性があります。
+
+したがって「どの posterior variance を acquisition が使っているか」を確認する必要があります。
+
+## 9.7 Pointwise uncertaintyからtarget-region reductionへ
+
+PosteriorVariance はその候補自身の uncertainty を評価します。
+
+しかし候補 $`x`$ を観測すると、GP の covariance structure により他の点 $`x'`$ の uncertainty も変化します。
+
+したがって、
+
+```text
+その点がどれだけ不確実か
+```
+
+と
+
+```text
+その点を観測すると領域全体の uncertainty がどれだけ減るか
+```
+
+は別の criterion です。
+
+後者を扱うのがintegrated variance reductionの考え方です。
+
+ここで重要なのはcandidate setとtarget / integration setを分けることです。観測可能な場所と、
+prediction qualityを改善したい場所は同一である必要がありません。
+
+## 9.8 Integrated Posterior Variance
+
+関心領域または target distribution p_T(x)`$ に対する integrated posterior variance を
+
+$$
+V_n
+=
+\int_{\mathcal X}
+\sigma_n^2(x)
+p_T(x)\,dx
+$$
+
+とします。
+
+候補 $`x_c`$ を観測した後の posterior variance を $`\sigma_{n+1}^2`$ とすれば、expected integrated variance
+reduction は
+
+$$
+\Delta V(x_c)
+=
+V_n
+-
+\mathbb E_{Y_{x_c}}
+\left[
+\int
+\sigma_{n+1}^2(x)
+p_T(x)\,dx
+\right]
+$$
+
+です。
+
+Gaussian models の条件によっては posterior covariance update が観測値そのものに依存しないため、この expectation を簡略化できる場合があります。
+
+## 9.9 Target distributionの意味
+
+AL の目的は「探索空間全体を均等に学ぶ」とは限りません。
+
+実運用で prediction する入力分布を p_T(x)`$ とすれば、target distribution 上で重要な領域へ acquisition を集中できます。
 
 例えば、
 
