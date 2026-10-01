@@ -15,6 +15,20 @@ RBF / Matérn のような標準 kernel は強力ですが、
 
 robotorchan では expressive GP を、表現力の源が異なる複数 family として扱います。
 
+### 最初に「何を柔軟にしているか」を分ける
+
+expressive GPでは、複雑さを追加する場所が異なります。
+
+| Family | 柔軟にする場所 | latent representation |
+| --- | --- | --- |
+| Joint neural GP | kernelへ入る決定論的feature map | deterministic |
+| Deep GP | GP mappingそのものを階層化 | stochastic |
+| Infinite-width BNN GP | kernel priorの関数形 | explicit latentなし |
+| Spectral Mixture GP | stationary kernelのspectral density | explicit latentなし |
+
+したがって「neural」という語が付くモデルでも、有限networkのweightを学習するのか、
+GP layerを確率的に積むのか、無限幅極限のanalytic kernelを使うのかで意味が異なります。
+
 ## 1. Expressiveness は1種類ではない
 
 この章で扱う主な構造は次です。
@@ -135,7 +149,9 @@ Monte Carlo approximation が必要になります。
 
 各 hidden layer は inducing-point variational GP として構成されます。
 
-public posterior は BoTorch-compatible な Monte Carlo posterior を返します。
+public posteriorはlatent hierarchyから複数sampleを生成した
+`DeepGPPosterior` を返します。これは単一のanalytic Gaussian posteriorへ潰したものではなく、
+sample-based posterior contractです。
 
 Tensor-valued `observation_noise` など、Exact GP と同一でない posterior contract もあるため、
 「BoTorch model interfaceを持つ」ことと「Exact GPと全機能が同じ」ことは区別します。
@@ -144,10 +160,14 @@ Tensor-valued `observation_noise` など、Exact GP と同一でない posterior
 
 DeepGP は exact marginal likelihood を解析的に計算する model ではありません。
 
-variational objective により inducing distributions と kernel parameters を学習します。
+variational objectiveによりinducing distributionsとkernel parametersを学習します。
 
-したがって Exact GP の training semantics をそのまま当てはめるのではなく、
-DeepGP の variational training contract に従います。
+現行 `make_mll()` は共通training APIを維持するため存在しますが、返すのはExact
+`ExactMarginalLogLikelihood` ではなく `DeepApproximateMLL(VariationalELBO)` です。
+したがって `supports_mll = True` は「Exact GPである」という意味ではありません。
+
+`training_loss()` も同じELBOを負号付きlossとして評価し、likelihood samplesを使います。
+Exact GPのtraining semanticsをそのまま当てはめず、DeepGPのvariational contractに従います。
 
 posterior も latent-function samples を通じて近似されます。
 
@@ -181,20 +201,23 @@ encoding とも異なる categorical treatment です。
 
 を使い分けます。
 
-## 10. DeepGP cross-combinations
+## 10. Mixed × MultiTask DeepGP
 
-Mixed × MultiTask のような組合せは、API対称性だけを理由に自動的に追加するべきではありません。
+現在は `MixedMultiTaskDeepGP` も実装されています。
 
-categorical embedding と task representation の両方を stochastic hierarchy に組み込む場合、
+このmodelでは、
 
-- identifiability
-- variational parameterization
-- posterior shape
-- acquisition compatibility
+- continuous featuresはcontinuous branchとして標準化
+- categorical featuresはlearnable embeddings
+- task identityはcategorical featureとは別のlearnable task embedding
 
-を個別に検証する必要があります。
+として分離した後、DeepGP hierarchyへ結合します。
 
-そのため named class の欠如を即座に「機能不足」とはみなしません。
+`task_feature` を `cat_dims` に含めることはできません。また現行APIではtask/category indexは
+non-negative integerかつtraining data内でcontiguous zero-basedであることを要求します。
+
+これは「MixedとMultiTaskを名前だけ組み合わせたwrapper」ではなく、category identityとtask
+identityを別のstructural variablesとして扱うためのcontractです。
 
 ## 11. Infinite-width neural network GP
 
@@ -236,10 +259,15 @@ ScaleKernel(
 
 です。
 
-有限 neural network の weight を学習する DKL とは違い、neural-network-derived inductive bias を
-kernel prior として使います。
+有限neural networkのweightを学習するDKLとは違い、neural-network-derived inductive biasを
+kernel priorとして使います。
 
-したがって inference は Exact GP のままです。
+現行実装では `depth`、`weight_variance`、`bias_variance` はconstructorで与える構造値で、
+GP fitting中に通常の `torch.nn.Parameter` として最適化される値ではありません。一方、
+kernelのlengthscaleはGP hyperparameterとして学習できます。
+
+したがってinferenceはExact GPのままですが、「有限BNNのweight posteriorを近似している」
+という意味ではありません。
 
 ## 13. Infinite-width BNN MultiTask / Kronecker
 
@@ -270,6 +298,14 @@ Mixed model では continuous NNGP covariance と categorical covariance の役�
 
 したがって「Infinite-width BNN GP = single-task neural kernel」という説明では現在の実装範囲を
 十分に表しません。
+
+### NNGP kernelはstationary kernelとは限らない
+
+Infinite-width ReLU kernelはinner productや各入力自身のnormに依存するため、一般に
+RBFのようなtranslation-invariant stationary covarianceとは異なります。
+
+したがって「Exact GPだからstationary」という対応はありません。Exact / variationalは
+inferenceの分類、stationary / nonstationaryはcovariance structureの分類です。
 
 ## 15. Spectral representation
 
@@ -308,8 +344,12 @@ initialization は現在、
 
 を選択できます。
 
-mixture 数を増やすほど複数周波数やmulti-scale stationary structureを表現できますが、
-optimization landscape と identifiability は難しくなります。
+mixture数を増やすと表現可能なspectral componentsは増えますが、常にpredictive performanceが
+改善するとは限りません。mixture componentsにはlabel symmetryもあり、parameterそのものの
+一意な解釈より、得られるcovariance / predictionを重視します。
+
+また `initialization="data"` と `"empspect"` は初期parameterの作り方であり、
+別のposterior familyを意味しません。
 
 ## 17. Stationary であること
 
@@ -416,16 +456,34 @@ expressive model と high-dimensional model は重なる場合がありますが
 - Mixed Joint neural GP は continuous encoding と categorical covariance を分離
 - DeepGP は stochastic hierarchy + variational inference
 - DeepGP posterior は Monte Carlo approximation
-- MultiTaskDeepGP は task representation を hierarchy に組み込む
-- MixedSingleTaskDeepGP は categorical embedding を使う
-- Infinite-width BNN は analytic ReLU NNGP kernel + Exact GP
+- MultiTaskDeepGPはtask representationをhierarchyに組み込む
+- MixedSingleTaskDeepGPはcategorical embeddingを使う
+- MixedMultiTaskDeepGPはcontinuous / category / task representationを分離してDeepGPへ結合する
+- DeepGPの `make_mll()` はDeepApproximateMLL / VariationalELBOでありExact MLLではない
+- Infinite-width BNNはanalytic ReLU NNGP kernel + Exact GP
+- NNGPのdepth / weight variance / bias varianceは現行ではconstructor設定値
+- Infinite-width ReLU kernelは一般にstationary covarianceとは限らない
 - Infinite-width BNN は SingleTask / MultiTask / Kronecker を持つ
 - Infinite-width BNN は Mixed variants も持つ
 - Spectral Mixture は stationary spectral-density mixture
-- Spectral Mixture は data / empirical-spectrum initialization を選択可能
+- Spectral Mixtureはdata / empirical-spectrum initializationを選択可能
+- initialization方式は初期化の違いでありposterior familyの違いではない
 - Spectral Mixture は SingleTask / MultiTask / Kronecker を持つ
 - Spectral Mixture は Mixed variants も持つ
 - expressive surrogate と search-space strategy を分離する
+
+## 24. この章で覚えておくこと
+
+- expressive GPは「どこを柔軟にするか」で分類する
+- Joint neural GPはdeterministic learned feature mapとExact GPをjoint trainingする
+- DeepGPはstochastic GP hierarchyであり、variational ELBOとsample-based posteriorを使う
+- `supports_mll=True` でもDeepGPのMLLはExact MLLではない
+- MixedMultiTaskDeepGPはcategory embeddingとtask embeddingを別構造として扱う
+- Infinite-width BNN GPは有限BNNを学習するmodelではなくanalytic NNGP kernelを使うExact GPである
+- Infinite-width ReLU kernelはExact GPでも一般にstationaryとは限らない
+- Spectral Mixture GPはstationary spectral structureを柔軟化する
+- Spectral mixture数の増加は表現力を増やすが、性能改善を保証しない
+- expressive surrogateとcandidate search strategyは別レイヤーである
 
 ## robotorchan の関連ドキュメント
 
