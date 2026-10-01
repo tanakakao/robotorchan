@@ -7,24 +7,24 @@ posterior distribution を使って、**次にどこを評価するか**を決�
 
 現在までの観測データを
 
-\[
+$$
 \mathcal{D}_n = \{(x_i, y_i)\}_{i=1}^n
-\]
+$$
 
-とし、候補点 \(x\) に対する獲得関数を
+とし、候補点 $`x`$ に対する獲得関数を
 
-\[
+$$
 \alpha(x; \mathcal{D}_n)
-\]
+$$
 
 と書くと、逐次評価では典型的に
 
-\[
+$$
 x_{n+1}
 =
 \operatorname*{arg\,max}_{x \in \mathcal{X}}
 \alpha(x; \mathcal{D}_n)
-\]
+$$
 
 として次の候補を選びます。
 
@@ -51,9 +51,25 @@ candidate
 [Acquisition Function Theory](acquisition/README.md) に分離しています。本章では、
 それらを読むために必要な全体像を整理します。
 
+### 予測と意思決定を分けて考える
+
+例えば2つの候補A、Bについて、posteriorが次のような状態だとします。
+
+~~~text
+A: 予測平均は高いが、すでによく調べられていて不確実性が小さい
+B: 予測平均は少し低いが、まだよく分からず不確実性が大きい
+~~~
+
+「予測値が最大の点」を選ぶだけならAを選びます。しかしBOでは、Bを観測することで
+未知の良い領域を発見できる可能性も考慮します。**どちらをどの程度価値ある候補と
+みなすかを数値化するのが acquisition function**です。
+
+したがって acquisition value の単位や大きさを、そのまま目的関数の予測値として
+解釈してはいけません。その意味は acquisition function ごとに異なります。
+
 ## 4.2 なぜ posterior mean だけでは不十分か
 
-posterior mean \(\mu_n(x)\) だけを最大化すると、現在のモデルがすでに良いと
+posterior mean $`\mu_n(x)`$ だけを最大化すると、現在のモデルがすでに良いと
 考えている場所へ評価が集中しやすくなります。
 
 一方、未観測領域では posterior uncertainty が大きく、現在の予測を更新する価値が
@@ -68,13 +84,13 @@ improvement、confidence bound、information gain、value of information など�
 
 ## 4.3 Posterior から観測価値を定義する
 
-単一出力 GP では、候補点 \(x\) に対して典型的に
+単一出力 GP では、候補点 $`x`$ に対して典型的に
 
-\[
+$$
 f(x) \mid \mathcal{D}_n
 \sim
 \mathcal{N}(\mu_n(x), \sigma_n^2(x))
-\]
+$$
 
 という posterior が得られます。
 
@@ -99,26 +115,50 @@ f(x) \mid \mathcal{D}_n
 
 Expected Improvement（EI）は、最大化問題なら概念的に
 
-\[
+$$
 I(x) = \max(f(x)-f_{\mathrm{best}}, 0)
-\]
+$$
 
-という improvement の期待値を評価します。Probability of Improvement（PI）は改善量
-ではなく改善確率を評価します。
+という improvement の期待値を評価します。つまり
+
+$$
+\operatorname{EI}(x)
+=
+\mathbb{E}\left[
+\max(f(x)-f_{\mathrm{best}},0)
+\mid \mathcal{D}_n
+\right]
+$$
+
+です。ここで期待値を取るのは、$`f(x)`$ が posterior のもとではまだ未知の
+確率変数だからです。EIは「改善する確率」だけでなく、
+**改善した場合にどれくらい大きく改善するか**も同時に考慮します。
+
+Probability of Improvement（PI）は改善量ではなく改善確率を評価します。
 
 Upper Confidence Bound（UCB）は、posterior mean と uncertainty を直接組み合わせる
 考え方です。
 
-\[
+$$
 \operatorname{UCB}(x)
 =
 \mu_n(x)+\sqrt{\beta}\,\sigma_n(x)
-\]
+$$
 
 これらの導出、LogEI / LogPI、パラメータの意味は詳細章で扱います。
 
 - [Improvement-based acquisition](acquisition/02_improvement.md)
 - [Confidence-bound acquisition](acquisition/03_confidence_bound.md)
+
+### 最大化・最小化と符号
+
+獲得関数の式は最大化問題を基準に説明されることが多いですが、実問題には最小化もあります。
+重要なのは「獲得関数を最大化する」という外側の最適化と、
+「目的関数を最大化したいか最小化したいか」を区別することです。
+
+実装では objective transform などによって向きをそろえる場合があります。
+したがって、数式を利用するときは $`f_{\mathrm{best}}`$ の定義や improvement の符号が
+最大化・最小化のどちらを前提としているか確認する必要があります。
 
 ## 4.5 Analytic と Monte Carlo
 
@@ -127,18 +167,26 @@ posterior samples を使って期待効用を近似する Monte Carlo（MC）acq
 
 MC では概念的に
 
-\[
+$$
 \alpha(X)
 \approx
 \frac{1}{S}
 \sum_{s=1}^{S}
 U(f^{(s)}(X))
-\]
+$$
 
 のように評価します。
 
+$`S`$ を増やすと一般に Monte Carlo 近似誤差は小さくなりますが、計算量は増えます。
+実際のBoTorchではQMC samplingなどを利用し、単純な独立乱数より効率的に
+期待値を近似する場合があります。
+
 MC は batch、multi-output、nonlinear objective、constraints などへ拡張しやすく、
 BoTorch の獲得関数設計でも重要な役割を持ちます。
+
+analytic acquisition と MC acquisition の違いは「どちらが高度か」ではありません。
+必要な期待値を閉形式で正確に計算できる設定なら analytic が有効であり、
+複雑な joint posterior や utility を扱うために sampling が必要なら MC が自然です。
 
 詳細は [Foundations](acquisition/01_foundations.md) で扱います。
 
@@ -147,15 +195,21 @@ BoTorch の獲得関数設計でも重要な役割を持ちます。
 1点ずつ評価する逐次 BO だけでなく、複数点を同時に評価する batch BO があります。
 候補集合を
 
-\[
+$$
 X = \{x_1,\ldots,x_q\}
-\]
+$$
 
 とすると、q-acquisition は通常、各点の独立スコア上位を選ぶものではありません。
 **候補集合の joint posterior と候補間相関を含めた価値**を評価します。
 
+例えば2点がほぼ同じ情報しか与えないなら、単点スコアが両方高くても、
+同時に選ぶ価値は低くなる場合があります。このため q-acquisition は
+「1点用 acquisition を計算して上位 $`q`$ 点を取る」こととは異なります。
+
 また、観測ノイズがある場合には、観測された最大値と潜在関数の真の最良値を区別する
-必要があります。実行中で結果が未取得の pending points も、非同期 BO では候補選択へ
+必要があります。大きな正の観測ノイズによって偶然得られた値を $`f_{\mathrm{best}}`$
+として固定すると、改善量の基準自体が歪む可能性があります。Noisy acquisition は、
+このような latent function の不確実性も含めて意思決定するための考え方です。実行中で結果が未取得の pending points も、非同期 BO では候補選択へ
 影響します。
 
 これらは [Batch and noisy acquisition](acquisition/04_batch_noisy.md) でまとめて扱います。
@@ -179,15 +233,17 @@ Knowledge Gradient（KG）は、候補を観測した後に最終的な意思決
 
 複数目的
 
-\[
+$$
 f(x)=(f_1(x),\ldots,f_m(x))
-\]
+$$
 
 を同時に扱う場合、単一の最良値だけではなく Pareto dominance や Pareto front を
 考えます。
 
 Hypervolume-based acquisition では reference point に対する hypervolume improvement
-を観測価値として使います。EHVI / NEHVI はこの考え方に基づきます。一方、
+を観測価値として使います。reference point は単なる描画範囲ではなく、
+「どの領域の hypervolume を価値として数えるか」を定めるため、acquisition value に
+直接影響します。EHVI / NEHVI はこの考え方に基づきます。一方、
 NParEGO のように scalarization を利用する方法や、lookahead を組み合わせる方法も
 あります。
 
@@ -197,9 +253,9 @@ NParEGO のように scalarization を利用する方法や、lookahead を組�
 
 実問題では、目的関数だけでなく
 
-\[
+$$
 g_j(x) \le 0
-\]
+$$
 
 のような制約を満たす必要があります。制約付き BO では、目的改善と feasibility を
 組み合わせて候補の価値を評価します。
@@ -229,8 +285,9 @@ output constraint:     g(x) <= 0  → model / acquisition composition
 candidate constraint:  A x <= b   → acquisition optimizer
 ```
 
-robotorchan では後者を対応strategyの `CandidateConstraints` で表現します。この二種類を同じ「constrained
-BO」として扱わないことが、APIと実装を読む際に重要です。
+robotorchan では後者を対応strategyの `CandidateConstraints` で表現します。
+この二種類を同じ「constrained BO」として扱わないことが、
+APIと実装を読む際に重要です。
 
 ## 4.10 Bayesian Optimization だけが目的ではない
 
@@ -247,11 +304,11 @@ integrated variance reduction、predictive information gain などが基準に�
 
 ### Level-set Estimation
 
-目的は、指定した target \(t\) に対して
+目的は、指定した target $`t`$ に対して
 
-\[
+$$
 f(x)=t
-\]
+$$
 
 となる境界や、その上下の領域を効率よく学習することです。Straddle のような基準は
 この目的に対応します。
@@ -286,11 +343,11 @@ fidelity / evaluation cost
 
 獲得関数を定義することと、それを最大化することは別の問題です。
 
-\[
+$$
 \text{acquisition definition}
 \neq
 \text{acquisition optimization}
-\]
+$$
 
 連続変数では勾配ベース最適化を利用できる場合がありますが、categorical、integer、
 hierarchical、discrete fidelity などを含むと candidate optimization 自体に追加の設計が
@@ -308,7 +365,25 @@ hierarchical、discrete fidelity などを含むと candidate optimization 自�
 transform などの設計と獲得関数は、ソフトウェア上は責務を分離できても、統計的には
 独立ではありません。
 
-## 4.14 Theory、利用方法、実装状況を分けて読む
+## 4.14 Acquisition Function をどう選ぶか
+
+初心者が最初からすべての acquisition function を使い分ける必要はありません。
+まず「問題設定が何か」を切り分ける方が重要です。
+
+| 問題設定 | 最初に確認する観点 |
+| --- | --- |
+| 単目的・逐次・低ノイズ | improvement / confidence bound |
+| 単目的・batch | jointな q-acquisition が必要か |
+| 観測ノイズが大きい | noisy formulation が必要か |
+| 多目的 | Pareto / hypervolume / scalarization のどれを使うか |
+| 未知制約あり | feasibility をどう acquisition に組み込むか |
+| 評価コストが異なる | information value と cost の関係 |
+| 最適化ではなく学習 | Active Learning / Level-set の目的を定義する |
+
+これは手法の優劣表ではありません。同じposteriorを使っていても、
+**何を意思決定上の価値と定義するか**によって適切な acquisition family が変わります。
+
+## 4.15 Theory、利用方法、実装状況を分けて読む
 
 robotorchan では獲得関数関連の情報を次のように分離します。
 
@@ -323,7 +398,7 @@ robotorchan は BoTorch-first を基本とします。Theory に掲載されて�
 robotorchan 固有実装であるとは限らず、BoTorch native の手法を直接利用する場合も
 あります。
 
-## 4.15 詳細理論への入口
+## 4.16 詳細理論への入口
 
 詳細理論は次の順序で整理します。
 
@@ -343,13 +418,15 @@ robotorchan 固有実装であるとは限らず、BoTorch native の手法を�
 詳細章では、現在の本章に含まれていた EI、PI、UCB、KG、EHVI、NEHVI などを
 削除するのではなく、より体系的に移行・拡張します。
 
-## 4.16 まとめ
+## 4.17 この章で覚えておくこと
 
 Acquisition Function は、surrogate model の posterior を
 
 **次に何を観測する価値があるか**
 
-という意思決定へ変換する層です。
+という意思決定へ変換する層です。最も重要なのは、acquisition function が
+「真の目的関数」でも「posterior mean」でもなく、**限られた評価予算を次にどこへ
+使うかを決めるための utility** だと理解することです。
 
 ```text
 Model
