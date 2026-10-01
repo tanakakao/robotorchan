@@ -13,13 +13,13 @@ Level-set estimation
 PosteriorVarianceのようなfunction-learning criterionは「どこが不確実か」を見ます。一方、level-set
 criterionは「そのuncertaintyが指定thresholdの分類を変え得るか」まで見ます。
 
-## 10.3 最適値ではなく境界を学ぶ
+## 10.2 最適値ではなく境界を学ぶ
 
 Level-set estimation は、未知関数 \(f(x)\) に対して指定した threshold / target level $`t`$ の上下を分類したり、
 
-$
+$$
 f(x)=t
-$
+$$
 
 となる境界を推定したりする問題です。
 
@@ -46,25 +46,25 @@ Bayesian Optimization が
 
 を問います。
 
-## 10.2 Level set と excursion set
+## 10.3 Level setとexcursion set
 
 target level $`t`$ に対して、
 
-$
+$$
 L_t
 =
 \{x\in\mathcal X:f(x)=t\}
-$
+$$
 
 を level set と考えます。
 
 また、
 
-$
+$$
 E_t^+
 =
 \{x:f(x)\ge t\}
-$
+$$
 
 のような threshold 以上の領域を excursion set と呼ぶことがあります。
 
@@ -74,11 +74,11 @@ $
 
 Gaussian posterior
 
-$
+$$
 f(x)\mid\mathcal D_n
 \sim
 \mathcal N(\mu_n(x),\sigma_n^2(x))
-$
+$$
 
 を考えます。
 
@@ -97,13 +97,13 @@ mean が target に近くても uncertainty がほぼゼロなら、すでに分
 
 threshold に対する exceedance probability は
 
-$
+$$
 P(f(x)\ge t\mid\mathcal D_n)
 =
 \Phi\left(
 \frac{\mu_n(x)-t}{\sigma_n(x)}
 \right)
-$
+$$
 
 です。
 
@@ -118,13 +118,13 @@ Straddle は boundary learning の代表的な acquisition criterion です。
 
 robotorchan で扱う形は
 
-$
+$$
 \alpha_{\mathrm{straddle}}(x)
 =
 \beta\sigma_n(x)
 -
 |\mu_n(x)-t|
-$
+$$
 
 です。
 
@@ -141,17 +141,17 @@ sigma が大きい
     → 高い Straddle score
 ```
 
-## 10.7 Straddle の幾何学的解釈
+## 10.7 Straddleの幾何学的解釈
 
 posterior credible interval を概念的に
 
-$
+$$
 [
 \mu_n(x)-\beta\sigma_n(x),
 \;
 \mu_n(x)+\beta\sigma_n(x)
 ]
-$
+$$
 
 と考えると、target $`t`$ がこの interval に入り得る点は boundary classification が未確定な候補です。
 
@@ -159,7 +159,7 @@ Straddle score が高い領域は、この「credible interval が target をま
 
 ただし $`\beta`$ の定義や平方根の置き方は文献・実装により異なるため、parameter 名だけで比較せず式を確認する必要があります。
 
-## 10.8 beta の役割
+## 10.8 betaの役割
 
 $`\beta`$ を大きくすると uncertainty の寄与が増え、boundary 候補をより広く探索します。
 
@@ -180,9 +180,9 @@ small beta
 
 複数の target levels
 
-$
+$$
 t_1,\ldots,t_K
-$
+$$
 
 を同時に学びたい場合、各 target に対する boundary utility を定義し、最大・和・重み付き和などで統合する方法が考えられます。
 
@@ -196,15 +196,15 @@ $
 
 したがって multi-boundary reduction は単なる tensor operation ではありません。
 
-## 10.10 Multi-output と output selection
+## 10.10 Multi-outputとoutput selection
 
 multi-output surrogate で特定 output の level set を学ぶ場合、どの output を target とするかを明示する必要があります。
 
 例えば
 
-$
+$$
 f(x)=(f_1(x),f_2(x),f_3(x))
-$
+$$
 
 に対して \(f_2(x)=t\) の boundary を学ぶなら、acquisition は output 2 の posterior marginal を利用します。
 
@@ -217,19 +217,19 @@ coefficient を導入する考え方です。
 
 robotorchan の実装が参照する randomized straddle 系の考え方では、正の random variable から探索係数を生成し、
 
-$
+$$
 \alpha_{\mathrm{RStraddle}}(x)
 =
 \sqrt{\beta_t}\,\sigma_n(x)
 -
 |\mu_n(x)-t|
-$
+$$
 
 のような score を使います。
 
 係数をランダム化することで、固定した exploration strength に依存しすぎない boundary exploration を行います。
 
-## 10.12 1 selection round で係数を固定する理由
+## 10.12 1 selection roundで係数を固定する理由
 
 Randomized Straddle で重要なのは、**同じ candidate selection round 内では同じ sampled coefficient を使う**ことです。
 
@@ -261,7 +261,7 @@ candidate 決定
 
 これは randomized acquisition と acquisition optimization を整合させる重要な設計です。
 
-## 10.13 Randomized Straddle の provenance
+## 10.13 Randomized Straddleのprovenance
 
 Randomized Straddle は robotorchan 固有の名称を付けた heuristic ではなく、randomized straddle に関する既存研究に基づく
 acquisition family として扱います。
@@ -278,13 +278,13 @@ BoundaryVariance は robotorchan-specific heuristic です。
 
 posterior variance
 
-$
+$$
 v(x)=\sigma_n^2(x)
-$
+$$
 
 を使い、
 
-$
+$$
 \alpha_{\mathrm{BV}}(x)
 =
 v(x)
@@ -294,29 +294,29 @@ v(x)
 \frac{\mu_n(x)-t}{\sqrt{v(x)}}
 \right)^2
 \right]
-$
+$$
 
 という形で、uncertainty と target proximity を組み合わせます。
 
-## 10.15 BoundaryVariance の解釈
+## 10.15 BoundaryVarianceの解釈
 
 指数項
 
-$
+$$
 \exp\left[
 -\frac12
 \left(
 \frac{\mu-t}{\sigma}
 \right)^2
 \right]
-$
+$$
 
 は standardized distance
 
-$
+$$
 z=
 \frac{\mu-t}{\sigma}
-$
+$$
 
 が 0 に近いほど大きくなります。
 
@@ -332,7 +332,7 @@ target が posterior distribution の中心付近にある
 
 Straddle と似た目的を持ちますが、同じ acquisition の再パラメータ化ではありません。
 
-## 10.16 BoundaryVariance に beta がない理由
+## 10.16 BoundaryVarianceにbetaがない理由
 
 BoundaryVariance の定義には Straddle のような $`\beta`$ exploration parameter はありません。
 
@@ -343,7 +343,7 @@ uncertainty の scale と target proximity は variance と standardized Gaussia
 
 Theory と public API の双方で、この違いを維持することが重要です。
 
-## 10.17 Literature method と library-specific heuristic を分ける
+## 10.17 Literature methodとlibrary-specific heuristicを分ける
 
 robotorchan の theory docs では provenance を明確にします。
 
@@ -362,13 +362,13 @@ library-specific heuristic を、文献で確立した named method であるか
 
 逆に heuristic であることは無価値という意味ではありません。目的、数式、適用範囲、既知の制約を明示すれば、実験的 acquisition として評価できます。
 
-## 10.18 PosteriorVariance との違い
+## 10.18 PosteriorVarianceとの違い
 
 PosteriorVariance は
 
-$
+$$
 \alpha(x)=\sigma_n^2(x)
-$
+$$
 
 なので、target $`t`$ を考慮しません。
 
@@ -385,19 +385,19 @@ Straddle / BoundaryVariance
 
 という目的の違いがあります。
 
-## 10.19 Constrained BO との関係
+## 10.19 Constrained BOとの関係
 
 未知制約
 
-$
+$$
 c(x)\le0
-$
+$$
 
 の boundary
 
-$
+$$
 c(x)=0
-$
+$$
 
 を学ぶことは level-set estimation と数学的に近い問題です。
 
@@ -413,15 +413,15 @@ Constrained BO
 
 Constrained BO では boundary uncertainty が重要でも、それだけで objective utility は決まりません。
 
-## 10.20 Classification Active Learning との関係
+## 10.20 Classification Active Learningとの関係
 
 binary classification の decision boundary learning も直感的には level-set estimation と似ています。
 
 latent function \(g(x)\) に対して
 
-$
+$$
 g(x)=0
-$
+$$
 
 を class boundary とみなせるモデルもあります。
 
@@ -444,7 +444,7 @@ q > 1 で複数点を同時選択する場合、pointwise Straddle score の上�
 
 robotorchan-specific q=1 acquisitions が存在することは、任意 q の joint semantics が自動的に定義されることを意味しません。
 
-## 10.22 Structured output と ensemble posterior
+## 10.22 Structured outputとensemble posterior
 
 scalar Gaussian posterior を前提にした boundary score を、structured output や ensemble posterior へ拡張するには
 reduction semantics が必要です。
@@ -475,7 +475,7 @@ Level-set estimation では、boundary classification uncertainty を使った s
 
 ただし acquisition score の絶対値は parameterization に依存するため、停止条件として利用する場合は calibration が必要です。
 
-## 10.24 BoTorch / robotorchan との対応
+## 10.24 BoTorch / robotorchanとの対応
 
 robotorchan は level-set / boundary learning 用に Straddle、RandomizedStraddle、BoundaryVariance を提供します。
 
@@ -525,9 +525,9 @@ PosteriorVariance / Stdにはregistry metadata上のensemble supportとの不整
 
 Level-set acquisition は、
 
-$
+$$
 f(x)=t
-$
+$$
 
 という boundary を効率よく学ぶための観測価値を定義します。
 
