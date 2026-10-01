@@ -94,8 +94,17 @@ g(X)\ge0
 
 を返す contract として表現します。
 
-intra-point callable は candidate ごと、
-inter-point callable は joint \([q,d]\) batch 全体を受け取ります。
+概念上、intra-point constraint は各 candidate に閉じ、
+inter-point constraint は joint \([q,d]\) batch 全体に依存します。
+
+BoTorch native route では callable contract を upstream API に従って扱います。
+一方、現在の robotorchan derivative-free 共通 violation evaluator は
+intra-point callable にも \([... , q, d]\) tensor を一度に渡し、
+candidate axis を保った vectorized result を要求します。
+
+したがって derivative-free backend 用 callable は、
+単一 \([d]\) candidate だけを仮定した実装にしないでください。
+これは数学的な intra-point / inter-point の区別とは別の runtime contract です。
 
 gradient-based optimizer では callable が candidate coordinates に対して
 微分可能である必要があります。
