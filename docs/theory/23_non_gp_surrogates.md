@@ -20,10 +20,9 @@ Bayesian optimization requires a predictive distribution or a sampleable predict
 it does not require every surrogate to be a Gaussian Process. For an empirical ensemble with
 predictions $`f_s(X)`$, robotorchan represents
 
-$
+$$
 \{f_1(X),\ldots,f_S(X)\}
-$
-
+$$
 as an `EnsemblePosterior` with shape `... x S x q x m`. Here $`S`$ is the ensemble dimension,
 $`q`$ the candidate batch size, and $`m`$ the number of outputs. Monte Carlo acquisition functions
 can sample from this discrete empirical distribution.
@@ -48,10 +47,9 @@ does not by itself identify observation noise or guarantee calibrated credible i
 
 A gradient boosting predictor has additive form
 
-$
+$$
 F_M(x)=F_0(x)+\sum_{j=1}^{M}\eta h_j(x).
-$
-
+$$
 The stage predictors $`h_j`$ are trained sequentially to correct residual structure. They are not
 exchangeable draws from a predictive distribution. Treating their spread as posterior uncertainty
 would therefore give the ensemble dimension the wrong statistical meaning.
@@ -59,10 +57,9 @@ would therefore give the ensemble dimension the wrong statistical meaning.
 robotorchan instead draws bootstrap datasets $`D_s`$, fits a complete boosting model $`F^{(s)}_M`$
 on each dataset, and uses
 
-$
+$$
 \{F^{(1)}_M(X),\ldots,F^{(S)}_M(X)\}
-$
-
+$$
 as empirical predictive samples.
 
 ## 4. Multi-output samples
