@@ -80,7 +80,8 @@ V_{n+1}
 V_n
 \]
 
-実際の formulation は observation noise、terminal value、candidate representation などに応じて変わりますが、本質は **観測後の最終 decision quality の改善**です。
+実際の formulation は observation noise、terminal value、candidate representation などに応じて変わりますが、本質は
+**観測後の最終 decision quality の改善**です。
 
 ## 6.4 EI との違い
 
@@ -120,7 +121,8 @@ optimize future decision
 
 という計算を複数の possible observations について行います。
 
-GP では条件付き Gaussian structure を利用して fantasy posterior を効率よく構成できますが、通常の myopic acquisition より計算負荷は高くなります。
+GP では条件付き Gaussian structure を利用して fantasy posterior を効率よく構成できますが、通常の myopic acquisition
+より計算負荷は高くなります。
 
 ## 6.6 Inner optimization
 
@@ -197,9 +199,11 @@ current
 
 ## 6.10 qMultiStepLookahead
 
-BoTorch の `qMultiStepLookahead` は、複数段階の fantasy decisions を含む lookahead acquisition を構成するための一般的な枠組みです。
+BoTorch の `qMultiStepLookahead` は、複数段階の fantasy decisions を含む lookahead acquisition
+を構成するための一般的な枠組みです。
 
-これは特定の単一 closed-form acquisition というより、stage-wise value functions と fantasy branching を組み合わせる framework として理解する方が適切です。
+これは特定の単一 closed-form acquisition というより、stage-wise value functions と fantasy branching を組み合わせる
+framework として理解する方が適切です。
 
 各 stage で何を value とするか、terminal value をどう定義するかによって、構成される decision problem が変わります。
 
@@ -271,11 +275,13 @@ lookahead depth を増やせば常に実用上優れるわけではなく、残�
 
 ## 6.15 BoTorch / robotorchan との対応
 
-BoTorch は `qKnowledgeGradient` と `qMultiStepLookahead` を提供し、fantasy model を使った lookahead optimization をサポートします。
+BoTorch は `qKnowledgeGradient` と `qMultiStepLookahead` を提供し、fantasy model を使った lookahead
+optimization をサポートします。
 
 robotorchan はこれらの標準手法を再実装せず、BoTorch native path を基本とします。
 
-利用上の位置付けは [Lookahead optimization guide](../../optimization/lookahead.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
+利用上の位置付けは [Lookahead optimization guide](../../optimization/lookahead.md)、現在の統合状況は [Acquisition
+integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ### 6.15.1 qKnowledgeGradient の runtime contract
 
@@ -305,13 +311,18 @@ Lookahead acquisition の中心は
 
 です。
 
-KG は one-step の代表例で、multi-step lookahead は future observation に応じて後段の decision が変わる adaptive policy を扱います。
+KG は one-step の代表例で、multi-step lookahead は future observation に応じて後段の decision が変わる adaptive
+policy を扱います。
 
-batch candidate selection と multi-step adaptive decision は別の概念であり、fantasy model は未知の将来観測を現在の時点で評価するための中核的な仕組みです。
+batch candidate selection と multi-step adaptive decision は別の概念であり、fantasy model
+は未知の将来観測を現在の時点で評価するための中核的な仕組みです。
 
 
 ## References
 
-- Frazier, P. I., Powell, W. B., and Dayanik, S. (2008), *A Knowledge-Gradient Policy for Sequential Information Collection*. SIAM Journal on Control and Optimization.
-- Jiang, S. et al. (2020), *Efficient Nonmyopic Bayesian Optimization via One-Shot Multi-Step Trees*. NeurIPS.
-- BoTorch documentation, *Acquisition Functions*, for current Knowledge Gradient and multi-step lookahead APIs.
+- Frazier, P. I., Powell, W. B., and Dayanik, S. (2008), *A Knowledge-Gradient Policy for
+Sequential Information Collection*. SIAM Journal on Control and Optimization.
+- Jiang, S. et al. (2020), *Efficient Nonmyopic Bayesian Optimization via One-Shot Multi-Step
+Trees*. NeurIPS.
+- BoTorch documentation, *Acquisition Functions*, for current Knowledge Gradient and multi-step
+lookahead APIs.
