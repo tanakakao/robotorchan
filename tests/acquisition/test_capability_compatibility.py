@@ -104,7 +104,6 @@ def test_ngboost_rejects_joint_gaussian_information_gain() -> None:
     assert "acquisition requires a joint Gaussian posterior" in result.reasons
 
 
-
 def test_registry_capabilities_are_internally_consistent() -> None:
     for entry in ACQUISITION_REGISTRY.values():
         capabilities = entry.capabilities
