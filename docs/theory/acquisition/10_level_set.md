@@ -464,6 +464,23 @@ Theory は将来の拡張可能性を説明できますが、現在の利用可�
 - [BoundaryVariance guide](../../optimization/boundary-variance.md)
 - [Acquisition integration status](../../optimization/acquisition-integration.md)
 
+### 10.23.1 現在の level-set registry
+
+現在の registry には
+
+- `BoundaryVariance`
+- `RandomizedStraddle`
+- `Straddle`
+
+が active-learning acquisition として登録されています。
+
+これらは marginal posterior moments を使う `q=1` acquisition です。
+現在の capability metadata では ensemble posterior はサポートせず、
+structured output は scalarization を要求します。
+
+`PosteriorVariance` / `PosteriorStd` とは ensemble support が異なるため、
+同じ pointwise uncertainty family でも完全に同一の compatibility ではありません。
+
 ## 10.24 まとめ
 
 Level-set acquisition は、
