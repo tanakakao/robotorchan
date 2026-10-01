@@ -128,7 +128,6 @@ def test_ensemble_sampling_type_is_reserved_for_empirical_ensemble_posteriors() 
     }
 
 
-
 def test_sampling_type_always_matches_sampling_support() -> None:
     for entry in MODEL_REGISTRY.values():
         capabilities = entry.capabilities
