@@ -161,6 +161,18 @@ BoTorch には EI / PI とその log formulation、q / noisy variants が用意�
 
 実際の推奨 API と現在の統合状況は [Standard acquisition](../../optimization/standard_acquisition.md) と [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
+### 2.10.1 現在の registry 名と LogEI 系
+
+現在の robotorchan capability registry では、BoTorch-native acquisition として
+`qLogExpectedImprovement` と `qLogNoisyExpectedImprovement` を登録しています。
+
+これは robotorchan 独自の EI 実装を持つという意味ではありません。
+実装 strategy は **BoTorch-native acquisition; no robotorchan wrapper** です。
+
+両者は Monte Carlo posterior sample を要求し、output / black-box constraint composition を
+サポートする acquisition として metadata 化されています。
+candidate/input-space constraint の可否は acquisition metadata ではなく optimizer 側の責務です。
+
 ## 2.11 使い分けの理解
 
 EI と PI の本質的な違いは、
