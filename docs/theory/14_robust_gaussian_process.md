@@ -15,6 +15,30 @@ robust GP では「外れ値を除去する」のではなく、**どの確率�
 
 これは heteroskedastic noise や robust objective とは別の問題です。
 
+### 最初に「robust」の対象を分ける
+
+「robust GP」という名前だけでは、何に頑健なのかは決まりません。
+
+~~~text
+Yの一部に極端な誤差
+  → outlier / contamination / heavy tail
+
+Var(Y | X=x) が場所で変化
+  → heteroskedastic noise
+
+観測したX自体が不確か
+  → uncertain-input model
+
+f(x)のsmoothnessやlengthscaleが場所で変化
+  → nonstationary model
+
+実行時にXが揺れる
+  → robust decision / input perturbation
+~~~
+
+この章の中心は最初の **observation-side robustness** です。
+同じ「予測が外れる」という症状でも、原因が違えばモデルも変わります。
+
 ## 1. Gaussian likelihood と外れ値感度
 
 標準的な観測モデルを
@@ -31,8 +55,9 @@ epsilon_i ~ Normal(0, sigma^2)
 (y_i - f_i)^2 / (2 sigma^2)
 ```
 
-を含みます。そのため残差の寄与は二乗で増加し、少数の極端な観測が latent function や
-kernel hyperparameter の推定へ強く影響することがあります。
+を含みます。そのため残差の寄与は二乗で増加します。通常のGaussian modelでは、極端な残差を
+latent function・noise level・kernel hyperparameterの組合せで説明しようとするため、
+少数の観測がposteriorやhyperparameter推定へ大きく影響することがあります。
 
 robust GP の各方式は、この影響を異なる仮定で緩和します。
 
@@ -44,8 +69,9 @@ Student-t observation model は
 y_i | f_i ~ StudentT(nu, f_i, sigma)
 ```
 
-と書けます。自由度 `nu` が小さいほど tail が重くなり、大きな残差へ Gaussian より
-高い確率を与えます。したがって「誤差分布全体が heavy-tailed」という仮定に適します。
+と書けます。自由度 `nu` が小さいほどtailが重くなり、大きな残差へGaussianより高い確率を
+与えます。これは「どの点がoutlierか」を明示的に選ぶモデルではなく、
+**観測誤差全体へheavy-tailed likelihoodを置く**考え方です。
 
 robotorchan の `StudentTSingleTaskGP` は `StudentTLikelihood` と variational GP を
 組み合わせます。Gaussian likelihood の exact marginal likelihood ではないため、
@@ -87,7 +113,11 @@ sigma_out > sigma_in > 0
 適用するのに対し、こちらは nominal component と gross-error component を明示的に分けます。
 
 robotorchan の `ContaminatedSingleTaskGP` はこの mixture likelihood を明示的に評価し、
-latent function の Monte Carlo sample に対して expected mixture log likelihood を近似します。
+latent functionのMonte Carlo sampleに対してexpected mixture log likelihoodを近似します。
+
+現行実装では `contamination_probability`、`inlier_scale`、`outlier_scale` はconstructorで
+与える固定値です。したがって、この3値までposteriorから自動学習するmixture modelと
+解釈しないことが重要です。
 
 ```text
 loss
@@ -117,17 +147,38 @@ y = f(X) + a + epsilon
 
 とし、補正ベクトル `a` の大部分がゼロである構造を利用します。
 
-この方式では「どの観測が例外的か」という sparsity を明示できます。Student-t のような
-global heavy-tail assumption、contamination mixture のような固定 mixture assumption と
-同一ではありません。
+この方式では「少数の観測だけに追加のnoise correctionが必要」というsparsityを
+明示します。Student-tのglobal heavy-tail assumptionや、固定mixture parameterを使う
+contamination modelとは異なる仮定です。
 
 robotorchan:
 
 - `RobustRelevancePursuitSingleTaskGP`
 - `MixedRobustRelevancePursuitSingleTaskGP`
+- `RobustRelevancePursuitMultiTaskGP`
+- `MixedRobustRelevancePursuitMultiTaskGP`
 
 実装の具体的な sparse-support 更新規則や最適化契約は、理論上の一般的な relevance pursuit
 と区別し、モデル実装とテストを source of truth とします。
+
+### Relevance Pursuitは「外れ値を削除する前処理」ではない
+
+Relevance Pursuit系では、候補となる異常観測をdataframeから消して通常GPを再学習する、
+という操作を目的にしていません。sparseな追加noise構造をmodel fittingの中で扱います。
+
+したがって、
+
+~~~text
+outlier detection → 行を削除 → ordinary GP
+~~~
+
+と
+
+~~~text
+robust GP → 異常観測を含めたままobservation modelを拡張
+~~~
+
+は別の設計です。
 
 ## 5. Mixed variables
 
@@ -161,6 +212,27 @@ robotorchan では少なくとも次を区別します。
 したがって robust surrogate を使うだけで CVaR 最適化になるわけではなく、逆に CVaR
 objective を使うだけで training observation の外れ値に頑健になるわけでもありません。
 
+### latent posteriorと観測分布を区別する
+
+robust likelihoodを使うときは、
+
+~~~text
+latent posterior
+p(f(x) | D)
+
+observed response distribution
+p(y | f(x))
+~~~
+
+を区別します。
+
+robotorchanのStudent-t / contaminationモデルが `posterior(X)` でBO側へ公開するのは
+**latent response posterior** です。heavy-tailed observation noiseやcontamination mixtureを
+そのままacquisition sampleとして返す、という意味ではありません。
+
+この違いは「将来の真の応答を最適化したい」のか、「次の noisy observation自体の分布を
+扱いたい」のかを考えるときに重要です。
+
 ## 7. Bayesian optimization との関係
 
 robust observation model は posterior mean と posterior uncertainty の両方を変えるため、
@@ -173,15 +245,16 @@ Student-t / contamination 系は variational inference を使うため、標準 
 training API が異なる点にも注意します。特に `make_mll()` を一律に呼ぶコードではなく、
 モデルの training contract を確認する必要があります。
 
-## 8. 使い分け
+## 8. 仮定の比較
 
-- 残差分布全体が heavy-tailed: Student-t
-- nominal data に少数の gross error が混ざる: contamination mixture
-- 少数観測へ sparse correction を置きたい: relevance pursuit
-- noise variance 自体が入力で変わる:
-  [Heteroskedastic noise](15_heteroskedastic_noise.md)
-- 入力値そのものが不確か:
-  [Uncertain-input GP](16_uncertain_input_gp.md)
+| 仮定 | 対応する考え方 |
+| --- | --- |
+| 残差分布全体がheavy-tailed | Student-t likelihood |
+| nominal dataにgross-error componentが混ざる | contamination mixture |
+| 少数観測へsparse correctionを置く | relevance pursuit |
+| noise variance自体が入力で変わる | heteroskedastic GP |
+| 入力値そのものが不確か | uncertain-input GP |
+| covariance structureが場所で変わる | nonstationary GP |
 
 実装ガイドは [Robust / Noise model guide](../models/robust_noise.md) を参照してください。
 
@@ -189,15 +262,26 @@ training API が異なる点にも注意します。特に `make_mll()` を一�
 
 理論章で特に重要な実装契約は次です。
 
-- Student-t / contamination は variational inference
+- Student-t / contamination は variational inferenceで `training_loss()` を使う
 - Student-t は `df > 2`
 - contamination は `0 < pi < 1` と `sigma_out > sigma_in > 0`
 - posterior は acquisition から利用可能な latent response posterior
 - Mixed 版は native categorical covariance を保持
 - MultiTask 版は task feature を構造列として分離
-- contamination diagnostic は posterior inference とは別の診断 API
+- contamination parametersは現行実装では固定constructor parameters
+- contamination diagnosticはposterior mean residualに基づく近似診断で、自動削除APIではない
+- relevance pursuitはsingle-taskだけでなくlong-format multi-task / Mixed版も公開
 
 API の詳細はコードとモデルガイドを優先してください。
+
+## 10. この章で覚えておくこと
+
+- robust GPは「怪しい行を自動削除するGP」の総称ではない
+- Student-t、contamination、relevance pursuitは異なるobservation assumptionsを持つ
+- heteroskedasticity、input uncertainty、nonstationarityは別のdata-generating mechanismである
+- surrogate robustnessとCVaR / worst-caseなどのdecision robustnessは別の設計軸である
+- BOへ渡すlatent posteriorと、観測noiseを含むresponse distributionを区別する
+- Mixed / MultiTask化しても、robust mechanismとstructural featureの責務は分離する
 
 ## 参考文献
 
