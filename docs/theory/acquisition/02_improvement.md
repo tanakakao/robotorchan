@@ -10,15 +10,15 @@ EI: 基準をどれだけ超えるかという改善量の期待値
 どちらも同じposteriorを利用できますが、候補を価値付けするutilityが異なります。
 LogPI / LogEIは別の探索原理ではなく、数値計算を安定化するformulationです。
 
-## 2.3 Improvement を直接評価する
+## 2.2 Improvement を直接評価する
 
 Improvement-based acquisition は、「現在の基準よりどれだけ良い結果を得られるか」を候補の価値とします。
 
 以下では最大化問題を考え、基準値を $`f_{\mathrm{best}}`$ とします。候補 $`x`$ の improvement は
 
-$
+$$
 I(x)=\max(f(x)-f_{\mathrm{best}},0)
-$
+$$
 
 です。
 
@@ -26,41 +26,41 @@ noiselessで関数値を直接観測する標準設定では、best valueを観�
 扱えます。ただしbest valueは常に観測yの最大値というAPI規則ではありません。
 noise、objective transform、constraint等によって改善基準の意味は変わります。
 
-## 2.2 Expected Improvement
+## 2.3 Expected Improvement
 
 Expected Improvement（EI）は improvement の posterior expectation です。
 
-$
+$$
 \operatorname{EI}(x)
 =
 \mathbb E[I(x)\mid\mathcal D_n]
-$
+$$
 
 Gaussian posterior
 
-$
+$$
 f(x)\mid\mathcal D_n
 \sim
 \mathcal N(\mu(x),\sigma^2(x))
-$
+$$
 
 に対して、\(\sigma(x)>0\) なら
 
-$
+$$
 z(x)
 =
 \frac{\mu(x)-f_{\mathrm{best}}}{\sigma(x)}
-$
+$$
 
 として
 
-$
+$$
 \operatorname{EI}(x)
 =
 (\mu(x)-f_{\mathrm{best}})\Phi(z)
 +
 \sigma(x)\phi(z)
-$
+$$
 
 と書けます。
 
@@ -70,15 +70,15 @@ $`\Phi`$ は標準正規 CDF、$`\phi`$ は標準正規 PDF です。
 
 式の
 
-$
+$$
 (\mu-f_{\mathrm{best}})\Phi(z)
-$
+$$
 
 は予測平均による改善の寄与を、
 
-$
+$$
 \sigma\phi(z)
-$
+$$
 
 は posterior uncertainty により改善が起こり得る寄与を含みます。
 
@@ -98,13 +98,13 @@ EIは両方をimprovementという一つの確率変数の期待値として評�
 
 Probability of Improvement（PI）は改善量ではなく改善イベントの確率を評価します。
 
-$
+$$
 \operatorname{PI}(x)
 =
 P(f(x)>f_{\mathrm{best}}\mid\mathcal D_n)
 =
 \Phi(z)
-$
+$$
 
 PI は「改善するか」を直接評価しますが、大きな改善と小さな改善を区別しません。
 
@@ -124,11 +124,11 @@ numerically robust formulationを含むため、対応する実装定義を確�
 
 EI / PI の定義には、基準値に margin $`\xi`$ を加えて
 
-$
+$$
 I_\xi(x)
 =
 \max(f(x)-f_{\mathrm{best}}-\xi,0)
-$
+$$
 
 とする流儀もあります。
 
@@ -139,9 +139,9 @@ parameter と実装引数を混同しないことが重要です。
 
 最小化問題では improvement を
 
-$
+$$
 I(x)=\max(f_{\mathrm{best}}-f(x),0)
-$
+$$
 
 と定義できます。
 
@@ -153,20 +153,20 @@ q > 1 では、単純に EI の上位 q 点を選ぶのではなく、候補集�
 
 最大化問題の概念的な q-improvement は
 
-$
+$$
 I(X)
 =
 \max\left(
 \max_{j=1,\ldots,q}f(x_j)-f_{\mathrm{best}},
 0
 \right)
-$
+$$
 
 であり、
 
-$
+$$
 q\operatorname{EI}(X)=\mathbb E[I(X)]
-$
+$$
 
 を MC で評価できます。
 
