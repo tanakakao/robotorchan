@@ -479,18 +479,18 @@ Candidate
 
 モデルとoptimizerの責務を式で書くと、
 
-$
+$$
 p(f(x) \mid \mathcal{D})
-$
+$$
 
 をmixed入力に対して妥当に定義するのが surrogate model 側です。一方、
 
-$
+$$
 x_{next}
 =
 \operatorname*{arg\,max}_{x \in \mathcal{X}_{valid}}
 \alpha(x)
-$
+$$
 
 で $`\mathcal{X}_{valid}`$ の外へ出ないようにするのが candidate optimization 側です。
 
