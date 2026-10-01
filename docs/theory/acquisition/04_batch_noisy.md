@@ -53,65 +53,6 @@ $$
 
 # 4. Batch and Noisy Acquisition
 
-## 4.1 最初に4つの軸を分ける
-
-Batch / noisy BOでは、次を同じ意味で使わないことが重要です。
-
-| 概念 | 問い |
-| --- | --- |
-| batch / q | 今回いくつの新しいcandidateを選ぶか |
-| noisy | 観測値とlatent function valueを区別する必要があるか |
-| pending / async | 結果待ちの実評価を考慮するか |
-| fantasization | 未観測結果を仮想的に条件付けしたmodelを作るか |
-
-これらは組み合わせられますが別の軸です。特にpending pointとfantasy pointを同一視しません。
-
-## 4.2 q > 1 は pointwise ranking ではない
-
-1回の実験サイクルで q 点を同時に評価する場合、候補集合
-
-$$
-X=(x_1,\ldots,x_q)
-$$
-
-全体に対して acquisition value を定義します。
-
-重要なのは、
-
-$$
-\alpha_q(X)
-\neq
-\sum_{j=1}^{q}\alpha_1(x_j)
-$$
-
-が一般的だという点です。
-
-候補点間にposterior dependenceがある場合、似た候補を複数選ぶ価値は重複し得ます。
-q-acquisitionは候補集合のjoint posterior semanticsを保ってutilityを評価します。
-
-Gaussian GPではcovariance matrixがこのdependenceを表しますが、一般のsampleable posteriorでは
-必ずしも明示的なGaussian covariance matrixを持つとは限りません。
-
-## 4.3 Joint posteriorはGaussian covarianceだけではない
-
-候補集合に対する Gaussian posterior は概念的に
-
-$$
-f(X)\mid\mathcal D_n
-\sim
-\mathcal N(\mu(X),\Sigma(X))
-$$
-
-です。
-
-\Sigma(X)`$ の off-diagonal elements が候補間の posterior correlation を表します。
-
-pointwise scoreだけを見ると、この依存構造を無視して近接候補ばかり選ぶ可能性があります。
-batch acquisitionでは候補集合をjointに扱います。
-
-ここで重要なのは、marginal posteriorをcandidateごとに独立sampleすることではありません。
-同一posterior sample内でcandidate間のdependenceを保持する必要があります。
-
 ## 4.4 qEI
 
 最大化問題で q 点のうち最も良い結果による improvement を
