@@ -316,7 +316,8 @@ model = MixedSingleTaskGP(
 
 `cat_dims` は **カテゴリ変数が存在する入力次元のindex** です。
 
-robotorchanの`MixedSingleTaskGP`はBoTorchの同名モデルを薄くwrapし、予測挙動を維持しながらraw data保持や`make_mll()`などの共通APIを追加しています。
+robotorchanの`MixedSingleTaskGP`はBoTorchの同名モデルを薄くwrapし、予測挙動を維持しながらraw
+data保持や`make_mll()`などの共通APIを追加しています。
 
 ## 5.9 カテゴリ値の表現
 

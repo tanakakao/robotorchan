@@ -375,7 +375,8 @@ Task covariance
 
 です。
 
-BoTorch実装では、data covariance に hierarchical conditional kernel を使い、task correlation は `MultiTaskGP` と同様の task covariance で扱います。
+BoTorch実装では、data covariance に hierarchical conditional kernel を使い、task correlation は
+`MultiTaskGP` と同様の task covariance で扱います。
 
 ---
 
