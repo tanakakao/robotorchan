@@ -18,7 +18,7 @@ acquisitionが必要とするpredictive representationを提供できること�
 
 Bayesian optimization requires a predictive distribution or a sampleable predictive representation;
 it does not require every surrogate to be a Gaussian Process. For an empirical ensemble with
-predictions \(f_s(X)\), robotorchan represents
+predictions $`f_s(X)`$, robotorchan represents
 
 $
 \{f_1(X),\ldots,f_S(X)\}
@@ -56,7 +56,7 @@ The stage predictors $`h_j`$ are trained sequentially to correct residual struct
 exchangeable draws from a predictive distribution. Treating their spread as posterior uncertainty
 would therefore give the ensemble dimension the wrong statistical meaning.
 
-robotorchan instead draws bootstrap datasets $`D_s`$, fits a complete boosting model \(F^{(s)}_M\)
+robotorchan instead draws bootstrap datasets $`D_s`$, fits a complete boosting model $`F^{(s)}_M`$
 on each dataset, and uses
 
 $
@@ -86,8 +86,8 @@ search rather than `optimize_acqf`'s gradient-based path.
 
 ## 6. Constraints
 
-Constraint handling belongs at the acquisition/objective layer. If output \(g(x)\) represents a
-constraint, feasibility can be defined by a callable such as \(g(x)\leq0\) while the surrogate
+Constraint handling belongs at the acquisition/objective layer. If output $`g(x)`$ represents a
+constraint, feasibility can be defined by a callable such as $`g(x)\leq0`$ while the surrogate
 continues to model outputs. This separation permits the same fitted surrogate to support different
 decision policies.
 
