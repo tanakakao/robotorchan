@@ -24,10 +24,10 @@ implemented behavior only; declaring a mode does not itself implement it.
 | --- | --- | --- | --- | --- |
 | BoTorch | native | native | native | native |
 | BoTorch mixed | native | native | native | unsupported |
-| DE | penalty | penalty | penalty | penalty |
+| DE | feasibility_first | feasibility_first | feasibility_first | feasibility_first |
 | CMA-ES | penalty | penalty | penalty | penalty |
-| GA | penalty | penalty | penalty | penalty |
-| Mixed GA | penalty | penalty | penalty | penalty |
+| GA | feasibility_first | feasibility_first | feasibility_first | feasibility_first |
+| Mixed GA | feasibility_first | feasibility_first | feasibility_first | feasibility_first |
 | PSO | penalty | penalty | penalty | penalty |
 | Hybrid | penalty | penalty | penalty | penalty |
 | Torch / Random / Sobol / NSGA-II | unsupported | unsupported | unsupported | unsupported |
