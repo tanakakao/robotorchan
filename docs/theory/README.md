@@ -71,9 +71,9 @@ Gaussian Process（GP）の理論を、実装と対応付けながら説明し�
 | 大規模データ / Sparse GP | `SingleTaskVariationalGP` |
 | Preference Learning | `PairwiseGP` |
 | 高次元 BO | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` |
-| MAP-SAAS / Additive GP | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`,<br>`OrthogonalAdditiveGP` |
-| Robust / heavy-tailed observation | `RobustRelevancePursuitSingleTaskGP`, `StudentTSingleTaskGP`,<br>`ContaminatedSingleTaskGP` |
-| Heteroskedastic / replicate noise | `HeteroskedasticSingleTaskGP`, `JointHeteroskedasticSingleTaskGP`,<br>`ReplicateNoiseSingleTaskGP` |
+| MAP-SAAS / Additive GP | `AdditiveMapSaasSingleTaskGP`,<br>`EnsembleMapSaasSingleTaskGP`,<br>`OrthogonalAdditiveGP` |
+| Robust / heavy-tailed observation | `RobustRelevancePursuitSingleTaskGP`,<br>`StudentTSingleTaskGP`,<br>`ContaminatedSingleTaskGP` |
+| Heteroskedastic / replicate noise | `HeteroskedasticSingleTaskGP`,<br>`JointHeteroskedasticSingleTaskGP`,<br>`ReplicateNoiseSingleTaskGP` |
 | Input uncertainty | `UncertainInputSingleTaskGP`, `UncertainCategoricalSingleTaskGP` |
 | Nonstationarity | `NonstationarySingleTaskGP` |
 | Input/output reduction | `PCAGP`, `PLSGP`, `OutputPCAGP`, `OutputPLSGP` |
@@ -84,7 +84,7 @@ Gaussian Process（GP）の理論を、実装と対応付けながら説明し�
 | Heterogeneous Multi-task | `HeterogeneousMTGP` |
 | Contextual GP | `SACGP`, `LCEAGP`, `LCEMGP` |
 | Expressive GP | `JointEncoderGP`, `SingleTaskDeepGP`, `InfiniteWidthBNNGP`, `SpectralMixtureGP` |
-| Non-GP empirical ensemble | `RandomForestSurrogate`, `ExtraTreesSurrogate`,<br>`GradientBoostingSurrogate`, `HistGradientBoostingSurrogate` |
+| Non-GP empirical ensemble | `RandomForestSurrogate`, `ExtraTreesSurrogate`,<br>`GradientBoostingSurrogate`,<br>`HistGradientBoostingSurrogate` |
 | Distributional non-GP | `NGBoostSurrogate` |
 
 ## 関連ドキュメント
