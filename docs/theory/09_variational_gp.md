@@ -1388,7 +1388,9 @@ Yes → dimension structure の対策も別途必要
 
 ### 「ELBO は Exact MLL と同じ」
 
-違います。ELBO は log marginal likelihood の lower bound です。
+違います。標準的な variational GP では ELBO は log marginal likelihood の lower bound です。
+ただし、実装で追加の regularization や別 objective を組み合わせる場合まで
+「常に同じ ELBO」と一般化しないことが重要です。
 
 ### 「mini-batch size が `num_data`」
 
