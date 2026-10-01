@@ -18,7 +18,7 @@ Acquisition function は「一般に最も優れた一つ」を選ぶもので�
 
 この章は各 acquisition の優劣ランキングではなく、**problem semantics と acquisition semantics を対応付けるためのガイド**です。
 
-## 12.2 最初の分岐: Optimization か Learning か
+## 12.2 最初の分岐: decision purpose
 
 最初に最終目的を分けます。
 
@@ -98,15 +98,15 @@ noise がある
 
 重要なのは、
 
-\[
+$
 \alpha(x_1)+\cdots+\alpha(x_q)
-\]
+$
 
 ではなく、
 
-\[
+$
 \alpha(x_1,\ldots,x_q)
-\]
+$
 
 として候補間 correlation と redundancy を扱うことです。
 
@@ -133,13 +133,13 @@ batch と asynchronous は同じではありません。
 
 exploration strength を明示的に扱いたい場合は UCB family が理解しやすい選択肢です。
 
-\[
+$
 \mu(x)+\sqrt{\beta}\sigma(x)
-\]
+$
 
 のように mean と uncertainty の寄与を直接確認できます。
 
-ただし \(\beta\) の convention は実装ごとに確認します。
+ただし $`\beta`$ の convention は実装ごとに確認します。
 
 UCB が常に EI より探索的という固定的なランキングではなく、posterior と parameterization に依存します。
 
@@ -299,9 +299,9 @@ target prediction が改善する
 
 ## 12.16 Threshold boundary を学びたい
 
-\[
+$
 f(x)=t
-\]
+$
 
 の境界が目的なら level-set acquisition を使います。
 
@@ -458,9 +458,9 @@ unsupported structure を generic tensor operation で無理に通すより、�
 
 例えば、
 
-\[
+$
 \mathbb E_w[f(x,w)]
-\]
+$
 
 や worst-case / risk measure などです。
 
@@ -483,9 +483,9 @@ posterior sampling / Thompson sampling も finite-pool selection と相性が良
 
 posterior function sample
 
-\[
+$
 \tilde f\sim p(f\mid\mathcal D)
-\]
+$
 
 を生成し、その sample 上の optimum を選ぶ Thompson Sampling は、明示的な deterministic acquisition formula とは異なる
 candidate-selection mechanism です。
@@ -528,18 +528,18 @@ MES、KG、multi-step lookahead、high-q MOBO などでは acquisition computati
 
 選択時には、
 
-\[
+$
 \text{experiment cost}
 \quad\text{vs}\quad
 \text{acquisition computation cost}
-\]
+$
 
 も考えます。
 
 black-box evaluation が数日かかるなら重い acquisition が合理的でも、millisecond-level simulator では acquisition
 overhead が支配的になる可能性があります。
 
-## 12.29 推奨する選択手順
+## 12.29 推奨する選択手順: semanticsからruntimeへ
 
 実務では次の順番で整理すると acquisition family を選びやすくなります。
 
@@ -551,7 +551,7 @@ function learning?
 boundary learning?
 ```
 
-### Step 2: output structure
+### Step 2: objective / learning target structure
 
 ```text
 single objective?
@@ -560,7 +560,7 @@ constraints?
 target task?
 ```
 
-### Step 3: observation process
+### Step 3: observation and evaluation process
 
 ```text
 noise?
@@ -569,7 +569,7 @@ pending evaluations?
 finite pool?
 ```
 
-### Step 4: evaluation structure
+### Step 4: fidelity / cost structure
 
 ```text
 same cost?
@@ -586,7 +586,7 @@ terminal decision value?
 multi-step planning?
 ```
 
-### Step 6: computational structure
+### Step 6: candidate-space / computational structure
 
 ```text
 continuous / mixed?
@@ -595,9 +595,21 @@ large q?
 many objectives?
 ```
 
-### Step 7: implementation contract
+### Step 7: posterior requirement
 
-最後に現在の robotorchan / BoTorch integration と posterior compatibility を確認します。
+~~~text
+marginal momentsだけで足りる?
+joint Gaussian structureが必要?
+posterior samplesが必要?
+fantasizeが必要?
+~~~
+
+ここでmodelが返せるposteriorとacquisitionの計算契約を照合します。
+
+### Step 8: implementation / optimizer contract
+
+最後に現在のrobotorchan / BoTorch integration、optimizer compatibility、runtime validationを確認します。
+Theoryで定義できることと、現在の実行可能workflowは同義ではありません。
 
 ## 12.30 Problem-to-family quick map
 
@@ -643,7 +655,7 @@ Theory に記載されていることは、robotorchan がすべて独自実装�
 
 BoTorch native で十分な標準 acquisition は再実装せず、robotorchan-specific acquisition が必要な領域だけを補完します。
 
-## 12.31.1 Registry を最終判定に使う
+## 12.31.1 Registryだけを最終判定にしない
 
 理論上の分類だけで model / acquisition / optimizer の組合せを決めないことが重要です。
 
@@ -658,8 +670,15 @@ BoTorch native で十分な標準 acquisition は再実装せず、robotorchan-s
 - multi-fidelity requirement
 - one-shot semantics
 
-さらに optimizer compatibility は別レイヤーです。
-たとえば現在の generic mixed optimizer check は one-shot acquisition を非互換とします。
+さらにoptimizer compatibilityは別レイヤーです。通常のgeneric mixed optimizerはone-shot acquisitionへ
+そのまま適用しませんが、現在はqKG / qMFKGについてq=1の専用
+`optimize_mixed_one_shot_acqf` pathがruntime-validatedです。したがって `one_shot=True` だけを見て
+mixed workflow全体を非対応と判定するのも誤りです。
+
+またregistry metadata自体もruntime behaviorと不整合になり得ます。Phase 10監査では
+`PosteriorVariance` / `PosteriorStd`のensemble metadataと実装のreject behaviorに不整合を確認しています。
+registryは重要なstatic compatibility surfaceですが、最終的にはexecutable integration / runtime testまで
+確認します。
 
 したがって実利用時の確認順序は、
 
@@ -673,7 +692,40 @@ problem semantics
 
 と考えるのが安全です。
 
-## 12.32 まとめ
+## 12.32 Current runtime guardrails
+
+現在の選択時に特に見落としやすい境界は次の通りです。
+
+| Workflow | Current interpretation |
+| --- | --- |
+| `PosteriorVariance` / `PosteriorStd` | q=1; runtimeはempirical ensemble posteriorをreject |
+| EPIG | q=1, single-output, joint Gaussian, finite target set |
+| Straddle family | q=1; structured outputはscalarization; ensemble非対応 |
+| qKG | single-output registry contract; fantasize + one-shot required |
+| mixed qKG | q=1 dedicated mixed one-shot pathのみruntime-validated |
+| qMFKG | single-output + multi-fidelity + fantasize + one-shot |
+| mixed qMFKG | q=1 dedicated mixed one-shot pathのみruntime-validated |
+| HVKG | theory coverage; current integration-test対象外 |
+| MF-MES | theory coverage; current runtime-validated contract外 |
+| candidate constraints | optimizer responsibility; acquisition `supports_constraints`とは別 |
+
+この表もsource of truthそのものではありません。実利用時はintegration guideとruntime testsを確認します。
+
+## 12.33 この章で覚えておくこと
+
+- acquisition名ではなくdecision purposeから選ぶ
+- BO、function learning、level-set learningを最初に分ける
+- multi-output modelとmulti-objective decisionを混同しない
+- noise、q-batch、pending、fantasyは別のaxis
+- unknown output constraintとknown candidate constraintを分ける
+- cost-awareとmulti-fidelityを分ける
+- information-theoretic methodでは「何についてのinformationか」を確認する
+- model capabilityとacquisition capabilityとoptimizer capabilityを別々に確認する
+- posterior requirementをmarginal moments / joint Gaussian / posterior samplesで確認する
+- registryはcompatibility surfaceであり、catalogでもruntime validationの代替でもない
+- Theory coverageはrobotorchan-owned implementationやruntime supportを意味しない
+
+## 12.34 まとめ
 
 Acquisition selection の最も重要な原則は、
 
