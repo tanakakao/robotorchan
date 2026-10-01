@@ -161,7 +161,8 @@ joint optimization と greedy construction は同じアルゴリズムではあ�
 q-acquisition の多くは MC expectation を最適化します。
 
 acquisition optimization の途中で sampling noise が過度に変化すると、objective surface 自体が揺れて gradient
-optimization が難しくなります。QMC sampling や共通 base samples は、MC estimator の variance と optimization stability に関係します。
+optimization が難しくなります。QMC sampling や共通 base samples は、MC estimator の variance と optimization 
+stability に関係します。
 
 これは acquisition の理論的 utility と、その数値最適化をつなぐ重要な実装論点です。
 
