@@ -199,7 +199,9 @@ K=K_X\otimes K_T
 
 というKronecker積構造が現れます。
 
-BoTorch 0.18.1の`MultiTaskGP`と`KroneckerMultiTaskGP`はいずれもICMの考え方を利用しますが、データ表現と計算構造が異なります。
+`MultiTaskGP` と `KroneckerMultiTaskGP` は、入力側 covariance と task covariance を組み合わせる
+multi-task GP ですが、データ表現、task covariance の parameterization、計算構造は同一ではありません。
+したがって、両者を単一の ICM 実装として同一視せず、各モデルの covariance contract を確認します。
 
 ---
 
