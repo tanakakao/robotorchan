@@ -121,14 +121,14 @@ $$
 
 という improvement の期待値を評価します。つまり
 
-$
+$$
 \operatorname{EI}(x)
 =
 \mathbb{E}\left[
 \max(f(x)-f_{\mathrm{best}},0)
 \mid \mathcal{D}_n
 \right]
-$
+$$
 
 です。ここで期待値を取るのは、$`f(x)`$ が posterior のもとではまだ未知の
 確率変数だからです。EIは「改善する確率」だけでなく、
