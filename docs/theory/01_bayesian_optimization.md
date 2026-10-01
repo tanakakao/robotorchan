@@ -298,6 +298,32 @@ Candidate
 
 本理論ガイドでは、その背景となる GP・Kernel・Multi-task・Multi-Fidelity などを順に説明します。
 
+## 1.12.1 実装では BO loop をさらに分解する
+
+理論上は surrogate と acquisition の2要素で説明できても、実装では次の責務を分けます。
+
+```text
+model
+ -> posterior
+ -> transform / objective
+ -> sampling
+ -> acquisition
+ -> initialization
+ -> acquisition optimization
+ -> evaluation
+ -> model update
+```
+
+batch / asynchronous BO では pending points と fantasization がこの loop に加わります。
+TuRBO のような trust-region method では candidate optimization 側に stateful search geometry が加わります。
+
+この分解は単なるソフトウェア設計ではありません。
+posterior sample の依存構造、objective の適用位置、initial conditions、
+pending-point semantics などが BO の意思決定結果を変え得るためです。
+
+詳細な実装境界は [理論ガイドREADME](README.md) の
+「BO 周辺基盤の理論と実装ガイド」を参照してください。
+
 ## 1.13 次に読む章
 
 BOを理解するためには、surrogate model がどのように予測平均と不確実性を計算しているかを理解することが重要です。
