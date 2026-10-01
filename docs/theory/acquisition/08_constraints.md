@@ -15,72 +15,74 @@ known candidate / input-space constraint
 同じconstraintという語でも、uncertaintyを学習する問題とcandidate domainを制限する問題は
 別のruntime responsibilityです。robotorchanでは一方を他方へ変換しません。
 
-## 8.3 最適値だけでなくfeasibilityを考える
+## 8.2 最適値だけでなくfeasibilityを考える
 
 実問題では、目的関数
 
-$
+$$
 f(x)
-$
+$$
 
 を最大化するだけでなく、制約
 
-$
+$$
 c_j(x)\le 0,
 \qquad j=1,\ldots,J
-$
+$$
 
 を満たす必要があります。
 
 このとき最適化対象は
 
-$
+$$
 \max_{x\in\mathcal X} f(x)
 \quad
 \text{subject to}
 \quad
 c_j(x)\le0
-$
+$$
 
 です。
 
-Bayesian Optimization では objective と constraints の両方が高コスト・未知である場合があり、それぞれを surrogate posterior で表現します。
+Bayesian Optimizationではobjectiveとconstraintsの両方が高コスト・未知である場合があり、
+それぞれをsurrogate posteriorで表現します。
 
-## 8.2 Feasibility probability
+## 8.3 Feasibility probability
 
 制約 \(c(x)\le0\) に対して posterior
 
-$
+$$
 c(x)\mid\mathcal D_n
 \sim
 \mathcal N(\mu_c(x),\sigma_c^2(x))
-$
+$$
 
 を仮定すると、feasibility probability は
 
-$
+$$
 P(c(x)\le0\mid\mathcal D_n)
 =
 \Phi\left(
 \frac{-\mu_c(x)}{\sigma_c(x)}
 \right)
-$
+$$
 
 です。
 
-複数制約が posterior 上で独立なら、joint feasibility probability を各確率の積として書ける場合があります。ただし constraints が相関している場合、この積は一般には正しくありません。
+複数制約がposterior上で独立なら、joint feasibility probabilityを各確率の積として書ける場合が
+あります。ただしconstraintsが相関している場合、この積は一般には正しくありません。
 
 ## 8.4 Objective utility と feasibility
 
 直感的な constrained acquisition は、
 
-$
+$$
 \alpha_{\mathrm{constrained}}(x)
 \approx
 \alpha_{\mathrm{objective}}(x)
 \times
 P(\text{feasible at }x)
-$
+$$
 
 と理解できます。
 
@@ -91,39 +93,42 @@ $
 
 候補を優先できます。
 
-ただし、すべての constrained acquisition がこの単純な積で定義されるわけではありません。MC formulation では posterior samples ごとに objective utility と constraint satisfaction を組み合わせられます。
+ただし、すべてのconstrained acquisitionがこの単純な積で定義されるわけではありません。
+MC formulationではposterior samplesごとにobjective utilityとconstraint satisfactionを
+組み合わせられます。
 
 ## 8.5 Sample-wise constraint
 
 posterior sample \(f^{(s)}(x)\) と constraint sample \(c^{(s)}(x)\) に対し、
 
-$
+$$
 U^{(s)}(x)
 =
 I^{(s)}(x)
 \mathbf 1[c^{(s)}(x)\le0]
-$
+$$
 
 のように infeasible sample の utility を無効化できます。
 
 複数 constraints なら
 
-$
+$$
 \prod_{j=1}^{J}
 \mathbf 1[c_j^{(s)}(x)\le0]
-$
+$$
 
 を使えます。
 
-実装では hard indicator の代わりに smooth approximation を使い、gradient-based acquisition optimization を安定させる場合があります。
+実装ではhard indicatorの代わりにsmooth approximationを使い、gradient-based acquisition
+optimizationを安定させる場合があります。
 
-## 8.6 Constraint の符号 convention
+## 8.6 Sign conventionはAPI layerごとに確認する
 
 output / black-box constraintの説明では
 
-$
+$$
 c(x)\le0
-$
+$$
 
 を feasible とする convention がよく使われますが、文献やコードによって符号規約は異なります。
 
@@ -149,9 +154,9 @@ constraint の符号を誤ると acquisition は feasible / infeasible を逆に
 
 例えば
 
-$
+$$
 Ax\le b
-$
+$$
 
 のように入力から厳密に判定できる制約は、candidate optimization の feasible domain として扱えます。
 
@@ -199,9 +204,9 @@ objective utility と uncertainty / feasibility を組み合わせ、candidate v
 
 例えば model が
 
-$
+$$
 (f(x),c_1(x),c_2(x))
-$
+$$
 
 を同時に出力する場合、objective output と constraint outputs を同じ posterior sample から取り出せます。
 
@@ -215,7 +220,7 @@ $
 
 どちらを選ぶかは、output correlation をモデル化したいか、data availability が同じか、noise structure が共通かなどに依存します。
 
-## 8.10 Feasible incumbent
+## 8.10 Feasible incumbentとnoise
 
 Improvement-based constrained BO では、「現在の best」を feasible observations の中から定義する必要があります。
 
@@ -223,7 +228,7 @@ infeasible だが objective value が非常に高い観測を incumbent にす�
 
 さらに observation noise がある場合は feasibility 自体も不確実なので、単純な observed feasible best では不十分になる場合があります。
 
-## 8.11 Feasible point がまだない場合
+## 8.11 Feasible pointがまだない場合
 
 初期データに feasible observation が一つもない場合、通常の improvement-based logic は扱いにくくなります。
 
@@ -237,15 +242,15 @@ infeasible だが objective value が非常に高い観測を incumbent にす�
 
 したがって constrained BO は「EI に feasibility probability を掛ければ常に終わり」ではありません。
 
-## 8.12 Constraint boundary の学習
+## 8.12 Constraint boundaryの学習
 
 制約付き最適化では、optimal solution が constraint boundary 付近に存在することが多くあります。
 
 そのため constraint posterior の uncertainty、特に
 
-$
+$$
 c(x)\approx0
-$
+$$
 
 の領域を正しく学習することが重要です。
 
@@ -288,7 +293,7 @@ safe BO では safe set expansion や high-probability safety guarantee など�
 
 したがって constraint-aware と safe を同義として扱わないことが重要です。
 
-## 8.15 BoTorch / robotorchan との対応
+## 8.15 BoTorch / robotorchanとの対応
 
 BoTorchのMC acquisitionはobjective samplesとoutput constraintsを組み合わせるcomposition pathを
 提供します。またknown candidate constraintsはacquisition optimization側で扱います。
@@ -302,16 +307,16 @@ robotorchan は BoTorch-first とし、標準的な constrained acquisition sema
 
 現在の対応状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
-## 8.16 robotorchan の constraint responsibility boundary
+## 8.16 robotorchanのconstraint responsibility boundary
 
 robotorchan では、同じ `constraint` という語でも runtime responsibility を明確に分けます。
 
 | 種類 | 既知/未知 | feasible convention | robotorchan の責務 |
 | --- | --- | --- | --- |
-| candidate linear inequality | 入力から既知 | BoTorch optimizer と同じ `sum(...) >= rhs` | `CandidateConstraints.inequality_constraints` |
+| candidate linear inequality | 既知 | `sum(...) >= rhs` | `inequality_constraints` |
 | candidate equality | 入力から既知 | `sum(...) = rhs` | `CandidateConstraints.equality_constraints` |
-| candidate nonlinear inequality | 入力から既知 | `callable(X) >= 0` | `CandidateConstraints.nonlinear_inequality_constraints` |
-| output / black-box constraint | 評価前は未知 | acquisition API の convention に従う | BoTorch constrained-acquisition composition |
+| candidate nonlinear inequality | 既知 | `callable(X) >= 0` | `nonlinear_inequality_constraints` |
+| output / black-box constraint | 未知 | acquisition APIに従う | BoTorch composition |
 
 したがって、candidate nonlinear constraint の `>= 0` と、output constraint の例で使う
 `c(x) <= 0` は矛盾ではありません。異なる API layer の符号規約です。
@@ -370,4 +375,5 @@ optimizer
 
 を分離することが重要です。
 
-特に known input constraint と unknown outcome constraint、constraint-aware optimization と safe optimization を混同しないようにします。
+特にknown candidate constraintとunknown output constraint、constraint-aware optimizationと
+safe optimizationを混同しないようにします。
