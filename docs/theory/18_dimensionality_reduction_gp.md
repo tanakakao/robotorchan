@@ -26,6 +26,19 @@ y in R^M
 robotorchan の reduced GP は、**公開 API では元の feature / output space を保ちながら、
 内部 GP だけを reduced space で動かす**ことを基本契約とします。
 
+### 最初に「何を保存したい削減か」を決める
+
+次元削減法は、すべて同じ情報を保存しようとしているわけではありません。
+
+| reducer | 主に保存しようとするもの | Yを使うか |
+| --- | --- | --- |
+| PCA | Xの大きなvariance方向 | 使わない |
+| PLS | XとYの共変動 | 使う |
+| Random Projection | Euclidean geometryの近似 | 使わない |
+
+したがって「高次元だからPCA」というだけではmodeling assumptionが不足しています。
+重要なのは、目的関数に必要な情報がreduced coordinatesへ残るかです。
+
 ## 1. Modeling dimension と search dimension
 
 最初に重要なのは、次の2つを分けることです。
@@ -63,21 +76,20 @@ z = W^T (x - mu_x)
 
 ここで `W` は上位 principal directions です。
 
-PCA は `Y` を使わない unsupervised reduction です。そのため、
+PCAは `Y` を使わないunsupervised reductionです。
+入力の主要variationを表現できますが、「noiseだけを選択的に除去する手法」ではありません。
+大きなvarianceを持つ不要方向があれば、それもprincipal componentになり得ます。
 
-- noise を含む高次元入力を圧縮できる
-- reducer が目的値へ直接 overfit しにくい
-
-という利点がある一方、
+一方でreducerが目的値へ直接fitされないという性質があります。ただし、
 
 - X の分散が小さくても Y に重要な方向を落とす
 
 可能性があります。
 
-robotorchan:
-
-- `PCAGP`
-- Mixed / MultiTask / Kronecker 系の PCA reduced model
+robotorchanではSingleTaskの `PCAGP` に加え、MultiTask / Kronecker向けのnamed PCA modelと、
+Mixed SingleTaskの `MixedPCAGP` があります。Mixed × MultiTaskではnamed cross-productを
+推測せず、`MixedReducedMultiTaskGP` / `MixedReducedKroneckerMultiTaskGP` に
+明示的なreducerを構成します。
 
 ## 3. PLS input reduction
 
@@ -92,13 +104,16 @@ t = X w
 
 が response と強く共変するように projection direction `w` を選びます。
 
-PCA と比較すると predictive direction を残しやすい一方、reducer 自体が `Y` を見るため、
-小標本では component 数の選択や過学習に注意が必要です。
+PLSはYとの関係を使うため、PCAとは異なる基準でpredictive directionを残します。
+ただし「常にPCAより予測に有利」という保証ではありません。小標本ではprojection direction自体が
+Yへ適合しすぎる可能性があるため、component数を含めてvalidation対象にします。
 
-robotorchan:
+特にPLS reducerを含むpipelineを評価するときは、test foldのYを使ってreducerをfitしないようにします。
+reducer fitもtraining foldの内部で行う必要があります。
 
-- `PLSGP`
-- Mixed / MultiTask / Kronecker 系の PLS reduced model
+robotorchanではSingleTaskの `PLSGP` に加え、MultiTask / Kronecker向けのnamed PLS modelと、
+Mixed SingleTaskの `MixedPLSGP` があります。Mixed × MultiTaskの組合せは共通reduced baseを
+使うため、`MixedPLSMultiTaskGP` のようなclass名を推測しません。
 
 ## 4. Random projection
 
@@ -115,7 +130,9 @@ z = A x
 robotorchan の `RandomProjectionGP` は Gaussian random projection を frozen reducer として
 使います。`random_state` により再現可能な projection を構成します。
 
-PCA / PLS のような fitted direction と比較する baseline としても有用です。
+PCA / PLSのようなdata-dependent directionと異なり、projection自体はtraining Yへfitしません。
+ただしrandom projection後のGP性能はprojection seedやreduced dimensionに依存し得るため、
+1つのseedだけを一般的な性能差と解釈しないことが重要です。
 
 ## 5. ReducedGP の公開空間と内部空間
 
@@ -140,9 +157,20 @@ dimension がどちらにも一致しなければ error とします。
 この契約により、通常利用では original feature space を維持しつつ、内部処理や高度な利用では
 reduced coordinates を直接渡すこともできます。
 
+### original-spaceとreduced-spaceを両方受けるAPIの注意
+
+`ReducedGP.posterior(X)` は最終dimensionからoriginal / reducedを判定します。
+通常は異なるdimensionなので明確ですが、reducerがdimensionを減らしていない構成では
+original dimensionとreduced dimensionが一致し得ます。
+
+その場合はpublic contract上original-space branchが先に選ばれるため、
+「同じshapeだからalready-reduced Xとして解釈される」と仮定しないようにします。
+通常利用ではoriginal-space Xを渡すのが最も分かりやすい使い方です。
+
 ## 6. Reducer lifecycle
 
-reducer はモデル構築時に1度だけ fit することを基本とします。
+reducerは**1つのmodel instanceの構築時**にfitし、そのmodel instance内ではfrozen representationとして
+使うことを基本とします。
 
 - unfitted reducer: constructor 内で `fit_transform`
 - already-fitted reducer: 再 fit せず `transform` のみ
@@ -150,11 +178,29 @@ reducer はモデル構築時に1度だけ fit することを基本とします
 したがって externally pre-fitted reducer や pretrained neural reducer の latent coordinate
 system を保持できます。
 
-BO iteration ごとに reducer を無条件に再 fit すると latent basis が変わり、以前の GP
-parameter や candidate geometry との整合性を失う可能性があります。
+新しいdataを追加したときにreducerを更新すること自体が誤りなのではありません。
+ただしBO iterationごとにreducerだけを無条件にrefitするとlatent basisが変わり、以前のGP
+parameterやcandidate geometryとの整合性を失う可能性があります。
 
 reducer を更新する場合は raw training data からモデルを再構築し、座標系の変更を明示的に
 扱う方が安全です。
+
+### Validationではreducerも学習pipelineの一部
+
+PCA / PLSのprojectionを全dataで先にfitしてからcross-validationすると、fold外の情報が
+projectionへ入ります。PLSではYも使うため特に直接的です。
+
+~~~text
+正しい評価単位
+training fold
+  → fit reducer
+  → transform training fold
+  → fit GP
+  → transform validation fold
+  → evaluate
+~~~
+
+component数やreducer familyを選ぶ処理も同じouter validation設計の中で扱います。
 
 ## 7. BoTorch transform との順序
 
@@ -309,6 +355,22 @@ categorical X -----------> categorical covariance
 
 これは「カテゴリコード 0, 1, 2 の数値距離」を PCA や PLS に学習させることを避けるためです。
 
+### Mixed reduction後のGP inputは「latentだけ」ではない
+
+Mixed modelではcontinuous partをD_contからd_latentへ削減した後、categorical columnsを
+保持してmixed covarianceへ渡します。
+
+~~~text
+raw X
+  ├─ continuous → reducer → latent continuous
+  └─ categorical ─────────→ passthrough
+                         ↓
+                   mixed GP covariance
+~~~
+
+したがってunderlying GPのinput dimensionは概念的に
+d_latent + categorical column countです。categoryをone-hotしてreducerへ混ぜる設計ではありません。
+
 ## 14. MultiTask と Kronecker
 
 long-format MultiTask では task feature は reducer に含めません。
@@ -324,8 +386,12 @@ task identity は structural column として保持します。
 Kronecker形式では task identity は `Y` の task/output axis にあり、`X` に task column が
 存在しません。そのため data features `X` の reduction と task covariance を自然に分離できます。
 
-PCA / PLS reduced model が MultiTask / Kronecker と組み合わされる場合でも、この
-structural-feature contract を維持する必要があります。
+PCA / PLS reduced modelがMultiTask / Kroneckerと組み合わされる場合でも、この
+structural-feature contractを維持する必要があります。
+
+なおSingleTask側に `MixedPCAGP` / `MixedPLSGP` / `MixedRandomProjectionGP` があることは、
+同じ命名規則のMixed MultiTask classが存在することを意味しません。現在のpublic common basesは
+`MixedReducedMultiTaskGP` と `MixedReducedKroneckerMultiTaskGP` です。
 
 ## 15. Input reduction と output reduction の違い
 
@@ -339,6 +405,19 @@ structural-feature contract を維持する必要があります。
 
 特に input PCA/PLS を使っても、original-space `optimize_acqf` の optimization difficulty が
 自動的に低次元になるわけではありません。
+
+### Reductionにはinformation-loss riskがある
+
+次元を減らすことは、GPへ強いinductive biasを入れることでもあります。
+
+~~~text
+full X
+  → 「捨てた方向には目的関数に必要な情報が少ない」と仮定
+  → reduced GP
+~~~
+
+この仮定が合えばsample efficiencyやconditioningを改善できますが、合わなければposterior全体が
+重要な方向を見られなくなります。そのため「reduced dimensionが小さいほど良い」とは限りません。
 
 ## 16. Bayesian optimization での注意
 
@@ -363,7 +442,9 @@ preservation という異なる基準を使います。
 
 - public training data は original space で保持
 - underlying GP は reduced space で学習
-- unfitted reducer は construction 時に1回 fit
+- unfitted reducerは1つのmodel instanceのconstruction時にfit
+- reducerを更新するならGPとの座標同期を含めてmodel再構築を考える
+- validationではreducer fitをtraining fold内に閉じる
 - fitted reducer は再 fit せず再利用
 - posterior は original-space / reduced-space X の両方を受理可能
 - BoTorch `input_transform` は input reduction の後に適用
@@ -373,12 +454,26 @@ preservation という異なる基準を使います。
 - output reduction + explicit `train_Yvar` は未対応
 - conditioning でも input/output reduction を適用
 - state restoration 後は reducer と GP training input を再同期
-- Mixed では continuous features のみ reduction
+- Mixedではcontinuous featuresのみreductionし、categorical columnsはpassthrough
+- Mixed reduced GPの内部inputはlatent continuous + categorical structure
+- Mixed × MultiTaskのnamed cross-product classをSingleTask名から推測しない
 - task / category は structural feature として保持
 - input reduction と acquisition search reduction は別機能
 
 実装詳細は [high-dimensional inputs](../models/high_dimensional_inputs.md) と
 [high-dimensional outputs](../models/high_dimensional_outputs.md) を参照してください。
+
+## 18. この章で覚えておくこと
+
+- input reduction、output reduction、search-space reductionは別の操作である
+- PCA / PLS / Random Projectionは保存しようとする情報が異なる
+- input reductionだけではoriginal-space acquisition optimizationの次元は下がらない
+- reducerも学習pipelineの一部なのでvalidation leakageを防ぐ
+- 1つのmodel instanceではreducerとGPのlatent coordinate systemを同期させる
+- Mixed入力ではcontinuous featureだけを削減しcategory semanticsを保持する
+- task featureもreducerへ混ぜずstructural featureとして保持する
+- output reductionではposteriorをoriginal output semanticsへ復元してからobjectiveを考える
+- dimensionality reductionはinformation-lossを伴うinductive biasであり、component数も検証対象である
 
 ## 参考文献
 
