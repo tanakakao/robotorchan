@@ -125,8 +125,9 @@ robotorchan: native BoTorch path を利用
 
 Theory は理論体系として構成します。robotorchan にローカル実装がない MES、GIBBON、qMultiStepLookahead なども、理論上の位置付けが重要なら扱います。
 
-現在の対応状況は Theory ではなく
-[Acquisition integration status](../../optimization/acquisition-integration.md) を正とします。
+現在の対応状況はTheory本文から推測せず、
+[Acquisition integration status](../../optimization/acquisition-integration.md) とexecutable runtime testsを
+確認します。registryは重要なstatic compatibility surfaceですが、runtime validationの代替ではありません。
 
 ### 原典を優先する
 
@@ -286,8 +287,9 @@ Theory本文はこのmetadataのコピーにはせず、**なぜそのrequiremen
 この acquisition theory hierarchy は次の整合性を維持します。
 
 - chapter number と filename は 01〜12 で一致させる。
-- theory から implementation support を推測しない。現在の対応範囲は
-  [Acquisition integration status](../../optimization/acquisition-integration.md) を正とする。
+- theoryからimplementation supportを推測しない。現在の対応範囲は
+  [Acquisition integration status](../../optimization/acquisition-integration.md)、registry、runtime testsを
+  相互確認する。metadataとruntimeが不一致なら実行時contractを優先してgapを修正する。
 - practical API の説明は [Optimization guide](../../optimization/README.md) に置き、Theory へ
   implementation-specific usage を重複させない。
 - BoTorch native acquisition は、robotorchan 固有 contract がない限り local alias として
@@ -297,6 +299,37 @@ Theory本文はこのmetadataのコピーにはせず、**なぜそのrequiremen
   自動的に拡張しない。
 
 
+
+## Cross-chapter invariants
+
+章をまたいで次の意味を固定します。
+
+~~~text
+q-batch       = 複数のreal candidateをjointに価値付けする構造
+X_pending     = 実際に評価中で結果が未確定のcandidate context
+fantasy       = hypothetical outcomeでconditionしたmodel / branch
+one-shot rows = lookahead acquisition内部のauxiliary decision variables
+~~~
+
+これらは互いに置換しません。同様に、multi-output modelとmulti-objective decision、output constraintと
+candidate constraint、cost-aware utilityとmulti-fidelity information transferを別axisとして扱います。
+
+posterior requirementも `MARGINAL_MOMENTS`、`JOINT_GAUSSIAN`、`POSTERIOR_SAMPLES`を区別し、
+「sampleableなら任意のMC acquisitionに互換」とは推論しません。
+
+## Cross-layer verification order
+
+~~~text
+problem semantics
+ -> theory family
+ -> model / posterior contract
+ -> acquisition capability
+ -> optimizer / search-space contract
+ -> executable runtime validation
+~~~
+
+Theory coverage、BoTorch native API、robotorchan registry entry、robotorchan-owned implementation、
+runtime-tested workflowは同義ではありません。
 
 ## Maintenance state
 
