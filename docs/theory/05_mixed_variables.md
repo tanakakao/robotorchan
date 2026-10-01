@@ -36,19 +36,34 @@ Mixed BOを理解するときは、
 
 を分けて考えることが重要です。
 
+### まず「値の型」ではなく「意味」を見る
+
+Mixed BOで重要なのは、PythonやTensor上のdtypeではなく、**その変数が探索問題で
+どのような意味を持つか**です。例えば整数 `0, 1, 2` が保存されていても、
+
+~~~text
+温度段階 0 / 1 / 2   → 順序や距離に意味があるかもしれない
+触媒ID   0 / 1 / 2   → 単なる名前で、数値差に意味はない
+~~~
+
+では統計的な扱いが異なります。
+
+したがって「数値としてTensorに入っているからcontinuous」という判断はできません。
+**変数の意味 → surrogateでの表現 → candidate生成時の制約**の順に考えます。
+
 ## 5.2 連続変数だけの場合
 
 通常の連続変数GPでは、例えば
 
-\[
+$$
 x=(x_1,x_2)\in\mathbb{R}^2
-\]
+$$
 
 に対して、入力間距離をkernelで評価します。
 
 RBF kernelなら
 
-\[
+$$
 k(x,x')
 =
 \sigma_f^2
@@ -57,7 +72,7 @@ k(x,x')
 \sum_j
 \frac{(x_j-x'_j)^2}{\ell_j^2}
 \right)
-\]
+$$
 
 です。
 
@@ -93,9 +108,9 @@ x' = (0.3, 0.5)
 
 ここで通常の連続kernelをそのまま使うと、
 
-\[
+$$
 |0-2|=2|0-1|
-\]
+$$
 
 なので、モデルは暗黙に
 
@@ -164,24 +179,26 @@ integer
 
 最も単純な直感は
 
-\[
+$$
 k_{cat}(c,c')
 =
 \begin{cases}
 1 & c=c'\\
 \rho & c\neq c'
 \end{cases}
-\]
+$$
 
 です。
 
-ここで `ρ` は異なるカテゴリ間の相関を表します。
+ここで $`\rho`$ は異なるカテゴリ間の共分散構造を表すパラメータの例です。
+これは categorical kernel の考え方を説明するための単純化した式であり、
+すべての categorical kernel がこの1パラメータ形式を使うわけではありません。
 
 重要なのは、カテゴリ番号そのものの差
 
-\[
+$$
 |c-c'|
-\]
+$$
 
 を距離として使っていないことです。
 
@@ -199,9 +216,9 @@ C = 2
 
 入力を
 
-\[
+$$
 x=(x_{cont},x_{cat})
-\]
+$$
 
 と分けて考えます。
 
@@ -216,15 +233,15 @@ x_cat  = [触媒]
 
 連続部分には
 
-\[
+$$
 k_{cont}(x_{cont},x'_{cont})
-\]
+$$
 
 カテゴリ部分には
 
-\[
+$$
 k_{cat}(x_{cat},x'_{cat})
-\]
+$$
 
 を使います。
 
@@ -281,7 +298,12 @@ optimizer側
   └─ one-hot制約をどう保証するか
 ```
 
-One-Hot Encodingそのものが誤りなのではなく、**モデル化と候補最適化の両方を整合させる必要がある**ということです。
+One-Hot Encodingそのものが誤りなのではなく、**モデル化と候補最適化の両方を
+整合させる必要がある**ということです。
+
+特に「one-hotを使わないこと」と「カテゴリを正しく扱うこと」は同義ではありません。
+native categorical covariance、明示的encoding、候補集合による列挙など、
+モデルの数学とoptimizerの制約が整合していれば複数の設計があり得ます。
 
 ## 5.8 MixedSingleTaskGP
 
@@ -316,8 +338,26 @@ model = MixedSingleTaskGP(
 
 `cat_dims` は **カテゴリ変数が存在する入力次元のindex** です。
 
-robotorchanの`MixedSingleTaskGP`はBoTorchの同名モデルを薄くwrapし、予測挙動を維持しながらraw
-data保持や`make_mll()`などの共通APIを追加しています。
+robotorchanの `MixedSingleTaskGP` はBoTorchの同名モデルを基礎にし、
+予測挙動を維持しながら raw data 保持や `make_mll()` などの共通APIを追加しています。
+
+### `cat_dims` が表すもの
+
+robotorchanでは `cat_dims` は **design-side categorical feature** を表します。
+task、fidelity、context、hierarchy selector のような構造列は、数値コードで
+格納されていても通常のカテゴリ設計変数とは役割が異なります。
+
+~~~text
+design category   → cat_dims
+task index        → task structure
+fidelity          → fidelity structure
+context           → contextual structure
+hierarchy selector→ hierarchical structure
+~~~
+
+これらを同じ列として重複指定すると、モデルが異なる意味を同じ入力次元へ
+割り当てることになります。robotorchanのmixed model設計では、このような
+structural dimension と `cat_dims` の重複を除外・検証する方針です。
 
 ## 5.9 カテゴリ値の表現
 
@@ -342,6 +382,14 @@ C → 2
 `cat_dims`によって、その次元をカテゴリとしてモデルへ伝えます。
 
 実務では、元ラベルと数値コードの対応表を保存しておくことも重要です。
+
+### 負の `cat_dims` と列index
+
+robotorchanのmixed modelでは、Pythonと同様に負のdimension indexを受け付ける
+モデルがあります。例えば入力次元が3なら $`-1`$ は最後の列を指します。
+
+ただし、負indexを使っても列の**意味**は変わりません。正規化後にtaskやfidelityなどの
+structural dimensionと同じ列を指す場合は、重複として扱う必要があります。
 
 ## 5.10 Integer variable はどう扱うか
 
@@ -373,7 +421,9 @@ candidate       : integerへ丸める
 
 という近似になります。
 
-この方法は簡単ですが、丸め前後でacquisition valueが変わるため、厳密なmixed optimizationとは異なります。
+この方法は簡単ですが、丸め前後でacquisition valueが変わるため、
+「連続緩和上で得た最適点」と「実際に評価する整数点」が異なります。
+そのため、丸めを含む方法は離散探索を直接解く方法と同一ではありません。
 
 整数変数の取り扱いは
 
@@ -400,12 +450,12 @@ X → posterior distribution
 
 一方、次候補を選ぶのは
 
-\[
+$$
 x_{next}
 =
 \arg\max_{x\in\mathcal{X}}
 \alpha(x)
-\]
+$$
 
 というacquisition optimizationです。
 
@@ -424,6 +474,29 @@ Candidate
 ```
 
 という構造になります。
+
+### 同じ mixed 対応でも保証しているものが違う
+
+モデルとoptimizerの責務を式で書くと、
+
+$
+p(f(x) \mid \mathcal{D})
+$
+
+をmixed入力に対して妥当に定義するのが surrogate model 側です。一方、
+
+$
+x_{next}
+=
+\operatorname*{arg\,max}_{x \in \mathcal{X}_{valid}}
+\alpha(x)
+$
+
+で $`\mathcal{X}_{valid}`$ の外へ出ないようにするのが candidate optimization 側です。
+
+したがってモデルがカテゴリを理解していても、optimizerが連続緩和した無効値を
+返せば実験条件としては使えません。逆にoptimizerが有効候補だけを返しても、
+surrogateがカテゴリ番号を連続距離として誤解すればposteriorが不適切になります。
 
 ## 5.12 optimize_acqf_mixed の考え方
 
@@ -449,15 +522,19 @@ Candidate
 
 概念的には
 
-\[
+$$
 \max_{c\in\mathcal{C}}
 \max_{x_{cont}}
 \alpha(x_{cont},c)
-\]
+$$
 
 です。
 
-これにより、カテゴリを連続値として補間せず、有効なカテゴリ値だけを評価できます。
+これにより、固定した離散設定についてはカテゴリを連続値として補間せず、
+有効な値だけを使って連続部分を最適化できます。
+
+ただし `fixed_features_list` に含めた組合せ自体が実行可能かどうかは、
+探索空間を構築する側で保証する必要があります。
 
 ## 5.13 fixed_features_list
 
@@ -496,9 +573,9 @@ fixed_features_list = [
 
 なら最大で
 
-\[
+$$
 3\times2=6
-\]
+$$
 
 個のカテゴリ組合せがあります。
 
@@ -508,19 +585,19 @@ fixed_features_list = [
 
 しかし、カテゴリ数や水準数が増えると
 
-\[
+$$
 N_{comb}
 =
 \prod_{j=1}^{p}L_j
-\]
+$$
 
 だけ組合せが増えます。
 
 例えば5つのカテゴリ変数が各5水準なら
 
-\[
+$$
 5^5=3125
-\]
+$$
 
 組です。
 
@@ -544,18 +621,18 @@ N_{comb}
 
 候補集合を
 
-\[
+$$
 \mathcal{C}=\{x_1,\ldots,x_M\}
-\]
+$$
 
 とすると、
 
-\[
+$$
 x_{next}
 =
 \arg\max_{x\in\mathcal{C}}
 \alpha(x)
-\]
+$$
 
 とすればよいからです。
 
@@ -605,13 +682,13 @@ candidate set = optimizerの別方式
 
 一度に複数条件を実験する場合は、Mixed search spaceでもbatch BOが必要になります。
 
-単純にacquisition value上位`q`点を独立に選ぶと、似た候補が集中する場合があります。
+単純にacquisition value上位 `q` 点を独立に選ぶと、似た候補が集中する場合があります。
 
 q-acquisitionでは候補集合
 
-\[
+$$
 X_q=\{x_1,\ldots,x_q\}
-\]
+$$
 
 を共同評価します。
 
@@ -735,14 +812,16 @@ high fidelity
 
 対処方法には、
 
-- `fixed_features_list`から無効組合せを除外する
+- `fixed_features_list` から無効組合せを除外する
 - 候補集合を事前に実行可能条件だけへ絞る
-- 制約付きacquisitionを使う
+- candidate/input-space constraint をoptimizer側で課す
 - 条件付き探索空間としてモデル化する
 
 などがあります。
 
-「物理的に生成不可能な候補」と「生成できるが性能制約を満たすか不明な候補」は区別することが重要です。
+「物理的に生成不可能な候補」と「生成できるが性能制約を満たすか不明な候補」は
+区別することが重要です。前者に対して未知制約用のconstrained acquisitionを
+使うのではなく、既知の実行可能性はcandidate search space側で守るのが基本です。
 
 前者はsearch spaceの制約、後者はconstrained BOの対象です。
 
@@ -752,9 +831,9 @@ Mixed inputでは、すべての列を同じ方法で正規化してはいけま
 
 連続変数は
 
-\[
+$$
 [0,1]
-\]
+$$
 
 へ正規化することが有効ですが、カテゴリコードを連続値と同じ意味で正規化すると、カテゴリ表現との整合性に注意が必要です。
 
@@ -870,6 +949,23 @@ fit_gpytorch_mll(mll)
 ### 「カテゴリとtaskは同じ」
 
 カテゴリは通常、最適化対象の設計変数です。taskは関連するデータ源・出力間で情報共有するための構造です。
+
+### 3つの整合性を確認する
+
+Mixed BOを実装するときは、最終的に次の3点が一致している必要があります。
+
+~~~text
+データ表現
+  「この列の0, 1, 2は何を意味するか」
+        ↓
+surrogate semantics
+  「その列の類似度・共分散をどうモデル化するか」
+        ↓
+candidate semantics
+  「実際に評価可能な値だけをどう生成するか」
+~~~
+
+この3つのどこか1つだけをmixed対応しても、Mixed BO全体が正しくなるわけではありません。
 
 ## 5.27 まとめ
 
