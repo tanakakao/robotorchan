@@ -893,9 +893,11 @@ robotorchanでは、連続 + カテゴリ変数のsurrogateとして`MixedSingle
 
 次章では、評価精度と評価コストが異なる複数の情報源を利用する [Multi-Fidelity](06_multi_fidelity.md) を説明します。
 
-## 参考
+## 参考文献
 
-- BoTorch v0.18.1 `MixedSingleTaskGP`
-- BoTorch v0.18.1 `optimize_acqf_mixed`
-- [Kernel](03_kernel.md)
-- [Acquisition Function](04_acquisition_function.md)
+1. Garrido-Merchán, E. C., and Hernández-Lobato, D. (2020).
+   Dealing with categorical and integer-valued variables in Bayesian optimization
+   with Gaussian processes. *Neurocomputing*, 380, 20-35.
+2. BoTorch `MixedSingleTaskGP` and `optimize_acqf_mixed` documentation.
+3. [Kernel](03_kernel.md)
+4. [Acquisition Function](04_acquisition_function.md)
