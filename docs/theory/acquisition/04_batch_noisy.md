@@ -13,23 +13,23 @@ Batch / noisy BOでは、次を同じ意味で使わないことが重要です�
 
 これらは組み合わせられますが別の軸です。特にpending pointとfantasy pointを同一視しません。
 
-## 4.3 q > 1 は pointwise ranking ではない
+## 4.2 q > 1 は pointwise ranking ではない
 
 1回の実験サイクルで q 点を同時に評価する場合、候補集合
 
-$
+$$
 X=(x_1,\ldots,x_q)
-$
+$$
 
 全体に対して acquisition value を定義します。
 
 重要なのは、
 
-$
+$$
 \alpha_q(X)
 \neq
 \sum_{j=1}^{q}\alpha_1(x_j)
-$
+$$
 
 が一般的だという点です。
 
@@ -39,15 +39,15 @@ q-acquisitionは候補集合のjoint posterior semanticsを保ってutilityを�
 Gaussian GPではcovariance matrixがこのdependenceを表しますが、一般のsampleable posteriorでは
 必ずしも明示的なGaussian covariance matrixを持つとは限りません。
 
-## 4.2 Joint posterior
+## 4.3 Joint posteriorはGaussian covarianceだけではない
 
 候補集合に対する Gaussian posterior は概念的に
 
-$
+$$
 f(X)\mid\mathcal D_n
 \sim
 \mathcal N(\mu(X),\Sigma(X))
-$
+$$
 
 です。
 
@@ -63,22 +63,22 @@ batch acquisitionでは候補集合をjointに扱います。
 
 最大化問題で q 点のうち最も良い結果による improvement を
 
-$
+$$
 I(X)
 =
 \max\left(
 \max_{j=1,\ldots,q} f(x_j)-f_{\mathrm{best}},
 0
 \right)
-$
+$$
 
 とすれば、
 
-$
+$$
 q\operatorname{EI}(X)
 =
 \mathbb E[I(X)]
-$
+$$
 
 です。
 
@@ -90,19 +90,19 @@ $
 
 観測モデルを
 
-$
+$$
 y(x)=f(x)+\epsilon,
 \qquad
 \epsilon\sim\mathcal N(0,\sigma_\epsilon^2)
-$
+$$
 
 とします。
 
 noise があると、観測値
 
-$
+$$
 \max_i y_i
-$
+$$
 
 が潜在関数 $`f`$ の最良値とは限りません。偶然大きな noise を含む観測を incumbent として固定すると、improvement criterion が歪む可能性があります。
 
@@ -147,9 +147,9 @@ baseline の選び方は単なる API detail ではなく、acquisition の計�
 
 並列実験では、すでに評価を開始したが結果が返っていない点
 
-$
+$$
 X_{\mathrm{pending}}
-$
+$$
 
 が存在します。
 
@@ -252,7 +252,7 @@ model registry の `supports_posterior_samples` と組み合わせて compatibil
 model-level fantasization supportも別契約であり、`X_pending` 対応から自動的には推論しません。
 
 実行可能な互換性matrixは
-[Batch, asynchronous, and fantasization compatibility](../../optimization/batch-async-fantasization.md)
+[Batch / async / fantasization compatibility](../../optimization/batch-async-fantasization.md)
 を正とします。
 
 ## 4.15 この章で覚えておくこと
