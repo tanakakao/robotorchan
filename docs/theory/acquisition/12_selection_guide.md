@@ -35,7 +35,8 @@ Acquisition function は「一般に最も優れた一つ」を選ぶもので�
      → Level-set Estimation
 ```
 
-この分岐を飛ばして acquisition 名から選ぶと、posterior variance が大きいだけの点を optimization で選んだり、EI を function learning に使ったりするような目的不整合が起こります。
+この分岐を飛ばして acquisition 名から選ぶと、posterior variance が大きいだけの点を optimization で選んだり、EI を function
+learning に使ったりするような目的不整合が起こります。
 
 ## 12.3 単目的・低ノイズ・逐次 BO
 
@@ -78,7 +79,8 @@ single objective
 
 baseline points の latent values に関する uncertainty を含めて candidate utility を評価します。
 
-「q」が付いていても q=1 で使える acquisition があります。q は単に parallelism の有無ではなく joint Monte Carlo formulation と関係します。
+「q」が付いていても q=1 で使える acquisition があります。q は単に parallelism の有無ではなく joint Monte Carlo formulation
+と関係します。
 
 詳細は [Batch / Noisy](04_batch_noisy.md) を参照してください。
 
@@ -279,7 +281,8 @@ PosteriorVariance は単純で解釈しやすい一方、candidate を観測し�
 
 ## 12.15 Deployment distribution 上の prediction を学びたい
 
-予測精度が必要な target distribution / target set が明確なら EPIG のような target-aware information acquisition が自然です。
+予測精度が必要な target distribution / target set が明確なら EPIG のような target-aware information acquisition
+が自然です。
 
 ```text
 candidate が不確実
@@ -364,11 +367,13 @@ MF acquisition
     どの fidelity を次に評価する価値があるか判断
 ```
 
-通常 acquisition で fidelity を単なる design variable として探索すると、target fidelity や cost semantics が十分に反映されない場合があります。
+通常 acquisition で fidelity を単なる design variable として探索すると、target fidelity や cost semantics
+が十分に反映されない場合があります。
 
 ## 12.20 Mixed variables と acquisition
 
-continuous / integer / categorical variables が混在していても、acquisition criterion 自体と acquisition optimizer は分けて考えます。
+continuous / integer / categorical variables が混在していても、acquisition criterion 自体と acquisition
+optimizer は分けて考えます。
 
 例えば EI を使うかどうかは utility の問題であり、categorical variables をどう探索するかは candidate optimization の問題です。
 
@@ -461,7 +466,8 @@ unsupported structure を generic tensor operation で無理に通すより、�
 
 その robust objective を posterior samples から構成した上で acquisition を評価します。
 
-したがって robustness は acquisition 名だけで決まるものではなく、objective transformation / environmental integration と acquisition の組合せとして考えます。
+したがって robustness は acquisition 名だけで決まるものではなく、objective transformation / environmental
+integration と acquisition の組合せとして考えます。
 
 ## 12.25 Candidate set が有限の場合
 
@@ -481,7 +487,8 @@ posterior function sample
 \tilde f\sim p(f\mid\mathcal D)
 \]
 
-を生成し、その sample 上の optimum を選ぶ Thompson Sampling は、明示的な deterministic acquisition formula とは異なる candidate-selection mechanism です。
+を生成し、その sample 上の optimum を選ぶ Thompson Sampling は、明示的な deterministic acquisition formula とは異なる
+candidate-selection mechanism です。
 
 finite pool では特に自然に利用できます。
 
@@ -510,7 +517,8 @@ qNEHVI
     → qLogNEHVI
 ```
 
-Log formulation は問題の目的を別物にするためではなく、極小 improvement probability などで acquisition optimization を安定させるために使われます。
+Log formulation は問題の目的を別物にするためではなく、極小 improvement probability などで acquisition optimization
+を安定させるために使われます。
 
 ## 12.28 Computational budget
 
@@ -528,7 +536,8 @@ MES、KG、multi-step lookahead、high-q MOBO などでは acquisition computati
 
 も考えます。
 
-black-box evaluation が数日かかるなら重い acquisition が合理的でも、millisecond-level simulator では acquisition overhead が支配的になる可能性があります。
+black-box evaluation が数日かかるなら重い acquisition が合理的でも、millisecond-level simulator では acquisition
+overhead が支配的になる可能性があります。
 
 ## 12.29 推奨する選択手順
 
@@ -680,4 +689,5 @@ Acquisition selection の最も重要な原則は、
 
 また model、objective、constraint、acquisition、acquisition optimizer、search strategy はそれぞれ異なる責務です。
 
-この分離を保つことで、robotorchan の多様な surrogate models と BoTorch の acquisition ecosystem を組み合わせても、問題設定の意味を失わずに設計できます。
+この分離を保つことで、robotorchan の多様な surrogate models と BoTorch の acquisition ecosystem
+を組み合わせても、問題設定の意味を失わずに設計できます。
