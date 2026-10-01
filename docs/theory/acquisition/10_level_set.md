@@ -525,7 +525,8 @@ BoundaryVariance
 the Straddle level-set heuristic.
 - Inatsu, Y., Takeno, S., Kutsukake, K., and Takeuchi, I. (2024), *Active Learning for Level Set
 Estimation Using Randomized Straddle Algorithms*. Transactions on Machine Learning Research. The 
-paper samples `beta_t` from a chi-squared distribution with two degrees of freedom and uses `sqrt(beta_t)` as the confidence coefficient.
+paper samples `beta_t` from a chi-squared distribution with two degrees of freedom
+and uses `sqrt(beta_t)` as the confidence coefficient.
 
 `BoundaryVariance` is robotorchan-specific and therefore has no literature citation as a named
 acquisition method.
