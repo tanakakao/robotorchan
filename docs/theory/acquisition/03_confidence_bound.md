@@ -9,30 +9,30 @@ UCB = 現在よさそうな候補 + まだ分からない候補へのoptimism bo
 EIがimprovementをutilityにするのに対し、UCBはposterior locationとuncertaintyを
 直接組み合わせて候補を順位付けします。
 
-## 3.3 平均と不確実性を直接組み合わせる
+## 3.2 平均と不確実性を直接組み合わせる
 
 Confidence-bound acquisition は、posterior mean と posterior uncertainty を明示的に組み合わせます。
 
 最大化問題の代表的な Upper Confidence Bound（UCB）は
 
-$
+$$
 \operatorname{UCB}(x)
 =
 \mu_n(x)+\sqrt{\beta}\,\sigma_n(x)
-$
+$$
 
 です。
 
 ここで \(\mu_n(x)\) は posterior mean、\(\sigma_n(x)\) は posterior standard deviation、$`\beta>0`$ は
 uncertainty の寄与を制御する parameter です。
 
-## 3.2 Confidence bound と optimism
+## 3.3 Confidence bound と optimism
 
 UCB は、posterior mean だけを見るのではなく、不確実な候補に対して楽観的な値を与えます。
 
-$
+$$
 \sqrt{\beta}\sigma_n(x)
-$
+$$
 
 が大きいほど、まだ十分に観測されていない点が候補になりやすくなります。
 
@@ -69,11 +69,11 @@ UCB acquisition の beta
 
 最小化問題では
 
-$
+$$
 \operatorname{LCB}(x)
 =
 \mu_n(x)-\sqrt{\beta}\,\sigma_n(x)
-$
+$$
 
 を最小化する形で考えられます。
 
@@ -120,15 +120,15 @@ UCB は uncertainty を式へ直接入れるため、posterior scale の calibra
 
 文献によって
 
-$
+$$
 \mu(x)+\sqrt{\beta}\sigma(x)
-$
+$$
 
 と書く場合と、
 
-$
+$$
 \mu(x)+\beta\sigma(x)
-$
+$$
 
 と書く場合があります。
 
