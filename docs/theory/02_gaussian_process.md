@@ -13,9 +13,9 @@ Gaussian Process（GP）を理解するには、まず「予測値を1つ返す�
 
 1つの実数値 $`z`$ が正規分布に従うことを
 
-$
+$$
 z \sim \mathcal{N}(\mu, \sigma^2)
-$
+$$
 
 と書きます。$`\mu`$ は平均、$`\sigma^2`$ は分散です。
 平均は「中心がどこか」、分散は「どの程度ばらつくか」を表します。
@@ -24,13 +24,13 @@ $
 
 複数の値をまとめたベクトルについては、
 
-$
+$$
 \mathbf{z} = [z_1, \ldots, z_n]^T
-$
+$$
 
-$
+$$
 \mathbf{z} \sim \mathcal{N}(\boldsymbol{\mu}, \Sigma)
-$
+$$
 
 と書けます。$`\boldsymbol{\mu}`$ は平均ベクトル、$`\Sigma`$ は共分散行列です。
 共分散行列の対角成分は各値の分散、非対角成分は異なる値どうしの関係を表します。
@@ -175,9 +175,9 @@ $$
 
 更新後の分布を posterior（事後分布）と呼びます。概念的には Bayes 則
 
-$
+$$
 p(f \mid \mathcal{D}) \propto p(\mathcal{D} \mid f) p(f)
-$
+$$
 
 によって、prior $`p(f)`$ と likelihood $`p(\mathcal{D}\mid f)`$ を組み合わせ、
 posterior $`p(f\mid\mathcal{D})`$ を得ます。
@@ -299,17 +299,17 @@ $$
 ここで $`\sigma^2(x_*)`$ は、潜在的な関数値 $`f(x_*)`$ の posterior variance です。
 将来のノイズ付き観測を
 
-$
+$$
 y_* = f(x_*) + \epsilon_*
-$
+$$
 
 とすると、独立な Gaussian noise のもとでは
 
-$
+$$
 \operatorname{Var}(y_* \mid \mathcal{D})
 =
 \operatorname{Var}(f_* \mid \mathcal{D}) + \sigma_n^2
-$
+$$
 
 となります。**関数そのものの不確実性と測定ノイズは別のもの**です。
 
