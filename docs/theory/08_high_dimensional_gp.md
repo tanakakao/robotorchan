@@ -1478,13 +1478,12 @@ f(x)=c+\sum_i f_i(x_i)
 
 次章では、データ数が増えてExact GPの計算が重くなる場合に使う [Variational GP](09_variational_gp.md) を説明します。
 
-## 参考
+## 参考文献
 
-- Eriksson, Jankowiak, *High-Dimensional Bayesian Optimization with Sparse Axis-Aligned Subspaces*, UAI 2021
-- BoTorch `SaasFullyBayesianSingleTaskGP`
-- BoTorch `SaasFullyBayesianMultiTaskGP`
-- BoTorch MAP-SAAS models
-- BoTorch `OrthogonalAdditiveGP`
-- [Gaussian Process](02_gaussian_process.md)
-- [Kernel](03_kernel.md)
-- [Acquisition Function](04_acquisition_function.md)
+1. Eriksson, D., and Jankowiak, M. (2021).
+   High-dimensional Bayesian optimization with sparse axis-aligned subspaces.
+   *Proceedings of the 37th Conference on Uncertainty in Artificial Intelligence*.
+2. BoTorch SAAS, MAP-SAAS, and `OrthogonalAdditiveGP` documentation.
+3. [Gaussian Process](02_gaussian_process.md)
+4. [Kernel](03_kernel.md)
+5. [Acquisition Function](04_acquisition_function.md)
