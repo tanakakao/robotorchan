@@ -1516,7 +1516,7 @@ LatentKroneckerGP
 3. `T` は時間・波長・位置などの明示的なoutput coordinateとして使える
 4. LatentKroneckerGP は新しい `T` でposteriorを評価できる
 5. LatentKroneckerGP はmissing output entriesを意識した設計
-6. HOGP fittingでは specialized fast solve と torch optimizer が重要
+6. HOGP fittingでは Kronecker / linear-operator structure を壊さない solver と optimizer の選択が重要
 7. LatentKroneckerGP では iterative methods が重要
 8. Kronecker efficiency は separable covariance assumption と引き換え
 9. BOではstructured responseから何を最適化するかobjectiveを明示する
