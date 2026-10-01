@@ -121,12 +121,12 @@ acquisition package. Use the following ownership categories when reading the doc
 | Lookahead | BoTorch native | qKG / qMultiStepLookahead integration path |
 | Multi-objective BO | BoTorch native | qLogEHVI / qLogNEHVI / qLogNParEGO integration path |
 | Constraints | BoTorch composition | theory coverage; no local acquisition class implied |
-| Regression uncertainty AL | robotorchan + BoTorch | local variance/std; native qNIPV for batch AL |
+| Regression AL | robotorchan + BoTorch | local variance/std; native qNIPV |
 | Predictive AL | robotorchan | `ExpectedPredictiveInformationGain` |
 | Level-set learning | robotorchan | `Straddle`, `RandomizedStraddle`, `BoundaryVariance` |
 | Multi-fidelity / cost-aware BO | BoTorch native | MF-KG and cost-aware integration path |
 | Posterior sampling | robotorchan utility over BoTorch | `select_thompson_candidates` |
-| Non-GP compatibility | robotorchan helper | `make_non_gp_acquisition`, `validate_non_gp_acquisition` |
+| Non-GP compatibility | robotorchan helper | acquisition validation helpers |
 
 The local public API is therefore intentionally smaller than the theory catalog. A theory chapter
 is not a request to duplicate a BoTorch acquisition under a robotorchan alias.
