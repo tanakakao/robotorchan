@@ -126,7 +126,8 @@ robotorchan: native BoTorch path を利用
 Theory は理論体系として構成します。robotorchan にローカル実装がない MES、GIBBON、qMultiStepLookahead なども、理論上の位置付けが重要なら扱います。
 
 現在の対応状況はTheory本文から推測せず、
-[Acquisition integration status](../../optimization/acquisition-integration.md) とexecutable runtime testsを
+[Acquisition integration status](../../optimization/acquisition-integration.md) と
+executable runtime testsを
 確認します。registryは重要なstatic compatibility surfaceですが、runtime validationの代替ではありません。
 
 ### 原典を優先する
@@ -288,7 +289,8 @@ Theory本文はこのmetadataのコピーにはせず、**なぜそのrequiremen
 
 - chapter number と filename は 01〜12 で一致させる。
 - theoryからimplementation supportを推測しない。現在の対応範囲は
-  [Acquisition integration status](../../optimization/acquisition-integration.md)、registry、runtime testsを
+  [Acquisition integration status](../../optimization/acquisition-integration.md)、registry、
+  runtime testsを
   相互確認する。metadataとruntimeが不一致なら実行時contractを優先してgapを修正する。
 - practical API の説明は [Optimization guide](../../optimization/README.md) に置き、Theory へ
   implementation-specific usage を重複させない。
