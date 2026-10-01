@@ -473,12 +473,14 @@ stopping rule としては、
 ## 11.24 BoTorch / robotorchan との対応
 
 BoTorch は Multi-Fidelity Knowledge Gradient、cost-aware utility、fidelity cost
-model、target-fidelity projection、および discrete fidelity を扱う acquisition optimization primitives を提供しています。
+model、target-fidelity projection、および discrete fidelity を扱う acquisition optimization primitives 
+を提供しています。
 
 robotorchan はこれらの標準機能を再実装せず、BoTorch native path を基本とします。
 
 利用上の位置付けは [Multi-Fidelity / Cost-aware optimization
-guide](../../optimization/multifidelity-cost-aware.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
+guide](../../optimization/multifidelity-cost-aware.md)、現在の統合状況は [Acquisition integration 
+status](../../optimization/acquisition-integration.md) を参照してください。
 
 ### 11.24.1 qMultiFidelityKnowledgeGradient の registry contract
 
