@@ -152,7 +152,8 @@ cost は objective value と別の量です。高 fidelity が高い objective v
 
 これは「単位コストあたりの価値」を表します。
 
-ただし ratio utility があらゆる budgeted decision problem の厳密な最適 policy になるわけではありません。remaining budget、terminal value、並列性、固定 overhead などによって最適な cost treatment は変わります。
+ただし ratio utility があらゆる budgeted decision problem の厳密な最適 policy になるわけではありません。remaining
+budget、terminal value、並列性、固定 overhead などによって最適な cost treatment は変わります。
 
 ## 11.8 Knowledge Gradient と Multi-Fidelity
 
@@ -176,7 +177,8 @@ V(x,s)
 
 ## 11.9 Multi-Fidelity Knowledge Gradient
 
-Multi-Fidelity KG（MF-KG）は、candidate fidelity での observation が target-fidelity decision に与える value of information を評価します。
+Multi-Fidelity KG（MF-KG）は、candidate fidelity での observation が target-fidelity decision に与える
+value of information を評価します。
 
 概念的には
 
@@ -229,7 +231,8 @@ terminal decision
 
 という役割分離です。
 
-projection は「低 fidelity の観測値を高 fidelity 値へ変換する」操作ではなく、terminal decision をどの fidelity で評価するかを acquisition に伝えるものです。
+projection は「低 fidelity の観測値を高 fidelity 値へ変換する」操作ではなく、terminal decision をどの fidelity で評価するかを
+acquisition に伝えるものです。
 
 ## 11.11 Current value
 
@@ -249,9 +252,11 @@ s\in[s_{\min},s_{\max}]
 
 として design variables と一緒に acquisition optimization できます。
 
-ただし fidelity dimension は通常の design dimension と意味が異なるため、target projection や cost model では fidelity index を明示的に扱います。
+ただし fidelity dimension は通常の design dimension と意味が異なるため、target projection や cost model では
+fidelity index を明示的に扱います。
 
-continuous fidelity だからといって、posterior が fidelity に対して単調であるとは限りません。必要な構造は surrogate model 側で表現する必要があります。
+continuous fidelity だからといって、posterior が fidelity に対して単調であるとは限りません。必要な構造は surrogate model
+側で表現する必要があります。
 
 ## 11.13 Discrete fidelity
 
@@ -378,7 +383,8 @@ higher value evaluation を優先
 B
 \]
 
-が明示される場合、各 step の value/cost ratio を最大化する greedy policy と、budget 全体を考えた optimal policy は一般に同じではありません。
+が明示される場合、各 step の value/cost ratio を最大化する greedy policy と、budget 全体を考えた optimal policy
+は一般に同じではありません。
 
 残り budget が少ないときには、高価な target-fidelity evaluation を実行する必要がある場合もあります。
 
@@ -430,7 +436,8 @@ model が表現できることと acquisition が選択対象にすることは�
 
 ## 11.22 Multi-Fidelity と Mixed Variables
 
-design space に continuous / categorical variables があり、さらに fidelity variable がある場合、candidate optimization は mixed structure を持ちます。
+design space に continuous / categorical variables があり、さらに fidelity variable がある場合、candidate
+optimization は mixed structure を持ちます。
 
 ただし構造列としての fidelity を通常の categorical design variable と混同しません。
 
@@ -451,7 +458,8 @@ task variable
 
 MFBO では探索終了時に target fidelity で最終候補を確認することが重要です。
 
-低 fidelity observations が多数あっても、最終 recommendation は target-fidelity posterior / observation に基づく必要があります。
+低 fidelity observations が多数あっても、最終 recommendation は target-fidelity posterior / observation
+に基づく必要があります。
 
 stopping rule としては、
 
@@ -464,11 +472,13 @@ stopping rule としては、
 
 ## 11.24 BoTorch / robotorchan との対応
 
-BoTorch は Multi-Fidelity Knowledge Gradient、cost-aware utility、fidelity cost model、target-fidelity projection、および discrete fidelity を扱う acquisition optimization primitives を提供しています。
+BoTorch は Multi-Fidelity Knowledge Gradient、cost-aware utility、fidelity cost
+model、target-fidelity projection、および discrete fidelity を扱う acquisition optimization primitives を提供しています。
 
 robotorchan はこれらの標準機能を再実装せず、BoTorch native path を基本とします。
 
-利用上の位置付けは [Multi-Fidelity / Cost-aware optimization guide](../../optimization/multifidelity-cost-aware.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
+利用上の位置付けは [Multi-Fidelity / Cost-aware optimization
+guide](../../optimization/multifidelity-cost-aware.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ### 11.24.1 qMultiFidelityKnowledgeGradient の registry contract
 
@@ -523,10 +533,13 @@ Acquisition optimizer
 
 を分離して理解することが重要です。
 
-次章 [Selection Guide](12_selection_guide.md) では、ここまでの acquisition families を problem setting から選択するための整理を行います。
+次章 [Selection Guide](12_selection_guide.md) では、ここまでの acquisition families を problem setting
+から選択するための整理を行います。
 
 
 ## References
 
-- Wu, J., Toscano-Palmerin, S., Frazier, P. I., and Wilson, A. G. (2020), *Practical Multi-fidelity Bayesian Optimization for Hyperparameter Tuning*. UAI.
-- BoTorch documentation and tutorials for `qMultiFidelityKnowledgeGradient`, target-fidelity projection, `AffineFidelityCostModel`, and `InverseCostWeightedUtility`.
+- Wu, J., Toscano-Palmerin, S., Frazier, P. I., and Wilson, A. G. (2020), *Practical
+Multi-fidelity Bayesian Optimization for Hyperparameter Tuning*. UAI.
+- BoTorch documentation and tutorials for `qMultiFidelityKnowledgeGradient`, target-fidelity
+projection, `AffineFidelityCostModel`, and `InverseCostWeightedUtility`.
