@@ -12,6 +12,19 @@
 
 robotorchan はこのため、**surrogate-side reduction** と **search strategy** を分離します。
 
+### 最初に3つの座標系を区別する
+
+高次元BOでは、同じ「低次元」という言葉でも座標系が異なることがあります。
+
+| 座標 | 意味 |
+| --- | --- |
+| original/public X | objectiveを実際に評価する入力 |
+| model latent Z_m | surrogate内部のPCA / neural representation |
+| search target Z_s | REMBO / ALEBO / BAxUS等がcandidate探索に使う座標 |
+
+`Z_m` と `Z_s` は同じとは限りません。candidate constraint、pending point、
+trust-region weightがどの座標で定義されるかを常に確認します。
+
 ## 1. Original-space search
 
 通常の BoTorch optimization は
@@ -47,8 +60,12 @@ z in R^d
 d << D
 ```
 
-重要なのは、acquisition model が必ずしも embedded-space GP である必要はないことです。
-search strategy は candidate generation の責務を持ち、surrogate model と分離できます。
+search strategyはcandidate generationの責務を持ち、surrogate modelと分離できます。
+
+ただし「acquisitionがどの座標を受け取るか」はstrategyごとに異なります。
+REMBO / HeSBO / BAxUSはtarget candidateをoriginal spaceへ写してからoriginal-space acquisitionを
+評価します。一方、現行ALEBO workflowはembedded coordinates上の `ALEBOGP` /
+acquisitionを使います。
 
 ## 3. REMBO
 
@@ -60,7 +77,10 @@ x = project(A z)
 
 として target space を探索します。
 
-original box から外れる projection は public bounds へ写像します。
+original boxから外れるprojectionはnormalized boxでclampしてpublic boundsへ写像します。
+
+そのため異なるtarget coordinateが同じboundary pointへ写ることがあり、clippingはsearch geometryを
+非線形に歪めます。ALEBOがfeasible polytopeを明示する理由の1つがこの違いです。
 
 robotorchan の `REMBOStrategy` は、
 
@@ -109,6 +129,9 @@ l <= A z <= u
 
 は target space では linear inequalities に対応し、一般には axis-aligned box ではなく
 polytope になります。
+
+`ALEBOStrategy` のpolytope constraintsは**public process constraintではなく**、
+projection後のcandidateをbox内へ保つためのinternal constraintsです。
 
 `ALEBOStrategy` は、
 
@@ -300,16 +323,25 @@ fidelity space  -> global
 
 ## 14. Constraints と pending points
 
-local search を使っても candidate feasibility を失ってはいけません。
+candidate constraintsはpublic/original input coordinatesで定義されます。そのためsearch coordinateが
+変わるstrategyへ同じ係数をそのまま渡すことはできません。
 
-TuRBO implementation は public-space candidate constraints と組み合わせられる経路を持ち、
-生成候補の feasibility を確認します。
+現行contractは次のように分かれます。
 
-また asynchronous BO では unresolved candidate を `X_pending` として扱う必要があります。
+| Strategy | public candidate constraints |
+| --- | --- |
+| TuRBO continuous / MultiFidelity | optimizer経由で対応 |
+| TuRBO Mixed | mixed backendの対応範囲で扱う |
+| REMBO / HeSBO / BAxUS | unmappedのため明示的に拒否 |
+| ALEBO | user constraintは拒否。internal polytopeのみ |
+| learned LatentSpace | unmappedのため明示的に拒否 |
 
-pending points は public input coordinates で shape / finite validation されます。
+つまり「project後にfeasibleか確認すればよい」という一般実装ではありません。
+constraintをsearch coordinatesへ厳密に写せないstrategyはsilent approximationを避けて拒否します。
 
-この点は stateful trust-region strategy と batch / async BO を組み合わせる際に重要です。
+asynchronous BOではunresolved candidateを `X_pending` として扱う経路があります。
+TuRBOではpending pointsはpublic input coordinatesとしてshape / finite validationされます。
+candidate feasibilityとpending semanticsは別contractとして確認します。
 
 ## 15. BAxUS
 
@@ -341,6 +373,17 @@ embedding の split budget に従って target dimension を増やします。
 
 を組み合わせた stateful search strategy です。
 
+### robotorchan BAxUSとtutorial構成の責務差
+
+現行robotorchanでは、探索strategy間でsurrogateを共通化できるよう、
+BAxUS strategy内部で別のtarget-space GPを毎反復fitしません。
+
+original-space modelが利用可能なARD lengthscaleを公開している場合は、現在のsparse embeddingから
+target-space metricを誘導します。取得できなければisotropic weightへfallbackします。
+
+したがって、BAxUSのsubspace / trust-region adaptationは保持しつつ、
+surrogate構成までBoTorch tutorialと完全に同一だと解釈しないことが重要です。
+
 ## 17. BAxUS acquisition optimization と TS
 
 `BAxUSStrategy` は embedded target space で acquisition を最適化し、original-space candidate を
@@ -351,6 +394,14 @@ target-space candidate pool を original space へ投影した上で posterior s
 
 このため「BAxUS = 1種類の optimizer」ではなく、adaptive subspace geometry と candidate
 selection を分けて理解する方が正確です。
+
+### State updateのutilityはscalar
+
+TuRBO / BAxUSのsuccess / failure判定は、multi-objective outcome vectorそのものを比較する操作では
+ありません。state updateへはcandidateごとのscalar utilityが必要です。
+
+TuRBOではraw observationとは別に `state_values` を渡せるため、denoised valueやrobust utilityを
+state decisionへ使えます。ただし、そのutilityの定義はcaller側の責務です。
 
 ## 18. Stateful strategy contract
 
@@ -434,8 +485,11 @@ search target z_s
 - TuRBO は acquisition optimization と Thompson sampling の両経路を持つ
 - Mixed TuRBO は discrete dimensions を continuous TR から分離
 - MultiFidelity TuRBO は fidelity dimensions を design TR から分離
-- constraints / pending points は public-space semantics を維持
-- BAxUS は target dimension を statefully expansion
+- constraints / pending pointsはpublic-space semanticsを維持
+- REMBO / HeSBO / BAxUS / latent searchはunmapped public constraintsを拒否
+- ALEBO internal polytopeはuser candidate constraintではない
+- BAxUSはtarget dimensionをstatefully expansion
+- BAxUS strategyは別のtarget-space GPを内部でfitせず、利用可能ならoriginal-space ARDからweightを誘導
 - BAxUS は acquisition optimization と Thompson-sampling candidate generation を持つ
 - state update は objective evaluation / surrogate fitting と分離
 - surrogate latent space と search target space は別座標系
@@ -443,6 +497,19 @@ search target z_s
 詳細は
 [high-dimensional search strategies](../optimization/high_dimensional_search.md)
 を参照してください。
+
+## 22. この章で覚えておくこと
+
+- surrogate-side dimension reductionとcandidate-search reductionは別問題である
+- original X、model latent Z_m、search target Z_sを区別する
+- REMBO / HeSBOはfixed embedding、ALEBOはfeasible linear subspaceを扱う
+- REMBOのclippingとALEBOのpolytope feasibilityは異なるgeometryである
+- TuRBOはoriginal/public spaceのlocal trust regionをstatefully適応する
+- Mixed TuRBOではdiscrete dimensions、MultiFidelityではfidelity dimensionsをlocalizeしない
+- BAxUSはsparse target subspace自体を探索中に拡張する
+- TuRBO / BAxUSのstateはsurrogate parameterではなくBO loop側で更新する
+- candidate constraintは座標変換後も同じ式とは限らず、未対応strategyでは明示的に拒否する
+- model reductionとsearch embeddingを併用する場合、2つのlatent coordinateを混同しない
 
 ## 参考文献
 
