@@ -49,7 +49,7 @@ Bayesian Optimizationではobjectiveとconstraintsの両方が高コスト・未
 
 ## 8.3 Feasibility probability
 
-制約 \(c(x)\le0\) に対して posterior
+制約 $`c(x)\le0`$ に対して posterior
 
 $$
 c(x)\mid\mathcal D_n
@@ -99,7 +99,7 @@ MC formulationではposterior samplesごとにobjective utilityとconstraint sat
 
 ## 8.5 Sample-wise constraint
 
-posterior sample \(f^{(s)}(x)\) と constraint sample \(c^{(s)}(x)\) に対し、
+posterior sample $`f^{(s)}(x)`$ と constraint sample $`c^{(s)}(x)`$ に対し、
 
 $$
 U^{(s)}(x)
