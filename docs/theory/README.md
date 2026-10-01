@@ -259,6 +259,90 @@ model chapter 側では acquisition formula を重複して網羅せず、
 
 の観点から接続可能性を説明します。
 
+## BO pipeline の横断理論
+
+model と acquisition だけでは、実際の Bayesian optimization loop の理論契約は完結しません。
+現在の robotorchan では次の横断レイヤーも明示的に分離しています。
+
+```text
+public candidate X
+ -> input / scenario transformation
+ -> surrogate posterior
+ -> posterior transform
+ -> posterior sampling
+ -> MC objective / outcome constraint
+ -> acquisition value
+ -> acquisition initialization
+ -> candidate optimization
+ -> pending / fantasy state
+ -> evaluation
+ -> trust-region or search-strategy state update
+```
+
+### Posterior sampling
+
+posterior sampler は model family 名ではなく posterior semantics から選びます。
+
+- Gaussian posterior: `SobolQMCNormalSampler`
+- empirical ensemble posterior: `IndexSampler`
+- stochastic trajectory posterior: `StochasticSampler`
+- actual `PosteriorList`: `ListSampler`
+
+MultiTask / Kronecker / multi-output posterior は、posterior が covariance を表現している限り
+joint に sample します。model 名だけを理由に output ごとの独立 sampler へ分割しません。
+
+詳細な実装契約は
+[Posterior sampling](../optimization/posterior-sampling.md)
+を参照してください。
+
+### PosteriorTransform と MC Objective
+
+`PosteriorTransform` は posterior distribution 自体を変換します。
+一方 `MCAcquisitionObjective` は posterior sample を変換します。
+
+したがって affine posterior scalarization と nonlinear sample objective は
+同じ抽象化ではありません。
+
+また input perturbation の scenario generation と risk aggregation は、
+generic posterior transform / MC objective とも別の uncertainty layer です。
+
+### Acquisition initialization
+
+restart initialization は acquisition formula の一部ではありませんが、
+candidate optimization の結果に直接影響します。
+
+通常の continuous optimization は BoTorch の initial-condition contract を使い、
+one-shot KG / MFKG は augmented q に対応する specialized initialization を必要とします。
+
+model-owned dimensionality reduction では initialization は public/raw coordinates のままです。
+REMBO / HeSBO / ALEBO のような optimizer-owned embedding では search coordinates が変わります。
+
+詳細は [Acquisition initialization](../optimization/initialization.md) を参照してください。
+
+### Batch・Async・Fantasization
+
+次の三つを同一視しません。
+
+- batch BO: 同時に複数候補を意思決定する
+- asynchronous BO: unresolved evaluation を残したまま次候補を選ぶ
+- fantasization: 未観測値を仮想観測して conditional model を構築する
+
+`X_pending` は acquisition context であり、fantasy batch dimension や optimizer restart axis では
+ありません。fantasization の可否は model capability でもあり、KG 系では acquisition
+compatibility に直接影響します。
+
+### Trust region
+
+TuRBO は surrogate posterior や acquisition の代替ではなく、
+candidate-search geometry と completed-result state transition を担当します。
+
+trust-region state、`X_pending`、fantasy model、robust scenario axis はそれぞれ別の状態です。
+Mixed / discrete TuRBO では categorical code に連続距離を仮定せず、
+現在の実装では trust-region localization を continuous dimensions に適用します。
+
+詳細は [TuRBO / Trust Region](../optimization/turbo.md) と
+[High-dimensional Search Strategies](20_high_dimensional_search.md) を参照してください。
+
 ## 実装 coverage を確認する基準
 
 理論ドキュメント監査では、各 model family について少なくとも次を確認します。
