@@ -84,3 +84,29 @@ def test_non_gp_acquisition_allows_lazy_sampler_initialization() -> None:
     value = acqf(torch.tensor([[[0.25], [0.75]]], dtype=torch.double))
     assert isinstance(acqf.sampler, IndexSampler)
     assert torch.isfinite(value).all()
+
+
+def test_ngboost_accepts_gaussian_sampler_when_available() -> None:
+    pytest.importorskip("ngboost")
+    from botorch.acquisition.monte_carlo import qUpperConfidenceBound
+    from botorch.sampling.normal import IIDNormalSampler
+
+    from robotorchan.models import NGBoostSurrogate
+
+    train_X = torch.linspace(0.0, 1.0, 10, dtype=torch.double).unsqueeze(-1)
+    train_Y = torch.sin(train_X * 4.0)
+    model = NGBoostSurrogate(
+        train_X,
+        train_Y,
+        random_state=0,
+        n_estimators=10,
+        verbose=False,
+    )
+    model.fit()
+    acqf = qUpperConfidenceBound(
+        model=model,
+        beta=0.2,
+        sampler=IIDNormalSampler(sample_shape=torch.Size([8])),
+    )
+
+    validate_non_gp_acquisition(model, acqf)
