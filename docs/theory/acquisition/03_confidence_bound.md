@@ -23,7 +23,7 @@ $$
 
 です。
 
-ここで \(\mu_n(x)\) は posterior mean、\(\sigma_n(x)\) は posterior standard deviation、$`\beta>0`$ は
+ここで $`\mu_n(x)`$ は posterior mean、$`\sigma_n(x)`$ は posterior standard deviation、$`\beta>0`$ は
 uncertainty の寄与を制御する parameter です。
 
 ## 3.3 Confidence bound と optimism
@@ -111,10 +111,10 @@ q-acquisition の一般的な意味は [Batch / Noisy](04_batch_noisy.md) を参
 
 UCB は uncertainty を式へ直接入れるため、posterior scale の calibration に特に敏感です。
 
-- \(\sigma(x)\) の過小評価 → exploration が弱くなる。
-- \(\sigma(x)\) の過大評価 → exploration が過剰になる。
+- $`\sigma(x)`$ の過小評価 → exploration が弱くなる。
+- $`\sigma(x)`$ の過大評価 → exploration が過剰になる。
 
-これは EI など他の acquisition にも影響しますが、UCB では \(\beta\sigma(x)\) の形で特に見えやすくなります。
+これは EI など他の acquisition にも影響しますが、UCB では $`\beta\sigma(x)`$ の形で特に見えやすくなります。
 
 ## 3.9 beta の意味を API と混同しない
 
