@@ -58,6 +58,19 @@ def test_ngboost_surrogate_fit_posterior_and_mc_acquisition() -> None:
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
 
+    from robotorchan.optim.backends import optimize_acqf_botorch
+
+    candidate, optimized_value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+    )
+    assert candidate.shape == torch.Size([1, 1])
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(optimized_value).all()
+
 
 @pytest.mark.skipif(not NGBOOST_AVAILABLE, reason="optional ngboost dependency is not installed")
 def test_ngboost_supports_posterior_variance_active_learning() -> None:
