@@ -40,6 +40,27 @@ PairwiseGP
 
 ---
 
+### 回帰との違いを最初に図で見る
+
+通常の回帰とPreference Learningでは、**観測しているもの**が違います。
+
+~~~text
+Regression
+x ──→ y
+      ↑
+      絶対的な数値を観測
+
+Preference Learning
+x_i ─┐
+     ├──→ i が j より好まれた
+x_j ─┘
+          ↑
+          相対的な比較だけを観測
+~~~
+
+Preference LearningでGPが直接説明しようとするのはwinner/loserのindexそのものではなく、
+その比較を生み出す背後のlatent utility $`f(x)`$ です。
+
 ## 10.2 なぜ絶対値ではなく比較を使うのか
 
 人間は、絶対的な数値評価より比較の方が答えやすい場合があります。
@@ -76,19 +97,22 @@ Preference Learning は、この比較結果から背後にある **潜在的な
 
 各候補 `x` に、直接は観測できない utility
 
-\[
+$$
 f(x)
-\]
+$$
 
 が存在すると仮定します。
 
 例えば
 
-\[
+$$
 f(x_A) > f(x_B)
-\]
+$$
 
-なら、理想的には A が B より好まれます。
+なら、モデル上はAがBより好まれる確率が高くなります。
+
+ただし比較likelihoodが確率的なので、$`f(x_A) > f(x_B)`$ だからといって
+観測される比較結果が必ずA勝利になるわけではありません。
 
 ただし人間の判断や測定にはノイズがあるため、比較結果は必ずしも deterministic ではありません。
 
@@ -195,29 +219,33 @@ comparisons[k] = [i, j]
 
 です。
 
+さらに、同じdatapointを複数のcomparisonで再利用できます。つまりcomparisonの行数と
+候補点の行数は一致する必要がありません。このindex表現によって、同じ候補を毎回
+複製せずに比較graphを表現できます。
+
 ---
 
 ## 10.6 比較確率
 
 2つの候補 `x_i`, `x_j` の utility を
 
-\[
+$$
 f_i = f(x_i),\qquad f_j = f(x_j)
-\]
+$$
 
 とします。
 
 Preference model では、
 
-\[
+$$
 P(i \succ j)
-\]
+$$
 
 つまり「i が j より好まれる確率」を utility difference
 
-\[
+$$
 f_i-f_j
-\]
+$$
 
 から定義します。
 
@@ -242,24 +270,24 @@ BoTorch の `PairwiseGP` は default で **probit likelihood** を使います�
 
 基本的な形は
 
-\[
+$$
 P(i \succ j)
 =
 \Phi\left(
 \frac{f_i-f_j}{\sqrt{2}}
 \right)
-\]
+$$
 
 です。
 
 ここで
 
-- \(\Phi\) は標準正規分布のCDF
-- \(f_i-f_j\) は latent utility difference
+- $`\Phi`$ は標準正規分布のCDF
+- $`f_i-f_j`$ は latent utility difference
 
 です。
 
-Chu & Ghahramani の定式化では denominator にノイズscale \(\sigma\) を含めますが、BoTorch はこの scale を明示的に
+Chu & Ghahramani の定式化では denominator にノイズscale $`\sigma`$ を含めますが、BoTorch はこの scale を明示的に
 likelihood parameter として分離せず、function scale を kernel の `ScaleKernel` で表現します。
 
 ---
@@ -270,15 +298,15 @@ pairwise comparison model では logistic model もよく使われます。
 
 例えば Bradley–Terry 型なら
 
-\[
+$$
 P(i \succ j)
 =
 \sigma(f_i-f_j)
-\]
+$$
 
 です。
 
-ここで \(\sigma\) は sigmoid です。
+ここで $`\sigma`$ は sigmoid です。
 
 一方 `PairwiseGP` の default は probit です。
 
@@ -298,9 +326,9 @@ PairwiseGP default
 
 utility function `f(x)` 自体には Gaussian Process prior を置きます。
 
-\[
+$$
 f \sim \mathcal{GP}(m(x),k(x,x'))
-\]
+$$
 
 つまり preference data を直接 GP に入れるのではなく、
 
@@ -318,23 +346,37 @@ observed preference
 
 ---
 
+### 比較データは「点」だけでなく「辺」の情報を持つ
+
+通常の回帰では、1観測はおおむね1つの入力点へ対応します。
+Preference Learningでは、1観測が**2候補間の辺**を追加します。
+
+~~~text
+datapoints = graph nodes
+comparisons = directed edges
+winner → loser
+~~~
+
+したがって同じ候補数でも、どのpairを比較したかによって得られる情報は大きく変わります。
+これは後半のquery designやPreference BOにつながります。
+
 ## 10.10 なぜ通常の GP regression と違うのか
 
 通常の Gaussian regression なら
 
-\[
+$$
 y=f(x)+\epsilon,
 \qquad
 \epsilon\sim\mathcal{N}(0,\sigma^2)
-\]
+$$
 
 であり、Gaussian prior と Gaussian likelihood の組み合わせなので posterior は解析的に Gaussian になります。
 
 Preference Learning では likelihood が
 
-\[
+$$
 \Phi(f_i-f_j)
-\]
+$$
 
 のような nonlinear function になるため、posterior を exact Gaussian として解析的には求められません。
 
@@ -344,13 +386,13 @@ Preference Learning では likelihood が
 
 ## 10.11 Laplace approximation
 
-観測 comparison data を \(D\) とすると、latent utilities `f` の posterior は
+観測 comparison data を $`D`$ とすると、latent utilities `f` の posterior は
 
-\[
+$$
 p(f\mid D)
 \propto
 p(D\mid f)p(f)
-\]
+$$
 
 です。
 
@@ -358,21 +400,21 @@ p(D\mid f)p(f)
 
 Laplace approximation では、まず posterior mode
 
-\[
+$$
 f_{MAP}
 =
 \arg\max_f p(f\mid D)
-\]
+$$
 
 を求めます。
 
 その周辺を2次近似して
 
-\[
+$$
 p(f\mid D)
 \approx
 \mathcal{N}(f_{MAP},\Sigma_{Laplace})
-\]
+$$
 
 とします。
 
@@ -405,7 +447,7 @@ Gaussian で局所近似
 
 概念的には
 
-\[
+$$
 f_{MAP}
 =
 \arg\max_f
@@ -414,7 +456,7 @@ f_{MAP}
 +
 \log p(f)
 \right]
-\]
+$$
 
 です。
 
@@ -426,20 +468,20 @@ f_{MAP}
 
 posterior mode の周辺で negative log posterior の Hessian を使うと、近似 covariance は概念的に
 
-\[
+$$
 \Sigma_{Laplace}
 \approx
 \left(
 K^{-1}+W
 \right)^{-1}
-\]
+$$
 
 となります。
 
 ここで
 
-- \(K\) は GP prior covariance
-- \(W\) は preference likelihood の曲率
+- $`K`$ は GP prior covariance
+- $`W`$ は preference likelihood の曲率
 
 です。
 
@@ -470,19 +512,23 @@ pairwise data で観測されるのは utility difference です。
 
 例えば、
 
-\[
+$$
 f(x)\rightarrow f(x)+c
-\]
+$$
 
 として全候補に同じ定数を足しても、
 
-\[
+$$
 (f_i+c)-(f_j+c)=f_i-f_j
-\]
+$$
 
 なので preference probability は変わりません。
 
-したがって utility の **絶対的な基準点** は識別されません。
+したがって比較likelihoodだけからはutilityの **絶対的な基準点** は識別されません。
+
+またutilityのscaleについても、likelihoodのnoise conventionやkernel scaleとの関係があるため、
+通常の回帰targetと同じ物理単位を持つ量として解釈しないことが重要です。
+Preference modelでは主に**差・順位・選好確率**に意味があります。
 
 ---
 
@@ -748,7 +794,9 @@ winner → loser
 
 とすると、observed comparisons は directed graph になります。
 
-十分に連結された graph なら候補間の相対順位を推定しやすくなります。
+graph connectivityは、離れた候補群の相対utilityをデータから結び付けるうえで重要です。
+ただしGP priorはinput similarityを通じても情報を共有するため、graphだけでposteriorの
+識別性や精度が完全に決まるわけではありません。
 
 ---
 
@@ -806,8 +854,11 @@ A > B
 
 となることは自然です。
 
-PairwiseGP は deterministic ranking table ではなく probabilistic likelihood を使うため、このような矛盾を
-uncertainty として扱えます。
+PairwiseGPはdeterministic ranking tableではなくprobabilistic likelihoodを使うため、
+このような矛盾した観測にも有限のlikelihoodを与えられます。
+
+ただし矛盾がそのまま1個の「uncertainty parameter」へ変換されるわけではありません。
+強い評価者差や時間変化があるなら、単一latent utility modelの仮定自体も確認します。
 
 ---
 
@@ -850,15 +901,34 @@ Preference Learning は ranking problem と密接です。
 
 GP を使うことで、未評価の新しい `x` に対しても
 
-\[
+$$
 f(x)
-\]
+$$
 
 を予測できます。
 
 この点が Bayesian Optimization に繋がります。
 
 ---
+
+### Preference LearningとPreference BOは別の層
+
+ここまでの `PairwiseGP` は、**比較データからutility posteriorを作るsurrogate model**です。
+これだけでは「次にどの2候補を比較するか」は決まりません。
+
+~~~text
+PairwiseGP
+  → preference surrogate
+
+Preference acquisition
+  → 次に比較する候補を評価
+
+Acquisition optimization
+  → 実際のquery pairを決定
+~~~
+
+通常のBOでGPとEIが別物なのと同じく、Preference LearningとPreferential BOも
+分けて考えます。
 
 ## 10.35 Preferential Bayesian Optimization
 
@@ -920,9 +990,11 @@ AnalyticExpectedUtilityOfBestOption
 
 があります。
 
-EUBO は **Expected Utility of the Best Option** の略です。
+EUBOは **Expected Utility of the Best Option** の略です。
 
-候補集合を提示したとき、その中で最終的に選べる最良 option の期待 utility を高くするように query を設計します。
+候補集合を提示したとき、その集合から得られるbest-option utilityの期待値を評価します。
+ただし「PairwiseGPを使えば自動的にEUBOになる」わけではなく、surrogateとは別に
+preference acquisitionを構成します。
 
 ---
 
@@ -1119,9 +1191,9 @@ Preference dataset では
 
 全 pair を比較すると
 
-\[
+$$
 \frac{n(n-1)}{2}
-\]
+$$
 
 件になるため、`n` が大きいと全比較は非現実的です。
 
@@ -1174,17 +1246,17 @@ Person 2: B > A
 
 好みが context に依存する場合、単純な
 
-\[
+$$
 f(x)
-\]
+$$
 
 では不十分です。
 
 例えば
 
-\[
+$$
 f(x,c)
-\]
+$$
 
 として context `c` を入力に含める必要があります。
 
@@ -1248,15 +1320,15 @@ BoTorch には Bayesian Optimization with Preference Exploration、つまり **B
 
 複数 outcome
 
-\[
+$$
 y=f(x)\in\mathbb{R}^m
-\]
+$$
 
 は測定できるが、それをどう総合評価するかの utility
 
-\[
+$$
 g(y)
-\]
+$$
 
 が分からない場合を考えます。
 
@@ -1346,9 +1418,9 @@ Preference Learning は「比較形式でしか情報が得られない / 比較
 
 複数 objective がある場合、重み付き和
 
-\[
+$$
 u(y)=w^T y
-\]
+$$
 
 を明示できるなら preference model は不要かもしれません。
 
@@ -1401,7 +1473,7 @@ maxfev
 
 probit preference model では utility scale と noise scale が完全に独立には識別できません。
 
-BoTorch は likelihood 内で明示的な \(\sigma\) を持たせる代わりに、kernel output scale 側で function scale を扱います。
+BoTorch は likelihood 内で明示的な $`\sigma`$ を持たせる代わりに、kernel output scale 側で function scale を扱います。
 
 そのため通常 regression GP の
 
@@ -1515,20 +1587,20 @@ EUBO は前者寄りです。
 
 連続最適化ではなく、既存候補集合
 
-\[
+$$
 \mathcal{C}=\{x_1,\dots,x_N\}
-\]
+$$
 
 から pair を選ぶ場合、全 pair に acquisition score を計算して
 
-\[
+$$
 (i^*,j^*)=
 \arg\max_{i\neq j}\alpha(x_i,x_j)
-\]
+$$
 
 とすることもできます。
 
-候補数が大きいと pair 数は \(O(N^2)\) なので効率化が必要です。
+候補数が大きいと pair 数は $`O(N^2)`$ なので効率化が必要です。
 
 ---
 
@@ -1712,18 +1784,16 @@ absolute objective observations がないので preference-specific acquisition 
 
 ---
 
-## 10.76 実務比較表
+## 10.76 観測形式とモデル仮定の比較表
 
-| 状況 | 第一候補 |
+| 観測・仮定 | 対応する考え方 |
 |---|---|
-| scalar target を直接測れる | `SingleTaskGP` |
-| 人の比較評価のみ | `PairwiseGP` |
-| ranking を学びたい | `PairwiseGP` |
-| 官能評価 | `PairwiseGP` |
-| 複数 outcome + preference | BOPE |
-| ordinal score が直接ある | ordinal model を検討 |
-| evaluator ごとの差が大きい | hierarchical / multitask preference model を検討 |
-| cyclic preference が強い | non-transitive model を検討 |
+| scalar targetを直接観測 | regression GP |
+| pairwise comparisonを観測 | `PairwiseGP` |
+| 複数outcomeは観測でき、utilityを比較で学ぶ | BOPE型の分離 |
+| ordinal scoreを直接観測 | ordinal model |
+| evaluator差を明示的に表現したい | hierarchical / multitask preference model |
+| 強いcyclic preferenceがある | scalar utility仮定を再検討 |
 
 ---
 
@@ -1756,33 +1826,33 @@ PairwiseLaplaceMarginalLogLikelihood
 
 Preference Learning の構造は
 
-\[
+$$
 f\sim\mathcal{GP}(m,k)
-\]
+$$
 
-\[
+$$
 P(i\succ j\mid f)
 =
 \Phi\left(
 \frac{f_i-f_j}{\sqrt{2}}
 \right)
-\]
+$$
 
-\[
+$$
 p(f\mid D)
 \propto
 p(D\mid f)p(f)
-\]
+$$
 
 です。
 
 この posterior は非Gaussianなので、
 
-\[
+$$
 p(f\mid D)
 \approx
 \mathcal{N}(f_{MAP},\Sigma_{Laplace})
-\]
+$$
 
 と Laplace approximation します。
 
@@ -1816,7 +1886,7 @@ EUBO / preference acquisition
 
 ---
 
-## 10.80 まとめ
+## 10.80 この章で覚えておくこと
 
 Preference Learning は、**絶対値ではなく比較から潜在 utility function を学ぶ方法**です。
 
