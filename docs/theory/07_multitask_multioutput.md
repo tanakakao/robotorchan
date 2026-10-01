@@ -34,11 +34,27 @@
 
 ---
 
+### 最初に3つの言葉を分ける
+
+この章では **task、output、objective** を区別すると混乱しにくくなります。
+
+| 用語 | この章での意味 |
+| --- | --- |
+| task | 装置、条件、データ源など、関連付けて学習したい単位 |
+| output | surrogate model が返す予測成分 |
+| objective | BOが実際に最大化・最小化したい量 |
+
+例えば強度と導電率を両方予測していても、BOで強度だけを最大化するなら
+「2 output・1 objective」です。また複数taskを学習していても、特定taskだけを
+最適化対象にできます。
+
+つまり、**モデルが何を出力するか**と**最適化で何を価値とするか**は別の設計です。
+
 ## 7.2 Multi-outputとは
 
 入力 `x` に対して複数の出力を返す問題を考えます。
 
-\[
+$$
 f(x)=
 \begin{bmatrix}
 f_1(x)\\
@@ -46,19 +62,22 @@ f_2(x)\\
 \vdots\\
 f_m(x)
 \end{bmatrix}
-\]
+$$
 
 例えば
 
-\[
+$$
 f(x)=(\text{strength},\text{conductivity},\text{cost})
-\]
+$$
 
 です。
 
 ただし、**multi-outputという言葉だけでは出力間の依存関係をモデル化するかどうかは決まりません**。
 
 独立なGPを並べてもmulti-output modelになります。
+
+したがってmulti-outputは主に**入出力interfaceの性質**を表し、
+output間の統計的依存を仮定する言葉ではありません。
 
 ---
 
@@ -68,9 +87,9 @@ Multi-task GPでは、複数の関連タスクを同時にモデル化し、タ�
 
 タスクを `t` とすると
 
-\[
+$$
 f(x,t)
-\]
+$$
 
 を考えます。
 
@@ -86,6 +105,9 @@ t = 2 : 装置C
 
 ある装置のデータから別装置の応答を推定できるなら、タスク間の情報共有が有効です。
 
+ここでtask IDは通常、大小関係を持つ連続量ではありません。`0, 1, 2` と保存されていても、
+その差をユークリッド距離として解釈するのではなく、task covarianceを通して関係を学習します。
+
 ```text
 Task A data ─┐
 Task B data ─┼→ shared multi-task GP → posterior for each task
@@ -98,9 +120,9 @@ Task C data ─┘
 
 タスクごとに完全に独立したGPを作るなら
 
-\[
+$$
 f_t(x)\sim\mathcal{GP}(m_t(x),k_t(x,x'))
-\]
+$$
 
 です。
 
@@ -108,21 +130,21 @@ f_t(x)\sim\mathcal{GP}(m_t(x),k_t(x,x'))
 
 Multi-task GPでは
 
-\[
+$$
 f(x,t)\sim\mathcal{GP}
 \left(
  m(x,t),
  k((x,t),(x',t'))
 \right)
-\]
+$$
 
 とし、異なるタスク間にもcovarianceを持たせます。
 
 そのため
 
-\[
+$$
 \operatorname{Cov}(f(x,t),f(x',t'))\neq 0
-\]
+$$
 
 となり得ます。
 
@@ -134,32 +156,34 @@ Multi-task GPの中心は **task covariance** です。
 
 入力間のcovarianceを
 
-\[
+$$
 K_X
-\]
+$$
 
 タスク間のcovarianceを
 
-\[
+$$
 K_T
-\]
+$$
 
 とします。
 
 例えば3タスクなら
 
-\[
+$$
 K_T=
 \begin{bmatrix}
 1.0 & 0.8 & 0.2\\
 0.8 & 1.0 & 0.3\\
 0.2 & 0.3 & 1.0
 \end{bmatrix}
-\]
+$$
 
 のような構造を考えられます。
 
-この例ではTask 1とTask 2の関係が強く、Task 1とTask 3の関係は弱いと解釈できます。
+この例ではTask 1とTask 2のcovarianceが大きく、Task 1とTask 3は小さい構造です。
+ただしcovarianceの絶対値とcorrelation coefficientは同じではありません。
+各taskのvarianceで正規化した量がcorrelationに対応します。
 
 ただし、推定されたtask covarianceを単純な因果関係や物理的関係と解釈してはいけません。これはモデルが観測データから学習した共分散構造です。
 
@@ -171,11 +195,11 @@ K_T=
 
 典型的には
 
-\[
+$$
 k((x,t),(x',t'))
 =
 k_X(x,x')k_T(t,t')
-\]
+$$
 
 とします。
 
@@ -191,13 +215,14 @@ k_X(x,x')k_T(t,t')
 
 です。
 
-行列としては、block designの場合に
+入力集合とtask集合が直積として並ぶblock designでは、モデルの仮定に応じて
 
-\[
+$
 K=K_X\otimes K_T
-\]
+$
 
-というKronecker積構造が現れます。
+というKronecker積構造を利用できます。これは任意のmulti-taskデータで常に
+この行列形になる、という意味ではありません。
 
 `MultiTaskGP` と `KroneckerMultiTaskGP` は、入力側 covariance と task covariance を組み合わせる
 multi-task GP ですが、データ表現、task covariance の parameterization、計算構造は同一ではありません。
@@ -237,6 +262,283 @@ x1   x2   task   y
 
 ---
 
+### Long formatを図で見る
+
+`MultiTaskGP` では、1行が「ある設計点・あるtaskの1観測」です。
+
+~~~text
+(x1, x2, task=A) → y_A
+(x1, x2, task=B) → y_B
+(x3, x4, task=A) → y_A
+~~~
+
+Task Bを # 7. Multi-task / Multi-output Gaussian Process
+
+## 7.1 この章で扱うこと
+
+実務では、1つの入力 `x` に対して複数の関連する応答や、条件・装置・材料ごとの関連タスクを同時に扱いたいことがあります。
+
+```text
+同じプロセス条件 x
+  ├─ 装置Aでの品質
+  ├─ 装置Bでの品質
+  └─ 装置Cでの品質
+```
+
+あるいは
+
+```text
+同じ材料 x
+  ├─ 強度
+  ├─ 導電率
+  └─ 熱伝導率
+```
+
+です。
+
+このとき重要なのは、単に「出力が複数ある」ことと「出力間の相関を利用して学習する」ことを区別することです。
+
+本章では、robotorchanで利用できる
+
+- `MultiTaskGP`
+- `KroneckerMultiTaskGP`
+- `ModelListGP`
+
+を中心に、Multi-task / Multi-output GPの考え方と使い分けを説明します。
+
+---
+
+### 最初に3つの言葉を分ける
+
+この章では **task、output、objective** を区別すると混乱しにくくなります。
+
+| 用語 | この章での意味 |
+| --- | --- |
+| task | 装置、条件、データ源など、関連付けて学習したい単位 |
+| output | surrogate model が返す予測成分 |
+| objective | BOが実際に最大化・最小化したい量 |
+
+例えば強度と導電率を両方予測していても、BOで強度だけを最大化するなら
+「2 output・1 objective」です。また複数taskを学習していても、特定taskだけを
+最適化対象にできます。
+
+つまり、**モデルが何を出力するか**と**最適化で何を価値とするか**は別の設計です。
+
+## 7.2 Multi-outputとは
+
+入力 `x` に対して複数の出力を返す問題を考えます。
+
+$$
+f(x)=
+\begin{bmatrix}
+f_1(x)\\
+f_2(x)\\
+\vdots\\
+f_m(x)
+\end{bmatrix}
+$$
+
+例えば
+
+$$
+f(x)=(\text{strength},\text{conductivity},\text{cost})
+$$
+
+です。
+
+ただし、**multi-outputという言葉だけでは出力間の依存関係をモデル化するかどうかは決まりません**。
+
+独立なGPを並べてもmulti-output modelになります。
+
+したがってmulti-outputは主に**入出力interfaceの性質**を表し、
+output間の統計的依存を仮定する言葉ではありません。
+
+---
+
+## 7.3 Multi-taskとは
+
+Multi-task GPでは、複数の関連タスクを同時にモデル化し、タスク間の相関を利用します。
+
+タスクを `t` とすると
+
+$$
+f(x,t)
+$$
+
+を考えます。
+
+例えば
+
+```text
+t = 0 : 装置A
+t = 1 : 装置B
+t = 2 : 装置C
+```
+
+です。
+
+ある装置のデータから別装置の応答を推定できるなら、タスク間の情報共有が有効です。
+
+ここでtask IDは通常、大小関係を持つ連続量ではありません。`0, 1, 2` と保存されていても、
+その差をユークリッド距離として解釈するのではなく、task covarianceを通して関係を学習します。
+
+```text
+Task A data ─┐
+Task B data ─┼→ shared multi-task GP → posterior for each task
+Task C data ─┘
+```
+
+---
+
+## 7.4 Single-task GPとの違い
+
+タスクごとに完全に独立したGPを作るなら
+
+$$
+f_t(x)\sim\mathcal{GP}(m_t(x),k_t(x,x'))
+$$
+
+です。
+
+この場合、Task Aの観測はTask Bのposteriorへ影響しません。
+
+Multi-task GPでは
+
+$$
+f(x,t)\sim\mathcal{GP}
+\left(
+ m(x,t),
+ k((x,t),(x',t'))
+\right)
+$$
+
+とし、異なるタスク間にもcovarianceを持たせます。
+
+そのため
+
+$$
+\operatorname{Cov}(f(x,t),f(x',t'))\neq 0
+$$
+
+となり得ます。
+
+---
+
+## 7.5 Task covariance
+
+Multi-task GPの中心は **task covariance** です。
+
+入力間のcovarianceを
+
+$$
+K_X
+$$
+
+タスク間のcovarianceを
+
+$$
+K_T
+$$
+
+とします。
+
+例えば3タスクなら
+
+$$
+K_T=
+\begin{bmatrix}
+1.0 & 0.8 & 0.2\\
+0.8 & 1.0 & 0.3\\
+0.2 & 0.3 & 1.0
+\end{bmatrix}
+$$
+
+のような構造を考えられます。
+
+この例ではTask 1とTask 2のcovarianceが大きく、Task 1とTask 3は小さい構造です。
+ただしcovarianceの絶対値とcorrelation coefficientは同じではありません。
+各taskのvarianceで正規化した量がcorrelationに対応します。
+
+ただし、推定されたtask covarianceを単純な因果関係や物理的関係と解釈してはいけません。これはモデルが観測データから学習した共分散構造です。
+
+---
+
+## 7.6 Intrinsic Coregionalization Model (ICM)
+
+代表的なMulti-task GPの構造が **ICM (Intrinsic Coregionalization Model)** です。
+
+典型的には
+
+$$
+k((x,t),(x',t'))
+=
+k_X(x,x')k_T(t,t')
+$$
+
+とします。
+
+つまり
+
+```text
+入力が似ているか
+    ×
+タスクが似ているか
+    ↓
+最終的な covariance
+```
+
+です。
+
+入力集合とtask集合が直積として並ぶblock designでは、モデルの仮定に応じて
+
+$
+K=K_X\otimes K_T
+$
+
+というKronecker積構造を利用できます。これは任意のmulti-taskデータで常に
+この行列形になる、という意味ではありません。
+
+`MultiTaskGP` と `KroneckerMultiTaskGP` は、入力側 covariance と task covariance を組み合わせる
+multi-task GP ですが、データ表現、task covariance の parameterization、計算構造は同一ではありません。
+したがって、両者を単一の ICM 実装として同一視せず、各モデルの covariance contract を確認します。
+
+---
+
+## 7.7 MultiTaskGP
+
+BoTorchの`MultiTaskGP`は、入力の1列をtask featureとして持つlong-format表現を使います。
+
+例えば通常の入力が
+
+```text
+[x1, x2]
+```
+
+なら
+
+```text
+[x1, x2, task]
+```
+
+として与えます。
+
+例:
+
+```text
+x1   x2   task   y
+0.1  0.2   0    1.3
+0.4  0.8   0    2.1
+0.2  0.3   1    1.6
+0.7  0.5   1    2.5
+```
+
+タスクごとに異なる `x` で観測されていても扱えることが重要です。
+
+---
+
+(x_3, x_4)`$ で測っていなくても、存在する観測だけを行として持てます。
+この柔軟性が、後述するblock designとの大きな違いです。
+
 ## 7.8 MultiTaskGPのcovariance
 
 現在の upstream `MultiTaskGP` では、non-task feature に対する data covariance と
@@ -244,10 +546,10 @@ task covariance を組み合わせます。
 
 概念的には
 
-\[
+$$
 k((x,t),(x',t'))
 =k_X(x,x')k_T(t,t')
-\]
+$$
 
 です。
 
@@ -286,7 +588,9 @@ model = MultiTaskGP(
 
 `MultiTaskGP`では、posteriorとして返したいtaskを`output_tasks`で指定できます。
 
-例えば複数taskを学習に利用しつつ、BOで最終的に重要なtaskだけを出力対象にする構成も可能です。
+例えば複数taskを学習に利用しつつ、posteriorで必要なtaskを出力対象にする構成も可能です。
+ただし `output_tasks` は「BOのobjectiveを自動的に決める指定」ではありません。
+最終的なobjectiveはObjective / PosteriorTransform / acquisition側の設計とも関係します。
 
 これはMulti-Fidelityでtarget fidelityを意識したのと似た場面がありますが、Multi-taskには一般に精度やコストの順序は必要ありません。
 
@@ -298,9 +602,9 @@ Task covarianceは低rank構造で表現できます。
 
 概念的には
 
-\[
+$$
 K_T\approx BB^\top + D
-\]
+$$
 
 のように、少数の潜在因子でタスク関係を表現します。
 
@@ -335,15 +639,15 @@ covarianceの要素を非負に制約する設計です。
 
 入力が
 
-\[
+$$
 X\in\mathbb{R}^{n\times d}
-\]
+$$
 
 出力が
 
-\[
+$$
 Y\in\mathbb{R}^{n\times m}
-\]
+$$
 
 です。
 
@@ -376,6 +680,19 @@ task feature を categorical feature として指定する構造ではありま�
 
 ---
 
+### Wide / block designを図で見る
+
+`KroneckerMultiTaskGP` では、1行の入力に対してtask出力が横に並びます。
+
+~~~text
+x_1 → [y_1A, y_1B, y_1C]
+x_2 → [y_2A, y_2B, y_2C]
+x_3 → [y_3A, y_3B, y_3C]
+~~~
+
+ここではtask identityを `train_X` の列へ追加しません。
+**task軸は `train_Y` の最後のoutput dimensionとして表現される**ためです。
+
 ## 7.14 Block design
 
 Block designとは
@@ -391,9 +708,9 @@ x_n → task 1, task 2, ..., task m
 
 この構造があると、共分散を
 
-\[
+$$
 K=K_X\otimes K_T
-\]
+$$
 
 として扱えます。
 
@@ -403,19 +720,19 @@ K=K_X\otimes K_T
 
 ## 7.15 Kronecker積の意味
 
-\[
+$$
 K_X\in\mathbb{R}^{n\times n}
-\]
+$$
 
-\[
+$$
 K_T\in\mathbb{R}^{m\times m}
-\]
+$$
 
 なら
 
-\[
+$$
 K_X\otimes K_T
-\]
+$$
 
 は全 `n × m` 個の関数値間のcovarianceを表します。
 
@@ -439,23 +756,23 @@ Kronecker構造を利用すると、巨大な `(nm) × (nm)` covariance matrix�
 robotorchanのKronecker extensionでは、block designとtask covarianceを固定したまま、
 主にdata covariance factorを拡張します。基準となるlatent covarianceは
 
-\[
+$$
 K_f = K_{data} \otimes K_{task}
-\]
+$$
 
 です。
 
 Spectral Mixture variantでは
 
-\[
+$$
 K_{data}=K_{SM}
-\]
+$$
 
 Infinite-width BNN variantでは
 
-\[
+$$
 K_{data}=K_{NNGP}
-\]
+$$
 
 とし、task covariance factorは別に維持します。Mixed variantでもcategorical covarianceは
 data factor側の構造であり、task identityとは異なります。
@@ -489,18 +806,19 @@ heavy-tailed likelihoodは単なるdata kernel交換ではありません。late
 | taskごとに異なるX | 可能 | 基本不可 |
 | 全taskが同一X | 必須ではない | 必須 |
 | task correlation | 利用 | 利用 |
-| ICM | Yes | Yes |
+| separable task/data covariance | 利用 | 利用 |
 | Kronecker構造 | 一般のlong-formatとして扱う | 明示的に利用 |
 
-したがって
+したがってデータ表現の入口としては
 
 ```text
 全taskが同じXで観測？
-  ├─ Yes → KroneckerMultiTaskGPを検討
-  └─ No  → MultiTaskGPを検討
+  ├─ Yes → KroneckerMultiTaskGPを検討可能
+  └─ No  → MultiTaskGPのlong formatを検討
 ```
 
-が基本的な判断です。
+と整理できます。ただし同じXだから必ずKronecker版が優れるわけではなく、
+必要なlikelihood、noise semantics、kernel拡張、posterior contractも確認します。
 
 ---
 
@@ -518,15 +836,853 @@ model = ModelListGP(model_1, model_2)
 
 とします。
 
-重要なのは、**各sub-modelは独立**だということです。
+重要なのは、標準的な使い方では**各sub-model間のcross-output covarianceを
+学習しない**ということです。
+
+つまりjointなcross-output covarianceを持つmulti-task modelとして
+# 7. Multi-task / Multi-output Gaussian Process
+
+## 7.1 この章で扱うこと
+
+実務では、1つの入力 `x` に対して複数の関連する応答や、条件・装置・材料ごとの関連タスクを同時に扱いたいことがあります。
+
+```text
+同じプロセス条件 x
+  ├─ 装置Aでの品質
+  ├─ 装置Bでの品質
+  └─ 装置Cでの品質
+```
+
+あるいは
+
+```text
+同じ材料 x
+  ├─ 強度
+  ├─ 導電率
+  └─ 熱伝導率
+```
+
+です。
+
+このとき重要なのは、単に「出力が複数ある」ことと「出力間の相関を利用して学習する」ことを区別することです。
+
+本章では、robotorchanで利用できる
+
+- `MultiTaskGP`
+- `KroneckerMultiTaskGP`
+- `ModelListGP`
+
+を中心に、Multi-task / Multi-output GPの考え方と使い分けを説明します。
+
+---
+
+### 最初に3つの言葉を分ける
+
+この章では **task、output、objective** を区別すると混乱しにくくなります。
+
+| 用語 | この章での意味 |
+| --- | --- |
+| task | 装置、条件、データ源など、関連付けて学習したい単位 |
+| output | surrogate model が返す予測成分 |
+| objective | BOが実際に最大化・最小化したい量 |
+
+例えば強度と導電率を両方予測していても、BOで強度だけを最大化するなら
+「2 output・1 objective」です。また複数taskを学習していても、特定taskだけを
+最適化対象にできます。
+
+つまり、**モデルが何を出力するか**と**最適化で何を価値とするか**は別の設計です。
+
+## 7.2 Multi-outputとは
+
+入力 `x` に対して複数の出力を返す問題を考えます。
+
+$$
+f(x)=
+\begin{bmatrix}
+f_1(x)\\
+f_2(x)\\
+\vdots\\
+f_m(x)
+\end{bmatrix}
+$$
+
+例えば
+
+$$
+f(x)=(\text{strength},\text{conductivity},\text{cost})
+$$
+
+です。
+
+ただし、**multi-outputという言葉だけでは出力間の依存関係をモデル化するかどうかは決まりません**。
+
+独立なGPを並べてもmulti-output modelになります。
+
+したがってmulti-outputは主に**入出力interfaceの性質**を表し、
+output間の統計的依存を仮定する言葉ではありません。
+
+---
+
+## 7.3 Multi-taskとは
+
+Multi-task GPでは、複数の関連タスクを同時にモデル化し、タスク間の相関を利用します。
+
+タスクを `t` とすると
+
+$$
+f(x,t)
+$$
+
+を考えます。
+
+例えば
+
+```text
+t = 0 : 装置A
+t = 1 : 装置B
+t = 2 : 装置C
+```
+
+です。
+
+ある装置のデータから別装置の応答を推定できるなら、タスク間の情報共有が有効です。
+
+ここでtask IDは通常、大小関係を持つ連続量ではありません。`0, 1, 2` と保存されていても、
+その差をユークリッド距離として解釈するのではなく、task covarianceを通して関係を学習します。
+
+```text
+Task A data ─┐
+Task B data ─┼→ shared multi-task GP → posterior for each task
+Task C data ─┘
+```
+
+---
+
+## 7.4 Single-task GPとの違い
+
+タスクごとに完全に独立したGPを作るなら
+
+$$
+f_t(x)\sim\mathcal{GP}(m_t(x),k_t(x,x'))
+$$
+
+です。
+
+この場合、Task Aの観測はTask Bのposteriorへ影響しません。
+
+Multi-task GPでは
+
+$$
+f(x,t)\sim\mathcal{GP}
+\left(
+ m(x,t),
+ k((x,t),(x',t'))
+\right)
+$$
+
+とし、異なるタスク間にもcovarianceを持たせます。
+
+そのため
+
+$$
+\operatorname{Cov}(f(x,t),f(x',t'))\neq 0
+$$
+
+となり得ます。
+
+---
+
+## 7.5 Task covariance
+
+Multi-task GPの中心は **task covariance** です。
+
+入力間のcovarianceを
+
+$$
+K_X
+$$
+
+タスク間のcovarianceを
+
+$$
+K_T
+$$
+
+とします。
+
+例えば3タスクなら
+
+$$
+K_T=
+\begin{bmatrix}
+1.0 & 0.8 & 0.2\\
+0.8 & 1.0 & 0.3\\
+0.2 & 0.3 & 1.0
+\end{bmatrix}
+$$
+
+のような構造を考えられます。
+
+この例ではTask 1とTask 2のcovarianceが大きく、Task 1とTask 3は小さい構造です。
+ただしcovarianceの絶対値とcorrelation coefficientは同じではありません。
+各taskのvarianceで正規化した量がcorrelationに対応します。
+
+ただし、推定されたtask covarianceを単純な因果関係や物理的関係と解釈してはいけません。これはモデルが観測データから学習した共分散構造です。
+
+---
+
+## 7.6 Intrinsic Coregionalization Model (ICM)
+
+代表的なMulti-task GPの構造が **ICM (Intrinsic Coregionalization Model)** です。
+
+典型的には
+
+$$
+k((x,t),(x',t'))
+=
+k_X(x,x')k_T(t,t')
+$$
+
+とします。
 
 つまり
 
-\[
-\operatorname{Cov}(f_1(x),f_2(x'))=0
-\]
+```text
+入力が似ているか
+    ×
+タスクが似ているか
+    ↓
+最終的な covariance
+```
 
-というモデル化に相当します。
+です。
+
+入力集合とtask集合が直積として並ぶblock designでは、モデルの仮定に応じて
+
+$
+K=K_X\otimes K_T
+$
+
+というKronecker積構造を利用できます。これは任意のmulti-taskデータで常に
+この行列形になる、という意味ではありません。
+
+`MultiTaskGP` と `KroneckerMultiTaskGP` は、入力側 covariance と task covariance を組み合わせる
+multi-task GP ですが、データ表現、task covariance の parameterization、計算構造は同一ではありません。
+したがって、両者を単一の ICM 実装として同一視せず、各モデルの covariance contract を確認します。
+
+---
+
+## 7.7 MultiTaskGP
+
+BoTorchの`MultiTaskGP`は、入力の1列をtask featureとして持つlong-format表現を使います。
+
+例えば通常の入力が
+
+```text
+[x1, x2]
+```
+
+なら
+
+```text
+[x1, x2, task]
+```
+
+として与えます。
+
+例:
+
+```text
+x1   x2   task   y
+0.1  0.2   0    1.3
+0.4  0.8   0    2.1
+0.2  0.3   1    1.6
+0.7  0.5   1    2.5
+```
+
+タスクごとに異なる `x` で観測されていても扱えることが重要です。
+
+---
+
+### Long formatを図で見る
+
+`MultiTaskGP` では、1行が「ある設計点・あるtaskの1観測」です。
+
+~~~text
+(x1, x2, task=A) → y_A
+(x1, x2, task=B) → y_B
+(x3, x4, task=A) → y_A
+~~~
+
+Task Bを # 7. Multi-task / Multi-output Gaussian Process
+
+## 7.1 この章で扱うこと
+
+実務では、1つの入力 `x` に対して複数の関連する応答や、条件・装置・材料ごとの関連タスクを同時に扱いたいことがあります。
+
+```text
+同じプロセス条件 x
+  ├─ 装置Aでの品質
+  ├─ 装置Bでの品質
+  └─ 装置Cでの品質
+```
+
+あるいは
+
+```text
+同じ材料 x
+  ├─ 強度
+  ├─ 導電率
+  └─ 熱伝導率
+```
+
+です。
+
+このとき重要なのは、単に「出力が複数ある」ことと「出力間の相関を利用して学習する」ことを区別することです。
+
+本章では、robotorchanで利用できる
+
+- `MultiTaskGP`
+- `KroneckerMultiTaskGP`
+- `ModelListGP`
+
+を中心に、Multi-task / Multi-output GPの考え方と使い分けを説明します。
+
+---
+
+### 最初に3つの言葉を分ける
+
+この章では **task、output、objective** を区別すると混乱しにくくなります。
+
+| 用語 | この章での意味 |
+| --- | --- |
+| task | 装置、条件、データ源など、関連付けて学習したい単位 |
+| output | surrogate model が返す予測成分 |
+| objective | BOが実際に最大化・最小化したい量 |
+
+例えば強度と導電率を両方予測していても、BOで強度だけを最大化するなら
+「2 output・1 objective」です。また複数taskを学習していても、特定taskだけを
+最適化対象にできます。
+
+つまり、**モデルが何を出力するか**と**最適化で何を価値とするか**は別の設計です。
+
+## 7.2 Multi-outputとは
+
+入力 `x` に対して複数の出力を返す問題を考えます。
+
+$$
+f(x)=
+\begin{bmatrix}
+f_1(x)\\
+f_2(x)\\
+\vdots\\
+f_m(x)
+\end{bmatrix}
+$$
+
+例えば
+
+$$
+f(x)=(\text{strength},\text{conductivity},\text{cost})
+$$
+
+です。
+
+ただし、**multi-outputという言葉だけでは出力間の依存関係をモデル化するかどうかは決まりません**。
+
+独立なGPを並べてもmulti-output modelになります。
+
+したがってmulti-outputは主に**入出力interfaceの性質**を表し、
+output間の統計的依存を仮定する言葉ではありません。
+
+---
+
+## 7.3 Multi-taskとは
+
+Multi-task GPでは、複数の関連タスクを同時にモデル化し、タスク間の相関を利用します。
+
+タスクを `t` とすると
+
+$$
+f(x,t)
+$$
+
+を考えます。
+
+例えば
+
+```text
+t = 0 : 装置A
+t = 1 : 装置B
+t = 2 : 装置C
+```
+
+です。
+
+ある装置のデータから別装置の応答を推定できるなら、タスク間の情報共有が有効です。
+
+ここでtask IDは通常、大小関係を持つ連続量ではありません。`0, 1, 2` と保存されていても、
+その差をユークリッド距離として解釈するのではなく、task covarianceを通して関係を学習します。
+
+```text
+Task A data ─┐
+Task B data ─┼→ shared multi-task GP → posterior for each task
+Task C data ─┘
+```
+
+---
+
+## 7.4 Single-task GPとの違い
+
+タスクごとに完全に独立したGPを作るなら
+
+$$
+f_t(x)\sim\mathcal{GP}(m_t(x),k_t(x,x'))
+$$
+
+です。
+
+この場合、Task Aの観測はTask Bのposteriorへ影響しません。
+
+Multi-task GPでは
+
+$$
+f(x,t)\sim\mathcal{GP}
+\left(
+ m(x,t),
+ k((x,t),(x',t'))
+\right)
+$$
+
+とし、異なるタスク間にもcovarianceを持たせます。
+
+そのため
+
+$$
+\operatorname{Cov}(f(x,t),f(x',t'))\neq 0
+$$
+
+となり得ます。
+
+---
+
+## 7.5 Task covariance
+
+Multi-task GPの中心は **task covariance** です。
+
+入力間のcovarianceを
+
+$$
+K_X
+$$
+
+タスク間のcovarianceを
+
+$$
+K_T
+$$
+
+とします。
+
+例えば3タスクなら
+
+$$
+K_T=
+\begin{bmatrix}
+1.0 & 0.8 & 0.2\\
+0.8 & 1.0 & 0.3\\
+0.2 & 0.3 & 1.0
+\end{bmatrix}
+$$
+
+のような構造を考えられます。
+
+この例ではTask 1とTask 2のcovarianceが大きく、Task 1とTask 3は小さい構造です。
+ただしcovarianceの絶対値とcorrelation coefficientは同じではありません。
+各taskのvarianceで正規化した量がcorrelationに対応します。
+
+ただし、推定されたtask covarianceを単純な因果関係や物理的関係と解釈してはいけません。これはモデルが観測データから学習した共分散構造です。
+
+---
+
+## 7.6 Intrinsic Coregionalization Model (ICM)
+
+代表的なMulti-task GPの構造が **ICM (Intrinsic Coregionalization Model)** です。
+
+典型的には
+
+$$
+k((x,t),(x',t'))
+=
+k_X(x,x')k_T(t,t')
+$$
+
+とします。
+
+つまり
+
+```text
+入力が似ているか
+    ×
+タスクが似ているか
+    ↓
+最終的な covariance
+```
+
+です。
+
+入力集合とtask集合が直積として並ぶblock designでは、モデルの仮定に応じて
+
+$
+K=K_X\otimes K_T
+$
+
+というKronecker積構造を利用できます。これは任意のmulti-taskデータで常に
+この行列形になる、という意味ではありません。
+
+`MultiTaskGP` と `KroneckerMultiTaskGP` は、入力側 covariance と task covariance を組み合わせる
+multi-task GP ですが、データ表現、task covariance の parameterization、計算構造は同一ではありません。
+したがって、両者を単一の ICM 実装として同一視せず、各モデルの covariance contract を確認します。
+
+---
+
+## 7.7 MultiTaskGP
+
+BoTorchの`MultiTaskGP`は、入力の1列をtask featureとして持つlong-format表現を使います。
+
+例えば通常の入力が
+
+```text
+[x1, x2]
+```
+
+なら
+
+```text
+[x1, x2, task]
+```
+
+として与えます。
+
+例:
+
+```text
+x1   x2   task   y
+0.1  0.2   0    1.3
+0.4  0.8   0    2.1
+0.2  0.3   1    1.6
+0.7  0.5   1    2.5
+```
+
+タスクごとに異なる `x` で観測されていても扱えることが重要です。
+
+---
+
+(x_3, x_4)`$ で測っていなくても、存在する観測だけを行として持てます。
+この柔軟性が、後述するblock designとの大きな違いです。
+
+## 7.8 MultiTaskGPのcovariance
+
+現在の upstream `MultiTaskGP` では、non-task feature に対する data covariance と
+task covariance を組み合わせます。
+
+概念的には
+
+$$
+k((x,t),(x',t'))
+=k_X(x,x')k_T(t,t')
+$$
+
+です。
+
+したがってTask Aの観測は、
+
+- `x` が近い
+- task covarianceが大きい
+
+ほどTask Bのposteriorにも強く影響します。
+
+robotorchanはこのBoTorchの挙動を維持した薄いwrapperです。
+
+---
+
+## 7.9 task_feature
+
+`MultiTaskGP`では、どの入力列がtaskを表すかを`task_feature`で指定します。
+
+例えば
+
+```python
+model = MultiTaskGP(
+    train_X=train_X,
+    train_Y=train_Y,
+    task_feature=-1,
+)
+```
+
+なら最後の列をtask featureとして使います。
+
+タスク番号はモデルにとってtask identityを表すための値であり、通常の連続変数として「task 2はtask 1の2倍」という意味ではありません。
+
+---
+
+## 7.10 output_tasks
+
+`MultiTaskGP`では、posteriorとして返したいtaskを`output_tasks`で指定できます。
+
+例えば複数taskを学習に利用しつつ、posteriorで必要なtaskを出力対象にする構成も可能です。
+ただし `output_tasks` は「BOのobjectiveを自動的に決める指定」ではありません。
+最終的なobjectiveはObjective / PosteriorTransform / acquisition側の設計とも関係します。
+
+これはMulti-Fidelityでtarget fidelityを意識したのと似た場面がありますが、Multi-taskには一般に精度やコストの順序は必要ありません。
+
+---
+
+## 7.11 rankとtask covariance
+
+Task covarianceは低rank構造で表現できます。
+
+概念的には
+
+$$
+K_T\approx BB^\top + D
+$$
+
+のように、少数の潜在因子でタスク関係を表現します。
+
+`rank`を小さくするとtask covarianceの自由度を抑えられます。
+
+```text
+rank 小
+  └─ 少数の共通潜在因子を仮定
+
+rank 大
+  └─ より柔軟なtask covariance
+```
+
+データが少ない状態で過度に柔軟なtask covarianceを推定すると不安定になるため、rankは表現力と推定安定性のトレードオフになります。
+
+---
+
+## 7.12 Positive task correlationについて
+
+現在の upstream `MultiTaskGP` は task covariance に専用の index kernel を利用し、task
+covarianceの要素を非負に制約する設計です。
+
+これは限られたデータからtask correlationを安定して推定するための実務的な仮定です。
+
+したがって、強い負相関を本質的に表現したい問題では、デフォルト設定の仮定が適切かを確認する必要があります。
+
+---
+
+## 7.13 KroneckerMultiTaskGP
+
+`KroneckerMultiTaskGP`は、**すべてのtaskが同じ入力点で観測されるblock design**を前提にします。
+
+入力が
+
+$$
+X\in\mathbb{R}^{n\times d}
+$$
+
+出力が
+
+$$
+Y\in\mathbb{R}^{n\times m}
+$$
+
+です。
+
+例えば
+
+```text
+x1   x2   taskA  taskB  taskC
+0.1  0.2   1.2    0.8    2.1
+0.4  0.7   1.8    1.3    2.6
+0.8  0.5   2.4    1.9    3.0
+```
+
+のように、各 `x` ですべてのtaskが測定されています。
+
+---
+
+## 7.13.1 Mixed × Kronecker MultiTask
+
+現在の robotorchan には `MixedKroneckerMultiTaskGP` があります。
+
+通常の `MixedMultiTaskGP` では task identity は `train_X` の `task_feature` にあります。
+一方、Kronecker版では task identity は `train_Y` の output dimension にあり、
+`train_X` は全taskで共有する block-design input です。
+
+そのため `MixedKroneckerMultiTaskGP(..., cat_dims=[...])` の `cat_dims` は、
+そのまま共有 `train_X` の design columns を指します。
+task feature を categorical feature として指定する構造ではありません。
+
+この差は Mixed × MultiTask を使う際の重要な API / statistical contract です。
+
+---
+
+### Wide / block designを図で見る
+
+`KroneckerMultiTaskGP` では、1行の入力に対してtask出力が横に並びます。
+
+~~~text
+x_1 → [y_1A, y_1B, y_1C]
+x_2 → [y_2A, y_2B, y_2C]
+x_3 → [y_3A, y_3B, y_3C]
+~~~
+
+ここではtask identityを `train_X` の列へ追加しません。
+**task軸は `train_Y` の最後のoutput dimensionとして表現される**ためです。
+
+## 7.14 Block design
+
+Block designとは
+
+```text
+x_1 → task 1, task 2, ..., task m
+x_2 → task 1, task 2, ..., task m
+...
+x_n → task 1, task 2, ..., task m
+```
+
+のように、同じ入力集合ですべてのtaskを観測するデータ構造です。
+
+この構造があると、共分散を
+
+$$
+K=K_X\otimes K_T
+$$
+
+として扱えます。
+
+これが`KroneckerMultiTaskGP`という名前の由来です。
+
+---
+
+## 7.15 Kronecker積の意味
+
+$$
+K_X\in\mathbb{R}^{n\times n}
+$$
+
+$$
+K_T\in\mathbb{R}^{m\times m}
+$$
+
+なら
+
+$$
+K_X\otimes K_T
+$$
+
+は全 `n × m` 個の関数値間のcovarianceを表します。
+
+直感的には
+
+```text
+入力間構造 K_X
+      ×
+タスク間構造 K_T
+      ↓
+入力 × タスク全体の covariance
+```
+
+です。
+
+Kronecker構造を利用すると、巨大な `(nm) × (nm)` covariance matrixを常に密行列として直接扱うより、線形代数上の構造を利用できる場合があります。
+
+
+### 7.15.1 Kronecker extensionで何を変更するか
+
+robotorchanのKronecker extensionでは、block designとtask covarianceを固定したまま、
+主にdata covariance factorを拡張します。基準となるlatent covarianceは
+
+$$
+K_f = K_{data} \otimes K_{task}
+$$
+
+です。
+
+Spectral Mixture variantでは
+
+$$
+K_{data}=K_{SM}
+$$
+
+Infinite-width BNN variantでは
+
+$$
+K_{data}=K_{NNGP}
+$$
+
+とし、task covariance factorは別に維持します。Mixed variantでもcategorical covarianceは
+data factor側の構造であり、task identityとは異なります。
+
+この分離は重要です。task indexを入力特徴へ追加してlong-format modelへ変形すると、
+block-design Kronecker modelとは異なる統計モデルになります。同様に、入力依存noiseや
+heavy-tailed likelihoodは単なるdata kernel交換ではありません。latent covariance
+`K_data ⊗ K_task` に加えてobservation modelを定義する必要があります。
+
+したがって、robotorchanではKronecker extensionを次の3種類に区別します。
+
+1. **data-factor extension**: Mixed、reduction、Nonstationary、Spectral Mixture、NNGP。
+2. **observation-model extension**: heteroskedastic、replicate noise、RRP、Student-t、
+   contaminated。専用のblock-design observation semanticsが必要です。
+3. **inference-architecture extension**: SAAS fully BayesianやDeepGP。kernel交換だけでは
+   成立せず、Pyro/variational inferenceのownershipまで含む設計が必要です。
+
+この区別により、「別のMultiTask版が存在する」ことだけを理由にKronecker版を追加することを
+避けます。
+
+---
+
+## 7.16 MultiTaskGPとKroneckerMultiTaskGPの違い
+
+最も重要な違いは**学習データの形**です。
+
+| 観点 | `MultiTaskGP` | `KroneckerMultiTaskGP` |
+|---|---|---|
+| データ形式 | long format | wide / block design |
+| task指定 | `task_feature` | `train_Y`の出力軸 |
+| taskごとに異なるX | 可能 | 基本不可 |
+| 全taskが同一X | 必須ではない | 必須 |
+| task correlation | 利用 | 利用 |
+| separable task/data covariance | 利用 | 利用 |
+| Kronecker構造 | 一般のlong-formatとして扱う | 明示的に利用 |
+
+したがってデータ表現の入口としては
+
+```text
+全taskが同じXで観測？
+  ├─ Yes → KroneckerMultiTaskGPを検討可能
+  └─ No  → MultiTaskGPのlong formatを検討
+```
+
+と整理できます。ただし同じXだから必ずKronecker版が優れるわけではなく、
+必要なlikelihood、noise semantics、kernel拡張、posterior contractも確認します。
+
+---
+
+## 7.17 ModelListGP
+
+`ModelListGP`は複数のGPをまとめるcontainerです。
+
+例えば
+
+```python
+model_1 = SingleTaskGP(X1, Y1)
+model_2 = SingleTaskGP(X2, Y2)
+model = ModelListGP(model_1, model_2)
+```
+
+とします。
+
+重要なのは、標準的な使い方では**各sub-model間のcross-output covarianceを
+学習しない**ということです。
+
+Cov(f_1(x), f_2(x'))`$ を学習する構成ではありません。
+各child modelはそれぞれのposteriorを持ちます。
 
 ---
 
@@ -596,6 +1752,27 @@ Multi-objective
 両者は関連しますが同義ではありません。
 
 ---
+
+### Multi-output posteriorからobjectiveへ
+
+複数outputを持つsurrogateをBOへ渡すときは、posteriorの全成分をそのまま
+最適化するとは限りません。
+
+~~~text
+multi-output posterior
+        ↓
+Objective / PosteriorTransform
+        ↓
+BOで価値を評価する量
+        ↓
+Acquisition Function
+~~~
+
+例えば3出力のうち1つだけを目的にしたり、複数出力を重み付きでscalarizeしたり、
+multi-objective acquisitionへ渡したりできます。
+
+このため **multi-output modelを選ぶこと**と**multi-objective BOを選ぶこと**は
+独立した設計判断です。
 
 ## 7.21 Multi-taskとMulti-Fidelityの違い
 
@@ -763,9 +1940,10 @@ experiment task : noise大
 
 です。
 
-現在の robotorchan `MultiTaskGP` は既知 noise を `train_Yvar` で受け取れます。
-一方、noise を推定する構成では task-noise semantics を likelihood contract と合わせて確認
-があるため、taskごとに異なるnoiseを明示的に表現したい場合はlikelihood設計を確認する必要があります。
+現在の robotorchan `MultiTaskGP` は既知noiseを `train_Yvar` で受け取れます。
+一方、noiseを推定する構成ではtask-noise semanticsをlikelihood contractと合わせて
+確認する必要があります。taskごとに異なるnoiseを明示的に表現したい場合は、
+モデル本体だけでなくlikelihood設計も確認します。
 
 モデル選択ではtask covarianceだけでなくnoise modelも確認します。
 
@@ -1008,7 +2186,27 @@ Candidate
 
 ---
 
-## 7.37 まとめ
+## 7.37 この章で覚えておくこと
+
+Multi-task / Multi-outputを整理すると、まず次の順に考えると混乱しにくくなります。
+
+~~~text
+何を予測する？
+  ↓
+output / taskを定義
+  ↓
+task間で情報共有する？
+  ├─ No  → independent / ModelList
+  └─ Yes
+       ↓
+     観測Xは全task共通？
+       ├─ No  → long-format MultiTaskGP
+       └─ Yes → Kronecker構造を検討
+  ↓
+posteriorのどの量をBOで使う？
+  ↓
+Objective / PosteriorTransform / Acquisition
+~~~
 
 Multi-task / Multi-output GPで最も重要なのは、**複数の出力を持つことと、出力間の相関を利用することを区別すること**です。
 
@@ -1026,11 +2224,11 @@ Related tasks
 
 理論的には
 
-\[
+$$
 k((x,t),(x',t'))
 =
 k_X(x,x')k_T(t,t')
-\]
+$$
 
 というICMの考え方が中心です。
 
