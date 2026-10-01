@@ -131,9 +131,7 @@ def test_ensemble_sampling_type_is_reserved_for_empirical_ensemble_posteriors() 
 def test_sampling_type_always_matches_sampling_support() -> None:
     for entry in MODEL_REGISTRY.values():
         capabilities = entry.capabilities
-        has_sampling_type = (
-            capabilities.posterior_sampling_type is not PosteriorSamplingType.NONE
-        )
+        has_sampling_type = capabilities.posterior_sampling_type is not PosteriorSamplingType.NONE
         assert capabilities.supports_posterior_samples is has_sampling_type
 
 
