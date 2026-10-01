@@ -120,6 +120,14 @@ BoTorch は analytic UCB と MC batch variant を提供しています。robotor
 
 利用方法は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の統合範囲は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
+### 3.9.1 現在の qUCB registry contract
+
+現在の registry では `qUpperConfidenceBound` を BoTorch-native Monte Carlo acquisition として扱います。
+robotorchan 独自の qUCB 数式や wrapper を追加しているわけではありません。
+
+したがって model compatibility は「GPかどうか」だけでなく、
+posterior sampling capability を満たすかで判定します。
+
 ## 3.10 まとめ
 
 Confidence-bound family の中心的な考え方は、posterior uncertainty を明示的な optimism として意思決定へ変換することです。
