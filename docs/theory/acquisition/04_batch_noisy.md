@@ -184,6 +184,17 @@ BoTorch は qLogEI、qLogNEI などの batch / noisy acquisition と pending-poi
 
 具体的な API は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の対応状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
+### 4.12.1 qLogEI / qLogNEI と posterior requirement
+
+現在の registry では `qLogExpectedImprovement` と
+`qLogNoisyExpectedImprovement` の posterior requirement を
+`POSTERIOR_SAMPLES` として表現しています。
+
+したがって「Gaussian posteriorだから利用可能」とだけ判断せず、
+model registry の `supports_posterior_samples` と組み合わせて compatibility を判定します。
+
+また pending points や asynchronous semantics と candidate optimizer の feasibility は別責務です。
+
 ## 4.13 まとめ
 
 Batch / noisy BO では、単一点の acquisition intuition だけでは不十分です。
