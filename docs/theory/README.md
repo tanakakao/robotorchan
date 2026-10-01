@@ -26,6 +26,7 @@ Gaussian Process（GP）の理論を、実装と対応付けながら説明し�
 4. [Acquisition Function](04_acquisition_function.md)
    - [Acquisition Function Theory](acquisition/README.md) — 01〜12の詳細理論
    - [Acquisition Selection Guide](acquisition/12_selection_guide.md) — 問題設定から獲得関数を選ぶ入口
+   - [Optimization Theory](optimization/README.md) — 獲得関数を最大化する探索法の理論
    - [Optimization guides](../optimization/README.md) — API・利用方法
    - [Acquisition integration status](../optimization/acquisition-integration.md) — 現在の対応範囲と制約
 5. [Mixed Variables](05_mixed_variables.md)
@@ -127,6 +128,7 @@ Gaussian Process（GP）の理論を、実装と対応付けながら説明し�
 | Expressiveness | DKL、DeepGP、NNGP、spectral mixture | 22 |
 | Non-GP posterior | tree ensemble、boosting、NGBoost | 23 |
 | Selection | problem assumptions と model capability の対応 | 13 |
+| Acquisition optimization | gradient / mixed / evolutionary / trust-region search | optimization/ |
 
 この分類では、1つの model が複数 layer に関係することがあります。
 
