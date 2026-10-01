@@ -290,6 +290,23 @@ K_3
 
 ---
 
+## 11.8.1 Mixed HigherOrderGP
+
+現在の robotorchan には `MixedHigherOrderGP` があります。
+
+HOGP の Kronecker factorization は design-input factor と tensor-output axes の factor を分離します。
+Mixed版はこのうち **design-input covarianceだけ**を robotorchan の mixed covariance に置き換え、
+tensor-output側の Kronecker structure は維持します。
+
+したがって `cat_dims` は `train_X` の categorical design columns を表し、
+output-axis coordinate の指定ではありません。
+
+また現在の Mixed wrapper は design-input covariance を内部管理するため、
+custom `covar_modules` との同時指定はサポートしません。
+これは HOGP 理論上の制約ではなく、現在の public implementation contract です。
+
+---
+
 ## 11.9 なぜ Kronecker が効くのか
 
 例えば出力 shape が

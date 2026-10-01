@@ -359,6 +359,22 @@ x1   x2   taskA  taskB  taskC
 
 ---
 
+## 7.13.1 Mixed × Kronecker MultiTask
+
+現在の robotorchan には `MixedKroneckerMultiTaskGP` があります。
+
+通常の `MixedMultiTaskGP` では task identity は `train_X` の `task_feature` にあります。
+一方、Kronecker版では task identity は `train_Y` の output dimension にあり、
+`train_X` は全taskで共有する block-design input です。
+
+そのため `MixedKroneckerMultiTaskGP(..., cat_dims=[...])` の `cat_dims` は、
+そのまま共有 `train_X` の design columns を指します。
+task feature を categorical feature として指定する構造ではありません。
+
+この差は Mixed × MultiTask を使う際の重要な API / statistical contract です。
+
+---
+
 ## 7.14 Block design
 
 Block designとは

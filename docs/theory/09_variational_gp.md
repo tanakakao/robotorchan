@@ -586,6 +586,20 @@ mll = model.make_mll()
 
 ---
 
+### 9.18.1 `make_mll()` と fitting helper を同一視しない
+
+`SingleTaskVariationalGP.make_mll()` が `VariationalELBO` を返すことは、
+Exact GP と同じ fitting routine を使うという意味ではありません。
+
+robotorchan の共通点は **objective factory として `make_mll()` を持つこと**です。
+Variational GP の parameter optimization は、この章の training loop のように
+ELBO を gradient optimizer で反復最適化するのが基本です。
+
+特に minibatch training では、batch tensor だけでなく全データ数を
+`make_mll(num_data=...)` に渡して ELBO の scaling を保ちます。
+
+---
+
 ## 9.19 `make_mll()` の実体
 
 robotorchan の wrapper では概念的に
