@@ -2,7 +2,11 @@
 
 このディレクトリでは、獲得関数を「実装の使い方」ではなく、意思決定基準としての理論から整理します。
 
-[Acquisition Function 概要](../04_acquisition_function.md) は獲得関数全体への入口です。個別手法の数式、仮定、手法間の関係はこのディレクトリで扱います。BoTorch / robotorchan の具体的な API、利用例、現在の対応範囲は [Optimization guide](../../optimization/README.md) と [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
+[Acquisition Function 概要](../04_acquisition_function.md) は獲得関数全体への入口です。
+個別手法の数式、仮定、手法間の関係はこのディレクトリで扱います。
+BoTorch / robotorchan の具体的な API、利用例、現在の対応範囲は
+[Optimization guide](../../optimization/README.md) と
+[Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 責務
 
@@ -45,17 +49,17 @@ Theory に掲載されていることは robotorchan での実装を意味しま
 
 | 章 | 主題 | 主な内容 |
 | --- | --- | --- |
-| [01](01_foundations.md) | Foundations | posterior、utility、exploration / exploitation、analytic / MC、acquisition optimization |
+| [01](01_foundations.md) | Foundations | posterior、utility、exploration / exploitation、analytic / MC |
 | [02](02_improvement.md) | Improvement | EI、LogEI、PI、LogPI と improvement-based utility |
 | [03](03_confidence_bound.md) | Confidence Bound | UCB、qUCB、confidence parameter |
-| [04](04_batch_noisy.md) | Batch / Noisy | q-acquisition、joint utility、posterior correlation、NEI、pending points |
+| [04](04_batch_noisy.md) | Batch / Noisy | q-acquisition、joint utility、correlation、NEI、pending |
 | [05](05_information_theoretic.md) | Information Theory | entropy、mutual information、MES、GIBBON |
 | [06](06_lookahead.md) | Lookahead | KG、qKG、fantasy model、multi-step lookahead |
-| [07](07_multiobjective.md) | Multi-objective | Pareto dominance、hypervolume、EHVI、NEHVI、NParEGO、HVKG |
-| [08](08_constraints.md) | Constraints | feasibility、constraint-aware acquisition、objective / posterior transform |
-| [09](09_active_learning.md) | Active Learning | posterior variance / std、integrated variance、qNIPV、EPIG |
-| [10](10_level_set.md) | Level-set | level-set estimation、Straddle、Randomized Straddle、BoundaryVariance |
-| [11](11_multifidelity_cost_aware.md) | Multi-Fidelity / Cost-aware | fidelity、value of information、MF-KG、cost-aware utility |
+| [07](07_multiobjective.md) | Multi-objective | Pareto、hypervolume、EHVI、NEHVI、NParEGO、HVKG |
+| [08](08_constraints.md) | Constraints | feasibility、constrained utility、objective / transform |
+| [09](09_active_learning.md) | Active Learning | variance / std、integrated variance、qNIPV、EPIG |
+| [10](10_level_set.md) | Level-set | level-set、Straddle、Randomized Straddle、BoundaryVariance |
+| [11](11_multifidelity_cost_aware.md) | Multi-Fidelity / Cost-aware | fidelity、VoI、MF-KG、cost-aware utility |
 | [12](12_selection_guide.md) | Selection Guide | 問題設定と獲得関数ファミリーの対応、各詳細章への導線 |
 
 ## 初心者向けの推奨ルート
@@ -121,7 +125,8 @@ robotorchan: native BoTorch path を利用
 
 Theory は理論体系として構成します。robotorchan にローカル実装がない MES、GIBBON、qMultiStepLookahead なども、理論上の位置付けが重要なら扱います。
 
-現在の対応状況は Theory ではなく [Acquisition integration status](../../optimization/acquisition-integration.md) を正とします。
+現在の対応状況は Theory ではなく
+[Acquisition integration status](../../optimization/acquisition-integration.md) を正とします。
 
 ### 原典を優先する
 
@@ -153,7 +158,8 @@ q-acquisition を「1点用スコアの上位 q 点」として説明しませ�
 
 ### noise の種類を区別する
 
-latent function uncertainty、observation noise、model uncertainty を必要に応じて区別します。Noisy acquisition の説明では、観測値の最大値と潜在関数の最良値を混同しません。
+latent function uncertainty、observation noise、model uncertainty を必要に応じて区別します。
+Noisy acquisition の説明では、観測値の最大値と潜在関数の最良値を混同しません。
 
 ### 情報獲得の対象を明示する
 
@@ -255,7 +261,9 @@ Theory本文はこのmetadataのコピーにはせず、**なぜそのrequiremen
 
 実際の問題から獲得関数を選びたい場合は、先に [Selection Guide](12_selection_guide.md) を読み、必要な詳細章へ移動してください。
 
-実装方法を確認したい場合は [Optimization guide](../../optimization/README.md)、現在の対応範囲だけを確認したい場合は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
+実装方法を確認したい場合は [Optimization guide](../../optimization/README.md)、
+現在の対応範囲だけを確認したい場合は
+[Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 
 ## 各章で確認する共通チェック
