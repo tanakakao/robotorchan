@@ -441,7 +441,7 @@ search target z_s
 - surrogate latent space と search target space は別座標系
 
 詳細は
-[high-dimensional search strategies](../high_dimensional_search_strategies.md)
+[high-dimensional search strategies](../optimization/high_dimensional_search.md)
 を参照してください。
 
 ## 参考文献
