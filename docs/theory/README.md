@@ -283,7 +283,7 @@ surrogate model
 | Layer | 主な実装ガイド |
 | --- | --- |
 | Posterior sampling | [Posterior sampling](../optimization/posterior-sampling.md) |
-| Objective / PosteriorTransform | [Objective / PosteriorTransform audit](../development/objective-posterior-transform-audit.md) |
+| Objective / transform | [Objective audit](../development/objective-posterior-transform-audit.md) |
 | Initialization | [Acquisition initialization](../optimization/initialization.md) |
 | Batch / Async | [Batch / Async / Fantasization](../optimization/batch-async-fantasization.md) |
 | Candidate optimization | [Optimization guide](../optimization/README.md) |
