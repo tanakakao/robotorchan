@@ -639,7 +639,9 @@ fit_gpytorch_mll(mll)
 
 で hyperparameter fitting できます。
 
-ただし objective は Exact Gaussian MLL ではなく、**Laplace approximation に基づく marginal likelihood** です。
+ただし objective は Gaussian regression の Exact MLL ではありません。
+`PairwiseLaplaceMarginalLogLikelihood` は pairwise likelihood と Laplace approximation を使う
+PairwiseGP 専用の学習 objective です。
 
 ---
 
