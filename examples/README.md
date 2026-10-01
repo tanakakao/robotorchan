@@ -24,6 +24,10 @@ pip install -e ".[examples,fully-bayesian]"
 
 ## Notebook の方針
 
+Notebook の標準構成・metadata・Tier A/B/C の要件は、
+[`notebook-authoring-standard.md`](../docs/development/notebook-authoring-standard.md) を
+source of truth とします。
+
 各 Notebook は単体で理解でき、上から順番に実行できる構成にします。説明文と見出しは原則として日本語とし、モデル名・API名・Bayesian Optimization / posterior / likelihood など、コードと対応付けた方が分かりやすい技術用語は英語表記を残します。
 
 基本構成は次のとおりです。
