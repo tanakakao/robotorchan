@@ -92,7 +92,7 @@ $$
 
 ### Multi-Fidelity acquisition
 
-候補 \((x,s)\) を評価したとき、それが target-fidelity decision にどれだけ価値を与えるかを評価します。
+候補 $`(x,s)`$ を評価したとき、それが target-fidelity decision にどれだけ価値を与えるかを評価します。
 
 したがって、
 
@@ -104,13 +104,13 @@ MF acquisition を使っている
 
 です。
 
-単に fidelity を入力特徴量へ追加し、通常の EI で \((x,s)\) を探索するだけでは、target fidelity と cost の意味を十分に利用しない場合があります。
+単に fidelity を入力特徴量へ追加し、通常の EI で $`(x,s)`$ を探索するだけでは、target fidelity と cost の意味を十分に利用しない場合があります。
 
 ## 11.6 Fidelity間のinformation transfer
 
 低 fidelity が有用なのは、target fidelity と相関しているからです。
 
-低 fidelity observation $`Y_{x,s}`$ が target quantity \(f(x',s^*)\) にほとんど情報を与えないなら、いくら安価でも価値は限定的です。
+低 fidelity observation $`Y_{x,s}`$ が target quantity $`f(x',s^*)`$ にほとんど情報を与えないなら、いくら安価でも価値は限定的です。
 
 MFBO acquisition は概念的に、
 
@@ -156,7 +156,7 @@ cost は objective value と別の量です。高 fidelity が高い objective v
 
 ## 11.8 Cost-aware utility
 
-候補の information / decision value を \(V(x,s)\) とすれば、直感的な cost-aware criterion は
+候補の information / decision value を $`V(x,s)`$ とすれば、直感的な cost-aware criterion は
 
 $$
 \frac{V(x,s)}{c(x,s)}
@@ -173,7 +173,7 @@ budget、terminal value、並列性、固定 overhead などによって最適�
 
 Knowledge Gradient（KG）は候補を観測した後の terminal decision value の改善を評価するため、MFBO と自然に結び付きます。
 
-候補 \((x,s)\) を評価した後、target fidelity $`s^*`$ での最終 decision quality がどれだけ改善するかを
+候補 $`(x,s)`$ を評価した後、target fidelity $`s^*`$ での最終 decision quality がどれだけ改善するかを
 
 $$
 V(x,s)
@@ -222,7 +222,7 @@ $$
 
 ## 11.11 Projection to target fidelity
 
-MF-KG では候補 \((x,s)\) を観測しても、最終的に評価したい terminal decision は target fidelity $`s^*`$ 上にあります。
+MF-KG では候補 $`(x,s)`$ を観測しても、最終的に評価したい terminal decision は target fidelity $`s^*`$ 上にあります。
 
 そのため design $`x`$ を target fidelity へ写像する
 
@@ -409,7 +409,7 @@ $$
 
 information-theoretic acquisition も multi-fidelity へ拡張できます。
 
-候補 \((x,s)\) の観測が target-fidelity optimum $`f^*_{s^*}`$ について与える information gain を評価し、cost を考慮できます。
+候補 $`(x,s)`$ の観測が target-fidelity optimum $`f^*_{s^*}`$ について与える information gain を評価し、cost を考慮できます。
 
 概念的には
 
