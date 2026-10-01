@@ -44,7 +44,53 @@ f(x)\mid\mathcal D_n
 \mathcal N(\mu(x),\sigma^2(x))
 $$
 
-に対して、\(\sigma(x)>0\) なら
+に対して、# 2. Improvement-based Acquisition
+
+## 2.1 PIとEIを一言で区別する
+
+~~~text
+PI: 基準を超える確率
+EI: 基準をどれだけ超えるかという改善量の期待値
+~~~
+
+どちらも同じposteriorを利用できますが、候補を価値付けするutilityが異なります。
+LogPI / LogEIは別の探索原理ではなく、数値計算を安定化するformulationです。
+
+## 2.2 Improvement を直接評価する
+
+Improvement-based acquisition は、「現在の基準よりどれだけ良い結果を得られるか」を候補の価値とします。
+
+以下では最大化問題を考え、基準値を $`f_{\mathrm{best}}`$ とします。候補 $`x`$ の improvement は
+
+$$
+I(x)=\max(f(x)-f_{\mathrm{best}},0)
+$$
+
+です。
+
+noiselessで関数値を直接観測する標準設定では、best valueを観測済み関数値の最良値として
+扱えます。ただしbest valueは常に観測yの最大値というAPI規則ではありません。
+noise、objective transform、constraint等によって改善基準の意味は変わります。
+
+## 2.3 Expected Improvement
+
+Expected Improvement（EI）は improvement の posterior expectation です。
+
+$$
+\operatorname{EI}(x)
+=
+\mathbb E[I(x)\mid\mathcal D_n]
+$$
+
+Gaussian posterior
+
+$$
+f(x)\mid\mathcal D_n
+\sim
+\mathcal N(\mu(x),\sigma^2(x))
+$$
+
+に対して、\sigma(x)>0`$ なら
 
 $$
 z(x)
