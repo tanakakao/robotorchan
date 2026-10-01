@@ -127,6 +127,7 @@ Gaussian Process（GP）の理論を、実装と対応付けながら説明し�
 | Expressiveness | DKL、DeepGP、NNGP、spectral mixture | 22 |
 | Non-GP posterior | tree ensemble、boosting、NGBoost | 23 |
 | Selection | problem assumptions と model capability の対応 | 13 |
+| BO integration | sampling、objective、initialization、async、search state | README / optimization guides |
 
 この分類では、1つの model が複数 layer に関係することがあります。
 
@@ -357,6 +358,11 @@ Mixed / discrete TuRBO では categorical code に連続距離を仮定せず、
 8. unsupported combination が暗黙に supported と読めないか
 9. model-specific limitations が guide と矛盾していないか
 10. canonical literature へ辿れるか
+11. posterior sampling semantics が model family 名だけで決められていないか
+12. Objective と PosteriorTransform の責務を混同していないか
+13. initialization と acquisition formula を混同していないか
+14. batch / async / fantasization の状態軸を混同していないか
+15. trust-region state と posterior / pending state を混同していないか
 
 新規 model を追加した場合も、この基準で theory coverage を確認します。
 
