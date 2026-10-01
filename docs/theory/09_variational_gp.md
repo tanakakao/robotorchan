@@ -290,7 +290,8 @@ q(u)=\mathcal{N}(m,S)
 
 これらを kernel hyperparameter や inducing point と一緒に最適化します。
 
-Exact GP では posterior が解析的に得られる Gaussian regression でも、Variational GP ではあえて近似 posterior を使うことでスケーラビリティを得ます。
+Exact GP では posterior が解析的に得られる Gaussian regression でも、Variational GP ではあえて近似 posterior
+を使うことでスケーラビリティを得ます。
 
 ---
 
@@ -781,7 +782,8 @@ model.raw_train_Yvar is None
 
 BoTorch 0.18.1 の `SingleTaskVariationalGP` では `train_Y` は optional です。
 
-これは model structure と inducing point を `train_X` だけで構築し、その後別途 training loop で target を与える使い方ができるためです。
+これは model structure と inducing point を `train_X` だけで構築し、その後別途 training loop で target
+を与える使い方ができるためです。
 
 例えば
 
@@ -878,7 +880,8 @@ inducing point 数が増えると `S` の parameter 数も増えるため、`m` 
 
 ## 9.32 input / outcome transform の注意
 
-BoTorch 0.18.1 は `SingleTaskVariationalGP` で minibatch training を行う場合、learnable transform に注意するよう明示しています。
+BoTorch 0.18.1 は `SingleTaskVariationalGP` で minibatch training を行う場合、learnable transform
+に注意するよう明示しています。
 
 例えば
 
@@ -1248,7 +1251,8 @@ Variational GP
 
 ## 9.49 acquisition function との組み合わせ
 
-`SingleTaskVariationalGP` は BoTorch model interface を実装しているため、通常の MC acquisition function と組み合わせられます。
+`SingleTaskVariationalGP` は BoTorch model interface を実装しているため、通常の MC acquisition function
+と組み合わせられます。
 
 例えば
 
@@ -1259,7 +1263,8 @@ Variational GP
 
 などです。
 
-ただし acquisition value は approximate posterior に依存するため、surrogate approximation error が candidate selection に直接影響します。
+ただし acquisition value は approximate posterior に依存するため、surrogate approximation error が candidate
+selection に直接影響します。
 
 ---
 
