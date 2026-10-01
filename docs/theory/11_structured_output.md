@@ -457,7 +457,8 @@ model.make_mll()
 
 BoTorch では HOGP の fitting に注意が必要です。
 
-specialized Kronecker solve を有効にし、通常の SciPy L-BFGS-B ベースの `fit_gpytorch_mll()` ではなく、PyTorch optimizer を使う `fit_gpytorch_mll_torch()` が推奨されます。
+specialized Kronecker solve を有効にし、通常の SciPy L-BFGS-B ベースの `fit_gpytorch_mll()` ではなく、PyTorch
+optimizer を使う `fit_gpytorch_mll_torch()` が推奨されます。
 
 ```python
 from botorch.fit import fit_gpytorch_mll_torch
@@ -1047,7 +1048,8 @@ threshold exceedance area
 spectrum similarity
 ```
 
-のような nonlinear functional は posterior mean にだけ適用するより、posterior sample ごとに評価する方が uncertainty を自然に反映できます。
+のような nonlinear functional は posterior mean にだけ適用するより、posterior sample ごとに評価する方が uncertainty
+を自然に反映できます。
 
 ---
 
@@ -1522,7 +1524,8 @@ LatentKroneckerGP
 9. BOではstructured responseから何を最適化するかobjectiveを明示する
 10. posterior sample上でobjectiveを評価するとstructured uncertaintyを伝播できる
 
-次章では、条件付き探索空間・異種task・contextを扱う [Hierarchical / Contextual GP](12_hierarchical_contextual_gp.md) を説明します。
+次章では、条件付き探索空間・異種task・contextを扱う [Hierarchical / Contextual GP](12_hierarchical_contextual_gp.md)
+を説明します。
 
 ## 参考文献
 
