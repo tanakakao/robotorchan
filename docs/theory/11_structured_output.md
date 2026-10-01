@@ -46,21 +46,38 @@ LatentKroneckerGP
 
 ---
 
+### Multi-outputとの違いを最初に見る
+
+重要なのは「出力数が多いか」ではなく、**出力の添字や座標に意味があるか**です。
+
+~~~text
+通常のmulti-output
+x → [強度, 導電率, コスト]
+     各成分は異なる量
+
+structured output
+x → [y(400 nm), y(410 nm), y(420 nm), ...]
+     隣接成分が波長軸上で関係する
+~~~
+
+後者では、output indexを単なるラベルとして扱うより、波長・時間・空間などの
+構造をcovarianceへ組み込む価値があります。
+
 ## 11.2 Structured Output とは
 
 通常の scalar regression は
 
-\[
+$$
 x \mapsto y
-\]
+$$
 
 です。
 
 multi-output regression なら
 
-\[
+$$
 x \mapsto \mathbf y
-\]
+$$
 
 です。
 
@@ -68,21 +85,21 @@ Structured Output では、さらに出力の並び方・位置関係そのも�
 
 例えばスペクトルなら
 
-\[
+$$
 y(x, \lambda)
-\]
+$$
 
 画像なら
 
-\[
+$$
 y(x, u, v)
-\]
+$$
 
 時空間場なら
 
-\[
+$$
 y(x,t,r)
-\]
+$$
 
 のように、出力側にも座標や軸があります。
 
@@ -108,15 +125,15 @@ y(x,t,r)
 
 例えば `64 x 64` 画像なら、flattenして4096出力として扱うことは理論上可能です。
 
-しかし、出力間の完全な covariance matrix を持つと
+しかし、flattenして各要素間の一般的なdense covarianceを直接表現しようとすると
 
-\[
+$$
 4096 \times 4096
-\]
+$$
 
 の巨大な covariance を考える必要があります。
 
-しかも flatten しただけでは
+さらに、単にflattenした表現を作っただけでは
 
 ```text
 隣接pixelは似ている
@@ -136,19 +153,19 @@ Structured Output GP の重要な道具が Kronecker product です。
 
 2つの covariance matrix
 
-\[
+$$
 K_X
-\]
+$$
 
-\[
+$$
 K_T
-\]
+$$
 
 から
 
-\[
+$$
 K = K_X \otimes K_T
-\]
+$$
 
 を作ると、入力側と出力軸側の covariance を分離して表現できます。
 
@@ -173,15 +190,15 @@ K_X ⊗ K_T
 
 最も基本的な仮定は
 
-\[
+$$
 k((x,t),(x',t'))
 =
 k_X(x,x')k_T(t,t')
-\]
+$$
 
 です。
 
-これは **separable covariance** と呼ばれます。
+これは **separable covariance** の代表的な形です。
 
 意味としては、
 
@@ -195,7 +212,11 @@ k_X(x,x')k_T(t,t')
 
 です。
 
-この仮定は強い一方、巨大な covariance matrix を構造化して扱える大きな利点があります。
+この仮定は強い一方、product-grid上ではKronecker線形代数を利用できる可能性があり、
+巨大なdense covarianceをそのまま扱うより効率化できます。
+
+ただし「separable kernelを書けば常に同じ計算量になる」という意味ではありません。
+実際の効率は観測pattern、likelihood、solver、posterior計算にも依存します。
 
 ---
 
@@ -211,18 +232,10 @@ LatentKroneckerGP
   └─ 入力 X と明示的な出力座標 T の積空間をモデル化する
 ```
 
-より具体的には、
+より具体的には、HOGPはtensor shapeの各axisを構造として扱い、
+LatentKroneckerGPは `X × T` のproduct spaceを明示します。
 
-```text
-画像・多次元grid
-    → HigherOrderGP
-
-波長・時間・位置など
-意味のある座標Tを明示したい
-    → LatentKroneckerGP
-```
-
-と考えると分かりやすいです。
+これは優劣ではなく**output structureの表現方法の違い**です。
 
 ---
 
@@ -260,7 +273,7 @@ train_Y: [n, h, w]
 
 例えば出力が2次元なら概念的に
 
-\[
+$$
 K
 =
 K_X
@@ -268,23 +281,23 @@ K_X
 K_1
 \otimes
 K_2
-\]
+$$
 
 です。
 
 ここで
 
-- \(K_X\): input covariance
-- \(K_1\): output axis 1 covariance
-- \(K_2\): output axis 2 covariance
+- $`K_X`$: input covariance
+- $`K_1`$: output axis 1 covariance
+- $`K_2`$: output axis 2 covariance
 
 です。
 
 出力が3次元ならさらに
 
-\[
+$$
 K_3
-\]
+$$
 
 が加わります。
 
@@ -317,17 +330,17 @@ custom `covar_modules` との同時指定はサポートしません。
 
 なら出力要素数は
 
-\[
+$$
 10\times20\times30=6000
-\]
+$$
 
 です。
 
 直接6000次元の covariance を持てば
 
-\[
+$$
 6000^2=36,000,000
-\]
+$$
 
 要素です。
 
@@ -359,7 +372,9 @@ latent_init
 
 があります。
 
-つまり単に tensor index を固定座標として扱うだけではなく、出力軸の latent representation 自体を学習できます。
+つまり出力axisを表すlatent coordinatesを用いてaxis covarianceを構成し、設定に応じて
+そのrepresentation自体も学習できます。これは波長などの既知の物理座標を
+そのまま入力することとは異なります。
 
 ---
 
@@ -381,7 +396,8 @@ axis covariance
 
 です。
 
-latent dimension を増やせば柔軟性は増しますが、parameter 数も増えます。
+latent dimensionを増やすとrepresentationの自由度は増えますが、必ず予測性能が
+改善するわけではありません。parameter数や識別の難しさも増えるため、検証が必要です。
 
 ---
 
@@ -487,7 +503,8 @@ with _fast_solves(True):
     fit_gpytorch_mll_torch(mll)
 ```
 
-これは approximate / structured computations により MLL が滑らかでない場合があり、L-BFGS-B と相性が悪いためです。
+これはHOGP固有のstructured linear algebraとupstreamの推奨fitting pathを
+維持するためです。optimizer選択を一般のExact GPと機械的に同一視しないようにします。
 
 ---
 
@@ -524,7 +541,9 @@ posterior.mean: [4, 32, 32]
 
 HOGP の posterior sampling は structured covariance を利用します。
 
-BoTorch は posterior sampling に Matheron's rule を利用します。
+BoTorchのHOGP posteriorはstructured sampling pathを利用します。
+Matheron型のconditioningは、その構造を保ったposterior samplingを理解するための
+重要な考え方です。
 
 概念的には
 
@@ -575,19 +594,19 @@ Y: X × T 上の観測
 
 モデル化のイメージは
 
-\[
+$$
 y = f(x,t)
-\]
+$$
 
 です。
 
 covariance は概念的に
 
-\[
+$$
 k((x,t),(x',t'))
 =
 k_X(x,x')k_T(t,t')
-\]
+$$
 
 です。
 
@@ -678,7 +697,8 @@ posterior = model.posterior(
 
 ## 11.23 missing output への対応
 
-LatentKroneckerGP の重要な特徴は、完全な block design でなくても Kronecker structure を活用できる点です。
+LatentKroneckerGPは、product-space structureを保ちながらmissing outputを扱うための
+仕組みを持ちます。
 
 つまり、すべての `X` で全 `T` が観測されていなくても扱える設計です。
 
@@ -847,6 +867,24 @@ mean_module_T
 
 ---
 
+### Mixed LatentKroneckerGP
+
+robotorchanには `MixedLatentKroneckerGP` もあります。
+
+~~~text
+X factor
+  → continuous + categorical design variables
+
+T factor
+  → time / wavelength / task-like output coordinates
+~~~
+
+Mixed版が置き換えるのは **X側のcovariance** です。`cat_dims` は `train_X` の
+categorical design columnsを表し、`train_T` の列をcategorical指定するものではありません。
+
+この分離は `MixedHigherOrderGP` と同じく、「design-input structure」と
+「structured-output structure」を別の責務として扱うためのものです。
+
 # モデル比較
 
 ## 11.32 HigherOrderGP vs LatentKroneckerGP
@@ -968,15 +1006,35 @@ Structured Output GP は output間の構造を共有します。
 
 # BOとの接続
 
+### Surrogateとobjectiveを分ける
+
+Structured Output GPが答えるのは、
+
+~~~text
+このXで、response全体はどう分布するか？
+~~~
+
+です。一方BOが必要とするのは、
+
+~~~text
+そのresponseの何を良いと定義するか？
+~~~
+
+です。
+
+したがってHOGPやLatentKroneckerGPを選んだだけでは最適化問題は完成しません。
+peak、積分値、target spectrumとの距離などをObjective / PosteriorTransform側で
+定義し、必要ならposterior sample上で非線形functionalを評価します。
+
 ## 11.37 structured response をそのまま最大化するわけではない
 
 Bayesian Optimization では最終的に「何を最大化 / 最小化するのか」を決める必要があります。
 
 structured output
 
-\[
+$$
 y(x,t)
-\]
+$$
 
 をそのまま scalar acquisition に渡すのではなく、通常は objective を定義します。
 
@@ -1028,15 +1086,15 @@ def objective(Y):
 
 structured posterior から sample
 
-\[
+$$
 Y^{(s)}(x)
-\]
+$$
 
 を取り、各sampleに objective
 
-\[
+$$
 g(Y^{(s)}(x))
-\]
+$$
 
 を適用すれば、structured uncertainty を scalar objective uncertainty に伝播できます。
 
@@ -1201,9 +1259,9 @@ Kronecker model の大きな仮定は separability です。
 
 例えば
 
-\[
+$$
 k((x,t),(x',t'))=k_X(x,x')k_T(t,t')
-\]
+$$
 
 が妥当かを考えます。
 
@@ -1432,19 +1490,18 @@ raw data は constructor input provenance であり、内部 transformed state �
 
 ---
 
-## 11.61 モデル選択表
+## 11.61 出力構造の比較表
 
-| 問題 | 推奨 |
+| 出力構造 | 対応する考え方 |
 |---|---|
-| scalar response | `SingleTaskGP` |
-| 少数の独立outputs | `ModelListGP` |
-| 関連tasks | `MultiTaskGP` / `KroneckerMultiTaskGP` |
-| 画像・tensor output | `HigherOrderGP` |
-| 波長profile | `LatentKroneckerGP` |
-| 時系列profile | `LatentKroneckerGP` |
-| spatial profile with coordinates | `LatentKroneckerGP` |
-| 新しいoutput coordinateで補間 | `LatentKroneckerGP` |
-| structured outputだが非常に巨大 | PCA / latent model / DKLも検討 |
+| scalar response | scalar GP |
+| 少数の独立outputs | independent / `ModelListGP` |
+| related task labels | multi-task GP |
+| tensor axesそのものに構造がある | `HigherOrderGP` |
+| 明示的なoutput coordinate `T` がある | `LatentKroneckerGP` |
+| mixed design X + tensor output | `MixedHigherOrderGP` |
+| mixed design X + explicit `T` | `MixedLatentKroneckerGP` |
+| 非常に巨大で低rankなoutput | reduction / latent modelも検討 |
 
 ---
 
@@ -1452,40 +1509,40 @@ raw data は constructor input provenance であり、内部 transformed state �
 
 Structured Output GP の基本は
 
-\[
+$$
 f(x,t)\sim\mathcal{GP}(m,k)
-\]
+$$
 
 と
 
-\[
+$$
 k((x,t),(x',t'))
 =
 k_X(x,x')k_T(t,t')
-\]
+$$
 
 です。
 
 grid全体では
 
-\[
+$$
 K
 =
 K_X\otimes K_T
-\]
+$$
 
 となります。
 
 HOGP では複数 output axes に拡張して
 
-\[
+$$
 K
 =
 K_X
 \otimes K_1
 \otimes \cdots
 \otimes K_p
-\]
+$$
 
 を利用します。
 
@@ -1515,7 +1572,7 @@ next X
 
 ---
 
-## 11.64 まとめ
+## 11.64 この章で覚えておくこと
 
 Structured Output GP は、出力を単なる多数のscalar valuesとしてではなく、**出力側の構造を利用してモデル化するGP**です。
 
