@@ -10,7 +10,7 @@ from botorch.models.model import Model
 from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import MCSampler
 
-from robotorchan.models import MODEL_REGISTRY
+from robotorchan.models.registry import MODEL_REGISTRY
 from robotorchan.models.capabilities import PosteriorSamplingType
 
 
