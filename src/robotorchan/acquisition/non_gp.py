@@ -10,8 +10,8 @@ from botorch.models.model import Model
 from botorch.sampling.index_sampler import IndexSampler
 from botorch.sampling.normal import MCSampler
 
-from robotorchan.models.registry import MODEL_REGISTRY
 from robotorchan.models.capabilities import PosteriorSamplingType
+from robotorchan.models.registry import MODEL_REGISTRY
 
 
 def validate_non_gp_acquisition(
