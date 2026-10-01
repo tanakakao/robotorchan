@@ -1,12 +1,26 @@
 # 11. Multi-Fidelity and Cost-aware Acquisition
 
-## 11.1 評価の価値とコストを同時に考える
+## 11.1 Cost-awareとMulti-Fidelityを分ける
 
-Multi-Fidelity Bayesian Optimization（MFBO）では、同じ設計変数 \(x\) を異なる fidelity \(s\) で評価できます。
+~~~text
+Cost-aware optimization
+    evaluation costをdecision utilityへ組み込む
 
-\[
+Multi-Fidelity BO
+    fidelity間のinformation transferを使ってtarget-fidelity decisionを改善する
+~~~
+
+安いevaluationを優先するだけではMFBOではありません。MFBOには少なくともfidelity semantics、
+target fidelity、cross-fidelity information transferが必要です。cost-aware utilityはそこへ追加できる
+別のdecision axisです。
+
+## 11.3 評価の価値とコストを同時に考える
+
+Multi-Fidelity Bayesian Optimization（MFBO）では、同じ設計変数 $`x`$ を異なる fidelity $`s`$ で評価できます。
+
+$
 y=f(x,s)
-\]
+$
 
 高 fidelity は target quantity に近い一方で高コスト、低 fidelity は安価だが近似誤差を持つ、という構造が典型です。
 
@@ -36,19 +50,19 @@ MFBO の中心的な問いは、
 
 ## 11.2 Target fidelity
 
-通常、最終的に最適化したい target fidelity \(s^*\) を定義します。
+通常、最終的に最適化したい target fidelity $`s^*`$ を定義します。
 
-\[
+$
 x^*
 =
 \arg\max_x f(x,s^*)
-\]
+$
 
 低 fidelity の目的は、それ自体の optimum を見つけることではなく、target-fidelity optimum の探索に有益な情報を安価に得ることです。
 
 したがって fidelity variable を通常の design variable と完全に同じ意味で扱うべきではありません。
 
-## 11.3 Fidelity と task の違い
+## 11.4 Fidelity と task の違い
 
 Multi-task と multi-fidelity は数学的に似た surrogate structure を使える場合がありますが、意思決定上の意味は異なります。
 
@@ -64,15 +78,15 @@ fidelity にはしばしば順序、target fidelity、evaluation cost が存在�
 
 したがって multi-task model が存在することだけで MFBO acquisition が自動的に定義されるわけではありません。
 
-## 11.4 Multi-Fidelity surrogate と acquisition は別
+## 11.5 Multi-Fidelity surrogate と acquisition は別
 
 MFBO では少なくとも二つの責務があります。
 
 ### Multi-Fidelity surrogate
 
-\[
+$
 p(f(x,s)\mid\mathcal D)
-\]
+$
 
 をモデル化し、異なる fidelity 間の相関を学習します。
 
@@ -92,41 +106,41 @@ MF acquisition を使っている
 
 単に fidelity を入力特徴量へ追加し、通常の EI で \((x,s)\) を探索するだけでは、target fidelity と cost の意味を十分に利用しない場合があります。
 
-## 11.5 Fidelity 間の information transfer
+## 11.6 Fidelity 間の information transfer
 
 低 fidelity が有用なのは、target fidelity と相関しているからです。
 
-低 fidelity observation \(Y_{x,s}\) が target quantity \(f(x',s^*)\) にほとんど情報を与えないなら、いくら安価でも価値は限定的です。
+低 fidelity observation $`Y_{x,s}`$ が target quantity \(f(x',s^*)\) にほとんど情報を与えないなら、いくら安価でも価値は限定的です。
 
 MFBO acquisition は概念的に、
 
-\[
+$
 \text{target-fidelity information / decision value}
-\]
+$
 
 と
 
-\[
+$
 \text{evaluation cost}
-\]
+$
 
 の trade-off を扱います。
 
-## 11.6 Evaluation cost
+## 11.7 Evaluation cost
 
 fidelity-dependent cost を
 
-\[
+$
 c(x,s)>0
-\]
+$
 
 とします。
 
 単純な場合は fidelity のみで
 
-\[
+$
 c(s)
-\]
+$
 
 とできます。
 
@@ -140,13 +154,13 @@ cost model は、
 
 cost は objective value と別の量です。高 fidelity が高い objective value を持つという意味ではありません。
 
-## 11.7 Cost-aware utility
+## 11.8 Cost-aware utility
 
 候補の information / decision value を \(V(x,s)\) とすれば、直感的な cost-aware criterion は
 
-\[
+$
 \frac{V(x,s)}{c(x,s)}
-\]
+$
 
 です。
 
@@ -155,13 +169,13 @@ cost は objective value と別の量です。高 fidelity が高い objective v
 ただし ratio utility があらゆる budgeted decision problem の厳密な最適 policy になるわけではありません。remaining
 budget、terminal value、並列性、固定 overhead などによって最適な cost treatment は変わります。
 
-## 11.8 Knowledge Gradient と Multi-Fidelity
+## 11.9 Knowledge Gradient と Multi-Fidelity
 
 Knowledge Gradient（KG）は候補を観測した後の terminal decision value の改善を評価するため、MFBO と自然に結び付きます。
 
-候補 \((x,s)\) を評価した後、target fidelity \(s^*\) での最終 decision quality がどれだけ改善するかを
+候補 \((x,s)\) を評価した後、target fidelity $`s^*`$ での最終 decision quality がどれだけ改善するかを
 
-\[
+$
 V(x,s)
 =
 \mathbb E[
@@ -169,30 +183,30 @@ V(x,s)
 ]
 -
 \text{current terminal value}
-\]
+$
 
 として評価できます。
 
 低 fidelity でも target posterior を大きく改善するなら高い value を持ち得ます。
 
-## 11.9 Multi-Fidelity Knowledge Gradient
+## 11.10 Multi-Fidelity Knowledge Gradient
 
 Multi-Fidelity KG（MF-KG）は、candidate fidelity での observation が target-fidelity decision に与える
 value of information を評価します。
 
 概念的には
 
-\[
+$
 \alpha_{\mathrm{MFKG}}(x,s)
 =
 \operatorname{VOI}_{s^*}(x,s)
-\]
+$
 
 です。
 
 cost-aware utility を組み合わせれば、
 
-\[
+$
 \alpha_{\mathrm{cost}}(x,s)
 \approx
 \frac{
@@ -200,21 +214,21 @@ cost-aware utility を組み合わせれば、
 }{
 c(x,s)
 }
-\]
+$
 
 のように理解できます。
 
 実際の実装では fantasy model、projected target points、cost-aware utility などが組み合わされます。
 
-## 11.10 Projection to target fidelity
+## 11.11 Projection to target fidelity
 
-MF-KG では候補 \((x,s)\) を観測しても、最終的に評価したい terminal decision は target fidelity \(s^*\) 上にあります。
+MF-KG では候補 \((x,s)\) を観測しても、最終的に評価したい terminal decision は target fidelity $`s^*`$ 上にあります。
 
-そのため design \(x\) を target fidelity へ写像する
+そのため design $`x`$ を target fidelity へ写像する
 
-\[
+$
 P(x,s)=(x,s^*)
-\]
+$
 
 のような projection が重要になります。
 
@@ -231,10 +245,11 @@ terminal decision
 
 という役割分離です。
 
-projection は「低 fidelity の観測値を高 fidelity 値へ変換する」操作ではなく、terminal decision をどの fidelity で評価するかを
-acquisition に伝えるものです。
+projectionは「低fidelityの観測値を高fidelity値へ変換する」操作ではありません。またcandidateの
+実評価fidelityをtargetへ強制固定する操作でもありません。candidate fidelityはoptimization variableの
+ままで、projectionはterminal decisionをどのfidelityで価値付けするかをacquisitionへ伝えます。
 
-## 11.11 Current value
+## 11.12 Current value
 
 KG 系では candidate observation 後の terminal value だけでなく、現在の terminal value が必要です。
 
@@ -242,13 +257,13 @@ MF setting ではこの current value も target fidelity 上で定義される�
 
 したがって current value の計算と candidate fidelity の acquisition optimization を混同しません。
 
-## 11.12 Continuous fidelity
+## 11.13 Continuous fidelity
 
-fidelity \(s\) が連続なら、
+fidelity $`s`$ が連続なら、
 
-\[
+$
 s\in[s_{\min},s_{\max}]
-\]
+$
 
 として design variables と一緒に acquisition optimization できます。
 
@@ -258,13 +273,13 @@ fidelity index を明示的に扱います。
 continuous fidelity だからといって、posterior が fidelity に対して単調であるとは限りません。必要な構造は surrogate model
 側で表現する必要があります。
 
-## 11.13 Discrete fidelity
+## 11.14 Discrete fidelity
 
 fidelity が
 
-\[
+$
 s\in\{s_1,s_2,\ldots,s_K\}
-\]
+$
 
 のような離散集合の場合、continuous relaxation より各 fidelity choice を明示的に扱う optimization が自然です。
 
@@ -285,7 +300,7 @@ s = high
 
 この問題は mixed / discrete acquisition optimization と関係します。
 
-## 11.14 Fidelity variable と categorical variable
+## 11.15 Fidelity variable と categorical variable
 
 discrete fidelity は値が離散でも、単なる nominal categorical variable とは限りません。
 
@@ -301,13 +316,13 @@ fidelity
 
 modeling semantics と acquisition semantics の両方を確認する必要があります。
 
-## 11.15 Multiple fidelity dimensions
+## 11.16 Multiple fidelity dimensions
 
 複数の fidelity controls
 
-\[
+$
 s=(s_1,\ldots,s_k)
-\]
+$
 
 を持つ場合もあります。
 
@@ -319,11 +334,11 @@ s=(s_1,\ldots,s_k)
 
 を別々に変えられる場合です。
 
-このとき target fidelity は vector \(s^*\) となり、cost model と information transfer も多次元になります。
+このとき target fidelity は vector $`s^*`$ となり、cost model と information transfer も多次元になります。
 
 すべての fidelity dimensions が同じ cost / accuracy structure を持つとは限りません。
 
-## 11.16 Learned cost model
+## 11.17 Learned cost model
 
 evaluation cost が未知または変動する場合、cost 自体を surrogate model で学習できます。
 
@@ -339,17 +354,17 @@ raw Gaussian prediction をそのまま cost とすると負値を取り得る�
 
 cost model uncertainty を acquisition にどう伝播させるかも別の設計問題です。
 
-## 11.17 Affine fidelity cost
+## 11.18 Affine fidelity cost
 
 単純な fidelity cost は
 
-\[
+$
 c(s)
 =
 c_0
 +
 \sum_j w_j s_j
-\]
+$
 
 のような affine form で表現できます。
 
@@ -359,7 +374,7 @@ fidelity が高いほど cost が増える問題では扱いやすい近似で�
 
 cost model は実験系の実態に合わせて選択します。
 
-## 11.18 Inverse-cost weighting
+## 11.19 Inverse-cost weighting
 
 cost-aware utility では、decision value を inverse cost で重み付けする考え方があります。
 
@@ -375,13 +390,13 @@ higher value evaluation を優先
 
 ただし非常に安価だがほぼ情報を持たない fidelity を無限に優先しないよう、value calculation と cost scale の両方が適切である必要があります。
 
-## 11.19 Budget と cost-aware acquisition
+## 11.20 Budget と cost-aware acquisition
 
 総 budget
 
-\[
+$
 B
-\]
+$
 
 が明示される場合、各 step の value/cost ratio を最大化する greedy policy と、budget 全体を考えた optimal policy
 は一般に同じではありません。
@@ -390,33 +405,35 @@ B
 
 したがって cost-aware acquisition を「常に最安 fidelity を選ぶ仕組み」と理解してはいけません。
 
-## 11.20 Multi-Fidelity MES
+## 11.21 Multi-Fidelity MES
 
 information-theoretic acquisition も multi-fidelity へ拡張できます。
 
-候補 \((x,s)\) の観測が target-fidelity optimum \(f^*_{s^*}\) について与える information gain を評価し、cost を考慮できます。
+候補 \((x,s)\) の観測が target-fidelity optimum $`f^*_{s^*}`$ について与える information gain を評価し、cost を考慮できます。
 
 概念的には
 
-\[
+$
 \frac{
 I(Y_{x,s};f^*_{s^*}\mid\mathcal D)
 }{
 c(x,s)
 }
-\]
+$
 
 です。
 
-MF-KG が terminal decision value を基準にするのに対し、MF-MES 系は optimum に関する information gain を基準にします。
+MF-KGがterminal decision valueを基準にするのに対し、MF-MES系はoptimumに関するinformation gainを
+基準にします。ただしMF-MESは現在のrobotorchan runtime-validated contractには含まれず、future
+extensionです。理論上の存在をintegration supportの主張にしません。
 
-## 11.21 Multi-Fidelity と Multi-Task の組合せ
+## 11.22 Multi-Fidelity と Multi-Task の組合せ
 
-実問題では task \(t\) と fidelity \(s\) の両方を持つことがあります。
+実問題では task $`t`$ と fidelity $`s`$ の両方を持つことがあります。
 
-\[
+$
 f(x,t,s)
-\]
+$
 
 例えば複数材料系 / 装置 / 条件 task について、simulation fidelity も変えられる場合です。
 
@@ -434,7 +451,7 @@ f(x,t,s)
 
 model が表現できることと acquisition が選択対象にすることは別です。
 
-## 11.22 Multi-Fidelity と Mixed Variables
+## 11.23 Multi-Fidelity と Mixed Variables
 
 design space に continuous / categorical variables があり、さらに fidelity variable がある場合、candidate
 optimization は mixed structure を持ちます。
@@ -454,7 +471,7 @@ task variable
 
 それぞれの semantics を保ったまま model と acquisition optimizer を設計します。
 
-## 11.23 Stopping と最終評価
+## 11.24 Stopping と最終評価
 
 MFBO では探索終了時に target fidelity で最終候補を確認することが重要です。
 
@@ -470,7 +487,7 @@ stopping rule としては、
 
 などが考えられます。
 
-## 11.24 BoTorch / robotorchan との対応
+## 11.25 BoTorch / robotorchan との対応
 
 BoTorch は Multi-Fidelity Knowledge Gradient、cost-aware utility、fidelity cost
 model、target-fidelity projection、および discrete fidelity を扱う acquisition optimization primitives 
@@ -496,10 +513,30 @@ status](../../optimization/acquisition-integration.md) を参照してくださ�
 したがって fidelity column を持つだけの model や、posterior samplingだけ可能な modelでは不十分です。
 model registry 上の `multi_fidelity` と `supports_fantasize` の両方が必要です。
 
-また one-shot acquisition なので、現在の generic mixed optimizer compatibility check では
-mixed optimization と非互換になります。
+またone-shot acquisitionではpublic qとは別にaugmented q-batchを最適化します。明示的な
+`batch_initial_conditions`を渡す場合、そのq dimensionはpublic qではなく
+`acqf.get_augmented_q_batch_size(q)`へ合わせる必要があります。
 
-## 11.25 まとめ
+mixed qMFKGは現在、`MixedSingleTaskMultiFidelityGP`と専用
+`optimize_mixed_one_shot_acqf`を使うq=1 workflowがruntime-validatedです。augmented rowごとに
+categorical assignmentを分離するため、通常の `optimize_acqf_mixed` をone-shotへそのまま使いません。
+larger qとconfigured enumeration limitを超えるassignment spaceはunsupportedです。
+
+## 11.26 この章で覚えておくこと
+
+- cost-aware optimizationとMFBOは別概念
+- MFBOではdesign xとfidelity sの両方をdecisionする
+- low fidelityの価値は安さだけでなくtarget fidelityへのinformation transferで決まる
+- MF surrogateとMF acquisitionは別の責務
+- target projectionはobserved valueの変換でもcandidate fidelityの固定でもない
+- `current_value`はtarget-fidelity terminal decisionに対応させる
+- MF-KGはfantasizationを使うone-shot value-of-information acquisition
+- cost-aware utilityはVOIとevaluation costを組み合わせるがratio policyが常にbudget-optimalとは限らない
+- qMFKG registry contractはposterior sampling、fantasize、multi-fidelity、one-shotを要求する
+- mixed qMFKGは現在q=1の専用one-shot optimizer pathがruntime-validated
+- MF-MESは理論上扱えるが現在のruntime-validated contract外
+
+## 11.27 まとめ
 
 Multi-Fidelity acquisition の中心は、
 
