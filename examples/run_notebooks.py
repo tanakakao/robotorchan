@@ -35,6 +35,7 @@ DEFAULT_NOTEBOOKS = [
     "20_neural_reduction_gp.ipynb",
     "21_reduced_multitask_gp.ipynb",
     "22_mixed_reduced_gp.ipynb",
+    "26_standard_acquisition.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [
