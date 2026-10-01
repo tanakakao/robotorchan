@@ -10,9 +10,29 @@ stationary kernel は、入力空間のどこにいても「同じ距離」が�
 急激に変化することがあります。nonstationary GP は latent function の局所 geometry を
 入力位置に依存させ、このような spatially varying smoothness を表現します。
 
+### 最初に「何が場所で変わるのか」を分ける
+
+見かけ上「領域によって挙動が違う」データでも、原因は複数あります。
+
+~~~text
+latent functionの相関距離が変わる
+  → nonstationarity
+
+observation scatterが変わる
+  → heteroskedasticity
+
+入力位置そのものが不確か
+  → uncertain-input problem
+
+既知のbranch / regimeで関数が分かれる
+  → hierarchy / context / piecewise structureも検討
+~~~
+
+この章のnonstationarityは、主に**latent covariance geometryがXに依存する**問題です。
+
 ## 1. Stationarity
 
-stationary covariance は概念的に
+stationary covarianceでは、入力を同じ量だけ平行移動してもcovarianceが変わらず、概念的に
 
 ```text
 k(x, x') = k(x - x')
@@ -29,8 +49,11 @@ k(x, x')
 
 であり、ARD を使っても各 `ell_d` は入力空間全体で共有されます。
 
-これは「入力次元ごとに smoothness が違う」ことは表現できますが、
-「同じ入力次元でも場所によって smoothness が違う」ことは表現しません。
+これは「入力次元ごとにsmoothnessが違う」ことは表現できますが、
+「同じ入力次元でも場所によってsmoothnessが違う」ことは表現しません。
+
+なおstationaryとisotropicは別概念です。ARD RBFは方向ごとに異なるlengthscaleを持つため
+anisotropicですが、lengthscaleが場所によらずglobalならstationaryです。
 
 ## 2. Input-dependent local lengthscale
 
@@ -59,7 +82,10 @@ k(x, x')
 です。
 
 多次元では dimension ごとの prefactor の積と、dimension ごとの距離項の和を使います。
-`ell_d(x)` が一定なら stationary RBF 型 covariance に対応する形へ戻ります。
+`ell_d(x)` が一定ならstationary RBF型covarianceに対応する形へ戻ります。
+
+このGibbs kernelで変化させているのはlocal lengthscaleです。outputscaleやobservation noiseまで
+同じ仕組みで入力依存にしているわけではありません。
 
 ## 3. robotorchan の local-lengthscale parameterization
 
@@ -86,6 +112,25 @@ ell(x) = softplus(a(x)) + ell_floor
 kernel** です。理論上可能な nonstationary kernel 全般と、robotorchan の実装範囲を
 区別する必要があります。
 
+### 現行parameterizationが表現できる範囲
+
+`lengthscale_slope` はd × d matrixなので、各local lengthscaleは自分自身の座標だけでなく、
+他のcontinuous coordinateにも依存できます。
+
+一方、softplusへ入る前はaffine functionです。そのため任意に複雑なlengthscale fieldを
+表現するnonstationary GPではありません。
+
+~~~text
+柔軟性
+  global stationary lengthscale
+    <
+  affine + softplus local lengthscale
+    <
+  より一般的なlatent lengthscale process等
+~~~
+
+この制約は、少標本で自由度を増やしすぎないという側面もあります。
+
 ## 4. Local lengthscale の解釈
 
 `ell_d(x)` が小さい領域では、入力の小さな変化でも covariance が急速に低下します。
@@ -99,6 +144,15 @@ robotorchan の各 nonstationary model は `local_lengthscale(X)` を公開し�
 
 これは posterior uncertainty そのものではなく、kernel geometry の診断量です。
 
+### local lengthscaleは物理的な「相境界検出器」ではない
+
+小さい `ell(x)` が得られた領域は、modelが短い相関距離を必要としていることを示します。
+しかし、それだけから相転移・故障regime・因果的境界が存在すると断定はできません。
+
+同じ現象は、未説明のcategorical factor、急なmean structure、外れ値、data sparsityなどでも
+生じ得ます。`local_lengthscale(X)` は**kernel diagnostic**として解釈し、domain knowledgeや
+predictive validationと組み合わせます。
+
 ## 5. Single-task model
 
 `NonstationarySingleTaskGP` は
@@ -109,8 +163,11 @@ ScaleKernel(GibbsKernel)
 
 を covariance module とする exact GP です。
 
-`train_Yvar` を指定できるため、既知の observation noise variance を持つ場合にも
-nonstationary latent covariance と observation noise を分離できます。
+`train_Yvar` を指定できるため、既知のobservation noise varianceを持つ場合にも
+nonstationary latent covarianceとobservation noiseを分離できます。
+
+ただし `train_Yvar` を渡せることと、未知のheteroskedastic noise surfaceを学習することは
+同じではありません。
 
 ここで変化するのは latent covariance の smoothness であり、noise variance を
 入力依存にしているわけではありません。
@@ -155,6 +212,24 @@ nonstationarity in data space
 ```
 
 です。
+
+### Long-format実装の注意点
+
+現行 `NonstationaryMultiTaskGP` は、BoTorchのMultiTaskGPが期待するfull long-format inputを
+data covarianceへ渡しつつ、Gibbs kernelの診断値ではtask featureを除外します。
+task covariance自体はMultiTaskGP側の専用kernelが担います。
+
+したがってpublic semanticsとしては
+
+~~~text
+continuous data geometry
+  → Gibbs nonstationarity
+
+task identity
+  → task covariance
+~~~
+
+と理解します。task IDの数値差を「連続距離」として解釈するモデルではありません。
 
 ## 8. Mixed MultiTask
 
@@ -218,6 +293,15 @@ nonstationary GP は入力位置を deterministic としたまま、kernel geome
 
 詳細は [Uncertain-input GP](16_uncertain_input_gp.md) を参照してください。
 
+### Nonstationaryと「既知regime」は別問題
+
+例えばprocess mode A/Bが既知で、それぞれで挙動が違うなら、そのmodeを無視して
+nonstationary kernelだけで吸収させる必要はありません。既知category、task、context、
+hierarchyとして構造をmodelへ渡せる場合があります。
+
+逆にregime labelがなく、同じinput axis上でsmoothnessが連続的に変化するなら、
+local-lengthscale modelが自然な表現になり得ます。
+
 ## 12. Bayesian optimization との関係
 
 stationary GP が急変領域を過度に平滑化すると、
@@ -241,7 +325,9 @@ posterior predictive check、local lengthscale、held-out error なども確認�
 
 現在の理論章で保持すべき実装契約は次です。
 
-- covariance は input-dependent Gibbs kernel
+- covarianceはinput-dependent Gibbs kernel
+- stationarityとisotropyは別概念
+- 現行Gibbs modelはlocal lengthscaleを変化させ、noise/outputscale全般を入力依存にはしない
 - local lengthscale は affine function + softplus + positive floor
 - `lengthscale_floor > 0`
 - SingleTask は exact GP
@@ -251,9 +337,21 @@ posterior predictive check、local lengthscale、held-out error なども確認�
 - long-format MultiTask では task feature を local geometry から分離
 - Mixed MultiTask では continuous / categorical / task role を分離
 - Kronecker 版では nonstationarity は data covariance 側に入る
-- `local_lengthscale(X)` は kernel geometry の診断 API
+- `local_lengthscale(X)` はkernel geometryの診断APIで、regimeや物理境界の確定器ではない
+- known heteroskedastic noiseを渡せても、unknown noise surfaceを自動学習するわけではない
 
 詳細は [Nonstationary GP](../models/nonstationary_gp.md) を参照してください。
+
+## 14. この章で覚えておくこと
+
+- stationary kernelはcovarianceがabsolute locationではなく相対的な配置に依存する
+- ARDでdimension別lengthscaleを持っても、globalならstationaryである
+- nonstationarityとheteroskedasticityはlatent covarianceとobservation noiseの違いである
+- robotorchanのGibbs kernelはaffine + softplusでlocal lengthscaleを表す限定的なモデルである
+- local lengthscaleは他のcontinuous coordinatesにも依存できる
+- Mixed / MultiTaskではcategoryやtask identityをcontinuous local geometryと分離する
+- known regimeがあるならcategory / task / context / hierarchyとして明示する選択肢もある
+- nonstationary modelはstationary modelを常に上回るものではなくpredictive validationが必要である
 
 ## 参考文献
 
