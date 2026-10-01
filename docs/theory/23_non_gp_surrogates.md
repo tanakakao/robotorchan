@@ -20,8 +20,8 @@ how the ensemble was generated. They are not automatically a Bayesian posterior 
 ## 2. Random Forest and Extra Trees
 
 For Random Forest and Extra Trees, a fitted tree is used as one empirical prediction member. Random
-Forest obtains diversity from bootstrap/data sampling and feature selection; Extra Trees adds stronger
-split randomization. The resulting tree disagreement can be useful as an epistemic heuristic, but it
+Forest obtains diversity from bootstrap/data sampling and feature selection;
+Extra Trees adds stronger split randomization. The resulting tree disagreement can be useful as an epistemic heuristic, but it
 does not by itself identify observation noise or guarantee calibrated credible intervals.
 
 ## 3. Why boosting stages are not posterior samples
@@ -85,8 +85,8 @@ must not be inferred merely from Gaussian marginal predictions.
 
 An empirical ensemble standard deviation is useful only after checking its behavior on the target
 problem. Useful diagnostics include predictive RMSE, interval coverage after defining an interval
-construction rule, BO simple regret, and computational cost. A deterministic predictive benchmark can provide regression diagnostics, but it must not claim that
-raw ensemble spread is calibrated without a dedicated calibration study.
+construction rule, BO simple regret, and computational cost. A deterministic predictive benchmark can provide regression diagnostics,
+but it must not claim that raw ensemble spread is calibrated without a dedicated calibration study.
 
 
 ## 9. 実装上の fitting contract
