@@ -239,7 +239,8 @@ x1   x2   task   y
 
 ## 7.8 MultiTaskGPのcovariance
 
-BoTorch 0.18.1の`MultiTaskGP`では、non-task featureに対するdata covarianceとtask covarianceを組み合わせます。
+現在の upstream `MultiTaskGP` では、non-task feature に対する data covariance と
+task covariance を組み合わせます。
 
 概念的には
 
@@ -319,7 +320,7 @@ rank 大
 
 ## 7.12 Positive task correlationについて
 
-BoTorch 0.18.1の`MultiTaskGP`はデフォルトで`PositiveIndexKernel`をtask covarianceに利用し、task
+現在の upstream `MultiTaskGP` は task covariance に専用の index kernel を利用し、task
 covarianceの要素を非負に制約する設計です。
 
 これは限られたデータからtask correlationを安定して推定するための実務的な仮定です。
@@ -762,7 +763,8 @@ experiment task : noise大
 
 です。
 
-BoTorch 0.18.1の`MultiTaskGP`では、既知noiseなら`train_Yvar`を渡せます。一方、noiseを推定するデフォルト構成にはtask間noiseの扱いに制約
+現在の robotorchan `MultiTaskGP` は既知 noise を `train_Yvar` で受け取れます。
+一方、noise を推定する構成では task-noise semantics を likelihood contract と合わせて確認
 があるため、taskごとに異なるnoiseを明示的に表現したい場合はlikelihood設計を確認する必要があります。
 
 モデル選択ではtask covarianceだけでなくnoise modelも確認します。
