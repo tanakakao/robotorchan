@@ -28,15 +28,15 @@ BO は、現在もっとも良さそうな条件だけでなく、まだ十分�
 
 典型的には、次の問題を考えます。
 
-$
+$$
 x^* = \arg\max_{x \in \mathcal{X}} f(x)
-$
+$$
 
 または最小化問題
 
-$
+$$
 x^* = \arg\min_{x \in \mathcal{X}} f(x)
-$
+$$
 
 です。
 
@@ -65,9 +65,9 @@ $x^*$ に対応します。
 
 勾配法では、目的関数の勾配
 
-$
+$$
 \nabla f(x)
-$
+$$
 
 を利用して最適点へ移動します。
 
@@ -75,9 +75,9 @@ $
 
 BOでは、最適化対象の真の関数 `f(x)` は直接には分かりません。代わりに、これまでの観測
 
-$
+$$
 \mathcal{D}_n = \{(x_i, y_i)\}_{i=1}^n
-$
+$$
 
 を使って `f(x)` の分布を推定します。
 
@@ -86,18 +86,18 @@ $\mathcal{D}_n$ は、入力 $x_i$ と観測値 $y_i$ の組を $n$ 個集めた
 
 観測値にはノイズが含まれる場合があり、一般には
 
-$
+$$
 y_i = f(x_i) + \epsilon_i
-$
+$$
 
 と書けます。
 
 ここで $f(x_i)$ は潜在的な真の関数値、$\epsilon_i$ は観測ノイズです。
 典型的な GP 回帰では
 
-$
+$$
 \epsilon_i \sim \mathcal{N}(0, \sigma_{\mathrm{noise}}^2)
-$
+$$
 
 のような Gaussian noise を仮定することがあります。ただし、これは BO 自体に必須の仮定ではなく、
 heteroskedastic noise や heavy-tailed noise など異なる観測モデルも考えられます。
@@ -123,11 +123,11 @@ GPはある点 `x` に対して単一の予測値だけでなく、
 
 GP の場合、単一点については典型的に
 
-$
+$$
 f(x) \mid \mathcal{D}_n
 \sim
 \mathcal{N}\left(\mu_n(x), \sigma_n^2(x)\right)
-$
+$$
 
 と表せます。$\mu_n(x)$ は予測平均、$\sigma_n^2(x)$ は予測分散です。
 
@@ -139,15 +139,15 @@ Monte Carlo acquisition で重要になります。
 
 代理モデルの予測分布を使って、次に評価する候補点の価値を数値化する関数です。
 
-$
+$$
 \alpha(x; \mathcal{D}_n)
-$
+$$
 
 と書き、次の評価点を
 
-$
+$$
 x_{n+1} = \arg\max_{x \in \mathcal{X}} \alpha(x; \mathcal{D}_n)
-$
+$$
 
 として選びます。
 
@@ -193,25 +193,25 @@ BOは以下の逐次ループで進みます。
 
 数式で表すと、まず
 
-$
+$$
 \mathcal{D}_n
-$
+$$
 
 から posterior
 
-$
+$$
 p(f \mid \mathcal{D}_n)
-$
+$$
 
 を構築します。これを posterior（事後分布）と呼びます。
 
 Bayes の定理との関係を概念的に書けば、
 
-$
+$$
 p(f \mid \mathcal{D}_n)
 \propto
 p(\mathcal{D}_n \mid f)\,p(f)
-$
+$$
 
 です。$p(f)$ はデータを見る前の prior、
 $p(\mathcal{D}_n \mid f)$ は likelihood、
@@ -219,31 +219,31 @@ $p(f \mid \mathcal{D}_n)$ はデータを見た後の posterior です。
 
 そこから acquisition function
 
-$
+$$
 \alpha(x; \mathcal{D}_n)
-$
+$$
 
 を計算します。
 
 その後、
 
-$
+$$
 x_{n+1}=\arg\max_x \alpha(x; \mathcal{D}_n)
-$
+$$
 
 を選び、実験またはシミュレーションで
 
-$
+$$
 y_{n+1}=f(x_{n+1})+\epsilon
-$
+$$
 
 を取得します。
 
 そして
 
-$
+$$
 \mathcal{D}_{n+1}=\mathcal{D}_n\cup\{(x_{n+1},y_{n+1})\}
-$
+$$
 
 として更新します。
 
@@ -255,9 +255,9 @@ BOでは、単に予測精度が高いだけでは十分ではありません。
 
 Gaussian Process は予測値を
 
-$
+$$
 f(x_*) \mid \mathcal{D}
-$
+$$
 
 という確率分布として扱えるため、各点で
 
@@ -275,11 +275,11 @@ posterior uncertainty も不適切になり得ます。
 
 この性質により、例えば UCB は
 
-$
+$$
 \alpha_{\mathrm{UCB}}(x)
 =
 \mu(x)+\beta^{1/2}\sigma(x)
-$
+$$
 
 のように、予測平均と不確実性を同時に利用できます。
 
@@ -321,11 +321,11 @@ kernel や prior、surrogate model、candidate-search strategy にも依存し�
 
 例えば
 
-$
+$$
 \mathbf{f}(x)
 =
 (f_1(x), f_2(x), \ldots, f_m(x))
-$
+$$
 
 を同時に最適化します。
 
@@ -339,15 +339,15 @@ BoTorch では EHVI / NEHVI 系の獲得関数が代表的です。
 
 例えば
 
-$
+$$
 \max_x f(x)
-$
+$$
 
 subject to
 
-$
+$$
 g_j(x) \le 0
-$
+$$
 
 という問題です。
 
@@ -364,10 +364,10 @@ $
 
 複数の実験を同時に実施できる場合は、1点ではなく `q` 点を同時に選びます。
 
-$
+$$
 X_{\mathrm{next}}
 =\{x_1,\ldots,x_q\}
-$
+$$
 
 単純に「1点用 acquisition の上位 $q$ 点」を選べばよいとは限りません。
 候補同士の依存関係や joint utility を考慮する必要があります。
