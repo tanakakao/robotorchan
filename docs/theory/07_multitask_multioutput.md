@@ -319,7 +319,8 @@ rank 大
 
 ## 7.12 Positive task correlationについて
 
-BoTorch 0.18.1の`MultiTaskGP`はデフォルトで`PositiveIndexKernel`をtask covarianceに利用し、task covarianceの要素を非負に制約する設計です。
+BoTorch 0.18.1の`MultiTaskGP`はデフォルトで`PositiveIndexKernel`をtask covarianceに利用し、task
+covarianceの要素を非負に制約する設計です。
 
 これは限られたデータからtask correlationを安定して推定するための実務的な仮定です。
 
@@ -745,7 +746,8 @@ experiment task : noise大
 
 です。
 
-BoTorch 0.18.1の`MultiTaskGP`では、既知noiseなら`train_Yvar`を渡せます。一方、noiseを推定するデフォルト構成にはtask間noiseの扱いに制約があるため、taskごとに異なるnoiseを明示的に表現したい場合はlikelihood設計を確認する必要があります。
+BoTorch 0.18.1の`MultiTaskGP`では、既知noiseなら`train_Yvar`を渡せます。一方、noiseを推定するデフォルト構成にはtask間noiseの扱いに制約
+があるため、taskごとに異なるnoiseを明示的に表現したい場合はlikelihood設計を確認する必要があります。
 
 モデル選択ではtask covarianceだけでなくnoise modelも確認します。
 
@@ -941,7 +943,8 @@ output間の情報共有が必要？
 
 ### 「MultiTaskGPとKroneckerMultiTaskGPは同じ入力形式」
 
-異なります。`MultiTaskGP`はtask featureを含むlong format、`KroneckerMultiTaskGP`は同一Xですべてのtaskを観測するblock designです。
+異なります。`MultiTaskGP`はtask featureを含むlong format、`KroneckerMultiTaskGP`は同一Xですべてのtaskを観測するblock
+designです。
 
 ### 「KroneckerMultiTaskGPの方が常に上位」
 
