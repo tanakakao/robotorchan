@@ -11,6 +11,21 @@ uncertain-input GP は output noise ではなく、**入力座標そのものの
 この問題は candidate perturbation や environmental scenario と関連しますが、robotorchan では
 training-input uncertainty と decision-time perturbation を明確に分けます。
 
+### 最初に「どのXが不確かか」を分ける
+
+入力の不確かさには少なくとも2つの異なる問題があります。
+
+~~~text
+training-input uncertainty
+  過去の観測を「どのXで得たか」が不確か
+
+candidate-time perturbation
+  提案したnominal Xを実行すると実現Xが揺らぐ
+~~~
+
+前者は**surrogate inference**の問題です。後者は主に**decision utility**の問題です。
+両方が同時に存在することもありますが、一方を扱えば他方も自動的に解決するわけではありません。
+
 ## 1. 入力誤差の確率モデル
 
 観測された入力を `x_obs`、真の入力を `x_true` として、
@@ -36,7 +51,10 @@ k_bar(i, j)
   = E_{x_i, x_j}[k(x_i, x_j)]
 ```
 
-この期待 kernel により、入力位置の uncertainty を posterior covariance へ反映できます。
+このexpected kernelにより、入力位置のuncertaintyをGP covarianceへ反映できます。
+
+ここで行っているのは「観測された `train_X` を一度だけrandom jitterして通常GPをfitする」
+処理ではありません。各training pointを入力分布として扱い、その分布間でkernelを周辺化します。
 
 ## 2. Gaussian uncertainty と RBF kernel
 
@@ -65,8 +83,11 @@ k_bar(i, j)
 
 という形になります。
 
-入力 uncertainty がゼロなら `Sigma_i = Sigma_j = 0` となり、通常の RBF covariance に
-戻ります。
+入力uncertaintyがゼロなら `Sigma_i = Sigma_j = 0` となり、
+このexpected covarianceは通常のRBF covarianceへ戻ります。
+
+なお、この解析式は**Gaussian input uncertainty × RBF kernel**という組合せに依存します。
+「任意のkernelへ同じ式を適用できる」という一般則ではありません。
 
 実装では Cholesky decomposition を使って線形系と log determinant を計算し、明示的な
 matrix inverse を避けています。
@@ -127,7 +148,26 @@ private representation です。
 
 この区別により、外部 API では元の feature dimension を維持できます。
 
-## 5. Prediction candidate は deterministic
+## 5. Training uncertaintyを学習しているわけではない
+
+現行 `UncertainInputSingleTaskGP` の `train_X_std` / `train_X_covar` は、
+callerが与えるuncertainty metadataです。
+
+つまりモデルが `train_X` と `train_Y` だけから各点の入力誤差分散を自動推定するわけではありません。
+
+~~~text
+caller
+  → observed train_X
+  → train_X_std または train_X_covar
+  → uncertain-input kernel
+
+model
+  → 与えられた入力分布を使ってcovarianceを計算
+~~~
+
+入力uncertainty自体が未知なら、そのuncertaintyをどう推定するかは別のstatistical modelが必要です。
+
+## 6. Prediction candidate は deterministic
 
 現在の `UncertainInputSingleTaskGP.posterior(X)` は candidate `X` を deterministic として
 扱います。内部では candidate covariance をゼロにして augmented representation を作ります。
@@ -142,7 +182,7 @@ private representation です。
 解決するわけではありません。candidate perturbation は別の scenario / objective /
 acquisition layer で扱います。
 
-## 6. Mixed uncertain input
+## 7. Mixed uncertain input
 
 mixed search space では continuous coordinate の uncertainty と categorical identity を
 分離する必要があります。
@@ -167,7 +207,7 @@ K_mixed
 カテゴリコードを `0.0, 1.0, 2.0` のような数値として Gaussian perturbation することは
 意味的に不適切なので行いません。
 
-## 7. Categorical uncertainty
+## 8. Categorical uncertainty
 
 カテゴリそのものが不確かな場合は別のモデル化が必要です。
 
@@ -199,7 +239,33 @@ robotorchan の `UncertainCategoricalSingleTaskGP` は、continuous coordinate u
 詳細は
 [uncertain categorical GP](../models/uncertain_categorical_gp.md) を参照してください。
 
-## 8. Input noise と output noise の違い
+### Uncertain categoricalはdeterministic categoryのMixed GPとも違う
+
+`MixedUncertainInputSingleTaskGP` のcategoryは確定値です。一方、
+`UncertainCategoricalSingleTaskGP` は1つのcategorical featureについて
+category probability vectorを明示的に受け取ります。
+
+例えば
+
+~~~text
+P(material=A) = 0.7
+P(material=B) = 0.2
+P(material=C) = 0.1
+~~~
+
+のような入力です。現行実装のexpected categorical covarianceは、学習されるPSDな
+category covariance matrixをこの確率分布で両側から平均化します。
+
+したがって、
+
+~~~text
+categorical code + Gaussian jitter
+~~~
+
+ではありません。また現行public modelは「複数のuncertain categorical columnsを
+一般的に自動処理するAPI」と解釈しないことが重要です。
+
+## 9. Input noise と output noise の違い
 
 output noise は
 
@@ -224,7 +290,7 @@ y = f(x_true) + epsilon_y
 output noise については
 [Heteroskedastic / Replicate Noise](15_heteroskedastic_noise.md) を参照してください。
 
-## 9. Training-input uncertainty と candidate perturbation
+## 10. Training-input uncertainty と candidate perturbation
 
 robotorchan では次を区別します。
 
@@ -235,13 +301,19 @@ robotorchan では次を区別します。
 | Environmental variable | 制御不能な w | scenario / risk |
 | Output noise | 観測 y | likelihood / noise model |
 
-candidate perturbation を
+candidate perturbationを
 
-```text
+~~~text
 x_realized = x_candidate + delta
-```
+~~~
 
-とする場合、実際に最適化したい quantity が
+とする場合、現行のrobust BO pipelineではBoTorchの `InputPerturbation` が
+posterior評価時にnominal candidateをscenario axisへ展開し、ExpectationやCVaRなどの
+risk objectiveがそのaxisを集約できます。
+
+したがってscenario数 `n_w` をsurrogateのpublic input dimensionへ追加するわけではありません。
+
+実際に最適化したいquantityが
 
 ```text
 E_delta[f(x + delta)]
@@ -251,7 +323,20 @@ E_delta[f(x + delta)]
 
 これは training-input uncertainty の kernel marginalization だけでは決まりません。
 
-## 10. Bayesian optimization との関係
+### 現行scopeを越えて推測しない
+
+現時点のpublic uncertain-input familyは主に
+
+- `UncertainInputSingleTaskGP`
+- `MixedUncertainInputSingleTaskGP`
+- `UncertainCategoricalSingleTaskGP`
+
+です。
+
+MultiTask / MultiFidelity / dimensionality-reductionとのcross-productを一般にサポートすると
+本文から推測してはいけません。複数構造を組み合わせる場合はregistryと実装contractを確認します。
+
+## 11. Bayesian optimization との関係
 
 uncertain training input を無視すると、観測位置を過度に正確だとみなし、lengthscale や
 posterior uncertainty を誤って推定する可能性があります。
@@ -268,11 +353,12 @@ uncertain-input surrogate
 
 です。両方が必要な問題では、それぞれを独立した層として合成します。
 
-## 11. 実装との対応
+## 12. 実装との対応
 
 現在の理論章で保持すべき実装契約は次です。
 
-- continuous uncertainty は Gaussian として扱う
+- continuous training-input uncertaintyはcaller-supplied Gaussianとして扱う
+- uncertainty metadata自体をtrain_X / train_Yから自動推定するモデルではない
 - RBF covariance を入力分布について解析的に周辺化する
 - diagonal uncertainty は `train_X_std`
 - correlated uncertainty は `train_X_covar`
@@ -281,12 +367,26 @@ uncertain-input surrogate
 - `posterior(X)` の candidate は deterministic
 - Mixed 版では continuous uncertainty と categorical identity を分離
 - categorical uncertainty は専用モデルで扱う
-- candidate perturbation / environmental scenario は別 layer
+- candidate perturbation / environmental scenarioは別layer
+- robust candidate evaluationでは `InputPerturbation` とrisk objectiveを独立に合成できる
+- current public uncertain-input familyからMultiTask等の未実装cross-productを推測しない
 
 実装仕様は [uncertain-input GP](../models/uncertain_input_gp.md)、
 [full-covariance uncertain-input GP](../models/full_covariance_uncertain_input_gp.md)、
 [mixed uncertain-input GP](../models/mixed_uncertain_input_gp.md)、
 [uncertain categorical GP](../models/uncertain_categorical_gp.md) を参照してください。
+
+## 13. この章で覚えておくこと
+
+- output noiseとinput uncertaintyは異なる
+- training-input uncertaintyとcandidate-time perturbationも異なる
+- 現行continuous modelはcaller-supplied Gaussian input uncertaintyをexpected RBF kernelへ入れる
+- analytic expected-kernel式はGaussian uncertainty × RBFという仮定に依存する
+- `train_X_std` / `train_X_covar` は学習される量ではなく入力metadataである
+- `posterior(X)` のquery candidateは現行実装ではdeterministicである
+- Mixed版ではGaussian uncertaintyはcontinuous dimensionsだけに適用する
+- uncertain categorical inputはcategory probability distributionとして別modelで扱う
+- candidate robustnessはscenario / risk-objective layerで定義する
 
 ## 参考文献
 
