@@ -1518,12 +1518,16 @@ SingleTaskVariationalGP
 
 次章では、人の好みや比較データを扱う [Preference Learning](10_preference_learning.md) を説明します。
 
-## 参考
+## 参考文献
 
-- Hensman, Fusi, Lawrence, *Gaussian Processes for Big Data*, UAI 2013
-- Burt, Rasmussen, van der Wilk, *Convergence of Sparse Variational Inference in Gaussian Process Regression*, JMLR 2020
-- Moss, Ober, Picheny, *Inducing Point Allocation for Sparse Gaussian Processes in High-Throughput Bayesian Optimization*, AISTATS 2023
-- BoTorch 0.18.1 `SingleTaskVariationalGP`
-- GPyTorch `VariationalELBO`
-- [Gaussian Process](02_gaussian_process.md)
-- [High-dimensional GP](08_high_dimensional_gp.md)
+1. Titsias, M. (2009).
+   Variational learning of inducing variables in sparse Gaussian processes.
+   *Proceedings of AISTATS*, 5, 567-574.
+2. Hensman, J., Fusi, N., and Lawrence, N. D. (2013).
+   Gaussian processes for big data. *Proceedings of UAI*.
+3. Burt, D. R., Rasmussen, C. E., and van der Wilk, M. (2020).
+   Convergence of sparse variational inference in Gaussian process regression.
+   *Journal of Machine Learning Research*, 21.
+4. BoTorch `SingleTaskVariationalGP` and GPyTorch `VariationalELBO` documentation.
+5. [Gaussian Process](02_gaussian_process.md)
+6. [High-dimensional GP](08_high_dimensional_gp.md)

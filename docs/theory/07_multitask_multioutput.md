@@ -1023,12 +1023,14 @@ k_X(x,x')k_T(t,t')
 
 次章では、高次元入力で通常のGPが難しくなる理由と、SAASなどの考え方を扱う [High-dimensional GP](08_high_dimensional_gp.md) を説明します。
 
-## 参考
+## 参考文献
 
-- BoTorch v0.18.1 `MultiTaskGP`
-- BoTorch v0.18.1 `KroneckerMultiTaskGP`
-- BoTorch v0.18.1 `ModelListGP`
-- Bonilla, Chai, Williams, *Multi-task Gaussian Process Prediction*, NeurIPS 2007
-- Swersky, Snoek, Adams, *Multi-Task Bayesian Optimization*, NeurIPS 2013
-- [Kernel](03_kernel.md)
-- [Multi-Fidelity](06_multi_fidelity.md)
+1. Bonilla, E. V., Chai, K. M. A., and Williams, C. K. I. (2008).
+   Multi-task Gaussian process prediction.
+   *Advances in Neural Information Processing Systems 20*, 153-160.
+2. Swersky, K., Snoek, J., and Adams, R. P. (2013).
+   Multi-task Bayesian optimization.
+   *Advances in Neural Information Processing Systems 26*.
+3. BoTorch `MultiTaskGP`, `KroneckerMultiTaskGP`, and `ModelListGP` documentation.
+4. [Kernel](03_kernel.md)
+5. [Multi-Fidelity](06_multi_fidelity.md)

@@ -1705,14 +1705,11 @@ problem structure
 
 次章では、ここまでのすべてのモデルを横断し、問題設定から候補モデルを選ぶための [Model Selection](13_model_selection.md) を整理します。
 
-## 参考
+## 参考文献
 
-- BoTorch `HierarchicalConditionalKernelGP`
-- BoTorch `HierarchicalConditionalKernelMultiTaskGP`
-- BoTorch `HeterogeneousMTGP`
-- BoTorch `SACGP`
-- BoTorch `LCEAGP`
-- BoTorch `LCEMGP`
-- [Mixed Variables](05_mixed_variables.md)
-- [Multi-task / Multi-output](07_multitask_multioutput.md)
-- [High-dimensional GP](08_high_dimensional_gp.md)
+1. BoTorch `SACGP`, `LCEAGP`, and `LCEMGP` documentation and associated method references.
+2. BoTorch `HeterogeneousMTGP` documentation and associated method references.
+3. robotorchan hierarchical conditional kernel implementation and public model documentation.
+4. [Mixed Variables](05_mixed_variables.md)
+5. [Multi-task / Multi-output](07_multitask_multioutput.md)
+6. [High-dimensional GP](08_high_dimensional_gp.md)

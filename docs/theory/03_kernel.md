@@ -467,3 +467,12 @@ GPが予測平均と不確実性を返す仕組みを理解したら、次はそ
 次章では acquisition function を説明します。
 
 → `04_acquisition_function.md`（今後追加予定）
+
+## 参考文献
+
+1. Rasmussen, C. E., and Williams, C. K. I. (2006).
+   *Gaussian Processes for Machine Learning*. MIT Press.
+2. Stein, M. L. (1999).
+   *Interpolation of Spatial Data: Some Theory for Kriging*. Springer.
+3. GPyTorch documentation.
+   Kernel implementations used by the upstream GP stack.

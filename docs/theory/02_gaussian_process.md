@@ -453,3 +453,14 @@ GPの性質は kernel によって大きく決まります。
 次章では、kernel が何を意味し、RBF・Matérn・ARD などが予測にどう影響するかを説明します。
 
 → [3. Kernel](03_kernel.md)
+
+## 参考文献
+
+1. Rasmussen, C. E., and Williams, C. K. I. (2006).
+   *Gaussian Processes for Machine Learning*. MIT Press.
+2. Williams, C. K. I., and Rasmussen, C. E. (1996).
+   Gaussian processes for regression.
+   *Advances in Neural Information Processing Systems 8*.
+3. Rasmussen, C. E. (2004).
+   Gaussian processes in machine learning.
+   *Advanced Lectures on Machine Learning*, 63-71.

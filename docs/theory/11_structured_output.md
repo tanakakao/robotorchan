@@ -1524,14 +1524,12 @@ LatentKroneckerGP
 
 次章では、条件付き探索空間・異種task・contextを扱う [Hierarchical / Contextual GP](12_hierarchical_contextual_gp.md) を説明します。
 
-## 参考
+## 参考文献
 
-- Zhe, Xing, Kirby, *Scalable High-Order Gaussian Process Regression*, AISTATS 2019
-- Maddox et al., structured GP posterior sampling / Bayesian optimization work
-- Lin et al., *Scaling Gaussian Processes for Learning Curve Prediction via Latent Kronecker Structure*, 2024
-- Lin et al., *Scalable Gaussian Processes with Latent Kronecker Structure*, ICML 2025
-- BoTorch `HigherOrderGP`
-- BoTorch `LatentKroneckerGP`
-- [Gaussian Process](02_gaussian_process.md)
-- [Kernel](03_kernel.md)
-- [Multi-task / Multi-output](07_multitask_multioutput.md)
+1. Zhe, S., Xing, W., and Kirby, R. M. (2019).
+   Scalable high-order Gaussian process regression.
+   *Proceedings of AISTATS*.
+2. BoTorch `HigherOrderGP` and `LatentKroneckerGP` documentation.
+3. [Gaussian Process](02_gaussian_process.md)
+4. [Kernel](03_kernel.md)
+5. [Multi-task / Multi-output](07_multitask_multioutput.md)

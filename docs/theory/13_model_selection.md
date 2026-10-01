@@ -1597,3 +1597,18 @@ context-wise output
 - BoTorch / robotorchan 内部設計: [`docs/architecture.md`](../architecture.md)
 
 本章で理論ガイドの基本的なモデル選択フローは完結します。
+
+## 参考文献
+
+1. Rasmussen, C. E., and Williams, C. K. I. (2006).
+   *Gaussian Processes for Machine Learning*. MIT Press.
+2. Shahriari, B., Swersky, K., Wang, Z., Adams, R. P., and de Freitas, N. (2016).
+   Taking the human out of the loop: A review of Bayesian optimization.
+   *Proceedings of the IEEE*, 104(1), 148-175.
+3. Balandat, M. et al. (2020).
+   BoTorch: A framework for efficient Monte-Carlo Bayesian optimization.
+   *Advances in Neural Information Processing Systems 33*.
+4. [Gaussian Process](02_gaussian_process.md)
+5. [High-dimensional GP](08_high_dimensional_gp.md)
+6. [Robust Gaussian Process](14_robust_gaussian_process.md)
+7. [Non-GP Surrogates](23_non_gp_surrogates.md)

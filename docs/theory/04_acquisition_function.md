@@ -375,3 +375,19 @@ Candidate
 次章では探索空間側の問題として
 [Mixed Variables](05_mixed_variables.md) を扱います。獲得関数そのものの詳細は
 [Acquisition Function Theory](acquisition/README.md) へ進んでください。
+
+## 参考文献
+
+1. Jones, D. R., Schonlau, M., and Welch, W. J. (1998).
+   Efficient global optimization of expensive black-box functions.
+   *Journal of Global Optimization*, 13, 455-492.
+2. Frazier, P. I. (2018).
+   A tutorial on Bayesian optimization.
+   arXiv:1807.02811.
+3. Wilson, J., Hutter, F., and Deisenroth, M. (2018).
+   Maximizing acquisition functions for Bayesian optimization.
+   *Advances in Neural Information Processing Systems 31*.
+4. Balandat, M. et al. (2020).
+   BoTorch: A framework for efficient Monte-Carlo Bayesian optimization.
+   *Advances in Neural Information Processing Systems 33*.
+5. [Acquisition Function Theory](acquisition/README.md)

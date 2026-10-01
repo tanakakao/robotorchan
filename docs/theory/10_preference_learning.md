@@ -1834,14 +1834,17 @@ PairwiseGP
 
 次章では、画像・波形・空間場などの structured output を扱う [Structured Output GP](11_structured_output.md) を説明します。
 
-## 参考
+## 参考文献
 
-- Chu, Ghahramani, *Preference Learning with Gaussian Processes*, ICML 2005
-- Brochu, Cora, de Freitas, *A Tutorial on Bayesian Optimization of Expensive Cost Functions*, 2010
-- Lin et al., *Preference Exploration for Efficient Bayesian Optimization with Multiple Outcomes*, AISTATS 2022
-- Astudillo et al., *qEUBO: A Decision-Theoretic Acquisition Function for Preferential Bayesian Optimization*, AISTATS 2023
-- BoTorch `PairwiseGP`
-- BoTorch preference BO tutorial
-- BoTorch BOPE tutorial
-- [Gaussian Process](02_gaussian_process.md)
-- [Acquisition Function](04_acquisition_function.md)
+1. Chu, W., and Ghahramani, Z. (2005).
+   Preference learning with Gaussian processes.
+   *Proceedings of the 22nd International Conference on Machine Learning*, 137-144.
+2. Lin, Z. J. et al. (2022).
+   Preference exploration for efficient Bayesian optimization with multiple outcomes.
+   *Proceedings of AISTATS*.
+3. Astudillo, R. et al. (2023).
+   qEUBO: A decision-theoretic acquisition function for preferential Bayesian optimization.
+   *Proceedings of AISTATS*.
+4. BoTorch `PairwiseGP`, preference BO, and BOPE documentation.
+5. [Gaussian Process](02_gaussian_process.md)
+6. [Acquisition Function](04_acquisition_function.md)

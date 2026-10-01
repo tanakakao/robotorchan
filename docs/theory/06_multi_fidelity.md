@@ -1009,10 +1009,14 @@ Acquisition optimization
 
 次章では、複数の関連taskや複数outputの情報共有を扱う [Multi-task / Multi-output](07_multitask_multioutput.md) を説明します。
 
-## 参考
+## 参考文献
 
-- BoTorch v0.18.1 `SingleTaskMultiFidelityGP`
-- BoTorch Multi-Fidelity Bayesian Optimization tutorial
-- BoTorch cost-aware utilities
-- [Acquisition Function](04_acquisition_function.md)
-- [Mixed Variables](05_mixed_variables.md)
+1. Kennedy, M. C., and O'Hagan, A. (2000).
+   Predicting the output from a complex computer code when fast approximations are available.
+   *Biometrika*, 87(1), 1-13.
+2. Kandasamy, K., Dasarathy, G., Oliva, J. B., Schneider, J., and Póczos, B. (2017).
+   Multi-fidelity Bayesian optimisation with continuous approximations.
+   *Proceedings of the 34th International Conference on Machine Learning*.
+3. BoTorch `SingleTaskMultiFidelityGP`, multi-fidelity, and cost-aware documentation.
+4. [Acquisition Function](04_acquisition_function.md)
+5. [Mixed Variables](05_mixed_variables.md)
