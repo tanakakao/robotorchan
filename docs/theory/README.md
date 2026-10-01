@@ -18,36 +18,119 @@ Gaussian Process（GP）の理論を、実装と対応付けながら説明し�
 
 ## 推奨する読み方
 
-初めてベイズ最適化を学ぶ場合は、次の順で読むことを推奨します。
+初めてベイズ最適化を学ぶ場合は、最初からモデル名を順番に暗記するのではなく、
+**「何を解決するためのモデルか」**という大分類を意識して読むことを推奨します。
+
+### Part I: ベイズ最適化と Gaussian Process の基礎
+
+まず、BO が何をしているのか、その判断材料となる GP と kernel、
+次の評価点を決める acquisition function を理解します。
 
 1. [ベイズ最適化とは](01_bayesian_optimization.md)
 2. [Gaussian Process](02_gaussian_process.md)
 3. [Kernel](03_kernel.md)
 4. [Acquisition Function](04_acquisition_function.md)
-   - [Acquisition Function Theory](acquisition/README.md) — 01〜12の詳細理論
+   - [Acquisition Function Theory](acquisition/README.md) — 獲得関数ごとの詳細理論
    - [Acquisition Selection Guide](acquisition/12_selection_guide.md) — 問題設定から獲得関数を選ぶ入口
    - [Optimization Theory](optimization/README.md) — 獲得関数を最大化する探索法の理論
    - [Optimization guides](../optimization/README.md) — API・利用方法
    - [Acquisition integration status](../optimization/acquisition-integration.md) — 現在の対応範囲と制約
+
+ここまでが、後続のモデル群を理解するための共通基礎です。
+
+### Part II: 入力・タスク・出力に構造がある問題
+
+標準 GP だけでは表現しにくい、カテゴリ変数、複数 fidelity、複数 task、
+構造化出力、階層・context を扱います。
+
 5. [Mixed Variables](05_mixed_variables.md)
 6. [Multi-Fidelity](06_multi_fidelity.md)
 7. [Multi-task / Multi-output](07_multitask_multioutput.md)
-8. [High-dimensional GP](08_high_dimensional_gp.md)
-9. [Variational GP](09_variational_gp.md)
 10. [Preference Learning](10_preference_learning.md)
 11. [Structured Output](11_structured_output.md)
 12. [Hierarchical / Contextual GP](12_hierarchical_contextual_gp.md)
-13. [Model Selection](13_model_selection.md)
-14. [Robust Gaussian Process](14_robust_gaussian_process.md)
-15. [Heteroskedastic / Replicate Noise](15_heteroskedastic_noise.md)
-16. [Uncertain-input GP](16_uncertain_input_gp.md)
-17. [Nonstationary GP](17_nonstationary_gp.md)
+
+これらは排他的な分類ではありません。例えば Mixed × MultiTask のように、
+複数の構造を同時に持つ問題もあります。
+
+### Part III: 大規模・高次元問題に対応するモデルと探索
+
+データ数や入力次元が増え、標準的な exact GP や通常の探索が難しくなる場合を扱います。
+
+8. [High-dimensional GP](08_high_dimensional_gp.md)
+9. [Variational GP](09_variational_gp.md)
 18. [Dimensionality Reduction GP](18_dimensionality_reduction_gp.md)
 19. [Neural Representation Learning for GP](19_neural_reduction_gp.md)
 20. [High-dimensional Search Strategies](20_high_dimensional_search.md)
 21. [Advanced High-dimensional GP Models](21_advanced_high_dimensional_models.md)
+
+ここでは、**モデル側で高次元へ対応する方法**と
+**候補点の探索空間を工夫する方法**を区別して説明します。
+
+### Part IV: ノイズ・外れ値・入力誤差・非定常性に対応するモデル
+
+現実の実験・製造データで、標準 GP の仮定が崩れる場合を扱います。
+
+14. [Robust Gaussian Process](14_robust_gaussian_process.md)
+15. [Heteroskedastic / Replicate Noise](15_heteroskedastic_noise.md)
+16. [Uncertain-input GP](16_uncertain_input_gp.md)
+17. [Nonstationary GP](17_nonstationary_gp.md)
+
+「予測が不確か」という結果が似ていても、外れ値、観測 noise、入力 uncertainty、
+nonstationarity では原因とモデル化方法が異なります。
+
+### Part V: より高い表現力を持つ GP
+
+標準 kernel だけでは捉えにくい複雑な表現や関数構造を扱います。
+
 22. [Expressive GP Models](22_expressive_gp.md)
+
+Deep GP、Deep Kernel Learning、NNGP、Spectral Mixture などは、
+「GP より高度だから使う」のではなく、どの構造を表現したいかを考えて選びます。
+
+### Part VI: GP 以外のサロゲートモデル
+
+BO の surrogate は GP に限定されません。
+
 23. [Non-GP Surrogates](23_non_gp_surrogates.md)
+
+tree ensemble、boosting、NGBoost などでは、GP と同じ posterior interface を持つ場合でも、
+不確実性や sample の統計的意味が異なることに注意します。
+
+### Part VII: モデルを選ぶ
+
+各モデル群の理論を理解した後、問題設定と実装 capability を対応付けます。
+
+13. [Model Selection](13_model_selection.md)
+
+13章は新しいモデル family を説明する章ではなく、
+**「自分の問題ではどの family を検討すべきか」**を整理する横断的な章です。
+
+## 問題からモデル群を探すための入口
+
+すべての章を読んでからモデルを選ぶ必要はありません。
+まず問題の特徴を確認し、対応する Part へ進めます。
+
+| 問題の特徴 | 最初に確認する分類 | 主な章 |
+| --- | --- | --- |
+| BO / GP 自体が初めて | 基礎 | 01-04 |
+| 連続値とカテゴリ値が混在する | 入力構造 | 05 |
+| 安価な近似評価と高価な本評価がある | Multi-Fidelity | 06 |
+| 複数 task / output の情報を共有したい | MultiTask / Structured Output | 07, 11 |
+| 比較結果から好みや効用を学習したい | Preference Learning | 10 |
+| 条件分岐や context を持つ探索空間 | Hierarchical / Contextual | 12 |
+| 入力次元が多い | 高次元モデル・探索 | 08, 18-21 |
+| データ数が多く exact GP が重い | Variational inference | 09 |
+| 外れ値や heavy-tail が問題になる | Robust GP | 14 |
+| 観測場所によって noise が変わる | Heteroskedastic noise | 15 |
+| 設定した入力値そのものに誤差がある | Uncertain-input GP | 16 |
+| 関数の滑らかさや挙動が場所で変わる | Nonstationary GP | 17 |
+| 標準 GP より複雑な表現が必要 | Expressive GP | 22 |
+| GP 以外の予測モデルを使いたい | Non-GP surrogate | 23 |
+| 候補が多く、どれを選ぶべきか整理したい | Model Selection | 13 |
+
+この表はモデルを一意に決める decision tree ではありません。
+実際の問題では複数行が同時に当てはまり、複数の性質を組み合わせたモデルが候補になります。
 
 ## このガイドの構成方針
 
