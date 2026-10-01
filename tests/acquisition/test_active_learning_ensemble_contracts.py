@@ -2,6 +2,7 @@ import torch
 from botorch.posteriors.ensemble import EnsemblePosterior
 
 from robotorchan.acquisition import BoundaryVariance, PosteriorVariance, Straddle
+from robotorchan.acquisition.registry import get_acquisition_registry_entry
 
 
 class _EnsembleModel:
@@ -65,3 +66,16 @@ def test_active_learning_rejects_flagged_ensemble_before_posterior() -> None:
             assert "ensemble posteriors" in str(error)
         else:
             raise AssertionError("Expected flagged-ensemble validation.")
+
+
+def test_pointwise_active_learning_registry_rejects_ensemble_support() -> None:
+    for name in (
+        "BoundaryVariance",
+        "PosteriorStd",
+        "PosteriorVariance",
+        "RandomizedStraddle",
+        "Straddle",
+    ):
+        entry = get_acquisition_registry_entry(name)
+        assert entry.capabilities.supports_ensemble is False
+        assert "ensemble posteriors are not supported" in entry.limitations
