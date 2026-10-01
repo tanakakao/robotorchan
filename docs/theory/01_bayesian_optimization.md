@@ -6,7 +6,7 @@
 この章では、具体例と直感を先に示し、その後で数式による定式化を行います。
 数式を省略するのではなく、記号が何を意味するかを確認しながら進みます。
 
-## 1.0 まず具体例から考える
+## まず具体例から考える
 
 材料開発で、温度と圧力を変えながら材料強度を最大化する問題を考えます。
 
@@ -374,7 +374,7 @@ X_{\mathrm{next}}
 
 BoTorch の `qEI`, `qUCB`, `qNEHVI` などは batch BO を扱えます。
 
-### Asynchronous Bayesian Optimization
+### 1.11.1 Asynchronous Bayesian Optimization
 
 複数の評価が同時に終了するとは限りません。一部の実験が実行中でも次の候補を決めたい場合、
 未完了候補を pending points として意思決定へ反映します。
