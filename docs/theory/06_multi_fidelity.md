@@ -12,28 +12,28 @@
 実験                     : 非常に高い / 最も信頼したい
 ```
 
-このような「評価の忠実度」を **fidelity** と呼び、複数のfidelityから得られる情報を統合して最適化する方法が **Multi-Fidelity Bayesian
-Optimization (MFBO)** です。
+このような「評価の忠実度」を **fidelity** と呼び、複数のfidelityから得られる情報を
+統合して最適化する方法が **Multi-Fidelity Bayesian Optimization (MFBO)** です。
 
 通常のBOが
 
-\[
+$$
 x^*=\arg\max_x f(x)
-\]
+$$
 
 を考えるのに対して、Multi-Fidelityでは
 
-\[
+$$
 y=f(x,s)+\epsilon
-\]
+$$
 
-のようにfidelity変数 \(s\) を追加します。
+のようにfidelity変数 $`s`$ を追加します。
 
 ここで重要なのは、最終的に欲しい解が
 
-\[
+$$
 x^*=\arg\max_x f(x,s_{target})
-\]
+$$
 
 であることです。
 
@@ -41,9 +41,25 @@ x^*=\arg\max_x f(x,s_{target})
 
 ---
 
+### Fidelityは「別の目的」ではなく「同じ対象を見る解像度」
+
+初心者はfidelityを「目的変数が複数ある」と捉えやすいですが、基本的には異なります。
+例えば同じ材料強度を、
+
+~~~text
+簡易simulation   → 安いが粗い
+高精度simulation → 高価だが精密
+実験              → 最終的に信頼したい
+~~~
+
+という異なる方法で調べていると考えます。
+
+低fidelityの値がtargetと完全に一致する必要はありません。重要なのは、
+**低fidelityを観測することでtarget fidelityについての不確実性が減るか**です。
+
 ## 6.2 Single-Fidelity BOとの違い
 
-Single-Fidelity BOでは、各候補 \(x\) に対して評価方法は1つです。
+Single-Fidelity BOでは、各候補 $`x`$ に対して評価方法は1つです。
 
 ```text
 Candidate x
@@ -67,9 +83,9 @@ y
 
 したがって次の評価点は概念的に
 
-\[
+$$
 (x_{next},s_{next})
-\]
+$$
 
 です。
 
@@ -142,19 +158,22 @@ high
 Fidelityには通常、
 
 ```text
-精度
-情報量
+精度または近似レベル
 評価コスト
-target fidelityへの近さ
+target fidelityとの統計的な関係
 ```
 
 という構造があります。
 
+ただし「fidelityが高いほど必ず情報量が大きい」という単純な順序を
+無条件に仮定するべきではありません。targetについてどれだけ有用かは、
+設計点、モデル化した相関、観測ノイズなどにも依存します。
+
 特にcontinuous fidelityなら
 
-\[
+$$
 s\in[0,1]
-\]
+$$
 
 として
 
@@ -172,29 +191,32 @@ s = 1.0  : target fidelity
 
 ## 6.5 Multi-Fidelity GPの基本思想
 
-Multi-Fidelity GPでは、設計変数 \(x\) とfidelity \(s\) をまとめて入力とします。
+Multi-Fidelity GPでは、設計変数 $`x`$ とfidelity $`s`$ をまとめて入力とします。
 
-\[
+$$
 \tilde{x}=(x,s)
-\]
+$$
 
 そして
 
-\[
+$$
 f(x,s)\sim\mathcal{GP}(m(x,s),k((x,s),(x',s')))
-\]
+$$
 
 とモデル化します。
 
-重要なのはkernelが
+重要なのはkernelが、設計変数とfidelityの構造を通して異なる観測間の
+covarianceを表現することです。概念的には
 
 ```text
-設計点 x の類似性
+設計点 x の関係
 +
-fidelity s の類似性
+fidelity s の関係
+        ↓
+異なる (x, s) 間の covariance
 ```
 
-を表現することです。
+と捉えられます。
 
 そのため、低fidelityで観測した情報をtarget fidelityの予測へ伝播できます。
 
@@ -223,25 +245,38 @@ high fidelity : 正確だが高コスト
 
 ---
 
+### 相関があることと「同じ値」であることは違う
+
+例えばlow fidelityが常にtargetより小さめに出るbiasを持っていても、
+設計変数に対する増減傾向が共有されていれば有用な場合があります。
+
+~~~text
+low    : 値そのものにはbiasがあるが、良い領域・悪い領域の傾向は似る
+target : 絶対値は異なるが、lowから情報を受け取れる
+~~~
+
+したがってMFBOでは「値が近いか」だけでなく、
+**targetのposterior更新に役立つ統計的依存関係があるか**を見る必要があります。
+
 ## 6.7 Target Fidelity
 
 Multi-Fidelityで最終的に最適化したいfidelityをtarget fidelityと考えます。
 
 例えば
 
-\[
+$$
 s_{target}=1
-\]
+$$
 
 なら、最終目的は
 
-\[
+$$
 x^*=\arg\max_x f(x,1)
-\]
+$$
 
 です。
 
-低fidelity \(s<1\) は、このtargetを効率よく推定するために利用します。
+低fidelity $`s<1`$ は、このtargetを効率よく推定するために利用します。
 
 この視点を失うと、単に安いfidelityばかり評価する戦略になりかねません。
 
@@ -253,17 +288,17 @@ x^*=\arg\max_x f(x,1)
 
 評価コストを
 
-\[
+$$
 c(x,s)
-\]
+$$
 
 とします。
 
 単純にはfidelityだけに依存して
 
-\[
+$$
 c(s)
-\]
+$$
 
 としても構いません。
 
@@ -277,17 +312,19 @@ s = 1.0 → cost = 50
 
 です。
 
-MFBOでは「情報量が最大の点」だけでなく、**情報量とコストの比**を考えることが重要です。
+MFBOでは評価価値とコストの両方を考えることが重要です。ただし、常に単純な
+「情報量 ÷ コスト」を使うわけではありません。どのutilityを使うかは
+acquisition設計によって異なります。
 
 ---
 
 ## 6.9 Cost-Aware Bayesian Optimization
 
-候補 \((x,s)\) の価値を \(V(x,s)\) とすると、直感的には
+候補 $`(x,s)`$ の価値を $`V(x,s)`$ とすると、直感的には
 
-\[
+$$
 \frac{V(x,s)}{c(x,s)}
-\]
+$$
 
 のように、単位コスト当たりの価値を評価できます。
 
@@ -329,15 +366,15 @@ Knowledge Gradient (KG) は、ある候補を観測することで「観測後�
 
 現在のposterior meanに基づく最良値を
 
-\[
+$$
 V_n=\max_x \mu_n(x,s_{target})
-\]
+$$
 
 とします。
 
-候補 \((x,s)\) を観測した後のposteriorを \(\mu_{n+1}\) とすると、KGは概念的に
+候補 $`(x,s)`$ を観測した後のposteriorを $`\mu_{n+1}`$ とすると、KGは概念的に
 
-\[
+$$
 \operatorname{KG}(x,s)
 =
 \mathbb{E}_n
@@ -346,7 +383,7 @@ V_n=\max_x \mu_n(x,s_{target})
 \right]
 -
 \max_{x'}\mu_n(x',s_{target})
-\]
+$$
 
 です。
 
@@ -366,7 +403,8 @@ target fidelityでの最良判断
 
 を測ります。
 
-このためKGはMulti-Fidelityとの相性がよい獲得関数です。
+このようにKGは、非target fidelityの観測を「将来のtarget上の意思決定改善」で
+評価できるため、Multi-Fidelityへ拡張しやすい考え方です。
 
 ---
 
@@ -376,11 +414,11 @@ Multi-Fidelity KGでは、target fidelity以外の観測も「targetでの意思
 
 さらにcost-awareにすれば、概念的には
 
-\[
+$$
 \alpha(x,s)
 \approx
 \frac{\operatorname{VoI}(x,s)}{c(x,s)}
-\]
+$$
 
 として評価できます。
 
@@ -429,9 +467,26 @@ model = SingleTaskMultiFidelityGP(
 )
 ```
 
-robotorchanのwrapperはBoTorchの予測挙動を維持しつつ、raw training data保持や`make_mll()`などの共通規約を追加します。
+robotorchanのwrapperはBoTorchの予測挙動を維持しつつ、raw training data保持や
+`make_mll()` などの共通規約を追加します。
 
 ---
+
+### モデルがfidelityを理解しても、評価戦略までは決まらない
+
+`SingleTaskMultiFidelityGP` が担うのは、異なるfidelity間で情報共有できる
+posteriorを構築することです。それだけで
+
+~~~text
+low fidelityを何回使うか
+いつtarget fidelityへ移るか
+残りbudgetをどう配分するか
+~~~
+
+まで自動的に決まるわけではありません。
+
+これらは acquisition、cost-aware utility、candidate optimization、停止条件などの
+意思決定層で扱います。**Multi-Fidelity model と MFBO policy は同義ではありません。**
 
 ## 6.14 iteration_fidelity と data_fidelities
 
@@ -496,22 +551,22 @@ fidelity dimension は構造列として保持され、categorical kernel の対
 
 例えば通常の設計変数が2次元なら
 
-\[
+$$
 x=(x_1,x_2)
-\]
+$$
 
 ですが、fidelityを追加すると
 
-\[
+$$
 \tilde{x}=(x_1,x_2,s)
-\]
+$$
 
 になります。
 
-ここで \(s\) は単なる追加特徴量ではなく、**観測精度・情報源の構造を表す特殊な入力**です。
+ここで $`s`$ は単なる追加特徴量ではなく、**観測精度・情報源の構造を表す特殊な入力**です。
 
-したがって、通常の`SingleTaskGP`へfidelity列を何も考えず追加することと、`SingleTaskMultiFidelityGP`でfidelity構造を明示することは同じで
-はありません。
+したがって、通常の `SingleTaskGP` へfidelity列を何も考えず追加することと、
+`SingleTaskMultiFidelityGP` でfidelity構造を明示することは同じではありません。
 
 ---
 
@@ -519,9 +574,9 @@ x=(x_1,x_2)
 
 Fidelityが連続値なら
 
-\[
+$$
 s\in[0,1]
-\]
+$$
 
 として扱えます。
 
@@ -564,7 +619,12 @@ s ∈ {0.2, 0.6, 1.0}
 
 だけが実行可能なら、その値に限定してacquisition optimizationを行います。
 
-少数の離散fidelityなら、前章で説明した`optimize_acqf_mixed`のようにfidelity値を固定した複数問題として最適化する方法が利用できます。
+少数の離散fidelityなら、前章で説明したmixed / discrete optimizationと同様に、
+fidelity値を固定した複数問題として候補探索する考え方が利用できます。
+
+ただし、**fidelity列をcategorical design featureへ変えるという意味ではありません**。
+モデル内部ではfidelityとして扱いながら、optimizer側で実行可能な離散値だけを
+候補にする、という責務分離です。
 
 つまり
 
@@ -625,15 +685,15 @@ Acquisition optimization
 
 ## 6.19 Projection to Target Fidelity
 
-MFBOでは、現在の候補 \((x,s)\) を評価した価値を考える一方で、最終的な意思決定はtarget fidelityで行います。
+MFBOでは、現在の候補 $`(x,s)`$ を評価した価値を考える一方で、最終的な意思決定はtarget fidelityで行います。
 
 そのため、入力をtarget fidelityへ射影する操作を考えることがあります。
 
 概念的には
 
-\[
+$$
 P(x,s)=(x,s_{target})
-\]
+$$
 
 です。
 
@@ -654,9 +714,9 @@ projection  = [temperature, pressure, 1.0]
 
 KG系の獲得関数では、現在の情報だけでtarget fidelity上の最適判断をしたときの価値を基準にします。
 
-\[
+$$
 \max_x \mu_n(x,s_{target})
-\]
+$$
 
 を求め、その後の仮想観測による改善量を評価します。
 
@@ -685,17 +745,17 @@ KG系の獲得関数では、現在の情報だけでtarget fidelity上の最適
 
 例えば
 
-\[
+$$
 c(s)=a+bs^p
-\]
+$$
 
 のようなモデルです。
 
 一方、実際の実験時間が設計条件にも依存するなら
 
-\[
+$$
 c(x,s)
-\]
+$$
 
 を学習することも考えられます。
 
@@ -740,11 +800,11 @@ almost no information
 
 MFBOでは「何回評価できるか」より「総コストをいくら使えるか」の方が自然な場合があります。
 
-\[
+$$
 \sum_{i=1}^{n} c(x_i,s_i)\le B
-\]
+$$
 
-ここで \(B\) は総budgetです。
+ここで $`B`$ は総budgetです。
 
 例えば
 
@@ -846,15 +906,19 @@ optimizer側
 
 の両方を考える必要があります。
 
-robotorchanではモデルの責務を分離しているため、今後このような拡張を考える際にも
+robotorchanには `MixedSingleTaskMultiFidelityGP` があり、categorical design featureと
+fidelity featureを分離して扱います。`cat_dims` はdesign-side categoryを指し、
+`iteration_fidelity` / `data_fidelities` と同じ列を指定することはできません。
+
+したがってMixed × Multi-Fidelityでも
 
 ```text
-surrogate
-acquisition
-optimizer
+surrogate  : category構造 + fidelity構造
+acquisition: targetへの価値 + 必要ならcost
+optimizer  : category値 + 実行可能fidelity値を守る
 ```
 
-を独立に設計することが重要です。
+という責務分離が重要です。
 
 ---
 
@@ -928,8 +992,8 @@ fit_gpytorch_mll(mll)
 
 この例では3列目がfidelityです。
 
-モデル学習後は、目的に応じてMulti-Fidelity acquisition、cost model、target fidelityへのprojection、acquisition
-optimizerを組み合わせます。
+モデル学習後は、目的に応じてMulti-Fidelity acquisition、cost model、
+target fidelityへのprojection、acquisition optimizerを組み合わせます。
 
 ---
 
@@ -966,6 +1030,18 @@ model.make_mll()
 
 ---
 
+### MFBOを使う前に確認する4つの質問
+
+実装を選ぶ前に、少なくとも次を確認します。
+
+1. **target fidelityは何か** — 最終的にどの評価方法の最適値が欲しいか。
+2. **low fidelityはtargetへ情報を与えるか** — 安いだけでは不十分です。
+3. **cost差は十分あるか** — MF化の複雑さに見合う節約余地があるか。
+4. **実行可能なfidelity値は何か** — continuousか、有限個のdiscrete値か。
+
+この4点が曖昧なまま `SingleTaskMultiFidelityGP` を選んでも、
+MFBOとしての意思決定問題は定義できません。
+
 ## 6.31 よくある誤解
 
 ### 「低fidelityをたくさん取れば必ず得」
@@ -990,7 +1066,7 @@ model.make_mll()
 
 ---
 
-## 6.32 まとめ
+## 6.32 この章で覚えておくこと
 
 Multi-Fidelity BOの中心は、
 
