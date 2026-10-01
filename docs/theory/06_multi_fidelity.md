@@ -12,7 +12,8 @@
 実験                     : 非常に高い / 最も信頼したい
 ```
 
-このような「評価の忠実度」を **fidelity** と呼び、複数のfidelityから得られる情報を統合して最適化する方法が **Multi-Fidelity Bayesian Optimization (MFBO)** です。
+このような「評価の忠実度」を **fidelity** と呼び、複数のfidelityから得られる情報を統合して最適化する方法が **Multi-Fidelity Bayesian
+Optimization (MFBO)** です。
 
 通常のBOが
 
@@ -489,7 +490,8 @@ x=(x_1,x_2)
 
 ここで \(s\) は単なる追加特徴量ではなく、**観測精度・情報源の構造を表す特殊な入力**です。
 
-したがって、通常の`SingleTaskGP`へfidelity列を何も考えず追加することと、`SingleTaskMultiFidelityGP`でfidelity構造を明示することは同じではありません。
+したがって、通常の`SingleTaskGP`へfidelity列を何も考えず追加することと、`SingleTaskMultiFidelityGP`でfidelity構造を明示することは同じで
+はありません。
 
 ---
 
@@ -906,7 +908,8 @@ fit_gpytorch_mll(mll)
 
 この例では3列目がfidelityです。
 
-モデル学習後は、目的に応じてMulti-Fidelity acquisition、cost model、target fidelityへのprojection、acquisition optimizerを組み合わせます。
+モデル学習後は、目的に応じてMulti-Fidelity acquisition、cost model、target fidelityへのprojection、acquisition
+optimizerを組み合わせます。
 
 ---
 
