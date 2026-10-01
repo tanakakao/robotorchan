@@ -15,7 +15,7 @@ criterionは「そのuncertaintyが指定thresholdの分類を変え得るか」
 
 ## 10.2 最適値ではなく境界を学ぶ
 
-Level-set estimation は、未知関数 \(f(x)\) に対して指定した threshold / target level $`t`$ の上下を分類したり、
+Level-set estimation は、未知関数 $`f(x)`$ に対して指定した threshold / target level $`t`$ の上下を分類したり、
 
 $$
 f(x)=t
@@ -206,7 +206,7 @@ $$
 f(x)=(f_1(x),f_2(x),f_3(x))
 $$
 
-に対して \(f_2(x)=t\) の boundary を学ぶなら、acquisition は output 2 の posterior marginal を利用します。
+に対して $`f_2(x)=t`$ の boundary を学ぶなら、acquisition は output 2 の posterior marginal を利用します。
 
 複数 output の joint boundary を学ぶ問題は、単一 output の Straddle を各 output に独立適用するだけでは一般に定義できません。
 
@@ -417,7 +417,7 @@ Constrained BO では boundary uncertainty が重要でも、それだけで obj
 
 binary classification の decision boundary learning も直感的には level-set estimation と似ています。
 
-latent function \(g(x)\) に対して
+latent function $`g(x)`$ に対して
 
 $$
 g(x)=0
