@@ -1,7 +1,10 @@
 """Tests for acquisition capability metadata and model compatibility."""
 
 import robotorchan.acquisition as acquisition
-from robotorchan.acquisition.capabilities import AcquisitionPurpose
+from robotorchan.acquisition.capabilities import (
+    AcquisitionPurpose,
+    PosteriorRequirement,
+)
 from robotorchan.acquisition.compatibility import (
     CompatibilityStatus,
     check_model_acquisition_compatibility,
@@ -99,3 +102,32 @@ def test_ngboost_rejects_joint_gaussian_information_gain() -> None:
     )
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "acquisition requires a joint Gaussian posterior" in result.reasons
+
+
+
+def test_registry_capabilities_are_internally_consistent() -> None:
+    for entry in ACQUISITION_REGISTRY.values():
+        capabilities = entry.capabilities
+
+        assert capabilities.max_q is None or capabilities.max_q >= 1
+        if capabilities.requires_single_output:
+            assert not capabilities.supports_multi_output
+        if capabilities.supports_multi_objective:
+            assert capabilities.supports_multi_output
+        if capabilities.one_shot:
+            assert capabilities.requires_fantasize
+        if capabilities.monte_carlo:
+            assert (
+                capabilities.posterior_requirement
+                is PosteriorRequirement.POSTERIOR_SAMPLES
+            )
+
+
+def test_static_compatibility_does_not_imply_runtime_validation() -> None:
+    result = check_model_acquisition_compatibility(
+        "RandomForestSurrogate",
+        "qLogExpectedImprovement",
+    )
+
+    assert result.status is CompatibilityStatus.COMPATIBLE
+    assert result.reasons == ()
