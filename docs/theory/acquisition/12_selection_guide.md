@@ -634,6 +634,36 @@ Theory に記載されていることは、robotorchan がすべて独自実装�
 
 BoTorch native で十分な標準 acquisition は再実装せず、robotorchan-specific acquisition が必要な領域だけを補完します。
 
+## 12.31.1 Registry を最終判定に使う
+
+理論上の分類だけで model / acquisition / optimizer の組合せを決めないことが重要です。
+
+現在の robotorchan は acquisition ごとに、少なくとも次の capability を区別します。
+
+- posterior requirement: marginal moments / joint Gaussian / posterior samples
+- multi-output support
+- ensemble-posterior support
+- output / black-box constraint composition
+- multi-objective support
+- fantasize requirement
+- multi-fidelity requirement
+- one-shot semantics
+
+さらに optimizer compatibility は別レイヤーです。
+たとえば現在の generic mixed optimizer check は one-shot acquisition を非互換とします。
+
+したがって実利用時の確認順序は、
+
+```text
+problem semantics
+  -> acquisition family
+  -> model/acquisition compatibility
+  -> acquisition/optimizer compatibility
+  -> runtime validation
+```
+
+と考えるのが安全です。
+
 ## 12.32 まとめ
 
 Acquisition selection の最も重要な原則は、
