@@ -1,6 +1,19 @@
 # 9. Active Learning Acquisition
 
-## 9.1 最適化ではなく学習を目的にする
+## 9.1 BOとALはdecision purposeが違う
+
+~~~text
+Bayesian Optimization
+    良いdecision / candidateを効率よく見つける
+
+Active Learning
+    未知関数やtarget predictionについて効率よく学ぶ
+~~~
+
+両者は同じposteriorやoptimizerを使えても、acquisition utilityの意味が違います。
+「explorationが強いBO」をそのままALと呼ぶのではなく、何を学習対象にするかを先に決めます。
+
+## 9.3 最適化ではなく学習を目的にする
 
 Bayesian Optimization（BO）と Active Learning（AL）は、どちらも surrogate posterior を使って次の観測点を選べますが、目的が異なります。
 
@@ -21,37 +34,37 @@ distribution 上の情報量などが観測価値になります。
 
 候補集合が有限 pool
 
-\[
+$
 \mathcal X_{\mathrm{pool}}
 =
 \{x^{(1)},\ldots,x^{(N)}\}
-\]
+$
 
 として与えられる場合、acquisition score を pool 上で評価して選択できます。
 
-一方、連続空間 \(\mathcal X\) では
+一方、連続空間 $`\mathcal X`$ では
 
-\[
+$
 x^*
 \in
 \arg\max_{x\in\mathcal X}\alpha_{AL}(x)
-\]
+$
 
 として acquisition optimization が必要です。
 
 理論上同じ acquisition criterion でも、finite-pool selection と continuous optimization では計算方法と重複候補処理が異なります。
 
-## 9.3 Posterior Variance Sampling
+## 9.4 Posterior Variance Sampling
 
 最も直接的な uncertainty sampling は posterior variance
 
-\[
+$
 \alpha_{\mathrm{Var}}(x)
 =
 \operatorname{Var}[f(x)\mid\mathcal D_n]
 =
 \sigma_n^2(x)
-\]
+$
 
 を最大化する方法です。
 
@@ -59,15 +72,15 @@ posterior variance が大きい点は、現在の surrogate がその latent fun
 
 この基準は objective value の大小を使わないため、最適値探索ではなく function learning に自然です。
 
-## 9.4 Posterior Standard Deviation
+## 9.5 Posterior Standard Deviation
 
 posterior standard deviation を使えば
 
-\[
+$
 \alpha_{\mathrm{Std}}(x)
 =
 \sigma_n(x)
-\]
+$
 
 です。
 
@@ -82,25 +95,25 @@ variance と standard deviation は q=1 の単純 ranking では単調変換な�
 
 場合には完全に同じ実装的意味になるとは限りません。
 
-## 9.5 Aleatoric noise と epistemic uncertainty
+## 9.6 Aleatoric noise と epistemic uncertainty
 
 AL で重要なのは、uncertainty の種類を区別することです。
 
 観測モデルを
 
-\[
+$
 y(x)=f(x)+\epsilon
-\]
+$
 
 とすると、predictive variance は概念的に
 
-\[
+$
 \operatorname{Var}[y(x)\mid\mathcal D_n]
 =
 \operatorname{Var}[f(x)\mid\mathcal D_n]
 +
 \operatorname{Var}[\epsilon]
-\]
+$
 
 と分解できます。
 
@@ -111,11 +124,11 @@ aleatoric uncertainty を追い続ける可能性があります。
 
 したがって「どの posterior variance を acquisition が使っているか」を確認する必要があります。
 
-## 9.6 Pointwise uncertainty の限界
+## 9.7 Pointwise uncertainty の限界
 
 PosteriorVariance はその候補自身の uncertainty を評価します。
 
-しかし候補 \(x\) を観測すると、GP の covariance structure により他の点 \(x'\) の uncertainty も変化します。
+しかし候補 $`x`$ を観測すると、GP の covariance structure により他の点 $`x'`$ の uncertainty も変化します。
 
 したがって、
 
@@ -131,26 +144,29 @@ PosteriorVariance はその候補自身の uncertainty を評価します。
 
 は別の criterion です。
 
-後者を扱うのが integrated variance reduction の考え方です。
+後者を扱うのがintegrated variance reductionの考え方です。
 
-## 9.7 Integrated Posterior Variance
+ここで重要なのはcandidate setとtarget / integration setを分けることです。観測可能な場所と、
+prediction qualityを改善したい場所は同一である必要がありません。
+
+## 9.8 Integrated Posterior Variance
 
 関心領域または target distribution \(p_T(x)) に対する integrated posterior variance を
 
-\[
+$
 V_n
 =
 \int_{\mathcal X}
 \sigma_n^2(x)
 p_T(x)\,dx
-\]
+$
 
 とします。
 
-候補 \(x_c\) を観測した後の posterior variance を \(\sigma_{n+1}^2\) とすれば、expected integrated variance
+候補 $`x_c`$ を観測した後の posterior variance を $`\sigma_{n+1}^2`$ とすれば、expected integrated variance
 reduction は
 
-\[
+$
 \Delta V(x_c)
 =
 V_n
@@ -161,13 +177,13 @@ V_n
 \sigma_{n+1}^2(x)
 p_T(x)\,dx
 \right]
-\]
+$
 
 です。
 
 Gaussian models の条件によっては posterior covariance update が観測値そのものに依存しないため、この expectation を簡略化できる場合があります。
 
-## 9.8 Target distribution の意味
+## 9.9 Target distribution の意味
 
 AL の目的は「探索空間全体を均等に学ぶ」とは限りません。
 
@@ -184,7 +200,7 @@ AL の目的は「探索空間全体を均等に学ぶ」とは限りません�
 
 これは BO の optimum-oriented utility とは異なる設計軸です。
 
-## 9.9 Negative Integrated Posterior Variance
+## 9.10 Negative Integrated Posterior Variance
 
 BoTorch の qNegativeIntegratedPosteriorVariance（qNIPV）は、candidate batch を観測した後の integrated
 posterior variance を基準に candidate set を評価する考え方です。
@@ -193,7 +209,7 @@ posterior variance を基準に candidate set を評価する考え方です。
 
 概念的には
 
-\[
+$
 \alpha_{\mathrm{NIPV}}(X)
 =
 -
@@ -205,7 +221,7 @@ f(x)
 \mathcal D_n, X
 ]
 p_T(x)\,dx
-\]
+$
 
 です。
 
@@ -213,7 +229,7 @@ p_T(x)\,dx
 
 qNIPV の重要な点は、単に q 個の高分散点を選ぶのではなく、candidate set が target region 全体の uncertainty をどのように減らすかを評価することです。
 
-## 9.10 Batch Active Learning
+## 9.11 Batch Active Learning
 
 q > 1 の AL でも redundancy が問題になります。
 
@@ -221,23 +237,23 @@ posterior variance の高い点を独立に上位 q 点選ぶと、互いに強�
 
 joint batch criterion は、
 
-\[
+$
 X=(x_1,\ldots,x_q)
-\]
+$
 
 をまとめて条件付けした後の uncertainty reduction を評価することで、候補間の情報重複を考慮できます。
 
 これは BO の q-acquisition と同じく、「pointwise score 上位 q 点」と「joint q acquisition」が異なることを示します。
 
-## 9.11 Predictive Information Gain
+## 9.12 Predictive Information Gain
 
 variance reduction は second-order uncertainty を基準にします。
 
-より一般には、候補観測 \(Y_x\) と target prediction \(Y_T\) の mutual information
+より一般には、候補観測 $`Y_x`$ と target prediction $`Y_T`$ の mutual information
 
-\[
+$
 I(Y_x;Y_T\mid\mathcal D_n)
-\]
+$
 
 を acquisition value として使えます。
 
@@ -254,49 +270,49 @@ target prediction について
 Gaussian setting では covariance structure と entropy の関係から、variance reduction と information gain
 は密接に関係しますが、概念としては同一ではありません。
 
-## 9.12 EPIG
+## 9.13 EPIG
 
 Expected Predictive Information Gain（EPIG）は、target inputs における predictions と candidate
 observation の information gain を target distribution について平均します。
 
-target input を \(x_T\sim p_T\) とすれば、概念的に
+target input を $`x_T\sim p_T`$ とすれば、概念的に
 
-\[
+$
 \operatorname{EPIG}(x)
 =
 \mathbb E_{x_T\sim p_T}
 \left[
 I(Y_x;Y_{x_T}\mid\mathcal D_n)
 \right]
-\]
+$
 
 です。
 
 finite target set
 
-\[
+$
 T=\{x_T^{(1)},\ldots,x_T^{(M)}\}
-\]
+$
 
-と weights \(w_j\) を使えば、
+と weights $`w_j`$ を使えば、
 
-\[
+$
 \operatorname{EPIG}(x)
 \approx
 \sum_{j=1}^{M}
 w_j
 I(Y_x;Y_{x_T^{(j)}}\mid\mathcal D_n)
-\]
+$
 
 として評価できます。
 
-## 9.13 EPIG と Entropy Sampling の違い
+## 9.14 EPIG と Entropy Sampling の違い
 
 candidate 自身の predictive entropy
 
-\[
+$
 H(Y_x\mid\mathcal D_n)
-\]
+$
 
 を最大化するだけでは、その候補が target predictions に有益かは分かりません。
 
@@ -314,7 +330,7 @@ EPIG
 
 という違いがあります。
 
-## 9.14 EPIG と MES の違い
+## 9.15 EPIG と MES の違い
 
 どちらも mutual information を使えますが、情報対象が異なります。
 
@@ -330,7 +346,7 @@ EPIG
 
 したがって information-theoretic acquisition を分類するときは、式に entropy が出てくるかではなく「何について情報を得るのか」を見る必要があります。
 
-## 9.15 Regression と Classification
+## 9.16 Regression と Classification
 
 AL は regression だけでなく classification でも重要です。
 
@@ -350,9 +366,9 @@ uncertainty、class probability uncertainty、label entropy を区別する必�
 本章は robotorchan の現在の regression acquisition theory を中心に扱い、classification-specific acquisition
 を同じ数式へ無理に統合しません。
 
-## 9.16 Distribution shift
+## 9.17 Distribution shift
 
-target distribution \(p_T\) が deployment distribution と一致しない場合、target-aware AL は誤った領域を重視する可能性があります。
+target distribution $`p_T`$ が deployment distribution と一致しない場合、target-aware AL は誤った領域を重視する可能性があります。
 
 また pool distribution と target distribution が異なる場合、
 
@@ -370,16 +386,16 @@ target distribution \(p_T\) が deployment distribution と一致しない場合
 
 これは covariate shift を伴う experimental design において重要です。
 
-## 9.17 Cost-aware Active Learning
+## 9.18 Cost-aware Active Learning
 
 観測点ごとに評価コストが異なる場合、information gain だけでなく cost も考慮できます。
 
 例えば概念的には
 
-\[
+$
 \frac{\text{expected information gain}}
 {\text{evaluation cost}}
-\]
+$
 
 のような utility が考えられます。
 
@@ -388,7 +404,7 @@ target distribution \(p_T\) が deployment distribution と一致しない場合
 Multi-Fidelity BO の value-of-information / cost の考え方とは関連しますが、AL では target prediction learning
 が最終目的です。
 
-## 9.18 Stopping criterion
+## 9.19 Stopping criterion
 
 AL では optimum discovery 以外の stopping rule が自然です。
 
@@ -404,7 +420,7 @@ AL では optimum discovery 以外の stopping rule が自然です。
 
 acquisition criterion と stopping criterion は別の責務ですが、同じ uncertainty objective に基づいて設計できる場合があります。
 
-## 9.19 BoTorch / robotorchan との対応
+## 9.20 BoTorch / robotorchan との対応
 
 BoTorch は qNegativeIntegratedPosteriorVariance など experimental-design 向け acquisition を提供しています。
 
@@ -418,7 +434,7 @@ robotorchan は regression AL 向けに PosteriorVariance、PosteriorStd、Expec
 - [EPIG guide](../../optimization/epig.md)
 - [Acquisition integration status](../../optimization/acquisition-integration.md)
 
-### 9.19.1 現在の active-learning registry
+### 9.20.1 現在の active-learning registry
 
 現在の robotorchan registry には
 
@@ -429,15 +445,32 @@ robotorchan は regression AL 向けに PosteriorVariance、PosteriorStd、Expec
 が明示的に登録されています。
 
 `PosteriorVariance` と `PosteriorStd` は marginal moments を要求し、
-ensemble posterior も capability 上サポートします。
+registry metadata上はensemble supportとされていますが、現在のruntime implementationは
+`_is_ensemble` modelと `EnsemblePosterior` を明示的にrejectします。したがって現時点の
+実行可能contractは **ensemble非対応** と解釈します。metadataと一部guideには不整合があり、
+runtime behaviorを優先します。
 
-一方 `ExpectedPredictiveInformationGain` は joint Gaussian posterior と single-output を要求し、
-ensemble posterior はサポートしません。
+一方 `ExpectedPredictiveInformationGain` はq=1、single-output、joint Gaussian posteriorを要求し、
+ensemble posteriorはサポートしません。target distributionは現在、unbatched finite `target_X`
+とoptional non-negative weightsで表します。
 
 したがって active learning acquisition を「posterior があれば交換可能」と扱わず、
 必要な posterior structure まで compatibility の一部として確認します。
 
-## 9.20 まとめ
+## 9.21 この章で覚えておくこと
+
+- BOとALはposteriorを共有できてもdecision purposeが違う
+- PosteriorVariance / Stdはcandidate自身のmarginal uncertaintyを見るq=1 criterion
+- candidate setとtarget / integration setを分ける
+- qNIPVはpointwise variance上位q点ではなくtarget-region uncertainty reductionを評価する
+- predictive varianceが高いこととreducible epistemic uncertaintyが大きいことは同義ではない
+- EPIGはcandidate自身のentropyではなくtarget predictionsとのinformation gainを見る
+- MESとEPIGはmutual informationを使ってもinformation targetが違う
+- current EPIGはq=1 single-output joint-Gaussian finite-target-set contract
+- current PosteriorVariance / Std runtimeはensemble posteriorをrejectする
+- classification-specific ALはregression uncertainty acquisitionへ無理に統合しない
+
+## 9.22 まとめ
 
 Active Learning acquisition は「どこが最適か」ではなく「何を効率よく学びたいか」から設計します。
 
