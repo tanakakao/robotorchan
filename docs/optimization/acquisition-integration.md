@@ -48,7 +48,8 @@ Static compatibility enforces posterior sampling, fantasy, multi-fidelity, ensem
 structured-output, and output-arity requirements.
 A `COMPATIBLE` result means only that no contradiction was found in registered static metadata.
 It does not prove constructor compatibility, sampler selection, objective semantics, optimizer
-compatibility, or an executable end-to-end workflow. Those remain integration/runtime concerns. In particular, an acquisition that does not
+compatibility, or an executable end-to-end workflow. Those remain integration/runtime concerns.
+In particular, an acquisition that does not
 support multi-output posteriors must reject a model whose public contract is multi-output-capable;
 checking only `TaskType.MULTITASK` is insufficient because `ModelListGP` is multi-output without
 being a multitask model.
@@ -57,11 +58,16 @@ The current metadata remains deliberately conservative for qKG and qMFKG: they a
 single-output acquisition workflows. Scalarized or custom-objective extensions should be added
 only with executable integration tests and corresponding metadata changes.
 
-`supports_constraints` in the acquisition registry means **output / black-box constrained BO** has a supported BoTorch composition path. It does not describe restrictions on candidate coordinates and does not mean robotorchan constructs constraint callables or objectives automatically. Candidate/input-space equality and inequality constraints belong to acquisition optimization and use `robotorchan.optim.CandidateConstraints` on compatible search strategies.
+`supports_constraints` in the acquisition registry means **output / black-box constrained BO** has
+a supported BoTorch composition path. It does not describe restrictions on candidate coordinates
+and does not mean robotorchan constructs constraint callables or objectives automatically.
+Candidate/input-space equality and inequality constraints belong to acquisition optimization and
+use `robotorchan.optim.CandidateConstraints` on compatible search strategies.
 Likewise, `supports_ensemble` means a compatible sampler/composition can be supplied, not that
 every acquisition uses an empirical-ensemble sampler by default. Empirical non-GP ensemble
 posteriors require `IndexSampler`; Gaussian posteriors, including MAP-SAAS model ensembles that
-still expose a Gaussian posterior, use `SobolQMCNormalSampler`. The non-GP acquisition validator enforces this distinction for explicitly supplied samplers, while
+still expose a Gaussian posterior, use `SobolQMCNormalSampler`. The non-GP acquisition validator
+enforces this distinction for explicitly supplied samplers, while
 preserving BoTorch's lazy `IndexSampler` initialization when the acquisition sampler is `None`.
 
 ## Final integration rule
@@ -114,13 +120,13 @@ acquisition package. Use the following ownership categories when reading the doc
 | Information-theoretic BO | BoTorch native | MES / GIBBON integration path |
 | Lookahead | BoTorch native | qKG / qMultiStepLookahead integration path |
 | Multi-objective BO | BoTorch native | qLogEHVI / qLogNEHVI / qLogNParEGO integration path |
-| Constraints | BoTorch composition | theory coverage does not imply a robotorchan acquisition class |
-| Regression uncertainty AL | robotorchan + BoTorch | `PosteriorVariance`, `PosteriorStd`; native qNIPV for batch AL |
+| Constraints | BoTorch composition | theory coverage; no local acquisition class implied |
+| Regression uncertainty AL | robotorchan + BoTorch | local variance/std; native qNIPV for batch AL |
 | Predictive AL | robotorchan | `ExpectedPredictiveInformationGain` |
 | Level-set learning | robotorchan | `Straddle`, `RandomizedStraddle`, `BoundaryVariance` |
 | Multi-fidelity / cost-aware BO | BoTorch native | MF-KG and cost-aware integration path |
 | Posterior sampling | robotorchan utility over BoTorch | `select_thompson_candidates` |
-| Non-GP acquisition compatibility | robotorchan contract helper | `make_non_gp_acquisition`, `validate_non_gp_acquisition` |
+| Non-GP compatibility | robotorchan helper | `make_non_gp_acquisition`, `validate_non_gp_acquisition` |
 
 The local public API is therefore intentionally smaller than the theory catalog. A theory chapter
 is not a request to duplicate a BoTorch acquisition under a robotorchan alias.
@@ -158,7 +164,12 @@ Robotorchan keeps two different notions of constraints separate:
 
 | Constraint kind | Example | Runtime layer | Contract |
 | --- | --- | --- | --- |
-| Output / black-box | predicted process response `g(x) <= 0` | acquisition/objective composition | acquisition `supports_constraints` |
-| Candidate / input-space | composition sum, ordering, geometry, known nonlinear design rule | acquisition optimizer | `CandidateConstraints` |
+| Output / black-box | predicted `g(x) <= 0` | acquisition/objective | `supports_constraints` |
+| Candidate / input-space | known design rule | acquisition optimizer | `CandidateConstraints` |
 
-The acquisition registry must therefore never be used to infer candidate-space feasibility support. Conversely, a search strategy accepting `CandidateConstraints` says nothing about whether the selected acquisition models uncertain black-box feasibility. `CandidateConstraints` covers linear inequality/equality constraints and BoTorch-native nonlinear inequalities. Nonlinear feasibility uses `callable(X) >= 0`; this optimizer convention is intentionally independent from output-constraint sign conventions.
+The acquisition registry must therefore never be used to infer candidate-space feasibility
+support. Conversely, a search strategy accepting `CandidateConstraints` says nothing about
+whether the selected acquisition models uncertain black-box feasibility. `CandidateConstraints`
+covers linear inequality/equality constraints and BoTorch-native nonlinear inequalities.
+Nonlinear feasibility uses `callable(X) >= 0`; this optimizer convention is intentionally
+independent from output-constraint sign conventions.
