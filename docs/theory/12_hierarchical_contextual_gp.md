@@ -44,23 +44,38 @@ Contextual
 
 ---
 
+### 最初に5つの概念を分ける
+
+この章では似た見た目の整数列やカテゴリ列が登場しますが、**意味は同じではありません**。
+
+| 概念 | 役割 |
+|---|---|
+| categorical design variable | 設計変数そのものが離散カテゴリ |
+| task | 関連する複数の関数・データ源を識別 |
+| context | 入力blockやtaskに付随する既知構造を表現 |
+| hierarchical parent | どの子変数がactiveかを決めるrouting構造 |
+| conditional child | 特定branchでのみ意味を持つ設計変数 |
+
+tensor上でどれも数値として保存できても、kernelとcandidate generationでの意味は異なります。
+特に**structural columnを普通のcategorical design variableとして二重に扱わない**ことが重要です。
+
 ## 12.2 通常のGPが暗黙に仮定していること
 
 通常のGPでは、入力
 
-\[
+$$
 x=(x_1,\dots,x_d)
-\]
+$$
 
 のすべての次元が、すべての候補で同じ意味を持つと考えます。
 
 例えば RBF / Matérn kernel なら、概念的に
 
-\[
+$$
 k(x,x')
 =
 k(\|x-x'\|)
-\]
+$$
 
 のように、同じ入力次元同士の距離を計算します。
 
@@ -104,7 +119,9 @@ process_type
 
 です。
 
-この構造を無視すると、方式0同士を比較するときにも pressure の差がkernel距離へ入ってしまいます。
+この構造を無視すると、方式0同士を比較するときにもpressureのplaceholder値が
+kernel距離へ入る可能性があります。ここで問題なのは欠損値処理ではなく、
+**そのbranchでは変数自体に意味がない**ことです。
 
 ---
 
@@ -133,7 +150,11 @@ Hierarchical Conditional Kernel は、比較する2点で**共通して有効な
 
 なら、branch固有変数 temperature / pressure をそのまま比較せず、共有された階層部分に基づいて共分散を作ります。
 
-BoTorch の `HierarchicalConditionalKernel` は、この種の階層search space用kernelとして実装されています。
+BoTorchの `HierarchicalConditionalKernel` は、この種のactive/inactive structureを
+covarianceへ反映するためのkernelです。
+
+ただしkernelが理解するのは**候補間のcovariance**です。どの候補が実行可能かを
+列挙・生成する責務までkernelが担うわけではありません。
 
 ---
 
@@ -435,6 +456,26 @@ task feature index
 
 ---
 
+### Mixed × Hierarchicalでのstructural dimension
+
+robotorchanには `MixedHierarchicalConditionalKernelGP` と
+`MixedHierarchicalConditionalKernelMultiTaskGP` もあります。
+
+ここでは `cat_dims` とhierarchyのparent dimensionを明確に分離します。
+
+~~~text
+hierarchical parent
+  → branchを決めるstructural dimension
+
+cat_dims
+  → branch内で通常のcategorical covarianceを使うdesign dimension
+~~~
+
+現行実装ではhierarchical parentを `cat_dims` に含めるとerrorにします。
+MultiTask版では `task_feature` もstructural columnなので `cat_dims` へ含められません。
+
+これは「整数列だから全部categorical」という扱いを防ぐためのpublic contractです。
+
 ## 12.15 どんな場面でHierarchical GPを使うか
 
 典型例は、
@@ -671,6 +712,17 @@ posterior = model.posterior(test_X_with_task)
 
 ---
 
+### Mixed Heterogeneous MTGP
+
+現行robotorchanには `MixedHeterogeneousMTGP` もあります。
+
+このモデルの `cat_dims` は `full_feature_dim` で定義される**global feature numbering**を
+使います。各taskの `feature_indices` に現れるsubsetのうち、categoricalなfeatureには
+native categorical / mixed covarianceを適用します。
+
+task identityはBoTorch側で内部的に追加されるstructural featureであり、
+`cat_dims` の対象ではありません。
+
 ## 12.24 HierarchicalとHeterogeneousの違い
 
 この2つは混同しやすいです。
@@ -712,12 +764,12 @@ Heterogeneous MTGP
 
 があり、最終scoreが
 
-\[
+$$
 y
 =
 f_A(a_0,a_1)
 +f_B(b_0,b_1)
-\]
+$$
 
 のような加法構造を持つと考えます。
 
@@ -771,21 +823,21 @@ context_B → [b0, b1]
 
 概念的には
 
-\[
+$$
 f(x)
 =
 \sum_{c=1}^{C} f_c(x_c)
-\]
+$$
 
 です。
 
 kernelも対応して
 
-\[
+$$
 k(x,x')
 =
 \sum_{c=1}^{C} k_c(x_c,x_c')
-\]
+$$
 
 のような構造を持ちます。
 
@@ -988,9 +1040,9 @@ LCEAGP
 
 です。
 
-context数が少なく、それぞれ独立と考えられるならSACGPで十分な場合があります。
-
-context数が多く、類似context間でtransferしたいならLCEAGPが有力です。
+SACGPとLCEAGPの違いは、単純にcontext数の大小で決まるわけではありません。
+LCEAGPはcontext feature / embeddingを通じた関係構造をモデルへ入れたい場合に検討します。
+どちらもdecompositionとaggregated rewardに関する仮定が問題に合うかを先に確認します。
 
 ---
 
@@ -1137,6 +1189,24 @@ wrapper は通常のrobotorchan exact-GP規約に従います。
 
 ---
 
+### Mixed LCEMGP
+
+`MixedLCEMGP` では、long-format `train_X` の**非task design features**に
+native mixed covarianceを導入できます。
+
+ここでは2種類の「category」を区別します。
+
+~~~text
+cat_dims
+  → design Xのcategorical columns
+
+context_cat_feature
+  → context/taskを説明するmetadata
+~~~
+
+さらに `task_feature` はstructural columnです。現行実装ではtask列を
+`cat_dims` に含めることを禁止しています。
+
 ## 12.42 Contextual GPとMultiTaskGPの違い
 
 MultiTaskGPでは、task correlation matrixそのものを学ぶことが中心です。
@@ -1221,7 +1291,9 @@ pressureだけを自由に最適化する
 
 ような無意味な候補を避ける必要があります。
 
-modelがhierarchyを理解していても、candidate generation側の制約設計は別問題です。
+modelがhierarchyを理解していても、candidate generation側のsearch-space設計は別問題です。
+
+ここは **surrogate validity** と **candidate validity** の分離として考えると明確です。
 
 ---
 
@@ -1260,7 +1332,9 @@ optimize_acqf_mixed
 
 ただし単なるカテゴリ列挙だけでは、子featureのactive/inactive semanticsまでは自動で解決しません。
 
-fixed feature combinationをbranch単位で構成する設計が自然です。
+fixed feature combinationをbranch単位で構成する方法は一つの実装戦略です。
+ただしhierarchyの深さやconstraintとの組合せによって適切なoptimizer設計は変わるため、
+`optimize_acqf_mixed`だけで一般のhierarchical spaceが自動解決されるとは考えません。
 
 ---
 
@@ -1284,9 +1358,9 @@ context = 工程
 
 contextが外生変数なら、acquisitionは
 
-\[
+$$
 \alpha(x\mid c)
-\]
+$$
 
 として現在contextを条件に最適化する考え方になります。
 
@@ -1425,11 +1499,11 @@ Hierarchical modelでは次を確認します。
 
 SACGP / LCEAGPで
 
-\[
+$$
 f(x_A,x_B)
 \neq
 f_A(x_A)+f_B(x_B)
-\]
+$$
 
 となる強いinteractionがある場合、加法モデルでは表現しにくくなります。
 
@@ -1503,19 +1577,19 @@ context数に対してデータが少ない場合、embeddingを自由に学習�
 
 ---
 
-## 12.60 実務比較表
+## 12.60 問題構造の比較表
 
-| 問題 | 第一候補 |
+| 問題構造 | 対応する考え方 |
 |---|---|
-| 装置方式で有効変数が変わる | `HierarchicalConditionalKernelGP` |
-| 階層空間 + 複数関連task | `HierarchicalConditionalKernelMultiTaskGP` |
-| taskごとに入力featureが異なる | `HeterogeneousMTGP` |
-| context別の入力block + 集約reward | `SACGP` |
-| context間similarityも学習したい | `LCEAGP` |
-| context別rewardを個別に観測できる | `LCEMGP` |
-| 単純なcontinuous + categorical | `MixedSingleTaskGP` |
-| 同じfeature spaceのmulti-task | `MultiTaskGP` |
-| 独立output | `ModelListGP` |
+| parent choiceでactive変数が変わる | hierarchical conditional kernel |
+| hierarchy + related tasks | hierarchical multi-task |
+| taskごとに観測feature setが異なる | heterogeneous multi-task |
+| context block + aggregated reward | structural additive contextual GP |
+| context relationもembeddingで表現 | latent-context additive GP |
+| context別outputを個別観測 | latent-context multi-output GP |
+| design側にもcategorical列がある | 対応するMixed variantを検討 |
+| 同一feature spaceのrelated tasks | standard multi-task GP |
+| cross-output sharingが不要 | independent / ModelList構成 |
 
 ---
 
@@ -1677,7 +1751,7 @@ contextual
 
 ---
 
-## 12.66 まとめ
+## 12.66 この章で覚えておくこと
 
 本章では、入力・task・contextに構造があるGPを整理しました。
 
