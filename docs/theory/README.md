@@ -280,12 +280,17 @@ surrogate model
 
 | Layer | 理論上の役割 | 実装ガイド |
 | --- | --- | --- |
-| Posterior sampling | posterior distribution から joint sample を生成 | [Posterior sampling](../optimization/posterior-sampling.md) |
-| Objective / PosteriorTransform | output を acquisition utility の空間へ写像 | [Objective / PosteriorTransform audit](../development/objective-posterior-transform-audit.md) |
-| Initialization | acquisition optimization の初期条件を生成 | [Acquisition initialization](../optimization/initialization.md) |
-| Batch / Async | joint batch、pending point、fantasy model を管理 | [Batch / Async / Fantasization](../optimization/batch-async-fantasization.md) |
-| Candidate optimization | acquisition を入力空間上で最大化 | [Optimization guide](../optimization/README.md) |
-| Trust region | 局所探索領域を状態に応じて更新 | [TuRBO](../optimization/turbo.md) |
+| Layer | 主な実装ガイド |
+| --- | --- |
+| Posterior sampling | [Posterior sampling](../optimization/posterior-sampling.md) |
+| Objective / PosteriorTransform | [Objective / PosteriorTransform audit](../development/objective-posterior-transform-audit.md) |
+| Initialization | [Acquisition initialization](../optimization/initialization.md) |
+| Batch / Async | [Batch / Async / Fantasization](../optimization/batch-async-fantasization.md) |
+| Candidate optimization | [Optimization guide](../optimization/README.md) |
+| Trust region | [TuRBO](../optimization/turbo.md) |
+
+各ガイドはそれぞれ、joint sampling、utility-space mapping、initial conditions、
+pending / fantasy handling、candidate maximization、trust-region update を扱います。
 
 ### Posterior と sampler は別レイヤー
 
