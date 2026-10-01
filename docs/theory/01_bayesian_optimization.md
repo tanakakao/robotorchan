@@ -306,6 +306,34 @@ BOを理解するためには、surrogate model がどのように予測平均�
 
 → [2. Gaussian Process](02_gaussian_process.md)
 
+## 1.16 BO loop を構成する実装レイヤー
+
+理論上は「surrogate を更新し、acquisition を最大化する」と短く書けますが、
+実装では次の責務を分離する必要があります。
+
+```text
+data
+ -> surrogate / posterior
+ -> posterior sampling or transform
+ -> objective / outcome constraint
+ -> acquisition
+ -> initialization
+ -> acquisition optimization
+ -> evaluation
+ -> data update
+```
+
+非同期評価では `X_pending`、lookahead では fantasy model、
+TuRBO では trust-region state が追加されます。
+これらはすべて「acquisition function」の内部状態ではありません。
+
+この責務分離により、同じ acquisition を continuous、Mixed、constraint-aware、
+trust-region search など異なる candidate optimizer と組み合わせる際に、
+どのレイヤーが feasibility や search geometry を所有するかを明確にできます。
+
+横断的な実装契約は [理論ガイドの BO pipeline](README.md#bo-pipeline-の横断理論) と
+[Optimization guides](../optimization/README.md) を参照してください。
+
 ## 参考文献
 
 1. Mockus, J. (1989). *Bayesian Approach to Global Optimization*.
