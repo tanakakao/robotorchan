@@ -19,7 +19,7 @@ robotorchan では BoTorch の
 PairwiseGP
 ```
 
-を thin wrapper として提供しています。
+を BoTorch-compatible wrapper として提供しています。
 
 本章では、
 
@@ -576,7 +576,7 @@ model = PairwiseGP(
 
 ## 10.21 constructor
 
-robotorchan wrapper は BoTorch 0.18.1 と同じ主要引数を公開します。
+robotorchan wrapper は現在の upstream contract に対応する主要引数を公開します。
 
 ```python
 PairwiseGP(
