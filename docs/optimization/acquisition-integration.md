@@ -45,7 +45,10 @@ but absent from the registry remain BoTorch-owned and are not implicitly recomme
 capability selector.
 
 Static compatibility enforces posterior sampling, fantasy, multi-fidelity, ensemble,
-structured-output, and output-arity requirements. In particular, an acquisition that does not
+structured-output, and output-arity requirements.
+A `COMPATIBLE` result means only that no contradiction was found in registered static metadata.
+It does not prove constructor compatibility, sampler selection, objective semantics, optimizer
+compatibility, or an executable end-to-end workflow. Those remain integration/runtime concerns. In particular, an acquisition that does not
 support multi-output posteriors must reject a model whose public contract is multi-output-capable;
 checking only `TaskType.MULTITASK` is insufficient because `ModelListGP` is multi-output without
 being a multitask model.
