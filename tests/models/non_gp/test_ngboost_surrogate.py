@@ -58,18 +58,19 @@ def test_ngboost_surrogate_fit_posterior_and_mc_acquisition() -> None:
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
 
-    from robotorchan.optim.backends import optimize_acqf_botorch
+    from robotorchan.optim import TreeEnsembleSearchStrategy
 
-    candidate, optimized_value = optimize_acqf_botorch(
-        acquisition,
+    strategy = TreeEnsembleSearchStrategy(
         torch.tensor([[0.0], [1.0]], dtype=torch.double),
-        q=1,
-        num_restarts=2,
-        raw_samples=16,
+        num_samples=64,
+        seed=17,
     )
-    assert candidate.shape == torch.Size([1, 1])
-    assert torch.isfinite(candidate).all()
-    assert torch.isfinite(optimized_value).all()
+    result = strategy.optimize(acquisition, q=1)
+
+    assert result.candidates.shape == torch.Size([1, 1])
+    assert result.acquisition_value is not None
+    assert torch.isfinite(result.candidates).all()
+    assert torch.isfinite(result.acquisition_value)
 
 
 @pytest.mark.skipif(not NGBOOST_AVAILABLE, reason="optional ngboost dependency is not installed")
