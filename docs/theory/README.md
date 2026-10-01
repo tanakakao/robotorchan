@@ -1,14 +1,20 @@
 # robotorchan 理論ガイド
 
-このディレクトリでは、`robotorchan` を使う上で必要となるベイズ最適化（Bayesian Optimization; BO）と Gaussian Process（GP）の理論を、実装と対応付けながら説明します。
+このディレクトリでは、`robotorchan` を使う上で必要となるベイズ最適化（Bayesian Optimization; BO）と
+Gaussian Process（GP）の理論を、実装と対応付けながら説明します。
 
-`docs/models.md` が「どのモデルを選ぶか」を中心にした実務ガイドであるのに対し、本ディレクトリは「なぜそのモデルが使えるのか」「数式上は何をしているのか」を理解するための理論ガイドです。
+`docs/models.md` が「どのモデルを選ぶか」を中心にした実務ガイドであるのに対し、
+本ディレクトリは「なぜそのモデルが使えるのか」「数式上は何をしているのか」を理解するための
+理論ガイドです。
 
 ## ドキュメント内での位置付け
 
-実務上の入口は [モデル概要・使い所ガイド](../models.md) です。そこで候補モデルを絞り、この理論ガイドで統計的仮定や数式を確認し、最後に [Notebook一覧](../../examples/README.md) から対応するコードを実行する流れを推奨します。
+実務上の入口は [モデル概要・使い所ガイド](../models.md) です。そこで候補モデルを絞り、
+この理論ガイドで統計的仮定や数式を確認します。最後に
+[Notebook一覧](../../examples/README.md) から対応するコードを実行する流れを推奨します。
 
-[プロジェクトREADME](../../README.md) → [モデル選択](../models.md) → **理論確認（現在地）** → [実行例](../../examples/README.md)
+[プロジェクトREADME](../../README.md) → [モデル選択](../models.md)
+→ **理論確認（現在地）** → [実行例](../../examples/README.md)
 
 ## 推奨する読み方
 
@@ -65,20 +71,20 @@
 | 大規模データ / Sparse GP | `SingleTaskVariationalGP` |
 | Preference Learning | `PairwiseGP` |
 | 高次元 BO | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` |
-| MAP-SAAS / Additive GP | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`, `OrthogonalAdditiveGP` |
-| Robust / heavy-tailed observation | `RobustRelevancePursuitSingleTaskGP`, `StudentTSingleTaskGP`, `ContaminatedSingleTaskGP` |
-| Heteroskedastic / replicate noise | `HeteroskedasticSingleTaskGP`, `JointHeteroskedasticSingleTaskGP`, `ReplicateNoiseSingleTaskGP` |
+| MAP-SAAS / Additive GP | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`,<br>`OrthogonalAdditiveGP` |
+| Robust / heavy-tailed observation | `RobustRelevancePursuitSingleTaskGP`, `StudentTSingleTaskGP`,<br>`ContaminatedSingleTaskGP` |
+| Heteroskedastic / replicate noise | `HeteroskedasticSingleTaskGP`, `JointHeteroskedasticSingleTaskGP`,<br>`ReplicateNoiseSingleTaskGP` |
 | Input uncertainty | `UncertainInputSingleTaskGP`, `UncertainCategoricalSingleTaskGP` |
 | Nonstationarity | `NonstationarySingleTaskGP` |
 | Input/output reduction | `PCAGP`, `PLSGP`, `OutputPCAGP`, `OutputPLSGP` |
 | Neural reduction | `AutoEncoderGP`, `VAEGP`, `JointEncoderGP`, `JointVAEGP` |
 | High-dimensional search | REMBO, HeSBO, ALEBO, TuRBO, BAxUS |
 | Structured Output | `HigherOrderGP`, `LatentKroneckerGP` |
-| Hierarchical search space | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` |
+| Hierarchical search space | `HierarchicalConditionalKernelGP`,<br>`HierarchicalConditionalKernelMultiTaskGP` |
 | Heterogeneous Multi-task | `HeterogeneousMTGP` |
 | Contextual GP | `SACGP`, `LCEAGP`, `LCEMGP` |
 | Expressive GP | `JointEncoderGP`, `SingleTaskDeepGP`, `InfiniteWidthBNNGP`, `SpectralMixtureGP` |
-| Non-GP empirical ensemble | `RandomForestSurrogate`, `ExtraTreesSurrogate`, `GradientBoostingSurrogate`, `HistGradientBoostingSurrogate` |
+| Non-GP empirical ensemble | `RandomForestSurrogate`, `ExtraTreesSurrogate`,<br>`GradientBoostingSurrogate`, `HistGradientBoostingSurrogate` |
 | Distributional non-GP | `NGBoostSurrogate` |
 
 ## 関連ドキュメント
@@ -90,11 +96,17 @@
 
 ## Model guide との責務分離
 
-`docs/models/` は「どのモデルを、どの条件で使うか」を扱い、public class、入力形式、学習契約、制約、Mixed / MultiTask 対応、Notebook への導線を記載します。
+`docs/models/` は「どのモデルを、どの条件で使うか」を扱い、public class、入力形式、学習契約、
+制約、Mixed / MultiTask 対応、Notebook への導線を記載します。
 
-`docs/theory/` は「なぜそのモデルが成立するか」を扱い、確率モデル、kernel / likelihood、構造仮定、推論、獲得関数との関係を説明します。class ごとの API 一覧や同じ使用手順を theory 側へ重複させません。
+`docs/theory/` は「なぜそのモデルが成立するか」を扱い、確率モデル、kernel / likelihood、
+構造仮定、推論、獲得関数との関係を説明します。class ごとの API 一覧や同じ使用手順を
+ theory 側へ重複させません。
 
-新しいモデルが既存の統計的仮定を共有する場合は既存 theory chapter へ接続し、新しい class が増えたという理由だけで theory chapter を複製しません。一方、新しい likelihood、kernel、inference、search geometry など独立した理論仮定を導入する場合は、既存章への追記または新章を追加します。
+新しいモデルが既存の統計的仮定を共有する場合は既存 theory chapter へ接続し、
+新しい class が増えたという理由だけで theory chapter を複製しません。
+一方、新しい likelihood、kernel、inference、search geometry など独立した理論仮定を
+導入する場合は、既存章への追記または新章を追加します。
 
 
 ## 理論体系の全体像
