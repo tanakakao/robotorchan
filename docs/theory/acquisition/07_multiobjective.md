@@ -10,7 +10,8 @@ f(x)=\left(f_1(x),\ldots,f_m(x)\right)
 
 を同時に最大化する問題では、一般にすべての目的で唯一最良となる点は存在しません。
 
-目的間に trade-off があるため、multi-objective Bayesian Optimization（MOBO）では単一の incumbent ではなく、Pareto dominance と Pareto front を扱います。
+目的間に trade-off があるため、multi-objective Bayesian Optimization（MOBO）では単一の incumbent ではなく、Pareto
+dominance と Pareto front を扱います。
 
 以下では各目的を最大化する convention を使います。最小化目的は符号反転などにより同じ convention へ変換できます。
 
@@ -34,7 +35,8 @@ MOBO の目的は、通常この front を少ない評価回数で学習・改�
 
 Pareto front の品質を測る代表的な指標が hypervolume（HV）です。
 
-reference point \(r\) を Pareto front より悪い点として設定し、non-dominated objective vectors と \(r\) の間で支配される領域の体積を
+reference point \(r\) を Pareto front より悪い点として設定し、non-dominated objective vectors と \(r\)
+の間で支配される領域の体積を
 
 \[
 HV(\mathcal P;r)
@@ -120,13 +122,16 @@ HV(\mathcal P_n;r)
 ]
 \]
 
-候補間 posterior correlation と、候補同士が作る新しい non-dominated region が相互作用するため、pointwise EHVI の上位 q 点を選ぶこととは異なります。
+候補間 posterior correlation と、候補同士が作る新しい non-dominated region が相互作用するため、pointwise EHVI の上位 q
+点を選ぶこととは異なります。
 
 ## 7.8 Noisy Expected Hypervolume Improvement
 
-observation noise がある場合、観測された objective vectors から作った Pareto front が latent Pareto front と一致するとは限りません。
+observation noise がある場合、観測された objective vectors から作った Pareto front が latent Pareto front
+と一致するとは限りません。
 
-Noisy Expected Hypervolume Improvement（NEHVI）は baseline points の latent objective values に関する uncertainty も考慮し、noise-aware な hypervolume improvement を評価します。
+Noisy Expected Hypervolume Improvement（NEHVI）は baseline points の latent objective values に関する
+uncertainty も考慮し、noise-aware な hypervolume improvement を評価します。
 
 これは単目的の NEI と同じく、
 
@@ -148,7 +153,8 @@ batch / noisy setting では qNEHVI 系が重要になります。
 
 hypervolume improvement が非常に小さい領域では、EI 系と同様に acquisition value や gradient の数値安定性が問題になります。
 
-LogEHVI / LogNEHVI 系は、hypervolume improvement の意思決定原理を変えるものではなく、acquisition optimization の数値安定性を改善する formulation として理解します。
+LogEHVI / LogNEHVI 系は、hypervolume improvement の意思決定原理を変えるものではなく、acquisition optimization
+の数値安定性を改善する formulation として理解します。
 
 ## 7.10 Scalarization
 
@@ -182,7 +188,8 @@ ParEGO / NParEGO
 
 ## 7.12 Hypervolume Knowledge Gradient
 
-Hypervolume Knowledge Gradient（HVKG）は、現在の candidate が直接作る hypervolume improvement ではなく、観測によって将来の Pareto decision quality がどれだけ改善するかを value-of-information として扱います。
+Hypervolume Knowledge Gradient（HVKG）は、現在の candidate が直接作る hypervolume improvement ではなく、観測によって将来の
+Pareto decision quality がどれだけ改善するかを value-of-information として扱います。
 
 したがって HVKG は、
 
@@ -200,15 +207,18 @@ EHVI と HVKG の違いは、単目的の EI と KG の違いに対応して理�
 
 一方、ModelList のように目的ごとに独立 model を使う構成もあります。
 
-Multi-objective acquisition が multi-output posterior を受け取れることと、surrogate が目的間 correlation をモデル化していることは別の話です。
+Multi-objective acquisition が multi-output posterior を受け取れることと、surrogate が目的間 correlation
+をモデル化していることは別の話です。
 
 ## 7.14 Constraints を伴う MOBO
 
 実問題では Pareto optimality だけでなく feasibility も必要です。
 
-制約付き MOBO では、infeasible な objective improvement をそのまま hypervolume gain として扱わないよう constraint semantics を組み込みます。
+制約付き MOBO では、infeasible な objective improvement をそのまま hypervolume gain として扱わないよう constraint
+semantics を組み込みます。
 
-constraint modeling と objective-space hypervolume は異なる責務です。詳細は [Constraints](08_constraints.md) で扱います。
+constraint modeling と objective-space hypervolume は異なる責務です。詳細は [Constraints](08_constraints.md)
+で扱います。
 
 ## 7.15 目的数と計算量
 
@@ -231,7 +241,24 @@ BoTorch は qLogEHVI、qLogNEHVI、qLogNParEGO、HVKG などの multi-objective 
 
 robotorchan は標準 MOBO acquisition をローカルに再実装せず、BoTorch native path を基本とします。
 
-実際の利用方法は [Multi-objective optimization guide](../../optimization/multiobjective.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
+実際の利用方法は [Multi-objective optimization guide](../../optimization/multiobjective.md)、現在の統合状況は
+[Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
+
+### 7.16.1 現在の multi-objective registry
+
+現在の registry では、BoTorch-native acquisition として
+
+- `qLogExpectedHypervolumeImprovement`
+- `qLogNoisyExpectedHypervolumeImprovement`
+- `qLogNParEGO`
+
+を明示的に登録しています。
+
+いずれも posterior samples を要求し、multi-objective capability を持ちます。
+また output / black-box constraint composition をサポートするものとして metadata 化されています。
+
+ここでいう constraint support は candidate/input-space constraint を意味しません。
+後者は acquisition optimizer の feasibility contract です。
 
 ## 7.17 まとめ
 
@@ -250,11 +277,15 @@ HVKG
 
 を区別することが重要です。
 
-reference point は hypervolume criterion の一部であり、noise がある場合は observed front と latent front の違いも考慮する必要があります。
+reference point は hypervolume criterion の一部であり、noise がある場合は observed front と latent front
+の違いも考慮する必要があります。
 
 
 ## References
 
-- Daulton, S., Balandat, M., and Bakshy, E. (2020), *Differentiable Expected Hypervolume Improvement for Parallel Multi-Objective Bayesian Optimization*. NeurIPS.
-- Daulton, S., Balandat, M., and Bakshy, E. (2021), *Parallel Bayesian Optimization of Multiple Noisy Objectives with Expected Hypervolume Improvement*. NeurIPS.
-- Ament, S. et al. (2023), *Unexpected Improvements to Expected Improvement for Bayesian Optimization*, for log-space improvement formulations used by modern BoTorch APIs.
+- Daulton, S., Balandat, M., and Bakshy, E. (2020), *Differentiable Expected Hypervolume
+Improvement for Parallel Multi-Objective Bayesian Optimization*. NeurIPS.
+- Daulton, S., Balandat, M., and Bakshy, E. (2021), *Parallel Bayesian Optimization of Multiple
+Noisy Objectives with Expected Hypervolume Improvement*. NeurIPS.
+- Ament, S. et al. (2023), *Unexpected Improvements to Expected Improvement for Bayesian
+Optimization*, for log-space improvement formulations used by modern BoTorch APIs.

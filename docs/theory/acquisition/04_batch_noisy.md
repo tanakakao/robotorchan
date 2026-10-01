@@ -20,7 +20,8 @@ X=(x_1,\ldots,x_q)
 
 が一般的だという点です。
 
-GP posterior では候補点間に covariance があるため、似た候補を複数選ぶ情報価値は重複し得ます。q-acquisition は joint posterior を使って候補集合としての価値を評価します。
+GP posterior では候補点間に covariance があるため、似た候補を複数選ぶ情報価値は重複し得ます。q-acquisition は joint posterior
+を使って候補集合としての価値を評価します。
 
 ## 4.2 Joint posterior
 
@@ -36,7 +37,8 @@ f(X)\mid\mathcal D_n
 
 \(\Sigma(X)\) の off-diagonal elements が候補間の posterior correlation を表します。
 
-pointwise score だけを見ると、この相関構造を無視して近接した候補ばかり選ぶ可能性があります。batch acquisition はこの joint distribution を直接扱います。
+pointwise score だけを見ると、この相関構造を無視して近接した候補ばかり選ぶ可能性があります。batch acquisition はこの joint distribution
+を直接扱います。
 
 ## 4.3 qEI
 
@@ -101,7 +103,8 @@ latent function の best
 
 ## 4.5 Noisy Expected Improvement
 
-Noisy Expected Improvement（NEI）は、baseline points における未知の latent function values についても posterior uncertainty を考慮します。
+Noisy Expected Improvement（NEI）は、baseline points における未知の latent function values についても posterior
+uncertainty を考慮します。
 
 概念的には、baseline latent values を posterior から積分しながら、それぞれの plausible world で improvement を評価します。
 
@@ -118,7 +121,8 @@ qNEI はさらに candidate batch の joint posterior を扱うため、
 
 NEI 系では baseline set が重要です。baseline は「何と比較して improvement を測るか」を posterior 上で定義するために使われます。
 
-baseline の選び方は単なる API detail ではなく、acquisition の計算量や意思決定対象に影響します。大規模 baseline では pruning などの計算上の工夫が重要になる場合があります。
+baseline の選び方は単なる API detail ではなく、acquisition の計算量や意思決定対象に影響します。大規模 baseline では pruning
+などの計算上の工夫が重要になる場合があります。
 
 ## 4.7 Pending points と非同期 BO
 
@@ -132,11 +136,13 @@ X_{\mathrm{pending}}
 
 pending points を無視すると、同じ領域へ重複して新しい候補を投入する可能性があります。
 
-非同期 BO では、pending evaluations が将来情報を与えることを考慮して次の候補を選びます。具体的な処理は acquisition family によって異なりますが、BoTorch では多くの MC acquisition が `X_pending` を扱える設計になっています。
+非同期 BO では、pending evaluations が将来情報を与えることを考慮して次の候補を選びます。具体的な処理は acquisition family
+によって異なりますが、BoTorch では多くの MC acquisition が `X_pending` を扱える設計になっています。
 
 ## 4.8 Sequential greedy batch と joint optimization
 
-batch candidates の生成には、q 点を一度に joint optimization する方法だけでなく、1点ずつ条件付きで追加する sequential greedy strategy もあります。
+batch candidates の生成には、q 点を一度に joint optimization する方法だけでなく、1点ずつ条件付きで追加する sequential greedy
+strategy もあります。
 
 ```text
 candidate 1 を選ぶ
@@ -154,7 +160,9 @@ joint optimization と greedy construction は同じアルゴリズムではあ�
 
 q-acquisition の多くは MC expectation を最適化します。
 
-acquisition optimization の途中で sampling noise が過度に変化すると、objective surface 自体が揺れて gradient optimization が難しくなります。QMC sampling や共通 base samples は、MC estimator の variance と optimization stability に関係します。
+acquisition optimization の途中で sampling noise が過度に変化すると、objective surface 自体が揺れて gradient
+optimization が難しくなります。QMC sampling や共通 base samples は、MC estimator の variance と optimization 
+stability に関係します。
 
 これは acquisition の理論的 utility と、その数値最適化をつなぐ重要な実装論点です。
 
@@ -162,7 +170,8 @@ acquisition optimization の途中で sampling noise が過度に変化すると
 
 qEI / qNEI の値が非常に小さい領域では、数値 underflow や gradient degradation が問題になります。
 
-qLogEI / qLogNEI は improvement-based criterion の数値安定性を改善する formulation です。log variant を「異なる探索目的」と考えるのではなく、同じ意思決定基準を安定して最適化するための重要な数値的設計として理解します。
+qLogEI / qLogNEI は improvement-based criterion の数値安定性を改善する formulation です。log variant
+を「異なる探索目的」と考えるのではなく、同じ意思決定基準を安定して最適化するための重要な数値的設計として理解します。
 
 ## 4.11 Batch size と計算量
 
@@ -180,9 +189,22 @@ q を増やすと候補集合の joint dimension が増え、MC sampling と acq
 
 ## 4.12 BoTorch / robotorchan との対応
 
-BoTorch は qLogEI、qLogNEI などの batch / noisy acquisition と pending-point semantics を提供します。robotorchan は標準手法を再実装せず、BoTorch native path を利用します。
+BoTorch は qLogEI、qLogNEI などの batch / noisy acquisition と pending-point semantics
+を提供します。robotorchan は標準手法を再実装せず、BoTorch native path を利用します。
 
-具体的な API は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の対応状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
+具体的な API は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の対応状況は
+[Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
+
+### 4.12.1 qLogEI / qLogNEI と posterior requirement
+
+現在の registry では `qLogExpectedImprovement` と
+`qLogNoisyExpectedImprovement` の posterior requirement を
+`POSTERIOR_SAMPLES` として表現しています。
+
+したがって「Gaussian posteriorだから利用可能」とだけ判断せず、
+model registry の `supports_posterior_samples` と組み合わせて compatibility を判定します。
+
+また pending points や asynchronous semantics と candidate optimizer の feasibility は別責務です。
 
 ## 4.13 まとめ
 
@@ -201,4 +223,5 @@ pending
 
 を分けて理解する必要があります。
 
-次の発展として、情報量そのものを価値とする [Information-theoretic acquisition](05_information_theoretic.md) と、将来の意思決定価値を見る [Lookahead acquisition](06_lookahead.md) があります。
+次の発展として、情報量そのものを価値とする [Information-theoretic acquisition](05_information_theoretic.md)
+と、将来の意思決定価値を見る [Lookahead acquisition](06_lookahead.md) があります。

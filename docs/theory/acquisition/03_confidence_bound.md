@@ -14,7 +14,8 @@ Confidence-bound acquisition は、posterior mean と posterior uncertainty を�
 
 です。
 
-ここで \(\mu_n(x)\) は posterior mean、\(\sigma_n(x)\) は posterior standard deviation、\(\beta>0\) は uncertainty の寄与を制御する parameter です。
+ここで \(\mu_n(x)\) は posterior mean、\(\sigma_n(x)\) は posterior standard deviation、\(\beta>0\) は
+uncertainty の寄与を制御する parameter です。
 
 ## 3.2 Confidence bound と optimism
 
@@ -33,7 +34,8 @@ UCB は、posterior mean だけを見るのではなく、不確実な候補に�
 
 ## 3.3 GP-UCB の理論的な beta
 
-理論解析で使われる GP-UCB では、\(\beta_t\) は単なる固定 tuning parameter ではなく、iteration \(t\)、信頼水準、探索空間、kernel / function class などに依存する confidence sequence として設定される場合があります。
+理論解析で使われる GP-UCB では、\(\beta_t\) は単なる固定 tuning parameter ではなく、iteration \(t\)、信頼水準、探索空間、kernel /
+function class などに依存する confidence sequence として設定される場合があります。
 
 実務コードで固定値 \(\beta\) を使う UCB と、regret bound を導く GP-UCB の理論的 schedule は区別する必要があります。
 
@@ -83,7 +85,8 @@ UCB は \(f_{\mathrm{best}}\) を直接必要とせず、exploration strength �
 
 batch setting では、複数候補の joint posterior を扱う qUCB 系を利用できます。
 
-qUCB を pointwise UCB の上位 q 点として理解するのは適切ではありません。batch acquisition では候補間 correlation と joint sample utility が候補集合の価値へ影響します。
+qUCB を pointwise UCB の上位 q 点として理解するのは適切ではありません。batch acquisition では候補間 correlation と joint
+sample utility が候補集合の価値へ影響します。
 
 q-acquisition の一般的な意味は [Batch / Noisy](04_batch_noisy.md) を参照してください。
 
@@ -116,12 +119,23 @@ UCB は uncertainty を式へ直接入れるため、posterior scale の calibra
 
 ## 3.9 BoTorch / robotorchan との対応
 
-BoTorch は analytic UCB と MC batch variant を提供しています。robotorchan は標準 UCB をローカルに再実装せず、BoTorch native path を利用します。
+BoTorch は analytic UCB と MC batch variant を提供しています。robotorchan は標準 UCB をローカルに再実装せず、BoTorch
+native path を利用します。
 
-利用方法は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の統合範囲は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
+利用方法は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の統合範囲は [Acquisition
+integration status](../../optimization/acquisition-integration.md) を参照してください。
+
+### 3.9.1 現在の qUCB registry contract
+
+現在の registry では `qUpperConfidenceBound` を BoTorch-native Monte Carlo acquisition として扱います。
+robotorchan 独自の qUCB 数式や wrapper を追加しているわけではありません。
+
+したがって model compatibility は「GPかどうか」だけでなく、
+posterior sampling capability を満たすかで判定します。
 
 ## 3.10 まとめ
 
 Confidence-bound family の中心的な考え方は、posterior uncertainty を明示的な optimism として意思決定へ変換することです。
 
-理論的な GP-UCB の confidence schedule と、実務上 tuning する UCB parameter を区別すること、posterior uncertainty の calibration を確認することが重要です。
+理論的な GP-UCB の confidence schedule と、実務上 tuning する UCB parameter を区別すること、posterior uncertainty の
+calibration を確認することが重要です。

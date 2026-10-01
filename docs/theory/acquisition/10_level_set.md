@@ -96,7 +96,8 @@ P(f(x)\ge t\mid\mathcal D_n)
 
 この確率が 0.5 に近い領域では threshold の上下分類が不確実です。
 
-ただし level-set acquisition は必ずしも exceedance probability の entropy を直接最大化する必要はありません。Straddle のように mean-to-target distance と uncertainty を組み合わせる基準もあります。
+ただし level-set acquisition は必ずしも exceedance probability の entropy を直接最大化する必要はありません。Straddle のように
+mean-to-target distance と uncertainty を組み合わせる基準もあります。
 
 ## 10.5 Straddle
 
@@ -159,7 +160,8 @@ small beta
     concentration near current estimated boundary
 ```
 
-理論的 confidence schedule を用いる level-set algorithms と、固定 \(\beta\) を tuning parameter として使う実装は区別する必要があります。
+理論的 confidence schedule を用いる level-set algorithms と、固定 \(\beta\) を tuning parameter
+として使う実装は区別する必要があります。
 
 ## 10.8 複数 threshold
 
@@ -197,7 +199,8 @@ f(x)=(f_1(x),f_2(x),f_3(x))
 
 ## 10.10 Randomized Straddle
 
-Randomized Straddle は deterministic な exploration coefficient を固定する代わりに、selection round ごとにランダムな coefficient を導入する考え方です。
+Randomized Straddle は deterministic な exploration coefficient を固定する代わりに、selection round ごとにランダムな
+coefficient を導入する考え方です。
 
 robotorchan の実装が参照する randomized straddle 系の考え方では、正の random variable から探索係数を生成し、
 
@@ -247,11 +250,14 @@ candidate 決定
 
 ## 10.12 Randomized Straddle の provenance
 
-Randomized Straddle は robotorchan 固有の名称を付けた heuristic ではなく、randomized straddle に関する既存研究に基づく acquisition family として扱います。
+Randomized Straddle は robotorchan 固有の名称を付けた heuristic ではなく、randomized straddle に関する既存研究に基づく
+acquisition family として扱います。
 
-一方、使用する random coefficient distribution、parameterization、round semantics は実装 contract として明示する必要があります。
+一方、使用する random coefficient distribution、parameterization、round semantics は実装 contract
+として明示する必要があります。
 
-Theory では手法の原理を説明し、現在の具体的な実装挙動は [Level-set guide](../../optimization/level_set_learning.md) と [Acquisition integration status](../../optimization/acquisition-integration.md) を正とします。
+Theory では手法の原理を説明し、現在の具体的な実装挙動は [Level-set guide](../../optimization/level_set_learning.md) と
+[Acquisition integration status](../../optimization/acquisition-integration.md) を正とします。
 
 ## 10.13 BoundaryVariance
 
@@ -317,7 +323,8 @@ Straddle と似た目的を持ちますが、同じ acquisition の再パラメ�
 
 BoundaryVariance の定義には Straddle のような \(\beta\) exploration parameter はありません。
 
-uncertainty の scale と target proximity は variance と standardized Gaussian-shaped weight の中に組み込まれています。
+uncertainty の scale と target proximity は variance と standardized Gaussian-shaped weight
+の中に組み込まれています。
 
 したがって API 上の対称性だけを理由に \(\beta\) を追加すると、定義されていない parameter を持つ別の heuristic に変わってしまいます。
 
@@ -352,7 +359,8 @@ PosteriorVariance は
 
 なので、target \(t\) を考慮しません。
 
-Level-set acquisition は target proximity を利用するため、関数全体の uncertainty reduction より boundary learning に集中できます。
+Level-set acquisition は target proximity を利用するため、関数全体の uncertainty reduction より boundary
+learning に集中できます。
 
 ```text
 PosteriorVariance
@@ -404,7 +412,8 @@ g(x)=0
 
 を class boundary とみなせるモデルもあります。
 
-ただし classification では likelihood が non-Gaussian であり、class probability、latent posterior、label entropy など複数の uncertainty notion があります。
+ただし classification では likelihood が non-Gaussian であり、class probability、latent posterior、label
+entropy など複数の uncertainty notion があります。
 
 Gaussian regression の Straddle を classification acquisition とそのまま同一視しないことが重要です。
 
@@ -424,7 +433,8 @@ robotorchan-specific q=1 acquisitions が存在することは、任意 q の jo
 
 ## 10.21 Structured output と ensemble posterior
 
-scalar Gaussian posterior を前提にした boundary score を、structured output や ensemble posterior へ拡張するには reduction semantics が必要です。
+scalar Gaussian posterior を前提にした boundary score を、structured output や ensemble posterior へ拡張するには
+reduction semantics が必要です。
 
 例えば ensemble members の variance を、
 
@@ -456,13 +466,31 @@ Level-set estimation では、boundary classification uncertainty を使った s
 
 robotorchan は level-set / boundary learning 用に Straddle、RandomizedStraddle、BoundaryVariance を提供します。
 
-これらは現在、scalarized q=1 regression acquisition として明示的な適用範囲を持ち、ensemble posterior など未定義の reduction semantics は拒否します。
+これらは現在、scalarized q=1 regression acquisition として明示的な適用範囲を持ち、ensemble posterior など未定義の reduction
+semantics は拒否します。
 
 Theory は将来の拡張可能性を説明できますが、現在の利用可能範囲については次を参照してください。
 
 - [Level-set learning guide](../../optimization/level_set_learning.md)
 - [BoundaryVariance guide](../../optimization/boundary-variance.md)
 - [Acquisition integration status](../../optimization/acquisition-integration.md)
+
+### 10.23.1 現在の level-set registry
+
+現在の registry には
+
+- `BoundaryVariance`
+- `RandomizedStraddle`
+- `Straddle`
+
+が active-learning acquisition として登録されています。
+
+これらは marginal posterior moments を使う `q=1` acquisition です。
+現在の capability metadata では ensemble posterior はサポートせず、
+structured output は scalarization を要求します。
+
+`PosteriorVariance` / `PosteriorStd` とは ensemble support が異なるため、
+同じ pointwise uncertainty family でも完全に同一の compatibility ではありません。
 
 ## 10.24 まとめ
 
@@ -493,7 +521,12 @@ BoundaryVariance
 
 ## References
 
-- Bryan, B. et al. (2006), *Active Learning for Identifying Function Threshold Boundaries*, for the Straddle level-set heuristic.
-- Inatsu, Y., Takeno, S., Kutsukake, K., and Takeuchi, I. (2024), *Active Learning for Level Set Estimation Using Randomized Straddle Algorithms*. Transactions on Machine Learning Research. The paper samples `beta_t` from a chi-squared distribution with two degrees of freedom and uses `sqrt(beta_t)` as the confidence coefficient.
+- Bryan, B. et al. (2006), *Active Learning for Identifying Function Threshold Boundaries*, for
+the Straddle level-set heuristic.
+- Inatsu, Y., Takeno, S., Kutsukake, K., and Takeuchi, I. (2024), *Active Learning for Level Set
+Estimation Using Randomized Straddle Algorithms*. Transactions on Machine Learning Research. The 
+paper samples `beta_t` from a chi-squared distribution with two degrees of freedom
+and uses `sqrt(beta_t)` as the confidence coefficient.
 
-`BoundaryVariance` is robotorchan-specific and therefore has no literature citation as a named acquisition method.
+`BoundaryVariance` is robotorchan-specific and therefore has no literature citation as a named
+acquisition method.

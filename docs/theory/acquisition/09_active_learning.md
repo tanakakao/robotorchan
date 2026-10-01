@@ -12,7 +12,8 @@ Active Learning
     未知関数や prediction を効率よく学習する
 ```
 
-BO では objective optimum に関係する領域が重要です。一方、AL では prediction quality、posterior uncertainty、target distribution 上の情報量などが観測価値になります。
+BO では objective optimum に関係する領域が重要です。一方、AL では prediction quality、posterior uncertainty、target
+distribution 上の情報量などが観測価値になります。
 
 したがって、AL acquisition を「改善量を使わない BO acquisition」と理解するのは不十分です。
 
@@ -105,7 +106,8 @@ y(x)=f(x)+\epsilon
 
 追加データで減らしたいのは主に latent function に関する epistemic uncertainty です。
 
-irreducible observation noise が大きい場所を単純に predictive variance が高いという理由だけで選ぶと、何度観測しても十分には減らない aleatoric uncertainty を追い続ける可能性があります。
+irreducible observation noise が大きい場所を単純に predictive variance が高いという理由だけで選ぶと、何度観測しても十分には減らない
+aleatoric uncertainty を追い続ける可能性があります。
 
 したがって「どの posterior variance を acquisition が使っているか」を確認する必要があります。
 
@@ -145,7 +147,8 @@ p_T(x)\,dx
 
 とします。
 
-候補 \(x_c\) を観測した後の posterior variance を \(\sigma_{n+1}^2\) とすれば、expected integrated variance reduction は
+候補 \(x_c\) を観測した後の posterior variance を \(\sigma_{n+1}^2\) とすれば、expected integrated variance
+reduction は
 
 \[
 \Delta V(x_c)
@@ -183,7 +186,8 @@ AL の目的は「探索空間全体を均等に学ぶ」とは限りません�
 
 ## 9.9 Negative Integrated Posterior Variance
 
-BoTorch の qNegativeIntegratedPosteriorVariance（qNIPV）は、candidate batch を観測した後の integrated posterior variance を基準に candidate set を評価する考え方です。
+BoTorch の qNegativeIntegratedPosteriorVariance（qNIPV）は、candidate batch を観測した後の integrated
+posterior variance を基準に candidate set を評価する考え方です。
 
 最小化したい posterior variance を負号によって最大化問題として扱います。
 
@@ -247,11 +251,13 @@ target prediction について
 
 を直接評価します。
 
-Gaussian setting では covariance structure と entropy の関係から、variance reduction と information gain は密接に関係しますが、概念としては同一ではありません。
+Gaussian setting では covariance structure と entropy の関係から、variance reduction と information gain
+は密接に関係しますが、概念としては同一ではありません。
 
 ## 9.12 EPIG
 
-Expected Predictive Information Gain（EPIG）は、target inputs における predictions と candidate observation の information gain を target distribution について平均します。
+Expected Predictive Information Gain（EPIG）は、target inputs における predictions と candidate
+observation の information gain を target distribution について平均します。
 
 target input を \(x_T\sim p_T\) とすれば、概念的に
 
@@ -338,9 +344,11 @@ classification では、
 
 などが利用されます。
 
-ただし classification posterior は Gaussian regression posterior と同じ構造ではありません。latent function uncertainty、class probability uncertainty、label entropy を区別する必要があります。
+ただし classification posterior は Gaussian regression posterior と同じ構造ではありません。latent function
+uncertainty、class probability uncertainty、label entropy を区別する必要があります。
 
-本章は robotorchan の現在の regression acquisition theory を中心に扱い、classification-specific acquisition を同じ数式へ無理に統合しません。
+本章は robotorchan の現在の regression acquisition theory を中心に扱い、classification-specific acquisition
+を同じ数式へ無理に統合しません。
 
 ## 9.16 Distribution shift
 
@@ -377,7 +385,8 @@ target distribution \(p_T\) が deployment distribution と一致しない場合
 
 ただし単純な ratio が常に最適とは限りません。cost-aware decision は budget、terminal objective、fidelity structure に依存します。
 
-Multi-Fidelity BO の value-of-information / cost の考え方とは関連しますが、AL では target prediction learning が最終目的です。
+Multi-Fidelity BO の value-of-information / cost の考え方とは関連しますが、AL では target prediction learning
+が最終目的です。
 
 ## 9.18 Stopping criterion
 
@@ -399,13 +408,34 @@ acquisition criterion と stopping criterion は別の責務ですが、同じ u
 
 BoTorch は qNegativeIntegratedPosteriorVariance など experimental-design 向け acquisition を提供しています。
 
-robotorchan は regression AL 向けに PosteriorVariance、PosteriorStd、ExpectedPredictiveInformationGain を提供し、BoTorch native で十分な手法は再実装しません。
+robotorchan は regression AL 向けに PosteriorVariance、PosteriorStd、ExpectedPredictiveInformationGain
+を提供し、BoTorch native で十分な手法は再実装しません。
 
-現在の robotorchan-specific acquisition には q、structured output、ensemble posterior などに明示的な適用範囲があります。Theory 上の一般形と現在の実装範囲を混同せず、詳細は次を参照してください。
+現在の robotorchan-specific acquisition には q、structured output、ensemble posterior
+などに明示的な適用範囲があります。Theory 上の一般形と現在の実装範囲を混同せず、詳細は次を参照してください。
 
 - [Regression Active Learning guide](../../optimization/regression_active_learning.md)
 - [EPIG guide](../../optimization/epig.md)
 - [Acquisition integration status](../../optimization/acquisition-integration.md)
+
+### 9.19.1 現在の active-learning registry
+
+現在の robotorchan registry には
+
+- `PosteriorVariance`
+- `PosteriorStd`
+- `ExpectedPredictiveInformationGain`
+
+が明示的に登録されています。
+
+`PosteriorVariance` と `PosteriorStd` は marginal moments を要求し、
+ensemble posterior も capability 上サポートします。
+
+一方 `ExpectedPredictiveInformationGain` は joint Gaussian posterior と single-output を要求し、
+ensemble posterior はサポートしません。
+
+したがって active learning acquisition を「posterior があれば交換可能」と扱わず、
+必要な posterior structure まで compatibility の一部として確認します。
 
 ## 9.20 まとめ
 
@@ -429,5 +459,9 @@ target distribution を明示すると、単なる空間充填ではなく deplo
 
 ## References
 
-- Bickford Smith, F. et al. (2023), *Prediction-Oriented Bayesian Active Learning*. AISTATS. EPIG measures information gained about predictions at target inputs rather than information about model parameters.
-- Kirsch, A., Rainforth, T., and Gal, Y. (2021), *Test Distribution-Aware Active Learning: A Principled Approach Against Distribution Shift and Outliers*. arXiv:2106.11719, for target-distribution-aware predictive information gain.
+- Bickford Smith, F. et al. (2023), *Prediction-Oriented Bayesian Active Learning*. AISTATS.
+EPIG measures information gained about predictions at target inputs rather than information 
+about model parameters.
+- Kirsch, A., Rainforth, T., and Gal, Y. (2021), *Test Distribution-Aware Active Learning: A
+Principled Approach Against Distribution Shift and Outliers*. arXiv:2106.11719, for 
+target-distribution-aware predictive information gain.
