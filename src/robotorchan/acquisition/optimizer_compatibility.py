@@ -9,6 +9,7 @@ from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 class CandidateOptimizer(StrEnum):
     CONTINUOUS = "continuous"
     MIXED = "mixed"
+    MIXED_ONE_SHOT = "mixed_one_shot"
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,8 +28,10 @@ def check_acquisition_optimizer_compatibility(
 
     if optimizer is CandidateOptimizer.MIXED and capabilities.one_shot:
         reasons.append(
-            "mixed optimization cannot fix one categorical assignment across a one-shot "
-            "augmented batch"
+            "standard mixed optimization cannot preserve row-specific categorical "
+            "assignments across a one-shot augmented batch"
         )
+    if optimizer is CandidateOptimizer.MIXED_ONE_SHOT and not capabilities.one_shot:
+        reasons.append("mixed one-shot optimization requires a one-shot acquisition")
 
     return OptimizerCompatibilityResult(not reasons, tuple(reasons))
