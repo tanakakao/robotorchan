@@ -33,7 +33,7 @@ $$
 
 ## 6.3 Value of Information
 
-現在の最終意思決定価値を \(V(\mathcal D_n)\) とします。
+現在の最終意思決定価値を $`V(\mathcal D_n)`$ とします。
 
 候補 $`x`$ を観測した後の expected decision value が
 
@@ -281,7 +281,7 @@ KG
 
 fidelity ごとに cost と information quality が異なる場合、KG の value-of-information interpretation は特に自然です。
 
-候補 \((x,s)\) の観測が target fidelity の最終 decision をどれだけ改善するかを評価し、さらに evaluation cost を考慮できます。
+候補 $`(x,s)`$ の観測が target fidelity の最終 decision をどれだけ改善するかを評価し、さらに evaluation cost を考慮できます。
 
 この考え方は [Multi-Fidelity / Cost-aware](11_multifidelity_cost_aware.md) で扱います。
 
