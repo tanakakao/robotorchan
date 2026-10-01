@@ -259,7 +259,8 @@ P(i \succ j)
 
 です。
 
-Chu & Ghahramani の定式化では denominator にノイズscale \(\sigma\) を含めますが、BoTorch はこの scale を明示的に likelihood parameter として分離せず、function scale を kernel の `ScaleKernel` で表現します。
+Chu & Ghahramani の定式化では denominator にノイズscale \(\sigma\) を含めますが、BoTorch はこの scale を明示的に
+likelihood parameter として分離せず、function scale を kernel の `ScaleKernel` で表現します。
 
 ---
 
@@ -458,7 +459,8 @@ ScaleKernel
   → latent utility scale
 ```
 
-probit preference model では observation-noise scale と utility scale の識別が通常回帰ほど単純ではないため、BoTorch は kernel output scale を使う設計です。
+probit preference model では observation-noise scale と utility scale の識別が通常回帰ほど単純ではないため、BoTorch は
+kernel output scale を使う設計です。
 
 ---
 
@@ -717,9 +719,11 @@ x3 > x2 > x1
 
 ## 10.27 observation noise の扱い
 
-通常の regression GP では `posterior(..., observation_noise=True)` で observation noise を含む predictive distribution を考えます。
+通常の regression GP では `posterior(..., observation_noise=True)` で observation noise を含む predictive
+distribution を考えます。
 
-PairwiseGP の probit preference model では noise と utility scale の識別が異なるため、通常回帰と同じ意味で observation-noise variance を解釈しません。
+PairwiseGP の probit preference model では noise と utility scale の識別が異なるため、通常回帰と同じ意味で
+observation-noise variance を解釈しません。
 
 したがって preference model の uncertainty と regression noise を同一視しないことが重要です。
 
@@ -802,7 +806,8 @@ A > B
 
 となることは自然です。
 
-PairwiseGP は deterministic ranking table ではなく probabilistic likelihood を使うため、このような矛盾を uncertainty として扱えます。
+PairwiseGP は deterministic ranking table ではなく probabilistic likelihood を使うため、このような矛盾を
+uncertainty として扱えます。
 
 ---
 
@@ -1006,7 +1011,8 @@ A > B
 
 ## 10.42 `condition_on_observations`
 
-`PairwiseGP` は `condition_on_observations` をサポートしますが、通常回帰モデルと違い、新しい `Y` も pairwise comparisons である必要があります。
+`PairwiseGP` は `condition_on_observations` をサポートしますが、通常回帰モデルと違い、新しい `Y` も pairwise comparisons
+である必要があります。
 
 つまり
 
@@ -1352,7 +1358,8 @@ u(y)=w^T y
 
 ## 10.58 PairwiseGP の計算コスト
 
-PairwiseGP では latent utility MAP と Laplace approximation が必要なため、standard exact GP regression より fitting が重くなる場合があります。
+PairwiseGP では latent utility MAP と Laplace approximation が必要なため、standard exact GP regression より
+fitting が重くなる場合があります。
 
 特に
 
