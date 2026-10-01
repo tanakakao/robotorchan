@@ -277,6 +277,24 @@ robotorchan はこれらの標準手法を再実装せず、BoTorch native path 
 
 利用上の位置付けは [Lookahead optimization guide](../../optimization/lookahead.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
+### 6.15.1 qKnowledgeGradient の runtime contract
+
+現在の registry では `qKnowledgeGradient` を
+
+- posterior samples required
+- single-output側の contract
+- fantasize support required
+- one-shot acquisition
+
+として扱います。
+
+特に `requires_fantasize=True` は重要で、posterior sample が取れるだけでは十分ではありません。
+model が fantasy model を構築できることも必要です。
+
+さらに現在の optimizer compatibility check では one-shot acquisition と mixed optimizer の組合せを
+非互換にします。one-shot の augmented batch 全体に単一の categorical assignment を固定すると、
+acquisition の内部構造を保存できないためです。
+
 ## 6.16 まとめ
 
 Lookahead acquisition の中心は
