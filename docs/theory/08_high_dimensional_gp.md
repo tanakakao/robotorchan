@@ -34,13 +34,36 @@
 
 ---
 
+### 「何次元から高次元か」に固定の境界はない
+
+10次元なら低次元、100次元なら高次元、という普遍的な閾値はありません。
+難しさは少なくとも
+
+~~~text
+入力次元 d
+観測数 n
+探索領域の広さ
+関数の滑らかさ
+実際に効いている方向の数
+acquisitionを最適化する難しさ
+~~~
+
+の組合せで決まります。
+
+例えば100次元でも実際に効く軸が3つなら構造を利用できる可能性があります。
+一方、20次元でも20変数すべてが複雑に相互作用し、観測が10点しかなければ
+非常に難しい問題です。
+
+したがって本章では「名目次元が何個か」より、**データ量に対してどのような
+低次元構造を仮定できるか**を中心に考えます。
+
 ## 8.2 高次元で何が難しくなるのか
 
 入力を
 
-\[
+$$
 x\in\mathbb{R}^d
-\]
+$$
 
 とします。
 
@@ -83,9 +106,9 @@ acquisition optimizationも難しくなる
 
 一般には各次元を `k` 分割すると
 
-\[
+$$
 k^d
-\]
+$$
 
 個の格子点が必要です。
 
@@ -97,9 +120,9 @@ BOはgrid searchよりはるかに効率的ですが、**空間体積が指数�
 
 高次元BOが成立する重要な理由は、多くの実問題で
 
-\[
+$$
 d_{\text{effective}} \ll d
-\]
+$$
 
 となることです。
 
@@ -111,7 +134,9 @@ d_{\text{effective}} \ll d
 
 といった構造を持つ場合があります。
 
-これを **effective dimension** と呼びます。
+このような考え方を広い意味で **effective dimension** と呼びます。
+ただし文献によってeffective dimensionの厳密な定義は異なるため、
+単一の指標として固定せず「関数変動を説明する実質的な自由度」と捉えます。
 
 ```text
 100 dimensions
@@ -131,7 +156,7 @@ SAASはこの考え方を、GPのlengthscale priorとして組み込みます。
 
 RBF kernelなら
 
-\[
+$$
 k(x,x')
 =
 \sigma_f^2
@@ -140,15 +165,15 @@ k(x,x')
 \sum_{j=1}^d
 \frac{(x_j-x_j')^2}{\ell_j^2}
 \right)
-\]
+$$
 
 です。
 
 ここで
 
-\[
+$$
 \ell_j
-\]
+$$
 
 が第 `j` 次元のlengthscaleです。
 
@@ -165,6 +190,10 @@ lengthscale 大
 ```
 
 と解釈できます。
+
+ただしARD lengthscaleは単独のfeature importance scoreではありません。入力scale、
+入力間相関、kernel、観測範囲などにも依存するため、短いlengthscaleをそのまま
+「重要度が高い」と順位付けするのは避けます。
 
 ---
 
@@ -193,6 +222,25 @@ input dimensions = 100
 そこで、**多くの次元は重要ではないというprior**を明示的に入れるのがSAASです。
 
 ---
+
+### 高次元BOには少なくとも2つの難しさがある
+
+高次元対策は大きく分けると、
+
+~~~text
+surrogate側
+  └─ 少ない観測から高次元関数をどう学習するか
+
+candidate search側
+  └─ 高次元空間でacquisitionの良い点をどう探すか
+~~~
+
+があります。
+
+SAASやAdditive GPは主に前者です。TuRBO、BAxUS、embedding系の探索戦略などは
+主に後者、または両者を組み合わせた設計です。
+
+したがって「SAASを使ったので高次元BO対策は完了」とは限りません。
 
 ## 8.7 SAASとは
 
@@ -230,15 +278,15 @@ SAASはこのsparsityを、inverse lengthscaleへの階層priorで表現しま�
 
 lengthscaleを
 
-\[
+$$
 \ell_j
-\]
+$$
 
 とすると、inverse lengthscaleを
 
-\[
+$$
 \rho_j=\frac{1}{\ell_j}
-\]
+$$
 
 と考えます。
 
@@ -258,9 +306,9 @@ lengthscaleを
 
 つまりSAASでは、ほとんどの
 
-\[
+$$
 \rho_j
-\]
+$$
 
 を0付近へ縮小できれば、重要変数だけを残せます。
 
@@ -272,13 +320,13 @@ SAASでは、典型的にはhierarchical half-Cauchy priorを使います。
 
 概念的には
 
-\[
+$$
 \tau \sim \operatorname{HalfCauchy}(\beta)
-\]
+$$
 
-\[
+$$
 \rho_j \sim \operatorname{HalfCauchy}(\tau)
-\]
+$$
 
 です。
 
@@ -289,7 +337,8 @@ SAASでは、典型的にはhierarchical half-Cauchy priorを使います。
 
 です。
 
-Half-Cauchyは0付近に強い質量を持ちながらheavy tailも持つため、
+階層priorによりglobal shrinkageと各次元の局所的なescapeを組み合わせます。
+Half-Cauchyのheavy tailによって、
 
 ```text
 大多数のρ_j
@@ -337,30 +386,30 @@ posteriorをサンプリングします。
 
 通常のGPでは概念的に
 
-\[
+$$
 \hat\theta
 =
 \arg\max_\theta p(\theta\mid D)
-\]
+$$
 
 のような1点を使います。
 
 Fully Bayesianでは
 
-\[
+$$
 p(\theta\mid D)
-\]
+$$
 
 そのものを扱い、
 
-\[
+$$
 p(f_*\mid D)
 =
 \int
 p(f_*\mid D,\theta)
 p(\theta\mid D)
 \,d\theta
-\]
+$$
 
 とhyperparameter uncertaintyを積分します。
 
@@ -402,21 +451,21 @@ model.make_mll()
 
 MCMCで複数のhyperparameter sample
 
-\[
+$$
 \theta_1,\theta_2,\ldots,\theta_S
-\]
+$$
 
 を得ると、それぞれに対応するGP posteriorがあります。
 
 そのためposteriorは概念的に
 
-\[
+$$
 p(f_*\mid D)
 \approx
 \frac{1}{S}
 \sum_{s=1}^S
 p(f_*\mid D,\theta_s)
-\]
+$$
 
 というmixtureになります。
 
@@ -502,9 +551,9 @@ x2: 0 ～ 1,000,000
 
 基本的には
 
-\[
+$$
 x_j\in[0,1]
-\]
+$$
 
 へ正規化します。
 
@@ -524,7 +573,7 @@ Fully Bayesian SAASの主な利点は
 
 1. 高次元でirrelevant variableを強くshrinkできる
 2. hyperparameter uncertaintyをposteriorへ反映できる
-3. 少数データでもMAP estimateの一点推定に依存しにくい
+3. hyperparameterの一点推定だけに依存せずposterior uncertaintyを伝播できる
 
 ことです。
 
@@ -533,10 +582,13 @@ Fully Bayesian SAASの主な利点は
 ```text
 dimension 高い
 observation 少ない
-effective dimension 小さい
+axis-alignedなeffective sparsityを期待できる
 ```
 
-という条件で有力です。
+という条件と整合しやすいモデルです。
+
+ただしこれは性能保証ではありません。SAAS priorの仮定と真の関数構造が
+合っているかはデータと比較実験で確認します。
 
 ---
 
@@ -636,7 +688,8 @@ fit_gpytorch_mll(mll)
 
 `num_taus`はSAAS shrinkage scaleの表現に関係します。
 
-Fully Bayesian SAASより軽量な代替として検討できます。
+Fully Bayesian SAASとは推論方法とmodel constructionが異なるため、
+単なる「NUTSをMAPへ置換した同一モデル」と考えず、軽量なSAAS系候補として扱います。
 
 ---
 
@@ -668,21 +721,26 @@ model = EnsembleMapSaasSingleTaskGP(
 )
 ```
 
-考え方としては、単一のMAP solutionだけに依存するより、複数のshrinkage設定を持つmodel ensembleで不確実性をある程度表現します。
+考え方としては、複数のshrinkage設定に対応するmodelをensembleとして扱います。
+ただしこれはMCMCでhyperparameter posteriorを積分するFully Bayesian推論と
+同一ではありません。
 
 ---
 
-## 8.23 Fully Bayesian SAASとMAP-SAASの選択
+## 8.23 Fully Bayesian SAASとMAP-SAASの違い
 
-実務上は次のように考えられます。
+比較するときは「どちらが上位か」ではなく、
 
-| 状況 | 第一候補 |
-|---|---|
-| 評価回数が少なくmodel fitting時間を許容 | Fully Bayesian SAAS |
-| 高次元だがNUTSが重い | MAP-SAAS |
-| hyperparameter uncertaintyを重視 | Fully Bayesian SAAS |
-| fitting速度を重視 | MAP-SAAS |
-| 通常GPでも十分安定 | `SingleTaskGP` |
+~~~text
+Fully Bayesian SAAS
+  → MCMCでhyperparameter uncertaintyを積分
+
+MAP-SAAS系
+  → optimizationを中心にSAAS型priorを利用
+~~~
+
+という**推論contractの違い**を先に理解します。計算時間だけでなく、
+posterior shapeや下流acquisitionとの組合せも確認します。
 
 高次元だから必ずSAASを使う必要はありません。
 
@@ -762,9 +820,9 @@ SAASの重要な制約は **axis-aligned** であることです。
 
 一方、真の関数が
 
-\[
+$$
 z=x_1+x_2+x_3+x_4
-\]
+$$
 
 のような回転した低次元部分空間だけで変化する場合、SAASの軸方向sparsityは必ずしも最適ではありません。
 
@@ -777,9 +835,31 @@ z=x_1+x_2+x_3+x_4
 
 など別の高次元BO手法も候補になります。
 
-robotorchanの現在の高次元GP群は、主にaxis-aligned sparsityとadditive structureを扱います。
+この章で中心に扱うsurrogate群は、主にaxis-aligned sparsityとadditive structureです。
+robotorchanにはreduction、ALEBO系、high-dimensional searchなど別の構造仮定もあるため、
+それらは後続の高次元理論章で分けて扱います。
 
 ---
+
+### Axis-aligned sparsityとlatent subspaceは別の仮定
+
+例えば
+
+~~~text
+f(x) ≈ g(x_2, x_8)
+~~~
+
+なら元の軸そのものが重要なのでSAASの仮定と整合します。一方、
+
+~~~text
+f(x) ≈ g(Ax)
+~~~
+
+のように複数変数の線形結合や非線形表現に重要方向がある場合は、
+元の軸をsparseにする仮定とは異なります。
+
+この違いが、SAASとdimension reduction / embedding系手法を使い分ける
+理論上の重要な境界です。
 
 ## 8.27 Additive structure
 
@@ -787,7 +867,7 @@ robotorchanの現在の高次元GP群は、主にaxis-aligned sparsityとadditiv
 
 例えば
 
-\[
+$$
 f(x)
 =
 c
@@ -795,7 +875,7 @@ c
 +f_2(x_2)
 +\cdots
 +f_d(x_d)
-\]
+$$
 
 と仮定します。
 
@@ -840,9 +920,9 @@ fit_gpytorch_mll(mll)
 
 完全なadditive modelでは
 
-\[
+$$
 f(x)=c+\sum_i f_i(x_i)
-\]
+$$
 
 ですが、現実には変数間interactionがあります。
 
@@ -854,25 +934,27 @@ second_order = True
 
 を使うことで、概念的に
 
-\[
+$$
 f(x)
 =
 c
 +\sum_i f_i(x_i)
 +\sum_{i<j}f_{ij}(x_i,x_j)
-\]
+$$
 
 という2次interactionを扱えます。
 
 ただしinteraction数は
 
-\[
+$$
 \frac{d(d-1)}{2}
-\]
+$$
 
 で増えるため、高次元では計算量とモデル複雑度に注意が必要です。
 
-まずfirst-order additiveで始め、必要な場合にsecond-orderを検討するのが実務的です。
+second-orderを使うかどうかは、interactionを表現する必要性とデータ量・計算量を
+比較して決めます。first-orderをbaselineとして比較すると、追加したinteractionの
+価値を確認しやすくなります。
 
 ---
 
@@ -908,10 +990,10 @@ Additive GP
 
 例えば
 
-\[
+$$
 f(x)
 =f_1(x_1)+f_4(x_4)+f_{12}(x_1,x_2)
-\]
+$$
 
 なら
 
@@ -934,9 +1016,9 @@ f(x)
 
 例えば
 
-\[
+$$
 x^*=\arg\max_x \alpha(x)
-\]
+$$
 
 を100次元空間で解く必要があります。
 
@@ -995,17 +1077,17 @@ BAxUS
 
 PCAは
 
-\[
+$$
 \operatorname{Var}(X)
-\]
+$$
 
 を大きく説明する方向を残します。
 
 しかしBOで重要なのは
 
-\[
+$$
 Y
-\]
+$$
 
 に効く方向です。
 
@@ -1031,9 +1113,9 @@ PCAは有力なpreprocessingですが、高次元BOの万能解ではありま�
 
 Deep Kernel Learning（DKL）では
 
-\[
+$$
 z=g_\phi(x)
-\]
+$$
 
 というneural network embeddingを作り、latent space上でGPを使います。
 
@@ -1065,9 +1147,9 @@ DKL
 
 重要なのは
 
-\[
+$$
 \frac{n}{d}
-\]
+$$
 
 だけでもなく、
 
@@ -1227,9 +1309,9 @@ model.make_mll()
 
 ---
 
-## 8.43 モデル選択フロー
+## 8.43 構造仮定を選ぶフロー
 
-高次元連続入力なら、次のように考えられます。
+高次元連続入力では、モデル名より先に**どの構造仮定が妥当か**を考えます。
 
 ```text
 入力次元が高い
@@ -1261,18 +1343,16 @@ high-dimensional + related tasks
 
 ---
 
-## 8.44 実務上の比較表
+## 8.44 構造仮定の比較表
 
-| 状況 | 第一候補 | 理由 |
-|---|---|---|
-| 高次元・少数重要変数 | Fully Bayesian SAAS | sparsity prior |
-| 高次元・SAASを軽量化したい | MAP-SAAS | NUTS不要 |
-| 高次元・関連taskあり | Multi-task SAAS | task sharing + sparsity |
-| 多数変数が加法的に効く | OrthogonalAdditiveGP | additive structure |
-| 少数次元・十分なデータ | SingleTaskGP | simpler |
-| 大量データ | Variational GPも検討 | Exact GP / NUTSの計算負荷 |
-| 非線形なlatent低次元構造 | DKL等 | learned representation |
-| 局所探索が有効 | TuRBO等 | trust region |
+| 想定する構造 | 対応する考え方 |
+|---|---|
+| 少数の元変数だけが効く | SAAS / MAP-SAAS系 |
+| 関連task + 少数の元変数が効く | Multi-task SAAS |
+| 多数変数が主に加法的に効く | Orthogonal Additive GP |
+| latentな低次元方向で変化する | reduction / embedding系 |
+| 局所領域に探索を集中したい | trust-region系 |
+| データ数そのものが大きい | Variational GPも検討 |
 
 ---
 
@@ -1428,9 +1508,10 @@ Acquisition Optimizer
 
 ---
 
-## 8.51 まとめ
+## 8.51 この章で覚えておくこと
 
-高次元BOで最も重要なのは、**名目次元ではなく、どのような低次元構造が問題に存在するか**です。
+高次元BOで最も重要なのは、**名目次元だけで手法を決めず、どのような低次元構造を
+問題に仮定できるか**です。
 
 ```text
 高次元
@@ -1452,17 +1533,17 @@ Acquisition Optimizer
 
 理論上の中心は、SAASでは
 
-\[
+$$
 \rho_j=1/\ell_j
-\]
+$$
 
 にsparsity-inducing hierarchical priorを置き、多くのinverse lengthscaleを0付近へshrinkすることです。
 
 一方、Additive GPでは
 
-\[
+$$
 f(x)=c+\sum_i f_i(x_i)
-\]
+$$
 
 のような構造を仮定して高次元性を緩和します。
 
