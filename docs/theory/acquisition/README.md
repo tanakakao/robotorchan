@@ -49,7 +49,7 @@ Theory に掲載されていることは robotorchan での実装を意味しま
 
 | 章 | 主題 | 主な内容 |
 | --- | --- | --- |
-| [01](01_foundations.md) | Foundations | posterior、utility、exploration / exploitation、analytic / MC |
+| [01](01_foundations.md) | Foundations | posterior、utility、exploration / exploitation |
 | [02](02_improvement.md) | Improvement | EI、LogEI、PI、LogPI と improvement-based utility |
 | [03](03_confidence_bound.md) | Confidence Bound | UCB、qUCB、confidence parameter |
 | [04](04_batch_noisy.md) | Batch / Noisy | q-acquisition、joint utility、correlation、NEI、pending |
@@ -59,7 +59,7 @@ Theory に掲載されていることは robotorchan での実装を意味しま
 | [08](08_constraints.md) | Constraints | feasibility、constrained utility、objective / transform |
 | [09](09_active_learning.md) | Active Learning | variance / std、integrated variance、qNIPV、EPIG |
 | [10](10_level_set.md) | Level-set | level-set、Straddle、Randomized Straddle、BoundaryVariance |
-| [11](11_multifidelity_cost_aware.md) | Multi-Fidelity / Cost-aware | fidelity、VoI、MF-KG、cost-aware utility |
+| [11](11_multifidelity_cost_aware.md) | Multi-Fidelity / Cost-aware | fidelity、VoI、MF-KG、cost |
 | [12](12_selection_guide.md) | Selection Guide | 問題設定と獲得関数ファミリーの対応、各詳細章への導線 |
 
 ## 初心者向けの推奨ルート
