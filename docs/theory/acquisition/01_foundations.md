@@ -10,7 +10,7 @@ observed data -> surrogate -> posterior -> objective / utility
 surrogateは未知応答の予測、acquisitionは次の評価の価値付け、candidate optimizerは
 そのacquisitionの最大化を担当します。この3層を最初から分けて考えます。
 
-## 1.3 獲得関数を意思決定として見る
+## 1.2 獲得関数を意思決定として見る
 
 獲得関数は surrogate model の予測器そのものではなく、posterior distribution を「次の観測の価値」へ変換する意思決定基準です。
 
@@ -36,7 +36,7 @@ $
 
 重要なのは、$`\alpha`$ が「予測値」ではなく、posterior に対して定義した **utility の期待値または代理量**だという点です。
 
-## 1.2 Posterior と utility
+## 1.3 Posterior と utility
 
 候補集合 $`X`$ の未知出力を \(f(X)\) とし、その結果から得られる効用を \(U(f(X))\) とすれば、多くの獲得関数は概念的に
 
@@ -71,14 +71,17 @@ $
 - exploitation は現在良いと予測される領域を重視します。
 - exploration は不確実で、追加観測により知識が変わり得る領域を重視します。
 
-ただし、この二分法は直感であって、すべての獲得関数を「平均項 + 分散項」として理解すべきではありません。EI は improvement、MES は optimum value の情報量、KG は将来の意思決定価値を直接定義します。
+ただし、この二分法は直感であって、すべての獲得関数を「平均項 + 分散項」として
+理解すべきではありません。EIはimprovement、MESはoptimum valueの情報量、KGは将来の
+意思決定価値を直接定義します。
 
 ## 1.5 Analytic acquisition
 
 posteriorとutilityの組合せによって期待値が閉形式で計算できる場合、analytic acquisitionを
 構成できます。analyticは手法の目的ではなく、閉形式で評価できるという計算上の性質です。
 
-Gaussian posterior に対する q=1 の EI や PI は代表例です。analytic form は高速で数値計算も単純ですが、閉形式が成立する posterior、objective、batch 構造に制約があります。
+Gaussian posteriorに対するq=1のEIやPIは代表例です。analytic formは高速ですが、
+閉形式が成立するposterior、objective、batch構造に制約があります。
 
 ## 1.6 Monte Carlo acquisition
 
@@ -110,7 +113,8 @@ Monte Carlo（MC）formulation は、
 
 などへ拡張しやすいことが利点です。
 
-MC error は sample 数に依存します。最適化中に acquisition surface が不必要に揺れないよう、QMC sampling や base samples の扱いも実装上重要になります。
+MC errorはsample数に依存します。最適化中にacquisition surfaceが不必要に揺れないよう、
+QMC samplingやbase samplesの扱いも実装上重要になります。
 
 ### MC samplingとjoint posterior
 
@@ -159,7 +163,9 @@ $
 
 を数値的に解く必要があります。
 
-連続空間では gradient-based optimization を使える場合があります。一方、categorical、integer、hierarchical、discrete fidelity、制約付き空間では、acquisition optimization 側に専用の探索方法が必要です。
+連続空間ではgradient-based optimizationを使える場合があります。一方、categorical、integer、
+hierarchical、discrete fidelity、制約付き空間では、acquisition optimization側に専用の
+探索方法が必要です。
 
 良いacquisition criterionが、必ずしも最適化しやすいacquisition surfaceを持つとは限りません。
 
@@ -170,7 +176,9 @@ $
 
 獲得関数は posterior を信頼して動きます。
 
-uncertainty を過小評価すれば探索不足、過大評価すれば過剰探索につながり得ます。kernel、noise model、task structure、input transform、approximate inference などは acquisition とソフトウェア上別の責務でも、意思決定品質には直接影響します。
+uncertaintyを過小評価すれば探索不足、過大評価すれば過剰探索につながり得ます。
+kernel、noise model、task structure、input transform、approximate inferenceなどは
+acquisitionとソフトウェア上別の責務でも、意思決定品質には直接影響します。
 
 ### posterior uncertaintyの意味もmodel依存
 
@@ -186,7 +194,9 @@ acquisition optimizerを分離した設計を採用しています。
 robotorchanのcapability metadataではposterior requirementをmarginal moments、joint Gaussian、
 posterior samplesに分けます。さらにq、multi-output、ensemble、fantasization等が重なります。
 
-robotorchan も BoTorch-first とし、BoTorch native の acquisition が目的を満たす場合はローカル wrapper を作りません。現在の対応状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
+robotorchanもBoTorch-firstとし、BoTorch native acquisitionが目的を満たす場合は
+ローカルwrapperを作りません。現在の対応状況は
+[Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 1.11 この章で覚えておくこと
 
@@ -201,7 +211,9 @@ robotorchan も BoTorch-first とし、BoTorch native の acquisition が目的�
 
 ## 1.12 次に読む章
 
-標準的な単目的 BO の基準として、次は [Improvement](02_improvement.md) と [Confidence Bound](03_confidence_bound.md) を扱います。batch、noise、pending points は [Batch / Noisy](04_batch_noisy.md) で整理します。
+標準的な単目的BOの基準として、次は [Improvement](02_improvement.md) と
+[Confidence Bound](03_confidence_bound.md) を扱います。batch、noise、pending pointsは
+[Batch / Noisy](04_batch_noisy.md) で整理します。
 
 ## 参考文献
 
