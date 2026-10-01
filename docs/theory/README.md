@@ -259,6 +259,98 @@ model chapter 側では acquisition formula を重複して網羅せず、
 
 の観点から接続可能性を説明します。
 
+## BO 周辺基盤の理論と実装ガイド
+
+モデルと acquisition の間には、独立して理解すべき cross-cutting layer があります。
+
+```text
+surrogate model
+  -> posterior
+  -> posterior transform / objective
+  -> sampler
+  -> acquisition
+  -> initialization
+  -> candidate optimization
+  -> batch / pending / fantasy handling
+  -> evaluation
+```
+
+これらは新しい surrogate model ではないため、model chapter を増やすだけでは coverage できません。
+現在は次の実装ガイドを source of truth として接続します。
+
+| Layer | 理論上の役割 | 実装ガイド |
+| --- | --- | --- |
+| Posterior sampling | posterior distribution から joint sample を生成 | [Posterior sampling](../optimization/posterior-sampling.md) |
+| Objective / PosteriorTransform | output を acquisition utility の空間へ写像 | [Objective / PosteriorTransform audit](../development/objective-posterior-transform-audit.md) |
+| Initialization | acquisition optimization の初期条件を生成 | [Acquisition initialization](../optimization/initialization.md) |
+| Batch / Async | joint batch、pending point、fantasy model を管理 | [Batch / Async / Fantasization](../optimization/batch-async-fantasization.md) |
+| Candidate optimization | acquisition を入力空間上で最大化 | [Optimization guide](../optimization/README.md) |
+| Trust region | 局所探索領域を状態に応じて更新 | [TuRBO](../optimization/turbo.md) |
+
+### Posterior と sampler は別レイヤー
+
+`posterior(X)` が存在することと、任意の sampler が利用できることは同義ではありません。
+
+Gaussian posterior、fully Bayesian posterior、DeepGP posterior、empirical ensemble posterior では
+sample semantics が異なります。
+たとえば empirical ensemble では member index を sample する `IndexSampler` が自然で、
+Gaussian base-sample sampler を機械的に適用するものではありません。
+
+また joint sampling は candidate 間・output 間の依存構造を保持する必要があります。
+marginal mean / variance だけを使う acquisition と posterior sample を使う acquisition を
+同一の compatibility 条件で扱いません。
+
+### PosteriorTransform と MC Objective は別レイヤー
+
+`PosteriorTransform` は posterior distribution 自体を acquisition が読む空間へ変換します。
+一方 MC Objective は posterior sample を utility sample へ変換します。
+
+したがって multi-output scalarization でも、
+
+```text
+posterior -> PosteriorTransform -> analytic / posterior-level acquisition
+```
+
+と
+
+```text
+posterior -> sampler -> samples -> MC Objective -> MC acquisition
+```
+
+は同一の処理ではありません。
+
+outcome / black-box constraint はさらに sample-wise feasibility として composition され得ます。
+candidate/input-space constraint はこの層ではなく candidate optimizer の責務です。
+
+### Initialization は optimizer の一部だが独立した数値問題
+
+multi-start acquisition optimization では、局所 optimizer を呼ぶ前の initial conditions が
+最終 candidate に影響します。
+
+通常の連続 acquisition、one-shot acquisition、high-dimensional strategy、hybrid optimizer では
+必要な初期化 contract が異なります。
+したがって「optimizer が対応している」だけで initialization compatibility まで仮定しません。
+
+### Batch、Async、Fantasization を分ける
+
+batch BO は複数候補の joint utility を扱う問題です。
+asynchronous BO は未完了候補を `X_pending` 等で意思決定へ反映する問題です。
+fantasization は未観測値を仮想的に条件付けした model を構築する操作です。
+
+これらは関連しますが同義ではありません。
+特に Knowledge Gradient 系のように fantasy model を内部計算で必要とする acquisition では、
+単に `X_pending` を受け取れること以上の model capability が必要です。
+
+### TuRBO は surrogate ではなく stateful search strategy
+
+TuRBO は GP kernel や likelihood を置き換える surrogate model ではありません。
+trust-region center、length、success / failure counter、restart condition を持つ
+stateful candidate-search strategy です。
+
+そのため SAAS、Mixed、MultiFidelity、robust model などとの組合せは、
+「TuRBO model」という新しい確率モデルを作るのではなく、
+surrogate capability と trust-region search contract の両方を満たすかで判断します。
+
 ## 実装 coverage を確認する基準
 
 理論ドキュメント監査では、各 model family について少なくとも次を確認します。
