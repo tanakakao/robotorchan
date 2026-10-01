@@ -14,13 +14,13 @@ Multi-objective optimization
 単目的utilityへ変換する場合もあります。逆にMOBO acquisitionを使うには、どのmodel outputsを
 objectivesとして扱うかというdecision semanticsが必要です。
 
-## 7.3 単一の最良値からPareto集合へ
+## 7.2 単一の最良値からPareto集合へ
 
 複数目的
 
-$
+$$
 f(x)=\left(f_1(x),\ldots,f_m(x)\right)
-$
+$$
 
 を同時に最大化する問題では、一般にすべての目的で唯一最良となる点は存在しません。
 
@@ -29,15 +29,15 @@ dominance と Pareto front を扱います。
 
 以下では各目的を最大化する convention を使います。最小化目的は符号反転などにより同じ convention へ変換できます。
 
-## 7.2 Pareto dominance
+## 7.3 Pareto dominance
 
 目的ベクトル $`y,y'\in\mathbb R^m`$ に対して、$`y`$ が $`y'`$ を Pareto dominate するとは、
 
-$
+$$
 y_j\ge y'_j
 \quad
 \forall j
-$
+$$
 
 かつ少なくとも一つの目的で strict inequality が成立することです。
 
@@ -52,9 +52,9 @@ Pareto front の品質を測る代表的な指標が hypervolume（HV）です�
 reference point $`r`$ を Pareto front より悪い点として設定し、non-dominated objective vectors と $`r`$
 の間で支配される領域の体積を
 
-$
+$$
 HV(\mathcal P;r)
-$
+$$
 
 とします。
 
@@ -91,13 +91,13 @@ reference point が不適切だと、
 
 現在の Pareto set を $`\mathcal P_n`$ とし、新しい目的ベクトル $`y`$ を追加したときの hypervolume improvement を
 
-$
+$$
 HVI(y)
 =
 HV(\mathcal P_n\cup\{y\};r)
 -
 HV(\mathcal P_n;r)
-$
+$$
 
 とします。
 
@@ -107,14 +107,14 @@ $
 
 候補 $`x`$ の目的ベクトルは未知なので、posterior expectation を取ります。
 
-$
+$$
 EHVI(x)
 =
 \mathbb E[
 HVI(f(x))
 \mid\mathcal D_n
 ]
-$
+$$
 
 これが Expected Hypervolume Improvement（EHVI）です。
 
@@ -124,13 +124,13 @@ $
 
 batch candidate set
 
-$
+$$
 X=(x_1,\ldots,x_q)
-$
+$$
 
 では、q 点を同時に追加した場合の joint hypervolume improvement を評価します。
 
-$
+$$
 qEHVI(X)
 =
 \mathbb E[
@@ -138,7 +138,7 @@ HV(\mathcal P_n\cup f(X);r)
 -
 HV(\mathcal P_n;r)
 ]
-$
+$$
 
 候補間 posterior correlation と、候補同士が作る新しい non-dominated region が相互作用するため、pointwise EHVI の上位 q
 点を選ぶこととは異なります。
@@ -175,16 +175,16 @@ hypervolume improvement が非常に小さい領域では、EI 系と同様に a
 LogEHVI / LogNEHVI 系は、hypervolume improvement の意思決定原理を変えるものではなく、acquisition optimization
 の数値安定性を改善する formulation として理解します。
 
-## 7.11 Scalarization
+## 7.11 ScalarizationはMulti-output reductionでもある
 
 Multi-objective optimizationを扱うもう一つの方法は、目的ベクトルをscalar utilityへ変換することです。
 この操作によりmulti-output posteriorからacquisitionが評価するscalar decision quantityを作れます。
 
 weight vector $`w`$ に対して
 
-$
+$$
 s_w(f(x))
-$
+$$
 
 を定義し、scalarized objective に対して単目的 acquisition を適用できます。
 
@@ -221,7 +221,7 @@ Pareto decision quality がどれだけ改善するかを value-of-information �
 
 EHVI と HVKG の違いは、単目的の EI と KG の違いに対応して理解できます。
 
-## 7.14 Objective correlation
+## 7.14 Objective dependenceとmodel contract
 
 複数目的が同じ入力 $`x`$ に対して correlation を持つ場合、surrogate model がその依存構造を表現できるかは acquisition quality に影響します。
 
