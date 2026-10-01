@@ -1307,7 +1307,7 @@ LatentKroneckerGP
 | tensor output | `HigherOrderGP` | output tensor covariance |
 | explicit output axis | `LatentKroneckerGP` | X × T product space |
 | conditional variables | `HierarchicalConditionalKernelGP` | active dimensions |
-| conditional + multitask | `HierarchicalConditionalKernelMultiTaskGP` | hierarchy + task covariance |
+| conditional + multitask | hierarchical conditional multi-task GP | hierarchy + task covariance |
 | contextual additive reward | `SACGP` | context decomposition |
 | latent context similarity | `LCEAGP` | learned embeddings |
 | context-wise outputs | `LCEMGP` | contextual multi-output |
