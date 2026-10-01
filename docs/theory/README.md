@@ -71,20 +71,20 @@ Gaussian Process（GP）の理論を、実装と対応付けながら説明し�
 | 大規模データ / Sparse GP | `SingleTaskVariationalGP` |
 | Preference Learning | `PairwiseGP` |
 | 高次元 BO | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` |
-| MAP-SAAS / Additive GP | `AdditiveMapSaasSingleTaskGP`,<br>`EnsembleMapSaasSingleTaskGP`,<br>`OrthogonalAdditiveGP` |
-| Robust / heavy-tailed observation | `RobustRelevancePursuitSingleTaskGP`,<br>`StudentTSingleTaskGP`,<br>`ContaminatedSingleTaskGP` |
-| Heteroskedastic / replicate noise | `HeteroskedasticSingleTaskGP`,<br>`JointHeteroskedasticSingleTaskGP`,<br>`ReplicateNoiseSingleTaskGP` |
+| MAP-SAAS / Additive GP | MAP-SAAS variants, `OrthogonalAdditiveGP` |
+| Robust / heavy-tailed observation | relevance pursuit, Student-t, contaminated GP |
+| Heteroskedastic / replicate noise | heteroskedastic and replicate-noise GP variants |
 | Input uncertainty | `UncertainInputSingleTaskGP`, `UncertainCategoricalSingleTaskGP` |
 | Nonstationarity | `NonstationarySingleTaskGP` |
 | Input/output reduction | `PCAGP`, `PLSGP`, `OutputPCAGP`, `OutputPLSGP` |
 | Neural reduction | `AutoEncoderGP`, `VAEGP`, `JointEncoderGP`, `JointVAEGP` |
 | High-dimensional search | REMBO, HeSBO, ALEBO, TuRBO, BAxUS |
 | Structured Output | `HigherOrderGP`, `LatentKroneckerGP` |
-| Hierarchical search space | `HierarchicalConditionalKernelGP`,<br>`HierarchicalConditionalKernelMultiTaskGP` |
+| Hierarchical search space | hierarchical conditional GP variants |
 | Heterogeneous Multi-task | `HeterogeneousMTGP` |
 | Contextual GP | `SACGP`, `LCEAGP`, `LCEMGP` |
 | Expressive GP | `JointEncoderGP`, `SingleTaskDeepGP`, `InfiniteWidthBNNGP`, `SpectralMixtureGP` |
-| Non-GP empirical ensemble | `RandomForestSurrogate`, `ExtraTreesSurrogate`,<br>`GradientBoostingSurrogate`,<br>`HistGradientBoostingSurrogate` |
+| Non-GP empirical ensemble | forest / extra-trees / boosting surrogate variants |
 | Distributional non-GP | `NGBoostSurrogate` |
 
 ## 関連ドキュメント
