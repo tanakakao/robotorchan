@@ -233,6 +233,22 @@ robotorchan は標準 MOBO acquisition をローカルに再実装せず、BoTor
 
 実際の利用方法は [Multi-objective optimization guide](../../optimization/multiobjective.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
+### 7.16.1 現在の multi-objective registry
+
+現在の registry では、BoTorch-native acquisition として
+
+- `qLogExpectedHypervolumeImprovement`
+- `qLogNoisyExpectedHypervolumeImprovement`
+- `qLogNParEGO`
+
+を明示的に登録しています。
+
+いずれも posterior samples を要求し、multi-objective capability を持ちます。
+また output / black-box constraint composition をサポートするものとして metadata 化されています。
+
+ここでいう constraint support は candidate/input-space constraint を意味しません。
+後者は acquisition optimizer の feasibility contract です。
+
 ## 7.17 まとめ
 
 MOBO では単一の incumbent ではなく Pareto structure を扱います。
