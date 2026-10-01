@@ -466,7 +466,7 @@ GPが予測平均と不確実性を返す仕組みを理解したら、次はそ
 
 次章では acquisition function を説明します。
 
-→ `04_acquisition_function.md`（今後追加予定）
+→ [4. Acquisition Function](04_acquisition_function.md)
 
 ## 参考文献
 
