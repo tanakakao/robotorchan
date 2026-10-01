@@ -470,6 +470,23 @@ robotorchan はこれらの標準機能を再実装せず、BoTorch native path 
 
 利用上の位置付けは [Multi-Fidelity / Cost-aware optimization guide](../../optimization/multifidelity-cost-aware.md)、現在の統合状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
+### 11.24.1 qMultiFidelityKnowledgeGradient の registry contract
+
+現在の `qMultiFidelityKnowledgeGradient` は
+
+- posterior samples required
+- fantasize support required
+- multi-fidelity model required
+- one-shot acquisition
+
+として registry に登録されています。
+
+したがって fidelity column を持つだけの model や、posterior samplingだけ可能な modelでは不十分です。
+model registry 上の `multi_fidelity` と `supports_fantasize` の両方が必要です。
+
+また one-shot acquisition なので、現在の generic mixed optimizer compatibility check では
+mixed optimization と非互換になります。
+
 ## 11.25 まとめ
 
 Multi-Fidelity acquisition の中心は、
