@@ -12,7 +12,8 @@ I(x)=\max(f(x)-f_{\mathrm{best}},0)
 
 です。
 
-noiseless な標準設定では、\(f_{\mathrm{best}}\) は既知の観測済み関数値の最良値として扱えます。noise がある場合、この単純な扱いは成立しにくくなり、NEI 系が重要になります。
+noiseless な標準設定では、\(f_{\mathrm{best}}\) は既知の観測済み関数値の最良値として扱えます。noise がある場合、この単純な扱いは成立しにくくなり、NEI
+系が重要になります。
 
 ## 2.2 Expected Improvement
 
@@ -70,7 +71,8 @@ z(x)
 
 は posterior uncertainty により改善が起こり得る寄与を含みます。
 
-このため EI は exploitation と exploration を自然に両立する代表的な基準です。ただし、これは二つの項を独立な「活用スコア」「探索スコア」として最適化しているという意味ではありません。両者は同じ improvement expectation の解析式です。
+このため EI は exploitation と exploration
+を自然に両立する代表的な基準です。ただし、これは二つの項を独立な「活用スコア」「探索スコア」として最適化しているという意味ではありません。両者は同じ improvement expectation の解析式です。
 
 ## 2.4 Probability of Improvement
 
@@ -92,7 +94,8 @@ PI は「改善するか」を直接評価しますが、大きな改善と小�
 
 EI や PI は理論的には単純ですが、改善が極めて起こりにくい領域では acquisition value と gradient が数値的に非常に小さくなることがあります。
 
-LogEI 系は、同じ improvement-based decision criterion を数値的に安定した log-space formulation で最適化する考え方です。したがって LogEI を EI と別の探索原理として扱うべきではありません。
+LogEI 系は、同じ improvement-based decision criterion を数値的に安定した log-space formulation
+で最適化する考え方です。したがって LogEI を EI と別の探索原理として扱うべきではありません。
 
 実装上は、理論式の正しさだけでなく acquisition optimization に十分な gradient information が残ることが重要です。
 
@@ -108,7 +111,8 @@ I_\xi(x)
 
 とする流儀もあります。
 
-\(\xi>0\) は「単に現在値を超える」より大きな改善を要求します。ただし、ライブラリ API がこの parameterization を採用しているとは限らないため、理論上の parameter と実装引数を混同しないことが重要です。
+\(\xi>0\) は「単に現在値を超える」より大きな改善を要求します。ただし、ライブラリ API がこの parameterization を採用しているとは限らないため、理論上の
+parameter と実装引数を混同しないことが重要です。
 
 ## 2.7 Minimize 問題
 
@@ -145,21 +149,26 @@ q\operatorname{EI}(X)=\mathbb E[I(X)]
 
 を MC で評価できます。
 
-候補間 posterior correlation が joint utility に影響するため、pointwise EI ranking とは異なります。詳細は [Batch / Noisy](04_batch_noisy.md) を参照してください。
+候補間 posterior correlation が joint utility に影響するため、pointwise EI ranking とは異なります。詳細は [Batch /
+Noisy](04_batch_noisy.md) を参照してください。
 
 ## 2.9 Noise と NEI
 
 observation noise があると、最大観測値が潜在関数の真の最良値とは限りません。この場合、固定した observed best を基準にする単純 EI は不安定な意思決定になり得ます。
 
-Noisy Expected Improvement（NEI）は baseline points の潜在関数値についても posterior uncertainty を積分し、noise-aware な improvement を評価します。
+Noisy Expected Improvement（NEI）は baseline points の潜在関数値についても posterior uncertainty
+を積分し、noise-aware な improvement を評価します。
 
-このため「noise があるので \(f_{\mathrm{best}}=\max y_i\) とする」という単純化は避ける必要があります。NEI の詳細は [Batch / Noisy](04_batch_noisy.md) で扱います。
+このため「noise があるので \(f_{\mathrm{best}}=\max y_i\) とする」という単純化は避ける必要があります。NEI の詳細は [Batch /
+Noisy](04_batch_noisy.md) で扱います。
 
 ## 2.10 BoTorch / robotorchan との対応
 
-BoTorch には EI / PI とその log formulation、q / noisy variants が用意されています。robotorchan はこれらを再実装せず、native path を利用します。
+BoTorch には EI / PI とその log formulation、q / noisy variants が用意されています。robotorchan
+はこれらを再実装せず、native path を利用します。
 
-実際の推奨 API と現在の統合状況は [Standard acquisition](../../optimization/standard_acquisition.md) と [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
+実際の推奨 API と現在の統合状況は [Standard acquisition](../../optimization/standard_acquisition.md) と
+[Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ### 2.10.1 現在の registry 名と LogEI 系
 
@@ -187,10 +196,13 @@ EI
 
 です。
 
-Log formulation は別の意思決定原理ではなく、数値安定性を改善する実装上重要な formulation です。batch と noise はさらに joint posterior と latent baseline uncertainty を導入するため、q / noisy variants を独立に理解する必要があります。
+Log formulation は別の意思決定原理ではなく、数値安定性を改善する実装上重要な formulation です。batch と noise はさらに joint posterior
+と latent baseline uncertainty を導入するため、q / noisy variants を独立に理解する必要があります。
 
 
 ## References
 
-- Ament, S. et al. (2023), *Unexpected Improvements to Expected Improvement for Bayesian Optimization*. arXiv:2310.20708. BoTorch's log-EI family follows this numerically robust formulation.
-- BoTorch documentation, *Acquisition Functions*, for the current analytic / Monte Carlo acquisition interfaces and log-space EI variants.
+- Ament, S. et al. (2023), *Unexpected Improvements to Expected Improvement for Bayesian
+Optimization*. arXiv:2310.20708. BoTorch's log-EI family follows this numerically robust formulation.
+- BoTorch documentation, *Acquisition Functions*, for the current analytic / Monte Carlo
+acquisition interfaces and log-space EI variants.
