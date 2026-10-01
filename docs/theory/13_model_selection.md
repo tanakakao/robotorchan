@@ -13,7 +13,8 @@ Output、Hierarchical、Contextual など多くのモデルがあります。
 
 複雑なモデルには、より強い仮定、より多いハイパーパラメータ、より高い計算コストが伴います。
 
-したがって本章では、まず `SingleTaskGP` を基準モデルとし、標準 GP では表現できない理由があるときだけ特殊モデルへ分岐する考え方を採用します。
+したがって本章では、通常のscalar regressionなら `SingleTaskGP` を比較基準に置きつつ、
+**観測形式や構造が最初から異なる問題を無理にSingleTaskGPへ変換しない**方針を採用します。
 
 ---
 
@@ -49,6 +50,23 @@ Output、Hierarchical、Contextual など多くのモデルがあります。
 この「なぜ標準 GP では足りないのか」を言語化できない場合、まず `SingleTaskGP` をベースラインにするのが安全です。
 
 ---
+
+### モデル名より先に7つの質問をする
+
+初心者はモデル一覧から選ぶより、次の順で問題を分解すると判断しやすくなります。
+
+~~~text
+1. 何を観測する？        numeric / comparison
+2. outputは何？          scalar / vector / tensor / function
+3. inputに構造はある？   mixed / hierarchy / context
+4. taskやfidelityはある？
+5. noise生成過程は？     known / heteroskedastic / outlier / input uncertainty
+6. d と n はどちらが難しい？
+7. BOで必要なposterior操作は？
+~~~
+
+最後の7番は重要です。予測モデルとして使えることと、posterior sampling・fantasization・
+特定のacquisitionでそのまま使えることは同義ではありません。
 
 ## 13.2 最重要フローチャート
 
@@ -150,7 +168,8 @@ A > C
 PairwiseGP
 ```
 
-が第一候補です。
+がcomparison likelihoodを持つ候補です。通常のnumeric regressionとは観測modelが異なるため、
+単なる0/1 regressionへの置換とは区別します。
 
 詳しくは [Preference Learning](10_preference_learning.md) を参照してください。
 
@@ -224,13 +243,14 @@ catalyst: categorical
 
 全変数は常に意味を持ちます。
 
-この場合、
+この場合、単一taskの基本構成なら
 
 ```text
 MixedSingleTaskGP
 ```
 
-が候補です。
+が候補です。ただし現行robotorchanには多くのMixed variantがあるため、
+**mixedであることは他の構造を捨てる理由ではありません**。
 
 ### Hierarchical / conditional variable
 
@@ -594,9 +614,9 @@ Exact GP の主要な制約は、学習点数 `n` に対する計算コストで
 
 標準的な Exact GP では、dense covariance の分解に概ね
 
-\[
+$$
 O(n^3)
-\]
+$$
 
 の計算量が現れます。
 
@@ -656,39 +676,33 @@ d = 5
 
 ---
 
-## 13.15 Step 9: 外れ値は問題か
+## 13.15 Step 9: noise生成過程とrobustnessを確認する
 
-一部の観測が極端に外れている場合、標準 Gaussian noise GP は強く影響を受けることがあります。
+「外れ値があるか」だけではなく、**なぜ観測が不確かになるのか**を分けます。
 
-外れ値が sparse contamination として解釈できるなら
+~~~text
+既知・固定の観測noise
+  → train_Yvar / likelihood
 
-```text
-RobustRelevancePursuitSingleTaskGP
-```
+入力位置によってnoise varianceが変わる
+  → heteroskedastic model
 
-を検討できます。
+replicateからnoiseを推定できる
+  → replicate-noise model
 
-ただし最初に確認するべきことがあります。
+少数のcontamination / outlier
+  → robust / contaminated model
 
-```text
-本当に外れ値か？
-```
+入力そのものが揺らぐ
+  → uncertain-input model
 
-例えば
+関数のsmoothnessやlengthscaleが場所で変わる
+  → nonstationary model
+~~~
 
-- 異なる装置
-- 異なる製法
-- regime change
-- 未記録カテゴリ
-- hierarchy
+これらは同じ「予測が不安定」という症状でも、仮定しているdata-generating processが異なります。
 
-が原因なら、それは外れ値ではなく **未モデル化の構造** です。
-
-その場合は robust GP より task / mixed / hierarchical model が適切です。
-
----
-
-## 13.16 ノイズと外れ値を区別する
+## 13.16 noise・outlier・regimeを区別する
 
 ### noise
 
@@ -709,7 +723,13 @@ noise
 → likelihood / train_Yvar
 
 outlier
-→ robust model
+→ robust / contaminated model
+
+input uncertainty
+→ uncertain-input model
+
+nonstationarity
+→ nonstationary model
 
 regime
 → task / categorical / hierarchical model
@@ -799,7 +819,7 @@ shape を先に整理すると、候補モデルをかなり絞れます。
 → 品質
 ```
 
-第一候補:
+基本候補:
 
 ```text
 SingleTaskGP
@@ -814,7 +834,7 @@ SingleTaskGP
 → 品質
 ```
 
-第一候補:
+基本候補:
 
 ```text
 MixedSingleTaskGP
@@ -827,7 +847,7 @@ MixedSingleTaskGP
 製法B → 圧力
 ```
 
-第一候補:
+基本候補:
 
 ```text
 HierarchicalConditionalKernelGP
@@ -982,9 +1002,9 @@ BO では posterior mean だけでなく posterior uncertainty が acquisition �
 
 例えば UCB なら
 
-\[
+$$
 \alpha(x) = \mu(x) + \beta^{1/2}\sigma(x)
-\]
+$$
 
 なので、`σ(x)` が過小評価されると探索不足になります。
 
@@ -1151,6 +1171,28 @@ PairwiseGP
 
 ---
 
+### Registryは「自動的な正解表」ではない
+
+現行robotorchanのmodel registryには、mixed、multitask、inference方式、
+high-dimensional strategy、robustness、multi-fidelity、structured-output、
+preference、posterior sampling、fantasizationなどのcapability metadataがあります。
+
+これは候補を絞るために有用ですが、
+
+~~~text
+capability = その操作・構造をサポートする
+~~~
+
+であって、
+
+~~~text
+capability = その問題に最適なモデルである
+~~~
+
+ではありません。
+
+最終判断では、data-generating assumptionとvalidationを優先します。
+
 ## 13.28 診断フロー
 
 モデルを学習した後は次の順で確認します。
@@ -1286,9 +1328,9 @@ LatentKroneckerGP
 
 ---
 
-## 13.36 実務向けモデル選択表
+## 13.36 問題構造から見るモデル候補表
 
-| 問題構造 | 第一候補 | 主な理由 |
+| 問題構造 | 基本候補 | 主な理由 |
 |---|---|---|
 | 通常の連続単一出力 | `SingleTaskGP` | 基準モデル |
 | 連続 + categorical | `MixedSingleTaskGP` | カテゴリ距離を適切に扱う |
@@ -1533,7 +1575,7 @@ SingleTaskGP で十分なら SingleTaskGP を使う
 
 ---
 
-## 13.44 robotorchan モデル選択の最終まとめ
+## 13.44 この章で覚えておくこと
 
 ```text
 普通の連続回帰
@@ -1591,6 +1633,29 @@ context-wise output
 ここまでの理論章と [`docs/models.md`](../models.md)、実行 Notebook を併用することで、理論・API・実装例を相互に参照しながらモデルを選択できます。
 
 ---
+
+### 最終的な考え方
+
+モデル選択は「最も高機能なclassを探す作業」ではありません。
+
+~~~text
+観測の意味
+  ↓
+data-generating structure
+  ↓
+必要なmodel assumption
+  ↓
+posterior contract
+  ↓
+acquisition / optimizerとの互換性
+  ↓
+validation
+~~~
+
+という順に絞ります。
+
+複数の特殊構造が同時にある場合は、registryのcapabilityを使って**交差する候補群**を確認し、
+その後に実装contractとvalidationを確認します。モデル名から機能を推測しないことも重要です。
 
 ## 次に読むもの
 
