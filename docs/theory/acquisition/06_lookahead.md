@@ -11,7 +11,7 @@ KG   : 観測後のterminal decision valueの改善
 KGの中心は「何を知れるか」だけではなく、その情報によって**最後に下すdecisionがどれだけ
 良くなるか**です。これがvalue of informationです。
 
-## 6.3 現在の候補ではなく観測後の意思決定を見る
+## 6.2 現在の候補ではなく観測後の意思決定を見る
 
 Lookahead acquisition は、候補 $`x`$ の現在の objective value だけでなく、
 
@@ -21,32 +21,32 @@ Lookahead acquisition は、候補 $`x`$ の現在の objective value だけで�
 
 現在のデータを $`\mathcal D_n`$、候補 $`x`$ の未知観測を $`Y_x`$ とすると、観測後データは
 
-$
+$$
 \mathcal D_{n+1}
 =
 \mathcal D_n\cup\{(x,Y_x)\}
-$
+$$
 
 です。
 
 しかし acquisition を評価する時点では $`Y_x`$ は未知です。そのため、possible outcomes に対して観測後の posterior と意思決定を平均する必要があります。
 
-## 6.2 Value of Information
+## 6.3 Value of Information
 
 現在の最終意思決定価値を \(V(\mathcal D_n)\) とします。
 
 候補 $`x`$ を観測した後の expected decision value が
 
-$
+$$
 \mathbb E_{Y_x}
 [
 V(\mathcal D_n\cup\{(x,Y_x)\})
 ]
-$
+$$
 
 なら、one-step value of information は概念的に
 
-$
+$$
 \alpha_{\mathrm{VOI}}(x)
 =
 \mathbb E_{Y_x}
@@ -55,7 +55,7 @@ V(\mathcal D_n\cup\{(x,Y_x)\})
 ]
 -
 V(\mathcal D_n)
-$
+$$
 
 と書けます。
 
@@ -67,29 +67,29 @@ Knowledge Gradient（KG）は Bayesian Optimization における代表的な val
 
 noiseless な直感では、現在の posterior mean に基づく最良 decision value
 
-$
+$$
 V_n
 =
 \max_{x'\in\mathcal X}\mu_n(x')
-$
+$$
 
 と、候補 $`x`$ を観測した後の posterior mean $`\mu_{n+1}`$ に基づく
 
-$
+$$
 V_{n+1}
 =
 \max_{x'\in\mathcal X}\mu_{n+1}(x')
-$
+$$
 
 の expected difference を評価します。
 
-$
+$$
 \operatorname{KG}(x)
 =
 \mathbb E_{Y_x}[V_{n+1}]
 -
 V_n
-$
+$$
 
 実際の formulation は observation noise、terminal value、candidate representation などに応じて変わりますが、本質は
 **観測後の最終 decision quality の改善**です。
@@ -141,14 +141,14 @@ KG には nested optimization が現れます。
 
 外側では「どこを観測するか」を最適化し、各 fantasy outcome の内側では「観測後にどこを最終選択するか」を最適化します。
 
-$
+$$
 \max_x
 \;
 \mathbb E_{Y_x}
 \left[
 \max_{x'} \mu_{n+1}(x')
 \right]
-$
+$$
 
 この inner maximization が KG の計算コストと最適化難易度の大きな要因です。
 
@@ -158,9 +158,9 @@ BoTorch では fantasy points / fantasy samples と acquisition optimization を
 
 複数候補を同時に観測する場合は、candidate batch $`X`$ の joint future observations を考えます。
 
-$
+$$
 Y_X\sim p(Y_X\mid\mathcal D_n)
-$
+$$
 
 qKG は batch を観測した後の expected terminal decision value を評価します。
 
@@ -241,21 +241,21 @@ framework として理解する方が適切です。
 
 ### Batch
 
-$
+$$
 (x_1,\ldots,x_q)
-$
+$$
 
 を**観測結果を見る前に同時決定**します。
 
 ### Multi-step adaptive policy
 
-$
+$$
 x_1
 \rightarrow
 Y_1
 \rightarrow
 x_2(Y_1)
-$
+$$
 
 のように、後の decision が前の observation に依存します。
 
@@ -351,9 +351,9 @@ augmented rowごとにcategorical assignmentを分離してexact enumerationし�
 
 Lookahead acquisition の中心は
 
-$
+$$
 \text{value of information for future decisions}
-$
+$$
 
 です。
 
