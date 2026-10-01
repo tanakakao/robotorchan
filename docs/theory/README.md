@@ -16,6 +16,22 @@ Gaussian Process（GP）の理論を、実装と対応付けながら説明し�
 [プロジェクトREADME](../../README.md) → [モデル選択](../models.md)
 → **理論確認（現在地）** → [実行例](../../examples/README.md)
 
+## 最短の学習ルート
+
+23章を番号順にすべて読む必要はありません。初心者はまず次の流れでBO loop全体を掴みます。
+
+~~~text
+01 Bayesian Optimization
+ -> 02 Gaussian Process
+ -> 03 Kernel
+ -> 04 Acquisition Function
+ -> optimization/ Acquisition Optimization
+~~~
+
+その後、自分の問題で標準GPのどの仮定が不足するかに応じて各Partへ進みます。
+13章Model Selectionは番号上は途中ですが、**横断的な選択ガイド**なので基礎4章の後にも、
+各専門章を読んだ後にも参照できます。
+
 ## 推奨する読み方
 
 初めてベイズ最適化を学ぶ場合は、最初からモデル名を順番に暗記するのではなく、
@@ -99,6 +115,11 @@ tree ensemble、boosting、NGBoost などでは、GP と同じ posterior interfa
 
 ### Part VII: モデルを選ぶ
 
+> **番号と読む順序について**
+>
+> 13章はファイル番号を維持していますが、Part VIIは横断ガイドです。
+> 「13章の後に14章を読む」という意味のPart分類ではありません。
+
 各モデル群の理論を理解した後、問題設定と実装 capability を対応付けます。
 
 13. [Model Selection](13_model_selection.md)
@@ -131,6 +152,47 @@ tree ensemble、boosting、NGBoost などでは、GP と同じ posterior interfa
 
 この表はモデルを一意に決める decision tree ではありません。
 実際の問題では複数行が同時に当てはまり、複数の性質を組み合わせたモデルが候補になります。
+
+## 章をまたいで使う共通用語
+
+| 用語 | このガイドでの意味 |
+| --- | --- |
+| raw / public input | userがmodelやoptimizerへ渡す元の入力座標 |
+| internal representation | model内部で変換された入力表現 |
+| search coordinates | candidate optimizationが探索する座標 |
+| posterior | 各model family固有のpredictive representation |
+| observation noise | 観測過程のnoise。posterior uncertainty全般の別名ではない |
+| Mixed | continuous / integer / categorical等を含む入力構造 |
+| MultiTask | task間の情報共有構造 |
+| Multi-output | 1入力に複数outputを持つ一般概念 |
+| fidelity | accuracy / costの異なる評価レベル |
+| robust | 原因を明記して使う。outlier、noise、input uncertainty等を一括しない |
+
+特に `posterior` は共通interface名として使いますが、Exact GP、DeepGP、ensemble、
+NGBoostで統計的意味が同じだとは仮定しません。
+
+## 初心者が混同しやすい境界
+
+~~~text
+model complexity
+  != data-size scalability
+  != input dimensionality
+  != candidate-search difficulty
+
+observation noise
+  != input uncertainty
+  != nonstationarity
+  != outlier robustness
+
+model latent coordinates
+  != search coordinates
+
+MultiTask
+  != generic Multi-output
+  != MultiFidelity
+~~~
+
+これらが同時に存在する問題はありますが、まず別の問題として理解してから組み合わせます。
 
 ## このガイドの構成方針
 
@@ -363,8 +425,6 @@ surrogate model
 これらは新しい surrogate model ではないため、model chapter を増やすだけでは coverage できません。
 現在は次の実装ガイドを source of truth として接続します。
 
-| Layer | 理論上の役割 | 実装ガイド |
-| --- | --- | --- |
 | Layer | 主な実装ガイド |
 | --- | --- |
 | Posterior sampling | [Posterior sampling](../optimization/posterior-sampling.md) |
@@ -472,9 +532,10 @@ surrogate capability と trust-region search contract の両方を満たすか�
 
 robotorchan 固有の API behavior は論文ではなく実装との対応として記述します。
 
-01-13章は初期から段階的に詳細化されたため、14-23章と比べて参考文献 section の形式が
-統一されていません。内容上の citation source と実装対応を再監査し、後続 phase で
-chapter-level reference section を統一します。
+各model chapterはcanonical literatureへ辿れるようchapter-level reference sectionを持ちます。
+referenceの表記差そのものより、理論上重要なclaimが原論文・canonical extension・標準textbookの
+いずれかへ接続できることを優先します。robotorchan固有のAPI behaviorは論文へ帰属させず、
+current implementationとの対応として記述します。
 
 ## 章を追加する判断
 
@@ -495,20 +556,12 @@ chapter-level reference section を統一します。
 
 ## 現在の再監査状況
 
-理論ドキュメントは実装拡張に合わせて段階的に再監査しています。
+01-23章は、基礎、構造化入力・出力、高次元、robustness、expressive GP、non-GP surrogateまで
+横断的に再監査しています。
 
-特に14-23章では、
-
-- robustness / noise / uncertain input
-- nonstationarity
-- dimensionality reduction
-- neural representation
-- high-dimensional search
-- SAAS / additive / ALEBO
-- expressive GP
-- non-GP surrogate
-
-について、数式、実装契約、BoTorch integration、参考文献を再確認しています。
+監査では、初心者向けの直感だけでなく、current implementationとの対応、fitting contract、
+posterior semantics、Mixed / MultiTask等の構造、acquisition requirements、search strategyとの
+責務境界を確認します。
 
 このREADMEは各章のsource of truthではなく、理論体系全体のnavigationと責務境界を示すindexです。
 具体的なmodel behaviorは各chapterとcurrent implementationを基準にします。
