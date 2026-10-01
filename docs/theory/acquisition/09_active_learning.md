@@ -13,7 +13,7 @@ Active Learning
 両者は同じposteriorやoptimizerを使えても、acquisition utilityの意味が違います。
 「explorationが強いBO」をそのままALと呼ぶのではなく、何を学習対象にするかを先に決めます。
 
-## 9.3 最適化ではなく学習を目的にする
+## 9.2 最適化ではなく学習を目的にする
 
 Bayesian Optimization（BO）と Active Learning（AL）は、どちらも surrogate posterior を使って次の観測点を選べますが、目的が異なります。
 
@@ -30,25 +30,25 @@ distribution 上の情報量などが観測価値になります。
 
 したがって、AL acquisition を「改善量を使わない BO acquisition」と理解するのは不十分です。
 
-## 9.2 Pool-based と continuous-domain AL
+## 9.3 Pool-basedとcontinuous-domain AL
 
 候補集合が有限 pool
 
-$
+$$
 \mathcal X_{\mathrm{pool}}
 =
 \{x^{(1)},\ldots,x^{(N)}\}
-$
+$$
 
 として与えられる場合、acquisition score を pool 上で評価して選択できます。
 
 一方、連続空間 $`\mathcal X`$ では
 
-$
+$$
 x^*
 \in
 \arg\max_{x\in\mathcal X}\alpha_{AL}(x)
-$
+$$
 
 として acquisition optimization が必要です。
 
@@ -58,13 +58,13 @@ $
 
 最も直接的な uncertainty sampling は posterior variance
 
-$
+$$
 \alpha_{\mathrm{Var}}(x)
 =
 \operatorname{Var}[f(x)\mid\mathcal D_n]
 =
 \sigma_n^2(x)
-$
+$$
 
 を最大化する方法です。
 
@@ -76,11 +76,11 @@ posterior variance が大きい点は、現在の surrogate がその latent fun
 
 posterior standard deviation を使えば
 
-$
+$$
 \alpha_{\mathrm{Std}}(x)
 =
 \sigma_n(x)
-$
+$$
 
 です。
 
@@ -101,19 +101,19 @@ AL で重要なのは、uncertainty の種類を区別することです。
 
 観測モデルを
 
-$
+$$
 y(x)=f(x)+\epsilon
-$
+$$
 
 とすると、predictive variance は概念的に
 
-$
+$$
 \operatorname{Var}[y(x)\mid\mathcal D_n]
 =
 \operatorname{Var}[f(x)\mid\mathcal D_n]
 +
 \operatorname{Var}[\epsilon]
-$
+$$
 
 と分解できます。
 
@@ -124,7 +124,7 @@ aleatoric uncertainty を追い続ける可能性があります。
 
 したがって「どの posterior variance を acquisition が使っているか」を確認する必要があります。
 
-## 9.7 Pointwise uncertainty の限界
+## 9.7 Pointwise uncertaintyからtarget-region reductionへ
 
 PosteriorVariance はその候補自身の uncertainty を評価します。
 
@@ -153,20 +153,20 @@ prediction qualityを改善したい場所は同一である必要がありま�
 
 関心領域または target distribution \(p_T(x)) に対する integrated posterior variance を
 
-$
+$$
 V_n
 =
 \int_{\mathcal X}
 \sigma_n^2(x)
 p_T(x)\,dx
-$
+$$
 
 とします。
 
 候補 $`x_c`$ を観測した後の posterior variance を $`\sigma_{n+1}^2`$ とすれば、expected integrated variance
 reduction は
 
-$
+$$
 \Delta V(x_c)
 =
 V_n
@@ -177,13 +177,13 @@ V_n
 \sigma_{n+1}^2(x)
 p_T(x)\,dx
 \right]
-$
+$$
 
 です。
 
 Gaussian models の条件によっては posterior covariance update が観測値そのものに依存しないため、この expectation を簡略化できる場合があります。
 
-## 9.9 Target distribution の意味
+## 9.9 Target distributionの意味
 
 AL の目的は「探索空間全体を均等に学ぶ」とは限りません。
 
@@ -209,7 +209,7 @@ posterior variance を基準に candidate set を評価する考え方です。
 
 概念的には
 
-$
+$$
 \alpha_{\mathrm{NIPV}}(X)
 =
 -
@@ -221,7 +221,7 @@ f(x)
 \mathcal D_n, X
 ]
 p_T(x)\,dx
-$
+$$
 
 です。
 
@@ -237,9 +237,9 @@ posterior variance の高い点を独立に上位 q 点選ぶと、互いに強�
 
 joint batch criterion は、
 
-$
+$$
 X=(x_1,\ldots,x_q)
-$
+$$
 
 をまとめて条件付けした後の uncertainty reduction を評価することで、候補間の情報重複を考慮できます。
 
@@ -251,9 +251,9 @@ variance reduction は second-order uncertainty を基準にします。
 
 より一般には、候補観測 $`Y_x`$ と target prediction $`Y_T`$ の mutual information
 
-$
+$$
 I(Y_x;Y_T\mid\mathcal D_n)
-$
+$$
 
 を acquisition value として使えます。
 
@@ -277,42 +277,42 @@ observation の information gain を target distribution について平均し�
 
 target input を $`x_T\sim p_T`$ とすれば、概念的に
 
-$
+$$
 \operatorname{EPIG}(x)
 =
 \mathbb E_{x_T\sim p_T}
 \left[
 I(Y_x;Y_{x_T}\mid\mathcal D_n)
 \right]
-$
+$$
 
 です。
 
 finite target set
 
-$
+$$
 T=\{x_T^{(1)},\ldots,x_T^{(M)}\}
-$
+$$
 
 と weights $`w_j`$ を使えば、
 
-$
+$$
 \operatorname{EPIG}(x)
 \approx
 \sum_{j=1}^{M}
 w_j
 I(Y_x;Y_{x_T^{(j)}}\mid\mathcal D_n)
-$
+$$
 
 として評価できます。
 
-## 9.14 EPIG と Entropy Sampling の違い
+## 9.14 EPIGとEntropy Samplingの違い
 
 candidate 自身の predictive entropy
 
-$
+$$
 H(Y_x\mid\mathcal D_n)
-$
+$$
 
 を最大化するだけでは、その候補が target predictions に有益かは分かりません。
 
@@ -330,7 +330,7 @@ EPIG
 
 という違いがあります。
 
-## 9.15 EPIG と MES の違い
+## 9.15 EPIGとMESの違い
 
 どちらも mutual information を使えますが、情報対象が異なります。
 
@@ -346,7 +346,7 @@ EPIG
 
 したがって information-theoretic acquisition を分類するときは、式に entropy が出てくるかではなく「何について情報を得るのか」を見る必要があります。
 
-## 9.16 Regression と Classification
+## 9.16 RegressionとClassification
 
 AL は regression だけでなく classification でも重要です。
 
@@ -392,10 +392,10 @@ target distribution $`p_T`$ が deployment distribution と一致しない場合
 
 例えば概念的には
 
-$
+$$
 \frac{\text{expected information gain}}
 {\text{evaluation cost}}
-$
+$$
 
 のような utility が考えられます。
 
@@ -420,7 +420,7 @@ AL では optimum discovery 以外の stopping rule が自然です。
 
 acquisition criterion と stopping criterion は別の責務ですが、同じ uncertainty objective に基づいて設計できる場合があります。
 
-## 9.20 BoTorch / robotorchan との対応
+## 9.20 BoTorch / robotorchanとの対応
 
 BoTorch は qNegativeIntegratedPosteriorVariance など experimental-design 向け acquisition を提供しています。
 
