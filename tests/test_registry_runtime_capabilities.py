@@ -1,5 +1,11 @@
 """Regression tests for explicit runtime capability metadata."""
 
+from botorch.sampling.index_sampler import IndexSampler
+from botorch.sampling.normal import SobolQMCNormalSampler
+from botorch.sampling.stochastic_samplers import StochasticSampler
+from torch import Size
+
+from robotorchan.acquisition.samplers import make_model_sampler
 from robotorchan.models.capabilities import InputType, PosteriorSamplingType
 from robotorchan.models.registry import MODEL_REGISTRY
 
@@ -120,3 +126,26 @@ def test_ensemble_sampling_type_is_reserved_for_empirical_ensemble_posteriors() 
         "GradientBoostingSurrogate",
         "HistGradientBoostingSurrogate",
     }
+
+
+def test_sampling_type_always_matches_sampling_support() -> None:
+    for entry in MODEL_REGISTRY.values():
+        capabilities = entry.capabilities
+        has_sampling_type = capabilities.posterior_sampling_type is not PosteriorSamplingType.NONE
+        assert capabilities.supports_posterior_samples is has_sampling_type
+
+
+def test_sampler_factory_matches_registered_sampling_type() -> None:
+    expected_sampler_type = {
+        PosteriorSamplingType.GAUSSIAN: SobolQMCNormalSampler,
+        PosteriorSamplingType.ENSEMBLE: IndexSampler,
+        PosteriorSamplingType.STOCHASTIC: StochasticSampler,
+    }
+
+    for name, entry in MODEL_REGISTRY.items():
+        sampling_type = entry.capabilities.posterior_sampling_type
+        if sampling_type is PosteriorSamplingType.NONE:
+            continue
+
+        sampler = make_model_sampler(name, Size([4]))
+        assert isinstance(sampler, expected_sampler_type[sampling_type])
