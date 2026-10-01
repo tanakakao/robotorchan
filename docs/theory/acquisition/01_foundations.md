@@ -16,21 +16,21 @@ surrogateは未知応答の予測、acquisitionは次の評価の価値付け、
 
 観測データを
 
-$
+$$
 \mathcal D_n=\{(x_i,y_i)\}_{i=1}^n
-$
+$$
 
 とし、潜在関数の posterior を
 
-$
+$$
 p(f\mid\mathcal D_n)
-$
+$$
 
 とします。逐次選択では一般に
 
-$
+$$
 x_{n+1}\in\arg\max_{x\in\mathcal X}\alpha(x;\mathcal D_n)
-$
+$$
 
 として候補を選びます。
 
@@ -38,14 +38,14 @@ $
 
 ## 1.3 Posterior と utility
 
-候補集合 $`X`$ の未知出力を \(f(X)\) とし、その結果から得られる効用を \(U(f(X))\) とすれば、多くの獲得関数は概念的に
+候補集合 $`X`$ の未知出力を $`f(X)`$ とし、その結果から得られる効用を $`U(f(X))`$ とすれば、多くの獲得関数は概念的に
 
-$
+$$
 \alpha(X)
 =
 \mathbb E_{p(f(X)\mid\mathcal D_n)}
 [U(f(X))]
-$
+$$
 
 と捉えられます。
 
@@ -60,13 +60,13 @@ Active Learningでは予測を学ぶ価値がutilityになります。
 
 単一出力 Gaussian posterior
 
-$
+$$
 f(x)\mid\mathcal D_n
 \sim
 \mathcal N(\mu_n(x),\sigma_n^2(x))
-$
+$$
 
-を考えると、\(\mu_n(x)\) は現在の予測、\(\sigma_n(x)\) は posterior uncertainty を表します。
+を考えると、$`\mu_n(x)`$ は現在の予測、$`\sigma_n(x)`$ は posterior uncertainty を表します。
 
 - exploitation は現在良いと予測される領域を重視します。
 - exploration は不確実で、追加観測により知識が変わり得る領域を重視します。
@@ -87,19 +87,19 @@ Gaussian posteriorに対するq=1のEIやPIは代表例です。analytic formは
 
 閉形式が難しい場合、posterior sample
 
-$
+$$
 f^{(s)}(X)\sim p(f(X)\mid\mathcal D_n),
 \quad s=1,\ldots,S
-$
+$$
 
 を使って
 
-$
+$$
 \alpha(X)
 \approx
 \frac{1}{S}
 \sum_{s=1}^{S}U(f^{(s)}(X))
-$
+$$
 
 と近似できます。
 
@@ -128,15 +128,15 @@ batch utilityでは、同じposterior sample内でcandidate間のjoint structure
 
 modelがmulti-outputでも、model outputとacquisitionが使う意思決定量は同じとは限りません。
 
-posterior sample \(f(X)\) に対して scalar objective
+posterior sample $`f(X)`$ に対して scalar objective
 
-$
+$$
 h(f(X))
-$
+$$
 
 を定義し、その後 utility を評価する場合があります。
 
-$
+$$
 \text{posterior}
 \rightarrow
 \text{objective / transform}
@@ -144,7 +144,7 @@ $
 \text{utility}
 \rightarrow
 \text{acquisition value}
-$
+$$
 
 したがって、model output、objective、acquisition functionは別の概念です。
 Multi-objective BOのようにobjective vector自体を扱う場合は、この単純なscalarizationとは
@@ -157,9 +157,9 @@ utility計算用の量へ写せますが、後者はposterior representation自�
 
 獲得関数の定義と、その最大化は別問題です。
 
-$
+$$
 X^*\in\arg\max_{X\in\mathcal X^q}\alpha(X)
-$
+$$
 
 を数値的に解く必要があります。
 
