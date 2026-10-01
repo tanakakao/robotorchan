@@ -2,7 +2,8 @@
 
 この章では、これまで説明してきた Gaussian Process（GP）モデルを、**問題設定から逆算して選ぶ方法**を整理します。
 
-`robotorchan` には標準 GP、Mixed、Multi-Fidelity、Multi-task、Variational、SAAS、Preference、Structured Output、Hierarchical、Contextual など多くのモデルがあります。
+`robotorchan` には標準 GP、Mixed、Multi-Fidelity、Multi-task、Variational、SAAS、Preference、Structured
+Output、Hierarchical、Contextual など多くのモデルがあります。
 
 しかし、モデル数が増えるほど重要になるのは「最も高度なモデルを使うこと」ではなく、
 
@@ -378,7 +379,8 @@ HeterogeneousMTGP
 
 を検討します。
 
-詳しくは [Multi-task / Multi-output](07_multitask_multioutput.md) と [Hierarchical / Contextual GP](12_hierarchical_contextual_gp.md) を参照してください。
+詳しくは [Multi-task / Multi-output](07_multitask_multioutput.md) と [Hierarchical / Contextual
+GP](12_hierarchical_contextual_gp.md) を参照してください。
 
 ---
 
