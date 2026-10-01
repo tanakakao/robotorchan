@@ -98,15 +98,15 @@ noise がある
 
 重要なのは、
 
-$
+$$
 \alpha(x_1)+\cdots+\alpha(x_q)
-$
+$$
 
 ではなく、
 
-$
+$$
 \alpha(x_1,\ldots,x_q)
-$
+$$
 
 として候補間 correlation と redundancy を扱うことです。
 
@@ -133,9 +133,9 @@ batch と asynchronous は同じではありません。
 
 exploration strength を明示的に扱いたい場合は UCB family が理解しやすい選択肢です。
 
-$
+$$
 \mu(x)+\sqrt{\beta}\sigma(x)
-$
+$$
 
 のように mean と uncertainty の寄与を直接確認できます。
 
@@ -299,9 +299,9 @@ target prediction が改善する
 
 ## 12.16 Threshold boundary を学びたい
 
-$
+$$
 f(x)=t
-$
+$$
 
 の境界が目的なら level-set acquisition を使います。
 
@@ -458,9 +458,9 @@ unsupported structure を generic tensor operation で無理に通すより、�
 
 例えば、
 
-$
+$$
 \mathbb E_w[f(x,w)]
-$
+$$
 
 や worst-case / risk measure などです。
 
@@ -483,9 +483,9 @@ posterior sampling / Thompson sampling も finite-pool selection と相性が良
 
 posterior function sample
 
-$
+$$
 \tilde f\sim p(f\mid\mathcal D)
-$
+$$
 
 を生成し、その sample 上の optimum を選ぶ Thompson Sampling は、明示的な deterministic acquisition formula とは異なる
 candidate-selection mechanism です。
@@ -528,11 +528,11 @@ MES、KG、multi-step lookahead、high-q MOBO などでは acquisition computati
 
 選択時には、
 
-$
+$$
 \text{experiment cost}
 \quad\text{vs}\quad
 \text{acquisition computation cost}
-$
+$$
 
 も考えます。
 
@@ -630,7 +630,7 @@ Theoryで定義できることと、現在の実行可能workflowは同義では
 
 この表は開始点であり、ランキングではありません。
 
-## 12.31 robotorchan のドキュメント層
+## 12.31 robotorchanのドキュメント層
 
 手法を選んだ後は、目的に応じて参照先を分けます。
 
