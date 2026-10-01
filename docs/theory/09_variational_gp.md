@@ -40,7 +40,7 @@ robotorchan では BoTorch の
 SingleTaskVariationalGP
 ```
 
-を thin wrapper として提供しています。
+を BoTorch-compatible wrapper として提供しています。
 
 本章では、
 
@@ -447,7 +447,7 @@ m 大
 
 ## 9.14 BoTorch の default inducing point 数
 
-BoTorch 0.18.1 の `SingleTaskVariationalGP` では、`inducing_points` を明示しない場合、heuristic として
+upstream `SingleTaskVariationalGP` では、`inducing_points` を明示しない場合、heuristic として
 
 \[
 m \approx 0.25n
@@ -523,7 +523,8 @@ Z の位置も更新
 
 ## 9.17 robotorchan の `SingleTaskVariationalGP`
 
-robotorchan では BoTorch のモデルを薄く wrap しています。
+robotorchan は BoTorch の variational model contract を維持しつつ、
+raw training data と `make_mll()` の共通規約を追加しています。
 
 constructor は主に
 
@@ -794,7 +795,7 @@ model.raw_train_Yvar is None
 
 ## 9.27 `train_Y` は optional
 
-BoTorch 0.18.1 の `SingleTaskVariationalGP` では `train_Y` は optional です。
+現在の robotorchan `SingleTaskVariationalGP` では `train_Y` は optional です。
 
 これは model structure と inducing point を `train_X` だけで構築し、その後別途 training loop で target
 を与える使い方ができるためです。
@@ -838,7 +839,7 @@ num_outputs > 1
 
 も扱えます。
 
-ただし BoTorch 0.18.1 では複数 output を **independent な batch** として扱います。
+ただし 現在の underlying variational contract では複数 output を **independent な batch** として扱います。
 
 つまり
 
@@ -894,7 +895,7 @@ inducing point 数が増えると `S` の parameter 数も増えるため、`m` 
 
 ## 9.32 input / outcome transform の注意
 
-BoTorch 0.18.1 は `SingleTaskVariationalGP` で minibatch training を行う場合、learnable transform
+upstream `SingleTaskVariationalGP` で minibatch training を行う場合、learnable transform
 に注意するよう明示しています。
 
 例えば
