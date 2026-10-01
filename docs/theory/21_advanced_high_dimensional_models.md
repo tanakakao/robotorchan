@@ -20,6 +20,22 @@ high-dimensional X
 
 この章では「高次元」という共通ラベルの下にある異なる statistical assumptions を分離します。
 
+### 最初に「高次元へ効く理由」を分ける
+
+同じhigh-dimensional modelでも、次元の難しさを減らす仮定は同じではありません。
+
+| 構造仮定 | 何を簡単にするか | 代表例 |
+| --- | --- | --- |
+| axis-aligned sparsity | 多くの元特徴を弱くする | SAAS / MAP-SAAS |
+| additive structure | 高次相互作用を制限する | OAK |
+| linear subspace | ambient space内の低次元方向を使う | ALEBO |
+| learned representation | 観測Xからlatent表現を作る | PCA / PLS / AE / VAE |
+| local search geometry | candidate探索範囲を局所化する | TuRBO |
+| adaptive search subspace | 探索部分空間を段階的に拡張する | BAxUS |
+
+これらは「高次元」という症状に対する異なるstatistical / search assumptionsです。
+複数を同じ意味のdimension reductionとして扱いません。
+
 ## 1. ARD と dimension relevance
 
 ARD kernel は dimension ごとの lengthscale を持ちます。
@@ -32,7 +48,9 @@ k(x, x')
     )
 ```
 
-大きな `ell_j` は、その dimension の変化に対して関数が比較的鈍感であることを意味します。
+大きな `ell_j` は、そのdimensionの変化に対して、**そのkernelと他のhyperparameterを固定した条件では**
+関数が比較的鈍感であることを意味します。lengthscaleだけから因果的重要度を結論づけることは
+できません。
 
 しかし通常の ARD では高次元・小標本になるほど多数の lengthscale を安定に推定しにくくなります。
 
@@ -59,7 +77,10 @@ x -> W^T x
 
 と latent coordinate を作る方法ではありません。
 
-元の input dimensions を保持したまま、その relevance に sparse prior を置きます。
+元のinput dimensionsを保持したまま、そのrelevanceにsparse priorを置きます。
+
+したがってSAASが想定する低有効次元性は主として**元座標軸に沿ったsparsity**です。
+任意に回転したdense linear subspaceを直接学習するALEBOやprojection modelとは仮定が異なります。
 
 ## 3. Fully Bayesian SAAS
 
@@ -70,7 +91,10 @@ robotorchan の
 
 は BoTorch の fully Bayesian SAAS implementation をラップします。
 
-hyperparameter uncertainty は point estimate へ潰さず MCMC samples として保持されます。
+hyperparameter uncertaintyはpoint estimateへ潰さずMCMC samplesとして保持されます。
+
+これは「重要dimensionを1組に確定する」操作ではなく、SAAS priorの下で複数のhyperparameter
+samplesをposterior predictionへ反映する構成です。
 
 そのため通常の exact GP の
 
@@ -137,10 +161,23 @@ robotorchan:
 
 BoTorch の MAP-SAAS model を raw-data retention contract とともに提供します。
 
-`num_taus` や `taus` により複数の shrinkage scales を扱います。
+`num_taus` や `taus` により複数のshrinkage scalesを扱います。
 
-fully Bayesian SAAS と比べると posterior over hyperparameters の完全な MCMC integration を
-行わない代わりに、計算負荷を抑えやすい構成です。
+ここでクラス名の `AdditiveMapSaasSingleTaskGP` にある「Additive」を、後述する
+Orthogonal Additive Kernelの「入力componentの加法分解」と同一視しません。
+MAP-SAAS familyとOAK familyは別のmodeling assumptionsです。
+
+fully Bayesian SAASと異なりNUTSによるhyperparameter posterior integrationは行いません。
+`AdditiveMapSaasSingleTaskGP` と `EnsembleMapSaasSingleTaskGP` のposterior semanticsも
+「fully Bayesian SAASを単に高速化した同一posterior」とは扱いません。
+
+### fitting contractも分ける
+
+現行robotorchanではFully Bayesian SAASは `supports_mll = False` で、
+BoTorchのNUTS fittingを使います。
+
+一方MAP-SAAS wrappersは `ExactGPModelMixin` を持つため、通常のMLL fitting contractへ
+接続できます。したがって「SAAS」という共通名だけから同じtraining APIだと考えません。
 
 ## 7. Mixed MAP-SAAS
 
@@ -185,7 +222,9 @@ f(x)
 
 `OrthogonalAdditiveGP` は BoTorch の Orthogonal Additive Kernel を利用します。
 
-first-order additive components に加えて、設定により second-order structure も扱えます。
+first-order additive componentsに加えて、`second_order=True` ではsecond-order interactionも
+扱います。これは任意次数のinteractionを自由に表現するkernelとは異なり、許すinteraction構造を
+明示的に制限する仮定です。
 
 orthogonalization により component decomposition の解釈性を改善することが目的の1つです。
 
@@ -268,7 +307,9 @@ k(z, z')
 
 ## 13. ALEBO metric uncertainty
 
-現在の `ALEBOGP` は単なる Mahalanobis RBF kernel に留まりません。
+現在の `ALEBOGP` は単なるMahalanobis RBF kernelに留まりません。
+
+また `train_Yvar` は必須で、現行ALEBOGPはfixed-noise single-output modelとして構成されます。
 
 実装には、
 
@@ -285,6 +326,10 @@ k(z, z')
 
 したがって metric point estimate だけでなく、Laplace approximation を用いて metric uncertainty を
 acquisition model へ反映する経路があります。
+
+metric uncertaintyのmarginalizationでは、metric sampleごとのGaussian predictionをそのまま
+mixtureとして返すのではなく、meanとfull predictive covarianceを使ってGaussianへ
+moment matchingします。したがってmetric mixtureの高次momentまで保持するposteriorではありません。
 
 ## 14. ALEBOGP と ALEBOStrategy
 
@@ -338,21 +383,22 @@ SAAS / additive GP / ALEBO はそれぞれ異なる構造仮定です。
 したがって `MixedXxxGP` という名前だけから、すべてが同じ categorical kernel implementation を
 持つと仮定してはいけません。
 
-## 17. Bayesian optimization での使い分け
+## 17. 問題構造との対応
 
-構造仮定は data-generating process に合わせて選びます。
+| 観測・仮定 | model / strategy側の考え方 |
+| --- | --- |
+| 少数のoriginal axesが主に効く | SAAS / MAP-SAAS |
+| low-order additive decompositionが妥当 | OAK |
+| observed Xからlinear representationを学ぶ | PCA / PLS |
+| observed Xからnonlinear representationを学ぶ | AE / VAE |
+| low-dimensional linear search subspaceを仮定 | ALEBO |
+| original spaceの局所探索へ集中 | TuRBO |
+| search subspace dimensionを探索中に拡張 | BAxUS |
 
-- 少数の original features が効く: SAAS / MAP-SAAS
-- additive structure が妥当: OAK
-- observed X から latent representation を学ぶ: PCA / PLS / AE / VAE
-- low-dimensional linear search subspace: ALEBO
-- local optimization が有効: TuRBO
-- intrinsic dimension が未知: BAxUS
+これは性能順位ではありません。高次元だからといって複数の強い仮定を無条件に重ねると、
+model misspecificationを増やす可能性があります。
 
-高次元だからといって複数の強い仮定を無条件に重ねると、model misspecification を増やす可能性が
-あります。
-
-predictive performance、posterior calibration、計算量、BO trajectory を同じ条件で比較します。
+predictive performance、posterior calibration、計算量、BO trajectoryを同じ条件で比較します。
 
 ## 18. 実装との対応
 
@@ -362,16 +408,32 @@ predictive performance、posterior calibration、計算量、BO trajectory を�
 - SAAS SingleTask / MultiTask が存在する
 - Mixed SAAS は model-owned one-hot encoding を使う
 - categorical dimensions は input warping 対象から除外する
-- MAP-SAAS は Additive / Ensemble variants を持つ
+- MAP-SAASはAdditive / Ensemble variantsを持つ
+- MAP-SAAS wrappersはExactGP MLL fitting contractを持ち、Fully Bayesian SAASとはtraining APIが異なる
+- AdditiveMapSaasの名称をOAKのadditive input decompositionと同一視しない
 - Mixed MAP-SAAS も model-owned one-hot encoding を使う
 - OAK は additive decomposition であり SAAS sparsity とは別
 - Mixed OAK は continuous orthogonalizationを維持するため one-hot fallback を使う
 - Mixed OAK component interpretation は encoded-column space 上
 - relevance pursuit の sparsity は observation-side robustness
 - ALEBOGP は Mahalanobis embedded-space surrogate
-- ALEBOGP は metric uncertainty の Laplace / sampling 経路を持つ
+- ALEBOGPはfixed-noise single-output modelで `train_Yvar` を必要とする
+- ALEBOGPはmetric uncertaintyのLaplace / sampling経路を持つ
+- metric-marginal posteriorはsample mixtureをGaussianへmoment matchingする
 - ALEBOGP と ALEBOStrategy は別責務
 - model reduction と search-space reduction を区別する
+
+## 19. この章で覚えておくこと
+
+- high-dimensional対応は1種類ではなく、sparsity・additivity・subspace・representation・local searchを分ける
+- SAASは主としてoriginal axesに沿ったsparse relevanceを仮定する
+- Fully Bayesian SAASはNUTS、MAP-SAASはExact GP MLL系でtraining contractが異なる
+- Mixed SAAS / MAP-SAASはmodel-owned one-hotを使い、native categorical kernel routeとは異なる
+- OAKはlow-order additive structureを仮定し、SAASのfeature sparsityとは別概念である
+- Mixed OAKのcomponent interpretationはraw categoryではなくencoded columns上になる
+- ALEBOGPはembedded-space Mahalanobis geometryを持つfixed-noise surrogateである
+- ALEBOのmetric-marginal posteriorはmetric uncertaintyをmoment-matched Gaussianへ近似する
+- surrogate-side high-dimensional modelとsearch-side strategyを同じレイヤーとして扱わない
 
 ## 参考文献
 
