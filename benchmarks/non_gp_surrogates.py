@@ -28,6 +28,7 @@ class BenchmarkResult:
     model: str
     rmse: float
     mean_posterior_std: float
+    coverage_95: float
     fit_seconds: float
     posterior_seconds: float
 
@@ -82,12 +83,15 @@ def run_benchmark(seed: int = 0) -> list[BenchmarkResult]:
         posterior = model.posterior(test_X)
         posterior_seconds = perf_counter() - start
         prediction = posterior.mean
+        posterior_std = posterior.variance.clamp_min(0.0).sqrt()
         rmse = torch.sqrt(torch.mean((prediction - test_Y).square())).item()
+        coverage_95 = ((prediction - test_Y).abs() <= 1.96 * posterior_std).double().mean()
         results.append(
             BenchmarkResult(
                 model=name,
                 rmse=rmse,
-                mean_posterior_std=posterior.variance.sqrt().mean().item(),
+                mean_posterior_std=posterior_std.mean().item(),
+                coverage_95=coverage_95.item(),
                 fit_seconds=fit_seconds,
                 posterior_seconds=posterior_seconds,
             )
@@ -100,5 +104,6 @@ if __name__ == "__main__":
         print(
             f"{result.model:24s} RMSE={result.rmse:.4f} "
             f"posterior_std={result.mean_posterior_std:.4f} "
+            f"coverage95={result.coverage_95:.3f} "
             f"fit={result.fit_seconds:.3f}s posterior={result.posterior_seconds:.3f}s"
         )
