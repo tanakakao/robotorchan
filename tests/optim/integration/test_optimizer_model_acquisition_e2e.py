@@ -41,6 +41,34 @@ def test_single_task_gp_ei_runs_with_botorch_optimizer() -> None:
     assert 0.0 <= candidate.item() <= 1.0
 
 
+def test_botorch_optimizer_improves_ucb_over_fixed_reference_candidate() -> None:
+    model = _fit_model()
+    acquisition = UpperConfidenceBound(model, beta=0.1)
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    reference = torch.tensor([[0.0]], dtype=torch.double)
+
+    with torch.no_grad():
+        reference_value = acquisition(reference)
+
+    candidate, optimized_value = optimize_acqf_botorch(
+        acquisition,
+        bounds,
+        q=1,
+        num_restarts=3,
+        raw_samples=32,
+    )
+
+    with torch.no_grad():
+        reevaluated_value = acquisition(candidate)
+
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(optimized_value).all()
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
+    torch.testing.assert_close(optimized_value.squeeze(), reevaluated_value.squeeze())
+    assert reevaluated_value.item() > reference_value.item()
+
+
 def test_single_task_gp_ucb_runs_with_sampling_ga_and_pso() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     optimizers = (
