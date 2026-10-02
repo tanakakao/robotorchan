@@ -197,8 +197,10 @@ def test_all_top_level_models_are_owned_by_a_family_package() -> None:
         )
 
     top_level_model_names = {
-        name for name in models.__all__ if isinstance(getattr(models, name), type)
+        name
+        for name in models.__all__
+        if isinstance(getattr(models, name), type)
+        and hasattr(getattr(models, name), "supports_mll")
     }
-    top_level_model_names.discard("UnsupportedModelOperationError")
 
     assert top_level_model_names <= family_names
