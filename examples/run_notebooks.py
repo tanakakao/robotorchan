@@ -109,6 +109,11 @@ def main() -> None:
         help="通常 CI では除外する重い Notebook も実行します。",
     )
     parser.add_argument(
+        "--include-excluded",
+        action="store_true",
+        help="通常 CI 対象外の Notebook も実行します。",
+    )
+    parser.add_argument(
         "--timeout",
         type=int,
         default=300,
@@ -121,6 +126,8 @@ def main() -> None:
     notebook_names = list(DEFAULT_NOTEBOOKS)
     if args.include_slow:
         notebook_names.extend(SLOW_NOTEBOOKS)
+    if args.include_excluded:
+        notebook_names.extend(EXCLUDED_NOTEBOOKS)
 
     missing = [name for name in notebook_names if not (NOTEBOOK_DIR / name).exists()]
     if missing:
