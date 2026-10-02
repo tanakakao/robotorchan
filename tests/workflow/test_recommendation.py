@@ -110,3 +110,33 @@ def test_knowledge_gradient_acquisitions_advertise_one_shot_semantics() -> None:
     assert qkg.one_shot
     assert qmfkg.one_shot
     assert not qlogei.one_shot
+
+
+def test_all_recommendations_are_registry_compatible() -> None:
+    specs = (
+        ProblemSpec(purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION),
+        ProblemSpec(
+            purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION,
+            output_type=OutputType.MULTI,
+            objective_type="multi",
+        ),
+        ProblemSpec(
+            purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION,
+            multi_fidelity=True,
+        ),
+        ProblemSpec(purpose=ProblemPurpose.ACTIVE_LEARNING),
+        ProblemSpec(
+            purpose=ProblemPurpose.ACTIVE_LEARNING,
+            output_type=OutputType.MULTI,
+        ),
+    )
+
+    for spec in specs:
+        for item in recommend_compatible_workflows(spec):
+            assert item.model_name in MODEL_REGISTRY
+            assert item.acquisition_name in ACQUISITION_REGISTRY
+            compatibility = check_model_acquisition_compatibility(
+                item.model_name,
+                item.acquisition_name,
+            )
+            assert compatibility.compatible
