@@ -1,5 +1,9 @@
 """Reusable benchmark definitions and measurement utilities."""
 
+from robotorchan.benchmarks.acquisition import (
+    AcquisitionBenchmarkResult,
+    benchmark_acquisition,
+)
 from robotorchan.benchmarks.optimization import (
     BenchmarkResult,
     CountingAcquisition,
@@ -10,8 +14,10 @@ from robotorchan.benchmarks.optimization import (
 )
 
 __all__ = [
+    "AcquisitionBenchmarkResult",
     "BenchmarkResult",
     "CountingAcquisition",
+    "benchmark_acquisition",
     "benchmark_optimizer",
     "benchmark_optimizers",
     "benchmark_result_record",
