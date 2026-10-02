@@ -22,6 +22,35 @@ def test_single_task_gp_is_botorch_compatible() -> None:
     assert set(model.raw_data) == {"train_X", "train_Y", "train_Yvar"}
 
 
+def test_single_task_gp_matches_upstream_posterior_numerically() -> None:
+    train_X = torch.linspace(0.0, 1.0, 10, dtype=torch.double).unsqueeze(-1)
+    train_Y = 3.0 + 2.0 * torch.sin(4.0 * train_X)
+    train_Yvar = torch.full_like(train_Y, 1e-4)
+    wrapper = SingleTaskGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        train_Yvar=train_Yvar,
+        outcome_transform=Standardize(m=1),
+    )
+    upstream = BoTorchSingleTaskGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        train_Yvar=train_Yvar,
+        outcome_transform=Standardize(m=1),
+    )
+    upstream.load_state_dict(wrapper.state_dict())
+
+    test_X = torch.tensor([[0.15], [0.45], [0.85]], dtype=torch.double)
+    wrapper.eval()
+    upstream.eval()
+
+    wrapper_posterior = wrapper.posterior(test_X)
+    upstream_posterior = upstream.posterior(test_X)
+
+    torch.testing.assert_close(wrapper_posterior.mean, upstream_posterior.mean)
+    torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
+
+
 def test_single_task_gp_make_mll() -> None:
     train_X = torch.rand(8, 2, dtype=torch.double)
     train_Y = train_X.square().sum(dim=-1, keepdim=True)
