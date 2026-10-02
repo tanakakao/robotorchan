@@ -39,6 +39,7 @@ DEFAULT_NOTEBOOKS = [
     "27_multiobjective_acquisition.ipynb",
     "28_active_learning_acquisition.ipynb",
     "29_objective_posterior_transform.ipynb",
+    "30_posterior_sampling.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [
