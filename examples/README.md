@@ -113,6 +113,7 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`34_turbo_trust_region.ipynb`](notebooks/34_turbo_trust_region.ipynb) | TuRBO / Trust Region | 利用可能 |
 | [`35_robust_input_perturbation.ipynb`](notebooks/35_robust_input_perturbation.ipynb) | Robust BO / Input Perturbation | 利用可能 |
 | [`36_end_to_end_workflows.ipynb`](notebooks/36_end_to_end_workflows.ipynb) | Sequential / Batch / Async E2E | 利用可能 |
+| [`37_outcome_constrained_bo.ipynb`](notebooks/37_outcome_constrained_bo.ipynb) | Outcome-constrained BO | 利用可能 |
 
 ## Benchmark
 
