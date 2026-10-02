@@ -40,5 +40,7 @@ def test_non_gp_benchmark_reports_finite_metrics() -> None:
         assert result.rmse >= 0.0
         assert math.isfinite(result.mean_posterior_std)
         assert result.mean_posterior_std >= 0.0
+        assert math.isfinite(result.coverage_95)
+        assert 0.0 <= result.coverage_95 <= 1.0
         assert result.fit_seconds >= 0.0
         assert result.posterior_seconds >= 0.0
