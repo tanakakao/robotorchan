@@ -189,6 +189,17 @@ def test_backend_support_has_dedicated_ownership() -> None:
     assert actual_support_tests == {"test_operations.py", "test_runtime.py"}
 
 
+def test_non_gp_models_share_feature_dimension_normalization() -> None:
+    non_gp_root = SOURCE_ROOT / "models" / "non_gp"
+    mixed_helpers = (non_gp_root / "mixed.py").read_text(encoding="utf-8")
+
+    assert "def normalize_cat_dims" not in mixed_helpers
+    for name in ("random_forest.py", "extra_trees.py"):
+        text = (non_gp_root / name).read_text(encoding="utf-8")
+        assert "normalize_feature_dims" in text
+        assert "normalize_cat_dims" not in text
+
+
 def test_resolved_audit_documents_are_not_permanent_documentation() -> None:
     docs_root = REPOSITORY_ROOT / "docs"
     temporary_markers = (
