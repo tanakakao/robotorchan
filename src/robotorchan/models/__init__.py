@@ -1,6 +1,17 @@
 """Surrogate-model extensions and BoTorch-compatible wrappers."""
 
 from robotorchan.models.base import UnsupportedModelOperationError
+from robotorchan.models.capabilities import (
+    DocumentationLinks,
+    HighDimensionalStrategy,
+    InferenceType,
+    InputType,
+    ModelCapabilities,
+    ModelRegistryEntry,
+    PosteriorSamplingType,
+    RobustnessType,
+    TaskType,
+)
 from robotorchan.models.expressive.deep_gp import (
     MixedMultiTaskDeepGP,
     MixedSingleTaskDeepGP,
@@ -104,6 +115,7 @@ from robotorchan.models.non_gp.hist_gradient_boosting import HistGradientBoostin
 from robotorchan.models.non_gp.ngboost import NGBoostSurrogate
 from robotorchan.models.non_gp.random_forest import RandomForestSurrogate
 from robotorchan.models.preference.pairwise import PairwiseGP
+from robotorchan.models.registry import get_model_registry_entry
 from robotorchan.models.robust.contaminated import (
     ContaminatedMultiTaskGP,
     ContaminatedSingleTaskGP,
@@ -183,6 +195,10 @@ from robotorchan.models.uncertain.uncertain_input import (
 
 __all__ = [
     "ALEBOGP",
+    "DocumentationLinks",
+    "HighDimensionalStrategy",
+    "InferenceType",
+    "InputType",
     "LCEAGP",
     "LCEMGP",
     "PCAGP",
@@ -274,7 +290,9 @@ __all__ = [
     "MixedSupervisedVAEGP",
     "MixedUncertainInputSingleTaskGP",
     "MixedVAEGP",
+    "ModelCapabilities",
     "ModelListGP",
+    "ModelRegistryEntry",
     "MultiTaskDeepGP",
     "MultiTaskGP",
     "NGBoostSurrogate",
@@ -282,6 +300,7 @@ __all__ = [
     "NonstationaryMultiTaskGP",
     "NonstationarySingleTaskGP",
     "OrthogonalAdditiveGP",
+    "PosteriorSamplingType",
     "OutputPCAGP",
     "OutputPLSGP",
     "PCAKroneckerMultiTaskGP",
@@ -303,6 +322,7 @@ __all__ = [
     "ReplicateNoiseSingleTaskGP",
     "RobustRelevancePursuitMultiTaskGP",
     "RobustRelevancePursuitSingleTaskGP",
+    "RobustnessType",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
     "SingleTaskDeepGP",
@@ -314,6 +334,7 @@ __all__ = [
     "SpectralMixtureMultiTaskGP",
     "StudentTMultiTaskGP",
     "StudentTSingleTaskGP",
+    "TaskType",
     "SupervisedAutoEncoderGP",
     "SupervisedAutoEncoderKroneckerMultiTaskGP",
     "SupervisedAutoEncoderMultiTaskGP",
@@ -324,5 +345,6 @@ __all__ = [
     "UncertainInputSingleTaskGP",
     "UnsupportedModelOperationError",
     "VAEKroneckerMultiTaskGP",
+    "get_model_registry_entry",
     "VAEMultiTaskGP",
 ]
