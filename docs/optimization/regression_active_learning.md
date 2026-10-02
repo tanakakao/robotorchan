@@ -61,11 +61,15 @@ predictive variance alone does not identify epistemic and aleatoric uncertainty 
 
 ## Empirical ensemble surrogates
 
-`PosteriorVariance` and `PosteriorStd` also accept BoTorch `EnsemblePosterior` objects. For
-`RandomForestSurrogate` and `ExtraTreesSurrogate`, the variance is the empirical spread of the
-individual tree predictions. This gives a practical regression-AL uncertainty score without
-pretending that the forest posterior is Gaussian.
+The current runtime contract intentionally rejects ensemble posteriors in `PosteriorVariance` and
+`PosteriorStd`. This includes models marked with `_is_ensemble` and direct BoTorch
+`EnsemblePosterior` results.
 
-This support is intentionally limited to marginal-moment AL. Straddle and boundary-oriented
-criteria retain their existing ensemble restrictions, and a tree ensemble is not assigned a
-joint-Gaussian or epistemic/aleatoric decomposition merely because empirical variance is available.
+Tree ensembles can expose an empirical spread across members, but robotorchan does not currently
+treat that spread as the uncertainty contract for these acquisition functions. Supporting
+RandomForest / ExtraTrees active learning therefore requires a separately certified ensemble-aware
+criterion rather than relying on the Gaussian-posterior path.
+
+This matches the executable scope described in
+[Active Learning acquisition theory](../theory/acquisition/09_active_learning.md) and the
+[regression active-learning notebook](../../examples/notebooks/28_active_learning_acquisition.ipynb).
