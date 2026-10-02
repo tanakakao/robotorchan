@@ -102,6 +102,17 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`23_high_dimensional_bo_benchmark.ipynb`](notebooks/23_high_dimensional_bo_benchmark.ipynb) | 高次元BO benchmark | 利用可能 / benchmark解説 |
 | [`24_expressive_surrogate_gp.ipynb`](notebooks/24_expressive_surrogate_gp.ipynb) | DKL / I-BNN / Spectral Mixture / DeepGP | 利用可能 / 解説中心 |
 | [`25_non_gp_surrogates.ipynb`](notebooks/25_non_gp_surrogates.ipynb) | Random Forest / Extra Trees / Gradient Boosting / NGBoost | 利用可能 |
+| [`26_standard_acquisition.ipynb`](notebooks/26_standard_acquisition.ipynb) | Standard BO acquisition | 利用可能 |
+| [`27_multiobjective_acquisition.ipynb`](notebooks/27_multiobjective_acquisition.ipynb) | Multi-objective acquisition | 利用可能 |
+| [`28_active_learning_acquisition.ipynb`](notebooks/28_active_learning_acquisition.ipynb) | Regression Active Learning | 利用可能 |
+| [`29_objective_posterior_transform.ipynb`](notebooks/29_objective_posterior_transform.ipynb) | Objective / PosteriorTransform | 利用可能 |
+| [`30_posterior_sampling.ipynb`](notebooks/30_posterior_sampling.ipynb) | Posterior / Sampling | 利用可能 |
+| [`31_acquisition_optimization.ipynb`](notebooks/31_acquisition_optimization.ipynb) | Acquisition Optimization | 利用可能 |
+| [`32_batch_async_fantasization.ipynb`](notebooks/32_batch_async_fantasization.ipynb) | Batch / Async / Fantasization | 利用可能 |
+| [`33_acquisition_initialization.ipynb`](notebooks/33_acquisition_initialization.ipynb) | Acquisition Initialization | 利用可能 |
+| [`34_turbo_trust_region.ipynb`](notebooks/34_turbo_trust_region.ipynb) | TuRBO / Trust Region | 利用可能 |
+| [`35_robust_input_perturbation.ipynb`](notebooks/35_robust_input_perturbation.ipynb) | Robust BO / Input Perturbation | 利用可能 |
+| [`36_end_to_end_workflows.ipynb`](notebooks/36_end_to_end_workflows.ipynb) | Sequential / Batch / Async E2E | 利用可能 |
 
 ## Benchmark
 
@@ -138,7 +149,8 @@ GitHub Actions の `notebooks` job では Python 3.11 / CPU 環境を使用し�
 01, 02, 03, 04, 05, 06, 07,
 09, 10,
 12, 13, 14, 15, 16, 17, 18,
-19, 20, 21, 22
+19, 20, 21, 22,
+26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36
 ```
 
 以下は通常の Pull Request CI から除外します。
