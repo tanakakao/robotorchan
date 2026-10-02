@@ -30,6 +30,13 @@ def test_model_tests_are_owned_by_a_family_or_contract_directory() -> None:
     )
 
 
+def test_repository_benchmarks_remain_script_only() -> None:
+    benchmark_root = REPOSITORY_ROOT / "benchmarks"
+
+    assert not (benchmark_root / "__init__.py").exists()
+    assert (SOURCE_ROOT / "benchmarks" / "__init__.py").is_file()
+
+
 def test_optimizer_benchmarks_are_owned_by_benchmark_package() -> None:
     assert not (SOURCE_ROOT / "optim" / "benchmark.py").exists()
     assert (SOURCE_ROOT / "benchmarks" / "optimization.py").is_file()
