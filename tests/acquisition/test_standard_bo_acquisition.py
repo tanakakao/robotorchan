@@ -35,6 +35,30 @@ def test_native_analytic_standard_bo_acquisitions() -> None:
         assert torch.isfinite(value).all()
 
 
+def test_analytic_ucb_gradient_matches_central_finite_difference() -> None:
+    model, _, _ = _model()
+    model.eval()
+    acquisition = UpperConfidenceBound(model=model, beta=0.2)
+    X = torch.tensor([[0.37]], dtype=torch.double, requires_grad=True)
+
+    value = acquisition(X)
+    gradient = torch.autograd.grad(value.sum(), X)[0]
+
+    step = 1e-5
+    with torch.no_grad():
+        plus = acquisition(X.detach() + step)
+        minus = acquisition(X.detach() - step)
+        finite_difference = (plus - minus) / (2.0 * step)
+
+    assert torch.isfinite(gradient).all()
+    torch.testing.assert_close(
+        gradient.squeeze(),
+        finite_difference.squeeze(),
+        rtol=1e-4,
+        atol=1e-6,
+    )
+
+
 def test_native_mc_standard_bo_acquisitions() -> None:
     model, train_X, train_Y = _model()
     sampler = SobolQMCNormalSampler(sample_shape=torch.Size([16]), seed=0)
