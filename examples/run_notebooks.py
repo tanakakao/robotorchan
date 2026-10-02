@@ -53,6 +53,39 @@ SLOW_NOTEBOOKS = [
     "11_structured_output_gp.ipynb",
 ]
 
+EXCLUDED_NOTEBOOKS = [
+    "23_high_dimensional_bo_benchmark.ipynb",
+    "24_expressive_surrogate_gp.ipynb",
+    "25_non_gp_surrogates.ipynb",
+]
+
+
+def validate_notebook_manifest() -> None:
+    """Notebook ファイルが実行区分へ明示的に分類されていることを確認する。"""
+    discovered = {path.name for path in NOTEBOOK_DIR.glob("*.ipynb")}
+    groups = {
+        "default": set(DEFAULT_NOTEBOOKS),
+        "slow": set(SLOW_NOTEBOOKS),
+        "excluded": set(EXCLUDED_NOTEBOOKS),
+    }
+
+    duplicates = (
+        (groups["default"] & groups["slow"])
+        | (groups["default"] & groups["excluded"])
+        | (groups["slow"] & groups["excluded"])
+    )
+    if duplicates:
+        raise ValueError(f"Notebook の実行区分が重複しています: {sorted(duplicates)}")
+
+    declared = set().union(*groups.values())
+    undeclared = discovered - declared
+    missing = declared - discovered
+    if undeclared or missing:
+        raise ValueError(
+            "Notebook manifest が実ファイルと一致しません: "
+            f"undeclared={sorted(undeclared)}, missing={sorted(missing)}"
+        )
+
 
 def execute_notebook(path: Path, timeout: int) -> None:
     """Notebook を上から順に実行し、例外があればそのまま失敗させる。"""
@@ -82,6 +115,8 @@ def main() -> None:
         help="1セルあたりのタイムアウト秒数。既定値は 300 秒です。",
     )
     args = parser.parse_args()
+
+    validate_notebook_manifest()
 
     notebook_names = list(DEFAULT_NOTEBOOKS)
     if args.include_slow:
