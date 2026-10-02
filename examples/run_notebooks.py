@@ -69,9 +69,11 @@ def validate_notebook_manifest() -> None:
         "excluded": set(EXCLUDED_NOTEBOOKS),
     }
 
-    duplicates = (groups["default"] & groups["slow"]) | (
-        groups["default"] & groups["excluded"]
-    ) | (groups["slow"] & groups["excluded"])
+    duplicates = (
+        (groups["default"] & groups["slow"])
+        | (groups["default"] & groups["excluded"])
+        | (groups["slow"] & groups["excluded"])
+    )
     if duplicates:
         raise ValueError(f"Notebook の実行区分が重複しています: {sorted(duplicates)}")
 
