@@ -9,6 +9,7 @@ def test_acquisition_architecture_documents_botorch_first_contract() -> None:
 
     assert "BoTorch-first" in text
     assert "not re-exported" in text
-    assert "No acquisition registry" in text
+    assert "metadata, not a string-based factory" in text
+    assert "must not create robotorchan wrapper" in text
     assert "classification-specific" in text
     assert "outside the current scope" in text
