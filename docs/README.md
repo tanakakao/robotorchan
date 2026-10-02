@@ -46,7 +46,7 @@
 - [Notebook executable-documentation architecture](development/notebook-executable-documentation-architecture.md)
 - [Notebook authoring standard](development/notebook-authoring-standard.md)
 - [Notebook CI](development/notebook-ci.md)
-- [Notebook coverage gap audit](development/notebook-coverage-gap-audit.md)
+- [Objective / PosteriorTransform](optimization/objective-posterior-transform.md)
 - [Release procedure](development/releasing.md)
 
 開発文書には現在も有効な設計原則・公開契約・リリース手順だけを残し、Phase記録や解消済みauditはGit/PR履歴で追跡します。
