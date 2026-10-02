@@ -42,6 +42,30 @@ jobs:
             exit 1
           fi
 
+      - name: Verify citation version matches package version
+        run: |
+          python - <<'PY'
+          import tomllib
+          from pathlib import Path
+
+          with open("pyproject.toml", "rb") as f:
+              package_version = tomllib.load(f)["project"]["version"]
+
+          citation_version = None
+          citation_path = Path("CITATION.cff")
+          citation_lines = citation_path.read_text(encoding="utf-8").splitlines()
+          for line in citation_lines:
+              if line.startswith("version:"):
+                  citation_version = line.split(":", 1)[1].strip().strip('"')
+                  break
+
+          if citation_version != package_version:
+              raise SystemExit(
+                  f"CITATION.cff version {citation_version!r} does not match "
+                  f"package version {package_version!r}."
+              )
+          PY
+
       - name: Verify release commit is on main
         run: |
           git fetch origin main
