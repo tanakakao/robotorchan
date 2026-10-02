@@ -3,7 +3,7 @@
 from robotorchan.acquisition.compatibility import check_model_acquisition_compatibility
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.models.registry import MODEL_REGISTRY
-from robotorchan.workflow.problem import OutputType, ProblemPurpose, ProblemSpec
+from robotorchan.workflow.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.workflow.recommendation import recommend_compatible_workflows
 
 
@@ -118,7 +118,7 @@ def test_all_recommendations_are_registry_compatible() -> None:
         ProblemSpec(
             purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION,
             output_type=OutputType.MULTI,
-            objective_type="multi",
+            objective_type=ObjectiveType.MULTI,
         ),
         ProblemSpec(
             purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION,
