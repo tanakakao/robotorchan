@@ -11,8 +11,7 @@ THEORY_ROOT = ROOT / "docs" / "theory" / "acquisition"
 
 def _documentation_text() -> str:
     theory = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in sorted(THEORY_ROOT.glob("*.md"))
+        path.read_text(encoding="utf-8") for path in sorted(THEORY_ROOT.glob("*.md"))
     )
     integration = INTEGRATION_GUIDE.read_text(encoding="utf-8")
     return f"{integration}\n{theory}"
@@ -22,9 +21,7 @@ def test_registered_acquisitions_are_named_in_documentation() -> None:
     """Every registry acquisition must be discoverable in current documentation."""
     documentation = _documentation_text()
 
-    missing = sorted(
-        name for name in ACQUISITION_REGISTRY if name not in documentation
-    )
+    missing = sorted(name for name in ACQUISITION_REGISTRY if name not in documentation)
 
     assert missing == [], f"Undocumented acquisition registry entries: {missing}"
 
