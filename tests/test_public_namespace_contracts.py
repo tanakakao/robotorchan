@@ -53,6 +53,23 @@ def test_reduced_models_are_canonical_model_exports() -> None:
         assert getattr(models, name) is getattr(reduced, name)
 
 
+def test_model_capability_read_api_is_public() -> None:
+    registry = importlib.import_module("robotorchan.models.registry")
+
+    for name, entry in registry.MODEL_REGISTRY.items():
+        assert models.get_model_registry_entry(name) is entry
+        assert isinstance(entry.capabilities, models.ModelCapabilities)
+        assert isinstance(entry.documentation, models.DocumentationLinks)
+
+
+def test_acquisition_capability_read_api_is_public() -> None:
+    registry = importlib.import_module("robotorchan.acquisition.registry")
+
+    for name, entry in registry.ACQUISITION_REGISTRY.items():
+        assert acquisition.get_acquisition_registry_entry(name) is entry
+        assert isinstance(entry.capabilities, acquisition.AcquisitionCapabilities)
+
+
 def test_acquisition_exports_resolve() -> None:
     for name in acquisition.__all__:
         assert getattr(acquisition, name) is not None
