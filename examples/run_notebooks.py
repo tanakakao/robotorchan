@@ -45,6 +45,7 @@ DEFAULT_NOTEBOOKS = [
     "33_acquisition_initialization.ipynb",
     "34_turbo_trust_region.ipynb",
     "35_robust_input_perturbation.ipynb",
+    "36_end_to_end_workflows.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [
