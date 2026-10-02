@@ -41,8 +41,10 @@ class SearchResult:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        if self.candidates.ndim < 2:
-            raise ValueError("candidates must have shape [..., q, d].")
+        if self.candidates.ndim < 2 or self.candidates.shape[-2] < 1:
+            raise ValueError("candidates must have shape [..., q, d] with q >= 1.")
+        if self.candidates.shape[-1] < 1:
+            raise ValueError("candidates must have shape [..., q, d] with d >= 1.")
         if self.acquisition_value is not None and self.acquisition_value.numel() != 1:
             raise ValueError("acquisition_value must be a scalar tensor when provided.")
 
