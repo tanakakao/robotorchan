@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
+import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
+from robotorchan.optim.backend_support.runtime import validate_bounds
 from robotorchan.optim.backends.botorch import optimize_acqf_botorch
 from robotorchan.optim.backends.cmaes import optimize_acqf_cmaes
 from robotorchan.optim.backends.differential_evolution import optimize_acqf_de
@@ -57,6 +59,11 @@ def optimize_acqf(
     variable_space: MixedVariableSpace | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Optimize an acquisition function using a named robotorchan backend."""
+    validate_bounds(bounds)
+    if q < 1:
+        raise ValueError("q must be at least 1.")
+    if variable_space is not None and not torch.equal(variable_space.bounds, bounds):
+        raise ValueError("variable_space bounds must match bounds.")
     backend_options = dict(optimizer_options or {})
     name = optimizer.lower()
     capabilities = get_optimizer_capabilities(name)
