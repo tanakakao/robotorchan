@@ -23,6 +23,7 @@ from botorch.utils.multi_objective.box_decompositions.non_dominated import (
     FastNondominatedPartitioning,
 )
 
+from robotorchan.acquisition.samplers import make_model_sampler
 from robotorchan.models import (
     PCAGP,
     PLSGP,
@@ -40,7 +41,7 @@ from robotorchan.models import (
     SingleTaskGP,
     SingleTaskMultiFidelityGP,
 )
-from robotorchan.optim import optimize_mixed_one_shot_acqf
+from robotorchan.optim import TreeEnsembleSearchStrategy, optimize_mixed_one_shot_acqf
 from robotorchan.reduction.input import PCAInputReducer
 
 
@@ -332,6 +333,108 @@ def test_mixed_kronecker_multitask_gp_runtime_optimizes_scalarized_qlogei() -> N
     assert candidate[0, 1].item() in {0.0, 1.0}
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()
+
+
+def test_kronecker_multitask_gp_runtime_optimizes_multi_objective_acquisition() -> None:
+    train_x = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
+    train_y = torch.cat(
+        [
+            torch.sin(train_x * 3.0),
+            torch.cos(train_x * 3.0),
+        ],
+        dim=-1,
+    )
+    model = KroneckerMultiTaskGP(train_x, train_y)
+    model.eval()
+
+    ref_point = train_y.min(dim=0).values - 0.1
+    partitioning = FastNondominatedPartitioning(ref_point=ref_point, Y=train_y)
+    acquisition = qLogExpectedHypervolumeImprovement(
+        model=model,
+        ref_point=ref_point.tolist(),
+        partitioning=partitioning,
+        sampler=make_model_sampler("KroneckerMultiTaskGP", torch.Size([8])),
+    )
+    candidate, value = optimize_acqf(
+        acq_function=acquisition,
+        bounds=torch.tensor([[0.1], [0.9]], dtype=torch.double),
+        q=1,
+        num_restarts=2,
+        raw_samples=8,
+    )
+
+    assert candidate.shape == torch.Size([1, 1])
+    assert 0.1 <= candidate.item() <= 0.9
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+
+
+def test_pca_gp_runtime_optimizes_in_public_input_space() -> None:
+    train_x = torch.stack(
+        [
+            torch.linspace(0.0, 1.0, 8, dtype=torch.double),
+            torch.linspace(1.0, 0.0, 8, dtype=torch.double),
+            torch.linspace(0.2, 0.9, 8, dtype=torch.double),
+        ],
+        dim=-1,
+    )
+    train_y = torch.sin(train_x[:, :1] * 3.0)
+    model = PCAGP(train_x, train_y, n_components=2)
+    model.eval()
+
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=make_model_sampler("PCAGP", torch.Size([8])),
+    )
+    bounds = torch.tensor(
+        [
+            [0.0, 0.0, 0.2],
+            [1.0, 1.0, 0.9],
+        ],
+        dtype=torch.double,
+    )
+    candidate, value = optimize_acqf(
+        acq_function=acquisition,
+        bounds=bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=8,
+    )
+
+    assert candidate.shape == torch.Size([1, 3])
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
+    assert torch.isfinite(value).all()
+
+
+def test_random_forest_sampler_metadata_runs_through_candidate_generation() -> None:
+    train_x = torch.linspace(0.0, 1.0, 12, dtype=torch.double).unsqueeze(-1)
+    train_y = torch.sin(train_x * 3.0)
+    model = RandomForestSurrogate(
+        train_x,
+        train_y,
+        n_estimators=16,
+        random_state=0,
+    )
+    model.fit()
+
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=make_model_sampler("RandomForestSurrogate", torch.Size([8])),
+    )
+    strategy = TreeEnsembleSearchStrategy(
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        num_samples=32,
+        seed=17,
+    )
+    result = strategy.optimize(acquisition, q=1)
+
+    assert result.candidates.shape == torch.Size([1, 1])
+    assert 0.0 <= result.candidates.item() <= 1.0
+    assert result.acquisition_value is not None
+    assert torch.isfinite(result.acquisition_value)
 
 
 def test_random_forest_runtime_supports_mc_acquisition() -> None:
