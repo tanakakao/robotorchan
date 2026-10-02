@@ -302,6 +302,60 @@ def test_representative_specialized_posteriors_match_upstream() -> None:
     torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
 
 
+def test_map_saas_wrapper_posterior_matches_upstream_from_same_state() -> None:
+    train_X, train_Y, train_Yvar = _single_task_data()
+    wrapper = AdditiveMapSaasSingleTaskGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        train_Yvar=train_Yvar,
+        num_taus=2,
+    )
+    upstream = BoTorchAdditiveMapSaasSingleTaskGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        train_Yvar=train_Yvar,
+        num_taus=2,
+    )
+    upstream.load_state_dict(wrapper.state_dict())
+
+    test_X = torch.tensor([[0.20, 0.30], [0.70, 0.80]], dtype=torch.double)
+    wrapper.eval()
+    upstream.eval()
+
+    wrapper_posterior = wrapper.posterior(test_X)
+    upstream_posterior = upstream.posterior(test_X)
+
+    torch.testing.assert_close(wrapper_posterior.mean, upstream_posterior.mean)
+    torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
+
+
+def test_contextual_wrapper_posterior_matches_upstream_from_same_state() -> None:
+    train_X, train_Y, decomposition = _contextual_data()
+    wrapper = SACGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        train_Yvar=None,
+        decomposition=decomposition,
+    )
+    upstream = BoTorchSACGP(
+        train_X=train_X,
+        train_Y=train_Y,
+        train_Yvar=None,
+        decomposition=decomposition,
+    )
+    upstream.load_state_dict(wrapper.state_dict())
+
+    test_X = torch.tensor([[0.20, 0.30], [0.70, 0.80]], dtype=torch.double)
+    wrapper.eval()
+    upstream.eval()
+
+    wrapper_posterior = wrapper.posterior(test_X)
+    upstream_posterior = upstream.posterior(test_X)
+
+    torch.testing.assert_close(wrapper_posterior.mean, upstream_posterior.mean)
+    torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
+
+
 def test_heterogeneous_posterior_matches_upstream_with_same_initialization() -> None:
     train_Xs, train_Ys, feature_indices = _heterogeneous_data()
     kwargs = {
