@@ -7,6 +7,9 @@
 `src/robotorchan/benchmarks/` はライブラリから再利用する構造的 benchmark API、
 このルート `benchmarks/` は手動・実験用の executable script という責務で分離します。
 
+ルート `benchmarks/` は importable package ではありません。再利用する定義・metric・scenario は
+`robotorchan.benchmarks` に置き、このディレクトリのファイルは script path から実行します。
+
 主なスクリプト:
 
 - `high_dimensional_sequential_bo.py`: q=1 sequential BO
