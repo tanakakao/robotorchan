@@ -1,5 +1,6 @@
 """End-to-end model x acquisition x optimizer coverage."""
 
+import pytest
 import torch
 from botorch.acquisition.analytic import ExpectedImprovement, UpperConfidenceBound
 from botorch.fit import fit_gpytorch_mll
@@ -67,6 +68,35 @@ def test_botorch_optimizer_improves_ucb_over_fixed_reference_candidate() -> None
     assert torch.all(candidate <= bounds[1])
     torch.testing.assert_close(optimized_value.squeeze(), reevaluated_value.squeeze())
     assert reevaluated_value.item() > reference_value.item()
+
+
+@pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
+def test_model_acquisition_optimizer_preserves_cpu_dtype(dtype: torch.dtype) -> None:
+    train_x = torch.linspace(0.0, 1.0, 8, dtype=dtype).unsqueeze(-1)
+    train_y = -(train_x - 0.72).square() + 1.0
+    model = SingleTaskGP(train_x, train_y)
+    model.eval()
+    acquisition = UpperConfidenceBound(model, beta=0.1)
+    bounds = torch.tensor([[0.0], [1.0]], dtype=dtype)
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+    )
+
+    posterior = model.posterior(candidate)
+
+    assert candidate.dtype == dtype
+    assert value.dtype == dtype
+    assert posterior.mean.dtype == dtype
+    assert posterior.variance.dtype == dtype
+    assert candidate.device.type == "cpu"
+    assert value.device.type == "cpu"
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
 
 
 def test_single_task_gp_ucb_runs_with_sampling_ga_and_pso() -> None:
