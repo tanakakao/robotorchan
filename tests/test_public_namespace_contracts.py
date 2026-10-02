@@ -8,8 +8,8 @@ import robotorchan.acquisition as acquisition
 import robotorchan.benchmarks as benchmarks
 import robotorchan.models as models
 import robotorchan.optim as optim
-import robotorchan.optim.backends as backends
 import robotorchan.optim.backend_support as backend_support
+import robotorchan.optim.backends as backends
 import robotorchan.optim.constraints as constraints
 import robotorchan.optim.domains as domains
 import robotorchan.optim.one_shot as one_shot
