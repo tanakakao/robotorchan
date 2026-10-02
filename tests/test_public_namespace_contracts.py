@@ -9,6 +9,7 @@ import robotorchan.benchmarks as benchmarks
 import robotorchan.models as models
 import robotorchan.optim as optim
 import robotorchan.optim.backend_support as backend_support
+import robotorchan.optim.backends as backends
 import robotorchan.optim.constraints as constraints
 import robotorchan.optim.domains as domains
 import robotorchan.optim.one_shot as one_shot
@@ -123,6 +124,17 @@ def test_strategy_exports_are_canonical() -> None:
 def test_optim_exports_resolve() -> None:
     for name in optim.__all__:
         assert getattr(optim, name) is not None
+
+
+def test_optimizer_backend_exports_resolve() -> None:
+    for name in backends.__all__:
+        assert getattr(backends, name) is not None
+
+
+def test_specialist_optimizer_backends_stay_out_of_top_level_namespace() -> None:
+    specialist_exports = set(backends.__all__) - {"TorchOptimizerName"}
+
+    assert specialist_exports.isdisjoint(optim.__all__)
 
 
 def test_removed_module_paths_do_not_import() -> None:
