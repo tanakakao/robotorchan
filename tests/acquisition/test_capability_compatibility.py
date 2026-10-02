@@ -14,6 +14,11 @@ from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 
 def test_registry_covers_public_acquisition_classes() -> None:
     helpers = {
+        "AcquisitionCapabilities",
+        "AcquisitionPurpose",
+        "AcquisitionRegistryEntry",
+        "PosteriorRequirement",
+        "get_acquisition_registry_entry",
         "make_non_gp_acquisition",
         "select_thompson_candidates",
         "validate_non_gp_acquisition",
