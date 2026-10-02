@@ -437,6 +437,34 @@ surrogate model
 各ガイドはそれぞれ、joint sampling、utility-space mapping、initial conditions、
 pending / fantasy handling、candidate maximization、trust-region update を扱います。
 
+
+### Executable Notebook との対応
+
+理論を読んだ後は、対応する Notebook で同じ責務境界を実行して確認できます。
+
+| Theory / cross-layer topic | Executable Notebook |
+| --- | --- |
+| BO loop / standard GP | [01 SingleTaskGP](../../examples/notebooks/01_single_task_gp.ipynb) |
+| Mixed variables | [02 Mixed BO](../../examples/notebooks/02_mixed_single_task_gp.ipynb) |
+| Multi-Fidelity | [03 Multi-Fidelity BO](../../examples/notebooks/03_multi_fidelity_gp.ipynb) |
+| MultiTask / Kronecker | [04 MultiTask / Kronecker](../../examples/notebooks/04_multitask_gp.ipynb) |
+| High-dimensional reduction | [19 Reduced GP](../../examples/notebooks/19_reduced_gp.ipynb) |
+| Standard acquisition | [26 Standard Acquisition](../../examples/notebooks/26_standard_acquisition.ipynb) |
+| Multi-objective acquisition | [27 Multi-objective](../../examples/notebooks/27_multiobjective_acquisition.ipynb) |
+| Regression Active Learning | [28 Active Learning](../../examples/notebooks/28_active_learning_acquisition.ipynb) |
+| Objective / PosteriorTransform | [29 Objective / Transform](../../examples/notebooks/29_objective_posterior_transform.ipynb) |
+| Posterior sampling | [30 Posterior Sampling](../../examples/notebooks/30_posterior_sampling.ipynb) |
+| Acquisition optimization | [31 Optimization](../../examples/notebooks/31_acquisition_optimization.ipynb) |
+| Batch / Async / Fantasization | [32 Batch / Async](../../examples/notebooks/32_batch_async_fantasization.ipynb) |
+| Initialization | [33 Initialization](../../examples/notebooks/33_acquisition_initialization.ipynb) |
+| TuRBO / Trust Region | [34 TuRBO](../../examples/notebooks/34_turbo_trust_region.ipynb) |
+| Robust BO / Input Perturbation | [35 Robust BO](../../examples/notebooks/35_robust_input_perturbation.ipynb) |
+| Integrated workflow | [36 End-to-End](../../examples/notebooks/36_end_to_end_workflows.ipynb) |
+
+Notebook は theory の代替ではなく、Theory → Public API → executable behavior を接続する
+integration documentation です。Notebook に存在することだけを理由に一般的な capability を
+claimせず、family-specific limitation は current implementation と runtime guide を優先します。
+
 ### Posterior と sampler は別レイヤー
 
 `posterior(X)` が存在することと、任意の sampler が利用できることは同義ではありません。
