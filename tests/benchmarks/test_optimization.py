@@ -143,9 +143,13 @@ def test_benchmark_result_records_are_serialization_friendly() -> None:
             "acquisition_value",
             "wall_time_seconds",
             "acquisition_evaluations",
+            "seconds_per_acquisition_evaluation",
             "feasible",
             "constraint_violation",
             "seed",
         }
         for record in records
     )
+    for result, record in zip(results, records, strict=True):
+        expected = result.wall_time_seconds / result.acquisition_evaluations
+        assert record["seconds_per_acquisition_evaluation"] == expected
