@@ -11,6 +11,45 @@ from robotorchan.optim.backend_support.runtime import make_generator, validate_b
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 
+def sample_candidate_batches(
+    bounds: Tensor,
+    num_samples: int,
+    q: int,
+    *,
+    method: str = "sobol",
+    seed: int | None = None,
+) -> Tensor:
+    """Draw continuous candidate q-batches using the requested sampling method."""
+    validate_bounds(bounds)
+    if q < 1:
+        raise ValueError("q must be at least 1.")
+    if num_samples < 1:
+        raise ValueError("num_samples must be at least 1.")
+    method = method.lower()
+    if method == "sobol":
+        return _draw_sobol(bounds, num_samples, q, seed)
+    if method == "random":
+        return _draw_random(bounds, num_samples, q, seed)
+    raise ValueError("method must be either 'random' or 'sobol'.")
+
+
+def select_best_sampled_batch(
+    acq_function: AcquisitionFunction,
+    samples: Tensor,
+) -> tuple[Tensor, Tensor]:
+    """Return the highest-valued candidate batch from precomputed samples."""
+    num_samples = samples.shape[0]
+    with torch.no_grad():
+        values = acq_function(samples)
+    if values.numel() != num_samples:
+        raise ValueError(
+            "Sampling optimization requires one scalar value per sampled q-batch."
+        )
+    scores = values.reshape(num_samples)
+    selected = scores.argmax()
+    return samples[selected], scores[selected]
+
+
 def optimize_acqf_sampling(
     acq_function: AcquisitionFunction,
     bounds: Tensor,
@@ -37,25 +76,20 @@ def optimize_acqf_sampling(
             raise ValueError("variable_space bounds must match bounds.")
         variable_space.validate_fixed_features(fixed_features)
 
-    if method == "sobol":
-        samples = _draw_sobol(bounds, num_samples, q, seed)
-        if variable_space is not None:
-            samples = _apply_mixed_sobol_semantics(samples, variable_space)
-    else:
-        samples = _draw_random(bounds, num_samples, q, seed)
-        if variable_space is not None:
-            samples = _apply_mixed_random_semantics(samples, variable_space, seed)
+    samples = sample_candidate_batches(
+        bounds,
+        num_samples,
+        q,
+        method=method,
+        seed=seed,
+    )
+    if variable_space is not None and method == "sobol":
+        samples = _apply_mixed_sobol_semantics(samples, variable_space)
+    elif variable_space is not None:
+        samples = _apply_mixed_random_semantics(samples, variable_space, seed)
     samples = _apply_fixed_features(samples, fixed_features)
 
-    with torch.no_grad():
-        values = acq_function(samples)
-    if values.numel() != num_samples:
-        raise ValueError(
-            "Sampling optimization requires one scalar acquisition value per sampled q-batch."
-        )
-    scores = values.reshape(num_samples)
-    selected = scores.argmax()
-    return samples[selected], scores[selected]
+    return select_best_sampled_batch(acq_function, samples)
 
 
 def _draw_random(bounds: Tensor, num_samples: int, q: int, seed: int | None) -> Tensor:
