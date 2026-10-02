@@ -18,6 +18,7 @@ Each `BenchmarkResult` records:
 - raw acquisition value at that candidate,
 - wall-clock runtime,
 - number of q-batches evaluated by the acquisition,
+- wall time normalized by acquisition evaluations in serialization-friendly records,
 - candidate-space feasibility when constraints are supplied,
 - optimizer seed.
 
@@ -30,7 +31,9 @@ Python call.
 Optimizer-specific budgets are not directly interchangeable. For example,
 `raw_samples`, DE population/generations, GA population/generations, and PSO
 swarm/iterations imply different acquisition evaluation counts. Reports should
-therefore show both wall time and measured acquisition evaluations.
+therefore show both wall time and measured acquisition evaluations. Serialized benchmark records
+also include seconds per acquisition evaluation as a derived diagnostic. It must not replace the
+raw metrics because vectorization and backend overhead can differ substantially.
 
 For stochastic methods, use several seeds and summarize the distribution of
 candidate quality rather than relying on one run.
