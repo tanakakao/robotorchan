@@ -36,12 +36,16 @@ class BenchmarkResult:
 
 def benchmark_result_record(result: BenchmarkResult) -> dict[str, Any]:
     """Convert a benchmark result to a serialization-friendly stable record."""
+    seconds_per_evaluation = None
+    if result.acquisition_evaluations > 0:
+        seconds_per_evaluation = result.wall_time_seconds / result.acquisition_evaluations
     return {
         "name": result.name,
         "candidate": result.candidate.detach().cpu().tolist(),
         "acquisition_value": float(result.acquisition_value.detach().cpu().item()),
         "wall_time_seconds": result.wall_time_seconds,
         "acquisition_evaluations": result.acquisition_evaluations,
+        "seconds_per_acquisition_evaluation": seconds_per_evaluation,
         "feasible": result.feasible,
         "constraint_violation": result.constraint_violation,
         "seed": result.seed,
