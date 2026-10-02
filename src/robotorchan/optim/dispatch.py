@@ -18,6 +18,7 @@ from robotorchan.optim.backends.sampling import optimize_acqf_sampling
 from robotorchan.optim.backends.torch import optimize_acqf_torch
 from robotorchan.optim.capabilities import (
     MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+    OPTIMIZER_CAPABILITIES,
     get_optimizer_capabilities,
 )
 from robotorchan.optim.constraints.contracts import CandidateConstraints
@@ -193,21 +194,7 @@ def optimize_acqf(
             variable_space=variable_space,
             **backend_options,
         )
-    supported = ", ".join(
-        (
-            "botorch",
-            "torch_adam",
-            "torch_adamw",
-            "torch_sgd",
-            "random",
-            "sobol",
-            "de",
-            "cmaes",
-            "ga",
-            "pso",
-            "hybrid",
-        )
-    )
+    supported = ", ".join(sorted(OPTIMIZER_CAPABILITIES))
     raise ValueError(f"Unknown optimizer {optimizer!r}. Supported optimizers: {supported}.")
 
 
