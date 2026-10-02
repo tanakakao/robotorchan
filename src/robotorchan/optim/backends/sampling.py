@@ -42,9 +42,7 @@ def select_best_sampled_batch(
     with torch.no_grad():
         values = acq_function(samples)
     if values.numel() != num_samples:
-        raise ValueError(
-            "Sampling optimization requires one scalar value per sampled q-batch."
-        )
+        raise ValueError("Sampling optimization requires one scalar value per sampled q-batch.")
     scores = values.reshape(num_samples)
     selected = scores.argmax()
     return samples[selected], scores[selected]
