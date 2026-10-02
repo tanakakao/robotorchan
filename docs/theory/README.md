@@ -459,6 +459,7 @@ pending / fantasy handling、candidate maximization、trust-region update を扱
 | Initialization | [33 Initialization](../../examples/notebooks/33_acquisition_initialization.ipynb) |
 | TuRBO / Trust Region | [34 TuRBO](../../examples/notebooks/34_turbo_trust_region.ipynb) |
 | Robust BO / Input Perturbation | [35 Robust BO](../../examples/notebooks/35_robust_input_perturbation.ipynb) |
+| Outcome / black-box constraints | [37 Outcome-constrained BO](../../examples/notebooks/37_outcome_constrained_bo.ipynb) |
 | Integrated workflow | [36 End-to-End](../../examples/notebooks/36_end_to_end_workflows.ipynb) |
 
 Notebook は theory の代替ではなく、Theory → Public API → executable behavior を接続する

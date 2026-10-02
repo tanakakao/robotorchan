@@ -38,10 +38,15 @@
 
 現在は次の文書があります。
 
-- [Acquisition architecture](development/acquisition-architecture.md)
 - [Architecture](development/architecture.md)
+- [Acquisition architecture](development/acquisition-architecture.md)
 - [Model design guidelines](development/model_design_guidelines.md)
 - [Training API](development/training_api.md)
+- [Executable Notebook Documentation](development/notebook-executable-documentation.md)
+- [Notebook executable-documentation architecture](development/notebook-executable-documentation-architecture.md)
+- [Notebook authoring standard](development/notebook-authoring-standard.md)
+- [Notebook CI](development/notebook-ci.md)
+- [Notebook coverage gap audit](development/notebook-coverage-gap-audit.md)
 - [Release procedure](development/releasing.md)
 
 開発文書には現在も有効な設計原則・公開契約・リリース手順だけを残し、Phase記録や解消済みauditはGit/PR履歴で追跡します。
@@ -57,7 +62,7 @@
 | Optimization | 探索戦略、獲得・最適化側の実務ガイド |
 | Theory | なぜ使えるか、数式、統計的仮定 |
 | Benchmarks | 比較条件、評価方法、実験結果 |
-| Development | architecture、設計原則、training contract、release |
+| Development | architecture、設計原則、training / Notebook contract、CI、release |
 
 ## 網羅性に関する方針
 
