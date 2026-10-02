@@ -189,6 +189,18 @@ def test_backend_support_has_dedicated_ownership() -> None:
     assert actual_support_tests == {"test_operations.py", "test_runtime.py"}
 
 
+def test_resolved_audit_documents_are_not_permanent_documentation() -> None:
+    docs_root = REPOSITORY_ROOT / "docs"
+    temporary_markers = ("audit", "phase", "snapshot", "closeout", "gap", "prototype", "feasibility")
+    offenders = [
+        path.relative_to(REPOSITORY_ROOT).as_posix()
+        for path in docs_root.rglob("*.md")
+        if any(marker in path.name.lower() for marker in temporary_markers)
+    ]
+
+    assert offenders == []
+
+
 def test_obsolete_phase_snapshot_is_not_permanent_documentation() -> None:
     optimization_docs = REPOSITORY_ROOT / "docs" / "optimization"
     obsolete_snapshot = "turbo-" + "phase1-research-inventory.md"
