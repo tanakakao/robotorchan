@@ -28,7 +28,7 @@ This prevents a new notebook from silently bypassing executable-documentation CI
 
 The current excluded group is:
 
-- `23_high_dimensional_benchmark.ipynb`;
+- `23_high_dimensional_bo_benchmark.ipynb`;
 - `24_expressive_surrogate_gp.ipynb`;
 - `25_non_gp_surrogates.ipynb`.
 
