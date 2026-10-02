@@ -36,17 +36,10 @@ class RandomSearchStrategy(SearchStrategy):
     ) -> SearchResult:
         """Return the highest-acquisition random q-batch in public input space."""
         samples = self._sample_candidate_batches(q)
-        try:
-            candidates, acquisition_value = select_best_sampled_batch(
-                acq_function,
-                samples,
-            )
-        except ValueError as error:
-            message = str(error).replace(
-                "one scalar value",
-                "one scalar value",
-            )
-            raise ValueError(message) from error
+        candidates, acquisition_value = select_best_sampled_batch(
+            acq_function,
+            samples,
+        )
         return SearchResult(
             candidates=candidates,
             acquisition_value=acquisition_value,
