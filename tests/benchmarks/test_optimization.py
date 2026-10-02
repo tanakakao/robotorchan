@@ -135,13 +135,17 @@ def test_benchmark_result_records_are_serialization_friendly() -> None:
     assert [record["seed"] for record in records] == [3, 5]
     assert all(isinstance(record["candidate"], list) for record in records)
     assert all(isinstance(record["acquisition_value"], float) for record in records)
-    assert all(set(record) == {
-        "name",
-        "candidate",
-        "acquisition_value",
-        "wall_time_seconds",
-        "acquisition_evaluations",
-        "feasible",
-        "constraint_violation",
-        "seed",
-    } for record in records)
+    assert all(
+        set(record)
+        == {
+            "name",
+            "candidate",
+            "acquisition_value",
+            "wall_time_seconds",
+            "acquisition_evaluations",
+            "feasible",
+            "constraint_violation",
+            "seed",
+        }
+        for record in records
+    )
