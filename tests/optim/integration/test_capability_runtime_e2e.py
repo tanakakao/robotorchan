@@ -552,6 +552,48 @@ def test_mixed_single_task_multifidelity_gp_runtime_supports_mc_acquisition() ->
     assert torch.isfinite(value).all()
 
 
+def test_mixed_multifidelity_gp_runtime_optimizes_target_fidelity_candidate() -> None:
+    design = torch.linspace(0.0, 1.0, 8, dtype=torch.double)
+    category = torch.tensor([0.0, 1.0] * 4, dtype=torch.double)
+    fidelity = torch.tensor([0.25, 0.5, 0.75, 1.0] * 2, dtype=torch.double)
+    train_x = torch.stack([design, category, fidelity], dim=-1)
+    train_y = (torch.sin(design * 3.0) + 0.15 * category + 0.2 * fidelity).unsqueeze(-1)
+    model = MixedSingleTaskMultiFidelityGP(
+        train_x,
+        train_y,
+        cat_dims=[1],
+        data_fidelities=[2],
+    )
+    model.eval()
+
+    acquisition = qLogExpectedImprovement(
+        model=model,
+        best_f=train_y.max(),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8]), seed=29),
+    )
+    candidate, value = optimize_acqf_mixed(
+        acq_function=acquisition,
+        bounds=torch.tensor(
+            [[0.0, 0.0, 1.0], [1.0, 1.0, 1.0]],
+            dtype=torch.double,
+        ),
+        q=1,
+        num_restarts=2,
+        raw_samples=16,
+        fixed_features_list=[
+            {1: 0.0, 2: 1.0},
+            {1: 1.0, 2: 1.0},
+        ],
+    )
+
+    assert candidate.shape == torch.Size([1, 3])
+    assert 0.0 <= candidate[0, 0].item() <= 1.0
+    assert candidate[0, 1].item() in {0.0, 1.0}
+    assert candidate[0, 2].item() == 1.0
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+
+
 def _assert_multifidelity_model_supports_knowledge_gradient(
     model,
     candidate: torch.Tensor,
