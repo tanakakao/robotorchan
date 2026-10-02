@@ -46,7 +46,12 @@ class ExtraTreesSurrogate(NonGPModelMixin, Model, nn.Module):
             raise ValueError("Phase 5 ExtraTreesSurrogate supports one output only.")
         if train_X.shape[0] != train_Y.shape[0]:
             raise ValueError("train_X and train_Y must contain the same number of observations.")
-        self.cat_dims = normalize_feature_dims(\n            cat_dims, train_X.shape[-1], name="cat_dims", require_nonempty=False\n        )
+        self.cat_dims = normalize_feature_dims(
+            cat_dims,
+            train_X.shape[-1],
+            name="cat_dims",
+            require_nonempty=False,
+        )
         validate_categorical_values(train_X, self.cat_dims)
         self._store_supervised_training_data(train_X, train_Y)
         self._forest = ExtraTreesRegressor(
