@@ -6,6 +6,21 @@ REPOSITORY_ROOT = Path(__file__).parents[1]
 SOURCE_ROOT = REPOSITORY_ROOT / "src" / "robotorchan"
 
 
+ROOT_TESTS = {
+    "test_import.py",
+    "test_import_boundaries.py",
+    "test_public_namespace_contracts.py",
+    "test_repository_layout.py",
+    "test_version.py",
+}
+
+
+def test_root_tests_are_repository_wide_contracts() -> None:
+    actual = {path.name for path in (REPOSITORY_ROOT / "tests").glob("test_*.py")}
+
+    assert actual == ROOT_TESTS
+
+
 def test_model_tests_are_owned_by_a_family_or_contract_directory() -> None:
     model_test_root = REPOSITORY_ROOT / "tests" / "models"
     misplaced = sorted(path.name for path in model_test_root.glob("test_*.py"))
@@ -100,6 +115,7 @@ def test_optimizer_e2e_tests_have_integration_ownership() -> None:
         "test_optimizer_model_acquisition_e2e.py",
         "test_sampling_mc_acquisition_e2e.py",
         "test_sampling_multiobjective_constrained_e2e.py",
+        "test_capability_runtime_e2e.py",
     }
     optim_test_root = REPOSITORY_ROOT / "tests" / "optim"
     assert not any((optim_test_root / name).exists() for name in integration_test_names)
