@@ -46,11 +46,7 @@ def test_exclusions_are_real_public_non_model_exports() -> None:
     excluded = set(manifest["excluded_public_exports"])
 
     assert excluded <= set(models.__all__)
-    expected_non_model_exports = {
-        name
-        for name in models.__all__
-        if name not in manifest["models"]
-    }
+    expected_non_model_exports = {name for name in models.__all__ if name not in manifest["models"]}
 
     assert excluded == expected_non_model_exports
 
