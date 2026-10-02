@@ -5,6 +5,8 @@ from robotorchan.benchmarks.optimization import (
     CountingAcquisition,
     benchmark_optimizer,
     benchmark_optimizers,
+    benchmark_result_record,
+    benchmark_result_records,
 )
 
 __all__ = [
@@ -12,4 +14,6 @@ __all__ = [
     "CountingAcquisition",
     "benchmark_optimizer",
     "benchmark_optimizers",
+    "benchmark_result_record",
+    "benchmark_result_records",
 ]

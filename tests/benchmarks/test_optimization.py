@@ -4,7 +4,12 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
-from robotorchan.benchmarks import benchmark_optimizer, benchmark_optimizers
+from robotorchan.benchmarks import (
+    benchmark_optimizer,
+    benchmark_optimizers,
+    benchmark_result_record,
+    benchmark_result_records,
+)
 from robotorchan.optim.backends import optimize_acqf_ga, optimize_acqf_sampling
 from robotorchan.optim.constraints import CandidateConstraints
 
@@ -107,3 +112,40 @@ def test_benchmark_reports_positive_violation_for_infeasible_result() -> None:
     assert result.feasible is False
     assert result.constraint_violation is not None
     assert result.constraint_violation > 0
+
+
+def test_benchmark_result_records_are_serialization_friendly() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    results = benchmark_optimizers(
+        {
+            "random": (
+                optimize_acqf_sampling,
+                {"num_samples": 8, "method": "random"},
+            ),
+        },
+        _Quadratic,
+        bounds,
+        1,
+        seeds=(3, 5),
+    )
+
+    records = benchmark_result_records(results)
+
+    assert records == [benchmark_result_record(result) for result in results]
+    assert [record["seed"] for record in records] == [3, 5]
+    assert all(isinstance(record["candidate"], list) for record in records)
+    assert all(isinstance(record["acquisition_value"], float) for record in records)
+    assert all(
+        set(record)
+        == {
+            "name",
+            "candidate",
+            "acquisition_value",
+            "wall_time_seconds",
+            "acquisition_evaluations",
+            "feasible",
+            "constraint_violation",
+            "seed",
+        }
+        for record in records
+    )
