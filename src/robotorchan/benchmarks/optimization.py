@@ -34,6 +34,25 @@ class BenchmarkResult:
     seed: int | None
 
 
+def benchmark_result_record(result: BenchmarkResult) -> dict[str, Any]:
+    """Convert a benchmark result to a serialization-friendly stable record."""
+    return {
+        "name": result.name,
+        "candidate": result.candidate.detach().cpu().tolist(),
+        "acquisition_value": float(result.acquisition_value.detach().cpu().item()),
+        "wall_time_seconds": result.wall_time_seconds,
+        "acquisition_evaluations": result.acquisition_evaluations,
+        "feasible": result.feasible,
+        "constraint_violation": result.constraint_violation,
+        "seed": result.seed,
+    }
+
+
+def benchmark_result_records(results: list[BenchmarkResult]) -> list[dict[str, Any]]:
+    """Convert benchmark results to serialization-friendly stable records."""
+    return [benchmark_result_record(result) for result in results]
+
+
 class CountingAcquisition(AcquisitionFunction):
     """Transparent acquisition wrapper that counts evaluated q-batches."""
 
