@@ -6,7 +6,6 @@ import torch
 from torch import Tensor
 
 
-
 def validate_categorical_values(X: Tensor, cat_dims: tuple[int, ...]) -> None:
     """Require categorical coordinates to use integer-valued numeric labels."""
     if not cat_dims:
