@@ -56,6 +56,57 @@ def test_dispatch_rejects_unknown_optimizer() -> None:
         raise AssertionError("Unknown optimizer should fail explicitly.")
 
 
+def test_dispatch_rejects_invalid_common_bounds_before_backend() -> None:
+    invalid_bounds = (
+        torch.tensor([[0.0], [float("nan")]]),
+        torch.tensor([[0.0], [float("inf")]]),
+        torch.tensor([[1.0], [0.0]]),
+    )
+    for bounds in invalid_bounds:
+        with patch("robotorchan.optim.dispatch.optimize_acqf_botorch") as mocked:
+            try:
+                optimize_acqf(_SumAcquisition(), bounds, q=1)
+            except ValueError:
+                pass
+            else:
+                raise AssertionError("Invalid bounds should fail before backend execution.")
+        mocked.assert_not_called()
+
+
+def test_dispatch_rejects_nonpositive_q_before_backend() -> None:
+    bounds = torch.tensor([[0.0], [1.0]])
+    with patch("robotorchan.optim.dispatch.optimize_acqf_botorch") as mocked:
+        try:
+            optimize_acqf(_SumAcquisition(), bounds, q=0)
+        except ValueError as exc:
+            assert "q must be at least 1" in str(exc)
+        else:
+            raise AssertionError("Non-positive q should fail before backend execution.")
+    mocked.assert_not_called()
+
+
+def test_dispatch_rejects_variable_space_bounds_mismatch_before_backend() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(
+        torch.tensor([[0.0, 0.0], [1.0, 3.0]], dtype=torch.double),
+        integer_dims=(1,),
+    )
+    with patch("robotorchan.optim.dispatch.optimize_acqf_mixed_ga") as mocked:
+        try:
+            optimize_acqf(
+                _SumAcquisition(),
+                bounds,
+                q=1,
+                optimizer="ga",
+                variable_space=variable_space,
+            )
+        except ValueError as exc:
+            assert "variable_space bounds must match bounds" in str(exc)
+        else:
+            raise AssertionError("Mismatched variable-space bounds should fail before backend.")
+    mocked.assert_not_called()
+
+
 def test_dispatch_forwards_variable_space_to_mixed_ga() -> None:
     bounds = torch.tensor([[0.0, 0.0, 0.0], [1.0, 4.0, 2.0]], dtype=torch.double)
     variable_space = MixedVariableSpace(
