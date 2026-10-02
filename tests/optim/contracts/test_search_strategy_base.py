@@ -64,6 +64,23 @@ def test_search_result_requires_candidate_matrix() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "candidates",
+    [
+        torch.empty(0, 2),
+        torch.empty(3, 0),
+        torch.empty(2, 0, 3),
+        torch.empty(2, 3, 0),
+    ],
+)
+def test_search_result_rejects_empty_q_or_input_dimension(candidates: torch.Tensor) -> None:
+    with pytest.raises(ValueError, match="candidates"):
+        SearchResult(
+            candidates=candidates,
+            acquisition_value=None,
+        )
+
+
 def test_search_result_accepts_scalar_joint_acquisition_value() -> None:
     result = SearchResult(
         candidates=torch.zeros(3, 2),
