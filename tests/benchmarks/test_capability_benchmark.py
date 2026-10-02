@@ -16,7 +16,8 @@ def test_benchmark_counts_are_internally_consistent() -> None:
 
     assert result.registered_models > 0
     assert 0 < result.compatible_models <= result.registered_models
-    assert result.recommendations > 0
+    assert result.compatible_acquisitions > 0
+    assert result.recommendations >= result.compatible_acquisitions
 
 
 def test_benchmark_covers_specialized_problem_shapes() -> None:
@@ -43,6 +44,11 @@ def test_benchmark_covers_specialized_problem_shapes() -> None:
 
     assert tuple(result.name for result in results) == tuple(cases)
     assert all(result.compatible_models > 0 for result in results)
+    assert all(result.compatible_acquisitions >= 0 for result in results)
+    assert all(result.recommendations >= result.compatible_acquisitions for result in results)
+    assert all(
+        result.compatible_acquisitions > 0 for result in results if result.recommendations > 0
+    )
 
 
 def test_benchmark_excludes_undeclared_special_structures() -> None:
