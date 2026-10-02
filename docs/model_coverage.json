@@ -2,7 +2,17 @@
   "schema_version": 3,
   "source_of_truth": "robotorchan.models.registry.MODEL_REGISTRY",
   "excluded_public_exports": [
-    "UnsupportedModelOperationError"
+    "DocumentationLinks",
+    "HighDimensionalStrategy",
+    "InferenceType",
+    "InputType",
+    "ModelCapabilities",
+    "ModelRegistryEntry",
+    "PosteriorSamplingType",
+    "RobustnessType",
+    "TaskType",
+    "UnsupportedModelOperationError",
+    "get_model_registry_entry"
   ],
   "models": {
     "ALEBOGP": {

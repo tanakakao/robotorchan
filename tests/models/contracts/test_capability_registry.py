@@ -41,7 +41,12 @@ def test_registry_documentation_paths_are_repository_relative() -> None:
 
 
 def test_registry_covers_every_public_model() -> None:
-    expected = set(models.__all__) - {"UnsupportedModelOperationError"}
+    expected = {
+        name
+        for name in models.__all__
+        if isinstance(getattr(models, name), type)
+        and hasattr(getattr(models, name), "supports_mll")
+    }
 
     assert set(MODEL_REGISTRY) == expected
 

@@ -11,7 +11,19 @@ from robotorchan.models.registry import MODEL_REGISTRY
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "docs" / "model_coverage.json"
-EXCLUDED_PUBLIC_EXPORTS = ("UnsupportedModelOperationError",)
+EXCLUDED_PUBLIC_EXPORTS = (
+    "DocumentationLinks",
+    "HighDimensionalStrategy",
+    "InferenceType",
+    "InputType",
+    "ModelCapabilities",
+    "ModelRegistryEntry",
+    "PosteriorSamplingType",
+    "RobustnessType",
+    "TaskType",
+    "UnsupportedModelOperationError",
+    "get_model_registry_entry",
+)
 COVERAGE_CONTRACT = {
     "guide": "model-family guide that names or covers the public model family",
     "theory": "statistical or optimization theory shared by the model",

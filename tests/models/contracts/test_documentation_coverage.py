@@ -46,7 +46,9 @@ def test_exclusions_are_real_public_non_model_exports() -> None:
     excluded = set(manifest["excluded_public_exports"])
 
     assert excluded <= set(models.__all__)
-    assert excluded == {"UnsupportedModelOperationError"}
+    expected_non_model_exports = {name for name in models.__all__ if name not in manifest["models"]}
+
+    assert excluded == expected_non_model_exports
 
 
 def test_coverage_uses_family_guides_instead_of_legacy_model_index() -> None:

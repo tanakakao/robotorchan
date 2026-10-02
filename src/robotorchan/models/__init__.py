@@ -1,6 +1,17 @@
 """Surrogate-model extensions and BoTorch-compatible wrappers."""
 
 from robotorchan.models.base import UnsupportedModelOperationError
+from robotorchan.models.capabilities import (
+    DocumentationLinks,
+    HighDimensionalStrategy,
+    InferenceType,
+    InputType,
+    ModelCapabilities,
+    ModelRegistryEntry,
+    PosteriorSamplingType,
+    RobustnessType,
+    TaskType,
+)
 from robotorchan.models.expressive.deep_gp import (
     MixedMultiTaskDeepGP,
     MixedSingleTaskDeepGP,
@@ -104,6 +115,7 @@ from robotorchan.models.non_gp.hist_gradient_boosting import HistGradientBoostin
 from robotorchan.models.non_gp.ngboost import NGBoostSurrogate
 from robotorchan.models.non_gp.random_forest import RandomForestSurrogate
 from robotorchan.models.preference.pairwise import PairwiseGP
+from robotorchan.models.registry import get_model_registry_entry
 from robotorchan.models.robust.contaminated import (
     ContaminatedMultiTaskGP,
     ContaminatedSingleTaskGP,
@@ -196,6 +208,7 @@ __all__ = [
     "AutoEncoderMultiTaskGP",
     "ContaminatedMultiTaskGP",
     "ContaminatedSingleTaskGP",
+    "DocumentationLinks",
     "EnsembleMapSaasSingleTaskGP",
     "ExtraTreesSurrogate",
     "GradientBoostingSurrogate",
@@ -205,14 +218,17 @@ __all__ = [
     "HeteroskedasticSingleTaskGP",
     "HierarchicalConditionalKernelGP",
     "HierarchicalConditionalKernelMultiTaskGP",
+    "HighDimensionalStrategy",
     "HigherOrderGP",
     "HistGradientBoostingSurrogate",
     "HybridAutoEncoderGP",
     "HybridAutoEncoderKroneckerMultiTaskGP",
     "HybridAutoEncoderMultiTaskGP",
+    "InferenceType",
     "InfiniteWidthBNNGP",
     "InfiniteWidthBNNKroneckerMultiTaskGP",
     "InfiniteWidthBNNMultiTaskGP",
+    "InputType",
     "JointEncoderGP",
     "JointEncoderKroneckerMultiTaskGP",
     "JointEncoderMultiTaskGP",
@@ -274,7 +290,9 @@ __all__ = [
     "MixedSupervisedVAEGP",
     "MixedUncertainInputSingleTaskGP",
     "MixedVAEGP",
+    "ModelCapabilities",
     "ModelListGP",
+    "ModelRegistryEntry",
     "MultiTaskDeepGP",
     "MultiTaskGP",
     "NGBoostSurrogate",
@@ -291,6 +309,7 @@ __all__ = [
     "PLSMultiFidelityGP",
     "PLSMultiTaskGP",
     "PairwiseGP",
+    "PosteriorSamplingType",
     "RandomForestSurrogate",
     "RandomProjectionGP",
     "RandomProjectionKroneckerMultiTaskGP",
@@ -303,6 +322,7 @@ __all__ = [
     "ReplicateNoiseSingleTaskGP",
     "RobustRelevancePursuitMultiTaskGP",
     "RobustRelevancePursuitSingleTaskGP",
+    "RobustnessType",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
     "SingleTaskDeepGP",
@@ -320,9 +340,11 @@ __all__ = [
     "SupervisedVAEGP",
     "SupervisedVAEKroneckerMultiTaskGP",
     "SupervisedVAEMultiTaskGP",
+    "TaskType",
     "UncertainCategoricalSingleTaskGP",
     "UncertainInputSingleTaskGP",
     "UnsupportedModelOperationError",
     "VAEKroneckerMultiTaskGP",
     "VAEMultiTaskGP",
+    "get_model_registry_entry",
 ]

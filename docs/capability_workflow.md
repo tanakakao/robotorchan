@@ -8,7 +8,7 @@ ProblemSpec → Model Registry → Selector → Model × Acquisition Compatibili
 
 ProblemSpec は問題の構造を宣言します。モデル名を直接指定する設定ではありません。
 
-    from robotorchan.models.capabilities import InputType
+    from robotorchan.models import InputType
     from robotorchan.workflow import (
         ProblemPurpose,
         ProblemSpec,
@@ -60,7 +60,11 @@ robotorchan.benchmarks.capability は予測精度 benchmark ではなく、capab
 
 ## Source of truth
 
-モデル capability の source of truth は robotorchan.models.registry.MODEL_REGISTRY です。docs/model_coverage.json はそこから生成されます。Acquisition extension の metadata は robotorchan.acquisition.registry.ACQUISITION_REGISTRY が保持します。
+モデル capability の内部 source of truth は `MODEL_REGISTRY`、Acquisition metadata の内部
+source of truth は `ACQUISITION_REGISTRY` です。利用者は内部dictへ直接依存せず、
+`robotorchan.models.get_model_registry_entry()` と
+`robotorchan.acquisition.get_acquisition_registry_entry()` からimmutable metadataを取得します。
+`docs/model_coverage.json` はmodel registryから生成されます。
 
 新しいモデルや acquisition を追加するときは、実装だけでなく対応する capability metadata と contract test も更新してください。
 
