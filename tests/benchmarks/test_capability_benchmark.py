@@ -47,9 +47,7 @@ def test_benchmark_covers_specialized_problem_shapes() -> None:
     assert all(result.compatible_acquisitions >= 0 for result in results)
     assert all(result.recommendations >= result.compatible_acquisitions for result in results)
     assert all(
-        result.compatible_acquisitions > 0
-        for result in results
-        if result.recommendations > 0
+        result.compatible_acquisitions > 0 for result in results if result.recommendations > 0
     )
 
 
