@@ -1,0 +1,29 @@
+name: Notebook Full Suite
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 18 * * 0"
+
+jobs:
+  notebooks-full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install CPU PyTorch
+        run: python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
+      - name: Install notebook dependencies
+        run: python -m pip install -e ".[examples,fully-bayesian,ngboost]"
+      - name: Execute full notebook suite
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python examples/run_notebooks.py
+          --include-slow
+          --include-excluded
+          --timeout 600
