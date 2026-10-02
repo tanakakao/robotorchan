@@ -42,6 +42,7 @@
 - [Acquisition architecture](development/acquisition-architecture.md)
 - [Model design guidelines](development/model_design_guidelines.md)
 - [Training API](development/training_api.md)
+- [Executable Notebook Documentation](development/notebook-executable-documentation.md)
 - [Notebook executable-documentation architecture](development/notebook-executable-documentation-architecture.md)
 - [Notebook authoring standard](development/notebook-authoring-standard.md)
 - [Notebook CI](development/notebook-ci.md)
