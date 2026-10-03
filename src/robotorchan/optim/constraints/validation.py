@@ -38,15 +38,18 @@ def validate_candidate_constraints(
                     raise ValueError(f"{name} contains an input-dimension index outside [0, d).")
                 if sequential and q > 1:
                     raise UnsupportedError(
-                        "Inter-point linear constraints require joint q-batch optimization; "
+                        "inter-point linear constraints require joint q-batch optimization; "
                         "sequential=True is unsupported."
                     )
 
-    if sequential and q > 1 and any(
-        not is_intrapoint
-        for _, is_intrapoint in constraints.nonlinear_inequality_constraints
+    if (
+        sequential
+        and q > 1
+        and any(
+            not is_intrapoint for _, is_intrapoint in constraints.nonlinear_inequality_constraints
+        )
     ):
         raise UnsupportedError(
-            "Inter-point nonlinear constraints require joint q-batch optimization; "
+            "inter-point nonlinear constraints require joint q-batch optimization; "
             "sequential=True is unsupported."
         )
