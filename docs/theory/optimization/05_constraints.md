@@ -297,7 +297,25 @@ robust feasibility / chance constraintに相当し、通常のnonlinear candidat
 constraintとは別の意味論です。現時点では暗黙にその保証を追加せず、将来拡張として
 分離します。
 
-## 5.17 Runtime capability
+## 5.17 dtype / device / autograd contract
+
+Gradient-based nonlinear candidate optimizationでは、constraint callableはoptimizerから渡された
+TensorをそのままPyTorch演算で処理する必要があります。
+
+- 出力は入力Xと同じdevice上のscalar Tensorにする
+- dtypeを暗黙に変更しない
+- `.cpu()`、NumPy変換、Python `float` 化をconstraint計算途中に入れない
+- `.detach()` でgradient pathを切らない
+- 定数は `x.new_tensor(...)` などでXのdtype/deviceに合わせる
+
+robotorchanはBoTorchへ渡す前にcandidateを別deviceへ移したり、constraint callableを
+NumPy callableへ変換したりしません。明示的なnonlinear initial conditionsについても
+boundsとdevice/dtypeが一致しない場合は早期にエラーにします。
+
+CPUではfloat32/float64のoptimizer regressionを持ち、CUDA環境では同じcallable contractを
+CUDA Tensorのまま通すテストを実行します。CUDAがないCI環境ではそのテストだけskipされます。
+
+## 5.18 Runtime capability
 
 最終的な利用可否は
 
