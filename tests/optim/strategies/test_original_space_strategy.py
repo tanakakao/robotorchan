@@ -653,3 +653,165 @@ def test_original_space_strategy_satisfies_qbatch_interpoint_equality_constraint
         torch.tensor(1.0, dtype=torch.double),
         atol=1e-5,
     )
+
+
+def test_multitask_fixed_task_with_nonlinear_candidate_constraint() -> None:
+    data_x = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
+    task_zero = torch.cat([data_x, torch.zeros_like(data_x)], dim=-1)
+    task_one = torch.cat([data_x, torch.ones_like(data_x)], dim=-1)
+    train_X = torch.cat([task_zero, task_one], dim=0)
+    train_Y = torch.cat(
+        [torch.sin(data_x * 3.0), torch.cos(data_x * 3.0)],
+        dim=0,
+    )
+    model = MultiTaskGP(train_X, train_Y, task_feature=1)
+    objective = GenericMCObjective(lambda samples, X=None: samples.squeeze(-1))
+    acquisition = qSimpleRegret(model, objective=objective)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+
+    def constraint(x: torch.Tensor) -> torch.Tensor:
+        return x.new_tensor(0.7) - x[0]
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((constraint, True),),
+    )
+    initial = torch.tensor(
+        [
+            [[0.2, 1.0]],
+            [[0.4, 1.0]],
+            [[0.6, 1.0]],
+        ],
+        dtype=torch.double,
+    )
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        fixed_features={1: 1.0},
+        batch_initial_conditions=initial,
+    )
+
+    result = strategy.optimize(acquisition)
+
+    assert result.candidates.shape == torch.Size([1, 2])
+    assert result.candidates[0, 1] == 1.0
+    assert constraint(result.candidates[0]) >= -1e-6
+
+
+def test_multitask_nonlinear_constraint_can_reference_fixed_task_feature() -> None:
+    data_x = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
+    task_zero = torch.cat([data_x, torch.zeros_like(data_x)], dim=-1)
+    task_one = torch.cat([data_x, torch.ones_like(data_x)], dim=-1)
+    train_X = torch.cat([task_zero, task_one], dim=0)
+    train_Y = torch.cat(
+        [torch.sin(data_x * 3.0), torch.cos(data_x * 3.0)],
+        dim=0,
+    )
+    model = MultiTaskGP(train_X, train_Y, task_feature=1)
+    objective = GenericMCObjective(lambda samples, X=None: samples.squeeze(-1))
+    acquisition = qSimpleRegret(model, objective=objective)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+
+    def task_dependent_constraint(x: torch.Tensor) -> torch.Tensor:
+        limit = x.new_tensor(0.4) + 0.3 * x[1]
+        return limit - x[0]
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((task_dependent_constraint, True),),
+    )
+    initial = torch.tensor(
+        [
+            [[0.2, 1.0]],
+            [[0.4, 1.0]],
+            [[0.6, 1.0]],
+        ],
+        dtype=torch.double,
+    )
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        fixed_features={1: 1.0},
+        batch_initial_conditions=initial,
+    )
+
+    result = strategy.optimize(acquisition)
+
+    assert result.candidates[0, 1] == 1.0
+    assert task_dependent_constraint(result.candidates[0]) >= -1e-6
+
+
+def test_kronecker_multitask_with_nonlinear_candidate_constraint() -> None:
+    train_X = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
+    train_Y = torch.cat(
+        [torch.sin(train_X * 3.0), torch.cos(train_X * 3.0)],
+        dim=-1,
+    )
+    model = KroneckerMultiTaskGP(train_X, train_Y)
+    probe = torch.tensor([[0.35]], dtype=torch.double)
+    posterior = model.posterior(probe)
+    assert posterior.mean.shape[-1] == 2
+
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x.new_tensor(0.75) - x[0], True),),
+    )
+    initial = torch.tensor(
+        [[[0.2]], [[0.4]], [[0.6]]],
+        dtype=torch.double,
+    )
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    result = strategy.optimize(_LinearCandidateAcquisition())  # type: ignore[arg-type]
+
+    assert result.candidates.shape == torch.Size([1, 1])
+    assert result.candidates[0, 0] <= 0.75 + 1e-6
+    assert torch.isfinite(result.acquisition_value).all()
+
+
+def test_multifidelity_fixed_fidelity_with_nonlinear_candidate_constraint() -> None:
+    design = torch.linspace(0.0, 1.0, 6, dtype=torch.double)
+    low = torch.stack((design, torch.full_like(design, 0.5)), dim=-1)
+    high = torch.stack((design, torch.ones_like(design)), dim=-1)
+    train_X = torch.cat((low, high), dim=0)
+    train_Y = torch.sin(train_X[:, :1] * 4.0) + 0.2 * (1.0 - train_X[:, 1:])
+    model = SingleTaskMultiFidelityGP(train_X, train_Y, data_fidelities=[1])
+    acquisition = PosteriorMean(model)
+    bounds = torch.tensor([[0.0, 0.5], [1.0, 1.0]], dtype=torch.double)
+
+    def fidelity_dependent_constraint(x: torch.Tensor) -> torch.Tensor:
+        return x.new_tensor(0.4) + 0.4 * x[1] - x[0]
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((fidelity_dependent_constraint, True),),
+    )
+    initial = torch.tensor(
+        [
+            [[0.2, 1.0]],
+            [[0.4, 1.0]],
+            [[0.6, 1.0]],
+        ],
+        dtype=torch.double,
+    )
+    strategy = OriginalSpaceStrategy(
+        bounds,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        fixed_features={1: 1.0},
+        batch_initial_conditions=initial,
+    )
+
+    result = strategy.optimize(acquisition)
+
+    assert result.candidates.shape == torch.Size([1, 2])
+    assert result.candidates[0, 1] == 1.0
+    assert fidelity_dependent_constraint(result.candidates[0]) >= -1e-6

@@ -226,7 +226,24 @@ derivative-free backendでも、constraintは実際に評価される \(x\) に�
 判定すべきです。現在の DE / PSO なども structured repair 後のcandidateに
 対してacquisition / constraint evaluationを行います。
 
-## 5.13 Coordinate transform と constraint
+## 5.13 Structured model features と constraint
+
+candidate constraint はmodel内部のtask/output構造ではなく、optimizerが扱うpublic
+candidate Xに対して定義します。
+
+`MultiTaskGP` のtask featureや `SingleTaskMultiFidelityGP` のfidelity featureが
+public Xの列として存在する場合、fixed featureとしてその列を固定したままnonlinear
+constraintを適用できます。callableからtask/fidelity列を参照して、taskやfidelityに
+依存するfeasible regionを表現することもできます。
+
+一方、`KroneckerMultiTaskGP` は同じinput Xに複数output taskを持つ構造であり、
+optimizerのcandidate Xにtask-feature列を追加する必要はありません。constraintも
+通常のpublic input coordinatesに対して定義します。
+
+この区別により、structural featureをconstraint専用の別座標系へ変換せず、各modelが
+実際に評価するcandidate spaceとconstraint spaceを一致させます。
+
+## 5.14 Coordinate transform と constraint
 
 public-space constraint を latent / embedded coordinateへそのまま渡すことはできません。
 
@@ -248,7 +265,7 @@ public-space `CandidateConstraints` を明示的に拒否します。
 これは保守的なAPI制限ではなく、異なる座標系で別のconstraintを
 誤って解くことを防ぐ correctness contract です。
 
-## 5.14 Sequential と inter-point
+## 5.15 Sequential と inter-point
 
 inter-point constraint は q-batch 全体を同時に見る必要があります。
 
@@ -259,7 +276,7 @@ inter-point constraint は q-batch 全体を同時に見る必要があります
 現在の BoTorch contract でも inter-point nonlinear constraint と
 greedy sequential optimization の組合せには制限があります。
 
-## 5.15 Runtime capability
+## 5.16 Runtime capability
 
 最終的な利用可否は
 
