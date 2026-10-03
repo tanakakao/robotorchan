@@ -29,16 +29,8 @@ def candidate_constraint_violation(
         violation = violation + torch.relu(residual.abs() - equality_tolerance)
     for callable_, is_intrapoint in constraints.nonlinear_inequality_constraints:
         if is_intrapoint:
-            values = callable_(candidates)
-            if values.shape == candidates.shape[:-1]:
-                violation = violation + torch.relu(-values).sum(dim=-1)
-            elif values.shape == batch_shape:
-                violation = violation + torch.relu(-values)
-            else:
-                raise ValueError(
-                    "Intra-point nonlinear constraint must return [..., q] or one value "
-                    "per candidate q-batch."
-                )
+            values = _evaluate_intrapoint_callable(callable_, candidates)
+            violation = violation + torch.relu(-values).sum(dim=-1)
         else:
             values = _evaluate_interpoint_callable(callable_, candidates)
             violation = violation + torch.relu(-values)
@@ -106,12 +98,29 @@ def _linear_residual(candidates: Tensor, constraint: LinearConstraint) -> Tensor
     raise ValueError("Linear constraint indices must be one- or two-dimensional.")
 
 
+def _evaluate_intrapoint_callable(callable_, candidates: Tensor) -> Tensor:
+    flat = candidates.reshape(-1, candidates.shape[-1])
+    values = [_validate_nonlinear_value(callable_(candidate), candidate) for candidate in flat]
+    return torch.stack(values).reshape(candidates.shape[:-1])
+
+
 def _evaluate_interpoint_callable(callable_, candidates: Tensor) -> Tensor:
     if candidates.ndim == 2:
-        value = callable_(candidates)
-        if value.numel() != 1:
-            raise ValueError("Inter-point nonlinear constraint must return one scalar per q-batch.")
-        return value.reshape(())
+        return _validate_nonlinear_value(callable_(candidates), candidates)
     flat = candidates.reshape(-1, candidates.shape[-2], candidates.shape[-1])
-    values = [callable_(candidate).reshape(()) for candidate in flat]
+    values = [_validate_nonlinear_value(callable_(candidate), candidate) for candidate in flat]
     return torch.stack(values).reshape(candidates.shape[:-2])
+
+
+def _validate_nonlinear_value(value: object, candidate: Tensor) -> Tensor:
+    if not isinstance(value, Tensor):
+        raise TypeError("Nonlinear candidate constraint callable must return a Tensor.")
+    if value.numel() != 1:
+        raise ValueError("Nonlinear candidate constraint callable must return a scalar Tensor.")
+    if value.device != candidate.device:
+        raise ValueError("Nonlinear candidate constraint callable must preserve candidate device.")
+    if value.dtype != candidate.dtype:
+        raise ValueError("Nonlinear candidate constraint callable must preserve candidate dtype.")
+    if not torch.isfinite(value).all():
+        raise ValueError("Nonlinear candidate constraint callable must return a finite value.")
+    return value.reshape(())
