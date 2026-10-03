@@ -79,11 +79,7 @@ def validate_notebook_manifest() -> None:
         raise ValueError(f"Notebook の実行区分が重複しています: {sorted(duplicates)}")
 
     declared = set().union(*groups.values())
-    ci_group_by_name = {
-        name: group_name
-        for group_name, names in groups.items()
-        for name in names
-    }
+    ci_group_by_name = {name: group_name for group_name, names in groups.items() for name in names}
     metadata_group = {"default": "default", "slow": "slow", "manual": "excluded"}
     for name in sorted(discovered):
         notebook = nbformat.read(NOTEBOOK_DIR / name, as_version=4)
