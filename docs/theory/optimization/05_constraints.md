@@ -211,11 +211,20 @@ capability metadata に semantics が存在しても、
 mixed space では constraint evaluation の前に
 integer / categorical feasibility を保証する必要があります。
 
-continuous proposal \(z\) を integer repair して \(x=R(z)\) とする場合、
-constraint は実際に評価される \(x\) に対して判定すべきです。
+BoTorch native mixed optimization では `fixed_features_list` が離散割当を列挙し、
+各continuous subproblemでその座標を固定します。nonlinear callableはone-hotや
+latent coordinateではなく、固定済みcategorical/discrete値を含む元の
+`[d]` candidateを受け取ります。このためcategoryによってfeasible regionが
+変わるconstraintも同じpublic-space callableで表現できます。
 
-現在の DE / PSO なども structured repair 後の candidate に対して
-acquisition / constraint evaluation を行います。
+q > 1 のnative mixed optimizationはgreedy sequentialに分解されるため、
+intra-point nonlinear constraintは各q=1 stepで適用できますが、
+joint `[q,d]` を必要とするinter-point nonlinear constraintは非対応です。
+
+continuous proposal \(z\) を integer repair して \(x=R(z)\) とする
+derivative-free backendでも、constraintは実際に評価される \(x\) に対して
+判定すべきです。現在の DE / PSO なども structured repair 後のcandidateに
+対してacquisition / constraint evaluationを行います。
 
 ## 5.13 Coordinate transform と constraint
 
