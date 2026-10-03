@@ -31,8 +31,8 @@ class CandidateConstraints:
     One-dimensional indices describe intra-point constraints; two-dimensional
     indices may describe inter-point q-batch constraints.
 
-    These are input constraints, not probabilistic output constraints such as
-    ``g(x) <= 0`` used by constrained BO acquisition functions.
+    These are input constraints, not probabilistic output constraints used by
+    constrained BO acquisition functions.
 
     Nonlinear inequalities use BoTorch's native ``(callable, is_intrapoint)``
     contract. The callable returns a scalar tensor and feasibility means
