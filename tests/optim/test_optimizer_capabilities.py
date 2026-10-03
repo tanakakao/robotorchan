@@ -94,10 +94,7 @@ def test_botorch_mixed_nonlinear_capability_does_not_overstate_interpoint_suppor
     assert capabilities.nonlinear_inequality_constraints
     assert not capabilities.interpoint_nonlinear_constraints
     assert capabilities.constraint_handling.nonlinear_inequality is ConstraintHandling.NATIVE
-    assert (
-        capabilities.constraint_handling.interpoint_nonlinear
-        is ConstraintHandling.UNSUPPORTED
-    )
+    assert capabilities.constraint_handling.interpoint_nonlinear is ConstraintHandling.UNSUPPORTED
 
 
 def test_gradient_botorch_capability_does_not_claim_gpu_optimizer_support() -> None:
