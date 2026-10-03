@@ -387,9 +387,7 @@ def test_intrapoint_nonlinear_callable_receives_one_candidate_at_a_time() -> Non
         seen_shapes.append(x.shape)
         return 0.6 - x[0]
 
-    constraints = CandidateConstraints(
-        nonlinear_inequality_constraints=((constraint, True),)
-    )
+    constraints = CandidateConstraints(nonlinear_inequality_constraints=((constraint, True),))
 
     violation = candidate_constraint_violation(candidates, constraints)
 
@@ -408,9 +406,7 @@ def test_intrapoint_nonlinear_callable_receives_one_candidate_at_a_time() -> Non
 )
 def test_nonlinear_constraint_evaluation_rejects_invalid_outputs(constraint, error) -> None:
     candidates = torch.tensor([[0.2]], dtype=torch.double)
-    constraints = CandidateConstraints(
-        nonlinear_inequality_constraints=((constraint, True),)
-    )
+    constraints = CandidateConstraints(nonlinear_inequality_constraints=((constraint, True),))
 
     with pytest.raises(error):
         candidate_constraint_violation(candidates, constraints)
