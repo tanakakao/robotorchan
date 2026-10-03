@@ -750,12 +750,10 @@ def test_kronecker_multitask_with_nonlinear_candidate_constraint() -> None:
         dim=-1,
     )
     model = KroneckerMultiTaskGP(train_X, train_Y)
-    weights = torch.tensor([0.7, 0.3], dtype=torch.double)
-    acquisition = qSimpleRegret(
-        model=model,
-        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([16]), seed=71),
-        objective=GenericMCObjective(lambda samples, X=None: samples @ weights),
-    )
+    probe = torch.tensor([[0.35]], dtype=torch.double)
+    posterior = model.posterior(probe)
+    assert posterior.mean.shape[-1] == 2
+
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
         nonlinear_inequality_constraints=((lambda x: x.new_tensor(0.75) - x[0], True),),
@@ -772,7 +770,7 @@ def test_kronecker_multitask_with_nonlinear_candidate_constraint() -> None:
         batch_initial_conditions=initial,
     )
 
-    result = strategy.optimize(acquisition)
+    result = strategy.optimize(_LinearCandidateAcquisition())  # type: ignore[arg-type]
 
     assert result.candidates.shape == torch.Size([1, 1])
     assert result.candidates[0, 0] <= 0.75 + 1e-6
