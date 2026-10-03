@@ -225,3 +225,142 @@ def test_pending_candidates_do_not_change_explicit_initial_condition_shape() -> 
     assert candidate.shape == torch.Size([2, 1])
     assert torch.isfinite(candidate).all()
     assert torch.isfinite(value).all()
+
+
+def test_qlogehvi_runs_with_nonlinear_candidate_constraint() -> None:
+    model, train_x = _multi_output_model()
+    with torch.no_grad():
+        train_y = model.posterior(train_x).mean
+    ref_point = train_y.min(dim=0).values - 0.1
+    partitioning = FastNondominatedPartitioning(ref_point=ref_point, Y=train_y)
+    acquisition = qLogExpectedHypervolumeImprovement(
+        model=model,
+        ref_point=ref_point.tolist(),
+        partitioning=partitioning,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=1401),
+    )
+
+    def candidate_constraint(x: torch.Tensor) -> torch.Tensor:
+        return x.new_tensor(0.8) - x[0]
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((candidate_constraint, True),),
+    )
+    initial_conditions = torch.tensor(
+        [
+            [[0.2], [0.6]],
+            [[0.3], [0.7]],
+            [[0.4], [0.5]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=2,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate[:, 0] <= 0.8 + 1e-6)
+
+
+def test_qlognehvi_runs_with_nonlinear_candidate_constraint_and_pending() -> None:
+    model, train_x = _multi_output_model()
+    with torch.no_grad():
+        train_y = model.posterior(train_x).mean
+    ref_point = train_y.min(dim=0).values - 0.1
+    acquisition = qLogNoisyExpectedHypervolumeImprovement(
+        model=model,
+        ref_point=ref_point.tolist(),
+        X_baseline=train_x,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=1402),
+        prune_baseline=False,
+    )
+    pending = torch.tensor([[0.9]], dtype=torch.double)
+    acquisition.set_X_pending(pending)
+
+    def candidate_constraint(x: torch.Tensor) -> torch.Tensor:
+        return x[0] - x.new_tensor(0.15)
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((candidate_constraint, True),),
+    )
+    initial_conditions = torch.tensor(
+        [
+            [[0.2], [0.6]],
+            [[0.3], [0.7]],
+            [[0.4], [0.8]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=2,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate[:, 0] >= 0.15 - 1e-6)
+    assert torch.equal(acquisition.X_pending, pending)
+
+
+def test_qlogehvi_keeps_outcome_and_candidate_constraints_independent() -> None:
+    train_x = torch.linspace(0.0, 1.0, 10, dtype=torch.double).unsqueeze(-1)
+    objective_one = -(train_x - 0.25).square() + 1.0
+    objective_two = -(train_x - 0.75).square() + 1.0
+    outcome_constraint = train_x - 0.85
+    model = ModelListGP(
+        SingleTaskGP(train_x, objective_one),
+        SingleTaskGP(train_x, objective_two),
+        SingleTaskGP(train_x, outcome_constraint),
+    )
+    model.eval()
+    with torch.no_grad():
+        train_y = model.posterior(train_x).mean[..., :2]
+    ref_point = train_y.min(dim=0).values - 0.1
+    partitioning = FastNondominatedPartitioning(ref_point=ref_point, Y=train_y)
+    acquisition = qLogExpectedHypervolumeImprovement(
+        model=model,
+        ref_point=ref_point.tolist(),
+        partitioning=partitioning,
+        sampler=SobolQMCNormalSampler(torch.Size([32]), seed=1403),
+        objective=lambda samples, X=None: samples[..., :2],
+        constraints=[lambda samples: samples[..., 2]],
+    )
+
+    def candidate_constraint(x: torch.Tensor) -> torch.Tensor:
+        return x.new_tensor(0.75) - x[0]
+
+    candidate_constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((candidate_constraint, True),),
+    )
+    initial_conditions = torch.tensor(
+        [[[0.2]], [[0.4]], [[0.6]]],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        torch.tensor([[0.0], [1.0]], dtype=torch.double),
+        q=1,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=candidate_constraints,
+        batch_initial_conditions=initial_conditions,
+    )
+
+    assert candidate.shape == torch.Size([1, 1])
+    assert torch.isfinite(value).all()
+    assert candidate_constraint(candidate[0]) >= -1e-6
