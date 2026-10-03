@@ -47,6 +47,7 @@ DEFAULT_NOTEBOOKS = [
     "35_robust_input_perturbation.ipynb",
     "36_end_to_end_workflows.ipynb",
     "37_outcome_constrained_bo.ipynb",
+    "38_nonlinear_candidate_constraints.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [
