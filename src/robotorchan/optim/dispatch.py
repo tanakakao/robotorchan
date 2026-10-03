@@ -6,6 +6,7 @@ from typing import Any, Literal
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
+from botorch.optim.initializers import TGenInitialConditions
 from torch import Tensor
 
 from robotorchan.optim.backend_support.runtime import validate_bounds
@@ -55,6 +56,8 @@ def optimize_acqf(
     fixed_features: dict[int, float | Tensor] | None = None,
     batch_initial_conditions: Tensor | None = None,
     sequential: bool = False,
+    ic_generator: TGenInitialConditions | None = None,
+    ic_gen_kwargs: dict[str, Any] | None = None,
     seed: int | None = None,
     optimizer_options: dict[str, Any] | None = None,
     variable_space: MixedVariableSpace | None = None,
@@ -98,8 +101,11 @@ def optimize_acqf(
             fixed_features=fixed_features,
             batch_initial_conditions=batch_initial_conditions,
             sequential=sequential,
+            ic_generator=ic_generator,
+            ic_gen_kwargs=ic_gen_kwargs,
         )
     if name.startswith("torch_"):
+        _reject_initial_condition_generator(name, ic_generator, ic_gen_kwargs)
         _reject_seed(name, seed)
         _reject_sequential(name, sequential)
         _reject_backend_options(name, backend_options)
@@ -120,6 +126,8 @@ def optimize_acqf(
         name,
         options=options,
         batch_initial_conditions=batch_initial_conditions,
+        ic_generator=ic_generator,
+        ic_gen_kwargs=ic_gen_kwargs,
     )
     if sequential:
         raise NotImplementedError(
@@ -227,6 +235,8 @@ def _reject_botorch_local_arguments(
     *,
     options: dict[str, Any] | None,
     batch_initial_conditions: Tensor | None,
+    ic_generator: TGenInitialConditions | None,
+    ic_gen_kwargs: dict[str, Any] | None,
 ) -> None:
     if options is not None:
         raise ValueError(
@@ -235,6 +245,18 @@ def _reject_botorch_local_arguments(
         )
     if batch_initial_conditions is not None:
         raise ValueError(f"batch_initial_conditions are not used by optimizer={name!r}.")
+    _reject_initial_condition_generator(name, ic_generator, ic_gen_kwargs)
+
+
+def _reject_initial_condition_generator(
+    name: str,
+    ic_generator: TGenInitialConditions | None,
+    ic_gen_kwargs: dict[str, Any] | None,
+) -> None:
+    if ic_generator is not None:
+        raise ValueError(f"ic_generator is only used by optimizer='botorch', not {name!r}.")
+    if ic_gen_kwargs is not None:
+        raise ValueError(f"ic_gen_kwargs are only used by optimizer='botorch', not {name!r}.")
 
 
 def _validate_requested_capabilities(
