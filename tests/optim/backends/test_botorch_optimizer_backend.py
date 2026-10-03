@@ -125,6 +125,101 @@ def test_mixed_backend_rejects_interpoint_nonlinear_constraint() -> None:
         raise AssertionError("Expected mixed backend to reject inter-point constraints.")
 
 
+def test_botorch_backend_solves_q1_with_intrapoint_nonlinear_constraint() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.4 - x[0], True),)
+    )
+    initial = torch.tensor([[[0.1]], [[0.2]], [[0.3]]], dtype=torch.double)
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=1,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    assert candidate.shape == torch.Size([1, 1])
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert 0.0 <= candidate[0, 0] <= 0.4 + 1e-6
+
+
+def test_botorch_backend_solves_joint_q_with_intrapoint_nonlinear_constraint() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.6 - x[0], True),)
+    )
+    initial = torch.tensor(
+        [
+            [[0.2], [0.3]],
+            [[0.3], [0.4]],
+            [[0.4], [0.5]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=2,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= 0.6 + 1e-6)
+
+
+def test_botorch_backend_enforces_multiple_intrapoint_nonlinear_constraints() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=(
+            (lambda x: 0.7 - x[0], True),
+            (lambda x: 0.8 - x[1], True),
+            (lambda x: 1.0 - x.square().sum(), True),
+        )
+    )
+    initial = torch.tensor(
+        [
+            [[0.2, 0.2]],
+            [[0.4, 0.4]],
+            [[0.6, 0.5]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=1,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    x = candidate[0]
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert x[0] <= 0.7 + 1e-6
+    assert x[1] <= 0.8 + 1e-6
+    assert x.square().sum() <= 1.0 + 1e-6
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
+
+
 def test_botorch_backend_forwards_linear_constraint_kinds_unchanged() -> None:
     acq = _DummyAcquisition()
     bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]])
