@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
-from botorch.exceptions.errors import UnsupportedError
+from botorch.exceptions.errors import OptimizationGradientError, UnsupportedError
 
 from robotorchan.optim.backends.botorch import (
     optimize_acqf_botorch,
