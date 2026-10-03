@@ -925,3 +925,106 @@ def test_botorch_backend_combines_linear_and_interpoint_nonlinear_constraints() 
     assert separation(candidate) >= -1e-6
     assert torch.all(candidate >= bounds[0])
     assert torch.all(candidate <= bounds[1])
+
+
+def test_botorch_backend_joint_q_nonlinear_preserves_existing_x_pending() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    acquisition = _DummyAcquisition()
+    pending = torch.tensor([[0.15], [0.25]], dtype=torch.double)
+    acquisition.set_X_pending(pending)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.8 - x[0], True),)
+    )
+    initial = torch.tensor(
+        [
+            [[0.3], [0.4]],
+            [[0.4], [0.5]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        bounds,
+        q=2,
+        num_restarts=2,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate[:, 0] <= 0.8 + 1e-6)
+    assert torch.equal(acquisition.X_pending, pending)
+
+
+def test_botorch_backend_sequential_nonlinear_restores_existing_x_pending() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    acquisition = _DummyAcquisition()
+    pending = torch.tensor([[0.2]], dtype=torch.double)
+    acquisition.set_X_pending(pending)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[0] - 0.1, True),)
+    )
+    seen_pending: list[torch.Tensor | None] = []
+
+    def ic_generator(*, q, num_restarts, **kwargs):
+        current = acquisition.X_pending
+        seen_pending.append(None if current is None else current.clone())
+        return torch.full(
+            (num_restarts, q, 1),
+            0.5,
+            dtype=bounds.dtype,
+            device=bounds.device,
+        )
+
+    candidate, value = optimize_acqf_botorch(
+        acquisition,
+        bounds,
+        q=2,
+        num_restarts=2,
+        raw_samples=8,
+        constraints=constraints,
+        sequential=True,
+        ic_generator=ic_generator,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate[:, 0] >= 0.1 - 1e-6)
+    assert torch.equal(acquisition.X_pending, pending)
+    assert len(seen_pending) == 2
+    assert torch.equal(seen_pending[0], pending)
+    assert seen_pending[1] is not None
+    assert seen_pending[1].shape == torch.Size([2, 1])
+    assert torch.equal(seen_pending[1][0], pending[0])
+
+
+def test_botorch_backend_rejects_async_sequential_interpoint_nonlinear() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    acquisition = _DummyAcquisition()
+    acquisition.set_X_pending(torch.tensor([[0.2]], dtype=torch.double))
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda X: X[:, 0].sum() - 0.5, False),)
+    )
+
+    def ic_generator(*, q, num_restarts, **kwargs):
+        return torch.full(
+            (num_restarts, q, 1),
+            0.6,
+            dtype=bounds.dtype,
+            device=bounds.device,
+        )
+
+    with pytest.raises(UnsupportedError, match="joint q-batch optimization"):
+        optimize_acqf_botorch(
+            acquisition,
+            bounds,
+            q=2,
+            num_restarts=2,
+            raw_samples=8,
+            constraints=constraints,
+            sequential=True,
+            ic_generator=ic_generator,
+        )

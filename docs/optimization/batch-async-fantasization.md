@@ -70,3 +70,20 @@ initialization contract documented for KG and multi-step lookahead.
 Add new Batch / Async / Fantasization functionality only when BoTorch primitives cannot express
 the required workflow, the missing responsibility is clear, shapes and gradients are defined,
 and executable tests justify the maintenance cost.
+
+
+## Nonlinear candidate constraints
+
+Nonlinear candidate constraints follow the same batch / asynchronous responsibility boundary.
+An intra-point constraint is evaluated on each newly optimized candidate and can be used with
+joint q-batch or BoTorch sequential optimization when feasible initialization is supplied.
+
+An inter-point nonlinear constraint couples the newly generated `[q, d]` batch and therefore
+requires joint q-batch optimization. It is rejected for greedy `sequential=True` generation,
+because decomposing the relation into independent q=1 subproblems would change its meaning.
+
+Existing `X_pending` points remain acquisition context. They are not appended to the argument
+of a candidate constraint and are not part of its q dimension. During sequential generation,
+BoTorch may temporarily add newly selected candidates to `X_pending`; the acquisition's original
+pending state is restored after optimization. Model fantasies likewise do not change the
+candidate-constraint q contract.
