@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from botorch.exceptions.errors import UnsupportedError
 from torch import Tensor
 
 from robotorchan.optim.constraints.contracts import CandidateConstraints
@@ -36,7 +37,7 @@ def validate_candidate_constraints(
                 if (d_indices < 0).any() or (d_indices >= d).any():
                     raise ValueError(f"{name} contains an input-dimension index outside [0, d).")
                 if sequential and q > 1:
-                    raise ValueError(
+                    raise UnsupportedError(
                         "Inter-point linear constraints require joint q-batch optimization; "
                         "sequential=True is unsupported."
                     )
@@ -45,7 +46,7 @@ def validate_candidate_constraints(
         not is_intrapoint
         for _, is_intrapoint in constraints.nonlinear_inequality_constraints
     ):
-        raise ValueError(
+        raise UnsupportedError(
             "Inter-point nonlinear constraints require joint q-batch optimization; "
             "sequential=True is unsupported."
         )
