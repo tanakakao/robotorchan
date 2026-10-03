@@ -77,3 +77,28 @@ def test_pso_capabilities_do_not_overstate_categorical_mixed_support() -> None:
     assert capabilities.integer
     assert not capabilities.categorical
     assert not capabilities.mixed
+
+
+def test_botorch_nonlinear_capability_metadata_matches_handling_mode() -> None:
+    capabilities = BOTORCH_OPTIMIZER_CAPABILITIES
+
+    assert capabilities.nonlinear_inequality_constraints
+    assert capabilities.interpoint_nonlinear_constraints
+    assert capabilities.constraint_handling.nonlinear_inequality is ConstraintHandling.NATIVE
+    assert capabilities.constraint_handling.interpoint_nonlinear is ConstraintHandling.NATIVE
+
+
+def test_botorch_mixed_nonlinear_capability_does_not_overstate_interpoint_support() -> None:
+    capabilities = BOTORCH_MIXED_OPTIMIZER_CAPABILITIES
+
+    assert capabilities.nonlinear_inequality_constraints
+    assert not capabilities.interpoint_nonlinear_constraints
+    assert capabilities.constraint_handling.nonlinear_inequality is ConstraintHandling.NATIVE
+    assert capabilities.constraint_handling.interpoint_nonlinear is ConstraintHandling.UNSUPPORTED
+
+
+def test_gradient_botorch_capability_does_not_claim_gpu_optimizer_support() -> None:
+    capabilities = BOTORCH_OPTIMIZER_CAPABILITIES
+
+    assert capabilities.requires_grad
+    assert not capabilities.gpu
