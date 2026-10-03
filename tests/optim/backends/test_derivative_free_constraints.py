@@ -426,9 +426,7 @@ def test_interpoint_nonlinear_callable_receives_each_joint_q_batch() -> None:
         seen_shapes.append(X.shape)
         return (X[0] - X[1]).square().sum() - 0.3**2
 
-    constraints = CandidateConstraints(
-        nonlinear_inequality_constraints=((constraint, False),)
-    )
+    constraints = CandidateConstraints(nonlinear_inequality_constraints=((constraint, False),))
 
     violation = candidate_constraint_violation(candidates, constraints)
 
