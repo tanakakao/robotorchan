@@ -37,3 +37,16 @@ when supported. Gradient Torch optimizers reject integer or categorical spaces. 
 rejects categorical spaces. The plain `optimizer="botorch"` dispatch path remains the
 continuous BoTorch optimizer; callers needing BoTorch mixed enumeration should use the
 explicit mixed backend where its `fixed_features_list` semantics are visible.
+
+
+## BoTorch initial-condition generators
+
+The default `optimizer="botorch"` path exposes BoTorch-compatible
+`batch_initial_conditions`, `ic_generator`, and `ic_gen_kwargs`. This is especially
+important for nonlinear candidate constraints: BoTorch requires feasible restart points,
+so callers may either provide explicit feasible initial conditions or provide an
+initial-condition generator that constructs them.
+
+These arguments retain their BoTorch semantics and are forwarded only to the BoTorch
+backend. Named non-BoTorch optimizers reject `ic_generator` and `ic_gen_kwargs`
+instead of silently ignoring them.
