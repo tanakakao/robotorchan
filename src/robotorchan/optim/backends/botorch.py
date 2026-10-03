@@ -36,9 +36,7 @@ def optimize_acqf_botorch(
 ) -> tuple[Tensor, Tensor]:
     """Delegate original-space acquisition optimization to BoTorch."""
     candidate_constraints = constraints or CandidateConstraints()
-    validate_candidate_constraints(
-        candidate_constraints, bounds=bounds, q=q, sequential=sequential
-    )
+    validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q, sequential=sequential)
     resolved_options = _options_for_nonlinear_constraints(
         options,
         candidate_constraints,
