@@ -49,9 +49,7 @@ import torch
 from robotorchan.optim import CandidateConstraints, optimize_acqf
 
 constraints = CandidateConstraints(
-    nonlinear_inequality_constraints=(
-        (lambda x: x.new_tensor(0.8) - x[0], True),
-    ),
+    nonlinear_inequality_constraints=((lambda x: x.new_tensor(0.8) - x[0], True),),
 )
 
 candidate, value = optimize_acqf(
