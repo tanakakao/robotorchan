@@ -16,7 +16,10 @@ from botorch.optim.initializers import TGenInitialConditions
 from torch import Tensor
 
 from robotorchan.optim.constraints.contracts import CandidateConstraints
-from robotorchan.optim.constraints.validation import validate_candidate_constraints
+from robotorchan.optim.constraints.validation import (
+    validate_candidate_constraints,
+    validate_nonlinear_initial_conditions,
+)
 
 
 def optimize_acqf_botorch(
@@ -42,6 +45,12 @@ def optimize_acqf_botorch(
         candidate_constraints,
         batch_initial_conditions,
         ic_generator,
+    )
+    validate_nonlinear_initial_conditions(
+        batch_initial_conditions,
+        candidate_constraints,
+        bounds=bounds,
+        q=q,
     )
     return botorch_optimize_acqf(
         acq_function=acq_function,
