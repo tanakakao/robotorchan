@@ -39,6 +39,41 @@ continuous BoTorch optimizer; callers needing BoTorch mixed enumeration should u
 explicit mixed backend where its `fixed_features_list` semantics are visible.
 
 
+## Candidate constraints
+
+Candidate-space constraints are public from `robotorchan.optim`:
+
+```python
+import torch
+
+from robotorchan.optim import CandidateConstraints, optimize_acqf
+
+constraints = CandidateConstraints(
+    nonlinear_inequality_constraints=((lambda x: x.new_tensor(0.8) - x[0], True),),
+)
+
+candidate, value = optimize_acqf(
+    acquisition,
+    bounds,
+    q=1,
+    constraints=constraints,
+    batch_initial_conditions=feasible_initial_conditions,
+)
+```
+
+The nonlinear tuple is the BoTorch-native `(callable, is_intrapoint)` contract rather than a
+robotorchan-specific DSL. Feasibility means `g(X) >= 0`. An intra-point callable receives one
+candidate `[d]`; an inter-point callable receives the joint q-batch `[q, d]`.
+
+The public typing aliases `LinearConstraint`, `NonlinearConstraint`, and
+`NonlinearConstraintCallable` are also exported from `robotorchan.optim`. They are optional
+typing conveniences; users do not need to instantiate wrapper classes around BoTorch-compatible
+constraint tuples.
+
+Candidate constraints are distinct from outcome constraints supplied to constrained acquisition
+functions. Outcome constraints use the acquisition function's own BoTorch contract and are not
+passed through `CandidateConstraints`.
+
 ## BoTorch initial-condition generators
 
 The default `optimizer="botorch"` path exposes BoTorch-compatible
