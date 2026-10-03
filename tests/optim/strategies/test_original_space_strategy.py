@@ -751,10 +751,9 @@ def test_kronecker_multitask_with_nonlinear_candidate_constraint() -> None:
     )
     model = KroneckerMultiTaskGP(train_X, train_Y)
     weights = torch.tensor([0.7, 0.3], dtype=torch.double)
-    acquisition = qLogExpectedImprovement(
+    acquisition = qSimpleRegret(
         model=model,
-        best_f=(train_Y @ weights).max(),
-        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([8]), seed=71),
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([16]), seed=71),
         objective=GenericMCObjective(lambda samples, X=None: samples @ weights),
     )
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
