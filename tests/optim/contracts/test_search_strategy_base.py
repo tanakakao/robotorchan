@@ -299,3 +299,29 @@ def test_embedded_strategies_reject_unmapped_nonlinear_constraints() -> None:
 
     with pytest.raises(NotImplementedError, match="does not map public-space"):
         REMBOStrategy(bounds, embedding_dim=1, constraints=constraints)
+
+
+@pytest.mark.parametrize(
+    "constraint",
+    [
+        ("not-callable", True),
+        (lambda x: x.sum(), 1),
+        (lambda x: x.sum(),),
+    ],
+)
+def test_candidate_constraints_reject_malformed_nonlinear_entries(constraint) -> None:
+    with pytest.raises((TypeError, ValueError)):
+        CandidateConstraints(nonlinear_inequality_constraints=(constraint,))
+
+
+@pytest.mark.parametrize(
+    "constraint",
+    [
+        (torch.tensor([0.0]), torch.tensor([1.0]), 0.0),
+        (torch.tensor([0]), torch.tensor([[1.0]]), 0.0),
+        (torch.tensor([[0, 0, 0]]), torch.tensor([1.0]), 0.0),
+    ],
+)
+def test_candidate_constraints_reject_malformed_linear_entries(constraint) -> None:
+    with pytest.raises((TypeError, ValueError)):
+        CandidateConstraints(inequality_constraints=(constraint,))
