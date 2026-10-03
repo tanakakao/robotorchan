@@ -1084,7 +1084,7 @@ def test_nonlinear_constraint_preserves_cuda_device() -> None:
         nonlinear_inequality_constraints=((cuda_constraint, True),),
     )
     candidate, value = optimize_acqf_botorch(
-        _DummyAcquisition().to(device=device, dtype=torch.double),
+        _DummyAcquisition().to(device=device),
         bounds,
         q=1,
         num_restarts=3,
