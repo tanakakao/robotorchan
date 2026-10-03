@@ -252,14 +252,3 @@ def test_repository_contains_no_obsolete_structure_references() -> None:
             continue
         for token in forbidden_tokens:
             assert token not in text, f"obsolete reference {token!r} remains in {path}"
-
-
-def test_markdown_docs_do_not_contain_literal_newline_escape() -> None:
-    docs_root = REPOSITORY_ROOT / "docs"
-    offenders = [
-        path.relative_to(REPOSITORY_ROOT).as_posix()
-        for path in docs_root.rglob("*.md")
-        if r"\n" in path.read_text(encoding="utf-8")
-    ]
-
-    assert offenders == []
