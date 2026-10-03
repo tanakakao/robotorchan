@@ -86,10 +86,9 @@ def validate_nonlinear_initial_conditions(
     if not torch.isfinite(batch_initial_conditions).all():
         raise ValueError("batch_initial_conditions must contain only finite values.")
     lower, upper = bounds
-    if (
-        (batch_initial_conditions < lower - tolerance).any()
-        or (batch_initial_conditions > upper + tolerance).any()
-    ):
+    if (batch_initial_conditions < lower - tolerance).any() or (
+        batch_initial_conditions > upper + tolerance
+    ).any():
         raise ValueError("batch_initial_conditions must lie within bounds.")
 
     for restart_index, restart in enumerate(batch_initial_conditions):
