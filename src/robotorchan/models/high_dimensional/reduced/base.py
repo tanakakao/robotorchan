@@ -40,16 +40,6 @@ class ReductionMixin:
         self.input_reducer = input_reducer
         self.output_reducer = output_reducer
 
-    def _fit_transform_inputs(self, train_X: Tensor, train_Y: Tensor) -> Tensor:
-        if self.input_reducer is None:
-            return train_X
-        return self.input_reducer.fit_transform(train_X, train_Y)
-
-    def _fit_transform_outputs(self, train_X: Tensor, train_Y: Tensor) -> Tensor:
-        if self.output_reducer is None:
-            return train_Y
-        return self.output_reducer.fit_transform(train_Y, train_X)
-
     def _transform_inputs(self, X: Tensor) -> Tensor:
         if self.input_reducer is None:
             return X

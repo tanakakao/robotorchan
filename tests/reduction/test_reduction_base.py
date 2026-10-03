@@ -143,28 +143,8 @@ def test_pca_output_reducer_state_dict_round_trip_without_refit() -> None:
     torch.testing.assert_close(restored.inverse_transform(latent), expected)
 
 
-def test_reduction_mixin_routes_training_and_candidate_tensors() -> None:
-    input_reducer = FirstColumnsReducer(n_components=2)
-    output_reducer = FirstColumnsOutputReducer(n_components=1)
-    model = DummyReducedModel(input_reducer=input_reducer, output_reducer=output_reducer)
-    train_X = torch.randn(7, 4)
-    train_Y = torch.randn(7, 3)
-
-    reduced_X = model._fit_transform_inputs(train_X, train_Y)
-    reduced_Y = model._fit_transform_outputs(train_X, train_Y)
-    candidate_X = torch.randn(2, 5, 4)
-    reduced_candidate_X = model._transform_inputs(candidate_X)
-
-    assert reduced_X.shape == torch.Size([7, 2])
-    assert reduced_Y.shape == torch.Size([7, 1])
-    assert reduced_candidate_X.shape == torch.Size([2, 5, 2])
-
-
 def test_reduction_mixin_is_identity_without_reducers() -> None:
     model = DummyReducedModel()
     train_X = torch.randn(5, 3)
-    train_Y = torch.randn(5, 2)
 
-    assert model._fit_transform_inputs(train_X, train_Y) is train_X
-    assert model._fit_transform_outputs(train_X, train_Y) is train_Y
     assert model._transform_inputs(train_X) is train_X
