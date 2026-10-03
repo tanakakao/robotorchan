@@ -13,7 +13,8 @@ Semantic Versioningを基本とし、Git tag / GitHub Releaseは `v{version}` �
 - GitHub Release: `v0.1.0`
 - PyPI version: `0.1.0`
 
-公開workflowは、Release tagと `pyproject.toml` のversionが一致しない場合は停止します。\n`pyproject.toml`、`CITATION.cff`、`CHANGELOG.md` のrelease情報も同じversionに揃えます。
+公開workflowは、Release tagと `pyproject.toml` のversionが一致しない場合は停止します。
+`pyproject.toml`、`CITATION.cff`、`CHANGELOG.md` のrelease情報も同じversionに揃えます。
 
 ## リリース前チェック
 
