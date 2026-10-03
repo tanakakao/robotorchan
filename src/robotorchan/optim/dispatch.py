@@ -24,6 +24,7 @@ from robotorchan.optim.capabilities import (
     get_optimizer_capabilities,
 )
 from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.validation import validate_candidate_constraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 OptimizerName = Literal[
@@ -65,6 +66,7 @@ def optimize_acqf(
     if variable_space is not None and not torch.equal(variable_space.bounds, bounds):
         raise ValueError("variable_space bounds must match bounds.")
     backend_options = dict(optimizer_options or {})
+    validate_candidate_constraints(constraints, bounds=bounds, q=q, sequential=sequential)
     name = optimizer.lower()
     capabilities = get_optimizer_capabilities(name)
     if name == "ga" and variable_space is not None and variable_space.is_mixed:

@@ -377,3 +377,36 @@ def test_de_supports_q_batch_integer_and_interpoint_nonlinear_constraint() -> No
 
     assert candidates[:, 0].sum() <= 0.8 + 1e-3
     assert torch.equal(candidates[:, 1], torch.full((2,), 2.0, dtype=torch.double))
+
+
+def test_intrapoint_nonlinear_callable_receives_one_candidate_at_a_time() -> None:
+    candidates = torch.tensor([[[0.2], [0.3]], [[0.4], [0.5]]], dtype=torch.double)
+    seen_shapes: list[torch.Size] = []
+
+    def constraint(x: Tensor) -> Tensor:
+        seen_shapes.append(x.shape)
+        return 0.6 - x[0]
+
+    constraints = CandidateConstraints(nonlinear_inequality_constraints=((constraint, True),))
+
+    violation = candidate_constraint_violation(candidates, constraints)
+
+    assert violation.shape == torch.Size([2])
+    assert seen_shapes == [torch.Size([1])] * 4
+
+
+@pytest.mark.parametrize(
+    "constraint, error",
+    [
+        (lambda x: 1.0, TypeError),
+        (lambda x: torch.tensor([1.0, 2.0], dtype=x.dtype), ValueError),
+        (lambda x: torch.tensor(float("nan"), dtype=x.dtype, device=x.device), ValueError),
+        (lambda x: torch.tensor(1.0, dtype=torch.float32, device=x.device), ValueError),
+    ],
+)
+def test_nonlinear_constraint_evaluation_rejects_invalid_outputs(constraint, error) -> None:
+    candidates = torch.tensor([[0.2]], dtype=torch.double)
+    constraints = CandidateConstraints(nonlinear_inequality_constraints=((constraint, True),))
+
+    with pytest.raises(error):
+        candidate_constraint_violation(candidates, constraints)

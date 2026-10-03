@@ -16,6 +16,7 @@ from botorch.optim.initializers import TGenInitialConditions
 from torch import Tensor
 
 from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.validation import validate_candidate_constraints
 
 
 def optimize_acqf_botorch(
@@ -35,6 +36,7 @@ def optimize_acqf_botorch(
 ) -> tuple[Tensor, Tensor]:
     """Delegate original-space acquisition optimization to BoTorch."""
     candidate_constraints = constraints or CandidateConstraints()
+    validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q, sequential=sequential)
     resolved_options = _options_for_nonlinear_constraints(
         options,
         candidate_constraints,
@@ -77,6 +79,7 @@ def optimize_acqf_mixed_botorch(
 ) -> tuple[Tensor, Tensor]:
     """Delegate enumerated mixed-space acquisition optimization to BoTorch."""
     candidate_constraints = constraints or CandidateConstraints()
+    validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
     if any(
         not is_intrapoint
         for _, is_intrapoint in candidate_constraints.nonlinear_inequality_constraints

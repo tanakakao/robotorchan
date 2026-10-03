@@ -98,7 +98,12 @@ def test_candidate_constraints_are_owned_by_constraint_package() -> None:
     assert (optim_root / "constraints").is_dir()
 
     constraint_modules = {path.name for path in (optim_root / "constraints").glob("*.py")}
-    assert constraint_modules == {"__init__.py", "contracts.py", "evaluation.py"}
+    assert constraint_modules == {
+        "__init__.py",
+        "contracts.py",
+        "evaluation.py",
+        "validation.py",
+    }
 
 
 def test_cross_backend_optimizer_contracts_have_dedicated_ownership() -> None:
