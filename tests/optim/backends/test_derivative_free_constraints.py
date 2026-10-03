@@ -410,3 +410,28 @@ def test_nonlinear_constraint_evaluation_rejects_invalid_outputs(constraint, err
 
     with pytest.raises(error):
         candidate_constraint_violation(candidates, constraints)
+
+
+def test_interpoint_nonlinear_callable_receives_each_joint_q_batch() -> None:
+    candidates = torch.tensor(
+        [
+            [[0.1], [0.6]],
+            [[0.2], [0.8]],
+        ],
+        dtype=torch.double,
+    )
+    seen_shapes: list[torch.Size] = []
+
+    def constraint(X: Tensor) -> Tensor:
+        seen_shapes.append(X.shape)
+        return (X[0] - X[1]).square().sum() - 0.3**2
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((constraint, False),)
+    )
+
+    violation = candidate_constraint_violation(candidates, constraints)
+
+    assert violation.shape == torch.Size([2])
+    assert torch.all(violation == 0)
+    assert seen_shapes == [torch.Size([2, 1]), torch.Size([2, 1])]
