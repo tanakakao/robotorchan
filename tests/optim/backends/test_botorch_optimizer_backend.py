@@ -695,3 +695,87 @@ def test_botorch_backend_rejects_sequential_interpoint_nonlinear_constraint() ->
             sequential=True,
             ic_generator=ic_generator,
         )
+
+
+def test_botorch_backend_rejects_infeasible_nonlinear_initial_conditions() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.4 - x[0], True),)
+    )
+    initial = torch.tensor([[[0.2]], [[0.8]]], dtype=torch.double)
+
+    with pytest.raises(ValueError, match="restart 1 is infeasible"):
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            bounds,
+            q=1,
+            num_restarts=2,
+            raw_samples=None,
+            constraints=constraints,
+            batch_initial_conditions=initial,
+        )
+
+
+def test_botorch_backend_rejects_out_of_bounds_nonlinear_initial_conditions() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[0] + 1.0, True),)
+    )
+    initial = torch.tensor([[[0.2]], [[1.2]]], dtype=torch.double)
+
+    with pytest.raises(ValueError, match="must lie within bounds"):
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            bounds,
+            q=1,
+            num_restarts=2,
+            raw_samples=None,
+            constraints=constraints,
+            batch_initial_conditions=initial,
+        )
+
+
+def test_botorch_backend_rejects_wrong_shape_nonlinear_initial_conditions() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[0] + 1.0, True),)
+    )
+    initial = torch.tensor([[[0.2]], [[0.4]]], dtype=torch.double)
+
+    with pytest.raises(ValueError, match=r"\[num_restarts, 2, 1\]"):
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            bounds,
+            q=2,
+            num_restarts=2,
+            raw_samples=None,
+            constraints=constraints,
+            batch_initial_conditions=initial,
+        )
+
+
+def test_botorch_backend_preserves_optimizer_failure_without_fallback() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[0] + 1.0, True),)
+    )
+    initial = torch.tensor([[[0.2]], [[0.4]]], dtype=torch.double)
+
+    with (
+        patch(
+            "robotorchan.optim.backends.botorch.botorch_optimize_acqf",
+            side_effect=RuntimeError("optimizer failed"),
+        ) as mocked,
+        pytest.raises(RuntimeError, match="optimizer failed"),
+    ):
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            bounds,
+            q=1,
+            num_restarts=2,
+            raw_samples=None,
+            constraints=constraints,
+            batch_initial_conditions=initial,
+        )
+
+    mocked.assert_called_once()

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import torch
 from botorch.exceptions.errors import UnsupportedError
 from torch import Tensor
 
@@ -53,3 +54,58 @@ def validate_candidate_constraints(
             "inter-point nonlinear constraints require joint q-batch optimization; "
             "sequential=True is unsupported."
         )
+
+
+def validate_nonlinear_initial_conditions(
+    batch_initial_conditions: Tensor | None,
+    constraints: CandidateConstraints,
+    *,
+    bounds: Tensor,
+    q: int,
+    tolerance: float = 1e-8,
+) -> None:
+    """Validate explicit restart points before nonlinear BoTorch optimization."""
+    if batch_initial_conditions is None or not constraints.has_nonlinear_constraints:
+        return
+    if batch_initial_conditions.ndim != 3:
+        raise ValueError(
+            "batch_initial_conditions for nonlinear constraints must have shape "
+            "[num_restarts, q, d]."
+        )
+    if batch_initial_conditions.shape[1:] != (q, bounds.shape[-1]):
+        raise ValueError(
+            "batch_initial_conditions for nonlinear constraints must have shape "
+            f"[num_restarts, {q}, {bounds.shape[-1]}]."
+        )
+    if batch_initial_conditions.shape[0] == 0:
+        raise ValueError("batch_initial_conditions must contain at least one restart.")
+    if batch_initial_conditions.device != bounds.device:
+        raise ValueError("batch_initial_conditions must use the same device as bounds.")
+    if batch_initial_conditions.dtype != bounds.dtype:
+        raise ValueError("batch_initial_conditions must use the same dtype as bounds.")
+    if not torch.isfinite(batch_initial_conditions).all():
+        raise ValueError("batch_initial_conditions must contain only finite values.")
+    lower, upper = bounds
+    if (batch_initial_conditions < lower - tolerance).any() or (
+        batch_initial_conditions > upper + tolerance
+    ).any():
+        raise ValueError("batch_initial_conditions must lie within bounds.")
+
+    for restart_index, restart in enumerate(batch_initial_conditions):
+        for constraint, is_intrapoint in constraints.nonlinear_inequality_constraints:
+            if is_intrapoint:
+                values = [constraint(candidate) for candidate in restart]
+            else:
+                values = [constraint(restart)]
+            for value in values:
+                if not isinstance(value, Tensor) or value.numel() != 1:
+                    raise ValueError(
+                        "Nonlinear constraint callables must return one scalar Tensor."
+                    )
+                if not torch.isfinite(value).all():
+                    raise ValueError("Nonlinear constraint values must be finite.")
+                if value.detach().item() < -tolerance:
+                    raise ValueError(
+                        "batch_initial_conditions must be feasible for all nonlinear "
+                        f"constraints; restart {restart_index} is infeasible."
+                    )

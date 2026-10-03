@@ -50,3 +50,16 @@ initial-condition generator that constructs them.
 These arguments retain their BoTorch semantics and are forwarded only to the BoTorch
 backend. Named non-BoTorch optimizers reject `ic_generator` and `ic_gen_kwargs`
 instead of silently ignoring them.
+
+
+### Nonlinear feasibility failures
+
+For nonlinear candidate constraints, explicit `batch_initial_conditions` are validated before
+BoTorch optimization. Their shape, dtype, device, finiteness, box bounds, and nonlinear
+feasibility must be valid for every restart. An invalid explicit restart fails immediately
+instead of being forwarded to the local optimizer.
+
+robotorchan does not attempt to prove that an arbitrary nonlinear feasible region is
+non-empty. When a custom `ic_generator` cannot construct feasible restarts, or when the
+underlying BoTorch/SciPy optimization fails after valid initialization, the original
+failure is propagated. There is no silent unconstrained fallback.
