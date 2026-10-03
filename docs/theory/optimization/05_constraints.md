@@ -130,7 +130,7 @@ box bounds と fixed features も同じ acquisition optimization problem に
 inter-point nonlinear constraint の組合せも、joint optimization が対応する
 範囲で利用できます。
 
-## 5.15 Violation measure
+## 5.7 Violation measure
 
 derivative-free backend では異なるconstraintを共通の非負 violationへ変換できます。
 
@@ -154,7 +154,7 @@ V(x)=\sum_j v_j(x)
 
 feasible candidate は \(V(x)=0\) です。
 
-## 5.7 Native enforcement
+## 5.8 Native enforcement
 
 native enforcement では optimizer 自身へ constraint を渡します。
 
@@ -164,7 +164,7 @@ upstream optimizer contract へ直接渡します。
 nonlinear constraint では feasible initial conditions または
 対応する initial-condition generator が必要です。
 
-## 5.8 Penalty method
+## 5.9 Penalty method
 
 penalty semantics では constrained problem を
 
@@ -179,7 +179,7 @@ penalty semantics では constrained problem を
 
 現在の PSO や一部 hybrid / CMA-ES route はこの family に位置付けられます。
 
-## 5.9 Feasibility-first
+## 5.10 Feasibility-first
 
 feasibility-firstでは objective value と violation を単純に同じscaleで加算しません。
 
@@ -193,7 +193,7 @@ Deb-style orderingでは、
 
 robotorchan の GA 系共通評価はこの考え方を明示的に実装しています。
 
-## 5.10 Repair / projection / rejection
+## 5.11 Repair / projection / rejection
 
 constraint handling の一般的な別方式として、
 
@@ -206,7 +206,7 @@ constraint handling の一般的な別方式として、
 capability metadata に semantics が存在しても、
 各 backend が現在すべての方式を実装していることを意味しません。
 
-## 5.11 Mixed variable と constraint
+## 5.12 Mixed variable と constraint
 
 mixed space では constraint evaluation の前に
 integer / categorical feasibility を保証する必要があります。
@@ -217,7 +217,7 @@ constraint は実際に評価される \(x\) に対して判定すべきです�
 現在の DE / PSO なども structured repair 後の candidate に対して
 acquisition / constraint evaluation を行います。
 
-## 5.12 Coordinate transform と constraint
+## 5.13 Coordinate transform と constraint
 
 public-space constraint を latent / embedded coordinateへそのまま渡すことはできません。
 
@@ -239,7 +239,7 @@ public-space `CandidateConstraints` を明示的に拒否します。
 これは保守的なAPI制限ではなく、異なる座標系で別のconstraintを
 誤って解くことを防ぐ correctness contract です。
 
-## 5.13 Sequential と inter-point
+## 5.14 Sequential と inter-point
 
 inter-point constraint は q-batch 全体を同時に見る必要があります。
 
@@ -250,7 +250,7 @@ inter-point constraint は q-batch 全体を同時に見る必要があります
 現在の BoTorch contract でも inter-point nonlinear constraint と
 greedy sequential optimization の組合せには制限があります。
 
-## 5.14 Runtime capability
+## 5.15 Runtime capability
 
 最終的な利用可否は
 
