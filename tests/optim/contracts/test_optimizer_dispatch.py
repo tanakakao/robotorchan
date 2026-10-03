@@ -5,7 +5,7 @@ from unittest.mock import patch
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 
-from robotorchan.optim import MixedVariableSpace, optimize_acqf
+from robotorchan.optim import CandidateConstraints, MixedVariableSpace, optimize_acqf
 
 
 class _SumAcquisition(AcquisitionFunction):
@@ -162,3 +162,96 @@ def test_dispatch_rejects_structured_space_for_gradient_torch_optimizer() -> Non
         else:
             raise AssertionError("Integer Adam should fail before backend execution.")
     mocked.assert_not_called()
+
+
+def test_dispatch_forwards_botorch_initial_condition_generator() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+
+    def ic_generator(**kwargs):
+        return torch.full((2, 1, 1), 0.5, dtype=bounds.dtype)
+
+    with patch("robotorchan.optim.dispatch.optimize_acqf_botorch") as mocked:
+        mocked.return_value = (torch.tensor([[0.5]]), torch.tensor(0.5))
+        optimize_acqf(
+            _SumAcquisition(),
+            bounds,
+            q=1,
+            ic_generator=ic_generator,
+            ic_gen_kwargs={"custom_option": 3},
+        )
+
+    assert mocked.call_args.kwargs["ic_generator"] is ic_generator
+    assert mocked.call_args.kwargs["ic_gen_kwargs"] == {"custom_option": 3}
+
+
+def test_dispatch_runs_nonlinear_constraint_with_ic_generator() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.4 - x[0], True),)
+    )
+
+    def ic_generator(*, q, num_restarts, **kwargs):
+        return torch.full(
+            (num_restarts, q, 1),
+            0.2,
+            dtype=bounds.dtype,
+            device=bounds.device,
+        )
+
+    candidate, value = optimize_acqf(
+        _SumAcquisition(),
+        bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=8,
+        constraints=constraints,
+        ic_generator=ic_generator,
+    )
+
+    assert candidate.shape == torch.Size([1, 1])
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert candidate[0, 0] <= 0.4 + 1e-6
+
+
+def test_dispatch_runs_nonlinear_constraint_with_explicit_initial_conditions() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.6 - x[0], True),)
+    )
+    initial = torch.tensor([[[0.2]], [[0.4]]], dtype=torch.double)
+
+    candidate, value = optimize_acqf(
+        _SumAcquisition(),
+        bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    assert candidate.shape == torch.Size([1, 1])
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert candidate[0, 0] <= 0.6 + 1e-6
+
+
+def test_dispatch_rejects_ic_generator_for_non_botorch_backend() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+
+    def ic_generator(**kwargs):
+        return torch.full((2, 1, 1), 0.5, dtype=bounds.dtype)
+
+    try:
+        optimize_acqf(
+            _SumAcquisition(),
+            bounds,
+            q=1,
+            optimizer="ga",
+            ic_generator=ic_generator,
+        )
+    except ValueError as exc:
+        assert "ic_generator is only used by optimizer='botorch'" in str(exc)
+    else:
+        raise AssertionError("Non-BoTorch backend should reject ic_generator.")
