@@ -6,6 +6,7 @@ from botorch.acquisition.multi_objective.logei import (
     qLogExpectedHypervolumeImprovement,
     qLogNoisyExpectedHypervolumeImprovement,
 )
+from botorch.acquisition.multi_objective.objective import GenericMCMultiOutputObjective
 from botorch.acquisition.objective import GenericMCObjective
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions.non_dominated import (
@@ -336,7 +337,7 @@ def test_qlogehvi_keeps_outcome_and_candidate_constraints_independent() -> None:
         ref_point=ref_point.tolist(),
         partitioning=partitioning,
         sampler=SobolQMCNormalSampler(torch.Size([32]), seed=1403),
-        objective=lambda samples, X=None: samples[..., :2],
+        objective=GenericMCMultiOutputObjective(lambda samples, X=None: samples[..., :2]),
         constraints=[lambda samples: samples[..., 2]],
     )
 
