@@ -60,6 +60,24 @@ qLogEHVI, qLogNEHVI, and qLogNParEGO are registered as multi-objective paths. qL
 already runtime-tested in robotorchan and is now represented in the capability registry as well,
 so documentation, executable coverage, and recommendation metadata agree.
 
+## Candidate constraints versus outcome constraints
+
+Multi-objective acquisition constraints and candidate-space constraints are separate layers.
+
+- BoTorch acquisition `constraints=[...]` evaluates feasibility from posterior samples in
+  outcome space. Its convention is `c(Y) <= 0`.
+- robotorchan `CandidateConstraints.nonlinear_inequality_constraints` is passed to acquisition
+  optimization and evaluates the proposed input. Its convention is `g(X) >= 0`.
+
+The two can be used simultaneously. A qLogEHVI or qLogNEHVI acquisition may therefore model
+outcome feasibility while `optimize_acqf_botorch` independently restricts which X values may
+be proposed. Candidate constraints do not alter the Pareto objectives or reference point, and
+outcome constraints do not replace candidate-space feasibility checks.
+
+For q-batch multi-objective optimization, intra-point nonlinear candidate constraints apply to
+each proposed X. Inter-point nonlinear constraints retain the same joint-q semantics as in
+single-objective optimization.
+
 ## Hypervolume Knowledge Gradient
 
 Hypervolume Knowledge Gradient remains a BoTorch-native future integration item. The current
