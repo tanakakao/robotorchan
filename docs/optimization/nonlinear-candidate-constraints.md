@@ -39,6 +39,8 @@ An intra-point nonlinear constraint receives one candidate `[d]`:
 ```python
 def inside_circle(x):
     return x.new_tensor(1.0) - x.square().sum()
+
+
 constraints = CandidateConstraints(
     nonlinear_inequality_constraints=((inside_circle, True),),
 )
@@ -49,6 +51,8 @@ An inter-point constraint receives the complete joint q-batch `[q, d]`:
 ```python
 def separated(X):
     return (X[0] - X[1]).square().sum() - X.new_tensor(0.01)
+
+
 constraints = CandidateConstraints(
     nonlinear_inequality_constraints=((separated, False),),
 )
