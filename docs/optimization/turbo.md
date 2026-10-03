@@ -145,6 +145,22 @@ Mixed reduced modelsはcategorical passthroughを含むため、このcontinuous
 
 TuRBOのtrust regionはcandidate/input-space constraintを置き換えません。acquisition optimizationでは、local trust-region boundsと `CandidateConstraints` の両方を同時に満たすcandidateを探索します。
 
+連続最適化経路でのfeasible setは概念的に次の積集合です。
+
+```text
+global input bounds
+    ∩
+current TuRBO trust-region bounds
+    ∩
+linear / nonlinear CandidateConstraints
+```
+
+trust regionを作る際にnonlinear constraintをboundsへ近似変換するのではなく、global
+boundsから切り出したlocal boundsをBoTorch optimizerへ渡し、そのlocal optimization内で
+candidate constraintを同時に課します。このためnon-convexなnonlinear feasible setでも
+trust-region geometryとは独立したまま扱えます。joint q最適化ではinter-point nonlinear
+constraintも通常のBoTorch contract `g(X) >= 0` のまま利用できます。
+
 ```python
 constraints = CandidateConstraints(
     inequality_constraints=((indices, coefficients, rhs),),

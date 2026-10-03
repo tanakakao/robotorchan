@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
+from botorch.acquisition.monte_carlo import qSimpleRegret
 
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim import (
@@ -742,7 +743,55 @@ def test_optimize_supports_nonlinear_constraint_with_feasible_initial_conditions
         batch_initial_conditions=initial,
     )
 
+    trust_bounds = result.metadata["trust_region_bounds"]
     assert result.candidates[0, 0] >= 0.6 - 1e-6
+    assert torch.all(result.candidates >= bounds[0])
+    assert torch.all(result.candidates <= bounds[1])
+    assert torch.all(result.candidates >= trust_bounds[0])
+    assert torch.all(result.candidates <= trust_bounds[1])
+
+
+def test_optimize_intersects_trust_region_with_interpoint_nonlinear_constraint() -> None:
+    train_X, train_Y, bounds = _problem()
+    acquisition = qSimpleRegret(SingleTaskGP(train_X, train_Y))
+    state = TuRBOState(dim=4, batch_size=2, length=0.4)
+    strategy = TuRBOStrategy(
+        bounds,
+        center=torch.full((4,), 0.5, dtype=torch.double),
+        state=state,
+        num_restarts=3,
+        raw_samples=32,
+    )
+
+    def separation_constraint(X: torch.Tensor) -> torch.Tensor:
+        return (X[0] - X[1]).square().sum() - X.new_tensor(0.01)
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((separation_constraint, False),),
+    )
+    initial = torch.tensor(
+        [
+            [[0.35, 0.4, 0.4, 0.4], [0.65, 0.6, 0.6, 0.6]],
+            [[0.4, 0.35, 0.4, 0.4], [0.6, 0.65, 0.6, 0.6]],
+            [[0.4, 0.4, 0.35, 0.4], [0.6, 0.6, 0.65, 0.6]],
+        ],
+        dtype=torch.double,
+    )
+
+    result = strategy.optimize(
+        acquisition,
+        q=2,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    trust_bounds = result.metadata["trust_region_bounds"]
+    assert result.candidates.shape == torch.Size([2, 4])
+    assert separation_constraint(result.candidates) >= -1e-6
+    assert torch.all(result.candidates >= bounds[0])
+    assert torch.all(result.candidates <= bounds[1])
+    assert torch.all(result.candidates >= trust_bounds[0])
+    assert torch.all(result.candidates <= trust_bounds[1])
 
 
 def test_thompson_sampling_filters_candidate_constraints() -> None:
