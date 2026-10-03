@@ -276,7 +276,28 @@ inter-point constraint は q-batch 全体を同時に見る必要があります
 現在の BoTorch contract でも inter-point nonlinear constraint と
 greedy sequential optimization の組合せには制限があります。
 
-## 5.16 Runtime capability
+## 5.16 Robust / input perturbation と candidate constraint
+
+BoTorch `InputPerturbation` を使うrobust BOでも、candidate constraintはoptimizerが
+提案するnominal candidate Xに対して評価します。model内部で生成される
+`X + perturbation` のscenario axisはcandidate constraintのq axisではありません。
+
+したがって、nominal Xが `g(X) >= 0` を満たしても、すべてのperturbed scenarioが
+同じconstraintを満たすことまでは現在のcontractでは保証しません。
+
+```text
+nominal X -- CandidateConstraints --> feasible
+    |
+    +-- InputPerturbation --> X + w_1, ..., X + w_n
+                              robust objective evaluation
+```
+
+「すべてのperturbed Xでもfeasible」や「一定確率以上でfeasible」といった条件は
+robust feasibility / chance constraintに相当し、通常のnonlinear candidate
+constraintとは別の意味論です。現時点では暗黙にその保証を追加せず、将来拡張として
+分離します。
+
+## 5.17 Runtime capability
 
 最終的な利用可否は
 
