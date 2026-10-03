@@ -779,3 +779,149 @@ def test_botorch_backend_preserves_optimizer_failure_without_fallback() -> None:
         )
 
     mocked.assert_called_once()
+
+
+def test_botorch_backend_combines_linear_inequality_and_nonlinear_constraint() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    linear = (
+        torch.tensor([0, 1]),
+        torch.tensor([1.0, 1.0], dtype=torch.double),
+        0.8,
+    )
+    constraints = CandidateConstraints(
+        inequality_constraints=(linear,),
+        nonlinear_inequality_constraints=((lambda x: 1.0 - x.square().sum(), True),),
+    )
+    initial = torch.tensor(
+        [
+            [[0.4, 0.4]],
+            [[0.5, 0.4]],
+            [[0.4, 0.5]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=1,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    x = candidate[0]
+    assert torch.isfinite(value).all()
+    assert x.sum() >= 0.8 - 1e-6
+    assert x.square().sum() <= 1.0 + 1e-6
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
+
+
+def test_botorch_backend_combines_linear_equality_and_nonlinear_constraint() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    equality = (
+        torch.tensor([0, 1]),
+        torch.tensor([1.0, 1.0], dtype=torch.double),
+        1.0,
+    )
+    constraints = CandidateConstraints(
+        equality_constraints=(equality,),
+        nonlinear_inequality_constraints=((lambda x: 0.7 - x[0], True),),
+    )
+    initial = torch.tensor(
+        [
+            [[0.4, 0.6]],
+            [[0.5, 0.5]],
+            [[0.6, 0.4]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=1,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    x = candidate[0]
+    assert torch.isfinite(value).all()
+    assert torch.isclose(x.sum(), torch.tensor(1.0, dtype=x.dtype), atol=1e-6)
+    assert x[0] <= 0.7 + 1e-6
+
+
+def test_botorch_backend_combines_fixed_features_and_nonlinear_constraint() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: 0.9 - x.sum(), True),)
+    )
+    initial = torch.tensor(
+        [
+            [[0.2, 0.3]],
+            [[0.4, 0.3]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=1,
+        num_restarts=2,
+        raw_samples=None,
+        constraints=constraints,
+        fixed_features={1: 0.3},
+        batch_initial_conditions=initial,
+    )
+
+    assert torch.isfinite(value).all()
+    assert torch.isclose(candidate[0, 1], torch.tensor(0.3, dtype=candidate.dtype))
+    assert candidate.sum() <= 0.9 + 1e-6
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
+
+
+def test_botorch_backend_combines_linear_and_interpoint_nonlinear_constraints() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    linear = (
+        torch.tensor([0]),
+        torch.tensor([1.0], dtype=torch.double),
+        0.2,
+    )
+
+    def separation(X: torch.Tensor) -> torch.Tensor:
+        return (X[0] - X[1]).square().sum() - 0.3**2
+
+    constraints = CandidateConstraints(
+        inequality_constraints=(linear,),
+        nonlinear_inequality_constraints=((separation, False),),
+    )
+    initial = torch.tensor(
+        [
+            [[0.2], [0.6]],
+            [[0.3], [0.7]],
+            [[0.4], [0.8]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=2,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate[:, 0] >= 0.2 - 1e-6)
+    assert separation(candidate) >= -1e-6
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
