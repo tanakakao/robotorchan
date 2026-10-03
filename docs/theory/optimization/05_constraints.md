@@ -226,6 +226,23 @@ derivative-free backendでも、constraintは実際に評価される \(x\) に�
 判定すべきです。現在の DE / PSO なども structured repair 後のcandidateに
 対してacquisition / constraint evaluationを行います。
 
+## 5.16 Structured model features と constraint
+
+candidate constraint はmodel内部のtask/output構造ではなく、optimizerが扱うpublic
+candidate Xに対して定義します。
+
+`MultiTaskGP` のtask featureや `SingleTaskMultiFidelityGP` のfidelity featureが
+public Xの列として存在する場合、fixed featureとしてその列を固定したままnonlinear
+constraintを適用できます。callableからtask/fidelity列を参照して、taskやfidelityに
+依存するfeasible regionを表現することもできます。
+
+一方、`KroneckerMultiTaskGP` は同じinput Xに複数output taskを持つ構造であり、
+optimizerのcandidate Xにtask-feature列を追加する必要はありません。constraintも
+通常のpublic input coordinatesに対して定義します。
+
+この区別により、structural featureをconstraint専用の別座標系へ変換せず、各modelが
+実際に評価するcandidate spaceとconstraint spaceを一致させます。
+
 ## 5.13 Coordinate transform と constraint
 
 public-space constraint を latent / embedded coordinateへそのまま渡すことはできません。
