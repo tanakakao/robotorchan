@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from botorch.exceptions.errors import UnsupportedError
 import torch
+from botorch.exceptions.errors import UnsupportedError
 from torch import Tensor
 
 from robotorchan.optim.constraints.contracts import CandidateConstraints
