@@ -226,7 +226,7 @@ derivative-free backendでも、constraintは実際に評価される \(x\) に�
 判定すべきです。現在の DE / PSO なども structured repair 後のcandidateに
 対してacquisition / constraint evaluationを行います。
 
-## 5.16 Structured model features と constraint
+## 5.13 Structured model features と constraint
 
 candidate constraint はmodel内部のtask/output構造ではなく、optimizerが扱うpublic
 candidate Xに対して定義します。
@@ -243,7 +243,7 @@ optimizerのcandidate Xにtask-feature列を追加する必要はありません
 この区別により、structural featureをconstraint専用の別座標系へ変換せず、各modelが
 実際に評価するcandidate spaceとconstraint spaceを一致させます。
 
-## 5.13 Coordinate transform と constraint
+## 5.14 Coordinate transform と constraint
 
 public-space constraint を latent / embedded coordinateへそのまま渡すことはできません。
 
@@ -265,7 +265,7 @@ public-space `CandidateConstraints` を明示的に拒否します。
 これは保守的なAPI制限ではなく、異なる座標系で別のconstraintを
 誤って解くことを防ぐ correctness contract です。
 
-## 5.14 Sequential と inter-point
+## 5.15 Sequential と inter-point
 
 inter-point constraint は q-batch 全体を同時に見る必要があります。
 
@@ -276,7 +276,7 @@ inter-point constraint は q-batch 全体を同時に見る必要があります
 現在の BoTorch contract でも inter-point nonlinear constraint と
 greedy sequential optimization の組合せには制限があります。
 
-## 5.15 Runtime capability
+## 5.16 Runtime capability
 
 最終的な利用可否は
 
