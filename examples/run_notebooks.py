@@ -79,6 +79,28 @@ def validate_notebook_manifest() -> None:
         raise ValueError(f"Notebook の実行区分が重複しています: {sorted(duplicates)}")
 
     declared = set().union(*groups.values())
+    ci_group_by_name = {
+        name: group_name
+        for group_name, names in groups.items()
+        for name in names
+    }
+    metadata_group = {"default": "default", "slow": "slow", "manual": "excluded"}
+    for name in sorted(discovered):
+        notebook = nbformat.read(NOTEBOOK_DIR / name, as_version=4)
+        metadata = notebook.metadata.get("robotorchan")
+        if metadata is None or "ci" not in metadata:
+            continue
+        declared_ci = metadata["ci"]
+        if declared_ci not in metadata_group:
+            raise ValueError(f"Notebook metadata ci が不正です: {name}: {declared_ci!r}")
+        expected_group = metadata_group[declared_ci]
+        actual_group = ci_group_by_name.get(name)
+        if actual_group != expected_group:
+            raise ValueError(
+                "Notebook metadata ci と manifest の実行区分が一致しません: "
+                f"{name}: metadata={declared_ci!r}, manifest={actual_group!r}"
+            )
+
     undeclared = discovered - declared
     missing = declared - discovered
     if undeclared or missing:
