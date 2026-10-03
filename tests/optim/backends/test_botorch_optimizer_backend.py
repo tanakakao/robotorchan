@@ -1098,3 +1098,101 @@ def test_nonlinear_constraint_preserves_cuda_device() -> None:
     assert seen_devices
     assert all(seen_device.type == "cuda" for seen_device in seen_devices)
     assert cuda_constraint(candidate[0]) >= -1e-6
+
+
+@pytest.mark.parametrize(
+    ("constraint", "message"),
+    [
+        (lambda x: torch.tensor([0.1, 0.2], dtype=x.dtype, device=x.device), "scalar Tensor"),
+        (lambda x: x.new_tensor(float("nan")), "must be finite"),
+        (lambda x: x.new_tensor(float("inf")), "must be finite"),
+        (lambda x: torch.tensor(0.1, dtype=torch.float32, device=x.device), "same dtype"),
+    ],
+)
+def test_botorch_backend_rejects_invalid_nonlinear_constraint_outputs(
+    constraint,
+    message: str,
+) -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((constraint, True),),
+    )
+    initial = torch.tensor([[[0.5]]], dtype=torch.double)
+
+    with pytest.raises(ValueError, match=message):
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            bounds,
+            q=1,
+            num_restarts=1,
+            raw_samples=None,
+            constraints=constraints,
+            batch_initial_conditions=initial,
+        )
+
+
+def test_botorch_backend_rejects_nonfinite_nonlinear_initial_conditions() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[0] + 1.0, True),),
+    )
+    initial = torch.tensor([[[float("nan")]]], dtype=torch.double)
+
+    with pytest.raises(ValueError, match="only finite values"):
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            bounds,
+            q=1,
+            num_restarts=1,
+            raw_samples=None,
+            constraints=constraints,
+            batch_initial_conditions=initial,
+        )
+
+
+def test_botorch_backend_rejects_wrong_dtype_nonlinear_initial_conditions() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[0] + 1.0, True),),
+    )
+    initial = torch.tensor([[[0.5]]], dtype=torch.float32)
+
+    with pytest.raises(ValueError, match="same dtype as bounds"):
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            bounds,
+            q=1,
+            num_restarts=1,
+            raw_samples=None,
+            constraints=constraints,
+            batch_initial_conditions=initial,
+        )
+
+
+def test_botorch_backend_rejects_impossible_nonlinear_initial_conditions() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[0] - 2.0, True),),
+    )
+    initial = torch.tensor([[[0.2]], [[0.8]]], dtype=torch.double)
+
+    with pytest.raises(ValueError, match="restart 0 is infeasible"):
+        optimize_acqf_botorch(
+            _DummyAcquisition(),
+            bounds,
+            q=1,
+            num_restarts=2,
+            raw_samples=None,
+            constraints=constraints,
+            batch_initial_conditions=initial,
+        )
+
+
+def test_detached_nonlinear_constraint_has_no_autograd_path() -> None:
+    candidate = torch.tensor([0.5], dtype=torch.double, requires_grad=True)
+
+    value = (candidate[0] - 0.1).detach()
+
+    assert not value.requires_grad
+    with pytest.raises(RuntimeError, match="does not require grad"):
+        torch.autograd.grad(value, candidate)
