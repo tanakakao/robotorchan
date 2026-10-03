@@ -110,7 +110,27 @@ gradient-based optimizer では callable が candidate coordinates に対して
 微分可能である必要があります。
 derivative-free backend ではこの勾配条件は不要です。
 
-## 5.6 Violation measure
+## 5.6 Linear と nonlinear の同時適用
+
+linear inequality、linear equality、nonlinear inequality は同じ
+`CandidateConstraints` に同時に指定できます。sign convention はそれぞれ
+
+[
+\sum_j a_j x_j \ge b,
+\qquad
+\sum_j a_j x_j = b,
+\qquad
+g(X) \ge 0
+]
+
+です。
+
+box bounds と fixed features も同じ acquisition optimization problem に
+同時適用できます。joint q-batch では intra-point linear constraint と
+inter-point nonlinear constraint の組合せも、joint optimization が対応する
+範囲で利用できます。
+
+## 5.15 Violation measure
 
 derivative-free backend では異なるconstraintを共通の非負 violationへ変換できます。
 
