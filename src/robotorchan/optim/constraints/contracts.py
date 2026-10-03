@@ -125,8 +125,7 @@ def _validate_linear_constraint(constraint: object, *, name: str) -> None:
 def _validate_nonlinear_constraint(constraint: object) -> None:
     if not isinstance(constraint, (tuple, list)) or len(constraint) != 2:
         raise TypeError(
-            "nonlinear_inequality_constraints entries must be "
-            "(callable, is_intrapoint) pairs."
+            "nonlinear_inequality_constraints entries must be (callable, is_intrapoint) pairs."
         )
     callable_, is_intrapoint = constraint
     if not callable(callable_):
