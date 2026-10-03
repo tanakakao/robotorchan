@@ -357,9 +357,7 @@ def test_botorch_backend_solves_joint_q_with_interpoint_nonlinear_constraint() -
     def separation(X: torch.Tensor) -> torch.Tensor:
         return (X[0] - X[1]).square().sum() - min_distance**2
 
-    constraints = CandidateConstraints(
-        nonlinear_inequality_constraints=((separation, False),)
-    )
+    constraints = CandidateConstraints(nonlinear_inequality_constraints=((separation, False),))
     initial = torch.tensor(
         [
             [[0.1], [0.6]],
