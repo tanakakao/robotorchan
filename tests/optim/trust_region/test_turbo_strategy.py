@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
+from botorch.acquisition.monte_carlo import qSimpleRegret
 
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim import (
