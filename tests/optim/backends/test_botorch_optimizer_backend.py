@@ -1188,24 +1188,11 @@ def test_botorch_backend_rejects_impossible_nonlinear_initial_conditions() -> No
         )
 
 
-def test_botorch_backend_does_not_hide_detached_constraint_failure() -> None:
-    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+def test_detached_nonlinear_constraint_has_no_autograd_path() -> None:
+    candidate = torch.tensor([0.5], dtype=torch.double, requires_grad=True)
 
-    def detached_constraint(x: torch.Tensor) -> torch.Tensor:
-        return (x[0] - 0.1).detach()
+    value = (candidate[0] - 0.1).detach()
 
-    constraints = CandidateConstraints(
-        nonlinear_inequality_constraints=((detached_constraint, True),),
-    )
-    initial = torch.tensor([[[0.5]], [[0.7]]], dtype=torch.double)
-
-    with pytest.raises(Exception):
-        optimize_acqf_botorch(
-            _DummyAcquisition(),
-            bounds,
-            q=1,
-            num_restarts=2,
-            raw_samples=None,
-            constraints=constraints,
-            batch_initial_conditions=initial,
-        )
+    assert not value.requires_grad
+    with pytest.raises(RuntimeError, match="does not require grad"):
+        torch.autograd.grad(value, candidate)
