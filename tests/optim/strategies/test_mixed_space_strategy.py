@@ -263,3 +263,104 @@ def test_mixed_space_strategy_runs_qbatch_nonlinear_with_ic_generator() -> None:
     assert torch.all(result.candidates[:, 0] <= 0.8 + 1e-6)
     assert set(result.candidates[:, 1].tolist()) <= {0.0, 1.0}
     assert generated_q == [1, 1, 1, 1]
+
+
+def test_mixed_nonlinear_constraint_receives_raw_categorical_coordinate() -> None:
+    train_X = torch.tensor(
+        [[0.0, 0.0], [0.3, 0.0], [0.7, 1.0], [1.0, 1.0]],
+        dtype=torch.double,
+    )
+    train_Y = train_X[:, :1] + 0.5 * train_X[:, 1:2]
+    model = MixedSingleTaskGP(train_X, train_Y, cat_dims=[1])
+    acquisition = PosteriorMean(model)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    seen_categories: list[float] = []
+
+    def category_dependent_constraint(x: torch.Tensor) -> torch.Tensor:
+        seen_categories.append(float(x[1].detach()))
+        limit = x.new_tensor(0.4) + 0.4 * x[1]
+        return limit - x[0]
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((category_dependent_constraint, True),),
+    )
+
+    def ic_generator(*, q, num_restarts, fixed_features=None, **kwargs):
+        category = 0.0 if fixed_features is None else float(fixed_features[1])
+        initial = torch.full(
+            (num_restarts, q, 2),
+            0.2,
+            dtype=bounds.dtype,
+            device=bounds.device,
+        )
+        initial[..., 1] = category
+        return initial
+
+    strategy = MixedSpaceStrategy(
+        bounds,
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+        num_restarts=2,
+        raw_samples=16,
+        constraints=constraints,
+        ic_generator=ic_generator,
+    )
+
+    result = strategy.optimize(acquisition)
+
+    category = result.candidates[0, 1]
+    limit = 0.4 + 0.4 * category
+    assert result.candidates.shape == torch.Size([1, 2])
+    assert category.item() in {0.0, 1.0}
+    assert result.candidates[0, 0] <= limit + 1e-6
+    assert seen_categories
+    assert set(seen_categories) <= {0.0, 1.0}
+    assert {0.0, 1.0} <= set(seen_categories)
+
+
+def test_mixed_qbatch_nonlinear_constraint_uses_raw_space_per_sequential_step() -> None:
+    train_X = torch.tensor(
+        [[0.0, 0.0], [0.3, 0.0], [0.7, 1.0], [1.0, 1.0]],
+        dtype=torch.double,
+    )
+    train_Y = train_X[:, :1] + 0.5 * train_X[:, 1:2]
+    model = MixedSingleTaskGP(train_X, train_Y, cat_dims=[1])
+    acquisition = qLogNoisyExpectedImprovement(
+        model=model,
+        X_baseline=train_X,
+        sampler=SobolQMCNormalSampler(sample_shape=torch.Size([16]), seed=57),
+    )
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+
+    def category_dependent_constraint(x: torch.Tensor) -> torch.Tensor:
+        return x.new_tensor(0.45) + 0.35 * x[1] - x[0]
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((category_dependent_constraint, True),),
+    )
+
+    def ic_generator(*, q, num_restarts, fixed_features=None, **kwargs):
+        category = 0.0 if fixed_features is None else float(fixed_features[1])
+        initial = torch.full(
+            (num_restarts, q, 2),
+            0.2,
+            dtype=bounds.dtype,
+            device=bounds.device,
+        )
+        initial[..., 1] = category
+        return initial
+
+    strategy = MixedSpaceStrategy(
+        bounds,
+        fixed_features_list=[{1: 0.0}, {1: 1.0}],
+        num_restarts=2,
+        raw_samples=16,
+        constraints=constraints,
+        ic_generator=ic_generator,
+    )
+
+    result = strategy.optimize(acquisition, q=2)
+
+    assert result.candidates.shape == torch.Size([2, 2])
+    assert set(result.candidates[:, 1].tolist()) <= {0.0, 1.0}
+    for candidate in result.candidates:
+        assert category_dependent_constraint(candidate) >= -1e-6
