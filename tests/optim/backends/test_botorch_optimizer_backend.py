@@ -1028,3 +1028,73 @@ def test_botorch_backend_rejects_async_sequential_interpoint_nonlinear() -> None
             sequential=True,
             ic_generator=ic_generator,
         )
+
+
+@pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
+def test_nonlinear_constraint_preserves_dtype_and_autograd(dtype: torch.dtype) -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=dtype)
+    initial = torch.tensor(
+        [[[0.2, 0.3]], [[0.4, 0.5]], [[0.6, 0.4]]],
+        dtype=dtype,
+    )
+    seen: list[tuple[torch.dtype, torch.device, bool]] = []
+
+    def differentiable_constraint(x: torch.Tensor) -> torch.Tensor:
+        seen.append((x.dtype, x.device, x.requires_grad))
+        return x.new_tensor(0.9) - x.square().sum()
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((differentiable_constraint, True),),
+    )
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=1,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    assert candidate.dtype == dtype
+    assert value.dtype == dtype
+    assert seen
+    assert all(seen_dtype == dtype for seen_dtype, _, _ in seen)
+    assert all(seen_device == bounds.device for _, seen_device, _ in seen)
+    assert any(requires_grad for _, _, requires_grad in seen)
+    assert differentiable_constraint(candidate[0]) >= -1e-5
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is not available")
+def test_nonlinear_constraint_preserves_cuda_device() -> None:
+    device = torch.device("cuda")
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double, device=device)
+    initial = torch.tensor(
+        [[[0.2]], [[0.4]], [[0.6]]],
+        dtype=torch.double,
+        device=device,
+    )
+    seen_devices: list[torch.device] = []
+
+    def cuda_constraint(x: torch.Tensor) -> torch.Tensor:
+        seen_devices.append(x.device)
+        return x.new_tensor(0.8) - x[0]
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((cuda_constraint, True),),
+    )
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition().to(device=device),
+        bounds,
+        q=1,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    assert candidate.device.type == "cuda"
+    assert value.device.type == "cuda"
+    assert seen_devices
+    assert all(seen_device.type == "cuda" for seen_device in seen_devices)
+    assert cuda_constraint(candidate[0]) >= -1e-6
