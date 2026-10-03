@@ -350,6 +350,119 @@ def test_botorch_backend_solves_joint_q_batch_with_interpoint_linear_constraint(
     assert torch.all(candidate <= bounds[1])
 
 
+def test_botorch_backend_solves_joint_q_with_interpoint_nonlinear_constraint() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    min_distance = 0.35
+
+    def separation(X: torch.Tensor) -> torch.Tensor:
+        return (X[0] - X[1]).square().sum() - min_distance**2
+
+    constraints = CandidateConstraints(nonlinear_inequality_constraints=((separation, False),))
+    initial = torch.tensor(
+        [
+            [[0.1], [0.6]],
+            [[0.2], [0.7]],
+            [[0.3], [0.8]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=2,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert separation(candidate) >= -1e-6
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
+
+
+def test_botorch_backend_combines_intra_and_interpoint_nonlinear_constraints() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+
+    def upper_bound(x: torch.Tensor) -> torch.Tensor:
+        return 0.85 - x[0]
+
+    def minimum_spread(X: torch.Tensor) -> torch.Tensor:
+        return (X[0] - X[1]).square().sum() - 0.25**2
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=(
+            (upper_bound, True),
+            (minimum_spread, False),
+        )
+    )
+    initial = torch.tensor(
+        [
+            [[0.1], [0.5]],
+            [[0.2], [0.6]],
+            [[0.3], [0.7]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, value = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=2,
+        num_restarts=3,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    assert candidate.shape == torch.Size([2, 1])
+    assert value.numel() == 1
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate[:, 0] <= 0.85 + 1e-6)
+    assert minimum_spread(candidate) >= -1e-6
+
+
+def test_botorch_backend_interpoint_callable_receives_joint_q_batch() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    seen_shapes: list[torch.Size] = []
+
+    def joint_constraint(X: torch.Tensor) -> torch.Tensor:
+        seen_shapes.append(X.shape)
+        return 1.5 - X[:, 0].sum()
+
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((joint_constraint, False),)
+    )
+    initial = torch.tensor(
+        [
+            [[0.2], [0.4], [0.6]],
+            [[0.1], [0.5], [0.7]],
+        ],
+        dtype=torch.double,
+    )
+
+    candidate, _ = optimize_acqf_botorch(
+        _DummyAcquisition(),
+        bounds,
+        q=3,
+        num_restarts=2,
+        raw_samples=None,
+        constraints=constraints,
+        batch_initial_conditions=initial,
+    )
+
+    assert candidate.shape == torch.Size([3, 1])
+    assert seen_shapes
+    assert all(shape == torch.Size([3, 1]) for shape in seen_shapes)
+    assert joint_constraint(candidate) >= -1e-6
+
+
 def test_botorch_backend_forwards_joint_qbatch_initial_conditions() -> None:
     initial = torch.tensor(
         [
