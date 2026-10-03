@@ -146,6 +146,5 @@ def test_pca_output_reducer_state_dict_round_trip_without_refit() -> None:
 def test_reduction_mixin_is_identity_without_reducers() -> None:
     model = DummyReducedModel()
     train_X = torch.randn(5, 3)
-    train_Y = torch.randn(5, 2)
 
     assert model._transform_inputs(train_X) is train_X
