@@ -47,6 +47,20 @@ def test_random_forest_posterior_uses_tree_ensemble() -> None:
     assert torch.isfinite(posterior.values).all()
 
 
+def test_random_forest_random_state_reproduces_ensemble_posterior() -> None:
+    train_X, train_Y = make_training_data()
+    first = RandomForestSurrogate(train_X, train_Y, n_estimators=9, random_state=17)
+    second = RandomForestSurrogate(train_X, train_Y, n_estimators=9, random_state=17)
+    first.fit()
+    second.fit()
+    X = torch.tensor([[0.15], [0.45], [0.85]], dtype=torch.double)
+
+    first_posterior = first.posterior(X)
+    second_posterior = second.posterior(X)
+
+    torch.testing.assert_close(first_posterior.values, second_posterior.values)
+
+
 def test_random_forest_posterior_supports_batched_candidates() -> None:
     train_X, train_Y = make_training_data()
     model = RandomForestSurrogate(train_X, train_Y, n_estimators=5, random_state=2)
