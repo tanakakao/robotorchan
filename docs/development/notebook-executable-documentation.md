@@ -44,6 +44,7 @@ Use these entry points for common tasks:
 | Robust input perturbation | `35_robust_input_perturbation.ipynb` |
 | Sequential -> batch -> async integrated workflow | `36_end_to_end_workflows.ipynb` |
 | Unknown outcome / black-box constraints | `37_outcome_constrained_bo.ipynb` |
+| Binary classification active learning | `39_classification_active_learning.ipynb` |
 
 The complete model-family notebook list remains in `examples/README.md`.
 
