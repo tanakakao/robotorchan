@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class ClassificationPortStatus(str, Enum):
+class ClassificationPortStatus(StrEnum):
     """Disposition of a regression family for binary classification."""
 
     IMPLEMENTED = "implemented"
