@@ -5,6 +5,7 @@ from enum import StrEnum
 
 from robotorchan.acquisition.capabilities import PosteriorRequirement
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
+from robotorchan.models.capabilities import ModelCapabilities
 from robotorchan.models.registry import MODEL_REGISTRY
 
 
@@ -24,17 +25,19 @@ class CompatibilityResult:
         return self.status is CompatibilityStatus.COMPATIBLE
 
 
-def check_model_acquisition_compatibility(
-    model_name: str,
+def check_capabilities_acquisition_compatibility(
+    model_capabilities: ModelCapabilities,
     acquisition_name: str,
 ) -> CompatibilityResult:
-    """Check static compatibility using registry metadata only."""
-    model = MODEL_REGISTRY[model_name]
+    """Check static compatibility for model capabilities and a registered acquisition."""
     acquisition = ACQUISITION_REGISTRY[acquisition_name]
-    model_capabilities = model.capabilities
     acquisition_capabilities = acquisition.capabilities
     reasons: list[str] = []
 
+    if model_capabilities.observation_type not in acquisition_capabilities.observation_types:
+        reasons.append(
+            f"acquisition does not support {model_capabilities.observation_type.value} observations"
+        )
     if model_capabilities.non_gp and not acquisition_capabilities.monte_carlo:
         posterior_requirement = acquisition_capabilities.posterior_requirement
         if posterior_requirement is not PosteriorRequirement.MARGINAL_MOMENTS:
@@ -68,3 +71,12 @@ def check_model_acquisition_compatibility(
     if reasons:
         return CompatibilityResult(CompatibilityStatus.INCOMPATIBLE, tuple(reasons))
     return CompatibilityResult(CompatibilityStatus.COMPATIBLE, ())
+
+
+def check_model_acquisition_compatibility(
+    model_name: str,
+    acquisition_name: str,
+) -> CompatibilityResult:
+    """Check static compatibility using registry metadata only."""
+    model_capabilities = MODEL_REGISTRY[model_name].capabilities
+    return check_capabilities_acquisition_compatibility(model_capabilities, acquisition_name)

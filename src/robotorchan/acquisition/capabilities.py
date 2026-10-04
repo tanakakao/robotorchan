@@ -3,10 +3,18 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
+from robotorchan.models.capabilities import ObservationType
+
 
 class AcquisitionPurpose(StrEnum):
     BAYESIAN_OPTIMIZATION = "bayesian_optimization"
     ACTIVE_LEARNING = "active_learning"
+
+
+class AcquisitionTarget(StrEnum):
+    LATENT = "latent"
+    CLASS_PROBABILITY = "class_probability"
+    LABEL_UNCERTAINTY = "label_uncertainty"
 
 
 class PosteriorRequirement(StrEnum):
@@ -19,6 +27,8 @@ class PosteriorRequirement(StrEnum):
 class AcquisitionCapabilities:
     purpose: AcquisitionPurpose
     posterior_requirement: PosteriorRequirement
+    observation_types: frozenset[ObservationType] = frozenset({ObservationType.REGRESSION})
+    target: AcquisitionTarget = AcquisitionTarget.LATENT
     max_q: int | None = None
     supports_multi_output: bool = False
     supports_structured_output: bool = False
