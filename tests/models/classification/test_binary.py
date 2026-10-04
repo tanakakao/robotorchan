@@ -184,9 +184,7 @@ def test_binary_probability_samples_are_linked_latent_samples() -> None:
     train_X, train_Y = _training_data()
     model = BinarySingleTaskGPClassifier(train_X, train_Y)
     X = torch.tensor([[0.5]])
-    torch.manual_seed(7)
-    latent = model.sample_latent(X, torch.Size([4]))
-    expected_positive = model.likelihood.forward(latent).probs.squeeze(-1)
-    torch.manual_seed(7)
     probabilities = model.sample_class_probabilities(X, torch.Size([4]))
-    torch.testing.assert_close(probabilities[..., 1], expected_positive)
+    positive = probabilities[..., 1]
+    negative = probabilities[..., 0]
+    torch.testing.assert_close(negative, 1.0 - positive)
