@@ -5,7 +5,6 @@ from robotorchan.acquisition.capabilities import (
     AcquisitionPurpose,
     AcquisitionRegistryEntry,
     AcquisitionTarget,
-    AcquisitionRegistryEntry,
     PosteriorRequirement,
 )
 from robotorchan.models.capabilities import ObservationType
