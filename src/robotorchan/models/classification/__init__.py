@@ -18,6 +18,13 @@ from robotorchan.models.classification.high_dimensional import (
     ReducedBinarySingleTaskGPClassifier,
     SaasBinarySingleTaskGPClassifier,
 )
+from robotorchan.models.classification.registry import (
+    CLASSIFICATION_MODEL_REGISTRY,
+    ClassificationModelRegistryEntry,
+    get_classification_model_class,
+    get_classification_model_entry,
+    list_classification_models,
+)
 from robotorchan.models.classification.standard.binary import (
     BinarySingleTaskGPClassifier,
     KroneckerMultiTaskBinaryGPClassifier,
@@ -28,6 +35,7 @@ from robotorchan.models.classification.standard.model_list import Classification
 from robotorchan.models.classification.validation import validate_binary_labels
 
 __all__ = [
+    "CLASSIFICATION_MODEL_REGISTRY",
     "ALEBOBinarySingleTaskGPClassifier",
     "BinaryClassificationMixin",
     "BinarySingleTaskDeepGPClassifier",
@@ -36,6 +44,7 @@ __all__ = [
     "ClassificationMetadata",
     "ClassificationModelList",
     "ClassificationModelMixin",
+    "ClassificationModelRegistryEntry",
     "JointEncoderBinaryGPClassifier",
     "KroneckerMultiTaskBinaryGPClassifier",
     "LatentOutputStructure",
@@ -47,5 +56,8 @@ __all__ = [
     "RandomProjectionBinarySingleTaskGPClassifier",
     "ReducedBinarySingleTaskGPClassifier",
     "SaasBinarySingleTaskGPClassifier",
+    "get_classification_model_class",
+    "get_classification_model_entry",
+    "list_classification_models",
     "validate_binary_labels",
 ]
