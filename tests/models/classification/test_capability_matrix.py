@@ -65,10 +65,7 @@ def test_structural_model_ids_match_capability_axes() -> None:
 
 
 def test_classification_acquisition_matrix_is_explicit() -> None:
-    entries = {
-        name: ACQUISITION_REGISTRY[name]
-        for name in _CLASSIFICATION_ACQUISITIONS
-    }
+    entries = {name: ACQUISITION_REGISTRY[name] for name in _CLASSIFICATION_ACQUISITIONS}
     assert set(entries) == _CLASSIFICATION_ACQUISITIONS
 
     for entry in entries.values():
