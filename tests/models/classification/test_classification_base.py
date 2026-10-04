@@ -8,7 +8,9 @@ from torch import Tensor
 
 from robotorchan.models.classification.base import (
     BinaryClassificationMixin,
+    ClassificationLikelihoodFamily,
     ClassificationModelMixin,
+    LatentOutputStructure,
 )
 
 
@@ -68,3 +70,12 @@ def test_threshold_is_binary_specific() -> None:
         model.predict_class(X, threshold=0.2),
         torch.ones(2, dtype=torch.long),
     )
+
+def test_binary_classification_metadata_is_explicit() -> None:
+    model = _BinaryStub()
+    metadata = model.classification_metadata
+    assert model.is_classification is True
+    assert metadata.num_classes == 2
+    assert metadata.class_labels == (0, 1)
+    assert metadata.likelihood_family is ClassificationLikelihoodFamily.BERNOULLI
+    assert metadata.latent_output_structure is LatentOutputStructure.SINGLE
