@@ -26,39 +26,48 @@ class RegressionFamilyClassificationAudit:
 
 REGRESSION_FAMILY_CLASSIFICATION_AUDIT = (
     RegressionFamilyClassificationAudit(
-        "standard_variational", ClassificationPortStatus.IMPLEMENTED,
+        "standard_variational",
+        ClassificationPortStatus.IMPLEMENTED,
         "Bernoulli variational GP is the binary classification baseline.",
     ),
     RegressionFamilyClassificationAudit(
-        "mixed", ClassificationPortStatus.IMPLEMENTED,
+        "mixed",
+        ClassificationPortStatus.IMPLEMENTED,
         "Native mixed-input covariance is already available to binary classification.",
     ),
     RegressionFamilyClassificationAudit(
-        "multitask_and_model_list", ClassificationPortStatus.IMPLEMENTED,
+        "multitask_and_model_list",
+        ClassificationPortStatus.IMPLEMENTED,
         "Long-format, block-design, and independent-output classification paths exist.",
     ),
     RegressionFamilyClassificationAudit(
-        "saas_and_reduced_space", ClassificationPortStatus.IMPLEMENTED,
+        "saas_and_reduced_space",
+        ClassificationPortStatus.IMPLEMENTED,
         "SAAS-style and fixed input-reduction classification paths are implemented.",
     ),
     RegressionFamilyClassificationAudit(
-        "alebo", ClassificationPortStatus.IMPLEMENTED,
+        "alebo",
+        ClassificationPortStatus.IMPLEMENTED,
         "ALEBO Mahalanobis geometry is reusable with Bernoulli variational inference.",
     ),
     RegressionFamilyClassificationAudit(
-        "joint_neural_and_deep_gp", ClassificationPortStatus.IMPLEMENTED,
+        "joint_neural_and_deep_gp",
+        ClassificationPortStatus.IMPLEMENTED,
         "Joint neural features and stochastic DeepGP classification paths exist.",
     ),
     RegressionFamilyClassificationAudit(
-        "spectral_mixture", ClassificationPortStatus.NATURAL_FOLLOW_UP,
+        "spectral_mixture",
+        ClassificationPortStatus.NATURAL_FOLLOW_UP,
         "Its covariance geometry is likelihood-independent and supports Bernoulli inference.",
     ),
     RegressionFamilyClassificationAudit(
-        "infinite_width_bnn", ClassificationPortStatus.NATURAL_FOLLOW_UP,
+        "infinite_width_bnn",
+        ClassificationPortStatus.NATURAL_FOLLOW_UP,
         "Its neural-network kernel is reusable inside a variational classifier.",
     ),
     RegressionFamilyClassificationAudit(
-        "nonstationary", ClassificationPortStatus.NATURAL_FOLLOW_UP,
+        "nonstationary",
+        ClassificationPortStatus.NATURAL_FOLLOW_UP,
         "Input-dependent covariance is reusable without Gaussian observation semantics.",
     ),
     RegressionFamilyClassificationAudit(
@@ -67,7 +76,8 @@ REGRESSION_FAMILY_CLASSIFICATION_AUDIT = (
         "Structured context/task kernels are reusable, but label/output contracts differ.",
     ),
     RegressionFamilyClassificationAudit(
-        "multi_fidelity", ClassificationPortStatus.REQUIRES_CLASSIFICATION_DESIGN,
+        "multi_fidelity",
+        ClassificationPortStatus.REQUIRES_CLASSIFICATION_DESIGN,
         "Classification needs explicit fidelity semantics before exposing a public model.",
     ),
     RegressionFamilyClassificationAudit(
