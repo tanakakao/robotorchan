@@ -80,3 +80,44 @@ def test_binary_classifier_mll_rejects_nonpositive_dataset_size() -> None:
     model = BinarySingleTaskGPClassifier(train_X, train_Y)
     with pytest.raises(ValueError, match="num_data must be positive"):
         model.make_mll(num_data=0)
+
+
+def test_binary_predict_proba_preserves_batch_shape() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    X = torch.rand(3, 4, 1)
+    probabilities = model.predict_proba(X)
+    assert probabilities.shape == torch.Size([3, 4, 2])
+    torch.testing.assert_close(probabilities.sum(dim=-1), torch.ones(3, 4))
+
+
+def test_binary_predict_proba_preserves_dtype_and_device() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X.double(), train_Y.double())
+    probabilities = model.predict_proba(torch.tensor([[0.5]], dtype=torch.double))
+    assert probabilities.dtype == torch.double
+    assert probabilities.device == train_X.device
+
+
+def test_binary_predict_class_returns_canonical_integer_labels() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    predictions = model.predict_class(torch.tensor([[0.25], [0.75]]))
+    assert predictions.shape == torch.Size([2])
+    assert predictions.dtype == torch.long
+    assert set(predictions.tolist()) <= {0, 1}
+
+
+def test_binary_predict_class_accepts_boundary_thresholds() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    X = torch.tensor([[0.25], [0.75]])
+    torch.testing.assert_close(model.predict_class(X, threshold=0.0), torch.ones(2).long())
+    torch.testing.assert_close(model.predict_class(X, threshold=1.0), torch.zeros(2).long())
+
+
+def test_binary_predict_class_rejects_non_numeric_threshold() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    with pytest.raises(TypeError, match="real number"):
+        model.predict_class(train_X, threshold="0.5")  # type: ignore[arg-type]
