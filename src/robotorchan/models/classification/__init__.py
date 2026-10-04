@@ -8,6 +8,7 @@ from robotorchan.models.classification.base import (
     LatentOutputStructure,
 )
 from robotorchan.models.classification.high_dimensional import (
+    ALEBOBinarySingleTaskGPClassifier,
     MapSaasBinarySingleTaskGPClassifier,
     PCABinarySingleTaskGPClassifier,
     PLSBinarySingleTaskGPClassifier,
@@ -25,6 +26,7 @@ from robotorchan.models.classification.standard.model_list import Classification
 from robotorchan.models.classification.validation import validate_binary_labels
 
 __all__ = [
+    "ALEBOBinarySingleTaskGPClassifier",
     "BinaryClassificationMixin",
     "BinarySingleTaskGPClassifier",
     "ClassificationLikelihoodFamily",
