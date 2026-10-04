@@ -9,6 +9,7 @@ from robotorchan.models.classification.base import (
 )
 from robotorchan.models.classification.high_dimensional import (
     ALEBOBinarySingleTaskGPClassifier,
+    BinarySingleTaskDeepGPClassifier,
     JointEncoderBinaryGPClassifier,
     MapSaasBinarySingleTaskGPClassifier,
     PCABinarySingleTaskGPClassifier,
@@ -29,6 +30,7 @@ from robotorchan.models.classification.validation import validate_binary_labels
 __all__ = [
     "ALEBOBinarySingleTaskGPClassifier",
     "BinaryClassificationMixin",
+    "BinarySingleTaskDeepGPClassifier",
     "BinarySingleTaskGPClassifier",
     "ClassificationLikelihoodFamily",
     "ClassificationMetadata",
