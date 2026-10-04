@@ -71,6 +71,7 @@ def test_threshold_is_binary_specific() -> None:
         torch.ones(2, dtype=torch.long),
     )
 
+
 def test_binary_classification_metadata_is_explicit() -> None:
     model = _BinaryStub()
     metadata = model.classification_metadata
