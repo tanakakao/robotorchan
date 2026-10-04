@@ -121,3 +121,41 @@ def test_binary_predict_class_rejects_non_numeric_threshold() -> None:
     model = BinarySingleTaskGPClassifier(train_X, train_Y)
     with pytest.raises(TypeError, match="real number"):
         model.predict_class(train_X, threshold="0.5")  # type: ignore[arg-type]
+
+
+def test_binary_uncertainty_components_have_distinct_shapes() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    X = torch.tensor([[0.25], [0.75]])
+    latent_variance = model.latent_variance(X)
+    predictive_variance = model.predictive_variance(X)
+    predictive_entropy = model.predictive_entropy(X)
+    assert latent_variance.shape == torch.Size([2, 1])
+    assert predictive_variance.shape == torch.Size([2, 2])
+    assert predictive_entropy.shape == torch.Size([2])
+
+
+def test_binary_predictive_variance_matches_bernoulli_variance() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    X = torch.tensor([[0.25], [0.75]])
+    probabilities = model.predict_proba(X)
+    expected = probabilities * (1.0 - probabilities)
+    torch.testing.assert_close(model.predictive_variance(X), expected)
+
+
+def test_binary_predictive_entropy_matches_class_probabilities() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    X = torch.tensor([[0.25], [0.75]])
+    probabilities = model.predict_proba(X)
+    expected = -torch.special.xlogy(probabilities, probabilities).sum(dim=-1)
+    torch.testing.assert_close(model.predictive_entropy(X), expected)
+
+
+def test_binary_predictive_entropy_is_finite() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    entropy = model.predictive_entropy(torch.tensor([[0.0], [0.5], [1.0]]))
+    assert torch.isfinite(entropy).all()
+    assert (entropy >= 0).all()
