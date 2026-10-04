@@ -5,7 +5,9 @@ from __future__ import annotations
 import torch
 from torch import Tensor, nn
 
-from robotorchan.models.classification.binary.standard.single_task import (\n    BinarySingleTaskGPClassifier,\n)
+from robotorchan.models.classification.binary.standard.single_task import (
+    BinarySingleTaskGPClassifier,
+)
 from robotorchan.models.expressive.neural_features import (
     make_feature_network,
     validate_feature_output,
