@@ -30,6 +30,7 @@ def _binary_data() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
 
 
 def _assert_prediction_round_trip(source: object, restored: object, X: torch.Tensor) -> None:
+    source.model.variational_strategy.variational_params_initialized.fill_(1)
     source.eval()
     restored.eval()
     source.model.eval()
