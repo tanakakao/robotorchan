@@ -7,13 +7,13 @@ from robotorchan.models.classification.base import (
     ClassificationModelMixin,
     LatentOutputStructure,
 )
-from robotorchan.models.classification.binary import (
+from robotorchan.models.classification.standard.binary import (
     BinarySingleTaskGPClassifier,
     KroneckerMultiTaskBinaryGPClassifier,
     MixedBinarySingleTaskGPClassifier,
     MultiTaskBinaryGPClassifier,
 )
-from robotorchan.models.classification.model_list import ClassificationModelList
+from robotorchan.models.classification.standard.model_list import ClassificationModelList
 from robotorchan.models.classification.validation import validate_binary_labels
 
 __all__ = [
