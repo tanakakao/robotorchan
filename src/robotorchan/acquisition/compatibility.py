@@ -72,6 +72,7 @@ def check_capabilities_acquisition_compatibility(
         return CompatibilityResult(CompatibilityStatus.INCOMPATIBLE, tuple(reasons))
     return CompatibilityResult(CompatibilityStatus.COMPATIBLE, ())
 
+
 def check_model_acquisition_compatibility(
     model_name: str,
     acquisition_name: str,
