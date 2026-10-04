@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from torch import Tensor
 
-from robotorchan.models.classification.binary.standard.single_task import (\n    BinarySingleTaskGPClassifier,\n)
+from robotorchan.models.classification.binary.standard.single_task import (
+    BinarySingleTaskGPClassifier,
+)
 from robotorchan.reduction.base import InputReducer
 from robotorchan.reduction.input import (
     PCAInputReducer,
