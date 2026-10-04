@@ -87,6 +87,13 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
         **kwargs: object,
     ) -> Tensor:
         """Return binary class labels using the requested probability threshold."""
+        if not isinstance(threshold, int | float):
+            raise TypeError("threshold must be a real number.")
         if not 0.0 <= threshold <= 1.0:
             raise ValueError("threshold must be between 0 and 1.")
-        return (self.predict_proba(X, **kwargs)[..., 1] >= threshold).long()
+        positive = self.predict_proba(X, **kwargs)[..., 1]
+        return torch.where(
+            positive >= threshold,
+            torch.ones_like(positive, dtype=torch.long),
+            torch.zeros_like(positive, dtype=torch.long),
+        )
