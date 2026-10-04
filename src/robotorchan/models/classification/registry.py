@@ -7,15 +7,25 @@ from typing import TypeAlias
 
 from torch import nn
 
-from robotorchan.models.classification.high_dimensional import (
+from robotorchan.models.classification.high_dimensional.alebo import (
     ALEBOBinarySingleTaskGPClassifier,
+)
+from robotorchan.models.classification.high_dimensional.deep_gp import (
     BinarySingleTaskDeepGPClassifier,
+)
+from robotorchan.models.classification.high_dimensional.joint_neural import (
     JointEncoderBinaryGPClassifier,
+)
+from robotorchan.models.classification.high_dimensional.map_saas import (
     MapSaasBinarySingleTaskGPClassifier,
+)
+from robotorchan.models.classification.high_dimensional.reduced import (
     PCABinarySingleTaskGPClassifier,
     PLSBinarySingleTaskGPClassifier,
     RandomProjectionBinarySingleTaskGPClassifier,
     ReducedBinarySingleTaskGPClassifier,
+)
+from robotorchan.models.classification.high_dimensional.saas import (
     SaasBinarySingleTaskGPClassifier,
 )
 from robotorchan.models.classification.standard.binary import (
@@ -72,7 +82,8 @@ def get_classification_model_entry(model_id: str) -> ClassificationModelRegistry
         return CLASSIFICATION_MODEL_REGISTRY[model_id]
     except KeyError as error:
         available = ", ".join(CLASSIFICATION_MODEL_REGISTRY)
-        raise KeyError(f"Unknown classification model {model_id!r}. Available: {available}") from error
+        message = f"Unknown classification model {model_id!r}. Available: {available}"
+        raise KeyError(message) from error
 
 
 def get_classification_model_class(model_id: str) -> ClassificationModelType:
