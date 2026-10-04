@@ -9,6 +9,7 @@ from robotorchan.models.classification.base import (
 )
 from robotorchan.models.classification.binary import (
     BinarySingleTaskGPClassifier,
+    KroneckerMultiTaskBinaryGPClassifier,
     MixedBinarySingleTaskGPClassifier,
     MultiTaskBinaryGPClassifier,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "ClassificationLikelihoodFamily",
     "ClassificationMetadata",
     "ClassificationModelMixin",
+    "KroneckerMultiTaskBinaryGPClassifier",
     "LatentOutputStructure",
     "MixedBinarySingleTaskGPClassifier",
     "MultiTaskBinaryGPClassifier",
