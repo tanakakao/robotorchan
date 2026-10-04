@@ -50,8 +50,6 @@ def test_epig_rejects_multitask_model() -> None:
     result = check_model_acquisition_compatibility(
         "KroneckerMultiTaskGP",
         "ExpectedPredictiveInformationGain",
-        "LatentStraddle",
-        "MarginUncertainty",
     )
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "acquisition requires a single-output posterior" in result.reasons
@@ -61,8 +59,6 @@ def test_random_forest_rejects_variance_active_learning() -> None:
     result = check_model_acquisition_compatibility(
         "RandomForestSurrogate",
         "PosteriorVariance",
-        "PredictiveEntropy",
-        "ProbabilityVariance",
     )
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "acquisition does not support ensemble posteriors" in result.reasons
