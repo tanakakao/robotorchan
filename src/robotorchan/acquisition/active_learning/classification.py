@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Protocol, cast
-
 import math
+from typing import Protocol, cast
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
