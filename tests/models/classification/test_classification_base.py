@@ -80,3 +80,21 @@ def test_binary_classification_metadata_is_explicit() -> None:
     assert metadata.class_labels == (0, 1)
     assert metadata.likelihood_family is ClassificationLikelihoodFamily.BERNOULLI
     assert metadata.latent_output_structure is LatentOutputStructure.SINGLE
+
+
+def test_latent_posterior_exposes_botorch_statistics_and_sampling() -> None:
+    model = _BinaryStub()
+    posterior = model.latent_posterior(torch.zeros(3, 2))
+    assert posterior.mean.shape == torch.Size([3, 1])
+    assert posterior.variance.shape == torch.Size([3, 1])
+    samples = posterior.rsample(torch.Size([5]))
+    assert samples.shape == torch.Size([5, 3, 1])
+
+
+def test_latent_posterior_is_not_class_probability_output() -> None:
+    model = _BinaryStub()
+    X = torch.zeros(3, 2)
+    posterior = model.latent_posterior(X)
+    probabilities = model.predict_proba(X)
+    assert posterior.mean.shape[-1] == 1
+    assert probabilities.shape[-1] == model.num_classes
