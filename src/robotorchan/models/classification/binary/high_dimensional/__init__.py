@@ -1,24 +1,24 @@
-"""High-dimensional classification surrogate models."""
+"""High-dimensional binary classification surrogate models."""
 
-from robotorchan.models.classification.high_dimensional.alebo import (
+from robotorchan.models.classification.binary.high_dimensional.alebo import (
     ALEBOBinarySingleTaskGPClassifier,
 )
-from robotorchan.models.classification.high_dimensional.deep_gp import (
+from robotorchan.models.classification.binary.high_dimensional.deep_gp import (
     BinarySingleTaskDeepGPClassifier,
 )
-from robotorchan.models.classification.high_dimensional.joint_neural import (
+from robotorchan.models.classification.binary.high_dimensional.joint_neural import (
     JointEncoderBinaryGPClassifier,
 )
-from robotorchan.models.classification.high_dimensional.map_saas import (
+from robotorchan.models.classification.binary.high_dimensional.map_saas import (
     MapSaasBinarySingleTaskGPClassifier,
 )
-from robotorchan.models.classification.high_dimensional.reduced import (
+from robotorchan.models.classification.binary.high_dimensional.reduced import (
     PCABinarySingleTaskGPClassifier,
     PLSBinarySingleTaskGPClassifier,
     RandomProjectionBinarySingleTaskGPClassifier,
     ReducedBinarySingleTaskGPClassifier,
 )
-from robotorchan.models.classification.high_dimensional.saas import (
+from robotorchan.models.classification.binary.high_dimensional.saas import (
     SaasBinarySingleTaskGPClassifier,
 )
 

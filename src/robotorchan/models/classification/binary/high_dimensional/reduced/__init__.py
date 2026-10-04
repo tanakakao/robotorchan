@@ -1,6 +1,6 @@
 """Input-reduced classification surrogate models."""
 
-from robotorchan.models.classification.high_dimensional.reduced.base import (
+from robotorchan.models.classification.binary.high_dimensional.reduced.base import (
     PCABinarySingleTaskGPClassifier,
     PLSBinarySingleTaskGPClassifier,
     RandomProjectionBinarySingleTaskGPClassifier,

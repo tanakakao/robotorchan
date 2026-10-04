@@ -9,7 +9,9 @@ from gpytorch.kernels import Kernel, ScaleKernel
 from gpytorch.priors import HalfCauchyPrior
 from torch import Tensor
 
-from robotorchan.models.classification.standard.binary import BinarySingleTaskGPClassifier
+from robotorchan.models.classification.binary.standard.single_task import (
+    BinarySingleTaskGPClassifier,
+)
 
 
 class MapSaasBinarySingleTaskGPClassifier(BinarySingleTaskGPClassifier):
