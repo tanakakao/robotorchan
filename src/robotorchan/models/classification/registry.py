@@ -16,20 +16,34 @@ from robotorchan.models.capabilities import (
     PosteriorSamplingType,
     TaskType,
 )
-from robotorchan.models.classification.binary import (
+from robotorchan.models.classification.binary.high_dimensional.alebo import (
     ALEBOBinarySingleTaskGPClassifier,
+)
+from robotorchan.models.classification.binary.high_dimensional.deep_gp import (
     BinarySingleTaskDeepGPClassifier,
-    BinarySingleTaskGPClassifier,
+)
+from robotorchan.models.classification.binary.high_dimensional.joint_neural import (
     JointEncoderBinaryGPClassifier,
-    KroneckerMultiTaskBinaryGPClassifier,
+)
+from robotorchan.models.classification.binary.high_dimensional.map_saas import (
     MapSaasBinarySingleTaskGPClassifier,
-    MixedBinarySingleTaskGPClassifier,
-    MultiTaskBinaryGPClassifier,
+)
+from robotorchan.models.classification.binary.high_dimensional.reduced import (
     PCABinarySingleTaskGPClassifier,
     PLSBinarySingleTaskGPClassifier,
     RandomProjectionBinarySingleTaskGPClassifier,
     ReducedBinarySingleTaskGPClassifier,
+)
+from robotorchan.models.classification.binary.high_dimensional.saas import (
     SaasBinarySingleTaskGPClassifier,
+)
+from robotorchan.models.classification.binary.standard.multitask import (
+    KroneckerMultiTaskBinaryGPClassifier,
+    MultiTaskBinaryGPClassifier,
+)
+from robotorchan.models.classification.binary.standard.single_task import (
+    BinarySingleTaskGPClassifier,
+    MixedBinarySingleTaskGPClassifier,
 )
 
 ClassificationModelType: TypeAlias = type[nn.Module]
