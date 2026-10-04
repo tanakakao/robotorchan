@@ -299,4 +299,13 @@ class KroneckerMultiTaskBinaryGPClassifier(MultiTaskBinaryGPClassifier):
         **kwargs: object,
     ) -> Tensor:
         """Return one binary class label for every input-task pair."""
-        return super().predict_class(self._expand_block_X(X), threshold=threshold, **kwargs)
+        if not isinstance(threshold, int | float):
+            raise TypeError("threshold must be a real number.")
+        if not 0.0 <= threshold <= 1.0:
+            raise ValueError("threshold must be between 0 and 1.")
+        positive = self.predict_proba(X, **kwargs)[..., 1]
+        return torch.where(
+            positive >= threshold,
+            torch.ones_like(positive, dtype=torch.long),
+            torch.zeros_like(positive, dtype=torch.long),
+        )
