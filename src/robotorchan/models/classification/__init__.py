@@ -1,5 +1,6 @@
-from robotorchan.models.classification.binary import BinarySingleTaskGPClassifier
 """Classification surrogate-model contracts."""
+
+from robotorchan.models.classification.binary import BinarySingleTaskGPClassifier
 
 from robotorchan.models.classification.base import (
     BinaryClassificationMixin,
