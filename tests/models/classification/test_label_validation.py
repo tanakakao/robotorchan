@@ -51,7 +51,7 @@ def test_validate_binary_labels_rejects_empty_tensor() -> None:
 
 
 def test_validate_binary_labels_rejects_non_tensor() -> None:
-    with pytest.raises(TypeError, match="torch.Tensor"):
+    with pytest.raises(TypeError, match=r"torch\.Tensor"):
         validate_binary_labels([0, 1])  # type: ignore[arg-type]
 
 
