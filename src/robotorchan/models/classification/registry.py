@@ -16,7 +16,6 @@ from robotorchan.models.capabilities import (
     PosteriorSamplingType,
     TaskType,
 )
-
 from robotorchan.models.classification.high_dimensional.alebo import (
     ALEBOBinarySingleTaskGPClassifier,
 )
