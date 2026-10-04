@@ -5,7 +5,9 @@ from __future__ import annotations
 from gpytorch.kernels import ScaleKernel
 from torch import Tensor
 
-from robotorchan.models.classification.binary.standard.single_task import (\n    BinarySingleTaskGPClassifier,\n)
+from robotorchan.models.classification.binary.standard.single_task import (
+    BinarySingleTaskGPClassifier,
+)
 from robotorchan.models.high_dimensional.alebo import MahalanobisRBFKernel
 
 
