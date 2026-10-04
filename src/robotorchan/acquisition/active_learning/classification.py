@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Protocol, cast
 
+import math
+
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.models.model import Model
@@ -120,6 +122,8 @@ class LatentStraddle(AcquisitionFunction):
     """Binary classification straddle score around the latent decision boundary."""
 
     def __init__(self, model: Model, *, beta: float = 1.96) -> None:
+        if not math.isfinite(beta):
+            raise ValueError("beta must be finite.")
         if beta < 0:
             raise ValueError("beta must be non-negative.")
         super().__init__(model=model)
