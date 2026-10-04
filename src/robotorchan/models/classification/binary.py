@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import torch
 from botorch.models.transforms.input import InputTransform
+from botorch.models.utils.gpytorch_modules import get_covar_module_with_dim_scaled_prior
 from botorch.models.utils.inducing_point_allocators import InducingPointAllocator
-from gpytorch.kernels import Kernel
+from gpytorch.kernels import IndexKernel, Kernel, ProductKernel
 from gpytorch.likelihoods import BernoulliLikelihood
 from gpytorch.means import Mean
 from gpytorch.mlls import VariationalELBO
@@ -172,3 +173,73 @@ class MixedBinarySingleTaskGPClassifier(BinarySingleTaskGPClassifier):
             train_X.shape[-1],
             name="cat_dims",
         )
+
+
+class MultiTaskBinaryGPClassifier(BinarySingleTaskGPClassifier):
+    """Long-format binary variational GP classifier with a structural task feature."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        task_feature: int,
+        *,
+        rank: int | None = None,
+        learn_inducing_points: bool = True,
+        mean_module: Mean | None = None,
+        variational_distribution: _VariationalDistribution | None = None,
+        variational_strategy: type[_VariationalStrategy] = VariationalStrategy,
+        inducing_points: Tensor | int | None = None,
+        inducing_point_allocator: InducingPointAllocator | None = None,
+        input_transform: InputTransform | None = None,
+    ) -> None:
+        """Initialize an intrinsic-coregionalization binary classifier."""
+        input_dim = train_X.shape[-1]
+        resolved_task_feature = normalize_feature_dims(
+            [task_feature],
+            input_dim,
+            name="task_feature",
+        )[0]
+        task_values = torch.unique(train_X[..., resolved_task_feature])
+        if task_values.numel() < 1:
+            raise ValueError("task_feature must contain at least one task value.")
+        rounded = task_values.round()
+        if not torch.allclose(task_values, rounded):
+            raise ValueError("task_feature values must be integer task identifiers.")
+        task_ids = rounded.to(dtype=torch.long)
+        if int(task_ids.min()) < 0:
+            raise ValueError("task_feature values must be non-negative.")
+        num_tasks = int(task_ids.max()) + 1
+        resolved_rank = min(num_tasks, 1) if rank is None else rank
+        if resolved_rank < 1 or resolved_rank > num_tasks:
+            raise ValueError("rank must be between 1 and the number of indexed tasks.")
+
+        data_dims = [dim for dim in range(input_dim) if dim != resolved_task_feature]
+        if not data_dims:
+            raise ValueError("train_X must contain at least one non-task feature.")
+        data_kernel = get_covar_module_with_dim_scaled_prior(
+            ard_num_dims=len(data_dims),
+            batch_shape=train_X.shape[:-2],
+            active_dims=data_dims,
+        )
+        task_kernel = IndexKernel(
+            num_tasks=num_tasks,
+            rank=resolved_rank,
+            active_dims=[resolved_task_feature],
+        )
+        covar_module = ProductKernel(data_kernel, task_kernel)
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            learn_inducing_points=learn_inducing_points,
+            covar_module=covar_module,
+            mean_module=mean_module,
+            variational_distribution=variational_distribution,
+            variational_strategy=variational_strategy,
+            inducing_points=inducing_points,
+            inducing_point_allocator=inducing_point_allocator,
+            input_transform=input_transform,
+        )
+        self.task_feature = resolved_task_feature
+        self.num_tasks = num_tasks
+        self.rank = resolved_rank
