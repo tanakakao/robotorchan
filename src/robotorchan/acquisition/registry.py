@@ -110,6 +110,7 @@ ACQUISITION_REGISTRY.update(
     }
 )
 
+
 def get_acquisition_registry_entry(acquisition_name: str) -> AcquisitionRegistryEntry:
     """Return capability metadata for a registered acquisition extension."""
     return ACQUISITION_REGISTRY[acquisition_name]
