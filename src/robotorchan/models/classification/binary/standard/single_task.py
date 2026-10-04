@@ -19,8 +19,8 @@ from robotorchan.models.base import (
     make_mixed_covar_module,
     normalize_feature_dims,
 )
-from robotorchan.models.classification.base import BinaryClassificationMixin
-from robotorchan.models.classification.validation import validate_binary_labels
+from robotorchan.models.classification.binary.base import BinaryClassificationMixin
+from robotorchan.models.classification.binary.validation import validate_binary_labels
 from robotorchan.models.standard.variational import SingleTaskVariationalGP
 
 
