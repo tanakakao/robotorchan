@@ -9,7 +9,6 @@ from robotorchan.models.capabilities import (
     PosteriorSamplingType,
     TaskType,
 )
-
 from robotorchan.models.classification import (
     CLASSIFICATION_MODEL_REGISTRY,
     BinarySingleTaskGPClassifier,
