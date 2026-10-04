@@ -54,3 +54,29 @@ def test_binary_classifier_make_mll_uses_bernoulli_likelihood() -> None:
     mll = model.make_mll()
     assert mll.likelihood is model.likelihood
     assert mll.num_data == train_X.shape[-2]
+
+
+def test_binary_classifier_mll_evaluates_training_objective() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    model.train()
+    model.likelihood.train()
+    mll = model.make_mll()
+    latent_output = model.model(train_X)
+    objective = mll(latent_output, train_Y)
+    assert objective.ndim == 0
+    assert torch.isfinite(objective)
+
+
+def test_binary_classifier_mll_accepts_explicit_dataset_size() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    mll = model.make_mll(num_data=32)
+    assert mll.num_data == 32
+
+
+def test_binary_classifier_mll_rejects_nonpositive_dataset_size() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    with pytest.raises(ValueError, match="num_data must be positive"):
+        model.make_mll(num_data=0)
