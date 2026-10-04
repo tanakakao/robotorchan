@@ -3,7 +3,6 @@
 from robotorchan.models.classification.high_dimensional.alebo import (
     ALEBOBinarySingleTaskGPClassifier,
 )
-
 from robotorchan.models.classification.high_dimensional.map_saas import (
     MapSaasBinarySingleTaskGPClassifier,
 )
