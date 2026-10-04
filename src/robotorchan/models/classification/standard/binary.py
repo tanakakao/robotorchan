@@ -66,9 +66,15 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
         )
         self._store_raw_tensor("train_Y", raw_train_Y)
 
-    def load_state_dict(self, state_dict: dict[str, Tensor], strict: bool = True):
+    def load_state_dict(
+        self,
+        state_dict: dict[str, Tensor],
+        strict: bool = True,
+        assign: bool = False,
+    ):
         """Load variational classifier state without Gaussian target extraction."""
-        result = nn.Module.load_state_dict(self, state_dict, strict=strict)
+        result = nn.Module.load_state_dict(self, state_dict, strict=strict, assign=assign)
+        self.model.variational_strategy.variational_params_initialized.fill_(1)
         self.apply(clear_cache_hook)
         return result
 
