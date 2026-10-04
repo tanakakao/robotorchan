@@ -13,6 +13,7 @@ from robotorchan.models.classification.binary import (
     MixedBinarySingleTaskGPClassifier,
     MultiTaskBinaryGPClassifier,
 )
+from robotorchan.models.classification.model_list import ClassificationModelList
 from robotorchan.models.classification.validation import validate_binary_labels
 
 __all__ = [
@@ -20,6 +21,7 @@ __all__ = [
     "BinarySingleTaskGPClassifier",
     "ClassificationLikelihoodFamily",
     "ClassificationMetadata",
+    "ClassificationModelList",
     "ClassificationModelMixin",
     "KroneckerMultiTaskBinaryGPClassifier",
     "LatentOutputStructure",
