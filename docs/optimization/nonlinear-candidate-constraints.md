@@ -32,6 +32,13 @@ robotorchan intentionally preserves the BoTorch candidate-constraint vocabulary.
 `CandidateConstraints` is a container for BoTorch-compatible candidate constraint definitions.
 The tuple semantics are unchanged; robotorchan does not introduce a second nonlinear DSL.
 
+Nonlinear equality constraints are not a separate public candidate-constraint type in the current
+BoTorch / robotorchan optimizer contract. `equality_constraints` covers linear equalities only;
+`nonlinear_inequality_constraints` covers nonlinear constraints with `g(X) >= 0` semantics. A
+nonlinear equality should therefore not be encoded as if native equality support existed. If an
+application needs one, use a backend-specific reformulation only when its numerical tolerance and
+feasibility semantics are explicit, or treat it as a future optimizer capability.
+
 ## Intra-point and inter-point callables
 
 An intra-point nonlinear constraint receives one candidate `[d]`:
