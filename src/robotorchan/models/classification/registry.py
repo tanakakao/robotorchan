@@ -28,7 +28,7 @@ from robotorchan.models.classification.binary.high_dimensional.joint_neural impo
 from robotorchan.models.classification.binary.high_dimensional.map_saas import (
     MapSaasBinarySingleTaskGPClassifier,
 )
-from robotorchan.models.classification.binary.high_dimensional.reduced import (
+from robotorchan.models.classification.binary.high_dimensional.reduced.base import (
     PCABinarySingleTaskGPClassifier,
     PLSBinarySingleTaskGPClassifier,
     RandomProjectionBinarySingleTaskGPClassifier,
