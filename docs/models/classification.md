@@ -52,7 +52,8 @@ labels = model.predict_class(X)
 | `binary.kronecker_multitask` | continuous | multitask | none | Gaussian latent |
 | `binary.map_saas` | continuous | single | MAP-SAAS | Gaussian latent |
 | `binary.saas` | continuous | single | SAAS | Gaussian latent |
-| `binary.reduced` / PCA / PLS / random projection | continuous | single | reduction | Gaussian latent |
+| `binary.reduced` / PCA / PLS / random projection | continuous | single | reduction | Gaussian |
+
 | `binary.alebo` | continuous | single | random embedding | Gaussian latent |
 | `binary.joint_encoder` | continuous | single | neural reduction | Gaussian latent |
 | `binary.deep_gp` | continuous | single | deep | stochastic latent |
