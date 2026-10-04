@@ -15,7 +15,11 @@ from torch.distributions import Bernoulli
 
 from robotorchan.models.classification.base import BinaryClassificationMixin
 from robotorchan.models.classification.validation import validate_binary_labels
-from robotorchan.models.base import ContinuousKernelFactory, make_mixed_covar_module
+from robotorchan.models.base import (
+    ContinuousKernelFactory,
+    make_mixed_covar_module,
+    normalize_feature_dims,
+)
 from robotorchan.models.standard.variational import SingleTaskVariationalGP
 
 
@@ -163,8 +167,6 @@ class MixedBinarySingleTaskGPClassifier(BinarySingleTaskGPClassifier):
             inducing_point_allocator=inducing_point_allocator,
             input_transform=input_transform,
         )
-        from robotorchan.models.base import normalize_feature_dims
-
         self.cat_dims = normalize_feature_dims(
             cat_dims,
             train_X.shape[-1],
