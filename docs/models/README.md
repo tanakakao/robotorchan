@@ -9,6 +9,7 @@
 
 | ガイド | 主な対象 |
 |---|---|
+| [Classification](classification.md) | Binary GP分類、分類予測、不確実性、Active Learning |
 | [Standard / Fidelity / Variational](standard.md) | 標準回帰、Mixed、Multi-Fidelity、大規模データ |
 | [Multi-task / Multi-output](multitask_multioutput.md) | task共有、block design、独立出力、heterogeneous task |
 | [High-dimensional](high_dimensional.md) | SAAS、MAP-SAAS、additive、ALEBO |

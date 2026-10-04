@@ -104,7 +104,13 @@ nonstationarity では原因とモデル化方法が異なります。
 Deep GP、Deep Kernel Learning、NNGP、Spectral Mixture などは、
 「GP より高度だから使う」のではなく、どの構造を表現したいかを考えて選びます。
 
-### Part VI: GP 以外のサロゲートモデル
+### Part VI: Classification
+
+離散ラベルを扱うGP classificationでは、latent posterior、class probability、label uncertaintyを区別します。
+
+24. [Gaussian Process Classification](24_classification.md)
+
+### Part VII: GP 以外のサロゲートモデル
 
 BO の surrogate は GP に限定されません。
 
@@ -113,11 +119,11 @@ BO の surrogate は GP に限定されません。
 tree ensemble、boosting、NGBoost などでは、GP と同じ posterior interface を持つ場合でも、
 不確実性や sample の統計的意味が異なることに注意します。
 
-### Part VII: モデルを選ぶ
+### Part VIII: モデルを選ぶ
 
 > **番号と読む順序について**
 >
-> 13章はファイル番号を維持していますが、Part VIIは横断ガイドです。
+> 13章はファイル番号を維持していますが、Part VIIIは横断ガイドです。
 > 「13章の後に14章を読む」という意味のPart分類ではありません。
 
 各モデル群の理論を理解した後、問題設定と実装 capability を対応付けます。
@@ -148,6 +154,7 @@ tree ensemble、boosting、NGBoost などでは、GP と同じ posterior interfa
 | 関数の滑らかさや挙動が場所で変わる | Nonstationary GP | 17 |
 | 標準 GP より複雑な表現が必要 | Expressive GP | 22 |
 | GP 以外の予測モデルを使いたい | Non-GP surrogate | 23 |
+| 2値分類と分類Active Learning | Classification | 24 |
 | 候補が多く、どれを選ぶべきか整理したい | Model Selection | 13 |
 
 この表はモデルを一意に決める decision tree ではありません。
@@ -232,6 +239,7 @@ MultiTask
 | Expressive GP | `JointEncoderGP`, `SingleTaskDeepGP`, `InfiniteWidthBNNGP`, `SpectralMixtureGP` |
 | Non-GP empirical ensemble | forest / extra-trees / boosting surrogate variants |
 | Distributional non-GP | `NGBoostSurrogate` |
+| Binary GP classification | `BinarySingleTaskGPClassifier` and classification variants |
 
 ## 関連ドキュメント
 

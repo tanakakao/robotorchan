@@ -14,7 +14,7 @@ BoTorch-native なモデル構成を維持しながら、raw training data の�
 - **幅広い surrogate**: 標準 GP、Mixed、Multi-Fidelity、Multi-task / Multi-output、Robust / Noise / Input uncertainty をサポート
 - **高次元・表現力**: PCA / PLS / Random Projection、AE / VAE、SAAS、DeepGP、Infinite-width BNN GP、Spectral Mixture GP を提供
 - **Non-GP surrogate**: Random Forest、Extra Trees、Gradient Boosting 系を共通の探索フローで利用可能
-- **Active Learning 拡張**: variance / standard deviation、Straddle、Boundary Variance、EPIG などを提供
+- **Classification / Active Learning**: Binary GP分類とEntropy、BALD、Margin、Probability Variance、Latent Straddleを提供
 - **探索戦略の分離**: REMBO、HeSBO、ALEBO、TuRBO、BAxUS、tree ensemble search などを `SearchStrategy` として利用可能
 - **実行可能な資料**: モデル選択ガイド、理論ドキュメント、Jupyter Notebook を同じリポジトリで管理
 
@@ -140,6 +140,7 @@ robotorchan の public model API は多数の派生モデルを含むため、RE
 
 | ファミリー | 代表的なモデル・機能 |
 |---|---|
+| Classification | Binary、Mixed、MultiTask、SAAS、reduced、ALEBO、Joint Encoder、DeepGP分類 |
 | Standard / Mixed / Multi-Fidelity | `SingleTaskGP`, `MixedSingleTaskGP`, `SingleTaskMultiFidelityGP` |
 | Multi-task / Multi-output | `MultiTaskGP`, `KroneckerMultiTaskGP`, `ModelListGP`, Mixed / heterogeneous variants |
 | High-dimensional / Reduction | PCA, PLS, Random Projection, AE / VAE, Joint Encoder, SAAS, MAP-SAAS, ALEBO |
@@ -152,7 +153,7 @@ robotorchan の public model API は多数の派生モデルを含むため、RE
 
 ### Acquisition / Active Learning
 
-BoTorch 標準の acquisition function をそのまま利用できることを基本とし、robotorchan 固有の Active Learning / sampling 拡張として `PosteriorVariance`, `PosteriorStd`, `Straddle`, `RandomizedStraddle`, `BoundaryVariance`, `ExpectedPredictiveInformationGain`、Thompson candidate selection などを提供します。
+BoTorch 標準の acquisition function をそのまま利用できることを基本とし、robotorchan 固有の Active Learning / sampling 拡張として `PosteriorVariance`, `PosteriorStd`, `Straddle`, `RandomizedStraddle`, `BoundaryVariance`, `ExpectedPredictiveInformationGain`、分類向けの `PredictiveEntropy`, `MarginUncertainty`, `ProbabilityVariance`, `BALD`, `LatentStraddle`、Thompson candidate selection などを提供します。
 
 理論は [Acquisition Function Theory](docs/theory/acquisition/README.md)、利用方法と適用範囲は [Optimization guides](docs/optimization/README.md) と [Acquisition integration status](docs/optimization/acquisition-integration.md) を参照してください。
 
