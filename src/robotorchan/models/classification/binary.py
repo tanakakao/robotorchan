@@ -8,6 +8,7 @@ from botorch.models.utils.inducing_point_allocators import InducingPointAllocato
 from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import BernoulliLikelihood
 from gpytorch.means import Mean
+from gpytorch.mlls import VariationalELBO
 from gpytorch.variational import VariationalStrategy, _VariationalDistribution, _VariationalStrategy
 from torch import Tensor
 from torch.distributions import Bernoulli
@@ -53,6 +54,18 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             input_transform=input_transform,
         )
         self._store_raw_tensor("train_Y", train_Y.detach().clone())
+
+    def make_mll(self, num_data: int | None = None) -> VariationalELBO:
+        """Construct the Bernoulli variational evidence lower bound.
+
+        Args:
+            num_data: Total number of binary observations represented by the
+                ELBO. Defaults to the number of caller-supplied training rows.
+
+        Returns:
+            Variational ELBO bound to this classifier likelihood and latent GP.
+        """
+        return super().make_mll(num_data=num_data)
 
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> Bernoulli:
         """Return Bernoulli predictions after integrating latent uncertainty."""
