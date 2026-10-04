@@ -30,5 +30,5 @@ def test_prefix_filter_is_multiclass_ready() -> None:
 
 
 def test_unknown_model_reports_available_ids() -> None:
-    with pytest.raises(KeyError, match="Available: binary.standard"):
+    with pytest.raises(KeyError, match=r"Available: binary\.standard"):
         get_classification_model_entry("binary.unknown")
