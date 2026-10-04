@@ -26,9 +26,15 @@ def test_saas_binary_classifier_prior_targets_inverse_lengthscale() -> None:
     train_X, train_Y = _data()
     model = SaasBinarySingleTaskGPClassifier(train_X, train_Y)
     base_kernel = model.model.covar_module.base_kernel
-    priors = {name: closure(base_kernel) for name, _, prior, closure, _ in base_kernel.named_priors()}
+    priors = {
+        name: closure(base_kernel)
+        for name, _, _prior, closure, _ in base_kernel.named_priors()
+    }
     assert "saas_inv_lengthscale_prior" in priors
-    torch.testing.assert_close(priors["saas_inv_lengthscale_prior"], base_kernel.lengthscale.reciprocal())
+    torch.testing.assert_close(
+        priors["saas_inv_lengthscale_prior"],
+        base_kernel.lengthscale.reciprocal(),
+    )
 
 
 def test_saas_binary_classifier_elbo_has_finite_gradient() -> None:
