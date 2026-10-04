@@ -2,7 +2,16 @@
 
 from robotorchan.models.classification.base import (
     BinaryClassificationMixin,
+    ClassificationLikelihoodFamily,
+    ClassificationMetadata,
     ClassificationModelMixin,
+    LatentOutputStructure,
 )
 
-__all__ = ["BinaryClassificationMixin", "ClassificationModelMixin"]
+__all__ = [
+    "BinaryClassificationMixin",
+    "ClassificationLikelihoodFamily",
+    "ClassificationMetadata",
+    "ClassificationModelMixin",
+    "LatentOutputStructure",
+]
