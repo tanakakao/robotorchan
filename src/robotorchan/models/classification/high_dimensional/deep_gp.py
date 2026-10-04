@@ -53,8 +53,8 @@ class BinarySingleTaskDeepGPClassifier(SingleTaskDeepGP):
     ) -> Bernoulli:
         """Return Bernoulli predictions integrated over DeepGP latent samples."""
         resolved_samples = self.posterior_samples if num_samples is None else int(num_samples)
-        if resolved_samples <= 1:
-            raise ValueError("num_samples must be greater than one.")
+        if resolved_samples < 1:
+            raise ValueError("num_samples must be positive.")
         posterior = self.posterior(X, num_samples=resolved_samples)
         samples = posterior.rsample(torch.Size([resolved_samples]))
         positive = self.likelihood.forward(samples.squeeze(-1)).probs.mean(dim=0)
@@ -107,7 +107,7 @@ class BinarySingleTaskDeepGPClassifier(SingleTaskDeepGP):
             Y = Y.squeeze(-1)
         if Y.ndim != 1:
             raise ValueError("Y must have shape n or n x 1.")
-        if X.shape[-2] != Y.shape[-1]:
+        if X.shape[-2] != Y.shape[0]:
             raise ValueError("X and Y must contain the same number of rows.")
         if num_likelihood_samples <= 0:
             raise ValueError("num_likelihood_samples must be positive.")
