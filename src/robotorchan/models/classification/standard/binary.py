@@ -121,6 +121,8 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
         """Return binary class labels using the requested probability threshold."""
         if not isinstance(threshold, int | float):
             raise TypeError("threshold must be a real number.")
+        if not torch.isfinite(torch.tensor(threshold)):
+            raise ValueError("threshold must be finite.")
         if not 0.0 <= threshold <= 1.0:
             raise ValueError("threshold must be between 0 and 1.")
         positive = self.predict_proba(X, **kwargs)[..., 1]
