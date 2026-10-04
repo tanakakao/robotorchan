@@ -11,7 +11,7 @@ from gpytorch.likelihoods import BernoulliLikelihood
 from gpytorch.means import Mean
 from gpytorch.mlls import VariationalELBO
 from gpytorch.variational import VariationalStrategy, _VariationalDistribution, _VariationalStrategy
-from torch import Tensor
+from torch import Tensor, nn
 from torch.distributions import Bernoulli
 
 from robotorchan.models.base import (
@@ -64,6 +64,10 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             input_transform=input_transform,
         )
         self._store_raw_tensor("train_Y", raw_train_Y)
+
+    def load_state_dict(self, state_dict: dict[str, Tensor], strict: bool = True):
+        """Load variational classifier state without Gaussian target extraction."""
+        return nn.Module.load_state_dict(self, state_dict, strict=strict)
 
     def make_mll(self, num_data: int | None = None) -> VariationalELBO:
         """Construct the Bernoulli variational evidence lower bound.
