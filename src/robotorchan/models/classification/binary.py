@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import torch
 from botorch.models.transforms.input import InputTransform
+from botorch.models.utils.gpytorch_modules import get_covar_module_with_dim_scaled_prior
 from botorch.models.utils.inducing_point_allocators import InducingPointAllocator
 from gpytorch.kernels import IndexKernel, Kernel, ProductKernel
 from gpytorch.likelihoods import BernoulliLikelihood
@@ -216,9 +217,6 @@ class MultiTaskBinaryGPClassifier(BinarySingleTaskGPClassifier):
         data_dims = [dim for dim in range(input_dim) if dim != resolved_task_feature]
         if not data_dims:
             raise ValueError("train_X must contain at least one non-task feature.")
-        data_kernel = Kernel.__new__(Kernel)
-        from botorch.models.utils.gpytorch_modules import get_covar_module_with_dim_scaled_prior
-
         data_kernel = get_covar_module_with_dim_scaled_prior(
             ard_num_dims=len(data_dims),
             batch_shape=train_X.shape[:-2],
