@@ -9,6 +9,7 @@ from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import BernoulliLikelihood
 from gpytorch.means import Mean
 from gpytorch.variational import VariationalStrategy, _VariationalDistribution, _VariationalStrategy
+import torch
 from torch import Tensor
 
 from robotorchan.models.classification.base import BinaryClassificationMixin
@@ -61,7 +62,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
         positive = self.predictive_distribution(X, **kwargs).probs
         if positive.shape[-1:] == (1,):
             positive = positive.squeeze(-1)
-        return __import__("torch").stack((1.0 - positive, positive), dim=-1)
+        return torch.stack((1.0 - positive, positive), dim=-1)
 
     def predict_class(
         self,
