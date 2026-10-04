@@ -7,9 +7,11 @@ from robotorchan.acquisition.capabilities import (
 )
 from robotorchan.acquisition.compatibility import (
     CompatibilityStatus,
+    check_capabilities_acquisition_compatibility,
     check_model_acquisition_compatibility,
 )
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
+from robotorchan.models.classification import get_classification_model_entry
 
 
 def test_registry_covers_public_acquisition_classes() -> None:
@@ -132,3 +134,19 @@ def test_static_compatibility_does_not_imply_runtime_validation() -> None:
 
     assert result.status is CompatibilityStatus.COMPATIBLE
     assert result.reasons == ()
+
+
+def test_binary_classifier_rejects_regression_active_learning_acquisition() -> None:
+    model = get_classification_model_entry("binary.standard").capabilities
+    result = check_capabilities_acquisition_compatibility(model, "Straddle")
+    assert result.status is CompatibilityStatus.INCOMPATIBLE
+    assert "acquisition does not support classification observations" in result.reasons
+
+
+def test_binary_classifier_rejects_botorch_regression_bo_acquisition() -> None:
+    model = get_classification_model_entry("binary.standard").capabilities
+    result = check_capabilities_acquisition_compatibility(
+        model, "qLogExpectedImprovement"
+    )
+    assert result.status is CompatibilityStatus.INCOMPATIBLE
+    assert "acquisition does not support classification observations" in result.reasons
