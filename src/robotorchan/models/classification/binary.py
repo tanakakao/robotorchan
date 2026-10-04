@@ -36,9 +36,10 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
     ) -> None:
         """Initialize a binary variational GP with Bernoulli likelihood."""
         validate_binary_labels(train_Y)
+        model_train_Y = train_Y.unsqueeze(-1) if train_Y.ndim == train_X.ndim - 1 else train_Y
         super().__init__(
             train_X=train_X,
-            train_Y=train_Y,
+            train_Y=model_train_Y,
             likelihood=BernoulliLikelihood(),
             num_outputs=1,
             learn_inducing_points=learn_inducing_points,
@@ -51,6 +52,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             outcome_transform=None,
             input_transform=input_transform,
         )
+        self._store_raw_tensor("train_Y", train_Y.detach().clone())
 
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> Bernoulli:
         """Return Bernoulli predictions after integrating latent uncertainty."""
