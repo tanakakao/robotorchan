@@ -82,7 +82,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
     def sample_class_probabilities(
         self,
         X: Tensor,
-        sample_shape: torch.Size = torch.Size(),
+        sample_shape: torch.Size | None = None,
         **kwargs: object,
     ) -> Tensor:
         """Draw class probabilities by mapping latent posterior samples."""
