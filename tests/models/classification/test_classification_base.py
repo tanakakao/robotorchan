@@ -28,11 +28,12 @@ class _BinaryStub(BinaryClassificationMixin):
     def sample_class_probabilities(
         self,
         X: Tensor,
-        sample_shape: torch.Size = torch.Size(),
+        sample_shape: torch.Size | None = None,
         **kwargs: object,
     ) -> Tensor:
         probabilities = self.predict_proba(X, **kwargs)
-        return probabilities.expand(sample_shape + probabilities.shape)
+        resolved_shape = torch.Size() if sample_shape is None else sample_shape
+        return probabilities.expand(resolved_shape + probabilities.shape)
 
     def predictive_variance(self, X: Tensor, **kwargs: object) -> Tensor:
         probabilities = self.predict_proba(X, **kwargs)
