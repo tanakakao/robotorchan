@@ -42,7 +42,9 @@ class MapSaasBinarySingleTaskGPClassifier(BinarySingleTaskGPClassifier):
             ard_num_dims=train_X.shape[-1],
             batch_shape=train_X.shape[:-2],
         )
-        base_kernel = covar_module.base_kernel if isinstance(covar_module, ScaleKernel) else covar_module
+        base_kernel = (
+            covar_module.base_kernel if isinstance(covar_module, ScaleKernel) else covar_module
+        )
         prior = HalfCauchyPrior(torch.as_tensor(tau, dtype=train_X.dtype, device=train_X.device))
         base_kernel.register_prior("saas_inv_lengthscale_prior", prior, "raw_lengthscale")
         return covar_module
