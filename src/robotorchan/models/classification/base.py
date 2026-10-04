@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import ClassVar
+from typing import ClassVar, cast
 
 from botorch.posteriors import Posterior
 from torch import Tensor
@@ -79,8 +79,24 @@ class ClassificationModelMixin(ABC):
         )
 
     def latent_posterior(self, X: Tensor, **kwargs: object) -> Posterior:
-        """Return the latent-function posterior using the BoTorch contract."""
-        return self.posterior(X, **kwargs)
+        """Return the latent-function posterior using the BoTorch contract.
+
+        This is an explicit semantic alias for ``posterior(X)``. It never
+        applies a classification likelihood or converts latent values into
+        class probabilities.
+        """
+        posterior = self.posterior(X, **kwargs)
+        return cast(Posterior, posterior)
+
+    @property
+    def latent_mean(self) -> str:
+        """Name of the posterior statistic representing latent mean."""
+        return "posterior.mean"
+
+    @property
+    def latent_variance(self) -> str:
+        """Name of the posterior statistic representing latent variance."""
+        return "posterior.variance"
 
     @abstractmethod
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> object:
