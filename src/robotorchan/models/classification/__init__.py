@@ -1,7 +1,5 @@
 """Classification surrogate-model contracts."""
 
-from robotorchan.models.classification.binary import BinarySingleTaskGPClassifier
-
 from robotorchan.models.classification.base import (
     BinaryClassificationMixin,
     ClassificationLikelihoodFamily,
@@ -9,11 +7,12 @@ from robotorchan.models.classification.base import (
     ClassificationModelMixin,
     LatentOutputStructure,
 )
+from robotorchan.models.classification.binary import BinarySingleTaskGPClassifier
 from robotorchan.models.classification.validation import validate_binary_labels
 
 __all__ = [
-    "BinarySingleTaskGPClassifier",
     "BinaryClassificationMixin",
+    "BinarySingleTaskGPClassifier",
     "ClassificationLikelihoodFamily",
     "ClassificationMetadata",
     "ClassificationModelMixin",
