@@ -163,7 +163,16 @@ Categorical likelihood / multiclass latent representationを導入する必要�
 一方、`predict_proba`、`predict_class`、class-probability sampling、predictive entropyという
 高レベル契約はmulticlassでも維持できます。
 
-## 9. 関連ドキュメント
+## 9. 参考文献
+
+- Hensman, J., Matthews, A. G. de G., & Ghahramani, Z. (2015). Scalable Variational
+  Gaussian Process Classification. AISTATS.
+- Gal, Y., Islam, R., & Ghahramani, Z. (2017). Deep Bayesian Active Learning with Image
+  Data. ICML. BALDの実用的なclassification active-learning利用を扱います。
+- Eriksson, D., Jankowiak, M. (2021). High-Dimensional Bayesian Optimization with Sparse
+  Axis-Aligned Subspaces. UAI. SAAS priorの背景です。
+
+## 10. 関連ドキュメント
 
 - [Variational GP](09_variational_gp.md)
 - [Mixed Variables](05_mixed_variables.md)
