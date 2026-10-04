@@ -24,7 +24,9 @@ def validate_binary_labels(train_Y: Tensor) -> Tensor:
     """
     if not isinstance(train_Y, Tensor):
         raise TypeError("train_Y must be a torch.Tensor.")
-    if train_Y.numel() == 0:
+    if train_Y.ndim == 0:
+        raise ValueError("train_Y must include an observation dimension.")
+    if train_Y.numel() == 0 or train_Y.shape[0] == 0:
         raise ValueError("train_Y must contain at least one label.")
     if train_Y.is_complex():
         raise TypeError("train_Y must use a real-valued or boolean dtype.")

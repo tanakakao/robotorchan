@@ -43,6 +43,8 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
     ) -> None:
         """Initialize a binary variational GP with Bernoulli likelihood."""
         validate_binary_labels(train_Y)
+        if train_X.shape[-2] != train_Y.shape[0]:
+            raise ValueError("train_X and train_Y must contain the same number of rows.")
         raw_train_Y = train_Y.detach().clone()
         model_train_Y = train_Y.unsqueeze(-1) if train_Y.ndim == train_X.ndim - 1 else train_Y
         model_train_Y = model_train_Y.to(dtype=train_X.dtype, device=train_X.device)
@@ -121,6 +123,8 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
         """Return binary class labels using the requested probability threshold."""
         if not isinstance(threshold, int | float):
             raise TypeError("threshold must be a real number.")
+        if not torch.isfinite(torch.tensor(threshold)):
+            raise ValueError("threshold must be finite.")
         if not 0.0 <= threshold <= 1.0:
             raise ValueError("threshold must be between 0 and 1.")
         positive = self.predict_proba(X, **kwargs)[..., 1]
