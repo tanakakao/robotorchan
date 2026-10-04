@@ -95,6 +95,19 @@ callerが渡したtraining dataはraw training-data contractに従って保持�
 標準binary GP classifierはBernoulli likelihoodを持つvariational GPです。`make_mll()` は
 `VariationalELBO`を構築します。exact Gaussian GPと同じfitting contractだと仮定しないでください。
 
+## Multiclass-ready contract
+
+multiclass実装はまだ公開していませんが、共通classification contractはbinary固有値を持ちません。
+
+- `ClassificationMetadata.num_classes` は任意の2以上のクラス数を表現可能
+- `class_labels` はprobability最終次元の順序を定義
+- `CATEGORICAL` likelihoodと `PER_CLASS` latent structureを表現可能
+- canonical multiclass tensor labelは `0..C-1` の整数class indexとして検証可能
+- 0.5 threshold、Bernoulli likelihood、latent zero boundaryはbinary実装へ限定
+- PredictiveEntropy / MarginUncertainty / ProbabilityVariance / BALDはclass probability
+  vectorを扱うため、モデル側契約が実装されればmulticlassへ拡張可能
+- LatentStraddleはlatent zero boundaryに依存するためbinary-onlyのまま
+
 ## 制約と今後の拡張
 
 現在の主要な境界は次です。
