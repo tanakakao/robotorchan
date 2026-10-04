@@ -29,10 +29,7 @@ def test_mixed_binary_classifier_uses_native_categorical_kernel() -> None:
     model = MixedBinarySingleTaskGPClassifier(train_X, train_Y, cat_dims=[1])
     covariance = model.model.covar_module
     assert isinstance(covariance, AdditiveKernel)
-    assert any(
-        isinstance(module, CategoricalKernel)
-        for module in covariance.modules()
-    )
+    assert any(isinstance(module, CategoricalKernel) for module in covariance.modules())
     assert any(isinstance(module, ProductKernel) for module in covariance.modules())
     assert any(isinstance(module, ScaleKernel) for module in covariance.modules())
     assert model.cat_dims == (1,)
