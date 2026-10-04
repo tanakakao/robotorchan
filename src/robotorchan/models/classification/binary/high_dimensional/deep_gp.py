@@ -9,7 +9,7 @@ from gpytorch.mlls import DeepApproximateMLL, VariationalELBO
 from torch import Tensor
 from torch.distributions import Bernoulli
 
-from robotorchan.models.classification.validation import validate_binary_labels
+from robotorchan.models.classification.binary.validation import validate_binary_labels
 from robotorchan.models.expressive.deep_gp import SingleTaskDeepGP
 
 
