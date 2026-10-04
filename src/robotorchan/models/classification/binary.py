@@ -79,6 +79,17 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             positive = positive.squeeze(-1)
         return torch.stack((1.0 - positive, positive), dim=-1)
 
+    def predictive_variance(self, X: Tensor, **kwargs: object) -> Tensor:
+        """Return Bernoulli variance for each class probability."""
+        probabilities = self.predict_proba(X, **kwargs)
+        return probabilities * (1.0 - probabilities)
+
+    def predictive_entropy(self, X: Tensor, **kwargs: object) -> Tensor:
+        """Return Bernoulli predictive entropy for each input point."""
+        probabilities = self.predict_proba(X, **kwargs)
+        terms = torch.special.xlogy(probabilities, probabilities)
+        return -terms.sum(dim=-1)
+
     def predict_class(
         self,
         X: Tensor,
