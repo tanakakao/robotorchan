@@ -25,7 +25,7 @@ def test_map_saas_binary_classifier_preserves_prediction_contract() -> None:
 def test_map_saas_binary_classifier_registers_sparse_prior() -> None:
     train_X, train_Y = _data()
     model = MapSaasBinarySingleTaskGPClassifier(train_X, train_Y)
-    names = {name for name, *_ in model.covar_module.named_priors()}
+    names = {name for name, *_ in model.model.covar_module.named_priors()}
     assert any("saas_inv_lengthscale_prior" in name for name in names)
 
 
