@@ -13,13 +13,13 @@ from gpytorch.variational import VariationalStrategy, _VariationalDistribution, 
 from torch import Tensor
 from torch.distributions import Bernoulli
 
-from robotorchan.models.classification.base import BinaryClassificationMixin
-from robotorchan.models.classification.validation import validate_binary_labels
 from robotorchan.models.base import (
     ContinuousKernelFactory,
     make_mixed_covar_module,
     normalize_feature_dims,
 )
+from robotorchan.models.classification.base import BinaryClassificationMixin
+from robotorchan.models.classification.validation import validate_binary_labels
 from robotorchan.models.standard.variational import SingleTaskVariationalGP
 
 
