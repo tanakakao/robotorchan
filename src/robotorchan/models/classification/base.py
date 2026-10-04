@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import ClassVar, cast
 
+import torch
 from botorch.posteriors import Posterior
 from torch import Tensor
 
@@ -87,6 +88,25 @@ class ClassificationModelMixin(ABC):
         """
         posterior = self.posterior(X, **kwargs)
         return cast(Posterior, posterior)
+
+    def sample_latent(
+        self,
+        X: Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> Tensor:
+        """Draw reparameterized samples from the latent BoTorch posterior."""
+        resolved_shape = torch.Size() if sample_shape is None else sample_shape
+        return self.latent_posterior(X, **kwargs).rsample(sample_shape=resolved_shape)
+
+    @abstractmethod
+    def sample_class_probabilities(
+        self,
+        X: Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> Tensor:
+        """Draw class-probability samples induced by latent posterior samples."""
 
     def latent_variance(self, X: Tensor, **kwargs: object) -> Tensor:
         """Return posterior variance of the latent classification function."""

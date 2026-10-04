@@ -79,6 +79,19 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             positive = positive.squeeze(-1)
         return torch.stack((1.0 - positive, positive), dim=-1)
 
+    def sample_class_probabilities(
+        self,
+        X: Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> Tensor:
+        """Draw class probabilities by mapping latent posterior samples."""
+        latent_samples = self.sample_latent(X, sample_shape=sample_shape, **kwargs)
+        positive = self.likelihood.forward(latent_samples).probs
+        if positive.shape[-1:] == (1,):
+            positive = positive.squeeze(-1)
+        return torch.stack((1.0 - positive, positive), dim=-1)
+
     def predictive_variance(self, X: Tensor, **kwargs: object) -> Tensor:
         """Return Bernoulli variance for each class probability."""
         probabilities = self.predict_proba(X, **kwargs)
