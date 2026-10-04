@@ -60,19 +60,19 @@ def test_classification_acquisition_rejects_regression_model_contract() -> None:
         PredictiveEntropy(regression)
 
 
-@pytest.mark.parametrize("beta", [-1.0, -math.inf])
-def test_latent_straddle_rejects_negative_beta(beta: float) -> None:
+def test_latent_straddle_rejects_negative_beta() -> None:
     train_X, train_Y = _binary_data()
     model = BinarySingleTaskGPClassifier(train_X, train_Y)
     with pytest.raises(ValueError, match="non-negative"):
-        LatentStraddle(model, beta=beta)
+        LatentStraddle(model, beta=-1.0)
 
 
-def test_latent_straddle_rejects_nan_beta() -> None:
+@pytest.mark.parametrize("beta", [float("nan"), math.inf, -math.inf])
+def test_latent_straddle_rejects_nonfinite_beta(beta: float) -> None:
     train_X, train_Y = _binary_data()
     model = BinarySingleTaskGPClassifier(train_X, train_Y)
     with pytest.raises(ValueError, match="finite"):
-        LatentStraddle(model, beta=float("nan"))
+        LatentStraddle(model, beta=beta)
 
 
 def test_multitask_rejects_task_feature_outside_input_dimensions() -> None:
