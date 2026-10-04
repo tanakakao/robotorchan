@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import torch
-
 from botorch.models.transforms.input import InputTransform
 from botorch.models.utils.inducing_point_allocators import InducingPointAllocator
 from gpytorch.kernels import Kernel
