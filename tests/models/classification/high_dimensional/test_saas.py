@@ -27,8 +27,7 @@ def test_saas_binary_classifier_prior_targets_inverse_lengthscale() -> None:
     model = SaasBinarySingleTaskGPClassifier(train_X, train_Y)
     base_kernel = model.model.covar_module.base_kernel
     priors = {
-        name: closure(base_kernel)
-        for name, _, _prior, closure, _ in base_kernel.named_priors()
+        name: closure(base_kernel) for name, _, _prior, closure, _ in base_kernel.named_priors()
     }
     assert "saas_inv_lengthscale_prior" in priors
     torch.testing.assert_close(
