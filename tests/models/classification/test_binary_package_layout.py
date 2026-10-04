@@ -9,15 +9,11 @@ from robotorchan.models.classification.binary.standard.multitask import (
 from robotorchan.models.classification.binary.standard.single_task import (
     MixedBinarySingleTaskGPClassifier,
 )
-from robotorchan.models.classification.standard.binary import (
-    BinarySingleTaskGPClassifier as LegacyBinary,
-)
 
 
 def test_binary_namespace_preserves_public_class_identity() -> None:
-    """The new namespace must not create duplicate model classes."""
-    assert BinarySingleTaskGPClassifier is LegacyBinary
-    assert PublicBinary is LegacyBinary
+    """The package and public namespace must expose the same model class."""
+    assert BinarySingleTaskGPClassifier is PublicBinary
 
 
 def test_binary_standard_layout_exposes_single_and_multitask_models() -> None:
