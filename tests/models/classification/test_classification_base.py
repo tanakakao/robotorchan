@@ -25,6 +25,14 @@ class _BinaryStub(BinaryClassificationMixin):
         covariance = torch.eye(X.shape[-2], dtype=X.dtype, device=X.device)
         return GPyTorchPosterior(MultivariateNormal(mean, covariance))
 
+    def predictive_variance(self, X: Tensor, **kwargs: object) -> Tensor:
+        probabilities = self.predict_proba(X, **kwargs)
+        return probabilities * (1.0 - probabilities)
+
+    def predictive_entropy(self, X: Tensor, **kwargs: object) -> Tensor:
+        probabilities = self.predict_proba(X, **kwargs)
+        return -torch.special.xlogy(probabilities, probabilities).sum(dim=-1)
+
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> object:
         return _PredictiveDistribution(self.predict_proba(X, **kwargs)[..., 1])
 
