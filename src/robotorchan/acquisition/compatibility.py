@@ -36,8 +36,7 @@ def check_capabilities_acquisition_compatibility(
 
     if model_capabilities.observation_type not in acquisition_capabilities.observation_types:
         reasons.append(
-            "acquisition does not support "
-            f"{model_capabilities.observation_type.value} observations"
+            f"acquisition does not support {model_capabilities.observation_type.value} observations"
         )
     if model_capabilities.non_gp and not acquisition_capabilities.monte_carlo:
         posterior_requirement = acquisition_capabilities.posterior_requirement
@@ -79,6 +78,4 @@ def check_model_acquisition_compatibility(
 ) -> CompatibilityResult:
     """Check static compatibility using registry metadata only."""
     model_capabilities = MODEL_REGISTRY[model_name].capabilities
-    return check_capabilities_acquisition_compatibility(
-        model_capabilities, acquisition_name
-    )
+    return check_capabilities_acquisition_compatibility(model_capabilities, acquisition_name)
