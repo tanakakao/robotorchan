@@ -2,7 +2,7 @@
 
 import pytest
 import torch
-from gpytorch.distributions import Bernoulli
+from torch.distributions import Bernoulli
 from gpytorch.likelihoods import BernoulliLikelihood
 
 from robotorchan.models.classification import BinarySingleTaskGPClassifier
