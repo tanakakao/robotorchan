@@ -4,8 +4,10 @@ from robotorchan.acquisition.capabilities import (
     AcquisitionCapabilities,
     AcquisitionPurpose,
     AcquisitionRegistryEntry,
+    AcquisitionTarget,
     PosteriorRequirement,
 )
+from robotorchan.models.capabilities import ObservationType
 
 
 def _active_learning(
@@ -55,6 +57,57 @@ ACQUISITION_REGISTRY["ExpectedPredictiveInformationGain"] = _active_learning(
         "requires a single-output Gaussian posterior",
         "ensemble posteriors are not supported",
     ),
+)
+
+
+def _classification_active_learning(
+    name: str,
+    *,
+    target: AcquisitionTarget,
+    posterior_requirement: PosteriorRequirement,
+) -> AcquisitionRegistryEntry:
+    return AcquisitionRegistryEntry(
+        acquisition_name=name,
+        capabilities=AcquisitionCapabilities(
+            purpose=AcquisitionPurpose.ACTIVE_LEARNING,
+            posterior_requirement=posterior_requirement,
+            observation_types=frozenset({ObservationType.CLASSIFICATION}),
+            target=target,
+            max_q=1,
+            supports_multi_output=False,
+        ),
+        implementation_strategy="robotorchan classification active-learning acquisition",
+    )
+
+
+ACQUISITION_REGISTRY.update(
+    {
+        "PredictiveEntropy": _classification_active_learning(
+            "PredictiveEntropy",
+            target=AcquisitionTarget.LABEL_UNCERTAINTY,
+            posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+        ),
+        "MarginUncertainty": _classification_active_learning(
+            "MarginUncertainty",
+            target=AcquisitionTarget.CLASS_PROBABILITY,
+            posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+        ),
+        "ProbabilityVariance": _classification_active_learning(
+            "ProbabilityVariance",
+            target=AcquisitionTarget.CLASS_PROBABILITY,
+            posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
+        ),
+        "BALD": _classification_active_learning(
+            "BALD",
+            target=AcquisitionTarget.LABEL_UNCERTAINTY,
+            posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
+        ),
+        "LatentStraddle": _classification_active_learning(
+            "LatentStraddle",
+            target=AcquisitionTarget.LATENT,
+            posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+        ),
+    }
 )
 
 

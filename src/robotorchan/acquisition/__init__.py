@@ -1,10 +1,15 @@
 """Acquisition-function extensions for BoTorch."""
 
 from robotorchan.acquisition.active_learning import (
+    BALD,
     BoundaryVariance,
     ExpectedPredictiveInformationGain,
+    LatentStraddle,
+    MarginUncertainty,
     PosteriorStd,
     PosteriorVariance,
+    PredictiveEntropy,
+    ProbabilityVariance,
     RandomizedStraddle,
     Straddle,
 )
@@ -19,14 +24,19 @@ from robotorchan.acquisition.registry import get_acquisition_registry_entry
 from robotorchan.acquisition.sampling import select_thompson_candidates
 
 __all__ = [
+    "BALD",
     "AcquisitionCapabilities",
     "AcquisitionPurpose",
     "AcquisitionRegistryEntry",
     "BoundaryVariance",
     "ExpectedPredictiveInformationGain",
+    "LatentStraddle",
+    "MarginUncertainty",
     "PosteriorRequirement",
     "PosteriorStd",
     "PosteriorVariance",
+    "PredictiveEntropy",
+    "ProbabilityVariance",
     "RandomizedStraddle",
     "Straddle",
     "get_acquisition_registry_entry",
