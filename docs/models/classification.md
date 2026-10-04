@@ -42,6 +42,28 @@ labels = model.predict_class(X)
 | learned representation | `JointEncoderBinaryGPClassifier` |
 | stochastic deep hierarchy | `BinarySingleTaskDeepGPClassifier` |
 
+## Capability Matrix
+
+| model ID | input | task | high-dimensional strategy | posterior sampling |
+| --- | --- | --- | --- | --- |
+| `binary.standard` | continuous | single | none | Gaussian latent |
+| `binary.mixed` | mixed | single | none | Gaussian latent |
+| `binary.multitask` | continuous | multitask | none | Gaussian latent |
+| `binary.kronecker_multitask` | continuous | multitask | none | Gaussian latent |
+| `binary.map_saas` | continuous | single | MAP-SAAS | Gaussian latent |
+| `binary.saas` | continuous | single | SAAS | Gaussian latent |
+| `binary.reduced` / PCA / PLS / random projection | continuous | single | reduction | Gaussian |
+
+| `binary.alebo` | continuous | single | random embedding | Gaussian latent |
+| `binary.joint_encoder` | continuous | single | neural reduction | Gaussian latent |
+| `binary.deep_gp` | continuous | single | deep | stochastic latent |
+
+すべて `observation_type=classification`, variational inference,
+`supports_posterior_samples=True` です。現在のclassification ALは `q=1` かつ
+single-outputのみを明示的にサポートするため、multitask classifierは互換性判定で保守的に
+rejectします。これはモデル自体がAL不能という意味ではなく、task selection / scalarizationの
+契約が未定義なためです。
+
 ## 入出力契約
 
 binary labelは0/1だけを受け付けます。文字列classや任意整数を暗黙にencodeしません。
