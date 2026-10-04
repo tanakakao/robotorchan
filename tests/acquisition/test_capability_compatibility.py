@@ -145,8 +145,6 @@ def test_binary_classifier_rejects_regression_active_learning_acquisition() -> N
 
 def test_binary_classifier_rejects_botorch_regression_bo_acquisition() -> None:
     model = get_classification_model_entry("binary.standard").capabilities
-    result = check_capabilities_acquisition_compatibility(
-        model, "qLogExpectedImprovement"
-    )
+    result = check_capabilities_acquisition_compatibility(model, "qLogExpectedImprovement")
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "acquisition does not support classification observations" in result.reasons
