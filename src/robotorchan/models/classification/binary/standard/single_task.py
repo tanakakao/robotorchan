@@ -189,5 +189,3 @@ class MixedBinarySingleTaskGPClassifier(BinarySingleTaskGPClassifier):
             train_X.shape[-1],
             name="cat_dims",
         )
-
-
