@@ -9,6 +9,11 @@ class InputType(StrEnum):
     MIXED = "mixed"
 
 
+class ObservationType(StrEnum):
+    REGRESSION = "regression"
+    CLASSIFICATION = "classification"
+
+
 class TaskType(StrEnum):
     SINGLE = "single"
     MULTITASK = "multitask"
@@ -51,6 +56,7 @@ class RobustnessType(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class ModelCapabilities:
+    observation_type: ObservationType = ObservationType.REGRESSION
     input_type: InputType = InputType.CONTINUOUS
     task_type: TaskType = TaskType.SINGLE
     inference: InferenceType = InferenceType.EXACT
