@@ -20,6 +20,4 @@ def test_binary_standard_layout_exposes_single_and_multitask_models() -> None:
     """Regression-aligned binary modules must expose the expected families."""
     assert MixedBinarySingleTaskGPClassifier.__name__ == "MixedBinarySingleTaskGPClassifier"
     assert MultiTaskBinaryGPClassifier.__name__ == "MultiTaskBinaryGPClassifier"
-    assert KroneckerMultiTaskBinaryGPClassifier.__name__ == (
-        "KroneckerMultiTaskBinaryGPClassifier"
-    )
+    assert KroneckerMultiTaskBinaryGPClassifier.__name__ == ("KroneckerMultiTaskBinaryGPClassifier")
