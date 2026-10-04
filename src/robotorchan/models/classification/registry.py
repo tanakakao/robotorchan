@@ -48,7 +48,11 @@ _ENTRIES = (
     ("binary.reduced", ReducedBinarySingleTaskGPClassifier, "high_dimensional"),
     ("binary.pca", PCABinarySingleTaskGPClassifier, "high_dimensional"),
     ("binary.pls", PLSBinarySingleTaskGPClassifier, "high_dimensional"),
-    ("binary.random_projection", RandomProjectionBinarySingleTaskGPClassifier, "high_dimensional"),
+    (
+        "binary.random_projection",
+        RandomProjectionBinarySingleTaskGPClassifier,
+        "high_dimensional",
+    ),
     ("binary.alebo", ALEBOBinarySingleTaskGPClassifier, "high_dimensional"),
     ("binary.joint_encoder", JointEncoderBinaryGPClassifier, "high_dimensional"),
     ("binary.deep_gp", BinarySingleTaskDeepGPClassifier, "high_dimensional"),
