@@ -181,4 +181,3 @@ class KroneckerMultiTaskBinaryGPClassifier(MultiTaskBinaryGPClassifier):
             torch.ones_like(positive, dtype=torch.long),
             torch.zeros_like(positive, dtype=torch.long),
         )
-
