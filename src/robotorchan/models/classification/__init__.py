@@ -9,6 +9,10 @@ from robotorchan.models.classification.base import (
 )
 from robotorchan.models.classification.high_dimensional import (
     MapSaasBinarySingleTaskGPClassifier,
+    PCABinarySingleTaskGPClassifier,
+    PLSBinarySingleTaskGPClassifier,
+    RandomProjectionBinarySingleTaskGPClassifier,
+    ReducedBinarySingleTaskGPClassifier,
     SaasBinarySingleTaskGPClassifier,
 )
 from robotorchan.models.classification.standard.binary import (
@@ -30,6 +34,10 @@ __all__ = [
     "KroneckerMultiTaskBinaryGPClassifier",
     "LatentOutputStructure",
     "MapSaasBinarySingleTaskGPClassifier",
+    "PCABinarySingleTaskGPClassifier",
+    "PLSBinarySingleTaskGPClassifier",
+    "RandomProjectionBinarySingleTaskGPClassifier",
+    "ReducedBinarySingleTaskGPClassifier",
     "MixedBinarySingleTaskGPClassifier",
     "MultiTaskBinaryGPClassifier",
     "SaasBinarySingleTaskGPClassifier",
