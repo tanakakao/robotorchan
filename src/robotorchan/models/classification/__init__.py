@@ -7,6 +7,7 @@ from robotorchan.models.classification.base import (
     ClassificationModelMixin,
     LatentOutputStructure,
 )
+from robotorchan.models.classification.validation import validate_binary_labels
 
 __all__ = [
     "BinaryClassificationMixin",
@@ -14,4 +15,5 @@ __all__ = [
     "ClassificationMetadata",
     "ClassificationModelMixin",
     "LatentOutputStructure",
+    "validate_binary_labels",
 ]
