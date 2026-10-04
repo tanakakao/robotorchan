@@ -14,7 +14,14 @@ from robotorchan.models.classification import (
 
 def _binary_data() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     train_X = torch.tensor(
-        [[0.05, 0.10], [0.20, 0.30], [0.35, 0.20], [0.65, 0.80], [0.80, 0.70], [0.95, 0.90]],
+        [
+            [0.05, 0.10],
+            [0.20, 0.30],
+            [0.35, 0.20],
+            [0.65, 0.80],
+            [0.80, 0.70],
+            [0.95, 0.90],
+        ],
         dtype=torch.double,
     )
     train_Y = torch.tensor([0, 0, 0, 1, 1, 1], dtype=torch.double)
