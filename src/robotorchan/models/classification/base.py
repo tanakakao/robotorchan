@@ -87,6 +87,7 @@ class ClassificationModelMixin(ABC):
         """
         posterior = self.posterior(X, **kwargs)
         return cast(Posterior, posterior)
+
     @abstractmethod
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> object:
         """Return the observation-space predictive distribution."""
