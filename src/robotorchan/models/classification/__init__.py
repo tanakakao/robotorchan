@@ -7,7 +7,10 @@ from robotorchan.models.classification.base import (
     ClassificationModelMixin,
     LatentOutputStructure,
 )
-from robotorchan.models.classification.binary import BinarySingleTaskGPClassifier
+from robotorchan.models.classification.binary import (
+    BinarySingleTaskGPClassifier,
+    MixedBinarySingleTaskGPClassifier,
+)
 from robotorchan.models.classification.validation import validate_binary_labels
 
 __all__ = [
@@ -17,5 +20,6 @@ __all__ = [
     "ClassificationMetadata",
     "ClassificationModelMixin",
     "LatentOutputStructure",
+    "MixedBinarySingleTaskGPClassifier",
     "validate_binary_labels",
 ]
