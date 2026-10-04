@@ -46,5 +46,15 @@ class MapSaasBinarySingleTaskGPClassifier(BinarySingleTaskGPClassifier):
             covar_module.base_kernel if isinstance(covar_module, ScaleKernel) else covar_module
         )
         prior = HalfCauchyPrior(torch.as_tensor(tau, dtype=train_X.dtype, device=train_X.device))
-        base_kernel.register_prior("saas_inv_lengthscale_prior", prior, "raw_lengthscale")
+        base_kernel.register_prior(
+            "saas_inv_lengthscale_prior",
+            prior,
+            lambda module: module.lengthscale.reciprocal(),
+            _set_inverse_lengthscale,
+        )
         return covar_module
+
+
+def _set_inverse_lengthscale(module: Kernel, value: Tensor) -> None:
+    """Set kernel lengthscales from inverse-lengthscale prior values."""
+    module.lengthscale = value.reciprocal()
