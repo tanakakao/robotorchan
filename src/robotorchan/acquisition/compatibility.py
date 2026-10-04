@@ -35,6 +35,12 @@ def check_model_acquisition_compatibility(
     acquisition_capabilities = acquisition.capabilities
     reasons: list[str] = []
 
+    if model_capabilities.observation_type not in acquisition_capabilities.observation_types:
+        reasons.append(
+            "acquisition does not support "
+            f"{model_capabilities.observation_type.value} observations"
+        )
+
     if model_capabilities.non_gp and not acquisition_capabilities.monte_carlo:
         posterior_requirement = acquisition_capabilities.posterior_requirement
         if posterior_requirement is not PosteriorRequirement.MARGINAL_MOMENTS:
