@@ -50,6 +50,7 @@ DEFAULT_NOTEBOOKS = [
     "36_sequential_bo_workflow.ipynb",
     "37_outcome_constrained_bo.ipynb",
     "38_nonlinear_candidate_constraints.ipynb",
+    "39_classification_active_learning.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [
