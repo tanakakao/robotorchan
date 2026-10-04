@@ -68,6 +68,6 @@ def test_kronecker_classifier_block_contract_covers_latent_and_sampling() -> Non
     probabilities = model.predict_proba(X)
     samples = model.sample_class_probabilities(X, sample_shape=torch.Size([4]))
 
-    assert latent.mean.shape[-2:] == (2, 2)
+    assert latent.mean.shape == (2, 2, 1)
     assert probabilities.shape == (2, 2, 2)
     assert samples.shape == (4, 2, 2, 2)
