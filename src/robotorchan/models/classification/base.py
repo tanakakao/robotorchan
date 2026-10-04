@@ -87,17 +87,6 @@ class ClassificationModelMixin(ABC):
         """
         posterior = self.posterior(X, **kwargs)
         return cast(Posterior, posterior)
-
-    @property
-    def latent_mean(self) -> str:
-        """Name of the posterior statistic representing latent mean."""
-        return "posterior.mean"
-
-    @property
-    def latent_variance(self) -> str:
-        """Name of the posterior statistic representing latent variance."""
-        return "posterior.variance"
-
     @abstractmethod
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> object:
         """Return the observation-space predictive distribution."""
