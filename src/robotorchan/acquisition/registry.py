@@ -2,8 +2,9 @@
 
 from robotorchan.acquisition.capabilities import (
     AcquisitionCapabilities,
-    AcquisitionTarget,
     AcquisitionPurpose,
+    AcquisitionRegistryEntry,
+    AcquisitionTarget,
     AcquisitionRegistryEntry,
     PosteriorRequirement,
 )
