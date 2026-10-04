@@ -10,7 +10,6 @@ from robotorchan.acquisition.active_learning import (
 )
 from robotorchan.acquisition.capabilities import (
     AcquisitionCapabilities,
-    AcquisitionTarget,
     AcquisitionPurpose,
     AcquisitionRegistryEntry,
     PosteriorRequirement,
@@ -21,7 +20,6 @@ from robotorchan.acquisition.sampling import select_thompson_candidates
 
 __all__ = [
     "AcquisitionCapabilities",
-    "AcquisitionTarget",
     "AcquisitionPurpose",
     "AcquisitionRegistryEntry",
     "BoundaryVariance",
