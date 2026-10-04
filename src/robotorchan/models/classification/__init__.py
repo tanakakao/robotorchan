@@ -11,7 +11,6 @@ from robotorchan.models.classification.binary import (
     ALEBOBinarySingleTaskGPClassifier,
     BinarySingleTaskDeepGPClassifier,
     BinarySingleTaskGPClassifier,
-    ClassificationModelList,
     JointEncoderBinaryGPClassifier,
     KroneckerMultiTaskBinaryGPClassifier,
     MapSaasBinarySingleTaskGPClassifier,
@@ -23,6 +22,7 @@ from robotorchan.models.classification.binary import (
     ReducedBinarySingleTaskGPClassifier,
     SaasBinarySingleTaskGPClassifier,
 )
+from robotorchan.models.classification.model_list import ClassificationModelList
 from robotorchan.models.classification.registry import (
     CLASSIFICATION_MODEL_REGISTRY,
     ClassificationModelRegistryEntry,
