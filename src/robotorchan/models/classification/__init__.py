@@ -35,11 +35,11 @@ from robotorchan.models.classification.standard.model_list import Classification
 from robotorchan.models.classification.validation import validate_binary_labels
 
 __all__ = [
+    "CLASSIFICATION_MODEL_REGISTRY",
     "ALEBOBinarySingleTaskGPClassifier",
     "BinaryClassificationMixin",
     "BinarySingleTaskDeepGPClassifier",
     "BinarySingleTaskGPClassifier",
-    "CLASSIFICATION_MODEL_REGISTRY",
     "ClassificationLikelihoodFamily",
     "ClassificationMetadata",
     "ClassificationModelList",
