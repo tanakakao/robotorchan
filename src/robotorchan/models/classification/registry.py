@@ -7,6 +7,16 @@ from typing import TypeAlias
 
 from torch import nn
 
+from robotorchan.models.capabilities import (
+    HighDimensionalStrategy,
+    InferenceType,
+    InputType,
+    ModelCapabilities,
+    ObservationType,
+    PosteriorSamplingType,
+    TaskType,
+)
+
 from robotorchan.models.classification.high_dimensional.alebo import (
     ALEBOBinarySingleTaskGPClassifier,
 )
@@ -46,33 +56,119 @@ class ClassificationModelRegistryEntry:
     model_class: ClassificationModelType
     num_classes: int | None
     family: str
+    capabilities: ModelCapabilities
+
+
+def _binary_capabilities(
+    *,
+    input_type: InputType = InputType.CONTINUOUS,
+    task_type: TaskType = TaskType.SINGLE,
+    high_dimensional: HighDimensionalStrategy = HighDimensionalStrategy.NONE,
+    posterior_sampling_type: PosteriorSamplingType = PosteriorSamplingType.GAUSSIAN,
+    supports_multi_output: bool = False,
+) -> ModelCapabilities:
+    """Build reviewed capabilities shared by binary variational classifiers."""
+    return ModelCapabilities(
+        observation_type=ObservationType.CLASSIFICATION,
+        input_type=input_type,
+        task_type=task_type,
+        inference=InferenceType.VARIATIONAL,
+        high_dimensional=high_dimensional,
+        supports_multi_output=supports_multi_output,
+        supports_posterior_samples=True,
+        posterior_sampling_type=posterior_sampling_type,
+        supports_fantasize=False,
+    )
 
 
 _ENTRIES = (
-    ("binary.standard", BinarySingleTaskGPClassifier, "standard"),
-    ("binary.mixed", MixedBinarySingleTaskGPClassifier, "mixed"),
-    ("binary.multitask", MultiTaskBinaryGPClassifier, "multitask"),
-    ("binary.kronecker_multitask", KroneckerMultiTaskBinaryGPClassifier, "multitask"),
-    ("binary.map_saas", MapSaasBinarySingleTaskGPClassifier, "high_dimensional"),
-    ("binary.saas", SaasBinarySingleTaskGPClassifier, "high_dimensional"),
-    ("binary.reduced", ReducedBinarySingleTaskGPClassifier, "high_dimensional"),
-    ("binary.pca", PCABinarySingleTaskGPClassifier, "high_dimensional"),
-    ("binary.pls", PLSBinarySingleTaskGPClassifier, "high_dimensional"),
+    ("binary.standard", BinarySingleTaskGPClassifier, "standard", _binary_capabilities()),
+    (
+        "binary.mixed",
+        MixedBinarySingleTaskGPClassifier,
+        "mixed",
+        _binary_capabilities(input_type=InputType.MIXED),
+    ),
+    (
+        "binary.multitask",
+        MultiTaskBinaryGPClassifier,
+        "multitask",
+        _binary_capabilities(task_type=TaskType.MULTITASK, supports_multi_output=True),
+    ),
+    (
+        "binary.kronecker_multitask",
+        KroneckerMultiTaskBinaryGPClassifier,
+        "multitask",
+        _binary_capabilities(task_type=TaskType.MULTITASK, supports_multi_output=True),
+    ),
+    (
+        "binary.map_saas",
+        MapSaasBinarySingleTaskGPClassifier,
+        "high_dimensional",
+        _binary_capabilities(high_dimensional=HighDimensionalStrategy.MAP_SAAS),
+    ),
+    (
+        "binary.saas",
+        SaasBinarySingleTaskGPClassifier,
+        "high_dimensional",
+        _binary_capabilities(high_dimensional=HighDimensionalStrategy.SAAS),
+    ),
+    (
+        "binary.reduced",
+        ReducedBinarySingleTaskGPClassifier,
+        "high_dimensional",
+        _binary_capabilities(high_dimensional=HighDimensionalStrategy.REDUCTION),
+    ),
+    (
+        "binary.pca",
+        PCABinarySingleTaskGPClassifier,
+        "high_dimensional",
+        _binary_capabilities(high_dimensional=HighDimensionalStrategy.REDUCTION),
+    ),
+    (
+        "binary.pls",
+        PLSBinarySingleTaskGPClassifier,
+        "high_dimensional",
+        _binary_capabilities(high_dimensional=HighDimensionalStrategy.REDUCTION),
+    ),
     (
         "binary.random_projection",
         RandomProjectionBinarySingleTaskGPClassifier,
         "high_dimensional",
+        _binary_capabilities(high_dimensional=HighDimensionalStrategy.REDUCTION),
     ),
-    ("binary.alebo", ALEBOBinarySingleTaskGPClassifier, "high_dimensional"),
-    ("binary.joint_encoder", JointEncoderBinaryGPClassifier, "high_dimensional"),
-    ("binary.deep_gp", BinarySingleTaskDeepGPClassifier, "high_dimensional"),
+    (
+        "binary.alebo",
+        ALEBOBinarySingleTaskGPClassifier,
+        "high_dimensional",
+        _binary_capabilities(high_dimensional=HighDimensionalStrategy.RANDOM_EMBEDDING),
+    ),
+    (
+        "binary.joint_encoder",
+        JointEncoderBinaryGPClassifier,
+        "high_dimensional",
+        _binary_capabilities(high_dimensional=HighDimensionalStrategy.NEURAL_REDUCTION),
+    ),
+    (
+        "binary.deep_gp",
+        BinarySingleTaskDeepGPClassifier,
+        "high_dimensional",
+        _binary_capabilities(
+            high_dimensional=HighDimensionalStrategy.DEEP,
+            posterior_sampling_type=PosteriorSamplingType.STOCHASTIC,
+        ),
+    ),
 )
 
 CLASSIFICATION_MODEL_REGISTRY = {
     model_id: ClassificationModelRegistryEntry(
-        model_id=model_id, model_class=model_class, num_classes=2, family=family
+        model_id=model_id,
+        model_class=model_class,
+        num_classes=2,
+        family=family,
+        capabilities=capabilities,
     )
-    for model_id, model_class, family in _ENTRIES
+    for model_id, model_class, family, capabilities in _ENTRIES
 }
 
 
