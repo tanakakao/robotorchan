@@ -16,7 +16,7 @@ from robotorchan.models.base import normalize_feature_dims
 from robotorchan.models.classification.binary.standard.single_task import (
     BinarySingleTaskGPClassifier,
 )
-from robotorchan.models.classification.validation import validate_binary_labels
+from robotorchan.models.classification.binary.validation import validate_binary_labels
 
 
 class MultiTaskBinaryGPClassifier(BinarySingleTaskGPClassifier):
