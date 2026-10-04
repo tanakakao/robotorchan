@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from botorch.models.transforms.input import InputTransform
 from botorch.models.utils.inducing_point_allocators import InducingPointAllocator
-from gpytorch.distributions import Bernoulli
 from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import BernoulliLikelihood
 from gpytorch.means import Mean
 from gpytorch.variational import VariationalStrategy, _VariationalDistribution, _VariationalStrategy
 import torch
 from torch import Tensor
+from torch.distributions import Bernoulli
 
 from robotorchan.models.classification.base import BinaryClassificationMixin
 from robotorchan.models.classification.validation import validate_binary_labels
