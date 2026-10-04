@@ -297,9 +297,37 @@ class KroneckerMultiTaskBinaryGPClassifier(MultiTaskBinaryGPClassifier):
         tasks = task_ids.reshape(shape).expand(*X.shape[:-1], self.num_tasks, 1)
         return torch.cat((expanded_X, tasks), dim=-1)
 
+    def latent_posterior(self, X: Tensor, **kwargs: object):
+        """Return task-aware latent posterior for block-design inputs."""
+        return super().latent_posterior(self._expand_block_X(X), **kwargs)
+
+    def sample_latent(
+        self,
+        X: Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> Tensor:
+        """Draw task-aware latent samples for block-design inputs."""
+        resolved_shape = torch.Size() if sample_shape is None else sample_shape
+        return self.latent_posterior(X, **kwargs).rsample(sample_shape=resolved_shape)
+
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> Bernoulli:
         """Return task-aware Bernoulli predictions for block-design inputs."""
-        return super().predictive_distribution(self._expand_block_X(X), **kwargs)
+        latent = self.latent_posterior(X, **kwargs)
+        return self.likelihood(latent.distribution)
+
+    def sample_class_probabilities(
+        self,
+        X: Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> Tensor:
+        """Draw task-aware class-probability samples for block-design inputs."""
+        latent_samples = self.sample_latent(X, sample_shape=sample_shape, **kwargs)
+        positive = self.likelihood.forward(latent_samples).probs
+        if positive.shape[-1:] == (1,):
+            positive = positive.squeeze(-1)
+        return torch.stack((1.0 - positive, positive), dim=-1)
 
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
         """Return probabilities with task and class dimensions."""
