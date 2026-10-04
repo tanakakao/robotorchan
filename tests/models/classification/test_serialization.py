@@ -32,6 +32,8 @@ def _binary_data() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
 def _assert_prediction_round_trip(source: object, restored: object, X: torch.Tensor) -> None:
     source.eval()
     restored.eval()
+    source.model.eval()
+    restored.model.eval()
     with torch.no_grad():
         expected_latent = source.latent_posterior(X)
         actual_latent = restored.latent_posterior(X)
