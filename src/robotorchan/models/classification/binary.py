@@ -15,6 +15,7 @@ from torch.distributions import Bernoulli
 
 from robotorchan.models.classification.base import BinaryClassificationMixin
 from robotorchan.models.classification.validation import validate_binary_labels
+from robotorchan.models.base import ContinuousKernelFactory, make_mixed_covar_module
 from robotorchan.models.standard.variational import SingleTaskVariationalGP
 
 
@@ -122,4 +123,50 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             positive >= threshold,
             torch.ones_like(positive, dtype=torch.long),
             torch.zeros_like(positive, dtype=torch.long),
+        )
+
+
+class MixedBinarySingleTaskGPClassifier(BinarySingleTaskGPClassifier):
+    """Binary variational GP classifier for native mixed continuous/categorical inputs."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        cat_dims: list[int],
+        learn_inducing_points: bool = True,
+        cont_kernel_factory: ContinuousKernelFactory | None = None,
+        mean_module: Mean | None = None,
+        variational_distribution: _VariationalDistribution | None = None,
+        variational_strategy: type[_VariationalStrategy] = VariationalStrategy,
+        inducing_points: Tensor | int | None = None,
+        inducing_point_allocator: InducingPointAllocator | None = None,
+        input_transform: InputTransform | None = None,
+    ) -> None:
+        """Initialize a binary classifier with native categorical covariance."""
+        covar_module = make_mixed_covar_module(
+            input_dim=train_X.shape[-1],
+            cat_dims=cat_dims,
+            batch_shape=train_X.shape[:-2],
+            cont_kernel_factory=cont_kernel_factory,
+        )
+        super().__init__(
+            train_X=train_X,
+            train_Y=train_Y,
+            learn_inducing_points=learn_inducing_points,
+            covar_module=covar_module,
+            mean_module=mean_module,
+            variational_distribution=variational_distribution,
+            variational_strategy=variational_strategy,
+            inducing_points=inducing_points,
+            inducing_point_allocator=inducing_point_allocator,
+            input_transform=input_transform,
+        )
+        from robotorchan.models.base import normalize_feature_dims
+
+        self.cat_dims = normalize_feature_dims(
+            cat_dims,
+            train_X.shape[-1],
+            name="cat_dims",
         )
