@@ -29,9 +29,10 @@ class ReducedBinarySingleTaskGPClassifier(BinarySingleTaskGPClassifier):
             reduced_train_X = input_reducer.transform(train_X)
         else:
             reduced_train_X = input_reducer.fit_transform(train_X, train_Y)
-        self.input_reducer = input_reducer
-        self._original_input_dim_value = train_X.shape[-1]
+        original_input_dim = train_X.shape[-1]
         super().__init__(train_X=reduced_train_X, train_Y=train_Y)
+        self.input_reducer = input_reducer
+        self._original_input_dim_value = original_input_dim
         self._store_raw_tensor("train_X", raw_train_X)
 
     @property
