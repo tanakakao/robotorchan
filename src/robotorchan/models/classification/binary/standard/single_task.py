@@ -1,12 +1,11 @@
-"""Binary variational GP classifier."""
+"""Single-task binary classification surrogate models."""
 
 from __future__ import annotations
 
 import torch
 from botorch.models.transforms.input import InputTransform
-from botorch.models.utils.gpytorch_modules import get_covar_module_with_dim_scaled_prior
 from botorch.models.utils.inducing_point_allocators import InducingPointAllocator
-from gpytorch.kernels import IndexKernel, Kernel, ProductKernel
+from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import BernoulliLikelihood
 from gpytorch.means import Mean
 from gpytorch.mlls import VariationalELBO
