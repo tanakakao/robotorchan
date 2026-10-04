@@ -38,6 +38,7 @@ DEFAULT_NOTEBOOKS = [
     "26_standard_acquisition.ipynb",
     "27_multiobjective_acquisition.ipynb",
     "28_active_learning_acquisition.ipynb",
+    "28_regression_active_learning.ipynb",
     "29_objective_posterior_transform.ipynb",
     "30_posterior_sampling.ipynb",
     "31_acquisition_optimization.ipynb",
@@ -46,6 +47,7 @@ DEFAULT_NOTEBOOKS = [
     "34_turbo_trust_region.ipynb",
     "35_robust_input_perturbation.ipynb",
     "36_end_to_end_workflows.ipynb",
+    "36_sequential_bo_workflow.ipynb",
     "37_outcome_constrained_bo.ipynb",
     "38_nonlinear_candidate_constraints.ipynb",
 ]
