@@ -88,6 +88,18 @@ class ClassificationModelMixin(ABC):
         posterior = self.posterior(X, **kwargs)
         return cast(Posterior, posterior)
 
+    def latent_variance(self, X: Tensor, **kwargs: object) -> Tensor:
+        """Return posterior variance of the latent classification function."""
+        return self.latent_posterior(X, **kwargs).variance
+
+    @abstractmethod
+    def predictive_variance(self, X: Tensor, **kwargs: object) -> Tensor:
+        """Return observation-space variance for each predictive class."""
+
+    @abstractmethod
+    def predictive_entropy(self, X: Tensor, **kwargs: object) -> Tensor:
+        """Return entropy of the posterior-predictive class distribution."""
+
     @abstractmethod
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> object:
         """Return the observation-space predictive distribution.
