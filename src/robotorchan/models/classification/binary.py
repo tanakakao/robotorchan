@@ -37,7 +37,9 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
     ) -> None:
         """Initialize a binary variational GP with Bernoulli likelihood."""
         validate_binary_labels(train_Y)
+        raw_train_Y = train_Y.detach().clone()
         model_train_Y = train_Y.unsqueeze(-1) if train_Y.ndim == train_X.ndim - 1 else train_Y
+        model_train_Y = model_train_Y.to(dtype=train_X.dtype, device=train_X.device)
         super().__init__(
             train_X=train_X,
             train_Y=model_train_Y,
@@ -53,7 +55,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             outcome_transform=None,
             input_transform=input_transform,
         )
-        self._store_raw_tensor("train_Y", train_Y.detach().clone())
+        self._store_raw_tensor("train_Y", raw_train_Y)
 
     def make_mll(self, num_data: int | None = None) -> VariationalELBO:
         """Construct the Bernoulli variational evidence lower bound.
