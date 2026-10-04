@@ -90,11 +90,22 @@ class ClassificationModelMixin(ABC):
 
     @abstractmethod
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> object:
-        """Return the observation-space predictive distribution."""
+        """Return the observation-space predictive distribution.
+
+        Implementations must apply the classification likelihood or link to
+        latent uncertainty. The returned object is distinct from the latent
+        BoTorch ``Posterior`` exposed by ``posterior(X)``.
+        """
 
     @abstractmethod
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
-        """Return class probabilities with classes on the final dimension."""
+        """Return posterior-predictive class probabilities.
+
+        The final dimension must have size ``num_classes`` and follow
+        ``class_labels`` ordering. Implementations must integrate latent
+        uncertainty rather than treating a latent posterior mean as a class
+        probability.
+        """
 
     @abstractmethod
     def predict_class(self, X: Tensor, **kwargs: object) -> Tensor:

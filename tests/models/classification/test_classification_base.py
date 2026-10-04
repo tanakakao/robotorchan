@@ -14,6 +14,11 @@ from robotorchan.models.classification.base import (
 )
 
 
+class _PredictiveDistribution:
+    def __init__(self, probs: Tensor) -> None:
+        self.probs = probs
+
+
 class _BinaryStub(BinaryClassificationMixin):
     def posterior(self, X: Tensor, **kwargs: object) -> GPyTorchPosterior:
         mean = torch.zeros(X.shape[:-1], dtype=X.dtype, device=X.device)
@@ -21,7 +26,7 @@ class _BinaryStub(BinaryClassificationMixin):
         return GPyTorchPosterior(MultivariateNormal(mean, covariance))
 
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> object:
-        return self.predict_proba(X, **kwargs)
+        return _PredictiveDistribution(self.predict_proba(X, **kwargs)[..., 1])
 
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
         positive = torch.full(X.shape[:-1], 0.25, dtype=X.dtype, device=X.device)
@@ -98,3 +103,21 @@ def test_latent_posterior_is_not_class_probability_output() -> None:
     probabilities = model.predict_proba(X)
     assert posterior.mean.shape[-1] == 1
     assert probabilities.shape[-1] == model.num_classes
+
+
+def test_predictive_distribution_is_distinct_from_latent_posterior() -> None:
+    model = _BinaryStub()
+    X = torch.zeros(3, 2)
+    latent = model.latent_posterior(X)
+    predictive = model.predictive_distribution(X)
+    assert isinstance(latent, GPyTorchPosterior)
+    assert isinstance(predictive, _PredictiveDistribution)
+    torch.testing.assert_close(predictive.probs, torch.full((3,), 0.25))
+
+
+def test_predict_proba_follows_class_label_order() -> None:
+    model = _BinaryStub()
+    probabilities = model.predict_proba(torch.zeros(2, 1))
+    assert model.class_labels == (0, 1)
+    torch.testing.assert_close(probabilities[:, 0], torch.full((2,), 0.75))
+    torch.testing.assert_close(probabilities[:, 1], torch.full((2,), 0.25))
