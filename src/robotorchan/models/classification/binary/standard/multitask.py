@@ -1,4 +1,4 @@
-"""Binary variational GP classifier."""
+"""Multi-task binary classification surrogate models."""
 
 from __future__ import annotations
 
@@ -6,24 +6,17 @@ import torch
 from botorch.models.transforms.input import InputTransform
 from botorch.models.utils.gpytorch_modules import get_covar_module_with_dim_scaled_prior
 from botorch.models.utils.inducing_point_allocators import InducingPointAllocator
-from gpytorch.kernels import IndexKernel, Kernel, ProductKernel
-from gpytorch.likelihoods import BernoulliLikelihood
+from gpytorch.kernels import IndexKernel, ProductKernel
 from gpytorch.means import Mean
-from gpytorch.mlls import VariationalELBO
-from gpytorch.utils.memoize import clear_cache_hook
 from gpytorch.variational import VariationalStrategy, _VariationalDistribution, _VariationalStrategy
-from torch import Tensor, nn
+from torch import Tensor
 from torch.distributions import Bernoulli
 
-from robotorchan.models.base import (
-    ContinuousKernelFactory,
-    make_mixed_covar_module,
-    normalize_feature_dims,
+from robotorchan.models.base import normalize_feature_dims
+from robotorchan.models.classification.binary.standard.single_task import (
+    BinarySingleTaskGPClassifier,
 )
-from robotorchan.models.classification.base import BinaryClassificationMixin
-from robotorchan.models.classification.binary.standard.single_task import BinarySingleTaskGPClassifier
 from robotorchan.models.classification.validation import validate_binary_labels
-from robotorchan.models.standard.variational import SingleTaskVariationalGP
 
 
 class MultiTaskBinaryGPClassifier(BinarySingleTaskGPClassifier):
