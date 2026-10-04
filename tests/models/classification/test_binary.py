@@ -159,3 +159,34 @@ def test_binary_predictive_entropy_is_finite() -> None:
     entropy = model.predictive_entropy(torch.tensor([[0.0], [0.5], [1.0]]))
     assert torch.isfinite(entropy).all()
     assert (entropy >= 0).all()
+
+
+def test_binary_latent_sampling_uses_botorch_posterior_shape() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    samples = model.sample_latent(torch.tensor([[0.25], [0.75]]), torch.Size([5]))
+    assert samples.shape == torch.Size([5, 2, 1])
+
+
+def test_binary_probability_sampling_has_class_dimension() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    samples = model.sample_class_probabilities(
+        torch.tensor([[0.25], [0.75]]),
+        torch.Size([7]),
+    )
+    assert samples.shape == torch.Size([7, 2, 2])
+    torch.testing.assert_close(samples.sum(dim=-1), torch.ones(7, 2))
+    assert ((samples >= 0.0) & (samples <= 1.0)).all()
+
+
+def test_binary_probability_samples_are_linked_latent_samples() -> None:
+    train_X, train_Y = _training_data()
+    model = BinarySingleTaskGPClassifier(train_X, train_Y)
+    X = torch.tensor([[0.5]])
+    torch.manual_seed(7)
+    latent = model.sample_latent(X, torch.Size([4]))
+    expected_positive = model.likelihood.forward(latent).probs.squeeze(-1)
+    torch.manual_seed(7)
+    probabilities = model.sample_class_probabilities(X, torch.Size([4]))
+    torch.testing.assert_close(probabilities[..., 1], expected_positive)
