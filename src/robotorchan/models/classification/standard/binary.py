@@ -308,11 +308,8 @@ class KroneckerMultiTaskBinaryGPClassifier(MultiTaskBinaryGPClassifier):
         **kwargs: object,
     ) -> Tensor:
         """Draw task-aware latent samples for block-design inputs."""
-        return super().sample_latent(
-            self._expand_block_X(X),
-            sample_shape=sample_shape,
-            **kwargs,
-        )
+        resolved_shape = torch.Size() if sample_shape is None else sample_shape
+        return self.latent_posterior(X, **kwargs).rsample(sample_shape=resolved_shape)
 
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> Bernoulli:
         """Return task-aware Bernoulli predictions for block-design inputs."""
