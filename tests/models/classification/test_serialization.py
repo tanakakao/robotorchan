@@ -65,7 +65,7 @@ def test_mixed_classifier_state_dict_round_trip() -> None:
     restored.load_state_dict(source.state_dict())
 
     _assert_prediction_round_trip(source, restored, test_X)
-    assert restored.cat_dims == [1]
+    assert restored.cat_dims == (1,)
 
 
 def test_multitask_classifier_state_dict_round_trip() -> None:
@@ -131,6 +131,8 @@ def test_classification_model_list_state_dict_round_trip() -> None:
     )
 
     restored.load_state_dict(source.state_dict())
+    for model in source.models:
+        model.model.variational_strategy.variational_params_initialized.fill_(1)
 
     expected = source.predict_proba(test_X)
     actual = restored.predict_proba(test_X)
