@@ -7,6 +7,9 @@ from robotorchan.models.classification.binary.uncertain.base import (
     UncertainBinaryClassificationMixin,
     UncertainClassificationMetadata,
 )
+from robotorchan.models.classification.binary.uncertain.uncertain_categorical import (
+    UncertainCategoricalBinarySingleTaskGPClassifier,
+)
 from robotorchan.models.classification.binary.uncertain.uncertain_input import (
     ContinuousUncertainInputBinarySingleTaskGPClassifier,
 )
@@ -17,5 +20,6 @@ __all__ = [
     "ClassificationUncertaintyTarget",
     "ContinuousUncertainInputBinarySingleTaskGPClassifier",
     "UncertainBinaryClassificationMixin",
+    "UncertainCategoricalBinarySingleTaskGPClassifier",
     "UncertainClassificationMetadata",
 ]
