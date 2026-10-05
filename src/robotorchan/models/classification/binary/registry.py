@@ -13,6 +13,9 @@ from robotorchan.models.capabilities import (
 from robotorchan.models.classification.binary.ensemble.gp import (
     GPBinaryClassificationEnsemble,
 )
+from robotorchan.models.classification.binary.ensemble.heterogeneous import (
+    HeterogeneousBinaryClassificationEnsemble,
+)
 from robotorchan.models.classification.binary.expressive.deep_gp import (
     BinarySingleTaskDeepGPClassifier,
 )
@@ -114,6 +117,20 @@ def _gp_ensemble_binary_capabilities() -> ModelCapabilities:
     )
 
 
+def _heterogeneous_ensemble_binary_capabilities() -> ModelCapabilities:
+    """Build capabilities for backend-heterogeneous classification ensembles."""
+    return ModelCapabilities(
+        observation_type=ObservationType.CLASSIFICATION,
+        input_type=InputType.CONTINUOUS,
+        task_type=TaskType.SINGLE,
+        inference=InferenceType.NOT_APPLICABLE,
+        supports_posterior_samples=True,
+        posterior_sampling_type=PosteriorSamplingType.ENSEMBLE,
+        supports_fantasize=False,
+        ensemble_posterior=True,
+    )
+
+
 def _non_gp_ensemble_binary_capabilities() -> ModelCapabilities:
     """Build capabilities for empirical non-GP classification ensembles."""
     return ModelCapabilities(
@@ -149,6 +166,12 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
         GPBinaryClassificationEnsemble,
         "ensemble",
         _gp_ensemble_binary_capabilities(),
+    ),
+    (
+        "binary.ensemble.heterogeneous",
+        HeterogeneousBinaryClassificationEnsemble,
+        "ensemble",
+        _heterogeneous_ensemble_binary_capabilities(),
     ),
     ("binary.standard", BinarySingleTaskGPClassifier, "standard", _binary_capabilities()),
     (
