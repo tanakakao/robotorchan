@@ -6,7 +6,6 @@ from robotorchan.models.classification.binary.high_dimensional.reduced.base impo
     RandomProjectionBinarySingleTaskGPClassifier,
     ReducedBinarySingleTaskGPClassifier,
 )
-
 from robotorchan.models.classification.binary.high_dimensional.reduced.joint_neural import (
     JointEncoderBinaryGPClassifier,
 )
