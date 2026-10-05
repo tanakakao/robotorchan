@@ -339,3 +339,30 @@ ECE and MCE depend on the chosen bin count and use the maximum predicted class p
 confidence. They should therefore be reported with `n_bins` and interpreted alongside NLL and
 Brier score rather than as standalone proof of calibration. These metrics are evaluation
 diagnostics; Phase 25 does not silently use them as training losses or acquisition functions.
+
+
+### Imbalanced and cost-sensitive classification
+
+Class imbalance and asymmetric decision cost are related but distinct concerns. Robotorchan keeps
+them separate from the predictive probability model.
+
+For a calibrated binary probability `p = P(y=1 | x, D)`, false-positive cost `C_FP`, and
+false-negative cost `C_FN`, the minimum-expected-cost rule predicts class 1 when
+
+`p >= C_FP / (C_FP + C_FN)`.
+
+`binary_cost_sensitive_threshold`, `binary_expected_decision_cost`, and
+`binary_cost_sensitive_prediction` implement this Bayes decision layer without modifying the
+underlying posterior probabilities. This is important when the same probabilities are also used by
+PoF, calibration diagnostics, or active-learning acquisitions.
+
+`inverse_frequency_class_weights` provides a transparent binary imbalance diagnostic/weight
+utility. It does not automatically alter GP training. In particular, robotorchan does not wrap
+GPyTorch's standard variational ELBO with an ad-hoc class-weighted objective: doing so would change
+the probabilistic model and its calibration semantics. Backends with native sample/class weighting
+can consume explicit weights in backend-specific training APIs when that behavior is implemented
+and documented.
+
+For BO constraints, asymmetric operational costs should not be confused with candidate feasibility
+probability. A calibrated `P(feasible)` remains a probability; cost-sensitive decisions belong to
+the downstream decision policy.
