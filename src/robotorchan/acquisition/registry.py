@@ -88,11 +88,13 @@ ACQUISITION_REGISTRY.update(
             "PredictiveEntropy",
             target=AcquisitionTarget.LABEL_UNCERTAINTY,
             posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+            supports_ensemble=True,
         ),
         "MarginUncertainty": _classification_active_learning(
             "MarginUncertainty",
             target=AcquisitionTarget.CLASS_PROBABILITY,
             posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+            supports_ensemble=True,
         ),
         "ProbabilityVariance": _classification_active_learning(
             "ProbabilityVariance",
