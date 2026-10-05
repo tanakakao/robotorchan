@@ -11,6 +11,11 @@ from robotorchan.models.classification.binary.high_dimensional import (
     ReducedBinarySingleTaskGPClassifier,
     SaasBinarySingleTaskGPClassifier,
 )
+from robotorchan.models.classification.binary.robust import (
+    ClassificationRobustnessType,
+    RobustBinaryClassificationMixin,
+    RobustClassificationMetadata,
+)
 from robotorchan.models.classification.binary.standard import (
     BinarySingleTaskGPClassifier,
     KroneckerMultiTaskBinaryGPClassifier,
@@ -22,6 +27,7 @@ __all__ = [
     "ALEBOBinarySingleTaskGPClassifier",
     "BinarySingleTaskDeepGPClassifier",
     "BinarySingleTaskGPClassifier",
+    "ClassificationRobustnessType",
     "JointEncoderBinaryGPClassifier",
     "KroneckerMultiTaskBinaryGPClassifier",
     "MapSaasBinarySingleTaskGPClassifier",
@@ -31,5 +37,7 @@ __all__ = [
     "PLSBinarySingleTaskGPClassifier",
     "RandomProjectionBinarySingleTaskGPClassifier",
     "ReducedBinarySingleTaskGPClassifier",
+    "RobustBinaryClassificationMixin",
+    "RobustClassificationMetadata",
     "SaasBinarySingleTaskGPClassifier",
 ]
