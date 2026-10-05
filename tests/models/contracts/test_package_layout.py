@@ -46,9 +46,7 @@ def test_binary_model_families_are_nested_under_binary_task() -> None:
 
 def test_classification_common_layer_contains_only_shared_modules() -> None:
     common_modules = {
-        path.name
-        for path in CLASSIFICATION_ROOT.glob("*.py")
-        if path.name != "__init__.py"
+        path.name for path in CLASSIFICATION_ROOT.glob("*.py") if path.name != "__init__.py"
     }
 
     assert common_modules == {
