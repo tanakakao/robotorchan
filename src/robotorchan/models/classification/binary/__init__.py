@@ -34,6 +34,9 @@ from robotorchan.models.classification.binary.standard import (
 )
 
 __all__ = [
+    "ClassificationInputUncertaintyType",
+    "ClassificationUncertaintyIntegration",
+    "ClassificationUncertaintyTarget",
     "ALEBOBinarySingleTaskGPClassifier",
     "BinarySingleTaskDeepGPClassifier",
     "BinarySingleTaskGPClassifier",
@@ -60,4 +63,6 @@ __all__ = [
     "RobustBinaryClassificationMixin",
     "RobustClassificationMetadata",
     "SaasBinarySingleTaskGPClassifier",
+    "UncertainBinaryClassificationMixin",
+    "UncertainClassificationMetadata",
 ]
