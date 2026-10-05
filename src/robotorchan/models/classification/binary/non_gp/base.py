@@ -72,9 +72,7 @@ class NonGPBinaryClassificationMixin(BinaryClassificationMixin):
     ) -> Tensor:
         """Reject expected conditional entropy without posterior members."""
         del X, num_samples, kwargs
-        raise NotImplementedError(
-            "A single non-GP classifier has no posterior-member entropy."
-        )
+        raise NotImplementedError("A single non-GP classifier has no posterior-member entropy.")
 
     def mutual_information(
         self,
