@@ -166,12 +166,23 @@ class ClassificationModelMixin(ABC):
         therefore represents epistemic disagreement rather than total label
         uncertainty.
         """
-        predictive = self.predictive_entropy(X, **kwargs)
-        expected = self.expected_class_entropy(
+        probabilities = self.sample_class_probabilities(
             X,
-            num_samples=num_samples,
+            sample_shape=torch.Size([num_samples]),
             **kwargs,
         )
+        tiny = torch.finfo(probabilities.dtype).tiny
+        probabilities = probabilities.clamp_min(tiny)
+        mean_probabilities = probabilities.mean(dim=0)
+        predictive = -torch.special.xlogy(
+            mean_probabilities,
+            mean_probabilities,
+        ).sum(dim=-1)
+        conditional = -torch.special.xlogy(
+            probabilities,
+            probabilities,
+        ).sum(dim=-1)
+        expected = conditional.mean(dim=0)
         return (predictive - expected).clamp_min(0.0)
 
     @abstractmethod
