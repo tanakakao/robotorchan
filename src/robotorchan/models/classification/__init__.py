@@ -63,6 +63,12 @@ from robotorchan.models.classification.calibration import (
     maximum_calibration_error,
 )
 from robotorchan.models.classification.model_list import ClassificationModelList
+from robotorchan.models.classification.decision import (
+    binary_cost_sensitive_prediction,
+    binary_cost_sensitive_threshold,
+    binary_expected_decision_cost,
+    inverse_frequency_class_weights,
+)
 from robotorchan.models.classification.posterior import (
     ClassificationEnsemblePosterior,
     make_classification_ensemble_posterior,
@@ -138,11 +144,15 @@ __all__ = [
     "UncertainBinaryClassificationMixin",
     "UncertainCategoricalBinarySingleTaskGPClassifier",
     "UncertainClassificationMetadata",
+    "binary_cost_sensitive_prediction",
+    "binary_cost_sensitive_threshold",
+    "binary_expected_decision_cost",
     "brier_score",
     "classification_nll",
     "expected_calibration_error",
     "get_classification_model_class",
     "get_classification_model_entry",
+    "inverse_frequency_class_weights",
     "list_classification_models",
     "make_classification_ensemble_posterior",
     "maximum_calibration_error",
