@@ -3,6 +3,10 @@
 import pytest
 import torch
 
+from robotorchan.acquisition.compatibility import (
+    CompatibilityStatus,
+    check_capabilities_acquisition_compatibility,
+)
 from robotorchan.models.capabilities import PosteriorSamplingType
 from robotorchan.models.classification.binary.ensemble.gp import (
     GPBinaryClassificationEnsemble,
@@ -78,3 +82,22 @@ def test_gp_ensemble_registry_capabilities() -> None:
     assert capabilities.ensemble_posterior
     assert capabilities.supports_posterior_samples
     assert capabilities.posterior_sampling_type is PosteriorSamplingType.ENSEMBLE
+
+
+def test_gp_ensemble_supports_probability_space_active_learning() -> None:
+    capabilities = get_classification_model_entry("binary.ensemble.gp").capabilities
+
+    for acquisition_name in (
+        "BALD",
+        "MarginUncertainty",
+        "PredictiveEntropy",
+        "ProbabilityVariance",
+    ):
+        result = check_capabilities_acquisition_compatibility(
+            capabilities,
+            acquisition_name,
+        )
+        assert result.status is CompatibilityStatus.COMPATIBLE
+
+    latent = check_capabilities_acquisition_compatibility(capabilities, "LatentStraddle")
+    assert latent.status is CompatibilityStatus.INCOMPATIBLE
