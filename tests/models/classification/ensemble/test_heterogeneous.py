@@ -75,9 +75,7 @@ def test_heterogeneous_ensemble_supports_probability_space_active_learning() -> 
 
 
 def test_heterogeneous_ensemble_registry_is_backend_neutral() -> None:
-    capabilities = get_classification_model_entry(
-        "binary.ensemble.heterogeneous"
-    ).capabilities
+    capabilities = get_classification_model_entry("binary.ensemble.heterogeneous").capabilities
 
     assert capabilities.inference is InferenceType.NOT_APPLICABLE
     assert not capabilities.non_gp
