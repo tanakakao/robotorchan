@@ -56,9 +56,7 @@ def test_heterogeneous_ensemble_rejects_shared_latent_semantics() -> None:
 
 
 def test_heterogeneous_ensemble_supports_probability_space_active_learning() -> None:
-    capabilities = get_classification_model_entry(
-        "binary.ensemble.heterogeneous"
-    ).capabilities
+    capabilities = get_classification_model_entry("binary.ensemble.heterogeneous").capabilities
 
     for acquisition_name in (
         "BALD",
