@@ -13,6 +13,8 @@ from robotorchan.models.classification.binary.high_dimensional import (
 )
 from robotorchan.models.classification.binary.robust import (
     ClassificationRobustnessType,
+    ContaminatedBernoulliLikelihood,
+    ContaminatedBinarySingleTaskGPClassifier,
     LabelNoiseBernoulliLikelihood,
     LabelNoiseBinarySingleTaskGPClassifier,
     RobustBinaryClassificationMixin,
@@ -30,6 +32,8 @@ __all__ = [
     "BinarySingleTaskDeepGPClassifier",
     "BinarySingleTaskGPClassifier",
     "ClassificationRobustnessType",
+    "ContaminatedBernoulliLikelihood",
+    "ContaminatedBinarySingleTaskGPClassifier",
     "JointEncoderBinaryGPClassifier",
     "KroneckerMultiTaskBinaryGPClassifier",
     "LabelNoiseBernoulliLikelihood",
