@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor, nn
 
