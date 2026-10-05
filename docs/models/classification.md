@@ -284,3 +284,19 @@ training objectives.
 This ensemble is different from `ClassificationModelList`: a model list composes separate
 classification outputs or tasks, while a GP classification ensemble combines multiple models
 of the same classification target.
+
+
+### Heterogeneous classification ensembles
+
+`HeterogeneousBinaryClassificationEnsemble` combines complete binary classifiers from
+different backend families, for example a variational GP classifier and a fitted tree
+classifier. Members need only share binary class semantics and expose `predict_proba(X)`.
+
+The integration boundary is the observation-space class probability. A heterogeneous ensemble
+does not fabricate a common latent function, common likelihood, or common training objective.
+Its `ClassificationEnsemblePosterior` represents between-model disagreement across complete
+predictive probability vectors.
+
+The current combination is equally weighted. Learned, validation-weighted, and Bayesian model
+averaging weights belong to the weighted-ensemble policy in Phase 22 rather than this structural
+composition layer.
