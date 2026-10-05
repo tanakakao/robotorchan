@@ -177,3 +177,31 @@ def test_sampling_uncertainty_requires_two_samples(num_samples: int) -> None:
         model.expected_class_entropy(X, num_samples=num_samples)
     with pytest.raises(ValueError, match="at least 2"):
         model.mutual_information(X, num_samples=num_samples)
+
+
+class _CountingBinaryStub(_BinaryStub):
+    def __init__(self) -> None:
+        self.probability_sample_calls = 0
+
+    def sample_class_probabilities(
+        self,
+        X: Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> Tensor:
+        self.probability_sample_calls += 1
+        return super().sample_class_probabilities(
+            X,
+            sample_shape=sample_shape,
+            **kwargs,
+        )
+
+
+def test_mutual_information_uses_one_shared_probability_sample_set() -> None:
+    model = _CountingBinaryStub()
+    X = torch.zeros(3, 2)
+
+    mutual_information = model.mutual_information(X, num_samples=8)
+
+    assert model.probability_sample_calls == 1
+    torch.testing.assert_close(mutual_information, torch.zeros(3))
