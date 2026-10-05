@@ -28,8 +28,7 @@ def test_uncertain_input_metadata() -> None:
         {ClassificationInputUncertaintyType.CONTINUOUS}
     )
     assert (
-        model.classification_uncertainty_target
-        is ClassificationUncertaintyTarget.CANDIDATE_INPUTS
+        model.classification_uncertainty_target is ClassificationUncertaintyTarget.CANDIDATE_INPUTS
     )
     assert (
         model.classification_uncertainty_integration
