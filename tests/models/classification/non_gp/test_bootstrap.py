@@ -3,11 +3,11 @@
 import pytest
 import torch
 
+from robotorchan.models.capabilities import PosteriorSamplingType
 from robotorchan.models.classification.binary.non_gp import (
     BootstrapGradientBoostingBinaryClassifier,
 )
 from robotorchan.models.classification.registry import get_classification_model_entry
-from robotorchan.models.capabilities import PosteriorSamplingType
 
 
 def _training_data() -> tuple[torch.Tensor, torch.Tensor]:
