@@ -57,6 +57,10 @@ from robotorchan.models.classification.calibration import (
     CalibratedBinaryClassifier,
     ProbabilityCalibrator,
     TemperatureScalingCalibrator,
+    brier_score,
+    classification_nll,
+    expected_calibration_error,
+    maximum_calibration_error,
 )
 from robotorchan.models.classification.model_list import ClassificationModelList
 from robotorchan.models.classification.posterior import (
@@ -134,10 +138,14 @@ __all__ = [
     "UncertainBinaryClassificationMixin",
     "UncertainCategoricalBinarySingleTaskGPClassifier",
     "UncertainClassificationMetadata",
+    "brier_score",
+    "classification_nll",
+    "expected_calibration_error",
     "get_classification_model_class",
     "get_classification_model_entry",
     "list_classification_models",
     "make_classification_ensemble_posterior",
+    "maximum_calibration_error",
     "robust_class_probability",
     "validate_binary_labels",
 ]
