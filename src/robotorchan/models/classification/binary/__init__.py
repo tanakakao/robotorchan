@@ -1,5 +1,6 @@
 """Binary classification surrogate models."""
 
+from robotorchan.models.classification.binary.ensemble import GPBinaryClassificationEnsemble
 from robotorchan.models.classification.binary.expressive import BinarySingleTaskDeepGPClassifier
 from robotorchan.models.classification.binary.high_dimensional import (
     ALEBOBinarySingleTaskGPClassifier,
@@ -66,6 +67,7 @@ __all__ = [
     "ContaminatedBinarySingleTaskGPClassifier",
     "ContinuousUncertainInputBinarySingleTaskGPClassifier",
     "ExtraTreesBinaryClassifier",
+    "GPBinaryClassificationEnsemble",
     "GradientBoostingBinaryClassifier",
     "HistGradientBoostingBinaryClassifier",
     "InputDependentLabelNoiseBinarySingleTaskGPClassifier",
