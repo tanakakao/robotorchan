@@ -11,6 +11,14 @@ from robotorchan.models.classification.binary.high_dimensional import (
     ReducedBinarySingleTaskGPClassifier,
     SaasBinarySingleTaskGPClassifier,
 )
+from robotorchan.models.classification.binary.non_gp import (
+    ExtraTreesBinaryClassifier,
+    GradientBoostingBinaryClassifier,
+    HistGradientBoostingBinaryClassifier,
+    NonGPBinaryClassificationMixin,
+    RandomForestBinaryClassifier,
+    SklearnBinaryClassifier,
+)
 from robotorchan.models.classification.binary.robust import (
     ClassificationRobustnessType,
     ContaminatedBernoulliLikelihood,
@@ -53,6 +61,12 @@ __all__ = [
     "ContaminatedBernoulliLikelihood",
     "ContaminatedBinarySingleTaskGPClassifier",
     "ContinuousUncertainInputBinarySingleTaskGPClassifier",
+    "ExtraTreesBinaryClassifier",
+    "GradientBoostingBinaryClassifier",
+    "HistGradientBoostingBinaryClassifier",
+    "NonGPBinaryClassificationMixin",
+    "RandomForestBinaryClassifier",
+    "SklearnBinaryClassifier",
     "InputDependentLabelNoiseBinarySingleTaskGPClassifier",
     "InputDependentLabelNoiseLikelihood",
     "JointEncoderBinaryGPClassifier",
