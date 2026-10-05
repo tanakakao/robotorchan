@@ -31,6 +31,9 @@ from robotorchan.models.classification.binary.high_dimensional.reduced.joint_neu
 from robotorchan.models.classification.binary.high_dimensional.saas import (
     SaasBinarySingleTaskGPClassifier,
 )
+from robotorchan.models.classification.binary.non_gp.gradient_boosting import (
+    BootstrapGradientBoostingBinaryClassifier,
+)
 from robotorchan.models.classification.binary.non_gp.sklearn import (
     ExtraTreesBinaryClassifier,
     GradientBoostingBinaryClassifier,
@@ -91,6 +94,21 @@ def _binary_capabilities(
         supports_posterior_samples=True,
         posterior_sampling_type=posterior_sampling_type,
         supports_fantasize=False,
+    )
+
+
+def _non_gp_ensemble_binary_capabilities() -> ModelCapabilities:
+    """Build capabilities for empirical non-GP classification ensembles."""
+    return ModelCapabilities(
+        observation_type=ObservationType.CLASSIFICATION,
+        input_type=InputType.CONTINUOUS,
+        task_type=TaskType.SINGLE,
+        inference=InferenceType.NOT_APPLICABLE,
+        supports_posterior_samples=True,
+        posterior_sampling_type=PosteriorSamplingType.ENSEMBLE,
+        supports_fantasize=False,
+        non_gp=True,
+        ensemble_posterior=True,
     )
 
 
@@ -248,6 +266,12 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
             robustness=frozenset({RobustnessType.NONSTATIONARY}),
             supports_multi_output=True,
         ),
+    ),
+    (
+        "binary.non_gp.bootstrap_gradient_boosting",
+        BootstrapGradientBoostingBinaryClassifier,
+        "non_gp",
+        _non_gp_ensemble_binary_capabilities(),
     ),
     (
         "binary.non_gp.random_forest",
