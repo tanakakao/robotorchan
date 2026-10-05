@@ -36,9 +36,7 @@ def test_contaminated_classifier_exposes_clean_and_observed_probabilities() -> N
     expected_positive = 0.8 * clean[..., 1] + 0.1
 
     assert torch.allclose(observed[..., 1], expected_positive, atol=1e-5)
-    assert model.classification_robustness == frozenset(
-        {ClassificationRobustnessType.CONTAMINATION}
-    )
+    assert model.classification_robustness == frozenset({ClassificationRobustnessType.CONTAMINATION})
     assert model.models_observed_label_process
     assert model.preserves_latent_classification_posterior
 
