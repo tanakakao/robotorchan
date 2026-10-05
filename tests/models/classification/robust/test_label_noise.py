@@ -36,6 +36,10 @@ def test_symmetric_flip_probability_configures_both_rates() -> None:
     )
     assert model.models_observed_label_process
     assert model.preserves_latent_classification_posterior
+    clean = model.predict_clean_proba(train_x)
+    observed = model.predict_proba(train_x)
+    expected_positive = 0.15 + 0.7 * clean[..., 1]
+    assert torch.allclose(observed[..., 1], expected_positive, atol=1e-5)
 
 
 def test_learnable_flip_probabilities_receive_gradients() -> None:
