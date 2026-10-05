@@ -34,6 +34,9 @@ from robotorchan.models.classification.binary.high_dimensional.saas import (
 from robotorchan.models.classification.binary.robust.contaminated import (
     ContaminatedBinarySingleTaskGPClassifier,
 )
+from robotorchan.models.classification.binary.robust.input_dependent_noise import (
+    InputDependentLabelNoiseBinarySingleTaskGPClassifier,
+)
 from robotorchan.models.classification.binary.robust.label_noise import (
     LabelNoiseBinarySingleTaskGPClassifier,
 )
@@ -168,5 +171,11 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
         ReplicateLabelBinarySingleTaskGPClassifier,
         "robust",
         _binary_capabilities(robustness=frozenset({RobustnessType.REPLICATE_NOISE})),
+    ),
+    (
+        "binary.robust.input_dependent_label_noise",
+        InputDependentLabelNoiseBinarySingleTaskGPClassifier,
+        "robust",
+        _binary_capabilities(robustness=frozenset({RobustnessType.LABEL_NOISE})),
     ),
 )
