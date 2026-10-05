@@ -188,3 +188,17 @@ binary implementationへ閉じ込めます。
 
 詳細理論は [Gaussian Process Classification](../theory/24_classification.md) と
 [Classification Active Learning](../theory/acquisition/classification-active-learning.md) を参照してください。
+
+
+## Robust probability transforms
+
+Scenario-wise class probabilities can be aggregated with
+`RobustProbabilityTransform` using expectation, worst-case, lower-tail quantile/VaR,
+or CVaR semantics. The scenario axis is explicit and the final class axis is never
+reduced accidentally.
+
+These outputs are robust class-probability utilities, not a new predictive probability
+distribution. In particular, classwise worst-case, VaR, or CVaR values need not sum to
+one because different classes may attain their lower tails in different scenarios.
+Use `robust_class_probability` when a downstream feasibility or constraint calculation
+needs one selected class probability. Phase 16 composes this utility with constrained BO.
