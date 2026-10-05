@@ -9,7 +9,6 @@ from robotorchan.models.classification.binary.high_dimensional import (
     PLSBinarySingleTaskGPClassifier,
     RandomProjectionBinarySingleTaskGPClassifier,
     ReducedBinarySingleTaskGPClassifier,
-    ReplicateLabelBinarySingleTaskGPClassifier,
     SaasBinarySingleTaskGPClassifier,
 )
 from robotorchan.models.classification.binary.robust import (
@@ -18,6 +17,7 @@ from robotorchan.models.classification.binary.robust import (
     ContaminatedBinarySingleTaskGPClassifier,
     LabelNoiseBernoulliLikelihood,
     LabelNoiseBinarySingleTaskGPClassifier,
+    ReplicateLabelBinarySingleTaskGPClassifier,
     RobustBinaryClassificationMixin,
     RobustClassificationMetadata,
 )
