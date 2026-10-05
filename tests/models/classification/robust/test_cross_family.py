@@ -64,7 +64,7 @@ def test_model_list_composes_heterogeneous_robust_classifiers_without_wrapper() 
     contaminated = ContaminatedBinarySingleTaskGPClassifier(
         train_x,
         train_y,
-        contamination_rate=0.05,
+        contamination_probability=0.05,
     )
     model_list = ClassificationModelList(label_noise, contaminated)
 
