@@ -22,7 +22,7 @@ def test_nonstationary_classifier_uses_shared_gibbs_kernel() -> None:
     train_x, train_y = _training_data()
     model = NonstationaryBinarySingleTaskGPClassifier(train_x, train_y)
 
-    assert isinstance(model.covar_module, ScaleKernel)
+    assert isinstance(model.model.covar_module, ScaleKernel)
     assert isinstance(model.gibbs_kernel, GibbsKernel)
 
 
