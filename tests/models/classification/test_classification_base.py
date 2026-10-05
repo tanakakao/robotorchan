@@ -7,11 +7,11 @@ from gpytorch.distributions import MultivariateNormal
 from torch import Tensor
 
 from robotorchan.models.classification.base import (
-    BinaryClassificationMixin,
     ClassificationLikelihoodFamily,
     ClassificationModelMixin,
     LatentOutputStructure,
 )
+from robotorchan.models.classification.binary.base import BinaryClassificationMixin
 
 
 class _PredictiveDistribution:
