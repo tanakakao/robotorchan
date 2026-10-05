@@ -31,10 +31,11 @@ class NonstationaryBinarySingleTaskGPClassifier(
     ) -> None:
         input_dim = train_X.shape[-1]
         gibbs_kernel = GibbsKernel(input_dim, lengthscale_floor=lengthscale_floor)
+        covar_module = ScaleKernel(gibbs_kernel).to(train_X)
         super().__init__(
             train_X=train_X,
             train_Y=train_Y,
-            covar_module=ScaleKernel(gibbs_kernel),
+            covar_module=covar_module,
             **kwargs,
         )
 
