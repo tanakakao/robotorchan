@@ -128,6 +128,27 @@ class LabelNoiseBinarySingleTaskGPClassifier(
             learn_flip_probabilities=learn_flip_probabilities,
         )
 
+    def predict_clean_proba(self, X: Tensor, **kwargs: object) -> Tensor:
+        """Return posterior-predictive probabilities before label corruption."""
+        latent = self.latent_posterior(X, **kwargs)
+        positive = BernoulliLikelihood.marginal(self.likelihood, latent.distribution).probs
+        if positive.shape[-1:] == (1,):
+            positive = positive.squeeze(-1)
+        return torch.stack((1.0 - positive, positive), dim=-1)
+
+    def sample_clean_class_probabilities(
+        self,
+        X: Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> Tensor:
+        """Draw clean class probabilities before label corruption."""
+        latent_samples = self.sample_latent(X, sample_shape=sample_shape, **kwargs)
+        positive = BernoulliLikelihood.forward(self.likelihood, latent_samples).probs
+        if positive.shape[-1:] == (1,):
+            positive = positive.squeeze(-1)
+        return torch.stack((1.0 - positive, positive), dim=-1)
+
     @property
     def classification_robustness(self) -> frozenset[ClassificationRobustnessType]:
         """Return label-noise robustness metadata."""
