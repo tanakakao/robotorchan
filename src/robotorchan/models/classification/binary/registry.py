@@ -69,12 +69,6 @@ def _binary_capabilities(
 
 
 BINARY_CLASSIFICATION_MODEL_SPECS = (
-    (
-        "binary.robust.label_noise",
-        LabelNoiseBinarySingleTaskGPClassifier,
-        "robust",
-        _binary_capabilities(robustness=frozenset({RobustnessType.LABEL_NOISE})),
-    ),
     ("binary.standard", BinarySingleTaskGPClassifier, "standard", _binary_capabilities()),
     (
         "binary.mixed",
@@ -150,5 +144,11 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
             high_dimensional=HighDimensionalStrategy.DEEP,
             posterior_sampling_type=PosteriorSamplingType.STOCHASTIC,
         ),
+    ),
+    (
+        "binary.robust.label_noise",
+        LabelNoiseBinarySingleTaskGPClassifier,
+        "robust",
+        _binary_capabilities(robustness=frozenset({RobustnessType.LABEL_NOISE})),
     ),
 )
