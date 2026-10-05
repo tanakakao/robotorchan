@@ -52,6 +52,10 @@ from robotorchan.models.classification.binary import (
 from robotorchan.models.classification.binary.base import BinaryClassificationMixin
 from robotorchan.models.classification.binary.validation import validate_binary_labels
 from robotorchan.models.classification.model_list import ClassificationModelList
+from robotorchan.models.classification.posterior import (
+    ClassificationEnsemblePosterior,
+    make_classification_ensemble_posterior,
+)
 from robotorchan.models.classification.probability import (
     ClassificationProbabilityRiskType,
     RobustProbabilityTransform,
@@ -73,6 +77,7 @@ __all__ = [
     "BinarySingleTaskGPClassifier",
     "BootstrapBinaryClassificationEnsemble",
     "BootstrapGradientBoostingBinaryClassifier",
+    "ClassificationEnsemblePosterior",
     "ClassificationInputUncertaintyType",
     "ClassificationLikelihoodFamily",
     "ClassificationMetadata",
@@ -120,6 +125,7 @@ __all__ = [
     "get_classification_model_class",
     "get_classification_model_entry",
     "list_classification_models",
+    "make_classification_ensemble_posterior",
     "robust_class_probability",
     "validate_binary_labels",
 ]
