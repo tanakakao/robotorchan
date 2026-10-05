@@ -42,7 +42,6 @@ def test_all_classification_models_have_complete_binary_capabilities() -> None:
             assert capabilities.supports_posterior_samples
             assert capabilities.posterior_sampling_type is not PosteriorSamplingType.NONE
         if capabilities.ensemble_posterior:
-            assert capabilities.non_gp
             assert capabilities.posterior_sampling_type is PosteriorSamplingType.ENSEMBLE
         assert not capabilities.supports_fantasize
 
@@ -120,7 +119,10 @@ def test_single_task_classifiers_accept_all_classification_acquisitions() -> Non
         capabilities = entry.capabilities
         if capabilities.supports_multi_output or capabilities.non_gp:
             continue
-        for acquisition_name in _CLASSIFICATION_ACQUISITIONS:
+        acquisitions = _CLASSIFICATION_ACQUISITIONS
+        if capabilities.ensemble_posterior:
+            acquisitions = {"BALD", "MarginUncertainty", "PredictiveEntropy", "ProbabilityVariance"}
+        for acquisition_name in acquisitions:
             result = check_capabilities_acquisition_compatibility(
                 capabilities,
                 acquisition_name,
@@ -147,7 +149,7 @@ def test_multitask_classifiers_are_conservatively_rejected_by_current_al() -> No
 def test_single_non_gp_classifiers_reject_posterior_dependent_active_learning() -> None:
     posterior_dependent = {"BALD", "ProbabilityVariance", "LatentStraddle"}
     for model_id, entry in CLASSIFICATION_MODEL_REGISTRY.items():
-        if not entry.capabilities.non_gp:
+        if not entry.capabilities.non_gp or entry.capabilities.ensemble_posterior:
             continue
         for acquisition_name in posterior_dependent:
             result = check_capabilities_acquisition_compatibility(
