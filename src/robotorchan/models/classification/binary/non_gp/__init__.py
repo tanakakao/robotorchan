@@ -1,10 +1,10 @@
 """Non-GP binary classification models."""
 
-from robotorchan.models.classification.binary.non_gp.bootstrap import (
-    BootstrapBinaryClassificationEnsemble,
-)
 from robotorchan.models.classification.binary.non_gp.base import (
     NonGPBinaryClassificationMixin,
+)
+from robotorchan.models.classification.binary.non_gp.bootstrap import (
+    BootstrapBinaryClassificationEnsemble,
 )
 from robotorchan.models.classification.binary.non_gp.gradient_boosting import (
     BootstrapGradientBoostingBinaryClassifier,
