@@ -1,8 +1,8 @@
 """Final filesystem contracts for the surrogate-model package."""
 
-import robotorchan.models as models_package
-
 from pathlib import Path
+
+import robotorchan.models as models_package
 
 
 MODELS_ROOT = Path(models_package.__file__).parent
