@@ -61,8 +61,7 @@ def test_binary_robust_likelihoods_use_classification_native_noise_semantics() -
     registry = CLASSIFICATION_MODEL_REGISTRY
 
     assert (
-        RobustnessType.LABEL_NOISE
-        in registry["binary.robust.label_noise"].capabilities.robustness
+        RobustnessType.LABEL_NOISE in registry["binary.robust.label_noise"].capabilities.robustness
     )
     assert (
         RobustnessType.CONTAMINATION
