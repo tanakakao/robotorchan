@@ -35,12 +35,15 @@ def test_all_classification_models_have_complete_binary_capabilities() -> None:
         assert model_id.startswith("binary.")
         assert entry.num_classes == 2
         assert capabilities.observation_type is ObservationType.CLASSIFICATION
-        if capabilities.non_gp:
+        if capabilities.non_gp and not capabilities.ensemble_posterior:
             assert not capabilities.supports_posterior_samples
             assert capabilities.posterior_sampling_type is PosteriorSamplingType.NONE
         else:
             assert capabilities.supports_posterior_samples
             assert capabilities.posterior_sampling_type is not PosteriorSamplingType.NONE
+        if capabilities.ensemble_posterior:
+            assert capabilities.non_gp
+            assert capabilities.posterior_sampling_type is PosteriorSamplingType.ENSEMBLE
         assert not capabilities.supports_fantasize
 
 
