@@ -60,7 +60,9 @@ def test_structural_classifier_capabilities_are_explicit() -> None:
 
 def test_high_dimensional_and_deep_capabilities_are_explicit() -> None:
     pca = get_classification_model_entry("binary.pca").capabilities
-    deep = get_classification_model_entry("binary.deep_gp").capabilities
+    deep_entry = get_classification_model_entry("binary.deep_gp")
+    deep = deep_entry.capabilities
     assert pca.high_dimensional is HighDimensionalStrategy.REDUCTION
+    assert deep_entry.family == "expressive"
     assert deep.high_dimensional is HighDimensionalStrategy.DEEP
     assert deep.posterior_sampling_type is PosteriorSamplingType.STOCHASTIC
