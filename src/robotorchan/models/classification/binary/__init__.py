@@ -12,6 +12,8 @@ from robotorchan.models.classification.binary.high_dimensional import (
     SaasBinarySingleTaskGPClassifier,
 )
 from robotorchan.models.classification.binary.non_gp import (
+    BootstrapBinaryClassificationEnsemble,
+    BootstrapGradientBoostingBinaryClassifier,
     ExtraTreesBinaryClassifier,
     GradientBoostingBinaryClassifier,
     HistGradientBoostingBinaryClassifier,
@@ -54,6 +56,8 @@ __all__ = [
     "ALEBOBinarySingleTaskGPClassifier",
     "BinarySingleTaskDeepGPClassifier",
     "BinarySingleTaskGPClassifier",
+    "BootstrapBinaryClassificationEnsemble",
+    "BootstrapGradientBoostingBinaryClassifier",
     "ClassificationInputUncertaintyType",
     "ClassificationRobustnessType",
     "ClassificationUncertaintyIntegration",
