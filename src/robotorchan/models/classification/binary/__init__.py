@@ -9,6 +9,7 @@ from robotorchan.models.classification.binary.high_dimensional import (
     PLSBinarySingleTaskGPClassifier,
     RandomProjectionBinarySingleTaskGPClassifier,
     ReducedBinarySingleTaskGPClassifier,
+    ReplicateLabelBinarySingleTaskGPClassifier,
     SaasBinarySingleTaskGPClassifier,
 )
 from robotorchan.models.classification.binary.robust import (
@@ -45,6 +46,7 @@ __all__ = [
     "PLSBinarySingleTaskGPClassifier",
     "RandomProjectionBinarySingleTaskGPClassifier",
     "ReducedBinarySingleTaskGPClassifier",
+    "ReplicateLabelBinarySingleTaskGPClassifier",
     "RobustBinaryClassificationMixin",
     "RobustClassificationMetadata",
     "SaasBinarySingleTaskGPClassifier",
