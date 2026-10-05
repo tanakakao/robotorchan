@@ -21,9 +21,7 @@ def test_robust_metadata_is_classification_native() -> None:
     model = _RobustStub()
 
     assert model.is_robust_classification
-    assert model.classification_robustness == frozenset(
-        {ClassificationRobustnessType.LABEL_NOISE}
-    )
+    assert model.classification_robustness == frozenset({ClassificationRobustnessType.LABEL_NOISE})
     assert model.robust_classification_metadata == RobustClassificationMetadata(
         robustness=frozenset({ClassificationRobustnessType.LABEL_NOISE}),
         models_observed_label_process=True,
