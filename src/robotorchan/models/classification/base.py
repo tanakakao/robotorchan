@@ -166,6 +166,8 @@ class ClassificationModelMixin(ABC):
         therefore represents epistemic disagreement rather than total label
         uncertainty.
         """
+        if num_samples < 2:
+            raise ValueError("num_samples must be at least 2.")
         probabilities = self.sample_class_probabilities(
             X,
             sample_shape=torch.Size([num_samples]),
