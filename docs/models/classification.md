@@ -266,3 +266,21 @@ Classification member probabilities are observation-space probability vectors, n
 Gaussian function values. Bootstrap classifiers now route their uncertainty methods through
 this common posterior. The contract is backend-neutral so GP and heterogeneous ensembles can
 reuse it in later phases.
+
+
+### GP classification ensembles
+
+`GPBinaryClassificationEnsemble` composes independently fitted
+`BinarySingleTaskGPClassifier` members that represent the same binary task and share the
+same caller-supplied training data. Complete member predictive probabilities form a
+`ClassificationEnsemblePosterior`.
+
+Between-member variance and BALD-style mutual information therefore represent ensemble model
+disagreement. They are deliberately distinct from the latent posterior uncertainty inside
+each GP member. The ensemble exposes `member_latent_posteriors()` rather than inventing one
+collapsed latent Gaussian posterior, and `make_mlls()` preserves independent variational
+training objectives.
+
+This ensemble is different from `ClassificationModelList`: a model list composes separate
+classification outputs or tasks, while a GP classification ensemble combines multiple models
+of the same classification target.
