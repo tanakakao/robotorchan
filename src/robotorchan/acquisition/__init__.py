@@ -19,11 +19,6 @@ from robotorchan.acquisition.capabilities import (
     AcquisitionRegistryEntry,
     PosteriorRequirement,
 )
-from robotorchan.acquisition.classification_constraints import (
-    ClassificationProbabilityOfFeasibility,
-    FeasibilityWeightedAcquisition,
-    RobustClassificationProbabilityOfFeasibility,
-)
 from robotorchan.acquisition.non_gp import make_non_gp_acquisition, validate_non_gp_acquisition
 from robotorchan.acquisition.registry import get_acquisition_registry_entry
 from robotorchan.acquisition.sampling import select_thompson_candidates
@@ -34,8 +29,6 @@ __all__ = [
     "AcquisitionPurpose",
     "AcquisitionRegistryEntry",
     "BoundaryVariance",
-    "ClassificationProbabilityOfFeasibility",
-    "FeasibilityWeightedAcquisition",
     "ExpectedPredictiveInformationGain",
     "LatentStraddle",
     "MarginUncertainty",
@@ -45,7 +38,6 @@ __all__ = [
     "PredictiveEntropy",
     "ProbabilityVariance",
     "RandomizedStraddle",
-    "RobustClassificationProbabilityOfFeasibility",
     "Straddle",
     "get_acquisition_registry_entry",
     "make_non_gp_acquisition",
