@@ -4,11 +4,10 @@ import math
 
 import pytest
 import torch
-
-from robotorchan.acquisition import BALD, LatentStraddle, PredictiveEntropy, ProbabilityVariance
 from botorch.models.model import Model
 from botorch.posteriors import Posterior
 
+from robotorchan.acquisition import BALD, LatentStraddle, PredictiveEntropy, ProbabilityVariance
 from robotorchan.models import SingleTaskGP
 from robotorchan.models.classification import (
     BinarySingleTaskGPClassifier,
