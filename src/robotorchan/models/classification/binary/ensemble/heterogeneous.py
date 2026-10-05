@@ -52,9 +52,7 @@ class HeterogeneousBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Mo
         **kwargs: object,
     ) -> ClassificationEnsemblePosterior:
         """Return empirical probability posterior across heterogeneous members."""
-        member_probabilities = [
-            member.predict_proba(X, **kwargs) for member in self.members
-        ]
+        member_probabilities = [member.predict_proba(X, **kwargs) for member in self.members]
         target_shape = (*X.shape[:-1], self.num_classes)
         normalized = []
         for probabilities in member_probabilities:
