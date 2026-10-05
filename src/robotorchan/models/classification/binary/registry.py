@@ -248,7 +248,8 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
             robustness=frozenset({RobustnessType.NONSTATIONARY}),
             supports_multi_output=True,
         ),
-    ),    (
+    ),
+    (
         "binary.non_gp.random_forest",
         RandomForestBinaryClassifier,
         "non_gp",
@@ -272,5 +273,4 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
         "non_gp",
         _non_gp_binary_capabilities(),
     ),
-
 )
