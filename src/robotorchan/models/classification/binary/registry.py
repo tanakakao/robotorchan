@@ -109,30 +109,6 @@ def _non_gp_binary_capabilities() -> ModelCapabilities:
 
 
 BINARY_CLASSIFICATION_MODEL_SPECS = (
-    (
-        "binary.non_gp.random_forest",
-        RandomForestBinaryClassifier,
-        "non_gp",
-        _non_gp_binary_capabilities(),
-    ),
-    (
-        "binary.non_gp.extra_trees",
-        ExtraTreesBinaryClassifier,
-        "non_gp",
-        _non_gp_binary_capabilities(),
-    ),
-    (
-        "binary.non_gp.gradient_boosting",
-        GradientBoostingBinaryClassifier,
-        "non_gp",
-        _non_gp_binary_capabilities(),
-    ),
-    (
-        "binary.non_gp.hist_gradient_boosting",
-        HistGradientBoostingBinaryClassifier,
-        "non_gp",
-        _non_gp_binary_capabilities(),
-    ),
     ("binary.standard", BinarySingleTaskGPClassifier, "standard", _binary_capabilities()),
     (
         "binary.mixed",
@@ -272,5 +248,29 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
             robustness=frozenset({RobustnessType.NONSTATIONARY}),
             supports_multi_output=True,
         ),
+    ),    (
+        "binary.non_gp.random_forest",
+        RandomForestBinaryClassifier,
+        "non_gp",
+        _non_gp_binary_capabilities(),
     ),
+    (
+        "binary.non_gp.extra_trees",
+        ExtraTreesBinaryClassifier,
+        "non_gp",
+        _non_gp_binary_capabilities(),
+    ),
+    (
+        "binary.non_gp.gradient_boosting",
+        GradientBoostingBinaryClassifier,
+        "non_gp",
+        _non_gp_binary_capabilities(),
+    ),
+    (
+        "binary.non_gp.hist_gradient_boosting",
+        HistGradientBoostingBinaryClassifier,
+        "non_gp",
+        _non_gp_binary_capabilities(),
+    ),
+
 )
