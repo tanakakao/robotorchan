@@ -202,3 +202,23 @@ distribution. In particular, classwise worst-case, VaR, or CVaR values need not 
 one because different classes may attain their lower tails in different scenarios.
 Use `robust_class_probability` when a downstream feasibility or constraint calculation
 needs one selected class probability. Phase 16 composes this utility with constrained BO.
+
+
+## Classifier-backed feasibility for constrained BO
+
+A probabilistic classifier can be composed with an objective acquisition without turning
+the classifier into an outcome channel of the objective model.
+`ClassificationProbabilityOfFeasibility` exposes the selected feasible-class probability,
+and `RobustClassificationProbabilityOfFeasibility` first evaluates explicit input
+scenarios and then applies the robust probability transform from Phase 15.
+
+`FeasibilityWeightedAcquisition` multiplies an existing BoTorch-compatible objective
+acquisition by classifier feasibility. For q-batches, the default `product` reduction is
+an independence approximation for the event that all q candidates are feasible. The
+optional `minimum` policy is an explicit conservative score; neither policy invents a
+joint classifier posterior.
+
+This is an outcome-feasibility decision layer. It is separate from candidate constraints
+such as bounds, linear constraints, and nonlinear functions of X. When objective and
+constraint outputs already share one BoTorch posterior, native BoTorch MC constraint
+callables remain the preferred API.
