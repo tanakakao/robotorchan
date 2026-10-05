@@ -297,6 +297,12 @@ does not fabricate a common latent function, common likelihood, or common traini
 Its `ClassificationEnsemblePosterior` represents between-model disagreement across complete
 predictive probability vectors.
 
-The current combination is equally weighted. Learned, validation-weighted, and Bayesian model
-averaging weights belong to the weighted-ensemble policy in Phase 22 rather than this structural
-composition layer.
+Phase 22 extends this composition with non-negative member weights. The weights are normalized
+to one and are used consistently for predictive probabilities, between-model variance, expected
+member entropy, BALD disagreement, and empirical member sampling. Equal weights remain the
+default.
+
+When the supplied weights represent posterior model probabilities, the same mechanism implements
+discrete Bayesian model averaging in probability space. robotorchan does not infer those model
+probabilities automatically: evidence-based, validation-based, stacking, or externally supplied
+weight estimation remains a separate policy from the ensemble posterior contract.
