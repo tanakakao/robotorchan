@@ -1,6 +1,6 @@
 """Cross-layer family-alignment contracts for classification models."""
 
-from robotorchan.models.capabilities import HighDimensionalStrategy
+from robotorchan.models.capabilities import HighDimensionalStrategy, RobustnessType
 from robotorchan.models.classification import CLASSIFICATION_MODEL_REGISTRY
 
 _BINARY_MODULE_PREFIX = "robotorchan.models.classification.binary."
@@ -46,3 +46,29 @@ def test_standard_structural_variants_use_capabilities_not_fake_families() -> No
     assert registry["binary.mixed"].family == "standard"
     assert registry["binary.multitask"].family == "standard"
     assert registry["binary.kronecker_multitask"].family == "standard"
+
+
+def test_student_t_is_not_advertised_as_binary_classification_robustness() -> None:
+    """Student-t regression residual semantics must not leak into binary labels."""
+    for model_id, entry in CLASSIFICATION_MODEL_REGISTRY.items():
+        if not model_id.startswith("binary."):
+            continue
+        assert RobustnessType.STUDENT_T not in entry.capabilities.robustness
+
+
+def test_binary_robust_likelihoods_use_classification_native_noise_semantics() -> None:
+    """Robust binary registry entries advertise reviewed label-process mechanisms."""
+    registry = CLASSIFICATION_MODEL_REGISTRY
+
+    assert RobustnessType.LABEL_NOISE in registry[
+        "binary.robust.label_noise"
+    ].capabilities.robustness
+    assert RobustnessType.CONTAMINATION in registry[
+        "binary.robust.contaminated"
+    ].capabilities.robustness
+    assert RobustnessType.REPLICATE_NOISE in registry[
+        "binary.robust.replicate_labels"
+    ].capabilities.robustness
+    assert RobustnessType.LABEL_NOISE in registry[
+        "binary.robust.input_dependent_label_noise"
+    ].capabilities.robustness
