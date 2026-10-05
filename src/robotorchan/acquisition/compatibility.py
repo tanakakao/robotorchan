@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
-from robotorchan.acquisition.capabilities import PosteriorRequirement
+from robotorchan.acquisition.capabilities import AcquisitionTarget, PosteriorRequirement
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.models.capabilities import ModelCapabilities
 from robotorchan.models.registry import MODEL_REGISTRY
@@ -61,6 +61,12 @@ def check_capabilities_acquisition_compatibility(
     if model_capabilities.supports_multi_output and acquisition_capabilities.requires_single_output:
         reasons.append("acquisition requires a single-output posterior")
     posterior_requirement = acquisition_capabilities.posterior_requirement
+    if (
+        acquisition_capabilities.target is AcquisitionTarget.LATENT
+        and model_capabilities.non_gp
+        and model_capabilities.observation_type.value == "classification"
+    ):
+        reasons.append("acquisition requires a latent posterior")
     joint_gaussian = posterior_requirement is PosteriorRequirement.JOINT_GAUSSIAN
     if joint_gaussian and model_capabilities.non_gp:
         reasons.append("acquisition requires a joint Gaussian posterior")

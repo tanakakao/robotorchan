@@ -31,6 +31,12 @@ from robotorchan.models.classification.binary.high_dimensional.reduced.joint_neu
 from robotorchan.models.classification.binary.high_dimensional.saas import (
     SaasBinarySingleTaskGPClassifier,
 )
+from robotorchan.models.classification.binary.non_gp.sklearn import (
+    ExtraTreesBinaryClassifier,
+    GradientBoostingBinaryClassifier,
+    HistGradientBoostingBinaryClassifier,
+    RandomForestBinaryClassifier,
+)
 from robotorchan.models.classification.binary.robust.contaminated import (
     ContaminatedBinarySingleTaskGPClassifier,
 )
@@ -85,6 +91,20 @@ def _binary_capabilities(
         supports_posterior_samples=True,
         posterior_sampling_type=posterior_sampling_type,
         supports_fantasize=False,
+    )
+
+
+def _non_gp_binary_capabilities() -> ModelCapabilities:
+    """Build capabilities for deterministic fitted non-GP classifiers."""
+    return ModelCapabilities(
+        observation_type=ObservationType.CLASSIFICATION,
+        input_type=InputType.CONTINUOUS,
+        task_type=TaskType.SINGLE,
+        inference=InferenceType.NOT_APPLICABLE,
+        supports_posterior_samples=False,
+        posterior_sampling_type=PosteriorSamplingType.NONE,
+        supports_fantasize=False,
+        non_gp=True,
     )
 
 
@@ -228,5 +248,29 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
             robustness=frozenset({RobustnessType.NONSTATIONARY}),
             supports_multi_output=True,
         ),
+    ),
+    (
+        "binary.non_gp.random_forest",
+        RandomForestBinaryClassifier,
+        "non_gp",
+        _non_gp_binary_capabilities(),
+    ),
+    (
+        "binary.non_gp.extra_trees",
+        ExtraTreesBinaryClassifier,
+        "non_gp",
+        _non_gp_binary_capabilities(),
+    ),
+    (
+        "binary.non_gp.gradient_boosting",
+        GradientBoostingBinaryClassifier,
+        "non_gp",
+        _non_gp_binary_capabilities(),
+    ),
+    (
+        "binary.non_gp.hist_gradient_boosting",
+        HistGradientBoostingBinaryClassifier,
+        "non_gp",
+        _non_gp_binary_capabilities(),
     ),
 )
