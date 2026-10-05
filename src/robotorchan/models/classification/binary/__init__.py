@@ -36,6 +36,7 @@ from robotorchan.models.classification.binary.uncertain import (
     ClassificationInputUncertaintyType,
     ClassificationUncertaintyIntegration,
     ClassificationUncertaintyTarget,
+    ContinuousUncertainInputBinarySingleTaskGPClassifier,
     UncertainBinaryClassificationMixin,
     UncertainClassificationMetadata,
 )
@@ -50,6 +51,7 @@ __all__ = [
     "ClassificationUncertaintyTarget",
     "ContaminatedBernoulliLikelihood",
     "ContaminatedBinarySingleTaskGPClassifier",
+    "ContinuousUncertainInputBinarySingleTaskGPClassifier",
     "InputDependentLabelNoiseBinarySingleTaskGPClassifier",
     "InputDependentLabelNoiseLikelihood",
     "JointEncoderBinaryGPClassifier",
