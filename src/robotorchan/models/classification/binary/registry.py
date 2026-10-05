@@ -7,6 +7,7 @@ from robotorchan.models.capabilities import (
     ModelCapabilities,
     ObservationType,
     PosteriorSamplingType,
+    RobustnessType,
     TaskType,
 )
 from robotorchan.models.classification.binary.expressive.deep_gp import (
@@ -30,6 +31,9 @@ from robotorchan.models.classification.binary.high_dimensional.reduced.joint_neu
 from robotorchan.models.classification.binary.high_dimensional.saas import (
     SaasBinarySingleTaskGPClassifier,
 )
+from robotorchan.models.classification.binary.robust.label_noise import (
+    LabelNoiseBinarySingleTaskGPClassifier,
+)
 from robotorchan.models.classification.binary.standard.multitask import (
     KroneckerMultiTaskBinaryGPClassifier,
     MultiTaskBinaryGPClassifier,
@@ -47,6 +51,7 @@ def _binary_capabilities(
     high_dimensional: HighDimensionalStrategy = HighDimensionalStrategy.NONE,
     posterior_sampling_type: PosteriorSamplingType = PosteriorSamplingType.GAUSSIAN,
     supports_multi_output: bool = False,
+    robustness: frozenset[RobustnessType] = frozenset(),
 ) -> ModelCapabilities:
     """Build reviewed capabilities shared by binary variational classifiers."""
     return ModelCapabilities(
@@ -55,6 +60,7 @@ def _binary_capabilities(
         task_type=task_type,
         inference=InferenceType.VARIATIONAL,
         high_dimensional=high_dimensional,
+        robustness=robustness,
         supports_multi_output=supports_multi_output,
         supports_posterior_samples=True,
         posterior_sampling_type=posterior_sampling_type,
@@ -138,5 +144,11 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
             high_dimensional=HighDimensionalStrategy.DEEP,
             posterior_sampling_type=PosteriorSamplingType.STOCHASTIC,
         ),
+    ),
+    (
+        "binary.robust.label_noise",
+        LabelNoiseBinarySingleTaskGPClassifier,
+        "robust",
+        _binary_capabilities(robustness=frozenset({RobustnessType.LABEL_NOISE})),
     ),
 )

@@ -5,9 +5,15 @@ from robotorchan.models.classification.binary.robust.base import (
     RobustBinaryClassificationMixin,
     RobustClassificationMetadata,
 )
+from robotorchan.models.classification.binary.robust.label_noise import (
+    LabelNoiseBernoulliLikelihood,
+    LabelNoiseBinarySingleTaskGPClassifier,
+)
 
 __all__ = [
     "ClassificationRobustnessType",
+    "LabelNoiseBernoulliLikelihood",
+    "LabelNoiseBinarySingleTaskGPClassifier",
     "RobustBinaryClassificationMixin",
     "RobustClassificationMetadata",
 ]

@@ -45,6 +45,7 @@ class PosteriorSamplingType(StrEnum):
 
 
 class RobustnessType(StrEnum):
+    LABEL_NOISE = "label_noise"
     CONTAMINATION = "contamination"
     HETEROSKEDASTIC = "heteroskedastic"
     NONSTATIONARY = "nonstationary"
