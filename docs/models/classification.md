@@ -52,13 +52,33 @@ labels = model.predict_class(X)
 | `binary.kronecker_multitask` | continuous | multitask | none | Gaussian latent |
 | `binary.map_saas` | continuous | single | MAP-SAAS | Gaussian latent |
 | `binary.saas` | continuous | single | SAAS | Gaussian latent |
-
-> `binary.saas` is a variational GP classifier with SAAS-style inverse-lengthscale shrinkage. It is not the classification counterpart of the regression `SaasFullyBayesian*` wrappers, which use NUTS/Pyro and `InferenceType.FULLY_BAYESIAN`.
 | `binary.reduced` / PCA / PLS / random projection | continuous | single | reduction | Gaussian |
 
 | `binary.alebo` | continuous | single | random embedding | Gaussian latent |
 | `binary.joint_encoder` | continuous | single | neural reduction | Gaussian latent |
 | `binary.deep_gp` | continuous | single | deep | stochastic latent |
+
+> `binary.saas` is a variational GP classifier with SAAS-style inverse-lengthscale shrinkage. It is not the classification counterpart of the regression `SaasFullyBayesian*` wrappers, which use NUTS/Pyro and `InferenceType.FULLY_BAYESIAN`.
+
+### Regression-family coverage
+
+Classification families are added according to classification semantics rather than by mechanically mirroring every regression model.
+
+| regression/general family | binary classification status | rationale |
+| --- | --- | --- |
+| standard single-task / mixed / multitask | implemented | direct latent-classification counterparts exist |
+| high-dimensional SAAS / MAP-SAAS / reduction / ALEBO | implemented | classification-specific inference is explicit |
+| expressive DeepGP | implemented | stochastic latent hierarchy has a binary counterpart |
+| expressive spectral mixture / infinite-width BNN | not implemented | no binary wrapper has been reviewed yet |
+| structured output / HOGP | not implemented | structured regression outputs are not class-probability outputs |
+| hierarchical / contextual | not implemented | requires a classification-specific likelihood and prediction contract |
+| multi-fidelity | not implemented | fidelity-aware binary classification has not been reviewed |
+| robust / heteroskedastic / Student-t | not implemented | regression observation-noise semantics must not be reused for class labels |
+| uncertain-input | not implemented | requires a classification-specific uncertain-input contract |
+| non-GP surrogates | not implemented | probability/posterior contracts require separate classification adapters |
+| preference | separate task semantics | pairwise preference observations are not binary class labels |
+
+The absence of these binary counterparts is intentional coverage status, not a filesystem-family mismatch. New models should enter the family matching their model semantics and expose classification-specific capabilities before registry inclusion.
 
 すべて `observation_type=classification`, variational inference,
 `supports_posterior_samples=True` です。現在のclassification ALは `q=1` かつ
