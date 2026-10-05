@@ -4,6 +4,7 @@ import pytest
 
 from robotorchan.models.capabilities import (
     HighDimensionalStrategy,
+    InferenceType,
     InputType,
     ObservationType,
     PosteriorSamplingType,
@@ -66,3 +67,11 @@ def test_high_dimensional_and_deep_capabilities_are_explicit() -> None:
     assert deep_entry.family == "expressive"
     assert deep.high_dimensional is HighDimensionalStrategy.DEEP
     assert deep.posterior_sampling_type is PosteriorSamplingType.STOCHASTIC
+
+
+def test_binary_saas_is_variational_not_fully_bayesian() -> None:
+    """Binary SAAS currently means variational SAAS-style shrinkage."""
+    entry = get_classification_model_entry("binary.saas")
+    assert entry.family == "high_dimensional"
+    assert entry.capabilities.high_dimensional is HighDimensionalStrategy.SAAS
+    assert entry.capabilities.inference is InferenceType.VARIATIONAL
