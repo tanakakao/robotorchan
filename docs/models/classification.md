@@ -52,6 +52,8 @@ labels = model.predict_class(X)
 | `binary.kronecker_multitask` | continuous | multitask | none | Gaussian latent |
 | `binary.map_saas` | continuous | single | MAP-SAAS | Gaussian latent |
 | `binary.saas` | continuous | single | SAAS | Gaussian latent |
+
+> `binary.saas` is a variational GP classifier with SAAS-style inverse-lengthscale shrinkage. It is not the classification counterpart of the regression `SaasFullyBayesian*` wrappers, which use NUTS/Pyro and `InferenceType.FULLY_BAYESIAN`.
 | `binary.reduced` / PCA / PLS / random projection | continuous | single | reduction | Gaussian |
 
 | `binary.alebo` | continuous | single | random embedding | Gaussian latent |
