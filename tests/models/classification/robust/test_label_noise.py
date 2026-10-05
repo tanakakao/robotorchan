@@ -31,9 +31,7 @@ def test_symmetric_flip_probability_configures_both_rates() -> None:
     )
 
     assert torch.allclose(model.flip_probabilities, torch.tensor([0.15, 0.15]), atol=1e-6)
-    assert model.classification_robustness == frozenset(
-        {ClassificationRobustnessType.LABEL_NOISE}
-    )
+    assert model.classification_robustness == frozenset({ClassificationRobustnessType.LABEL_NOISE})
     assert model.models_observed_label_process
     assert model.preserves_latent_classification_posterior
     clean = model.predict_clean_proba(train_x)
