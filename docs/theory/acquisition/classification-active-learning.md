@@ -31,3 +31,26 @@ posterior model probabilities, also propagate into active-learning scores.
 
 `LatentStraddle` is intentionally excluded from heterogeneous ensembles because different
 members need not share a latent function or even a latent probabilistic representation.
+
+
+## Calibration and acquisition semantics
+
+Post-hoc probability calibration composes with probability-space classification acquisitions through
+the existing prediction contract. A `CalibratedBinaryClassifier` therefore changes the
+probabilities consumed by predictive entropy and margin uncertainty, and it calibrates posterior
+probability samples before probability variance and BALD are computed.
+
+The same rule applies to classifier-backed feasibility in Bayesian optimization:
+`ClassificationProbabilityOfFeasibility` consumes `predict_proba`, so a calibrated classifier
+produces calibrated feasibility probabilities without a separate calibration-specific acquisition
+wrapper. The calibration transform remains differentiable for temperature scaling, preserving
+gradient-based candidate optimization.
+
+`LatentStraddle` is intentionally different. It operates on the latent GP decision boundary and
+therefore delegates to the unchanged latent posterior. Post-hoc probability calibration does not
+change its score. This distinction prevents probability calibration from being misrepresented as a
+change to the latent GP posterior.
+
+Calibration quality should be checked on held-out data before calibrated probabilities are used for
+BO constraints or active-learning decisions. NLL, Brier score, ECE, and MCE are diagnostics rather
+than acquisition functions.
