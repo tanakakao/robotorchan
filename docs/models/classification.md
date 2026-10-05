@@ -323,3 +323,19 @@ Temperature scaling is multiclass-ready at the probability-transform level. The 
 adapter is binary-first. Calibration data should be held out from model fitting; fitting a
 calibrator on the same observations used to train the classifier does not provide an honest
 out-of-sample calibration assessment.
+
+
+### Calibration metrics
+
+Calibration should be evaluated on held-out observations with more than one diagnostic. The
+classification API provides:
+
+- `classification_nll`: mean negative log likelihood, a proper scoring rule.
+- `brier_score`: multiclass Brier score, also sensitive to probability quality.
+- `expected_calibration_error`: observation-weighted confidence ECE over fixed bins.
+- `maximum_calibration_error`: largest confidence/accuracy gap over non-empty bins.
+
+ECE and MCE depend on the chosen bin count and use the maximum predicted class probability as
+confidence. They should therefore be reported with `n_bins` and interpreted alongside NLL and
+Brier score rather than as standalone proof of calibration. These metrics are evaluation
+diagnostics; Phase 25 does not silently use them as training losses or acquisition functions.
