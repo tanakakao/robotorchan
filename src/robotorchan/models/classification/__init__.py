@@ -38,6 +38,7 @@ from robotorchan.models.classification.binary import (
     RobustClassificationMetadata,
     SaasBinarySingleTaskGPClassifier,
     UncertainBinaryClassificationMixin,
+    UncertainCategoricalBinarySingleTaskGPClassifier,
     UncertainClassificationMetadata,
 )
 from robotorchan.models.classification.binary.base import BinaryClassificationMixin
@@ -91,6 +92,7 @@ __all__ = [
     "RobustClassificationMetadata",
     "SaasBinarySingleTaskGPClassifier",
     "UncertainBinaryClassificationMixin",
+    "UncertainCategoricalBinarySingleTaskGPClassifier",
     "UncertainClassificationMetadata",
     "get_classification_model_class",
     "get_classification_model_entry",
