@@ -52,7 +52,7 @@ def test_one_hot_category_probability_matches_mixed_prediction() -> None:
         category_probabilities=torch.tensor([[0.0, 1.0]], dtype=torch.double),
     )
 
-    torch.testing.assert_close(uncertain, standard)
+    torch.testing.assert_close(uncertain.squeeze(0), standard)
 
 
 def test_soft_category_probability_matches_explicit_weighted_prediction() -> None:
