@@ -32,9 +32,7 @@ def test_uncertain_classification_metadata_is_explicit() -> None:
     metadata = model.uncertain_classification_metadata
 
     assert model.is_uncertain_classification is True
-    assert metadata.uncertainty == frozenset(
-        {ClassificationInputUncertaintyType.CONTINUOUS}
-    )
+    assert metadata.uncertainty == frozenset({ClassificationInputUncertaintyType.CONTINUOUS})
     assert metadata.target is ClassificationUncertaintyTarget.CANDIDATE_INPUTS
     assert metadata.integration is ClassificationUncertaintyIntegration.MONTE_CARLO
     assert metadata.preserves_latent_classification_posterior is True
