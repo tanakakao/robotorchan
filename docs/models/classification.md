@@ -306,3 +306,20 @@ When the supplied weights represent posterior model probabilities, the same mech
 discrete Bayesian model averaging in probability space. robotorchan does not infer those model
 probabilities automatically: evidence-based, validation-based, stacking, or externally supplied
 weight estimation remains a separate policy from the ensemble posterior contract.
+
+
+## Post-hoc probability calibration
+
+Classification probability calibration is separated from surrogate training. The initial calibration
+API provides `TemperatureScalingCalibrator`, which applies a positive scalar temperature in
+log-probability space and can be fitted on held-out validation probabilities and class labels.
+
+`CalibratedBinaryClassifier` composes a classifier and calibrator without changing the underlying
+latent posterior. Predictive probabilities and sampled class probabilities are both calibrated, so
+probability variance, predictive entropy, expected class entropy, and BALD remain internally
+consistent.
+
+Temperature scaling is multiclass-ready at the probability-transform level. The current model
+adapter is binary-first. Calibration data should be held out from model fitting; fitting a
+calibrator on the same observations used to train the classifier does not provide an honest
+out-of-sample calibration assessment.
