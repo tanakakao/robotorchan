@@ -6,14 +6,14 @@ import torch
 from gpytorch.kernels import IndexKernel, ProductKernel, ScaleKernel
 from torch import Tensor
 
-from robotorchan.models.classification.binary.robust.base import (
-    ClassificationRobustnessType,
-    RobustBinaryClassificationMixin,
-)
 from robotorchan.models.base import (
     continuous_feature_dims,
     make_mixed_covar_module,
     normalize_feature_dims,
+)
+from robotorchan.models.classification.binary.robust.base import (
+    ClassificationRobustnessType,
+    RobustBinaryClassificationMixin,
 )
 from robotorchan.models.classification.binary.standard.multitask import (
     MultiTaskBinaryGPClassifier,
