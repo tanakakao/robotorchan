@@ -81,3 +81,34 @@ def test_heterogeneous_ensemble_registry_is_backend_neutral() -> None:
     assert not capabilities.non_gp
     assert capabilities.ensemble_posterior
     assert capabilities.posterior_sampling_type is PosteriorSamplingType.ENSEMBLE
+
+
+def test_heterogeneous_ensemble_applies_member_weights() -> None:
+    gp, forest = _members()
+    weights = torch.tensor([0.8, 0.2], dtype=torch.double)
+    ensemble = HeterogeneousBinaryClassificationEnsemble(gp, forest, weights=weights)
+    X = gp.raw_train_X[:4]
+    member_probabilities = torch.stack([gp.predict_proba(X), forest.predict_proba(X)])
+    expected = (member_probabilities * weights[:, None, None]).sum(dim=0)
+
+    torch.testing.assert_close(ensemble.member_weights, weights)
+    torch.testing.assert_close(ensemble.predict_proba(X), expected)
+    torch.testing.assert_close(
+        ensemble.probability_posterior(X).weights,
+        weights,
+    )
+
+
+def test_heterogeneous_ensemble_weights_follow_module_state() -> None:
+    gp, forest = _members()
+    ensemble = HeterogeneousBinaryClassificationEnsemble(
+        gp,
+        forest,
+        weights=torch.tensor([2.0, 1.0]),
+    )
+
+    assert "member_weights" in ensemble.state_dict()
+    torch.testing.assert_close(
+        ensemble.member_weights,
+        torch.tensor([2.0 / 3.0, 1.0 / 3.0]),
+    )

@@ -14,7 +14,7 @@ class ClassificationEnsemblePosterior:
     batch, or candidate dimensions.
     """
 
-    def __init__(self, probabilities: Tensor) -> None:
+    def __init__(self, probabilities: Tensor, weights: Tensor | None = None) -> None:
         if probabilities.ndim < 2:
             raise ValueError("probabilities must have shape members x ... x classes.")
         if probabilities.shape[0] < 2:
@@ -30,12 +30,34 @@ class ClassificationEnsemblePosterior:
         sums = probabilities.sum(dim=-1)
         if not torch.allclose(sums, torch.ones_like(sums), atol=1e-6, rtol=1e-6):
             raise ValueError("Each member probability vector must sum to one.")
+        if weights is None:
+            weights = torch.ones(
+                probabilities.shape[0],
+                dtype=probabilities.dtype,
+                device=probabilities.device,
+            )
+        if weights.ndim != 1 or weights.shape[0] != probabilities.shape[0]:
+            raise ValueError("weights must have shape (num_members,).")
+        if weights.dtype != probabilities.dtype or weights.device != probabilities.device:
+            raise ValueError("weights must match probability dtype and device.")
+        if not torch.isfinite(weights).all():
+            raise ValueError("weights must be finite.")
+        if torch.any(weights < 0.0):
+            raise ValueError("weights must be non-negative.")
+        if not bool(weights.sum() > 0.0):
+            raise ValueError("At least one ensemble weight must be positive.")
         self._probabilities = probabilities
+        self._weights = weights / weights.sum()
 
     @property
     def probabilities(self) -> Tensor:
         """Return member probability vectors without copying."""
         return self._probabilities
+
+    @property
+    def weights(self) -> Tensor:
+        """Return normalized member weights."""
+        return self._weights
 
     @property
     def num_members(self) -> int:
@@ -50,12 +72,15 @@ class ClassificationEnsemblePosterior:
     @property
     def mean(self) -> Tensor:
         """Return the ensemble-mean class probability."""
-        return self._probabilities.mean(dim=0)
+        shape = (self.num_members,) + (1,) * (self._probabilities.ndim - 1)
+        return (self._probabilities * self._weights.reshape(shape)).sum(dim=0)
 
     @property
     def variance(self) -> Tensor:
         """Return epistemic class-probability variance across members."""
-        return self._probabilities.var(dim=0, unbiased=False)
+        shape = (self.num_members,) + (1,) * (self._probabilities.ndim - 1)
+        deviations = self._probabilities - self.mean.unsqueeze(0)
+        return (deviations.square() * self._weights.reshape(shape)).sum(dim=0)
 
     @property
     def predictive_entropy(self) -> Tensor:
@@ -71,7 +96,8 @@ class ClassificationEnsemblePosterior:
         tiny = torch.finfo(self._probabilities.dtype).tiny
         safe = self._probabilities.clamp_min(tiny)
         entropy = -torch.special.xlogy(safe, safe).sum(dim=-1)
-        return entropy.mean(dim=0)
+        shape = (self.num_members,) + (1,) * (entropy.ndim - 1)
+        return (entropy * self._weights.reshape(shape)).sum(dim=0)
 
     @property
     def mutual_information(self) -> Tensor:
@@ -84,10 +110,10 @@ class ClassificationEnsemblePosterior:
         if not resolved_shape:
             raise ValueError("sample_shape must contain at least one sample dimension.")
         num_samples = resolved_shape.numel()
-        indices = torch.randint(
-            self.num_members,
-            (num_samples,),
-            device=self._probabilities.device,
+        indices = torch.multinomial(
+            self._weights,
+            num_samples,
+            replacement=True,
         )
         samples = self._probabilities.index_select(0, indices)
         return samples.reshape(*resolved_shape, *self._probabilities.shape[1:])
@@ -95,6 +121,7 @@ class ClassificationEnsemblePosterior:
 
 def make_classification_ensemble_posterior(
     probabilities: Tensor,
+    weights: Tensor | None = None,
 ) -> ClassificationEnsemblePosterior:
     """Build a validated empirical posterior over class probabilities."""
-    return ClassificationEnsemblePosterior(probabilities)
+    return ClassificationEnsemblePosterior(probabilities, weights=weights)

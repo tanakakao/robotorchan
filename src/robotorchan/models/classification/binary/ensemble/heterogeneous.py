@@ -16,7 +16,11 @@ from robotorchan.models.classification.posterior.ensemble import (
 class HeterogeneousBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Module):
     """Ensemble complete classifiers that share binary class semantics."""
 
-    def __init__(self, *members: nn.Module) -> None:
+    def __init__(
+        self,
+        *members: nn.Module,
+        weights: Tensor | None = None,
+    ) -> None:
         super().__init__()
         if len(members) < 2:
             raise ValueError("Heterogeneous classification ensembles require at least two members.")
@@ -28,6 +32,19 @@ class HeterogeneousBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Mo
             if tuple(getattr(member, "class_labels", ())) != self.class_labels:
                 raise ValueError("Every ensemble member must use class_labels=(0, 1).")
         self.members = nn.ModuleList(members)
+        if weights is None:
+            weights = torch.ones(len(members), dtype=torch.get_default_dtype())
+        if weights.ndim != 1 or weights.shape[0] != len(members):
+            raise ValueError("weights must have shape (num_members,).")
+        if not torch.is_floating_point(weights):
+            raise ValueError("weights must use a floating-point dtype.")
+        if not torch.isfinite(weights).all():
+            raise ValueError("weights must be finite.")
+        if torch.any(weights < 0.0):
+            raise ValueError("weights must be non-negative.")
+        if not bool(weights.sum() > 0.0):
+            raise ValueError("At least one ensemble weight must be positive.")
+        self.register_buffer("member_weights", weights / weights.sum())
 
     def probability_posterior(
         self,
@@ -39,10 +56,14 @@ class HeterogeneousBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Mo
             [member.predict_proba(X, **kwargs) for member in self.members],
             dim=0,
         )
-        return make_classification_ensemble_posterior(probabilities)
+        weights = self.member_weights.to(
+            dtype=probabilities.dtype,
+            device=probabilities.device,
+        )
+        return make_classification_ensemble_posterior(probabilities, weights=weights)
 
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
-        """Return equally weighted mean member probability."""
+        """Return weighted mean member probability."""
         return self.probability_posterior(X, **kwargs).mean
 
     def sample_class_probabilities(
@@ -85,7 +106,7 @@ class HeterogeneousBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Mo
         num_samples: int = 128,
         **kwargs: object,
     ) -> Tensor:
-        """Return equally weighted mean member entropy."""
+        """Return weighted mean member entropy."""
         del num_samples
         return self.probability_posterior(X, **kwargs).expected_class_entropy
 
