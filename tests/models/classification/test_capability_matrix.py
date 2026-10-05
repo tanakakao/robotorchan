@@ -35,8 +35,12 @@ def test_all_classification_models_have_complete_binary_capabilities() -> None:
         assert model_id.startswith("binary.")
         assert entry.num_classes == 2
         assert capabilities.observation_type is ObservationType.CLASSIFICATION
-        assert capabilities.supports_posterior_samples
-        assert capabilities.posterior_sampling_type is not PosteriorSamplingType.NONE
+        if capabilities.non_gp:
+            assert not capabilities.supports_posterior_samples
+            assert capabilities.posterior_sampling_type is PosteriorSamplingType.NONE
+        else:
+            assert capabilities.supports_posterior_samples
+            assert capabilities.posterior_sampling_type is not PosteriorSamplingType.NONE
         assert not capabilities.supports_fantasize
 
 
@@ -110,11 +114,12 @@ def test_classification_acquisition_targets_and_posterior_requirements_match() -
 
 def test_single_task_classifiers_accept_all_classification_acquisitions() -> None:
     for model_id, entry in CLASSIFICATION_MODEL_REGISTRY.items():
-        if entry.capabilities.supports_multi_output:
+        capabilities = entry.capabilities
+        if capabilities.supports_multi_output or capabilities.non_gp:
             continue
         for acquisition_name in _CLASSIFICATION_ACQUISITIONS:
             result = check_capabilities_acquisition_compatibility(
-                entry.capabilities,
+                capabilities,
                 acquisition_name,
             )
             assert result.status is CompatibilityStatus.COMPATIBLE, (
@@ -134,3 +139,20 @@ def test_multitask_classifiers_are_conservatively_rejected_by_current_al() -> No
             )
             assert result.status is CompatibilityStatus.INCOMPATIBLE
             assert "acquisition does not support multi-output posteriors" in result.reasons
+
+
+def test_single_non_gp_classifiers_reject_posterior_dependent_active_learning() -> None:
+    posterior_dependent = {"BALD", "ProbabilityVariance", "LatentStraddle"}
+    for model_id, entry in CLASSIFICATION_MODEL_REGISTRY.items():
+        if not entry.capabilities.non_gp:
+            continue
+        for acquisition_name in posterior_dependent:
+            result = check_capabilities_acquisition_compatibility(
+                entry.capabilities,
+                acquisition_name,
+            )
+            assert result.status is CompatibilityStatus.INCOMPATIBLE, (
+                model_id,
+                acquisition_name,
+                result.reasons,
+            )
