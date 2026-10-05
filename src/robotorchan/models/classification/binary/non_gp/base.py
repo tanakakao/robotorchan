@@ -6,7 +6,7 @@ from abc import abstractmethod
 from typing import ClassVar
 
 import torch
-from torch import Tensor, nn
+from torch import Tensor
 
 from robotorchan.models.classification.binary.base import BinaryClassificationMixin
 
