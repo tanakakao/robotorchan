@@ -116,9 +116,7 @@ class LabelNoiseBinarySingleTaskGPClassifier(
         if flip_probability is not None:
             _validate_flip_probability(flip_probability, name="flip_probability")
             if false_positive_rate != 0.0 or false_negative_rate != 0.0:
-                raise ValueError(
-                    "flip_probability cannot be combined with asymmetric flip rates."
-                )
+                raise ValueError("flip_probability cannot be combined with asymmetric flip rates.")
             false_positive_rate = flip_probability
             false_negative_rate = flip_probability
         super().__init__(train_X=train_X, train_Y=train_Y, **kwargs)
