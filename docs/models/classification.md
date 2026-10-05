@@ -88,6 +88,25 @@ single-outputのみを明示的にサポートするため、multitask classifie
 rejectします。これはモデル自体がAL不能という意味ではなく、task selection / scalarizationの
 契約が未定義なためです。
 
+## Robust cross-family composition
+
+Robust classification follows composition semantics instead of a Cartesian product of model
+classes. Observation-process mechanisms such as label noise and contamination stay in the
+likelihood layer, so they can be composed with compatible latent models without dedicated
+family wrappers. `ClassificationModelList` already composes heterogeneous robust child models.
+
+Nonstationarity changes the latent covariance itself, so reviewed mixed and multitask variants
+are explicit:
+
+- `binary.robust.nonstationary`: continuous single-task latent Gibbs covariance.
+- `binary.robust.mixed_nonstationary`: Gibbs covariance on continuous dimensions plus native
+  categorical covariance.
+- `binary.robust.multitask_nonstationary`: Gibbs data covariance multiplied by task covariance.
+
+High-dimensional robust combinations are not generated mechanically here. SAAS, reduced-space,
+and neural-reduction combinations require separate interaction tests and remain part of the
+high-dimensional cross-combination audit.
+
 ## Robust likelihood policy
 
 回帰のrobust likelihoodをbinary classificationへ機械的に移植しません。特に
