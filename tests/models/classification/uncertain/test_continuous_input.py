@@ -27,7 +27,10 @@ def test_uncertain_input_metadata() -> None:
     assert model.classification_input_uncertainty == frozenset(
         {ClassificationInputUncertaintyType.CONTINUOUS}
     )
-    assert model.classification_uncertainty_target is ClassificationUncertaintyTarget.CANDIDATE_INPUTS
+    assert (
+        model.classification_uncertainty_target
+        is ClassificationUncertaintyTarget.CANDIDATE_INPUTS
+    )
     assert (
         model.classification_uncertainty_integration
         is ClassificationUncertaintyIntegration.MONTE_CARLO
@@ -86,7 +89,10 @@ def test_uncertain_probability_keeps_candidate_autograd() -> None:
 
 
 def test_registry_advertises_uncertain_input_capability() -> None:
-    specs = {model_id: (family, capabilities) for model_id, _, family, capabilities in BINARY_CLASSIFICATION_MODEL_SPECS}
+    specs = {
+        model_id: (family, capabilities)
+        for model_id, _, family, capabilities in BINARY_CLASSIFICATION_MODEL_SPECS
+    }
     family, capabilities = specs["binary.uncertain.continuous_input"]
 
     assert family == "uncertain"
