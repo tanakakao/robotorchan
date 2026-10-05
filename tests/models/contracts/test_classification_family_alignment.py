@@ -60,15 +60,19 @@ def test_binary_robust_likelihoods_use_classification_native_noise_semantics() -
     """Robust binary registry entries advertise reviewed label-process mechanisms."""
     registry = CLASSIFICATION_MODEL_REGISTRY
 
-    assert RobustnessType.LABEL_NOISE in registry[
-        "binary.robust.label_noise"
-    ].capabilities.robustness
-    assert RobustnessType.CONTAMINATION in registry[
-        "binary.robust.contaminated"
-    ].capabilities.robustness
-    assert RobustnessType.REPLICATE_NOISE in registry[
-        "binary.robust.replicate_labels"
-    ].capabilities.robustness
-    assert RobustnessType.LABEL_NOISE in registry[
-        "binary.robust.input_dependent_label_noise"
-    ].capabilities.robustness
+    assert (
+        RobustnessType.LABEL_NOISE
+        in registry["binary.robust.label_noise"].capabilities.robustness
+    )
+    assert (
+        RobustnessType.CONTAMINATION
+        in registry["binary.robust.contaminated"].capabilities.robustness
+    )
+    assert (
+        RobustnessType.REPLICATE_NOISE
+        in registry["binary.robust.replicate_labels"].capabilities.robustness
+    )
+    assert (
+        RobustnessType.LABEL_NOISE
+        in registry["binary.robust.input_dependent_label_noise"].capabilities.robustness
+    )
