@@ -3,9 +3,6 @@
 from robotorchan.models.classification.binary.high_dimensional.alebo import (
     ALEBOBinarySingleTaskGPClassifier,
 )
-from robotorchan.models.classification.binary.high_dimensional.deep_gp import (
-    BinarySingleTaskDeepGPClassifier,
-)
 from robotorchan.models.classification.binary.high_dimensional.joint_neural import (
     JointEncoderBinaryGPClassifier,
 )
@@ -24,7 +21,6 @@ from robotorchan.models.classification.binary.high_dimensional.saas import (
 
 __all__ = [
     "ALEBOBinarySingleTaskGPClassifier",
-    "BinarySingleTaskDeepGPClassifier",
     "JointEncoderBinaryGPClassifier",
     "MapSaasBinarySingleTaskGPClassifier",
     "PCABinarySingleTaskGPClassifier",
