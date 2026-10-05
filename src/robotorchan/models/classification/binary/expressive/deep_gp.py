@@ -9,11 +9,12 @@ from gpytorch.mlls import DeepApproximateMLL, VariationalELBO
 from torch import Tensor
 from torch.distributions import Bernoulli
 
+from robotorchan.models.classification.binary.base import BinaryClassificationMixin
 from robotorchan.models.classification.binary.validation import validate_binary_labels
 from robotorchan.models.expressive.deep_gp import SingleTaskDeepGP
 
 
-class BinarySingleTaskDeepGPClassifier(SingleTaskDeepGP):
+class BinarySingleTaskDeepGPClassifier(BinaryClassificationMixin, SingleTaskDeepGP):
     """Binary DeepGP classifier with a Bernoulli observation model."""
 
     def __init__(
@@ -65,6 +66,23 @@ class BinarySingleTaskDeepGPClassifier(SingleTaskDeepGP):
         positive = self.predictive_distribution(X, num_samples=num_samples).probs
         return torch.stack((1.0 - positive, positive), dim=-1)
 
+    def sample_class_probabilities(
+        self,
+        X: Tensor,
+        sample_shape: torch.Size | None = None,
+        *,
+        num_samples: int | None = None,
+    ) -> Tensor:
+        """Draw class-probability samples from the DeepGP latent posterior."""
+        resolved_shape = torch.Size() if sample_shape is None else sample_shape
+        resolved_samples = self.posterior_samples if num_samples is None else int(num_samples)
+        if resolved_samples < 1:
+            raise ValueError("num_samples must be positive.")
+        posterior = self.latent_posterior(X, num_samples=resolved_samples)
+        latent_samples = posterior.rsample(sample_shape=resolved_shape)
+        positive = self.likelihood.forward(latent_samples.squeeze(-1)).probs
+        return torch.stack((1.0 - positive, positive), dim=-1)
+
     def predict_class(
         self,
         X: Tensor,
@@ -75,6 +93,8 @@ class BinarySingleTaskDeepGPClassifier(SingleTaskDeepGP):
         """Return binary labels from posterior predictive probabilities."""
         if not isinstance(threshold, int | float):
             raise TypeError("threshold must be a real number.")
+        if not torch.isfinite(torch.tensor(threshold)):
+            raise ValueError("threshold must be finite.")
         if not 0.0 <= threshold <= 1.0:
             raise ValueError("threshold must be between 0 and 1.")
         positive = self.predict_proba(X, num_samples=num_samples)[..., 1]
