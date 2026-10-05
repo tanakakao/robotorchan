@@ -65,3 +65,9 @@ def test_development_audits_are_not_runtime_modules() -> None:
 def test_binary_deep_gp_is_owned_by_expressive_family() -> None:
     assert (BINARY_ROOT / "expressive" / "deep_gp.py").is_file()
     assert not (BINARY_ROOT / "high_dimensional" / "deep_gp.py").exists()
+
+
+def test_binary_joint_encoder_is_owned_by_reduced_family() -> None:
+    reduced_root = BINARY_ROOT / "high_dimensional" / "reduced"
+    assert (reduced_root / "joint_neural.py").is_file()
+    assert not (BINARY_ROOT / "high_dimensional" / "joint_neural.py").exists()

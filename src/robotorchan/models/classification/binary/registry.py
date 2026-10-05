@@ -15,9 +15,6 @@ from robotorchan.models.classification.binary.expressive.deep_gp import (
 from robotorchan.models.classification.binary.high_dimensional.alebo import (
     ALEBOBinarySingleTaskGPClassifier,
 )
-from robotorchan.models.classification.binary.high_dimensional.joint_neural import (
-    JointEncoderBinaryGPClassifier,
-)
 from robotorchan.models.classification.binary.high_dimensional.map_saas import (
     MapSaasBinarySingleTaskGPClassifier,
 )
@@ -26,6 +23,9 @@ from robotorchan.models.classification.binary.high_dimensional.reduced.base impo
     PLSBinarySingleTaskGPClassifier,
     RandomProjectionBinarySingleTaskGPClassifier,
     ReducedBinarySingleTaskGPClassifier,
+)
+from robotorchan.models.classification.binary.high_dimensional.reduced.joint_neural import (
+    JointEncoderBinaryGPClassifier,
 )
 from robotorchan.models.classification.binary.high_dimensional.saas import (
     SaasBinarySingleTaskGPClassifier,
