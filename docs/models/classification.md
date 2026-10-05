@@ -73,7 +73,9 @@ Classification families are added according to classification semantics rather t
 | structured output / HOGP | not implemented | structured regression outputs are not class-probability outputs |
 | hierarchical / contextual | not implemented | requires a classification-specific likelihood and prediction contract |
 | multi-fidelity | not implemented | fidelity-aware binary classification has not been reviewed |
-| robust / heteroskedastic / Student-t | not implemented | regression observation-noise semantics must not be reused for class labels |
+| robust label noise / contamination / replicates | implemented | classification-native label semantics |
+| input-dependent label noise | implemented | flip rates are functions of input X |
+| Student-t likelihood | intentionally unsupported | no Bernoulli residual analogue |
 | uncertain-input | not implemented | requires a classification-specific uncertain-input contract |
 | non-GP surrogates | not implemented | probability/posterior contracts require separate classification adapters |
 | preference | separate task semantics | pairwise preference observations are not binary class labels |
@@ -85,6 +87,29 @@ The absence of these binary counterparts is intentional coverage status, not a f
 single-outputのみを明示的にサポートするため、multitask classifierは互換性判定で保守的に
 rejectします。これはモデル自体がAL不能という意味ではなく、task selection / scalarizationの
 契約が未定義なためです。
+
+## Robust likelihood policy
+
+回帰のrobust likelihoodをbinary classificationへ機械的に移植しません。特に
+Student-t likelihoodは連続値の残差にheavy tailを与える観測モデルであり、0/1 Bernoulli
+ラベルには対応する残差分布がありません。そのためbinary classifierは
+`RobustnessType.STUDENT_T`をadvertiseしません。
+
+外れラベル・誤ラベルへのrobustnessは、観測ラベル生成過程として次のように表現します。
+
+| 問題 | classification-native mechanism |
+| --- | --- |
+| global class-conditional mislabeling | `binary.robust.label_noise` |
+| separate contaminant label source | `binary.robust.contaminated` |
+| repeated labels at identical X | `binary.robust.replicate_labels` |
+| reliability varying with X | `binary.robust.input_dependent_label_noise` |
+
+これは「robust classification likelihoodが存在しない」という意味ではありません。
+Bernoulli probabilityへlabel-flip / contamination channelを合成すること自体が分類固有の
+robust likelihoodです。clean latent posteriorとobserved-label probabilityは分離して扱います。
+
+Student-t相当の名前だけを追加する薄いwrapperは作らず、新しいrobust mechanismを追加する場合は
+Bernoulli/Categorical観測過程として意味が定義できることを要件とします。
 
 ## 入出力契約
 
