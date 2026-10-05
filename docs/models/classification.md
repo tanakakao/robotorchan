@@ -251,3 +251,18 @@ The registry advertises this family as `non_gp=True`,
 `ensemble_posterior=True`, and `posterior_sampling_type="ensemble"`.
 A latent Gaussian posterior is still not fabricated. Phase 19 generalizes the ensemble
 posterior contract beyond this bootstrap implementation.
+
+
+### Classification ensemble posterior
+
+`ClassificationEnsemblePosterior` is the shared empirical posterior contract for class
+probability vectors. It stores complete member predictions as
+`members x ... x classes` and exposes the ensemble mean, epistemic probability variance,
+predictive entropy, expected member entropy, BALD mutual information, and empirical member
+sampling.
+
+This is intentionally distinct from BoTorch's regression-oriented `EnsemblePosterior`.
+Classification member probabilities are observation-space probability vectors, not latent
+Gaussian function values. Bootstrap classifiers now route their uncertainty methods through
+this common posterior. The contract is backend-neutral so GP and heterogeneous ensembles can
+reuse it in later phases.
