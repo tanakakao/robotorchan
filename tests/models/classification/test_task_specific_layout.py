@@ -2,12 +2,10 @@
 
 from robotorchan.models.classification import (
     BinaryClassificationMixin as PublicBinaryClassificationMixin,
-)
-from robotorchan.models.classification import (
+    base as common_base,
     validate_binary_labels as public_validate_binary_labels,
+    validation as common_validation,
 )
-from robotorchan.models.classification import base as common_base
-from robotorchan.models.classification import validation as common_validation
 from robotorchan.models.classification.binary.base import BinaryClassificationMixin
 from robotorchan.models.classification.binary.validation import validate_binary_labels
 
