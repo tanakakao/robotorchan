@@ -139,3 +139,41 @@ def test_predict_proba_follows_class_label_order() -> None:
     assert model.class_labels == (0, 1)
     torch.testing.assert_close(probabilities[:, 0], torch.full((2,), 0.75))
     torch.testing.assert_close(probabilities[:, 1], torch.full((2,), 0.25))
+
+
+def test_uncertainty_contract_separates_observation_and_probability_variance() -> None:
+    model = _BinaryStub()
+    X = torch.zeros(3, 2)
+
+    observation_variance = model.predictive_variance(X)
+    probability_variance = model.probability_variance(X, num_samples=8)
+
+    assert observation_variance.shape == torch.Size([3, 2])
+    assert probability_variance.shape == torch.Size([3, 2])
+    assert torch.count_nonzero(probability_variance) == 0
+    assert torch.count_nonzero(observation_variance) > 0
+
+
+def test_mutual_information_is_predictive_minus_expected_entropy() -> None:
+    model = _BinaryStub()
+    X = torch.zeros(3, 2)
+
+    predictive = model.predictive_entropy(X)
+    expected = model.expected_class_entropy(X, num_samples=8)
+    mutual_information = model.mutual_information(X, num_samples=8)
+
+    torch.testing.assert_close(expected, predictive)
+    torch.testing.assert_close(mutual_information, torch.zeros_like(predictive))
+
+
+@pytest.mark.parametrize("num_samples", [0, 1, -1])
+def test_sampling_uncertainty_requires_two_samples(num_samples: int) -> None:
+    model = _BinaryStub()
+    X = torch.zeros(2, 1)
+
+    with pytest.raises(ValueError, match="at least 2"):
+        model.probability_variance(X, num_samples=num_samples)
+    with pytest.raises(ValueError, match="at least 2"):
+        model.expected_class_entropy(X, num_samples=num_samples)
+    with pytest.raises(ValueError, match="at least 2"):
+        model.mutual_information(X, num_samples=num_samples)
