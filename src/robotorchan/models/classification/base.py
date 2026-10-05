@@ -142,4 +142,3 @@ class ClassificationModelMixin(ABC):
     @abstractmethod
     def predict_class(self, X: Tensor, **kwargs: object) -> Tensor:
         """Return discrete class predictions."""
-
