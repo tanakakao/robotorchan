@@ -36,10 +36,7 @@ def test_joint_encoder_keeps_reduced_hierarchy_and_hd_family() -> None:
 
     assert ".high_dimensional.reduced." in entry.model_class.__module__
     assert entry.family == "high_dimensional"
-    assert (
-        entry.capabilities.high_dimensional
-        is HighDimensionalStrategy.NEURAL_REDUCTION
-    )
+    assert entry.capabilities.high_dimensional is HighDimensionalStrategy.NEURAL_REDUCTION
 
 
 def test_standard_structural_variants_use_capabilities_not_fake_families() -> None:
