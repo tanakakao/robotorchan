@@ -49,12 +49,7 @@ def _classification_model(
     *,
     required_methods: tuple[str, ...] = (),
 ) -> ClassificationAcquisitionModel:
-    required = (
-        "predict_proba",
-        "sample_class_probabilities",
-        "latent_posterior",
-        *required_methods,
-    )
+    required = required_methods
     missing = tuple(name for name in required if not callable(getattr(model, name, None)))
     if missing:
         names = ", ".join(missing)
@@ -80,7 +75,10 @@ class PredictiveEntropy(AcquisitionFunction):
 
     def __init__(self, model: Model) -> None:
         super().__init__(model=model)
-        self.classification_model = _classification_model(model)
+        self.classification_model = _classification_model(
+            model,
+            required_methods=("predict_proba",),
+        )
 
     def forward(self, X: Tensor) -> Tensor:
         """Evaluate predictive entropy for q=1 candidates."""
@@ -94,7 +92,10 @@ class MarginUncertainty(AcquisitionFunction):
 
     def __init__(self, model: Model) -> None:
         super().__init__(model=model)
-        self.classification_model = _classification_model(model)
+        self.classification_model = _classification_model(
+            model,
+            required_methods=("predict_proba",),
+        )
 
     def forward(self, X: Tensor) -> Tensor:
         """Return one minus the top-two probability margin."""
@@ -162,7 +163,10 @@ class LatentStraddle(AcquisitionFunction):
         if beta < 0:
             raise ValueError("beta must be non-negative.")
         super().__init__(model=model)
-        self.classification_model = _classification_model(model)
+        self.classification_model = _classification_model(
+            model,
+            required_methods=("latent_posterior",),
+        )
         if self.classification_model.num_classes != 2:
             raise ValueError("LatentStraddle currently requires binary classification.")
         self.beta = beta

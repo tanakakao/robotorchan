@@ -112,3 +112,14 @@ def test_heterogeneous_ensemble_weights_follow_module_state() -> None:
         ensemble.member_weights,
         torch.tensor([2.0 / 3.0, 1.0 / 3.0]),
     )
+
+
+def test_heterogeneous_ensemble_preserves_q_one_candidate_axis() -> None:
+    gp, forest = _members()
+    ensemble = HeterogeneousBinaryClassificationEnsemble(gp, forest)
+    X = gp.raw_train_X[:2].unsqueeze(-2)
+
+    posterior = ensemble.probability_posterior(X)
+
+    assert posterior.probabilities.shape == torch.Size([2, 2, 1, 2])
+    assert ensemble.predict_proba(X).shape == torch.Size([2, 1, 2])

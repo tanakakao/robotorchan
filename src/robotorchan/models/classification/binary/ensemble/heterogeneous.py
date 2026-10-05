@@ -52,10 +52,22 @@ class HeterogeneousBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Mo
         **kwargs: object,
     ) -> ClassificationEnsemblePosterior:
         """Return empirical probability posterior across heterogeneous members."""
-        probabilities = torch.stack(
-            [member.predict_proba(X, **kwargs) for member in self.members],
-            dim=0,
-        )
+        member_probabilities = [member.predict_proba(X, **kwargs) for member in self.members]
+        target_shape = (*X.shape[:-1], self.num_classes)
+        normalized = []
+        for probabilities in member_probabilities:
+            if probabilities.shape == target_shape:
+                normalized.append(probabilities)
+                continue
+            squeezed_target = (*X.shape[:-2], self.num_classes)
+            if X.shape[-2] == 1 and probabilities.shape == squeezed_target:
+                normalized.append(probabilities.unsqueeze(-2))
+                continue
+            raise ValueError(
+                "Ensemble member predict_proba output must preserve input leading "
+                f"dimensions; expected {target_shape}, got {tuple(probabilities.shape)}."
+            )
+        probabilities = torch.stack(normalized, dim=0)
         weights = self.member_weights.to(
             dtype=probabilities.dtype,
             device=probabilities.device,
