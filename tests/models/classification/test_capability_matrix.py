@@ -43,8 +43,10 @@ def test_all_classification_models_have_complete_binary_capabilities() -> None:
 def test_structural_model_ids_match_capability_axes() -> None:
     registry = CLASSIFICATION_MODEL_REGISTRY
 
+    assert registry["binary.mixed"].family == "standard"
     assert registry["binary.mixed"].capabilities.input_type is InputType.MIXED
     for model_id in ("binary.multitask", "binary.kronecker_multitask"):
+        assert registry[model_id].family == "standard"
         capabilities = registry[model_id].capabilities
         assert capabilities.task_type is TaskType.MULTITASK
         assert capabilities.supports_multi_output
