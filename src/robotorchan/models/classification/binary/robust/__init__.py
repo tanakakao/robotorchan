@@ -13,6 +13,9 @@ from robotorchan.models.classification.binary.robust.label_noise import (
     LabelNoiseBernoulliLikelihood,
     LabelNoiseBinarySingleTaskGPClassifier,
 )
+from robotorchan.models.classification.binary.robust.replicate import (
+    ReplicateLabelBinarySingleTaskGPClassifier,
+)
 
 __all__ = [
     "ClassificationRobustnessType",
@@ -20,6 +23,7 @@ __all__ = [
     "ContaminatedBinarySingleTaskGPClassifier",
     "LabelNoiseBernoulliLikelihood",
     "LabelNoiseBinarySingleTaskGPClassifier",
+    "ReplicateLabelBinarySingleTaskGPClassifier",
     "RobustBinaryClassificationMixin",
     "RobustClassificationMetadata",
 ]

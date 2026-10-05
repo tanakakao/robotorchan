@@ -17,6 +17,7 @@ from robotorchan.models.classification.binary.robust import (
     ContaminatedBinarySingleTaskGPClassifier,
     LabelNoiseBernoulliLikelihood,
     LabelNoiseBinarySingleTaskGPClassifier,
+    ReplicateLabelBinarySingleTaskGPClassifier,
     RobustBinaryClassificationMixin,
     RobustClassificationMetadata,
 )
@@ -45,6 +46,7 @@ __all__ = [
     "PLSBinarySingleTaskGPClassifier",
     "RandomProjectionBinarySingleTaskGPClassifier",
     "ReducedBinarySingleTaskGPClassifier",
+    "ReplicateLabelBinarySingleTaskGPClassifier",
     "RobustBinaryClassificationMixin",
     "RobustClassificationMetadata",
     "SaasBinarySingleTaskGPClassifier",
