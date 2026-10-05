@@ -112,6 +112,68 @@ class ClassificationModelMixin(ABC):
         """Return posterior variance of the latent classification function."""
         return self.latent_posterior(X, **kwargs).variance
 
+    def probability_variance(
+        self,
+        X: Tensor,
+        *,
+        num_samples: int = 128,
+        **kwargs: object,
+    ) -> Tensor:
+        """Return epistemic variance of class probabilities.
+
+        This quantity is estimated across posterior class-probability samples.
+        It is distinct from Bernoulli or categorical observation variance.
+        """
+        if num_samples < 2:
+            raise ValueError("num_samples must be at least 2.")
+        samples = self.sample_class_probabilities(
+            X,
+            sample_shape=torch.Size([num_samples]),
+            **kwargs,
+        )
+        return samples.var(dim=0, unbiased=False)
+
+    def expected_class_entropy(
+        self,
+        X: Tensor,
+        *,
+        num_samples: int = 128,
+        **kwargs: object,
+    ) -> Tensor:
+        """Return expected conditional class entropy across posterior samples."""
+        if num_samples < 2:
+            raise ValueError("num_samples must be at least 2.")
+        probabilities = self.sample_class_probabilities(
+            X,
+            sample_shape=torch.Size([num_samples]),
+            **kwargs,
+        )
+        tiny = torch.finfo(probabilities.dtype).tiny
+        probabilities = probabilities.clamp_min(tiny)
+        entropy = -torch.special.xlogy(probabilities, probabilities).sum(dim=-1)
+        return entropy.mean(dim=0)
+
+    def mutual_information(
+        self,
+        X: Tensor,
+        *,
+        num_samples: int = 128,
+        **kwargs: object,
+    ) -> Tensor:
+        """Return label-parameter mutual information used by BALD.
+
+        The result is predictive entropy minus expected conditional entropy and
+        therefore represents epistemic disagreement rather than total label
+        uncertainty.
+        """
+        predictive = self.predictive_entropy(X, **kwargs)
+        expected = self.expected_class_entropy(
+            X,
+            num_samples=num_samples,
+            **kwargs,
+        )
+        return (predictive - expected).clamp_min(0.0)
+
     @abstractmethod
     def predictive_variance(self, X: Tensor, **kwargs: object) -> Tensor:
         """Return observation-space variance for each predictive class."""
