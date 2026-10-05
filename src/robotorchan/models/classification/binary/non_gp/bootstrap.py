@@ -10,6 +10,10 @@ from torch import Tensor, nn
 
 from robotorchan.models.classification.binary.non_gp.base import NonGPBinaryClassificationMixin
 from robotorchan.models.classification.binary.validation import validate_binary_labels
+from robotorchan.models.classification.posterior import (
+    ClassificationEnsemblePosterior,
+    make_classification_ensemble_posterior,
+)
 
 
 class BootstrapBinaryClassificationEnsemble(NonGPBinaryClassificationMixin, nn.Module):
@@ -86,10 +90,14 @@ class BootstrapBinaryClassificationEnsemble(NonGPBinaryClassificationMixin, nn.M
         values = torch.stack(probabilities)
         return values.reshape(self.n_members, *original_shape, self.num_classes)
 
+    def probability_posterior(self, X: Tensor, **kwargs: object) -> ClassificationEnsemblePosterior:
+        """Return the empirical posterior over member class probabilities."""
+        del kwargs
+        return make_classification_ensemble_posterior(self._member_probabilities(X))
+
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
         """Return the ensemble-mean predictive class probability."""
-        del kwargs
-        return self._member_probabilities(X).mean(dim=0)
+        return self.probability_posterior(X, **kwargs).mean
 
     def sample_class_probabilities(
         self,
@@ -98,15 +106,7 @@ class BootstrapBinaryClassificationEnsemble(NonGPBinaryClassificationMixin, nn.M
         **kwargs: object,
     ) -> Tensor:
         """Sample the empirical posterior by resampling complete ensemble members."""
-        del kwargs
-        probabilities = self._member_probabilities(X)
-        resolved_shape = torch.Size([1]) if sample_shape is None else torch.Size(sample_shape)
-        if not resolved_shape:
-            raise ValueError("sample_shape must contain at least one sample dimension.")
-        num_samples = resolved_shape.numel()
-        indices = torch.randint(self.n_members, (num_samples,), device=X.device)
-        samples = probabilities.index_select(0, indices)
-        return samples.reshape(*resolved_shape, *probabilities.shape[1:])
+        return self.probability_posterior(X, **kwargs).rsample(sample_shape)
 
     def probability_variance(
         self,
@@ -116,8 +116,8 @@ class BootstrapBinaryClassificationEnsemble(NonGPBinaryClassificationMixin, nn.M
         **kwargs: object,
     ) -> Tensor:
         """Return epistemic variance across complete bootstrap members."""
-        del num_samples, kwargs
-        return self._member_probabilities(X).var(dim=0, unbiased=False)
+        del num_samples
+        return self.probability_posterior(X, **kwargs).variance
 
     def expected_class_entropy(
         self,
@@ -127,11 +127,8 @@ class BootstrapBinaryClassificationEnsemble(NonGPBinaryClassificationMixin, nn.M
         **kwargs: object,
     ) -> Tensor:
         """Return mean conditional entropy across bootstrap members."""
-        del num_samples, kwargs
-        probabilities = self._member_probabilities(X)
-        tiny = torch.finfo(probabilities.dtype).tiny
-        safe = probabilities.clamp_min(tiny)
-        return -torch.special.xlogy(safe, safe).sum(dim=-1).mean(dim=0)
+        del num_samples
+        return self.probability_posterior(X, **kwargs).expected_class_entropy
 
     def mutual_information(
         self,
@@ -142,4 +139,4 @@ class BootstrapBinaryClassificationEnsemble(NonGPBinaryClassificationMixin, nn.M
     ) -> Tensor:
         """Return BALD-style disagreement from the empirical member posterior."""
         del num_samples
-        return self.predictive_entropy(X, **kwargs) - self.expected_class_entropy(X, **kwargs)
+        return self.probability_posterior(X, **kwargs).mutual_information
