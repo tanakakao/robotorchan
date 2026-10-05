@@ -53,6 +53,7 @@ def test_classification_common_layer_contains_only_shared_modules() -> None:
     assert common_modules == {
         "base.py",
         "model_list.py",
+        "probability.py",
         "registry.py",
         "validation.py",
     }
