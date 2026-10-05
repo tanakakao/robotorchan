@@ -73,9 +73,9 @@ Classification families are added according to classification semantics rather t
 | structured output / HOGP | not implemented | structured regression outputs are not class-probability outputs |
 | hierarchical / contextual | not implemented | requires a classification-specific likelihood and prediction contract |
 | multi-fidelity | not implemented | fidelity-aware binary classification has not been reviewed |
-| robust label noise / contamination / replicates | implemented | classification-native observed-label semantics |
+| robust label noise / contamination / replicates | implemented | classification-native label semantics |
 | input-dependent label noise | implemented | flip rates are functions of input X |
-| Student-t likelihood | intentionally unsupported | continuous residual heavy tails do not define a Bernoulli label model |
+| Student-t likelihood | intentionally unsupported | no Bernoulli residual analogue |
 | uncertain-input | not implemented | requires a classification-specific uncertain-input contract |
 | non-GP surrogates | not implemented | probability/posterior contracts require separate classification adapters |
 | preference | separate task semantics | pairwise preference observations are not binary class labels |
