@@ -35,9 +35,9 @@ from robotorchan.models.classification.binary import (
     ReplicateLabelBinarySingleTaskGPClassifier,
     RobustBinaryClassificationMixin,
     RobustClassificationMetadata,
+    SaasBinarySingleTaskGPClassifier,
     UncertainBinaryClassificationMixin,
     UncertainClassificationMetadata,
-    SaasBinarySingleTaskGPClassifier,
 )
 from robotorchan.models.classification.binary.base import BinaryClassificationMixin
 from robotorchan.models.classification.binary.validation import validate_binary_labels
@@ -51,9 +51,6 @@ from robotorchan.models.classification.registry import (
 )
 
 __all__ = [
-    "ClassificationInputUncertaintyType",
-    "ClassificationUncertaintyIntegration",
-    "ClassificationUncertaintyTarget",
     "CLASSIFICATION_MODEL_REGISTRY",
     "ALEBOBinarySingleTaskGPClassifier",
     "BinaryClassificationMixin",
@@ -64,7 +61,10 @@ __all__ = [
     "ClassificationModelList",
     "ClassificationModelMixin",
     "ClassificationModelRegistryEntry",
+    "ClassificationInputUncertaintyType",
     "ClassificationRobustnessType",
+    "ClassificationUncertaintyIntegration",
+    "ClassificationUncertaintyTarget",
     "ContaminatedBernoulliLikelihood",
     "ContaminatedBinarySingleTaskGPClassifier",
     "InputDependentLabelNoiseBinarySingleTaskGPClassifier",
@@ -88,10 +88,10 @@ __all__ = [
     "RobustBinaryClassificationMixin",
     "RobustClassificationMetadata",
     "SaasBinarySingleTaskGPClassifier",
+    "UncertainBinaryClassificationMixin",
+    "UncertainClassificationMetadata",
     "get_classification_model_class",
     "get_classification_model_entry",
     "list_classification_models",
     "validate_binary_labels",
-    "UncertainBinaryClassificationMixin",
-    "UncertainClassificationMetadata",
 ]
