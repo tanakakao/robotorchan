@@ -75,3 +75,29 @@ def test_binary_saas_is_variational_not_fully_bayesian() -> None:
     assert entry.family == "high_dimensional"
     assert entry.capabilities.high_dimensional is HighDimensionalStrategy.SAAS
     assert entry.capabilities.inference is InferenceType.VARIATIONAL
+
+
+def test_registry_family_tracks_filesystem_family_not_capability_axes() -> None:
+    registry = CLASSIFICATION_MODEL_REGISTRY
+
+    for model_id in (
+        "binary.standard",
+        "binary.mixed",
+        "binary.multitask",
+        "binary.kronecker_multitask",
+    ):
+        assert registry[model_id].family == "standard"
+
+    for model_id in (
+        "binary.map_saas",
+        "binary.saas",
+        "binary.reduced",
+        "binary.pca",
+        "binary.pls",
+        "binary.random_projection",
+        "binary.alebo",
+        "binary.joint_encoder",
+    ):
+        assert registry[model_id].family == "high_dimensional"
+
+    assert registry["binary.deep_gp"].family == "expressive"

@@ -67,19 +67,19 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
     (
         "binary.mixed",
         MixedBinarySingleTaskGPClassifier,
-        "mixed",
+        "standard",
         _binary_capabilities(input_type=InputType.MIXED),
     ),
     (
         "binary.multitask",
         MultiTaskBinaryGPClassifier,
-        "multitask",
+        "standard",
         _binary_capabilities(task_type=TaskType.MULTITASK, supports_multi_output=True),
     ),
     (
         "binary.kronecker_multitask",
         KroneckerMultiTaskBinaryGPClassifier,
-        "multitask",
+        "standard",
         _binary_capabilities(task_type=TaskType.MULTITASK, supports_multi_output=True),
     ),
     (
