@@ -42,6 +42,7 @@ def test_classification_task_axis_is_explicit() -> None:
 def test_binary_model_families_are_nested_under_binary_task() -> None:
     assert (BINARY_ROOT / "standard").is_dir()
     assert (BINARY_ROOT / "high_dimensional").is_dir()
+    assert (BINARY_ROOT / "expressive").is_dir()
 
 
 def test_classification_common_layer_contains_only_shared_modules() -> None:
@@ -59,3 +60,8 @@ def test_classification_common_layer_contains_only_shared_modules() -> None:
 
 def test_development_audits_are_not_runtime_modules() -> None:
     assert not (CLASSIFICATION_ROOT / "regression_family_audit.py").exists()
+
+
+def test_binary_deep_gp_is_owned_by_expressive_family() -> None:
+    assert (BINARY_ROOT / "expressive" / "deep_gp.py").is_file()
+    assert not (BINARY_ROOT / "high_dimensional" / "deep_gp.py").exists()
