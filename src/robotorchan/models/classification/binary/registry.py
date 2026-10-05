@@ -34,11 +34,11 @@ from robotorchan.models.classification.binary.high_dimensional.saas import (
 from robotorchan.models.classification.binary.robust.contaminated import (
     ContaminatedBinarySingleTaskGPClassifier,
 )
-from robotorchan.models.classification.binary.robust.replicate import (
-    ReplicateLabelBinarySingleTaskGPClassifier,
-)
 from robotorchan.models.classification.binary.robust.label_noise import (
     LabelNoiseBinarySingleTaskGPClassifier,
+)
+from robotorchan.models.classification.binary.robust.replicate import (
+    ReplicateLabelBinarySingleTaskGPClassifier,
 )
 from robotorchan.models.classification.binary.standard.multitask import (
     KroneckerMultiTaskBinaryGPClassifier,
