@@ -10,7 +10,7 @@ from torch import Tensor, nn
 
 from robotorchan.models.classification.binary.non_gp.base import NonGPBinaryClassificationMixin
 from robotorchan.models.classification.binary.validation import validate_binary_labels
-from robotorchan.models.classification.posterior import (
+from robotorchan.models.classification.posterior.ensemble import (
     ClassificationEnsemblePosterior,
     make_classification_ensemble_posterior,
 )
