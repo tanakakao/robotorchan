@@ -9,11 +9,11 @@ from robotorchan.models.capabilities import (
     PosteriorSamplingType,
     TaskType,
 )
+from robotorchan.models.classification.binary.expressive.deep_gp import (
+    BinarySingleTaskDeepGPClassifier,
+)
 from robotorchan.models.classification.binary.high_dimensional.alebo import (
     ALEBOBinarySingleTaskGPClassifier,
-)
-from robotorchan.models.classification.binary.high_dimensional.deep_gp import (
-    BinarySingleTaskDeepGPClassifier,
 )
 from robotorchan.models.classification.binary.high_dimensional.joint_neural import (
     JointEncoderBinaryGPClassifier,
@@ -133,7 +133,7 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
     (
         "binary.deep_gp",
         BinarySingleTaskDeepGPClassifier,
-        "high_dimensional",
+        "expressive",
         _binary_capabilities(
             high_dimensional=HighDimensionalStrategy.DEEP,
             posterior_sampling_type=PosteriorSamplingType.STOCHASTIC,

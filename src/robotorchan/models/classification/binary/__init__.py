@@ -1,8 +1,8 @@
 """Binary classification surrogate models."""
 
+from robotorchan.models.classification.binary.expressive import BinarySingleTaskDeepGPClassifier
 from robotorchan.models.classification.binary.high_dimensional import (
     ALEBOBinarySingleTaskGPClassifier,
-    BinarySingleTaskDeepGPClassifier,
     JointEncoderBinaryGPClassifier,
     MapSaasBinarySingleTaskGPClassifier,
     PCABinarySingleTaskGPClassifier,
