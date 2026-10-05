@@ -27,11 +27,41 @@ class ClassificationAcquisitionModel(Protocol):
 
     def latent_posterior(self, X: Tensor, **kwargs: object) -> object: ...
 
+    def probability_variance(
+        self,
+        X: Tensor,
+        *,
+        num_samples: int = 128,
+        **kwargs: object,
+    ) -> Tensor: ...
 
-def _classification_model(model: Model) -> ClassificationAcquisitionModel:
-    required = ("predict_proba", "sample_class_probabilities", "latent_posterior")
-    if not all(callable(getattr(model, name, None)) for name in required):
-        raise TypeError("model must implement the robotorchan classification prediction contract")
+    def mutual_information(
+        self,
+        X: Tensor,
+        *,
+        num_samples: int = 128,
+        **kwargs: object,
+    ) -> Tensor: ...
+
+
+def _classification_model(
+    model: Model,
+    *,
+    required_methods: tuple[str, ...] = (),
+) -> ClassificationAcquisitionModel:
+    required = (
+        "predict_proba",
+        "sample_class_probabilities",
+        "latent_posterior",
+        *required_methods,
+    )
+    missing = tuple(name for name in required if not callable(getattr(model, name, None)))
+    if missing:
+        names = ", ".join(missing)
+        raise TypeError(
+            "model must implement the robotorchan classification prediction "
+            f"contract; missing methods: {names}"
+        )
     return cast(ClassificationAcquisitionModel, model)
 
 
@@ -84,16 +114,20 @@ class ProbabilityVariance(AcquisitionFunction):
         if num_samples < 2:
             raise ValueError("num_samples must be at least 2.")
         super().__init__(model=model)
-        self.classification_model = _classification_model(model)
+        self.classification_model = _classification_model(
+            model,
+            required_methods=("probability_variance",),
+        )
         self.num_samples = num_samples
 
     def forward(self, X: Tensor) -> Tensor:
         """Average class-probability variance across classes."""
         _require_q_one(X, self.__class__.__name__)
-        samples = self.classification_model.sample_class_probabilities(
-            X, sample_shape=torch.Size([self.num_samples])
+        variance = self.classification_model.probability_variance(
+            X,
+            num_samples=self.num_samples,
         )
-        return samples.var(dim=0, unbiased=False).mean(dim=-1).squeeze(-1)
+        return variance.mean(dim=-1).squeeze(-1)
 
 
 class BALD(AcquisitionFunction):
@@ -103,18 +137,20 @@ class BALD(AcquisitionFunction):
         if num_samples < 2:
             raise ValueError("num_samples must be at least 2.")
         super().__init__(model=model)
-        self.classification_model = _classification_model(model)
+        self.classification_model = _classification_model(
+            model,
+            required_methods=("mutual_information",),
+        )
         self.num_samples = num_samples
 
     def forward(self, X: Tensor) -> Tensor:
         """Estimate mutual information between labels and latent parameters."""
         _require_q_one(X, self.__class__.__name__)
-        samples = self.classification_model.sample_class_probabilities(
-            X, sample_shape=torch.Size([self.num_samples])
+        mutual_information = self.classification_model.mutual_information(
+            X,
+            num_samples=self.num_samples,
         )
-        predictive_entropy = _entropy(samples.mean(dim=0))
-        expected_entropy = _entropy(samples).mean(dim=0)
-        return (predictive_entropy - expected_entropy).clamp_min(0.0).squeeze(-1)
+        return mutual_information.squeeze(-1)
 
 
 class LatentStraddle(AcquisitionFunction):

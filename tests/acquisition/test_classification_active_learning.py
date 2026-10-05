@@ -97,3 +97,23 @@ def test_classification_acquisitions_require_q_one() -> None:
         assert "q=1" in str(error)
     else:
         raise AssertionError("PredictiveEntropy must reject q > 1")
+
+
+def test_active_learning_matches_model_uncertainty_contract() -> None:
+    model = _model()
+    X = torch.tensor([[[0.5]], [[0.8]]], dtype=torch.double)
+
+    probability_variance = ProbabilityVariance(model, num_samples=16)(X)
+    torch.manual_seed(123)
+    expected_variance = model.probability_variance(X, num_samples=16)
+    expected_variance = expected_variance.mean(dim=-1).squeeze(-1)
+
+    torch.manual_seed(123)
+    probability_variance = ProbabilityVariance(model, num_samples=16)(X)
+    torch.testing.assert_close(probability_variance, expected_variance)
+
+    torch.manual_seed(456)
+    expected_bald = model.mutual_information(X, num_samples=16).squeeze(-1)
+    torch.manual_seed(456)
+    actual_bald = BALD(model, num_samples=16)(X)
+    torch.testing.assert_close(actual_bald, expected_bald)

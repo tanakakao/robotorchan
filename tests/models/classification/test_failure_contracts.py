@@ -4,6 +4,8 @@ import math
 
 import pytest
 import torch
+from botorch.models.model import Model
+from botorch.posteriors import Posterior
 
 from robotorchan.acquisition import BALD, LatentStraddle, PredictiveEntropy, ProbabilityVariance
 from robotorchan.models import SingleTaskGP
@@ -95,3 +97,45 @@ def test_binary_classifier_rejects_mismatched_training_rows() -> None:
     train_X, train_Y = _binary_data()
     with pytest.raises(ValueError):
         BinarySingleTaskGPClassifier(train_X[:-1], train_Y)
+
+
+class _LegacyClassificationModel(Model):
+    @property
+    def num_outputs(self) -> int:
+        return 1
+
+    def posterior(
+        self,
+        X: torch.Tensor,
+        output_indices: list[int] | None = None,
+        observation_noise: bool | torch.Tensor = False,
+        posterior_transform: object | None = None,
+        **kwargs: object,
+    ) -> Posterior:
+        raise NotImplementedError
+
+    def predict_proba(self, X: torch.Tensor, **kwargs: object) -> torch.Tensor:
+        positive = torch.full(X.shape[:-1], 0.5, dtype=X.dtype, device=X.device)
+        return torch.stack((1.0 - positive, positive), dim=-1)
+
+    def sample_class_probabilities(
+        self,
+        X: torch.Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> torch.Tensor:
+        probabilities = self.predict_proba(X)
+        shape = torch.Size() if sample_shape is None else sample_shape
+        return probabilities.expand(shape + probabilities.shape)
+
+    def latent_posterior(self, X: torch.Tensor, **kwargs: object) -> object:
+        raise NotImplementedError
+
+
+def test_uncertainty_acquisitions_reject_incomplete_extended_contract() -> None:
+    model = _LegacyClassificationModel()
+
+    with pytest.raises(TypeError, match="probability_variance"):
+        ProbabilityVariance(model)
+    with pytest.raises(TypeError, match="mutual_information"):
+        BALD(model)
