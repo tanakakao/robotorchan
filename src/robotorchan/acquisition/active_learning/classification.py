@@ -44,10 +44,24 @@ class ClassificationAcquisitionModel(Protocol):
     ) -> Tensor: ...
 
 
-def _classification_model(model: Model) -> ClassificationAcquisitionModel:
-    required = ("predict_proba", "sample_class_probabilities", "latent_posterior")
-    if not all(callable(getattr(model, name, None)) for name in required):
-        raise TypeError("model must implement the robotorchan classification prediction contract")
+def _classification_model(
+    model: Model,
+    *,
+    required_methods: tuple[str, ...] = (),
+) -> ClassificationAcquisitionModel:
+    required = (
+        "predict_proba",
+        "sample_class_probabilities",
+        "latent_posterior",
+        *required_methods,
+    )
+    missing = tuple(name for name in required if not callable(getattr(model, name, None)))
+    if missing:
+        names = ", ".join(missing)
+        raise TypeError(
+            "model must implement the robotorchan classification prediction "
+            f"contract; missing methods: {names}"
+        )
     return cast(ClassificationAcquisitionModel, model)
 
 
@@ -100,7 +114,10 @@ class ProbabilityVariance(AcquisitionFunction):
         if num_samples < 2:
             raise ValueError("num_samples must be at least 2.")
         super().__init__(model=model)
-        self.classification_model = _classification_model(model)
+        self.classification_model = _classification_model(
+            model,
+            required_methods=("probability_variance",),
+        )
         self.num_samples = num_samples
 
     def forward(self, X: Tensor) -> Tensor:
@@ -120,7 +137,10 @@ class BALD(AcquisitionFunction):
         if num_samples < 2:
             raise ValueError("num_samples must be at least 2.")
         super().__init__(model=model)
-        self.classification_model = _classification_model(model)
+        self.classification_model = _classification_model(
+            model,
+            required_methods=("mutual_information",),
+        )
         self.num_samples = num_samples
 
     def forward(self, X: Tensor) -> Tensor:
