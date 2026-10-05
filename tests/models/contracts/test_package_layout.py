@@ -71,3 +71,14 @@ def test_binary_joint_encoder_is_owned_by_reduced_family() -> None:
     reduced_root = BINARY_ROOT / "high_dimensional" / "reduced"
     assert (reduced_root / "joint_neural.py").is_file()
     assert not (BINARY_ROOT / "high_dimensional" / "joint_neural.py").exists()
+
+
+def test_classification_family_tests_follow_model_ownership() -> None:
+    test_root = MODELS_ROOT.parent.parent.parent / "tests" / "models" / "classification"
+
+    assert (test_root / "expressive" / "test_deep_gp_classifier.py").is_file()
+    assert (
+        test_root / "high_dimensional" / "reduced" / "test_joint_encoder_classifier.py"
+    ).is_file()
+    assert not (test_root / "high_dimensional" / "test_deep_gp_classifier.py").exists()
+    assert not (test_root / "high_dimensional" / "test_joint_encoder_classifier.py").exists()
