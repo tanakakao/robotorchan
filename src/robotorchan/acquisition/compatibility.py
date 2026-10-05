@@ -64,6 +64,7 @@ def check_capabilities_acquisition_compatibility(
     if (
         acquisition_capabilities.target is AcquisitionTarget.LATENT
         and model_capabilities.non_gp
+        and model_capabilities.observation_type.value == "classification"
     ):
         reasons.append("acquisition requires a latent posterior")
     joint_gaussian = posterior_requirement is PosteriorRequirement.JOINT_GAUSSIAN
