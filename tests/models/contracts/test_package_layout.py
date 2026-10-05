@@ -4,7 +4,6 @@ from pathlib import Path
 
 import robotorchan.models as models_package
 
-
 MODELS_ROOT = Path(models_package.__file__).parent
 CLASSIFICATION_ROOT = MODELS_ROOT / "classification"
 BINARY_ROOT = CLASSIFICATION_ROOT / "binary"
