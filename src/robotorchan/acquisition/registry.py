@@ -65,6 +65,7 @@ def _classification_active_learning(
     *,
     target: AcquisitionTarget,
     posterior_requirement: PosteriorRequirement,
+    supports_ensemble: bool = False,
 ) -> AcquisitionRegistryEntry:
     return AcquisitionRegistryEntry(
         acquisition_name=name,
@@ -75,6 +76,7 @@ def _classification_active_learning(
             target=target,
             max_q=1,
             supports_multi_output=False,
+            supports_ensemble=supports_ensemble,
         ),
         implementation_strategy="robotorchan classification active-learning acquisition",
     )
@@ -96,11 +98,13 @@ ACQUISITION_REGISTRY.update(
             "ProbabilityVariance",
             target=AcquisitionTarget.CLASS_PROBABILITY,
             posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
+            supports_ensemble=True,
         ),
         "BALD": _classification_active_learning(
             "BALD",
             target=AcquisitionTarget.LABEL_UNCERTAINTY,
             posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
+            supports_ensemble=True,
         ),
         "LatentStraddle": _classification_active_learning(
             "LatentStraddle",
