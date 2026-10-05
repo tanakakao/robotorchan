@@ -4,7 +4,7 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import nn
 
-from robotorchan.acquisition import (
+from robotorchan.acquisition.classification_constraints import (
     ClassificationProbabilityOfFeasibility,
     FeasibilityWeightedAcquisition,
     RobustClassificationProbabilityOfFeasibility,
