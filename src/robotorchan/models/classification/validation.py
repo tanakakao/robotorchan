@@ -26,4 +26,3 @@ def validate_class_indices(train_Y: Tensor, *, num_classes: int) -> Tensor:
     if not bool(valid.all()):
         raise ValueError(f"Class indices must be in [0, {num_classes}).")
     return train_Y
-
