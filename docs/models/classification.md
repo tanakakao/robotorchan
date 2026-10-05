@@ -222,3 +222,16 @@ This is an outcome-feasibility decision layer. It is separate from candidate con
 such as bounds, linear constraints, and nonlinear functions of X. When objective and
 constraint outputs already share one BoTorch posterior, native BoTorch MC constraint
 callables remain the preferred API.
+
+
+## Non-GP binary classifiers
+
+The binary classification family includes scikit-learn adapters for Random Forest,
+Extra Trees, Gradient Boosting, and Histogram Gradient Boosting. These models implement
+the classification prediction contract without pretending to own a GP latent posterior.
+
+A single fitted estimator exposes `predict_proba`, class prediction, predictive entropy,
+and Bernoulli predictive variance. It does not expose latent posterior samples, epistemic
+probability variance, expected member entropy, or BALD mutual information. Returning zero
+for those quantities would incorrectly imply certainty. Phase 18 adds bootstrap/member
+sampling where ensemble disagreement has an explicit statistical meaning.
