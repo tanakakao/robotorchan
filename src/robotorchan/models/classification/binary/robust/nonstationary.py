@@ -42,7 +42,7 @@ class NonstationaryBinarySingleTaskGPClassifier(
     @property
     def gibbs_kernel(self) -> GibbsKernel:
         """Return the Gibbs kernel controlling latent decision-boundary smoothness."""
-        kernel = self.covar_module.base_kernel
+        kernel = self.model.covar_module.base_kernel
         if not isinstance(kernel, GibbsKernel):
             raise RuntimeError("Expected GibbsKernel as the base covariance module.")
         return kernel
