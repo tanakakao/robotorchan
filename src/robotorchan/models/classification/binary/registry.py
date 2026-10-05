@@ -41,7 +41,9 @@ from robotorchan.models.classification.binary.robust.label_noise import (
     LabelNoiseBinarySingleTaskGPClassifier,
 )
 from robotorchan.models.classification.binary.robust.nonstationary import (
+    MixedNonstationaryBinarySingleTaskGPClassifier,
     NonstationaryBinarySingleTaskGPClassifier,
+    NonstationaryMultiTaskBinaryGPClassifier,
 )
 from robotorchan.models.classification.binary.robust.replicate import (
     ReplicateLabelBinarySingleTaskGPClassifier,
@@ -186,5 +188,24 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
         NonstationaryBinarySingleTaskGPClassifier,
         "robust",
         _binary_capabilities(robustness=frozenset({RobustnessType.NONSTATIONARY})),
+    ),
+    (
+        "binary.robust.mixed_nonstationary",
+        MixedNonstationaryBinarySingleTaskGPClassifier,
+        "robust",
+        _binary_capabilities(
+            input_type=InputType.MIXED,
+            robustness=frozenset({RobustnessType.NONSTATIONARY}),
+        ),
+    ),
+    (
+        "binary.robust.multitask_nonstationary",
+        NonstationaryMultiTaskBinaryGPClassifier,
+        "robust",
+        _binary_capabilities(
+            task_type=TaskType.MULTITASK,
+            robustness=frozenset({RobustnessType.NONSTATIONARY}),
+            supports_multi_output=True,
+        ),
     ),
 )
