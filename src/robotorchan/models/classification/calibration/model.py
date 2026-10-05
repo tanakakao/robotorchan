@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import torch
 from torch import Tensor, nn
+from torch.distributions import Categorical
 
 from robotorchan.models.classification.binary.base import BinaryClassificationMixin
 from robotorchan.models.classification.calibration.base import ProbabilityCalibrator
@@ -65,6 +66,10 @@ class CalibratedBinaryClassifier(BinaryClassificationMixin, nn.Module):
             **kwargs,
         )
         return self.calibrator(samples)
+
+    def predictive_distribution(self, X: Tensor, **kwargs: object) -> Categorical:
+        """Return categorical distribution from calibrated probabilities."""
+        return Categorical(probs=self.predict_proba(X, **kwargs))
 
     def predictive_variance(self, X: Tensor, **kwargs: object) -> Tensor:
         """Return Bernoulli observation variance after calibration."""
