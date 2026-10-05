@@ -48,7 +48,7 @@ class TemperatureScalingCalibrator(ProbabilityCalibrator):
         targets: Tensor,
         *,
         max_iter: int = 100,
-    ) -> "TemperatureScalingCalibrator":
+    ) -> TemperatureScalingCalibrator:
         """Fit temperature by validation-set negative log likelihood."""
         if max_iter < 1:
             raise ValueError("max_iter must be positive.")
