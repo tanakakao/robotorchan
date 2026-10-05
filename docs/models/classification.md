@@ -235,3 +235,19 @@ and Bernoulli predictive variance. It does not expose latent posterior samples, 
 probability variance, expected member entropy, or BALD mutual information. Returning zero
 for those quantities would incorrectly imply certainty. Phase 18 adds bootstrap/member
 sampling where ensemble disagreement has an explicit statistical meaning.
+
+
+### Bootstrap ensemble classification
+
+`BootstrapGradientBoostingBinaryClassifier` fits complete classifiers on independent
+bootstrap resamples. The ensemble mean is the predictive class probability, while the
+distribution across complete fitted members is an empirical epistemic probability posterior.
+
+This distinction is intentional: boosting stages are not treated as posterior members.
+`sample_class_probabilities`, `probability_variance`,
+`expected_class_entropy`, and `mutual_information` operate on complete bootstrap members.
+
+The registry advertises this family as `non_gp=True`,
+`ensemble_posterior=True`, and `posterior_sampling_type="ensemble"`.
+A latent Gaussian posterior is still not fabricated. Phase 19 generalizes the ensemble
+posterior contract beyond this bootstrap implementation.
