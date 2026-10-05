@@ -56,6 +56,9 @@ from robotorchan.models.classification.binary.standard.single_task import (
     BinarySingleTaskGPClassifier,
     MixedBinarySingleTaskGPClassifier,
 )
+from robotorchan.models.classification.binary.uncertain.uncertain_categorical import (
+    UncertainCategoricalBinarySingleTaskGPClassifier,
+)
 from robotorchan.models.classification.binary.uncertain.uncertain_input import (
     ContinuousUncertainInputBinarySingleTaskGPClassifier,
 )
@@ -160,6 +163,15 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
         _binary_capabilities(
             high_dimensional=HighDimensionalStrategy.DEEP,
             posterior_sampling_type=PosteriorSamplingType.STOCHASTIC,
+        ),
+    ),
+    (
+        "binary.uncertain.categorical_input",
+        UncertainCategoricalBinarySingleTaskGPClassifier,
+        "uncertain",
+        _binary_capabilities(
+            input_type=InputType.MIXED,
+            robustness=frozenset({RobustnessType.UNCERTAIN_INPUT}),
         ),
     ),
     (
