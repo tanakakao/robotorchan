@@ -32,12 +32,22 @@ from robotorchan.models.classification.binary.standard import (
     MixedBinarySingleTaskGPClassifier,
     MultiTaskBinaryGPClassifier,
 )
+from robotorchan.models.classification.binary.uncertain import (
+    ClassificationInputUncertaintyType,
+    ClassificationUncertaintyIntegration,
+    ClassificationUncertaintyTarget,
+    UncertainBinaryClassificationMixin,
+    UncertainClassificationMetadata,
+)
 
 __all__ = [
     "ALEBOBinarySingleTaskGPClassifier",
     "BinarySingleTaskDeepGPClassifier",
     "BinarySingleTaskGPClassifier",
+    "ClassificationInputUncertaintyType",
     "ClassificationRobustnessType",
+    "ClassificationUncertaintyIntegration",
+    "ClassificationUncertaintyTarget",
     "ContaminatedBernoulliLikelihood",
     "ContaminatedBinarySingleTaskGPClassifier",
     "InputDependentLabelNoiseBinarySingleTaskGPClassifier",
@@ -60,4 +70,6 @@ __all__ = [
     "RobustBinaryClassificationMixin",
     "RobustClassificationMetadata",
     "SaasBinarySingleTaskGPClassifier",
+    "UncertainBinaryClassificationMixin",
+    "UncertainClassificationMetadata",
 ]
