@@ -192,7 +192,10 @@ def test_classification_sampling_compatibility_uses_probability_samples() -> Non
         )
         assert supported.status is CompatibilityStatus.COMPATIBLE
         assert unsupported.status is CompatibilityStatus.INCOMPATIBLE
-        assert "acquisition requires class-probability sampling support" in unsupported.reasons
+        assert (
+            "acquisition requires class-probability sampling support"
+            in unsupported.reasons
+        )
 
 
 def test_non_gp_probability_ensemble_supports_sampling_active_learning() -> None:
