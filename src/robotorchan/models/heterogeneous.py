@@ -141,9 +141,7 @@ class HeterogeneousModel(nn.Module):
         """Return one classification entry's native predictive probabilities."""
         model = self[key]
         if not isinstance(model, ClassificationModelMixin):
-            raise TypeError(
-                f"Heterogeneous model entry {key!r} is not a classification model."
-            )
+            raise TypeError(f"Heterogeneous model entry {key!r} is not a classification model.")
         return model.predict_proba(X, **kwargs)
 
     def output_classification_metadata(
