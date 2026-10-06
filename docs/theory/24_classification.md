@@ -198,3 +198,34 @@ sparsity priors operate only on the intended design coordinates.
 
 This distinction prevents family-parity work from producing thin wrappers while keeping low-level
 BoTorch/GPyTorch model components available for genuinely new covariance constructions.
+
+
+## Probability-space layers after the latent classifier
+
+A classification surrogate has several mathematically different output layers. They should not be
+collapsed into one generic "posterior":
+
+1. the latent GP posterior represents uncertainty in latent functions;
+2. the likelihood maps latent values to posterior-predictive class probabilities;
+3. repeated latent/model draws induce epistemic samples of class probabilities;
+4. post-hoc calibration transforms predictive probabilities without changing the latent posterior;
+5. decision rules map probabilities to actions using thresholds or a cost matrix;
+6. conformal prediction maps held-out nonconformity scores to set-valued predictions.
+
+This separation matters for Active Learning. Predictive entropy mixes predictive uncertainty,
+whereas BALD uses the difference between entropy of the mean predictive distribution and expected
+entropy under the same probability sample set. A deterministic non-GP classifier can provide a
+probability vector without providing epistemic probability samples, so it does not automatically
+support BALD or ProbabilityVariance. An empirical ensemble can provide those samples without
+claiming a Gaussian latent posterior.
+
+Calibration and conformal prediction also solve different problems. Calibration targets the quality
+of numerical probabilities. Split conformal prediction targets marginal coverage under
+exchangeability and does not require calibrated probabilities for validity. Reliability or OOD
+scores are diagnostics again: a high input-distance score is not itself a calibrated probability of
+being out of distribution.
+
+The model/acquisition capability matrix records these distinctions explicitly. In particular,
+classification probability-sampling support is separate from generic latent/posterior sampling.
+This prevents compatibility metadata from treating a Gaussian latent draw, an ensemble member
+probability vector, and a deterministic predicted probability as interchangeable objects.
