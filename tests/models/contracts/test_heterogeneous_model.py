@@ -169,9 +169,13 @@ class _InvalidOutputCountModel(_ToyModel):
         return 0
 
 
-def test_requires_declared_positive_output_count() -> None:
-    with pytest.raises(ValueError, match="positive integer num_outputs"):
-        HeterogeneousModel(_ToyModel(1.0))
+def test_undeclared_output_count_defaults_to_one() -> None:
+    model = HeterogeneousModel(_ToyModel(1.0))
 
-    with pytest.raises(ValueError, match="positive integer num_outputs"):
+    assert model.entry_num_outputs == (1,)
+    assert model.num_outputs == 1
+
+
+def test_declared_output_count_must_be_positive() -> None:
+    with pytest.raises(ValueError, match="positive integer"):
         HeterogeneousModel(_InvalidOutputCountModel(1.0))
