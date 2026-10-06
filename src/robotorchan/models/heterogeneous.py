@@ -132,6 +132,18 @@ class HeterogeneousModel(nn.Module):
             raise TypeError(f"Heterogeneous model entry {key!r} does not provide posterior(X).")
         return posterior(X, **kwargs)
 
+    def entry_latent_posterior(
+        self,
+        key: int | str,
+        X: Tensor,
+        **kwargs: object,
+    ) -> object:
+        """Return one classification entry's latent-function posterior."""
+        model = self[key]
+        if not isinstance(model, ClassificationModelMixin):
+            raise TypeError(f"Heterogeneous model entry {key!r} is not a classification model.")
+        return model.latent_posterior(X, **kwargs)
+
     def entry_predict_proba(
         self,
         key: int | str,
