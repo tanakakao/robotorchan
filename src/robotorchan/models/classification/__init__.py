@@ -66,6 +66,11 @@ from robotorchan.models.classification.calibration import (
     expected_calibration_error,
     maximum_calibration_error,
 )
+from robotorchan.models.classification.conformal import (
+    SplitConformalClassifier,
+    classification_nonconformity_scores,
+    conformal_quantile,
+)
 from robotorchan.models.classification.model_list import ClassificationModelList
 from robotorchan.models.classification.posterior import (
     ClassificationEnsemblePosterior,
@@ -143,6 +148,7 @@ __all__ = [
     "RobustProbabilityTransform",
     "SaasBinarySingleTaskGPClassifier",
     "SklearnBinaryClassifier",
+    "SplitConformalClassifier",
     "TemperatureScalingCalibrator",
     "UncertainBinaryClassificationMixin",
     "UncertainCategoricalBinarySingleTaskGPClassifier",
@@ -152,6 +158,8 @@ __all__ = [
     "binary_expected_decision_cost",
     "brier_score",
     "classification_nll",
+    "classification_nonconformity_scores",
+    "conformal_quantile",
     "expected_calibration_error",
     "get_classification_model_class",
     "get_classification_model_entry",
