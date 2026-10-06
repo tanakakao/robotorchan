@@ -35,9 +35,27 @@ class ClassificationProbabilityOfFeasibility(nn.Module):
         self.feasible_class = feasible_class
 
     def forward(self, X: Tensor) -> Tensor:
-        """Return P(feasible | X, D)."""
+        """Return per-candidate P(feasible | X, D)."""
         probabilities = self.model.predict_proba(X)
         return probabilities[..., self.feasible_class]
+
+
+class ClassificationProbabilityAcquisition(AcquisitionFunction):
+    """Expose q=1 classifier feasibility as a BoTorch acquisition."""
+
+    def __init__(
+        self,
+        probability_of_feasibility: ClassificationProbabilityOfFeasibility,
+    ) -> None:
+        """Initialize the q=1 acquisition adapter."""
+        super().__init__(model=probability_of_feasibility.model)
+        self.probability_of_feasibility = probability_of_feasibility
+
+    def forward(self, X: Tensor) -> Tensor:
+        """Return one feasibility acquisition value per t-batch."""
+        if X.shape[-2] != 1:
+            raise ValueError("ClassificationProbabilityAcquisition supports q=1 only.")
+        return self.probability_of_feasibility(X).squeeze(-1)
 
 
 class RobustClassificationProbabilityOfFeasibility(nn.Module):
