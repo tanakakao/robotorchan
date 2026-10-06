@@ -35,9 +35,16 @@ class HeterogeneousModel(nn.Module):
         *models: Models to compose. At least one model is required.
         names: Optional aliases for model entries. Positional indices remain
             the canonical identity and names only provide additional lookup.
+        output_names: Optional aliases for global outputs in deterministic output
+            order. Global output indices remain the canonical identity.
     """
 
-    def __init__(self, *models: nn.Module, names: Sequence[str | None] | None = None) -> None:
+    def __init__(
+        self,
+        *models: nn.Module,
+        names: Sequence[str | None] | None = None,
+        output_names: Sequence[str | None] | None = None,
+    ) -> None:
         super().__init__()
         if not models:
             raise ValueError("HeterogeneousModel requires at least one model.")
@@ -63,6 +70,20 @@ class HeterogeneousModel(nn.Module):
         self._name_to_index = {
             name: index for index, name in enumerate(self._names) if name is not None
         }
+        if output_names is None:
+            self._output_names = (None,) * self.num_outputs
+        else:
+            if len(output_names) != self.num_outputs:
+                raise ValueError("output_names must contain one entry for each global output.")
+            if any(name is not None and not isinstance(name, str) for name in output_names):
+                raise TypeError("Each output name must be a string or None.")
+            named_outputs = [name for name in output_names if name is not None]
+            if len(named_outputs) != len(set(named_outputs)):
+                raise ValueError("Output names must be unique.")
+            self._output_names = tuple(output_names)
+        self._output_name_to_index = {
+            name: index for index, name in enumerate(self._output_names) if name is not None
+        }
 
     def __len__(self) -> int:
         """Return the number of child model entries."""
@@ -85,6 +106,21 @@ class HeterogeneousModel(nn.Module):
     def names(self) -> tuple[str | None, ...]:
         """Return optional model aliases in insertion order."""
         return self._names
+
+    @property
+    def output_names(self) -> tuple[str | None, ...]:
+        """Return optional global-output aliases in deterministic output order."""
+        return self._output_names
+
+    def resolve_output(self, output: int | str) -> int:
+        """Resolve an output name or index to its canonical global output index."""
+        if isinstance(output, str):
+            try:
+                return self._output_name_to_index[output]
+            except KeyError as error:
+                raise KeyError(f"Unknown heterogeneous output name: {output!r}.") from error
+        self.output_owner(output)
+        return output if output >= 0 else output + self.num_outputs
 
     @property
     def entries(self) -> Sequence[nn.Module]:
@@ -133,9 +169,9 @@ class HeterogeneousModel(nn.Module):
             "regression or classification semantics."
         )
 
-    def output_observation_type(self, output_index: int) -> ObservationType:
-        """Return observation semantics for one global output."""
-        entry_index, _ = self.output_owner(output_index)
+    def output_observation_type(self, output_index: int | str) -> ObservationType:
+        """Return observation semantics for one named or indexed global output."""
+        entry_index, _ = self.output_owner(self.resolve_output(output_index))
         return self.entry_observation_type(entry_index)
 
     @property
@@ -211,10 +247,10 @@ class HeterogeneousModel(nn.Module):
 
     def output_classification_metadata(
         self,
-        output_index: int,
+        output_index: int | str,
     ) -> ClassificationMetadata | None:
         """Return classification metadata when the selected output is categorical."""
-        entry_index, local_index = self.output_owner(output_index)
+        entry_index, local_index = self.output_owner(self.resolve_output(output_index))
         model = self.models[entry_index]
         if not isinstance(model, ClassificationModelMixin):
             return None
