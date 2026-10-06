@@ -101,3 +101,25 @@ def test_registry_family_tracks_filesystem_family_not_capability_axes() -> None:
         assert registry[model_id].family == "high_dimensional"
 
     assert registry["binary.deep_gp"].family == "expressive"
+
+
+def test_registry_fragment_registration_is_task_agnostic() -> None:
+    from robotorchan.models.classification.registry import _register_fragment
+
+    registry = {}
+    capabilities = get_classification_model_entry("binary.standard").capabilities
+    specs = (
+        (
+            "multiclass.standard",
+            BinarySingleTaskGPClassifier,
+            "standard",
+            capabilities,
+        ),
+    )
+
+    _register_fragment(registry, specs, num_classes=None)
+
+    entry = registry["multiclass.standard"]
+    assert entry.model_id == "multiclass.standard"
+    assert entry.num_classes is None
+    assert entry.family == "standard"

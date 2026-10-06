@@ -26,19 +26,41 @@ class ClassificationModelRegistryEntry:
     capabilities: ModelCapabilities
 
 
-def _make_registry() -> dict[str, ClassificationModelRegistryEntry]:
-    """Compose task-specific classification registry fragments."""
-    registry: dict[str, ClassificationModelRegistryEntry] = {}
-    for model_id, model_class, family, capabilities in BINARY_CLASSIFICATION_MODEL_SPECS:
+ClassificationModelSpec: TypeAlias = tuple[
+    str,
+    ClassificationModelType,
+    str,
+    ModelCapabilities,
+]
+
+
+def _register_fragment(
+    registry: dict[str, ClassificationModelRegistryEntry],
+    specs: tuple[ClassificationModelSpec, ...],
+    *,
+    num_classes: int | None,
+) -> None:
+    """Register one task-specific model fragment without task assumptions."""
+    for model_id, model_class, family, capabilities in specs:
         if model_id in registry:
             raise RuntimeError(f"Duplicate classification model ID: {model_id!r}")
         registry[model_id] = ClassificationModelRegistryEntry(
             model_id=model_id,
             model_class=model_class,
-            num_classes=2,
+            num_classes=num_classes,
             family=family,
             capabilities=capabilities,
         )
+
+
+def _make_registry() -> dict[str, ClassificationModelRegistryEntry]:
+    """Compose task-specific classification registry fragments."""
+    registry: dict[str, ClassificationModelRegistryEntry] = {}
+    _register_fragment(
+        registry,
+        BINARY_CLASSIFICATION_MODEL_SPECS,
+        num_classes=2,
+    )
     return registry
 
 
