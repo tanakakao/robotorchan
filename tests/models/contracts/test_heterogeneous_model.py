@@ -757,3 +757,73 @@ def test_train_and_eval_modes_propagate_to_all_entries() -> None:
     assert model.training is True
     assert regression.training is True
     assert classifier.training is True
+
+
+def test_state_dict_uses_registered_entry_order_without_alias_keys() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(regression, classifier, names=["strength", "pass"])
+
+    keys = tuple(model.state_dict())
+
+    assert any(key.startswith("models.0.") for key in keys)
+    assert any(key.startswith("models.1.") for key in keys)
+    assert not any("strength" in key or "pass" in key for key in keys)
+
+
+def test_state_dict_excludes_nonpersistent_raw_training_data() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    model = HeterogeneousModel(regression)
+
+    keys = tuple(model.state_dict())
+
+    assert not any("raw_train_X" in key for key in keys)
+    assert not any("raw_train_Y" in key for key in keys)
+    assert torch.equal(model.raw_train_Xs[0], train_X)
+
+
+def test_state_dict_round_trip_restores_child_parameters() -> None:
+    train_X = torch.rand(6, 2)
+    train_Y = torch.rand(6, 1)
+    source = HeterogeneousModel(
+        SingleTaskGP(train_X, train_Y),
+        names=["strength"],
+    )
+    target = HeterogeneousModel(
+        SingleTaskGP(train_X, train_Y),
+        names=["strength"],
+    )
+
+    state = source.state_dict()
+    target.load_state_dict(state)
+
+    for source_parameter, target_parameter in zip(
+        source.parameters(),
+        target.parameters(),
+        strict=True,
+    ):
+        assert torch.equal(source_parameter, target_parameter)
+
+
+def test_aliases_are_constructor_metadata_not_state_dict_state() -> None:
+    train_X = torch.rand(6, 2)
+    train_Y = torch.rand(6, 1)
+    source = HeterogeneousModel(
+        SingleTaskGP(train_X, train_Y),
+        names=["strength"],
+    )
+    target = HeterogeneousModel(
+        SingleTaskGP(train_X, train_Y),
+        names=["property"],
+    )
+
+    target.load_state_dict(source.state_dict())
+
+    assert source.names == ("strength",)
+    assert target.names == ("property",)
+    assert target["property"] is target[0]
