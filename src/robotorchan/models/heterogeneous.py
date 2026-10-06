@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 
-from torch import nn
+from torch import Tensor, nn
 
 from robotorchan.models.classification.base import (
     ClassificationMetadata,
@@ -118,6 +118,33 @@ class HeterogeneousModel(nn.Module):
         """Return global indices not owned by classification model entries."""
         classification = set(self.classification_output_indices)
         return tuple(index for index in range(self.num_outputs) if index not in classification)
+
+    def entry_posterior(
+        self,
+        key: int | str,
+        X: Tensor,
+        **kwargs: object,
+    ) -> object:
+        """Return one entry's native posterior without merging semantics."""
+        model = self[key]
+        posterior = getattr(model, "posterior", None)
+        if not callable(posterior):
+            raise TypeError(f"Heterogeneous model entry {key!r} does not provide posterior(X).")
+        return posterior(X, **kwargs)
+
+    def entry_predict_proba(
+        self,
+        key: int | str,
+        X: Tensor,
+        **kwargs: object,
+    ) -> Tensor:
+        """Return one classification entry's native predictive probabilities."""
+        model = self[key]
+        if not isinstance(model, ClassificationModelMixin):
+            raise TypeError(
+                f"Heterogeneous model entry {key!r} is not a classification model."
+            )
+        return model.predict_proba(X, **kwargs)
 
     def output_classification_metadata(
         self,
