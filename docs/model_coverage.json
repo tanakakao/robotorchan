@@ -3,6 +3,7 @@
   "source_of_truth": "robotorchan.models.registry.MODEL_REGISTRY",
   "excluded_public_exports": [
     "DocumentationLinks",
+    "HeterogeneousModel",
     "HighDimensionalStrategy",
     "InferenceType",
     "InputType",

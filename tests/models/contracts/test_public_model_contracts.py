@@ -176,6 +176,7 @@ def test_public_model_exports_are_complete_and_explicit() -> None:
 
     non_model_exports = {
         "DocumentationLinks",
+        "HeterogeneousModel",
         "HighDimensionalStrategy",
         "InferenceType",
         "InputType",
