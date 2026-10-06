@@ -7,6 +7,14 @@ from collections.abc import Iterator, Sequence
 from torch import nn
 
 
+def _num_outputs(model: nn.Module) -> int:
+    """Return a model's declared number of outputs."""
+    num_outputs = getattr(model, "num_outputs", 1)
+    if not isinstance(num_outputs, int) or isinstance(num_outputs, bool) or num_outputs < 1:
+        raise ValueError("num_outputs must be a positive integer when declared.")
+    return num_outputs
+
+
 class HeterogeneousModel(nn.Module):
     """Compose models without merging their prediction semantics.
 
@@ -29,6 +37,11 @@ class HeterogeneousModel(nn.Module):
         if not all(isinstance(model, nn.Module) for model in models):
             raise TypeError("All heterogeneous model entries must be torch.nn.Module instances.")
         self.models = nn.ModuleList(models)
+        self._entry_num_outputs = tuple(_num_outputs(model) for model in models)
+        offsets = [0]
+        for num_outputs in self._entry_num_outputs:
+            offsets.append(offsets[-1] + num_outputs)
+        self._output_offsets = tuple(offsets)
         if names is None:
             self._names = (None,) * len(models)
         else:
@@ -70,3 +83,27 @@ class HeterogeneousModel(nn.Module):
     def entries(self) -> Sequence[nn.Module]:
         """Return the registered child models in insertion order."""
         return self.models
+
+    @property
+    def entry_num_outputs(self) -> tuple[int, ...]:
+        """Return each entry's declared output count in insertion order."""
+        return self._entry_num_outputs
+
+    @property
+    def num_outputs(self) -> int:
+        """Return the total number of outputs owned by all entries."""
+        return self._output_offsets[-1]
+
+    def output_owner(self, output_index: int) -> tuple[int, int]:
+        """Map a global output index to its entry and entry-local output index."""
+        if not isinstance(output_index, int) or isinstance(output_index, bool):
+            raise TypeError("output_index must be an integer.")
+        if output_index < 0:
+            output_index += self.num_outputs
+        if output_index < 0 or output_index >= self.num_outputs:
+            raise IndexError("heterogeneous output index out of range")
+        for entry_index, stop in enumerate(self._output_offsets[1:]):
+            if output_index < stop:
+                local_index = output_index - self._output_offsets[entry_index]
+                return entry_index, local_index
+        raise RuntimeError("Failed to resolve heterogeneous output ownership.")
