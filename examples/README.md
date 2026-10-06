@@ -116,7 +116,9 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`36_end_to_end_workflows.ipynb`](notebooks/36_end_to_end_workflows.ipynb) | Sequential / Batch / Async E2E | 利用可能 |
 | [`37_outcome_constrained_bo.ipynb`](notebooks/37_outcome_constrained_bo.ipynb) | Outcome-constrained BO | 利用可能 |
 | [`38_nonlinear_candidate_constraints.ipynb`](notebooks/38_nonlinear_candidate_constraints.ipynb) | Nonlinear candidate constraints | 利用可能 |
-| [`39_classification_active_learning.ipynb`](notebooks/39_classification_active_learning.ipynb) | Binary GP Classification / AL | 利用可能 |\n| [`40_classification_robust_uncertain.ipynb`](notebooks/40_classification_robust_uncertain.ipynb) | Robust / Uncertain-input Classification | 利用可能 |\n| [`41_classification_probability_layers.ipynb`](notebooks/41_classification_probability_layers.ipynb) | Ensemble / Calibration / Reliability / Conformal | 利用可能 |
+| [`39_classification_active_learning.ipynb`](notebooks/39_classification_active_learning.ipynb) | Binary GP Classification / AL | 利用可能 |
+| [`40_classification_robust_uncertain.ipynb`](notebooks/40_classification_robust_uncertain.ipynb) | Robust / Uncertain-input Classification | 利用可能 |
+| [`41_classification_probability_layers.ipynb`](notebooks/41_classification_probability_layers.ipynb) | Ensemble / Calibration / Reliability / Conformal | 利用可能 |
 
 ## Benchmark
 
