@@ -688,3 +688,72 @@ def test_training_data_views_follow_child_owned_buffers() -> None:
 
     assert model.raw_train_Xs[0] is regression.raw_train_X
     assert model.raw_train_Ys[0] is regression.raw_train_Y
+
+
+def test_to_dtype_propagates_to_registered_entries_and_raw_data() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(regression, classifier)
+
+    returned = model.to(dtype=torch.float64)
+
+    assert returned is model
+    assert next(regression.parameters()).dtype == torch.float64
+    assert next(classifier.parameters()).dtype == torch.float64
+    assert model.raw_train_Xs[0].dtype == torch.float64
+    assert model.raw_train_Xs[1].dtype == torch.float64
+
+
+def test_prediction_access_preserves_native_batched_input_shape() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(regression, classifier)
+    X = torch.rand(4, 3, 2)
+
+    posterior = model.entry_posterior(0, X)
+    probabilities = model.entry_predict_proba(1, X)
+
+    assert posterior.mean.shape == (4, 3, 1)
+    assert probabilities.shape == (4, 3, 2)
+
+
+def test_entries_may_retain_different_dtypes_until_container_is_moved() -> None:
+    regression_X = torch.rand(6, 2, dtype=torch.float64)
+    classification_X = torch.rand(6, 2, dtype=torch.float32)
+    regression = SingleTaskGP(regression_X, torch.rand(6, 1, dtype=torch.float64))
+    classifier = BinarySingleTaskGPClassifier(
+        classification_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(regression, classifier)
+
+    assert model.raw_train_Xs[0].dtype == torch.float64
+    assert model.raw_train_Xs[1].dtype == torch.float32
+
+
+def test_train_and_eval_modes_propagate_to_all_entries() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(regression, classifier)
+
+    model.eval()
+    assert model.training is False
+    assert regression.training is False
+    assert classifier.training is False
+
+    model.train()
+    assert model.training is True
+    assert regression.training is True
+    assert classifier.training is True
