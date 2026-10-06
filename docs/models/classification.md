@@ -498,3 +498,26 @@ PCA/PLS/random projection/neural encoders must not absorb them, ALEBO embeddings
 coordinates only, and SAAS shrinkage must be scoped to design covariance. This mirrors the
 regression-side structural-dimension rule without claiming those classification combinations are
 implemented today.
+
+
+### Posterior and sampling final contract
+
+Classification keeps three uncertainty surfaces distinct. `posterior` / `latent_posterior` is a
+BoTorch latent-function posterior only for models that genuinely have one. `predict_proba` is the
+posterior-predictive class probability after the likelihood, corruption channel, or calibration
+layer. `sample_class_probabilities` represents epistemic probability samples and is the sampling
+surface used by probability variance, expected class entropy, and BALD-style mutual information.
+
+Deterministic non-GP classifiers do not fabricate a latent BoTorch posterior. Empirical ensembles
+instead expose `ClassificationEnsemblePosterior`, which is explicitly a posterior over member
+probability vectors and is not advertised as a BoTorch latent posterior. GP and heterogeneous
+ensembles likewise do not collapse independent latent functions into a fictitious single latent GP.
+
+Post-hoc calibration leaves the underlying latent posterior unchanged but transforms both predictive
+probabilities and every epistemic probability sample. BALD-style mutual information must compute
+predictive and expected conditional entropy from the same probability sample set so Monte Carlo
+draw mismatch is not mistaken for epistemic disagreement.
+
+Observation-space predictive variance remains distinct from epistemic probability variance:
+Bernoulli/categorical variance describes label randomness conditional on the predictive
+distribution, while `probability_variance` measures variation across posterior probability samples.
