@@ -463,3 +463,38 @@ Cost-aware acquisition is a separate concern from the surrogate. Existing optimi
 fixed-feature, constraint, and cost-model utilities can be composed where their contracts are
 posterior-independent. This audit does not claim that regression qMFKG becomes valid merely because
 the classifier accepts a fidelity coordinate.
+
+
+### High-dimensional classification cross-family audit
+
+High-dimensional classification already has dedicated MAP-SAAS / SAAS, reduced-space, ALEBO, and
+joint-encoder model families. Phase 32 therefore treats cross-family support as a composition problem
+by default rather than generating a named class for every Cartesian product.
+
+| Cross-family combination | Decision | Contract |
+|---|---|---|
+| high-dimensional + calibration | COMPOSE | wrap final `predict_proba`; representation and latent GP remain unchanged |
+| high-dimensional + conformal | COMPOSE | conformalize held-out probabilities; no high-dimensional-specific conformal class |
+| high-dimensional + ensemble | COMPOSE | ensemble member probabilities through the common probability posterior |
+| high-dimensional + reliability/OOD | COMPOSE | predictive diagnostics compose; input-distance OOD must use a meaningful representation/reference space |
+| high-dimensional + candidate-time continuous input uncertainty | COMPOSE | marginalize candidate probabilities after raw-to-model input handling |
+| high-dimensional + label contamination / flip likelihood | COMPOSE where likelihood-only | likelihood semantics can be attached without creating SAAS/ALEBO-specific public names |
+| high-dimensional + nonstationary covariance | DEFER | both mechanisms alter covariance geometry and need an explicit combined kernel contract |
+| high-dimensional + Multi-Fidelity | DEFER | fidelity dimensions must remain structural and excluded from reduction/embedding/shrinkage where appropriate |
+| high-dimensional + mixed categorical structure | DEFER unless already explicit | categorical coordinates must not be silently reduced or embedded as continuous design dimensions |
+| high-dimensional + DeepGP | DEFER | combines representation/hierarchy and inference changes; not a thin-wrapper composition |
+
+The public API should not grow classes such as `CalibratedALEBO...`,
+`ConformalMapSaas...`, or `EnsemblePCA...`. Those operations consume the existing classifier
+probability contract and should remain wrappers/composition utilities.
+
+For reduced-space and random-embedding models, candidate uncertainty must be defined in raw input
+space first unless the user explicitly supplies a latent-space uncertainty model. Likewise, raw
+Mahalanobis OOD scores are not automatically meaningful after aggressive reduction; a reference
+representation must be chosen deliberately.
+
+For future Multi-Fidelity combinations, fidelity coordinates are protected structural dimensions:
+PCA/PLS/random projection/neural encoders must not absorb them, ALEBO embeddings must act on design
+coordinates only, and SAAS shrinkage must be scoped to design covariance. This mirrors the
+regression-side structural-dimension rule without claiming those classification combinations are
+implemented today.
