@@ -58,6 +58,14 @@ labels = model.predict_class(X)
 | `binary.joint_encoder` | continuous | single | neural reduction | Gaussian latent |
 | `binary.deep_gp` | continuous | single | deep | stochastic latent |
 
+| `binary.robust.*` | continuous / mixed / multitask | robust | Gaussian latent + probability samples |
+| `binary.uncertain.continuous_input` | continuous | uncertain input | none | Gaussian latent + probability samples |
+| `binary.uncertain.categorical_input` | mixed | uncertain input | none | Gaussian latent + probability samples |
+| `binary.ensemble.gp` | continuous | ensemble | none | empirical probability ensemble |
+| `binary.ensemble.heterogeneous` | continuous | ensemble | none | empirical probability ensemble |
+| `binary.non_gp.bootstrap_gradient_boosting` | continuous | non-GP ensemble | none | empirical probability ensemble |
+| `binary.non_gp.random_forest` / Extra Trees / boosting | continuous | non-GP | none | deterministic probability only |
+
 > `binary.saas` is a variational GP classifier with SAAS-style inverse-lengthscale shrinkage. It is not the classification counterpart of the regression `SaasFullyBayesian*` wrappers, which use NUTS/Pyro and `InferenceType.FULLY_BAYESIAN`.
 
 ### Regression-family coverage
