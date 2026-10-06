@@ -4,7 +4,7 @@ import pytest
 import torch
 from torch import nn
 
-from robotorchan.models import HeterogeneousModel, KroneckerMultiTaskGP, SingleTaskGP
+from robotorchan.models import HeterogeneousModel, KroneckerMultiTaskGP, ModelListGP, SingleTaskGP
 from robotorchan.models.classification import BinarySingleTaskGPClassifier
 
 
@@ -273,4 +273,66 @@ def test_mixed_output_metadata_remains_entry_local() -> None:
 
     assert model.output_classification_metadata(0) is None
     assert model.output_classification_metadata(1) is None
+    assert model.output_classification_metadata(2) == classifier.classification_metadata
+
+
+def test_model_list_gp_remains_one_heterogeneous_entry() -> None:
+    train_X = torch.rand(6, 2)
+    first = SingleTaskGP(train_X, torch.rand(6, 1))
+    second = SingleTaskGP(train_X, torch.rand(6, 1))
+    model_list = ModelListGP(first, second)
+
+    model = HeterogeneousModel(model_list)
+
+    assert len(model) == 1
+    assert model[0] is model_list
+    assert model.entry_num_outputs == (2,)
+    assert model.num_outputs == 2
+    assert model.output_owners == ((0, 0), (0, 1))
+    assert model.regression_output_indices == (0, 1)
+
+
+def test_model_list_gp_native_posterior_is_not_reimplemented() -> None:
+    train_X = torch.rand(6, 2)
+    first = SingleTaskGP(train_X, torch.rand(6, 1))
+    second = SingleTaskGP(train_X, torch.rand(6, 1))
+    model_list = ModelListGP(first, second)
+    model = HeterogeneousModel(model_list)
+
+    X = torch.rand(2, 2)
+    native_posterior = model[0].posterior(X)
+
+    assert len(native_posterior.posteriors) == 2
+    assert not hasattr(model, "posterior")
+
+
+def test_model_list_gp_raw_training_data_remains_child_owned() -> None:
+    first_X = torch.rand(6, 2)
+    second_X = torch.rand(7, 2)
+    first = SingleTaskGP(first_X, torch.rand(6, 1))
+    second = SingleTaskGP(second_X, torch.rand(7, 1))
+    model_list = ModelListGP(first, second)
+    model = HeterogeneousModel(model_list)
+
+    assert model[0].raw_train_Xs[0] is first.raw_train_X
+    assert model[0].raw_train_Xs[1] is second.raw_train_X
+    assert not hasattr(model, "raw_train_X")
+
+
+def test_model_list_gp_can_coexist_with_classifier_entry() -> None:
+    train_X = torch.rand(6, 2)
+    first = SingleTaskGP(train_X, torch.rand(6, 1))
+    second = SingleTaskGP(train_X, torch.rand(6, 1))
+    model_list = ModelListGP(first, second)
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+
+    model = HeterogeneousModel(model_list, classifier)
+
+    assert model.entry_num_outputs == (2, 1)
+    assert model.output_owners == ((0, 0), (0, 1), (1, 0))
+    assert model.regression_output_indices == (0, 1)
+    assert model.classification_output_indices == (2,)
     assert model.output_classification_metadata(2) == classifier.classification_metadata
