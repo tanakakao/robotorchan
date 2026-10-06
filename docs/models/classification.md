@@ -72,7 +72,7 @@ Classification families are added according to classification semantics rather t
 | expressive spectral mixture / infinite-width BNN | not implemented | no binary wrapper has been reviewed yet |
 | structured output / HOGP | not implemented | structured regression outputs are not class-probability outputs |
 | hierarchical / contextual | not implemented | requires a classification-specific likelihood and prediction contract |
-| multi-fidelity | not implemented | fidelity-aware binary classification has not been reviewed |
+| multi-fidelity | planned | Phase 31: classification-native variational MF model is meaningful; regression exact GP is not reusable directly |
 | robust label noise / contamination / replicates | implemented | classification-native label semantics |
 | input-dependent label noise | implemented | flip rates are functions of input X |
 | Student-t likelihood | intentionally unsupported | no Bernoulli residual analogue |
@@ -433,3 +433,33 @@ input/task covariance can be attached to the existing classification-native vari
 sampling, calibration, active-learning, and optimization contracts. HigherOrderGP and
 LatentKroneckerGP are different: their current output semantics themselves do not correspond to the
 binary/multiclass classification contract.
+
+
+### Multi-Fidelity classification audit
+
+Multi-Fidelity has a meaningful classification counterpart because fidelity is an input-side
+structural coordinate, not a Gaussian output type. The target model is therefore a
+classification-native latent GP with Bernoulli likelihood and fidelity-aware covariance; it is not
+an inheritance wrapper around regression `SingleTaskMultiFidelityGP`.
+
+| Regression capability | Classification decision | Reason |
+|---|---|---|
+| SingleTaskMultiFidelityGP model role | IMPLEMENT | fidelity-aware latent classification is well-defined, but requires variational Bernoulli inference |
+| MixedSingleTaskMultiFidelityGP | DEFER | compose categorical design covariance only after the base classification MF contract exists |
+| MAP-SAAS MultiFidelity | DEFER | preserve fidelity dimensions and apply shrinkage only to design dimensions after the base MF classifier |
+| PCA / PLS / RandomProjection MultiFidelity | DEFER | reduce only design dimensions; never absorb fidelity coordinates into the reducer |
+| target-fidelity projection / fixed fidelity features | COMPOSE | public candidate-X semantics are model-independent and can be reused |
+| fidelity-aware candidate constraints / TuRBO geometry | COMPOSE | optimizer-side fidelity coordinates remain structural and independent of outcome likelihood |
+| AffineFidelityCostModel / cost utility | COMPOSE | evaluation cost is an input/fidelity property, not a regression-only posterior property |
+| qMultiFidelityKnowledgeGradient workflow | DEFER | current qMFKG integration relies on Gaussian posterior, fantasy, and value semantics not yet established for classification |
+
+The future base classifier must keep fidelity dimensions explicit in raw candidate space, exclude
+them from ordinary design reduction and physical input perturbation, and expose target-fidelity
+probabilities through the normal classification probability contract. Classification uncertainty,
+calibration, reliability, conformal prediction, and active-learning utilities should consume those
+probabilities without treating fidelity as a class/task dimension.
+
+Cost-aware acquisition is a separate concern from the surrogate. Existing optimizer-side projection,
+fixed-feature, constraint, and cost-model utilities can be composed where their contracts are
+posterior-independent. This audit does not claim that regression qMFKG becomes valid merely because
+the classifier accepts a fidelity coordinate.
