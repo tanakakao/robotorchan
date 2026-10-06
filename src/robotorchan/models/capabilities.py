@@ -70,6 +70,7 @@ class ModelCapabilities:
     ensemble_posterior: bool = False
     supports_multi_output: bool = False
     supports_posterior_samples: bool = False
+    supports_probability_samples: bool = False
     posterior_sampling_type: PosteriorSamplingType = PosteriorSamplingType.NONE
     supports_fantasize: bool = False
 
