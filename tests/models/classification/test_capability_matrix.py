@@ -37,9 +37,11 @@ def test_all_classification_models_have_complete_binary_capabilities() -> None:
         assert capabilities.observation_type is ObservationType.CLASSIFICATION
         if capabilities.non_gp and not capabilities.ensemble_posterior:
             assert not capabilities.supports_posterior_samples
+            assert not capabilities.supports_probability_samples
             assert capabilities.posterior_sampling_type is PosteriorSamplingType.NONE
         else:
             assert capabilities.supports_posterior_samples
+            assert capabilities.supports_probability_samples
             assert capabilities.posterior_sampling_type is not PosteriorSamplingType.NONE
         if capabilities.ensemble_posterior:
             assert capabilities.posterior_sampling_type is PosteriorSamplingType.ENSEMBLE
@@ -171,3 +173,23 @@ def test_classification_batch_async_fantasy_boundaries_are_explicit() -> None:
 
     for entry in CLASSIFICATION_MODEL_REGISTRY.values():
         assert not entry.capabilities.supports_fantasize
+
+
+def test_classification_sampling_compatibility_uses_probability_samples() -> None:
+    standard = CLASSIFICATION_MODEL_REGISTRY["binary.standard"].capabilities
+    deterministic = CLASSIFICATION_MODEL_REGISTRY[
+        "binary.non_gp.gradient_boosting"
+    ].capabilities
+
+    for acquisition_name in ("BALD", "ProbabilityVariance"):
+        supported = check_capabilities_acquisition_compatibility(
+            standard,
+            acquisition_name,
+        )
+        unsupported = check_capabilities_acquisition_compatibility(
+            deterministic,
+            acquisition_name,
+        )
+        assert supported.status is CompatibilityStatus.COMPATIBLE
+        assert unsupported.status is CompatibilityStatus.INCOMPATIBLE
+        assert "acquisition requires class-probability sampling support" in unsupported.reasons
