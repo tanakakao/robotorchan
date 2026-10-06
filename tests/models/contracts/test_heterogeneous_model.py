@@ -11,6 +11,7 @@ from robotorchan.models import (
     MultiTaskGP,
     SingleTaskGP,
 )
+from robotorchan.models.capabilities import ObservationType
 from robotorchan.models.classification import BinarySingleTaskGPClassifier
 from robotorchan.models.classification.binary.non_gp.sklearn import RandomForestBinaryClassifier
 
@@ -827,3 +828,38 @@ def test_aliases_are_constructor_metadata_not_state_dict_state() -> None:
     assert source.names == ("strength",)
     assert target.names == ("property",)
     assert target["property"] is target[0]
+
+
+def test_observation_type_uses_model_family_contracts() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(regression, classifier)
+
+    assert model.entry_observation_type(0) is ObservationType.REGRESSION
+    assert model.entry_observation_type(1) is ObservationType.CLASSIFICATION
+    assert model.output_observation_type(0) is ObservationType.REGRESSION
+    assert model.output_observation_type(1) is ObservationType.CLASSIFICATION
+
+
+def test_unknown_custom_module_is_not_silently_treated_as_regression() -> None:
+    model = HeterogeneousModel(_ToyModel(1.0), names=["custom"])
+
+    with pytest.raises(TypeError, match="does not declare supported"):
+        model.entry_observation_type("custom")
+    with pytest.raises(TypeError, match="does not declare supported"):
+        _ = model.regression_output_indices
+
+
+def test_model_list_gp_uses_regression_training_contract() -> None:
+    train_X = torch.rand(6, 2)
+    first = SingleTaskGP(train_X, torch.rand(6, 1))
+    second = SingleTaskGP(train_X, torch.rand(6, 1))
+    model = HeterogeneousModel(ModelListGP(first, second))
+
+    assert model.entry_observation_type(0) is ObservationType.REGRESSION
+    assert model.regression_output_indices == (0, 1)
+    assert model.classification_output_indices == ()
