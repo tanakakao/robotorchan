@@ -556,3 +556,28 @@ parameters, inducing points, likelihood observations, and fantasy batch dimensio
 
 Candidate q, posterior Monte Carlo sample dimensions, ensemble-member dimensions, uncertain-input
 scenario dimensions, and any future fantasy dimensions remain independent axes.
+
+
+### Multiclass readiness
+
+The common classification contract is class-count agnostic: class probabilities use the final tensor
+dimension, `class_labels` defines its ordering, and probability samples retain that class axis.
+`ClassificationEnsemblePosterior`, probability calibration, predictive entropy, margin
+uncertainty, probability variance, and BALD-style mutual information therefore do not require a
+binary-only API redesign.
+
+Binary-specific semantics remain isolated under `classification/binary`: Bernoulli likelihood,
+the scalar latent decision boundary, threshold-based `predict_class`, label flip false-positive /
+false-negative channels, and `LatentStraddle`. A future multiclass family must use categorical /
+softmax likelihood semantics and a per-class or otherwise explicit latent-output structure rather
+than inheriting `BinaryClassificationMixin`.
+
+The public registry is assembled from task-specific fragments. Adding
+`MULTICLASS_CLASSIFICATION_MODEL_SPECS` should therefore extend the registry without rewriting the
+binary fragment or changing existing stable IDs. Multiclass model entries may use a dynamic
+`num_classes=None` registry value when class count is constructor/data dependent; the instantiated
+model remains responsible for concrete `num_classes` and `class_labels`.
+
+Multiclass readiness does not imply that a multiclass surrogate is implemented. In particular,
+multiclass calibration, class-conditional robustness, cost-sensitive decisions, latent-boundary
+acquisitions, and structured/multitask latent shapes require their own semantic review.
