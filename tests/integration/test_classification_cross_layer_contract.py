@@ -1,8 +1,8 @@
 """Final cross-layer runtime contracts for classification workflows."""
 
 import torch
-from torch import nn
 from botorch.optim import optimize_acqf
+from torch import nn
 
 from robotorchan.acquisition import BALD, PredictiveEntropy
 from robotorchan.acquisition.classification_constraints import (
@@ -15,8 +15,6 @@ from robotorchan.acquisition.compatibility import (
 )
 from robotorchan.models.classification import (
     BinarySingleTaskGPClassifier,
-    CalibratedBinaryClassifier,
-    TemperatureScalingCalibrator,
     get_classification_model_entry,
 )
 
