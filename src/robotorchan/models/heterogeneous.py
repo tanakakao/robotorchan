@@ -84,7 +84,6 @@ class HeterogeneousModel(nn.Module):
         """Return the registered child models in insertion order."""
         return self.models
 
-
     @property
     def entry_num_outputs(self) -> tuple[int, ...]:
         """Return each entry's declared output count in insertion order."""
