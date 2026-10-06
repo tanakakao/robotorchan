@@ -88,7 +88,6 @@ def test_classifier_feasibility_path_preserves_candidate_autograd() -> None:
     assert torch.isfinite(X.grad).all()
 
 
-
 def test_classifier_probability_acquisition_squeezes_q_one_axis() -> None:
     X = torch.tensor([[[-1.0]], [[1.0]]], dtype=torch.double)
     acquisition = ClassificationProbabilityAcquisition(
