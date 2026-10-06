@@ -4,7 +4,13 @@ import pytest
 import torch
 from torch import nn
 
-from robotorchan.models import HeterogeneousModel, KroneckerMultiTaskGP, ModelListGP, SingleTaskGP
+from robotorchan.models import (
+    HeterogeneousModel,
+    KroneckerMultiTaskGP,
+    ModelListGP,
+    MultiTaskGP,
+    SingleTaskGP,
+)
 from robotorchan.models.classification import BinarySingleTaskGPClassifier
 
 
@@ -338,4 +344,108 @@ def test_model_list_gp_can_coexist_with_classifier_entry() -> None:
     assert model.output_owners == ((0, 0), (0, 1), (1, 0))
     assert model.regression_output_indices == (0, 1)
     assert model.classification_output_indices == (2,)
+    assert model.output_classification_metadata(2) == classifier.classification_metadata
+
+
+def test_long_format_multitask_gp_uses_selected_tasks_as_outputs() -> None:
+    data_X = torch.rand(6, 2)
+    task_zero = torch.zeros(6, 1)
+    task_one = torch.ones(6, 1)
+    train_X = torch.cat(
+        [
+            torch.cat([data_X, task_zero], dim=-1),
+            torch.cat([data_X, task_one], dim=-1),
+        ],
+        dim=0,
+    )
+    train_Y = torch.rand(12, 1)
+    multitask = MultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=2,
+        output_tasks=[0, 1],
+    )
+    model = HeterogeneousModel(multitask)
+
+    assert multitask.num_outputs == 2
+    assert model.entry_num_outputs == (2,)
+    assert model.num_outputs == 2
+    assert model.output_owners == ((0, 0), (0, 1))
+
+
+def test_long_format_multitask_gp_respects_output_task_subset() -> None:
+    data_X = torch.rand(6, 2)
+    rows = [torch.cat([data_X, torch.full((6, 1), float(task))], dim=-1) for task in range(3)]
+    train_X = torch.cat(rows, dim=0)
+    train_Y = torch.rand(18, 1)
+    multitask = MultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=2,
+        output_tasks=[0, 2],
+    )
+    model = HeterogeneousModel(multitask)
+
+    assert multitask.num_outputs == 2
+    assert model.entry_num_outputs == (2,)
+    assert model.output_owners == ((0, 0), (0, 1))
+
+
+def test_multitask_gp_remains_one_entry_with_native_posterior() -> None:
+    data_X = torch.rand(6, 2)
+    train_X = torch.cat(
+        [
+            torch.cat([data_X, torch.zeros(6, 1)], dim=-1),
+            torch.cat([data_X, torch.ones(6, 1)], dim=-1),
+        ],
+        dim=0,
+    )
+    train_Y = torch.rand(12, 1)
+    multitask = MultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=2,
+        output_tasks=[0, 1],
+    )
+    model = HeterogeneousModel(multitask)
+
+    X = torch.rand(3, 2)
+    native_posterior = multitask.posterior(X)
+    nested_posterior = model[0].posterior(X)
+
+    assert len(model) == 1
+    assert model[0] is multitask
+    assert type(nested_posterior) is type(native_posterior)
+    assert nested_posterior.mean.shape == native_posterior.mean.shape
+    assert nested_posterior.mean.shape[-1] == 2
+    assert not hasattr(model, "posterior")
+
+
+def test_multitask_gp_and_classifier_keep_task_and_observation_semantics_separate() -> None:
+    data_X = torch.rand(6, 2)
+    train_X = torch.cat(
+        [
+            torch.cat([data_X, torch.zeros(6, 1)], dim=-1),
+            torch.cat([data_X, torch.ones(6, 1)], dim=-1),
+        ],
+        dim=0,
+    )
+    multitask = MultiTaskGP(
+        train_X,
+        torch.rand(12, 1),
+        task_feature=2,
+        output_tasks=[0, 1],
+    )
+    classifier = BinarySingleTaskGPClassifier(
+        data_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(multitask, classifier)
+
+    assert model.entry_num_outputs == (2, 1)
+    assert model.output_owners == ((0, 0), (0, 1), (1, 0))
+    assert model.regression_output_indices == (0, 1)
+    assert model.classification_output_indices == (2,)
+    assert model.output_classification_metadata(0) is None
+    assert model.output_classification_metadata(1) is None
     assert model.output_classification_metadata(2) == classifier.classification_metadata
