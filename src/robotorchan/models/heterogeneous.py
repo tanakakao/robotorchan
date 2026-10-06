@@ -6,6 +6,11 @@ from collections.abc import Iterator, Sequence
 
 from torch import nn
 
+from robotorchan.models.classification.base import (
+    ClassificationMetadata,
+    ClassificationModelMixin,
+)
+
 
 def _num_outputs(model: nn.Module) -> int:
     """Return a model's declared number of outputs."""
@@ -93,6 +98,22 @@ class HeterogeneousModel(nn.Module):
     def num_outputs(self) -> int:
         """Return the total number of outputs owned by all entries."""
         return self._output_offsets[-1]
+
+    def output_classification_metadata(
+        self,
+        output_index: int,
+    ) -> ClassificationMetadata | None:
+        """Return classification metadata when the selected output is categorical."""
+        entry_index, local_index = self.output_owner(output_index)
+        model = self.models[entry_index]
+        if not isinstance(model, ClassificationModelMixin):
+            return None
+        if model.num_outputs != 1 or local_index != 0:
+            raise ValueError(
+                "Classification metadata requires an unambiguous single-output "
+                "classification entry."
+            )
+        return model.classification_metadata
 
     def output_owner(self, output_index: int) -> tuple[int, int]:
         """Map a global output index to its entry and entry-local output index."""
