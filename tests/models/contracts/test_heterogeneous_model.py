@@ -13,6 +13,11 @@ from robotorchan.models import (
 )
 from robotorchan.models.capabilities import ObservationType
 from robotorchan.models.classification import BinarySingleTaskGPClassifier
+from robotorchan.models.classification.base import (
+    ClassificationLikelihoodFamily,
+    ClassificationModelMixin,
+    LatentOutputStructure,
+)
 from robotorchan.models.classification.binary.non_gp.sklearn import RandomForestBinaryClassifier
 
 
@@ -863,3 +868,131 @@ def test_model_list_gp_uses_regression_training_contract() -> None:
     assert model.entry_observation_type(0) is ObservationType.REGRESSION
     assert model.regression_output_indices == (0, 1)
     assert model.classification_output_indices == ()
+
+
+def test_heterogeneous_model_end_to_end_mixed_model_contract() -> None:
+    regression_X = torch.rand(8, 2)
+    multitask_Y = torch.rand(8, 2)
+    scalar_X = torch.rand(6, 2)
+    scalar_Y = torch.rand(6, 1)
+    classification_X = torch.rand(5, 2)
+    classification_Y = torch.tensor([0, 1, 0, 1, 1])
+
+    multitask = KroneckerMultiTaskGP(regression_X, multitask_Y)
+    scalar = SingleTaskGP(scalar_X, scalar_Y)
+    classifier = BinarySingleTaskGPClassifier(classification_X, classification_Y)
+    model = HeterogeneousModel(
+        multitask,
+        scalar,
+        classifier,
+        names=["properties", "cost", "pass"],
+    )
+
+    assert model.entry_num_outputs == (2, 1, 1)
+    assert model.num_outputs == 4
+    assert model.output_owners == ((0, 0), (0, 1), (1, 0), (2, 0))
+    assert model.regression_output_indices == (0, 1, 2)
+    assert model.classification_output_indices == (3,)
+    assert model.output_observation_type(0) is ObservationType.REGRESSION
+    assert model.output_observation_type(3) is ObservationType.CLASSIFICATION
+
+    assert model.raw_train_Xs[0].shape[0] == 8
+    assert model.raw_train_Xs[1].shape[0] == 6
+    assert model.raw_train_Xs[2].shape[0] == 5
+
+    X = torch.rand(4, 2)
+    multitask_posterior = model.entry_posterior("properties", X)
+    scalar_posterior = model.entry_posterior("cost", X)
+    latent_posterior = model.entry_latent_posterior("pass", X)
+    probabilities = model.entry_predict_proba("pass", X)
+
+    assert multitask_posterior.mean.shape == (4, 2)
+    assert scalar_posterior.mean.shape == (4, 1)
+    assert latent_posterior.mean.shape[-1] == 1
+    assert probabilities.shape == (4, 2)
+    assert model.output_classification_metadata(3) == classifier.classification_metadata
+
+    assert model.entry_make_mll("properties").model is multitask
+    assert model.entry_make_mll("cost").model is scalar
+    assert not hasattr(model, "posterior")
+    assert not hasattr(model, "fit")
+    assert not hasattr(model, "raw_train_X")
+
+
+def test_nested_model_list_and_classifier_preserve_composition_boundaries() -> None:
+    first_X = torch.rand(7, 2)
+    second_X = torch.rand(4, 2)
+    classifier_X = torch.rand(5, 2)
+    model_list = ModelListGP(
+        SingleTaskGP(first_X, torch.rand(7, 1)),
+        SingleTaskGP(second_X, torch.rand(4, 1)),
+    )
+    classifier = BinarySingleTaskGPClassifier(
+        classifier_X,
+        torch.tensor([0, 1, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(model_list, classifier)
+
+    assert len(model) == 2
+    assert model.entry_num_outputs == (2, 1)
+    assert model.output_owners == ((0, 0), (0, 1), (1, 0))
+    assert model.regression_output_indices == (0, 1)
+    assert model.classification_output_indices == (2,)
+    assert model[0] is model_list
+    assert model.raw_train_Xs[0] is None
+    assert model_list.raw_train_Xs[0].shape[0] == 7
+    assert model_list.raw_train_Xs[1].shape[0] == 4
+
+
+def test_classification_semantics_depend_on_family_contract_not_binary_class() -> None:
+    class _ClassificationStub(ClassificationModelMixin, nn.Module):
+        num_classes = 3
+        class_labels = ("a", "b", "c")
+        likelihood_family = ClassificationLikelihoodFamily.CATEGORICAL
+        latent_output_structure = LatentOutputStructure.PER_CLASS
+        num_outputs = 1
+
+        def __init__(self) -> None:
+            nn.Module.__init__(self)
+
+        def posterior(self, X: torch.Tensor, **kwargs: object) -> object:
+            del X, kwargs
+            raise NotImplementedError
+
+        def sample_class_probabilities(
+            self,
+            X: torch.Tensor,
+            sample_shape: torch.Size | None = None,
+            **kwargs: object,
+        ) -> torch.Tensor:
+            del sample_shape, kwargs
+            return self.predict_proba(X)
+
+        def predictive_variance(self, X: torch.Tensor, **kwargs: object) -> torch.Tensor:
+            del kwargs
+            return torch.zeros(*X.shape[:-1], 3)
+
+        def predictive_entropy(self, X: torch.Tensor, **kwargs: object) -> torch.Tensor:
+            del kwargs
+            return torch.zeros(X.shape[:-1])
+
+        def predictive_distribution(self, X: torch.Tensor, **kwargs: object) -> object:
+            del X, kwargs
+            return object()
+
+        def predict_proba(self, X: torch.Tensor, **kwargs: object) -> torch.Tensor:
+            del kwargs
+            return torch.full((*X.shape[:-1], 3), 1.0 / 3.0)
+
+        def predict_class(self, X: torch.Tensor, **kwargs: object) -> torch.Tensor:
+            del kwargs
+            return torch.zeros(X.shape[:-1], dtype=torch.long)
+
+    classifier = _ClassificationStub()
+    model = HeterogeneousModel(classifier)
+
+    assert model.classification_output_indices == (0,)
+    assert model.regression_output_indices == ()
+    assert model.output_observation_type(0) is ObservationType.CLASSIFICATION
+    assert model.output_classification_metadata(0).num_classes == 3
+    assert model.entry_predict_proba(0, torch.rand(2, 3)).shape == (2, 3)
