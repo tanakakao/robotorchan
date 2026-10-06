@@ -388,3 +388,24 @@ detector. A classifier can be confidently wrong far outside its training distrib
 These diagnostics remain separate from calibration. Calibration evaluates whether predicted
 probabilities match observed frequencies; OOD diagnostics evaluate whether a candidate is unlike
 the reference domain or has high epistemic uncertainty.
+
+
+### Conformal prediction sets
+
+`SplitConformalClassifier` adds finite-sample prediction sets on top of any classifier exposing
+`predict_proba`. It uses the inverse-probability nonconformity score
+`1 - P(y_observed | x, D)` on a held-out calibration set and the split-conformal finite-sample
+quantile `ceil((n + 1) * (1 - alpha))`.
+
+The wrapper does not recalibrate or replace predictive probabilities. Instead, `prediction_set(X)`
+returns a boolean mask over classes, and `prediction_set_size(X)` reports set size. The score and
+set construction are multiclass-ready even though the current model program remains binary-first.
+
+The usual marginal coverage statement requires exchangeability between the conformal calibration
+examples and future observations. It does not imply conditional coverage for every input, subgroup,
+or OOD region. Distribution shift can invalidate the guarantee, so conformal sets complement rather
+than replace the reliability/OOD diagnostics from Phase 28.
+
+Conformal calibration data must be held out from model fitting. If probability calibration such as
+temperature scaling is also used, fit that transformation without leaking the conformal calibration
+labels, then conformalize the final probability model on a separate held-out conformal split.
