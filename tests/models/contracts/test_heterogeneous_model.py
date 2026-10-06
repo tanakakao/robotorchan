@@ -518,3 +518,64 @@ def test_prediction_access_keeps_posterior_and_probability_distinct() -> None:
     assert classification_probability.shape == (3, 2)
     assert not hasattr(model, "posterior")
     assert not hasattr(model, "predict_proba")
+
+
+def test_classification_latent_posterior_is_explicitly_distinct_from_probability() -> None:
+    train_X = torch.rand(6, 2)
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(classifier, names=["pass"])
+    X = torch.rand(3, 2)
+
+    latent = model.entry_latent_posterior("pass", X)
+    probability = model.entry_predict_proba("pass", X)
+
+    assert type(latent) is type(classifier.latent_posterior(X))
+    assert latent.mean.shape[-1] == 1
+    assert probability.shape[-1] == classifier.num_classes
+    assert probability.shape[-1] == 2
+
+
+def test_classification_entry_posterior_preserves_native_latent_semantics() -> None:
+    train_X = torch.rand(6, 2)
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(classifier)
+    X = torch.rand(3, 2)
+
+    native = classifier.posterior(X)
+    generic = model.entry_posterior(0, X)
+    explicit = model.entry_latent_posterior(0, X)
+
+    assert type(generic) is type(native)
+    assert type(explicit) is type(native)
+    assert generic.mean.shape == explicit.mean.shape == native.mean.shape
+    assert generic.variance.shape == explicit.variance.shape == native.variance.shape
+
+
+def test_entry_latent_posterior_rejects_regression_entry() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    model = HeterogeneousModel(regression, names=["strength"])
+
+    with pytest.raises(TypeError, match="not a classification model"):
+        model.entry_latent_posterior("strength", torch.rand(3, 2))
+
+
+def test_multitask_regression_posterior_keeps_native_output_dimension() -> None:
+    train_X = torch.rand(6, 2)
+    multitask = KroneckerMultiTaskGP(train_X, torch.rand(6, 2))
+    model = HeterogeneousModel(multitask, names=["properties"])
+    X = torch.rand(3, 2)
+
+    native = multitask.posterior(X)
+    delegated = model.entry_posterior("properties", X)
+
+    assert model.entry_num_outputs == (2,)
+    assert type(delegated) is type(native)
+    assert delegated.mean.shape == native.mean.shape
+    assert delegated.mean.shape[-1] == 2
