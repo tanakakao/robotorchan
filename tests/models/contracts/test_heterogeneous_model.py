@@ -636,3 +636,55 @@ def test_heterogeneous_model_does_not_define_global_training_objective() -> None
 
     assert not hasattr(model, "make_mll")
     assert not hasattr(model, "fit")
+
+
+def test_training_data_remains_owned_by_each_entry() -> None:
+    regression_X = torch.rand(7, 2)
+    regression_Y = torch.rand(7, 1)
+    classification_X = torch.rand(5, 2)
+    classification_Y = torch.tensor([0, 1, 0, 1, 1])
+    regression = SingleTaskGP(regression_X, regression_Y)
+    classifier = BinarySingleTaskGPClassifier(classification_X, classification_Y)
+    model = HeterogeneousModel(regression, classifier)
+
+    assert torch.equal(model.raw_train_Xs[0], regression_X)
+    assert torch.equal(model.raw_train_Ys[0], regression_Y)
+    assert torch.equal(model.raw_train_Xs[1], classification_X)
+    assert torch.equal(model.raw_train_Ys[1], classification_Y)
+
+
+def test_training_data_contract_allows_partial_observation_rows() -> None:
+    strength_X = torch.rand(8, 2)
+    pass_X = torch.rand(3, 2)
+    strength = SingleTaskGP(strength_X, torch.rand(8, 1))
+    classifier = BinarySingleTaskGPClassifier(
+        pass_X,
+        torch.tensor([0, 1, 1]),
+    )
+    model = HeterogeneousModel(strength, classifier)
+
+    assert model.raw_train_Xs[0].shape[0] == 8
+    assert model.raw_train_Xs[1].shape[0] == 3
+    assert not hasattr(model, "raw_train_X")
+    assert not hasattr(model, "raw_train_Y")
+
+
+def test_training_data_contract_reports_missing_optional_data_per_entry() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    custom = _ToyModel(1.0)
+    model = HeterogeneousModel(regression, custom)
+
+    assert torch.equal(model.raw_train_Xs[0], train_X)
+    assert model.raw_train_Xs[1] is None
+    assert model.raw_train_Ys[1] is None
+    assert model.raw_train_Yvars[1] is None
+
+
+def test_training_data_views_follow_child_owned_buffers() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    model = HeterogeneousModel(regression)
+
+    assert model.raw_train_Xs[0] is regression.raw_train_X
+    assert model.raw_train_Ys[0] is regression.raw_train_Y
