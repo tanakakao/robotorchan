@@ -40,7 +40,6 @@ class ClassificationProbabilityOfFeasibility(nn.Module):
         return probabilities[..., self.feasible_class]
 
 
-
 class ClassificationProbabilityAcquisition(AcquisitionFunction):
     """Expose q=1 classifier feasibility as a BoTorch acquisition."""
 
