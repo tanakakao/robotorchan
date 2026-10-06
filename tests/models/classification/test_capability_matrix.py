@@ -177,9 +177,7 @@ def test_classification_batch_async_fantasy_boundaries_are_explicit() -> None:
 
 def test_classification_sampling_compatibility_uses_probability_samples() -> None:
     standard = CLASSIFICATION_MODEL_REGISTRY["binary.standard"].capabilities
-    deterministic = CLASSIFICATION_MODEL_REGISTRY[
-        "binary.non_gp.gradient_boosting"
-    ].capabilities
+    deterministic = CLASSIFICATION_MODEL_REGISTRY["binary.non_gp.gradient_boosting"].capabilities
 
     for acquisition_name in ("BALD", "ProbabilityVariance"):
         supported = check_capabilities_acquisition_compatibility(
@@ -192,10 +190,7 @@ def test_classification_sampling_compatibility_uses_probability_samples() -> Non
         )
         assert supported.status is CompatibilityStatus.COMPATIBLE
         assert unsupported.status is CompatibilityStatus.INCOMPATIBLE
-        assert (
-            "acquisition requires class-probability sampling support"
-            in unsupported.reasons
-        )
+        assert "acquisition requires class-probability sampling support" in unsupported.reasons
 
 
 def test_non_gp_probability_ensemble_supports_sampling_active_learning() -> None:
