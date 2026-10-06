@@ -38,7 +38,16 @@ def check_capabilities_acquisition_compatibility(
         reasons.append(
             f"acquisition does not support {model_capabilities.observation_type.value} observations"
         )
-    if model_capabilities.non_gp and not acquisition_capabilities.monte_carlo:
+    probability_space_classification = (
+        model_capabilities.observation_type.value == "classification"
+        and acquisition_capabilities.target
+        in {AcquisitionTarget.CLASS_PROBABILITY, AcquisitionTarget.LABEL_UNCERTAINTY}
+    )
+    if (
+        model_capabilities.non_gp
+        and not acquisition_capabilities.monte_carlo
+        and not probability_space_classification
+    ):
         posterior_requirement = acquisition_capabilities.posterior_requirement
         if posterior_requirement is not PosteriorRequirement.MARGINAL_MOMENTS:
             reasons.append("non-GP models require BoTorch Monte Carlo acquisitions")
