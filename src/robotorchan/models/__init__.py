@@ -34,8 +34,8 @@ from robotorchan.models.expressive.spectral_mixture import (
     SpectralMixtureKroneckerMultiTaskGP,
     SpectralMixtureMultiTaskGP,
 )
-from robotorchan.models.high_dimensional.alebo import ALEBOGP
 from robotorchan.models.heterogeneous import HeterogeneousModel
+from robotorchan.models.high_dimensional.alebo import ALEBOGP
 from robotorchan.models.high_dimensional.fully_bayesian import (
     MixedSaasFullyBayesianMultiTaskGP,
     MixedSaasFullyBayesianSingleTaskGP,
