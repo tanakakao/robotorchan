@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "docs" / "model_coverage.json"
 EXCLUDED_PUBLIC_EXPORTS = (
     "DocumentationLinks",
+    "HeterogeneousModel",
     "HighDimensionalStrategy",
     "InferenceType",
     "InputType",
