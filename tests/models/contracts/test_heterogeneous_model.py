@@ -449,3 +449,72 @@ def test_multitask_gp_and_classifier_keep_task_and_observation_semantics_separat
     assert model.output_classification_metadata(0) is None
     assert model.output_classification_metadata(1) is None
     assert model.output_classification_metadata(2) == classifier.classification_metadata
+
+
+def test_entry_posterior_delegates_without_changing_native_semantics() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    model = HeterogeneousModel(regression, names=["strength"])
+    X = torch.rand(3, 2)
+
+    native = regression.posterior(X)
+    delegated = model.entry_posterior("strength", X)
+
+    assert type(delegated) is type(native)
+    assert delegated.mean.shape == native.mean.shape
+    assert delegated.variance.shape == native.variance.shape
+
+
+def test_entry_predict_proba_delegates_classification_probability() -> None:
+    train_X = torch.rand(6, 2)
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(classifier, names=["pass"])
+    X = torch.rand(3, 2)
+
+    native = classifier.predict_proba(X)
+    delegated = model.entry_predict_proba("pass", X)
+
+    assert torch.equal(delegated, native)
+    assert delegated.shape == (3, 2)
+
+
+def test_entry_predict_proba_rejects_regression_entry() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    model = HeterogeneousModel(regression, names=["strength"])
+
+    with pytest.raises(TypeError, match="not a classification model"):
+        model.entry_predict_proba("strength", torch.rand(3, 2))
+
+
+def test_entry_posterior_rejects_entry_without_posterior_contract() -> None:
+    model = HeterogeneousModel(_ToyModel(1.0), names=["custom"])
+
+    with pytest.raises(TypeError, match=r"does not provide posterior\(X\)"):
+        model.entry_posterior("custom", torch.rand(3, 2))
+
+
+def test_prediction_access_keeps_posterior_and_probability_distinct() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(
+        regression,
+        classifier,
+        names=["strength", "pass"],
+    )
+    X = torch.rand(3, 2)
+
+    regression_posterior = model.entry_posterior("strength", X)
+    classification_probability = model.entry_predict_proba("pass", X)
+
+    assert regression_posterior.mean.shape == (3, 1)
+    assert classification_probability.shape == (3, 2)
+    assert not hasattr(model, "posterior")
+    assert not hasattr(model, "predict_proba")
