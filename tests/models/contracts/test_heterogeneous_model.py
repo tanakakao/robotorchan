@@ -77,3 +77,45 @@ def test_composes_regression_and_classification_models_without_wrapping() -> Non
     assert model[1] is classification
     assert model[0].posterior(train_X[:2]).mean.shape[-1] == 1
     assert model[1].predict_proba(train_X[:2]).shape == torch.Size([2, 2])
+
+
+def test_optional_names_are_aliases_for_entry_indices() -> None:
+    first = _ToyModel(1.0)
+    second = _ToyModel(2.0)
+    model = HeterogeneousModel(first, second, names=["strength", "pass"])
+
+    assert model.names == ("strength", "pass")
+    assert model["strength"] is model[0] is first
+    assert model["pass"] is model[1] is second
+
+
+def test_names_are_optional_per_entry() -> None:
+    first = _ToyModel(1.0)
+    second = _ToyModel(2.0)
+    model = HeterogeneousModel(first, second, names=[None, "pass"])
+
+    assert model.names == (None, "pass")
+    assert model[0] is first
+    assert model["pass"] is second
+
+
+def test_names_must_match_entry_count() -> None:
+    with pytest.raises(ValueError, match="one entry for each model"):
+        HeterogeneousModel(_ToyModel(1.0), _ToyModel(2.0), names=["only-one"])
+
+
+def test_names_must_be_unique() -> None:
+    with pytest.raises(ValueError, match="must be unique"):
+        HeterogeneousModel(_ToyModel(1.0), _ToyModel(2.0), names=["same", "same"])
+
+
+def test_names_must_be_strings_or_none() -> None:
+    with pytest.raises(TypeError, match="string or None"):
+        HeterogeneousModel(_ToyModel(1.0), names=[1])  # type: ignore[list-item]
+
+
+def test_unknown_name_raises_clear_key_error() -> None:
+    model = HeterogeneousModel(_ToyModel(1.0), names=["strength"])
+
+    with pytest.raises(KeyError, match="Unknown heterogeneous model name"):
+        model["missing"]
