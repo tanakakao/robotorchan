@@ -99,6 +99,26 @@ class HeterogeneousModel(nn.Module):
         """Return the total number of outputs owned by all entries."""
         return self._output_offsets[-1]
 
+    @property
+    def output_owners(self) -> tuple[tuple[int, int], ...]:
+        """Return ownership for every global output in deterministic order."""
+        return tuple(self.output_owner(index) for index in range(self.num_outputs))
+
+    @property
+    def classification_output_indices(self) -> tuple[int, ...]:
+        """Return global indices owned by classification model entries."""
+        indices: list[int] = []
+        for output_index, (entry_index, _) in enumerate(self.output_owners):
+            if isinstance(self.models[entry_index], ClassificationModelMixin):
+                indices.append(output_index)
+        return tuple(indices)
+
+    @property
+    def regression_output_indices(self) -> tuple[int, ...]:
+        """Return global indices not owned by classification model entries."""
+        classification = set(self.classification_output_indices)
+        return tuple(index for index in range(self.num_outputs) if index not in classification)
+
     def output_classification_metadata(
         self,
         output_index: int,
