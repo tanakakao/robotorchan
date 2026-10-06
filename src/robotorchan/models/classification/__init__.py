@@ -76,16 +76,16 @@ from robotorchan.models.classification.probability import (
     RobustProbabilityTransform,
     robust_class_probability,
 )
-from robotorchan.models.classification.reliability import (
-    ClassificationReliabilityEvaluator,
-    max_probability_reliability,
-)
 from robotorchan.models.classification.registry import (
     CLASSIFICATION_MODEL_REGISTRY,
     ClassificationModelRegistryEntry,
     get_classification_model_class,
     get_classification_model_entry,
     list_classification_models,
+)
+from robotorchan.models.classification.reliability import (
+    ClassificationReliabilityEvaluator,
+    max_probability_reliability,
 )
 
 __all__ = [
