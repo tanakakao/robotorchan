@@ -38,7 +38,16 @@ def check_capabilities_acquisition_compatibility(
         reasons.append(
             f"acquisition does not support {model_capabilities.observation_type.value} observations"
         )
-    if model_capabilities.non_gp and not acquisition_capabilities.monte_carlo:
+    probability_space_classification = (
+        model_capabilities.observation_type.value == "classification"
+        and acquisition_capabilities.target
+        in {AcquisitionTarget.CLASS_PROBABILITY, AcquisitionTarget.LABEL_UNCERTAINTY}
+    )
+    if (
+        model_capabilities.non_gp
+        and not acquisition_capabilities.monte_carlo
+        and not probability_space_classification
+    ):
         posterior_requirement = acquisition_capabilities.posterior_requirement
         if posterior_requirement is not PosteriorRequirement.MARGINAL_MOMENTS:
             reasons.append("non-GP models require BoTorch Monte Carlo acquisitions")
@@ -71,7 +80,16 @@ def check_capabilities_acquisition_compatibility(
     if joint_gaussian and model_capabilities.non_gp:
         reasons.append("acquisition requires a joint Gaussian posterior")
     posterior_samples = posterior_requirement is PosteriorRequirement.POSTERIOR_SAMPLES
-    if posterior_samples and not model_capabilities.supports_posterior_samples:
+    classification_probability_samples = (
+        posterior_samples
+        and model_capabilities.observation_type.value == "classification"
+        and acquisition_capabilities.target
+        in {AcquisitionTarget.CLASS_PROBABILITY, AcquisitionTarget.LABEL_UNCERTAINTY}
+    )
+    if classification_probability_samples:
+        if not model_capabilities.supports_probability_samples:
+            reasons.append("acquisition requires class-probability sampling support")
+    elif posterior_samples and not model_capabilities.supports_posterior_samples:
         reasons.append("acquisition requires posterior sampling support")
 
     if reasons:
