@@ -210,3 +210,21 @@ Public model documentation is tracked by `docs/model_coverage.json`.
 - `tests/test_model_documentation_coverage.py` validates exact public-API coverage and referenced file existence.
 
 This contract intentionally does not require one Notebook per class. It detects documentation drift without creating compatibility aliases or a separate documentation-only CI job; the check runs in the existing pytest matrix.
+
+
+## Heterogeneous model composition
+
+`HeterogeneousModel` composes child models with different observation semantics without
+inventing a shared posterior or training objective. Entry order is the canonical identity;
+optional names are aliases only.
+
+Observation semantics are resolved from model-family contracts. Classification entries
+implement `ClassificationModelMixin`, while regression entries participate in the common
+`ModelTrainingMixin` contract. An arbitrary `torch.nn.Module` is not silently interpreted
+as regression. Custom model families must first expose a supported robotorchan model
+contract before semantic output queries are valid.
+
+Regression posteriors, classification latent posteriors, and class probabilities remain
+separate APIs. Training data is owned by each child, so entries may have different
+observation rows. Device, dtype, training mode, and parameter serialization use normal
+PyTorch module-tree behavior.
