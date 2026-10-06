@@ -122,7 +122,19 @@ class CalibratedBinaryClassifier(BinaryClassificationMixin, nn.Module):
         **kwargs: object,
     ) -> Tensor:
         """Return calibrated BALD-style disagreement."""
-        return (
-            self.predictive_entropy(X, **kwargs)
-            - self.expected_class_entropy(X, num_samples=num_samples, **kwargs)
-        ).clamp_min(0.0)
+        if num_samples < 2:
+            raise ValueError("num_samples must be at least 2.")
+        probabilities = self.sample_class_probabilities(
+            X,
+            sample_shape=torch.Size([num_samples]),
+            **kwargs,
+        )
+        tiny = torch.finfo(probabilities.dtype).tiny
+        safe = probabilities.clamp_min(tiny)
+        mean_probabilities = probabilities.mean(dim=0)
+        predictive = -torch.special.xlogy(
+            mean_probabilities,
+            mean_probabilities,
+        ).sum(dim=-1)
+        conditional = -torch.special.xlogy(safe, safe).sum(dim=-1)
+        return (predictive - conditional.mean(dim=0)).clamp_min(0.0)
