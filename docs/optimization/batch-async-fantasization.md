@@ -27,6 +27,7 @@ fantasization audit. It describes runtime evidence rather than adding a parallel
 | Multi-objective GP | Supported | Supported | Model-dependent | qLogEHVI / qLogNEHVI integration tested |
 | Input-perturbation robust BO | Supported | Supported | Model-dependent | Input scenarios, posterior MC samples, and fantasies are distinct axes |
 | Empirical tree ensembles | Supported with compatible sampler / optimizer | Acquisition-dependent | Unsupported | Do not impose ExactGP fantasy semantics |
+| Classification AL | Pointwise q=1 only | Unsupported | Model-dependent; variational GP classification deferred | Entropy, margin, probability variance, BALD, and latent straddle do not claim joint-q or async semantics |
 | NGBoost | Posterior-path dependent | Acquisition-dependent | Unsupported | Optional non-GP dependency |
 | qKG / lookahead | One-shot semantics | Separate from internal fantasies | Required by acquisition | Augmented rows are not all real candidates |
 

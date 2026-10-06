@@ -161,3 +161,13 @@ def test_single_non_gp_classifiers_reject_posterior_dependent_active_learning() 
                 acquisition_name,
                 result.reasons,
             )
+
+
+def test_classification_batch_async_fantasy_boundaries_are_explicit() -> None:
+    for name in _CLASSIFICATION_ACQUISITIONS:
+        capabilities = ACQUISITION_REGISTRY[name].capabilities
+        assert capabilities.max_q == 1
+        assert not capabilities.requires_fantasize
+
+    for entry in CLASSIFICATION_MODEL_REGISTRY.values():
+        assert not entry.capabilities.supports_fantasize

@@ -521,3 +521,38 @@ draw mismatch is not mistaken for epistemic disagreement.
 Observation-space predictive variance remains distinct from epistemic probability variance:
 Bernoulli/categorical variance describes label randomness conditional on the predictive
 distribution, while `probability_variance` measures variation across posterior probability samples.
+
+
+### Batch, asynchronous, and fantasization contract
+
+Classification keeps candidate batch, pending-evaluation context, and fantasy-model state as
+separate concepts.
+
+| Capability | Current classification status | Contract |
+|---|---|---|
+| batched tensor evaluation | SUPPORTED | classifiers may evaluate multiple points in one tensor |
+| joint q-batch AL utility | UNSUPPORTED | current PredictiveEntropy, MarginUncertainty, ProbabilityVariance, BALD, and LatentStraddle are pointwise and require q=1 |
+| optimizer-side q > 1 from pointwise AL | UNSUPPORTED as joint utility | repeated/greedy selection needs an explicit diversity or conditioning policy |
+| X_pending on current classification AL | UNSUPPORTED | pending points are not silently ignored or converted into a penalty |
+| asynchronous classification AL | DEFER | requires a defined pending-point policy, not only storage of unresolved X |
+| variational GP classification fantasize | DEFER | ExactGP fantasy semantics are not claimed for Bernoulli variational inference |
+| deterministic non-GP fantasize | UNSUPPORTED | no latent posterior exists from which to construct fantasy observations |
+| empirical ensemble fantasize | UNSUPPORTED | member disagreement is not a substitute for a conditioned fantasy model |
+
+The q=1 restriction is semantic rather than a tensor-shape limitation. Pointwise entropy or BALD
+evaluated on a tensor of q candidates does not become a joint batch acquisition merely by summing
+or averaging scores. A future batch classifier acquisition must define redundancy/diversity or
+joint information gain explicitly.
+
+Likewise, unresolved `X_pending` belongs to the acquisition policy. Current classification
+acquisitions do not expose `X_pending`, so they must not advertise asynchronous support. A future
+async policy may penalize proximity, condition on pseudo/fantasy labels, or use a joint
+information-theoretic objective, but that choice must be explicit.
+
+Classification GP models use variational Bernoulli inference. They therefore do not inherit the
+exact-Gaussian assumption that a posterior draw can always be appended through the standard
+ExactGP fantasy lifecycle. Any future `fantasize` implementation must define how variational
+parameters, inducing points, likelihood observations, and fantasy batch dimensions are updated.
+
+Candidate q, posterior Monte Carlo sample dimensions, ensemble-member dimensions, uncertain-input
+scenario dimensions, and any future fantasy dimensions remain independent axes.
