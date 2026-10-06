@@ -5,6 +5,7 @@ from botorch.optim import optimize_acqf
 
 from robotorchan.acquisition import BALD, PredictiveEntropy
 from robotorchan.acquisition.classification_constraints import (
+    ClassificationProbabilityAcquisition,
     ClassificationProbabilityOfFeasibility,
 )
 from robotorchan.acquisition.compatibility import (
@@ -73,7 +74,9 @@ def test_calibrated_probability_of_feasibility_optimizes_end_to_end() -> None:
         model,
         TemperatureScalingCalibrator(temperature=1.5).double(),
     )
-    acquisition = ClassificationProbabilityOfFeasibility(calibrated)
+    acquisition = ClassificationProbabilityAcquisition(
+        ClassificationProbabilityOfFeasibility(calibrated)
+    )
 
     candidate, value = optimize_acqf(
         acquisition,
