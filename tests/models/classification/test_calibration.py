@@ -73,3 +73,32 @@ def test_calibration_does_not_replace_latent_posterior() -> None:
     X = torch.tensor([[0.5]], dtype=torch.double)
 
     assert calibrated.latent_posterior(X) is not None
+
+
+def test_calibrated_bald_uses_one_probability_sample_set() -> None:
+    train_X = torch.tensor([[0.0], [0.3], [0.7], [1.0]], dtype=torch.double)
+    train_Y = torch.tensor([0, 0, 1, 1], dtype=torch.long)
+    model = BinarySingleTaskGPClassifier(train_X, train_Y, inducing_points=4)
+    calibrated = CalibratedBinaryClassifier(
+        model,
+        TemperatureScalingCalibrator(temperature=1.5).double(),
+    )
+    X = torch.tensor([[0.4], [0.6]], dtype=torch.double)
+
+    torch.manual_seed(19)
+    probabilities = calibrated.sample_class_probabilities(
+        X,
+        sample_shape=torch.Size([16]),
+    )
+    tiny = torch.finfo(probabilities.dtype).tiny
+    safe = probabilities.clamp_min(tiny)
+    mean_probabilities = probabilities.mean(dim=0)
+    expected = (
+        -torch.special.xlogy(mean_probabilities, mean_probabilities).sum(dim=-1)
+        + torch.special.xlogy(safe, safe).sum(dim=-1).mean(dim=0)
+    ).clamp_min(0.0)
+
+    torch.manual_seed(19)
+    actual = calibrated.mutual_information(X, num_samples=16)
+
+    torch.testing.assert_close(actual, expected)
