@@ -581,3 +581,24 @@ model remains responsible for concrete `num_classes` and `class_labels`.
 Multiclass readiness does not imply that a multiclass surrogate is implemented. In particular,
 multiclass calibration, class-conditional robustness, cost-sensitive decisions, latent-boundary
 acquisitions, and structured/multitask latent shapes require their own semantic review.
+
+
+### Registry and capability matrix
+
+Classification capability metadata distinguishes latent/posterior sampling from class-probability
+sampling. GP classifiers can provide both: their latent posterior is sampled first and mapped through
+the classification likelihood. Bootstrap and heterogeneous ensembles provide probability samples
+without implying a shared Gaussian latent process. Deterministic non-GP classifiers provide neither
+epistemic probability samples nor a latent posterior unless a specific uncertainty mechanism is
+implemented.
+
+Classification acquisitions that target class probability or label uncertainty and require samples,
+such as ProbabilityVariance and BALD, are therefore checked against
+`supports_probability_samples`. This prevents a generic posterior-sampling flag from accidentally
+making a future model compatible with probability-space active learning when it cannot actually
+produce `sample_class_probabilities`.
+
+Registry metadata is a runtime contract, not documentation-only metadata. New classification
+families must keep observation type, input type, task structure, inference type, high-dimensional
+strategy, robustness, ensemble semantics, sampling surfaces, multi-output support, and fantasy
+support consistent with the implemented model methods.
