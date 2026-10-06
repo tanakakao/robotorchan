@@ -6,6 +6,8 @@ from collections.abc import Iterator, Sequence
 
 from torch import Tensor, nn
 
+from robotorchan.models.base import ModelTrainingMixin
+from robotorchan.models.capabilities import ObservationType
 from robotorchan.models.classification.base import (
     ClassificationMetadata,
     ClassificationModelMixin,
@@ -119,20 +121,40 @@ class HeterogeneousModel(nn.Module):
         """Return ownership for every global output in deterministic order."""
         return tuple(self.output_owner(index) for index in range(self.num_outputs))
 
+    def entry_observation_type(self, key: int | str) -> ObservationType:
+        """Return the validated observation semantics for one entry."""
+        model = self[key]
+        if isinstance(model, ClassificationModelMixin):
+            return ObservationType.CLASSIFICATION
+        if isinstance(model, ModelTrainingMixin):
+            return ObservationType.REGRESSION
+        raise TypeError(
+            f"Heterogeneous model entry {key!r} does not declare supported "
+            "regression or classification semantics."
+        )
+
+    def output_observation_type(self, output_index: int) -> ObservationType:
+        """Return observation semantics for one global output."""
+        entry_index, _ = self.output_owner(output_index)
+        return self.entry_observation_type(entry_index)
+
     @property
     def classification_output_indices(self) -> tuple[int, ...]:
         """Return global indices owned by classification model entries."""
-        indices: list[int] = []
-        for output_index, (entry_index, _) in enumerate(self.output_owners):
-            if isinstance(self.models[entry_index], ClassificationModelMixin):
-                indices.append(output_index)
-        return tuple(indices)
+        return tuple(
+            index
+            for index in range(self.num_outputs)
+            if self.output_observation_type(index) is ObservationType.CLASSIFICATION
+        )
 
     @property
     def regression_output_indices(self) -> tuple[int, ...]:
         """Return global indices not owned by classification model entries."""
-        classification = set(self.classification_output_indices)
-        return tuple(index for index in range(self.num_outputs) if index not in classification)
+        return tuple(
+            index
+            for index in range(self.num_outputs)
+            if self.output_observation_type(index) is ObservationType.REGRESSION
+        )
 
     def entry_make_mll(self, key: int | str) -> object:
         """Construct one entry's native marginal-likelihood objective."""
