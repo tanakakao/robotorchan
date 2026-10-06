@@ -44,7 +44,10 @@ class ClassificationProbabilityOfFeasibility(nn.Module):
 class ClassificationProbabilityAcquisition(AcquisitionFunction):
     """Expose q=1 classifier feasibility as a BoTorch acquisition."""
 
-    def __init__(self, probability_of_feasibility: ClassificationProbabilityOfFeasibility) -> None:
+    def __init__(
+        self,
+        probability_of_feasibility: ClassificationProbabilityOfFeasibility,
+    ) -> None:
         """Initialize the q=1 acquisition adapter."""
         super().__init__(model=probability_of_feasibility.model)
         self.probability_of_feasibility = probability_of_feasibility
