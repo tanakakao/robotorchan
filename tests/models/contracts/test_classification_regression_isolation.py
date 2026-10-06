@@ -32,7 +32,7 @@ def test_regression_non_gp_does_not_use_classification_probability_exception() -
 
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "non-GP models require BoTorch Monte Carlo acquisitions" in result.reasons
-    assert "acquisition requires joint Gaussian posterior" in result.reasons
+    assert "acquisition requires a joint Gaussian posterior" in result.reasons
 
 
 def test_regression_non_gp_monte_carlo_bo_remains_compatible() -> None:
