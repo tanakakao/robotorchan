@@ -55,14 +55,13 @@ def test_classification_common_layer_contains_only_shared_modules() -> None:
         "model_list.py",
         "probability.py",
         "registry.py",
-        "structured_audit.py",
         "validation.py",
     }
 
 
-def test_only_runtime_relevant_classification_audits_are_packaged() -> None:
+def test_development_audits_are_not_runtime_modules() -> None:
     assert not (CLASSIFICATION_ROOT / "regression_family_audit.py").exists()
-    assert (CLASSIFICATION_ROOT / "structured_audit.py").is_file()
+    assert not (CLASSIFICATION_ROOT / "structured_audit.py").exists()
 
 
 def test_binary_deep_gp_is_owned_by_expressive_family() -> None:
