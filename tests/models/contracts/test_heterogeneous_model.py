@@ -179,3 +179,52 @@ def test_undeclared_output_count_defaults_to_one() -> None:
 def test_declared_output_count_must_be_positive() -> None:
     with pytest.raises(ValueError, match="positive integer"):
         HeterogeneousModel(_InvalidOutputCountModel(1.0))
+
+
+def test_binary_class_probabilities_remain_one_heterogeneous_output() -> None:
+    train_X = torch.rand(6, 2)
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(classifier)
+
+    assert classifier.predict_proba(train_X[:2]).shape[-1] == 2
+    assert classifier.num_outputs == 1
+    assert model.entry_num_outputs == (1,)
+    assert model.num_outputs == 1
+    assert model.output_owner(0) == (0, 0)
+
+
+def test_classification_metadata_is_resolved_by_global_output() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(regression, classifier)
+
+    assert model.output_classification_metadata(0) is None
+    metadata = model.output_classification_metadata(1)
+    assert metadata == classifier.classification_metadata
+    assert metadata.num_classes == 2
+
+
+def test_multiple_classification_entries_keep_independent_metadata() -> None:
+    train_X = torch.rand(6, 2)
+    first = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    second = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([1, 1, 0, 0, 1, 0]),
+    )
+    model = HeterogeneousModel(first, second)
+
+    assert model.num_outputs == 2
+    assert model.output_owner(0) == (0, 0)
+    assert model.output_owner(1) == (1, 0)
+    assert model.output_classification_metadata(0) == first.classification_metadata
+    assert model.output_classification_metadata(1) == second.classification_metadata
