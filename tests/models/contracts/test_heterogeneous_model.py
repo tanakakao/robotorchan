@@ -13,6 +13,11 @@ from robotorchan.models import (
 )
 from robotorchan.models.capabilities import ObservationType
 from robotorchan.models.classification import BinarySingleTaskGPClassifier
+from robotorchan.models.classification.base import (
+    ClassificationLikelihoodFamily,
+    ClassificationModelMixin,
+    LatentOutputStructure,
+)
 from robotorchan.models.classification.binary.non_gp.sklearn import RandomForestBinaryClassifier
 
 
