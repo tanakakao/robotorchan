@@ -71,7 +71,16 @@ def check_capabilities_acquisition_compatibility(
     if joint_gaussian and model_capabilities.non_gp:
         reasons.append("acquisition requires a joint Gaussian posterior")
     posterior_samples = posterior_requirement is PosteriorRequirement.POSTERIOR_SAMPLES
-    if posterior_samples and not model_capabilities.supports_posterior_samples:
+    classification_probability_samples = (
+        posterior_samples
+        and model_capabilities.observation_type.value == "classification"
+        and acquisition_capabilities.target
+        in {AcquisitionTarget.CLASS_PROBABILITY, AcquisitionTarget.LABEL_UNCERTAINTY}
+    )
+    if classification_probability_samples:
+        if not model_capabilities.supports_probability_samples:
+            reasons.append("acquisition requires class-probability sampling support")
+    elif posterior_samples and not model_capabilities.supports_posterior_samples:
         reasons.append("acquisition requires posterior sampling support")
 
     if reasons:
