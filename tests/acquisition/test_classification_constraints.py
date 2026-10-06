@@ -5,6 +5,7 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import nn
 
 from robotorchan.acquisition.classification_constraints import (
+    ClassificationProbabilityAcquisition,
     ClassificationProbabilityOfFeasibility,
     FeasibilityWeightedAcquisition,
     RobustClassificationProbabilityOfFeasibility,
@@ -87,21 +88,26 @@ def test_classifier_feasibility_path_preserves_candidate_autograd() -> None:
     assert torch.isfinite(X.grad).all()
 
 
-def test_classifier_probability_of_feasibility_squeezes_q_one_axis() -> None:
+
+def test_classifier_probability_acquisition_squeezes_q_one_axis() -> None:
     X = torch.tensor([[[-1.0]], [[1.0]]], dtype=torch.double)
-    pof = ClassificationProbabilityOfFeasibility(_Classifier())
+    acquisition = ClassificationProbabilityAcquisition(
+        ClassificationProbabilityOfFeasibility(_Classifier())
+    )
 
-    assert pof(X).shape == torch.Size([2])
-    torch.testing.assert_close(pof(X), torch.sigmoid(X[..., 0]).squeeze(-1))
+    assert acquisition(X).shape == torch.Size([2])
+    torch.testing.assert_close(acquisition(X), torch.sigmoid(X[..., 0]).squeeze(-1))
 
 
-def test_classifier_probability_of_feasibility_rejects_direct_q_batch() -> None:
+def test_classifier_probability_acquisition_rejects_q_batch() -> None:
     X = torch.tensor([[[0.2], [0.8]]], dtype=torch.double)
-    pof = ClassificationProbabilityOfFeasibility(_Classifier())
+    acquisition = ClassificationProbabilityAcquisition(
+        ClassificationProbabilityOfFeasibility(_Classifier())
+    )
 
     try:
-        pof(X)
+        acquisition(X)
     except ValueError as error:
         assert "q=1" in str(error)
     else:
-        raise AssertionError("Direct classification PoF must reject q > 1")
+        raise AssertionError("ClassificationProbabilityAcquisition must reject q > 1")
