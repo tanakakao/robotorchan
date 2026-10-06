@@ -9,11 +9,9 @@ from torch import nn
 
 def _num_outputs(model: nn.Module) -> int:
     """Return a model's declared number of outputs."""
-    num_outputs = getattr(model, "num_outputs", None)
+    num_outputs = getattr(model, "num_outputs", 1)
     if not isinstance(num_outputs, int) or isinstance(num_outputs, bool) or num_outputs < 1:
-        raise ValueError(
-            "Each heterogeneous model entry must expose a positive integer num_outputs."
-        )
+        raise ValueError("num_outputs must be a positive integer when declared.")
     return num_outputs
 
 
