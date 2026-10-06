@@ -1,5 +1,11 @@
 """Binary classification surrogate models."""
 
+from robotorchan.models.classification.binary.decision import (
+    binary_cost_sensitive_prediction,
+    binary_cost_sensitive_threshold,
+    binary_expected_decision_cost,
+    inverse_frequency_class_weights,
+)
 from robotorchan.models.classification.binary.ensemble import (
     GPBinaryClassificationEnsemble,
     HeterogeneousBinaryClassificationEnsemble,
@@ -100,4 +106,8 @@ __all__ = [
     "UncertainBinaryClassificationMixin",
     "UncertainCategoricalBinarySingleTaskGPClassifier",
     "UncertainClassificationMetadata",
+    "binary_cost_sensitive_prediction",
+    "binary_cost_sensitive_threshold",
+    "binary_expected_decision_cost",
+    "inverse_frequency_class_weights",
 ]
