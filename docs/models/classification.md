@@ -76,8 +76,8 @@ Classification families are added according to classification semantics rather t
 | robust label noise / contamination / replicates | implemented | classification-native label semantics |
 | input-dependent label noise | implemented | flip rates are functions of input X |
 | Student-t likelihood | intentionally unsupported | no Bernoulli residual analogue |
-| uncertain-input | not implemented | requires a classification-specific uncertain-input contract |
-| non-GP surrogates | not implemented | probability/posterior contracts require separate classification adapters |
+| uncertain-input | implemented | continuous Gaussian MC and categorical finite marginalization are explicit |
+| non-GP surrogates | implemented | RF / Extra Trees / Gradient Boosting / HistGradientBoosting use classification-specific adapters |
 | preference | separate task semantics | pairwise preference observations are not binary class labels |
 
 The absence of these binary counterparts is intentional coverage status, not a filesystem-family mismatch. New models should enter the family matching their model semantics and expose classification-specific capabilities before registry inclusion.
