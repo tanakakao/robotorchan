@@ -409,3 +409,27 @@ than replace the reliability/OOD diagnostics from Phase 28.
 Conformal calibration data must be held out from model fitting. If probability calibration such as
 temperature scaling is also used, fit that transformation without leaking the conformal calibration
 labels, then conformalize the final probability model on a separate held-out conformal split.
+
+
+### Structured-family classification audit
+
+The regression `models.structured` package mixes two fundamentally different ideas, so
+classification does not mirror the directory mechanically.
+
+| Regression family | Classification decision | Reason |
+|---|---|---|
+| OrthogonalAdditiveGP | DEFER | additive latent structure is meaningful, but requires a Bernoulli variational model rather than the exact Gaussian regression class |
+| SACGP / LCEAGP | DEFER | contextual decomposition is meaningful on a latent classifier, but needs classification-native inference |
+| LCEMGP / HeterogeneousMTGP | DEFER | task/context covariance can be reused only through the multitask classification posterior contract |
+| HierarchicalConditionalKernelGP | DEFER | hierarchical input covariance is meaningful, but should be implemented as a variational classifier preserving structural parent dimensions |
+| HigherOrderGP | UNSUPPORTED | tensor-valued Gaussian responses are not class-probability outputs |
+| LatentKroneckerGP | UNSUPPORTED | a Gaussian response over an output-coordinate axis is not a classification-label posterior |
+
+`classification_structured_audit()` exposes these decisions as runtime-readable metadata. Phase 30
+does not add thin classifier wrappers around exact regression classes merely for family-name parity.
+
+The deferred families are not rejected concepts. They are implementation candidates only when their
+input/task covariance can be attached to the existing classification-native variational posterior,
+sampling, calibration, active-learning, and optimization contracts. HigherOrderGP and
+LatentKroneckerGP are different: their current output semantics themselves do not correspond to the
+binary/multiclass classification contract.
