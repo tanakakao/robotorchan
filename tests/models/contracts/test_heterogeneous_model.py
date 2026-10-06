@@ -12,6 +12,7 @@ from robotorchan.models import (
     SingleTaskGP,
 )
 from robotorchan.models.classification import BinarySingleTaskGPClassifier
+from robotorchan.models.classification.binary.non_gp.sklearn import RandomForestBinaryClassifier
 
 
 class _ToyModel(nn.Module):
@@ -579,3 +580,59 @@ def test_multitask_regression_posterior_keeps_native_output_dimension() -> None:
     assert type(delegated) is type(native)
     assert delegated.mean.shape == native.mean.shape
     assert delegated.mean.shape[-1] == 2
+
+
+def test_entry_make_mll_preserves_exact_gp_training_objective() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    model = HeterogeneousModel(regression, names=["strength"])
+
+    native = regression.make_mll()
+    delegated = model.entry_make_mll("strength")
+
+    assert type(delegated) is type(native)
+    assert delegated.model is regression
+
+
+def test_entry_make_mll_rejects_entry_without_mll_contract() -> None:
+    model = HeterogeneousModel(_ToyModel(1.0), names=["custom"])
+
+    with pytest.raises(TypeError, match=r"does not provide make_mll\(\)"):
+        model.entry_make_mll("custom")
+
+
+def test_entry_fit_delegates_explicit_non_gp_training() -> None:
+    train_X = torch.rand(8, 2)
+    classifier = RandomForestBinaryClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1, 0, 1]),
+        n_estimators=4,
+        random_state=0,
+    )
+    model = HeterogeneousModel(classifier, names=["pass"])
+
+    assert classifier.is_fitted is False
+    model.entry_fit("pass")
+    assert classifier.is_fitted is True
+
+
+def test_entry_fit_rejects_entry_without_explicit_fit_contract() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    model = HeterogeneousModel(regression, names=["strength"])
+
+    with pytest.raises(TypeError, match=r"does not provide fit\(\)"):
+        model.entry_fit("strength")
+
+
+def test_heterogeneous_model_does_not_define_global_training_objective() -> None:
+    train_X = torch.rand(6, 2)
+    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(regression, classifier)
+
+    assert not hasattr(model, "make_mll")
+    assert not hasattr(model, "fit")

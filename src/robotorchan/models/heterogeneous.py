@@ -119,6 +119,22 @@ class HeterogeneousModel(nn.Module):
         classification = set(self.classification_output_indices)
         return tuple(index for index in range(self.num_outputs) if index not in classification)
 
+    def entry_make_mll(self, key: int | str) -> object:
+        """Construct one entry's native marginal-likelihood objective."""
+        model = self[key]
+        make_mll = getattr(model, "make_mll", None)
+        if not callable(make_mll):
+            raise TypeError(f"Heterogeneous model entry {key!r} does not provide make_mll().")
+        return make_mll()
+
+    def entry_fit(self, key: int | str) -> None:
+        """Run one entry's native explicit fit operation."""
+        model = self[key]
+        fit = getattr(model, "fit", None)
+        if not callable(fit):
+            raise TypeError(f"Heterogeneous model entry {key!r} does not provide fit().")
+        fit()
+
     def entry_posterior(
         self,
         key: int | str,
