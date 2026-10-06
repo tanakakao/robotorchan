@@ -50,6 +50,10 @@ from robotorchan.models.classification.binary import (
     UncertainBinaryClassificationMixin,
     UncertainCategoricalBinarySingleTaskGPClassifier,
     UncertainClassificationMetadata,
+    binary_cost_sensitive_prediction,
+    binary_cost_sensitive_threshold,
+    binary_expected_decision_cost,
+    inverse_frequency_class_weights,
 )
 from robotorchan.models.classification.binary.base import BinaryClassificationMixin
 from robotorchan.models.classification.binary.validation import validate_binary_labels
@@ -63,12 +67,6 @@ from robotorchan.models.classification.calibration import (
     maximum_calibration_error,
 )
 from robotorchan.models.classification.model_list import ClassificationModelList
-from robotorchan.models.classification.decision import (
-    binary_cost_sensitive_prediction,
-    binary_cost_sensitive_threshold,
-    binary_expected_decision_cost,
-    inverse_frequency_class_weights,
-)
 from robotorchan.models.classification.posterior import (
     ClassificationEnsemblePosterior,
     make_classification_ensemble_posterior,
