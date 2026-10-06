@@ -42,7 +42,13 @@ When an algorithm is derived from a paper, its implementation should document th
   - `models.structured`: additive, contextual, hierarchical, heterogeneous-task, higher-order, and latent-Kronecker models;
   - `models.uncertain`: uncertain continuous and categorical input models;
   - `models.preference`: pairwise preference models;
-  - `models.non_gp`: probabilistic and ensemble non-GP surrogate models.
+  - `models.non_gp`: probabilistic and ensemble non-GP surrogate models;
+  - `models.classification`: classification-specific models and supporting probability,
+    calibration, conformal, posterior, and reliability utilities. Binary classifier
+    implementations live under `models.classification.binary` and mirror the applicable model
+    families (`standard`, `robust`, `high_dimensional`, `expressive`, `uncertain`, `non_gp`, and
+    `ensemble`) so future task types can be added without flattening classification into the
+    regression-oriented family packages.
 
   These family packages describe implementation responsibility, not separate compatibility APIs. Removed flat module paths are not forwarded or aliased.
 - `robotorchan.objectives`: objectives, posterior transforms, and constraint-related helpers when BoTorch does not already provide them.
