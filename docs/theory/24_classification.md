@@ -182,3 +182,19 @@ Categorical likelihood / multiclass latent representationを導入する必要�
 - [Expressive GP Models](22_expressive_gp.md)
 - [Classification Active Learning](acquisition/classification-active-learning.md)
 - [Classification model guide](../models/classification.md)
+
+
+## High-dimensional cross-family composition
+
+High-dimensional classification does not require a separate named model for every combination with
+calibration, conformal prediction, ensembles, or reliability diagnostics. These layers operate on
+the common probability contract and compose with MAP-SAAS, reduced-space, ALEBO, and joint-encoder
+classifiers.
+
+A new model family is justified when the combination changes latent covariance or representation
+semantics. Nonstationary covariance and Multi-Fidelity are examples that require explicit design:
+fidelity/task/category coordinates must remain structural, while reduction, random embedding, and
+sparsity priors operate only on the intended design coordinates.
+
+This distinction prevents family-parity work from producing thin wrappers while keeping low-level
+BoTorch/GPyTorch model components available for genuinely new covariance constructions.
