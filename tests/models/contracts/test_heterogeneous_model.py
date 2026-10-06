@@ -228,3 +228,49 @@ def test_multiple_classification_entries_keep_independent_metadata() -> None:
     assert model.output_owner(1) == (1, 0)
     assert model.output_classification_metadata(0) == first.classification_metadata
     assert model.output_classification_metadata(1) == second.classification_metadata
+
+
+def test_mixed_n_by_m_composition_preserves_global_output_layout() -> None:
+    train_X = torch.rand(6, 2)
+    regression_multi = KroneckerMultiTaskGP(train_X, torch.rand(6, 2))
+    classifier_a = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    regression_single = SingleTaskGP(train_X, torch.rand(6, 1))
+    classifier_b = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([1, 1, 0, 0, 1, 0]),
+    )
+
+    model = HeterogeneousModel(
+        regression_multi,
+        classifier_a,
+        regression_single,
+        classifier_b,
+        names=["properties", "pass", "cost", "stable"],
+    )
+
+    assert model.entry_num_outputs == (2, 1, 1, 1)
+    assert model.num_outputs == 5
+    assert model.output_owners == ((0, 0), (0, 1), (1, 0), (2, 0), (3, 0))
+    assert model.regression_output_indices == (0, 1, 3)
+    assert model.classification_output_indices == (2, 4)
+    assert model["properties"] is regression_multi
+    assert model["pass"] is classifier_a
+    assert model["cost"] is regression_single
+    assert model["stable"] is classifier_b
+
+
+def test_mixed_output_metadata_remains_entry_local() -> None:
+    train_X = torch.rand(6, 2)
+    regression = KroneckerMultiTaskGP(train_X, torch.rand(6, 2))
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(regression, classifier)
+
+    assert model.output_classification_metadata(0) is None
+    assert model.output_classification_metadata(1) is None
+    assert model.output_classification_metadata(2) == classifier.classification_metadata
