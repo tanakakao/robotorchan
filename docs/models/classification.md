@@ -72,7 +72,7 @@ Classification families are added according to classification semantics rather t
 | expressive spectral mixture / infinite-width BNN | not implemented | no binary wrapper has been reviewed yet |
 | structured output / HOGP | not implemented | structured regression outputs are not class-probability outputs |
 | hierarchical / contextual | not implemented | requires a classification-specific likelihood and prediction contract |
-| multi-fidelity | not implemented | fidelity-aware binary classification has not been reviewed |
+| multi-fidelity | planned | Phase 31: classification-native variational MF model is meaningful; regression exact GP is not reusable directly |
 | robust label noise / contamination / replicates | implemented | classification-native label semantics |
 | input-dependent label noise | implemented | flip rates are functions of input X |
 | Student-t likelihood | intentionally unsupported | no Bernoulli residual analogue |
