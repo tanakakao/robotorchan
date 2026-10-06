@@ -90,11 +90,33 @@ Classification families are added according to classification semantics rather t
 
 The absence of these binary counterparts is intentional coverage status, not a filesystem-family mismatch. New models should enter the family matching their model semantics and expose classification-specific capabilities before registry inclusion.
 
-すべて `observation_type=classification`, variational inference,
-`supports_posterior_samples=True` です。現在のclassification ALは `q=1` かつ
-single-outputのみを明示的にサポートするため、multitask classifierは互換性判定で保守的に
-rejectします。これはモデル自体がAL不能という意味ではなく、task selection / scalarizationの
-契約が未定義なためです。
+Registry entryはすべて `observation_type=classification` ですが、inferenceとsampling
+capabilityはfamilyごとに異なります。GP classifierはvariational inferenceとlatent /
+class-probability samplingを提供し、empirical ensembleはprobability samplingを提供します。
+deterministic non-GP classifierはlatent posteriorやepistemic probability samplesを捏造しません。
+
+現在のclassification ALは `q=1` かつsingle-outputのみを明示的にサポートするため、
+multitask classifierは互換性判定で保守的にrejectします。これはモデル自体がAL不能という
+意味ではなく、task selection / scalarizationの契約が未定義なためです。
+
+## 目的別の追加レイヤー
+
+分類ではsurrogate modelそのものと、予測確率に作用する後段レイヤーを分離します。
+
+| 目的 | API / family | 主な意味 |
+| --- | --- | --- |
+| label noise | `binary.robust.*` | 観測label生成過程をrobust化 |
+| candidate input uncertainty | `binary.uncertain.*` | 入力分布上でclass probabilityを周辺化 |
+| model disagreement | GP / heterogeneous / bootstrap ensemble | probability-space epistemic uncertainty |
+| probability calibration | `CalibratedBinaryClassifier` | latent posteriorを変えず予測確率を校正 |
+| calibration evaluation | NLL / Brier / ECE / MCE | held-out probability qualityを評価 |
+| reliability / OOD diagnostic | `ClassificationReliabilityEvaluator` | entropy・disagreement・input distanceを分離 |
+| prediction-set uncertainty | `SplitConformalClassifier` | held-out calibrationでset-valued prediction |
+| asymmetric decision cost | cost-sensitive decision utilities | probability estimationとdecision ruleを分離 |
+| constrained BO | classification PoF | classifier probabilityをfeasibilityとして合成 |
+
+これらを新しいsurrogate classとして直積的に増やしません。例えばcalibrationやconformal
+predictionはMAP-SAASやensembleにもprobability contractを介して合成する設計です。
 
 ## Robust cross-family composition
 
