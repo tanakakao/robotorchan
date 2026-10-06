@@ -193,3 +193,16 @@ def test_classification_sampling_compatibility_uses_probability_samples() -> Non
         assert supported.status is CompatibilityStatus.COMPATIBLE
         assert unsupported.status is CompatibilityStatus.INCOMPATIBLE
         assert "acquisition requires class-probability sampling support" in unsupported.reasons
+
+
+def test_non_gp_probability_ensemble_supports_sampling_active_learning() -> None:
+    capabilities = CLASSIFICATION_MODEL_REGISTRY[
+        "binary.non_gp.bootstrap_gradient_boosting"
+    ].capabilities
+
+    for acquisition_name in ("BALD", "ProbabilityVariance"):
+        result = check_capabilities_acquisition_compatibility(
+            capabilities,
+            acquisition_name,
+        )
+        assert result.status is CompatibilityStatus.COMPATIBLE, result.reasons
