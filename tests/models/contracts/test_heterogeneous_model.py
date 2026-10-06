@@ -4,7 +4,13 @@ import pytest
 import torch
 from torch import nn
 
-from robotorchan.models import (\n    HeterogeneousModel,\n    KroneckerMultiTaskGP,\n    ModelListGP,\n    MultiTaskGP,\n    SingleTaskGP,\n)
+from robotorchan.models import (
+    HeterogeneousModel,
+    KroneckerMultiTaskGP,
+    ModelListGP,
+    MultiTaskGP,
+    SingleTaskGP,
+)
 from robotorchan.models.classification import BinarySingleTaskGPClassifier
 
 
