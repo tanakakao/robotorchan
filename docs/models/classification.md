@@ -366,3 +366,25 @@ and documented.
 For BO constraints, asymmetric operational costs should not be confused with candidate feasibility
 probability. A calibrated `P(feasible)` remains a probability; cost-sensitive decisions belong to
 the downstream decision policy.
+
+
+### Reliability and out-of-distribution diagnostics
+
+Reliability is not represented by one universal score. Robotorchan keeps three concepts separate:
+
+- predictive entropy measures ambiguity in the predictive class distribution;
+- mutual information measures epistemic disagreement when the model exposes that posterior quantity;
+- input OOD score measures distance from a reference input distribution.
+
+`ClassificationReliabilityEvaluator` provides these signals without changing the classifier posterior.
+Its input-space OOD diagnostic uses a regularized Mahalanobis distance estimated from explicit
+`reference_X`, or from `model.raw_train_X` when available. It is a diagnostic for covariate
+departure, not a calibrated probability that a point is OOD.
+
+`max_probability_reliability` is a simple multiclass-ready confidence diagnostic. Low maximum
+probability can indicate ambiguity, but robotorchan deliberately does not label it as an OOD
+detector. A classifier can be confidently wrong far outside its training distribution.
+
+These diagnostics remain separate from calibration. Calibration evaluates whether predicted
+probabilities match observed frequencies; OOD diagnostics evaluate whether a candidate is unlike
+the reference domain or has high epistemic uncertainty.

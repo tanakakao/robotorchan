@@ -83,6 +83,10 @@ from robotorchan.models.classification.registry import (
     get_classification_model_entry,
     list_classification_models,
 )
+from robotorchan.models.classification.reliability import (
+    ClassificationReliabilityEvaluator,
+    max_probability_reliability,
+)
 
 __all__ = [
     "CLASSIFICATION_MODEL_REGISTRY",
@@ -101,6 +105,7 @@ __all__ = [
     "ClassificationModelMixin",
     "ClassificationModelRegistryEntry",
     "ClassificationProbabilityRiskType",
+    "ClassificationReliabilityEvaluator",
     "ClassificationRobustnessType",
     "ClassificationUncertaintyIntegration",
     "ClassificationUncertaintyTarget",
@@ -153,6 +158,7 @@ __all__ = [
     "inverse_frequency_class_weights",
     "list_classification_models",
     "make_classification_ensemble_posterior",
+    "max_probability_reliability",
     "maximum_calibration_error",
     "robust_class_probability",
     "validate_binary_labels",
