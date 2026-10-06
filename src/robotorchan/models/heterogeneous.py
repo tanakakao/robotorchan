@@ -90,6 +90,21 @@ class HeterogeneousModel(nn.Module):
         return self.models
 
     @property
+    def raw_train_Xs(self) -> tuple[Tensor | None, ...]:
+        """Return each entry's retained raw training inputs, if available."""
+        return tuple(getattr(model, "raw_train_X", None) for model in self.models)
+
+    @property
+    def raw_train_Ys(self) -> tuple[Tensor | None, ...]:
+        """Return each entry's retained raw training outcomes, if available."""
+        return tuple(getattr(model, "raw_train_Y", None) for model in self.models)
+
+    @property
+    def raw_train_Yvars(self) -> tuple[Tensor | None, ...]:
+        """Return each entry's retained observation variances, if available."""
+        return tuple(getattr(model, "raw_train_Yvar", None) for model in self.models)
+
+    @property
     def entry_num_outputs(self) -> tuple[int, ...]:
         """Return each entry's declared output count in insertion order."""
         return self._entry_num_outputs
