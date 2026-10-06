@@ -1,6 +1,7 @@
 """Final cross-layer runtime contracts for classification workflows."""
 
 import torch
+from torch import nn
 from botorch.optim import optimize_acqf
 
 from robotorchan.acquisition import BALD, PredictiveEntropy
@@ -68,14 +69,17 @@ def test_sampling_active_learning_optimizes_with_botorch_optimizer() -> None:
     assert torch.isfinite(value).all()
 
 
-def test_calibrated_probability_of_feasibility_optimizes_end_to_end() -> None:
-    model = _model()
-    calibrated = CalibratedBinaryClassifier(
-        model,
-        TemperatureScalingCalibrator(temperature=1.5).double(),
-    )
+class _NonconstantClassifier(nn.Module):
+    num_classes = 2
+
+    def predict_proba(self, X: torch.Tensor) -> torch.Tensor:
+        positive = torch.sigmoid(6.0 * (X[..., 0] - 0.5))
+        return torch.stack((1.0 - positive, positive), dim=-1)
+
+
+def test_probability_of_feasibility_optimizes_nonconstant_predictions() -> None:
     acquisition = ClassificationProbabilityAcquisition(
-        ClassificationProbabilityOfFeasibility(calibrated)
+        ClassificationProbabilityOfFeasibility(_NonconstantClassifier())
     )
 
     candidate, value = optimize_acqf(
@@ -94,9 +98,7 @@ def test_calibrated_probability_of_feasibility_optimizes_end_to_end() -> None:
 
 
 def test_registry_rejects_sampling_acquisition_without_probability_samples() -> None:
-    capabilities = get_classification_model_entry(
-        "binary.non_gp.gradient_boosting"
-    ).capabilities
+    capabilities = get_classification_model_entry("binary.non_gp.gradient_boosting").capabilities
     result = check_capabilities_acquisition_compatibility(capabilities, "BALD")
 
     assert result.status is CompatibilityStatus.INCOMPATIBLE
