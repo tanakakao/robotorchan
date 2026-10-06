@@ -300,9 +300,12 @@ def test_model_list_gp_native_posterior_is_not_reimplemented() -> None:
     model = HeterogeneousModel(model_list)
 
     X = torch.rand(2, 2)
-    native_posterior = model[0].posterior(X)
+    native_posterior = model_list.posterior(X)
+    nested_posterior = model[0].posterior(X)
 
-    assert len(native_posterior.posteriors) == 2
+    assert type(nested_posterior) is type(native_posterior)
+    assert nested_posterior.mean.shape == native_posterior.mean.shape
+    assert nested_posterior.variance.shape == native_posterior.variance.shape
     assert not hasattr(model, "posterior")
 
 
