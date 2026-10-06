@@ -375,10 +375,7 @@ def test_long_format_multitask_gp_uses_selected_tasks_as_outputs() -> None:
 
 def test_long_format_multitask_gp_respects_output_task_subset() -> None:
     data_X = torch.rand(6, 2)
-    rows = [
-        torch.cat([data_X, torch.full((6, 1), float(task))], dim=-1)
-        for task in range(3)
-    ]
+    rows = [torch.cat([data_X, torch.full((6, 1), float(task))], dim=-1) for task in range(3)]
     train_X = torch.cat(rows, dim=0)
     train_Y = torch.rand(18, 1)
     multitask = MultiTaskGP(
