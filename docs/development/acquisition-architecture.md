@@ -272,3 +272,18 @@ joint posterior. If a continuous constraint belongs to another entry, constraine
 qEI rejects the composition rather than independently sampling tensors and
 treating matching sample indices as joint draws. Classification feasibility is
 also excluded here and is composed in the mixed-constraint phase.
+
+
+### qEI with mixed constraints
+
+The Phase 13 mixed baseline keeps the two established feasibility semantics
+distinct. Continuous sample residuals that share the objective model entry are
+handled inside BoTorch's `ConstrainedMCObjective`. Classification constraints
+remain posterior-predictive `ProbabilityOfFeasibility` values and weight the
+resulting native qEI outside its objective posterior.
+
+This deliberately does not pair classifier probability samples with regression
+posterior samples by matching Monte Carlo indices. Separate heterogeneous model
+entries do not provide a joint posterior merely because their tensors have the
+same shape. Sample-wise cross-model aggregation and correlation policy belong to
+the later feasibility-aggregator and correlation phases.
