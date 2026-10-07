@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
+from numbers import Real
 
 from torch import Tensor
 
@@ -18,6 +20,15 @@ class ContinuousConstraint:
     output: int | str
     threshold: float
     direction: ConstraintDirection = ConstraintDirection.LESS_THAN_OR_EQUAL
+
+    def __post_init__(self) -> None:
+        """Validate scalar threshold and direction semantics."""
+        if not isinstance(self.threshold, Real) or isinstance(self.threshold, bool):
+            raise TypeError("threshold must be a real scalar.")
+        if not math.isfinite(float(self.threshold)):
+            raise ValueError("threshold must be finite.")
+        if not isinstance(self.direction, ConstraintDirection):
+            raise TypeError("direction must be a ConstraintDirection.")
 
     def resolve_output(self, model: HeterogeneousModel) -> int:
         """Resolve and validate the referenced regression output."""
