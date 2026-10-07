@@ -42,9 +42,8 @@ learning and level-set estimation. These classes follow BoTorch acquisition conv
 that normal BoTorch optimizers can consume them when their semantics permit.
 
 Classification active-learning criteria are robotorchan-owned when they add semantics not
-provided directly by BoTorch. Current examples include predictive entropy, BALD, margin
-uncertainty, probability variance, and latent straddle. They remain separate from Bayesian
-optimization outcome-constraint composition.
+provided directly by BoTorch. They remain separate from Bayesian optimization
+outcome-constraint composition.
 
 ## Capability and compatibility metadata
 
