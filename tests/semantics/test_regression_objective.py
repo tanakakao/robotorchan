@@ -52,10 +52,33 @@ def test_regression_objective_converts_to_botorch_mc_objective(
     objective = RegressionObjective(output="strength", direction=direction)
     botorch_objective = objective.to_botorch(model)
     samples = torch.tensor(
-        [[[1.0, 0.2], [2.0, 0.8]]],
+        [[[1.0], [2.0]]],
         dtype=torch.double,
     )
 
     values = botorch_objective(samples)
 
     assert torch.equal(values, torch.tensor([expected], dtype=torch.double))
+
+
+def test_regression_objective_uses_entry_local_sample_index() -> None:
+    train_X = torch.rand(6, 2, dtype=torch.double)
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1]),
+    )
+    regression = SingleTaskGP(train_X, torch.rand(6, 1, dtype=torch.double))
+    model = HeterogeneousModel(
+        classifier,
+        regression,
+        output_names=["pass", "strength"],
+    )
+    objective = RegressionObjective(output="strength")
+    samples = torch.tensor([[[1.0], [2.0]]], dtype=torch.double)
+
+    assert objective.resolve_output(model) == 1
+    assert model.output_owner(1) == (1, 0)
+    assert torch.equal(
+        objective.to_botorch(model)(samples),
+        torch.tensor([[1.0, 2.0]], dtype=torch.double),
+    )
