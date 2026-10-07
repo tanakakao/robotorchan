@@ -289,17 +289,20 @@ def test_sample_classification_feasibility_rejects_deterministic_non_gp_classifi
     [
         (torch.Size([8]), torch.Size(), 3, torch.Size([8, 3])),
         (torch.Size([4, 2]), torch.Size([5]), 3, torch.Size([4, 2, 5, 3])),
-        (torch.Size(), torch.Size([2, 5]), 1, torch.Size([2, 5, 1])),
+        (torch.Size([1]), torch.Size([2, 5]), 1, torch.Size([1, 2, 5, 1])),
     ],
 )
-def test_sample_shape_contract_preserves_sample_batch_and_q_dimensions(
+def test_sample_shape_contract_preserves_resolved_sample_batch_and_q_dimensions(
     sample_shape: torch.Size,
     batch_shape: torch.Size,
     q: int,
     expected: torch.Size,
 ) -> None:
-    X = torch.zeros(*batch_shape, q, 2, dtype=torch.double)
-    contract = SampleShapeContract.from_X(X, sample_shape=sample_shape)
+    contract = SampleShapeContract.from_resolved_shapes(
+        sample_shape=sample_shape,
+        batch_shape=batch_shape,
+        q=q,
+    )
 
     assert contract.sample_shape == sample_shape
     assert contract.batch_shape == batch_shape
@@ -307,9 +310,13 @@ def test_sample_shape_contract_preserves_sample_batch_and_q_dimensions(
     assert contract.value_shape == expected
 
 
-def test_sample_shape_contract_rejects_input_without_q_and_feature_dimensions() -> None:
-    with pytest.raises(ValueError, match=r"\.\.\. x q x d"):
-        SampleShapeContract.from_X(torch.zeros(3, dtype=torch.double))
+def test_sample_shape_contract_rejects_empty_q() -> None:
+    with pytest.raises(ValueError, match="q must be at least 1"):
+        SampleShapeContract.from_resolved_shapes(
+            sample_shape=torch.Size([8]),
+            batch_shape=torch.Size(),
+            q=0,
+        )
 
 
 def test_regression_objective_preserves_mc_batch_and_q_dimensions() -> None:
@@ -359,6 +366,10 @@ def test_sample_classification_feasibility_preserves_batch_and_q_dimensions() ->
     sample_shape = torch.Size([8])
 
     actual = feasibility.probability(X, sample_shape=sample_shape)
-    expected = SampleShapeContract.from_X(X, sample_shape=sample_shape).value_shape
+    expected = SampleShapeContract.from_resolved_shapes(
+        sample_shape=sample_shape,
+        batch_shape=torch.Size(X.shape[:-2]),
+        q=X.shape[-2],
+    ).value_shape
 
     assert actual.shape == expected
