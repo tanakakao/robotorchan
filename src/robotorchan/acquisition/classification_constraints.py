@@ -7,7 +7,6 @@ from collections.abc import Callable
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor, nn
 
-
 from robotorchan.models.classification.probability import (
     ClassificationProbabilityRiskType,
     RobustProbabilityTransform,
