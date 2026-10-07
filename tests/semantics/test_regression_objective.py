@@ -161,7 +161,6 @@ def test_regression_objective_preserves_output_reference_errors(
         objective.resolve_output(model)
 
 
-
 def test_regression_objective_works_with_long_format_multitask_gp() -> None:
     torch.manual_seed(13)
     data_X = torch.rand(6, 2, dtype=torch.double)
