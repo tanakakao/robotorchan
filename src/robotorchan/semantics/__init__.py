@@ -2,7 +2,9 @@
 
 from robotorchan.semantics.constraints import (
     ClassificationConstraint,
+    ConstraintCollection,
     ContinuousConstraint,
+    SemanticConstraint,
 )
 from robotorchan.semantics.direction import (
     ConstraintDirection,
@@ -21,10 +23,11 @@ from robotorchan.semantics.objectives import (
     RegressionObjective,
     SemanticObjective,
 )
-from robotorchan.semantics.problem import ProblemSemantics, SemanticConstraint
+from robotorchan.semantics.problem import ProblemSemantics
 
 __all__ = [
     "ClassificationConstraint",
+    "ConstraintCollection",
     "ConstraintDirection",
     "ContinuousConstraint",
     "FeasibilityRepresentation",
