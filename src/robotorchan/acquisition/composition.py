@@ -12,6 +12,7 @@ import torch
 from torch import Tensor
 
 from robotorchan.acquisition.classification_constraints import FeasibilityWeightedAcquisition
+from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.semantics.feasibility import (
     FeasibilityRepresentation,
@@ -213,10 +214,18 @@ def make_sample_classification_feasibility_bridge(
 
     probability = make_classification_feasibility_bridge(model, binding)
     classifier = probability.model
-    sample_class_probabilities = getattr(classifier, "sample_class_probabilities", None)
-    if not callable(sample_class_probabilities):
-        raise TypeError("Classifier must provide sample_class_probabilities().")
+    registry_entry = next(
+        (
+            entry
+            for entry in CLASSIFICATION_MODEL_REGISTRY.values()
+            if isinstance(classifier, entry.model_class)
+        ),
+        None,
+    )
+    if registry_entry is None or not registry_entry.capabilities.supports_probability_samples:
+        raise TypeError("Classifier must support epistemic class-probability samples.")
 
+    sample_class_probabilities = classifier.sample_class_probabilities
     feasible_class = probability.feasible_class
 
     def sample_probability(
