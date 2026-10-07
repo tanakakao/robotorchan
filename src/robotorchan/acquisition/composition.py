@@ -12,6 +12,7 @@ from robotorchan.acquisition.classification_constraints import FeasibilityWeight
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.semantics.feasibility import FeasibilityRepresentation, ProbabilityOfFeasibility
 from robotorchan.semantics.objectives import RegressionObjective, SemanticObjective
+from robotorchan.semantics.probability import ClassificationProbabilityOfFeasibility
 from robotorchan.semantics.problem import ProblemSemantics
 
 
@@ -146,3 +147,30 @@ def make_deterministic_pof_acquisition(
         representation.probability,
         q_reduction=q_reduction,
     )
+
+
+def make_classification_feasibility_bridge(
+    model: HeterogeneousModel,
+    binding: FeasibilityBinding,
+) -> ClassificationProbabilityOfFeasibility:
+    """Expose one classification feasibility binding as posterior-predictive PoF."""
+    representation = binding.representation
+    if not isinstance(representation, ProbabilityOfFeasibility):
+        raise TypeError(
+            "Classification feasibility bridge requires a ProbabilityOfFeasibility representation."
+        )
+
+    probability = representation.probability
+    entry_model = model[binding.entry_index]
+    if probability.model is not entry_model:
+        raise ValueError("FeasibilityBinding does not match the current heterogeneous model.")
+
+    output_index = model.resolve_output(binding.output_index)
+    entry_index, local_output_index = model.output_owner(output_index)
+    if (
+        entry_index != binding.entry_index
+        or local_output_index != binding.local_output_index
+    ):
+        raise ValueError("FeasibilityBinding does not match the current heterogeneous model.")
+
+    return probability
