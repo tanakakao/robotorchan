@@ -72,7 +72,6 @@ def test_thresholded_classification_exposes_probability_residual() -> None:
     assert representation.constraint.probability_of_feasibility.model is model[1]
 
 
-
 @pytest.mark.parametrize(
     ("wrapper", "payload"),
     [
