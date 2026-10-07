@@ -21,6 +21,7 @@ from robotorchan.semantics.objectives import (
     RegressionObjective,
     SemanticObjective,
 )
+from robotorchan.semantics.problem import ProblemSemantics, SemanticConstraint
 
 __all__ = [
     "ClassificationConstraint",
@@ -33,7 +34,9 @@ __all__ = [
     "ProbabilityObjective",
     "ProbabilityOfFeasibility",
     "ProbabilityResidualFeasibility",
+    "ProblemSemantics",
     "RegressionObjective",
     "SampleResidualFeasibility",
+    "SemanticConstraint",
     "SemanticObjective",
 ]
