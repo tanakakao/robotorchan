@@ -86,7 +86,6 @@ def test_regression_objective_uses_entry_local_sample_index() -> None:
     )
 
 
-
 def test_regression_objective_resolves_negative_global_index() -> None:
     model = _model()
 
