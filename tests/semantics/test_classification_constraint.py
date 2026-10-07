@@ -6,6 +6,9 @@ import torch
 from robotorchan.acquisition.classification_constraints import (
     ClassificationProbabilityOfFeasibility,
 )
+from robotorchan.models.classification.binary.non_gp.sklearn import (
+    RandomForestBinaryClassifier,
+)
 from robotorchan.models.classification.binary.standard.single_task import (
     BinarySingleTaskGPClassifier,
 )
@@ -86,3 +89,22 @@ def test_classification_constraint_probability_matches_classifier() -> None:
     expected = model.entry_predict_proba(1, X)[..., 1]
 
     torch.testing.assert_close(probability(X), expected)
+
+
+
+def test_classification_constraint_supports_classifier_without_num_outputs() -> None:
+    train_X = torch.rand(8, 2, dtype=torch.double)
+    classifier = RandomForestBinaryClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(
+        classifier,
+        output_names=["pass"],
+    )
+    constraint = ClassificationConstraint(output="pass", feasible_class=1)
+
+    probability = constraint.to_probability_of_feasibility(model)
+
+    assert constraint.resolve_owner(model) == (0, 0)
+    assert probability.model is classifier
