@@ -92,7 +92,7 @@ composition consumes semantic representations instead of branching on concrete m
 The semantic boundary distinguishes feasibility representations by the meaning of their
 runtime values, not merely by tensor shape:
 
-- **sample residual**: a callable over outcome samples with values <= 0 denoting feasibility;
+- **sample-residual feasibility**: a callable over outcome samples with values <= 0 denoting feasibility;
 - **posterior-predictive PoF**: deterministic P(feasible | X, D), already marginalized over
   predictive uncertainty;
 - **probability residual**: a deterministic residual from thresholding a predictive
