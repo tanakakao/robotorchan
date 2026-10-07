@@ -2,6 +2,9 @@ import pytest
 import torch
 
 from robotorchan.acquisition.composition import resolve_acquisition_composition
+from robotorchan.models.classification.binary.standard.single_task import (
+    BinarySingleTaskGPClassifier,
+)
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.models.standard import SingleTaskGP
 from robotorchan.semantics import (
@@ -15,11 +18,9 @@ from robotorchan.semantics import (
 
 @pytest.mark.parametrize("use_names", [False, True])
 def test_resolve_acquisition_composition_preserves_output_ownership(use_names: bool) -> None:
-    from robotorchan.models.classification.binary.standard.single_task import BinarySingleTaskGPClassifier
-
     train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
     train_y = torch.tensor([0.0, 1.0, 1.0], dtype=torch.double)
-    classifier = BinaryGPClassifier(train_x, train_y)
+    classifier = BinarySingleTaskGPClassifier(train_x, train_y)
 
     regression_y = torch.sin(train_x)
     model = HeterogeneousModel(
