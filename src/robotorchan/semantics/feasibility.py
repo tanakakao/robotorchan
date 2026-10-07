@@ -9,8 +9,6 @@ from typing import TypeAlias
 from robotorchan.acquisition.classification_constraints import (
     ClassificationProbabilityOfFeasibility,
 )
-from robotorchan.semantics.constraints import ClassificationProbabilityConstraint
-
 
 class FeasibilityRepresentationKind(StrEnum):
     """Kinds of runtime feasibility representations."""
@@ -46,7 +44,7 @@ class ProbabilityOfFeasibility:
 class ProbabilityResidualFeasibility:
     """Posterior-predictive probability residual where values <= 0 are feasible."""
 
-    constraint: ClassificationProbabilityConstraint
+    constraint: object
     kind: FeasibilityRepresentationKind = field(
         default=FeasibilityRepresentationKind.PROBABILITY_RESIDUAL,
         init=False,
