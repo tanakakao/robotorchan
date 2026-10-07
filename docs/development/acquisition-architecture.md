@@ -94,6 +94,21 @@ probability of feasibility, and probability-residual feasibility. These represen
 not be silently converted into one another. Regression outcome constraints naturally expose
 sample residuals, while classification feasibility can retain probability semantics.
 
+The composition boundary is split into four responsibilities:
+
+1. `ProblemSemantics` declares user intent without acquisition-specific behavior.
+2. `resolve_acquisition_composition()` resolves output ownership and preserves the semantic
+   objective and feasibility representations in an immutable `AcquisitionCompositionPlan`.
+3. Later composition policies adapt compatible bindings to native BoTorch objective,
+   constraint, sampler, and acquisition constructor interfaces.
+4. The resulting BoTorch acquisition remains responsible for acquisition evaluation and is
+   passed to the existing optimization layer.
+
+The resolved plan is descriptive rather than executable: it must not create a shared posterior,
+choose a sampler, aggregate feasibility, or instantiate an acquisition function. Those choices
+depend on the requested acquisition family and predictive capabilities and belong to later
+composition policies.
+
 Standard Bayesian optimization remains BoTorch-native. Semantic composition should follow the
 smallest sufficient integration level:
 
