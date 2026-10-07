@@ -119,7 +119,6 @@ class ClassificationConstraint:
         )
 
 
-
 class ClassificationProbabilityConstraint:
     """Evaluate a thresholded classifier probability with <= 0 feasibility."""
 
