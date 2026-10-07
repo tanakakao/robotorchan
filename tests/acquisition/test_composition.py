@@ -1,6 +1,5 @@
 import pytest
 import torch
-
 from botorch.acquisition.objective import GenericMCObjective
 
 from robotorchan.acquisition.composition import (
