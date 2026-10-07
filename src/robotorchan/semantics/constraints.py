@@ -55,7 +55,6 @@ class ContinuousConstraint:
         return constraint
 
 
-
 @dataclass(frozen=True, slots=True)
 class ClassificationConstraint:
     """Declare classifier membership in one class as feasibility."""
