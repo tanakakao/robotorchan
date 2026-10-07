@@ -5,6 +5,7 @@ from botorch.acquisition.monte_carlo import qExpectedImprovement
 from botorch.acquisition.objective import ConstrainedMCObjective, GenericMCObjective
 from botorch.sampling.normal import SobolQMCNormalSampler
 
+from robotorchan.acquisition.classification_constraints import FeasibilityWeightedAcquisition
 from robotorchan.acquisition.composition import (
     SampleShapeContract,
     make_botorch_objective_bridge,
@@ -12,6 +13,7 @@ from robotorchan.acquisition.composition import (
     make_continuous_constrained_qei_acquisition,
     make_continuous_constraint_bridge,
     make_deterministic_pof_acquisition,
+    make_mixed_constrained_qei_acquisition,
     make_qei_acquisition,
     make_sample_classification_feasibility_bridge,
     resolve_acquisition_composition,
@@ -496,3 +498,79 @@ def test_continuous_constrained_qei_rejects_classification_constraint() -> None:
 
     with pytest.raises(TypeError, match="continuous constraints only"):
         make_continuous_constrained_qei_acquisition(model, semantics, best_f=0.5)
+
+
+def test_mixed_constrained_qei_combines_continuous_mc_and_classifier_pof() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    regression = SingleTaskGP(train_x, train_y)
+    classifier = BinarySingleTaskGPClassifier(
+        train_x,
+        torch.tensor([0.0, 1.0, 1.0], dtype=torch.double),
+    )
+    model = HeterogeneousModel(regression, classifier)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(
+            ContinuousConstraint(1, threshold=0.8),
+            ClassificationConstraint(2, feasible_class=1),
+        ),
+    )
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([16]))
+
+    acquisition = make_mixed_constrained_qei_acquisition(
+        model,
+        semantics,
+        best_f=0.5,
+        sampler=sampler,
+    )
+
+    assert isinstance(acquisition, FeasibilityWeightedAcquisition)
+    assert type(acquisition.objective_acquisition) is qExpectedImprovement
+    assert isinstance(acquisition.objective_acquisition.objective, ConstrainedMCObjective)
+    assert acquisition.objective_acquisition.sampler is sampler
+    assert acquisition(torch.tensor([[0.25]], dtype=torch.double)).shape == torch.Size([1])
+
+
+def test_mixed_constrained_qei_rejects_independent_continuous_constraint() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    objective_model = SingleTaskGP(train_x, torch.sin(train_x))
+    constraint_model = SingleTaskGP(train_x, torch.cos(train_x))
+    classifier = BinarySingleTaskGPClassifier(
+        train_x,
+        torch.tensor([0.0, 1.0, 1.0], dtype=torch.double),
+    )
+    model = HeterogeneousModel(objective_model, constraint_model, classifier)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(
+            ContinuousConstraint(1, threshold=0.8),
+            ClassificationConstraint(2, feasible_class=1),
+        ),
+    )
+
+    with pytest.raises(ValueError, match="share the objective"):
+        make_mixed_constrained_qei_acquisition(model, semantics, best_f=0.5)
+
+
+@pytest.mark.parametrize("constraint_kind", ["continuous", "classification"])
+def test_mixed_constrained_qei_requires_both_constraint_kinds(constraint_kind: str) -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.cat((torch.sin(train_x), torch.cos(train_x)), -1))
+    classifier = BinarySingleTaskGPClassifier(
+        train_x,
+        torch.tensor([0.0, 1.0, 1.0], dtype=torch.double),
+    )
+    model = HeterogeneousModel(regression, classifier)
+    constraint = (
+        ContinuousConstraint(1, threshold=0.8)
+        if constraint_kind == "continuous"
+        else ClassificationConstraint(2, feasible_class=1)
+    )
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(constraint,),
+    )
+
+    with pytest.raises(ValueError, match="both continuous and classification"):
+        make_mixed_constrained_qei_acquisition(model, semantics, best_f=0.5)
