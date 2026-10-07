@@ -137,7 +137,10 @@ class ObjectiveCollection(Sequence[SemanticObjective]):
             ExpectedClassUtilityObjective,
         )
         if not all(isinstance(objective, objective_types) for objective in objectives):
-            raise TypeError("ObjectiveCollection accepts supported semantic objective instances.")
+            raise TypeError(
+                "ObjectiveCollection accepts RegressionObjective or ProbabilityObjective, "
+                "OrdinalProbabilityObjective, or ExpectedClassUtilityObjective instances."
+            )
         object.__setattr__(self, "objectives", tuple(objectives))
 
     def __len__(self) -> int:
