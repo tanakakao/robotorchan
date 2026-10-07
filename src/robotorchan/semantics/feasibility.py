@@ -10,6 +10,7 @@ from robotorchan.acquisition.classification_constraints import (
     ClassificationProbabilityOfFeasibility,
 )
 
+
 class FeasibilityRepresentationKind(StrEnum):
     """Kinds of runtime feasibility representations."""
 
