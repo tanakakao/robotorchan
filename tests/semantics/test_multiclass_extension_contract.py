@@ -20,9 +20,7 @@ from robotorchan.semantics import ClassificationConstraint, ProbabilityObjective
 class _MulticlassMetadata:
     num_classes: int = 3
     class_labels: tuple[object, ...] = ("fail", "review", "pass")
-    likelihood_family: ClassificationLikelihoodFamily = (
-        ClassificationLikelihoodFamily.CATEGORICAL
-    )
+    likelihood_family: ClassificationLikelihoodFamily = ClassificationLikelihoodFamily.CATEGORICAL
     latent_output_structure: LatentOutputStructure = LatentOutputStructure.PER_CLASS
 
 
