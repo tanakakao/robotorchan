@@ -154,3 +154,40 @@ def test_ordinal_and_utility_objectives_join_problem_semantics() -> None:
     semantics.validate(_model())
 
     assert objectives.resolve_outputs(_model()) == (0, 0)
+
+
+def test_problem_validation_rejects_invalid_ordinal_order() -> None:
+    semantics = ProblemSemantics(
+        objectives=(
+            OrdinalProbabilityObjective(
+                output="grade",
+                threshold_class="acceptable",
+                class_order=("bad", "acceptable", "acceptable"),
+            ),
+        ),
+    )
+
+    try:
+        semantics.validate(_model())
+    except ValueError as error:
+        assert "class_order" in str(error)
+    else:
+        raise AssertionError("ProblemSemantics.validate() must validate class_order.")
+
+
+def test_problem_validation_rejects_incomplete_utility_mapping() -> None:
+    semantics = ProblemSemantics(
+        objectives=(
+            ExpectedClassUtilityObjective(
+                output="grade",
+                utilities=(("bad", 0.0), ("acceptable", 1.0)),
+            ),
+        ),
+    )
+
+    try:
+        semantics.validate(_model())
+    except ValueError as error:
+        assert "utilities" in str(error)
+    else:
+        raise AssertionError("ProblemSemantics.validate() must validate utilities.")

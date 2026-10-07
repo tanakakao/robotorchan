@@ -109,7 +109,7 @@ class ProbabilityObjective:
             sample_shape=sample_shape,
             **kwargs,
         )
-        return self.direction.apply(probabilities[..., self.class_index])
+        return self.direction.apply(probabilities[..., self.resolve_class_index(model)])
 
 
 SemanticObjective: TypeAlias = (

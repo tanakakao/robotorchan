@@ -109,6 +109,10 @@ def test_probability_objective_resolves_multiclass_label() -> None:
         objective.evaluate(model, X),
         torch.full((4,), 0.2, dtype=torch.double),
     )
+    assert torch.allclose(
+        objective.sample(model, X, sample_shape=torch.Size([3])),
+        torch.full((3, 4), 0.2, dtype=torch.double),
+    )
 
 
 def test_multiclass_semantics_preserve_integer_class_selection() -> None:

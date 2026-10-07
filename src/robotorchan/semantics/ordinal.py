@@ -58,7 +58,15 @@ class OrdinalProbabilityObjective:
     def resolve_output(self, model: HeterogeneousModel) -> int:
         """Resolve and validate the referenced classification output."""
         output_index = model.resolve_output(self.output)
-        _classification_entry(model, self.output)
+        _, metadata = _classification_entry(model, self.output)
+        order = _resolve_order(self.class_order, metadata)
+        threshold = resolve_class(
+            self.threshold_class,
+            metadata,
+            argument_name="threshold_class",
+        )
+        if threshold not in order:
+            raise ValueError("threshold_class must be present in class_order.")
         return output_index
 
     def evaluate(self, model: HeterogeneousModel, X: Tensor, **kwargs: object) -> Tensor:
@@ -129,7 +137,13 @@ class ExpectedClassUtilityObjective:
     def resolve_output(self, model: HeterogeneousModel) -> int:
         """Resolve and validate the referenced classification output."""
         output_index = model.resolve_output(self.output)
-        _classification_entry(model, self.output)
+        _, metadata = _classification_entry(model, self.output)
+        labels = metadata.class_labels
+        mapping = dict(self.utilities)
+        if len(mapping) != len(self.utilities):
+            raise ValueError("utilities must not contain duplicate class labels.")
+        if set(mapping) != set(labels):
+            raise ValueError("utilities must define exactly one value for every classifier class.")
         return output_index
 
     def evaluate(self, model: HeterogeneousModel, X: Tensor, **kwargs: object) -> Tensor:
