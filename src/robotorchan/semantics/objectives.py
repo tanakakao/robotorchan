@@ -109,7 +109,8 @@ class ObjectiveCollection(Sequence[SemanticObjective]):
         """Initialize an immutable ordered objective collection."""
         if not objectives:
             raise ValueError("ObjectiveCollection requires at least one objective.")
-        if not all(isinstance(objective, RegressionObjective | ProbabilityObjective) for objective in objectives):
+        objective_types = (RegressionObjective, ProbabilityObjective)
+        if not all(isinstance(objective, objective_types) for objective in objectives):
             raise TypeError(
                 "ObjectiveCollection accepts RegressionObjective or ProbabilityObjective instances."
             )
