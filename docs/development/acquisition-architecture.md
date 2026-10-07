@@ -242,3 +242,17 @@ silently squeeze q=1, collapse t-batches, copy deterministic mean PoF across a
 sample dimension, or rely on accidental broadcasting to reconcile independently
 sampled heterogeneous outputs. Cross-model sample alignment and joint sampling
 are separate composition policies and are not implied by matching tensor shapes.
+
+
+### Native qEI integration
+
+Single-objective unconstrained expected improvement is composed with BoTorch's
+native `qExpectedImprovement`; robotorchan does not implement a parallel qEI
+class. The composition builder resolves exactly one `RegressionObjective`,
+reuses its owning BoTorch model and `MCAcquisitionObjective`, transforms
+`best_f` into the same semantic maximize-space as the objective, and forwards
+an optional native `MCSampler`.
+
+Phase 11 deliberately rejects feasibility bindings. Continuous and mixed learned
+constraints are composed in the following phases so unconstrained qEI does not
+silently apply deterministic PoF weighting or invent cross-model sample coupling.

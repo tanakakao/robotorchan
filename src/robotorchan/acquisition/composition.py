@@ -7,8 +7,10 @@ from dataclasses import dataclass
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
+from botorch.acquisition.monte_carlo import qExpectedImprovement
 from botorch.acquisition.objective import MCAcquisitionObjective
 from botorch.models.model import Model as BoTorchModel
+from botorch.sampling.base import MCSampler
 from torch import Tensor
 
 from robotorchan.acquisition.classification_constraints import FeasibilityWeightedAcquisition
@@ -272,3 +274,34 @@ def make_sample_classification_feasibility_bridge(
         return probabilities[..., feasible_class]
 
     return SampleProbabilityOfFeasibility(sample_probability)
+
+
+def make_qei_acquisition(
+    model: HeterogeneousModel,
+    semantics: ProblemSemantics,
+    *,
+    best_f: float | Tensor,
+    sampler: MCSampler | None = None,
+) -> qExpectedImprovement:
+    """Build native BoTorch qEI for one unconstrained regression objective."""
+    plan = resolve_acquisition_composition(model, semantics)
+    if len(plan.objectives) != 1:
+        raise ValueError("qEI integration requires exactly one objective.")
+    if plan.feasibility:
+        raise ValueError(
+            "Phase 11 qEI integration is unconstrained; use constraint composition instead."
+        )
+
+    binding = plan.objectives[0]
+    objective = binding.objective
+    if not isinstance(objective, RegressionObjective):
+        raise TypeError("qEI integration currently supports RegressionObjective only.")
+
+    bridge = make_botorch_objective_bridge(model, binding)
+    directed_best_f = objective.direction.apply(torch.as_tensor(best_f))
+    return qExpectedImprovement(
+        model=bridge.model,
+        best_f=directed_best_f,
+        sampler=sampler,
+        objective=bridge.objective,
+    )

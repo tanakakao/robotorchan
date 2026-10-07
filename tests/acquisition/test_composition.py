@@ -1,7 +1,9 @@
 import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
+from botorch.acquisition.monte_carlo import qExpectedImprovement
 from botorch.acquisition.objective import GenericMCObjective
+from botorch.sampling.normal import SobolQMCNormalSampler
 
 from robotorchan.acquisition.composition import (
     SampleShapeContract,
@@ -9,6 +11,7 @@ from robotorchan.acquisition.composition import (
     make_classification_feasibility_bridge,
     make_continuous_constraint_bridge,
     make_deterministic_pof_acquisition,
+    make_qei_acquisition,
     make_sample_classification_feasibility_bridge,
     resolve_acquisition_composition,
 )
@@ -373,3 +376,66 @@ def test_sample_classification_feasibility_preserves_batch_and_q_dimensions() ->
     ).value_shape
 
     assert actual.shape == expected
+
+
+@pytest.mark.parametrize(
+    ("direction", "best_f", "expected_best_f"),
+    [
+        (ObjectiveDirection.MAXIMIZE, 0.5, 0.5),
+        (ObjectiveDirection.MINIMIZE, 0.5, -0.5),
+    ],
+)
+def test_qei_integration_returns_native_botorch_acquisition(
+    direction: ObjectiveDirection,
+    best_f: float,
+    expected_best_f: float,
+) -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    model = HeterogeneousModel(regression)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0, direction=direction),),
+    )
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([16]))
+
+    acquisition = make_qei_acquisition(
+        model,
+        semantics,
+        best_f=best_f,
+        sampler=sampler,
+    )
+
+    assert type(acquisition) is qExpectedImprovement
+    assert acquisition.model is regression
+    assert acquisition.sampler is sampler
+    assert torch.equal(
+        torch.as_tensor(acquisition.best_f),
+        torch.tensor(expected_best_f, dtype=torch.double),
+    )
+    assert acquisition(torch.tensor([[0.25]], dtype=torch.double)).shape == torch.Size([1])
+
+
+def test_qei_integration_rejects_constraint_composition() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    model = HeterogeneousModel(regression)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ContinuousConstraint(0, threshold=1.0),),
+    )
+
+    with pytest.raises(ValueError, match="unconstrained"):
+        make_qei_acquisition(model, semantics, best_f=0.0)
+
+
+def test_qei_integration_rejects_multiple_objectives() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    first = SingleTaskGP(train_x, torch.sin(train_x))
+    second = SingleTaskGP(train_x, torch.cos(train_x))
+    model = HeterogeneousModel(first, second)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0), RegressionObjective(1)),
+    )
+
+    with pytest.raises(ValueError, match="exactly one objective"):
+        make_qei_acquisition(model, semantics, best_f=0.0)
