@@ -23,7 +23,7 @@ from robotorchan.semantics.objectives import (
     RegressionObjective,
     SemanticObjective,
 )
-from robotorchan.semantics.problem import ProblemSemantics, SemanticConstraint
+from robotorchan.semantics.problem import ProblemSemantics
 
 __all__ = [
     "ClassificationConstraint",
