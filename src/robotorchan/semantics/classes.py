@@ -21,6 +21,4 @@ def resolve_class(
     try:
         return metadata.class_labels.index(selector)
     except ValueError as error:
-        raise ValueError(
-            f"{argument_name} is not present in classifier class_labels."
-        ) from error
+        raise ValueError(f"{argument_name} is not present in classifier class_labels.") from error
