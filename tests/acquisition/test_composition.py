@@ -263,8 +263,13 @@ def test_sample_classification_feasibility_rejects_non_probability_binding() -> 
 def test_sample_classification_feasibility_rejects_deterministic_non_gp_classifier() -> None:
     train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
     regression = SingleTaskGP(train_x, torch.sin(train_x))
-    classifier = RandomForestBinaryClassifier(n_estimators=4, random_state=0)
-    classifier.fit(train_x, torch.tensor([0, 1, 1]))
+    classifier = RandomForestBinaryClassifier(
+        train_x,
+        torch.tensor([0, 1, 1]),
+        n_estimators=4,
+        random_state=0,
+    )
+    classifier.fit()
     model = HeterogeneousModel(regression, classifier)
     semantics = ProblemSemantics(
         objectives=(RegressionObjective(0),),
