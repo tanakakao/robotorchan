@@ -29,6 +29,7 @@ def test_acquisition_public_api_is_intentionally_small() -> None:
         "make_continuous_constraint_bridge",
         "make_deterministic_pof_acquisition",
         "make_non_gp_acquisition",
+        "make_qei_acquisition",
         "make_sample_classification_feasibility_bridge",
         "resolve_acquisition_composition",
         "select_thompson_candidates",
