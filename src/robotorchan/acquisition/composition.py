@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.objective import MCAcquisitionObjective
-import torch
 from botorch.models.model import Model as BoTorchModel
 from torch import Tensor
 
