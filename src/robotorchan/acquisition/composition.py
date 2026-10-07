@@ -7,8 +7,8 @@ from dataclasses import dataclass
 
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.objective import MCAcquisitionObjective
-from botorch.models.model import Model as BoTorchModel
 import torch
+from botorch.models.model import Model as BoTorchModel
 from torch import Tensor
 
 from robotorchan.acquisition.classification_constraints import FeasibilityWeightedAcquisition
