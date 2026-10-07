@@ -95,7 +95,6 @@ class ProbabilityObjective:
         return self.direction.apply(probabilities[..., self.class_index])
 
 
-
 SemanticObjective: TypeAlias = RegressionObjective | ProbabilityObjective
 
 
