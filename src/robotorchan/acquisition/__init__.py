@@ -21,8 +21,10 @@ from robotorchan.acquisition.capabilities import (
 )
 from robotorchan.acquisition.composition import (
     AcquisitionCompositionPlan,
+    BoTorchObjectiveBridge,
     FeasibilityBinding,
     ObjectiveBinding,
+    make_botorch_objective_bridge,
     resolve_acquisition_composition,
 )
 from robotorchan.acquisition.non_gp import make_non_gp_acquisition, validate_non_gp_acquisition
@@ -33,6 +35,7 @@ __all__ = [
     "BALD",
     "AcquisitionCapabilities",
     "AcquisitionCompositionPlan",
+    "BoTorchObjectiveBridge",
     "AcquisitionPurpose",
     "AcquisitionRegistryEntry",
     "BoundaryVariance",
@@ -49,6 +52,7 @@ __all__ = [
     "RandomizedStraddle",
     "Straddle",
     "get_acquisition_registry_entry",
+    "make_botorch_objective_bridge",
     "make_non_gp_acquisition",
     "resolve_acquisition_composition",
     "select_thompson_candidates",
