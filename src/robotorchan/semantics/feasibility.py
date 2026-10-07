@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TypeAlias
 
@@ -25,7 +25,7 @@ class SampleResidualFeasibility:
     """BoTorch-compatible sample residual where values <= 0 are feasible."""
 
     constraint: object
-    kind: FeasibilityRepresentationKind = FeasibilityRepresentationKind.SAMPLE_RESIDUAL
+    kind: FeasibilityRepresentationKind = field(\n        default=FeasibilityRepresentationKind.SAMPLE_RESIDUAL,\n        init=False,\n    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,7 +43,7 @@ class ProbabilityResidualFeasibility:
     """Posterior-predictive probability residual where values <= 0 are feasible."""
 
     constraint: ClassificationProbabilityConstraint
-    kind: FeasibilityRepresentationKind = FeasibilityRepresentationKind.PROBABILITY_RESIDUAL
+    kind: FeasibilityRepresentationKind = field(\n        default=FeasibilityRepresentationKind.PROBABILITY_RESIDUAL,\n        init=False,\n    )
 
 
 FeasibilityRepresentation: TypeAlias = (
