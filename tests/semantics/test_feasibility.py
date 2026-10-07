@@ -1,5 +1,6 @@
 """Tests for heterogeneous feasibility representation contracts."""
 
+import pytest
 import torch
 
 from robotorchan.models.classification.binary.standard.single_task import (
@@ -69,3 +70,23 @@ def test_thresholded_classification_exposes_probability_residual() -> None:
     assert representation.kind is FeasibilityRepresentationKind.PROBABILITY_RESIDUAL
     assert representation.constraint.threshold == 0.8
     assert representation.constraint.probability_of_feasibility.model is model[1]
+
+
+
+@pytest.mark.parametrize(
+    ("wrapper", "payload"),
+    [
+        (SampleResidualFeasibility, lambda samples: samples),
+        (ProbabilityOfFeasibility, object()),
+        (ProbabilityResidualFeasibility, object()),
+    ],
+)
+def test_feasibility_representation_kind_cannot_be_overridden(
+    wrapper: type,
+    payload: object,
+) -> None:
+    with pytest.raises(TypeError, match="kind"):
+        wrapper(
+            payload,
+            kind=FeasibilityRepresentationKind.PROBABILITY_OF_FEASIBILITY,
+        )
