@@ -44,17 +44,24 @@ def test_classification_constraint_rejects_regression_output() -> None:
         ClassificationConstraint(output="strength").resolve_output(model)
 
 
-@pytest.mark.parametrize("feasible_class", [True, 1.0, "1"])
-def test_classification_constraint_requires_integer_class(
+@pytest.mark.parametrize("feasible_class", [True, 1.0])
+def test_classification_constraint_rejects_invalid_class_selector_type(
     feasible_class: object,
 ) -> None:
     model = _model()
 
-    with pytest.raises(TypeError, match="must be an integer"):
+    with pytest.raises(TypeError, match="must be an integer or string class label"):
         ClassificationConstraint(
             output="pass",
-            feasible_class=feasible_class,  # type: ignore[arg-type]
+            feasible_class=feasible_class,
         ).resolve_output(model)
+
+
+def test_classification_constraint_rejects_unknown_string_class_label() -> None:
+    model = _model()
+
+    with pytest.raises(ValueError, match="not present in classifier class_labels"):
+        ClassificationConstraint(output="pass", feasible_class="1").resolve_output(model)
 
 
 @pytest.mark.parametrize("feasible_class", [-1, 2])

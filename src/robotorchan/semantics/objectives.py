@@ -12,6 +12,7 @@ from torch import Tensor
 
 from robotorchan.models.capabilities import ObservationType
 from robotorchan.models.heterogeneous import HeterogeneousModel
+from robotorchan.semantics.classes import resolve_class
 from robotorchan.semantics.direction import ObjectiveDirection
 
 
@@ -49,7 +50,7 @@ class ProbabilityObjective:
     """Declare one classification probability as an optimization objective."""
 
     output: int | str
-    class_index: int
+    class_index: object
     direction: ObjectiveDirection = ObjectiveDirection.MAXIMIZE
 
     def resolve_output(self, model: HeterogeneousModel) -> int:
@@ -60,11 +61,20 @@ class ProbabilityObjective:
         metadata = model.output_classification_metadata(output_index)
         if metadata is None:
             raise TypeError("ProbabilityObjective requires classification metadata.")
-        if not isinstance(self.class_index, int) or isinstance(self.class_index, bool):
-            raise TypeError("class_index must be an integer.")
-        if not 0 <= self.class_index < metadata.num_classes:
-            raise ValueError("class_index is outside the classifier class range.")
+        self.resolve_class_index(model)
         return output_index
+
+    def resolve_class_index(self, model: HeterogeneousModel) -> int:
+        """Resolve a class index or label to the canonical probability index."""
+        output_index = model.resolve_output(self.output)
+        metadata = model.output_classification_metadata(output_index)
+        if metadata is None:
+            raise TypeError("ProbabilityObjective requires classification metadata.")
+        return resolve_class(
+            self.class_index,
+            metadata,
+            argument_name="class_index",
+        )
 
     def evaluate(
         self,
@@ -76,7 +86,7 @@ class ProbabilityObjective:
         output_index = self.resolve_output(model)
         entry_index, _ = model.output_owner(output_index)
         probabilities = model.entry_predict_proba(entry_index, X, **kwargs)
-        return self.direction.apply(probabilities[..., self.class_index])
+        return self.direction.apply(probabilities[..., self.resolve_class_index(model)])
 
     def sample(
         self,

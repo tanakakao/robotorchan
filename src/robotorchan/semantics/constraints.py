@@ -15,6 +15,7 @@ from robotorchan.acquisition.classification_constraints import (
 )
 from robotorchan.models.capabilities import ObservationType
 from robotorchan.models.heterogeneous import HeterogeneousModel
+from robotorchan.semantics.classes import resolve_class
 from robotorchan.semantics.direction import ConstraintDirection
 
 
@@ -68,7 +69,7 @@ class ClassificationConstraint:
     """Declare classifier membership in one class as feasibility."""
 
     output: int | str
-    feasible_class: int = 1
+    feasible_class: int | object = 1
     probability_threshold: float | None = None
 
     def __post_init__(self) -> None:
@@ -91,11 +92,20 @@ class ClassificationConstraint:
         metadata = model.output_classification_metadata(output_index)
         if metadata is None:
             raise TypeError("ClassificationConstraint requires classification metadata.")
-        if not isinstance(self.feasible_class, int) or isinstance(self.feasible_class, bool):
-            raise TypeError("feasible_class must be an integer.")
-        if not 0 <= self.feasible_class < metadata.num_classes:
-            raise ValueError("feasible_class is outside the classifier class range.")
+        self.resolve_feasible_class(model)
         return output_index
+
+    def resolve_feasible_class(self, model: HeterogeneousModel) -> int:
+        """Resolve a class index or label to the canonical probability index."""
+        output_index = model.resolve_output(self.output)
+        metadata = model.output_classification_metadata(output_index)
+        if metadata is None:
+            raise TypeError("ClassificationConstraint requires classification metadata.")
+        return resolve_class(
+            self.feasible_class,
+            metadata,
+            argument_name="feasible_class",
+        )
 
     def resolve_owner(self, model: HeterogeneousModel) -> tuple[int, int]:
         """Resolve the referenced output to its entry and local output index."""
@@ -109,7 +119,7 @@ class ClassificationConstraint:
         entry_index, _ = self.resolve_owner(model)
         return ClassificationProbabilityOfFeasibility(
             model[entry_index],
-            feasible_class=self.feasible_class,
+            feasible_class=self.resolve_feasible_class(model),
         )
 
     def to_probability_constraint(
