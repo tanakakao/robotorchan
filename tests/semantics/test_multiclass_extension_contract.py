@@ -1,0 +1,95 @@
+"""Tests for multiclass-ready semantic class selection."""
+
+from dataclasses import dataclass
+
+import pytest
+import torch
+from torch import Tensor, nn
+
+from robotorchan.models.classification.base import (
+    ClassificationLikelihoodFamily,
+    ClassificationMetadata,
+    LatentOutputStructure,
+)
+from robotorchan.models.heterogeneous import HeterogeneousModel
+from robotorchan.models.standard.single_task import SingleTaskGP
+from robotorchan.semantics import ClassificationConstraint, ProbabilityObjective
+
+
+@dataclass(frozen=True)
+class _MulticlassMetadata:
+    num_classes: int = 3
+    class_labels: tuple[object, ...] = ("fail", "review", "pass")
+    likelihood_family: ClassificationLikelihoodFamily = (
+        ClassificationLikelihoodFamily.CATEGORICAL
+    )
+    latent_output_structure: LatentOutputStructure = LatentOutputStructure.PER_CLASS
+
+
+class _MulticlassClassifier(nn.Module):
+    task_type = "classification"
+    is_classification = True
+    num_outputs = 1
+    num_classes = 3
+    class_labels = ("fail", "review", "pass")
+    classification_metadata = ClassificationMetadata(
+        num_classes=3,
+        class_labels=class_labels,
+        likelihood_family=ClassificationLikelihoodFamily.CATEGORICAL,
+        latent_output_structure=LatentOutputStructure.PER_CLASS,
+    )
+
+    def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
+        del kwargs
+        probabilities = torch.tensor(
+            [0.1, 0.2, 0.7],
+            dtype=X.dtype,
+            device=X.device,
+        )
+        return probabilities.expand(*X.shape[:-1], 3)
+
+
+def _model() -> HeterogeneousModel:
+    train_X = torch.rand(5, 2, dtype=torch.double)
+    return HeterogeneousModel(
+        SingleTaskGP(train_X, torch.rand(5, 1, dtype=torch.double)),
+        _MulticlassClassifier(),
+        output_names=["score", "status"],
+    )
+
+
+def test_classification_constraint_resolves_multiclass_label() -> None:
+    model = _model()
+    constraint = ClassificationConstraint("status", feasible_class="pass")
+
+    assert constraint.resolve_output(model) == 1
+    assert constraint.resolve_feasible_class(model) == 2
+    assert constraint.to_probability_of_feasibility(model).feasible_class == 2
+
+
+def test_probability_objective_resolves_multiclass_label() -> None:
+    model = _model()
+    objective = ProbabilityObjective("status", class_index="review")
+    X = torch.rand(4, 2, dtype=torch.double)
+
+    assert objective.resolve_output(model) == 1
+    assert objective.resolve_class_index(model) == 1
+    assert torch.allclose(objective.evaluate(model, X), torch.full((4,), 0.2))
+
+
+def test_multiclass_semantics_preserve_integer_class_selection() -> None:
+    model = _model()
+
+    assert ClassificationConstraint("status", feasible_class=0).resolve_feasible_class(model) == 0
+    assert ProbabilityObjective("status", class_index=2).resolve_class_index(model) == 2
+
+
+@pytest.mark.parametrize("selector", ["unknown", 3, -1, True])
+def test_multiclass_semantics_reject_unknown_class_selection(selector: object) -> None:
+    model = _model()
+
+    with pytest.raises(ValueError):
+        ClassificationConstraint("status", feasible_class=selector).resolve_feasible_class(model)
+
+    with pytest.raises(ValueError):
+        ProbabilityObjective("status", class_index=selector).resolve_class_index(model)
