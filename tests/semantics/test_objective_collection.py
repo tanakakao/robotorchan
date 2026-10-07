@@ -81,7 +81,6 @@ def test_objective_collection_validation_preserves_objective_errors() -> None:
         objectives.validate(model)
 
 
-
 def test_objective_collection_resolves_model_list_local_outputs() -> None:
     train_X = torch.rand(7, 2, dtype=torch.double)
     first = SingleTaskGP(train_X, torch.rand(7, 1, dtype=torch.double))
