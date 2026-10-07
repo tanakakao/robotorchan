@@ -5,16 +5,19 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.objective import MCAcquisitionObjective
 from botorch.models.model import Model as BoTorchModel
 from torch import Tensor
 
 from robotorchan.acquisition.classification_constraints import FeasibilityWeightedAcquisition
+from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.semantics.feasibility import (
     FeasibilityRepresentation,
     ProbabilityOfFeasibility,
+    SampleProbabilityOfFeasibility,
     SampleResidualFeasibility,
 )
 from robotorchan.semantics.objectives import RegressionObjective, SemanticObjective
@@ -196,3 +199,45 @@ def make_continuous_constraint_bridge(
         raise ValueError("FeasibilityBinding does not match the current heterogeneous model.")
 
     return representation.constraint
+
+
+def make_sample_classification_feasibility_bridge(
+    model: HeterogeneousModel,
+    binding: FeasibilityBinding,
+) -> SampleProbabilityOfFeasibility:
+    """Build sample-wise classifier feasibility without mean-PoF fallback."""
+    representation = binding.representation
+    if not isinstance(representation, ProbabilityOfFeasibility):
+        raise TypeError(
+            "Sample classification feasibility requires a ProbabilityOfFeasibility binding."
+        )
+
+    probability = make_classification_feasibility_bridge(model, binding)
+    classifier = probability.model
+    registry_entry = next(
+        (
+            entry
+            for entry in CLASSIFICATION_MODEL_REGISTRY.values()
+            if isinstance(classifier, entry.model_class)
+        ),
+        None,
+    )
+    if registry_entry is None or not registry_entry.capabilities.supports_probability_samples:
+        raise TypeError("Classifier must support epistemic class-probability samples.")
+
+    sample_class_probabilities = classifier.sample_class_probabilities
+    feasible_class = probability.feasible_class
+
+    def sample_probability(
+        X: Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> Tensor:
+        probabilities = sample_class_probabilities(
+            X,
+            sample_shape=sample_shape,
+            **kwargs,
+        )
+        return probabilities[..., feasible_class]
+
+    return SampleProbabilityOfFeasibility(sample_probability)

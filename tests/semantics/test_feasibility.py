@@ -14,6 +14,7 @@ from robotorchan.semantics import (
     FeasibilityRepresentationKind,
     ProbabilityOfFeasibility,
     ProbabilityResidualFeasibility,
+    SampleProbabilityOfFeasibility,
     SampleResidualFeasibility,
 )
 
@@ -75,6 +76,7 @@ def test_thresholded_classification_exposes_probability_residual() -> None:
 @pytest.mark.parametrize(
     ("wrapper", "payload"),
     [
+        (SampleProbabilityOfFeasibility, lambda X: X),
         (SampleResidualFeasibility, lambda samples: samples),
         (ProbabilityOfFeasibility, object()),
         (ProbabilityResidualFeasibility, object()),
@@ -92,8 +94,9 @@ def test_feasibility_representation_kind_cannot_be_overridden(
 
 
 def test_feasibility_representation_kinds_are_semantically_distinct() -> None:
-    assert len(FeasibilityRepresentationKind) == 3
+    assert len(FeasibilityRepresentationKind) == 4
     assert {kind.value for kind in FeasibilityRepresentationKind} == {
+        "sample_probability_of_feasibility",
         "sample_residual",
         "probability_of_feasibility",
         "probability_residual",
