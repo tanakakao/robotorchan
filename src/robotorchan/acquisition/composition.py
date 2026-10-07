@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.objective import MCAcquisitionObjective
 from botorch.models.model import Model as BoTorchModel
 
+from robotorchan.acquisition.classification_constraints import FeasibilityWeightedAcquisition
 from robotorchan.models.heterogeneous import HeterogeneousModel
-from robotorchan.semantics.feasibility import FeasibilityRepresentation
+from robotorchan.semantics.feasibility import FeasibilityRepresentation, ProbabilityOfFeasibility
 from robotorchan.semantics.objectives import RegressionObjective, SemanticObjective
 from robotorchan.semantics.problem import ProblemSemantics
 
@@ -124,4 +126,23 @@ def make_botorch_objective_bridge(
     return BoTorchObjectiveBridge(
         model=entry_model,
         objective=objective.to_botorch(model),
+    )
+
+
+def make_deterministic_pof_acquisition(
+    objective_acquisition: AcquisitionFunction,
+    binding: FeasibilityBinding,
+    *,
+    q_reduction: str = "product",
+) -> FeasibilityWeightedAcquisition:
+    """Weight an acquisition by one deterministic posterior-predictive PoF."""
+    representation = binding.representation
+    if not isinstance(representation, ProbabilityOfFeasibility):
+        raise TypeError(
+            "Deterministic PoF weighting requires a ProbabilityOfFeasibility representation."
+        )
+    return FeasibilityWeightedAcquisition(
+        objective_acquisition,
+        representation.probability,
+        q_reduction=q_reduction,
     )
