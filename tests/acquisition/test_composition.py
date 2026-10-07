@@ -5,6 +5,7 @@ from botorch.acquisition.objective import GenericMCObjective
 
 from robotorchan.acquisition.composition import (
     make_botorch_objective_bridge,
+    make_classification_feasibility_bridge,
     make_deterministic_pof_acquisition,
     resolve_acquisition_composition,
 )
@@ -124,3 +125,45 @@ def test_deterministic_pof_bridge_rejects_sample_residual() -> None:
 
     with pytest.raises(TypeError, match="ProbabilityOfFeasibility"):
         make_deterministic_pof_acquisition(_ConstantAcquisition(regression, 2.0), binding)
+
+
+@pytest.mark.parametrize("use_names", [False, True])
+def test_classification_feasibility_bridge_preserves_semantic_pof(use_names: bool) -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    classifier = BinarySingleTaskGPClassifier(
+        train_x,
+        torch.tensor([0.0, 1.0, 1.0], dtype=torch.double),
+    )
+    model = HeterogeneousModel(
+        regression,
+        classifier,
+        output_names=("objective", "pass") if use_names else None,
+    )
+    output = "pass" if use_names else 1
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ClassificationConstraint(output, feasible_class=1),),
+    )
+    binding = resolve_acquisition_composition(model, semantics).feasibility[0]
+
+    probability = make_classification_feasibility_bridge(model, binding)
+    X = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
+
+    assert probability is binding.representation.probability
+    assert probability.model is classifier
+    assert torch.equal(probability(X), classifier.predict_proba(X)[..., 1])
+
+
+def test_classification_feasibility_bridge_rejects_non_probability_representation() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    model = HeterogeneousModel(regression)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ContinuousConstraint(0, threshold=1.0),),
+    )
+    binding = resolve_acquisition_composition(model, semantics).feasibility[0]
+
+    with pytest.raises(TypeError, match="ProbabilityOfFeasibility"):
+        make_classification_feasibility_bridge(model, binding)
