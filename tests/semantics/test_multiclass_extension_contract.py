@@ -56,6 +56,31 @@ class _MulticlassClassifier(nn.Module, ClassificationModelMixin):
         )
         return probabilities.expand(*X.shape[:-1], 3)
 
+    def sample_class_probabilities(
+        self,
+        X: Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> Tensor:
+        del kwargs
+        probabilities = self.predict_proba(X)
+        shape = torch.Size() if sample_shape is None else sample_shape
+        return probabilities.expand(*shape, *probabilities.shape)
+
+    def predictive_variance(self, X: Tensor, **kwargs: object) -> Tensor:
+        probabilities = self.predict_proba(X, **kwargs)
+        return probabilities * (1.0 - probabilities)
+
+    def predictive_entropy(self, X: Tensor, **kwargs: object) -> Tensor:
+        probabilities = self.predict_proba(X, **kwargs)
+        return -(probabilities * probabilities.log()).sum(dim=-1)
+
+    def predictive_distribution(self, X: Tensor, **kwargs: object) -> object:
+        return torch.distributions.Categorical(probs=self.predict_proba(X, **kwargs))
+
+    def predict_class(self, X: Tensor, **kwargs: object) -> Tensor:
+        return self.predict_proba(X, **kwargs).argmax(dim=-1)
+
 
 def _model() -> HeterogeneousModel:
     train_X = torch.rand(5, 2, dtype=torch.double)
