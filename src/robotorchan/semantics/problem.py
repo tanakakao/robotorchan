@@ -6,7 +6,9 @@ from dataclasses import dataclass
 
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.semantics.constraints import (
+    ClassificationConstraint,
     ConstraintCollection,
+    ContinuousConstraint,
     SemanticConstraint,
 )
 from robotorchan.semantics.feasibility import FeasibilityRepresentation
@@ -36,6 +38,12 @@ class ProblemSemantics:
         if isinstance(constraints, ConstraintCollection):
             constraint_collection = constraints
         elif isinstance(constraints, tuple):
+            constraint_types = (ContinuousConstraint, ClassificationConstraint)
+            if not all(isinstance(constraint, constraint_types) for constraint in constraints):
+                raise TypeError(
+                    "constraints accepts ContinuousConstraint or "
+                    "ClassificationConstraint instances."
+                )
             constraint_collection = ConstraintCollection(*constraints)
         else:
             raise TypeError(
