@@ -93,9 +93,7 @@ def test_feasibility_representation_kind_cannot_be_overridden(
 
 def test_feasibility_representation_kinds_are_semantically_distinct() -> None:
     assert len(FeasibilityRepresentationKind) == 3
-    assert {
-        kind.value for kind in FeasibilityRepresentationKind
-    } == {
+    assert {kind.value for kind in FeasibilityRepresentationKind} == {
         "sample_residual",
         "probability_of_feasibility",
         "probability_residual",
