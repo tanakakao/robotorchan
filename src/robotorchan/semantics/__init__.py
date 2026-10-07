@@ -4,16 +4,16 @@ from robotorchan.semantics.constraints import (
     ClassificationConstraint,
     ContinuousConstraint,
 )
+from robotorchan.semantics.direction import (
+    ConstraintDirection,
+    ObjectiveDirection,
+)
 from robotorchan.semantics.feasibility import (
     FeasibilityRepresentation,
     FeasibilityRepresentationKind,
     ProbabilityOfFeasibility,
     ProbabilityResidualFeasibility,
     SampleResidualFeasibility,
-)
-from robotorchan.semantics.direction import (
-    ConstraintDirection,
-    ObjectiveDirection,
 )
 from robotorchan.semantics.objectives import (
     ObjectiveCollection,
