@@ -16,9 +16,21 @@ class FeasibilityRepresentationKind(StrEnum):
     instead of coercing one representation into another.
     """
 
+    SAMPLE_PROBABILITY_OF_FEASIBILITY = "sample_probability_of_feasibility"
     SAMPLE_RESIDUAL = "sample_residual"
     PROBABILITY_OF_FEASIBILITY = "probability_of_feasibility"
     PROBABILITY_RESIDUAL = "probability_residual"
+
+
+@dataclass(frozen=True, slots=True)
+class SampleProbabilityOfFeasibility:
+    """Sample-wise feasibility probabilities retaining posterior sample uncertainty."""
+
+    probability: object
+    kind: FeasibilityRepresentationKind = field(
+        default=FeasibilityRepresentationKind.SAMPLE_PROBABILITY_OF_FEASIBILITY,
+        init=False,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,5 +79,8 @@ class ProbabilityResidualFeasibility:
 
 
 FeasibilityRepresentation: TypeAlias = (
-    SampleResidualFeasibility | ProbabilityOfFeasibility | ProbabilityResidualFeasibility
+    ProbabilityOfFeasibility
+    | ProbabilityResidualFeasibility
+    | SampleProbabilityOfFeasibility
+    | SampleResidualFeasibility
 )
