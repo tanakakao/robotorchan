@@ -29,9 +29,10 @@ class RegressionObjective:
     def to_botorch(self, model: HeterogeneousModel) -> GenericMCObjective:
         """Create a BoTorch MC objective for heterogeneous posterior samples."""
         output_index = self.resolve_output(model)
+        _, local_output_index = model.output_owner(output_index)
 
         def objective(samples: Tensor, X: Tensor | None = None) -> Tensor:
             del X
-            return self.direction.apply(samples[..., output_index])
+            return self.direction.apply(samples[..., local_output_index])
 
         return GenericMCObjective(objective)
