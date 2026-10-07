@@ -26,6 +26,37 @@ from robotorchan.semantics.problem import ProblemSemantics
 
 
 @dataclass(frozen=True, slots=True)
+class SampleShapeContract:
+    """Resolved sample/posterior-batch/q shape contract for composition."""
+
+    sample_shape: torch.Size
+    batch_shape: torch.Size
+    q: int
+
+    @property
+    def value_shape(self) -> torch.Size:
+        """Return the required shape of one scalar sample-wise value."""
+        return self.sample_shape + self.batch_shape + torch.Size([self.q])
+
+    @classmethod
+    def from_resolved_shapes(
+        cls,
+        *,
+        sample_shape: torch.Size,
+        batch_shape: torch.Size,
+        q: int,
+    ) -> SampleShapeContract:
+        """Build a contract from already-resolved sampling and posterior shapes."""
+        if q < 1:
+            raise ValueError("q must be at least 1.")
+        return cls(
+            sample_shape=sample_shape,
+            batch_shape=batch_shape,
+            q=q,
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class ObjectiveBinding:
     """Bind one semantic objective to its owning heterogeneous model entry."""
 

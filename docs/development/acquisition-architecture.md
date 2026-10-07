@@ -215,3 +215,30 @@ Empty scaffolding is avoided.
 This keeps acquisition functions composable with BoTorch while allowing workflow and
 optimization layers to reason about concrete compatibility requirements without building a
 second acquisition API.
+
+
+### Sample-shape contract
+
+Acquisition composition preserves BoTorch's shape semantics instead of repairing
+shape mismatches by implicit squeezing or broadcasting. Once the sampler's
+`sample_shape` and the posterior's fully broadcast `batch_shape` are resolved,
+one scalar sample-wise objective, residual, or feasibility value has shape
+
+```text
+sample_shape + batch_shape + (q,)
+```
+
+The source output/class axis is removed only when selecting the semantic scalar.
+The sample dimensions, t-batch dimensions, and q dimension remain explicit.
+Deterministic posterior-predictive PoF has no Monte Carlo sample dimensions and
+therefore remains a separate representation.
+
+`SampleShapeContract` records this boundary contract from explicit, already-resolved
+`sample_shape`, posterior `batch_shape`, and `q`. It intentionally does not infer
+posterior batches from `X`, because model batches may add dimensions, and it does
+not assign a meaning to `sample_shape=None`, because sampler backends may define
+different defaults. Composition code must not
+silently squeeze q=1, collapse t-batches, copy deterministic mean PoF across a
+sample dimension, or rely on accidental broadcasting to reconcile independently
+sampled heterogeneous outputs. Cross-model sample alignment and joint sampling
+are separate composition policies and are not implied by matching tensor shapes.

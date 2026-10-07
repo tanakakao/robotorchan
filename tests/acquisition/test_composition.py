@@ -4,6 +4,7 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.objective import GenericMCObjective
 
 from robotorchan.acquisition.composition import (
+    SampleShapeContract,
     make_botorch_objective_bridge,
     make_classification_feasibility_bridge,
     make_continuous_constraint_bridge,
@@ -281,3 +282,94 @@ def test_sample_classification_feasibility_rejects_deterministic_non_gp_classifi
 
     with pytest.raises(TypeError, match="epistemic class-probability samples"):
         make_sample_classification_feasibility_bridge(model, binding)
+
+
+@pytest.mark.parametrize(
+    ("sample_shape", "batch_shape", "q", "expected"),
+    [
+        (torch.Size([8]), torch.Size(), 3, torch.Size([8, 3])),
+        (torch.Size([4, 2]), torch.Size([5]), 3, torch.Size([4, 2, 5, 3])),
+        (torch.Size([1]), torch.Size([2, 5]), 1, torch.Size([1, 2, 5, 1])),
+    ],
+)
+def test_sample_shape_contract_preserves_resolved_sample_batch_and_q_dimensions(
+    sample_shape: torch.Size,
+    batch_shape: torch.Size,
+    q: int,
+    expected: torch.Size,
+) -> None:
+    contract = SampleShapeContract.from_resolved_shapes(
+        sample_shape=sample_shape,
+        batch_shape=batch_shape,
+        q=q,
+    )
+
+    assert contract.sample_shape == sample_shape
+    assert contract.batch_shape == batch_shape
+    assert contract.q == q
+    assert contract.value_shape == expected
+
+
+def test_sample_shape_contract_rejects_empty_q() -> None:
+    with pytest.raises(ValueError, match="q must be at least 1"):
+        SampleShapeContract.from_resolved_shapes(
+            sample_shape=torch.Size([8]),
+            batch_shape=torch.Size(),
+            q=0,
+        )
+
+
+def test_regression_objective_preserves_mc_batch_and_q_dimensions() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    model = HeterogeneousModel(SingleTaskGP(train_x, torch.sin(train_x)))
+    semantics = ProblemSemantics(objectives=(RegressionObjective(0),))
+    binding = resolve_acquisition_composition(model, semantics).objectives[0]
+    objective = make_botorch_objective_bridge(model, binding).objective
+    samples = torch.zeros(8, 2, 3, 1, dtype=torch.double)
+
+    assert objective(samples).shape == torch.Size([8, 2, 3])
+
+
+def test_continuous_constraint_preserves_mc_batch_and_q_dimensions() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    model = HeterogeneousModel(SingleTaskGP(train_x, torch.sin(train_x)))
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ContinuousConstraint(0, threshold=1.0),),
+    )
+    binding = resolve_acquisition_composition(model, semantics).feasibility[0]
+    constraint = make_continuous_constraint_bridge(model, binding)
+    samples = torch.zeros(8, 2, 3, 1, dtype=torch.double)
+
+    assert constraint(samples).shape == torch.Size([8, 2, 3])
+
+
+def test_sample_classification_feasibility_preserves_batch_and_q_dimensions() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    classifier = BinarySingleTaskGPClassifier(
+        train_x,
+        torch.tensor([0.0, 1.0, 1.0], dtype=torch.double),
+    )
+    model = HeterogeneousModel(regression, classifier)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ClassificationConstraint(1, feasible_class=1),),
+    )
+    binding = resolve_acquisition_composition(model, semantics).feasibility[0]
+    feasibility = make_sample_classification_feasibility_bridge(model, binding)
+    X = torch.tensor(
+        [[[[0.1], [0.2], [0.3]]], [[[0.7], [0.8], [0.9]]]],
+        dtype=torch.double,
+    )
+    X = X.squeeze(1)
+    sample_shape = torch.Size([8])
+
+    actual = feasibility.probability(X, sample_shape=sample_shape)
+    expected = SampleShapeContract.from_resolved_shapes(
+        sample_shape=sample_shape,
+        batch_shape=torch.Size(X.shape[:-2]),
+        q=X.shape[-2],
+    ).value_shape
+
+    assert actual.shape == expected
