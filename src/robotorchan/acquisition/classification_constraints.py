@@ -7,12 +7,12 @@ from collections.abc import Callable
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor, nn
 
-from robotorchan.semantics.probability import ClassificationProbabilityOfFeasibility
 
 from robotorchan.models.classification.probability import (
     ClassificationProbabilityRiskType,
     RobustProbabilityTransform,
 )
+from robotorchan.semantics.probability import ClassificationProbabilityOfFeasibility
 
 
 class ClassificationProbabilityAcquisition(AcquisitionFunction):
