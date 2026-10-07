@@ -43,8 +43,7 @@ def test_resolve_acquisition_composition_preserves_output_ownership(use_names: b
     plan = resolve_acquisition_composition(model, semantics)
 
     assert [
-        (item.output_index, item.entry_index, item.local_output_index)
-        for item in plan.objectives
+        (item.output_index, item.entry_index, item.local_output_index) for item in plan.objectives
     ] == [(0, 0, 0)]
     assert [
         (item.output_index, item.entry_index, item.local_output_index) for item in plan.feasibility
