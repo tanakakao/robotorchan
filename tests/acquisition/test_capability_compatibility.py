@@ -17,11 +17,15 @@ from robotorchan.models.classification import get_classification_model_entry
 def test_registry_covers_public_acquisition_classes() -> None:
     helpers = {
         "AcquisitionCapabilities",
+        "AcquisitionCompositionPlan",
         "AcquisitionPurpose",
         "AcquisitionRegistryEntry",
+        "FeasibilityBinding",
+        "ObjectiveBinding",
         "PosteriorRequirement",
         "get_acquisition_registry_entry",
         "make_non_gp_acquisition",
+        "resolve_acquisition_composition",
         "select_thompson_candidates",
         "validate_non_gp_acquisition",
     }
