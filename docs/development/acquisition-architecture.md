@@ -114,6 +114,27 @@ semantics before their required reductions.
 Sampler selection remains governed by posterior-sampling capabilities. Heterogeneous
 composition must reuse that contract rather than choose samplers from concrete model classes.
 
+`HeterogeneousModel` deliberately has no shared `posterior()` contract. Regression posteriors
+and classification latent posteriors have different meanings, so acquisition composition must
+preserve entry ownership and native predictive representations rather than concatenate
+heterogeneous outputs into a synthetic joint posterior or sample tensor solely to satisfy a
+BoTorch constructor.
+
+Semantic objective and constraint adapters are therefore entry-local at the BoTorch boundary.
+A regression objective or continuous outcome constraint can be converted to a callable over
+samples from its owning entry. Classification probability objectives expose both
+posterior-predictive evaluation and, when the classifier supports epistemic sampling,
+class-probability samples induced by its latent posterior.
+
+Classification feasibility currently exposes posterior-predictive probability of feasibility
+and an optional thresholded probability residual. Sample-wise classification feasibility is a
+distinct composition requirement: it must be derived from the classifier's
+`sample_class_probabilities()` contract without reinterpreting latent-function samples as
+outcome samples. Models that do not provide epistemic probability samples may support
+deterministic probability weighting but must not be treated as sample-wise feasible by
+implicit fallback.
+
+
 Outcome or black-box constraints and candidate/input-space constraints remain distinct.
 Outcome constraints belong to acquisition composition. Candidate constraints belong to
 acquisition optimization through `robotorchan.optim.CandidateConstraints`.

@@ -18,3 +18,7 @@ def test_acquisition_architecture_documents_botorch_first_contract() -> None:
     assert "probability-residual feasibility" in text
     assert "FeasibilityWeightedAcquisition" in text
     assert "CandidateConstraints" in text
+    assert "no shared `posterior()` contract" in text
+    assert "entry-local at the BoTorch boundary" in text
+    assert "sample_class_probabilities()" in text
+    assert "must not be treated as sample-wise feasible" in text
