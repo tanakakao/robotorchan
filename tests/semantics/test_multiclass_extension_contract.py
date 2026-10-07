@@ -105,7 +105,10 @@ def test_probability_objective_resolves_multiclass_label() -> None:
 
     assert objective.resolve_output(model) == 1
     assert objective.resolve_class_index(model) == 1
-    assert torch.allclose(objective.evaluate(model, X), torch.full((4,), 0.2))
+    assert torch.allclose(
+        objective.evaluate(model, X),
+        torch.full((4,), 0.2, dtype=torch.double),
+    )
 
 
 def test_multiclass_semantics_preserve_integer_class_selection() -> None:
@@ -115,7 +118,7 @@ def test_multiclass_semantics_preserve_integer_class_selection() -> None:
     assert ProbabilityObjective("status", class_index=2).resolve_class_index(model) == 2
 
 
-@pytest.mark.parametrize("selector", ["unknown", 3, -1, True])
+@pytest.mark.parametrize("selector", ["unknown", 3, -1])
 def test_multiclass_semantics_reject_unknown_class_selection(selector: object) -> None:
     model = _model()
 
@@ -123,4 +126,15 @@ def test_multiclass_semantics_reject_unknown_class_selection(selector: object) -
         ClassificationConstraint("status", feasible_class=selector).resolve_feasible_class(model)
 
     with pytest.raises(ValueError):
+        ProbabilityObjective("status", class_index=selector).resolve_class_index(model)
+
+
+@pytest.mark.parametrize("selector", [True, 1.0])
+def test_multiclass_semantics_reject_invalid_class_selector_types(selector: object) -> None:
+    model = _model()
+
+    with pytest.raises(TypeError):
+        ClassificationConstraint("status", feasible_class=selector).resolve_feasible_class(model)
+
+    with pytest.raises(TypeError):
         ProbabilityObjective("status", class_index=selector).resolve_class_index(model)
