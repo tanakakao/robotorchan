@@ -256,3 +256,19 @@ an optional native `MCSampler`.
 Phase 11 deliberately rejects feasibility bindings. Continuous and mixed learned
 constraints are composed in the following phases so unconstrained qEI does not
 silently apply deterministic PoF weighting or invent cross-model sample coupling.
+
+
+### qEI with continuous constraints
+
+Continuous outcome constraints can be composed into native BoTorch qEI when the
+objective and every constraint are outputs of the same owning BoTorch model
+entry. In that case they share one posterior sample tensor, so robotorchan builds
+BoTorch's `ConstrainedMCObjective` from the semantic objective and
+sample-residual constraint callables and passes it to native
+`qExpectedImprovement`.
+
+Phase 12 does not pretend that independent heterogeneous model entries form one
+joint posterior. If a continuous constraint belongs to another entry, constrained
+qEI rejects the composition rather than independently sampling tensors and
+treating matching sample indices as joint draws. Classification feasibility is
+also excluded here and is composed in the mixed-constraint phase.
