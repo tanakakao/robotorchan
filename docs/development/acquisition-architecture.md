@@ -41,8 +41,10 @@ their capabilities.
 learning and level-set estimation. These classes follow BoTorch acquisition conventions so
 that normal BoTorch optimizers can consume them when their semantics permit.
 
-Classification-specific criteria remain deferred until classification surrogate models are
-introduced.
+Classification active-learning criteria are robotorchan-owned when they add semantics not
+provided directly by BoTorch. Current examples include predictive entropy, BALD, margin
+uncertainty, probability variance, and latent straddle. They remain separate from Bayesian
+optimization outcome-constraint composition.
 
 ## Capability and compatibility metadata
 
@@ -83,15 +85,42 @@ non-GP model is an empirical ensemble.
 construction with robotorchan-specific compatibility validation. It must not grow into a
 general acquisition factory.
 
-## Deferred classification support
+## Heterogeneous semantic composition
 
-Classification models and classification-specific acquisition functions are intentionally
-outside the current scope. Predictive entropy, BALD for classification, margin uncertainty,
-least confidence, probability variance, and related criteria will be designed when
-classification surrogate models are introduced.
+The semantic layer owns model-specific interpretation of heterogeneous outputs. Acquisition
+composition consumes semantic representations instead of branching on concrete model classes.
 
-Regression level-set estimation is not classification and is represented by the current
-active-learning package.
+The current semantic boundary distinguishes sample-residual feasibility, posterior-predictive
+probability of feasibility, and probability-residual feasibility. These representations must
+not be silently converted into one another. Regression outcome constraints naturally expose
+sample residuals, while classification feasibility can retain probability semantics.
+
+Standard Bayesian optimization remains BoTorch-native. Semantic composition should follow the
+smallest sufficient integration level:
+
+1. use a native BoTorch constructor directly when semantic inputs already match its contract;
+2. add a thin adapter when only objective, constraint, sampler, or transform conversion is
+   required;
+3. add an explicit robotorchan composition policy when heterogeneous predictive
+   representations must be combined;
+4. implement a custom acquisition only when the required semantics cannot be expressed by the
+   supported BoTorch interfaces.
+
+Existing `FeasibilityWeightedAcquisition` is a deterministic probability-of-feasibility
+weighting utility. It multiplies an already evaluated acquisition value by reduced classifier
+feasibility and therefore must not be treated as a general sample-wise constrained Monte Carlo
+contract. Joint Monte Carlo composition must preserve sample-level utility and feasibility
+semantics before their required reductions.
+
+Sampler selection remains governed by posterior-sampling capabilities. Heterogeneous
+composition must reuse that contract rather than choose samplers from concrete model classes.
+
+Outcome or black-box constraints and candidate/input-space constraints remain distinct.
+Outcome constraints belong to acquisition composition. Candidate constraints belong to
+acquisition optimization through `robotorchan.optim.CandidateConstraints`.
+
+Regression level-set estimation is not classification and remains represented by the
+regression active-learning package.
 
 ## Current package shape
 
@@ -102,12 +131,14 @@ responsibilities create modules:
 acquisition/
 ├── __init__.py
 ├── capabilities.py
+├── classification_constraints.py
 ├── compatibility.py
 ├── non_gp.py
 ├── optimizer_compatibility.py
 ├── registry.py
 ├── samplers.py
 ├── active_learning/
+│   ├── classification.py
 │   ├── epig.py
 │   ├── randomized_straddle.py
 │   ├── straddle.py
