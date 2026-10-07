@@ -61,6 +61,19 @@ class ClassificationConstraint:
 
     output: int | str
     feasible_class: int = 1
+    probability_threshold: float | None = None
+
+    def __post_init__(self) -> None:
+        """Validate optional posterior-predictive probability threshold."""
+        if self.probability_threshold is None:
+            return
+        threshold = self.probability_threshold
+        if not isinstance(threshold, Real) or isinstance(threshold, bool):
+            raise TypeError("probability_threshold must be a real scalar.")
+        if not math.isfinite(float(threshold)):
+            raise ValueError("probability_threshold must be finite.")
+        if not 0.0 <= float(threshold) <= 1.0:
+            raise ValueError("probability_threshold must be between 0 and 1.")
 
     def resolve_output(self, model: HeterogeneousModel) -> int:
         """Resolve and validate the referenced classification output."""
@@ -90,3 +103,34 @@ class ClassificationConstraint:
             model[entry_index],
             feasible_class=self.feasible_class,
         )
+
+    def to_probability_constraint(
+        self,
+        model: HeterogeneousModel,
+    ) -> ClassificationProbabilityConstraint:
+        """Create a thresholded posterior-predictive probability constraint."""
+        if self.probability_threshold is None:
+            raise ValueError(
+                "probability_threshold is required for a probability constraint."
+            )
+        return ClassificationProbabilityConstraint(
+            self.to_probability_of_feasibility(model),
+            self.probability_threshold,
+        )
+
+
+
+class ClassificationProbabilityConstraint:
+    """Evaluate a thresholded classifier probability with <= 0 feasibility."""
+
+    def __init__(
+        self,
+        probability_of_feasibility: ClassificationProbabilityOfFeasibility,
+        threshold: float,
+    ) -> None:
+        self.probability_of_feasibility = probability_of_feasibility
+        self.threshold = threshold
+
+    def __call__(self, X: Tensor) -> Tensor:
+        """Return threshold minus P(feasible), where values <= 0 are feasible."""
+        return self.threshold - self.probability_of_feasibility(X)
