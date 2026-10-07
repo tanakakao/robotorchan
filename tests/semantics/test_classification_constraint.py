@@ -91,7 +91,6 @@ def test_classification_constraint_probability_matches_classifier() -> None:
     torch.testing.assert_close(probability(X), expected)
 
 
-
 def test_classification_constraint_supports_classifier_without_num_outputs() -> None:
     train_X = torch.rand(8, 2, dtype=torch.double)
     classifier = RandomForestBinaryClassifier(
