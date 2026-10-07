@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from numbers import Real
+from typing import TypeAlias
 
 from torch import Tensor
 
@@ -148,3 +150,73 @@ class ClassificationProbabilityConstraint:
     def __call__(self, X: Tensor) -> Tensor:
         """Return threshold minus P(feasible), where values <= 0 are feasible."""
         return self.threshold - self.probability_of_feasibility(X)
+
+
+SemanticConstraint: TypeAlias = ContinuousConstraint | ClassificationConstraint
+
+
+@dataclass(frozen=True, slots=True)
+class ConstraintCollection(Sequence[SemanticConstraint]):
+    """Ordered mixed semantic constraints for one optimization problem."""
+
+    constraints: tuple[SemanticConstraint, ...]
+
+    def __init__(self, *constraints: SemanticConstraint) -> None:
+        """Initialize an immutable ordered constraint collection."""
+        constraint_types = (ContinuousConstraint, ClassificationConstraint)
+        if not all(isinstance(constraint, constraint_types) for constraint in constraints):
+            raise TypeError(
+                "ConstraintCollection accepts ContinuousConstraint or "
+                "ClassificationConstraint instances."
+            )
+        object.__setattr__(self, "constraints", tuple(constraints))
+
+    def __len__(self) -> int:
+        """Return the number of semantic constraints."""
+        return len(self.constraints)
+
+    def __getitem__(
+        self,
+        index: int | slice,
+    ) -> SemanticConstraint | tuple[SemanticConstraint, ...]:
+        """Return constraints in their declared order."""
+        return self.constraints[index]
+
+    def __iter__(self) -> Iterator[SemanticConstraint]:
+        """Iterate over constraints in their declared order."""
+        return iter(self.constraints)
+
+    def resolve_outputs(self, model: HeterogeneousModel) -> tuple[int, ...]:
+        """Resolve constraints to canonical heterogeneous output indices."""
+        return tuple(constraint.resolve_output(model) for constraint in self.constraints)
+
+    def resolve_owners(
+        self,
+        model: HeterogeneousModel,
+    ) -> tuple[tuple[int, int], ...]:
+        """Resolve constraints to entry and local output indices."""
+        return tuple(constraint.resolve_owner(model) for constraint in self.constraints)
+
+    def group_by_entry(
+        self,
+        model: HeterogeneousModel,
+    ) -> dict[int, tuple[SemanticConstraint, ...]]:
+        """Group mixed constraints by model entry while preserving declared order."""
+        grouped: dict[int, list[SemanticConstraint]] = {}
+        for constraint, (entry_index, _) in zip(
+            self.constraints,
+            self.resolve_owners(model),
+            strict=True,
+        ):
+            grouped.setdefault(entry_index, []).append(constraint)
+        return {entry: tuple(constraints) for entry, constraints in grouped.items()}
+
+    def feasibility_representations(self, model: HeterogeneousModel):
+        """Build heterogeneous feasibility representations in declaration order."""
+        return tuple(
+            constraint.to_feasibility_representation(model) for constraint in self.constraints
+        )
+
+    def validate(self, model: HeterogeneousModel) -> None:
+        """Validate every constraint against the heterogeneous model contract."""
+        self.resolve_outputs(model)
