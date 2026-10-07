@@ -107,3 +107,70 @@ def test_classification_constraint_supports_classifier_without_num_outputs() -> 
 
     assert constraint.resolve_owner(model) == (0, 0)
     assert probability.model is classifier
+
+
+@pytest.mark.parametrize("threshold", [True, "0.8", torch.tensor(0.8)])
+def test_classification_constraint_rejects_non_scalar_probability_threshold(
+    threshold: object,
+) -> None:
+    with pytest.raises(TypeError, match="real scalar"):
+        ClassificationConstraint(
+            output="pass",
+            probability_threshold=threshold,  # type: ignore[arg-type]
+        )
+
+
+@pytest.mark.parametrize("threshold", [float("nan"), float("inf"), float("-inf")])
+def test_classification_constraint_requires_finite_probability_threshold(
+    threshold: float,
+) -> None:
+    with pytest.raises(ValueError, match="finite"):
+        ClassificationConstraint(output="pass", probability_threshold=threshold)
+
+
+@pytest.mark.parametrize("threshold", [-0.1, 1.1])
+def test_classification_constraint_bounds_probability_threshold(threshold: float) -> None:
+    with pytest.raises(ValueError, match="between 0 and 1"):
+        ClassificationConstraint(output="pass", probability_threshold=threshold)
+
+
+@pytest.mark.parametrize("threshold", [0.0, 1.0])
+def test_classification_constraint_accepts_probability_boundary(
+    threshold: float,
+) -> None:
+    constraint = ClassificationConstraint(
+        output="pass",
+        probability_threshold=threshold,
+    )
+
+    assert constraint.probability_threshold == threshold
+
+
+def test_classification_constraint_requires_threshold_for_probability_constraint() -> None:
+    model = _model()
+
+    with pytest.raises(ValueError, match="probability_threshold is required"):
+        ClassificationConstraint(output="pass").to_probability_constraint(model)
+
+
+def test_classification_probability_constraint_uses_nonpositive_feasibility() -> None:
+    model = _model()
+    constraint = ClassificationConstraint(
+        output="pass",
+        feasible_class=1,
+        probability_threshold=0.7,
+    )
+    probability_constraint = constraint.to_probability_constraint(model)
+    probability_constraint.probability_of_feasibility.forward = lambda X: torch.tensor(
+        [0.6, 0.7, 0.8],
+        dtype=X.dtype,
+        device=X.device,
+    )
+    X = torch.rand(3, 2, dtype=torch.double)
+
+    residual = probability_constraint(X)
+
+    torch.testing.assert_close(
+        residual,
+        torch.tensor([0.1, 0.0, -0.1], dtype=torch.double),
+    )
