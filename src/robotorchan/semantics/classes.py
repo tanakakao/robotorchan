@@ -12,7 +12,9 @@ def resolve_class(
     argument_name: str,
 ) -> int:
     """Resolve a probability class index or declared class label."""
-    if isinstance(selector, int) and not isinstance(selector, bool):
+    if isinstance(selector, bool):
+        raise ValueError(f"{argument_name} must not be a boolean.")
+    if isinstance(selector, int):
         if not 0 <= selector < metadata.num_classes:
             raise ValueError(f"{argument_name} is outside the classifier class range.")
         return selector
