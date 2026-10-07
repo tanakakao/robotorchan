@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 
+from botorch.models.model import Model as BoTorchModel
 from torch import Tensor, nn
 
 from robotorchan.models.base import ModelTrainingMixin
@@ -162,7 +163,7 @@ class HeterogeneousModel(nn.Module):
         model = self[key]
         if isinstance(model, ClassificationModelMixin):
             return ObservationType.CLASSIFICATION
-        if isinstance(model, ModelTrainingMixin):
+        if isinstance(model, (ModelTrainingMixin, BoTorchModel)):
             return ObservationType.REGRESSION
         raise TypeError(
             f"Heterogeneous model entry {key!r} does not declare supported "
