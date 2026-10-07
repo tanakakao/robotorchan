@@ -25,6 +25,7 @@ from robotorchan.acquisition.composition import (
     FeasibilityBinding,
     ObjectiveBinding,
     make_botorch_objective_bridge,
+    make_deterministic_pof_acquisition,
     resolve_acquisition_composition,
 )
 from robotorchan.acquisition.non_gp import make_non_gp_acquisition, validate_non_gp_acquisition
@@ -53,6 +54,7 @@ __all__ = [
     "Straddle",
     "get_acquisition_registry_entry",
     "make_botorch_objective_bridge",
+    "make_deterministic_pof_acquisition",
     "make_non_gp_acquisition",
     "resolve_acquisition_composition",
     "select_thompson_candidates",
