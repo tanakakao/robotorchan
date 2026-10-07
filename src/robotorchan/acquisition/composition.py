@@ -27,13 +27,7 @@ from robotorchan.semantics.problem import ProblemSemantics
 
 @dataclass(frozen=True, slots=True)
 class SampleShapeContract:
-    """Canonical sample/batch/q shape contract for acquisition composition.
-
-    ``sample_shape`` contains Monte Carlo dimensions, ``batch_shape`` contains
-    t-batch dimensions, and ``q`` is the candidate-set dimension. Scalar
-    objective, residual, and feasibility values must preserve all three and
-    remove only their source output/class dimension.
-    """
+    """Resolved sample/posterior-batch/q shape contract for composition."""
 
     sample_shape: torch.Size
     batch_shape: torch.Size
@@ -45,20 +39,20 @@ class SampleShapeContract:
         return self.sample_shape + self.batch_shape + torch.Size([self.q])
 
     @classmethod
-    def from_X(
+    def from_resolved_shapes(
         cls,
-        X: Tensor,
         *,
-        sample_shape: torch.Size | None = None,
-    ) -> "SampleShapeContract":
-        """Resolve the canonical contract from a BoTorch ``... x q x d`` input."""
-        if X.ndim < 2:
-            raise ValueError("X must have shape ... x q x d.")
-        resolved_sample_shape = torch.Size() if sample_shape is None else sample_shape
+        sample_shape: torch.Size,
+        batch_shape: torch.Size,
+        q: int,
+    ) -> SampleShapeContract:
+        """Build a contract from already-resolved sampling and posterior shapes."""
+        if q < 1:
+            raise ValueError("q must be at least 1.")
         return cls(
-            sample_shape=resolved_sample_shape,
-            batch_shape=torch.Size(X.shape[:-2]),
-            q=X.shape[-2],
+            sample_shape=sample_shape,
+            batch_shape=batch_shape,
+            q=q,
         )
 
 
