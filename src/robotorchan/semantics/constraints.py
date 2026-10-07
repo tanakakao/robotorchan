@@ -10,9 +10,7 @@ from typing import TypeAlias
 
 from torch import Tensor
 
-from robotorchan.acquisition.classification_constraints import (
-    ClassificationProbabilityOfFeasibility,
-)
+from robotorchan.semantics.probability import ClassificationProbabilityOfFeasibility
 from robotorchan.models.capabilities import ObservationType
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.semantics.classes import resolve_class
