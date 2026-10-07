@@ -26,6 +26,7 @@ from robotorchan.acquisition.composition import (
     ObjectiveBinding,
     make_botorch_objective_bridge,
     make_classification_feasibility_bridge,
+    make_continuous_constraint_bridge,
     make_deterministic_pof_acquisition,
     resolve_acquisition_composition,
 )
@@ -56,6 +57,7 @@ __all__ = [
     "get_acquisition_registry_entry",
     "make_botorch_objective_bridge",
     "make_classification_feasibility_bridge",
+    "make_continuous_constraint_bridge",
     "make_deterministic_pof_acquisition",
     "make_non_gp_acquisition",
     "resolve_acquisition_composition",
