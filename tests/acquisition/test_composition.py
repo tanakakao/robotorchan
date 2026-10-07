@@ -67,9 +67,7 @@ def test_botorch_objective_bridge_preserves_native_model_and_direction(
     train_y = torch.sin(train_x)
     regression = SingleTaskGP(train_x, train_y)
     model = HeterogeneousModel(regression)
-    direction = (
-        ObjectiveDirection.MAXIMIZE if direction_sign > 0 else ObjectiveDirection.MINIMIZE
-    )
+    direction = ObjectiveDirection.MAXIMIZE if direction_sign > 0 else ObjectiveDirection.MINIMIZE
     semantics = ProblemSemantics(objectives=(RegressionObjective(0, direction=direction),))
 
     binding = resolve_acquisition_composition(model, semantics).objectives[0]
