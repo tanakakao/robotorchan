@@ -996,3 +996,91 @@ def test_classification_semantics_depend_on_family_contract_not_binary_class() -
     assert model.output_observation_type(0) is ObservationType.CLASSIFICATION
     assert model.output_classification_metadata(0).num_classes == 3
     assert model.entry_predict_proba(0, torch.rand(2, 3)).shape == (2, 3)
+
+
+def test_output_names_resolve_to_canonical_global_indices() -> None:
+    train_X = torch.rand(6, 2)
+    model = HeterogeneousModel(
+        KroneckerMultiTaskGP(train_X, torch.rand(6, 2)),
+        BinarySingleTaskGPClassifier(
+            train_X,
+            torch.tensor([0, 1, 0, 1, 0, 1]),
+        ),
+        names=["properties", "pass_model"],
+        output_names=["strength", "conductivity", "pass"],
+    )
+
+    assert model.output_names == ("strength", "conductivity", "pass")
+    assert model.resolve_output("strength") == 0
+    assert model.resolve_output("conductivity") == 1
+    assert model.resolve_output("pass") == 2
+    assert model.resolve_output(0) == 0
+    assert model.resolve_output(-1) == 2
+    assert model.output_observation_type("strength") is ObservationType.REGRESSION
+    assert model.output_observation_type("pass") is ObservationType.CLASSIFICATION
+    assert model.output_classification_metadata("pass") is not None
+
+
+def test_output_names_are_optional_and_indices_remain_canonical() -> None:
+    train_X = torch.rand(6, 2)
+    model = HeterogeneousModel(
+        KroneckerMultiTaskGP(train_X, torch.rand(6, 2)),
+    )
+
+    assert model.output_names == (None, None)
+    assert model.resolve_output(0) == 0
+    assert model.resolve_output(1) == 1
+
+
+def test_output_names_must_match_global_output_count() -> None:
+    train_X = torch.rand(6, 2)
+
+    with pytest.raises(ValueError, match="one entry for each global output"):
+        HeterogeneousModel(
+            KroneckerMultiTaskGP(train_X, torch.rand(6, 2)),
+            output_names=["strength"],
+        )
+
+
+def test_output_names_must_be_unique_when_provided() -> None:
+    train_X = torch.rand(6, 2)
+
+    with pytest.raises(ValueError, match="Output names must be unique"):
+        HeterogeneousModel(
+            KroneckerMultiTaskGP(train_X, torch.rand(6, 2)),
+            output_names=["same", "same"],
+        )
+
+
+def test_output_names_must_be_strings_or_none() -> None:
+    train_X = torch.rand(6, 2)
+
+    with pytest.raises(TypeError, match="string or None"):
+        HeterogeneousModel(
+            SingleTaskGP(train_X, torch.rand(6, 1)),
+            output_names=[1],  # type: ignore[list-item]
+        )
+
+
+def test_unknown_output_name_raises_clear_key_error() -> None:
+    train_X = torch.rand(6, 2)
+    model = HeterogeneousModel(
+        SingleTaskGP(train_X, torch.rand(6, 1)),
+        output_names=["strength"],
+    )
+
+    with pytest.raises(KeyError, match="Unknown heterogeneous output name"):
+        model.resolve_output("missing")
+
+
+def test_resolve_output_rejects_invalid_index_types_and_ranges() -> None:
+    train_X = torch.rand(6, 2)
+    model = HeterogeneousModel(
+        SingleTaskGP(train_X, torch.rand(6, 1)),
+        output_names=["strength"],
+    )
+
+    with pytest.raises(TypeError, match="output_index must be an integer"):
+        model.resolve_output(1.0)  # type: ignore[arg-type]
+    with pytest.raises(IndexError, match="out of range"):
+        model.resolve_output(1)
