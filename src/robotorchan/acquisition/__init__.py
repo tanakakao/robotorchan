@@ -29,6 +29,7 @@ from robotorchan.acquisition.composition import (
     make_classification_feasibility_bridge,
     make_continuous_constraint_bridge,
     make_deterministic_pof_acquisition,
+    make_qei_acquisition,
     make_sample_classification_feasibility_bridge,
     resolve_acquisition_composition,
 )
