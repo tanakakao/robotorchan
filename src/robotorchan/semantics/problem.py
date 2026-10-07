@@ -74,6 +74,5 @@ class ProblemSemantics:
     ) -> tuple[FeasibilityRepresentation, ...]:
         """Build runtime feasibility representations in declaration order."""
         return tuple(
-            constraint.to_feasibility_representation(model)
-            for constraint in self.constraints
+            constraint.to_feasibility_representation(model) for constraint in self.constraints
         )
