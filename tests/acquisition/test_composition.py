@@ -16,6 +16,7 @@ from robotorchan.semantics import (
     ClassificationConstraint,
     ContinuousConstraint,
     FeasibilityRepresentationKind,
+    ObjectiveDirection,
     ProblemSemantics,
     RegressionObjective,
 )
@@ -63,8 +64,6 @@ def test_resolve_acquisition_composition_preserves_output_ownership(use_names: b
 def test_botorch_objective_bridge_preserves_native_model_and_direction(
     direction_sign: float,
 ) -> None:
-    from robotorchan.semantics import ObjectiveDirection
-
     train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
     train_y = torch.sin(train_x)
     regression = SingleTaskGP(train_x, train_y)
