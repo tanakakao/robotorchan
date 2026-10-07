@@ -15,6 +15,7 @@ from robotorchan.acquisition.classification_constraints import (
 )
 from robotorchan.models.capabilities import ObservationType
 from robotorchan.models.heterogeneous import HeterogeneousModel
+from robotorchan.semantics.classes import resolve_class
 from robotorchan.semantics.direction import ConstraintDirection
 
 
@@ -100,14 +101,11 @@ class ClassificationConstraint:
         metadata = model.output_classification_metadata(output_index)
         if metadata is None:
             raise TypeError("ClassificationConstraint requires classification metadata.")
-        if isinstance(self.feasible_class, int) and not isinstance(self.feasible_class, bool):
-            if not 0 <= self.feasible_class < metadata.num_classes:
-                raise ValueError("feasible_class is outside the classifier class range.")
-            return self.feasible_class
-        try:
-            return metadata.class_labels.index(self.feasible_class)
-        except ValueError as error:
-            raise ValueError("feasible_class is not present in classifier class_labels.") from error
+        return resolve_class(
+            self.feasible_class,
+            metadata,
+            argument_name="feasible_class",
+        )
 
     def resolve_owner(self, model: HeterogeneousModel) -> tuple[int, int]:
         """Resolve the referenced output to its entry and local output index."""
