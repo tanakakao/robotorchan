@@ -11,6 +11,9 @@ from robotorchan.acquisition.composition import (
     make_sample_classification_feasibility_bridge,
     resolve_acquisition_composition,
 )
+from robotorchan.models.classification.binary.non_gp.sklearn import (
+    RandomForestBinaryClassifier,
+)
 from robotorchan.models.classification.binary.standard.single_task import (
     BinarySingleTaskGPClassifier,
 )
@@ -254,4 +257,20 @@ def test_sample_classification_feasibility_rejects_non_probability_binding() -> 
     binding = resolve_acquisition_composition(model, semantics).feasibility[0]
 
     with pytest.raises(TypeError, match="ProbabilityOfFeasibility"):
+        make_sample_classification_feasibility_bridge(model, binding)
+
+
+def test_sample_classification_feasibility_rejects_deterministic_non_gp_classifier() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    classifier = RandomForestBinaryClassifier(n_estimators=4, random_state=0)
+    classifier.fit(train_x, torch.tensor([0, 1, 1]))
+    model = HeterogeneousModel(regression, classifier)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ClassificationConstraint(1, feasible_class=1),),
+    )
+    binding = resolve_acquisition_composition(model, semantics).feasibility[0]
+
+    with pytest.raises(TypeError, match="epistemic class-probability samples"):
         make_sample_classification_feasibility_bridge(model, binding)
