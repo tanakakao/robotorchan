@@ -25,7 +25,10 @@ class SampleResidualFeasibility:
     """BoTorch-compatible sample residual where values <= 0 are feasible."""
 
     constraint: object
-    kind: FeasibilityRepresentationKind = field(\n        default=FeasibilityRepresentationKind.SAMPLE_RESIDUAL,\n        init=False,\n    )
+    kind: FeasibilityRepresentationKind = field(
+        default=FeasibilityRepresentationKind.SAMPLE_RESIDUAL,
+        init=False,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,8 +36,9 @@ class ProbabilityOfFeasibility:
     """Posterior-predictive probability of the feasible class."""
 
     probability: ClassificationProbabilityOfFeasibility
-    kind: FeasibilityRepresentationKind = (
-        FeasibilityRepresentationKind.PROBABILITY_OF_FEASIBILITY
+    kind: FeasibilityRepresentationKind = field(
+        default=FeasibilityRepresentationKind.PROBABILITY_OF_FEASIBILITY,
+        init=False,
     )
 
 
@@ -43,7 +47,10 @@ class ProbabilityResidualFeasibility:
     """Posterior-predictive probability residual where values <= 0 are feasible."""
 
     constraint: ClassificationProbabilityConstraint
-    kind: FeasibilityRepresentationKind = field(\n        default=FeasibilityRepresentationKind.PROBABILITY_RESIDUAL,\n        init=False,\n    )
+    kind: FeasibilityRepresentationKind = field(
+        default=FeasibilityRepresentationKind.PROBABILITY_RESIDUAL,
+        init=False,
+    )
 
 
 FeasibilityRepresentation: TypeAlias = (
