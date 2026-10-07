@@ -1,9 +1,11 @@
 import pytest
 import torch
+from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.objective import GenericMCObjective
 
 from robotorchan.acquisition.composition import (
     make_botorch_objective_bridge,
+    make_deterministic_pof_acquisition,
     resolve_acquisition_composition,
 )
 from robotorchan.models.classification.binary.standard.single_task import (
@@ -77,3 +79,48 @@ def test_botorch_objective_bridge_preserves_native_model_and_direction(
     assert bridge.model is regression
     assert isinstance(bridge.objective, GenericMCObjective)
     assert torch.equal(bridge.objective(samples), direction_sign * samples[..., 0])
+
+
+class _ConstantAcquisition(AcquisitionFunction):
+    def __init__(self, model: SingleTaskGP, value: float) -> None:
+        super().__init__(model=model)
+        self.value = value
+
+    def forward(self, X: torch.Tensor) -> torch.Tensor:
+        return X.new_full(X.shape[:-2], self.value)
+
+
+def test_deterministic_pof_bridge_reuses_probability_representation() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    classifier = BinarySingleTaskGPClassifier(
+        train_x,
+        torch.tensor([0.0, 1.0, 1.0], dtype=torch.double),
+    )
+    model = HeterogeneousModel(regression, classifier)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ClassificationConstraint(1, feasible_class=1),),
+    )
+    binding = resolve_acquisition_composition(model, semantics).feasibility[0]
+    objective_acquisition = _ConstantAcquisition(regression, 2.0)
+
+    acquisition = make_deterministic_pof_acquisition(objective_acquisition, binding)
+    X = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
+    expected = 2.0 * binding.representation.probability(X).squeeze(-1)
+
+    assert torch.allclose(acquisition(X), expected)
+
+
+def test_deterministic_pof_bridge_rejects_sample_residual() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    model = HeterogeneousModel(regression)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ContinuousConstraint(0, threshold=1.0),),
+    )
+    binding = resolve_acquisition_composition(model, semantics).feasibility[0]
+
+    with pytest.raises(TypeError, match="ProbabilityOfFeasibility"):
+        make_deterministic_pof_acquisition(_ConstantAcquisition(regression, 2.0), binding)
