@@ -23,6 +23,10 @@ from robotorchan.semantics.objectives import (
     RegressionObjective,
     SemanticObjective,
 )
+from robotorchan.semantics.ordinal import (
+    ExpectedClassUtilityObjective,
+    OrdinalProbabilityObjective,
+)
 from robotorchan.semantics.problem import ProblemSemantics
 
 __all__ = [
@@ -30,10 +34,12 @@ __all__ = [
     "ConstraintCollection",
     "ConstraintDirection",
     "ContinuousConstraint",
+    "ExpectedClassUtilityObjective",
     "FeasibilityRepresentation",
     "FeasibilityRepresentationKind",
     "ObjectiveCollection",
     "ObjectiveDirection",
+    "OrdinalProbabilityObjective",
     "ProbabilityObjective",
     "ProbabilityOfFeasibility",
     "ProbabilityResidualFeasibility",

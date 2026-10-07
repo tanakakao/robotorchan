@@ -14,6 +14,10 @@ from robotorchan.models.capabilities import ObservationType
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.semantics.classes import resolve_class
 from robotorchan.semantics.direction import ObjectiveDirection
+from robotorchan.semantics.ordinal import (
+    ExpectedClassUtilityObjective,
+    OrdinalProbabilityObjective,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,7 +112,12 @@ class ProbabilityObjective:
         return self.direction.apply(probabilities[..., self.class_index])
 
 
-SemanticObjective: TypeAlias = RegressionObjective | ProbabilityObjective
+SemanticObjective: TypeAlias = (
+    RegressionObjective
+    | ProbabilityObjective
+    | OrdinalProbabilityObjective
+    | ExpectedClassUtilityObjective
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,10 +130,16 @@ class ObjectiveCollection(Sequence[SemanticObjective]):
         """Initialize an immutable ordered objective collection."""
         if not objectives:
             raise ValueError("ObjectiveCollection requires at least one objective.")
-        objective_types = (RegressionObjective, ProbabilityObjective)
+        objective_types = (
+            RegressionObjective,
+            ProbabilityObjective,
+            OrdinalProbabilityObjective,
+            ExpectedClassUtilityObjective,
+        )
         if not all(isinstance(objective, objective_types) for objective in objectives):
             raise TypeError(
-                "ObjectiveCollection accepts RegressionObjective or ProbabilityObjective instances."
+                "ObjectiveCollection accepts RegressionObjective or ProbabilityObjective, "
+                "OrdinalProbabilityObjective, or ExpectedClassUtilityObjective instances."
             )
         object.__setattr__(self, "objectives", tuple(objectives))
 
