@@ -412,7 +412,7 @@ def test_qei_integration_returns_native_botorch_acquisition(
         torch.as_tensor(acquisition.best_f),
         torch.tensor(expected_best_f, dtype=torch.double),
     )
-    assert acquisition(torch.tensor([[0.25]], dtype=torch.double)).shape == torch.Size([])
+    assert acquisition(torch.tensor([[0.25]], dtype=torch.double)).shape == torch.Size([1])
 
 
 def test_qei_integration_rejects_constraint_composition() -> None:
