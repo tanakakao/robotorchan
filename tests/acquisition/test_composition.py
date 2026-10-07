@@ -8,6 +8,7 @@ from robotorchan.acquisition.composition import (
     make_classification_feasibility_bridge,
     make_continuous_constraint_bridge,
     make_deterministic_pof_acquisition,
+    make_sample_classification_feasibility_bridge,
     resolve_acquisition_composition,
 )
 from robotorchan.models.classification.binary.standard.single_task import (
@@ -212,3 +213,45 @@ def test_continuous_constraint_bridge_rejects_probability_representation() -> No
 
     with pytest.raises(TypeError, match="SampleResidualFeasibility"):
         make_continuous_constraint_bridge(model, binding)
+
+
+def test_sample_classification_feasibility_preserves_mc_sample_dimension() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    classifier = BinarySingleTaskGPClassifier(
+        train_x,
+        torch.tensor([0.0, 1.0, 1.0], dtype=torch.double),
+    )
+    model = HeterogeneousModel(regression, classifier)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ClassificationConstraint(1, feasible_class=1),),
+    )
+    binding = resolve_acquisition_composition(model, semantics).feasibility[0]
+    sample_feasibility = make_sample_classification_feasibility_bridge(model, binding)
+    X = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
+    torch.manual_seed(7)
+    expected = classifier.sample_class_probabilities(
+        X,
+        sample_shape=torch.Size([8]),
+    )[..., 1]
+    torch.manual_seed(7)
+    actual = sample_feasibility.probability(X, sample_shape=torch.Size([8]))
+
+    assert sample_feasibility.kind is FeasibilityRepresentationKind.SAMPLE_PROBABILITY_OF_FEASIBILITY
+    assert actual.shape == expected.shape
+    assert torch.equal(actual, expected)
+
+
+def test_sample_classification_feasibility_rejects_non_probability_binding() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    model = HeterogeneousModel(regression)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ContinuousConstraint(0, threshold=1.0),),
+    )
+    binding = resolve_acquisition_composition(model, semantics).feasibility[0]
+
+    with pytest.raises(TypeError, match="ProbabilityOfFeasibility"):
+        make_sample_classification_feasibility_bridge(model, binding)
