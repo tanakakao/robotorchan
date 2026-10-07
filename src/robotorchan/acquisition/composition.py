@@ -9,8 +9,8 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import qExpectedImprovement
 from botorch.acquisition.objective import MCAcquisitionObjective
-from botorch.sampling.base import MCSampler
 from botorch.models.model import Model as BoTorchModel
+from botorch.sampling.base import MCSampler
 from torch import Tensor
 
 from robotorchan.acquisition.classification_constraints import FeasibilityWeightedAcquisition
@@ -298,13 +298,7 @@ def make_qei_acquisition(
         raise TypeError("qEI integration currently supports RegressionObjective only.")
 
     bridge = make_botorch_objective_bridge(model, binding)
-    directed_best_f = objective.direction.apply(
-        torch.as_tensor(
-            best_f,
-            dtype=bridge.model.train_targets.dtype,
-            device=bridge.model.train_targets.device,
-        )
-    )
+    directed_best_f = objective.direction.apply(torch.as_tensor(best_f))
     return qExpectedImprovement(
         model=bridge.model,
         best_f=directed_best_f,
