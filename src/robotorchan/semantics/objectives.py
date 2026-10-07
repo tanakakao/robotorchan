@@ -61,11 +61,16 @@ class ProbabilityObjective:
             raise ValueError("class_index is outside the classifier class range.")
         return output_index
 
-    def evaluate(self, model: HeterogeneousModel, X: Tensor) -> Tensor:
+    def evaluate(
+        self,
+        model: HeterogeneousModel,
+        X: Tensor,
+        **kwargs: object,
+    ) -> Tensor:
         """Return the directed posterior-predictive class probability."""
         output_index = self.resolve_output(model)
         entry_index, _ = model.output_owner(output_index)
-        probabilities = model.entry_predict_proba(entry_index, X)
+        probabilities = model.entry_predict_proba(entry_index, X, **kwargs)
         return self.direction.apply(probabilities[..., self.class_index])
 
     def sample(
@@ -74,10 +79,15 @@ class ProbabilityObjective:
         X: Tensor,
         *,
         sample_shape: torch.Size | None = None,
+        **kwargs: object,
     ) -> Tensor:
         """Return directed class-probability samples induced by the latent posterior."""
         output_index = self.resolve_output(model)
         entry_index, _ = model.output_owner(output_index)
         classifier = model[entry_index]
-        probabilities = classifier.sample_class_probabilities(X, sample_shape=sample_shape)
+        probabilities = classifier.sample_class_probabilities(
+            X,
+            sample_shape=sample_shape,
+            **kwargs,
+        )
         return self.direction.apply(probabilities[..., self.class_index])

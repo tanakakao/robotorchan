@@ -86,3 +86,68 @@ def test_probability_objective_samples_posterior_induced_probabilities() -> None
     assert values.shape == torch.Size([4, 3])
     assert values.dtype == X.dtype
     assert torch.all((values >= 0.0) & (values <= 1.0))
+
+
+def test_probability_objective_is_distinct_from_latent_posterior() -> None:
+    torch.manual_seed(11)
+    model = _model()
+    X = torch.rand(3, 2, dtype=torch.double)
+    classifier = model[1]
+    objective = ProbabilityObjective(output="pass", class_index=1)
+
+    latent_mean = classifier.latent_posterior(X).mean.squeeze(-1)
+    probabilities = objective.evaluate(model, X)
+
+    assert probabilities.shape == latent_mean.shape
+    assert torch.all((probabilities >= 0.0) & (probabilities <= 1.0))
+    assert not torch.equal(probabilities, latent_mean)
+
+
+def test_probability_objective_forwards_native_prediction_kwargs() -> None:
+    model = _model()
+    X = torch.rand(2, 2, dtype=torch.double)
+    classifier = model[1]
+    objective = ProbabilityObjective(output="pass", class_index=1)
+    calls: list[object] = []
+
+    original = classifier.predict_proba
+
+    def predict_proba(query: torch.Tensor, **kwargs: object) -> torch.Tensor:
+        calls.append(kwargs["marker"])
+        return original(query)
+
+    classifier.predict_proba = predict_proba  # type: ignore[method-assign]
+
+    objective.evaluate(model, X, marker="predictive")
+
+    assert calls == ["predictive"]
+
+
+def test_probability_objective_forwards_native_sampling_kwargs() -> None:
+    model = _model()
+    X = torch.rand(2, 2, dtype=torch.double)
+    classifier = model[1]
+    objective = ProbabilityObjective(output="pass", class_index=1)
+    calls: list[object] = []
+
+    original = classifier.sample_class_probabilities
+
+    def sample_probabilities(
+        query: torch.Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> torch.Tensor:
+        calls.append(kwargs["marker"])
+        return original(query, sample_shape=sample_shape)
+
+    classifier.sample_class_probabilities = sample_probabilities  # type: ignore[method-assign]
+
+    values = objective.sample(
+        model,
+        X,
+        sample_shape=torch.Size([3]),
+        marker="posterior",
+    )
+
+    assert calls == ["posterior"]
+    assert values.shape == torch.Size([3, 2])
