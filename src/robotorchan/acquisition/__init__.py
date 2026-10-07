@@ -30,11 +30,11 @@ from robotorchan.acquisition.registry import get_acquisition_registry_entry
 from robotorchan.acquisition.sampling import select_thompson_candidates
 
 __all__ = [
+    "BALD",
     "AcquisitionCapabilities",
     "AcquisitionCompositionPlan",
     "AcquisitionPurpose",
     "AcquisitionRegistryEntry",
-    "BALD",
     "BoundaryVariance",
     "ExpectedPredictiveInformationGain",
     "FeasibilityBinding",
