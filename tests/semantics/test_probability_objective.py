@@ -88,7 +88,6 @@ def test_probability_objective_samples_posterior_induced_probabilities() -> None
     assert torch.all((values >= 0.0) & (values <= 1.0))
 
 
-
 def test_probability_objective_is_distinct_from_latent_posterior() -> None:
     torch.manual_seed(11)
     model = _model()
