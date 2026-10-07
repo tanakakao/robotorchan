@@ -13,12 +13,7 @@ from robotorchan.semantics import (
 )
 
 
-class _RegressionModel(nn.Module):
-    num_outputs = 1
-
-    def posterior(self, X, **kwargs):
-        del X, kwargs
-        raise NotImplementedError
+from robotorchan.models.standard import SingleTaskGP
 
 
 @pytest.mark.parametrize("use_names", [False, True])
@@ -29,9 +24,10 @@ def test_resolve_acquisition_composition_preserves_output_ownership(use_names: b
     train_y = torch.tensor([0.0, 1.0, 1.0], dtype=torch.double)
     classifier = BinaryGPClassifier(train_x, train_y)
 
+    regression_y = torch.sin(train_x)
     model = HeterogeneousModel(
-        _RegressionModel(),
-        _RegressionModel(),
+        SingleTaskGP(train_x, regression_y),
+        SingleTaskGP(train_x, regression_y),
         classifier,
         output_names=("objective", "cost", "pass") if use_names else None,
     )
