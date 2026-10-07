@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import qExpectedImprovement
-from botorch.acquisition.objective import MCAcquisitionObjective
+from botorch.acquisition.objective import ConstrainedMCObjective, MCAcquisitionObjective
 from botorch.models.model import Model as BoTorchModel
 from botorch.sampling.base import MCSampler
 from torch import Tensor
@@ -304,4 +304,52 @@ def make_qei_acquisition(
         best_f=directed_best_f,
         sampler=sampler,
         objective=bridge.objective,
+    )
+
+
+def make_continuous_constrained_qei_acquisition(
+    model: HeterogeneousModel,
+    semantics: ProblemSemantics,
+    *,
+    best_f: float | Tensor,
+    sampler: MCSampler | None = None,
+    infeasible_cost: float | Tensor = 0.0,
+) -> qExpectedImprovement:
+    """Build native qEI with continuous constraints from one shared posterior."""
+    plan = resolve_acquisition_composition(model, semantics)
+    if len(plan.objectives) != 1:
+        raise ValueError("Constrained qEI requires exactly one objective.")
+    if not plan.feasibility:
+        raise ValueError("Constrained qEI requires at least one continuous constraint.")
+
+    objective_binding = plan.objectives[0]
+    objective = objective_binding.objective
+    if not isinstance(objective, RegressionObjective):
+        raise TypeError("Constrained qEI currently supports RegressionObjective only.")
+    if any(
+        not isinstance(binding.representation, SampleResidualFeasibility)
+        for binding in plan.feasibility
+    ):
+        raise TypeError("Phase 12 constrained qEI supports continuous constraints only.")
+    if any(binding.entry_index != objective_binding.entry_index for binding in plan.feasibility):
+        raise ValueError(
+            "Continuous constrained qEI requires objective and constraints to share "
+            "one BoTorch posterior."
+        )
+
+    bridge = make_botorch_objective_bridge(model, objective_binding)
+    constraints = [
+        make_continuous_constraint_bridge(model, binding) for binding in plan.feasibility
+    ]
+    constrained_objective = ConstrainedMCObjective(
+        objective=bridge.objective,
+        constraints=constraints,
+        infeasible_cost=infeasible_cost,
+    )
+    directed_best_f = objective.direction.apply(torch.as_tensor(best_f))
+    return qExpectedImprovement(
+        model=bridge.model,
+        best_f=directed_best_f,
+        sampler=sampler,
+        objective=constrained_objective,
     )
