@@ -1,9 +1,8 @@
 import pytest
 import torch
-from torch import nn
-
 from robotorchan.acquisition.composition import resolve_acquisition_composition
 from robotorchan.models.heterogeneous import HeterogeneousModel
+from robotorchan.models.standard import SingleTaskGP
 from robotorchan.semantics import (
     ClassificationConstraint,
     ContinuousConstraint,
@@ -11,9 +10,6 @@ from robotorchan.semantics import (
     ProblemSemantics,
     RegressionObjective,
 )
-
-
-from robotorchan.models.standard import SingleTaskGP
 
 
 @pytest.mark.parametrize("use_names", [False, True])
@@ -44,9 +40,10 @@ def test_resolve_acquisition_composition_preserves_output_ownership(use_names: b
 
     plan = resolve_acquisition_composition(model, semantics)
 
-    assert [(item.output_index, item.entry_index, item.local_output_index) for item in plan.objectives] == [
-        (0, 0, 0)
-    ]
+    assert [
+        (item.output_index, item.entry_index, item.local_output_index)
+        for item in plan.objectives
+    ] == [(0, 0, 0)]
     assert [
         (item.output_index, item.entry_index, item.local_output_index) for item in plan.feasibility
     ] == [(1, 1, 0), (2, 2, 0)]
