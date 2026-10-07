@@ -21,6 +21,7 @@ def test_acquisition_public_api_is_intentionally_small() -> None:
         "PredictiveEntropy",
         "ProbabilityVariance",
         "RandomizedStraddle",
+        "SampleShapeContract",
         "Straddle",
         "get_acquisition_registry_entry",
         "make_botorch_objective_bridge",
