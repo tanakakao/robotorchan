@@ -7,6 +7,7 @@ from robotorchan.models.classification.binary.standard.single_task import (
     BinarySingleTaskGPClassifier,
 )
 from robotorchan.models.heterogeneous import HeterogeneousModel
+from robotorchan.models.standard.model_list import ModelListGP
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.semantics import (
     ObjectiveCollection,
@@ -78,3 +79,62 @@ def test_objective_collection_validation_preserves_objective_errors() -> None:
 
     with pytest.raises(TypeError, match="RegressionObjective requires a regression output"):
         objectives.validate(model)
+
+
+def test_objective_collection_resolves_model_list_local_outputs() -> None:
+    train_X = torch.rand(7, 2, dtype=torch.double)
+    first = SingleTaskGP(train_X, torch.rand(7, 1, dtype=torch.double))
+    second = SingleTaskGP(train_X, torch.rand(7, 1, dtype=torch.double))
+    model = HeterogeneousModel(
+        ModelListGP(first, second),
+        output_names=["strength", "cost"],
+    )
+    objectives = ObjectiveCollection(
+        RegressionObjective(output="cost"),
+        RegressionObjective(output="strength"),
+    )
+
+    assert objectives.resolve_outputs(model) == (1, 0)
+    assert objectives.resolve_owners(model) == ((0, 1), (0, 0))
+    assert objectives.group_by_entry(model) == {0: tuple(objectives)}
+
+
+def test_objective_collection_groups_heterogeneous_entries() -> None:
+    train_X = torch.rand(8, 2, dtype=torch.double)
+    first = SingleTaskGP(train_X, torch.rand(8, 1, dtype=torch.double))
+    second = SingleTaskGP(train_X, torch.rand(8, 1, dtype=torch.double))
+    classifier = BinarySingleTaskGPClassifier(
+        train_X,
+        torch.tensor([0, 1, 0, 1, 0, 1, 0, 1]),
+    )
+    model = HeterogeneousModel(
+        ModelListGP(first, second),
+        classifier,
+        SingleTaskGP(train_X, torch.rand(8, 1, dtype=torch.double)),
+        output_names=["strength", "cost", "pass", "lifetime"],
+    )
+    cost = RegressionObjective(output="cost")
+    passing = ProbabilityObjective(output="pass", class_index=1)
+    strength = RegressionObjective(output="strength")
+    lifetime = RegressionObjective(output="lifetime")
+    objectives = ObjectiveCollection(cost, passing, strength, lifetime)
+
+    assert objectives.resolve_owners(model) == ((0, 1), (1, 0), (0, 0), (2, 0))
+    assert objectives.group_by_entry(model) == {
+        0: (cost, strength),
+        1: (passing,),
+        2: (lifetime,),
+    }
+
+
+def test_regression_objective_exposes_model_list_entry_owner() -> None:
+    train_X = torch.rand(7, 2, dtype=torch.double)
+    model = HeterogeneousModel(
+        ModelListGP(
+            SingleTaskGP(train_X, torch.rand(7, 1, dtype=torch.double)),
+            SingleTaskGP(train_X, torch.rand(7, 1, dtype=torch.double)),
+        ),
+        output_names=["first", "second"],
+    )
+
+    assert RegressionObjective(output="second").resolve_owner(model) == (0, 1)

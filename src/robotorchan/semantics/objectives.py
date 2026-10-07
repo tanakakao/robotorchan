@@ -29,10 +29,13 @@ class RegressionObjective:
             raise TypeError("RegressionObjective requires a regression output.")
         return output_index
 
+    def resolve_owner(self, model: HeterogeneousModel) -> tuple[int, int]:
+        """Resolve the referenced output to its entry and local output index."""
+        return model.output_owner(self.resolve_output(model))
+
     def to_botorch(self, model: HeterogeneousModel) -> GenericMCObjective:
-        """Create a BoTorch MC objective for heterogeneous posterior samples."""
-        output_index = self.resolve_output(model)
-        _, local_output_index = model.output_owner(output_index)
+        """Create a BoTorch MC objective for the referenced entry samples."""
+        _, local_output_index = self.resolve_owner(model)
 
         def objective(samples: Tensor, X: Tensor | None = None) -> Tensor:
             del X
@@ -130,6 +133,31 @@ class ObjectiveCollection(Sequence[SemanticObjective]):
     def resolve_outputs(self, model: HeterogeneousModel) -> tuple[int, ...]:
         """Resolve every objective to its canonical heterogeneous output index."""
         return tuple(objective.resolve_output(model) for objective in self.objectives)
+
+    def resolve_owners(
+        self,
+        model: HeterogeneousModel,
+    ) -> tuple[tuple[int, int], ...]:
+        """Resolve objective outputs to entry and local output indices."""
+        owners = []
+        for objective in self.objectives:
+            output_index = objective.resolve_output(model)
+            owners.append(model.output_owner(output_index))
+        return tuple(owners)
+
+    def group_by_entry(
+        self,
+        model: HeterogeneousModel,
+    ) -> dict[int, tuple[SemanticObjective, ...]]:
+        """Group objectives by owning model entry while preserving declaration order."""
+        grouped: dict[int, list[SemanticObjective]] = {}
+        for objective, (entry_index, _) in zip(
+            self.objectives,
+            self.resolve_owners(model),
+            strict=True,
+        ):
+            grouped.setdefault(entry_index, []).append(objective)
+        return {entry: tuple(objectives) for entry, objectives in grouped.items()}
 
     def validate(self, model: HeterogeneousModel) -> None:
         """Validate every objective against the heterogeneous model contract."""
