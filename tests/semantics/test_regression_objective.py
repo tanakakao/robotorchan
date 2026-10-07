@@ -8,7 +8,7 @@ from robotorchan.models.classification.binary.standard.single_task import (
     BinarySingleTaskGPClassifier,
 )
 from robotorchan.models.heterogeneous import HeterogeneousModel
-from robotorchan.models.standard.multitask import KroneckerMultiTaskGP
+from robotorchan.models.standard.multitask import KroneckerMultiTaskGP, MultiTaskGP
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.semantics import ObjectiveDirection, RegressionObjective
 
@@ -159,3 +159,74 @@ def test_regression_objective_preserves_output_reference_errors(
 
     with pytest.raises((KeyError, IndexError)):
         objective.resolve_output(model)
+
+
+
+def test_regression_objective_works_with_long_format_multitask_gp() -> None:
+    torch.manual_seed(13)
+    data_X = torch.rand(6, 2, dtype=torch.double)
+    train_X = torch.cat(
+        [
+            torch.cat([data_X, torch.zeros(6, 1, dtype=torch.double)], dim=-1),
+            torch.cat([data_X, torch.ones(6, 1, dtype=torch.double)], dim=-1),
+        ],
+        dim=0,
+    )
+    train_Y = torch.rand(12, 1, dtype=torch.double)
+    regression = MultiTaskGP(
+        train_X,
+        train_Y,
+        task_feature=2,
+        output_tasks=[0, 1],
+    )
+    model = HeterogeneousModel(
+        regression,
+        output_names=["task_zero", "task_one"],
+    )
+    candidate = torch.rand(3, 2, dtype=torch.double)
+    posterior = model.entry_posterior(0, candidate)
+    samples = SobolQMCNormalSampler(torch.Size([4]), seed=19)(posterior)
+    objective = RegressionObjective(output="task_one").to_botorch(model)
+
+    values = objective(samples)
+
+    assert regression.num_outputs == 2
+    assert model.output_owner(1) == (0, 1)
+    assert samples.shape == torch.Size([4, 3, 2])
+    torch.testing.assert_close(values, samples[..., 1])
+
+
+def test_regression_objective_respects_long_format_output_task_order() -> None:
+    torch.manual_seed(17)
+    data_X = torch.rand(5, 2, dtype=torch.double)
+    rows = [
+        torch.cat(
+            [
+                data_X,
+                torch.full((5, 1), float(task), dtype=torch.double),
+            ],
+            dim=-1,
+        )
+        for task in (0, 1, 2)
+    ]
+    regression = MultiTaskGP(
+        torch.cat(rows, dim=0),
+        torch.rand(15, 1, dtype=torch.double),
+        task_feature=2,
+        output_tasks=[2, 0],
+    )
+    model = HeterogeneousModel(
+        regression,
+        output_names=["task_two", "task_zero"],
+    )
+    samples = torch.tensor(
+        [[[20.0, 0.0], [21.0, 1.0]]],
+        dtype=torch.double,
+    )
+
+    task_two = RegressionObjective(output="task_two").to_botorch(model)
+    task_zero = RegressionObjective(output="task_zero").to_botorch(model)
+
+    assert model.output_owners == ((0, 0), (0, 1))
+    assert torch.equal(task_two(samples), torch.tensor([[20.0, 21.0]], dtype=torch.double))
+    assert torch.equal(task_zero(samples), torch.tensor([[0.0, 1.0]], dtype=torch.double))
