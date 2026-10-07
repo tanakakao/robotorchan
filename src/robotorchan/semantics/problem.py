@@ -46,9 +46,7 @@ class ProblemSemantics:
                 )
             constraint_collection = ConstraintCollection(*constraints)
         else:
-            raise TypeError(
-                "constraints must be a ConstraintCollection or tuple of constraints."
-            )
+            raise TypeError("constraints must be a ConstraintCollection or tuple of constraints.")
 
         object.__setattr__(self, "objectives", objective_collection)
         object.__setattr__(self, "constraints", constraint_collection)
