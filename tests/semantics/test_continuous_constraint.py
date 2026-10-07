@@ -115,7 +115,6 @@ def test_continuous_constraint_preserves_sample_dimensions_dtype_and_device() ->
     assert values.device == samples.device
 
 
-
 @pytest.mark.parametrize("threshold", [True, "100", torch.tensor(100.0)])
 def test_continuous_constraint_rejects_non_scalar_threshold_types(
     threshold: object,
