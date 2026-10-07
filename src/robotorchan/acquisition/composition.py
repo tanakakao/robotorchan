@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from botorch.acquisition.objective import MCAcquisitionObjective
+from botorch.models.model import Model as BoTorchModel
+
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.semantics.feasibility import FeasibilityRepresentation
-from robotorchan.semantics.objectives import SemanticObjective
+from robotorchan.semantics.objectives import RegressionObjective, SemanticObjective
 from robotorchan.semantics.problem import ProblemSemantics
 
 
@@ -85,4 +88,40 @@ def resolve_acquisition_composition(
     return AcquisitionCompositionPlan(
         objectives=tuple(objective_bindings),
         feasibility=tuple(feasibility_bindings),
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class BoTorchObjectiveBridge:
+    """Native BoTorch model and MC objective for one regression binding."""
+
+    model: BoTorchModel
+    objective: MCAcquisitionObjective
+
+
+def make_botorch_objective_bridge(
+    model: HeterogeneousModel,
+    binding: ObjectiveBinding,
+) -> BoTorchObjectiveBridge:
+    """Adapt one regression objective binding to native BoTorch interfaces."""
+    objective = binding.objective
+    if not isinstance(objective, RegressionObjective):
+        raise TypeError("BoTorch objective bridge currently supports RegressionObjective only.")
+
+    output_index = objective.resolve_output(model)
+    entry_index, local_output_index = model.output_owner(output_index)
+    if (
+        output_index != binding.output_index
+        or entry_index != binding.entry_index
+        or local_output_index != binding.local_output_index
+    ):
+        raise ValueError("ObjectiveBinding does not match the current heterogeneous model.")
+
+    entry_model = model[entry_index]
+    if not isinstance(entry_model, BoTorchModel):
+        raise TypeError("Regression objective owner must be a BoTorch Model.")
+
+    return BoTorchObjectiveBridge(
+        model=entry_model,
+        objective=objective.to_botorch(model),
     )
