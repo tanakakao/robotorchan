@@ -85,4 +85,4 @@ def test_probability_objective_samples_posterior_induced_probabilities() -> None
 
     assert values.shape == torch.Size([4, 3])
     assert values.dtype == X.dtype
-    assert torch.all((0.0 <= values) & (values <= 1.0))
+    assert torch.all((values >= 0.0) & (values <= 1.0))
