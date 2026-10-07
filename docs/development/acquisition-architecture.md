@@ -95,7 +95,7 @@ runtime values, not merely by tensor shape:
 - **sample-residual feasibility**: a callable over outcome samples with values <= 0 denoting feasibility;
 - **posterior-predictive PoF**: deterministic P(feasible | X, D), already marginalized over
   predictive uncertainty;
-- **probability residual**: a deterministic residual from thresholding a predictive
+- **probability-residual feasibility**: a deterministic residual from thresholding a predictive
   probability, again using <= 0 as the feasibility convention;
 - **sample-wise feasibility**: a future Monte Carlo representation whose values retain an
   explicit sample dimension and must be derived from predictive probability samples rather
