@@ -14,7 +14,9 @@ from robotorchan.models.classification.base import (
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.semantics import (
     ExpectedClassUtilityObjective,
+    ObjectiveCollection,
     OrdinalProbabilityObjective,
+    ProblemSemantics,
 )
 
 
@@ -134,3 +136,21 @@ def test_utility_mapping_must_cover_every_class_once() -> None:
         assert "exactly one value for every classifier class" in str(error)
     else:
         raise AssertionError("incomplete utilities must be rejected")
+
+
+def test_ordinal_and_utility_objectives_join_problem_semantics() -> None:
+    ordinal = OrdinalProbabilityObjective(
+        output="grade",
+        threshold_class="acceptable",
+        class_order=("bad", "acceptable", "good"),
+    )
+    utility = ExpectedClassUtilityObjective(
+        output="grade",
+        utilities=(("bad", 0.0), ("acceptable", 1.0), ("good", 3.0)),
+    )
+    objectives = ObjectiveCollection(ordinal, utility)
+    semantics = ProblemSemantics(objectives=objectives)
+
+    semantics.validate(_model())
+
+    assert objectives.resolve_outputs(_model()) == (0, 0)
