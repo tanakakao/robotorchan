@@ -89,9 +89,23 @@ general acquisition factory.
 The semantic layer owns model-specific interpretation of heterogeneous outputs. Acquisition
 composition consumes semantic representations instead of branching on concrete model classes.
 
-The current semantic boundary distinguishes sample-residual feasibility, posterior-predictive
-probability of feasibility, and probability-residual feasibility. These representations must
-not be silently converted into one another. Regression outcome constraints naturally expose
+The semantic boundary distinguishes feasibility representations by the meaning of their
+runtime values, not merely by tensor shape:
+
+- **sample-residual feasibility**: a callable over outcome samples with values <= 0 denoting feasibility;
+- **posterior-predictive PoF**: deterministic P(feasible | X, D), already marginalized over
+  predictive uncertainty;
+- **probability-residual feasibility**: a deterministic residual from thresholding a predictive
+  probability, again using <= 0 as the feasibility convention;
+- **sample-wise feasibility**: a future Monte Carlo representation whose values retain an
+  explicit sample dimension and must be derived from predictive probability samples rather
+  than deterministic mean PoF;
+- **hard feasibility**: a Boolean/indicator decision, which is distinct from both residuals
+  and probabilities and must only be introduced by an explicit policy that requires it.
+
+These representations must not be silently converted into one another. In particular,
+thresholding mean PoF does not create sample-wise feasibility, and testing a sample residual
+does not create a posterior-predictive PoF. Regression outcome constraints naturally expose
 sample residuals, while classification feasibility can retain probability semantics.
 
 The composition boundary is split into four responsibilities:
