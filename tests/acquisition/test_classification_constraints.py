@@ -110,3 +110,31 @@ def test_classifier_probability_acquisition_rejects_q_batch() -> None:
         assert "q=1" in str(error)
     else:
         raise AssertionError("ClassificationProbabilityAcquisition must reject q > 1")
+
+
+def test_feasibility_weighted_acquisition_reduces_unbatched_q_axis() -> None:
+    X = torch.tensor([[0.2], [0.8]], dtype=torch.double)
+    objective = _ObjectiveAcquisition()
+    pof = ClassificationProbabilityOfFeasibility(_Classifier())
+    acquisition = FeasibilityWeightedAcquisition(objective, pof)
+
+    expected = objective(X) * torch.sigmoid(X[..., 0]).prod(dim=-1)
+
+    assert acquisition(X).shape == expected.shape
+    torch.testing.assert_close(acquisition(X), expected)
+
+
+def test_feasibility_weighted_acquisition_forwards_pending_points() -> None:
+    objective = _ObjectiveAcquisition()
+    acquisition = FeasibilityWeightedAcquisition(
+        objective,
+        ClassificationProbabilityOfFeasibility(_Classifier()),
+    )
+    X_pending = torch.tensor([[0.4]], dtype=torch.double)
+
+    acquisition.set_X_pending(X_pending)
+
+    assert acquisition.X_pending is not None
+    assert objective.X_pending is not None
+    torch.testing.assert_close(acquisition.X_pending, X_pending)
+    torch.testing.assert_close(objective.X_pending, X_pending)
