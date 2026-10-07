@@ -28,6 +28,7 @@ class _MulticlassClassifier(nn.Module, ClassificationModelMixin):
     task_type = "classification"
     is_classification = True
     num_outputs = 1
+
     @property
     def num_classes(self) -> int:
         return 3
