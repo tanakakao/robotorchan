@@ -6,9 +6,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TypeAlias
 
-from robotorchan.acquisition.classification_constraints import (
-    ClassificationProbabilityOfFeasibility,
-)
+from robotorchan.semantics.probability import ClassificationProbabilityOfFeasibility
 
 
 class FeasibilityRepresentationKind(StrEnum):
