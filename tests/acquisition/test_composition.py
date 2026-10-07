@@ -1,7 +1,12 @@
 import pytest
 import torch
 
-from robotorchan.acquisition.composition import resolve_acquisition_composition
+from botorch.acquisition.objective import GenericMCObjective
+
+from robotorchan.acquisition.composition import (
+    make_botorch_objective_bridge,
+    resolve_acquisition_composition,
+)
 from robotorchan.models.classification.binary.standard.single_task import (
     BinarySingleTaskGPClassifier,
 )
@@ -52,3 +57,27 @@ def test_resolve_acquisition_composition_preserves_output_ownership(use_names: b
         FeasibilityRepresentationKind.SAMPLE_RESIDUAL,
         FeasibilityRepresentationKind.PROBABILITY_OF_FEASIBILITY,
     ]
+
+
+@pytest.mark.parametrize("direction_sign", [1.0, -1.0])
+def test_botorch_objective_bridge_preserves_native_model_and_direction(
+    direction_sign: float,
+) -> None:
+    from robotorchan.semantics import ObjectiveDirection
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.sin(train_x)
+    regression = SingleTaskGP(train_x, train_y)
+    model = HeterogeneousModel(regression)
+    direction = (
+        ObjectiveDirection.MAXIMIZE if direction_sign > 0 else ObjectiveDirection.MINIMIZE
+    )
+    semantics = ProblemSemantics(objectives=(RegressionObjective(0, direction=direction),))
+
+    binding = resolve_acquisition_composition(model, semantics).objectives[0]
+    bridge = make_botorch_objective_bridge(model, binding)
+    samples = torch.tensor([[[[2.0]]]], dtype=torch.double)
+
+    assert bridge.model is regression
+    assert isinstance(bridge.objective, GenericMCObjective)
+    assert torch.equal(bridge.objective(samples), direction_sign * samples[..., 0])
