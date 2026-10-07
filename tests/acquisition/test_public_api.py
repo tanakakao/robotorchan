@@ -3,11 +3,11 @@ from robotorchan import acquisition
 
 def test_acquisition_public_api_is_intentionally_small() -> None:
     assert acquisition.__all__ == [
-        "BALD",
-        "AcquisitionCompositionPlan",
         "AcquisitionCapabilities",
+        "AcquisitionCompositionPlan",
         "AcquisitionPurpose",
         "AcquisitionRegistryEntry",
+        "BALD",
         "BoundaryVariance",
         "ExpectedPredictiveInformationGain",
         "FeasibilityBinding",
