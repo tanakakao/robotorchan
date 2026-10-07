@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
+from typing import TypeAlias
 
 import torch
 from botorch.acquisition.objective import GenericMCObjective
@@ -91,3 +93,44 @@ class ProbabilityObjective:
             **kwargs,
         )
         return self.direction.apply(probabilities[..., self.class_index])
+
+
+SemanticObjective: TypeAlias = RegressionObjective | ProbabilityObjective
+
+
+@dataclass(frozen=True, slots=True)
+class ObjectiveCollection(Sequence[SemanticObjective]):
+    """Ordered semantic objectives for one optimization problem."""
+
+    objectives: tuple[SemanticObjective, ...]
+
+    def __init__(self, *objectives: SemanticObjective) -> None:
+        """Initialize an immutable ordered objective collection."""
+        if not objectives:
+            raise ValueError("ObjectiveCollection requires at least one objective.")
+        objective_types = (RegressionObjective, ProbabilityObjective)
+        if not all(isinstance(objective, objective_types) for objective in objectives):
+            raise TypeError(
+                "ObjectiveCollection accepts RegressionObjective or ProbabilityObjective instances."
+            )
+        object.__setattr__(self, "objectives", tuple(objectives))
+
+    def __len__(self) -> int:
+        """Return the number of semantic objectives."""
+        return len(self.objectives)
+
+    def __getitem__(self, index: int | slice) -> SemanticObjective | tuple[SemanticObjective, ...]:
+        """Return objectives in their declared order."""
+        return self.objectives[index]
+
+    def __iter__(self) -> Iterator[SemanticObjective]:
+        """Iterate over objectives in their declared order."""
+        return iter(self.objectives)
+
+    def resolve_outputs(self, model: HeterogeneousModel) -> tuple[int, ...]:
+        """Resolve every objective to its canonical heterogeneous output index."""
+        return tuple(objective.resolve_output(model) for objective in self.objectives)
+
+    def validate(self, model: HeterogeneousModel) -> None:
+        """Validate every objective against the heterogeneous model contract."""
+        self.resolve_outputs(model)
