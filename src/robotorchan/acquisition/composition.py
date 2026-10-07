@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.objective import MCAcquisitionObjective
 from botorch.models.model import Model as BoTorchModel
+from torch import Tensor
 
 from robotorchan.acquisition.classification_constraints import FeasibilityWeightedAcquisition
 from robotorchan.models.heterogeneous import HeterogeneousModel
-from robotorchan.semantics.feasibility import FeasibilityRepresentation, ProbabilityOfFeasibility
+from robotorchan.semantics.feasibility import (
+    FeasibilityRepresentation,
+    ProbabilityOfFeasibility,
+    SampleResidualFeasibility,
+)
 from robotorchan.semantics.objectives import RegressionObjective, SemanticObjective
 from robotorchan.semantics.probability import ClassificationProbabilityOfFeasibility
 from robotorchan.semantics.problem import ProblemSemantics
@@ -171,3 +177,22 @@ def make_classification_feasibility_bridge(
         raise ValueError("FeasibilityBinding does not match the current heterogeneous model.")
 
     return probability
+
+
+def make_continuous_constraint_bridge(
+    model: HeterogeneousModel,
+    binding: FeasibilityBinding,
+) -> Callable[[Tensor], Tensor]:
+    """Expose one continuous feasibility binding as a BoTorch sample residual."""
+    representation = binding.representation
+    if not isinstance(representation, SampleResidualFeasibility):
+        raise TypeError(
+            "Continuous constraint bridge requires a SampleResidualFeasibility representation."
+        )
+
+    output_index = model.resolve_output(binding.output_index)
+    entry_index, local_output_index = model.output_owner(output_index)
+    if entry_index != binding.entry_index or local_output_index != binding.local_output_index:
+        raise ValueError("FeasibilityBinding does not match the current heterogeneous model.")
+
+    return representation.constraint
