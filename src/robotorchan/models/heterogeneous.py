@@ -254,7 +254,7 @@ class HeterogeneousModel(nn.Module):
         model = self.models[entry_index]
         if not isinstance(model, ClassificationModelMixin):
             return None
-        if model.num_outputs != 1 or local_index != 0:
+        if self._entry_num_outputs[entry_index] != 1 or local_index != 0:
             raise ValueError(
                 "Classification metadata requires an unambiguous single-output "
                 "classification entry."
