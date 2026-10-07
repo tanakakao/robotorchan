@@ -110,9 +110,7 @@ class ClassificationConstraint:
     ) -> ClassificationProbabilityConstraint:
         """Create a thresholded posterior-predictive probability constraint."""
         if self.probability_threshold is None:
-            raise ValueError(
-                "probability_threshold is required for a probability constraint."
-            )
+            raise ValueError("probability_threshold is required for a probability constraint.")
         return ClassificationProbabilityConstraint(
             self.to_probability_of_feasibility(model),
             self.probability_threshold,
