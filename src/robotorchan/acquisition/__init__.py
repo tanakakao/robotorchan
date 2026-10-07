@@ -19,6 +19,12 @@ from robotorchan.acquisition.capabilities import (
     AcquisitionRegistryEntry,
     PosteriorRequirement,
 )
+from robotorchan.acquisition.composition import (
+    AcquisitionCompositionPlan,
+    FeasibilityBinding,
+    ObjectiveBinding,
+    resolve_acquisition_composition,
+)
 from robotorchan.acquisition.non_gp import make_non_gp_acquisition, validate_non_gp_acquisition
 from robotorchan.acquisition.registry import get_acquisition_registry_entry
 from robotorchan.acquisition.sampling import select_thompson_candidates
@@ -26,12 +32,15 @@ from robotorchan.acquisition.sampling import select_thompson_candidates
 __all__ = [
     "BALD",
     "AcquisitionCapabilities",
+    "AcquisitionCompositionPlan",
     "AcquisitionPurpose",
     "AcquisitionRegistryEntry",
     "BoundaryVariance",
     "ExpectedPredictiveInformationGain",
+    "FeasibilityBinding",
     "LatentStraddle",
     "MarginUncertainty",
+    "ObjectiveBinding",
     "PosteriorRequirement",
     "PosteriorStd",
     "PosteriorVariance",
@@ -41,6 +50,7 @@ __all__ = [
     "Straddle",
     "get_acquisition_registry_entry",
     "make_non_gp_acquisition",
+    "resolve_acquisition_composition",
     "select_thompson_candidates",
     "validate_non_gp_acquisition",
 ]

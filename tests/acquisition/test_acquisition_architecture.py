@@ -22,3 +22,6 @@ def test_acquisition_architecture_documents_botorch_first_contract() -> None:
     assert "entry-local at the BoTorch boundary" in text
     assert "sample_class_probabilities()" in text
     assert "must not be treated as sample-wise feasible" in text
+    assert "resolve_acquisition_composition()" in text
+    assert "AcquisitionCompositionPlan" in text
+    assert "descriptive rather than executable" in text
