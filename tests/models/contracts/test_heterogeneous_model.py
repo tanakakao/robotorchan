@@ -2,6 +2,7 @@
 
 import pytest
 import torch
+from botorch.models import SingleTaskGP as BoTorchSingleTaskGP
 from torch import nn
 
 from robotorchan.models import (
@@ -1084,3 +1085,14 @@ def test_resolve_output_rejects_invalid_index_types_and_ranges() -> None:
         model.resolve_output(1.0)  # type: ignore[arg-type]
     with pytest.raises(IndexError, match="out of range"):
         model.resolve_output(1)
+
+
+def test_heterogeneous_model_recognizes_native_botorch_model_as_regression() -> None:
+    train_X = torch.rand(6, 2, dtype=torch.double)
+    native_model = BoTorchSingleTaskGP(
+        train_X,
+        torch.rand(6, 1, dtype=torch.double),
+    )
+    model = HeterogeneousModel(native_model, output_names=["score"])
+
+    assert model.output_observation_type("score") is ObservationType.REGRESSION
