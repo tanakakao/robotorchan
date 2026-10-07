@@ -15,6 +15,7 @@ from robotorchan.semantics.feasibility import (
     FeasibilityRepresentationKind,
     ProbabilityOfFeasibility,
     ProbabilityResidualFeasibility,
+    SampleProbabilityOfFeasibility,
     SampleResidualFeasibility,
 )
 from robotorchan.semantics.objectives import (
@@ -45,6 +46,7 @@ __all__ = [
     "ProbabilityResidualFeasibility",
     "ProblemSemantics",
     "RegressionObjective",
+    "SampleProbabilityOfFeasibility",
     "SampleResidualFeasibility",
     "SemanticConstraint",
     "SemanticObjective",
