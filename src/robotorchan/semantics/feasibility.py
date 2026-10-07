@@ -1,0 +1,53 @@
+"""Runtime representation contract for heterogeneous feasibility semantics."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import StrEnum
+from typing import TypeAlias
+
+from robotorchan.acquisition.classification_constraints import (
+    ClassificationProbabilityOfFeasibility,
+)
+from robotorchan.semantics.constraints import ClassificationProbabilityConstraint
+
+
+class FeasibilityRepresentationKind(StrEnum):
+    """Kinds of runtime feasibility representations."""
+
+    SAMPLE_RESIDUAL = "sample_residual"
+    PROBABILITY_OF_FEASIBILITY = "probability_of_feasibility"
+    PROBABILITY_RESIDUAL = "probability_residual"
+
+
+@dataclass(frozen=True, slots=True)
+class SampleResidualFeasibility:
+    """BoTorch-compatible sample residual where values <= 0 are feasible."""
+
+    constraint: object
+    kind: FeasibilityRepresentationKind = FeasibilityRepresentationKind.SAMPLE_RESIDUAL
+
+
+@dataclass(frozen=True, slots=True)
+class ProbabilityOfFeasibility:
+    """Posterior-predictive probability of the feasible class."""
+
+    probability: ClassificationProbabilityOfFeasibility
+    kind: FeasibilityRepresentationKind = (
+        FeasibilityRepresentationKind.PROBABILITY_OF_FEASIBILITY
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class ProbabilityResidualFeasibility:
+    """Posterior-predictive probability residual where values <= 0 are feasible."""
+
+    constraint: ClassificationProbabilityConstraint
+    kind: FeasibilityRepresentationKind = FeasibilityRepresentationKind.PROBABILITY_RESIDUAL
+
+
+FeasibilityRepresentation: TypeAlias = (
+    SampleResidualFeasibility
+    | ProbabilityOfFeasibility
+    | ProbabilityResidualFeasibility
+)
