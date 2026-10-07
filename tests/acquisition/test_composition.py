@@ -241,7 +241,10 @@ def test_sample_classification_feasibility_preserves_mc_sample_dimension() -> No
     torch.manual_seed(7)
     actual = sample_feasibility.probability(X, sample_shape=torch.Size([8]))
 
-    assert sample_feasibility.kind is FeasibilityRepresentationKind.SAMPLE_PROBABILITY_OF_FEASIBILITY
+    assert (
+        sample_feasibility.kind
+        is FeasibilityRepresentationKind.SAMPLE_PROBABILITY_OF_FEASIBILITY
+    )
     assert actual.shape == expected.shape
     assert torch.equal(actual, expected)
 
