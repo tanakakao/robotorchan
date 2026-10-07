@@ -54,7 +54,5 @@ class ProbabilityResidualFeasibility:
 
 
 FeasibilityRepresentation: TypeAlias = (
-    SampleResidualFeasibility
-    | ProbabilityOfFeasibility
-    | ProbabilityResidualFeasibility
+    SampleResidualFeasibility | ProbabilityOfFeasibility | ProbabilityResidualFeasibility
 )
