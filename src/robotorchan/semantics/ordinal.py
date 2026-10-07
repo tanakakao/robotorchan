@@ -37,7 +37,9 @@ def _resolve_order(
     try:
         indices = tuple(labels.index(label) for label in class_order)
     except ValueError as error:
-        raise ValueError("class_order contains a label not present in classifier class_labels.") from error
+        raise ValueError(
+            "class_order contains a label not present in classifier class_labels."
+        ) from error
     if len(set(indices)) != metadata.num_classes:
         raise ValueError("class_order must contain every classifier class exactly once.")
     return indices
@@ -53,6 +55,12 @@ class OrdinalProbabilityObjective:
     at_or_above: bool = True
     direction: ObjectiveDirection = ObjectiveDirection.MAXIMIZE
 
+    def resolve_output(self, model: HeterogeneousModel) -> int:
+        """Resolve and validate the referenced classification output."""
+        output_index = model.resolve_output(self.output)
+        _classification_entry(model, self.output)
+        return output_index
+
     def evaluate(self, model: HeterogeneousModel, X: Tensor, **kwargs: object) -> Tensor:
         """Return directed posterior-predictive probability of the ordinal event."""
         entry_index, metadata = _classification_entry(model, self.output)
@@ -63,7 +71,10 @@ class OrdinalProbabilityObjective:
             argument_name="threshold_class",
         )
         threshold_position = order.index(threshold)
-        selected = order[threshold_position:] if self.at_or_above else order[: threshold_position + 1]
+        if self.at_or_above:
+            selected = order[threshold_position:]
+        else:
+            selected = order[: threshold_position + 1]
         probabilities = model.entry_predict_proba(entry_index, X, **kwargs)
         value = probabilities[..., list(selected)].sum(dim=-1)
         return self.direction.apply(value)
@@ -85,7 +96,10 @@ class OrdinalProbabilityObjective:
             argument_name="threshold_class",
         )
         threshold_position = order.index(threshold)
-        selected = order[threshold_position:] if self.at_or_above else order[: threshold_position + 1]
+        if self.at_or_above:
+            selected = order[threshold_position:]
+        else:
+            selected = order[: threshold_position + 1]
         probabilities = model[entry_index].sample_class_probabilities(
             X,
             sample_shape=sample_shape,
@@ -111,6 +125,12 @@ class ExpectedClassUtilityObjective:
         if set(mapping) != set(labels):
             raise ValueError("utilities must define exactly one value for every classifier class.")
         return reference.new_tensor([mapping[label] for label in labels])
+
+    def resolve_output(self, model: HeterogeneousModel) -> int:
+        """Resolve and validate the referenced classification output."""
+        output_index = model.resolve_output(self.output)
+        _classification_entry(model, self.output)
+        return output_index
 
     def evaluate(self, model: HeterogeneousModel, X: Tensor, **kwargs: object) -> Tensor:
         """Return directed posterior-predictive expected class utility."""
