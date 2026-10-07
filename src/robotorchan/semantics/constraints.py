@@ -211,6 +211,36 @@ class ConstraintCollection(Sequence[SemanticConstraint]):
             grouped.setdefault(entry_index, []).append(constraint)
         return {entry: tuple(constraints) for entry, constraints in grouped.items()}
 
+    def classification_constraints(self) -> tuple[ClassificationConstraint, ...]:
+        """Return classification constraints in their declared order."""
+        return tuple(
+            constraint
+            for constraint in self.constraints
+            if isinstance(constraint, ClassificationConstraint)
+        )
+
+    def group_classification_by_output(
+        self,
+        model: HeterogeneousModel,
+    ) -> dict[int, tuple[ClassificationConstraint, ...]]:
+        """Group classification constraints by canonical output index."""
+        grouped: dict[int, list[ClassificationConstraint]] = {}
+        for constraint in self.classification_constraints():
+            output_index = constraint.resolve_output(model)
+            grouped.setdefault(output_index, []).append(constraint)
+        return {output: tuple(constraints) for output, constraints in grouped.items()}
+
+    def group_classification_by_entry(
+        self,
+        model: HeterogeneousModel,
+    ) -> dict[int, tuple[ClassificationConstraint, ...]]:
+        """Group classification constraints by owning model entry."""
+        grouped: dict[int, list[ClassificationConstraint]] = {}
+        for constraint in self.classification_constraints():
+            entry_index, _ = constraint.resolve_owner(model)
+            grouped.setdefault(entry_index, []).append(constraint)
+        return {entry: tuple(constraints) for entry, constraints in grouped.items()}
+
     def feasibility_representations(self, model: HeterogeneousModel):
         """Build heterogeneous feasibility representations in declaration order."""
         return tuple(
