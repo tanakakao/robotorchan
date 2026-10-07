@@ -83,8 +83,8 @@ def test_multiple_classification_constraints_evaluate_their_own_models() -> None
 
     assert safe_probability.shape == torch.Size([3, 1])
     assert stable_probability.shape == torch.Size([3, 1])
-    assert torch.all((0.0 <= safe_probability) & (safe_probability <= 1.0))
-    assert torch.all((0.0 <= stable_probability) & (stable_probability <= 1.0))
+    assert torch.all((safe_probability >= 0.0) & (safe_probability <= 1.0))
+    assert torch.all((stable_probability >= 0.0) & (stable_probability <= 1.0))
 
 
 def test_problem_semantics_supports_multiple_classification_constraints() -> None:
