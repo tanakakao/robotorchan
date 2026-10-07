@@ -113,3 +113,56 @@ def test_continuous_constraint_preserves_sample_dimensions_dtype_and_device() ->
     assert values.shape == torch.Size([4, 3, 2])
     assert values.dtype == samples.dtype
     assert values.device == samples.device
+
+
+
+@pytest.mark.parametrize("threshold", [True, "100", torch.tensor(100.0)])
+def test_continuous_constraint_rejects_non_scalar_threshold_types(
+    threshold: object,
+) -> None:
+    with pytest.raises(TypeError, match="real scalar"):
+        ContinuousConstraint(output="cost", threshold=threshold)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("threshold", [float("nan"), float("inf"), float("-inf")])
+def test_continuous_constraint_requires_finite_threshold(threshold: float) -> None:
+    with pytest.raises(ValueError, match="finite"):
+        ContinuousConstraint(output="cost", threshold=threshold)
+
+
+def test_continuous_constraint_accepts_integer_threshold() -> None:
+    constraint = ContinuousConstraint(output="cost", threshold=100)
+
+    assert constraint.threshold == 100
+
+
+def test_continuous_constraint_requires_constraint_direction() -> None:
+    with pytest.raises(TypeError, match="ConstraintDirection"):
+        ContinuousConstraint(
+            output="cost",
+            threshold=100.0,
+            direction="less_than_or_equal",  # type: ignore[arg-type]
+        )
+
+
+@pytest.mark.parametrize(
+    "direction",
+    [
+        ConstraintDirection.LESS_THAN_OR_EQUAL,
+        ConstraintDirection.GREATER_THAN_OR_EQUAL,
+    ],
+)
+def test_continuous_constraint_boundary_is_feasible(
+    direction: ConstraintDirection,
+) -> None:
+    model = _model()
+    constraint = ContinuousConstraint(
+        output="cost",
+        threshold=2.0,
+        direction=direction,
+    ).to_botorch(model)
+    samples = torch.tensor([[[2.0]]], dtype=torch.double)
+
+    residual = constraint(samples)
+
+    assert residual.item() == 0.0
