@@ -39,7 +39,6 @@ class RegressionObjective:
         return GenericMCObjective(objective)
 
 
-
 @dataclass(frozen=True, slots=True)
 class ProbabilityObjective:
     """Declare one classification probability as an optimization objective."""
