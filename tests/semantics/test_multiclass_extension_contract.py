@@ -9,6 +9,7 @@ from torch import Tensor, nn
 from robotorchan.models.classification.base import (
     ClassificationLikelihoodFamily,
     ClassificationMetadata,
+    ClassificationModelMixin,
     LatentOutputStructure,
 )
 from robotorchan.models.heterogeneous import HeterogeneousModel
@@ -26,18 +27,25 @@ class _MulticlassMetadata:
     latent_output_structure: LatentOutputStructure = LatentOutputStructure.PER_CLASS
 
 
-class _MulticlassClassifier(nn.Module):
+class _MulticlassClassifier(nn.Module, ClassificationModelMixin):
     task_type = "classification"
     is_classification = True
     num_outputs = 1
-    num_classes = 3
-    class_labels = ("fail", "review", "pass")
-    classification_metadata = ClassificationMetadata(
-        num_classes=3,
-        class_labels=class_labels,
-        likelihood_family=ClassificationLikelihoodFamily.CATEGORICAL,
-        latent_output_structure=LatentOutputStructure.PER_CLASS,
-    )
+    @property
+    def num_classes(self) -> int:
+        return 3
+
+    @property
+    def class_labels(self) -> tuple[object, ...]:
+        return ("fail", "review", "pass")
+
+    @property
+    def likelihood_family(self) -> ClassificationLikelihoodFamily:
+        return ClassificationLikelihoodFamily.CATEGORICAL
+
+    @property
+    def latent_output_structure(self) -> LatentOutputStructure:
+        return LatentOutputStructure.PER_CLASS
 
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
         del kwargs
