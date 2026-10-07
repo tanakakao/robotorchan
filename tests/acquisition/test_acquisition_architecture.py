@@ -13,6 +13,7 @@ def test_acquisition_architecture_documents_botorch_first_contract() -> None:
     assert "must not create robotorchan wrapper" in text
     assert "Classification active-learning criteria are robotorchan-owned" in text
     assert "Heterogeneous semantic composition" in text
-    assert "must not be silently converted into one another" in text
+    assert "must not be silently" in text
+    assert "converted into one another" in text
     assert "FeasibilityWeightedAcquisition" in text
     assert "CandidateConstraints" in text
