@@ -167,10 +167,7 @@ def make_classification_feasibility_bridge(
 
     output_index = model.resolve_output(binding.output_index)
     entry_index, local_output_index = model.output_owner(output_index)
-    if (
-        entry_index != binding.entry_index
-        or local_output_index != binding.local_output_index
-    ):
+    if entry_index != binding.entry_index or local_output_index != binding.local_output_index:
         raise ValueError("FeasibilityBinding does not match the current heterogeneous model.")
 
     return probability
