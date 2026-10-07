@@ -109,7 +109,6 @@ def test_classification_constraint_supports_classifier_without_num_outputs() -> 
     assert probability.model is classifier
 
 
-
 @pytest.mark.parametrize("threshold", [True, "0.8", torch.tensor(0.8)])
 def test_classification_constraint_rejects_non_scalar_probability_threshold(
     threshold: object,
