@@ -54,6 +54,12 @@ class ContinuousConstraint:
 
         return constraint
 
+    def to_feasibility_representation(self, model: HeterogeneousModel):
+        """Represent this constraint as a sample-space residual."""
+        from robotorchan.semantics.feasibility import SampleResidualFeasibility
+
+        return SampleResidualFeasibility(self.to_botorch(model))
+
 
 @dataclass(frozen=True, slots=True)
 class ClassificationConstraint:
@@ -115,6 +121,17 @@ class ClassificationConstraint:
             self.to_probability_of_feasibility(model),
             self.probability_threshold,
         )
+
+    def to_feasibility_representation(self, model: HeterogeneousModel):
+        """Represent class feasibility without erasing its probability semantics."""
+        from robotorchan.semantics.feasibility import (
+            ProbabilityOfFeasibility,
+            ProbabilityResidualFeasibility,
+        )
+
+        if self.probability_threshold is None:
+            return ProbabilityOfFeasibility(self.to_probability_of_feasibility(model))
+        return ProbabilityResidualFeasibility(self.to_probability_constraint(model))
 
 
 class ClassificationProbabilityConstraint:
