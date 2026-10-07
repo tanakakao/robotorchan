@@ -29,6 +29,7 @@ def test_registry_covers_public_acquisition_classes() -> None:
         "make_classification_feasibility_bridge",
         "make_continuous_constraint_bridge",
         "make_deterministic_pof_acquisition",
+        "make_sample_classification_feasibility_bridge",
         "make_non_gp_acquisition",
         "resolve_acquisition_composition",
         "select_thompson_candidates",
