@@ -97,9 +97,9 @@ runtime values, not merely by tensor shape:
   predictive uncertainty;
 - **probability-residual feasibility**: a deterministic residual from thresholding a predictive
   probability, again using <= 0 as the feasibility convention;
-- **sample-wise feasibility**: a future Monte Carlo representation whose values retain an
-  explicit sample dimension and must be derived from predictive probability samples rather
-  than deterministic mean PoF;
+- **sample-wise feasibility**: `SampleProbabilityOfFeasibility` retains an explicit
+  Monte Carlo sample dimension and is derived from classifier
+  `sample_class_probabilities()` rather than deterministic mean PoF;
 - **hard feasibility**: a Boolean/indicator decision, which is distinct from both residuals
   and probabilities and must only be introduced by an explicit policy that requires it.
 
@@ -155,9 +155,9 @@ samples from its owning entry. Classification probability objectives expose both
 posterior-predictive evaluation and, when the classifier supports epistemic sampling,
 class-probability samples induced by its latent posterior.
 
-Classification feasibility currently exposes posterior-predictive probability of feasibility
-and an optional thresholded probability residual. Sample-wise classification feasibility is a
-distinct composition requirement: it must be derived from the classifier's
+Classification feasibility exposes posterior-predictive probability of feasibility and an
+optional thresholded probability residual. Sample-wise classification feasibility is represented
+separately by `SampleProbabilityOfFeasibility` and is derived from the classifier's
 `sample_class_probabilities()` contract without reinterpreting latent-function samples as
 outcome samples. Models that do not provide epistemic probability samples may support
 deterministic probability weighting but must not be treated as sample-wise feasible by
