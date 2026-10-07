@@ -8,7 +8,6 @@ from torch import Tensor, nn
 
 from robotorchan.models.classification.base import (
     ClassificationLikelihoodFamily,
-    ClassificationMetadata,
     ClassificationModelMixin,
     LatentOutputStructure,
 )
