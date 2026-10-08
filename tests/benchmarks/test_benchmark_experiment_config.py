@@ -61,7 +61,7 @@ def test_problem_resolution() -> None:
 )
 def test_invalid_config(changes: dict[str, object], message: str) -> None:
     with pytest.raises(ValueError, match=message):
-        BenchmarkExperimentConfig(problem="quadratic", strategy="sobol", **changes)
+        BenchmarkExperimentConfig(**{"problem": "quadratic", "strategy": "sobol", **changes})
 
 
 def test_reject_unknown_fields() -> None:
