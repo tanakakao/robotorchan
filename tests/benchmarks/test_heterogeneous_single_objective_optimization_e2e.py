@@ -52,9 +52,7 @@ def test_fitted_single_objective_candidate_generation(
             cache_root=False,
         )
 
-    bounds = torch.stack(
-        (torch.zeros(3, dtype=torch.double), torch.ones(3, dtype=torch.double))
-    )
+    bounds = torch.stack((torch.zeros(3, dtype=torch.double), torch.ones(3, dtype=torch.double)))
     candidate, acquisition_value = optimize_acqf(
         acquisition,
         bounds,
