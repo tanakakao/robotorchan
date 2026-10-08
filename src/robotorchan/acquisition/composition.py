@@ -353,3 +353,62 @@ def make_continuous_constrained_qei_acquisition(
         sampler=sampler,
         objective=constrained_objective,
     )
+
+
+def make_mixed_constrained_qei_acquisition(
+    model: HeterogeneousModel,
+    semantics: ProblemSemantics,
+    *,
+    best_f: float | Tensor,
+    sampler: MCSampler | None = None,
+    infeasible_cost: float | Tensor = 0.0,
+    q_reduction: str = "product",
+) -> AcquisitionFunction:
+    """Compose qEI with continuous residuals and deterministic classifier PoF."""
+    plan = resolve_acquisition_composition(model, semantics)
+    if len(plan.objectives) != 1:
+        raise ValueError("Mixed constrained qEI requires exactly one objective.")
+
+    continuous = tuple(
+        binding
+        for binding in plan.feasibility
+        if isinstance(binding.representation, SampleResidualFeasibility)
+    )
+    classification = tuple(
+        binding
+        for binding in plan.feasibility
+        if isinstance(binding.representation, ProbabilityOfFeasibility)
+    )
+    if not continuous or not classification:
+        raise ValueError(
+            "Mixed constrained qEI requires both continuous and classification constraints."
+        )
+    if len(continuous) + len(classification) != len(plan.feasibility):
+        raise TypeError("Mixed constrained qEI received an unsupported feasibility representation.")
+
+    objective_binding = plan.objectives[0]
+    if any(binding.entry_index != objective_binding.entry_index for binding in continuous):
+        raise ValueError("Continuous constraints must share the objective's BoTorch posterior.")
+
+    objective = objective_binding.objective
+    if not isinstance(objective, RegressionObjective):
+        raise TypeError("Mixed constrained qEI currently supports RegressionObjective only.")
+    bridge = make_botorch_objective_bridge(model, objective_binding)
+    constrained_objective = ConstrainedMCObjective(
+        objective=bridge.objective,
+        constraints=[make_continuous_constraint_bridge(model, binding) for binding in continuous],
+        infeasible_cost=infeasible_cost,
+    )
+    acquisition: AcquisitionFunction = qExpectedImprovement(
+        model=bridge.model,
+        best_f=objective.direction.apply(torch.as_tensor(best_f)),
+        sampler=sampler,
+        objective=constrained_objective,
+    )
+    for binding in classification:
+        acquisition = make_deterministic_pof_acquisition(
+            acquisition,
+            binding,
+            q_reduction=q_reduction,
+        )
+    return acquisition

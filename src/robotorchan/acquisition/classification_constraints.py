@@ -87,11 +87,17 @@ class FeasibilityWeightedAcquisition(AcquisitionFunction):
         self.probability_of_feasibility = probability_of_feasibility
         self.q_reduction = q_reduction
 
+    def set_X_pending(self, X_pending: Tensor | None = None) -> None:
+        """Forward pending points to the wrapped objective acquisition."""
+        super().set_X_pending(X_pending)
+        self.objective_acquisition.set_X_pending(X_pending)
+
     def forward(self, X: Tensor) -> Tensor:
         """Return objective acquisition weighted by joint q-batch feasibility."""
         objective_value = self.objective_acquisition(X)
         feasibility = self.probability_of_feasibility(X)
-        if feasibility.ndim > objective_value.ndim:
+        q = X.shape[-2]
+        if feasibility.ndim > 0 and feasibility.shape[-1] == q:
             if self.q_reduction == "product":
                 feasibility = feasibility.prod(dim=-1)
             else:
