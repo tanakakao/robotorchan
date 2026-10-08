@@ -494,3 +494,70 @@ def make_continuous_constrained_qnei_acquisition(
         prune_baseline=prune_baseline,
         cache_root=cache_root,
     )
+
+
+def make_multiple_learned_constrained_qnei_acquisition(
+    model: HeterogeneousModel,
+    semantics: ProblemSemantics,
+    *,
+    X_baseline: Tensor,
+    sampler: MCSampler | None = None,
+    infeasible_cost: float | Tensor = 0.0,
+    prune_baseline: bool = False,
+    cache_root: bool = True,
+    q_reduction: str = "product",
+) -> AcquisitionFunction:
+    """Compose native continuous-constrained qNEI with classifier PoF factors.
+
+    Classification probabilities are independent marginal factors, not a
+    sampled joint posterior or baseline-feasibility correction.
+    """
+    plan = resolve_acquisition_composition(model, semantics)
+    if len(plan.objectives) != 1:
+        raise ValueError("Multiple constrained qNEI requires exactly one objective.")
+    objective_binding = plan.objectives[0]
+    if not isinstance(objective_binding.objective, RegressionObjective):
+        raise TypeError("Multiple constrained qNEI requires RegressionObjective.")
+    if not plan.feasibility:
+        raise ValueError("Multiple constrained qNEI requires at least one constraint.")
+    if X_baseline.ndim != 2 or X_baseline.shape[0] == 0:
+        raise ValueError("X_baseline must be a nonempty n x d tensor.")
+
+    continuous = tuple(
+        binding
+        for binding in plan.feasibility
+        if isinstance(binding.representation, SampleResidualFeasibility)
+    )
+    classification = tuple(
+        binding
+        for binding in plan.feasibility
+        if isinstance(binding.representation, ProbabilityOfFeasibility)
+    )
+    if len(continuous) + len(classification) != len(plan.feasibility):
+        raise TypeError("Unsupported feasibility representation for multiple constrained qNEI.")
+    if any(binding.entry_index != objective_binding.entry_index for binding in continuous):
+        raise ValueError("Continuous constraints must share the objective's BoTorch posterior.")
+
+    bridge = make_botorch_objective_bridge(model, objective_binding)
+    objective: MCAcquisitionObjective = bridge.objective
+    if continuous:
+        objective = ConstrainedMCObjective(
+            objective=bridge.objective,
+            constraints=[make_continuous_constraint_bridge(model, binding) for binding in continuous],
+            infeasible_cost=infeasible_cost,
+        )
+    acquisition: AcquisitionFunction = qNoisyExpectedImprovement(
+        model=bridge.model,
+        X_baseline=X_baseline,
+        sampler=sampler,
+        objective=objective,
+        prune_baseline=prune_baseline,
+        cache_root=cache_root,
+    )
+    for binding in classification:
+        acquisition = make_deterministic_pof_acquisition(
+            acquisition,
+            binding,
+            q_reduction=q_reduction,
+        )
+    return acquisition
