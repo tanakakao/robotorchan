@@ -387,7 +387,9 @@ def make_mixed_constrained_qei_acquisition(
         raise TypeError("Mixed constrained qEI received an unsupported feasibility representation.")
 
     objective_binding = plan.objectives[0]
-    if any(binding.entry_index != objective_binding.entry_index for binding in continuous):
+    if any(
+        binding.entry_index != objective_binding.entry_index for binding in continuous
+    ):
         raise ValueError(
             "Continuous constraints must share the objective's BoTorch posterior."
         )
