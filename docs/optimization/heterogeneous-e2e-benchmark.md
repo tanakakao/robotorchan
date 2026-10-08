@@ -1,6 +1,6 @@
 # Heterogeneous E2E synthetic benchmark (Phase 2)
 
-The fixed benchmark is implemented in `benchmarks/heterogeneous_synthetic.py`.
+The fixed benchmark is implemented in `src/robotorchan/benchmarks/heterogeneous_synthetic.py`.
 All three design variables are continuous in `[0, 1]`:
 temperature (`x0`), pressure (`x1`), and composition (`x2`).
 These are illustrative normalized coordinates, not calibrated physical quantities.
