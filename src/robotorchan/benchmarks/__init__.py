@@ -21,7 +21,6 @@ from robotorchan.benchmarks.registry import (
     list_problems,
     register_problem,
 )
-
 from robotorchan.benchmarks.runner import (
     BenchmarkTrajectory,
     random_candidates,
