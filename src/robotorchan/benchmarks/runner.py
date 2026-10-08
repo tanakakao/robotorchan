@@ -97,9 +97,7 @@ def run_benchmark(
     trajectories = []
     for seed in config.seeds:
         generator = torch.Generator(device=device).manual_seed(seed)
-        X = sobol_initial_design(
-            problem, config.initial_points, seed, dtype=dtype, device=device
-        )
+        X = sobol_initial_design(problem, config.initial_points, seed, dtype=dtype, device=device)
         observed = problem.evaluate_observation(X)
         truth = problem.evaluate_truth(X)
         constraints = problem.evaluate_constraints(X)
