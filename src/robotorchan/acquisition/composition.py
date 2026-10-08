@@ -689,9 +689,7 @@ class _NoPendingFeasibilityWeightedAcquisition(FeasibilityWeightedAcquisition):
     def set_X_pending(self, X_pending: Tensor | None = None) -> None:
         """Prevent inconsistent pending-point objective and PoF batches."""
         if X_pending is not None and X_pending.numel() > 0:
-            raise NotImplementedError(
-                "Classification-weighted qEHVI does not support X_pending."
-            )
+            raise NotImplementedError("Classification-weighted qEHVI does not support X_pending.")
         super().set_X_pending(X_pending)
 
 
@@ -715,11 +713,13 @@ def make_constrained_qehvi_acquisition(
         raise ValueError("Constrained qEHVI requires at least one constraint.")
     bridge = make_botorch_multiobjective_bridge(model, plan.objectives)
     continuous = tuple(
-        binding for binding in plan.feasibility
+        binding
+        for binding in plan.feasibility
         if isinstance(binding.representation, SampleResidualFeasibility)
     )
     classification = tuple(
-        binding for binding in plan.feasibility
+        binding
+        for binding in plan.feasibility
         if isinstance(binding.representation, ProbabilityOfFeasibility)
     )
     if len(continuous) + len(classification) != len(plan.feasibility):
