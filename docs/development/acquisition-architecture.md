@@ -365,3 +365,18 @@ construct a joint classifier posterior, or provide calibrated lower/upper
 joint-feasibility bounds. Future extensions must require explicit dependence
 representations, sampling alignment and batch-shape contracts rather than
 inferring correlations from heterogeneous model ownership.
+
+
+### Phase 19: multi-objective bridge
+
+`make_botorch_multiobjective_bridge` converts at least two distinct
+`RegressionObjective` bindings from **one shared BoTorch model entry**
+into a native `GenericMCMultiOutputObjective`. Each output retains its
+declared direction, and the bridge exposes ordered global output indices.
+It does not build an acquisition function, reference point, or partitioning.
+
+Separate heterogeneous model entries do not expose a coupled posterior.
+Consequently, cross-entry objectives are rejected rather than silently
+combining independent draws. Mixed regression/classification objectives
+and `ProbabilityObjective` remain future integration work. Phase 20
+will connect compatible multi-output objectives to native qEHVI.
