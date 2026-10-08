@@ -167,3 +167,16 @@ def test_feasibility_weighted_acquisition_rejects_preexisting_pending() -> None:
         assert "X_pending" in str(error)
     else:
         raise AssertionError("Preexisting pending candidates must be rejected")
+
+
+def test_feasibility_weighted_acquisition_rejects_joint_fantasization() -> None:
+    acquisition = FeasibilityWeightedAcquisition(
+        _ObjectiveAcquisition(),
+        ClassificationProbabilityOfFeasibility(_Classifier()),
+    )
+    try:
+        acquisition.fantasize(torch.tensor([[0.4]], dtype=torch.double))
+    except NotImplementedError as error:
+        assert "joint fantasization" in str(error)
+    else:
+        raise AssertionError("Unsupported joint fantasies must be rejected")
