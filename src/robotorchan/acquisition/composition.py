@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
-from botorch.acquisition.monte_carlo import qExpectedImprovement
+from botorch.acquisition.monte_carlo import qExpectedImprovement, qNoisyExpectedImprovement
 from botorch.acquisition.objective import ConstrainedMCObjective, MCAcquisitionObjective
 from botorch.models.model import Model as BoTorchModel
 from botorch.sampling.base import MCSampler
@@ -412,3 +412,36 @@ def make_mixed_constrained_qei_acquisition(
             q_reduction=q_reduction,
         )
     return acquisition
+
+
+def make_qnei_acquisition(
+    model: HeterogeneousModel,
+    semantics: ProblemSemantics,
+    *,
+    X_baseline: Tensor,
+    sampler: MCSampler | None = None,
+    prune_baseline: bool = False,
+    cache_root: bool = True,
+) -> qNoisyExpectedImprovement:
+    """Build native BoTorch qNEI for one unconstrained regression objective."""
+    plan = resolve_acquisition_composition(model, semantics)
+    if len(plan.objectives) != 1:
+        raise ValueError("qNEI integration requires exactly one objective.")
+    if plan.feasibility:
+        raise ValueError("Phase 14 qNEI integration supports unconstrained objectives only.")
+
+    binding = plan.objectives[0]
+    if not isinstance(binding.objective, RegressionObjective):
+        raise TypeError("qNEI integration currently supports RegressionObjective only.")
+    if X_baseline.ndim != 2 or X_baseline.shape[0] == 0:
+        raise ValueError("X_baseline must be a nonempty n x d tensor.")
+
+    bridge = make_botorch_objective_bridge(model, binding)
+    return qNoisyExpectedImprovement(
+        model=bridge.model,
+        X_baseline=X_baseline,
+        sampler=sampler,
+        objective=bridge.objective,
+        prune_baseline=prune_baseline,
+        cache_root=cache_root,
+    )
