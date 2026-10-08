@@ -535,6 +535,9 @@ def make_multiple_learned_constrained_qnei_acquisition(
     )
     if len(continuous) + len(classification) != len(plan.feasibility):
         raise TypeError("Unsupported feasibility representation for multiple constrained qNEI.")
+    classification_outputs = [binding.output_index for binding in classification]
+    if len(set(classification_outputs)) != len(classification_outputs):
+        raise ValueError("Repeated classification constraint outputs are not supported.")
     if any(binding.entry_index != objective_binding.entry_index for binding in continuous):
         raise ValueError("Continuous constraints must share the objective's BoTorch posterior.")
 
@@ -543,7 +546,9 @@ def make_multiple_learned_constrained_qnei_acquisition(
     if continuous:
         objective = ConstrainedMCObjective(
             objective=bridge.objective,
-            constraints=[make_continuous_constraint_bridge(model, binding) for binding in continuous],
+            constraints=[
+                make_continuous_constraint_bridge(model, binding) for binding in continuous
+            ],
             infeasible_cost=infeasible_cost,
         )
     acquisition: AcquisitionFunction = qNoisyExpectedImprovement(
