@@ -113,8 +113,10 @@ class FeasibilityWeightedAcquisition(AcquisitionFunction):
         objective_value = self.objective_acquisition(X)
         feasibility = self.probability_of_feasibility(X)
         feasibility = _normalize_q_batch_probabilities(feasibility, X)
-        expected_batch_shape = X.shape[:-2] if X.ndim > 2 else torch.Size([1])
-        if objective_value.shape != expected_batch_shape:
+        expected_batch_shape = X.shape[:-2]
+        if objective_value.shape != expected_batch_shape and not (
+            X.ndim == 2 and objective_value.shape == torch.Size([1])
+        ):
             raise ValueError("Objective acquisition must return one value per t-batch.")
         if self.q_reduction == "product":
             feasibility = feasibility.prod(dim=-1)
