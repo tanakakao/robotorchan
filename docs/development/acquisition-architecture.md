@@ -483,8 +483,8 @@ factors are multiplied per candidate, retaining the q dimension.
 `FeasibilityWeightedAcquisition` then reduces q **once** using either
 `product` (independent candidate feasibility approximation) or
 `minimum` (conservative heuristic), and multiplies the native
-acquisition value of shape `batch_shape` (or `[1]` for native
-BoTorch's unbatched `q x d` candidate input). Probability values must be
+acquisition value of shape `batch_shape` (either scalar `[]` or
+singleton `[1]` is accepted for unbatched `q x d` input). Probability values must be
 finite and in `[0, 1]`. Shape violations raise explicitly rather
 than silently changing acquisition semantics.
 
