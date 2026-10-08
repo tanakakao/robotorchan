@@ -4,6 +4,7 @@ from robotorchan.benchmarks.acquisition import (
     AcquisitionBenchmarkResult,
     benchmark_acquisition,
 )
+from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.optimization import (
     BenchmarkResult,
     CountingAcquisition,
@@ -23,6 +24,7 @@ from robotorchan.benchmarks.registry import (
 
 __all__ = [
     "AcquisitionBenchmarkResult",
+    "BenchmarkExperimentConfig",
     "BenchmarkProblem",
     "BenchmarkProblemRegistry",
     "BenchmarkResult",
