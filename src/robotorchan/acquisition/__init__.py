@@ -39,6 +39,7 @@ from robotorchan.acquisition.composition import (
     make_qehvi_acquisition,
     make_qei_acquisition,
     make_qnei_acquisition,
+    make_qnehvi_acquisition,
     make_sample_classification_feasibility_bridge,
     resolve_acquisition_composition,
 )
@@ -83,6 +84,7 @@ __all__ = [
     "make_qehvi_acquisition",
     "make_qei_acquisition",
     "make_qnei_acquisition",
+    "make_qnehvi_acquisition",
     "make_sample_classification_feasibility_bridge",
     "resolve_acquisition_composition",
     "select_thompson_candidates",
