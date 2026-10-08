@@ -89,7 +89,7 @@ class BenchmarkProblem:
         if not X.is_floating_point() or not torch.isfinite(X).all():
             raise ValueError("X must contain finite floating-point values.")
         bounds = self.bounds.to(device=X.device, dtype=X.dtype)
-        if ((X < bounds[0]) | (X > bounds[1])).any():
+        if ((bounds[0] > X) | (bounds[1] < X)).any():
             raise ValueError("X must lie within bounds.")
         for index, kind in enumerate(self.variable_types):
             if kind != "continuous" and not torch.all(X[..., index] == X[..., index].round()):
@@ -100,7 +100,7 @@ class BenchmarkProblem:
         result = fn(X)
         if (
             not isinstance(result, Tensor)
-            or result.shape != X.shape[:-1] + (width,)
+            or result.shape != (*X.shape[:-1], width)
             or not result.is_floating_point()
             or not torch.isfinite(result).all()
         ):
@@ -121,14 +121,14 @@ class BenchmarkProblem:
         """Return constraint residuals g(X) >= 0."""
         if self.constraints is None:
             self._validate_X(X)
-            return X.new_empty(X.shape[:-1] + (0,))
+            return X.new_empty((*X.shape[:-1], 0))
         return self._evaluate(self.constraints, X, self.n_constraints, "constraints")
 
     def evaluate_cost(self, X: Tensor) -> Tensor:
         """Return nonnegative evaluation cost with shape (..., q, 1)."""
         if self.cost is None:
             self._validate_X(X)
-            return X.new_ones(X.shape[:-1] + (1,))
+            return X.new_ones((*X.shape[:-1], 1))
         values = self._evaluate(self.cost, X, 1, "cost")
         if (values < 0).any():
             raise ValueError("Evaluation cost must be nonnegative.")
