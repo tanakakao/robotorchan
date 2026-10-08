@@ -1248,3 +1248,28 @@ def test_feasibility_weighted_acquisition_accepts_squeezed_singleton_q() -> None
     )
     X = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
     assert torch.allclose(acquisition(X), torch.tensor([0.5, 1.5], dtype=torch.double))
+
+
+@pytest.mark.parametrize("family", ["qei", "qnei"])
+def test_classification_weighted_composition_rejects_pending(family: str) -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1))
+    classifier = BinarySingleTaskGPClassifier(
+        train_x, torch.tensor([0.0, 1.0, 1.0], dtype=torch.double)
+    )
+    model = HeterogeneousModel(regression, classifier)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(
+            ContinuousConstraint(1, threshold=0.8),
+            ClassificationConstraint(2, feasible_class=1),
+        ),
+    )
+    if family == "qei":
+        acquisition = make_mixed_constrained_qei_acquisition(model, semantics, best_f=0.0)
+    else:
+        acquisition = make_multiple_learned_constrained_qnei_acquisition(
+            model, semantics, X_baseline=train_x
+        )
+    with pytest.raises(NotImplementedError, match="X_pending"):
+        acquisition.set_X_pending(torch.tensor([[0.25]], dtype=torch.double))

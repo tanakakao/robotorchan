@@ -124,7 +124,7 @@ def test_feasibility_weighted_acquisition_reduces_unbatched_q_axis() -> None:
     torch.testing.assert_close(acquisition(X), expected)
 
 
-def test_feasibility_weighted_acquisition_forwards_pending_points() -> None:
+def test_feasibility_weighted_acquisition_rejects_pending_points() -> None:
     objective = _ObjectiveAcquisition()
     acquisition = FeasibilityWeightedAcquisition(
         objective,
@@ -132,9 +132,38 @@ def test_feasibility_weighted_acquisition_forwards_pending_points() -> None:
     )
     X_pending = torch.tensor([[0.4]], dtype=torch.double)
 
-    acquisition.set_X_pending(X_pending)
+    try:
+        acquisition.set_X_pending(X_pending)
+    except NotImplementedError as error:
+        assert "X_pending" in str(error)
+    else:
+        raise AssertionError("Nonempty pending candidates must be rejected")
 
-    assert acquisition.X_pending is not None
-    assert objective.X_pending is not None
-    torch.testing.assert_close(acquisition.X_pending, X_pending)
-    torch.testing.assert_close(objective.X_pending, X_pending)
+    assert getattr(acquisition, "X_pending", None) is None
+    assert getattr(objective, "X_pending", None) is None
+
+
+def test_feasibility_weighted_acquisition_clears_pending_points() -> None:
+    objective = _ObjectiveAcquisition()
+    acquisition = FeasibilityWeightedAcquisition(
+        objective,
+        ClassificationProbabilityOfFeasibility(_Classifier()),
+    )
+    acquisition.set_X_pending(None)
+
+    assert acquisition.X_pending is None
+    assert objective.X_pending is None
+
+
+def test_feasibility_weighted_acquisition_rejects_preexisting_pending() -> None:
+    objective = _ObjectiveAcquisition()
+    objective.set_X_pending(torch.tensor([[0.4]], dtype=torch.double))
+    try:
+        FeasibilityWeightedAcquisition(
+            objective,
+            ClassificationProbabilityOfFeasibility(_Classifier()),
+        )
+    except NotImplementedError as error:
+        assert "X_pending" in str(error)
+    else:
+        raise AssertionError("Preexisting pending candidates must be rejected")

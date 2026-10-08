@@ -99,14 +99,23 @@ class FeasibilityWeightedAcquisition(AcquisitionFunction):
         super().__init__(model=objective_acquisition.model)
         if q_reduction not in {"product", "minimum"}:
             raise ValueError("q_reduction must be 'product' or 'minimum'.")
+        existing_pending = getattr(objective_acquisition, "X_pending", None)
+        if existing_pending is not None and existing_pending.numel() > 0:
+            raise NotImplementedError(
+                "Classification-weighted acquisition does not support nonempty X_pending."
+            )
         self.objective_acquisition = objective_acquisition
         self.probability_of_feasibility = probability_of_feasibility
         self.q_reduction = q_reduction
 
     def set_X_pending(self, X_pending: Tensor | None = None) -> None:
-        """Forward pending points to the wrapped objective acquisition."""
-        super().set_X_pending(X_pending)
+        """Reject pending candidates that lack matching classifier weighting."""
+        if X_pending is not None and X_pending.numel() > 0:
+            raise NotImplementedError(
+                "Classification-weighted acquisition does not support nonempty X_pending."
+            )
         self.objective_acquisition.set_X_pending(X_pending)
+        super().set_X_pending(X_pending)
 
     def forward(self, X: Tensor) -> Tensor:
         """Return objective acquisition weighted by joint q-batch feasibility."""
