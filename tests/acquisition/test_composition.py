@@ -963,18 +963,14 @@ def test_constrained_qehvi_uses_native_continuous_constraints() -> None:
     )
 
     train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
-    train_y = torch.cat(
-        (torch.sin(train_x), torch.cos(train_x), train_x), dim=-1
-    )
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x), train_x), dim=-1)
     model = HeterogeneousModel(SingleTaskGP(train_x, train_y))
     semantics = ProblemSemantics(
         objectives=(RegressionObjective(0), RegressionObjective(1)),
         constraints=(ContinuousConstraint(2, threshold=0.8),),
     )
     reference = torch.tensor([-1.0, -1.0], dtype=torch.double)
-    partitioning = FastNondominatedPartitioning(
-        ref_point=reference, Y=train_y[..., :2]
-    )
+    partitioning = FastNondominatedPartitioning(ref_point=reference, Y=train_y[..., :2])
     acquisition = make_constrained_qehvi_acquisition(
         model, semantics, ref_point=reference, partitioning=partitioning
     )
