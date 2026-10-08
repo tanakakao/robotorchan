@@ -1060,10 +1060,6 @@ def test_qnehvi_rejects_invalid_baseline_and_reference() -> None:
         objectives=(RegressionObjective(0), RegressionObjective(1)),
     )
     with pytest.raises(ValueError, match="X_baseline"):
-        make_qnehvi_acquisition(
-            model, semantics, ref_point=[-1.0, -1.0], X_baseline=train_x[:0]
-        )
+        make_qnehvi_acquisition(model, semantics, ref_point=[-1.0, -1.0], X_baseline=train_x[:0])
     with pytest.raises(ValueError, match="one value per objective"):
-        make_qnehvi_acquisition(
-            model, semantics, ref_point=[-1.0], X_baseline=train_x
-        )
+        make_qnehvi_acquisition(model, semantics, ref_point=[-1.0], X_baseline=train_x)
