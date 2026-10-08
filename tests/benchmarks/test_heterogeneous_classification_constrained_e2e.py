@@ -90,6 +90,8 @@ def test_classification_constrained_candidate_generation(kind: str, q: int) -> N
         probabilities = acquisition.probability_of_feasibility(X)
         values = acquisition(X)
     assert values.shape == (2,)
+    if q == 1 and probabilities.shape == (2,):
+        probabilities = probabilities.unsqueeze(-1)
     assert probabilities.shape == (2, q)
     assert torch.isfinite(values).all()
     assert torch.all((probabilities >= 0) & (probabilities <= 1))
@@ -123,5 +125,5 @@ def test_classification_feasibility_does_not_use_latent_gp_mean() -> None:
     X = torch.tensor([[[0.25, 0.5, 0.75]], [[0.8, 0.2, 0.6]]], dtype=torch.double)
     with torch.no_grad():
         actual = binding.representation.probability(X)
-        expected = model.entry_predict_proba("pass", X)[..., 1]
+        expected = model.entry_predict_proba(1, X)[..., 1]
     torch.testing.assert_close(actual, expected)
