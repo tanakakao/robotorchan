@@ -8,12 +8,11 @@ from dataclasses import dataclass
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import qExpectedImprovement, qNoisyExpectedImprovement
-from botorch.acquisition.objective import (
-    ConstrainedMCObjective,
+from botorch.acquisition.multi_objective.objective import (
     GenericMCMultiOutputObjective,
-    MCAcquisitionObjective,
     MCMultiOutputObjective,
 )
+from botorch.acquisition.objective import ConstrainedMCObjective, MCAcquisitionObjective
 from botorch.models.model import Model as BoTorchModel
 from botorch.sampling.base import MCSampler
 from torch import Tensor
