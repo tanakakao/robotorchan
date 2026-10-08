@@ -1134,6 +1134,14 @@ def test_qlognparego_rejects_invalid_scalarization_inputs() -> None:
         make_qlognparego_acquisition(
             model, semantics, X_baseline=train_x, Y_baseline=train_y[:, :1], weights=weights
         )
+    with pytest.raises(ValueError, match="floating-point"):
+        make_qlognparego_acquisition(
+            model,
+            semantics,
+            X_baseline=train_x,
+            Y_baseline=train_y.to(torch.int64),
+            weights=weights,
+        )
     with pytest.raises(ValueError, match="weights"):
         make_qlognparego_acquisition(
             model,
