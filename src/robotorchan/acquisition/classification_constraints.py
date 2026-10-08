@@ -70,16 +70,19 @@ class RobustClassificationProbabilityOfFeasibility(nn.Module):
         return robust[..., self.base.feasible_class]
 
 
-def _validate_q_batch_probabilities(probability: Tensor, X: Tensor) -> None:
-    """Require exact t-batch and q dimensions for candidate feasibility."""
+def _normalize_q_batch_probabilities(probability: Tensor, X: Tensor) -> Tensor:
+    """Restore a missing singleton q axis without broadcasting t-batches."""
     if X.ndim < 2 or X.shape[-2] < 1:
         raise ValueError("X must have shape batch_shape x q x d with q >= 1.")
+    if X.shape[-2] == 1 and probability.shape == X.shape[:-2]:
+        probability = probability.unsqueeze(-1)
     if probability.shape != X.shape[:-1]:
         raise ValueError("Feasibility must have shape X.shape[:-1] (batch_shape x q).")
     if not torch.isfinite(probability).all():
         raise ValueError("Feasibility probabilities must be finite.")
     if ((probability < 0) | (probability > 1)).any():
         raise ValueError("Feasibility probabilities must be in [0, 1].")
+    return probability
 
 
 class FeasibilityWeightedAcquisition(AcquisitionFunction):
@@ -109,8 +112,9 @@ class FeasibilityWeightedAcquisition(AcquisitionFunction):
         """Return objective acquisition weighted by joint q-batch feasibility."""
         objective_value = self.objective_acquisition(X)
         feasibility = self.probability_of_feasibility(X)
-        _validate_q_batch_probabilities(feasibility, X)
-        if objective_value.shape != X.shape[:-2]:
+        feasibility = _normalize_q_batch_probabilities(feasibility, X)
+        expected_batch_shape = X.shape[:-2] if X.ndim > 2 else torch.Size([1])
+        if objective_value.shape != expected_batch_shape:
             raise ValueError("Objective acquisition must return one value per t-batch.")
         if self.q_reduction == "product":
             feasibility = feasibility.prod(dim=-1)
@@ -134,6 +138,5 @@ class IndependentFeasibilityAggregator(nn.Module):
         probabilities = []
         for factor in self.factors:
             probability = factor(X)
-            _validate_q_batch_probabilities(probability, X)
-            probabilities.append(probability)
+            probabilities.append(_normalize_q_batch_probabilities(probability, X))
         return torch.stack(probabilities, dim=0).prod(dim=0)
