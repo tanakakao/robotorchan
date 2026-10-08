@@ -5,6 +5,11 @@ from robotorchan.benchmarks.acquisition import (
     benchmark_acquisition,
 )
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
+from robotorchan.benchmarks.constrained_problems import (
+    constrained_annulus,
+    constrained_quadratic,
+    register_constrained_problems,
+)
 from robotorchan.benchmarks.optimization import (
     BenchmarkResult,
     CountingAcquisition,
@@ -49,11 +54,14 @@ __all__ = [
     "benchmark_result_record",
     "benchmark_result_records",
     "branin",
+    "constrained_annulus",
+    "constrained_quadratic",
     "get_problem",
     "hartmann6",
     "list_problems",
     "profile_callable",
     "random_candidates",
+    "register_constrained_problems",
     "register_problem",
     "register_standard_problems",
     "run_benchmark",
