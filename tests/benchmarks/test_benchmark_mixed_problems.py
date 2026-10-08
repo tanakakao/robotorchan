@@ -16,7 +16,8 @@ from robotorchan.benchmarks.runner import random_candidates, run_benchmark, sobo
 def test_mixed_quadratic_known_optimum() -> None:
     problem = mixed_quadratic()
     optimum = torch.tensor([[0.8, 2.0, 1.0]], dtype=torch.double)
-    torch.testing.assert_close(problem.evaluate_truth(optimum), torch.zeros(1, 1, dtype=torch.double))
+    expected = torch.zeros(1, 1, dtype=torch.double)
+    torch.testing.assert_close(problem.evaluate_truth(optimum), expected)
     torch.testing.assert_close(problem.simple_regret(optimum), torch.zeros((), dtype=torch.double))
     assert problem.variable_types == ("continuous", "integer", "categorical")
 
@@ -24,7 +25,8 @@ def test_mixed_quadratic_known_optimum() -> None:
 def test_categorical_switch_known_optimum() -> None:
     problem = categorical_switch()
     optimum = torch.tensor([[0.7, 1.0]], dtype=torch.double)
-    torch.testing.assert_close(problem.evaluate_truth(optimum), torch.ones(1, 1, dtype=torch.double))
+    expected = torch.ones(1, 1, dtype=torch.double)
+    torch.testing.assert_close(problem.evaluate_truth(optimum), expected)
     torch.testing.assert_close(problem.simple_regret(optimum), torch.zeros((), dtype=torch.double))
 
 
