@@ -1173,9 +1173,7 @@ def test_feasibility_weighted_acquisition_preserves_t_batch_shape(q_reduction: s
     )
     probabilities = X[..., 0]
     reduced = (
-        probabilities.prod(dim=-1)
-        if q_reduction == "product"
-        else probabilities.min(dim=-1).values
+        probabilities.prod(dim=-1) if q_reduction == "product" else probabilities.min(dim=-1).values
     )
     assert acquisition(X).shape == torch.Size([2, 2])
     assert torch.allclose(acquisition(X), 2.0 * reduced)
@@ -1213,3 +1211,40 @@ def test_feasibility_weighted_acquisition_rejects_implicit_broadcast() -> None:
     )
     with pytest.raises(ValueError, match="shape"):
         acquisition(torch.zeros(2, 3, 1, dtype=torch.double))
+
+
+def test_feasibility_weighted_acquisition_accepts_native_unbatched_q() -> None:
+    from torch import nn
+
+    class CandidateProbability(nn.Module):
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X[..., 0].clamp(0.0, 1.0)
+
+    class NativeSingletonAcquisition(AcquisitionFunction):
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X.new_ones(1)
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    model = SingleTaskGP(train_x, torch.sin(train_x))
+    acquisition = FeasibilityWeightedAcquisition(
+        NativeSingletonAcquisition(model=model), CandidateProbability()
+    )
+    result = acquisition(torch.tensor([[0.5], [0.8]], dtype=torch.double))
+    assert result.shape == torch.Size([1])
+    assert torch.allclose(result, torch.tensor([0.4], dtype=torch.double))
+
+
+def test_feasibility_weighted_acquisition_accepts_squeezed_singleton_q() -> None:
+    from torch import nn
+
+    class SqueezedProbability(nn.Module):
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X[..., 0].squeeze(-1)
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    model = SingleTaskGP(train_x, torch.sin(train_x))
+    acquisition = FeasibilityWeightedAcquisition(
+        _ConstantAcquisition(model, 2.0), SqueezedProbability()
+    )
+    X = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
+    assert torch.allclose(acquisition(X), torch.tensor([0.5, 1.5], dtype=torch.double))
