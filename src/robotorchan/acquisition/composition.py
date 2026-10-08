@@ -750,7 +750,8 @@ def make_constrained_qehvi_acquisition(
         sampler=sampler,
         objective=bridge.objective,
         constraints=[make_continuous_constraint_bridge(model, b) for b in continuous]
-        if continuous else None,
+        if continuous
+        else None,
         eta=eta,
     )
     if classification:
