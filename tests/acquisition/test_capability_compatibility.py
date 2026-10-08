@@ -24,7 +24,6 @@ def test_registry_covers_public_acquisition_classes() -> None:
         "BoTorchObjectiveBridge",
         "FeasibilityBinding",
         "ObjectiveBinding",
-        "ProbabilityObjectiveBridge",
         "PosteriorRequirement",
         "SampleShapeContract",
         "get_acquisition_registry_entry",
