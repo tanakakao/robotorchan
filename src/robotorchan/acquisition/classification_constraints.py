@@ -108,6 +108,12 @@ class FeasibilityWeightedAcquisition(AcquisitionFunction):
         self.probability_of_feasibility = probability_of_feasibility
         self.q_reduction = q_reduction
 
+    def fantasize(self, *args: object, **kwargs: object) -> None:
+        """Reject unsupported joint fantasy updates across model families."""
+        raise NotImplementedError(
+            "Classification-weighted acquisition does not support joint fantasization."
+        )
+
     def set_X_pending(self, X_pending: Tensor | None = None) -> None:
         """Reject pending candidates that lack matching classifier weighting."""
         if X_pending is not None and X_pending.numel() > 0:

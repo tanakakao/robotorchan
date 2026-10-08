@@ -511,3 +511,29 @@ This is an explicit unsupported-capability boundary, not a claim of
 async classification-constrained BO support. A future implementation
 must define pending-inclusive feasibility and consistent batch
 semantics before allowing pending points.
+
+
+### Phase 27: Fantasization capability boundary
+
+Fantasization is a **model** capability, not a universal acquisition
+operation. For a native BoTorch regression model, callers may use
+`model.fantasize(X, sampler=...)` and
+`model.condition_on_observations(X, Y)` where the concrete model
+supports those methods. The resulting fantasy model must be passed to
+a newly constructed acquisition; no generic acquisition-level
+`fantasize` protocol is assumed.
+
+The heterogeneous model layer does not guarantee a common fantasy
+posterior for regression and classification entries. In particular,
+classifier probability semantics and sample-residual regression
+constraints must not be silently coupled through independent fantasy
+updates. `FeasibilityWeightedAcquisition.fantasize` explicitly
+raises `NotImplementedError`; classifier-weighted pending points
+remain unsupported under Phase 26. Native BoTorch acquisitions
+without classifier weighting retain their own model-specific
+fantasization and pending behavior.
+
+Future support requires an explicit capability contract for every
+participating model, consistent fantasy sample shapes and conditioning
+data, and a defined cross-output dependence assumption. Do not
+interpret separate `fantasize` methods as a joint posterior.
