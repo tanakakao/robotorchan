@@ -310,3 +310,14 @@ feasibility must not be replaced by an externally supplied unconstrained
 `best_f`, nor may an independently trained classifier be treated as part of
 this joint posterior. Classification and multi-entry aggregation are deferred
 to later composition phases.
+
+
+### Multiple learned feasibility factors
+
+Phase 16 composes same-posterior continuous residual constraints into the
+native qNEI Monte Carlo objective and weights the resulting acquisition by
+one or more classifier predictive feasibility factors. Multiplying marginal
+classifier probabilities is an **explicit independence approximation**, not
+joint feasibility sampling; it does not correct baseline feasibility for
+independently learned classifiers. Correlated constraint aggregation and
+sample-wise cross-model semantics remain separate design work in Phases 17–18.
