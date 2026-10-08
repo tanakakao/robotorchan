@@ -38,6 +38,7 @@ def test_acquisition_public_api_is_intentionally_small() -> None:
         "make_non_gp_acquisition",
         "make_qehvi_acquisition",
         "make_qei_acquisition",
+        "make_qnehvi_acquisition",
         "make_qnei_acquisition",
         "make_sample_classification_feasibility_bridge",
         "resolve_acquisition_composition",
