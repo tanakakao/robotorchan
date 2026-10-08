@@ -413,3 +413,7 @@ the directed objective space. In particular, the partitioning's
 frontier must be consistent with the feasible reference set used for
 constrained hypervolume; this builder does not construct or filter
 that frontier. Repeated classification output constraints are rejected.
+
+Classification-weighted constrained qEHVI explicitly rejects nonempty
+`X_pending` until pending candidates can participate in both the native
+hypervolume computation and the classifier feasibility aggregation.
