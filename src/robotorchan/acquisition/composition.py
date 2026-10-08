@@ -681,3 +681,72 @@ def make_qehvi_acquisition(
         sampler=sampler,
         objective=bridge.objective,
     )
+
+
+def make_constrained_qehvi_acquisition(
+    model: HeterogeneousModel,
+    semantics: ProblemSemantics,
+    *,
+    ref_point: Tensor | list[float],
+    partitioning: BoxDecomposition,
+    sampler: MCSampler | None = None,
+    eta: float = 1e-3,
+    q_reduction: str = "product",
+) -> AcquisitionFunction:
+    """Compose native constrained qEHVI with heterogeneous feasibility.
+
+    Same-entry continuous residuals use native qEHVI sample-wise constraints.
+    Independent classification marginal PoFs weight the resulting acquisition.
+    """
+    plan = resolve_acquisition_composition(model, semantics)
+    if not plan.feasibility:
+        raise ValueError("Constrained qEHVI requires at least one constraint.")
+    bridge = make_botorch_multiobjective_bridge(model, plan.objectives)
+    continuous = tuple(
+        binding for binding in plan.feasibility
+        if isinstance(binding.representation, SampleResidualFeasibility)
+    )
+    classification = tuple(
+        binding for binding in plan.feasibility
+        if isinstance(binding.representation, ProbabilityOfFeasibility)
+    )
+    if len(continuous) + len(classification) != len(plan.feasibility):
+        raise TypeError("Unsupported feasibility representation for constrained qEHVI.")
+    if any(binding.entry_index != plan.objectives[0].entry_index for binding in continuous):
+        raise ValueError("Continuous constraints require the shared objective posterior.")
+    outputs = [binding.output_index for binding in classification]
+    if len(outputs) != len(set(outputs)):
+        raise ValueError("Repeated classification output constraints are not independent.")
+    reference = torch.as_tensor(ref_point)
+    if reference.ndim != 1 or reference.numel() != len(bridge.output_indices):
+        raise ValueError("ref_point must have one value per objective.")
+    if not torch.isfinite(reference).all():
+        raise ValueError("ref_point must contain finite values.")
+    if not isinstance(partitioning, BoxDecomposition):
+        raise TypeError("partitioning must be a BoTorch BoxDecomposition.")
+    if partitioning.num_outcomes != reference.numel():
+        raise ValueError("partitioning and ref_point objective dimensions must match.")
+    partition_ref = partitioning.ref_point.to(device=reference.device, dtype=reference.dtype)
+    if not torch.allclose(reference, partition_ref, rtol=0, atol=0):
+        raise ValueError("ref_point must match partitioning.ref_point.")
+    if eta <= 0:
+        raise ValueError("eta must be positive.")
+    acquisition: AcquisitionFunction = qExpectedHypervolumeImprovement(
+        model=bridge.model,
+        ref_point=reference.tolist(),
+        partitioning=partitioning,
+        sampler=sampler,
+        objective=bridge.objective,
+        constraints=[make_continuous_constraint_bridge(model, b) for b in continuous]
+        if continuous else None,
+        eta=eta,
+    )
+    if classification:
+        acquisition = FeasibilityWeightedAcquisition(
+            acquisition,
+            IndependentFeasibilityAggregator(
+                [binding.representation.probability for binding in classification]
+            ),
+            q_reduction=q_reduction,
+        )
+    return acquisition
