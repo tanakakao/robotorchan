@@ -67,9 +67,7 @@ def observe(
     strength, conductivity, probability = evaluate_truth(X)
     generator = torch.Generator(device=X.device).manual_seed(seed)
     noise_1 = torch.randn(strength.shape, dtype=X.dtype, device=X.device, generator=generator)
-    noise_2 = torch.randn(
-        conductivity.shape, dtype=X.dtype, device=X.device, generator=generator
-    )
+    noise_2 = torch.randn(conductivity.shape, dtype=X.dtype, device=X.device, generator=generator)
     uniform = torch.rand(probability.shape, dtype=X.dtype, device=X.device, generator=generator)
     return SyntheticObservation(
         strength=strength + noise_std * noise_1,
