@@ -806,3 +806,36 @@ def test_independent_feasibility_aggregator_preserves_q_axis() -> None:
 def test_independent_feasibility_aggregator_rejects_empty_factors() -> None:
     with pytest.raises(ValueError, match="At least one"):
         IndependentFeasibilityAggregator([])
+
+
+@pytest.mark.parametrize("invalid", [-0.1, 1.1, float("nan"), float("inf")])
+def test_independent_aggregator_rejects_invalid_probabilities(invalid: float) -> None:
+    from torch import nn
+
+    class InvalidProbability(nn.Module):
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X.new_full(X.shape[:-1], invalid)
+
+    aggregator = IndependentFeasibilityAggregator([InvalidProbability()])
+    with pytest.raises(ValueError, match="Feasibility probabilities"):
+        aggregator(torch.zeros(2, 3, 1))
+
+
+def test_independent_aggregator_does_not_infer_constraint_correlation() -> None:
+    from torch import nn
+
+    class FixedProbability(nn.Module):
+        def __init__(self, value: float) -> None:
+            super().__init__()
+            self.value = value
+
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X.new_full(X.shape[:-1], self.value)
+
+    X = torch.zeros(2, 1)
+    independent = IndependentFeasibilityAggregator(
+        [FixedProbability(0.6), FixedProbability(0.6)]
+    )
+    assert torch.allclose(independent(X), torch.tensor([0.36]))
+    # Perfectly correlated identical events would instead have joint PoF 0.6.
+    assert not torch.allclose(independent(X), torch.tensor([0.6]))
