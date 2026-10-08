@@ -1253,9 +1253,7 @@ def test_feasibility_weighted_acquisition_accepts_squeezed_singleton_q() -> None
 @pytest.mark.parametrize("family", ["qei", "qnei"])
 def test_classification_weighted_composition_rejects_pending(family: str) -> None:
     train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
-    regression = SingleTaskGP(
-        train_x, torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
-    )
+    regression = SingleTaskGP(train_x, torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1))
     classifier = BinarySingleTaskGPClassifier(
         train_x, torch.tensor([0.0, 1.0, 1.0], dtype=torch.double)
     )
