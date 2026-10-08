@@ -1,7 +1,7 @@
 import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
-from botorch.acquisition.monte_carlo import qExpectedImprovement
+from botorch.acquisition.monte_carlo import qExpectedImprovement, qNoisyExpectedImprovement
 from botorch.acquisition.objective import ConstrainedMCObjective, GenericMCObjective
 from botorch.sampling.normal import SobolQMCNormalSampler
 
@@ -15,6 +15,7 @@ from robotorchan.acquisition.composition import (
     make_deterministic_pof_acquisition,
     make_mixed_constrained_qei_acquisition,
     make_qei_acquisition,
+    make_qnei_acquisition,
     make_sample_classification_feasibility_bridge,
     resolve_acquisition_composition,
 )
@@ -574,3 +575,45 @@ def test_mixed_constrained_qei_requires_both_constraint_kinds(constraint_kind: s
 
     with pytest.raises(ValueError, match="both continuous and classification"):
         make_mixed_constrained_qei_acquisition(model, semantics, best_f=0.5)
+
+
+@pytest.mark.parametrize("direction", [ObjectiveDirection.MAXIMIZE, ObjectiveDirection.MINIMIZE])
+def test_qnei_integration_uses_native_botorch_acquisition(
+    direction: ObjectiveDirection,
+) -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    model = HeterogeneousModel(regression)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0, direction=direction),),
+    )
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([16]))
+
+    acquisition = make_qnei_acquisition(
+        model,
+        semantics,
+        X_baseline=train_x,
+        sampler=sampler,
+        cache_root=False,
+    )
+
+    assert type(acquisition) is qNoisyExpectedImprovement
+    assert acquisition.model is regression
+    assert acquisition.sampler is sampler
+    assert acquisition(torch.tensor([[0.25]], dtype=torch.double)).shape == torch.Size([1])
+
+
+def test_qnei_integration_rejects_constraints_and_empty_baseline() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    model = HeterogeneousModel(regression)
+    constrained = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ContinuousConstraint(0, threshold=1.0),),
+    )
+    with pytest.raises(ValueError, match="unconstrained"):
+        make_qnei_acquisition(model, constrained, X_baseline=train_x)
+
+    unconstrained = ProblemSemantics(objectives=(RegressionObjective(0),))
+    with pytest.raises(ValueError, match="nonempty"):
+        make_qnei_acquisition(model, unconstrained, X_baseline=train_x[:0])
