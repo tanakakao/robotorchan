@@ -475,14 +475,16 @@ Phase 23 probability bridge is not a synthetic joint posterior.
 ### Phase 25: q-batch feasibility semantics
 
 Candidate tensors have shape `batch_shape x q x d` with `q >= 1`.
-Deterministic classifier feasibility factors must return exactly
-`batch_shape x q`: neither missing t-batch dimensions nor extra
-sampling dimensions are implicitly broadcast. Independent feasibility
+Deterministic classifier feasibility factors return `batch_shape x q`.
+For `q=1`, a legacy squeezed `batch_shape` probability is normalized
+by restoring the singleton q axis; other missing t-batch dimensions
+and extra sampling dimensions are rejected rather than broadcast. Independent feasibility
 factors are multiplied per candidate, retaining the q dimension.
 `FeasibilityWeightedAcquisition` then reduces q **once** using either
 `product` (independent candidate feasibility approximation) or
 `minimum` (conservative heuristic), and multiplies the native
-acquisition value of shape `batch_shape`. Probability values must be
+acquisition value of shape `batch_shape` (or `[1]` for native
+BoTorch's unbatched `q x d` candidate input). Probability values must be
 finite and in `[0, 1]`. Shape violations raise explicitly rather
 than silently changing acquisition semantics.
 
