@@ -756,3 +756,28 @@ def test_multiple_learned_constrained_qnei_rejects_duplicate_classifier_output()
             semantics,
             X_baseline=train_x,
         )
+
+
+@pytest.mark.parametrize("feasible_classes", [(1, 1), (0, 1)])
+def test_multiple_learned_qnei_rejects_repeated_classifier_output(
+    feasible_classes: tuple[int, int],
+) -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    labels = torch.tensor([0.0, 1.0, 1.0], dtype=torch.double)
+    model = HeterogeneousModel(
+        SingleTaskGP(train_x, torch.sin(train_x)),
+        BinarySingleTaskGPClassifier(train_x, labels),
+    )
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=tuple(
+            ClassificationConstraint(1, feasible_class=feasible_class)
+            for feasible_class in feasible_classes
+        ),
+    )
+    with pytest.raises(ValueError, match="Repeated classifier output"):
+        make_multiple_learned_constrained_qnei_acquisition(
+            model,
+            semantics,
+            X_baseline=train_x,
+        )
