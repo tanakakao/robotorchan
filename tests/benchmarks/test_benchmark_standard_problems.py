@@ -25,7 +25,7 @@ def test_analytic_problem_contract(factory) -> None:
 
 def test_branin_known_minimum() -> None:
     problem = branin()
-    X = torch.tensor([[-torch.pi.item(), 12.275]], dtype=torch.double)
+    X = torch.tensor([[-torch.pi, 12.275]], dtype=torch.double)
     torch.testing.assert_close(
         problem.evaluate_truth(X).squeeze(),
         problem.optimal_value.squeeze(),
