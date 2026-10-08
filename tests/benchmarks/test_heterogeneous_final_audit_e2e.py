@@ -56,13 +56,11 @@ def test_notebook_and_report_document_same_experiment() -> None:
         )
     )
     source = "\n".join(
-        "".join(cell["source"])
-        for cell in notebook["cells"]
-        if cell["cell_type"] == "code"
+        "".join(cell["source"]) for cell in notebook["cells"] if cell["cell_type"] == "code"
     )
-    report = (
-        root / "docs" / "optimization" / "heterogeneous-e2e-benchmark-report.md"
-    ).read_text(encoding="utf-8")
+    report = (root / "docs" / "optimization" / "heterogeneous-e2e-benchmark-report.md").read_text(
+        encoding="utf-8"
+    )
     assert "SEEDS = (1901, 1902, 1903)" in source
     assert "INITIAL_POINTS = 12" in source
     assert "STEPS = 3" in source
