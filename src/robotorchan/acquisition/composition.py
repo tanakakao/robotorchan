@@ -683,6 +683,18 @@ def make_qehvi_acquisition(
     )
 
 
+class _NoPendingFeasibilityWeightedAcquisition(FeasibilityWeightedAcquisition):
+    """Reject pending points until classification feasibility can include them."""
+
+    def set_X_pending(self, X_pending: Tensor | None = None) -> None:
+        """Prevent inconsistent pending-point objective and PoF batches."""
+        if X_pending is not None and X_pending.numel() > 0:
+            raise NotImplementedError(
+                "Classification-weighted qEHVI does not support X_pending."
+            )
+        super().set_X_pending(X_pending)
+
+
 def make_constrained_qehvi_acquisition(
     model: HeterogeneousModel,
     semantics: ProblemSemantics,
@@ -742,7 +754,7 @@ def make_constrained_qehvi_acquisition(
         eta=eta,
     )
     if classification:
-        acquisition = FeasibilityWeightedAcquisition(
+        acquisition = _NoPendingFeasibilityWeightedAcquisition(
             acquisition,
             IndependentFeasibilityAggregator(
                 [binding.representation.probability for binding in classification]
