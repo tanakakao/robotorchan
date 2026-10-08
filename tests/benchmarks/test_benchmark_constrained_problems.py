@@ -3,6 +3,7 @@
 import pytest
 import torch
 
+from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.constrained_problems import (
     constrained_annulus,
     constrained_quadratic,
@@ -10,7 +11,6 @@ from robotorchan.benchmarks.constrained_problems import (
 )
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.runner import random_candidates, run_benchmark
-from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 
 
 def test_quadratic_optimum_and_infeasible_unconstrained_optimum() -> None:
@@ -19,8 +19,12 @@ def test_quadratic_optimum_and_infeasible_unconstrained_optimum() -> None:
     infeasible = torch.tensor([[0.8, 0.8]], dtype=torch.double)
     assert (problem.evaluate_constraints(feasible) >= 0).all()
     assert (problem.evaluate_constraints(infeasible) < 0).any()
-    torch.testing.assert_close(problem.evaluate_truth(feasible).squeeze(), problem.optimal_value[0])
-    torch.testing.assert_close(problem.simple_regret(feasible), torch.zeros((), dtype=torch.double))
+    torch.testing.assert_close(
+        problem.evaluate_truth(feasible).squeeze(), problem.optimal_value[0]
+    )
+    torch.testing.assert_close(
+        problem.simple_regret(feasible), torch.zeros((), dtype=torch.double)
+    )
     assert torch.isinf(problem.simple_regret(infeasible))
 
 
