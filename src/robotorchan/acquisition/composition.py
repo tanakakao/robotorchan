@@ -16,8 +16,8 @@ from botorch.acquisition.multi_objective.objective import (
 from botorch.acquisition.objective import ConstrainedMCObjective, MCAcquisitionObjective
 from botorch.models.model import Model as BoTorchModel
 from botorch.sampling.base import MCSampler
-from botorch.utils.multi_objective.box_decompositions.non_dominated import (
-    NondominatedPartitioning,
+from botorch.utils.multi_objective.box_decompositions.box_decomposition import (
+    BoxDecomposition,
 )
 from torch import Tensor
 
@@ -650,7 +650,7 @@ def make_qehvi_acquisition(
     semantics: ProblemSemantics,
     *,
     ref_point: Tensor | list[float],
-    partitioning: NondominatedPartitioning,
+    partitioning: BoxDecomposition,
     sampler: MCSampler | None = None,
 ) -> qExpectedHypervolumeImprovement:
     """Build native unconstrained qEHVI from one shared regression posterior.
@@ -667,10 +667,13 @@ def make_qehvi_acquisition(
         raise ValueError("ref_point must have one value per objective.")
     if not torch.isfinite(reference).all():
         raise ValueError("ref_point must contain finite values.")
-    if not isinstance(partitioning, NondominatedPartitioning):
-        raise TypeError("partitioning must be a BoTorch NondominatedPartitioning.")
+    if not isinstance(partitioning, BoxDecomposition):
+        raise TypeError("partitioning must be a BoTorch BoxDecomposition.")
     if partitioning.num_outcomes != reference.numel():
         raise ValueError("partitioning and ref_point objective dimensions must match.")
+    partition_ref = partitioning.ref_point.to(device=reference.device, dtype=reference.dtype)
+    if not torch.allclose(reference, partition_ref, rtol=0, atol=0):
+        raise ValueError("ref_point must match partitioning.ref_point.")
     return qExpectedHypervolumeImprovement(
         model=bridge.model,
         ref_point=reference.tolist(),
