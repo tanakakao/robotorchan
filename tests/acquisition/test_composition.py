@@ -1273,3 +1273,31 @@ def test_classification_weighted_composition_rejects_pending(family: str) -> Non
         )
     with pytest.raises(NotImplementedError, match="X_pending"):
         acquisition.set_X_pending(torch.tensor([[0.25]], dtype=torch.double))
+
+
+def test_qucb_native_objective_bridge_preserves_regression_direction() -> None:
+    from botorch.acquisition.monte_carlo import qUpperConfidenceBound
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    model = HeterogeneousModel(regression)
+    semantics = ProblemSemantics(objectives=(RegressionObjective(0),))
+    binding = resolve_acquisition_composition(model, semantics).objectives[0]
+    bridge = make_botorch_objective_bridge(model, binding)
+    acquisition = qUpperConfidenceBound(model=bridge.model, beta=0.1, objective=bridge.objective)
+    X = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
+
+    assert acquisition(X).shape == torch.Size([2])
+    assert torch.isfinite(acquisition(X)).all()
+
+
+def test_qkg_registry_requires_fantasization_and_one_shot_optimization() -> None:
+    from robotorchan.acquisition.registry import get_acquisition_registry_entry
+
+    qucb = get_acquisition_registry_entry("qUpperConfidenceBound")
+    qkg = get_acquisition_registry_entry("qKnowledgeGradient")
+
+    assert not qucb.capabilities.requires_fantasize
+    assert not qucb.capabilities.one_shot
+    assert qkg.capabilities.requires_fantasize
+    assert qkg.capabilities.one_shot

@@ -537,3 +537,36 @@ Future support requires an explicit capability contract for every
 participating model, consistent fantasy sample shapes and conditioning
 data, and a defined cross-output dependence assumption. Do not
 interpret separate `fantasize` methods as a joint posterior.
+
+
+### Phase 28: qUCB and qKG composition audit
+
+**qUpperConfidenceBound (qUCB)** is a native BoTorch Monte Carlo
+acquisition. Its scalar MC objective can consume the existing
+`BoTorchObjectiveBridge` for a single regression objective, including
+direction normalization. However, the current composition factories
+do **not** expose a qUCB constructor; callers can instantiate native
+`qUpperConfidenceBound(model=bridge.model, beta=..., objective=bridge.objective)`
+explicitly. Its utility is a confidence-bound statistic, not expected
+improvement: multiplying by classifier marginal PoF is **not** a
+validated constrained-qUCB formulation. Sample-residual constraints
+likewise require a separately specified constrained utility, not
+automatic reuse of the qEI objective.
+
+**qKnowledgeGradient (qKG)** is a native one-shot, lookahead
+acquisition with fantasy-model conditioning, fantasy sampling and
+inner-value-function optimization. A scalar objective bridge alone
+does not satisfy its model fantasization or one-shot optimizer
+requirements. No generic qKG composition factory is exposed, and
+`FeasibilityWeightedAcquisition` must not wrap qKG: multiplying
+its one-shot values by a marginal classifier PoF would neither
+condition the classifier on fantasy outcomes nor model joint
+future feasibility. A heterogeneous regression/classification
+fantasy posterior is not supplied by the current Model Layer.
+
+The registry's `requires_fantasize=True` and `one_shot=True`
+metadata for qKG describes the native method, **not** verified
+compatibility with heterogeneous models. Neither qUCB nor qKG
+receives a new thin wrapper in this phase. Explicit unsupported
+cases remain unsupported until the appropriate utility and
+fantasy contracts are implemented and tested.
