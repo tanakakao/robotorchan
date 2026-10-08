@@ -1313,3 +1313,24 @@ def test_bo_and_active_learning_registry_purposes_remain_distinct() -> None:
     assert bo.capabilities.purpose is AcquisitionPurpose.BAYESIAN_OPTIMIZATION
     assert al.capabilities.purpose is AcquisitionPurpose.ACTIVE_LEARNING
     assert bo.capabilities.purpose is not al.capabilities.purpose
+
+
+def test_cross_layer_composition_preserves_regression_output_ownership() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    classifier = BinarySingleTaskGPClassifier(
+        train_x, torch.tensor([0.0, 1.0, 1.0], dtype=torch.double)
+    )
+    model = HeterogeneousModel(regression, classifier)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ClassificationConstraint(1, feasible_class=1),),
+    )
+    plan = resolve_acquisition_composition(model, semantics)
+    bridge = make_botorch_objective_bridge(model, plan.objectives[0])
+    feasibility = make_classification_feasibility_bridge(model, plan.feasibility[0])
+
+    assert bridge.model is regression
+    assert feasibility is not None
+    assert len(plan.objectives) == 1
+    assert len(plan.feasibility) == 1
