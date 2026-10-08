@@ -24,6 +24,7 @@ from robotorchan.acquisition.composition import (
     make_qehvi_acquisition,
     make_qei_acquisition,
     make_qnei_acquisition,
+    make_qnehvi_acquisition,
     make_sample_classification_feasibility_bridge,
     resolve_acquisition_composition,
 )
@@ -1020,3 +1021,49 @@ def test_classification_weighted_qehvi_rejects_pending_points() -> None:
     )
     with pytest.raises(NotImplementedError, match="X_pending"):
         acquisition.set_X_pending(torch.tensor([[0.5]], dtype=torch.double))
+
+
+def test_qnehvi_composes_native_noisy_multiobjective_acquisition() -> None:
+    from botorch.acquisition.multi_objective.monte_carlo import (
+        qNoisyExpectedHypervolumeImprovement,
+    )
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    model = HeterogeneousModel(SingleTaskGP(train_x, train_y))
+    semantics = ProblemSemantics(
+        objectives=(
+            RegressionObjective(0),
+            RegressionObjective(1, direction=ObjectiveDirection.MINIMIZE),
+        ),
+    )
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([8]))
+    acquisition = make_qnehvi_acquisition(
+        model,
+        semantics,
+        ref_point=[-1.0, -2.0],
+        X_baseline=train_x,
+        sampler=sampler,
+        prune_baseline=False,
+    )
+    assert isinstance(acquisition, qNoisyExpectedHypervolumeImprovement)
+    assert acquisition.model is model[0]
+    assert acquisition.sampler is sampler
+    assert torch.isfinite(acquisition(torch.tensor([[0.25]], dtype=torch.double))).all()
+
+
+def test_qnehvi_rejects_invalid_baseline_and_reference() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    model = HeterogeneousModel(SingleTaskGP(train_x, train_y))
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0), RegressionObjective(1)),
+    )
+    with pytest.raises(ValueError, match="X_baseline"):
+        make_qnehvi_acquisition(
+            model, semantics, ref_point=[-1.0, -1.0], X_baseline=train_x[:0]
+        )
+    with pytest.raises(ValueError, match="one value per objective"):
+        make_qnehvi_acquisition(
+            model, semantics, ref_point=[-1.0], X_baseline=train_x
+        )
