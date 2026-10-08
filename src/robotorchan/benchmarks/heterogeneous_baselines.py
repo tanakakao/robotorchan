@@ -11,7 +11,8 @@ from robotorchan.benchmarks.heterogeneous_synthetic import evaluate_truth, obser
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.dispatch import optimize_acqf
-from robotorchan.semantics import ProblemSemantics, RegressionObjective
+from robotorchan.semantics.objectives import RegressionObjective
+from robotorchan.semantics.problem import ProblemSemantics
 
 
 def run_strategy(
@@ -75,5 +76,3 @@ def run_strategy(
         train_Y = torch.cat((train_Y, new_Y), dim=0)
 
     return train_X, torch.stack(best)
-
-
