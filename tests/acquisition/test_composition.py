@@ -833,9 +833,7 @@ def test_independent_aggregator_does_not_infer_constraint_correlation() -> None:
             return X.new_full(X.shape[:-1], self.value)
 
     X = torch.zeros(2, 1)
-    independent = IndependentFeasibilityAggregator(
-        [FixedProbability(0.6), FixedProbability(0.6)]
-    )
+    independent = IndependentFeasibilityAggregator([FixedProbability(0.6), FixedProbability(0.6)])
     assert torch.allclose(independent(X), torch.tensor([0.36]))
     # Perfectly correlated identical events would instead have joint PoF 0.6.
     assert not torch.allclose(independent(X), torch.tensor([0.6]))
