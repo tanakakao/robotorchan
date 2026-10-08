@@ -32,9 +32,7 @@ def _benchmark_models() -> tuple[HeterogeneousModel, torch.Tensor]:
         train_X,
         torch.stack((observed.strength, observed.conductivity), dim=-1),
     )
-    classifier = BinarySingleTaskGPClassifier(
-        train_X, observed.passed, inducing_points=8
-    )
+    classifier = BinarySingleTaskGPClassifier(train_X, observed.passed, inducing_points=8)
     model = HeterogeneousModel(
         regression, classifier, output_names=["strength", "conductivity", "pass"]
     )
@@ -51,10 +49,16 @@ def test_composition_resolves_benchmark_objectives_and_feasibility() -> None:
     )
     plan = resolve_acquisition_composition(model, semantics)
 
-    assert [(item.output_index, item.entry_index, item.local_output_index)
-            for item in plan.objectives] == [(0, 0, 0), (1, 0, 1)]
-    assert [(item.output_index, item.entry_index, item.local_output_index)
-            for item in plan.feasibility] == [(2, 1, 0)]
+    objective_owners = [
+        (item.output_index, item.entry_index, item.local_output_index)
+        for item in plan.objectives
+    ]
+    feasibility_owners = [
+        (item.output_index, item.entry_index, item.local_output_index)
+        for item in plan.feasibility
+    ]
+    assert objective_owners == [(0, 0, 0), (1, 0, 1)]
+    assert feasibility_owners == [(2, 1, 0)]
 
 
 @pytest.mark.parametrize("q", [1, 3])
