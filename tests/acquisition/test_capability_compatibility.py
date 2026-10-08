@@ -37,6 +37,7 @@ def test_registry_covers_public_acquisition_classes() -> None:
         "make_mixed_constrained_qei_acquisition",
         "make_multiple_learned_constrained_qnei_acquisition",
         "make_non_gp_acquisition",
+        "make_qehvi_acquisition",
         "make_qei_acquisition",
         "make_qnei_acquisition",
         "make_sample_classification_feasibility_bridge",

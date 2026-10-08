@@ -8,6 +8,7 @@ from dataclasses import dataclass
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import qExpectedImprovement, qNoisyExpectedImprovement
+from botorch.acquisition.multi_objective.monte_carlo import qExpectedHypervolumeImprovement
 from botorch.acquisition.multi_objective.objective import (
     GenericMCMultiOutputObjective,
     MCMultiOutputObjective,
@@ -15,6 +16,9 @@ from botorch.acquisition.multi_objective.objective import (
 from botorch.acquisition.objective import ConstrainedMCObjective, MCAcquisitionObjective
 from botorch.models.model import Model as BoTorchModel
 from botorch.sampling.base import MCSampler
+from botorch.utils.multi_objective.box_decompositions.box_decomposition import (
+    BoxDecomposition,
+)
 from torch import Tensor
 
 from robotorchan.acquisition.classification_constraints import (
@@ -638,4 +642,42 @@ def make_botorch_multiobjective_bridge(
         model=entry_model,
         objective=GenericMCMultiOutputObjective(objective),
         output_indices=tuple(binding.output_index for binding in bindings),
+    )
+
+
+def make_qehvi_acquisition(
+    model: HeterogeneousModel,
+    semantics: ProblemSemantics,
+    *,
+    ref_point: Tensor | list[float],
+    partitioning: BoxDecomposition,
+    sampler: MCSampler | None = None,
+) -> qExpectedHypervolumeImprovement:
+    """Build native unconstrained qEHVI from one shared regression posterior.
+
+    The reference point and partitioning must already use the directed
+    objective space. No cross-entry posterior or partitioning is inferred.
+    """
+    plan = resolve_acquisition_composition(model, semantics)
+    if plan.feasibility:
+        raise ValueError("Phase 20 qEHVI supports unconstrained objectives only.")
+    bridge = make_botorch_multiobjective_bridge(model, plan.objectives)
+    reference = torch.as_tensor(ref_point)
+    if reference.ndim != 1 or reference.numel() != len(bridge.output_indices):
+        raise ValueError("ref_point must have one value per objective.")
+    if not torch.isfinite(reference).all():
+        raise ValueError("ref_point must contain finite values.")
+    if not isinstance(partitioning, BoxDecomposition):
+        raise TypeError("partitioning must be a BoTorch BoxDecomposition.")
+    if partitioning.num_outcomes != reference.numel():
+        raise ValueError("partitioning and ref_point objective dimensions must match.")
+    partition_ref = partitioning.ref_point.to(device=reference.device, dtype=reference.dtype)
+    if not torch.allclose(reference, partition_ref, rtol=0, atol=0):
+        raise ValueError("ref_point must match partitioning.ref_point.")
+    return qExpectedHypervolumeImprovement(
+        model=bridge.model,
+        ref_point=reference.tolist(),
+        partitioning=partitioning,
+        sampler=sampler,
+        objective=bridge.objective,
     )

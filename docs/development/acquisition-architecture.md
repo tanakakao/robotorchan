@@ -380,3 +380,19 @@ Consequently, cross-entry objectives are rejected rather than silently
 combining independent draws. Mixed regression/classification objectives
 and `ProbabilityObjective` remain future integration work. Phase 20
 will connect compatible multi-output objectives to native qEHVI.
+
+
+### Phase 20: native qEHVI integration
+
+`make_qehvi_acquisition` constructs BoTorch's
+`qExpectedHypervolumeImprovement` using the Phase 19 multi-output bridge.
+It requires at least two regression objectives owned by one shared BoTorch
+posterior and accepts an explicit `NondominatedPartitioning`, reference
+point and optional native MC sampler. The partitioning's observed outcomes
+and reference point **must already be transformed to the directed
+(maximization) objective space**, including sign changes for minimized
+outputs. No partitioning or joint posterior is fabricated.
+
+This phase is unconstrained: semantic feasibility bindings are rejected.
+Constrained qEHVI belongs to Phase 21. Cross-entry multiobjective models
+and classification probability objectives remain unsupported.

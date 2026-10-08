@@ -20,6 +20,7 @@ from robotorchan.acquisition.composition import (
     make_deterministic_pof_acquisition,
     make_mixed_constrained_qei_acquisition,
     make_multiple_learned_constrained_qnei_acquisition,
+    make_qehvi_acquisition,
     make_qei_acquisition,
     make_qnei_acquisition,
     make_sample_classification_feasibility_bridge,
@@ -900,3 +901,55 @@ def test_multiobjective_bridge_rejects_cross_entry_posterior() -> None:
     plan = resolve_acquisition_composition(model, semantics)
     with pytest.raises(ValueError, match="shared posterior"):
         make_botorch_multiobjective_bridge(model, plan.objectives)
+
+
+def test_qehvi_composes_native_multiobjective_acquisition() -> None:
+    from botorch.acquisition.multi_objective.monte_carlo import qExpectedHypervolumeImprovement
+    from botorch.utils.multi_objective.box_decompositions.non_dominated import (
+        NondominatedPartitioning,
+    )
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    model = HeterogeneousModel(SingleTaskGP(train_x, train_y))
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0), RegressionObjective(1)),
+    )
+    ref_point = torch.tensor([-1.0, -1.0], dtype=torch.double)
+    partitioning = NondominatedPartitioning(ref_point=ref_point, Y=train_y)
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([8]))
+    acquisition = make_qehvi_acquisition(
+        model,
+        semantics,
+        ref_point=ref_point,
+        partitioning=partitioning,
+        sampler=sampler,
+    )
+    assert isinstance(acquisition, qExpectedHypervolumeImprovement)
+    assert acquisition.model is model[0]
+    assert acquisition.sampler is sampler
+    assert torch.isfinite(acquisition(torch.tensor([[0.25]], dtype=torch.double))).all()
+
+
+def test_qehvi_rejects_reference_dimension_mismatch() -> None:
+    from botorch.utils.multi_objective.box_decompositions.non_dominated import (
+        NondominatedPartitioning,
+    )
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    model = HeterogeneousModel(SingleTaskGP(train_x, train_y))
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0), RegressionObjective(1)),
+    )
+    partitioning = NondominatedPartitioning(
+        ref_point=torch.tensor([-1.0, -1.0], dtype=torch.double),
+        Y=train_y,
+    )
+    with pytest.raises(ValueError, match="one value per objective"):
+        make_qehvi_acquisition(
+            model,
+            semantics,
+            ref_point=torch.tensor([-1.0], dtype=torch.double),
+            partitioning=partitioning,
+        )
