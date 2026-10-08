@@ -445,3 +445,52 @@ def make_qnei_acquisition(
         prune_baseline=prune_baseline,
         cache_root=cache_root,
     )
+
+
+def make_continuous_constrained_qnei_acquisition(
+    model: HeterogeneousModel,
+    semantics: ProblemSemantics,
+    *,
+    X_baseline: Tensor,
+    sampler: MCSampler | None = None,
+    infeasible_cost: float | Tensor = 0.0,
+    prune_baseline: bool = False,
+    cache_root: bool = True,
+) -> qNoisyExpectedImprovement:
+    """Build native qNEI with same-posterior continuous sample constraints."""
+    plan = resolve_acquisition_composition(model, semantics)
+    if len(plan.objectives) != 1:
+        raise ValueError("Constrained qNEI requires exactly one objective.")
+    if not plan.feasibility:
+        raise ValueError("Constrained qNEI requires continuous constraints.")
+    if X_baseline.ndim != 2 or X_baseline.shape[0] == 0:
+        raise ValueError("X_baseline must be a nonempty n x d tensor.")
+
+    binding = plan.objectives[0]
+    if not isinstance(binding.objective, RegressionObjective):
+        raise TypeError("Constrained qNEI currently supports RegressionObjective only.")
+    if any(
+        not isinstance(feasibility.representation, SampleResidualFeasibility)
+        for feasibility in plan.feasibility
+    ):
+        raise TypeError("Phase 15 constrained qNEI supports continuous constraints only.")
+    if any(feasibility.entry_index != binding.entry_index for feasibility in plan.feasibility):
+        raise ValueError("Constrained qNEI requires one shared BoTorch posterior.")
+
+    bridge = make_botorch_objective_bridge(model, binding)
+    objective = ConstrainedMCObjective(
+        objective=bridge.objective,
+        constraints=[
+            make_continuous_constraint_bridge(model, feasibility)
+            for feasibility in plan.feasibility
+        ],
+        infeasible_cost=infeasible_cost,
+    )
+    return qNoisyExpectedImprovement(
+        model=bridge.model,
+        X_baseline=X_baseline,
+        sampler=sampler,
+        objective=objective,
+        prune_baseline=prune_baseline,
+        cache_root=cache_root,
+    )
