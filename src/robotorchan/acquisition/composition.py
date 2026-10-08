@@ -537,7 +537,7 @@ def make_multiple_learned_constrained_qnei_acquisition(
         raise TypeError("Unsupported feasibility representation for multiple constrained qNEI.")
     classifier_outputs = [binding.output_index for binding in classification]
     if len(set(classifier_outputs)) != len(classifier_outputs):
-        raise ValueError("Repeated classifier output constraints are not independent.")
+        raise ValueError("Repeated classification output constraints are not independent.")
     classification_outputs = [binding.output_index for binding in classification]
     if len(set(classification_outputs)) != len(classification_outputs):
         raise ValueError("Repeated classification constraint outputs are not supported.")
