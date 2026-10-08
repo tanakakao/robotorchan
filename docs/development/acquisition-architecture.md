@@ -503,9 +503,9 @@ wrapper retain their standard `set_X_pending` behavior. In contrast,
 **all** classifier-weighted families (including qEI, qNEI and qEHVI).
 Passing pending points only to the native objective acquisition while
 evaluating classifier feasibility on the new candidates would mix
-different q-sets and misrepresent joint batch feasibility. Rejection
-happens before either the wrapper or its objective acquisition mutates
-pending state. Clearing pending state with `None` remains supported.
+different q-sets and misrepresent joint batch feasibility. Rejection happens during wrapper construction if the wrapped
+acquisition already has nonempty pending state, or before either the
+wrapper or its objective acquisition mutates pending state. Clearing pending state with `None` remains supported.
 
 This is an explicit unsupported-capability boundary, not a claim of
 async classification-constrained BO support. A future implementation
