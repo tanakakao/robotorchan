@@ -613,3 +613,74 @@ compatibility remain unchanged. The capability registry's
 `AcquisitionPurpose` and posterior requirements are the
 starting point for a future explicit policy contract, not
 authorization for automatic cross-purpose composition.
+
+
+### Phase 30: Cross-layer final audit
+
+The Phase 1–29 composition cycle establishes a deliberately bounded
+pipeline:
+
+`HeterogeneousModel` / BoTorch model ownership
+→ `ProblemSemantics` (named or indexed output meanings)
+→ `resolve_acquisition_composition` (objective and feasibility bindings)
+→ BoTorch objective / feasibility bridges
+→ native BoTorch acquisition
+→ native acquisition optimization.
+
+**Supported acquisition construction** currently includes native
+qEI, qNEI, qEHVI, qNEHVI and qLogNEI-based qLogNParEGO through
+the documented composition functions. Regression objectives retain
+their direction and output ownership. Multiple regression objectives
+for hypervolume/scalarization must belong to one shared
+BoTorch multi-output model; heterogeneous independent models
+are not silently treated as a joint posterior.
+
+**Feasibility contracts** distinguish deterministic marginal
+classification probability, sample-wise classification probability
+and sample-residual continuous constraints. Same-entry continuous
+constraints can be passed to native BoTorch MC objective/constraint
+machinery where supported. Classification-weighted qEI/qNEI/qEHVI
+uses an outer marginal-PoF factor and explicit independent-factor
+aggregation; this is not sample-wise joint feasibility and does not
+model dependence across classifier outputs. The exposed qNEHVI
+constructor remains unconstrained. A feasible candidate-input
+constraint belongs to the optimizer, not to outcome semantics.
+
+**Shape and state contracts** require explicit q-batch and sample
+shape handling. Classifier-weighted wrappers reject nonempty
+`X_pending` (including pending state already present on the
+wrapped acquisition) and reject joint acquisition-level
+fantasization. Native BoTorch models and acquisitions retain their
+own documented pending/fantasy behavior when no classifier-weighted
+wrapper is involved. The bridge does not fabricate a shared
+heterogeneous fantasy posterior.
+
+**Extension boundaries**: qUCB can consume the native scalar
+objective bridge but no constrained-qUCB factory is supplied;
+qKG requires model fantasization and one-shot optimization and
+has no generic heterogeneous composition factory. BO × AL
+combination requires an explicit future utility policy. The
+composition layer does not implement new optimizers, multiclass
+classifiers, correlated classifier feasibility, or generic
+multi-output heterogeneous fantasy conditioning.
+
+**Release/compatibility checklist** for subsequent work:
+1. Preserve the native BoTorch posterior, sampler, objective,
+   acquisition and optimizer entry points.
+2. Resolve output ownership before construction; never infer
+   cross-entry posterior dependence.
+3. Validate objective direction, feasibility representation,
+   q/sample/batch shapes and required baselines/reference points.
+4. Keep candidate-space constraints separate from predicted
+   outcome constraints.
+5. Fail explicitly for unsupported pending, fantasy, correlation
+   and lookahead combinations rather than returning a misleading
+   acquisition value.
+6. Maintain regression-only behavior and run the full CI matrix
+   before treating the cycle as complete.
+
+This audit records the supported contract, not an assertion that
+all possible combinations of model, acquisition and optimizer are
+implemented. The next development cycle should prioritize
+capability-driven integration tests and explicitly scoped
+extensions rather than additional generic wrapper layers.
