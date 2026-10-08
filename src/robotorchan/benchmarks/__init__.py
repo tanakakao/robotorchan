@@ -27,7 +27,6 @@ from robotorchan.benchmarks.runner import (
     run_benchmark,
     sobol_initial_design,
 )
-
 from robotorchan.benchmarks.standard_problems import (
     branin,
     hartmann6,
