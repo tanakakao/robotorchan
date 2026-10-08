@@ -59,9 +59,7 @@ class BenchmarkProblem:
             ("reference_point", self.reference_point, m),
         ):
             if value is not None and (
-                value.ndim != 1
-                or value.numel() != width
-                or not torch.isfinite(value).all()
+                value.ndim != 1 or value.numel() != width or not torch.isfinite(value).all()
             ):
                 raise ValueError(f"{name} must be a finite vector of length {width}.")
         if self.optimal_value is not None and m != 1:
@@ -113,9 +111,7 @@ class BenchmarkProblem:
 
     def evaluate_observation(self, X: Tensor) -> Tensor:
         """Evaluate observed objectives; use truth when no observation model exists."""
-        return self._evaluate(
-            self.observe or self.objective, X, self.n_objectives, "observation"
-        )
+        return self._evaluate(self.observe or self.objective, X, self.n_objectives, "observation")
 
     def evaluate_constraints(self, X: Tensor) -> Tensor:
         """Return constraint residuals g(X) >= 0."""
