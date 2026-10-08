@@ -451,3 +451,22 @@ probabilities. The bridge is not a BoTorch `MCAcquisitionObjective`:
 heterogeneous regression/classification entries do not provide a
 joint posterior or coupled samples. No qEHVI/qNEHVI mixed-objective
 support is implied by this adapter alone.
+
+
+### Phase 24: Native qLogNParEGO composition
+
+`make_qlognparego_acquisition` builds native BoTorch
+`qLogNoisyExpectedImprovement` using a Chebyshev scalarization of
+two or more regression objectives from a **single shared BoTorch model**.
+The existing multi-output bridge applies maximize/minimize directions
+before scalarization. `Y_baseline` must be supplied by the caller as
+an `n x m` tensor of **directed objective values**, aligned with
+`X_baseline`; `weights` must be finite, nonnegative and nonzero.
+The builder does not estimate `Y_baseline` from the model or sample
+new scalarization weights. Resample weights externally for sequential
+ParEGO iterations.
+
+This phase does not combine independently sampled regression and
+classification outputs. `ProbabilityObjective` and feasibility
+constraints remain explicitly unsupported in this builder; the
+Phase 23 probability bridge is not a synthetic joint posterior.
