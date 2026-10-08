@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from botorch.acquisition.acquisition import AcquisitionFunction
+import torch
 from torch import Tensor, nn
 
 from robotorchan.models.classification.probability import (
@@ -103,3 +104,35 @@ class FeasibilityWeightedAcquisition(AcquisitionFunction):
             else:
                 feasibility = feasibility.min(dim=-1).values
         return objective_value * feasibility
+
+
+class IndependentFeasibilityAggregator(nn.Module):
+    """Combine distinct classifier marginal PoFs under explicit independence."""
+
+    def __init__(self, factors: Sequence[nn.Module], *, q_reduction: str = "product") -> None:
+        """Validate independent factors and their q-batch reduction."""
+        super().__init__()
+        if not factors:
+            raise ValueError("At least one feasibility factor is required.")
+        if q_reduction not in {"product", "minimum"}:
+            raise ValueError("q_reduction must be 'product' or 'minimum'.")
+        self.factors = nn.ModuleList(factors)
+        self.q_reduction = q_reduction
+
+    def forward(self, X: Tensor) -> Tensor:
+        """Return independent marginal conjunction for each candidate batch."""
+        q = X.shape[-2]
+        probabilities = []
+        for factor in self.factors:
+            probability = factor(X)
+            if probability.ndim == 0:
+                if q != 1:
+                    raise ValueError("Scalar feasibility is only valid for q=1.")
+                probability = probability.reshape(1)
+            if probability.shape[-1] != q:
+                raise ValueError("Feasibility factors must retain their q dimension.")
+            probabilities.append(probability)
+        combined = torch.stack(torch.broadcast_tensors(*probabilities), dim=0).prod(dim=0)
+        if self.q_reduction == "product":
+            return combined.prod(dim=-1)
+        return combined.min(dim=-1).values
