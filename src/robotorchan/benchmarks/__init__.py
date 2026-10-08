@@ -10,6 +10,12 @@ from robotorchan.benchmarks.constrained_problems import (
     constrained_quadratic,
     register_constrained_problems,
 )
+from robotorchan.benchmarks.multiobjective_problems import (
+    biobjective_linear,
+    dtlz2,
+    register_multiobjective_problems,
+    zdt1,
+)
 from robotorchan.benchmarks.optimization import (
     BenchmarkResult,
     CountingAcquisition,
@@ -53,18 +59,22 @@ __all__ = [
     "benchmark_optimizers",
     "benchmark_result_record",
     "benchmark_result_records",
+    "biobjective_linear",
     "branin",
     "constrained_annulus",
     "constrained_quadratic",
+    "dtlz2",
     "get_problem",
     "hartmann6",
     "list_problems",
     "profile_callable",
     "random_candidates",
     "register_constrained_problems",
+    "register_multiobjective_problems",
     "register_problem",
     "register_standard_problems",
     "run_benchmark",
     "sobol_initial_design",
     "sphere3",
+    "zdt1",
 ]
