@@ -12,10 +12,19 @@ from robotorchan.benchmarks.optimization import (
     benchmark_result_record,
     benchmark_result_records,
 )
+from robotorchan.benchmarks.problem import BenchmarkProblem
 from robotorchan.benchmarks.profiling import ProfileResult, profile_callable
+from robotorchan.benchmarks.registry import (
+    BenchmarkProblemRegistry,
+    get_problem,
+    list_problems,
+    register_problem,
+)
 
 __all__ = [
     "AcquisitionBenchmarkResult",
+    "BenchmarkProblem",
+    "BenchmarkProblemRegistry",
     "BenchmarkResult",
     "CountingAcquisition",
     "ProfileResult",
@@ -24,5 +33,8 @@ __all__ = [
     "benchmark_optimizers",
     "benchmark_result_record",
     "benchmark_result_records",
+    "get_problem",
+    "list_problems",
     "profile_callable",
+    "register_problem",
 ]
