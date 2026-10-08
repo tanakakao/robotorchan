@@ -832,9 +832,7 @@ class ProbabilityObjectiveBridge:
         """Sample epistemic class probabilities only for capable classifiers."""
         if not self.supports_probability_samples:
             raise TypeError("Classifier does not support epistemic probability samples.")
-        return self.objective.sample(
-            self.model, X, sample_shape=sample_shape, **kwargs
-        )
+        return self.objective.sample(self.model, X, sample_shape=sample_shape, **kwargs)
 
 
 def make_probability_objective_bridge(
