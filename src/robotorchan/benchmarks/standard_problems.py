@@ -38,7 +38,7 @@ def _branin(X: Tensor) -> Tensor:
 def _hartmann6(X: Tensor) -> Tensor:
     alpha = X.new_tensor(_HARTMANN_ALPHA)
     A = X.new_tensor(_HARTMANN_A)
-    P = X.new_tensor(_HARTMANN_P) * 1e-4
+    P = X.new_tensor(_HARTMANN_P)
     inner = (A * (X.unsqueeze(-2) - P).square()).sum(dim=-1)
     return -(alpha * torch.exp(-inner)).sum(dim=-1, keepdim=True)
 
