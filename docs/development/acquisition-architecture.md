@@ -287,3 +287,14 @@ posterior samples by matching Monte Carlo indices. Separate heterogeneous model
 entries do not provide a joint posterior merely because their tensors have the
 same shape. Sample-wise cross-model aggregation and correlation policy belong to
 the later feasibility-aggregator and correlation phases.
+
+
+### Native qNEI integration
+
+Phase 14 exposes `make_qnei_acquisition` for a single unconstrained
+`RegressionObjective`. It delegates noisy-baseline improvement, posterior
+sampling, and baseline handling to BoTorch's native
+`qNoisyExpectedImprovement`. The semantic objective bridge preserves output
+ownership and maximize/minimize direction. `X_baseline` is supplied explicitly
+and must be a nonempty two-dimensional tensor; no observed best value is
+required. Constraint feasibility composition is deferred to Phase 15.
