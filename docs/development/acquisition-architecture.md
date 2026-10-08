@@ -570,3 +570,46 @@ compatibility with heterogeneous models. Neither qUCB nor qKG
 receives a new thin wrapper in this phase. Explicit unsupported
 cases remain unsupported until the appropriate utility and
 fantasy contracts are implemented and tested.
+
+
+### Phase 29: BO × Active Learning extension point
+
+The current acquisition architecture separates **Bayesian optimization**
+and **active learning** by their acquisition purpose. This distinction
+must remain explicit: BO utility measures objective improvement or
+decision value, while AL utility measures information gain, predictive
+uncertainty, or boundary resolution. The two values are not generally
+on a common scale, and neither should be silently treated as a
+constraint probability or an objective posterior sample.
+
+The future extension point is **after semantic output resolution and
+before acquisition construction**. A joint BO × AL policy must
+explicitly identify each component's acquisition purpose, required
+posterior representation, output ownership, direction, q-batch
+reduction, and scaling/normalization. A policy may use a
+weighted/normalized sum, staged selection, or an explicit
+multi-criterion decision rule, but must document the utility units
+and trade-off parameter. This phase intentionally does **not**
+implement or register any such policy.
+
+A candidate-space feasibility constraint remains an acquisition
+**optimizer** concern. An outcome feasibility constraint remains
+part of BO semantic composition. An AL boundary target is not
+automatically either kind of constraint. In particular, the
+classification `PredictiveEntropy` / `BALD` target must not
+be interpreted as a `ClassificationConstraint` or a
+`ProbabilityObjective`.
+
+For mixed regression/classification models, a future joint policy
+must retain the existing heterogeneous output-owner contracts.
+Combining independently evaluated BO and AL scalar acquisitions
+does **not** establish a joint posterior or a correlated
+feasibility model. Pending points, fantasy conditioning and
+q-batch shapes must each be validated against both components
+before enabling batch/async joint selection.
+
+Existing BO and AL acquisition constructors and their BoTorch
+compatibility remain unchanged. The capability registry's
+`AcquisitionPurpose` and posterior requirements are the
+starting point for a future explicit policy contract, not
+authorization for automatic cross-purpose composition.
