@@ -417,3 +417,22 @@ that frontier. Repeated classification output constraints are rejected.
 Classification-weighted constrained qEHVI explicitly rejects nonempty
 `X_pending` until pending candidates can participate in both the native
 hypervolume computation and the classifier feasibility aggregation.
+
+
+### Phase 22: Native qNEHVI composition
+
+`make_qnehvi_acquisition(model, semantics, *, ref_point, X_baseline,
+sampler=None, prune_baseline=False, cache_root=True)` constructs BoTorch's
+native `qNoisyExpectedHypervolumeImprovement`. It requires two or more
+regression objectives from **one shared BoTorch posterior entry**, with
+objective directions applied by the existing multi-output MC bridge.
+`ref_point` is expressed in this directed, maximization-oriented objective
+space; `X_baseline` is a nonempty two-dimensional tensor of baseline inputs.
+The native acquisition handles noisy baseline posterior samples and
+hypervolume improvement; no custom partitioning or posterior coupling is
+introduced.
+
+This phase intentionally rejects feasibility constraints. Continuous and
+classification feasibility, including baseline feasibility and pending-point
+semantics, require explicit subsequent integration and must not be approximated
+silently.
