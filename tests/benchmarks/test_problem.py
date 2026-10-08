@@ -22,9 +22,9 @@ def _problem(**kwargs: object) -> BenchmarkProblem:
 def test_truth_observation_and_regret_are_separate() -> None:
     problem = _problem(observe=lambda x: -(x - 0.7).square() + 10)
     X = torch.tensor([[0.2], [0.7]], dtype=torch.double)
-    torch.testing.assert_close(problem.evaluate_truth(X), torch.tensor([[-0.25], [0.0]]))
+    torch.testing.assert_close(problem.evaluate_truth(X), torch.tensor([[-0.25], [0.0]], dtype=torch.double))
     assert torch.all(problem.evaluate_observation(X) > problem.evaluate_truth(X))
-    torch.testing.assert_close(problem.simple_regret(X), torch.tensor(0.0))
+    torch.testing.assert_close(problem.simple_regret(X), torch.tensor(0.0, dtype=torch.double))
 
 
 def test_minimization_regret() -> None:
@@ -33,7 +33,7 @@ def test_minimization_regret() -> None:
         directions=("minimize",),
     )
     X = torch.tensor([[0.2]], dtype=torch.double)
-    torch.testing.assert_close(problem.simple_regret(X), torch.tensor(0.25))
+    torch.testing.assert_close(problem.simple_regret(X), torch.tensor(0.25, dtype=torch.double))
 
 
 def test_constraint_and_cost_contract() -> None:
