@@ -28,6 +28,7 @@ def test_acquisition_public_api_is_intentionally_small() -> None:
         "make_botorch_multiobjective_bridge",
         "make_botorch_objective_bridge",
         "make_classification_feasibility_bridge",
+        "make_constrained_qehvi_acquisition",
         "make_continuous_constrained_qei_acquisition",
         "make_continuous_constrained_qnei_acquisition",
         "make_continuous_constraint_bridge",
