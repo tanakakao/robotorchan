@@ -3,7 +3,11 @@
 import pytest
 import torch
 
-from benchmarks.heterogeneous_synthetic import evaluate_truth, observe, reference_front
+from robotorchan.benchmarks.heterogeneous_synthetic import (
+    evaluate_truth,
+    observe,
+    reference_front,
+)
 
 
 def test_truth_has_competing_objective_optima() -> None:
