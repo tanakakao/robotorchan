@@ -5,7 +5,10 @@ from botorch.acquisition.monte_carlo import qExpectedImprovement, qNoisyExpected
 from botorch.acquisition.objective import ConstrainedMCObjective, GenericMCObjective
 from botorch.sampling.normal import SobolQMCNormalSampler
 
-from robotorchan.acquisition.classification_constraints import FeasibilityWeightedAcquisition
+from robotorchan.acquisition.classification_constraints import (
+    FeasibilityWeightedAcquisition,
+    IndependentFeasibilityAggregator,
+)
 from robotorchan.acquisition.composition import (
     SampleShapeContract,
     make_botorch_objective_bridge,
@@ -709,9 +712,8 @@ def test_multiple_learned_constrained_qnei_composes_two_classifiers() -> None:
     )
 
     assert isinstance(acquisition, FeasibilityWeightedAcquisition)
-    assert isinstance(acquisition.objective_acquisition, FeasibilityWeightedAcquisition)
-    inner_acquisition = acquisition.objective_acquisition.objective_acquisition
-    assert type(inner_acquisition) is qNoisyExpectedImprovement
+    assert isinstance(acquisition.probability_of_feasibility, IndependentFeasibilityAggregator)
+    assert type(acquisition.objective_acquisition) is qNoisyExpectedImprovement
     value = acquisition(torch.tensor([[0.25]], dtype=torch.double))
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
@@ -781,3 +783,26 @@ def test_multiple_learned_qnei_rejects_repeated_classifier_output(
             semantics,
             X_baseline=train_x,
         )
+
+
+def test_independent_feasibility_aggregator_preserves_q_axis() -> None:
+    from torch import nn
+
+    class ConstantProbability(nn.Module):
+        def __init__(self, probability: float) -> None:
+            super().__init__()
+            self.probability = probability
+
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X.new_full(X.shape[:-1], self.probability)
+
+    aggregator = IndependentFeasibilityAggregator(
+        [ConstantProbability(0.5), ConstantProbability(0.8)]
+    )
+    X = torch.zeros(2, 3, 1)
+    assert torch.allclose(aggregator(X), torch.full((2, 3), 0.4))
+
+
+def test_independent_feasibility_aggregator_rejects_empty_factors() -> None:
+    with pytest.raises(ValueError, match="At least one"):
+        IndependentFeasibilityAggregator([])

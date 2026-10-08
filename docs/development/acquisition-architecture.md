@@ -321,3 +321,14 @@ classifier probabilities is an **explicit independence approximation**, not
 joint feasibility sampling; it does not correct baseline feasibility for
 independently learned classifiers. Correlated constraint aggregation and
 sample-wise cross-model semantics remain separate design work in Phases 17–18.
+
+
+### Phase 17: explicit feasibility aggregation
+
+`IndependentFeasibilityAggregator` combines distinct classifier marginal
+probabilities **per candidate** and retains the q dimension. The outer
+`FeasibilityWeightedAcquisition` applies the selected q reduction once,
+avoiding nested reductions when multiple classification constraints exist.
+The product across classifiers is an independence approximation; correlated
+constraints, shared output references, and joint posterior semantics are not
+inferred. Phase 18 audits those assumptions.

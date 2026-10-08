@@ -13,7 +13,10 @@ from botorch.models.model import Model as BoTorchModel
 from botorch.sampling.base import MCSampler
 from torch import Tensor
 
-from robotorchan.acquisition.classification_constraints import FeasibilityWeightedAcquisition
+from robotorchan.acquisition.classification_constraints import (
+    FeasibilityWeightedAcquisition,
+    IndependentFeasibilityAggregator,
+)
 from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.semantics.feasibility import (
@@ -405,10 +408,12 @@ def make_mixed_constrained_qei_acquisition(
         sampler=sampler,
         objective=constrained_objective,
     )
-    for binding in classification:
-        acquisition = make_deterministic_pof_acquisition(
+    if classification:
+        acquisition = FeasibilityWeightedAcquisition(
             acquisition,
-            binding,
+            IndependentFeasibilityAggregator(
+                [binding.representation.probability for binding in classification]
+            ),
             q_reduction=q_reduction,
         )
     return acquisition
@@ -562,10 +567,12 @@ def make_multiple_learned_constrained_qnei_acquisition(
         prune_baseline=prune_baseline,
         cache_root=cache_root,
     )
-    for binding in classification:
-        acquisition = make_deterministic_pof_acquisition(
+    if classification:
+        acquisition = FeasibilityWeightedAcquisition(
             acquisition,
-            binding,
+            IndependentFeasibilityAggregator(
+                [binding.representation.probability for binding in classification]
+            ),
             q_reduction=q_reduction,
         )
     return acquisition

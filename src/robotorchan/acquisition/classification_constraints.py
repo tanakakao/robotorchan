@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
+import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor, nn
 
@@ -103,3 +104,29 @@ class FeasibilityWeightedAcquisition(AcquisitionFunction):
             else:
                 feasibility = feasibility.min(dim=-1).values
         return objective_value * feasibility
+
+
+class IndependentFeasibilityAggregator(nn.Module):
+    """Combine distinct classifier marginal PoFs under explicit independence."""
+
+    def __init__(self, factors: Sequence[nn.Module]) -> None:
+        """Validate independent factors."""
+        super().__init__()
+        if not factors:
+            raise ValueError("At least one feasibility factor is required.")
+        self.factors = nn.ModuleList(factors)
+
+    def forward(self, X: Tensor) -> Tensor:
+        """Return a per-candidate marginal conjunction retaining the q-axis."""
+        q = X.shape[-2]
+        probabilities = []
+        for factor in self.factors:
+            probability = factor(X)
+            if probability.ndim == 0:
+                if q != 1:
+                    raise ValueError("Scalar feasibility is only valid for q=1.")
+                probability = probability.reshape(1)
+            if probability.shape[-1] != q:
+                raise ValueError("Feasibility factors must retain their q dimension.")
+            probabilities.append(probability)
+        return torch.stack(torch.broadcast_tensors(*probabilities), dim=0).prod(dim=0)
