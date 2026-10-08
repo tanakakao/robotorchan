@@ -861,8 +861,7 @@ def make_probability_objective_bridge(
         None,
     )
     supports_samples = (
-        registry_entry is not None
-        and registry_entry.capabilities.supports_probability_samples
+        registry_entry is not None and registry_entry.capabilities.supports_probability_samples
     )
     return ProbabilityObjectiveBridge(
         model=model,
