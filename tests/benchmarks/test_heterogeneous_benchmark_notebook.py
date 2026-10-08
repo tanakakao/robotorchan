@@ -3,7 +3,6 @@
 import json
 from pathlib import Path
 
-
 NOTEBOOK = (
     Path(__file__).resolve().parents[2]
     / "notebooks"
