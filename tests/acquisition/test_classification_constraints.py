@@ -139,8 +139,8 @@ def test_feasibility_weighted_acquisition_rejects_pending_points() -> None:
     else:
         raise AssertionError("Nonempty pending candidates must be rejected")
 
-    assert acquisition.X_pending is None
-    assert objective.X_pending is None
+    assert getattr(acquisition, "X_pending", None) is None
+    assert getattr(objective, "X_pending", None) is None
 
 
 def test_feasibility_weighted_acquisition_clears_pending_points() -> None:
@@ -153,3 +153,17 @@ def test_feasibility_weighted_acquisition_clears_pending_points() -> None:
 
     assert acquisition.X_pending is None
     assert objective.X_pending is None
+
+
+def test_feasibility_weighted_acquisition_rejects_preexisting_pending() -> None:
+    objective = _ObjectiveAcquisition()
+    objective.set_X_pending(torch.tensor([[0.4]], dtype=torch.double))
+    try:
+        FeasibilityWeightedAcquisition(
+            objective,
+            ClassificationProbabilityOfFeasibility(_Classifier()),
+        )
+    except NotImplementedError as error:
+        assert "X_pending" in str(error)
+    else:
+        raise AssertionError("Preexisting pending candidates must be rejected")
