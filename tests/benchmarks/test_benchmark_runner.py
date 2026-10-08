@@ -54,7 +54,7 @@ def test_multiseed_partial_batch_and_histories() -> None:
         )
         assert trajectory.cumulative_cost.shape == (9,)
     repeated = run_benchmark(config, random_candidates, registry=_registry())
-    for first, second in zip(trajectories, repeated):
+    for first, second in zip(trajectories, repeated, strict=True):
         torch.testing.assert_close(first.X, second.X)
 
 
