@@ -460,7 +460,7 @@ support is implied by this adapter alone.
 two or more regression objectives from a **single shared BoTorch model**.
 The existing multi-output bridge applies maximize/minimize directions
 before scalarization. `Y_baseline` must be supplied by the caller as
-an `n x m` tensor of **directed objective values**, aligned with
+an `n x m` floating-point tensor of **directed objective values**, aligned with
 `X_baseline`; `weights` must be finite, nonnegative and nonzero.
 The builder does not estimate `Y_baseline` from the model or sample
 new scalarization weights. Resample weights externally for sequential
