@@ -10,6 +10,11 @@ from robotorchan.benchmarks.constrained_problems import (
     constrained_quadratic,
     register_constrained_problems,
 )
+from robotorchan.benchmarks.mixed_problems import (
+    categorical_switch,
+    mixed_quadratic,
+    register_mixed_problems,
+)
 from robotorchan.benchmarks.multiobjective_problems import (
     biobjective_linear,
     dtlz2,
@@ -61,15 +66,18 @@ __all__ = [
     "benchmark_result_records",
     "biobjective_linear",
     "branin",
+    "categorical_switch",
     "constrained_annulus",
     "constrained_quadratic",
     "dtlz2",
     "get_problem",
     "hartmann6",
     "list_problems",
+    "mixed_quadratic",
     "profile_callable",
     "random_candidates",
     "register_constrained_problems",
+    "register_mixed_problems",
     "register_multiobjective_problems",
     "register_problem",
     "register_standard_problems",
