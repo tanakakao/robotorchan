@@ -1150,3 +1150,101 @@ def test_qlognparego_rejects_invalid_scalarization_inputs() -> None:
             Y_baseline=train_y,
             weights=torch.tensor([-0.5, 1.5], dtype=torch.double),
         )
+
+
+@pytest.mark.parametrize("q_reduction", ["product", "minimum"])
+def test_feasibility_weighted_acquisition_preserves_t_batch_shape(q_reduction: str) -> None:
+    from torch import nn
+
+    class CandidateProbability(nn.Module):
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X[..., 0].clamp(0.0, 1.0)
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    model = SingleTaskGP(train_x, torch.sin(train_x))
+    acquisition = FeasibilityWeightedAcquisition(
+        _ConstantAcquisition(model, 2.0),
+        CandidateProbability(),
+        q_reduction=q_reduction,
+    )
+    X = torch.tensor(
+        [[[[0.5], [0.8]], [[0.4], [0.9]]], [[[0.2], [0.7]], [[0.3], [0.6]]]],
+        dtype=torch.double,
+    )
+    probabilities = X[..., 0]
+    reduced = (
+        probabilities.prod(dim=-1) if q_reduction == "product" else probabilities.min(dim=-1).values
+    )
+    assert acquisition(X).shape == torch.Size([2, 2])
+    assert torch.allclose(acquisition(X), 2.0 * reduced)
+
+
+@pytest.mark.parametrize("bad_shape", ["scalar", "missing_batch", "extra_axis"])
+def test_independent_aggregator_rejects_ambiguous_q_batch_shapes(bad_shape: str) -> None:
+    from torch import nn
+
+    class BadProbability(nn.Module):
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            if bad_shape == "scalar":
+                return X.new_tensor(0.5)
+            if bad_shape == "missing_batch":
+                return X.new_full((X.shape[-2],), 0.5)
+            return X.new_full((*X.shape[:-1], 1), 0.5)
+
+    aggregator = IndependentFeasibilityAggregator([BadProbability()])
+    with pytest.raises(ValueError, match="shape"):
+        aggregator(torch.zeros(2, 3, 1))
+
+
+def test_feasibility_weighted_acquisition_rejects_implicit_broadcast() -> None:
+    from torch import nn
+
+    class MissingBatchProbability(nn.Module):
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X.new_full((X.shape[-2],), 0.5)
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    model = SingleTaskGP(train_x, torch.sin(train_x))
+    acquisition = FeasibilityWeightedAcquisition(
+        _ConstantAcquisition(model, 2.0),
+        MissingBatchProbability(),
+    )
+    with pytest.raises(ValueError, match="shape"):
+        acquisition(torch.zeros(2, 3, 1, dtype=torch.double))
+
+
+def test_feasibility_weighted_acquisition_accepts_native_unbatched_q() -> None:
+    from torch import nn
+
+    class CandidateProbability(nn.Module):
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X[..., 0].clamp(0.0, 1.0)
+
+    class NativeSingletonAcquisition(AcquisitionFunction):
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X.new_ones(1)
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    model = SingleTaskGP(train_x, torch.sin(train_x))
+    acquisition = FeasibilityWeightedAcquisition(
+        NativeSingletonAcquisition(model=model), CandidateProbability()
+    )
+    result = acquisition(torch.tensor([[0.5], [0.8]], dtype=torch.double))
+    assert result.shape == torch.Size([1])
+    assert torch.allclose(result, torch.tensor([0.4], dtype=torch.double))
+
+
+def test_feasibility_weighted_acquisition_accepts_squeezed_singleton_q() -> None:
+    from torch import nn
+
+    class SqueezedProbability(nn.Module):
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X[..., 0].squeeze(-1)
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    model = SingleTaskGP(train_x, torch.sin(train_x))
+    acquisition = FeasibilityWeightedAcquisition(
+        _ConstantAcquisition(model, 2.0), SqueezedProbability()
+    )
+    X = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
+    assert torch.allclose(acquisition(X), torch.tensor([0.5, 1.5], dtype=torch.double))

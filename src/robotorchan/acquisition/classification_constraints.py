@@ -70,6 +70,21 @@ class RobustClassificationProbabilityOfFeasibility(nn.Module):
         return robust[..., self.base.feasible_class]
 
 
+def _normalize_q_batch_probabilities(probability: Tensor, X: Tensor) -> Tensor:
+    """Restore a missing singleton q axis without broadcasting t-batches."""
+    if X.ndim < 2 or X.shape[-2] < 1:
+        raise ValueError("X must have shape batch_shape x q x d with q >= 1.")
+    if X.shape[-2] == 1 and probability.shape == X.shape[:-2]:
+        probability = probability.unsqueeze(-1)
+    if probability.shape != X.shape[:-1]:
+        raise ValueError("Feasibility must have shape X.shape[:-1] (batch_shape x q).")
+    if not torch.isfinite(probability).all():
+        raise ValueError("Feasibility probabilities must be finite.")
+    if ((probability < 0) | (probability > 1)).any():
+        raise ValueError("Feasibility probabilities must be in [0, 1].")
+    return probability
+
+
 class FeasibilityWeightedAcquisition(AcquisitionFunction):
     """Weight an arbitrary objective acquisition by classifier feasibility."""
 
@@ -97,12 +112,16 @@ class FeasibilityWeightedAcquisition(AcquisitionFunction):
         """Return objective acquisition weighted by joint q-batch feasibility."""
         objective_value = self.objective_acquisition(X)
         feasibility = self.probability_of_feasibility(X)
-        q = X.shape[-2]
-        if feasibility.ndim > 0 and feasibility.shape[-1] == q:
-            if self.q_reduction == "product":
-                feasibility = feasibility.prod(dim=-1)
-            else:
-                feasibility = feasibility.min(dim=-1).values
+        feasibility = _normalize_q_batch_probabilities(feasibility, X)
+        expected_batch_shape = X.shape[:-2]
+        if objective_value.shape != expected_batch_shape and not (
+            X.ndim == 2 and objective_value.shape == torch.Size([1])
+        ):
+            raise ValueError("Objective acquisition must return one value per t-batch.")
+        if self.q_reduction == "product":
+            feasibility = feasibility.prod(dim=-1)
+        else:
+            feasibility = feasibility.min(dim=-1).values
         return objective_value * feasibility
 
 
@@ -117,21 +136,9 @@ class IndependentFeasibilityAggregator(nn.Module):
         self.factors = nn.ModuleList(factors)
 
     def forward(self, X: Tensor) -> Tensor:
-        """Return a per-candidate marginal conjunction retaining the q-axis."""
-        q = X.shape[-2]
+        """Return a per-candidate conjunction without collapsing q or t-batches."""
         probabilities = []
         for factor in self.factors:
             probability = factor(X)
-            if probability.ndim == 0:
-                if q != 1:
-                    raise ValueError("Scalar feasibility is only valid for q=1.")
-                probability = probability.reshape(1)
-            if probability.shape[-1] != q:
-                raise ValueError("Feasibility factors must retain their q dimension.")
-            probabilities.append(probability)
-        for probability in probabilities:
-            if not torch.isfinite(probability).all():
-                raise ValueError("Feasibility probabilities must be finite.")
-            if ((probability < 0) | (probability > 1)).any():
-                raise ValueError("Feasibility probabilities must be in [0, 1].")
-        return torch.stack(torch.broadcast_tensors(*probabilities), dim=0).prod(dim=0)
+            probabilities.append(_normalize_q_batch_probabilities(probability, X))
+        return torch.stack(probabilities, dim=0).prod(dim=0)

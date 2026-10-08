@@ -470,3 +470,26 @@ This phase does not combine independently sampled regression and
 classification outputs. `ProbabilityObjective` and feasibility
 constraints remain explicitly unsupported in this builder; the
 Phase 23 probability bridge is not a synthetic joint posterior.
+
+
+### Phase 25: q-batch feasibility semantics
+
+Candidate tensors have shape `batch_shape x q x d` with `q >= 1`.
+Deterministic classifier feasibility factors return `batch_shape x q`.
+For `q=1`, a legacy squeezed `batch_shape` probability is normalized
+by restoring the singleton q axis; other missing t-batch dimensions
+and extra sampling dimensions are rejected rather than broadcast. Independent feasibility
+factors are multiplied per candidate, retaining the q dimension.
+`FeasibilityWeightedAcquisition` then reduces q **once** using either
+`product` (independent candidate feasibility approximation) or
+`minimum` (conservative heuristic), and multiplies the native
+acquisition value of shape `batch_shape` (either scalar `[]` or
+singleton `[1]` is accepted for unbatched `q x d` input). Probability values must be
+finite and in `[0, 1]`. Shape violations raise explicitly rather
+than silently changing acquisition semantics.
+
+This deterministic marginal weighting does **not** represent joint
+classifier posterior samples or correlated feasibility events.
+Native BoTorch MC acquisitions retain their own q-batch and t-batch
+handling; sample-wise residual constraints remain inside native
+BoTorch acquisition evaluation.
