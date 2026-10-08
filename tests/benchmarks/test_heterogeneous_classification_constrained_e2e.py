@@ -63,9 +63,7 @@ def test_classification_constrained_candidate_generation(kind: str, q: int) -> N
     )
     sampler = SobolQMCNormalSampler(sample_shape=torch.Size([16]), seed=808)
     if kind == "qei":
-        objective_semantics = ProblemSemantics(
-            objectives=(RegressionObjective("strength"),)
-        )
+        objective_semantics = ProblemSemantics(objectives=(RegressionObjective("strength"),))
         objective_acquisition = make_qei_acquisition(
             model,
             objective_semantics,
