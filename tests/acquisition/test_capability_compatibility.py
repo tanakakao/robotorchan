@@ -29,6 +29,7 @@ def test_registry_covers_public_acquisition_classes() -> None:
         "make_botorch_objective_bridge",
         "make_classification_feasibility_bridge",
         "make_continuous_constrained_qei_acquisition",
+        "make_continuous_constrained_qnei_acquisition",
         "make_continuous_constraint_bridge",
         "make_deterministic_pof_acquisition",
         "make_mixed_constrained_qei_acquisition",
