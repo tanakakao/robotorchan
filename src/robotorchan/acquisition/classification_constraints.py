@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 
-from botorch.acquisition.acquisition import AcquisitionFunction
 import torch
+from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor, nn
 
 from robotorchan.models.classification.probability import (
