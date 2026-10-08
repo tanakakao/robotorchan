@@ -8,6 +8,10 @@ from dataclasses import dataclass
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import qExpectedImprovement, qNoisyExpectedImprovement
+from botorch.acquisition.multi_objective.objective import (
+    GenericMCMultiOutputObjective,
+    MCMultiOutputObjective,
+)
 from botorch.acquisition.objective import ConstrainedMCObjective, MCAcquisitionObjective
 from botorch.models.model import Model as BoTorchModel
 from botorch.sampling.base import MCSampler
@@ -580,3 +584,58 @@ def make_multiple_learned_constrained_qnei_acquisition(
             q_reduction=q_reduction,
         )
     return acquisition
+
+
+@dataclass(frozen=True, slots=True)
+class BoTorchMultiObjectiveBridge:
+    """One shared BoTorch posterior with directed multi-output MC objectives."""
+
+    model: BoTorchModel
+    objective: MCMultiOutputObjective
+    output_indices: tuple[int, ...]
+
+
+def make_botorch_multiobjective_bridge(
+    model: HeterogeneousModel,
+    bindings: tuple[ObjectiveBinding, ...],
+) -> BoTorchMultiObjectiveBridge:
+    """Adapt multiple regression objectives owned by one BoTorch model entry.
+
+    Cross-entry objectives are deliberately unsupported: heterogeneous model
+    entries do not expose a joint posterior or coupled MC samples.
+    """
+    if len(bindings) < 2:
+        raise ValueError("Multi-objective bridge requires at least two objectives.")
+    if len({binding.output_index for binding in bindings}) != len(bindings):
+        raise ValueError("Multi-objective outputs must be distinct.")
+    if len({binding.entry_index for binding in bindings}) != 1:
+        raise ValueError("Multi-objective bridge requires one shared posterior entry.")
+    for binding in bindings:
+        if not isinstance(binding.objective, RegressionObjective):
+            raise TypeError("Multi-objective bridge supports RegressionObjective only.")
+        if binding.objective.resolve_output(model) != binding.output_index:
+            raise ValueError("Objective binding does not match its resolved output.")
+        if model.output_owner(binding.output_index) != (
+            binding.entry_index,
+            binding.local_output_index,
+        ):
+            raise ValueError("Objective binding does not match its model owner.")
+    entry_model = model[bindings[0].entry_index]
+    if not isinstance(entry_model, BoTorchModel):
+        raise TypeError("Multi-objective bridge requires a BoTorch model.")
+
+    def objective(samples: Tensor, X: Tensor | None = None) -> Tensor:
+        del X
+        return torch.stack(
+            [
+                binding.objective.direction.apply(samples[..., binding.local_output_index])
+                for binding in bindings
+            ],
+            dim=-1,
+        )
+
+    return BoTorchMultiObjectiveBridge(
+        model=entry_model,
+        objective=GenericMCMultiOutputObjective(objective),
+        output_indices=tuple(binding.output_index for binding in bindings),
+    )
