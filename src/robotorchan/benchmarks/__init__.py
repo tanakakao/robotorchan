@@ -22,12 +22,20 @@ from robotorchan.benchmarks.registry import (
     register_problem,
 )
 
+from robotorchan.benchmarks.runner import (
+    BenchmarkTrajectory,
+    random_candidates,
+    run_benchmark,
+    sobol_initial_design,
+)
+
 __all__ = [
     "AcquisitionBenchmarkResult",
     "BenchmarkExperimentConfig",
     "BenchmarkProblem",
     "BenchmarkProblemRegistry",
     "BenchmarkResult",
+    "BenchmarkTrajectory",
     "CountingAcquisition",
     "ProfileResult",
     "benchmark_acquisition",
@@ -38,5 +46,8 @@ __all__ = [
     "get_problem",
     "list_problems",
     "profile_callable",
+    "random_candidates",
     "register_problem",
+    "run_benchmark",
+    "sobol_initial_design",
 ]
