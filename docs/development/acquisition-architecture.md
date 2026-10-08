@@ -493,3 +493,21 @@ classifier posterior samples or correlated feasibility events.
 Native BoTorch MC acquisitions retain their own q-batch and t-batch
 handling; sample-wise residual constraints remain inside native
 BoTorch acquisition evaluation.
+
+
+### Phase 26: X_pending and asynchronous acquisition semantics
+
+Native BoTorch acquisitions without an external classifier-feasibility
+wrapper retain their standard `set_X_pending` behavior. In contrast,
+`FeasibilityWeightedAcquisition` rejects nonempty `X_pending` for
+**all** classifier-weighted families (including qEI, qNEI and qEHVI).
+Passing pending points only to the native objective acquisition while
+evaluating classifier feasibility on the new candidates would mix
+different q-sets and misrepresent joint batch feasibility. Rejection
+happens before either the wrapper or its objective acquisition mutates
+pending state. Clearing pending state with `None` remains supported.
+
+This is an explicit unsupported-capability boundary, not a claim of
+async classification-constrained BO support. A future implementation
+must define pending-inclusive feasibility and consistent batch
+semantics before allowing pending points.
