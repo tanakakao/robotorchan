@@ -21,9 +21,8 @@ def test_regression_objectives_and_binary_labels() -> None:
     assert Y.shape == (3, 2)
     assert labels.shape == (3, 1)
     assert set(labels.flatten().tolist()) == {0.0, 1.0}
-    torch.testing.assert_close(
-        labels, (problem.evaluate_constraints(X) >= 0).to(dtype=X.dtype)
-    )
+    expected = (problem.evaluate_constraints(X) >= 0).to(dtype=X.dtype)
+    torch.testing.assert_close(labels, expected)
     assert problem.directions == ("maximize", "maximize")
     assert problem.n_constraints == 1
 
@@ -31,8 +30,8 @@ def test_regression_objectives_and_binary_labels() -> None:
 def test_pass_boundary_is_feasible() -> None:
     problem = strength_conductivity_pass()
     X = torch.tensor([[0.5, 0.5]], dtype=torch.double)
-    torch.testing.assert_close(problem.evaluate_constraints(X), torch.zeros(1, 1))
-    torch.testing.assert_close(strength_conductivity_pass_labels(X), torch.ones(1, 1))
+    torch.testing.assert_close(problem.evaluate_constraints(X), torch.zeros(1, 1, dtype=torch.double))
+    torch.testing.assert_close(strength_conductivity_pass_labels(X), torch.ones(1, 1, dtype=torch.double))
 
 
 def test_batched_label_shape_and_dtype() -> None:
