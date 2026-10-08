@@ -387,12 +387,8 @@ def make_mixed_constrained_qei_acquisition(
         raise TypeError("Mixed constrained qEI received an unsupported feasibility representation.")
 
     objective_binding = plan.objectives[0]
-    if any(
-        binding.entry_index != objective_binding.entry_index for binding in continuous
-    ):
-        raise ValueError(
-            "Continuous constraints must share the objective's BoTorch posterior."
-        )
+    if any(binding.entry_index != objective_binding.entry_index for binding in continuous):
+        raise ValueError("Continuous constraints must share the objective's BoTorch posterior.")
 
     objective = objective_binding.objective
     if not isinstance(objective, RegressionObjective):
@@ -400,9 +396,7 @@ def make_mixed_constrained_qei_acquisition(
     bridge = make_botorch_objective_bridge(model, objective_binding)
     constrained_objective = ConstrainedMCObjective(
         objective=bridge.objective,
-        constraints=[
-            make_continuous_constraint_bridge(model, binding) for binding in continuous
-        ],
+        constraints=[make_continuous_constraint_bridge(model, binding) for binding in continuous],
         infeasible_cost=infeasible_cost,
     )
     acquisition: AcquisitionFunction = qExpectedImprovement(
