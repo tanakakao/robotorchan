@@ -27,6 +27,12 @@ from robotorchan.benchmarks.runner import (
     run_benchmark,
     sobol_initial_design,
 )
+from robotorchan.benchmarks.standard_problems import (
+    branin,
+    hartmann6,
+    register_standard_problems,
+    sphere3,
+)
 
 __all__ = [
     "AcquisitionBenchmarkResult",
@@ -42,11 +48,15 @@ __all__ = [
     "benchmark_optimizers",
     "benchmark_result_record",
     "benchmark_result_records",
+    "branin",
     "get_problem",
+    "hartmann6",
     "list_problems",
     "profile_callable",
     "random_candidates",
     "register_problem",
+    "register_standard_problems",
     "run_benchmark",
     "sobol_initial_design",
+    "sphere3",
 ]
