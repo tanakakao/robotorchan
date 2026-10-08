@@ -50,12 +50,10 @@ def test_composition_resolves_benchmark_objectives_and_feasibility() -> None:
     plan = resolve_acquisition_composition(model, semantics)
 
     objective_owners = [
-        (item.output_index, item.entry_index, item.local_output_index)
-        for item in plan.objectives
+        (item.output_index, item.entry_index, item.local_output_index) for item in plan.objectives
     ]
     feasibility_owners = [
-        (item.output_index, item.entry_index, item.local_output_index)
-        for item in plan.feasibility
+        (item.output_index, item.entry_index, item.local_output_index) for item in plan.feasibility
     ]
     assert objective_owners == [(0, 0, 0), (1, 0, 1)]
     assert feasibility_owners == [(2, 1, 0)]
