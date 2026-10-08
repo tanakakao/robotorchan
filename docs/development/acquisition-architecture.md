@@ -298,3 +298,15 @@ sampling, and baseline handling to BoTorch's native
 ownership and maximize/minimize direction. `X_baseline` is supplied explicitly
 and must be a nonempty two-dimensional tensor; no observed best value is
 required. Constraint feasibility composition is deferred to Phase 15.
+
+
+### qNEI continuous feasibility semantics
+
+The Phase 15 native qNEI baseline accepts only sample-residual continuous
+constraints sharing the regression objective's BoTorch model entry. The
+`ConstrainedMCObjective` is evaluated on the same outcome samples for both
+candidate and baseline values by native `qNoisyExpectedImprovement`. Baseline
+feasibility must not be replaced by an externally supplied unconstrained
+`best_f`, nor may an independently trained classifier be treated as part of
+this joint posterior. Classification and multi-entry aggregation are deferred
+to later composition phases.
