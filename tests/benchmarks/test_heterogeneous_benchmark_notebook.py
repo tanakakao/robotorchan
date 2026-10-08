@@ -1,7 +1,5 @@
 """Validate the reproducible Phase 19 notebook's static execution contract."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 
