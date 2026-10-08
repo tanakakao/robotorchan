@@ -710,7 +710,8 @@ def test_multiple_learned_constrained_qnei_composes_two_classifiers() -> None:
 
     assert isinstance(acquisition, FeasibilityWeightedAcquisition)
     assert isinstance(acquisition.objective_acquisition, FeasibilityWeightedAcquisition)
-    assert type(acquisition.objective_acquisition.objective_acquisition) is qNoisyExpectedImprovement
+    inner_acquisition = acquisition.objective_acquisition.objective_acquisition
+    assert type(inner_acquisition) is qNoisyExpectedImprovement
     value = acquisition(torch.tensor([[0.25]], dtype=torch.double))
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
@@ -727,6 +728,29 @@ def test_multiple_learned_constrained_qnei_rejects_cross_entry_residual() -> Non
         constraints=(ContinuousConstraint(1, threshold=0.8),),
     )
     with pytest.raises(ValueError, match="share"):
+        make_multiple_learned_constrained_qnei_acquisition(
+            model,
+            semantics,
+            X_baseline=train_x,
+        )
+
+
+def test_multiple_learned_constrained_qnei_rejects_duplicate_classifier_output() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    classifier = BinarySingleTaskGPClassifier(
+        train_x,
+        torch.tensor([0.0, 1.0, 1.0], dtype=torch.double),
+    )
+    model = HeterogeneousModel(regression, classifier)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(
+            ClassificationConstraint(1, feasible_class=1),
+            ClassificationConstraint(1, feasible_class=0),
+        ),
+    )
+    with pytest.raises(ValueError, match="Repeated classification"):
         make_multiple_learned_constrained_qnei_acquisition(
             model,
             semantics,
