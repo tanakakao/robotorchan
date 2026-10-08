@@ -21,10 +21,12 @@ from robotorchan.acquisition.capabilities import (
 )
 from robotorchan.acquisition.composition import (
     AcquisitionCompositionPlan,
+    BoTorchMultiObjectiveBridge,
     BoTorchObjectiveBridge,
     FeasibilityBinding,
     ObjectiveBinding,
     SampleShapeContract,
+    make_botorch_multiobjective_bridge,
     make_botorch_objective_bridge,
     make_classification_feasibility_bridge,
     make_continuous_constrained_qei_acquisition,
@@ -48,6 +50,7 @@ __all__ = [
     "AcquisitionCompositionPlan",
     "AcquisitionPurpose",
     "AcquisitionRegistryEntry",
+    "BoTorchMultiObjectiveBridge",
     "BoTorchObjectiveBridge",
     "BoundaryVariance",
     "ExpectedPredictiveInformationGain",
@@ -64,6 +67,7 @@ __all__ = [
     "SampleShapeContract",
     "Straddle",
     "get_acquisition_registry_entry",
+    "make_botorch_multiobjective_bridge",
     "make_botorch_objective_bridge",
     "make_classification_feasibility_bridge",
     "make_continuous_constrained_qei_acquisition",
