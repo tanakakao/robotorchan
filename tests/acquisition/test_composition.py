@@ -15,6 +15,7 @@ from robotorchan.acquisition.composition import (
     make_continuous_constraint_bridge,
     make_deterministic_pof_acquisition,
     make_mixed_constrained_qei_acquisition,
+    make_multiple_learned_constrained_qnei_acquisition,
     make_qei_acquisition,
     make_qnei_acquisition,
     make_sample_classification_feasibility_bridge,
@@ -677,6 +678,56 @@ def test_continuous_constrained_qnei_rejects_classification_constraint() -> None
     )
     with pytest.raises(TypeError, match="continuous constraints only"):
         make_continuous_constrained_qnei_acquisition(
+            model,
+            semantics,
+            X_baseline=train_x,
+        )
+
+
+def test_multiple_learned_constrained_qnei_composes_two_classifiers() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(train_x, torch.sin(train_x))
+    labels = torch.tensor([0.0, 1.0, 1.0], dtype=torch.double)
+    model = HeterogeneousModel(
+        regression,
+        BinarySingleTaskGPClassifier(train_x, labels),
+        BinarySingleTaskGPClassifier(train_x, labels),
+    )
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(
+            ClassificationConstraint(1, feasible_class=1),
+            ClassificationConstraint(2, feasible_class=1),
+        ),
+    )
+
+    acquisition = make_multiple_learned_constrained_qnei_acquisition(
+        model,
+        semantics,
+        X_baseline=train_x,
+        cache_root=False,
+    )
+
+    assert isinstance(acquisition, FeasibilityWeightedAcquisition)
+    assert isinstance(acquisition.objective_acquisition, FeasibilityWeightedAcquisition)
+    assert type(acquisition.objective_acquisition.objective_acquisition) is qNoisyExpectedImprovement
+    value = acquisition(torch.tensor([[0.25]], dtype=torch.double))
+    assert value.shape == torch.Size([1])
+    assert torch.isfinite(value).all()
+
+
+def test_multiple_learned_constrained_qnei_rejects_cross_entry_residual() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    model = HeterogeneousModel(
+        SingleTaskGP(train_x, torch.sin(train_x)),
+        SingleTaskGP(train_x, torch.cos(train_x)),
+    )
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(ContinuousConstraint(1, threshold=0.8),),
+    )
+    with pytest.raises(ValueError, match="share"):
+        make_multiple_learned_constrained_qnei_acquisition(
             model,
             semantics,
             X_baseline=train_x,
