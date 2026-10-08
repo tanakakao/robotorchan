@@ -109,18 +109,15 @@ class FeasibilityWeightedAcquisition(AcquisitionFunction):
 class IndependentFeasibilityAggregator(nn.Module):
     """Combine distinct classifier marginal PoFs under explicit independence."""
 
-    def __init__(self, factors: Sequence[nn.Module], *, q_reduction: str = "product") -> None:
-        """Validate independent factors and their q-batch reduction."""
+    def __init__(self, factors: Sequence[nn.Module]) -> None:
+        """Validate independent factors."""
         super().__init__()
         if not factors:
             raise ValueError("At least one feasibility factor is required.")
-        if q_reduction not in {"product", "minimum"}:
-            raise ValueError("q_reduction must be 'product' or 'minimum'.")
         self.factors = nn.ModuleList(factors)
-        self.q_reduction = q_reduction
 
     def forward(self, X: Tensor) -> Tensor:
-        """Return independent marginal conjunction for each candidate batch."""
+        """Return a per-candidate marginal conjunction retaining the q-axis."""
         q = X.shape[-2]
         probabilities = []
         for factor in self.factors:
@@ -132,7 +129,4 @@ class IndependentFeasibilityAggregator(nn.Module):
             if probability.shape[-1] != q:
                 raise ValueError("Feasibility factors must retain their q dimension.")
             probabilities.append(probability)
-        combined = torch.stack(torch.broadcast_tensors(*probabilities), dim=0).prod(dim=0)
-        if self.q_reduction == "product":
-            return combined.prod(dim=-1)
-        return combined.min(dim=-1).values
+        return torch.stack(torch.broadcast_tensors(*probabilities), dim=0).prod(dim=0)
