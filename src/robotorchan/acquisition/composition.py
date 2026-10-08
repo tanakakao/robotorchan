@@ -24,10 +24,10 @@ from botorch.acquisition.objective import (
 )
 from botorch.models.model import Model as BoTorchModel
 from botorch.sampling.base import MCSampler
-from botorch.utils.multi_objective.scalarization import get_chebyshev_scalarization
 from botorch.utils.multi_objective.box_decompositions.box_decomposition import (
     BoxDecomposition,
 )
+from botorch.utils.multi_objective.scalarization import get_chebyshev_scalarization
 from torch import Tensor
 
 from robotorchan.acquisition.classification_constraints import (
@@ -902,8 +902,8 @@ def make_qlognparego_acquisition(
         raise ValueError("X_baseline must be a nonempty n x d tensor.")
     if Y_baseline.ndim != 2 or Y_baseline.shape != (X_baseline.shape[0], m):
         raise ValueError("Y_baseline must have shape n x number_of_objectives.")
-    if not torch.isfinite(Y_baseline).all():
-        raise ValueError("Y_baseline must contain finite values.")
+    if not Y_baseline.is_floating_point() or not torch.isfinite(Y_baseline).all():
+        raise ValueError("Y_baseline must contain finite floating-point values.")
     if weights.ndim != 1 or weights.numel() != m:
         raise ValueError("weights must have one value per objective.")
     if not torch.isfinite(weights).all() or (weights < 0).any() or weights.sum() <= 0:
