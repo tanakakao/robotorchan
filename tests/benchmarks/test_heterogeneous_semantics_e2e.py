@@ -50,11 +50,11 @@ def test_semantic_output_resolution_and_feasibility(named: bool) -> None:
     assert semantics.resolve_constraint_outputs(model) == (2,)
     assert semantics.resolve_constraint_owners(model) == ((2, 0),)
 
-    X = torch.tensor([[0.5, 0.5, 0.5]], dtype=torch.double)
+    X = torch.tensor([[0.5, 0.5, 0.5], [0.2, 0.3, 0.4]], dtype=torch.double)
     representations = semantics.feasibility_representations(model)
     assert len(representations) == 1
     probabilities = model.entry_predict_proba(2, X)
-    assert probabilities.shape == (1, 2)
+    assert probabilities.shape == (2, 2)
     assert torch.isfinite(probabilities).all()
 
 
@@ -73,9 +73,7 @@ def test_objective_direction_and_continuous_constraint_residual() -> None:
         direction=ConstraintDirection.GREATER_THAN_OR_EQUAL,
     )
     residual = constraint.to_botorch(model)(samples)
-    torch.testing.assert_close(
-        residual, torch.tensor([[0.3, -0.2]], dtype=torch.double)
-    )
+    torch.testing.assert_close(residual, torch.tensor([[0.3, -0.2]], dtype=torch.double))
 
 
 def test_classification_constraint_probability_matches_classifier() -> None:
@@ -99,9 +97,7 @@ def test_probability_threshold_residual_sign() -> None:
     """Thresholded classification feasibility is threshold minus P(Pass)."""
     model = _heterogeneous_model(named=True)
     X = torch.tensor([[0.5, 0.5, 0.5]], dtype=torch.double)
-    constraint = ClassificationConstraint(
-        "pass", feasible_class=1, probability_threshold=0.6
-    )
+    constraint = ClassificationConstraint("pass", feasible_class=1, probability_threshold=0.6)
     with torch.no_grad():
         probability = model.entry_predict_proba(2, X)[..., 1]
         residual = constraint.to_probability_constraint(model)(X)
