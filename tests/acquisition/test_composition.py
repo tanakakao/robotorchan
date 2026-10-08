@@ -999,3 +999,28 @@ def test_constrained_qehvi_rejects_missing_constraints() -> None:
         make_constrained_qehvi_acquisition(
             model, semantics, ref_point=reference, partitioning=partitioning
         )
+
+
+def test_classification_weighted_qehvi_rejects_pending_points() -> None:
+    from botorch.utils.multi_objective.box_decompositions.non_dominated import (
+        FastNondominatedPartitioning,
+    )
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    regression = SingleTaskGP(train_x, train_y)
+    classifier = BinarySingleTaskGPClassifier(
+        train_x, torch.tensor([0.0, 1.0, 1.0], dtype=torch.double)
+    )
+    model = HeterogeneousModel(regression, classifier)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0), RegressionObjective(1)),
+        constraints=(ClassificationConstraint(2, feasible_class=1),),
+    )
+    ref_point = torch.tensor([-1.0, -1.0], dtype=torch.double)
+    partitioning = FastNondominatedPartitioning(ref_point=ref_point, Y=train_y)
+    acquisition = make_constrained_qehvi_acquisition(
+        model, semantics, ref_point=ref_point, partitioning=partitioning
+    )
+    with pytest.raises(NotImplementedError, match="X_pending"):
+        acquisition.set_X_pending(torch.tensor([[0.5]], dtype=torch.double))
