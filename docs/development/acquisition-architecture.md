@@ -436,3 +436,18 @@ This phase intentionally rejects feasibility constraints. Continuous and
 classification feasibility, including baseline feasibility and pending-point
 semantics, require explicit subsequent integration and must not be approximated
 silently.
+
+
+### Phase 23: ProbabilityObjective composition bridge
+
+`make_probability_objective_bridge(model, binding)` resolves a
+`ProbabilityObjective` to its owning classification output, preserving
+class selection and objective direction. The bridge exposes
+`evaluate(X)` for directed posterior-predictive class probability and
+`sample(X, sample_shape=...)` for epistemic class-probability samples
+**only when the classifier registry declares sampling support**.
+Unsupported classifiers raise rather than falling back to mean
+probabilities. The bridge is not a BoTorch `MCAcquisitionObjective`:
+heterogeneous regression/classification entries do not provide a
+joint posterior or coupled samples. No qEHVI/qNEHVI mixed-objective
+support is implied by this adapter alone.
