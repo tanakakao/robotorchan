@@ -8,7 +8,10 @@ from dataclasses import dataclass
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import qExpectedImprovement, qNoisyExpectedImprovement
-from botorch.acquisition.multi_objective.monte_carlo import qExpectedHypervolumeImprovement
+from botorch.acquisition.multi_objective.monte_carlo import (
+    qExpectedHypervolumeImprovement,
+    qNoisyExpectedHypervolumeImprovement,
+)
 from botorch.acquisition.multi_objective.objective import (
     GenericMCMultiOutputObjective,
     MCMultiOutputObjective,
@@ -763,3 +766,40 @@ def make_constrained_qehvi_acquisition(
             q_reduction=q_reduction,
         )
     return acquisition
+
+
+def make_qnehvi_acquisition(
+    model: HeterogeneousModel,
+    semantics: ProblemSemantics,
+    *,
+    ref_point: Tensor | list[float],
+    X_baseline: Tensor,
+    sampler: MCSampler | None = None,
+    prune_baseline: bool = False,
+    cache_root: bool = True,
+) -> qNoisyExpectedHypervolumeImprovement:
+    """Build native unconstrained qNEHVI using one shared regression posterior.
+
+    The reference point is specified in directed objective space. Baseline
+    observations are input points, not precomputed Pareto objective values.
+    """
+    plan = resolve_acquisition_composition(model, semantics)
+    if plan.feasibility:
+        raise ValueError("Phase 22 qNEHVI supports unconstrained objectives only.")
+    bridge = make_botorch_multiobjective_bridge(model, plan.objectives)
+    if X_baseline.ndim != 2 or X_baseline.shape[0] == 0:
+        raise ValueError("X_baseline must be a nonempty n x d tensor.")
+    reference = torch.as_tensor(ref_point)
+    if reference.ndim != 1 or reference.numel() != len(bridge.output_indices):
+        raise ValueError("ref_point must have one value per objective.")
+    if not torch.isfinite(reference).all():
+        raise ValueError("ref_point must contain finite values.")
+    return qNoisyExpectedHypervolumeImprovement(
+        model=bridge.model,
+        ref_point=reference.tolist(),
+        X_baseline=X_baseline,
+        sampler=sampler,
+        objective=bridge.objective,
+        prune_baseline=prune_baseline,
+        cache_root=cache_root,
+    )
