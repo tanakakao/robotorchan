@@ -36,9 +36,7 @@ def test_binary_classifier_fit_and_predictive_contract(seed: int) -> None:
         latent = model.latent_posterior(validation_X)
         probabilities = model.predict_proba(validation_X)
         classes = model.predict_class(validation_X)
-        probability_samples = model.sample_class_probabilities(
-            validation_X, torch.Size([4])
-        )
+        probability_samples = model.sample_class_probabilities(validation_X, torch.Size([4]))
 
     assert latent.mean.shape == (20, 1)
     assert latent.variance.shape == (20, 1)
@@ -48,9 +46,7 @@ def test_binary_classifier_fit_and_predictive_contract(seed: int) -> None:
     assert probabilities.shape == (20, 2)
     assert torch.isfinite(probabilities).all()
     assert torch.all((probabilities >= 0) & (probabilities <= 1))
-    torch.testing.assert_close(
-        probabilities.sum(dim=-1), torch.ones(20, dtype=torch.double)
-    )
+    torch.testing.assert_close(probabilities.sum(dim=-1), torch.ones(20, dtype=torch.double))
     assert classes.shape == (20,)
     assert set(classes.unique().tolist()).issubset({0, 1})
     assert probability_samples.shape == (4, 20, 2)
@@ -84,6 +80,4 @@ def test_binary_classifier_batch_q_shape() -> None:
     assert latent.mean.shape == (2, 3, 1)
     assert probabilities.shape == (2, 3, 2)
     assert samples.shape == (4, 2, 3, 2)
-    torch.testing.assert_close(
-        probabilities.sum(dim=-1), torch.ones(2, 3, dtype=torch.double)
-    )
+    torch.testing.assert_close(probabilities.sum(dim=-1), torch.ones(2, 3, dtype=torch.double))
