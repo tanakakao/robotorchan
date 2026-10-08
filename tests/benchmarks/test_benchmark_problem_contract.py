@@ -46,7 +46,7 @@ def test_constraint_and_cost_contract() -> None:
     X = torch.tensor([[0.2], [0.7]], dtype=torch.double)
     torch.testing.assert_close(problem.evaluate_constraints(X), X - 0.5)
     torch.testing.assert_close(problem.evaluate_cost(X), X + 1)
-    torch.testing.assert_close(problem.simple_regret(X), torch.tensor(0.0))
+    torch.testing.assert_close(problem.simple_regret(X), torch.tensor(0.0, dtype=torch.double))
     assert torch.isinf(problem.simple_regret(X[:1]))
 
 
