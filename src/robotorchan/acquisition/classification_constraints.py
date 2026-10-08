@@ -97,7 +97,7 @@ class FeasibilityWeightedAcquisition(AcquisitionFunction):
         objective_value = self.objective_acquisition(X)
         feasibility = self.probability_of_feasibility(X)
         q = X.shape[-2]
-        if feasibility.shape[-1] == q:
+        if feasibility.ndim > 0 and feasibility.shape[-1] == q:
             if self.q_reduction == "product":
                 feasibility = feasibility.prod(dim=-1)
             else:
