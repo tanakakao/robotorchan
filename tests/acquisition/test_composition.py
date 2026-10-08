@@ -1284,9 +1284,7 @@ def test_qucb_native_objective_bridge_preserves_regression_direction() -> None:
     semantics = ProblemSemantics(objectives=(RegressionObjective(0),))
     binding = resolve_acquisition_composition(model, semantics).objectives[0]
     bridge = make_botorch_objective_bridge(model, binding)
-    acquisition = qUpperConfidenceBound(
-        model=bridge.model, beta=0.1, objective=bridge.objective
-    )
+    acquisition = qUpperConfidenceBound(model=bridge.model, beta=0.1, objective=bridge.objective)
     X = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
 
     assert acquisition(X).shape == torch.Size([2])
