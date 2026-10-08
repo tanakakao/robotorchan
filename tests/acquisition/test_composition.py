@@ -14,6 +14,7 @@ from robotorchan.acquisition.composition import (
     make_botorch_multiobjective_bridge,
     make_botorch_objective_bridge,
     make_classification_feasibility_bridge,
+    make_constrained_qehvi_acquisition,
     make_continuous_constrained_qei_acquisition,
     make_continuous_constrained_qnei_acquisition,
     make_continuous_constraint_bridge,
@@ -953,3 +954,69 @@ def test_qehvi_rejects_reference_dimension_mismatch() -> None:
             ref_point=torch.tensor([-1.0], dtype=torch.double),
             partitioning=partitioning,
         )
+
+
+def test_constrained_qehvi_uses_native_continuous_constraints() -> None:
+    from botorch.acquisition.multi_objective.monte_carlo import qExpectedHypervolumeImprovement
+    from botorch.utils.multi_objective.box_decompositions.non_dominated import (
+        FastNondominatedPartitioning,
+    )
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x), train_x), dim=-1)
+    model = HeterogeneousModel(SingleTaskGP(train_x, train_y))
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0), RegressionObjective(1)),
+        constraints=(ContinuousConstraint(2, threshold=0.8),),
+    )
+    reference = torch.tensor([-1.0, -1.0], dtype=torch.double)
+    partitioning = FastNondominatedPartitioning(ref_point=reference, Y=train_y[..., :2])
+    acquisition = make_constrained_qehvi_acquisition(
+        model, semantics, ref_point=reference, partitioning=partitioning
+    )
+    assert isinstance(acquisition, qExpectedHypervolumeImprovement)
+    assert len(acquisition.constraints) == 1
+
+
+def test_constrained_qehvi_rejects_missing_constraints() -> None:
+    from botorch.utils.multi_objective.box_decompositions.non_dominated import (
+        FastNondominatedPartitioning,
+    )
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    model = HeterogeneousModel(SingleTaskGP(train_x, train_y))
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0), RegressionObjective(1)),
+    )
+    reference = torch.tensor([-1.0, -1.0], dtype=torch.double)
+    partitioning = FastNondominatedPartitioning(ref_point=reference, Y=train_y)
+    with pytest.raises(ValueError, match="at least one constraint"):
+        make_constrained_qehvi_acquisition(
+            model, semantics, ref_point=reference, partitioning=partitioning
+        )
+
+
+def test_classification_weighted_qehvi_rejects_pending_points() -> None:
+    from botorch.utils.multi_objective.box_decompositions.non_dominated import (
+        FastNondominatedPartitioning,
+    )
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    regression = SingleTaskGP(train_x, train_y)
+    classifier = BinarySingleTaskGPClassifier(
+        train_x, torch.tensor([0.0, 1.0, 1.0], dtype=torch.double)
+    )
+    model = HeterogeneousModel(regression, classifier)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0), RegressionObjective(1)),
+        constraints=(ClassificationConstraint(2, feasible_class=1),),
+    )
+    ref_point = torch.tensor([-1.0, -1.0], dtype=torch.double)
+    partitioning = FastNondominatedPartitioning(ref_point=ref_point, Y=train_y)
+    acquisition = make_constrained_qehvi_acquisition(
+        model, semantics, ref_point=ref_point, partitioning=partitioning
+    )
+    with pytest.raises(NotImplementedError, match="X_pending"):
+        acquisition.set_X_pending(torch.tensor([[0.5]], dtype=torch.double))

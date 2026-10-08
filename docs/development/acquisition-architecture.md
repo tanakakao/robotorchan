@@ -396,3 +396,24 @@ outputs. No partitioning or joint posterior is fabricated.
 This phase is unconstrained: semantic feasibility bindings are rejected.
 Constrained qEHVI belongs to Phase 21. Cross-entry multiobjective models
 and classification probability objectives remain unsupported.
+
+
+### Phase 21: constrained qEHVI
+
+`make_constrained_qehvi_acquisition` retains BoTorch's native qEHVI
+and Phase 19 multi-objective bridge. Same-entry continuous outcome
+constraints are forwarded as sample-wise residuals to native qEHVI
+(`g(samples) <= 0`); separately modeled classification constraints
+weight the acquisition by marginal feasibility probabilities through
+the independent aggregator. These two operations do **not** imply a
+joint regression/classification posterior or correlated feasibility.
+
+The supplied reference point and non-dominated partitioning must use
+the directed objective space. In particular, the partitioning's
+frontier must be consistent with the feasible reference set used for
+constrained hypervolume; this builder does not construct or filter
+that frontier. Repeated classification output constraints are rejected.
+
+Classification-weighted constrained qEHVI explicitly rejects nonempty
+`X_pending` until pending candidates can participate in both the native
+hypervolume computation and the classifier feasibility aggregation.
