@@ -30,8 +30,10 @@ def test_regression_objectives_and_binary_labels() -> None:
 def test_pass_boundary_is_feasible() -> None:
     problem = strength_conductivity_pass()
     X = torch.tensor([[0.5, 0.5]], dtype=torch.double)
-    torch.testing.assert_close(problem.evaluate_constraints(X), torch.zeros(1, 1, dtype=torch.double))
-    torch.testing.assert_close(strength_conductivity_pass_labels(X), torch.ones(1, 1, dtype=torch.double))
+    expected_margin = torch.zeros(1, 1, dtype=torch.double)
+    expected_labels = torch.ones(1, 1, dtype=torch.double)
+    torch.testing.assert_close(problem.evaluate_constraints(X), expected_margin)
+    torch.testing.assert_close(strength_conductivity_pass_labels(X), expected_labels)
 
 
 def test_batched_label_shape_and_dtype() -> None:
