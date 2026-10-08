@@ -99,6 +99,11 @@ class FeasibilityWeightedAcquisition(AcquisitionFunction):
         super().__init__(model=objective_acquisition.model)
         if q_reduction not in {"product", "minimum"}:
             raise ValueError("q_reduction must be 'product' or 'minimum'.")
+        existing_pending = getattr(objective_acquisition, "X_pending", None)
+        if existing_pending is not None and existing_pending.numel() > 0:
+            raise NotImplementedError(
+                "Classification-weighted acquisition does not support nonempty X_pending."
+            )
         self.objective_acquisition = objective_acquisition
         self.probability_of_feasibility = probability_of_feasibility
         self.q_reduction = q_reduction
