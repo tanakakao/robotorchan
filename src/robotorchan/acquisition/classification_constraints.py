@@ -129,4 +129,9 @@ class IndependentFeasibilityAggregator(nn.Module):
             if probability.shape[-1] != q:
                 raise ValueError("Feasibility factors must retain their q dimension.")
             probabilities.append(probability)
+        for probability in probabilities:
+            if not torch.isfinite(probability).all():
+                raise ValueError("Feasibility probabilities must be finite.")
+            if ((probability < 0) | (probability > 1)).any():
+                raise ValueError("Feasibility probabilities must be in [0, 1].")
         return torch.stack(torch.broadcast_tensors(*probabilities), dim=0).prod(dim=0)

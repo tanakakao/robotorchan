@@ -389,6 +389,10 @@ def make_mixed_constrained_qei_acquisition(
     if len(continuous) + len(classification) != len(plan.feasibility):
         raise TypeError("Mixed constrained qEI received an unsupported feasibility representation.")
 
+    classifier_outputs = [binding.output_index for binding in classification]
+    if len(set(classifier_outputs)) != len(classifier_outputs):
+        raise ValueError("Repeated classification output constraints are not independent.")
+
     objective_binding = plan.objectives[0]
     if any(binding.entry_index != objective_binding.entry_index for binding in continuous):
         raise ValueError("Continuous constraints must share the objective's BoTorch posterior.")

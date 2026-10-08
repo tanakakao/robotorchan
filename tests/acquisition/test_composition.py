@@ -806,3 +806,60 @@ def test_independent_feasibility_aggregator_preserves_q_axis() -> None:
 def test_independent_feasibility_aggregator_rejects_empty_factors() -> None:
     with pytest.raises(ValueError, match="At least one"):
         IndependentFeasibilityAggregator([])
+
+
+@pytest.mark.parametrize("invalid", [-0.1, 1.1, float("nan"), float("inf")])
+def test_independent_aggregator_rejects_invalid_probabilities(invalid: float) -> None:
+    from torch import nn
+
+    class InvalidProbability(nn.Module):
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X.new_full(X.shape[:-1], invalid)
+
+    aggregator = IndependentFeasibilityAggregator([InvalidProbability()])
+    with pytest.raises(ValueError, match="Feasibility probabilities"):
+        aggregator(torch.zeros(2, 3, 1))
+
+
+def test_independent_aggregator_does_not_infer_constraint_correlation() -> None:
+    from torch import nn
+
+    class FixedProbability(nn.Module):
+        def __init__(self, value: float) -> None:
+            super().__init__()
+            self.value = value
+
+        def forward(self, X: torch.Tensor) -> torch.Tensor:
+            return X.new_full(X.shape[:-1], self.value)
+
+    X = torch.zeros(2, 1)
+    independent = IndependentFeasibilityAggregator([FixedProbability(0.6), FixedProbability(0.6)])
+    assert torch.allclose(independent(X), torch.tensor([0.36]))
+    # Perfectly correlated identical events would instead have joint PoF 0.6.
+    assert not torch.allclose(independent(X), torch.tensor([0.6]))
+
+
+@pytest.mark.parametrize("feasible_classes", [(1, 1), (0, 1)])
+def test_mixed_qei_rejects_repeated_classifier_output(
+    feasible_classes: tuple[int, int],
+) -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    regression = SingleTaskGP(
+        train_x,
+        torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1),
+    )
+    classifier = BinarySingleTaskGPClassifier(
+        train_x,
+        torch.tensor([0.0, 1.0, 1.0], dtype=torch.double),
+    )
+    model = HeterogeneousModel(regression, classifier)
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0),),
+        constraints=(
+            ContinuousConstraint(1, threshold=0.8),
+            ClassificationConstraint(2, feasible_class=feasible_classes[0]),
+            ClassificationConstraint(2, feasible_class=feasible_classes[1]),
+        ),
+    )
+    with pytest.raises(ValueError, match="Repeated classification output"):
+        make_mixed_constrained_qei_acquisition(model, semantics, best_f=0.5)

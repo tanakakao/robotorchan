@@ -332,3 +332,36 @@ avoiding nested reductions when multiple classification constraints exist.
 The product across classifiers is an independence approximation; correlated
 constraints, shared output references, and joint posterior semantics are not
 inferred. Phase 18 audits those assumptions.
+
+
+### Phase 18: constraint correlation audit
+
+The existing aggregator computes `prod_i P(C_i | X)` for distinct
+classifier outputs. This is a **conditional independence assumption** and
+must not be interpreted as `P(all C_i | X)` without supporting dependence
+information. For example, two events with marginal probability 0.6 yield
+0.36 under independence, but 0.6 when the events are identical. In general,
+for two events with probabilities p and q, the joint probability is bounded
+by `max(0, p + q - 1) <= P(A and B) <= min(p, q)`.
+
+| Representation | Cross-constraint dependence | Supported behavior |
+| --- | --- | --- |
+| Continuous residuals from one BoTorch model entry | Shared posterior samples | Native `ConstrainedMCObjective` evaluates all residuals on the same draws |
+| Distinct classifier marginal PoFs | Unknown | Explicit independent product approximation |
+| Same classifier output repeated | Not independent | Rejected before aggregation |
+| Residual constraints from separate model entries | Unknown | Rejected by qNEI composition |
+| Sample-wise classifier probabilities | Requires explicit coupling | Not silently combined with regression posterior samples |
+| Baseline classifier feasibility for qNEI | Unknown | Not corrected by outer candidate PoF weighting |
+
+A minimum across marginal probabilities is an upper bound on a conjunction,
+not a joint probability estimator. Multiplying marginal factors across
+candidate points also assumes independence across the q-batch; posterior
+correlation within a classifier is not recovered from pointwise
+`predict_proba`. The `minimum` q reduction is a heuristic and must not
+be labeled joint PoF.
+
+The acquisition implementation does **not** currently estimate dependence,
+construct a joint classifier posterior, or provide calibrated lower/upper
+joint-feasibility bounds. Future extensions must require explicit dependence
+representations, sampling alignment and batch-shape contracts rather than
+inferring correlations from heterogeneous model ownership.
