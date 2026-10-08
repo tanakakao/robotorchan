@@ -24,6 +24,7 @@ from robotorchan.acquisition.composition import (
     make_probability_objective_bridge,
     make_qehvi_acquisition,
     make_qei_acquisition,
+    make_qlognparego_acquisition,
     make_qnehvi_acquisition,
     make_qnei_acquisition,
     make_sample_classification_feasibility_bridge,
@@ -1091,3 +1092,61 @@ def test_probability_objective_bridge_rejects_regression_binding() -> None:
     binding = resolve_acquisition_composition(model, semantics).objectives[0]
     with pytest.raises(TypeError, match="ProbabilityObjective"):
         make_probability_objective_bridge(model, binding)
+
+
+def test_qlognparego_composes_native_log_noisy_ei() -> None:
+    from botorch.acquisition.logei import qLogNoisyExpectedImprovement
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    model = HeterogeneousModel(SingleTaskGP(train_x, train_y))
+    semantics = ProblemSemantics(
+        objectives=(
+            RegressionObjective(0),
+            RegressionObjective(1, direction=ObjectiveDirection.MINIMIZE),
+        ),
+    )
+    directed_y = torch.stack((train_y[:, 0], -train_y[:, 1]), dim=-1)
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([8]))
+    acquisition = make_qlognparego_acquisition(
+        model,
+        semantics,
+        X_baseline=train_x,
+        Y_baseline=directed_y,
+        weights=torch.tensor([0.4, 0.6], dtype=torch.double),
+        sampler=sampler,
+    )
+    assert isinstance(acquisition, qLogNoisyExpectedImprovement)
+    assert acquisition.model is model[0]
+    assert acquisition.sampler is sampler
+    assert torch.isfinite(acquisition(torch.tensor([[0.25]], dtype=torch.double))).all()
+
+
+def test_qlognparego_rejects_invalid_scalarization_inputs() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    model = HeterogeneousModel(SingleTaskGP(train_x, train_y))
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0), RegressionObjective(1)),
+    )
+    weights = torch.tensor([0.5, 0.5], dtype=torch.double)
+    with pytest.raises(ValueError, match="Y_baseline"):
+        make_qlognparego_acquisition(
+            model, semantics, X_baseline=train_x, Y_baseline=train_y[:, :1], weights=weights
+        )
+    with pytest.raises(ValueError, match="floating-point"):
+        make_qlognparego_acquisition(
+            model,
+            semantics,
+            X_baseline=train_x,
+            Y_baseline=train_y.to(torch.int64),
+            weights=weights,
+        )
+    with pytest.raises(ValueError, match="weights"):
+        make_qlognparego_acquisition(
+            model,
+            semantics,
+            X_baseline=train_x,
+            Y_baseline=train_y,
+            weights=torch.tensor([-0.5, 1.5], dtype=torch.double),
+        )

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
+from botorch.acquisition.logei import qLogNoisyExpectedImprovement
 from botorch.acquisition.monte_carlo import qExpectedImprovement, qNoisyExpectedImprovement
 from botorch.acquisition.multi_objective.monte_carlo import (
     qExpectedHypervolumeImprovement,
@@ -16,12 +17,17 @@ from botorch.acquisition.multi_objective.objective import (
     GenericMCMultiOutputObjective,
     MCMultiOutputObjective,
 )
-from botorch.acquisition.objective import ConstrainedMCObjective, MCAcquisitionObjective
+from botorch.acquisition.objective import (
+    ConstrainedMCObjective,
+    GenericMCObjective,
+    MCAcquisitionObjective,
+)
 from botorch.models.model import Model as BoTorchModel
 from botorch.sampling.base import MCSampler
 from botorch.utils.multi_objective.box_decompositions.box_decomposition import (
     BoxDecomposition,
 )
+from botorch.utils.multi_objective.scalarization import get_chebyshev_scalarization
 from torch import Tensor
 
 from robotorchan.acquisition.classification_constraints import (
@@ -868,4 +874,54 @@ def make_probability_objective_bridge(
         objective=objective,
         output_index=output_index,
         supports_probability_samples=supports_samples,
+    )
+
+
+def make_qlognparego_acquisition(
+    model: HeterogeneousModel,
+    semantics: ProblemSemantics,
+    *,
+    X_baseline: Tensor,
+    Y_baseline: Tensor,
+    weights: Tensor,
+    sampler: MCSampler | None = None,
+    prune_baseline: bool = False,
+    cache_root: bool = True,
+) -> qLogNoisyExpectedImprovement:
+    """Build native qLogNEI with directed Chebyshev scalarization.
+
+    Y_baseline and weights are in directed objective space. The caller
+    controls the scalarization weights; no implicit resampling occurs.
+    """
+    plan = resolve_acquisition_composition(model, semantics)
+    if plan.feasibility:
+        raise ValueError("Phase 24 qLogNParEGO supports unconstrained objectives only.")
+    bridge = make_botorch_multiobjective_bridge(model, plan.objectives)
+    m = len(bridge.output_indices)
+    if X_baseline.ndim != 2 or X_baseline.shape[0] == 0:
+        raise ValueError("X_baseline must be a nonempty n x d tensor.")
+    if Y_baseline.ndim != 2 or Y_baseline.shape != (X_baseline.shape[0], m):
+        raise ValueError("Y_baseline must have shape n x number_of_objectives.")
+    if not Y_baseline.is_floating_point() or not torch.isfinite(Y_baseline).all():
+        raise ValueError("Y_baseline must contain finite floating-point values.")
+    if weights.ndim != 1 or weights.numel() != m:
+        raise ValueError("weights must have one value per objective.")
+    if not torch.isfinite(weights).all() or (weights < 0).any() or weights.sum() <= 0:
+        raise ValueError("weights must be finite, nonnegative, and not all zero.")
+    scalarization = get_chebyshev_scalarization(
+        weights=weights.to(dtype=Y_baseline.dtype, device=Y_baseline.device),
+        Y=Y_baseline,
+    )
+
+    def scalarized_objective(samples: Tensor, X: Tensor | None = None) -> Tensor:
+        directed = bridge.objective(samples, X=X)
+        return scalarization(directed)
+
+    return qLogNoisyExpectedImprovement(
+        model=bridge.model,
+        X_baseline=X_baseline,
+        sampler=sampler,
+        objective=GenericMCObjective(scalarized_objective),
+        prune_baseline=prune_baseline,
+        cache_root=cache_root,
     )
