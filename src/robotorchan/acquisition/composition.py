@@ -36,7 +36,11 @@ from robotorchan.semantics.feasibility import (
     SampleProbabilityOfFeasibility,
     SampleResidualFeasibility,
 )
-from robotorchan.semantics.objectives import RegressionObjective, SemanticObjective
+from robotorchan.semantics.objectives import (
+    ProbabilityObjective,
+    RegressionObjective,
+    SemanticObjective,
+)
 from robotorchan.semantics.probability import ClassificationProbabilityOfFeasibility
 from robotorchan.semantics.problem import ProblemSemantics
 
@@ -802,4 +806,66 @@ def make_qnehvi_acquisition(
         objective=bridge.objective,
         prune_baseline=prune_baseline,
         cache_root=cache_root,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class ProbabilityObjectiveBridge:
+    """Directed classification probability objective with explicit sample capability."""
+
+    model: HeterogeneousModel
+    objective: ProbabilityObjective
+    output_index: int
+    supports_probability_samples: bool
+
+    def evaluate(self, X: Tensor, **kwargs: object) -> Tensor:
+        """Evaluate posterior-predictive class probability, without MC sampling."""
+        return self.objective.evaluate(self.model, X, **kwargs)
+
+    def sample(
+        self,
+        X: Tensor,
+        *,
+        sample_shape: torch.Size,
+        **kwargs: object,
+    ) -> Tensor:
+        """Sample epistemic class probabilities only for capable classifiers."""
+        if not self.supports_probability_samples:
+            raise TypeError("Classifier does not support epistemic probability samples.")
+        return self.objective.sample(self.model, X, sample_shape=sample_shape, **kwargs)
+
+
+def make_probability_objective_bridge(
+    model: HeterogeneousModel,
+    binding: ObjectiveBinding,
+) -> ProbabilityObjectiveBridge:
+    """Resolve one classification objective without inventing a joint posterior."""
+    objective = binding.objective
+    if not isinstance(objective, ProbabilityObjective):
+        raise TypeError("Probability objective bridge requires ProbabilityObjective.")
+    output_index = objective.resolve_output(model)
+    entry_index, local_output_index = model.output_owner(output_index)
+    if (
+        output_index != binding.output_index
+        or entry_index != binding.entry_index
+        or local_output_index != binding.local_output_index
+    ):
+        raise ValueError("ObjectiveBinding does not match the current heterogeneous model.")
+    classifier = model[entry_index]
+    registry_entry = next(
+        (
+            entry
+            for entry in CLASSIFICATION_MODEL_REGISTRY.values()
+            if isinstance(classifier, entry.model_class)
+        ),
+        None,
+    )
+    supports_samples = (
+        registry_entry is not None and registry_entry.capabilities.supports_probability_samples
+    )
+    return ProbabilityObjectiveBridge(
+        model=model,
+        objective=objective,
+        output_index=output_index,
+        supports_probability_samples=supports_samples,
     )

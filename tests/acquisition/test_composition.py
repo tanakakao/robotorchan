@@ -21,6 +21,7 @@ from robotorchan.acquisition.composition import (
     make_deterministic_pof_acquisition,
     make_mixed_constrained_qei_acquisition,
     make_multiple_learned_constrained_qnei_acquisition,
+    make_probability_objective_bridge,
     make_qehvi_acquisition,
     make_qei_acquisition,
     make_qnehvi_acquisition,
@@ -42,6 +43,7 @@ from robotorchan.semantics import (
     ContinuousConstraint,
     FeasibilityRepresentationKind,
     ObjectiveDirection,
+    ProbabilityObjective,
     ProblemSemantics,
     RegressionObjective,
 )
@@ -1063,3 +1065,29 @@ def test_qnehvi_rejects_invalid_baseline_and_reference() -> None:
         make_qnehvi_acquisition(model, semantics, ref_point=[-1.0, -1.0], X_baseline=train_x[:0])
     with pytest.raises(ValueError, match="one value per objective"):
         make_qnehvi_acquisition(model, semantics, ref_point=[-1.0], X_baseline=train_x)
+
+
+def test_probability_objective_bridge_evaluates_classification_probability() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    labels = torch.tensor([0.0, 1.0, 1.0], dtype=torch.double)
+    model = HeterogeneousModel(BinarySingleTaskGPClassifier(train_x, labels))
+    objective = ProbabilityObjective(0, class_index=1)
+    semantics = ProblemSemantics(objectives=(objective,))
+    binding = resolve_acquisition_composition(model, semantics).objectives[0]
+    bridge = make_probability_objective_bridge(model, binding)
+    X = torch.tensor([[0.25]], dtype=torch.double)
+    assert bridge.output_index == 0
+    assert torch.allclose(bridge.evaluate(X), objective.evaluate(model, X))
+    assert bridge.supports_probability_samples
+    samples = bridge.sample(X, sample_shape=torch.Size([4]))
+    assert samples.shape == torch.Size([4, 1])
+    assert torch.isfinite(samples).all()
+
+
+def test_probability_objective_bridge_rejects_regression_binding() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    model = HeterogeneousModel(SingleTaskGP(train_x, torch.sin(train_x)))
+    semantics = ProblemSemantics(objectives=(RegressionObjective(0),))
+    binding = resolve_acquisition_composition(model, semantics).objectives[0]
+    with pytest.raises(TypeError, match="ProbabilityObjective"):
+        make_probability_objective_bridge(model, binding)
