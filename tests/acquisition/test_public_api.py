@@ -32,7 +32,6 @@ def test_acquisition_public_api_is_intentionally_small() -> None:
         "make_continuous_constrained_qei_acquisition",
         "make_continuous_constrained_qnei_acquisition",
         "make_continuous_constraint_bridge",
-        "make_constrained_qehvi_acquisition",
         "make_deterministic_pof_acquisition",
         "make_mixed_constrained_qei_acquisition",
         "make_multiple_learned_constrained_qnei_acquisition",
