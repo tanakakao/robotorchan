@@ -775,7 +775,7 @@ def test_multiple_learned_qnei_rejects_repeated_classifier_output(
             for feasible_class in feasible_classes
         ),
     )
-    with pytest.raises(ValueError, match="Repeated classifier output"):
+    with pytest.raises(ValueError, match="Repeated classification output"):
         make_multiple_learned_constrained_qnei_acquisition(
             model,
             semantics,
