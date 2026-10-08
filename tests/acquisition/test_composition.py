@@ -11,6 +11,7 @@ from robotorchan.acquisition.classification_constraints import (
 )
 from robotorchan.acquisition.composition import (
     SampleShapeContract,
+    make_botorch_multiobjective_bridge,
     make_botorch_objective_bridge,
     make_classification_feasibility_bridge,
     make_continuous_constrained_qei_acquisition,
@@ -863,3 +864,39 @@ def test_mixed_qei_rejects_repeated_classifier_output(
     )
     with pytest.raises(ValueError, match="Repeated classification output"):
         make_mixed_constrained_qei_acquisition(model, semantics, best_f=0.5)
+
+
+def test_multiobjective_bridge_directs_shared_posterior_outputs() -> None:
+    from robotorchan.semantics.direction import ObjectiveDirection
+
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    train_y = torch.cat((torch.sin(train_x), torch.cos(train_x)), dim=-1)
+    model = HeterogeneousModel(SingleTaskGP(train_x, train_y))
+    semantics = ProblemSemantics(
+        objectives=(
+            RegressionObjective(0),
+            RegressionObjective(1, direction=ObjectiveDirection.MINIMIZE),
+        ),
+    )
+    plan = resolve_acquisition_composition(model, semantics)
+    bridge = make_botorch_multiobjective_bridge(model, plan.objectives)
+    samples = torch.tensor([[[2.0, 3.0]]], dtype=torch.double)
+    values = bridge.objective(samples)
+    assert bridge.model is model[0]
+    assert bridge.output_indices == (0, 1)
+    assert values.shape == torch.Size([1, 1, 2])
+    assert torch.allclose(values, torch.tensor([[[2.0, -3.0]]], dtype=torch.double))
+
+
+def test_multiobjective_bridge_rejects_cross_entry_posterior() -> None:
+    train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    model = HeterogeneousModel(
+        SingleTaskGP(train_x, torch.sin(train_x)),
+        SingleTaskGP(train_x, torch.cos(train_x)),
+    )
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective(0), RegressionObjective(1)),
+    )
+    plan = resolve_acquisition_composition(model, semantics)
+    with pytest.raises(ValueError, match="shared posterior"):
+        make_botorch_multiobjective_bridge(model, plan.objectives)
