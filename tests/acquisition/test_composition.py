@@ -23,8 +23,8 @@ from robotorchan.acquisition.composition import (
     make_multiple_learned_constrained_qnei_acquisition,
     make_qehvi_acquisition,
     make_qei_acquisition,
-    make_qnei_acquisition,
     make_qnehvi_acquisition,
+    make_qnei_acquisition,
     make_sample_classification_feasibility_bridge,
     resolve_acquisition_composition,
 )
