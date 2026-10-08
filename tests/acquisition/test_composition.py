@@ -1301,3 +1301,15 @@ def test_qkg_registry_requires_fantasization_and_one_shot_optimization() -> None
     assert not qucb.capabilities.one_shot
     assert qkg.capabilities.requires_fantasize
     assert qkg.capabilities.one_shot
+
+
+def test_bo_and_active_learning_registry_purposes_remain_distinct() -> None:
+    from robotorchan.acquisition.capabilities import AcquisitionPurpose
+    from robotorchan.acquisition.registry import get_acquisition_registry_entry
+
+    bo = get_acquisition_registry_entry("qUpperConfidenceBound")
+    al = get_acquisition_registry_entry("PredictiveEntropy")
+
+    assert bo.capabilities.purpose is AcquisitionPurpose.BAYESIAN_OPTIMIZATION
+    assert al.capabilities.purpose is AcquisitionPurpose.ACTIVE_LEARNING
+    assert bo.capabilities.purpose is not al.capabilities.purpose
