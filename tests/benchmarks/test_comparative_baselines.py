@@ -8,7 +8,8 @@ from robotorchan.benchmarks.comparative_baselines import (
     sobol_candidates,
 )
 from robotorchan.benchmarks.comparative_matrix import ComparativeExperimentCell
-from robotorchan.benchmarks.config import BenchmarkExperimentConfig\nfrom robotorchan.benchmarks.standard_problems import branin
+from robotorchan.benchmarks.config import BenchmarkExperimentConfig
+from robotorchan.benchmarks.standard_problems import branin
 
 
 def _cell(strategy: str, problem: str = "branin") -> ComparativeExperimentCell:
