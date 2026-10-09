@@ -26,7 +26,6 @@ _HARTMANN_P = (
 
 
 def _ackley(X: Tensor) -> Tensor:
-    d = X.shape[-1]
     squared_mean = X.square().mean(dim=-1)
     cosine_mean = torch.cos(2.0 * math.pi * X).mean(dim=-1)
     value = -20.0 * torch.exp(-0.2 * torch.sqrt(squared_mean))
