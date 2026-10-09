@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import torch
 from torch import Tensor
 
 from robotorchan.benchmarks.comparative_baselines import run_comparative_baseline
@@ -32,8 +33,6 @@ def run_multiobjective_baseline(cell: ComparativeExperimentCell) -> Multiobjecti
     problem = branin_currin()
     initial = cell.config.initial_points
     curves = [hypervolume_curve(problem, run)[initial - 1 :] for run in trajectories]
-    import torch
-
     return MultiobjectiveBaselineResult(
         trajectories=trajectories,
         evaluations=torch.arange(cell.config.evaluation_budget + 1, dtype=torch.long),
