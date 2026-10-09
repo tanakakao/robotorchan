@@ -41,9 +41,7 @@ def test_qnei_smoke_completes_budget_and_respects_bounds(problem: str) -> None:
 def test_qnei_uses_paired_initial_design(problem: str) -> None:
     trajectory = run_comparative_qnei(_cell(problem), num_restarts=1, raw_samples=8)[0]
     factory = branin if problem == "branin" else hartmann6
-    expected = sobol_initial_design(
-        factory(), 4, 0, dtype=torch.double, device=torch.device("cpu")
-    )
+    expected = sobol_initial_design(factory(), 4, 0, dtype=torch.double, device=torch.device("cpu"))
     torch.testing.assert_close(trajectory.X[:4], expected)
 
 
