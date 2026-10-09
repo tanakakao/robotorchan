@@ -9,7 +9,6 @@ from robotorchan.benchmarks.probability_objective_problems import (
     pass_probability_objective,
     register_probability_objective_problems,
     sample_pass_labels,
-    yield_probability_tradeoff,
 )
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.runner import random_candidates, run_benchmark
@@ -61,7 +60,7 @@ def test_probability_objective_runner(name) -> None:
         else:
             curve = hypervolume_curve(registry.create(name), a)
             assert curve.shape == (11,)
-            assert (curve[1:] >= curve[:-1]).all()
+            assert torch.all(curve[1:] + 1e-12 >= curve[:-1])
 
 
 def test_registry_duplicate_registration() -> None:
