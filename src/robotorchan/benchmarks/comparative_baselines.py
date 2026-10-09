@@ -6,12 +6,17 @@ import torch
 from torch import Tensor
 
 from robotorchan.benchmarks.comparative_matrix import ComparativeExperimentCell
+from robotorchan.benchmarks.heterogeneous_problems import register_heterogeneous_problems
+from robotorchan.benchmarks.multiobjective_problems import register_multiobjective_problems
 from robotorchan.benchmarks.problem import BenchmarkProblem
+from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
+from robotorchan.benchmarks.regression_binary_problems import register_regression_binary_problems
 from robotorchan.benchmarks.runner import (
     BenchmarkTrajectory,
     random_candidates,
     run_benchmark,
 )
+from robotorchan.benchmarks.standard_problems import register_standard_problems
 
 
 def sobol_candidates(
@@ -28,7 +33,7 @@ def sobol_candidates(
     engine = torch.quasirandom.SobolEngine(
         dimension=problem.dimension,
         scramble=True,
-        seed=generator.initial_seed() + 1,
+        seed=(generator.initial_seed() ^ 0x5A17C3E9) % (2**32),
     )
     engine.fast_forward(X.shape[0] - initial_points)
     unit = engine.draw(q).to(dtype=X.dtype, device=X.device)
@@ -45,8 +50,13 @@ def run_comparative_baseline(
 ) -> tuple[BenchmarkTrajectory, ...]:
     """Execute a validated baseline cell with paired initial designs."""
     config = cell.config
+    registry = BenchmarkProblemRegistry()
+    register_heterogeneous_problems(registry)
+    register_multiobjective_problems(registry)
+    register_regression_binary_problems(registry)
+    register_standard_problems(registry)
     if config.strategy == "random":
-        return run_benchmark(config, random_candidates)
+        return run_benchmark(config, random_candidates, registry=registry)
     if config.strategy != "sobol":
         raise ValueError("Only Random and Sobol are supported by this runner.")
 
@@ -66,4 +76,4 @@ def run_comparative_baseline(
             initial_points=config.initial_points,
         )
 
-    return run_benchmark(config, candidate_generator)
+    return run_benchmark(config, candidate_generator, registry=registry)
