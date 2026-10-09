@@ -44,6 +44,7 @@ from robotorchan.benchmarks.mixed_problems import (
 )
 from robotorchan.benchmarks.multiobjective_problems import (
     biobjective_linear,
+    branin_currin,
     dtlz2,
     register_multiobjective_problems,
     zdt1,
@@ -105,6 +106,7 @@ __all__ = [
     "benchmark_result_record",
     "benchmark_result_records",
     "biobjective_linear",
+    "branin_currin",
     "botorch_gp_candidates",
     "branin",
     "categorical_switch",
