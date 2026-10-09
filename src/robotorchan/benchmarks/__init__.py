@@ -69,18 +69,18 @@ from robotorchan.benchmarks.multiobjective_heterogeneous_problems import (
     strength_conductivity_pass_tradeoff,
     strength_conductivity_two_pass,
 )
-from robotorchan.benchmarks.multiple_learned_constraints import (
-    binary_constraint_labels,
-    register_multiple_learned_constraint_problems,
-    yield_binary_continuous_constraints,
-    yield_two_binary_constraints,
-)
 from robotorchan.benchmarks.multiobjective_problems import (
     biobjective_linear,
     branin_currin,
     dtlz2,
     register_multiobjective_problems,
     zdt1,
+)
+from robotorchan.benchmarks.multiple_learned_constraints import (
+    binary_constraint_labels,
+    register_multiple_learned_constraint_problems,
+    yield_binary_continuous_constraints,
+    yield_two_binary_constraints,
 )
 from robotorchan.benchmarks.noisy_problems import (
     heteroscedastic_quadratic,
