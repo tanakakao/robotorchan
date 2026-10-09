@@ -14,9 +14,7 @@ def test_summary_mean_std_and_confidence_interval() -> None:
     summary = summarize_curves(curves)
     assert summary.seeds == (3, 7)
     torch.testing.assert_close(summary.mean, torch.tensor([1.0, 3.0], dtype=torch.double))
-    torch.testing.assert_close(
-        summary.std, torch.tensor([2.0**0.5, 2.0**0.5], dtype=torch.double)
-    )
+    torch.testing.assert_close(summary.std, torch.tensor([2.0**0.5, 2.0**0.5], dtype=torch.double))
     assert (summary.lower < summary.mean).all()
     assert (summary.upper > summary.mean).all()
 
@@ -32,9 +30,7 @@ def test_paired_differences_preserve_seed_alignment() -> None:
     second = {1: torch.tensor([1.0, 2.0]), 5: torch.tensor([2.0, 4.0])}
     comparison = compare_paired_curves(first, second)
     assert comparison.seeds == (1, 5)
-    torch.testing.assert_close(
-        comparison.difference.mean, torch.tensor([1.5, 1.0])
-    )
+    torch.testing.assert_close(comparison.difference.mean, torch.tensor([1.5, 1.0]))
 
 
 @pytest.mark.parametrize(
