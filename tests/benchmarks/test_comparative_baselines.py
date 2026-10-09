@@ -57,7 +57,6 @@ def test_baseline_runner_rejects_bo_strategy() -> None:
         run_comparative_baseline(cell)
 
 
-
 def test_sobol_sequence_is_independent_of_batch_partition() -> None:
     problem = branin()
     X = torch.zeros((4, problem.dimension), dtype=torch.double)
@@ -66,9 +65,7 @@ def test_sobol_sequence_is_independent_of_batch_partition() -> None:
     combined = sobol_candidates(problem, X, Y, 5, generator, initial_points=4)
     first = sobol_candidates(problem, X, Y, 3, generator, initial_points=4)
     extended_X = torch.cat((X, first))
-    second = sobol_candidates(
-        problem, extended_X, Y, 2, generator, initial_points=4
-    )
+    second = sobol_candidates(problem, extended_X, Y, 2, generator, initial_points=4)
     torch.testing.assert_close(combined, torch.cat((first, second)))
 
 
@@ -76,9 +73,7 @@ def test_sobol_candidate_stream_does_not_match_next_run_initial_design() -> None
     from robotorchan.benchmarks.runner import sobol_initial_design
 
     problem = branin()
-    X = sobol_initial_design(
-        problem, 4, 0, dtype=torch.double, device=torch.device("cpu")
-    )
+    X = sobol_initial_design(problem, 4, 0, dtype=torch.double, device=torch.device("cpu"))
     Y = torch.zeros((4, 1), dtype=torch.double)
     candidate = sobol_candidates(
         problem, X, Y, 4, torch.Generator().manual_seed(0), initial_points=4
