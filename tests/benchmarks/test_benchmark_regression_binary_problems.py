@@ -5,12 +5,12 @@ import torch
 
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.metrics import cumulative_feasibility_rate, simple_regret_curve
+from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.regression_binary_problems import (
     register_regression_binary_problems,
     strength_pass,
     strength_pass_labels,
 )
-from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.runner import random_candidates, run_benchmark
 
 
