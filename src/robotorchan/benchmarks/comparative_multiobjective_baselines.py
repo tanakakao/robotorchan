@@ -32,9 +32,19 @@ def run_multiobjective_baseline(cell: ComparativeExperimentCell) -> Multiobjecti
     trajectories = run_comparative_baseline(cell)
     problem = branin_currin()
     initial = cell.config.initial_points
-    curves = [hypervolume_curve(problem, run)[initial - 1 :] for run in trajectories]
+    budget = cell.config.evaluation_budget
+    q = cell.config.q
+    checkpoints = [0, *range(q, budget + 1, q)]
+    if checkpoints[-1] != budget:
+        checkpoints.append(budget)
+    curves = [
+        hypervolume_curve(problem, run)[
+            torch.tensor([initial + count - 1 for count in checkpoints], dtype=torch.long)
+        ]
+        for run in trajectories
+    ]
     return MultiobjectiveBaselineResult(
         trajectories=trajectories,
-        evaluations=torch.arange(cell.config.evaluation_budget + 1, dtype=torch.long),
+        evaluations=torch.tensor(checkpoints, dtype=torch.long),
         hypervolume=torch.stack(curves),
     )
