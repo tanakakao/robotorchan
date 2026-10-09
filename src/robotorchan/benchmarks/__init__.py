@@ -94,6 +94,11 @@ from robotorchan.benchmarks.persistence import (
 )
 from robotorchan.benchmarks.problem import BenchmarkProblem
 from robotorchan.benchmarks.profiling import ProfileResult, profile_callable
+from robotorchan.benchmarks.regression_binary_problems import (
+    register_regression_binary_problems,
+    strength_pass,
+    strength_pass_labels,
+)
 from robotorchan.benchmarks.registry import (
     BenchmarkProblemRegistry,
     get_problem,
@@ -175,6 +180,7 @@ __all__ = [
     "register_multiobjective_problems",
     "register_noisy_problems",
     "register_problem",
+    "register_regression_binary_problems",
     "register_standard_problems",
     "rosenbrock2",
     "rotated_subspace_40",
@@ -188,6 +194,8 @@ __all__ = [
     "sphere3",
     "strength_conductivity_pass",
     "strength_conductivity_pass_labels",
+    "strength_pass",
+    "strength_pass_labels",
     "summarize_curves",
     "thermal_management",
     "trajectory_from_record",
