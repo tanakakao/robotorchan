@@ -9,6 +9,10 @@ from robotorchan.benchmarks.async_runner import (
     AsyncEvaluation,
     run_async_benchmark,
 )
+from robotorchan.benchmarks.botorch_strategy import (
+    botorch_gp_candidates,
+    make_botorch_gp_strategy,
+)
 from robotorchan.benchmarks.comparison import (
     CurveSummary,
     PairedCurveComparison,
@@ -98,6 +102,7 @@ __all__ = [
     "benchmark_result_record",
     "benchmark_result_records",
     "biobjective_linear",
+    "botorch_gp_candidates",
     "branin",
     "categorical_switch",
     "compare_paired_curves",
@@ -112,6 +117,7 @@ __all__ = [
     "hypervolume_curve",
     "list_problems",
     "load_trajectory",
+    "make_botorch_gp_strategy",
     "mixed_quadratic",
     "profile_callable",
     "random_candidates",
