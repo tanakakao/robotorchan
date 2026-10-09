@@ -99,6 +99,12 @@ from robotorchan.benchmarks.persistence import (
     trajectory_from_record,
     trajectory_to_record,
 )
+from robotorchan.benchmarks.probability_objective_problems import (
+    pass_probability_objective,
+    register_probability_objective_problems,
+    sample_pass_labels,
+    yield_probability_tradeoff,
+)
 from robotorchan.benchmarks.problem import BenchmarkProblem
 from robotorchan.benchmarks.profiling import ProfileResult, profile_callable
 from robotorchan.benchmarks.registry import (
@@ -178,6 +184,7 @@ __all__ = [
     "multiobjective_pass_labels",
     "multiobjective_two_labels",
     "noisy_quadratic",
+    "pass_probability_objective",
     "profile_callable",
     "random_candidates",
     "register_constrained_problems",
@@ -189,6 +196,7 @@ __all__ = [
     "register_multiobjective_heterogeneous_problems",
     "register_multiobjective_problems",
     "register_noisy_problems",
+    "register_probability_objective_problems",
     "register_problem",
     "register_regression_binary_problems",
     "register_standard_problems",
@@ -197,6 +205,7 @@ __all__ = [
     "run_async_benchmark",
     "run_benchmark",
     "run_parallel_comparison",
+    "sample_pass_labels",
     "save_trajectory",
     "simple_regret_curve",
     "sobol_initial_design",
@@ -212,5 +221,6 @@ __all__ = [
     "thermal_management",
     "trajectory_from_record",
     "trajectory_to_record",
+    "yield_probability_tradeoff",
     "zdt1",
 ]
