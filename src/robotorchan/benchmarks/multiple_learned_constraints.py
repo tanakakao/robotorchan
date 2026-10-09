@@ -49,7 +49,7 @@ def yield_two_binary_constraints() -> BenchmarkProblem:
         variable_types=("continuous", "continuous"),
         constraints=_binary_constraints,
         n_constraints=2,
-        optimal_value=torch.tensor([0.84], dtype=torch.double),
+        optimal_value=torch.tensor([0.8144], dtype=torch.double),
     )
 
 
@@ -63,7 +63,7 @@ def yield_binary_continuous_constraints() -> BenchmarkProblem:
         variable_types=("continuous", "continuous"),
         constraints=_mixed_constraints,
         n_constraints=2,
-        optimal_value=torch.tensor([0.928], dtype=torch.double),
+        optimal_value=torch.tensor([1.0 - 0.64 * 0.16 / 1.16], dtype=torch.double),
     )
 
 
