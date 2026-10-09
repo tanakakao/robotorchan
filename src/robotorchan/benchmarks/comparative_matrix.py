@@ -22,7 +22,14 @@ _METHODS = {
     "strength_pass": ("random", "sobol", "qEI", "qNEI"),
     "strength_conductivity_pass": ("random", "sobol", "qEHVI", "qNEHVI"),
 }
-_BLOCKED = frozenset(("strength_pass", "strength_conductivity_pass"))
+_BLOCKED = frozenset(
+    {
+        ("strength_pass", "qEI"),
+        ("strength_pass", "qNEI"),
+        ("strength_conductivity_pass", "qEHVI"),
+        ("strength_conductivity_pass", "qNEHVI"),
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -41,7 +48,7 @@ class ComparativeExperimentCell:
             raise ValueError(f"Problem is not eligible: {config.problem}")
         if config.strategy not in _METHODS[config.problem]:
             raise ValueError("Strategy is not applicable to this problem.")
-        if config.problem in _BLOCKED:
+        if (config.problem, config.strategy) in _BLOCKED:
             raise ValueError("Classification label history is not yet supported.")
         if config.seeds != tuple(range(count)):
             raise ValueError("Comparison seeds must match the tier.")
