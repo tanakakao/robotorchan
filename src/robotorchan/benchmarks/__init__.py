@@ -94,16 +94,16 @@ from robotorchan.benchmarks.persistence import (
 )
 from robotorchan.benchmarks.problem import BenchmarkProblem
 from robotorchan.benchmarks.profiling import ProfileResult, profile_callable
-from robotorchan.benchmarks.regression_binary_problems import (
-    register_regression_binary_problems,
-    strength_pass,
-    strength_pass_labels,
-)
 from robotorchan.benchmarks.registry import (
     BenchmarkProblemRegistry,
     get_problem,
     list_problems,
     register_problem,
+)
+from robotorchan.benchmarks.regression_binary_problems import (
+    register_regression_binary_problems,
+    strength_pass,
+    strength_pass_labels,
 )
 from robotorchan.benchmarks.runner import (
     BenchmarkTrajectory,
