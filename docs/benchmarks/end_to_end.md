@@ -65,7 +65,7 @@ different hardware as if they were algorithm-only differences.
 
 ## Related documentation
 
-- [Final audit and release-readiness criteria](final_audit.md)
+- [Final audit and release-readiness criteria](release_readiness.md)
 - [Execution profiles](execution_profiles.md)
 - [Result storage](storage.md)
 - [Checkpointing](checkpoint.md)
