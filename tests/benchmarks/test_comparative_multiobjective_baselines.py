@@ -58,3 +58,21 @@ def test_multiobjective_baseline_rejects_other_problem() -> None:
 def test_multiobjective_baseline_rejects_acquisition_strategy() -> None:
     with pytest.raises(ValueError, match="random or sobol"):
         run_multiobjective_baseline(_cell("qEHVI"))
+
+
+@pytest.mark.parametrize("strategy", ["random", "sobol"])
+def test_batch_checkpoints_exclude_partial_batches(strategy: str) -> None:
+    from dataclasses import replace
+
+    cell = _cell(strategy)
+    config = replace(
+        cell.config,
+        seeds=tuple(range(5)),
+        initial_points=20,
+        evaluation_budget=40,
+        q=3,
+    )
+    standard = ComparativeExperimentCell(tier="standard", config=config)
+    result = run_multiobjective_baseline(standard)
+    assert result.evaluations.tolist() == [0, *range(3, 40, 3), 40]
+    assert result.hypervolume.shape == (5, len(result.evaluations))
