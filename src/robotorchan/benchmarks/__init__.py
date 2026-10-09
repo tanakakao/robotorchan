@@ -4,6 +4,11 @@ from robotorchan.benchmarks.acquisition import (
     AcquisitionBenchmarkResult,
     benchmark_acquisition,
 )
+from robotorchan.benchmarks.async_runner import (
+    AsyncBenchmarkResult,
+    AsyncEvaluation,
+    run_async_benchmark,
+)
 from robotorchan.benchmarks.comparison import (
     CurveSummary,
     PairedCurveComparison,
@@ -76,6 +81,8 @@ from robotorchan.benchmarks.standard_problems import (
 
 __all__ = [
     "AcquisitionBenchmarkResult",
+    "AsyncBenchmarkResult",
+    "AsyncEvaluation",
     "BenchmarkExperimentConfig",
     "BenchmarkProblem",
     "BenchmarkProblemRegistry",
@@ -114,6 +121,7 @@ __all__ = [
     "register_multiobjective_problems",
     "register_problem",
     "register_standard_problems",
+    "run_async_benchmark",
     "run_benchmark",
     "save_trajectory",
     "simple_regret_curve",
