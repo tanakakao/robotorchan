@@ -46,6 +46,8 @@ from robotorchan.benchmarks.metrics import (
 )
 from robotorchan.benchmarks.mixed_problems import (
     categorical_switch,
+    mixed_category_interaction,
+    mixed_process_yield,
     mixed_quadratic,
     register_mixed_problems,
 )
@@ -139,6 +141,8 @@ __all__ = [
     "list_problems",
     "load_trajectory",
     "make_botorch_gp_strategy",
+    "mixed_category_interaction",
+    "mixed_process_yield",
     "mixed_quadratic",
     "noisy_quadratic",
     "profile_callable",
