@@ -36,9 +36,7 @@ def test_botorch_strategy_end_to_end(acquisition: str) -> None:
         evaluation_budget=1,
         q=1,
     )
-    strategy = make_botorch_gp_strategy(
-        acquisition=acquisition, num_restarts=1, raw_samples=8
-    )
+    strategy = make_botorch_gp_strategy(acquisition=acquisition, num_restarts=1, raw_samples=8)
     result = run_benchmark(config, strategy, registry=registry)[0]
     assert result.X.shape == (5, 1)
     assert result.Y_observed.shape == (5, 1)
