@@ -46,12 +46,15 @@ def test_single_seed_bootstrap_is_degenerate() -> None:
     torch.testing.assert_close(result.mean, result.upper)
 
 
-@pytest.mark.parametrize("kwargs", [
-    {"n_resamples": 0},
-    {"n_resamples": True},
-    {"seed": -1},
-    {"confidence": 1.0},
-])
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"n_resamples": 0},
+        {"n_resamples": True},
+        {"seed": -1},
+        {"confidence": 1.0},
+    ],
+)
 def test_invalid_bootstrap_options(kwargs: dict) -> None:
     with pytest.raises(ValueError):
         bootstrap_curves({1: torch.tensor([1.0])}, **kwargs)
