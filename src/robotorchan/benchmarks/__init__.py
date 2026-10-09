@@ -76,6 +76,12 @@ from robotorchan.benchmarks.multiobjective_problems import (
     register_multiobjective_problems,
     zdt1,
 )
+from robotorchan.benchmarks.multiple_learned_constraints import (
+    binary_constraint_labels,
+    register_multiple_learned_constraint_problems,
+    yield_binary_continuous_constraints,
+    yield_two_binary_constraints,
+)
 from robotorchan.benchmarks.noisy_problems import (
     heteroscedastic_quadratic,
     noisy_quadratic,
@@ -153,6 +159,7 @@ __all__ = [
     "benchmark_optimizers",
     "benchmark_result_record",
     "benchmark_result_records",
+    "binary_constraint_labels",
     "biobjective_linear",
     "botorch_gp_candidates",
     "branin",
@@ -195,6 +202,7 @@ __all__ = [
     "register_multifidelity_problems",
     "register_multiobjective_heterogeneous_problems",
     "register_multiobjective_problems",
+    "register_multiple_learned_constraint_problems",
     "register_noisy_problems",
     "register_probability_objective_problems",
     "register_problem",
@@ -221,6 +229,8 @@ __all__ = [
     "thermal_management",
     "trajectory_from_record",
     "trajectory_to_record",
+    "yield_binary_continuous_constraints",
     "yield_probability_tradeoff",
+    "yield_two_binary_constraints",
     "zdt1",
 ]
