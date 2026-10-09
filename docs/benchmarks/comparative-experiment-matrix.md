@@ -33,7 +33,8 @@ the acquisition does not match the problem's objective structure.
 | noisy_quadratic | blocked | blocked | blocked | blocked | not applicable | not applicable |
 | branin_currin | baseline | integration | not applicable | not applicable | integration | integration |
 | dtlz2 (3 objectives) | blocked | blocked | not applicable | not applicable | blocked | blocked |
-| strength_conductivity_pass | baseline | integration | not applicable | not applicable | integration | integration |
+| strength_pass | baseline | integration | blocked | blocked | not applicable | not applicable |
+| strength_conductivity_pass | baseline | integration | not applicable | not applicable | blocked | blocked |
 
 The `noisy_quadratic` case is a registered noisy single-objective
 alternative. No `noisy_branin` problem was verified in the inspected
