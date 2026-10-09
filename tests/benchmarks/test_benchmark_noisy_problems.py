@@ -29,9 +29,7 @@ def test_noisy_factory_reproducibility_and_batch_shapes() -> None:
     for factory in (noisy_quadratic, heteroscedastic_quadratic):
         first = factory()
         second = factory()
-        torch.testing.assert_close(
-            first.evaluate_observation(X), second.evaluate_observation(X)
-        )
+        torch.testing.assert_close(first.evaluate_observation(X), second.evaluate_observation(X))
         assert first.evaluate_truth(X).shape == (2, 3, 1)
 
 
