@@ -56,7 +56,13 @@ def test_sphere_optimum_and_registry() -> None:
     )
     registry = BenchmarkProblemRegistry()
     register_standard_problems(registry)
-    assert registry.names() == ("branin", "hartmann6", "sphere3")
+    assert registry.names() == (
+        "ackley2",
+        "branin",
+        "hartmann6",
+        "rosenbrock2",
+        "sphere3",
+    )
     assert registry.create("branin").name == "branin"
     with pytest.raises(ValueError, match="already registered"):
         register_standard_problems(registry)
