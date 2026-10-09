@@ -56,9 +56,7 @@ def test_unsupported_cells_are_rejected(problem: str, strategy: str) -> None:
         ("strength_conductivity_pass", "sobol"),
     ],
 )
-def test_classification_problem_baselines_remain_valid(
-    problem: str, strategy: str
-) -> None:
+def test_classification_problem_baselines_remain_valid(problem: str, strategy: str) -> None:
     assert _cell(problem, strategy).config.strategy == strategy
 
 
