@@ -39,8 +39,12 @@ def test_active_learning_truth_and_labels(factory, margin, boundary) -> None:
 def test_active_learning_metrics() -> None:
     labels = torch.tensor([[0.0], [1.0], [1.0]], dtype=torch.double)
     probabilities = torch.tensor([[0.1], [0.9], [0.8]], dtype=torch.double)
-    torch.testing.assert_close(classification_accuracy(labels, probabilities), torch.tensor(1.0, dtype=torch.double))
-    torch.testing.assert_close(brier_score(labels, probabilities), torch.tensor(0.02, dtype=torch.double))
+    torch.testing.assert_close(
+        classification_accuracy(labels, probabilities), torch.tensor(1.0, dtype=torch.double)
+    )
+    torch.testing.assert_close(
+        brier_score(labels, probabilities), torch.tensor(0.02, dtype=torch.double)
+    )
     torch.testing.assert_close(
         boundary_mae(labels, probabilities),
         torch.tensor(0.13333333333333333, dtype=torch.double),
