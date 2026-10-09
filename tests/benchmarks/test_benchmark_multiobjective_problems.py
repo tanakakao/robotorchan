@@ -5,6 +5,7 @@ import torch
 
 from robotorchan.benchmarks.multiobjective_problems import (
     biobjective_linear,
+    branin_currin,
     dtlz2,
     register_multiobjective_problems,
     zdt1,
@@ -12,14 +13,15 @@ from robotorchan.benchmarks.multiobjective_problems import (
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 
 
-@pytest.mark.parametrize("factory", [biobjective_linear, dtlz2, zdt1])
+@pytest.mark.parametrize("factory", [biobjective_linear, branin_currin, dtlz2, zdt1])
 def test_multiobjective_problem_contract(factory) -> None:
     problem = factory()
     X = problem.bounds.mean(dim=0).unsqueeze(0)
     Y = problem.evaluate_truth(X)
     assert Y.shape == (1, problem.n_objectives)
-    assert problem.reference_front.shape[-1] == problem.n_objectives
-    assert torch.isfinite(problem.reference_front).all()
+    if problem.reference_front is not None:
+        assert problem.reference_front.shape[-1] == problem.n_objectives
+        assert torch.isfinite(problem.reference_front).all()
     assert torch.isfinite(problem.reference_point).all()
     assert problem.optimal_value is None
 
@@ -54,9 +56,20 @@ def test_dtlz2_unit_sphere_pareto_front() -> None:
     )
 
 
+def test_branin_currin_reference_and_boundaries() -> None:
+    problem = branin_currin()
+    X = torch.tensor([[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]], dtype=torch.double)
+    Y = problem.evaluate_truth(X)
+    assert Y.shape == (3, 2)
+    assert torch.isfinite(Y).all()
+    assert (problem.reference_point < Y).all()
+    assert problem.reference_front is None
+    assert Y[0, 1] > 0
+
+
 def test_multiobjective_registry() -> None:
     registry = BenchmarkProblemRegistry()
     register_multiobjective_problems(registry)
-    assert registry.names() == ("biobjective_linear", "dtlz2", "zdt1")
+    assert registry.names() == ("biobjective_linear", "branin_currin", "dtlz2", "zdt1")
     with pytest.raises(ValueError, match="already registered"):
         register_multiobjective_problems(registry)
