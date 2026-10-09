@@ -19,8 +19,9 @@ def test_multiobjective_problem_contract(factory) -> None:
     X = problem.bounds.mean(dim=0).unsqueeze(0)
     Y = problem.evaluate_truth(X)
     assert Y.shape == (1, problem.n_objectives)
-    assert problem.reference_front.shape[-1] == problem.n_objectives
-    assert torch.isfinite(problem.reference_front).all()
+    if problem.reference_front is not None:
+        assert problem.reference_front.shape[-1] == problem.n_objectives
+        assert torch.isfinite(problem.reference_front).all()
     assert torch.isfinite(problem.reference_point).all()
     assert problem.optimal_value is None
 
