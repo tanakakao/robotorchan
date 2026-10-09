@@ -149,6 +149,7 @@ from robotorchan.benchmarks.regression_binary_problems import (
     strength_pass,
     strength_pass_labels,
 )
+from robotorchan.benchmarks.reporting import BenchmarkMetricReport, make_metric_report
 from robotorchan.benchmarks.runner import (
     BenchmarkTrajectory,
     random_candidates,
@@ -169,6 +170,7 @@ __all__ = [
     "AsyncBenchmarkResult",
     "AsyncEvaluation",
     "BenchmarkExperimentConfig",
+    "BenchmarkMetricReport",
     "BenchmarkProblem",
     "BenchmarkProblemRegistry",
     "BenchmarkResult",
@@ -223,6 +225,7 @@ __all__ = [
     "load_trajectory",
     "log_loss",
     "make_botorch_gp_strategy",
+    "make_metric_report",
     "mixed_category_interaction",
     "mixed_process_yield",
     "mixed_quadratic",
