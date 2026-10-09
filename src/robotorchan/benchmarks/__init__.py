@@ -62,6 +62,13 @@ from robotorchan.benchmarks.multifidelity_problems import (
     multifidelity_quadratic,
     register_multifidelity_problems,
 )
+from robotorchan.benchmarks.multiobjective_heterogeneous_problems import (
+    multiobjective_pass_labels,
+    multiobjective_two_labels,
+    register_multiobjective_heterogeneous_problems,
+    strength_conductivity_pass_tradeoff,
+    strength_conductivity_two_pass,
+)
 from robotorchan.benchmarks.multiobjective_problems import (
     biobjective_linear,
     branin_currin,
@@ -168,6 +175,8 @@ __all__ = [
     "mixed_quadratic",
     "multifidelity_oscillatory",
     "multifidelity_quadratic",
+    "multiobjective_pass_labels",
+    "multiobjective_two_labels",
     "noisy_quadratic",
     "profile_callable",
     "random_candidates",
@@ -177,6 +186,7 @@ __all__ = [
     "register_high_dimensional_problems",
     "register_mixed_problems",
     "register_multifidelity_problems",
+    "register_multiobjective_heterogeneous_problems",
     "register_multiobjective_problems",
     "register_noisy_problems",
     "register_problem",
@@ -194,6 +204,8 @@ __all__ = [
     "sphere3",
     "strength_conductivity_pass",
     "strength_conductivity_pass_labels",
+    "strength_conductivity_pass_tradeoff",
+    "strength_conductivity_two_pass",
     "strength_pass",
     "strength_pass_labels",
     "summarize_curves",
