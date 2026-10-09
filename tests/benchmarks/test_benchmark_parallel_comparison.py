@@ -5,6 +5,8 @@ import torch
 
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.parallel_comparison import run_parallel_comparison
+from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
+from robotorchan.benchmarks.standard_problems import sphere3
 
 
 def test_parallel_comparison_matches_budgets_and_initial_designs() -> None:
@@ -16,7 +18,11 @@ def test_parallel_comparison_matches_budgets_and_initial_designs() -> None:
         evaluation_budget=5,
         q=3,
     )
-    result = run_parallel_comparison(config, batch_size=3, max_concurrency=2)
+    registry = BenchmarkProblemRegistry()
+    registry.register("sphere3", sphere3)
+    result = run_parallel_comparison(
+        config, batch_size=3, max_concurrency=2, registry=registry
+    )
     assert len(result.sequential) == len(result.batch) == len(result.asynchronous) == 2
     for sequential, batch, asynchronous in zip(
         result.sequential, result.batch, result.asynchronous, strict=True
@@ -40,8 +46,10 @@ def test_parallel_comparison_is_reproducible() -> None:
         evaluation_budget=4,
         q=2,
     )
-    first = run_parallel_comparison(config, batch_size=2, max_concurrency=2)
-    second = run_parallel_comparison(config, batch_size=2, max_concurrency=2)
+    registry = BenchmarkProblemRegistry()
+    registry.register("sphere3", sphere3)
+    first = run_parallel_comparison(config, batch_size=2, max_concurrency=2, registry=registry)
+    second = run_parallel_comparison(config, batch_size=2, max_concurrency=2, registry=registry)
     for arm in ("sequential", "batch", "asynchronous"):
         torch.testing.assert_close(getattr(first, arm)[0].X, getattr(second, arm)[0].X)
 
@@ -50,6 +58,4 @@ def test_parallel_comparison_is_reproducible() -> None:
 def test_parallel_comparison_rejects_invalid_parallelism(batch_size, concurrency) -> None:
     config = BenchmarkExperimentConfig(problem="sphere3", strategy="random")
     with pytest.raises(ValueError, match="positive integer"):
-        run_parallel_comparison(
-            config, batch_size=batch_size, max_concurrency=concurrency
-        )
+        run_parallel_comparison(config, batch_size=batch_size, max_concurrency=concurrency)
