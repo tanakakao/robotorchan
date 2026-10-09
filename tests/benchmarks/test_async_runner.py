@@ -46,8 +46,7 @@ def test_async_completion_order_and_capacity() -> None:
 
 def test_async_reproducible_seed_and_single_worker() -> None:
     config = BenchmarkExperimentConfig(
-        problem="linear", strategy="async", seeds=(7,), initial_points=3,
-        evaluation_budget=3, q=3
+        problem="linear", strategy="async", seeds=(7,), initial_points=3, evaluation_budget=3, q=3
     )
 
     def random(problem, X, Y, pending, q, generator):
@@ -73,8 +72,7 @@ def test_invalid_duration_rejected(duration: float) -> None:
     )
     with pytest.raises(ValueError, match="durations"):
         run_async_benchmark(
-            config, _candidates, lambda X: duration, max_concurrency=1,
-            registry=_registry()
+            config, _candidates, lambda X: duration, max_concurrency=1, registry=_registry()
         )
 
 
@@ -88,6 +86,9 @@ def test_invalid_concurrency_and_candidate_shape() -> None:
         )
     with pytest.raises(ValueError, match="shape"):
         run_async_benchmark(
-            config, lambda *args: torch.zeros(2, 1), lambda X: 1.0,
-            max_concurrency=1, registry=_registry()
+            config,
+            lambda *args: torch.zeros(2, 1),
+            lambda X: 1.0,
+            max_concurrency=1,
+            registry=_registry(),
         )
