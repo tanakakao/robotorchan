@@ -48,3 +48,5 @@ def test_qehvi_validates_optimizer_settings() -> None:
         make_comparative_qehvi_strategy(num_restarts=0)
     with pytest.raises(ValueError, match="raw_samples"):
         make_comparative_qehvi_strategy(raw_samples=0)
+    with pytest.raises(ValueError, match="mc_samples"):
+        make_comparative_qehvi_strategy(mc_samples=0)
