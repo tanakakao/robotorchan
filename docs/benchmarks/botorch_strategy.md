@@ -28,9 +28,7 @@ config = BenchmarkExperimentConfig(
     initial_points=8,
     evaluation_budget=4,
 )
-strategy = make_botorch_gp_strategy(
-    acquisition="qNEI", num_restarts=2, raw_samples=32
-)
+strategy = make_botorch_gp_strategy(acquisition="qNEI", num_restarts=2, raw_samples=32)
 trajectory = run_benchmark(config, strategy, registry=registry)[0]
 print(trajectory.X.shape)
 ```
