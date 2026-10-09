@@ -24,6 +24,12 @@ from robotorchan.benchmarks.botorch_strategy import (
     botorch_gp_candidates,
     make_botorch_gp_strategy,
 )
+from robotorchan.benchmarks.checkpoint import (
+    BenchmarkCheckpoint,
+    load_benchmark_checkpoint,
+    run_resumable_benchmark,
+    save_benchmark_checkpoint,
+)
 from robotorchan.benchmarks.comparison import (
     CurveSummary,
     PairedCurveComparison,
@@ -170,6 +176,7 @@ __all__ = [
     "AcquisitionBenchmarkResult",
     "AsyncBenchmarkResult",
     "AsyncEvaluation",
+    "BenchmarkCheckpoint",
     "BenchmarkExperimentConfig",
     "BenchmarkMetricReport",
     "BenchmarkProblem",
@@ -223,6 +230,7 @@ __all__ = [
     "hypervolume_curve",
     "interaction_chain_30",
     "list_problems",
+    "load_benchmark_checkpoint",
     "load_benchmark_results",
     "load_trajectory",
     "log_loss",
@@ -260,7 +268,9 @@ __all__ = [
     "run_async_benchmark",
     "run_benchmark",
     "run_parallel_comparison",
+    "run_resumable_benchmark",
     "sample_pass_labels",
+    "save_benchmark_checkpoint",
     "save_benchmark_results",
     "save_trajectory",
     "simple_regret_curve",
