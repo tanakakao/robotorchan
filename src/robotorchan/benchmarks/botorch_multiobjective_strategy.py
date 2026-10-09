@@ -11,8 +11,7 @@ from botorch.optim import optimize_acqf
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.box_decompositions import NondominatedPartitioning
 from gpytorch.mlls import SumMarginalLogLikelihood
-from torch import Tensor
-from torch import Size
+from torch import Size, Tensor
 
 from robotorchan.benchmarks.problem import BenchmarkProblem
 
