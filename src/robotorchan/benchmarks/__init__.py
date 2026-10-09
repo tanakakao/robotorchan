@@ -20,6 +20,13 @@ from robotorchan.benchmarks.candidate_turbo_problems import (
     candidate_nonlinear_region,
     register_candidate_constraint_problems,
 )
+from robotorchan.benchmarks.candidate_turbo import (
+    TrustRegionCandidateGenerator,
+    candidate_constraint,
+    candidate_linear_region,
+    candidate_nonlinear_region,
+    register_candidate_region_problems,
+)
 from robotorchan.benchmarks.comparison import (
     CurveSummary,
     PairedCurveComparison,
@@ -137,6 +144,7 @@ __all__ = [
     "PairedCurveComparison",
     "ParallelBenchmarkComparison",
     "ProfileResult",
+    "TrustRegionCandidateGenerator",
     "TrustRegionState",
     "ackley2",
     "benchmark_acquisition",
@@ -151,6 +159,9 @@ __all__ = [
     "candidate_linear_region",
     "candidate_nonlinear_region",
     "cantilever_beam",
+    "candidate_constraint",
+    "candidate_linear_region",
+    "candidate_nonlinear_region",
     "categorical_switch",
     "compare_paired_curves",
     "constrained_annulus",
@@ -178,6 +189,7 @@ __all__ = [
     "profile_callable",
     "random_candidates",
     "register_candidate_constraint_problems",
+    "register_candidate_region_problems",
     "register_constrained_problems",
     "register_engineering_problems",
     "register_heterogeneous_problems",
