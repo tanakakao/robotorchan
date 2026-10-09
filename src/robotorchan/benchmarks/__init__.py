@@ -4,6 +4,12 @@ from robotorchan.benchmarks.acquisition import (
     AcquisitionBenchmarkResult,
     benchmark_acquisition,
 )
+from robotorchan.benchmarks.comparison import (
+    CurveSummary,
+    PairedCurveComparison,
+    compare_paired_curves,
+    summarize_curves,
+)
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.constrained_problems import (
     constrained_annulus,
@@ -70,6 +76,8 @@ __all__ = [
     "BenchmarkResult",
     "BenchmarkTrajectory",
     "CountingAcquisition",
+    "CurveSummary",
+    "PairedCurveComparison",
     "ProfileResult",
     "benchmark_acquisition",
     "benchmark_optimizer",
@@ -81,6 +89,7 @@ __all__ = [
     "categorical_switch",
     "constrained_annulus",
     "constrained_quadratic",
+    "compare_paired_curves",
     "cumulative_feasibility_rate",
     "dtlz2",
     "feasibility_rate",
@@ -104,5 +113,6 @@ __all__ = [
     "sphere3",
     "strength_conductivity_pass",
     "strength_conductivity_pass_labels",
+    "summarize_curves",
     "zdt1",
 ]
