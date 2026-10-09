@@ -50,6 +50,7 @@ from robotorchan.benchmarks.extended_metrics import (
     log_loss,
     probability_calibration_error,
 )
+from robotorchan.benchmarks.fair_comparison import FairComparisonProtocol
 from robotorchan.benchmarks.heterogeneous_problems import (
     register_heterogeneous_problems,
     strength_conductivity_pass,
@@ -168,6 +169,7 @@ __all__ = [
     "BenchmarkTrajectory",
     "CountingAcquisition",
     "CurveSummary",
+    "FairComparisonProtocol",
     "PairedCurveComparison",
     "ParallelBenchmarkComparison",
     "ProfileResult",
