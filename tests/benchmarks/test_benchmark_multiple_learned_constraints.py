@@ -33,9 +33,7 @@ def test_mixed_binary_and_continuous_optimum() -> None:
     problem = yield_binary_continuous_constraints()
     x0 = 0.8 / 1.16
     optimum = torch.tensor([[x0, 0.2 + 0.4 * x0]], dtype=torch.double)
-    torch.testing.assert_close(
-        problem.evaluate_truth(optimum), problem.optimal_value.unsqueeze(0)
-    )
+    torch.testing.assert_close(problem.evaluate_truth(optimum), problem.optimal_value.unsqueeze(0))
     assert (problem.evaluate_constraints(optimum) >= -1e-12).all()
     assert problem.n_constraints == 2
 
