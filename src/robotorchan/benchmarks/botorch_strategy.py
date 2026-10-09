@@ -51,9 +51,7 @@ def botorch_gp_candidates(
     train_Y = Y * signs
     bounds = problem.bounds.to(dtype=X.dtype, device=X.device)
     # Seed the entire fit/acquisition/optimization cycle, not only initial conditions.
-    seed = int(
-        torch.randint(0, 2**31 - 1, (1,), device=X.device, generator=generator).item()
-    )
+    seed = int(torch.randint(0, 2**31 - 1, (1,), device=X.device, generator=generator).item())
     devices = [X.device.index or 0] if X.is_cuda else []
     with torch.random.fork_rng(devices=devices):
         torch.manual_seed(seed)
