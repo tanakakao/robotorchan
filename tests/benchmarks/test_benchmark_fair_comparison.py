@@ -3,7 +3,6 @@
 from dataclasses import replace
 
 import pytest
-import torch
 
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.fair_comparison import FairComparisonProtocol
