@@ -71,7 +71,12 @@ def load_benchmark_checkpoint(path: str | Path) -> BenchmarkCheckpoint:
     """Load and validate a checkpoint, rejecting unknown schema versions."""
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(payload, dict) or set(payload) != {
-        "schema_version", "config", "seed", "initial_points", "generator_state", "trajectory"
+        "schema_version",
+        "config",
+        "seed",
+        "initial_points",
+        "generator_state",
+        "trajectory",
     }:
         raise ValueError("Invalid checkpoint schema.")
     if type(payload["schema_version"]) is not int or payload["schema_version"] != 1:
@@ -138,8 +143,11 @@ def run_resumable_benchmark(
     generator = torch.Generator(device=config.torch_device).manual_seed(seed)
     if checkpoint is None:
         X = sobol_initial_design(
-            problem, config.initial_points, seed,
-            dtype=config.torch_dtype, device=config.torch_device,
+            problem,
+            config.initial_points,
+            seed,
+            dtype=config.torch_dtype,
+            device=config.torch_device,
         )
         observed = problem.evaluate_observation(X)
         truth = problem.evaluate_truth(X)
@@ -153,8 +161,10 @@ def run_resumable_benchmark(
             raise ValueError("Checkpoint seed or initial points mismatch.")
         if run.X.ndim != 2 or run.X.shape[1] != problem.dimension:
             raise ValueError("Checkpoint problem dimension mismatch.")
-        if not config.initial_points <= run.X.shape[0] <= (
-            config.initial_points + config.evaluation_budget
+        if (
+            not config.initial_points
+            <= run.X.shape[0]
+            <= (config.initial_points + config.evaluation_budget)
         ):
             raise ValueError("Checkpoint evaluation count mismatch.")
         for name in _FIELDS:
@@ -186,10 +196,17 @@ def run_resumable_benchmark(
         remaining -= q
         batches += 1
     trajectory = BenchmarkTrajectory(
-        seed=seed, X=X, Y_observed=observed, Y_truth=truth,
-        constraints=constraints, costs=costs, initial_points=config.initial_points,
+        seed=seed,
+        X=X,
+        Y_observed=observed,
+        Y_truth=truth,
+        constraints=constraints,
+        costs=costs,
+        initial_points=config.initial_points,
     )
     result = BenchmarkCheckpoint(
-        config=config, trajectory=trajectory, generator_state=generator.get_state().cpu(),
+        config=config,
+        trajectory=trajectory,
+        generator_state=generator.get_state().cpu(),
     )
     return trajectory, result
