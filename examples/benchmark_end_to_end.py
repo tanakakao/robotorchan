@@ -36,12 +36,8 @@ def main(output_dir: Path) -> None:
         metric="simple_regret",
         curves=curves,
     )
-    (output_dir / "branin_random_report.json").write_text(
-        report.to_json() + "\n", encoding="utf-8"
-    )
-    (output_dir / "branin_random_report.csv").write_text(
-        report.to_csv(), encoding="utf-8"
-    )
+    (output_dir / "branin_random_report.json").write_text(report.to_json() + "\n", encoding="utf-8")
+    (output_dir / "branin_random_report.csv").write_text(report.to_csv(), encoding="utf-8")
     print(f"Saved {len(loaded)} trajectory and metric report to {output_dir}")
 
 
