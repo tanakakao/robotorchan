@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Mapping
 
 import torch
 from torch import Tensor
@@ -18,6 +18,7 @@ class SingleObjectiveComparison:
     """Regret curves aligned by seed and candidate evaluation count."""
 
     seeds: tuple[int, ...]
+    q: int
     evaluations: Tensor
     regret_by_method: dict[str, Tensor]
     mean_regret_by_method: dict[str, Tensor]
@@ -27,6 +28,8 @@ class SingleObjectiveComparison:
 def compare_single_objective(
     problem: BenchmarkProblem,
     trajectories: Mapping[str, tuple[BenchmarkTrajectory, ...]],
+    *,
+    q_by_method: Mapping[str, int],
 ) -> SingleObjectiveComparison:
     """Compare methods with identical seeds, initial design, and budgets.
 
@@ -36,6 +39,12 @@ def compare_single_objective(
     """
     if not trajectories:
         raise ValueError("At least one method is required.")
+    if set(q_by_method) != set(trajectories):
+        raise ValueError("Batch-size metadata must cover every method.")
+    if any(type(q) is not int or q < 1 for q in q_by_method.values()):
+        raise ValueError("Batch sizes must be positive integers.")
+    if len(set(q_by_method.values())) != 1:
+        raise ValueError("Batch sizes must match across methods.")
     if problem.n_objectives != 1 or problem.optimal_value is None:
         raise ValueError("Comparison requires a known single-objective optimum.")
     if not set(trajectories).issubset({"random", "sobol", "qEI", "qNEI"}):
@@ -71,7 +80,7 @@ def compare_single_objective(
                 or not torch.equal(run.X[:reference_initial], reference_X[run.seed])
             ):
                 raise ValueError("Initial designs and evaluation budgets must match.")
-            regret = simple_regret_curve(problem, run)[reference_initial:]
+            regret = simple_regret_curve(problem, run)[reference_initial - 1 :]
             method_curves.append(regret)
         curves[method] = torch.stack(method_curves)
 
@@ -88,7 +97,8 @@ def compare_single_objective(
     }
     return SingleObjectiveComparison(
         seeds=reference_seeds,
-        evaluations=torch.arange(1, reference_budget + 1, dtype=torch.long),
+        q=next(iter(q_by_method.values())),
+        evaluations=torch.arange(reference_budget + 1, dtype=torch.long),
         regret_by_method=curves,
         mean_regret_by_method=mean,
         standard_error_by_method=standard_error,
