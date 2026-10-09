@@ -77,9 +77,11 @@ from robotorchan.benchmarks.runner import (
     sobol_initial_design,
 )
 from robotorchan.benchmarks.standard_problems import (
+    ackley2,
     branin,
     hartmann6,
     register_standard_problems,
+    rosenbrock2,
     sphere3,
 )
 
@@ -96,6 +98,7 @@ __all__ = [
     "CurveSummary",
     "PairedCurveComparison",
     "ProfileResult",
+    "ackley2",
     "benchmark_acquisition",
     "benchmark_optimizer",
     "benchmark_optimizers",
@@ -127,6 +130,7 @@ __all__ = [
     "register_multiobjective_problems",
     "register_problem",
     "register_standard_problems",
+    "rosenbrock2",
     "run_async_benchmark",
     "run_benchmark",
     "save_trajectory",
