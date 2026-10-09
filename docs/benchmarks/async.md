@@ -28,10 +28,12 @@ from robotorchan.benchmarks import (
     BenchmarkExperimentConfig,
     run_async_benchmark,
 )
+from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.standard_problems import register_standard_problems
 
 # Register the standard problems before resolving the experiment config.
-register_standard_problems()
+registry = BenchmarkProblemRegistry()
+register_standard_problems(registry)
 
 def propose(problem, X, Y, pending, q, generator):
     bounds = problem.bounds.to(dtype=X.dtype, device=X.device)
@@ -44,7 +46,7 @@ config = BenchmarkExperimentConfig(
 )
 result = run_async_benchmark(
     config, propose, lambda candidate: 1.0,
-    max_concurrency=2,
+    max_concurrency=2, registry=registry,
 )[0]
 print(result.completion_order, result.simulated_makespan)
 ```
