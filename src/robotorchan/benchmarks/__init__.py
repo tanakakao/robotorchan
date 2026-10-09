@@ -57,6 +57,12 @@ from robotorchan.benchmarks.mixed_problems import (
     mixed_quadratic,
     register_mixed_problems,
 )
+from robotorchan.benchmarks.multiple_learned_constraints import (
+    binary_constraint_labels,
+    register_multiple_learned_constraint_problems,
+    yield_binary_continuous_constraints,
+    yield_two_binary_constraints,
+)
 from robotorchan.benchmarks.multifidelity_problems import (
     multifidelity_oscillatory,
     multifidelity_quadratic,
@@ -153,6 +159,7 @@ __all__ = [
     "benchmark_optimizers",
     "benchmark_result_record",
     "benchmark_result_records",
+    "binary_constraint_labels",
     "biobjective_linear",
     "botorch_gp_candidates",
     "branin",
@@ -193,6 +200,7 @@ __all__ = [
     "register_high_dimensional_problems",
     "register_mixed_problems",
     "register_multifidelity_problems",
+    "register_multiple_learned_constraint_problems",
     "register_multiobjective_heterogeneous_problems",
     "register_multiobjective_problems",
     "register_noisy_problems",
@@ -222,5 +230,7 @@ __all__ = [
     "trajectory_from_record",
     "trajectory_to_record",
     "yield_probability_tradeoff",
+    "yield_binary_continuous_constraints",
+    "yield_two_binary_constraints",
     "zdt1",
 ]
