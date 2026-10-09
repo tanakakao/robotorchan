@@ -57,12 +57,6 @@ from robotorchan.benchmarks.mixed_problems import (
     mixed_quadratic,
     register_mixed_problems,
 )
-from robotorchan.benchmarks.multiple_learned_constraints import (
-    binary_constraint_labels,
-    register_multiple_learned_constraint_problems,
-    yield_binary_continuous_constraints,
-    yield_two_binary_constraints,
-)
 from robotorchan.benchmarks.multifidelity_problems import (
     multifidelity_oscillatory,
     multifidelity_quadratic,
@@ -74,6 +68,12 @@ from robotorchan.benchmarks.multiobjective_heterogeneous_problems import (
     register_multiobjective_heterogeneous_problems,
     strength_conductivity_pass_tradeoff,
     strength_conductivity_two_pass,
+)
+from robotorchan.benchmarks.multiple_learned_constraints import (
+    binary_constraint_labels,
+    register_multiple_learned_constraint_problems,
+    yield_binary_continuous_constraints,
+    yield_two_binary_constraints,
 )
 from robotorchan.benchmarks.multiobjective_problems import (
     biobjective_linear,
