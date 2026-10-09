@@ -15,6 +15,13 @@ from robotorchan.benchmarks.heterogeneous_problems import (
     strength_conductivity_pass,
     strength_conductivity_pass_labels,
 )
+from robotorchan.benchmarks.metrics import (
+    cumulative_feasibility_rate,
+    feasibility_rate,
+    hypervolume_2d,
+    hypervolume_curve,
+    simple_regret_curve,
+)
 from robotorchan.benchmarks.mixed_problems import (
     categorical_switch,
     mixed_quadratic,
@@ -74,9 +81,13 @@ __all__ = [
     "categorical_switch",
     "constrained_annulus",
     "constrained_quadratic",
+    "cumulative_feasibility_rate",
     "dtlz2",
+    "feasibility_rate",
     "get_problem",
     "hartmann6",
+    "hypervolume_2d",
+    "hypervolume_curve",
     "list_problems",
     "mixed_quadratic",
     "profile_callable",
@@ -88,6 +99,7 @@ __all__ = [
     "register_problem",
     "register_standard_problems",
     "run_benchmark",
+    "simple_regret_curve",
     "sobol_initial_design",
     "sphere3",
     "strength_conductivity_pass",
