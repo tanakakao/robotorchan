@@ -47,6 +47,21 @@ def test_unsupported_cells_are_rejected(problem: str, strategy: str) -> None:
         _cell(problem, strategy)
 
 
+@pytest.mark.parametrize(
+    ("problem", "strategy"),
+    [
+        ("strength_pass", "random"),
+        ("strength_pass", "sobol"),
+        ("strength_conductivity_pass", "random"),
+        ("strength_conductivity_pass", "sobol"),
+    ],
+)
+def test_classification_problem_baselines_remain_valid(
+    problem: str, strategy: str
+) -> None:
+    assert _cell(problem, strategy).config.strategy == strategy
+
+
 def test_invalid_seeds_are_rejected() -> None:
     with pytest.raises(ValueError, match="seeds"):
         _cell(seeds=(0, 1, 2, 3, 5))
