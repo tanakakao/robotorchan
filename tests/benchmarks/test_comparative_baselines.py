@@ -3,9 +3,12 @@
 import pytest
 import torch
 
-from robotorchan.benchmarks.comparative_baselines import run_comparative_baseline
+from robotorchan.benchmarks.comparative_baselines import (
+    run_comparative_baseline,
+    sobol_candidates,
+)
 from robotorchan.benchmarks.comparative_matrix import ComparativeExperimentCell
-from robotorchan.benchmarks.config import BenchmarkExperimentConfig
+from robotorchan.benchmarks.config import BenchmarkExperimentConfig\nfrom robotorchan.benchmarks.registry import get_problem
 
 
 def _cell(strategy: str, problem: str = "branin") -> ComparativeExperimentCell:
@@ -51,3 +54,18 @@ def test_baseline_runner_rejects_bo_strategy() -> None:
     cell = _cell("qEI")
     with pytest.raises(ValueError, match="Random and Sobol"):
         run_comparative_baseline(cell)
+
+
+
+def test_sobol_sequence_is_independent_of_batch_partition() -> None:
+    problem = get_problem("branin")
+    X = torch.zeros((4, problem.dimension), dtype=torch.double)
+    Y = torch.zeros((4, 1), dtype=torch.double)
+    generator = torch.Generator().manual_seed(17)
+    combined = sobol_candidates(problem, X, Y, 5, generator, initial_points=4)
+    first = sobol_candidates(problem, X, Y, 3, generator, initial_points=4)
+    extended_X = torch.cat((X, first))
+    second = sobol_candidates(
+        problem, extended_X, Y, 2, generator, initial_points=4
+    )
+    torch.testing.assert_close(combined, torch.cat((first, second)))
