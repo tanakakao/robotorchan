@@ -7,9 +7,17 @@ import torch
 
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
+from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.runner import random_candidates, run_benchmark
 from robotorchan.benchmarks.standard_problems import register_standard_problems
+from robotorchan.benchmarks.standard_problems import register_standard_problems
 from robotorchan.benchmarks.storage import load_benchmark_results, save_benchmark_results
+
+
+def _registry() -> BenchmarkProblemRegistry:
+    registry = BenchmarkProblemRegistry()
+    register_standard_problems(registry)
+    return registry
 
 
 def test_storage_roundtrip(tmp_path) -> None:
