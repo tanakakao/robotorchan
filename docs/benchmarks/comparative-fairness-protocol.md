@@ -27,10 +27,11 @@ not candidate-generation iterations.
 ## Initial observations and observation noise
 
 Use `sobol_initial_design` with the same seed and bounds across
-strategies, and verify the initial X tensors are identical. The
-strategy receives only X and `Y_observed`; never expose `Y_truth`,
-known optima, future evaluations or evaluation-time constraints
-unless that knowledge is explicitly part of the method definition.
+strategies, and verify the initial X tensors are identical. The current runner passes X and observed Y together with the full
+`BenchmarkProblem` to the candidate callback. This includes truth,
+constraint evaluators and known optimum metadata. Current callbacks
+are not certified oracle-isolated. Require a restricted problem view
+or a tested callback-access audit before comparative certification.
 
 For noisy problems, use independent, seeded observation-noise streams
 that are reproducible for each experiment. A problem factory's
