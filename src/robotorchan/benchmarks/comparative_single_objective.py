@@ -67,9 +67,7 @@ def compare_single_objective(
             reference_budget = runs[0].evaluation_count
             if reference_initial < 1 or reference_budget < 1:
                 raise ValueError("Initial design and evaluation budget must be positive.")
-            reference_X = {
-                run.seed: run.X[:reference_initial].clone() for run in runs
-            }
+            reference_X = {run.seed: run.X[:reference_initial].clone() for run in runs}
         if seeds != reference_seeds:
             raise ValueError("Seed ordering must match across methods.")
         method_curves = []
