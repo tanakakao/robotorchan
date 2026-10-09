@@ -17,12 +17,12 @@ from robotorchan.benchmarks.runner import random_candidates, run_benchmark
 
 def test_two_binary_constraints_and_known_optimum() -> None:
     problem = yield_two_binary_constraints()
-    X = torch.tensor([[0.4, 0.36], [0.8, 0.2], [0.2, 0.8]], dtype=torch.double)
+    X = torch.tensor([[0.4, 0.36000000000000004], [0.8, 0.2], [0.2, 0.8]], dtype=torch.double)
     labels = binary_constraint_labels(X)
     assert labels.shape == (3, 2)
     assert set(labels.flatten().tolist()) == {0.0, 1.0}
     torch.testing.assert_close(labels, (problem.evaluate_constraints(X) >= 0).to(X.dtype))
-    optimum = torch.tensor([[0.4, 0.36]], dtype=torch.double)
+    optimum = torch.tensor([[0.4, 0.36000000000000004]], dtype=torch.double)
     torch.testing.assert_close(
         problem.evaluate_truth(optimum), torch.tensor([[0.8144]], dtype=torch.double)
     )
