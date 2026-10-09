@@ -20,9 +20,7 @@ def test_parallel_comparison_matches_budgets_and_initial_designs() -> None:
     )
     registry = BenchmarkProblemRegistry()
     registry.register("sphere3", sphere3)
-    result = run_parallel_comparison(
-        config, batch_size=3, max_concurrency=2, registry=registry
-    )
+    result = run_parallel_comparison(config, batch_size=3, max_concurrency=2, registry=registry)
     assert len(result.sequential) == len(result.batch) == len(result.asynchronous) == 2
     for sequential, batch, asynchronous in zip(
         result.sequential, result.batch, result.asynchronous, strict=True
