@@ -29,7 +29,7 @@ def _trajectory(problem: BenchmarkProblem, X: torch.Tensor) -> BenchmarkTrajecto
     ("direction", "expected"),
     [
         ("minimize", [4.0, 1.0, 0.0]),
-        ("maximize", [0.0, 0.0, 0.0]),
+        ("maximize", [3.0, 3.0, 0.0]),
     ],
 )
 def test_regret_respects_direction(direction: str, expected: list[float]) -> None:
@@ -45,7 +45,10 @@ def test_regret_respects_direction(direction: str, expected: list[float]) -> Non
         variable_types=("continuous",),
         optimal_value=torch.tensor([optimum], dtype=torch.double),
     )
-    X = torch.tensor([[2.0], [1.0], [0.0]], dtype=torch.double)
+    X = torch.tensor(
+        [[2.0], [1.0], [0.0]] if direction == "minimize" else [[1.0], [0.0], [2.0]],
+        dtype=torch.double,
+    )
     actual = simple_regret_curve(problem, _trajectory(problem, X))
     torch.testing.assert_close(actual, torch.tensor(expected, dtype=torch.double))
 
@@ -135,6 +138,7 @@ def test_hypervolume_curve_uses_truth_and_feasibility() -> None:
     )
     X = torch.tensor([[0.2, 2.0], [1.0, 1.0], [2.0, 0.5]], dtype=torch.double)
     trajectory = _trajectory(problem, X)
+    trajectory.Y_observed[:] = 100.0
     curve = hypervolume_curve(problem, trajectory)
     torch.testing.assert_close(curve, torch.tensor([0.0, 1.0, 1.5], dtype=torch.double))
 
