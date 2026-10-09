@@ -51,6 +51,11 @@ from robotorchan.benchmarks.multiobjective_problems import (
     register_multiobjective_problems,
     zdt1,
 )
+from robotorchan.benchmarks.noisy_problems import (
+    heteroscedastic_quadratic,
+    noisy_quadratic,
+    register_noisy_problems,
+)
 from robotorchan.benchmarks.optimization import (
     BenchmarkResult,
     CountingAcquisition,
@@ -122,18 +127,21 @@ __all__ = [
     "feasibility_rate",
     "get_problem",
     "hartmann6",
+    "heteroscedastic_quadratic",
     "hypervolume_2d",
     "hypervolume_curve",
     "list_problems",
     "load_trajectory",
     "make_botorch_gp_strategy",
     "mixed_quadratic",
+    "noisy_quadratic",
     "profile_callable",
     "random_candidates",
     "register_constrained_problems",
     "register_heterogeneous_problems",
     "register_mixed_problems",
     "register_multiobjective_problems",
+    "register_noisy_problems",
     "register_problem",
     "register_standard_problems",
     "rosenbrock2",
