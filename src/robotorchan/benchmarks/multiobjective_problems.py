@@ -11,6 +11,40 @@ from robotorchan.benchmarks.problem import BenchmarkProblem
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 
 
+def _branin_currin(X: Tensor) -> Tensor:
+    x1 = 15.0 * X[..., 0] - 5.0
+    x2 = 15.0 * X[..., 1]
+    b = 5.1 / (4.0 * math.pi**2)
+    c = 5.0 / math.pi
+    t = 1.0 / (8.0 * math.pi)
+    branin_value = (x2 - b * x1.square() + c * x1 - 6.0).square()
+    branin_value = branin_value + 10.0 * (1.0 - t) * torch.cos(x1) + 10.0
+
+    u = X[..., 0]
+    v = X[..., 1]
+    numerator = 2300.0 * u**3 + 1900.0 * u.square() + 2092.0 * u + 60.0
+    denominator = 100.0 * u**3 + 500.0 * u.square() + 4.0 * u + 20.0
+    exponential = torch.where(
+        v > 0.0,
+        torch.exp(-1.0 / v.clamp_min(torch.finfo(v.dtype).tiny)),
+        torch.zeros_like(v),
+    )
+    currin_value = (1.0 - exponential) * numerator / denominator
+    return torch.stack((-branin_value, currin_value), dim=-1)
+
+
+def branin_currin() -> BenchmarkProblem:
+    """Maximize negative Branin and Currin on the unit square."""
+    return BenchmarkProblem(
+        name="branin_currin",
+        bounds=torch.tensor([[0.0] * 2, [1.0] * 2], dtype=torch.double),
+        objective=_branin_currin,
+        directions=("maximize", "maximize"),
+        variable_types=("continuous",) * 2,
+        reference_point=torch.tensor([-310.0, -1.0], dtype=torch.double),
+    )
+
+
 def _biobjective_linear(X: Tensor) -> Tensor:
     return torch.cat((X, 1.0 - X), dim=-1)
 
@@ -88,6 +122,7 @@ def register_multiobjective_problems(registry: BenchmarkProblemRegistry) -> None
     """Register Phase 8 problems explicitly in a benchmark registry."""
     for name, factory in (
         ("biobjective_linear", biobjective_linear),
+        ("branin_currin", branin_currin),
         ("dtlz2", dtlz2),
         ("zdt1", zdt1),
     ):
