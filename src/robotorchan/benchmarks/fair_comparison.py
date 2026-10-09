@@ -27,7 +27,9 @@ class FairComparisonProtocol:
             "dtype",
             "device",
         )
-        mismatched = [name for name in fields if getattr(self.first, name) != getattr(self.second, name)]
+        mismatched = [
+            name for name in fields if getattr(self.first, name) != getattr(self.second, name)
+        ]
         if mismatched:
             raise ValueError(f"Unmatched benchmark settings: {', '.join(mismatched)}")
         if self.first.strategy == self.second.strategy:
