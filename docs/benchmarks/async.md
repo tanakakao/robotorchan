@@ -35,18 +35,27 @@ from robotorchan.benchmarks.standard_problems import register_standard_problems
 registry = BenchmarkProblemRegistry()
 register_standard_problems(registry)
 
+
 def propose(problem, X, Y, pending, q, generator):
     bounds = problem.bounds.to(dtype=X.dtype, device=X.device)
     unit = torch.rand((q, problem.dimension), dtype=X.dtype, generator=generator)
     return bounds[0] + unit * (bounds[1] - bounds[0])
 
+
 config = BenchmarkExperimentConfig(
-    problem="branin", strategy="random-async", q=2,
-    initial_points=4, evaluation_budget=10, seeds=(42,),
+    problem="branin",
+    strategy="random-async",
+    q=2,
+    initial_points=4,
+    evaluation_budget=10,
+    seeds=(42,),
 )
 result = run_async_benchmark(
-    config, propose, lambda candidate: 1.0,
-    max_concurrency=2, registry=registry,
+    config,
+    propose,
+    lambda candidate: 1.0,
+    max_concurrency=2,
+    registry=registry,
 )[0]
 print(result.completion_order, result.simulated_makespan)
 ```
