@@ -30,8 +30,8 @@ def strength_pass() -> BenchmarkProblem:
 
     The deterministic signed margin is used for evaluation metrics only.
     Classification models must be trained on strength_pass_labels(X), not
-    on the signed margin. The constrained optimum is (0.7, 0.6), with
-    strength 0.9.
+    on the signed margin. The constrained optimum is (0.66, 0.58), with
+    strength 0.902.
     """
     return BenchmarkProblem(
         name="strength_pass",
@@ -41,7 +41,7 @@ def strength_pass() -> BenchmarkProblem:
         variable_types=("continuous", "continuous"),
         constraints=_pass_margin,
         n_constraints=1,
-        optimal_value=torch.tensor([0.9], dtype=torch.double),
+        optimal_value=torch.tensor([0.902], dtype=torch.double),
     )
 
 
