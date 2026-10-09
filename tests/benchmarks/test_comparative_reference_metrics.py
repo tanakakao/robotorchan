@@ -138,8 +138,16 @@ def test_hypervolume_curve_uses_truth_and_feasibility() -> None:
     )
     X = torch.tensor([[0.2, 2.0], [1.0, 1.0], [2.0, 0.5]], dtype=torch.double)
     trajectory = _trajectory(problem, X)
-    trajectory.Y_observed[:] = 100.0
-    curve = hypervolume_curve(problem, trajectory)
+    altered = BenchmarkTrajectory(
+        seed=trajectory.seed,
+        X=trajectory.X,
+        Y_observed=torch.full_like(trajectory.Y_observed, 100.0),
+        Y_truth=trajectory.Y_truth,
+        constraints=trajectory.constraints,
+        costs=trajectory.costs,
+        initial_points=trajectory.initial_points,
+    )
+    curve = hypervolume_curve(problem, altered)
     torch.testing.assert_close(curve, torch.tensor([0.0, 1.0, 1.5], dtype=torch.double))
 
 
