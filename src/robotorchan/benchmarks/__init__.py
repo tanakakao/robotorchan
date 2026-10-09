@@ -156,7 +156,6 @@ from robotorchan.benchmarks.runner import (
     run_benchmark,
     sobol_initial_design,
 )
-from robotorchan.benchmarks.storage import load_benchmark_results, save_benchmark_results
 from robotorchan.benchmarks.standard_problems import (
     ackley2,
     branin,
@@ -165,6 +164,7 @@ from robotorchan.benchmarks.standard_problems import (
     rosenbrock2,
     sphere3,
 )
+from robotorchan.benchmarks.storage import load_benchmark_results, save_benchmark_results
 
 __all__ = [
     "AcquisitionBenchmarkResult",
