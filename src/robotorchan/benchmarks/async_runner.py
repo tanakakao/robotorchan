@@ -75,9 +75,9 @@ def run_async_benchmark(
     """
     if type(max_concurrency) is not int or max_concurrency < 1:
         raise ValueError("max_concurrency must be a positive integer.")
-    problem = config.resolve_problem(registry)
     results = []
     for seed in config.seeds:
+        problem = config.resolve_problem(registry)
         generator = torch.Generator(device=config.torch_device).manual_seed(seed)
         X = sobol_initial_design(
             problem,
