@@ -8,7 +8,7 @@ from robotorchan.benchmarks.comparative_baselines import (
     sobol_candidates,
 )
 from robotorchan.benchmarks.comparative_matrix import ComparativeExperimentCell
-from robotorchan.benchmarks.config import BenchmarkExperimentConfig\nfrom robotorchan.benchmarks.registry import get_problem
+from robotorchan.benchmarks.config import BenchmarkExperimentConfig\nfrom robotorchan.benchmarks.standard_problems import branin
 
 
 def _cell(strategy: str, problem: str = "branin") -> ComparativeExperimentCell:
@@ -58,7 +58,7 @@ def test_baseline_runner_rejects_bo_strategy() -> None:
 
 
 def test_sobol_sequence_is_independent_of_batch_partition() -> None:
-    problem = get_problem("branin")
+    problem = branin()
     X = torch.zeros((4, problem.dimension), dtype=torch.double)
     Y = torch.zeros((4, 1), dtype=torch.double)
     generator = torch.Generator().manual_seed(17)
@@ -69,3 +69,20 @@ def test_sobol_sequence_is_independent_of_batch_partition() -> None:
         problem, extended_X, Y, 2, generator, initial_points=4
     )
     torch.testing.assert_close(combined, torch.cat((first, second)))
+
+
+def test_sobol_candidate_stream_does_not_match_next_run_initial_design() -> None:
+    from robotorchan.benchmarks.runner import sobol_initial_design
+
+    problem = branin()
+    X = sobol_initial_design(
+        problem, 4, 0, dtype=torch.double, device=torch.device("cpu")
+    )
+    Y = torch.zeros((4, 1), dtype=torch.double)
+    candidate = sobol_candidates(
+        problem, X, Y, 4, torch.Generator().manual_seed(0), initial_points=4
+    )
+    next_initial = sobol_initial_design(
+        problem, 4, 1, dtype=torch.double, device=torch.device("cpu")
+    )
+    assert not torch.equal(candidate, next_initial)
