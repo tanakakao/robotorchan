@@ -92,7 +92,8 @@ def probability_calibration_error(
     for index in range(n_bins):
         selected = bins == index
         if selected.any():
-            error = error + selected.to(p.dtype).mean() * (
-                p[selected].mean() - y[selected].mean()
-            ).abs()
+            error = (
+                error
+                + selected.to(p.dtype).mean() * (p[selected].mean() - y[selected].mean()).abs()
+            )
     return error
