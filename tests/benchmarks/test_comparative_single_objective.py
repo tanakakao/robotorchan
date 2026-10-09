@@ -25,7 +25,9 @@ def _trajectory(seed: int, *, initial: float = 0.0, final: float = 0.0) -> Bench
 def test_comparison_aligns_methods_and_candidate_budgets() -> None:
     first = (_trajectory(0), _trajectory(1))
     second = (_trajectory(0, final=2.0), _trajectory(1, final=2.0))
-    result = compare_single_objective(branin(), {"random": first, "qEI": second}, q_by_method={"random": 1, "qEI": 1})
+    result = compare_single_objective(
+        branin(), {"random": first, "qEI": second}, q_by_method={"random": 1, "qEI": 1}
+    )
     assert result.seeds == (0, 1)
     assert result.evaluations.tolist() == [0, 1, 2]
     assert result.regret_by_method["random"].shape == (2, 3)
@@ -36,7 +38,9 @@ def test_comparison_aligns_methods_and_candidate_budgets() -> None:
 
 
 def test_single_seed_standard_error_is_zero() -> None:
-    result = compare_single_objective(branin(), {"sobol": (_trajectory(0),)}, q_by_method={"sobol": 1})
+    result = compare_single_objective(
+        branin(), {"sobol": (_trajectory(0),)}, q_by_method={"sobol": 1}
+    )
     assert torch.count_nonzero(result.standard_error_by_method["sobol"]) == 0
 
 
