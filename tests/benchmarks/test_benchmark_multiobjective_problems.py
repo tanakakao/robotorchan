@@ -61,7 +61,7 @@ def test_branin_currin_reference_and_boundaries() -> None:
     Y = problem.evaluate_truth(X)
     assert Y.shape == (3, 2)
     assert torch.isfinite(Y).all()
-    assert (Y > problem.reference_point).all()
+    assert (problem.reference_point < Y).all()
     assert problem.reference_front is None
     assert Y[0, 1] > 0
 
