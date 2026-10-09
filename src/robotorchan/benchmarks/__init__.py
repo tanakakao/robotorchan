@@ -20,6 +20,11 @@ from robotorchan.benchmarks.async_runner import (
     AsyncEvaluation,
     run_async_benchmark,
 )
+from robotorchan.benchmarks.baselines import (
+    list_baseline_strategies,
+    make_baseline_strategy,
+    sobol_candidates,
+)
 from robotorchan.benchmarks.botorch_strategy import (
     botorch_gp_candidates,
     make_botorch_gp_strategy,
@@ -207,9 +212,11 @@ __all__ = [
     "hypervolume_2d",
     "hypervolume_curve",
     "interaction_chain_30",
+    "list_baseline_strategies",
     "list_problems",
     "load_trajectory",
     "log_loss",
+    "make_baseline_strategy",
     "make_botorch_gp_strategy",
     "mixed_category_interaction",
     "mixed_process_yield",
@@ -246,6 +253,7 @@ __all__ = [
     "sample_pass_labels",
     "save_trajectory",
     "simple_regret_curve",
+    "sobol_candidates",
     "sobol_initial_design",
     "sparse_sphere_50",
     "sphere3",
