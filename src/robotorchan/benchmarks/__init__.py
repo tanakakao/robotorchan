@@ -82,6 +82,10 @@ from robotorchan.benchmarks.optimization import (
     benchmark_result_record,
     benchmark_result_records,
 )
+from robotorchan.benchmarks.parallel_comparison import (
+    ParallelBenchmarkComparison,
+    run_parallel_comparison,
+)
 from robotorchan.benchmarks.persistence import (
     load_trajectory,
     save_trajectory,
@@ -123,6 +127,7 @@ __all__ = [
     "CountingAcquisition",
     "CurveSummary",
     "PairedCurveComparison",
+    "ParallelBenchmarkComparison",
     "ProfileResult",
     "ackley2",
     "benchmark_acquisition",
@@ -175,6 +180,7 @@ __all__ = [
     "rotated_subspace_40",
     "run_async_benchmark",
     "run_benchmark",
+    "run_parallel_comparison",
     "save_trajectory",
     "simple_regret_curve",
     "sobol_initial_design",
