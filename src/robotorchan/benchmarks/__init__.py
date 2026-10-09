@@ -1,5 +1,9 @@
 """Reusable benchmark definitions and measurement utilities."""
 
+from robotorchan.benchmarks.acquisition import (
+    AcquisitionBenchmarkResult,
+    benchmark_acquisition,
+)
 from robotorchan.benchmarks.active_learning_problems import (
     active_learning_labels,
     boundary_mae,
@@ -10,10 +14,6 @@ from robotorchan.benchmarks.active_learning_problems import (
     register_active_learning_problems,
     wave_boundary,
     wave_margin,
-)
-from robotorchan.benchmarks.acquisition import (
-    AcquisitionBenchmarkResult,
-    benchmark_acquisition,
 )
 from robotorchan.benchmarks.async_runner import (
     AsyncBenchmarkResult,
