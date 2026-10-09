@@ -32,15 +32,18 @@ def test_matching_seeded_runs_pass_protocol() -> None:
     FairComparisonProtocol(first, second).validate_trajectories(a, b)
 
 
-@pytest.mark.parametrize("field,value", [
-    ("problem", "sphere3"),
-    ("seeds", (3, 4)),
-    ("initial_points", 5),
-    ("evaluation_budget", 6),
-    ("q", 3),
-    ("dtype", "float32"),
-    ("device", "cuda"),
-])
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("problem", "sphere3"),
+        ("seeds", (3, 4)),
+        ("initial_points", 5),
+        ("evaluation_budget", 6),
+        ("q", 3),
+        ("dtype", "float32"),
+        ("device", "cuda"),
+    ],
+)
 def test_mismatched_settings_rejected(field: str, value: object) -> None:
     first, second = _configs()
     with pytest.raises(ValueError, match="Unmatched"):
