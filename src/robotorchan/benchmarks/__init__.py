@@ -101,6 +101,12 @@ from robotorchan.benchmarks.multiple_learned_constraints import (
     yield_binary_continuous_constraints,
     yield_two_binary_constraints,
 )
+from robotorchan.benchmarks.multiseed_statistics import (
+    BootstrapCurveSummary,
+    PairedBootstrapComparison,
+    bootstrap_curves,
+    compare_paired_bootstrap,
+)
 from robotorchan.benchmarks.noisy_problems import (
     heteroscedastic_quadratic,
     noisy_quadratic,
@@ -167,9 +173,11 @@ __all__ = [
     "BenchmarkProblemRegistry",
     "BenchmarkResult",
     "BenchmarkTrajectory",
+    "BootstrapCurveSummary",
     "CountingAcquisition",
     "CurveSummary",
     "FairComparisonProtocol",
+    "PairedBootstrapComparison",
     "PairedCurveComparison",
     "ParallelBenchmarkComparison",
     "ProfileResult",
@@ -184,6 +192,7 @@ __all__ = [
     "best_feasible_value_curve",
     "binary_constraint_labels",
     "biobjective_linear",
+    "bootstrap_curves",
     "botorch_gp_candidates",
     "boundary_mae",
     "branin",
@@ -194,6 +203,7 @@ __all__ = [
     "circle_boundary",
     "circle_margin",
     "classification_accuracy",
+    "compare_paired_bootstrap",
     "compare_paired_curves",
     "constrained_annulus",
     "constrained_disconnected",
