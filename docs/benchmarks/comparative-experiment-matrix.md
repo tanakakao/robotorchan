@@ -48,12 +48,13 @@ them with exact constrained methods.
 
 ## Independent classification and continuous constraints
 
-The single-objective Strength + Pass benchmark and continuous-constrained
-Hartmann must be explicitly registered and verified before being
-scheduled. The currently inspected `strength_conductivity_pass`
-problem is multiobjective and does not substitute for Strength + Pass.
+The existing `strength_pass` benchmark is registered by
+`register_regression_binary_problems`. Continuous-constrained Hartmann
+requires a separate eligibility review.
 Treat classification labels as 0/1 observations, never as signed
-constraint margins used to train the classifier.
+constraint margins used to train the classifier. The runner does not
+provide observed Pass/Fail label history to candidate callbacks;
+classification-constrained acquisition cells remain blocked.
 
 ## Mandatory gate: oracle access
 
