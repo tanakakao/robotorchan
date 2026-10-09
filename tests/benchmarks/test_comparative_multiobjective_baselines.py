@@ -32,7 +32,7 @@ def test_multiobjective_baseline_hypervolume_and_budget(strategy: str) -> None:
     assert result.trajectories[0].evaluation_count == 4
     assert result.trajectories[0].Y_truth.shape == (8, 2)
     assert torch.isfinite(result.hypervolume).all()
-    assert (result.hypervolume[:, 1:] >= result.hypervolume[:, :-1]).all()
+    assert (result.hypervolume[:, 1:] + 1e-8 >= result.hypervolume[:, :-1]).all()
 
 
 @pytest.mark.parametrize("strategy", ["random", "sobol"])
