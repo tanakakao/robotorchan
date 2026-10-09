@@ -164,6 +164,7 @@ from robotorchan.benchmarks.standard_problems import (
     rosenbrock2,
     sphere3,
 )
+from robotorchan.benchmarks.storage import load_benchmark_results, save_benchmark_results
 
 __all__ = [
     "AcquisitionBenchmarkResult",
@@ -222,6 +223,7 @@ __all__ = [
     "hypervolume_curve",
     "interaction_chain_30",
     "list_problems",
+    "load_benchmark_results",
     "load_trajectory",
     "log_loss",
     "make_botorch_gp_strategy",
@@ -259,6 +261,7 @@ __all__ = [
     "run_benchmark",
     "run_parallel_comparison",
     "sample_pass_labels",
+    "save_benchmark_results",
     "save_trajectory",
     "simple_regret_curve",
     "sobol_initial_design",
