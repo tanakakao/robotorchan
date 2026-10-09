@@ -10,6 +10,11 @@ from robotorchan.benchmarks.constrained_problems import (
     constrained_quadratic,
     register_constrained_problems,
 )
+from robotorchan.benchmarks.heterogeneous_problems import (
+    register_heterogeneous_problems,
+    strength_conductivity_pass,
+    strength_conductivity_pass_labels,
+)
 from robotorchan.benchmarks.mixed_problems import (
     categorical_switch,
     mixed_quadratic,
@@ -77,6 +82,7 @@ __all__ = [
     "profile_callable",
     "random_candidates",
     "register_constrained_problems",
+    "register_heterogeneous_problems",
     "register_mixed_problems",
     "register_multiobjective_problems",
     "register_problem",
@@ -84,5 +90,7 @@ __all__ = [
     "run_benchmark",
     "sobol_initial_design",
     "sphere3",
+    "strength_conductivity_pass",
+    "strength_conductivity_pass_labels",
     "zdt1",
 ]
