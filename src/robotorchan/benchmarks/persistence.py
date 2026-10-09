@@ -26,9 +26,7 @@ def trajectory_to_record(trajectory: BenchmarkTrajectory) -> dict[str, object]:
         "schema_version": SCHEMA_VERSION,
         "seed": trajectory.seed,
         "initial_points": trajectory.initial_points,
-        "tensors": {
-            name: _tensor_record(getattr(trajectory, name)) for name in _TENSOR_FIELDS
-        },
+        "tensors": {name: _tensor_record(getattr(trajectory, name)) for name in _TENSOR_FIELDS},
     }
 
 
@@ -66,11 +64,7 @@ def trajectory_from_record(record: dict[str, object]) -> BenchmarkTrajectory:
         raise ValueError("Trajectory tensors must contain finite values.")
     seed = record.get("seed")
     initial_points = record.get("initial_points")
-    if (
-        type(seed) is not int
-        or type(initial_points) is not int
-        or not 0 < initial_points <= n
-    ):
+    if type(seed) is not int or type(initial_points) is not int or not 0 < initial_points <= n:
         raise ValueError("Invalid trajectory seed or initial_points.")
     return BenchmarkTrajectory(seed=seed, initial_points=initial_points, **values)
 
