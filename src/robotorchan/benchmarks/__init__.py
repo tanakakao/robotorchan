@@ -49,6 +49,11 @@ from robotorchan.benchmarks.engineering_problems import (
     register_engineering_problems,
     thermal_management,
 )
+from robotorchan.benchmarks.execution_profiles import (
+    BenchmarkExecutionProfile,
+    get_execution_profile,
+    list_execution_profiles,
+)
 from robotorchan.benchmarks.extended_metrics import (
     area_under_curve,
     best_feasible_value_curve,
@@ -177,6 +182,7 @@ __all__ = [
     "AsyncBenchmarkResult",
     "AsyncEvaluation",
     "BenchmarkCheckpoint",
+    "BenchmarkExecutionProfile",
     "BenchmarkExperimentConfig",
     "BenchmarkMetricReport",
     "BenchmarkProblem",
@@ -223,12 +229,14 @@ __all__ = [
     "dtlz2",
     "feasibility_rate",
     "first_feasible_evaluation",
+    "get_execution_profile",
     "get_problem",
     "hartmann6",
     "heteroscedastic_quadratic",
     "hypervolume_2d",
     "hypervolume_curve",
     "interaction_chain_30",
+    "list_execution_profiles",
     "list_problems",
     "load_benchmark_checkpoint",
     "load_benchmark_results",
