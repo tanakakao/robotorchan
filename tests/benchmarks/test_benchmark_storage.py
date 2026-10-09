@@ -6,7 +6,7 @@ import pytest
 import torch
 
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
-from robotorchan.benchmarks.runner import run_benchmark, random_candidates
+from robotorchan.benchmarks.runner import random_candidates, run_benchmark
 from robotorchan.benchmarks.storage import load_benchmark_results, save_benchmark_results
 
 
@@ -34,7 +34,6 @@ def test_storage_roundtrip(tmp_path) -> None:
 
 def test_storage_rejects_incorrect_seed(tmp_path) -> None:
     config = BenchmarkExperimentConfig(problem="branin", strategy="random", seeds=(1,))
-    runs = run_benchmark(config, random_candidates)
     with pytest.raises(ValueError, match="seeds"):
         save_benchmark_results(tmp_path / "results.json", config, ())
 
