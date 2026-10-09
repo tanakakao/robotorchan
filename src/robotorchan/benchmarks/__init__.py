@@ -47,6 +47,12 @@ from robotorchan.benchmarks.optimization import (
     benchmark_result_record,
     benchmark_result_records,
 )
+from robotorchan.benchmarks.persistence import (
+    load_trajectory,
+    save_trajectory,
+    trajectory_from_record,
+    trajectory_to_record,
+)
 from robotorchan.benchmarks.problem import BenchmarkProblem
 from robotorchan.benchmarks.profiling import ProfileResult, profile_callable
 from robotorchan.benchmarks.registry import (
@@ -98,6 +104,7 @@ __all__ = [
     "hypervolume_2d",
     "hypervolume_curve",
     "list_problems",
+    "load_trajectory",
     "mixed_quadratic",
     "profile_callable",
     "random_candidates",
@@ -108,11 +115,14 @@ __all__ = [
     "register_problem",
     "register_standard_problems",
     "run_benchmark",
+    "save_trajectory",
     "simple_regret_curve",
     "sobol_initial_design",
     "sphere3",
     "strength_conductivity_pass",
     "strength_conductivity_pass_labels",
     "summarize_curves",
+    "trajectory_from_record",
+    "trajectory_to_record",
     "zdt1",
 ]
