@@ -27,6 +27,11 @@ from robotorchan.benchmarks.constrained_problems import (
     constrained_quadratic,
     register_constrained_problems,
 )
+from robotorchan.benchmarks.engineering_problems import (
+    cantilever_beam,
+    register_engineering_problems,
+    thermal_management,
+)
 from robotorchan.benchmarks.heterogeneous_problems import (
     register_heterogeneous_problems,
     strength_conductivity_pass,
@@ -116,6 +121,7 @@ __all__ = [
     "botorch_gp_candidates",
     "branin",
     "branin_currin",
+    "cantilever_beam",
     "categorical_switch",
     "compare_paired_curves",
     "constrained_annulus",
@@ -138,6 +144,7 @@ __all__ = [
     "profile_callable",
     "random_candidates",
     "register_constrained_problems",
+    "register_engineering_problems",
     "register_heterogeneous_problems",
     "register_mixed_problems",
     "register_multiobjective_problems",
@@ -154,6 +161,7 @@ __all__ = [
     "strength_conductivity_pass",
     "strength_conductivity_pass_labels",
     "summarize_curves",
+    "thermal_management",
     "trajectory_from_record",
     "trajectory_to_record",
     "zdt1",
