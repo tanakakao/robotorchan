@@ -33,7 +33,8 @@ the acquisition does not match the problem's objective structure.
 | noisy_quadratic | blocked | blocked | blocked | blocked | not applicable | not applicable |
 | branin_currin | baseline | integration | not applicable | not applicable | integration | integration |
 | dtlz2 (3 objectives) | blocked | blocked | not applicable | not applicable | blocked | blocked |
-| strength_conductivity_pass | baseline | integration | not applicable | not applicable | integration | integration |
+| strength_pass | baseline | integration | blocked | blocked | not applicable | not applicable |
+| strength_conductivity_pass | baseline | integration | not applicable | not applicable | blocked | blocked |
 
 The `noisy_quadratic` case is a registered noisy single-objective
 alternative. No `noisy_branin` problem was verified in the inspected
@@ -47,12 +48,13 @@ them with exact constrained methods.
 
 ## Independent classification and continuous constraints
 
-The single-objective Strength + Pass benchmark and continuous-constrained
-Hartmann must be explicitly registered and verified before being
-scheduled. The currently inspected `strength_conductivity_pass`
-problem is multiobjective and does not substitute for Strength + Pass.
+The existing `strength_pass` benchmark is registered by
+`register_regression_binary_problems`. Continuous-constrained Hartmann
+requires a separate eligibility review.
 Treat classification labels as 0/1 observations, never as signed
-constraint margins used to train the classifier.
+constraint margins used to train the classifier. The runner does not
+provide observed Pass/Fail label history to candidate callbacks;
+classification-constrained acquisition cells remain blocked.
 
 ## Mandatory gate: oracle access
 
@@ -104,12 +106,13 @@ For each scheduled cell:
 
 Keep a machine-readable manifest of each cell's problem, method,
 tier, q, seed, configuration, eligibility decision, reason,
-commit SHA, execution status and artifact path. A manifest is
-a follow-up implementation deliverable, not asserted to exist here.
+commit SHA, execution status and artifact path. The `ComparativeExperimentCell` validator in
+`src/robotorchan/benchmarks/comparative_matrix.py` enforces tier,
+seeds, budget, q, device, dtype and ineligible problem/method pairs.
+It does not certify strategy callback safety or runtime execution.
 
 ## Phase 3 acceptance
 
-The experiment matrix, statuses, unsupported cases, and oracle-access
-gate are documented. **No cell is yet certified for scientific
-comparison.** Phase 4 must validate reference metrics and oracle
-isolation before benchmarking results can be interpreted.
+The experiment matrix and configuration validator are implemented.
+No cell is yet certified for scientific comparison until callback
+safety, observed-label access and execution are verified.
