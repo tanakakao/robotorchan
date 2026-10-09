@@ -22,6 +22,8 @@ from robotorchan.benchmarks.comparison import (
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.constrained_problems import (
     constrained_annulus,
+    constrained_disconnected,
+    constrained_narrow_band,
     constrained_quadratic,
     register_constrained_problems,
 )
@@ -112,6 +114,8 @@ __all__ = [
     "categorical_switch",
     "compare_paired_curves",
     "constrained_annulus",
+    "constrained_disconnected",
+    "constrained_narrow_band",
     "constrained_quadratic",
     "cumulative_feasibility_rate",
     "dtlz2",
