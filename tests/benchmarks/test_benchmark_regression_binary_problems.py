@@ -16,18 +16,23 @@ from robotorchan.benchmarks.runner import random_candidates, run_benchmark
 
 def test_strength_pass_optimum_and_binary_boundary() -> None:
     problem = strength_pass()
-    optimum = torch.tensor([[0.66, 0.58]], dtype=torch.double)
+    optimum = torch.tensor([[0.66, 0.5800000000000001]], dtype=torch.double)
     torch.testing.assert_close(
         problem.evaluate_truth(optimum), torch.tensor([[0.902]], dtype=torch.double)
     )
-    torch.testing.assert_close(problem.evaluate_constraints(optimum), torch.zeros(1, 1))
+    torch.testing.assert_close(
+        problem.evaluate_constraints(optimum),
+        torch.zeros(1, 1, dtype=torch.double),
+        atol=1e-14,
+        rtol=0,
+    )
     torch.testing.assert_close(problem.simple_regret(optimum), torch.zeros((), dtype=torch.double))
     assert strength_pass_labels(optimum).item() == 1
 
 
 def test_binary_labels_match_truth_feasibility() -> None:
     problem = strength_pass()
-    X = torch.tensor([[0.8, 0.3], [0.66, 0.58], [0.2, 0.9]], dtype=torch.double)
+    X = torch.tensor([[0.8, 0.3], [0.66, 0.5800000000000001], [0.2, 0.9]], dtype=torch.double)
     labels = strength_pass_labels(X)
     assert labels.shape == (3, 1)
     assert set(labels.flatten().tolist()) == {0.0, 1.0}
