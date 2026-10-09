@@ -6,7 +6,9 @@ import pytest
 import torch
 
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
+from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.runner import random_candidates, run_benchmark
+from robotorchan.benchmarks.standard_problems import register_standard_problems
 from robotorchan.benchmarks.storage import load_benchmark_results, save_benchmark_results
 
 
@@ -19,7 +21,9 @@ def test_storage_roundtrip(tmp_path) -> None:
         evaluation_budget=5,
         q=2,
     )
-    trajectories = run_benchmark(config, random_candidates)
+    registry = BenchmarkProblemRegistry()
+    register_standard_problems(registry)
+    trajectories = run_benchmark(config, random_candidates, registry=registry)
     path = tmp_path / "nested" / "results.json"
     save_benchmark_results(path, config, trajectories)
     loaded_config, loaded = load_benchmark_results(path)
@@ -50,7 +54,9 @@ def test_storage_rejects_corrupt_records(tmp_path, mutation: str) -> None:
         initial_points=3,
         evaluation_budget=2,
     )
-    runs = run_benchmark(config, random_candidates)
+    registry = BenchmarkProblemRegistry()
+    register_standard_problems(registry)
+    runs = run_benchmark(config, random_candidates, registry=registry)
     path = tmp_path / "results.json"
     save_benchmark_results(path, config, runs)
     payload = json.loads(path.read_text(encoding="utf-8"))
