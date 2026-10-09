@@ -57,6 +57,11 @@ from robotorchan.benchmarks.mixed_problems import (
     mixed_quadratic,
     register_mixed_problems,
 )
+from robotorchan.benchmarks.multifidelity_problems import (
+    multifidelity_oscillatory,
+    multifidelity_quadratic,
+    register_multifidelity_problems,
+)
 from robotorchan.benchmarks.multiobjective_problems import (
     biobjective_linear,
     branin_currin,
@@ -151,6 +156,8 @@ __all__ = [
     "mixed_category_interaction",
     "mixed_process_yield",
     "mixed_quadratic",
+    "multifidelity_oscillatory",
+    "multifidelity_quadratic",
     "noisy_quadratic",
     "profile_callable",
     "random_candidates",
@@ -159,6 +166,7 @@ __all__ = [
     "register_heterogeneous_problems",
     "register_high_dimensional_problems",
     "register_mixed_problems",
+    "register_multifidelity_problems",
     "register_multiobjective_problems",
     "register_noisy_problems",
     "register_problem",
