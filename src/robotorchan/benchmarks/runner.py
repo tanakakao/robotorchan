@@ -91,11 +91,11 @@ def run_benchmark(
     The candidate callback receives the problem, evaluated X, observed Y,
     requested batch size, and a run-local generator. It must return (q, d).
     """
-    problem = config.resolve_problem(registry)
     device = config.torch_device
     dtype = config.torch_dtype
     trajectories = []
     for seed in config.seeds:
+        problem = config.resolve_problem(registry)
         generator = torch.Generator(device=device).manual_seed(seed)
         X = sobol_initial_design(problem, config.initial_points, seed, dtype=dtype, device=device)
         observed = problem.evaluate_observation(X)
