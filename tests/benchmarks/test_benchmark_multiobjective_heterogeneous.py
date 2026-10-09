@@ -25,11 +25,7 @@ def test_multiobjective_binary_labels(factory, n_constraints) -> None:
     X = torch.tensor([[0.8, 0.3], [0.5, 0.5], [0.2, 0.8]], dtype=torch.double)
     assert problem.evaluate_truth(X).shape == (3, 2)
     assert problem.evaluate_constraints(X).shape == (3, n_constraints)
-    labels = (
-        multiobjective_pass_labels(X)
-        if n_constraints == 1
-        else multiobjective_two_labels(X)
-    )
+    labels = multiobjective_pass_labels(X) if n_constraints == 1 else multiobjective_two_labels(X)
     torch.testing.assert_close(labels, (problem.evaluate_constraints(X) >= 0).to(X.dtype))
     assert ((labels == 0) | (labels == 1)).all()
     assert labels.shape == (3, n_constraints)
