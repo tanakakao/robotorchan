@@ -49,19 +49,19 @@ def botorch_gp_candidates(
         raise ValueError("Expected X=(n,d), Y=(n,1), and q >= 1.")
     signs = Y.new_tensor([1 if problem.directions[0] == "maximize" else -1])
     train_Y = Y * signs
-    model = model_factory(X, train_Y)
-    mll = ExactMarginalLogLikelihood(model.likelihood, model)
-    fit_gpytorch_mll(mll)
-    if acquisition == "qEI":
-        acqf = qExpectedImprovement(model=model, best_f=train_Y.max())
-    else:
-        acqf = qNoisyExpectedImprovement(model=model, X_baseline=X)
     bounds = problem.bounds.to(dtype=X.dtype, device=X.device)
-    # Isolate optimizer sampling from the process-global RNG.
+    # Seed the entire fit/acquisition/optimization cycle, not only initial conditions.
     seed = int(torch.randint(0, 2**31 - 1, (1,), generator=generator).item())
     devices = [X.device.index or 0] if X.is_cuda else []
     with torch.random.fork_rng(devices=devices):
         torch.manual_seed(seed)
+        model = model_factory(X, train_Y)
+        mll = ExactMarginalLogLikelihood(model.likelihood, model)
+        fit_gpytorch_mll(mll)
+        if acquisition == "qEI":
+            acqf = qExpectedImprovement(model=model, best_f=train_Y.max())
+        else:
+            acqf = qNoisyExpectedImprovement(model=model, X_baseline=X)
         candidates, _ = optimize_acqf(
             acq_function=acqf,
             bounds=bounds,
