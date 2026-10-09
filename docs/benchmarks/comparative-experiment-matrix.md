@@ -106,12 +106,13 @@ For each scheduled cell:
 
 Keep a machine-readable manifest of each cell's problem, method,
 tier, q, seed, configuration, eligibility decision, reason,
-commit SHA, execution status and artifact path. A manifest is
-a follow-up implementation deliverable, not asserted to exist here.
+commit SHA, execution status and artifact path. The `ComparativeExperimentCell` validator in
+`src/robotorchan/benchmarks/comparative_matrix.py` enforces tier,
+seeds, budget, q, device, dtype and ineligible problem/method pairs.
+It does not certify strategy callback safety or runtime execution.
 
 ## Phase 3 acceptance
 
-The experiment matrix, statuses, unsupported cases, and oracle-access
-gate are documented. **No cell is yet certified for scientific
-comparison.** Phase 4 must validate reference metrics and oracle
-isolation before benchmarking results can be interpreted.
+The experiment matrix and configuration validator are implemented.
+No cell is yet certified for scientific comparison until callback
+safety, observed-label access and execution are verified.
