@@ -10,9 +10,10 @@ import torch
 from torch import Tensor
 
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
+from robotorchan.benchmarks.persistence import _decode_timing
 from robotorchan.benchmarks.runner import BenchmarkTrajectory
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 _TENSOR_FIELDS = ("X", "Y_observed", "Y_truth", "constraints", "costs")
 
 
@@ -81,6 +82,14 @@ def save_benchmark_results(
         _validate_trajectory(item, config)
         record = {"seed": item.seed, "initial_points": item.initial_points}
         record.update({name: _encode_tensor(getattr(item, name)) for name in _TENSOR_FIELDS})
+        record.update(
+            {
+                "completed_batches": list(item.completed_batches),
+                "candidate_seconds": list(item.candidate_seconds),
+                "evaluation_seconds": list(item.evaluation_seconds),
+                "initial_evaluation_seconds": item.initial_evaluation_seconds,
+            }
+        )
         records.append(record)
     payload = {
         "schema_version": SCHEMA_VERSION,
@@ -106,7 +115,8 @@ def load_benchmark_results(
         "trajectories",
     }:
         raise ValueError("Invalid benchmark result schema.")
-    if type(payload["schema_version"]) is not int or payload["schema_version"] != SCHEMA_VERSION:
+    version = payload["schema_version"]
+    if type(version) is not int or version not in (1, SCHEMA_VERSION):
         raise ValueError("Unsupported benchmark result schema version.")
     config = BenchmarkExperimentConfig.from_dict(payload["config"])
     records = payload["trajectories"]
@@ -114,21 +124,29 @@ def load_benchmark_results(
         raise ValueError("Trajectory count does not match configured seeds.")
     trajectories = []
     for expected_seed, record in zip(config.seeds, records, strict=True):
-        if not isinstance(record, dict) or set(record) != {
-            "seed",
-            "initial_points",
-            *_TENSOR_FIELDS,
-        }:
+        fields = {"seed", "initial_points", *_TENSOR_FIELDS}
+        if version == 2:
+            fields.update(
+                {
+                    "completed_batches",
+                    "candidate_seconds",
+                    "evaluation_seconds",
+                    "initial_evaluation_seconds",
+                }
+            )
+        if not isinstance(record, dict) or set(record) != fields:
             raise ValueError("Invalid trajectory record.")
         if type(record["seed"]) is not int or record["seed"] != expected_seed:
             raise ValueError("Trajectory seed mismatch.")
         if type(record["initial_points"]) is not int:
             raise ValueError("Invalid initial point count.")
         tensors = {name: _decode_tensor(record[name]) for name in _TENSOR_FIELDS}
+        timing = _decode_timing(record) if version == 2 else {}
         item = BenchmarkTrajectory(
             seed=expected_seed,
             initial_points=record["initial_points"],
             **tensors,
+            **timing,
         )
         _validate_trajectory(item, config)
         trajectories.append(item)
