@@ -76,8 +76,7 @@ def compare_constrained(
             checkpoints = result.evaluations.clone()
             initial = {run.seed: run.X[: run.initial_points].clone() for run in result.trajectories}
             initial_truth = {
-                run.seed: run.Y_truth[: run.initial_points].clone()
-                for run in result.trajectories
+                run.seed: run.Y_truth[: run.initial_points].clone() for run in result.trajectories
             }
             initial_constraints = {
                 run.seed: run.constraints[: run.initial_points].clone()
@@ -96,15 +95,11 @@ def compare_constrained(
                 run.X.dtype != reference_dtype
                 or run.X.device != reference_device
                 or not torch.equal(run.X[: run.initial_points], initial[run.seed])
-                or not torch.equal(
-                    run.Y_truth[: run.initial_points], initial_truth[run.seed]
-                )
+                or not torch.equal(run.Y_truth[: run.initial_points], initial_truth[run.seed])
                 or not torch.equal(
                     run.constraints[: run.initial_points], initial_constraints[run.seed]
                 )
-                or not torch.equal(
-                    run.Y_observed[: run.initial_points], initial_observed[run.seed]
-                )
+                or not torch.equal(run.Y_observed[: run.initial_points], initial_observed[run.seed])
             ):
                 raise ValueError("Initial designs, histories, dtypes, and devices must match.")
         expected = (len(seeds), checkpoints.numel())
