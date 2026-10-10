@@ -24,6 +24,7 @@ from robotorchan.benchmarks.runner import (
     run_benchmark,
 )
 
+
 @dataclass(frozen=True)
 class CandidateProblemView:
     """Strategy-visible search domain without objective or constraint truth."""
