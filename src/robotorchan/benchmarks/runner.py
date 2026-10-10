@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from time import perf_counter
 
 import torch
 from torch import Tensor
@@ -26,6 +27,9 @@ class BenchmarkTrajectory:
     constraints: Tensor
     costs: Tensor
     initial_points: int
+    candidate_seconds: tuple[float, ...] = ()
+    evaluation_seconds: tuple[float, ...] = ()
+    initial_evaluation_seconds: float | None = None
 
     @property
     def evaluation_count(self) -> int:
@@ -98,13 +102,22 @@ def run_benchmark(
         problem = config.resolve_problem(registry)
         generator = torch.Generator(device=device).manual_seed(seed)
         X = sobol_initial_design(problem, config.initial_points, seed, dtype=dtype, device=device)
+        initial_start = perf_counter()
         observed = problem.evaluate_observation(X)
         truth = problem.evaluate_truth(X)
         constraints = problem.evaluate_constraints(X)
         costs = problem.evaluate_cost(X)
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+        initial_evaluation_seconds = perf_counter() - initial_start
+        candidate_seconds = []
+        evaluation_seconds = []
         remaining = config.evaluation_budget
         while remaining:
             batch_size = min(config.q, remaining)
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            candidate_start = perf_counter()
             candidates = candidate_generator(
                 problem, X.clone(), observed.clone(), batch_size, generator
             )
@@ -114,10 +127,17 @@ def run_benchmark(
             ):
                 raise ValueError("Candidate generator must return a tensor of shape (q, d).")
             problem._validate_X(candidates)
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            candidate_seconds.append(perf_counter() - candidate_start)
+            evaluation_start = perf_counter()
             new_observed = problem.evaluate_observation(candidates)
             new_truth = problem.evaluate_truth(candidates)
             new_constraints = problem.evaluate_constraints(candidates)
             new_costs = problem.evaluate_cost(candidates)
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            evaluation_seconds.append(perf_counter() - evaluation_start)
             X = torch.cat((X, candidates), dim=0)
             observed = torch.cat((observed, new_observed), dim=0)
             truth = torch.cat((truth, new_truth), dim=0)
@@ -133,6 +153,9 @@ def run_benchmark(
                 constraints=constraints,
                 costs=costs,
                 initial_points=config.initial_points,
+                candidate_seconds=tuple(candidate_seconds),
+                evaluation_seconds=tuple(evaluation_seconds),
+                initial_evaluation_seconds=initial_evaluation_seconds,
             )
         )
     return tuple(trajectories)
