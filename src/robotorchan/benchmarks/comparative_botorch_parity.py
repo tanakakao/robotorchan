@@ -46,7 +46,12 @@ def compare_botorch_candidates(
         raise ValueError("Only qEI and qNEI are supported.")
     if type(seed) is not int or seed < 0:
         raise ValueError("seed must be a nonnegative integer.")
-    if q < 1 or atol < 0 or rtol < 0:
+    if (
+        q < 1
+        or atol < 0
+        or rtol < 0
+        or not torch.isfinite(torch.tensor([atol, rtol], dtype=torch.float64)).all()
+    ):
         raise ValueError("q and tolerances must be valid.")
     if X.ndim != 2 or Y.shape != (X.shape[0], 1):
         raise ValueError("Expected X=(n,d) and Y=(n,1).")
