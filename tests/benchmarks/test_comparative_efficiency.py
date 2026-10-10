@@ -84,8 +84,12 @@ def test_timing_survives_both_serializers(tmp_path) -> None:
     summarize_efficiency((loaded,), q=2)
 
     config = BenchmarkExperimentConfig(
-        problem="branin", strategy="random", seeds=(0, 1),
-        initial_points=4, evaluation_budget=5, q=2,
+        problem="branin",
+        strategy="random",
+        seeds=(0, 1),
+        initial_points=4,
+        evaluation_budget=5,
+        q=2,
     )
     path = tmp_path / "results.json"
     save_benchmark_results(path, config, runs)
