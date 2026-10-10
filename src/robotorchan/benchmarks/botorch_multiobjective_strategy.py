@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import torch
-from botorch.acquisition.multi_objective.monte_carlo import qExpectedHypervolumeImprovement
+from botorch.acquisition.multi_objective.monte_carlo import (
+    qExpectedHypervolumeImprovement,
+    qNoisyExpectedHypervolumeImprovement,
+)
 from botorch.fit import fit_gpytorch_mll
 from botorch.models import SingleTaskGP
 from botorch.models.model_list_gp_regression import ModelListGP
@@ -26,11 +29,14 @@ def botorch_qehvi_candidates(
     num_restarts: int = 3,
     raw_samples: int = 64,
     mc_samples: int = 128,
+    acquisition: str = "qEHVI",
 ) -> Tensor:
     """Fit independent objective GPs and optimize native BoTorch qEHVI.
 
     The surrogate and partitioning use observed outcomes only, never truth.
     """
+    if acquisition not in ("qEHVI", "qNEHVI"):
+        raise ValueError("acquisition must be qEHVI or qNEHVI.")
     if problem.n_objectives != 2 or problem.n_constraints:
         raise ValueError("qEHVI requires unconstrained two-objective problems.")
     if any(kind != "continuous" for kind in problem.variable_types):
@@ -59,13 +65,23 @@ def botorch_qehvi_candidates(
         model = ModelListGP(*[SingleTaskGP(X, train_Y[:, i : i + 1]) for i in range(2)])
         mll = SumMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_mll(mll)
-        partitioning = NondominatedPartitioning(ref_point=reference, Y=train_Y)
-        acqf = qExpectedHypervolumeImprovement(
-            model=model,
-            ref_point=reference.tolist(),
-            partitioning=partitioning,
-            sampler=SobolQMCNormalSampler(sample_shape=Size([mc_samples]), seed=seed),
-        )
+        sampler = SobolQMCNormalSampler(sample_shape=Size([mc_samples]), seed=seed)
+        if acquisition == "qEHVI":
+            partitioning = NondominatedPartitioning(ref_point=reference, Y=train_Y)
+            acqf = qExpectedHypervolumeImprovement(
+                model=model,
+                ref_point=reference.tolist(),
+                partitioning=partitioning,
+                sampler=sampler,
+            )
+        else:
+            acqf = qNoisyExpectedHypervolumeImprovement(
+                model=model,
+                ref_point=reference.tolist(),
+                X_baseline=X,
+                sampler=sampler,
+                prune_baseline=False,
+            )
         candidates, _ = optimize_acqf(
             acq_function=acqf,
             bounds=bounds,
