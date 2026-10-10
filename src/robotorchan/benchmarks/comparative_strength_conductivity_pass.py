@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import torch
 from torch import Tensor
 
+from robotorchan.benchmarks.comparative_baselines import sobol_candidates
 from robotorchan.benchmarks.comparative_matrix import ComparativeExperimentCell
 from robotorchan.benchmarks.comparative_strength_pass import (
     BinaryCandidateGenerator,
@@ -25,7 +26,6 @@ from robotorchan.benchmarks.runner import (
     random_candidates,
     run_benchmark,
 )
-from robotorchan.benchmarks.comparative_baselines import sobol_candidates
 
 
 @dataclass(frozen=True)
