@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 
 import torch
 
@@ -36,10 +37,7 @@ def _numerically_equal(left: BenchmarkTrajectory, right: BenchmarkTrajectory) ->
         or left.completed_batches != right.completed_batches
     ):
         return False
-    return all(
-        torch.equal(getattr(left, field), getattr(right, field))
-        for field in _TENSOR_FIELDS
-    )
+    return all(torch.equal(getattr(left, field), getattr(right, field)) for field in _TENSOR_FIELDS)
 
 
 def verify_random_baseline_reproducibility(
@@ -59,11 +57,13 @@ def verify_random_baseline_reproducibility(
     first = run_benchmark(config, random_candidates, registry=registry)
     second = run_benchmark(config, random_candidates, registry=registry)
     repeat_equal = all(
-        _numerically_equal(left, right)
-        for left, right in zip(first, second, strict=True)
+        _numerically_equal(left, right) for left, right in zip(first, second, strict=True)
     )
     persistence_equal = all(
-        _numerically_equal(run, trajectory_from_record(trajectory_to_record(run)))
+        _numerically_equal(
+            run,
+            trajectory_from_record(json.loads(json.dumps(trajectory_to_record(run)))),
+        )
         for run in first
     )
     return ReproducibilityResult(
