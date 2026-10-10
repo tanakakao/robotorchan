@@ -46,3 +46,13 @@ def test_finite_score_requires_defined_error() -> None:
         report_single_objective(
             _comparison(torch.tensor([1.0, 2.0]), torch.tensor([0.1, float("nan")]))
         )
+
+
+def test_infinite_regret_never_reports_zero_uncertainty() -> None:
+    result = report_single_objective(
+        _comparison(
+            torch.tensor([float("inf"), float("inf")]),
+            torch.tensor([0.0, 0.0]),
+        )
+    )
+    assert "| random | +inf | undefined |" in result.markdown
