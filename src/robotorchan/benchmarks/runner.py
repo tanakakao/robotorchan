@@ -27,6 +27,7 @@ class BenchmarkTrajectory:
     constraints: Tensor
     costs: Tensor
     initial_points: int
+    completed_batches: tuple[int, ...] = ()
     candidate_seconds: tuple[float, ...] = ()
     evaluation_seconds: tuple[float, ...] = ()
     initial_evaluation_seconds: float | None = None
@@ -102,6 +103,8 @@ def run_benchmark(
         problem = config.resolve_problem(registry)
         generator = torch.Generator(device=device).manual_seed(seed)
         X = sobol_initial_design(problem, config.initial_points, seed, dtype=dtype, device=device)
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
         initial_start = perf_counter()
         observed = problem.evaluate_observation(X)
         truth = problem.evaluate_truth(X)
@@ -110,6 +113,7 @@ def run_benchmark(
         if device.type == "cuda":
             torch.cuda.synchronize(device)
         initial_evaluation_seconds = perf_counter() - initial_start
+        completed_batches = []
         candidate_seconds = []
         evaluation_seconds = []
         remaining = config.evaluation_budget
@@ -144,6 +148,7 @@ def run_benchmark(
             constraints = torch.cat((constraints, new_constraints), dim=0)
             costs = torch.cat((costs, new_costs), dim=0)
             remaining -= batch_size
+            completed_batches.append(config.evaluation_budget - remaining)
         trajectories.append(
             BenchmarkTrajectory(
                 seed=seed,
@@ -153,6 +158,7 @@ def run_benchmark(
                 constraints=constraints,
                 costs=costs,
                 initial_points=config.initial_points,
+                completed_batches=tuple(completed_batches),
                 candidate_seconds=tuple(candidate_seconds),
                 evaluation_seconds=tuple(evaluation_seconds),
                 initial_evaluation_seconds=initial_evaluation_seconds,
