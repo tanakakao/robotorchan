@@ -44,6 +44,11 @@ def test_binary_candidate_receives_only_labels_not_margin() -> None:
     def propose(problem, X, Y, labels, q, generator):
         torch.testing.assert_close(labels, strength_pass_labels(X))
         assert labels.shape == (X.shape[0], 1)
+        assert not hasattr(problem, "constraints")
+        assert not hasattr(problem, "objective")
+        assert not hasattr(problem, "optimal_value")
+        assert not hasattr(problem, "evaluate_constraints")
+        assert problem.dimension == X.shape[1]
         assert set(labels.unique().tolist()).issubset({0.0, 1.0})
         seen.append(labels.clone())
         return random_candidates(problem, X, Y, q, generator)
