@@ -55,6 +55,8 @@ def compare_multiobjective(
     reference_initial: int | None = None
     reference_budget: int | None = None
     reference_X: dict[int, Tensor] = {}
+    reference_dtype: torch.dtype | None = None
+    reference_device: torch.device | None = None
     curves: dict[str, Tensor] = {}
     for method, runs in trajectories.items():
         if not runs:
@@ -69,10 +71,17 @@ def compare_multiobjective(
             if reference_initial < 1 or reference_budget < 1:
                 raise ValueError("Initial design and evaluation budget must be positive.")
             reference_X = {run.seed: run.X[:reference_initial].clone() for run in runs}
+            reference_dtype = runs[0].X.dtype
+            reference_device = runs[0].X.device
         if seeds != reference_seeds:
             raise ValueError("Seed ordering must match across methods.")
         method_curves = []
         for run in runs:
+            if any(
+                tensor.dtype != reference_dtype or tensor.device != reference_device
+                for tensor in (run.X, run.Y_observed, run.Y_truth, run.constraints, run.costs)
+            ):
+                raise ValueError("Trajectory dtypes and devices must match across methods.")
             if (
                 run.initial_points != reference_initial
                 or run.evaluation_count != reference_budget
