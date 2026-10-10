@@ -88,9 +88,7 @@ def run_strength_pass(
             return candidate_generator(view, X, Y, labels, q, generator)
         if config.strategy == "random":
             return random_candidates(view, X, Y, q, generator)
-        return sobol_candidates(
-            view, X, Y, q, generator, initial_points=config.initial_points
-        )
+        return sobol_candidates(view, X, Y, q, generator, initial_points=config.initial_points)
 
     trajectories = run_benchmark(config, propose, registry=registry)
     problem = strength_pass()
