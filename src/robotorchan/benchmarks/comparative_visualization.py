@@ -50,14 +50,17 @@ def _series(
         raise ValueError("Plot values must not contain NaN or negative infinity.")
     lower = upper = None
     if error is not None:
-        if (
-            error.shape != y.shape
-            or not torch.isfinite(error).all()
-            or (error < 0).any()
-        ):
-            raise ValueError("Uncertainty must be finite, nonnegative, and aligned.")
-        lower = y - error
-        upper = y + error
+        if error.shape != y.shape or (error < 0).any():
+            raise ValueError("Uncertainty must be nonnegative and aligned.")
+        if torch.isinf(error).any():
+            raise ValueError("Uncertainty must not be infinite.")
+        # A pre-feasibility +inf regret has an undefined standard error.
+        # Preserve the score and omit the uncertainty band at that checkpoint.
+        invalid_band = torch.isnan(error)
+        if (invalid_band & torch.isfinite(y)).any():
+            raise ValueError("Finite scores require finite uncertainty.")
+        lower = torch.where(invalid_band, y, y - error)
+        upper = torch.where(invalid_band, y, y + error)
     return PlotSeries(
         name=name,
         x=tuple(float(v) for v in x.detach().cpu().tolist()),
