@@ -57,9 +57,7 @@ def test_paired_constrained_baselines(problem, runner, metric) -> None:
 
 def test_reject_incompatible_metrics() -> None:
     regression = run_strength_pass(_cell("strength_pass", "random"))
-    multiobjective = run_strength_conductivity_pass(
-        _cell("strength_conductivity_pass", "random")
-    )
+    multiobjective = run_strength_conductivity_pass(_cell("strength_conductivity_pass", "random"))
     with pytest.raises(ValueError, match="regret and hypervolume"):
         compare_constrained({"regression": regression, "multiobjective": multiobjective})
 
@@ -77,3 +75,16 @@ def test_reject_unpaired_initial_design() -> None:
 def test_reject_empty_comparison() -> None:
     with pytest.raises(ValueError, match="At least one"):
         compare_constrained({})
+
+
+def test_reject_different_problem_with_matching_initial_design() -> None:
+    baseline = run_strength_pass(_cell("strength_pass", "random"))
+    original = baseline.trajectories[0]
+    other = replace(
+        original,
+        Y_truth=original.Y_truth.clone() + 1.0,
+        constraints=original.constraints.clone() + 1.0,
+    )
+    incompatible = replace(baseline, trajectories=(other,))
+    with pytest.raises(ValueError, match="Initial designs, histories"):
+        compare_constrained({"original": baseline, "different_problem": incompatible})
