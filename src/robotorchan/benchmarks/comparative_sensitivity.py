@@ -92,7 +92,9 @@ def summarize_sensitivity(
             not isinstance(data, Tensor)
             or data.shape != (len(reference_seeds), points.numel())
             or not torch.is_floating_point(data)
-            or not torch.isfinite(data).all()
+            or torch.isnan(data).any()
+            or torch.isneginf(data).any()
+            or (metric != "feasible_regret" and torch.isposinf(data).any())
         ):
             raise ValueError("Scores must be finite floating-point [seed, checkpoint] tensors.")
         if seeds[value] != reference_seeds:
