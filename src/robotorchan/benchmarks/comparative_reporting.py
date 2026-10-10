@@ -75,9 +75,8 @@ def _report(
             raise ValueError("Standard errors must be nonnegative or undefined.")
         if (torch.isnan(error) & torch.isfinite(mean)).any():
             raise ValueError("Finite scores require defined standard errors.")
-        rows.append(
-            f"| {method} | {_format(mean[-1])} | {_format(error[-1])} |"
-        )
+        final_error = "undefined" if torch.isposinf(mean[-1]) else _format(error[-1])
+        rows.append(f"| {method} | {_format(mean[-1])} | {final_error} |")
     final = int(evaluations[-1].item())
     direction = _DIRECTIONS[metric]
     lines = [
