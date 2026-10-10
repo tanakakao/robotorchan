@@ -52,7 +52,9 @@ def _decode_timing(record: dict[str, object]) -> dict[str, object]:
 def trajectory_to_record(trajectory: BenchmarkTrajectory) -> dict[str, object]:
     """Encode a trajectory as a JSON-compatible versioned record."""
     return {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": (
+            SCHEMA_VERSION if trajectory.initial_evaluation_seconds is not None else 1
+        ),
         "seed": trajectory.seed,
         "initial_points": trajectory.initial_points,
         "completed_batches": list(trajectory.completed_batches),
