@@ -12,20 +12,33 @@ from robotorchan.benchmarks.comparative_baselines import sobol_candidates
 from robotorchan.benchmarks.comparative_matrix import ComparativeExperimentCell
 from robotorchan.benchmarks.metrics import cumulative_feasibility_rate, simple_regret_curve
 from robotorchan.benchmarks.problem import BenchmarkProblem
+from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.regression_binary_problems import (
     register_regression_binary_problems,
     strength_pass,
     strength_pass_labels,
 )
-from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.runner import (
     BenchmarkTrajectory,
     random_candidates,
     run_benchmark,
 )
 
+@dataclass(frozen=True)
+class CandidateProblemView:
+    """Strategy-visible search domain without objective or constraint truth."""
+
+    bounds: Tensor
+    variable_types: tuple[str, ...]
+
+    @property
+    def dimension(self) -> int:
+        """Number of input features."""
+        return self.bounds.shape[1]
+
+
 BinaryCandidateGenerator = Callable[
-    [BenchmarkProblem, Tensor, Tensor, Tensor, int, torch.Generator], Tensor
+    [CandidateProblemView, Tensor, Tensor, Tensor, int, torch.Generator], Tensor
 ]
 
 
@@ -66,12 +79,16 @@ def run_strength_pass(
         generator: torch.Generator,
     ) -> Tensor:
         labels = strength_pass_labels(X)
+        view = CandidateProblemView(
+            bounds=problem.bounds.to(device=X.device, dtype=X.dtype).clone(),
+            variable_types=problem.variable_types,
+        )
         if candidate_generator is not None:
-            return candidate_generator(problem, X, Y, labels, q, generator)
+            return candidate_generator(view, X, Y, labels, q, generator)
         if config.strategy == "random":
-            return random_candidates(problem, X, Y, q, generator)
+            return random_candidates(view, X, Y, q, generator)
         return sobol_candidates(
-            problem, X, Y, q, generator, initial_points=config.initial_points
+            view, X, Y, q, generator, initial_points=config.initial_points
         )
 
     trajectories = run_benchmark(config, propose, registry=registry)
