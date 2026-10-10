@@ -12,9 +12,7 @@ from robotorchan.benchmarks.runner import BenchmarkTrajectory, sobol_initial_des
 
 def _run(seed: int, offset: float = 0.0, budget: int = 4) -> BenchmarkTrajectory:
     problem = branin_currin()
-    initial = sobol_initial_design(
-        problem, 4, seed, dtype=torch.double, device=torch.device("cpu")
-    )
+    initial = sobol_initial_design(problem, 4, seed, dtype=torch.double, device=torch.device("cpu"))
     additional = torch.full((budget, 2), 0.3 + offset, dtype=torch.double)
     X = torch.cat((initial, additional))
     Y = problem.evaluate_truth(X)
@@ -34,9 +32,7 @@ def test_paired_hypervolume_includes_initial_and_terminal() -> None:
         "random": (_run(0), _run(1)),
         "sobol": (_run(0, 0.1), _run(1, 0.1)),
     }
-    result = compare_multiobjective(
-        branin_currin(), runs, q_by_method={"random": 1, "sobol": 1}
-    )
+    result = compare_multiobjective(branin_currin(), runs, q_by_method={"random": 1, "sobol": 1})
     assert result.seeds == (0, 1)
     assert result.evaluations.tolist() == [0, 1, 2, 3, 4]
     assert result.hypervolume_by_method["random"].shape == (2, 5)
@@ -91,5 +87,23 @@ def test_comparison_rejects_seed_mismatch() -> None:
         compare_multiobjective(
             branin_currin(),
             {"random": (_run(0),), "sobol": (_run(1),)},
+            q_by_method={"random": 1, "sobol": 1},
+        )
+
+
+def test_comparison_rejects_mixed_precision() -> None:
+    mixed = _run(0)
+    mixed = replace(
+        mixed,
+        X=mixed.X.float(),
+        Y_observed=mixed.Y_observed.float(),
+        Y_truth=mixed.Y_truth.float(),
+        constraints=mixed.constraints.float(),
+        costs=mixed.costs.float(),
+    )
+    with pytest.raises(ValueError, match="dtypes and devices"):
+        compare_multiobjective(
+            branin_currin(),
+            {"random": (_run(0),), "sobol": (mixed,)},
             q_by_method={"random": 1, "sobol": 1},
         )
