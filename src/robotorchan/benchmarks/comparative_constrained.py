@@ -14,9 +14,7 @@ from robotorchan.benchmarks.comparative_strength_conductivity_pass import (
 )
 from robotorchan.benchmarks.comparative_strength_pass import StrengthPassResult
 
-ConstrainedResult = (
-    ContinuousConstraintResult | StrengthPassResult | StrengthConductivityPassResult
-)
+ConstrainedResult = ContinuousConstraintResult | StrengthPassResult | StrengthConductivityPassResult
 
 
 @dataclass(frozen=True)
@@ -55,6 +53,9 @@ def compare_constrained(
     checkpoints: Tensor | None = None
     metric_name: str | None = None
     initial: dict[int, Tensor] = {}
+    initial_truth: dict[int, Tensor] = {}
+    initial_constraints: dict[int, Tensor] = {}
+    initial_observed: dict[int, Tensor] = {}
     reference_dtype: torch.dtype | None = None
     reference_device: torch.device | None = None
     scores: dict[str, Tensor] = {}
@@ -74,6 +75,18 @@ def compare_constrained(
             seeds = current_seeds
             checkpoints = result.evaluations.clone()
             initial = {run.seed: run.X[: run.initial_points].clone() for run in result.trajectories}
+            initial_truth = {
+                run.seed: run.Y_truth[: run.initial_points].clone()
+                for run in result.trajectories
+            }
+            initial_constraints = {
+                run.seed: run.constraints[: run.initial_points].clone()
+                for run in result.trajectories
+            }
+            initial_observed = {
+                run.seed: run.Y_observed[: run.initial_points].clone()
+                for run in result.trajectories
+            }
             reference_dtype = result.trajectories[0].X.dtype
             reference_device = result.trajectories[0].X.device
         if current_seeds != seeds or not torch.equal(result.evaluations, checkpoints):
@@ -83,8 +96,17 @@ def compare_constrained(
                 run.X.dtype != reference_dtype
                 or run.X.device != reference_device
                 or not torch.equal(run.X[: run.initial_points], initial[run.seed])
+                or not torch.equal(
+                    run.Y_truth[: run.initial_points], initial_truth[run.seed]
+                )
+                or not torch.equal(
+                    run.constraints[: run.initial_points], initial_constraints[run.seed]
+                )
+                or not torch.equal(
+                    run.Y_observed[: run.initial_points], initial_observed[run.seed]
+                )
             ):
-                raise ValueError("Initial designs, dtypes, and devices must match.")
+                raise ValueError("Initial designs, histories, dtypes, and devices must match.")
         expected = (len(seeds), checkpoints.numel())
         if values.shape != expected or result.feasibility_rate.shape != expected:
             raise ValueError("Metric shapes must match seeds and checkpoints.")
