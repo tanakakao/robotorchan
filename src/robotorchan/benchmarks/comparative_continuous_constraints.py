@@ -67,7 +67,11 @@ def run_continuous_constraint_baseline(
     checkpoints = [0, *range(config.q, budget + 1, config.q)]
     if checkpoints[-1] != budget:
         checkpoints.append(budget)
-    indices = torch.tensor([initial + count - 1 for count in checkpoints], dtype=torch.long)
+    indices = torch.tensor(
+        [initial + count - 1 for count in checkpoints],
+        dtype=torch.long,
+        device=trajectories[0].X.device,
+    )
     problem = registry.create(config.problem)
     regret = torch.stack(
         [simple_regret_curve(problem, run).index_select(0, indices) for run in trajectories]
