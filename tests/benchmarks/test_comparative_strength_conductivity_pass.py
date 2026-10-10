@@ -38,10 +38,7 @@ def test_heterogeneous_baseline(strategy: str) -> None:
     assert result.feasible_hypervolume.shape == (1, 5)
     assert result.feasibility_rate.shape == (1, 5)
     torch.testing.assert_close(result.pass_labels[0], strength_conductivity_pass_labels(run.X))
-    assert (
-        result.feasible_hypervolume[:, 1:]
-        >= result.feasible_hypervolume[:, :-1] - 1e-12
-    ).all()
+    assert (result.feasible_hypervolume[:, 1:] >= result.feasible_hypervolume[:, :-1] - 1e-12).all()
 
 
 def test_candidate_receives_binary_labels_without_truth() -> None:
