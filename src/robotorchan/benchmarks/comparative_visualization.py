@@ -59,8 +59,11 @@ def _series(
         invalid_band = torch.isnan(error)
         if (invalid_band & torch.isfinite(y)).any():
             raise ValueError("Finite scores require finite uncertainty.")
-        lower = torch.where(invalid_band, y, y - error)
-        upper = torch.where(invalid_band, y, y + error)
+        if invalid_band.any():
+            lower = upper = None
+        else:
+            lower = y - error
+            upper = y + error
     return PlotSeries(
         name=name,
         x=tuple(float(v) for v in x.detach().cpu().tolist()),
