@@ -56,3 +56,18 @@ def test_invalid_efficiency_data_rejected() -> None:
     )
     with pytest.raises(ValueError, match="nonnegative"):
         plot_efficiency({"random": replace(efficiency, total_seconds=-values)})
+
+
+def test_pre_feasibility_regret_omits_undefined_band() -> None:
+    comparison = SingleObjectiveComparison(
+        seeds=(0, 1),
+        q=1,
+        evaluations=torch.tensor([0, 1]),
+        regret_by_method={},
+        mean_regret_by_method={"random": torch.tensor([float("inf"), 2.0])},
+        standard_error_by_method={"random": torch.tensor([float("nan"), 0.2])},
+    )
+    plot = plot_single_objective(comparison)
+    assert plot.series[0].y[0] == float("inf")
+    assert plot.series[0].lower is None
+    assert plot.series[0].upper is None
