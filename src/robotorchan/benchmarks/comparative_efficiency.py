@@ -51,6 +51,8 @@ def summarize_efficiency(
         if run.seed in seeds:
             raise ValueError("Duplicate seeds are not allowed.")
         seeds.append(run.seed)
+        if run.completed_batches != tuple(checkpoints[1:]):
+            raise ValueError("Recorded batch boundaries must match q and budget.")
         batches = len(checkpoints) - 1
         if (
             len(run.candidate_seconds) != batches
