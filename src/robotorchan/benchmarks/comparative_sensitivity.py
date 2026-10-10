@@ -99,7 +99,10 @@ def summarize_sensitivity(
             raise ValueError("Scores must be finite floating-point [seed, checkpoint] tensors.")
         if seeds[value] != reference_seeds:
             raise ValueError("Seed ordering must match across sensitivity settings.")
-        point_set = set(points.tolist())
+        point_set = {
+            point for index, point in enumerate(points.tolist())
+            if torch.isfinite(data[:, index]).all()
+        }
         common = point_set if common is None else common & point_set
     assert common is not None
     if not common:
