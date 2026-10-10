@@ -61,8 +61,9 @@ def test_batch_checkpoints_include_final_partial_batch() -> None:
 
 def test_comparison_rejects_mismatched_initial_design() -> None:
     altered = _run(0)
-    altered = replace(altered, X=altered.X.clone())
-    altered.X[0, 0] = 0.2
+    modified_X = altered.X.clone()
+    modified_X[0, 0] = 0.2
+    altered = replace(altered, X=modified_X)
     with pytest.raises(ValueError, match="Initial designs"):
         compare_multiobjective(
             branin_currin(),
