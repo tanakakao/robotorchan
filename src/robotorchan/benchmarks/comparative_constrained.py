@@ -13,7 +13,6 @@ from robotorchan.benchmarks.comparative_strength_conductivity_pass import (
     StrengthConductivityPassResult,
 )
 from robotorchan.benchmarks.comparative_strength_pass import StrengthPassResult
-from robotorchan.benchmarks.runner import BenchmarkTrajectory
 
 ConstrainedResult = (
     ContinuousConstraintResult | StrengthPassResult | StrengthConductivityPassResult
@@ -74,10 +73,7 @@ def compare_constrained(
         if seeds is None:
             seeds = current_seeds
             checkpoints = result.evaluations.clone()
-            initial = {
-                run.seed: run.X[: run.initial_points].clone()
-                for run in result.trajectories
-            }
+            initial = {run.seed: run.X[: run.initial_points].clone() for run in result.trajectories}
             reference_dtype = result.trajectories[0].X.dtype
             reference_device = result.trajectories[0].X.device
         if current_seeds != seeds or not torch.equal(result.evaluations, checkpoints):
