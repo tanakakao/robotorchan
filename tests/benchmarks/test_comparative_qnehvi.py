@@ -53,7 +53,7 @@ def test_qnehvi_rejects_invalid_optimizer_settings(name: str) -> None:
 def test_qnehvi_rejects_unknown_acquisition() -> None:
     problem = branin_currin()
     X = torch.rand(4, 2, dtype=torch.double)
-    Y = problem.evaluate(X)
+    Y = problem.evaluate_observation(X)
     with pytest.raises(ValueError, match="acquisition"):
         botorch_qehvi_candidates(
             problem,
