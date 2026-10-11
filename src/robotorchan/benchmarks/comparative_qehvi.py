@@ -66,6 +66,7 @@ def run_comparative_qehvi(
     strategy = make_comparative_qehvi_strategy(
         num_restarts=num_restarts,
         raw_samples=raw_samples,
+        mc_samples=mc_samples,
     )
     return run_benchmark(
         cell.config,
