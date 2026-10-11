@@ -117,19 +117,21 @@ def run_noisy_singleobjective(
                 evaluation_budget=50,
                 q=q,
             )
-            cell = ComparativeExperimentCell(tier="empirical_standard", config=config)
+            ComparativeExperimentCell(tier="empirical_standard", config=config)
             if strategy == "random":
                 candidate_generator = random_candidates
             elif strategy == "sobol":
 
-                def candidate_generator(problem_view, X, Y, batch_q, generator):
+                def candidate_generator(
+                    problem_view, X, Y, batch_q, generator, *, initial_points=20
+                ):
                     return sobol_candidates(
                         problem_view,
                         X,
                         Y,
                         batch_q,
                         generator,
-                        initial_points=config.initial_points,
+                        initial_points=initial_points,
                     )
             elif strategy == "qEI":
                 candidate_generator = make_comparative_qei_strategy(
