@@ -69,4 +69,11 @@ def run_comparative_qnehvi(
         raw_samples=raw_samples,
         mc_samples=mc_samples,
     )
-    return run_benchmark(cell.config, strategy, registry=registry, restrict_candidate_problem=True, independent_rng_streams=True, isolate_strategy_rng=True)
+    return run_benchmark(
+        cell.config,
+        strategy,
+        registry=registry,
+        restrict_candidate_problem=True,
+        independent_rng_streams=True,
+        isolate_strategy_rng=True,
+    )
