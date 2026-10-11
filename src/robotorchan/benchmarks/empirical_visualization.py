@@ -91,10 +91,7 @@ def render_empirical_charts(artifacts: str | Path, destination: str | Path) -> d
         plt.close(fig)
 
         fig, ax = plt.subplots(figsize=(9, 5))
-        means = [
-            sum(summary["elapsed_seconds_by_seed"][strategy]) / 10
-            for strategy in strategies
-        ]
+        means = [sum(summary["elapsed_seconds_by_seed"][strategy]) / 10 for strategy in strategies]
         ax.bar(strategies, means)
         ax.set(ylabel="Elapsed seconds", title="Mean wall-clock time (10 seeds)")
         fig.tight_layout()
