@@ -17,9 +17,7 @@ from robotorchan.benchmarks.standard_problems import branin, hartmann6
 _PROBLEMS = {"branin": branin, "hartmann6": hartmann6, "branin_currin": branin_currin}
 
 
-def export_empirical_curves(
-    directory: str | Path, destination: str | Path
-) -> dict[str, object]:
+def export_empirical_curves(directory: str | Path, destination: str | Path) -> dict[str, object]:
     """Require a complete validated cohort before emitting any performance curve."""
     output = Path(destination)
     if output.exists():
