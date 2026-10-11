@@ -2,6 +2,5 @@
 
 from robotorchan.benchmarks.empirical_baseline_evidence import main
 
-
 if __name__ == "__main__":
     main()
