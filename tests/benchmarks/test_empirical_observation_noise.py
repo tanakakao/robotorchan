@@ -13,9 +13,9 @@ from robotorchan.benchmarks.standard_problems import register_standard_problems
 
 
 def _noise(truth: Tensor, generator: torch.Generator) -> Tensor:
-    return torch.randn(
-        truth.shape, generator=generator, device=truth.device, dtype=truth.dtype
-    ) * 0.1
+    return (
+        torch.randn(truth.shape, generator=generator, device=truth.device, dtype=truth.dtype) * 0.1
+    )
 
 
 def _registry() -> BenchmarkProblemRegistry:
