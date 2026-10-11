@@ -83,7 +83,9 @@ def render_empirical_charts(artifacts: str | Path, destination: str | Path) -> d
         if (
             not all(math.isfinite(value) and value >= 0 for value in components)
             or not math.isfinite(total_seconds)
-            or not math.isclose(sum(components), total_seconds, rel_tol=1e-10, abs_tol=1e-12)
+            or not math.isclose(
+                sum(components), total_seconds, rel_tol=1e-10, abs_tol=1e-12
+            )
             or not math.isclose(
                 total_seconds, expected_seconds, rel_tol=1e-10, abs_tol=1e-12
             )
