@@ -18,6 +18,7 @@ class CandidateProblemView:
     directions: tuple[Direction, ...]
     variable_types: tuple[VariableKind, ...]
     n_constraints: int
+    reference_point: Tensor | None = None
 
     @classmethod
     def from_problem(cls, problem: BenchmarkProblem) -> CandidateProblemView:
@@ -28,6 +29,11 @@ class CandidateProblemView:
             directions=problem.directions,
             variable_types=problem.variable_types,
             n_constraints=problem.n_constraints,
+            reference_point=(
+                None
+                if problem.reference_point is None
+                else problem.reference_point.detach().clone()
+            ),
         )
 
     @property
