@@ -50,9 +50,7 @@ class EmpiricalComparisonReport:
 
 def build_comparison_report(
     problem: BenchmarkProblem,
-    experiments: Mapping[
-        str, tuple[BenchmarkExperimentConfig, tuple[BenchmarkTrajectory, ...]]
-    ],
+    experiments: Mapping[str, tuple[BenchmarkExperimentConfig, tuple[BenchmarkTrajectory, ...]]],
     *,
     metric: MetricName,
     reference: str,
@@ -74,8 +72,7 @@ def build_comparison_report(
     if any(config.problem != problem.name for config, _ in experiments.values()):
         raise ValueError("Provided problem does not match experiment configurations.")
     curves = {
-        name: align_metric_curves(problem, runs, metric)
-        for name, (_, runs) in experiments.items()
+        name: align_metric_curves(problem, runs, metric) for name, (_, runs) in experiments.items()
     }
     summaries = {
         name: _json_value(
