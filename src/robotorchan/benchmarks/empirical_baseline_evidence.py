@@ -70,9 +70,7 @@ def run_baseline_cohort(destination: Path, *, problem: str, q: int, git_sha: str
                 if (
                     run.initial_points != 20
                     or run.evaluation_count != 50
-                    or run.completed_batches != tuple(range(q, 51, q)) + (
-                        (50,) if 50 % q else ()
-                    )
+                    or run.completed_batches != tuple(range(q, 51, q)) + ((50,) if 50 % q else ())
                 ):
                     raise ValueError("Incorrect baseline budget or batch boundaries.")
                 path = destination / f"{strategy}_seed{run.seed}.json"
