@@ -70,9 +70,7 @@ def test_restricted_callback_cannot_access_oracle() -> None:
         assert problem.dimension == X.shape[-1]
         return random_candidates(problem, X, Y, q, generator)
 
-    run_benchmark(
-        config, inspect_callback, registry=_registry(), restrict_candidate_problem=True
-    )
+    run_benchmark(config, inspect_callback, registry=_registry(), restrict_candidate_problem=True)
 
 
 def test_restricted_view_bounds_are_defensively_copied() -> None:
