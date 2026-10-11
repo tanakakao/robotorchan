@@ -56,7 +56,14 @@ def run_comparative_baseline(
     register_regression_binary_problems(registry)
     register_standard_problems(registry)
     if config.strategy == "random":
-        return run_benchmark(config, random_candidates, registry=registry)
+        return run_benchmark(
+            config,
+            random_candidates,
+            registry=registry,
+            restrict_candidate_problem=True,
+            independent_rng_streams=True,
+            isolate_strategy_rng=True,
+        )
     if config.strategy != "sobol":
         raise ValueError("Only Random and Sobol are supported by this runner.")
 
@@ -76,4 +83,11 @@ def run_comparative_baseline(
             initial_points=config.initial_points,
         )
 
-    return run_benchmark(config, candidate_generator, registry=registry)
+    return run_benchmark(
+        config,
+        candidate_generator,
+        registry=registry,
+        restrict_candidate_problem=True,
+        independent_rng_streams=True,
+        isolate_strategy_rng=True,
+    )
