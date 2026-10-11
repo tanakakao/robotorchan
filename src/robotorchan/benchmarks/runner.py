@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import nullcontext
 from dataclasses import dataclass
 from time import perf_counter
 
@@ -15,6 +16,7 @@ from robotorchan.benchmarks.observation_noise import SeededObservationNoise
 from robotorchan.benchmarks.problem import BenchmarkProblem
 from robotorchan.benchmarks.random_streams import derive_stream_seed, make_stream_generator
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
+from robotorchan.benchmarks.strategy_rng import strategy_rng_scope
 
 CandidateGenerator = Callable[
     [BenchmarkProblem | CandidateProblemView, Tensor, Tensor, int, torch.Generator], Tensor
@@ -98,6 +100,7 @@ def run_benchmark(
     restrict_candidate_problem: bool = False,
     independent_rng_streams: bool = False,
     observation_noise: SeededObservationNoise | None = None,
+    isolate_strategy_rng: bool = False,
 ) -> tuple[BenchmarkTrajectory, ...]:
     """Run independent seeds with a strict evaluation budget.
 
@@ -106,7 +109,7 @@ def run_benchmark(
     Set restrict_candidate_problem=True for oracle-free strategy-facing metadata.
     Set independent_rng_streams=True to isolate initial-design and candidate seeds.
     Seeded observation_noise overrides problem.observe and uses a separate RNG stream.
-    Internal acquisition RNG still requires its own contract.
+    Set isolate_strategy_rng=True to seed PyTorch global RNG per candidate batch.
     """
     device = config.torch_device
     dtype = config.torch_dtype
@@ -155,9 +158,15 @@ def run_benchmark(
             if device.type == "cuda":
                 torch.cuda.synchronize(device)
             candidate_start = perf_counter()
-            candidates = candidate_generator(
-                candidate_problem, X.clone(), observed.clone(), batch_size, generator
+            scope = (
+                strategy_rng_scope(seed, len(completed_batches), device)
+                if isolate_strategy_rng
+                else nullcontext()
             )
+            with scope:
+                candidates = candidate_generator(
+                    candidate_problem, X.clone(), observed.clone(), batch_size, generator
+                )
             if not isinstance(candidates, Tensor) or candidates.shape != (
                 batch_size,
                 problem.dimension,
