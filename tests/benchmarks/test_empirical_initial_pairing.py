@@ -10,9 +10,13 @@ from torch import Tensor
 
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.initial_pairing import validate_initial_pairing
-from robotorchan.benchmarks.observation_noise import SeededObservationNoise
+from robotorchan.benchmarks.observation_noise import NoisePolicy, SeededObservationNoise
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
-from robotorchan.benchmarks.runner import BenchmarkTrajectory, random_candidates, run_benchmark
+from robotorchan.benchmarks.runner import (
+    BenchmarkTrajectory,
+    random_candidates,
+    run_benchmark,
+)
 from robotorchan.benchmarks.standard_problems import register_standard_problems
 
 
@@ -26,7 +30,7 @@ def _noise(truth: Tensor, generator: torch.Generator) -> Tensor:
     return torch.randn(truth.shape, generator=generator, dtype=truth.dtype) * 0.1
 
 
-def _run(strategy: str, policy: str = "paired") -> tuple[BenchmarkTrajectory, ...]:
+def _run(strategy: str, policy: NoisePolicy = "paired") -> tuple[BenchmarkTrajectory, ...]:
     config = BenchmarkExperimentConfig(
         problem="branin",
         strategy=strategy,
