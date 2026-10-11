@@ -7,7 +7,15 @@ from torch import Tensor
 
 from robotorchan.benchmarks.candidate_view import CandidateProblemView
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
+from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.runner import random_candidates, run_benchmark
+from robotorchan.benchmarks.standard_problems import register_standard_problems
+
+
+def _registry() -> BenchmarkProblemRegistry:
+    registry = BenchmarkProblemRegistry()
+    register_standard_problems(registry)
+    return registry
 
 
 def test_restricted_random_baseline_runs_with_complete_budget() -> None:
@@ -24,6 +32,7 @@ def test_restricted_random_baseline_runs_with_complete_budget() -> None:
         config,
         random_candidates,
         restrict_candidate_problem=True,
+        registry=_registry(),
     )
     assert len(trajectories) == 1
     assert trajectories[0].evaluation_count == 5
@@ -61,7 +70,9 @@ def test_restricted_callback_cannot_access_oracle() -> None:
         assert problem.dimension == X.shape[-1]
         return random_candidates(problem, X, Y, q, generator)
 
-    run_benchmark(config, inspect_callback, restrict_candidate_problem=True)
+    run_benchmark(
+        config, inspect_callback, registry=_registry(), restrict_candidate_problem=True
+    )
 
 
 def test_restricted_view_bounds_are_defensively_copied() -> None:
@@ -83,5 +94,7 @@ def test_restricted_view_bounds_are_defensively_copied() -> None:
         problem.bounds.fill_(0)
         return X[:q].clone()
 
-    trajectory = run_benchmark(config, mutate_callback, restrict_candidate_problem=True)[0]
+    trajectory = run_benchmark(
+        config, mutate_callback, registry=_registry(), restrict_candidate_problem=True
+    )[0]
     assert torch.equal(trajectory.X[-1:], trajectory.X[:1])
