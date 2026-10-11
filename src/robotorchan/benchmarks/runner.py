@@ -11,6 +11,7 @@ from torch import Tensor
 
 from robotorchan.benchmarks.candidate_view import CandidateProblemView
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
+from robotorchan.benchmarks.observation_noise import SeededObservationNoise
 from robotorchan.benchmarks.problem import BenchmarkProblem
 from robotorchan.benchmarks.random_streams import derive_stream_seed, make_stream_generator
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
@@ -96,6 +97,7 @@ def run_benchmark(
     registry: BenchmarkProblemRegistry | None = None,
     restrict_candidate_problem: bool = False,
     independent_rng_streams: bool = False,
+    observation_noise: SeededObservationNoise | None = None,
 ) -> tuple[BenchmarkTrajectory, ...]:
     """Run independent seeds with a strict evaluation budget.
 
@@ -103,7 +105,8 @@ def run_benchmark(
     requested batch size, and a run-local generator. It must return (q, d).
     Set restrict_candidate_problem=True for oracle-free strategy-facing metadata.
     Set independent_rng_streams=True to isolate initial-design and candidate seeds.
-    Observation noise and internal acquisition RNG require separate contracts.
+    Seeded observation_noise overrides problem.observe and uses a separate RNG stream.
+    Internal acquisition RNG still requires its own contract.
     """
     device = config.torch_device
     dtype = config.torch_dtype
@@ -114,6 +117,11 @@ def run_benchmark(
             make_stream_generator(seed, "candidate", device)
             if independent_rng_streams
             else torch.Generator(device=device).manual_seed(seed)
+        )
+        noise_generator = (
+            observation_noise.generator(seed, config.strategy, device)
+            if observation_noise is not None
+            else None
         )
         initial_seed = (
             derive_stream_seed(seed, "initial_design") if independent_rng_streams else seed
@@ -127,8 +135,12 @@ def run_benchmark(
         if device.type == "cuda":
             torch.cuda.synchronize(device)
         initial_start = perf_counter()
-        observed = problem.evaluate_observation(X)
         truth = problem.evaluate_truth(X)
+        observed = (
+            problem.evaluate_observation(X)
+            if observation_noise is None
+            else observation_noise.observe(truth, noise_generator)
+        )
         constraints = problem.evaluate_constraints(X)
         costs = problem.evaluate_cost(X)
         if device.type == "cuda":
@@ -156,8 +168,12 @@ def run_benchmark(
                 torch.cuda.synchronize(device)
             candidate_seconds.append(perf_counter() - candidate_start)
             evaluation_start = perf_counter()
-            new_observed = problem.evaluate_observation(candidates)
             new_truth = problem.evaluate_truth(candidates)
+            new_observed = (
+                problem.evaluate_observation(candidates)
+                if observation_noise is None
+                else observation_noise.observe(new_truth, noise_generator)
+            )
             new_constraints = problem.evaluate_constraints(candidates)
             new_costs = problem.evaluate_cost(candidates)
             if device.type == "cuda":
