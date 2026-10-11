@@ -82,7 +82,7 @@ def _validate_trajectories(
 ) -> None:
     if len(trajectories) != len(config.seeds):
         raise ValueError("Trajectory count does not match configured seeds.")
-    for seed, run in zip(config.seeds, trajectories):
+    for seed, run in zip(config.seeds, trajectories, strict=True):
         n = config.initial_points + config.evaluation_budget
         if run.seed != seed or run.initial_points != config.initial_points:
             raise ValueError("Trajectory seed or initial design does not match configuration.")
@@ -104,7 +104,9 @@ def _validate_trajectories(
             raise ValueError("Trajectory batch history is inconsistent.")
         if any(
             current <= previous or current - previous > config.q
-            for previous, current in zip((0, *run.completed_batches[:-1]), run.completed_batches)
+            for previous, current in zip(
+                (0, *run.completed_batches[:-1]), run.completed_batches, strict=True
+            )
         ):
             raise ValueError("Trajectory batch increments are inconsistent.")
 
