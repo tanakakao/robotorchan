@@ -41,7 +41,7 @@ def test_trajectory_roundtrip(tmp_path) -> None:
     save_trajectory_artifact(original, path)
     loaded = load_trajectory_artifact(path)
     assert loaded.config == original.config
-    for first, second in zip(original.trajectories, loaded.trajectories):
+    for first, second in zip(original.trajectories, loaded.trajectories, strict=True):
         assert first.seed == second.seed
         assert first.completed_batches == second.completed_batches
         for name in ("X", "Y_observed", "Y_truth", "constraints", "costs"):
