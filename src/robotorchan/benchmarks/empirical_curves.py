@@ -39,6 +39,24 @@ def export_empirical_curves(directory: str | Path, destination: str | Path) -> d
             )
             if curve.numel() != 70 or not torch.isfinite(curve).all():
                 raise ValueError("Invalid truth-based performance curve.")
+            expected_final = summary["final_metric_by_seed"][strategy][seed]
+            if not torch.isclose(
+                curve[-1], curve.new_tensor(expected_final), rtol=1e-10, atol=1e-12
+            ):
+                raise ValueError("Final curve metric disagrees with empirical summary.")
+            actual_seconds = (
+                run.initial_evaluation_seconds
+                + sum(run.candidate_seconds)
+                + sum(run.evaluation_seconds)
+            )
+            expected_seconds = summary["elapsed_seconds_by_seed"][strategy][seed]
+            if not torch.isclose(
+                torch.tensor(actual_seconds, dtype=torch.double),
+                torch.tensor(expected_seconds, dtype=torch.double),
+                rtol=1e-10,
+                atol=1e-12,
+            ):
+                raise ValueError("Trajectory timing disagrees with empirical summary.")
             for index, value in enumerate(curve.tolist()):
                 rows.append(
                     {
