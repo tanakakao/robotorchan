@@ -80,9 +80,7 @@ def test_visualization_rejects_corrupted_final_metric(tmp_path):
         )
         writer.writeheader()
         for seed in range(10):
-            writer.writerow(
-                {"problem": "branin", "q": 1, "strategy": "random", "seed": seed}
-            )
+            writer.writerow({"problem": "branin", "q": 1, "strategy": "random", "seed": seed})
     with pytest.raises(ValueError, match="Curve final value disagrees"):
         render_empirical_charts(artifacts, tmp_path / "charts")
     assert not (tmp_path / "charts").exists()
