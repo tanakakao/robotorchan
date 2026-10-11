@@ -67,4 +67,4 @@ def run_comparative_qehvi(
         num_restarts=num_restarts,
         raw_samples=raw_samples,
     )
-    return run_benchmark(cell.config, strategy, registry=registry)
+    return run_benchmark(cell.config, strategy, registry=registry, restrict_candidate_problem=True, independent_rng_streams=True, isolate_strategy_rng=True)
