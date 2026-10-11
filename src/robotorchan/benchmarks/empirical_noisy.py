@@ -102,9 +102,10 @@ def run_noisy_singleobjective(
     register_standard_problems(registry)
 
     def gaussian_noise(truth: torch.Tensor, generator: torch.Generator) -> torch.Tensor:
-        return torch.randn(
-            truth.shape, dtype=truth.dtype, device=truth.device, generator=generator
-        ) * noise_std
+        return (
+            torch.randn(truth.shape, dtype=truth.dtype, device=truth.device, generator=generator)
+            * noise_std
+        )
 
     observation_noise = SeededObservationNoise(gaussian_noise, policy=noise_policy)
     try:
@@ -139,7 +140,8 @@ def run_noisy_singleobjective(
                 )
             else:
                 candidate_generator = make_comparative_qnei_strategy(
-                    num_restarts=num_restarts, raw_samples=raw_samples,
+                    num_restarts=num_restarts,
+                    raw_samples=raw_samples,
                 )
             runs = run_benchmark(
                 config,
