@@ -59,9 +59,7 @@ class TrajectoryArtifact:
         _validate_trajectories(self.config, self.trajectories)
         runs = []
         for trajectory in self.trajectories:
-            run = {
-                name: _encode_tensor(getattr(trajectory, name)) for name in _TENSOR_FIELDS
-            }
+            run = {name: _encode_tensor(getattr(trajectory, name)) for name in _TENSOR_FIELDS}
             run.update(
                 seed=trajectory.seed,
                 initial_points=trajectory.initial_points,
@@ -97,8 +95,6 @@ def _validate_trajectories(
             raise ValueError("Trajectory observation dimensions are inconsistent.")
         if run.Y_observed.shape != run.Y_truth.shape or run.costs.shape[1] != 1:
             raise ValueError("Trajectory output or cost dimensions are inconsistent.")
-        if run.constraints.shape[1] < 0:
-            raise ValueError("Invalid constraint dimensions.")
         if (
             not run.completed_batches
             or run.completed_batches[-1] != config.evaluation_budget
@@ -126,8 +122,9 @@ def load_trajectory_artifact(path: str | Path) -> TrajectoryArtifact:
         "schema_version", "config", "trajectories"
     }:
         raise ValueError("Invalid trajectory artifact envelope.")
-    if type(payload["schema_version"]) is not int or (
-        payload["schema_version"] != TRAJECTORY_SCHEMA_VERSION
+    if (
+        type(payload["schema_version"]) is not int
+        or payload["schema_version"] != TRAJECTORY_SCHEMA_VERSION
     ):
         raise ValueError("Unsupported trajectory schema version.")
     config = BenchmarkExperimentConfig.from_dict(payload["config"])
