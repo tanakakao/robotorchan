@@ -15,19 +15,29 @@ import torch
 from robotorchan.benchmarks.comparative_baselines import run_comparative_baseline
 from robotorchan.benchmarks.comparative_matrix import ComparativeExperimentCell
 from robotorchan.benchmarks.comparative_qei import run_comparative_qei
+from robotorchan.benchmarks.comparative_qlogei import run_comparative_qlogei
+from robotorchan.benchmarks.comparative_qlognei import run_comparative_qlognei
 from robotorchan.benchmarks.comparative_qnei import run_comparative_qnei
+from robotorchan.benchmarks.comparative_qts import run_comparative_qts
+from robotorchan.benchmarks.comparative_qucb_qpi import run_comparative_qucb_qpi
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.initial_pairing import validate_initial_pairing
 from robotorchan.benchmarks.persistence import save_trajectory
 from robotorchan.benchmarks.runner import BenchmarkTrajectory
 
 STRATEGIES = ("random", "sobol", "qEI", "qNEI")
+EXTENDED_STRATEGIES = ("qLogEI", "qLogNEI", "qPI", "qUCB", "qTS")
 PROBLEMS = ("branin", "hartmann6")
 RUNNERS: dict[str, Callable] = {
     "random": run_comparative_baseline,
     "sobol": run_comparative_baseline,
     "qEI": run_comparative_qei,
     "qNEI": run_comparative_qnei,
+    "qLogEI": run_comparative_qlogei,
+    "qLogNEI": run_comparative_qlognei,
+    "qPI": run_comparative_qucb_qpi,
+    "qUCB": run_comparative_qucb_qpi,
+    "qTS": run_comparative_qts,
 }
 
 
@@ -40,6 +50,7 @@ def run_noiseless_singleobjective(
     dirty: bool,
     num_restarts: int = 3,
     raw_samples: int = 64,
+    strategies: tuple[str, ...] = STRATEGIES,
 ) -> dict[str, object]:
     """Persist full seed-paired runs; raise rather than silently omit failures.
 
@@ -57,6 +68,13 @@ def run_noiseless_singleobjective(
     if type(raw_samples) is not int or raw_samples < 1:
         raise ValueError("raw_samples must be positive.")
 
+    if not strategies or len(set(strategies)) != len(strategies):
+        raise ValueError("Strategies must be nonempty and unique.")
+    if any(strategy not in RUNNERS for strategy in strategies):
+        raise ValueError("Unknown empirical strategy.")
+    if "random" not in strategies or "sobol" not in strategies:
+        raise ValueError("Empirical comparison requires Random and Sobol baselines.")
+
     root = Path(destination)
     if root.exists() and any(root.iterdir()):
         raise FileExistsError("Refusing to overwrite an existing experiment directory.")
@@ -64,7 +82,7 @@ def run_noiseless_singleobjective(
     manifest: dict[str, object] = {
         "protocol": "empirical-evaluation-protocol",
         "problem": problem,
-        "strategies": list(STRATEGIES),
+        "strategies": list(strategies),
         "q": q,
         "seeds": list(range(10)),
         "initial_points": 20,
@@ -92,7 +110,7 @@ def run_noiseless_singleobjective(
     persist_manifest()
     trajectories: dict[str, tuple[BenchmarkTrajectory, ...]] = {}
     try:
-        for strategy in STRATEGIES:
+        for strategy in strategies:
             config = BenchmarkExperimentConfig(
                 problem=problem,
                 strategy=strategy,
@@ -102,10 +120,10 @@ def run_noiseless_singleobjective(
                 q=q,
             )
             cell = ComparativeExperimentCell(tier="empirical_standard", config=config)
-            if strategy in ("qEI", "qNEI"):
-                runs = RUNNERS[strategy](cell, num_restarts=num_restarts, raw_samples=raw_samples)
-            else:
+            if strategy == "qTS" or strategy in ("random", "sobol"):
                 runs = RUNNERS[strategy](cell)
+            else:
+                runs = RUNNERS[strategy](cell, num_restarts=num_restarts, raw_samples=raw_samples)
             if len(runs) != 10 or {run.seed for run in runs} != set(range(10)):
                 raise ValueError("Missing or duplicate seed trajectories.")
             for run in runs:
