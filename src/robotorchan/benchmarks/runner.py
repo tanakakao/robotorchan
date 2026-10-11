@@ -98,7 +98,8 @@ def run_benchmark(
     """Run independent seeds with a strict evaluation budget.
 
     The candidate callback receives the problem, evaluated X, observed Y,
-    requested batch size, and a run-local generator. It must return (q, d).\n    Set restrict_candidate_problem=True for oracle-free strategy-facing metadata.
+    requested batch size, and a run-local generator. It must return (q, d).
+    Set restrict_candidate_problem=True for oracle-free strategy-facing metadata.
     """
     device = config.torch_device
     dtype = config.torch_dtype
