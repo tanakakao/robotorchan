@@ -87,9 +87,7 @@ def run_noiseless_singleobjective(
     manifest_path = root / "manifest.json"
 
     def persist_manifest() -> None:
-        manifest_path.write_text(
-            json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
-        )
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
     persist_manifest()
     trajectories: dict[str, tuple[BenchmarkTrajectory, ...]] = {}
@@ -105,9 +103,7 @@ def run_noiseless_singleobjective(
             )
             cell = ComparativeExperimentCell(tier="empirical_standard", config=config)
             if strategy in ("qEI", "qNEI"):
-                runs = RUNNERS[strategy](
-                    cell, num_restarts=num_restarts, raw_samples=raw_samples
-                )
+                runs = RUNNERS[strategy](cell, num_restarts=num_restarts, raw_samples=raw_samples)
             else:
                 runs = RUNNERS[strategy](cell)
             if len(runs) != 10 or {run.seed for run in runs} != set(range(10)):
