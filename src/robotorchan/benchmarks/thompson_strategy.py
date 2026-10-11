@@ -36,9 +36,11 @@ def thompson_candidates(
     devices = [X.device.index or 0] if X.is_cuda else []
     with torch.random.fork_rng(devices=devices):
         torch.manual_seed(seed)
-        pool = torch.quasirandom.SobolEngine(
-            dimension=X.shape[-1], scramble=True, seed=seed
-        ).draw(pool_size).to(dtype=X.dtype, device=X.device)
+        pool = (
+            torch.quasirandom.SobolEngine(dimension=X.shape[-1], scramble=True, seed=seed)
+            .draw(pool_size)
+            .to(dtype=X.dtype, device=X.device)
+        )
         pool = bounds[0] + (bounds[1] - bounds[0]) * pool
         direction = 1 if problem.directions[0] == "maximize" else -1
         model = SingleTaskGP(X, Y * direction)
