@@ -21,11 +21,11 @@ def export_empirical_curves(
     directory: str | Path, destination: str | Path
 ) -> dict[str, object]:
     """Require a complete validated cohort before emitting any performance curve."""
-    summary = summarize_empirical_directory(directory)
-    root = Path(directory)
     output = Path(destination)
     if output.exists():
         raise FileExistsError("Refusing to overwrite existing curve artifacts.")
+    summary = summarize_empirical_directory(directory)
+    root = Path(directory)
     problem = _PROBLEMS[summary["problem"]]()
     manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
     strategies = manifest["strategies"]
