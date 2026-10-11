@@ -7,7 +7,11 @@ import torch
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.random_streams import derive_stream_seed, make_stream_generator
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
-from robotorchan.benchmarks.runner import random_candidates, run_benchmark
+from robotorchan.benchmarks.runner import (
+    random_candidates,
+    run_benchmark,
+    sobol_initial_design,
+)
 from robotorchan.benchmarks.standard_problems import register_standard_problems
 
 
@@ -70,8 +74,6 @@ def test_legacy_initial_design_is_unchanged_by_default() -> None:
         initial_points=4,
         evaluation_budget=1,
     )
-    from robotorchan.benchmarks.runner import sobol_initial_design
-
     legacy = run_benchmark(config, random_candidates, registry=_registry())[0]
     expected = sobol_initial_design(
         _registry().create("branin"),
