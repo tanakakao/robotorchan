@@ -74,9 +74,7 @@ def paired_metric_difference(
     """Return first-minus-second differences paired by seed, not tuple order."""
     if first.metric != second.metric or first.evaluations != second.evaluations:
         raise ValueError("Paired curves must share metric and evaluation axis.")
-    if len(set(first.seeds)) != len(first.seeds) or len(set(second.seeds)) != len(
-        second.seeds
-    ):
+    if len(set(first.seeds)) != len(first.seeds) or len(set(second.seeds)) != len(second.seeds):
         raise ValueError("Paired curve seeds must be unique.")
     if set(first.seeds) != set(second.seeds):
         raise ValueError("Paired curves must share identical seed sets.")
