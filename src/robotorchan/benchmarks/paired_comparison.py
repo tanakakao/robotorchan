@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-import torch
 from torch import Tensor
 
 from robotorchan.benchmarks.curve_statistics import (
