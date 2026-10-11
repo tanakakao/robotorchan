@@ -115,7 +115,9 @@ def run_benchmark(
             if independent_rng_streams
             else torch.Generator(device=device).manual_seed(seed)
         )
-        initial_seed = derive_stream_seed(seed, "initial_design") if independent_rng_streams else seed
+        initial_seed = (
+            derive_stream_seed(seed, "initial_design") if independent_rng_streams else seed
+        )
         candidate_problem = (
             CandidateProblemView.from_problem(problem) if restrict_candidate_problem else problem
         )
