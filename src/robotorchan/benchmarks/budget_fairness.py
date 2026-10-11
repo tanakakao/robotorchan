@@ -27,9 +27,7 @@ def expected_completed_batches(budget: int, q: int) -> tuple[int, ...]:
     """Return cumulative batch endpoints, including a short final batch."""
     if type(budget) is not int or budget < 1 or type(q) is not int or q < 1:
         raise ValueError("budget and q must be positive integers.")
-    return tuple(range(q, budget + 1, q)) + (
-        (budget,) if budget % q else ()
-    )
+    return tuple(range(q, budget + 1, q)) + ((budget,) if budget % q else ())
 
 
 def validate_budget_fairness(
