@@ -6,7 +6,7 @@ import torch
 from torch import Tensor
 
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
-from robotorchan.benchmarks.observation_noise import SeededObservationNoise
+from robotorchan.benchmarks.observation_noise import NoisePolicy, SeededObservationNoise
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.runner import random_candidates, run_benchmark
 from robotorchan.benchmarks.standard_problems import register_standard_problems
@@ -24,7 +24,7 @@ def _registry() -> BenchmarkProblemRegistry:
     return registry
 
 
-def _run(strategy: str, policy: str) -> tuple:
+def _run(strategy: str, policy: NoisePolicy) -> tuple:
     config = BenchmarkExperimentConfig(
         problem="branin",
         strategy=strategy,
