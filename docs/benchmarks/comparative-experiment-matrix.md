@@ -9,11 +9,12 @@ eligibility assessments**, not results of executed benchmarks.
 | Comparison tier | Seeds | Initial points | New evaluations | q | Precision | Device |
 | --- | ---: | ---: | ---: | --- | --- | --- |
 | Smoke | 1 | 4 | 4 | 1 | float64 | CPU |
-| Standard | 5 | 20 | 40 | 1, 3 | float64 | CPU |
+| Standard (legacy) | 5 | 20 | 40 | 1, 3 | float64 | CPU |
+| Empirical Standard | 10 | 20 | 50 | 1, 3 | float64 | CPU |
 | Full | 20 | 30 | 100 | 1, 3, 5 | float64 | CPU |
 | Full CUDA | 20 | 30 | 100 | 1, 3, 5 | float64 | CUDA, separately |
 
-These are comparison tiers, **not** the existing `get_execution_profile`
+The new `empirical_standard` tier is the default for the empirical performance\nevaluation cycle. The older `standard` tier remains available for historical\ncomparability; do not pool results across these tiers. For q=3, the last\nbatch contains two candidates because the new-evaluation budget is 50.\nEach method must use identical seeds and initial designs, with separate\nstrata for q=1 and q=3.\n\nThese are comparison tiers, **not** the existing `get_execution_profile`
 presets. Each q value is a separate stratum. Use seeds 0 through N-1
 for each tier; record the actual seed mapping. The evaluation budget
 counts newly evaluated points, not initial points or optimizer calls.
@@ -99,9 +100,9 @@ For each scheduled cell:
 - **Smoke:** exercise candidate callback, budget accounting,
   objective/constraint semantics and storage for each eligible cell.
   One seed cannot support performance claims.
-- **Standard:** five paired seeds, q=1 and q=3, fixed acquisition
+- **Standard (legacy):** five paired seeds, q=1 and q=3, fixed acquisition
   settings, and seed-resampled uncertainty intervals.
-- **Full:** twenty paired seeds and q=1/3/5, after standard acceptance;
+- **Empirical Standard:** ten paired seeds, twenty initial points, fifty\n  additional evaluations, q=1 and q=3, with the same evaluation budget\n  across methods and paired uncertainty intervals.\n- **Full:** twenty paired seeds and q=1/3/5, after standard acceptance;
   CPU and CUDA results must not be pooled for timing.
 
 Keep a machine-readable manifest of each cell's problem, method,
