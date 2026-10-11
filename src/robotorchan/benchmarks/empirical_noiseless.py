@@ -120,9 +120,7 @@ def run_noiseless_singleobjective(
                 q=q,
             )
             cell = ComparativeExperimentCell(tier="empirical_standard", config=config)
-            if strategy == "qTS":
-                runs = RUNNERS[strategy](cell)
-            elif strategy in ("random", "sobol"):
+            if strategy == "qTS" or strategy in ("random", "sobol"):
                 runs = RUNNERS[strategy](cell)
             else:
                 runs = RUNNERS[strategy](cell, num_restarts=num_restarts, raw_samples=raw_samples)
