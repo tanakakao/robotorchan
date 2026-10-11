@@ -121,7 +121,9 @@ def load_trajectory_artifact(path: str | Path) -> TrajectoryArtifact:
     """Load and validate a versioned experiment history on CPU."""
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(payload, dict) or set(payload) != {
-        "schema_version", "config", "trajectories"
+        "schema_version",
+        "config",
+        "trajectories",
     }:
         raise ValueError("Invalid trajectory artifact envelope.")
     if (
