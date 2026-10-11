@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager
 from collections.abc import Iterator
+from contextlib import contextmanager
 
 import torch
 
@@ -19,9 +19,11 @@ def strategy_rng_scope(seed: int, batch_index: int, device: torch.device) -> Ite
     """
     if type(batch_index) is not int or batch_index < 0:
         raise ValueError("batch_index must be a nonnegative integer.")
-    cuda_devices = [device.index if device.index is not None else torch.cuda.current_device()]
-    if device.type != "cuda":
-        cuda_devices = []
+    cuda_devices = (
+        [device.index if device.index is not None else torch.cuda.current_device()]
+        if device.type == "cuda"
+        else []
+    )
     batch_seed = derive_stream_seed(seed, f"strategy_batch:{batch_index}")
     with torch.random.fork_rng(devices=cuda_devices):
         torch.manual_seed(batch_seed)
