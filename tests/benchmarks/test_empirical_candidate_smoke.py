@@ -52,11 +52,7 @@ def test_comparative_callback_receives_only_public_problem_view(
         calls.append(q)
         return (view.bounds[0] + view.bounds[1]).to(X).expand(q, -1) / 2
 
-    target = (
-        "botorch_gp_candidates"
-        if strategy in ("qEI", "qNEI")
-        else "botorch_qehvi_candidates"
-    )
+    target = "botorch_gp_candidates" if strategy in ("qEI", "qNEI") else "botorch_qehvi_candidates"
     with patch(f"robotorchan.benchmarks.{backend}.{target}", side_effect=candidate):
         trajectories = runner(cell, num_restarts=1, raw_samples=4)
     assert calls == [1, 1, 1, 1]
