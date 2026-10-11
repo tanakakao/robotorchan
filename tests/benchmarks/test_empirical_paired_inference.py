@@ -61,4 +61,6 @@ def test_unpaired_seeds_are_rejected() -> None:
 def test_invalid_alpha_is_rejected() -> None:
     baseline = _curve([5.0, 5.0])
     with pytest.raises(ValueError, match="alpha"):
-        infer_paired_strategies({"random": baseline, "candidate": baseline}, reference="random", alpha=1)
+        infer_paired_strategies(
+            {"random": baseline, "candidate": baseline}, reference="random", alpha=1
+        )
