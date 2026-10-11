@@ -69,10 +69,7 @@ def load_report_artifact(path: str | Path) -> ReportArtifact:
         "report",
     }:
         raise ValueError("Invalid report artifact envelope.")
-    if (
-        type(data["schema_version"]) is not int
-        or data["schema_version"] != REPORT_SCHEMA_VERSION
-    ):
+    if type(data["schema_version"]) is not int or data["schema_version"] != REPORT_SCHEMA_VERSION:
         raise ValueError("Unsupported report schema version.")
     provenance = data["provenance"]
     report = data["report"]
