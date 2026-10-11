@@ -69,13 +69,15 @@ def load_report_artifact(path: str | Path) -> ReportArtifact:
         "report",
     }:
         raise ValueError("Invalid report artifact envelope.")
-    if type(data["schema_version"]) is not int or data["schema_version"] != REPORT_SCHEMA_VERSION:
+    if (
+        type(data["schema_version"]) is not int
+        or data["schema_version"] != REPORT_SCHEMA_VERSION
+    ):
         raise ValueError("Unsupported report schema version.")
     provenance = data["provenance"]
     report = data["report"]
     if not isinstance(provenance, dict) or not all(
-        isinstance(key, str) and isinstance(value, str)
-        for key, value in provenance.items()
+        isinstance(key, str) and isinstance(value, str) for key, value in provenance.items()
     ):
         raise ValueError("Invalid provenance metadata.")
     if not isinstance(report, dict) or not {
