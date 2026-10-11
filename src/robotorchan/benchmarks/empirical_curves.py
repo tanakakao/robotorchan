@@ -72,7 +72,16 @@ def export_empirical_curves(
             (
                 "curves.csv",
                 rows,
-                ("problem", "q", "strategy", "seed", "evaluations", "total_points", "metric", "value"),
+                (
+                    "problem",
+                    "q",
+                    "strategy",
+                    "seed",
+                    "evaluations",
+                    "total_points",
+                    "metric",
+                    "value",
+                ),
             ),
             (
                 "timing.csv",
