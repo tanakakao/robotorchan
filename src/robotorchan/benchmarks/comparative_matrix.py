@@ -18,7 +18,7 @@ _PROFILES = {
 }
 _METHODS = {
     "branin": ("random", "sobol", "qEI", "qLogEI", "qNEI"),
-    "hartmann6": ("random", "sobol", "qEI", "qNEI"),
+    "hartmann6": ("random", "sobol", "qEI", "qLogEI", "qNEI"),
     "branin_currin": ("random", "sobol", "qEHVI", "qNEHVI"),
     "strength_pass": ("random", "sobol", "qEI", "qNEI"),
     "strength_conductivity_pass": ("random", "sobol", "qEHVI", "qNEHVI"),
