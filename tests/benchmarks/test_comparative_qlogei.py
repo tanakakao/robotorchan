@@ -7,8 +7,8 @@ from robotorchan.benchmarks.botorch_strategy import botorch_gp_candidates
 from robotorchan.benchmarks.comparative_matrix import ComparativeExperimentCell
 from robotorchan.benchmarks.comparative_qlogei import run_comparative_qlogei
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
-from robotorchan.benchmarks.standard_problems import register_standard_problems
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
+from robotorchan.benchmarks.standard_problems import register_standard_problems
 
 
 @pytest.mark.parametrize("problem", ["branin", "hartmann6"])
