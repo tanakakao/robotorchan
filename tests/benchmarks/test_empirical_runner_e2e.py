@@ -54,9 +54,7 @@ def test_real_branin_round_trip(tmp_path, q, expected_batches):
         assert restored.initial_evaluation_seconds >= 0
         for field in ("X", "Y_truth", "Y_observed", "constraints", "costs"):
             torch.testing.assert_close(getattr(restored, field), getattr(run, field))
-        torch.testing.assert_close(
-            restored.Y_truth, problem.evaluate_truth(restored.X)
-        )
+        torch.testing.assert_close(restored.Y_truth, problem.evaluate_truth(restored.X))
         curve = simple_regret_curve(problem, restored)
         assert curve.shape == (9,)
         assert torch.isfinite(curve).all()
