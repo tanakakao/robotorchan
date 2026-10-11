@@ -56,7 +56,7 @@ def botorch_qehvi_candidates(
 
     signs = Y.new_tensor([1 if d == "maximize" else -1 for d in problem.directions])
     train_Y = Y * signs
-    reference = problem.to_maximization(problem.reference_point.to(dtype=Y.dtype, device=Y.device))
+    reference = problem.reference_point.to(dtype=Y.dtype, device=Y.device) * signs
     bounds = problem.bounds.to(dtype=X.dtype, device=X.device)
     seed = int(torch.randint(0, 2**31 - 1, (1,), device=X.device, generator=generator).item())
     devices = list(range(torch.cuda.device_count())) if X.is_cuda else []
