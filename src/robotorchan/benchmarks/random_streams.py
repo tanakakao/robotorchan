@@ -16,7 +16,7 @@ def derive_stream_seed(seed: int, stream: str) -> int:
         raise ValueError("seed must be a nonnegative integer.")
     if not isinstance(stream, str) or not stream:
         raise ValueError("stream must be a nonempty string.")
-    payload = f"robotorchan:empirical:v1:{seed}:{stream}".encode("utf-8")
+    payload = f"robotorchan:empirical:v1:{seed}:{stream}".encode()
     digest = hashlib.sha256(payload).digest()
     return int.from_bytes(digest[:8], byteorder="big") % (2**63)
 
