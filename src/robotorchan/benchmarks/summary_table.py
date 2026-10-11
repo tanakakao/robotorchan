@@ -94,9 +94,7 @@ def summarize_comparison_table(
                 final_win_rate=(
                     float(comparison["final_win_rate"]) if comparison is not None else None
                 ),
-                adjusted_p_value=(
-                    float(test["adjusted_p_value"]) if test is not None else None
-                ),
+                adjusted_p_value=(float(test["adjusted_p_value"]) if test is not None else None),
                 significant=bool(test["significant"]) if test is not None else None,
             )
         )
