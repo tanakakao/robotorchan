@@ -43,10 +43,7 @@ def prepare_anytime_series(
             raise ValueError("All strategies must share an evaluation axis.")
         if not (len(axis) == len(mean) == len(lower) == len(upper)):
             raise ValueError("Anytime curve lengths are inconsistent.")
-        if any(
-            not all(isfinite(value) for value in values)
-            for values in (mean, lower, upper)
-        ):
+        if any(not all(isfinite(value) for value in values) for values in (mean, lower, upper)):
             raise ValueError("Anytime statistics must be finite.")
         if any(lo > hi for lo, hi in zip(lower, upper, strict=True)):
             raise ValueError("Anytime confidence interval bounds are inconsistent.")
