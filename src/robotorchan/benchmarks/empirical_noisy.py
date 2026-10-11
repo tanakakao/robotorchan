@@ -83,7 +83,11 @@ def run_noisy_singleobjective(
         "gpytorch": gpytorch.__version__,
         "num_restarts": num_restarts,
         "raw_samples": raw_samples,
-        "observation_noise": {"distribution": "Gaussian", "std": noise_std, "policy": noise_policy},
+        "observation_noise": {
+            "distribution": "Gaussian",
+            "std": noise_std,
+            "policy": noise_policy,
+        },
         "rng": "independent_streams_and_isolated_strategy_torch_rng",
         "status": "running",
     }
@@ -98,8 +102,9 @@ def run_noisy_singleobjective(
     register_standard_problems(registry)
 
     def gaussian_noise(truth: torch.Tensor, generator: torch.Generator) -> torch.Tensor:
-        return torch.randn(truth.shape, dtype=truth.dtype, device=truth.device,
-                           generator=generator) * noise_std
+        return torch.randn(
+            truth.shape, dtype=truth.dtype, device=truth.device, generator=generator
+        ) * noise_std
 
     observation_noise = SeededObservationNoise(gaussian_noise, policy=noise_policy)
     try:
@@ -116,23 +121,32 @@ def run_noisy_singleobjective(
             if strategy == "random":
                 candidate_generator = random_candidates
             elif strategy == "sobol":
+
                 def candidate_generator(problem_view, X, Y, batch_q, generator):
                     return sobol_candidates(
-                        problem_view, X, Y, batch_q, generator,
+                        problem_view,
+                        X,
+                        Y,
+                        batch_q,
+                        generator,
                         initial_points=config.initial_points,
                     )
             elif strategy == "qEI":
                 candidate_generator = make_comparative_qei_strategy(
-                    num_restarts=num_restarts, raw_samples=raw_samples,
+                    num_restarts=num_restarts, raw_samples=raw_samples
                 )
             else:
                 candidate_generator = make_comparative_qnei_strategy(
                     num_restarts=num_restarts, raw_samples=raw_samples,
                 )
             runs = run_benchmark(
-                config, candidate_generator, registry=registry,
-                restrict_candidate_problem=True, independent_rng_streams=True,
-                observation_noise=observation_noise, isolate_strategy_rng=True,
+                config,
+                candidate_generator,
+                registry=registry,
+                restrict_candidate_problem=True,
+                independent_rng_streams=True,
+                observation_noise=observation_noise,
+                isolate_strategy_rng=True,
             )
             if len(runs) != 10 or {run.seed for run in runs} != set(range(10)):
                 raise ValueError("Missing or duplicate seed trajectories.")
@@ -160,7 +174,8 @@ def run_noisy_singleobjective(
         }
         if not any(
             not torch.equal(run.Y_observed, run.Y_truth)
-            for runs in trajectories.values() for run in runs
+            for runs in trajectories.values()
+            for run in runs
         ):
             raise ValueError("Noisy cohort unexpectedly has no observation perturbation.")
         manifest["status"] = "runtime_validated"
