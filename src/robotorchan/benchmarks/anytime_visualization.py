@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import pairwise
 from pathlib import Path
 
 from robotorchan.benchmarks.comparison_report import EmpiricalComparisonReport
@@ -34,7 +35,7 @@ def prepare_anytime_series(
         upper = tuple(float(value) for value in stats["ci_upper"])
         if not axis or any(type(x) is not int or x < 0 for x in axis):
             raise ValueError("Evaluation axis must contain nonnegative integers.")
-        if any(current <= previous for previous, current in zip(axis, axis[1:], strict=False)):
+        if any(current <= previous for previous, current in pairwise(axis)):
             raise ValueError("Evaluation axis must be strictly increasing.")
         if common_axis is None:
             common_axis = axis
