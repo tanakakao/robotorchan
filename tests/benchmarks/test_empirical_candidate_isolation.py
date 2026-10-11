@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 import torch
 from torch import Tensor
 
@@ -84,5 +83,5 @@ def test_restricted_view_bounds_are_defensively_copied() -> None:
         problem.bounds.fill_(0)
         return X[:q].clone()
 
-    with pytest.raises(ValueError, match="within bounds"):
-        run_benchmark(config, mutate_callback, restrict_candidate_problem=True)
+    trajectory = run_benchmark(config, mutate_callback, restrict_candidate_problem=True)[0]
+    assert torch.equal(trajectory.X[-1:], trajectory.X[:1])
