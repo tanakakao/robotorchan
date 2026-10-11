@@ -5,7 +5,12 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import torch
-from botorch.acquisition import qExpectedImprovement, qNoisyExpectedImprovement
+from botorch.acquisition import (
+    qExpectedImprovement,
+    qNoisyExpectedImprovement,
+    qProbabilityOfImprovement,
+    qUpperConfidenceBound,
+)
 from botorch.acquisition.logei import qLogExpectedImprovement, qLogNoisyExpectedImprovement
 from botorch.fit import fit_gpytorch_mll
 from botorch.models import SingleTaskGP
@@ -40,8 +45,8 @@ def botorch_gp_candidates(
         raise ValueError("GP baseline requires unconstrained single-objective problems.")
     if any(kind != "continuous" for kind in problem.variable_types):
         raise ValueError("GP baseline requires continuous variables.")
-    if acquisition not in ("qEI", "qLogEI", "qNEI", "qLogNEI"):
-        raise ValueError("acquisition must be qEI, qLogEI, qNEI or qLogNEI.")
+    if acquisition not in ("qEI", "qLogEI", "qNEI", "qLogNEI", "qPI", "qUCB"):
+        raise ValueError("acquisition must be qEI, qLogEI, qNEI, qLogNEI, qPI or qUCB.")
     if type(num_restarts) is not int or num_restarts < 1:
         raise ValueError("num_restarts must be positive.")
     if type(raw_samples) is not int or raw_samples < 1:
@@ -63,6 +68,10 @@ def botorch_gp_candidates(
             acqf = qExpectedImprovement(model=model, best_f=train_Y.max())
         elif acquisition == "qLogEI":
             acqf = qLogExpectedImprovement(model=model, best_f=train_Y.max())
+        elif acquisition == "qPI":
+            acqf = qProbabilityOfImprovement(model=model, best_f=train_Y.max())
+        elif acquisition == "qUCB":
+            acqf = qUpperConfidenceBound(model=model, beta=0.2)
         elif acquisition == "qLogNEI":
             acqf = qLogNoisyExpectedImprovement(model=model, X_baseline=X)
         else:
