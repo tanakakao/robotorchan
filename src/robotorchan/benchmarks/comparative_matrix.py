@@ -17,8 +17,8 @@ _PROFILES = {
     "full_cuda": (20, 30, 100, (1, 3, 5), "cuda"),
 }
 _METHODS = {
-    "branin": ("random", "sobol", "qEI", "qLogEI", "qNEI"),
-    "hartmann6": ("random", "sobol", "qEI", "qLogEI", "qNEI"),
+    "branin": ("random", "sobol", "qEI", "qLogEI", "qNEI", "qLogNEI"),
+    "hartmann6": ("random", "sobol", "qEI", "qLogEI", "qNEI", "qLogNEI"),
     "branin_currin": ("random", "sobol", "qEHVI", "qNEHVI"),
     "strength_pass": ("random", "sobol", "qEI", "qNEI"),
     "strength_conductivity_pass": ("random", "sobol", "qEHVI", "qNEHVI"),
