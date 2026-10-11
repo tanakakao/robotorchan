@@ -12,6 +12,7 @@ from torch import Tensor
 from robotorchan.benchmarks.candidate_view import CandidateProblemView
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.problem import BenchmarkProblem
+from robotorchan.benchmarks.random_streams import derive_stream_seed, make_stream_generator
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 
 CandidateGenerator = Callable[
@@ -94,23 +95,35 @@ def run_benchmark(
     *,
     registry: BenchmarkProblemRegistry | None = None,
     restrict_candidate_problem: bool = False,
+    independent_rng_streams: bool = False,
 ) -> tuple[BenchmarkTrajectory, ...]:
     """Run independent seeds with a strict evaluation budget.
 
     The candidate callback receives the problem, evaluated X, observed Y,
     requested batch size, and a run-local generator. It must return (q, d).
     Set restrict_candidate_problem=True for oracle-free strategy-facing metadata.
+    Set independent_rng_streams=True to isolate initial-design and candidate seeds.
+    Observation noise and internal acquisition RNG require separate contracts.
     """
     device = config.torch_device
     dtype = config.torch_dtype
     trajectories = []
     for seed in config.seeds:
         problem = config.resolve_problem(registry)
-        generator = torch.Generator(device=device).manual_seed(seed)
+        generator = (
+            make_stream_generator(seed, "candidate", device)
+            if independent_rng_streams
+            else torch.Generator(device=device).manual_seed(seed)
+        )
+        initial_seed = (
+            derive_stream_seed(seed, "initial_design") if independent_rng_streams else seed
+        )
         candidate_problem = (
             CandidateProblemView.from_problem(problem) if restrict_candidate_problem else problem
         )
-        X = sobol_initial_design(problem, config.initial_points, seed, dtype=dtype, device=device)
+        X = sobol_initial_design(
+            problem, config.initial_points, initial_seed, dtype=dtype, device=device
+        )
         if device.type == "cuda":
             torch.cuda.synchronize(device)
         initial_start = perf_counter()
