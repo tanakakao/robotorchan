@@ -9,11 +9,14 @@ from time import perf_counter
 import torch
 from torch import Tensor
 
+from robotorchan.benchmarks.candidate_view import CandidateProblemView
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.problem import BenchmarkProblem
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 
-CandidateGenerator = Callable[[BenchmarkProblem, Tensor, Tensor, int, torch.Generator], Tensor]
+CandidateGenerator = Callable[
+    [BenchmarkProblem | CandidateProblemView, Tensor, Tensor, int, torch.Generator], Tensor
+]
 
 
 @dataclass(frozen=True)
@@ -90,11 +93,12 @@ def run_benchmark(
     candidate_generator: CandidateGenerator,
     *,
     registry: BenchmarkProblemRegistry | None = None,
+    restrict_candidate_problem: bool = False,
 ) -> tuple[BenchmarkTrajectory, ...]:
     """Run independent seeds with a strict evaluation budget.
 
     The candidate callback receives the problem, evaluated X, observed Y,
-    requested batch size, and a run-local generator. It must return (q, d).
+    requested batch size, and a run-local generator. It must return (q, d).\n    Set restrict_candidate_problem=True for oracle-free strategy-facing metadata.
     """
     device = config.torch_device
     dtype = config.torch_dtype
@@ -102,6 +106,9 @@ def run_benchmark(
     for seed in config.seeds:
         problem = config.resolve_problem(registry)
         generator = torch.Generator(device=device).manual_seed(seed)
+        candidate_problem = (
+            CandidateProblemView.from_problem(problem) if restrict_candidate_problem else problem
+        )
         X = sobol_initial_design(problem, config.initial_points, seed, dtype=dtype, device=device)
         if device.type == "cuda":
             torch.cuda.synchronize(device)
@@ -123,7 +130,7 @@ def run_benchmark(
                 torch.cuda.synchronize(device)
             candidate_start = perf_counter()
             candidates = candidate_generator(
-                problem, X.clone(), observed.clone(), batch_size, generator
+                candidate_problem, X.clone(), observed.clone(), batch_size, generator
             )
             if not isinstance(candidates, Tensor) or candidates.shape != (
                 batch_size,
