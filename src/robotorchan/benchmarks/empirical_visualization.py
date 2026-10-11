@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 from collections import defaultdict
 from pathlib import Path
 
@@ -40,8 +41,17 @@ def render_empirical_charts(artifacts: str | Path, destination: str | Path) -> d
         ):
             raise ValueError("Invalid empirical curve row.")
         value = float(row["value"])
-        if not __import__("math").isfinite(value):
+        if not math.isfinite(value):
             raise ValueError("Nonfinite empirical curve.")
+        if int(row["evaluations"]) != max(0, total - 20):
+            raise ValueError("Incorrect additional evaluation index.")
+        if total == 70 and not math.isclose(
+            value,
+            summary["final_metric_by_seed"][strategy][seed],
+            rel_tol=1e-10,
+            abs_tol=1e-12,
+        ):
+            raise ValueError("Curve final value disagrees with summary.")
         grouped[strategy][seed][total] = value
     if any(
         set(grouped[strategy][seed]) != set(range(1, 71))
@@ -60,6 +70,25 @@ def render_empirical_charts(artifacts: str | Path, destination: str | Path) -> d
             or int(row["q"]) != summary["q"]
         ):
             raise ValueError("Invalid timing row.")
+        components = [
+            float(row[name])
+            for name in (
+                "candidate_seconds",
+                "evaluation_seconds",
+                "initial_evaluation_seconds",
+            )
+        ]
+        total_seconds = float(row["total_seconds"])
+        expected_seconds = summary["elapsed_seconds_by_seed"][key[0]][key[1]]
+        if (
+            not all(math.isfinite(value) and value >= 0 for value in components)
+            or not math.isfinite(total_seconds)
+            or not math.isclose(sum(components), total_seconds, rel_tol=1e-10, abs_tol=1e-12)
+            or not math.isclose(
+                total_seconds, expected_seconds, rel_tol=1e-10, abs_tol=1e-12
+            )
+        ):
+            raise ValueError("Timing CSV disagrees with empirical summary.")
         seen.add(key)
     if len(seen) != len(strategies) * 10:
         raise ValueError("Incomplete timing rows.")
