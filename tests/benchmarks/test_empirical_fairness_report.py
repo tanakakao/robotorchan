@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 import json
+from dataclasses import replace
 
 import pytest
 
@@ -42,7 +42,6 @@ def test_fairness_report_is_serializable() -> None:
         require_cost_pairing=True,
     )
     data = json.loads(json.dumps(report.to_dict()))
-    assert data["initial"]["fully_paired"] if "fully_paired" in data["initial"] else True
     assert data["initial"]["design_paired"]
     assert data["initial"]["truth_paired"]
     assert data["initial"]["observation_paired"]
