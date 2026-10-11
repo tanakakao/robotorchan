@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 import torch
 from botorch.acquisition import qExpectedImprovement, qNoisyExpectedImprovement
+from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.fit import fit_gpytorch_mll
 from botorch.models import SingleTaskGP
 from botorch.optim import optimize_acqf
@@ -39,8 +40,8 @@ def botorch_gp_candidates(
         raise ValueError("GP baseline requires unconstrained single-objective problems.")
     if any(kind != "continuous" for kind in problem.variable_types):
         raise ValueError("GP baseline requires continuous variables.")
-    if acquisition not in ("qEI", "qNEI"):
-        raise ValueError("acquisition must be qEI or qNEI.")
+    if acquisition not in ("qEI", "qLogEI", "qNEI"):
+        raise ValueError("acquisition must be qEI, qLogEI or qNEI.")
     if type(num_restarts) is not int or num_restarts < 1:
         raise ValueError("num_restarts must be positive.")
     if type(raw_samples) is not int or raw_samples < 1:
@@ -60,6 +61,8 @@ def botorch_gp_candidates(
         fit_gpytorch_mll(mll)
         if acquisition == "qEI":
             acqf = qExpectedImprovement(model=model, best_f=train_Y.max())
+        elif acquisition == "qLogEI":
+            acqf = qLogExpectedImprovement(model=model, best_f=train_Y.max())
         else:
             acqf = qNoisyExpectedImprovement(model=model, X_baseline=X)
         candidates, _ = optimize_acqf(
