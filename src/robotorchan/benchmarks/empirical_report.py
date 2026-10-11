@@ -47,9 +47,12 @@ def summarize_empirical_directory(directory: str | Path) -> dict[str, object]:
     if manifest.get("pairing", {}).get("truth") is not True:
         raise ValueError("Initial truths were not paired.")
     noise = manifest.get("observation_noise")
-    if isinstance(noise, dict) and noise.get("policy") == "paired":
-        if manifest["pairing"].get("observation") is not True:
-            raise ValueError("Paired observation noise did not match.")
+    if (
+        isinstance(noise, dict)
+        and noise.get("policy") == "paired"
+        and manifest["pairing"].get("observation") is not True
+    ):
+        raise ValueError("Paired observation noise did not match.")
     problem = _PROBLEMS[problem_name]()
     q = manifest["q"]
     scores: dict[str, list[float]] = {}
