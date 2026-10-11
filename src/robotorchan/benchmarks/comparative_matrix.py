@@ -7,11 +7,12 @@ from typing import Literal
 
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 
-Tier = Literal["smoke", "standard", "full", "full_cuda"]
+Tier = Literal["smoke", "standard", "empirical_standard", "full", "full_cuda"]
 
 _PROFILES = {
     "smoke": (1, 4, 4, (1,), "cpu"),
     "standard": (5, 20, 40, (1, 3), "cpu"),
+    "empirical_standard": (10, 20, 50, (1, 3), "cpu"),
     "full": (20, 30, 100, (1, 3, 5), "cpu"),
     "full_cuda": (20, 30, 100, (1, 3, 5), "cuda"),
 }
