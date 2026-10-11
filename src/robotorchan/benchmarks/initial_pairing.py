@@ -66,9 +66,7 @@ def validate_initial_pairing(
             if other.initial_points != reference.initial_points:
                 raise ValueError("Strategies must use identical initial-point counts.")
             design_paired &= torch.equal(_initial(reference, "X"), _initial(other, "X"))
-            truth_paired &= torch.equal(
-                _initial(reference, "Y_truth"), _initial(other, "Y_truth")
-            )
+            truth_paired &= torch.equal(_initial(reference, "Y_truth"), _initial(other, "Y_truth"))
             observation_paired &= torch.equal(
                 _initial(reference, "Y_observed"), _initial(other, "Y_observed")
             )
