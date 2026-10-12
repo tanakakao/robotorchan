@@ -4,7 +4,10 @@ import json
 from pathlib import Path
 
 NOTEBOOK = (
-    Path(__file__).resolve().parents[2] / "notebooks" / "heterogeneous_bo_benchmark_phase19.ipynb"
+    Path(__file__).resolve().parents[2]
+    / "examples"
+    / "notebooks"
+    / "heterogeneous_bo_benchmark_phase19.ipynb"
 )
 
 

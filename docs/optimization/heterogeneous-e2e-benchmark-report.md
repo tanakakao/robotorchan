@@ -2,7 +2,7 @@
 
 ## Purpose and reproducibility
 
-Run `notebooks/heterogeneous_bo_benchmark_phase19.ipynb` from the repository root in an environment with robotorchan, PyTorch, BoTorch, Matplotlib, and Jupyter installed. This is a **reproducible report generator**, not a report containing measured performance numbers. Do not interpret unexecuted notebook code as observed results.
+Run `examples/notebooks/heterogeneous_bo_benchmark_phase19.ipynb` from the repository root in an environment with robotorchan, PyTorch, BoTorch, Matplotlib, and Jupyter installed. This is a **reproducible report generator**, not a report containing measured performance numbers. Do not interpret unexecuted notebook code as observed results.
 
 The notebook runs `compare_strategies` with three paired seeds (1901, 1902, 1903), 12 initial design points per seed, and three additional objective evaluations per strategy. Change the parameters explicitly for a larger study and record the environment versions, hardware, seed list, budget, and git commit SHA in any published report.
 
