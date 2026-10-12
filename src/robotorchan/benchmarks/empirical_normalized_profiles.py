@@ -118,9 +118,7 @@ def write_normalized_profiles(
     if root.exists():
         raise FileExistsError("Refusing to overwrite performance evidence.")
     root.mkdir(parents=True)
-    with (root / "normalized_profiles.csv").open(
-        "w", newline="", encoding="utf-8"
-    ) as handle:
+    with (root / "normalized_profiles.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=tuple(profiles[0]))
         writer.writeheader()
         writer.writerows(profiles)
