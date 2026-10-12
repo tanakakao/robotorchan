@@ -19,9 +19,7 @@ def test_parallel_comparison_has_paired_initial_design_and_equal_budget():
     )
     registry = BenchmarkProblemRegistry()
     register_standard_problems(registry)
-    comparison = run_parallel_comparison(
-        config, batch_size=3, max_concurrency=3, registry=registry
-    )
+    comparison = run_parallel_comparison(config, batch_size=3, max_concurrency=3, registry=registry)
     sequential = comparison.sequential[0]
     batch = comparison.batch[0]
     asynchronous = comparison.asynchronous[0]
