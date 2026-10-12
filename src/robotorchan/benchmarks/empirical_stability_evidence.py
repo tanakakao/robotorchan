@@ -48,11 +48,7 @@ def summarize_seed_stability(
     )
     n = len(values)
     mean = sum(values) / n if n else None
-    std = (
-        math.sqrt(sum((value - mean) ** 2 for value in values) / (n - 1))
-        if n > 1
-        else None
-    )
+    std = math.sqrt(sum((value - mean) ** 2 for value in values) / (n - 1)) if n > 1 else None
 
     def quantile(p: float) -> float | None:
         if not values:
