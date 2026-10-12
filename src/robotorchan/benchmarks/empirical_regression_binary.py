@@ -75,9 +75,7 @@ def run_regression_binary_evidence(
                 if run.completed_batches != expected:
                     raise ValueError("Incomplete heterogeneous evaluation batches.")
                 if run.seed in paired_initial:
-                    torch.testing.assert_close(
-                        run.X[:20], paired_initial[run.seed], rtol=0, atol=0
-                    )
+                    torch.testing.assert_close(run.X[:20], paired_initial[run.seed], rtol=0, atol=0)
                 else:
                     paired_initial[run.seed] = run.X[:20]
                 validation = validate_constrained_trajectory("strength_pass", strategy, run)
