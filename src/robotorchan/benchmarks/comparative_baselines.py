@@ -7,6 +7,7 @@ from torch import Tensor
 
 from robotorchan.benchmarks.comparative_matrix import ComparativeExperimentCell
 from robotorchan.benchmarks.heterogeneous_problems import register_heterogeneous_problems
+from robotorchan.benchmarks.mixed_problems import register_mixed_problems
 from robotorchan.benchmarks.multiobjective_problems import register_multiobjective_problems
 from robotorchan.benchmarks.problem import BenchmarkProblem
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
@@ -53,6 +54,7 @@ def run_comparative_baseline(
     registry = BenchmarkProblemRegistry()
     register_heterogeneous_problems(registry)
     register_multiobjective_problems(registry)
+    register_mixed_problems(registry)
     register_regression_binary_problems(registry)
     register_standard_problems(registry)
     if config.strategy == "random":
