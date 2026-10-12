@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "check_docs_links.py"
+SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "check_docs_links.py"
 SPEC = importlib.util.spec_from_file_location("check_docs_links", SCRIPT)
 assert SPEC is not None and SPEC.loader is not None
 MODULE = importlib.util.module_from_spec(SPEC)
