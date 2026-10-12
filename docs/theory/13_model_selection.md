@@ -1661,7 +1661,7 @@ validation
 
 - 実際のモデル API と使い所: [`docs/models.md`](../models.md)
 - 実行可能な例: [`examples/notebooks/`](../../examples/notebooks/)
-- BoTorch / robotorchan 内部設計: [`docs/architecture.md`](../architecture.md)
+- BoTorch / robotorchan 内部設計: [`docs/development/architecture.md`](../development/architecture.md)
 
 本章で理論ガイドの基本的なモデル選択フローは完結します。
 
