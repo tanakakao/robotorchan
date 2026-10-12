@@ -95,7 +95,9 @@ def run_constrained_baselines(
                 else:
                     initial_by_seed[run.seed] = run.X[:20]
                 save_trajectory(run, root / f"{strategy}_seed{run.seed}.json")
-                rows.append({"strategy": strategy, "seed": run.seed, **constrained_baseline_metrics(run)})
+                rows.append(
+                    {"strategy": strategy, "seed": run.seed, **constrained_baseline_metrics(run)}
+                )
         with (root / "seed_results.csv").open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=tuple(rows[0]))
             writer.writeheader()
