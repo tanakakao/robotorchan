@@ -17,8 +17,8 @@ another. The version numbers are local to each format, not a global benchmark
 schema version. In particular, the configured experiment formats may share
 field names but impose different version and validation contracts.
 
-Phase 9 adds cross-format rejection regression tests to guard this boundary.
-Any future internal helper extraction must preserve serialized field names,
+Cross-format rejection tests guard this boundary. Any future internal helper
+extraction must preserve serialized field names,
 validation rules, dtype, tensor shapes, timing histories, and compatibility
 with older supported versions. Validate with existing round-trip tests before
-changing shared codecs. No public persistence API is removed in this phase.
+changing shared codecs.
