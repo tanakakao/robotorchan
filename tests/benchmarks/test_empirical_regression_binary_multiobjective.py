@@ -16,8 +16,6 @@ def test_multiobjective_pass_labels_filter_hypervolume():
     assert torch.equal(labels.unsqueeze(-1), problem.evaluate_constraints(X) >= 0)
     reference = problem.reference_point
     assert hypervolume_2d(values[~labels], reference) > 0
-    assert torch.equal(
-        hypervolume_2d(values[labels], reference),
-        hypervolume_2d(values[labels], reference),
-    )
+    expected = (values[labels][0] - reference).prod()
+    torch.testing.assert_close(hypervolume_2d(values[labels], reference), expected)
     assert hypervolume_2d(values[:0], reference).item() == 0.0
