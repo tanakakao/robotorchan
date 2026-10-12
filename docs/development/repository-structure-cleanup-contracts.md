@@ -1,8 +1,8 @@
-# Repository structure audit: cleanup contracts
+# Repository structure cleanup contracts
 
-This document records the decisions from the repository structure audit before
-cleanup changes are proposed. It is a review checklist, not evidence that a
-full dependency graph or test suite has been executed.
+These contracts govern package boundaries and safe structural changes.
+A directory listing alone is not evidence of complete dependency analysis
+or successful runtime validation.
 
 ## Package boundaries
 
@@ -36,11 +36,10 @@ full dependency graph or test suite has been executed.
    schemas, validation rules, and round-trip compatibility first.
 4. Treat `src/robotorchan/benchmarks/` subpackage proposals as optional;
    first prefer internal refactoring that does not move public modules.
-5. If moving `notebooks/heterogeneous_bo_benchmark_phase19.ipynb` to
-   `examples/notebooks/`, update all documentation and test references,
-   register the notebook in the execution manifest, and choose the appropriate
-   execution group. Do not accidentally add an expensive benchmark to
-   lightweight CI.
+5. When moving notebooks into `examples/notebooks/`, update documentation,
+   tests, and the execution manifest together. Keep expensive benchmark
+   notebooks in the manual execution group unless a separate CI budget review
+   approves their inclusion.
 6. Split cleanup into small pull requests with focused regression checks.
    Preserve the existing Python 3.11–3.13 CI, packaging checks, and
    notebook execution contracts.
