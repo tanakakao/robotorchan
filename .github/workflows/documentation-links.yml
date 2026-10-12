@@ -1,0 +1,17 @@
+name: Documentation links
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  local-markdown-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Check local documentation links
+        run: python scripts/check_docs_links.py
