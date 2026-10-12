@@ -10,6 +10,11 @@ from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.runner import random_candidates, run_benchmark
 from robotorchan.benchmarks.standard_problems import register_standard_problems
 from robotorchan.benchmarks.storage import load_benchmark_results, save_benchmark_results
+from robotorchan.benchmarks.trajectory_persistence import (
+    TrajectoryArtifact,
+    load_trajectory_artifact,
+    save_trajectory_artifact,
+)
 
 
 def _registry() -> BenchmarkProblemRegistry:
@@ -73,3 +78,37 @@ def test_storage_rejects_corrupt_records(tmp_path, mutation: str) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
     with pytest.raises(ValueError):
         load_benchmark_results(path)
+
+
+def test_storage_rejects_trajectory_artifact_schema(tmp_path) -> None:
+    """Do not silently interpret an artifact envelope as benchmark results."""
+    config = BenchmarkExperimentConfig(
+        problem="branin",
+        strategy="random",
+        seeds=(1,),
+        initial_points=3,
+        evaluation_budget=2,
+    )
+    trajectories = run_benchmark(config, random_candidates, registry=_registry())
+    path = tmp_path / "artifact.json"
+    save_trajectory_artifact(TrajectoryArtifact(config, trajectories), path)
+
+    with pytest.raises(ValueError, match="trajectory record"):
+        load_benchmark_results(path)
+
+
+def test_trajectory_artifact_rejects_storage_schema(tmp_path) -> None:
+    """Keep the independent trajectory artifact schema strict."""
+    config = BenchmarkExperimentConfig(
+        problem="branin",
+        strategy="random",
+        seeds=(1,),
+        initial_points=3,
+        evaluation_budget=2,
+    )
+    trajectories = run_benchmark(config, random_candidates, registry=_registry())
+    path = tmp_path / "results.json"
+    save_benchmark_results(path, config, trajectories)
+
+    with pytest.raises(ValueError, match="schema version"):
+        load_trajectory_artifact(path)
