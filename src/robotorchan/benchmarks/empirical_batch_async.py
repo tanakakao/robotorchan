@@ -11,6 +11,8 @@ import torch
 
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.parallel_comparison import run_parallel_comparison
+from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
+from robotorchan.benchmarks.standard_problems import register_standard_problems
 from robotorchan.benchmarks.standard_problems import branin, hartmann6
 
 _PROBLEMS = {"branin": branin, "hartmann6": hartmann6}
@@ -63,8 +65,10 @@ def run_batch_async_evidence(
             evaluation_budget=50,
             q=3,
         )
+        registry = BenchmarkProblemRegistry()
+        register_standard_problems(registry)
         comparison = run_parallel_comparison(
-            config, batch_size=batch_size, max_concurrency=max_concurrency
+            config, batch_size=batch_size, max_concurrency=max_concurrency, registry=registry
         )
         definition = _PROBLEMS[problem]()
         rows = []
