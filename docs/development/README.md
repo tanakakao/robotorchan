@@ -15,6 +15,8 @@
 - `external_non_gp_surrogates.md`: 未実装 external non-GP adapter の統合契約
 - `training_api.md`: `make_mll()` と training API の契約
 - `releasing.md`: version、GitHub Release、PyPI 公開手順
+- `repository-structure-cleanup-contracts.md`: package 境界と安全な整理の契約
+- `benchmark-persistence-schema-boundaries.md`: benchmark JSON schema の互換性境界
 
 ## Temporary design records
 
