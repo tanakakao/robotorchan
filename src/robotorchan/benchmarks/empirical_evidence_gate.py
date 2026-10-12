@@ -34,8 +34,7 @@ def audit_empirical_evidence(
     evidence prerequisites were declared and independently verified.
     """
     if not all(
-        isinstance(flag, bool)
-        for flag in (ci_success, provenance_verified, rerun_verified)
+        isinstance(flag, bool) for flag in (ci_success, provenance_verified, rerun_verified)
     ):
         raise ValueError("Verification flags must be booleans.")
     by_family = {}
@@ -107,7 +106,5 @@ def write_empirical_evidence_audit(
     if path.exists():
         raise FileExistsError("Refusing to overwrite empirical evidence audit.")
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8"
-    )
+    path.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     return report
