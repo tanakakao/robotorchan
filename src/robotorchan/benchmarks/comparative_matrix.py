@@ -20,6 +20,7 @@ _METHODS = {
     "branin": ("random", "sobol", "qEI", "qLogEI", "qNEI", "qLogNEI", "qPI", "qUCB", "qTS"),
     "hartmann6": ("random", "sobol", "qEI", "qLogEI", "qNEI", "qLogNEI", "qPI", "qUCB", "qTS"),
     "branin_currin": ("random", "sobol", "qEHVI", "qNEHVI"),
+    "constrained_quadratic": ("random", "sobol"),
     "strength_pass": ("random", "sobol", "qEI", "qNEI"),
     "strength_conductivity_pass": ("random", "sobol", "qEHVI", "qNEHVI"),
 }
