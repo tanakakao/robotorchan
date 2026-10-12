@@ -12,8 +12,7 @@ import torch
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.parallel_comparison import run_parallel_comparison
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
-from robotorchan.benchmarks.standard_problems import register_standard_problems
-from robotorchan.benchmarks.standard_problems import branin, hartmann6
+from robotorchan.benchmarks.standard_problems import branin, hartmann6, register_standard_problems
 
 _PROBLEMS = {"branin": branin, "hartmann6": hartmann6}
 _ARMS = ("sequential", "batch", "asynchronous")
