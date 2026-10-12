@@ -13,10 +13,10 @@ from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.multifidelity_problems import (
     multifidelity_oscillatory,
     multifidelity_quadratic,
+    register_multifidelity_problems,
 )
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.runner import random_candidates, run_benchmark
-from robotorchan.benchmarks.multifidelity_problems import register_multifidelity_problems
 
 _PROBLEMS = {
     "multifidelity_oscillatory": multifidelity_oscillatory,
