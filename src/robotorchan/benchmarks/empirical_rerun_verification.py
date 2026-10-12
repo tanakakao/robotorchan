@@ -87,8 +87,7 @@ def compare_empirical_reruns(
         "status_mismatches": sum(not row["status_match"] for row in rows),
         "numerical_mismatches": sum(row["numerical_match"] is False for row in rows),
         "all_successful_seeds_reproduced": (
-            len(successful_pairs) == 10
-            and all(row["numerical_match"] is True for row in rows)
+            len(successful_pairs) == 10 and all(row["numerical_match"] is True for row in rows)
         ),
         "rows": rows,
     }
@@ -108,9 +107,7 @@ def write_rerun_verification(
     """Persist deterministic rerun comparisons and revision provenance."""
     if not original_git_sha or not rerun_git_sha:
         raise ValueError("Both source revisions are required.")
-    result = compare_empirical_reruns(
-        original, rerun, metric=metric, atol=atol, rtol=rtol
-    )
+    result = compare_empirical_reruns(original, rerun, metric=metric, atol=atol, rtol=rtol)
     root = Path(destination)
     if root.exists():
         raise FileExistsError("Refusing to overwrite rerun verification evidence.")
