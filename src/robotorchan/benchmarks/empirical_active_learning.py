@@ -70,29 +70,33 @@ def run_active_learning_baselines(
         reference = torch.quasirandom.SobolEngine(2, scramble=True, seed=93827).draw(1024).double()
         reference_labels = active_learning_labels(reference, boundary=boundary)
         for seed in range(10):
-            initial = torch.quasirandom.SobolEngine(
-                2, scramble=True, seed=derive_stream_seed(seed, "initial_design")
-            ).draw(20).double()
+            initial = (
+                torch.quasirandom.SobolEngine(
+                    2, scramble=True, seed=derive_stream_seed(seed, "initial_design")
+                )
+                .draw(20)
+                .double()
+            )
             for strategy in _STRATEGIES:
                 if strategy == "random":
-                    generator = torch.Generator().manual_seed(
-                        derive_stream_seed(seed, "candidate")
-                    )
+                    generator = torch.Generator().manual_seed(derive_stream_seed(seed, "candidate"))
                     additional = torch.rand(50, 2, generator=generator).double()
                 else:
-                    additional = torch.quasirandom.SobolEngine(
-                        2,
-                        scramble=True,
-                        seed=derive_stream_seed(seed, "candidate"),
-                    ).draw(50).double()
+                    additional = (
+                        torch.quasirandom.SobolEngine(
+                            2,
+                            scramble=True,
+                            seed=derive_stream_seed(seed, "candidate"),
+                        )
+                        .draw(50)
+                        .double()
+                    )
                 X = torch.cat((initial, additional), dim=0)
                 labels = active_learning_labels(X, boundary=boundary)
                 if labels.shape != (70, 1) or X.dtype != torch.float64:
                     raise ValueError("Invalid active-learning sample contract.")
                 for count in range(20, 71):
-                    probabilities = kernel_label_probabilities(
-                        X[:count], labels[:count], reference
-                    )
+                    probabilities = kernel_label_probabilities(X[:count], labels[:count], reference)
                     rows.append(
                         {
                             "strategy": strategy,
@@ -102,9 +106,7 @@ def run_active_learning_baselines(
                             "reference_accuracy": float(
                                 classification_accuracy(reference_labels, probabilities)
                             ),
-                            "reference_brier": float(
-                                brier_score(reference_labels, probabilities)
-                            ),
+                            "reference_brier": float(brier_score(reference_labels, probabilities)),
                             "train_pass_count": int(labels[:count].sum()),
                         }
                     )
