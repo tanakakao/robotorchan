@@ -2,6 +2,17 @@
 
 robotorchan のモデル・探索戦略を、再現可能な条件で比較するためのベンチマーク文書です。
 
+## Comparative optimization benchmark navigation
+
+比較実験を再現・解釈する際は、次の順に確認してください。
+
+1. **問題定義**: [Problem contract](problem-contract.md)、[Problem registry](problem-registry.md)、[Standard problems](standard-problems.md)、[Heterogeneous problems](heterogeneous-problems.md)
+2. **実行条件**: [Experiment configuration](experiment-configuration.md)、[Execution profiles](execution_profiles.md)、[Environment provenance](environment_provenance.md)、[Fairness protocol](comparative-fairness-protocol.md)
+3. **評価・集計**: [Metrics](metrics.md)、[Multi-seed statistics](multiseed_statistics.md)、[Comparative experiment matrix](comparative-experiment-matrix.md)、[Empirical evaluation protocol](empirical-evaluation-protocol.md)
+4. **結果と証拠**: [Reporting](reporting.md)、[Empirical measured report](empirical-measured-report.md)、[Empirical evaluation status](empirical-evaluation.md)
+
+実行可能なベンチマークやレポート生成手順が存在しても、実測比較が完了したことや最適化性能の優位性が認定されたことは意味しません。各レポートの実行状態・評価条件・証拠を確認してください。
+
 ## Expressive surrogate models
 
 - [Predictive benchmark](expressive_predictive.md)
