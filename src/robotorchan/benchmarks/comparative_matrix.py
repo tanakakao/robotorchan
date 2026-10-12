@@ -19,6 +19,8 @@ _PROFILES = {
 _METHODS = {
     "branin": ("random", "sobol", "qEI", "qLogEI", "qNEI", "qLogNEI", "qPI", "qUCB", "qTS"),
     "hartmann6": ("random", "sobol", "qEI", "qLogEI", "qNEI", "qLogNEI", "qPI", "qUCB", "qTS"),
+    "mixed_quadratic": ("random", "sobol"),
+    "categorical_switch": ("random", "sobol"),
     "branin_currin": ("random", "sobol", "qEHVI", "qNEHVI"),
     "constrained_quadratic": ("random", "sobol"),
     "strength_pass": ("random", "sobol", "qEI", "qNEI"),
