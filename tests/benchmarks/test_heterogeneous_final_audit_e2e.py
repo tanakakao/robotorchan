@@ -51,7 +51,7 @@ def test_notebook_and_report_document_same_experiment() -> None:
     """Keep the reproducibility parameters aligned across code and report."""
     root = Path(__file__).resolve().parents[2]
     notebook = json.loads(
-        (root / "notebooks" / "heterogeneous_bo_benchmark_phase19.ipynb").read_text(
+        (root / "examples" / "notebooks" / "heterogeneous_bo_benchmark_phase19.ipynb").read_text(
             encoding="utf-8"
         )
     )
