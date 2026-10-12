@@ -123,16 +123,12 @@ def write_paired_bootstrap_evidence(
     """Persist deterministic paired statistics and per-seed inclusion records."""
     if not git_sha:
         raise ValueError("Source revision is required.")
-    result = paired_bootstrap_comparison(
-        baseline, challenger, metric=metric, direction=direction
-    )
+    result = paired_bootstrap_comparison(baseline, challenger, metric=metric, direction=direction)
     root = Path(destination)
     if root.exists():
         raise FileExistsError("Refusing to overwrite statistical evidence.")
     root.mkdir(parents=True)
-    with (root / "paired_differences.csv").open(
-        "w", newline="", encoding="utf-8"
-    ) as handle:
+    with (root / "paired_differences.csv").open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=("seed", "improvement"))
         writer.writeheader()
         writer.writerows(result["paired_differences"])
