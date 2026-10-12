@@ -2,11 +2,18 @@
 
 from __future__ import annotations
 
+import importlib.util
 import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.check_docs_links import check_links, strip_fenced_code
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "check_docs_links.py"
+SPEC = importlib.util.spec_from_file_location("check_docs_links", SCRIPT)
+assert SPEC is not None and SPEC.loader is not None
+MODULE = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(MODULE)
+check_links = MODULE.check_links
+strip_fenced_code = MODULE.strip_fenced_code
 
 
 class DocumentationLinkTests(unittest.TestCase):
