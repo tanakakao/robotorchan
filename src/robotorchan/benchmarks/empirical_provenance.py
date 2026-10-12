@@ -72,9 +72,7 @@ def verify_evidence_manifest(directory: str | Path) -> dict[str, object]:
     _validate_root(root)
     manifest_path = root / "evidence_provenance.json"
     report = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if report.get("schema_version") != 1 or not _GIT_SHA.fullmatch(
-        str(report.get("git_sha", ""))
-    ):
+    if report.get("schema_version") != 1 or not _GIT_SHA.fullmatch(str(report.get("git_sha", ""))):
         raise ValueError("Invalid evidence provenance schema or Git SHA.")
     config_json = json.dumps(
         report["experiment_config"], sort_keys=True, separators=(",", ":"), allow_nan=False
@@ -83,9 +81,7 @@ def verify_evidence_manifest(directory: str | Path) -> dict[str, object]:
     if report.get("config_sha256") != config_hash:
         raise ValueError("Experiment configuration checksum mismatch.")
     actual = {
-        path.relative_to(root).as_posix(): path
-        for path in _files(root)
-        if path != manifest_path
+        path.relative_to(root).as_posix(): path for path in _files(root) if path != manifest_path
     }
     expected = report["files"]
     if not isinstance(expected, list) or any(
