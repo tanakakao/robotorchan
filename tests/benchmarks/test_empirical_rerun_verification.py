@@ -7,8 +7,7 @@ from robotorchan.benchmarks.empirical_rerun_verification import compare_empirica
 
 def _records(offset=0.0):
     return [
-        {"seed": seed, "status": "success", "regret": seed + 1.0 + offset}
-        for seed in range(10)
+        {"seed": seed, "status": "success", "regret": seed + 1.0 + offset} for seed in range(10)
     ]
 
 
