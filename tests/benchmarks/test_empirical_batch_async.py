@@ -4,6 +4,8 @@ import torch
 
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.parallel_comparison import run_parallel_comparison
+from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
+from robotorchan.benchmarks.standard_problems import register_standard_problems
 
 
 def test_parallel_comparison_has_paired_initial_design_and_equal_budget():
@@ -15,7 +17,11 @@ def test_parallel_comparison_has_paired_initial_design_and_equal_budget():
         evaluation_budget=4,
         q=3,
     )
-    comparison = run_parallel_comparison(config, batch_size=3, max_concurrency=3)
+    registry = BenchmarkProblemRegistry()
+    register_standard_problems(registry)
+    comparison = run_parallel_comparison(
+        config, batch_size=3, max_concurrency=3, registry=registry
+    )
     sequential = comparison.sequential[0]
     batch = comparison.batch[0]
     asynchronous = comparison.asynchronous[0]
