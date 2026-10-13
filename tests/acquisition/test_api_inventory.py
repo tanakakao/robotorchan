@@ -56,9 +56,7 @@ def test_one_shot_compatibility_is_kept_separate_from_acquisition_contract() -> 
     name = "qKnowledgeGradient"
     assert name in ACQUISITION_REGISTRY
     standard = check_acquisition_optimizer_compatibility(name, CandidateOptimizer.MIXED)
-    dedicated = check_acquisition_optimizer_compatibility(
-        name, CandidateOptimizer.MIXED_ONE_SHOT
-    )
+    dedicated = check_acquisition_optimizer_compatibility(name, CandidateOptimizer.MIXED_ONE_SHOT)
     assert not standard.compatible
     assert dedicated.compatible
 
