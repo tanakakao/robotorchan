@@ -82,3 +82,22 @@ def test_all_registered_classifiers_declare_prediction_methods() -> None:
     for row in inventory["classification_models"].values():
         assert row["methods"]["predict_proba"]["status"] == "declared"
         assert row["methods"]["predict_class"]["status"] == "declared"
+
+
+def test_existing_fit_without_capability_flag_is_not_marked_missing() -> None:
+    inventory = build_inventory()
+    classifiers = inventory["classification_models"]
+    concrete = [
+        (name, row)
+        for name, row in classifiers.items()
+        if row["methods"]["fit"]["status"] == "declared"
+        and row["supports_fit_flag"] is not True
+    ]
+    assert concrete
+    for name, row in concrete:
+        assert row["training_api"]["category"] == "fit_declared"
+        assert any(
+            issue["model"] == name
+            and issue["issue"] == "fit_declared_without_supports_fit_true"
+            for issue in inventory["static_contract_gaps"]
+        )
