@@ -27,6 +27,8 @@ class SingleTaskGP(FittableExactGPModelMixin, BoTorchSingleTaskGP):
     data retention, training-capability metadata, ``make_mll()``, and ``fit()``.
     """
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
