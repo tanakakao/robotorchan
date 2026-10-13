@@ -17,3 +17,5 @@ jobs:
         run: python -m unittest discover -s tests/docs -p test_docs_links.py
       - name: Check local documentation links
         run: python scripts/check_docs_links.py
+      - name: Check notebook Markdown links
+        run: python scripts/check_notebook_links.py
