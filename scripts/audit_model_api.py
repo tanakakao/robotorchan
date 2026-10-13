@@ -80,7 +80,6 @@ def _model_row(model_class: type, *, family: str, capabilities: Any) -> dict[str
     }
 
 
-
 def classify_training_api(row: dict[str, Any]) -> dict[str, str]:
     """Classify observed fitting interfaces without claiming runtime success."""
     fit = row["methods"]["fit"]["status"]
@@ -113,34 +112,42 @@ def find_contract_gaps(inventory: dict[str, Any]) -> list[dict[str, str]]:
         for name, row in inventory[group].items():
             fit = row["methods"]["fit"]["status"]
             if fit == "declared" and row["supports_fit_flag"] is not True:
-                gaps.append({
+                gaps.append(
+                    {
                     "model": name,
                     "issue": "fit_declared_without_supports_fit_true",
                     "observed": str(row["supports_fit_flag"]),
-                })
+                    }
+                )
             if row["supports_fit_flag"] is True and fit != "declared":
-                gaps.append({
+                gaps.append(
+                    {
                     "model": name,
                     "issue": "supports_fit_true_without_concrete_method",
                     "observed": fit,
-                })
+                    }
+                )
             if (
                 row["supports_mll_flag"] is True
                 and row["methods"]["make_mll"]["status"] != "declared"
             ):
-                gaps.append({
+                gaps.append(
+                    {
                     "model": name,
                     "issue": "supports_mll_true_without_callable_method",
                     "observed": row["methods"]["make_mll"]["status"],
-                })
+                    }
+                )
             if group == "classification_models":
                 for method in ("predict_proba", "predict_class"):
                     if row["methods"][method]["status"] != "declared":
-                        gaps.append({
+                        gaps.append(
+                            {
                             "model": name,
                             "issue": f"missing_{method}",
                             "observed": row["methods"][method]["status"],
-                        })
+                            }
+                        )
     return gaps
 
 
