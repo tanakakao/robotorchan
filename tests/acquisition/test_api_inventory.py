@@ -19,7 +19,7 @@ from robotorchan.models.classification.binary.standard.single_task import (
 )
 
 _AUDIT = runpy.run_path(
-    str(Path(__file__).resolve().parents[3] / "scripts" / "audit_acquisition_api.py")
+    str(Path(__file__).resolve().parents[2] / "scripts" / "audit_acquisition_api.py")
 )
 build_inventory = _AUDIT["build_inventory"]
 
