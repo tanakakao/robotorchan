@@ -62,10 +62,7 @@ def check_reference_anchors(root: Path) -> list[str]:
             parsed = urlsplit(url)
             if not parsed.fragment or parsed.scheme or parsed.netloc:
                 continue
-            if parsed.path:
-                target = (source.parent / unquote(parsed.path)).resolve()
-            else:
-                target = source
+            target = (source.parent / unquote(parsed.path)).resolve() if parsed.path else source
             if not target.is_relative_to(root.resolve()) or not target.is_file():
                 continue  # Existing local-path checker owns missing targets.
             if target.suffix.lower() != ".md":
