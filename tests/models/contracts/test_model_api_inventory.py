@@ -70,11 +70,13 @@ def test_static_contract_gap_report_detects_false_capability_claims() -> None:
         "classification_models": {},
     }
     gaps = find_contract_gaps(example)
-    assert gaps == [{
-        "model": "Example",
-        "issue": "supports_fit_true_without_concrete_method",
-        "observed": "placeholder",
-    }]
+    assert gaps == [
+        {
+            "model": "Example",
+            "issue": "supports_fit_true_without_concrete_method",
+            "observed": "placeholder",
+        }
+    ]
 
 
 def test_all_registered_classifiers_declare_prediction_methods() -> None:
@@ -90,14 +92,12 @@ def test_existing_fit_without_capability_flag_is_not_marked_missing() -> None:
     concrete = [
         (name, row)
         for name, row in classifiers.items()
-        if row["methods"]["fit"]["status"] == "declared"
-        and row["supports_fit_flag"] is not True
+        if row["methods"]["fit"]["status"] == "declared" and row["supports_fit_flag"] is not True
     ]
     assert concrete
     for name, row in concrete:
         assert row["training_api"]["category"] == "fit_declared"
         assert any(
-            issue["model"] == name
-            and issue["issue"] == "fit_declared_without_supports_fit_true"
+            issue["model"] == name and issue["issue"] == "fit_declared_without_supports_fit_true"
             for issue in inventory["static_contract_gaps"]
         )
