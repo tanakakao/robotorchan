@@ -31,9 +31,7 @@ def check_acquisition_optimizer_compatibility(
     reasons: list[str] = []
 
     if capabilities.max_q is not None and q > capabilities.max_q:
-        reasons.append(
-            f"{acquisition_name} supports q <= {capabilities.max_q}; received q={q}"
-        )
+        reasons.append(f"{acquisition_name} supports q <= {capabilities.max_q}; received q={q}")
     if optimizer is CandidateOptimizer.MIXED and capabilities.one_shot:
         reasons.append(
             "standard mixed optimization cannot preserve row-specific categorical "
