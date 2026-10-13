@@ -9,10 +9,10 @@ from urllib.parse import unquote, urlsplit
 
 from check_docs_links import LINK_RE, ROOT, strip_fenced_code
 
-DEFINITION_RE = re.compile(r'^\s{0,3}\[([^\]]+)\]:\s*<?([^\s>]+)>?', re.MULTILINE)
-REFERENCE_RE = re.compile(r'(?<!!)\[([^\]]+)\]\[([^\]]*)\]')
-HEADING_RE = re.compile(r'^#{1,6}\s+(.+?)\s*#*\s*$', re.MULTILINE)
-EXPLICIT_ID_RE = re.compile(r'\{#([\w-]+)\}\s*$')
+DEFINITION_RE = re.compile(r"^\s{0,3}\[([^\]]+)\]:\s*<?([^\s>]+)>?", re.MULTILINE)
+REFERENCE_RE = re.compile(r"(?<!!)\[([^\]]+)\]\[([^\]]*)\]")
+HEADING_RE = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$", re.MULTILINE)
+EXPLICIT_ID_RE = re.compile(r"\{#([\w-]+)\}\s*$")
 
 
 def normalize(label: str) -> str:
@@ -25,14 +25,14 @@ def anchors(text: str) -> set[str]:
     result = set()
     counts = {}
     for match in HEADING_RE.finditer(strip_fenced_code(text)):
-        heading = re.sub(r'<[^>]+>', '', match.group(1))
+        heading = re.sub(r"<[^>]+>', '", match.group(1))
         explicit = EXPLICIT_ID_RE.search(heading)
         if explicit:
             result.add(explicit.group(1))
-            heading = heading[:explicit.start()]
-        heading = re.sub(r'\[([^\]]+)\]\([^)]*\)', r'\1', heading)
-        heading = re.sub(r'[^\w\s-]', '', heading.casefold()).strip()
-        slug = re.sub(r'\s+', '-', heading)
+            heading = heading[: explicit.start()]
+        heading = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", heading)
+        heading = re.sub(r"[^\w\s-]', '", heading.casefold()).strip()
+        slug = re.sub(r"\s+', '-", heading)
         if not slug:
             continue
         count = counts.get(slug, 0)
@@ -47,10 +47,7 @@ def check_reference_anchors(root: Path) -> list[str]:
     documents = sorted((root / "docs").rglob("*.md"))
     for source in documents:
         content = strip_fenced_code(source.read_text(encoding="utf-8"))
-        definitions = {
-            normalize(label): url
-            for label, url in DEFINITION_RE.findall(content)
-        }
+        definitions = {normalize(label): url for label, url in DEFINITION_RE.findall(content)}
         links = [match.group(1).strip("<>") for match in LINK_RE.finditer(content)]
         for match in REFERENCE_RE.finditer(content):
             label = normalize(match.group(2) or match.group(1))
