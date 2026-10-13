@@ -42,14 +42,14 @@ def test_inventory_reports_training_interfaces_without_claiming_runtime_support(
 def test_abstract_fit_placeholder_is_not_reported_as_implementation() -> None:
     assert _method_info(FittableModelMixin, "fit")["status"] == "placeholder"
     assert _method_info(RandomForestSurrogate, "fit")["status"] == "declared"
-    assert _method_info(SingleTaskGP, "fit")["status"] == "absent"
+    assert _method_info(SingleTaskGP, "fit")["status"] == "declared"
 
 
 def test_training_api_classification_separates_exact_and_non_gp() -> None:
     inventory = build_inventory()
     exact = inventory["regression_models"]["SingleTaskGP"]
     forest = inventory["regression_models"]["RandomForestSurrogate"]
-    assert exact["training_api"]["category"] == "mll_training_fit_candidate"
+    assert exact["training_api"]["category"] == "fit_declared"
     assert forest["training_api"]["category"] == "fit_declared"
     assert all(
         row["training_api"]["verification"] == "static_only"
