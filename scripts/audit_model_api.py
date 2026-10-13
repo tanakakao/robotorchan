@@ -87,7 +87,7 @@ def classify_training_api(row: dict[str, Any]) -> dict[str, str]:
     loss = row["methods"]["training_loss"]["status"]
     mll = row["methods"]["make_mll"]["status"]
     inference = row["inference"]
-    if fit == "declared" and row["supports_fit_flag"] is True:
+    if fit == "declared":
         category = "fit_declared"
     elif fit == "placeholder" or row["supports_fit_flag"] is True:
         category = "fit_contract_needs_review"
@@ -112,6 +112,12 @@ def find_contract_gaps(inventory: dict[str, Any]) -> list[dict[str, str]]:
     for group in ("regression_models", "classification_models"):
         for name, row in inventory[group].items():
             fit = row["methods"]["fit"]["status"]
+            if fit == "declared" and row["supports_fit_flag"] is not True:
+                gaps.append({
+                    "model": name,
+                    "issue": "fit_declared_without_supports_fit_true",
+                    "observed": str(row["supports_fit_flag"]),
+                })
             if row["supports_fit_flag"] is True and fit != "declared":
                 gaps.append({
                     "model": name,
