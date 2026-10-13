@@ -374,7 +374,13 @@ class FittableExactGPModelMixin(ExactGPModelMixin):
     inherit this mixin without a separately verified training contract.
     """
 
-    supports_fit: ClassVar[bool] = True
+    supports_fit: ClassVar[bool] = False
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Do not enable native MLL fitting implicitly for specialized subclasses."""
+        super().__init_subclass__(**kwargs)
+        if "supports_fit" not in cls.__dict__:
+            cls.supports_fit = False
 
     def fit(self, *, optimizer_kwargs: dict[str, Any] | None = None) -> None:
         """Fit stored GP observations using BoTorch's native MLL optimizer.
@@ -385,4 +391,8 @@ class FittableExactGPModelMixin(ExactGPModelMixin):
         Returns:
             None, consistent with existing non-GP fit interfaces.
         """
+        if not self.supports_fit:
+            raise UnsupportedModelOperationError(
+                f"{type(self).__name__} does not support fit()."
+            )
         fit_gpytorch_mll(self.make_mll(), optimizer_kwargs=optimizer_kwargs)
