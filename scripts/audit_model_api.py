@@ -118,7 +118,7 @@ def find_contract_gaps(inventory: dict[str, Any]) -> list[dict[str, str]]:
                     "issue": "supports_fit_true_without_concrete_method",
                     "observed": fit,
                 })
-            if row["supports_mll_flag"] is True and row["methods"]["make_mll"]["status"] != "declared":
+            if (\n                row["supports_mll_flag"] is True\n                and row["methods"]["make_mll"]["status"] != "declared"\n            ):
                 gaps.append({
                     "model": name,
                     "issue": "supports_mll_true_without_callable_method",
