@@ -29,8 +29,16 @@ def test_standard_exact_gp_fit_preserves_native_mll_and_modes() -> None:
 
 def test_mixed_exact_gp_fit_supports_native_categorical_kernel() -> None:
     X = torch.tensor(
-        [[0.1, 0.0], [0.2, 1.0], [0.3, 0.0], [0.4, 1.0],
-         [0.5, 0.0], [0.6, 1.0], [0.7, 0.0], [0.8, 1.0]],
+        [
+            [0.1, 0.0],
+            [0.2, 1.0],
+            [0.3, 0.0],
+            [0.4, 1.0],
+            [0.5, 0.0],
+            [0.6, 1.0],
+            [0.7, 0.0],
+            [0.8, 1.0],
+        ],
         dtype=torch.double,
     )
     Y = torch.sin(X[:, :1] * 3.0) + X[:, 1:] * 0.15
