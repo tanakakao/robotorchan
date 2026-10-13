@@ -19,3 +19,5 @@ jobs:
         run: python scripts/check_docs_links.py
       - name: Check notebook Markdown links
         run: python scripts/check_notebook_links.py
+      - name: Check reference links and heading anchors
+        run: python scripts/check_docs_references.py
