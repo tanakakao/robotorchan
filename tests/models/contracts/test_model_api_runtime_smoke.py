@@ -24,7 +24,7 @@ def test_exact_gp_mll_and_posterior_are_directly_usable() -> None:
     assert mll.model is model
     assert model.raw_train_X.shape == X.shape
     assert model.raw_train_Y.shape == Y.shape
-    assert not model.supports_fit
+    assert model.supports_fit
     fit_gpytorch_mll(mll, optimizer_kwargs={"options": {"maxiter": 2}})
     model.eval()
     with torch.no_grad():

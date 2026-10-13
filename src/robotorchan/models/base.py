@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import torch
+from botorch.fit import fit_gpytorch_mll
 from botorch.models.kernels.categorical import CategoricalKernel
 from botorch.models.transforms.input import InputTransform
 from botorch.models.utils.gpytorch_modules import get_covar_module_with_dim_scaled_prior
@@ -364,3 +365,32 @@ class ExactGPModelMixin(SupervisedTrainingDataMixin, ModelTrainingMixin):
     def make_mll(self) -> ExactMarginalLogLikelihood:
         """Construct the exact marginal log likelihood for this model."""
         return ExactMarginalLogLikelihood(self.likelihood, self)
+
+
+class FittableExactGPModelMixin(ExactGPModelMixin):
+    """Opt-in convenient fitting for standard exact GP wrappers only.
+
+    Special-loss, fully Bayesian, variational, and joint-neural models must not
+    inherit this mixin without a separately verified training contract.
+    """
+
+    supports_fit: ClassVar[bool] = False
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Do not enable native MLL fitting implicitly for specialized subclasses."""
+        super().__init_subclass__(**kwargs)
+        if "supports_fit" not in cls.__dict__:
+            cls.supports_fit = False
+
+    def fit(self, *, optimizer_kwargs: dict[str, Any] | None = None) -> None:
+        """Fit stored GP observations using BoTorch's native MLL optimizer.
+
+        Args:
+            optimizer_kwargs: Optional settings for the native MLL optimizer.
+
+        Returns:
+            None, consistent with existing non-GP fit interfaces.
+        """
+        if not self.supports_fit:
+            raise UnsupportedModelOperationError(f"{type(self).__name__} does not support fit().")
+        fit_gpytorch_mll(self.make_mll(), optimizer_kwargs=optimizer_kwargs)

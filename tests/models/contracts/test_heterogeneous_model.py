@@ -625,7 +625,7 @@ def test_entry_fit_delegates_explicit_non_gp_training() -> None:
 
 def test_entry_fit_rejects_entry_without_explicit_fit_contract() -> None:
     train_X = torch.rand(6, 2)
-    regression = SingleTaskGP(train_X, torch.rand(6, 1))
+    regression = KroneckerMultiTaskGP(train_X, torch.rand(6, 2))
     model = HeterogeneousModel(regression, names=["strength"])
 
     with pytest.raises(TypeError, match=r"does not provide fit\(\)"):
