@@ -16,15 +16,15 @@ from gpytorch.means import Mean
 from gpytorch.module import Module
 from torch import Tensor
 
-from robotorchan.models.base import ExactGPModelMixin
+from robotorchan.models.base import FittableExactGPModelMixin
 
 
-class SingleTaskGP(ExactGPModelMixin, BoTorchSingleTaskGP):
+class SingleTaskGP(FittableExactGPModelMixin, BoTorchSingleTaskGP):
     """BoTorch ``SingleTaskGP`` with robotorchan convenience features.
 
     The predictive model and posterior behavior are inherited directly from
     BoTorch. robotorchan only adds the common wrapper surface: raw training
-    data retention, training-capability metadata, and ``make_mll()``.
+    data retention, training-capability metadata, ``make_mll()``, and ``fit()``.
     """
 
     def __init__(
@@ -60,7 +60,7 @@ class SingleTaskGP(ExactGPModelMixin, BoTorchSingleTaskGP):
         )
 
 
-class MixedSingleTaskGP(ExactGPModelMixin, BoTorchMixedSingleTaskGP):
+class MixedSingleTaskGP(FittableExactGPModelMixin, BoTorchMixedSingleTaskGP):
     """BoTorch ``MixedSingleTaskGP`` with robotorchan convenience features."""
 
     def __init__(
