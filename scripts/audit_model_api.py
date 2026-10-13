@@ -114,17 +114,17 @@ def find_contract_gaps(inventory: dict[str, Any]) -> list[dict[str, str]]:
             if fit == "declared" and row["supports_fit_flag"] is not True:
                 gaps.append(
                     {
-                    "model": name,
-                    "issue": "fit_declared_without_supports_fit_true",
-                    "observed": str(row["supports_fit_flag"]),
+                        "model": name,
+                        "issue": "fit_declared_without_supports_fit_true",
+                        "observed": str(row["supports_fit_flag"]),
                     }
                 )
             if row["supports_fit_flag"] is True and fit != "declared":
                 gaps.append(
                     {
-                    "model": name,
-                    "issue": "supports_fit_true_without_concrete_method",
-                    "observed": fit,
+                        "model": name,
+                        "issue": "supports_fit_true_without_concrete_method",
+                        "observed": fit,
                     }
                 )
             if (
@@ -133,9 +133,9 @@ def find_contract_gaps(inventory: dict[str, Any]) -> list[dict[str, str]]:
             ):
                 gaps.append(
                     {
-                    "model": name,
-                    "issue": "supports_mll_true_without_callable_method",
-                    "observed": row["methods"]["make_mll"]["status"],
+                        "model": name,
+                        "issue": "supports_mll_true_without_callable_method",
+                        "observed": row["methods"]["make_mll"]["status"],
                     }
                 )
             if group == "classification_models":
@@ -143,9 +143,9 @@ def find_contract_gaps(inventory: dict[str, Any]) -> list[dict[str, str]]:
                     if row["methods"][method]["status"] != "declared":
                         gaps.append(
                             {
-                            "model": name,
-                            "issue": f"missing_{method}",
-                            "observed": row["methods"][method]["status"],
+                                "model": name,
+                                "issue": f"missing_{method}",
+                                "observed": row["methods"][method]["status"],
                             }
                         )
     return gaps
