@@ -65,6 +65,8 @@ class SingleTaskGP(FittableExactGPModelMixin, BoTorchSingleTaskGP):
 class MixedSingleTaskGP(FittableExactGPModelMixin, BoTorchMixedSingleTaskGP):
     """BoTorch ``MixedSingleTaskGP`` with robotorchan convenience features."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
