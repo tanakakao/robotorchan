@@ -87,3 +87,22 @@ def test_specialized_subclasses_do_not_implicitly_gain_native_fit() -> None:
     assert not SpecializedMixedSingleTaskGP.supports_fit
     with pytest.raises(UnsupportedModelOperationError, match="does not support fit"):
         specialized.fit(optimizer_kwargs={"options": {"maxiter": 1}})
+
+
+def test_registered_exact_gp_subclasses_require_explicit_fit_opt_in() -> None:
+    """Prevent unreviewed public subclasses from inheriting verified fitting."""
+    from robotorchan.models import (
+        NonstationarySingleTaskGP,
+        ReplicateNoiseSingleTaskGP,
+        SpectralMixtureGP,
+        UncertainInputSingleTaskGP,
+    )
+
+    for model_class in (
+        NonstationarySingleTaskGP,
+        ReplicateNoiseSingleTaskGP,
+        SpectralMixtureGP,
+        UncertainInputSingleTaskGP,
+    ):
+        assert issubclass(model_class, SingleTaskGP)
+        assert model_class.supports_fit is False
