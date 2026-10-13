@@ -392,7 +392,5 @@ class FittableExactGPModelMixin(ExactGPModelMixin):
             None, consistent with existing non-GP fit interfaces.
         """
         if not self.supports_fit:
-            raise UnsupportedModelOperationError(
-                f"{type(self).__name__} does not support fit()."
-            )
+            raise UnsupportedModelOperationError(f"{type(self).__name__} does not support fit().")
         fit_gpytorch_mll(self.make_mll(), optimizer_kwargs=optimizer_kwargs)
