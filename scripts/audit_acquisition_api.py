@@ -50,7 +50,8 @@ def _parameters(value: Any) -> list[str]:
     return [
         name
         for name, parameter in signature.parameters.items()
-        if parameter.kind not in (
+        if parameter.kind
+        not in (
             inspect.Parameter.VAR_KEYWORD,
             inspect.Parameter.VAR_POSITIONAL,
         )
@@ -120,8 +121,7 @@ def build_inventory() -> dict[str, Any]:
     registry_local_missing_exports = sorted(
         name
         for name, entry in ACQUISITION_REGISTRY.items()
-        if not entry.implementation_strategy.startswith("BoTorch-native")
-        and name not in exports
+        if not entry.implementation_strategy.startswith("BoTorch-native") and name not in exports
     )
     return {
         "schema_version": 1,
