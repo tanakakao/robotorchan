@@ -1,13 +1,20 @@
 """Static API inventory contracts; model construction is intentionally avoided."""
 
 import json
+import runpy
+from pathlib import Path
 
 from robotorchan.models import SingleTaskGP
 from robotorchan.models.base import FittableModelMixin
 from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.non_gp.random_forest import RandomForestSurrogate
 from robotorchan.models.registry import MODEL_REGISTRY
-from scripts.audit_model_api import _method_info, build_inventory
+
+_AUDIT = runpy.run_path(
+    str(Path(__file__).resolve().parents[3] / "scripts" / "audit_model_api.py"),
+)
+_method_info = _AUDIT["_method_info"]
+build_inventory = _AUDIT["build_inventory"]
 
 
 def test_inventory_covers_registered_models_without_instantiation() -> None:
