@@ -80,6 +80,77 @@ def _model_row(model_class: type, *, family: str, capabilities: Any) -> dict[str
     }
 
 
+def classify_training_api(row: dict[str, Any]) -> dict[str, str]:
+    """Classify observed fitting interfaces without claiming runtime success."""
+    fit = row["methods"]["fit"]["status"]
+    loss = row["methods"]["training_loss"]["status"]
+    mll = row["methods"]["make_mll"]["status"]
+    inference = row["inference"]
+    if fit == "declared":
+        category = "fit_declared"
+    elif fit == "placeholder" or row["supports_fit_flag"] is True:
+        category = "fit_contract_needs_review"
+    elif inference == "fully_bayesian":
+        category = "specialized_mcmc_training"
+    elif loss == "declared":
+        category = "custom_loss_training"
+    elif row["supports_mll_flag"] is True and mll == "declared":
+        category = "mll_training_fit_candidate"
+    else:
+        category = "manual_training_review"
+    return {
+        "category": category,
+        "verification": "static_only",
+        "next_step": "verify_constructor_training_and_posterior_at_runtime",
+    }
+
+
+def find_contract_gaps(inventory: dict[str, Any]) -> list[dict[str, str]]:
+    """Return explicit static mismatches for review rather than hiding them."""
+    gaps = []
+    for group in ("regression_models", "classification_models"):
+        for name, row in inventory[group].items():
+            fit = row["methods"]["fit"]["status"]
+            if fit == "declared" and row["supports_fit_flag"] is not True:
+                gaps.append(
+                    {
+                        "model": name,
+                        "issue": "fit_declared_without_supports_fit_true",
+                        "observed": str(row["supports_fit_flag"]),
+                    }
+                )
+            if row["supports_fit_flag"] is True and fit != "declared":
+                gaps.append(
+                    {
+                        "model": name,
+                        "issue": "supports_fit_true_without_concrete_method",
+                        "observed": fit,
+                    }
+                )
+            if (
+                row["supports_mll_flag"] is True
+                and row["methods"]["make_mll"]["status"] != "declared"
+            ):
+                gaps.append(
+                    {
+                        "model": name,
+                        "issue": "supports_mll_true_without_callable_method",
+                        "observed": row["methods"]["make_mll"]["status"],
+                    }
+                )
+            if group == "classification_models":
+                for method in ("predict_proba", "predict_class"):
+                    if row["methods"][method]["status"] != "declared":
+                        gaps.append(
+                            {
+                                "model": name,
+                                "issue": f"missing_{method}",
+                                "observed": row["methods"][method]["status"],
+                            }
+                        )
+    return gaps
+
+
 def build_inventory() -> dict[str, Any]:
     """Build a deterministic inventory of regression and classification APIs."""
     regression = {
@@ -98,12 +169,16 @@ def build_inventory() -> dict[str, Any]:
         )
         for name, entry in sorted(CLASSIFICATION_MODEL_REGISTRY.items())
     }
-    return {
-        "schema_version": 1,
+    for row in (*regression.values(), *classification.values()):
+        row["training_api"] = classify_training_api(row)
+    inventory = {
+        "schema_version": 2,
         "scope": "static_signature_inventory_not_runtime_capability_verification",
         "regression_models": regression,
         "classification_models": classification,
     }
+    inventory["static_contract_gaps"] = find_contract_gaps(inventory)
+    return inventory
 
 
 def main() -> int:
