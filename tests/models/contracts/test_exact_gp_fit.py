@@ -1,9 +1,11 @@
 """Contracts for opt-in native fitting of standard exact GP wrappers."""
 
+import pytest
 import torch
 from botorch.fit import fit_gpytorch_mll
 
 from robotorchan.models import MixedSingleTaskGP, SingleTaskGP, SingleTaskVariationalGP
+from robotorchan.models.base import UnsupportedModelOperationError
 from robotorchan.models.non_gp.random_forest import RandomForestSurrogate
 
 
@@ -68,3 +70,20 @@ def test_specialized_families_do_not_inherit_exact_fit() -> None:
     assert not hasattr(variational, "fit")
     assert forest.supports_fit
     assert forest.fit() is None
+
+
+def test_specialized_subclasses_do_not_implicitly_gain_native_fit() -> None:
+    class SpecializedSingleTaskGP(SingleTaskGP):
+        pass
+
+    class SpecializedMixedSingleTaskGP(MixedSingleTaskGP):
+        pass
+
+    X, Y = _regression_data()
+    specialized = SpecializedSingleTaskGP(X, Y)
+    assert SingleTaskGP.supports_fit
+    assert MixedSingleTaskGP.supports_fit
+    assert not SpecializedSingleTaskGP.supports_fit
+    assert not SpecializedMixedSingleTaskGP.supports_fit
+    with pytest.raises(UnsupportedModelOperationError, match="does not support fit"):
+        specialized.fit(optimizer_kwargs={"options": {"maxiter": 1}})
