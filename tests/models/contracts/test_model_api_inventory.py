@@ -51,7 +51,10 @@ def test_training_api_classification_separates_exact_and_non_gp() -> None:
     forest = inventory["regression_models"]["RandomForestSurrogate"]
     assert exact["training_api"]["category"] == "mll_training_fit_candidate"
     assert forest["training_api"]["category"] == "fit_declared"
-    assert all(\n        row["training_api"]["verification"] == "static_only"\n        for row in inventory["regression_models"].values()\n    )
+    assert all(
+        row["training_api"]["verification"] == "static_only"
+        for row in inventory["regression_models"].values()
+    )
 
 
 def test_static_contract_gap_report_detects_false_capability_claims() -> None:
