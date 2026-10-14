@@ -39,7 +39,8 @@ silently reducing the wrong dimension.
 ## Compatibility contract
 
 The acquisition registry is intentionally a compatibility surface, not a catalog of every
-BoTorch acquisition. Registered BoTorch entries include native `qSimpleRegret` for unconstrained\nsingle-objective posterior utility and representative standard MC, lookahead,
+BoTorch acquisition. Registered BoTorch entries include native `qSimpleRegret` for unconstrained
+single-objective posterior utility and representative standard MC, lookahead,
 multi-objective, constrained, and multi-fidelity workflows. Native acquisitions documented above
 but absent from the registry remain BoTorch-owned and are not implicitly recommended by the
 capability selector.
