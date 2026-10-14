@@ -51,6 +51,12 @@ Fully Bayesian SAAS、Pairwise GP などは学習方法や入力表現が異な�
 特殊なモデルを利用するときは [モデルガイド](../models.md) と対応する
 [Notebook](../../examples/README.md) を確認してください。
 
+## モデル学習から候補生成まで
+
+2出力GPとBoTorch標準のSampler・Objective・獲得関数をつなぐ
+[Unified API workflow](../optimization/unified-api-workflow.md) と、
+実行可能な [Python例](../../examples/unified_api_workflow.py) を参照してください。
+
 ## 次に読むもの
 
 問題設定からモデルを選ぶ場合は [Model selection](model_selection.md)、

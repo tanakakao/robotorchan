@@ -2,6 +2,7 @@
 
 surrogate model とは独立した candidate search / optimization の利用者向けガイドです。
 
+- [Unified API workflow](unified-api-workflow.md): GP学習からBoTorch獲得関数・Optimizerまでの実行可能な接続例
 - [Standard acquisition functions](standard_acquisition.md): single-objective BO の推奨獲得関数とBoTorch直接利用方針
 - [Thompson sampling](thompson_sampling.md): finite candidate set向けposterior samplingと連続探索との責務分離
 - [Regression active learning](regression_active_learning.md): posterior uncertaintyとintegrated variance reduction
