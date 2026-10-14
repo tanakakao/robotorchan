@@ -684,3 +684,25 @@ all possible combinations of model, acquisition and optimizer are
 implemented. The next development cycle should prioritize
 capability-driven integration tests and explicitly scoped
 extensions rather than additional generic wrapper layers.
+
+## Cross-layer executable contract (Phase 6)
+
+A complete ordinary Monte Carlo optimization path is:
+
+`Model.posterior(X) → MCSampler(posterior) → MCAcquisitionObjective(samples, X=X)
+→ AcquisitionFunction(X) → optimize_acqf(acquisition, bounds, q)`.
+
+The boundary checks in `tests/acquisition/test_phase6_cross_layer.py`
+verify a multi-output GP posterior with shape `batch × q × m`, Sobol samples
+with shape `sample × batch × q × m`, and scalarized objective values with
+shape `sample × batch × q`. They also check acquisition values,
+input gradients and candidate generation using both the BoTorch and
+robotorchan Sobol optimization backends.
+
+This is representative runtime coverage, not a universal compatibility
+claim. Classification, structured-output, multi-fidelity, one-shot and
+heterogeneous models retain their dedicated capability checks and E2E tests.
+BoTorch continues to own the sampler, objective and standard acquisition;
+robotorchan owns its explicitly selected optimizer dispatch and semantic
+adapters. Outcome constraints belong to the acquisition/objective layer,
+whereas candidate-space constraints belong to the optimizer layer.
