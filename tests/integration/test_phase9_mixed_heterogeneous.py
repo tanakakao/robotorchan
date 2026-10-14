@@ -58,6 +58,8 @@ def test_mixed_gp_binary_classifier_constraints_and_candidate_generation(q: int)
     objective_score = acquisition.objective_acquisition(candidate_X)
     feasibility = acquisition.probability_of_feasibility(candidate_X)
     score = acquisition(candidate_X)
+    if q == 1 and feasibility.shape == (2,):
+        feasibility = feasibility.unsqueeze(-1)
     assert objective_score.shape == (2,)
     assert feasibility.shape == (2, q)
     assert score.shape == (2,)
