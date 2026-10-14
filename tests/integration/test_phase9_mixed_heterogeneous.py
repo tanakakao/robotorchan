@@ -31,9 +31,7 @@ def test_mixed_gp_binary_classifier_constraints_and_candidate_generation(q: int)
     passed = (train_X[:, 0] + 0.2 * train_X[:, 1] > 0.5).to(dtype=torch.double)
 
     regression = MixedSingleTaskGP(train_X, train_Y, cat_dims=[1])
-    classifier = MixedBinarySingleTaskGPClassifier(
-        train_X, passed, cat_dims=[1], inducing_points=6
-    )
+    classifier = MixedBinarySingleTaskGPClassifier(train_X, passed, cat_dims=[1], inducing_points=6)
     regression.eval()
     classifier.eval()
     classifier.likelihood.eval()
