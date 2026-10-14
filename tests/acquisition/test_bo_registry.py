@@ -47,6 +47,7 @@ def test_constrained_bo_filters_acquisition_metadata() -> None:
     assert names == {
         "qLogExpectedImprovement",
         "qLogNoisyExpectedImprovement",
+        "qProbabilityOfImprovement",
     }
 
 

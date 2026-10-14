@@ -25,7 +25,7 @@ def test_qpi_registry_capabilities_and_native_signature() -> None:
     assert entry.capabilities.purpose is AcquisitionPurpose.BAYESIAN_OPTIMIZATION
     assert entry.capabilities.posterior_requirement is PosteriorRequirement.POSTERIOR_SAMPLES
     assert entry.capabilities.max_q is None
-    assert not entry.capabilities.supports_constraints
+    assert entry.capabilities.supports_constraints
     assert not entry.capabilities.one_shot
     assert entry.implementation_strategy.startswith("BoTorch-native")
     assert qProbabilityOfImprovement.__module__.startswith("botorch.")
@@ -40,13 +40,13 @@ def test_qpi_registry_capabilities_and_native_signature() -> None:
     ).compatible
 
 
-def test_qpi_workflow_respects_constrained_filter() -> None:
+def test_qpi_workflow_includes_supported_outcome_constraints() -> None:
     ordinary = ProblemSpec(purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION)
     constrained = ProblemSpec(purpose=ProblemPurpose.BAYESIAN_OPTIMIZATION, constrained=True)
     normal = {r.acquisition_name for r in recommend_compatible_workflows(ordinary)}
     filtered = {r.acquisition_name for r in recommend_compatible_workflows(constrained)}
     assert "qProbabilityOfImprovement" in normal
-    assert "qProbabilityOfImprovement" not in filtered
+    assert "qProbabilityOfImprovement" in filtered
 
 
 def test_native_qpi_evaluation_and_q_batch_candidate_optimization() -> None:
@@ -81,3 +81,28 @@ def test_native_qpi_evaluation_and_q_batch_candidate_optimization() -> None:
     assert torch.isfinite(candidates).all()
     assert torch.isfinite(value).all()
     assert ((candidates >= bounds[0]) & (candidates <= bounds[1])).all()
+
+
+def test_native_qpi_outcome_constraints_with_q_batch() -> None:
+    """Check native qPI outcome feasibility without input-space constraints."""
+    train_X = torch.linspace(0.1, 0.9, 9, dtype=torch.double).unsqueeze(-1)
+    train_Y = torch.sin(train_X * 4)
+    model = SingleTaskGP(train_X, train_Y)
+    model.eval()
+    sampler = SobolQMCNormalSampler(sample_shape=torch.Size([32]), seed=81)
+
+    def outcome_constraint(samples: torch.Tensor) -> torch.Tensor:
+        return samples[..., 0] - 0.5
+
+    acquisition = qProbabilityOfImprovement(
+        model=model,
+        best_f=train_Y.max(),
+        sampler=sampler,
+        constraints=[outcome_constraint],
+    )
+    batch = train_X[:6].reshape(3, 2, 1)
+    with torch.no_grad():
+        values = acquisition(batch)
+    assert values.shape == (3,)
+    assert torch.isfinite(values).all()
+    assert ((values >= 0) & (values <= 1)).all()
