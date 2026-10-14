@@ -67,7 +67,7 @@ def test_replicate_noise_fit_posterior_and_candidate_optimization(mixed: bool) -
             bounds,
             q=1,
             optimizer="sobol",
-            variable_space=None,
+            fixed_features={1: 0.0},
             raw_samples=32,
             seed=71,
         )
@@ -83,6 +83,8 @@ def test_replicate_noise_fit_posterior_and_candidate_optimization(mixed: bool) -
         )
     assert candidate.shape == (1 if mixed else 2, raw_X.shape[-1])
     assert torch.isfinite(candidate).all()
+    if mixed:
+        assert torch.all(candidate[:, 1] == 0)
     assert torch.isfinite(score).all()
     assert ((candidate >= bounds[0]) & (candidate <= bounds[1])).all()
 
