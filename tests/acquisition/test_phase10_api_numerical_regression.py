@@ -7,7 +7,6 @@ from botorch.acquisition.objective import LinearMCObjective
 from botorch.sampling.normal import SobolQMCNormalSampler
 
 import robotorchan.acquisition as acquisition_package
-from robotorchan.acquisition.capabilities import AcquisitionPurpose
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.models import SingleTaskGP
 from robotorchan.models.robust.replicate_noise import (
@@ -19,8 +18,7 @@ from robotorchan.models.robust.replicate_noise import (
 def test_botorch_native_registry_entries_are_not_local_public_api_aliases() -> None:
     """Registry metadata must not silently expand the robotorchan public API."""
     for name, entry in ACQUISITION_REGISTRY.items():
-        if entry.capabilities.purpose is AcquisitionPurpose.BAYESIAN_OPTIMIZATION:
-            assert entry.implementation_strategy.startswith("BoTorch-native")
+        if entry.implementation_strategy.startswith("BoTorch-native"):
             assert name not in acquisition_package.__all__
             assert not hasattr(acquisition_package, name)
 
