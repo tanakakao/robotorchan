@@ -62,11 +62,15 @@ def test_qpi_outcome_feasibility_numerical_ordering() -> None:
         return samples[..., 0] * 0 + 10.0
 
     accepted = qProbabilityOfImprovement(
-        model=model, best_f=train_Y.min(), sampler=sampler,
+        model=model,
+        best_f=train_Y.min(),
+        sampler=sampler,
         constraints=[always_feasible],
     )
     rejected = qProbabilityOfImprovement(
-        model=model, best_f=train_Y.min(), sampler=sampler,
+        model=model,
+        best_f=train_Y.min(),
+        sampler=sampler,
         constraints=[never_feasible],
     )
     with torch.no_grad():
