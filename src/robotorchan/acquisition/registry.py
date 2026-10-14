@@ -162,6 +162,7 @@ ACQUISITION_REGISTRY.update(
             supports_constraints=True,
         ),
         "qUpperConfidenceBound": _botorch_bo("qUpperConfidenceBound"),
+        "qProbabilityOfImprovement": _botorch_bo("qProbabilityOfImprovement"),
         "qSimpleRegret": _botorch_bo("qSimpleRegret"),
         "qKnowledgeGradient": _botorch_bo(
             "qKnowledgeGradient",
