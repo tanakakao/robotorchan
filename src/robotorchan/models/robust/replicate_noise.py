@@ -54,6 +54,8 @@ def _aggregate_replicates(
 class ReplicateNoiseSingleTaskGP(SingleTaskGP):
     """Single-task GP trained on replicate means with empirical mean variance."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -133,6 +135,8 @@ class ReplicateNoiseSingleTaskGP(SingleTaskGP):
 
 class MixedReplicateNoiseSingleTaskGP(MixedSingleTaskGP):
     """Mixed exact GP trained on replicate means with empirical mean variance."""
+
+    supports_fit = True
 
     def __init__(
         self,
