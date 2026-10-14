@@ -22,6 +22,17 @@ Fully Bayesian SAAS の例も実行する場合は次を使用します。
 pip install -e ".[examples,fully-bayesian]"
 ```
 
+## 単体実行できるPython例
+
+[`unified_api_workflow.py`](unified_api_workflow.py) では、2出力Exact GPのfit、
+BoTorch標準Sampler / Objective / qSimpleRegretとrobotorchanのSobol Optimizerを接続します。
+
+```bash
+python examples/unified_api_workflow.py
+```
+
+契約の詳細は [Unified API workflow](../docs/optimization/unified-api-workflow.md) にまとめています。
+
 ## Notebook の方針
 
 Notebook の標準構成・metadata・Tier A/B/C の要件は、
