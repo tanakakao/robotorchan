@@ -39,9 +39,9 @@ silently reducing the wrong dimension.
 ## Compatibility contract
 
 The acquisition registry is intentionally a compatibility surface, not a catalog of every
-BoTorch acquisition. Registered BoTorch entries include native `qProbabilityOfImprovement` (qPI) and
-`qSimpleRegret` for unconstrained
-single-objective posterior utility and representative standard MC, lookahead,
+BoTorch acquisition. Registered BoTorch entries include native `qProbabilityOfImprovement` (qPI),
+which supports outcome constraints, and `qSimpleRegret`, which supports
+unconstrained single-objective posterior utility, alongside standard MC, lookahead,
 multi-objective, constrained, and multi-fidelity workflows. Native acquisitions documented above
 but absent from the registry remain BoTorch-owned and are not implicitly recommended by the
 capability selector.
