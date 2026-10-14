@@ -10,6 +10,7 @@ from robotorchan.acquisition.composition import make_mixed_constrained_qei_acqui
 from robotorchan.models.classification import MixedBinarySingleTaskGPClassifier
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.models.standard.single_task import MixedSingleTaskGP
+from robotorchan.optim.dispatch import optimize_acqf
 from robotorchan.semantics import (
     ClassificationConstraint,
     ContinuousConstraint,
@@ -78,8 +79,6 @@ def test_mixed_gp_binary_classifier_constraints_and_candidate_generation(q: int)
             options={"maxiter": 5},
         )
     else:
-        from robotorchan.optim.dispatch import optimize_acqf
-
         candidates, best_score = optimize_acqf(
             acquisition,
             bounds,
