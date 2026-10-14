@@ -175,3 +175,22 @@ whether the selected acquisition models uncertain black-box feasibility. `Candid
 covers linear inequality/equality constraints and BoTorch-native nonlinear inequalities.
 Nonlinear feasibility uses `callable(X) >= 0`; this optimizer convention is intentionally
 independent from output-constraint sign conventions.
+
+## Cross-family mixed-input heterogeneous integration (Phase 9)
+
+The integration test `tests/integration/test_phase9_mixed_heterogeneous.py`
+combines a native categorical-kernel `MixedSingleTaskGP` (two regression
+outputs) with a `MixedBinarySingleTaskGPClassifier` (binary feasibility).
+`HeterogeneousModel` owns output selection without manufacturing a shared
+regression/classification posterior. The semantic layer binds the regression
+objective, same-model continuous constraint, and classification probability
+of feasibility. The acquisition preserves a BoTorch MC objective and weights
+it by explicit marginal classifier feasibility for q=1 or q=2.
+
+For discrete candidate variables, q=1 uses BoTorch's
+`optimize_acqf_mixed` with enumerated categorical assignments. The q=2
+smoke path holds the categorical feature fixed in the sampling optimizer.
+This does not claim arbitrary discrete joint-q categorical assignment
+coverage or correlation between classifier feasibility events. Additional
+MultiTask/high-dimensional combinations retain their separate tests and
+capability boundaries.
