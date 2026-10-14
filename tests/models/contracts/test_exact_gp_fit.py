@@ -93,7 +93,6 @@ def test_registered_exact_gp_subclasses_require_explicit_fit_opt_in() -> None:
     """Prevent unreviewed public subclasses from inheriting verified fitting."""
     from robotorchan.models import (
         NonstationarySingleTaskGP,
-        ReplicateNoiseSingleTaskGP,
         SpectralMixtureGP,
         UncertainInputSingleTaskGP,
     )
