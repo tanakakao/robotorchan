@@ -32,9 +32,7 @@ def _replicate_observations(mixed: bool) -> tuple[torch.Tensor, torch.Tensor]:
 def test_replicate_noise_fit_posterior_and_candidate_optimization(mixed: bool) -> None:
     raw_X, raw_Y = _replicate_observations(mixed)
     if mixed:
-        model = MixedReplicateNoiseSingleTaskGP.from_replicates(
-            raw_X, raw_Y, cat_dims=[1]
-        )
+        model = MixedReplicateNoiseSingleTaskGP.from_replicates(raw_X, raw_Y, cat_dims=[1])
     else:
         model = ReplicateNoiseSingleTaskGP.from_replicates(raw_X, raw_Y)
 
