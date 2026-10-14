@@ -120,3 +120,25 @@ Phase 11 is complete when replicate-derived observation noise can be used throug
 a documented exact-GP interface, while preserving the statistical distinction
 between replicate variance, variance of the mean, and learned heteroskedastic
 noise.
+
+## Explicit native fitting for replicate-noise exact GPs
+
+`ReplicateNoiseSingleTaskGP` and `MixedReplicateNoiseSingleTaskGP` are explicitly
+opted into `model.fit(optimizer_kwargs=...)`. Their replicate observations are
+first grouped by identical design rows; the empirical variance of each group
+mean is retained as the known observation variance. The fitting shortcut
+delegates to BoTorch's `fit_gpytorch_mll(model.make_mll())`; it does **not**
+re-estimate noise from the aggregated means or bypass the known-noise model.
+
+```python
+model = ReplicateNoiseSingleTaskGP.from_replicates(raw_X, raw_Y)
+model.fit(optimizer_kwargs={"options": {"maxiter": 100}})
+posterior = model.posterior(test_X)
+```
+
+The native `make_mll()`, `posterior()`, acquisition and optimizer APIs
+remain usable. Only these two reviewed classes are enabled: arbitrary
+descendant classes and other robust, uncertain, multi-fidelity or
+classification models do not inherit `supports_fit=True` implicitly.
+Mixed-space candidate optimization must maintain categorical-domain
+semantics; keeping a category fixed is one supported way to test that path.
