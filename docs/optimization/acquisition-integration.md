@@ -5,7 +5,7 @@ directly, while robotorchan owns only functionality that adds a distinct contrac
 
 | Area | Preferred path |
 | --- | --- |
-| Standard BO | Native LogEI, LogPI, UCB, qLogEI, qLogNEI, qUCB |
+| Standard BO | Native LogEI, LogPI, UCB, qLogEI, qLogNEI, qUCB, `qSimpleRegret` |
 | Posterior sampling | `select_thompson_candidates` |
 | Regression AL | `PosteriorVariance`, `PosteriorStd`; native qNIPV for batch AL |
 | Level-set learning | `Straddle`, `BoundaryVariance`, `RandomizedStraddle` |
@@ -39,7 +39,7 @@ silently reducing the wrong dimension.
 ## Compatibility contract
 
 The acquisition registry is intentionally a compatibility surface, not a catalog of every
-BoTorch acquisition. Registered BoTorch entries cover representative standard MC, lookahead,
+BoTorch acquisition. Registered BoTorch entries include native `qSimpleRegret` for unconstrained\nsingle-objective posterior utility and representative standard MC, lookahead,
 multi-objective, constrained, and multi-fidelity workflows. Native acquisitions documented above
 but absent from the registry remain BoTorch-owned and are not implicitly recommended by the
 capability selector.
