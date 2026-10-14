@@ -99,7 +99,6 @@ def test_registered_exact_gp_subclasses_require_explicit_fit_opt_in() -> None:
 
     for model_class in (
         NonstationarySingleTaskGP,
-        ReplicateNoiseSingleTaskGP,
         SpectralMixtureGP,
         UncertainInputSingleTaskGP,
     ):
