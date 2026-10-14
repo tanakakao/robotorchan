@@ -22,6 +22,8 @@ Other standard choices remain native BoTorch APIs:
 - `LogProbabilityOfImprovement` for probability of improvement;
 - `UpperConfidenceBound` and `qUpperConfidenceBound` for confidence-bound exploration;
 - `qSimpleRegret` for posterior-utility / simple-regret style selection.
+  Its BoTorch-native capability is registered for unconstrained single-objective
+  recommendation and q-batch optimization without a robotorchan wrapper.
 
 ## Example
 
