@@ -58,6 +58,14 @@ labels = model.predict_class(X)
 | `binary.joint_encoder` | continuous | single | neural reduction | Gaussian latent |
 | `binary.deep_gp` | continuous | single | deep | stochastic latent |
 
+| `binary.robust.*` | continuous / mixed / multitask | robust | Gaussian latent + probability samples |
+| `binary.uncertain.continuous_input` | continuous | uncertain input | none | Gaussian latent + probability samples |
+| `binary.uncertain.categorical_input` | mixed | uncertain input | none | Gaussian latent + probability samples |
+| `binary.ensemble.gp` | continuous | ensemble | none | empirical probability ensemble |
+| `binary.ensemble.heterogeneous` | continuous | ensemble | none | empirical probability ensemble |
+| `binary.non_gp.bootstrap_gradient_boosting` | continuous | non-GP ensemble | none | empirical probability ensemble |
+| `binary.non_gp.random_forest` / Extra Trees / boosting | continuous | non-GP | none | deterministic probability only |
+
 > `binary.saas` is a variational GP classifier with SAAS-style inverse-lengthscale shrinkage. It is not the classification counterpart of the regression `SaasFullyBayesian*` wrappers, which use NUTS/Pyro and `InferenceType.FULLY_BAYESIAN`.
 
 ### Regression-family coverage
@@ -76,17 +84,39 @@ Classification families are added according to classification semantics rather t
 | robust label noise / contamination / replicates | implemented | classification-native label semantics |
 | input-dependent label noise | implemented | flip rates are functions of input X |
 | Student-t likelihood | intentionally unsupported | no Bernoulli residual analogue |
-| uncertain-input | not implemented | requires a classification-specific uncertain-input contract |
-| non-GP surrogates | not implemented | probability/posterior contracts require separate classification adapters |
+| uncertain-input | implemented | continuous Gaussian MC and categorical finite marginalization are explicit |
+| non-GP surrogates | implemented | RF / Extra Trees / Gradient Boosting / HistGradientBoosting use classification-specific adapters |
 | preference | separate task semantics | pairwise preference observations are not binary class labels |
 
 The absence of these binary counterparts is intentional coverage status, not a filesystem-family mismatch. New models should enter the family matching their model semantics and expose classification-specific capabilities before registry inclusion.
 
-すべて `observation_type=classification`, variational inference,
-`supports_posterior_samples=True` です。現在のclassification ALは `q=1` かつ
-single-outputのみを明示的にサポートするため、multitask classifierは互換性判定で保守的に
-rejectします。これはモデル自体がAL不能という意味ではなく、task selection / scalarizationの
-契約が未定義なためです。
+Registry entryはすべて `observation_type=classification` ですが、inferenceとsampling
+capabilityはfamilyごとに異なります。GP classifierはvariational inferenceとlatent /
+class-probability samplingを提供し、empirical ensembleはprobability samplingを提供します。
+deterministic non-GP classifierはlatent posteriorやepistemic probability samplesを捏造しません。
+
+現在のclassification ALは `q=1` かつsingle-outputのみを明示的にサポートするため、
+multitask classifierは互換性判定で保守的にrejectします。これはモデル自体がAL不能という
+意味ではなく、task selection / scalarizationの契約が未定義なためです。
+
+## 目的別の追加レイヤー
+
+分類ではsurrogate modelそのものと、予測確率に作用する後段レイヤーを分離します。
+
+| 目的 | API / family | 主な意味 |
+| --- | --- | --- |
+| label noise | `binary.robust.*` | 観測label生成過程をrobust化 |
+| candidate input uncertainty | `binary.uncertain.*` | 入力分布上でclass probabilityを周辺化 |
+| model disagreement | GP / heterogeneous / bootstrap ensemble | probability-space epistemic uncertainty |
+| probability calibration | `CalibratedBinaryClassifier` | latent posteriorを変えず予測確率を校正 |
+| calibration evaluation | NLL / Brier / ECE / MCE | held-out probability qualityを評価 |
+| reliability / OOD diagnostic | `ClassificationReliabilityEvaluator` | entropy・disagreement・input distanceを分離 |
+| prediction-set uncertainty | `SplitConformalClassifier` | held-out calibrationでset-valued prediction |
+| asymmetric decision cost | cost-sensitive decision utilities | probability estimationとdecision ruleを分離 |
+| constrained BO | classification PoF | classifier probabilityをfeasibilityとして合成 |
+
+これらを新しいsurrogate classとして直積的に増やしません。例えばcalibrationやconformal
+predictionはMAP-SAASやensembleにもprobability contractを介して合成する設計です。
 
 ## Robust cross-family composition
 
