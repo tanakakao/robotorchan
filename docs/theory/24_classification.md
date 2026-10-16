@@ -1,178 +1,201 @@
 # Gaussian Process Classification
 
-## 1. 位置付け
+## 1. Problem formulation
 
-GP classification は、連続値を直接回帰する Gaussian Process regression と異なり、
-潜在関数 `f(x)` を分類確率へ変換して離散ラベルをモデル化します。robotorchan の現在の
-classification API は binary classification を実装し、multiclass へ拡張できる予測契約を
-分離しています。
+Gaussian process (GP) classification models a discrete label through a latent
+real-valued function, rather than assuming Gaussian observation noise on the
+label itself. For binary observations \(y_i\in\{0,1\}\), let
 
-```text
-X
- -> latent GP f(X)
- -> likelihood / link
- -> class probability p(y | f)
- -> predicted class / classification uncertainty
-```
+$$
+f\sim\mathcal{GP}(m,k),\qquad
+y_i\mid f_i\sim\operatorname{Bernoulli}(\pi(f_i)),
+\quad f_i=f(x_i).
+$$
 
-`model.posterior(X)` は **latent function posterior** です。class probability posterior や
-Bernoulli label distributionそのものではありません。この区別は acquisition function と
-uncertainty の意味を判断する上で重要です。
+The link \(\pi:\mathbb R\to(0,1)\) may be logistic,
+\(\pi(f)=1/(1+\exp(-f))\), or probit, \(\pi(f)=\Phi(f)\).
+The prior on latent values is multivariate Gaussian; the conditional
+observation distribution is Bernoulli. Neither the posterior over latent
+values nor the predictive label distribution is generally Gaussian.
 
-## 2. Binary GP classification
+## 2. Posterior inference
 
-binary labelを `y in {0, 1}` とし、潜在関数にGP priorを置きます。
+For \(f=(f_1,\ldots,f_n)\) and data
+\(\mathcal D=\{(x_i,y_i)\}_{i=1}^n\), Bayes' rule gives
 
-```text
-f ~ GP(m, k)
-y | f ~ Bernoulli(pi(f))
-```
+$$
+p(f\mid\mathcal D)
+=\frac{p(f)\prod_{i=1}^n p(y_i\mid f_i)}
+{\int p(f')\prod_{i=1}^n p(y_i\mid f_i')\,df'}.
+$$
 
-現在の実装は GPyTorch の `BernoulliLikelihood` を使います。linkを通した確率を `p` とすると、
+The Bernoulli likelihood is not conjugate to the Gaussian prior, so the
+normalizing integral is generally intractable. Common approximations include
+Laplace approximation, expectation propagation, and variational inference.
+Their approximation assumptions and numerical properties differ.
 
-```text
-p(y = 1 | f) = p
-p(y = 0 | f) = 1 - p
-```
+### 2.1 Sparse variational inference
 
-です。Gaussian regressionと違い、Bernoulli likelihoodはGaussian likelihoodではないため、
-標準的なexact GP regressionと同じclosed-form posteriorにはなりません。robotorchanの標準
-binary classifierはBoTorch `SingleTaskVariationalGP`基盤のvariational inferenceを使います。
+Let \(u=f(Z)\) denote inducing variables at inducing inputs \(Z\), and
+introduce a variational distribution \(q(u)\). The implied latent
+approximation is
 
-## 3. Variational inference
+$$
+q(f)=\int p(f\mid u)q(u)\,du.
+$$
 
-近似posteriorを `q(f)` とすると、学習ではvariational ELBOを最大化します。概念的には、
+A standard evidence lower bound is
 
-```text
-ELBO = E_q(f)[log p(y | f)] - KL(q(u) || p(u))
-```
+$$
+\log p(y\mid X)
+\geq
+\mathcal L
+=
+\sum_{i=1}^n
+\mathbb E_{q(f_i)}[\log p(y_i\mid f_i)]
+-
+\operatorname{KL}\!\left(q(u)\,\|\,p(u)\right).
+$$
 
-です。`u` は inducing variables です。実装では `make_mll()` が `VariationalELBO` を返します。
-したがってbinary classificationをexact Gaussian MLLとして学習してはいけません。
+The bound follows by Jensen's inequality. The likelihood expectations may
+require quadrature or Monte Carlo estimation. For minibatch training,
+the data-fit term must be scaled consistently with the total data size.
+An ELBO is not the exact Gaussian marginal log likelihood used in GP
+regression.
 
-## 4. Posterior と prediction contract
+## 3. Latent uncertainty and predictive probability
 
-robotorchanでは次を分離します。
+Given an approximate latent posterior \(q(f_*\mid\mathcal D)\), the
+posterior-predictive probability is
 
-| API | 意味 |
-| --- | --- |
-| `posterior(X)` | BoTorch-compatible latent posterior |
-| `latent_posterior(X)` | latent posteriorであることを明示するsemantic alias |
-| `predictive_distribution(X)` | likelihoodを通したpredictive label distribution |
-| `predict_proba(X)` | class probability |
-| `predict_class(X)` | probability thresholdによるclass label |
-| `sample_latent(X)` | latent function samples |
-| `sample_class_probabilities(X)` | latent samplesをlinkへ通したclass-probability samples |
+$$
+\bar p_*(x)
+=
+p(y_*=1\mid x,\mathcal D)
+\approx
+\int \pi(f_*)q(f_*\mid\mathcal D)\,df_*.
+$$
 
-この契約により、BoTorch側が期待するposterior interfaceを壊さず、分類固有のprobability
-semanticsを別APIとして扱えます。
+**In general, \(\bar p_*(x)\neq\pi(\mathbb E_q[f_*])\).**
+Applying the link to the posterior mean discards latent uncertainty.
 
-## 5. 分類での「ばらつき」
+Three distinct quantities must not be conflated:
 
-分類では少なくとも3種類を区別します。
+1. **Latent uncertainty:** \(\operatorname{Var}_q[f_*]\), measured on the
+   latent-function scale.
+2. **Probability uncertainty:**
+   \(\operatorname{Var}_q[\pi(f_*)]\), describing posterior variation of
+   the Bernoulli success parameter.
+3. **Predictive label uncertainty:**
+   \(\operatorname{Var}[y_*\mid x,\mathcal D]
+   =\bar p_*(1-\bar p_*)\), including irreducible label randomness
+   conditional on a known success probability.
 
-### 5.1 Latent uncertainty
+The law of total variance makes the distinction explicit:
 
-`f(x)` 自体のposterior varianceです。
+$$
+\underbrace{\bar p_*(1-\bar p_*)}_{\text{predictive label variance}}
+=
+\underbrace{\mathbb E_q[\pi(f_*)(1-\pi(f_*))]}_{\text{conditional label variance}}
++
+\underbrace{\operatorname{Var}_q[\pi(f_*)]}_{\text{probability uncertainty}}.
+$$
 
-```text
-Var[f(x) | D]
-```
+For a probit link and Gaussian marginal
+\(q(f_*)=\mathcal N(\mu_*,s_*^2)\), the predictive probability has the
+analytic form
 
-これはGPが潜在decision functionをどの程度知らないかを表します。
+$$
+\bar p_*=\Phi\!\left(\frac{\mu_*}{\sqrt{1+s_*^2}}\right).
+$$
 
-### 5.2 Class-probability uncertainty
+This identity does not hold for the logistic link without approximation.
 
-latent posteriorをlinkへ通すと、`p(y=c | f)` 自体もposterior samplesを持ちます。
-そのsample varianceは、class probabilityについてのepistemic uncertaintyを表します。
+## 4. Classification uncertainty and active learning
 
-```text
-Var_q(f)[p(y=c | f)]
-```
+For \(C\) classes, predictive entropy is
 
-`ProbabilityVariance` はこの量を利用します。
+$$
+H[y_*\mid x,\mathcal D]
+=
+-\sum_{c=1}^{C}\bar p_c(x)\log\bar p_c(x).
+$$
 
-### 5.3 Predictive label uncertainty
+It measures uncertainty in the future label, not solely uncertainty about
+the latent model. Bayesian active learning by disagreement (BALD) uses the
+mutual information between the label and latent function:
 
-平均的なclass probabilityを `p` としたとき、実際のlabelはBernoulli random variableです。
-binaryではlabel variance `p(1-p)`、より一般にはpredictive entropyで曖昧さを表せます。
+$$
+I(y_*;f_*\mid x,\mathcal D)
+=
+H[y_*\mid x,\mathcal D]
+-
+\mathbb E_{q(f_*)}\!\left[H[y_*\mid f_*]\right].
+$$
 
-```text
-H[y | x, D] = - sum_c p_c log p_c
-```
+Thus, high predictive entropy need not imply high information gain: a label
+can remain intrinsically noisy even when the latent function is well known.
+Probability-variance criteria instead use
+\(\operatorname{Var}_q[\pi(f_*)]\). Boundary-based criteria focus on
+uncertainty near a specified decision threshold; their statistical target
+differs from both entropy and variance sampling.
 
-これはclass probability posteriorのvarianceとは同じではありません。
+These are *selection objectives*, not properties of a GP posterior alone.
+See [Active Learning](acquisition/09_active_learning.md) and
+[Classification Active Learning](acquisition/classification-active-learning.md)
+for acquisition theory.
 
-## 6. Active Learningとの接続
+## 5. Multiclass classification
 
-現在のclassification Active Learningはすべて `q=1` です。
+For \(C>2\), one common construction uses a vector of latent functions
+\(f_1(x),\ldots,f_C(x)\) and a categorical likelihood with softmax link:
 
-| Acquisition | 主に使う不確実性 | Multiclass拡張 |
-| --- | --- | --- |
-| `PredictiveEntropy` | predictive label entropy | 自然 |
-| `MarginUncertainty` | top-two class probability margin | 自然 |
-| `ProbabilityVariance` | class-probability posterior variance | 自然 |
-| `BALD` | predictive entropyとexpected conditional entropyの差 | 自然 |
-| `LatentStraddle` | latent mean / varianceとdecision boundary | binary固有 |
+$$
+p(y=c\mid f(x))
+=
+\frac{\exp(f_c(x))}{\sum_{j=1}^{C}\exp(f_j(x))}.
+$$
 
-BALDは概念的に、
+The latent functions may be independent a priori or correlated through a
+multi-output covariance. The predictive class probability integrates the
+softmax over their **joint** latent posterior:
 
-```text
-I[y, f | x, D] = H[y | x, D] - E_q(f)[H[y | f, x]]
-```
+$$
+p(y=c\mid x,\mathcal D)
+=
+\mathbb E_{p(f(x)\mid\mathcal D)}
+\left[
+\frac{\exp(f_c(x))}{\sum_j\exp(f_j(x))}
+\right].
+$$
 
-を評価し、label ambiguityのうちlatent/model uncertaintyに由来する部分を選択します。
+The softmax likelihood is invariant to adding the same constant to all
+latent logits, so identifiability requires care. Multiclass inference and
+decision rules cannot generally be reduced to a single binary threshold.
 
-Gaussian latent posteriorを持つという理由だけで、回帰用 `Straddle` やqEIなどを分類へ
-自動的に適用してはいけません。robotorchanのcapability metadataはobservation semanticsを
-分離し、この誤接続を静的に拒否します。低レベルBoTorch APIを直接使う経路は維持します。
+## 6. Modeling assumptions and limitations
 
-## 7. 実装済みモデルファミリー
+- The link function and latent covariance jointly determine the class
+  probability model; a flexible kernel does not guarantee calibration.
+- Label imbalance, asymmetric misclassification costs, and dataset shift
+  affect decision thresholds and evaluation, not merely GP fitting.
+- A binary Gaussian-likelihood regression model is not equivalent to
+  Bernoulli GP classification.
+- Calibration measures such as Brier score and log loss assess predictive
+  probabilities. Accuracy alone does not assess calibration.
+- The latent variance, probability variance, and predictive entropy have
+  different units and interpretations; they are not interchangeable.
 
-現在のbinary classificationには次の系統があります。
+## 7. References
 
-| 構造 | 主なモデル |
-| --- | --- |
-| Standard | `BinarySingleTaskGPClassifier` |
-| Mixed | `MixedBinarySingleTaskGPClassifier` |
-| MultiTask | `MultiTaskBinaryGPClassifier` |
-| Block-design MultiTask | `KroneckerMultiTaskBinaryGPClassifier` |
-| Independent composition | `ClassificationModelList` |
-| High-dimensional prior | MAP-SAAS / SAAS binary classifier |
-| Reduced space | Reduced / PCA / PLS / Random Projection binary classifier |
-| Random embedding | `ALEBOBinarySingleTaskGPClassifier` |
-| Neural representation | `JointEncoderBinaryGPClassifier` |
-| Deep GP | `BinarySingleTaskDeepGPClassifier` |
+- Rasmussen, C. E., & Williams, C. K. I. (2006).
+  *Gaussian Processes for Machine Learning*, Chapter 3.
+- Hensman, J., Matthews, A. G. de G., & Ghahramani, Z. (2015).
+  *Scalable Variational Gaussian Process Classification*. AISTATS.
+- Houlsby, N., Huszár, F., Ghahramani, Z., & Lengyel, M. (2011).
+  *Bayesian Active Learning for Classification and Preference Learning*.
 
-回帰モデルと名前を揃えること自体を目的にせず、Bernoulli likelihoodとclassification inferenceが
-理論的に自然なfamilyだけを分類側へ移植します。Gaussian observation noiseを直接モデル化する
-heteroskedastic GPやStudent-t observation modelなどは、そのまま分類器へ置換できません。
-
-## 8. Multiclassへの拡張境界
-
-binary実装は0/1 labelを厳密に検証します。将来のmulticlassではlabelを `0, ..., C-1` とし、
-Categorical likelihood / multiclass latent representationを導入する必要があります。
-
-共通層で固定してはいけないものは次です。
-
-- Bernoulli likelihood
-- class数2
-- probability threshold 0.5
-- latent decision boundary 0
-
-一方、`predict_proba`、`predict_class`、class-probability sampling、predictive entropyという
-高レベル契約はmulticlassでも維持できます。
-
-## 9. 参考文献
-
-- Hensman, J., Matthews, A. G. de G., & Ghahramani, Z. (2015). Scalable Variational
-  Gaussian Process Classification. AISTATS.
-- Gal, Y., Islam, R., & Ghahramani, Z. (2017). Deep Bayesian Active Learning with Image
-  Data. ICML. BALDの実用的なclassification active-learning利用を扱います。
-- Eriksson, D., Jankowiak, M. (2021). High-Dimensional Bayesian Optimization with Sparse
-  Axis-Aligned Subspaces. UAI. SAAS priorの背景です。
-
-## 10. 関連ドキュメント
+## 8. Related theory
 
 - [Variational GP](09_variational_gp.md)
 - [Mixed Variables](05_mixed_variables.md)
@@ -180,21 +203,6 @@ Categorical likelihood / multiclass latent representationを導入する必要�
 - [High-dimensional GP](08_high_dimensional_gp.md)
 - [Dimensionality Reduction GP](18_dimensionality_reduction_gp.md)
 - [Expressive GP Models](22_expressive_gp.md)
-- [Classification Active Learning](acquisition/classification-active-learning.md)
-- [Classification model guide](../models/classification.md)
 
-
-## High-dimensional cross-family composition
-
-High-dimensional classification does not require a separate named model for every combination with
-calibration, conformal prediction, ensembles, or reliability diagnostics. These layers operate on
-the common probability contract and compose with MAP-SAAS, reduced-space, ALEBO, and joint-encoder
-classifiers.
-
-A new model family is justified when the combination changes latent covariance or representation
-semantics. Nonstationary covariance and Multi-Fidelity are examples that require explicit design:
-fidelity/task/category coordinates must remain structural, while reduction, random embedding, and
-sparsity priors operate only on the intended design coordinates.
-
-This distinction prevents family-parity work from producing thin wrappers while keeping low-level
-BoTorch/GPyTorch model components available for genuinely new covariance constructions.
+For library-specific model families, prediction APIs, and supported
+compositions, see the [Classification model guide](../models/classification.md).
