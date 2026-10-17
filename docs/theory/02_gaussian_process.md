@@ -474,52 +474,23 @@ lengthscale、outputscale、noise level などの有限個の hyperparameter は
 固定個数のパラメータだけで表現する必要がなく、データが増えるにつれて
 扱う関数値や共分散構造も拡張される、という意味です。
 
-## 2.15 SingleTaskGP との対応
+## 2.15 単一出力と複数出力の理論的な違い
 
-robotorchan の標準 GP は `SingleTaskGP` です。
-
-基本的な流れは次の通りです。
-
-```python
-import torch
-from botorch.fit import fit_gpytorch_mll
-from robotorchan.models import SingleTaskGP
-
-train_X = torch.rand(20, 2, dtype=torch.double)
-train_Y = torch.sin(train_X[:, :1] * 6.0)
-
-model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
-
-mll = model.make_mll()
-fit_gpytorch_mll(mll)
-
-posterior = model.posterior(torch.rand(5, 2, dtype=torch.double))
-
-mean = posterior.mean
-variance = posterior.variance
-```
-
-理論上の
+単一出力 GP はスカラー値の潜在関数 \\(f(x)\\) に共分散
+\\(k(x,x')\\) を置きます。複数出力の場合は出力添字 \\(t\\) を導入し、
 
 $$
-\mu(x),\sigma^2(x)
+\\operatorname{Cov}(f_t(x),f_{t'}(x'))
+= k((x,t),(x',t'))
 $$
 
-に対応するものが `posterior.mean` と `posterior.variance` です。
+という出力間の共分散も指定する必要があります。出力ごとに独立した GP を置く場合、
+異なる出力間の共分散はゼロです。一方、MultiTask GP では出力間の相関を
+利用して情報共有できます。詳しくは
+[Multi-task / Multi-output](07_multitask_multioutput.md) を参照してください。
 
-## 2.16 Multi-output との違い
-
-標準 `SingleTaskGP` は基本的に単一タスクの GP です。
-
-複数の出力や複数の関連タスクを扱う場合は、
-
-- `ModelListGP`
-- `MultiTaskGP`
-- `KroneckerMultiTaskGP`
-
-などを利用します。
-
-これらの違いは主に「出力・タスク間の共分散をどう扱うか」にあります。
+モデルの生成、学習、事後分布取得の API は
+[モデルドキュメント](../models/README.md) に記載します。
 
 ## 2.17 GPの強みと弱み
 
