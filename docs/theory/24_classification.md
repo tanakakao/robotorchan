@@ -1,10 +1,10 @@
-# Gaussian Process Classification
+# ガウス過程による分類
 
-## 1. Problem formulation
+## 1. 問題設定
 
-Gaussian process (GP) classification models a discrete label through a latent
-real-valued function, rather than assuming Gaussian observation noise on the
-label itself. For binary observations \(y_i\in\{0,1\}\), let
+GP分類はラベル自体にガウス観測ノイズを仮定せず、
+実数値の潜在関数を通じて離散ラベルをモデル化します。
+二値観測 \(y_i\in\{0,1\}\) に対して、次を仮定します。
 
 $$
 f\sim\mathcal{GP}(m,k),\qquad
@@ -12,16 +12,15 @@ y_i\mid f_i\sim\operatorname{Bernoulli}(\pi(f_i)),
 \quad f_i=f(x_i).
 $$
 
-The link \(\pi:\mathbb R\to(0,1)\) may be logistic,
-\(\pi(f)=1/(1+\exp(-f))\), or probit, \(\pi(f)=\Phi(f)\).
-The prior on latent values is multivariate Gaussian; the conditional
-observation distribution is Bernoulli. Neither the posterior over latent
-values nor the predictive label distribution is generally Gaussian.
+リンク関数 \(\pi:\mathbb R\to(0,1)\) にはlogistic
+\(\pi(f)=1/(1+\exp(-f))\) やprobit \(\pi(f)=\Phi(f)\) を利用できます。
+潜在値の事前分布は多変量正規分布ですが、条件付き観測分布はBernoulli分布です。
+潜在値の事後分布も予測ラベル分布も、一般にガウス分布ではありません。
 
-## 2. Posterior inference
+## 2. 事後推論
 
-For \(f=(f_1,\ldots,f_n)\) and data
-\(\mathcal D=\{(x_i,y_i)\}_{i=1}^n\), Bayes' rule gives
+\(f=(f_1,\ldots,f_n)\) とデータ
+\(\mathcal D=\{(x_i,y_i)\}_{i=1}^n\) に対し、Bayesの定理から次を得ます。
 
 $$
 p(f\mid\mathcal D)
@@ -29,22 +28,21 @@ p(f\mid\mathcal D)
 {\int p(f')\prod_{i=1}^n p(y_i\mid f_i')\,df'}.
 $$
 
-The Bernoulli likelihood is not conjugate to the Gaussian prior, so the
-normalizing integral is generally intractable. Common approximations include
-Laplace approximation, expectation propagation, and variational inference.
-Their approximation assumptions and numerical properties differ.
+Bernoulli尤度はガウス事前分布に共役ではないため、
+正規化積分を一般に解析的には計算できません。
+代表的な近似法にはLaplace近似、期待値伝播、変分推論があり、
+近似仮定と数値的性質が異なります。
 
-### 2.1 Sparse variational inference
+### 2.1 疎変分推論
 
-Let \(u=f(Z)\) denote inducing variables at inducing inputs \(Z\), and
-introduce a variational distribution \(q(u)\). The implied latent
-approximation is
+誘導点 \(Z\) 上の誘導変数を \(u=f(Z)\) とし、
+変分分布 \(q(u)\) を導入すると、潜在分布の近似は次のとおりです。
 
 $$
 q(f)=\int p(f\mid u)q(u)\,du.
 $$
 
-A standard evidence lower bound is
+標準的なEvidence Lower Bound（ELBO）は次のとおりです。
 
 $$
 \log p(y\mid X)
@@ -57,16 +55,15 @@ $$
 \operatorname{KL}\!\left(q(u)\,\|\,p(u)\right).
 $$
 
-The bound follows by Jensen's inequality. The likelihood expectations may
-require quadrature or Monte Carlo estimation. For minibatch training,
-the data-fit term must be scaled consistently with the total data size.
-An ELBO is not the exact Gaussian marginal log likelihood used in GP
-regression.
+この下界はJensenの不等式から導かれます。
+尤度の期待値には数値積分やMonte Carlo推定が必要な場合があります。
+ミニバッチ学習ではデータ適合項を全データ数に合わせてスケーリングします。
+ELBOはGP回帰で用いる厳密なガウス周辺対数尤度とは異なります。
 
-## 3. Latent uncertainty and predictive probability
+## 3. 潜在不確実性と予測確率
 
-Given an approximate latent posterior \(q(f_*\mid\mathcal D)\), the
-posterior-predictive probability is
+潜在事後分布の近似 \(q(f_*\mid\mathcal D)\) に対して、
+事後予測確率は次のとおりです。
 
 $$
 \bar p_*(x)
@@ -76,22 +73,19 @@ p(y_*=1\mid x,\mathcal D)
 \int \pi(f_*)q(f_*\mid\mathcal D)\,df_*.
 $$
 
-**In general, \(\bar p_*(x)\neq\pi(\mathbb E_q[f_*])\).**
-Applying the link to the posterior mean discards latent uncertainty.
+**一般に \(\bar p_*(x)\neq\pi(\mathbb E_q[f_*])\) です。**
+潜在平均だけにリンク関数を適用すると、潜在不確実性を無視します。
 
-Three distinct quantities must not be conflated:
+次の3種類の不確実性は区別する必要があります。
 
-1. **Latent uncertainty:** \(\operatorname{Var}_q[f_*]\), measured on the
-   latent-function scale.
-2. **Probability uncertainty:**
-   \(\operatorname{Var}_q[\pi(f_*)]\), describing posterior variation of
-   the Bernoulli success parameter.
-3. **Predictive label uncertainty:**
-   \(\operatorname{Var}[y_*\mid x,\mathcal D]
-   =\bar p_*(1-\bar p_*)\), including irreducible label randomness
-   conditional on a known success probability.
+1. **潜在不確実性：** 潜在関数の尺度で測る \(\operatorname{Var}_q[f_*]\)。
+2. **確率の不確実性：** Bernoulli成功確率の事後変動
+   \(\operatorname{Var}_q[\pi(f_*)]\)。
+3. **予測ラベルの不確実性：**
+   \(\operatorname{Var}[y_*\mid x,\mathcal D]=\bar p_*(1-\bar p_*)\)。
+   成功確率が既知でも残るラベルの偶然性を含みます。
 
-The law of total variance makes the distinction explicit:
+全分散の法則により、この区別は次のように表せます。
 
 $$
 \underbrace{\bar p_*(1-\bar p_*)}_{\text{predictive label variance}}
@@ -101,19 +95,18 @@ $$
 \underbrace{\operatorname{Var}_q[\pi(f_*)]}_{\text{probability uncertainty}}.
 $$
 
-For a probit link and Gaussian marginal
-\(q(f_*)=\mathcal N(\mu_*,s_*^2)\), the predictive probability has the
-analytic form
+probitリンクで周辺分布が \(q(f_*)=\mathcal N(\mu_*,s_*^2)\) のとき、
+予測確率は次の解析式を持ちます。
 
 $$
 \bar p_*=\Phi\!\left(\frac{\mu_*}{\sqrt{1+s_*^2}}\right).
 $$
 
-This identity does not hold for the logistic link without approximation.
+logisticリンクでは、近似なしに同じ恒等式は成立しません。
 
-## 4. Classification uncertainty and active learning
+## 4. 分類の不確実性と能動学習
 
-For \(C\) classes, predictive entropy is
+\(C\) クラスの予測エントロピーは次のとおりです。
 
 $$
 H[y_*\mid x,\mathcal D]
@@ -121,9 +114,8 @@ H[y_*\mid x,\mathcal D]
 -\sum_{c=1}^{C}\bar p_c(x)\log\bar p_c(x).
 $$
 
-It measures uncertainty in the future label, not solely uncertainty about
-the latent model. Bayesian active learning by disagreement (BALD) uses the
-mutual information between the label and latent function:
+これは将来のラベルの不確実性を測り、潜在モデルの不確実性だけを表すものではありません。
+BALDはラベルと潜在関数の相互情報量を利用します。
 
 $$
 I(y_*;f_*\mid x,\mathcal D)
@@ -133,22 +125,20 @@ H[y_*\mid x,\mathcal D]
 \mathbb E_{q(f_*)}\!\left[H[y_*\mid f_*]\right].
 $$
 
-Thus, high predictive entropy need not imply high information gain: a label
-can remain intrinsically noisy even when the latent function is well known.
-Probability-variance criteria instead use
-\(\operatorname{Var}_q[\pi(f_*)]\). Boundary-based criteria focus on
-uncertainty near a specified decision threshold; their statistical target
-differs from both entropy and variance sampling.
+予測エントロピーが大きくても情報利得が大きいとは限りません。
+潜在関数がよく分かっていても、ラベルに本質的なノイズが残り得るためです。
+確率分散基準は \(\operatorname{Var}_q[\pi(f_*)]\) を用い、
+境界基準は指定した判定閾値付近の不確実性を重視します。
+それぞれエントロピーや分散サンプリングとは統計的な目的が異なります。
 
-These are *selection objectives*, not properties of a GP posterior alone.
-See [Active Learning](acquisition/09_active_learning.md) and
-[Classification Active Learning](acquisition/classification-active-learning.md)
-for acquisition theory.
+これらはGP事後分布そのものの性質ではなく、*候補選択の目的*です。
+獲得関数の理論は[能動学習](acquisition/09_active_learning.md)と
+[分類能動学習](acquisition/classification-active-learning.md)を参照してください。
 
-## 5. Multiclass classification
+## 5. 多クラス分類
 
-For \(C>2\), one common construction uses a vector of latent functions
-\(f_1(x),\ldots,f_C(x)\) and a categorical likelihood with softmax link:
+\(C>2\) の場合、潜在関数のベクトル
+\(f_1(x),\ldots,f_C(x)\) とsoftmaxリンクを持つカテゴリ尤度を使う方法があります。
 
 $$
 p(y=c\mid f(x))
@@ -156,9 +146,8 @@ p(y=c\mid f(x))
 \frac{\exp(f_c(x))}{\sum_{j=1}^{C}\exp(f_j(x))}.
 $$
 
-The latent functions may be independent a priori or correlated through a
-multi-output covariance. The predictive class probability integrates the
-softmax over their **joint** latent posterior:
+潜在関数は事前に独立でも、多出力共分散を通じて相関していても構いません。
+予測クラス確率は潜在関数の**同時**事後分布についてsoftmaxを積分します。
 
 $$
 p(y=c\mid x,\mathcal D)
@@ -169,24 +158,19 @@ p(y=c\mid x,\mathcal D)
 \right].
 $$
 
-The softmax likelihood is invariant to adding the same constant to all
-latent logits, so identifiability requires care. Multiclass inference and
-decision rules cannot generally be reduced to a single binary threshold.
+softmax尤度は全潜在ロジットに同じ定数を加えても不変であり、
+識別可能性に注意が必要です。多クラス推論と意思決定は、
+一般に単一の二値閾値に還元できません。
 
-## 6. Modeling assumptions and limitations
+## 6. モデルの仮定と限界
 
-- The link function and latent covariance jointly determine the class
-  probability model; a flexible kernel does not guarantee calibration.
-- Label imbalance, asymmetric misclassification costs, and dataset shift
-  affect decision thresholds and evaluation, not merely GP fitting.
-- A binary Gaussian-likelihood regression model is not equivalent to
-  Bernoulli GP classification.
-- Calibration measures such as Brier score and log loss assess predictive
-  probabilities. Accuracy alone does not assess calibration.
-- The latent variance, probability variance, and predictive entropy have
-  different units and interpretations; they are not interchangeable.
+- リンク関数と潜在共分散がクラス確率を決めます。柔軟なカーネルでも校正は保証されません。
+- クラス不均衡、非対称な誤分類コスト、データ分布の変化は閾値や評価にも影響します。
+- 二値ラベルへのガウス尤度回帰はBernoulli GP分類と等価ではありません。
+- Brier scoreや対数損失は確率予測を評価します。正解率だけでは校正を評価できません。
+- 潜在分散、確率分散、予測エントロピーは尺度と意味が異なり、交換できません。
 
-## 6.1 分類閾値と最適化制約の意味
+### 6.1 分類閾値と最適化制約の意味
 
 二値分類で $\bar p(x)=P(y=1\mid x,\mathcal D)$ とすると、
 予測クラスは閾値 $\tau$ を使って
@@ -199,7 +183,7 @@ $\tau=0.5$ は対称な誤分類コストの下で自然な選択ですが、
 これは潜在平均 $\mathbb E[f(x)]\geq0$ と一般に等価ではありません。
 また、予測クラスの閾値と最適化上の要求確率は異なる概念です。
 
-## 6.2 不均衡・ラベルノイズ・校正
+### 6.2 不均衡・ラベルノイズ・校正
 
 クラス不均衡がある場合、全体の正解率だけでは少数クラスの性能を
 判断できません。確率予測の評価には対数損失、Brier score、
@@ -217,7 +201,7 @@ $
 この式は通常のBernoulliリンクとは異なる観測過程を表します。
 観測ラベルのノイズと予測クラスの不確実性を混同しないことが重要です。
 
-## 6.3 多クラス潜在表現の識別性
+### 6.3 多クラス潜在表現の識別性
 
 softmaxは全クラスの潜在値に同じ定数を加えても変化しません。
 そのため、クラス確率は識別可能でも潜在ロジットの絶対的な
@@ -228,7 +212,7 @@ softmaxは全クラスの潜在値に同じ定数を加えても変化しませ�
 各クラスの潜在平均にsoftmaxを適用するだけでは、一般に
 事後不確実性を正しく反映できません。
 
-## 7. References
+## 7. 参考文献
 
 - Rasmussen, C. E., & Williams, C. K. I. (2006).
   *Gaussian Processes for Machine Learning*, Chapter 3.
@@ -237,7 +221,7 @@ softmaxは全クラスの潜在値に同じ定数を加えても変化しませ�
 - Houlsby, N., Huszár, F., Ghahramani, Z., & Lengyel, M. (2011).
   *Bayesian Active Learning for Classification and Preference Learning*.
 
-## 8. Related theory
+## 8. 関連理論
 
 - [Variational GP](09_variational_gp.md)
 - [Mixed Variables](05_mixed_variables.md)
@@ -246,5 +230,5 @@ softmaxは全クラスの潜在値に同じ定数を加えても変化しませ�
 - [Dimensionality Reduction GP](18_dimensionality_reduction_gp.md)
 - [Expressive GP Models](22_expressive_gp.md)
 
-For library-specific model families, prediction APIs, and supported
-compositions, see the [Classification model guide](../models/classification.md).
+ライブラリ固有のモデル群、予測API、対応する組合せについては
+[分類モデルガイド](../models/classification.md)を参照してください。
