@@ -1,47 +1,45 @@
-# Hierarchical, Heterogeneous Multitask, and Contextual Gaussian Processes
+# 階層・異種マルチタスク・文脈ガウス過程
 
-## 1. Distinct forms of structure
+## 1. 構造の違い
 
-Several GP constructions exploit information beyond a flat Euclidean
-design space. The distinctions are statistical:
+GPには、通常のユークリッド設計空間以外の構造を利用するモデルがあります。
+それぞれの統計的な意味は異なります。
 
-| Structure | Mathematical issue |
+| 構造 | 数学的な論点 |
 | --- | --- |
-| Hierarchical design | A parent choice activates or deactivates child coordinates. |
-| Heterogeneous multitask | Different tasks observe different subsets of covariates. |
-| Contextual decomposition | An output decomposes into contributions associated with contexts. |
-| Context embeddings | Similarity among contexts is learned through latent descriptors. |
+| 階層設計 | 親変数の選択により子座標が有効・無効になります。 |
+| 異種マルチタスク | タスクごとに観測する共変量の集合が異なります。 |
+| 文脈分解 | 出力を文脈に対応する寄与へ分解します。 |
+| 文脈埋め込み | 潜在記述子から文脈間の類似性を学習します。 |
 
-These assumptions should not be conflated. A categorical design variable
-does not necessarily induce a hierarchy, and a task label is not
-automatically a continuous coordinate.
+これらの仮定は区別する必要があります。
+カテゴリ変数が必ず階層構造を持つわけではなく、
+タスクラベルも自動的に連続座標になるわけではありません。
 
-## 2. Hierarchical search spaces
+## 2. 階層的探索空間
 
-Let \(b\) be a branch variable and \(x=(x_1,\ldots,x_D)\) the
-candidate coordinates. Define an activity indicator
+分岐変数を \(b\)、候補座標を \(x=(x_1,\ldots,x_D)\) とし、
+座標の有効性を次の指示関数で定義します。
 
 $$
 a_j(b)\in\{0,1\},\qquad
 A(b)=\{j:a_j(b)=1\}.
 $$
 
-A hierarchical response \(f(b,x)\) is invariant to inactive coordinates:
-if \(x_j\) and \(x_j'\) differ only where \(a_j(b)=0\), then
+階層応答 \(f(b,x)\) は無効な座標の値に依存しません。
+\(x_j\) と \(x_j'\) が \(a_j(b)=0\) の座標でしか異ならないなら、
 
 $$
 f(b,x)=f(b,x').
 $$
 
-For example, one manufacturing route may use temperature while another
-uses pressure. An arbitrary placeholder in an inactive coordinate
-must not change predictions.
+たとえば、ある製造経路では温度を使い、別の経路では圧力を使う場合があります。
+無効な座標に置いた任意のダミー値で予測が変わってはいけません。
 
-### 2.1 Covariance constructions
+### 2.1 共分散の構成
 
-A valid hierarchical covariance must be positive semidefinite and
-respect inactive-coordinate invariance. One simple, explicit
-construction is a sum of shared and branch-specific kernels:
+妥当な階層共分散は正半定値であり、無効座標に対する不変性を満たす必要があります。
+共有カーネルと分岐固有カーネルの和は、明示的な構成の一例です。
 
 $$
 k((b,x),(b',x'))
@@ -51,21 +49,19 @@ k_{\mathrm{shared}}(b,b')
 \mathbf 1[b=b']\,k_b(x_{A(b)},x'_{A(b)}).
 $$
 
-The shared term is a valid kernel over branch identifiers; each
-\(k_b\) is a valid kernel on its branch's active subspace.
-The branch-specific term is block diagonal and hence positive
-semidefinite. This construction permits cross-branch information
-sharing through \(k_{\mathrm{shared}}\) while never comparing inactive
-child coordinates.
+共有項は分岐識別子上の妥当なカーネルであり、各 \(k_b\) は
+分岐の有効部分空間上の妥当なカーネルです。
+分岐固有項はブロック対角なので正半定値です。
+この構成では無効な子座標を比較せず、\(k_{\mathrm{shared}}\) を通じて
+分岐間で情報を共有できます。
 
-**Not every heuristic that discards nonshared coordinates defines a
-positive-semidefinite kernel.** A hierarchical distance formula must
-be justified separately before inserting it into a standard radial
-kernel.
+**共有しない座標を除外する任意のヒューリスティクスが
+正半定値カーネルを与えるわけではありません。**
+階層距離を通常の動径カーネルに代入する際は、数学的な妥当性の確認が必要です。
 
-### 2.2 Hierarchical multitask structure
+### 2.2 階層的マルチタスク構造
 
-For tasks \(t,t'\), a separable example is
+タスク \(t,t'\) に対する分離可能な構成は次のとおりです。
 
 $$
 k((b,x,t),(b',x',t'))
@@ -73,27 +69,25 @@ k((b,x,t),(b',x',t'))
 k_{\mathrm{hier}}((b,x),(b',x'))\,k_{\mathrm{task}}(t,t').
 $$
 
-This is valid because products of positive-semidefinite kernels are
-positive semidefinite. Separability is a modeling assumption:
-different tasks may instead require task-specific hierarchical
-kernels or nonseparable cross-task relationships.
+正半定値カーネルの積も正半定値なので、この構成は妥当です。
+ただし分離可能性はモデルの仮定であり、タスク固有の階層カーネルや
+非分離なタスク間関係が必要な場合もあります。
 
-## 3. Heterogeneous multitask covariates
+## 3. 異種マルチタスクの共変量
 
-Suppose task \(t\) observes only a subset \(S_t\) of an ambient
-covariate vector. The observed covariate space is then
-\(\mathcal X_t=\mathbb R^{|S_t|}\), and the statistical model must
-specify how tasks with different observed coordinates share
-information.
+タスク \(t\) が共変量ベクトルの部分集合 \(S_t\) だけを観測するとします。
+観測空間は \(\mathcal X_t=\mathbb R^{|S_t|}\) であり、
+異なる座標を観測するタスク間でどのように情報を共有するかを
+統計モデルで定義する必要があります。
 
-A common approach introduces a shared latent representation
+代表的な方法では、共通の潜在表現を導入します。
 
 $$
 h_t:\mathcal X_t\to\mathcal Z,\qquad
 f_t(x)=g_t(h_t(x)).
 $$
 
-One possible cross-task covariance is
+タスク間共分散の一例は次のとおりです。
 
 $$
 k((t,x),(t',x'))
@@ -102,42 +96,38 @@ k_{\mathcal Z}(h_t(x),h_{t'}(x'))
 \,k_{\mathrm{task}}(t,t').
 $$
 
-For fixed maps \(h_t\), this is a valid kernel when both factors are
-valid kernels. The maps and covariance assumptions determine which
-information transfers. Merely padding missing features with zeros
-does not preserve the meaning of unobserved covariates.
+写像 \(h_t\) を固定し、両因子が妥当なカーネルなら、この積も妥当です。
+写像と共分散の仮定が転移可能な情報を決めます。
+欠けた特徴を単にゼロで埋めても、未観測共変量の意味は保持されません。
 
-Negative transfer can occur if the shared representation or
-cross-task covariance is misspecified.
+共通表現やタスク間共分散が不適切な場合、負の転移が起こり得ます。
 
-## 4. Contextual additive models
+## 4. 文脈加法モデル
 
-Partition an input into context blocks \(x=(x_1,\ldots,x_C)\).
-An additive latent function assumes
+入力を文脈ブロック \(x=(x_1,\ldots,x_C)\) に分割します。
+加法的な潜在関数は次を仮定します。
 
 $$
 f(x)=\sum_{c=1}^{C}f_c(x_c).
 $$
 
-If the components are independent GPs, their sum is a GP with
+各成分が独立なGPなら、その和も次の共分散を持つGPです。
 
 $$
 k(x,x')=\sum_{c=1}^{C}k_c(x_c,x_c').
 $$
 
-This covariance does not capture interactions between contexts.
-When interactions are important, additive assumptions can
-underfit even if each component is modeled accurately.
+この共分散は文脈間の相互作用を表現しません。
+相互作用が重要なら、各成分が正確でも加法仮定によって過小適合が生じ得ます。
 
-If only the aggregate output \(f(x)\) is observed, individual
-component functions may not be identifiable without additional
-constraints or priors. If context-specific outputs are observed,
-a multi-output model can exploit that richer observation structure.
+合計出力 \(f(x)\) しか観測されない場合、追加の制約や事前分布がなければ
+各成分を識別できないことがあります。
+文脈別の出力が観測されれば、多出力モデルでその情報を活用できます。
 
-## 5. Latent context embeddings
+## 5. 潜在文脈埋め込み
 
-Let \(e_c\in\mathbb R^r\) be an embedding for context \(c\).
-A shared GP construction may use
+文脈 \(c\) の埋め込みを \(e_c\in\mathbb R^r\) とすると、
+共有GPは次の共分散を用いることができます。
 
 $$
 k_{\mathrm{context}}(c,c')
@@ -145,38 +135,26 @@ k_{\mathrm{context}}(c,c')
 \kappa(e_c,e_{c'}).
 $$
 
-The embeddings induce a positive-semidefinite context kernel
-when \(\kappa\) is valid. They can encode graded context
-similarities rather than forcing all contexts to be independent
-or identical.
+\(\kappa\) が妥当なカーネルなら、埋め込みによる文脈カーネルも正半定値です。
+文脈を完全に独立または同一と仮定せず、段階的な類似性を表現できます。
 
-Jointly learned embeddings may be weakly identified: rotations,
-translations (for stationary embedding kernels), or other
-transformations can leave covariance predictions unchanged.
-Regularization and held-out validation are important when the
-number of contexts or observations is small.
+埋め込みを同時学習する場合、回転や、定常埋め込みカーネルでの平行移動などが
+共分散を変えず、識別性が弱くなることがあります。
+文脈数や観測数が少ない場合は正則化と保留データでの検証が重要です。
 
-## 6. Comparison and model selection
+## 6. 比較とモデル選択
 
-- **Hierarchy:** Is the validity or meaning of a coordinate
-  conditional on a parent choice?
-- **Heterogeneous tasks:** Do different tasks observe different
-  covariate subsets, with a scientifically justified transfer
-  relationship?
-- **Contextual decomposition:** Can the response reasonably be
-  expressed as a sum or structured interaction of context
-  contributions?
-- **Context embedding:** Is similarity among contexts itself
-  a quantity to estimate?
+- **階層：** 座標の有効性や意味が親変数の選択に依存しますか。
+- **異種タスク：** タスクごとに観測する共変量が異なり、転移の科学的根拠がありますか。
+- **文脈分解：** 応答を文脈別の寄与の和や構造化相互作用として表現できますか。
+- **文脈埋め込み：** 文脈間の類似性自体を推定する必要がありますか。
 
-The choice is driven by the data-generating assumptions, not by
-the availability of a named model. Structured models may improve
-sample efficiency when those assumptions hold and degrade
-performance when they do not.
+モデル選択は名称や利用可能性ではなく、データ生成過程の仮定に基づきます。
+構造の仮定が妥当なら標本効率を改善し得ますが、誤っていれば性能が悪化します。
 
-Hierarchical *candidate feasibility* is distinct from hierarchical
-*covariance*: a surrogate can respect inactive coordinates without
-guaranteeing that an optimizer generates only valid configurations.
+階層的な*候補の実行可能性*と階層*共分散*は異なります。
+代理モデルが無効座標を適切に扱っても、最適化器が有効な候補だけを
+生成するとは限りません。
 
 ## 7. 階層・異種タスク・文脈モデルの識別性
 
@@ -207,7 +185,7 @@ $f_1(x_1)+a$ と $f_2(x_2)-a$ は同じ合計値を与えます。
 観測されていない分岐間の類似性を、単なる整数コードの近さから
 自動的に推論できるわけではありません。
 
-## 9. References and further reading
+## 9. 参考文献
 
 - Rasmussen, C. E., & Williams, C. K. I. (2006).
   *Gaussian Processes for Machine Learning*. MIT Press.
@@ -219,7 +197,7 @@ $f_1(x_1)+a$ と $f_2(x_2)-a$ は同じ合計値を与えます。
   Sequential Model-Based Optimization for General Algorithm
   Configuration. *LION*.
 
-## Related documents
+## 関連文書
 
 - [Mixed Variables](05_mixed_variables.md)
 - [Multi-task / Multi-output](07_multitask_multioutput.md)
