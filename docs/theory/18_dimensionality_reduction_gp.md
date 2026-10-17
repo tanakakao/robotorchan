@@ -1,93 +1,81 @@
-# Dimensionality Reduction for Gaussian Process Models
+# ガウス過程モデルの次元削減
 
-## 1. Modeling dimension versus search dimension
+## 1. モデル入力次元と探索次元
 
-Let \(x\in\mathbb R^D\) denote the original input and
-\(z=T(x)\in\mathbb R^d\), with \(d<D\), a reduced representation.
-A reduced-input surrogate assumes
+元の入力を \(x\in\mathbb R^D\)、次元削減後の表現を
+\(z=T(x)\in\mathbb R^d\)（\(d<D\)）とします。
+削減入力を用いる代理モデルでは次を仮定します。
 
 $$
 f(x)\approx g(T(x)),\qquad g\sim\mathcal{GP}(m_z,k_z).
 $$
 
-This changes the *modeling dimension*. It does not automatically
-reduce the dimension of the acquisition optimization problem when
-candidates must still be chosen in the original space.
+これは*モデル入力の次元*を変更しますが、候補を元空間から選ぶ必要がある場合、
+獲得関数の最適化次元が自動的に下がるわけではありません。
 
-A separate search embedding instead optimizes a low-dimensional
-decision variable \(z\) and maps it to a feasible original input
-\(x=S(z)\). The two transformations need not be inverses.
+一方、探索空間の埋め込みでは低次元の決定変数 \(z\) を最適化し、
+実行可能な元入力 \(x=S(z)\) に写像します。二つの変換は逆写像とは限りません。
 
-## 2. Principal component analysis
+## 2. 主成分分析（PCA）
 
-For centered observations \(X_c\in\mathbb R^{n\times D}\),
-PCA selects orthonormal directions maximizing sample variance.
-If \(V_d\in\mathbb R^{D\times d}\) contains the leading right
-singular vectors of \(X_c\), the representation is
+中心化された観測行列 \(X_c\in\mathbb R^{n\times D}\) に対して、
+PCAは標本分散が大きくなる直交方向を選びます。
+\(V_d\in\mathbb R^{D\times d}\) を上位の右特異ベクトルとすると、表現は次のとおりです。
 
 $$
 z=V_d^\top(x-\bar x).
 $$
 
-PCA is unsupervised: a low-variance direction can still be highly
-predictive of the response. PCA component count is therefore a
-model-selection parameter, not solely a variance-explained threshold.
+PCAは教師なし手法であり、低分散方向でも応答の予測に重要な場合があります。
+したがって主成分数は、寄与率だけではなくモデル選択の対象です。
 
-## 3. Partial least squares
+## 3. 部分的最小二乗法（PLS）
 
-Partial least squares (PLS) constructs latent directions using
-input-output relationships. A basic PLS objective selects directions
-that favor covariance between projected predictors and responses.
-Unlike PCA, PLS is supervised and can retain predictive directions
-with relatively low input variance.
+PLSは入力と出力の関係を用いて潜在方向を構成します。
+基本的には、射影した説明変数と応答の共分散が大きい方向を選びます。
+PCAとは異なる教師あり手法であり、入力分散が小さくても予測に重要な方向を保持できます。
 
-Because PLS uses labels, all fitting of its projection—including
-component selection—must occur inside the training partition of
-cross-validation. Otherwise evaluation suffers from target leakage.
+PLSは目的変数を利用するため、成分数の選択を含む射影の学習は
+交差検証の各学習分割内で実施する必要があります。
+これを守らないと目的変数の情報漏洩が生じます。
 
-## 4. Random projection
+## 4. ランダム射影
 
-A random linear map \(R\in\mathbb R^{d\times D}\) produces
+ランダムな線形写像 \(R\in\mathbb R^{d\times D}\) は次の表現を与えます。
 
 $$
 z=Rx.
 $$
 
-Suitable random constructions approximately preserve pairwise
-distances on a *finite set* with high probability when the
-projection dimension is sufficiently large. This is the setting
-of Johnson–Lindenstrauss-type guarantees; such guarantees do not
-imply that a particular low-dimensional projection preserves the
-response function or its optimum.
+適切なランダム射影は、射影次元が十分に大きければ、*有限集合*上の点間距離を
+高い確率で近似的に保存します。これはJohnson–Lindenstrauss型の保証ですが、
+特定の低次元射影が応答関数やその最適解を保存することは保証しません。
 
-## 5. Induced covariance and identifiability
+## 5. 誘導される共分散と識別可能性
 
-For a fixed transformation \(T\), a reduced-input GP induces
+固定された変換 \(T\) に対して、削減入力GPは次の共分散を誘導します。
 
 $$
 k_x(x,x')=k_z(T(x),T(x')).
 $$
 
-This is positive semidefinite whenever \(k_z\) is a valid kernel.
-However, if \(T(x)=T(x')\), the surrogate cannot distinguish
-\(x\) from \(x'\) through this covariance. Any variation in \(f\)
-along directions discarded by \(T\) is necessarily misspecified
-unless separately modeled.
+\(k_z\) が妥当なカーネルなら、この共分散は正半定値です。
+ただし \(T(x)=T(x')\) のとき、代理モデルは両入力を区別できません。
+捨てられた方向に沿う応答の変動は、別途モデル化しなければ表現できません。
 
-Learning \(T\) jointly with the GP introduces additional
-nonidentifiability: multiple representations and kernel parameters
-may define the same predictive function.
+変換 \(T\) をGPと同時学習すると、異なる表現とカーネルパラメータが
+同じ予測関数を与えるという識別不能性が追加されます。
 
-## 6. Output reduction and uncertainty restoration
+## 6. 出力次元削減と不確実性の復元
 
-Suppose \(y\in\mathbb R^M\) and a linear output representation is
+\(y\in\mathbb R^M\) の線形な出力表現を次のように仮定します。
 
 $$
 y\approx \mu_y+A z_y,\qquad A\in\mathbb R^{M\times r}.
 $$
 
-If the reduced predictive distribution has mean \(\mu_z\) and
-covariance \(\Sigma_z\), the reconstructed output moments are
+削減空間の予測分布の平均を \(\mu_z\)、共分散を \(\Sigma_z\) とすると、
+復元された出力のモーメントは次のようになります。
 
 $$
 \mathbb E[y]\approx\mu_y+A\mu_z,
@@ -95,25 +83,19 @@ $$
 \operatorname{Cov}(y)\approx A\Sigma_zA^\top.
 $$
 
-If an independent residual model with covariance \(\Sigma_\epsilon\)
-is included, it adds to the reconstructed covariance. Without that
-term, uncertainty in discarded output directions is omitted.
-Nonlinear decoders generally require sampling or approximate
-moment propagation.
+独立な残差モデルの共分散 \(\Sigma_\epsilon\) がある場合、復元共分散に加算します。
+この項がないと、捨てた出力方向の不確実性が欠落します。
+非線形デコーダでは一般にサンプリングまたは近似的なモーメント伝播が必要です。
 
-A downstream multiobjective acquisition must use the intended
-original-output semantics, not silently treat latent coordinates
-as physical objectives.
+下流の多目的獲得関数では、潜在座標を物理目的値と混同せず、
+元の出力が持つ意味を保持する必要があります。
 
-## 7. Mixed, multitask, and structured inputs
+## 7. 混合・マルチタスク・構造化入力
 
-Categorical identifiers, task indices, fidelity levels, and
-context labels have distinct statistical meanings. An ordinary
-Euclidean projection of their numeric encodings can introduce
-spurious distances.
+カテゴリ識別子、タスク番号、忠実度、文脈ラベルは統計的意味が異なります。
+数値コードを通常のユークリッド射影に含めると、根拠のない距離が生じます。
 
-One possible mixed-input construction reduces continuous design
-variables only:
+混合入力では、連続設計変数だけを削減する方法が考えられます。
 
 $$
 T(x_{\mathrm{cont}},x_{\mathrm{cat}})
@@ -121,25 +103,18 @@ T(x_{\mathrm{cont}},x_{\mathrm{cat}})
 \big(T_c(x_{\mathrm{cont}}),x_{\mathrm{cat}}\big).
 $$
 
-The resulting kernel can combine continuous reduced-space and
-categorical covariances. Task and fidelity coordinates may be
-modeled through their own covariance structures rather than
-being absorbed into an undifferentiated PCA projection.
+得られたカーネルは削減連続空間とカテゴリ共分散を組み合わせられます。
+タスクや忠実度の座標は、区別のないPCA射影に混ぜず、
+それぞれの共分散構造でモデル化できます。
 
-## 8. Statistical and optimization limitations
+## 8. 統計的・最適化上の限界
 
-- The reduction is an inductive bias and may discard
-  response-relevant directions.
-- Validation must refit supervised and unsupervised reductions
-  within each training fold to avoid information leakage.
-- A reduced modeling space does not guarantee a reduced feasible
-  search space.
-- Noninvertible projections make original-space candidate
-  reconstruction ambiguous.
-- Output reconstruction can understate predictive uncertainty
-  when discarded directions are ignored.
-- Projection dimension and surrogate hyperparameters should be
-  assessed together.
+- 次元削減は帰納的バイアスであり、応答に重要な方向を捨てる可能性があります。
+- 情報漏洩を防ぐため、教師あり・教師なしの削減とも各学習分割内で再学習します。
+- モデル入力の次元削減は、実行可能な探索空間の次元削減を保証しません。
+- 非可逆な射影では、元空間への候補復元が一意に決まりません。
+- 捨てた出力方向を無視すると予測不確実性を過小評価する可能性があります。
+- 射影次元と代理モデルのハイパーパラメータは合わせて評価します。
 
 ## 9. 入力削減と探索空間削減の違い
 
@@ -165,7 +140,7 @@ being absorbed into an undifferentiated PCA projection.
 元空間の目的・制約を復元した予測分布で評価するか、
 潜在空間の目的が元の問題と等価になる条件を明示する必要があります。
 
-## References
+## 参考文献
 
 1. Jolliffe, I. T., & Cadima, J. (2016). Principal component analysis:
    A review and recent developments. *Philosophical Transactions of
@@ -181,7 +156,7 @@ being absorbed into an undifferentiated PCA projection.
 5. Rasmussen, C. E., & Williams, C. K. I. (2006).
    *Gaussian Processes for Machine Learning*. MIT Press.
 
-## Related documents
+## 関連文書
 
 - [Gaussian Process](02_gaussian_process.md)
 - [High-dimensional GP](08_high_dimensional_gp.md)
