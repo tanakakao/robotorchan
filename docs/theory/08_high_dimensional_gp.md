@@ -473,66 +473,15 @@ BoTorchではMCMC sampleに対応するbatch dimensionを持つため、通常GP
 
 ---
 
-## 8.14 `SaasFullyBayesianSingleTaskGP`
+## 8.14 SAASの高次元・少数データにおける位置付け
 
-robotorchanではBoTorchのFully Bayesian SAASを薄くwrapしています。
-
-```python
-import torch
-from botorch.fit import fit_fully_bayesian_model_nuts
-from botorch.models.transforms import Normalize, Standardize
-from robotorchan.models import SaasFullyBayesianSingleTaskGP
-
-torch.set_default_dtype(torch.double)
-
-train_X = torch.rand(30, 50)
-train_Y = torch.sin(6.0 * train_X[:, :1]) + 0.5 * train_X[:, 3:4]
-
-model = SaasFullyBayesianSingleTaskGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    input_transform=Normalize(d=50),
-    outcome_transform=Standardize(m=1),
-)
-
-fit_fully_bayesian_model_nuts(
-    model,
-    warmup_steps=256,
-    num_samples=128,
-    thinning=16,
-    disable_progbar=True,
-)
-```
-
-50次元入力でも真に効く変数が少数なら、SAAS priorが有効に働く可能性があります。
+SAASは、入力次元が多くても実効的に効く変数が少ないという事前仮定を導入します。軸方向の疎性が適切なら少数観測でも有効ですが、重要変数が多数ある場合や回転した低次元部分空間に依存する場合は近似の偏りに注意が必要です。
 
 ---
 
-## 8.15 `median_lengthscale`
+## 8.15 Lengthscaleの事後要約
 
-SAAS modelでは、MCMC sampleごとにlengthscaleがあります。
-
-BoTorchでは代表値としてmedian lengthscaleを確認できます。
-
-```python
-model.median_lengthscale
-```
-
-例えば
-
-```text
-x0  0.4
-x1  80.0
-x2  120.0
-x3  1.2
-x4  95.0
-```
-
-なら、`x0`と`x3`が他より重要である可能性があります。
-
-ただし、lengthscaleは説明変数の因果的重要度ではありません。
-
-入力scaleや相関、観測領域にも依存するため、feature importanceとして過度に解釈しないことが重要です。
+Fully Bayesian SAASでは、各次元のlengthscaleは単一の推定値ではなく事後分布を持ちます。中央値などで重要そうな次元を概観できますが、入力尺度、変数間相関、観測領域に依存するため、因果的重要度と解釈してはいけません。
 
 ---
 
@@ -664,66 +613,15 @@ fit_gpytorch_mll(mll)
 
 ---
 
-## 8.21 `AdditiveMapSaasSingleTaskGP`
+## 8.21 MAP-SAASにおける縮小の推定
 
-このモデルは複数のSAAS prior scaleを用いたadditiveな構造を使います。
-
-robotorchan APIでは
-
-```python
-from botorch.fit import fit_gpytorch_mll
-from robotorchan.models import AdditiveMapSaasSingleTaskGP
-
-model = AdditiveMapSaasSingleTaskGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    num_taus=4,
-)
-
-mll = model.make_mll()
-fit_gpytorch_mll(mll)
-```
-
-のように利用します。
-
-`num_taus`はSAAS shrinkage scaleの表現に関係します。
-
-Fully Bayesian SAASとは推論方法とmodel constructionが異なるため、
-単なる「NUTSをMAPへ置換した同一モデル」と考えず、軽量なSAAS系候補として扱います。
+MAP-SAASでは、SAAS型の縮小事前分布を用いながら点推定でハイパーパラメータを求めます。複数の縮小強度を組み合わせる設計もあり、完全ベイズ推論の事後積分とは異なります。
 
 ---
 
-## 8.22 `EnsembleMapSaasSingleTaskGP`
+## 8.22 複数のMAP-SAAS推定の統合
 
-`EnsembleMapSaasSingleTaskGP`は、複数のSAAS MAP modelをensembleとして扱うモデルです。
-
-```python
-from botorch.fit import fit_gpytorch_mll
-from robotorchan.models import EnsembleMapSaasSingleTaskGP
-
-model = EnsembleMapSaasSingleTaskGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    num_taus=4,
-)
-
-mll = model.make_mll()
-fit_gpytorch_mll(mll)
-```
-
-`taus`を明示的に渡すこともできます。
-
-```python
-model = EnsembleMapSaasSingleTaskGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    taus=taus,
-)
-```
-
-考え方としては、複数のshrinkage設定に対応するmodelをensembleとして扱います。
-ただしこれはMCMCでhyperparameter posteriorを積分するFully Bayesian推論と
-同一ではありません。
+異なる縮小強度のMAP推定を統合すると、単一設定への依存を緩和できる場合があります。ただし複数の点推定の統合は、NUTSなどによるハイパーパラメータ事後分布の積分と同一ではありません。
 
 ---
 
@@ -748,61 +646,15 @@ posterior shapeや下流acquisitionとの組合せも確認します。
 
 ---
 
-## 8.24 `SaasFullyBayesianMultiTaskGP`
+## 8.24 Multi-task構造とSAASの統合
 
-高次元とMulti-taskを組み合わせたい場合、robotorchanでは
-
-```python
-SaasFullyBayesianMultiTaskGP
-```
-
-を利用できます。
-
-これは
-
-```text
-Multi-task structure
-    +
-SAAS prior on data dimensions
-```
-
-を組み合わせる考え方です。
-
-例えば
-
-```text
-入力: 80 process variables
-Task 0: 装置A
-Task 1: 装置B
-Task 2: 装置C
-```
-
-で、実際に重要なprocess variableが少数なら有力です。
+Multi-task SAASは、タスク間の情報共有と、説明変数に対する疎な事前仮定を組み合わせます。共有すべき変動とタスク固有の変動を区別し、タスク間の相関を適切に表現する必要があります。
 
 ---
 
-## 8.25 Multi-task SAASの入力形式
+## 8.25 Multi-task SAASの共分散構造
 
-通常の`MultiTaskGP`と同じように、task featureを含むlong-formatを使います。
-
-```python
-model = SaasFullyBayesianMultiTaskGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    task_feature=-1,
-)
-
-fit_fully_bayesian_model_nuts(model)
-```
-
-robotorchan wrapperでは
-
-- `task_feature`
-- `output_tasks`
-- `rank`
-- `all_tasks`
-
-などのBoTorch APIを維持しています。
+タスクを離散的な入力として扱う場合、データ次元とタスク次元の役割は異なります。SAASによる縮小は説明変数側に適用し、タスク間相関は別の共分散構造で表現します。詳細は[Multi-task GP](07_multitask_multioutput.md)を参照してください。
 
 ---
 
@@ -893,26 +745,9 @@ Additive GP
 
 ---
 
-## 8.28 `OrthogonalAdditiveGP`
+## 8.28 Orthogonal Additive Kernelの考え方
 
-robotorchanではBoTorchの`OrthogonalAdditiveGP`をwrapしています。
-
-```python
-from botorch.fit import fit_gpytorch_mll
-from robotorchan.models import OrthogonalAdditiveGP
-
-model = OrthogonalAdditiveGP(
-    train_X=train_X,
-    train_Y=train_Y,
-)
-
-mll = model.make_mll()
-fit_gpytorch_mll(mll)
-```
-
-このモデルはOrthogonal Additive Kernelを用いて、各入力次元の寄与を分解します。
-
-高次元問題でも関数がほぼadditiveなら、通常GPより少数データで学習しやすくなります。
+Additive Kernelは、入力次元ごとの寄与を足し合わせることで高次元の関数を構成します。Orthogonalな分解では寄与項間の識別性を高め、主効果と相互作用を整理しやすくします。モデル化の前提は関数の加法構造であり、SAASの軸方向疎性とは異なります。
 
 ---
 
@@ -1266,46 +1101,22 @@ interpretability
 
 ---
 
-## 8.41 raw-data API
+## 8.41 推論方法とモデル構造の分離
 
-Fully Bayesian SAAS wrapperでも、robotorchanのraw-data規約を維持します。
-
-```python
-model.raw_train_X
-model.raw_train_Y
-model.raw_train_Yvar
-```
-
-ただし
-
-```python
-model.supports_mll is False
-```
-
-です。
-
-MAP-SAAS / OrthogonalAdditiveGPはExact GP系なので
-
-```python
-model.make_mll()
-```
-
-を利用できます。
+高次元モデルの事前仮定と、そのハイパーパラメータをどのように推論するかは別の設計選択です。Exact GP、MAP、MCMCを比較する際は、予測精度だけでなく事後不確実性と計算コストを評価します。
 
 ---
 
-## 8.42 学習方法の整理
+## 8.42 高次元GPの推論方法の比較
 
-| Model | 学習方法 |
+| 推論方式 | 理論上の特徴 |
 |---|---|
-| `SingleTaskGP` | Exact MLL |
-| `SaasFullyBayesianSingleTaskGP` | NUTS |
-| `SaasFullyBayesianMultiTaskGP` | NUTS |
-| `AdditiveMapSaasSingleTaskGP` | Exact MLL / MAP |
-| `EnsembleMapSaasSingleTaskGP` | Exact MLL / MAP ensemble |
-| `OrthogonalAdditiveGP` | Exact MLL |
+| 周辺尤度最大化 | ハイパーパラメータの点推定 |
+| MAP | 事前分布を含む点推定 |
+| Fully Bayesian MCMC | ハイパーパラメータの事後不確実性を積分 |
+| 複数MAP推定の統合 | 複数設定の予測を統合するが、厳密な事後積分ではない |
 
-高次元モデルを選ぶときは、**surrogate structureだけでなくfitting methodも重要**です。
+具体的なモデルAPIや学習手順は[モデルドキュメント](../models/README.md)を参照してください。
 
 ---
 
@@ -1458,34 +1269,9 @@ BoTorchのMonte Carlo acquisition functionと組み合わせられます。
 
 ---
 
-## 8.49 `qLogEI`との組み合わせ例
+## 8.49 高次元での獲得関数最適化
 
-```python
-from botorch.acquisition.logei import qLogExpectedImprovement
-from botorch.optim import optimize_acqf
-
-acqf = qLogExpectedImprovement(
-    model=model,
-    best_f=train_Y.max(),
-)
-
-bounds = torch.stack(
-    [
-        torch.zeros(train_X.shape[-1], dtype=train_X.dtype),
-        torch.ones(train_X.shape[-1], dtype=train_X.dtype),
-    ]
-)
-
-candidate, acq_value = optimize_acqf(
-    acq_function=acqf,
-    bounds=bounds,
-    q=1,
-    num_restarts=10,
-    raw_samples=512,
-)
-```
-
-高次元では`raw_samples`や`num_restarts`も計算コストと探索品質のトレードオフになります。
+高次元の獲得関数は局所解や平坦な領域が増えやすく、初期点数と再始動回数が探索品質と計算時間に影響します。獲得関数の定義と最大化アルゴリズムは区別し、具体的な実行手順は[最適化ドキュメント](../optimization/README.md)で扱います。
 
 ---
 
