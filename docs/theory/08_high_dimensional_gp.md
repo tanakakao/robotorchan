@@ -20,15 +20,7 @@
 
 で比較すると、同じ10点でも情報密度はまったく異なります。
 
-本章では、robotorchanで利用できる
-
-- `SaasFullyBayesianSingleTaskGP`
-- `SaasFullyBayesianMultiTaskGP`
-- `AdditiveMapSaasSingleTaskGP`
-- `EnsembleMapSaasSingleTaskGP`
-- `OrthogonalAdditiveGP`
-
-を中心に、高次元 GP / BO をどのように考えるかを説明します。
+本章では、SAAS、MAP-SAAS、Multi-task SAAS、Additive GPを中心に、高次元GP / BOの構造仮定を説明します。
 
 重要なのは、**「高次元だから特別なモデルを使う」のではなく、高次元問題にどのような低次元構造が潜んでいると仮定するか**です。
 
@@ -381,69 +373,19 @@ SAAS = Bayesian variable selection
 
 ## 8.11 Fully Bayesian inference
 
-`SaasFullyBayesianSingleTaskGP`では、通常のGPのように1組のhyperparameterをMAP推定するのではなく、hyperparameter
-posteriorをサンプリングします。
-
-通常のGPでは概念的に
+通常のGPでハイパーパラメータを周辺尤度最大化する場合、一般に得られるのは点推定です。MAP推定では事前分布も考慮した事後モードを用います。Fully Bayesian推論ではハイパーパラメータ $\theta$ の事後分布を積分し、
 
 $$
-\hat\theta
-=
-\arg\max_\theta p(\theta\mid D)
+p(f_*\mid D)=\int p(f_*\mid D,\theta)p(\theta\mid D)\,d\theta
 $$
 
-のような1点を使います。
-
-Fully Bayesianでは
-
-$$
-p(\theta\mid D)
-$$
-
-そのものを扱い、
-
-$$
-p(f_*\mid D)
-=
-\int
-p(f_*\mid D,\theta)
-p(\theta\mid D)
-\,d\theta
-$$
-
-とhyperparameter uncertaintyを積分します。
-
-実際にはこの積分をMCMC sampleで近似します。
+として予測します。実際にはMCMC標本で積分を近似します。
 
 ---
 
 ## 8.12 NUTSによる学習
 
-BoTorchのFully Bayesian SAASは、`fit_fully_bayesian_model_nuts`を使って学習します。
-
-```python
-from botorch.fit import fit_fully_bayesian_model_nuts
-
-fit_fully_bayesian_model_nuts(model)
-```
-
-NUTSはNo-U-Turn Samplerで、Hamiltonian Monte Carlo（HMC）の一種です。
-
-robotorchanでは
-
-```python
-model.supports_mll
-```
-
-が`False`です。
-
-つまり
-
-```python
-model.make_mll()
-```
-
-による通常のExact GP fittingとは異なります。
+NUTS（No-U-Turn Sampler）はHamiltonian Monte Carloの一種で、軌道長を適応的に選ぶMCMC手法です。SAASの階層的なハイパーパラメータ事後分布を近似する際に利用できます。混合の良否、収束、事後サンプル数が予測の信頼性に影響します。
 
 ---
 
@@ -487,32 +429,7 @@ Fully Bayesian SAASでは、各次元のlengthscaleは単一の推定値では�
 
 ## 8.16 入力正規化が重要
 
-lengthscale priorを使う高次元GPでは、入力scaleの統一が特に重要です。
-
-例えば
-
-```text
-x1: 0 ～ 1
-x2: 0 ～ 1,000,000
-```
-
-をそのまま使うとlengthscaleの比較が意味を失います。
-
-基本的には
-
-$$
-x_j\in[0,1]
-$$
-
-へ正規化します。
-
-```python
-from botorch.models.transforms import Normalize
-
-input_transform = Normalize(d=train_X.shape[-1])
-```
-
-SAASを使う場合は特に、入力scaleをモデル設計の一部として扱います。
+Lengthscaleの事前分布を比較可能にするため、入力変数の尺度を揃えることが重要です。例えば、各入力を学習データに基づいて $[0,1]$ へ正規化すると、逆lengthscaleの縮小を次元間で比較しやすくなります。学習時と予測時で同じ変換を使用し、検証データから正規化範囲を推定しないようにします。
 
 ---
 
@@ -593,23 +510,7 @@ MAP
 
 ## 8.20 MAP-SAAS
 
-MAP-SAASでは、SAASのsparsity-inducing priorを維持しつつ、NUTSを使わずMAP fittingします。
-
-robotorchanでは
-
-- `AdditiveMapSaasSingleTaskGP`
-- `EnsembleMapSaasSingleTaskGP`
-
-を利用できます。
-
-これらは通常のExact GP wrapperと同じく
-
-```python
-mll = model.make_mll()
-fit_gpytorch_mll(mll)
-```
-
-で学習できます。
+MAP-SAASは、疎性を誘導する事前分布を用いながら、MCMCによる事後積分の代わりにハイパーパラメータを点推定する方法です。計算負荷を抑えやすい一方、ハイパーパラメータの事後不確実性は直接積分しません。
 
 ---
 
@@ -688,7 +589,7 @@ $$
 など別の高次元BO手法も候補になります。
 
 この章で中心に扱うsurrogate群は、主にaxis-aligned sparsityとadditive structureです。
-robotorchanにはreduction、ALEBO系、high-dimensional searchなど別の構造仮定もあるため、
+次元削減、ALEBO系、高次元探索など別の構造仮定もあるため、
 それらは後続の高次元理論章で分けて扱います。
 
 ---
@@ -753,43 +654,13 @@ Additive Kernelは、入力次元ごとの寄与を足し合わせることで�
 
 ## 8.29 second-order interaction
 
-完全なadditive modelでは
+完全な加法モデルでは $f(x)=c+\sum_i f_i(x_i)$ ですが、変数間相互作用がある場合は
 
 $$
-f(x)=c+\sum_i f_i(x_i)
+f(x)=c+\sum_i f_i(x_i)+\sum_{i<j}f_{ij}(x_i,x_j)
 $$
 
-ですが、現実には変数間interactionがあります。
-
-`OrthogonalAdditiveGP`では
-
-```python
-second_order = True
-```
-
-を使うことで、概念的に
-
-$$
-f(x)
-=
-c
-+\sum_i f_i(x_i)
-+\sum_{i<j}f_{ij}(x_i,x_j)
-$$
-
-という2次interactionを扱えます。
-
-ただしinteraction数は
-
-$$
-\frac{d(d-1)}{2}
-$$
-
-で増えるため、高次元では計算量とモデル複雑度に注意が必要です。
-
-second-orderを使うかどうかは、interactionを表現する必要性とデータ量・計算量を
-比較して決めます。first-orderをbaselineとして比較すると、追加したinteractionの
-価値を確認しやすくなります。
+のように二次相互作用を導入できます。相互作用候補は $d(d-1)/2$ 個に増えるため、データ数とモデル複雑度のトレードオフに注意が必要です。
 
 ---
 
@@ -1080,24 +951,7 @@ NUTSは重すぎる
 
 ## 8.40 Additive GPを使う典型条件
 
-`OrthogonalAdditiveGP`を検討しやすいのは
-
-- 多数の変数が効く
-- 主効果が強い
-- interactionが比較的弱い
-- 各変数の寄与を解釈したい
-
-場合です。
-
-component-wise functionを理解しやすい点も重要です。
-
-```text
-prediction accuracy
-      +
-interpretability
-```
-
-を両立しやすい高次元GPです。
+加法的なGPは、多数の変数が寄与する一方で主効果が支配的な場合に適しています。各成分の解釈可能性はモデルの識別性や制約に依存し、予測精度だけでなく相互作用の残差も確認する必要があります。
 
 ---
 
@@ -1122,35 +976,7 @@ interpretability
 
 ## 8.43 構造仮定を選ぶフロー
 
-高次元連続入力では、モデル名より先に**どの構造仮定が妥当か**を考えます。
-
-```text
-入力次元が高い
-    ↓
-少数の変数だけが重要そう？
- ├─ Yes
- │    ↓
- │   NUTSコストを許容？
- │    ├─ Yes → SaasFullyBayesianSingleTaskGP
- │    └─ No  → MAP-SAAS
- │
- └─ No
-      ↓
-      ほぼ加法的？
-       ├─ Yes → OrthogonalAdditiveGP
-       └─ No
-            ↓
-            standard GP / DKL / TuRBO / BAxUS 等を検討
-```
-
-Multi-taskなら
-
-```text
-high-dimensional + related tasks
-    → SaasFullyBayesianMultiTaskGP
-```
-
-も候補です。
+高次元モデルは、まず関数に置く構造仮定で選びます。少数の座標軸が重要ならSAAS、加法性が強ければAdditive GP、回転した低次元部分空間に依存するなら埋め込み・次元削減を検討します。次に、推論コストと不確実性の扱いに応じてMAP推定とFully Bayesian推論を比較します。
 
 ---
 
@@ -1338,7 +1164,7 @@ $$
 1. 高次元BOではeffective dimensionが重要
 2. ARDだけでは少数データでlengthscale推定が不安定になり得る
 3. SAASはaxis-aligned sparsityをpriorとして導入する
-4. Fully Bayesian SAASはNUTSを使うため`make_mll()`では学習しない
+4. Fully Bayesian SAASではMCMCによりハイパーパラメータの事後分布を近似する
 5. MAP-SAASは計算コストを下げる選択肢
 6. Additive GPは「少数重要変数」とは異なる構造仮定
 7. 高次元ではacquisition optimization自体も難しい
