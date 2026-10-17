@@ -86,3 +86,13 @@ mathematical detail, citations, and existing external links.
 - Internal relative links and documentation checks pass.
 - Equations, notation, assumptions, and references are reviewed separately
   from documentation relocation.
+
+## Review safeguards
+
+Before declaring the model-theory migration complete, compare source and
+result for large chapter rewrites. Confirm unique derivations, assumptions,
+counterexamples, and references are preserved or moved to their canonical
+owners. Passing link checks alone does not prove content preservation.
+
+Keep terminology and language consistent across chapters, and validate the
+integrated default branch after independent documentation changes are merged.
