@@ -34,13 +34,7 @@ n = 100,000, d = 5
 
 後者では、通常の Exact GP が必要とする共分散行列の計算がボトルネックになります。
 
-robotorchan では BoTorch の
-
-```python
-SingleTaskVariationalGP
-```
-
-を BoTorch-compatible wrapper として提供しています。
+具体的なモデルの生成・学習方法は [モデルドキュメント](../models/README.md) を参照してください。
 
 本章では、
 
@@ -52,7 +46,6 @@ SingleTaskVariationalGP
 - stochastic variational inference
 - minibatch 学習
 - inducing point allocation
-- `SingleTaskVariationalGP`
 - Bayesian Optimization での利用
 
 までを順に整理します。
@@ -478,43 +471,13 @@ $m/n$ に普遍的な最適比率はなく、データの複雑さ・カーネ�
 
 ## 9.15 inducing point allocation
 
-inducing point はどこに置くかも重要です。
-
-BoTorchの `SingleTaskVariationalGP` では、inducing point allocatorを通して
-初期配置を決められます。defaultの具体的なallocatorやheuristicはupstream versionに
-依存し得るため、固定仕様として覚えるより、利用中のBoTorch APIを確認します。
-
-これは GP posterior / kernel variance を効率よく表現するように inducing point を配置する考え方です。
-
-BoTorch では downstream task に合わせた custom allocator も利用できます。
+Inducing point の配置は、近似事後分布の精度と計算負荷に影響します。観測点からの選択、空間充填、クラスタリング、カーネルに基づく配置などの選択肢があります。配置の良否は、近似したい関数の変動と入力分布に依存します。
 
 ---
 
 ## 9.16 inducing point を学習する
 
-`SingleTaskVariationalGP` には
-
-```python
-learn_inducing_points = True
-```
-
-があります。
-
-これにより inducing point の位置自体も学習対象にできます。
-
-```text
-初期配置
-  ↓
-variational training
-  ↓
-Z の位置も更新
-  ↓
-データをよりよく近似する位置へ移動
-```
-
-という挙動です。
-
-ただし inducing point の optimization が不安定になるケースもあるため、固定点との比較も有効です。
+誘導点位置 $Z$ を固定する方法と、変分パラメータやカーネルパラメータとともに最適化する方法があります。位置を最適化すると表現力が上がる一方、非凸最適化による初期値依存性が増えるため、固定配置との比較が有用です。
 
 ---
 
@@ -596,26 +559,7 @@ parameter update
 
 ## 9.24 minibatch 学習の考え方
 
-DataLoader を使うと概念的には
-
-```python
-for batch_X, batch_Y in loader:
-    optimizer.zero_grad()
-    output = model(batch_X)
-    loss = -mll(output, batch_Y.squeeze(-1))
-    loss.backward()
-    optimizer.step()
-```
-
-となります。
-
-このとき `mll` は
-
-```python
-mll = model.make_mll(num_data=len(dataset))
-```
-
-として、全データ数を使う必要があります。
+Mini-batch 学習では、観測ごとの期待対数尤度をサンプリングして推定し、KL 項との相対スケールを保つ必要があります。独立観測から一様に抽出したサイズ $b$ の batch では、尤度項に $n/b$ を掛けます。導出は[9.20](#920-mini-batch-elbo-のスケーリング)を参照してください。
 
 ---
 
@@ -644,61 +588,19 @@ mll = model.make_mll(num_data=len(dataset))
 
 ## 9.28 Gaussian likelihood 以外
 
-BoTorch のドキュメントでは `SingleTaskVariationalGP` は大量データだけでなく、non-Gaussian response を扱う場合にも候補とされています。
-
-Variational inference は Gaussian likelihood で解析的 posterior が得られないケースにも拡張しやすいためです。
-
-ただし Bayesian Optimization で custom likelihood を使う場合は、
-
-- posterior semantics
-- observation noise
-- acquisition function compatibility
-
-を確認する必要があります。
+Gaussian likelihood では共役性により Exact GP の事後分布を解析的に計算できます。一方、分類などの非 Gaussian likelihood では一般に事後分布が非共役となり、変分近似が有用です。ただし潜在関数の事後分布と観測ラベルの予測分布は区別する必要があります。
 
 ---
 
 ## 9.29 multiple outputs
 
-`SingleTaskVariationalGP` は
-
-```python
-num_outputs > 1
-```
-
-も扱えます。
-
-ただし 現在の underlying variational contract では複数 output を **independent な batch** として扱います。
-
-つまり
-
-```text
-output 1 ─ GP
-output 2 ─ GP
-output 3 ─ GP
-```
-
-であり、`MultiTaskGP` のように cross-output covariance を積極的に共有するモデルではありません。
-
-関連出力間で情報共有したい場合は、別の multi-task model を検討します。
+複数出力を扱う場合、出力ごとに独立した変分 GP を置く構成と、共有潜在過程を使って出力間共分散をモデル化する構成は異なります。前者の出力間共分散はゼロであり、後者は cross-output uncertainty を表現できます。詳しくは [Multi-task / Multi-output](07_multitask_multioutput.md) を参照してください。
 
 ---
 
 ## 9.30 Variational Strategy
 
-GPyTorch では inducing variables をどう parameterize し、posterior approximation をどう構成するかを
-
-```python
-VariationalStrategy
-```
-
-で表現します。
-
-default strategyの具体的なparameterizationはupstream BoTorch / GPyTorchの
-versionに依存し得ます。重要なのは、`variational_strategy` がinducing variablesと
-近似posteriorの構成方法を担うことです。
-
-whitening により variational optimization の conditioning を改善しやすくなります。
+変分戦略は、誘導変数 $u$ と近似分布 $q(u)$ から $q(f)$ を構成する方法を定めます。Whitening は事前共分散で再パラメータ化することで、変分最適化の条件数を改善する場合があります。具体的なパラメータ化は推論手法の選択に依存します。
 
 ---
 
@@ -798,25 +700,7 @@ Variational approximation が uncertainty を歪めると、探索と活用の�
 
 ## 9.37 inducing point allocation と BO
 
-global regression accuracy に適した inducing points と、optimum 周辺を正確に表現する inducing points は必ずしも同じではありません。
-
-BoTorch の設計でも custom `InducingPointAllocator` を渡せます。
-
-BO では
-
-```text
-全領域を均一に近似
-```
-
-よりも
-
-```text
-改善が期待できる領域を高精度に近似
-```
-
-した方がよい場合があります。
-
-これは今後 robotorchan で BO-oriented allocator を拡張する余地があります。
+全入力領域の平均的な予測精度に適した誘導点配置と、獲得関数が重視する領域の不確実性を正確に近似する配置は必ずしも一致しません。探索領域に偏った配置は局所精度を高める一方、未探索領域での不確実性を過小評価する可能性があります。
 
 ---
 
@@ -1037,43 +921,13 @@ $$
 
 ## 9.48 posterior prediction
 
-学習後は Exact GP wrapper と同じ BoTorch model interface で
-
-```python
-posterior = model.posterior(test_X)
-```
-
-を使えます。
-
-したがって acquisition function 側からは
-
-```text
-Exact GP
-Variational GP
-```
-
-の違いを大きく意識せずに posterior を利用できます。
-
-これは BoTorch-native wrapper にする大きな利点です。
+変分 GP の予測分布は、誘導変数の近似事後分布を介して得られます。近似誤差は予測平均だけでなく、予測分散にも現れます。特にベイズ最適化では獲得関数が不確実性に依存するため、分散の較正を検証する必要があります。
 
 ---
 
 ## 9.49 acquisition function との組み合わせ
 
-`SingleTaskVariationalGP` は BoTorch model interface を実装しているため、通常の MC acquisition function
-と組み合わせられます。
-
-例えば
-
-- qLogEI
-- qLogNEI
-- qUCB
-- qPI
-
-などです。
-
-ただし acquisition value は approximate posterior に依存するため、surrogate approximation error が candidate
-selection に直接影響します。
+獲得関数は近似事後分布から計算されるため、近似誤差が候補選択へ直接影響します。Expected Improvement や UCB など、予測分散に依存する基準では特にその影響が大きくなり得ます。近似モデルと Exact GP を小規模データで比較することが有用です。
 
 ---
 
@@ -1139,36 +993,7 @@ Exact GP が十分速いなら、posterior approximation error を増やさな�
 
 ## 9.53 モデル選択フロー
 
-```text
-回帰問題
-  ↓
-データ数 n が Exact GP で現実的？
-  ├─ Yes
-  │    └─ SingleTaskGP など Exact GP
-  │
-  └─ No
-       ↓
-       inducing-point approximation を許容？
-       ├─ Yes
-       │    └─ SingleTaskVariationalGP
-       │
-       └─ No
-            └─ 別の scalable surrogate も検討
-```
-
-さらに高次元なら
-
-```text
-n large?
-  ↓
-Yes → Variational approximation の必要性
-
-同時に d high?
-  ↓
-Yes → dimension structure の対策も別途必要
-```
-
-と二軸で考えます。
+モデル選択では、まず観測数 $n$ による計算負荷と、入力次元 $d$ による統計的な難しさを分けます。Exact GP が十分に扱える場合は近似の追加を避ける選択が合理的です。大規模データでは誘導点近似を検討し、高次元性には別途構造仮定や次元削減を検討します。
 
 ---
 
