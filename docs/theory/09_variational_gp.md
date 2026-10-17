@@ -468,33 +468,11 @@ m 大
 
 ---
 
-## 9.14 BoTorch の default inducing point 数
+## 9.14 Inducing point 数に一般的な固定比率はない
 
-upstream `SingleTaskVariationalGP` では、`inducing_points` を明示しない場合、heuristic として
-
-$$
-m \approx 0.25n
-$$
-
-つまり training points の 25% が使われます。
-
-例えば
-
-```text
-n = 400
-```
-
-なら、おおよそ
-
-```text
-m = 100
-```
-
-です。
-
-ただしこれは一般解ではありません。
-
-大規模データでは `m` を明示的に設定して精度と計算時間を検証することが重要です。
+Inducing point 数 $m$ は、近似精度と計算負荷のトレードオフを決めるモデル選択パラメータです。
+$m/n$ に普遍的な最適比率はなく、データの複雑さ・カーネル・誘導点配置に依存します。
+予測精度と不確実性の較正を複数の $m$ で検証します。
 
 ---
 
@@ -540,182 +518,59 @@ Z の位置も更新
 
 ---
 
-## 9.17 robotorchan の `SingleTaskVariationalGP`
+## 9.17 Variational GP の推論対象
 
-robotorchan は BoTorch の variational model contract を維持しつつ、
-raw training data と `make_mll()` の共通規約を追加しています。
-
-constructor は主に
-
-```python
-from robotorchan.models import SingleTaskVariationalGP
-
-model = SingleTaskVariationalGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    inducing_points=64,
-)
-```
-
-のように利用できます。
-
-主な引数は
-
-- `train_X`
-- `train_Y`
-- `likelihood`
-- `num_outputs`
-- `learn_inducing_points`
-- `covar_module`
-- `mean_module`
-- `variational_distribution`
-- `variational_strategy`
-- `inducing_points`
-- `inducing_point_allocator`
-- `outcome_transform`
-- `input_transform`
-
-です。
+Inducing variables $u=f(Z)$ と変分分布 $q(u)$ を導入し、
+$p(f\mid u)$ を用いて近似事後分布 $q(f)$ を構成します。
+推論アルゴリズムとモデルの入力構造は独立した設計軸です。
 
 ---
 
-## 9.18 Exact GP と学習 API が違う
+## 9.18 Exact GP と Variational GP の目的関数
 
-通常の `SingleTaskGP` は Exact Marginal Log Likelihood を使います。
-
-```python
-mll = model.make_mll()
-fit_gpytorch_mll(mll)
-```
-
-一方 `SingleTaskVariationalGP` の `make_mll()` は
-
-```python
-VariationalELBO
-```
-
-を返します。
-
-robotorchan では
-
-```python
-mll = model.make_mll()
-```
-
-という共通 API を維持しつつ、内部の objective は Exact GP と異なります。
+Gaussian likelihood を用いる Exact GP は周辺対数尤度 $\log p(y)$ を直接評価できます。
+Variational GP は一般に $\log p(y)$ の下界である ELBO を最大化します。
+両者の最適化目的を同一視してはいけません。
 
 ---
 
-### 9.18.1 `make_mll()` と fitting helper を同一視しない
+## 9.19 ELBO と KL 正則化
 
-`SingleTaskVariationalGP.make_mll()` が `VariationalELBO` を返すことは、
-Exact GP と同じ fitting routine を使うという意味ではありません。
+$
+\mathcal L=\sum_{i=1}^{n}\mathbb E_{q(f_i)}[\log p(y_i\mid f_i)]
+-\operatorname{KL}(q(u)\Vert p(u)).
+$
 
-robotorchan の共通点は **objective factory として `make_mll()` を持つこと**です。
-Variational GP の parameter optimization は、この章の training loop のように
-ELBO を gradient optimizer で反復最適化するのが基本です。
-
-特に minibatch training では、batch tensor だけでなく全データ数を
-`make_mll(num_data=...)` に渡して ELBO の scaling を保ちます。
+第一項は観測データへの適合、第二項は誘導変数の変分分布と事前分布の乖離を表します。
 
 ---
 
-## 9.19 `make_mll()` の実体
+## 9.20 Mini-batch ELBO のスケーリング
 
-robotorchan の wrapper では概念的に
+観測 $n$ 件から一様に抽出した mini-batch $B$（サイズ $b$）では、
 
-```python
-from gpytorch.mlls import VariationalELBO
+$
+\widehat{\mathcal L}_B
+=\frac{n}{b}\sum_{i\in B}\mathbb E_{q(f_i)}[\log p(y_i\mid f_i)]
+-\operatorname{KL}(q(u)\Vert p(u)).
+$
 
-mll = VariationalELBO(
-    likelihood=model.likelihood,
-    model=model.model,
-    num_data=num_data,
-)
-```
-
-を作ります。
-
-`num_data` を省略した場合は
-
-```python
-model.raw_train_X.shape[-2]
-```
-
-を使います。
+これは独立観測・一様サンプリングのもとで全データ ELBO の不偏推定量です。
+非一様サンプリングでは適切な重み付けが必要です。
 
 ---
 
-## 9.20 `num_data` が重要な理由
+## 9.21 Full-batch 最適化の理論
 
-mini-batch 学習では、1回の forward に使う batch size と全データ数が異なります。
-
-例えば
-
-```text
-全データ n = 100,000
-mini-batch b = 512
-```
-
-でも ELBO は全データを代表する objective でなければなりません。
-
-そのため
-
-```python
-mll = model.make_mll(num_data=100_000)
-```
-
-のように全観測数を渡します。
-
-`num_data=512` としてしまうと、KL term と likelihood term の相対スケーリングが誤ります。
+全観測を使う場合は ELBO の勾配を直接計算し、変分パラメータ、カーネルパラメータ、
+必要に応じて誘導点位置を同時または交互に更新します。
 
 ---
 
-## 9.21 基本的な full-batch 学習例
+## 9.22 Stochastic optimization
 
-```python
-import torch
-from robotorchan.models import SingleTaskVariationalGP
-
-torch.set_default_dtype(torch.double)
-
-train_X = torch.rand(500, 3)
-train_Y = torch.sin(2 * torch.pi * train_X[:, :1]) + 0.2 * train_X[:, 1:2] - 0.1 * train_X[:, 2:3]
-
-model = SingleTaskVariationalGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    inducing_points=64,
-)
-
-mll = model.make_mll()
-```
-
-Variational GP は通常、gradient optimizer を使って ELBO を反復最適化します。
-
----
-
-## 9.22 optimizer による学習
-
-概念的には次のように学習します。
-
-```python
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-
-model.train()
-model.likelihood.train()
-
-for _ in range(200):
-    optimizer.zero_grad()
-    output = model(train_X)
-    loss = -mll(output, train_Y.squeeze(-1))
-    loss.backward()
-    optimizer.step()
-```
-
-GPyTorch の likelihood や output shape に応じて target shape は調整が必要です。
-
-重要なのは、Exact GP のように「MLL を一度 optimizer helper に渡す」だけではなく、SGD / Adam 系 optimizer を用いた反復学習が自然だという点です。
+Mini-batch の確率的勾配を用いる場合、学習率、batch size、誘導点位置の更新が
+近似事後分布の品質に影響します。ELBO の改善だけでなく予測分布を検証します。
 
 ---
 
@@ -764,91 +619,28 @@ mll = model.make_mll(num_data=len(dataset))
 
 ---
 
-## 9.25 `train_X` は全データでなくてもよい
+## 9.25 誘導点の初期化と観測データ
 
-BoTorch の `SingleTaskVariationalGP` は、constructor の `train_X` が必ずしも全学習データである必要はありません。
-
-これは inducing point allocation と初期化に使うデータとして扱えます。
-
-大規模データでは
-
-```text
-全データ
-  ↓
-初期化用 subset
-  ↓
-inducing point allocation
-  ↓
-その後 minibatch training
-```
-
-という使い方もできます。
-
-ただし robotorchan の `raw_train_X` は constructor に渡した tensor の snapshot なので、全データそのものとは限りません。
+誘導点 $Z$ は観測点の部分集合に限定されません。
+観測点からの初期化、クラスタリング、最適化可能な位置パラメータなどを考えられます。
+初期化に用いるデータと ELBO の評価に用いる全観測は概念的に区別します。
 
 ---
 
-## 9.26 raw-data API の注意
+## 9.26 データ来歴と統計的推論
 
-robotorchan では
-
-```python
-model.raw_train_X
-model.raw_train_Y
-model.raw_train_Yvar
-```
-
-を持ちます。
-
-`SingleTaskVariationalGP` の upstream constructor には `train_Yvar` がないため、
-
-```python
-model.raw_train_Yvar is None
-```
-
-です。
-
-また `raw_train_X` / `raw_train_Y` は constructor 入力の provenance であり、後続 minibatch で学習した全データ履歴ではありません。
+モデルの初期化に使う観測、実際に ELBO に寄与する観測、予測評価に使う観測は
+区別する必要があります。データ来歴の保持方法はモデル API の責務です。
 
 ---
 
-## 9.27 `train_Y` は optional
+## 9.27 Variational approximation と入力構造
 
-現在の robotorchan `SingleTaskVariationalGP` では `train_Y` は optional です。
-
-これは model structure と inducing point を `train_X` だけで構築し、その後別途 training loop で target
-を与える使い方ができるためです。
-
-例えば
-
-```python
-model = SingleTaskVariationalGP(
-    train_X=initial_X,
-    inducing_points=64,
-)
-```
-
-のような構築も可能です。
+変分近似は主として推論の計算量に関わります。
+カテゴリ変数や階層入力の意味を保持するには、それとは別に適切な共分散を指定します。
+近似推論を導入しただけで Mixed Variables に対応するわけではありません。
 
 ---
-
-### Mixed入力でも「大規模化」と「カテゴリ構造」は別の責務
-
-robotorchanには `MixedSingleTaskVariationalGP` もあります。
-
-~~~text
-Variational approximation
-  → large nへのscalability
-
-native categorical covariance
-  → mixed inputの意味論
-~~~
-
-を組み合わせるモデルです。`cat_dims` はraw input上のcategorical design columnsを
-指定し、continuous部分とcategorical部分を分けたcovarianceを構築します。
-
-つまり「Variationalにしたからcategoryも扱える」のではなく、**近似推論と入力構造を
-別々に設計して組み合わせている**点が重要です。
 
 ## 9.28 Gaussian likelihood 以外
 
@@ -928,46 +720,19 @@ inducing point 数が増えると `S` の parameter 数も増えるため、`m` 
 
 ---
 
-## 9.32 input / outcome transform の注意
+## 9.32 Mini-batch と変換の整合性
 
-upstream `SingleTaskVariationalGP` で minibatch training を行う場合、learnable transform
-に注意するよう明示しています。
-
-例えば
-
-```python
-Normalize(...)
-Standardize(...)
-```
-
-の統計量が mini-batch ごとに更新されると、batch ごとに scale が変わってしまいます。
-
-これは望ましくありません。
+入力正規化や出力標準化の統計量が mini-batch ごとに変わると、
+異なるスケールの尤度項を同じ目的関数に混在させることになります。
+学習データから推定した変換を固定するなど、一貫した尺度を維持します。
 
 ---
 
-## 9.33 大規模データでは事前変換を推奨
+## 9.33 学習データ内での変換推定
 
-minibatch training では、全データから事前に
-
-- input normalization parameters
-- output mean / standard deviation
-
-を計算し、dataset 自体を pre-transform しておく方が安全です。
-
-```text
-全 training data
-    ↓
-一度だけ normalization / standardization
-    ↓
-固定済み transformed dataset
-    ↓
-mini-batch training
-```
-
-とします。
-
-これにより各 mini-batch で統計量が変化する問題を避けられます。
+正規化・標準化の統計量は、検証データを混ぜず学習部分から推定します。
+その統計量を固定して各 mini-batch に適用することで、
+変換の不整合と検証データのリークを防ぎます。
 
 ---
 
@@ -1451,30 +1216,11 @@ Yes → dimension structure の対策も別途必要
 
 ---
 
-## 9.56 robotorchan で覚えておく API
+## 9.56 実装 API との境界
 
-```python
-model = SingleTaskVariationalGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    inducing_points=64,
-)
-
-mll = model.make_mll()
-
-model.raw_train_X
-model.raw_train_Y
-model.raw_train_Yvar
-model.posterior(test_X)
-```
-
-mini-batch 学習なら
-
-```python
-mll = model.make_mll(num_data=n_total)
-```
-
-とします。
+学習器の生成、ELBO オブジェクトの取得、mini-batch の指定、事後分布取得などの
+ライブラリ固有の呼び出し方は[モデルドキュメント](../models/README.md)で扱います。
+本章では $q(u)$、ELBO、近似誤差、計算量および不確実性の理論を扱います。
 
 ---
 
@@ -1547,13 +1293,7 @@ Variational GP
   mini-batch possible
 ```
 
-robotorchan では
-
-```python
-SingleTaskVariationalGP
-```
-
-を使います。
+具体的なモデル API は [モデルドキュメント](../models/README.md) を参照してください。
 
 特に覚えておきたい点は次の通りです。
 
@@ -1562,7 +1302,7 @@ SingleTaskVariationalGP
 3. `q(u)` で posterior を variational approximation する
 4. ELBO は log marginal likelihood の lower bound
 5. `m` が近似精度と計算コストを支配する
-6. mini-batch 学習では `num_data` に全データ数を渡す
+6. mini-batch 学習では尤度項を全データ数に応じて正しくスケーリングする
 7. minibatch 時の learnable transform には注意する
 8. BO では posterior mean だけでなく uncertainty approximation が重要
 9. Exact GP が十分速いなら無理に Variational GP を使わない
