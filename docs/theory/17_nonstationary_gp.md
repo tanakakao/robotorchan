@@ -1,12 +1,10 @@
-# Nonstationary Gaussian Processes
+# 非定常ガウス過程
 
-## 1. Stationarity and local smoothness
+## 1. 定常性と局所的な滑らかさ
 
-A covariance function is stationary when
-\(k(x,x')=\kappa(x-x')\). Isotropy is a stronger restriction:
-covariance depends only on a distance such as \(\|x-x'\|\).
-An automatic relevance determination (ARD) RBF kernel may be
-anisotropic yet stationary:
+共分散関数が \(k(x,x')=\kappa(x-x')\) を満たすとき、定常であるといいます。
+等方性はより強い条件であり、共分散が \(\|x-x'\|\) のような距離のみに依存します。
+ARD付きRBFカーネルは異方的であっても定常です。
 
 $$
 k_{\mathrm{RBF}}(x,x')
@@ -15,18 +13,16 @@ k_{\mathrm{RBF}}(x,x')
 \right).
 $$
 
-Global lengthscales \(\ell_d\) cannot represent a correlation length
-that changes with location. Nonstationary covariance models allow local
-properties of the latent function to vary over the input domain.
+大域的な長さ尺度 \(\ell_d\) では、場所によって変わる相関距離を表現できません。
+非定常共分散モデルでは、潜在関数の局所的な性質が入力領域内で変化することを許容します。
 
-This differs from heteroskedasticity, where the *observation noise*
-variance changes with \(x\), and uncertain-input models, where the
-location of an observation is itself uncertain.
+これは、*観測ノイズ*の分散が入力 \(x\) に依存する異分散性や、
+観測位置自体に不確実性がある入力不確実性モデルとは異なります。
 
-## 2. Gibbs covariance with input-dependent lengthscales
+## 2. 入力依存長さ尺度を持つGibbs共分散
 
-Let \(\ell_d(x)>0\) be the local lengthscale of coordinate \(d\).
-A Gibbs-type covariance can be written as
+座標 \(d\) の局所長さ尺度を \(\ell_d(x)>0\) とします。
+Gibbs型共分散は次のように表せます。
 
 $$
 k(x,x')=\sigma_f^2
@@ -42,18 +38,15 @@ k(x,x')=\sigma_f^2
 \right).
 $$
 
-This construction is positive semidefinite for positive local
-lengthscale functions. If each \(\ell_d(x)\equiv\ell_d\) is constant,
-the prefactor becomes one and the exponent reduces to the stationary
-ARD RBF kernel.
+局所長さ尺度が正であれば、この構成は正半定値です。
+各 \(\ell_d(x)\equiv\ell_d\) が一定なら前置係数は1となり、指数部は定常ARD RBFカーネルに帰着します。
 
-A small local lengthscale allows shorter-range correlation; it does
-**not** by itself establish a physical phase boundary or causal
-regime transition.
+局所長さ尺度が小さいことは短距離の相関を許容しますが、
+それだけで物理的な相境界や因果的な状態遷移が示されるわけではありません。
 
-## 3. Parameterizing local lengthscales
+## 3. 局所長さ尺度のパラメータ化
 
-One finite-dimensional model is
+有限次元のパラメータ化の一例は次のとおりです。
 
 $$
 \ell_d(x)
@@ -64,25 +57,22 @@ b_d+\sum_{j=1}^{D}W_{dj}x_j
 \qquad \ell_{\min,d}>0.
 $$
 
-Here \(W\) controls how each local lengthscale responds to other input
-coordinates. The softplus and positive floor enforce positivity.
-This is a restricted nonstationary model, not a universal
-representation of arbitrary smoothness fields. More flexible
-alternatives place stochastic processes on local kernel parameters
-or construct nonstationary covariances through input warping.
+ここで \(W\) は各局所長さ尺度の入力座標への依存性を表します。
+softplusと正の下限値により長さ尺度の正値性を保証します。
+これは制約された非定常モデルであり、任意の滑らかさの場を表現できるわけではありません。
+より柔軟な方法として、局所カーネルパラメータに確率過程を置く方法や、
+入力ワーピングによって非定常共分散を構成する方法があります。
 
-The model's additional degrees of freedom can be difficult to
-identify with small datasets. Validation against a stationary
-baseline is therefore important.
+自由度が増えるため、小規模データではパラメータの識別が難しくなります。
+したがって、定常モデルを基準とした検証が重要です。
 
-## 4. Structured input spaces
+## 4. 構造化された入力空間
 
-For mixed continuous and categorical inputs, a nonstationary
-continuous covariance may be combined with a valid categorical
-kernel through sums or products. Category identifiers are not
-automatically meaningful Euclidean coordinates.
+連続・カテゴリ混合入力では、非定常な連続共分散と妥当なカテゴリカーネルを
+和または積で組み合わせられます。カテゴリ識別子を自動的にユークリッド座標として
+解釈してはいけません。
 
-For multitask data, a separable construction is
+マルチタスクデータに対する分離可能な構成は次のとおりです。
 
 $$
 k\big((x,t),(x',t')\big)
@@ -90,31 +80,23 @@ k\big((x,t),(x',t')\big)
 k_{\mathrm{data}}(x,x')\,k_{\mathrm{task}}(t,t').
 $$
 
-The data covariance may be nonstationary while the task covariance
-captures relationships among discrete tasks. With a complete
-Cartesian observation design, its covariance matrix has a Kronecker
-structure, up to the ordering of observations:
+入力側の共分散を非定常とし、タスク側の共分散で離散タスク間の関係を表現できます。
+完全な直積観測配置では、観測順序の取り方を除いてKronecker構造になります。
 
 $$
 K=K_{\mathrm{task}}\otimes K_{\mathrm{data}}.
 $$
 
-This factorization is an assumption, not a universal property of
-multitask nonstationary GPs. Other models allow task-specific local
-lengthscale fields and nonseparable cross-task interactions.
+この分解はモデルの仮定であり、非定常マルチタスクGPに一般的に成立する性質ではありません。
+タスク固有の局所長さ尺度や、分離不可能なタスク間相互作用を許容するモデルもあります。
 
-## 5. Interpretation and limitations
+## 5. 解釈と限界
 
-- Local lengthscales describe covariance geometry, not posterior
-  uncertainty or a calibrated physical boundary.
-- Spatial variation in observation scatter is a separate
-  heteroskedastic likelihood problem.
-- Apparent nonstationarity can also result from an inadequate mean
-  function, missing covariates, outliers, or known categorical regimes.
-- Nonstationary kernels may reduce underfitting but increase
-  estimation variance and numerical complexity.
-- Held-out predictive performance and posterior predictive checks
-  should guide model comparison.
+- 局所長さ尺度は共分散の幾何を表すものであり、事後不確実性や校正された物理境界ではありません。
+- 観測値のばらつきが場所によって変化する場合は、異分散尤度として別途扱います。
+- 不適切な平均関数、欠落した説明変数、外れ値、既知のカテゴリ別領域も見かけの非定常性を生みます。
+- 非定常カーネルは過小適合を緩和し得ますが、推定分散と数値計算コストが増加します。
+- 保留データでの予測性能と事後予測チェックに基づいてモデルを比較します。
 
 ## 6. 非定常性の診断と推定上の注意点
 
@@ -131,7 +113,7 @@ lengthscale fields and nonseparable cross-task interactions.
 校正、領域別の残差、および未観測領域での不確実性を比較します。
 追加の柔軟性による改善が再現されるかを確認することが重要です。
 
-## References
+## 参考文献
 
 1. Gibbs, M. N. (1997). *Bayesian Gaussian Processes for Regression
    and Classification*. PhD thesis, University of Cambridge.
@@ -141,7 +123,7 @@ lengthscale fields and nonseparable cross-task interactions.
 3. Rasmussen, C. E., & Williams, C. K. I. (2006).
    *Gaussian Processes for Machine Learning*. MIT Press.
 
-## Related documents
+## 関連文書
 
 - [Gaussian Process](02_gaussian_process.md)
 - [Kernel](03_kernel.md)
