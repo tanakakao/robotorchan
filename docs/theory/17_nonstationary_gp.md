@@ -116,6 +116,21 @@ lengthscale fields and nonseparable cross-task interactions.
 - Held-out predictive performance and posterior predictive checks
   should guide model comparison.
 
+## 6. 非定常性の診断と推定上の注意点
+
+非定常カーネルは場所ごとに異なる相関距離を表現できますが、
+観測点が疎な領域では局所長さ尺度 $\ell_d(x)$ を十分に識別できないことがあります。
+局所的に長さ尺度が短く推定されたことを、直ちに物理的な相転移や
+異常発生の証拠と解釈することは適切ではありません。
+
+また、入力に依存する観測ノイズと入力に依存する潜在関数の滑らかさは
+別の統計的要因です。反復測定があれば観測ノイズの変化を推定しやすくなりますが、
+単一観測のみでは両者の区別が難しい場合があります。
+
+評価では、定常カーネルを基準モデルとして、予測対数尤度、
+校正、領域別の残差、および未観測領域での不確実性を比較します。
+追加の柔軟性による改善が再現されるかを確認することが重要です。
+
 ## References
 
 1. Gibbs, M. N. (1997). *Bayesian Gaussian Processes for Regression
