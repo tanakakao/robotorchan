@@ -18,7 +18,7 @@ z = encoder_theta(x)
 
 として非線形な latent representation を学習します。
 
-robotorchan では neural reduction を大きく2種類に分けます。
+Neural reduction は学習方法により大きく2種類に分けられます。
 
 1. encoder を事前学習して固定し、その後 GP を学習する frozen-reducer model
 2. GP objective の勾配を encoder まで伝える jointly-trained model
@@ -184,13 +184,8 @@ L_joint = - log p(Y | encoder_theta(X))
 
 です。
 
-現行 `JointEncoderGP` はExact GPのMLLを使うDKL型モデルです。
-constructor時に一度作ったlatent tensorを固定して学習するのではなく、training時の
-`forward(raw_train_X)` で現在のencoderを通すため、MLL gradientがencoderへ届きます。
-
-robotorchan では `training_loss()` を joint neural GP の共通学習契約とします。
-
-これは frozen `ReducedGP` と異なり、encoder parameter が GP training loop の一部だからです。
+Joint learningでは、encoderの出力を固定値として扱わず、GPの目的関数からencoderへ勾配を伝播させます。
+そのため、事前学習済みのencoderを固定する二段階学習とは異なる関数表現を獲得します。
 
 ## 6. HybridAutoEncoderGP
 
@@ -265,7 +260,7 @@ Monte Carloで得たpredictive momentsをmoment matchingしてGaussian posterior
 categorical code を continuous neural encoder へそのまま入力すると、カテゴリ値の数値距離を
 意味のある Euclidean geometry として学習してしまう可能性があります。
 
-robotorchan の Mixed neural model は原則として
+Mixed neural representationでは、カテゴリ値の順序や数値距離を誤って仮定しないよう、原則として
 
 ```text
 continuous X
@@ -404,27 +399,13 @@ model familyは単純な性能順位ではなく、どのrepresentation assumpti
 
 です。
 
-## 14. 実装との対応
+## 14. 理論と実装の境界
 
-現在の理論章で保持すべき実装契約は次です。
+Neural reductionでは、encoderの事前学習とGPとの共同学習を区別します。
+また、潜在変数の不確実性を点推定に置き換える場合、予測分布の分散が過小評価される可能性があります。
+Mixed入力では連続変数の表現学習とカテゴリ共分散を区別し、Multi-task入力ではタスク構造を適切に保持します。
 
-- `AutoEncoderGP` は frozen deterministic reducer
-- `VAEGP` は frozen posterior-mean latent reducer
-- Supervised AE/VAE は reducer pretraining で `Y` を利用
-- `JointEncoderGP` は GP objective を encoder まで伝播
-- `HybridAutoEncoderGP` は GP loss + reconstruction regularization
-- joint neural model の共通学習契約は `training_loss()`
-- VAE latent uncertainty は deterministic posterior では自動伝播しない
-- `uncertainty_aware_posterior()` はlatent samplingとmoment matchingによる近似を提供
-- uncertainty-aware posteriorはlatent mixture全体をそのまま保持するposteriorではない
-- Mixed neural model は continuous encoding と categorical covariance を分離
-- structural featureをneural continuous representationと混同しない
-- long-format MultiTaskではtask featureをencoderから分離する
-- Kronecker MultiTaskではtask identityはY側のaxisにある
-- Mixed Hybridのreconstructionはcontinuous partだけを対象にする
-- public posterior interface は original input space を基本とする
-
-詳細は [high-dimensional inputs](../models/high_dimensional_inputs.md) を参照してください。
+モデルごとのAPI、学習手順、事後分布の呼び出し方は[高次元入力モデル](../models/high_dimensional_inputs.md)を参照してください。
 
 ## 15. この章で覚えておくこと
 
