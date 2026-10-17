@@ -25,14 +25,14 @@ def anchors(text: str) -> set[str]:
     result = set()
     counts = {}
     for match in HEADING_RE.finditer(strip_fenced_code(text)):
-        heading = re.sub(r"<[^>]+>', '", match.group(1))
+        heading = re.sub(r"<[^>]+>", "", match.group(1))
         explicit = EXPLICIT_ID_RE.search(heading)
         if explicit:
             result.add(explicit.group(1))
             heading = heading[: explicit.start()]
         heading = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", heading)
-        heading = re.sub(r"[^\w\s-]', '", heading.casefold()).strip()
-        slug = re.sub(r"\s+', '-", heading)
+        heading = re.sub(r"[^\w\s-]", "", heading.casefold()).strip()
+        slug = re.sub(r"\s+", "-", heading)
         if not slug:
             continue
         count = counts.get(slug, 0)
