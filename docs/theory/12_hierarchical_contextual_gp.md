@@ -178,7 +178,36 @@ Hierarchical *candidate feasibility* is distinct from hierarchical
 *covariance*: a surrogate can respect inactive coordinates without
 guaranteeing that an optimizer generates only valid configurations.
 
-## 7. References and further reading
+## 7. 階層・異種タスク・文脈モデルの識別性
+
+階層的な入力では、無効な変数にダミー値を与えて通常の距離を計算すると、
+同一の物理条件を表す候補が異なる予測を受ける可能性があります。
+有効性マスクを用いる場合も、**得られた共分散が正半定値であること**を
+確認しなければなりません。任意の距離式をRBFカーネルに代入するだけでは、
+その性質は一般に保証されません。
+
+異種タスクの共通潜在表現 $h_t(x)$ は、異なる特徴集合を比較するための
+仮定です。タスク固有の情報が潜在表現で失われる場合には、
+タスク間転移によって予測が悪化することがあります。
+
+文脈加法モデル $f(x)=\sum_c f_c(x_c)$ では、合計値しか観測されない場合、
+各成分の寄与を一意に推定できるとは限りません。たとえば任意の定数 $a$ に対して
+$f_1(x_1)+a$ と $f_2(x_2)-a$ は同じ合計値を与えます。
+成分の識別には中心化制約や適切な事前分布、文脈別の観測などが役立ちます。
+
+## 8. 探索空間の有効性とモデルの不確実性
+
+階層構造を扱うBOでは、モデルが無効な座標に依存しないことと、
+候補生成が無効な組合せを出力しないことを別々に検証します。
+親カテゴリが変わると有効な連続変数の次元も変わるため、
+固定次元の最適化器に埋め込む際には条件付き制約が必要です。
+
+未知の分岐や観測が少ない文脈への一般化は、
+カーネルや埋め込みの事前仮定に依存します。
+観測されていない分岐間の類似性を、単なる整数コードの近さから
+自動的に推論できるわけではありません。
+
+## 9. References and further reading
 
 - Rasmussen, C. E., & Williams, C. K. I. (2006).
   *Gaussian Processes for Machine Learning*. MIT Press.
