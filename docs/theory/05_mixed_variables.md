@@ -1,27 +1,22 @@
-# 5. Mixed Variables in Gaussian Process Models
+# 5. ガウス過程における混合変数
 
-## 5.1 Variable semantics
+## 5.1 変数の意味
 
-A mixed design space combines continuous, integer, ordinal, nominal,
-and possibly conditional variables. Their statistical meaning—not
-the numerical dtype used to store them—determines the covariance
-model and the feasible candidate set.
+混合探索空間は、連続・整数・順序・名義・条件付き変数を組み合わせたものです。
+共分散モデルと実行可能な候補集合を決めるのは、保存時の数値型ではなく
+各変数の統計的な意味です。
 
-- **Continuous:** distances and interpolation are meaningful.
-- **Ordinal:** order is meaningful, but equal spacing need not be.
-- **Integer:** numerical distances may be meaningful, subject to
-  discrete feasibility.
-- **Nominal:** labels identify categories; their numeric codes do
-  not define Euclidean distances.
-- **Conditional:** some variables exist or are active only under
-  particular parent choices.
+- **連続変数：** 距離や補間に意味があります。
+- **順序変数：** 順序には意味がありますが、間隔が等しいとは限りません。
+- **整数変数：** 数値的な距離に意味がある場合でも、候補は離散的です。
+- **名義変数：** ラベルはカテゴリを区別しますが、数値コードに距離の意味はありません。
+- **条件付き変数：** 親変数の値によって有効になる座標が変わります。
 
-A task index or fidelity level can also be stored as an integer,
-but it represents a distinct statistical structure.
+タスク番号や忠実度も整数で保存できますが、それぞれ異なる統計構造を表します。
 
-## 5.2 Categorical covariance
+## 5.2 カテゴリ共分散
 
-For nominal labels \(c,c'\), a simple valid kernel is
+名義ラベル \(c,c'\) に対する妥当なカーネルの一例は次のとおりです。
 
 $$
 k_{\mathrm{cat}}(c,c')
@@ -34,11 +29,11 @@ k_{\mathrm{cat}}(c,c')
 -\frac{1}{K-1}\le\rho\le1,
 $$
 
-where \(K>1\) is the number of categories. Its covariance
-matrix is \(\sigma_c^2[(1-\rho)I+\rho\mathbf 1\mathbf 1^\top]\);
-the displayed bounds on \(\rho\) guarantee positive semidefiniteness.
+ここで \(K>1\) はカテゴリ数です。共分散行列は
+\(\sigma_c^2[(1-\rho)I+\rho\mathbf 1\mathbf 1^\top]\) となり、
+表示した \(\rho\) の範囲で正半定値が保証されます。
 
-A common alternative is the Hamming-distance kernel
+別の代表例はHamming距離に基づくカーネルです。
 
 $$
 k_{\mathrm{cat}}(c,c')
@@ -47,18 +42,18 @@ k_{\mathrm{cat}}(c,c')
 \qquad \lambda\ge0.
 $$
 
-For multiple categorical coordinates, products of such valid
-kernels are valid. Category-specific embeddings and learned
-coregionalization structures provide more expressive alternatives.
+複数のカテゴリ座標に対して、妥当なカーネルの積も妥当です。
+カテゴリ埋め込みや学習されたコレジオナライゼーション構造を使うと、
+より柔軟な共分散を表現できます。
 
-Treating category codes as coordinates in an RBF kernel instead
-introduces arbitrary ordering and spacing assumptions.
+一方、カテゴリコードをそのままRBFカーネルに入れると、
+恣意的な順序や間隔を仮定してしまいます。
 
-## 5.3 Mixed covariance constructions
+## 5.3 混合共分散の構成
 
-Write \(x=(x_{\mathrm{cont}},x_{\mathrm{cat}})\).
-Let \(k_c\) be a valid continuous kernel and \(k_d\) a valid
-categorical kernel. Two basic mixed kernels are
+\(x=(x_{\mathrm{cont}},x_{\mathrm{cat}})\) とし、
+\(k_c\) を連続カーネル、\(k_d\) をカテゴリカーネルとします。
+基本的な混合カーネルには次の2種類があります。
 
 $$
 k_{\mathrm{add}}(x,x')
@@ -77,33 +72,27 @@ k_c(x_{\mathrm{cont}},x'_{\mathrm{cont}})
 \,k_d(x_{\mathrm{cat}},x'_{\mathrm{cat}}).
 $$
 
-The additive kernel represents independent contributions,
-whereas the product represents interactions whose correlation
-depends on both variable types. Positive weighted sums of
-these terms are also valid covariance functions.
+加法カーネルは独立な寄与を、積カーネルは両変数の種類に依存する相互作用を表します。
+これらを非負の重みで足し合わせても妥当な共分散関数になります。
 
-An additive-only model can miss strong category-dependent
-continuous effects; a product-only model can constrain
-cross-category sharing too strongly. Kernel choice is an
-inductive assumption to validate, not a universally optimal rule.
+加法モデルだけではカテゴリ依存の連続効果を捉えにくく、
+積モデルだけではカテゴリ間の情報共有を過度に制限する場合があります。
+カーネル選択は検証すべき帰納的仮定であり、万能な規則ではありません。
 
-## 5.4 One-hot encoding and integer variables
+## 5.4 One-hot符号化と整数変数
 
-One-hot encoding is a possible representation, but a generic
-continuous kernel on encoded vectors is not automatically the
-same as a desired nominal covariance. Moreover, an optimizer
-must enforce one-hot feasibility; fractional indicator values
-do not correspond to valid categories.
+One-hot符号化も可能ですが、符号化後に通常の連続カーネルを使っても、
+意図した名義共分散になるとは限りません。
+最適化器はOne-hotの実行可能性を守る必要があり、
+小数の指示変数は有効なカテゴリを表しません。
 
-For integer-valued inputs, the choice between an ordered
-numerical kernel and a nominal categorical kernel depends on
-whether numerical proximity carries scientific meaning.
-An integer design variable can be modeled numerically while
-still requiring discrete candidate generation.
+整数入力に順序付きの数値カーネルを使うか、名義カテゴリカーネルを使うかは、
+数値的な近さに科学的な意味があるかで決まります。
+整数変数を数値的にモデル化しても、候補生成では離散性を守る必要があります。
 
-## 5.5 Surrogate and search-space constraints
+## 5.5 代理モデルと探索空間制約
 
-A mixed Bayesian optimization problem can be expressed as
+混合変数のベイズ最適化問題は次のように表せます。
 
 $$
 \max_{x\in\mathcal X_{\mathrm{feasible}}}
@@ -114,52 +103,36 @@ $$
 \mathcal X_c\times\mathcal X_d,
 $$
 
-where \(\mathcal X_c\) is continuous and \(\mathcal X_d\)
-contains discrete assignments.
+ここで \(\mathcal X_c\) は連続変数、\(\mathcal X_d\) は離散変数の割当集合です。
 
-Modeling categorical similarity does **not** enforce
-candidate feasibility. Common optimization strategies include
-enumerating discrete assignments and optimizing continuous
-variables conditionally, searching a finite candidate set, or
-using mixed-integer/combinatorial optimizers.
+カテゴリの類似性をモデル化しても、候補の実行可能性は保証されません。
+代表的な探索方法には、離散割当を列挙して連続変数を条件付きで最適化する方法、
+有限候補集合の探索、混合整数・組合せ最適化があります。
 
-Full enumeration becomes expensive when the number of
-combinations grows as \(\prod_j K_j\).
-Batch selection adds joint diversity and feasibility
-considerations; the batch objective generally cannot be
-reduced to independently maximizing a single-point score.
+組合せ数が \(\prod_j K_j\) に増えると全列挙は高コストになります。
+バッチ選択では候補の多様性と実行可能性を同時に考慮するため、
+通常は単一点のスコアを独立に最大化するだけでは不十分です。
 
-Conditional variables require a feasible-space representation
-that respects their activation rules. This is a different
-problem from merely choosing a categorical covariance.
+条件付き変数には有効化規則を守る探索空間の表現が必要であり、
+これはカテゴリ共分散の選択とは別の問題です。
 
-## 5.6 Constraints and transformations
+## 5.6 制約と変換
 
-Input normalization should preserve the intended meaning of
-categorical identifiers and structural columns. A linear
-transformation of nominal codes can introduce spurious
-distances.
+入力正規化ではカテゴリ識別子や構造列の意味を保持する必要があります。
+名義コードを線形変換すると、根拠のない距離が生じる場合があります。
 
-Outcome constraints restrict which outcomes are acceptable;
-candidate constraints restrict which design points may be
-proposed. They are different mathematical objects and should
-not be interchanged.
+出力制約は許容される結果を、候補制約は提案可能な設計点を制限します。
+両者は異なる数学的対象であり、混同してはいけません。
 
-A complete mixed-variable BO formulation requires agreement
-among the data representation, the surrogate covariance,
-and the feasible acquisition search space.
+混合変数BOでは、データ表現、代理モデルの共分散、獲得関数の実行可能探索空間を
+整合させる必要があります。
 
-## 5.7 Limitations
+## 5.7 限界
 
-- High-cardinality categorical variables may have too little
-  data per level to estimate meaningful similarities.
-- Unseen categories require an explicit generalization
-  assumption; nominal labels alone offer none.
-- Category-dependent interactions can increase model
-  complexity and data requirements.
-- Integer, ordinal, nominal, task, and fidelity coordinates
-  should not be conflated solely because all are encoded
-  as integers.
+- カテゴリ数が多いと、各カテゴリの観測が不足して類似性を推定できない場合があります。
+- 未観測カテゴリへの一般化には明示的な仮定が必要で、ラベルだけでは不十分です。
+- カテゴリ依存の相互作用はモデルの複雑さと必要データ量を増やします。
+- 整数・順序・名義・タスク・忠実度を、整数コードという理由だけで同一視してはいけません。
 
 ## 5.8 カテゴリごとに異なる連続応答
 
@@ -195,7 +168,7 @@ and the feasible acquisition search space.
 カテゴリの組合せ数が多い場合やバッチ全体に制約がある場合には
 組合せ探索そのものが計算上のボトルネックになります。
 
-## References
+## 参考文献
 
 1. Garrido-Merchán, E. C., & Hernández-Lobato, D. (2020).
    Dealing with categorical and integer-valued variables in
@@ -204,7 +177,7 @@ and the feasible acquisition search space.
 2. Rasmussen, C. E., & Williams, C. K. I. (2006).
    *Gaussian Processes for Machine Learning*. MIT Press.
 
-## Related documents
+## 関連文書
 
 - [Kernel](03_kernel.md)
 - [Acquisition Function](04_acquisition_function.md)
