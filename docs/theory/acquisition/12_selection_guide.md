@@ -655,7 +655,7 @@ Theory に記載されていることは、robotorchan がすべて独自実装�
 
 BoTorch native で十分な標準 acquisition は再実装せず、robotorchan-specific acquisition が必要な領域だけを補完します。
 
-## 12.31.1 Registryだけを最終判定にしない
+## 12.31.1 理論と実行可能性を分ける
 
 理論上の分類だけで model / acquisition / optimizer の組合せを決めないことが重要です。
 
