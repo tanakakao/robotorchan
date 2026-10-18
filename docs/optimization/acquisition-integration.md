@@ -15,6 +15,22 @@ directly, while robotorchan owns only functionality that adds a distinct contrac
 | Multi-fidelity | Native MF-KG and cost-aware utilities |
 | Predictive AL | `ExpectedPredictiveInformationGain` |
 
+## Acquisition registry name index
+
+The following names are documented here as implementation identifiers, not as new
+algorithms or an exhaustive BoTorch catalog:
+
+| Family | Registry identifiers |
+| --- | --- |
+| Batch / noisy improvement | `qLogExpectedImprovement`, `qLogNoisyExpectedImprovement` |
+| Lookahead | `qKnowledgeGradient`, `qMultiFidelityKnowledgeGradient` |
+| Multi-objective | `qLogExpectedHypervolumeImprovement`, `qLogNoisyExpectedHypervolumeImprovement`, `qLogNParEGO` |
+| Regression active learning | `PosteriorVariance`, `PosteriorStd` |
+
+See the compatibility contract below for the distinction between registry metadata
+and executable runtime support. Theory chapters define acquisition utilities,
+not a snapshot of these identifiers.
+
 ## Explicit limitations
 
 Robotorchan-specific q=1 regression acquisitions do not claim structured-output or arbitrary

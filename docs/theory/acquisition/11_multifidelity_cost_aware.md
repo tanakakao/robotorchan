@@ -499,29 +499,6 @@ robotorchan はこれらの標準機能を再実装せず、BoTorch native path 
 guide](../../optimization/multifidelity-cost-aware.md)、現在の統合状況は [Acquisition integration 
 status](../../optimization/acquisition-integration.md) を参照してください。
 
-### 11.24.1 qMultiFidelityKnowledgeGradient の registry contract
-
-現在の `qMultiFidelityKnowledgeGradient` は
-
-- posterior samples required
-- fantasize support required
-- multi-fidelity model required
-- one-shot acquisition
-
-として registry に登録されています。
-
-したがって fidelity column を持つだけの model や、posterior samplingだけ可能な modelでは不十分です。
-model registry 上の `multi_fidelity` と `supports_fantasize` の両方が必要です。
-
-またone-shot acquisitionではpublic qとは別にaugmented q-batchを最適化します。明示的な
-`batch_initial_conditions`を渡す場合、そのq dimensionはpublic qではなく
-`acqf.get_augmented_q_batch_size(q)`へ合わせる必要があります。
-
-mixed qMFKGは現在、`MixedSingleTaskMultiFidelityGP`と専用
-`optimize_mixed_one_shot_acqf`を使うq=1 workflowがruntime-validatedです。augmented rowごとに
-categorical assignmentを分離するため、通常の `optimize_acqf_mixed` をone-shotへそのまま使いません。
-larger qとconfigured enumeration limitを超えるassignment spaceはunsupportedです。
-
 ## 11.26 この章で覚えておくこと
 
 - cost-aware optimizationとMFBOは別概念

@@ -434,29 +434,6 @@ robotorchan は regression AL 向けに PosteriorVariance、PosteriorStd、Expec
 - [EPIG guide](../../optimization/epig.md)
 - [Acquisition integration status](../../optimization/acquisition-integration.md)
 
-### 9.20.1 現在の active-learning registry
-
-現在の robotorchan registry には
-
-- `PosteriorVariance`
-- `PosteriorStd`
-- `ExpectedPredictiveInformationGain`
-
-が明示的に登録されています。
-
-`PosteriorVariance` と `PosteriorStd` は marginal moments を要求し、
-registry metadata上はensemble supportとされていますが、現在のruntime implementationは
-`_is_ensemble` modelと `EnsemblePosterior` を明示的にrejectします。したがって現時点の
-実行可能contractは **ensemble非対応** と解釈します。metadataと一部guideには不整合があり、
-runtime behaviorを優先します。
-
-一方 `ExpectedPredictiveInformationGain` はq=1、single-output、joint Gaussian posteriorを要求し、
-ensemble posteriorはサポートしません。target distributionは現在、unbatched finite `target_X`
-とoptional non-negative weightsで表します。
-
-したがって active learning acquisition を「posterior があれば交換可能」と扱わず、
-必要な posterior structure まで compatibility の一部として確認します。
-
 ## 9.21 この章で覚えておくこと
 
 - BOとALはposteriorを共有できてもdecision purposeが違う

@@ -311,29 +311,6 @@ robotorchan はこれらの標準手法を再実装せず、BoTorch native path 
 利用上の位置付けは [Lookahead optimization guide](../../optimization/lookahead.md)、現在の統合状況は [Acquisition
 integration status](../../optimization/acquisition-integration.md) を参照してください。
 
-### 6.17.1 qKnowledgeGradient の runtime contract
-
-現在の registry では `qKnowledgeGradient` を
-
-- posterior samples required
-- single-output側の contract
-- fantasize support required
-- one-shot acquisition
-
-として扱います。
-
-特に `requires_fantasize=True` は重要で、posterior sample が取れるだけでは十分ではありません。
-model が fantasy model を構築できることも必要です。
-
-通常の `optimize_acqf_mixed` をmixed one-shotへそのまま適用するのは不正確です。augmented batch
-全体へ同じcategorical assignmentを固定すると、actual candidateとfantasy decision pointが
-異なるcategoryを選べなくなるためです。
-
-現在は専用の `optimize_mixed_one_shot_acqf` がq=1のmixed qKG / qMFKGをcorrectness-firstに扱います。
-augmented rowごとにcategorical assignmentを分離してexact enumerationし、最後にone-shot
-`extract_candidates` semanticsでactual candidateだけを返します。larger qやenumeration limitを
-超えるassignment spaceは明示的にunsupportedです。
-
 ## 6.18 この章で覚えておくこと
 
 - KGはcandidate valueではなく観測後のterminal decision valueの改善を評価する
