@@ -290,7 +290,7 @@ MultiTask
 
 ## Model・Posterior・Search を分離する
 
-robotorchan の理論では、次の3層を明示的に分離します。
+確率モデル、獲得関数、候補探索は異なる数学的役割を持ちます。
 
 ```text
 Surrogate model
@@ -299,18 +299,8 @@ Surrogate model
  -> candidate-search strategy
 ```
 
-例えば、
-
-- `ALEBOGP` は surrogate geometry
-- `ALEBOStrategy` は candidate-search geometry
-- `JointEncoderGP` は model-internal representation
-- REMBO / HeSBO / BAxUS は search-space representation
-- `RandomForestSurrogate` は empirical posterior model
-- `TreeEnsembleSearchStrategy` は gradient-free candidate optimization
-
-を担当します。
-
-「高次元対応」「Mixed対応」「BoTorch互換」というラベルだけで、これらの責務を混同しません。
+高次元問題では、モデルの入力表現を変える方法と、探索空間そのものを制限する方法を
+区別します。前者は事前分布や予測分布に、後者は候補の選択可能集合に作用します。
 
 ## Inference と posterior semantics
 
@@ -446,33 +436,11 @@ surrogate model
 pending / fantasy handling、candidate maximization、trust-region update を扱います。
 
 
-### Executable Notebook との対応
+### 理論と実行可能な例の対応
 
-理論を読んだ後は、対応する Notebook で同じ責務境界を実行して確認できます。
-
-| Theory / cross-layer topic | Executable Notebook |
-| --- | --- |
-| BO loop / standard GP | [01 SingleTaskGP](../../examples/notebooks/01_single_task_gp.ipynb) |
-| Mixed variables | [02 Mixed BO](../../examples/notebooks/02_mixed_single_task_gp.ipynb) |
-| Multi-Fidelity | [03 Multi-Fidelity BO](../../examples/notebooks/03_multi_fidelity_gp.ipynb) |
-| MultiTask / Kronecker | [04 MultiTask / Kronecker](../../examples/notebooks/04_multitask_gp.ipynb) |
-| High-dimensional reduction | [19 Reduced GP](../../examples/notebooks/19_reduced_gp.ipynb) |
-| Standard acquisition | [26 Standard Acquisition](../../examples/notebooks/26_standard_acquisition.ipynb) |
-| Multi-objective acquisition | [27 Multi-objective](../../examples/notebooks/27_multiobjective_acquisition.ipynb) |
-| Regression Active Learning | [28 Active Learning](../../examples/notebooks/28_active_learning_acquisition.ipynb) |
-| Objective / PosteriorTransform | [29 Objective / Transform](../../examples/notebooks/29_objective_posterior_transform.ipynb) |
-| Posterior sampling | [30 Posterior Sampling](../../examples/notebooks/30_posterior_sampling.ipynb) |
-| Acquisition optimization | [31 Optimization](../../examples/notebooks/31_acquisition_optimization.ipynb) |
-| Batch / Async / Fantasization | [32 Batch / Async](../../examples/notebooks/32_batch_async_fantasization.ipynb) |
-| Initialization | [33 Initialization](../../examples/notebooks/33_acquisition_initialization.ipynb) |
-| TuRBO / Trust Region | [34 TuRBO](../../examples/notebooks/34_turbo_trust_region.ipynb) |
-| Robust BO / Input Perturbation | [35 Robust BO](../../examples/notebooks/35_robust_input_perturbation.ipynb) |
-| Outcome / black-box constraints | [37 Outcome-constrained BO](../../examples/notebooks/37_outcome_constrained_bo.ipynb) |
-| Integrated workflow | [36 End-to-End](../../examples/notebooks/36_end_to_end_workflows.ipynb) |
-
-Notebook は theory の代替ではなく、Theory → Public API → executable behavior を接続する
-integration documentation です。Notebook に存在することだけを理由に一般的な capability を
-claimせず、family-specific limitation は current implementation と runtime guide を優先します。
+理論の数式・仮定と、実行可能な例による検証は異なる役割を持ちます。
+実装例は [Optimization guide](../optimization/README.md) と
+[Model guide](../models/README.md) から参照してください。
 
 ### Posterior と sampler は別レイヤー
 
@@ -509,14 +477,13 @@ posterior -> sampler -> samples -> MC Objective -> MC acquisition
 outcome / black-box constraint はさらに sample-wise feasibility として composition され得ます。
 candidate/input-space constraint はこの層ではなく candidate optimizer の責務です。
 
-### Initialization は optimizer の一部だが独立した数値問題
+### 候補最適化と初期値
 
-multi-start acquisition optimization では、局所 optimizer を呼ぶ前の initial conditions が
-最終 candidate に影響します。
-
-通常の連続 acquisition、one-shot acquisition、high-dimensional strategy、hybrid optimizer では
-必要な初期化 contract が異なります。
-したがって「optimizer が対応している」だけで initialization compatibility まで仮定しません。
+獲得関数の最大化は、元の目的関数の最適化とは異なる数値問題です。
+局所解を持つ獲得関数では初期点や再始動が結果に影響します。
+Mixed Variable や既知の入力制約がある場合、許容集合上で候補を選ぶ必要があります。
+数値的な初期化手順や最適化アルゴリズムの実装は
+[Optimization guide](../optimization/README.md) を参照してください。
 
 ### Batch、Async、Fantasization を分ける
 
@@ -540,20 +507,8 @@ surrogate capability と trust-region search contract の両方を満たすか�
 
 
 
-理論ドキュメント監査では、各 model family について少なくとも次を確認します。
-
-1. public class / strategy が理論章に対応しているか
-2. raw input と internal representation の関係が説明されているか
-3. fitting contract が実装と一致するか
-4. posterior semantics が説明されているか
-5. Mixed / MultiTask / Kronecker / MultiFidelity の対応範囲を過大評価していないか
-6. acquisition compatibility の前提が説明されているか
-7. search-space strategy と surrogate responsibility を混同していないか
-8. unsupported combination が暗黙に supported と読めないか
-9. model-specific limitations が guide と矛盾していないか
-10. canonical literature へ辿れるか
-
-新規 model を追加した場合も、この基準で theory coverage を確認します。
+理論監査では、確率的仮定、事後分布、獲得効用、探索領域、適用条件を確認します。
+public API、fit contract、実装上の対応可否は実装ガイドとテストで検証します。
 
 ## 参考文献の方針
 
@@ -593,7 +548,7 @@ current implementationとの対応として記述します。
 
 
 
-01-23章は、基礎、構造化入力・出力、高次元、robustness、expressive GP、non-GP surrogateまで
+01-24章は、基礎、構造化入力・出力、高次元、robustness、expressive GP、non-GP surrogateまで
 横断的に再監査しています。
 
 監査では、初心者向けの直感だけでなく、current implementationとの対応、fitting contract、
