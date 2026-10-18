@@ -82,7 +82,7 @@ infeasible 同士では violation を使って比較します。
 `penalty` は constraint violation を search objective に加えます。
 
 同じ constraint class を受け取れても、探索挙動は異なります。
-したがって capability table の boolean だけで backend を交換可能とはみなしません。
+したがって制約処理方式の違いを無視して探索手法を交換可能とはみなしません。
 
 ## 12.14 Inter-point constraints
 
@@ -143,7 +143,7 @@ GPU 上で surrogate を評価できても、探索手法全体が GPU-native �
 
 高次元問題では optimizer backend だけでなく search coordinates を検討します。
 
-robotorchan には
+高次元探索には
 
 - LatentSpace
 - REMBO
@@ -190,7 +190,7 @@ Mixed problem では、少なくとも次を確認します。
 現在の主な経路は explicit BoTorch mixed、Mixed GA、
 および対応範囲内のDE / PSOです。
 
-Random / Sobolにも mixed capabilityがありますが、
+Random / Sobol による mixed-variable sampling では、
 general candidate constraintsはunsupportedです。
 
 ## 12.23 MultiFidelity selection
@@ -224,7 +224,7 @@ acquisitionのoutput shapeとoptimizerのobjective contractを確認します。
 
 ## 12.25 Search strategy と backend を分ける
 
-robotorchan の optimization stack は概念的に
+最適化の構造は概念的に
 
     acquisition
       -> search strategy
