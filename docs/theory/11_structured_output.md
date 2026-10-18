@@ -360,21 +360,10 @@ $$
 
 ## 11.10 HOGP の latent representation
 
-HOGP では各出力軸について latent coordinates を持ち、それらの上で kernel covariance を構成します。
+HOGPは出力軸ごとの潜在座標上に共分散を構成します。潜在座標を学習する場合、
+出力軸の関係も観測から推定されます。
 
-robotorchan wrapper の constructor には
-
-```python
-num_latent_dims
-learn_latent_pars
-latent_init
-```
-
-があります。
-
-つまり出力axisを表すlatent coordinatesを用いてaxis covarianceを構成し、設定に応じて
-そのrepresentation自体も学習できます。これは波長などの既知の物理座標を
-そのまま入力することとは異なります。
+実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
 
 ---
 
@@ -403,57 +392,19 @@ latent dimensionを増やすとrepresentationの自由度は増えますが、�
 
 ## 11.12 `learn_latent_pars`
 
-```python
-learn_latent_pars=True
-```
+出力軸の潜在座標を推定する場合と、既知の物理座標を直接使う場合では、
+共分散に課す仮定と解釈が異なります。
 
-では output latent parameters を学習します。
-
-これは
-
-```text
-出力 index 間の関係を data から学ぶ
-```
-
-ことに相当します。
-
-一方で物理的な波長や時間座標がすでに分かっている場合、その座標を直接モデルに渡せる `LatentKroneckerGP` の方が解釈しやすいことがあります。
+実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
 
 ---
 
 ## 11.13 HOGP の入力 shape
 
-robotorchan wrapper では
+入力 $X$ の各観測点に、画像やスペクトルなどの構造化応答 $Y$ が対応します。
+$Y$ の出力軸を独立の構造として保持します。
 
-```python
-HigherOrderGP(
-    train_X=train_X,
-    train_Y=train_Y,
-)
-```
-
-とします。
-
-典型的に
-
-```text
-train_X
-batch_shape × n × d
-
-train_Y
-batch_shape × n × output_shape
-```
-
-です。
-
-例えば画像なら
-
-```text
-train_X: [30, 5]
-train_Y: [30, 64, 64]
-```
-
-です。
+実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
 
 ---
 
@@ -558,29 +509,10 @@ $$
 
 ## 11.20 `train_T`
 
-robotorchan の wrapper は
+Latent Kroneckerモデルでは、設計入力 $X$ と出力座標 $T$ を区別します。
+例えば、材料組成が $X$、波長が $T$、測定スペクトルが $Y$ です。
 
-```python
-LatentKroneckerGP(
-    train_X=train_X,
-    train_T=train_T,
-    train_Y=train_Y,
-)
-```
-
-と使います。
-
-例えばスペクトルなら
-
-```text
-train_X: [n, d]
-train_T: [m, 1]   # wavelength
-train_Y: [n, m]
-```
-
-です。
-
-`T` が出力軸そのものを表します。
+実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
 
 ---
 
@@ -610,32 +542,10 @@ Tに物理的意味がある
 
 ## 11.22 新しい T で予測できる
 
-大きな利点の1つは、学習時の `train_T` と異なる `test_T` で posterior を評価できることです。
+出力座標上の共分散を用いるため、観測時と異なる出力座標で予測できます。
+これは出力座標方向の補間や外挿に相当します。
 
-```python
-posterior = model.posterior(
-    test_X,
-    test_T,
-)
-```
-
-です。
-
-例えば学習データが
-
-```text
-450, 460, 470, ..., 700 nm
-```
-
-でも、posterior を
-
-```text
-455, 465, 475, ...
-```
-
-で評価できます。
-
-これは output coordinate 上での interpolation に相当します。
+実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
 
 ---
 
@@ -698,18 +608,10 @@ posterior covariance を巨大な dense matrix として完全に構築する方
 
 ## 11.26 iterative linear solvers
 
-LatentKroneckerGP は効率的な inference のため iterative linear system solver を使います。
+構造化共分散の推論では、大規模線形系の反復解法が必要になる場合があります。
+反復法の収束精度は予測の数値誤差に影響します。
 
-BoTorch では
-
-```python
-with model.use_iterative_methods():
-    ...
-```
-
-という context manager が用意されています。
-
-学習と posterior inference で、この context を使うのが重要です。
+実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
 
 ---
 
@@ -848,49 +750,12 @@ X × tensor axes
 
 ## 11.36 ModelListGP との違い
 
-出力位置ごとに独立 GP を作る方法なら
+出力位置ごとに独立したモデルを学習する場合、出力位置間の相関は共有されません。
+構造化出力GPでは共分散を通じてその依存関係を表現できます。
 
-```python
-ModelListGP(...)
-```
-
-も可能です。
-
-しかし例えば100波長なら100個の独立GPになります。
-
-これは
-
-- 波長間相関を使わない
-- model 数が増える
-- smooth spectrum structure を利用できない
-
-という欠点があります。
-
-Structured Output GP は output間の構造を共有します。
+実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
 
 ---
-
-# BOとの接続
-
-### Surrogateとobjectiveを分ける
-
-Structured Output GPが答えるのは、
-
-~~~text
-このXで、response全体はどう分布するか？
-~~~
-
-です。一方BOが必要とするのは、
-
-~~~text
-そのresponseの何を良いと定義するか？
-~~~
-
-です。
-
-したがってHOGPやLatentKroneckerGPを選んだだけでは最適化問題は完成しません。
-peak、積分値、target spectrumとの距離などをObjective / PosteriorTransform側で
-定義し、必要ならposterior sample上で非線形functionalを評価します。
 
 ## 11.37 structured response をそのまま最大化するわけではない
 
@@ -919,32 +784,12 @@ $$
 
 ## 11.38 objective function の例
 
-スペクトル `Y` に対して
+構造化応答 $Y(x)$ に対する効用の例として、特定座標 $t_0$ の応答
+$U_1(x)=Y(x,t_0)$、出力座標に沿う積分 $U_2(x)=\int Y(x,t)\,dt$、
+目標曲線 $y_\mathrm{target}$ からの距離
+$U_3(x)=-\int (Y(x,t)-y_\mathrm{target}(t))^2\,dt$ が考えられます。
 
-```python
-def objective(Y):
-    return Y[..., target_idx]
-```
-
-なら target wavelength 最大化です。
-
-積分面積なら概念的に
-
-```python
-def objective(Y):
-    return Y.mean(dim=-1)
-```
-
-です。
-
-target spectrum に近づけるなら
-
-```python
-def objective(Y):
-    return -((Y - target) ** 2).mean(dim=-1)
-```
-
-とできます。
+実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
 
 ---
 
