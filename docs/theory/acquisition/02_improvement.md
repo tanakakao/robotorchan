@@ -125,8 +125,7 @@ $$
 
 とする流儀もあります。
 
-$`\xi>0`$ は「単に現在値を超える」より大きな改善を要求します。ただし、ライブラリ API がこの parameterization を採用しているとは限らないため、理論上の
-parameter と実装引数を混同しないことが重要です。
+$`\xi>0`$ は「単に現在値を超える」より大きな改善を要求します。この拡張では、改善イベントと改善量の双方の基準が $f_{\mathrm{best}}+\xi$ に変わります。
 
 ## 2.9 Minimize 問題
 
@@ -179,14 +178,6 @@ best baseline自体が不確実という問題を扱います。
 このため「noise があるので $`f_{\mathrm{best}}=\max y_i`$ とする」という単純化は避ける必要があります。NEI の詳細は [Batch /
 Noisy](04_batch_noisy.md) で扱います。
 
-## 2.12 BoTorch / robotorchan との対応
-
-BoTorch には EI / PI とその log formulation、q / noisy variants が用意されています。robotorchan
-はこれらを再実装せず、native path を利用します。
-
-実際の推奨 API と現在の統合状況は [Standard acquisition](../../optimization/standard_acquisition.md) と
-[Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
-
 ## 2.13 使い分けの理解
 
 EI と PI の本質的な違いは、
@@ -213,7 +204,6 @@ Log formulation は別の意思決定原理ではなく、数値安定性を改�
 - best valueの意味はnoiseやobjective compositionによって変わる
 - qEIはpointwise EI上位q点ではなくjoint improvement
 - NEIはlatent baseline uncertaintyを扱う
-- registryはBoTorch acquisition全件のcatalogではない
 
 ## References
 
