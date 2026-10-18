@@ -96,7 +96,7 @@ Hybrid 全体としては local refinement に必要な differentiability を失
 
 は同じ意味ではありません。
 
-現在の capability descriptor が `requires_grad=True` とするのは、
+局所段階に勾配が必要な場合は、
 この local-stage requirement を表します。
 
 ## 11.8 Constraint semantics は stage-dependent
@@ -121,11 +121,11 @@ global stage で infeasible landscape をどう探索するかは選択した op
 
 nonlinear candidate constraints が存在する場合、local BoTorch stage では
 
-    batch_limit = 1
+    constrained local optimization
 
 が default として設定されます。
 
-これは constrained local optimization の runtime contract に合わせるためです。
+制約付き局所最適化では初期点の実行可能性と数値安定性に注意が必要です。
 
 global stage 側の nonlinear constraint handling は選択した global optimizer の方式に従います。
 
@@ -134,7 +134,7 @@ stage 間で同一とは限りません。
 
 ## 11.10 Fixed features
 
-直接 `optimize_acqf_hybrid()` を使う場合、`fixed_features` は global stage に渡され、
+fixed features は global stage と local stage の両方で一貫して維持する必要があります。
 local stage にも引き継がれます。
 
 Mixed local stage では common fixed features と
@@ -142,12 +142,12 @@ Mixed local stage では common fixed features と
 
 同じ dimension に矛盾する値が指定された場合は error になります。
 
-ただし後述する named dispatcher では、現在の public capability validation により
+ただし段階間で固定座標が異なると、
 `optimizer="hybrid"` と `fixed_features` の組合せは拒否されます。
 
 ## 11.11 Mixed-variable Hybrid
 
-direct hybrid backend は `MixedVariableSpace` を受け取れます。
+Mixed-variable hybrid では構造化された変数空間を扱います。
 
 integer / categorical dimension が存在する場合、global stage と local stage の双方で
 structured variable semantics を保持する必要があります。
@@ -235,7 +235,7 @@ augmented candidate semantics、initial-condition shape、candidate extraction �
 現在の Hybrid backendは one-shot 専用 initializer / extraction path を所有しません。
 
 したがって one-shot acquisition については、
-専用の BoTorch / robotorchan one-shot optimization contract を優先します。
+one-shot に必要な補助変数と候補抽出の意味を保つ必要があります。
 
 ## 11.19 Hybrid と Trust Region
 
