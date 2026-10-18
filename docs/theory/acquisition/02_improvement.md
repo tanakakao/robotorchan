@@ -44,20 +44,20 @@ f(x)\mid\mathcal D_n
 \mathcal N(\mu(x),\sigma^2(x))
 $$
 
-に対して、$\`\\sigma(x)>0\`$ のとき
+に対して、$\sigma(x)>0$ のとき
 
-$
-\\operatorname{EI}(x)
+$$
+\operatorname{EI}(x)
 =
-(\\mu(x)-f_{\\mathrm{best}})\\Phi(z)
-+\\sigma(x)\\phi(z),
-\\qquad
-z=\\frac{\\mu(x)-f_{\\mathrm{best}}}{\\sigma(x)}
-$
+(\mu(x)-f_{\mathrm{best}})\Phi(z)
++\sigma(x)\phi(z),
+\qquad
+z=\frac{\mu(x)-f_{\mathrm{best}}}{\sigma(x)}
+$$
 
-となります。ここで $\`\\Phi\`$ と $\`\\phi\`$ は標準正規分布の累積分布関数と
-確率密度関数です。$\`\\sigma(x)=0\`$ では極限として
-$\`\\operatorname{EI}(x)=\\max(\\mu(x)-f_{\\mathrm{best}},0)\`$ を用います。
+となります。ここで $\Phi$ と $\phi$ は標準正規分布の累積分布関数と
+確率密度関数です。$\sigma(x)=0$ では極限として
+$\operatorname{EI}(x)=\max(\mu(x)-f_{\mathrm{best}},0)$ を用います。
 
 ## 2.4 EI の二つの寄与
 
