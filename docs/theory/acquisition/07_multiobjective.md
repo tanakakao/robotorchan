@@ -89,6 +89,10 @@ reference point が不適切だと、
 
 ## 7.6 Hypervolume Improvement
 
+ここでは $\mathcal P_n$ を、観測済みの目的ベクトルから得られる
+**固定された非支配集合**とします。以下の通常の EHVI は、
+この基準集合を確定値として扱う場合の定義です。
+
 現在の Pareto set を $`\mathcal P_n`$ とし、新しい目的ベクトル $`y`$ を追加したときの hypervolume improvement を
 
 $$
@@ -171,7 +175,7 @@ batch / noisy settingではqNEHVI系が重要になります。これは単にEH
 baseline $B$ の latent objective vectors から得られる非支配集合を
 $\mathcal P(f(B))$ とすれば、制約なしの基本的な noisy hypervolume improvement は
 
-$
+$$
 q\operatorname{NEHVI}(X)
 =
 \mathbb E\left[
@@ -180,9 +184,10 @@ HV(\mathcal P(f(B)\cup f(X));r)
 HV(\mathcal P(f(B));r)
 \mid\mathcal D_n
 \right]
-$
+$$
 
-と表せます。候補と baseline の latent outputs は同じ joint posterior に従い、
+と表せます。ここでは $f(B)\cup f(X)$ は目的ベクトルの集合の和集合を表します。
+候補と baseline の latent outputs は同じ joint posterior に従い、
 baseline Pareto front 自体もサンプルごとに変化します。
 この式は基本的な意思決定量を示すものであり、実際の数値評価では
 partitioning、baseline pruning、制約などを別途考慮します。
@@ -260,8 +265,8 @@ dependenceをmodel化していることは別の話です。
 semantics を組み込みます。
 
 constraint modelingとobjective-space hypervolumeは異なる責務です。ここでいうblack-box constraintは
-model outputからfeasibilityを評価する制約です。既知のcandidate/input-space constraintはoptimizer側の
-責務であり、registryの `supports_constraints` から推論しません。詳細は
+model outputからfeasibilityを評価する制約です。既知のcandidate/input-space constraintは
+探索領域の制限として別に扱います。詳細は
 [Constraints](08_constraints.md) で扱います。
 
 ## 7.16 目的数と計算量
@@ -279,15 +284,6 @@ hypervolume computation は目的数が増えるほど難しくなります。
 
 そのため目的数が増えた場合、hypervolume-based acquisition だけでなく scalarization-based methods も重要な選択肢になります。
 
-## 7.17 BoTorch / robotorchan との対応
-
-BoTorchはqLogEHVI、qLogNEHVI、qLogNParEGO、HVKG等のmulti-objective acquisitionを提供しています。
-
-robotorchan は標準 MOBO acquisition をローカルに再実装せず、BoTorch native path を基本とします。
-
-実際の利用方法は [Multi-objective optimization guide](../../optimization/multiobjective.md)、現在の統合状況は
-[Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
-
 ## 7.18 この章で覚えておくこと
 
 - Multi-output modelとMulti-objective optimizationは別概念
@@ -299,8 +295,6 @@ robotorchan は標準 MOBO acquisition をローカルに再実装せず、BoTor
 - scalarizationはmulti-output predictionをscalar decision quantityへ写す方法でもある
 - objective間dependenceとcandidate間dependenceは別の軸
 - black-box output constraintとcandidate/input-space constraintを分ける
-- qLogEHVI / qLogNEHVI / qLogNParEGOは現在のintegration path
-- HVKGはBoTorch-nativeだが現在のrobotorchanではintegration-testedではない
 
 ## 7.19 まとめ
 
