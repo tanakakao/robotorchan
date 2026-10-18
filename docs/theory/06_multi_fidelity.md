@@ -441,111 +441,32 @@ $$
 
 ---
 
-## 6.13 SingleTaskMultiFidelityGP
+## 6.13 Fidelity-aware covariance
 
-robotorchanではBoTorchのMulti-Fidelity GPを共通wrapper APIで利用できます。
+Multi-Fidelity GP は設計変数 $x$ と fidelity $s$ の組を入力とし、
+$k((x,s),(x',s'))$ によって fidelity 間の情報共有を表します。
+同じ設計条件でも fidelity が異なれば、応答は一般に一致しません。
 
-```python
-from robotorchan.models import SingleTaskMultiFidelityGP
-```
+Fidelity-aware posterior を構築することと、評価予算の配分方針を定めることは別です。
+後者には acquisition、評価コスト、停止条件などの意思決定が必要です。
 
-例えば入力を
+## 6.14 Fidelity の意味による区別
 
-```text
-0: temperature
-1: pressure
-2: fidelity
-```
+反復回数・学習 epoch のように計算の進行度を表す fidelity と、
+データ量・解像度・物理モデル精度などを表す fidelity は、
+いずれも評価条件ですが、自然な相関構造は同じとは限りません。
 
-とすると、fidelity次元を指定してモデルを構築できます。
+順序、連続性、target fidelity との相関を問題ごとに定義する必要があります。
 
-```python
-model = SingleTaskMultiFidelityGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    data_fidelities=[2],
-)
-```
+## 6.14.1 Mixed × Multi-Fidelity の共分散仮定
 
-robotorchanのwrapperはBoTorchの予測挙動を維持しつつ、raw training data保持や
-`make_mll()` などの共通規約を追加します。
+カテゴリ設計変数と fidelity は異なる統計的意味を持ちます。
+カテゴリ変数の類似性と fidelity 間の相関は、それぞれ妥当な
+共分散構造で表現し、必要に応じて組み合わせます。
 
----
-
-### モデルがfidelityを理解しても、評価戦略までは決まらない
-
-`SingleTaskMultiFidelityGP` が担うのは、異なるfidelity間で情報共有できる
-posteriorを構築することです。それだけで
-
-~~~text
-low fidelityを何回使うか
-いつtarget fidelityへ移るか
-残りbudgetをどう配分するか
-~~~
-
-まで自動的に決まるわけではありません。
-
-これらは acquisition、cost-aware utility、candidate optimization、停止条件などの
-意思決定層で扱います。**Multi-Fidelity model と MFBO policy は同義ではありません。**
-
-## 6.14 iteration_fidelity と data_fidelities
-
-`SingleTaskMultiFidelityGP`では、fidelityの意味に応じて指定方法が分かれます。
-
-### iteration_fidelity
-
-反復回数や学習epochのように、iterationに対応するfidelityです。
-
-概念例:
-
-```text
-iteration = 10
-iteration = 100
-iteration = 1000
-```
-
-### data_fidelities
-
-データ量、解像度、物理モデル精度などのfidelityを入力次元として指定します。
-
-概念例:
-
-```text
-mesh resolution
-training data fraction
-simulation accuracy
-```
-
-robotorchanのwrapperはBoTorchのconstructorに合わせて
-
-```python
-iteration_fidelity: int | None
-data_fidelities: Sequence[int] | None
-```
-
-を受け取ります。
-
----
-
-## 6.14.1 Mixed × Multi-Fidelity の現在の実装境界
-
-現在の robotorchan には `MixedSingleTaskMultiFidelityGP` があります。
-
-このモデルでは categorical design feature と fidelity feature を同じ役割として扱いません。
-`cat_dims` は design-side categorical feature だけを表し、
-`iteration_fidelity` / `data_fidelities` と重複すると validation error になります。
-
-covariance も、
-
-- 非 fidelity design dimensions: continuous / categorical mixed covariance
-- fidelity dimensions: BoTorch の fidelity covariance
-
-という責務分離です。
-
-したがって「Mixed GP に fidelity 列を追加しただけ」ではありません。
-fidelity dimension は構造列として保持され、categorical kernel の対象外です。
-
----
+Fidelity をカテゴリ設計変数と同一視すると、評価精度やコストの順序情報を
+失う場合があります。ただし離散 fidelity に順序構造を仮定できない場合は、
+カテゴリ的な共分散モデルも選択肢になります。
 
 ## 6.15 Fidelityを入力に含める意味
 
@@ -906,9 +827,8 @@ optimizer側
 
 の両方を考える必要があります。
 
-robotorchanには `MixedSingleTaskMultiFidelityGP` があり、categorical design featureと
-fidelity featureを分離して扱います。`cat_dims` はdesign-side categoryを指し、
-`iteration_fidelity` / `data_fidelities` と同じ列を指定することはできません。
+カテゴリ設計変数と fidelity を異なる構造としてモデル化し、
+探索候補ではカテゴリの許容値と fidelity の実行可能集合を同時に守ります。
 
 したがってMixed × Multi-Fidelityでも
 
@@ -959,61 +879,24 @@ Multi-Fidelity
 
 ---
 
-## 6.28 robotorchanでの基本例
+## 6.28 理論的なモデル化の例
 
-```python
-import torch
-from botorch.fit import fit_gpytorch_mll
-from robotorchan.models import SingleTaskMultiFidelityGP
+設計変数 $x=(x_1,x_2)$ と fidelity $s$ を用いて、
+観測 $y=f(x,s)+\epsilon$ を考えます。
+目標は target fidelity $s_\star$ での目的関数を最適化することです。
 
-torch.set_default_dtype(torch.double)
+低 fidelity の観測が有用かどうかは、$f(x,s)$ と
+$f(x',s_\star)$ の共分散および評価コストに依存します。
+そのため低 fidelity の値を直接最大化することは、一般には目的と一致しません。
 
-# [x1, x2, fidelity]
-train_X = torch.tensor(
-    [
-        [0.10, 0.20, 0.25],
-        [0.30, 0.60, 0.25],
-        [0.70, 0.40, 0.50],
-        [0.20, 0.80, 1.00],
-        [0.80, 0.70, 1.00],
-    ]
-)
-train_Y = torch.tensor([[0.20], [0.35], [0.55], [0.45], [0.80]])
+## 6.29 観測データと事後更新
 
-model = SingleTaskMultiFidelityGP(
-    train_X=train_X,
-    train_Y=train_Y,
-    data_fidelities=[2],
-)
+観測データは設計変数、fidelity、観測値の組
+$\mathcal D=\{(x_i,s_i,y_i)\}_{i=1}^{n}$ として表せます。
+新しい観測を追加すると、その fidelity に関する情報が
+共分散を介して target fidelity の事後分布にも反映されます。
 
-mll = model.make_mll()
-fit_gpytorch_mll(mll)
-```
-
-この例では3列目がfidelityです。
-
-モデル学習後は、目的に応じてMulti-Fidelity acquisition、cost model、
-target fidelityへのprojection、acquisition optimizerを組み合わせます。
-
----
-
-## 6.29 Raw Dataと共通API
-
-robotorchan wrapperでは他のsupervised modelと同様に
-
-```python
-model.raw_train_X
-model.raw_train_Y
-model.raw_train_Yvar
-model.raw_data
-model.make_mll()
-```
-
-を利用できます。
-
-ただし`raw_*`はwrapper構築時のprovenanceであり、`condition_on_observations()`後の現在状態そのものではありません。
-
----
+観測ノイズの仮定と、fidelity による系統的なモデル差は区別します。
 
 ## 6.30 実務上の選択目安
 
