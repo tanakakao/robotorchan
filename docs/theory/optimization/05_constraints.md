@@ -78,13 +78,13 @@ inter-point constraintになり得ます。
 
 ## 5.5 Nonlinear constraint
 
-nonlinear inequality は callable \(g\) が
+nonlinear inequality は関数 \(g\) が
 
 \[
 g(X)\ge0
 \]
 
-を返す contract として表現します。
+を満たす領域として表現します。
 
 概念上、intra-point constraint は各 candidate に閉じ、
 inter-point constraint は joint \([q,d]\) batch 全体に依存します。
@@ -95,23 +95,23 @@ gradient-based optimizer では制約関数の candidate coordinates に関す�
 
 ## 5.6 Linear と nonlinear の同時適用
 
-linear inequality、linear equality、nonlinear inequality は同じ
-`CandidateConstraints` に同時に指定できます。sign convention はそれぞれ
+linear inequality、linear equality、nonlinear inequality を同時に課すと、
+許容探索領域は各制約の実行可能集合の共通部分になります。
+例えば、次の符号規約を採用できます。
 
-[
+\[
 \sum_j a_j x_j \ge b,
 \qquad
 \sum_j a_j x_j = b,
 \qquad
 g(X) \ge 0
-]
+\]
 
 です。
 
-box bounds と fixed features も同じ acquisition optimization problem に
-同時適用できます。joint q-batch では intra-point linear constraint と
-inter-point nonlinear constraint の組合せも、joint optimization が対応する
-範囲で利用できます。
+box bounds や固定された入力座標も同じ実行可能集合の定義に含められます。
+joint q-batch では、各候補に対する制約と候補集合全体に対する制約を
+同時に考える必要があります。
 
 ## 5.7 Violation measure
 
