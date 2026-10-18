@@ -21,8 +21,8 @@ candidate の型、制約、q-batch semantics は backend ごとに保存する�
 Random search は有限個の候補を sampling し、その中で acquisition value が
 最大の q-batch を選択します。
 
-robotorchan の optimize_acqf_sampling(method="random") は [N, q, d] の q-batch を生成し、
-各 batch に対して1つの scalar acquisition value を要求します。
+joint q-batch では各サンプルが q 個の候補を含み、
+その集合全体に対して acquisition value を評価します。
 
 continuous dimension は bounds 内の一様乱数です。
 integer dimension は legal integer set、categorical dimension は allowed category set から
@@ -35,7 +35,7 @@ integer dimension は legal integer set、categorical dimension は allowed cate
 Sobol sequence は low-discrepancy sequence により、擬似乱数より均一な
 space-filling を狙う quasi-Monte Carlo sampling です。
 
-robotorchan では q-batch 全体を qd 次元の Sobol point として生成し、
+joint q-batch 全体を qd 次元の Sobol point として生成し、
 unit hypercube から bounds へ写像します。
 
 integer / categorical dimension では Sobol coordinate を equal-width inverse-CDF bin に
@@ -63,12 +63,11 @@ X = (x_1, ..., x_q) を1つの decision variable として評価します。
 qEI や qNEHVI のような joint acquisition は candidate 間の相互作用を持つため、
 各点の marginal acquisition を個別最大化することとは一般に一致しません。
 
-robotorchan の sampling / DE / CMA-ES / GA / PSO は scalar acquisition optimization では
-この joint q-batch semantics を維持します。
+この joint q-batch semantics は数値最適化手法にかかわらず維持する必要があります。
 
 ## 6.6 Fixed features
 
-sampling backend は candidate 生成後に fixed feature を適用します。
+fixed feature は候補生成時に固定するか、生成後に対応座標を置き換えられます。
 
 mixed variable の fixed feature は variable semantics と整合する必要があります。
 integer dimension には整数、categorical dimension には allowed category を指定します。
@@ -77,13 +76,13 @@ integer dimension には整数、categorical dimension には allowed category �
 
 gradient-free optimizer でも candidate constraint は無視できません。
 
-| Backend family | 現在の主な constraint semantics |
+| Constraint handling | 原理 |
 | --- | --- |
-| DE | native SciPy nonlinear constraint |
-| GA / Mixed GA | feasibility-first |
-| CMA-ES | penalty |
-| PSO | penalty |
-| Random / Sobol | candidate constraint API は未提供 |
+| Native | 探索演算に制約を組み込む |
+| Feasibility-first | 実行可能性と違反量を優先して比較 |
+| Penalty | 目的値から制約違反ペナルティを差し引く |
+| Repair / projection | 評価前に実行可能領域へ写像 |
+| Rejection | 実行不可能な候補を棄却 |
 
 penalty method は acquisition value から lambda × violation を引いた score を最大化します。
 
@@ -102,14 +101,14 @@ acquisition が実際に見る repaired coordinate は一致しません。
 同じ整数値へ複数の proposal が写像されるため、plateau が生じます。
 
 unordered categorical variable では単純な rounding は category semantics を保存しません。
-現在の DE / PSO は categorical variable を拒否し、Mixed GA または sampling を使います。
+unordered categorical variable には離散集合上の探索演算が必要です。
 
 ## 6.9 Tree posterior との関係
 
 tree ensemble のように candidate coordinate に関する滑らかな gradient を
 前提にしない posterior では gradient-free search が自然です。
 
-TreeEnsembleSearchStrategy はこの責務に位置付けられます。
+tree surrogate に対しても random search や population search を利用できます。
 
 ただし derivative-free optimization は tree model 専用ではありません。
 GP acquisition でも非滑らかな objective transform、structured variable、
