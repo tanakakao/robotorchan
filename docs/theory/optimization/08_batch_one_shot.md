@@ -29,10 +29,8 @@ q-batch acquisition は
 qEI、qNEI、qEHVI、qNEHVI などでは candidate 間の posterior correlation や
 joint improvement が acquisition value に影響します。
 
-robotorchan の scalar acquisition optimizer backend は q > 1 の場合も
-[q, d] を1つの decision object として扱います。
-gradient-free backend では内部的に [qd] へ flatten する場合がありますが、
-acquisition evaluation 前には [q, d] に戻されます。
+joint q-batch は [q, d] を1つの decision object として扱います。
+内部的に [qd] へ flatten しても、acquisition evaluation は [q, d] 上で行います。
 
 ## 8.3 Joint batch の長所とコスト
 
@@ -70,22 +68,11 @@ joint q-batch を一度に解く代わりに、1点ずつ選択して batch を�
 これは最初から q 点を joint optimize することとは異なります。
 greedy approximation なので、一般に joint optimum と一致する保証はありません。
 
-## 8.5 robotorchan の sequential helper
+## 8.5 Sequential selection と pending state
 
-robotorchan の optimize_acqf_sequential は generic backend wrapper です。
-
-各 step で指定 optimizer を q=1 として呼び出し、得られた candidate を X_pending に追加します。
-
-重要な runtime contract は次です。
-
-- acquisition が set_X_pending を持つ必要がある
-- 呼び出し前に存在した X_pending を保持する
-- 新規 candidate は既存 pending の後ろへ追加する
-- q 点の生成終了後、元の X_pending を復元する
-- 各 step の acquisition value を個別に返す
-
-したがって helper 自体が fantasy model を構築するわけではありません。
-pending point を acquisition へ伝える責務を持つ orchestration layer です。
+各ステップで選んだ候補を pending set に追加し、後続の獲得関数に反映します。
+既存の pending state と新しく選んだ候補を区別する必要があります。
+この操作は fantasy model の構築と同義ではありません。
 
 ## 8.6 Pending points と asynchronous BO
 
@@ -142,26 +129,11 @@ outer optimization variable に組み込みます。
 
 ## 8.9 Augmented q-batch
 
-OneShotAcquisitionFunction では public q に対して
-
-    q_aug = get_augmented_q_batch_size(q)
-
-で augmented batch size が決まります。
-
-optimizer は
-
-    [q_aug, d]
-
-を最適化しますが、ユーザーが実際に評価する candidate は通常その一部です。
-
-最適化後は
-
-    extract_candidates(X_aug)
-
-により実 candidate を取り出します。
-
-したがって one-shot acquisition に対して、通常の q-batch と同じ shape の
-initial condition を渡すことは一般に正しくありません。
+one-shot formulation は実際に評価する q 個の候補に加え、
+将来の意思決定を表す補助変数を最適化変数に含めます。
+補助変数を含む augmented dimension は q より大きくなる場合があります。
+最適化後は augmented solution から実際の候補を抽出します。
+したがって初期条件も補助変数を含む空間で定義する必要があります。
 
 ## 8.10 Knowledge Gradient の one-shot optimization
 
@@ -177,10 +149,8 @@ auxiliary optimization variables です。
 
 を含みます。
 
-BoTorch は qKG に専用の initialization path を持つため、
-robotorchan はこれを独自 initializer で置き換えません。
-
-qKG では native BoTorch optimization path を優先します。
+fantasy decision の初期値は実際の候補とは異なる役割を持つため、
+その構造を考慮した初期化が重要です。
 
 ## 8.11 qMultiStepLookahead
 
@@ -200,17 +170,9 @@ lookahead depth は将来観測後に何段階の adaptive decision を評価す
 
 ## 8.12 Multi-step の augmented initialization
 
-qMultiStepLookahead のように専用 initializer を持たない one-shot acquisition では、
-通常の q ではなく q_aug に対する initial conditions が必要です。
-
-robotorchan の gen_augmented_one_shot_initial_conditions は
-
-    q_aug = acq_function.get_augmented_q_batch_size(q)
-
-を求め、BoTorch の gen_batch_initial_conditions を augmented batch 全体へ適用します。
-
-この helper は新しい sampling heuristic を導入するものではありません。
-BoTorch standard initializer を正しい augmented shape で呼ぶための bridge です。
+multi-step lookahead の初期条件は、現在の候補だけでなく
+将来の fantasy decision を表す補助変数についても構成します。
+branching factor が増えると augmented optimization dimension は急速に増加します。
 
 ## 8.13 Mixed one-shot が難しい理由
 
@@ -231,21 +193,12 @@ continuous coordinates を最適化する方法があります。
 
 したがって mixed one-shot では row-specific categorical assignment が必要です。
 
-## 8.14 robotorchan の Mixed one-shot
+## 8.14 Mixed one-shot の探索原理
 
-robotorchan の optimize_mixed_one_shot_acqf は correctness-first の専用 path です。
-
-現在の contract は次の通りです。
-
-- q=1 のみ
-- OneShotAcquisitionFunction を要求
-- augmented q の各 row ごとに categorical assignment を持つ
-- categorical combination を全列挙する
-- 各 assignment では augmented tensor を flatten して BoTorch optimize_acqf を利用
-- 最適化後に extract_candidates で実 candidate を取得
-- assignment explosion を max_assignments で制限
-
-categorical feature の値は bounds 内でなければなりません。
+augmented row ごとに categorical assignment を区別する必要があります。
+すべての row で同一 category を固定することは、一般には正しい定式化ではありません。
+小規模な離散集合なら row-specific assignment を列挙し、
+連続部分問題を条件付きで最適化できます。
 
 ## 8.15 Mixed one-shot の組合せ爆発
 
@@ -260,8 +213,8 @@ augmented row 数を q_aug とすると、単純列挙数は
 
 したがって q=1 であっても fantasy count が増えると列挙数は急増します。
 
-現在の max_assignments は単なる性能 tuning ではなく、
-correctness-first enumeration を現実的な範囲に制限する safety boundary です。
+この指数的増加は列挙法の計算可能性を制限するため、
+大規模な場合には近似探索や構造利用が必要です。
 
 ## 8.16 One-shot と ordinary q-batch の比較
 
@@ -322,20 +275,10 @@ one-shot acquisition に candidate constraint を組み合わせる場合は、
 
 backend の capability だけでなく acquisition の tensor contract を確認することが重要です。
 
-## 8.20 実装上の境界
+## 8.20 実装ガイドへの参照
 
-robotorchan は batch / one-shot のすべてを独自 abstraction に置き換える方針ではありません。
-
-BoTorch が正しい native semantics を持つ部分はそのまま利用し、
-robotorchan は次の gap を補います。
-
-- backend-agnostic sequential orchestration
-- augmented q を意識した generic one-shot initialization
-- correctness-first mixed one-shot categorical handling
-- optimizer / acquisition compatibility validation
-
-この境界により、BoTorch-first を維持しながら mixed backend や独自 optimizer を
-組み合わせられるようにします。
+実際の optimizer の対応範囲、初期化 API、pending-state contract は
+[Optimization guides](../../optimization/README.md) を参照してください。
 
 ## 参考文献
 
