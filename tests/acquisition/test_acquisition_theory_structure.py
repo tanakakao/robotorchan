@@ -1,10 +1,15 @@
 """Regression tests for acquisition theory chapter integrity."""
 
+from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
-from scripts.check_acquisition_theory_structure import check_theory_structure
-
 ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "scripts" / "check_acquisition_theory_structure.py"
+SPEC = spec_from_file_location("check_acquisition_theory_structure", SCRIPT)
+assert SPEC is not None and SPEC.loader is not None
+MODULE = module_from_spec(SPEC)
+SPEC.loader.exec_module(MODULE)
+check_theory_structure = MODULE.check_theory_structure
 
 
 def test_acquisition_theory_has_no_duplicate_sections() -> None:
