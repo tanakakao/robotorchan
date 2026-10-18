@@ -175,7 +175,7 @@ batch / noisy settingではqNEHVI系が重要になります。これは単にEH
 baseline $B$ の latent objective vectors から得られる非支配集合を
 $\mathcal P(f(B))$ とすれば、制約なしの基本的な noisy hypervolume improvement は
 
-$
+$$
 q\operatorname{NEHVI}(X)
 =
 \mathbb E\left[
@@ -184,7 +184,7 @@ HV(\mathcal P(f(B)\cup f(X));r)
 HV(\mathcal P(f(B));r)
 \mid\mathcal D_n
 \right]
-$
+$$
 
 と表せます。ここでは $f(B)\cup f(X)$ は目的ベクトルの集合の和集合を表します。
 候補と baseline の latent outputs は同じ joint posterior に従い、
