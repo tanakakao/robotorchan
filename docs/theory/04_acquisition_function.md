@@ -285,9 +285,8 @@ output constraint:     g(x) <= 0  → model / acquisition composition
 candidate constraint:  A x <= b   → acquisition optimizer
 ```
 
-robotorchan では後者を対応strategyの `CandidateConstraints` で表現します。
-この二種類を同じ「constrained BO」として扱わないことが、
-APIと実装を読む際に重要です。
+後者は既知の可行集合を定め、候補探索の段階で満たす必要があります。
+この二種類を同じ制約として扱わず、確率的な応答制約と決定論的な入力制約を区別します。
 
 ## 4.10 Bayesian Optimization だけが目的ではない
 
