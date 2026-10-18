@@ -330,7 +330,7 @@ latent_init
 ## 11.12 `learn_latent_pars`
 
 ```python
-learn_latent_pars=True
+learn_latent_pars = True
 ```
 
 では output latent parameters を学習します。
