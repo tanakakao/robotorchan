@@ -581,7 +581,7 @@ Multi-Fidelity の確率モデルは $(x,s)$ に関する事後分布を定義�
 したがって
 
 ```text
-SingleTaskMultiFidelityGP
+Fidelity-aware probabilistic model
         ↓
 Posterior across fidelities
         ↓
@@ -954,7 +954,7 @@ Multi-Fidelity BOの中心は、
 ```text
 Design x + Fidelity s
         ↓
-SingleTaskMultiFidelityGP
+Fidelity-aware probabilistic model
         ↓
 Posterior across fidelities
         ↓
