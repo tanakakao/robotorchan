@@ -196,33 +196,17 @@ Hybrid の性質は構成要素に依存するため、単一の optimizer 名�
 任意の広域探索法を初期候補生成に使う場合、局所法が期待する目的関数、変数型、制約、
 探索座標系と整合する必要があります。
 
-## 11.16 CPU / device boundary
+## 11.16 Computational environment
 
-現在の hybrid orchestration は numerical optimizer layer では CPU-oriented です。
-
-特に SciPy Differential Evolution や CMA-ES を global stage に使う場合、
-Tensor-native GPU population optimization と同じ device-native pipeline ではありません。
-
-したがって surrogate posterior がGPUで計算可能であることと、
-hybrid numerical optimization 全体がGPU-nativeであることは区別する必要があります。
+Hybrid の計算コストは global search の評価回数と local refinement の費用に依存します。
+各 stage の計算デバイスが異なる場合、データ転送のコストも考慮する必要があります。
+特定の実行環境への対応状況は数学的な hybrid formulation とは別の問題です。
 
 ## 11.17 Hybrid と sequential optimization
 
-現在の `HYBRID_OPTIMIZER_CAPABILITIES` は `sequential=False` です。
-
-Hybrid backend は joint q-batch を global-to-local に refine する設計であり、
-q=1 を繰り返して `X_pending` を更新する sequential orchestration を
-backend 内には持ちません。
-
-したがって
-
-    joint hybrid q-batch
-
-と
-
-    sequential greedy batch generation
-
-は別の構造です。
+joint hybrid q-batch optimization と sequential greedy selection は異なる操作です。
+前者は q 個の候補を一括最適化し、後者は既選択点を条件として次の点を選びます。
+両者を組み合わせることも可能ですが、pending state の扱いを明確にする必要があります。
 
 ## 11.18 Hybrid と one-shot acquisition
 

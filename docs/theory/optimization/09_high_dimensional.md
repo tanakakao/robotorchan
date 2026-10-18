@@ -303,20 +303,12 @@ target-space pool を original space へ射影し、
 
 ## 9.18 q-batch と高次元 search
 
-高次元 search では q > 1 により optimizer dimension がさらに増えます。
+高次元 search では q > 1 により optimizer dimension が qd に増えます。
+joint acquisition は候補間の相互作用を含むため、独立に選んだ q 点の集合と
+joint optimization の結果は一般に一致しません。
 
-joint acquisition は q-batch 全体を評価する必要があります。
-
-RandomSearchStrategy では num_samples は point 数ではなく
-「評価する random q-batch 数」です。
-
-つまり q > 1 では
-
-    [num_samples, q, d]
-
-を生成し、joint acquisition value が最大の batch を返します。
-
-上位 q 個の independent q=1 candidate を並べる実装ではありません。
+random search を用いる場合も、複数の q-batch を生成して各 batch の
+joint acquisition value を比較する定式化が考えられます。
 
 ## 9.19 Candidate constraints と reduced search space
 
@@ -405,15 +397,11 @@ update_state() へ明示的に返す必要があります。
 
 search strategy 自体は objective function を評価しません。
 
-## 9.24 dtype / device contract
+## 9.24 Numerical stability
 
-search strategy が生成する bounds、embedding、latent coordinates、
-diagnostic tensors は public bounds の dtype / device を原則として保持します。
-
-GP-based BO では通常 float64 が推奨されます。
-
-GPU を利用する場合も model、acquisition、bounds、strategy 内 tensor の device を
-一致させる必要があります。
+高次元の射影・再構成では数値誤差が蓄積し得ます。
+特に rank-deficient な写像の逆問題は不安定になり得るため、
+擬似逆や正則化の性質を考慮します。
 
 ## 9.25 Strategy 選択の考え方
 

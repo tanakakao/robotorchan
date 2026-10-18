@@ -232,18 +232,10 @@ default perturbation probability は
 
 ## 10.15 Pending points
 
-Thompson-sampling path は `X_pending` を public input coordinates で受け取ります。
-
-shape は
-
-    [n_pending, input_dim]
-
-で、finite value が要求されます。
-
-local candidate pool と pending point が一致する候補は除外されます。
-
-したがって pending points は trust-region state の一部ではなく、
-現在の candidate generation で再選択を避けるための async context です。
+asynchronous BO では未観測の評価中候補を pending set として扱います。
+局所候補の生成時には pending locations との重複を避けたり、
+fantasy-based acquisition へ pending information を組み込んだりできます。
+ただし pending points は観測済みのデータではありません。
 
 ## 10.16 Candidate constraints
 
@@ -295,19 +287,9 @@ fidelity coordinate も design coordinate と同じ意味ではありません�
 
 ## 10.19 Restart
 
-`length < length_min` になると restart が必要です。
-
-restart 前に `optimize()`、mixed / multifidelity optimization、
-Thompson sampling を呼ぶと runtime error になります。
-
-`restart_turbo_state()` は
-
-- success / failure counters を reset
-- trust-region length を reset
-- `restart_triggered=False`
-- `restart_count += 1`
-
-とし、global best information は保持します。
+trust-region length が下限を下回った場合、局所探索領域を再初期化します。
+新しい中心は既存観測の良好点、複数の局所領域、あるいは大域的な探索から
+選ぶことができます。restart の具体的な規則はアルゴリズムの設計に依存します。
 
 ## 10.20 Restart center
 
@@ -356,23 +338,14 @@ BAxUS は trust-region adaptation に加えて、低次元 target subspace 自�
 したがって BAxUS は単なる TuRBO backend ではなく、
 adaptive embedding と trust-region search を組み合わせた高次元探索法です。
 
-## 10.23 実装上の contract
+## 10.23 Stateful optimization の整合条件
 
-理論上の状態管理で重要な整合条件は次です。
-
-- trust-region state は surrogate parameter ではない
-- `q` は `state.batch_size` と一致する
-- state update は completed batch ごとに1回行う
-- state update utility は scalar per candidate
-- `values` と `state_values` を分離できる
-- center は public/original input space に保持する
-- trust-region length は global input width に対する相対 scale
-- public-space ARD と reduced-space ARD を混同しない
-- restart trigger 後は明示的 restart 前に candidate を生成しない
-- Mixed では discrete dimensions を continuous trust region から分離する
-- MultiFidelity では fidelity dimensions を design trust region から分離する
-- TS の pending points は public coordinates
-- TS の constraint filtering は inter-point constraints を扱わない
+- trust-region state と surrogate parameter を区別する
+- success / failure は一貫した観測 utility で判定する
+- q-batch の更新単位を明確にする
+- center と length を同じ座標系で定義する
+- latent ARD と元空間の ARD を混同しない
+- restart 前後の状態遷移を明確にする
 
 ## 10.24 関連章
 
