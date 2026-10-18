@@ -28,10 +28,8 @@ TuRBO (Trust Region Bayesian Optimization) は局所 BO と adaptive trust regio
       -> success / failure
       -> resize / restart
 
-robotorchan では `TuRBOState` と `TuRBOStrategy` がこの責務を分担します。
-
-- `TuRBOState`: length、counter、best value、restart state
-- `TuRBOStrategy`: center、local bounds、candidate generation、state update
+理論上は trust-region の状態（長さ、成功・失敗カウンタ、best value）と、
+その状態から局所探索領域を定める幾何学的操作を区別できます。、state update
 - surrogate / acquisition: objective の確率モデルと utility
 
 この分離により、同じ surrogate / acquisition に異なる探索戦略を適用できます。
@@ -61,13 +59,13 @@ default failure tolerance は
 
 completed batch の scalar utility の最大値を `y_new`、state best を `y_best` とします。
 
-robotorchan は単なる `y_new > y_best` ではなく、
+meaningful improvement の一例として、
 
     y_new > y_best + eta * max(1, abs(y_best))
 
 を meaningful improvement とみなします。
 
-`eta` は `relative_improvement` で、default は `1e-3` です。
+ここで $\eta>0$ は改善判定の閾値であり、値の選択は問題に依存します。
 
 success なら success counter を増やして failure counter を0へ戻し、
 failure なら逆の操作を行います。
@@ -92,7 +90,7 @@ counter は resize 後に0へ戻ります。
 
 となると `restart_triggered=True` になります。
 
-この状態では robotorchan は candidate generation を継続せず、明示的な restart を要求します。
+閾値を下回った場合は trust region の再初期化を検討します。
 
 ## 10.6 Observed value と state utility
 
@@ -179,7 +177,7 @@ local half width は
 dimension weights は geometric mean が1になるよう正規化されます。
 
 GP が public input space の ARD lengthscale `ell_d` を持つ場合、
-robotorchan はその情報から anisotropic trust-region geometry を構成できます。
+ARD lengthscale から anisotropic trust-region geometry を構成できます。
 
 bounds が与えられる場合は input range で lengthscale を正規化してから weight を作ります。
 
@@ -198,15 +196,12 @@ original/public input dimension の TuRBO geometry ではありません。
 
 です。
 
-robotorchan は model が input reduction を明示している場合、
-その lengthscale から public-space weight を自動生成することを拒否します。
-
-必要なら caller が public-space `dimension_weights` を明示します。
+latent-space の lengthscale を元空間の重みとして使うには、
+適切な座標変換や metric の導出が必要です。
 
 ## 10.13 Acquisition optimization path
 
-`TuRBOStrategy.optimize()` は現在の trust-region bounds を作り、
-通常の robotorchan acquisition optimizer dispatcher へ渡します。
+trust-region search は局所 bounds を定め、その内部で acquisition を最適化します。
 
 したがって TuRBO は acquisition optimizer を置き換えるのではなく、
 

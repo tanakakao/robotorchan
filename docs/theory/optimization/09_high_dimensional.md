@@ -36,7 +36,7 @@ surrogate の public input contract は維持しながら、candidate search だ
 
     Z_search -> X_original -> acquisition(model, X_original)
 
-robotorchan の search strategy は後者を独立した責務として扱います。
+両者は surrogate を変えるか探索座標を変えるかという点で異なります。
 
 ## 9.3 Effective dimension
 
@@ -53,9 +53,9 @@ random embedding 系手法は、この低 intrinsic/effective dimension 構造�
 
 この仮定が成立しない場合、固定低次元 embedding は optimum を十分に表現できない可能性があります。
 
-## 9.4 LatentSpaceStrategy
+## 9.4 Latent-space reconstruction
 
-robotorchan の LatentSpaceStrategy は fitted reducer による latent reconstruction を使います。
+学習済みの次元削減写像を使う場合、latent reconstruction により元空間へ戻します。
 
 optimizer は latent coordinate Z を探索し、acquisition evaluation の直前に
 
@@ -102,8 +102,7 @@ p_X は box domain への projection です。
 低 effective dimension の function では、適切な embedded dimension を使うことで
 ambient dimension より小さい search problem として acquisition optimization を行えます。
 
-robotorchan の REMBOStrategy は fixed dense Gaussian embedding を使い、
-元空間 box 外への projection は normalized box で clamp します。
+Gaussian random embedding と元空間への射影を組み合わせることができます。
 
 embedding は strategy 作成時に固定され、BO iteration ごとには再生成しません。
 
@@ -138,8 +137,7 @@ embedding matrix の各 original row はちょうど1つの nonzero element を�
 この sparse structure により、ambient dimension が大きい場合でも
 projection の計算と保存を軽量化できます。
 
-robotorchan の HeSBOStrategy では embedding は固定され、
-surrogate は original space のままです。
+embedding を固定して元空間の surrogate を評価する構成も考えられます。
 
 ## 9.9 ALEBO
 
@@ -307,8 +305,7 @@ target-space pool を original space へ射影し、
 
 高次元 search では q > 1 により optimizer dimension がさらに増えます。
 
-robotorchan の search strategy は返却 candidate を [q, d] に統一し、
-joint acquisition は q-batch 全体を評価します。
+joint acquisition は q-batch 全体を評価する必要があります。
 
 RandomSearchStrategy では num_samples は point 数ではなく
 「評価する random q-batch 数」です。
@@ -332,7 +329,7 @@ original-space constraint g(X) を latent coordinate z へ移すには、
 linear constraint であっても embedding 後の係数や q-batch semantics を
 正しく変換しなければなりません。
 
-robotorchan は現在、暗黙の constraint mapping を行いません。
+この写像を省略すると元の制約付き最適化問題とは異なる問題を解くことになります。
 
 そのため original-space CandidateConstraints は
 
@@ -378,7 +375,7 @@ random embedding 系は search geometry を構成するために低次元 space 
 
 ## 9.22 Surrogate と Search Strategy の分離
 
-robotorchan では高次元 search strategy が surrogate を勝手に置き換えないことを原則とします。
+高次元探索では surrogate と search geometry の変更を区別します。
 
 REMBO / HeSBO / BAxUS の通常 strategy は original-space surrogate を共有できます。
 
@@ -446,8 +443,8 @@ acquisition optimization cost を合わせて選択する必要があります�
 
 の組合せで決まります。
 
-robotorchan はこれらを分離し、search strategy の比較時に
-surrogate 差を探索アルゴリズム差として誤認しない設計を採ります。
+比較実験では surrogate 差を探索アルゴリズム差として誤認しないよう、
+条件を統制する必要があります。
 
 モデル側の高次元対応については model theory、
 Trust Region / TuRBO は次章で扱います。
