@@ -5,7 +5,7 @@
 Hybrid acquisition optimization は、1つの numerical optimizer に全探索責務を持たせず、
 異なる性質を持つ探索段階を接続します。
 
-robotorchan の現在の hybrid backend は
+代表的な hybrid optimization は
 
     global derivative-free search
       -> promising joint q-batch
@@ -34,24 +34,10 @@ Hybrid method は
 
 を段階的に組み合わせます。
 
-## 11.3 robotorchan の現在の構成
+## 11.3 Global-to-local composition
 
-`optimize_acqf_hybrid()` の global stage は現在、
-
-- Differential Evolution
-- CMA-ES
-- Mixed Genetic Algorithm
-- compatible custom callable
-
-を受け取れます。
-
-local stage は BoTorch backend です。
-
-continuous problem では `optimize_acqf_botorch()`、
-structured mixed problem では `optimize_acqf_mixed_botorch()` を使います。
-
-したがって「Hybrid」という独立した数値アルゴリズムがあるのではなく、
-global optimizer と BoTorch local optimizer の orchestration です。
+二段階探索では広域探索で得た候補を局所探索の初期値とします。
+各段階は異なる数値最適化手法を利用できますが、目的関数と探索変数の意味を保つ必要があります。
 
 ## 11.4 Joint q-batch hand-off
 
@@ -88,27 +74,16 @@ Hybrid backend では global optimizer 自体が initial-condition generator の
 global search と local initialization は独立した処理ではなく、
 global candidate がそのまま local start になります。
 
-## 11.6 現在の local restart contract
+## 11.6 Local restart diversity
 
-現在の実装では `num_restarts=1` のみを受け付けます。
-
-同じ global candidate を複製して複数 restart としても、
-initialization diversity は増えません。
-
-そのため
-
-    num_restarts > 1
-
-は明示的に拒否されます。
-
-将来複数 restart を提供するなら、異なる global seeds / basins から
-distinct initial conditions を生成する必要があります。
+同じ初期点を複製しても探索 basin の多様性は増えません。
+複数 restart を使う場合は、異なる global candidates を初期値として渡すことが有効です。
 
 ## 11.7 Global optimizer と gradient
 
 global stage は candidate gradient を必要としない optimizer を使えます。
 
-しかし local stage は BoTorch の gradient-based optimization を使うため、
+しかし local stage が gradient-based optimization を使う場合、
 Hybrid 全体としては local refinement に必要な differentiability を失ってはいけません。
 
 したがって
@@ -206,78 +181,20 @@ Mixed local optimization ではさらに
 
 を一致させる必要があります。
 
-## 11.13 Direct backend と named dispatcher
+## 11.13 数値最適化手法の合成可能性
 
-robotorchan には2つの利用層があります。
+global / local の組合せには、変数型、制約、座標系、勾配の要件が整合することが必要です。
+理論上の合成可能性と特定ライブラリの対応範囲は区別します。
 
-### Direct backend
+## 11.14 Stage-dependent properties
 
-    optimize_acqf_hybrid(...)
+Hybrid の性質は構成要素に依存するため、単一の optimizer 名だけでは特徴を決定できません。
+たとえば全体の可微分性要件は、各段階で必要な情報の和集合で評価します。
 
-現在の direct backend は、
+## 11.15 Custom global search
 
-- `fixed_features`
-- `variable_space`
-- `mixed_fixed_features_list`
-
-を扱う実装経路を持ちます。
-
-### Named dispatcher
-
-    optimize_acqf(..., optimizer="hybrid")
-
-named dispatcher は最初に `HYBRID_OPTIMIZER_CAPABILITIES` で要求を検証します。
-
-現在この descriptor は
-
-- `mixed=False`
-- `integer=False`
-- `categorical=False`
-- `fixed_features=False`
-
-なので、direct backend に実装があっても dispatcher 経由では
-Mixed / fixed-feature request が事前に拒否されます。
-
-これは現在の **API surface 差** であり、両経路を同一 capability とみなしてはいけません。
-
-## 11.14 Capability metadata の限界
-
-Hybrid optimizer の capability は、選択した global stage に依存します。
-
-たとえば constraint handling は
-
-    DE       -> feasibility-first
-    CMA-ES   -> penalty
-    Mixed GA -> feasibility-first
-
-です。
-
-そのため1つの static `OptimizerCapabilities` だけでは、
-すべての hybrid composition を完全には表現できません。
-
-現在の `HYBRID_OPTIMIZER_CAPABILITIES` は named dispatcher の validation contract として
-扱うべきであり、direct backend が内部的に持つ全機能の一覧ではありません。
-
-## 11.15 Custom global optimizer
-
-`global_optimizer` には compatible callable を渡せます。
-
-必要な基本 contract は
-
-    optimizer(
-        acq_function,
-        bounds,
-        q,
-        **global_options,
-    ) -> (candidates, acquisition_value)
-
-という形です。
-
-しかし callable を受け付けることは、任意の optimizer が安全に組み合わせられることを
-意味しません。
-
-constraints、fixed features、q-batch、variable space、dtype/device など、
-hybrid backend が渡す引数と semantics を global callable が正しく処理する必要があります。
+任意の広域探索法を初期候補生成に使う場合、局所法が期待する目的関数、変数型、制約、
+探索座標系と整合する必要があります。
 
 ## 11.16 CPU / device boundary
 
@@ -389,23 +306,16 @@ Hybrid optimization では各 stage 単独にはない failure mode がありま
 
 そのため「optimizerを2つ使う」ことより、stage間 contract を維持することが重要です。
 
-## 11.23 実装上の contract
+## 11.23 理論上の整合条件
 
-現在の実装に対応する主要 contract は次です。
+- joint q-batch の意味を段階間で保つ
+- 異なる初期点を使う場合は basin の多様性を意識する
+- 制約の符号規約と実行可能集合を段階間で一致させる
+- fixed / discrete coordinate を hand-off で変更しない
+- local optimizer に必要な勾配が得られることを確認する
+- reduced coordinates と元空間の写像を整合させる
 
-- global stage は DE / CMA-ES / Mixed GA / compatible callable
-- local stage は BoTorch continuous または mixed optimization
-- global candidate は explicit `batch_initial_conditions` として渡す
-- joint q-batch semantics を stage 間で維持する
-- local `raw_samples` は使わない
-- local restart は現在1つだけ
-- constraints は両 stage に渡すが enforcement mechanism は stage-dependent
-- nonlinear constraints では local `batch_limit=1` を default にする
-- direct backend は Mixed / fixed-feature 実装経路を持つ
-- named dispatcher の Hybrid capability は現在 Mixed / fixed features を拒否する
-- custom global optimizer は明示的な compatibility contract を負う
-- Hybrid 自体は sequential / one-shot / TuRBO / embedding orchestration を所有しない
-- current numerical orchestration は GPU-native とはみなさない
+実装固有の制約と対応状況は [Optimization guides](../../optimization/README.md) を参照してください。
 
 ## 11.24 関連章
 
