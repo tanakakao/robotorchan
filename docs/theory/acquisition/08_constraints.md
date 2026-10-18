@@ -13,7 +13,8 @@ known candidate / input-space constraint
 ~~~
 
 同じconstraintという語でも、uncertaintyを学習する問題とcandidate domainを制限する問題は
-別のruntime responsibilityです。robotorchanでは一方を他方へ変換しません。
+異なる数学的役割を持ちます。既知の入力制約は許容探索領域を定め、
+未知の出力制約は事後分布を通じて実行可能性を評価します。
 
 ## 8.2 最適値だけでなくfeasibilityを考える
 
@@ -67,7 +68,8 @@ P(c(x)\le0\mid\mathcal D_n)
 \right)
 $$
 
-です。
+です（$\sigma_c(x)>0$ の場合）。$\sigma_c(x)=0$ なら
+$P(c(x)\le0\mid\mathcal D_n)=\mathbf 1[\mu_c(x)\le0]$ です。
 
 複数制約がposterior上で独立なら、joint feasibility probabilityを各確率の積として書ける場合が
 あります。ただしconstraintsが相関している場合、この積は一般には正しくありません。
@@ -99,12 +101,12 @@ MC formulationではposterior samplesごとにobjective utilityとconstraint sat
 
 例えば improvement $I(x)$ と feasibility event $F(x)$ に対して、一般には
 
-$
+$$
 \mathbb E[I(x)\mathbf 1_{F(x)}\mid\mathcal D_n]
 \ne
 \mathbb E[I(x)\mid\mathcal D_n]\,
 P(F(x)\mid\mathcal D_n)
-$
+$$
 
 です。右辺への分解が成立するのは、posterior の下で improvement と
 feasibility indicator が独立である場合などに限られます。
@@ -135,7 +137,7 @@ $$
 実装ではhard indicatorの代わりにsmooth approximationを使い、gradient-based acquisition
 optimizationを安定させる場合があります。
 
-## 8.6 Sign conventionはAPI layerごとに確認する
+## 8.6 制約の符号規約を明示する
 
 output / black-box constraintの説明では
 
@@ -143,7 +145,8 @@ $$
 c(x)\le0
 $$
 
-を feasible とする convention がよく使われますが、文献やコードによって符号規約は異なります。
+を feasible とする convention がよく使われますが、数学的には逆符号で
+$-c(x)\ge0$ と表現しても同じ実行可能領域を定義できます。
 
 ```text
 c(x) <= 0 が feasible
@@ -306,52 +309,6 @@ safe BO では safe set expansion や high-probability safety guarantee など�
 
 したがって constraint-aware と safe を同義として扱わないことが重要です。
 
-## 8.15 BoTorch / robotorchanとの対応
-
-BoTorchのMC acquisitionはobjective samplesとoutput constraintsを組み合わせるcomposition pathを
-提供します。またknown candidate constraintsはacquisition optimization側で扱います。
-
-現在のrobotorchan registryでは `qLogExpectedImprovement`、`qLogNoisyExpectedImprovement`、
-`qLogExpectedHypervolumeImprovement`、`qLogNoisyExpectedHypervolumeImprovement`、`qLogNParEGO` を
-output / black-box constrained-BO composition対応としてmetadata化しています。
-`supports_constraints=True` はconstraint callableをrobotorchanが自動生成するという意味ではありません。
-
-robotorchan は BoTorch-first とし、標準的な constrained acquisition semantics を独自 wrapper で置き換えません。
-
-現在の対応状況は [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
-
-## 8.16 robotorchanのconstraint responsibility boundary
-
-robotorchan では、同じ `constraint` という語でも runtime responsibility を明確に分けます。
-
-| 種類 | 既知/未知 | feasible convention | robotorchan の責務 |
-| --- | --- | --- | --- |
-| candidate linear inequality | 既知 | `sum(...) >= rhs` | `inequality_constraints` |
-| candidate equality | 入力から既知 | `sum(...) = rhs` | `CandidateConstraints.equality_constraints` |
-| candidate nonlinear inequality | 既知 | `callable(X) >= 0` | `nonlinear_inequality_constraints` |
-| output / black-box constraint | 未知 | acquisition APIに従う | BoTorch composition |
-
-したがって、candidate nonlinear constraint の `>= 0` と、output constraint の例で使う
-`c(x) <= 0` は矛盾ではありません。異なる API layer の符号規約です。
-
-`AcquisitionCapabilities.supports_constraints` は **output / black-box constrained BO の
-composition support** のみを表します。これを candidate-space constraint の対応判定には
-使用しません。逆に、search strategy が `CandidateConstraints` を受け付けても、その
-acquisition が未知の制約出力をモデル化できることは意味しません。
-
-既知の入力制約と未知の出力制約を同時に持つ問題では、両者を併用できます。
-
-```text
-surrogate / constrained acquisition
-    unknown output feasibility を確率的に扱う
-                +
-CandidateConstraints / search strategy
-    known input feasibility を候補生成時に厳密に扱う
-```
-
-この場合も一方を他方へ変換せず、それぞれの layer に保持します。
-
-
 ## 8.17 この章で覚えておくこと
 
 - unknown output constraintとknown candidate constraintは別layer
@@ -359,9 +316,7 @@ CandidateConstraints / search strategy
 - constrained acquisitionは常にobjective acquisitionとPoFの単純積ではない
 - MCではsample-wise objective utilityとconstraint satisfactionをcompositionできる
 - output constraintとcandidate constraintではsign conventionが異なり得る
-- `supports_constraints` はoutput / black-box constrained-BO compositionのmetadata
-- `CandidateConstraints` はcandidate coordinatesのknown feasibilityを表す
-- linear/nonlinear candidate constraintsはBoTorch optimizer conventionを保持する
+- 既知の入力制約は探索領域を制限し、未知の出力制約は確率的に扱う
 - constrained BOとsafe BOを同義にしない
 - MOBOではhypervolume reference pointとconstraint thresholdを混同しない
 
