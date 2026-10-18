@@ -157,7 +157,7 @@ MES では一般に、
 実際の $`f^*`$ sampling には近似が必要です。探索空間の離散化、posterior function sampling、極値分布近似など、実装により計算方法は異なります。
 
 したがって「MESのdecision criterion」と「optimum-value samplesの生成方法」は区別します。
-後者の近似方法を変えることと、情報対象を # 5. Information-theoretic Acquisition
+後者の近似方法を変えても、情報対象が最適値であることは変わりません。
 
 ## 5.9 GIBBON
 
@@ -353,7 +353,7 @@ MES では一般に、
 実際の $`f^*`$ sampling には近似が必要です。探索空間の離散化、posterior function sampling、極値分布近似など、実装により計算方法は異なります。
 
 したがって「MESのdecision criterion」と「optimum-value samplesの生成方法」は区別します。
-後者の近似方法を変えることと、情報対象を # 5. Information-theoretic Acquisition
+後者の近似方法を変えても、情報対象が最適値であることは変わりません。
 
 ## 5.9 GIBBON
 
@@ -388,9 +388,7 @@ MES は
 
 不確実でも optimum と無関係な領域は、MES では価値が低くなり得ます。
 
-## 5.11 Observation noise
-
-Y_x`$ と latent function value # 5. Information-theoretic Acquisition
+Y_x`$ と潜在関数値 # 5. Information-theoretic Acquisition
 
 ## 5.1 EI / UCBとの違いから理解する
 
@@ -549,7 +547,7 @@ MES では一般に、
 実際の $`f^*`$ sampling には近似が必要です。探索空間の離散化、posterior function sampling、極値分布近似など、実装により計算方法は異なります。
 
 したがって「MESのdecision criterion」と「optimum-value samplesの生成方法」は区別します。
-後者の近似方法を変えることと、情報対象を # 5. Information-theoretic Acquisition
+後者の近似方法を変えても、情報対象が最適値であることは変わりません。
 
 ## 5.9 GIBBON
 
@@ -583,11 +581,9 @@ MES は
 を評価します。
 
 不確実でも optimum と無関係な領域は、MES では価値が低くなり得ます。
-
-## 5.11 Observation noise
 
 f(x)`$ は異なります。
-例えば加法的観測 noise の下では # 5. Information-theoretic Acquisition
+例えば # 5. Information-theoretic Acquisition
 
 ## 5.1 EI / UCBとの違いから理解する
 
@@ -746,7 +742,7 @@ MES では一般に、
 実際の $`f^*`$ sampling には近似が必要です。探索空間の離散化、posterior function sampling、極値分布近似など、実装により計算方法は異なります。
 
 したがって「MESのdecision criterion」と「optimum-value samplesの生成方法」は区別します。
-後者の近似方法を変えることと、情報対象を # 5. Information-theoretic Acquisition
+後者の近似方法を変えても、情報対象が最適値であることは変わりません。
 
 ## 5.9 GIBBON
 
@@ -781,11 +777,9 @@ MES は
 
 不確実でも optimum と無関係な領域は、MES では価値が低くなり得ます。
 
-## 5.11 Observation noise
+Y_x=f(x)+\epsilon_x`$ のような加法的観測 noise を考えます。
 
-Y_x=f(x)+\\epsilon_x`$ です。
-
-情報獲得量は、実際に得られる観測 # 5. Information-theoretic Acquisition
+情報獲得量は、実際の観測 # 5. Information-theoretic Acquisition
 
 ## 5.1 EI / UCBとの違いから理解する
 
@@ -944,7 +938,7 @@ MES では一般に、
 実際の $`f^*`$ sampling には近似が必要です。探索空間の離散化、posterior function sampling、極値分布近似など、実装により計算方法は異なります。
 
 したがって「MESのdecision criterion」と「optimum-value samplesの生成方法」は区別します。
-後者の近似方法を変えることと、情報対象を # 5. Information-theoretic Acquisition
+後者の近似方法を変えても、情報対象が最適値であることは変わりません。
 
 ## 5.9 GIBBON
 
@@ -978,8 +972,6 @@ MES は
 を評価します。
 
 不確実でも optimum と無関係な領域は、MES では価値が低くなり得ます。
-
-## 5.11 Observation noise
 
 Y_x`$ と関心のある未知量
 （最適値 # 5. Information-theoretic Acquisition
@@ -1141,7 +1133,7 @@ MES では一般に、
 実際の $`f^*`$ sampling には近似が必要です。探索空間の離散化、posterior function sampling、極値分布近似など、実装により計算方法は異なります。
 
 したがって「MESのdecision criterion」と「optimum-value samplesの生成方法」は区別します。
-後者の近似方法を変えることと、情報対象を # 5. Information-theoretic Acquisition
+後者の近似方法を変えても、情報対象が最適値であることは変わりません。
 
 ## 5.9 GIBBON
 
@@ -1175,8 +1167,6 @@ MES は
 を評価します。
 
 不確実でも optimum と無関係な領域は、MES では価値が低くなり得ます。
-
-## 5.11 Observation noise
 
 f^*`$、最適位置 # 5. Information-theoretic Acquisition
 
@@ -1337,7 +1327,7 @@ MES では一般に、
 実際の $`f^*`$ sampling には近似が必要です。探索空間の離散化、posterior function sampling、極値分布近似など、実装により計算方法は異なります。
 
 したがって「MESのdecision criterion」と「optimum-value samplesの生成方法」は区別します。
-後者の近似方法を変えることと、情報対象を # 5. Information-theoretic Acquisition
+後者の近似方法を変えても、情報対象が最適値であることは変わりません。
 
 ## 5.9 GIBBON
 
@@ -1371,8 +1361,6 @@ MES は
 を評価します。
 
 不確実でも optimum と無関係な領域は、MES では価値が低くなり得ます。
-
-## 5.11 Observation noise
 
 x^*`$ など）の相互情報量で定義します。
 latent value を直接観測できると仮定した acquisition と、

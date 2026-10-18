@@ -302,8 +302,6 @@ PosteriorVariance はその候補自身の uncertainty を評価します。
 ここで重要なのはcandidate setとtarget / integration setを分けることです。観測可能な場所と、
 prediction qualityを改善したい場所は同一である必要がありません。
 
-## 9.8 Integrated Posterior Variance
-
 p_T(x)`$ に対する integrated posterior variance を
 
 $$
