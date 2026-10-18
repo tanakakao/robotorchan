@@ -20,10 +20,7 @@
 
 robotorchan では主に
 
-```python
-HigherOrderGP
-LatentKroneckerGP
-```
+`HigherOrderGP` / `LatentKroneckerGP`
 
 を利用します。
 
@@ -1231,10 +1228,7 @@ Structured Output GP は、出力を単なる多数のscalar valuesとしてで�
 
 robotorchan では主に
 
-```python
-HigherOrderGP
-LatentKroneckerGP
-```
+`HigherOrderGP` / `LatentKroneckerGP`
 
 を使います。
 
