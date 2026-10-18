@@ -34,8 +34,7 @@ def test_acquisition_theory_detects_injected_titles(tmp_path: Path) -> None:
     chapter = tmp_path / "docs" / "theory" / "acquisition"
     chapter.mkdir(parents=True)
     (chapter / "09_active_learning.md").write_text(
-        "# 9. Example\n\n## 9.1 First\n"
-        "some prose # 9. Example\n",
+        "# 9. Example\n\n## 9.1 First\nsome prose # 9. Example\n",
         encoding="utf-8",
     )
     failures = check_theory_structure(tmp_path)
