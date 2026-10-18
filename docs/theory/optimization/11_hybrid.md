@@ -211,54 +211,20 @@ joint hybrid q-batch optimization と sequential greedy selection は異なる�
 ## 11.18 Hybrid と one-shot acquisition
 
 one-shot acquisition は auxiliary variables を含む augmented q-batch を最適化します。
-
-通常の q-batch hand-offだけを前提にした Hybrid backendへ one-shot acquisition を渡す場合、
-augmented candidate semantics、initial-condition shape、candidate extraction が
-正しく維持される必要があります。
-
-現在の Hybrid backendは one-shot 専用 initializer / extraction path を所有しません。
-
-したがって one-shot acquisition については、
-one-shot に必要な補助変数と候補抽出の意味を保つ必要があります。
+Hybrid で扱うには、各段階で augmented variables の意味と制約を維持し、
+最適化後に実候補だけを抽出する必要があります。
 
 ## 11.19 Hybrid と Trust Region
 
-Hybrid optimization と Trust Region は異なる軸です。
-
-Hybrid は
-
-    global optimizer -> local optimizer
-
-という optimizer composition を表します。
-
-TuRBO は
-
-    global domain -> adaptive local domain
-
-という search geometry / state adaptation を表します。
-
-理論上は組み合わせ可能でも、bounds、state update、restart、initialization、
-constraint semantics を統合した専用 contract が必要です。
-
-現在の hybrid backend が TuRBO state を自動管理するわけではありません。
+Hybrid optimization は global-to-local な optimizer composition を表します。
+一方、TuRBO は探索領域の geometry と state adaptation を表します。
+両者を組み合わせる場合は局所領域、状態更新、restart と初期化の整合が必要です。
 
 ## 11.20 Hybrid と high-dimensional embedding
 
-REMBO、HeSBO、ALEBO、BAxUS では optimization coordinate が
-original/public space と異なる場合があります。
-
-Hybrid optimization を reduced search space で使うには、
-
-    global search coordinate
-    -> local refinement coordinate
-    -> public candidate coordinate
-
-の mapping を両 stage で一致させる必要があります。
-
-現在の generic hybrid backend は arbitrary embedding の coordinate conversion を
-自動構築しません。
-
-したがって search embedding と Hybrid を自由合成できるとはみなしません。
+REMBO、HeSBO、ALEBO、BAxUS では探索座標が元空間と異なる場合があります。
+Hybrid を reduced search space で用いる場合、global / local の各段階で
+座標写像と制約の意味を一貫させる必要があります。
 
 ## 11.21 何を組み合わせているのか
 

@@ -183,8 +183,8 @@ constraint handling の一般的な別方式として、
 
 があります。
 
-capability metadata に semantics が存在しても、
-各 backend が現在すべての方式を実装していることを意味しません。
+repair は一般に元の提案分布を変え、projection は境界に候補を集中させる場合があります。
+rejection は feasible region が小さい場合に効率が低下します。
 
 ## 5.12 Mixed variable と constraint
 
