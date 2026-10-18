@@ -51,6 +51,10 @@ $$
 
 です。
 
+候補間の共分散は joint acquisition の値に影響します。
+一方、Gaussian でない sampleable posterior でも、同時サンプル
+f(X) によって依存構造を保った batch utility を定義できます。
+各点の marginal posterior だけでは、一般に joint acquisition を再現できません。
 
 ## 4.4 qEI
 
@@ -119,6 +123,29 @@ Noisy Expected Improvement（NEI）は、baseline points における未知の l
 uncertainty を考慮します。
 
 概念的には、baseline latent values を posterior から積分しながら、それぞれの plausible world で improvement を評価します。
+
+最大化問題で baseline B={b_1,...,b_m} と候補集合 X={x_1,...,x_q} を考えると、
+代表的な joint noisy improvement は
+
+$
+q\operatorname{NEI}(X)
+=
+\mathbb E\left[
+\left(
+\max_{x\in X}f(x)
+-
+\max_{b\in B}f(b)
+\right)_+
+\middle|\mathcal D_n
+\right]
+$
+
+と表せます。ここで $(u)_+=\max(u,0)$ です。
+候補値と baseline 値は同じ joint posterior から評価し、
+baseline の最大値も固定した観測値ではなく確率変数として扱います。
+この式は基本的な unconstrained noisy-improvement の概念式であり、
+制約、目的変換、pending points、近似・pruning を含む場合は
+対応する utility と計算手順を別途定義する必要があります。
 
 qNEIはさらにcandidate batchのjoint posteriorを扱うため、
 
