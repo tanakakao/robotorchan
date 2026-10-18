@@ -509,9 +509,8 @@ status](../../optimization/acquisition-integration.md) を参照してくださ�
 - `current_value`はtarget-fidelity terminal decisionに対応させる
 - MF-KGはfantasizationを使うone-shot value-of-information acquisition
 - cost-aware utilityはVOIとevaluation costを組み合わせるがratio policyが常にbudget-optimalとは限らない
-- qMFKG registry contractはposterior sampling、fantasize、multi-fidelity、one-shotを要求する
-- mixed qMFKGは現在q=1の専用one-shot optimizer pathがruntime-validated
-- MF-MESは理論上扱えるが現在のruntime-validated contract外
+- MF-KGではfantasy observationsとtarget-fidelity terminal valueの整合が重要
+- mixed variableやmulti-fidelityの実装対応状況はoptimization guideで確認する
 
 ## 11.27 まとめ
 
