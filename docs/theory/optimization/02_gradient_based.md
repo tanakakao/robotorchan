@@ -50,22 +50,20 @@ X_0^{(1)},\ldots,X_0^{(r)}
 restart 数を増やしても global optimum の保証にはなりませんが、
 異なる basin を探索する機会は増えます。
 
-## 2.5 BoTorch backend
+## 2.5 Quasi-Newton と制約付き局所最適化
 
-BoTorch の標準 acquisition optimization は複数 restart を利用し、
-PyTorch autograd で gradient を計算しながら SciPy local optimizer を利用します。
+L-BFGS-B は box constraint を扱う準 Newton 法の代表例です。
+SLSQP は微分可能な等式・不等式制約を扱える逐次二次計画法です。
+どちらも一般の非凸 acquisition に対する大域最適性を保証しません。
 
-現在の upstream documentation では L-BFGS-B / SLSQP が
-代表的な solver として説明されています。
+## 2.6 First-order iterative optimization
 
-robotorchan の BoTorch backend はこの upstream optimization contract を利用します。
+Adam、AdamW、SGD などの first-order method は candidate input を反復更新します。
+ただし box / nonlinear constraint を自動的に満たすわけではなく、
+射影・パラメータ化・制約付き更新などの追加処理が必要になる場合があります。
 
-## 2.6 Torch optimizer backend
-
-robotorchan では Adam、AdamW、SGD を candidate-input optimizer として利用できます。
-
-これらは first-order iterative optimizer なので、
-candidate tensor 自体を optimization parameter として更新します。
+実際に利用できる solver と constraint support は
+[Optimization guides](../../optimization/README.md) を参照してください。
 
 ## 2.7 Gradient が使えることと適していること
 
