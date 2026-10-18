@@ -107,7 +107,7 @@ trust-region decision に使う値を分けたいことがあります。
 `state_values=None` なら両方に `values` を使います。
 
 これは観測値を保存しつつ、別の caller-owned scalar utility で局所探索状態を更新するための
-runtime contract です。
+アルゴリズムの状態更新規則として定義できます。
 
 ## 10.7 Multi-objective outcome
 
@@ -143,7 +143,7 @@ candidate を渡さない場合、state value は更新されても center は�
 
 TuRBO state は `batch_size` を persistent state として持ちます。
 
-robotorchan では candidate generation と state update の双方で
+batch size を一定に保つ設計では candidate generation と state update の双方で
 
     q == state.batch_size
 
@@ -358,7 +358,7 @@ adaptive embedding と trust-region search を組み合わせた高次元探索�
 
 ## 10.23 実装上の contract
 
-現在の実装と理論を対応させる際の主要 contract は次です。
+理論上の状態管理で重要な整合条件は次です。
 
 - trust-region state は surrogate parameter ではない
 - `q` は `state.batch_size` と一致する
