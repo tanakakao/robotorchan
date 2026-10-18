@@ -427,7 +427,7 @@ model = PairwiseGP(
 constructor には
 
 ```python
-jitter=1e-6
+jitter = 1e-6
 ```
 
 があります。
