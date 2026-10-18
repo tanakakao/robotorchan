@@ -1,7 +1,7 @@
 # robotorchan 理論ガイド
 
-このディレクトリでは、`robotorchan` を使う上で必要となるベイズ最適化（Bayesian Optimization; BO）と
-Gaussian Process（GP）の理論を、実装と対応付けながら説明します。
+このディレクトリでは、ベイズ最適化（Bayesian Optimization; BO）と
+Gaussian Process（GP）の数学的な定義、仮定、導出、理論上の制約を説明します。
 
 `docs/models.md` が「どのモデルを選ぶか」を中心にした実務ガイドであるのに対し、
 本ディレクトリは「なぜそのモデルが使えるのか」「数式上は何をしているのか」を理解するための
@@ -126,7 +126,7 @@ tree ensemble、boosting、NGBoost などでは、GP と同じ posterior interfa
 > 13章はファイル番号を維持していますが、Part VIIIは横断ガイドです。
 > 「13章の後に14章を読む」という意味のPart分類ではありません。
 
-各モデル群の理論を理解した後、問題設定と実装 capability を対応付けます。
+各モデル群の理論を理解した後、問題設定とモデルの統計的仮定を対応付けます。
 
 13. [Model Selection](13_model_selection.md)
 
@@ -209,10 +209,10 @@ MultiTask
 2. **数式** — 最低限必要な定式化
 3. **モデル化上の意味** — 仮定を変えると何が変わるか
 4. **ベイズ最適化との関係** — 次点選択にどう影響するか
-5. **robotorchan との対応** — 実装上どのモデル・APIに対応するか
-6. **使い所と注意点** — 実務で選ぶ際の判断基準
+5. **理論上の適用条件** — 仮定と限界を明確にする
+6. **関連文献** — 原論文や標準的な参考文献へ接続する
 
-## 理論と実装の対応
+
 
 | 理論テーマ | 主な robotorchan モデル |
 |---|---|
@@ -331,7 +331,7 @@ BoTorch-compatible interface は、これらが同じ確率モデルであるこ
 acquisition compatibility は posterior requirements、sampling support、multi-output、
 fantasization などの capability と合わせて判断します。
 
-## Mixed 対応は実装方式まで確認する
+
 
 `MixedXxxGP` という名前だけでは categorical treatment は決まりません。
 
@@ -414,7 +414,7 @@ model chapter 側では acquisition formula を重複して網羅せず、
 
 の観点から接続可能性を説明します。
 
-## BO 周辺基盤の理論と実装ガイド
+
 
 モデルと acquisition の間には、独立して理解すべき cross-cutting layer があります。
 
@@ -538,7 +538,7 @@ stateful candidate-search strategy です。
 「TuRBO model」という新しい確率モデルを作るのではなく、
 surrogate capability と trust-region search contract の両方を満たすかで判断します。
 
-## 実装 coverage を確認する基準
+
 
 理論ドキュメント監査では、各 model family について少なくとも次を確認します。
 
@@ -589,9 +589,9 @@ current implementationとの対応として記述します。
 
 のように独立した理論仮定が追加された場合です。
 
-既存理論の Mixed / MultiTask / Kronecker variant は、原則として既存章へ実装上の差分を追記します。
+既存理論の Mixed / MultiTask / Kronecker variant は、原則として既存章で理論的な差分を説明します。
 
-## 現在の再監査状況
+
 
 01-23章は、基礎、構造化入力・出力、高次元、robustness、expressive GP、non-GP surrogateまで
 横断的に再監査しています。
