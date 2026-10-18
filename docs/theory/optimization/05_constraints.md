@@ -188,128 +188,64 @@ capability metadata に semantics が存在しても、
 
 ## 5.12 Mixed variable と constraint
 
-mixed space では constraint evaluation の前に
-integer / categorical feasibility を保証する必要があります。
+mixed space では integer / categorical の許容集合と制約条件を同時に満たす必要があります。
+連続提案 $z$ を修復写像 $R$ により $x=R(z)$ とする場合、制約は
+実際に評価する $x$ に対して判定します。
+カテゴリ値によって feasible region が変化する場合もあります。
 
-BoTorch native mixed optimization では `fixed_features_list` が離散割当を列挙し、
-各continuous subproblemでその座標を固定します。nonlinear callableはone-hotや
-latent coordinateではなく、固定済みcategorical/discrete値を含む元の
-`[d]` candidateを受け取ります。このためcategoryによってfeasible regionが
-変わるconstraintも同じpublic-space callableで表現できます。
+## 5.13 Structured features と constraint
 
-q > 1 のnative mixed optimizationはgreedy sequentialに分解されるため、
-intra-point nonlinear constraintは各q=1 stepで適用できますが、
-joint `[q,d]` を必要とするinter-point nonlinear constraintは非対応です。
-
-continuous proposal \(z\) を integer repair して \(x=R(z)\) とする
-derivative-free backendでも、constraintは実際に評価される \(x\) に対して
-判定すべきです。現在の DE / PSO なども structured repair 後のcandidateに
-対してacquisition / constraint evaluationを行います。
-
-## 5.13 Structured model features と constraint
-
-candidate constraint はmodel内部のtask/output構造ではなく、optimizerが扱うpublic
-candidate Xに対して定義します。
-
-`MultiTaskGP` のtask featureや `SingleTaskMultiFidelityGP` のfidelity featureが
-public Xの列として存在する場合、fixed featureとしてその列を固定したままnonlinear
-constraintを適用できます。callableからtask/fidelity列を参照して、taskやfidelityに
-依存するfeasible regionを表現することもできます。
-
-一方、`KroneckerMultiTaskGP` は同じinput Xに複数output taskを持つ構造であり、
-optimizerのcandidate Xにtask-feature列を追加する必要はありません。constraintも
-通常のpublic input coordinatesに対して定義します。
-
-この区別により、structural featureをconstraint専用の別座標系へ変換せず、各modelが
-実際に評価するcandidate spaceとconstraint spaceを一致させます。
+candidate constraint は、実際に探索する入力空間の座標に対して定義します。
+モデル内部の task / output 構造と、候補入力に含まれる task / fidelity 座標は区別します。
+構造的な変数を候補座標として含める場合、その変数への制約も同じ座標系で定義します。
 
 ## 5.14 Coordinate transform と constraint
 
-public-space constraint を latent / embedded coordinateへそのまま渡すことはできません。
+$x=T(z)$ で探索する場合、元空間の制約 $g(x)\ge 0$ は
 
 \[
-x=T(z)
+g(T(z))\ge 0
 \]
 
-で探索するなら、public constraint \(g(x)\ge0\) は
-
-\[
-g(T(z))\ge0
-\]
-
-として正しく写像する必要があります。
-
-robotorchan は exact mapping を実装していない embedding / latent strategy では
-public-space `CandidateConstraints` を明示的に拒否します。
-
-これは保守的なAPI制限ではなく、異なる座標系で別のconstraintを
-誤って解くことを防ぐ correctness contract です。
+へ写像する必要があります。座標変換だけを適用して制約を変換しない場合、
+元の constrained optimization problem と異なる問題になります。
 
 ## 5.15 Sequential と inter-point
 
-inter-point constraint は q-batch 全体を同時に見る必要があります。
-
-そのため joint optimization と自然に整合しますが、
-1点ずつ選ぶ greedy sequential optimization では同じcontractを
-そのまま適用できない場合があります。
-
-現在の BoTorch contract でも inter-point nonlinear constraint と
-greedy sequential optimization の組合せには制限があります。
+inter-point constraint は q-batch 全体に依存します。
+そのため joint optimization と整合しますが、1点ずつ選ぶ greedy sequential
+optimization では制約をそのまま分解できない場合があります。
 
 ## 5.16 Robust / input perturbation と candidate constraint
 
-BoTorch `InputPerturbation` を使うrobust BOでも、candidate constraintはoptimizerが
-提案するnominal candidate Xに対して評価します。model内部で生成される
-`X + perturbation` のscenario axisはcandidate constraintのq axisではありません。
+nominal candidate $x$ が $g(x)\ge 0$ を満たしても、摂動 $w$ を加えた
+$x+w$ が必ず実行可能とは限りません。
 
-したがって、nominal Xが `g(X) >= 0` を満たしても、すべてのperturbed scenarioが
-同じconstraintを満たすことまでは現在のcontractでは保証しません。
+すべての摂動に対する robust feasibility は
 
-```text
-nominal X -- CandidateConstraints --> feasible
-    |
-    +-- InputPerturbation --> X + w_1, ..., X + w_n
-                              robust objective evaluation
-```
+\[
+\inf_{w\in\mathcal W} g(x+w)\ge 0
+\]
 
-「すべてのperturbed Xでもfeasible」や「一定確率以上でfeasible」といった条件は
-robust feasibility / chance constraintに相当し、通常のnonlinear candidate
-constraintとは別の意味論です。現時点では暗黙にその保証を追加せず、将来拡張として
-分離します。
+であり、chance constraint は
 
-## 5.17 dtype / device / autograd contract
+\[
+\Pr(g(x+W)\ge 0)\ge 1-\delta
+\]
 
-Gradient-based nonlinear candidate optimizationでは、constraint callableはoptimizerから渡された
-TensorをそのままPyTorch演算で処理する必要があります。
+で表せます。これらは nominal candidate feasibility より強い、または異なる条件です。
 
-- 出力は入力Xと同じdevice上のscalar Tensorにする
-- dtypeを暗黙に変更しない
-- `.cpu()`、NumPy変換、Python `float` 化をconstraint計算途中に入れない
-- `.detach()` でgradient pathを切らない
-- 定数は `x.new_tensor(...)` などでXのdtype/deviceに合わせる
+## 5.17 Differentiability of nonlinear constraints
 
-robotorchanはBoTorchへ渡す前にcandidateを別deviceへ移したり、constraint callableを
-NumPy callableへ変換したりしません。明示的なnonlinear initial conditionsについても
-boundsとdevice/dtypeが一致しない場合は早期にエラーにします。
+gradient-based constrained optimization では、制約関数の微分可能性や
+導関数の数値的安定性が重要です。
+一方、derivative-free methods は制約値のみを利用する方式もあります。
 
-CPUではfloat32/float64のoptimizer regressionを持ち、CUDA環境では同じcallable contractを
-CUDA Tensorのまま通すテストを実行します。CUDAがないCI環境ではそのテストだけskipされます。
+## 5.18 Constraint method selection
 
-## 5.18 Runtime capability
-
-最終的な利用可否は
-
-```text
-constraint type
- -> optimizer capability
- -> enforcement semantics
- -> variable-space compatibility
- -> initialization compatibility
-```
-
-の順に確認します。
-
-「nonlinear constraint対応」という1つのbooleanだけで判断しません。
+制約の種類、実行可能集合の幾何、可微分性、変数型、joint q-batch の有無に応じて
+native enforcement、penalty、feasibility-first、repair、projection を選びます。
+特定ライブラリの対応状況は [Optimization guides](../../optimization/README.md) を参照してください。
 
 ## 参考文献
 
