@@ -6,11 +6,10 @@ population-based optimizer は複数の candidate を保持し、
 評価結果を次の population 更新へ利用します。
 
 scalar acquisition optimization では acquisition function を joint [q, d] batch 上で最大化し、
-robotorchan の DE、CMA-ES、GA、Mixed GA、PSO は q-batch を内部的に
-[qd] の decision vector として扱います。
+population-based method では q-batch を [qd] の decision vector として
+表現できます。
 
-NSGA-II は例外で、scalar acquisition dispatcher ではなく、
-vector-valued objective の Pareto set を探索する別 primitive です。
+一方、NSGA-II は vector-valued objective の Pareto set を探索する手法です。
 
 ## 7.2 Differential Evolution
 
@@ -24,21 +23,17 @@ Differential Evolution (DE) は population 内の個体差分を mutation direct
 
 trial vector を crossover で作り、objective が改善すれば target vector と置き換えます。
 
-robotorchan の optimize_acqf_de は SciPy Differential Evolution を利用します。
-acquisition maximization は内部で負の acquisition value の minimization に変換されます。
+acquisition maximization は符号を反転すれば minimization としても定式化できます。
 
 ### Integer variable
 
-integer dimension は acquisition / constraint evaluation 前に round と clip で repair します。
-unordered categorical variable は数値距離を仮定しないため明示的に拒否します。
+integer dimension では評価前に round と clip による repair が可能です。
+unordered categorical variable には別途 type-aware な演算が必要です。
 
 ### Constraint
 
-candidate constraint は SciPy NonlinearConstraint へ violation evaluator を接続し、
-violation が0の candidate を feasible として扱います。
-
-このため現在の DE は単なる penalty backend ではなく、
-optimizer-native constraint route を持ちます。
+DE に対しては feasibility-first selection、penalty、native constraint handling など
+複数の制約処理方式を組み合わせられます。
 
 ## 7.3 CMA-ES
 
@@ -48,10 +43,8 @@ Covariance Matrix Adaptation Evolution Strategy (CMA-ES) は
 
 coordinate-wise gradient を使わず、変数間の相関を covariance に学習できることが特徴です。
 
-robotorchan の optimize_acqf_cmaes は optional cmaes dependency を利用し、
-q-batch を flatten した continuous vector を探索します。
-
-現在の backend は integer / categorical variable 用の native semantics を持ちません。
+標準的な CMA-ES は連続空間の探索分布を前提とします。
+離散変数を扱う場合は別途 encoding や離散化の設計が必要です。
 
 candidate constraint は
 
@@ -64,8 +57,8 @@ candidate constraint は
 
 Genetic Algorithm (GA) は selection、crossover、mutation、elitism を組み合わせます。
 
-robotorchan の continuous GA は real-valued population を使い、
-tournament selection、arithmetic crossover、Gaussian mutation を行います。
+連続空間の GA では tournament selection、arithmetic crossover、
+Gaussian mutation などの演算を利用できます。
 
 constraint がある場合は scalar penalty だけに依存せず、feasibility-first ranking を使います。
 
@@ -90,7 +83,7 @@ category code の差を metric として mutation magnitude に使いません�
 この type-aware operator が、continuous GA に最後だけ rounding を追加する方法との
 本質的な違いです。
 
-robotorchan では unordered categorical を含む mixed search の主要 population backend です。
+type-aware operator は unordered categorical を含む mixed search に適しています。
 
 ## 7.6 Particle Swarm Optimization
 
@@ -106,8 +99,8 @@ Particle Swarm Optimization (PSO) は particle の位置と速度を
 
 p_i は personal best、g は global best です。
 
-robotorchan では bounds 内へ clip し、integer dimension は評価前に repair します。
-categorical variable は現在サポートしません。
+box bounds に対する clipping や integer dimension の repair を組み込めます。
+categorical variable には別途離散的な位置更新規則が必要です。
 
 constraint は acquisition value から lambda × violation を引いた penalty score に反映されます。
 
@@ -117,11 +110,8 @@ NSGA-II は multi-objective evolutionary algorithm です。
 population を Pareto dominance に基づく non-dominated front へ分け、
 同じ front 内では crowding distance により diversity を維持します。
 
-robotorchan の optimize_vector_nsga2 は [population, d] の candidate を受け取り、
-[population, m]、m >= 2 の vector objective を返す contract です。
-全 objective は maximize として扱います。
-
-返り値は近似 Pareto set と対応する objective values です。
+複数目的の評価ベクトルに対して Pareto 優越関係を定義し、
+非劣解集合の近似と多様性の維持を目指します。
 
 ### qEHVI / qNEHVI との違い
 
@@ -137,7 +127,7 @@ qEHVI や qNEHVI は multi-objective BO の acquisition ですが、
 です。
 
 qEHVI / qNEHVI の candidate optimization に NSGA-II が必須なわけではありません。
-optimize_vector_nsga2 は最適化対象そのものが vector-valued な場合の別 primitive です。
+NSGA-II は最適化対象そのものが vector-valued な場合の選択肢です。
 
 ## 7.8 q-batch flattening
 
@@ -164,17 +154,9 @@ BO acquisition の epistemic exploration parameter を増やすことと同義�
 
 ## 7.10 Constraint semantics の比較
 
-| Backend | Constraint semantics | Integer | Categorical |
-| --- | --- | --- | --- |
-| DE | native feasibility | repair | no |
-| CMA-ES | penalty | no | no |
-| GA | feasibility-first | no | no |
-| Mixed GA | feasibility-first | yes | yes |
-| PSO | penalty | repair | no |
-| NSGA-II | vector APIではcandidate constraintなし | no | no |
-
-同じ「constraint対応」でも enforcement semantics が異なります。
-backend 選択では boolean capability だけでなく方式まで確認する必要があります。
+population-based search では native feasibility、penalty、feasibility-first、
+repair などを区別します。制約処理方式は探索アルゴリズム名だけで一意には決まりません。
+詳細は [Candidate Constraint Optimization](05_constraints.md) を参照してください。
 
 ## 7.11 Acquisition optimization での意味
 
