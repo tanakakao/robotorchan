@@ -97,6 +97,19 @@ $$
 MC formulationではposterior samplesごとにobjective utilityとconstraint satisfactionを
 組み合わせられます。
 
+例えば improvement $I(x)$ と feasibility event $F(x)$ に対して、一般には
+
+$
+\mathbb E[I(x)\mathbf 1_{F(x)}\mid\mathcal D_n]
+\ne
+\mathbb E[I(x)\mid\mathcal D_n]\,
+P(F(x)\mid\mathcal D_n)
+$
+
+です。右辺への分解が成立するのは、posterior の下で improvement と
+feasibility indicator が独立である場合などに限られます。
+目的と制約が相関する surrogate では joint samples による期待値が重要です。
+
 ## 8.5 Sample-wise constraint
 
 posterior sample $`f^{(s)}(x)`$ と constraint sample $`c^{(s)}(x)`$ に対し、
