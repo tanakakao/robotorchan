@@ -495,10 +495,8 @@ Theory は将来の拡張可能性を説明できますが、現在の利用可�
 - Straddleは `beta * std - abs(mean - target)` のq=1 criterion
 - fixed betaは実装上のexploration parameterで、理論confidence scheduleと自動的に同一ではない
 - RandomizedStraddleはselection round内で1つのrandom coefficientを固定する
-- current RandomizedStraddleはchi-square(2)相当のbetaを生成し `sqrt(beta) * std` を使う
 - BoundaryVarianceはrobotorchan-specific heuristicで、beta parameterを持たない
-- multi-outputでは `output_index` が必要で、structured outputは事前scalarizationが必要
-- current level-set acquisitionsはq=1でensemble posterior非対応
+- multi-outputやstructured outputでは、境界を定義するscalar quantityが必要
 - pointwise score上位q点はjoint batch level-set acquisitionではない
 - level-set estimation、constrained BO、classification ALはboundaryを共有してもdecision purposeが違う
 
