@@ -22,8 +22,8 @@ acquisition landscape が非凸なら、局所 optimizer が同じでも
 3. 有望な候補を restart initial conditions として選択
 4. 各 restart から local optimization
 
-`raw_samples` は candidate pool の広さ、
-`num_restarts` は local optimization を開始する basin の数に対応します。
+raw candidate 数は初期候補 pool の広さ、
+restart 数は局所探索を開始する初期点の数に対応します。
 
 ## 3.3 Random と quasi-random
 
@@ -37,8 +37,8 @@ low-discrepancy design は有限個の点で search space を
 
 raw candidates を単純に上位だけ選ぶとは限りません。
 
-BoTorch の initialization heuristic には acquisition value を使って
-有望な initial conditions を確率的に選ぶ方式があります。
+acquisition value を使って有望な initial conditions を
+確率的に選ぶ heuristic があります。
 
 non-negative acquisition では正の acquisition value を標準化し、
 その値に応じて sampling probability を変える heuristic があります。
@@ -68,8 +68,7 @@ auxiliary fantasy variables \(X'\) を含む augmented problem
 通常の q-candidate initialization とは geometry が異なるため、
 fantasy variables も含めた専用 initialization が重要です。
 
-BoTorch には KG 系のための
-`gen_one_shot_kg_initial_conditions` が用意されています。
+この場合、通常の候補変数と補助変数の両方に対して初期値を構成します。
 
 ## 3.7 Constraint と initialization
 
@@ -93,9 +92,9 @@ trust-region local space
 
 どの座標系で initial conditions を生成するかを明示する必要があります。
 
-## 3.9 robotorchan の実装境界
+## 3.9 実装ガイドへの参照
 
-現在の対応範囲は
+実装固有の対応範囲は
 [Acquisition initialization](../../optimization/initialization.md) と
 [Initialization compatibility](../../optimization/initialization-compatibility.md)
 を source of truth とします。
