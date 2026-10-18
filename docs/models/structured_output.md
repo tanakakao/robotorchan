@@ -12,3 +12,294 @@
 
 Notebook: [Structured output](../../examples/notebooks/11_structured_output_gp.ipynb)  
 Theory: [Structured Output](../theory/11_structured_output.md)
+
+
+## API examples and fitting notes
+
+## 11.14 robotorchan の HOGP wrapper
+
+現在の wrapper は BoTorch の挙動をそのまま利用し、主に
+
+- raw training data 保持
+- `make_mll()`
+- 共通 model API
+
+を追加しています。
+
+```python
+from robotorchan.models import HigherOrderGP
+
+model = HigherOrderGP(
+    train_X=train_X,
+    train_Y=train_Y,
+)
+
+model.raw_train_X
+model.raw_train_Y
+model.make_mll()
+```
+
+です。
+
+`raw_train_Yvar` は `None` です。
+
+---
+
+## 11.15 HOGP の fitting
+
+BoTorch では HOGP の fitting に注意が必要です。
+
+specialized Kronecker solve を有効にし、通常の SciPy L-BFGS-B ベースの `fit_gpytorch_mll()` ではなく、PyTorch
+optimizer を使う `fit_gpytorch_mll_torch()` が推奨されます。
+
+```python
+from botorch.fit import fit_gpytorch_mll_torch
+from linear_operator.settings import _fast_solves
+
+mll = model.make_mll()
+
+with _fast_solves(True):
+    fit_gpytorch_mll_torch(mll)
+```
+
+これはHOGP固有のstructured linear algebraとupstreamの推奨fitting pathを
+維持するためです。optimizer選択を一般のExact GPと機械的に同一視しないようにします。
+
+---
+
+## 11.16 HOGP posterior
+
+学習後は
+
+```python
+posterior = model.posterior(test_X)
+```
+
+で structured posterior を取得できます。
+
+posterior mean の shape も output shape を保ちます。
+
+例えば
+
+```text
+test_X: [4, 5]
+output_shape: [32, 32]
+```
+
+なら、概念的に
+
+```text
+posterior.mean: [4, 32, 32]
+```
+
+です。
+
+---
+
+## 11.27 fitting example
+
+```python
+from botorch.fit import fit_gpytorch_mll
+from robotorchan.models import LatentKroneckerGP
+
+model = LatentKroneckerGP(
+    train_X=train_X,
+    train_T=train_T,
+    train_Y=train_Y,
+)
+
+mll = model.make_mll()
+
+with model.use_iterative_methods():
+    fit_gpytorch_mll(mll)
+```
+
+です。
+
+HOGP と異なり、こちらは `use_iterative_methods()` が重要です。
+
+---
+
+## 11.28 posterior example
+
+```python
+with model.use_iterative_methods():
+    posterior = model.posterior(
+        test_X,
+        test_T,
+    )
+```
+
+とします。
+
+posterior mean は `test_X × test_T` のstructured responseになります。
+
+---
+
+## 11.29 robotorchan の raw data API
+
+LatentKroneckerGP wrapper では
+
+```python
+model.raw_train_X
+model.raw_train_T
+model.raw_train_Y
+```
+
+を保持します。
+
+特に `raw_train_T` がこのモデル固有です。
+
+これらは constructor input の provenance であり、内部で broadcasting / masking / transforms が適用された現在状態とは区別します。
+
+---
+
+## 11.30 covariance modules
+
+LatentKroneckerGP では input space と output-coordinate space に別々の covariance module を指定できます。
+
+```python
+covar_module_X
+covar_module_T
+```
+
+です。
+
+これにより、
+
+```text
+process variables X
+  → Matérn kernel
+
+wavelength T
+  → RBF kernel
+```
+
+のような使い分けも可能です。
+
+---
+
+## 11.31 mean modules
+
+同様に
+
+```python
+mean_module_X
+mean_module_T
+```
+
+を持ちます。
+
+実務上は default から始めることが多いですが、明確な基調トレンドがある場合には mean structure も検討できます。
+
+---
+
+### Mixed LatentKroneckerGP
+
+robotorchanには `MixedLatentKroneckerGP` もあります。
+
+~~~text
+X factor
+  → continuous + categorical design variables
+
+T factor
+  → time / wavelength / task-like output coordinates
+~~~
+
+Mixed版が置き換えるのは **X側のcovariance** です。`cat_dims` は `train_X` の
+categorical design columnsを表し、`train_T` の列をcategorical指定するものではありません。
+
+この分離は `MixedHigherOrderGP` と同じく、「design-input structure」と
+「structured-output structure」を別の責務として扱うためのものです。
+
+# モデル比較
+
+## 11.56 robotorchan Notebook
+
+実行例は
+
+```text
+examples/notebooks/11_structured_output_gp.ipynb
+```
+
+です。
+
+Notebookでは合成スペクトルを使い、
+
+1. `train_X`, `train_T`, `train_Y` を生成
+2. `HigherOrderGP` を学習
+3. `LatentKroneckerGP` を学習
+4. posterior spectrum を比較
+5. `LatentKroneckerGP` を新しい `test_T` で評価
+
+します。
+
+---
+
+## 11.57 HigherOrderGP example
+
+```python
+from botorch.fit import fit_gpytorch_mll_torch
+from linear_operator.settings import _fast_solves
+from robotorchan.models import HigherOrderGP
+
+model = HigherOrderGP(
+    train_X=train_X,
+    train_Y=train_Y,
+)
+
+mll = model.make_mll()
+
+with _fast_solves(True):
+    fit_gpytorch_mll_torch(mll)
+
+posterior = model.posterior(test_X)
+```
+
+---
+
+## 11.58 LatentKroneckerGP example
+
+```python
+from botorch.fit import fit_gpytorch_mll
+from robotorchan.models import LatentKroneckerGP
+
+model = LatentKroneckerGP(
+    train_X=train_X,
+    train_T=train_T,
+    train_Y=train_Y,
+)
+
+mll = model.make_mll()
+
+with model.use_iterative_methods():
+    fit_gpytorch_mll(mll)
+    posterior = model.posterior(test_X, test_T)
+```
+
+---
+
+## 11.59 raw data
+
+HOGP:
+
+```python
+model.raw_train_X
+model.raw_train_Y
+model.raw_train_Yvar  # None
+```
+
+LatentKroneckerGP:
+
+```python
+model.raw_train_X
+model.raw_train_T
+model.raw_train_Y
+model.raw_train_Yvar  # None
+```
+
+です。
+
+raw data は constructor input provenance であり、内部 transformed state ではありません。
+
+---
