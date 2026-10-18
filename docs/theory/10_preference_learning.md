@@ -134,57 +134,10 @@ B > A
 
 ## 10.4 Pairwise comparison data
 
-BoTorch / robotorchan の `PairwiseGP` では、入力候補を
+比較データは、候補集合 $X=(x_1,\ldots,x_n)$ と勝者・敗者の添字対
+$(i,j)$ から構成され、$x_i$ が $x_j$ より好まれたことを表します。
 
-```python
-datapoints
-```
-
-比較結果を
-
-```python
-comparisons
-```
-
-として与えます。
-
-例えば
-
-```python
-datapoints = torch.tensor(
-    [
-        [0.1],
-        [0.4],
-        [0.8],
-    ],
-    dtype=torch.double,
-)
-
-comparisons = torch.tensor(
-    [
-        [2, 1],
-        [1, 0],
-    ],
-    dtype=torch.long,
-)
-```
-
-なら、
-
-```text
-2番目の候補 > 1番目の候補
-1番目の候補 > 0番目の候補
-```
-
-という意味です。
-
-各行は
-
-```text
-[winner, loser]
-```
-
-です。
+実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
@@ -551,46 +504,19 @@ BoTorch の preference tutorial でも、latent value の絶対値ではなく r
 
 ## 10.18 duplicate datapoints の consolidation
 
-Preference dataset では同じ候補が複数回現れることがあります。
+同じ入力が繰り返し現れる場合、比較関係を保ちながら重複候補を統合できます。
+この操作は観測数とユニークな候補数の違いに注意が必要です。
 
-BoTorch の `PairwiseGP` は numerical stability のため、近接・重複 datapoints を内部で consolidation できます。
-
-wrapper の引数には
-
-```python
-consolidate_rtol
-consolidate_atol
-```
-
-があります。
-
-robotorchan はこの upstream behavior をそのまま利用します。
+実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
 ## 10.19 raw data と consolidated data
 
-robotorchan では constructor に渡された値を
+観測時の候補・比較と、重複統合後に推論へ用いる候補・比較は区別します。
+統合前後で添字付けが変化し得ます。
 
-```python
-model.raw_datapoints
-model.raw_comparisons
-```
-
-として保持します。
-
-これは **caller input の provenance** です。
-
-一方 BoTorch model 内部では duplicate consolidation 後の
-
-```python
-model.datapoints
-model.comparisons
-```
-
-が使われる場合があります。
-
-したがって両者は必ずしも同じ shape になるとは限りません。
+実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
@@ -637,54 +563,17 @@ outer problem
 
 ## 10.25 posterior
 
-学習後は通常の BoTorch model と同様に
+比較観測から推論するのは、絶対的な観測スコアではなく潜在効用 $u(x)$ の事後分布です。
 
-```python
-posterior = model.posterior(test_X)
-```
-
-で latent utility posterior を得られます。
-
-ここで posterior が表しているのは
-
-```text
-観測スコア y
-```
-
-ではなく
-
-```text
-潜在 utility f(x)
-```
-
-です。
+実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
 ## 10.26 posterior mean の解釈
 
-```python
-mean = posterior.mean
-```
+潜在効用の事後平均による順位付けは可能ですが、絶対水準より候補間の相対関係が重要です。
 
-が高い候補ほど、モデルは「より好まれやすい」と推定しています。
-
-ただし absolute scale より ranking が重要です。
-
-```text
-posterior mean
-x1: -0.8
-x2:  0.2
-x3:  1.1
-```
-
-なら
-
-```text
-x3 > x2 > x1
-```
-
-という ranking interpretation が自然です。
+実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
@@ -907,19 +796,10 @@ Preference BO では、utility model に適した acquisition function を使い
 
 ## 10.37 EUBO
 
-BoTorch には preference optimization 向け acquisition function として
+Expected Utility of the Best Option（EUBO）は、提示する候補集合で得られる
+最大潜在効用の期待値を評価する獲得基準です。
 
-```python
-AnalyticExpectedUtilityOfBestOption
-```
-
-があります。
-
-EUBOは **Expected Utility of the Best Option** の略です。
-
-候補集合を提示したとき、その集合から得られるbest-option utilityの期待値を評価します。
-ただし「PairwiseGPを使えば自動的にEUBOになる」わけではなく、surrogateとは別に
-preference acquisitionを構成します。
+実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
@@ -972,20 +852,10 @@ EUBO
 
 ## 10.40 preference BO loop
 
-概念的には
+潜在効用を比較観測から推論し、次の比較候補を選び、比較結果を追加して
+事後分布を更新する反復過程です。
 
-```python
-model = PairwiseGP(datapoints, comparisons)
-fit_gpytorch_mll(model.make_mll())
-
-# preference acquisition を構築
-# acquisition を最大化して next_X を選ぶ
-# next_X 内の pairwise comparison を取得
-# datapoints / comparisons に追加
-# refit
-```
-
-となります。
+実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
@@ -1031,45 +901,19 @@ Y = comparison indices
 
 ## 10.43 raw data API
 
-robotorchan では
+比較学習では、入力候補と勝者・敗者の関係が教師情報です。
+通常の実数値回帰ターゲットと同一視しません。
 
-```python
-model.raw_datapoints
-model.raw_comparisons
-```
-
-を提供します。
-
-通常の supervised wrappers の
-
-```python
-raw_train_X
-raw_train_Y
-```
-
-とは命名を分けています。
-
-Preference data の semantics を明確にするためです。
+実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
 ## 10.44 input normalization
 
-PairwiseGP でも kernel を使うため、連続入力なら unit cube への normalization が有効です。
+入力の尺度が大きく異なる場合、カーネルの距離尺度を適切に設定するため
+正規化が有効になることがあります。
 
-例えば
-
-```python
-from botorch.models.transforms.input import Normalize
-
-model = PairwiseGP(
-    datapoints=datapoints,
-    comparisons=comparisons,
-    input_transform=Normalize(d=datapoints.shape[-1]),
-)
-```
-
-とできます。
+実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
@@ -1371,26 +1215,10 @@ fitting が重くなる場合があります。
 
 ## 10.59 numerical stability
 
-constructor には
+Laplace近似や行列分解では数値的な安定化が必要です。
+安定化の強さと最適化収束精度は近似結果に影響します。
 
-```python
-jitter=1e-6
-```
-
-があります。
-
-これは Cholesky 等の numerical stability のために使われます。
-
-また
-
-```python
-xtol
-maxfev
-```
-
-は latent utility MAP を求める数値解法の収束制御に関係します。
-
-通常は default から始め、収束問題が出た場合に調整します。
+実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
@@ -1568,18 +1396,10 @@ A vs D
 
 ## 10.71 raw-data provenance
 
-Notebook / wrapper では
+比較観測の原データと、推論用に整理したデータを区別することは
+推定結果の再現性と解釈に重要です。
 
-```python
-model.raw_datapoints
-model.raw_comparisons
-```
-
-を確認できます。
-
-これは model fitting 後の consolidated state ではなく constructor input の snapshot です。
-
-再現性やデバッグではこの区別が重要です。
+実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
@@ -1591,16 +1411,10 @@ model.raw_comparisons
 
 ## 10.73 posterior ranking
 
-```python
-test_X = torch.linspace(0.0, 1.0, 200).unsqueeze(-1)
-posterior = model.posterior(test_X)
-mean = posterior.mean.squeeze(-1)
+潜在効用の事後平均を最大にする点は、一つの意思決定基準です。
+ただし事後不確実性を考慮する探索基準とは異なります。
 
-best_idx = mean.argmax()
-best_x = test_X[best_idx]
-```
-
-これにより比較データしか与えていなくても、latent utility posterior に基づいて好ましい領域を推定できます。
+実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
