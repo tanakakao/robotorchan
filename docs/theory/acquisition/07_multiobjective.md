@@ -168,6 +168,25 @@ latent incumbent / front
 batch / noisy settingではqNEHVI系が重要になります。これは単にEHVIのposterior varianceを
 大きくすることではなく、baseline objective valuesとfront自体のlatent uncertaintyを扱います。
 
+baseline $B$ の latent objective vectors から得られる非支配集合を
+$\mathcal P(f(B))$ とすれば、制約なしの基本的な noisy hypervolume improvement は
+
+$
+q\operatorname{NEHVI}(X)
+=
+\mathbb E\left[
+HV(\mathcal P(f(B)\cup f(X));r)
+-
+HV(\mathcal P(f(B));r)
+\mid\mathcal D_n
+\right]
+$
+
+と表せます。候補と baseline の latent outputs は同じ joint posterior に従い、
+baseline Pareto front 自体もサンプルごとに変化します。
+この式は基本的な意思決定量を示すものであり、実際の数値評価では
+partitioning、baseline pruning、制約などを別途考慮します。
+
 ## 7.10 Log formulation
 
 hypervolume improvement が非常に小さい領域では、EI 系と同様に acquisition value や gradient の数値安定性が問題になります。
