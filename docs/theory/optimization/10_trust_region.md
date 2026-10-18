@@ -239,51 +239,30 @@ fantasy-based acquisition へ pending information を組み込んだりできま
 
 ## 10.16 Candidate constraints
 
-通常の `optimize()`、`optimize_mixed()`、`optimize_multifidelity()` は
-public-space `CandidateConstraints` を各 optimizer path へ渡します。
+Trust Region を用いる場合、探索領域と candidate constraints の共通部分が
+実行可能集合になります。局所領域内に feasible point が存在しない場合は、
+領域の拡張や中心の変更が必要になる場合があります。
 
-一方、TuRBO Thompson sampling は有限 candidate pool を point-wise に filter するため、
-
-- intra-point linear constraints: 対応
-- intra-point nonlinear constraints: 対応
-- inter-point linear constraints: 非対応
-- inter-point nonlinear constraints: 非対応
-
-です。
-
-joint q-batch feasibility が必要な inter-point constraint を、独立 pool filtering として
-誤って処理しないための制限です。
+有限候補集合を点ごとに filter する方法では、各点の実行可能性は判定できますが、
+候補間の関係を定める inter-point constraints を一般には保証できません。
 
 ## 10.17 Mixed-variable TuRBO
 
 continuous、integer、categorical variable を同じ Euclidean trust region で縮小すると、
 離散変数へ人工的な局所距離を導入します。
 
-`turbo_mixed_trust_region_bounds()` は
-
-- continuous dimensions: localize
-- integer dimensions: global range を保持
-- categorical dimensions: global range を保持
-
-とします。
-
-`optimize_mixed()` は legal integer / categorical assignments を fixed-feature combinations として
-列挙し、continuous local region と組み合わせて BoTorch mixed optimization を行います。
+一つの設計として、continuous dimensions のみを局所化し、
+integer / categorical dimensions の許容集合を維持する方法があります。
+この場合、離散割当を列挙または探索し、各割当で連続部分を局所最適化します。
 
 ## 10.18 MultiFidelity TuRBO
 
-fidelity coordinate も design coordinate と同じ意味ではありません。
+fidelity coordinate と design coordinate は役割が異なります。
+一つの設計として design dimensions のみを局所化し、
+fidelity dimensions は元の許容範囲を保つ方法があります。
 
-`turbo_multifidelity_trust_region_bounds()` は
-
-- design dimensions: localize
-- fidelity dimensions: global range を保持
-
-とします。
-
-これにより incumbent 周辺の design を探索しつつ、fidelity 自体は global に選択できます。
-
-全 dimension が fidelity の場合は localize する design dimension がないため拒否されます。
+fidelity にも局所領域を設定する方法は考えられますが、
+探索費用と精度のトレードオフを含めた別の設計が必要です。
 
 ## 10.19 Restart
 
