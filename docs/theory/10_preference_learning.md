@@ -15,9 +15,7 @@ B の方が C より好ましい
 
 robotorchan では BoTorch の
 
-```python
-PairwiseGP
-```
+`PairwiseGP`
 
 を BoTorch-compatible wrapper として提供しています。
 
@@ -145,19 +143,13 @@ $(i,j)$ から構成され、$x_i$ が $x_j$ より好まれたことを表し�
 
 通常回帰では
 
-```python
-train_X
-train_Y
-```
+`train_X` / `train_Y`
 
 を使います。
 
 Preference Learning では
 
-```python
-datapoints
-comparisons
-```
+`datapoints` / `comparisons`
 
 を使います。
 
@@ -1567,9 +1559,7 @@ Preference Learning は、**絶対値ではなく比較から潜在 utility func
 
 robotorchan では
 
-```python
-PairwiseGP
-```
+`PairwiseGP`
 
 を利用します。
 
