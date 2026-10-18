@@ -78,7 +78,7 @@ minimum-norm reconstruction であり、元の点の一意な復元ではあり�
 LatentSpaceStrategy では linear image の coordinate-wise outer bounds を探索 bounds とします。
 
 したがって latent box 内の点を reconstruct すると元空間 bounds を外れる場合があります。
-現在の実装は acquisition evaluation 前と返却前に元空間 box へ clamp します。
+元空間 box への射影は境界を満たしますが、latent 空間での探索幾何を変化させます。
 
 このため metadata には
 
@@ -156,7 +156,7 @@ embedded coordinate z のうち
 
 ALEBO では embedding 後の geometry も重要です。
 
-robotorchan の ALEBOGP は embedded coordinates 上で学習し、
+ALEBO では embedded coordinates 上の surrogate に
 full Mahalanobis metric を用います。
 
 Cholesky factor U に対して metric を
@@ -169,7 +169,7 @@ Cholesky factor U に対して metric を
 
 で測られます。
 
-robotorchan は projection-conditioned metric initialization、multi-start MAP、
+metric initialization、multi-start MAP、
 reference diagonal Laplace approximation、metric sampling、moment-matched acquisition model
 までを実装範囲としています。
 
@@ -213,7 +213,7 @@ BAxUS は sparse embedding と trust region を組み合わせ、
 
 ## 9.13 BAxUSState
 
-robotorchan の BAxUSState は ambient dimension と残り evaluation budget から
+BAxUS の状態は ambient dimension と残り evaluation budget から
 
 - initial target dimension
 - expansion schedule
@@ -234,7 +234,7 @@ BAxUS の sparse embedding では original dimensions が target-space bins に�
 
 subspace expansion では、複数 original dimensions を持つ parent bin を child bins に分割します。
 
-robotorchan は expansion 時に
+subspace expansion では
 
 - 各 original dimension の sign
 - 各 original dimension が1 binだけに属する構造
@@ -264,7 +264,7 @@ Trust Region 一般と TuRBO の詳細は次章で扱います。
 BoTorch BAxUS tutorial では target-space GP の ARD lengthscale を使って
 trust-region shape を調整します。
 
-robotorchan は search strategy と surrogate を分離しているため、
+search strategy と surrogate を分離する構成では、
 strategy 内で別の target-space GP を fit しません。
 
 original-space acquisition model が ARD lengthscale l_i を公開している場合、
@@ -280,7 +280,7 @@ target bin B_j に対して
 fallback します。
 
 これは BoTorch tutorial と完全に同じ surrogate configuration ではなく、
-robotorchan の model/search responsibility separation に基づく設計差です。
+これはモデルの表現と探索空間の設計を区別する観点から理解できます。
 
 ## 9.17 BAxUS Thompson Sampling
 
