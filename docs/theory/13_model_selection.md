@@ -1135,10 +1135,8 @@ robotorchan では model / acquisition / objective / optimizer を分離して�
 
 多くの Exact GP wrapper は
 
-```python
-mll = model.make_mll()
-fit_gpytorch_mll(mll)
-```
+周辺尤度を最大化してカーネルなどのハイパーパラメータを推定します。
+具体的な学習APIは各モデルの実装ガイドを参照してください。
 
 で学習します。
 
