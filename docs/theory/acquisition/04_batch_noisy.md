@@ -127,7 +127,7 @@ uncertainty を考慮します。
 最大化問題で baseline B={b_1,...,b_m} と候補集合 X={x_1,...,x_q} を考えると、
 代表的な joint noisy improvement は
 
-$
+$$
 q\operatorname{NEI}(X)
 =
 \mathbb E\left[
@@ -138,7 +138,7 @@ q\operatorname{NEI}(X)
 \right)_+
 \middle|\mathcal D_n
 \right]
-$
+$$
 
 と表せます。ここで $(u)_+=\max(u,0)$ です。
 候補値と baseline 値は同じ joint posterior から評価し、
