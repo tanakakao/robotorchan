@@ -10,8 +10,7 @@ x=(x_c,x_i,x_k)
 
 のように continuous \(x_c\)、integer \(x_i\)、categorical \(x_k\) に分けます。
 
-robotorchan の `MixedVariableSpace` は public candidate coordinates 上で
-各dimensionにちょうど1つの variable kind を割り当てます。
+各入力次元の変数型と許容集合を明示し、変数型に適した探索演算を定義します。
 
 ## 4.2 Integer と categorical は異なる
 
@@ -49,7 +48,7 @@ categorical combination が有限で小さい場合、
 
 です。
 
-BoTorch mixed optimization はこの種の fixed-feature decomposition を利用できます。
+この分解は組合せ数が少ない場合に有効ですが、列挙コストは組合せ数とともに増大します。
 
 ## 4.4 Integer repair
 
@@ -84,21 +83,12 @@ legal value へ写像する、または legal set から直接生成する必要
 単に bounds 内の実数を生成することと、
 mixed feasible candidate を生成することは同義ではありません。
 
-## 4.7 現在の backend 境界
+## 4.7 探索方式と変数型の整合性
 
-現在の実装では代表的に次の違いがあります。
-
-| Backend | Integer | Categorical | 主な semantics |
-| --- | --- | --- | --- |
-| BoTorch mixed | 対象構成による | yes | fixed-feature enumeration |
-| Mixed GA | yes | yes | type-aware evolutionary search |
-| Random / Sobol | yes | yes | structured sampling |
-| DE | yes | no | integer repair |
-| PSO | yes | no | integer repair |
-| CMA-ES | no | no | continuous search |
-
-DE は unordered categorical variable を明示的に拒否します。
-PSO も categorical variable を現在は受け付けません。
+fixed-feature enumeration、type-aware evolutionary search、structured sampling、
+integer repair は異なる探索方式です。
+整数の順序構造と unordered categorical の集合構造を区別する必要があります。
+ライブラリ固有の対応状況は [Optimization guides](../../optimization/README.md) を参照してください。
 
 ## 4.8 Fixed features
 
@@ -118,8 +108,7 @@ surrogate mixed capability
 optimizer mixed capability
 ```
 
-さらに optimizer の `mixed=True` だけでは categorical support を意味しません。
-integer と categorical capability を個別に確認します。
+整数と categorical の探索可能性は個別に評価する必要があります。
 
 ## 4.10 q-batch
 

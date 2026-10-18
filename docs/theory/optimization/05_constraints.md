@@ -24,15 +24,7 @@ constrained Bayesian optimization とは別レイヤーです。
 
 ## 5.2 Linear inequality
 
-robotorchan は BoTorch と同じ tuple contract
-
-```text
-(indices, coefficients, rhs)
-```
-
-を使います。
-
-intra-point inequality は
+係数と閾値による intra-point inequality は
 
 \[
 \sum_j a_j x_j \ge b
@@ -53,7 +45,7 @@ equality は
 floating-point computation では derivative-free evaluation 時に
 tolerance を使って equality violation を判定する必要があります。
 
-現在の共通 violation evaluator は
+許容誤差を含む violation measure は
 
 \[
 v_{eq}(x)
@@ -97,13 +89,9 @@ g(X)\ge0
 概念上、intra-point constraint は各 candidate に閉じ、
 inter-point constraint は joint \([q,d]\) batch 全体に依存します。
 
-BoTorch native route と robotorchan の共通 derivative-free constraint evaluator は、
-同じ public callable contract を使います。intra-point callable は各 candidate の
-\([d]\) Tensorを受け取り、inter-point callable はjoint \([q,d]\) Tensorを受け取ります。
-
-したがって backend ごとに別の callable を用意する必要はありません。gradient-based
-optimizer では callable が candidate coordinates に対して微分可能である必要がありますが、
-derivative-free backend ではこの勾配条件は不要です。
+gradient-based optimizer では制約関数の candidate coordinates に関する
+微分可能性が必要になる場合があります。一方、derivative-free optimizer は
+制約値の評価だけを利用する方式もあります。
 
 ## 5.6 Linear と nonlinear の同時適用
 
@@ -153,11 +141,8 @@ feasible candidate は \(V(x)=0\) です。
 
 native enforcement では optimizer 自身へ constraint を渡します。
 
-現在の BoTorch backend は linear inequality / equality と nonlinear inequality を
-upstream optimizer contract へ直接渡します。
-
-nonlinear constraint では feasible initial conditions または
-対応する initial-condition generator が必要です。
+非線形制約を局所法で扱う場合、実行可能な初期点や制約に対応した
+初期化手法が重要になることがあります。
 
 ## 5.9 Penalty method
 
@@ -172,7 +157,7 @@ penalty semantics では constrained problem を
 \(\lambda\) が小さすぎれば infeasible solution を好む可能性があり、
 大きすぎれば feasible boundary 近傍の数値geometryを悪化させる場合があります。
 
-現在の PSO や一部 hybrid / CMA-ES route はこの family に位置付けられます。
+有限の penalty weight では厳密な実行可能性が保証されるとは限りません。
 
 ## 5.10 Feasibility-first
 
@@ -186,7 +171,7 @@ Deb-style orderingでは、
 
 という ordering を利用できます。
 
-robotorchan の GA 系共通評価はこの考え方を明示的に実装しています。
+この順序は目的値と制約違反量の単位を直接混合しない利点があります。
 
 ## 5.11 Repair / projection / rejection
 
