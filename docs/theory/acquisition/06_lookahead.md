@@ -164,6 +164,22 @@ $$
 
 qKG は batch を観測した後の expected terminal decision value を評価します。
 
+終端価値を $V(\mathcal D)$ と置けば、one-step batch KG は概念的に
+
+$
+q\operatorname{KG}(X)
+=
+\mathbb E_{Y_X\mid\mathcal D_n}
+[V(\mathcal D_n\cup\{(X,Y_X)\})]
+-
+V(\mathcal D_n)
+$
+
+と書けます。後段の最適な意思決定は各 fantasy outcome に応じて変わり、
+同じ固定された future candidate を全シナリオに使うわけではありません。
+観測費用や評価時間を組み込む場合は、この終端価値との差分だけでなく
+対応する cost-aware utility を定義する必要があります。
+
 qEIと同様に、qKGもpointwise KGの上位q点を選ぶものではありません。候補集合のjoint future
 observationsと、それらから構成されるfantasy modelsがterminal valueへ影響します。
 
