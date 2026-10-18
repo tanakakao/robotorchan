@@ -127,7 +127,7 @@ uncertainty を考慮します。
 最大化問題で baseline B={b_1,...,b_m} と候補集合 X={x_1,...,x_q} を考えると、
 代表的な joint noisy improvement は
 
-$
+$$
 q\operatorname{NEI}(X)
 =
 \mathbb E\left[
@@ -138,7 +138,7 @@ q\operatorname{NEI}(X)
 \right)_+
 \middle|\mathcal D_n
 \right]
-$
+$$
 
 と表せます。ここで $(u)_+=\max(u,0)$ です。
 候補値と baseline 値は同じ joint posterior から評価し、
@@ -175,11 +175,9 @@ $$
 
 pending points を無視すると、同じ領域へ重複して新しい候補を投入する可能性があります。
 
-非同期BOでは、completed observationsでmodelをfitし、結果待ちの実評価を `X_pending` として
-対応acquisitionへ渡す構成を取れます。robotorchanは独自のasync scheduler stateを持ちません。
-
-`X_pending` は実際に評価中のcandidateというcontextです。acquisition内部のlookahead fantasy
-variablesとは別物です。pending対応の有無もmodel固有flagではなく、主としてacquisition contractです。
+非同期BOでは、完了した観測で事後分布を更新し、結果待ちの実評価を
+候補選択の条件に含めます。結果待ちの評価点と、将来の結果を仮定する
+lookahead の仮想観測は別の概念です。
 
 ## 4.9 Sequential greedy batch と joint optimization
 
@@ -198,12 +196,12 @@ candidate 2 を選ぶ
 
 joint optimizationとgreedy constructionは同じアルゴリズムではありません。
 sequential optimizationで先に選んだcandidateをpending-like contextとして利用する場合も、
-それは外部で既に実行中の `X_pending` と同一の状態管理ではありません。
+それは外部で既に実行中の評価点と同一ではありません。
 
 ## 4.10 Fantasizationをpendingと分ける
 
 fantasizationは、未観測点のoutcomeをsampleし、その仮想観測でconditionしたmodelを作る操作です。
-これはreal pending evaluationを表す `X_pending` そのものではありません。
+これは実際に結果待ちとなっている評価点そのものではありません。
 
 Knowledge Gradientやmulti-step lookaheadではacquisition内部の将来意思決定を表すために
 fantasy modelが本質的です。一方、すべてのq-acquisitionやasync workflowがmodel-level
@@ -212,13 +210,13 @@ fantasy modelが本質的です。一方、すべてのq-acquisitionやasync wor
 したがって次を分けます。
 
 ~~~text
-q > 1              candidate setのdecision dimension
-X_pending          unresolved real evaluations
-fantasy batch      hypothetical outcomesによるmodel batch dimension
-one-shot rows      acquisition内部のauxiliary decision variables
+q > 1              同時に選ぶ候補集合
+pending            結果待ちの実評価
+fantasy            仮想的な観測結果による条件付け
+auxiliary decisions  lookahead の内部意思決定変数
 ~~~
 
-これらのshapeを相互に推測しません。
+これらの役割は異なります。
 
 ## 4.11 Monte Carlo と sample consistency
 
@@ -251,25 +249,16 @@ q を増やすと候補集合の joint dimension が増え、MC sampling と acq
 
 などを含めて設計する必要があります。
 
-## 4.14 BoTorch / robotorchan との対応
-
-BoTorch は qLogEI、qLogNEI などの batch / noisy acquisition と pending-point semantics
-を提供します。robotorchan は標準手法を再実装せず、BoTorch native path を利用します。
-
-具体的な API は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の対応状況は
-[Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
-
 ## 4.15 この章で覚えておくこと
 
 - q、noise、pending、fantasizationは別の軸
 - q-acquisitionはpointwise score上位q点ではなくjoint utilityを評価する
 - joint semanticsはGaussian covariance matrixに限定されない
 - NEIではobserved bestとlatent baseline uncertaintyを区別する
-- `X_pending` は結果待ちの実評価でありlookahead fantasy variableではない
-- async BOのためにrobotorchan独自scheduler stateは導入しない
-- model `fantasize()` はすべてのbatch / async acquisitionに必須ではない
-- candidate q、fantasy batch、one-shot auxiliary rowsを同じshape axisだと考えない
-- qLogEI / qLogNEIはBoTorch-native pathを利用する
+- pending は結果待ちの実評価であり、lookahead の仮想観測とは異なる
+- すべてのbatch / async acquisitionに仮想観測への条件付けが必須なわけではない
+- 候補集合と仮想観測と内部意思決定変数は異なる役割を持つ
+- qLogEI / qLogNEIは数値安定性を改善する定式化である
 
 ## 4.16 まとめ
 
