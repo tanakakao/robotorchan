@@ -212,12 +212,32 @@ softmaxは全クラスの潜在値に同じ定数を加えても変化しませ�
 各クラスの潜在平均にsoftmaxを適用するだけでは、一般に
 事後不確実性を正しく反映できません。
 
+### 6.4 高次元分類とモデル構造の合成
+
+高次元分類では、入力次元削減、疎な長さ尺度事前分布、ランダム埋め込み、
+ニューラル特徴表現を潜在GPの入力側に組み合わせられます。
+これらは入力の表現や潜在共分散を変える仮定であり、
+Bernoulli尤度と予測クラス確率の定義を自動的に変えるものではありません。
+
+一方、確率校正、適合性予測、アンサンブル、不確実性診断は、
+予測分布をどのように利用・評価するかという別の問題です。
+それぞれを組み合わせる際は、潜在関数の不確実性と
+クラス確率の不確実性を混同しないことが重要です。
+
+マルチフィデリティ、タスク、カテゴリなどの構造列は、
+入力次元削減の対象となる連続設計座標とは統計的な意味が異なります。
+単一の射影に無条件で含めると、根拠のない距離を導入する可能性があります。
+
 ## 7. 参考文献
 
 - Rasmussen, C. E., & Williams, C. K. I. (2006).
   *Gaussian Processes for Machine Learning*, Chapter 3.
 - Hensman, J., Matthews, A. G. de G., & Ghahramani, Z. (2015).
   *Scalable Variational Gaussian Process Classification*. AISTATS.
+- Gal, Y., Islam, R., & Ghahramani, Z. (2017).
+  *Deep Bayesian Active Learning with Image Data*. ICML.
+- Eriksson, D., & Jankowiak, M. (2021).
+  *High-Dimensional Bayesian Optimization with Sparse Axis-Aligned Subspaces*. UAI.
 - Houlsby, N., Huszár, F., Ghahramani, Z., & Lengyel, M. (2011).
   *Bayesian Active Learning for Classification and Preference Learning*.
 
@@ -229,6 +249,7 @@ softmaxは全クラスの潜在値に同じ定数を加えても変化しませ�
 - [High-dimensional GP](08_high_dimensional_gp.md)
 - [Dimensionality Reduction GP](18_dimensionality_reduction_gp.md)
 - [Expressive GP Models](22_expressive_gp.md)
+- [Classification Active Learning](acquisition/classification-active-learning.md)
 
 ライブラリ固有のモデル群、予測API、対応する組合せについては
 [分類モデルガイド](../models/classification.md)を参照してください。
