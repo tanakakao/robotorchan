@@ -5,7 +5,7 @@ directly, while robotorchan owns only functionality that adds a distinct contrac
 
 | Area | Preferred path |
 | --- | --- |
-| Standard BO | Native LogEI, LogPI, UCB, qLogEI, qLogNEI, qUCB, `qProbabilityOfImprovement`, `qSimpleRegret` |
+| Standard BO | Native LogEI, LogPI, UCB (`qUpperConfidenceBound` for MC qUCB), qLogEI, qLogNEI, `qProbabilityOfImprovement`, `qSimpleRegret` |
 | Posterior sampling | `select_thompson_candidates` |
 | Regression AL | `PosteriorVariance`, `PosteriorStd`; native qNIPV for batch AL |
 | Level-set learning | `Straddle`, `BoundaryVariance`, `RandomizedStraddle` |

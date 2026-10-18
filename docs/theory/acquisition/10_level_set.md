@@ -488,25 +488,6 @@ Theory は将来の拡張可能性を説明できますが、現在の利用可�
 - [BoundaryVariance guide](../../optimization/boundary-variance.md)
 - [Acquisition integration status](../../optimization/acquisition-integration.md)
 
-### 10.23.1 現在の level-set registry
-
-現在の registry には
-
-- `BoundaryVariance`
-- `RandomizedStraddle`
-- `Straddle`
-
-が active-learning acquisition として登録されています。
-
-これらは marginal posterior moments を使う `q=1` acquisition です。
-現在の capability metadata では ensemble posterior はサポートせず、
-structured output は scalarization を要求します。
-
-`PosteriorVariance` / `PosteriorStd`を含む現在のrobotorchan-specific regression AL runtimeは、
-いずれもempirical ensemble posteriorを明示的にrejectします。Phase 10監査で確認した通り、
-PosteriorVariance / Stdにはregistry metadata上のensemble supportとの不整合が残っています。
-本章ではruntime behaviorを基準にし、level-set 3手法はいずれもensemble非対応とします。
-
 ## 10.25 この章で覚えておくこと
 
 - function learningとlevel-set learningは同じuncertaintyを使えても目的が違う

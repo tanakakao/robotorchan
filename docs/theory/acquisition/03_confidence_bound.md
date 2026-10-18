@@ -142,17 +142,6 @@ native path を利用します。
 利用方法は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の統合範囲は [Acquisition
 integration status](../../optimization/acquisition-integration.md) を参照してください。
 
-### 3.9.1 現在の qUCB registry contract
-
-現在のregistryでは `qUpperConfidenceBound` をBoTorch-native Monte Carlo acquisitionとして
-扱います。robotorchan独自のqUCB数式やwrapperを追加しているわけではありません。
-
-integration guideではanalytic UCBもnative pathとして利用対象です。registryはBoTorchの全acquisition
-catalogではないため、registry entryの有無とnative APIの存在を区別します。
-
-したがって model compatibility は「GPかどうか」だけでなく、
-posterior sampling capability を満たすかで判定します。
-
 ## 3.11 この章で覚えておくこと
 
 - UCBはposterior meanにuncertainty由来のoptimism bonusを加える考え方
