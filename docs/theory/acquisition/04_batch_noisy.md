@@ -51,7 +51,6 @@ $$
 
 です。
 
-# 4. Batch and Noisy Acquisition
 
 ## 4.4 qEI
 
