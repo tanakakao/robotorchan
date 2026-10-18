@@ -2,7 +2,7 @@
 
 ## 12.1 この章の目的
 
-acquisition optimizer は名前から選ぶのではなく、問題と runtime contract を分解して選びます。
+acquisition optimizer は手法名だけでなく、最適化問題の構造に基づいて選びます。
 
 確認する軸は主に、
 
@@ -11,222 +11,66 @@ acquisition optimizer は名前から選ぶのではなく、問題と runtime c
     -> gradient availability
     -> q semantics
     -> search geometry
-    -> runtime / device
+    -> evaluation cost
 
 です。
 
-理論的に利用可能な手法と、現在の robotorchan API が公開する組合せは同じではありません。
-最終的な source of truth は実装と capability metadata です。
+理論上の適用可能性と、個別ライブラリの実装上の対応状況は区別します。
 
 ## 12.2 まず変数型を確認する
 
-continuous-only problem と integer / categorical を含む問題では探索空間が異なります。
-
-| Backend | Continuous | Integer | Categorical | Mixed |
-| --- | --- | --- | --- | --- |
-| BoTorch named | Yes | No | No | No |
-| BoTorch mixed direct | Yes | Yes | Yes | Yes |
-| Torch Adam/AdamW/SGD | Yes | No | No | No |
-| Random / Sobol | Yes | Yes | Yes | Yes |
-| DE | Yes | Yes | No | Yes |
-| CMA-ES | Yes | No | No | No |
-| GA | Yes | Yes | Yes* | Yes* |
-| PSO | Yes | Yes | No | Yes |
-| Hybrid named | Yes | No | No | No |
-| Hybrid direct | Yes | implementation pathあり | implementation pathあり | implementation pathあり |
-
-`GA` の categorical / mixed capability は `MixedVariableSpace` が与えられた場合に
-Mixed GA backendへdispatchされる経路を含みます。
-
-Hybrid direct と named dispatcher の差は
-[Hybrid Optimization](11_hybrid.md) を参照してください。
+連続変数は勾配法や連続探索に適し、整数・カテゴリ変数にはその離散構造を保つ探索が必要です。
+unordered categorical に数値的な距離を仮定しないことが重要です。
 
 ## 12.3 Smooth continuous acquisition
 
-candidate gradient が利用でき、continuous domain であれば、
-BoTorch multi-start optimization は標準的な構成です。
+滑らかな連続 acquisition では multi-start gradient-based optimization が有力です。
+ただし非凸性があるため、局所解から大域最適性は保証されません。
 
-robotorchan の named `botorch` backend は
+## 12.4 First-order local optimizer
 
-- continuous
-- q-batch
-- sequential
-- fixed features
-- linear / nonlinear candidate constraints
-
-を扱います。
-
-ただし `MixedVariableSpace` を named `optimizer="botorch"` に直接渡す経路はありません。
-Mixed problem では explicit BoTorch mixed backend など、structured-space対応経路を使います。
-
-## 12.4 Torch local optimizer
-
-`torch_adam`、`torch_adamw`、`torch_sgd` は
-Tensor-native gradient optimization です。
-
-現在の capability は
-
-- continuous
-- q-batch
-- fixed features
-- GPU-native
-- batch evaluation
-
-ですが、candidate constraints と sequential dispatch は公開していません。
-
-「gradient-based」であることだけを理由に BoTorch backend と同じ制約機能を
-持つとはみなしません。
+SGD、Adam、AdamW などの一次法は candidate gradient を用います。
+制約を満たすためには射影・変数変換などの追加設計が必要になる場合があります。
 
 ## 12.5 Sampling
 
-Random / Sobol search は gradient を必要とせず、Tensor-native に多数候補を評価できます。
-
-現在の capability metadata では
-
-- continuous / integer / categorical / mixed
-- q-batch
-- fixed features
-- GPU
-- batch evaluation
-
-を持ちます。
-
-一方、一般の `CandidateConstraints` は capability 上 unsupported です。
-
-sampling は baseline、initial exploration、gradient-free search として有用ですが、
-constraint-aware optimizer と同一ではありません。
+Random / Sobol sampling は勾配を必要とせず、探索の基準手法として有用です。
+高次元では被覆に必要な候補数が増えることに注意します。
 
 ## 12.6 Differential Evolution
 
-DE は gradient-free な population search です。
-
-現在の capability は
-
-- continuous
-- integer
-- mixed
-- q-batch
-- fixed features
-- linear / nonlinear / inter-point constraints
-
-です。
-
-categorical capability は持ちません。
-
-constraint handling は現在 feasibility-first です。
-SciPy orchestrationを含むため、numerical optimizer layer は native GPU backend ではありません。
+DE は個体間差分に基づく population search です。
+整数変数には repair を組み込めますが、unordered categorical には type-aware な扱いが必要です。
 
 ## 12.7 CMA-ES
 
-CMA-ES は continuous derivative-free optimization を提供します。
-
-現在の capability は
-
-- continuous
-- q-batch
-- linear / nonlinear / inter-point constraints
-
-です。
-
-integer、categorical、Mixed、fixed features は capability 上公開していません。
-
-constraint handling は penalty です。
-optional dependency と CPU-oriented orchestration も runtime selection に影響します。
+CMA-ES は共分散を適応させる連続空間の分布ベース探索です。
+制約や離散変数を扱う場合は、別途適切な処理が必要です。
 
 ## 12.8 Genetic Algorithm
 
-continuous GA は gradient-free population search です。
-
-通常の GA capability は
-
-- continuous
-- q-batch
-- fixed features
-- GPU
-- batch evaluation
-- candidate constraints
-
-を持ちます。
-
-`optimizer="ga"` に mixed `MixedVariableSpace` を渡すと、
-dispatcher は Mixed GA capability と backend を選択します。
-
-Mixed GA は integer / categorical / mixed variable を扱い、
-constraint handling は feasibility-first です。
+GA は selection、crossover、mutation により探索します。
+Mixed GA では変数型ごとに演算子を変更することでカテゴリ構造を維持できます。
 
 ## 12.9 Particle Swarm Optimization
 
-PSO は gradient-free population search です。
-
-現在の capability は
-
-- continuous
-- integer
-- mixed
-- q-batch
-- fixed features
-- GPU
-- batch evaluation
-- candidate constraints
-
-です。
-
-categorical capability は公開していません。
-constraint handling は penalty です。
+PSO は個体と群れの最良位置を使って探索を更新します。
+連続空間以外へ適用する場合は位置更新や repair の意味を定義する必要があります。
 
 ## 12.10 Hybrid
 
-Hybrid backend は
-
-    derivative-free global search
-      -> explicit initial condition
-      -> BoTorch local refinement
-
-です。
-
-named dispatcher の current capability は continuous q-batch と constraints を中心とし、
-Mixed / fixed features / sequential は公開していません。
-
-direct `optimize_acqf_hybrid()` は Mixed / fixed-feature 実装経路を持つため、
-named capability と direct backend capability を混同しないことが重要です。
+Hybrid optimization は広域探索から局所 refinement へ初期点を引き渡します。
+各段階の制約・座標系・勾配要件を整合させる必要があります。
 
 ## 12.11 NSGA-II
 
-NSGA-II は scalar acquisition optimizer registry の named backend ではなく、
-specialist optimizer です。
-
-現在の capability metadata は
-
-- continuous
-- gradient-free
-- GPU
-- batch evaluation
-
-で、通常の `q_batch` capability は false です。
-
-NSGA-II の population / Pareto semantics を、
-scalar acquisition の joint q-batch semantics と同一視しません。
+NSGA-II は vector-valued objective の Pareto set を近似する手法です。
+多目的 BO の scalar acquisition を最適化する場合に必須というわけではありません。
 
 ## 12.12 Constraint handling は boolean ではない
 
-constraint support は「対応 / 非対応」だけでは不十分です。
-
-現在の主要 semantics は次です。
-
-| Backend | Linear inequality | Linear equality | Nonlinear | Inter-point nonlinear |
-| --- | --- | --- | --- | --- |
-| BoTorch | native | native | native | native |
-| BoTorch mixed | native | native | native | unsupported |
-| DE | feasibility-first | feasibility-first | feasibility-first | feasibility-first |
-| CMA-ES | penalty | penalty | penalty | penalty |
-| GA | feasibility-first | feasibility-first | feasibility-first | feasibility-first |
-| Mixed GA | feasibility-first | feasibility-first | feasibility-first | feasibility-first |
-| PSO | penalty | penalty | penalty | penalty |
-| Hybrid named metadata | penalty | penalty | penalty | penalty |
-| Torch / Random / Sobol / NSGA-II | unsupported | unsupported | unsupported | unsupported |
-
-Hybrid の実際のglobal-stage semanticsは選択した global optimizer に依存し、
-local stage は BoTorch native constraint handling です。
+native enforcement、feasibility-first、penalty、projection、repair、rejection は
+異なる数学的な制約処理方式です。実行可能性の保証と探索挙動も異なります。
 
 ## 12.13 Native / feasibility-first / penalty
 
@@ -242,17 +86,8 @@ infeasible 同士では violation を使って比較します。
 
 ## 12.14 Inter-point constraints
 
-inter-point constraint は1 candidate rowだけでは判定できず、
-joint q-batch 全体を必要とします。
-
-BoTorch continuous、DE、CMA-ES、GA、Mixed GA、PSOなどには
-対応経路がありますが、BoTorch mixed capability は
-inter-point nonlinear constraint を公開していません。
-
-また TuRBO Thompson sampling の finite-pool filtering も
-inter-point constraints を扱いません。
-
-q-batch support と inter-point constraint support は別の capability です。
+inter-point constraint は q-batch 全体の候補間関係を定義します。
+単一点ずつの greedy optimization に分解できるとは限りません。
 
 ## 12.15 Joint q-batch
 
@@ -271,15 +106,8 @@ Random Search でも population method でも、joint acquisition の場合は
 
 ## 12.16 Sequential optimization
 
-sequential optimization は q-batch support とは別です。
-
-named capability で sequential を公開している標準経路は BoTorch backend です。
-
-sequential greedy generation では、選択済み候補を pending context として次の q=1 optimizationへ
-反映する必要があります。
-
-単に q=1 optimizer を q 回呼ぶだけでは、acquisition state が更新されなければ
-同じ意味になりません。
+sequential greedy generation では既選択候補を後続の獲得関数に反映します。
+単に同じ単一点最適化を繰り返すだけでは同等になりません。
 
 ## 12.17 One-shot acquisition
 
@@ -303,31 +131,13 @@ one-shot では専用 optimization path を優先します。
 
 ## 12.18 Fixed features
 
-fixed features は一部 coordinate を既知値に固定する contract です。
+fixed features は探索空間の一部座標を定数に固定する操作です。
+整数・カテゴリ変数では固定値が許容集合に属する必要があります。
 
-現在の named capabilityでは BoTorch、Torch、Random/Sobol、DE、GA、PSO が対応します。
+## 12.19 計算環境と評価コスト
 
-CMA-ES と Hybrid named capability は対応を公開していません。
-
-ただし Hybrid direct backend には fixed-feature path があるため、
-利用する API surface を確認する必要があります。
-
-## 12.19 GPU と batch evaluation
-
-GPU capability は surrogate がGPUに置けるかではなく、
-numerical optimizer が device-native に動くかを表します。
-
-現在 Tensor-native として扱われる主な backend は
-
-- Torch optimizer
-- Random / Sobol
-- GA / Mixed GA
-- PSO
-- NSGA-II
-
-です。
-
-SciPy DE、CMA-ES、Hybrid orchestrationは numerical optimizer layer ではCPU-orientedです。
+acquisition の評価コストと数値 optimizer の評価回数を区別します。
+GPU 上で surrogate を評価できても、探索手法全体が GPU-native とは限りません。
 
 ## 12.20 High-dimensional search
 
@@ -430,60 +240,29 @@ Hybridは複数backendをstageとして接続する orchestration です。
 
 この区別を保つと、機能の組合せ可否を名前だけで判断することを避けられます。
 
-## 12.26 実装ベースの選択フロー
+## 12.26 理論に基づく選択フロー
 
-実際には次の順序で絞り込みます。
+1. 連続・整数・カテゴリ変数の構造を確認する
+2. 制約の種類と実行可能集合を確認する
+3. joint q / sequential / one-shot を区別する
+4. candidate gradient の利用可能性を確認する
+5. fixed features と探索座標系を確認する
+6. 評価コストと計算予算を考慮する
 
-    1. continuous / integer / categorical / mixed
-    2. CandidateConstraints の種類
-    3. joint q / sequential / one-shot
-    4. gradient availability
-    5. fixed features
-    6. high-dimensional / trust-region geometry
-    7. GPU / batch evaluation
-    8. named dispatcher か specialist direct API か
-    9. capability metadata と runtime validation を確認
+## 12.27 理論と実装の対応
 
-この順序なら「理論的に使えそうだが現在のAPIでは拒否される」組合せを早めに検出できます。
+数学的に適用可能な手法が、特定の実装ですべて利用可能とは限りません。
+実際の対応状況は [Optimization guides](../../optimization/README.md) を参照してください。
 
-## 12.27 Capability metadata は runtime contract
+## 12.28 特殊な最適化構造
 
-`OptimizerCapabilities` は説明用ラベルだけではありません。
+Mixed、one-shot、vector-valued objective、trust-region search は通常の
+continuous scalar optimization と異なる構造を持ちます。
 
-named dispatcher は
+## 12.29 適用可能性の限界
 
-- variable-space support
-- fixed features
-- sequential
-- constraint support
-
-を optimization 開始前に検証します。
-
-unsupported combination は黙って近似するのではなく、原則として明示的に拒否します。
-
-この fail-fast behavior は optimizer selection の一部です。
-
-## 12.28 Specialist API
-
-すべての optimizer が `OPTIMIZER_CAPABILITIES` registry に入るわけではありません。
-
-registry は scalar `robotorchan.optim.optimize_acqf()` が受け取る named backend を対象にします。
-
-BoTorch mixed、Mixed GA、NSGA-IIなどには specialist capability descriptor / direct API があり、
-named registry にないこと自体は「未実装」を意味しません。
-
-## 12.29 Compatibility matrix の読み方
-
-表で Yes でも、次の条件まで自動的に保証するわけではありません。
-
-- arbitrary one-shot acquisition
-- arbitrary search embedding
-- arbitrary custom constraints
-- arbitrary custom global optimizer
-- cross-device bitwise reproducibility
-- search strategyとの任意合成
-
-capability はその backend が公開している contract の範囲で解釈します。
+ある探索手法が変数型に適合しても、任意の制約、one-shot、embedding、
+並列化との組合せが数学的・数値的に適切とは限りません。
 
 ## 12.30 最終確認
 
