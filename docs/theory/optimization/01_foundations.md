@@ -84,24 +84,26 @@ optimizer の適用可能性は continuous / integer / categorical、
 gradient requirement、q-batch、sequential、fixed features、
 candidate constraints、GPU などで決まります。
 
-robotorchan はこれらを optimizer capability として実装側で明示します。
+適用可能性の評価では、数学的な可微分性、変数型、制約の性質、batch の結合構造を個別に確認します。
 
 ## 1.8 Constraint semantics
 
 candidate constraint の support は boolean だけでは十分ではありません。
 
-robotorchan では native、penalty、feasibility-first、repair、projection、
-rejection を異なる enforcement semantics として区別します。
+制約を厳密に満たす探索（native / feasibility-first / projection / rejection）と、
+違反量を目的関数へ組み込む penalty、候補を修復する repair は異なる方式です。
+penalty 法では有限の重みだけで厳密な実行可能性が保証されるとは限りません。
 
 同じ feasible set を対象としても、探索 trajectory や境界付近の挙動は同一ではありません。
 
-## 1.9 実装との対応
+## 1.9 探索原理の分類
 
-現在の scalar dispatcher には BoTorch、Torch optimizer、random、Sobol、
-DE、CMA-ES、GA、PSO、hybrid があります。
+局所勾配法、random / quasi-random sampling、進化計算、mixed-variable search、
+trust-region search、hybrid optimization は異なる探索原理です。
+search geometry と数値 optimizer の選択は分離して考えます。
 
-Mixed GA、BoTorch mixed、NSGA-II など specialist backend は
-public primitive / capability を持ちますが、scalar dispatcher 名とは別です。
+ライブラリ固有の対応状況と API は
+[Optimization guides](../../optimization/README.md) を参照してください。
 
 ## 参考文献
 
