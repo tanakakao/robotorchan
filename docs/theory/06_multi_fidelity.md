@@ -441,7 +441,15 @@ $$
 
 ---
 
-## 6.13 SingleTaskMultiFidelityGP
+## 6.13 Fidelity-aware covariance
+
+Multi-Fidelity GP は設計変数 $x$ と fidelity $s$ の組を入力とし、
+$k((x,s),(x',s'))$ によって fidelity 間の情報共有を表します。
+同じ設計条件でも fidelity が異なれば、応答は一般に一致しません。
+
+Fidelity-aware posterior を構築することと、評価予算の配分方針を定めることは別です。
+後者には acquisition、評価コスト、停止条件などの意思決定が必要です。
+
 
 robotorchanではBoTorchのMulti-Fidelity GPを共通wrapper APIで利用できます。
 
@@ -488,7 +496,14 @@ low fidelityを何回使うか
 これらは acquisition、cost-aware utility、candidate optimization、停止条件などの
 意思決定層で扱います。**Multi-Fidelity model と MFBO policy は同義ではありません。**
 
-## 6.14 iteration_fidelity と data_fidelities
+## 6.14 Fidelity の意味による区別
+
+反復回数・学習 epoch のように計算の進行度を表す fidelity と、
+データ量・解像度・物理モデル精度などを表す fidelity は、
+いずれも評価条件ですが、自然な相関構造は同じとは限りません。
+
+順序、連続性、target fidelity との相関を問題ごとに定義する必要があります。
+
 
 `SingleTaskMultiFidelityGP`では、fidelityの意味に応じて指定方法が分かれます。
 
@@ -527,7 +542,16 @@ data_fidelities: Sequence[int] | None
 
 ---
 
-## 6.14.1 Mixed × Multi-Fidelity の現在の実装境界
+## 6.14.1 Mixed × Multi-Fidelity の共分散仮定
+
+カテゴリ設計変数と fidelity は異なる統計的意味を持ちます。
+カテゴリ変数の類似性と fidelity 間の相関は、それぞれ妥当な
+共分散構造で表現し、必要に応じて組み合わせます。
+
+Fidelity をカテゴリ設計変数と同一視すると、評価精度やコストの順序情報を
+失う場合があります。ただし離散 fidelity に順序構造を仮定できない場合は、
+カテゴリ的な共分散モデルも選択肢になります。
+
 
 現在の robotorchan には `MixedSingleTaskMultiFidelityGP` があります。
 
@@ -906,9 +930,8 @@ optimizer側
 
 の両方を考える必要があります。
 
-robotorchanには `MixedSingleTaskMultiFidelityGP` があり、categorical design featureと
-fidelity featureを分離して扱います。`cat_dims` はdesign-side categoryを指し、
-`iteration_fidelity` / `data_fidelities` と同じ列を指定することはできません。
+カテゴリ設計変数と fidelity を異なる構造としてモデル化し、
+探索候補ではカテゴリの許容値と fidelity の実行可能集合を同時に守ります。
 
 したがってMixed × Multi-Fidelityでも
 
@@ -959,7 +982,16 @@ Multi-Fidelity
 
 ---
 
-## 6.28 robotorchanでの基本例
+## 6.28 理論的なモデル化の例
+
+設計変数 $x=(x_1,x_2)$ と fidelity $s$ を用いて、
+観測 $y=f(x,s)+\epsilon$ を考えます。
+目標は target fidelity $s_\star$ での目的関数を最適化することです。
+
+低 fidelity の観測が有用かどうかは、$f(x,s)$ と
+$f(x',s_\star)$ の共分散および評価コストに依存します。
+そのため低 fidelity の値を直接最大化することは、一般には目的と一致しません。
+
 
 ```python
 import torch
@@ -997,7 +1029,15 @@ target fidelityへのprojection、acquisition optimizerを組み合わせます�
 
 ---
 
-## 6.29 Raw Dataと共通API
+## 6.29 観測データと事後更新
+
+観測データは設計変数、fidelity、観測値の組
+$\mathcal D=\{(x_i,s_i,y_i)\}_{i=1}^{n}$ として表せます。
+新しい観測を追加すると、その fidelity に関する情報が
+共分散を介して target fidelity の事後分布にも反映されます。
+
+観測ノイズの仮定と、fidelity による系統的なモデル差は区別します。
+
 
 robotorchan wrapperでは他のsupervised modelと同様に
 
