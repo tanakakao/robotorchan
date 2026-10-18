@@ -486,8 +486,8 @@ $$
 
 ここで $`s`$ は単なる追加特徴量ではなく、**観測精度・情報源の構造を表す特殊な入力**です。
 
-したがって、通常の `SingleTaskGP` へfidelity列を何も考えず追加することと、
-`SingleTaskMultiFidelityGP` でfidelity構造を明示することは同じではありません。
+したがって、fidelity を通常の数値特徴量として扱うモデルと、
+fidelity 間の相関を明示的に仮定するモデルでは、事前共分散の意味が異なります。
 
 ---
 
@@ -567,15 +567,7 @@ continuous fidelity ? → continuous optimization
 
 Mixed Variablesと同様、Multi-Fidelityでもモデルとoptimizerの責務を分離することが重要です。
 
-`SingleTaskMultiFidelityGP`は
-
-```text
-(x, fidelity)
-      ↓
-posterior
-```
-
-を定義します。
+Multi-Fidelity の確率モデルは $(x,s)$ に関する事後分布を定義します。
 
 一方、
 
@@ -589,7 +581,7 @@ posterior
 したがって
 
 ```text
-SingleTaskMultiFidelityGP
+Fidelity-aware probabilistic model
         ↓
 Posterior across fidelities
         ↓
@@ -922,7 +914,7 @@ $\mathcal D=\{(x_i,s_i,y_i)\}_{i=1}^{n}$ として表せます。
 3. **cost差は十分あるか** — MF化の複雑さに見合う節約余地があるか。
 4. **実行可能なfidelity値は何か** — continuousか、有限個のdiscrete値か。
 
-この4点が曖昧なまま `SingleTaskMultiFidelityGP` を選んでも、
+この4点が曖昧なまま Multi-Fidelity の確率モデルを選んでも、
 MFBOとしての意思決定問題は定義できません。
 
 ## 6.31 よくある誤解
@@ -935,7 +927,7 @@ MFBOとしての意思決定問題は定義できません。
 
 精度・cost・targetへの関係を持つ点が異なります。
 
-### 「SingleTaskMultiFidelityGPを使えばcost-awareになる」
+### 「Fidelity-aware GPを使えば自動的にcost-awareになる」
 
 モデルはposteriorを定義するものです。cost-awareな意思決定はacquisition側で設計します。
 
@@ -962,7 +954,7 @@ Multi-Fidelity BOの中心は、
 ```text
 Design x + Fidelity s
         ↓
-SingleTaskMultiFidelityGP
+Fidelity-aware probabilistic model
         ↓
 Posterior across fidelities
         ↓
