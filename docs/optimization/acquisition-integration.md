@@ -31,6 +31,28 @@ See the compatibility contract below for the distinction between registry metada
 and executable runtime support. Theory chapters define acquisition utilities,
 not a snapshot of these identifiers.
 
+## Selection-time runtime guardrails
+
+Theoretical coverage is not proof of executable support. Check the current acquisition,
+posterior, and optimizer contracts together.
+
+| Workflow | Current interpretation |
+| --- | --- |
+| `PosteriorVariance` / `PosteriorStd` | q=1; empirical ensemble posterior rejected |
+| EPIG | q=1, single-output, joint Gaussian, finite target set |
+| Straddle family | q=1; structured outputs need scalarization; ensemble unsupported |
+| RandomizedStraddle | Current coefficient uses chi-square(2) beta and sqrt(beta) times std |
+| qKG | Single-output registry contract; fantasize + one-shot required |
+| Mixed qKG | q=1 dedicated mixed one-shot path runtime-validated |
+| qMFKG | Single-output + multi-fidelity + fantasize + one-shot |
+| Mixed qMFKG | q=1 dedicated mixed one-shot path runtime-validated |
+| HVKG | Theory coverage only; not currently integration-tested |
+| MF-MES | Theory coverage only; outside runtime-validated contract |
+| Candidate constraints | Optimizer responsibility, not acquisition supports_constraints |
+
+These entries are snapshots of documented integration boundaries. Check executable
+tests before treating any combination as supported.
+
 ## Explicit limitations
 
 Robotorchan-specific q=1 regression acquisitions do not claim structured-output or arbitrary
