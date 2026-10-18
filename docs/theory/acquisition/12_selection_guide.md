@@ -658,58 +658,25 @@ BoTorch native で十分な標準 acquisition は再実装せず、robotorchan-s
 ## 12.31.1 理論と実行可能性を分ける
 
 理論上の分類だけで model / acquisition / optimizer の組合せを決めないことが重要です。
+acquisition が必要とする posterior information（marginal moments、joint samples、
+fantasization）と、optimizer が扱う decision variables（continuous、mixed、
+one-shot auxiliary variables）を区別します。
 
-現在の robotorchan は acquisition ごとに、少なくとも次の capability を区別します。
+実利用時は次の順序で検討します。
 
-- posterior requirement: marginal moments / joint Gaussian / posterior samples
-- multi-output support
-- ensemble-posterior support
-- output / black-box constraint composition
-- multi-objective support
-- fantasize requirement
-- multi-fidelity requirement
-- one-shot semantics
-
-さらにoptimizer compatibilityは別レイヤーです。通常のgeneric mixed optimizerはone-shot acquisitionへ
-そのまま適用しませんが、現在はqKG / qMFKGについてq=1の専用
-`optimize_mixed_one_shot_acqf` pathがruntime-validatedです。したがって `one_shot=True` だけを見て
-mixed workflow全体を非対応と判定するのも誤りです。
-
-またregistry metadata自体もruntime behaviorと不整合になり得ます。Phase 10監査では
-`PosteriorVariance` / `PosteriorStd`のensemble metadataと実装のreject behaviorに不整合を確認しています。
-registryは重要なstatic compatibility surfaceですが、最終的にはexecutable integration / runtime testまで
-確認します。
-
-したがって実利用時の確認順序は、
-
-```text
+~~~text
 problem semantics
   -> acquisition family
   -> model/acquisition compatibility
   -> acquisition/optimizer compatibility
-  -> runtime validation
-```
+  -> executable validation
+~~~
 
-と考えるのが安全です。
-
-## 12.32 Current runtime guardrails
-
-現在の選択時に特に見落としやすい境界は次の通りです。
-
-| Workflow | Current interpretation |
-| --- | --- |
-| `PosteriorVariance` / `PosteriorStd` | q=1; runtimeはempirical ensemble posteriorをreject |
-| EPIG | q=1, single-output, joint Gaussian, finite target set |
-| Straddle family | q=1; structured outputはscalarization; ensemble非対応 |
-| qKG | single-output registry contract; fantasize + one-shot required |
-| mixed qKG | q=1 dedicated mixed one-shot pathのみruntime-validated |
-| qMFKG | single-output + multi-fidelity + fantasize + one-shot |
-| mixed qMFKG | q=1 dedicated mixed one-shot pathのみruntime-validated |
-| HVKG | theory coverage; current integration-test対象外 |
-| MF-MES | theory coverage; current runtime-validated contract外 |
-| candidate constraints | optimizer responsibility; acquisition `supports_constraints`とは別 |
-
-この表もsource of truthそのものではありません。実利用時はintegration guideとruntime testsを確認します。
+現在のregistry名、対応するposterior、q-batch、mixed one-shot、ensemble、
+multi-fidelity、制約などの実装条件は
+[Acquisition integration status](../../optimization/acquisition-integration.md) と
+各optimization guideを参照してください。理論上の適用可能性は、現在のruntime
+supportを保証しません。
 
 ## 12.33 この章で覚えておくこと
 
