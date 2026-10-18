@@ -269,26 +269,6 @@ robotorchan は標準 MOBO acquisition をローカルに再実装せず、BoTor
 実際の利用方法は [Multi-objective optimization guide](../../optimization/multiobjective.md)、現在の統合状況は
 [Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
-### 7.16.1 現在の multi-objective registry
-
-現在の registry では、BoTorch-native acquisition として
-
-- `qLogExpectedHypervolumeImprovement`
-- `qLogNoisyExpectedHypervolumeImprovement`
-- `qLogNParEGO`
-
-を明示的に登録しています。
-
-いずれも posterior samples を要求し、multi-objective capability を持ちます。
-また output / black-box constraint composition をサポートするものとして metadata 化されています。
-
-ここでいうconstraint supportはcandidate/input-space constraintを意味しません。
-後者はacquisition optimizerのfeasibility contractです。
-
-現在のintegration guideではqLogEHVI / qLogNEHVI / qLogNParEGOをintegration pathとして扱います。
-HVKGは理論上・BoTorch-native APIとして説明できますが、robotorchanではまだintegration-testedとは
-していません。理論章にあることをruntime supportの主張へ読み替えないでください。
-
 ## 7.18 この章で覚えておくこと
 
 - Multi-output modelとMulti-objective optimizationは別概念
