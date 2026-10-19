@@ -20,3 +20,33 @@ Use `register_standard_problems(registry)` to register the suite.
 Run each method with the same `BenchmarkExperimentConfig` seeds and initial
 design for paired comparisons. This phase expands problem coverage; statistical
 performance claims require the later fair-comparison and multi-seed phases.
+
+## Minimal executable example
+
+The registry factories return fresh `BenchmarkProblem` instances. Explicit
+registration avoids global import side effects. For a deterministic,
+unconstrained, continuous benchmark run:
+
+```python
+from robotorchan.benchmarks import (
+    BenchmarkExperimentConfig,
+    BenchmarkProblemRegistry,
+    random_candidates,
+    register_standard_problems,
+    run_benchmark,
+)
+
+registry = BenchmarkProblemRegistry()
+register_standard_problems(registry)
+config = BenchmarkExperimentConfig(
+    problem="branin",
+    strategy="random",
+    seeds=(0, 1, 2),
+    initial_points=8,
+    evaluation_budget=20,
+    q=3,
+)
+trajectories = run_benchmark(config, random_candidates, registry=registry)
+```
+
+This is an execution example, not evidence of optimizer superiority.
