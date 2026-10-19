@@ -17,7 +17,7 @@ robotorchan のモデル・探索戦略を、再現可能な条件で比較す�
 
 - [Synthetic problem and reference feasibility](heterogeneous-e2e-benchmark.md)
 - [Reproducible benchmark report generator](heterogeneous-e2e-benchmark-report.md)
-- [Random, Sobol, and qEI baseline evaluation](heterogeneous-e2e-baselines.md)
+- [Random, Sobol, and qEI baseline evaluation](heterogeneous-e2e-multiseed.md)
 - [Sequential closed-loop smoke evaluation](heterogeneous-e2e-closed-loop.md)
 - [Paired multi-seed statistical evaluation](heterogeneous-e2e-multiseed.md)
 
