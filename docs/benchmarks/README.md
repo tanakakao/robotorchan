@@ -6,7 +6,7 @@ robotorchan のモデル・探索戦略を、再現可能な条件で比較す�
 
 比較実験を再現・解釈する際は、次の順に確認してください。
 
-1. **問題定義**: [Problem contract](problem-contract.md)、[Problem registry](problem-registry.md)、[Standard problems](standard-problems.md)、[Heterogeneous problems](heterogeneous-problems.md)
+1. **問題定義**: [Problem contract](problem-contract.md)、[Problem registry](problem-registry.md)、[Standard problems](single_objective.md)、[Heterogeneous problems](heterogeneous-problems.md)
 2. **実行条件**: [Experiment configuration](experiment-configuration.md)、[Execution profiles](execution_profiles.md)、[Environment provenance](environment_provenance.md)、[Fairness protocol](comparative-fairness-protocol.md)
 3. **評価・集計**: [Metrics](metrics.md)、[Multi-seed statistics](multiseed_statistics.md)、[Comparative experiment matrix](comparative-experiment-matrix.md)、[Empirical evaluation protocol](empirical-evaluation-protocol.md)
 4. **結果と証拠**: [Reporting](reporting.md)、[Empirical measured report](empirical-measured-report.md)、[Empirical evaluation status](empirical-evaluation.md)
