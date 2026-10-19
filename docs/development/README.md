@@ -25,7 +25,7 @@ The following historical test records document what was checked, not current pub
 
 - [Binary classification verification](heterogeneous-e2e-classification.md)
 - [Regression verification](heterogeneous-e2e-regression.md)
-- [Regression surrogate variations](heterogeneous-e2e-regression-variations.md)
+- [Regression surrogate variations](heterogeneous-e2e-regression.md)
 - [Runtime and shape compatibility](heterogeneous-e2e-runtime-compatibility.md)
 - [Negative-path and edge-failure tests](heterogeneous-e2e-edge-failures.md)
 - [Final cross-phase verification audit](heterogeneous-e2e-verification.md)
