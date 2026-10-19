@@ -28,3 +28,36 @@ optimization, use a compatible candidate generator with the same
 `(q, d)` tensor contract.
 
 Register all problems using `register_mixed_problems(registry)`.
+
+## Executable mixed-variable smoke example
+
+```python
+from robotorchan.benchmarks import (
+    BenchmarkExperimentConfig,
+    BenchmarkProblemRegistry,
+    random_candidates,
+    register_mixed_problems,
+    run_benchmark,
+)
+
+registry = BenchmarkProblemRegistry()
+register_mixed_problems(registry)
+config = BenchmarkExperimentConfig(
+    problem="mixed_quadratic",
+    strategy="random",
+    seeds=(0, 1, 2),
+    initial_points=8,
+    evaluation_budget=24,
+    q=3,
+)
+trajectories = run_benchmark(config, random_candidates, registry=registry)
+```
+
+The `mixed_quadratic` optimum is `(0.8, 2, 1)` and the
+`categorical_switch` optimum is `(0.7, 1)`. Both have optimal value
+`0` (minimize) and `1` (maximize), respectively. Categorical codes
+such as `0`, `1`, and `2` are nominal labels without an ordinal distance.
+Rounding by the baseline Sobol and random candidate generators supports
+an end-to-end smoke test, but does **not** establish uniform sampling
+across discrete levels or the quality of specialized mixed-variable
+acquisition optimization.
