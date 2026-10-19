@@ -19,6 +19,17 @@
 - [`documentation-structure-contract.md`](documentation-structure-contract.md): documentation の責務分離と継続的な検証範囲
 - [`benchmark-persistence-schema-boundaries.md`](benchmark-persistence-schema-boundaries.md): benchmark JSON schema の互換性境界
 
+## Heterogeneous E2E verification records
+
+The following historical test records document what was checked, not current public API specifications or performance certifications. Current usage and support boundaries belong in the [Optimization guides](../optimization/README.md), while measured evaluation protocols belong in the [Benchmark guides](../benchmarks/README.md). Phase 6 will consolidate these records and remove redundant per-phase documents after preserving their unique test contracts.
+
+- [Binary classification verification](heterogeneous-e2e-classification.md)
+- [Regression verification](heterogeneous-e2e-regression.md)
+- [Regression surrogate variations](heterogeneous-e2e-regression-variations.md)
+- [Runtime and shape compatibility](heterogeneous-e2e-runtime-compatibility.md)
+- [Negative-path and edge-failure tests](heterogeneous-e2e-edge-failures.md)
+- [Final cross-phase verification audit](heterogeneous-e2e-verification.md)
+
 ## Temporary design records
 
 audit、prototype、feasibility、gap、個別 model design の文書は恒久仕様ではありません。
