@@ -13,6 +13,13 @@ robotorchan のモデル・探索戦略を、再現可能な条件で比較す�
 
 実行可能なベンチマークやレポート生成手順が存在しても、実測比較が完了したことや最適化性能の優位性が認定されたことは意味しません。各レポートの実行状態・評価条件・証拠を確認してください。
 
+## Heterogeneous end-to-end benchmark
+
+- [Synthetic problem and reference feasibility](heterogeneous-e2e-benchmark.md)
+- [Reproducible benchmark report generator](heterogeneous-e2e-benchmark-report.md)
+
+These documents define a synthetic problem and an executable report protocol; neither constitutes a certified measured performance result.
+
 ## Expressive surrogate models
 
 - [Predictive benchmark](expressive_predictive.md)
