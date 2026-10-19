@@ -32,12 +32,12 @@ surrogate model とは独立した candidate search / optimization の利用者�
 
 回帰・分類・制約・多目的を組み合わせた検証資料は、用途別に次の文書を参照してください。
 
-- **問題と意味付け**: [Synthetic benchmark](heterogeneous-e2e-benchmark.md)、[Semantic contract](heterogeneous-e2e-semantics.md)、[Acquisition composition](heterogeneous-e2e-acquisition-composition.md)
+- **問題と意味付け**: [Synthetic benchmark](../benchmarks/heterogeneous-e2e-benchmark.md)、[Semantic contract](heterogeneous-e2e-semantics.md)、[Acquisition composition](heterogeneous-e2e-acquisition-composition.md)
 - **単目的・回帰**: [Single-objective](heterogeneous-e2e-single-objective.md)、[Regression](heterogeneous-e2e-regression.md)、[Regression variations](heterogeneous-e2e-regression-variations.md)
 - **分類・制約**: [Classification](heterogeneous-e2e-classification.md)、[Classification constraints](heterogeneous-e2e-classification-constrained.md)、[Mixed constraints](heterogeneous-e2e-mixed-constraints.md)
 - **多目的・確率目的**: [Multi-objective](heterogeneous-e2e-multiobjective.md)、[Constrained multi-objective](heterogeneous-e2e-constrained-multiobjective.md)、[Probability objective](heterogeneous-e2e-probability-objective.md)
 - **実行・基準手法**: [Baselines](heterogeneous-e2e-baselines.md)、[Closed-loop](heterogeneous-e2e-closed-loop.md)、[Multi-seed](heterogeneous-e2e-multiseed.md)、[Runtime compatibility](heterogeneous-e2e-runtime-compatibility.md)
-- **検証と制限**: [Edge failures](heterogeneous-e2e-edge-failures.md)、[Verification](heterogeneous-e2e-verification.md)、[Benchmark report generator](heterogeneous-e2e-benchmark-report.md)
+- **検証と制限**: [Edge failures](heterogeneous-e2e-edge-failures.md)、[Verification](heterogeneous-e2e-verification.md)、[Benchmark report generator](../benchmarks/heterogeneous-e2e-benchmark-report.md)
 
 これらは機能・契約・検証範囲の記録です。レポート生成コードや限定的なテストの存在を、包括的な性能実証またはリリース認定と解釈しないでください。比較実験の共通条件は [Benchmark guides](../benchmarks/README.md) を参照してください。
 
