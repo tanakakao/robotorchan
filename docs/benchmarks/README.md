@@ -23,6 +23,15 @@ robotorchan のモデル・探索戦略を、再現可能な条件で比較す�
 
 These documents define a synthetic problem and an executable report protocol; neither constitutes a certified measured performance result.
 
+## Historical benchmark audit records
+
+These dated audit snapshots are retained as historical evidence, not as current implementation or release status. Consult the current benchmark contracts and actual execution artifacts before making capability or performance claims.
+
+- [Comparative capability audit (2026-10-09)](comparative-capability-matrix.md)
+- [Comparative benchmark validation and release criteria](comparative-benchmark-validation.md)
+- [Benchmark Phase 30 release-readiness review](release_readiness.md)
+- [Empirical performance coverage and execution gates (2026-10-11)](empirical-evaluation.md)
+
 ## Expressive surrogate models
 
 - [Predictive benchmark](expressive_predictive.md)
