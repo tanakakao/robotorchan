@@ -22,7 +22,7 @@ Reuse the existing problem registry, runner, profiles, trajectory storage, paire
 1. The native `make_botorch_gp_strategy` supports unconstrained continuous single-objective qEI/qNEI only. Confirm qEHVI/qNEHVI strategy callbacks and compare their settings with BoTorch before claiming full benchmark support.
 2. `hypervolume_curve` is documented as two-objective only, whereas `dtlz2` has three objectives. Implement or reuse tested multi-dimensional hypervolume calculation before DTLZ2 evaluation.
 3. `branin_currin` has a reference point but no stored reference front. Define a reproducible reference HV before reporting HV regret.
-4. `docs/optimization/heterogeneous-e2e-constrained-multiobjective.md` describes marginal PoF weighting and a qNEHVI path without baseline feasibility correction. Do not label it exact joint-MC constrained hypervolume improvement.
+4. `docs/optimization/heterogeneous-e2e-multiobjective.md` describes marginal PoF weighting and a qNEHVI path without baseline feasibility correction. Do not label it exact joint-MC constrained hypervolume improvement.
 5. `docs/optimization/heterogeneous-e2e-classification-constrained.md` documents marginal PoF weighting and no qNEI baseline feasibility correction. Separate approximation comparisons from exact constrained acquisition comparisons.
 6. `docs/benchmarks/end_to_end.md` documents that resume does not capture global RNG, model/optimizer state or stochastic observation noise. Specify deterministic noise and restart protocol.
 7. Make acquisition MC sample counts, optimizer restart/raw sample counts, fit time, construction time, optimizer time, and seed handling explicit in Phase 2.
