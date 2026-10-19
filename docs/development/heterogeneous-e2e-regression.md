@@ -25,3 +25,21 @@ pytest -q tests/benchmarks/test_heterogeneous_regression_e2e.py
 
 Classifier training, semantics, acquisition composition, and closed-loop
 optimization remain in subsequent phases.
+
+## Exact and variational surrogate compatibility (historical Phase 16)
+
+The same heterogeneous synthetic Strength observations are used to
+validate the semantic qEI and candidate optimization pipeline with
+both exact `SingleTaskGP` and approximate `SingleTaskVariationalGP`.
+The exact model fits its marginal likelihood; the variational model
+uses Adam and `VariationalELBO` with eight inducing points. Tests verify
+retention of raw training data, finite native BoTorch posteriors,
+batched qEI evaluation, and bounded candidate generation at q=1 and q=2.
+
+This is a **model-family integration check**, not a predictive accuracy
+or runtime comparison. The variational fit uses a short fixed iteration
+budget and may not have converged. Classification, multitask, mixed
+categorical, and high-dimensional surrogate variants require separate
+compatibility coverage.
+
+Run `pytest -q tests/benchmarks/test_heterogeneous_regression_variations_e2e.py`.
