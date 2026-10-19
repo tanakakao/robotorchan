@@ -6,18 +6,18 @@
 
 現在仕様の source of truth として扱う恒久文書は次のとおりです。
 
-- `acquisition-architecture.md`: acquisition の責務と custom 実装境界
-- `architecture.md`: BoTorch extension としての package / API 設計、リポジトリ配置責務
-- `model_design_guidelines.md`: model 追加・変更時の設計原則
-- `kronecker_research_gates.md`: 未実装 Kronecker 拡張の統計・実装ゲート
-- `classification_ordinal_research_gates.md`: 分類・ordinal model / AL の統計・実装ゲート
-- `input_perturbation_contract.md`: decision-time input perturbation の認定契約
-- `external_non_gp_surrogates.md`: 未実装 external non-GP adapter の統合契約
-- `training_api.md`: `make_mll()` と training API の契約
-- `releasing.md`: version、GitHub Release、PyPI 公開手順
-- `repository-structure-cleanup-contracts.md`: package 境界と安全な整理の契約
-- `documentation-structure-contract.md`: documentation の責務分離と継続的な検証範囲
-- `benchmark-persistence-schema-boundaries.md`: benchmark JSON schema の互換性境界
+- [`acquisition-architecture.md`](acquisition-architecture.md): acquisition の責務と custom 実装境界
+- [`architecture.md`](architecture.md): BoTorch extension としての package / API 設計、リポジトリ配置責務
+- [`model_design_guidelines.md`](model_design_guidelines.md): model 追加・変更時の設計原則
+- [`kronecker_research_gates.md`](kronecker_research_gates.md): 未実装 Kronecker 拡張の統計・実装ゲート
+- [`classification_ordinal_research_gates.md`](classification_ordinal_research_gates.md): 分類・ordinal model / AL の統計・実装ゲート
+- [`input_perturbation_contract.md`](input_perturbation_contract.md): decision-time input perturbation の認定契約
+- [`external_non_gp_surrogates.md`](external_non_gp_surrogates.md): 未実装 external non-GP adapter の統合契約
+- [`training_api.md`](training_api.md): `make_mll()` と training API の契約
+- [`releasing.md`](releasing.md): version、GitHub Release、PyPI 公開手順
+- [`repository-structure-cleanup-contracts.md`](repository-structure-cleanup-contracts.md): package 境界と安全な整理の契約
+- [`documentation-structure-contract.md`](documentation-structure-contract.md): documentation の責務分離と継続的な検証範囲
+- [`benchmark-persistence-schema-boundaries.md`](benchmark-persistence-schema-boundaries.md): benchmark JSON schema の互換性境界
 
 ## Temporary design records
 
@@ -35,11 +35,12 @@ audit、prototype、feasibility、gap、個別 model design の文書は恒久�
 
 ## Documentation ownership
 
-公開モデルの利用方法は `docs/models/`、理論的背景は `docs/theory/`、
-最適化手順は `docs/optimization/` を正とします。
+公開モデルの利用方法は [Models](../models/README.md)、理論的背景は
+[Theory](../theory/README.md)、最適化手順は
+[Optimization](../optimization/README.md) を正とします。
 
 public model の documentation coverage は
-`docs/model_coverage.json` と対応する coverage test を正とします。
+[model_coverage.json](../model_coverage.json) と対応する coverage test を正とします。
 
 利用者に必要な現行仕様を development 文書だけに置かないことを原則とします。
 このディレクトリには、開発者が継続的に守る必要がある契約だけを残します。
