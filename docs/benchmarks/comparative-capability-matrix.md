@@ -1,5 +1,7 @@
 # Comparative optimization benchmark — Phase 1 capability audit
 
+> **Historical audit snapshot:** This is a point-in-time static capability inventory. Its gap list is not a current unsupported-feature matrix; recheck the latest implementation and benchmark contracts before relying on it.
+
 Audit date: 2026-10-09. Source: repository default branch `main` (inspect commit SHA again before Phase 2).
 
 ## Scope and decision
