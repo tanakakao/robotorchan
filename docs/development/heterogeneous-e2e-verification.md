@@ -4,7 +4,7 @@
 
 **Audit outcome: partial coverage, not release certification.** This phase adds a small cross-phase contract test and a traceable coverage / gap inventory. Passing the tests does not certify all optimizer, classification, or multiobjective workflows.
 
-The audit source is the repository `main` at the time the Phase 20 branch was created. The Phase 19 pull request #1028 passed CI at commit `c605854278cbce6ba8c7e35e0c2b69c125e93a91`. Phase 20 CI and the full-suite result must be verified separately before merging.
+This is a **historical Phase 20 audit snapshot**, based on the repository state at the time. The Phase 19 pull request #1028 passed CI at commit `c605854278cbce6ba8c7e35e0c2b69c125e93a91`. That evidence does not establish the current `main` status or a current full-suite pass; verify current CI and execution artifacts independently.
 
 ## Covered by the cross-phase contract test
 
@@ -38,7 +38,7 @@ The audit source is the repository `main` at the time the Phase 20 branch was cr
 5. **Notebook execution:** Phase 19 tests check JSON structure and Python syntax; execute the notebook in a clean environment before claiming end-user reproducibility.
 6. **Performance and significance:** three seeds and three additional evaluations are illustrative. No statistically defensible algorithm ranking, wall-time comparison, or convergence guarantee is claimed.
 
-## Recommended verification before merge
+## Revalidation commands for a current checkout
 
 ```bash
 ruff check .
@@ -52,4 +52,4 @@ Record each command's outcome and the exact commit. Notebook execution requires 
 
 ## Completion criterion
 
-Phase 20 is complete as an **audit deliverable** when its CI is green and the gaps above are accepted as explicitly out of scope or tracked for a subsequent cycle. It must not be described as comprehensive heterogeneous BO release readiness until the unresolved end-to-end workflows have been validated.
+This historical Phase 20 audit is complete as an **audit deliverable** only to the extent supported by its original CI and accepted scope. Reassess the gaps and rerun validation against the current checkout before making current-state claims. It must not be described as comprehensive heterogeneous BO release readiness until the unresolved end-to-end workflows have been validated.
