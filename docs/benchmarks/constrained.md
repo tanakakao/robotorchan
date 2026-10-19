@@ -21,3 +21,32 @@ has infinite simple regret, as specified by the problem contract.
 
 Use `register_constrained_problems(registry)` to register these four
 problems, then `run_benchmark` with the desired candidate strategy.
+
+## Executable example and evaluation semantics
+
+```python
+from robotorchan.benchmarks import (
+    BenchmarkExperimentConfig,
+    BenchmarkProblemRegistry,
+    random_candidates,
+    register_constrained_problems,
+    run_benchmark,
+)
+
+registry = BenchmarkProblemRegistry()
+register_constrained_problems(registry)
+config = BenchmarkExperimentConfig(
+    problem="constrained_quadratic",
+    strategy="random",
+    evaluation_budget=20,
+    q=3,
+)
+results = run_benchmark(config, random_candidates, registry=registry)
+```
+
+All four problems are deterministic **outcome-constrained** benchmarks.
+Candidate generation may propose infeasible points; these evaluations
+remain in the history, but they are excluded from truth-based feasible
+regret. If no evaluated candidate is feasible, feasible regret is `+inf`.
+The constraint residual convention is `g(X) >= 0`; it does not impose
+candidate-space restrictions on the acquisition optimizer.
