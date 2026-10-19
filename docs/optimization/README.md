@@ -32,8 +32,8 @@ surrogate model とは独立した candidate search / optimization の利用者�
 
 回帰・分類・制約・多目的を組み合わせた検証資料は、用途別に次の文書を参照してください。
 
-- **問題と意味付け**: [Synthetic benchmark](../benchmarks/heterogeneous-e2e-benchmark.md)、[Semantic contract](heterogeneous-e2e-semantics.md)、[Acquisition composition](heterogeneous-e2e-acquisition-composition.md)
-- **単目的・回帰**: [Single-objective](heterogeneous-e2e-single-objective.md)、[Regression](../development/heterogeneous-e2e-regression.md)、[Regression variations](../development/heterogeneous-e2e-regression-variations.md)
+- **問題と意味付け**: [Synthetic benchmark](../benchmarks/heterogeneous-e2e-benchmark.md)、[Semantic and acquisition composition validation](heterogeneous-e2e-acquisition-composition.md)
+- **単目的・回帰**: [Single-objective validation](heterogeneous-e2e-acquisition-composition.md)、[Regression](../development/heterogeneous-e2e-regression.md)、[Regression variations](../development/heterogeneous-e2e-regression-variations.md)
 - **分類・制約**: [Classification](../development/heterogeneous-e2e-classification.md)、[Classification constraints](heterogeneous-e2e-classification-constrained.md)、[Mixed constraints](heterogeneous-e2e-mixed-constraints.md)
 - **多目的・確率目的**: [Multi-objective](heterogeneous-e2e-multiobjective.md)、[Constrained multi-objective](heterogeneous-e2e-constrained-multiobjective.md)、[Probability objective](heterogeneous-e2e-probability-objective.md)
 - **実行・基準手法**: [Baselines](../benchmarks/heterogeneous-e2e-baselines.md)、[Closed-loop](../benchmarks/heterogeneous-e2e-closed-loop.md)、[Multi-seed](../benchmarks/heterogeneous-e2e-multiseed.md)、[Runtime compatibility](../development/heterogeneous-e2e-runtime-compatibility.md)
