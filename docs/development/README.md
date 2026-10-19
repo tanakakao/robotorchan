@@ -21,11 +21,10 @@
 
 ## Heterogeneous E2E verification records
 
-The following historical test records document what was checked, not current public API specifications or performance certifications. Current usage and support boundaries belong in the [Optimization guides](../optimization/README.md), while measured evaluation protocols belong in the [Benchmark guides](../benchmarks/README.md). Phase 6 will consolidate these records and remove redundant per-phase documents after preserving their unique test contracts.
+The following historical test records document what was checked, not current public API specifications or performance certifications. Current usage and support boundaries belong in the [Optimization guides](../optimization/README.md), while measured evaluation protocols belong in the [Benchmark guides](../benchmarks/README.md). Overlapping regression and surrogate-variation coverage is consolidated in the regression guide. The remaining records retain distinct test contracts and should not be merged solely to reduce file count.
 
 - [Binary classification verification](heterogeneous-e2e-classification.md)
-- [Regression verification](heterogeneous-e2e-regression.md)
-- [Regression surrogate variations](heterogeneous-e2e-regression.md)
+- [Regression and surrogate-variation verification](heterogeneous-e2e-regression.md)
 - [Runtime and shape compatibility](heterogeneous-e2e-runtime-compatibility.md)
 - [Negative-path and edge-failure tests](heterogeneous-e2e-edge-failures.md)
 - [Final cross-phase verification audit](heterogeneous-e2e-verification.md)
