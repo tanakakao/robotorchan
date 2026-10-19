@@ -24,7 +24,7 @@ These documents define a synthetic problem and an executable report protocol; ne
 
 ## Historical benchmark audit records
 
-These dated audit snapshots are retained as historical evidence, not as current implementation or release status. Consult the current benchmark contracts and actual execution artifacts before making capability or performance claims.
+These dated audit snapshots are retained as historical evidence, **not** as current implementation, current release status, or measured optimization results. Their Phase numbers belong to different development cycles and are not one continuous roadmap. Earlier statements about missing features, report formats, CI status, or provisional future work may have been superseded by later merges. Consult current benchmark contracts, latest `main`, and actual execution artifacts before making capability or performance claims.
 
 - [Comparative capability audit (2026-10-09)](comparative-capability-matrix.md)
 - [Comparative benchmark validation and release criteria](comparative-benchmark-validation.md)
