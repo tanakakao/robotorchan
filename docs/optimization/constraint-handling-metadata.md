@@ -29,13 +29,22 @@ implemented behavior only; declaring a mode does not itself implement it.
 | GA | feasibility_first | feasibility_first | feasibility_first | feasibility_first |
 | Mixed GA | feasibility_first | feasibility_first | feasibility_first | feasibility_first |
 | PSO | penalty | penalty | penalty | penalty |
-| Hybrid | penalty | penalty | penalty | penalty |
+| Hybrid | penalty* | penalty* | penalty* | penalty* |
 | Torch / Random / Sobol / NSGA-II | unsupported | unsupported | unsupported | unsupported |
 
+*Hybrid's static capability descriptor reports `penalty` for its constraint
+families, but the actual two-stage optimizer does not enforce a single penalty
+rule. Its global stage uses the selected backend (`de`, `cmaes`, or `mixed_ga`),
+then passes constraints to BoTorch local refinement. DE uses SciPy-native
+feasibility constraints, CMA-ES uses a penalty, and Mixed GA uses
+feasibility-first ranking. The static Hybrid metadata must not be interpreted
+as a guarantee that every stage uses a penalty.*
+
 The existing boolean fields remain the coarse compatibility surface used by
-runtime validation. The handling metadata is the precise semantic contract and
-will allow later phases to compare penalty handling with Deb-style
-`feasibility_first` without pretending they are equivalent.
+runtime validation. The handling metadata describes individual backend enforcement; composite
+optimizers such as Hybrid require stage-level interpretation. The enum
+allows penalty and feasibility-first behavior to be compared without
+pretending they are equivalent.
 
 `CandidateConstraints` remains the only candidate-constraint representation.
 This metadata does not introduce a second constraint DSL.
