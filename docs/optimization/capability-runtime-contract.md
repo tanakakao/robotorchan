@@ -13,8 +13,13 @@ The dispatcher validates requested fixed features, sequential behavior, and
 candidate-constraint families before numerical optimization starts. Unsupported
 combinations raise before entering the backend.
 
-The runtime RNG contract is also explicit: a supplied seed creates a backend-local
-`torch.Generator`; `seed=None` returns `None` so normal PyTorch global RNG
-behavior is preserved instead of accidentally repeating an implicit default
-generator seed. Bounds must contain at least one finite floating-point dimension
-with strict lower/upper ordering.
+The runtime RNG contract is backend-specific. Tensor-native stochastic backends
+use a backend-local `torch.Generator` when supplied a seed; `seed=None` does not
+create an implicitly fixed-seed generator. Sobol sampling uses a local
+`SobolEngine`, while SciPy DE and CMA-ES pass seeds through their own optimizer
+APIs. A seed controls backend randomness but does not guarantee determinism for
+an acquisition with independent stochastic sampling. See
+[Optimizer runtime contract](runtime-contract.md).
+
+Bounds must contain at least one finite floating-point dimension with strict
+lower/upper ordering.
