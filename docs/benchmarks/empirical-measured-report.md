@@ -27,10 +27,14 @@ runs block the comparison. `save_empirical_report` refuses overwrite.
 ## Interpretation and outstanding evidence
 
 A confidence interval is descriptive, not a corrected multiple-testing
-significance claim. The JSON summary does not yet implement performance
-curves, multiple-comparison correction, CSV exports, or graphical plots.
-The cohort runners must be executed to generate actual evidence before
-reporting numerical performance or superiority. Constrained GP methods
+significance claim. The Phase 30 JSON summary does not itself include performance curves,
+CSV exports, or rendered plots. These are available as **separate**, later
+artifact stages: [Phase 31 curve and timing CSV exports](empirical-curve-artifacts.md)
+and [Phase 32 SVG visualization](empirical-visualization.md).
+Neither stage performs expensive cohort execution or supplies missing
+measured results. Multiple-comparison correction is not established by
+these artifact stages. The cohort runners must be executed to generate
+actual evidence before reporting numerical performance or superiority. Constrained GP methods
 remain blocked by Phase 29's classification acquisition eligibility gate.
 
 To produce an artifact from a completed cohort:
