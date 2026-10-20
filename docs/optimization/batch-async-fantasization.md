@@ -56,12 +56,14 @@ real evaluation candidates.
 ## Initialization contract
 
 Acquisition initialization remains a candidate-search concern. Real unresolved `X_pending` points
-are acquisition context and are not appended to `batch_initial_conditions`. For ordinary q-batch
+are acquisition context and are not appended to `batch_initial_conditions`. For ordinary BoTorch q-batch
 optimization, explicit initial conditions therefore keep shape `num_restarts x q x d` regardless
-of the number of pending evaluations.
+of the number of pending evaluations. This describes the BoTorch initialization path, not a
+promise that every named optimizer backend accepts `batch_initial_conditions`;
+see [Initialization compatibility](initialization-compatibility.md).
 
 Likewise, a model fantasy batch is a model batch dimension, not an optimizer restart or candidate
-dimension. Standard initialization still uses `num_restarts x q x d`; BoTorch broadcasts the
+dimension. BoTorch standard initialization still uses `num_restarts x q x d`; BoTorch broadcasts the
 acquisition evaluation over compatible fantasy-model batch dimensions. One-shot acquisition
 fantasy rows are different: those are acquisition decision variables and follow the augmented-q
 initialization contract documented for KG and multi-step lookahead.
