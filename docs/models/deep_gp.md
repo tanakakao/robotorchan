@@ -1,32 +1,45 @@
-# DeepGP variant policy
+# DeepGP models and input contracts
 
-`SingleTaskDeepGP` is the supported Deep Gaussian Process model in the current
-robotorchan release.
+robotorchan provides `SingleTaskDeepGP`, `MixedSingleTaskDeepGP`, and
+`MultiTaskDeepGP`. These are variational Deep Gaussian Process models,
+not exact GP wrappers. Choose the variant from the input and task structure.
 
-## Why there is no automatic Mixed DeepGP variant
+## Single-task continuous inputs
 
-A categorical coordinate must not be passed through a continuous DeepGP layer as
-if its integer code had metric meaning. A useful mixed-input DGP therefore needs
-an explicit architecture for categorical latent mappings or a principled mixed
-kernel at every relevant stochastic layer. Reusing the exact-GP mixed kernel only
-at the final layer would not preserve that semantics.
+`SingleTaskDeepGP` uses a hierarchy of stochastic GP layers for
+single-task regression. It exposes a Monte Carlo posterior for BoTorch
+acquisition integration; stochastic DeepGP trajectories must not be
+interpreted as an exact Gaussian posterior.
 
-For this reason robotorchan does not add a nominal `MixedSingleTaskDeepGP`
-wrapper merely for API symmetry.
+## Mixed continuous and categorical inputs
 
-## Multi-output and multitask
+`MixedSingleTaskDeepGP` accepts the original mixed input space and
+requires `cat_dims`. It standardizes continuous features while encoding
+categorical features with **learned embeddings** before the DeepGP
+layers. Integer category IDs are not treated as continuous distances.
 
-A multi-output DGP is mathematically meaningful, but it requires a deliberate
-choice between independent output layers, shared latent processes, and correlated
-task/output structure. These alternatives imply different posterior shapes and
-BoTorch objective semantics.
+Categorical feature indices may be negative. Category values must be
+non-negative, integer-valued, contiguous, and zero-based in training
+data. At least one continuous feature is required. The learned
+embedding is a model-specific representation, not the exact-GP
+`MixedSingleTaskGP` categorical kernel.
 
-The first DeepGP implementation therefore remains single-output until those
-structures are implemented and tested as real models rather than aliases.
+## Multi-task long-format inputs
 
-## Current integration contract
+`MultiTaskDeepGP` accepts a long-format task feature and embeds task
+identity separately from standardized data features. Pass original
+long-format inputs to `posterior()` and `training_loss()`.
+This is distinct from block-design `train_Y[n, m]` models.
 
-The supported model provides a Monte Carlo posterior for BoTorch acquisition
-functions. The posterior preserves stochastic DeepGP trajectories instead of
-collapsing them to an exact Gaussian posterior. Batched candidate evaluation keeps
-t-batch dimensions when trajectories are selected from normal base samples.
+## Training and acquisition integration
+
+DeepGP training uses a variational objective rather than the exact
+GP marginal likelihood fitting path. Posterior sampling preserves
+stochastic layers and supports batched candidate evaluation under
+the model's tested shape contracts. Verify acquisition compatibility
+and the chosen optimization backend before assuming a specific
+candidate-search path is supported.
+
+See [Expressive model families](expressive.md) and
+[Expressive BoTorch integration](expressive_botorch_integration.md)
+for model-family selection and integration boundaries.
