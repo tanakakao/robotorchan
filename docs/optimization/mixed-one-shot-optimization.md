@@ -69,13 +69,13 @@ categorical assignment spaces. It fails explicitly outside that contract rather 
 falling back to ordinary `optimize_acqf_mixed`.
 
 
-## Optimizer design
+## Implemented optimizer design
 
-The mixed one-shot optimizer will treat categorical assignments as part of the augmented
+The mixed one-shot optimizer treats categorical assignments as part of the augmented
 batch state rather than as global fixed features.
 
 For an acquisition with actual batch size `q` and augmented size `q_aug`, define a
-categorical assignment matrix with one assignment per augmented row. The optimizer must:
+categorical assignment matrix with one assignment per augmented row. The optimizer follows these steps:
 
 1. enumerate feasible categorical assignments for the actual candidate rows;
 2. allow fantasy rows to use assignments independently from the actual rows;
@@ -83,8 +83,8 @@ categorical assignment matrix with one assignment per augmented row. The optimiz
 4. compare acquisition values across the resulting conditional optima;
 5. return only the actual candidates using the acquisition's one-shot extraction semantics.
 
-The first implementation will target `q=1` and finite categorical alternatives. This keeps
-the combinatorial search explicit and correct before introducing pruning or approximate
+The current implementation targets `q=1` and finite categorical alternatives. This keeps
+the combinatorial search explicit and correct without introducing pruning or approximate
 search. Multi-category and larger-`q` acceleration are future performance extensions, not
 requirements for semantic correctness.
 
