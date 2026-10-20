@@ -1,103 +1,69 @@
-# Phase 7: heavy-tailed observation model feasibility
+# Student-t observation GP models
 
-## Purpose
+Student-t likelihood models are **implemented** robust surrogates for
+heavy-tailed observation residuals. They are distinct from sparse-outlier
+relevance pursuit and input-dependent Gaussian observation noise.
 
-Phase 7 addresses observation robustness that is not covered by relevance pursuit
-or heteroskedastic Gaussian noise: heavy-tailed residuals and isolated large
-errors that should be modeled through the observation likelihood itself.
-
-The target statistical model is
+## Statistical model
 
 ```text
 f(x) ~ GP
 y | f(x) ~ StudentT(df=nu, loc=f(x), scale=sigma)
 ```
 
-with `nu > 2` as the default finite-variance regime.
+The public constructors require `df > 2` so the observation variance
+exists. These models use variational inference with a Student-t
+likelihood, not exact Gaussian marginal likelihood fitting.
 
-## Why this is a separate surrogate
+## Public model families
 
-A Student-t observation model changes the likelihood and inference procedure.
-It is therefore a genuine surrogate-model concern rather than an acquisition
-risk measure or a `Robust*` composition wrapper.
+- `StudentTSingleTaskGP`: continuous single-task scalar regression.
+- `MixedStudentTSingleTaskGP`: continuous and categorical inputs
+  with `cat_dims` and a mixed covariance.
+- `StudentTMultiTaskGP`: long-format multi-task data using
+  `task_feature` and task covariance.
+- `MixedStudentTMultiTaskGP`: long-format multi-task data with
+  mixed continuous/categorical data covariance.
 
-It is also distinct from the existing models:
+Task features and categorical data features are separate structural
+roles. Choose the matching model rather than interpreting task IDs or
+category codes as continuous measurements.
 
-- relevance pursuit models sparse gross outliers;
-- heteroskedastic models input-dependent Gaussian variance;
-- Student-t likelihood models globally heavy-tailed observation residuals.
-
-All three should remain available because their assumptions differ.
-
-## Inference decision
-
-Do not force Student-t observations into an exact Gaussian MLL. The Phase 7
-implementation should use variational GP inference and expose a
-`training_loss()` contract, following the same non-exact-inference principle as
-`JointHeteroskedasticSingleTaskGP`.
-
-The first implementation should be scalar-output and continuous-input only.
-Mixed, reduced-input, multi-task, and heteroskedastic-Student-t cross products
-are deferred until the base inference model is validated.
-
-## Public API target
+## Training and posterior contract
 
 ```python
+import torch
+from robotorchan.models import StudentTSingleTaskGP
+
+train_X = torch.rand(20, 2, dtype=torch.double)
+train_Y = torch.sin(train_X[:, :1])
+
 model = StudentTSingleTaskGP(
     train_X,
     train_Y,
-    num_inducing=32,
+    num_inducing=16,
     df=4.0,
 )
-
 loss = model.training_loss()
-posterior = model.posterior(test_X)
+posterior = model.posterior(train_X[:3])
 ```
 
-Required behavior:
+`training_loss()` combines the Student-t expected log likelihood and
+variational KL term. Optimize the differentiable loss with a suitable
+PyTorch optimizer. `supports_mll = False`, and `make_mll()` raises
+rather than returning an exact Gaussian MLL. The BoTorch-compatible
+`posterior()` describes the **latent response**, not a Student-t
+predictive observation distribution.
 
-- retain raw training data;
-- `supports_mll = False`;
-- `make_mll()` must not claim an exact Gaussian MLL;
-- provide a BoTorch-compatible latent response posterior;
-- preserve dtype/device migration and state serialization;
-- support MC acquisition functions that consume the latent posterior.
+The implementation preserves raw training inputs and outputs, and
+clears variational caches when loading a state dictionary.
 
-Whether `df` and observation scale are fixed or learned must be explicit in
-the constructor and state dictionary. The initial implementation should prefer
-a stable constrained parameterization over implicit magic defaults.
+## Scope and interpretation
 
-## Validation gates
+The heavy-tailed likelihood is a modeling assumption, not a guarantee
+of outlier resistance in every dataset. Verify calibration and
+predictive performance against Gaussian and other robust baselines
+on held-out data. Input perturbation and CVaR/worst-case acquisition
+risk remain separate optimization concerns.
 
-Before Phase 7 is complete, tests must cover:
-
-1. finite differentiable training loss;
-2. gradients through variational GP parameters and Student-t likelihood
-   parameters that are configured as learnable;
-3. finite posterior with batch and q dimensions;
-4. state-dict round trip in evaluation mode;
-5. float32/float64 migration;
-6. MC acquisition compatibility;
-7. robustness smoke test showing that one extreme response produces less
-   likelihood penalty than under a comparable Gaussian observation model;
-8. no regression to the two heteroskedastic models or relevance-pursuit models.
-
-## Composition boundary
-
-Input perturbation, environmental scenarios, CVaR, worst-case, and SN ratio stay
-outside this model. They compose with the posterior/acquisition layer exactly as
-specified by the robust architecture.
-
-Do not introduce `RobustStudentTGP`, `StudentTPCAGP`,
-`StudentTHeteroskedasticGP`, or similar cross-product classes in this phase.
-
-## Phase 7 implementation sequence
-
-1. Audit current GPyTorch Student-t likelihood semantics and the existing
-   robotorchan variational wrapper.
-2. Implement the scalar continuous `StudentTSingleTaskGP`.
-3. Add training, lifecycle, dtype, posterior, and acquisition tests.
-4. Add an outlier-resistance likelihood test against Gaussian residual penalty.
-5. Register the public model and non-MLL contract atomically.
-6. Run stale-contract, Ruff lint/format, Python 3.11/3.12/3.13, package, and
-   notebook gates before merge.
+See [Robust and noise models](robust_noise.md) for model selection.
