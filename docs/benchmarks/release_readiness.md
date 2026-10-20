@@ -1,5 +1,7 @@
 # Benchmark final audit — Phase 30
 
+> **Historical audit snapshot:** This release-readiness decision applies only to the historical Phase 30 scope and recorded CI evidence. It does not certify the current `main` or scientific optimization superiority.
+
 ## Scope and evidence
 
 The benchmark work through Phase 29 is integrated on `main`. Phase 24–29

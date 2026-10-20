@@ -1,5 +1,7 @@
 # Comparative Benchmark — Validation and Release Criteria
 
+> **Historical audit snapshot:** This is the validation and release decision for its original comparative benchmark cycle. Phase-numbered limitations and statements about artifact/report support may have been superseded; consult current reporting and execution contracts.
+
 ## Scope and evidence
 
 This audit describes the benchmark implementation present on `main` at the

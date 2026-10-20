@@ -1,5 +1,7 @@
 # Empirical optimization performance — coverage and execution gates
 
+> **Historical audit snapshot:** This document freezes a historical empirical-cycle audit and provisional Phase 22–50 plan. The listed pending CI/merge state and proposed future gates are historical, not the current repository status or a new work plan.
+
 Audit date: 2026-10-11
 Pinned main: `4d492df655e38cdab91acee689898dcebc74a4fd`
 Scope: static repository and documentation inspection only. No fresh benchmark run or CI verification.
