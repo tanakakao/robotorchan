@@ -57,7 +57,7 @@ for _ in range(n_iterations):
 
 candidate optimizationはrobotorchanの `optimize_acqf` dispatchを経由します。既定値は `optimizer="botorch"` で、BoTorchのgradient-based acquisition optimizationを利用します。これによりTuRBO固有コードはlocal search regionの管理に集中し、optimizer実装を重複させません。
 
-Phase 4のbaselineはcontinuous single-objective TuRBO-1を対象とします。restartの実行、Thompson sampling、q-batch固有state semantics、constraints、async/fantasizationは後続Phaseで追加します。
+初期のbaseline実装はcontinuous single-objective TuRBO-1を対象としていました。現在はrestart、Thompson sampling、q-batch state、candidate constraints、async pending-point連携も追加されています。各機能の対応範囲と制限は以下の節を参照してください。
 
 
 ## Thompson candidate generation
@@ -76,7 +76,7 @@ candidate poolは現在のtrust region内にSobol点を生成し、各候補で�
 
 posterior samplingとsample maximizerの選択は既存の `select_thompson_candidates` に委譲し、TuRBO側では再実装しません。`seed` を指定したstrategyではSobol poolとperturbation maskを再現可能に生成します。
 
-この経路はcontinuous trust regionから有限candidate poolを構築する処理です。mixed/discrete search space、constraints、async pending pointsはそれぞれ後続Phaseで扱います。
+この経路はtrust regionから有限candidate poolを構築する処理です。現在のmixed/discrete、candidate constraints、async pending pointsの対応範囲と制限は以下の専用節を参照してください。
 
 
 ## Batch TuRBO
@@ -96,7 +96,7 @@ state transitionはcandidateごとではなく、完了したbatchごとに1回�
 
 Thompson経路でも同じbatch contractを使用します。`replacement=False` でlocal candidate poolからq点を選ぶため、同一batch内で同じpool rowを重複選択しません。
 
-Phase 6では同期batchを対象とします。評価完了順が異なるasynchronous batch、`X_pending`、fantasizationはPhase 11で扱います。
+同期batchに加えて、非同期評価の完了順と`X_pending`の扱いも後述の専用節で説明します。pending pointsはstate更新に含めず、完了した観測のみで更新します。
 
 
 ## Restart strategy
@@ -172,7 +172,7 @@ result = strategy.optimize(acquisition, constraints=constraints)
 
 Thompson samplingではlocal candidate poolを `CandidateConstraints` でfilterした後にposterior samplingします。feasible点が `q` 未満なら明示的に失敗し、unconstrained candidateへfallbackしません。現在この経路で保証するのは各candidateを独立に判定できるintra-point constraintです。q-batch全体を結ぶinter-point linear/nonlinear constraintは個別pool filteringでは数学的に保証できないためunsupportedです。
 
-candidate constraintは入力座標に対する既知制約です。constrained EIなどのoutcome constraintは未知の出力・制約モデルをacquisition側で扱う別概念であり、TuRBOのtrust-region geometryへ変換しません。Mixed / discrete constraint semanticsはPhase 13で別途扱います。
+candidate constraintは入力座標に対する既知制約です。constrained EIなどのoutcome constraintは未知の出力・制約モデルをacquisition側で扱う別概念であり、TuRBOのtrust-region geometryへ変換しません。Mixed / discrete constraint semanticsの現行の対応範囲は、後述のMixed and discrete search spaces節を参照してください。
 
 ## Asynchronous evaluations and fantasization
 
