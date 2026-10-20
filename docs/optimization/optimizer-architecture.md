@@ -27,7 +27,7 @@ The optimization stack has three responsibilities.
 2. **Candidate optimizer backend** defines how an acquisition function is
    numerically optimized in that space. BoTorch/SciPy, Torch optimizers,
    differential evolution, CMA-ES, and evolutionary algorithms belong here.
-3. **Convenience dispatch** may select a backend from an argument, but it must
+3. **Convenience dispatch** selects a backend from an argument and must
    preserve direct access to the underlying BoTorch-compatible behavior.
 
 The numerical backends must not become surrogate-model abstractions. They
@@ -59,7 +59,7 @@ BoTorch instead of reimplementing it. In particular, the baseline original-space
 and mixed-space paths remain thin adapters over `botorch.optim.optimize_acqf`
 and `botorch.optim.optimize_acqf_mixed`.
 
-Future alternative backends should expose BoTorch-like arguments where those
+Alternative backends expose BoTorch-like arguments where those
 arguments have the same semantics. Backend-specific options belong in an
 explicit options/configuration surface rather than changing the meaning of a
 BoTorch argument.
@@ -84,9 +84,17 @@ from model and acquisition capabilities. It records support for:
 These flags are descriptive runtime contracts. They are not a scoring or
 automatic-selection policy.
 
-## Public API direction
+## Implemented public dispatch API
 
-The intended convenience API is conceptually:
+`robotorchan.optim.optimize_acqf` is implemented in `robotorchan.optim.dispatch`.
+It accepts an existing BoTorch acquisition function and dispatches by `optimizer`.
+Available names are `botorch`, `torch_adam`, `torch_adamw`, `torch_sgd`,
+`random`, `sobol`, `de`, `cmaes`, `ga`, `pso`, and `hybrid`.
+For `optimizer="ga"`, a mixed `MixedVariableSpace` selects the mixed GA backend.
+The dispatcher does not consume `MixedVariableSpace` with `optimizer="botorch"`;
+use the explicit BoTorch mixed optimizer for that case.
+
+Example:
 
 ```python
 from robotorchan.optim import optimize_acqf
@@ -99,7 +107,14 @@ candidates, value = optimize_acqf(
 )
 ```
 
-The exact dispatcher is introduced only after backend contracts are stable.
+Backend-specific settings use `optimizer_options`, while BoTorch-local
+`options`, initial conditions, and initial-condition generators are accepted
+only where the selected backend supports them. Unsupported argument and
+capability combinations raise explicit errors instead of being silently ignored.
+The dispatcher validates candidate constraints and requested capabilities
+before invoking the backend. Derivative-free dispatch uses joint q-batches;
+sequential selection is a separate explicit operation.
+
 Direct BoTorch usage remains valid, and existing search strategies continue to
 accept normal BoTorch acquisition functions.
 
