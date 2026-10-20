@@ -1,130 +1,75 @@
-# Phase 13: nonstationary Gaussian-process model
+# Nonstationary Gaussian-process models
 
-## Purpose
+robotorchan implements exact GP models with input-dependent latent
+process smoothness. These models use a Gibbs covariance kernel and
+must not be confused with heteroskedastic observation-noise models.
 
-The robust-surrogate audit now covers sparse outliers, heavy tails,
-heteroskedastic observation noise, replicate-derived noise, contamination, and
-uncertain training inputs. A remaining distinct modeling gap is nonstationary
-process behavior: the response smoothness itself can change across the design
-space.
+## Covariance and local lengthscales
 
-A stationary RBF or Matérn kernel uses one global lengthscale pattern. That can
-be inadequate when, for example, a manufacturing process has a smooth operating
-region and a sharp transition region.
-
-Phase 13 evaluates a nonstationary kernel without conflating process
-nonstationarity with observation-noise heteroskedasticity.
-
-## Initial model
-
-Use an input-dependent positive lengthscale field:
+The `GibbsKernel` uses an affine, positive lengthscale field:
 
 ```text
-ell(x) = softplus(a + B phi(x)) + ell_floor
+ell(x) = softplus(a + B x) + lengthscale_floor
 ```
 
-with a low-complexity feature map `phi(x)`. For the first implementation,
-`phi(x) = x` is sufficient.
+The resulting Gibbs covariance allows smoothness to vary across the
+input space. The kernel learns its intercept and slope parameters
+jointly with the GP model. `lengthscale_floor` must be positive.
 
-A positive-semidefinite Gibbs kernel is appropriate:
+## Implemented model families
 
-```text
-k(x, x')
-= product_j [
-    sqrt(2 ell_j(x) ell_j(x') / (ell_j(x)^2 + ell_j(x')^2))
-  ]
-  * exp(
-      - sum_j (x_j - x'_j)^2
-        / (ell_j(x)^2 + ell_j(x')^2)
-    )
-```
+| Model | Input structure | Local-lengthscale diagnostic |
+| --- | --- | --- |
+| `NonstationarySingleTaskGP` | Continuous single-task | `local_lengthscale(X)` |
+| `MixedNonstationarySingleTaskGP` | Mixed single-task, `cat_dims` | Tuple of additive and interaction continuous-branch lengthscales |
+| `NonstationaryMultiTaskGP` | Long-format task feature | Data-feature lengthscales, excluding task identity |
+| `MixedNonstationaryMultiTaskGP` | Long-format task + mixed data | Tuple of continuous-branch lengthscales |
+| `NonstationaryKroneckerMultiTaskGP` | Block-design multi-output | `local_lengthscale(X)` on data features |
 
-This allows local smoothness to vary while retaining a valid covariance
-function.
+Mixed models apply the Gibbs kernel to continuous data features and
+combine it with categorical covariance. A mixed model requires at
+least one continuous data dimension. `task_feature` and `cat_dims`
+identify distinct structural features and must not overlap.
 
-## Statistical distinction
-
-- heteroskedastic GP: observation variance changes with `x`;
-- nonstationary GP: latent process covariance/smoothness changes with `x`;
-- uncertain-input GP: training coordinates are uncertain;
-- robust risk/scenario layers: decision evaluation changes, not the surrogate
-  process itself.
-
-These must remain separate concerns.
-
-## Proposed API
+## Example: single-task nonstationary GP
 
 ```python
+import torch
+from botorch.fit import fit_gpytorch_mll
+from robotorchan.models import NonstationarySingleTaskGP
+
+train_X = torch.rand(24, 2, dtype=torch.double)
+train_Y = torch.sin(6 * train_X[:, :1])
+
 model = NonstationarySingleTaskGP(
     train_X,
     train_Y,
     lengthscale_floor=1e-3,
 )
+fit_gpytorch_mll(model.make_mll())
+
+test_X = torch.rand(5, 2, dtype=torch.double)
+posterior = model.posterior(test_X)
+local_scales = model.local_lengthscale(test_X)
 ```
 
-The model should retain the normal exact-GP contract:
+The exact-GP variants support the usual `make_mll()` fitting path,
+BoTorch posterior interface, and raw training-data retention.
+The local-lengthscale diagnostic reports learned kernel structure;
+it is not a direct estimate of observation noise or causal regime
+boundaries.
 
-- `supports_mll = True`;
-- `make_mll()`;
-- BoTorch posterior and acquisition compatibility;
-- raw training data retention.
+## Modeling boundaries
 
-The local lengthscale parameters are learned jointly with the exact GP
-hyperparameters.
+- **Heteroskedastic GP:** input-dependent observation variance.
+- **Nonstationary GP:** input-dependent latent covariance/smoothness.
+- **Uncertain-input GP:** uncertain training input coordinates.
+- **Risk-aware acquisition:** decision-time objective aggregation.
 
-## Complexity control
+The implemented family uses affine lengthscale fields. Neural or
+GP-driven lengthscale fields and change-point kernels are not implied
+by these APIs. Validate performance against stationary baselines,
+particularly when data are sparse.
 
-The first implementation should use an affine local-lengthscale field rather
-than a neural network or second GP. This limits parameter count and keeps exact
-GP training practical.
-
-Do not add a second latent GP for lengthscales in Phase 13. Such a model changes
-inference substantially and should be evaluated separately only if the affine
-field is insufficient.
-
-## Diagnostics
-
-Expose:
-
-```python
-model.local_lengthscale(X)
-```
-
-returning positive local lengthscales with shape compatible with
-`X[..., d]`.
-
-This diagnostic is useful for identifying regions where the fitted process
-changes rapidly.
-
-## Required tests
-
-1. local lengthscales are positive;
-2. kernel covariance is symmetric;
-3. kernel matrix is positive semidefinite up to numerical tolerance;
-4. zero slope in the lengthscale field reduces to a stationary Gibbs/RBF-like
-   covariance;
-5. changing the local-lengthscale slope changes covariance;
-6. gradients reach local-lengthscale parameters;
-7. finite exact MLL;
-8. raw training data, dtype/device migration, and state-dict roundtrip work;
-9. posterior batch/q shapes work;
-10. qMC acquisition smoke test passes;
-11. existing heteroskedastic and robust models remain unchanged.
-
-## Scope boundaries
-
-Phase 13 does not add:
-
-- neural or GP-driven lengthscale fields;
-- input-dependent signal variance;
-- change-point kernels;
-- mixed/reduced/multitask cross-product wrappers;
-- nonstationary observation noise.
-
-Those require separate statistical justification.
-
-## Exit criterion
-
-Phase 13 is complete when robotorchan can represent input-dependent latent
-smoothness through a documented positive-semidefinite covariance model while
-preserving the standard exact-GP/BoTorch contract.
+See [Robust and noise models](robust_noise.md) and
+[Model selection](../getting_started/model_selection.md).
