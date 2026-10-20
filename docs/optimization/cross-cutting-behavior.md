@@ -24,14 +24,17 @@ implements BoTorch's `sequential=True` semantics.
 
 ## Fixed features
 
-BoTorch and the Torch backend already support fixed features. Phase 14 adds
-fixed-feature projection to DE, GA, and PSO. Fixed values are applied before
+BoTorch and the Torch backend already support fixed features. The fixed-feature path also covers
+DE, GA, and PSO. Fixed values are applied before
 acquisition and constraint evaluation, and the returned candidate is evaluated
 again to return the raw acquisition value.
 
-CMA-ES and the hybrid backend remain unsupported for fixed features in this
-phase. Their capability metadata stays false rather than silently approximating
-the behavior.
+The hybrid backend now accepts `fixed_features` and forwards them to its
+global and BoTorch local stages. Structured-variable local refinement also
+requires `mixed_fixed_features_list`; see
+[Hybrid optimizer](hybrid-optimizer.md). CMA-ES does not advertise
+`fixed_features` support in its capability metadata. The public dispatcher
+rejects unsupported fixed-feature requests rather than ignoring them.
 
 ## Deferred items
 
