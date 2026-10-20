@@ -18,7 +18,8 @@ coordinates are not produced by continuous sampling followed by rounding.
 The same variable semantics apply independently to every point in a q-batch.
 A fixed seed reproduces both the continuous and structured coordinates.
 
-Mixed-variable Sobol is intentionally not implemented in this phase. Supplying
-integer or categorical metadata with `optimizer="sobol"` raises
-`NotImplementedError` rather than silently rounding low-discrepancy points.
-Its semantics are assessed separately in Phase 5.
+Mixed-variable Sobol sampling is also implemented. It maps scrambled Sobol
+coordinates through a discrete inverse CDF for integer and categorical domains
+instead of treating categorical labels as continuous distances. See
+[Mixed-variable Sobol sampling](mixed-sobol.md) for its discretization contract
+and low-discrepancy limitations.
