@@ -1,27 +1,40 @@
 # Candidate constraints across optimizer backends
 
-Phase 10 extends the existing `CandidateConstraints` contract to derivative-free
-candidate optimizers without introducing a second constraint language.
+Candidate-space constraints are specified with the shared
+`CandidateConstraints` contract. They restrict which input candidates
+may be proposed; they are distinct from outcome constraints used to
+construct constrained acquisition functions.
 
-BoTorch and BoTorch-mixed backends continue to forward linear equality,
-linear inequality, and nonlinear inequality constraints to BoTorch itself.
+## Backend-specific enforcement
 
-Differential Evolution, CMA-ES, continuous GA, and mixed-variable GA evaluate the
-same `CandidateConstraints` contract through a common violation function. Their
-search objective is augmented by a configurable positive `constraint_penalty`.
-Equality constraints use `equality_tolerance` (default `1e-6`).
+| Backend | Candidate constraint handling |
+| --- | --- |
+| BoTorch / BoTorch-mixed | Forward supported linear and nonlinear constraints to BoTorch |
+| Differential Evolution | Wrap shared violation evaluation in SciPy `NonlinearConstraint` |
+| CMA-ES | Penalize constraint violation in the search objective |
+| Continuous GA | Rank feasible candidates ahead of infeasible candidates |
+| Mixed-variable GA | Use feasibility-first ranking with mixed-domain operators |
+| PyTorch candidate generator | Candidate constraints are unsupported and explicitly rejected |
 
-Both intra-point and inter-point q-batch constraints are supported. Nonlinear
-callables need to be differentiable only for gradient-based BoTorch optimization;
-derivative-free backends only require valid tensor outputs.
+The derivative-free backends reuse the same constraint evaluation
+contract but **do not share a single penalty algorithm**.
+CMA-ES accepts a positive `constraint_penalty`; do not assume this
+parameter controls Differential Evolution or GA feasibility handling.
 
-This penalty implementation deliberately preserves the native evolutionary search
-operators. It does not claim exact feasibility: callers should use a sufficiently
-large penalty and verify the returned candidate when feasibility is safety-critical
-or mathematically strict. Benchmarking feasibility rates is part of the optimizer
-benchmark phase.
+The shared `equality_tolerance` defaults to `1e-6`. Supported
+constraints include intra-point and inter-point q-batch conditions.
+Derivative-free backends require valid tensor outputs from nonlinear
+constraint callables, not differentiability. Gradient-based BoTorch
+optimization has additional differentiability requirements.
 
-The PyTorch `gen_candidates_torch` backend remains constraint-disabled because
-that BoTorch generator does not provide the same constrained optimization contract
-as the SciPy-backed BoTorch candidate generator. Constraints are not silently
-approximated there.
+## Feasibility and validation
+
+Constraint handling does not guarantee that every optimization run
+returns a feasible candidate. In particular, a penalty-based CMA-ES
+run can return an infeasible result, and feasibility-first ranking
+depends on the evaluated population. Check the returned candidate
+against the original constraints when strict feasibility matters.
+
+Do not silently replace an unsupported candidate constraint with an
+outcome feasibility weight or an approximate search-space penalty.
+Inspect the selected backend's capability contract before dispatch.
