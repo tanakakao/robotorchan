@@ -1,20 +1,39 @@
 # CMA-ES optimizer backend
 
-Phase 7 adds CMA-ES as an optional derivative-free acquisition optimizer.
-The backend consumes a BoTorch `AcquisitionFunction`, tensor bounds, and `q`,
-while the `cmaes` package owns the evolutionary update loop.
+CMA-ES is an optional derivative-free acquisition optimizer. It consumes a
+BoTorch `AcquisitionFunction`, tensor bounds, and a joint candidate batch
+size `q`; the optional `cmaes` package implements the evolutionary loop.
 
-The joint `q x d` candidate batch is flattened to one CMA-ES vector and restored
-before every acquisition evaluation. The initial mean is the center of the box.
-The public `sigma` is relative to the largest box width, which avoids silently
-treating the same absolute sigma as meaningful across differently scaled domains.
+The joint `q x d` candidate batch is flattened to one CMA-ES vector and
+restored before each acquisition evaluation. The initial mean is the box
+center. `sigma` is relative to the largest box width.
 
-The dependency is optional: install `robotorchan[cmaes]` when this backend is
-needed. Importing robotorchan does not require `cmaes`.
+Install the optional dependency with `pip install "robotorchan[cmaes]"`.
+The package is imported only when this backend is used.
 
-Candidate constraints are explicitly rejected until the cross-optimizer
-constraint phase. Population orchestration is CPU-side; acquisition evaluation
-uses the tensor device and dtype supplied by the caller.
+## Candidate constraints
+
+The backend accepts the shared `CandidateConstraints` contract via
+`constraints`. It evaluates candidate violation and minimizes a
+penalized objective:
+
+```text
+penalized_objective = -acquisition_value + constraint_penalty * violation
+```
+
+`constraint_penalty` must be positive (default `1e6`).
+`equality_tolerance` defaults to `1e-6`. These settings apply to
+the joint q-batch constraint evaluation, including inter-point
+constraints. A finite penalty does **not** guarantee feasibility.
+Validate returned candidates against the original constraints when
+strict feasibility matters.
+
+The evolutionary loop is CPU-side; acquisition and constraint
+evaluation use the supplied tensor device and dtype. The returned
+`value` is the **unpenalized acquisition value** at the selected
+candidate, not the penalized search objective.
+
+## Usage
 
 ```python
 from robotorchan.optim.backends import optimize_acqf_cmaes
@@ -26,5 +45,13 @@ candidates, value = optimize_acqf_cmaes(
     sigma=0.25,
     max_generations=200,
     seed=123,
+    constraints=candidate_constraints,
+    constraint_penalty=1e6,
+    equality_tolerance=1e-6,
 )
 ```
+
+The example assumes that `acq`, `bounds`, and
+`candidate_constraints` have been constructed by the caller.
+For differences across backends, see
+[Candidate constraints](candidate-constraints.md).
