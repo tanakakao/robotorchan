@@ -22,7 +22,7 @@ robotorchan では、モデルの複雑さではなく **データ生成過程�
 | 反復測定 | Replicate Noise | replicate から noise を推定 |
 | 入力値が不確か | Uncertain Input | observation noise とは別問題 |
 | カテゴリ入力が不確か | Uncertain Categorical | カテゴリ確率を扱う |
-| 非定常な応答 | Nonstationary GP | noise 非定常性との違いに注意 |
+| 非定常な応答 | Nonstationary GP | noise 非定常性との違いに注意 |\n| 非線形な階層的確率表現 | `SingleTaskDeepGP` / `MixedSingleTaskDeepGP` / `MultiTaskDeepGP` | variational trainingとMC posteriorを確認 |
 | Tensor / structured output | HigherOrder / LatentKronecker | 出力軸の構造を利用 |
 | 条件付き探索空間 | Hierarchical GP | 親変数で有効次元が変化 |
 | Context 構造 | SAC / LCEA / LCEM | context の意味と観測形式を確認 |
@@ -57,10 +57,9 @@ BAxUS は主に探索側の選択肢です。
 外れ値、heavy-tailed residual、入力依存ノイズ、反復測定、入力不確かさ、非定常性は
 似た予測誤差を生むことがありますが、モデルが仮定する生成機構は異なります。
 
-詳細は [Robust / Noise model guide](../models/robust_noise.md) と
-[モデルファミリー別ガイド](../models/README.md) を参照してください。
+Student-t観測ノイズを扱う場合は [Student-t GP](../models/student_t_gp.md)、\n入力依存の潜在関数の滑らかさを扱う場合は\n[Nonstationary GP](../models/nonstationary_gp.md) を参照してください。\nどちらもSingleTaskだけでなくMixedやMultiTaskの実装があります。\n\n詳細は [Robust / Noise model guide](../models/robust_noise.md) と\n[モデルファミリー別ガイド](../models/README.md) を参照してください。
 
-## 詳細へ進む
+## DeepGPを選ぶ場合\n\nDeepGPは確率的な階層構造を持つvariational surrogateです。\n単一タスク、Mixed単一タスク、long-format MultiTaskの実装があり、\n通常のExact GPと同じ学習手順を仮定しないでください。\n[DeepGP guide](../models/deep_gp.md) に入力構造と学習契約をまとめています。\n\n## 詳細へ進む
 
 このページはモデル選択の入口であり、個別モデルの説明を置き換えるものではありません。
 各モデルファミリーの用途、API、制約、Mixed 対応、Notebook は
