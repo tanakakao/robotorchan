@@ -2,7 +2,10 @@
 
 This matrix is the closeout contract for acquisition initialization. It complements
 [Acquisition initialization](initialization.md) by recording the executable coverage expected from
-the optimizer stack.
+the optimizer stack. The BoTorch-specific rows below describe the native BoTorch backend
+or an explicitly named specialist path, **not** every optimizer accepted by the public
+dispatcher. Non-BoTorch backends can reject `batch_initial_conditions`, `ic_generator`,
+and `ic_gen_kwargs`; see [Public optimizer API](public-optimizer-api.md).
 
 | Problem | Initialization | Runtime contract |
 | --- | --- | --- |
@@ -30,7 +33,8 @@ the optimizer stack.
 
 ## Required invariants
 
-The ordinary explicit initial-condition shape is `num_restarts x q x d`. Pending observations,
+For a backend that accepts explicit initial conditions, the ordinary shape is
+`num_restarts x q x d`. Pending observations,
 fantasy-model batch dimensions, robust perturbation scenarios, and model output dimensions do not
 become optimizer restart or q axes.
 
