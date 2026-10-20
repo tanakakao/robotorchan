@@ -1,6 +1,6 @@
 # PyTorch acquisition optimizer backend
 
-Phase 4 adds a BoTorch-native PyTorch optimizer path without replacing the
+robotorchan provides a BoTorch-native PyTorch optimizer path without replacing the
 BoTorch acquisition-function API. The backend calls `botorch.optim.optimize_acqf`
 for restart initialization and candidate selection, while
 `botorch.generation.gen.gen_candidates_torch` performs local optimization.
@@ -13,9 +13,10 @@ LBFGS as interchangeable would require optimizer-specific semantics and tests.
 
 The backend supports continuous box bounds, q-batches, fixed features, tensor
 device/dtype preservation, and GPU execution when the acquisition function and
-tensors are on GPU. Candidate constraints are rejected explicitly in Phase 4;
-they are handled in the cross-optimizer constraint phase rather than by a
-silent penalty approximation.
+tensors are on GPU. Candidate-space constraints are not supported by this backend and are rejected
+explicitly rather than approximated with a silent penalty. Use a compatible
+backend for constrained candidate search; see
+[Candidate constraints](candidate-constraints.md).
 
 Example:
 
