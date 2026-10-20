@@ -12,10 +12,10 @@ The backend is intentionally CPU-orchestrated because SciPy owns the evolutionar
 loop. Acquisition evaluation can still execute on the model tensor device, but
 Phase 6 does not advertise GPU capability or vectorized population evaluation.
 
-Candidate constraints are rejected explicitly in Phase 6. Constraint translation
-is handled in the dedicated cross-optimizer constraint phase. SciPy polishing is
-disabled by default so the DE backend remains derivative-free and its semantics
-do not silently change to a local optimizer.
+Candidate constraints are supported through the shared `CandidateConstraints`
+contract and translated to SciPy `NonlinearConstraint` using a common violation
+evaluator. SciPy polishing is disabled by default so the DE backend remains
+derivative-free and does not silently switch to a local optimizer.
 
 ```python
 from robotorchan.optim.backends import optimize_acqf_de

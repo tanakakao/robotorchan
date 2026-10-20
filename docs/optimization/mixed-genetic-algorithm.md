@@ -46,9 +46,10 @@ This is deliberately a numerical optimizer backend, not another search-space
 strategy. It can therefore be reused later by higher-level mixed or tree search
 strategies.
 
-Candidate constraints use the common penalty implementation described in
-`candidate-constraints.md`. Phase 7 separately evaluates penalty ranking against
-feasibility-first selection.
+Candidate constraints use feasibility-first ranking, not a scalar penalty
+added to the acquisition value. Feasible candidates are preferred, and
+infeasible candidates are ranked by total violation. See
+[Candidate constraints](candidate-constraints.md).
 
 
 ## Mixed-variable constraints
