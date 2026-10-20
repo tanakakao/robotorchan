@@ -18,9 +18,13 @@ global random stream.
 Because the population remains on the bounds tensor device, this backend supports
 GPU-resident evolutionary operations and batched GPU acquisition evaluation.
 
-Phase 8 is intentionally continuous-only. Integer and categorical genes belong to
-the mixed-variable evolutionary phase. Candidate constraints are also rejected
-until the dedicated cross-optimizer constraint phase.
+The continuous GA operates on real-valued variables. Integer and categorical
+genes use the separate mixed-variable GA backend. Candidate constraints are
+supported through the shared `CandidateConstraints` contract. The backend ranks
+feasible candidates before infeasible ones; among infeasible candidates,
+constraint violation determines priority. This is **not** a penalty-weighted
+acquisition objective. Strict feasibility is not guaranteed if the population
+contains no feasible candidate.
 
 ```python
 from robotorchan.optim.backends import optimize_acqf_ga
@@ -32,5 +36,6 @@ candidates, value = optimize_acqf_ga(
     population_size=128,
     generations=100,
     seed=123,
+    constraints=candidate_constraints,
 )
 ```
