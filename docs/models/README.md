@@ -22,9 +22,9 @@
 | [Expressive GP](expressive.md) | DKL、DeepGP、NNGP、Spectral Mixture |
 | [Non-GP surrogates](non_gp.md) | Random Forest、Extra Trees、Gradient Boosting、NGBoost |
 
-## 共通規約
+## 実装済みモデルの詳細ガイド\n\nモデルファミリーの説明から、具体的な入力条件・学習方法・posteriorの契約を\n確認する場合は以下を参照してください。\n\n- [DeepGP](deep_gp.md): SingleTask、Mixed、MultiTaskとvariational training\n- [Student-t GP](student_t_gp.md): SingleTask、Mixed、MultiTaskのheavy-tailed likelihood\n- [Nonstationary GP](nonstationary_gp.md): Gibbs kernelとlocal lengthscale、Mixed、MultiTask\n\n## 共通規約
 
-多くの supervised wrapper は raw training data、`supports_mll`、`make_mll()` を共通化します。ただし、Variational GP、Fully Bayesian SAAS、Pairwise GP などは学習契約が異なります。モデル固有の契約を優先してください。
+多くの supervised wrapper は raw training data、`supports_mll`、`make_mll()` を共通化します。\nただし、Variational GP、DeepGP、Student-t GP、Fully Bayesian SAAS、Pairwise GP などは\n学習契約が異なります。`make_mll()` が利用可能であることとExact Gaussian MLLで\n学習できることは同義ではありません。モデル固有の契約を優先してください。
 
 この再編ではファイル数削減を目的にせず、public model の用途・仮定・制約・関連する Theory / Notebook への到達性を維持します。機械可読な対応表は [model_coverage.json](../model_coverage.json) です。
 
