@@ -76,17 +76,20 @@ Classification families are added according to classification semantics rather t
 | robust label noise / contamination / replicates | implemented | classification-native label semantics |
 | input-dependent label noise | implemented | flip rates are functions of input X |
 | Student-t likelihood | intentionally unsupported | no Bernoulli residual analogue |
-| uncertain-input | not implemented | requires a classification-specific uncertain-input contract |
-| non-GP surrogates | not implemented | probability/posterior contracts require separate classification adapters |
+| uncertain-input | implemented | continuous uncertainty and categorical uncertainty have classification-specific marginalization |
+| non-GP surrogates | implemented | sklearn-based classifiers use probability adapters without a Gaussian latent posterior |
 | preference | separate task semantics | pairwise preference observations are not binary class labels |
 
 The absence of these binary counterparts is intentional coverage status, not a filesystem-family mismatch. New models should enter the family matching their model semantics and expose classification-specific capabilities before registry inclusion.
 
-すべて `observation_type=classification`, variational inference,
-`supports_posterior_samples=True` です。現在のclassification ALは `q=1` かつ
-single-outputのみを明示的にサポートするため、multitask classifierは互換性判定で保守的に
-rejectします。これはモデル自体がAL不能という意味ではなく、task selection / scalarizationの
-契約が未定義なためです。
+分類モデルは `observation_type=classification` を共有しますが、推論方式と
+sampling capability は異なります。GP分類はlatent posteriorを持ち、non-GP分類器は
+クラス確率を予測してもGaussian latent posteriorを持つとは限りません。
+ensembleは構成モデル間の確率サンプルを提供できる一方、deterministic non-GP分類器の
+単一の予測確率からepistemic samplingを捏造してはいけません。
+現在のclassification ALは `q=1` かつsingle-outputのみを明示的にサポートするため、
+multitask classifierは互換性判定で保守的にrejectします。これはモデル自体がAL不能という
+意味ではなく、task selection / scalarizationの契約が未定義なためです。
 
 ## Robust cross-family composition
 
