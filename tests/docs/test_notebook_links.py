@@ -68,7 +68,8 @@ class NotebookLinkTests(unittest.TestCase):
             self.assertEqual(
                 MODULE.check_notebook_links(root),
                 [
-                    "examples/notebooks/example.ipynb cell 0: outside repository: ../../../escape.md"
+                    "examples/notebooks/example.ipynb cell 0: outside repository: "
+                    "../../../escape.md"
                 ],
             )
 
