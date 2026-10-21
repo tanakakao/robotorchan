@@ -2,10 +2,21 @@
 
 from __future__ import annotations
 
+import importlib.util
+import sys
 import unittest
+from pathlib import Path
 
 from robotorchan.models.registry import MODEL_REGISTRY
-from scripts.generate_model_coverage import build_model_coverage, render_model_coverage
+SCRIPT_PATH = Path(__file__).resolve().parents[2] / "scripts" / "generate_model_coverage.py"
+spec = importlib.util.spec_from_file_location("generate_model_coverage", SCRIPT_PATH)
+if spec is None or spec.loader is None:
+    raise ImportError(f"Cannot load model coverage generator: {SCRIPT_PATH}")
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+build_model_coverage = module.build_model_coverage
+render_model_coverage = module.render_model_coverage
 
 
 class ModelCoverageTests(unittest.TestCase):
