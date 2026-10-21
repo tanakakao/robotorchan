@@ -23,7 +23,7 @@ Semantic Versioningを基本とし、Git tag / GitHub Releaseは `v{version}` �
 3. `CITATION.cff` の `version` も同じversionへ更新します。
 4. `CHANGELOG.md` の対象versionを確定し、リリース日を記録します。
 5. version変更をPull Request経由で `main` にマージします。
-6. 必要に応じてローカルでも配布物を確認します.
+6. 必要に応じてローカルでも配布物を確認します。
 
 ```bash
 python -m build
@@ -41,14 +41,19 @@ pip install robotorchan
 
 ## 公開workflowの安全条件
 
-`.github/workflows/publish.yml` は次を確認してからPyPIへ公開します。
+`.github/workflows/publish.yml` はGitHub Releaseの`published`イベントで起動します。
+次の検証に成功した場合のみ、`pypi` environmentの公開jobへ進みます。
 
 - GitHub Releaseのtagが `v{project.version}` と一致する
 - tagのcommitが `main` に含まれる
+- `CITATION.cff` のversionが `project.version` と一致する
 - sdist / wheelのbuildが成功する
 - `twine check` が成功する
 - build済みwheelをinstallできる
 - installされたpackage versionがRelease versionと一致する
+
+`CHANGELOG.md` の内容やリリース日の妥当性は公開workflowでは自動検証しません。
+リリース前のレビューで確認してください。
 
 PyPIへの認証にはTrusted Publishing (OIDC) を使用します。PyPI API tokenをGitHub Secretsに保存する運用は想定していません。
 
