@@ -27,11 +27,13 @@ not candidate-generation iterations.
 ## Initial observations and observation noise
 
 Use `sobol_initial_design` with the same seed and bounds across
-strategies, and verify the initial X tensors are identical. The current runner passes X and observed Y together with the full
-`BenchmarkProblem` to the candidate callback. This includes truth,
-constraint evaluators and known optimum metadata. Current callbacks
-are not certified oracle-isolated. Require a restricted problem view
-or a tested callback-access audit before comparative certification.
+strategies, and verify the initial X tensors are identical. For a
+publishable comparison, enable `restrict_candidate_problem=True` so
+candidate callbacks receive `CandidateProblemView` rather than the
+truth-bearing `BenchmarkProblem`. The runner does not enable this
+restriction automatically. Verify callback isolation and initial
+pairing before certification; see the
+[Empirical execution contract](empirical-execution-contract.md).
 
 For noisy problems, use independent, seeded observation-noise streams
 that are reproducible for each experiment. A problem factory's
@@ -40,9 +42,11 @@ paired noise at different adaptive X locations. Document whether
 comparisons use common random numbers, independent observation noise,
 or deterministic precomputed noise keyed to a sample identity.
 Do not use global RNG state as an implicit reproducibility guarantee.
-Current `run_benchmark` has no observation-noise generator argument;
-an extension or explicit noise adapter is needed before strict noisy
-paired comparisons can be certified.
+The runner supports an explicit observation-noise policy, including
+`SeededObservationNoise(policy="paired")`; this does not guarantee
+pointwise noise pairing after adaptive strategies diverge. Verify
+initial-observation pairing and document the noise consumption policy
+before certifying noisy comparisons.
 
 ## Strategy and optimizer budgets
 
