@@ -73,7 +73,6 @@ explicitly unsupported. See [Mixed one-shot optimization](mixed-one-shot-optimiz
 These restrictions are deliberate: unsupported posterior shapes should fail clearly rather than
 silently reducing the wrong dimension.
 
-
 ## Compatibility contract
 
 The acquisition registry is intentionally a compatibility surface, not a catalog of every
@@ -117,7 +116,6 @@ algorithm. Native functionality should be integration-tested and documented inst
 A robotorchan implementation is justified when it supplies a genuinely missing algorithm or a
 robotorchan-specific contract.
 
-
 ## Future extensions
 
 The current integration surface covers the scoped single-objective BO,
@@ -146,7 +144,6 @@ posteriors explicitly. Defining variance, boundary, or predictive-information sc
 ensemble members requires an intentional reduction semantics; silently treating empirical
 spread as Gaussian posterior variance would change the acquisition meaning. Ensemble AL remains
 a future extension until that semantics is specified and tested.
-
 
 ## Theory-to-implementation correspondence
 
@@ -196,7 +193,6 @@ The theory chapters, practical optimization guides, status table, package export
 test are consistent with the current ownership policy. Remaining items listed under
 **Future extensions** are intentionally unsupported or not yet integration-tested rather than
 silently implied by the theory documentation.
-
 
 ## Constraint semantics: output vs candidate space
 
