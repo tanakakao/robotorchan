@@ -28,8 +28,17 @@ The `Documentation links` workflow runs:
 4. `python scripts/check_docs_references.py`
 
 These checks validate supported local Markdown targets, notebook Markdown-cell
-targets, reference-style links, and Markdown heading fragments. They do not
-establish that documentation is semantically correct or that notebooks execute.
+targets, reference-style links, and Markdown heading fragments. The workflow
+runs on pull requests and pushes to `main` using Python 3.11.
+
+The link checkers scan Markdown under `docs/` and Markdown cells in
+`examples/notebooks/*.ipynb` (the current flat notebook layout). They do not
+execute notebooks or establish semantic correctness. Notebook execution is a
+separate CI responsibility described in [Notebook CI](notebook-ci.md).
+
+Model coverage is generated and checked separately by
+`python scripts/generate_model_coverage.py --check` in the main CI workflow;
+it is not one of the four Documentation links checks.
 
 ## Maintenance decisions
 
@@ -46,5 +55,8 @@ establish that documentation is semantically correct or that notebooks execute.
 
 ## Coverage limitations
 
-Uncovered Markdown variants (including HTML anchors and notebook fragments)
-remain known limitations rather than implied validation coverage.
+Uncovered Markdown variants (including HTML anchors), non-Markdown notebook
+cells, and notebooks in future nested directories remain known limitations
+rather than implied validation coverage. Local link and fragment checks do not
+validate external URLs, mathematical claims, API compatibility, or actual
+benchmark performance.
