@@ -2,10 +2,10 @@
 
 Status: **protocol frozen; empirical results not yet certified**.
 
-This document defines the decision rules for Phase 26–30. It extends
-[the fairness contract](empirical-execution-contract.md) without changing
-the benchmark runner or claiming that a completed smoke test establishes
-optimization performance.
+This document defines the frozen decision rules for measured empirical
+cohorts. It extends [the execution contract](empirical-execution-contract.md)
+without changing the benchmark runner or claiming that a completed smoke
+test establishes optimization performance.
 
 ## Frozen comparison population
 
@@ -117,13 +117,16 @@ nonoverlapping marginal confidence intervals.
   previous results or mix cohorts in the same aggregate.
 - Report negative, inconclusive, and unsupported results explicitly.
 
-## Phase 26 handoff
+## Execution and reporting evidence
 
-Phase 26 executes paired noiseless single-objective comparisons under
-this protocol, verifies all gates, and stores raw artifacts and
-failure evidence. Phase 27 handles noisy comparisons; Phase 28 handles
-multiobjective comparisons. Phase 29 addresses constrained eligibility
-and evidence; Phase 30 assembles the measured report.
+The single-objective, noisy, multiobjective, and constrained cohorts
+must each satisfy the eligibility, isolation, pairing, and provenance
+gates above. The [Empirical eligibility matrix](empirical-eligibility.md)
+records supported and blocked cells; the
+[Measured report contract](empirical-measured-report.md) describes
+which completed trajectories qualify for aggregation. Neither a
+configured cohort nor a report-generation API establishes that the
+experiments were executed or independently reviewed.
 
 No performance result or statistical conclusion is claimed by this
 protocol document.
