@@ -1,13 +1,14 @@
 # Benchmark reporting
 
-Phase 25 adds a portable reporting API for evaluation-aligned metric curves.
+The benchmark package provides a portable reporting API for evaluation-aligned
+metric curves.
 
 `make_metric_report(strategy, metric, curves, interval_method="normal")`
 accepts a dictionary mapping each independent run seed to a finite 1D
 PyTorch metric curve. All curves must have equal length, dtype and device.
 The result contains the sorted seeds, pointwise mean, and confidence bounds.
 
-Choose `interval_method="bootstrap"` to use the Phase 24 seeded
+Choose `interval_method="bootstrap"` to use the seeded
 percentile bootstrap. The default `"normal"` method uses the existing
 normal-approximation confidence interval.
 
@@ -31,7 +32,9 @@ index** and can be plotted with external tools. The index is not
 automatically mapped to the number of additional BO evaluations.
 
 The reporting API does not itself execute benchmarks, produce figures,
-or guarantee fairness. Use Phase 23 fairness validation before
-cross-strategy comparisons, and Phase 24 paired statistics to assess
-differences. For plotting, draw `mean` with a shaded band between
-`lower` and `upper`.
+or guarantee fairness. Validate the experimental pairing and fairness
+contract before cross-strategy comparisons, and use paired statistics
+to assess differences. See the
+[Comparative fairness protocol](comparative-fairness-protocol.md) and
+[Multi-seed statistics](multiseed_statistics.md). For plotting, draw
+`mean` with a shaded band between `lower` and `upper`.
