@@ -23,17 +23,13 @@ class NotebookLinkTests(unittest.TestCase):
     def _write_notebook(self, root: Path, cells: list[dict]) -> None:
         notebooks = root / "examples" / "notebooks"
         notebooks.mkdir(parents=True)
-        (notebooks / "example.ipynb").write_text(
-            json.dumps({"cells": cells}), encoding="utf-8"
-        )
+        (notebooks / "example.ipynb").write_text(json.dumps({"cells": cells}), encoding="utf-8")
 
     def test_valid_markdown_link_and_ignored_code_cell(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "docs").mkdir()
-            (root / "docs" / "guide.md").write_text(
-                "# Guide\n", encoding="utf-8"
-            )
+            (root / "docs" / "guide.md").write_text("# Guide\n", encoding="utf-8")
             self._write_notebook(
                 root,
                 [
@@ -65,13 +61,9 @@ class NotebookLinkTests(unittest.TestCase):
                 root,
                 [{"cell_type": "markdown", "source": ["[bad](../../../escape.md)"]}],
             )
-            self.assertEqual(
-                MODULE.check_notebook_links(root),
-                [
-                    "examples/notebooks/example.ipynb cell 0: outside repository: "
-                    "../../../escape.md"
-                ],
-            )
+            expected = "examples/notebooks/example.ipynb cell 0: outside repository: "
+            expected += "../../../escape.md"
+            self.assertEqual(MODULE.check_notebook_links(root), [expected])
 
 
 if __name__ == "__main__":
