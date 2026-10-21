@@ -1,4 +1,4 @@
-# Benchmark Experiment Configuration (Phase 4)
+# Benchmark experiment configuration
 
 `BenchmarkExperimentConfig` is a frozen, JSON-compatible record describing
 the experimental protocol independently of any GP, acquisition function,
@@ -32,5 +32,7 @@ assert restored == config
 - `to_dict` and `from_dict` support JSON roundtrips, rejecting unknown fields.
 
 A configuration alone does not modify the global RNG, allocate CUDA tensors,
-train models, or run a benchmark. The Phase 5 runner will be responsible for
-deterministic seed handling, paired initial designs, and device/dtype transfer.
+train models, or run a benchmark. The
+[Closed-loop benchmark runner](closed-loop-runner.md) handles per-seed
+execution and initial-design pairing. Record the observation-noise policy
+and environment separately for reproducible comparisons.
