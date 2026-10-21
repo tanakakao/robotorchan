@@ -69,9 +69,11 @@ For each cell record the following fields before claiming a result:
 | Certification | config-valid, oracle-isolated, runtime-validated, reviewed |
 
 The `BenchmarkExperimentConfig` serialization alone does **not**
-contain all these fields. Existing persistence/reporting utilities
-should be reused, with missing metadata added at the execution layer
-in subsequent phases rather than falsely declaring it captured.
+contain all these fields. Verify the persisted execution manifest and
+associated trajectory artifacts before claiming complete provenance;
+do not infer that a later reporting stage automatically captured missing
+metadata. See the [Frozen empirical protocol](empirical-evaluation-protocol.md)
+for the required pre-execution manifest and acceptance gates.
 
 ## Phase 23 acceptance and Phase 24 handoff
 
