@@ -1,7 +1,7 @@
 # Benchmark execution profiles
 
-Phase 28 standardizes experiment sizes without changing the benchmark runner
-or introducing implicit device selection.
+Execution profiles provide reusable experiment sizes without changing
+the benchmark runner or implicitly selecting a device.
 
 | Profile | Seeds | Initial points | New evaluations per seed | q |
 | --- | ---: | ---: | ---: | ---: |
@@ -28,5 +28,9 @@ does not guarantee that a particular problem, strategy, or optional
 dependency supports CUDA or float32; those are validated by execution.
 
 The presets are resource budgets, not benchmark performance baselines.
+They are distinct from the larger, separately specified cohorts in the
+[Empirical evaluation protocol](empirical-evaluation-protocol.md).
 For fair comparisons, use the same profile and problem registry across
 strategies, and record the resulting configuration in result artifacts.
+See the [Comparative fairness protocol](comparative-fairness-protocol.md)
+for pairing and evaluation-axis requirements.
