@@ -42,8 +42,12 @@ ruff format --check src/robotorchan/benchmarks/empirical_environment.py tests/be
 - Numerical reproducibility excludes wall-clock timing.
 - GP fitting, acquisition MC, optimization, observation noise, and CUDA
   determinism require separate validation.
-- For noisy experiments, the runner currently lacks a dedicated observation
-  noise RNG contract. Do not claim paired noisy comparisons until it exists.
+- For noisy experiments, an explicit observation-noise policy is available,
+  including `SeededObservationNoise(policy="paired")`. Record the policy
+  and seed mapping; paired policy does not by itself guarantee pointwise
+  common random numbers at different adaptive candidate locations.
+  See the [Comparative fairness protocol](comparative-fairness-protocol.md)
+  before certifying noisy paired comparisons.
 - This utility does not record peak memory, CPU model reliably on all systems,
   or the full resolved dependency lockfile. Preserve those externally where
   needed.
