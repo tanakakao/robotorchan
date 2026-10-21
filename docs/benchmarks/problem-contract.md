@@ -1,8 +1,9 @@
-# Benchmark problem contract (Phase 2)
+# Benchmark problem contract
 
 `robotorchan.benchmarks.problem.BenchmarkProblem` defines an independent,
-tensor-native optimization problem. The registry and generic runner are deferred
-to Phases 3 and 5.
+tensor-native optimization problem. The registry and generic runner are
+documented in [Problem registry](problem-registry.md) and
+[End-to-end benchmark](end_to_end.md), respectively.
 
 - `bounds`: finite floating tensor `(2, d)`, lower bounds strictly below upper.
 - `variable_types`: one of continuous, integer, categorical for each dimension.
@@ -11,8 +12,8 @@ to Phases 3 and 5.
 - `directions`: one maximize/minimize label per objective.
 - `objective(X)`: noiseless ground truth, `(..., q, m)`.
 - `observe(X)`: optional noisy observed objectives with the same shape. The
-  evaluator owns random-number generation; deterministic replay requires its
-  own explicit RNG state or seed management in the future experiment runner.
+  evaluator owns random-number generation; deterministic replay requires
+  explicit RNG management and a recorded observation-noise policy.
 - `constraints(X)`: optional deterministic outcome residuals `(..., q, c)`
   where **g(X) >= 0 means feasible**. Candidate/search-space constraints are
   a separate optimizer-layer concept.
@@ -30,6 +31,7 @@ positive infinity when no feasible candidate has been evaluated. For unknown
 optima or multiobjective problems, the caller must select a different metric.
 A known optimum must correspond to the feasible optimum when constraints exist.
 
-This is intentionally a small problem-layer contract. No GP, acquisition
-function, optimizer, registry, persistence format, or new high-level
-optimization API is introduced in Phase 2.
+This is intentionally a small problem-layer contract. It does not itself
+implement a GP, acquisition function, optimizer, registry, persistence format,
+or high-level optimization API. Those responsibilities belong to other
+benchmark and optimization modules.
