@@ -1,10 +1,11 @@
-# Theory documentation boundary and migration plan
+# Theory documentation boundary and migration reference
 
 ## Purpose
 
 Keep `docs/theory/` independent of robotorchan-specific implementation and public APIs.
-This document defines ownership and a migration map. Phase 2 establishes the
-boundary; subsequent phases migrate content and validate mathematical claims.
+This document defines maintained ownership rules and preserves a historical
+migration map for reviewing content placement. The map is not a current
+implementation schedule or evidence that any individual chapter has been audited.
 
 ## Ownership
 
@@ -37,7 +38,7 @@ Avoid package imports, constructor signatures, parameter names specific to
 robotorchan, compatibility matrices, and claims about currently supported
 features. Distinguish a mathematical model from its numerical approximation.
 
-## Migration map
+## Historical migration map
 
 | Source | Retain in theory | Move to implementation documentation |
 | --- | --- | --- |
@@ -78,7 +79,7 @@ content.
 Do not delete or merge chapters solely because concepts recur. Preserve
 mathematical detail, citations, and existing external links.
 
-## Acceptance criteria for later migration
+## Content relocation acceptance criteria
 
 - Every relocated implementation statement has a canonical destination.
 - No mathematical derivation is lost in a move.
