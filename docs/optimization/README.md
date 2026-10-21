@@ -20,6 +20,10 @@ surrogate model とは独立した candidate search / optimization の利用者�
 - [Optimizer architecture](optimizer-architecture.md): search strategy、backend、dispatch の責務境界
 - [Public optimizer API](public-optimizer-api.md): named backend と structured variable space の利用方法
 - [Constraint handling metadata](constraint-handling-metadata.md): backend ごとの制約処理 semantics
+- [Candidate constraints](candidate-constraints.md): backend別の制約適用方式と実行可能性の注意点
+- [Capability runtime contract](capability-runtime-contract.md): optimizer capability registryとdispatch検証
+- [Cross-cutting optimizer behavior](cross-cutting-behavior.md): q-batch、sequential、fixed features
+- [Batch / Async / Fantasization](batch-async-fantasization.md): pending pointsとfantasy軸の契約
 - [Nonlinear candidate constraints](nonlinear-candidate-constraints.md): X-space nonlinear制約、intra/inter、初期条件、対応範囲
 - [Acquisition initialization](initialization.md): restart、q、constraints、one-shot、
   embedded search の初期条件契約
