@@ -40,7 +40,8 @@ It runs:
 The schedule uses UTC. Its purpose is regression detection rather than a pull-request merge gate.
 
 The full environment installs the example, Fully Bayesian, and NGBoost extras so specialist
-notebooks can execute in the same clean environment.
+notebooks can execute in the same clean environment. The workflow runs on Python 3.11 CPU;
+it is not a CUDA or multi-Python-version notebook validation gate.
 
 ## Manifest semantics
 
@@ -57,7 +58,7 @@ The manifest validator requires every committed notebook to belong to exactly on
 
 ## Failure policy
 
-A default-notebook failure blocks ordinary CI.
+A default-notebook failure blocks ordinary CI when the notebook job fails.
 
 A full-suite failure should be investigated as an executable-documentation regression. A notebook
 may move between tiers when runtime or optional-dependency characteristics change, but it should
