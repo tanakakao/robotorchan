@@ -49,4 +49,10 @@ pytest -q tests/benchmarks/test_heterogeneous_baseline_comparison_e2e.py tests/b
 pytest -q tests/benchmarks/test_heterogeneous_benchmark_notebook.py
 ```
 
-The Phase 20 audit should check the full suite, notebook execution in CI, and any outstanding heterogeneous classification-constrained / multiobjective benchmark gaps before making a release-readiness claim.
+This report generator is not a release-readiness certificate. Check the current
+[Heterogeneous benchmark overview](README.md),
+[Classification-constrained E2E coverage](../optimization/heterogeneous-e2e-classification-constrained.md),
+and [Multiobjective E2E coverage](../optimization/heterogeneous-e2e-multiobjective.md)
+against executable tests and persisted measurement artifacts before making a
+release-readiness or optimization-performance claim. Notebook execution in CI
+must be verified separately rather than inferred from the existence of a notebook.
