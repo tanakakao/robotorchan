@@ -1,7 +1,7 @@
-# Phase 30: measured empirical comparison report
+# Measured empirical comparison report
 
-Phase 30 is the reporting gate, not a claim that the complete expensive
-benchmark matrix has been executed.
+This is the reporting gate for completed empirical cohorts, not evidence
+that the full benchmark matrix has been executed.
 
 ## Source and validation
 
@@ -27,15 +27,16 @@ runs block the comparison. `save_empirical_report` refuses overwrite.
 ## Interpretation and outstanding evidence
 
 A confidence interval is descriptive, not a corrected multiple-testing
-significance claim. The Phase 30 JSON summary does not itself include performance curves,
-CSV exports, or rendered plots. These are available as **separate**, later
-artifact stages: [Phase 31 curve and timing CSV exports](empirical-curve-artifacts.md)
-and [Phase 32 SVG visualization](empirical-visualization.md).
-Neither stage performs expensive cohort execution or supplies missing
-measured results. Multiple-comparison correction is not established by
-these artifact stages. The cohort runners must be executed to generate
-actual evidence before reporting numerical performance or superiority. Constrained GP methods
-remain blocked by Phase 29's classification acquisition eligibility gate.
+significance claim. The JSON summary does not itself include performance
+curves, CSV exports, or rendered plots. These are available through the
+separate [Curve and timing CSV exports](empirical-curve-artifacts.md)
+and [SVG visualization](empirical-visualization.md) workflows.
+Neither workflow executes expensive cohorts or supplies missing measured
+results. Multiple-comparison correction is not established by these
+artifact stages. Cohort runners must be executed to produce evidence
+before reporting numerical performance or superiority. Constrained GP
+methods remain blocked by the classification acquisition eligibility
+gate in the [Empirical eligibility matrix](empirical-eligibility.md).
 
 To produce an artifact from a completed cohort:
 
