@@ -1,6 +1,7 @@
 # Resumable benchmark execution
 
-Phase 27 introduces single-seed checkpointing and deterministic continuation.
+The benchmark runner supports single-seed checkpointing and deterministic
+continuation under the conditions below.
 
 ```python
 from robotorchan.benchmarks import (
@@ -35,4 +36,6 @@ is written after a completed batch, not mid-batch. The caller must
 explicitly persist the returned checkpoint; there is no automatic
 periodic saving or atomic writer.
 
-Phase 26 result files and Phase 27 checkpoint files have distinct schemas.
+Completed-run [result files](storage.md) and resumable checkpoint files
+have distinct schemas. A saved result file alone does not preserve the
+run-local generator state needed for exact continuation.
