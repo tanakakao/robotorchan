@@ -51,9 +51,7 @@ class DocumentationReferenceTests(unittest.TestCase):
             docs = root / "docs"
             docs.mkdir()
             (docs / "target.md").write_text("# Existing\n", encoding="utf-8")
-            (docs / "README.md").write_text(
-                "[read](target.md#absent)\n", encoding="utf-8"
-            )
+            (docs / "README.md").write_text("[read](target.md#absent)\n", encoding="utf-8")
             self.assertEqual(
                 MODULE.check_reference_anchors(root),
                 ["docs/README.md: missing anchor: target.md#absent"],
