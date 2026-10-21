@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 from robotorchan.models.registry import MODEL_REGISTRY
+
 SCRIPT_PATH = Path(__file__).resolve().parents[2] / "scripts" / "generate_model_coverage.py"
 spec = importlib.util.spec_from_file_location("generate_model_coverage", SCRIPT_PATH)
 if spec is None or spec.loader is None:
