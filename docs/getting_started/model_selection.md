@@ -29,6 +29,24 @@ robotorchan では、モデルの複雑さではなく **データ生成過程�
 | Context 構造 | SAC / LCEA / LCEM | context の意味と観測形式を確認 |
 | Preference data | `PairwiseGP` | 絶対値ではなく比較を学習 |
 
+## Classification を選ぶ
+
+二値分類ではlabelの生成過程と予測不確実性の意味から選びます。
+
+| 問題設定 | 候補 | 選択上の注意 |
+|---|---|---|
+| 通常の二値分類 | `BinarySingleTaskGPClassifier` | Bernoulli variational GPを基準とする |
+| 連続・カテゴリ混合 | `MixedBinarySingleTaskGPClassifier` | カテゴリを連続距離として扱わない |
+| 高次元 | SAAS / reduced / ALEBO / Joint Encoder classifier | 表現・疎性の仮定を比較する |
+| 誤ラベル | label noise / contaminated classifier | 観測ラベルの生成機構を区別する |
+| 不確かな入力 | continuous / categorical uncertain-input classifier | 観測ノイズとは別に周辺化する |
+| 非GP | Random Forest / Extra Trees / boosting classifier | latent GP posteriorを仮定しない |
+| モデル間の不一致 | GP / bootstrap / heterogeneous ensemble | 構成モデルの確率差を利用する |
+
+確率校正、conformal prediction、reliability / OOD診断はモデルに直積的に追加せず、
+予測確率を受け取る独立レイヤーで扱います。詳細は
+[Classification model guide](../models/classification.md) を参照してください。
+
 ## Mixed は独立した問題軸
 
 Mixed は「モデルファミリー」だけではなく入力空間の性質です。Robust、Multi-task、
