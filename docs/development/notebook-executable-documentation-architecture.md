@@ -29,9 +29,10 @@ or benchmarks.
 6. Keep expensive MCMC, structured-output, and benchmark examples in an explicit slow tier.
 7. Prefer public `robotorchan` and BoTorch APIs over notebook-only helper abstractions.
 
-## Target taxonomy
+## Logical taxonomy and current physical layout
 
-The target logical taxonomy is:
+The following taxonomy describes learning responsibilities, not the current
+filesystem layout:
 
 ```text
 examples/notebooks/
@@ -42,8 +43,11 @@ examples/notebooks/
   workflows/
 ```
 
-The physical move is deferred until links, CI discovery, and redirects/document references can be
-changed atomically. During the migration, the existing numbered notebooks remain valid.
+As of the current documentation audit, notebooks remain in the flat,
+numbered `examples/notebooks/` layout (44 committed `.ipynb` files).
+The categories below are conceptual; no physical move is required by this
+contract. Any future relocation needs a separate change that updates links,
+execution manifests, and CI discovery together.
 
 ### getting_started
 
@@ -145,7 +149,7 @@ structured outputs, and selected expressive or non-GP models.
 A Tier C notebook must state what is intentionally omitted and link to the relevant theory and
 compatibility documentation.
 
-## Existing notebook disposition
+## Historical notebook disposition (original 01–25 set)
 
 | Existing notebook | Disposition | Target role |
 | --- | --- | --- |
@@ -227,7 +231,7 @@ these columns:
 A blank cell means "not demonstrated here", not "unsupported by robotorchan". Runtime support must
 continue to come from capability metadata, implementation validation, and tests.
 
-## Migration order
+## Historical migration sequence
 
 1. Add a coverage manifest and validate notebook metadata.
 2. Upgrade the SingleTaskGP notebook into the canonical minimum end-to-end example.
@@ -249,9 +253,11 @@ continue to come from capability metadata, implementation validation, and tests.
 - hiding cross-layer contracts behind a large notebook helper framework
 - using notebook execution as a substitute for unit or integration tests
 
-## Phase 2 decision
+## Current maintenance decision
 
-The current 25 notebooks are retained as migration inputs. No notebook is deleted in this phase.
-The target architecture is model-family documentation plus explicit acquisition, optimization, and
-workflow documentation. Physical reorganization is delayed until the migration can preserve links
-and CI atomically.
+The original 25-notebook disposition and migration sequence above are
+historical planning references, not an outstanding requirement to reorganize
+files. The repository now contains additional acquisition, optimization,
+workflow, and classification notebooks. Keep the current numbered paths and
+execution manifest authoritative until a separately reviewed relocation is
+justified and validated.
