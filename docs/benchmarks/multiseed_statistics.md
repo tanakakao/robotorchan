@@ -1,7 +1,7 @@
 # Multi-seed statistical evaluation
 
-Phase 24 extends the existing normal-approximation curve summaries with
-**seed-level percentile bootstrap confidence intervals**.
+The benchmark statistics API supplements normal-approximation curve summaries
+with **seed-level percentile bootstrap confidence intervals**.
 
 `bootstrap_curves({seed: metric_curve, ...})` returns pointwise mean and
 bootstrap confidence bounds. The bootstrap resamples **whole independent
@@ -15,8 +15,9 @@ curves for matching seed identifiers and resamples the paired differences.
 differences above zero. It is **not** a Bayesian posterior probability
 or a formal p-value.
 
-Use the Phase 23 `FairComparisonProtocol` to validate identical
-experimental settings and initial observations before comparing curves.
+Use `FairComparisonProtocol` to validate identical experimental settings
+and initial observations before comparing curves. See the
+[Comparative fairness protocol](comparative-fairness-protocol.md).
 Report the number of independent seeds, interval confidence, bootstrap
 resamples, metric orientation, and evaluation budget.
 
