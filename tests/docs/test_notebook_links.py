@@ -31,7 +31,9 @@ class NotebookLinkTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "docs").mkdir()
-            (root / "docs" / "guide.md").write_text("# Guide\n", encoding="utf-8")
+            (root / "docs" / "guide.md").write_text(
+                "# Guide\n", encoding="utf-8"
+            )
             self._write_notebook(
                 root,
                 [
@@ -65,7 +67,9 @@ class NotebookLinkTests(unittest.TestCase):
             )
             self.assertEqual(
                 MODULE.check_notebook_links(root),
-                ["examples/notebooks/example.ipynb cell 0: outside repository: ../../../escape.md"],
+                [
+                    "examples/notebooks/example.ipynb cell 0: outside repository: ../../../escape.md"
+                ],
             )
 
 
