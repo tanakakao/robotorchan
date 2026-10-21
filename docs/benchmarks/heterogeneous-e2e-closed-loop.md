@@ -4,6 +4,12 @@ This test executes three sequential Bayesian optimization iterations on the synt
 
 The test checks that the dataset grows from 16 to 19 rows, initial observations remain unchanged, every selected candidate and observation is finite, and the recorded history matches appended rows. For qNEI, the baseline is refreshed from the current training inputs on every iteration.
 
-**Limitations:** This is a small, unconstrained, single-objective closed-loop integration smoke test. It does not establish convergence, superiority to random search, statistical repeatability across seeds, or classifier-constrained closed-loop behavior. Those require later benchmark phases.
+**Limitations:** This is a small, unconstrained, single-objective closed-loop
+integration smoke test. It does not establish convergence, superiority to
+random search, statistical repeatability across seeds, or classifier-constrained
+closed-loop behavior. These claims require separate executable evidence and
+measured comparison artifacts; see the
+[Benchmark overview](README.md) and
+[Empirical evaluation protocol](empirical-evaluation-protocol.md).
 
 Run `pytest -q tests/benchmarks/test_heterogeneous_closed_loop_e2e.py`.
