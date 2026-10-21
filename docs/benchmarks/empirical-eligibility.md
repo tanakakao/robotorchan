@@ -62,11 +62,15 @@ not promote a cell to runtime-ready.
 No cell is marked **certified** by this document. Certification
 requires explicit runtime evidence attached to a subsequent phase.
 
-## Phase 22 acceptance and handoff
+## Runtime evidence and promotion
 
-Phase 22 records static eligibility and prevents false claims that
-configuration validation is a runnable, oracle-safe strategy.
-Phase 23 owns the executable fairness/oracle isolation contract;
-Phase 24 owns end-to-end candidate path smoke validation.
+Static eligibility does not establish an oracle-safe runnable strategy.
+Use the [Comparative fairness protocol](comparative-fairness-protocol.md)
+for candidate-view isolation and paired execution requirements, and
+the [Empirical evaluation protocol](empirical-evaluation-protocol.md)
+for runtime acceptance and measured-result certification. An
+integration cell must not be promoted to a validated comparison
+without complete candidate-path and seed-level execution evidence.
+
 Do not weaken blocked cells or introduce untested qEHVI adapters
 just to increase matrix coverage.
