@@ -7,13 +7,14 @@ robotorchanではExact GP wrapperの `make_mll()` と、Joint neural modelの `t
 
 この区別により `make_mll()` の共通Exact GP契約を保ったまま、GP MLL以外のreconstruction / KL regularizationを欠落させず学習できます。
 
-詳細は `../models/joint_neural_training.md` を参照してください。
+詳細は [Joint neural training](../models/joint_neural_training.md) を参照してください。
 
 ## `fit()` と学習方式の関係
 
 `fit()` は、学習方式が定義済みのモデルで、コンストラクタに渡した学習データから学習するための便利な入口です。
 例えば `RandomForestSurrogate.fit()` は内部のscikit-learn推定器を学習します。
-`SingleTaskGP` と `MixedSingleTaskGP` では `fit()` も利用できます。全モデル共通の\n`fit()` は保証していません。
+`SingleTaskGP` と `MixedSingleTaskGP` では `fit()` も利用できます。全モデル共通の
+`fit()` は保証していません。
 
 将来ほかのモデルに `fit()` を追加する場合も、以下の区別を維持してください。
 
