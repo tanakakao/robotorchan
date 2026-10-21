@@ -14,7 +14,14 @@ eligibility assessments**, not results of executed benchmarks.
 | Full | 20 | 30 | 100 | 1, 3, 5 | float64 | CPU |
 | Full CUDA | 20 | 30 | 100 | 1, 3, 5 | float64 | CUDA, separately |
 
-The new `empirical_standard` tier is the default for the empirical performance\nevaluation cycle. The older `standard` tier remains available for historical\ncomparability; do not pool results across these tiers. For q=3, the last\nbatch contains two candidates because the new-evaluation budget is 50.\nEach method must use identical seeds and initial designs, with separate\nstrata for q=1 and q=3.\n\nThese are comparison tiers, **not** the existing `get_execution_profile`
+The new `empirical_standard` tier is the default for the empirical performance
+evaluation cycle. The older `standard` tier remains available for historical
+comparability; do not pool results across these tiers. For q=3, the last
+batch contains two candidates because the new-evaluation budget is 50.
+Each method must use identical seeds and initial designs, with separate
+strata for q=1 and q=3.
+
+These are comparison tiers, **not** the existing `get_execution_profile`
 presets. Each q value is a separate stratum. Use seeds 0 through N-1
 for each tier; record the actual seed mapping. The evaluation budget
 counts newly evaluated points, not initial points or optimizer calls.
@@ -59,20 +66,21 @@ classification-constrained acquisition cells remain blocked.
 
 ## Mandatory gate: oracle access
 
-The existing `run_benchmark` passes a full `BenchmarkProblem` to
-each candidate callback, along with X and observed Y. The problem
-object exposes truth evaluators, known optimum, reference information
-and constraint evaluators. Therefore **none** of the rows above is
-certified oracle-isolated merely by running the existing callback.
+The runner supports `restrict_candidate_problem=True` to provide a
+`CandidateProblemView` instead of the full truth-bearing
+`BenchmarkProblem` to candidate callbacks. This restriction is
+opt-in; a default runner invocation does not certify oracle isolation.
 
-Before enabling a row for publishable comparison, implement a
-restricted strategy-facing problem view **or** audit and test every
-candidate callback to ensure it accesses only approved fields
-(bounds, dimension, variable types and declared public metadata).
-No strategy may inspect `evaluate_truth`, `objective`,
-`optimal_value`, future observations, or hidden feasibility margins.
-Reference points may be provided to multiobjective methods only
-under a predeclared policy applied identically to comparable methods.
+For publishable comparisons, enable the restricted view, verify that
+candidate callbacks consume only observed data and approved public
+metadata, and retain runtime evidence of this isolation. No strategy
+may inspect `evaluate_truth`, `objective`, `optimal_value`, future
+observations, or hidden feasibility margins. Reference points may be
+provided to multiobjective methods only under a predeclared policy
+applied identically to comparable methods.
+
+See the [Empirical execution contract](empirical-execution-contract.md)
+for the full required runner settings.
 
 ## Mandatory gate: execution validation
 
@@ -83,7 +91,7 @@ For each scheduled cell:
 2. Verify same initial X per seed across strategies, equal number
    of new evaluations and correct final partial batch.
 3. Verify no oracle leakage and no unintended observation-noise
-   leakage, including direct `BenchmarkProblem` attribute access.
+   leakage, including accidental use of a full `BenchmarkProblem` view.
 4. Verify reproducible independent seed streams, and paired noise
    policy for noisy cases.
 5. Verify truth-only metric, reference point, feasibility sign and
@@ -102,7 +110,10 @@ For each scheduled cell:
   One seed cannot support performance claims.
 - **Standard (legacy):** five paired seeds, q=1 and q=3, fixed acquisition
   settings, and seed-resampled uncertainty intervals.
-- **Empirical Standard:** ten paired seeds, twenty initial points, fifty\n  additional evaluations, q=1 and q=3, with the same evaluation budget\n  across methods and paired uncertainty intervals.\n- **Full:** twenty paired seeds and q=1/3/5, after standard acceptance;
+- **Empirical Standard:** ten paired seeds, twenty initial points, fifty
+  additional evaluations, q=1 and q=3, with the same evaluation budget
+  across methods and paired uncertainty intervals.
+- **Full:** twenty paired seeds and q=1/3/5, after standard acceptance;
   CPU and CUDA results must not be pooled for timing.
 
 Keep a machine-readable manifest of each cell's problem, method,
