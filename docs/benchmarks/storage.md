@@ -1,8 +1,8 @@
 # Benchmark result storage
 
-Phase 26 adds versioned, non-executable JSON storage for full benchmark
-trajectories, including observations, ground truth, constraint values,
-evaluation costs, candidate locations, and experiment configuration.
+The benchmark storage API provides versioned, non-executable JSON storage
+for full trajectories, including observations, ground truth, constraint
+values, evaluation costs, candidate locations, and experiment configuration.
 
 ```python
 from robotorchan.benchmarks import load_benchmark_results, save_benchmark_results
@@ -22,6 +22,8 @@ values, unsupported dtypes, malformed tensor shapes and unknown schema
 versions. Unlike pickle, JSON loading does not execute Python objects.
 
 This API is intended for trusted benchmark result files of manageable
-size. It is not an atomic/concurrent writer, does not store model or
-optimizer state, and does not yet support resuming an interrupted run.
-Phase 27 addresses resumable execution.
+size. It is not an atomic/concurrent writer and does not store model or
+optimizer state. It persists completed trajectories; interrupted-run
+continuation uses the separate [Checkpointing](checkpoint.md) and
+[End-to-end benchmark](end_to_end.md) workflows rather than this
+save/load API alone.
