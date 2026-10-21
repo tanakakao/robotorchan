@@ -30,11 +30,13 @@ metrics are recorded after each member of a completed batch.
 
 ## Outstanding validation gates
 
-- **Oracle access:** `run_benchmark` currently passes the complete
-  `BenchmarkProblem` to candidate callbacks. The callback can access
-  `objective`, `evaluate_truth`, `constraints` and
-  `optimal_value`. Metric correctness alone does not prevent leakage.
-  Require a restricted view or audited callback before certification.
+- **Oracle access:** `run_benchmark` can restrict candidate callbacks
+  to `CandidateProblemView` with `restrict_candidate_problem=True`,
+  but this is not the default. Without that option, callbacks may receive
+  the truth-bearing `BenchmarkProblem`. Metric correctness alone does
+  not prevent leakage. Verify the restricted-view execution contract
+  before certification; see the
+  [Empirical execution contract](empirical-execution-contract.md).
 - **Observed classification labels:** Current callback inputs include
   observed objective Y but not observed Pass/Fail labels. A separate
   history interface is required before classification-constrained
@@ -45,9 +47,11 @@ metrics are recorded after each member of a completed batch.
   DTLZ2. Extend and independently verify before enabling it.
 - **Constrained optimum:** Feasible regret needs a certified feasible
   optimum; `+inf` before first feasibility is intentional.
-- **Phase 3 follow-up:** The machine-checkable eligibility manifest
-  and configuration validator remain required. A documentation matrix
-  alone is insufficient for runtime enforcement.
+- **Eligibility enforcement:** A machine-checkable eligibility matrix
+  and configuration validator are available; validation alone is not
+  evidence that a strategy executed successfully. See
+  [Empirical eligibility](empirical-eligibility.md) and verify the
+  relevant runtime evidence before promoting a benchmark cell.
 
 ## Verification
 
