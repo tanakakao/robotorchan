@@ -15,11 +15,19 @@ Use `evaluate_truth(X)` for ground-truth metrics and
 records both `Y_truth` and `Y_observed`; acquisition candidate
 generators receive only observed responses.
 
-Factories create isolated, locally seeded observation generators;
-fresh factory instances reproduce the same noise stream. The runner
-instantiates a new problem for each experiment seed to prevent noise
-streams from leaking between runs. At present the observation stream
-uses a fixed seed for every run; candidate designs still vary by run
-seed. Independent per-run observation seeds are a future extension.
+These problem factories create isolated, locally seeded observation
+generators. Fresh factory instances reproduce the same noise stream;
+the runner instantiates a new problem for each experiment seed to avoid
+leaking generator state between runs. These built-in factories use a
+fixed observation seed even when candidate designs vary by run seed.
+
+Separately, the benchmark runner supports an explicit
+`SeededObservationNoise` policy with run-local noise streams and
+`paired` or `independent` strategy pairing. This policy is not
+implicitly applied to the built-in noisy problem factories. For
+measured noisy comparisons, record which observation mechanism was
+used and follow the [Empirical execution contract](empirical-execution-contract.md).
+Paired streams do not guarantee pointwise pairing for different
+adaptive candidate paths.
 
 Register via `register_noisy_problems(registry)`.
