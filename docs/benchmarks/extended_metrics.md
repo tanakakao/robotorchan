@@ -1,7 +1,7 @@
 # Extended benchmark metrics
 
-Phase 21 adds metrics that complement the existing simple-regret,
-hypervolume and feasibility curves.
+The extended metrics complement the core simple-regret, hypervolume,
+and feasibility curves described in [Benchmark metrics](metrics.md).
 
 | Metric | API | Direction |
 | --- | --- | --- |
@@ -27,5 +27,8 @@ equal-width bins on `[0, 1]`, with 1 included in the last bin.
 This is not confidence-based multiclass ECE.
 
 Use the same fixed reference set, evaluation budget and prediction
-schedule for fair active-learning comparisons. These functions do not
-perform surrogate fitting or acquire new observations.
+schedule for fair active-learning comparisons. Keep the initial-design
+and new-evaluation axes consistent with the
+[Comparative fairness protocol](comparative-fairness-protocol.md).
+These functions do not perform surrogate fitting or acquire new
+observations.
