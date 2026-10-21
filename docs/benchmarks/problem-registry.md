@@ -1,4 +1,4 @@
-# Benchmark Problem Registry (Phase 3)
+# Benchmark problem registry
 
 The registry stores **factories**, not problem instances. This prevents shared
 mutable tensors or evaluator state between independent benchmark runs.
@@ -29,7 +29,9 @@ A local `BenchmarkProblemRegistry()` is recommended for tests and independent
 experiments. Duplicate names, unknown names, and invalid factory results fail
 explicitly. Registry listings are sorted to ensure stable output.
 
-Phase 3 deliberately does **not** register Branin, Hartmann, constrained,
-multiobjective, or heterogeneous benchmark problems; those are introduced in
-subsequent problem-family phases. No registry entry is created by importing
-the module, and no global random seed is modified.
+The registry itself does not implicitly register built-in problem families
+on import. Branin, Hartmann, constrained, multiobjective, and heterogeneous
+problems are defined separately and can be registered explicitly for a run.
+Importing the registry module does not change the global random seed.
+See the [End-to-end benchmark guide](end_to_end.md) for explicit
+registration and execution.
