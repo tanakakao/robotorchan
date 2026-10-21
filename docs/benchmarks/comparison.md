@@ -1,4 +1,4 @@
-# Seeded benchmark comparisons (Phase 12)
+# Seeded benchmark comparisons
 
 Aggregate equal-length evaluation-indexed metric curves using
 `summarize_curves({seed: curve})`. The output contains:
@@ -25,5 +25,8 @@ device. The interval is a normal approximation and is **not** an exact
 Student-t interval; for one seed, the interval width is set to zero as a
 descriptive convention, not a statistical confidence guarantee.
 
-This phase does not perform significance testing, multiple-comparison
-correction, nonfinite-regret handling, or resampling onto a shared cost axis.
+These summary functions do not perform significance testing,
+multiple-comparison correction, nonfinite-regret handling, or resampling
+onto a shared cost axis. For seed-level percentile bootstrap intervals
+and paired bootstrap comparisons, see
+[Multi-seed statistical evaluation](multiseed_statistics.md).
