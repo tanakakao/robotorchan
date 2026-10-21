@@ -1,7 +1,7 @@
-# Closed-loop Benchmark Runner (Phase 5)
+# Closed-loop benchmark runner
 
-The runner connects the Phase 2 problem contract, Phase 3 registry, and
-Phase 4 experiment configuration. It evaluates an initial Sobol design, then
+The runner connects the problem contract, registry, and experiment
+configuration. It evaluates an initial Sobol design, then
 repeatedly requests candidates until the **additional evaluation** budget is
 exhausted. The final batch may be smaller than `q`.
 
@@ -37,9 +37,14 @@ candidate callback; only observed values are passed.
 
 Initial Sobol designs are paired by problem and seed across strategies.
 Random-search candidates use a per-seed torch generator, avoiding mutation
-of the global torch RNG. The runner does not yet serialize trajectories or
-compute regret curves; those belong to subsequent phases.
+of the global torch RNG. Trajectory persistence and regret metrics are
+available through separate benchmark modules; see
+[Result storage](storage.md) and [Benchmark metrics](metrics.md).
 
 Observation callbacks using global randomness remain the responsibility of
-the caller. Full reproducibility of noisy observations requires a seeded
-observation model; this will be addressed in a later phase.
+the caller. For reproducible noisy experiments, use an explicit observation-
+noise policy and record its seed semantics; see the
+[Comparative fairness protocol](comparative-fairness-protocol.md).
+For candidate callbacks that must not access truth-bearing problem fields,
+use `restrict_candidate_problem=True` and verify the restricted-view
+contract before certifying a comparison.
