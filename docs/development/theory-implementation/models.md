@@ -107,10 +107,75 @@ python scripts/audit_model_api.py --output /tmp/robotorchan-model-api-audit.json
 python scripts/generate_model_coverage.py --check
 ```
 
+
+## Phase 2 public-export reconciliation
+
+Static comparison against the latest `main` at this review found:
+
+- Regression registry: **142** entries, all present in `models.__all__`.
+- Regression public exports: **154** names; the remaining
+  **12** are infrastructure and heterogeneous-layer symbols,
+  not unregistered regression surrogate classes.
+- Classification public exports: **76** names; all
+  **29** binary registry classes are publicly exported.
+- Registry entries and exports are *not* a runtime or mathematical proof.
+
+### Regression public symbols outside the registry
+
+- `DocumentationLinks`
+- `HeterogeneousModel`
+- `HighDimensionalStrategy`
+- `InferenceType`
+- `InputType`
+- `ModelCapabilities`
+- `ModelRegistryEntry`
+- `PosteriorSamplingType`
+- `RobustnessType`
+- `TaskType`
+- `UnsupportedModelOperationError`
+- `get_model_registry_entry`
+
+### Binary registry IDs and exported model classes
+
+| Registry ID | Exported class |
+| --- | --- |
+| `binary.ensemble.gp` | `GPBinaryClassificationEnsemble` |
+| `binary.ensemble.heterogeneous` | `HeterogeneousBinaryClassificationEnsemble` |
+| `binary.standard` | `BinarySingleTaskGPClassifier` |
+| `binary.mixed` | `MixedBinarySingleTaskGPClassifier` |
+| `binary.multitask` | `MultiTaskBinaryGPClassifier` |
+| `binary.kronecker_multitask` | `KroneckerMultiTaskBinaryGPClassifier` |
+| `binary.map_saas` | `MapSaasBinarySingleTaskGPClassifier` |
+| `binary.saas` | `SaasBinarySingleTaskGPClassifier` |
+| `binary.reduced` | `ReducedBinarySingleTaskGPClassifier` |
+| `binary.pca` | `PCABinarySingleTaskGPClassifier` |
+| `binary.pls` | `PLSBinarySingleTaskGPClassifier` |
+| `binary.random_projection` | `RandomProjectionBinarySingleTaskGPClassifier` |
+| `binary.alebo` | `ALEBOBinarySingleTaskGPClassifier` |
+| `binary.joint_encoder` | `JointEncoderBinaryGPClassifier` |
+| `binary.deep_gp` | `BinarySingleTaskDeepGPClassifier` |
+| `binary.uncertain.categorical_input` | `UncertainCategoricalBinarySingleTaskGPClassifier` |
+| `binary.uncertain.continuous_input` | `ContinuousUncertainInputBinarySingleTaskGPClassifier` |
+| `binary.robust.label_noise` | `LabelNoiseBinarySingleTaskGPClassifier` |
+| `binary.robust.contaminated` | `ContaminatedBinarySingleTaskGPClassifier` |
+| `binary.robust.replicate_labels` | `ReplicateLabelBinarySingleTaskGPClassifier` |
+| `binary.robust.input_dependent_label_noise` | `InputDependentLabelNoiseBinarySingleTaskGPClassifier` |
+| `binary.robust.nonstationary` | `NonstationaryBinarySingleTaskGPClassifier` |
+| `binary.robust.mixed_nonstationary` | `MixedNonstationaryBinarySingleTaskGPClassifier` |
+| `binary.robust.multitask_nonstationary` | `NonstationaryMultiTaskBinaryGPClassifier` |
+| `binary.non_gp.bootstrap_gradient_boosting` | `BootstrapGradientBoostingBinaryClassifier` |
+| `binary.non_gp.random_forest` | `RandomForestBinaryClassifier` |
+| `binary.non_gp.extra_trees` | `ExtraTreesBinaryClassifier` |
+| `binary.non_gp.gradient_boosting` | `GradientBoostingBinaryClassifier` |
+| `binary.non_gp.hist_gradient_boosting` | `HistGradientBoostingBinaryClassifier` |
+
+The binary registry does not encode per-ID theory or notebook links.
+These links must be audited separately; absence of metadata is not evidence
+that a model has no theoretical basis or examples.
+
 ## Open verification items (Phase 2 exit criteria)
 
-1. Reconcile actual `models.__all__` against the 142 regression registry names,
-   and classification exports against the 29 registered binary IDs.
+1. Public registry/export name reconciliation completed statically above.
 2. For **every** model ID, resolve the concrete class/module and any upstream
    base or delegated backend; distinguish implementation from inheritance.
 3. Resolve the actual test files and test assertions, not just directory names.
