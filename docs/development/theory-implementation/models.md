@@ -195,6 +195,34 @@ variational classifier probability calibration, and correctness of all
 `Unverified` until a relevant numerical assertion is identified or added
 in the mathematical verification track (Phases 7–9).
 
+
+## Component-level implementation ownership
+
+Source imports and class inheritance were inspected for the following
+representative paths. Ownership is **per component**, not per model name.
+
+| Model | Local responsibility | Delegated responsibility |
+| --- | --- | --- |
+| `SingleTaskGP` | `FittableExactGPModelMixin` fit/data contract | BoTorch `SingleTaskGP` GP and posterior |
+| `MixedSingleTaskGP` | Local fit/data contract | BoTorch `MixedSingleTaskGP` categorical GP |
+| `BinarySingleTaskGPClassifier` | Binary label validation and predictive probability interface | Local `SingleTaskVariationalGP`, GPyTorch `BernoulliLikelihood` and `VariationalELBO` |
+| `ReducedGP` | `ReductionMixin`, input/output reducer and public posterior handling | BoTorch `SingleTaskGP` latent-space GP |
+| `RandomForestSurrogate` | BoTorch `Model` facade and ensemble-posterior adapter | scikit-learn random-forest estimator (runtime import) |
+
+These findings support `Extended` and `Delegated` **at different
+boundaries**. They do not establish that the local wrapper owns the upstream
+algorithm. For `RandomForestSurrogate`, the sklearn estimator is imported
+within implementation code rather than from the module-level imports.
+
+### Limits of the current evidence
+
+The full 171-entry registry is inventoried, but these five source paths are
+representative rather than exhaustive. The existing
+`scripts/audit_model_api.py` produces per-class module paths and method
+owners for all registry entries without fitting them; use its temporary JSON
+report to finish the exhaustive ownership review. Its method-owner output
+must not be interpreted as a numerical validation of a posterior or fit.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
