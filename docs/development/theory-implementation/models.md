@@ -304,6 +304,29 @@ runtime tracing. Other registered models remain `static_mro_only` until their
 composition and method delegation have been inspected. This section does not
 claim that any mathematical property has passed a numerical reference test.
 
+## Inspected test assertions and verification boundaries
+
+The following test modules were inspected individually, rather than inferred
+from AST references. Test counts describe named test functions in the files;
+they are **not** a measure of mathematical proof or model-family coverage.
+
+| Test module | Named tests | Inspected assertion scope | Not established |
+| --- | ---: | --- | --- |
+| `tests/models/standard/test_mixed_single_task_gp.py` | 3 | Constructor signature compatibility with upstream BoTorch; shared raw-data/MLL contract; posterior comparison with upstream implementation | Kernel equivalence across all categorical settings, numerical optimization accuracy |
+| `tests/models/non_gp/test_random_forest_surrogate.py` | 6 | Raw training-data and fit contracts; tree ensemble posterior; deterministic seed; batched candidates; MC qEI compatibility; error handling | Calibrated uncertainty or statistically consistent predictive intervals |
+| `tests/models/classification/test_binary.py` | 20 | Bernoulli likelihood and ELBO API; latent/predictive shapes; label/threshold validation; probability and class outputs; Bernoulli variance/entropy identities; latent and probability sampling | Trained probability calibration, convergence of variational inference, ELBO optimum |
+| `tests/models/high_dimensional/reduced/test_reduced_gp.py` | 13 | Raw versus reduced inputs; q-batch posterior; reducer reuse; conditioning; MLL contract; named reducer selection; output restoration; explicit-noise guards; serialization round-trip | Bounds on dimensionality-reduction error, covariance reconstruction accuracy across all reducers |
+
+The assertion scopes above were derived from the named tests and inspected
+source, not from filename matches alone. Some assertions check equality with
+an upstream implementation or elementary probability identities, but neither
+establishes a universal mathematical guarantee. In particular, the
+classification tests exercise the Bernoulli variance and entropy formulas,
+not empirical calibration; the forest tests exercise ensemble construction,
+not calibrated epistemic uncertainty. All remaining registry models require
+comparable assertion-level inspection before Phase 2's exhaustive test mapping
+can be considered complete.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
