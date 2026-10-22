@@ -278,6 +278,32 @@ evidence of mathematical verification. Assertions and actual executed model
 paths still require human inspection and, where needed, numerical tests.
 The generated JSON is a temporary review artifact, not a tracked document.
 
+## Inspected runtime composition and mathematical ownership
+
+The following paths were checked directly against implementation source on
+`main`. These findings supplement the MRO inventory: an upstream base class
+alone does not reveal internal estimators, likelihoods, or reducers.
+
+| Model | Local responsibilities | Delegated numerical components | Verification still needed |
+| --- | --- | --- | --- |
+| `RandomForestSurrogate` | Validate shapes and categories; preserve raw tensors; convert per-tree predictions into a BoTorch-compatible ensemble posterior | `sklearn.ensemble.RandomForestRegressor` fits the forest and individual sklearn trees compute predictions; `make_ensemble_posterior` is a local posterior adapter | Ensemble calibration and correspondence of tree spread to predictive uncertainty |
+| `BinarySingleTaskGPClassifier` | Validate binary labels; retain raw labels; expose predictive distribution and class probabilities; restore variational state | `SingleTaskVariationalGP` provides latent GP infrastructure; GPyTorch `BernoulliLikelihood`, `VariationalStrategy`, and `VariationalELBO` provide probabilistic inference components | ELBO numerical reference, probability calibration, and latent-to-label integration accuracy |
+| `ReducedGP` | Fit/reuse reducers; transform input data and candidate locations; reconstruct public output posterior | BoTorch `SingleTaskGP` supplies exact GP machinery; configured `InputReducer`/`OutputReducer` implementations supply reductions | Reconstruction covariance, approximation error, and behavior under each reducer family |
+
+**Interpretation:** `RandomForestSurrogate` has no sklearn class in its MRO,
+because it composes `RandomForestRegressor` in `self._forest`. The forest is
+fitted in `fit()`; `posterior()` gathers predictions from
+`self._forest.estimators_`. The ensemble is an empirical approximation,
+not an analytically derived GP posterior. Similarly, the classifier's
+Bernoulli likelihood is constructed as an instance, and reduced GP behavior
+depends on the configured reducer. None of these facts can be inferred from
+`upstream_bases` alone.
+
+These three cases have **source-inspected** component ownership, not exhaustive
+runtime tracing. Other registered models remain `static_mro_only` until their
+composition and method delegation have been inspected. This section does not
+claim that any mathematical property has passed a numerical reference test.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
