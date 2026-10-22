@@ -68,8 +68,16 @@ def _property_info(model_class: type, name: str) -> dict[str, str]:
 
 def _model_row(model_class: type, *, family: str, capabilities: Any) -> dict[str, Any]:
     """Create an auditable signature snapshot for one public model class."""
+    upstream_bases = [
+        f"{base.__module__}.{base.__qualname__}"
+        for base in model_class.__mro__[1:]
+        if base.__module__.startswith(("botorch.", "gpytorch.", "sklearn."))
+    ]
     return {
         "family": family,
+        "implementation_module": model_class.__module__,
+        "upstream_bases": upstream_bases,
+        "provenance_verification": "static_mro_only",
         "class": f"{model_class.__module__}.{model_class.__qualname__}",
         "constructor": _signature(model_class),
         "supports_fit_flag": getattr(model_class, "supports_fit", None),
@@ -169,6 +177,18 @@ def build_inventory() -> dict[str, Any]:
         )
         for name, entry in sorted(CLASSIFICATION_MODEL_REGISTRY.items())
     }
+    for name, row in regression.items():
+        links = MODEL_REGISTRY[name].documentation
+        row["documentation"] = {
+            "guide": links.guide,
+            "theory": links.theory,
+            "notebook": links.notebook,
+            "verification": "registry_metadata_only",
+        }
+    for row in classification.values():
+        row["documentation"] = {
+            "verification": "not_recorded_in_classification_registry",
+        }
     for row in (*regression.values(), *classification.values()):
         row["training_api"] = classify_training_api(row)
     inventory = {
