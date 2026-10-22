@@ -101,3 +101,32 @@ def test_existing_fit_without_capability_flag_is_not_marked_missing() -> None:
             issue["model"] == name and issue["issue"] == "fit_declared_without_supports_fit_true"
             for issue in inventory["static_contract_gaps"]
         )
+
+
+def test_inventory_reports_upstream_ownership_without_runtime_claims() -> None:
+    inventory = build_inventory()
+    exact = inventory["regression_models"]["SingleTaskGP"]
+    mixed = inventory["regression_models"]["MixedSingleTaskGP"]
+    forest = inventory["regression_models"]["RandomForestSurrogate"]
+
+    assert exact["implementation_module"].startswith("robotorchan.")
+    assert any(base.endswith(".SingleTaskGP") for base in exact["upstream_bases"])
+    assert any(base.endswith(".MixedSingleTaskGP") for base in mixed["upstream_bases"])
+    assert forest["provenance_verification"] == "static_mro_only"
+    assert forest["upstream_bases"] == [] or all(
+        not base.startswith("sklearn.") for base in forest["upstream_bases"]
+    )
+
+
+def test_inventory_preserves_registry_documentation_provenance() -> None:
+    inventory = build_inventory()
+    regression = inventory["regression_models"]["SingleTaskGP"]
+    classification = inventory["classification_models"]["binary.standard"]
+
+    assert regression["documentation"]["guide"] == "docs/models/standard.md"
+    assert regression["documentation"]["theory"] == "docs/theory/02_gaussian_process.md"
+    assert regression["documentation"]["notebook"].endswith("01_single_task_gp.ipynb")
+    assert regression["documentation"]["verification"] == "registry_metadata_only"
+    assert classification["documentation"] == {
+        "verification": "not_recorded_in_classification_registry"
+    }
