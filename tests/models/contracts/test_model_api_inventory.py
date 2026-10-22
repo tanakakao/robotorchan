@@ -18,6 +18,7 @@ build_inventory = _AUDIT["build_inventory"]
 classify_training_api = _AUDIT["classify_training_api"]
 find_contract_gaps = _AUDIT["find_contract_gaps"]
 find_missing_documentation_paths = _AUDIT["find_missing_documentation_paths"]
+find_test_references = _AUDIT["find_test_references"]
 
 
 def test_inventory_covers_registered_models_without_instantiation() -> None:
@@ -166,3 +167,27 @@ def test_documentation_path_check_reports_missing_file(tmp_path: Path) -> None:
     missing = find_missing_documentation_paths(inventory, repository_root=tmp_path)
     assert len(missing) == 3 * len(MODEL_REGISTRY)
     assert {item["kind"] for item in missing} == {"guide", "theory", "notebook"}
+
+
+def test_test_reference_inventory_covers_all_registered_models() -> None:
+    inventory = build_inventory()
+    references = find_test_references(
+        inventory, repository_root=Path(__file__).resolve().parents[3]
+    )
+    assert set(references) == set(MODEL_REGISTRY) | set(CLASSIFICATION_MODEL_REGISTRY)
+    assert all(row["verification"] == "syntactic_reference_only" for row in references.values())
+    assert all(row["test_files"] == sorted(set(row["test_files"])) for row in references.values())
+    assert any(
+        path.endswith("test_mixed_single_task_gp.py")
+        for path in references["MixedSingleTaskGP"]["test_files"]
+    )
+
+
+def test_test_reference_inventory_ignores_strings_and_comments(tmp_path: Path) -> None:
+    test_dir = tmp_path / "tests"
+    test_dir.mkdir()
+    (test_dir / "test_example.py").write_text(
+        '# SingleTaskGP\\ntext = "SingleTaskGP"\\n', encoding="utf-8"
+    )
+    references = find_test_references(build_inventory(), repository_root=tmp_path)
+    assert references["SingleTaskGP"]["test_files"] == []

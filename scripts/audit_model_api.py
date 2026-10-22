@@ -7,6 +7,7 @@ Reports are temporary review artifacts; do not commit point-in-time snapshots.
 from __future__ import annotations
 
 import argparse
+import ast
 import inspect
 import json
 from pathlib import Path
@@ -214,10 +215,47 @@ def find_missing_documentation_paths(
     return missing
 
 
+def find_test_references(
+    inventory: dict[str, Any], *, repository_root: Path
+) -> dict[str, dict[str, Any]]:
+    """Find syntactic model references in tests; not evidence of model verification."""
+    names = {
+        name
+        for group in ("regression_models", "classification_models")
+        for name in inventory[group]
+    }
+    classes = {
+        name: row["class"].rsplit(".", 1)[-1]
+        for group in ("regression_models", "classification_models")
+        for name, row in inventory[group].items()
+    }
+    matches: dict[str, set[str]] = {name: set() for name in names}
+    tests_root = repository_root / "tests"
+    for path in sorted(tests_root.rglob("test_*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        referenced = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+        referenced.update(node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute))
+        for name, class_name in classes.items():
+            if class_name in referenced:
+                matches[name].add(path.relative_to(repository_root).as_posix())
+    return {
+        name: {
+            "test_files": sorted(matches[name]),
+            "verification": "syntactic_reference_only",
+        }
+        for name in sorted(names)
+    }
+
+
 def main() -> int:
     """Print an inventory or save it as a review-only JSON report."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, help="Write a temporary JSON report")
+    parser.add_argument(
+        "--include-test-references",
+        action="store_true",
+        help="Include syntactic test references, not verified test assertions",
+    )
     parser.add_argument(
         "--check-documentation-paths",
         action="store_true",
@@ -225,6 +263,10 @@ def main() -> int:
     )
     args = parser.parse_args()
     inventory = build_inventory()
+    if args.include_test_references:
+        inventory["test_references"] = find_test_references(
+            inventory, repository_root=Path(__file__).resolve().parents[1]
+        )
     if args.check_documentation_paths:
         inventory["missing_documentation_paths"] = find_missing_documentation_paths(
             inventory, repository_root=Path(__file__).resolve().parents[1]
