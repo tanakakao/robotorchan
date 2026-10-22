@@ -173,6 +173,28 @@ The binary registry does not encode per-ID theory or notebook links.
 These links must be audited separately; absence of metadata is not evidence
 that a model has no theoretical basis or examples.
 
+
+## Representative test assertion mapping
+
+The following are **inspected test files**, not merely directory matches.
+They provide evidence for the listed contracts, but do not prove all
+mathematical properties or cover every registered model.
+
+| Model | Test source | Verified assertion scope |
+| --- | --- | --- |
+| `MixedSingleTaskGP` | `tests/models/standard/test_mixed_single_task_gp.py` | Upstream constructor surface, wrapper contract, upstream posterior comparison |
+| `BinarySingleTaskGPClassifier` | `tests/models/classification/test_binary.py` | Bernoulli likelihood, latent/probability API, ELBO construction, shapes, Bernoulli variance and entropy |
+| `ReducedGP` | `tests/models/high_dimensional/reduced/test_reduced_gp.py` | Original/latent input contract, posterior q-batches, observation conditioning, output reconstruction, state round-trip |
+| `RandomForestSurrogate` | `tests/models/non_gp/test_random_forest_surrogate.py` | Ensemble posterior, reproducibility, batched candidates, MC qEI integration |
+| `SingleTaskGP` and mixed exact GP | `tests/models/contracts/test_exact_gp_fit.py` | Native MLL/fit behavior, categorical kernel, direct BoTorch MLL interoperability |
+
+**Not established by these tests:** calibrated RF predictive intervals,
+posterior approximation error bounds, reduction-induced covariance error,
+variational classifier probability calibration, and correctness of all
+142 regression / 29 binary classification models. Those claims remain
+`Unverified` until a relevant numerical assertion is identified or added
+in the mathematical verification track (Phases 7–9).
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
