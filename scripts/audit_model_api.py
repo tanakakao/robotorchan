@@ -201,17 +201,35 @@ def build_inventory() -> dict[str, Any]:
     return inventory
 
 
+def find_missing_documentation_paths(
+    inventory: dict[str, Any], *, repository_root: Path
+) -> list[dict[str, str]]:
+    """Check referenced files exist; do not claim notebook execution or theory validity."""
+    missing = []
+    for name, row in inventory["regression_models"].items():
+        for kind in ("guide", "theory", "notebook"):
+            reference = row["documentation"][kind]
+            if not (repository_root / reference).is_file():
+                missing.append({"model": name, "kind": kind, "path": reference})
+    return missing
+
+
 def main() -> int:
     """Print an inventory or save it as a review-only JSON report."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, help="Write a temporary JSON report")
+    parser.add_argument(
+        "--check-documentation-paths",
+        action="store_true",
+        help="Fail if regression registry guide/theory/notebook paths do not exist",
+    )
     args = parser.parse_args()
     content = json.dumps(build_inventory(), ensure_ascii=False, indent=2) + "\n"
     if args.output is None:
         print(content, end="")
     else:
         args.output.write_text(content, encoding="utf-8")
-    return 0
+    return int(bool(inventory.get("missing_documentation_paths")))
 
 
 if __name__ == "__main__":
