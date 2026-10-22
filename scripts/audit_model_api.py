@@ -247,6 +247,53 @@ def find_test_references(
     }
 
 
+def find_upstream_constructor_calls(
+    inventory: dict[str, Any], *, repository_root: Path
+) -> dict[str, dict[str, Any]]:
+    """Find explicit upstream constructor calls within model class syntax trees.
+
+    Imported call targets are resolved statically. Calls via factories, aliases
+    assigned at runtime, and helper functions are intentionally not inferred.
+    """
+    results: dict[str, dict[str, Any]] = {}
+    for group in ("regression_models", "classification_models"):
+        for name, row in inventory[group].items():
+            module_name, class_name = row["class"].rsplit(".", 1)
+            source = repository_root / "src" / Path(*module_name.split(".")).with_suffix(".py")
+            calls: set[str] = set()
+            if source.is_file():
+                tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+                imports: dict[str, str] = {}
+                for node in tree.body:
+                    if isinstance(node, ast.ImportFrom) and node.module:
+                        for alias in node.names:
+                            imports[alias.asname or alias.name] = f"{node.module}.{alias.name}"
+                    elif isinstance(node, ast.Import):
+                        for alias in node.names:
+                            imports[alias.asname or alias.name.split(".")[0]] = alias.name
+                for node in tree.body:
+                    if not isinstance(node, ast.ClassDef) or node.name != class_name:
+                        continue
+                    for child in ast.walk(node):
+                        if not isinstance(child, ast.Call):
+                            continue
+                        target = child.func
+                        if isinstance(target, ast.Name):
+                            resolved = imports.get(target.id, "")
+                        elif isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name):
+                            prefix = imports.get(target.value.id, "")
+                            resolved = f"{prefix}.{target.attr}" if prefix else ""
+                        else:
+                            resolved = ""
+                        if resolved.startswith(("botorch.", "gpytorch.", "sklearn.")):
+                            calls.add(resolved)
+            results[name] = {
+                "upstream_calls": sorted(calls),
+                "verification": "static_direct_import_call_only",
+            }
+    return results
+
+
 def main() -> int:
     """Print an inventory or save it as a review-only JSON report."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -257,6 +304,11 @@ def main() -> int:
         help="Include syntactic test references, not verified test assertions",
     )
     parser.add_argument(
+        "--include-upstream-calls",
+        action="store_true",
+        help="Include direct imported upstream calls within model class bodies",
+    )
+    parser.add_argument(
         "--check-documentation-paths",
         action="store_true",
         help="Fail if regression registry guide/theory/notebook paths do not exist",
@@ -265,6 +317,10 @@ def main() -> int:
     inventory = build_inventory()
     if args.include_test_references:
         inventory["test_references"] = find_test_references(
+            inventory, repository_root=Path(__file__).resolve().parents[1]
+        )
+    if args.include_upstream_calls:
+        inventory["upstream_calls"] = find_upstream_constructor_calls(
             inventory, repository_root=Path(__file__).resolve().parents[1]
         )
     if args.check_documentation_paths:
