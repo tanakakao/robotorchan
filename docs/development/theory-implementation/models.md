@@ -107,10 +107,74 @@ python scripts/audit_model_api.py --output /tmp/robotorchan-model-api-audit.json
 python scripts/generate_model_coverage.py --check
 ```
 
+
+## Public export reconciliation (static)
+
+The regression module exports **154** names through `models.__all__`.
+Exactly **142** are represented in `MODEL_REGISTRY`. The remaining **12**
+are public infrastructure symbols, including `HeterogeneousModel`, not missing
+GP regression entries. Explicitly preserve its separate heterogeneous adapter
+mapping; do not add it to the generated regression coverage just to balance counts.
+
+The classification package exports **76** names, which include
+likelihoods, mixins, calibration, conformal utilities, and registry helpers.
+All **29** binary registry model classes are present in the package's
+public export list. The remaining exports must not be counted as 47 unregistered
+classification models.
+
+### Classification model ID → public implementation class
+
+| Stable model ID | Public class |
+| --- | --- |
+| `binary.ensemble.gp` | `GPBinaryClassificationEnsemble` |
+| `binary.ensemble.heterogeneous` | `HeterogeneousBinaryClassificationEnsemble` |
+| `binary.standard` | `BinarySingleTaskGPClassifier` |
+| `binary.mixed` | `MixedBinarySingleTaskGPClassifier` |
+| `binary.multitask` | `MultiTaskBinaryGPClassifier` |
+| `binary.kronecker_multitask` | `KroneckerMultiTaskBinaryGPClassifier` |
+| `binary.map_saas` | `MapSaasBinarySingleTaskGPClassifier` |
+| `binary.saas` | `SaasBinarySingleTaskGPClassifier` |
+| `binary.reduced` | `ReducedBinarySingleTaskGPClassifier` |
+| `binary.pca` | `PCABinarySingleTaskGPClassifier` |
+| `binary.pls` | `PLSBinarySingleTaskGPClassifier` |
+| `binary.random_projection` | `RandomProjectionBinarySingleTaskGPClassifier` |
+| `binary.alebo` | `ALEBOBinarySingleTaskGPClassifier` |
+| `binary.joint_encoder` | `JointEncoderBinaryGPClassifier` |
+| `binary.deep_gp` | `BinarySingleTaskDeepGPClassifier` |
+| `binary.uncertain.categorical_input` | `UncertainCategoricalBinarySingleTaskGPClassifier` |
+| `binary.uncertain.continuous_input` | `ContinuousUncertainInputBinarySingleTaskGPClassifier` |
+| `binary.robust.label_noise` | `LabelNoiseBinarySingleTaskGPClassifier` |
+| `binary.robust.contaminated` | `ContaminatedBinarySingleTaskGPClassifier` |
+| `binary.robust.replicate_labels` | `ReplicateLabelBinarySingleTaskGPClassifier` |
+| `binary.robust.input_dependent_label_noise` | `InputDependentLabelNoiseBinarySingleTaskGPClassifier` |
+| `binary.robust.nonstationary` | `NonstationaryBinarySingleTaskGPClassifier` |
+| `binary.robust.mixed_nonstationary` | `MixedNonstationaryBinarySingleTaskGPClassifier` |
+| `binary.robust.multitask_nonstationary` | `NonstationaryMultiTaskBinaryGPClassifier` |
+| `binary.non_gp.bootstrap_gradient_boosting` | `BootstrapGradientBoostingBinaryClassifier` |
+| `binary.non_gp.random_forest` | `RandomForestBinaryClassifier` |
+| `binary.non_gp.extra_trees` | `ExtraTreesBinaryClassifier` |
+| `binary.non_gp.gradient_boosting` | `GradientBoostingBinaryClassifier` |
+| `binary.non_gp.hist_gradient_boosting` | `HistGradientBoostingBinaryClassifier` |
+
+### Regression exports outside the regression model registry
+
+- `DocumentationLinks`
+- `HeterogeneousModel`
+- `HighDimensionalStrategy`
+- `InferenceType`
+- `InputType`
+- `ModelCapabilities`
+- `ModelRegistryEntry`
+- `PosteriorSamplingType`
+- `RobustnessType`
+- `TaskType`
+- `UnsupportedModelOperationError`
+- `get_model_registry_entry`
+
 ## Open verification items (Phase 2 exit criteria)
 
-1. Reconcile actual `models.__all__` against the 142 regression registry names,
-   and classification exports against the 29 registered binary IDs.
+1. Reconciliation of public exports and both registries: complete at the static
+   name level; confirm any runtime aliases or re-exports if found.
 2. For **every** model ID, resolve the concrete class/module and any upstream
    base or delegated backend; distinguish implementation from inheritance.
 3. Resolve the actual test files and test assertions, not just directory names.
