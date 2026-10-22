@@ -245,6 +245,21 @@ are invisible to MRO inspection. Inspect implementation source to determine
 component-level ownership. The report is a traceability aid, not proof of
 correctness, training support, or mathematical equivalence.
 
+## Documentation link existence validation
+
+The static audit now supports:
+
+```bash
+python scripts/audit_model_api.py --check-documentation-paths
+python scripts/generate_model_coverage.py --check
+```
+
+The optional check validates that the guide, theory, and notebook files
+referenced by **every regression registry entry** exist in the repository.
+It reports missing paths and exits nonzero if any are absent. It does not
+execute notebooks, validate theory content, or check classification-model
+links (which are not encoded in that registry).
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
@@ -253,7 +268,8 @@ correctness, training support, or mathematical equivalence.
 3. Resolve the actual test files and test assertions, not just directory names.
 4. Confirm the theory/guide/notebook links for each model; note shared notebooks
    and models without individual executable demonstrations.
-5. Run the existing model API audit, coverage check, and CI; triage any gaps.
+5. Run the model API audit, documentation-path validation, coverage check,
+   and CI; triage any gaps.
 6. Document unsupported and unverified mathematical properties explicitly.
 
 Do not advance to Phase 3 or declare Phase 2 complete while these remain open.
