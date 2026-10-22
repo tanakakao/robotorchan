@@ -223,6 +223,28 @@ owners for all registry entries without fitting them; use its temporary JSON
 report to finish the exhaustive ownership review. Its method-owner output
 must not be interpreted as a numerical validation of a posterior or fit.
 
+
+## Exhaustive static provenance export
+
+The existing `scripts/audit_model_api.py` now emits these additional fields
+for **every registered regression and classification model**:
+
+- `implementation_module`: Python module defining the public class.
+- `upstream_bases`: BoTorch/GPyTorch/sklearn classes in the static MRO.
+- `provenance_verification`: `static_mro_only`, never a runtime claim.
+- `documentation`: regression registry guide/theory/notebook paths,
+  tagged `registry_metadata_only` (not link or execution validation).
+- Classification entries explicitly say
+  `not_recorded_in_classification_registry` for documentation metadata.
+
+Run `python scripts/audit_model_api.py --output /tmp/model-api-audit.json`
+to review the full 171-entry snapshot without committing generated files.
+An empty `upstream_bases` list **does not** imply a fully native algorithm:
+composition, runtime imports, and delegated estimators (e.g. sklearn forests)
+are invisible to MRO inspection. Inspect implementation source to determine
+component-level ownership. The report is a traceability aid, not proof of
+correctness, training support, or mathematical equivalence.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
