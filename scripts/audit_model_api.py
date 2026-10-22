@@ -224,7 +224,12 @@ def main() -> int:
         help="Fail if regression registry guide/theory/notebook paths do not exist",
     )
     args = parser.parse_args()
-    content = json.dumps(build_inventory(), ensure_ascii=False, indent=2) + "\n"
+    inventory = build_inventory()
+    if args.check_documentation_paths:
+        inventory["missing_documentation_paths"] = find_missing_documentation_paths(
+            inventory, repository_root=Path(__file__).resolve().parents[1]
+        )
+    content = json.dumps(inventory, ensure_ascii=False, indent=2) + "\n"
     if args.output is None:
         print(content, end="")
     else:
