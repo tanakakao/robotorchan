@@ -327,6 +327,18 @@ not calibrated epistemic uncertainty. All remaining registry models require
 comparable assertion-level inspection before Phase 2's exhaustive test mapping
 can be considered complete.
 
+## Optional static upstream composition scan
+
+Run `python scripts/audit_model_api.py --include-upstream-calls --output model-review.json`
+to list imported BoTorch, GPyTorch, and scikit-learn call targets
+syntactically present inside each registered model class. This supplements
+`upstream_bases`, which reports inheritance only. The scan intentionally
+excludes helper-function delegation, runtime aliases, inherited method bodies,
+and indirect factories. Empty `upstream_calls` means **not detected**, not
+that a model does not delegate. Results are marked
+`static_direct_import_call_only` and must not be treated as runtime traces
+or proof that any upstream method executed.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
