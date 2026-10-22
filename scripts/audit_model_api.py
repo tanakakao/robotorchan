@@ -215,7 +215,6 @@ def find_missing_documentation_paths(
     return missing
 
 
-
 def find_test_references(
     inventory: dict[str, Any], *, repository_root: Path
 ) -> dict[str, dict[str, Any]]:
@@ -246,6 +245,7 @@ def find_test_references(
         }
         for name in sorted(names)
     }
+
 
 def main() -> int:
     """Print an inventory or save it as a review-only JSON report."""
