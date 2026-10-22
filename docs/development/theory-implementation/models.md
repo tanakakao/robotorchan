@@ -260,6 +260,24 @@ It reports missing paths and exits nonzero if any are absent. It does not
 execute notebooks, validate theory content, or check classification-model
 links (which are not encoded in that registry).
 
+## Static test-reference discovery
+
+The existing audit can now discover syntactic references to all 171 model
+registry identifiers / class names in Python test files:
+
+```bash
+python scripts/audit_model_api.py --include-test-references --output model-test-references.json
+```
+
+The `test_references` result lists matching test file paths and explicitly
+labels them `syntactic_reference_only`. AST matching ignores comments and
+string literals but can still produce false positives (unrelated names) and
+false negatives (aliases, parametrization, dynamically constructed classes).
+An empty list is **not** evidence of missing tests; a nonempty list is **not**
+evidence of mathematical verification. Assertions and actual executed model
+paths still require human inspection and, where needed, numerical tests.
+The generated JSON is a temporary review artifact, not a tracked document.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
