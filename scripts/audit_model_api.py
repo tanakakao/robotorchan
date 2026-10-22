@@ -216,7 +216,6 @@ def find_missing_documentation_paths(
 
 
 
-
 def find_test_references(
     inventory: dict[str, Any], *, repository_root: Path
 ) -> dict[str, dict[str, Any]]:
@@ -235,12 +234,8 @@ def find_test_references(
     tests_root = repository_root / "tests"
     for path in sorted(tests_root.rglob("test_*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        referenced = {
-            node.id for node in ast.walk(tree) if isinstance(node, ast.Name)
-        }
-        referenced.update(
-            node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)
-        )
+        referenced = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+        referenced.update(node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute))
         for name, class_name in classes.items():
             if class_name in referenced:
                 matches[name].add(path.relative_to(repository_root).as_posix())
