@@ -17,6 +17,7 @@ _method_info = _AUDIT["_method_info"]
 build_inventory = _AUDIT["build_inventory"]
 classify_training_api = _AUDIT["classify_training_api"]
 find_contract_gaps = _AUDIT["find_contract_gaps"]
+find_missing_documentation_paths = _AUDIT["find_missing_documentation_paths"]
 
 
 def test_inventory_covers_registered_models_without_instantiation() -> None:
@@ -152,3 +153,16 @@ def test_all_registered_models_expose_static_provenance_fields() -> None:
 
     for row in inventory["classification_models"].values():
         assert row["documentation"]["verification"] == ("not_recorded_in_classification_registry")
+
+
+def test_registry_documentation_paths_exist_in_repository() -> None:
+    root = Path(__file__).resolve().parents[3]
+    missing = find_missing_documentation_paths(build_inventory(), repository_root=root)
+    assert missing == []
+
+
+def test_documentation_path_check_reports_missing_file(tmp_path: Path) -> None:
+    inventory = build_inventory()
+    missing = find_missing_documentation_paths(inventory, repository_root=tmp_path)
+    assert len(missing) == 3 * len(MODEL_REGISTRY)
+    assert {item["kind"] for item in missing} == {"guide", "theory", "notebook"}
