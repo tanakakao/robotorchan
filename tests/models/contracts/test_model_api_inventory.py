@@ -137,7 +137,7 @@ def test_all_registered_models_expose_static_provenance_fields() -> None:
     for family in ("regression_models", "classification_models"):
         for row in inventory[family].values():
             assert row["implementation_module"]
-            assert row["class"].startswith(f'{row["implementation_module"]}.')
+            assert row["class"].startswith(f"{row['implementation_module']}.")
             assert row["provenance_verification"] == "static_mro_only"
             assert isinstance(row["upstream_bases"], list)
             assert all(
@@ -151,6 +151,4 @@ def test_all_registered_models_expose_static_provenance_fields() -> None:
         assert all(row["documentation"][field] for field in ("guide", "theory", "notebook"))
 
     for row in inventory["classification_models"].values():
-        assert row["documentation"]["verification"] == (
-            "not_recorded_in_classification_registry"
-        )
+        assert row["documentation"]["verification"] == ("not_recorded_in_classification_registry")
