@@ -486,6 +486,27 @@ The sklearn parametrized probability-contract test runs against four estimator
 classes, but does not compare each model's predictions to a standalone
 sklearn reference. These boundaries should inform targeted Phase 7 tests.
 
+## Source and assertion audit: binary multitask and DeepGP
+
+Three additional classification test modules were inspected in full, with
+**16 named test functions** (6 long-format multitask, 4 block-design
+multitask, 6 DeepGP). The DeepGP threshold test is parametrized for three
+nonfinite values; named test counts do not represent executed case counts.
+
+| Implementation and tests | Mathematical implementation and delegated operations | Confirmed assertions | Not confirmed |
+| --- | --- | --- | --- |
+| `classification/binary/standard/multitask.py` / `test_multitask_binary.py` | Local structural task-feature validation; data covariance from BoTorch's `get_covar_module_with_dim_scaled_prior` multiplied by GPyTorch `IndexKernel` via `ProductKernel`; variational GP and Bernoulli inference inherited from single-task classifier | Product and IndexKernel structure, negative feature index normalization, rank and task-ID validation, raw long-format data, predicted probability simplex and sample shape | Correct task-covariance values, cross-task correlation and inference quality |
+| `classification/binary/standard/multitask.py` / `test_kronecker_binary.py` | Local block-to-long format reshaping, task-axis expansion, and return to all-task predictions; **uses the same variational ICM backend**, not an independently implemented Kronecker Gaussian inference routine | Preserves block-design raw X/Y, per-task output shapes and probability simplex, rejects invalid block shapes, preserves boolean labels | Equivalence with explicit long-format predictions or algebraic Kronecker structure and scaling |
+| `classification/binary/expressive/deep_gp.py` / `expressive/test_deep_gp_classifier.py` | Inherits `SingleTaskDeepGP`; locally adds a GPyTorch Bernoulli observation likelihood, wraps `VariationalELBO` in `DeepApproximateMLL`, averages likelihood probabilities over latent posterior samples | Latent/probability shapes, finite scalar training loss, Bernoulli deep ELBO type, raw data contract, probability sample simplex, common classification metadata and invalid-label/threshold guards | ELBO reference equivalence, MC convergence, probability calibration, and trained predictive quality |
+
+In the block-design classifier, `KroneckerMultiTaskBinaryGPClassifier`
+expands `n x d` inputs and `n x m` labels to `(n*m) x (d+1)`
+inputs with an explicit task column and `n*m` labels, then delegates
+to `MultiTaskBinaryGPClassifier`. The name must not be interpreted as
+evidence that exact Kronecker matrix algebra runs in this classification
+model. This is an important distinction between naming and implemented
+numerical algorithm.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
