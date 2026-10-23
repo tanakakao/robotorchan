@@ -201,8 +201,12 @@ def test_upstream_call_scan_covers_all_registered_models() -> None:
     )
     assert set(calls) == set(MODEL_REGISTRY) | set(CLASSIFICATION_MODEL_REGISTRY)
     assert all(row["verification"] == "static_direct_import_call_only" for row in calls.values())
-    assert all(row["upstream_calls"] == sorted(set(row["upstream_calls"])) for row in calls.values())
-    assert "sklearn.ensemble.RandomForestRegressor" in calls["RandomForestSurrogate"]["upstream_calls"]
+    assert all(
+        row["upstream_calls"] == sorted(set(row["upstream_calls"])) for row in calls.values()
+    )
+    assert "sklearn.ensemble.RandomForestRegressor" in calls["RandomForestSurrogate"][
+        "upstream_calls"
+    ]
     assert "gpytorch.likelihoods.BernoulliLikelihood" in calls["binary.standard"]["upstream_calls"]
 
 
