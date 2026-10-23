@@ -466,6 +466,26 @@ reported tolerance and sample count describe a specific finite-data test,
 not exact equality for all settings. The nonzero-covariance test verifies
 simplex preservation, not accuracy against a Gaussian integral reference.
 
+## Inspected classification test assertions: label noise and sklearn adapters
+
+The following two modules were inspected directly on `main`. Each contains
+**five and four named test functions**, respectively; parametrization expands
+the actual executed cases and must not be confused with function counts.
+
+| Test module | Named tests | Assertion evidence | Unverified mathematical or statistical behavior |
+| --- | ---: | --- | --- |
+| `tests/models/classification/robust/test_label_noise.py` | 5 | Explicit asymmetric label-flip formula at three reference probabilities; symmetric flip-rate configuration and clean-to-observed positive-probability relationship; gradients for learnable flip logits; invalid-rate rejection (four parametrized rates); exclusion of simultaneous symmetric/asymmetric settings | Identifiability of flip parameters, quadrature accuracy for training likelihood, and probability calibration |
+| `tests/models/classification/non_gp/test_sklearn.py` | 4 | Fitted output simplex, bounds, entropy/variance shapes for each of four sklearn classifier families (one parametrized test); rejection of unsupported epistemic probability sampling; fit-before-predict guard; registry posterior-sampling capability flags | Proper calibration, treatment of single-class training sets, class-order edge cases, and predictive performance versus sklearn references |
+
+The label-noise test asserts the source formula
+`p_observed = a + (1 - a - b) * p_clean` for
+`(a, b) = (0.1, 0.2)` and `p_clean = (0, 0.25, 1)`.
+This is an explicit fixed-value mathematical assertion, not evidence that
+the numerical quadrature or fitted classifier is statistically calibrated.
+The sklearn parametrized probability-contract test runs against four estimator
+classes, but does not compare each model's predictions to a standalone
+sklearn reference. These boundaries should inform targeted Phase 7 tests.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
