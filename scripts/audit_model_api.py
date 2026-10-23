@@ -280,9 +280,8 @@ def find_upstream_constructor_calls(
                         target = child.func
                         if isinstance(target, ast.Name):
                             resolved = imports.get(target.id, "")
-                        elif (
-                            isinstance(target, ast.Attribute)
-                            and isinstance(target.value, ast.Name)
+                        elif isinstance(target, ast.Attribute) and isinstance(
+                            target.value, ast.Name
                         ):
                             prefix = imports.get(target.value.id, "")
                             resolved = f"{prefix}.{target.attr}" if prefix else ""
