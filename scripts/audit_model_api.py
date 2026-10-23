@@ -302,7 +302,6 @@ def find_upstream_constructor_calls(
     return results
 
 
-
 def summarize_static_model_evidence(
     inventory: dict[str, Any],
     test_references: dict[str, dict[str, Any]],
