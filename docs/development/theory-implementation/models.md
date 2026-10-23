@@ -664,6 +664,28 @@ constructed mixed covariance is *not* a replacement for BoTorch's fidelity
 kernel. Cost-aware knowledge-gradient interoperability establishes a usable
 call path rather than optimization performance.
 
+## Source and assertion audit: regression DeepGP models
+
+The implementation in `models/expressive/deep_gp.py` and two targeted
+test modules were inspected on `main`: **20 named test functions** (15 in
+`tests/models/expressive/test_deep_gp.py`, five in
+`tests/models/expressive/test_deep_gp_botorch.py`).
+
+| Model family | Numerical method and delegation | Inspected assertion evidence | Verification limits |
+| --- | --- | --- | --- |
+| `SingleTaskDeepGP` | Hierarchy of GPyTorch `DeepGPLayer` modules with Cholesky variational distributions, `VariationalStrategy`, Gaussian likelihood and `DeepApproximateMLL(VariationalELBO)`; local `DeepGPPosterior` exposes Monte Carlo samples | Raw training data/layer structure, finite negative ELBO, hidden/output kernel gradients and actual Adam parameter update, minibatch total-data scaling contract, invalid hyperparameter guards | ELBO numerical reference, posterior approximation convergence, learned function recovery |
+| `MultiTaskDeepGP` | Local task-id normalization and learned task embedding; inherited stochastic DeepGP on embedded features, **not** a BoTorch exact `MultiTaskGP` covariance | Task embedding/structure, posterior shape for raw long-format task inputs, finite nonzero embedding gradient, noncontiguous task-id rejection | Cross-task correlation accuracy and embedding identifiability |
+| `MixedSingleTaskDeepGP` | Local categorical embedding followed by inherited DeepGP hierarchy; categorical labels are not treated as continuous GP coordinates | Raw mixed data and category metadata, posterior finite moments, nonzero categorical embedding gradient, unknown-category rejection | Embedding extrapolation, calibrated mixed-data uncertainty |
+| BoTorch integration of `SingleTaskDeepGP` | Local sample-backed `DeepGPPosterior` supports upstream MC acquisitions and `botorch.optim.optimize_acqf` | Candidate gradient through posterior mean, `rsample` shape, finite qLogEI/qUCB, successful optimize_acqf call in original input coordinates, stable singleton-input standardization | Optimization regret, independent distributional Monte Carlo reference, multi-seed stability |
+
+The `DeepGPPosterior` is a **sample-based approximation**, not an exact
+Gaussian analytic posterior. A finite acquisition value and optimizer call
+demonstrate interoperability rather than global optimality. The contract
+test `tests/models/contracts/test_expressive_public_contract.py` also
+explicitly forbids the legacy public alias `DeepKernelGP`; it must not be
+mistaken for a registered model. Phase 7 should test Monte Carlo moment
+accuracy and numerical stability separately from these contract checks.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
