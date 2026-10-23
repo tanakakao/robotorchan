@@ -295,9 +295,12 @@ def test_evidence_summary_covers_both_actual_registries() -> None:
     for family in ("regression_models", "classification_models"):
         group = summary["families"][family]
         assert group["registered_models"] == len(inventory[family])
-        assert group["with_syntactic_test_references"] + len(
-            group["without_syntactic_test_references"]
-        ) == group["registered_models"]
-        assert group["with_direct_upstream_calls"] + len(
-            group["without_direct_upstream_calls"]
-        ) == group["registered_models"]
+        assert (
+            group["with_syntactic_test_references"]
+            + len(group["without_syntactic_test_references"])
+            == group["registered_models"]
+        )
+        assert (
+            group["with_direct_upstream_calls"] + len(group["without_direct_upstream_calls"])
+            == group["registered_models"]
+        )
