@@ -20,6 +20,7 @@ find_contract_gaps = _AUDIT["find_contract_gaps"]
 find_missing_documentation_paths = _AUDIT["find_missing_documentation_paths"]
 find_test_references = _AUDIT["find_test_references"]
 find_upstream_constructor_calls = _AUDIT["find_upstream_constructor_calls"]
+summarize_static_model_evidence = _AUDIT["summarize_static_model_evidence"]
 
 
 def test_inventory_covers_registered_models_without_instantiation() -> None:
@@ -255,3 +256,48 @@ def test_upstream_call_scan_resolves_optional_and_aliased_imports(tmp_path: Path
         "gpytorch.likelihoods.BernoulliLikelihood",
         "sklearn.ensemble.RandomForestRegressor",
     ]
+
+
+def test_evidence_summary_separates_detection_from_verification() -> None:
+    inventory = {
+        "regression_models": {"A": {}, "B": {}},
+        "classification_models": {"binary.example": {}},
+    }
+    references = {
+        "A": {"test_files": ["tests/test_a.py"]},
+        "B": {"test_files": []},
+        "binary.example": {"test_files": ["tests/test_binary.py"]},
+    }
+    calls = {
+        "A": {"upstream_calls": []},
+        "B": {"upstream_calls": ["botorch.models.SingleTaskGP"]},
+        "binary.example": {"upstream_calls": []},
+    }
+    result = summarize_static_model_evidence(inventory, references, calls)
+    assert result["verification"] == "static_detection_counts_only"
+    regression = result["families"]["regression_models"]
+    assert regression["registered_models"] == 2
+    assert regression["with_syntactic_test_references"] == 1
+    assert regression["without_syntactic_test_references"] == ["B"]
+    assert regression["with_direct_upstream_calls"] == 1
+    assert regression["without_direct_upstream_calls"] == ["A"]
+    classification = result["families"]["classification_models"]
+    assert classification["registered_models"] == 1
+    assert classification["without_direct_upstream_calls"] == ["binary.example"]
+
+
+def test_evidence_summary_covers_both_actual_registries() -> None:
+    inventory = build_inventory()
+    root = Path(__file__).resolve().parents[3]
+    references = find_test_references(inventory, repository_root=root)
+    calls = find_upstream_constructor_calls(inventory, repository_root=root)
+    summary = summarize_static_model_evidence(inventory, references, calls)
+    for family in ("regression_models", "classification_models"):
+        group = summary["families"][family]
+        assert group["registered_models"] == len(inventory[family])
+        assert group["with_syntactic_test_references"] + len(
+            group["without_syntactic_test_references"]
+        ) == group["registered_models"]
+        assert group["with_direct_upstream_calls"] + len(
+            group["without_direct_upstream_calls"]
+        ) == group["registered_models"]
