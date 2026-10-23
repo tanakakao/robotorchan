@@ -686,6 +686,32 @@ explicitly forbids the legacy public alias `DeepKernelGP`; it must not be
 mistaken for a registered model. Phase 7 should test Monte Carlo moment
 accuracy and numerical stability separately from these contract checks.
 
+## Source and assertion audit: expressive stationary and infinite-width kernels
+
+The source and dedicated tests for `SpectralMixtureGP` variants
+(`models/expressive/spectral_mixture.py`,
+`tests/models/expressive/test_spectral_mixture.py`) and
+`InfiniteWidthBNNGP` variants
+(`models/expressive/infinite_width_bnn.py`,
+`tests/models/expressive/test_infinite_width_bnn.py`) were inspected.
+These checks cover standard, mixed, long-format multitask and block-design
+Kronecker constructions, with different evidence strengths.
+
+| Family | Mathematical object and implementation boundary | Directly inspected evidence | Remaining mathematical verification |
+| --- | --- | --- | --- |
+| Spectral mixture exact GPs | Local setup initializes GPyTorch `SpectralMixtureKernel` using either training data or empirical spectrum; parent BoTorch-compatible exact GP handles posterior and MLL | Finite spectral parameters, valid hyperparameter guards, preserved raw data, exact MLL, finite posterior/qLogEI and successful BoTorch optimization | Independent spectral-density reconstruction, recovery of known mixture frequencies and initialization sensitivity |
+| Spectral mixed / multitask / Kronecker | Local class selects non-task/non-categorical dimensions for spectral data covariance; native categorical kernels or structured task covariance are composed with GPyTorch spectral kernel | Correct spectral active dimensions, block-design MLL and sampling shapes, category changes covariance, scalarized qLogEI, mixed `optimize_acqf_mixed` candidate feasibility | Numeric equality of composed covariance to explicit Kronecker or mixed-kernel reference, learned cross-task correlations |
+| Infinite-width ReLU NNGP kernel | `InfiniteWidthReLUKernel` **locally** applies the arc-cosine ReLU covariance recursion at each depth, with ARD-scaled inputs; GPyTorch provides `Kernel` plumbing | Symmetric finite 12-by-12 Gram matrix with positive diagonal and eigenvalues >= -1e-8; invalid variance/depth guards | Independent depth-one closed-form reference, analytic diagonal recursion identity, deeper numerical stability |
+| NNGP single/mixed/multitask/Kronecker | Local custom NNGP data kernel is passed to exact GP; task columns excluded from data covariance and categorical data handled through `make_mixed_covar_module` | Raw data/MLL, correct task active dimensions, finite posterior/samples/qLogEI, mixed-category changes covariance, both continuous and mixed BoTorch optimizer pathways | Numerical task/Kronecker covariance identity and objective performance on controlled functions |
+
+These families must not be classified as wholly delegated. Spectral-mixture
+kernel evaluation delegates to GPyTorch, while its input-role composition
+and initialization are local; the infinite-width ReLU recursion itself is
+implemented in robotorchan. In particular, Gram-matrix symmetry and a
+tolerance-based PSD check are useful numerical properties, **not** a proof
+that the recursion matches a published infinite-width kernel formula. That
+independent algebraic reference belongs to Phase 7.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
