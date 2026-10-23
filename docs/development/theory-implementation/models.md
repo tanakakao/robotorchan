@@ -411,6 +411,25 @@ for each classification ID, inspect its assertion-level tests, and record
 missing demonstrations explicitly. A shared guide link is not sufficient to
 close these items.
 
+## Source-inspected classification delegation: non-GP and label noise
+
+Two additional classification paths were inspected directly on `main`:
+
+| Implementation | Local numerical contract | Delegation and mathematical object | Unverified boundary |
+| --- | --- | --- | --- |
+| `classification/binary/non_gp/sklearn.py`: `SklearnBinaryClassifier` and four subclasses | Validate canonical 0/1 labels, preserve raw tensors, fit a stored estimator, convert `predict_proba` to candidate batch shape | The four subclasses assign sklearn `RandomForestClassifier`, `ExtraTreesClassifier`, `GradientBoostingClassifier`, or `HistGradientBoostingClassifier` to `estimator_class`; the base class constructs and calls the estimator | Per-estimator class-order and calibration behavior; no Gaussian latent posterior follows from this adapter |
+| `classification/binary/robust/label_noise.py`: `LabelNoiseBinarySingleTaskGPClassifier` | Validate flip rates, replace the base classifier likelihood, distinguish clean from observed-label predictions | GPyTorch `BernoulliLikelihood` supplies clean probabilities; `LabelNoiseBernoulliLikelihood` maps them through an explicit label-flip channel and integrates log probability by quadrature | Numerical quadrature accuracy, learned flip-rate identifiability, and calibration of clean versus corrupted predictions |
+
+For false-positive rate `a`, false-negative rate `b`, and clean positive
+probability `p`, the local label-noise transform is
+`p_observed = a + (1 - a - b) * p`. The implementation applies this
+transform to both latent-sample and posterior-predictive likelihood paths.
+This equation is **source-inspected**, not yet checked against an independent
+numerical reference. The sklearn base class constructs the estimator through
+`self.estimator_class`; the current direct-import call scanner does not
+resolve that class-attribute indirection. Its empty result for an individual
+sklearn subclass must not be interpreted as an absence of upstream delegation.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
