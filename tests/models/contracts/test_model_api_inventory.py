@@ -204,9 +204,9 @@ def test_upstream_call_scan_covers_all_registered_models() -> None:
     assert all(
         row["upstream_calls"] == sorted(set(row["upstream_calls"])) for row in calls.values()
     )
-    assert "sklearn.ensemble.RandomForestRegressor" in calls["RandomForestSurrogate"][
-        "upstream_calls"
-    ]
+    assert (
+        "sklearn.ensemble.RandomForestRegressor" in calls["RandomForestSurrogate"]["upstream_calls"]
+    )
     assert "gpytorch.likelihoods.BernoulliLikelihood" in calls["binary.standard"]["upstream_calls"]
 
 
@@ -220,11 +220,11 @@ def test_upstream_call_scan_ignores_strings_and_unrelated_calls(tmp_path: Path) 
     source = tmp_path / "src" / "example.py"
     source.parent.mkdir()
     source.write_text(
-        'from sklearn.ensemble import RandomForestRegressor\\n'
-        'class Example:\\n'
-        '    def run(self):\\n'
+        "from sklearn.ensemble import RandomForestRegressor\\n"
+        "class Example:\\n"
+        "    def run(self):\\n"
         '        message = "RandomForestRegressor()"\\n'
-        '        return len(message)\\n',
+        "        return len(message)\\n",
         encoding="utf-8",
     )
     calls = find_upstream_constructor_calls(inventory, repository_root=tmp_path)
