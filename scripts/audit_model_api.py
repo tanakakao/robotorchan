@@ -264,7 +264,13 @@ def find_upstream_constructor_calls(
             if source.is_file():
                 tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
                 imports: dict[str, str] = {}
-                for node in tree.body:
+                import_nodes = (
+                    child
+                    for node in tree.body
+                    if not isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
+                    for child in ast.walk(node)
+                )
+                for node in import_nodes:
                     if isinstance(node, ast.ImportFrom) and node.module:
                         for alias in node.names:
                             imports[alias.asname or alias.name] = f"{node.module}.{alias.name}"
