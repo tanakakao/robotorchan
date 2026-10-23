@@ -529,6 +529,29 @@ through its Mahalanobis parameter, but does not benchmark candidate-search
 quality. These explicit verification boundaries are inputs to Phase 7,
 not Phase 2 numerical pass claims.
 
+## Source and assertion audit: neural, ensemble, robust and categorical models
+
+Five further implementation and corresponding test modules were inspected
+on `main`. Together they contain **27 named test functions**: joint neural
+encoder (4), homogeneous GP ensemble (6), input-dependent label noise (6),
+nonstationary binary GP (5), and uncertain categorical input (6).
+
+| Model and test module | Implemented / delegated numerical object | Specific assertions observed | Remaining verification |
+| --- | --- | --- | --- |
+| `high_dimensional/reduced/joint_neural.py` / `high_dimensional/reduced/test_joint_encoder_classifier.py` | Local neural encoder maps standardized original inputs to GP features; `training_loss` evaluates the binary variational ELBO through the encoder | Class probability shape and simplex, latent feature dimension, finite gradients for all encoder parameters, raw-data preservation, incorrect input dimension rejection | End-to-end trained representation quality, encoder/GP optimization stability and extrapolation |
+| `ensemble/gp.py` / `ensemble/test_gp.py` | Empirical class-probability posterior over separate binary GP classifiers, via local `ClassificationEnsemblePosterior` adapter | Mean and population variance against stacked member predictions, separate member latent posteriors, probability sample simplex and nonnegative MI, matching-training-data guard, registry/acquisition compatibility | Independent MI/entropy identity, statistical calibration, robustness to correlated ensemble members |
+| `robust/input_dependent_noise.py` / `robust/test_input_dependent_noise.py` | GPyTorch Bernoulli likelihood plus local input-dependent false-positive/negative flip channel; rate module or callable | Input-dependent observed probabilities, clean vs observed predictions, learnable rate parameter registration, callable rates, shape and bound validation | Quadrature accuracy, noisy-label parameter identifiability, calibrated prediction across input space |
+| `robust/nonstationary.py` / `robust/test_nonstationary.py` | Local `GibbsKernel` changes latent covariance with location, while the Bernoulli observation process remains unchanged | Gibbs/ScaleKernel structure, positive input-dependent local lengthscale, predictive class simplex, latent-process (not label-noise) metadata, registry capability | Positive-definite kernel numerical tests across settings, spatial adaptation and training quality; mixed/multitask variants not covered by this module |
+| `uncertain/uncertain_categorical.py` / `uncertain/test_uncertain_categorical.py` | Analytic finite-support marginalization: a weighted sum of mixed-GP class probabilities over candidate categorical values | One-hot category identity, soft-weighted sum against explicit alternatives, finite gradients in continuous candidate coordinates, categorical-dimension rejection and metadata | Larger category supports, multi-batch edge cases, invalid probability distributions and runtime performance |
+
+These assertions include meaningful identities for ensemble moments and
+finite-support categorical marginalization. They are not equivalent to
+statistical calibration or convergence tests. Notably, joint neural encoder
+training checks that gradients reach encoder parameters, but does not verify
+that a fitted encoder learns a useful representation. The nonstationary test
+covers the single-task classifier only; it must not be generalized to the
+mixed and multitask nonstationary implementations.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
