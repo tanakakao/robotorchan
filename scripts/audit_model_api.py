@@ -302,6 +302,38 @@ def find_upstream_constructor_calls(
     return results
 
 
+def summarize_static_model_evidence(
+    inventory: dict[str, Any],
+    test_references: dict[str, dict[str, Any]],
+    upstream_calls: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Summarize detected evidence, without inferring assertion or runtime coverage."""
+    groups = {}
+    for family in ("regression_models", "classification_models"):
+        names = sorted(inventory[family])
+        without_test_references = [
+            name for name in names if not test_references[name]["test_files"]
+        ]
+        without_direct_upstream_calls = [
+            name for name in names if not upstream_calls[name]["upstream_calls"]
+        ]
+        groups[family] = {
+            "registered_models": len(names),
+            "with_syntactic_test_references": len(names) - len(without_test_references),
+            "without_syntactic_test_references": without_test_references,
+            "with_direct_upstream_calls": len(names) - len(without_direct_upstream_calls),
+            "without_direct_upstream_calls": without_direct_upstream_calls,
+        }
+    return {
+        "verification": "static_detection_counts_only",
+        "limitations": (
+            "Missing matches do not imply missing tests or delegation; matches "
+            "do not demonstrate executed assertions, runtime behavior or numerical validity."
+        ),
+        "families": groups,
+    }
+
+
 def main() -> int:
     """Print an inventory or save it as a review-only JSON report."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -317,19 +349,30 @@ def main() -> int:
         help="Include direct imported upstream calls within model class bodies",
     )
     parser.add_argument(
+        "--include-evidence-summary",
+        action="store_true",
+        help="Summarize static model test references and direct upstream calls",
+    )
+    parser.add_argument(
         "--check-documentation-paths",
         action="store_true",
         help="Fail if regression registry guide/theory/notebook paths do not exist",
     )
     args = parser.parse_args()
     inventory = build_inventory()
-    if args.include_test_references:
+    if args.include_test_references or args.include_evidence_summary:
         inventory["test_references"] = find_test_references(
             inventory, repository_root=Path(__file__).resolve().parents[1]
         )
-    if args.include_upstream_calls:
+    if args.include_upstream_calls or args.include_evidence_summary:
         inventory["upstream_calls"] = find_upstream_constructor_calls(
             inventory, repository_root=Path(__file__).resolve().parents[1]
+        )
+    if args.include_evidence_summary:
+        inventory["evidence_summary"] = summarize_static_model_evidence(
+            inventory,
+            inventory["test_references"],
+            inventory["upstream_calls"],
         )
     if args.check_documentation_paths:
         inventory["missing_documentation_paths"] = find_missing_documentation_paths(

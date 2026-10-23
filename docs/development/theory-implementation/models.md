@@ -577,6 +577,24 @@ itself a guarantee of calibrated epistemic uncertainty. Robust cross-family
 tests establish structural shapes and composition contracts, not covariance
 matrix numerical equivalence.
 
+## Repeatable registry-wide static evidence summary
+
+Run the following command to produce one temporary JSON review report for
+all regression and classification registry entries:
+
+```bash
+python scripts/audit_model_api.py --include-evidence-summary --output model-evidence.json
+```
+
+The `evidence_summary.families` result reports registry counts, identifiers
+without syntactic test references, and identifiers without direct upstream
+constructor calls, separately for regression and classification. It includes
+the complete `test_references` and `upstream_calls` evidence for follow-up
+review. Both are **static detection only**: absent matches do not prove missing
+tests or delegation, and detected matches do not establish assertion execution,
+mathematical correctness, or exercised runtime pathways. Do not commit the
+point-in-time JSON snapshot; rerun it on the relevant `main` revision.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
