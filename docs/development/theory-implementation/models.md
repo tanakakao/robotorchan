@@ -507,6 +507,28 @@ evidence that exact Kronecker matrix algebra runs in this classification
 model. This is an important distinction between naming and implemented
 numerical algorithm.
 
+## Source and assertion audit: high-dimensional binary classifiers
+
+Four implementation modules and four corresponding test modules were inspected
+on `main`. These contain **13 named test functions** (3 reduction, 4 SAAS,
+3 MAP-SAAS, 3 ALEBO); the reduction test is parametrized over three reducers.
+
+| Model family and tests | Local mathematical or algorithmic responsibility | Upstream delegation and checked assertions | Still unverified |
+| --- | --- | --- | --- |
+| `high_dimensional/reduced/base.py` / `high_dimensional/reduced/test_reduced.py` | Fit or reuse a frozen input reducer; train the latent binary GP on transformed inputs; accept original or latent candidate coordinates | PCA, PLS, and random projection use `robotorchan.reduction.input` reducers; tests compare original versus reduced probability outputs for all three, check raw tensor preservation and reject wrong dimensions | Reduction-induced predictive distortion, supervised PLS leakage in evaluation, unseen-data behavior, and numerical projection accuracy |
+| `high_dimensional/saas.py` / `high_dimensional/test_saas.py` | Register Half-Cauchy shrinkage on inverse ARD lengthscales of a Matérn-5/2 kernel; use the base variational binary GP | GPyTorch kernels and prior; tests check prior targets reciprocal lengthscale, finite raw-lengthscale ELBO gradient, probability simplex and positive scale validation | Sparse feature recovery, prior posterior behavior, calibrated predictions; this is **not** a NUTS/Pyro fully Bayesian classifier |
+| `high_dimensional/map_saas.py` / `high_dimensional/test_map_saas.py` | Create BoTorch ARD covariance and attach a GPyTorch Half-Cauchy inverse-lengthscale prior | Tests check registered prior name, predicted class simplex and positive `tau` guard | Whether an optimization run finds a MAP solution, active-dimension recovery, and fit convergence |
+| `high_dimensional/alebo.py` / `high_dimensional/test_alebo_classifier.py` | Apply `MahalanobisRBFKernel` to embedded coordinates with an optional projection; inherit variational Bernoulli prediction | Local ALEBO kernel, `ALEBOStrategy` for training examples and BoTorch-compatible binary GP inference; tests check probability simplex, metric size, finite Mahalanobis-parameter ELBO gradient and projection shape guard | Validity of ambient-space feasibility, convergence of embedded optimization, and metric learning accuracy |
+
+The SAAS and MAP-SAAS names denote distinct covariance construction and
+prior configuration; their test assertions do **not** establish a fully
+Bayesian NUTS posterior. Likewise, the reduced classifier's equality between
+original- and reduced-coordinate predictions checks a code-path identity,
+not lossless dimension reduction. The ALEBO test differentiates an ELBO
+through its Mahalanobis parameter, but does not benchmark candidate-search
+quality. These explicit verification boundaries are inputs to Phase 7,
+not Phase 2 numerical pass claims.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
