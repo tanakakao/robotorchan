@@ -552,6 +552,31 @@ that a fitted encoder learns a useful representation. The nonstationary test
 covers the single-task classifier only; it must not be generalized to the
 mixed and multitask nonstationary implementations.
 
+## Source and assertion audit: contamination, replicates, bootstrap and robust composition
+
+Four additional implementation/test paths were inspected on `main`, together
+with the mixed/multitask nonstationary implementations in
+`classification/binary/robust/nonstationary.py`. Their four inspected test
+modules contain **18 named test functions**: contamination (5), repeated
+labels (4), bootstrap gradient boosting (4), and robust cross-family
+composition (5). Parametrized tests cover additional execution cases.
+
+| Implementation and test module | Local algorithm and delegation | Asserted checks | Not verified |
+| --- | --- | --- | --- |
+| `robust/contaminated.py` / `robust/test_contaminated.py` | A GPyTorch Bernoulli likelihood is mixed with an independent contaminant source using `(1-c)*p_clean+c*p_contaminant`; the classifier retains the clean latent GP | Explicit three-point mixture values; clean-to-observed relation; learnable contamination gradient; probability bounds and finite-value validation | Quadrature error, identifiability of contamination and clean signal, fitted probability calibration |
+| `robust/replicate.py` / `robust/test_replicate.py` | Keeps every repeated observation for inherited variational Bernoulli inference; locally computes counts, positive rates and disagreement `2*p*(1-p)` without replacing training labels with aggregated rates | Six raw observations retained, per-condition counts and rates, disagreement at mixed vs unanimous replicates, minimum two replicates guard, column-label support | Effect of replication on predictive uncertainty, large replicate groups, and consistency of posterior learning |
+| `non_gp/gradient_boosting.py` and `non_gp/bootstrap.py` / `non_gp/test_bootstrap.py` | Constructs individual sklearn gradient-boosting estimators over bootstrap samples; reports empirical member probability moments | Fit/sample probability shapes and class simplex; mean and population variance against member predictions; nonnegative mutual information; minimum member count; registry ensemble sampling flags | Bootstrap uncertainty calibration, independent numerical MI reference, sensitivity to resampling and rare classes |
+| `robust/nonstationary.py` / `robust/test_cross_family.py` | Mixed model puts Gibbs kernels on continuous features and separate categorical kernels; multitask model excludes task identity from data-lengthscale input | Continuous-only local-lengthscale shapes in mixed and task-aware models, heterogeneous robust `ClassificationModelList` composition, capability flags, standard nonstationary compatibility | Numerical mixed/task kernel identities, positive definiteness across wider parameter ranges, cross-task recovery and training quality |
+
+The contamination mixture formula is verified against fixed expected values
+for `c=0.2`, `p_contaminant=0.75` and `p_clean=(0,0.25,1)`. In the
+replicate model, `2*p*(1-p)` is a diagnostic of observed-label disagreement,
+not a replacement likelihood or a GP posterior variance. Bootstrap member
+variance describes variability across resampled estimators; it is not by
+itself a guarantee of calibrated epistemic uncertainty. Robust cross-family
+tests establish structural shapes and composition contracts, not covariance
+matrix numerical equivalence.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
