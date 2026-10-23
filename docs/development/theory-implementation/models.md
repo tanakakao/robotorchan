@@ -339,6 +339,23 @@ that a model does not delegate. Results are marked
 `static_direct_import_call_only` and must not be treated as runtime traces
 or proof that any upstream method executed.
 
+## Conditional import provenance and static scan boundaries
+
+The Phase 2 static upstream-call scanner is now covered by regression tests for
+optional imports inside `try/except ImportError`, aliased imports, and strings
+that merely mention a constructor. In particular, the source of
+`RandomForestSurrogate` imports `RandomForestRegressor` conditionally and
+instantiates it inside the model constructor. The classifier directly
+constructs a GPyTorch `BernoulliLikelihood`; these are concrete source-level
+composition examples, not inherited sklearn/GPyTorch model classes.
+
+The scanner does not resolve runtime reassignment, monkey-patched references,
+indirect helper calls, or methods inherited from upstream implementations.
+A syntactic match does not prove that the call executes on every code path.
+The scanner's test suite checks detection behavior, **not** estimator fit,
+posterior numerical accuracy, or likelihood calibration. Keep those separate
+from Phase 7's mathematical verification work.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
