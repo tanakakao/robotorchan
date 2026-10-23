@@ -430,6 +430,23 @@ numerical reference. The sklearn base class constructs the estimator through
 resolve that class-attribute indirection. Its empty result for an individual
 sklearn subclass must not be interpreted as an absence of upstream delegation.
 
+## Source-inspected classification: heterogeneous ensembles and uncertain inputs
+
+| Implementation | Local mathematical object | Delegated behavior | Remaining verification |
+| --- | --- | --- | --- |
+| `classification/binary/ensemble/heterogeneous.py` | Weighted empirical distribution over member class-probability vectors; its mean is the reported `predict_proba` and its variance measures between-member disagreement | Calls each member's `predict_proba`; delegates probability-posterior moments and entropy to `ClassificationEnsemblePosterior` | Weight normalization, entropy/MI identities, and numerical agreement across heterogeneous member backends |
+| `classification/binary/uncertain/uncertain_input.py` | Gaussian candidate perturbations and Monte Carlo average of `predict_proba(X + epsilon)` | Inherits the binary GP classifier's predictive probabilities; uses PyTorch Cholesky decomposition and Gaussian draws for perturbations | Covariance validation, reproducibility, Monte Carlo convergence, and near-singular covariance behavior |
+
+The heterogeneous ensemble intentionally raises `NotImplementedError` for
+`latent_posterior` and `sample_latent`: its members do not share a single
+latent space. The empirical probability posterior must not be relabeled as a
+GP latent posterior. For uncertain continuous inputs, the code samples
+`epsilon ~ N(0, Sigma)` with a machine-epsilon diagonal jitter and estimates
+`E_epsilon[P(y | X + epsilon, D)]` by averaging member probability vectors.
+These are **source-inspected algorithms**, not evidence of numerical convergence
+or of calibrated epistemic uncertainty. Both require assertion-level test
+mapping and independent numerical checks before verification can be claimed.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
