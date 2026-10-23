@@ -382,6 +382,35 @@ omits. Record missing evidence as `Unverified` rather than treating an empty
 scan as `Unsupported`. Numerical identity and statistical validation belong
 to Phase 7; Phase 2 identifies the specific gaps they must address.
 
+## Classification model documentation ownership
+
+Unlike the regression registry, the classification registry contains no
+per-model `guide`, `theory`, or `notebook` path fields. All 29 public binary
+model IDs are composed from `BINARY_CLASSIFICATION_MODEL_SPECS` in
+`src/robotorchan/models/classification/binary/registry.py`. Therefore the
+regression-only `--check-documentation-paths` check cannot be cited as
+validation of classification documentation coverage.
+
+The shared entry point is `docs/models/classification.md`, which distinguishes
+latent GP posterior, predictive class probabilities, robust observation
+channels, non-GP classifiers, and ensembles. It links to
+`docs/theory/24_classification.md` for GP classification theory and
+`docs/theory/acquisition/classification-active-learning.md` for acquisition
+semantics. These are **shared family references**, not verified per-model
+mathematical derivations or proof that each model has a runnable notebook.
+
+| Registry family | Source of model IDs | Documentation interpretation |
+| --- | --- | --- |
+| standard / multitask | `BINARY_CLASSIFICATION_MODEL_SPECS` | Shared classification guide and latent-versus-label contract |
+| high_dimensional / expressive | `BINARY_CLASSIFICATION_MODEL_SPECS` | Family overview; reduction, embedding, and deep approximations require individual checks |
+| robust / uncertain | `BINARY_CLASSIFICATION_MODEL_SPECS` | Label-noise and uncertain-input semantics require model-specific verification |
+| non_gp / ensemble | `BINARY_CLASSIFICATION_MODEL_SPECS` | Probability adapters and ensemble uncertainty are not Gaussian latent inference |
+
+**Outstanding:** resolve the relevant theory section and executable example
+for each classification ID, inspect its assertion-level tests, and record
+missing demonstrations explicitly. A shared guide link is not sufficient to
+close these items.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
