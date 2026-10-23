@@ -356,6 +356,32 @@ The scanner's test suite checks detection behavior, **not** estimator fit,
 posterior numerical accuracy, or likelihood calibration. Keep those separate
 from Phase 7's mathematical verification work.
 
+## Phase 2 evidence levels and follow-up matrix
+
+The following evidence levels must not be conflated when reporting model
+coverage. A registry entry is an inventory item, not a verified numerical
+implementation. The static test-reference inventory establishes that a name
+occurs in a test AST; it does not establish which assertion exercises that
+model, whether the test executes, or whether the expected value is correct.
+
+| Evidence level | Current source | What it establishes | What it cannot establish |
+| --- | --- | --- | --- |
+| Registry and export | Model registries and public `__all__` | Publicly advertised class identifiers | Instantiation or fit success |
+| Inheritance | `upstream_bases` and `static_mro_only` | Declared BoTorch/GPyTorch ancestry | Composed estimator ownership or executed delegation |
+| Direct composition | `upstream_calls` and `static_direct_import_call_only` | Syntactic calls to imported upstream objects | Indirect calls, actual execution, or numerical fidelity |
+| Test reference | `test_references` and `syntactic_reference_only` | AST-level model references in test files | Assertion coverage or test success |
+| Inspected assertions | The four test modules documented above | Exact assertions in selected source files | Mathematical validity outside those cases |
+| Numerical verification | Future targeted reference/identity tests | Behavior for specified data, tolerances, and seeds | Universal guarantees or empirical calibration |
+
+**Immediate Phase 2 review priorities:** inspect assertions for model families
+not represented by the four source-reviewed test modules; reconcile
+classification models with guide/theory/notebook references (the regression
+registry's path checker does not cover them); and review delegated behavior
+through local helper functions, which the direct-call scanner intentionally
+omits. Record missing evidence as `Unverified` rather than treating an empty
+scan as `Unsupported`. Numerical identity and statistical validation belong
+to Phase 7; Phase 2 identifies the specific gaps they must address.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
