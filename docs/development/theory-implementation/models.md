@@ -447,6 +447,25 @@ These are **source-inspected algorithms**, not evidence of numerical convergence
 or of calibrated epistemic uncertainty. Both require assertion-level test
 mapping and independent numerical checks before verification can be claimed.
 
+## Inspected classification test assertions: ensemble and uncertain input
+
+These two test files were read in full on `main`, adding **12 named test
+functions** to the source-inspected subset. These observations supplement,
+not replace, the AST-level `test_references` inventory.
+
+| Test module | Named tests | Verified by assertions | Not established by these tests |
+| --- | ---: | --- | --- |
+| `tests/models/classification/ensemble/test_heterogeneous.py` | 7 | GP-plus-fitted-forest probability composition; unweighted mean and population variance; rejection of shared latent methods; compatibility matrix for probability AL versus LatentStraddle; backend-neutral registry flags; weighted mean and normalized weights; state-dict persistence; q=1 candidate-axis preservation | Entropy and mutual-information numerical identities; calibrated probability estimates; ensembles with more than two heterogeneous backend families |
+| `tests/models/classification/uncertain/test_continuous_input.py` | 5 | Uncertainty metadata; zero-input-std agreement with baseline probability (tolerance 1e-6); probability simplex and output shape for covariance input; finite candidate gradients; registry robustness capability | Monte Carlo convergence versus independent integration; multivariate correlated covariance cases; non-PSD rejection, near-singular stability, or device portability |
+
+**Numerical scope:** The heterogeneous ensemble's mean and variance are
+compared with explicitly stacked member probabilities in the test source.
+The uncertain-input zero-std test provides a useful limiting case, but the
+implementation adds a small diagonal jitter before Cholesky sampling; the
+reported tolerance and sample count describe a specific finite-data test,
+not exact equality for all settings. The nonzero-covariance test verifies
+simplex preservation, not accuracy against a Gaussian integral reference.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
