@@ -595,6 +595,25 @@ tests or delegation, and detected matches do not establish assertion execution,
 mathematical correctness, or exercised runtime pathways. Do not commit the
 point-in-time JSON snapshot; rerun it on the relevant `main` revision.
 
+## Inspected regression non-GP implementations: NGBoost and ExtraTrees
+
+Two additional non-GP regression implementations and their test modules were
+inspected on `main`, covering **8 named tests** (NGBoost: 3; ExtraTrees: 5).
+This evidence extends the classification-focused review to regression models.
+
+| Model and inspected tests | Implementation and numerical delegation | Assertions inspected | Verification limits |
+| --- | --- | --- | --- |
+| `NGBoostSurrogate` in `models/non_gp/ngboost.py`, `tests/models/non_gp/test_ngboost_surrogate.py` | Composes optional `ngboost.NGBRegressor(Dist=Normal)`, converts NGBoost's `loc` and `scale` to a local `GaussianDistributionPosterior` with variance `scale**2`; no MLL contract | Posterior mean/variance and sampling shapes, finite nonnegative variance, raw data, MC qUCB and tree-ensemble strategy integration, posterior standard-deviation squared equals variance | NGBoost-specific tests are skipped when optional `ngboost` is unavailable; numerical agreement with the source distribution and predictive calibration are not established |
+| `ExtraTreesSurrogate` in `models/non_gp/extra_trees.py`, `tests/models/non_gp/test_extra_trees_surrogate.py` | Composes sklearn `ExtraTreesRegressor`, gathers per-tree predictions into BoTorch `EnsemblePosterior` through local `make_ensemble_posterior` | Raw-data/fit and unsupported MLL contracts, ensemble values and batch shapes, finite MC qEI, fit-before-posterior and single-output guards | Per-tree prediction equality to independent sklearn results, uncertainty calibration, and statistical performance remain unverified |
+
+**Distinct uncertainty semantics:** NGBoost exports the variance of its
+fitted parametric Gaussian predictive distribution, whereas ExtraTrees
+returns an empirical distribution of tree predictions. Neither should be
+silently interpreted as the posterior of an exact Gaussian process. Test
+presence in a file does not guarantee CI executed the optional NGBoost
+cases: the NGBoost tests use dependency-dependent skip markers. The static
+model test-reference scanner also does not track these runtime skips.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
