@@ -316,9 +316,7 @@ def summarize_static_model_evidence(
             name for name in names if not test_references[name]["test_files"]
         ]
         without_direct_upstream_calls = [
-            name
-            for name in names
-            if not upstream_calls[name]["upstream_calls"]
+            name for name in names if not upstream_calls[name]["upstream_calls"]
         ]
         groups[family] = {
             "registered_models": len(names),
