@@ -638,6 +638,32 @@ heteroskedastic Kronecker *prototype* must not be presented as a complete
 input-dependent observation-noise posterior. These distinctions are retained
 for the Phase 7 mathematical checks.
 
+## Source and assertion audit: multi-fidelity regression families
+
+The shared implementation in `models/standard/multi_fidelity.py`, the
+heteroskedastic extension in `models/robust/robust.py`, and four test modules
+were inspected on `main`. These include **22 named test functions** (nine in
+`test_single_task_multi_fidelity_gp.py`, four in
+`test_multi_fidelity_sampling.py`, five in
+`test_heteroskedastic_multifidelity.py`, and four in
+`test_mixed_multi_fidelity.py`); several parametrized functions generate
+more than one executed case.
+
+| Model and tests | Delegated and local responsibilities | Assertions inspected | Unverified claims |
+| --- | --- | --- | --- |
+| `SingleTaskMultiFidelityGP` / `test_single_task_multi_fidelity_gp.py`, `test_multi_fidelity_sampling.py` | Direct inheritance from BoTorch's `SingleTaskMultiFidelityGP`; local raw-training-tensor retention and exact MLL mixin | Public constructor signature/default parity, raw-data and MLL contract, **posterior mean and variance agreement with upstream BoTorch after state transfer**, IID and Sobol sampler shapes and differentiability through design and fidelity inputs | Fitted multi-fidelity predictive accuracy, cost-efficiency and sampler distributional calibration |
+| `MixedSingleTaskMultiFidelityGP` / `test_single_task_multi_fidelity_gp.py`, `test_mixed_multi_fidelity.py` | Local mixed design covariance excludes structural fidelity columns; BoTorch-native fidelity `DownsamplingKernel` retained; linear-truncated path deliberately rejected | Categorical/fidelity dimension separation, native kernel types, posterior and t-batch shapes, categorical-only design, continuous factory active dims, overlap/duplicate/invalid dimension checks | Numerical equivalence to independent kernel reference, cross-fidelity statistical recovery and large mixed search quality |
+| `HeteroskedasticMultiFidelityGP` / `test_heteroskedastic_multifidelity.py` | Alternates response and log-noise GPs while retaining fidelity coordinates in both; delegates fitting to BoTorch `fit_gpytorch_mll` | Raw-data and posterior contract, finite qUCB, one-iteration noise-model fitting, positive predicted noise, integration with BoTorch cost-aware `qMultiFidelityKnowledgeGradient`, fidelity retained in noise model | Convergence of noise estimation across iterations, calibrated noise recovery, objective improvement versus standard multi-fidelity GP |
+
+The direct upstream posterior equality test is stronger than structural API
+checks but covers only one small fixed configuration and matching transferred
+parameters. Multi-fidelity samplers are tested for shape and finite gradients,
+not unbiasedness or convergence. `MixedSingleTaskMultiFidelityGP` keeps
+categorical design columns distinct from fidelity identity; the locally
+constructed mixed covariance is *not* a replacement for BoTorch's fidelity
+kernel. Cost-aware knowledge-gradient interoperability establishes a usable
+call path rather than optimization performance.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
