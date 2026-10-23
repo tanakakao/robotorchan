@@ -19,6 +19,7 @@ classify_training_api = _AUDIT["classify_training_api"]
 find_contract_gaps = _AUDIT["find_contract_gaps"]
 find_missing_documentation_paths = _AUDIT["find_missing_documentation_paths"]
 find_test_references = _AUDIT["find_test_references"]
+find_upstream_constructor_calls = _AUDIT["find_upstream_constructor_calls"]
 
 
 def test_inventory_covers_registered_models_without_instantiation() -> None:
@@ -191,3 +192,40 @@ def test_test_reference_inventory_ignores_strings_and_comments(tmp_path: Path) -
     )
     references = find_test_references(build_inventory(), repository_root=tmp_path)
     assert references["SingleTaskGP"]["test_files"] == []
+
+
+def test_upstream_call_scan_covers_all_registered_models() -> None:
+    inventory = build_inventory()
+    calls = find_upstream_constructor_calls(
+        inventory, repository_root=Path(__file__).resolve().parents[3]
+    )
+    assert set(calls) == set(MODEL_REGISTRY) | set(CLASSIFICATION_MODEL_REGISTRY)
+    assert all(row["verification"] == "static_direct_import_call_only" for row in calls.values())
+    assert all(
+        row["upstream_calls"] == sorted(set(row["upstream_calls"])) for row in calls.values()
+    )
+    assert (
+        "sklearn.ensemble.RandomForestRegressor" in calls["RandomForestSurrogate"]["upstream_calls"]
+    )
+    assert "gpytorch.likelihoods.BernoulliLikelihood" in calls["binary.standard"]["upstream_calls"]
+
+
+def test_upstream_call_scan_ignores_strings_and_unrelated_calls(tmp_path: Path) -> None:
+    inventory = {
+        "regression_models": {
+            "Example": {"class": "example.Example"},
+        },
+        "classification_models": {},
+    }
+    source = tmp_path / "src" / "example.py"
+    source.parent.mkdir()
+    source.write_text(
+        "from sklearn.ensemble import RandomForestRegressor\n"
+        "class Example:\n"
+        "    def run(self):\n"
+        '        message = "RandomForestRegressor()"\n'
+        "        return len(message)\n",
+        encoding="utf-8",
+    )
+    calls = find_upstream_constructor_calls(inventory, repository_root=tmp_path)
+    assert calls["Example"]["upstream_calls"] == []
