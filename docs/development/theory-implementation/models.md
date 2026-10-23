@@ -614,6 +614,30 @@ presence in a file does not guarantee CI executed the optional NGBoost
 cases: the NGBoost tests use dependency-dependent skip markers. The static
 model test-reference scanner also does not track these runtime skips.
 
+## Inspected regression noise and heterogeneous multitask implementations
+
+Three regression model implementations and their corresponding test modules
+were inspected on `main`. The modules contain **13 named test functions**
+(seven in `test_heteroskedastic_gp.py`, four in
+`test_joint_heteroskedastic_gp.py`, and two in
+`test_mixed_heterogeneous_mtgp.py`). The first test module also exercises
+the `HeteroskedasticKroneckerMultiTaskGP` prototype, so counts do not imply
+seven independent tests of the single-task model.
+
+| Model / source and tests | Numerical algorithm and delegation | Specific assertion evidence | Verification gaps |
+| --- | --- | --- | --- |
+| `HeteroskedasticSingleTaskGP` / `models/robust/robust.py`, `tests/models/robust/test_heteroskedastic_gp.py` | Local alternating response-GP and log-residual-variance-GP fitting via `botorch.fit.fit_gpytorch_mll`; exponentiates predicted log noise and applies a floor | Preserved raw inputs/labels, one-iteration fit returns self and finite floored noise, pre-fit noise-posterior guard, positive iteration guard | Recovery of a known heteroskedastic noise function, convergence across alternating iterations, calibration of observation variance |
+| `HeteroskedasticKroneckerMultiTaskGP` prototype / same source and test module | Block-design multitask response covariance with separate log-noise GP; source labels public observation-posterior behavior as intentionally unsupported | Raw task-specific variance shape, distinct task-specific noise and flattened covariance diagonal, rejection of broadcast single-column variance | Full observation-posterior consistency and numerical Kronecker-noise propagation; the source explicitly describes this as a prototype |
+| `JointHeteroskedasticSingleTaskGP` / `models/robust/joint_heteroskedastic.py`, `tests/models/robust/test_joint_heteroskedastic_gp.py` | Two `SingleTaskVariationalGP` latent processes; local Monte Carlo expected Gaussian log likelihood plus response/noise KL terms; `E[exp(log_noise)]` from Gaussian moments | Finite differentiable scalar loss with gradients reaching both latent processes, candidate-batch posterior/noise shapes, qUCB interoperability, state-dict prediction round trip | ELBO numerical reference, MC convergence, true noise recovery, trained posterior calibration |
+| `MixedHeterogeneousMTGP` / `models/structured/heterogeneous.py`, `tests/models/structured/test_mixed_heterogeneous_mtgp.py` | Delegates heterogeneous task/feature-subset structure to BoTorch's `HeterogeneousMTGP`; locally replaces categorical-containing conditional covariance subsets with native mixed kernels | Presence of categorical and additive kernels, raw per-task inputs, exact MLL type, finite posterior mean/variance and shapes | Numerical task cross-covariances, feature-subset invariance, SAAS-enabled configuration and fitted predictive quality |
+
+The iterative noise-GP and jointly optimized variational two-latent noise
+model are different numerical algorithms. A finite one-iteration result does
+not establish convergence of the alternating method. Likewise, the
+heteroskedastic Kronecker *prototype* must not be presented as a complete
+input-dependent observation-noise posterior. These distinctions are retained
+for the Phase 7 mathematical checks.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
