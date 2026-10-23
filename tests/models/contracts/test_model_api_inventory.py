@@ -229,3 +229,29 @@ def test_upstream_call_scan_ignores_strings_and_unrelated_calls(tmp_path: Path) 
     )
     calls = find_upstream_constructor_calls(inventory, repository_root=tmp_path)
     assert calls["Example"]["upstream_calls"] == []
+
+
+def test_upstream_call_scan_resolves_optional_and_aliased_imports(tmp_path: Path) -> None:
+    inventory = {
+        "regression_models": {"Example": {"class": "example.Example"}},
+        "classification_models": {},
+    }
+    source = tmp_path / "src" / "example.py"
+    source.parent.mkdir()
+    source.write_text(
+        "try:\n"
+        "    from sklearn.ensemble import RandomForestRegressor as Forest\n"
+        "except ImportError:\n"
+        "    Forest = None\n"
+        "import gpytorch.likelihoods as likelihoods\n"
+        "class Example:\n"
+        "    def run(self):\n"
+        "        self.forest = Forest()\n"
+        "        self.likelihood = likelihoods.BernoulliLikelihood()\n",
+        encoding="utf-8",
+    )
+    calls = find_upstream_constructor_calls(inventory, repository_root=tmp_path)
+    assert calls["Example"]["upstream_calls"] == [
+        "gpytorch.likelihoods.BernoulliLikelihood",
+        "sklearn.ensemble.RandomForestRegressor",
+    ]
