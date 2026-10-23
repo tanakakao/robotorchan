@@ -220,11 +220,11 @@ def test_upstream_call_scan_ignores_strings_and_unrelated_calls(tmp_path: Path) 
     source = tmp_path / "src" / "example.py"
     source.parent.mkdir()
     source.write_text(
-        "from sklearn.ensemble import RandomForestRegressor\\n"
-        "class Example:\\n"
-        "    def run(self):\\n"
-        '        message = "RandomForestRegressor()"\\n'
-        "        return len(message)\\n",
+        "from sklearn.ensemble import RandomForestRegressor\n"
+        "class Example:\n"
+        "    def run(self):\n"
+        '        message = "RandomForestRegressor()"\n'
+        "        return len(message)\n",
         encoding="utf-8",
     )
     calls = find_upstream_constructor_calls(inventory, repository_root=tmp_path)
