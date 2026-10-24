@@ -1472,3 +1472,19 @@ uncertainty, uncertain category membership, and heteroskedastic
 **output** noise are different probabilistic assumptions. Source and
 named test assertions were inspected; Phase 7 mathematical/numerical
 verification remains separate.
+
+## Phase 4 inspected structured-output regression registry (4 entries)
+
+| Registry models | Theory / BoTorch contract | robotorchan ownership | Source/test evidence and boundaries |
+| --- | --- | --- | --- |
+| `HigherOrderGP` | BoTorch HigherOrderGP factorizes covariance over the design inputs and each tensor-output axis. Tensor-output Kronecker structure, latent parameters, specialized solves, transforms and posterior sampling remain upstream. | `models/structured/higher_order.py` inherits `BoTorchHigherOrderGP` and `ExactGPModelMixin`; preserves caller-supplied `train_X/train_Y` before transforms and exposes common `make_mll()`. | `tests/models/structured/test_higher_order_gp.py` checks exact constructor signature parity, raw tensor ownership/dtype, exact MLL and seeded upstream posterior mean/variance equality. The source/test evidence is not an independent derivation of BoTorch tensor Kronecker algebra. |
+| `MixedHigherOrderGP` | Same tensor-output factorization, but the **design-input** covariance factor `covar_modules[0]` is replaced by native mixed continuous/categorical covariance; tensor-output factors are unchanged. | `higher_order.py` normalizes `cat_dims`, calls `make_mixed_covar_module` and replaces only factor zero. It rejects user-supplied `covar_modules` to avoid conflicting design-factor ownership. | Source-level constructor and covariance-factor inspection; the upstream equality test is for the nonmixed model, so it does not establish mixed-specific numerical equivalence. |
+| `LatentKroneckerGP` | BoTorch latent Kronecker GP models product-space `X × T`, including missing-output handling, iterative inference, pathwise sampling and posterior semantics upstream. `train_T` is an explicit second coordinate axis, not a category in `train_X`. | `models/structured/latent_kronecker.py` preserves raw `train_X/train_T/train_Y` before upstream processing, retains exact GP `make_mll()` contract and delegates product-space inference to BoTorch. | `tests/models/structured/test_latent_kronecker_gp.py` checks constructor parity, raw buffers including missing `Y`, dtype behavior, exact MLL and seeded upstream iterative posterior mean/variance equality. |
+| `MixedLatentKroneckerGP` | Same `X × T` product-space semantics, with mixed covariance applied **only to the X factor**. The T factor remains an independent upstream covariance module. | `latent_kronecker.py` creates `covar_module_X` through `make_mixed_covar_module`, preserves `covar_module_T`, and retains normalized `cat_dims`. | Source-level factor separation inspected. Do not infer that nonmixed upstream parity proves every mixed-input and missing-output configuration. |
+
+**Registry reconciliation:** The `structured_output` family contains
+exactly these four entries. Higher-order tensor outputs and latent
+product-space outputs use distinct upstream models; neither is a
+generic single-task GP with flattened outputs. Named tests were
+inspected, not executed here; broader numerical verification is
+reserved for Phase 7.
