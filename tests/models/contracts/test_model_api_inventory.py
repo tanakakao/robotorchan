@@ -1,7 +1,10 @@
 """Static API inventory contracts; model construction is intentionally avoided."""
 
 import json
+import re
 import runpy
+import subprocess
+import sys
 from pathlib import Path
 
 from robotorchan.models import SingleTaskGP
@@ -304,3 +307,49 @@ def test_evidence_summary_covers_both_actual_registries() -> None:
             group["with_direct_upstream_calls"] + len(group["without_direct_upstream_calls"])
             == group["registered_models"]
         )
+
+
+def test_phase2_classification_documentation_map_covers_all_registry_ids() -> None:
+    root = Path(__file__).resolve().parents[3]
+    document = (root / "docs/development/theory-implementation/models.md").read_text(
+        encoding="utf-8"
+    )
+    heading = "## Classification documentation mapping at registry-ID granularity"
+    section = document.split(heading, 1)[1].split("\n## ", 1)[0]
+    mapped_ids = re.findall(r"`(binary\.[a-z_.]+)`", section)
+    assert len(mapped_ids) == len(set(mapped_ids))
+    assert set(mapped_ids) == set(CLASSIFICATION_MODEL_REGISTRY)
+    assert (root / "docs/models/classification.md").is_file()
+    assert (root / "docs/theory/24_classification.md").is_file()
+
+
+def test_phase2_static_report_cli_checks_all_registry_members(tmp_path: Path) -> None:
+    root = Path(__file__).resolve().parents[3]
+    output = tmp_path / "model-evidence.json"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(root / "scripts/audit_model_api.py"),
+            "--include-evidence-summary",
+            "--check-documentation-paths",
+            "--output",
+            str(output),
+        ],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert report["missing_documentation_paths"] == []
+    assert set(report["test_references"]) == set(MODEL_REGISTRY) | set(
+        CLASSIFICATION_MODEL_REGISTRY
+    )
+    assert set(report["upstream_calls"]) == set(report["test_references"])
+    assert report["evidence_summary"]["verification"] == "static_detection_counts_only"
+    families = report["evidence_summary"]["families"]
+    assert families["regression_models"]["registered_models"] == len(MODEL_REGISTRY)
+    assert families["classification_models"]["registered_models"] == len(
+        CLASSIFICATION_MODEL_REGISTRY
+    )
