@@ -1415,3 +1415,20 @@ Student-t process. Its `posterior(X)` returns the latent Gaussian
 variational GP posterior for BoTorch acquisition use, not the
 Student-t predictive observation distribution. The above source/test
 inspection is Phase 4 evidence only, not Phase 7 numerical verification.
+
+## Phase 4 inspected robust relevance-pursuit regression variants
+
+| Models | Mathematical/fit contract | Local/upstream ownership | Inspected evidence and limits |
+| --- | --- | --- | --- |
+| `RobustRelevancePursuitSingleTaskGP` | Sparse outlier relevance pursuit augments a Gaussian GP's observation-noise model rather than replacing the latent covariance with a Student-t or contamination-mixture likelihood. The single-task class directly subclasses BoTorch's `RobustRelevancePursuitSingleTaskGP`. | `models/robust/robust.py` owns raw-training-tensor preservation and shared exact-GP conventions; BoTorch owns the sparse outlier relevance-pursuit algorithm and likelihood. | Source inspection confirms BoTorch inheritance and raw `train_X/train_Y/train_Yvar` storage; no independent recovery-rate or outlier-identification benchmark is claimed. |
+| `MixedRobustRelevancePursuitSingleTaskGP` | Same BoTorch sparse-outlier likelihood, with native mixed continuous/categorical covariance in the **latent GP**. `cat_dims` are normalized before covariance construction. | `robust.py` delegates mixed kernel construction to `models/base.py::make_mixed_covar_module`, while BoTorch owns relevance pursuit. | Source-level categorical routing inspected; do not infer full mixed optimizer/fit parity solely from inheritance. |
+| `RobustRelevancePursuitMultiTaskGP` | Long-format task covariance plus BoTorch `RobustRelevancePursuitMixin` wrapping the base likelihood with sparse outlier noise. `to_standard_model()` constructs a **non-dispatching** `MultiTaskGP` with the same likelihood, mean and covariance modules for numerical fitting. | `robust.py` owns explicit multi-task initialization, preserved constructor metadata and standard-model conversion; BoTorch mixin owns sparse noise mechanism. | `tests/models/robust/test_robust_relevance_pursuit_multitask.py` checks `SparseOutlierGaussianLikelihood`, exact MLL, raw tensors, standard-model class and module identity. |
+| `MixedRobustRelevancePursuitMultiTaskGP` | Mixed long-format covariance excludes the task feature from `cat_dims`; the task covariance is not encoded as a categorical design kernel. Sparse outlier likelihood is inherited from the multi-task robust model. | `robust.py` normalizes task/category dimensions, creates native mixed data covariance and delegates multi-task covariance/noise to inherited components. | Same test module checks categorical dimensions, `ProductKernel` with mixed `AdditiveKernel`, sparse likelihood and rejection of task/category overlap. |
+
+**Algorithm boundary:** BoTorch relevance pursuit, explicit
+contamination mixtures and Student-t variational likelihoods are
+different outlier-robustification strategies. These assertions establish
+the inspected class/likelihood/covariance contracts, **not** sparse
+support recovery, calibrated predictive uncertainty or a Phase 7
+numerical equivalence result. The robust-noise family registry should
+still be reconciled for any unlisted variants before Phase 4 closure.
