@@ -1399,3 +1399,19 @@ mixture; replicate noise estimates **known training noise** from grouped
 measurements; Gibbs nonstationarity changes the **latent covariance**.
 These are not interchangeable robustness assumptions. The mapping records
 inspected source and named assertions, not Phase 7 numerical verification.
+
+## Phase 4 inspected Student-t robust regression variants
+
+| Models | Mathematical/training contract | Ownership and variant boundary | Assertion evidence / unverified |
+| --- | --- | --- | --- |
+| `StudentTSingleTaskGP` | Variational latent GP with GPyTorch `StudentTLikelihood` and degrees of freedom `df>2` (finite observation variance). `training_loss() = (-sum E_q[log p_StudentT(y\|f)] + KL(q(u)\|p(u))) / n`; the implementation delegates expected log probability to the likelihood. | `models/robust/student_t.py::_StudentTGPBase` owns loss, latent posterior, raw-data storage and cache reset; `models/standard/variational.py` and GPyTorch own variational GP and Student-t likelihood. `make_mll()` intentionally raises. | `tests/models/robust/test_student_t_gp.py` checks finite differentiable loss, batch/q posterior, MC acquisition, state round-trip, dtype migration and invalid parameter rejection. |
+| `MixedStudentTSingleTaskGP` | Same Student-t observation likelihood with native mixed continuous/categorical **latent covariance**, not one-hot encoding or a distinct heavy-tail likelihood. | `student_t.py` delegates covariance to `MixedSingleTaskVariationalGP` and retains `cat_dims`. | The shared single-task test file is inspected; do not infer that it independently proves all mixed-specific categorical invariants. |
+| `StudentTMultiTaskGP` | Long-format variational GP with `K((x,t),(x',t')) = K_data(x,x') K_task(t,t')`; data covariance is Matérn-5/2 and task covariance is GPyTorch `IndexKernel`. Observation likelihood remains Student-t. | `student_t.py::_multitask_covar_module` owns task-feature routing and covariance composition, while GPyTorch owns kernel primitives. | The source explicitly separates task identity from data covariance. The inspected single-task test module does not establish a multi-task-specific numerical equivalence result. |
+| `MixedStudentTMultiTaskGP` | Same long-format task covariance product, with native mixed data covariance and categorical dimensions explicitly prohibited from overlapping the task feature. | `_multitask_covar_module` calls `make_mixed_covar_module` with the task dimension excluded; `normalize_feature_dims` enforces overlap validation. | Separate mixed/multi-task assertion coverage should be reconciled before closing the robust-noise family audit. |
+
+**Scope boundary:** The Student-t likelihood is heavy-tailed
+**observation noise**; it does not change the latent GP into a
+Student-t process. Its `posterior(X)` returns the latent Gaussian
+variational GP posterior for BoTorch acquisition use, not the
+Student-t predictive observation distribution. The above source/test
+inspection is Phase 4 evidence only, not Phase 7 numerical verification.
