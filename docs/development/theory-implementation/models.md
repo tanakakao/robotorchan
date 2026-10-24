@@ -2,12 +2,15 @@
 
 ## Audit provenance and limits
 
-- Baseline: `main` at `a4454c59232f6eb209f4c8cd302d87c7f2233032`.
+- Initial inventory baseline: `main` at `a4454c59232f6eb209f4c8cd302d87c7f2233032`.
+  Subsequent source/test inspections are append-only audit evidence from later
+  `main` revisions; rerun registry scripts against the revision under review.
 - Sources: `MODEL_REGISTRY`, `CLASSIFICATION_MODEL_REGISTRY`,
   `docs/model_coverage.json`, public exports, and inspected implementation modules.
-- This is a static inventory and representative code-path audit. It is **not**
-  numerical or mathematical verification. Full per-class upstream and test-path
-  provenance remains to be verified before Phase 2 can be closed.
+- This is a static inventory plus selected source and assertion inspections,
+  **not** comprehensive numerical or mathematical verification. Static MRO,
+  imported calls, syntactic test references and inspected assertions are
+  distinct evidence levels; see the registry-wide evidence-summary command.
 - Model coverage is generated: never edit `docs/model_coverage.json` by hand.
 
 ## Registry boundaries
@@ -46,39 +49,43 @@ canonical in `docs/model_coverage.json` rather than duplicated here.
 
 ## Binary classification registry inventory
 
-These are stable registry **IDs**, not public class names.
+These are stable registry **IDs**, not public class names. The status below
+refers to representative source/test inspection recorded in later sections;
+**it is not per-ID exhaustive runtime validation**. Static class/module
+resolution and syntactic test/upstream-call detection are available for all
+29 IDs using `scripts/audit_model_api.py`.
 
 | Registry ID | Audit status |
 | --- | --- |
-| `binary.ensemble.gp` | Implementation/test/upstream provenance pending |
-| `binary.ensemble.heterogeneous` | Implementation/test/upstream provenance pending |
-| `binary.standard` | Implementation/test/upstream provenance pending |
-| `binary.mixed` | Implementation/test/upstream provenance pending |
-| `binary.multitask` | Implementation/test/upstream provenance pending |
-| `binary.kronecker_multitask` | Implementation/test/upstream provenance pending |
-| `binary.map_saas` | Implementation/test/upstream provenance pending |
-| `binary.saas` | Implementation/test/upstream provenance pending |
-| `binary.reduced` | Implementation/test/upstream provenance pending |
-| `binary.pca` | Implementation/test/upstream provenance pending |
-| `binary.pls` | Implementation/test/upstream provenance pending |
-| `binary.random_projection` | Implementation/test/upstream provenance pending |
-| `binary.alebo` | Implementation/test/upstream provenance pending |
-| `binary.joint_encoder` | Implementation/test/upstream provenance pending |
-| `binary.deep_gp` | Implementation/test/upstream provenance pending |
-| `binary.uncertain.categorical_input` | Implementation/test/upstream provenance pending |
-| `binary.uncertain.continuous_input` | Implementation/test/upstream provenance pending |
-| `binary.robust.label_noise` | Implementation/test/upstream provenance pending |
-| `binary.robust.contaminated` | Implementation/test/upstream provenance pending |
-| `binary.robust.replicate_labels` | Implementation/test/upstream provenance pending |
-| `binary.robust.input_dependent_label_noise` | Implementation/test/upstream provenance pending |
-| `binary.robust.nonstationary` | Implementation/test/upstream provenance pending |
-| `binary.robust.mixed_nonstationary` | Implementation/test/upstream provenance pending |
-| `binary.robust.multitask_nonstationary` | Implementation/test/upstream provenance pending |
-| `binary.non_gp.bootstrap_gradient_boosting` | Implementation/test/upstream provenance pending |
-| `binary.non_gp.random_forest` | Implementation/test/upstream provenance pending |
-| `binary.non_gp.extra_trees` | Implementation/test/upstream provenance pending |
-| `binary.non_gp.gradient_boosting` | Implementation/test/upstream provenance pending |
-| `binary.non_gp.hist_gradient_boosting` | Implementation/test/upstream provenance pending |
+| `binary.ensemble.gp` | GP ensemble source and named assertions inspected |
+| `binary.ensemble.heterogeneous` | Heterogeneous ensemble source and named assertions inspected |
+| `binary.standard` | Variational Bernoulli baseline source and named assertions inspected |
+| `binary.mixed` | Mixed classifier source and named assertions inspected |
+| `binary.multitask` | Multitask variational source and named assertions inspected |
+| `binary.kronecker_multitask` | Long-format variational implementation and assertions inspected; not exact Kronecker |
+| `binary.map_saas` | MAP-SAAS kernel/prior and named assertions inspected |
+| `binary.saas` | Shrinkage-prior variational model and named assertions inspected; not NUTS |
+| `binary.reduced` | Reduced model source and representative assertions inspected |
+| `binary.pca` | PCA reduction and parametrized assertions inspected |
+| `binary.pls` | PLS reduction and parametrized assertions inspected |
+| `binary.random_projection` | Random projection and parametrized assertions inspected |
+| `binary.alebo` | ALEBO metric and named assertions inspected |
+| `binary.joint_encoder` | Neural encoder and named assertions inspected |
+| `binary.deep_gp` | Deep variational model and named assertions inspected |
+| `binary.uncertain.categorical_input` | Finite-category marginalization and named assertions inspected |
+| `binary.uncertain.continuous_input` | Gaussian input perturbation and named assertions inspected |
+| `binary.robust.label_noise` | Flip-channel likelihood and named assertions inspected |
+| `binary.robust.contaminated` | Contamination mixture and named assertions inspected |
+| `binary.robust.replicate_labels` | Replicate preservation and named assertions inspected |
+| `binary.robust.input_dependent_label_noise` | Input-dependent flip channel and named assertions inspected |
+| `binary.robust.nonstationary` | Gibbs nonstationary kernel and named assertions inspected |
+| `binary.robust.mixed_nonstationary` | Mixed nonstationary source and structural assertions inspected |
+| `binary.robust.multitask_nonstationary` | Multitask nonstationary source and structural assertions inspected |
+| `binary.non_gp.bootstrap_gradient_boosting` | Bootstrap sklearn ensemble and named assertions inspected |
+| `binary.non_gp.random_forest` | sklearn adapter and named assertions inspected |
+| `binary.non_gp.extra_trees` | sklearn adapter and named assertions inspected |
+| `binary.non_gp.gradient_boosting` | sklearn adapter and named assertions inspected |
+| `binary.non_gp.hist_gradient_boosting` | sklearn adapter and named assertions inspected |
 
 ## Representative code-path findings
 
@@ -746,5 +753,33 @@ correctness of that optional uncertainty propagation.
 5. Run the model API audit, documentation-path validation, coverage check,
    and CI; triage any gaps.
 6. Document unsupported and unverified mathematical properties explicitly.
+
+### Current evidence reconciliation (not a completion declaration)
+
+- All **142** regression registry names and **29** binary classification IDs
+  are inventoried. The static API export includes resolved implementation
+  classes/modules, inheritance and callable surface for every entry.
+- The test-reference and upstream-constructor scanners cover all registry
+  entries as **static detection**, not executed assertion evidence; the
+  `--include-evidence-summary` report lists names with no detected matches.
+- Representative model-family source and test-assertion inspections are
+  recorded above, including cases where the direct upstream scan is
+  incomplete (for example sklearn class-attribute delegation). The 29-row
+  classification status table has been reconciled to those inspections;
+  previously all rows incorrectly said "pending".
+- Regression guide/theory/notebook file-existence checks are exercised in
+  `tests/models/contracts/test_model_api_inventory.py`. Classification
+  registry **does not contain** per-ID documentation metadata, so link
+  ownership must remain an explicit gap rather than an invented 29-ID link
+  mapping.
+- Actual numerical identities, statistical calibration and posterior
+  convergence are reserved for Phase 7; their absence does not itself
+  invalidate the Phase 2 *inventory*.
+
+**Outstanding Phase 2 acceptance work:** review the latest static evidence
+summary and any unmatched registry IDs, reconcile per-ID classification
+documentation ownership and trace the representative regression-family
+assertions back to test names; only then make a formal Phase 2 completion
+decision. This is a fixed-scope exit check, not permission to add new phases.
 
 Do not advance to Phase 3 or declare Phase 2 complete while these remain open.
