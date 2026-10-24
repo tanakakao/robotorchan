@@ -55,3 +55,21 @@ categorical assignment were row-independent.
    including unsupported and unverified behavior.
 5. Run relevant inventory and CI checks, then make an explicit completion
    decision. Numerical identities belong to Phases 8–9.
+
+## Inspected acquisition registry and assertion evidence
+
+The following tests were inspected directly in source. They are named
+assertion evidence; a successful repository CI is separate execution
+evidence, and neither proves an independent mathematical derivation.
+
+| Source of assertions | Confirmed behavior | Not established |
+| --- | --- | --- |
+| `tests/acquisition/test_api_inventory.py` | Audit inventory is JSON serializable; all registered local acquisition classes are exported; BoTorch-native entries are metadata-only; custom parameter names such as `output_index`, `target`, and `num_samples` survive introspection | Exact formulas, numerical convergence or completeness of the upstream BoTorch catalogue |
+| `tests/acquisition/test_api_inventory.py` | `PosteriorVariance` produces finite `q=1` scores and rejects `q=2`; `PredictiveEntropy` returns finite classification scores and rejects `q=2` | Calibration of either score or equivalence of predictive label entropy to latent Gaussian entropy |
+| `tests/acquisition/test_optimizer_compatibility.py` | Ordinary mixed route rejects qKG and multi-fidelity qKG; mixed one-shot route accepts them; non-one-shot methods reject one-shot routing; registered AL `q=1` limits are enforced; normal qLogEI accepts `q=3` | Success of an actual augmented one-shot optimization, feasibility of a candidate, compatibility with all concrete backends |
+
+The compatibility test uses `CandidateOptimizer.MIXED_ONE_SHOT` as a
+**semantic route**. It must not be confused with an additional dispatcher
+optimizer name; the operational mixed one-shot implementation belongs to
+`optim/one_shot/`. These targeted tests are distinct from later
+formula-level Phase 8 checks.
