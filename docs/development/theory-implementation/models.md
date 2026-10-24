@@ -1364,3 +1364,23 @@ accounted for by source-family and test-file mappings. This does **not**
 close Phase 4: all remaining regression families and binary classification
 variants still require the same evidence standard, and source-level
 assertions must not be mislabeled as independent numerical verification.
+
+## Phase 4 inspected robust-noise heteroskedastic inference paths
+
+These similarly named models do **not** share one noise-inference
+algorithm. The following is a source-and-test mapping, not an independent
+numerical verification of calibrated predictive variances.
+
+| Models | Mathematical/inference distinction | Local/upstream ownership | Inspected tests and limitations |
+| --- | --- | --- | --- |
+| `HeteroskedasticSingleTaskGP` | Alternating response GP and log-residual-variance GP, with a positive noise floor; `fit_heteroskedastic(iterations=...)` is a distinct fitting step. | `models/robust/robust.py` owns iteration and noise-model orchestration; GP fitting/posteriors use inherited BoTorch/GPyTorch machinery. | `tests/models/robust/test_heteroskedastic_gp.py` checks raw tensors, noise fit, positive iteration validation and rejection of noise posterior before fitting. Do not equate this iterative procedure with a jointly optimized heteroskedastic ELBO. |
+| `HeteroskedasticMultiTaskGP`, `MixedHeteroskedasticMultiTaskGP` | Long-format task-feature covariance with heteroskedastic observation noise; the mixed variant preserves task identity separately from categorical design features. | `models/robust/robust.py` owns noise and structural-feature handling; `models/standard/multitask.py` and upstream dependencies own multi-task covariance. | `tests/models/robust/test_heteroskedastic_multitask.py` checks the public contract, noise-floor validation, task preservation and category/task overlap rejection. |
+| `HeteroskedasticKroneckerMultiTaskGP`, `MixedHeteroskedasticKroneckerMultiTaskGP` | Block-design task outputs require a distinct output/task noise axis; broadcasting a single noise column over tasks is not a valid substitute. | `models/robust/robust.py` and Kronecker multi-task implementation own output-shape/noise routing. | `tests/models/robust/test_heteroskedastic_gp.py` checks task-specific noise shape, output-axis retention and invalid broadcast rejection. |
+| `HeteroskedasticMultiFidelityGP` | Fidelity coordinates remain structural in the response/noise modeling path; the noise model is not a fidelity-agnostic residual smoother. | `models/robust/robust.py` and `models/standard/multi_fidelity.py` own wrapper and fidelity routing; BoTorch owns fidelity GP covariance. | `tests/models/robust/test_heteroskedastic_multifidelity.py` checks raw data, MLL, MC acquisition, native multi-fidelity KG and noise-model fidelity coordinates. |
+| `JointHeteroskedasticSingleTaskGP`, `MixedJointHeteroskedasticSingleTaskGP` | Two variational latent processes `f(x)` and `g(x)=log sigma²(x)`; Monte Carlo expected Gaussian log likelihood plus separate response/noise KL penalties. `predicted_noise` uses `exp(E[g]+Var[g]/2)` with a floor. `posterior(X)` exposes the **response latent posterior**, while `noise_posterior(X)` is separate. | `models/robust/joint_heteroskedastic.py` owns two-model objective, noise transformation, posterior separation and cache reset; `models/standard/variational.py` and upstream components own variational GP primitives. Mixed uses native mixed variational covariance in **both** processes. | `tests/models/robust/test_joint_heteroskedastic_gp.py` checks differentiable finite loss, posterior/noise shapes, MC acquisition and state round-trip. `make_mll()` intentionally raises: training must use `training_loss()`. Tests do not establish predictive calibration or MC convergence. |
+
+**Inference boundary:** Fixed-noise, alternating fitted noise and jointly
+variational noise are separate algorithms. A positive variance and a
+successful posterior shape test do not establish the numerical correctness
+of the inferred observation-noise distribution. The remaining robust-noise
+registry entries still require Phase 4 mapping.
