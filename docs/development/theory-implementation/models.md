@@ -1316,3 +1316,26 @@ registry-wide proof of absence.
 
 The entries above remain Phase 4 static implementation/test mapping, not
 Phase 7 numerical verification or a Phase 4 completion declaration.
+
+## Phase 4 inspected jointly trained multi-task and design-reduced multi-fidelity GP
+
+**Correction to the earlier scope note:** Although there is no class named
+`ReducedMultiFidelityGP` in the inspected reduced package, the repository
+**does implement** `PCAMultiFidelityGP`, `PLSMultiFidelityGP`, and
+`RandomProjectionMultiFidelityGP` in
+`models/standard/multi_fidelity.py`. The earlier class-name search was too
+narrow to characterize the capability. These are named design-reduced
+multi-fidelity models and must be included in the implementation mapping.
+
+| Models | Mathematical/training contract | Implementation ownership | Inspected assertion evidence / limits |
+| --- | --- | --- | --- |
+| `JointEncoderMultiTaskGP`, `JointEncoderKroneckerMultiTaskGP` | Neural `T_theta(x)` is trained through the GP marginal likelihood. Long-format models preserve the task feature as `[T_theta(x),t]`; Kronecker models encode shared design inputs with task structure in the output matrix. | `models/high_dimensional/reduced/joint_multitask.py` owns encoder, task routing and `training_loss()`; `models/standard/multitask.py` and BoTorch/GPyTorch own GP task covariance/inference. | `tests/models/high_dimensional/reduced/test_joint_multitask.py` checks encoder gradients, task identity, original-space posterior and training loss. |
+| `HybridAutoEncoderMultiTaskGP`, `HybridAutoEncoderKroneckerMultiTaskGP` | Joint GP negative MLL plus `reconstruction_weight * MSE`; the long-format decoder reconstructs non-task features only. | `joint_multitask.py::_HybridMixin` owns reconstruction penalty; PyTorch owns encoder/decoder modules. | Same test module checks additional reconstruction loss in both layouts. |
+| `JointVAEMultiTaskGP`, `JointVAEKroneckerMultiTaskGP` | Joint GP MLL, reconstruction penalty and `beta * KL(q(z\|x) \| N(0,I))`. The default encoded GP inputs are the mean head output; the inspected implementation does **not** establish a latent-marginalized posterior API for these multi-task variants. | `joint_multitask.py::_JointVAEMixin` owns variational head, KL and composite loss; shared joint multi-task classes own GP routing. | Same test module checks KL contribution. Independent latent uncertainty propagation and numerical equivalence remain unverified. |
+| `MixedJointEncoderMultiTaskGP` | Jointly learn continuous representation while retaining categorical codes and structural task index: `[T_theta(x_cont),x_cat,t]`. | `joint_multitask.py` owns continuous/category/task partition, encoder and loss; `MixedMultiTaskGP` owns native mixed multi-task GP. | Same test module checks category/task preservation, original-space posterior and encoder parameter updates. |
+| `PCAMultiFidelityGP`, `PLSMultiFidelityGP`, `RandomProjectionMultiFidelityGP` | Reduce **design** features only; preserve iteration/data fidelity coordinates as structural inputs, remapping fidelity indices after concatenating reduced design and unchanged fidelity values. The supported path uses `linear_truncated=False`. | `models/standard/multi_fidelity.py` owns reducer, structural-feature index remapping, original-space input conversion; `SingleTaskMultiFidelityGP` delegates fidelity covariance and GP inference to BoTorch. | `tests/models/high_dimensional/test_pca_multifidelity.py` asserts structural fidelity preservation, role-overlap rejection, MC acquisition, MLL, conditioning, fantasize and native multi-fidelity KG compatibility. Independent covariance equivalence remains unverified. |
+
+This reconciliation supersedes the narrow class-name inference in the
+previous reduced multi-task mapping section. The broader registry and
+remaining Phase 4 family variants still require source-and-assertion review;
+no Phase 4 completion or Phase 7 numerical verification is claimed.
