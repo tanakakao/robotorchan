@@ -1219,3 +1219,21 @@ is still necessary before Phase 4 acceptance:
 
 This reconciliation identifies **outstanding evidence**, not 142 broken
 models. The phase remains **in progress** until the exit gate is met.
+
+## Phase 4 inspected binary variant reconciliation: mixed and nonstationary
+
+This subsection closes the **source-level mapping gap** for the three binary
+variants identified above. It does not claim numerical validation or completion
+of the full 171-entry registry reconciliation.
+
+| Registry ID | Mathematical and implementation contract | Local versus delegated ownership | Assertion evidence and remaining limits |
+| --- | --- | --- | --- |
+| `binary.mixed` | Variational Bernoulli GP with native mixed covariance `K_cont + K_cat + K_cont*K_cat` when continuous features exist; categorical-only inputs use a scaled categorical kernel. Raw `cat_dims` are normalized, including negative indices, with duplicates rejected. | `classification/binary/standard/single_task.py::MixedBinarySingleTaskGPClassifier` calls local `models/base.py::make_mixed_covar_module`; this composes BoTorch `CategoricalKernel` and GPyTorch additive/product/scale kernels. Bernoulli likelihood and variational GP inference are delegated to the standard classifier stack. No one-hot transform is introduced by this constructor. | Source inspection confirms the constructor and shared validation. A dedicated per-variant assertion for posterior/kernel equivalence was **not established** in this audit; numerical equivalence and optimization performance remain unverified. |
+| `binary.robust.mixed_nonstationary` | The same mixed additive-plus-interaction structure, replacing both continuous branches with independently constructed `ScaleKernel(GibbsKernel)`; categorical covariance remains native. Both reported local lengthscales exclude categorical dimensions. At least one continuous feature is required. | `classification/binary/robust/nonstationary.py::MixedNonstationaryBinarySingleTaskGPClassifier` supplies a local Gibbs factory to the shared mixed-kernel builder; GPyTorch handles covariance composition and variational Bernoulli inference. | `tests/models/classification/robust/test_cross_family.py::test_mixed_nonstationary_uses_only_continuous_dims_for_local_lengthscale` asserts both branch shapes and normalized feature indices. Numerical covariance equivalence and trained calibration are unverified. |
+| `binary.robust.multitask_nonstationary` | Long-format input with a structural task column; `K((x,t),(x',t')) = K_Gibbs(x,x') * K_task(t,t')` with an input-dependent data kernel and GPyTorch `IndexKernel` task covariance. The task column is excluded from local-lengthscale evaluation. | `classification/binary/robust/nonstationary.py::NonstationaryMultiTaskBinaryGPClassifier` constructs `ProductKernel(ScaleKernel(GibbsKernel), IndexKernel)` and directly initializes the base binary classifier; GPyTorch owns task covariance and variational Bernoulli inference. This is not the Kronecker multitask classifier. | `tests/models/classification/robust/test_cross_family.py::test_multitask_nonstationary_excludes_task_identity_from_local_lengthscale` checks dimensions and task feature; the same file checks both variants' registry capabilities. Task covariance numerical equivalence and per-task convergence are unverified. |
+
+**Evidence boundary:** The source-level statements above follow the
+constructors in `classification/binary/standard/single_task.py`,
+`classification/binary/robust/nonstationary.py`, and
+`models/base.py::make_mixed_covar_module`. Assertions are cited only where
+their bodies were inspected. The full Phase 4 exit gate above remains open.
