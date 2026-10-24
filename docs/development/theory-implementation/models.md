@@ -1094,12 +1094,72 @@ The provenance below is source and test inspection on `main` at
 | Notebook | Per-ID executable example unverified |
 | Limitations | Monte Carlo sampling error, deep variational approximation and calibrated predictive probabilities not independently established |
 
-The remaining robust (replicate, input-dependent, nonstationary),
-uncertain-input, multitask, high-dimensional and expressive classifier IDs
-retain the inventory paths above; they **do not** inherit a verified
-model-specific theoretical derivation merely by sharing the classification
-guide. Further family mapping is limited to this existing Phase 4 scope.
 
-Further families will be mapped using the same record contract; the
-registry inventory remains complete but these detailed mappings are
-representative and do not silently certify unmapped variants.
+### Remaining robust binary classification families
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `ReplicateLabelBinarySingleTaskGPClassifier` / `binary.robust.replicate_labels` |
+| Mathematical object | At repeated design point x, empirical positive rate r = sum(y_i)/n and disagreement 2r(1-r); **individual binary labels**, not rates, are used as training targets |
+| Theory | `docs/theory/24_classification.md`; repeated Bernoulli observations under the ordinary latent GP likelihood |
+| Source / ownership | `classification/binary/robust/replicate.py`; **Implemented** exact-input grouping and descriptive statistics, **Delegated** latent GP/Bernoulli training to the standard classifier |
+| Numerical method | `torch.unique` groups identical input rows; every condition requires at least two labels; no special beta-binomial likelihood is introduced |
+| Assertion evidence | `tests/models/classification/robust/test_replicate.py`: original rows preserved, counts, positive rates, disagreement and input validation |
+| Notebook / limitations | Per-ID notebook execution unverified; identical floating-point rows are required; disagreement is descriptive, not a posterior variance estimate |
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `InputDependentLabelNoiseBinarySingleTaskGPClassifier` / `binary.robust.input_dependent_label_noise` |
+| Mathematical object | p_obs(x) = FP(x) + [1 - FP(x) - FN(x)] p_clean(x), with input-dependent asymmetric flip rates |
+| Theory | `docs/theory/24_classification.md` supplies the Bernoulli foundation; local observation-channel extension |
+| Source / ownership | `classification/binary/robust/input_dependent_noise.py`; **Implemented** corruption channel and input-conditioned quadrature integrand; **Delegated** latent variational GP and GPyTorch Bernoulli/quadrature components |
+| Numerical method | User-supplied module/callable returns [...,2] rates in [0, max_flip_probability); likelihood quadrature uses stored training X |
+| Assertion evidence | `tests/models/classification/robust/test_input_dependent_noise.py`: X-varying corruption, clean/observed distinction, registered parameters and invalid rates |
+| Notebook / limitations | Per-ID execution unverified; rate-model identifiability and calibration unverified; callable parameters are not automatically registered unless supplied as a module |
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `NonstationaryBinarySingleTaskGPClassifier`, `MixedNonstationaryBinarySingleTaskGPClassifier`, `NonstationaryMultiTaskBinaryGPClassifier` / three `binary.robust.*nonstationary` IDs |
+| Mathematical object | Input-dependent latent lengthscales through a Gibbs covariance; mixed version composes continuous Gibbs and categorical kernels; multitask version uses data Gibbs kernel multiplied by task `IndexKernel` |
+| Theory | `docs/theory/02_gaussian_process.md` and `docs/theory/24_classification.md`; nonstationarity changes latent covariance, **not** label-flip probabilities |
+| Source / ownership | `classification/binary/robust/nonstationary.py`; **Extended** local `models/robust/nonstationary.py::GibbsKernel`, **Delegated** GPyTorch kernel composition and base variational classifier |
+| Numerical method | Positive local lengthscales with configurable floor; task feature is structural; mixed version requires at least one continuous dimension |
+| Assertion evidence | `tests/models/classification/robust/test_nonstationary.py`: Gibbs kernel, positive input-varying lengthscales, probability normalization, robustness metadata; mixed/multitask model-specific mathematical assertions not established by this inspection |
+| Notebook / limitations | Per-ID notebook execution unverified; learned local smoothness, extrapolation and multitask kernel numerical equivalence remain Phase 7 questions |
+
+### Sparse and embedded high-dimensional binary classification
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `MapSaasBinarySingleTaskGPClassifier` / `binary.map_saas`; `SaasBinarySingleTaskGPClassifier` / `binary.saas` |
+| Mathematical object | ARD inverse lengthscales rho_j = 1/ell_j with Half-Cauchy shrinkage priors; latent variational Bernoulli GP |
+| Theory | `docs/theory/24_classification.md` plus existing high-dimensional GP guides; neither implementation is the fully Bayesian BoTorch SAAS NUTS classifier |
+| Source / ownership | `classification/binary/high_dimensional/{map_saas,saas}.py`; **Extended** prior registration and covariance construction, **Delegated** base variational inference to GPyTorch; MAP-SAAS uses BoTorch covariance helper |
+| Numerical method | Positive tau/global_scale required; MAP-SAAS uses a dimension-scaled covariance helper, SAAS uses Matérn-5/2 ARD; registered priors alone do not establish posterior integration or a specific MAP optimizer |
+| Assertion evidence | `tests/models/classification/high_dimensional/{test_map_saas,test_saas}.py`: prior presence, output shape, invalid scales and SAAS finite ELBO gradient |
+| Notebook / limitations | Per-ID execution unverified; sparse recovery, optimization of prior terms and Bayesian calibration require independent tests |
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `ALEBOBinarySingleTaskGPClassifier` / `binary.alebo` |
+| Mathematical object | Bernoulli latent GP in embedded coordinates Z with a Mahalanobis RBF metric |
+| Theory | `docs/theory/24_classification.md` and existing high-dimensional/ALEBO guides |
+| Source / ownership | `classification/binary/high_dimensional/alebo.py`; **Extended** local `MahalanobisRBFKernel` and standard classifier; embedding and ambient projection belong to `optim.embedding.ALEBOStrategy` |
+| Numerical method | Public training inputs are embedded Z, not ambient X; optional projection must match embedded dimension |
+| Assertion evidence | `tests/models/classification/high_dimensional/test_alebo_classifier.py`: probability shape, metric shape, differentiable metric and projection mismatch |
+| Notebook / limitations | Per-ID execution unverified; feasible ambient-space recovery and ALEBO optimization guarantees not established by classifier tests |
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `JointEncoderBinaryGPClassifier` / `binary.joint_encoder` |
+| Mathematical object | p(y=1|x,D) from variational Bernoulli GP on learned neural features z = encoder((x-mean)/scale) |
+| Theory | `docs/theory/24_classification.md`; representation and latent GP are jointly optimized by the training loss |
+| Source / ownership | `classification/binary/high_dimensional/reduced/joint_neural.py`; **Implemented** encoder/normalization and joint loss, **Delegated** network layers to PyTorch and variational GP/Bernoulli inference to GPyTorch |
+| Numerical method | Constructor initially detaches encoded inputs for GP setup, while `training_loss()` recomputes the encoder features without detaching, allowing gradient flow |
+| Assertion evidence | `tests/models/classification/high_dimensional/reduced/test_joint_encoder_classifier.py`: prediction/encoding shapes, finite encoder gradients, raw input retention and dimension guard |
+| Notebook / limitations | Per-ID execution unverified; end-to-end convergence and encoder-induced calibration error unverified |
+
+These mappings establish inspected source and named assertion coverage, **not**
+independent numerical equivalence. Phase 4 remains open until all 142 regression
+and 29 classification registry entries have been reconciled against detailed
+family records, including composition ownership and unverified properties.
