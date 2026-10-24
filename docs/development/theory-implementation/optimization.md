@@ -80,3 +80,25 @@ test-to-route matrix, one-shot and mixed feasibility inspections,
 public symbol inventory for strategies and direct backends, and a
 fixed-scope exit check. Mathematical constraint satisfaction and
 state-transition identities belong to Phase 9.
+
+## Inspected optimizer and strategy assertion evidence
+
+| Test module | Direct assertions | Evidence boundary |
+| --- | --- | --- |
+| `tests/optim/contracts/test_optimizer_dispatch.py` | Default BoTorch backend forwarding and restart/sample arguments; actual GA candidate/value shape; unknown optimizer and invalid bounds/`q` rejection; mixed GA routing; categorical PSO and integer Torch rejection; initialization-generator forwarding and unsupported-backend rejection | Mock-based routing is contract evidence, not evidence of numerical solver quality |
+| `tests/optim/contracts/test_optimizer_dispatch.py` | Nonlinear bound is enforced for q=1 with both an explicit initial-condition tensor and a custom initializer | Two synthetic scalar problems do not prove general nonlinear feasibility |
+| `tests/optim/integration/test_nonlinear_candidate_constraints_e2e.py` | BoTorch qLogEI returns a nonlinear-feasible candidate; linear + nonlinear + fixed-feature combination; inter-point separation with q=2; qLogNParEGO with nonlinear candidate constraint | This is actual candidate-level feasibility at 1e-6 tolerance for selected problems, **not** a global optimality guarantee or a test of all backends |
+| `tests/optim/trust_region/test_turbo_strategy.py` | Success expansion, failure shrinkage and restart flag; minimum length guarding; geometric-mean normalized ARD weights and scale invariance; clipped public-space bounds; multi-fidelity coordinate preservation; named optimizer strategy route | Does not establish improvement in regret or statistical efficiency relative to global BO |
+
+These examples deliberately distinguish dispatch/capability validation,
+actual returned-candidate feasibility and optimization quality. Derivative-free
+constraint backends may use penalty or feasibility-first ranking, which is
+not identical to native hard-constraint enforcement.
+
+## Fixed follow-up audit surface
+
+The Phase 3 source-to-test matrix still needs direct inspection for
+`optim/one_shot/`, specialized mixed BoTorch optimization, NSGA-II,
+the complete backend-specific constraint matrix, and
+`optim/embedding/`/`optim/latent/` search strategies. Formula and
+state-transition reference tests remain the separate Phase 9 deliverable.
