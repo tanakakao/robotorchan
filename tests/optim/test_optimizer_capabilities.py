@@ -13,9 +13,9 @@ from robotorchan.optim.capabilities import (
     BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
     BOTORCH_OPTIMIZER_CAPABILITIES,
     DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES,
+    OPTIMIZER_CAPABILITIES,
     PSO_OPTIMIZER_CAPABILITIES,
     ConstraintHandling,
-    OPTIMIZER_CAPABILITIES,
     OptimizerCapabilities,
 )
 from robotorchan.optim.dispatch import OptimizerName
