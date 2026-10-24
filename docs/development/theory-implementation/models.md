@@ -1432,3 +1432,26 @@ the inspected class/likelihood/covariance contracts, **not** sparse
 support recovery, calibrated predictive uncertainty or a Phase 7
 numerical equivalence result. The robust-noise family registry should
 still be reconciled for any unlisted variants before Phase 4 closure.
+
+## Phase 4 robust-noise registry reconciliation (27 entries)
+
+The current regression registry assigns **27** entries to the
+`robust_noise` family. Their mathematical mechanisms and source
+ownership have been mapped in the preceding inspected sections.
+This checkpoint reconciles registration paths that are easy to miss
+when reviewing only the later `_register_family(...)` blocks:
+
+| Registry mechanism | Registry names / count | Registration detail and Phase 4 boundary |
+| --- | --- | --- |
+| Sparse relevance pursuit | `RobustRelevancePursuitSingleTaskGP`, `RobustRelevancePursuitMultiTaskGP`, `MixedRobustRelevancePursuitSingleTaskGP`, `MixedRobustRelevancePursuitMultiTaskGP` (4) | The mixed multi-task entry is declared directly in the initial `MODEL_REGISTRY` dictionary, not the later three-name `_register_family` call. BoTorch sparse outlier likelihood is distinct from explicit contamination. |
+| Contamination mixture | `ContaminatedSingleTaskGP`, `ContaminatedMultiTaskGP`, `MixedContaminatedSingleTaskGP`, `MixedContaminatedMultiTaskGP` (4) | Custom two-Gaussian observation mixture and Monte Carlo variational objective. |
+| Student-t observations | `StudentTSingleTaskGP`, `StudentTMultiTaskGP`, `MixedStudentTSingleTaskGP`, `MixedStudentTMultiTaskGP` (4) | GPyTorch Student-t likelihood on a variational **Gaussian latent GP**. |
+| Heteroskedastic / replicate | `HeteroskedasticSingleTaskGP`, `HeteroskedasticMultiTaskGP`, `MixedHeteroskedasticSingleTaskGP`, `MixedHeteroskedasticMultiTaskGP`, `JointHeteroskedasticSingleTaskGP`, `MixedJointHeteroskedasticSingleTaskGP`, `ReplicateNoiseSingleTaskGP`, `MixedReplicateNoiseSingleTaskGP`, `HeteroskedasticMultiFidelityGP`, `ReplicateNoiseMultiFidelityGP` (10) | Two multi-fidelity entries are registered directly in the initial dictionary. Distinguish iterative noise GP, joint variational noise GP and replicate-estimated **fixed** noise. |
+| Gibbs nonstationarity | `NonstationarySingleTaskGP`, `NonstationaryMultiTaskGP`, `NonstationaryKroneckerMultiTaskGP`, `MixedNonstationarySingleTaskGP`, `MixedNonstationaryMultiTaskGP` (5) | Input-dependent **latent covariance** rather than heteroskedastic observation likelihood. |
+| **Total** | **27** | 4 + 4 + 4 + 10 + 5 = 27; registry enumeration is not a numerical-verification result. |
+
+**Remaining Phase 4 evidence gaps:** Reconcile per-variant assertion
+coverage (particularly mixed and multi-task contamination/Student-t),
+distinguish class-level API inspection from exercised tests, and check
+the other registry families. This registry checkpoint does not close
+Phase 4 or replace the mathematical tests planned for Phase 7.
