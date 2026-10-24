@@ -712,6 +712,29 @@ tolerance-based PSD check are useful numerical properties, **not** a proof
 that the recursion matches a published infinite-width kernel formula. That
 independent algebraic reference belongs to Phase 7.
 
+## Source and assertion audit: joint neural representation regression
+
+The implementations in `models/high_dimensional/reduced/joint_neural.py` and
+`joint_vae.py`, along with three dedicated test modules, were inspected.
+There are **17 named test functions**: eleven for `JointEncoderGP`, four
+for mixed joint models and two shared training-loss checks.
+
+| Model family | Implemented mathematics and upstream boundary | Verified assertions in inspected tests | Numerical/empirical gaps |
+| --- | --- | --- | --- |
+| `JointEncoderGP` | Locally standardizes inputs and jointly trains a neural feature network through BoTorch `SingleTaskGP` exact marginal log likelihood; the public GP accepts original coordinates | Original training inputs retained, encoder dimensions, MLL gradient to encoder, candidate gradients through qLogEI, state-dict round trip, custom encoder contract, qLogEI/qLogNEI/qUCB, `optimize_acqf`, condition-on-observations and fantasize in original coordinates | Learned representation quality, comparison with frozen reduction, optimization stability across seeds |
+| `HybridAutoEncoderGP` | Adds weighted standardized input reconstruction MSE to negative GP MLL; the decoder is local PyTorch | Shared finite scalar training loss and actual Adam parameter update; mixed variant verifies continuous-only reconstruction and decoder gradient | Exact weighted-loss decomposition and reconstruction–prediction tradeoff |
+| `JointVAEGP` | Adds VAE KL divergence and stochastic reconstruction to negative GP MLL; default predictions use the posterior-mean latent code; optional `uncertainty_aware_posterior` performs Monte Carlo latent marginalization with Gaussian moment matching | Shared finite training loss; mixed variant checks mean/logvariance shapes and gradient flow into both variational heads and decoder | Independent KL and total-variance identities, stochastic latent MC convergence, calibration of uncertainty-aware posterior |
+| `MixedJointEncoderGP`, `MixedHybridAutoEncoderGP`, `MixedJointVAEGP` | Reduces **only continuous coordinates** and appends unmodified categorical values; builds native mixed covariance rather than one-hot encoding categories | Categorical column survives encoding exactly, negative categorical index, original mixed posterior shape, encoder/decoder/VAE gradient propagation | Mixed-covariance numerical reference, sensitivity to rare categories and noisy categorical observations |
+
+The joint encoder's training GP is constructed initially from detached
+encoded training inputs, then reset to raw input coordinates so its
+`forward` method can apply the trainable encoder. This must not be
+confused with a frozen dimensionality reducer. The VAE default
+`posterior(X)` uses deterministic latent means; its explicit
+`uncertainty_aware_posterior` is a separate moment-matched approximation.
+Existing tests of the joint VAE training loss do not by themselves establish
+correctness of that optional uncertainty propagation.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
