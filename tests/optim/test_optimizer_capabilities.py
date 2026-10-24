@@ -1,11 +1,24 @@
+from typing import get_args
+
+from robotorchan.optim import (
+    ALEBOStrategy,
+    HeSBOStrategy,
+    LatentSpaceStrategy,
+    REMBOStrategy,
+    TuRBOStrategy,
+    optimize_mixed_one_shot_acqf,
+)
+from robotorchan.optim.backends import optimize_vector_nsga2
 from robotorchan.optim.capabilities import (
     BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
     BOTORCH_OPTIMIZER_CAPABILITIES,
     DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES,
+    OPTIMIZER_CAPABILITIES,
     PSO_OPTIMIZER_CAPABILITIES,
     ConstraintHandling,
     OptimizerCapabilities,
 )
+from robotorchan.optim.dispatch import OptimizerName
 
 
 def test_optimizer_capabilities_are_immutable() -> None:
@@ -102,3 +115,28 @@ def test_gradient_botorch_capability_does_not_claim_gpu_optimizer_support() -> N
 
     assert capabilities.requires_grad
     assert not capabilities.gpu
+
+
+def test_phase3_dispatch_inventory_matches_backend_registry() -> None:
+    """Keep advertised named backends distinct from specialized algorithms."""
+    names = set(get_args(OptimizerName))
+    assert names == set(OPTIMIZER_CAPABILITIES)
+    assert len(names) == 11
+    assert "nsga2" not in names
+    assert "mixed_one_shot" not in names
+    assert callable(optimize_vector_nsga2)
+    assert callable(optimize_mixed_one_shot_acqf)
+
+
+def test_phase3_high_dimensional_strategies_are_public() -> None:
+    """Preserve explicit search strategies rather than dispatcher aliases."""
+    assert all(
+        strategy is not None
+        for strategy in (
+            ALEBOStrategy,
+            HeSBOStrategy,
+            LatentSpaceStrategy,
+            REMBOStrategy,
+            TuRBOStrategy,
+        )
+    )
