@@ -1488,3 +1488,26 @@ product-space outputs use distinct upstream models; neither is a
 generic single-task GP with flattened outputs. Named tests were
 inspected, not executed here; broader numerical verification is
 reserved for Phase 7.
+
+## Phase 4 inspected hierarchical/contextual registry (6 entries)
+
+| Registry model(s) | Mathematical and API contract | Source ownership | Inspected assertions / limits |
+| --- | --- | --- | --- |
+| `HierarchicalConditionalKernelGP` | Hierarchical dependencies determine which design coordinates are active under each parent setting. BoTorch's `HierarchicalConditionalKernelGP` owns dependency transformation, conditional covariance and optional SAAS prior. | `models/structured/hierarchical.py` subclasses the upstream model with `ExactGPModelMixin` and preserves raw training inputs/targets/noise. | Source inspection establishes delegation, not independent conditional-kernel equivalence. |
+| `MixedHierarchicalConditionalKernelGP` | Retains hierarchical active blocks, with native categorical covariance in each active block (continuous, categorical, or their additive/product combination). Structural parent indices are **not** categorical design dimensions. | `hierarchical.py::_MixedHierarchicalConditionalKernel` builds per-partition mixed blocks; the wrapper rejects overlap of `cat_dims` with hierarchical parents. | `tests/models/structured/test_mixed_contextual_hierarchical.py` checks categorical kernel presence, raw data, exact MLL and structural-parent overlap rejection. |
+| `LCEAGP` | Latent-context-embedding **additive** GP with context decomposition and optional learned embeddings, delegated to BoTorch's `LCEAGP`. | `models/structured/contextual.py` retains raw training data and common exact-GP contract without rewriting upstream context embeddings. | Source-level constructor delegation inspected; no independent embedding-identifiability or posterior-parity claim. |
+| `LCEMGP` | BoTorch latent-context-embedding **multi-output** GP with task feature, optional context categorical/embedding metadata and output-task selection. | `contextual.py` inherits upstream `LCEMGP` and preserves raw tensors. | Context metadata is distinct from `cat_dims` in a mixed design kernel; do not conflate them. |
+| `MixedLCEMGP` | Mixed design covariance applies only after removing the structural task feature; context metadata still controls latent context embeddings. | `contextual.py` normalizes task/category indices, shifts `data_cat_dims` after task removal, constructs native mixed covariance, rejects a conflicting custom covariance. | `test_mixed_lcemgp_uses_native_mixed_design_covariance` checks task/category mapping, categorical kernel, raw data and exact MLL. |
+| `SACGP` | Structural-additive contextual GP decomposes design features by named contexts using upstream BoTorch `SACGP`. | `contextual.py` forwards `decomposition` and raw data through the common exact-GP wrapper. | Source-level delegation inspected; no standalone empirical comparison to latent-context embedding is claimed. |
+
+**Family boundary:** These six registry names comprise the
+`hierarchical_contextual` group. Separately registered
+`HierarchicalConditionalKernelMultiTaskGP` and
+`MixedHierarchicalConditionalKernelMultiTaskGP` are multi-task
+variants in the `multitask_multioutput` group. Their source shares
+`hierarchical.py`, and the mixed multi-task test explicitly checks
+task-feature removal, category-index remapping and exact MLL.
+BoTorch's hierarchical parent dependency, a task index, and an
+ordinary categorical design coordinate have different semantics.
+These are inspected source and test contracts, not Phase 7
+numerical verification.
