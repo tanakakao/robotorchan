@@ -135,3 +135,28 @@ Trace HeSBO, remaining latent/reduced strategies, specialized backend
 constraint-handling modes, and the native BoTorch acquisition/optimizer
 call-site inventory. Then run the finite inventory/CI exit check. The
 independent mathematical identities remain reserved for Phase 9.
+
+## HeSBO, latent-space reconstruction and backend constraint semantics
+
+The following source and named test modules were inspected directly.
+These are **contract-level assertions**, not proof of optimality.
+
+| Route and assertion source | Mathematical/implementation responsibility | Confirmed tests and limitations |
+| --- | --- | --- |
+| `HeSBOStrategy` (`optim/embedding/hesbo.py`; `tests/optim/embedding/test_hesbo_strategy.py`) | Sparse signed hash matrix maps each public feature to one embedded coordinate; normalized projection is clipped to the original box before evaluating the **original-space** acquisition. Continuous optimization delegates to BoTorch `optimize_acqf`. | One signed nonzero per input row; seed repeatability; original-space bounded projection and candidate metadata; invalid configuration/`q` guards. Embedding collision risk, clipping distortion and regret are not quantified. |
+| `LatentSpaceStrategy` (`optim/latent/strategy.py`; `tests/optim/latent/test_latent_space_strategy.py`) | Fitted reconstruction maps latent optimizer coordinates back to public inputs, clamps public bounds and re-evaluates the original acquisition. Returns projection and round-trip distortion diagnostics. | PCA reconstruction yields bounded public-space candidates; random projection preserves original acquisition contract; wrong dimensions and invalid optimizer settings rejected. Round-trip distortion is reported, not proven negligible. |
+| Input constraint boundary (both strategies) | `reject_unmapped_candidate_constraints` refuses supplied public-space candidate constraints before coordinate transformation. | Latent test explicitly rejects unmapped nonlinear constraints; HeSBO implementation calls the same guard. A box-clamped candidate is **not** automatically feasible for an arbitrary nonlinear input constraint. |
+| Backend capability declarations (`optim/capabilities.py`; `tests/optim/test_optimizer_capabilities.py`) | Separate native constraints, feasibility-first ranking, penalties and unsupported combinations. BoTorch mixed advertises nonlinear intrapoint but not interpoint nonlinear constraints; PSO does not advertise categorical mixed optimization. | Test names explicitly cover these capability distinctions, including GPU claim limits. Flags alone cannot guarantee a returned candidate is feasible, or validate penalty tuning. |
+
+### Phase 3 evidence limits
+
+The inspected strategy tests exercise shape, determinism, feasibility of
+public **box** bounds and model/acquisition call compatibility; they do
+not validate the theoretical effective dimension or sample complexity.
+For the exact equations and independent numerical identities, use the
+planned Phase 9 optimization verification, without adding another phase.
+
+Phase 3 still requires a finite cross-family reconciliation of exposed
+optimization/acquisition names, delegated upstream paths and an explicit
+CI-backed exit decision. Remaining source-to-test omissions should be
+recorded as unverified, not implicitly treated as passed.
