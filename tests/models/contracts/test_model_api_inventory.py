@@ -308,6 +308,7 @@ def test_evidence_summary_covers_both_actual_registries() -> None:
             == group["registered_models"]
         )
 
+
 def test_phase2_classification_documentation_map_covers_all_registry_ids() -> None:
     root = Path(__file__).resolve().parents[3]
     document = (root / "docs/development/theory-implementation/models.md").read_text(
