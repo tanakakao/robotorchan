@@ -1163,3 +1163,59 @@ These mappings establish inspected source and named assertion coverage, **not**
 independent numerical equivalence. Phase 4 remains open until all 142 regression
 and 29 classification registry entries have been reconciled against detailed
 family records, including composition ownership and unverified properties.
+
+## Phase 4 registry-wide reconciliation: outstanding detailed evidence
+
+The two registries enumerate **171 identifiers** (142 regression names and
+29 binary classification IDs). Enumeration, public exports, generated
+documentation links, and AST test references are **not** equivalent to a
+complete mapping record. The following table is an explicit work queue
+against the registry's existing guide groups, not a claim that every listed
+variant lacks all documentation.
+
+| Regression registry guide group | IDs | Detailed-mapping reconciliation still required |
+| --- | ---: | --- |
+| `expressive` | 16 | Distinguish deep, spectral-mixture, and infinite-width BNN families; mixed and multitask variants require explicit inheritance/delegation evidence |
+| `hierarchical_contextual` | 6 | Inspect hierarchy/context kernels, task structure, and each mixed variant |
+| `high_dimensional` | 12 | Separate MAP-SAAS, fully Bayesian SAAS, orthogonal additive, ALEBO and mixed/multitask variants |
+| `multitask_multioutput` | 10 | Verify heterogeneous, conditional-kernel, mixed, and model-list ownership beyond the two representative multitask GP records |
+| `non_gp` | 5 | Distinguish ExtraTrees, GBDT, histogram GBDT, RF, and NGBoost predictive-distribution adapters |
+| `preference` | 1 | Inspect `PairwiseGP` likelihood, preference posterior, upstream fitting and tests |
+| `reduced` | 52 | Separate frozen versus joint reducers, input versus output reduction, neural/VAE families, and mixed/multitask variants |
+| `robust_noise` | 27 | Distinguish heteroskedastic, replicate, contamination, relevance pursuit, nonstationary, and Student-t variants |
+| `standard` | 6 | Reconcile variational, mixed, and multifidelity variants beyond exact single-task baselines |
+| `structured_output` | 4 | Inspect HigherOrder and LatentKronecker output covariance and mixed variants |
+| `uncertain_input` | 3 | Inspect continuous, categorical and mixed input integration, prediction semantics and assertions |
+| **Total** | **142** | **All registry names must receive family-to-variant traceability** |
+
+For binary classification, the registry lists 29 IDs. Source-and-assertion
+records now describe the principal families, including the remaining robust
+and high-dimensional classifiers. The following **per-variant** reconciliation
+is still necessary before Phase 4 acceptance:
+
+- `binary.mixed`: confirm its mixed kernel and categorical contract in a
+  dedicated mapping record rather than inferring parity from regression.
+- `binary.robust.mixed_nonstationary` and
+  `binary.robust.multitask_nonstationary`: inspect variant-specific tests and
+  state the categorical/task covariance composition separately.
+- All classification IDs: reconcile their detailed records with actual
+  implementation module, assertion evidence, notebook availability and
+  upstream ownership. Shared guide references alone are insufficient.
+
+### Phase 4 exit gate (unchanged)
+
+1. Regenerate the temporary registry audit from current `main` using
+   `scripts/audit_model_api.py --include-test-references --include-upstream-calls --include-evidence-summary --check-documentation-paths`.
+2. Compare every identifier with a detailed family record and record any
+   variant-specific exceptions; do not count a family guide as proof.
+3. Confirm local implementation versus BoTorch, GPyTorch, sklearn and other
+   delegated components from source, not only static MRO.
+4. Inspect actual test assertions; mark mathematical and runtime evidence
+   **Unverified** when absent. Independent numerical verification remains
+   assigned to Phase 7.
+5. Run the generated-coverage check without modifying
+   `docs/model_coverage.json`, and require successful CI and Documentation
+   links before merging the final Phase 4 completion claim.
+
+This reconciliation identifies **outstanding evidence**, not 142 broken
+models. The phase remains **in progress** until the exit gate is met.
