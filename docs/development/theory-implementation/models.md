@@ -1288,3 +1288,31 @@ have identical uncertainty-marginalization support without a separate audit.
 The above statements reflect inspected constructors, method bodies and named
 test assertions. The remaining reduced-family variants and Phase 4 exit gate
 are still open; independent numerical verification belongs to Phase 7.
+
+## Phase 4 inspected reduced multi-task implementations
+
+The inspected reduced multi-task code has **two different observation
+layouts**. A task-feature column in long-format data must not be confused
+with a multi-output target matrix in a Kronecker block design.
+
+| Implementations and variants | Mathematical/data contract | Source ownership | Inspected assertion evidence and caveats |
+| --- | --- | --- | --- |
+| `ReducedMultiTaskGP`; `PCAMultiTaskGP`, `PLSMultiTaskGP`, `RandomProjectionMultiTaskGP`, `AutoEncoderMultiTaskGP`, `VAEMultiTaskGP`, `SupervisedAutoEncoderMultiTaskGP`, `SupervisedVAEMultiTaskGP` | Long-format `X=[x,t]` with scalar outcome rows: learn/freeze `T(x)`, then fit a multi-task GP on `[T(x),t]`. The task index is **excluded** from the reducer; PLS/supervised reducers use row-wise long-format outcomes. VAE-based reducers use deterministic posterior-mean codes for the downstream GP. | `models/high_dimensional/reduced/multitask.py` owns task-feature normalization, input slicing, reducer fitting, task reattachment, original-space posterior/conditioning and state reload. `models/standard/multitask.py::MultiTaskGP` and its BoTorch/GPyTorch dependencies own task covariance/inference. | `tests/models/high_dimensional/reduced/test_multitask.py` asserts task exclusion, negative task index, PLS outcome use, frozen AE/VAE semantics, original/reduced dimensions and state resynchronization. No independent task-covariance numerical equivalence check is claimed. |
+| `ReducedKroneckerMultiTaskGP`; `PCAKroneckerMultiTaskGP`, `PLSKroneckerMultiTaskGP`, `RandomProjectionKroneckerMultiTaskGP`, `AutoEncoderKroneckerMultiTaskGP`, `VAEKroneckerMultiTaskGP`, `SupervisedAutoEncoderKroneckerMultiTaskGP`, `SupervisedVAEKroneckerMultiTaskGP` | Block design: `X` contains only shared data features and `Y` holds all task outcomes. Reduce `X` to `T(X)`; task structure is represented by the multi-output GP, **not** by an appended task column. Supervised reducers can use all output columns jointly. | `models/high_dimensional/reduced/multitask.py::ReducedKroneckerMultiTaskGP` owns reducer and input routing; `models/standard/multitask.py::KroneckerMultiTaskGP` and upstream components own structured task covariance and posterior. | `tests/models/high_dimensional/reduced/test_multitask.py` checks multi-output PLS supervision, q-batch posterior, VAE MLL and serialization. The Kronecker algebra is delegated, not independently re-derived in this audit. |
+| `MixedReducedMultiTaskGP` | Long-format `[x_cont,x_cat,t]` becomes `[T(x_cont),x_cat,t]`. The task column is excluded from `cat_dims` and reduction, while categories bypass the reducer and retain native mixed-kernel semantics. | `models/high_dimensional/reduced/mixed_multitask.py` owns structural-feature validation and column routing; `MixedInputReducer` owns category passthrough; `models/standard/multitask.py::MixedMultiTaskGP` owns the mixed task GP interface. | `tests/models/high_dimensional/reduced/test_mixed_multitask.py` asserts preserved category/task values and state resynchronization. |
+| `MixedReducedKroneckerMultiTaskGP` | Block-design mixed inputs become `[T(x_cont),x_cat]` with task identity represented by the target-output structure rather than a feature column. | `models/high_dimensional/reduced/mixed_multitask.py` delegates to `MixedInputReducer` and `models/standard/multitask.py::MixedKroneckerMultiTaskGP`. | `tests/models/high_dimensional/reduced/test_mixed_multitask.py` checks categorical passthrough, posterior behavior and state reload. |
+
+**Dimensional ambiguity:** Both reduced multi-task base classes check the
+reduced input dimension before the original input dimension. If the two
+dimensions are equal, the public interface cannot infer whether the supplied
+tensor is already reduced; do not claim unambiguous original-space dispatch.
+
+**Scope correction:** No `ReducedMultiFidelityGP` or
+`MixedReducedMultiFidelityGP` class was found in the inspected reduced
+model sources. Multi-fidelity support elsewhere in the registry must be
+audited on its own terms rather than presented as an implemented reduced
+multi-fidelity variant. This is a source-level observation, not a
+registry-wide proof of absence.
+
+The entries above remain Phase 4 static implementation/test mapping, not
+Phase 7 numerical verification or a Phase 4 completion declaration.
