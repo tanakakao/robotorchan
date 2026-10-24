@@ -982,6 +982,68 @@ The provenance below is source and test inspection on `main` at
 | Notebook | Not a regression registry entry; per-entry demonstrations remain separate |
 | Limitations | No common `posterior()`, global ELBO, shared covariance or assumption of independence implied by container membership |
 
+### Classification with flipped observation labels
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `LabelNoiseBinarySingleTaskGPClassifier` / `binary.robust.label_noise` |
+| Mathematical object | Observed positive probability `p_obs = FP + (1 - FP - FN) * p_clean`, where FP and FN are false-positive and false-negative flip rates |
+| Theory and reference | `docs/theory/24_classification.md` (shared latent GP/Bernoulli foundation); asymmetric label-noise observation process implemented locally |
+| Public API | `predict_proba` (observed label), `predict_clean_proba` (clean class), `flip_probabilities`, `latent_posterior` |
+| Source / ownership | `src/robotorchan/models/classification/binary/robust/label_noise.py`; **Extended** GPyTorch `BernoulliLikelihood` with corrupted forward, marginal and expected-log-probability; variational GP **Delegated** |
+| Training method | Gaussian latent variational approximation with quadrature expected log likelihood for corrupted Bernoulli labels; flip rates may be fixed or learned |
+| Assertion evidence | `tests/models/classification/robust/test_label_noise.py`: explicit asymmetric formula, symmetric configuration, trainable-rate gradients and invalid parameters |
+| Notebook | Per-registry-ID executable demonstration **unverified**; shared guide `docs/models/classification.md` |
+| Limitations | Permitted individual flip rates are below 0.5; clean-class probability is **not** interchangeable with observed-label probability, and flip-rate identifiability is unverified |
+
+### Classification with contaminating labels
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `ContaminatedBinarySingleTaskGPClassifier` / `binary.robust.contaminated` |
+| Mathematical object | `p_obs = (1 - epsilon) * p_clean + epsilon * p_contaminant` |
+| Theory and reference | Shared binary GP theory in `docs/theory/24_classification.md`, augmented by a distinct local contamination process |
+| Public API | `predict_clean_proba`, `predict_proba`, `latent_posterior` and contamination parameter |
+| Source / ownership | `src/robotorchan/models/classification/binary/robust/contaminated.py`; **Extended** Bernoulli likelihood with mixture probability and quadrature-based expected log likelihood |
+| Training method | Variational latent GP with optional learned contamination probability |
+| Assertion evidence | `tests/models/classification/robust/test_contaminated.py`: exact contamination mixing formula, clean/observed distinction, gradient and invalid-probability guards |
+| Notebook | Per-ID execution **unverified** |
+| Limitations | Input-independent contaminant positive-class probability in this implementation; not an equivalent model of feature-dependent label corruption |
+
+### Classification probability ensembles (GP and heterogeneous)
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `GPBinaryClassificationEnsemble` / `binary.ensemble.gp`; `HeterogeneousBinaryClassificationEnsemble` / `binary.ensemble.heterogeneous` |
+| Mathematical object | Discrete ensemble of **complete predictive class-probability vectors** with ensemble mean, between-member variance, predictive entropy and BALD-style information difference |
+| Theory and reference | Predictive class probabilities and entropy in `docs/theory/24_classification.md`; the ensemble **does not** define one Gaussian latent posterior |
+| Public API | `probability_posterior`, `predict_proba`, `sample_class_probabilities`, `mutual_information`; GP members retain individual `member_latent_posteriors` |
+| Source / ownership | `src/robotorchan/models/classification/binary/ensemble/{gp,heterogeneous}.py` and `classification/posterior/ensemble.py`; **Implemented** ensemble mixture semantics over delegated member predictions |
+| Training method | Individual member objectives and fitting remain independent; heterogeneous case accepts normalized nonnegative member weights |
+| Assertion evidence | `tests/models/classification/ensemble/test_gp.py` and `test_heterogeneous.py`: member probability alignment, separate latent semantics, information scores, weights, backend mixture and AL support |
+| Notebook | Per-ID execution **unverified** |
+| Limitations | Member disagreement measures ensemble epistemic spread, not a calibrated fully Bayesian model posterior; do not substitute predictive entropy for expected member entropy |
+
+### Non-GP binary classification and bootstrap uncertainty
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `RandomForestBinaryClassifier`, `ExtraTreesBinaryClassifier`, `GradientBoostingBinaryClassifier`, `HistGradientBoostingBinaryClassifier` (four `binary.non_gp.*` IDs); `BootstrapGradientBoostingBinaryClassifier` (`binary.non_gp.bootstrap_gradient_boosting`) |
+| Mathematical object | Fitted class-probability scores from scikit-learn classifiers; bootstrap models additionally expose empirical between-estimator uncertainty |
+| Theory and reference | Non-GP classification and ensemble probability semantics; **not** a latent Gaussian process or variational ELBO |
+| Public API | `fit()`, `predict_proba(X)` and classification methods; bootstrap variant exposes sampled ensemble probabilities |
+| Source / ownership | `src/robotorchan/models/classification/binary/non_gp/{sklearn,gradient_boosting,bootstrap}.py`; **Delegated** estimator fitting/prediction to scikit-learn, **Extended** classifier and ensemble adapters |
+| Training method | Direct scikit-learn estimator fitting; bootstrap gradient boosting fits a multi-member empirical ensemble |
+| Assertion evidence | `tests/models/classification/non_gp/test_sklearn.py` checks single-model probability and fit contract, including rejection of unsupported epistemic sampling; `test_bootstrap.py` checks empirical member uncertainty and registry metadata |
+| Notebook | Shared classification guide; each specific executed example **unverified** |
+| Limitations | Single non-GP estimators do not claim epistemic posterior sampling; bootstrap spread is not a GP posterior and may be miscalibrated |
+
+The remaining robust (replicate, input-dependent, nonstationary),
+uncertain-input, multitask, high-dimensional and expressive classifier IDs
+retain the inventory paths above; they **do not** inherit a verified
+model-specific theoretical derivation merely by sharing the classification
+guide. Further family mapping is limited to this existing Phase 4 scope.
+
 Further families will be mapped using the same record contract; the
 registry inventory remains complete but these detailed mappings are
 representative and do not silently certify unmapped variants.
