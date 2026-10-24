@@ -847,4 +847,81 @@ The provenance below is source and test inspection on `main` at
 | Notebook | **Unverified** per-ID executable demo; common usage guide is `docs/models/classification.md` |
 | Limitations | Probability calibration, ELBO fit convergence and variational approximation error unverified; Phase 7 numerical checks pending |
 
-Further model families remain to be mapped at the same detail in Phase 4.
+### Long-format multitask Gaussian-process regression
+
+| Field | Verified mapping |
+| --- | --- |
+| Method / family | `MultiTaskGP` / standard multitask exact GP |
+| Theory and mathematical object | Shared task-data covariance, GP conditioning; `docs/theory/02_gaussian_process.md` is a foundation, not a complete task-kernel derivation |
+| Reference | BoTorch `botorch.models.MultiTaskGP` with an explicit task input feature |
+| Public API | `robotorchan.models.MultiTaskGP`; `task_feature`, `output_tasks`, `posterior`, `make_mll` |
+| Implementation | `src/robotorchan/models/standard/multitask.py`; `MultiTaskGP(ExactGPModelMixin, BoTorchMultiTaskGP)` |
+| Ownership / upstream | **Delegated** task covariance, exact posterior and task representation to BoTorch; **Extended** raw data retention and common training contract |
+| Numerical method | Exact GP over long-format observations with task label included in `train_X`; not equivalent to complete block-design observations |
+| Verification | `tests/models/standard/test_multi_task_gp.py`: constructor parity, wrapper contract, posterior agreement with upstream, fantasy shape contract |
+| Notebook | Registry documentation metadata; per-variant notebook execution **unverified** |
+| Limitations | Task-feature semantics and observed-task coverage matter; numerical task correlation and identifiability are not independently proven here |
+
+### Kronecker block-design multitask GP
+
+| Field | Verified mapping |
+| --- | --- |
+| Method / family | `KroneckerMultiTaskGP` / block-design multitask GP |
+| Theory and mathematical object | Separable data/task covariance and block multi-output observations; GP theory background in `docs/theory/02_gaussian_process.md` |
+| Reference | `botorch.models.KroneckerMultiTaskGP` |
+| Public API | `robotorchan.models.KroneckerMultiTaskGP(train_X, train_Y, ...)`, with `train_Y` shape `[n, m]` |
+| Implementation | `src/robotorchan/models/standard/multitask.py`; direct BoTorch Kronecker subclass |
+| Ownership / upstream | **Delegated** multitask posterior and Kronecker covariance behavior; **Extended** raw data and training interface |
+| Numerical method | BoTorch multitask inference on shared input rows across tasks; no per-observation `train_Yvar` accepted in the wrapper constructor |
+| Verification | `tests/models/standard/test_kronecker_multi_task_gp.py`: constructor parity, wrapper contract, posterior agreement, plus separate mixed-Kronecker input tests |
+| Notebook | Registry-mapped path; execution **unverified** |
+| Limitations | Incomplete task observation grids are not equivalent to block design; mathematical Kronecker approximation details still require reference checks |
+
+### SAAS fully Bayesian single-task GP
+
+| Field | Verified mapping |
+| --- | --- |
+| Method / family | `SaasFullyBayesianSingleTaskGP` / fully Bayesian high-dimensional sparsity |
+| Theory and mathematical object | Sparsity-inducing SAAS lengthscale prior and posterior hyperparameter integration; existing high-dimensional theory and model selection documents provide context |
+| Reference | `botorch.models.fully_bayesian.SaasFullyBayesianSingleTaskGP` and BoTorch NUTS/Pyro fitting |
+| Public API | `robotorchan.models.SaasFullyBayesianSingleTaskGP`; **not** `make_mll`-based exact GP fitting |
+| Implementation | `src/robotorchan/models/high_dimensional/fully_bayesian.py` |
+| Ownership / upstream | **Delegated** fully Bayesian model, posterior and NUTS fitting to BoTorch; **Extended** raw data retention and explicit `supports_mll=False` |
+| Numerical method | Posterior averaged over MCMC hyperparameter samples, not MAP or a single MLL-optimized parameter point |
+| Verification | `tests/models/high_dimensional/test_fully_bayesian_single_task_gp.py`: constructor surface, raw-transform contract, MLL rejection, dtype/buffer rules and posterior equality with identical upstream MCMC samples |
+| Notebook | Registry metadata; NUTS run-time and reproducibility not inferred from notebook existence |
+| Limitations | NUTS mixing/convergence, computational cost and SAAS prior calibration remain numerical verification items |
+
+### Stochastic deep Gaussian-process regression
+
+| Field | Verified mapping |
+| --- | --- |
+| Method / family | `SingleTaskDeepGP` / expressive stacked variational GPs |
+| Theory and mathematical object | Composition of stochastic GP mappings with variational ELBO, not exact GP conditioning |
+| Reference | GPyTorch `DeepGP`, `DeepGPLayer`, `DeepApproximateMLL` and `VariationalELBO` |
+| Public API | `robotorchan.models.SingleTaskDeepGP`; `posterior`, `make_mll`, `training_loss` |
+| Implementation | `src/robotorchan/models/expressive/deep_gp.py`, `deep_gp_posterior.py` |
+| Ownership / upstream | **Extended** GPyTorch deep variational layers and local BoTorch-compatible sample-based posterior |
+| Numerical method | Stochastic inducing-point variational layers and Monte Carlo posterior sampling; posterior is not Gaussian exact-GP posterior |
+| Verification | `tests/models/expressive/test_deep_gp.py`: sample shape, finite ELBO/loss, gradients through layers, optimizer updates and minibatch size; additional posterior integration tests in `tests/models/expressive/test_deep_gp_botorch.py` |
+| Notebook | Registry metadata; individual example execution unverified |
+| Limitations | Monte Carlo variance, stochastic consistency and training convergence remain Phase 7 targets |
+
+### Random-forest ensemble regression
+
+| Field | Verified mapping |
+| --- | --- |
+| Method / family | `RandomForestSurrogate` / non-GP tree ensemble |
+| Theory and mathematical object | Empirical ensemble distribution of tree predictions; **not** a GP covariance posterior |
+| Reference | scikit-learn `sklearn.ensemble.RandomForestRegressor` |
+| Public API | `robotorchan.models.RandomForestSurrogate`; explicit `fit()`, `posterior(X)` |
+| Implementation | `src/robotorchan/models/non_gp/random_forest.py` and `models/non_gp/posterior.py` |
+| Ownership / upstream | **Delegated** tree fitting/prediction to sklearn; **Extended** BoTorch `Model` protocol with empirical ensemble posterior |
+| Numerical method | Stack individual decision-tree predictions in the ensemble sample axis; this is not automatically a calibrated Bayesian posterior |
+| Verification | `tests/models/non_gp/test_random_forest_surrogate.py`: fit/raw data, ensemble posterior, seed reproducibility, batch candidate shapes, MC qEI integration, error cases |
+| Notebook | Registry guide/theory/notebook metadata; execution unverified |
+| Limitations | Epistemic coverage/calibration and predictive distribution validity are not guaranteed by tree prediction spread |
+
+Further families will be mapped using the same record contract; the
+registry inventory remains complete but these detailed mappings are
+representative and do not silently certify unmapped variants.
