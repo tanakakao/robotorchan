@@ -922,6 +922,66 @@ The provenance below is source and test inspection on `main` at
 | Notebook | Registry guide/theory/notebook metadata; execution unverified |
 | Limitations | Epistemic coverage/calibration and predictive distribution validity are not guaranteed by tree prediction spread |
 
+### Reduced input/output Gaussian-process regression
+
+| Field | Verified mapping |
+| --- | --- |
+| Method / family | `ReducedGP` and configured PCA/PLS/random-projection/output-reduced variants |
+| Theory and mathematical object | GP applied to transformed input `z = T(x)`; optional outcome reconstruction from reduced response coordinates |
+| Reference | BoTorch `SingleTaskGP` exact GP plus robotorchan `InputReducer` / `OutputReducer` interfaces |
+| Public API | `robotorchan.models.ReducedGP`, `posterior`, `condition_on_observations`, input/output reducer objects |
+| Implementation | `src/robotorchan/models/high_dimensional/reduced/base.py`; `robotorchan/reduction/` |
+| Ownership / upstream | **Extended** upstream exact GP using local reducer fitting, dimensionality transforms and posterior reconstruction |
+| Numerical method | Fit or reuse reducer, fit GP on reduced coordinates; restore posterior to public outcome coordinates where configured |
+| Verification | `tests/models/high_dimensional/reduced/test_reduced_gp.py`: input training/reconstruction, q-batch posterior, no redundant reducer fitting, MLL contract, output restoration, forbidden explicit reduced-output noise and state-dict round trip |
+| Notebook | Generated registry metadata; execution unverified |
+| Limitations | Reduction can discard predictive information; output reduction with `train_Yvar` is rejected; some posterior options are unsupported; calibration after reconstruction is unverified |
+
+### Student-t robust variational regression
+
+| Field | Verified mapping |
+| --- | --- |
+| Method / family | `StudentTSingleTaskGP` and mixed/multitask Student-t variants |
+| Theory and mathematical object | Latent variational GP with heavy-tailed Student-t **observation likelihood**, not Gaussian exact MLL |
+| Reference | GPyTorch `StudentTLikelihood`, variational GP infrastructure |
+| Public API | `posterior`, `training_loss`; `make_mll()` explicitly raises |
+| Implementation | `src/robotorchan/models/robust/student_t.py` |
+| Ownership / upstream | **Extended** local negative expected log probability plus KL training objective with delegated GPyTorch likelihood |
+| Numerical method | Sparse inducing-point variational GP; `df > 2` enforced for finite noise variance |
+| Verification | `tests/models/robust/test_student_t_gp.py`: finite differentiable loss, batch/q posterior, MC-acquisition compatibility, serialization, dtype migration and invalid inputs |
+| Notebook | Registry metadata; execution unverified |
+| Limitations | Latent posterior differs from heavy-tailed predictive observations; robustness under actual outliers and calibration are not independently benchmarked |
+
+### NGBoost probabilistic non-GP regression
+
+| Field | Verified mapping |
+| --- | --- |
+| Method / family | `NGBoostSurrogate` / natural-gradient boosted probabilistic regression |
+| Theory and mathematical object | Parametric Gaussian predictive distribution `Normal(loc(x), scale(x))`; **not** a Gaussian-process posterior |
+| Reference | `ngboost.NGBRegressor` and `ngboost.distns.Normal` |
+| Public API | `fit()`, `posterior(X)`; single-output model |
+| Implementation | `src/robotorchan/models/non_gp/ngboost.py`, `models/non_gp/distribution_posterior.py` |
+| Ownership / upstream | **Delegated** NGBoost distribution fitting to third-party NGBoost; **Extended** a BoTorch-compatible Gaussian-distribution posterior |
+| Numerical method | Convert NGBoost `loc` and `scale` predictive parameters to tensors, with `variance=scale**2`; not an MCMC hyperparameter posterior |
+| Verification | `tests/models/non_gp/test_ngboost_surrogate.py`: posterior shapes, fit/predict/MC acquisition and posterior-variance AL integration |
+| Notebook | Registry metadata; extra dependency/runtime execution not inferred |
+| Limitations | Predictive scale depends on distribution family and calibration; observation-noise override unsupported |
+
+### Heterogeneous regression/classification composition
+
+| Field | Verified mapping |
+| --- | --- |
+| Method / family | `HeterogeneousModel` / heterogeneous observation-semantic container **outside** regression registry |
+| Theory and mathematical object | Joint **bookkeeping** of distinct regression outcomes and classification probabilities; no newly defined joint Gaussian likelihood |
+| Reference | PyTorch `nn.ModuleList`, BoTorch model and robotorchan classification contracts |
+| Public API | `HeterogeneousModel` with `entry_posterior`, `entry_predict_proba`, global output ownership and per-entry training |
+| Implementation | `src/robotorchan/models/heterogeneous.py` |
+| Ownership / upstream | **Implemented** output ownership, names and per-entry dispatch; **Delegated** each child model's posterior and fitting semantics |
+| Numerical method | Does not combine posterior distributions or define a global training objective; training and uncertainty remain child-local |
+| Verification | `tests/models/contracts/test_heterogeneous_model.py`: child registration, index/name/output ownership, regression/classification separation, native posterior/probability semantics, fit/MLL dispatch, device/dtype and serialization |
+| Notebook | Not a regression registry entry; per-entry demonstrations remain separate |
+| Limitations | No common `posterior()`, global ELBO, shared covariance or assumption of independence implied by container membership |
+
 Further families will be mapped using the same record contract; the
 registry inventory remains complete but these detailed mappings are
 representative and do not silently certify unmapped variants.
