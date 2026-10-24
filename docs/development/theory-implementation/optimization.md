@@ -160,3 +160,19 @@ Phase 3 still requires a finite cross-family reconciliation of exposed
 optimization/acquisition names, delegated upstream paths and an explicit
 CI-backed exit decision. Remaining source-to-test omissions should be
 recorded as unverified, not implicitly treated as passed.
+
+## Phase 3 registry reconciliation gate
+
+The public scalar dispatcher `OptimizerName` and the concrete
+`OPTIMIZER_CAPABILITIES` keys are checked for exact equality in
+`tests/optim/test_optimizer_capabilities.py`. The same test verifies
+that the specialist `optimize_vector_nsga2` and
+`optimize_mixed_one_shot_acqf` are callable but **not** dispatcher names,
+and that representative embedding/latent/TuRBO strategies remain public.
+The acquisition registry ownership split is checked in
+`tests/acquisition/test_api_inventory.py`.
+
+These checks address Phase 3 namespace and metadata reconciliation, not
+backend numerical equivalence. All remaining formula-level checks belong
+to Phases 8–9. Phase 3 exit requires successful repository CI and a
+source-to-test/known-limit signoff; only then advance to Phase 4.
