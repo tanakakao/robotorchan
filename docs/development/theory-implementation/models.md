@@ -1237,3 +1237,30 @@ constructors in `classification/binary/standard/single_task.py`,
 `classification/binary/robust/nonstationary.py`, and
 `models/base.py::make_mixed_covar_module`. Assertions are cited only where
 their bodies were inspected. The full Phase 4 exit gate above remains open.
+
+## Phase 4 inspected reduced-GP family mapping: frozen, mixed and joint
+
+These records distinguish three **different training contracts** that cannot
+be collapsed into a single generic dimensionality-reduction description.
+The model inventory above remains the authoritative list of registry names;
+the records below cover inspected implementations and explicitly named
+variants, not every reduced-family entry.
+
+| Model / registry variants | Mathematical object and training contract | Source and ownership | Inspected assertion evidence / limits |
+| --- | --- | --- | --- |
+| `ReducedGP`, `PCAGP`, `PLSGP`, `RandomProjectionGP` | A fixed map `z=T(x)` precedes an exact GP in latent coordinates; an unfitted reducer is fitted once at construction and reused for predictions. PCA is unsupervised, PLS is supervised, and Gaussian random projection is seeded. Original-space inputs are accepted by the public posterior. | `models/high_dimensional/reduced/base.py` owns the original/latent input conversion, reducer lifecycle, raw-data snapshots and posterior routing; `reduction/input/` owns projection algorithms; BoTorch `SingleTaskGP` and GPyTorch own exact GP inference. | `tests/models/high_dimensional/reduced/test_reduced_gp.py` checks raw/latent shapes, q-batch posterior, no refit, conditioned inputs and named reducer selection. End-to-end optimization performance and projection-quality guarantees unverified. |
+| `OutputPCAGP`, `OutputPLSGP` and `ReducedGP` with an output reducer | Train the GP on `u=S(y)` and reconstruct the public posterior in original outcome coordinates. Output reduction changes posterior semantics, not merely the input kernel. Explicit `train_Yvar` is unsupported; output indices and tensor-valued observation noise have guarded restrictions. | `models/high_dimensional/reduced/base.py` owns latent-output construction and restored-posterior routing; `reduction/output/` owns reducers and restoration; BoTorch owns underlying exact GP posterior. | `tests/models/high_dimensional/reduced/test_reduced_gp.py` checks restored output shape, supervised output reduction, conditioning, noise restrictions and serialization. Exact covariance reconstruction equivalence is not established by this source audit. |
+| `MixedReducedGP`, `MixedPCAGP`, `MixedPLSGP`, `MixedRandomProjectionGP` | Reduce **continuous columns only**: `z=[T(x_cont), x_cat]`. Original categorical values are appended unchanged; downstream categorical indices shift to follow the latent block. | `models/high_dimensional/reduced/mixed.py::MixedInputLayout` and `MixedInputReducer` own feature routing; `MixedReducedGP` delegates native mixed covariance and GP inference to BoTorch `MixedSingleTaskGP`. | `tests/models/high_dimensional/reduced/test_mixed_reduced_gp.py` checks passthrough category values, latent categorical indices, negative category indexing, q-batch prediction and serialization. Mathematical equivalence of the induced mixed kernel is unverified. |
+| `JointEncoderGP`, `HybridAutoEncoderGP`, `MixedJointEncoderGP`, `MixedHybridAutoEncoderGP` | The feature map `z=encoder(x)` is **jointly optimized** with the exact GP through negative MLL; hybrid variants add weighted reconstruction MSE. Mixed joint variants encode only continuous columns and preserve native categories. Unlike frozen reduction, gradients must flow through the encoder. | `models/high_dimensional/reduced/joint_neural.py` implements encoder, standardization, mixed composition and `training_loss()`; PyTorch owns neural layers, BoTorch/GPyTorch own exact GP machinery. | `tests/models/high_dimensional/reduced/test_joint_encoder_gp.py` asserts finite nonzero encoder gradients, original-space candidate gradients, posterior/MC acquisition integration and state round-trip. Other joint/hybrid/mixed variants require their own assertion reconciliation; numerical training stability remains unverified. |
+
+**Source-audit caveat:** For `ReducedGP`, inputs already having the latent
+dimension are accepted by `_prepare_inputs`. When original and latent
+dimensions coincide, this branch is ambiguous; the implementation checks the
+original dimension first. Do not describe this interface as an unambiguous
+original-versus-latent discriminator. Similarly, the joint-encoder model
+retains original-space GP training inputs and applies the encoder in
+`forward()`; it is not a frozen latent-training-input GP.
+
+These are static implementation and inspected-assertion findings. They do not
+replace Phase 7's independent numerical verification or close the Phase 4
+registry-wide reconciliation gate.
