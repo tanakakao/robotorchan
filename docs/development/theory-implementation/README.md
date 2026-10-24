@@ -1,4 +1,4 @@
-# Theory–Implementation Mapping: Phase 1 architecture audit
+# Theory–Implementation Mapping: 12-phase development cycle
 
 ## Baseline and scope
 
@@ -6,7 +6,7 @@
 - Scope: Models, acquisition functions, acquisition optimization, and search strategies.
 - This document records verified architectural boundaries and the mapping contract.
   It does **not** certify that individual algorithms are mathematically correct.
-- The development cycle has exactly 12 phases; this is the Phase 1 artifact.
+- The development cycle has exactly 12 phases; the architecture baseline above is the original Phase 1 artifact.
 
 ## Existing ownership (preserve)
 
@@ -35,8 +35,9 @@
 - `src/robotorchan/optim/`: candidate generation, constraints, and search strategies.
   Do not infer algorithm support solely from family names.
 
-These are architecture-level observations, not completed per-symbol audits. Phases 2–3
-will establish exhaustive exported-symbol inventories and their exact source paths.
+These were the initial Phase 1 architecture-level observations. Phases 2–3
+subsequently established static exported-symbol inventories and concrete
+source ownership in the companion mapping documents.
 
 ## Mapping record contract
 
@@ -79,6 +80,26 @@ Do not introduce a new wrapper, registry, or runtime API for documentation.
 - Phase 11: add narrowly scoped consistency checks only after mapping records
   exist; reuse existing CI jobs where possible.
 
-No runtime tests, full-tree inventory, or CI execution are claimed by this
-document. Phase 1 remains open until PR CI passes, the PR is merged, and
-the remaining architecture/inventory review is signed off.
+### Recorded phase decisions
+
+| Phase | Decision and evidence boundary |
+| --- | --- |
+| Phase 1 — architectural audit | **Complete**; original baseline above remains historical provenance |
+| Phase 2 — model inventory audit | **Complete (static scope)**; registry-wide model audit and documentation path/ID contracts recorded in `models.md`; the final CI-backed exit checks were merged in PR #1361 |
+| Phase 3 — acquisition / optimizer / constraint inventory | **Complete (static scope)**; `acquisition.md` and `optimization.md` record public/registry/implementation paths and representative assertions; exit checks merged in PR #1366 at `e1ae6474dca742be2f882ddac7f61c9f77306614` |
+| Phase 4 — model theory-to-implementation mapping | **In progress**; full mapping fields and ownership/verification boundaries are recorded by model family in `models.md` |
+| Phases 5–6 — acquisition and optimizer mappings | Not yet complete |
+| Phases 7–9 — mathematical verification | Not yet complete |
+| Phases 10–12 — navigation, consistency CI, final audit | Not yet complete |
+
+**Acceptance is scope-specific:** a static source inventory or a passing
+contract test does not prove an algorithm's mathematical correctness.
+Independent numerical/model/acquisition/optimizer verification remains in
+the previously agreed Phases 7–9. Do not add phases or change the plan to
+claim such tests were part of the Phase 2/3 static exit gates.
+
+To reproduce static audit evidence, run
+`python scripts/audit_model_api.py --include-evidence-summary --check-documentation-paths`
+and `python scripts/audit_acquisition_api.py`, along with repository CI.
+The scripts report metadata and syntactic evidence, not independent formula
+validation.
