@@ -1264,3 +1264,27 @@ retains original-space GP training inputs and applies the encoder in
 These are static implementation and inspected-assertion findings. They do not
 replace Phase 7's independent numerical verification or close the Phase 4
 registry-wide reconciliation gate.
+
+## Phase 4 inspected neural and variational reduced-GP variants
+
+The following source-level records distinguish **pretrained frozen**
+representations from jointly trained representations. The term "VAE" alone
+does not imply that the downstream GP integrates latent uncertainty.
+
+| Model variants | Mathematical/training semantics | Implementation and delegation | Inspected tests and limits |
+| --- | --- | --- | --- |
+| `VAEGP`, `MixedVAEGP` | A VAE reducer is trained before GP construction; downstream GP inputs use the **posterior-mean** latent code. Mixed variants fit the VAE on continuous columns only and append unchanged categorical codes. The downstream exact GP does not marginalize the VAE latent distribution by default. | `models/high_dimensional/reduced/vae.py` instantiates `reduction/neural.py::VAEInputReducer` and delegates GP construction to `ReducedGP` or `MixedReducedGP`, then BoTorch exact GP machinery. | `tests/models/high_dimensional/reduced/test_vae_gp.py` checks frozen mean-code inputs, original-space acquisition gradients and state round-trip. Mixed-specific numerical assertions were not inspected here. |
+| `SupervisedVAEGP`, `MixedSupervisedVAEGP` | Frozen VAE representation with an additional outcome-supervised training signal, parameterized by `supervised_weight`; the GP is fitted after representation learning. Mixed variants reduce continuous features only. | `models/high_dimensional/reduced/vae.py` constructs `SupervisedVAEInputReducer` and delegates to the shared reduced-GP classes. | Constructor and inheritance were inspected; no dedicated variant-specific assertion was established in this pass. Predictive calibration and supervised benefit remain unverified. |
+| `SupervisedAutoEncoderGP`, `MixedSupervisedAutoEncoderGP` | Frozen outcome-aware AE encoder, pretrained with reconstruction and auxiliary prediction losses, then reused as a deterministic GP input map. Mixed variants preserve raw categorical values. | `models/high_dimensional/reduced/supervised_neural.py` constructs `SupervisedAutoEncoderInputReducer`; the shared `ReducedGP`/`MixedReducedGP` classes own routing and BoTorch owns GP inference. | `tests/models/high_dimensional/reduced/test_supervised_autoencoder_gp.py` asserts reducer/raw-data ownership, original-space acquisition gradients and serialization resynchronization. Mixed-specific assertion coverage remains to be reconciled. |
+| `JointVAEGP`, `MixedJointVAEGP` | Joint optimization uses negative GP MLL plus weighted reconstruction and KL penalties. Default `encode()` uses the VAE mean `mu(x)`. The non-mixed `JointVAEGP` additionally exposes `uncertainty_aware_posterior`, which samples `q(z\|x)` and moment-matches the resulting GP predictive mixture; this is **not** the default `posterior()` path. | `models/high_dimensional/reduced/joint_vae.py` owns VAE heads, reparameterized sampling, loss composition and optional Monte Carlo moment matching; `joint_neural.py` owns shared encoder/GP integration; PyTorch and BoTorch/GPyTorch provide the underlying modules. | `tests/models/high_dimensional/reduced/test_joint_vae_gp.py` checks distribution/sample shapes, gradients through variational/decoder parameters, acquisition gradients and state round-trip. Independent correctness and Monte Carlo convergence of uncertainty-aware moment matching remain unverified. |
+
+**Numerical caveat:** The optional `JointVAEGP.uncertainty_aware_posterior`
+implementation explicitly restricts the GP to a single output and requires a
+likelihood exposing scalar or per-observation training noise. Its predictive
+distribution is a Gaussian **moment approximation** to a latent mixture, not
+an exact analytic marginal. The mixed joint variant must not be assumed to
+have identical uncertainty-marginalization support without a separate audit.
+
+The above statements reflect inspected constructors, method bodies and named
+test assertions. The remaining reduced-family variants and Phase 4 exit gate
+are still open; independent numerical verification belongs to Phase 7.
