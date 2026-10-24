@@ -742,6 +742,33 @@ confused with a frozen dimensionality reducer. The VAE default
 Existing tests of the joint VAE training loss do not by themselves establish
 correctness of that optional uncertainty propagation.
 
+## Classification documentation mapping at registry-ID granularity
+
+Unlike regression `MODEL_REGISTRY`, the 29 entries in
+`CLASSIFICATION_MODEL_REGISTRY` do **not** carry individual guide, theory,
+or notebook metadata. The following is a documentation-ownership convention
+derived from the implemented binary registry and existing shared references,
+not an assertion that every entry has its own notebook.
+
+| Binary registry ID subset | Shared usage guide | Shared theoretical reference | Notebook verification |
+| --- | --- | --- | --- |
+| `binary.standard`, `binary.mixed`, `binary.multitask`, `binary.kronecker_multitask` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
+| `binary.map_saas`, `binary.saas`, `binary.reduced`, `binary.pca`, `binary.pls`, `binary.random_projection`, `binary.alebo`, `binary.joint_encoder` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
+| `binary.deep_gp` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
+| `binary.ensemble.gp`, `binary.ensemble.heterogeneous` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
+| `binary.uncertain.categorical_input`, `binary.uncertain.continuous_input` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
+| `binary.robust.label_noise`, `binary.robust.contaminated`, `binary.robust.replicate_labels`, `binary.robust.input_dependent_label_noise`, `binary.robust.nonstationary`, `binary.robust.mixed_nonstationary`, `binary.robust.multitask_nonstationary` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
+| `binary.non_gp.bootstrap_gradient_boosting`, `binary.non_gp.random_forest`, `binary.non_gp.extra_trees`, `binary.non_gp.gradient_boosting`, `binary.non_gp.hist_gradient_boosting` | `docs/models/classification.md` | `docs/theory/24_classification.md` (probability/latent distinction; not a GP derivation for sklearn) | Per-ID execution **unverified** |
+
+The shared classification guide explicitly documents family capabilities,
+predictive probability versus latent posterior, robust observation-process
+semantics, and non-GP limitations. The common GP classification theory
+provides background, **not** a mathematical derivation for every listed
+non-GP, ensemble, encoder, or robust variant. Those require family-specific
+source-to-theory records in Phase 4. Neither missing registry metadata nor
+shared documentation paths should be represented as broken files or as
+individual executable demonstrations.
+
 ## Open verification items (Phase 2 exit criteria)
 
 1. Public registry/export name reconciliation completed statically above.
