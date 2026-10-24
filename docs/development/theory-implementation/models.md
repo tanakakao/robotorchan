@@ -1,4 +1,4 @@
-# Model theory–implementation mapping: Phase 2 inventory
+# Model theory–implementation mapping
 
 ## Audit provenance and limits
 
@@ -769,44 +769,82 @@ source-to-theory records in Phase 4. Neither missing registry metadata nor
 shared documentation paths should be represented as broken files or as
 individual executable demonstrations.
 
-## Open verification items (Phase 2 exit criteria)
+## Phase 2 inventory sign-off and scope
 
-1. Public registry/export name reconciliation completed statically above.
-2. For **every** model ID, resolve the concrete class/module and any upstream
-   base or delegated backend; distinguish implementation from inheritance.
-3. Resolve the actual test files and test assertions, not just directory names.
-4. Confirm the theory/guide/notebook links for each model; note shared notebooks
-   and models without individual executable demonstrations.
-5. Run the model API audit, documentation-path validation, coverage check,
-   and CI; triage any gaps.
-6. Document unsupported and unverified mathematical properties explicitly.
+Phase 2 was accepted as a **registry-wide static provenance inventory**
+after the model API CLI, regression documentation-path checks, the
+classification shared-documentation mapping contract, and the repository
+CI / Documentation links workflows passed. It does **not** certify that
+every listed algorithm has been manually validated or that the mathematical
+formulas have passed independent reference tests.
 
-### Current evidence reconciliation (not a completion declaration)
+- 142 regression registry names and 29 classification IDs are enumerated.
+- The API audit resolves concrete registered classes and implementation
+  modules, static MRO, syntactic test references and direct imported calls.
+  Absence of a syntactic match is not proof of absent test coverage.
+- Representative source and assertion inspections and their explicit
+  limitations are recorded in the Phase 2 sections above.
+- Classification entries share a documented guide/theory owner without
+  asserting individual notebooks or mathematically complete derivations.
+- Numerical consistency and statistical behavior remain Phase 7 work,
+  **not** an unclosed Phase 2 gate.
 
-- All **142** regression registry names and **29** binary classification IDs
-  are inventoried. The static API export includes resolved implementation
-  classes/modules, inheritance and callable surface for every entry.
-- The test-reference and upstream-constructor scanners cover all registry
-  entries as **static detection**, not executed assertion evidence; the
-  `--include-evidence-summary` report lists names with no detected matches.
-- Representative model-family source and test-assertion inspections are
-  recorded above, including cases where the direct upstream scan is
-  incomplete (for example sklearn class-attribute delegation). The 29-row
-  classification status table has been reconciled to those inspections;
-  previously all rows incorrectly said "pending".
-- Regression guide/theory/notebook file-existence checks are exercised in
-  `tests/models/contracts/test_model_api_inventory.py`. Classification
-  registry **does not contain** per-ID documentation metadata, so link
-  ownership must remain an explicit gap rather than an invented 29-ID link
-  mapping.
-- Actual numerical identities, statistical calibration and posterior
-  convergence are reserved for Phase 7; their absence does not itself
-  invalidate the Phase 2 *inventory*.
+Phase 3 acquisition and optimizer static inventory and its CI-backed exit
+contracts are complete on `main` at `e1ae6474dca742be2f882ddac7f61c9f77306614`.
+Phase 4 develops the **method-level model theory-to-source records** below;
+their verified status must not be inferred from Phase 2 inventory alone.
 
-**Outstanding Phase 2 acceptance work:** review the latest static evidence
-summary and any unmatched registry IDs, reconcile per-ID classification
-documentation ownership and trace the representative regression-family
-assertions back to test names; only then make a formal Phase 2 completion
-decision. This is a fixed-scope exit check, not permission to add new phases.
+## Phase 4: theory-to-implementation records
 
-Do not advance to Phase 3 or declare Phase 2 complete while these remain open.
+The following records use the mapping contract from this directory's
+`README.md`. Registry-wide theory, guide and notebook metadata continues
+to live in `docs/model_coverage.json` rather than being copied here.
+The provenance below is source and test inspection on `main` at
+`e1ae6474dca742be2f882ddac7f61c9f77306614`.
+
+### Exact single-task Gaussian-process regression
+
+| Field | Verified mapping |
+| --- | --- |
+| Method / family | `SingleTaskGP` / exact Gaussian-process regression |
+| Theory and mathematical object | `docs/theory/02_gaussian_process.md`; Gaussian likelihood, kernel-conditioned posterior mean/covariance and exact marginal log likelihood |
+| Reference | BoTorch `botorch.models.SingleTaskGP` and Gaussian-process conditioning; this record does not claim an independent derivation |
+| Public API | `robotorchan.models.SingleTaskGP`; `posterior`, `make_mll`, `fit`, and raw training-tensor accessors |
+| Implementation | `src/robotorchan/models/standard/single_task.py`: `SingleTaskGP(FittableExactGPModelMixin, BoTorchSingleTaskGP)` |
+| Ownership / upstream | **Delegated** posterior and GP behavior to `botorch.models.SingleTaskGP`; **Extended** raw training-data capture and common fit/MLL mixin in `models/base.py` |
+| Numerical method | BoTorch/GPyTorch exact Gaussian process inference and `ExactMarginalLogLikelihood`; no locally implemented GP conditioning formula in this class |
+| Verification | `tests/models/standard/test_single_task_gp.py`: direct upstream posterior mean/variance agreement with transferred state, duplicate-input finite posterior, exact MLL type, raw-data retention |
+| Notebook | Registry-specified notebook in `docs/model_coverage.json`; executable coverage is **not** established by a path |
+| Limitations | Equality holds on inspected configurations, not all kernels, batch shapes or noisy-data regimes; Phase 7 independent numerical references are pending |
+
+### Native mixed-input Gaussian-process regression
+
+| Field | Verified mapping |
+| --- | --- |
+| Method / family | `MixedSingleTaskGP` / mixed continuous and categorical exact GP |
+| Theory and mathematical object | `docs/theory/02_gaussian_process.md` (GP conditioning); categorical covariance composition is owned by upstream BoTorch |
+| Reference | `botorch.models.MixedSingleTaskGP`; do not equate integer-coded categories with an ordered continuous metric |
+| Public API | `robotorchan.models.MixedSingleTaskGP(train_X, train_Y, cat_dims, ...)` |
+| Implementation | `src/robotorchan/models/standard/single_task.py`: `MixedSingleTaskGP(FittableExactGPModelMixin, BoTorchMixedSingleTaskGP)` |
+| Ownership / upstream | **Delegated** the native mixed kernel and posterior to `botorch.models.MixedSingleTaskGP`; **Extended** raw-data capture and common fit/MLL API |
+| Numerical method | Exact GP inference with BoTorch mixed kernel; `cat_dims` accepts negative indices and stores the caller's categorical coordinate metadata |
+| Verification | `tests/models/standard/test_mixed_single_task_gp.py`: constructor signature parity, native subclass identity, exact MLL, raw-data retention and posterior mean/variance agreement after state transfer |
+| Notebook | Registry-specified notebook via generated coverage; no per-test notebook execution claim |
+| Limitations | Static signature parity and a fixed numerical configuration do not establish every categorical kernel or optimizer combination; mathematical reference checks remain Phase 7 |
+
+### Bernoulli variational Gaussian-process classification
+
+| Field | Verified mapping |
+| --- | --- |
+| Method / family | `binary.standard` / `BinarySingleTaskGPClassifier` |
+| Theory and mathematical object | `docs/theory/24_classification.md`; latent GP with a Bernoulli observation likelihood and variational evidence lower bound (ELBO) |
+| Reference | GPyTorch `BernoulliLikelihood`, `VariationalELBO`; BoTorch `SingleTaskVariationalGP` infrastructure |
+| Public API | `posterior` (latent), `predictive_distribution` (Bernoulli), `predict_proba` (class probabilities), `predict_class`, `make_mll` |
+| Implementation | `src/robotorchan/models/classification/binary/standard/single_task.py` |
+| Ownership / upstream | **Extended** BoTorch variational GP with local 0/1 label validation and class-probability adaptation; **Delegated** Bernoulli likelihood and ELBO to GPyTorch |
+| Numerical method | Approximate variational latent posterior; likelihood integrates latent uncertainty for Bernoulli predictive probabilities; **not** exact Gaussian regression conditioning |
+| Verification | `tests/acquisition/test_api_inventory.py` confirms a valid probability-based PredictiveEntropy score and `q=1` enforcement; classification model tests require further source-to-assertion mapping |
+| Notebook | **Unverified** per-ID executable demo; common usage guide is `docs/models/classification.md` |
+| Limitations | Probability calibration, ELBO fit convergence and variational approximation error unverified; Phase 7 numerical checks pending |
+
+Further model families remain to be mapped at the same detail in Phase 4.
