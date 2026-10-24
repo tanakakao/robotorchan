@@ -1038,6 +1038,62 @@ The provenance below is source and test inspection on `main` at
 | Notebook | Shared classification guide; each specific executed example **unverified** |
 | Limitations | Single non-GP estimators do not claim epistemic posterior sampling; bootstrap spread is not a GP posterior and may be miscalibrated |
 
+### Classification with uncertain candidate inputs
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `ContinuousUncertainInputBinarySingleTaskGPClassifier` / `binary.uncertain.continuous_input`; `UncertainCategoricalBinarySingleTaskGPClassifier` / `binary.uncertain.categorical_input` |
+| Mathematical object | Continuous: Monte Carlo estimate of `E_epsilon[p(y | X + epsilon, D)]` for Gaussian perturbations with diagonal or full covariance. Categorical: exact finite sum `sum_k w_k p(y | X_cat=k, D)` |
+| Theory | `docs/theory/24_classification.md` provides class-probability semantics; candidate uncertainty integration is an extra layer over the latent predictive model |
+| Public API | `sample_uncertain_inputs`, `predict_proba_with_input_uncertainty`; `predict_proba_with_category_uncertainty` |
+| Source / ownership | `classification/binary/uncertain/{uncertain_input,uncertain_categorical}.py`; **Implemented** integration over perturbed candidates, **Delegated** base Bernoulli GP class predictions |
+| Numerical method | Cholesky sample covariance with small diagonal jitter and probability averaging for continuous inputs; enumeration of one uncertain categorical dimension with probability weights |
+| Assertion evidence | `tests/models/classification/uncertain/test_continuous_input.py`: zero perturbation limit, covariance shapes/simplex and candidate gradients; `test_uncertain_categorical.py`: one-hot/exact weighted expectation, categorical guards and gradients |
+| Notebook | Shared classification documentation; per-ID executable notebooks unverified |
+| Limitations | Perturbations describe **candidate inputs**, not uncertain labels or training inputs. Continuous integration is finite-sample MC, not an analytic integral. Categorical integration covers a single uncertain category column |
+
+### Multitask binary classification (long format and block input)
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `MultiTaskBinaryGPClassifier` / `binary.multitask`; `KroneckerMultiTaskBinaryGPClassifier` / `binary.kronecker_multitask` |
+| Mathematical object | Product of data covariance and task-index covariance in a variational Bernoulli GP; task identity is structural, not a categorical design feature |
+| Theory | `docs/theory/24_classification.md` plus multitask covariance principles; this is **not** a Gaussian exact GP posterior |
+| Public API | Long-format `task_feature`; block design accepts shared `train_X[n,d]`, labels `train_Y[n,m]` and returns per-task Bernoulli predictions |
+| Source / ownership | `classification/binary/standard/multitask.py`; **Implemented** `IndexKernel` × data kernel; block classifier **converts** complete block observations into internal long-format variational ICM inputs |
+| Numerical method | Variational GP and Bernoulli likelihood; despite the public `Kronecker` name the inspected block classifier delegates to a **long-format variational ICM backend**, not an exact Kronecker linear algebra solver |
+| Assertion evidence | `tests/models/classification/test_multitask_binary.py`: structural task kernel, task identifiers/rank, long-format prediction; `test_kronecker_binary.py`: block shapes, all-task predictions and input validation |
+| Notebook | Registry metadata/shared classification guide; execution unverified |
+| Limitations | Block design expects each task at every input row; the class name must not be mistaken for an exact Kronecker posterior algorithm |
+
+### Frozen reduced-input binary GP classification
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `ReducedBinarySingleTaskGPClassifier`, `PCABinarySingleTaskGPClassifier`, `PLSBinarySingleTaskGPClassifier`, `RandomProjectionBinarySingleTaskGPClassifier` (`binary.reduced`, `binary.pca`, `binary.pls`, `binary.random_projection`) |
+| Mathematical object | `p(y=1 | x,D)` from a latent Bernoulli GP evaluated at reduced coordinates `T(x)` |
+| Theory | GP binary classification with frozen input representation; `docs/theory/24_classification.md` |
+| Public API | `posterior(X)` accepts original or already reduced features; `original_input_dim`, `reduced_input_dim` |
+| Source / ownership | `classification/binary/high_dimensional/reduced/base.py`; **Extended** binary variational GP using fitted/reused `InputReducer` and preserved public raw inputs |
+| Numerical method | PCA, supervised PLS, or seeded Gaussian random projection is fitted before variational GP training, then kept fixed for prediction |
+| Assertion evidence | `tests/models/classification/high_dimensional/reduced/test_reduced.py`: original and latent candidate support, raw-input retention, dimension validation |
+| Notebook | Registry metadata; individual executed notebooks unverified |
+| Limitations | Loss of information from reduction and latent calibration unverified; this does not jointly optimize reducer and GP in the inspected source |
+
+### Deep variational GP binary classification
+
+| Field | Verified mapping |
+| --- | --- |
+| Model / registry | `BinarySingleTaskDeepGPClassifier` / `binary.deep_gp` |
+| Mathematical object | Composition of stochastic GP layers with Bernoulli observation process; approximate predictive probability from latent Monte Carlo samples |
+| Theory | `docs/theory/24_classification.md` for likelihood; `docs/theory/02_gaussian_process.md` for GP background; stochastic deep layers are not exact GP conditioning |
+| Public API | `posterior` / `latent_posterior`, `predictive_distribution`, `predict_proba`, `sample_class_probabilities`, `make_mll` |
+| Source / ownership | `classification/binary/expressive/deep_gp.py`, inheriting local `models/expressive/deep_gp.py`; **Extended** GPyTorch `DeepApproximateMLL(VariationalELBO)` with Bernoulli likelihood |
+| Numerical method | Finite Monte Carlo samples through the deep latent posterior and Bernoulli probabilities, with differentiable stochastic variational training loss |
+| Assertion evidence | `tests/models/classification/expressive/test_deep_gp_classifier.py`: latent/probability distinction, Bernoulli deep ELBO, label/raw-data guards, shared classifier contract |
+| Notebook | Per-ID executable example unverified |
+| Limitations | Monte Carlo sampling error, deep variational approximation and calibrated predictive probabilities not independently established |
+
 The remaining robust (replicate, input-dependent, nonstationary),
 uncertain-input, multitask, high-dimensional and expressive classifier IDs
 retain the inventory paths above; they **do not** inherit a verified
