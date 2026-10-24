@@ -102,3 +102,36 @@ The Phase 3 source-to-test matrix still needs direct inspection for
 the complete backend-specific constraint matrix, and
 `optim/embedding/`/`optim/latent/` search strategies. Formula and
 state-transition reference tests remain the separate Phase 9 deliverable.
+
+## Specialized optimization paths: inspected source and assertions
+
+The specialist paths are **not additional names** of the scalar
+`optim.optimize_acqf(optimizer=...)` dispatcher.
+
+| Source and tests | Implementation/numerical method | Assertions inspected | Unverified / unsupported |
+| --- | --- | --- | --- |
+| `optim/one_shot/mixed.py` / `tests/optim/one_shot/test_mixed.py` | Locally enumerates categorical choices for **each row** of an augmented one-shot q-batch, flattens the augmented coordinates, delegates each continuous subproblem to BoTorch `optimize_acqf`, and extracts actual candidates | A synthetic one-shot problem finds an actual/fantasy **cross-category** assignment and value > 0.9; assignment-count cap and invalid categorical domains rejected | **q=1 only**, exponential assignment count with augmented size; not general mixed qKG performance or proof of optimum |
+| `optim/backends/nsga2.py` / `tests/optim/backends/test_nsga2_backend.py` | Local nondominated ranking, crowding distance, tournament, crossover, mutation and environmental selection for **vector-valued** maximization | Returned tradeoff set within bounds and mutually nondominated; same-seed reproducibility; scalar objective rejected; dtype/device retained | Scalar BoTorch qEHVI/qNEHVI acquisition values do **not** require this API; hypervolume convergence and reference Pareto front coverage unverified |
+| `optim/backends/botorch.py` / `tests/optim/backends/test_botorch_optimizer_backend.py` | Native BoTorch continuous and mixed solver forwarding with local constraint and initialization validation | Native argument forwarding; fixed features under sequential q; mixed rejects interpoint nonlinear constraints before delegation; actual continuous q=1/joint-q nonlinear and interpoint feasibility within 1e-6 on synthetic cases | Mocked forwarding differs from actual feasibility; unrestricted optimizer convergence and cross-backend equivalence unverified |
+
+### Coordinate-changing high-dimensional strategies
+
+| Strategy and tests | Source-specific behavior and test evidence | Numerical limits |
+| --- | --- | --- |
+| REMBO / `tests/optim/embedding/test_rembo_strategy.py` | Repeatable normalized embedding, projection to public bounds, invariance to input units and original-space candidate API | Empirical effective-dimensionality and regret remain unverified |
+| ALEBO / `tests/optim/embedding/test_alebo_strategy.py` | Reproducible projection, polytope feasibility, refusal to clip truly infeasible points, constrained feasible sampling and original-space optimized candidate | Polytope reference algebra and complex high-dimensional coverage not independently certified |
+| BAxUS / `tests/optim/embedding/test_baxus_strategy.py` and `test_baxus_reference_schedule.py` | Signed sparse embedding, repeatable expansion/splitting, state adaptation, original-space candidates, and **500-dimensional reference schedule** checks | A schedule agreeing with a tutorial is not a benchmark proof of sample efficiency or of all state-transition numerics |
+
+The embedding and trust-region algorithms choose a **search geometry**;
+they may delegate numerical acquisition optimization. A strategy test that
+checks original-coordinate reconstruction is not evidence of a distinct
+acquisition function or backend optimizer. Nonlinear public-coordinate
+constraints are rejected if a strategy has no mathematically valid mapping
+into its embedded coordinates.
+
+### Remaining Phase 3 audit surface
+
+Trace HeSBO, remaining latent/reduced strategies, specialized backend
+constraint-handling modes, and the native BoTorch acquisition/optimizer
+call-site inventory. Then run the finite inventory/CI exit check. The
+independent mathematical identities remain reserved for Phase 9.
