@@ -1339,3 +1339,28 @@ This reconciliation supersedes the narrow class-name inference in the
 previous reduced multi-task mapping section. The broader registry and
 remaining Phase 4 family variants still require source-and-assertion review;
 no Phase 4 completion or Phase 7 numerical verification is claimed.
+
+## Phase 4 reduced-family registry reconciliation (52 entries)
+
+The current `MODEL_REGISTRY` reduced-related set comprises **20** names
+in `_REDUCED`, **29** names in `_NEURAL_REDUCED`, and **3**
+design-reduced multi-fidelity names (`PCAMultiFidelityGP`,
+`PLSMultiFidelityGP`, `RandomProjectionMultiFidelityGP`). This
+accounts for all **52** entries in the Phase 4 reduced-family inventory;
+the latter three are implemented under `models/standard/multi_fidelity.py`
+rather than the `models/high_dimensional/reduced/` directory. This
+count is a registry reconciliation, **not** proof of mathematical correctness.
+
+| Registry group | Exact registry membership | Implementation/test mapping and remaining boundary |
+| --- | --- | --- |
+| Deterministic input/output reduction (10) | `ReducedGP`, `PCAGP`, `PLSGP`, `RandomProjectionGP`, `OutputPCAGP`, `OutputPLSGP`, `MixedReducedGP`, `MixedPCAGP`, `MixedPLSGP`, `MixedRandomProjectionGP` | `reduced/base.py` and `reduced/mixed.py`; see frozen/mixed/output mapping above. Output reduction changes the **output** posterior contract and must not be described as an input-only transformation. |
+| Frozen reduced multi-task (10) | `ReducedMultiTaskGP`, `ReducedKroneckerMultiTaskGP`, `PCAMultiTaskGP`, `PCAKroneckerMultiTaskGP`, `PLSMultiTaskGP`, `PLSKroneckerMultiTaskGP`, `RandomProjectionMultiTaskGP`, `RandomProjectionKroneckerMultiTaskGP`, `MixedReducedMultiTaskGP`, `MixedReducedKroneckerMultiTaskGP` | `reduced/multitask.py` and `reduced/mixed_multitask.py`; see long-format/block-design evidence above. |
+| Neural reduced single-task and mixed (14) | `AutoEncoderGP`, `VAEGP`, `SupervisedAutoEncoderGP`, `SupervisedVAEGP`, `HybridAutoEncoderGP`, `JointEncoderGP`, `JointVAEGP`, `MixedAutoEncoderGP`, `MixedVAEGP`, `MixedSupervisedAutoEncoderGP`, `MixedSupervisedVAEGP`, `MixedHybridAutoEncoderGP`, `MixedJointEncoderGP`, `MixedJointVAEGP` | `reduced/base.py`, `reduced/vae.py`, `reduced/supervised_neural.py`, `reduced/joint_neural.py`, `reduced/joint_vae.py`; see frozen-versus-joint and uncertainty-marginalization mapping above. `tests/models/high_dimensional/reduced/test_autoencoder_gp.py` additionally checks frozen AE latent inputs, original-space acquisition gradients, conditioning and state round-trip. |
+| Neural reduced multi-task (15) | `AutoEncoderMultiTaskGP`, `AutoEncoderKroneckerMultiTaskGP`, `VAEMultiTaskGP`, `VAEKroneckerMultiTaskGP`, `SupervisedAutoEncoderMultiTaskGP`, `SupervisedAutoEncoderKroneckerMultiTaskGP`, `SupervisedVAEMultiTaskGP`, `SupervisedVAEKroneckerMultiTaskGP`, `HybridAutoEncoderMultiTaskGP`, `HybridAutoEncoderKroneckerMultiTaskGP`, `JointEncoderMultiTaskGP`, `JointEncoderKroneckerMultiTaskGP`, `JointVAEMultiTaskGP`, `JointVAEKroneckerMultiTaskGP`, `MixedJointEncoderMultiTaskGP` | `reduced/multitask.py` and `reduced/joint_multitask.py`; see frozen multi-task and joint multi-task mappings above. |
+| Design-reduced multi-fidelity (3) | `PCAMultiFidelityGP`, `PLSMultiFidelityGP`, `RandomProjectionMultiFidelityGP` | `standard/multi_fidelity.py` and `tests/models/high_dimensional/test_pca_multifidelity.py`; fidelity indices are structural, not part of design reduction. |
+
+**Exit-gate status:** The 52 reduced-family registry names are now
+accounted for by source-family and test-file mappings. This does **not**
+close Phase 4: all remaining regression families and binary classification
+variants still require the same evidence standard, and source-level
+assertions must not be mislabeled as independent numerical verification.
