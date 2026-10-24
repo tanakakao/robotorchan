@@ -84,3 +84,18 @@ def test_classification_acquisition_predictive_semantics_and_q() -> None:
     assert torch.isfinite(score).all()
     with pytest.raises(ValueError, match="q=1"):
         acquisition(train_X[:4].reshape(2, 2, 1))
+
+
+def test_phase3_all_registry_methods_have_explicit_ownership() -> None:
+    """Do not accidentally misrepresent upstream acquisitions as local classes."""
+    report = build_inventory()
+    assert set(report["native_botorch_metadata"]) == {
+        name
+        for name, entry in ACQUISITION_REGISTRY.items()
+        if entry.implementation_strategy.startswith("BoTorch-native")
+    }
+    assert set(report["native_botorch_metadata"]).isdisjoint(report["exports"])
+    assert report["gaps"] == {
+        "unregistered_public_acquisition_classes": [],
+        "registered_local_acquisitions_not_exported": [],
+    }
