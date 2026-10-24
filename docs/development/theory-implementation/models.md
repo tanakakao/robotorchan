@@ -1455,3 +1455,20 @@ coverage (particularly mixed and multi-task contamination/Student-t),
 distinguish class-level API inspection from exercised tests, and check
 the other registry families. This registry checkpoint does not close
 Phase 4 or replace the mathematical tests planned for Phase 7.
+
+## Phase 4 inspected uncertain-input registry models (3 entries)
+
+| Registry model | Mathematical contract | Source ownership | Inspected test evidence and limitations |
+| --- | --- | --- | --- |
+| `UncertainInputSingleTaskGP` | For Gaussian input locations with means `mu_i` and covariance `Sigma_i`, integrate an ARD RBF covariance over input distributions. The expected kernel contains the determinant factor `|Lambda|^(1/2) / |Lambda + Sigma_i + Sigma_j|^(1/2)` and exponent `-1/2 (mu_i-mu_j)^T (Lambda+Sigma_i+Sigma_j)^(-1) (mu_i-mu_j)`, with `Lambda=diag(lengthscale²)`. Training accepts exactly one of per-coordinate `train_X_std` or full PSD `train_X_covar`; prediction at candidates sets their uncertainty covariance to zero. | `models/uncertain/uncertain_input.py::GaussianUncertainInputKernel` owns Cholesky-based analytic kernel integration, covariance validation and private mean/covariance augmentation; `models/standard/single_task.py` delegates exact GP fitting/posterior to BoTorch. | `tests/models/uncertain/test_uncertain_input_gp.py` checks zero-uncertainty RBF equivalence, changed covariance under uncertainty, diagonal/full covariance equivalence, correlated covariance effects, invalid inputs, posterior and qUCB. Candidate-input uncertainty is **not** automatically marginalized by `posterior(X)`. |
+| `MixedUncertainInputSingleTaskGP` | Continuous training coordinates are Gaussian uncertain, but category labels are deterministic. Mixed kernel is the product of expected continuous RBF and BoTorch categorical covariance. Uncertainty std/covariance arrays refer to **continuous coordinates only**, not the full mixed input width. | `uncertain_input.py::MixedGaussianUncertainInputKernel` owns product covariance and feature slicing; `normalize_feature_dims` and `continuous_feature_dims` separate categories, with at least one continuous coordinate required. | Source-level contract inspected. The single-task uncertainty test file does not by itself prove all mixed categorical and q-batch variants; reconcile variant-specific tests separately. |
+| `UncertainCategoricalSingleTaskGP` | A single uncertain categorical feature is represented by probability simplex vector `p`. Category covariance is `p_i^T B p_j`, where `B=LL^T + jitter I` is learned PSD/PD; continuous inputs, if present, contribute a multiplicative BoTorch covariance. This is categorical **distribution** uncertainty, not native deterministic category-index covariance. | `models/uncertain/uncertain_categorical.py::ExpectedCategoricalKernel` owns learned category matrix and expected covariance; `AugmentedUncertainCategoricalKernel` composes continuous covariance; `UncertainCategoricalSingleTaskGP` validates simplex inputs and exposes `posterior_with_category_probabilities`. | `tests/models/uncertain/test_uncertain_categorical_gp.py` checks PSD/symmetry, one-hot exactness, probability mixture interpolation, invalid simplex rejection, exact MLL gradients, augmented-input posterior/qUCB, dtype migration and serialization. Generic `posterior(X)` uses the **augmented** representation; use the named convenience API for separate continuous/probability inputs. |
+
+**Registry reconciliation:** `UncertainInputSingleTaskGP`,
+`MixedUncertainInputSingleTaskGP`, and
+`UncertainCategoricalSingleTaskGP` are the three entries registered
+under the `uncertain_input` family. Gaussian input-location
+uncertainty, uncertain category membership, and heteroskedastic
+**output** noise are different probabilistic assumptions. Source and
+named test assertions were inspected; Phase 7 mathematical/numerical
+verification remains separate.
