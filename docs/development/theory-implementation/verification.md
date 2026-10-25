@@ -56,10 +56,9 @@ for a whole model family.
    multi-task, fidelity, reduced and robust
    families without changing the fixed phases.
 
-**Current status:** Phase 7 started; no
-independent numerical result is claimed by
-this document. The tests and execution
-evidence above are pending.
+**Current status:** Phase 7 has independent mathematical reference tests for
+selected model properties. The coverage is property-specific; see the
+execution reconciliation and outstanding gaps below.
 
 
 ### Kronecker block-design covariance reference (Phase 7)
@@ -74,7 +73,7 @@ permutation. Entry comparisons use atol=rtol=1e-10; no random seed
 or parameter fitting is involved. This covers the *latent prior
 covariance structure*, not posterior conditioning, learned
 hyperparameters, observation noise, or other Kronecker variants.
-Execution and CI evidence are pending until the PR checks complete.
+The corresponding PR passed CI and documentation-link checks and was merged.
 
 
 ### Data-fidelity downsampling kernel reference (Phase 7)
@@ -88,7 +87,7 @@ residual covariance after subtracting that offset is rank one.
 The test checks this boundary, symmetry, a residual rank-one identity, and positive
 semidefiniteness (atol=rtol=1e-10). This does not verify the complete
 multi-fidelity posterior, the linear-truncated kernel, or learned
-hyperparameters. Execution evidence is pending CI.
+hyperparameters. The corresponding PR passed CI and documentation-link checks and was merged.
 
 
 ### PCA reduced-space projection reference (Phase 7)
@@ -102,7 +101,7 @@ checks basis orthonormality, projection reconstruction, and residual
 orthogonality (atol=rtol=1e-10 where specified). PCA basis signs
 are intentionally not fixed. This validates the input reduction
 geometry, not the full reduced GP posterior or PLS/neural reducers.
-Execution evidence is pending CI.
+The corresponding PR passed CI and documentation-link checks and was merged.
 
 
 ### Replicate observation-noise statistical reference (Phase 7)
@@ -116,7 +115,7 @@ independently calculates group statistics and checks the aggregated
 raw targets, replicate counts, replicate variance, and raw observation
 variance. It does not establish the accuracy of a learned
 heteroskedastic noise process or a robust GP posterior.
-Execution evidence is pending CI.
+The corresponding PR passed CI and documentation-link checks and was merged.
 
 
 ### Binary GP probit predictive reference (Phase 7)
@@ -129,7 +128,7 @@ positive-class probability against `predict_proba` and verifies
 the complementary negative-class probability and normalization
 on fixed float64 candidates. This checks the probit predictive
 probability mapping, not ELBO convergence, calibration quality,
-or the quality of the latent GP fit. Execution evidence is pending CI.
+or the quality of the latent GP fit. The corresponding PR passed CI and documentation-link checks and was merged.
 
 
 ### Non-GP Gaussian posterior reparameterization reference (Phase 7)
@@ -143,4 +142,39 @@ batch and sample dimensions, a zero-variance deterministic
 component, exact mean/variance accessors, and gradient propagation
 through the mean. This is a posterior adapter contract check,
 not a claim about the predictive accuracy of external estimators.
-Execution evidence is pending CI.
+The corresponding PR passed CI and documentation-link checks and was merged.
+
+
+## Phase 7 execution reconciliation and remaining scope
+
+The following merged pull requests had successful CI and documentation-link
+workflows on their final feature-branch heads (Python 3.11/3.12/3.13 CI).
+This records **test execution**, not proof of every model-family property.
+
+| Mathematical reference | Merged PR | Assertion scope |
+| --- | --- | --- |
+| Exact GP posterior conditioning | Earlier Phase 7 reference | Fixed-parameter posterior values |
+| Mixed categorical relabeling | Earlier Phase 7 reference | Categorical covariance invariance |
+| Multi-task covariance | #1416 | Task-indexed kernel blocks |
+| Kronecker covariance | #1417 | Input/task product structure |
+| Multi-fidelity downsampling | #1418 | Offset boundary and residual rank one |
+| PCA reduction | #1419 | Orthogonal projection and eigenvalues |
+| Replicate noise | #1420 | Unbiased variance and variance of mean |
+| Binary GP probit | #1421 | Analytic class probability |
+| Non-GP Gaussian adapter | #1422 | Gaussian reparameterization and gradients |
+
+**Phase 7 completion assessment: not yet complete.** The original matrix
+requires more than one property per broad model family. The current tests
+do not yet establish the following representative properties:
+
+- Reduced GP: posterior equivalence between public input coordinates and
+  the frozen latent transform, including categorical coordinate retention.
+- Heteroskedastic GP: explicit separation of latent uncertainty and
+  observation noise in a controlled two-noise-level example.
+- Non-GP estimators: agreement between a frozen external estimator's
+  predictions and the adapter's exposed mean/uncertainty, including
+  explicitly unsupported uncertainty.
+
+The next work should address these gaps within **Phase 7**, without
+expanding the fixed 12-phase plan. Passing CI for this reconciliation
+alone must not be used to mark Phase 7 complete.
