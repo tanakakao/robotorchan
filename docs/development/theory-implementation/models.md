@@ -1682,3 +1682,50 @@ additive/ensemble MAP-SAAS family, or with PCA/PLS/reduced
 multi-fidelity models. The named tests were inspected, not
 executed here. Model registry coverage and test reference
 inventory still require a complete Phase 4 closure audit.
+
+## Phase 4 cross-family registry reconciliation: high-dimensional and multitask
+
+This reconciliation uses the registry inventory at the top of
+this document as the **set of registered names**, rather
+than treating the number of models in a source module as
+equivalent to the number in a guide. The two guide families
+have different membership despite sharing SAAS and
+multi-fidelity implementation modules.
+
+| Registry guide | Registered names | Source-level mapping coverage | Cross-family exception |
+| --- | ---: | --- | --- |
+| `docs/models/high_dimensional.md` | 12 | 12 names across the SAAS/MAP-SAAS/ALEBO, orthogonal additive and MAP-SAAS multi-fidelity mapping sections | `MixedSaasFullyBayesianMultiTaskGP` is **not** in this guide; it is registered under multitask. |
+| `docs/models/multitask_multioutput.md` | 10 | 5 core multitask/model-list + 4 heterogeneous/hierarchical multitask + 1 mixed fully Bayesian SAAS multitask, with the latter mapped in the high-dimensional SAAS inspection section | `SaasFullyBayesianMultiTaskGP` is in the high-dimensional guide, not the multitask guide. |
+| `docs/models/expressive.md` | 16 | 12 spectral-mixture/infinite-width NNGP + 4 stochastic DeepGP | Model class names containing `MultiTask` do not imply membership in the multitask guide. |
+
+**High-dimensional guide, exact name set (12):**
+`ALEBOGP`, `AdditiveMapSaasMultiFidelityGP`,
+`AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`,
+`MapSaasMultiFidelityGP`, `MixedAdditiveMapSaasSingleTaskGP`,
+`MixedEnsembleMapSaasSingleTaskGP`,
+`MixedOrthogonalAdditiveGP`,
+`MixedSaasFullyBayesianSingleTaskGP`,
+`OrthogonalAdditiveGP`,
+`SaasFullyBayesianMultiTaskGP`,
+`SaasFullyBayesianSingleTaskGP`.
+
+**Multitask guide, exact name set (10):**
+`HeterogeneousMTGP`,
+`HierarchicalConditionalKernelMultiTaskGP`,
+`KroneckerMultiTaskGP`,
+`MixedHeterogeneousMTGP`,
+`MixedHierarchicalConditionalKernelMultiTaskGP`,
+`MixedKroneckerMultiTaskGP`,
+`MixedMultiTaskGP`,
+`MixedSaasFullyBayesianMultiTaskGP`,
+`ModelListGP`, `MultiTaskGP`.
+
+**Closure limitation:** The inventory table and inspected
+mapping sections support name-level reconciliation for
+these three guide families, but do not establish that all
+142 regression entries and 29 binary classification IDs
+have equivalent implementation and test evidence. A
+registry-wide evidence audit, generated coverage check
+and CI verification are still required before declaring
+Phase 4 complete. No tests were executed as part of
+this documentation-only reconciliation.
