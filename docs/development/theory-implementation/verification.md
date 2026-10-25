@@ -324,9 +324,9 @@ sample-moment references. With 64 posterior class-probability samples,
 `ProbabilityVariance` is the class-averaged population variance
 (denominator `N`), whereas `BALD` is the predictive entropy of the
 sample-mean class probabilities minus the sample-mean conditional
-entropy, clamped below at zero. A fixed RNG seed (2718) reproduces
-the same Monte Carlo draws for the independent reference and the
-public acquisition calls. The test uses float64, CPU, two q=1
+entropy, clamped below at zero. A deterministic, injected class-probability sample tensor is shared
+between the independent reference and public acquisition calls; this
+avoids assuming RNG resets reproduce cached posterior draws. The test uses float64, CPU, two q=1
 candidates and 1e-10 absolute/relative tolerance. It verifies
 aggregation arithmetic, not Monte Carlo convergence, classifier
 calibration, or the fidelity of latent GP fitting. CI pending.
