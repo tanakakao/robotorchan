@@ -87,7 +87,7 @@ Do not introduce a new wrapper, registry, or runtime API for documentation.
 | Phase 1 — architectural audit | **Complete**; original baseline above remains historical provenance |
 | Phase 2 — model inventory audit | **Complete (static scope)**; registry-wide model audit and documentation path/ID contracts recorded in `models.md`; the final CI-backed exit checks were merged in PR #1361 |
 | Phase 3 — acquisition / optimizer / constraint inventory | **Complete (static scope)**; `acquisition.md` and `optimization.md` record public/registry/implementation paths and representative assertions; exit checks merged in PR #1366 at `e1ae6474dca742be2f882ddac7f61c9f77306614` |
-| Phase 4 — model theory-to-implementation mapping | **In progress**; full mapping fields and ownership/verification boundaries are recorded by model family in `models.md` |
+| Phase 4 — model theory-to-implementation mapping | **Complete (static mapping scope)**; all 142 regression names and 29 binary registry IDs inventoried in `models.md`, family-level theory/implementation/test boundaries mapped, and PR #1400's Python 3.11 model evidence/documentation audit and coverage check passed. Numerical equivalence remains Phase 7. |
 | Phases 5–6 — acquisition and optimizer mappings | Not yet complete |
 | Phases 7–9 — mathematical verification | Not yet complete |
 | Phases 10–12 — navigation, consistency CI, final audit | Not yet complete |
