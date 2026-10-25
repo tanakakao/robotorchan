@@ -1,4 +1,4 @@
-"""Tests for the theory–implementation navigation consistency checker."""
+"""Tests for the theory-implementation navigation consistency checker."""
 
 from __future__ import annotations
 
