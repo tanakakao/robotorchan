@@ -43,9 +43,7 @@ def test_kronecker_covariance_matches_explicit_input_task_indexing() -> None:
 
     # Swapping task indices must swap the corresponding rows and columns.
     task_swap = torch.tensor([1, 0], dtype=torch.long)
-    indices = (
-        torch.arange(n, dtype=torch.long)[:, None] * m + task_swap[None, :]
-    ).reshape(-1)
+    indices = (torch.arange(n, dtype=torch.long)[:, None] * m + task_swap[None, :]).reshape(-1)
     swapped = actual.index_select(0, indices).index_select(1, indices)
     swapped_reference = torch.kron(input_cov, task_cov[task_swap][:, task_swap])
     torch.testing.assert_close(swapped, swapped_reference, atol=1e-10, rtol=1e-10)
