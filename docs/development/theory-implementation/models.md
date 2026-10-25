@@ -1595,3 +1595,23 @@ cross-check before claiming the full
 heterogeneous feature subsets, hierarchical conditional
 activation and independent model-list composition. The named
 tests were inspected, not executed here.
+
+## Phase 4 inspected expressive spectral and infinite-width NNGP models (12 entries)
+
+| Registry model(s) | Mathematical contract | Source ownership | Inspected tests / limits |
+| --- | --- | --- | --- |
+| `SpectralMixtureGP`, `MixedSpectralMixtureGP` | Stationary covariance is modeled by a finite mixture of Gaussian spectral components. `num_mixtures` controls spectral components; initialization uses GPyTorch `initialize_from_data` or `initialize_from_data_empspect`. Mixed variant applies the spectral kernel **only to continuous design dimensions** and categorical covariance separately. | `models/expressive/spectral_mixture.py` constructs GPyTorch `SpectralMixtureKernel` and plugs it into exact `SingleTaskGP`; mixed covariance uses `make_mixed_covar_module` and requires at least one continuous feature. | `tests/models/expressive/test_spectral_mixture.py` checks finite initialized parameters, raw/MLL contract, posterior, qLogEI/optimizer and invalid settings; mixed posterior is exercised. |
+| `SpectralMixtureMultiTaskGP`, `MixedSpectralMixtureMultiTaskGP` | Long-format task covariance remains distinct from the spectral data kernel; the task index is removed from spectral initialization and excluded from mixed `cat_dims`. | Same source subclasses `MultiTaskGP`, initializes spectral parameters using design-only columns, and preserves original input indexing in mixed kernels. | Spectral test file checks multi-task structure, finite posterior and qLogEI; no independent task/spectral kernel decomposition proof is claimed. |
+| `SpectralMixtureKroneckerMultiTaskGP`, `MixedSpectralMixtureKroneckerMultiTaskGP` | Block-design `train_Y: n × m`; the spectral **data** covariance is initialized against the mean over output tasks. Mixed variant retains categorical design covariance and needs a continuous dimension. | Same source supplies `data_covar_module` to `KroneckerMultiTaskGP`; GPyTorch/BoTorch retain Kronecker inference. | Spectral tests check block-design raw data, categorical covariance path, finite sampling, scalarized MC acquisition and optimizer integration. |
+| `InfiniteWidthBNNGP`, `MixedInfiniteWidthBNNGP` | Infinite-width fully connected ReLU neural-network GP kernel (NNGP), not a trained finite-width neural network. `InfiniteWidthReLUKernel` recursively applies the analytic ReLU covariance map using layer depth and weight/bias variances. Mixed variant uses this kernel on continuous dimensions and native categorical covariance elsewhere. | `models/expressive/infinite_width_bnn.py` locally implements the analytic kernel recursion, wrapped in `ScaleKernel` and `SingleTaskGP`; mixed path uses `make_mixed_covar_module`. | `tests/models/expressive/test_infinite_width_bnn.py` checks kernel symmetry/finite values, hyperparameter validation, exact GP contract, posterior, qLogEI and optimizer. |
+| `InfiniteWidthBNNMultiTaskGP`, `MixedInfiniteWidthBNNMultiTaskGP` | Long-format task feature is excluded from NNGP data covariance; task covariance remains BoTorch-owned. Mixed variant excludes task from categorical dimensions. | Same NNGP source supplies data covariance to `MultiTaskGP`, retaining original column indexing for mixed active dimensions. | NNGP tests check multi-task contract, finite posterior and qLogEI; mixed posterior is exercised. |
+| `InfiniteWidthBNNKroneckerMultiTaskGP`, `MixedInfiniteWidthBNNKroneckerMultiTaskGP` | Block-design NNGP data kernel with separate Kronecker task covariance. Mixed design dimensions are handled with native categorical kernels, including negative `cat_dims` normalization. | Same NNGP source supplies `data_covar_module` to `KroneckerMultiTaskGP`. | NNGP tests check raw block design, negative category indices, finite sampling, categorical covariance changes, qLogEI and mixed optimizer integration. |
+
+**Scope boundary:** Twelve spectral-mixture and infinite-width
+NNGP entries are inspected here. The NNGP ReLU covariance
+recursion is **implemented locally**, while the spectral-mixture
+kernel and its parameter initialization are delegated to
+GPyTorch. Both use GP inference, not deep-network training.
+Named tests were inspected rather than executed; mathematical
+kernel identities and approximation error require separate
+Phase 7 verification. Other expressive families remain open.
