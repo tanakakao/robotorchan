@@ -13,7 +13,7 @@ def test_turbo_geometry_matches_direct_normalized_ard_formula() -> None:
         [[-2.0, 10.0, 100.0], [2.0, 30.0, 200.0]],
         dtype=torch.float64,
     )
-    center = torch.tensor([-1.8, 20.0, 198.0], dtype=torch.float64)
+    center = torch.tensor([-1.99, 20.0, 199.9], dtype=torch.float64)
     weights = torch.tensor([0.5, 1.0, 4.0], dtype=torch.float64)
     length = 0.2
 
