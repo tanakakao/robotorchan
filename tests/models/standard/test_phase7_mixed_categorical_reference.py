@@ -39,7 +39,5 @@ def test_mixed_gp_kernel_is_invariant_to_category_relabeling() -> None:
         original_covariance = model.covar_module(query).to_dense()
         relabeled_covariance = model.covar_module(relabeled).to_dense()
 
-    torch.testing.assert_close(
-        original_covariance, relabeled_covariance, atol=1e-10, rtol=1e-10
-    )
+    torch.testing.assert_close(original_covariance, relabeled_covariance, atol=1e-10, rtol=1e-10)
     assert original_covariance.shape == (4, 4)
