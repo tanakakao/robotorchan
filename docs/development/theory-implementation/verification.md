@@ -252,3 +252,20 @@ index, and that original-coordinate and explicitly reduced-coordinate
 posterior means/variances agree (atol=rtol=1e-10). This covers the
 MixedPCAGP frozen PCA path, not all mixed reducers or categorical
 generalization quality. Execution evidence is pending CI.
+
+### Heteroskedastic observation-variance composition boundary (Phase 7)
+
+`tests/models/robust/test_phase7_heteroskedastic_uncertainty_reference.py`
+also checks the *manually composed* conditional identity
+`Var[y(x)|D] = Var[f(x)|D] + v(x)` for independent zero-mean
+observation error with fixed conditional variance `v(x)`.
+It uses the public latent posterior and separately exposed
+`predicted_noise(x)` with controlled values 0.01 and 0.09
+on float64 candidates. This is **not** a verification of
+`posterior(observation_noise=True)`: the heteroskedastic wrapper
+does not override that public method to inject candidate-specific
+predicted noise. The log-noise GP posterior uncertainty is also
+not integrated in this plug-in variance identity. Accordingly,
+a complete heteroskedastic observation-posterior implementation
+remains **Unverified/Unsupported** rather than being silently
+marked Verified. CI execution evidence is pending.
