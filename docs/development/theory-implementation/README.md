@@ -48,8 +48,8 @@ then follow its theory, implementation, and evidence in that order.
 | Subject | Mapping | Canonical theory | Verification evidence |
 | --- | --- | --- | --- |
 | Surrogate models and classification | [Model mapping](models.md) | [Theory index](../../theory/README.md) | [Model reference checks](verification.md#phase-7-final-exit-reconciliation) |
-| Acquisition and active learning | [Acquisition mapping](acquisition.md) | [Theory index](../../theory/README.md) | [Acquisition reference checks](verification.md#phase-8--verification-reconciliation-representative-scope) |
-| Optimizers, candidate constraints and TuRBO | [Optimization mapping](optimization.md) | [Theory index](../../theory/README.md) | [Optimizer reference checks](verification.md#phase-9--representative-optimizer-verification-exit-audit) |
+| Acquisition and active learning | [Acquisition mapping](acquisition.md) | [Theory index](../../theory/README.md) | [Acquisition reference checks](verification.md) |
+| Optimizers, candidate constraints and TuRBO | [Optimization mapping](optimization.md) | [Theory index](../../theory/README.md) | [Optimizer reference checks](verification.md) |
 
 **How to interpret the evidence:** start with the mathematical
 definition and assumptions in `docs/theory/`, use the relevant mapping
