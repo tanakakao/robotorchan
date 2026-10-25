@@ -403,3 +403,17 @@ goal; the unverified families remain recorded rather than silently
 marked mathematically verified. Phase 9 remains optimizer
 mathematical verification, without adding phases or changing
 the twelve-phase plan.
+
+## Phase 9 — sampling optimizer reference (initial property)
+
+`tests/optim/backends/test_phase9_sampling_optimizer_reference.py`
+checks the `random` and `sobol` named dispatch routes using a
+deterministic negative-quadratic q=2 objective with known global
+maximum zero. For each seeded 128-batch candidate pool, the
+reference independently evaluates squared distances to the target,
+selects the highest score, and checks the returned coordinates,
+objective value, shape, and bounds (float64, CPU). This establishes
+sample-pool argmax correctness and dispatch consistency, **not**
+convergence to the continuous global optimum, sampling quality,
+mixed-variable validity, constraint enforcement, or the other
+optimizer backends. CI pending.
