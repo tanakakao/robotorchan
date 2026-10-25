@@ -45,9 +45,7 @@ def test_exact_gp_posterior_matches_independent_cholesky_conditioning() -> None:
     actual_covariance = posterior.distribution.covariance_matrix
 
     torch.testing.assert_close(posterior.mean, reference_mean, atol=2e-5, rtol=2e-5)
-    torch.testing.assert_close(
-        actual_covariance, reference_covariance, atol=2e-5, rtol=2e-5
-    )
+    torch.testing.assert_close(actual_covariance, reference_covariance, atol=2e-5, rtol=2e-5)
     torch.testing.assert_close(
         posterior.variance.squeeze(-1),
         reference_covariance.diagonal(),
