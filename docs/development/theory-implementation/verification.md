@@ -287,3 +287,18 @@ The exit evidence is the fixed float64 mathematical references and
 their CI-backed execution, not mere source inventory or test presence.
 Phase 8 can proceed to acquisition mathematical verification under
 the unchanged twelve-phase plan. Phase 9 remains optimizer verification.
+
+## Phase 8 — regression active-learning formula reference
+
+`tests/acquisition/test_phase8_regression_al_formula_reference.py`
+checks four local q=1 regression AL scores against separately written
+posterior-moment formulas on fixed float64 candidates (CPU, no fitting):
+`PosteriorVariance = Var[f]`,
+`PosteriorStd = sqrt(max(Var[f],0))`,
+`Straddle = beta * std - abs(mean - target)`, and
+`BoundaryVariance = max(Var[f],0) * exp(-0.5*((mean-target)/max(std,eps))**2)`.
+The reference uses the model posterior as an input; it verifies
+acquisition arithmetic and batch-axis semantics, **not** independent
+GP posterior conditioning (Phase 7), optimizer behavior (Phase 9),
+or all acquisition families. Absolute/relative tolerance is 1e-12.
+Execution evidence is pending CI.
