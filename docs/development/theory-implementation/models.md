@@ -1667,3 +1667,18 @@ covariance for mixed OAK: a discrete orthogonalization
 measure would be required for that extension. Named tests
 were inspected, not executed; independent numerical
 orthogonality checks belong to Phase 7.
+
+## Phase 4 inspected MAP-SAAS multi-fidelity model variants
+
+| Registry model(s) | Mathematical / structural contract | Source ownership | Inspected evidence and limits |
+| --- | --- | --- | --- |
+| `MapSaasMultiFidelityGP` | A SAAS shrinkage prior applies to **design-only** Matérn lengthscales; iteration/data fidelity dimensions are excluded from design covariance and handled by BoTorch's native multi-fidelity covariance. This is an exact GP with MAP-style fitting, **not** fully Bayesian NUTS SAAS. | `models/standard/multi_fidelity.py` normalizes fidelity indices, rejects duplicates and design-empty inputs, installs `add_saas_prior` on a design-only `MaternKernel`, and delegates fidelity covariance to `SingleTaskMultiFidelityGP`. The `linear_truncated=True` branch is rejected. | Source-level constructor, covariance ownership and validation inspected. No separate numerical posterior equivalence claim is made. |
+| `AdditiveMapSaasMultiFidelityGP` | Multiple additive MAP-SAAS design covariance components (`num_taus`) act **only** on non-fidelity design coordinates, while the fidelity kernel remains BoTorch-owned. Fidelity variables are structural and cannot overlap or exhaust design variables. | Same source calls BoTorch `get_additive_map_saas_covar_module` with design-only `active_dims`, then passes it into `SingleTaskMultiFidelityGP`; `linear_truncated=True` is unsupported. | `tests/models/high_dimensional/test_additive_map_saas_multifidelity.py` checks design/fidelity split, component count and priors, raw tensors, exact MLL, posterior sampling, duplicate fidelity validation and cost-aware `qMultiFidelityKnowledgeGradient` integration. |
+
+**Registry reconciliation:** These two models are listed
+under the high-dimensional guide but have multi-fidelity
+semantics. They must not be conflated with the single-task
+additive/ensemble MAP-SAAS family, or with PCA/PLS/reduced
+multi-fidelity models. The named tests were inspected, not
+executed here. Model registry coverage and test reference
+inventory still require a complete Phase 4 closure audit.
