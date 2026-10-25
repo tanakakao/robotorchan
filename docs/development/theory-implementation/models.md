@@ -1542,3 +1542,20 @@ separate `_register_family` calls rather than the initial
 variational ELBO, or fidelity indices with `cat_dims`.
 The source and named tests were inspected; this is not Phase 7
 independent numerical verification.
+
+## Phase 4 inspected non-GP surrogate registry (5 entries)
+
+| Registry model(s) | Predictive uncertainty contract | Source ownership | Inspected assertions and limits |
+| --- | --- | --- | --- |
+| `RandomForestSurrogate`, `ExtraTreesSurrogate` | Each fitted tree predicts a value; the collection of tree predictions becomes an **empirical ensemble posterior** for BoTorch MC acquisition. Tree disagreement is not an exact GP posterior or calibrated observation-noise distribution. Single-output only. | `models/non_gp/random_forest.py` and `extra_trees.py` fit scikit-learn forests on detached CPU NumPy raw tensors, reshape per-tree predictions for batch/q dimensions, and call `make_ensemble_posterior`. | `tests/models/non_gp/test_random_forest_surrogate.py` and `test_extra_trees_surrogate.py` check fit/raw-data contracts, tree posterior, batched candidates, MC qEI, and invalid fit/output; RF additionally checks seed reproducibility. |
+| `GradientBoostingSurrogate`, `HistGradientBoostingSurrogate` | Each bootstrap-resampled **complete boosting estimator** is a posterior ensemble member; individual boosting stages are **not** posterior samples. Supports multi-output via `MultiOutputRegressor`. | `models/non_gp/bootstrap.py::BootstrapEnsembleSurrogate` owns independent bootstrap resampling, member fitting and ensemble posterior. `gradient_boosting.py` and `hist_gradient_boosting.py` select scikit-learn estimator families. | `tests/models/non_gp/test_gradient_boosting_surrogate.py` and `test_hist_gradient_boosting_surrogate.py` check complete-member posterior, fit contract, MC qEI and minimum member count; multi-output tests are separate. |
+| `NGBoostSurrogate` | NGBoost fits a parametric **Gaussian predictive distribution** with mean `loc` and variance `scale²`; it is not a bootstrap/tree-ensemble empirical posterior. Single-output only. | `models/non_gp/ngboost.py` delegates natural-gradient boosting to `ngboost.NGBRegressor(Dist=Normal)` and converts `pred_dist` parameters to `GaussianDistributionPosterior`. | `tests/models/non_gp/test_ngboost_surrogate.py` checks distribution-posterior shapes, fitted posterior with MC acquisition, and variance-based active learning. |
+
+**Registry boundary:** These five entries are the `non_gp`
+family, with inference metadata `NOT_APPLICABLE` for GP
+training. They implement the BoTorch `Model.posterior` interface
+without GP marginal likelihood or GP latent covariance. Ensemble
+spread and NGBoost predictive variance have different probabilistic
+interpretations; neither alone proves uncertainty calibration.
+The named tests and source were inspected, not executed as part
+of this documentation-only Phase 4 change.
