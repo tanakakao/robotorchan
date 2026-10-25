@@ -117,3 +117,16 @@ raw targets, replicate counts, replicate variance, and raw observation
 variance. It does not establish the accuracy of a learned
 heteroskedastic noise process or a robust GP posterior.
 Execution evidence is pending CI.
+
+
+### Binary GP probit predictive reference (Phase 7)
+
+`tests/models/classification/test_phase7_binary_probit_reference.py`
+independently evaluates the Gaussian-probit integral
+`E[Phi(f)] = Phi(mu / sqrt(1 + sigma²))` for a latent Gaussian
+posterior `f ~ N(mu, sigma²)`. It compares the closed-form
+positive-class probability against `predict_proba` and verifies
+the complementary negative-class probability and normalization
+on fixed float64 candidates. This checks the probit predictive
+probability mapping, not ELBO convergence, calibration quality,
+or the quality of the latent GP fit. Execution evidence is pending CI.
