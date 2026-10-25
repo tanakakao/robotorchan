@@ -39,8 +39,11 @@ def test_constraint_violation_matches_explicit_q_batch_reference() -> None:
         first, second = batch
         intra_linear = max(0.0, 0.9 - min(sum(first), sum(second)))
         inter_linear = max(0.0, -0.3 - (first[0] - second[0]))
-        equality = max(0.0, abs(first[1] - 0.5) - tolerance)
-        equality += max(0.0, abs(second[1] - 0.5) - tolerance)
+        equality = max(
+            0.0,
+            abs(first[1] - 0.5) - tolerance,
+            abs(second[1] - 0.5) - tolerance,
+        )
         intra_nonlinear = sum(max(0.0, 0.1 - x * y) for x, y in batch)
         inter_nonlinear = max(0.0, 0.1 - (second[0] - first[0]))
         expected.append(
