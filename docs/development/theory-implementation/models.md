@@ -1511,3 +1511,17 @@ BoTorch's hierarchical parent dependency, a task index, and an
 ordinary categorical design coordinate have different semantics.
 These are inspected source and test contracts, not Phase 7
 numerical verification.
+
+## Phase 4 inspected preference-learning registry (1 entry)
+
+| Model | Mathematical / fitting contract | Source ownership | Inspected assertions and limitations |
+| --- | --- | --- | --- |
+| `PairwiseGP` | Observations are **ordered comparisons** between candidate datapoints, not scalar `train_Y` regression labels. BoTorch's pairwise likelihood and Laplace approximation infer latent utility from preference outcomes; the fitting objective is `PairwiseLaplaceMarginalLogLikelihood`, **not** `ExactMarginalLogLikelihood`. Duplicate datapoints may be consolidated upstream before inference. | `models/preference/pairwise.py` inherits `BoTorchPairwiseGP`, retaining caller `datapoints/comparisons` as nonpersistent raw buffers before consolidation and exposing `make_mll()`. Laplace approximation, duplicate consolidation, conditioning, transforms and posterior are delegated to BoTorch. | `tests/models/preference/test_pairwise_gp.py` checks constructor parity, raw comparison preservation, duplicate consolidation boundary, prior-only construction, Laplace MLL type/identity, dtype and nonpersistent raw buffers, and seeded upstream posterior mean/variance equality. No independent ranking accuracy, utility-identifiability or Laplace approximation error bound is established. |
+
+**Registry and data-contract boundary:** `PairwiseGP` is the
+sole `preference` registry entry. It intentionally exposes
+`raw_datapoints` and `raw_comparisons`, **not**
+`raw_train_Y`. The preference-data API must not be described
+as a conventional supervised regression `(train_X, train_Y)`
+contract. Inspected tests are not a substitute for the separate
+Phase 7 numerical verification.
