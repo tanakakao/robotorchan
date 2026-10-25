@@ -88,7 +88,8 @@ Do not introduce a new wrapper, registry, or runtime API for documentation.
 | Phase 2 — model inventory audit | **Complete (static scope)**; registry-wide model audit and documentation path/ID contracts recorded in `models.md`; the final CI-backed exit checks were merged in PR #1361 |
 | Phase 3 — acquisition / optimizer / constraint inventory | **Complete (static scope)**; `acquisition.md` and `optimization.md` record public/registry/implementation paths and representative assertions; exit checks merged in PR #1366 at `e1ae6474dca742be2f882ddac7f61c9f77306614` |
 | Phase 4 — model theory-to-implementation mapping | **Complete (static mapping scope)**; all 142 regression names and 29 binary registry IDs inventoried in `models.md`, family-level theory/implementation/test boundaries mapped, and PR #1400's Python 3.11 model evidence/documentation audit and coverage check passed. Numerical equivalence remains Phase 7. |
-| Phases 5–6 — acquisition and optimizer mappings | Not yet complete |
+| Phase 5 — acquisition theory-to-implementation mapping | **Complete (static mapping scope)**; regression/classification AL, scalar/multi-objective/constrained BO, information/lookahead families and 21 registry entries reconciled in `acquisition.md`; exit audit merged in PR #1408. Numerical identities remain Phase 8. |
+| Phase 6 — optimizer and strategy mapping | **Complete (static mapping scope)**; all eleven named dispatch options, native mixed and one-shot paths, vector NSGA-II, constraint enforcement semantics, TuRBO, embeddings and latent strategies mapped in `optimization.md`; PR #1411 passed CI and documentation links. Numerical correctness remains Phase 9. |
 | Phases 7–9 — mathematical verification | Not yet complete |
 | Phases 10–12 — navigation, consistency CI, final audit | Not yet complete |
 
@@ -103,3 +104,41 @@ To reproduce static audit evidence, run
 and `python scripts/audit_acquisition_api.py`, along with repository CI.
 The scripts report metadata and syntactic evidence, not independent formula
 validation.
+
+## Phase 6 exit reconciliation (static scope)
+
+The public `robotorchan.optim.__all__` was inspected
+alongside `optim/dispatch.py` and
+`optim/capabilities.py`. The mapping separates:
+
+- **Eleven named scalar backends:** one native
+  BoTorch, three Torch, two sampling and five
+  derivative-free/combined routes.
+- **Specialist routes outside named dispatch:**
+  native BoTorch mixed optimization, mixed
+  augmented one-shot, and vector-valued NSGA-II.
+- **Public search strategies:** original, mixed,
+  random, Sobol, tree ensemble, TuRBO, REMBO,
+  HeSBO, ALEBO, BAxUS, BAxUS Thompson and
+  latent-space search.
+- **Domain and enforcement contracts:**
+  `MixedVariableSpace`, `CandidateConstraints`,
+  explicit `ConstraintHandling` modes, and
+  unsupported argument combinations.
+
+This reconciles algorithm families and API
+ownership, not every exported helper as a separate
+algorithm. `NSGA2_OPTIMIZER_CAPABILITIES`
+is a public descriptor, not a twelfth dispatcher
+value. The explicit native mixed and one-shot
+entry points are distinct from the convenience
+dispatcher. Search strategies may delegate to
+numerical backends without inheriting every
+backend capability.
+
+**Exit criterion:** Phase 6 is complete when
+this reconciliation passes repository CI and
+documentation-link checks. Phase 7 begins model
+mathematical verification; Phase 8 acquisition
+verification; Phase 9 optimizer verification.
+The original twelve-phase scope is unchanged.
