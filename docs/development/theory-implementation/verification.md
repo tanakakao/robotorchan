@@ -243,7 +243,7 @@ unverified properties into acquisition/optimizer verification.
 
 ### Mixed reduced GP categorical-coordinate reference (Phase 7)
 
-`tests/models/high_dimensional/reduced/test_phase7_mixed_categorical_reference.py`
+`tests/models/high_dimensional/reduced/test_phase7_mixed_reduced_categorical_reference.py`
 uses fixed float64 continuous/category inputs with the category column
 interleaved among continuous features. It independently checks that
 the reduced representation and training inputs retain the exact category
