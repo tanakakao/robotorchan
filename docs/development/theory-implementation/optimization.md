@@ -176,3 +176,67 @@ These checks address Phase 3 namespace and metadata reconciliation, not
 backend numerical equivalence. All remaining formula-level checks belong
 to Phases 8–9. Phase 3 exit requires successful repository CI and a
 source-to-test/known-limit signoff; only then advance to Phase 4.
+
+## Phase 6 — named optimizer mathematical and dispatch mapping
+
+This section maps the public scalar-acquisition
+dispatcher to concrete optimization procedures.
+All eleven `OptimizerName` values are inspected
+against `src/robotorchan/optim/dispatch.py`.
+The acquisition `A(X)` is **maximized**; backend
+choice does not change the underlying acquisition
+formula.
+
+| `optimizer=` | Optimization method / mathematical object | Concrete implementation and ownership |
+| --- | --- | --- |
+| `botorch` | Multi-start continuous acquisition maximization, with optional sequential q and native candidate constraints. | **Delegated** to `backends/botorch.py::optimize_acqf_botorch` and upstream BoTorch. A mixed `MixedVariableSpace` is rejected on this named route. |
+| `torch_adam` | Differentiable first-order ascent via Adam updates on candidate coordinates. | **Extended** `backends/torch.py::optimize_acqf_torch`: upstream `botorch.optim.optimize_acqf` with `gen_candidates_torch` and `torch.optim.Adam`. |
+| `torch_adamw` | AdamW adaptive gradient updates with decoupled weight decay. | Same upstream BoTorch candidate generator with `torch.optim.AdamW`; **Delegated/Extended**. |
+| `torch_sgd` | Stochastic-gradient optimization of candidate coordinates. | Same upstream BoTorch candidate generator with `torch.optim.SGD`; **Delegated/Extended**. |
+| `random` | Draw `num_samples` independent uniform candidate q-batches and select the highest acquisition value. | **Implemented** in `backends/sampling.py` using `torch.rand`, `argmax`. |
+| `sobol` | Draw scrambled Sobol q-batches in `q*d` dimensions and select the highest acquisition value. | **Implemented** in `backends/sampling.py` using `torch.quasirandom.SobolEngine`, `argmax`. |
+| `de` | Differential-evolution population search. | **Implemented** backend `backends/differential_evolution.py`; routed through `optimize_acqf_de`. |
+| `cmaes` | Covariance-matrix adaptation evolution strategy. | **Implemented** backend `backends/cmaes.py`; routed through `optimize_acqf_cmaes`. |
+| `ga` | Population-based genetic search; mixed-variable GA when the declared domain is mixed. | **Implemented** in `backends/genetic_algorithm.py` or `backends/mixed_genetic_algorithm.py`, selected by `variable_space.is_mixed`. |
+| `pso` | Particle-swarm candidate optimization. | **Implemented** in `backends/pso.py`, called through `optimize_acqf_pso`. |
+| `hybrid` | Combined search backend rather than a distinct acquisition function. | **Implemented** in `backends/hybrid.py`, called through `optimize_acqf_hybrid`; stage-level algorithm details require backend-specific audit. |
+
+### Exact dispatch and mathematical limitations
+
+- `botorch` forwards `num_restarts`,
+  `raw_samples`, BoTorch `options`, candidate
+  constraints, fixed features, initial conditions,
+  `sequential`, and initial-condition generator
+  arguments to the native-backed route.
+- The three `torch_*` routes **reuse BoTorch**
+  restart and best-candidate selection but replace
+  local candidate generation with
+  `gen_candidates_torch`. They reject nonempty
+  candidate constraints and direct `seed` /
+  `sequential` / custom `ic_generator` arguments.
+  AdamW's weight decay must not be described as
+  a Gaussian-process prior or BO regularizer.
+- `random` and `sobol` score complete
+  `[q,d]` batches; for a mixed domain, random
+  samples integer/categorical values from legal
+  discrete sets, while Sobol maps unit coordinates
+  through equal-width inverse-CDF bins. Neither
+  procedure proves global acquisition optimality.
+- The named derivative-free backends use joint
+  q-batch optimization; they reject BoTorch-only
+  initialization arguments and `sequential=True`.
+  Their constraint enforcement depends on each
+  backend's explicit capability/handling mode.
+- The `optimizer=` dispatcher does **not**
+  include NSGA-II, native mixed BoTorch, or
+  mixed one-shot optimization. These are separate
+  public or low-level routes, as recorded in the
+  Phase 3 inventory above.
+
+**Source and tests:** `src/robotorchan/optim/dispatch.py`,
+`src/robotorchan/optim/backends/{botorch,torch,sampling,differential_evolution,cmaes,genetic_algorithm,mixed_genetic_algorithm,pso,hybrid}.py`,
+`tests/optim/contracts/test_optimizer_dispatch.py`,
+`tests/optim/test_optimizer_capabilities.py`.
+This is source-level mapping; Phase 9 retains
+independent numerical correctness, feasibility,
+and optimizer quality checks.
