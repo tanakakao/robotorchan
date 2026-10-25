@@ -120,7 +120,7 @@ Do not introduce a new wrapper, registry, or runtime API for documentation.
 | Phase 9 — optimizer mathematical verification | **Complete (representative property scope)**; five merged reference/contract PRs #1438–#1442; exit audit PR #1443 in `verification.md` |
 | Phase 10 — navigation and cross-document links | **Complete (navigation scope)**; entry-point table and bidirectional links merged in PRs #1444–#1445; CI and documentation-link workflows passed |
 | Phase 11 — mapping consistency CI | **Complete (structural scope)**; checker, regression tests and documentation workflow integrated in merged green PR #1447 |
-| Phase 12 — final audit | Not yet complete |
+| Phase 12 — final audit | **In progress**; final evidence and limitations reconciliation pending PR checks |
 
 **Acceptance is scope-specific:** a static source inventory or a passing
 contract test does not prove an algorithm's mathematical correctness.
@@ -228,3 +228,50 @@ The remaining fixed work is **Phase 12: final audit and
 completion decision**. Pedagogical chapter restructuring
 and historical audit-text cleanup remain a separate
 post-cycle workflow, not an additional Phase 11 task.
+
+## Phase 12 final audit: evidence and decision
+
+This audit reviews the **original twelve-phase deliverables**;
+it does not add verification scope or reinterpret green CI as
+a mathematical proof. The previous phase exit records remain
+historical evidence of what was checked at the time.
+
+| Fixed phase | Deliverable and exit evidence | Scope boundary |
+| --- | --- | --- |
+| 1 | Architecture and documentation ownership baseline | Architecture inspection only |
+| 2 | Model API and registry inventory, PR #1361 | Static inventory, not fitted model accuracy |
+| 3 | Acquisition, optimizer and constraint inventory, PR #1366 | Public and implementation ownership |
+| 4 | Model theory/implementation mapping, PR #1400 | Family-level static mapping |
+| 5 | Acquisition mapping, PR #1408 | Static mathematical-object and ownership mapping |
+| 6 | Optimizer/strategy mapping, PR #1411 | Dispatch and enforcement contracts |
+| 7 | Model property-specific references, recorded in [verification](verification.md) | Selected identities, not all models |
+| 8 | Acquisition formula and MC references, PRs #1431–#1437 | Representative properties; several families unverified |
+| 9 | Optimizer references and exit audit, PRs #1438–#1443 | Deterministic properties, not convergence proofs |
+| 10 | Bidirectional reader navigation, PRs #1444–#1446 | Local links, not semantic completeness |
+| 11 | CI mapping navigation checker, PRs #1447–#1448 | Structural links, not full registry semantics |
+| 12 | This final reconciliation and acceptance decision | Conditional on this PR's checks |
+
+**Remaining evidence gaps, not silently closed:** model
+posterior/noise composition for heteroskedastic wrappers;
+unverified model families and numerical calibration;
+noisy, hypervolume, constrained/heterogeneous and
+lookahead acquisition mathematical references; general
+optimizer convergence and constraint feasibility across
+backends; mixed-variable and async guarantees. The
+mapping tables' labels and limitations take precedence
+over broad claims of verification.
+
+**Completion criterion:** once the Phase 12 audit PR passes
+repository CI and documentation-link checks and is merged,
+the original twelve-phase *documentation/mapping and
+representative verification cycle* is complete. This is
+not certification of all robotorchan algorithms, nor a
+claim that every theory topic is implemented. Until then,
+Phase 12 remains **in progress**.
+
+**Separate post-cycle work:** restructure the oversized
+mapping documents into theory-aligned, educational
+chapters, move audit chronology out of the learning
+narrative, and remove obsolete Phase references. That
+work is explicitly excluded from the fixed twelve-phase
+completion decision.
