@@ -302,3 +302,16 @@ acquisition arithmetic and batch-axis semantics, **not** independent
 GP posterior conditioning (Phase 7), optimizer behavior (Phase 9),
 or all acquisition families. Absolute/relative tolerance is 1e-12.
 Execution evidence is pending CI.
+
+### Phase 8 — classification active-learning arithmetic reference
+
+`tests/acquisition/test_phase8_classification_al_reference.py`
+compares `PredictiveEntropy`, `MarginUncertainty` and
+`LatentStraddle` with separately expressed label entropy,
+top-two class-probability gap, and latent Gaussian boundary scores.
+The fixed binary classifier is evaluated on three float64 q=1
+candidates without fitting; the comparison tolerance is 1e-10.
+This distinguishes label probability from latent uncertainty.
+It does **not** verify posterior calibration, the classifier's
+variational training objective, BALD mutual-information Monte Carlo
+accuracy, or multiclass implementations. Execution evidence awaits CI.
