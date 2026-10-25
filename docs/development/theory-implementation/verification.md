@@ -315,3 +315,18 @@ This distinguishes label probability from latent uncertainty.
 It does **not** verify posterior calibration, the classifier's
 variational training objective, BALD mutual-information Monte Carlo
 accuracy, or multiclass implementations. Execution evidence awaits CI.
+
+### Phase 8 — BALD and probability-variance sample-moment reference
+
+`tests/acquisition/test_phase8_bald_probability_variance_reference.py`
+checks binary classification AL acquisitions against explicit
+sample-moment references. With 64 posterior class-probability samples,
+`ProbabilityVariance` is the class-averaged population variance
+(denominator `N`), whereas `BALD` is the predictive entropy of the
+sample-mean class probabilities minus the sample-mean conditional
+entropy, clamped below at zero. A fixed RNG seed (2718) reproduces
+the same Monte Carlo draws for the independent reference and the
+public acquisition calls. The test uses float64, CPU, two q=1
+candidates and 1e-10 absolute/relative tolerance. It verifies
+aggregation arithmetic, not Monte Carlo convergence, classifier
+calibration, or the fidelity of latent GP fitting. CI pending.
