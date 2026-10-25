@@ -1559,3 +1559,20 @@ spread and NGBoost predictive variance have different probabilistic
 interpretations; neither alone proves uncertainty calibration.
 The named tests and source were inspected, not executed as part
 of this documentation-only Phase 4 change.
+
+## Phase 4 inspected core multitask and model-list registry contracts
+
+| Registry model(s) | Mathematical and data contract | Source ownership | Inspected tests and limitations |
+| --- | --- | --- | --- |
+| `MultiTaskGP`, `MixedMultiTaskGP` | BoTorch **long-format** multi-task GP: `train_X` includes a structural `task_feature` and `train_Y` has one observed outcome per row. The mixed variant's categorical design columns must exclude the task index. | `models/standard/multitask.py` delegates task covariance to BoTorch. Mixed wrapper builds native data covariance excluding the task feature and preserves original column indexing through `active_dims`. | `tests/models/standard/test_mixed_multi_task_gp.py` checks task exclusion, categorical-only design, mixed posterior, raw wrapper contract and overlap rejection. These are not independent task-covariance numerical proofs. |
+| `KroneckerMultiTaskGP`, `MixedKroneckerMultiTaskGP` | BoTorch **block-design** multi-task GP: every task is observed for each `train_X` row and `train_Y` is `n × m`; task identity is the output axis, not a `train_X` column. | `multitask.py` delegates Kronecker inference to BoTorch. Mixed variant supplies `data_covar_module` over original `train_X` features; upstream constructor does not accept `train_Yvar`, so raw Yvar is `None`. | `tests/models/standard/test_kronecker_multi_task_gp.py` checks upstream constructor and posterior parity for the base, mixed q-posterior, raw contracts and categorical-only design. |
+| `ModelListGP` | A collection of independent GP models, with a **sum of child marginal log likelihoods**; it is not a single jointly parameterized multi-task covariance model. Child datasets can differ. | `models/standard/model_list.py` delegates posterior aggregation to BoTorch, exposes per-child `raw_train_Xs/raw_train_Ys/raw_train_Yvars`, and constructs `SumMarginalLogLikelihood`. No fabricated singular container-level raw tensors. | `tests/models/standard/test_model_list_gp.py` checks constructor parity, per-child raw data, sum MLL, upstream posterior equality, multi-output sampling shape and candidate gradients. |
+
+**Scope boundary:** This table covers five core registry
+entries in `multitask_multioutput`. Related hierarchical
+multi-task models were inspected separately with their conditional
+kernel family; remaining specialized multi-task registry variants
+must be reconciled before the Phase 4 exit gate. Long-format,
+Kronecker block-design and independent model-list composition
+are distinct probabilistic structures. Source/test inspection
+is separate from Phase 7 numerical verification.
