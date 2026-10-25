@@ -417,3 +417,17 @@ sample-pool argmax correctness and dispatch consistency, **not**
 convergence to the continuous global optimum, sampling quality,
 mixed-variable validity, constraint enforcement, or the other
 optimizer backends. CI pending.
+
+### Phase 9 — TuRBO state-transition reference
+
+`tests/optim/trust_region/test_phase9_turbo_state_reference.py`
+checks deterministic trust-region transitions against explicitly
+calculated thresholds: three meaningful successes expand length
+from 0.9 to the 1.6 cap; two consecutive failures shrink length
+from 0.15 to 0.075, crossing the 0.1 restart threshold; restart
+restores length 0.8 and preserves best observations. A separate
+case distinguishes denoised decision values from observed values.
+The checks use float64 scalar observations and exact state
+invariants, with no RNG or GP fitting. They do not establish
+TuRBO regret, optimality, ARD geometry, asynchronous behavior,
+or restart-center sampling correctness. CI pending.
