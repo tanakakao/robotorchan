@@ -21,3 +21,7 @@ jobs:
         run: python scripts/check_notebook_links.py
       - name: Check reference links and heading anchors
         run: python scripts/check_docs_references.py
+      - name: Test theory-implementation mapping consistency
+        run: python -m unittest discover -s tests/docs -p test_theory_implementation_mapping.py
+      - name: Check theory-implementation mapping consistency
+        run: python scripts/check_theory_implementation_mapping.py
