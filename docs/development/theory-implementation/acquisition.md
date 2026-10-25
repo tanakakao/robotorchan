@@ -340,3 +340,63 @@ These sources establish construction paths and
 named test evidence; statistical validity of
 factorization, calibration, and numerical constrained
 acquisition identities remain Phase 8 checks.
+
+## Phase 5 — information-theoretic and lookahead acquisitions (source inspected)
+
+The following methods optimize different **information
+targets**. Their presence in theory documentation
+does not imply a local acquisition class, registry
+entry, or optimizer route.
+
+| Method | Theory / optimization target | Implementation route and status |
+| --- | --- | --- |
+| `qKnowledgeGradient` (qKG) | One-step value of information: expected improvement in the optimal value after a fantasy observation. | **Delegated** to native `botorch.acquisition.knowledge_gradient.qKnowledgeGradient`; registry marks `one_shot=True`, `requires_fantasize=True`. No local wrapper. |
+| `qMultiFidelityKnowledgeGradient` | Fantasy-based lookahead across fidelity levels, with a fidelity-aware model and appropriate cost/value policy. | **Delegated** to native BoTorch; registry additionally declares `requires_multi_fidelity=True`. Capability metadata alone does not construct a cost-aware policy. |
+| `qMultiStepLookahead` | Multi-stage fantasy decision tree; optimizes future decisions jointly rather than only one-step value. | **Delegated** directly to BoTorch per `docs/optimization/lookahead.md`; not a named local registry entry in the inspected `registry.py`. |
+| `qMaxValueEntropy` (MES) | Information gain about the maximum objective value, approximated using a finite `candidate_set`. | **Delegated** directly to BoTorch; `tests/acquisition/test_information_theoretic.py` checks finite scores with a local `SingleTaskGP`. No local wrapper/registry entry. |
+| `qLowerBoundMaxValueEntropy` (GIBBON) | Lower-bound approximation to max-value entropy search. | **Delegated** directly to BoTorch; same native integration test checks finite values. No local wrapper/registry entry. |
+| Predictive Entropy Search (PES) | Information about the optimizer location. | **Unverified** as a specific executable route in the inspected local registry/tests; theoretical coverage does not establish a supported public constructor. |
+| Joint Entropy Search (JES) | Joint information about optimizer location and optimum value. | **Unverified** as a specific executable route in the inspected local registry/tests; no local wrapper is claimed. |
+
+### One-shot and information-target boundaries
+
+- qKG's optimization input contains `q` actual
+  candidates **plus fantasy decision variables**.
+  Native BoTorch initialization and candidate
+  extraction preserve that augmented-batch
+  contract. The registered compatibility check
+  rejects ordinary mixed optimization for one-shot
+  acquisitions and permits the semantic
+  `MIXED_ONE_SHOT` route; this check is not an
+  end-to-end optimizer execution.
+- `qMultiStepLookahead` requires explicit
+  augmented initial conditions or an appropriate
+  `ic_generator` when the default initializer
+  does not account for the full fantasy tree.
+  Its computational cost grows with horizon and
+  fantasy branching.
+- MES/GIBBON require a finite candidate set to
+  approximate optimum-value information; their
+  finite-output tests do not verify information
+  estimates or optimization performance.
+- The local regression
+  `ExpectedPredictiveInformationGain` computes
+  Gaussian information between candidate and
+  **target observations**. Classification `BALD`
+  targets label/parameter mutual information.
+  Neither is interchangeable with KG, MES, PES,
+  or JES.
+- A multi-fidelity model's availability alone
+  does not prove a complete cost-aware KG
+  optimization path.
+
+**Evidence:** `src/robotorchan/acquisition/registry.py`,
+`src/robotorchan/acquisition/optimizer_compatibility.py`,
+`tests/acquisition/test_lookahead.py`,
+`tests/acquisition/test_optimizer_compatibility.py`,
+`tests/acquisition/test_information_theoretic.py`,
+`docs/optimization/lookahead.md`,
+`docs/optimization/multifidelity-cost-aware.md`,
+`docs/optimization/information_theoretic.md`.
+Numerical information identities and fantasy
+optimization behavior remain Phase 8.
