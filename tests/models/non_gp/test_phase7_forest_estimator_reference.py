@@ -31,8 +31,6 @@ def test_random_forest_posterior_matches_individual_estimator_predictions() -> N
 
     torch.testing.assert_close(posterior.values, reference_values, atol=1e-12, rtol=1e-12)
     torch.testing.assert_close(posterior.mean, reference_mean, atol=1e-12, rtol=1e-12)
-    torch.testing.assert_close(
-        posterior.variance, reference_variance, atol=1e-12, rtol=1e-12
-    )
+    torch.testing.assert_close(posterior.variance, reference_variance, atol=1e-12, rtol=1e-12)
     with pytest.raises(NotImplementedError, match="observation noise"):
         model.posterior(candidates, observation_noise=True)
