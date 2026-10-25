@@ -103,3 +103,17 @@ orthogonality (atol=rtol=1e-10 where specified). PCA basis signs
 are intentionally not fixed. This validates the input reduction
 geometry, not the full reduced GP posterior or PLS/neural reducers.
 Execution evidence is pending CI.
+
+
+### Replicate observation-noise statistical reference (Phase 7)
+
+`tests/models/robust/test_phase7_replicate_noise_reference.py`
+checks the unbiased within-group sample variance
+`s² = sum((y_i - mean(y))²) / (n - 1)` and the observation-noise
+variance of each group mean `s²/n`. The fixed float64 dataset
+contains interleaved groups with unequal replicate counts. The test
+independently calculates group statistics and checks the aggregated
+raw targets, replicate counts, replicate variance, and raw observation
+variance. It does not establish the accuracy of a learned
+heteroskedastic noise process or a robust GP posterior.
+Execution evidence is pending CI.
