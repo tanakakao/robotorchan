@@ -227,3 +227,58 @@ See `docs/optimization/standard_acquisition.md`
 for usage. Exact MC estimator equivalence, log-domain
 stability and noisy-baseline behavior remain Phase 8
 numerical verification topics.
+
+## Phase 5 — multi-objective MC Bayesian optimization (source inspected)
+
+For an objective vector oriented to maximization,
+hypervolume improvement measures the gain in
+dominated volume relative to a **directed** reference
+point. These are BoTorch algorithms; the local
+composition functions are semantic construction
+bridges, not reimplementations of hypervolume.
+
+| Method | Mathematical object | Concrete route and ownership |
+| --- | --- | --- |
+| `qExpectedHypervolumeImprovement` (qEHVI) | Expected batch hypervolume improvement over a reference point and a nondominated partition. | `composition.py::make_qehvi_acquisition` returns native BoTorch `qExpectedHypervolumeImprovement`; **Delegated** hypervolume computation, **Extended** directed multi-output bridge and argument validation. |
+| `qNoisyExpectedHypervolumeImprovement` (qNEHVI) | MC noisy expected hypervolume improvement using a sampled baseline. | `composition.py::make_qnehvi_acquisition` returns native BoTorch `qNoisyExpectedHypervolumeImprovement`; **Delegated** noisy hypervolume algorithm, **Extended** directed bridge and baseline validation. |
+| `qLogExpectedHypervolumeImprovement` (qLogEHVI) | Log-domain expected hypervolume improvement. | `registry.py` lists native BoTorch capability metadata; tests/examples reference the upstream class. No local `make_qlogehvi_acquisition` composition helper was found in the inspected public exports. |
+| `qLogNoisyExpectedHypervolumeImprovement` (qLogNEHVI) | Log-domain noisy expected hypervolume improvement. | `registry.py` lists native BoTorch capability metadata; no local `make_qlognehvi_acquisition` helper is exported. Do not equate registry support with a composed runtime route. |
+| `qLogNParEGO` (scalarized log-NEI policy) | Random-weight multi-objective scalarization followed by log-domain noisy improvement. | `composition.py::make_qlognparego_acquisition` **constructs native `qLogNoisyExpectedImprovement`** with a directed Chebyshev `GenericMCObjective`. Weights are supplied by the caller; this helper does **not** resample them or instantiate a distinct BoTorch `qLogNParEGO` class. |
+
+### Verified construction contracts
+
+- **qEHVI:** `make_botorch_multiobjective_bridge`
+  requires compatible objective outputs from one
+  shared regression posterior. `ref_point` must be
+  finite, have one component per objective and match
+  the provided `BoxDecomposition.ref_point`
+  exactly. The caller supplies partitioning already
+  constructed in the directed objective space.
+- **qNEHVI:** `X_baseline` is a nonempty `n x d`
+  tensor of **input locations**, not Pareto objective
+  values; `ref_point` must be finite and
+  dimensionally consistent. `prune_baseline` and
+  `cache_root` are forwarded to native BoTorch.
+- **qLogNParEGO composition:** `X_baseline` and
+  `Y_baseline` have aligned rows; `Y_baseline`
+  must be finite floating-point values already
+  oriented to maximization. `weights` must be
+  finite, nonnegative, nonzero in sum and match the
+  objective count. Chebyshev scalarization is built
+  with BoTorch `get_chebyshev_scalarization`.
+- These three composition helpers reject feasibility
+  constraints; constrained qEHVI is a separate policy
+  documented under the constrained acquisition
+  mapping. There is no implicit cross-model joint
+  posterior reconstruction.
+
+**Evidence:** `src/robotorchan/acquisition/composition.py`,
+`src/robotorchan/acquisition/registry.py`,
+`tests/acquisition/test_multiobjective.py`,
+`tests/acquisition/test_phase5_native_integration.py`,
+`tests/acquisition/test_composition.py`, and
+`docs/optimization/multiobjective.md`.
+Source/contract evidence does not establish independent
+hypervolume estimator accuracy, reference-point
+sensitivity or log-domain numerical equivalence;
+those belong to Phase 8.
