@@ -444,3 +444,19 @@ ARD weights by seven, with 1e-12 absolute/relative tolerance.
 This verifies deterministic geometry, not learned ARD
 lengthscales, constrained candidate optimization, or search
 convergence. CI pending.
+
+### Phase 9 — candidate constraint residual and feasibility ordering reference
+
+`tests/optim/constraints/test_phase9_constraint_violation_reference.py`
+uses three fixed float64 q=2 candidate batches to compare the
+constraint evaluator with separately written residual arithmetic.
+The reference combines intra-point linear inequality and equality
+constraints, an inter-point linear inequality, per-point nonlinear
+inequalities, and a joint nonlinear inequality. Intra-point
+linear residuals use the minimum across q before aggregating
+batch violation; nonlinear per-point violations sum across q.
+A separate check establishes Deb-style feasibility-first ranking
+with infeasible candidates having higher objective values.
+Absolute/relative tolerance is 1e-12. This tests violation
+arithmetic and ordering, **not** optimizer-enforced feasibility,
+probabilistic outcome constraints, or convergence. CI pending.
