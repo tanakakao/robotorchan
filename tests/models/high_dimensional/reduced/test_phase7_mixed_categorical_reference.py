@@ -18,7 +18,9 @@ def test_mixed_pca_retains_categories_and_matches_reduced_posterior() -> None:
         ],
         dtype=torch.float64,
     )
-    categories = torch.tensor([[0.0], [1.0], [0.0], [1.0], [0.0], [1.0]], dtype=torch.float64)
+    categories = torch.tensor(
+        [[0.0], [1.0], [0.0], [1.0], [0.0], [1.0]], dtype=torch.float64
+    )
     train_x = torch.cat((continuous[:, :1], categories, continuous[:, 1:]), dim=-1)
     train_y = continuous[:, :1] - 0.2 * continuous[:, 1:2]
     model = MixedPCAGP(train_x, train_y, n_components=2, cat_dims=[1])
