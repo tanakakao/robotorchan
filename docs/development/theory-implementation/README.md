@@ -119,7 +119,8 @@ Do not introduce a new wrapper, registry, or runtime API for documentation.
 | Phase 8 — acquisition mathematical verification | **Complete (representative property scope)**; six merged formula/MC reference PRs #1431–#1436; explicit gaps in `verification.md` |
 | Phase 9 — optimizer mathematical verification | **Complete (representative property scope)**; five merged reference/contract PRs #1438–#1442; exit audit PR #1443 in `verification.md` |
 | Phase 10 — navigation and cross-document links | **Complete (navigation scope)**; entry-point table and bidirectional links merged in PRs #1444–#1445; CI and documentation-link workflows passed |
-| Phases 11–12 — consistency CI and final audit | Not yet complete |
+| Phase 11 — mapping consistency CI | **Complete (structural scope)**; checker, regression tests and documentation workflow integrated in merged green PR #1447 |
+| Phase 12 — final audit | Not yet complete |
 
 **Acceptance is scope-specific:** a static source inventory or a passing
 contract test does not prove an algorithm's mathematical correctness.
@@ -197,3 +198,33 @@ the separately agreed post-cycle workflow.
 The next fixed phase is **Phase 11: narrowly scoped mapping
 consistency checks in CI**, followed by **Phase 12: final audit**.
 No additional phases or objectives are introduced.
+
+## Phase 11 mapping consistency exit audit
+
+**Decision: complete for the fixed structural consistency scope.**
+Merged PR #1447 added
+`scripts/check_theory_implementation_mapping.py`, its regression
+tests in `tests/docs/test_theory_implementation_mapping.py`, and
+a step in the existing documentation-links workflow. Both
+repository CI and documentation-link workflows passed on the
+merged head.
+
+The checker enforces existence of the five canonical mapping
+documents, index and verification links to the three subject
+mappings, return links to the index and verification, and links
+to the canonical theory index. Negative regression cases
+cover missing documents and missing return links.
+
+**Explicit limitations:** this is a structural navigation
+contract, not a semantic parser of mapping tables. It does
+not verify all registry entries, code symbols, theory
+equations, assertion-level evidence, or mathematical
+equivalence. Those evidence boundaries remain documented
+in the respective mappings and `verification.md`.
+Existing generated coverage checks retain their own
+ownership; this checker does not rewrite generated artifacts.
+
+The remaining fixed work is **Phase 12: final audit and
+completion decision**. Pedagogical chapter restructuring
+and historical audit-text cleanup remain a separate
+post-cycle workflow, not an additional Phase 11 task.
