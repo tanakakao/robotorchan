@@ -75,3 +75,17 @@ or parameter fitting is involved. This covers the *latent prior
 covariance structure*, not posterior conditioning, learned
 hyperparameters, observation noise, or other Kronecker variants.
 Execution and CI evidence are pending until the PR checks complete.
+
+
+### Data-fidelity downsampling kernel reference (Phase 7)
+
+`tests/models/standard/test_phase7_multifidelity_kernel_reference.py`
+checks the native data-fidelity kernel in
+`MixedSingleTaskMultiFidelityGP` with fixed float64 inputs and no
+hyperparameter fitting. For `K_f(s,t)=offset+c(1-s)^p(1-t)^p`, the
+high-fidelity boundary `s=1` leaves the constant offset, and the
+residual covariance after subtracting that offset is rank one.
+The test checks this boundary, symmetry, a residual rank-one identity, and positive
+semidefiniteness (atol=rtol=1e-10). This does not verify the complete
+multi-fidelity posterior, the linear-truncated kernel, or learned
+hyperparameters. Execution evidence is pending CI.
