@@ -192,3 +192,17 @@ and checks that posterior evaluation does not mutate PCA components
 or centering. This establishes coordinate-path consistency, not
 the quality of the dimensionality reduction or categorical retention.
 Execution evidence is pending CI.
+
+
+### Heteroskedastic latent-versus-observation noise reference (Phase 7)
+
+`tests/models/robust/test_phase7_heteroskedastic_uncertainty_reference.py`
+uses a deterministic two-level log-variance surrogate (0.01 and 0.09
+on the variance scale) to check `predicted_noise(x) =
+exp(noise_posterior(x).mean)` and to distinguish that path from the
+response GP's latent posterior variance. The response GP is not
+refitted, and the controlled noise surrogate is a test double rather
+than a trained model. This does **not** establish calibrated
+heteroskedastic uncertainty or a correct total observation
+posterior at arbitrary candidate inputs. Execution evidence is
+pending CI.
