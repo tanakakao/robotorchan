@@ -1651,3 +1651,19 @@ metric Laplace approximation are three different uncertainty
 contracts. Tests were inspected, not run in this Phase 4
 documentation change; independent numerical verification
 remains Phase 7.
+
+## Phase 4 inspected orthogonal additive high-dimensional GP variants
+
+| Registry model(s) | Mathematical / input contract | Source ownership | Inspected evidence and limits |
+| --- | --- | --- | --- |
+| `OrthogonalAdditiveGP` | Orthogonal additive GP decomposes covariance into one-dimensional additive components, optionally including second-order interactions. BoTorch's `OrthogonalAdditiveKernel` orthogonalizes base components using Gauss–Legendre quadrature on continuous **[0, 1]** input coordinates. It is not the same covariance family as MAP-SAAS or ALEBO. | `models/structured/additive.py` delegates orthogonalized covariance and exact GP inference to BoTorch; local wrapper preserves original `raw_train_X/Y` and common exact MLL. | `tests/models/contracts/test_specialized_wrappers.py` checks upstream constructor surface, exact GP/MLL contract and representative posterior parity. |
+| `MixedOrthogonalAdditiveGP` | Mixed OAK intentionally uses **internal categorical one-hot encoding** and applies the original continuous OAK in encoded coordinates. Each one-hot column becomes a separate additive component; it does **not** implement a discrete-measure orthogonal categorical kernel. Continuous raw coordinates still must satisfy upstream [0, 1] assumptions. | `additive.py` owns `CategoricalOneHotInputTransform`, validates encoded kernel dimensionality and rejects conflicting user-supplied transforms. The posterior accepts original mixed inputs, with components interpreted in encoded space. | `tests/models/structured/test_mixed_orthogonal_additive_gp.py` checks category encoding, raw posterior, unseen-category rejection, exact MLL, custom kernel dimension validation and transform rejection. |
+
+**High-dimensional registry reconciliation:** The preceding
+SAAS/MAP-SAAS/ALEBO mapping plus these two OAK entries
+accounts for eleven high-dimensional models by source-level
+inspection. This section does not imply native categorical
+covariance for mixed OAK: a discrete orthogonalization
+measure would be required for that extension. Named tests
+were inspected, not executed; independent numerical
+orthogonality checks belong to Phase 7.
