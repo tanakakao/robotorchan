@@ -24,16 +24,8 @@ def test_data_fidelity_downsampling_has_rank_one_boundary_structure() -> None:
     with torch.no_grad():
         actual = downsampling(train_x).to_dense()
 
-    # The downsampling term is separable in (1 - fidelity):
-    # K_f(s, t) = c * (1-s)^p * (1-t)^p for c > 0 and p > 0.
+    # The native kernel includes a positive constant offset:\n    # K_f(s, t) = offset + c * (1-s)^p * (1-t)^p.
     assert actual.shape == (4, 4)
     assert actual.dtype == torch.float64
     torch.testing.assert_close(actual, actual.T, atol=1e-10, rtol=1e-10)
-    torch.testing.assert_close(actual[-1], torch.zeros(4, dtype=torch.float64), atol=1e-10, rtol=0)
-    torch.testing.assert_close(actual[:, -1], torch.zeros(4, dtype=torch.float64), atol=1e-10, rtol=0)
-    assert actual[0, 0].item() > 0
-
-    # Independent rank-one identity, without copying the kernel implementation.
-    reference = actual[:, :1] @ actual[:1, :] / actual[0, 0]
-    torch.testing.assert_close(actual, reference, atol=1e-10, rtol=1e-10)
-    assert torch.linalg.eigvalsh(actual).min().item() >= -1e-10
+    offset = actual[-1, -1]\n    assert offset.item() > 0\n    torch.testing.assert_close(actual[-1], offset.expand(4), atol=1e-10, rtol=0)\n    torch.testing.assert_close(actual[:, -1], offset.expand(4), atol=1e-10, rtol=0)\n    residual = actual - offset\n    assert residual[0, 0].item() > 0\n\n    # Independent rank-one identity after subtracting the constant offset.\n    reference = residual[:, :1] @ residual[:1, :] / residual[0, 0]\n    torch.testing.assert_close(residual, reference, atol=1e-10, rtol=1e-10)\n    assert torch.linalg.eigvalsh(actual).min().item() >= -1e-10
