@@ -217,7 +217,7 @@ q-batch candidates and `random_state=17`. It checks each sample,
 the ensemble mean and BoTorch sample variance (denominator `s-1`), and explicit rejection of unsupported observation noise.
 This verifies Random Forest adapter semantics, not generalization
 accuracy, epistemic calibration, or other non-GP estimator families.
-PR #1426 is merged; final-head CI was pending at the time of this audit.
+PR #1426 is merged; its final-head CI status was pending at the earlier audit.
 
 ## Phase 7 exit audit (property-specific)
 
@@ -251,7 +251,7 @@ IDs, that the category is moved to the declared reduced categorical
 index, and that original-coordinate and explicitly reduced-coordinate
 posterior means/variances agree (atol=rtol=1e-10). This covers the
 MixedPCAGP frozen PCA path, not all mixed reducers or categorical
-generalization quality. Execution evidence is pending CI.
+generalization quality. PR #1428 passed CI and documentation-link checks and was merged.
 
 ### Heteroskedastic observation-variance composition boundary (Phase 7)
 
@@ -268,4 +268,22 @@ predicted noise. The log-noise GP posterior uncertainty is also
 not integrated in this plug-in variance identity. Accordingly,
 a complete heteroskedastic observation-posterior implementation
 remains **Unverified/Unsupported** rather than being silently
-marked Verified. CI execution evidence is pending.
+marked Verified. PR #1429 passed CI and documentation-link checks and was merged.
+
+## Phase 7 final exit reconciliation
+
+**Decision: complete for the agreed representative, property-specific
+mathematical verification scope.** The earlier exit audit above records
+historical gaps; subsequent merged, green references #1428 and #1429
+close the categorical-coordinate check and the *manual* conditional
+observation-variance identity. The latter deliberately does not
+establish candidate-specific `posterior(observation_noise=True)`
+semantics; this remains **Unsupported/Unverified**, not a hidden
+verification success. Tests do not establish broad numerical
+correctness across every registered model, fitted calibration,
+or all dimensionality reducers.
+
+The exit evidence is the fixed float64 mathematical references and
+their CI-backed execution, not mere source inventory or test presence.
+Phase 8 can proceed to acquisition mathematical verification under
+the unchanged twelve-phase plan. Phase 9 remains optimizer verification.
