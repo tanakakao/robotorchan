@@ -1,5 +1,7 @@
 # Acquisition optimization theory–implementation mapping: Phase 3 inventory
 
+> **Navigation:** [Mapping index](README.md) · [Canonical theory](../../theory/README.md) · [Optimizer mathematical verification](verification.md) · [Other mappings](README.md#reader-navigation-phase-10)
+
 ## Baseline and separation of responsibilities
 
 Baseline: `main` after Phase 2 exit-check merge
