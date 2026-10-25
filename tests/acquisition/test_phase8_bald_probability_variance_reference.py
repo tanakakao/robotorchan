@@ -1,5 +1,7 @@
 """Phase 8 deterministic posterior class-probability sample references."""
 
+from types import MethodType
+
 import torch
 
 from robotorchan.acquisition import BALD, ProbabilityVariance
@@ -15,11 +17,30 @@ def test_bald_and_probability_variance_match_sample_moment_references() -> None:
     candidates = torch.tensor([[[0.2]], [[0.8]]], dtype=torch.float64)
     num_samples = 64
 
-    torch.manual_seed(2718)
+    positive_class = torch.tensor(
+        [
+            [[0.1], [0.7]],
+            [[0.2], [0.8]],
+            [[0.4], [0.9]],
+            [[0.6], [0.6]],
+        ],
+        dtype=torch.float64,
+    )
+    positive_class = positive_class.repeat(num_samples // 4, 1, 1)
+    samples = torch.stack((1.0 - positive_class, positive_class), dim=-1)
+
+    def fixed_probability_samples(
+        self: BinarySingleTaskGPClassifier,
+        X: torch.Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> torch.Tensor:
+        assert X.shape == candidates.shape
+        assert sample_shape == torch.Size([num_samples])
+        return samples
+
+    model.sample_class_probabilities = MethodType(fixed_probability_samples, model)
     with torch.no_grad():
-        samples = model.sample_class_probabilities(
-            candidates, sample_shape=torch.Size([num_samples])
-        )
         sample_mean = samples.mean(dim=0)
         centered = samples - sample_mean
         expected_variance = centered.square().mean(dim=0).mean(dim=-1).squeeze(-1)
@@ -31,9 +52,7 @@ def test_bald_and_probability_variance_match_sample_moment_references() -> None:
             predictive_entropy - conditional_entropy.mean(dim=0)
         ).clamp_min(0.0).squeeze(-1)
 
-        torch.manual_seed(2718)
         actual_variance = ProbabilityVariance(model, num_samples=num_samples)(candidates)
-        torch.manual_seed(2718)
         actual_bald = BALD(model, num_samples=num_samples)(candidates)
 
     assert samples.shape == (num_samples, 2, 1, 2)
