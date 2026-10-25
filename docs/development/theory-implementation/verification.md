@@ -460,3 +460,14 @@ with infeasible candidates having higher objective values.
 Absolute/relative tolerance is 1e-12. This tests violation
 arithmetic and ordering, **not** optimizer-enforced feasibility,
 probabilistic outcome constraints, or convergence. CI pending.
+
+### Phase 9 — PyTorch optimizer candidate-constraint support boundary
+
+`tests/optim/backends/test_phase9_torch_constraint_contract.py`
+verifies that Adam, AdamW and SGD backends explicitly reject
+unsupported candidate-space linear inequalities, linear equalities,
+and nonlinear inequalities. This is a negative contract check:
+it prevents silent acceptance of mathematically unenforced
+constraints. It does **not** demonstrate constrained optimization
+or gradient convergence; those remain unverified for this backend.
+CI pending.
