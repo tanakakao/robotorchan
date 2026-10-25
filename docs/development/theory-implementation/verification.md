@@ -191,7 +191,7 @@ trained GP and fixed reducer. The float64 test covers q-batch inputs
 and checks that posterior evaluation does not mutate PCA components
 or centering. This establishes coordinate-path consistency, not
 the quality of the dimensionality reduction or categorical retention.
-Execution evidence is pending CI.
+PR #1424 passed CI and documentation-link checks and was merged.
 
 
 ### Heteroskedastic latent-versus-observation noise reference (Phase 7)
@@ -205,7 +205,7 @@ refitted, and the controlled noise surrogate is a test double rather
 than a trained model. This does **not** establish calibrated
 heteroskedastic uncertainty or a correct total observation
 posterior at arbitrary candidate inputs. Execution evidence is
-pending CI.
+confirmed by PR #1425 CI and documentation-link checks after fixes; merged.
 
 
 ### Non-GP Random Forest estimator-level reference (Phase 7)
@@ -217,4 +217,26 @@ q-batch candidates and `random_state=17`. It checks each sample,
 the ensemble mean and BoTorch sample variance (denominator `s-1`), and explicit rejection of unsupported observation noise.
 This verifies Random Forest adapter semantics, not generalization
 accuracy, epistemic calibration, or other non-GP estimator families.
-Execution evidence is pending CI.
+PR #1426 is merged; final-head CI was pending at the time of this audit.
+
+## Phase 7 exit audit (property-specific)
+
+The three follow-up references are tracked independently of the earlier
+nine-reference reconciliation:
+
+| Reference | PR | Execution evidence | Verified property | Explicit boundary |
+| --- | --- | --- | --- | --- |
+| PCA reduced posterior coordinate equivalence | #1424 | CI and docs checks passed; merged | Original/latent coordinate posterior mean and variance with frozen PCA | No categorical retention, output reducer, or non-PCA reducers |
+| Heteroskedastic latent/noise separation | #1425 | CI and docs checks passed; merged | Two controlled log-noise levels and separate latent variance | No fitted noise-GP calibration or full observation posterior identity |
+| Random Forest external estimator reference | #1426 | Merged; final-head CI pending at audit time | Individual sklearn tree predictions and ensemble sample moments | No other non-GP families or estimator uncertainty calibration |
+
+**Exit decision: Phase 7 remains open pending #1426 final-head CI and
+resolution or explicit acceptance of the matrix boundaries.**
+In particular, categorical-coordinate preservation in reduced mixed
+models and the heteroskedastic observation-posterior composition
+remain unverified. Neither a green workflow nor a merged PR by itself
+upgrades these properties to mathematical verification.
+
+The fixed Phase 8 acquisition and Phase 9 optimizer verification scopes
+are unchanged. This audit does not add phases or move model-specific
+unverified properties into acquisition/optimizer verification.
