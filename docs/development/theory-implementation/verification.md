@@ -301,7 +301,7 @@ The reference uses the model posterior as an input; it verifies
 acquisition arithmetic and batch-axis semantics, **not** independent
 GP posterior conditioning (Phase 7), optimizer behavior (Phase 9),
 or all acquisition families. Absolute/relative tolerance is 1e-12.
-Execution evidence is pending CI.
+CI passed on merged PR.
 
 ### Phase 8 — classification active-learning arithmetic reference
 
@@ -314,7 +314,7 @@ candidates without fitting; the comparison tolerance is 1e-10.
 This distinguishes label probability from latent uncertainty.
 It does **not** verify posterior calibration, the classifier's
 variational training objective, BALD mutual-information Monte Carlo
-accuracy, or multiclass implementations. Execution evidence awaits CI.
+accuracy, or multiclass implementations. CI passed on merged PR.
 
 ### Phase 8 — BALD and probability-variance sample-moment reference
 
@@ -329,7 +329,7 @@ between the independent reference and public acquisition calls; this
 avoids assuming RNG resets reproduce cached posterior draws. The test uses float64, CPU, two q=1
 candidates and 1e-10 absolute/relative tolerance. It verifies
 aggregation arithmetic, not Monte Carlo convergence, classifier
-calibration, or the fidelity of latent GP fitting. CI pending.
+calibration, or the fidelity of latent GP fitting. CI passed on merged PR.
 
 ### Phase 8 — native analytic BO Gaussian reference
 
@@ -345,7 +345,7 @@ It uses a fixed float64 single-output GP posterior, three q=1
 candidates, no fitting, and 1e-8 absolute/relative tolerance.
 This verifies analytic acquisition arithmetic and delegation,
 not GP conditioning, noisy/MC acquisition estimators, constraints,
-or numerical stability at extreme Gaussian tails. CI pending.
+or numerical stability at extreme Gaussian tails. CI passed on merged PR.
 
 ### Phase 8 — Monte Carlo qSimpleRegret sample reference
 
@@ -357,7 +357,7 @@ same seeded Sobol QMC sampler and its base samples so it checks
 aggregation rather than independent sampling variability. Two
 batches, float64, and 1e-8 tolerance are covered. This does not
 verify posterior calibration, MC convergence, noisy improvement,
-or other MC acquisitions. CI pending.
+or other MC acquisitions. CI passed on merged PR.
 
 ### Phase 8 — Monte Carlo qUCB sample reference
 
@@ -370,4 +370,36 @@ base samples to isolate aggregation from sampling variability.
 Two batches, float64, and 1e-8 tolerance are covered. This tests
 the native MC acquisition's samplewise aggregation, not GP
 posterior fidelity, acquisition optimizer behavior, or MC
-convergence. CI pending.
+convergence. CI passed on merged PR.
+
+## Phase 8 — verification reconciliation (representative scope)
+
+The following evidence is merged into `main`; all six PRs passed
+the repository CI and documentation-link workflows. Each test
+certifies only its stated property, not an entire acquisition family.
+
+| Evidence | Merged PR | Verified mathematical property |
+| --- | --- | --- |
+| Regression AL formulas | #1431 | Posterior moment-to-score arithmetic for four q=1 methods |
+| Classification AL formulas | #1432 | Entropy, margin and latent straddle arithmetic |
+| Binary classification MC scores | #1433 | Probability variance and BALD sample-moment aggregation |
+| Native analytic BO | #1434 | Gaussian log-EI, log-PI and UCB in a non-extreme numeric regime |
+| Native qSimpleRegret | #1435 | Sample maximum over q followed by MC mean |
+| Native qUCB | #1436 | Sample-mean-centered confidence aggregation over q and MC draws |
+
+**Still unverified by these independent references:** noisy improvement
+(qNEI/qLogNEI), qEI/qLogEI sample improvements, multi-objective
+hypervolume (qEHVI/qNEHVI), constrained probability/feasibility
+weighting, heterogeneous objective composition, and information
+gain/lookahead estimators. Existing smoke, integration, and
+contract tests must not be promoted to independent mathematical
+verification for these properties. The fixed Phase 8 scope is
+representative property verification with explicit evidence gaps,
+not certification of every exported upstream acquisition.
+
+**Exit recommendation:** the representative formula and MC
+aggregation checks above meet the Phase 8 property-level evidence
+goal; the unverified families remain recorded rather than silently
+marked mathematically verified. Phase 9 remains optimizer
+mathematical verification, without adding phases or changing
+the twelve-phase plan.
