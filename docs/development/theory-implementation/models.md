@@ -1779,3 +1779,15 @@ had identical class-name semantics.
 
 This is a **static count reconciliation**, not a declaration
 that the complete Phase 4 verification gates have passed.
+
+
+### KroneckerMultiTaskGP covariance verification reference
+
+The float64 block-design covariance test
+[`test_phase7_kronecker_covariance_reference.py`](../../../tests/models/standard/test_phase7_kronecker_covariance_reference.py)
+independently checks input-major task indexing, entrywise
+`K_input * K_task` products, symmetry, positive semidefiniteness,
+and task permutation. This is a prior-covariance property only;
+it does not establish posterior or likelihood correctness.
+See [mathematical verification](verification.md) for assumptions
+and evidence status.
