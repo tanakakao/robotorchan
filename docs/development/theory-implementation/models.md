@@ -1525,3 +1525,20 @@ sole `preference` registry entry. It intentionally exposes
 as a conventional supervised regression `(train_X, train_Y)`
 contract. Inspected tests are not a substitute for the separate
 Phase 7 numerical verification.
+
+## Phase 4 inspected standard single-task, variational and multi-fidelity models
+
+| Registry model(s) | Mathematical / fitting contract | Source ownership | Inspected tests and boundaries |
+| --- | --- | --- | --- |
+| `SingleTaskGP`, `MixedSingleTaskGP` | Exact GP regression with BoTorch posterior and exact marginal log likelihood. The mixed model uses BoTorch's native mixed-variable kernel rather than one-hot conversion. | `models/standard/single_task.py` inherits `BoTorchSingleTaskGP` / `BoTorchMixedSingleTaskGP`, adds `FittableExactGPModelMixin`, retains pre-transform `train_X/train_Y/train_Yvar` and exposes `fit()` / `make_mll()`. | `tests/models/standard/test_single_task_gp.py` checks BoTorch compatibility, numerical posterior equality, finite duplicate-observation posterior, exact MLL, and raw-buffer transform/dtype behavior. These named assertions primarily exercise the nonmixed base; mixed behavior needs its own contract evidence. |
+| `SingleTaskVariationalGP`, `MixedSingleTaskVariationalGP` | Sparse variational GP with inducing points and `VariationalELBO`; unlike exact GP, `num_data` determines the total observation count for ELBO scaling and can differ from minibatch size. | `models/standard/variational.py` delegates variational strategy, inducing-point allocation and posterior to BoTorch; locally creates `VariationalELBO(self.likelihood, self.model, num_data)`. Mixed variant builds native categorical/continuous covariance; `train_Y` can be absent at initialization. | `tests/models/standard/test_variational_gp.py` checks constructor parity, optional Y, ELBO count/default/override/invalid count, raw-buffer semantics, upstream posterior equality, and mixed covariance/custom factory/posterior/categorical-only inputs. |
+| `SingleTaskMultiFidelityGP`, `MixedSingleTaskMultiFidelityGP` | BoTorch multi-fidelity covariance uses structural iteration/data-fidelity coordinates distinct from ordinary design features. The mixed variant combines native mixed **design** covariance with upstream fidelity kernels and requires `linear_truncated=False`. | `models/standard/multi_fidelity.py` retains raw tensors. Mixed wrapper normalizes fidelity indices, rejects duplicate fidelity roles or category/fidelity overlap, excludes fidelity columns when constructing `make_mixed_covar_module`. | `tests/models/standard/test_mixed_multi_fidelity.py` checks raw data/dimension roles, original q-batch posterior and overlap/dimension validation. The mixed wrapper deliberately rejects the upstream linear-truncated branch because that branch owns the full input covariance. |
+
+**Registry boundary:** These six models cover the standard
+single-task, variational and multi-fidelity pairs. Some registry
+metadata classifies the fidelity or mixed variational variants via
+separate `_register_family` calls rather than the initial
+`MODEL_REGISTRY` literal. Do not conflate exact GP MLL with
+variational ELBO, or fidelity indices with `cat_dims`.
+The source and named tests were inspected; this is not Phase 7
+independent numerical verification.
