@@ -1,5 +1,7 @@
 # Model theory–implementation mapping
 
+> **Navigation:** [Mapping index](README.md) · [Canonical theory](../../theory/README.md) · [Model mathematical verification](verification.md) · [Other mappings](README.md#reader-navigation-phase-10)
+
 ## Audit provenance and limits
 
 - Initial inventory baseline: `main` at `a4454c59232f6eb209f4c8cd302d87c7f2233032`.
