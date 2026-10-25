@@ -44,13 +44,11 @@ def test_bald_and_probability_variance_match_sample_moment_references() -> None:
         sample_mean = samples.mean(dim=0)
         centered = samples - sample_mean
         expected_variance = centered.square().mean(dim=0).mean(dim=-1).squeeze(-1)
-        predictive_entropy = -torch.special.xlogy(
-            sample_mean, sample_mean
-        ).sum(dim=-1)
+        predictive_entropy = -torch.special.xlogy(sample_mean, sample_mean).sum(dim=-1)
         conditional_entropy = -torch.special.xlogy(samples, samples).sum(dim=-1)
         expected_bald = (
-            predictive_entropy - conditional_entropy.mean(dim=0)
-        ).clamp_min(0.0).squeeze(-1)
+            (predictive_entropy - conditional_entropy.mean(dim=0)).clamp_min(0.0).squeeze(-1)
+        )
 
         actual_variance = ProbabilityVariance(model, num_samples=num_samples)(candidates)
         actual_bald = BALD(model, num_samples=num_samples)(candidates)
