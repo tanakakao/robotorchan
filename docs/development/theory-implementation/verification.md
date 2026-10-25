@@ -89,3 +89,17 @@ The test checks this boundary, symmetry, a residual rank-one identity, and posit
 semidefiniteness (atol=rtol=1e-10). This does not verify the complete
 multi-fidelity posterior, the linear-truncated kernel, or learned
 hyperparameters. Execution evidence is pending CI.
+
+
+### PCA reduced-space projection reference (Phase 7)
+
+`tests/models/high_dimensional/reduced/test_phase7_pca_projection_reference.py`
+checks the `PCAInputReducer` used by reduced GP models on a fixed
+six-sample, three-feature float64 dataset. An independently computed
+centered covariance eigenspectrum is compared with the reducer's
+explained variance and projected sample covariance. The test also
+checks basis orthonormality, projection reconstruction, and residual
+orthogonality (atol=rtol=1e-10 where specified). PCA basis signs
+are intentionally not fixed. This validates the input reduction
+geometry, not the full reduced GP posterior or PLS/neural reducers.
+Execution evidence is pending CI.
