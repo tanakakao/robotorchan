@@ -109,3 +109,67 @@ information criteria.
 `examples/notebooks/28_regression_active_learning.ipynb`.
 The named files are source/test references, not evidence
 that every combination has been numerically verified.
+
+## Phase 5 — classification AL and Gaussian EPIG (source inspected)
+
+Classification AL distinguishes **predictive class
+probability**, **label uncertainty** and **latent Gaussian
+uncertainty**. These are not interchangeable posterior
+quantities. The following five acquisitions are local
+`AcquisitionFunction` subclasses, not BoTorch-native
+classification acquisitions.
+
+| Registered acquisition | Maximized score / target | Source ownership and evidence boundary |
+| --- | --- | --- |
+| `PredictiveEntropy` | `-sum_c p_c(x) log(p_c(x))`, with `p` returned by `predict_proba`; predictive **label entropy**. | `active_learning/classification.py::PredictiveEntropy`; **Implemented** score, **Delegated** class probabilities to the classification model. |
+| `MarginUncertainty` | `1 - (p_(1)(x)-p_(2)(x))` for the two highest class probabilities; smaller margin scores higher. | `classification.py::MarginUncertainty`; **Implemented** local top-two operation, **Delegated** `predict_proba`. Requires at least two classes. |
+| `ProbabilityVariance` | Mean over classes of the model-provided posterior variance of class probabilities; **not** variance of latent GP outputs. | `classification.py::ProbabilityVariance`; **Delegated** `probability_variance(X,num_samples)`, locally averages class axis. Requires `num_samples>=2`. |
+| `BALD` | Model-provided mutual information between labels and latent parameters, commonly `H[Y|D,x] - E_theta H[Y|theta,x]`; not merely predictive entropy. | `classification.py::BALD`; **Delegated** `mutual_information(X,num_samples)`. Requires `num_samples>=2`; estimator depends on the model. |
+| `LatentStraddle` | `beta * sqrt(max(v_latent(x),0)) - abs(mu_latent(x))`; zero latent decision boundary. | `classification.py::LatentStraddle`; **Implemented** local score, **Delegated** `latent_posterior`. Binary only, finite `beta>=0`. |
+
+All five explicitly enforce `q=1`, and the registry
+declares single-output classification targets. The
+protocol checks the required prediction method at
+construction, not its numerical calibration. Named
+assertion evidence:
+`tests/acquisition/test_classification_active_learning.py`,
+`tests/acquisition/test_classification_calibration_integration.py`,
+and `tests/acquisition/test_public_api.py`. The
+classification-specific theoretical distinction is
+documented in
+`docs/theory/acquisition/classification-active-learning.md`.
+
+### ExpectedPredictiveInformationGain (regression)
+
+`ExpectedPredictiveInformationGain` is a separate,
+locally implemented **Gaussian regression** AL
+acquisition, not classification BALD or the general
+non-Gaussian EPIG objective. For each candidate `x`
+and finite target point `z_i`, it obtains a joint
+two-point Gaussian posterior and computes
+
+`I_i(x) = -0.5 * log(1-rho_i(x)^2)`,
+
+where `rho_i^2 = cov(x,z_i)^2 /
+((var(x)+noise)*(var(z_i)+noise))`. It maximizes
+the arithmetic mean of `I_i` or a normalized
+nonnegative weighted mean over the finite target set.
+The correlation is clamped below one for stability,
+and supplied observation noise is clamped nonnegative.
+
+- **Implementation:** `active_learning/epig.py`;
+  **Implemented** Gaussian information formula and
+  finite target integration, **Delegated** joint
+  covariance to the model's posterior.
+- **Requirements:** `q=1`, single-output joint
+  Gaussian `posterior.mvn.covariance_matrix`;
+  ensemble posterior unsupported; `target_X` must
+  be nonempty and two-dimensional.
+- **Evidence:** `tests/acquisition/test_epig.py`
+  and `docs/optimization/epig.md`; Gaussian
+  assumptions and numerical identities still require
+  independent Phase 8 verification.
+
+**Phase boundary:** These are source-level formula and
+ownership mappings, not proof of model calibration,
+information-theoretic optimality or numerical identity.
