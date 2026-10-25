@@ -1,4 +1,4 @@
-"""Check the stable theory–implementation mapping navigation contract."""
+"""Check the stable theory-implementation mapping navigation contract."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ def main() -> int:
         print(failure)
     if failures:
         return 1
-    print("Theory–implementation mapping navigation is consistent.")
+    print("Theory-implementation mapping navigation is consistent.")
     return 0
 
 
