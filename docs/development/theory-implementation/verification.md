@@ -240,3 +240,15 @@ upgrades these properties to mathematical verification.
 The fixed Phase 8 acquisition and Phase 9 optimizer verification scopes
 are unchanged. This audit does not add phases or move model-specific
 unverified properties into acquisition/optimizer verification.
+
+### Mixed reduced GP categorical-coordinate reference (Phase 7)
+
+`tests/models/high_dimensional/reduced/test_phase7_mixed_categorical_reference.py`
+uses fixed float64 continuous/category inputs with the category column
+interleaved among continuous features. It independently checks that
+the reduced representation and training inputs retain the exact category
+IDs, that the category is moved to the declared reduced categorical
+index, and that original-coordinate and explicitly reduced-coordinate
+posterior means/variances agree (atol=rtol=1e-10). This covers the
+MixedPCAGP frozen PCA path, not all mixed reducers or categorical
+generalization quality. Execution evidence is pending CI.
