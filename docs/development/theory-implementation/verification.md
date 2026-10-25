@@ -60,3 +60,18 @@ for a whole model family.
 independent numerical result is claimed by
 this document. The tests and execution
 evidence above are pending.
+
+
+### Kronecker block-design covariance reference (Phase 7)
+
+`tests/models/standard/test_phase7_kronecker_covariance_reference.py`
+checks the covariance of `KroneckerMultiTaskGP` with a fixed
+three-input, two-task float64 example on CPU. For input-major flattening,
+`K[i*m+a, j*m+b] = K_input[i,j] * K_task[a,b]`.
+The independent scalar-index reference checks every entry, symmetry,
+positive semidefiniteness (minimum eigenvalue >= -1e-10), and task
+permutation. Entry comparisons use atol=rtol=1e-10; no random seed
+or parameter fitting is involved. This covers the *latent prior
+covariance structure*, not posterior conditioning, learned
+hyperparameters, observation noise, or other Kronecker variants.
+Execution and CI evidence are pending until the PR checks complete.
