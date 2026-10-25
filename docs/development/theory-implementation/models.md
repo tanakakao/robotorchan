@@ -1615,3 +1615,20 @@ GPyTorch. Both use GP inference, not deep-network training.
 Named tests were inspected rather than executed; mathematical
 kernel identities and approximation error require separate
 Phase 7 verification. Other expressive families remain open.
+
+## Phase 4 inspected expressive DeepGP hierarchy (4 entries)
+
+| Registry model(s) | Mathematical / fitting contract | Source ownership | Inspected evidence and limits |
+| --- | --- | --- | --- |
+| `SingleTaskDeepGP` | Composition of stochastic **variational GP layers**, not a deterministic deep feature map followed by one exact GP. Training minimizes the negative `DeepApproximateMLL(VariationalELBO)`; minibatches require total `num_data` for ELBO scaling. Posterior is Monte Carlo `DeepGPPosterior`, not a single exact Gaussian posterior. | `models/expressive/deep_gp.py` locally builds `_DeepGPLayer` with GPyTorch inducing-point `VariationalStrategy`, input standardization, likelihood sampling, and BoTorch-compatible posterior; `models/expressive/deep_gp_posterior.py` owns sample-based posterior representation. | `tests/models/expressive/test_deep_gp.py` checks raw tensors, stochastic forward shape, ELBO/gradients, parameter updates, minibatch scaling and invalid configurations. |
+| `MultiTaskDeepGP` | Long-format task identity is represented by a **learned task embedding** before stochastic GP layers; the task column is not standardized as a continuous feature. This differs from an ICM exact GP task covariance. | Same source validates integer task IDs and embeds tasks in the original-input transform; inherits DeepGP ELBO and Monte Carlo posterior. | DeepGP tests check original long-format inputs, posterior and gradients through task embeddings, and invalid task encoding. |
+| `MixedSingleTaskDeepGP` | Categorical columns are encoded by **trainable embeddings** rather than a native categorical covariance kernel. Continuous columns alone may be standardized; categorical IDs must be contiguous, zero-based integers. | Same source builds category embedding modules, reconstructs latent inputs on each forward call and retains raw original-space training tensors. | DeepGP tests check mixed raw data, original-space posterior, category embedding gradients and rejection of unknown categories. |
+| `MixedMultiTaskDeepGP` | Long-format task embedding and categorical embeddings coexist, with distinct structural task and categorical indices. Requires at least one continuous design feature. | Same source validates task/category index disjointness, builds separate learned embeddings, and preserves original-space posterior through stochastic GP layers. | `tests/models/expressive/test_expressive_mixed_multitask.py::test_mixed_multitask_deep_gp_posterior_and_embedding_gradients` checks posterior and embedding gradients. |
+
+**Interpretation boundary:** DeepGP variational composition
+is not Deep Kernel Learning, a finite-width neural network,
+or the infinite-width ReLU NNGP kernel. Unlike exact GP
+wrappers, its posterior is based on likelihood samples and
+its objective is a deep variational ELBO. The named tests
+were inspected, not executed here. Independent numerical
+accuracy and Monte Carlo convergence remain Phase 7 work.
