@@ -90,7 +90,8 @@ Do not introduce a new wrapper, registry, or runtime API for documentation.
 | Phase 4 — model theory-to-implementation mapping | **Complete (static mapping scope)**; all 142 regression names and 29 binary registry IDs inventoried in `models.md`, family-level theory/implementation/test boundaries mapped, and PR #1400's Python 3.11 model evidence/documentation audit and coverage check passed. Numerical equivalence remains Phase 7. |
 | Phase 5 — acquisition theory-to-implementation mapping | **Complete (static mapping scope)**; regression/classification AL, scalar/multi-objective/constrained BO, information/lookahead families and 21 registry entries reconciled in `acquisition.md`; exit audit merged in PR #1408. Numerical identities remain Phase 8. |
 | Phase 6 — optimizer and strategy mapping | **Complete (static mapping scope)**; all eleven named dispatch options, native mixed and one-shot paths, vector NSGA-II, constraint enforcement semantics, TuRBO, embeddings and latent strategies mapped in `optimization.md`; PR #1411 passed CI and documentation links. Numerical correctness remains Phase 9. |
-| Phases 7–9 — mathematical verification | Not yet complete |
+| Phase 7 — model mathematical verification | **Complete (representative property scope)**; CI-backed independent references, with unsupported observation-posterior semantics explicitly retained in `verification.md` |
+| Phases 8–9 — acquisition and optimizer mathematical verification | Not yet complete |
 | Phases 10–12 — navigation, consistency CI, final audit | Not yet complete |
 
 **Acceptance is scope-specific:** a static source inventory or a passing
