@@ -173,3 +173,57 @@ and supplied observation noise is clamped nonnegative.
 **Phase boundary:** These are source-level formula and
 ownership mappings, not proof of model calibration,
 information-theoretic optimality or numerical identity.
+
+## Phase 5 — single-objective Monte Carlo BO (source inspected)
+
+These acquisition functions maximize **utility** after
+the problem's objective direction has been normalized
+to maximization. Let `F(Y)` be the scalar objective
+on posterior samples and `f_best` the incumbent in
+the same oriented scale.
+
+| Method | Mathematical object / source-level route | Ownership and limitations |
+| --- | --- | --- |
+| `qExpectedImprovement` (qEI) | MC expectation of `max(max_i F(Y_i)-f_best,0)`; `composition.py::make_qei_acquisition` constructs the upstream class using `best_f` and an objective bridge. | **Delegated** acquisition formula to BoTorch; **Extended** local semantic direction and output bridge. Helper supports one unconstrained `RegressionObjective`. |
+| `qNoisyExpectedImprovement` (qNEI) | MC expected improvement relative to jointly sampled baseline; `composition.py::make_qnei_acquisition` passes `X_baseline`, `prune_baseline`, `cache_root` and the objective bridge. | **Delegated** to BoTorch; local helper requires nonempty 2-D baseline, one unconstrained regression objective. No `best_f` parameter. |
+| `qLogExpectedImprovement` (qLogEI) | Log-domain expected improvement for improved numerical behavior; constructed directly in `benchmarks/botorch_strategy.py`. | **Delegated** to BoTorch. Registered metadata is not a local wrapper; no general-purpose `make_qlogei_acquisition` composition helper is exported. |
+| `qLogNoisyExpectedImprovement` (qLogNEI) | Log-domain noisy expected improvement; benchmark strategy supplies `X_baseline=X`. | **Delegated** to BoTorch; distinguish from the composition module's ordinary qNEI constructor. |
+| `qProbabilityOfImprovement` (qPI) | MC probability that the best sampled batch utility exceeds `f_best`; benchmark strategy passes `best_f=train_Y.max()`. | **Delegated** to BoTorch; registry metadata does not implement the score. |
+| `qUpperConfidenceBound` (qUCB) | MC upper-confidence utility; benchmark strategy passes `beta=0.2`. | **Delegated** to BoTorch; do not conflate this MC acquisition with analytic single-point UCB or Straddle. |
+| `qSimpleRegret` | MC expected best sampled objective value, with no improvement threshold. | **Delegated** to BoTorch by registry metadata; no use of this class was established in the inspected benchmark strategy. Do not claim an executable benchmark route from registration alone. |
+
+The benchmark route
+`benchmarks/botorch_strategy.py::botorch_gp_candidates`
+currently accepts `qEI`, `qLogEI`, `qNEI`,
+`qLogNEI`, `qPI` and `qUCB`; it requires a
+continuous, unconstrained, single-objective problem.
+It orients training targets by the problem direction,
+fits a BoTorch `SingleTaskGP` (or supplied factory)
+and delegates candidate optimization to
+`botorch.optim.optimize_acqf`. The fixed
+`beta=0.2` in this benchmark is an experiment
+configuration, not a universal qUCB default.
+
+**Composition vs. algorithm:** The public
+`make_qei_acquisition` and
+`make_qnei_acquisition` are construction helpers,
+not independent acquisition algorithms. They resolve
+heterogeneous model ownership, apply semantic objective
+direction and pass the resulting BoTorch objective to
+native qEI/qNEI. Their continuous and classification
+constraint variants are distinct composition policies
+and will be mapped under constrained BO rather than
+silently attributed to unconstrained EI.
+
+**Evidence and limits:** Source references:
+`src/robotorchan/acquisition/registry.py`,
+`src/robotorchan/acquisition/composition.py`,
+`src/robotorchan/benchmarks/botorch_strategy.py`;
+tests:
+`tests/acquisition/test_standard_bo_acquisition.py`,
+`tests/acquisition/test_phase5_native_contracts.py`,
+`tests/acquisition/test_phase5_native_integration.py`.
+See `docs/optimization/standard_acquisition.md`
+for usage. Exact MC estimator equivalence, log-domain
+stability and noisy-baseline behavior remain Phase 8
+numerical verification topics.
