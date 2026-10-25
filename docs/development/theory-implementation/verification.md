@@ -364,7 +364,7 @@ or other MC acquisitions. CI pending.
 `tests/acquisition/test_phase8_mc_qucb_reference.py`
 compares native `qUpperConfidenceBound` with a separately expressed
 samplewise reference: add `sqrt(beta*pi/2)*abs(sample-mean)` to
-each posterior mean, maximize across q=2, and average over 64
+each Monte Carlo sample mean (not the exact posterior mean), maximize across q=2, and average over 64
 Sobol QMC samples. The reference reuses the acquisition sampler's
 base samples to isolate aggregation from sampling variability.
 Two batches, float64, and 1e-8 tolerance are covered. This tests
