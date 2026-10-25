@@ -18,16 +18,18 @@ def test_binary_entropy_margin_and_latent_straddle_reference() -> None:
     with torch.no_grad():
         probabilities = model.predict_proba(candidates)
         latent = model.latent_posterior(candidates)
-        expected_entropy = -torch.special.xlogy(
-            probabilities, probabilities
-        ).sum(dim=-1).squeeze(-1)
+        expected_entropy = (
+            -torch.special.xlogy(probabilities, probabilities).sum(dim=-1).squeeze(-1)
+        )
         sorted_probabilities = probabilities.sort(dim=-1, descending=True).values
         expected_margin = (
             1.0 - sorted_probabilities[..., 0] + sorted_probabilities[..., 1]
         ).squeeze(-1)
         expected_latent = (
-            beta * latent.variance.clamp_min(0.0).sqrt() - latent.mean.abs()
-        ).squeeze(-1).squeeze(-1)
+            (beta * latent.variance.clamp_min(0.0).sqrt() - latent.mean.abs())
+            .squeeze(-1)
+            .squeeze(-1)
+        )
 
         actual_entropy = PredictiveEntropy(model)(candidates)
         actual_margin = MarginUncertainty(model)(candidates)
