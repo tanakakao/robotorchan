@@ -118,7 +118,7 @@ Do not introduce a new wrapper, registry, or runtime API for documentation.
 | Phase 7 — model mathematical verification | **Complete (representative property scope)**; CI-backed independent references, with unsupported observation-posterior semantics explicitly retained in `verification.md` |
 | Phase 8 — acquisition mathematical verification | **Complete (representative property scope)**; six merged formula/MC reference PRs #1431–#1436; explicit gaps in `verification.md` |
 | Phase 9 — optimizer mathematical verification | **Complete (representative property scope)**; five merged reference/contract PRs #1438–#1442; exit audit PR #1443 in `verification.md` |
-| Phase 10 — navigation and cross-document links | In progress |
+| Phase 10 — navigation and cross-document links | **Complete (navigation scope)**; entry-point table and bidirectional links merged in PRs #1444–#1445; CI and documentation-link workflows passed |
 | Phases 11–12 — consistency CI and final audit | Not yet complete |
 
 **Acceptance is scope-specific:** a static source inventory or a passing
@@ -170,3 +170,30 @@ documentation-link checks. Phase 7 begins model
 mathematical verification; Phase 8 acquisition
 verification; Phase 9 optimizer verification.
 The original twelve-phase scope is unchanged.
+
+## Phase 10 navigation exit audit
+
+**Decision: complete for the fixed navigation and cross-reference scope.**
+Merged PR #1444 introduced subject-based entry links from this index to
+the three mapping files, the canonical theory index, and mathematical
+verification. Merged PR #1445 added return paths from each mapping
+and the verification document. Both PRs passed repository CI and
+documentation-link checks.
+
+| Reader path | Entry point | Return path |
+| --- | --- | --- |
+| Models | [Model mapping](models.md) | [Verification](verification.md) and [index](README.md) |
+| Acquisitions | [Acquisition mapping](acquisition.md) | [Verification](verification.md) and [index](README.md) |
+| Optimizers and strategies | [Optimization mapping](optimization.md) | [Verification](verification.md) and [index](README.md) |
+
+**Evidence boundary:** link-check success establishes that local
+Markdown paths and checked anchors resolve; it does not prove
+that all theoretical concepts have one-to-one implementation
+coverage or that every external reference is current. The
+large audit-oriented chapters and historical phase labels remain
+as-is, by design. Their pedagogical restructuring is deferred to
+the separately agreed post-cycle workflow.
+
+The next fixed phase is **Phase 11: narrowly scoped mapping
+consistency checks in CI**, followed by **Phase 12: final audit**.
+No additional phases or objectives are introduced.
