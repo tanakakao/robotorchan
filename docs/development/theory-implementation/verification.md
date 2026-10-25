@@ -178,3 +178,17 @@ do not yet establish the following representative properties:
 The next work should address these gaps within **Phase 7**, without
 expanding the fixed 12-phase plan. Passing CI for this reconciliation
 alone must not be used to mark Phase 7 complete.
+
+
+### Reduced GP public/latent posterior coordinate reference (Phase 7)
+
+`tests/models/high_dimensional/reduced/test_phase7_posterior_coordinate_reference.py`
+compares the PCA-reduced GP's posterior mean and variance when candidates
+are supplied in the original input coordinates and in the frozen PCA
+coordinates `T(x)`. The identity is
+`posterior_original(x) = posterior_reduced(T(x))` for the **same**
+trained GP and fixed reducer. The float64 test covers q-batch inputs
+and checks that posterior evaluation does not mutate PCA components
+or centering. This establishes coordinate-path consistency, not
+the quality of the dimensionality reduction or categorical retention.
+Execution evidence is pending CI.
