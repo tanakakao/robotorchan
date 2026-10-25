@@ -130,3 +130,17 @@ the complementary negative-class probability and normalization
 on fixed float64 candidates. This checks the probit predictive
 probability mapping, not ELBO convergence, calibration quality,
 or the quality of the latent GP fit. Execution evidence is pending CI.
+
+
+### Non-GP Gaussian posterior reparameterization reference (Phase 7)
+
+`tests/models/non_gp/test_phase7_gaussian_posterior_reference.py`
+verifies the BoTorch-compatible `GaussianDistributionPosterior`
+used for distribution-aware non-GP surrogates. Fixed float64
+base samples are mapped using the independent affine Gaussian
+identity `y = mu + sqrt(variance) * epsilon`. The test covers
+batch and sample dimensions, a zero-variance deterministic
+component, exact mean/variance accessors, and gradient propagation
+through the mean. This is a posterior adapter contract check,
+not a claim about the predictive accuracy of external estimators.
+Execution evidence is pending CI.
