@@ -31,9 +31,7 @@ def test_native_analytic_bo_matches_gaussian_closed_forms() -> None:
             torch.tensor(0.0, dtype=torch.float64),
             torch.tensor(1.0, dtype=torch.float64),
         )
-        expected_ei = (mean - best_f) * normal.cdf(z) + std * torch.exp(
-            normal.log_prob(z)
-        )
+        expected_ei = (mean - best_f) * normal.cdf(z) + std * torch.exp(normal.log_prob(z))
         expected_log_ei = expected_ei.log()
         expected_log_pi = normal.cdf(z).log()
         expected_ucb = mean + math.sqrt(beta) * std
