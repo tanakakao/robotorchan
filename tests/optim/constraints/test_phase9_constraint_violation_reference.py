@@ -25,9 +25,7 @@ def test_constraint_violation_matches_explicit_q_batch_reference() -> None:
             (torch.tensor([0, 1]), torch.tensor([1.0, 1.0]), 0.9),
             (torch.tensor([[0, 0], [1, 0]]), torch.tensor([1.0, -1.0]), -0.3),
         ),
-        equality_constraints=(
-            (torch.tensor([1]), torch.tensor([1.0]), 0.5),
-        ),
+        equality_constraints=((torch.tensor([1]), torch.tensor([1.0]), 0.5),),
         nonlinear_inequality_constraints=(
             (lambda x: x[0] * x[1] - 0.1, True),
             (lambda x: x[1, 0] - x[0, 0] - 0.1, False),
@@ -46,13 +44,9 @@ def test_constraint_violation_matches_explicit_q_batch_reference() -> None:
         )
         intra_nonlinear = sum(max(0.0, 0.1 - x * y) for x, y in batch)
         inter_nonlinear = max(0.0, 0.1 - (second[0] - first[0]))
-        expected.append(
-            intra_linear + inter_linear + equality + intra_nonlinear + inter_nonlinear
-        )
+        expected.append(intra_linear + inter_linear + equality + intra_nonlinear + inter_nonlinear)
 
-    actual = candidate_constraint_violation(
-        candidates, constraints, equality_tolerance=tolerance
-    )
+    actual = candidate_constraint_violation(candidates, constraints, equality_tolerance=tolerance)
     torch.testing.assert_close(
         actual, torch.tensor(expected, dtype=torch.float64), atol=1e-12, rtol=1e-12
     )
@@ -69,6 +63,4 @@ def test_feasibility_first_ordering_ignores_infeasible_objective_advantage() -> 
 
     ranks = feasibility_first_ranks(values, violation)
 
-    torch.testing.assert_close(
-        ranks, torch.tensor([3.0, 1.0, 4.0, 2.0], dtype=torch.float64)
-    )
+    torch.testing.assert_close(ranks, torch.tensor([3.0, 1.0, 4.0, 2.0], dtype=torch.float64))
