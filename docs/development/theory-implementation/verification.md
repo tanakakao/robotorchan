@@ -330,3 +330,19 @@ avoids assuming RNG resets reproduce cached posterior draws. The test uses float
 candidates and 1e-10 absolute/relative tolerance. It verifies
 aggregation arithmetic, not Monte Carlo convergence, classifier
 calibration, or the fidelity of latent GP fitting. CI pending.
+
+### Phase 8 — native analytic BO Gaussian reference
+
+`tests/acquisition/test_phase8_analytic_bo_gaussian_reference.py`
+checks BoTorch-native analytic `LogExpectedImprovement`,
+`LogProbabilityOfImprovement` and `UpperConfidenceBound` against
+independently expressed Gaussian closed forms for maximization.
+For `z=(mu-best_f)/sigma`, EI is
+`(mu-best_f)*Phi(z)+sigma*phi(z)`, PI is `Phi(z)`,
+and UCB is `mu+sqrt(beta)*sigma`. The test compares the log
+of EI and PI to the corresponding native log acquisitions.
+It uses a fixed float64 single-output GP posterior, three q=1
+candidates, no fitting, and 1e-8 absolute/relative tolerance.
+This verifies analytic acquisition arithmetic and delegation,
+not GP conditioning, noisy/MC acquisition estimators, constraints,
+or numerical stability at extreme Gaussian tails. CI pending.
