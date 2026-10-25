@@ -19,11 +19,15 @@ def test_multitask_task_covariance_matches_explicit_task_kernel() -> None:
     )
 
     task_kernel = model.covar_module.kernels[1]
-    unique_tasks = torch.tensor([[0], [1]])
-    repeated_tasks = torch.tensor([[0], [0], [1]])
+    # The task kernel retains active_dims=[1] in the original input coordinates.
+    # Supply the full [continuous, task] features, not a task-only column.
+    unique_tasks = torch.tensor([[0.2, 0.0], [0.8, 1.0]], dtype=torch.double)
+    repeated_tasks = torch.tensor(
+        [[0.2, 0.0], [0.5, 0.0], [0.8, 1.0]], dtype=torch.double
+    )
     with torch.no_grad():
         task_covariance = task_kernel(unique_tasks, unique_tasks).to_dense()
-        # IndexKernel expects n x 1 inputs; n-vectors are interpreted as a single point.
+        # The active task dimension selects column 1 from the full inputs.
         repeated = task_kernel(repeated_tasks, repeated_tasks).to_dense()
 
     expected = task_covariance[
