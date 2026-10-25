@@ -39,6 +39,31 @@ These were the initial Phase 1 architecture-level observations. Phases 2–3
 subsequently established static exported-symbol inventories and concrete
 source ownership in the companion mapping documents.
 
+## Reader navigation (Phase 10)
+
+This is the entry point for navigating the existing mapping, not a
+replacement for the mathematical theory chapters. Choose a subject,
+then follow its theory, implementation, and evidence in that order.
+
+| Subject | Mapping | Canonical theory | Verification evidence |
+| --- | --- | --- | --- |
+| Surrogate models and classification | [Model mapping](models.md) | [Theory index](../../theory/README.md) | [Model reference checks](verification.md#phase-7-final-exit-reconciliation) |
+| Acquisition and active learning | [Acquisition mapping](acquisition.md) | [Theory index](../../theory/README.md) | [Acquisition reference checks](verification.md) |
+| Optimizers, candidate constraints and TuRBO | [Optimization mapping](optimization.md) | [Theory index](../../theory/README.md) | [Optimizer reference checks](verification.md) |
+
+**How to interpret the evidence:** start with the mathematical
+definition and assumptions in `docs/theory/`, use the relevant mapping
+to locate public API and implementation ownership, then consult
+`verification.md` for the *specific* property checked. Registry
+coverage and smoke tests are not proofs. `Implemented`, `Delegated`,
+`Extended`, `Approximated`, `Unsupported`, and `Unverified`
+describe implementation relationships, not a universal accuracy grade.
+
+The mapping files retain audit history for traceability. Reorganizing
+their large sections into theory-aligned educational chapters and
+removing historical phase labels is reserved for a separate workflow
+after the original twelve phases; Phase 10 only improves navigation.
+
 ## Mapping record contract
 
 A record must identify:
@@ -91,8 +116,10 @@ Do not introduce a new wrapper, registry, or runtime API for documentation.
 | Phase 5 — acquisition theory-to-implementation mapping | **Complete (static mapping scope)**; regression/classification AL, scalar/multi-objective/constrained BO, information/lookahead families and 21 registry entries reconciled in `acquisition.md`; exit audit merged in PR #1408. Numerical identities remain Phase 8. |
 | Phase 6 — optimizer and strategy mapping | **Complete (static mapping scope)**; all eleven named dispatch options, native mixed and one-shot paths, vector NSGA-II, constraint enforcement semantics, TuRBO, embeddings and latent strategies mapped in `optimization.md`; PR #1411 passed CI and documentation links. Numerical correctness remains Phase 9. |
 | Phase 7 — model mathematical verification | **Complete (representative property scope)**; CI-backed independent references, with unsupported observation-posterior semantics explicitly retained in `verification.md` |
-| Phases 8–9 — acquisition and optimizer mathematical verification | Not yet complete |
-| Phases 10–12 — navigation, consistency CI, final audit | Not yet complete |
+| Phase 8 — acquisition mathematical verification | **Complete (representative property scope)**; six merged formula/MC reference PRs #1431–#1436; explicit gaps in `verification.md` |
+| Phase 9 — optimizer mathematical verification | **Complete (representative property scope)**; five merged reference/contract PRs #1438–#1442; exit audit PR #1443 in `verification.md` |
+| Phase 10 — navigation and cross-document links | In progress |
+| Phases 11–12 — consistency CI and final audit | Not yet complete |
 
 **Acceptance is scope-specific:** a static source inventory or a passing
 contract test does not prove an algorithm's mathematical correctness.
