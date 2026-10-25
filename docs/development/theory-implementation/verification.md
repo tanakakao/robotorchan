@@ -416,7 +416,7 @@ objective value, shape, and bounds (float64, CPU). This establishes
 sample-pool argmax correctness and dispatch consistency, **not**
 convergence to the continuous global optimum, sampling quality,
 mixed-variable validity, constraint enforcement, or the other
-optimizer backends. CI pending.
+optimizer backends. CI and documentation-link workflows passed on the merged PR.
 
 ### Phase 9 — TuRBO state-transition reference
 
@@ -430,7 +430,7 @@ case distinguishes denoised decision values from observed values.
 The checks use float64 scalar observations and exact state
 invariants, with no RNG or GP fitting. They do not establish
 TuRBO regret, optimality, ARD geometry, asynchronous behavior,
-or restart-center sampling correctness. CI pending.
+or restart-center sampling correctness. CI and documentation-link workflows passed on the merged PR.
 
 ### Phase 9 — TuRBO trust-region geometry reference
 
@@ -443,7 +443,7 @@ at both ends. The test also checks invariance to multiplying all
 ARD weights by seven, with 1e-12 absolute/relative tolerance.
 This verifies deterministic geometry, not learned ARD
 lengthscales, constrained candidate optimization, or search
-convergence. CI pending.
+convergence. CI and documentation-link workflows passed on the merged PR.
 
 ### Phase 9 — candidate constraint residual and feasibility ordering reference
 
@@ -459,7 +459,7 @@ A separate check establishes Deb-style feasibility-first ranking
 with infeasible candidates having higher objective values.
 Absolute/relative tolerance is 1e-12. This tests violation
 arithmetic and ordering, **not** optimizer-enforced feasibility,
-probabilistic outcome constraints, or convergence. CI pending.
+probabilistic outcome constraints, or convergence. CI and documentation-link workflows passed on the merged PR.
 
 ### Phase 9 — PyTorch optimizer candidate-constraint support boundary
 
@@ -470,4 +470,39 @@ and nonlinear inequalities. This is a negative contract check:
 it prevents silent acceptance of mathematically unenforced
 constraints. It does **not** demonstrate constrained optimization
 or gradient convergence; those remain unverified for this backend.
-CI pending.
+CI and documentation-link workflows passed on the merged PR.
+
+## Phase 9 — representative optimizer verification exit audit
+
+**Decision: complete for the fixed representative, property-specific
+verification scope.** Five merged PRs have passing CI and
+documentation-link workflows. The references verify discrete
+candidate selection, TuRBO state transitions and geometric bounds,
+candidate-constraint violation/ranking arithmetic, and explicit
+rejection of unsupported constraints in PyTorch optimizers.
+They do not establish general optimizer convergence or universal
+constraint enforcement.
+
+| Evidence | Merged PR | Verified property |
+| --- | --- | --- |
+| Random/Sobol sample-pool selection | #1438 | Deterministic q=2 pool argmax and bounds |
+| TuRBO state transition | #1439 | Expansion, shrinkage, restart and best-value tracking |
+| TuRBO ARD geometry | #1440 | Normalized weighted bounds and clipping |
+| Candidate constraint arithmetic | #1441 | Intra/interpoint residuals and feasibility-first ordering |
+| PyTorch optimizer support boundary | #1442 | Adam/AdamW/SGD reject unsupported candidate constraints |
+
+**Unverified or unsupported:** convergence rates and global
+optimality for gradient or derivative-free optimizers;
+optimizer-enforced feasibility across backends; stochastic
+candidate-generation quality; mixed-variable, batch/async and
+multi-fidelity optimization guarantees; TuRBO learned-ARD
+fidelity and restart-center distribution; and constrained
+optimization with Adam/AdamW/SGD (explicitly unsupported).
+Existing integration tests must not be presented as independent
+mathematical references for these properties.
+
+This exit decision does not modify implementation support labels
+or imply every optimizer is mathematically certified. The next
+planned work is Phase 10 navigation and cross-document linkage
+under the unchanged twelve-phase plan; educational restructuring
+of the large mapping files is a separate future workflow.
