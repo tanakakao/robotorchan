@@ -35,6 +35,12 @@ jobs:
       - name: Verify generated model coverage
         if: matrix.python-version == '3.11'
         run: python scripts/generate_model_coverage.py --check
+      - name: Audit model registry evidence and documentation paths
+        if: matrix.python-version == '3.11'
+        run: >-
+          python scripts/audit_model_api.py
+          --include-evidence-summary
+          --check-documentation-paths
       - name: Test core wrappers
         run: >-
           pytest
