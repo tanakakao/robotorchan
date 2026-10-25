@@ -18,8 +18,8 @@ def test_native_analytic_bo_matches_gaussian_closed_forms() -> None:
     train_y = torch.sin(5.0 * train_x)
     model = SingleTaskGP(train_x, train_y)
     model.eval()
-    candidates = torch.tensor([[[0.12]], [[0.42]], [[0.82]]], dtype=torch.float64)
-    best_f = float(train_y.max())
+    candidates = torch.tensor([[[0.12]], [[0.25]], [[0.42]]], dtype=torch.float64)
+    best_f = 0.0
     beta = 0.4
 
     with torch.no_grad():
