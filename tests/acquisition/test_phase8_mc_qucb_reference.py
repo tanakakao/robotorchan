@@ -27,7 +27,7 @@ def test_q_ucb_matches_samplewise_upper_confidence_reference() -> None:
         actual = acquisition(candidates)
         posterior = model.posterior(candidates)
         samples = sampler(posterior).squeeze(-1)
-        mean = posterior.mean.squeeze(-1)
+        mean = samples.mean(dim=0)
         adjusted = mean + math.sqrt(beta * math.pi / 2.0) * (samples - mean).abs()
         expected = adjusted.max(dim=-1).values.mean(dim=0)
 
