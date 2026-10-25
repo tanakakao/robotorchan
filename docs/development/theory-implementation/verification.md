@@ -206,3 +206,16 @@ than a trained model. This does **not** establish calibrated
 heteroskedastic uncertainty or a correct total observation
 posterior at arbitrary candidate inputs. Execution evidence is
 pending CI.
+
+
+### Non-GP Random Forest estimator-level reference (Phase 7)
+
+`tests/models/non_gp/test_phase7_forest_estimator_reference.py`
+compares the public ensemble posterior with independently collected
+predictions from every fitted scikit-learn tree, using fixed float64
+q-batch candidates and `random_state=17`. It checks each sample,
+the ensemble population mean and variance (denominator `s`, not
+`s-1`), and explicit rejection of unsupported observation noise.
+This verifies Random Forest adapter semantics, not generalization
+accuracy, epistemic calibration, or other non-GP estimator families.
+Execution evidence is pending CI.
