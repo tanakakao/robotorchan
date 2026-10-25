@@ -282,3 +282,61 @@ Source/contract evidence does not establish independent
 hypervolume estimator accuracy, reference-point
 sensitivity or log-domain numerical equivalence;
 those belong to Phase 8.
+
+## Phase 5 — outcome-constrained BO composition (source inspected)
+
+These policies impose **outcome feasibility** on
+posterior predictions; they are not candidate-space
+linear/nonlinear constraints passed to an optimizer.
+Let `A(X)` denote the native acquisition, and
+`p_j(x)` a classifier's posterior-predictive
+probability of feasibility. Continuous outcome
+constraints are represented as sample-wise residuals
+in the same BoTorch posterior as the objective;
+classifier feasibility is a separate marginal factor.
+
+| Local constructor | Native acquisition and constraint semantics | Ownership and limits |
+| --- | --- | --- |
+| `make_continuous_constrained_qei_acquisition` | `qExpectedImprovement` with BoTorch `ConstrainedMCObjective` and same-posterior continuous residuals. | **Extended** objective/constraint bridging; **Delegated** MC improvement and sample feasibility to BoTorch. Exactly one regression objective, at least one continuous constraint. |
+| `make_mixed_constrained_qei_acquisition` | Continuous residuals enter `ConstrainedMCObjective`; separate classifier PoFs weight the resulting qEI via `FeasibilityWeightedAcquisition`. | **Extended** local hybrid composition; requires both constraint kinds and distinct classification outputs. |
+| `make_continuous_constrained_qnei_acquisition` | `qNoisyExpectedImprovement` with `ConstrainedMCObjective` and a nonempty `X_baseline`. | **Extended** same-posterior continuous constraints; **Delegated** noisy improvement to BoTorch. |
+| `make_multiple_learned_constrained_qnei_acquisition` | Native qNEI with optional continuous residual constraints, then independent classifier PoF weighting when classifiers are present. | **Extended** heterogeneous composition. Marginal classifier probabilities are not a sampled joint posterior or baseline feasibility correction. |
+| `make_constrained_qehvi_acquisition` | Native `qExpectedHypervolumeImprovement` with sample-wise continuous `constraints` and optional external classifier PoF factors. | **Extended** multi-objective feasibility bridge; **Delegated** HV improvement to BoTorch. Requires directed `ref_point` matching partitioning and `eta>0`. |
+| `make_deterministic_pof_acquisition` | Multiplies an existing objective acquisition by one posterior-predictive PoF through `FeasibilityWeightedAcquisition`. | **Implemented** local weighting adapter; does not create an independent EI/HV acquisition or joint classifier samples. |
+
+### Interpretation and boundaries
+
+- For the default `q_reduction="product"`,
+  classifier feasibility weighting uses a product
+  over the q candidates. This is a **factorization
+  assumption** across marginal feasibility terms,
+  not a proof that outputs or candidates are
+  probabilistically independent.
+- The composition constructors reject unsupported
+  feasibility representations, repeated classifier
+  outputs, and continuous constraints whose model
+  entry differs from the objective's shared
+  posterior. They do not invent cross-entry
+  covariance.
+- `infeasible_cost` controls BoTorch
+  `ConstrainedMCObjective` for continuous qEI/qNEI
+  routes. It is not equivalent to multiplying a
+  native acquisition by a classifier's mean PoF.
+- `make_sample_classification_feasibility_bridge`
+  is a separate capability-gated path requiring
+  epistemic probability samples. The deterministic
+  PoF routes above do not silently use that path.
+- No local constrained qNEHVI constructor is
+  exported in the inspected composition API.
+  Constrained qEHVI support does not imply
+  constrained qNEHVI support.
+
+**Evidence:** `src/robotorchan/acquisition/composition.py`,
+`src/robotorchan/acquisition/classification_constraints.py`,
+`tests/acquisition/test_composition.py`,
+`tests/acquisition/test_phase5_native_integration.py`,
+`tests/benchmarks/test_heterogeneous_classification_constrained_e2e.py`.
+These sources establish construction paths and
+named test evidence; statistical validity of
+factorization, calibration, and numerical constrained
+acquisition identities remain Phase 8 checks.
