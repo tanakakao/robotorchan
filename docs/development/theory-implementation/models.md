@@ -1632,3 +1632,22 @@ wrappers, its posterior is based on likelihood samples and
 its objective is a deep variational ELBO. The named tests
 were inspected, not executed here. Independent numerical
 accuracy and Monte Carlo convergence remain Phase 7 work.
+
+## Phase 4 inspected high-dimensional SAAS, MAP-SAAS and ALEBO ownership
+
+| Registry model(s) | Mathematical / fitting contract | Source ownership | Inspected evidence and limitations |
+| --- | --- | --- | --- |
+| `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` | Fully Bayesian sparse-axis-aligned subspace (SAAS) GP: hyperparameter uncertainty is integrated using BoTorch/Pyro NUTS samples, **not** an exact GP MLL optimization or MAP fit. Multi-task model retains a structural long-format task feature. | `models/high_dimensional/fully_bayesian.py` subclasses BoTorch fully Bayesian SAAS models, retains pre-transform raw data and sets `supports_mll=False`; NUTS fitting and posterior computation are upstream. | `tests/models/high_dimensional/test_fully_bayesian_single_task_gp.py` checks upstream constructor parity, raw transforms, MLL rejection, dtype and posterior equality for the same MCMC samples. |
+| `MixedSaasFullyBayesianSingleTaskGP`, `MixedSaasFullyBayesianMultiTaskGP` | Mixed fully Bayesian SAAS uses an **internal categorical one-hot transform**, not a native categorical kernel; multi-task variant remaps the task feature after encoding and excludes it from categories. | `fully_bayesian.py` owns categorical encoding, raw-space posterior adapter and task-index remapping, while BoTorch owns Pyro/NUTS inference. | `tests/models/high_dimensional/test_mixed_fully_bayesian.py` checks encoded training/raw prediction and structural task preservation. This is an intentional exception to native mixed-kernel conventions. |
+| `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP` | MAP-SAAS uses point-estimated sparse priors; additive and multiple-`tau` ensemble approximations are **not** fully Bayesian NUTS. | `models/high_dimensional/map_saas.py` delegates MAP-SAAS covariance/fitting to BoTorch, adds raw tensor retention and common exact-GP MLL interface. | Source-level upstream ownership inspected; this table does not claim independent MAP optimization equivalence. |
+| `MixedAdditiveMapSaasSingleTaskGP`, `MixedEnsembleMapSaasSingleTaskGP` | Mixed MAP-SAAS variants encode categorical features via `CategoricalOneHotInputTransform`, retaining raw input interfaces; do not describe these as native categorical covariance kernels. | `map_saas.py` constructs model-owned input transform and delegates MAP-SAAS to upstream BoTorch classes. | `tests/models/high_dimensional/test_mixed_map_saas.py` checks raw API and categorical encoding. |
+| `ALEBOGP` | Embedded-space GP with a full positive-semidefinite Mahalanobis RBF metric `M=UᵀU`. The model supports MAP metric fitting and diagonal Laplace approximation, with optional marginalization over sampled metric parameters. Embedding/search strategy is distinct from GP model covariance. | `models/high_dimensional/alebo.py` locally implements `MahalanobisRBFKernel`, finite-difference Hessian diagonal, Laplace covariance and metric-marginal posterior; exact GP conditioning uses `SingleTaskGP`. | `tests/models/high_dimensional/test_alebo.py` checks metric PSD, kernel distance identity, Hessian/Laplace construction, MAP fit, sampled metric restoration, marginal covariance and acquisition integration. |
+
+**Scope boundary:** These nine high-dimensional registry
+models are mapped here; additive orthogonal GP and fidelity
+MAP-SAAS variants require separate reconciliation. Full NUTS
+posterior inference, MAP-SAAS point estimation and ALEBO's
+metric Laplace approximation are three different uncertainty
+contracts. Tests were inspected, not run in this Phase 4
+documentation change; independent numerical verification
+remains Phase 7.
