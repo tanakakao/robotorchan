@@ -290,3 +290,63 @@ output for arbitrary inputs.
   checks declared capability contracts. Actual
   constraint satisfaction and algorithmic
   convergence remain Phase 9.
+
+## Phase 6 — stateful and coordinate-changing search strategies
+
+These methods control **where** an acquisition
+is optimized, or which coordinate system it
+receives. They are not additional values of
+`OptimizerName`, and they do not replace the
+acquisition's probabilistic objective.
+
+| Strategy | Theory object and local source | Implementation status and limits |
+| --- | --- | --- |
+| `TuRBOStrategy` | Adaptive local trust region around an incumbent; `trust_region/turbo.py` tracks successes, failures, region length and restart state. | **Implemented/Extended**. State update doubles length after `success_tolerance`, halves it after `failure_tolerance`, and triggers restart below `length_min`. The strategy delegates candidate optimization to named or mixed BoTorch routes. |
+| TuRBO ARD geometry | Axis widths scale with positive dimension weights normalized to geometric mean one; `turbo_dimension_weights_from_model` reads public-space kernel lengthscales. | **Implemented**. Reduced-space lengthscales are rejected as public-space weights; bounds scale and clipping are explicit. |
+| `REMBOStrategy` | Fixed low-dimensional random embedding followed by public-space projection; `embedding/rembo.py`. | **Implemented** embedding strategy; effective-dimension assumptions and regret unverified. |
+| `HeSBOStrategy` | Sparse signed hash embedding, with public-space clipping; `embedding/hesbo.py`. | **Implemented**; collisions and clipping distortion can affect search. |
+| `ALEBOStrategy` | Linear embedding with feasible target-space polytope handling; `embedding/alebo.py`. | **Implemented**; mapping and feasible-sampling tests are contract evidence, not full optimization guarantees. |
+| `BAxUSStrategy` | Budget-aware adaptive sparse embedding and trust-region state; `embedding/baxus.py`. | **Implemented**. `BAxUSState` sets target dimension and split budget; signed sparse bins are split on restart and target observations carried into child coordinates. |
+| `BAxUSThompsonSamplingStrategy` | Thompson candidate selection over BAxUS's changing target geometry; `optim/embedding/`. | **Extended** strategy route; does not imply an independent GP posterior or new acquisition algorithm. |
+| `LatentSpaceStrategy` | Optimize `A(reconstruct(z))` in fitted latent coordinates; `latent/strategy.py`. | **Implemented/Delegated**. BoTorch optimizes latent coordinates, candidates are reconstructed and clipped to public bounds, and the original acquisition is re-evaluated. |
+
+### Coordinate and constraint invariants
+
+- TuRBO's `length` is relative to the original
+  bounds. With weights `w` of geometric mean
+  one, the local half-width in dimension `i`
+  is `0.5 * length * w[i] * (upper[i]-lower[i])`,
+  clipped to the public box.
+- TuRBO's observed best and state-decision best
+  may differ when `state_values` are supplied;
+  a robust or denoised trust-region decision is
+  not identical to the raw observation.
+- BAxUS target coordinates are transformed
+  through a signed sparse embedding into the
+  public box. Its restart can **increase target
+  dimension** rather than merely reset the
+  same low-dimensional search.
+- Latent reconstruction can distort candidates:
+  the strategy reports original-space clipping
+  distance and latent round-trip distance.
+  Clipping is **not** a guarantee of arbitrary
+  nonlinear candidate feasibility.
+- Embedding/latent strategies that lack a
+  mathematically valid mapping of supplied
+  public-coordinate candidate constraints
+  reject them via
+  `reject_unmapped_candidate_constraints`.
+  Constraint rejection is safer than silently
+  treating latent-space bounds as equivalent.
+
+**Source and assertion evidence:**
+`src/robotorchan/optim/trust_region/turbo.py`,
+`src/robotorchan/optim/embedding/{rembo,hesbo,alebo,baxus}.py`,
+`src/robotorchan/optim/latent/strategy.py`,
+`tests/optim/trust_region/test_turbo_strategy.py`,
+`tests/optim/embedding/test_baxus_strategy.py`,
+`tests/optim/embedding/test_baxus_reference_schedule.py`,
+`tests/optim/latent/test_latent_space_strategy.py`.
+Phase 9 retains independent state-transition
+identities, coordinate correctness and
+optimization-quality verification.
