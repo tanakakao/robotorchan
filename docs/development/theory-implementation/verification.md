@@ -1,4 +1,5 @@
 # Mathematical verification: Phases 7–9
+> **Navigation:** [Mapping index](README.md) · [Models](models.md) · [Acquisition](acquisition.md) · [Optimization](optimization.md) · [Canonical theory](../../theory/README.md)
 
 ## Purpose and evidence rules
 
