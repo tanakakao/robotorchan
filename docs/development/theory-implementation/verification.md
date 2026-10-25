@@ -431,3 +431,16 @@ The checks use float64 scalar observations and exact state
 invariants, with no RNG or GP fitting. They do not establish
 TuRBO regret, optimality, ARD geometry, asynchronous behavior,
 or restart-center sampling correctness. CI pending.
+
+### Phase 9 — TuRBO trust-region geometry reference
+
+`tests/optim/trust_region/test_phase9_turbo_geometry_reference.py`
+compares public-coordinate TuRBO bounds to an independent scalar
+geometric-mean normalization and clipped half-width formula.
+The fixed float64 three-dimensional case has unequal global
+coordinate widths, unequal ARD weights, and boundary clipping
+at both ends. The test also checks invariance to multiplying all
+ARD weights by seven, with 1e-12 absolute/relative tolerance.
+This verifies deterministic geometry, not learned ARD
+lengthscales, constrained candidate optimization, or search
+convergence. CI pending.
