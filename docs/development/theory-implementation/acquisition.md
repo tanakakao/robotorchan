@@ -73,3 +73,39 @@ The compatibility test uses `CandidateOptimizer.MIXED_ONE_SHOT` as a
 optimizer name; the operational mixed one-shot implementation belongs to
 `optim/one_shot/`. These targeted tests are distinct from later
 formula-level Phase 8 checks.
+
+## Phase 5 — regression active-learning acquisition mappings (source inspected)
+
+This section maps the local `q=1` regression AL family
+to the mathematical score actually computed by the
+implementation. Let `mu(x)` and `v(x)` denote the
+selected scalar output's posterior mean and variance,
+`sigma(x)=sqrt(max(v(x),0))`, and `t` the target level.
+All listed scores are **maximized**.
+
+| Registered acquisition | Mathematical score / interpretation | Concrete implementation and ownership | Tests and verification boundary |
+| --- | --- | --- | --- |
+| `PosteriorVariance` | `v(x)`; marginal uncertainty sampling (not integrated batch variance). | `acquisition/active_learning/variance.py::PosteriorVariance.forward`; **Implemented** scalar posterior extraction, **Delegated** posterior moments to the model. | `tests/acquisition/test_api_inventory.py` and `tests/acquisition/test_public_api.py`; independent variance identity remains Phase 8. |
+| `PosteriorStd` | `sigma(x)`; monotone in variance for nonnegative variance, but numerically different scale. | `variance.py::PosteriorStd.forward`; **Extended** `PosteriorVariance` with nonnegative clamp and square root. | Public API/AL contracts; independent numerical checks deferred. |
+| `Straddle` | `beta * sigma(x) - abs(mu(x)-t)`, `beta >= 0`. Level-set boundary search balances uncertainty and proximity. | `acquisition/active_learning/straddle.py::Straddle.forward`; **Implemented** local formula, **Delegated** posterior moments. | `tests/acquisition/test_level_set_learning.py`; coefficient convention must not be confused with UCB's `sqrt(beta)`. |
+| `RandomizedStraddle` | `sqrt(B) * sigma(x) - abs(mu(x)-t)`, where `B=-2 log(1-U)`, `U ~ Uniform(0,1)`; one random coefficient is cached per selection round until `resample()`. | `acquisition/active_learning/randomized_straddle.py`; **Extended** local Straddle with cached stochastic coefficient; no BoTorch-native acquisition delegation. | `tests/acquisition/test_randomized_straddle.py`; statistical distribution and reproducibility beyond named assertions require Phase 8. |
+| `BoundaryVariance` | `v(x) * exp(-0.5 * ((mu(x)-t) / max(sigma(x),eps))^2)`; local Gaussian target-proximity heuristic, **not** a named upstream acquisition. | `straddle.py::BoundaryVariance.forward`; **Implemented** local heuristic and inherits scalar-output selection, not Straddle's `beta` weighting. | `tests/acquisition/test_boundary_variance_contract.py`; mathematical optimality claims are unsupported. |
+
+**Shared domain and shape restrictions:** All five
+registry entries declare `max_q=1` and require scalar
+posterior output or an explicit `output_index`.
+Structured-output posteriors without scalarization and
+ensemble posteriors are rejected by the inspected local
+implementations. The BoTorch
+`average_over_ensemble_models` decorator does **not**
+override those explicit ensemble guards. These are
+per-candidate marginal scores, not joint q-batch
+information criteria.
+
+**Canonical theory and usage:** see
+`docs/theory/acquisition/10_level_set.md`,
+`docs/optimization/level_set_learning.md`,
+`docs/optimization/boundary-variance.md` and
+`examples/notebooks/28_regression_active_learning.ipynb`.
+The named files are source/test references, not evidence
+that every combination has been numerically verified.
