@@ -1576,3 +1576,22 @@ must be reconciled before the Phase 4 exit gate. Long-format,
 Kronecker block-design and independent model-list composition
 are distinct probabilistic structures. Source/test inspection
 is separate from Phase 7 numerical verification.
+
+## Phase 4 inspected specialized heterogeneous/hierarchical multitask models
+
+| Registry model(s) | Mathematical and input contract | Source ownership | Inspected evidence and boundaries |
+| --- | --- | --- | --- |
+| `HeterogeneousMTGP` | Different tasks can observe **different subsets of input features**. BoTorch's `MultiTaskConditionalKernel` conditions covariance on the per-task `feature_indices` mapping into `full_feature_dim`; inputs are lists `train_Xs/train_Ys`, not one common rectangular `train_X`. | `models/structured/heterogeneous.py` delegates heterogeneous conditional covariance to BoTorch, retains per-task raw tensors and exposes exact `make_mll()`. | Source-level task/subset and raw-data contract inspected. Do not treat heterogeneous task-specific input spaces as independent `ModelListGP` posteriors. |
+| `MixedHeterogeneousMTGP` | Each active feature subset receives native categorical/continuous covariance while preserving BoTorch's heterogeneous conditional task structure. `cat_dims` is in the **global design-feature** numbering; BoTorch's internally appended task index is structural. | `heterogeneous.py::_MixedMultiTaskConditionalKernel` replaces subset kernels with continuous, categorical or additive-plus-product mixed covariance; keeps original `active_dims` coordinate system. | `tests/models/structured/test_mixed_heterogeneous_mtgp.py` checks categorical and additive kernels, per-task raw tensors, exact MLL, and finite posterior shape in global feature space. |
+| `HierarchicalConditionalKernelMultiTaskGP` | Long-format multi-task GP with task covariance plus hierarchical dependency-conditioned **design** covariance. Hierarchical parent/child activation is not a categorical task label. | `models/structured/hierarchical.py` delegates the conditional kernel and task structure to BoTorch, adding raw-data retention and common exact GP contract. | Source-level constructor and upstream ownership inspected; numerical hierarchy/task interaction parity not established here. |
+| `MixedHierarchicalConditionalKernelMultiTaskGP` | Native mixed covariance in active hierarchical blocks; the task feature and hierarchical parent indices are excluded from ordinary categorical design dimensions. | `hierarchical.py` remaps `cat_dims` after task-feature removal, rejects task/parent overlaps, replaces only the design factor `self.covar_module.kernels[0]` and preserves task covariance. | `tests/models/structured/test_mixed_contextual_hierarchical.py::test_mixed_hierarchical_multitask_remaps_cat_dims_around_task_feature` checks task/category mapping, native categorical kernel and exact MLL. |
+
+**Registry reconciliation:** Together with the five core
+multi-task / model-list entries and the contextual `LCEMGP`
+and `MixedLCEMGP` pair already inspected, these four
+specialized entries require a registry-family classification
+cross-check before claiming the full
+`multitask_multioutput` inventory closed. Distinguish
+heterogeneous feature subsets, hierarchical conditional
+activation and independent model-list composition. The named
+tests were inspected, not executed here.
