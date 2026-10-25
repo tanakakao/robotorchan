@@ -346,3 +346,15 @@ candidates, no fitting, and 1e-8 absolute/relative tolerance.
 This verifies analytic acquisition arithmetic and delegation,
 not GP conditioning, noisy/MC acquisition estimators, constraints,
 or numerical stability at extreme Gaussian tails. CI pending.
+
+### Phase 8 — Monte Carlo qSimpleRegret sample reference
+
+`tests/acquisition/test_phase8_mc_simple_regret_reference.py`
+compares native `qSimpleRegret` to an explicit Monte Carlo reference:
+take the maximum objective value across each q=2 candidate batch,
+then average over 64 posterior samples. The comparison reuses the
+same seeded Sobol QMC sampler and its base samples so it checks
+aggregation rather than independent sampling variability. Two
+batches, float64, and 1e-8 tolerance are covered. This does not
+verify posterior calibration, MC convergence, noisy improvement,
+or other MC acquisitions. CI pending.
