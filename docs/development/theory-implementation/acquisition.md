@@ -400,3 +400,63 @@ entry, or optimizer route.
 `docs/optimization/information_theoretic.md`.
 Numerical information identities and fantasy
 optimization behavior remain Phase 8.
+
+## Phase 5 — coverage reconciliation and exit audit
+
+This audit reconciles the source-inspected method
+tables above against the canonical
+`ACQUISITION_REGISTRY` and public
+`acquisition.__all__` at the current main
+baseline. It is a **static coverage check**,
+not a claim that all acquisitions were run.
+
+| Registry/API group | Count | Mapping outcome |
+| --- | ---: | --- |
+| Regression AL including Gaussian EPIG | 6 | All six local classes exported and mapped to source, formula target, limitations and named tests. |
+| Classification AL | 5 | All five local classes exported and mapped; label entropy, class-probability and latent targets remain distinct. |
+| Native BoTorch registry entries | 10 | All ten mapped as **Delegated** metadata. Do not treat them as local acquisition exports. |
+| Additional native methods reached directly | Outside registry | qEI/qNEI, qEHVI/qNEHVI, multi-step lookahead, MES/GIBBON and log-domain variants have separately documented source routes; no invented registry entries. |
+| Local composition helpers | Not acquisition registry classes | qEI/qNEI, qEHVI/qNEHVI, constrained routes and scalarized qLogNParEGO mapped as **Extended** construction policies. |
+
+### Confirmed limits and carry-forward
+
+1. **Registration is not execution.** The ten
+   native registry entries describe capabilities,
+   while executable direct/benchmark/composition
+   paths must be established separately.
+2. **Not all theory families have verified routes.**
+   PES/JES and a general local constrained qNEHVI
+   composition constructor remain explicitly
+   **Unverified** in the inspected integration
+   surfaces; do not silently classify them as
+   implemented. Unsupported and unverified are
+   different findings.
+3. **No independent numerical certification.**
+   Acquisition identities, MC variance, hypervolume
+   accuracy, information gain, PoF calibration and
+   optimizer coupling are reserved for Phase 8.
+4. **No additional algorithm implementation.**
+   The Phase 5 deliverable is theory-to-source
+   traceability, not a request for wrappers or
+   expanded method support.
+5. **Evidence boundary.** Registry:
+   `src/robotorchan/acquisition/registry.py`;
+   exports: `src/robotorchan/acquisition/__init__.py`;
+   repeatable inventory:
+   `scripts/audit_acquisition_api.py`;
+   public API tests:
+   `tests/acquisition/test_api_inventory.py`,
+   `tests/acquisition/test_public_api.py`.
+   The audit script's `gaps` fields measure
+   registry/export mismatches, not the entire
+   universe of supported upstream acquisitions.
+
+**Phase 5 completion criterion:** All 21 registry
+entries (11 local AL and 10 native metadata) are
+accounted for, with explicit mapping of additional
+direct BoTorch paths and heterogeneous composition
+policies. Phase 5 can be marked complete **after
+CI and documentation-link checks succeed on this
+audit PR**. Phase 6 then covers candidate
+optimizers and search strategies; the unresolved
+mathematical claims remain in Phase 8.
