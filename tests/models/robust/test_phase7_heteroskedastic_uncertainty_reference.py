@@ -15,7 +15,7 @@ class _FixedLogNoiseModel:
 
     def posterior(self, X: torch.Tensor) -> _FixedLogNoisePosterior:
         return _FixedLogNoisePosterior(
-            torch.log(torch.where(X[..., :1] < 0.5, 0.01, 0.09))
+            torch.log(\n                torch.where(\n                    X[..., :1] < 0.5,\n                    torch.full_like(X[..., :1], 0.01),\n                    torch.full_like(X[..., :1], 0.09),\n                )\n            )
         )
 
 
