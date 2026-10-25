@@ -240,3 +240,53 @@ formula.
 This is source-level mapping; Phase 9 retains
 independent numerical correctness, feasibility,
 and optimizer quality checks.
+
+## Phase 6 — specialist optimizers and candidate-constraint semantics
+
+These routes are **not** additional
+`optimizer=` values in the eleven-name scalar
+dispatcher.
+
+| Route | Algorithm and concrete source | Verified scope and limitation |
+| --- | --- | --- |
+| Native mixed BoTorch | `backends/botorch.py::optimize_acqf_mixed_botorch` delegates to upstream `botorch.optim.optimize_acqf_mixed` with `fixed_features_list`. **Delegated/Extended**. | Enumerated mixed fixed-feature configurations; inter-point nonlinear constraints are rejected explicitly. Nonlinear constraints require feasible initial conditions or an initializer. |
+| Mixed one-shot | `one_shot/mixed.py::optimize_mixed_one_shot_acqf` enumerates **row-specific categorical assignments across the augmented q-batch**, flattens each continuous subproblem and delegates to native BoTorch `optimize_acqf`. **Implemented/Delegated**. | Only public `q=1`; assignment count is `(product of category counts) ** augmented_q`, guarded by `max_assignments`. Calls `extract_candidates` after optimization. |
+| Vector-valued NSGA-II | `backends/nsga2.py::optimize_vector_nsga2` performs nondominated sorting, crowding distance, binary tournament, arithmetic crossover, mutation and elitist environmental selection. **Implemented**. | Requires `[population,m]` objective values with `m>=2`, maximization, and returns rank-zero population. Not a scalar qEHVI/qNEHVI optimizer. |
+
+### Constraint handling is part of the algorithm
+
+The contracts in `optim/capabilities.py`
+distinguish the following enforcement methods.
+A capability flag is **not** proof of feasible
+output for arbitrary inputs.
+
+| Route | Linear / nonlinear candidate constraints | Meaning |
+| --- | --- | --- |
+| Continuous BoTorch | `NATIVE`, including inter-point nonlinear | Forwarded to BoTorch with input validation and nonlinear initial-condition requirements. |
+| Mixed BoTorch | `NATIVE` for supported intrapoint nonlinear; inter-point nonlinear unsupported | Cannot silently convert a q-coupled nonlinear constraint into independent per-point constraints. |
+| PyTorch Adam/AdamW/SGD | `UNSUPPORTED` | `optimize_acqf_torch` explicitly rejects nonempty candidate constraints. |
+| Random / Sobol | `UNSUPPORTED` | Sampling and argmax alone do not implement arbitrary candidate constraint rejection. |
+| DE, GA, Mixed GA | `FEASIBILITY_FIRST` | Constraint violations affect selection/ranking; this is not native hard-constraint enforcement. |
+| CMA-ES, PSO, Hybrid | `PENALTY` | Penalized objective trades acquisition value against constraint violation; feasibility is not guaranteed. |
+| NSGA-II | No candidate-constraint interface in the inspected vector API | Its nondominated sorting is over supplied objectives, not an implicit constraint-domination policy. |
+
+### Tests and mathematical verification boundary
+
+- `tests/optim/one_shot/test_mixed.py`
+  exercises category assignments and augmented
+  one-shot extraction; it does not establish
+  general qKG optimality.
+- `tests/optim/backends/test_nsga2_backend.py`
+  checks a nondominated tradeoff set and
+  reproducibility; it does not establish
+  Pareto-front convergence.
+- `tests/optim/backends/test_botorch_optimizer_backend.py`
+  and
+  `tests/optim/integration/test_nonlinear_candidate_constraints_e2e.py`
+  provide forwarding and selected actual-feasibility
+  evidence. They do not prove arbitrary constrained
+  solver convergence.
+- `tests/optim/test_optimizer_capabilities.py`
+  checks declared capability contracts. Actual
+  constraint satisfaction and algorithmic
+  convergence remain Phase 9.
