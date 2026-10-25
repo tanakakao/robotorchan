@@ -1729,3 +1729,53 @@ registry-wide evidence audit, generated coverage check
 and CI verification are still required before declaring
 Phase 4 complete. No tests were executed as part of
 this documentation-only reconciliation.
+
+## Phase 4 inventory-count closure audit (static, documentation-only)
+
+A second pass over the **canonical inventory table above**
+reconciled the eleven guide-family counts without treating
+cross-family implementation reuse as additional registrations:
+
+| Registry guide | Count |
+| --- | ---: |
+| `expressive` | 16 |
+| `hierarchical_contextual` | 6 |
+| `high_dimensional` | 12 |
+| `multitask_multioutput` | 10 |
+| `non_gp` | 5 |
+| `preference` | 1 |
+| `reduced` | 52 |
+| `robust_noise` | 27 |
+| `standard` | 6 |
+| `structured_output` | 4 |
+| `uncertain_input` | 3 |
+| **Total** | **142** |
+
+All 142 backtick-delimited model names were present in the
+inventory table with per-guide name counts equal to the
+declared values. The separate binary classification
+inventory contains **29 registry IDs** and must not be
+added to regression model names as though both registries
+had identical class-name semantics.
+
+**Evidence status / closure gates:**
+
+1. **Documented inventory:** 142 regression names and
+   29 binary IDs enumerated; family totals reconciled.
+2. **Source inspection:** family-level mathematical and
+   delegation boundaries recorded in preceding sections;
+   this is not equivalent to executing all models.
+3. **Pending executable audit:** run
+   `python scripts/audit_model_api.py --include-evidence-summary --check-documentation-paths`
+   and
+   `python scripts/generate_model_coverage.py --check`
+   on the merged revision. Review unresolved warnings,
+   test references and upstream-call coverage rather than
+   inferring passing status from this static table.
+4. **Pending PR checks:** CI and Documentation links must
+   pass for the reconciliation PR before Phase 4 closure.
+5. **Deferred to Phase 7:** numerical equivalence,
+   predictive calibration and stochastic posterior checks.
+
+This is a **static count reconciliation**, not a declaration
+that the complete Phase 4 verification gates have passed.
