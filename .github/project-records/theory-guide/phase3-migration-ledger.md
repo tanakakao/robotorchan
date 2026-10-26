@@ -169,17 +169,17 @@
 | `optimization.md` | 275–295 | Tests and mathematical verification boundary | `guide/optimization/01_foundations.md` | `appendix/optimizer-dispatch-and-constraints.md` | **body-reviewed routing / not migrated** |
 | `optimization.md` | 296–314 | Phase 6 — stateful and coordinate-changing search strategies | `guide/optimization/09_high_dimensional.md` | `appendix/optimizer-dispatch-and-constraints.md` | **body-reviewed routing / not migrated** |
 | `optimization.md` | 315–355 | Coordinate and constraint invariants | `guide/optimization/09_high_dimensional.md` | `appendix/optimizer-dispatch-and-constraints.md` | **body-reviewed routing / not migrated** |
-| `verification.md` | 1–3 | Mathematical verification: Phases 7–9 | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 4–26 | Purpose and evidence rules | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 27–39 | Phase 7 — model verification matrix | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 40–64 | Initial Phase 7 execution gate | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 65–79 | Kronecker block-design covariance reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 80–93 | Data-fidelity downsampling kernel reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 94–107 | PCA reduced-space projection reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 108–121 | Replicate observation-noise statistical reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 122–134 | Binary GP probit predictive reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 135–148 | Non-GP Gaussian posterior reparameterization reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 149–183 | Phase 7 execution reconciliation and remaining scope | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
+| `verification.md` | 1–3 | Mathematical verification: Phases 7–9 | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 4–26 | Purpose and evidence rules | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 27–39 | Phase 7 — model verification matrix | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 40–64 | Initial Phase 7 execution gate | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 65–79 | Kronecker block-design covariance reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 80–93 | Data-fidelity downsampling kernel reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 94–107 | PCA reduced-space projection reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 108–121 | Replicate observation-noise statistical reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 122–134 | Binary GP probit predictive reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 135–148 | Non-GP Gaussian posterior reparameterization reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 149–183 | Phase 7 execution reconciliation and remaining scope | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
 | `verification.md` | 184–197 | Reduced GP public/latent posterior coordinate reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
 | `verification.md` | 198–211 | Heteroskedastic latent-versus-observation noise reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
 | `verification.md` | 212–222 | Non-GP Random Forest estimator-level reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
