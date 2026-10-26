@@ -250,3 +250,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 Phase1見出し台帳で`audit/`が仮primaryの25区間のうち、`acquisition.md:288–308`（outcome-constrained qEI/qNEI/qEHVIの合成）、`:346–362`（qKG/MF-KG/multi-step/MES/GIBBONとPES/JESの区分）、`optimization.md:182–205`（11名optimizer dispatch）、`:246–257`（mixed native / one-shot / NSGA-II）の原文4区間を直接確認した。いずれも実装契約・数学的意味・非対応条件を含むため、見出し名のPhase番号を理由にauditのみへ移してはならない。[Phase1 ledger](phase1-heading-preservation-ledger.md)へ区間ごとの技術的受け皿とレビュー限界を追記した。
 
 重要な調整として、[Phase3本文レビュー済みrouting](phase3-migration-ledger.md)は174区間全体の再割当を既に記録している。Phase1の`audit/`25件は**過去の仮割当件数**であり、現在の確定routing件数ではない。Phase3も`body-reviewed routing / not migrated`なので、本文移行済みと誤認しない。旧台帳174見出しの`verified`は引き続き0件。元Mapping5ファイルは保全する。
+
+## Phase 18：旧Acquisition 288–308の制約付きacquisition本文改善（部分移行）
+
+Phase 3台帳が旧 `acquisition.md:288–308` を `guide/acquisition/01_foundations.md` と補助索引へ割り当てたことを確認した上で、技術内容の適切な主受け皿である [`guide/acquisition/08_constraints.md`](../../../docs/development/theory-implementation/guide/acquisition/08_constraints.md) に本文を直接追記した。旧区間と直後のInterpretation、`src/robotorchan/acquisition/composition.py`、`classification_constraints.py`、`tests/acquisition/test_composition.py` および理論正本 `docs/theory/acquisition/08_constraints.md` を照合し、6種類のconstructor、native BoTorchへの委譲、同一posterior sample-wise制約と分類PoF積の相違、qEI利用例、qNEI baseline、qEHVI ref_point/eta、X_pending/fantasizeのnegative contractを文章・式・表に整理した。
+
+**判定：partial / review required。** この変更はPhase 3 routingの受け皿を内容に即して拡張したもので、元のPhase 3行を書き換えたり `verified` に昇格させたりしない。旧区間288–308および309行以降の全文・すべてのテストassertion・参照リンクの一対一semantic migration検収は未完了。既存テストの静的ソース確認のみで、新規独立数値実験やCI成功を主張しない。旧Mapping5ファイル・174見出しは維持する。
