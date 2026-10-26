@@ -298,3 +298,9 @@ Phase 3台帳の旧 `optimization.md:246–257` は主受け皿 `guide/optimizat
 guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。`models/standard/multitask.py`のlong-format MultiTaskGPとblock-design KroneckerMultiTaskGP、`standard/model_list.py`の独立子GPとSumMarginalLogLikelihood、`models/heterogeneous.py`のglobal output ownership、entry_posterior/entry_predict_probaを直接照合し、出力軸・相関・latentとclass probabilityを混同しない説明を追加した。
 
 **判定：partial / review required。** 旧Mapping全区間の一対一semantic migrationの判定は未実施、旧5 Mapping保全。174見出しのverified=0を維持。独立numerical cross-task covariance検証、確率校正、end-to-end最適化実行は行っていない。
+
+## Phase 18：Multi-objective qEHVI/qNEHVIとHeterogeneous分類制約の接続
+
+`guide/acquisition/07_multiobjective.md`に、BoTorch-native qEHVI/qNEHVIの違い、HeterogeneousModel内の共有回帰posterior所有権、ModelListGPとの境界、continuous residualとclassification PoFの組合せ、directed ref_point/partitioningとX_baselineの拒否契約を追記した。根拠は`src/robotorchan/acquisition/composition.py`、`src/robotorchan/models/heterogeneous.py`。`make_constrained_qehvi_acquisition`は存在するが同名のconstrained qNEHVI builderは確認できず、未実装のローカルAPIを推定していない。
+
+**判定：partial / review required。** 数値hypervolume、joint feasibility、PoF calibrationや最適化性能の新規実行はなし。旧Mappingの保全と174見出しverified=0を維持する。
