@@ -435,3 +435,27 @@
 - リンク検証スクリプトとCIの実行。
 
 **現時点ではPhase 1を完了と判定しない。**
+
+## verification.md: 数値的検証条件の意味レベル移行レビュー（第1弾）
+
+下表は`verification.md`の本文を実際に読み、理論との対応、テストが示す性質、**検証できない範囲**を明示したもの。単なるパス抽出ではない。元の本文は移行完了まで保持する。各テストの**現時点の実行結果は未確認**（原文に記載された過去のCI成功とは区別）。
+
+| 元行 | 対応する技術ガイド | テスト・数値条件 | 確認する性質 | 保全すべき限界 |
+| --- | --- | --- | --- | --- |
+| 65–79 | multitask / Kronecker GP | `test_phase7_kronecker_covariance_reference.py`; float64, 3入力×2タスク, 1e-10 | `K[i*m+a,j*m+b]=K_input[i,j]*K_task[a,b]`、対称性、半正定値性、タスク置換 | 潜在事前共分散のみ。事後条件付け・学習済みパラメータ・観測雑音は対象外 |
+| 80–93 | multi-fidelity GP | `test_phase7_multifidelity_kernel_reference.py`; float64, 1e-10 | データ忠実度kernelの高忠実度境界、残差rank-one、対称性・半正定値性 | 完全な多忠実度事後・linear-truncated kernel・学習は対象外 |
+| 292–306 | regression AL acquisition | `test_phase8_regression_al_formula_reference.py`; CPU float64, q=1, 1e-12 | variance/std/straddle/boundary varianceの事後モーメント演算 | GP事後計算・最適化・他獲得関数は対象外 |
+| 307–319 | classification AL acquisition | `test_phase8_classification_al_reference.py`; binary, q=1, 1e-10 | entropy/margin/latent straddle、ラベル確率とlatent不確実性の区別 | 較正・変分学習・BALDのMC精度・多クラスは対象外 |
+| 320–334 | classification AL / information gain | `test_phase8_bald_probability_variance_reference.py`; 64 samples, CPU float64, 1e-10 | BALDのエントロピー差とProbabilityVarianceの母分散集約 | MC収束・較正・GP学習の忠実性は対象外 |
+| 335–350 | analytic BO acquisition | `test_phase8_analytic_bo_gaussian_reference.py`; q=1, float64, 1e-8 | logEI/logPI/UCBの正規分布閉形式との整合 | GP条件付け・noisy/MC・制約・極端な裾の数値安定性は対象外 |
+| 408–421 | optimizer sampling/dispatch | `test_phase9_sampling_optimizer_reference.py`; q=2, 128候補, float64 | random/sobol候補集合内のargmaxとdispatch | 連続空間の大域収束・制約・mixed対応は対象外 |
+| 422–435 | TuRBO state | `test_phase9_turbo_state_reference.py`; deterministic float64 | 成功時拡張、失敗時縮小、restart、観測とdenoised値の区別 | regret・ARD幾何・非同期・restart点選択は対象外 |
+| 436–448 | TuRBO geometry | `test_phase9_turbo_geometry_reference.py`; 3D, float64, 1e-12 | 幾何平均ARD正規化、境界clipping、ARD共通倍率不変性 | ARD学習・制約付き最適化・収束は対象外 |
+| 449–464 | candidate constraints / optimizer | `test_phase9_constraint_violation_reference.py`; q=2, float64, 1e-12 | 線形/非線形、点内/点間の残差とDeb-style feasibility-first順序 | optimizerによる実際の制約充足・outcome constraints・収束は対象外 |
+| 465–475 | PyTorch optimizer support matrix | `test_phase9_torch_constraint_contract.py`; Adam/AdamW/SGD | 未対応candidate constraintsの明示的拒否（negative contract） | 制約付き最適化ができることは証明しない |
+
+### 移行上の判定
+
+- 数式・条件・許容誤差・検証限界は各技術章の「検証範囲」に**必ず残す**。詳細なテストケース表は`verification/`またはAppendixに配置する。
+- Phase番号やPR完了報告は監査履歴に置き、学習本文には入れない。ただしテストファイル名自体に含まれる`phase7`等は実在の識別子なので改名しない。
+- `verification.md`の他の区間はまだ意味レベルレビューが未完了。ここにある11区間だけをレビュー済みとする。
