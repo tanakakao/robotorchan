@@ -537,3 +537,30 @@
 - `Implemented/Delegated/Extended/Approximated/Unsupported/Unverified`は構成要素ごとに付す。名称から数学的アルゴリズムを推測しない（特にKronecker分類、SAAS分類、VAEの事後）。
 - 分類全29 ID・回帰全142 entryの歴史的registry表と根拠テストはAppendixに保存し、学習本文に巨大な監査表をそのまま埋め込まない。
 - 元の`models.md`は引き続き保持する。**Phase 1の全内容レビューは未完了**。
+
+## acquisition.md / optimization.md: 技術意味と章別移行の監査（第1弾）
+
+両文書の章立てを確認し、acquisition 79–465行、optimization 20–85・182–355行の技術本文を読み、次の**意味単位**で移行する。歴史的なPhase/PR/完了ゲートは学習本文から分離し、Appendix/auditに保存する。
+
+| 原文 | 技術ガイド候補 | 保存するアルゴリズム・APIの区別 | 検証限界 |
+| --- | --- | --- | --- |
+| acquisition 79–114 | regression AL / level set | Variance、Std、Straddle、RandomizedStraddle、BoundaryVarianceは`q=1`の**周辺スコア**。Straddleの`beta`はUCBの`sqrt(beta)`と同一視しない | joint q-batch情報量・最適性は未証明 |
+| acquisition 115–143 | classification AL | Entropyはlabel、ProbabilityVarianceはclass probability、LatentStraddleはlatent、BALDは相互情報量。全5種`q=1` | 較正・MC精度は未証明 |
+| acquisition 144–178 | Gaussian regression EPIG | 有限target集合の2点同時Gaussian posteriorから`-0.5 log(1-rho²)`を平均。classification BALDと別物 | 非Gaussian/ensemble非対応、数値同値性未検証 |
+| acquisition 179–232 | single-objective BO | qEI/qNEI等の**獲得関数本体はBoTorchにDelegated**。semantic directionとcomposition helperはlocal Extended。qLogEI/LogNEIはbenchmark経路であり一般のcomposition helperとは限らない | registry登録≠実行経路、MC数値安定性未検証 |
+| acquisition 233–287 | multi-objective BO | qEHVI/qNEHVIはnative HV、local helperは有向objective/ref point/baselineを橋渡し。qLogNParEGO helperは重み付きChebyshev+native qLogNEIの**構築policy** | HV数値精度、log-domain比較未検証。log EHVI helperの存在を推測しない |
+| acquisition 288–345 | outcome-constrained BO | continuous residualはsample-wise `ConstrainedMCObjective`、分類PoFは別posteriorの**marginal factor**。candidate-space constraintsとは別 | `q_reduction=product`は因子化仮定。joint posterior/独立性の証明ではない。一般constrained qNEHVI constructorは確認されていない |
+| acquisition 346–405 | information / lookahead | qKG・MF-KG・multi-step、MES/GIBBON、Gaussian EPIG、BALDは**情報targetが異なる**。one-shotはaugmented q/fantasy initial conditionsを必要とする | registry capabilityだけではcost-aware KG最適化やPES/JES実行を保証しない |
+| acquisition 406–465 | Appendix: acquisition coverage | 監査時点の11 local AL +10 native metadataと、直接BoTorch利用・composition helperを区別 | 登録・source inspection・独立数値検証の証拠水準を混同しない |
+| optimization 20–39,182–245 | optimizer dispatch | `optimizer=`は**11名**（botorch/torch×3/random/sobol/de/cmaes/ga/pso/hybrid）。mixed BoTorch、mixed one-shot、NSGA-II、TuRBOは別API | backend選択は獲得関数の数式を変更しない。収束未証明 |
+| optimization 40–62,246–295 | candidate constraints | candidate`g(X)>=0`とoutcome制約を分離。`NATIVE`/`FEASIBILITY_FIRST`/`PENALTY`/`UNSUPPORTED`は別保証 | penalty≠hard feasibility。torch・samplingは制約非対応。mixedのinter-point nonlinearは非対応 |
+| optimization 296–355 | strategies / high-dimensional | TuRBOはtrust region**strategy**、REMBO/HeSBO/ALEBO/BAxUSは座標変換、LatentSpaceは再構成後に元空間acquisitionを再評価 | clipping≠非線形制約充足。ARDはpublic座標、BAxUS restartでtarget次元増加、latent制約写像不能なら拒否 |
+
+### 技術ガイドの必須境界
+
+1. **Acquisition formula / composition policy / optimizer backend / search strategyを4層に分離**し、名前やregistry metadataだけで実装済みとしない。
+2. `q`とsample/target/fantasyの次元、最大化方向、`best_f`対`X_baseline`、ref pointの有向座標、continuous outcome residualとclassifier PoFを明記する。
+3. Optimizerの`constraint_handling`はAPI互換性・選択/罰則方式を表すものであり、任意入力での可行解保証とは限らない。
+4. 原文の監査時点の件数・完了判定はAppendix/auditへ保全する。上記の実装範囲は**既存Mapping記述に基づく**もので、現ブランチでの全backend動作確認ではない。
+
+**未完了:** acquisition 1–78、optimization 1–19・86–181の監査本文・履歴の仕分けと、全参照先の検証・CIは別途必要。Phase 1完了判定は保留する。
