@@ -154,3 +154,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 `tests/models/classification/test_phase7_binary_probit_reference.py`および`tests/models/non_gp/test_phase7_gaussian_posterior_reference.py`を直接確認し、[Models verification guide](../../../docs/development/theory-implementation/guide/verification/models.md)へ具体的な数式、入力shape、数値tolとテスト証拠の限界を追記した。前者は`E[Phi(f)] = Phi(mu/sqrt(1+variance))`、3候補の2クラス確率・正規化（1e-10）を検査。後者は固定Gaussian posteriorのbase-sample affine reparameterization（shape `[2,2,2,1]`、1e-12）とmean gradient・zero varianceを検査する。
 
 **判定：partial / review required。** Classifierの学習・較正や外部estimatorの予測精度を証明したものではなく、本作業で独立数値テストの再実行は行っていない。旧Mappingおよび174見出し台帳は引き続き保全する。
+
+## Phase 18 Verification：Reduced/Mixed PCAとForestのassertion照合
+
+`tests/models/high_dimensional/reduced/test_phase7_posterior_coordinate_reference.py`、`test_phase7_mixed_reduced_categorical_reference.py`および`tests/models/non_gp/test_phase7_forest_estimator_reference.py`のテスト本文を直接確認し、[Models verification guide](../../../docs/development/theory-implementation/guide/verification/models.md)に入力shape・数値tol・negative contractを追記した。PCAGPは固定reducerの元空間/縮約空間posterior平均・分散一致（1e-10）、MixedPCAGPは`reduced_cat_dims == [2]`とカテゴリID保持・posterior同値（1e-10）、RandomForestSurrogateは7 treeの各予測とmean/不偏varianceの一致（1e-12）および`observation_noise=True`拒否を照合した。
+
+**判定：partial / review required。** ここで得られたのはテストのassertionと数式の対応であり、今回の独立再実行や全モデル族の性能・uncertainty calibrationを示すものではない。旧Mappingの174見出し全件検収は未完了。
