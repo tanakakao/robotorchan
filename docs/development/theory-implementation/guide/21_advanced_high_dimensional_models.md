@@ -44,4 +44,4 @@ print(type(model).__name__)
 
 監査では、モデルの選択理由（axis-aligned sparse、additive、linear subspace、learned representationなど）、posterior type、fit方式、transform座標系、optimizerとの接続を記録する。特定のtestが通過しても別のsurrogate familyやhigh-dimensional search全体を保証しない。
 
-[既存Mapping](../models.md)・[Verification](../verification.md)は履歴を保持する。利用者向け：[High-dimensional models](../../../models/high_dimensional.md)、[MAP-SAAS Notebook](../../../../examples/notebooks/09_map_saas_and_additive_gp.ipynb)、[High-dimensional search](../../../optimization/high_dimensional_search.md)。関連：[高次元GP](08_high_dimensional_gp.md)、[低次元表現](18_dimensionality_reduction_gp.md)、[探索strategyの理論](../../../theory/20_high_dimensional_search.md)。
+[既存Mapping](../models.md)・[Verification](../verification.md)は履歴を保持する。利用者向け：[High-dimensional models](../../../models/high_dimensional.md)、[MAP-SAAS Notebook](../../../../examples/notebooks/09_map_saas_and_additive_gp.ipynb)、[High-dimensional search](../../../optimization/high_dimensional_search.md)。関連：[高次元GP](08_high_dimensional_gp.md)、[低次元表現の理論](../../../theory/18_dimensionality_reduction_gp.md)、[探索strategyの理論](../../../theory/20_high_dimensional_search.md)。
