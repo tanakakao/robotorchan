@@ -190,3 +190,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 `tests/acquisition/test_phase8_regression_al_formula_reference.py`、`tests/acquisition/test_phase8_classification_al_reference.py`、`tests/acquisition/test_phase8_analytic_bo_gaussian_reference.py`のテスト本文を読み、[Acquisition verification guide](../../../docs/development/theory-implementation/guide/verification/acquisition.md)へ回帰AL 4式（1e-12）、分類AL 3式（1e-10）、Gaussian log-EI/log-PI/UCB（1e-8）の入力条件と数式および限界を追記した。[174見出し台帳](phase1-heading-preservation-ledger.md)に旧`verification.md:292–306`、`:307–319`、`:335–350`を部分照合として対応付けた。
 
 **判定：partial / review required。** 固定posteriorを入力としたacquisition算術のテストassertion静的確認であり、GP posteriorの独立検証、分類較正、全獲得関数の数値正当性は主張しない。今回のテスト独立再実行と旧Mappingの174見出し完全検収は未実施。
+
+## Phase 18：BALD/ProbabilityVarianceとPhase 8 exit境界の照合
+
+`tests/acquisition/test_phase8_bald_probability_variance_reference.py`のtest本文と旧`verification.md`のPhase 8 exit reconciliationを直接確認した。[Acquisition verification guide](../../../docs/development/theory-implementation/guide/verification/acquisition.md)に64固定draw・2候補・2クラス（`[64,2,1,2]`）でのProbabilityVarianceの母分散型集約とBALDのentropy差（atol/rtol=1e-10）を追記し、モデルsampling分布とMC収束は検証していないことを明示した。Phase8のexit recommendationは代表的な6つのreferenceのproperty範囲のみを対象とし、情報獲得・hypervolume・制約付き等の全獲得関数を保証しない。[移行台帳](phase1-heading-preservation-ledger.md)には固定`verification.md:320–334`および`:376–407`の部分照合を追加した。
+
+**判定：partial / review required。** 新規の独立テスト実行や174見出しの完全移行は未達であり、旧Mappingを保全する。
