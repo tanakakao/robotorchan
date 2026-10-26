@@ -202,3 +202,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 `tests/models/robust/test_phase7_replicate_noise_reference.py`の本文を確認し、[Models verification guide](../../../docs/development/theory-implementation/guide/verification/models.md)へ不等replicate数（入力0.0に3件、1.0に4件）の標本平均・不偏標本分散・平均の分散（`s²/n`）と、`noise_floor=1e-12`、テストの`assert_close`がTorch既定tolを使うことを記録した。さらに旧`verification.md`のPhase7 final exit、Phase8 representative exit recommendation、Phase9 representative exitを区別し、[固定174見出し台帳](phase1-heading-preservation-ledger.md)の対象区間108–121、274–291、376–407、476–510へ部分照合を追記した。
 
 **判定：partial / review required。** 旧Phase7〜9の限定的な数理property検証の完了と、現在のPhase18によるMapping全文の意味論的な移行完了は別。今回独立テストを再実行した証拠はなく、全174見出しの移行・検収は引き続き未達。旧5 Mappingファイルと元ステータスを保全する。
+
+## Phase 18：Verification冒頭のevidence rulesとmodel matrixの意味論照合
+
+旧`docs/development/theory-implementation/verification.md`冒頭1–64行（Phase1固定行番号）のPurpose、Phase7–9 ownership表、8モデルfamily検証行列、初期Phase7 execution gateを読んで、[日本語Verification入口](../../../docs/development/theory-implementation/guide/verification/README.md)へ検証証拠・入力条件・実測値記録の要件、過去の計画と後続exit判定の区別を追記した。既に直接確認済みのreplicate-noise testについて、索引内の『本文未照合』という古い説明も修正した。[174見出し台帳](phase1-heading-preservation-ledger.md)へ旧1–3、4–26、27–39、40–64行の部分照合を追加した。
+
+**判定：partial / review required。** Exact GP条件付きposteriorとcategorical relabeling等、旧初期検証行列に明記された全propertyの独立数値検証を完了したとは宣言しない。本文・リンク・実測値の全件semantic migrationにも未達であり、旧Mappingの原文と174見出しのstatusを保全する。
