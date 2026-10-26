@@ -712,3 +712,45 @@
 | `verification.md:27–39` | `guide/verification/models.md` | `test_phase7_mixed_categorical_reference.py`：カテゴリID 0→17、1→-4、2→9、kernel共分散 `[4,4]` の置換不変性（1e-10） | 部分照合・review required |
 
 両テストとも存在と具体的なvalue-level assertionを直接確認できたが、旧行列の8 familyと周辺本文の完全移行や、モデル族全体の学習・posterior保証を意味しない。
+
+## Phase 18：Verification 31見出しの全件棚卸し（見出しレベル、非最終判定）
+
+この31行は本台帳の固定スナップショットから抽出した**全見出し**である。原文を削除せず、存在・受け皿・個別assertionの確認段階を記録する。表の「部分照合」は本文・脚注・表・PR/CI・リンクをすべて照合してverifiedになったという意味ではない。旧174行の元ステータスは変更しない。
+
+| No. | 旧行範囲 | 原見出し | 主な受け皿 | 現時点の照合証拠 | 最終検収に残る確認 | 判定 |
+| ---: | --- | --- | --- | --- | --- | --- |
+| 1 | `1–3` | Mathematical verification: Phases 7–9 | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 2 | `4–26` | Purpose and evidence rules | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 3 | `27–39` | Phase 7 — model verification matrix | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 4 | `40–64` | Initial Phase 7 execution gate | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 5 | `65–79` | Kronecker block-design covariance reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 6 | `80–93` | Data-fidelity downsampling kernel reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 7 | `94–107` | PCA reduced-space projection reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 8 | `108–121` | Replicate observation-noise statistical reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 9 | `122–134` | Binary GP probit predictive reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 10 | `135–148` | Non-GP Gaussian posterior reparameterization reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 11 | `149–183` | Phase 7 execution reconciliation and remaining scope | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 12 | `184–197` | Reduced GP public/latent posterior coordinate reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 13 | `198–211` | Heteroskedastic latent-versus-observation noise reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 14 | `212–222` | Non-GP Random Forest estimator-level reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 15 | `223–244` | Phase 7 exit audit (property-specific) | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 16 | `245–256` | Mixed reduced GP categorical-coordinate reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 17 | `257–273` | Heteroskedastic observation-variance composition boundary (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 18 | `274–291` | Phase 7 final exit reconciliation | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 19 | `292–306` | Phase 8 — regression active-learning formula reference | `guide/verification/acquisition.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 20 | `307–319` | Phase 8 — classification active-learning arithmetic reference | `guide/verification/acquisition.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 21 | `320–334` | Phase 8 — BALD and probability-variance sample-moment reference | `guide/verification/acquisition.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 22 | `335–350` | Phase 8 — native analytic BO Gaussian reference | `guide/verification/acquisition.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 23 | `351–362` | Phase 8 — Monte Carlo qSimpleRegret sample reference | `guide/verification/acquisition.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 24 | `363–375` | Phase 8 — Monte Carlo qUCB sample reference | `guide/verification/acquisition.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 25 | `376–407` | Phase 8 — verification reconciliation (representative scope) | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 26 | `408–421` | Phase 9 — sampling optimizer reference (initial property) | `guide/verification/optimization.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 27 | `422–435` | Phase 9 — TuRBO state-transition reference | `guide/verification/optimization.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 28 | `436–448` | Phase 9 — TuRBO trust-region geometry reference | `guide/verification/optimization.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 29 | `449–464` | Phase 9 — candidate constraint residual and feasibility ordering reference | `guide/verification/optimization.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 30 | `465–475` | Phase 9 — PyTorch optimizer candidate-constraint support boundary | `guide/verification/optimization.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 31 | `476–510` | Phase 9 — representative optimizer verification exit audit | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+
+**集計：31/31見出しの受け皿・照合種別を記録。** 内訳は**22件が対応する数値/contract test本文のassertionと部分照合、9件が方針・検証行列・履歴の主要論点と部分照合**。いずれも全文の移行を意味する`verified`は**0件**である。Phase 1固定行番号と現行ファイルの行番号は混用しない。
+
+**検収ゲート：** 各区間の全文（数学式、数値条件、表、testパス、negative contract、過去のPR/CI結果と時系列）について旧原文と移行先を双方向比較し、欠落がない証拠を追記して初めて`verified`へ変更する。資料の保全のみであれば、旧Mapping自体が正本として継続する。全174見出しについて同様の承認が得られるまで旧5ファイルは保持する。
