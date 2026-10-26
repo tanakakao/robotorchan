@@ -196,3 +196,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 `tests/acquisition/test_phase8_bald_probability_variance_reference.py`のtest本文と旧`verification.md`のPhase 8 exit reconciliationを直接確認した。[Acquisition verification guide](../../../docs/development/theory-implementation/guide/verification/acquisition.md)に64固定draw・2候補・2クラス（`[64,2,1,2]`）でのProbabilityVarianceの母分散型集約とBALDのentropy差（atol/rtol=1e-10）を追記し、モデルsampling分布とMC収束は検証していないことを明示した。Phase8のexit recommendationは代表的な6つのreferenceのproperty範囲のみを対象とし、情報獲得・hypervolume・制約付き等の全獲得関数を保証しない。[移行台帳](phase1-heading-preservation-ledger.md)には固定`verification.md:320–334`および`:376–407`の部分照合を追加した。
 
 **判定：partial / review required。** 新規の独立テスト実行や174見出しの完全移行は未達であり、旧Mappingを保全する。
+
+## Phase 18：Replicate noiseとPhase 7〜9 exit判定の照合
+
+`tests/models/robust/test_phase7_replicate_noise_reference.py`の本文を確認し、[Models verification guide](../../../docs/development/theory-implementation/guide/verification/models.md)へ不等replicate数（入力0.0に3件、1.0に4件）の標本平均・不偏標本分散・平均の分散（`s²/n`）と、`noise_floor=1e-12`、テストの`assert_close`がTorch既定tolを使うことを記録した。さらに旧`verification.md`のPhase7 final exit、Phase8 representative exit recommendation、Phase9 representative exitを区別し、[固定174見出し台帳](phase1-heading-preservation-ledger.md)の対象区間108–121、274–291、376–407、476–510へ部分照合を追記した。
+
+**判定：partial / review required。** 旧Phase7〜9の限定的な数理property検証の完了と、現在のPhase18によるMapping全文の意味論的な移行完了は別。今回独立テストを再実行した証拠はなく、全174見出しの移行・検収は引き続き未達。旧5 Mappingファイルと元ステータスを保全する。
