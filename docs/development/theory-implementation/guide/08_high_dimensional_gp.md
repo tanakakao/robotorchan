@@ -30,9 +30,7 @@ X = torch.rand(12, 5, dtype=torch.double)
 Y = (X[:, :1] - 0.3).square()
 model = SaasFullyBayesianSingleTaskGP(train_X=X, train_Y=Y)
 # 実行にはMCMCの計算時間・依存関係・seed管理が必要。
-fit_fully_bayesian_model_nuts(
-    model, warmup_steps=32, num_samples=16, thinning=1
-)
+fit_fully_bayesian_model_nuts(model, warmup_steps=32, num_samples=16, thinning=1)
 posterior = model.posterior(X[:2])
 print(posterior.mean.shape)
 ```
