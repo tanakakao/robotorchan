@@ -72,7 +72,9 @@ from robotorchan.acquisition.composition import make_continuous_constrained_qei_
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.models.standard import SingleTaskGP
 from robotorchan.semantics import (
-    ContinuousConstraint, ProblemSemantics, RegressionObjective,
+    ContinuousConstraint,
+    ProblemSemantics,
+    RegressionObjective,
 )
 
 train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
@@ -83,7 +85,10 @@ semantics = ProblemSemantics(
     constraints=(ContinuousConstraint(1, threshold=0.8),),
 )
 acq = make_continuous_constrained_qei_acquisition(
-    model, semantics, best_f=0.5, infeasible_cost=0.0,
+    model,
+    semantics,
+    best_f=0.5,
+    infeasible_cost=0.0,
 )
 value = acq(torch.tensor([[0.25]], dtype=torch.double))
 # 既存契約テストではshape [1]を確認する。
