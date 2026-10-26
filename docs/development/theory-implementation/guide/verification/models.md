@@ -69,3 +69,27 @@ Var[y(x) | D] = Var[f(x) | D] + v(x)
 を固定2点の候補で数値検査する。ここでは**手動合成した分散**を比較するだけで、`posterior(X, observation_noise=True)`が位置依存雑音を自動的に反映することをテストしていない。雑音GP自体の学習、雑音較正、未知地点での不確実性の精度も検証範囲外である。
 
 この2件は旧[Verification Mapping](../../verification.md)に記載された性質のうち、実際のテスト本文を再照合した範囲だけを説明している。
+
+
+## 実装assertionの照合：Binary probit classification
+
+`tests/models/classification/test_phase7_binary_probit_reference.py`は`BinarySingleTaskGPClassifier`の0/1ラベル（8学習点）を用い、3候補点`[0.15,0.5,0.85]`について`latent_posterior`と`predict_proba`を分けて取得する。潜在分布をGaussianとするprobitリンクの恒等式
+
+```text
+f ~ Normal(mu, sigma²)
+P(y=1 | x, D) = E[Phi(f)] = Phi(mu / sqrt(1 + sigma²))
+```
+
+を`torch.erfc`から独立に構築し、`probabilities[:,1]`と`atol=rtol=1e-10`で比較する。加えて`[3,2]`の確率shape、陰性確率が`1-p`であること、行和が1、全確率が`[0,1]`内に収まることをassertする。これは**予測確率変換の恒等式**の検査であり、分類モデルのELBO最適化、予測確率の較正、データ上の分類精度を証明しない。
+
+## 実装assertionの照合：Gaussian non-GP adapter
+
+`tests/models/non_gp/test_phase7_gaussian_posterior_reference.py`は`GaussianDistributionPosterior`を固定float64のmean/varianceとbase samplesから構成する。BoTorchと接続するサンプル契約
+
+```text
+sample = mean + sqrt(variance) * base_sample
+```
+
+を`rsample_from_base_samples(sample_shape=[2],...)`と比較し、`atol=rtol=1e-12`で確認する。期待サンプルshapeは`[2,2,2,1]`。ゼロ分散成分はbase sampleに依らずmeanへ一致し、2サンプルの和から逆伝播した`mean.grad`が全成分で2になることも確かめる。これは**宣言したGaussian posterior adapterのaffine samplingとgradientの契約**であり、外部non-GP estimator自体の予測精度・uncertainty較正や全adapterの適合性を保証しない。
+
+以上2件は実際のテスト本文を照合した結果であり、この更新で新たな独立数値実験を実行したという意味ではない。
