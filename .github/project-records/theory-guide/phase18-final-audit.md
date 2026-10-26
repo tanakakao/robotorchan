@@ -268,3 +268,9 @@ Phase 3 routingのprimary `guide/acquisition/06_lookahead.md`と旧Mapping固定
 旧Optimization Mappingの固定区間182–205、Phase3のprimary `guide/optimization/01_foundations.md`と補助索引のroutingを確認し、読者がbackendを選択するための説明を `guide/optimization/12_selection_guide.md` に追記した。11種類のOptimizerName、最大化対象A(X)、各backendのOwned/Delegatedの違い、sampled joint q-batchのargmax式と[N,q,d] shape、BoTorch固有引数とoptimizer_options、torch_*のcandidate制約拒否、GA mixed分岐、named dispatchに含まれないNSGA-II/native mixed/one-shotを明示した。`src/robotorchan/optim/dispatch.py`、`backends/torch.py`、`backends/sampling.py`、旧Mappingの本文を静的に照合し、最小sampling dispatch例を追加した。
 
 **判定：partial / review required。** Phase3 routingの受け皿は意味に応じて補完したが、旧区間全体の一対一semantic migrationの検収には至っていない。数値テストの新規実行や全backend正当性の証明は行っていない。174区間のverifiedは0件、旧5 Mappingは保全する。
+
+## Phase 18：旧Optimization 246–257の専門optimizer本文改善
+
+Phase 3台帳の旧 `optimization.md:246–257` は主受け皿 `guide/optimization/05_constraints.md` と補助appendixを指定しているが、実装別の数理・APIを読者が追えるよう、関連する48章内の `04_mixed_discrete.md`、`08_batch_one_shot.md`、`07_evolutionary.md` の本文を直接改善した。旧原文と `src/robotorchan/optim/backends/botorch.py`、`src/robotorchan/optim/one_shot/mixed.py`、`src/robotorchan/optim/backends/nsga2.py` を直接確認した。native mixedのfixed_features_listとinter-point nonlinear拒否、mixed one-shotの行ごとのカテゴリ割当てとM**augmented_q列挙・q=1制約、NSGA-IIの支配関係・vector objectiveとscalar qEHVIの相違・使用例を補った。
+
+**判定：partial / review required。** Phase 3 routing自体や旧Mappingは書き換えず、正式な完全移行のverifiedに昇格しない。実装ソースの静的照合に基づく説明であり、今回の独立数値実験や全制約の可行性・最適性の証明ではない。174見出しは引き続き0 verifiedとして保全する。
