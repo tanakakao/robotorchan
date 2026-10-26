@@ -34,7 +34,7 @@
 
 | 分野 | assertionを再照合した対象 | 証拠が成立する範囲 | 依然として別途必要な検証 |
 | --- | --- | --- | --- |
-| Models | Kronecker covariance、Multi-fidelity downsampling、PCA reducer、Binary probit、Gaussian adapter | 固定データのprior/kernel/transform/probability/sampling不変量 | 全posterior条件付け・学習精度・異なるvariant |
+| Models | Exact GP conditioning、Mixed categorical relabeling、Kronecker covariance、Multi-fidelity downsampling、PCA reducer、Binary probit、Gaussian adapter | 固定データのprior/kernel/transform/probability/sampling不変量 | 他kernel・variantのposterior条件付け、学習精度、汎化・較正 |
 | Models | Heteroskedasticの分散分離、PCAGPの座標一致、MixedPCAGPのカテゴリ保持、Random Forestのtree moments | 公開APIとの固定条件・固定数値tolでの一致 | 位置依存の公開observation posterior、較正、他reducer/estimator |
 | Acquisition | regression/classification AL、BALD、ProbabilityVariance、analytic Gaussian、MC qSimpleRegret/qUCB | utilityの算術、sample集約順序、固定乱数とshape | qNEI、EHVI、情報利得、全constrained compositionの独立数値参照 |
 | Optimization | nonlinear candidate feasibility E2E、TuRBO state、one-shot/mixedとNSGA-IIの実装契約 | テスト対象の可行性・state遷移・行別カテゴリ割当て等 | 一般制約下のhard feasibility、global optimum、regret |
@@ -50,10 +50,28 @@ Modelsの`replicate noise`もテスト本文と直接照合済みである。た
 
 | 旧Phase | 数理検証の対象 | 現ガイドの受け皿 | 依然として個別確認が必要な例 |
 | --- | --- | --- | --- |
-| 7 | モデルposterior・likelihood・covariance・入出力変換 | [Models](models.md) | Exact GPの固定kernel Cholesky conditioning参照、categorical relabeling、Kronecker priorとposteriorの区別 |
+| 7 | モデルposterior・likelihood・covariance・入出力変換 | [Models](models.md) | Exact GP Cholesky conditioningとcategorical kernel relabelingは固定条件のテスト本文を照合済み。Kronecker priorとposteriorの区別・他variantは未証明 |
 | 8 | Acquisition値・MC推定量・objective・constraints | [Acquisition](acquisition.md) | qNEI、multi-objective hypervolume、制約付き組成・情報獲得などの独立数値式 |
 | 9 | Candidate最適化・可行性・状態・座標変換 | [Optimization](optimization.md) | 全backendの可行性・収束・座標変換の一般保証 |
 
 再現可能な記録として原文が要求するのは、**対象model/method ID、独立数式/参照、仮定、dtype/device、seed、数値tol、実測結果、厳密なassertion対象**である。固定数値例の一部を確認できても、原文が提示する**モデル検証行列の全行**（Exact GP条件付きposterior、カテゴリID置換不変性を含む）の実証に置き換わるものではない。
 
 旧`Initial Phase 7 execution gate`には、既存テストのvalue-level assertionの精査、学習を除いたfloat64 kernel conditioning oracle、カテゴリ置換不変性、分類のlatent/probability区別、focused testとCIの結果記録、他familyへの段階的拡張が含まれる。これは**当初の検証手順・到達目標**として保全し、後続の代表property限定exit判定と同一視しない。旧Mapping冒頭1–64行に由来する技術・履歴上の意味は[原文](../../verification.md)を正本として参照し続ける。
+
+
+### 冒頭のモデル検証行列8 family：要求と実証範囲の差分
+
+旧`verification.md`の見出し`Phase 7 — model verification matrix`について、8行の**要求property**と今確認できる独立referenceの**実証property**を分離した。旧行列の「suggested reference」はテスト結果そのものではない。
+
+| 旧行列family | 確認できたテストと数値契約 | なお残る差分 |
+| --- | --- | --- |
+| Exact single-output GP | `test_phase7_exact_gp_reference.py`：固定RBF・固定noiseのCholesky平均/共分散（2e-5） | 原文の一般的なnoiseless/任意kernel参照、学習・数値条件の全範囲 |
+| Mixed categorical GP | `test_phase7_mixed_categorical_reference.py`：4 queryのkernel共分散、カテゴリ0/1/2を17/-4/9へ置換（1e-10） | 学習入力の再ラベルと再学習posteriorの予測不変性は未確認 |
+| Multi-task / Kronecker | `test_phase7_kronecker_covariance_reference.py`：2 taskのprior covariance、flatten順・PSD・task置換（1e-10） | posterior条件付け、variational方式への一般化 |
+| Multi-fidelity | `test_phase7_multifidelity_kernel_reference.py`：downsampling fidelity-only kernelのoffset/rank-one（1e-10） | 全multi-fidelity block covarianceとposterior |
+| Reduced / latent | `test_phase7_posterior_coordinate_reference.py`、`test_phase7_mixed_reduced_categorical_reference.py`：固定PCAとカテゴリ保持（1e-10） | 他reducer、reconstruction品質、学習精度 |
+| Heteroskedastic / robust | `test_phase7_heteroskedastic_uncertainty_reference.py`：固定2段階noiseとlatent分離、手動観測分散（1e-12） | public観測posteriorへの位置依存noise注入、非Gaussian likelihood一般化 |
+| Binary classification | `test_phase7_binary_probit_reference.py`：Gaussian-probit積分と2クラス確率（1e-10） | holdout calibration、classifier fitting、任意linkの数値積分 |
+| Non-GP surrogates | `test_phase7_gaussian_posterior_reference.py`、`test_phase7_forest_estimator_reference.py`：adapter sample（1e-12）、7-tree ensemble moments（1e-12） | 他estimator・epistemic uncertaintyの較正 |
+
+この表は原文27–39行の8行を**一対一で意味論比較するための差分台帳**であり、8 familyに対する無制限の数学的合格判定ではない。各テストの具体的assertionと例外は[Models verification](models.md)、原文の歴史的判定は[Verification Mapping](../../verification.md)に残す。
