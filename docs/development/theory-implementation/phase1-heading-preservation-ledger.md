@@ -486,3 +486,30 @@
 ### レビュー状態
 
 今回のレビューは数値参照の具体的な意味と総括の限界を対象とする。初期execution gate・マトリクス・exit audit等の全記述を移行確定したわけではなく、**Phase 1完了判定は保留**。
+
+## models.md: 技術内容と章構成の意味レベル監査（第1弾）
+
+`models.md`の18–106、208–235、607–675、807–866行を本文ベースで読み、**技術本文・横断契約・歴史的監査証拠**を分離する移行判定を行った。以下はこの範囲に限った確定候補であり、全91見出しの最終移行確定ではない。
+
+| 元行 | 移行先候補 | 章に残す技術内容 | Appendix/監査に残す内容 |
+| --- | --- | --- | --- |
+| 18–31 | Appendix: model registry / coverage semantics | 回帰registryと分類registryは異なるID体系。HeterogeneousModelは別扱い。分類exportのhelperをmodel IDに数えない | 142回帰entry・29分類IDは**監査時点の値**として保全し、現在値と混同しない |
+| 32–91 | Appendix: model-family inventory | model→family→ユーザーガイドの分類、reduced 52/robust 27等の当時の対応 | 全142件の原表は削除せずAppendixに保管。正本`docs/model_coverage.json`との二重管理を避ける |
+| 92–106 | standard GP / classification / reduced / non-GP | `SingleTaskGP`と`MixedSingleTaskGP`はBoTorchへGPを委譲。`BinarySingleTaskGPClassifier`はGPyTorch Bernoulli/ELBO。`ReducedGP`は変換をローカル実装。`RandomForestSurrogate`はsklearnを委譲 | Source-inspectedとruntime verifiedを区別するevidence legend |
+| 208–235 | Appendix: ownership contract + 各モデル章 | **Delegated/Extendedはコンポーネント単位**。`posterior`・`fit`・`raw_train_X/Y`を分けて説明。RandomForestのruntime importにも注意 | 5例は代表監査であり171件の網羅的検証ではない。method-owner scanは数値検証ではない |
+| 607–625 | non-GP regression | NGBoostはparametric Gaussian (`loc`,`scale²`)。ExtraTreesは木予測の経験分布。両者の不確実性はGP事後とは異なる | optional `ngboost`未導入時のskipと、較正/数値一致の未検証 |
+| 626–649 | robust/noise + heterogeneous multitask | 交互fitのlog-noise GP、joint variational二潜在GP、Kronecker heteroskedastic prototype、mixed task conditional kernelを**別アルゴリズム**として記述 | finite 1-iterationは収束を示さない。prototypeの観測事後は未対応。テスト関数数は検証保証ではない |
+| 650–675 | multi-fidelity GP | fidelity列とcategorical列の分離、BoTorch DownsamplingKernel保持、linear-truncated拒否、cost-aware KG接続 | upstream posterior一致は固定構成のみ。samplerのshape/gradientは統計的無偏性を示さない |
+| 807–821 | standard exact GP | exact MLL・BoTorch posterior委譲とlocal fit/raw data contract | upstream equalityは検査した設定に限定 |
+| 822–836 | mixed GP | native categorical kernel、`cat_dims`負index、one-hot/順序距離の誤解を避ける | kernel/optimizerの全組合せ検証なし |
+| 837–851 | classification GP | `posterior`はlatent、`predict_proba`はlabel probability、variational ELBO | calibration・fit収束・実行Notebookは未検証 |
+| 852–866 | multitask GP | long-format task featureとblock-design Kroneckerを混同しない | task相関の数値同定・全task coverageは未検証 |
+
+### 横断的な設計原則（技術ガイド本文へ反映）
+
+1. `Implemented`等のstatusは**モデル名一括ではなくアルゴリズム構成要素単位**で説明する。ローカルsubclassの存在だけでGP posteriorを独自実装と判定しない。
+2. 分類のlatent uncertainty、predictive class probability、label uncertaintyは別物として扱う。Regressionと同じ`posterior`という名称だけで確率の意味を混同しない。
+3. Heteroskedastic、non-GP、multi-fidelityは、単にBoTorch互換APIがあることと、数理的に同じposteriorがあることを区別する。
+4. 既存の英語表とregistry全件リストはAppendixへ保全し、日本語の章本文には学習上必要な説明を再構成する。Phase/PR番号はauditへ分離する。
+
+**保留:** 原文のregistry件数や過去のテスト状況は今回再計算・再実行していないため、「現時点の実装保証」に書き換えない。既存5ファイルは維持し、CIを壊す移動・改名は行わない。
