@@ -18,6 +18,7 @@
 ```python
 import torch
 from robotorchan.models import MixedSingleTaskGP
+
 X = torch.tensor([[0.1, 0.0], [0.3, 1.0], [0.8, 0.0], [0.9, 1.0]], dtype=torch.double)
 Y = torch.tensor([[0.2], [0.8], [0.6], [0.4]], dtype=torch.double)
 model = MixedSingleTaskGP(train_X=X, train_Y=Y, cat_dims=[1])
