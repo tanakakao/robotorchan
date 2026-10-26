@@ -17,6 +17,7 @@
 ```python
 import torch
 from robotorchan.models import SingleTaskMultiFidelityGP
+
 X = torch.tensor([[0.1, 0.0], [0.1, 1.0], [0.8, 0.0], [0.8, 1.0]], dtype=torch.double)
 Y = torch.tensor([[0.2], [0.25], [0.6], [0.7]], dtype=torch.double)
 model = SingleTaskMultiFidelityGP(train_X=X, train_Y=Y, data_fidelities=[1])
