@@ -172,3 +172,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 [Phase 1の174見出し台帳](phase1-heading-preservation-ledger.md)の末尾に、歴史的な`verification.md`行区間と`guide/verification/{models,acquisition,limitations,README}.md`への受け皿の対応を追加した。Kronecker、multi-fidelity、PCA、binary probit、Gaussian adapter、heteroskedastic、MixedPCAGP、Forest、MC qSimpleRegret/qUCB、過去の代表property限定exit判定を、確認したassertionごとに**部分照合・review required**として明示した。
 
 **未達：** 対象31見出しを含む174見出し全件の本文・表・数式・negative contract・根拠リンクの行単位検収。旧台帳の`planned (review required)`を機械的に`verified`に変更せず、旧Mapping5ファイルも保全する。Phase1の行番号は固定スナップショット由来であり現行行番号と混同しない。
+
+## Phase 18：Phase 9 独立参照テストの部分照合
+
+`tests/optim/backends/test_phase9_sampling_optimizer_reference.py`、`tests/optim/trust_region/test_phase9_turbo_geometry_reference.py`、`tests/optim/constraints/test_phase9_constraint_violation_reference.py`を直接読み、[Optimizer verification guide](../../../docs/development/theory-implementation/guide/verification/optimization.md)にrandom/sobol pool内argmax（seed=29、128 sample、q=2）、TuRBO ARD幾何平均正規化とboundary clipping、CandidateConstraintsの各種残差（等式許容差0.05）とfeasibility-first順位の具体的数値assertionを記載した。いずれも出力の意味・数値tolと未検証のglobal optimum/一般可行性を区別した。[Phase1 heading ledger](phase1-heading-preservation-ledger.md)に、Verificationの固定行番号408–421、436–448、449–464を部分照合として追記した。
+
+**判定：partial / review required。** この作業は既存テスト本文の静的照合であり、独立再実行は行っていない。原文の残区間および174見出し全体のsemantic migration gateは未達。旧Mappingを保全する。
