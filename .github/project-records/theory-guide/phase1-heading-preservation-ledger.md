@@ -785,3 +785,16 @@ Phase 1固定台帳から`README.md`、`models.md`、`acquisition.md`、`optimiz
 | `acquisition.md` | 115–143 | Phase 5 — classification AL and Gaussian EPIG (source inspected) | `appendix/acquisition-contracts-and-compatibility.md` | 見出し名による技術情報の誤仕分けを全文点検 |
 
 **次の検収ゲート：** 各見出しの元本文と移行先を直接比較して、数式・public API・registry列・negative contract・テストassertion・旧PR/CIをそれぞれ保存できたかを確認する。特に`models.md`の91件を内容未読のまま一括`verified`にしない。旧174行の状態はすべて`planned (review required)`のまま保全し、旧5ファイルも削除しない。
+
+## Phase 18：Phase 1仮割当とPhase 3本文レビュー済みroutingの差異
+
+前節の`audit/` primary **25件はPhase 1のキーワード仮割当**であり、現在の最優先routingと断定してはならない。[Phase 3本文レビュー台帳](phase3-migration-ledger.md)には174区間すべての本文確認と一次/二次移行先の再割当があり、`body-reviewed routing / not migrated`と明記されている。Phase 3も**移行完了・検収完了ではない**が、移行先を選ぶ際にはPhase 1より具体的な一次根拠として参照する。
+
+| 原文固定区間 | Phase 1仮primary | 原文に実際にある技術情報 | 移行時の正しい扱い |
+| --- | --- | --- | --- |
+| `acquisition.md:288–308` | `audit/` | qEI/qNEI/qEHVIのcontinuous outcome residualと分類PoFによるweighting、同一posterior制約と別classifierの差 | `guide/acquisition/08_constraints.md`と獲得関数の該当章へ技術内容を残し、歴史的Phase/CIのみauditへ |
+| `acquisition.md:346–362` | `audit/` | qKG、multi-fidelity KG、multi-step、MES、GIBBON、PES/JESの実装・委譲・未検証区分 | `guide/acquisition/05_information_theoretic.md`と`06_lookahead.md`に技術契約を保存し、履歴だけをauditへ |
+| `optimization.md:182–205` | `audit/` | 11種類の`optimizer=`名とbackend/上流委譲、混合変数・制約の分岐 | `guide/optimization/12_selection_guide.md`などで11名dispatchを保持し、PR/CIをauditへ |
+| `optimization.md:246–257` | `audit/` | mixed native BoTorch / row-specific one-shot / NSGA-IIの専門経路とnegative contracts | `guide/optimization/04_mixed_discrete.md`、`08_batch_one_shot.md`、`07_evolutionary.md`の対象契約を保存 |
+
+以上4件は元区間を直接読んで**技術内容が含まれることを確認**した。上記の章は技術的な受け皿の候補を明示したものであり、この作業で各章への全文移行を完了したという意味ではない。Phase 1の原台帳行は歴史的スナップショットのため上書きしない。最終的なprimary/secondaryはPhase 3 routingおよび本文と照合して確定する。
