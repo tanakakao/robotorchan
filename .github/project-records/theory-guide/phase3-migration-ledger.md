@@ -1,3 +1,12 @@
+## verification.md（184–510行、20区間）の本文レビュー
+
+- 184–291: PCA public/latent posterior consistency、heteroskedastic latent/noise separation、RandomForest estimator-level moments、mixed reduced categorical preservation、manual conditional observation varianceを区別する。**posterior(observation_noise=True)のheteroskedastic candidate-specific varianceは検証済みではない**。過去の暫定exit判定と最終property-specific判定を履歴として分離。
+- 292–407: regression AL 4種の数式、classification entropy/margin/latent straddle、BALD/probability varianceの標本集約、analytic log-EI/log-PI/UCB、MC qSimpleRegret/qUCBの独立参照を整理。共通posteriorやQMC base samplesの再利用による比較は推定量の収束・校正を証明しない。qNEI、EHVI、制約付き、lookahead等は未検証のまま保持。
+- 408–510: Random/Sobol pool argmax、TuRBO success/failure/restart、ARD幾何、linear/nonlinear intra/inter-point constraint residualとfeasibility-first ordering、torch系の候補制約明示拒否を整理。最適化の大域収束・任意制約の実行可能性を主張しない。
+- 全区間の過去PR番号、CI、exit decision、旧Phase番号は監査記録へ。教育用verificationガイドには検証命題・前提・再現手順・許容誤差・未検証境界を記載する。
+
+**全174区間の本文レビュー完了（README 13、models 91、acquisition 18、optimization 21、verification 31）。移行・照合検証完了0件。**
+
 ## acquisition.md（1–178行、9区間）の本文レビュー
 
 - 1–78: registryのlocal acquisition、BoTorch-native metadata、composition helper、Thompson selectionを別種として扱う。mixed one-shot optimizerは普通のmixed routeとは異なり、compatibility assertionは実際の最適化成功を保証しない。旧Phaseのcompletion gateは監査履歴へ。
@@ -180,26 +189,26 @@
 | `verification.md` | 122–134 | Binary GP probit predictive reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
 | `verification.md` | 135–148 | Non-GP Gaussian posterior reparameterization reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
 | `verification.md` | 149–183 | Phase 7 execution reconciliation and remaining scope | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
-| `verification.md` | 184–197 | Reduced GP public/latent posterior coordinate reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 198–211 | Heteroskedastic latent-versus-observation noise reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 212–222 | Non-GP Random Forest estimator-level reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 223–244 | Phase 7 exit audit (property-specific) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 245–256 | Mixed reduced GP categorical-coordinate reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 257–273 | Heteroskedastic observation-variance composition boundary (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 274–291 | Phase 7 final exit reconciliation | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 292–306 | Phase 8 — regression active-learning formula reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 307–319 | Phase 8 — classification active-learning arithmetic reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 320–334 | Phase 8 — BALD and probability-variance sample-moment reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 335–350 | Phase 8 — native analytic BO Gaussian reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 351–362 | Phase 8 — Monte Carlo qSimpleRegret sample reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 363–375 | Phase 8 — Monte Carlo qUCB sample reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 376–407 | Phase 8 — verification reconciliation (representative scope) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 408–421 | Phase 9 — sampling optimizer reference (initial property) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 422–435 | Phase 9 — TuRBO state-transition reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 436–448 | Phase 9 — TuRBO trust-region geometry reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 449–464 | Phase 9 — candidate constraint residual and feasibility ordering reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 465–475 | Phase 9 — PyTorch optimizer candidate-constraint support boundary | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
-| `verification.md` | 476–510 | Phase 9 — representative optimizer verification exit audit | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
+| `verification.md` | 184–197 | Reduced GP public/latent posterior coordinate reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 198–211 | Heteroskedastic latent-versus-observation noise reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 212–222 | Non-GP Random Forest estimator-level reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 223–244 | Phase 7 exit audit (property-specific) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 245–256 | Mixed reduced GP categorical-coordinate reference (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 257–273 | Heteroskedastic observation-variance composition boundary (Phase 7) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 274–291 | Phase 7 final exit reconciliation | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 292–306 | Phase 8 — regression active-learning formula reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 307–319 | Phase 8 — classification active-learning arithmetic reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 320–334 | Phase 8 — BALD and probability-variance sample-moment reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 335–350 | Phase 8 — native analytic BO Gaussian reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 351–362 | Phase 8 — Monte Carlo qSimpleRegret sample reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 363–375 | Phase 8 — Monte Carlo qUCB sample reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 376–407 | Phase 8 — verification reconciliation (representative scope) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 408–421 | Phase 9 — sampling optimizer reference (initial property) | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 422–435 | Phase 9 — TuRBO state-transition reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 436–448 | Phase 9 — TuRBO trust-region geometry reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 449–464 | Phase 9 — candidate constraint residual and feasibility ordering reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 465–475 | Phase 9 — PyTorch optimizer candidate-constraint support boundary | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `verification.md` | 476–510 | Phase 9 — representative optimizer verification exit audit | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
 
 ## README.md（13区間）の本文レビュー結果
 
