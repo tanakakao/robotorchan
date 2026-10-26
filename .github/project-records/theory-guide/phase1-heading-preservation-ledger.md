@@ -620,3 +620,181 @@
 移行先の形式検査：primaryとsecondaryの完全一致`0`件、primary/secondary空欄`0`件。status内訳：`planned (review required)` 174件。
 
 **判定の境界**：この結果はH1–H3の**所在と区間の完全性**の証拠であり、各区間内のH4・数式・表・コード・リンクの意味的移行が完了した証拠ではない。`planned (review required)`を`reviewed`へ一括変更しない。本文は旧ファイルに保全されたまま。次のゲートは178参照候補のtree突合せとリンク・CI検証。
+
+
+## Phase 18追跡：Verification見出しの部分照合（原台帳の状態は据え置き）
+
+以下は`verification.md`に由来する**31見出しの一部**について、実際に開いたsource/testと日本語の移行先を対応付けた二次的な照合メモである。元台帳の全174行に設定されている`planned (review required)`を`verified`に書き換えない。下表の「部分照合」は個別assertionに関する照合であり、元見出しに含まれる履歴・表・数式・例外・前後文を**すべて移行済みと認定しない**。
+
+| 元区間（歴史的行番号） | 日本語ガイドの具体的な受け皿 | 今回までに確認できた主題 | 移行判定 |
+| --- | --- | --- | --- |
+| `verification.md:65–79` | `guide/verification/models.md` | Kronecker priorの入力優先flatten、task置換、PSD、1e-10 | 部分照合・review required |
+| `verification.md:80–93` | `guide/verification/models.md` | fidelity-only kernelのoffset境界、rank-one残差、1e-10 | 部分照合・review required |
+| `verification.md:94–107` | `guide/verification/models.md` | PCAのeigenspectrum、直交性、射影・残差、1e-10 | 部分照合・review required |
+| `verification.md:122–134` | `guide/verification/models.md` | binary probit積分、2クラス正規化、1e-10 | 部分照合・review required |
+| `verification.md:135–148` | `guide/verification/models.md` | Gaussian adapterのaffine samplingと勾配、1e-12 | 部分照合・review required |
+| `verification.md:184–197` | `guide/verification/models.md` | PCAGPのpublic/reduced posteriorのmean/variance一致 | 部分照合・review required |
+| `verification.md:198–211,257–273` | `guide/verification/models.md` と `guide/verification/limitations.md` | log-noise分離と手動分散恒等式、public observation posteriorは別 | 部分照合・review required |
+| `verification.md:212–222` | `guide/verification/models.md` | Random Forest tree moments、不偏分散、observation noise拒否 | 部分照合・review required |
+| `verification.md:245–256` | `guide/verification/models.md` | MixedPCAGPのカテゴリID保持とposterior同値 | 部分照合・review required |
+| `verification.md:351–362,363–375` | `guide/verification/acquisition.md` | qSimpleRegret/qUCBのMC演算順、64 draws、q=2、1e-8 | 部分照合・review required |
+| `verification.md:274–291,376–407` | `guide/verification/README.md` と `phase18-final-audit.md` | 過去の代表property限定exit判定と後続の未検証境界 | 時系列の部分照合・review required |
+
+**未照合として優先する区間：** `verification.md:108–121`のreplicate-noise参照、`292–350`のAL・analytic参照のテスト本文、`408–510`のoptimizer数学的referenceおよびexit判定の各assertionは、別の部分的なガイド要約・Mapping記録があっても、この見出し単位の完全移行検収には未達である。
+
+この表の行番号は**Phase 1の固定スナップショット**を表す。現行ファイルの行番号と一致する保証はなく、参照先は見出し名でも確認する必要がある。旧原文を削除・短縮するには、各区間ごとに全文・数式・負の契約・根拠リンクを再点検し、台帳と移行先の双方向で`verified`にできる証拠を記録すること。
+
+### Phase 9 独立参照の追加部分照合
+
+| 元区間（Phase 1固定行番号） | 日本語移行先 | 直接確認したテスト・assertion | 状態 |
+| --- | --- | --- | --- |
+| `verification.md:408–421` | `guide/verification/optimization.md` | `test_phase9_sampling_optimizer_reference.py`：random/sobol、128候補pool、seed=29、q=2、argmax候補完全一致とvalue 1e-12 | 部分照合・review required |
+| `verification.md:436–448` | `guide/verification/optimization.md` | `test_phase9_turbo_geometry_reference.py`：ARD幾何平均正規化、boundary clipping、7倍weight不変性、1e-12 | 部分照合・review required |
+| `verification.md:449–464` | `guide/verification/optimization.md` | `test_phase9_constraint_violation_reference.py`：intra/interpoint残差、等式tol=0.05、feasibility-first順位、1e-12 | 部分照合・review required |
+
+`verification.md:422–435`および`465–510`は関連資料の説明があっても、この追加表ではテスト本文の直接assertion照合を完了したとは記載しない。旧174行のreview statusは変更しない。
+
+### Phase 9 state／negative contractの追加部分照合
+
+| 元区間（Phase 1固定行番号） | 日本語移行先 | 直接確認したassertion | 状態 |
+| --- | --- | --- | --- |
+| `verification.md:422–435` | `guide/verification/optimization.md` | `test_phase9_turbo_state_reference.py`：3連続成功のlength上限1.6、2連続失敗で0.075/restart、decision値と生観測値の分離 | 部分照合・review required |
+| `verification.md:465–475` | `guide/verification/optimization.md` | `test_phase9_torch_constraint_contract.py`：Adam/AdamW/SGD × linear/equality/nonlinearの9ケースで明示的ValueError | 部分照合・review required |
+
+`verification.md:476–510`の代表property限定exit判定は旧文書に保持し、上記の特定テストassertionと同じ意味の移行完了認定にはしない。
+
+### Phase 8 AL/analytic参照の追加部分照合
+
+| 元区間（Phase 1固定行番号） | 日本語移行先 | 確認したassertion | 状態 |
+| --- | --- | --- | --- |
+| `verification.md:292–306` | `guide/verification/acquisition.md` | `test_phase8_regression_al_formula_reference.py`：4獲得関数、q=1、3候補、target=0.35、beta=1.7、1e-12 | 部分照合・review required |
+| `verification.md:307–319` | `guide/verification/acquisition.md` | `test_phase8_classification_al_reference.py`：entropy/margin/latent straddle、beta=1.5、1e-10、score範囲 | 部分照合・review required |
+| `verification.md:335–350` | `guide/verification/acquisition.md` | `test_phase8_analytic_bo_gaussian_reference.py`：log-EI、log-PI、UCB、best_f=0、beta=0.4、1e-8 | 部分照合・review required |
+
+旧台帳の各行はplannedのまま据え置き、全文・履歴・negative contractが漏れなく移行したという意味のverifiedへは昇格させない。
+
+### Phase 8 BALD/ProbabilityVarianceとexitの追加部分照合
+
+| 元区間（Phase 1固定行番号） | 日本語移行先 | 確認したassertion・判定 | 状態 |
+| --- | --- | --- | --- |
+| `verification.md:320–334` | `guide/verification/acquisition.md` | `test_phase8_bald_probability_variance_reference.py`：固定class probability `[64,2,1,2]`、母分散型class平均とentropy差、非負性、1e-10 | 部分照合・review required |
+| `verification.md:376–407` | `guide/verification/{acquisition,README}.md` | Phase8 exitは6件の代表的property参照についてのrecommendation。noisy improvement、hypervolume、constrained/heterogeneous、情報獲得等の数理参照は認定外 | 部分照合・review required |
+
+表に載せることは元区間の数式・表・PR履歴を完全に移した判定ではない。174見出しの元statusは変更しない。
+
+### Replicate noiseとPhase 7〜9 exit判定の部分照合
+
+| 元区間（Phase 1固定行番号） | 移行先 | この作業で確認した対象 | 判定 |
+| --- | --- | --- | --- |
+| `verification.md:108–121` | `guide/verification/models.md` | `test_phase7_replicate_noise_reference.py`：7観測を3件/4件に集計、不偏分散と平均分散、noise_floor=1e-12。assert_closeはTorch既定tol | 部分照合・review required |
+| `verification.md:274–291` | `guide/verification/README.md`、`phase18-final-audit.md` | Phase7は代表propertyの限定的完了。heteroskedasticのpublic observation posteriorは対象外 | 時系列・判定範囲を部分照合・review required |
+| `verification.md:376–407` | `guide/verification/{acquisition,README}.md`、`phase18-final-audit.md` | Phase8は6件の代表的算術・MC参照のexit recommendation。noisy/multiobjective/constrained/lookaheadは保証外 | 時系列・判定範囲を部分照合・review required |
+| `verification.md:476–510` | `guide/verification/{optimization,README}.md`、`phase18-final-audit.md` | Phase9は5件の代表的参照に限定してcomplete。global convergence、全backend可行性は保証外 | 時系列・判定範囲を部分照合・review required |
+
+この表の「完了」は**旧Phase7〜9における代表propertyの数学的検証の完了**であり、現在のPhase18の174見出し移行をverifiedとする意味ではない。原台帳の`planned (review required)`は不変とする。
+
+### Verification冒頭の方針・検証行列の部分照合
+
+| 元区間（Phase 1固定行番号） | 日本語移行先 | 直接比較した情報・未達 | 状態 |
+| --- | --- | --- | --- |
+| `verification.md:1–3` | `guide/verification/README.md` | 数学的検証Phase7–9の責務を示す入口。旧12 Phaseの歴史的な表現は維持 | 部分照合・review required |
+| `verification.md:4–26` | `guide/verification/README.md` | static inventoryと独立数値assertionの証拠区別、method ID・仮定・dtype/device・seed・tol・実測値・propertyの記録 | 部分照合・review required |
+| `verification.md:27–39` | `guide/verification/README.md`と`models.md` | Exact GP条件付け、categorical relabeling等を含む8 familyの初期数理検証行列。全行の実測証明ではない | 部分照合・review required |
+| `verification.md:40–64` | `guide/verification/README.md` | Phase7の初期execution gate（value-level検査、float64 oracle、label置換、focused tests/CI）と当時の状況は履歴として保全 | 部分照合・review required |
+
+旧見出しに記載された計画・テスト目標と、後日の代表property限定exitを同一視しない。原文の歴史的リンクや全段落の網羅移行は未検収であり、174行の旧statusは据え置く。
+
+### Phase 7 exact conditioningとcategorical relabelingの追加照合
+
+| 元区間（Phase 1固定行番号） | 移行先 | テスト本文から確認したproperty | 判定 |
+| --- | --- | --- | --- |
+| `verification.md:27–39` | `guide/verification/models.md` | `test_phase7_exact_gp_reference.py`：float64・4学習点/3予測点、RBF lengthscale=0.4、noise=0.025、独立Cholesky参照とposterior平均・全共分散・分散対角（2e-5） | 部分照合・review required |
+| `verification.md:27–39` | `guide/verification/models.md` | `test_phase7_mixed_categorical_reference.py`：カテゴリID 0→17、1→-4、2→9、kernel共分散 `[4,4]` の置換不変性（1e-10） | 部分照合・review required |
+
+両テストとも存在と具体的なvalue-level assertionを直接確認できたが、旧行列の8 familyと周辺本文の完全移行や、モデル族全体の学習・posterior保証を意味しない。
+
+## Phase 18：Verification 31見出しの全件棚卸し（見出しレベル、非最終判定）
+
+この31行は本台帳の固定スナップショットから抽出した**全見出し**である。原文を削除せず、存在・受け皿・個別assertionの確認段階を記録する。表の「部分照合」は本文・脚注・表・PR/CI・リンクをすべて照合してverifiedになったという意味ではない。旧174行の元ステータスは変更しない。
+
+| No. | 旧行範囲 | 原見出し | 主な受け皿 | 現時点の照合証拠 | 最終検収に残る確認 | 判定 |
+| ---: | --- | --- | --- | --- | --- | --- |
+| 1 | `1–3` | Mathematical verification: Phases 7–9 | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 2 | `4–26` | Purpose and evidence rules | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 3 | `27–39` | Phase 7 — model verification matrix | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 4 | `40–64` | Initial Phase 7 execution gate | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 5 | `65–79` | Kronecker block-design covariance reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 6 | `80–93` | Data-fidelity downsampling kernel reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 7 | `94–107` | PCA reduced-space projection reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 8 | `108–121` | Replicate observation-noise statistical reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 9 | `122–134` | Binary GP probit predictive reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 10 | `135–148` | Non-GP Gaussian posterior reparameterization reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 11 | `149–183` | Phase 7 execution reconciliation and remaining scope | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 12 | `184–197` | Reduced GP public/latent posterior coordinate reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 13 | `198–211` | Heteroskedastic latent-versus-observation noise reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 14 | `212–222` | Non-GP Random Forest estimator-level reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 15 | `223–244` | Phase 7 exit audit (property-specific) | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 16 | `245–256` | Mixed reduced GP categorical-coordinate reference (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 17 | `257–273` | Heteroskedastic observation-variance composition boundary (Phase 7) | `guide/verification/models.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 18 | `274–291` | Phase 7 final exit reconciliation | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 19 | `292–306` | Phase 8 — regression active-learning formula reference | `guide/verification/acquisition.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 20 | `307–319` | Phase 8 — classification active-learning arithmetic reference | `guide/verification/acquisition.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 21 | `320–334` | Phase 8 — BALD and probability-variance sample-moment reference | `guide/verification/acquisition.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 22 | `335–350` | Phase 8 — native analytic BO Gaussian reference | `guide/verification/acquisition.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 23 | `351–362` | Phase 8 — Monte Carlo qSimpleRegret sample reference | `guide/verification/acquisition.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 24 | `363–375` | Phase 8 — Monte Carlo qUCB sample reference | `guide/verification/acquisition.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 25 | `376–407` | Phase 8 — verification reconciliation (representative scope) | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+| 26 | `408–421` | Phase 9 — sampling optimizer reference (initial property) | `guide/verification/optimization.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 27 | `422–435` | Phase 9 — TuRBO state-transition reference | `guide/verification/optimization.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 28 | `436–448` | Phase 9 — TuRBO trust-region geometry reference | `guide/verification/optimization.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 29 | `449–464` | Phase 9 — candidate constraint residual and feasibility ordering reference | `guide/verification/optimization.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 30 | `465–475` | Phase 9 — PyTorch optimizer candidate-constraint support boundary | `guide/verification/optimization.md` | 対応するテスト本文のassertionを照合 | 原文区間全体の数式・表・PR/CI履歴・リンクの欠落検査 | 部分照合 |
+| 31 | `476–510` | Phase 9 — representative optimizer verification exit audit | `guide/verification/README.md` | 方針/行列/履歴の主要論点を照合 | 原文の全記録・履歴リンク・表の逐語照合 | 部分照合 |
+
+**集計：31/31見出しの受け皿・照合種別を記録。** 内訳は**22件が対応する数値/contract test本文のassertionと部分照合、9件が方針・検証行列・履歴の主要論点と部分照合**。いずれも全文の移行を意味する`verified`は**0件**である。Phase 1固定行番号と現行ファイルの行番号は混用しない。
+
+**検収ゲート：** 各区間の全文（数学式、数値条件、表、testパス、negative contract、過去のPR/CI結果と時系列）について旧原文と移行先を双方向比較し、欠落がない証拠を追記して初めて`verified`へ変更する。資料の保全のみであれば、旧Mapping自体が正本として継続する。全174見出しについて同様の承認が得られるまで旧5ファイルは保持する。
+
+## Phase 18：Verification以外の143見出し・監査仕分け（初回棚卸し）
+
+Phase 1固定台帳から`README.md`、`models.md`、`acquisition.md`、`optimization.md`の全143見出しを抽出した。**全143件に仮のprimary/secondary移行先が存在すること**を確認したが、元台帳が明示する通り、それは意味論的な本文移行検収ではない。
+
+| 旧Mapping | 見出し数 | primaryがaudit/の仮割当 | それ以外の仮割当 | Verified |
+| --- | ---: | ---: | ---: | ---: |
+| `README.md` | 13 | 8 | 5 | 0 |
+| `models.md` | 91 | 0 | 91 | 0 |
+| `acquisition.md` | 18 | 9 | 9 | 0 |
+| `optimization.md` | 21 | 8 | 13 | 0 |
+| **合計** | **143** | **25** | **118** | **0** |
+
+**audit/への誤仕分けリスク：** primaryが`audit/`である区間にもモデル実装、獲得関数、制約・最適化の数理契約が混在する。Phase番号を含む見出しだからといって技術内容をauditだけに隔離しない。原文区間を読み、技術本文は`guide/`の関連章・Appendix・verificationへ、PR/CI/歴史的判定は監査記録へ分割する。
+
+| 優先レビュー対象 | 固定行範囲 | 原見出し | 元secondary | 最初に調べる差分 |
+| --- | --- | --- | --- | --- |
+| `README.md` | 1–2 | Theory–Implementation Mapping: 12-phase development cycle | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 3–10 | Baseline and scope | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 42–66 | Reader navigation (Phase 10) | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 108–136 | Recorded phase decisions | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 137–174 | Phase 6 exit reconciliation (static scope) | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 175–201 | Phase 10 navigation exit audit | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 202–231 | Phase 11 mapping consistency exit audit | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 232–278 | Phase 12 final audit: evidence and decision | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `acquisition.md` | 1–4 | Acquisition theory–implementation mapping: Phase 3 inventory | `appendix/acquisition-contracts-and-compatibility.md` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `acquisition.md` | 48–60 | Fixed Phase 3 completion criteria | `appendix/acquisition-contracts-and-compatibility.md` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `acquisition.md` | 79–114 | Phase 5 — regression active-learning acquisition mappings (source inspected) | `appendix/acquisition-contracts-and-compatibility.md` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `acquisition.md` | 115–143 | Phase 5 — classification AL and Gaussian EPIG (source inspected) | `appendix/acquisition-contracts-and-compatibility.md` | 見出し名による技術情報の誤仕分けを全文点検 |
+
+**次の検収ゲート：** 各見出しの元本文と移行先を直接比較して、数式・public API・registry列・negative contract・テストassertion・旧PR/CIをそれぞれ保存できたかを確認する。特に`models.md`の91件を内容未読のまま一括`verified`にしない。旧174行の状態はすべて`planned (review required)`のまま保全し、旧5ファイルも削除しない。
+
+## Phase 18：Phase 1仮割当とPhase 3本文レビュー済みroutingの差異
+
+前節の`audit/` primary **25件はPhase 1のキーワード仮割当**であり、現在の最優先routingと断定してはならない。[Phase 3本文レビュー台帳](phase3-migration-ledger.md)には174区間すべての本文確認と一次/二次移行先の再割当があり、`body-reviewed routing / not migrated`と明記されている。Phase 3も**移行完了・検収完了ではない**が、移行先を選ぶ際にはPhase 1より具体的な一次根拠として参照する。
+
+| 原文固定区間 | Phase 1仮primary | 原文に実際にある技術情報 | 移行時の正しい扱い |
+| --- | --- | --- | --- |
+| `acquisition.md:288–308` | `audit/` | qEI/qNEI/qEHVIのcontinuous outcome residualと分類PoFによるweighting、同一posterior制約と別classifierの差 | `guide/acquisition/08_constraints.md`と獲得関数の該当章へ技術内容を残し、歴史的Phase/CIのみauditへ |
+| `acquisition.md:346–362` | `audit/` | qKG、multi-fidelity KG、multi-step、MES、GIBBON、PES/JESの実装・委譲・未検証区分 | `guide/acquisition/05_information_theoretic.md`と`06_lookahead.md`に技術契約を保存し、履歴だけをauditへ |
+| `optimization.md:182–205` | `audit/` | 11種類の`optimizer=`名とbackend/上流委譲、混合変数・制約の分岐 | `guide/optimization/12_selection_guide.md`などで11名dispatchを保持し、PR/CIをauditへ |
+| `optimization.md:246–257` | `audit/` | mixed native BoTorch / row-specific one-shot / NSGA-IIの専門経路とnegative contracts | `guide/optimization/04_mixed_discrete.md`、`08_batch_one_shot.md`、`07_evolutionary.md`の対象契約を保存 |
+
+以上4件は元区間を直接読んで**技術内容が含まれることを確認**した。上記の章は技術的な受け皿の候補を明示したものであり、この作業で各章への全文移行を完了したという意味ではない。Phase 1の原台帳行は歴史的スナップショットのため上書きしない。最終的なprimary/secondaryはPhase 3 routingおよび本文と照合して確定する。
