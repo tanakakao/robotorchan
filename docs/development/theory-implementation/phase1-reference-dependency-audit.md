@@ -170,3 +170,23 @@ GitHubの作業ブランチ上で、以下の10ファイルを直接取得でき
 - 固定sampleによるALスコア検証はsample generatorやclassification calibrationの証拠にしない。
 - `candidate_constraint_violation`の正しさを、candidate optimizationの可行性保証や収束証明へ拡張しない。
 - `Test asserts`までレビュー済み、`Test passes`と実行環境での独立再現は**未確認**。CIを実行したとは記載しない。
+
+## Acquisition / Optimization数値参照テストのassertion監査（第2バッチ）
+
+以下の6ファイルの**テスト本文**を読み、入力形状、参照式、実際のassertion、未検証範囲を確認した。**テスト・CIは実行していない**。
+
+| Test | 参照計算とassertion | 数値条件 | 対応する理論・重要な限界 |
+| --- | --- | --- | --- |
+| `tests/acquisition/test_phase8_classification_al_reference.py` | PredictiveEntropyは`-sum(p log p)`、MarginUncertaintyは`1-p_top1+p_top2`、LatentStraddleは`beta*sqrt(v_latent)-abs(mu_latent)`。3候補で形状・entropy/marginの範囲もassert | `atol=rtol=1e-10`、`beta=1.5` | `acquisition/09_active_learning.md`と`10_level_set.md`、`24_classification.md`。**確率空間とlatent空間の異なるscore**。予測較正は検証しない |
+| `tests/acquisition/test_phase8_mc_qucb_reference.py` | BoTorch native qUCBと、同一Sobol samplerの64 drawから計算する`E[max_q(mean_samples+sqrt(beta*pi/2)*abs(sample-mean_samples))]`を比較 | `atol=rtol=1e-8`、`beta=0.3`、`q=2`、seed=23 | `acquisition/03_confidence_bound.md`、`04_batch_noisy.md`。**sample mean**を用いる参照。analytic UCBの単純なq点選択とは異なる。sampler独立性は検証しない |
+| `tests/acquisition/test_phase8_mc_simple_regret_reference.py` | BoTorch native qSimpleRegretと`mean_samples(max_q(f_sample))`を比較。同一samplerのbase samplesを再利用 | `atol=rtol=1e-8`、64 draw、`q=2`、seed=17 | `acquisition/04_batch_noisy.md`。**sample-wise q最大値**。simple regretの最終最適化性能やMC収束率は検証しない |
+| `tests/acquisition/test_phase8_regression_al_formula_reference.py` | PosteriorVariance=`v`、PosteriorStd=`sqrt(v)`、Straddle=`beta*std-abs(mu-target)`、BoundaryVariance=`v*exp(-0.5*((mu-target)/max(std,eps))**2)` | `atol=rtol=1e-12`、`target=0.35`、`beta=1.7`、3候補 | `acquisition/09_active_learning.md`、`10_level_set.md`。固定パラメータ・q=1のscore式であり、境界推定性能の保証ではない |
+| `tests/optim/backends/test_phase9_sampling_optimizer_reference.py` | q=2負二次目的に対し、同seedで作成した128点のRandom/Sobol候補集合の**集合内argmax**とdispatcher結果・bounds・scoreを比較 | candidate`atol=rtol=0`、score`1e-12`、seed=29 | `optimization/06_derivative_free.md`、`08_batch_one_shot.md`。**全連続空間の真の最適点**を求めた検証ではなく、同一候補集合での選択一致 |
+| `tests/optim/trust_region/test_phase9_turbo_state_reference.py` | 3成功でregion lengthを倍増（maxでcap）、2失敗で半減・min割れでrestart、restart後のbest保持、denoised decision valueとraw observed bestの区別をassert | `success_tolerance=3`、`failure_tolerance=2`、length閾値と`math.isclose` | `optimization/10_trust_region.md`。TuRBO **state transition**を検証。実問題での改善率や並列async条件の性能は検証しない |
+
+### 既存6テストとの横断整理
+
+- これまでの**assertion本文レビューは計12ファイル**。過去の35パス存在確認とは異なる集計であり、混同しない。
+- acquisitionの`qUCB`、`qSimpleRegret`はBoTorch nativeの式・MC aggregationに対する参照。local `BoundaryVariance`、`Straddle`、分類AL scoreのテストとは実装所有者が異なる。
+- optimizationの`sampling optimizer`は同じ生成poolのargmax、`TuRBO state`は状態遷移、前回の`TuRBO geometry`は領域形状をそれぞれ検証する。3つを「TuRBO全体のE2E性能が検証済み」とまとめない。
+- 次段階でverification guideへ移すときは、**式、参照値の生成方法、`q`、dtype、sample数、seed、tolerance、未検証範囲**を同じ表で管理する。
