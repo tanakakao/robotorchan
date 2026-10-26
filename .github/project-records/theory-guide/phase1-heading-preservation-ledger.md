@@ -692,3 +692,14 @@
 | `verification.md:476–510` | `guide/verification/{optimization,README}.md`、`phase18-final-audit.md` | Phase9は5件の代表的参照に限定してcomplete。global convergence、全backend可行性は保証外 | 時系列・判定範囲を部分照合・review required |
 
 この表の「完了」は**旧Phase7〜9における代表propertyの数学的検証の完了**であり、現在のPhase18の174見出し移行をverifiedとする意味ではない。原台帳の`planned (review required)`は不変とする。
+
+### Verification冒頭の方針・検証行列の部分照合
+
+| 元区間（Phase 1固定行番号） | 日本語移行先 | 直接比較した情報・未達 | 状態 |
+| --- | --- | --- | --- |
+| `verification.md:1–3` | `guide/verification/README.md` | 数学的検証Phase7–9の責務を示す入口。旧12 Phaseの歴史的な表現は維持 | 部分照合・review required |
+| `verification.md:4–26` | `guide/verification/README.md` | static inventoryと独立数値assertionの証拠区別、method ID・仮定・dtype/device・seed・tol・実測値・propertyの記録 | 部分照合・review required |
+| `verification.md:27–39` | `guide/verification/README.md`と`models.md` | Exact GP条件付け、categorical relabeling等を含む8 familyの初期数理検証行列。全行の実測証明ではない | 部分照合・review required |
+| `verification.md:40–64` | `guide/verification/README.md` | Phase7の初期execution gate（value-level検査、float64 oracle、label置換、focused tests/CI）と当時の状況は履歴として保全 | 部分照合・review required |
+
+旧見出しに記載された計画・テスト目標と、後日の代表property限定exitを同一視しない。原文の歴史的リンクや全段落の網羅移行は未検収であり、174行の旧statusは据え置く。
