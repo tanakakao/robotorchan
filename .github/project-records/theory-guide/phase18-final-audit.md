@@ -136,3 +136,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 `tests/optim/integration/test_nonlinear_candidate_constraints_e2e.py`と`tests/optim/trust_region/test_turbo_strategy.py`のテスト本文を直接確認し、[Optimizer verification guide](../../../docs/development/theory-implementation/guide/verification/optimization.md)にcandidate feasibility（q=1、linear/nonlinear/fixed、q=2 interpoint、qLogNParEGO）およびTuRBOの閾値・length・restart状態について具体的なassertionと許容誤差を追記した。既存のOptimization MappingとVerification Mappingは引き続き原文の証拠を保持する。
 
 **判定：partial / review required。** このコミットはソース・テストassertionの静的照合であり、テストの新規独立実行や残余の174見出し全件のmeaning-level migrationを完了したことを意味しない。
+
+## Phase 18 Verification：Kronecker prior / PCA reducerのassertion照合
+
+`tests/models/standard/test_phase7_kronecker_covariance_reference.py`と`tests/models/high_dimensional/reduced/test_phase7_pca_projection_reference.py`を直接読み、[モデル検証ガイド](../../../docs/development/theory-implementation/guide/verification/models.md)に、3入力×2タスクのKronecker prior covarianceの添字・PSD・タスク置換（atol/rtol=1e-10）と、6×3→2 PCAのcovariance eigenspectrum、basis直交性、投影・残差の不変条件を追加した。
+
+**判定：partial / review required。** 両テストのassertionを照合したにとどまり、この作業で数値実験を独立に再実行したものではない。他のモデル検証やposterior conditioningの完全性を一般化しない。元の174見出し台帳とMappingは保全する。
