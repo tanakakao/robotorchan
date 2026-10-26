@@ -274,3 +274,9 @@ Phase 3 routingのprimary `guide/acquisition/06_lookahead.md`と旧Mapping固定
 Phase 3台帳の旧 `optimization.md:246–257` は主受け皿 `guide/optimization/05_constraints.md` と補助appendixを指定しているが、実装別の数理・APIを読者が追えるよう、関連する48章内の `04_mixed_discrete.md`、`08_batch_one_shot.md`、`07_evolutionary.md` の本文を直接改善した。旧原文と `src/robotorchan/optim/backends/botorch.py`、`src/robotorchan/optim/one_shot/mixed.py`、`src/robotorchan/optim/backends/nsga2.py` を直接確認した。native mixedのfixed_features_listとinter-point nonlinear拒否、mixed one-shotの行ごとのカテゴリ割当てとM**augmented_q列挙・q=1制約、NSGA-IIの支配関係・vector objectiveとscalar qEHVIの相違・使用例を補った。
 
 **判定：partial / review required。** Phase 3 routing自体や旧Mappingは書き換えず、正式な完全移行のverifiedに昇格しない。実装ソースの静的照合に基づく説明であり、今回の独立数値実験や全制約の可行性・最適性の証明ではない。174見出しは引き続き0 verifiedとして保全する。
+
+## Phase 18：optimizer制約処理の主受け皿への補充
+
+旧optimization.md固定区間246–257および直後のconstraint handling表について、Phase 3で主受け皿とされたguide/optimization/05_constraints.mdへbackend別のNATIVE・FEASIBILITY_FIRST・PENALTY・UNSUPPORTEDの数理的意味と、BoTorch形式の線形入力制約の最小例を追加した。src/robotorchan/optim/capabilities.py、constraints/contracts.py、backends/botorch.py、backends/torch.pyと旧Mappingを確認した。mixed BoTorchのinter-point nonlinear拒否、PyTorchの制約拒否、feasible初期点要件を区別した。
+
+**判定：partial / review required。** 旧区間全件の意味論的移行検収ではない。独立数値実行や全backendの一般可行性検証は行っていない。旧Mapping5ファイルおよび174見出しのverified=0を維持する。
