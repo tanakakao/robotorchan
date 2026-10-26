@@ -166,3 +166,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 [Verification guide index](../../../docs/development/theory-implementation/guide/verification/README.md)に、Models/Acquisition/Optimizationのassertion照合対象と、そのproperty別の未証明範囲を一つの表に整理した。旧`verification.md`内の「Phase 7 remains open」は当時のexit auditであり、後続の「Phase 7 final exit reconciliation」は**限定した代表的propertyの完了**を示すという時系列差を明記した。どちらも原文を改変しない。
 
 検証索引にテストパスがあること、テスト本文と数式を静的に照合したこと、GitHub CIが実行成功したこと、独立の数理的propertyが成立することを**別の証拠**として扱う。例えば既存のHeteroskedastic手動分散恒等式は、位置依存の`posterior(observation_noise=True)`自動合成を保証しない。**Phase18の文書移行・174見出し意味論照合は引き続きreview required**であり、各機能検証の過去のexit結果で置き換えない。
+
+## Phase 18：Verificationの見出し単位移行照合（部分照合）
+
+[Phase 1の174見出し台帳](phase1-heading-preservation-ledger.md)の末尾に、歴史的な`verification.md`行区間と`guide/verification/{models,acquisition,limitations,README}.md`への受け皿の対応を追加した。Kronecker、multi-fidelity、PCA、binary probit、Gaussian adapter、heteroskedastic、MixedPCAGP、Forest、MC qSimpleRegret/qUCB、過去の代表property限定exit判定を、確認したassertionごとに**部分照合・review required**として明示した。
+
+**未達：** 対象31見出しを含む174見出し全件の本文・表・数式・negative contract・根拠リンクの行単位検収。旧台帳の`planned (review required)`を機械的に`verified`に変更せず、旧Mapping5ファイルも保全する。Phase1の行番号は固定スナップショット由来であり現行行番号と混同しない。
