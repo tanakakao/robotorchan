@@ -220,3 +220,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 [Phase1見出し台帳](phase1-heading-preservation-ledger.md)から旧`verification.md`のH1–H3区間31件を機械的に抽出し、それぞれの原見出し、旧固定行範囲、日本語ガイド受け皿、確認証拠の種類、完全移行に必要な残作業を31行の表へ明示した。**22件はテスト本文のassertionへの部分照合、9件は方針・初期行列・履歴・exit節の主要論点への部分照合**。見出しの索引整備という狭い意味では31/31件、原区間の本文・表・数式・PR/CI・リンクすべてのsemantic migrationを確認した`verified`は**0/31件**。この区別を持たない『31件完了』の表現を禁止する。
 
 検査は原文との完全な差分照合ではなく、以前実施した部分照合の記録を棚卸ししたもの。旧174行の`planned (review required)`を変更せず、旧Mapping5ファイルは維持。以後はVerificationの各区間で残る全文移行の根拠を埋めるか、他4ファイルの見出し別reviewを進める。
+
+## Phase 18：Verificationモデル検証行列8行の要件・証拠差分
+
+旧`verification.md`冒頭1–64行と`guide/verification/README.md`を再照合し、旧Phase7 model verification matrixの8 familyについて、原文の要求と現在確認できる特定テストassertionとの相違を[日本語検証索引](../../../docs/development/theory-implementation/guide/verification/README.md)に一対一で記載した。Exact GP Cholesky参照やMixed categorical label relabelingはすでに実際のテストファイルを発見・直接確認済みであるため、索引の古い『別途確認が必要』という表現を修正した。一方でExact GPの他kernel条件、カテゴリ再学習posterior、Kronecker posterior conditioning、multi-fidelity全block、public heteroskedastic observation posteriorなどは引き続き独立reference未確認とする。
+
+**判定：行列8/8行の要件と特定証拠との差分を文書化。完全なsemantic migrationの検収ではない。** Phase1固定の旧`verification.md:27–39`および全174見出しの`planned (review required)`を昇格せず、旧Mapping5ファイルを保持する。今回の作業で数学的テストの新規独立再実行はしていない。
