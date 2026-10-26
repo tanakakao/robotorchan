@@ -107,3 +107,31 @@ docs/development/theory-implementation/
 4. リンクとmapping checker、docsテストを実行して初めて移行完了と判定する。**この監査更新ではCI未実行**。
 
 **残作業:** 見出しごとの完全な行単位仕分け、全参照の存在/anchor確認、章の確定設計。Phase 1完了判定は保留。
+
+## 獲得関数・最適化の理論サブ章との照合（Phase 1）
+
+`docs/theory/acquisition/README.md`と`docs/theory/optimization/README.md`の**実際の章構成**を確認した。既存`acquisition.md`・`optimization.md`の技術内容は、次の理論キーへ対応付ける。これは技術ガイドの章名を確定したものではなく、Phase 2で再利用する**理論との対応表**である。
+
+| 元文書の行 | 理論の正本（相対パスは`docs/theory/`起点） | 移行時の意味上の注意 |
+| --- | --- | --- |
+| acquisition 79–114 | `acquisition/09_active_learning.md`、`acquisition/10_level_set.md` | regression ALの分散と境界推定のStraddleを区別 |
+| acquisition 115–143 | `acquisition/09_active_learning.md`、`24_classification.md` | 分類entropy、BALD、latent straddleはlabel/latentの区別を保持 |
+| acquisition 144–178 | `acquisition/09_active_learning.md`、`acquisition/05_information_theoretic.md` | EPIGはtarget prediction情報。KGやMESと情報対象が異なる |
+| acquisition 179–232 | `acquisition/02_improvement.md`、`acquisition/03_confidence_bound.md`、`acquisition/04_batch_noisy.md` | EI/PI、UCB、q/NEIを計算方式と目的で分ける |
+| acquisition 233–287 | `acquisition/07_multiobjective.md`、`acquisition/04_batch_noisy.md` | EHVI/NEHVIとNParEGO、q/MCを区別 |
+| acquisition 288–345 | `acquisition/08_constraints.md` | outcome制約の合成。candidate制約はoptimization側 |
+| acquisition 346–405 | `acquisition/05_information_theoretic.md`、`acquisition/06_lookahead.md`、`acquisition/11_multifidelity_cost_aware.md` | MES/GIBBON、KG/fantasy、cost-aware MF-KGを別扱い |
+| acquisition 1–78,406–465 | `acquisition/01_foundations.md`、`acquisition/12_selection_guide.md`、Appendix/audit | registryとcapabilityの契約・未検証事項は理論本文へコピーしない |
+| optimization 20–39,182–245 | `optimization/01_foundations.md`、`optimization/02_gradient_based.md`、`optimization/03_initialization.md`、`optimization/06_derivative_free.md`、`optimization/07_evolutionary.md`、`optimization/11_hybrid.md` | named dispatchとspecialist entry point、初期条件、hybrid stagesを区別 |
+| optimization 40–62,246–295 | `optimization/04_mixed_discrete.md`、`optimization/05_constraints.md`、`optimization/08_batch_one_shot.md` | native/penalty/feasibility-first、q-batch、one-shotを区別 |
+| optimization 296–355 | `optimization/09_high_dimensional.md`、`optimization/10_trust_region.md` | REMBO/HeSBO/ALEBO/BAxUSの座標変換とTuRBOのstateful trust region |
+| optimization 1–19,86–181 | `optimization/01_foundations.md`、`optimization/12_selection_guide.md`、Appendix/audit | 旧Phase 3のテスト/CI/完了判定は監査履歴へ |
+
+### 12章構成の実在名称（両subtree）
+
+- **Acquisition**：`01_foundations.md`、`02_improvement.md`、`03_confidence_bound.md`、`04_batch_noisy.md`、`05_information_theoretic.md`、`06_lookahead.md`、`07_multiobjective.md`、`08_constraints.md`、`09_active_learning.md`、`10_level_set.md`、`11_multifidelity_cost_aware.md`、`12_selection_guide.md`。
+- **Optimization**：`01_foundations.md`、`02_gradient_based.md`、`03_initialization.md`、`04_mixed_discrete.md`、`05_constraints.md`、`06_derivative_free.md`、`07_evolutionary.md`、`08_batch_one_shot.md`、`09_high_dimensional.md`、`10_trust_region.md`、`11_hybrid.md`、`12_selection_guide.md`。
+
+**衝突回避**：同じ`01_foundations.md`などのbasenameが両subtreeに存在するため、移行台帳・ガイドのリンクは必ず`acquisition/`または`optimization/`を含む完全な相対パスで管理する。理論の掲載はrobotorchan実装済みを意味しない。BoTorch native、local、registry-only、runtime-verifiedを区別する。
+
+**検証範囲**：上記2つのREADMEに記載されたファイル名と章の意味を照合した。24サブ章の個別ファイル取得・存在確認や、原文全174見出しの逐語的対応、CIは今回実行していない。既存Mapping5ファイルは不変。
