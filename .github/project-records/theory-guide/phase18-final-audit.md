@@ -232,3 +232,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 旧`verification.md`の固定区間149–183、223–244、274–291の原文を再読し、[Verification日本語索引](../../../docs/development/theory-implementation/guide/verification/README.md)に時系列の表を追加した。初期の9件のrepresentative reference、#1424–#1426の追加3参照、#1426 final-head CIが当時pendingだった判定、後続#1428/#1429によるカテゴリ保持と**手動観測分散合成**の追加、最終的なproperty-specific complete判定を区別した。後続のexitはpublic `posterior(observation_noise=True)`の位置依存noise注入を認定していない。
 
 **判定：partial / review required。** 古い`remains open`と後続の限定的`complete`を時系列で両立させ、#1426の当時のpendingを現在のCI状態と混同しない。PR番号と証拠範囲の静的照合であり、各歴史的PRの最新状態を新たに取得していない。全174見出しの完全移行は未達、旧Mapping保全。
+
+## Phase 18：Phase 8 / Phase 9 final exitの証拠範囲と未検証契約
+
+旧`verification.md`のPhase 8 `376–407`とPhase 9 `476–510`（Phase1固定行番号）を再確認し、[Verification日本語索引](../../../docs/development/theory-implementation/guide/verification/README.md)に過去のPR番号・代表的検証property・未検証項目を対比した。Phase8は#1431–#1436の六つの数式/MC参照を対象とする**exit recommendation**であり、noisy improvement、hypervolume、constraints、lookahead等の数値referenceを保証しない。Phase9は#1438–#1442の五つの代表propertyについての**complete decision**であり、全backendの制約可行性、global convergenceや混合/非同期最適化は対象外である。
+
+**判定：partial / review required。** 旧Mapping内の歴史的CI/PR記録を照合したもので、過去のPR状態を今回の作業で全件再照会してはいない。数値テストを新規独立実行したわけではなく、Phase 18における174見出し全体の完全なsemantic migrationも未達。元台帳の`planned (review required)`と旧5 Mappingファイルは保全する。
