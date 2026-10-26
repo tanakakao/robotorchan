@@ -149,3 +149,24 @@ GitHubの作業ブランチ上で、以下の10ファイルを直接取得でき
 - **Notebook runnable**：指定環境で実行成功した状態。今回未実施。
 
 今後、各技術ガイドの「検証」節は少なくとも`source`、`test`、`notebook`、`verification level`、`limitations`を分離する。テストファイル名を挙げるだけで数値妥当性を主張しない。旧5 Mappingファイルは不変。
+
+## 数値参照テストのassertion監査（第1バッチ）
+
+下記6ファイルは存在確認に加えて**テスト本文を直接読み、assertion・期待値の作り方・許容誤差**を確認した。**実行はしていない**。ここでの`independent`は「対象APIの出力と別の式・計算経路を比較している」という限定的な意味で、実装から完全に独立した第三者検証の保証ではない。
+
+| Test | 実際に検証する性質と期待値 | tolerance | 残る限界・ガイド接続 |
+| --- | --- | --- | --- |
+| `tests/models/standard/test_phase7_kronecker_covariance_reference.py` | input×task共分散の明示indexing、行列shape・対称性・固有値によるPSD、task順序交換時の対応 | `atol=rtol=1e-10`、最小固有値`>=-1e-10` | 特定小規模構成のkernel行列。大規模Kronecker計算・posterior性能の証明ではない。理論`07_multitask_multioutput.md` |
+| `tests/models/classification/test_phase7_binary_probit_reference.py` | `f~N(mu,var)`で`E[Phi(f)]=Phi(mu/sqrt(1+var))`を用いてpositive class probabilityを直接算出、class complement・和1・[0,1] | 主要比較`atol=rtol=1e-10` | 未学習の単一binary model、3候補。予測較正・ELBO収束の証明ではない。理論`24_classification.md` |
+| `tests/acquisition/test_phase8_bald_probability_variance_reference.py` | `sample_class_probabilities`を固定64標本に差替え、ProbabilityVarianceの標本分散とBALDの`H(E[p])-E[H(p)]`を直接計算 | `atol=rtol=1e-10` | **固定sampleに対する計算式テスト**。実posterior samplingの較正・Monte Carlo誤差を検証しない。理論`acquisition/09_active_learning.md` |
+| `tests/acquisition/test_phase8_analytic_bo_gaussian_reference.py` | BoTorch native LogEI/LogPI/UCBとGaussian CDF/PDF閉形式を比較。`UCB=mu+sqrt(beta)*sigma` | `atol=rtol=1e-8` | 3候補・単目的`q=1`、`best_f=0`、`beta=0.4`。log-domainの極端なtail安定性やrobotorchan独自acquisitionを検証しない。理論`acquisition/02_improvement.md`・`03_confidence_bound.md` |
+| `tests/optim/trust_region/test_phase9_turbo_geometry_reference.py` | ARD正規化のtrust region boundsを直接式と比較、public bounds内clamp・境界接触をassert | `atol=rtol=1e-12` | geometryのみ。TuRBOのsuccess/failure state・restart・最適化性能はこのテストの範囲外。理論`optimization/10_trust_region.md` |
+| `tests/optim/constraints/test_phase9_constraint_violation_reference.py` | q=2のintra/interpoint線形・等式許容誤差・非線形違反量を手計算で加算、`feasible <=> violation==0`、feasibility-first順位をassert | 違反量`atol=rtol=1e-12`、等式許容`0.05` | 制約**評価・順位付け**のテスト。optimizerが必ず可行点を発見する保証ではない。理論`optimization/05_constraints.md` |
+
+### 数値テストをガイドへ転記する際の原則
+
+- テスト対象の**数式・対象次元・構成・許容誤差・期待値算出法・未検証範囲**を記述し、Phase番号を章見出しに残さない。
+- BoTorch nativeの数値一致とrobotorchan local compositionの数値一致を混同しない。
+- 固定sampleによるALスコア検証はsample generatorやclassification calibrationの証拠にしない。
+- `candidate_constraint_violation`の正しさを、candidate optimizationの可行性保証や収束証明へ拡張しない。
+- `Test asserts`までレビュー済み、`Test passes`と実行環境での独立再現は**未確認**。CIを実行したとは記載しない。
