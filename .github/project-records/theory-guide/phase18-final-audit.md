@@ -238,3 +238,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 旧`verification.md`のPhase 8 `376–407`とPhase 9 `476–510`（Phase1固定行番号）を再確認し、[Verification日本語索引](../../../docs/development/theory-implementation/guide/verification/README.md)に過去のPR番号・代表的検証property・未検証項目を対比した。Phase8は#1431–#1436の六つの数式/MC参照を対象とする**exit recommendation**であり、noisy improvement、hypervolume、constraints、lookahead等の数値referenceを保証しない。Phase9は#1438–#1442の五つの代表propertyについての**complete decision**であり、全backendの制約可行性、global convergenceや混合/非同期最適化は対象外である。
 
 **判定：partial / review required。** 旧Mapping内の歴史的CI/PR記録を照合したもので、過去のPR状態を今回の作業で全件再照会してはいない。数値テストを新規独立実行したわけではなく、Phase 18における174見出し全体の完全なsemantic migrationも未達。元台帳の`planned (review required)`と旧5 Mappingファイルは保全する。
+
+## Phase 18：Verification以外の143見出しを初回棚卸し
+
+[Phase1固定見出し台帳](phase1-heading-preservation-ledger.md)から`README.md` 13件、`models.md` 91件、`acquisition.md` 18件、`optimization.md` 21件、合計143見出しを抽出し、仮のprimary/secondary割当が全件存在することを確認した。うち25件はprimaryが`audit/`であり、Phase番号やaudit語だけで技術本文を歴史資料へ誤仕分けする危険があるため、優先レビュー表を台帳に追加した。
+
+**判定：inventory / review required。** 143/143件は**仮の移行先が台帳にある**という意味だけであり、元区間の全文を実際に読み、技術数式・public API・negative contract・テスト結果・CI/PR履歴が移行先で完全に保全されたことを意味しない。新たな`verified`は0件。Verificationの31見出しと合わせ174件の旧台帳ステータスは変えず、旧Mapping5ファイルを保全する。
