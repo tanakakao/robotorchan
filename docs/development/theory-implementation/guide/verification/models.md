@@ -40,3 +40,32 @@ K[i*m + a, j*m + b] = K_input[i,j] * K_task[a,b]
 これらは入力削減の線形代数であり、PCAを内部に持つGPの`posterior(X)`、分類特徴の保持、PLSやAE/VAEの数値契約の独立検証ではない。対応するモデル・reducerの境界は[Reductionの実装ガイド](../18_dimensionality_reduction_gp.md)で扱う。
 
 以上二件は旧[Verification Mapping](../../verification.md)のPhase 7 reference記録を**実際のテストassertionと再照合した範囲**である。表に挙げた他のfamilyについて同じ程度のassertion-level照合が済んだとは扱わない。
+
+
+## ソースassertionとの直接照合：Multi-fidelity downsampling kernel
+
+`tests/models/standard/test_phase7_multifidelity_kernel_reference.py`は、設計値・カテゴリ値・fidelity値を連結した4行3列の固定float64入力で`MixedSingleTaskMultiFidelityGP`を作る。カテゴリ軸は`cat_dims=[1]`、fidelity軸は`data_fidelities=[2]`である。モデルの`covar_module.kernels[1]`から取り出すdownsampling kernelに対して、次の形の構造を確認する。
+
+```text
+K_f(s,t) = offset + c * (1-s)^p * (1-t)^p
+s=1 または t=1 の境界では K_f = offset
+K_residual = K_f - offset
+```
+
+最後のfidelityが`1.0`であるため、最終行・最終列の全値が`offset=K_f(1,1)`となることを`atol=1e-10, rtol=0`で検査する。残差のrank-one構造は`K_residual[:,0:1] @ K_residual[0:1,:] / K_residual[0,0]`との一致で確かめ、対称性・半正定値性（最小固有値`>=-1e-10`）も検証する。行列shapeは`[4,4]`、dtypeはfloat64、行列比較は原則`atol=rtol=1e-10`である。
+
+**検証対象はfidelity-only kernel成分**であり、Mixed GPの全covariance積、条件付きposterior、他のfidelity kernel変種やhyperparameter fittingの正しさを示すものではない。
+
+## ソースassertionとの直接照合：Heteroskedastic uncertainty
+
+`tests/models/robust/test_phase7_heteroskedastic_uncertainty_reference.py`は`HeteroskedasticSingleTaskGP`に固定log-noiseのtest doubleを接続し、入力`x=0.2`で`0.01`、`x=0.8`で`0.09`の**観測雑音分散**が`predicted_noise(X)`から返ることを検査する。固定されたlog-varianceを指数変換した値との比較は`atol=rtol=1e-12`である。
+
+`posterior(X, observation_noise=False).variance`は潜在関数の不確実性であり、入力依存の観測雑音分散と同じではないことを確かめる。さらに、独立な零平均観測誤差を仮定した場合の手動の恒等式
+
+```text
+Var[y(x) | D] = Var[f(x) | D] + v(x)
+```
+
+を固定2点の候補で数値検査する。ここでは**手動合成した分散**を比較するだけで、`posterior(X, observation_noise=True)`が位置依存雑音を自動的に反映することをテストしていない。雑音GP自体の学習、雑音較正、未知地点での不確実性の精度も検証範囲外である。
+
+この2件は旧[Verification Mapping](../../verification.md)に記載された性質のうち、実際のテスト本文を再照合した範囲だけを説明している。
