@@ -662,3 +662,13 @@
 | `verification.md:465–475` | `guide/verification/optimization.md` | `test_phase9_torch_constraint_contract.py`：Adam/AdamW/SGD × linear/equality/nonlinearの9ケースで明示的ValueError | 部分照合・review required |
 
 `verification.md:476–510`の代表property限定exit判定は旧文書に保持し、上記の特定テストassertionと同じ意味の移行完了認定にはしない。
+
+### Phase 8 AL/analytic参照の追加部分照合
+
+| 元区間（Phase 1固定行番号） | 日本語移行先 | 確認したassertion | 状態 |
+| --- | --- | --- | --- |
+| `verification.md:292–306` | `guide/verification/acquisition.md` | `test_phase8_regression_al_formula_reference.py`：4獲得関数、q=1、3候補、target=0.35、beta=1.7、1e-12 | 部分照合・review required |
+| `verification.md:307–319` | `guide/verification/acquisition.md` | `test_phase8_classification_al_reference.py`：entropy/margin/latent straddle、beta=1.5、1e-10、score範囲 | 部分照合・review required |
+| `verification.md:335–350` | `guide/verification/acquisition.md` | `test_phase8_analytic_bo_gaussian_reference.py`：log-EI、log-PI、UCB、best_f=0、beta=0.4、1e-8 | 部分照合・review required |
+
+旧台帳の各行はplannedのまま据え置き、全文・履歴・negative contractが漏れなく移行したという意味のverifiedへは昇格させない。
