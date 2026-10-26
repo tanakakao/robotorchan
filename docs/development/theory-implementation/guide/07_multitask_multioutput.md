@@ -18,6 +18,7 @@
 ```python
 import torch
 from robotorchan.models import MultiTaskGP
+
 X = torch.tensor([[0.1, 0.0], [0.4, 0.0], [0.1, 1.0], [0.4, 1.0]], dtype=torch.double)
 Y = torch.tensor([[0.2], [0.5], [0.3], [0.7]], dtype=torch.double)
 model = MultiTaskGP(train_X=X, train_Y=Y, task_feature=1)
