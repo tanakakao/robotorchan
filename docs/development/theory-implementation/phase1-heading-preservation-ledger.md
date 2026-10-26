@@ -66,16 +66,16 @@
 | `models.md` | 459–477 | 2 | Inspected classification test assertions: ensemble and uncertain input | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 478–497 | 2 | Inspected classification test assertions: label noise and sklearn adapters | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 498–518 | 2 | Source and assertion audit: binary multitask and DeepGP | `07_multitask_multioutput.md` | `24_classification.md` | planned (review required) |
-| `models.md` | 519–540 | 2 | Source and assertion audit: high-dimensional binary classifiers | `08_high_dimensional.md` | `24_classification.md` | planned (review required) |
+| `models.md` | 519–540 | 2 | Source and assertion audit: high-dimensional binary classifiers | `08_high_dimensional_gp.md` | `24_classification.md` | planned (review required) |
 | `models.md` | 541–563 | 2 | Source and assertion audit: neural, ensemble, robust and categorical models | `24_classification.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
 | `models.md` | 564–588 | 2 | Source and assertion audit: contamination, replicates, bootstrap and robust composition | `24_classification.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
 | `models.md` | 589–606 | 2 | Repeatable registry-wide static evidence summary | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 607–625 | 2 | Inspected regression non-GP implementations: NGBoost and ExtraTrees | `23_non_gp_surrogates.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
 | `models.md` | 626–649 | 2 | Inspected regression noise and heterogeneous multitask implementations | `07_multitask_multioutput.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
-| `models.md` | 650–675 | 2 | Source and assertion audit: multi-fidelity regression families | `06_multifidelity.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
-| `models.md` | 676–697 | 2 | Source and assertion audit: regression DeepGP models | `22_expressive_models.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
-| `models.md` | 698–723 | 2 | Source and assertion audit: expressive stationary and infinite-width kernels | `22_expressive_models.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
-| `models.md` | 724–746 | 2 | Source and assertion audit: joint neural representation regression | `11_neural_reduction.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
+| `models.md` | 650–675 | 2 | Source and assertion audit: multi-fidelity regression families | `06_multi_fidelity.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
+| `models.md` | 676–697 | 2 | Source and assertion audit: regression DeepGP models | `22_expressive_gp.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
+| `models.md` | 698–723 | 2 | Source and assertion audit: expressive stationary and infinite-width kernels | `22_expressive_gp.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
+| `models.md` | 724–746 | 2 | Source and assertion audit: joint neural representation regression | `19_neural_reduction_gp.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
 | `models.md` | 747–773 | 2 | Classification documentation mapping at registry-ID granularity | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 774–798 | 2 | Phase 2 inventory sign-off and scope | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 799–806 | 2 | Phase 4: theory-to-implementation records | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
@@ -573,3 +573,31 @@
 - 機械割当の`planned (review required)`は維持。技術内容を本文レビューしたことと、全行・全参照の移行検証済みを区別するため。
 - 同一の原文区間がモデル・分類・高次元など複数の章へ関係する場合、**正本となる説明を1箇所に置き、他章は参照する**。Appendixは完全な原表と横断契約を保管し、説明の重複コピーを避ける。
 - **残る要確認事項**：全174区間の候補先が既存理論章に対応するか、primary/secondaryの最終確定、本文内のH4/表/数式の網羅、原文リンクとアンカーの完全性。今回の修正で移行完了やPhase 1完了とはしない。
+
+## docs/theory/README.md と台帳の正式章名照合（第1弾）
+
+現行ブランチの`docs/theory/README.md`を取得し、理論01–24の正式な章ファイル名を確認した。既存台帳で前回追加した仮章名のうち、**4種類の誤記**を正式なbasenameへ修正した（上記全見出し台帳と後続のレビュー記録中の一致文字列）。理論ファイルは変更していない。
+
+| 旧仮名 | 正式な理論章ファイル名 | 対応テーマ |
+| --- | --- | --- |
+| `06_multifidelity.md` | `06_multi_fidelity.md` | Multi-Fidelity |
+| `08_high_dimensional.md` | `08_high_dimensional_gp.md` | High-dimensional GP |
+| `11_neural_reduction.md` | `19_neural_reduction_gp.md` | Neural Representation |
+| `22_expressive_models.md` | `22_expressive_gp.md` | Expressive GP |
+
+**正本章一覧（docs/theory/README.mdのナビゲーションより）**：
+`01_bayesian_optimization.md`、`02_gaussian_process.md`、`03_kernel.md`、`04_acquisition_function.md`、
+`05_mixed_variables.md`、`06_multi_fidelity.md`、`07_multitask_multioutput.md`、`08_high_dimensional_gp.md`、
+`09_variational_gp.md`、`10_preference_learning.md`、`11_structured_output.md`、`12_hierarchical_contextual_gp.md`、
+`13_model_selection.md`、`14_robust_gaussian_process.md`、`15_heteroskedastic_noise.md`、
+`16_uncertain_input_gp.md`、`17_nonstationary_gp.md`、`18_dimensionality_reduction_gp.md`、
+`19_neural_reduction_gp.md`、`20_high_dimensional_search.md`、`21_advanced_high_dimensional_models.md`、
+`22_expressive_gp.md`、`23_non_gp_surrogates.md`、`24_classification.md`。
+
+**重要な設計上の区別**：
+- `docs/theory/11_structured_output.md`はStructured Outputであり、Neural Reductionは19章。`11_neural_reduction.md`という仮名を採用しない。
+- 08は高次元GPの章、20は高次元探索、21は高度な高次元モデル。SAAS/埋込/探索strategyの記述を名前だけで一括配置しない。
+- 台帳の`01_...`等は**新規日本語技術ガイドのファイル名ではなく理論章との意味的対応キー**。Phase 2で構成を決めるまで実ファイルとしてリンクしない。
+- `acquisition/`と`optimization/`のサブ章はこの24ファイルとは別の構成であり、今後それぞれのREADMEと照合する。
+
+**未完了**：全174見出しのprimary/secondaryに対する正式名・技術的意味の完全照合、理論章リンクの実在確認、全参照のanchor検証、CI。今回の結果は`docs/theory/README.md`との名称照合であり、全ファイルを個別fetchした証明ではない。
