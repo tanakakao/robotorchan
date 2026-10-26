@@ -107,3 +107,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 旧`optimization.md`の「Specialized optimization paths: inspected source and assertions」、`src/robotorchan/optim/backends/nsga2.py`および`tests/optim/backends/test_nsga2_backend.py`の実装・テスト本文を確認した。[Evolutionaryガイド](../../../docs/development/theory-implementation/guide/optimization/07_evolutionary.md)に、NSGA-IIが11種のnamed acquisition dispatcherに含まれないこと、`[population,d] → [population,m]`（`m>=2`、全目的最大化）の契約、nondominated ranking／crowding／選択・交叉・突然変異、返却される近似Pareto集合とテストの限界を明記した。
 
 **判定：partial / review required。** この照合はソースとテストの静的確認であり、今回独立にNSGA-IIを実行した結果やhypervolume収束の証明ではない。旧Mappingは引き続き保全する。
+
+## HeSBOとLatentSpaceStrategy：座標変換の実装照合（部分達成）
+
+旧`optimization.md`の「HeSBO, latent-space reconstruction and backend constraint semantics」を参照し、`src/robotorchan/optim/embedding/hesbo.py`、`src/robotorchan/optim/latent/strategy.py`を直接読んで[High-dimensional optimizationガイド](../../../docs/development/theory-implementation/guide/optimization/09_high_dimensional.md)を書き直した。HeSBOの疎hash・符号・正規化座標のclamping、LatentSpaceStrategyの学習済み再構成と元空間のacquisition評価、両者の`reject_unmapped_candidate_constraints`を照合した。
+
+**判定：partial / review required。** sourceの契約を説明し旧Mapping中の代表テスト名を参照したが、今回テスト本文全件・数値実行・REMBO/ALEBO/BAxUS全経路の検収は完了していない。座標復元のboundsと一般の非線形candidate feasibilityを同一視しない。旧174見出し台帳は依然検収待ちである。
