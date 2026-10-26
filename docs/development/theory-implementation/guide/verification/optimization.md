@@ -68,3 +68,22 @@ upper_TR = min(upper, center + half_width)
 別テストではobjective値`[0.5,100,0.9,200]`、違反量`[0,0.2,0,0.1]`に対する`feasibility_first_ranks=[3,1,4,2]`をassertする。高いobjective値を持つ不可行点より、可行点を上位にする**順位付け算術**の証拠であり、数値optimizer自体が制約可行な候補を必ず返す保証ではない。
 
 これらの独立参照は旧[Verification Mapping](../../verification.md)のPhase 9区間と照合したものだが、一般のglobal optimum、学習済みARDの正しさ、全制約backendの厳密可行性は対象外とする。
+
+
+## Phase 9独立参照：TuRBO state transition
+
+`tests/optim/trust_region/test_phase9_turbo_state_reference.py`はfloat64の固定観測値で状態更新を照合する。独立したGP fittingや乱数samplingは含まない。
+
+- `length=0.9`、`length_max=1.6`、`success_tolerance=3`の状態に`[0.1,0.2,0.3]`を順に渡す。最初の2成功で長さは0.9のまま、3回目は2倍にするものの上限1.6にclipされ、success counterは0へ戻る。
+- `length=0.15`、`length_min=0.1`、`failure_tolerance=2`で`[1.0,1.5]`を更新すると、最良値2.0を超えないため2連続失敗となり、長さは0.075に半減、`restart_triggered=True`。続く`restart_turbo_state(length=0.8)`ではrestart回数が1増え、best valueとobserved best valueは2.0のまま保存される。
+- `best_value=1.0`の状態に観測3.0と`state_values=0.5`を同時に渡すと、decision utility上は失敗扱い（failure counter=1、best value=1.0）だが、生の`observed_best_value`は3.0となる。**意思決定の改善判定と観測最大値の記録を分離する**契約を明示する。
+
+これは状態遷移の限定的なreferenceであり、ノイズ付き探索の性能やrestart centerの生成分布を立証しない。
+
+## Phase 9 negative contract：PyTorch勾配optimizerとcandidate制約
+
+`tests/optim/backends/test_phase9_torch_constraint_contract.py`は`optim/backends/torch.py::optimize_acqf_torch`を直接呼び、`optimizer`が`adam`、`adamw`、`sgd`の各値について、線形不等式・線形等式・非線形不等式の計9組合せが`ValueError("does not support candidate constraints")`で拒否されることをassertする。入力はfloat64、`q=1`、`num_restarts=1`、`raw_samples=4`である。
+
+この拒否は**未対応のcandidate constraintを無視して最適化する事故を防ぐnegative contract**であり、制約付きAdam等が実行できる、またはその候補の可行性を保証する、という主張とは正反対である。optimizerの勾配収束自体もこのテストからは評価できない。
+
+今回の直接照合は、旧[Verification Mapping](../../verification.md)のPhase 9独立reference五群を対象とする。歴史的なPhase 9 exit判定は**代表的propertyに限定**される。旧文書の他の断定や全backendの数学的同値性まで検収済みとはしない。
