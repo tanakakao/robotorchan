@@ -262,3 +262,9 @@ Phase 3台帳が旧 `acquisition.md:288–308` を `guide/acquisition/01_foundat
 Phase 3 routingのprimary `guide/acquisition/06_lookahead.md`と旧Mapping固定区間346–362を確認し、技術内容をその主受け皿に反映するとともに、情報獲得固有の内容を `guide/acquisition/05_information_theoretic.md` に追記。KGの意思決定価値の概念式、qKG/multi-fidelity KG/multi-stepのBoTorch委譲、one-shot augmented batchと初期化、MES/GIBBON/PES/JESの情報対象、有限candidate_set、MES/GIBBONのnative実行例を補った。根拠として `src/robotorchan/acquisition/registry.py`、`docs/optimization/lookahead.md`、`tests/acquisition/test_information_theoretic.py` の既存ソースを直接確認した。
 
 **判定：partial / review required。** MES/GIBBONテストは有限値のみ検査し、情報量の独立数値正当性を保証しない。PES/JESのローカル公開constructorも未確認。新規数値再実行なし。174区間の全文一対一semantic migrationのverified判定は0件を維持し、旧5 Mappingファイルを保全する。
+
+## Phase 18：旧Optimization 182–205のoptimizer dispatch本文移行（部分照合）
+
+旧Optimization Mappingの固定区間182–205、Phase3のprimary `guide/optimization/01_foundations.md`と補助索引のroutingを確認し、読者がbackendを選択するための説明を `guide/optimization/12_selection_guide.md` に追記した。11種類のOptimizerName、最大化対象A(X)、各backendのOwned/Delegatedの違い、sampled joint q-batchのargmax式と[N,q,d] shape、BoTorch固有引数とoptimizer_options、torch_*のcandidate制約拒否、GA mixed分岐、named dispatchに含まれないNSGA-II/native mixed/one-shotを明示した。`src/robotorchan/optim/dispatch.py`、`backends/torch.py`、`backends/sampling.py`、旧Mappingの本文を静的に照合し、最小sampling dispatch例を追加した。
+
+**判定：partial / review required。** Phase3 routingの受け皿は意味に応じて補完したが、旧区間全体の一対一semantic migrationの検収には至っていない。数値テストの新規実行や全backend正当性の証明は行っていない。174区間のverifiedは0件、旧5 Mappingは保全する。
