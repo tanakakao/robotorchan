@@ -84,3 +84,20 @@ GitHubの作業ブランチ上で、以下の10ファイルを直接取得でき
 1. `models.md` のfamily別見出しに含まれる **技術的な主張** を章別本文とAppendixに二重取りこぼしなく割り当てる。
 2. `verification.md` の各数値テストについて、テスト存在・実行結果・独立参照・検証限界を別列で管理する。
 3. `README.md` と各subjectファイルのリンク先を新章へ移す際、既存のナビゲーション契約を維持する。
+
+## 追加の参照先確認（第2バッチ）
+
+既存5ファイルの本文から、特定形式の`src/robotorchan/`、`tests/`、`examples/notebooks/`、`scripts/`、`docs/`の明示パスを抽出した結果、重複除外で**178候補**を識別した。省略パス・波括弧展開・相対リンク・外部からの被参照はこの件数に含まれない。178件すべての存在確認は未完了。
+
+追加で以下6件をGitHub作業ブランチから直接取得し、すべて存在を確認した。
+
+| Path | Status |
+| --- | --- |
+| `docs/models/classification.md` | 取得成功 |
+| `docs/optimization/epig.md` | 取得成功 |
+| `docs/theory/acquisition/classification-active-learning.md` | 取得成功 |
+| `scripts/audit_model_api.py` | 取得成功 |
+| `scripts/audit_acquisition_api.py` | 取得成功 |
+| `scripts/generate_model_coverage.py` | 取得成功 |
+
+前回の個別取得10件と合わせて、**個別取得による確認は計16件**。実行結果や全参照の網羅性は未確認。以後は新規監査ファイルを増やさず、同じ台帳を更新する。
