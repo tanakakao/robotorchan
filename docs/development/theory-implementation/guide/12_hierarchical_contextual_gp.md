@@ -17,6 +17,7 @@
 ```python
 import torch
 from robotorchan.models import SACGP
+
 # Context構造の詳細な入力契約はモデル別ガイドに従う。
 print(SACGP.__name__)
 ```
