@@ -142,3 +142,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 `tests/models/standard/test_phase7_kronecker_covariance_reference.py`と`tests/models/high_dimensional/reduced/test_phase7_pca_projection_reference.py`を直接読み、[モデル検証ガイド](../../../docs/development/theory-implementation/guide/verification/models.md)に、3入力×2タスクのKronecker prior covarianceの添字・PSD・タスク置換（atol/rtol=1e-10）と、6×3→2 PCAのcovariance eigenspectrum、basis直交性、投影・残差の不変条件を追加した。
 
 **判定：partial / review required。** 両テストのassertionを照合したにとどまり、この作業で数値実験を独立に再実行したものではない。他のモデル検証やposterior conditioningの完全性を一般化しない。元の174見出し台帳とMappingは保全する。
+
+## Phase 18 Verification：Multi-fidelity / Heteroskedastic assertion照合
+
+`tests/models/standard/test_phase7_multifidelity_kernel_reference.py`と`tests/models/robust/test_phase7_heteroskedastic_uncertainty_reference.py`の本文を読んで、[Models verification guide](../../../docs/development/theory-implementation/guide/verification/models.md)に数式・入力条件・許容誤差を追記した。前者はfidelity-only downsampling kernelのhigh-fidelity offset boundary、rank-one residual、PSDをfloat64/1e-10で照合した。後者は固定log-noiseからの0.01/0.09分散（1e-12）、latent varianceとの分離、手動の分散加法恒等式を確認した。
+
+**判定：partial / review required。** テスト本文とのassertion照合であり、今回の独立再実行は行っていない。特にHeteroskedasticの`posterior(observation_noise=True)`で位置依存noiseが自動合成されること、全MF posteriorの同値性は証明されていない。旧Mappingの全区間移行は未完了。
