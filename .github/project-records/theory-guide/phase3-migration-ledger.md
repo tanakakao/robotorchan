@@ -59,15 +59,15 @@
 | `models.md` | 519–540 | Source and assertion audit: high-dimensional binary classifiers | `guide/24_classification.md` | `guide/08_high_dimensional_gp.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 541–563 | Source and assertion audit: neural, ensemble, robust and categorical models | `guide/24_classification.md` | `guide/14_robust_gaussian_process.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 564–588 | Source and assertion audit: contamination, replicates, bootstrap and robust composition | `guide/24_classification.md` | `guide/14_robust_gaussian_process.md` | **body-reviewed routing / not migrated** |
-| `models.md` | 589–606 | Repeatable registry-wide static evidence summary | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 607–625 | Inspected regression non-GP implementations: NGBoost and ExtraTrees | `guide/23_non_gp_surrogates.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 626–649 | Inspected regression noise and heterogeneous multitask implementations | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 650–675 | Source and assertion audit: multi-fidelity regression families | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 676–697 | Source and assertion audit: regression DeepGP models | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 698–723 | Source and assertion audit: expressive stationary and infinite-width kernels | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 724–746 | Source and assertion audit: joint neural representation regression | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 747–773 | Classification documentation mapping at registry-ID granularity | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 774–798 | Phase 2 inventory sign-off and scope | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
+| `models.md` | 589–606 | Repeatable registry-wide static evidence summary | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 607–625 | Inspected regression non-GP implementations: NGBoost and ExtraTrees | `guide/23_non_gp_surrogates.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 626–649 | Inspected regression noise and heterogeneous multitask implementations | `guide/15_heteroskedastic_noise.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 650–675 | Source and assertion audit: multi-fidelity regression families | `guide/06_multi_fidelity.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 676–697 | Source and assertion audit: regression DeepGP models | `guide/22_expressive_gp.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 698–723 | Source and assertion audit: expressive stationary and infinite-width kernels | `guide/22_expressive_gp.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 724–746 | Source and assertion audit: joint neural representation regression | `guide/19_neural_reduction_gp.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 747–773 | Classification documentation mapping at registry-ID granularity | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 774–798 | Phase 2 inventory sign-off and scope | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **body-reviewed routing / not migrated** |
 | `models.md` | 799–806 | Phase 4: theory-to-implementation records | `guide/appendix/model-composition-and-delegation.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 807–821 | Exact single-task Gaussian-process regression | `guide/02_gaussian_process.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 822–836 | Native mixed-input Gaussian-process regression | `guide/05_mixed_variables.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
@@ -291,6 +291,26 @@
 5. 不確実入力のGaussian MC平均とcategorical finite-support marginalizationは異なる計算法として説明する。
 
 **進捗:** README 13 + models 30 = 43/174区間レビュー済み。残り131区間。新ガイドへの移行・検証は0件。
+
+## models.md（589–798行）の本文レビュー記録
+
+以下9区間の原文を確認した。いずれも移行先の判定であり、新章への移行・現行コードの数値再検証ではない。
+
+| 原文行 | 保存する実装上の区別 |
+| --- | --- |
+| 589–606 | 静的test/upstream call検出はassertion実行や数学的正しさを証明しない |
+| 607–625 | NGBoostのGaussian予測分布とExtraTreesの経験的ensemble posteriorを区別。optional NGBoostテストはskipされ得る |
+| 626–649 | 異分散GPの交互学習とjoint variational学習を区別。Kronecker異分散prototypeのobservation posteriorは未対応 |
+| 650–675 | BoTorch委譲のMultiFidelity GPと、mixed設計変数・構造fidelity変数の分離を維持 |
+| 676–697 | DeepGPのsample-based posteriorは厳密なGaussian posteriorではない。旧DeepKernelGP aliasは非公開 |
+| 698–723 | SpectralMixtureKernelのGPyTorch委譲と独自InfiniteWidthReLUKernel再帰を区別 |
+| 724–746 | JointEncoderの同時学習、HybridAEの再構成項、JointVAEのKLと不確実性伝播を区別 |
+| 747–773 | 分類29 registry IDの共有ガイドは個別Notebook実行の証拠ではない |
+| 774–798 | 旧静的監査の完了記録はauditへ、未検証範囲はverificationへ残す |
+
+複数テーマを含む区間は関連するMixed、Noise、MultiTask、Kernel、Reduced、Classification各章への二次参照を後続の本文移行で追加する。
+
+**累計:** README 13 + models 39 = 52/174区間レビュー済み。未レビュー122区間。移行・検証完了0件。
 
 ## 各区間の移行検収条件
 
