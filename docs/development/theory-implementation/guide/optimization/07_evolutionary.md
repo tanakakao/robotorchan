@@ -34,3 +34,32 @@
 ## 5. 関連する実装ガイド
 
 [制約付き候補探索](05_constraints.md)、[多目的獲得関数](../acquisition/07_multiobjective.md)、[Optimization検証](../verification/optimization.md)、[旧Optimization Mapping](../../optimization.md)を参照する。旧Mappingの全区間検収が完了するまでは元文書を保持する。
+
+## 6. NSGA-IIのPareto判定とscalar acquisitionの区別
+
+旧Optimization Mappingの固定区間246–257と src/robotorchan/optim/backends/nsga2.py を照合する。最大化するm目的の値ベクトル f(x) に対し、xがyを支配する（優越する）条件は
+
+$$
+f_i(x)\ge f_i(y)\quad(\forall i),\qquad
+f_j(x)>f_j(y)\quad(\exists j).
+$$
+
+NSGA-IIはnondominated sortingでrankを求め、同じrankの多様性をcrowding distanceで評価する。binary tournament、算術交叉、変異、親子集団からのelitist environmental selectionを繰り返す。これはrobotorchanが実装するベクトル目的の近似Pareto探索であり、BoTorchへ委譲するqEHVI（hypervolume improvementを**スカラー**で返すacquisition）の最適化と同じものではない。
+
+利用例（値と候補のshapeを明示）：
+
+~~~python
+import torch
+from robotorchan.optim.backends.nsga2 import optimize_vector_nsga2
+
+def objectives(x: torch.Tensor) -> torch.Tensor:
+    return torch.cat((-((x - 0.2) ** 2), -((x - 0.8) ** 2)), dim=-1)
+
+bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+pareto_x, pareto_y = optimize_vector_nsga2(
+    objectives, bounds, population_size=16, generations=5, seed=7
+)
+# pareto_xは[n_pareto, 1]、pareto_yは[n_pareto, 2]。
+~~~
+
+このAPIのobjectiveは入力[population,d]に対して[population,m]かつm>=2を返す必要がある。いずれの目的も最大化向きなので最小化したい量には負符号など方向変換が必要。ローカルNSGA-II APIは旧Mappingで確認した範囲にcandidate-constraint引数を持たず、constraint-dominationやfeasible Pareto frontを自動的に保証しない。実装・テストで確認できるのは返却集団内の非支配性など限定された性質であり、真のPareto frontへの収束証明ではない。
