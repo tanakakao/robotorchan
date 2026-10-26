@@ -244,3 +244,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 [Phase1固定見出し台帳](phase1-heading-preservation-ledger.md)から`README.md` 13件、`models.md` 91件、`acquisition.md` 18件、`optimization.md` 21件、合計143見出しを抽出し、仮のprimary/secondary割当が全件存在することを確認した。うち25件はprimaryが`audit/`であり、Phase番号やaudit語だけで技術本文を歴史資料へ誤仕分けする危険があるため、優先レビュー表を台帳に追加した。
 
 **判定：inventory / review required。** 143/143件は**仮の移行先が台帳にある**という意味だけであり、元区間の全文を実際に読み、技術数式・public API・negative contract・テスト結果・CI/PR履歴が移行先で完全に保全されたことを意味しない。新たな`verified`は0件。Verificationの31見出しと合わせ174件の旧台帳ステータスは変えず、旧Mapping5ファイルを保全する。
+
+## Phase 18：audit仮割当の実体確認とPhase3 routingへの優先順位修正
+
+Phase1見出し台帳で`audit/`が仮primaryの25区間のうち、`acquisition.md:288–308`（outcome-constrained qEI/qNEI/qEHVIの合成）、`:346–362`（qKG/MF-KG/multi-step/MES/GIBBONとPES/JESの区分）、`optimization.md:182–205`（11名optimizer dispatch）、`:246–257`（mixed native / one-shot / NSGA-II）の原文4区間を直接確認した。いずれも実装契約・数学的意味・非対応条件を含むため、見出し名のPhase番号を理由にauditのみへ移してはならない。[Phase1 ledger](phase1-heading-preservation-ledger.md)へ区間ごとの技術的受け皿とレビュー限界を追記した。
+
+重要な調整として、[Phase3本文レビュー済みrouting](phase3-migration-ledger.md)は174区間全体の再割当を既に記録している。Phase1の`audit/`25件は**過去の仮割当件数**であり、現在の確定routing件数ではない。Phase3も`body-reviewed routing / not migrated`なので、本文移行済みと誤認しない。旧台帳174見出しの`verified`は引き続き0件。元Mapping5ファイルは保全する。
