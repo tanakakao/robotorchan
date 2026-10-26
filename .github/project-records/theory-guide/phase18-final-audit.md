@@ -280,3 +280,9 @@ Phase 3台帳の旧 `optimization.md:246–257` は主受け皿 `guide/optimizat
 旧optimization.md固定区間246–257および直後のconstraint handling表について、Phase 3で主受け皿とされたguide/optimization/05_constraints.mdへbackend別のNATIVE・FEASIBILITY_FIRST・PENALTY・UNSUPPORTEDの数理的意味と、BoTorch形式の線形入力制約の最小例を追加した。src/robotorchan/optim/capabilities.py、constraints/contracts.py、backends/botorch.py、backends/torch.pyと旧Mappingを確認した。mixed BoTorchのinter-point nonlinear拒否、PyTorchの制約拒否、feasible初期点要件を区別した。
 
 **判定：partial / review required。** 旧区間全件の意味論的移行検収ではない。独立数値実行や全backendの一般可行性検証は行っていない。旧Mapping5ファイルおよび174見出しのverified=0を維持する。
+
+## Phase 18：Exact GP posterior・MLL・混合kernelのガイド本文改善
+
+既存の `guide/02_gaussian_process.md` と `guide/03_kernel.md` に、理論正本のGaussian conditioning式と公開posterior API、raw data snapshots、ExactMarginalLogLikelihood/fit、latentとobservation noiseの違い、native mixed covarianceの加法・積の構成およびstructural dimension拒否の説明を追加。`src/robotorchan/models/standard/single_task.py`、`src/robotorchan/models/base.py`、`docs/theory/02_gaussian_process.md`、旧 `models.md` の代表的なモデルsource対応を直接照合した。BoTorchとGPyTorchの既存機能への委譲とrobotorchan側の拡張責務を区別した。
+
+**判定：partial / review required。** 旧Models Mapping全91見出しの一対一移行は未完了。現時点の174見出し `verified=0`を維持し、旧Mapping5ファイルを保全する。数値実験の新規再実行や一般GP理論の実装完全性の主張ではない。
