@@ -1,48 +1,35 @@
-# Constrained Acquisition：理論から実装へ
+# Constrained Acquisition：制約の定義域と合成の責務
 
-## 1. この章で解決する問い
+## 1. 制約を二種類に分ける
 
-未知のoutput constraintはposterior/utilityに入り、既知のcandidate constraintはoptimizerの探索集合を制限する。g(X)≥0のcandidate制約とc(Y)≤0のoutcome制約を混同しない。
+[理論の制約付き獲得関数](../../../../theory/acquisition/08_constraints.md)を正本とする。目的と制約を観測して初めて可行性が分かる**outcome constraint**と、実験前にXだけで可行か判断できる**candidate constraint**は別の層で処理する。例えばモデル予測の制約残差`c(Y) <= 0`を実行可能確率やMC目的に反映するのはacquisition側、設計変数の`g(X) >= 0`を満たすよう候補を探索するのはoptimizer側である。符号規約はAPIによって確認する必要がある。
 
-数学的な定義・仮定・導出は[理論の対応章](../../../../theory/acquisition/08_constraints.md)が正本であり、この章は**数式の計算対象 → 実装の所有権 → 公開API → 探索上の制約**をつなぐ日本語実装ガイドである。
+## 2. RegressionとClassificationの同時利用
 
-## 2. posteriorからcandidateへの処理の流れ
+`src/robotorchan/acquisition/composition.py`は`HeterogeneousModel`の出力と`ProblemSemantics`を、`resolve_acquisition_composition`を介して`ObjectiveBinding`および`FeasibilityBinding`に対応付ける。`AcquisitionCompositionPlan`は所有権と出力索引を保持し、この段階で統一されたposteriorやsamplerを生成しない。従って回帰latent Gaussian値と分類class probabilityを**一つのGaussian posteriorに単純連結しない**。
 
-```text
-train observations → surrogate.fit / posterior(X)
-                                     ↓
-                          objective / utility
-                                     ↓
-                  acquisition function α(X)
-                                     ↓
-                    candidate optimizer
-                                     ↓
-             selected X → costly evaluation
-```
-
-候補点で観測する未知の応答値と、観測前に計算する獲得関数値は異なる。獲得関数が最大化するutilityを、posterior meanの予測結果と読み替えない。analytic計算、MC sampling、fantasization、classification probability等、用いる数値表現は手法とモデルによって異なる。
-
-## 3. 実装の対応と委譲
-
-`src/robotorchan/acquisition/composition.py`にregression+classificationのfeasibility bridgeとconstrained EI/NEI/EHVI helpersがある。BoTorchのutilityは委譲、semantic変換はExtended。
-
-参照する代表的な公開APIは ``robotorchan.acquisition.make_continuous_constrained_qei_acquisition``。ここでは**名前・責務の参照**であり、すべてのモデルやoptimizerとの組合せを実行検証済みとするものではない。
-
-| 層 | 何を担当するか | 検証上の要点 |
+| 要素 | 役割と所有権 | 契約 |
 | --- | --- | --- |
-| surrogate | posterior、必要に応じてclass probability | posterior type、出力軸、学習方式 |
-| acquisition | utilityの期待値・近似または探索score | 定義した数式、方向、q、sample形状 |
-| semantic bridge | objective/constraintの意味論変換 | objectiveとclassification feasibilityの分離 |
-| optimizer | 入力境界、fixed features、candidate constraintsを満たす候補検索 | one-shot/gradient/mixedの対応、最適化失敗の検出 |
+| `RegressionObjective` / `ProbabilityObjective` | 意味論的に目的変数を定義 | maximize/minimizeと出力の意味を明示する |
+| `ClassificationProbabilityOfFeasibility` | classification probabilityを可行性として利用 | latent `posterior`値ではなくclass probabilityを利用 |
+| `AcquisitionCompositionPlan` | semantic binding（robotorchan側でImplemented） | `objectives`と`feasibility`の対応を記録。acquisitionそのものではない |
+| `ConstrainedMCObjective`等 | BoTorch-native objective（Delegated） | sample shape / constraintの符号を揃える |
+| `CandidateConstraints`等 | optimizer側の探索集合 | outcome feasibilityとは独立にXの範囲を制限 |
 
-## 4. 採用時の確認と注意事項
+`SampleShapeContract`は`sample_shape + batch_shape + [q]`をscalar sample-wise valueの期待形状とする。この形状に分類可行確率をbroadcastする際、出力軸とq軸を混同してはならない。
 
-独立可行確率の積は相関制約では一般に不正確。未観測制約/候補空間の非線形制約の責務を分離。
+## 3. BoTorchへの委譲とapproximation
 
-モデル側のposteriorが正しい形を返すことと、獲得関数の数学的同値性を示すことは別である。またacquisition functionの単体テストと、候補探索が可行な点を返すことは別々に検証する。
+robotorchanの`composition.py`はBoTorchの`qExpectedImprovement`、`qNoisyExpectedImprovement`、`qExpectedHypervolumeImprovement`等を部品として利用する。各`make_*constrained*` helperは**acquisitionの新規アルゴリズムではなく**semantic adapter / builderである。独立なclassification feasibilityを各点で乗じる場合、同一batch内の可行性の相関を正しく積分したjoint probabilityとは一般に一致しない。独立性近似を無条件の厳密公式と説明しない。
 
-## 5. 数学的検証と実装の追跡
+## 4. optimizerとの互換性
 
-[既存Acquisition Mapping](../../acquisition.md)はsource inspectedの実装契約、entry・テスト証拠を保持する。[Verification Mapping](../../verification.md)は独立数値参照や既存のassertionの追跡先とする。両者を消去・置き換えず、原文区間のmigration ledgerをverifiedとする際に照合する。CI成功だけで全数値契約が検証されたことにはならない。
+`src/robotorchan/acquisition/optimizer_compatibility.py`の`check_acquisition_optimizer_compatibility(name, optimizer, q=...)`はregistryの`max_q`とone-shotの意味論を検査する。通常の`CandidateOptimizer.MIXED`はone-shot augmented batchの行ごとのカテゴリ割当てを保存できないため、登録されたone-shot acquisitionを拒否する。一方`MIXED_ONE_SHOT`はone-shot acquisition以外を拒否する。
 
-[獲得関数の基礎ガイド](../04_acquisition_function.md)、[獲得関数利用ドキュメント](../../../../optimization/README.md)、[理論Acquisition索引](../../../../theory/acquisition/README.md)にも戻れる。個別の数式、適用例や比較条件は対応する理論章と使用ガイドで読む。
+これは**事前の静的互換性判定**であり、実際に候補点を探索して可行性を証明するものではない。candidate nonlinear constraintの全backend対応を認証するものでもない。
+
+## 5. 検証と未検証の境界
+
+[旧Acquisition Mapping](../../acquisition.md)はBoTorch delegation・分類可行性の合成・one-shot制限を保全する。[旧Optimization Mapping](../../optimization.md)はcandidate feasibility側の責務を記す。[Verification Mapping](../../verification.md)と[検証索引](../verification/acquisition.md)で個別propertyの独立数値参照を確認する。
+
+CIでリンクや契約テストが成功しても、任意の制約付き関数に対する探索最適性、joint feasibilityの厳密性、全てのoptimizerとの接続成功は証明されない。旧Mappingは移行元として保存する。

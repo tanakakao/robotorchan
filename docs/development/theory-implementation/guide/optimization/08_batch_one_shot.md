@@ -1,44 +1,39 @@
-# Batch / One-shot：獲得関数最適化の実装ガイド
+# Batch / One-shot：実候補とfantasy変数を分離する
 
-## 1. この章の問い
+## 1. Joint-qとone-shotの意思決定変数
 
-joint-q、sequential greedy、pending、one-shot fantasyは意思決定変数と情報構造が異なる。
+[理論の対応章](../../../../theory/optimization/08_batch_one_shot.md)が数理的な正本である。通常のjoint-q最適化では実際に評価する候補数が`q`である。一方one-shot acquisition（Knowledge Gradientやmulti-step lookahead）は、最適化する拡張変数に**fantasy補助点**を含む。拡張サイズ`augmented_q = acq_function.get_augmented_q_batch_size(q)`は実際の評価点数とは異なり、返す実候補には`acq_function.extract_candidates`が必要である。
 
-数理的な正本は[理論の対応章](../../../../theory/optimization/08_batch_one_shot.md)とする。本章は、そこで定義される問題の**候補の座標系、実装経路、契約、検証上の限界**を学ぶための日本語案内である。
+`X_pending`は評価中でまだ観測を受け取っていない候補であり、one-shotのfantasy変数とも完了観測値とも混同しない。
 
-## 2. 理論から実装まで
+## 2. 一般one-shotの初期点生成
 
-```text
-surrogate.posterior(X)
-      ↓
-acquisition α(X) ← objective / constraints
-      ↓
-optimizer: bounds + fixed features + candidate feasibility
-      ↓
-candidate X*（joint q × d）
-      ↓
-実際のblack-box評価 → 次の観測を追加
-```
+`src/robotorchan/optim/one_shot/initialization.py`の`gen_augmented_one_shot_initial_conditions`は、`get_augmented_q_batch_size(q)`で決めたサイズをBoTorch `gen_batch_initial_conditions`へ渡す。戻り値の形状は`[num_restarts, augmented_q, d]`である。
 
-BoTorch one-shot KGとrobotorchan `optim/one_shot/`、通常mixed dispatcherを区別する。
+このhelperは専用initializerのないone-shot（例：`qMultiStepLookahead`）用であり、Knowledge Gradientに専用のBoTorch initializerがある場合はそちらを使う。一般helperがKGに常に最良の初期値を与えると主張しない。
 
-| 役割 | 実装の追跡先 | 検証すべき点 |
+## 3. Mixed one-shotの実装：行ごとに異なるカテゴリを保持
+
+`src/robotorchan/optim/one_shot/mixed.py::optimize_mixed_one_shot_acqf`は`OneShotAcquisitionFunction`を受け取る。現行実装では**q=1のみ**許可し、その他のqに対して`NotImplementedError`を出す。
+
+実装は次の手順をとる。
+
+1. カテゴリ次元と選択肢を検証し、各選択肢がbounds内にあることを確かめる。
+2. 拡張batch内の**各行ごと**にカテゴリ割当てを列挙する。`m`を1行あたりの組合せ数とすると、探索する割当て数は`m ** augmented_q`となる。`max_assignments`を超えれば`ValueError`で停止する。
+3. 各割当てで`[augmented_q,d]`をflattenし、`[1,augmented_q*d]`の連続最適化問題へ変換する。元の行ごとに別々の`fixed_features`を設定して、BoTorchの`optimize_acqf`へ委譲する。
+4. 最良の拡張点に`extract_candidates`を適用し、**実評価する候補だけ**を返す。fantasy点を実験へ渡してはいけない。
+
+通常のmixed optimizerにaugmented batchを直接渡すと、行ごとの異なるカテゴリ選択が保存されない可能性がある。`check_acquisition_optimizer_compatibility`は`CandidateOptimizer.MIXED`とone-shotの組合せを拒否し、`MIXED_ONE_SHOT`では逆にnon-one-shotを拒否する。これは事前の意味論チェックであり、実行成功の保証ではない。
+
+## 4. 実装の責務と数値的な制限
+
+| 対象 | 実装・委譲 | 主な制限 |
 | --- | --- | --- |
-| 数学的目的 | `docs/theory/optimization/08_batch_one_shot.md` | αを最大化する変数・制約・近似 |
-| 公開API / dispatcher | `src/robotorchan/optim/` | 対応するoptimizer名、能力宣言、fallback |
-| 具体的な探索backend | `src/robotorchan/optim/`とBoTorch optimizer | 実際の探索アルゴリズム、依存ライブラリ |
-| 数値実行証拠 | [旧Optimization Mapping](../../optimization.md) | test assertions、実装境界、未対応条件 |
+| 通常のBoTorch one-shot | BoTorchのlookahead / fantasy machineryへDelegated | `q`とaugmented batchを区別する |
+| 一般one-shot初期値 | `gen_augmented_one_shot_initial_conditions`がExtended | KG専用initializerとは区別 |
+| Mixed one-shot | `optimize_mixed_one_shot_acqf`が行別カテゴリ割当て列挙をImplemented | `q=1`、`max_assignments`による列挙上限 |
+| 連続部分問題 | BoTorch `optimize_acqf`にDelegated | 得られた値は一般に大域最適性の証明ではない |
 
-実装方法は**Implemented / Extended / Delegated**を分けて読む。BoTorchへ処理を委譲する名前と、robotorchanが実際に更新則を実装する名前を同等の独自アルゴリズムとして数えない。実際のbackend、candidate制約とposteriorの相互依存は旧Mappingを参照する。
+個別テストの証拠は旧[Optimization Mapping](../../optimization.md)の`optim/one_shot/mixed.py`／`tests/optim/one_shot/test_mixed.py`行に記録されている。合成例のカテゴリ横断割当てと`max_assignments`等のassertionは**特定の条件での実装契約**を確認するもので、一般のmixed qKG性能や全制約との互換性を証明しない。
 
-## 3. 適用条件と失敗の解釈
-
-augmented fantasy pointsを通常のq-candidateとして数えてはいけない。mixed one-shot互換性の事前確認が必要。
-
-最適化器が候補を返すことと、その候補が厳密な大域最適解であることは違う。候補座標の型、bounds、fixed features、constraint tolerance、q軸、one-shot追加変数、random seed等を適用先に合わせる。モデルの学習後posteriorが有限でも、candidate探索の収束は別途確認する。
-
-## 4. 検証と使い方の入口
-
-最低限の確認順序は、**(1) 問題の型→(2) 数理契約→(3) optimizer dispatch→(4) backend→(5) 制約と出力shape→(6) 再現実験**である。CI成功だけで全backend・全constraint・全qに対して正しいとは主張しない。
-
-[Optimization利用ガイド](../../../../optimization/README.md)、[理論Optimization索引](../../../../theory/optimization/README.md)、[旧Optimization Mapping](../../optimization.md)、[Verification](../../verification.md)を参照。原文は章別照合完了まで削除しない。
+[Batch/Noisy acquisition](../acquisition/04_batch_noisy.md)、[One-shotの理論](../../../../theory/optimization/08_batch_one_shot.md)、[Optimizer検証](../verification/optimization.md)、[旧Mapping](../../optimization.md)を併読し、原文の検収完了まで旧Mappingを保持する。

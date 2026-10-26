@@ -1,44 +1,36 @@
-# Evolutionary：獲得関数最適化の実装ガイド
+# Evolutionary Optimization：スカラー獲得関数と多目的探索を区別する
 
-## 1. この章の問い
+## 1. この章の対象と数理的境界
 
-DE、CMA-ES、GA、PSO等はpopulation探索を行うが更新則と変数型の対応が異なる。NSGA-IIはvector-valued目標のPareto最適化。
+[進化的最適化の理論](../../../../theory/optimization/07_evolutionary.md)を正本とする。DE、CMA-ES、GA、PSOは候補群を使うが更新則・制約の処理・混合変数への適合性は異なる。NSGA-IIは**複数の実数値目的を同時に最大化するPareto探索**を行う。BoTorchのqEHVI・qNEHVIが出力するscalar acquisitionを最適化することと、NSGA-IIでvector-valued objectiveそのものを探索することは別である。
 
-数理的な正本は[理論の対応章](../../../../theory/optimization/07_evolutionary.md)とする。本章は、そこで定義される問題の**候補の座標系、実装経路、契約、検証上の限界**を学ぶための日本語案内である。
+## 2. Dispatcherのoptimizer名と特殊backend
 
-## 2. 理論から実装まで
+`src/robotorchan/optim/dispatch.py::optimize_acqf`に登録される11個のnamed backendは`botorch`、`torch_adam`、`torch_adamw`、`torch_sgd`、`random`、`sobol`、`de`、`cmaes`、`ga`、`pso`、`hybrid`である。これらはacquisitionのscalar値を探索する。`nsga2`はこの`optimizer=`の選択肢ではなく、別APIの`optimize_vector_nsga2`で利用する。
 
-```text
-surrogate.posterior(X)
-      ↓
-acquisition α(X) ← objective / constraints
-      ↓
-optimizer: bounds + fixed features + candidate feasibility
-      ↓
-candidate X*（joint q × d）
-      ↓
-実際のblack-box評価 → 次の観測を追加
-```
+## 3. NSGA-IIのローカル実装
 
-robotorchanのevolutionary backendsとオプション依存のCMA-ES等の実行経路を区別する。
+`src/robotorchan/optim/backends/nsga2.py::optimize_vector_nsga2`は、`objective(X)`に`[population,d]`を渡し、少なくとも2つの目的からなる`[population,m]`を受け取る。**全目的を最大化**すると定義されている。最小化目的はユーザー側の向きの変換が必要となる。
 
-| 役割 | 実装の追跡先 | 検証すべき点 |
-| --- | --- | --- |
-| 数学的目的 | `docs/theory/optimization/07_evolutionary.md` | αを最大化する変数・制約・近似 |
-| 公開API / dispatcher | `src/robotorchan/optim/` | 対応するoptimizer名、能力宣言、fallback |
-| 具体的な探索backend | `src/robotorchan/optim/`とBoTorch optimizer | 実際の探索アルゴリズム、依存ライブラリ |
-| 数値実行証拠 | [旧Optimization Mapping](../../optimization.md) | test assertions、実装境界、未対応条件 |
+初期集団をbounds内で生成し、各世代で(1) nondominated ranking、(2) crowding distance、(3) binary tournament、(4) crossover、(5) mutation、(6) environmental selectionを行う。最終集団からrank=0の候補`[n_pareto,d]`と、対応する目的値`[n_pareto,m]`を返す。
 
-実装方法は**Implemented / Extended / Delegated**を分けて読む。BoTorchへ処理を委譲する名前と、robotorchanが実際に更新則を実装する名前を同等の独自アルゴリズムとして数えない。実際のbackend、candidate制約とposteriorの相互依存は旧Mappingを参照する。
+| 実装契約 | ソースで確認できる意味 |
+| --- | --- |
+| `population_size`、`generations` | 集団数と世代数で計算費用を指定 |
+| `crossover_rate`、`mutation_rate`、`mutation_scale` | 局所実装の遺伝演算を制御 |
+| `seed` | ローカル乱数生成器を利用し再現性を確保 |
+| `bounds` | 候補の下限・上限。結果の可行性は制約機構を別途確認 |
+| `objective`の出力shape | `[population,m]`かつ`m>=2`。scalar目的は拒否 |
+| 戻り値 | 非劣解の近似集合とその実目的値。BoTorch acquisition scalarの戻り値ではない |
 
-## 3. 適用条件と失敗の解釈
+上記の独自ranking・crowding・変異等はrobotorchan側で**Implemented**。BoTorchにNSGA-IIアルゴリズムを委譲していると説明してはいけない。
 
-単一scalar acquisition最大化にNSGA-IIが必須ではない。制約処理はpenalty/feasibility-first等の実体で比較する。
+## 4. テストが証明すること・しないこと
 
-最適化器が候補を返すことと、その候補が厳密な大域最適解であることは違う。候補座標の型、bounds、fixed features、constraint tolerance、q軸、one-shot追加変数、random seed等を適用先に合わせる。モデルの学習後posteriorが有限でも、candidate探索の収束は別途確認する。
+`tests/optim/backends/test_nsga2_backend.py`には、二目的のsynthetic trade-offで(1) candidate bounds、(2)返却集団内部でのnondominance、(3)seed再現性、(4)scalar目的の拒否、(5)dtype/device保持を検査するassertionがある。
 
-## 4. 検証と使い方の入口
+これらは返却された集合内部での性質であり、**真のPareto frontへの収束、hypervolume改善率、制約付き探索の性能**を一般に保証しない。各evolutionary backendのcandidate制約はnative enforcement、feasibility-first、penalty等で異なり、capability metadataだけで結果の厳密可行性を認定しない。
 
-最低限の確認順序は、**(1) 問題の型→(2) 数理契約→(3) optimizer dispatch→(4) backend→(5) 制約と出力shape→(6) 再現実験**である。CI成功だけで全backend・全constraint・全qに対して正しいとは主張しない。
+## 5. 関連する実装ガイド
 
-[Optimization利用ガイド](../../../../optimization/README.md)、[理論Optimization索引](../../../../theory/optimization/README.md)、[旧Optimization Mapping](../../optimization.md)、[Verification](../../verification.md)を参照。原文は章別照合完了まで削除しない。
+[制約付き候補探索](05_constraints.md)、[多目的獲得関数](../acquisition/07_multiobjective.md)、[Optimization検証](../verification/optimization.md)、[旧Optimization Mapping](../../optimization.md)を参照する。旧Mappingの全区間検収が完了するまでは元文書を保持する。

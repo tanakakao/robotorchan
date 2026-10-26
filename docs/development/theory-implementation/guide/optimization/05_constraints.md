@@ -1,44 +1,39 @@
-# Candidate constraints：獲得関数最適化の実装ガイド
+# Candidate constraints：座標・数理契約・backendの制限
 
-## 1. この章の問い
+## 1. CandidateとOutcomeの制約を分離する
 
-既知の入力制約をoptimizerで扱い、未知のoutcome constraintはacquisitionのutilityで扱う。intra-pointとinter-pointも異なる。
+[理論の対応章](../../../../theory/optimization/05_constraints.md)を数理的な正本とする。実験実施前に既知の`X`だけで判定できるcandidate-space制約は`robotorchan.optim.constraints.contracts.CandidateConstraints`へ渡す。一方、未知の観測`Y`に対する制約や分類に基づく実行可能確率は、[Constrained Acquisition](../acquisition/08_constraints.md)のobjective/composition側で扱う。
 
-数理的な正本は[理論の対応章](../../../../theory/optimization/05_constraints.md)とする。本章は、そこで定義される問題の**候補の座標系、実装経路、契約、検証上の限界**を学ぶための日本語案内である。
+## 2. 線形・非線形制約の数式と呼び出し規約
 
-## 2. 理論から実装まで
-
-```text
-surrogate.posterior(X)
-      ↓
-acquisition α(X) ← objective / constraints
-      ↓
-optimizer: bounds + fixed features + candidate feasibility
-      ↓
-candidate X*（joint q × d）
-      ↓
-実際のblack-box評価 → 次の観測を追加
-```
-
-linear inequality/equality、nonlinear constraint、fixed features、backendが対応するfeasibility処理を整理する。
-
-| 役割 | 実装の追跡先 | 検証すべき点 |
+| 制約 | 契約 | 可行条件とshape |
 | --- | --- | --- |
-| 数学的目的 | `docs/theory/optimization/05_constraints.md` | αを最大化する変数・制約・近似 |
-| 公開API / dispatcher | `src/robotorchan/optim/` | 対応するoptimizer名、能力宣言、fallback |
-| 具体的な探索backend | `src/robotorchan/optim/`とBoTorch optimizer | 実際の探索アルゴリズム、依存ライブラリ |
-| 数値実行証拠 | [旧Optimization Mapping](../../optimization.md) | test assertions、実装境界、未対応条件 |
+| linear inequality | `(indices, coefficients, rhs)` | `sum(X[indices] * coefficients) >= rhs`。BoTorch形式を保持 |
+| linear equality | 同形式のtuple | 線形式が`rhs`と等しい。数値許容誤差に注意 |
+| nonlinear inequality | `(callable, is_intrapoint)` | callableが返す**scalar Tensor >= 0** |
+| intrapoint nonlinear | `is_intrapoint=True` | callableへの入力は1候補`[d]` |
+| interpoint nonlinear | `is_intrapoint=False` | callableへの入力はjoint候補`[q,d]` |
 
-実装方法は**Implemented / Extended / Delegated**を分けて読む。BoTorchへ処理を委譲する名前と、robotorchanが実際に更新則を実装する名前を同等の独自アルゴリズムとして数えない。実際のbackend、candidate制約とposteriorの相互依存は旧Mappingを参照する。
+線形tupleのindicesが1次元なら1点内の制約、2次元ならq座標とd座標を含むinter-point制約である。`contracts.py`の`CandidateConstraints.__post_init__`は形式を検査し、`validation.py::validate_candidate_constraints`はboundsとqが分かった段階で範囲・sequentialの制限を確認する。
 
-## 3. 適用条件と失敗の解釈
+`q > 1`でinter-point linear/nonlinear制約を指定した場合、`sequential=True`はサポートされず、**joint q-batch探索**が必要となる。独立にq点を逐次提案すると相互制約が壊れるためである。
 
-penaltyを加えただけで可行解が保証されるわけではない。equalitiesには許容誤差、joint-q制約には専用契約が必要。
+## 3. optimizer dispatchの責務
 
-最適化器が候補を返すことと、その候補が厳密な大域最適解であることは違う。候補座標の型、bounds、fixed features、constraint tolerance、q軸、one-shot追加変数、random seed等を適用先に合わせる。モデルの学習後posteriorが有限でも、candidate探索の収束は別途確認する。
+`src/robotorchan/optim/dispatch.py::optimize_acqf`は`bounds`、`q`、`constraints`、`fixed_features`、`variable_space`を受け取り、`validate_candidate_constraints`と各backendのcapability checksを行う。一般の候補は`[q,d]`で、戻り値は`(candidate, acquisition_value)`。acquisition valueをblack-boxの新観測`Y`として使ってはならない。
 
-## 4. 検証と使い方の入口
+公開dispatcherのnamed backendは`botorch`、`torch_adam`、`torch_adamw`、`torch_sgd`、`random`、`sobol`、`de`、`cmaes`、`ga`、`pso`、`hybrid`。Mixed BoTorch、one-shot、NSGA-II、TuRBOなどは同じ`optimizer=`文字列で選ぶ12番目以降のbackendではない。`optimizer="botorch"`に`MixedVariableSpace.is_mixed`を直接渡すことも拒否されるため、明示的なmixed backendまたは対応optimizerを使う。
 
-最低限の確認順序は、**(1) 問題の型→(2) 数理契約→(3) optimizer dispatch→(4) backend→(5) 制約と出力shape→(6) 再現実験**である。CI成功だけで全backend・全constraint・全qに対して正しいとは主張しない。
+capability descriptorの`constraint_handling`はnative、feasibility-first、penalty、unsupportedなどの戦略を区別する。**penalty方式が返した候補をhard-feasibleと断定できない**。制約型・backend別に候補値を検算する。
 
-[Optimization利用ガイド](../../../../optimization/README.md)、[理論Optimization索引](../../../../theory/optimization/README.md)、[旧Optimization Mapping](../../optimization.md)、[Verification](../../verification.md)を参照。原文は章別照合完了まで削除しない。
+## 4. 非線形の初期点と探索座標
+
+`validate_nonlinear_initial_conditions`は明示的な`batch_initial_conditions`に対し、`[num_restarts,q,d]`形、bounds、device・dtype、有限値とcallableのscalar返値を調べる。モデルとboundsを同じdevice/dtypeへ揃え、gradient backendであればcallableの微分可能性を確認する。inter-pointの条件を持つ初期点は個別候補だけで可否判定しない。
+
+埋め込み・潜在探索は通常、公開Xとは別の内部座標Zで最適化する。元のXへのlinear constraintを無変換でZへ渡すと**別の数学的制約**になるため、`reject_unmapped_candidate_constraints`は未対応の座標写像を`NotImplementedError`として拒否する。明示的な逆写像に基づく適切な合成なしに可行性を保証しない。
+
+## 5. テストによる検証と未検証の境界
+
+[旧Optimization Mapping](../../optimization.md)で示される`tests/optim/contracts/test_optimizer_dispatch.py`はdispatch引数・不正組合せの拒否等を検査する。`tests/optim/integration/test_nonlinear_candidate_constraints_e2e.py`は選ばれた問題におけるcandidate-level feasibilityを1e-6許容誤差で確認する。この証拠は一部の経路の具体的なcandidateの可行性であり、全backend・すべてのconstraint・大域最適性を示さない。
+
+[Optimization verification索引](../verification/optimization.md)と[旧Verification Mapping](../../verification.md)は数値参照とその制限を保持する。旧Mappingの各区間が検収されるまでは原文を削除しない。
