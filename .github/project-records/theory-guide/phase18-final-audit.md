@@ -83,3 +83,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 旧`acquisition.md`の「Distinct implementation paths」「Acquisition/optimizer interaction」の技術的主張に対し、`src/robotorchan/acquisition/composition.py`および`optimizer_compatibility.py`のソースを直接照合した。[制約付きAcquisitionガイド](../../../docs/development/theory-implementation/guide/acquisition/08_constraints.md)にsemantic binding、sample shape、分類可行性の独立性近似、candidate/outcome制約の区別、one-shot/mixed静的互換性の限界を追加した。
 
 **状態：partial / review required。** 本作業では全constrained helperの数値的同値性、非線形候補制約の各backendでの実行、joint feasibility相関モデルは独立テストしていない。旧Mappingの原区間の数式・例外・テストパスを全件照合して`verified`にする作業は保留する。
+
+## Optimizer Candidate Constraints：原文・ソース・ガイドの部分照合
+
+旧`optimization.md`の「Baseline and separation of responsibilities」「Named optimization dispatcher」「Candidate-space constraints versus outcome constraints」の区間を、`src/robotorchan/optim/constraints/contracts.py`、`validation.py`および`dispatch.py`と比較した。確認対象は11 named backends、`CandidateConstraints`の線形・非線形tupleと符号、intrapoint/interpointの入力shape、`sequential=True`の拒否条件、非線形初期点・公開座標/埋め込み座標の違いである。技術ガイド[Candidate constraints](../../../docs/development/theory-implementation/guide/optimization/05_constraints.md)へ具体的な実装契約を反映した。
+
+**移行判定：partial / review required。** この調査は制約関連のソース照合であり、全backendのconstraint enforcementの数値実行や、旧`optimization.md`の残りのstrategy/one-shot/NSGA-II区間の意味論的照合を完了したものではない。旧Mappingと174見出し台帳は変更しない。
