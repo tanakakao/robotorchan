@@ -43,7 +43,10 @@ class GuideQualityTests(unittest.TestCase):
                 src.parent.mkdir(parents=True, exist_ok=True)
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 src.write_text("# theory\n", encoding="utf-8")
-                dst.write_text("# Guide\n\n## Explanation\n\n[Theory](../../../theory/ref.md)\n", encoding="utf-8")
+                dst.write_text(
+                    "# Guide\n\n## Explanation\n\n[Theory](../../../theory/ref.md)\n",
+                    encoding="utf-8",
+                )
             broken = root / MODULE.MAPPING / "guide" / "13_model_selection.md"
             broken.write_text("# only a heading\n", encoding="utf-8")
             failures = MODULE.check_guide_quality(root)
