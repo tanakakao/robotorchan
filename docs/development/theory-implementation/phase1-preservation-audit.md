@@ -76,3 +76,30 @@ These counts are descriptive only: mention counts are not proof of historical-on
 `phase1-heading-preservation-ledger.md`には174見出しの移行候補以外にファイル集計・説明表も含まれる。ファイル名から始まるMarkdown表行を単純に数えると183行となり、**183見出しではない**。見出し台帳は表の役割・列を区別して集計する。過去の`Phase 12`記録は旧開発サイクルの履歴であり、現在の18 Phaseの進捗に読み替えない。
 
 **今回の判定はGitHub上の文書内容を確認した静的監査**であり、CI成功、全参照の実在、数学的正当性を確認したものではない。
+
+## Phase 1 再判定：静的監査完了／実行ゲート未達（2026-10-26）
+
+**判定：Phase 1全体は未完了。静的な保全・参照存在確認は完了したが、実行証拠がないため正式なPhase 2移行判定は保留。** 既存の18 Phase計画は変更しない。以前の「残り146候補」「178候補未確認」などは作業時点の履歴であり、最新の集計は下表を優先する。
+
+| 判定ゲート | 確認できた証拠 | 現在の判定 |
+| --- | --- | --- |
+| 旧Mapping5ファイルの保全 | baselineとの差分をGitHub compareで確認。baseline `9de071c` →作業ブランチ`030d69d`は**ahead 30 / behind 0**、変更対象はPhase 1監査用の**新規4ファイルのみ**。旧5ファイルの変更なし | **達成** |
+| 見出し台帳の構造照合 | 旧5ファイルのH1–H3 **174見出し**を原文と機械照合し、見出し・元行範囲・元blob SHAが一致 | **達成（構造）**。意味論上の移行先は`review required`のまま |
+| 明示ファイル参照の存在確認 | 元5ファイルから抽出した**178候補すべて**を作業ブランチから直接取得。missing 0 | **達成（対象パターン限定）** |
+| 旧Mappingの通常Markdownリンクと既知anchor | **38リンク出現、25 source→target組、4/4 fragment解決**。旧5ファイルの内容を静的照合 | **達成（限定範囲）**。全repo・reference-styleは未実行 |
+| CI/checkerの契約監査 | `documentation-links.yml`の6ステップと関連checker・unittestを直接レビュー | **達成（静的）** |
+| 作業ブランチのCI実行証拠 | HEAD `030d69d`についてGitHub combined statuses **0件**、PR起点workflow runs **0件**、当該headのPR検索 **0件** | **未達**。これはCI失敗の証拠ではなく、**成功を確認できない**という意味 |
+| 原文の本文区間・数式・表・negative contractの意味論レビュー | H1–H3台帳と12数値テストのassertion本文レビューは存在するが、**全本文区間の意味論的移行先確定は未完了** | **未達（後続の章執筆・レビューと接続して追跡）** |
+
+### CI証拠の厳密な扱い
+
+GitHub connectorの`get_commit_combined_status`はHEADで`statuses=[]`、`fetch_commit_workflow_runs`は`workflow_runs=[]`を返した。後者は**PR-triggered runsのみを検索**するため、全イベントのworkflow実行がないと断定するものではない。作業ブランチにPRが見つからないこと、および`.github/workflows/documentation-links.yml`が`pull_request`と`main`へのpushでのみ起動する設定であることは整合的。したがって現時点では**CI not run / not verified**と記録し、greenとは扱わない。
+
+### Phase 1を閉じるための次の具体的な作業
+
+1. **作業ブランチからPRを作成**してdocs workflowを起動する（PR作成前に監査4ファイルのMarkdownリンク・参照に問題がないか最終点検）。
+2. CIの6ステップについて成功・失敗を取得し、失敗時は当該ステップと根本原因のみ修正する。CIの成功を確認できない場合は`not verified`を維持する。
+3. H1–H3台帳の意味論レビューは**章移行時に全区間を消失なく扱う義務**として保持する。Phase 1の完了を「174見出しの技術内容が全て移行済み」と読み替えない。
+4. 上記の実行結果と旧5ファイル不変を再確認してPhase 1の最終判定を更新する。Phase 2の正式章構成確定はその後に進める。
+
+**注**：本再判定はGitHub上のコード・ドキュメントとステータスAPIの確認結果であり、ローカルのchecker/pytestを実行した結果ではない。
