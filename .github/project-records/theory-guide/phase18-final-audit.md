@@ -160,3 +160,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 `tests/models/high_dimensional/reduced/test_phase7_posterior_coordinate_reference.py`、`test_phase7_mixed_reduced_categorical_reference.py`および`tests/models/non_gp/test_phase7_forest_estimator_reference.py`のテスト本文を直接確認し、[Models verification guide](../../../docs/development/theory-implementation/guide/verification/models.md)に入力shape・数値tol・negative contractを追記した。PCAGPは固定reducerの元空間/縮約空間posterior平均・分散一致（1e-10）、MixedPCAGPは`reduced_cat_dims == [2]`とカテゴリID保持・posterior同値（1e-10）、RandomForestSurrogateは7 treeの各予測とmean/不偏varianceの一致（1e-12）および`observation_noise=True`拒否を照合した。
 
 **判定：partial / review required。** ここで得られたのはテストのassertionと数式の対応であり、今回の独立再実行や全モデル族の性能・uncertainty calibrationを示すものではない。旧Mappingの174見出し全件検収は未完了。
+
+## Verification横断：検証証拠のレベルと履歴上の完了判定
+
+[Verification guide index](../../../docs/development/theory-implementation/guide/verification/README.md)に、Models/Acquisition/Optimizationのassertion照合対象と、そのproperty別の未証明範囲を一つの表に整理した。旧`verification.md`内の「Phase 7 remains open」は当時のexit auditであり、後続の「Phase 7 final exit reconciliation」は**限定した代表的propertyの完了**を示すという時系列差を明記した。どちらも原文を改変しない。
+
+検証索引にテストパスがあること、テスト本文と数式を静的に照合したこと、GitHub CIが実行成功したこと、独立の数理的propertyが成立することを**別の証拠**として扱う。例えば既存のHeteroskedastic手動分散恒等式は、位置依存の`posterior(observation_noise=True)`自動合成を保証しない。**Phase18の文書移行・174見出し意味論照合は引き続きreview required**であり、各機能検証の過去のexit結果で置き換えない。
