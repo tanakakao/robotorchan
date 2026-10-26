@@ -113,3 +113,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 旧`optimization.md`の「HeSBO, latent-space reconstruction and backend constraint semantics」を参照し、`src/robotorchan/optim/embedding/hesbo.py`、`src/robotorchan/optim/latent/strategy.py`を直接読んで[High-dimensional optimizationガイド](../../../docs/development/theory-implementation/guide/optimization/09_high_dimensional.md)を書き直した。HeSBOの疎hash・符号・正規化座標のclamping、LatentSpaceStrategyの学習済み再構成と元空間のacquisition評価、両者の`reject_unmapped_candidate_constraints`を照合した。
 
 **判定：partial / review required。** sourceの契約を説明し旧Mapping中の代表テスト名を参照したが、今回テスト本文全件・数値実行・REMBO/ALEBO/BAxUS全経路の検収は完了していない。座標復元のboundsと一般の非線形candidate feasibilityを同一視しない。旧174見出し台帳は依然検収待ちである。
+
+## REMBO・ALEBO・BAxUS：embeddingと状態更新の部分照合
+
+旧`optimization.md`の「Coordinate-changing high-dimensional strategies」を参照し、`src/robotorchan/optim/embedding/{rembo,alebo,baxus}.py`を直接確認した。[High-dimensional optimization guide](../../../docs/development/theory-implementation/guide/optimization/09_high_dimensional.md)にREMBOのGaussian投影・clipping、ALEBOのpseudoinverseに基づく埋め込みpolytopeと明示的なfeasibility判定、BAxUSの評価予算・部分空間次元・成功失敗counter・length更新・ARD重みを追加した。BAxUSの相対改善閾値とTuRBOの閾値の定義差も記録した。
+
+**判定：partial / review required。** この更新はソース本文を読んだ監査であり、関連embeddingの数値テストやベンチマークの独立再実行、174見出し全体の内容検収は未完了。元Mappingを削除しない。
