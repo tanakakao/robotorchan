@@ -37,3 +37,55 @@ capability descriptorの`constraint_handling`はnative、feasibility-first、pen
 [旧Optimization Mapping](../../optimization.md)で示される`tests/optim/contracts/test_optimizer_dispatch.py`はdispatch引数・不正組合せの拒否等を検査する。`tests/optim/integration/test_nonlinear_candidate_constraints_e2e.py`は選ばれた問題におけるcandidate-level feasibilityを1e-6許容誤差で確認する。この証拠は一部の経路の具体的なcandidateの可行性であり、全backend・すべてのconstraint・大域最適性を示さない。
 
 [Optimization verification索引](../verification/optimization.md)と[旧Verification Mapping](../../verification.md)は数値参照とその制限を保持する。旧Mappingの各区間が検収されるまでは原文を削除しない。
+
+## 6. Backendごとに異なる可行性の数学的意味
+
+旧Optimization Mappingの固定区間246–257の制約処理表と、src/robotorchan/optim/capabilities.py、backends/botorch.py、backends/torch.py、optim/one_shot/mixed.pyを対応付ける。候補空間の制約は獲得関数値とは別に評価し、backendごとに異なる方法で探索に反映する。
+
+$$
+\max_{X\in\mathcal X^q} A(X),\quad
+g_j(X)\ge0,\quad h_k(X)=0.
+$$
+
+| 経路 | 処理契約 | 制限・数学的意味 |
+| --- | --- | --- |
+| Continuous BoTorch | NATIVE | 線形・非線形制約をBoTorchへ渡す。inter-point nonlinearも対応するが、feasible初期点が必要 |
+| Native mixed BoTorch | NATIVE | fixed_features_listで混合値を列挙。inter-point nonlinearは拒否 |
+| Adam / AdamW / SGD | UNSUPPORTED | CandidateConstraintsが非空なら明示拒否 |
+| Random / Sobol | UNSUPPORTED | 候補のサンプリング・argmaxだけでは制約の可行性を保証しない |
+| DE / GA / Mixed GA | FEASIBILITY_FIRST | 制約違反量を用いる順位付け。常に可行点を返す保証ではない |
+| CMA-ES / PSO / Hybrid | PENALTY | acquisitionスコアから制約違反分を減点する近似。有限ペナルティでは違反が残り得る |
+| NSGA-II | 別API | vector objective用であり、scalar獲得関数のcandidate制約dispatchに含まれない |
+
+FEASIBILITY_FIRSTは可行性を順位に反映する方式であり、PENALTYは概念的には次のようにacquisitionと違反量をトレードオフさせる。
+
+$$
+A_{\mathrm{penalty}}(X)=A(X)-\lambda V(X).
+$$
+
+これは個々のbackendの正確な更新則や係数を再定義した式ではない。具体的な違反量の集約や候補選択はそれぞれのソースで確認する。
+
+### 6.1 BoTorch形式の入力制約の例
+
+~~~python
+import torch
+from robotorchan.optim.constraints.contracts import CandidateConstraints
+
+constraints = CandidateConstraints(
+    inequality_constraints=(
+        (
+            torch.tensor([0], dtype=torch.long),
+            torch.tensor([1.0], dtype=torch.double),
+            0.3,
+        ),
+    ),
+)
+~~~
+
+これは入力xの第0列についてx[0] >= 0.3を意味し、未知出力Yの可行確率ではない。非線形制約はcallableの戻り値が0以上で可行、intrapointなら入力[d]、interpointなら[q,d]とする。gradient backendでは微分可能性が必要となる。BoTorch nativeは非線形制約でfeasibleなbatch_initial_conditionsまたはic_generatorを要求し、native mixedはinter-point nonlinearを明示拒否する。
+
+### 6.2 実装根拠と未検証事項
+
+宣言の根拠はsrc/robotorchan/optim/capabilities.py、符号・shape契約はconstraints/contracts.py、委譲と例外条件はbackends/botorch.pyおよびbackends/torch.py。tests/optim/integration/test_nonlinear_candidate_constraints_e2e.pyは選択した条件の可行候補を検証するが、全backendと任意の制約の大域最適性を保証しない。この改訂では独立数値テストを再実行していない。
+
+**移行判定：partial / review required。** Phase 3 routingは変更せず、旧Mapping174区間のverified判定を昇格しない。
