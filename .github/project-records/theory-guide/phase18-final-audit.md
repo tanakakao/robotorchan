@@ -59,3 +59,15 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 4. **最終再判定：** CIとリンクが緑であるだけでなく、上記の台帳・実行証拠・情報非喪失が説明できた時点でのみPhase18全体を`complete`とする。
 
 これらは固定Phase18の**未解決ゲート**であり、新しいPhaseの追加ではない。
+
+## 原文区間の実照合：Models Registry（部分達成）
+
+[旧Model Mapping](../../../docs/development/theory-implementation/models.md)の行18–91を直接取得し、以下を照合した。
+
+| 原文区間 | 調査した事実 | 対応先 | 移行判定 |
+| --- | --- | --- | --- |
+| 18–31「Registry boundaries」 | 回帰registry監査時点142件／二値分類29 ID、異種modelはcoverage外、分類のhelper exportとmodel IDの区別 | [Model registry appendix](../../../docs/development/theory-implementation/guide/appendix/model-registry-and-public-api.md) | **partial, review required**：意味論は対応したが現在mainの独立カウントは未実施 |
+| 32–51「Regression model inventory by existing guide」 | 11 familyの集計（合計142件）と各モデル利用ガイドへの参照 | 同Appendix | **partial, review required**：全142 model名と個別notebook/theoryの全行照合は未実施 |
+| 52–91「Binary classification registry inventory」 | 分類IDとpublic classの名前空間の差。binary.kronecker_multitaskはExact Kroneckerを意味しない | 同Appendix・[Classification](../../../docs/development/theory-implementation/guide/24_classification.md) | **partial, review required**：全29 IDのassertion証拠の移管・全件検収は未実施 |
+
+確認した本文は新しいAppendixに概念別にまとめたが、**原文のinventory全件をコピー・移行したものではない**。既存の174見出し台帳上の`planned (review required)`を`verified`へ変更せず、重複情報があるという理由で旧Mappingを削除しない。原文のsource blob SHA、詳細なテスト証拠、各レコードの完全な再配置は引き続き未達である。
