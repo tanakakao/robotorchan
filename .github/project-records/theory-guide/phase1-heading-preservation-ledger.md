@@ -681,3 +681,14 @@
 | `verification.md:376–407` | `guide/verification/{acquisition,README}.md` | Phase8 exitは6件の代表的property参照についてのrecommendation。noisy improvement、hypervolume、constrained/heterogeneous、情報獲得等の数理参照は認定外 | 部分照合・review required |
 
 表に載せることは元区間の数式・表・PR履歴を完全に移した判定ではない。174見出しの元statusは変更しない。
+
+### Replicate noiseとPhase 7〜9 exit判定の部分照合
+
+| 元区間（Phase 1固定行番号） | 移行先 | この作業で確認した対象 | 判定 |
+| --- | --- | --- | --- |
+| `verification.md:108–121` | `guide/verification/models.md` | `test_phase7_replicate_noise_reference.py`：7観測を3件/4件に集計、不偏分散と平均分散、noise_floor=1e-12。assert_closeはTorch既定tol | 部分照合・review required |
+| `verification.md:274–291` | `guide/verification/README.md`、`phase18-final-audit.md` | Phase7は代表propertyの限定的完了。heteroskedasticのpublic observation posteriorは対象外 | 時系列・判定範囲を部分照合・review required |
+| `verification.md:376–407` | `guide/verification/{acquisition,README}.md`、`phase18-final-audit.md` | Phase8は6件の代表的算術・MC参照のexit recommendation。noisy/multiobjective/constrained/lookaheadは保証外 | 時系列・判定範囲を部分照合・review required |
+| `verification.md:476–510` | `guide/verification/{optimization,README}.md`、`phase18-final-audit.md` | Phase9は5件の代表的参照に限定してcomplete。global convergence、全backend可行性は保証外 | 時系列・判定範囲を部分照合・review required |
+
+この表の「完了」は**旧Phase7〜9における代表propertyの数学的検証の完了**であり、現在のPhase18の174見出し移行をverifiedとする意味ではない。原台帳の`planned (review required)`は不変とする。
