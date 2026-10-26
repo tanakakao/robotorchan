@@ -50,3 +50,18 @@ print(latent_posterior.mean.shape, class_probabilities.shape, predicted_labels.s
 Brier score、NLL、ECEなどはclass probabilityの予測校正を評価するための指標であり、latent varianceの値を直接比較する指標ではない。現行文書の分類モデルはbinary-firstであり、全multiclass対応を主張しない。出力の全familyやmulti-fidelity分類などの対応可否は[Classificationモデル一覧](../../../models/classification.md)で個別に確認する。
 
 [Classification theory](../../../theory/24_classification.md)、[Classification model guide](../../../models/classification.md)、[旧Mapping](../models.md)、[Acquisition Mapping](../acquisition.md)、[Verification](../verification.md)を併読する。
+
+## 7. Bernoulli likelihoodがlatent posteriorをクラス確率へ変える
+
+BinarySingleTaskGPClassifierはBoTorchのVariational GPを基礎に、GPyTorch BernoulliLikelihoodとVariationalELBOを使う。近似潜在分布q(f(x))に対して
+
+$$
+P(y=1\mid x,\mathcal D)
+=\mathbb E_{q(f(x))}[P(y=1\mid f(x))]
+$$
+
+とするため、一般にlatent posterior meanを単にsigmoidやprobit変換した値と同一視できない。src/robotorchan/models/classification/binary/standard/single_task.pyではpredictive_distribution()がlatent_posterior(X).distributionをself.likelihoodへ渡し、predict_proba()は結果のpositive probabilityから[P(y=0),P(y=1)]を構築する。sample_class_probabilities()は別経路としてlatent samplesから条件付き確率を生成する。
+
+predict_class()はpredict_proba()[...,1]に閾値を適用するだけであり、クラス確率の校正を保証しない。閾値は0〜1の有限数である必要があり、範囲外を拒否する。Bernoulli likelihoodに対するELBOを利用する点はExact GPのGaussian MLLと異なる。
+
+**注意：** APIが確率を返すことはBrier・ECE・NLLの十分な性能を意味せず、個別のデータ・学習条件で評価する必要がある。今回の照合はソース契約のみで、数値校正実験は行っていない。
