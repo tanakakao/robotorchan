@@ -45,3 +45,31 @@ assert p.variance.shape[-2:] == (2, 1)
 [既存のverification Mapping](../verification.md)には固定ハイパーパラメータ下での小規模GP条件付き平均・共分散との比較が記録されている。テストが検証するのはその条件における値であり、学習最適化の収束、すべてのノイズ設定、hyperparameterの同定可能性ではない。
 
 実装の責務確認：[single_task.py](../../../../src/robotorchan/models/standard/single_task.py)、[base.py](../../../../src/robotorchan/models/base.py)。利用者向け説明：[Standard models](../../../models/standard.md)、[Notebook](../../../../examples/notebooks/01_single_task_gp.ipynb)。関連章：[BO](01_bayesian_optimization.md)、[Kernel](03_kernel.md)。
+
+## GP条件付き分布の数式をAPIに対応付ける
+
+単一出力・固定hyperparameterのExact GPで、学習点X、予測点X_*、平均関数m、kernel k、観測共分散K_y=K_XX+Σ_noiseとすると、潜在関数の条件付き予測は
+
+$$
+\mu_*=m(X_*)+K_{*X}K_y^{-1}(y-m(X)),
+\qquad
+\Sigma_*=K_{**}-K_{*X}K_y^{-1}K_{X*}.
+$$
+
+実装は逆行列を直接形成することを要求せず、BoTorch/GPyTorchの線形代数へ委譲する。上式のmとkはmodel.mean_moduleとmodel.covar_module、観測ノイズはlikelihoodと必要に応じてtrain_Yvar、予測値はmodel.posterior(test_X)のmean/varianceに対応する。varianceはΣ_*の対角成分で、複数候補点の相関を評価する際は周辺varianceだけでは不十分である。予測入力のshapeは通常batch_shape + [q,d]、単一出力のmean/varianceはbatch_shape + [q,1]となる。
+
+## 学習目的・ノイズ・rawデータの実装境界
+
+| 数理対象 | robotorchan上の入口 | 実装上の所有権と注意点 |
+| --- | --- | --- |
+| 対数周辺尤度 log p(y\|X,θ) | model.make_mll() | ExactGPModelMixinがExactMarginalLogLikelihood(likelihood, model)を生成し、GPyTorchが計算 |
+| hyperparameter最適化 | model.fit() または fit_gpytorch_mll(model.make_mll()) | FittableExactGPModelMixinがBoTorchのfittingを利用。学習収束は別途評価 |
+| posteriorのjoint分布 | model.posterior(test_X) | BoTorchのSingleTaskGPから継承。robotorchan独自のGaussian conditioning式ではない |
+| 観測ノイズ | train_Yvar、likelihood、posterior(observation_noise=...) | 学習時のノイズと将来観測のノイズを区別。latent posteriorとnoisy observation posteriorは同義でない |
+| 元データのprovenance | raw_train_X / raw_train_Y / raw_train_Yvar | constructor引数のdetach/cloneした非永続buffer。condition_on_observationsやfantasize後の最新訓練状態ではない |
+
+src/robotorchan/models/standard/single_task.pyでは、SingleTaskGPがFittableExactGPModelMixinとBoTorchSingleTaskGPを継承し、train_X/Y/Yvar、likelihood、covar_module、mean_module、input/outcome transformsを親classへ渡す。raw_train_*は入力時点のコピーであり、BoTorchが保持するtransform後の現在の訓練状態と混同しない。raw buffersはstate_dictに永続保存しない。
+
+上のMLLはExact GPの式である。Variational GPはELBO、Fully Bayesianモデルはposterior hyperparameter integrationなど異なる学習契約を持ち、この共通exact MLLを自動適用してはならない。
+
+**検証水準：** ソースの継承関係・数式の対応と、既存verification Mappingにある固定条件のGaussian conditioning参照を区別する。今回独立数値検証を実行したわけではなく、すべてのkernel・ノイズ設定・学習収束を認証しない。
