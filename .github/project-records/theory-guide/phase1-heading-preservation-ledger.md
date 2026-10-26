@@ -620,3 +620,26 @@
 移行先の形式検査：primaryとsecondaryの完全一致`0`件、primary/secondary空欄`0`件。status内訳：`planned (review required)` 174件。
 
 **判定の境界**：この結果はH1–H3の**所在と区間の完全性**の証拠であり、各区間内のH4・数式・表・コード・リンクの意味的移行が完了した証拠ではない。`planned (review required)`を`reviewed`へ一括変更しない。本文は旧ファイルに保全されたまま。次のゲートは178参照候補のtree突合せとリンク・CI検証。
+
+
+## Phase 18追跡：Verification見出しの部分照合（原台帳の状態は据え置き）
+
+以下は`verification.md`に由来する**31見出しの一部**について、実際に開いたsource/testと日本語の移行先を対応付けた二次的な照合メモである。元台帳の全174行に設定されている`planned (review required)`を`verified`に書き換えない。下表の「部分照合」は個別assertionに関する照合であり、元見出しに含まれる履歴・表・数式・例外・前後文を**すべて移行済みと認定しない**。
+
+| 元区間（歴史的行番号） | 日本語ガイドの具体的な受け皿 | 今回までに確認できた主題 | 移行判定 |
+| --- | --- | --- | --- |
+| `verification.md:65–79` | `guide/verification/models.md` | Kronecker priorの入力優先flatten、task置換、PSD、1e-10 | 部分照合・review required |
+| `verification.md:80–93` | `guide/verification/models.md` | fidelity-only kernelのoffset境界、rank-one残差、1e-10 | 部分照合・review required |
+| `verification.md:94–107` | `guide/verification/models.md` | PCAのeigenspectrum、直交性、射影・残差、1e-10 | 部分照合・review required |
+| `verification.md:122–134` | `guide/verification/models.md` | binary probit積分、2クラス正規化、1e-10 | 部分照合・review required |
+| `verification.md:135–148` | `guide/verification/models.md` | Gaussian adapterのaffine samplingと勾配、1e-12 | 部分照合・review required |
+| `verification.md:184–197` | `guide/verification/models.md` | PCAGPのpublic/reduced posteriorのmean/variance一致 | 部分照合・review required |
+| `verification.md:198–211,257–273` | `guide/verification/models.md` と `guide/verification/limitations.md` | log-noise分離と手動分散恒等式、public observation posteriorは別 | 部分照合・review required |
+| `verification.md:212–222` | `guide/verification/models.md` | Random Forest tree moments、不偏分散、observation noise拒否 | 部分照合・review required |
+| `verification.md:245–256` | `guide/verification/models.md` | MixedPCAGPのカテゴリID保持とposterior同値 | 部分照合・review required |
+| `verification.md:351–362,363–375` | `guide/verification/acquisition.md` | qSimpleRegret/qUCBのMC演算順、64 draws、q=2、1e-8 | 部分照合・review required |
+| `verification.md:274–291,376–407` | `guide/verification/README.md` と `phase18-final-audit.md` | 過去の代表property限定exit判定と後続の未検証境界 | 時系列の部分照合・review required |
+
+**未照合として優先する区間：** `verification.md:108–121`のreplicate-noise参照、`292–350`のAL・analytic参照のテスト本文、`408–510`のoptimizer数学的referenceおよびexit判定の各assertionは、別の部分的なガイド要約・Mapping記録があっても、この見出し単位の完全移行検収には未達である。
+
+この表の行番号は**Phase 1の固定スナップショット**を表す。現行ファイルの行番号と一致する保証はなく、参照先は見出し名でも確認する必要がある。旧原文を削除・短縮するには、各区間ごとに全文・数式・負の契約・根拠リンクを再点検し、台帳と移行先の双方向で`verified`にできる証拠を記録すること。
