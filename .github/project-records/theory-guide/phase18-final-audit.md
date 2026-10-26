@@ -178,3 +178,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 `tests/optim/backends/test_phase9_sampling_optimizer_reference.py`、`tests/optim/trust_region/test_phase9_turbo_geometry_reference.py`、`tests/optim/constraints/test_phase9_constraint_violation_reference.py`を直接読み、[Optimizer verification guide](../../../docs/development/theory-implementation/guide/verification/optimization.md)にrandom/sobol pool内argmax（seed=29、128 sample、q=2）、TuRBO ARD幾何平均正規化とboundary clipping、CandidateConstraintsの各種残差（等式許容差0.05）とfeasibility-first順位の具体的数値assertionを記載した。いずれも出力の意味・数値tolと未検証のglobal optimum/一般可行性を区別した。[Phase1 heading ledger](phase1-heading-preservation-ledger.md)に、Verificationの固定行番号408–421、436–448、449–464を部分照合として追記した。
 
 **判定：partial / review required。** この作業は既存テスト本文の静的照合であり、独立再実行は行っていない。原文の残区間および174見出し全体のsemantic migration gateは未達。旧Mappingを保全する。
+
+## Phase 18：Phase 9 state / PyTorch negative contractの部分照合
+
+`tests/optim/trust_region/test_phase9_turbo_state_reference.py`と`tests/optim/backends/test_phase9_torch_constraint_contract.py`を直接確認した。[Optimizer verification guide](../../../docs/development/theory-implementation/guide/verification/optimization.md)へTuRBOの成功3回・失敗2回・restart・`state_values`とraw observationsの差、およびAdam/AdamW/SGDがlinear/equality/nonlinear candidate constraintsを9組合せで明示拒否するnegative contractを追記した。固定[見出し台帳](phase1-heading-preservation-ledger.md)では`verification.md:422–435`と`:465–475`の受け皿を部分照合とした。
+
+**判定：partial / review required。** 既存テストの静的assertion照合であり、独立再実行・全見出しの完全移行は未達。元Mappingと全174行の`planned (review required)`は保全する。
