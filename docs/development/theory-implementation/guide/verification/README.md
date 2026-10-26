@@ -75,3 +75,18 @@ Modelsの`replicate noise`もテスト本文と直接照合済みである。た
 | Non-GP surrogates | `test_phase7_gaussian_posterior_reference.py`、`test_phase7_forest_estimator_reference.py`：adapter sample（1e-12）、7-tree ensemble moments（1e-12） | 他estimator・epistemic uncertaintyの較正 |
 
 この表は原文27–39行の8行を**一対一で意味論比較するための差分台帳**であり、8 familyに対する無制限の数学的合格判定ではない。各テストの具体的assertionと例外は[Models verification](models.md)、原文の歴史的判定は[Verification Mapping](../../verification.md)に残す。
+
+
+## 旧Phase 7の中間監査と最終exit：時系列による読み分け
+
+原文[Verification Mapping](../../verification.md)の3つの区間は、互いに置き換えず、**当時の判定と後続の限定的な解消**として読む。
+
+| 旧区間（Phase 1固定行番号） | 当時の証拠・判定 | 後続による変化と残る境界 |
+| --- | --- | --- |
+| `149–183` execution reconciliation | Exact GP・Mixed relabelingと#1416–#1422の代表参照を記録。CI/Docs成功を**実行証拠**として確認するが、reduced posterior座標、heteroskedastic分離、外部estimator同値には当時未達 | 後の#1424–#1426により3件の代表参照が追加。最初の「not yet complete」は当時の判断 |
+| `223–244` property-specific exit audit | #1424・#1425のCI/Docs成功、#1426のfinal-head CIは**その監査時点でpending**。カテゴリ列保持とobservation posterior合成なども残り、`remains open` | 後の#1428がMixedPCAGPの元カテゴリID・posterior同値を追加。#1429は観測分散の**手動合成**のみ追加 |
+| `274–291` final exit reconciliation | 後続の#1428・#1429を含め、**合意した代表property別の数学的reference範囲についてcomplete** | `posterior(observation_noise=True)`の位置依存noise自動注入は依然としてUnsupported/Unverified。全モデル・学習・較正・他reducerの認定ではない |
+
+原文の「#1426 final-head CI pending」は**過去の監査時点の記録**であり、現時点でpendingと推定する根拠には使わない。反対に、後続のfinal exitをもって過去のCI結果を書き換えたり、未検証のAPI契約を`Verified`へ昇格させたりもしない。古い12 Phaseの開発履歴と、現在の固定18 Phase・48章の文書移行は別工程である。
+
+**完全検収との差：** 以上は3区間の主要な表・条件付き判断・後続PR番号・negative contractの照合であり、全文章・全リンク・現在のPR状態を再確認した完全移行検収ではない。移行台帳の`planned (review required)`は維持する。
