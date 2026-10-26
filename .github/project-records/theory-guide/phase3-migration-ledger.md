@@ -1,3 +1,13 @@
+## acquisition.md（1–178行、9区間）の本文レビュー
+
+- 1–78: registryのlocal acquisition、BoTorch-native metadata、composition helper、Thompson selectionを別種として扱う。mixed one-shot optimizerは普通のmixed routeとは異なり、compatibility assertionは実際の最適化成功を保証しない。旧Phaseのcompletion gateは監査履歴へ。
+- 79–114: regression ALはq=1のscalar marginal score。Variance、Std、Straddle、RandomizedStraddle、BoundaryVarianceの式・係数・random coefficient cacheを区別。ensembleと非scalar outputのguardを保持。
+- 115–143: classification ALのPredictiveEntropy、Margin、ProbabilityVariance、BALD、LatentStraddleはclass probability、label entropy、latent uncertaintyを混同しない。すべてq=1。
+- 144–178: regression EPIGはfinite target set上の二点Gaussian mutual information平均。joint covarianceとnoise補正を必要とし、classification BALDや一般非Gaussian EPIGと同一視しない。
+- 原文のnamed testsはassertion inspectionであり、CI実行・独立数値検証とは別。
+
+**累計:** README 13 + models 91 + acquisition 9 = 113/174区間。未レビュー61区間。本文移行・検証完了0件。
+
 # Phase 3 — 原文174区間から日本語ガイドへの移行割当台帳
 
 > 作業記録。原文を削除・改名しない。**未レビュー行のprimaryは見出しベースの暫定割当**であり、`verified`は0件。機械的に分類した結果を移行完了と誤認しないこと。
@@ -120,15 +130,15 @@
 | `models.md` | 1688–1734 | Phase 4 cross-family registry reconciliation: high-dimensional and multitask | `guide/appendix/model-registry-and-public-api.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 1735–1785 | Phase 4 inventory-count closure audit (static, documentation-only) | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **body-reviewed routing / not migrated** |
 | `models.md` | 1786–1796 | KroneckerMultiTaskGP covariance verification reference | `guide/verification/README.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
-| `acquisition.md` | 1–4 | Acquisition theory–implementation mapping: Phase 3 inventory | `guide/acquisition/01_foundations.md` | `appendix/acquisition-contracts-and-compatibility.md` | **planned / needs body review** |
-| `acquisition.md` | 5–18 | Sources and evidence boundary | `guide/acquisition/10_level_set.md` | `appendix/acquisition-contracts-and-compatibility.md` | **planned / needs body review** |
-| `acquisition.md` | 19–38 | Distinct implementation paths | `guide/acquisition/01_foundations.md` | `appendix/acquisition-contracts-and-compatibility.md` | **planned / needs body review** |
-| `acquisition.md` | 39–47 | Acquisition/optimizer interaction | `guide/acquisition/01_foundations.md` | `appendix/acquisition-contracts-and-compatibility.md` | **planned / needs body review** |
-| `acquisition.md` | 48–60 | Fixed Phase 3 completion criteria | `guide/acquisition/01_foundations.md` | `appendix/acquisition-contracts-and-compatibility.md` | **planned / needs body review** |
-| `acquisition.md` | 61–78 | Inspected acquisition registry and assertion evidence | `guide/acquisition/01_foundations.md` | `appendix/acquisition-contracts-and-compatibility.md` | **planned / needs body review** |
-| `acquisition.md` | 79–114 | Phase 5 — regression active-learning acquisition mappings (source inspected) | `guide/acquisition/09_active_learning.md` | `appendix/acquisition-contracts-and-compatibility.md` | **planned / needs body review** |
-| `acquisition.md` | 115–143 | Phase 5 — classification AL and Gaussian EPIG (source inspected) | `guide/acquisition/09_active_learning.md` | `appendix/acquisition-contracts-and-compatibility.md` | **planned / needs body review** |
-| `acquisition.md` | 144–178 | ExpectedPredictiveInformationGain (regression) | `guide/acquisition/05_information_theoretic.md` | `appendix/acquisition-contracts-and-compatibility.md` | **planned / needs body review** |
+| `acquisition.md` | 1–4 | Acquisition theory–implementation mapping: Phase 3 inventory | `guide/acquisition/01_foundations.md` | `appendix/acquisition-contracts-and-compatibility.md` | **body-reviewed routing / not migrated** |
+| `acquisition.md` | 5–18 | Sources and evidence boundary | `guide/appendix/acquisition-contracts-and-compatibility.md` | `appendix/acquisition-contracts-and-compatibility.md` | **body-reviewed routing / not migrated** |
+| `acquisition.md` | 19–38 | Distinct implementation paths | `guide/acquisition/01_foundations.md` | `appendix/acquisition-contracts-and-compatibility.md` | **body-reviewed routing / not migrated** |
+| `acquisition.md` | 39–47 | Acquisition/optimizer interaction | `guide/acquisition/01_foundations.md` | `appendix/acquisition-contracts-and-compatibility.md` | **body-reviewed routing / not migrated** |
+| `acquisition.md` | 48–60 | Fixed Phase 3 completion criteria | `guide/appendix/acquisition-contracts-and-compatibility.md` | `appendix/acquisition-contracts-and-compatibility.md` | **body-reviewed routing / not migrated** |
+| `acquisition.md` | 61–78 | Inspected acquisition registry and assertion evidence | `guide/appendix/acquisition-contracts-and-compatibility.md` | `appendix/acquisition-contracts-and-compatibility.md` | **body-reviewed routing / not migrated** |
+| `acquisition.md` | 79–114 | Phase 5 — regression active-learning acquisition mappings (source inspected) | `guide/acquisition/09_active_learning.md` | `appendix/acquisition-contracts-and-compatibility.md` | **body-reviewed routing / not migrated** |
+| `acquisition.md` | 115–143 | Phase 5 — classification AL and Gaussian EPIG (source inspected) | `guide/acquisition/09_active_learning.md` | `appendix/acquisition-contracts-and-compatibility.md` | **body-reviewed routing / not migrated** |
+| `acquisition.md` | 144–178 | ExpectedPredictiveInformationGain (regression) | `guide/acquisition/05_information_theoretic.md` | `appendix/acquisition-contracts-and-compatibility.md` | **body-reviewed routing / not migrated** |
 | `acquisition.md` | 179–232 | Phase 5 — single-objective Monte Carlo BO (source inspected) | `guide/acquisition/04_batch_noisy.md` | `appendix/acquisition-contracts-and-compatibility.md` | **planned / needs body review** |
 | `acquisition.md` | 233–249 | Phase 5 — multi-objective MC Bayesian optimization (source inspected) | `guide/acquisition/07_multiobjective.md` | `appendix/acquisition-contracts-and-compatibility.md` | **planned / needs body review** |
 | `acquisition.md` | 250–287 | Verified construction contracts | `guide/acquisition/01_foundations.md` | `appendix/acquisition-contracts-and-compatibility.md` | **planned / needs body review** |
