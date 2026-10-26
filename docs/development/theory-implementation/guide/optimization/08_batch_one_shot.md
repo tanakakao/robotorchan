@@ -37,3 +37,34 @@
 個別テストの証拠は旧[Optimization Mapping](../../optimization.md)の`optim/one_shot/mixed.py`／`tests/optim/one_shot/test_mixed.py`行に記録されている。合成例のカテゴリ横断割当てと`max_assignments`等のassertionは**特定の条件での実装契約**を確認するもので、一般のmixed qKG性能や全制約との互換性を証明しない。
 
 [Batch/Noisy acquisition](../acquisition/04_batch_noisy.md)、[One-shotの理論](../../../../theory/optimization/08_batch_one_shot.md)、[Optimizer検証](../verification/optimization.md)、[旧Mapping](../../optimization.md)を併読し、原文の検収完了まで旧Mappingを保持する。
+
+## 5. 拡張batchに対する組合せ数と連続サブ問題
+
+旧Optimization Mappingの固定区間246–257、および src/robotorchan/optim/one_shot/mixed.py の実装に従う。カテゴリ次元 j が K_j 種類の値を持つとき、1行に対する割当て数は
+
+$$
+M=\prod_j K_j,
+\qquad N_{\mathrm{assignments}}=M^{q_{\mathrm{aug}}}.
+$$
+
+ここで q_aug は acq_function.get_augmented_q_batch_size(q) であり、実験候補数 q と区別する。例えばカテゴリ1列が3択、augmented_q=4であれば81通りを列挙する。max_assignmentsより大きい場合はValueErrorを出すので、カテゴリ数・fantasy数を増やすほど組合せ爆発が生じる。
+
+各割当てで [q_aug,d] を1個の連続候補 [1,q_aug*d] にflattenする。カテゴリ列 j の各行 r に相当するflatten後の列番号は r*d+j なので、この列を固定することでfantasy行ごとのカテゴリ差異を保存する。連続部分をBoTorch optimize_acqfへ渡し、得られた拡張変数を [q_aug,d] に戻し、extract_candidates によって実験するq行だけを返す。
+
+~~~python
+from robotorchan.optim.one_shot.mixed import optimize_mixed_one_shot_acqf
+
+# acqf: BoTorch OneShotAcquisitionFunction、bounds: [2, d]を事前に用意
+candidate, score = optimize_mixed_one_shot_acqf(
+    acqf,
+    bounds,
+    categorical_features={1: (0.0, 1.0)},
+    q=1,
+    max_assignments=256,
+)
+# candidateは実評価用。fantasy補助行は含まない。
+~~~
+
+このコード断片は acqf と bounds が既に存在する場合の呼び出し形を示す。成立にはカテゴリ値がbounds内、指定次元が有効、選択肢が空でないことが必要。最適化成功を保証する実行例ではない。q>1はNotImplementedErrorであり、一般のq-batch mixed KGへ拡張済みと解釈してはいけない。
+
+**検証境界：** tests/optim/one_shot/test_mixed.pyの限定的なassertionと実装を参照する。各連続部分の大域最適性、全one-shot獲得関数への適合、全candidate制約の対応は未証明である。
