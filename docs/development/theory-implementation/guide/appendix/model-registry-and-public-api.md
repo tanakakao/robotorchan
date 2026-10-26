@@ -1,6 +1,6 @@
 # Model registryと公開API：回帰・分類の境界
 
-このAppendixは[旧Model Mapping](../../../models.md)の「Registry boundaries」「Regression model inventory by existing guide」「Binary classification registry inventory」（旧原文の行18–91、および分類ID表）を読者向けに対応付ける。**静的inventoryの出典を保持するための補助説明**であり、元文書の全レコードや検証証拠の完全移行を意味しない。
+このAppendixは[旧Model Mapping](../../models.md)の「Registry boundaries」「Regression model inventory by existing guide」「Binary classification registry inventory」（旧原文の行18–91、および分類ID表）を読者向けに対応付ける。**静的inventoryの出典を保持するための補助説明**であり、元文書の全レコードや検証証拠の完全移行を意味しない。
 
 ## 1. Registry IDとpublic classは異なる集合
 
@@ -45,8 +45,8 @@
 | binary classification registry | `src/robotorchan/models/classification/registry.py` | IDとpublic exportを混同しない |
 | 生成coverage | `scripts/generate_model_coverage.py`と`docs/model_coverage.json` | 手動編集・再集計しない |
 | 全件静的監査 | `scripts/audit_model_api.py` | ソース存在と参照の検査、数学的同値性ではない |
-| 数学的検証 | [Verification Mapping](../../../verification.md) | 一つのpropertyごとの数値参照のみをVerifiedとする |
+| 数学的検証 | [Verification Mapping](../../verification.md) | 一つのpropertyごとの数値参照のみをVerifiedとする |
 
-関連：[Model Selection](../13_model_selection.md)、[検証索引](../verification/models.md)、[原文](../../../models.md)。
+関連：[Model Selection](../13_model_selection.md)、[検証索引](../verification/models.md)、[原文](../../models.md)。
 
 この文書は、旧原文の`Registry boundaries`と11 familyの導線を再配置した**部分的レビュー**。29分類IDの全行、142回帰名、H4・数式・negative contracts、最新mainとの全件再照合が終わるまでは元文書を削除しない。
