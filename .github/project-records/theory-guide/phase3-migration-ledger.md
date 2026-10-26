@@ -68,14 +68,14 @@
 | `models.md` | 724–746 | Source and assertion audit: joint neural representation regression | `guide/19_neural_reduction_gp.md` | `audit-history` | **body-reviewed routing / not migrated** |
 | `models.md` | 747–773 | Classification documentation mapping at registry-ID granularity | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 774–798 | Phase 2 inventory sign-off and scope | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **body-reviewed routing / not migrated** |
-| `models.md` | 799–806 | Phase 4: theory-to-implementation records | `guide/appendix/model-composition-and-delegation.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 807–821 | Exact single-task Gaussian-process regression | `guide/02_gaussian_process.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 822–836 | Native mixed-input Gaussian-process regression | `guide/05_mixed_variables.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 837–851 | Bernoulli variational Gaussian-process classification | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 852–866 | Long-format multitask Gaussian-process regression | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 867–881 | Kronecker block-design multitask GP | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 882–896 | SAAS fully Bayesian single-task GP | `guide/08_high_dimensional_gp.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 897–911 | Stochastic deep Gaussian-process regression | `guide/appendix/model-composition-and-delegation.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
+| `models.md` | 799–806 | Phase 4: theory-to-implementation records | `guide/appendix/cross-cutting-implementation-contracts.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 807–821 | Exact single-task Gaussian-process regression | `guide/02_gaussian_process.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 822–836 | Native mixed-input Gaussian-process regression | `guide/05_mixed_variables.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 837–851 | Bernoulli variational Gaussian-process classification | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 852–866 | Long-format multitask Gaussian-process regression | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 867–881 | Kronecker block-design multitask GP | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 882–896 | SAAS fully Bayesian single-task GP | `guide/08_high_dimensional_gp.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 897–911 | Stochastic deep Gaussian-process regression | `guide/22_expressive_gp.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 912–926 | Random-forest ensemble regression | `guide/23_non_gp_surrogates.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 927–941 | Reduced input/output Gaussian-process regression | `guide/18_dimensionality_reduction_gp.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 942–956 | Student-t robust variational regression | `guide/14_robust_gaussian_process.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
@@ -311,6 +311,23 @@
 複数テーマを含む区間は関連するMixed、Noise、MultiTask、Kernel、Reduced、Classification各章への二次参照を後続の本文移行で追加する。
 
 **累計:** README 13 + models 39 = 52/174区間レビュー済み。未レビュー122区間。移行・検証完了0件。
+
+## models.md（799–911行、method-level mapping 8区間）のレビュー
+
+原文のmethod-level mapping recordを読み、API・委譲・数値手法・assertion・制約を章ごとに再割当した。
+
+| 原文行 | 移行時の技術契約 |
+| --- | --- |
+| 799–806 | registry metadataの正本はgenerated coverage。記録のsource/test inspection baselineを保持 |
+| 807–821 | SingleTaskGPはBoTorch exact posteriorをDelegated、raw dataとfit/MLLをExtended。状態転送後のposterior比較は限定条件 |
+| 822–836 | MixedSingleTaskGPはBoTorch native mixed kernelをDelegated。負のcat_dimsを許容し、カテゴリ値を順序付き連続量と見なさない |
+| 837–851 | BinarySingleTaskGPClassifierはlatent posterior、Bernoulli predictive distribution、predict_proba、predict_classを分離。ELBOはGPyTorchに委譲 |
+| 852–866 | MultiTaskGPはtask featureを含むlong-format exact GP。block-designのKronecker GPとは異なる |
+| 867–881 | KroneckerMultiTaskGPはtrain_Y [n,m]のblock design。未観測タスクを含む不完全gridと同一視しない |
+| 882–896 | SaasFullyBayesianSingleTaskGPはBoTorchのMCMC/NUTSへ委譲。make_mllを前提とするexact GPと区別 |
+| 897–911 | SingleTaskDeepGPはGPyTorch variational layersとsample-based DeepGPPosterior。exact Gaussian posteriorではない |
+
+**進捗:** README 13 + models 47 = 60/174区間レビュー済み。未レビュー114区間。移行・検証完了0件。
 
 ## 各区間の移行検収条件
 
