@@ -89,3 +89,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 旧`optimization.md`の「Baseline and separation of responsibilities」「Named optimization dispatcher」「Candidate-space constraints versus outcome constraints」の区間を、`src/robotorchan/optim/constraints/contracts.py`、`validation.py`および`dispatch.py`と比較した。確認対象は11 named backends、`CandidateConstraints`の線形・非線形tupleと符号、intrapoint/interpointの入力shape、`sequential=True`の拒否条件、非線形初期点・公開座標/埋め込み座標の違いである。技術ガイド[Candidate constraints](../../../docs/development/theory-implementation/guide/optimization/05_constraints.md)へ具体的な実装契約を反映した。
 
 **移行判定：partial / review required。** この調査は制約関連のソース照合であり、全backendのconstraint enforcementの数値実行や、旧`optimization.md`の残りのstrategy/one-shot/NSGA-II区間の意味論的照合を完了したものではない。旧Mappingと174見出し台帳は変更しない。
+
+## TuRBOの状態更新：実装と旧Mappingの部分照合
+
+旧`optimization.md`の「Stateful and coordinate-changing algorithms」「Inspected optimizer and strategy assertion evidence」を読み、`src/robotorchan/optim/trust_region/turbo.py`の`TuRBOState`、`update_turbo_state`、`restart_turbo_state`、`generate_turbo_restart_center`の実装本文を直接照合した。実装で定義されたbatch observations/state_values区別、relative improvement閾値、success/failure counters、region lengthの拡縮、restart、ARD重みの幾何平均正規化を[Trust Regionガイド](../../../docs/development/theory-implementation/guide/optimization/10_trust_region.md)へ詳記した。
+
+**判定：partial / review required。** 数式・sourceは照合したが、今回新たなテスト実行、全TuRBO optimizer/Thompson/pending/mixed pathのassertion-level完全照合、regret評価は行っていない。旧原文と174見出し台帳を保全する。
