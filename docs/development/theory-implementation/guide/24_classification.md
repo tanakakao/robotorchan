@@ -65,3 +65,13 @@ $$
 predict_class()はpredict_proba()[...,1]に閾値を適用するだけであり、クラス確率の校正を保証しない。閾値は0〜1の有限数である必要があり、範囲外を拒否する。Bernoulli likelihoodに対するELBOを利用する点はExact GPのGaussian MLLと異なる。
 
 **注意：** APIが確率を返すことはBrier・ECE・NLLの十分な性能を意味せず、個別のデータ・学習条件で評価する必要がある。今回の照合はソース契約のみで、数値校正実験は行っていない。
+
+## 8. HeterogeneousModelで回帰と分類の意味論を保つ
+
+src/robotorchan/models/heterogeneous.pyのHeterogeneousModelはtorch.nn.Moduleのcontainerであり、BoTorchの単一Modelとして全outputを結合したposterior()を提供しない。entry_posterior(key,X)は子のposteriorをそのまま返すため、分類子ではlatent distributionになる。entry_predict_proba(key,X)はClassificationModelMixinの子にのみ使える。回帰子で呼ぶとTypeErrorになる。
+
+分類子と回帰子を併用する制約付きBOでは、回帰acquisitionの価値とP(pass|x)を異なる数理量として扱う。分類出力をGaussian regressionの1列として連結しない。global output indexは各子のnum_outputsに応じて割り当て、output_ownerが子モデルのindexとlocal output indexを返す。output_namesやnamesは別名であり、位置indexが基準となる。
+
+ModelListGPはBoTorch ModelListGPの独立GP合成とSumMarginalLogLikelihoodを用いるもので、分類確率と回帰posteriorの意味論を管理するHeterogeneousModelとは責務が異なる。ModelListGPを異種モデルの単一posteriorとして説明してはいけない。
+
+**検証境界：** 上記はmodels/heterogeneous.pyおよびstandard/model_list.pyの静的実装契約。確率校正、複数目的＋分類制約のend-to-end最適化の数値検証を今回実施したわけではない。

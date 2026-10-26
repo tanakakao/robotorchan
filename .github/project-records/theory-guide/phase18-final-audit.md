@@ -292,3 +292,9 @@ Phase 3台帳の旧 `optimization.md:246–257` は主受け皿 `guide/optimizat
 既存48章内の `guide/09_variational_gp.md`、`guide/24_classification.md`、`guide/21_advanced_high_dimensional_models.md` に、Gaussian exact MLL・variational ELBO・Bernoulli分類ELBO・Fully Bayesian SAASのNUTS posteriorの相違を数式、公開API、上流委譲と照合して追記した。対象は `src/robotorchan/models/standard/variational.py`、`classification/binary/standard/single_task.py`、`high_dimensional/fully_bayesian.py`、`models/base.py`。num_dataの全観測スケール、predict_probaの潜在分布からの積分、supports_mll=Falseなどの負契約を明記した。
 
 **判定：partial / review required。** モデルMappingの全見出しの移行は未完了。NUTS・ELBOの独立数値実行も行っていない。旧Mapping5本保全、174見出しverified=0を維持する。
+
+## Phase 18：MultiTask／ModelList／Heterogeneousのposterior意味論
+
+guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。`models/standard/multitask.py`のlong-format MultiTaskGPとblock-design KroneckerMultiTaskGP、`standard/model_list.py`の独立子GPとSumMarginalLogLikelihood、`models/heterogeneous.py`のglobal output ownership、entry_posterior/entry_predict_probaを直接照合し、出力軸・相関・latentとclass probabilityを混同しない説明を追加した。
+
+**判定：partial / review required。** 旧Mapping全区間の一対一semantic migrationの判定は未実施、旧5 Mapping保全。174見出しのverified=0を維持。独立numerical cross-task covariance検証、確率校正、end-to-end最適化実行は行っていない。
