@@ -312,3 +312,126 @@
 | 1786–1796 | 1 | 0 | 0 | 章別/Appendixを本文レビューで確定 |
 
 **重要：** 上記は全91区間の証拠参照密度に基づく分類支援であり、各区間の技術的意味の完全レビューではない。既存の174見出しの暫定移行先を`verified`へ昇格させない。
+
+## 残り4ファイル・全83見出しの証拠密度監査
+
+この節は`README.md`、`acquisition.md`、`optimization.md`、`verification.md`のH1–H3全見出しを対象とした**本文中の明示パス抽出**。参照が0でも根拠がないことは意味しない。監査見出しの中の技術情報は、auditに隔離せず章別ガイド・Appendix・verificationへ保全する。
+
+| File | Headings | Test-ref sections | Src-ref sections | Notebook-ref sections | History-like headings with technical refs |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `README.md` | 13 | 1 | 1 | 0 | 1 |
+| `acquisition.md` | 18 | 10 | 6 | 1 | 6 |
+| `optimization.md` | 21 | 8 | 3 | 0 | 3 |
+| `verification.md` | 31 | 22 | 0 | 0 | 22 |
+
+### README.md
+
+| Lines | Heading | Tests | Src | Notebook | Review |
+| --- | --- | ---: | ---: | ---: | --- |
+| 1–2 | Theory–Implementation Mapping: 12-phase development cycle | 0 | 0 | 0 | 本文レビューが必要 |
+| 3–10 | Baseline and scope | 0 | 0 | 0 | 本文レビューが必要 |
+| 11–23 | Existing ownership (preserve) | 0 | 0 | 0 | 本文レビューが必要 |
+| 24–41 | Confirmed source-of-truth boundaries | 0 | 4 | 0 | 本文レビューが必要 |
+| 42–66 | Reader navigation (Phase 10) | 0 | 0 | 0 | 本文レビューが必要 |
+| 67–86 | Mapping record contract | 0 | 0 | 0 | 本文レビューが必要 |
+| 87–94 | Mapping documentation layout | 0 | 0 | 0 | 本文レビューが必要 |
+| 95–107 | Verification and remaining work | 0 | 0 | 0 | 本文レビューが必要 |
+| 108–136 | Recorded phase decisions | 0 | 0 | 0 | 本文レビューが必要 |
+| 137–174 | Phase 6 exit reconciliation (static scope) | 0 | 0 | 0 | 本文レビューが必要 |
+| 175–201 | Phase 10 navigation exit audit | 0 | 0 | 0 | 本文レビューが必要 |
+| 202–231 | Phase 11 mapping consistency exit audit | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 232–278 | Phase 12 final audit: evidence and decision | 0 | 0 | 0 | 本文レビューが必要 |
+
+### acquisition.md
+
+| Lines | Heading | Tests | Src | Notebook | Review |
+| --- | --- | ---: | ---: | ---: | --- |
+| 1–4 | Acquisition theory–implementation mapping: Phase 3 inventory | 0 | 0 | 0 | 本文レビューが必要 |
+| 5–18 | Sources and evidence boundary | 0 | 2 | 0 | 技術情報の抽出が必要 |
+| 19–38 | Distinct implementation paths | 0 | 0 | 0 | 本文レビューが必要 |
+| 39–47 | Acquisition/optimizer interaction | 0 | 0 | 0 | 本文レビューが必要 |
+| 48–60 | Fixed Phase 3 completion criteria | 0 | 0 | 0 | 本文レビューが必要 |
+| 61–78 | Inspected acquisition registry and assertion evidence | 2 | 0 | 0 | 技術情報の抽出が必要 |
+| 79–114 | Phase 5 — regression active-learning acquisition mappings (source inspected) | 5 | 0 | 1 | 技術情報の抽出が必要 |
+| 115–143 | Phase 5 — classification AL and Gaussian EPIG (source inspected) | 3 | 0 | 0 | 技術情報の抽出が必要 |
+| 144–178 | ExpectedPredictiveInformationGain (regression) | 1 | 0 | 0 | 本文レビューが必要 |
+| 179–232 | Phase 5 — single-objective Monte Carlo BO (source inspected) | 3 | 3 | 0 | 技術情報の抽出が必要 |
+| 233–249 | Phase 5 — multi-objective MC Bayesian optimization (source inspected) | 0 | 0 | 0 | 本文レビューが必要 |
+| 250–287 | Verified construction contracts | 3 | 2 | 0 | 本文レビューが必要 |
+| 288–308 | Phase 5 — outcome-constrained BO composition (source inspected) | 0 | 0 | 0 | 本文レビューが必要 |
+| 309–345 | Interpretation and boundaries | 3 | 2 | 0 | 本文レビューが必要 |
+| 346–362 | Phase 5 — information-theoretic and lookahead acquisitions (source inspected) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 363–405 | One-shot and information-target boundaries | 3 | 2 | 0 | 本文レビューが必要 |
+| 406–422 | Phase 5 — coverage reconciliation and exit audit | 0 | 0 | 0 | 本文レビューが必要 |
+| 423–465 | Confirmed limits and carry-forward | 2 | 2 | 0 | 本文レビューが必要 |
+
+### optimization.md
+
+| Lines | Heading | Tests | Src | Notebook | Review |
+| --- | --- | ---: | ---: | ---: | --- |
+| 1–4 | Acquisition optimization theory–implementation mapping: Phase 3 inventory | 0 | 0 | 0 | 本文レビューが必要 |
+| 5–19 | Baseline and separation of responsibilities | 0 | 0 | 0 | 本文レビューが必要 |
+| 20–39 | Named optimization dispatcher | 0 | 0 | 0 | 本文レビューが必要 |
+| 40–62 | Candidate-space constraints versus outcome constraints | 0 | 0 | 0 | 本文レビューが必要 |
+| 63–76 | Stateful and coordinate-changing algorithms | 0 | 0 | 0 | 本文レビューが必要 |
+| 77–85 | Verification boundaries | 0 | 0 | 0 | 本文レビューが必要 |
+| 86–99 | Inspected optimizer and strategy assertion evidence | 3 | 0 | 0 | 技術情報の抽出が必要 |
+| 100–107 | Fixed follow-up audit surface | 0 | 0 | 0 | 本文レビューが必要 |
+| 108–118 | Specialized optimization paths: inspected source and assertions | 3 | 0 | 0 | 本文レビューが必要 |
+| 119–133 | Coordinate-changing high-dimensional strategies | 3 | 0 | 0 | 本文レビューが必要 |
+| 134–140 | Remaining Phase 3 audit surface | 0 | 0 | 0 | 本文レビューが必要 |
+| 141–152 | HeSBO, latent-space reconstruction and backend constraint semantics | 3 | 0 | 0 | 本文レビューが必要 |
+| 153–165 | Phase 3 evidence limits | 0 | 0 | 0 | 本文レビューが必要 |
+| 166–181 | Phase 3 registry reconciliation gate | 2 | 0 | 0 | 技術情報の抽出が必要 |
+| 182–205 | Phase 6 — named optimizer mathematical and dispatch mapping | 0 | 1 | 0 | 技術情報の抽出が必要 |
+| 206–245 | Exact dispatch and mathematical limitations | 2 | 1 | 0 | 本文レビューが必要 |
+| 246–257 | Phase 6 — specialist optimizers and candidate-constraint semantics | 0 | 0 | 0 | 本文レビューが必要 |
+| 258–274 | Constraint handling is part of the algorithm | 0 | 0 | 0 | 本文レビューが必要 |
+| 275–295 | Tests and mathematical verification boundary | 5 | 0 | 0 | 本文レビューが必要 |
+| 296–314 | Phase 6 — stateful and coordinate-changing search strategies | 0 | 0 | 0 | 本文レビューが必要 |
+| 315–355 | Coordinate and constraint invariants | 4 | 2 | 0 | 本文レビューが必要 |
+
+### verification.md
+
+| Lines | Heading | Tests | Src | Notebook | Review |
+| --- | --- | ---: | ---: | ---: | --- |
+| 1–3 | Mathematical verification: Phases 7–9 | 0 | 0 | 0 | 本文レビューが必要 |
+| 4–26 | Purpose and evidence rules | 0 | 0 | 0 | 本文レビューが必要 |
+| 27–39 | Phase 7 — model verification matrix | 0 | 0 | 0 | 本文レビューが必要 |
+| 40–64 | Initial Phase 7 execution gate | 0 | 0 | 0 | 本文レビューが必要 |
+| 65–79 | Kronecker block-design covariance reference (Phase 7) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 80–93 | Data-fidelity downsampling kernel reference (Phase 7) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 94–107 | PCA reduced-space projection reference (Phase 7) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 108–121 | Replicate observation-noise statistical reference (Phase 7) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 122–134 | Binary GP probit predictive reference (Phase 7) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 135–148 | Non-GP Gaussian posterior reparameterization reference (Phase 7) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 149–183 | Phase 7 execution reconciliation and remaining scope | 0 | 0 | 0 | 本文レビューが必要 |
+| 184–197 | Reduced GP public/latent posterior coordinate reference (Phase 7) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 198–211 | Heteroskedastic latent-versus-observation noise reference (Phase 7) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 212–222 | Non-GP Random Forest estimator-level reference (Phase 7) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 223–244 | Phase 7 exit audit (property-specific) | 0 | 0 | 0 | 本文レビューが必要 |
+| 245–256 | Mixed reduced GP categorical-coordinate reference (Phase 7) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 257–273 | Heteroskedastic observation-variance composition boundary (Phase 7) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 274–291 | Phase 7 final exit reconciliation | 0 | 0 | 0 | 本文レビューが必要 |
+| 292–306 | Phase 8 — regression active-learning formula reference | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 307–319 | Phase 8 — classification active-learning arithmetic reference | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 320–334 | Phase 8 — BALD and probability-variance sample-moment reference | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 335–350 | Phase 8 — native analytic BO Gaussian reference | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 351–362 | Phase 8 — Monte Carlo qSimpleRegret sample reference | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 363–375 | Phase 8 — Monte Carlo qUCB sample reference | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 376–407 | Phase 8 — verification reconciliation (representative scope) | 0 | 0 | 0 | 本文レビューが必要 |
+| 408–421 | Phase 9 — sampling optimizer reference (initial property) | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 422–435 | Phase 9 — TuRBO state-transition reference | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 436–448 | Phase 9 — TuRBO trust-region geometry reference | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 449–464 | Phase 9 — candidate constraint residual and feasibility ordering reference | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 465–475 | Phase 9 — PyTorch optimizer candidate-constraint support boundary | 1 | 0 | 0 | 技術情報の抽出が必要 |
+| 476–510 | Phase 9 — representative optimizer verification exit audit | 0 | 0 | 0 | 本文レビューが必要 |
+
+### Phase 1の残ゲート（未完了）
+
+- 全リポジトリのtreeを用いた参照先の網羅的な存在確認と外部からの被参照チェック。
+- 見出し内の数式・表・注意書き・暗黙のパスを含めた意味レベルの保全レビュー。
+- 各見出しの移行先（primary/secondary）を仮分類から確定に昇格するレビュー。
+- リンク検証スクリプトとCIの実行。
+
+**現時点ではPhase 1を完了と判定しない。**
