@@ -43,13 +43,13 @@
 | `models.md` | 208–225 | Component-level implementation ownership | `guide/appendix/model-composition-and-delegation.md` | `guide/02_gaussian_process.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 226–235 | Limits of the current evidence | `guide/appendix/limitations-and-unverified.md` | `guide/verification/README.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 236–256 | Exhaustive static provenance export | `guide/appendix/model-registry-and-public-api.md` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
-| `models.md` | 257–271 | Documentation link existence validation | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 272–289 | Static test-reference discovery | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 290–315 | Inspected runtime composition and mathematical ownership | `guide/appendix/model-composition-and-delegation.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 316–338 | Inspected test assertions and verification boundaries | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 339–350 | Optional static upstream composition scan | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 351–367 | Conditional import provenance and static scan boundaries | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 368–393 | Phase 2 evidence levels and follow-up matrix | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
+| `models.md` | 257–271 | Documentation link existence validation | `guide/appendix/model-registry-and-public-api.md` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 272–289 | Static test-reference discovery | `guide/verification/README.md` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 290–315 | Inspected runtime composition and mathematical ownership | `guide/appendix/model-composition-and-delegation.md` | `guide/02_gaussian_process.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 316–338 | Inspected test assertions and verification boundaries | `guide/verification/README.md` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 339–350 | Optional static upstream composition scan | `guide/appendix/model-composition-and-delegation.md` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 351–367 | Conditional import provenance and static scan boundaries | `guide/appendix/model-composition-and-delegation.md` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 368–393 | Phase 2 evidence levels and follow-up matrix | `guide/verification/README.md` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 394–422 | Classification model documentation ownership | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 423–441 | Source-inspected classification delegation: non-GP and label noise | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 442–458 | Source-inspected classification: heterogeneous ensembles and uncertain inputs | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
@@ -243,6 +243,28 @@
 - `RandomForestSurrogate`はsklearnへの委譲とBoTorch-compatible posterior facadeを区別し、`guide/23_non_gp_surrogates.md`へ接続する。
 
 **進捗:** `models.md`冒頭14/91区間を本文レビュー済み。READMEの13区間と合わせて27/174区間。未レビュー147区間。新ガイドへの移行・検証は依然0件。
+
+## models.md（257–393行、追加7区間）の本文レビュー
+
+既存の静的監査・委譲・テスト証拠を、ガイド本文と検証Appendixへ分離するために原文を確認した。
+
+| 原文行 | 残す技術情報 | 証拠水準・限界 |
+| --- | --- | --- |
+| 257–271 | `audit_model_api.py --check-documentation-paths` と `generate_model_coverage.py --check` | regression registryに記録されたguide/theory/notebookの**パス存在**のみ。Notebook実行や分類ドキュメントを保証しない |
+| 272–289 | `--include-test-references` によるAST参照抽出、`syntactic_reference_only` | alias・動的生成による偽陰性と同名参照による偽陽性。assertionや実行成功を保証しない |
+| 290–315 | RandomForestの`self._forest`、Binary GPのBernoulli/ELBO、ReducedGPのreducerとBoTorch GPの**合成** | MROだけではsklearn/GPyTorch/reducerの委譲を発見できない。source-inspectedだが全runtime pathは未確認 |
+| 316–338 | Mixed GP・RandomForest・Binary GP・ReducedGPの代表テスト、named test数とassertion scope | RFのcalibration、分類のELBO最適値、reduction covariance誤差などは未検証 |
+| 339–350 | `--include-upstream-calls` によるBoTorch/GPyTorch/sklearnの直接import-call静的検出 | helper内委譲・間接factory・inherited method・runtime aliasを網羅しない |
+| 351–367 | try/except ImportError内の条件付きimport、alias、文字列の偽検出を区別するscanner regression test | syntax scan成功はfit、posterior、likelihoodの数値正確性を証明しない |
+| 368–393 | registry/export、MRO、direct composition、test AST、inspected assertion、numerical referenceの**6段階の証拠** | 静的スキャンの空結果は`Unsupported`ではなく未検出。`Unverified`を維持 |
+
+### モデル章への二次接続（本文レビューで必要と判明）
+
+- `models.md` 290–315：`guide/23_non_gp_surrogates.md`、`guide/24_classification.md`、`guide/18_dimensionality_reduction_gp.md`をそれぞれ追加参照する。1区間に複数の数学的対象が含まれるため、単一のGP章だけへ移さない。
+- `models.md` 316–338：`guide/05_mixed_variables.md`、`guide/23_non_gp_surrogates.md`、`guide/24_classification.md`、`guide/18_dimensionality_reduction_gp.md`とverificationを接続する。
+- `models.md` 368–393：全モデルに共通するevidence taxonomyとしてverification/Appendixに配置する。過去のPhase番号だけを監査履歴に残す。
+
+**進捗:** README 13区間 + models.md 21区間 = 34/174区間を本文レビュー済み。140区間は未レビュー。ガイド本文への移行・検証完了は0件。
 
 ## 各区間の移行検収条件
 
