@@ -119,3 +119,14 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 旧`optimization.md`の「Coordinate-changing high-dimensional strategies」を参照し、`src/robotorchan/optim/embedding/{rembo,alebo,baxus}.py`を直接確認した。[High-dimensional optimization guide](../../../docs/development/theory-implementation/guide/optimization/09_high_dimensional.md)にREMBOのGaussian投影・clipping、ALEBOのpseudoinverseに基づく埋め込みpolytopeと明示的なfeasibility判定、BAxUSの評価予算・部分空間次元・成功失敗counter・length更新・ARD重みを追加した。BAxUSの相対改善閾値とTuRBOの閾値の定義差も記録した。
 
 **判定：partial / review required。** この更新はソース本文を読んだ監査であり、関連embeddingの数値テストやベンチマークの独立再実行、174見出し全体の内容検収は未完了。元Mappingを削除しない。
+
+## Verification：Phase 8のMC数値参照（追加の個別検収）
+
+旧`verification.md`の「Monte Carlo qSimpleRegret sample reference」「Monte Carlo qUCB sample reference」と、`tests/acquisition/test_phase8_mc_simple_regret_reference.py`および`tests/acquisition/test_phase8_mc_qucb_reference.py`のassertion本文を直接確認し、[Acquisition検証索引](../../../docs/development/theory-implementation/guide/verification/acquisition.md)へ計算順序・shape・seed・許容誤差を移した。
+
+| Property | 独立参照と一致の範囲 | 定数・条件 | 判定 |
+| --- | --- | --- | --- |
+| `qSimpleRegret` MC aggregation | `mean_s max_q samples[s,q]`とBoTorch-native出力 | 64 Sobol samples、seed 17、2 batches×q=2、float64、atol=rtol=1e-8 | source/test assertion inspected。個別propertyだけ |
+| `qUpperConfidenceBound` MC aggregation | `mean_s max_q (sample_mean+sqrt(beta*pi/2)*abs(sample-sample_mean))` | 64 Sobol samples、seed 23、beta=0.3、2 batches×q=2、float64、atol=rtol=1e-8 | source/test assertion inspected。個別propertyだけ |
+
+元のテストが用いるbase samplesを参照式でも再利用するため、これらはsample aggregationの独立記述との一致であり、MC収束やGP conditioningの独立検証ではない。Phase 18の全体完了判定は変えず、元の174見出し台帳も一括`verified`としない。
