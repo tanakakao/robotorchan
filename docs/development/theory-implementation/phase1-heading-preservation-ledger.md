@@ -459,3 +459,30 @@
 - 数式・条件・許容誤差・検証限界は各技術章の「検証範囲」に**必ず残す**。詳細なテストケース表は`verification/`またはAppendixに配置する。
 - Phase番号やPR完了報告は監査履歴に置き、学習本文には入れない。ただしテストファイル名自体に含まれる`phase7`等は実在の識別子なので改名しない。
 - `verification.md`の他の区間はまだ意味レベルレビューが未完了。ここにある11区間だけをレビュー済みとする。
+
+## verification.md: 数値的検証条件の意味レベル移行レビュー（第2弾）
+
+前節に続き、`verification.md`の未レビューの数値検証本文を読み、モデル系8区間とacquisitionの総括・optimizerの総括をレビューした。原文の過去のCI/PR記述は**歴史的証拠**であり、今回の作業でCIを再実行したことは意味しない。
+
+| 元行 | 技術ガイド候補 | 実証する性質・条件 | 引き継ぐべき未検証境界 |
+| --- | --- | --- | --- |
+| 94–107 | reduced / PCA GP | `test_phase7_pca_projection_reference.py`：6×3 float64、共分散固有値・直交性・射影・残差直交性、1e-10 | PCAの基底符号は非固定。reduced GP事後、PLS、neural reducerは対象外 |
+| 108–121 | robust/noise / replicate | `test_phase7_replicate_noise_reference.py`：不均等replicate群、標本分散`s²=Σ(y-ȳ)²/(n-1)`と群平均の雑音分散`s²/n` | 学習済みheteroskedastic noiseやrobust GPの精度は対象外 |
+| 122–134 | binary classification | `test_phase7_binary_probit_reference.py`：`E[Φ(f)]=Φ(μ/√(1+σ²))`、float64、確率の正規化 | ELBO収束・較正・latent GP fitは対象外 |
+| 135–148 | non-GP posterior adapter | `test_phase7_gaussian_posterior_reference.py`：`y=μ+√v ε`、base sample、batch/sample形状、零分散、平均への勾配 | 外部推定器の予測精度は対象外 |
+| 184–197 | reduced GP coordinate API | `test_phase7_posterior_coordinate_reference.py`：`posterior_original(x)=posterior_reduced(T(x))`、固定PCA、q-batch、reducer不変 | 次元削減の有効性・カテゴリ保持は対象外 |
+| 198–211 | heteroskedastic GP | `test_phase7_heteroskedastic_uncertainty_reference.py`：制御されたlog-noiseの指数変換とlatent/noise分離、0.01/0.09 | noise GP較正・任意点での観測事後は対象外 |
+| 212–222 | non-GP / random forest | `test_phase7_forest_estimator_reference.py`：sklearn tree個別予測、標本分散`s-1`、q-batch、random_state=17 | 汎化精度・epistemic較正・他の非GPモデルは対象外 |
+| 245–256 | mixed reduced GP | `test_phase7_mixed_reduced_categorical_reference.py`：連続/カテゴリ交互列、カテゴリID・reduced cat index保持、事後座標同値、1e-10 | MixedPCAGP固定PCA経路のみ。全mixed reducerへの一般化不可 |
+| 257–273 | heteroskedastic observation | 同`test_phase7_heteroskedastic_uncertainty_reference.py`：条件付き独立雑音の手動合成`Var[y|D]=Var[f|D]+v(x)` | **`posterior(observation_noise=True)`の検証ではない**。候補依存noise注入やnoise GP不確実性積分は未対応/未検証 |
+
+### 章別ガイドに必要な「非証明」記述
+
+- `verification.md` 223–244と274–291のPhase 7監査は、PR #1426の最終head CIが当時未確認であったことや、カテゴリ座標・heteroskedastic観測事後の限界を明示する**歴史的な時点記録**。後続の#1428/#1429の記述を考慮しても、完全な観測事後の実装を検証済みに昇格させない。
+- 376–407のPhase 8総括：独立数式参照で確認したのは代表的なAL・解析的BO・MC集約。**qNEI/qLogNEI、qEI/qLogEI、qEHVI/qNEHVI、制約付き獲得、異種合成、情報利得/lookaheadの数理的検証は別扱い**。
+- 476–510のPhase 9総括：sampling pool argmax、TuRBO状態/ARD幾何、constraint residual、未対応制約の拒否を確認した歴史的判断であり、**大域収束、全backend制約充足、mixed/batch/asyncの保証は示さない**。
+- これらの限界は章本文の「検証できていない性質」に残し、PR番号・Phase完了宣言はaudit側へ分離する。
+
+### レビュー状態
+
+今回のレビューは数値参照の具体的な意味と総括の限界を対象とする。初期execution gate・マトリクス・exit audit等の全記述を移行確定したわけではなく、**Phase 1完了判定は保留**。
