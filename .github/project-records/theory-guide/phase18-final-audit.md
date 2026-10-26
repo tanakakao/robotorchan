@@ -148,3 +148,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 `tests/models/standard/test_phase7_multifidelity_kernel_reference.py`と`tests/models/robust/test_phase7_heteroskedastic_uncertainty_reference.py`の本文を読んで、[Models verification guide](../../../docs/development/theory-implementation/guide/verification/models.md)に数式・入力条件・許容誤差を追記した。前者はfidelity-only downsampling kernelのhigh-fidelity offset boundary、rank-one residual、PSDをfloat64/1e-10で照合した。後者は固定log-noiseからの0.01/0.09分散（1e-12）、latent varianceとの分離、手動の分散加法恒等式を確認した。
 
 **判定：partial / review required。** テスト本文とのassertion照合であり、今回の独立再実行は行っていない。特にHeteroskedasticの`posterior(observation_noise=True)`で位置依存noiseが自動合成されること、全MF posteriorの同値性は証明されていない。旧Mappingの全区間移行は未完了。
+
+## Phase 18 Verification：Binary probit / Gaussian posterior adapterのassertion照合
+
+`tests/models/classification/test_phase7_binary_probit_reference.py`および`tests/models/non_gp/test_phase7_gaussian_posterior_reference.py`を直接確認し、[Models verification guide](../../../docs/development/theory-implementation/guide/verification/models.md)へ具体的な数式、入力shape、数値tolとテスト証拠の限界を追記した。前者は`E[Phi(f)] = Phi(mu/sqrt(1+variance))`、3候補の2クラス確率・正規化（1e-10）を検査。後者は固定Gaussian posteriorのbase-sample affine reparameterization（shape `[2,2,2,1]`、1e-12）とmean gradient・zero varianceを検査する。
+
+**判定：partial / review required。** Classifierの学習・較正や外部estimatorの予測精度を証明したものではなく、本作業で独立数値テストの再実行は行っていない。旧Mappingおよび174見出し台帳は引き続き保全する。
