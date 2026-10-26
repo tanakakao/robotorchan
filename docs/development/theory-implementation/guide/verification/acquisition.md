@@ -29,3 +29,45 @@
 両テストは、独立の乱数系列を単純比較するのではなく、**acquisition側と参照式で同じSobol samplerのbase samplesを再利用**してsamplingノイズを除外する。このため検証できるのはMCの演算順序・集約の一致であり、独立サンプリングの分布一致、有限sampleからの収束、posterior較正、最適化候補の性能までは確証しない。
 
 本節の数値は[Verification Mapping](../../verification.md)のPhase 8 MC記述と、各テストのソース本文を直接照合した。原文にある他の情報理論型・制約付き・多目的MC familyが検証済みだとは、この二件から推定しない。
+
+
+## Phase 8の独立参照：Regression / Classification ALの算術
+
+`tests/acquisition/test_phase8_regression_al_formula_reference.py`は、学習の再実行を伴わない固定`SingleTaskGP`、float64、q=1の3候補`[0.15,0.45,0.85]`について、posteriorのmean `mu`とvariance `v`から次を直接算出する。
+
+```text
+PosteriorVariance = v
+PosteriorStd = sqrt(max(v, 0))
+Straddle = beta * PosteriorStd - abs(mu - target)
+BoundaryVariance = max(v, 0) * exp(-0.5*((mu-target)/max(PosteriorStd,eps))**2)
+target = 0.35, beta = 1.7
+```
+
+4つの公開acquisition値はいずれもshape `[3]`、`atol=rtol=1e-12`で参照値と一致する。これはposteriorに与えられた**momentから獲得関数値への算術**の検証であって、posterior moment自体を独立に計算した結果ではない。
+
+`tests/acquisition/test_phase8_classification_al_reference.py`は、`BinarySingleTaskGPClassifier`の0/1ラベル4学習点とq=1の3候補で、固定の`predict_proba`と`latent_posterior`から以下を計算する。
+
+```text
+PredictiveEntropy = -sum_c(p_c * log(p_c))   # xlogyでp=0も扱う
+MarginUncertainty = 1 - p_largest + p_second_largest
+LatentStraddle = beta*sqrt(max(var_latent,0)) - abs(mean_latent)
+beta = 1.5
+```
+
+3つの公開scoreがshape `[3]`で`atol=rtol=1e-10`に一致し、entropyが`[0,log(2)]`、marginが`[0,1]`内であることをassertする。label uncertaintyとlatent uncertaintyを**異なる量**として扱っており、分類器の学習収束・calibration・multiclass適合性の独立保証ではない。
+
+## Phase 8の独立参照：Gaussian analytic BO
+
+`tests/acquisition/test_phase8_analytic_bo_gaussian_reference.py`は、float64の固定単出力GPから得たposteriorの`mu`、`sigma`に対して、最大化の`z=(mu-best_f)/sigma`を使った次のclosed formを手計算する。
+
+```text
+EI = (mu-best_f)*Phi(z) + sigma*phi(z)
+LogEI = log(EI)
+LogPI = log(Phi(z))
+UCB = mu + sqrt(beta)*sigma
+best_f = 0, beta = 0.4
+```
+
+BoTorch-nativeの`LogExpectedImprovement`、`LogProbabilityOfImprovement`、`UpperConfidenceBound`を3個のq=1候補で比較し、各出力shape `[3]`および`atol=rtol=1e-8`を確認する。**BoTorchへのdelegateされた解析型acquisitionの値**を対象とし、極端なGaussian tailでの安定性、GPの独立posterior計算、q>1やnoisy/MC acquisitionへの保証にはならない。
+
+以上3テストの本文を旧[Verification Mapping](../../verification.md)のPhase 8節に対応付けた。別familyに関する数値テストの存在や未検証の境界を、この3件から推測しない。
