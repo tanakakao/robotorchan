@@ -93,3 +93,25 @@ sample = mean + sqrt(variance) * base_sample
 を`rsample_from_base_samples(sample_shape=[2],...)`と比較し、`atol=rtol=1e-12`で確認する。期待サンプルshapeは`[2,2,2,1]`。ゼロ分散成分はbase sampleに依らずmeanへ一致し、2サンプルの和から逆伝播した`mean.grad`が全成分で2になることも確かめる。これは**宣言したGaussian posterior adapterのaffine samplingとgradientの契約**であり、外部non-GP estimator自体の予測精度・uncertainty較正や全adapterの適合性を保証しない。
 
 以上2件は実際のテスト本文を照合した結果であり、この更新で新たな独立数値実験を実行したという意味ではない。
+
+
+## 実装assertionの照合：PCA reduced GPの公開座標と内部座標
+
+`tests/models/high_dimensional/reduced/test_phase7_posterior_coordinate_reference.py`は、float64の6×4学習データで`PCAGP(n_components=2)`を構築する。候補は`[batch=2,q=2,d=4]`で、`input_reducer.transform(candidates)`による2次元表現を明示的に得る。`model.posterior(candidates)`と`model.posterior(latent)`の平均・分散をそれぞれ`atol=rtol=1e-10`で比較し、両者のshapeが`[2,2,1]`であることを確認する。さらに`components`と`mean`がposterior呼び出しによって変化しないことを検証する。**固定済みreducerを経由した座標契約**の確認であり、PCA学習の選択やGPの推定精度そのものの検証ではない。
+
+## 実装assertionの照合：Mixed-PCAでカテゴリ列を保持
+
+`tests/models/high_dimensional/reduced/test_phase7_mixed_reduced_categorical_reference.py`は3連続変数と1カテゴリ列からなる6×4学習データを使い、`MixedPCAGP(n_components=2, cat_dims=[1])`を構築する。縮約後のカテゴリ座標が`reduced_cat_dims == [2]`であること、縮約後のカテゴリ値が元の`candidates[...,1]`と一致すること、内部学習入力でも元カテゴリIDを保持することを検査する。
+
+2 batch×2候補のfloat64入力について、元空間の`posterior(candidates)`と縮約空間の`posterior(reduced)`の平均・分散を`atol=rtol=1e-10`で照合する。カテゴリIDを**連続成分としてPCAで圧縮しない**という対象構成の実装契約を確認するテストであり、全てのカテゴリkernelや他の次元削減手法に一般化しない。
+
+## 実装assertionの照合：Random Forestのensemble posterior
+
+`tests/models/non_gp/test_phase7_forest_estimator_reference.py`は`sklearn`が利用可能な環境で、float64の12学習点から`RandomForestSurrogate(n_estimators=7,random_state=17)`を学習する。候補shapeは`[2,2,1]`。7個のtreeそれぞれの`predict`を独立に集め、`posterior.values`、`posterior.mean`、`posterior.variance`を参照する。
+
+```text
+mean = mean(tree_predictions)
+variance = var(tree_predictions, unbiased=True)
+```
+
+3つの比較はいずれも`atol=rtol=1e-12`を採用し、`posterior(observation_noise=True)`が`NotImplementedError`を返すことも明示的にassertしている。これは**7つのtree予測をensemble momentsとして表現する契約**であり、epistemic uncertaintyの較正やforest以外のnon-GPモデルを検証するものではない。
