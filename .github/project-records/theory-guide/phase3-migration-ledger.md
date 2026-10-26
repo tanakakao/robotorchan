@@ -1,6 +1,6 @@
 # Phase 3 — 原文174区間から日本語ガイドへの移行割当台帳
 
-> 作業記録。原文を削除・改名しない。**全行のprimaryは本文未レビューの暫定割当**であり、`verified`は0件。機械的に分類した結果を移行完了と誤認しないこと。
+> 作業記録。原文を削除・改名しない。**未レビュー行のprimaryは見出しベースの暫定割当**であり、`verified`は0件。機械的に分類した結果を移行完了と誤認しないこと。
 
 ## 入力と判定基準
 
@@ -29,20 +29,20 @@
 | `README.md` | 175–201 | Phase 10 navigation exit audit | `guide/README.md` | `audit-history` | **body-reviewed routing / not migrated** |
 | `README.md` | 202–231 | Phase 11 mapping consistency exit audit | `guide/verification/README.md` | `audit-history` | **body-reviewed routing / not migrated** |
 | `README.md` | 232–278 | Phase 12 final audit: evidence and decision | `guide/appendix/limitations-and-unverified.md` | `audit-history` | **body-reviewed routing / not migrated** |
-| `models.md` | 1–4 | Model theory–implementation mapping | `guide/appendix/model-composition-and-delegation.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 5–17 | Audit provenance and limits | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 18–31 | Registry boundaries | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 32–51 | Regression model inventory by existing guide | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 52–91 | Binary classification registry inventory | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 92–106 | Representative code-path findings | `guide/appendix/model-composition-and-delegation.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 107–119 | Existing audit machinery | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 120–131 | Phase 2 public-export reconciliation | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 132–146 | Regression public symbols outside the registry | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 147–185 | Binary registry IDs and exported model classes | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 186–207 | Representative test assertion mapping | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 208–225 | Component-level implementation ownership | `guide/appendix/model-composition-and-delegation.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 226–235 | Limits of the current evidence | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 236–256 | Exhaustive static provenance export | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
+| `models.md` | 1–4 | Model theory–implementation mapping | `guide/README.md` | `guide/appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 5–17 | Audit provenance and limits | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 18–31 | Registry boundaries | `guide/appendix/model-registry-and-public-api.md` | `guide/24_classification.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 32–51 | Regression model inventory by existing guide | `guide/appendix/model-registry-and-public-api.md` | `guide/13_model_selection.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 52–91 | Binary classification registry inventory | `guide/appendix/model-registry-and-public-api.md` | `guide/24_classification.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 92–106 | Representative code-path findings | `guide/appendix/model-composition-and-delegation.md` | `guide/02_gaussian_process.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 107–119 | Existing audit machinery | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 120–131 | Phase 2 public-export reconciliation | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 132–146 | Regression public symbols outside the registry | `guide/appendix/model-registry-and-public-api.md` | `guide/13_model_selection.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 147–185 | Binary registry IDs and exported model classes | `guide/appendix/model-registry-and-public-api.md` | `guide/24_classification.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 186–207 | Representative test assertion mapping | `guide/verification/README.md` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 208–225 | Component-level implementation ownership | `guide/appendix/model-composition-and-delegation.md` | `guide/02_gaussian_process.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 226–235 | Limits of the current evidence | `guide/appendix/limitations-and-unverified.md` | `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 236–256 | Exhaustive static provenance export | `guide/appendix/model-registry-and-public-api.md` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 257–271 | Documentation link existence validation | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
 | `models.md` | 272–289 | Static test-reference discovery | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
 | `models.md` | 290–315 | Inspected runtime composition and mathematical ownership | `guide/appendix/model-composition-and-delegation.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
@@ -213,6 +213,36 @@
 **保全上の重要な修正:** 原台帳で `README.md` の13区間を機械的に `audit/` 中心へ振っていた部分を、本文の技術的主張に基づいてガイド本文・Appendix・verificationへ再分類した。旧Phase番号を理由に技術情報を監査履歴だけへ移してはならない。
 
 **状態:** README 13/13区間は「本文を読んで移行先を再判定」まで完了。ただし各主張の実装照合・新章への文章移行・assertion検証は未完了であり、`migrated` / `verified` は0件。残り161区間は暫定分類のまま。
+
+## models.md（冒頭14区間）の本文レビュー
+
+原文 `models.md` の**1–256行**を確認し、次の技術的区別を保全対象として抽出した。移行先の確定は原文の記述に基づくが、現行コードを再実行して数値検証したものではない。
+
+| 原文行 | 主な技術的主張・保全項目 | 移行時の注意 |
+| --- | --- | --- |
+| 1–17 | 元のMappingの位置付け、初期baseline SHA、静的MRO・source inspection・assertionの証拠水準 | 原文の当時の状態と現在の実装を同一視しない |
+| 18–31 | regression registryの142件、classification registryの29 ID、heterogeneous layerの別扱い、helper exportsはmodel IDでない | 件数は原文時点の記録。最新件数はregistryから再計算 |
+| 32–51 | regression 142件のfamily別全件表。特にreduced 52、robust/noise 27、expressive 16など | 全名称表をAppendixへ保全し、単一モデル章へ押し込まない |
+| 52–91 | binary 29 IDの一覧と代表的source/test evidence。Kronecker分類のlong-format variationalとexact Kroneckerの相違 | registry IDと公開class名を混同しない。個別IDのruntime検証を主張しない |
+| 92–106 | SingleTaskGP・MixedSingleTaskGP・binary classifier・ReducedGP・RandomForestのcomponent-level ownership | local wrapperがあることと確率アルゴリズムの実装主体を区別 |
+| 107–119 | 既存audit scriptとgenerated coverageの所有権 | `docs/model_coverage.json`を手編集しない |
+| 120–131 | regression registry 142件、public exports 154名、classification exports 76名、binary model ID 29件 | 数字は静的監査の時点値。exportとregistryの集合は同じではない |
+| 132–146 | registry外の公開12シンボル（`HeterogeneousModel`等） | infrastructure symbolを未登録モデルと誤分類しない |
+| 147–185 | binary registry ID→公開class名の全29対応 | 分類registryは理論・Notebookリンクを持たず、別途照合が必要 |
+| 186–207 | 代表的test assertionの範囲と非保証事項（RF calibration、posterior approximation等） | test file存在≠全モデルの数学的検証 |
+| 208–225 | fit/raw-data/GP posteriorの委譲、分類ELBO、reducer、sklearn estimatorのcomponent ownership | `Extended`と`Delegated`をコンポーネントごとに併記 |
+| 226–235 | 171 registry entriesはinventory済みだがsource inspectionは代表5パス | 監査scriptのmethod ownerは数値正しさの証拠ではない |
+| 236–256 | `implementation_module`、`upstream_bases`、`provenance_verification`、documentation metadata | MROに上流baseがなくてもruntime composition/delegationはあり得る |
+
+### 実装章への分岐が必要な箇所
+
+- `SingleTaskGP`はGP本体とfit/data契約を分け、`guide/02_gaussian_process.md`と横断契約に割り当てる。
+- `MixedSingleTaskGP`はnative categorical GPとデータ契約を区別し、`guide/05_mixed_variables.md`にも二次参照が必要。
+- `BinarySingleTaskGPClassifier`はlatent posterior、class probability、Bernoulli likelihood、ELBOを区別し、`guide/24_classification.md`へ接続する。
+- `ReducedGP`はreducer・latent GP・posterior reconstructionを分離し、`guide/18_dimensionality_reduction_gp.md`にも接続する。
+- `RandomForestSurrogate`はsklearnへの委譲とBoTorch-compatible posterior facadeを区別し、`guide/23_non_gp_surrogates.md`へ接続する。
+
+**進捗:** `models.md`冒頭14/91区間を本文レビュー済み。READMEの13区間と合わせて27/174区間。未レビュー147区間。新ガイドへの移行・検証は依然0件。
 
 ## 各区間の移行検収条件
 
