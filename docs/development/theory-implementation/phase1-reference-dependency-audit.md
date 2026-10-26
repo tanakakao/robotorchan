@@ -190,3 +190,19 @@ GitHubの作業ブランチ上で、以下の10ファイルを直接取得でき
 - acquisitionの`qUCB`、`qSimpleRegret`はBoTorch nativeの式・MC aggregationに対する参照。local `BoundaryVariance`、`Straddle`、分類AL scoreのテストとは実装所有者が異なる。
 - optimizationの`sampling optimizer`は同じ生成poolのargmax、`TuRBO state`は状態遷移、前回の`TuRBO geometry`は領域形状をそれぞれ検証する。3つを「TuRBO全体のE2E性能が検証済み」とまとめない。
 - 次段階でverification guideへ移すときは、**式、参照値の生成方法、`q`、dtype、sample数、seed、tolerance、未検証範囲**を同じ表で管理する。
+
+## 178候補のカテゴリ別突合せ：文書・スクリプト・Notebook（2026-10-26）
+
+元の5 Mappingファイルから同一正規表現で**ユニーク178候補**を再抽出し、カテゴリを分離した：`src/robotorchan/` 24件、`tests/` 122件、`examples/notebooks/` 1件、`scripts/` 4件、`docs/` 27件（合計178）。
+
+今回は`docs/` **27件**、`scripts/` **4件**、`examples/notebooks/` **1件**の計**32件を作業ブランチから直接取得し、32/32件のパス存在を確認**した。これはリポジトリ全treeの列挙ではなく、**原文から抽出した32候補の個別照合**である。前回までの存在確認と重複するため、過去の35件に32件を加算して累計ユニーク数を算出してはならない。
+
+| 対象 | 候補数 | 直接取得成功 | 未確認 |
+| --- | ---: | ---: | ---: |
+| `docs/` | 27 | 27 | 0 |
+| `scripts/` | 4 | 4 | 0 |
+| `examples/notebooks/` | 1 | 1 | 0 |
+| `src/robotorchan/` | 24 | 今回は未照合 | 24 |
+| `tests/` | 122 | 今回は未照合 | 122 |
+
+**検証の意味**：パスが現ブランチに存在することを確認しただけで、Markdownのアンカー・相対リンク・Notebook実行・スクリプト実行・テスト成功を確認していない。残る146候補（実装24、テスト122）は次のバッチで直接照合し、失敗したパスは`missing`と断定する前に表記ゆれ・省略形を確認する。全件完了後、元の35件の存在確認記録と集合突合せしてユニーク件数を再計算する。
