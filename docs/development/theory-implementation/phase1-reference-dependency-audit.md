@@ -60,3 +60,27 @@ GitHubコード検索で `check_theory_implementation_mapping` は `README.md`�
 - [ ] 全174見出しの本文レベルレビュー。
 - [ ] 現行CIの実行結果確認と移行後の比較。
 - [ ] Phase 1の完了判定。
+
+
+## 追加確認：重要参照先の実在性（個別取得）
+
+GitHubの作業ブランチ上で、以下の10ファイルを直接取得できた。**ファイルの存在は確認済み**だが、テストの実行成功や記述内容の数学的正当性は未確認。
+
+| Category | Path | Result |
+| --- | --- | --- |
+| Model numerical test | `tests/models/standard/test_phase7_kronecker_covariance_reference.py` | 存在確認 |
+| Classification numerical test | `tests/models/classification/test_phase7_binary_probit_reference.py` | 存在確認 |
+| Acquisition numerical test | `tests/acquisition/test_phase8_bald_probability_variance_reference.py` | 存在確認 |
+| Optimization numerical test | `tests/optim/trust_region/test_phase9_turbo_geometry_reference.py` | 存在確認 |
+| Notebook | `examples/notebooks/28_regression_active_learning.ipynb` | 存在確認 |
+| Model registry | `src/robotorchan/models/registry.py` | 存在確認 |
+| Acquisition registry | `src/robotorchan/acquisition/registry.py` | 存在確認 |
+| Optimizer dispatch | `src/robotorchan/optim/dispatch.py` | 存在確認 |
+| Reference checker | `scripts/check_docs_references.py` | 存在確認 |
+| Theory chapter | `docs/theory/24_classification.md` | 存在確認 |
+
+### 次のレビューで優先する点
+
+1. `models.md` のfamily別見出しに含まれる **技術的な主張** を章別本文とAppendixに二重取りこぼしなく割り当てる。
+2. `verification.md` の各数値テストについて、テスト存在・実行結果・独立参照・検証限界を別列で管理する。
+3. `README.md` と各subjectファイルのリンク先を新章へ移す際、既存のナビゲーション契約を維持する。
