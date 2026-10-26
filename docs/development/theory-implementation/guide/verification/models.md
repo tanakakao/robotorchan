@@ -15,7 +15,7 @@
 | Heteroskedastic noise | `tests/models/robust/test_phase7_heteroskedastic_uncertainty_reference.py` | 制御されたlog-noise、latentとの分離、手動の`Var[y]=Var[f]+v` | `posterior(observation_noise=True)`の場所依存noise注入 |
 | Forest adapter | `tests/models/non_gp/test_phase7_forest_estimator_reference.py` | sklearn各treeの予測とBoTorch ensemble momentsの一致 | epistemic calibration、他ensemble |
 
-この表は原文に明記されたpropertyを分類したものであり、今回新しい数値テストを実行したという意味ではない。Exact GP conditioning referenceやcategorical relabelingの参照は原文に記述があるが、ここでは確認可能なテストパスのない行を推測で補っていない。
+この表は原文に明記されたpropertyを分類したものであり、今回新しい数値テストを実行したという意味ではない。Exact GP conditioningとcategorical relabelingも実際の独立参照テストのパスを確認した。検証範囲は下の直接照合節に限定する。
 
 **明示的に未検証の境界：** Heteroskedastic wrapperの候補点ごとの`posterior(observation_noise=True)`が正しい観測分散を自動合成する性質は保証されない。手動の恒等式の検証と、公開posterior実装の検証を分ける。[未検証事項](limitations.md)へ。
 
@@ -130,3 +130,26 @@ variance_of_mean = s2/n
 `model.replicate_counts`、`raw_train_Y`、`replicate_variance`、`raw_train_Yvar`が、それぞれ観測件数・標本平均・不偏標本分散・平均の観測分散と一致することを`torch.testing.assert_close`で確認する。比較の許容誤差は**テスト内で明示指定されておらず、Torchの既定値**が使われる。さらに`raw_train_Yvar`の有限性・正値性を検査する。
 
 これはreplicate集計の数理的契約であり、学習済みheteroskedasticノイズGPの予測、入力間の雑音分布、posterior較正や外れ値耐性を確認するテストではない。
+
+
+## 直接照合：Exact GPの独立Cholesky条件付け
+
+`tests/models/standard/test_phase7_exact_gp_reference.py`は、`SingleTaskGP`について、**posteriorやkernel.forwardを参照計算に使用せず**RBFの解析式から共分散行列を独立構築する。float64の4学習点・3予測点を使い、`train_Yvar=0.025`、`lengthscale=0.4`、`ZeroMean`、`outcome_transform=None`という固定条件にする。
+
+```text
+K(a,b) = exp(-||a-b||² / (2 * 0.4²))
+L = cholesky(K(X,X) + 0.025 I)
+alpha = cholesky_solve(y, L)
+mean_* = K(X,X_*)^T alpha
+cov_* = K(X_*,X_*) - K(X,X_*)^T cholesky_solve(K(X,X_*),L)
+```
+
+公開`model.posterior(test_x)`の平均、`posterior.distribution.covariance_matrix`の全要素、`posterior.variance`と参照共分散の対角要素をいずれも`atol=rtol=2e-5`で比較する。**shapeのみのテストではない**一方、学習済みhyperparameterや複数出力、異なるkernel、数値的に悪条件の行列などはこの固定参照の対象外である。
+
+## 直接照合：Mixed categorical kernelのラベル置換不変性
+
+`tests/models/standard/test_phase7_mixed_categorical_reference.py`は、float64の6学習点、`MixedSingleTaskGP(cat_dims=[-1], outcome_transform=None)`を構築し、4つのquery点のカテゴリラベルを`0→17, 1→-4, 2→9`と**一対一に置換**する。入力の連続値を変えず、両query間で`model.covar_module(...).to_dense()`を比較する。
+
+検査対象は`[4,4]`の**kernel covariance**であり、`atol=rtol=1e-10`で同じになることをassertする。カテゴリの数値的な大小・距離ではなく同値関係に依存するという不変性の証拠である。ただし**学習入力自体は再ラベルしていない**ため、再学習後のposterior不変性、one-hot/embedding型の全mixed model、カテゴリ値の妥当性検査を保証するものではない。
+
+以上2件もテスト本文のassertionを静的に再照合した結果であり、この作業で新たに数値テストを独立実行したという意味ではない。
