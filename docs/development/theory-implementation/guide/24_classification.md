@@ -75,3 +75,30 @@ src/robotorchan/models/heterogeneous.pyのHeterogeneousModelはtorch.nn.Module�
 ModelListGPはBoTorch ModelListGPの独立GP合成とSumMarginalLogLikelihoodを用いるもので、分類確率と回帰posteriorの意味論を管理するHeterogeneousModelとは責務が異なる。ModelListGPを異種モデルの単一posteriorとして説明してはいけない。
 
 **検証境界：** 上記はmodels/heterogeneous.pyおよびstandard/model_list.pyの静的実装契約。確率校正、複数目的＋分類制約のend-to-end最適化の数値検証を今回実施したわけではない。
+
+## 9. 分類確率を目的と制約で使い分ける
+
+同じpredict_proba(X)[..., c]でも、最大化する対象と可行性の判定に用いる対象では意味が異なる。ProbabilityObjective(output, class_index, direction)は対象クラスの予測確率をスカラー目的として評価する。例えば良品になる確率自体を最大化する場合である。一方、ClassificationProbabilityOfFeasibility(model, feasible_class)はクラス確率をP(feasible|X,D)として取得し、回帰目的の獲得関数に外部重みとして用いる。
+
+| 意味論 | 公開契約 | 実装上の区別 |
+| --- | --- | --- |
+| 分類確率を最大化・最小化 | ProbabilityObjective.evaluate(model,X) | 指定クラス列を抽出しObjectiveDirectionを適用。RegressionObjectiveではない |
+| 分類確率から潜在posteriorに基づくサンプルを生成 | ProbabilityObjective.sample(model,X,sample_shape=...) | classifier.sample_class_probabilitiesに依存。全分類器で利用可能とは限らない |
+| 分類を制約として利用 | ClassificationProbabilityOfFeasibility(X) | predict_probaからfeasible_classの列を抽出。一般のjoint可行性ではない |
+| サンプル単位の可行確率 | SampleProbabilityOfFeasibility | epistemic sampleの確率。平均PoFをそのままMC sampleへ置き換えない |
+| 観測値に基づく連続制約 | SampleResidualFeasibility | posterior sampleから残差を計算し、残差 <= 0で可行 |
+| 予測確率そのものの閾値制約 | ProbabilityResidualFeasibility | 決定論的な確率残差。P(別の制約が成立)とは異なる |
+
+ProbabilityObjectiveのdirection=MINIMIZEは対象確率へ方向変換を適用するが、確率の物理的定義が負になるわけではない。分類制約では可行クラス番号を明示し、ラベルが0を可行とする問題で既定値feasible_class=1を誤用しない。class_indexはclassification metadataから解決され、未対応ラベル・回帰モデルへの指定は拒否される。
+
+### 9.1 posterior predictiveとepistemic sampleは別の期待値
+
+~~~text
+latent posterior q(f|D)
+    ├─ likelihoodによる周辺化 → predict_proba(X) → deterministic PoF
+    └─ latent sample → sample_class_probabilities(X) → sample-wise PoF
+~~~
+
+予測確率の平均と、潜在関数posterior由来の確率sampleは異なる。src/robotorchan/acquisition/composition.py::make_sample_classification_feasibility_bridgeはclassification registryのsupports_probability_samplesをチェックし、非対応ならTypeErrorで拒否する。サンプル化できない分類器に平均PoFを複製して代替しない。
+
+**照合根拠：** src/robotorchan/semantics/objectives.py、semantics/feasibility.py、semantics/probability.py、acquisition/composition.py。出力shapeや確率校正の独立数値実行は今回行っていない。
