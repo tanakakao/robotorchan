@@ -37,3 +37,25 @@
 固定計画には新しいPhaseを追加しない。上記の保留事項は**Phase18の最終監査ゲートの未達**として記録する。構造・リンク・CIの達成を維持しながら、意味論的移行検査・コード例実行・文書重複の解消を最終ゲートとして再判定する。
 
 関連：[48章ガイド索引](../../../docs/development/theory-implementation/guide/README.md)、[元Mapping](../../../docs/development/theory-implementation/README.md)、[検証索引](../../../docs/development/theory-implementation/guide/verification/README.md)、[移行先設計](phase1-migration-routing.md)。
+
+## PR #1467 の実行ゲート確認（2026-10-26）
+
+Phase18の文書修正HEAD `07b459f98555ea5d147040cf46950934c4a0f1e1` に対し、次をGitHub Actionsで確認した。
+
+| Workflow | Run ID | 結果 | 証拠の意味 |
+| --- | --- | --- | --- |
+| Documentation links | `40296208635` | **success** | Markdownリンク・参照・48章構造など、ワークフロー内検査の成功 |
+| CI | `40296208646` | **success** | 現在のCIで対象としたlint / tests / notebook jobs等の成功 |
+
+PR #1467はこの記録時点で**Open（未マージ）**である。したがって、完了をmainに反映済みとは扱わない。CI緑は変更内容をマージ可能とする必要条件の一つであり、174見出しの意味論的移行確認、H4以下の数式・negative contract保全、すべての新規コード例の実行完了を示さない。
+
+[既存の見出し移行台帳](phase1-heading-preservation-ledger.md)は**174見出しの仮割当**で、各レコードが`planned (review required)`とされている。これを目視・機械照合したという記録なしに`verified`へ更新しない。
+
+### Phase18で追加のゲートを閉じる際の順序
+
+1. **台帳の内容検収：** 見出し区間の本文、H4・数式・表・参照・exception・未対応情報を原文と照合する。primaryとsecondary移行先を明示し、単にリンクを置いただけでは`migrated`にしない。
+2. **APIとテスト：** 各ガイドの使用例について、コード上の公開export・constructor・実行を検査し、別途numerical propertyのassertion根拠を確認する。
+3. **監査履歴の整理：** 学習用本文に歴史的なPhase/PR/CIが混入していないかを確認し、必要な技術説明を残したままauditに分離する。
+4. **最終再判定：** CIとリンクが緑であるだけでなく、上記の台帳・実行証拠・情報非喪失が説明できた時点でのみPhase18全体を`complete`とする。
+
+これらは固定Phase18の**未解決ゲート**であり、新しいPhaseの追加ではない。
