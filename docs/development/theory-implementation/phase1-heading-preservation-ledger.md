@@ -39,23 +39,23 @@
 | `README.md` | 175–201 | 2 | Phase 10 navigation exit audit | `audit/` | `appendix/` | planned (review required) |
 | `README.md` | 202–231 | 2 | Phase 11 mapping consistency exit audit | `audit/` | `appendix/` | planned (review required) |
 | `README.md` | 232–278 | 2 | Phase 12 final audit: evidence and decision | `audit/` | `appendix/` | planned (review required) |
-| `models.md` | 1–4 | 1 | Model theory–implementation mapping | `appendix/model-composition-and-delegation.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
+| `models.md` | 1–4 | 1 | Model theory–implementation mapping | `README.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
 | `models.md` | 5–17 | 2 | Audit provenance and limits | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 18–31 | 2 | Registry boundaries | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 32–51 | 2 | Regression model inventory by existing guide | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 52–91 | 2 | Binary classification registry inventory | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
-| `models.md` | 92–106 | 2 | Representative code-path findings | `appendix/model-composition-and-delegation.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
+| `models.md` | 92–106 | 2 | Representative code-path findings | `appendix/model-composition-and-delegation.md` | `02_gaussian_process.md` | planned (review required) |
 | `models.md` | 107–119 | 2 | Existing audit machinery | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 120–131 | 2 | Phase 2 public-export reconciliation | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 132–146 | 3 | Regression public symbols outside the registry | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 147–185 | 3 | Binary registry IDs and exported model classes | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 186–207 | 2 | Representative test assertion mapping | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
-| `models.md` | 208–225 | 2 | Component-level implementation ownership | `appendix/model-composition-and-delegation.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
+| `models.md` | 208–225 | 2 | Component-level implementation ownership | `appendix/model-composition-and-delegation.md` | `02_gaussian_process.md` | planned (review required) |
 | `models.md` | 226–235 | 3 | Limits of the current evidence | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 236–256 | 2 | Exhaustive static provenance export | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 257–271 | 2 | Documentation link existence validation | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 272–289 | 2 | Static test-reference discovery | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
-| `models.md` | 290–315 | 2 | Inspected runtime composition and mathematical ownership | `appendix/model-composition-and-delegation.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
+| `models.md` | 290–315 | 2 | Inspected runtime composition and mathematical ownership | `appendix/model-composition-and-delegation.md` | `02_gaussian_process.md` | planned (review required) |
 | `models.md` | 316–338 | 2 | Inspected test assertions and verification boundaries | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 339–350 | 2 | Optional static upstream composition scan | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 351–367 | 2 | Conditional import provenance and static scan boundaries | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
@@ -65,17 +65,17 @@
 | `models.md` | 442–458 | 2 | Source-inspected classification: heterogeneous ensembles and uncertain inputs | `16_uncertain_input_gp.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
 | `models.md` | 459–477 | 2 | Inspected classification test assertions: ensemble and uncertain input | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 478–497 | 2 | Inspected classification test assertions: label noise and sklearn adapters | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
-| `models.md` | 498–518 | 2 | Source and assertion audit: binary multitask and DeepGP | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
-| `models.md` | 519–540 | 2 | Source and assertion audit: high-dimensional binary classifiers | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
-| `models.md` | 541–563 | 2 | Source and assertion audit: neural, ensemble, robust and categorical models | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
-| `models.md` | 564–588 | 2 | Source and assertion audit: contamination, replicates, bootstrap and robust composition | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
+| `models.md` | 498–518 | 2 | Source and assertion audit: binary multitask and DeepGP | `07_multitask_multioutput.md` | `24_classification.md` | planned (review required) |
+| `models.md` | 519–540 | 2 | Source and assertion audit: high-dimensional binary classifiers | `08_high_dimensional.md` | `24_classification.md` | planned (review required) |
+| `models.md` | 541–563 | 2 | Source and assertion audit: neural, ensemble, robust and categorical models | `24_classification.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
+| `models.md` | 564–588 | 2 | Source and assertion audit: contamination, replicates, bootstrap and robust composition | `24_classification.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
 | `models.md` | 589–606 | 2 | Repeatable registry-wide static evidence summary | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 607–625 | 2 | Inspected regression non-GP implementations: NGBoost and ExtraTrees | `23_non_gp_surrogates.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
 | `models.md` | 626–649 | 2 | Inspected regression noise and heterogeneous multitask implementations | `07_multitask_multioutput.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
-| `models.md` | 650–675 | 2 | Source and assertion audit: multi-fidelity regression families | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
-| `models.md` | 676–697 | 2 | Source and assertion audit: regression DeepGP models | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
-| `models.md` | 698–723 | 2 | Source and assertion audit: expressive stationary and infinite-width kernels | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
-| `models.md` | 724–746 | 2 | Source and assertion audit: joint neural representation regression | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
+| `models.md` | 650–675 | 2 | Source and assertion audit: multi-fidelity regression families | `06_multifidelity.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
+| `models.md` | 676–697 | 2 | Source and assertion audit: regression DeepGP models | `22_expressive_models.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
+| `models.md` | 698–723 | 2 | Source and assertion audit: expressive stationary and infinite-width kernels | `22_expressive_models.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
+| `models.md` | 724–746 | 2 | Source and assertion audit: joint neural representation regression | `11_neural_reduction.md` | `appendix/model-composition-and-delegation.md` | planned (review required) |
 | `models.md` | 747–773 | 2 | Classification documentation mapping at registry-ID granularity | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 774–798 | 2 | Phase 2 inventory sign-off and scope | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
 | `models.md` | 799–806 | 2 | Phase 4: theory-to-implementation records | `appendix/model-registry-and-public-api.md` | `audit/` | planned (review required) |
@@ -564,3 +564,12 @@
 4. 原文の監査時点の件数・完了判定はAppendix/auditへ保全する。上記の実装範囲は**既存Mapping記述に基づく**もので、現ブランチでの全backend動作確認ではない。
 
 **未完了:** acquisition 1–78、optimization 1–19・86–181の監査本文・履歴の仕分けと、全参照先の検証・CIは別途必要。Phase 1完了判定は保留する。
+
+## 見出し台帳の整合性監査：初回修正
+
+- 初版の174 H1–H3見出しについて、重複したprimary/secondary候補と、本文が技術説明であるのに`appendix/audit`へ一括振り分けられていた区間を点検した。
+- **修正した台帳行：12件**。このうち4件はprimaryとsecondaryの同一指定、8件は本文に数式・モデル構成・検証境界があるにもかかわらずAppendix中心になっていた割当を見直した。
+- 修正した章名は**仮の意味的ルーティング識別子**であり、Phase 2で実在する`docs/theory/`の正式な章名・番号との照合が必要。新規ファイルの作成を意味しない。
+- 機械割当の`planned (review required)`は維持。技術内容を本文レビューしたことと、全行・全参照の移行検証済みを区別するため。
+- 同一の原文区間がモデル・分類・高次元など複数の章へ関係する場合、**正本となる説明を1箇所に置き、他章は参照する**。Appendixは完全な原表と横断契約を保管し、説明の重複コピーを避ける。
+- **残る要確認事項**：全174区間の候補先が既存理論章に対応するか、primary/secondaryの最終確定、本文内のH4/表/数式の網羅、原文リンクとアンカーの完全性。今回の修正で移行完了やPhase 1完了とはしない。
