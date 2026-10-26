@@ -226,3 +226,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 旧`verification.md`冒頭1–64行と`guide/verification/README.md`を再照合し、旧Phase7 model verification matrixの8 familyについて、原文の要求と現在確認できる特定テストassertionとの相違を[日本語検証索引](../../../docs/development/theory-implementation/guide/verification/README.md)に一対一で記載した。Exact GP Cholesky参照やMixed categorical label relabelingはすでに実際のテストファイルを発見・直接確認済みであるため、索引の古い『別途確認が必要』という表現を修正した。一方でExact GPの他kernel条件、カテゴリ再学習posterior、Kronecker posterior conditioning、multi-fidelity全block、public heteroskedastic observation posteriorなどは引き続き独立reference未確認とする。
 
 **判定：行列8/8行の要件と特定証拠との差分を文書化。完全なsemantic migrationの検収ではない。** Phase1固定の旧`verification.md:27–39`および全174見出しの`planned (review required)`を昇格せず、旧Mapping5ファイルを保持する。今回の作業で数学的テストの新規独立再実行はしていない。
+
+## Phase 18：旧Phase 7 execution / exitの履歴整合性
+
+旧`verification.md`の固定区間149–183、223–244、274–291の原文を再読し、[Verification日本語索引](../../../docs/development/theory-implementation/guide/verification/README.md)に時系列の表を追加した。初期の9件のrepresentative reference、#1424–#1426の追加3参照、#1426 final-head CIが当時pendingだった判定、後続#1428/#1429によるカテゴリ保持と**手動観測分散合成**の追加、最終的なproperty-specific complete判定を区別した。後続のexitはpublic `posterior(observation_noise=True)`の位置依存noise注入を認定していない。
+
+**判定：partial / review required。** 古い`remains open`と後続の限定的`complete`を時系列で両立させ、#1426の当時のpendingを現在のCI状態と混同しない。PR番号と証拠範囲の静的照合であり、各歴史的PRの最新状態を新たに取得していない。全174見出しの完全移行は未達、旧Mapping保全。
