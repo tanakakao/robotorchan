@@ -45,3 +45,15 @@ print(type(model).__name__)
 監査では、モデルの選択理由（axis-aligned sparse、additive、linear subspace、learned representationなど）、posterior type、fit方式、transform座標系、optimizerとの接続を記録する。特定のtestが通過しても別のsurrogate familyやhigh-dimensional search全体を保証しない。
 
 [既存Mapping](../models.md)・[Verification](../verification.md)は履歴を保持する。利用者向け：[High-dimensional models](../../../models/high_dimensional.md)、[MAP-SAAS Notebook](../../../../examples/notebooks/09_map_saas_and_additive_gp.ipynb)、[High-dimensional search](../../../optimization/high_dimensional_search.md)。関連：[高次元GP](08_high_dimensional_gp.md)、[低次元表現の理論](../../../theory/18_dimensionality_reduction_gp.md)、[探索strategyの理論](../../../theory/20_high_dimensional_search.md)。
+
+## 追加：Fully Bayesian SAASとVariational GPの学習契約
+
+src/robotorchan/models/high_dimensional/fully_bayesian.pyのSaasFullyBayesianSingleTaskGPとSaasFullyBayesianMultiTaskGPはBoTorchの同名モデルを継承し、supports_mll=Falseとしている。つまりmodel.make_mll()によりExact GP型の学習目的を組み立てる経路ではない。推論はBoTorchのfit_fully_bayesian_model_nutsを使う。
+
+$$
+p(f_*\mid\mathcal D)=\int p(f_*\mid\theta,\mathcal D)\,p(\theta\mid\mathcal D)\,d\theta
+$$
+
+と表されるhyperparameter uncertaintyの周辺化を、MCMC sampleによって近似する。これに対してMAP-SAASでは点推定されたhyperparameterの条件付きposteriorを利用し、Variational GPではinducing variablesの近似分布に対するELBOを最適化する。いずれも同じ「GP」だが、学習目的・不確実性の意味・計算コストは同じではない。
+
+robotorchanが保持するraw_train_X/Y/Yvarはconstructor入力のsnapshotであり、MCMC posterior sampleとは別である。MixedSaasFullyBayesianSingleTaskGPはカテゴリ列のone-hot transformをモデル側で保持する一方、native MixedSingleTaskGPは別のcategorical covarianceを用いる。**検証境界：** 上記の継承・capabilityはソース照合であり、今回のNUTS数値実行・chain収束診断・posterior校正までは検証していない。
