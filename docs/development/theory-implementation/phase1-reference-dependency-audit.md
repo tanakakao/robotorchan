@@ -101,3 +101,20 @@ GitHubの作業ブランチ上で、以下の10ファイルを直接取得でき
 | `scripts/generate_model_coverage.py` | 取得成功 |
 
 前回の個別取得10件と合わせて、**個別取得による確認は計16件**。実行結果や全参照の網羅性は未確認。以後は新規監査ファイルを増やさず、同じ台帳を更新する。
+
+## 数値検証テスト参照の追加確認（第3バッチ）
+
+`verification.md`で扱う数値検証のうち、下記8テストをGitHubの作業ブランチから直接取得し、すべて存在を確認した。これは**テストファイルの存在確認**であり、実行成功や参照式の独立性を検証したものではない。
+
+| Test | Status |
+| --- | --- |
+| `tests/acquisition/test_phase8_analytic_bo_gaussian_reference.py` | 取得成功 |
+| `tests/acquisition/test_phase8_classification_al_reference.py` | 取得成功 |
+| `tests/acquisition/test_phase8_mc_qucb_reference.py` | 取得成功 |
+| `tests/acquisition/test_phase8_mc_simple_regret_reference.py` | 取得成功 |
+| `tests/acquisition/test_phase8_regression_al_formula_reference.py` | 取得成功 |
+| `tests/optim/backends/test_phase9_sampling_optimizer_reference.py` | 取得成功 |
+| `tests/optim/trust_region/test_phase9_turbo_state_reference.py` | 取得成功 |
+| `tests/optim/constraints/test_phase9_constraint_violation_reference.py` | 取得成功 |
+
+これまでの個別取得16件と合わせ、**計24件の個別参照先の存在確認**を記録した。178件の抽出候補の網羅確認は未完了。次のゲートでは、存在確認の反復だけでなく、`verification.md`に書かれた数値的な検証条件・未検証範囲を章別ガイドとAppendixに対応付ける。
