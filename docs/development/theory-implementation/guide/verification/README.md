@@ -90,3 +90,17 @@ Modelsの`replicate noise`もテスト本文と直接照合済みである。た
 原文の「#1426 final-head CI pending」は**過去の監査時点の記録**であり、現時点でpendingと推定する根拠には使わない。反対に、後続のfinal exitをもって過去のCI結果を書き換えたり、未検証のAPI契約を`Verified`へ昇格させたりもしない。古い12 Phaseの開発履歴と、現在の固定18 Phase・48章の文書移行は別工程である。
 
 **完全検収との差：** 以上は3区間の主要な表・条件付き判断・後続PR番号・negative contractの照合であり、全文章・全リンク・現在のPR状態を再確認した完全移行検収ではない。移行台帳の`planned (review required)`は維持する。
+
+
+## 旧Phase 8・9のexit判定：数値propertyと未検証範囲
+
+旧[Verification Mapping](../../verification.md)のPhase 8最終照合（固定行番号`376–407`）とPhase 9 exit audit（`476–510`）は、**代表的なpropertyを限定して合格とした歴史的判定**である。後続のPhase 18文書移行の検収と分離する。
+
+| 旧exit | 原文にあるPRと確認対象 | 原文が認定しない主張 |
+| --- | --- | --- |
+| Phase 8：representative scopeへのexit recommendation | #1431 regression AL 4式、#1432 classification AL、#1433 BALD/ProbabilityVariance、#1434 analytic log-EI/log-PI/UCB、#1435 qSimpleRegret、#1436 qUCB。原文は6PRすべてmainへmerged・CIとDocs links成功と記録 | qNEI/qLogNEI、qEI/qLogEIのsample improvement、qEHVI/qNEHVI、制約の確率/feasibility重み、異種目的composition、情報獲得/lookaheadの**独立数学的検証** |
+| Phase 9：representative property-specific scopeでcomplete | #1438 random/sobolのpool内argmax、#1439 TuRBO state、#1440 TuRBO ARD幾何、#1441 candidate違反量とfeasibility-first順位、#1442 Adam/AdamW/SGDの未対応constraint拒否。原文は5PRのCIとDocs links成功・mergedを記録 | 勾配法/derivative-free法の大域最適性・収束率、全backendの制約可行性、sampling品質、mixed/batch/async/multi-fidelity最適化の保証、学習済みARDの忠実度、restart中心の分布、PyTorch optimizerによる制約付き最適化（明示非対応） |
+
+Phase 8の原文は**exit recommendation**、Phase 9は**exit decision**という表現の違いがあるため、同じ強さの普遍的な完了認定へ統一しない。両者とも「独立数学的参照」を要件とし、smoke・integration・contract testをそのまま数学的証明へ格上げしない。
+
+**証拠の限界：** 上表の過去のPR/CI状態は旧Mappingに記録された当時の情報であり、この節のために個々の過去PRを再照会したものではない。個別数式・サンプル条件は[Acquisition](acquisition.md)と[Optimization](optimization.md)に、移行レビューの進捗はプロジェクト監査記録で管理する。原文の全文・表・リンクの意味論的移行検収は別途必要である。
