@@ -77,3 +77,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 旧`acquisition.md`の「Distinct implementation paths」「Phase 5 — regression active-learning acquisition mappings」「Phase 5 — classification AL and Gaussian EPIG」を読んで、現行の`src/robotorchan/acquisition/active_learning/variance.py`、`classification.py`および`registry.py`のソースと照合した。[ALガイド](../../../docs/development/theory-implementation/guide/acquisition/09_active_learning.md)へ具体的な数式・クラス・posterior/predict_probaの違い・q=1・拒否条件を反映した。
 
 **確認した範囲：** `PosteriorVariance`、`PosteriorStd`、`PredictiveEntropy`、`MarginUncertainty`、`ProbabilityVariance`、`BALD`、`LatentStraddle`の責務、ならびにregression ALのstructured/ensemble guardとclassification model interface。数値テストをこの作業で再実行したわけではなく、旧原文の全行・全entryの移行を検収したわけでもない。原文見出し台帳は依然`review required`のまま保全する。
+
+## Constrained AcquisitionとOptimizer接続の部分照合
+
+旧`acquisition.md`の「Distinct implementation paths」「Acquisition/optimizer interaction」の技術的主張に対し、`src/robotorchan/acquisition/composition.py`および`optimizer_compatibility.py`のソースを直接照合した。[制約付きAcquisitionガイド](../../../docs/development/theory-implementation/guide/acquisition/08_constraints.md)にsemantic binding、sample shape、分類可行性の独立性近似、candidate/outcome制約の区別、one-shot/mixed静的互換性の限界を追加した。
+
+**状態：partial / review required。** 本作業では全constrained helperの数値的同値性、非線形候補制約の各backendでの実行、joint feasibility相関モデルは独立テストしていない。旧Mappingの原区間の数式・例外・テストパスを全件照合して`verified`にする作業は保留する。
