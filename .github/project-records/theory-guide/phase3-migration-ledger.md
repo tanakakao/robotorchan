@@ -50,15 +50,15 @@
 | `models.md` | 339–350 | Optional static upstream composition scan | `guide/appendix/model-composition-and-delegation.md` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 351–367 | Conditional import provenance and static scan boundaries | `guide/appendix/model-composition-and-delegation.md` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 368–393 | Phase 2 evidence levels and follow-up matrix | `guide/verification/README.md` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
-| `models.md` | 394–422 | Classification model documentation ownership | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 423–441 | Source-inspected classification delegation: non-GP and label noise | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 442–458 | Source-inspected classification: heterogeneous ensembles and uncertain inputs | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 459–477 | Inspected classification test assertions: ensemble and uncertain input | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 478–497 | Inspected classification test assertions: label noise and sklearn adapters | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 498–518 | Source and assertion audit: binary multitask and DeepGP | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 519–540 | Source and assertion audit: high-dimensional binary classifiers | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 541–563 | Source and assertion audit: neural, ensemble, robust and categorical models | `guide/05_mixed_variables.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 564–588 | Source and assertion audit: contamination, replicates, bootstrap and robust composition | `guide/15_heteroskedastic_noise.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
+| `models.md` | 394–422 | Classification model documentation ownership | `guide/24_classification.md` | `guide/appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 423–441 | Source-inspected classification delegation: non-GP and label noise | `guide/24_classification.md` | `guide/23_non_gp_surrogates.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 442–458 | Source-inspected classification: heterogeneous ensembles and uncertain inputs | `guide/24_classification.md` | `guide/16_uncertain_input_gp.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 459–477 | Inspected classification test assertions: ensemble and uncertain input | `guide/verification/README.md` | `guide/24_classification.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 478–497 | Inspected classification test assertions: label noise and sklearn adapters | `guide/verification/README.md` | `guide/24_classification.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 498–518 | Source and assertion audit: binary multitask and DeepGP | `guide/24_classification.md` | `guide/07_multitask_multioutput.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 519–540 | Source and assertion audit: high-dimensional binary classifiers | `guide/24_classification.md` | `guide/08_high_dimensional_gp.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 541–563 | Source and assertion audit: neural, ensemble, robust and categorical models | `guide/24_classification.md` | `guide/14_robust_gaussian_process.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 564–588 | Source and assertion audit: contamination, replicates, bootstrap and robust composition | `guide/24_classification.md` | `guide/14_robust_gaussian_process.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 589–606 | Repeatable registry-wide static evidence summary | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
 | `models.md` | 607–625 | Inspected regression non-GP implementations: NGBoost and ExtraTrees | `guide/23_non_gp_surrogates.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 626–649 | Inspected regression noise and heterogeneous multitask implementations | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
@@ -265,6 +265,32 @@
 - `models.md` 368–393：全モデルに共通するevidence taxonomyとしてverification/Appendixに配置する。過去のPhase番号だけを監査履歴に残す。
 
 **進捗:** README 13区間 + models.md 21区間 = 34/174区間を本文レビュー済み。140区間は未レビュー。ガイド本文への移行・検証完了は0件。
+
+## models.md（394–588行、分類9区間）の本文レビュー
+
+分類モデルの原文を読み、latent posterior、class probability、観測ラベルノイズ、ensemble probability posterior、非GP adapterを混同しないよう移行先を再判定した。以下は**原文に記録されたsource/test inspectionの整理**であり、このコミットでコードを再実行した結果ではない。
+
+| 原文行 | 技術的保全対象 | 章の接続・未検証境界 |
+| --- | --- | --- |
+| 394–422 | 分類29 registry IDはregression registryのper-model guide/theory/notebook metadataを持たない。共有分類ガイドは個別modelの実行例を保証しない | `24_classification` + model-registry Appendix。ID別ドキュメントとNotebookは別途確認 |
+| 423–441 | sklearn classifier adapterは`estimator_class`経由で委譲。label-flip channelは `p_observed = a + (1-a-b)*p_clean` | `24_classification` + `23_non_gp_surrogates` + robust/noise。quadrature、識別可能性、calibrationは未検証 |
+| 442–458 | heterogeneous ensembleはmember probabilityの重み付き経験分布。共通latentがなく`latent_posterior`/`sample_latent`を明示的に非対応。連続入力不確実性はGaussian摂動のMC平均 | `24_classification` + `16_uncertain_input_gp`。probability posteriorをGP latent posteriorと呼ばない |
+| 459–477 | heterogeneous ensemble 7 named tests、continuous uncertain input 5 named tests。重み正規化、mean/variance、zero-std極限など | entropy/MI identity、相関共分散の積分精度、near-singular安定性は未検証 |
+| 478–497 | label noise 5 named tests、sklearn adapters 4 named tests（parametrizationは別）。非対称flip formulaを固定値で検証 | class-order、quadrature、calibration、単一クラス学習などは未検証 |
+| 498–518 | multitask variational ICM（IndexKernel×data kernel）、block design→long-format変換、DeepGPのDeepApproximateMLL/Bernoulli | `07_multitask_multioutput` + `22_expressive_gp`。**Kronecker名の分類モデルはexact Kronecker推論を実装したという意味ではない** |
+| 519–540 | reduced binary GP（PCA/PLS/random projection）、variational SAASとMAP-SAASの異なるprior設定、ALEBO Mahalanobis metric | `08_high_dimensional_gp` + `18_dimensionality_reduction_gp`。SAAS分類をNUTS/Pyro fully Bayesianと誤記しない |
+| 541–563 | joint neural encoder、homogeneous GP ensemble、input-dependent flip、Gibbs nonstationary、categorical finite-support marginalization | `19_neural_reduction_gp`、`17_nonstationary_gp`、`16_uncertain_input_gp`も参照。gradient到達≠学習品質 |
+| 564–588 | contamination `(1-c)*p_clean+c*p_contaminant`、replicate disagreement `2*p*(1-p)`、bootstrap probability moments、mixed/task Gibbs kernel | `14_robust_gaussian_process` + `15_heteroskedastic_noise`。replicate disagreementはposterior varianceでも代替likelihoodでもない |
+
+### 本文移行時の必須注意
+
+1. `KroneckerMultiTaskBinaryGPClassifier`はblock-to-long変換後のvariational ICM backendであり、exact Kronecker algebraの検証と区別する。
+2. `SaasBinarySingleTaskGPClassifier`と`MapSaasBinarySingleTaskGPClassifier`のprior・推論契約を別々に記載し、NUTSの実行を主張しない。
+3. Heterogeneous ensembleではlatent APIが非対応であることを**肯定的な仕様**として残し、probability-based ALとの接続を記載する。
+4. ノイズ付き分類はclean probabilityとobserved probabilityを区別する。fixed-value testはcalibrationを証明しない。
+5. 不確実入力のGaussian MC平均とcategorical finite-support marginalizationは異なる計算法として説明する。
+
+**進捗:** README 13 + models 30 = 43/174区間レビュー済み。残り131区間。新ガイドへの移行・検証は0件。
 
 ## 各区間の移行検収条件
 
