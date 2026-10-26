@@ -214,3 +214,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 旧Phase7モデル検証行列にあるExact GP kernel-conditioningとcategorical label permutationについて、既存テストの所在をGitHubで検索し`tests/models/standard/test_phase7_exact_gp_reference.py`および`tests/models/standard/test_phase7_mixed_categorical_reference.py`の本文を直接検査した。[Models verification guide](../../../docs/development/theory-implementation/guide/verification/models.md)に前者の固定RBF/Cholesky条件付け（float64、noise 0.025、lengthscale 0.4、平均/全共分散/variance対角、2e-5）、後者のラベル0→17、1→-4、2→9に対するmixed kernel covariance不変性（1e-10）を追記した。これにより従前の『テストパス未確認』説明を訂正し、[見出し台帳](phase1-heading-preservation-ledger.md)の`verification.md:27–39`へproperty別の部分照合を追記した。
 
 **判定：partial / review required。** 学習済みGPのgeneral correctnessや全mixed variantの意味論的保証ではなく、既存テスト本文の静的照合に限定。今回の独立テスト再実行・174見出し完全移行を意味しない。
+
+## Phase 18：Verification見出し31件のinventory確定（検収未完了）
+
+[Phase1見出し台帳](phase1-heading-preservation-ledger.md)から旧`verification.md`のH1–H3区間31件を機械的に抽出し、それぞれの原見出し、旧固定行範囲、日本語ガイド受け皿、確認証拠の種類、完全移行に必要な残作業を31行の表へ明示した。**22件はテスト本文のassertionへの部分照合、9件は方針・初期行列・履歴・exit節の主要論点への部分照合**。見出しの索引整備という狭い意味では31/31件、原区間の本文・表・数式・PR/CI・リンクすべてのsemantic migrationを確認した`verified`は**0/31件**。この区別を持たない『31件完了』の表現を禁止する。
+
+検査は原文との完全な差分照合ではなく、以前実施した部分照合の記録を棚卸ししたもの。旧174行の`planned (review required)`を変更せず、旧Mapping5ファイルは維持。以後はVerificationの各区間で残る全文移行の根拠を埋めるか、他4ファイルの見出し別reviewを進める。
