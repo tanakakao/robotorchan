@@ -184,3 +184,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 `tests/optim/trust_region/test_phase9_turbo_state_reference.py`と`tests/optim/backends/test_phase9_torch_constraint_contract.py`を直接確認した。[Optimizer verification guide](../../../docs/development/theory-implementation/guide/verification/optimization.md)へTuRBOの成功3回・失敗2回・restart・`state_values`とraw observationsの差、およびAdam/AdamW/SGDがlinear/equality/nonlinear candidate constraintsを9組合せで明示拒否するnegative contractを追記した。固定[見出し台帳](phase1-heading-preservation-ledger.md)では`verification.md:422–435`と`:465–475`の受け皿を部分照合とした。
 
 **判定：partial / review required。** 既存テストの静的assertion照合であり、独立再実行・全見出しの完全移行は未達。元Mappingと全174行の`planned (review required)`は保全する。
+
+## Phase 18：Acquisition Phase 8の独立参照assertion追加照合
+
+`tests/acquisition/test_phase8_regression_al_formula_reference.py`、`tests/acquisition/test_phase8_classification_al_reference.py`、`tests/acquisition/test_phase8_analytic_bo_gaussian_reference.py`のテスト本文を読み、[Acquisition verification guide](../../../docs/development/theory-implementation/guide/verification/acquisition.md)へ回帰AL 4式（1e-12）、分類AL 3式（1e-10）、Gaussian log-EI/log-PI/UCB（1e-8）の入力条件と数式および限界を追記した。[174見出し台帳](phase1-heading-preservation-ledger.md)に旧`verification.md:292–306`、`:307–319`、`:335–350`を部分照合として対応付けた。
+
+**判定：partial / review required。** 固定posteriorを入力としたacquisition算術のテストassertion静的確認であり、GP posteriorの独立検証、分類較正、全獲得関数の数値正当性は主張しない。今回のテスト独立再実行と旧Mappingの174見出し完全検収は未実施。
