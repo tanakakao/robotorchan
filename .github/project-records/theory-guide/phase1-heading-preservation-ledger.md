@@ -672,3 +672,12 @@
 | `verification.md:335–350` | `guide/verification/acquisition.md` | `test_phase8_analytic_bo_gaussian_reference.py`：log-EI、log-PI、UCB、best_f=0、beta=0.4、1e-8 | 部分照合・review required |
 
 旧台帳の各行はplannedのまま据え置き、全文・履歴・negative contractが漏れなく移行したという意味のverifiedへは昇格させない。
+
+### Phase 8 BALD/ProbabilityVarianceとexitの追加部分照合
+
+| 元区間（Phase 1固定行番号） | 日本語移行先 | 確認したassertion・判定 | 状態 |
+| --- | --- | --- | --- |
+| `verification.md:320–334` | `guide/verification/acquisition.md` | `test_phase8_bald_probability_variance_reference.py`：固定class probability `[64,2,1,2]`、母分散型class平均とentropy差、非負性、1e-10 | 部分照合・review required |
+| `verification.md:376–407` | `guide/verification/{acquisition,README}.md` | Phase8 exitは6件の代表的property参照についてのrecommendation。noisy improvement、hypervolume、constrained/heterogeneous、情報獲得等の数理参照は認定外 | 部分照合・review required |
+
+表に載せることは元区間の数式・表・PR履歴を完全に移した判定ではない。174見出しの元statusは変更しない。
