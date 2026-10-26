@@ -703,3 +703,12 @@
 | `verification.md:40–64` | `guide/verification/README.md` | Phase7の初期execution gate（value-level検査、float64 oracle、label置換、focused tests/CI）と当時の状況は履歴として保全 | 部分照合・review required |
 
 旧見出しに記載された計画・テスト目標と、後日の代表property限定exitを同一視しない。原文の歴史的リンクや全段落の網羅移行は未検収であり、174行の旧statusは据え置く。
+
+### Phase 7 exact conditioningとcategorical relabelingの追加照合
+
+| 元区間（Phase 1固定行番号） | 移行先 | テスト本文から確認したproperty | 判定 |
+| --- | --- | --- | --- |
+| `verification.md:27–39` | `guide/verification/models.md` | `test_phase7_exact_gp_reference.py`：float64・4学習点/3予測点、RBF lengthscale=0.4、noise=0.025、独立Cholesky参照とposterior平均・全共分散・分散対角（2e-5） | 部分照合・review required |
+| `verification.md:27–39` | `guide/verification/models.md` | `test_phase7_mixed_categorical_reference.py`：カテゴリID 0→17、1→-4、2→9、kernel共分散 `[4,4]` の置換不変性（1e-10） | 部分照合・review required |
+
+両テストとも存在と具体的なvalue-level assertionを直接確認できたが、旧行列の8 familyと周辺本文の完全移行や、モデル族全体の学習・posterior保証を意味しない。
