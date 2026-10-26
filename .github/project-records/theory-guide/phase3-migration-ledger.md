@@ -98,17 +98,17 @@
 | `models.md` | 1270–1293 | Phase 4 inspected neural and variational reduced-GP variants | `guide/19_neural_reduction_gp.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 1294–1321 | Phase 4 inspected reduced multi-task implementations | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 1322–1344 | Phase 4 inspected jointly trained multi-task and design-reduced multi-fidelity GP | `guide/06_multi_fidelity.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
-| `models.md` | 1345–1369 | Phase 4 reduced-family registry reconciliation (52 entries) | `guide/18_dimensionality_reduction_gp.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1370–1389 | Phase 4 inspected robust-noise heteroskedastic inference paths | `guide/15_heteroskedastic_noise.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1390–1404 | Phase 4 inspected contamination, replicate-noise and nonstationary regression models | `guide/15_heteroskedastic_noise.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1405–1420 | Phase 4 inspected Student-t robust regression variants | `guide/14_robust_gaussian_process.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1421–1437 | Phase 4 inspected robust relevance-pursuit regression variants | `guide/14_robust_gaussian_process.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1438–1460 | Phase 4 robust-noise registry reconciliation (27 entries) | `guide/15_heteroskedastic_noise.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1461–1477 | Phase 4 inspected uncertain-input registry models (3 entries) | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 1478–1493 | Phase 4 inspected structured-output regression registry (4 entries) | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 1494–1516 | Phase 4 inspected hierarchical/contextual registry (6 entries) | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 1517–1530 | Phase 4 inspected preference-learning registry (1 entry) | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 1531–1547 | Phase 4 inspected standard single-task, variational and multi-fidelity models | `guide/06_multi_fidelity.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
+| `models.md` | 1345–1369 | Phase 4 reduced-family registry reconciliation (52 entries) | `guide/18_dimensionality_reduction_gp.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1370–1389 | Phase 4 inspected robust-noise heteroskedastic inference paths | `guide/15_heteroskedastic_noise.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1390–1404 | Phase 4 inspected contamination, replicate-noise and nonstationary regression models | `guide/14_robust_gaussian_process.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1405–1420 | Phase 4 inspected Student-t robust regression variants | `guide/14_robust_gaussian_process.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1421–1437 | Phase 4 inspected robust relevance-pursuit regression variants | `guide/14_robust_gaussian_process.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1438–1460 | Phase 4 robust-noise registry reconciliation (27 entries) | `guide/appendix/model-registry-and-public-api.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1461–1477 | Phase 4 inspected uncertain-input registry models (3 entries) | `guide/16_uncertain_input_gp.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 1478–1493 | Phase 4 inspected structured-output regression registry (4 entries) | `guide/11_structured_output.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 1494–1516 | Phase 4 inspected hierarchical/contextual registry (6 entries) | `guide/12_hierarchical_contextual.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 1517–1530 | Phase 4 inspected preference-learning registry (1 entry) | `guide/13_preference_gp.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 1531–1547 | Phase 4 inspected standard single-task, variational and multi-fidelity models | `guide/06_multi_fidelity.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 1548–1564 | Phase 4 inspected non-GP surrogate registry (5 entries) | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
 | `models.md` | 1565–1581 | Phase 4 inspected core multitask and model-list registry contracts | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 1582–1600 | Phase 4 inspected specialized heterogeneous/hierarchical multitask models | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
@@ -370,6 +370,26 @@
 教育用本文では旧Phase番号・完了宣言を除去し、実装境界と未検証事項のみを残す。複数章への二次参照は各章執筆時に追記する。
 
 **累計:** README 13 + models 69 = 82/174区間レビュー済み。未レビュー92区間。本文移行・検証完了0件。
+
+## models.md（1345–1547行、11区間）の本文レビュー
+
+原文のregistry family reconciliationとsource/test assertion記録を確認した。登録数は静的照合であり数値的正しさの検証ではない。
+
+| 原文行 | 移行時に保存する実装契約 |
+| --- | --- |
+| 1345–1369 | reduced family 52件 = deterministic 10 + frozen multitask 10 + neural single/mixed 14 + neural multitask 15 + design-reduced fidelity 3。family countは数学的証明ではない |
+| 1370–1389 | alternating heteroskedastic、joint variational two-latent、block task-noise、multi-fidelity noiseを区別。joint posteriorはresponse latentとnoiseを別APIで公開 |
+| 1390–1404 | contaminationはGaussian mixture likelihood、replicate noiseは平均の固定観測分散s²/n、Gibbs nonstationarityはlatent covariance。相互に置換不可 |
+| 1405–1420 | Student-tはvariational Gaussian latent GPのheavy-tail観測尤度。make_mll非対応でtraining_lossを使用 |
+| 1421–1437 | BoTorch relevance pursuit sparse-outlier likelihoodはStudent-t/contaminationと別。mixed/task structural featureを分離 |
+| 1438–1460 | robust_noise 27件のregistry照合。4 relevance + 4 contamination + 4 Student-t + 10 heteroskedastic/replicate + 5 Gibbs |
+| 1461–1477 | Gaussian uncertain inputのexpected RBF kernel、mixed continuous-only uncertainty、categorical simplex expected kernelは異なる。candidate uncertaintyをposteriorが自動周辺化するとは限らない |
+| 1478–1493 | HigherOrderGPはtensor output factors、LatentKroneckerGPはX×T product space。mixed kernelはX factorのみに適用 |
+| 1494–1516 | hierarchical parent indicesは設計カテゴリと別。LCEAGPとLCEMGPのcontext/task契約を分ける |
+| 1517–1530 | preference-learningのpairwise比較を通常の数値観測回帰と同一視しない |
+| 1531–1547 | standard exact、variational、multi-fidelityの異なるfit/MLLとfidelity covarianceを分離 |
+
+**累計:** README 13 + models 80 = 93/174区間レビュー済み。未レビュー81区間。ガイド本文移行・検証完了0件。
 
 ## 各区間の移行検収条件
 
