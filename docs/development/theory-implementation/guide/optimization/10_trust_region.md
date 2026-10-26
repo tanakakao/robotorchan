@@ -1,44 +1,49 @@
-# Trust region：獲得関数最適化の実装ガイド
+# TuRBO Trust Region：状態遷移と局所探索
 
-## 1. この章の問い
+## 理論・実装の対応
 
-TuRBOはincumbent周辺の局所探索領域を実観測の成功・失敗によって調整するstateful search。
+[理論のTrust region](../../../../theory/optimization/10_trust_region.md)と[高次元探索のガイド](../20_high_dimensional_search.md)に対応する。TuRBOは`optimizer="turbo"`という12番目のbackendではなく、状態を保持して局所boundsを更新する**search strategy**である。実装は`src/robotorchan/optim/trust_region/turbo.py`の`TuRBOState`、`update_turbo_state`、`restart_turbo_state`、`TuRBOStrategy`へ分解される。
 
-数理的な正本は[理論の対応章](../../../../theory/optimization/10_trust_region.md)とする。本章は、そこで定義される問題の**候補の座標系、実装経路、契約、検証上の限界**を学ぶための日本語案内である。
+## 1. 更新の入力：acquisitionではなく完了観測
 
-## 2. 理論から実装まで
+`update_turbo_state(state, values, *, state_values=None, relative_improvement=1e-3)`は完了した1 batchの観測値`values`を受け取る。値の個数は`state.batch_size`と一致しなければならず、入力shapeは`[q]`または`[q,1]`である。未完了の`X_pending`や獲得関数scoreを観測Yとして入力しない。
+
+オプションの`state_values`はdenoised posteriorなど、局所領域を広げる判断に使う別のscalar utilityである。このとき`best_value`は`state_values`の最大値を追跡し、`observed_best_value`は生の`values`の最大値を追跡する。両者を同じ観測量として扱わない。
+
+## 2. 成功・失敗とregion lengthの数式
+
+意思決定に使うbatch最大値を`b`、stateの最良判断値を`b_best`とし、`relative_improvement=r`とする。初回など`b_best`が有限でなければ成功とみなす。それ以外は
 
 ```text
-surrogate.posterior(X)
-      ↓
-acquisition α(X) ← objective / constraints
-      ↓
-optimizer: bounds + fixed features + candidate feasibility
-      ↓
-candidate X*（joint q × d）
-      ↓
-実際のblack-box評価 → 次の観測を追加
+success ⇔ b > b_best + r * max(1, abs(b_best))
 ```
 
-`TuRBOState`と局所boundsの生成、候補探索、観測後update/restartを別責務として追う。
+を評価する。成功時は`success_counter += 1`、`failure_counter = 0`、失敗時は逆に`failure_counter += 1`、`success_counter = 0`。成功回数が`success_tolerance`に達すると`length = min(2 * length, length_max)`、失敗回数が`failure_tolerance`に達すると`length = length / 2`。閾値到達後、該当counterは0へ戻る。
 
-| 役割 | 実装の追跡先 | 検証すべき点 |
+| `TuRBOState`の主要項目 | 初期値・意味 |
+| --- | --- |
+| `length`、`length_min`、`length_max` | 0.8、`0.5**7`、1.6。局所幅の上下限 |
+| `success_tolerance` | 3回の成功を閾値とする |
+| `failure_tolerance` | `ceil(max(4 / batch_size, dim / batch_size))`が自動既定値 |
+| `best_value`、`observed_best_value` | 両者の初期値は`-inf` |
+| `restart_triggered` | 更新で`length < length_min`になった場合にTrue |
+| `restart_count` | 実際のrestart時に増加する |
+
+この条件は`update_turbo_state`の実装で定義される。posterior varianceが下がったからという理由だけで成功と判定しない。
+
+## 3. Restartと局所bounds
+
+`restart_turbo_state`は`restart_triggered=True`が必要で、成功/失敗counter、flagをリセットし`restart_count`を1増やす。既存の`best_value`と`observed_best_value`は保持されるので、「global bestごとゼロに戻る」わけではない。
+
+`generate_turbo_restart_center(bounds,seed=...)`はpublic-spaceのbounds上にSobol centerを生成し、`[2,d]`の有限boundsかつ各成分`lower < upper`を検証する。ARD由来の`dimension_weights`を使う場合は正で有限の重みを幾何平均1に正規化し、局所boundsはglobal boundsにclipする。特定のモデルのlengthscale抽出と幾何計算は別の責務である。
+
+## 4. 検証すべきレイヤー
+
+| レイヤー | テストで確認する性質 | 言えないこと |
 | --- | --- | --- |
-| 数学的目的 | `docs/theory/optimization/10_trust_region.md` | αを最大化する変数・制約・近似 |
-| 公開API / dispatcher | `src/robotorchan/optim/` | 対応するoptimizer名、能力宣言、fallback |
-| 具体的な探索backend | `src/robotorchan/optim/`とBoTorch optimizer | 実際の探索アルゴリズム、依存ライブラリ |
-| 数値実行証拠 | [旧Optimization Mapping](../../optimization.md) | test assertions、実装境界、未対応条件 |
+| State transition | 成功でexpand、失敗でshrink、restart trigger、batch-sizeチェック | 全探索履歴の最適性 |
+| Coordinate geometry | ARDの正規化と公開空間の局所bounds clip | 効果次元を正しく発見した保証 |
+| Candidate proposal | `SearchResult.candidates`のq/d shape、bounds・feasibility、mixed dispatch | ベンチマークregretの改善 |
+| Observation update | 実評価値と`state_values`の責務分離 | noise不確実性の厳密な最適制御 |
 
-実装方法は**Implemented / Extended / Delegated**を分けて読む。BoTorchへ処理を委譲する名前と、robotorchanが実際に更新則を実装する名前を同等の独自アルゴリズムとして数えない。実際のbackend、candidate制約とposteriorの相互依存は旧Mappingを参照する。
-
-## 3. 適用条件と失敗の解釈
-
-posterior varianceの減少だけでsuccessと判定しない。best value、改善閾値、failure toleranceを保存する。
-
-最適化器が候補を返すことと、その候補が厳密な大域最適解であることは違う。候補座標の型、bounds、fixed features、constraint tolerance、q軸、one-shot追加変数、random seed等を適用先に合わせる。モデルの学習後posteriorが有限でも、candidate探索の収束は別途確認する。
-
-## 4. 検証と使い方の入口
-
-最低限の確認順序は、**(1) 問題の型→(2) 数理契約→(3) optimizer dispatch→(4) backend→(5) 制約と出力shape→(6) 再現実験**である。CI成功だけで全backend・全constraint・全qに対して正しいとは主張しない。
-
-[Optimization利用ガイド](../../../../optimization/README.md)、[理論Optimization索引](../../../../theory/optimization/README.md)、[旧Optimization Mapping](../../optimization.md)、[Verification](../../verification.md)を参照。原文は章別照合完了まで削除しない。
+代表的な契約テストは`tests/optim/trust_region/test_turbo_strategy.py`。旧[Optimization Mapping](../../optimization.md)のassertion evidenceと[Verification Mapping](../../verification.md)に既存の数値参照記録がある。CI成功と特定state invariantの検査から、TuRBOの総合的な収束や一般化性能を証明したとは扱わない。旧原文は台帳が検収されるまで保全する。
