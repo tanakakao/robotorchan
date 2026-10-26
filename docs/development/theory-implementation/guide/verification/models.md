@@ -115,3 +115,18 @@ variance = var(tree_predictions, unbiased=True)
 ```
 
 3つの比較はいずれも`atol=rtol=1e-12`を採用し、`posterior(observation_noise=True)`が`NotImplementedError`を返すことも明示的にassertしている。これは**7つのtree予測をensemble momentsとして表現する契約**であり、epistemic uncertaintyの較正やforest以外のnon-GPモデルを検証するものではない。
+
+
+## 実装assertionの照合：Replicate由来の観測分散
+
+`tests/models/robust/test_phase7_replicate_noise_reference.py`は、同じ入力地点で繰り返した観測をまとめる`ReplicateNoiseSingleTaskGP.from_replicates`を対象とする。float64の7観測は入力0.0に3件、1.0に4件と**不等サンプル数で交互に並ぶ**。テストは`noise_floor=1e-12`でモデルを構成し、各地点について以下をPython/Torchのscalar統計式で別計算する。
+
+```text
+mean = sum(y_i)/n
+s2 = sum((y_i-mean)^2)/(n-1)   # 不偏標本分散
+variance_of_mean = s2/n
+```
+
+`model.replicate_counts`、`raw_train_Y`、`replicate_variance`、`raw_train_Yvar`が、それぞれ観測件数・標本平均・不偏標本分散・平均の観測分散と一致することを`torch.testing.assert_close`で確認する。比較の許容誤差は**テスト内で明示指定されておらず、Torchの既定値**が使われる。さらに`raw_train_Yvar`の有限性・正値性を検査する。
+
+これはreplicate集計の数理的契約であり、学習済みheteroskedasticノイズGPの予測、入力間の雑音分布、posterior較正や外れ値耐性を確認するテストではない。
