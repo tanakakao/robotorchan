@@ -39,6 +39,21 @@
 | Acquisition | regression/classification AL、BALD、ProbabilityVariance、analytic Gaussian、MC qSimpleRegret/qUCB | utilityの算術、sample集約順序、固定乱数とshape | qNEI、EHVI、情報利得、全constrained compositionの独立数値参照 |
 | Optimization | nonlinear candidate feasibility E2E、TuRBO state、one-shot/mixedとNSGA-IIの実装契約 | テスト対象の可行性・state遷移・行別カテゴリ割当て等 | 一般制約下のhard feasibility、global optimum、regret |
 
-Modelsの`replicate noise`等、[Models verification](models.md)に名前が載っていても、**この再照合作業でテスト本文をまだ読んでいない項目**はassertion-level照合済みとはしない。上表のAcquisitionやOptimizerにも同じ注意が必要であり、すべての掲載対象を同じ確度のVerifiedに一括昇格させない。数式・shape・negative contractの実証が不足するものは[limitations](limitations.md)で区別する。
+Modelsの`replicate noise`もテスト本文と直接照合済みである。ただし、[Models verification](models.md)に名前が載ること自体は、元区間の全情報の移行完了を意味しない。上表のAcquisitionやOptimizerにも同じ注意が必要であり、すべての掲載対象を同じ確度のVerifiedに一括昇格させない。数式・shape・negative contractの実証が不足するものは[limitations](limitations.md)で区別する。
 
 元[Verification Mapping](../../verification.md)の古い「Phase 7 remains open」等は**当時の履歴として保全**されている。同じファイル内に、その後の「Phase 7 final exit reconciliation」（代表的property別スコープに限定したcomplete判定）もあるため、古い節だけを引用して現在の結論にしない。最新のexit判定でも、位置依存observational noiseのpublic posteriorは保証されていない。文書移行作業そのものの完了判定とは独立である。
+
+
+## 旧Verification Mapping冒頭の移行契約（原文1–64行を照合）
+
+旧Mappingの`Purpose and evidence rules`は、Models/Acquisition/Optimizationの**静的な対応表**と、独立の数理参照に基づく**数値検証**を明確に分離する。公開registryへの登録、tensor shapeの一致、CI成功だけでは数学的propertyを`Verified`にしない。この基準を現在のガイドでも維持する。
+
+| 旧Phase | 数理検証の対象 | 現ガイドの受け皿 | 依然として個別確認が必要な例 |
+| --- | --- | --- | --- |
+| 7 | モデルposterior・likelihood・covariance・入出力変換 | [Models](models.md) | Exact GPの固定kernel Cholesky conditioning参照、categorical relabeling、Kronecker priorとposteriorの区別 |
+| 8 | Acquisition値・MC推定量・objective・constraints | [Acquisition](acquisition.md) | qNEI、multi-objective hypervolume、制約付き組成・情報獲得などの独立数値式 |
+| 9 | Candidate最適化・可行性・状態・座標変換 | [Optimization](optimization.md) | 全backendの可行性・収束・座標変換の一般保証 |
+
+再現可能な記録として原文が要求するのは、**対象model/method ID、独立数式/参照、仮定、dtype/device、seed、数値tol、実測結果、厳密なassertion対象**である。固定数値例の一部を確認できても、原文が提示する**モデル検証行列の全行**（Exact GP条件付きposterior、カテゴリID置換不変性を含む）の実証に置き換わるものではない。
+
+旧`Initial Phase 7 execution gate`には、既存テストのvalue-level assertionの精査、学習を除いたfloat64 kernel conditioning oracle、カテゴリ置換不変性、分類のlatent/probability区別、focused testとCIの結果記録、他familyへの段階的拡張が含まれる。これは**当初の検証手順・到達目標**として保全し、後続の代表property限定exit判定と同一視しない。旧Mapping冒頭1–64行に由来する技術・履歴上の意味は[原文](../../verification.md)を正本として参照し続ける。
