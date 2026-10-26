@@ -130,3 +130,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 | `qUpperConfidenceBound` MC aggregation | `mean_s max_q (sample_mean+sqrt(beta*pi/2)*abs(sample-sample_mean))` | 64 Sobol samples、seed 23、beta=0.3、2 batches×q=2、float64、atol=rtol=1e-8 | source/test assertion inspected。個別propertyだけ |
 
 元のテストが用いるbase samplesを参照式でも再利用するため、これらはsample aggregationの独立記述との一致であり、MC収束やGP conditioningの独立検証ではない。Phase 18の全体完了判定は変えず、元の174見出し台帳も一括`verified`としない。
+
+## Phase 18 Verification：optimizerの実行assertion照合（部分達成）
+
+`tests/optim/integration/test_nonlinear_candidate_constraints_e2e.py`と`tests/optim/trust_region/test_turbo_strategy.py`のテスト本文を直接確認し、[Optimizer verification guide](../../../docs/development/theory-implementation/guide/verification/optimization.md)にcandidate feasibility（q=1、linear/nonlinear/fixed、q=2 interpoint、qLogNParEGO）およびTuRBOの閾値・length・restart状態について具体的なassertionと許容誤差を追記した。既存のOptimization MappingとVerification Mappingは引き続き原文の証拠を保持する。
+
+**判定：partial / review required。** このコミットはソース・テストassertionの静的照合であり、テストの新規独立実行や残余の174見出し全件のmeaning-level migrationを完了したことを意味しない。
