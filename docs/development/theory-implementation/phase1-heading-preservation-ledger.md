@@ -513,3 +513,27 @@
 4. 既存の英語表とregistry全件リストはAppendixへ保全し、日本語の章本文には学習上必要な説明を再構成する。Phase/PR番号はauditへ分離する。
 
 **保留:** 原文のregistry件数や過去のテスト状況は今回再計算・再実行していないため、「現時点の実装保証」に書き換えない。既存5ファイルは維持し、CIを壊す移動・改名は行わない。
+
+## models.md: 高次元・分類・表現学習の意味レベル監査（第2弾）
+
+本文の498–588、676–773、1100–1168行を確認。理論章は原理の説明、技術ガイドはAPI・数値手法・委譲境界・検証限界、Appendixは全ID一覧と横断契約、auditは過去の実施記録を担当する。
+
+| 元行 | 技術ガイドへの移行候補 | 絶対に失ってはいけない実装上の区別 | 限界・Appendix保全事項 |
+| --- | --- | --- | --- |
+| 498–518 | multitask classification / deep GP classification | **KroneckerMultiTaskBinaryGPClassifierはblock→long形式へ展開してvariational ICMを使う**。厳密Kronecker行列計算ではない。DeepGP分類はDeepApproximateMLL+Bernoulliでlatent sample平均 | タスク間相関の数値一致・ELBO/MC収束・較正は未検証 |
+| 519–540 | high-dimensional binary classification | SAASとMAP-SAASのHalf-Cauchy inverse-ARD prior、ALEBO Mahalanobis metric、frozen PCA/PLS/random projectionの元/削減座標対応 | SAAS分類は**NUTS/Pyro完全Bayesianではない**。MAP最適化成功・次元削減の情報保持は未検証 |
+| 541–563 | joint encoder / classification ensembles / uncertain input | encoderのELBO勾配、GP ensembleのclass probability経験分布、カテゴリ不確実性の有限support重み付き周辺化、Gibbs非定常は**latent covariance**の変更 | 勾配存在≠学習品質。ensemble variance≠較正。非定常≠label noise |
+| 564–588 | robust classification / non-GP bootstrap | contamination `(1-c)p_clean+c p_contaminant`、replicate disagreement `2p(1-p)`、bootstrap推定器間分散、mixed Gibbs+categorical kernel | replicateの不一致はposterior varianceではない。bootstrap分散は較正保証ではない |
+| 676–697 | expressive / DeepGP | `DeepGPPosterior`は**MC sample-backed**で解析的正規事後ではない。task embedding/categorical embeddingは局所実装。BoTorch獲得関数への接続 | finite qLogEI/optimize_acqfはregret・MC分布一致の証明ではない。legacy `DeepKernelGP` aliasは公開不可 |
+| 698–723 | expressive / spectral & NNGP | spectral kernel計算はGPyTorchへ委譲、構造列/カテゴリとの合成はlocal。**InfiniteWidthReLUKernelのarc-cosine再帰はlocal実装** | Gram PSD数値チェックだけで公開理論式との同値性は証明されない |
+| 724–746 | reduced / joint encoder / hybrid AE / VAE | joint encoderはGP MLLと同時最適化し**frozen reducerではない**。Hybridは再構成MSE、VAEはKL+stochastic reconstruction。mixedでは連続のみ削減 | VAE標準`posterior`はlatent平均経路、`uncertainty_aware_posterior`は別のMC moment-matched近似。後者の較正・収束未検証 |
+| 747–773 | Appendix: classification registry documentation | 29分類IDは個別guide/theory/notebookメタデータを持たず、共通分類ガイドへ案内する | 共通理論章はsklearn/ensemble/robust変種の個別数理導出ではない。IDごとのNotebook実行未確認 |
+| 1100–1131 | robust binary classification | replicateは個々の0/1ラベルで学習。input-dependent flipは`p_obs=FP+(1-FP-FN)p_clean`。Gibbs非定常はflip確率ではなくlatent kernel | identical floating rowsの要件、flip rate同定/較正未検証、mixed/multitaskの数値同値性未検証 |
+| 1132–1168 | sparse/embedded binary classification | MAP-SAAS/SAASのpriorとNUTSを混同しない。ALEBO分類は**埋込座標Z**を入力としambient projectionはstrategy側。joint encoderはlossで特徴へ勾配伝播 | ALEBO ambient可行性・prior収束・joint encoder予測較正は未検証 |
+
+### 検証状態と移行先のルール
+
+- 上記は**既存Mapping本文の意味を保全するためのレビュー**であり、実装をこの作業で再実行したわけではない。
+- `Implemented/Delegated/Extended/Approximated/Unsupported/Unverified`は構成要素ごとに付す。名称から数学的アルゴリズムを推測しない（特にKronecker分類、SAAS分類、VAEの事後）。
+- 分類全29 ID・回帰全142 entryの歴史的registry表と根拠テストはAppendixに保存し、学習本文に巨大な監査表をそのまま埋め込まない。
+- 元の`models.md`は引き続き保持する。**Phase 1の全内容レビューは未完了**。
