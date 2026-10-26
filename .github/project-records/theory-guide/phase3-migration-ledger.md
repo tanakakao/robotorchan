@@ -106,8 +106,8 @@
 | `models.md` | 1438–1460 | Phase 4 robust-noise registry reconciliation (27 entries) | `guide/appendix/model-registry-and-public-api.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 1461–1477 | Phase 4 inspected uncertain-input registry models (3 entries) | `guide/16_uncertain_input_gp.md` | `audit-history` | **body-reviewed routing / not migrated** |
 | `models.md` | 1478–1493 | Phase 4 inspected structured-output regression registry (4 entries) | `guide/11_structured_output.md` | `audit-history` | **body-reviewed routing / not migrated** |
-| `models.md` | 1494–1516 | Phase 4 inspected hierarchical/contextual registry (6 entries) | `guide/12_hierarchical_contextual.md` | `audit-history` | **body-reviewed routing / not migrated** |
-| `models.md` | 1517–1530 | Phase 4 inspected preference-learning registry (1 entry) | `guide/13_preference_gp.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 1494–1516 | Phase 4 inspected hierarchical/contextual registry (6 entries) | `guide/12_hierarchical_contextual_gp.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 1517–1530 | Phase 4 inspected preference-learning registry (1 entry) | `guide/10_preference_learning.md` | `audit-history` | **body-reviewed routing / not migrated** |
 | `models.md` | 1531–1547 | Phase 4 inspected standard single-task, variational and multi-fidelity models | `guide/06_multi_fidelity.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 1548–1564 | Phase 4 inspected non-GP surrogate registry (5 entries) | `guide/23_non_gp_surrogates.md` | `audit-history` | **body-reviewed routing / not migrated** |
 | `models.md` | 1565–1581 | Phase 4 inspected core multitask and model-list registry contracts | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
@@ -413,7 +413,7 @@
 | 元ファイルの行範囲 | 5ファイルとも台帳範囲がファイル末尾まで連続し、各区間の見出し開始位置が一致 |
 | 台帳ステータス | **174/174 body-reviewed routing / not migrated**、planned 0、migrated 0、verified 0 |
 | 本文と監査履歴 | 数式・API・実装制約・assertionは技術ガイド、旧Phase・PR・CIの時系列は本監査記録で保持 |
-| 新ガイドの実ファイル | 指定先 `docs/development/theory-implementation/guide/README.md` はこのブランチで取得できず（404）。**移行先の実在・48章構成の現物照合は未完了** |
+| 新ガイドの章構成 | Phase 2の成果物を積み上げブランチから復元し、READMEの24+12+12章を確認。各章本文は未作成（予定パス） |
 | 移行先の章内容 | 本文未執筆につき照合未実施。全174区間の移行検収は後続Phase |
 
 ### 履歴の読み方
@@ -422,7 +422,7 @@
 
 ### 追加の是正が必要な点
 
-ガイドREADMEの配置をPhase 2の成果物と照合し、実在する目次と全primary/secondaryの移行先を照合する。現時点で移行先のパス表記は**計画上のラベル**であり、実ファイル存在確認済みではない。これはPhase 3の移行台帳レビュー完了と、後続のガイド本文移行可能性を区別するための明示的な未解決事項である。
+Phase 2のPR #1451はPhase 1の積み上げブランチをbaseとしてマージされており、Phase 3ブランチ（main起点）にはガイドREADMEが含まれていなかった。元ブランチから同一内容のREADMEを復元した。台帳primaryの不一致2件（hierarchical/contextual、preference）をPhase 2目次の正式パスに修正した。48章の各本文は未作成であり、移行先パスは**計画上のラベル**。後続Phaseでは実際の章作成とsecondary参照の確定を行う。
 
 ## 時系列レビュー補足（当時の作業記録）
 
