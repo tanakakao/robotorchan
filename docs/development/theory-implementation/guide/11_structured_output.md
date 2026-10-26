@@ -18,6 +18,7 @@
 ```python
 import torch
 from robotorchan.models import HigherOrderGP
+
 X = torch.tensor([[0.1], [0.4], [0.8]], dtype=torch.double)
 Y = torch.rand(3, 2, 2, dtype=torch.double)
 model = HigherOrderGP(train_X=X, train_Y=Y)
