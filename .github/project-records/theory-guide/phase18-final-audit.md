@@ -71,3 +71,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 | 52–91「Binary classification registry inventory」 | 分類IDとpublic classの名前空間の差。binary.kronecker_multitaskはExact Kroneckerを意味しない | 同Appendix・[Classification](../../../docs/development/theory-implementation/guide/24_classification.md) | **partial, review required**：全29 IDのassertion証拠の移管・全件検収は未実施 |
 
 確認した本文は新しいAppendixに概念別にまとめたが、**原文のinventory全件をコピー・移行したものではない**。既存の174見出し台帳上の`planned (review required)`を`verified`へ変更せず、重複情報があるという理由で旧Mappingを削除しない。原文のsource blob SHA、詳細なテスト証拠、各レコードの完全な再配置は引き続き未達である。
+
+## Acquisition Active Learningの実装照合（部分達成）
+
+旧`acquisition.md`の「Distinct implementation paths」「Phase 5 — regression active-learning acquisition mappings」「Phase 5 — classification AL and Gaussian EPIG」を読んで、現行の`src/robotorchan/acquisition/active_learning/variance.py`、`classification.py`および`registry.py`のソースと照合した。[ALガイド](../../../docs/development/theory-implementation/guide/acquisition/09_active_learning.md)へ具体的な数式・クラス・posterior/predict_probaの違い・q=1・拒否条件を反映した。
+
+**確認した範囲：** `PosteriorVariance`、`PosteriorStd`、`PredictiveEntropy`、`MarginUncertainty`、`ProbabilityVariance`、`BALD`、`LatentStraddle`の責務、ならびにregression ALのstructured/ensemble guardとclassification model interface。数値テストをこの作業で再実行したわけではなく、旧原文の全行・全entryの移行を検収したわけでもない。原文見出し台帳は依然`review required`のまま保全する。
