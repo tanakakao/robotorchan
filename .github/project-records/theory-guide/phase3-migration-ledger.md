@@ -76,19 +76,19 @@
 | `models.md` | 867–881 | Kronecker block-design multitask GP | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 882–896 | SAAS fully Bayesian single-task GP | `guide/08_high_dimensional_gp.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 897–911 | Stochastic deep Gaussian-process regression | `guide/22_expressive_gp.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
-| `models.md` | 912–926 | Random-forest ensemble regression | `guide/23_non_gp_surrogates.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 927–941 | Reduced input/output Gaussian-process regression | `guide/18_dimensionality_reduction_gp.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 942–956 | Student-t robust variational regression | `guide/14_robust_gaussian_process.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 957–971 | NGBoost probabilistic non-GP regression | `guide/23_non_gp_surrogates.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 972–986 | Heterogeneous regression/classification composition | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 987–1000 | Classification with flipped observation labels | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1001–1014 | Classification with contaminating labels | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1015–1028 | Classification probability ensembles (GP and heterogeneous) | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1029–1042 | Non-GP binary classification and bootstrap uncertainty | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1043–1056 | Classification with uncertain candidate inputs | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1057–1070 | Multitask binary classification (long format and block input) | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1071–1084 | Frozen reduced-input binary GP classification | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1085–1099 | Deep variational GP binary classification | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
+| `models.md` | 912–926 | Random-forest ensemble regression | `guide/23_non_gp_surrogates.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 927–941 | Reduced input/output Gaussian-process regression | `guide/18_dimensionality_reduction_gp.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 942–956 | Student-t robust variational regression | `guide/14_robust_gaussian_process.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 957–971 | NGBoost probabilistic non-GP regression | `guide/23_non_gp_surrogates.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 972–986 | Heterogeneous regression/classification composition | `guide/appendix/model-composition-and-delegation.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 987–1000 | Classification with flipped observation labels | `guide/24_classification.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1001–1014 | Classification with contaminating labels | `guide/24_classification.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1015–1028 | Classification probability ensembles (GP and heterogeneous) | `guide/24_classification.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1029–1042 | Non-GP binary classification and bootstrap uncertainty | `guide/24_classification.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1043–1056 | Classification with uncertain candidate inputs | `guide/16_uncertain_input_gp.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1057–1070 | Multitask binary classification (long format and block input) | `guide/07_multitask_multioutput.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1071–1084 | Frozen reduced-input binary GP classification | `guide/18_dimensionality_reduction_gp.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1085–1099 | Deep variational GP binary classification | `guide/22_expressive_gp.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 1100–1131 | Remaining robust binary classification families | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 1132–1168 | Sparse and embedded high-dimensional binary classification | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 1169–1206 | Phase 4 registry-wide reconciliation: outstanding detailed evidence | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
@@ -328,6 +328,28 @@
 | 897–911 | SingleTaskDeepGPはGPyTorch variational layersとsample-based DeepGPPosterior。exact Gaussian posteriorではない |
 
 **進捗:** README 13 + models 47 = 60/174区間レビュー済み。未レビュー114区間。移行・検証完了0件。
+
+## models.md（912–1099行、13 method records）の本文レビュー
+
+各method recordの公開API・数値計算法・委譲境界・assertion・未検証事項を原文から確認した。表のsecondaryは複数章にまたがる場合の参照先であり、分類ではない回帰レコードについてはverificationのみが適用される。
+
+| 原文行 | 保存すべき相違 |
+| --- | --- |
+| 912–926 | RandomForestはsklearn tree predictionをBoTorch EnsemblePosteriorに変換。ensemble spreadはcalibrated Bayesian uncertaintyではない |
+| 927–941 | ReducedGPはinput/output reducerとBoTorch GPを合成。reduced outputでtrain_Yvar非対応 |
+| 942–956 | Student-tはheavy-tailed observation likelihoodとvariational training_loss。exact Gaussian MLLではない |
+| 957–971 | NGBoostはNormal(loc,scale)のparametric posterior adapter。optional dependencyのテスト実行は未確認 |
+| 972–986 | HeterogeneousModelはregression/classification childのoutput ownershipとdispatch。global posterior/ELBOを定義しない |
+| 987–1000 | asymmetric label flipはclean/observed probabilityを区別。p_obs=FP+(1-FP-FN)*p_clean |
+| 1001–1014 | contaminationは(1-epsilon)*p_clean+epsilon*p_contaminant。入力依存ノイズとは異なる |
+| 1015–1028 | probability ensembleはmember確率の経験分布。共通latent GP posteriorを定義しない |
+| 1029–1042 | sklearn非GP分類とbootstrap empirical uncertainty。単体推定器はepistemic samplingを保証しない |
+| 1043–1056 | 連続候補入力はGaussian MC積分、カテゴリ入力は有限支持の重み付き厳密和。訓練入力やラベルの不確実性とは区別 |
+| 1057–1070 | multitask binary GPはvariational ICM。Kronecker名のblock入力でもexact Kronecker推論ではない |
+| 1071–1084 | PCA/PLS/random projectionは凍結した入力削減器。encoderとGPのjoint trainingではない |
+| 1085–1099 | DeepGP binaryはDeepApproximateMLLとBernoulli likelihood、finite MC予測。校正・収束は未検証 |
+
+**累計:** README 13 + models 60 = 73/174区間本文レビュー済み。未レビュー101区間。新ガイドへの本文移行・検証完了は0件。
 
 ## 各区間の移行検収条件
 
