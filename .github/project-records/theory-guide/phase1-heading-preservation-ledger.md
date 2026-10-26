@@ -754,3 +754,34 @@
 **集計：31/31見出しの受け皿・照合種別を記録。** 内訳は**22件が対応する数値/contract test本文のassertionと部分照合、9件が方針・検証行列・履歴の主要論点と部分照合**。いずれも全文の移行を意味する`verified`は**0件**である。Phase 1固定行番号と現行ファイルの行番号は混用しない。
 
 **検収ゲート：** 各区間の全文（数学式、数値条件、表、testパス、negative contract、過去のPR/CI結果と時系列）について旧原文と移行先を双方向比較し、欠落がない証拠を追記して初めて`verified`へ変更する。資料の保全のみであれば、旧Mapping自体が正本として継続する。全174見出しについて同様の承認が得られるまで旧5ファイルは保持する。
+
+## Phase 18：Verification以外の143見出し・監査仕分け（初回棚卸し）
+
+Phase 1固定台帳から`README.md`、`models.md`、`acquisition.md`、`optimization.md`の全143見出しを抽出した。**全143件に仮のprimary/secondary移行先が存在すること**を確認したが、元台帳が明示する通り、それは意味論的な本文移行検収ではない。
+
+| 旧Mapping | 見出し数 | primaryがaudit/の仮割当 | それ以外の仮割当 | Verified |
+| --- | ---: | ---: | ---: | ---: |
+| `README.md` | 13 | 8 | 5 | 0 |
+| `models.md` | 91 | 0 | 91 | 0 |
+| `acquisition.md` | 18 | 9 | 9 | 0 |
+| `optimization.md` | 21 | 8 | 13 | 0 |
+| **合計** | **143** | **25** | **118** | **0** |
+
+**audit/への誤仕分けリスク：** primaryが`audit/`である区間にもモデル実装、獲得関数、制約・最適化の数理契約が混在する。Phase番号を含む見出しだからといって技術内容をauditだけに隔離しない。原文区間を読み、技術本文は`guide/`の関連章・Appendix・verificationへ、PR/CI/歴史的判定は監査記録へ分割する。
+
+| 優先レビュー対象 | 固定行範囲 | 原見出し | 元secondary | 最初に調べる差分 |
+| --- | --- | --- | --- | --- |
+| `README.md` | 1–2 | Theory–Implementation Mapping: 12-phase development cycle | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 3–10 | Baseline and scope | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 42–66 | Reader navigation (Phase 10) | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 108–136 | Recorded phase decisions | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 137–174 | Phase 6 exit reconciliation (static scope) | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 175–201 | Phase 10 navigation exit audit | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 202–231 | Phase 11 mapping consistency exit audit | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `README.md` | 232–278 | Phase 12 final audit: evidence and decision | `appendix/` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `acquisition.md` | 1–4 | Acquisition theory–implementation mapping: Phase 3 inventory | `appendix/acquisition-contracts-and-compatibility.md` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `acquisition.md` | 48–60 | Fixed Phase 3 completion criteria | `appendix/acquisition-contracts-and-compatibility.md` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `acquisition.md` | 79–114 | Phase 5 — regression active-learning acquisition mappings (source inspected) | `appendix/acquisition-contracts-and-compatibility.md` | 見出し名による技術情報の誤仕分けを全文点検 |
+| `acquisition.md` | 115–143 | Phase 5 — classification AL and Gaussian EPIG (source inspected) | `appendix/acquisition-contracts-and-compatibility.md` | 見出し名による技術情報の誤仕分けを全文点検 |
+
+**次の検収ゲート：** 各見出しの元本文と移行先を直接比較して、数式・public API・registry列・negative contract・テストassertion・旧PR/CIをそれぞれ保存できたかを確認する。特に`models.md`の91件を内容未読のまま一括`verified`にしない。旧174行の状態はすべて`planned (review required)`のまま保全し、旧5ファイルも削除しない。
