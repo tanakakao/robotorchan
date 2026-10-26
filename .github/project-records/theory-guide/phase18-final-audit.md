@@ -101,3 +101,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 旧`optimization.md`の「Specialized optimization paths: inspected source and assertions」と、`src/robotorchan/optim/one_shot/{initialization,mixed}.py`を直接比較した。[Batch / One-shotガイド](../../../docs/development/theory-implementation/guide/optimization/08_batch_one_shot.md)へ`get_augmented_q_batch_size(q)`と実候補qの区別、`extract_candidates`、one-shot初期点のshape、mixed one-shotの行別カテゴリ割当ての列挙（組合せ数`m ** augmented_q`）、`q=1`制限、`max_assignments`上限、BoTorchへの連続部分問題委譲を追記した。旧Mapping記載の`tests/optim/one_shot/test_mixed.py`はassertion追跡先として維持した。
 
 **判定：partial / review required。** 本作業はsrc記述を確認した文書照合であり、独立の混合KG数値検証や全候補制約の組合せ、全one-shotアルゴリズムの性能検証ではない。固定174見出し台帳は保全する。
+
+## NSGA-II：vector objectiveとscalar acquisitionの境界を照合
+
+旧`optimization.md`の「Specialized optimization paths: inspected source and assertions」、`src/robotorchan/optim/backends/nsga2.py`および`tests/optim/backends/test_nsga2_backend.py`の実装・テスト本文を確認した。[Evolutionaryガイド](../../../docs/development/theory-implementation/guide/optimization/07_evolutionary.md)に、NSGA-IIが11種のnamed acquisition dispatcherに含まれないこと、`[population,d] → [population,m]`（`m>=2`、全目的最大化）の契約、nondominated ranking／crowding／選択・交叉・突然変異、返却される近似Pareto集合とテストの限界を明記した。
+
+**判定：partial / review required。** この照合はソースとテストの静的確認であり、今回独立にNSGA-IIを実行した結果やhypervolume収束の証明ではない。旧Mappingは引き続き保全する。
