@@ -25,3 +25,7 @@ jobs:
         run: python -m unittest discover -s tests/docs -p test_theory_implementation_mapping.py
       - name: Check theory-implementation mapping consistency
         run: python scripts/check_theory_implementation_mapping.py
+      - name: Test fixed theory-guide chapter contract
+        run: python -m unittest discover -s tests/docs -p test_theory_guide_quality.py
+      - name: Check 48 theory-guide chapter correspondence
+        run: python scripts/check_theory_guide_quality.py
