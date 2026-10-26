@@ -601,3 +601,22 @@
 - `acquisition/`と`optimization/`のサブ章はこの24ファイルとは別の構成であり、今後それぞれのREADMEと照合する。
 
 **未完了**：全174見出しのprimary/secondaryに対する正式名・技術的意味の完全照合、理論章リンクの実在確認、全参照のanchor検証、CI。今回の結果は`docs/theory/README.md`との名称照合であり、全ファイルを個別fetchした証明ではない。
+
+## 全174見出しの原文との機械照合（2026-10-26）
+
+作業ブランチ上の**既存5 Mapping本文と本台帳を同時取得**し、MarkdownのH1–H3見出しを直接抽出した。台帳の`全見出し台帳`にある`Source | Lines | Level | Original heading | Tentative primary | Tentative secondary | Status`形式の行のみを対象とした（集計表や後続説明表を除外）。
+
+| 原文 | 原文H1–H3 | 台帳見出し行 | 原文行数 | 原文blob SHAが基準と一致 |
+| --- | ---: | ---: | ---: | --- |
+| `README.md` | 13 | 13 | 278 | Yes |
+| `models.md` | 91 | 91 | 1796 | Yes |
+| `acquisition.md` | 18 | 18 | 465 | Yes |
+| `optimization.md` | 21 | 21 | 355 | Yes |
+| `verification.md` | 31 | 31 | 510 | Yes |
+| **合計** | **174** | **174** | **3404** | **5/5** |
+
+**機械照合結果：不一致0件。** 174行すべてについて、(1)source、(2)見出し開始行、(3)次のH1–H3直前またはEOFまでの終了行、(4)level、(5)見出し本文、(6)原文blob SHAを照合した。欠落・余剰・順序逆転・行範囲の不整合は検出されなかった。
+
+移行先の形式検査：primaryとsecondaryの完全一致`0`件、primary/secondary空欄`0`件。status内訳：`planned (review required)` 174件。
+
+**判定の境界**：この結果はH1–H3の**所在と区間の完全性**の証拠であり、各区間内のH4・数式・表・コード・リンクの意味的移行が完了した証拠ではない。`planned (review required)`を`reviewed`へ一括変更しない。本文は旧ファイルに保全されたまま。次のゲートは178参照候補のtree突合せとリンク・CI検証。
