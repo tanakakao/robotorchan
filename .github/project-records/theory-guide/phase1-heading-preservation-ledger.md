@@ -653,3 +653,12 @@
 | `verification.md:449–464` | `guide/verification/optimization.md` | `test_phase9_constraint_violation_reference.py`：intra/interpoint残差、等式tol=0.05、feasibility-first順位、1e-12 | 部分照合・review required |
 
 `verification.md:422–435`および`465–510`は関連資料の説明があっても、この追加表ではテスト本文の直接assertion照合を完了したとは記載しない。旧174行のreview statusは変更しない。
+
+### Phase 9 state／negative contractの追加部分照合
+
+| 元区間（Phase 1固定行番号） | 日本語移行先 | 直接確認したassertion | 状態 |
+| --- | --- | --- | --- |
+| `verification.md:422–435` | `guide/verification/optimization.md` | `test_phase9_turbo_state_reference.py`：3連続成功のlength上限1.6、2連続失敗で0.075/restart、decision値と生観測値の分離 | 部分照合・review required |
+| `verification.md:465–475` | `guide/verification/optimization.md` | `test_phase9_torch_constraint_contract.py`：Adam/AdamW/SGD × linear/equality/nonlinearの9ケースで明示的ValueError | 部分照合・review required |
+
+`verification.md:476–510`の代表property限定exit判定は旧文書に保持し、上記の特定テストassertionと同じ意味の移行完了認定にはしない。
