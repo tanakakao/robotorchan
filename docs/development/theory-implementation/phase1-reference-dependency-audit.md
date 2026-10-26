@@ -118,3 +118,34 @@ GitHubの作業ブランチ上で、以下の10ファイルを直接取得でき
 | `tests/optim/constraints/test_phase9_constraint_violation_reference.py` | 取得成功 |
 
 これまでの個別取得16件と合わせ、**計24件の個別参照先の存在確認**を記録した。178件の抽出候補の網羅確認は未完了。次のゲートでは、存在確認の反復だけでなく、`verification.md`に書かれた数値的な検証条件・未検証範囲を章別ガイドとAppendixに対応付ける。
+
+## 実装・テスト・Notebook・理論参照の直接存在確認（第4バッチ）
+
+作業ブランチから以下の12ファイルの冒頭をGitHub connectorで直接取得し、全件の**パス存在とblob SHA取得**を確認した。テスト実行・Notebook実行・JSON生成・リンク解決・数式検証を意味しない。
+
+| 種別 | 参照先 | 判定 |
+| --- | --- | --- |
+| test | `tests/acquisition/test_epig.py` | 直接取得成功 |
+| test | `tests/acquisition/test_phase5_native_integration.py` | 直接取得成功 |
+| test | `tests/optim/one_shot/test_mixed.py` | 直接取得成功 |
+| test | `tests/optim/embedding/test_baxus_reference_schedule.py` | 直接取得成功 |
+| test | `tests/optim/trust_region/test_turbo_strategy.py` | 直接取得成功 |
+| test | `tests/models/standard/test_mixed_single_task_gp.py` | 直接取得成功 |
+| test | `tests/models/classification/robust/test_label_noise.py` | 直接取得成功 |
+| artifact | `docs/model_coverage.json` | 直接取得成功 |
+| checker | `scripts/check_theory_implementation_mapping.py` | 直接取得成功 |
+| notebook | `examples/notebooks/28_regression_active_learning.ipynb` | 直接取得成功 |
+| theory | `docs/theory/acquisition/09_active_learning.md` | 直接取得成功 |
+| theory | `docs/theory/optimization/09_high_dimensional.md` | 直接取得成功 |
+
+以前の24件との重複はNotebook1件であるため、**直接取得で確認したユニークなパスは35件**（今回の新規11件）。178件の静的抽出候補に含まれるか否かは個別の集合突合せ未実施であり、単純に35/178を厳密な検証率とは呼ばない。
+
+### ガイド移行時の証拠レベル
+
+- **Path exists**：GitHubで取得成功（今回確認した範囲）。
+- **Test asserts**：テスト本文を読み、対象のproperty・許容誤差・否定ケースを確認した状態。今回未実施。
+- **Test passes**：対象commitの実行結果が確認できた状態。今回未実施。
+- **Independent reference**：実装と独立した式・基準との比較が成立するとレビューできた状態。今回未実施。
+- **Notebook runnable**：指定環境で実行成功した状態。今回未実施。
+
+今後、各技術ガイドの「検証」節は少なくとも`source`、`test`、`notebook`、`verification level`、`limitations`を分離する。テストファイル名を挙げるだけで数値妥当性を主張しない。旧5 Mappingファイルは不変。
