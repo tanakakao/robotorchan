@@ -46,3 +46,44 @@ train observations → surrogate.fit / posterior(X)
 [既存Acquisition Mapping](../../acquisition.md)はsource inspectedの実装契約、entry・テスト証拠を保持する。[Verification Mapping](../../verification.md)は独立数値参照や既存のassertionの追跡先とする。両者を消去・置き換えず、原文区間のmigration ledgerをverifiedとする際に照合する。CI成功だけで全数値契約が検証されたことにはならない。
 
 [獲得関数の基礎ガイド](../04_acquisition_function.md)、[獲得関数利用ドキュメント](../../../../optimization/README.md)、[理論Acquisition索引](../../../../theory/acquisition/README.md)にも戻れる。個別の数式、適用例や比較条件は対応する理論章と使用ガイドで読む。
+
+
+## 6. KGの数式とone-shot拡張batchの対応
+
+旧Acquisition Mappingの固定区間346–362にあるKGは、候補観測後に最良の決定を**選び直せる価値**を測る。単一候補の場合の概念式は
+
+$$
+\alpha_{\mathrm{KG}}(x)=
+\mathbb E_{Y_x\mid\mathcal D}
+\left[\max_{z\in\mathcal X}\mathbb E[f(z)\mid\mathcal D,(x,Y_x)]\right]
+-\max_{z\in\mathcal X}\mathbb E[f(z)\mid\mathcal D].
+$$
+
+右辺の内側の最大化はfantasy observation後の意思決定であり、現在候補のimprovementであるEI、最適値のentropyであるMESとは異なる。BoTorchの実際のqKGは複数候補・fantasy sample・terminal valueの設定に対応するので、上式はその全数値実装を定義したものではない。
+
+| 経路 | APIとlocal capability | 利用上の制約 |
+| --- | --- | --- |
+| qKG | BoTorch qKnowledgeGradient。registryでone_shot=True、requires_fantasize=True、supports_multi_output=False | augmented q-batchに実験候補とfantasy decision variablesが共存する |
+| Multi-fidelity KG | BoTorch qMultiFidelityKnowledgeGradient。registryでrequires_multi_fidelity=True | fidelity-aware model、cost/value設計が別途必要。metadataはcost-aware policyを自動生成しない |
+| Multi-step | BoTorch qMultiStepLookaheadを直接利用 | local registryに名前付きentryなし。複数future stageのfantasy treeが増大する |
+
+具体的には、BoTorchのone-shot acquisitionは実験するq行だけでなく補助decision variableを最適化変数として受け取る。batch_initial_conditionsを指定するなら acqf.get_augmented_q_batch_size(q) 行に合わせ、optimize_acqfの結果はextract_candidatesによって実験対象のq行のみを取り出す。fantasy補助点を実験候補として解釈してはいけない。
+
+~~~python
+import torch
+from botorch.acquisition.knowledge_gradient import qKnowledgeGradient
+from robotorchan.models import SingleTaskGP
+
+train_x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+train_y = torch.sin(train_x * 5.0)
+model = SingleTaskGP(train_x, train_y)
+acqf = qKnowledgeGradient(model=model, num_fantasies=16)
+augmented_q = acqf.get_augmented_q_batch_size(1)
+# augmented_qはq=1より大きい。実験するのはextract_candidates後の候補のみ。
+~~~
+
+BoTorchのoptimize_acqfにはqKG専用initializerがあり、robotorchanはそれを置き換えない。qMultiStepLookaheadには通常のinitializerだけではfantasy tree全体の初期条件を作れないため、docs/optimization/lookahead.mdの通りgen_augmented_one_shot_initial_conditionsをic_generatorとして使うか、拡張batch用のbatch_initial_conditionsを明示する。stage数・samplerのfantasy分岐数とともに最適化変数も増える。
+
+src/robotorchan/acquisition/optimizer_compatibility.pyのone-shot compatibility判定では通常のMIXEDを拒否し、MIXED_ONE_SHOTをone-shotに限定する。ただしこれは静的契約であって、実行したoptimizerの可行性・解の品質・cost-aware最適化を検証しない。
+
+**検証の限界：** src/robotorchan/acquisition/registry.py、docs/optimization/lookahead.md、旧Mappingを静的照合した。今回独立の数値実験は行っていない。移行区間346–362の判定はpartial / review requiredのままとする。

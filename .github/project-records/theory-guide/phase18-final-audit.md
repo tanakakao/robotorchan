@@ -256,3 +256,9 @@ Phase1見出し台帳で`audit/`が仮primaryの25区間のうち、`acquisition
 Phase 3台帳が旧 `acquisition.md:288–308` を `guide/acquisition/01_foundations.md` と補助索引へ割り当てたことを確認した上で、技術内容の適切な主受け皿である [`guide/acquisition/08_constraints.md`](../../../docs/development/theory-implementation/guide/acquisition/08_constraints.md) に本文を直接追記した。旧区間と直後のInterpretation、`src/robotorchan/acquisition/composition.py`、`classification_constraints.py`、`tests/acquisition/test_composition.py` および理論正本 `docs/theory/acquisition/08_constraints.md` を照合し、6種類のconstructor、native BoTorchへの委譲、同一posterior sample-wise制約と分類PoF積の相違、qEI利用例、qNEI baseline、qEHVI ref_point/eta、X_pending/fantasizeのnegative contractを文章・式・表に整理した。
 
 **判定：partial / review required。** この変更はPhase 3 routingの受け皿を内容に即して拡張したもので、元のPhase 3行を書き換えたり `verified` に昇格させたりしない。旧区間288–308および309行以降の全文・すべてのテストassertion・参照リンクの一対一semantic migration検収は未完了。既存テストの静的ソース確認のみで、新規独立数値実験やCI成功を主張しない。旧Mapping5ファイル・174見出しは維持する。
+
+## Phase 18：情報獲得・lookahead（旧Acquisition 346–362）の本文改善
+
+Phase 3 routingのprimary `guide/acquisition/06_lookahead.md`と旧Mapping固定区間346–362を確認し、技術内容をその主受け皿に反映するとともに、情報獲得固有の内容を `guide/acquisition/05_information_theoretic.md` に追記。KGの意思決定価値の概念式、qKG/multi-fidelity KG/multi-stepのBoTorch委譲、one-shot augmented batchと初期化、MES/GIBBON/PES/JESの情報対象、有限candidate_set、MES/GIBBONのnative実行例を補った。根拠として `src/robotorchan/acquisition/registry.py`、`docs/optimization/lookahead.md`、`tests/acquisition/test_information_theoretic.py` の既存ソースを直接確認した。
+
+**判定：partial / review required。** MES/GIBBONテストは有限値のみ検査し、情報量の独立数値正当性を保証しない。PES/JESのローカル公開constructorも未確認。新規数値再実行なし。174区間の全文一対一semantic migrationのverified判定は0件を維持し、旧5 Mappingファイルを保全する。
