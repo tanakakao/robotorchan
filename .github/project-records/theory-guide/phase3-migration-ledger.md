@@ -16,19 +16,19 @@
 
 | 原文 | 行範囲 | 見出し | 第一移行先（予定） | 第二移行先・保全分類 | 状態 |
 | --- | --- | --- | --- | --- | --- |
-| `README.md` | 1–2 | Theory–Implementation Mapping: 12-phase development cycle | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
-| `README.md` | 3–10 | Baseline and scope | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
-| `README.md` | 11–23 | Existing ownership (preserve) | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
-| `README.md` | 24–41 | Confirmed source-of-truth boundaries | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
-| `README.md` | 42–66 | Reader navigation (Phase 10) | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
-| `README.md` | 67–86 | Mapping record contract | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
-| `README.md` | 87–94 | Mapping documentation layout | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
-| `README.md` | 95–107 | Verification and remaining work | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
-| `README.md` | 108–136 | Recorded phase decisions | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
-| `README.md` | 137–174 | Phase 6 exit reconciliation (static scope) | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
-| `README.md` | 175–201 | Phase 10 navigation exit audit | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
-| `README.md` | 202–231 | Phase 11 mapping consistency exit audit | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
-| `README.md` | 232–278 | Phase 12 final audit: evidence and decision | `guide/appendix/cross-cutting-implementation-contracts.md` | `audit-history` | **planned / needs body review** |
+| `README.md` | 1–2 | Theory–Implementation Mapping: 12-phase development cycle | `guide/README.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `README.md` | 3–10 | Baseline and scope | `guide/README.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `README.md` | 11–23 | Existing ownership (preserve) | `guide/README.md` | `guide/appendix/cross-cutting-implementation-contracts.md` | **body-reviewed routing / not migrated** |
+| `README.md` | 24–41 | Confirmed source-of-truth boundaries | `guide/appendix/cross-cutting-implementation-contracts.md` | `guide/appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `README.md` | 42–66 | Reader navigation (Phase 10) | `guide/README.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `README.md` | 67–86 | Mapping record contract | `guide/appendix/cross-cutting-implementation-contracts.md` | `guide/verification/README.md` | **body-reviewed routing / not migrated** |
+| `README.md` | 87–94 | Mapping documentation layout | `guide/README.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `README.md` | 95–107 | Verification and remaining work | `guide/verification/README.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `README.md` | 108–136 | Recorded phase decisions | `audit-history` | `guide/appendix/limitations-and-unverified.md` | **body-reviewed routing / not migrated** |
+| `README.md` | 137–174 | Phase 6 exit reconciliation (static scope) | `guide/appendix/optimizer-dispatch-and-constraints.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `README.md` | 175–201 | Phase 10 navigation exit audit | `guide/README.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `README.md` | 202–231 | Phase 11 mapping consistency exit audit | `guide/verification/README.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `README.md` | 232–278 | Phase 12 final audit: evidence and decision | `guide/appendix/limitations-and-unverified.md` | `audit-history` | **body-reviewed routing / not migrated** |
 | `models.md` | 1–4 | Model theory–implementation mapping | `guide/appendix/model-composition-and-delegation.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 5–17 | Audit provenance and limits | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
 | `models.md` | 18–31 | Registry boundaries | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
@@ -190,6 +190,29 @@
 | `verification.md` | 449–464 | Phase 9 — candidate constraint residual and feasibility ordering reference | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
 | `verification.md` | 465–475 | Phase 9 — PyTorch optimizer candidate-constraint support boundary | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
 | `verification.md` | 476–510 | Phase 9 — representative optimizer verification exit audit | `guide/verification/README.md` | `appendix/limitations-and-unverified.md` | **planned / needs body review** |
+
+## README.md（13区間）の本文レビュー結果
+
+旧MappingのREADME全文を確認し、**技術契約と歴史的判定が同一区間に混在する**箇所を区別した。これは移行先の確定に向けた内容レビューであり、技術ガイドへの本文転記やソースコードの再検証ではない。
+
+| 原文行 | 技術本文として残す内容 | 別途保全する履歴・制約 |
+| --- | --- | --- |
+| 1–10 | Mappingの目的、対象範囲、数学的正しさを保証しない境界 | 旧12 Phase、当時のbaseline SHA |
+| 11–23 | theory / models / optimization / architecture / notebooks / tests / coverage JSONの正本責任 | 正本ファイルを新ガイドが上書きしない |
+| 24–41 | regression registryとclassification registryの相違、acquisition metadataとoptimizer実行可否の非同一性、生成coverageの責務 | 旧監査時点のsource-of-truth判定 |
+| 42–66 | 理論→実装→assertion単位の検証という読者導線、6種類の実装関係ラベル | 旧Phase 10のナビゲーション履歴 |
+| 67–86 | method ID、数学的対象、API/実装symbol、上流委譲、数値手法、test、Notebook、limitationsの9項目契約 | 「存在する」と「数値的に検証済み」の区別 |
+| 87–94 | 旧5 Mappingのcanonical契約、wrapperやregistryを文書のために増設しない原則 | 旧Phase 4–9の執筆順序 |
+| 95–107 | 静的監査と独立数値参照の証拠水準の違い、監査スクリプト | 旧Phaseごとの未完了項目 |
+| 108–136 | inventory / mapping / property-specific verification / CIの証拠水準 | 旧12 Phaseの判定、PR、当時の件数 |
+| 137–174 | 11 named backendとspecialist pathの区別、stateful strategy、candidate constraint、unsupported combinations | 旧Phase 6のexit gate |
+| 175–201 | 理論・Mapping・検証間の双方向ナビゲーション、リンク検査の限界 | 旧Phase 10のPR・CI |
+| 202–231 | 旧5ファイル存在・戻りリンクの構造的CI契約、数値検証ではない限界 | 旧Phase 11のPR・CI |
+| 232–278 | heteroskedastic posterior、制約・HV・lookahead、optimizer収束、async等の未検証範囲 | 旧Phase 12の条件付き完了判定・PR履歴 |
+
+**保全上の重要な修正:** 原台帳で `README.md` の13区間を機械的に `audit/` 中心へ振っていた部分を、本文の技術的主張に基づいてガイド本文・Appendix・verificationへ再分類した。旧Phase番号を理由に技術情報を監査履歴だけへ移してはならない。
+
+**状態:** README 13/13区間は「本文を読んで移行先を再判定」まで完了。ただし各主張の実装照合・新章への文章移行・assertion検証は未完了であり、`migrated` / `verified` は0件。残り161区間は暫定分類のまま。
 
 ## 各区間の移行検収条件
 
