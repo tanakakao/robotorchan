@@ -643,3 +643,13 @@
 **未照合として優先する区間：** `verification.md:108–121`のreplicate-noise参照、`292–350`のAL・analytic参照のテスト本文、`408–510`のoptimizer数学的referenceおよびexit判定の各assertionは、別の部分的なガイド要約・Mapping記録があっても、この見出し単位の完全移行検収には未達である。
 
 この表の行番号は**Phase 1の固定スナップショット**を表す。現行ファイルの行番号と一致する保証はなく、参照先は見出し名でも確認する必要がある。旧原文を削除・短縮するには、各区間ごとに全文・数式・負の契約・根拠リンクを再点検し、台帳と移行先の双方向で`verified`にできる証拠を記録すること。
+
+### Phase 9 独立参照の追加部分照合
+
+| 元区間（Phase 1固定行番号） | 日本語移行先 | 直接確認したテスト・assertion | 状態 |
+| --- | --- | --- | --- |
+| `verification.md:408–421` | `guide/verification/optimization.md` | `test_phase9_sampling_optimizer_reference.py`：random/sobol、128候補pool、seed=29、q=2、argmax候補完全一致とvalue 1e-12 | 部分照合・review required |
+| `verification.md:436–448` | `guide/verification/optimization.md` | `test_phase9_turbo_geometry_reference.py`：ARD幾何平均正規化、boundary clipping、7倍weight不変性、1e-12 | 部分照合・review required |
+| `verification.md:449–464` | `guide/verification/optimization.md` | `test_phase9_constraint_violation_reference.py`：intra/interpoint残差、等式tol=0.05、feasibility-first順位、1e-12 | 部分照合・review required |
+
+`verification.md:422–435`および`465–510`は関連資料の説明があっても、この追加表ではテスト本文の直接assertion照合を完了したとは記載しない。旧174行のreview statusは変更しない。
