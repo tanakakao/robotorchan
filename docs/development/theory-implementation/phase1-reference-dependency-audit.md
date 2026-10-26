@@ -301,3 +301,46 @@ GitHubの作業ブランチ上で、以下の10ファイルを直接取得でき
 **検証限界**：抽出パターンは`src/robotorchan/`、`tests/`、`examples/notebooks/`、`scripts/`、`docs/`で始まる拡張子`.py/.ipynb/.md/.json`の明示パスに限定される。相対Markdownリンク、拡張子省略、URL、画像、anchor、import文字列等の**全リンク網羅性は別途確認**が必要。ファイルの存在は、コードの実行可能性・テスト成功・数学的正しさを意味しない。
 
 **次のゲート**：リンク・anchor解決、docs checker / CI実行状況の確認、Phase 1完了判定。18 Phase計画や既存5 Mappingは変更しない。
+
+## リンクチェッカーの実装・CI契約レビューと旧Mappingリンク静的照合（2026-10-26）
+
+### 直接確認した現行CI
+
+`.github/workflows/documentation-links.yml` はpull requestおよびmainへのpushで起動し、Python 3.11を使って次の6ステップを実行する（設定ファイルを直接取得して確認）。
+
+1. `python -m unittest discover -s tests/docs -p test_docs_links.py`
+2. `python scripts/check_docs_links.py`
+3. `python scripts/check_notebook_links.py`
+4. `python scripts/check_docs_references.py`
+5. `python -m unittest discover -s tests/docs -p test_theory_implementation_mapping.py`
+6. `python scripts/check_theory_implementation_mapping.py`
+
+5つの検証実装（`scripts/check_docs_links.py`、`scripts/check_notebook_links.py`、`scripts/check_docs_references.py`、`scripts/check_theory_implementation_mapping.py`、`tests/docs/test_theory_implementation_mapping.py`）と`tests/docs/test_docs_links.py`を直接読み、以下の契約を確認した。
+
+| Checker | 実装上の検査範囲 | 注意点 |
+| --- | --- | --- |
+| `check_docs_links.py` | `docs/**/*.md`の通常Markdownローカルリンクの相対パス存在・repo外脱出 | `#fragment`の妥当性は検査しない。fenced codeを除外 |
+| `check_docs_references.py` | `docs/**/*.md`のreference-style定義・参照と、通常MarkdownリンクのローカルMarkdown heading anchor | 対象が存在しない場合はスキップし、パス存在は前段に委譲。GitHub-style slugは独自近似 |
+| `check_notebook_links.py` | `examples/notebooks/*.ipynb`のMarkdownセルのローカルリンク先存在 | コードセル、Notebook実行、fragmentを検証しない |
+| `check_theory_implementation_mapping.py` | 旧Mapping5ファイルの存在と、README・subject・verification・theory間の必須リンク文字列 | **新ガイドの意味論・実装整合性は検証しない**。旧ファイル削除やリンク変更で失敗する |
+| `test_docs_links.py` | 正常リンク、欠落、URL encoding、repo外脱出、fragment付き欠落、fenced codeなどのユニットテスト | 全repoの実行結果ではない |
+| `test_theory_implementation_mapping.py` | 現行navigation正常、README欠損、subject→verification欠落を検出 | 新ガイドの章対応は未検査 |
+
+### 旧5 MappingのMarkdownリンク静的照合
+
+旧5ファイルを**今回改めて直接取得**し、通常のMarkdownインラインリンクを抽出した。**リンク出現38件**、**source→targetの重複除外25組**。リンク先として挙がる旧Mappingファイル、理論README、Kronecker数値テストはこれまでの直接存在確認で存在が確認されている。
+
+`#fragment`付きリンクは**4出現**、参照先は**2種類**（`README.md#reader-navigation-phase-10`、`verification.md#phase-7-final-exit-reconciliation`）。現行checkerに準じたH1–H6 heading slug計算を今回取得した旧5ファイルに適用し、**4/4解決、欠落0件**だった。これらのアンカーは今後も保持する。
+
+**静的照合の制限**：今回の38件は単純な通常Markdownインラインリンク抽出であり、reference-style定義・HTML・全リポジトリからの被参照を網羅しない。また、checkerの実コードを実行した結果ではなく、取得した文書に対する独立した静的照合である。
+
+### 実行・完了ステータス
+
+- 旧Mapping5ファイルのリンク静的照合：**完了（上記限定範囲）**。
+- CIワークフローとcheckerのコードレビュー：**完了**。
+- 上記6つのCIコマンドを作業ブランチ上で実行：**not run**。
+- pull requestの最新CI結果取得：**未確認**。
+- `docs/`全体のリンク・anchor checker実行：**not run**。
+- `examples/notebooks/`全体のリンク checker実行：**not run**。
+
+次の完了判定では、**静的監査完了**と**CI実行成功**を別ゲートとする。実行証拠なしにCI greenと記載しない。18 Phase計画と旧5 Mappingは変更しない。
