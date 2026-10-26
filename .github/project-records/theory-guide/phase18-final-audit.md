@@ -95,3 +95,9 @@ PR #1467はこの記録時点で**Open（未マージ）**である。したが�
 旧`optimization.md`の「Stateful and coordinate-changing algorithms」「Inspected optimizer and strategy assertion evidence」を読み、`src/robotorchan/optim/trust_region/turbo.py`の`TuRBOState`、`update_turbo_state`、`restart_turbo_state`、`generate_turbo_restart_center`の実装本文を直接照合した。実装で定義されたbatch observations/state_values区別、relative improvement閾値、success/failure counters、region lengthの拡縮、restart、ARD重みの幾何平均正規化を[Trust Regionガイド](../../../docs/development/theory-implementation/guide/optimization/10_trust_region.md)へ詳記した。
 
 **判定：partial / review required。** 数式・sourceは照合したが、今回新たなテスト実行、全TuRBO optimizer/Thompson/pending/mixed pathのassertion-level完全照合、regret評価は行っていない。旧原文と174見出し台帳を保全する。
+
+## Mixed one-shot：augmented batch契約のソース照合（部分達成）
+
+旧`optimization.md`の「Specialized optimization paths: inspected source and assertions」と、`src/robotorchan/optim/one_shot/{initialization,mixed}.py`を直接比較した。[Batch / One-shotガイド](../../../docs/development/theory-implementation/guide/optimization/08_batch_one_shot.md)へ`get_augmented_q_batch_size(q)`と実候補qの区別、`extract_candidates`、one-shot初期点のshape、mixed one-shotの行別カテゴリ割当ての列挙（組合せ数`m ** augmented_q`）、`q=1`制限、`max_assignments`上限、BoTorchへの連続部分問題委譲を追記した。旧Mapping記載の`tests/optim/one_shot/test_mixed.py`はassertion追跡先として維持した。
+
+**判定：partial / review required。** 本作業はsrc記述を確認した文書照合であり、独立の混合KG数値検証や全候補制約の組合せ、全one-shotアルゴリズムの性能検証ではない。固定174見出し台帳は保全する。
