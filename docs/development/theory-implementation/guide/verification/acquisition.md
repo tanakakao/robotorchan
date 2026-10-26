@@ -71,3 +71,21 @@ best_f = 0, beta = 0.4
 BoTorch-nativeの`LogExpectedImprovement`、`LogProbabilityOfImprovement`、`UpperConfidenceBound`を3個のq=1候補で比較し、各出力shape `[3]`および`atol=rtol=1e-8`を確認する。**BoTorchへのdelegateされた解析型acquisitionの値**を対象とし、極端なGaussian tailでの安定性、GPの独立posterior計算、q>1やnoisy/MC acquisitionへの保証にはならない。
 
 以上3テストの本文を旧[Verification Mapping](../../verification.md)のPhase 8節に対応付けた。別familyに関する数値テストの存在や未検証の境界を、この3件から推測しない。
+
+
+## Phase 8独立参照：BALDとProbabilityVarianceの固定sample
+
+`tests/acquisition/test_phase8_bald_probability_variance_reference.py`は、`BinarySingleTaskGPClassifier`の`sample_class_probabilities`をテスト内で固定の64 drawへ差し替え、2候補（q=1）、2クラスのprobability sampleを共有する。`samples`の形状は`[64,2,1,2]`、acquisition scoreはそれぞれ`[2]`。固定4 drawを16回繰り返した数値tensorなので、samplerの乱数系列やモデルの学習品質は検査していない。
+
+```text
+p_bar = mean_samples(p_sample)
+ProbabilityVariance = mean_classes(mean_samples((p_sample - p_bar)^2))
+BALD = max(0, H(p_bar) - mean_samples(H(p_sample)))
+H(p) = -sum_classes(xlogy(p,p))
+```
+
+ProbabilityVarianceは**不偏標本分散（N-1で除算）ではなく母分散型のsample平均（Nで除算）**を使い、さらにclass軸で平均する。BALDは予測entropyとsampleごとの条件付きentropyとの差を計算し、下限0へclampする。両者とも公開acquisition値と独立に組み立てたsample-moment式を`atol=rtol=1e-10`で比較し、非負性も確認する。
+
+同じ固定sampleを実装側と参照式に渡すため、検証範囲は**集約演算と軸の意味**である。実際のposterior samplingの分布、64 drawの収束、相互情報量の推定誤差、分類器のcalibrationやactive learning性能は確認していない。
+
+旧[Verification Mapping](../../verification.md)のPhase 8 final reconciliationは**代表propertyの検証範囲についてのexit recommendation**であり、qNEI/qLogNEI、multi-objective hypervolume、constrained/heterogeneous composition、情報利得lookaheadの独立数値参照まで認定していない。既存の[未検証事項](limitations.md)と併読する。
