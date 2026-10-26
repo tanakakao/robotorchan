@@ -42,3 +42,26 @@ categorical codeを連続補間して丸める方法は人工的な順序を持�
 最低限の確認順序は、**(1) 問題の型→(2) 数理契約→(3) optimizer dispatch→(4) backend→(5) 制約と出力shape→(6) 再現実験**である。CI成功だけで全backend・全constraint・全qに対して正しいとは主張しない。
 
 [Optimization利用ガイド](../../../../optimization/README.md)、[理論Optimization索引](../../../../theory/optimization/README.md)、[旧Optimization Mapping](../../optimization.md)、[Verification](../../verification.md)を参照。原文は章別照合完了まで削除しない。
+
+## 5. Native mixed BoTorchとmixed one-shotの数学的差異
+
+旧Optimization Mappingの固定区間246–257と src/robotorchan/optim/backends/botorch.py を照合すると、native mixed経路は optimize_acqf_mixed_botorch から BoTorch optimize_acqf_mixed へ委譲する。有限なカテゴリ割当て集合 C に対して、各割当て c で連続変数の acquisition を最大化する問題と考えられる。
+
+$$
+\max_{c\in C}\;\max_{x_{\mathrm{continuous}}}
+\alpha(x_{\mathrm{continuous}},c).
+$$
+
+固定するカテゴリ値は fixed_features_list として渡される。これは11種類の named optimizer を選択する optimize_acqf(optimizer="botorch") とは異なり、後者は mixed MixedVariableSpace を明示的に拒否する。数式は探索方針の概念化であり、BoTorch内部の全枝刈りやq-batch処理の完全な再記述ではない。
+
+| 比較対象 | 実装入口 | 主要な制約 |
+| --- | --- | --- |
+| native mixed | backends/botorch.py::optimize_acqf_mixed_botorch | fixed_features_list を受け、inter-point nonlinear constraintsを拒否 |
+| mixed GA | dispatch.pyの optimizer="ga" と MixedVariableSpace | is_mixedならmixed_genetic_algorithm.pyに分岐 |
+| mixed one-shot | one_shot/mixed.py::optimize_mixed_one_shot_acqf | fantasy補助行を含む拡張batchに行別カテゴリ割当てが必要。q=1のみ |
+
+native mixedではnonlinear candidate constraintsを使用すると、feasibleな batch_initial_conditions または ic_generator が必要となる。inter-point nonlinear制約はValueErrorで拒否され、q点間の制約を点単位の独立制約へ無断変換しない。候補の数値精度や全制約可行性は、委譲したという事実だけから保証できない。
+
+通常のカテゴリIDを連続座標として補間することと、カテゴリごとの固定割当てを明示することは異なる。特にone-shotのfantasy行には別々のカテゴリ値が入り得るため、[Batch/one-shot](08_batch_one_shot.md)の拡張batch契約を参照する。
+
+**証拠水準：** 上記の関係はソースの静的照合であり、独立した探索性能・数学的最適性の数値再実行ではない。
