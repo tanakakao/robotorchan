@@ -1,33 +1,14 @@
-## verification.md（184–510行、20区間）の本文レビュー
-
-- 184–291: PCA public/latent posterior consistency、heteroskedastic latent/noise separation、RandomForest estimator-level moments、mixed reduced categorical preservation、manual conditional observation varianceを区別する。**posterior(observation_noise=True)のheteroskedastic candidate-specific varianceは検証済みではない**。過去の暫定exit判定と最終property-specific判定を履歴として分離。
-- 292–407: regression AL 4種の数式、classification entropy/margin/latent straddle、BALD/probability varianceの標本集約、analytic log-EI/log-PI/UCB、MC qSimpleRegret/qUCBの独立参照を整理。共通posteriorやQMC base samplesの再利用による比較は推定量の収束・校正を証明しない。qNEI、EHVI、制約付き、lookahead等は未検証のまま保持。
-- 408–510: Random/Sobol pool argmax、TuRBO success/failure/restart、ARD幾何、linear/nonlinear intra/inter-point constraint residualとfeasibility-first ordering、torch系の候補制約明示拒否を整理。最適化の大域収束・任意制約の実行可能性を主張しない。
-- 全区間の過去PR番号、CI、exit decision、旧Phase番号は監査記録へ。教育用verificationガイドには検証命題・前提・再現手順・許容誤差・未検証境界を記載する。
-
-**全174区間の本文レビュー完了（README 13、models 91、acquisition 18、optimization 21、verification 31）。移行・照合検証完了0件。**
-
-## acquisition.md（1–178行、9区間）の本文レビュー
-
-- 1–78: registryのlocal acquisition、BoTorch-native metadata、composition helper、Thompson selectionを別種として扱う。mixed one-shot optimizerは普通のmixed routeとは異なり、compatibility assertionは実際の最適化成功を保証しない。旧Phaseのcompletion gateは監査履歴へ。
-- 79–114: regression ALはq=1のscalar marginal score。Variance、Std、Straddle、RandomizedStraddle、BoundaryVarianceの式・係数・random coefficient cacheを区別。ensembleと非scalar outputのguardを保持。
-- 115–143: classification ALのPredictiveEntropy、Margin、ProbabilityVariance、BALD、LatentStraddleはclass probability、label entropy、latent uncertaintyを混同しない。すべてq=1。
-- 144–178: regression EPIGはfinite target set上の二点Gaussian mutual information平均。joint covarianceとnoise補正を必要とし、classification BALDや一般非Gaussian EPIGと同一視しない。
-- 原文のnamed testsはassertion inspectionであり、CI実行・独立数値検証とは別。
-
-**累計:** README 13 + models 91 + acquisition 9 = 113/174区間。未レビュー61区間。本文移行・検証完了0件。
-
 # Phase 3 — 原文174区間から日本語ガイドへの移行割当台帳
 
-> 作業記録。原文を削除・改名しない。**未レビュー行のprimaryは見出しベースの暫定割当**であり、`verified`は0件。機械的に分類した結果を移行完了と誤認しないこと。
+> **現行判定（Phase 3）:** 174/174区間の本文確認・一次移行先割当が完了。`migrated` 0件、`verified` 0件。原文は未変更。本文レビュー完了はガイド執筆・数学的検証の完了を意味しない。
 
 ## 入力と判定基準
 
 - 入力: Phase 1の174見出し台帳（5ファイル、元行範囲・元blob SHAは原台帳に保持）。
 - 章構成: `docs/development/theory-implementation/guide/README.md`の24+12+12章。
 - 一次移行先は**本文を読み進める主章**、二次移行先は横断的な技術契約や監査情報の保全先。
-- **見出し語による暫定割当**のため、本文に複数テーマが混在する区間は後続の逐条レビューで分割する。
-- `verification.md`は全区間をverificationに暫定割当し、propertyごとの対応章を本文レビューで追加する。
+- 一次移行先は本文レビューに基づく**移行計画**。本文に複数テーマが混在する区間は後続の章執筆時に分割・二次参照を確定する。
+- `verification.md`の全区間はverificationの章へ一次割当済み。propertyごとのモデル・獲得・最適化章への二次参照は後続の執筆で確定する。
 - `Phase`と付いた見出しでも数式、テストassertion、未検証条件は技術ガイドまたはverificationに残す。
 - `audit-history`は旧Phase/PR/CIの履歴を指す**分類ラベル**であり、新しいファイルが作成済みという意味ではない。
 
@@ -329,7 +310,7 @@
 
 複数テーマを含む区間は関連するMixed、Noise、MultiTask、Kernel、Reduced、Classification各章への二次参照を後続の本文移行で追加する。
 
-**累計:** README 13 + models 39 = 52/174区間レビュー済み。未レビュー122区間。移行・検証完了0件。
+> 過去の作業時点の進捗記録（現在値ではない）：README 13 + models 39 = 52/174区間レビュー済み。未レビュー122区間。移行・検証完了0件。
 
 ## models.md（799–911行、method-level mapping 8区間）のレビュー
 
@@ -368,7 +349,7 @@
 | 1071–1084 | PCA/PLS/random projectionは凍結した入力削減器。encoderとGPのjoint trainingではない |
 | 1085–1099 | DeepGP binaryはDeepApproximateMLLとBernoulli likelihood、finite MC予測。校正・収束は未検証 |
 
-**累計:** README 13 + models 60 = 73/174区間本文レビュー済み。未レビュー101区間。新ガイドへの本文移行・検証完了は0件。
+> 過去の作業時点の進捗記録（現在値ではない）：README 13 + models 60 = 73/174区間本文レビュー済み。未レビュー101区間。新ガイドへの本文移行・検証完了は0件。
 
 ## models.md（1100–1344行、9区間）の本文レビュー
 
@@ -388,7 +369,7 @@
 
 教育用本文では旧Phase番号・完了宣言を除去し、実装境界と未検証事項のみを残す。複数章への二次参照は各章執筆時に追記する。
 
-**累計:** README 13 + models 69 = 82/174区間レビュー済み。未レビュー92区間。本文移行・検証完了0件。
+> 過去の作業時点の進捗記録（現在値ではない）：README 13 + models 69 = 82/174区間レビュー済み。未レビュー92区間。本文移行・検証完了0件。
 
 ## models.md（1345–1547行、11区間）の本文レビュー
 
@@ -408,7 +389,7 @@
 | 1517–1530 | preference-learningのpairwise比較を通常の数値観測回帰と同一視しない |
 | 1531–1547 | standard exact、variational、multi-fidelityの異なるfit/MLLとfidelity covarianceを分離 |
 
-**累計:** README 13 + models 80 = 93/174区間レビュー済み。未レビュー81区間。ガイド本文移行・検証完了0件。
+> 過去の作業時点の進捗記録（現在値ではない）：README 13 + models 80 = 93/174区間レビュー済み。未レビュー81区間。ガイド本文移行・検証完了0件。
 
 ## 各区間の移行検収条件
 
@@ -421,4 +402,45 @@
 
 ## 今回の作業範囲
 
-このPhaseでは**移行対象の漏れ防止と一次配置の具体化**まで行う。174区間の逐語的な技術監査・48章の執筆は後続Phaseで実施する。移行先パスは未作成を含むため、Markdownリンクではなくコード表記とする。
+このPhaseでは**全174区間の本文確認と一次配置の確定**までを実施した。数式・API・実装・テストの独立した再検証と48章の本文執筆は後続Phaseで実施する。移行先パスは未作成を含むため、Markdownリンクではなくコード表記とする。
+
+
+## 最終整合確認（Phase 3）
+
+| 確認対象 | 結果 |
+| --- | --- |
+| 元ファイルと台帳 | README 13、models 91、acquisition 18、optimization 21、verification 31 = **174区間** |
+| 元ファイルの行範囲 | 5ファイルとも台帳範囲がファイル末尾まで連続し、各区間の見出し開始位置が一致 |
+| 台帳ステータス | **174/174 body-reviewed routing / not migrated**、planned 0、migrated 0、verified 0 |
+| 本文と監査履歴 | 数式・API・実装制約・assertionは技術ガイド、旧Phase・PR・CIの時系列は本監査記録で保持 |
+| 新ガイドの実ファイル | 指定先 `docs/development/theory-implementation/guide/README.md` はこのブランチで取得できず（404）。**移行先の実在・48章構成の現物照合は未完了** |
+| 移行先の章内容 | 本文未執筆につき照合未実施。全174区間の移行検収は後続Phase |
+
+### 履歴の読み方
+
+以下の各区間レビューに記載された過去の「累計」は作業途中のスナップショットであり、現在の進捗ではない。最終値は本節の174/174を唯一の集計基準とする。前掲の詳細レビューは技術的判断の根拠として保存し、重複した進捗宣言を完了証明には使用しない。
+
+### 追加の是正が必要な点
+
+ガイドREADMEの配置をPhase 2の成果物と照合し、実在する目次と全primary/secondaryの移行先を照合する。現時点で移行先のパス表記は**計画上のラベル**であり、実ファイル存在確認済みではない。これはPhase 3の移行台帳レビュー完了と、後続のガイド本文移行可能性を区別するための明示的な未解決事項である。
+
+## 時系列レビュー補足（当時の作業記録）
+
+## verification.md（184–510行、20区間）の本文レビュー
+
+- 184–291: PCA public/latent posterior consistency、heteroskedastic latent/noise separation、RandomForest estimator-level moments、mixed reduced categorical preservation、manual conditional observation varianceを区別する。**posterior(observation_noise=True)のheteroskedastic candidate-specific varianceは検証済みではない**。過去の暫定exit判定と最終property-specific判定を履歴として分離。
+- 292–407: regression AL 4種の数式、classification entropy/margin/latent straddle、BALD/probability varianceの標本集約、analytic log-EI/log-PI/UCB、MC qSimpleRegret/qUCBの独立参照を整理。共通posteriorやQMC base samplesの再利用による比較は推定量の収束・校正を証明しない。qNEI、EHVI、制約付き、lookahead等は未検証のまま保持。
+- 408–510: Random/Sobol pool argmax、TuRBO success/failure/restart、ARD幾何、linear/nonlinear intra/inter-point constraint residualとfeasibility-first ordering、torch系の候補制約明示拒否を整理。最適化の大域収束・任意制約の実行可能性を主張しない。
+- 全区間の過去PR番号、CI、exit decision、旧Phase番号は監査記録へ。教育用verificationガイドには検証命題・前提・再現手順・許容誤差・未検証境界を記載する。
+
+**全174区間の本文レビュー完了（README 13、models 91、acquisition 18、optimization 21、verification 31）。移行・照合検証完了0件。**
+
+## acquisition.md（1–178行、9区間）の本文レビュー
+
+- 1–78: registryのlocal acquisition、BoTorch-native metadata、composition helper、Thompson selectionを別種として扱う。mixed one-shot optimizerは普通のmixed routeとは異なり、compatibility assertionは実際の最適化成功を保証しない。旧Phaseのcompletion gateは監査履歴へ。
+- 79–114: regression ALはq=1のscalar marginal score。Variance、Std、Straddle、RandomizedStraddle、BoundaryVarianceの式・係数・random coefficient cacheを区別。ensembleと非scalar outputのguardを保持。
+- 115–143: classification ALのPredictiveEntropy、Margin、ProbabilityVariance、BALD、LatentStraddleはclass probability、label entropy、latent uncertaintyを混同しない。すべてq=1。
+- 144–178: regression EPIGはfinite target set上の二点Gaussian mutual information平均。joint covarianceとnoise補正を必要とし、classification BALDや一般非Gaussian EPIGと同一視しない。
+- 原文のnamed testsはassertion inspectionであり、CI実行・独立数値検証とは別。
+
+**累計:** README 13 + models 91 + acquisition 9 = 113/174区間。未レビュー61区間。本文移行・検証完了0件。
