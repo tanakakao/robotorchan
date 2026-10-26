@@ -52,6 +52,7 @@ NSGA-IIはnondominated sortingでrankを求め、同じrankの多様性をcrowdi
 import torch
 from robotorchan.optim.backends.nsga2 import optimize_vector_nsga2
 
+
 def objectives(x: torch.Tensor) -> torch.Tensor:
     return torch.cat((-((x - 0.2) ** 2), -((x - 0.8) ** 2)), dim=-1)
 
