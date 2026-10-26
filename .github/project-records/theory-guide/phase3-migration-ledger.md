@@ -89,15 +89,15 @@
 | `models.md` | 1057–1070 | Multitask binary classification (long format and block input) | `guide/07_multitask_multioutput.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 1071–1084 | Frozen reduced-input binary GP classification | `guide/18_dimensionality_reduction_gp.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 1085–1099 | Deep variational GP binary classification | `guide/22_expressive_gp.md` | `guide/24_classification.md` / `guide/verification/README.md` | **body-reviewed routing / not migrated** |
-| `models.md` | 1100–1131 | Remaining robust binary classification families | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1132–1168 | Sparse and embedded high-dimensional binary classification | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1169–1206 | Phase 4 registry-wide reconciliation: outstanding detailed evidence | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **planned / needs body review** |
-| `models.md` | 1207–1224 | Phase 4 exit gate (unchanged) | `guide/appendix/model-composition-and-delegation.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1225–1242 | Phase 4 inspected binary variant reconciliation: mixed and nonstationary | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1243–1269 | Phase 4 inspected reduced-GP family mapping: frozen, mixed and joint | `guide/05_mixed_variables.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1270–1293 | Phase 4 inspected neural and variational reduced-GP variants | `guide/09_variational_gp.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1294–1321 | Phase 4 inspected reduced multi-task implementations | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
-| `models.md` | 1322–1344 | Phase 4 inspected jointly trained multi-task and design-reduced multi-fidelity GP | `guide/06_multi_fidelity.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
+| `models.md` | 1100–1131 | Remaining robust binary classification families | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1132–1168 | Sparse and embedded high-dimensional binary classification | `guide/08_high_dimensional_gp.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1169–1206 | Phase 4 registry-wide reconciliation: outstanding detailed evidence | `guide/appendix/model-registry-and-public-api.md` | `audit-history` | **body-reviewed routing / not migrated** |
+| `models.md` | 1207–1224 | Phase 4 exit gate (unchanged) | `guide/verification/README.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1225–1242 | Phase 4 inspected binary variant reconciliation: mixed and nonstationary | `guide/24_classification.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1243–1269 | Phase 4 inspected reduced-GP family mapping: frozen, mixed and joint | `guide/18_dimensionality_reduction_gp.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1270–1293 | Phase 4 inspected neural and variational reduced-GP variants | `guide/19_neural_reduction_gp.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1294–1321 | Phase 4 inspected reduced multi-task implementations | `guide/07_multitask_multioutput.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
+| `models.md` | 1322–1344 | Phase 4 inspected jointly trained multi-task and design-reduced multi-fidelity GP | `guide/06_multi_fidelity.md` | `appendix/model-registry-and-public-api.md` | **body-reviewed routing / not migrated** |
 | `models.md` | 1345–1369 | Phase 4 reduced-family registry reconciliation (52 entries) | `guide/18_dimensionality_reduction_gp.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 1370–1389 | Phase 4 inspected robust-noise heteroskedastic inference paths | `guide/15_heteroskedastic_noise.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
 | `models.md` | 1390–1404 | Phase 4 inspected contamination, replicate-noise and nonstationary regression models | `guide/15_heteroskedastic_noise.md` | `appendix/model-registry-and-public-api.md` | **planned / needs body review** |
@@ -350,6 +350,26 @@
 | 1085–1099 | DeepGP binaryはDeepApproximateMLLとBernoulli likelihood、finite MC予測。校正・収束は未検証 |
 
 **累計:** README 13 + models 60 = 73/174区間本文レビュー済み。未レビュー101区間。新ガイドへの本文移行・検証完了は0件。
+
+## models.md（1100–1344行、9区間）の本文レビュー
+
+モデル別記録と旧Phaseの照合手順を読み、教育用ガイドと監査履歴を区別した。
+
+| 原文行 | 保存する技術内容・注意点 |
+| --- | --- |
+| 1100–1131 | replicate labelsは個別0/1観測を維持し、2r(1-r)は記述的な不一致率。input-dependent flipとGibbs nonstationarityは観測ノイズとlatent covarianceの別概念 |
+| 1132–1168 | MAP-SAAS/SAAS binaryはHalf-Cauchy prior付きvariational BernoulliでNUTSではない。ALEBOはembedded Mahalanobis metric、JointEncoderはencoderへELBO勾配が流れる |
+| 1169–1206 | 142 regression + 29 binary IDのregistry別の詳細照合未完了事項。静的inventoryと数学的検証を区別 |
+| 1207–1224 | 旧Phaseのexit gateは監査履歴へ、assertion/数値検証の証拠区分はverificationへ |
+| 1225–1242 | binary.mixedはnative categorical kernelでone-hot不要。mixed Gibbsはcontinuousのみ、multitask Gibbsはtask identityをlengthscale入力から除外 |
+| 1243–1269 | frozen ReducedGP、output reduction、mixed continuous-only reduction、joint encoderを異なるtraining contractとして整理。original/latent同次元では入力判定が曖昧 |
+| 1270–1293 | pretrained VAE/SAEのfrozen mean codeとJointVAEのjoint trainingを区別。uncertainty_aware_posteriorはsingle-outputのMC moment approximation |
+| 1294–1321 | reduced multitask long-formatのtask列とKronecker block outputを区別。reducerはtask identityを変換しない。同次元入力の判定曖昧性も保持 |
+| 1322–1344 | **訂正の継承が必須**: ReducedMultiFidelityGPという名前がなくてもPCAMultiFidelityGP/PLSMultiFidelityGP/RandomProjectionMultiFidelityGPが存在。designのみ削減しfidelity列を保存。Joint multi-task encoder/AE/VAEのlossとlayoutを区別 |
+
+教育用本文では旧Phase番号・完了宣言を除去し、実装境界と未検証事項のみを残す。複数章への二次参照は各章執筆時に追記する。
+
+**累計:** README 13 + models 69 = 82/174区間レビュー済み。未レビュー92区間。本文移行・検証完了0件。
 
 ## 各区間の移行検収条件
 
