@@ -42,3 +42,21 @@ print(model.posterior(X[:2]).mean)
 カテゴリ変数のラベルを連続座標上の数値距離とみなすのは不適切な場合がある。[Mixed Variablesの理論](../../../theory/05_mixed_variables.md)と対応章（後続Phaseで作成）でnative categoricalとone-hot等を個別に区別する。Nonstationaryや構造化kernelもこの章の標準RBF例で検証した扱いにはしない。
 
 PSDと行列対称性は数学的必要条件だが、kernelのクラスが存在することだけでは独立数値検証の完了を示さない。既存[verification Mapping](../verification.md)のproperty別証拠と結び付ける。関連：[GP](02_gaussian_process.md)、[モデルガイド](../../../models/standard.md)、[標準GP Notebook](../../../../examples/notebooks/01_single_task_gp.ipynb)。
+
+## Mixed kernelの構成式と実装上の意味
+
+src/robotorchan/models/base.pyのmake_mixed_covar_moduleは、通常の連続GPのデフォルトkernelを置き換える一般規則ではなく、連続設計変数とカテゴリ設計変数のための専用構築関数である。連続次元が存在する場合の構成は概念的に
+
+$$
+k_{\mathrm{mixed}}(x,x')=k_c(x_c,x_c')
++s_k k_{\mathrm{cat}}(x_{\mathrm{cat}},x'_{\mathrm{cat}})
++k'_c(x_c,x'_c)k'_{\mathrm{cat}}(x_{\mathrm{cat}},x'_{\mathrm{cat}}).
+$$
+
+ここで加法項のcategorical kernelはScaleKernelで包まれ、交互作用項のcategorical kernelはunscaledである。2つのcontinuous_kernel()呼出しは別moduleを作るため、同一のパラメータ共有を前提にしてはいけない。連続次元がない場合はscaled CategoricalKernelのみを返す。GPyTorch AdditiveKernel/ProductKernel、BoTorch CategoricalKernelを組み合わせるのはrobotorchan、各kernelの数値計算は上流への委譲である。
+
+cat_dimsにはraw入力列の番号を使い、normalize_feature_dimsが負インデックスを正規化し、重複・範囲外・structural excluded_dimsとの重なりを拒否する。task/fidelity/context/hierarchyの構造列を通常のカテゴリ設計変数として無断使用しない。連続部にはget_covar_module_with_dim_scaled_priorまたは指定したcont_kernel_factoryを利用する。
+
+このnative categorical kernel経路は、同じbase.pyに別途存在するCategoricalOneHotInputTransformとは異なる。MixedSingleTaskGPはBoTorch MixedSingleTaskGPの実装・cat_dims契約を継承するので、すべてのmixedモデルがone-hotを行うと記述してはならない。
+
+**検証境界：** ソースのkernel構成とカテゴリ次元の検査を確認した。独立したPSD/パラメータ推定/予測精度の全面検証は今回行っていない。
