@@ -42,3 +42,29 @@ Phase 9相当の旧検証記録にはoptimizerの複数の独立参照・契約�
 - 局所boundsはpublic bounds内にclipされ、ARD重みの幾何平均正規化について別のassertionがある。
 
 これらは特定した入力に対する**状態不変条件と実行経路の証拠**である。探索性能、ノイズ下の較正、すべての戦略による最適値の発見率まで検証したものではない。詳しくは[Trust-region実装ガイド](../optimization/10_trust_region.md)と元[Verification Mapping](../../verification.md)を参照する。
+
+
+## Phase 9独立参照：Sampling optimizerのpool内最大値
+
+`tests/optim/backends/test_phase9_sampling_optimizer_reference.py`を直接照合した。`optimizer="random"`または`"sobol"`、`seed=29`、`num_samples=128`、`q=2`で、負の二次形式`-(X-target)^2`を候補2点・2次元のbatchに対して合計したscoreを用いる。公開optimizerが返す`[2,2]`候補と**同じseedで独立生成したpool中のargmax候補**は完全一致（`atol=rtol=0`）、valueは`1e-12`で一致し、候補はboundsに収まる。真の連続最大値0への収束を証明するものではない。
+
+## Phase 9独立参照：TuRBOのARD幾何
+
+`tests/optim/trust_region/test_phase9_turbo_geometry_reference.py`は3次元の非等幅bounds、境界付近のcenter、`weights=[0.5,1.0,4.0]`と`length=0.2`に対して、次のscalar referenceを組み立てる。
+
+```text
+w_normalized = w / geometric_mean(w)
+half_width = 0.5 * length * (upper - lower) * w_normalized
+lower_TR = max(lower, center - half_width)
+upper_TR = min(upper, center + half_width)
+```
+
+`turbo_trust_region_bounds`がこの値に`atol=rtol=1e-12`で一致し、境界でclippingされることと、全weightsを7倍しても同じ領域になることをassertする。**既学習GPのARD lengthscaleの妥当性**や最適化性能は確認していない。
+
+## Phase 9独立参照：Constraint residualとfeasibility-first
+
+`tests/optim/constraints/test_phase9_constraint_violation_reference.py`は3つの`q=2`、`d=2`候補batchに対し、intrapoint/interpointの線形不等式、線形等式、per-point/jointの非線形不等式を組み合わせる。`equality_tolerance=0.05`として、**個々のPython scalar演算で独立に計算した**非負の違反量合計を`candidate_constraint_violation`と`1e-12`で比較する。intrapoint線形不等式はq軸の最小残差を使い、per-point非線形違反はq内で加算する。`candidate_is_feasible`は違反量ゼロと一致することを確認する。
+
+別テストではobjective値`[0.5,100,0.9,200]`、違反量`[0,0.2,0,0.1]`に対する`feasibility_first_ranks=[3,1,4,2]`をassertする。高いobjective値を持つ不可行点より、可行点を上位にする**順位付け算術**の証拠であり、数値optimizer自体が制約可行な候補を必ず返す保証ではない。
+
+これらの独立参照は旧[Verification Mapping](../../verification.md)のPhase 9区間と照合したものだが、一般のglobal optimum、学習済みARDの正しさ、全制約backendの厳密可行性は対象外とする。
