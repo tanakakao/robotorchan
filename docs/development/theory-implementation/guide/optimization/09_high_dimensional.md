@@ -65,3 +65,37 @@ HeSBOもLatentSpaceStrategyも、原空間の`CandidateConstraints`を数学的�
 `BAxUSStrategy`はtarget-spaceの観測履歴とsparse embeddingを保持する。局所中心は履歴が無ければ原点、観測があればtarget上のbest点である。ARD由来の元空間lengthscaleが得られる場合はembeddingに集約してtarget側の幾何重みを作る。元空間`CandidateConstraints`が潜在変数に正しく写像されない場合は、これらのstrategyは`reject_unmapped_candidate_constraints`で拒否する。
 
 これらの説明は**ソースレベルの契約照合**である。旧Mapping中の`tests/optim/embedding/test_rembo_strategy.py`、`test_alebo_strategy.py`、`test_baxus_strategy.py`等は検証の追跡先だが、ここでは新たに数値ベンチマークを実行していない。ハイパーボリュームやsimple regretの優位性、任意の制約下での可行候補生成はこの照合からは結論しない。
+
+## 6. HeSBOで低次元候補を実験座標に戻す実行例
+
+次は元の入力6次元を2次元の埋め込み空間で探索する。
+`HeSBOStrategy.optimize`は元空間のacquisitionを内部で投影経由で評価し、
+返り値の`candidates`を6次元の実験座標に復元する。
+
+```python
+import torch
+from botorch.acquisition.analytic import PosteriorMean
+from robotorchan.models import SingleTaskGP
+from robotorchan.optim import HeSBOStrategy
+
+train_X = torch.rand(12, 6, dtype=torch.double)
+train_Y = -((train_X[:, :2] - 0.4) ** 2).sum(dim=-1, keepdim=True)
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+model.eval()
+acqf = PosteriorMean(model=model)
+bounds = torch.stack((torch.zeros(6, dtype=torch.double), torch.ones(6, dtype=torch.double)))
+strategy = HeSBOStrategy(bounds, embedding_dim=2, seed=7, num_restarts=2, raw_samples=16)
+result = strategy.optimize(acqf)
+original = result.candidates
+embedded = result.metadata["embedded_candidates"]
+assert original.shape == (1, 6)
+assert embedded.shape == (1, 2)
+assert strategy.embedding.shape == (6, 2)
+assert torch.all(original >= bounds[0])
+assert torch.all(original <= bounds[1])
+torch.testing.assert_close(strategy.project(embedded), original)
+```
+
+元空間への射影はclippingを含み得るため、同じ候補に複数の潜在点が
+対応する可能性がある。この例は座標とboundsの契約を検証するもので、
+低有効次元仮定の成立や最適化性能の優位性は示さない。
