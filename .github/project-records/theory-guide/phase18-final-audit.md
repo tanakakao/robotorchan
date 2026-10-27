@@ -363,3 +363,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `guide/07_multitask_multioutput.md`のHeterogeneousModel例に未定義の`regression_model`・`binary_classifier`・`X`が残っていたため、`SingleTaskGP`と`BinarySingleTaskGPClassifier`のconstructorに合わせて入力tensor・学習ラベルを明示し、output ownership、分類確率と回帰posteriorのshape assertionを持つ独立したサンプルへ差し替えた。根拠は`src/robotorchan/models/{heterogeneous.py,standard/single_task.py,classification/binary/standard/single_task.py}`。新規の独立数値実験ではなく、CI実行結果はPR作成後に確認する必要がある。
 
 **判定：partial / review required。** 他23章の全コード例の実行成功、学習収束、旧Mappingの174見出し検収を示さない。固定18 Phase・48章は維持。
+
+## Phase 18：HeterogeneousModel掲載コードの実行回帰テスト
+
+`tests/docs/test_theory_guide_heterogeneous_example.py`を追加し、`guide/07_multitask_multioutput.md`の掲載コードをMarkdownから抽出してそのまま実行する回帰テストを設定した。output_owner、出力数、predict_probaのshape・有限性・クラス確率の総和を検査する。従来の静的constructor照合より強い証拠とする一方、モデルfit・分類確率の校正・数値最適化の正当性を確認するテストではない。
+
+**判定：CI待ち / partial。** 本変更前に実行成功を主張しない。旧Mapping5本、174見出しverified=0、固定18 Phase・48章を維持する。
