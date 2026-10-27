@@ -16,13 +16,41 @@
 
 ```python
 import torch
-from robotorchan.models import SACGP
+from robotorchan.models import MixedHierarchicalConditionalKernelGP
 
-# Context構造の詳細な入力契約はモデル別ガイドに従う。
-print(SACGP.__name__)
+train_X = torch.tensor(
+    [
+        [0.0, 0.10, 0.0, 0.20],
+        [1.0, 0.25, 0.0, 0.35],
+        [0.0, 0.40, 1.0, 0.55],
+        [1.0, 0.60, 1.0, 0.70],
+        [0.0, 0.75, 0.0, 0.80],
+        [1.0, 0.90, 1.0, 0.95],
+    ],
+    dtype=torch.double,
+)
+train_Y = 0.3 * train_X[:, :1] + train_X[:, 1:2] + 0.2 * train_X[:, 3:4]
+dependencies = {2: {0: [1], 1: [3]}}
+model = MixedHierarchicalConditionalKernelGP(
+    train_X=train_X,
+    train_Y=train_Y,
+    hierarchical_dependencies=dependencies,
+    cat_dims=[0],
+    use_saas_prior=False,
+    outcome_transform=None,
+)
+assert model.cat_dims == (0,)
+assert model.raw_train_X.shape == train_X.shape
+assert model.make_mll() is not None
 ```
 
-コードは確認した公開APIを示す最小例であり、今回のセッションで実行して成功したとの主張ではない。tensorのshape、dtype/device、入力変数の意味と、posteriorの出力構造を意識して利用する。
+この例で第2列（0-based index 2）は条件を切り替える親変数であり、
+`dependencies`は親が0なら第1列、1なら第3列をactiveにする。
+`cat_dims=[0]`は通常のカテゴリ設計列を表し、親列を含めない。
+`make_mll()`の生成は学習収束やinactive値に対する不変性の検証ではない。
+
+Contextual GPの`SACGP`は`train_Yvar`と`decomposition`を明示的に受け取る。
+階層条件付きkernelの`hierarchical_dependencies`と同じAPIではない。
 
 ## 検証・未検証事項
 
