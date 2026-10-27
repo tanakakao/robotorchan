@@ -405,3 +405,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `tests/models/robust/test_theory_guide_gibbs_reference.py`を追加した。1Dの局所lengthscaleを固定し、Gibbs共分散をスカラー式で独立計算して、実装の行列値との一致、対称性、対角1、有限点でのPSD、diag経路を比較する。さらにslope=0の定常RBF極限を検証する。理論第17章と実装`src/robotorchan/models/robust/nonstationary.py`の意味論対応を数値テストへ接続した。
 
 **判定：CI待ち / partial。** このテストは非定常GPの学習収束、任意次元・パラメータでのPSD証明やBO最適化性能を保証しない。旧Mapping、18 Phase・48章を維持。
+
+## Phase 18：Gaussian入力不確実性の期待RBF kernelの独立参照
+
+`tests/models/uncertain/test_theory_guide_gaussian_input_kernel_reference.py`にて、入力平均と分散を連結した1DのGaussianUncertainInputKernelを対象に、解析式から個別に計算した行列と比較する。共分散の対称性、有限集合での半正定値性、diag=Trueの一致、入力分散がゼロとなる場合のRBF極限を検査する。対応する実装は`src/robotorchan/models/uncertain/uncertain_input.py`、理論ガイドは第16章。
+
+**判定：CI待ち / partial。** 訓練収束や多次元共分散の独立参照、BO性能は対象外。旧Mapping5本、174見出しverified=0、18 Phase・48章の構成を維持。
