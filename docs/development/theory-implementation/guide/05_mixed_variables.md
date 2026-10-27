@@ -32,3 +32,20 @@ print(model.posterior(X[:2]).mean)
 カテゴリ名の置換に対する共分散の不変性は、同じ条件でのカテゴリIDの付け替えを比較するpropertyであり、全mixed variantの検証完了を意味しない。BoTorch-native categorical kernel、内部one-hot、embedding、passthroughをモデルごとに区別する。関連Notebook: [Mixed GP](../../../../examples/notebooks/02_mixed_single_task_gp.ipynb)。
 
 [旧Model Mapping](../models.md)および[検証記録](../verification.md)は移行元の正本として保持する。API存在、静的assertion、CI成功、独立数値検証は区別する。使用例と詳しいモデル選択は[モデルガイド](../../../models/README.md)を参照する。
+
+## カテゴリ共分散と符号化の実装境界
+
+カテゴリcを数値的な距離として扱うRBFと、カテゴリ同一性に基づくcategorical kernelは異なる。カテゴリ番号を付け替えても同じカテゴリ同士の同一性が保存される場合、native categorical kernelの共分散構造は変わらないというのが重要なpropertyである。連続設計座標x_cとカテゴリcを組み合わせると、専用mixed covariance helperは概念的に連続項・カテゴリ項・交互作用項を足し合わせる。
+
+src/robotorchan/models/standard/single_task.pyのMixedSingleTaskGPはBoTorchMixedSingleTaskGPを直接継承し、BoTorch-native mixed kernelとposterior推論を上流へ委譲する。一方、src/robotorchan/models/base.pyのmake_mixed_covar_moduleはrobotorchanが他の構造化mixed family向けに加法・積kernelを構成するための実装で、MixedSingleTaskGPの内部kernelを必ず上書きするものではない。
+
+| モデル系 | カテゴリの取扱い | 確認するべき契約 |
+| --- | --- | --- |
+| MixedSingleTaskGP | BoTorch native mixed categorical kernel | train_Xはraw [n,d]、cat_dimsはraw列番号。raw snapshotsとMLL便宜APIを追加 |
+| MixedMultiTaskGP | 設計変数上のnative mixed covariance | task_featureはstructuralでありcat_dimsに入れない |
+| MixedSingleTaskMultiFidelityGP | 設計変数上のnative mixed covarianceとBoTorch fidelity kernel | fidelity列をcat_dimsから除外。linear_truncated=Trueは拒否 |
+| MixedSaasFullyBayesianSingleTaskGP | モデル所有のone-hot入力変換 | native mixed kernel経路とは異なる。カテゴリ列とencoded次元を区別 |
+
+raw train_Xのカテゴリ列を実験側で任意に丸めるのではなく、学習・posterior・optimizerの全境界で同じ符号と候補値を使う。負のcat_dimsやtask/fidelityとの重複を扱う場合は、各モデルのnormalize_feature_dims呼出しを確認する。これはBoTorchMixedSingleTaskGPの全入力検証を代替する主張ではない。
+
+**検証境界：** 上記の継承と共分散構成はソース照合。カテゴリラベル付け替えの数値不変性・探索候補の可行性は今回独立実験で検証していない。
