@@ -46,3 +46,26 @@ target-fidelity projection、cost model、fantasy/one-shot route、fidelity次�
 [既存Acquisition Mapping](../../acquisition.md)はsource inspectedの実装契約、entry・テスト証拠を保持する。[Verification Mapping](../../verification.md)は独立数値参照や既存のassertionの追跡先とする。両者を消去・置き換えず、原文区間のmigration ledgerをverifiedとする際に照合する。CI成功だけで全数値契約が検証されたことにはならない。
 
 [獲得関数の基礎ガイド](../04_acquisition_function.md)、[獲得関数利用ドキュメント](../../../../optimization/README.md)、[理論Acquisition索引](../../../../theory/acquisition/README.md)にも戻れる。個別の数式、適用例や比較条件は対応する理論章と使用ガイドで読む。
+
+## 6. Fidelity依存コストを評価する最小例
+
+情報量や改善量をコストと比較するときは、fidelity列とコスト関数の関係を明示する。
+以下は`qMultiFidelityKnowledgeGradient`そのものを評価する前段階として、
+BoTorchの`AffineFidelityCostModel`が候補ごとの正のコストを返すことを確かめる。
+
+```python
+import torch
+from botorch.models.cost import AffineFidelityCostModel
+
+cost_model = AffineFidelityCostModel(fidelity_weights={1: 1.0}, fixed_cost=0.1)
+candidates = torch.tensor([[[0.3, 0.5]], [[0.3, 1.0]]], dtype=torch.double)
+costs = cost_model(candidates)
+assert torch.isfinite(costs).all()
+assert torch.all(costs > 0)
+assert costs.reshape(-1)[0] < costs.reshape(-1)[1]
+```
+
+この単純な線形コストモデルでは同じ設計点でも高いfidelityの費用が大きい。
+これは`qMultiFidelityKnowledgeGradient`が改善情報とコストを正しく統合できる証拠ではない。
+その確認には`project`、`num_fantasies`、one-shotの拡張q次元と
+`InverseCostWeightedUtility`を含めた獲得関数テストが別途必要となる。
