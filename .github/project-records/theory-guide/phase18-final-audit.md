@@ -399,3 +399,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `guide/14_robust_gaussian_process.md`でGaussian contamination mixtureのlogsumexp尤度とMC+KL損失、潜在posteriorと近似contamination_diagnosticの相違、RRPのsparse support契約を説明した。第14章にContaminatedSingleTaskGPの使用例を追加し、`tests/docs/test_theory_guide_contaminated_example.py`でMarkdown掲載コードの直接実行、有限loss・診断確率範囲・make_mll拒否を検査する。実装照合元は`src/robotorchan/models/robust/{contaminated,student_t,robust}.py`。
 
 **判定：CI待ち / partial。** 外れ値検出精度やRRP support回復の数値評価は対象外。旧Mapping保全、18 Phase・48章を維持。
+
+## Phase 18：非定常Gibbs kernelの独立数値参照
+
+`tests/models/robust/test_theory_guide_gibbs_reference.py`を追加した。1Dの局所lengthscaleを固定し、Gibbs共分散をスカラー式で独立計算して、実装の行列値との一致、対称性、対角1、有限点でのPSD、diag経路を比較する。さらにslope=0の定常RBF極限を検証する。理論第17章と実装`src/robotorchan/models/robust/nonstationary.py`の意味論対応を数値テストへ接続した。
+
+**判定：CI待ち / partial。** このテストは非定常GPの学習収束、任意次元・パラメータでのPSD証明やBO最適化性能を保証しない。旧Mapping、18 Phase・48章を維持。
