@@ -23,7 +23,7 @@
 | 05 | Mixed Variables | core_model_examples | — |
 | 06 | Multi-Fidelity | structured_model_examples | — |
 | 07 | MultiTask / MultiOutput | structured_model_examples, heterogeneous_example | — |
-| 08 | High-Dimensional GP | — | — |
+| 08 | High-Dimensional GP | saas_lightweight_example（MCMCなし） | — |
 | 09 | Variational GP | core_model_examples | — |
 | 10 | Preference Learning | kernel_preference_examples | — |
 | 11 | Structured Output | structured_model_examples | — |
