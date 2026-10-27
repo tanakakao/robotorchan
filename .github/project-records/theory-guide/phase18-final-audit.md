@@ -423,3 +423,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `tests/docs/test_theory_guide_kernel_preference_examples.py`を追加し、ガイド第03章のRBFKernel/ScaleKernel付きSingleTaskGP、及び第10章のPairwiseGPの最初のPythonコードブロックを直接実行する回帰テストを定義した。第03章はposterior形状と有限値、第10章はcomparison shape、PairwiseLaplaceMarginalLogLikelihoodの型、単一出力契約を確認する。model-chapter-verification-matrix.mdに両章を掲載例実行の対象として追加した。
 
 **判定：CI待ち / partial。** 選好推論のLaplace近似精度、独立数値照合、学習収束は未実証。固定18 Phase・48章を維持。
+
+## Phase 18：Joint Heteroskedastic GPの掲載例実行
+
+第15章のJointHeteroskedasticSingleTaskGPのクラス名表示例を、training_loss、response posterior、log-noise posterior、predicted_noiseの区別を示すコードへ置き換えた。`tests/docs/test_theory_guide_heteroskedastic_example.py`がMarkdownコードを直接実行し、有限損失、潜在分布の有限性、推定観測分散の正値性、make_mll()拒否を調べる。これは学習収束やnoise較正の数値実証ではない。
+
+**判定：CI待ち / partial。** 固定18 Phase・48章、旧Mappingと174見出しの未確認状態を維持。

@@ -30,7 +30,7 @@
 | 12 | Hierarchical / Contextual | — | — |
 | 13 | Model Selection | — | — |
 | 14 | Robust GP | robust_model_example, contaminated_example | — |
-| 15 | Heteroskedastic Noise | — | — |
+| 15 | Heteroskedastic Noise | heteroskedastic_example | — |
 | 16 | Uncertain Input GP | kernel_model_examples | gaussian_input_kernel_reference |
 | 17 | Nonstationary GP | kernel_model_examples | gibbs_reference |
 | 18 | Dimensionality Reduction GP | — | — |
