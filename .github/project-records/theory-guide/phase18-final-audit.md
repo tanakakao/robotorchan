@@ -417,3 +417,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `model-chapter-verification-matrix.md`を新規追加し、モデル24章ごとに掲載例の直接実行テストと独立数値照合テストの対応を整理した。既存の証拠として`tests/docs/test_theory_guide_*.py`およびGibbs・Gaussian uncertain-inputの独立参照テストのみを記載し、空欄からテスト不存在を推論しない。モデル24章と獲得関数・最適化各12章の固定体系は変更しない。旧Mapping5本と174見出しは別途検証までverifiedにしない。
 
 **判定：CI待ち / partial。** 対応表は証拠の索引であり、実装全域の品質保証でも数値収束の実証でもない。
+
+## Phase 18：Kernel・Pairwise Preferenceガイドの掲載例実行テスト
+
+`tests/docs/test_theory_guide_kernel_preference_examples.py`を追加し、ガイド第03章のRBFKernel/ScaleKernel付きSingleTaskGP、及び第10章のPairwiseGPの最初のPythonコードブロックを直接実行する回帰テストを定義した。第03章はposterior形状と有限値、第10章はcomparison shape、PairwiseLaplaceMarginalLogLikelihoodの型、単一出力契約を確認する。model-chapter-verification-matrix.mdに両章を掲載例実行の対象として追加した。
+
+**判定：CI待ち / partial。** 選好推論のLaplace近似精度、独立数値照合、学習収束は未実証。固定18 Phase・48章を維持。
