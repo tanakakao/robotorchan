@@ -89,3 +89,49 @@ constraints = CandidateConstraints(
 宣言の根拠はsrc/robotorchan/optim/capabilities.py、符号・shape契約はconstraints/contracts.py、委譲と例外条件はbackends/botorch.pyおよびbackends/torch.py。tests/optim/integration/test_nonlinear_candidate_constraints_e2e.pyは選択した条件の可行候補を検証するが、全backendと任意の制約の大域最適性を保証しない。この改訂では独立数値テストを再実行していない。
 
 **移行判定：partial / review required。** Phase 3 routingは変更せず、旧Mapping174区間のverified判定を昇格しない。
+
+## 7. 線形candidate制約を課して実際に候補を生成する
+
+入力変数`x`に`x >= 0.3`という既知の線形制約を課す。
+この制約は未知の応答のfeasibilityではなく、optimizerが探索する座標に対する条件である。
+次は`CandidateConstraints`を公開dispatcherへ渡して候補を生成する最小例。
+
+```python
+import torch
+from botorch.acquisition.analytic import UpperConfidenceBound
+from robotorchan.models import SingleTaskGP
+from robotorchan.optim import optimize_acqf
+from robotorchan.optim.constraints.contracts import CandidateConstraints
+
+train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(4 * train_X)
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+model.eval()
+acqf = UpperConfidenceBound(model=model, beta=0.5)
+bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+constraints = CandidateConstraints(
+    inequality_constraints=(
+        (
+            torch.tensor([0], dtype=torch.long),
+            torch.tensor([1.0], dtype=torch.double),
+            0.3,
+        ),
+    ),
+)
+candidate, value = optimize_acqf(
+    acq_function=acqf,
+    bounds=bounds,
+    q=1,
+    optimizer="botorch",
+    constraints=constraints,
+    num_restarts=2,
+    raw_samples=16,
+)
+assert candidate.shape == (1, 1)
+assert candidate[0, 0].item() >= 0.3 - 1e-6
+assert candidate[0, 0].item() <= 1.0 + 1e-6
+assert torch.isfinite(value).all()
+```
+
+この例は線形のintra-point候補制約の可行性を検査する。
+非線形・inter-point制約、他backendのpenalty、最適化の大域保証は対象外とする。
