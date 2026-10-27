@@ -46,3 +46,28 @@ q=1と出力選択の制限、Straddle betaとUCBのsqrt(beta)慣行の違い、
 [既存Acquisition Mapping](../../acquisition.md)はsource inspectedの実装契約、entry・テスト証拠を保持する。[Verification Mapping](../../verification.md)は独立数値参照や既存のassertionの追跡先とする。両者を消去・置き換えず、原文区間のmigration ledgerをverifiedとする際に照合する。CI成功だけで全数値契約が検証されたことにはならない。
 
 [獲得関数の基礎ガイド](../04_acquisition_function.md)、[獲得関数利用ドキュメント](../../../../optimization/README.md)、[理論Acquisition索引](../../../../theory/acquisition/README.md)にも戻れる。個別の数式、適用例や比較条件は対応する理論章と使用ガイドで読む。
+
+## 6. Straddleで閾値付近の候補を評価する
+
+`Straddle`は予測平均と閾値の距離を、不確実性による探索ボーナスから引く。
+`beta`は標準偏差に直接掛かるので、UCBの`sqrt(beta)`と取り違えない。
+
+```python
+import torch
+from robotorchan.acquisition import Straddle
+from robotorchan.models import SingleTaskGP
+
+train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(4 * train_X)
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+model.eval()
+candidates = torch.tensor([[[0.15]], [[0.45]], [[0.85]]], dtype=torch.double)
+target = 0.35
+beta = 1.7
+scores = Straddle(model, target=target, beta=beta)(candidates)
+assert scores.shape == (3,)
+assert torch.isfinite(scores).all()
+```
+
+このスコアは境界探索のheuristicであり、閾値の上下を表す分類確率ではない。
+また`q=1`の候補別評価であり、複数候補のjoint utilityを求めたものでもない。
