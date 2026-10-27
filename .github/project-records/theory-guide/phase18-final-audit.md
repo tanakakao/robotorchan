@@ -494,3 +494,11 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 今後は獲得関数12章・最適化12章の整合監査へ進めつつ、
 174見出しの原文移行ゲートを閉じる作業をPhase18内で並行管理する。
 固定18 Phase・48章を変更せず、旧Mapping5ファイルを削除しない。
+
+## 獲得関数12章の条件付き完了判定（PR #1515マージ後）
+
+PR #1515のCIとDocumentation linksが成功し、マージされたことを確認した。第02～11章の10章にMarkdown掲載例の直接実行テストへの参照を登録している。第01章Foundations・第12章Selection Guideは導線中心であり、単一数値アルゴリズムと同じ基準を強制しない。
+
+**判定：構造と代表例の検証整備は一区切り。獲得関数12章の完全技術検収は保留。** Gaussian EI/UCB、回帰posterior moment、affine costの参照値に関するテストはあるが、q-batch joint MC、MES/GIBBONの情報量推定誤差、classification PoF、KG最適化、EHVIの独立hypervolume照合、すべてのAPI/optimizer接続を網羅するものではない。
+
+証拠の詳細は[獲得関数12章マトリクス](acquisition-chapter-verification-matrix.md)を参照。次は最適化12章の実装導線と例の実行を点検する。旧Mapping5本、174見出しの未確認状態、固定18 Phase・48章を維持する。
