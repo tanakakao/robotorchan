@@ -9,8 +9,6 @@ from pathlib import Path
 import torch
 
 
-
-
 GUIDE = (
     Path(__file__).resolve().parents[2]
     / "docs/development/theory-implementation/guide/07_multitask_multioutput.md"
