@@ -357,3 +357,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `guide/13_model_selection.md`にモデル各章への章内リンクと、Exact/Variational/Pairwise/Structured/Heteroskedastic/Uncertain/Nonstationary/DeepGP/NNGP/Spectral/Non-GP/Classification/Fully Bayesianの学習方式・posterior意味論・獲得関数における注意点を横断対照できる教育用表を追加した。MultiTask、ModelListGP、HeterogeneousModelの責務の相違も読書導線として補足した。
 
 **判定：partial / review required。** 本変更は既存章との意味論照合と読書導線の補強であり、24章の全行を対象にした網羅的ソース・API・数値テスト監査ではない。旧Mapping5本保全、174見出しverified=0と固定18 Phase・48章を維持。
+
+## Phase 18：モデル横断ガイドのコード例契約確認
+
+`guide/07_multitask_multioutput.md`のHeterogeneousModel例に未定義の`regression_model`・`binary_classifier`・`X`が残っていたため、`SingleTaskGP`と`BinarySingleTaskGPClassifier`のconstructorに合わせて入力tensor・学習ラベルを明示し、output ownership、分類確率と回帰posteriorのshape assertionを持つ独立したサンプルへ差し替えた。根拠は`src/robotorchan/models/{heterogeneous.py,standard/single_task.py,classification/binary/standard/single_task.py}`。新規の独立数値実験ではなく、CI実行結果はPR作成後に確認する必要がある。
+
+**判定：partial / review required。** 他23章の全コード例の実行成功、学習収束、旧Mappingの174見出し検収を示さない。固定18 Phase・48章は維持。
