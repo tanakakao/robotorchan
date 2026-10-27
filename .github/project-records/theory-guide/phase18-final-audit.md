@@ -310,3 +310,20 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `guide/24_classification.md`と`guide/acquisition/08_constraints.md`にProbabilityObjective、ClassificationProbabilityOfFeasibility、ProbabilityOfFeasibility、SampleProbabilityOfFeasibility、SampleResidualFeasibility、ProbabilityResidualFeasibilityの数学的役割・公開API・非互換条件を追加。`src/robotorchan/semantics/{objectives,feasibility,probability}.py`および`src/robotorchan/acquisition/composition.py`を直接照合し、deterministic PoFとepistemic probability samples、objectiveとconstraint、posteriorとclass probabilitiesを区別した。
 
 **判定：partial / review required。** 独立数値・校正評価・最適化再実行はなし。固定18 Phase・48章、旧Mapping5本、174見出しverified=0は維持する。
+
+## Phase 18：モデル主章24本の本文密度の横断点検と3章の契約照合
+
+`guide/01_...`から`guide/24_classification.md`のファイル配置を一覧化し、全24章が存在することを確認した。モデル中心の薄い章について本文冒頭・節立てを横断点検した。特に `05_mixed_variables.md`、`06_multi_fidelity.md`、`10_preference_learning.md` はそれぞれ35行、34行、34行の概説主体だったため、今回 `standard/single_task.py`、`standard/multi_fidelity.py`、`preference/pairwise.py` および `models/base.py` と照合して追加解説を行った。
+
+| 点検範囲 | 今回の判断 | 深いソース照合 |
+| --- | --- | --- |
+| 01–04：BO、Exact GP、Kernel、Acquisition基礎 | 既存本文維持。以前のGP/API加筆を保持 | 今回の新規再検証対象外 |
+| 05 Mixed variables | native categorical vs helper/one-hot、structural列の境界を補強 | standard/single_task.py、models/base.py、standard/multi_fidelity.py |
+| 06 Multi-fidelity | fidelity/観測ノイズ/設計列の区分、familyごとのlinear_truncated拒否を補強 | standard/multi_fidelity.py |
+| 07–09 MultiTask、高次元、Variational | 既存の主題・節立て確認、本文維持 | 今回の新規再検証対象外 |
+| 10 Preference learning | Pairwise likelihood、比較index、Laplace MLLの違いを補強 | preference/pairwise.py |
+| 11–17 Structured、Hierarchical、Selection、Robust、Noise、Uncertain、Nonstationary | 本文冒頭と節立てを点検。短い章が残り、次回以降の深いAPI・数値根拠点検が必要 | 今回は各familyのソース深掘りなし |
+| 18–21 Reduced、Neural、High-dimensional search、Advanced | 既存の概念区分・本文密度を確認、本文維持 | 今回の新規再検証対象外 |
+| 22–24 Expressive、Non-GP、Classification | 既存の概念区分・本文密度を確認、本文維持 | 今回の新規再検証対象外 |
+
+**判定：partial / review required。** 24章の存在確認と本文密度の横断点検は、各章の意味論的検収とは異なる。今回深く実装照合したのはモデル3章に限定する。特に11–17の短い章、実装のAPI例のruntime、tensor shape/dtype/device、数値参照は追加の重点確認を要する。旧Mapping保全、全174原文見出しのverified=0を維持。固定18 Phase・48章を変更しない。
