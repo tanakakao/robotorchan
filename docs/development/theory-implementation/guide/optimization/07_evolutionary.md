@@ -61,7 +61,11 @@ bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
 pareto_x, pareto_y = optimize_vector_nsga2(
     objectives, bounds, population_size=16, generations=5, seed=7
 )
-# pareto_xは[n_pareto, 1]、pareto_yは[n_pareto, 2]。
+assert pareto_x.ndim == 2 and pareto_x.shape[1] == 1
+assert pareto_y.shape == (pareto_x.shape[0], 2)
+assert torch.all(pareto_x >= bounds[0])
+assert torch.all(pareto_x <= bounds[1])
+assert torch.isfinite(pareto_y).all()
 ~~~
 
 このAPIのobjectiveは入力[population,d]に対して[population,m]かつm>=2を返す必要がある。いずれの目的も最大化向きなので最小化したい量には負符号など方向変換が必要。ローカルNSGA-II APIは旧Mappingで確認した範囲にcandidate-constraint引数を持たず、constraint-dominationやfeasible Pareto frontを自動的に保証しない。実装・テストで確認できるのは返却集団内の非支配性など限定された性質であり、真のPareto frontへの収束証明ではない。
