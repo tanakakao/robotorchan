@@ -18,14 +18,14 @@
 | --- | --- | --- | --- |
 | 01 | Bayesian Optimization | — | — |
 | 02 | Gaussian Process | core_model_examples | — |
-| 03 | Kernel | — | — |
+| 03 | Kernel | kernel_preference_examples | — |
 | 04 | Acquisition Function | — | — |
 | 05 | Mixed Variables | core_model_examples | — |
 | 06 | Multi-Fidelity | structured_model_examples | — |
 | 07 | MultiTask / MultiOutput | structured_model_examples, heterogeneous_example | — |
 | 08 | High-Dimensional GP | — | — |
 | 09 | Variational GP | core_model_examples | — |
-| 10 | Preference Learning | — | — |
+| 10 | Preference Learning | kernel_preference_examples | — |
 | 11 | Structured Output | structured_model_examples | — |
 | 12 | Hierarchical / Contextual | — | — |
 | 13 | Model Selection | — | — |
@@ -57,8 +57,8 @@ CI成功は記録したコミットのテスト実行成功を示すが、数値
 
 ## 以降の優先順位
 
-まず実行例の証拠が未登録の章から、第03章Kernel、第10章Preference Learning、
-第12章Hierarchical / Contextual、第15章Heteroskedastic Noiseを確認する。
+次は掲載例実行の証拠が未登録の第12章Hierarchical / Contextualと
+第15章Heteroskedastic Noiseを確認する。
 次に第08・18～24章の高次元・非GP・分類関連を確認する。
 学習済みposteriorの独立参照や獲得関数・最適化の統合検証は、
 単純なconstructor実行テストと切り分けて整備する。
