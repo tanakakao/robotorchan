@@ -15,12 +15,32 @@
 ## APIと実装を読むための最小例
 
 ```python
+import torch
 from robotorchan.models import JointHeteroskedasticSingleTaskGP
 
-print(JointHeteroskedasticSingleTaskGP.__name__)
+train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(5 * train_X)
+model = JointHeteroskedasticSingleTaskGP(
+    train_X=train_X,
+    train_Y=train_Y,
+    num_inducing=4,
+    num_mc_samples=4,
+)
+loss = model.training_loss()
+candidate_X = train_X[:2]
+response = model.posterior(candidate_X)
+log_noise = model.noise_posterior(candidate_X)
+observation_variance = model.predicted_noise(candidate_X)
+assert loss.ndim == 0
+assert response.mean.shape[-2:] == (2, 1)
+assert log_noise.mean.shape[-2:] == (2, 1)
+assert observation_variance.shape[-2:] == (2, 1)
 ```
 
-コード例は公開APIを示す静的な例であり、このセッションで実行して成功したとの主張ではない。
+この例は2つの潜在過程の予測を区別する。responseは関数値のposterior、
+log_noiseは対数観測分散のposteriorを表す。predicted_noise()は
+対数正規分布のモーメントを用いた観測分散の推定で、responseのposterior分散とは異なる。
+学習ステップは実行していない。make_mll()ではなくtraining_loss()を使用する。
 
 ## 適用条件、テスト、限界
 
