@@ -46,3 +46,31 @@ train observations → surrogate.fit / posterior(X)
 [既存Acquisition Mapping](../../acquisition.md)はsource inspectedの実装契約、entry・テスト証拠を保持する。[Verification Mapping](../../verification.md)は独立数値参照や既存のassertionの追跡先とする。両者を消去・置き換えず、原文区間のmigration ledgerをverifiedとする際に照合する。CI成功だけで全数値契約が検証されたことにはならない。
 
 [獲得関数の基礎ガイド](../04_acquisition_function.md)、[獲得関数利用ドキュメント](../../../../optimization/README.md)、[理論Acquisition索引](../../../../theory/acquisition/README.md)にも戻れる。個別の数式、適用例や比較条件は対応する理論章と使用ガイドで読む。
+
+## 6. LogEIを評価する最小例
+
+次の例では、観測済み最大値を`best_f`に設定し、
+`LogExpectedImprovement`のスコアを候補点で計算する。
+学習と獲得関数の評価は異なる処理なので、ここでは候補最適化を実行しない。
+
+```python
+import torch
+from botorch.acquisition.analytic import LogExpectedImprovement
+from robotorchan.models import SingleTaskGP
+
+train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(2 * torch.pi * train_X)
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+model.eval()
+candidates = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
+best_f = train_Y.max()
+acqf = LogExpectedImprovement(model=model, best_f=best_f)
+scores = acqf(candidates)
+assert scores.shape == (2,)
+assert torch.isfinite(scores).all()
+```
+
+`candidates`は`batch_shape × q × d`で、この例では`q=1`。
+値はlog-EIなので、EIに戻すには`scores.exp()`を使う。
+観測ノイズと`best_f`の整合、予測分散が小さい場合の安定性、
+真の最適化改善幅は別途評価する。
