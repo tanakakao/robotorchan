@@ -417,3 +417,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `model-chapter-verification-matrix.md`を新規追加し、モデル24章ごとに掲載例の直接実行テストと独立数値照合テストの対応を整理した。既存の証拠として`tests/docs/test_theory_guide_*.py`およびGibbs・Gaussian uncertain-inputの独立参照テストのみを記載し、空欄からテスト不存在を推論しない。モデル24章と獲得関数・最適化各12章の固定体系は変更しない。旧Mapping5本と174見出しは別途検証までverifiedにしない。
 
 **判定：CI待ち / partial。** 対応表は証拠の索引であり、実装全域の品質保証でも数値収束の実証でもない。
+
+## Phase 18：第10章Preference Learning掲載例の実行回帰テスト
+
+`tests/docs/test_theory_guide_preference_example.py`を追加し、`guide/10_preference_learning.md`の対比較コードをMarkdownから直接抽出して実行する。比較index tensorのdtype・shape、raw_datapoints / raw_comparisonsの保存、PairwiseLaplaceMarginalLogLikelihoodの構築を確認する。モデル24章の検証対応表にも当該証拠を登録した。
+
+**判定：CI待ち / partial。** Laplace近似の収束・選好確率の数値較正は確認対象外。旧Mapping5本、174見出しverified=0、固定18 Phase・48章を維持。
