@@ -375,3 +375,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `tests/docs/test_theory_guide_core_model_examples.py`を追加した。`guide/02_gaussian_process.md`、`05_mixed_variables.md`、`09_variational_gp.md`の最初のPython fenced blockを直接抽出・実行し、Exact GPのposterior平均と分散、Mixed GPのposterior shape、Variational GPのELBO生成と訓練行数を確認する。掲載コードとテスト用コードの複製を避ける。学習の数値収束、独立条件付きGP参照、探索性能の評価とは区別する。
 
 **判定：CI待ち / partial。** 旧Mapping5本保全、174見出しverified=0、固定18 Phase・48章は維持。
+
+## Phase 18：Fidelity / MultiTask / Structured Outputの掲載例実行テスト
+
+`tests/docs/test_theory_guide_structured_model_examples.py`で`guide/06_multi_fidelity.md`、`07_multitask_multioutput.md`、`11_structured_output.md`の掲載された最初のPython fenced blockをそのまま実行するテストを追加。Multi-FidelityとMultiTaskはposteriorのshapeと有限性、HigherOrderGPはtensor shapeと構築契約を確認する。これらのテストはfit完了や構造化posteriorの数値同値性を認証しない。
+
+**判定：CI待ち / partial。** 旧Mapping5本、174見出しverified=0、固定18 Phase・48章を維持。
