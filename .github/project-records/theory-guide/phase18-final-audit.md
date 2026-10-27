@@ -351,3 +351,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `guide/23_non_gp_surrogates.md`にRandom Forest・Extra Trees・Gradient Boosting・Histogram Boosting・NGBoostの経験分布／Gaussian predictive distributionの意味、ensemble `[s,q,m]`軸、complete bootstrap estimators、CPU/sklearn非微分経路、観測ノイズ拒否、NGBoost独立Gaussian posteriorを追記した。根拠：`src/robotorchan/models/non_gp/{random_forest,bootstrap,gradient_boosting,posterior,ngboost,distribution_posterior}.py`。既存24章構成を維持。
 
 **判定：partial / review required。** APIの静的照合のみ。fit・posterior・MC acquisitionの数値再実行や予測不確実性の校正検収はしていない。旧Mapping5本の保全、174見出しverified=0、固定18 Phase・48章を維持。
+
+## Phase 18：モデル横断の学習・posterior・acquisition契約表
+
+`guide/13_model_selection.md`にモデル各章への章内リンクと、Exact/Variational/Pairwise/Structured/Heteroskedastic/Uncertain/Nonstationary/DeepGP/NNGP/Spectral/Non-GP/Classification/Fully Bayesianの学習方式・posterior意味論・獲得関数における注意点を横断対照できる教育用表を追加した。MultiTask、ModelListGP、HeterogeneousModelの責務の相違も読書導線として補足した。
+
+**判定：partial / review required。** 本変更は既存章との意味論照合と読書導線の補強であり、24章の全行を対象にした網羅的ソース・API・数値テスト監査ではない。旧Mapping5本保全、174見出しverified=0と固定18 Phase・48章を維持。
