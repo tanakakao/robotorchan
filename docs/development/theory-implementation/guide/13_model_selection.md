@@ -44,6 +44,7 @@
 ## 5. 検証の境界
 
 モデルを作れることと、posterior sample、fantasize、q-batch、one-shot、mixed constraints、dtype/deviceまで互換であることは別。実装の分類はImplemented / Extended / Delegated / Approximated / Unsupported / Unverifiedを使い分ける。[検証索引](verification/README.md)では数式の独立数値検証、契約テスト、CI成功を分ける。旧Mappingは移行台帳の原文区間照合が済むまで保全する。
+
 ## 6. モデルを横断した学習・posterior・獲得関数の契約
 
 モデルの選択では「posterior()が存在するか」だけでなく、**その確率変数の意味、学習目的、BoTorch acquisitionへの接続**を順番に調べる。以下は各実装章とソースの対応をたどるための比較表であり、実行済み互換性の網羅表ではない。
@@ -61,7 +62,7 @@
 | [NNGP / Spectral Mixture](22_expressive_gp.md) | 専用kernelを持つExact GP | Gaussian GP posterior | kernel priorの意味と入力scaling/初期化を確認 |
 | [Non-GP](23_non_gp_surrogates.md) | estimator固有`fit()` | empirical `EnsemblePosterior`またはNGBoost予測分布 | 入力勾配・点間依存・校正がGPと異なる |
 | [Binary Classification](24_classification.md) | Bernoulli likelihoodのvariational学習 | `posterior(X)`はlatent、`predict_proba(X)`はclass probability | feasibilityへは確率を渡しlatent値を誤用しない |
-| [Fully Bayesian SAAS](21_advanced_high_dimensional_models.md) | BoTorch NUTS/MCMC、`supports_mll=False` | hyperparameter uncertaintyを反映するposterior | モデル/獲得関数のMCMC軸とsampling互換性を確認 |
+| [Fully Bayesian SAAS](08_high_dimensional_gp.md) | BoTorch NUTS/MCMC、`supports_mll=False` | hyperparameter uncertaintyを反映するposterior | モデル/獲得関数のMCMC軸とsampling互換性を確認 |
 
 ### 6.1 実装を確認する順番
 
@@ -76,3 +77,22 @@
 [MultiTask](07_multitask_multioutput.md)はタスク共分散を扱うモデル、`ModelListGP`は子GPの独立な合成、`HeterogeneousModel`は回帰と分類の出力意味論を保つcontainerである。`HeterogeneousModel`自身が全出力に対する共通Gaussian posteriorを作るわけではない。複数目的を構成する場合は[多目的獲得関数](acquisition/07_multiobjective.md)、分類制約は[制約付き獲得関数](acquisition/08_constraints.md)の共有posterior・出力所有権の制限を参照する。
 
 この比較は章間の意味論整合を支援する読書ガイドであり、全24章の関数・テスト・数値propertyの移行検収を完了とするものではない。
+
+## 7. 学習経路から各章を選ぶ
+
+同じ「GP」でも、学習目的関数と予測対象によって実装経路が変わる。
+以下の入口を使い分け、クラス名やモデル選択表だけで互換性を判断しない。
+
+| まず確認したいこと | 読み進める章 | 実装での判断点 |
+| --- | --- | --- |
+| 通常の回帰を学習・予測したい | [Exact GP](02_gaussian_process.md) | `make_mll()`からExact MLLを組み立てる |
+| 多数の観測点を近似的に扱いたい | [Variational GP](09_variational_gp.md) | ELBOの`num_data`とinducingの設定 |
+| 観測が二者比較である | [Preference](10_preference_learning.md) | comparisonsとPairwise Laplace MLL |
+| ノイズ分散が入力依存する | [Heteroskedastic](15_heteroskedastic_noise.md) | responseとnoiseを分け、jointなら`training_loss()` |
+| 高次元で軸方向の疎性を仮定する | [SAAS](08_high_dimensional_gp.md) | MCMCとMAP-SAASを分ける。追加依存を確認 |
+| 応答が合否などの二値である | [Classification](24_classification.md) | latent posteriorとclass probabilityを分ける |
+| 複数のモデル出力を意思決定へつなぐ | [Multi-Output](07_multitask_multioutput.md) | task共分散と独立出力・異種出力を区別する |
+
+最初の動作確認には[BOの基本例](01_bayesian_optimization.md)から始め、
+[獲得関数](04_acquisition_function.md)で候補生成まで追う。
+選択表は適用可能性を確認するための案内であり、性能や互換性の保証ではない。
