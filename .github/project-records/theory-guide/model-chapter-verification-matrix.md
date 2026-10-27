@@ -25,7 +25,7 @@
 | 07 | MultiTask / MultiOutput | structured_model_examples, heterogeneous_example | — |
 | 08 | High-Dimensional GP | — | — |
 | 09 | Variational GP | core_model_examples | — |
-| 10 | Preference Learning | — | — |
+| 10 | Preference Learning | preference_example | — |
 | 11 | Structured Output | structured_model_examples | — |
 | 12 | Hierarchical / Contextual | — | — |
 | 13 | Model Selection | — | — |
