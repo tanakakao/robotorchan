@@ -31,3 +31,20 @@ print(model.posterior(X[:2]).mean)
 既存の数値参照にはdata-fidelity kernelの境界値とrank-one残差の検証があるが、全fidelity posteriorや学習ハイパーパラメータの最適性まで検証したことにはならない。異なるfidelity値を同じ尺度で単純に比較できるとは限らない。Notebook: [Multi-Fidelity](../../../../examples/notebooks/03_multi_fidelity_gp.ipynb)。
 
 [旧Model Mapping](../models.md)および[検証記録](../verification.md)は移行元の正本として保持する。API存在、静的assertion、CI成功、独立数値検証は区別する。使用例と詳しいモデル選択は[モデルガイド](../../../models/README.md)を参照する。
+
+## Fidelity列とカーネルの所有権を具体化する
+
+SingleTaskMultiFidelityGPはBoTorchSingleTaskMultiFidelityGPを継承し、iteration_fidelity・data_fidelities・linear_truncated・nu等を転送する。fidelityは観測の標準偏差やtrain_Yvarと異なり、評価レベルの違いを表す入力座標である。低fidelityが常に高fidelityの単調下界になるといった仮定はこのconstructorだけからは導けない。
+
+| family | 設計共分散 | fidelityの取扱い・拒否条件 |
+| --- | --- | --- |
+| SingleTaskMultiFidelityGP | BoTorch標準の構成に委譲 | fidelity列は構造的な入力。linear_truncated指定はBoTorchへ転送 |
+| MixedSingleTaskMultiFidelityGP | make_mixed_covar_moduleによりカテゴリ＋連続の設計部分を構成 | iteration_fidelityとdata_fidelitiesをカテゴリ列から除外し、両者の重複を拒否。linear_truncated=TrueはValueError |
+| MapSaasMultiFidelityGP | 設計列のMatern kernelにSAAS prior | fidelity列をdesign_dimsから除外。linear_truncated=Trueは拒否 |
+| AdditiveMapSaasMultiFidelityGP | BoTorchのadditive MAP-SAAS kernel | 少なくとも1つのfidelity列と設計列が必要。linear_truncated=Trueは拒否 |
+
+構造列をカテゴリ列として同時指定すると、kernelで同じ入力を二重に解釈するおそれがある。Mixed版はnormalize_feature_dimsによりカテゴリ列・fidelity列の重複を明示的に検査する。学習に使う全fidelityレベルの観測数と、獲得関数のコストモデル・ターゲットfidelityを同一概念として扱わない。
+
+posteriorのmean/varianceは指定したfidelity座標での予測であり、高精度評価を提案する際はその対象レベルとcost-aware acquisitionを別途定義する。データ形状やdtypeのAPI確認と、fidelity間相関が実データで妥当かの数値評価は別の検証となる。
+
+**実装根拠：** src/robotorchan/models/standard/multi_fidelity.py。今回の根拠はconstructor・dimension validationの静的確認であり、全fidelity kernelの数値同値性・最適化性能を再実行していない。
