@@ -339,3 +339,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `guide/15_heteroskedastic_noise.md`、`guide/16_uncertain_input_gp.md`、`guide/17_nonstationary_gp.md`に、input-dependent noiseの交互学習とjoint variational loss、Gaussian uncertain-input expected RBF kernelと元入力posterior契約、Gibbs kernelの局所lengthscaleの数式およびMixed版の2分岐を追記した。確認ソースは`src/robotorchan/models/robust/{robust,joint_heteroskedastic,nonstationary}.py`および`src/robotorchan/models/uncertain/uncertain_input.py`。
 
 **判定：partial / review required。** 各familyでsourceを照合したが、独立した数値PSD・variance calibration・posterior予測精度・dtype/device組合せの再実行はしていない。旧Mapping保全、174見出しverified=0、固定18 Phase・48章を維持。
+
+## Expressive GPの理論・実装対応の追加照合
+
+`guide/22_expressive_gp.md`へDeepGPのVariationalELBO/DeepApproximateMLL、MC DeepGPPosterior、tensor-valued observation_noise拒否、NNGP ReLU covariance recursion、Spectral Mixtureのkernel初期化とtask/mixed契約を追記した。根拠：`src/robotorchan/models/expressive/{deep_gp,infinite_width_bnn,spectral_mixture}.py`。DKLに対する既存記述を維持し、決定論的特徴写像と確率的層を区別。
+
+**判定：partial / review required。** 独立数値kernel property、学習収束、MC posterior accuracyは未再実行。固定18 Phase・48章、旧Mapping保全、174見出しverified=0を維持。

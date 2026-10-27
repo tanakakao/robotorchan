@@ -43,3 +43,28 @@ print(model.latent_dim)
 MC acquisitionがposteriorsを消費できても、全Expressive familyで任意の`q`、constraint、`optimize_acqf`が成功するとは限らない。DeepGPのstochastic posteriorを単一Gaussian posteriorとみなさず、NNGPのpriorを有限NNのweight posteriorとみなさない。Spectral Mixtureでは入力スケール・初期化・mixture数を比較条件として固定する。
 
 参照：[Neural Representation](19_neural_reduction_gp.md)、[Expressive Notebook](../../../../examples/notebooks/24_expressive_surrogate_gp.ipynb)、[旧Models Mapping](../models.md)、[Verification](../verification.md)。完了した検証の範囲は数値propertyと実行環境により限定する。
+
+## 5. 確率的深層GPと決定論的特徴写像の違い
+
+Deep Kernel Learningでは、決定論的encoder g_theta(x)を通した特徴の上でGP kernel k(g_theta(x), g_theta(x'))を評価する。一方、DeepGPは確率的なGP layerを合成し、各中間層の不確実性を積分・サンプリングして推論する。後者を単一のExact GP kernelへ置き換えることは一般にできない。
+
+src/robotorchan/models/expressive/deep_gp.pyのSingleTaskDeepGPはGPyTorch DeepGPを継承し、hidden_layersとoutput_layerの各層にVariationalStrategy、CholeskyVariationalDistribution、RBFKernelを構成する。make_mll(num_data)はDeepApproximateMLL(VariationalELBO(...))を返し、training_loss()はその負値を評価する。Exact GPのExactMarginalLogLikelihoodを流用しない。
+
+DeepGPのposterior(X)はnum_samples個のサンプルからDeepGPPosteriorを返す。Tensor-valued observation_noiseはNotImplementedErrorで拒否し、num_samplesは2以上を要求する。GaussianLikelihoodを介したobservation_noise=Trueの経路と、latent samplesの経路を区別する。単一のGaussian posteriorとみなして解析的獲得関数へ無条件に渡さない。
+
+## 6. NNGP kernelとSpectral Mixtureの推論契約
+
+| Family | covarianceの構成 | 訓練の意味と制約 |
+| --- | --- | --- |
+| InfiniteWidthBNNGP | infinite-width ReLU network由来のanalytic kernel recursion | src/robotorchan/models/expressive/infinite_width_bnn.pyでInfiniteWidthReLUKernelを実装し、SingleTaskGPのExact GP学習へ接続。有限幅NNのweight posteriorではない |
+| SpectralMixtureGP | GPyTorch SpectralMixtureKernelをScaleKernelで包む | src/robotorchan/models/expressive/spectral_mixture.pyがnum_mixturesと初期化方式を検証する。num_mixtures>0、initializationはdata/empspect |
+| MultiTask variants | task列の除去またはblock-design output軸の扱い | long-formatではtask_featureを通常の設計kernelに入れず、Kroneckerではtrain_Yのtask軸を保持 |
+| Mixed variants | カテゴリ用kernelと連続側のexpressive kernelを合成 | 全モデルでone-hotするという一般化は誤り。連続設計次元を必要とするvariantがある |
+
+InfiniteWidthReLUKernelの再帰では、初期線形共分散から各ReLU層の解析的共分散写像を反復する。これは無限幅における**prior covariance**を構成する処理で、ニューラルネットワークのパラメータを直接学習する方法ではない。GP posteriorとMLL計算はSingleTaskGP経由でBoTorch/GPyTorchへ委譲される。
+
+SpectralMixtureGPでは学習前にkernelのspectral parameterをtrain_X/Yから初期化し、その後Exact GPとして学習する。初期化はdataまたはempspectのみで、収束・周期性・予測性能を保証する処理ではない。SpectralMixtureMultiTaskGPはtask featureをdesign kernelの入力から除外し、Kronecker版は複数出力を使った初期化用ターゲットを構成する。
+
+## 7. 何を数値検証する必要があるか
+
+DeepGPではMC sample数・ランダムseed・training_loss勾配・posteriorの形状とサンプリングの再現性を検証する。Infinite-width BNNではkernelの対称性・PSD・深さとパラメータの感度、Spectral Mixtureでは初期化方式・mixture数・入力スケールに対する安定性を検証する。DKLはencoder gradientとGP推論の接続を別途確かめる。今回は上記ソース契約の確認であり、独立数値検証や学習実行を行っていない。
