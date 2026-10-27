@@ -447,3 +447,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `tests/docs/test_theory_guide_surrogate_examples.py`を追加し、第18章PCAGP、第23章RandomForestSurrogate、第24章BinarySingleTaskGPClassifierの掲載コードを直接実行するテストを定義した。回帰posteriorのshape・有限性、分類確率の2-class軸・総和1・有限性、分類latent posteriorの有限性を確認する。第08章のSAAS MCMC例は計算コストと追加依存関係があるため対象外。検証マトリクスには該当3章を掲載例実行として登録。
 
 **判定：CI待ち / partial。** 未学習分類モデルの校正やランダムフォレストの最適化性能を証明しない。固定18 Phase・48章と旧Mapping、174見出しの未完了判定を維持。
+
+## Phase 18：Neural Reduction・Expressive GPの掲載例実行
+
+`tests/docs/test_theory_guide_joint_encoder_examples.py`は第19章と第22章のJointEncoderGP掲載例をMarkdownから直接抽出して実行し、latent_dim=2の生成契約を確認する。検証マトリクスに両章の実行対象を追記する。
+
+**判定：CI待ち / partial。** training_lossやposteriorの数値精度、encoderの収束は未検証。旧Mapping5本・174見出し、18 Phase・48章の構成を維持。

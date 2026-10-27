@@ -34,10 +34,10 @@
 | 16 | Uncertain Input GP | kernel_model_examples | gaussian_input_kernel_reference |
 | 17 | Nonstationary GP | kernel_model_examples | gibbs_reference |
 | 18 | Dimensionality Reduction GP | surrogate_examples | — |
-| 19 | Neural Reduction GP | — | — |
+| 19 | Neural Reduction GP | joint_encoder_examples | — |
 | 20 | High-Dimensional Search | — | — |
 | 21 | Advanced High-Dimensional | — | — |
-| 22 | Expressive GP | — | — |
+| 22 | Expressive GP | joint_encoder_examples | — |
 | 23 | Non-GP Surrogates | surrogate_examples | — |
 | 24 | Classification | surrogate_examples | — |
 
