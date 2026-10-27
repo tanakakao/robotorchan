@@ -304,3 +304,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `guide/acquisition/07_multiobjective.md`に、BoTorch-native qEHVI/qNEHVIの違い、HeterogeneousModel内の共有回帰posterior所有権、ModelListGPとの境界、continuous residualとclassification PoFの組合せ、directed ref_point/partitioningとX_baselineの拒否契約を追記した。根拠は`src/robotorchan/acquisition/composition.py`、`src/robotorchan/models/heterogeneous.py`。`make_constrained_qehvi_acquisition`は存在するが同名のconstrained qNEHVI builderは確認できず、未実装のローカルAPIを推定していない。
 
 **判定：partial / review required。** 数値hypervolume、joint feasibility、PoF calibrationや最適化性能の新規実行はなし。旧Mappingの保全と174見出しverified=0を維持する。
+
+## Phase 18：分類確率ObjectiveとFeasibilityの意味論的区分
+
+`guide/24_classification.md`と`guide/acquisition/08_constraints.md`にProbabilityObjective、ClassificationProbabilityOfFeasibility、ProbabilityOfFeasibility、SampleProbabilityOfFeasibility、SampleResidualFeasibility、ProbabilityResidualFeasibilityの数学的役割・公開API・非互換条件を追加。`src/robotorchan/semantics/{objectives,feasibility,probability}.py`および`src/robotorchan/acquisition/composition.py`を直接照合し、deterministic PoFとepistemic probability samples、objectiveとconstraint、posteriorとclass probabilitiesを区別した。
+
+**判定：partial / review required。** 独立数値・校正評価・最適化再実行はなし。固定18 Phase・48章、旧Mapping5本、174見出しverified=0は維持する。

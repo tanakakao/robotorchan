@@ -113,3 +113,25 @@ value = acq(torch.tensor([[0.25]], dtype=torch.double))
 [旧Acquisition Mapping](../../acquisition.md)はBoTorch delegation・分類可行性の合成・one-shot制限を保全する。[旧Optimization Mapping](../../optimization.md)はcandidate feasibility側の責務を記す。[Verification Mapping](../../verification.md)と[検証索引](../verification/acquisition.md)で個別propertyの独立数値参照を確認する。
 
 CIでリンクや契約テストが成功しても、任意の制約付き関数に対する探索最適性、joint feasibilityの厳密性、全てのoptimizerとの接続成功は証明されない。旧Mappingは移行元として保存する。
+
+## 7. ProbabilityObjectiveとClassificationConstraintを取り違えない
+
+ProbabilityObjectiveは「分類確率を最適化する」という意味論的目的、ClassificationProbabilityOfFeasibilityは「分類確率で可行性を評価する」という意味論的制約である。例えばpass確率を上げることと、強度の獲得値をpass確率で重み付けすることは異なる探索目的になる。AcquisitionCompositionPlanは出力のownerを対応付けるだけであり、その時点で共有posteriorや獲得関数を生成しない。
+
+$$
+\alpha_{\mathrm{weighted}}(X)=\alpha_{\mathrm{reg}}(X)
+\prod_{i=1}^{q} P(\mathrm{pass}=1\mid x_i,\mathcal D)
+$$
+
+はFeasibilityWeightedAcquisitionのproduct reductionを使う場合の外部重み付けの模式式であり、ProbabilityObjectiveを使ってpass確率自体を最大化する獲得関数と同一ではない。分類器間・候補間の相関を積分したjoint PoFでもない。
+
+| feasibility representation | 判定する値 | 主な契約 |
+| --- | --- | --- |
+| ProbabilityOfFeasibility | 周辺化済みP(feasible|X,D) | deterministicなper-candidate値。MC sample軸を持たない |
+| SampleProbabilityOfFeasibility | sampled class probability | supports_probability_samplesを持つモデルに限定 |
+| SampleResidualFeasibility | sampled outcomeの残差 | 残差 <= 0で可行。BoTorch constrained MCと接続 |
+| ProbabilityResidualFeasibility | 閾値からの予測確率残差 | 決定論的な確率制約。サンプル制約やPoFと別 |
+
+BoTorchのConstrainedMCObjectiveへ渡すsample-wise constraint、分類PoFを外側から乗じるwrapper、候補Xに直接課すCandidateConstraintsの3層を混同しない。make_sample_classification_feasibility_bridgeはepistemic class-probability sampleの能力確認を行い、非対応ならTypeErrorを出す。サンプルの存在はpredict_probaの校正やjoint feasibility保証とは別である。
+
+**検証境界：** semantics/objectives.py、semantics/feasibility.py、semantics/probability.py、acquisition/composition.pyを照合。独立の統計的校正試験・最適化実行は今回なし。
