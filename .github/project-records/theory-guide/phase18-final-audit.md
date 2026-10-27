@@ -459,3 +459,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `tests/docs/test_theory_guide_high_dimensional_examples.py`は第20章TuRBOStrategyと第21章AdditiveMapSaasSingleTaskGPの掲載コードを抽出し、strategyのlength・boundsとモデルのraw training tensor形状を確認する。第08章のFully Bayesian SAASはMCMC・optional dependency負荷があるため、通常の軽量テスト対象から除外した。検証マトリクスは第20・21章にのみ実行証拠を追記した。
 
 **判定：CI待ち / partial。** TuRBOの最適化収束、MAP-SAASのfit、SAAS MCMCの数値的推論精度は未認証。旧Mapping5本・174見出し、18 Phase・48章を維持。
+
+## Phase 18：BO総論・獲得関数の掲載例実行とskip判定の修正
+
+`tests/docs/test_theory_guide_bo_acquisition_examples.py`では第01章GP posteriorと第04章LogExpectedImprovementから候補生成までの掲載例を直接実行し、shape・有限性・bounds内候補を確認する。第08章SAAS例の通常CIはNumPyro不足でskipされる場合があり、成功済みとは数えない。第12章Contextual Multi-Outputの掲載例テストが既存マトリクスに未反映だったため追加した。
+
+**判定：CI待ち / partial。** 第13章モデル選択の導線監査、旧Mapping・174見出しの根拠照合は残る。固定18 Phase・48章を維持。
