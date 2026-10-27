@@ -27,9 +27,7 @@ class BatchOneShotGuideTests(unittest.TestCase):
             exec(compile(match.group(1), str(GUIDE), "exec"), scope)
         self.assertEqual(scope["augmented_q"], 6)
         self.assertEqual(tuple(scope["candidates"].shape), (1, 2, 1))
-        self.assertTrue(
-            torch.equal(scope["candidates"], scope["augmented"][:, :2, :])
-        )
+        self.assertTrue(torch.equal(scope["candidates"], scope["augmented"][:, :2, :]))
 
 
 if __name__ == "__main__":
