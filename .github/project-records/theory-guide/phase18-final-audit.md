@@ -369,3 +369,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `tests/docs/test_theory_guide_heterogeneous_example.py`を追加し、`guide/07_multitask_multioutput.md`の掲載コードをMarkdownから抽出してそのまま実行する回帰テストを設定した。output_owner、出力数、predict_probaのshape・有限性・クラス確率の総和を検査する。従来の静的constructor照合より強い証拠とする一方、モデルfit・分類確率の校正・数値最適化の正当性を確認するテストではない。
 
 **判定：CI待ち / partial。** 本変更前に実行成功を主張しない。旧Mapping5本、174見出しverified=0、固定18 Phase・48章を維持する。
+
+## Phase 18：基本モデル3章の掲載例をそのまま実行するテスト
+
+`tests/docs/test_theory_guide_core_model_examples.py`を追加した。`guide/02_gaussian_process.md`、`05_mixed_variables.md`、`09_variational_gp.md`の最初のPython fenced blockを直接抽出・実行し、Exact GPのposterior平均と分散、Mixed GPのposterior shape、Variational GPのELBO生成と訓練行数を確認する。掲載コードとテスト用コードの複製を避ける。学習の数値収束、独立条件付きGP参照、探索性能の評価とは区別する。
+
+**判定：CI待ち / partial。** 旧Mapping5本保全、174見出しverified=0、固定18 Phase・48章は維持。
