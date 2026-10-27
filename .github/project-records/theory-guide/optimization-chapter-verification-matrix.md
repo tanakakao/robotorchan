@@ -10,8 +10,8 @@
 | 03 | Initialization | initialization_example（explicit starts） | — |
 | 04 | Mixed / Discrete | mixed_discrete_example（fixed-feature列挙） | — |
 | 05 | Constraints | constraints_example（linear candidate） | feasibility tolerance |
-| 06 | Derivative Free | — | — |
-| 07 | Evolutionary | — | — |
+| 06 | Derivative Free | sampling_evolutionary_examples（Sobol） | pool内argmax照合 |
+| 07 | Evolutionary | sampling_evolutionary_examples（NSGA-II） | 返却集合内の非支配性 |
 | 08 | Batch / One-shot | — | — |
 | 09 | High Dimensional | — | — |
 | 10 | Trust Region | — | — |
@@ -32,3 +32,5 @@
 第04章は`tests/docs/test_theory_guide_optimization_mixed_discrete_example.py`でnative mixed optimizerのカテゴリ固定候補を直接実行する。ここでのGPは数値入力を連続扱いする簡易モデルであり、categorical kernelの学習やMixedVariableSpace dispatcherの全面検証ではない。
 
 第05章は`tests/docs/test_theory_guide_optimization_constraints_example.py`で公開dispatcherによる線形candidate制約を直接実行し、許容誤差1e-6内の候補可行性を確認する。outcome制約・非線形・inter-point・全backendの保証ではない。
+
+第06・07章の掲載例を`tests/docs/test_theory_guide_optimization_sampling_evolutionary_examples.py`で直接実行する。Sobolは有限サンプル内の最大スコア、NSGA-IIは返却された近似Pareto集合の内部非支配性を検査する。真の大域最適解・Pareto frontへの収束や制約対応の保証ではない。
