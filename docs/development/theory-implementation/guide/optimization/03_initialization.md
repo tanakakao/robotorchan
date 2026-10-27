@@ -42,3 +42,40 @@ flat acquisition、重複、one-shot補助変数、random seedの扱いで収束
 最低限の確認順序は、**(1) 問題の型→(2) 数理契約→(3) optimizer dispatch→(4) backend→(5) 制約と出力shape→(6) 再現実験**である。CI成功だけで全backend・全constraint・全qに対して正しいとは主張しない。
 
 [Optimization利用ガイド](../../../../optimization/README.md)、[理論Optimization索引](../../../../theory/optimization/README.md)、[旧Optimization Mapping](../../optimization.md)、[Verification](../../verification.md)を参照。原文は章別照合完了まで削除しない。
+
+## 5. 明示的な初期点とSobol poolを区別する
+
+`raw_samples`は初期候補の探索pool、`num_restarts`は局所最適化の開始数である。
+`batch_initial_conditions`を明示するときは`num_restarts × q × d`のshapeを使用する。
+次は同じUCBに対して、明示的な初期値を使って候補を生成する例。
+
+```python
+import torch
+from botorch.acquisition.analytic import UpperConfidenceBound
+from robotorchan.models import SingleTaskGP
+from robotorchan.optim import optimize_acqf
+
+train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(4 * train_X)
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+model.eval()
+acqf = UpperConfidenceBound(model=model, beta=0.5)
+bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+initial_conditions = torch.tensor([[[0.2]], [[0.8]]], dtype=torch.double)
+candidate, value = optimize_acqf(
+    acq_function=acqf,
+    bounds=bounds,
+    q=1,
+    optimizer="botorch",
+    num_restarts=2,
+    raw_samples=None,
+    batch_initial_conditions=initial_conditions,
+)
+assert candidate.shape == (1, 1)
+assert torch.isfinite(value).all()
+assert torch.all(candidate >= bounds[0])
+assert torch.all(candidate <= bounds[1])
+```
+
+この例は初期点を手動で与える場合のshapeとdispatcher接続を検証する。
+Sobol poolの品質、局所解の大域最適性、非線形制約付き初期化の成功は示さない。
