@@ -52,9 +52,46 @@ assert model.make_mll() is not None
 Contextual GPの`SACGP`は`train_Yvar`と`decomposition`を明示的に受け取る。
 階層条件付きkernelの`hierarchical_dependencies`と同じAPIではない。
 
+
+### Contextual Multi-Output：task列と設計カテゴリ列を分ける
+
+LCEMGP系列ではtaskを区別する構造列と、設計条件のカテゴリ列は役割が異なる。
+次のMixedLCEMGPはtask_featureを末尾列として指定し、cat_dimsには設計列だけを渡す。
+
+```python
+import torch
+from robotorchan.models import MixedLCEMGP
+
+train_X = torch.tensor(
+    [
+        [0.10, 0.0, 0.0],
+        [0.20, 1.0, 0.0],
+        [0.40, 0.0, 1.0],
+        [0.55, 1.0, 1.0],
+        [0.75, 0.0, 0.0],
+        [0.90, 1.0, 1.0],
+    ],
+    dtype=torch.double,
+)
+train_Y = train_X[:, :1] + 0.25 * train_X[:, 1:2] + 0.4 * train_X[:, 2:3]
+model = MixedLCEMGP(
+    train_X=train_X,
+    train_Y=train_Y,
+    task_feature=-1,
+    cat_dims=[1],
+    outcome_transform=None,
+)
+assert model.cat_dims == (1,)
+assert model.raw_task_feature == 2
+assert model.make_mll() is not None
+```
+
+この例はtaskと設計カテゴリの分離、および学習目的関数を生成できることを示す。
+context間の汎化や潜在embeddingの推定精度まで示すものではない。
+
 ## 検証・未検証事項
 
-上の例は公開シンボルの入口確認であり、学習・posterior実行例ではない。conditional inactive dimensionsの扱い、contextごとの入力構造、観測に存在しないcontextへの汎化条件はfamilyごとに制限がある。詳細は[モデル選択ガイド](../../../models/hierarchical_contextual.md)と[Hierarchical Notebook](../../../../examples/notebooks/12_hierarchical_gp.ipynb)、[Context Notebook](../../../../examples/notebooks/14_contextual_gp.ipynb)を参照する。
+上の階層条件付きGPの例はモデル構築とMLL生成を示すものであり、fitやposteriorの数値検証は含まない。conditional inactive dimensionsの扱い、contextごとの入力構造、観測に存在しないcontextへの汎化条件はfamilyごとに制限がある。詳細は[モデル選択ガイド](../../../models/hierarchical_contextual.md)と[Hierarchical Notebook](../../../../examples/notebooks/12_hierarchical_gp.ipynb)、[Context Notebook](../../../../examples/notebooks/14_contextual_gp.ipynb)を参照する。
 
 [旧Model Mapping](../models.md)および[検証記録](../verification.md)は移行元の正本として保持する。API存在、静的assertion、CI成功、独立数値検証は区別する。使用例と詳しいモデル選択は[モデルガイド](../../../models/README.md)を参照する。
 

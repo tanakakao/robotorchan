@@ -435,3 +435,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 第12章のSACGP名表示だけの例を、MixedHierarchicalConditionalKernelGPとhierarchical_dependenciesの具体的な設定へ更新。`tests/docs/test_theory_guide_hierarchical_example.py`は掲載コードを直接実行し、cat_dims、raw訓練tensor、ExactMarginalLogLikelihoodの生成を調べる。SACGPは別familyとしてtrain_Yvarとdecompositionが必要な点を説明。contextual全familyの実行、inactive invarianceの独立数値参照や学習収束は未検証。
 
 **判定：CI待ち / partial。** 旧Mapping5本、174見出しverified=0、固定18 Phase・48章を維持。
+
+## Phase 18：第12章 Contextual Multi-Outputの掲載例実行
+
+第12章にMixedLCEMGPのtask列とcat_dimsを分離するコード例を追加し、`tests/docs/test_theory_guide_contextual_example.py`から当該Markdownを直接実行するテストを作成した。raw task feature、カテゴリ列、raw tensor、ExactMarginalLogLikelihood生成を確認する。既存の階層モデル例については、単なるクラス名表示とする古い説明を修正した。
+
+**判定：CI待ち / partial。** embeddingの学習収束・context外挿・SACGPの全契約は未検証。固定18 Phase・48章と旧Mappingを保全する。
