@@ -28,7 +28,7 @@
 | 10 | Preference Learning | kernel_preference_examples | — |
 | 11 | Structured Output | structured_model_examples | — |
 | 12 | Hierarchical / Contextual | hierarchical_example, contextual_example | — |
-| 13 | Model Selection | — | — |
+| 13 | Model Selection | —（案内・比較章） | — |
 | 14 | Robust GP | robust_model_example, contaminated_example | — |
 | 15 | Heteroskedastic Noise | heteroskedastic_example | — |
 | 16 | Uncertain Input GP | kernel_model_examples | gaussian_input_kernel_reference |
@@ -40,6 +40,12 @@
 | 22 | Expressive GP | joint_encoder_examples | — |
 | 23 | Non-GP Surrogates | surrogate_examples | — |
 | 24 | Classification | surrogate_examples | — |
+
+## 第13章の別種の証拠
+
+第13章は個別モデルの掲載コードではなく、モデル選択の比較表と関連章への案内を担う。
+モデル別MLL・posteriorの学習経路を第7節に追記し、SAASへの参照先を第08章に修正した。
+リンク検査のCI結果は別途確認し、数値テストの代わりに「実行成功」とは記録しない。
 
 ## 証拠の場所
 
