@@ -387,3 +387,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `guide/16_uncertain_input_gp.md`のクラス名表示だけの例を`train_X_std`を与えてposteriorを取得する例に更新した。`tests/docs/test_theory_guide_kernel_model_examples.py`で第16章と第17章の掲載コードを直接抽出・実行し、UncertainInputのposterior形状・有限性・raw input std、第17章のGibbs local lengthscale形状・正値性を調べる。ソース契約に基づく実行テストであり、kernelの独立数値比較や学習収束の証明ではない。
 
 **判定：CI待ち / partial。** 旧Mapping5本の保全、174見出しverified=0、固定18 Phase・48章を維持。
+
+## Phase 18：Student-t Robust GPの掲載例と実行契約
+
+`guide/14_robust_gaussian_process.md`のクラス名表示のみの例をStudentTSingleTaskGPの生成、training_lossとlatent posteriorの取得例へ更新した。`tests/docs/test_theory_guide_robust_model_example.py`では掲載コードを抽出して実行し、lossの有限性、posterior shape・有限性、make_mll()の拒否を確認する。根拠は`src/robotorchan/models/robust/student_t.py`のsupports_mll=False、StudentTLikelihoodおよび明示的training_loss経路。実行CIは作成後に確認する。
+
+**判定：CI待ち / partial。** これはvariational fittingの収束、外れ値耐性の数値実証、独立尤度検証を意味しない。旧Mapping5本と固定18 Phase・48章を維持。

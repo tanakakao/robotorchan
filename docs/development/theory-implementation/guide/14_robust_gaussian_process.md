@@ -16,12 +16,24 @@
 ## APIと実装を読むための最小例
 
 ```python
+import torch
 from robotorchan.models import StudentTSingleTaskGP
 
-print(StudentTSingleTaskGP.__name__)
+train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(6 * train_X)
+model = StudentTSingleTaskGP(
+    train_X=train_X,
+    train_Y=train_Y,
+    num_inducing=4,
+    df=4.0,
+)
+loss = model.training_loss()
+posterior = model.posterior(train_X[:2])
+assert loss.ndim == 0
+assert posterior.mean.shape[-2:] == (2, 1)
 ```
 
-コード例は公開APIを示す静的な例であり、このセッションで実行して成功したとの主張ではない。
+この例はvariational objectiveを計算し、潜在応答posteriorを取得する。optimizer stepは行っていない。\n`make_mll()`はStudent-t系列では使用できず、学習時には`training_loss()`を最小化する。
 
 ## 適用条件、テスト、限界
 
