@@ -46,3 +46,28 @@ train observations → surrogate.fit / posterior(X)
 [既存Acquisition Mapping](../../acquisition.md)はsource inspectedの実装契約、entry・テスト証拠を保持する。[Verification Mapping](../../verification.md)は独立数値参照や既存のassertionの追跡先とする。両者を消去・置き換えず、原文区間のmigration ledgerをverifiedとする際に照合する。CI成功だけで全数値契約が検証されたことにはならない。
 
 [獲得関数の基礎ガイド](../04_acquisition_function.md)、[獲得関数利用ドキュメント](../../../../optimization/README.md)、[理論Acquisition索引](../../../../theory/acquisition/README.md)にも戻れる。個別の数式、適用例や比較条件は対応する理論章と使用ガイドで読む。
+
+## 6. UCBを評価する最小例
+
+`UpperConfidenceBound`では`beta`により不確実性への探索ボーナスを調整する。
+`beta`は観測ノイズの分散ではなく、理論の時変スケジュールと固定値も区別する。
+
+```python
+import torch
+from botorch.acquisition.analytic import UpperConfidenceBound
+from robotorchan.models import SingleTaskGP
+
+train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(2 * torch.pi * train_X)
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+model.eval()
+candidates = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
+beta = 0.5
+acqf = UpperConfidenceBound(model=model, beta=beta)
+scores = acqf(candidates)
+assert scores.shape == (2,)
+assert torch.isfinite(scores).all()
+```
+
+この例は`q=1`のanalytic UCBであり、
+batch UCBや制約付き候補最適化の実行例ではない。
