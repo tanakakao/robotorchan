@@ -393,3 +393,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `guide/14_robust_gaussian_process.md`のクラス名表示のみの例をStudentTSingleTaskGPの生成、training_lossとlatent posteriorの取得例へ更新した。`tests/docs/test_theory_guide_robust_model_example.py`では掲載コードを抽出して実行し、lossの有限性、posterior shape・有限性、make_mll()の拒否を確認する。根拠は`src/robotorchan/models/robust/student_t.py`のsupports_mll=False、StudentTLikelihoodおよび明示的training_loss経路。実行CIは作成後に確認する。
 
 **判定：CI待ち / partial。** これはvariational fittingの収束、外れ値耐性の数値実証、独立尤度検証を意味しない。旧Mapping5本と固定18 Phase・48章を維持。
+
+## Phase 18：Contaminated GP / RRPの学習契約照合
+
+`guide/14_robust_gaussian_process.md`でGaussian contamination mixtureのlogsumexp尤度とMC+KL損失、潜在posteriorと近似contamination_diagnosticの相違、RRPのsparse support契約を説明した。第14章にContaminatedSingleTaskGPの使用例を追加し、`tests/docs/test_theory_guide_contaminated_example.py`でMarkdown掲載コードの直接実行、有限loss・診断確率範囲・make_mll拒否を検査する。実装照合元は`src/robotorchan/models/robust/{contaminated,student_t,robust}.py`。
+
+**判定：CI待ち / partial。** 外れ値検出精度やRRP support回復の数値評価は対象外。旧Mapping保全、18 Phase・48章を維持。

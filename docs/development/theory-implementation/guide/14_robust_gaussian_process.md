@@ -33,7 +33,8 @@ assert loss.ndim == 0
 assert posterior.mean.shape[-2:] == (2, 1)
 ```
 
-この例はvariational objectiveを計算し、潜在応答posteriorを取得する。optimizer stepは行っていない。\n`make_mll()`はStudent-t系列では使用できず、学習時には`training_loss()`を最小化する。
+この例はvariational objectiveを計算し、潜在応答posteriorを取得する。optimizer stepは行っていない。
+`make_mll()`はStudent-t系列では使用できず、学習時には`training_loss()`を最小化する。
 
 ## 適用条件、テスト、限界
 
@@ -52,3 +53,53 @@ MultiTask版のto_standard_model()は現在の学習／評価モードを保持�
 MixedRobustRelevancePursuitMultiTaskGPはtask_featureを構造列として扱うため、cat_dimsと重ねるとnormalize_feature_dimsが拒否する。カテゴリ共分散の構築にはmake_mixed_covar_moduleを利用する。外れ値重みの推論やsupport選択は通常の最大周辺尤度の一段階最適化と混同しない。
 
 **検証境界：** robust.py内のclass継承、mixin初期化、task列とカテゴリ列の検証を確認した。外れ値支持集合の復元精度、likelihood同定、実測ノイズ下の較正や数値的頑健性の比較は今回実行していない。
+
+## Contamination Mixture：対数尤度と外れ値診断
+
+ContaminatedSingleTaskGPは2成分のGaussian observation modelを使う。外れ値混入率をπ、
+inlier/outlierの標準偏差をそれぞれσ_in、σ_outとすると、残差rの密度は次の形となる。
+
+$$
+p(r)=(1-\pi)\,\mathcal N(r;0,\sigma_{\mathrm{in}}^2)
++\pi\,\mathcal N(r;0,\sigma_{\mathrm{out}}^2).
+$$
+
+実装ではinlier/outlier log probabilityの加重和をlogsumexpで安定的に評価する。
+training_loss()は潜在GPのMonte Carlo sampleで期待対数尤度を近似し、KL項を加える。
+model.make_mll()はRuntimeErrorで拒否される。posterior(X)は潜在応答の予測であり、
+汚染ラベルの確定値ではない。contamination_diagnostic(X,Y)は潜在平均を代入して
+汚染確率を近似する診断量で、外れ値ラベルの正解や完全Bayesianな周辺確率ではない。
+
+~~~python
+import torch
+from robotorchan.models import ContaminatedSingleTaskGP
+
+train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(6 * train_X)
+model = ContaminatedSingleTaskGP(
+    train_X=train_X,
+    train_Y=train_Y,
+    num_inducing=4,
+    num_likelihood_samples=4,
+)
+loss = model.training_loss()
+posterior = model.posterior(train_X[:2])
+diagnostic = model.contamination_diagnostic(train_X[:2], train_Y[:2])
+assert loss.ndim == 0
+assert posterior.mean.shape[-2:] == (2, 1)
+assert diagnostic.shape == (2, 1)
+~~~
+
+## Robust Relevance Pursuit：疎な外れ値構造
+
+RobustRelevancePursuitSingleTaskGPはBoTorchの
+RobustRelevancePursuitSingleTaskGPを継承し、robotorchan側で元の教師データと
+make_mll()を提供する。ただし、通常のExact GPと同じハイパーパラメータ最適化だけで
+outlier support探索が終了するとは限らない。support選択のための上流契約を確認する。
+
+Student-tとContaminatedモデルが非Gaussianな観測モデルをvariational inferenceで扱うのに対し、
+RRPは外れ値に関連した疎なnoise構造を持つ。RRPのmake_mll()が利用可能であっても、
+Student-tやContaminatedのtraining_loss()と交換可能ではない。
+
+根拠：src/robotorchan/models/robust/{student_t,contaminated,robust}.py。
+ここでの数式とAPIの照合は、外れ値検出性能・support回復精度の数値実証ではない。
