@@ -12,13 +12,17 @@
 | 05 | Information Theoretic | — | — |
 | 06 | Lookahead | — | — |
 | 07 | Multiobjective | — | — |
-| 08 | Constraints | — | — |
+| 08 | Constraints | constraints_example（continuous qEI） | — |
 | 09 | Active Learning | — | — |
 | 10 | Level Set | — | — |
 | 11 | Multifidelity / Cost Aware | — | — |
 | 12 | Selection Guide | —（選択・案内章） | — |
 
 `batch_noisy_example`は`tests/docs/test_theory_guide_acquisition_batch_noisy_example.py`を表し、q=2のbaseline付きMC獲得値を実行・shape検査する。独立数値参照ではない。
+
+`constraints_example`は`tests/docs/test_theory_guide_acquisition_constraints_example.py`を表し、
+第08章の既存`~~~python`コードを直接実行して返り値の形状・有限性を確認する。
+候補点制約や分類PoFを含む全builderの検証と同義ではない。
 
 表中の`analytic_examples`は
 `tests/docs/test_theory_guide_acquisition_analytic_examples.py`を表す。
