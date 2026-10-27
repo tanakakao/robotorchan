@@ -30,7 +30,7 @@ class HighDimensionalGuideExamplesTests(unittest.TestCase):
     def test_turbo_strategy_construction(self) -> None:
         scope = self.run_example("20_high_dimensional_search.md")
         strategy = scope["strategy"]
-        self.assertTrue(0 < strategy.state.length)
+        self.assertTrue(strategy.state.length > 0)
         self.assertEqual(tuple(scope["bounds"].shape), (2, 2))
 
     def test_additive_map_saas_construction(self) -> None:
