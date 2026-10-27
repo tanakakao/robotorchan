@@ -381,3 +381,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `tests/docs/test_theory_guide_structured_model_examples.py`で`guide/06_multi_fidelity.md`、`07_multitask_multioutput.md`、`11_structured_output.md`の掲載された最初のPython fenced blockをそのまま実行するテストを追加。Multi-FidelityとMultiTaskはposteriorのshapeと有限性、HigherOrderGPはtensor shapeと構築契約を確認する。これらのテストはfit完了や構造化posteriorの数値同値性を認証しない。
 
 **判定：CI待ち / partial。** 旧Mapping5本、174見出しverified=0、固定18 Phase・48章を維持。
+
+## Phase 18：入力不確実性・非定常GPのガイド掲載例テスト
+
+`guide/16_uncertain_input_gp.md`のクラス名表示だけの例を`train_X_std`を与えてposteriorを取得する例に更新した。`tests/docs/test_theory_guide_kernel_model_examples.py`で第16章と第17章の掲載コードを直接抽出・実行し、UncertainInputのposterior形状・有限性・raw input std、第17章のGibbs local lengthscale形状・正値性を調べる。ソース契約に基づく実行テストであり、kernelの独立数値比較や学習収束の証明ではない。
+
+**判定：CI待ち / partial。** 旧Mapping5本の保全、174見出しverified=0、固定18 Phase・48章を維持。
