@@ -22,7 +22,9 @@ Fully Bayesian SAAS系は`supports_mll=False`であり、標準exact GPと同様
 ## API利用例：MCMCを実行しない基本契約の確認
 
 Fully Bayesian SAASでは、モデル生成だけならNUTSを実行せずに入力shape、
-元の観測データの保持、標準MLL非対応を確認できる。通常の軽量CIではこの範囲を検証する。
+元の観測データの保持、標準MLL非対応を確認できる。ただしモデル生成時点でも
+JAX・jaxlib・NumPyroが必要なため、通常CIにこれらがなければ実行せずskipし、
+fully-bayesian用の依存関係を揃えた環境で検証する。
 
 ```python
 import torch
