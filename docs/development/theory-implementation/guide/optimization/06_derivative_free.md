@@ -42,3 +42,36 @@ finite samplesはglobal optimumの保証にならない。mixed variable、fixed
 最低限の確認順序は、**(1) 問題の型→(2) 数理契約→(3) optimizer dispatch→(4) backend→(5) 制約と出力shape→(6) 再現実験**である。CI成功だけで全backend・全constraint・全qに対して正しいとは主張しない。
 
 [Optimization利用ガイド](../../../../optimization/README.md)、[理論Optimization索引](../../../../theory/optimization/README.md)、[旧Optimization Mapping](../../optimization.md)、[Verification](../../verification.md)を参照。原文は章別照合完了まで削除しない。
+
+## 5. Sobol候補poolから獲得関数を最大化する
+
+`sample_candidate_batches`は候補点を生成し、
+`select_best_sampled_batch`は与えられた有限poolの獲得値を比較する。
+最良のサンプルが連続領域全体の大域最適解とは限らない。
+
+```python
+import torch
+from botorch.acquisition.analytic import UpperConfidenceBound
+from robotorchan.models import SingleTaskGP
+from robotorchan.optim.backends.sampling import (
+    sample_candidate_batches,
+    select_best_sampled_batch,
+)
+
+train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(4 * train_X)
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+model.eval()
+acqf = UpperConfidenceBound(model=model, beta=0.5)
+bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+samples = sample_candidate_batches(bounds, num_samples=32, q=1, seed=7)
+candidate, score = select_best_sampled_batch(acqf, samples)
+assert samples.shape == (32, 1, 1)
+assert candidate.shape == (1, 1)
+assert torch.isfinite(score).all()
+assert torch.all(candidate >= bounds[0])
+assert torch.all(candidate <= bounds[1])
+```
+
+この例の対象はcontinuous・q=1の有限poolであり、
+mixed変数や候補制約を含む探索結果の可行性を保証しない。
