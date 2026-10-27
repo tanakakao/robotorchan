@@ -441,3 +441,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 第12章にMixedLCEMGPのtask列とcat_dimsを分離するコード例を追加し、`tests/docs/test_theory_guide_contextual_example.py`から当該Markdownを直接実行するテストを作成した。raw task feature、カテゴリ列、raw tensor、ExactMarginalLogLikelihood生成を確認する。既存の階層モデル例については、単なるクラス名表示とする古い説明を修正した。
 
 **判定：CI待ち / partial。** embeddingの学習収束・context外挿・SACGPの全契約は未検証。固定18 Phase・48章と旧Mappingを保全する。
+
+## Phase 18：PCA GP・非GP surrogate・Binary分類の掲載例実行
+
+`tests/docs/test_theory_guide_surrogate_examples.py`を追加し、第18章PCAGP、第23章RandomForestSurrogate、第24章BinarySingleTaskGPClassifierの掲載コードを直接実行するテストを定義した。回帰posteriorのshape・有限性、分類確率の2-class軸・総和1・有限性、分類latent posteriorの有限性を確認する。第08章のSAAS MCMC例は計算コストと追加依存関係があるため対象外。検証マトリクスには該当3章を掲載例実行として登録。
+
+**判定：CI待ち / partial。** 未学習分類モデルの校正やランダムフォレストの最適化性能を証明しない。固定18 Phase・48章と旧Mapping、174見出しの未完了判定を維持。
