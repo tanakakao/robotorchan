@@ -27,7 +27,7 @@
 | 09 | Variational GP | core_model_examples | — |
 | 10 | Preference Learning | kernel_preference_examples | — |
 | 11 | Structured Output | structured_model_examples | — |
-| 12 | Hierarchical / Contextual | — | — |
+| 12 | Hierarchical / Contextual | hierarchical_example | — |
 | 13 | Model Selection | — | — |
 | 14 | Robust GP | robust_model_example, contaminated_example | — |
 | 15 | Heteroskedastic Noise | heteroskedastic_example | — |
@@ -57,8 +57,8 @@ CI成功は記録したコミットのテスト実行成功を示すが、数値
 
 ## 以降の優先順位
 
-次は掲載例実行の証拠が未登録の第12章Hierarchical / Contextualと
-第15章Heteroskedastic Noiseを確認する。
+第12章についてはhierarchical conditionalの掲載例を検証対象に登録したが、
+SACGP・LCEAGPなどcontextual family全体の実行検証は未実施。
 次に第08・18～24章の高次元・非GP・分類関連を確認する。
 学習済みposteriorの独立参照や獲得関数・最適化の統合検証は、
 単純なconstructor実行テストと切り分けて整備する。
