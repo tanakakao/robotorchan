@@ -9,13 +9,13 @@
 | 02 | Improvement / LogEI / PI | analytic_examples（LogEI） | Gaussian EI reference |
 | 03 | Confidence Bound / UCB | analytic_examples（UCB） | Gaussian UCB reference |
 | 04 | Batch / Noisy | batch_noisy_example（qLogNEI） | — |
-| 05 | Information Theoretic | — | — |
+| 05 | Information Theoretic | information_cost_examples（MES/GIBBON） | — |
 | 06 | Lookahead | — | — |
 | 07 | Multiobjective | — | — |
 | 08 | Constraints | constraints_example（continuous qEI） | — |
 | 09 | Active Learning | active_learning_example（regression） | posterior-moment reference |
 | 10 | Level Set | level_set_example（Straddle） | posterior-moment reference |
-| 11 | Multifidelity / Cost Aware | — | — |
+| 11 | Multifidelity / Cost Aware | information_cost_examples（fidelity cost） | affine cost formula |
 | 12 | Selection Guide | —（選択・案内章） | — |
 
 `batch_noisy_example`は`tests/docs/test_theory_guide_acquisition_batch_noisy_example.py`を表し、q=2のbaseline付きMC獲得値を実行・shape検査する。独立数値参照ではない。
@@ -37,3 +37,5 @@ CI未実行・失敗・skipの際は検証成功と認定しない。
 第09章の掲載例と独立moment参照は`tests/docs/test_theory_guide_acquisition_active_learning_example.py`、既存のより広い回帰AL数式検証は`tests/acquisition/test_phase8_regression_al_formula_reference.py`で確認する。分類entropyとBALDの完全な統合実行を認定するものではない。
 
 第10章の掲載例は`tests/docs/test_theory_guide_acquisition_level_set_example.py`で直接実行し、Straddleの閾値距離とposterior標準偏差の式を別経路で確認する。境界分類の較正やbatch最適化の実証ではない。
+
+第05章は既存のMES/GIBBON掲載コードを直接実行するが、情報利得の独立数値照合は行わない。第11章のコスト関数は`tests/docs/test_theory_guide_acquisition_information_cost_examples.py`で固定fidelityごとの線形コストを確認する。これはmulti-fidelity KGの最適化性能やone-shot動作の検証ではない。
