@@ -8,7 +8,7 @@
 | 01 | Foundations | — | — |
 | 02 | Improvement / LogEI / PI | analytic_examples（LogEI） | Gaussian EI reference |
 | 03 | Confidence Bound / UCB | analytic_examples（UCB） | Gaussian UCB reference |
-| 04 | Batch / Noisy | — | — |
+| 04 | Batch / Noisy | batch_noisy_example（qLogNEI） | — |
 | 05 | Information Theoretic | — | — |
 | 06 | Lookahead | — | — |
 | 07 | Multiobjective | — | — |
@@ -17,6 +17,8 @@
 | 10 | Level Set | — | — |
 | 11 | Multifidelity / Cost Aware | — | — |
 | 12 | Selection Guide | —（選択・案内章） | — |
+
+`batch_noisy_example`は`tests/docs/test_theory_guide_acquisition_batch_noisy_example.py`を表し、q=2のbaseline付きMC獲得値を実行・shape検査する。独立数値参照ではない。
 
 表中の`analytic_examples`は
 `tests/docs/test_theory_guide_acquisition_analytic_examples.py`を表す。
