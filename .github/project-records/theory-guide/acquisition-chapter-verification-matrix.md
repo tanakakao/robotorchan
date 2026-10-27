@@ -10,7 +10,7 @@
 | 03 | Confidence Bound / UCB | analytic_examples（UCB） | Gaussian UCB reference |
 | 04 | Batch / Noisy | batch_noisy_example（qLogNEI） | — |
 | 05 | Information Theoretic | information_cost_examples（MES/GIBBON） | — |
-| 06 | Lookahead | — | — |
+| 06 | Lookahead | lookahead_example（qKG augmented q） | — |
 | 07 | Multiobjective | — | — |
 | 08 | Constraints | constraints_example（continuous qEI） | — |
 | 09 | Active Learning | active_learning_example（regression） | posterior-moment reference |
@@ -39,3 +39,5 @@ CI未実行・失敗・skipの際は検証成功と認定しない。
 第10章の掲載例は`tests/docs/test_theory_guide_acquisition_level_set_example.py`で直接実行し、Straddleの閾値距離とposterior標準偏差の式を別経路で確認する。境界分類の較正やbatch最適化の実証ではない。
 
 第05章は既存のMES/GIBBON掲載コードを直接実行するが、情報利得の独立数値照合は行わない。第11章のコスト関数は`tests/docs/test_theory_guide_acquisition_information_cost_examples.py`で固定fidelityごとの線形コストを確認する。これはmulti-fidelity KGの最適化性能やone-shot動作の検証ではない。
+
+第06章は`tests/docs/test_theory_guide_acquisition_lookahead_example.py`でone-shot候補の拡張q次元と`extract_candidates`を検証する。KG獲得値や最適化性能の独立数値検証ではない。第07章Multiobjectiveの数値検証は次の監査対象とする。
