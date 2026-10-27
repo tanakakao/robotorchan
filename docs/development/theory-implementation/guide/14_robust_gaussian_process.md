@@ -54,7 +54,6 @@ MixedRobustRelevancePursuitMultiTaskGPはtask_featureを構造列として扱う
 
 **検証境界：** robust.py内のclass継承、mixin初期化、task列とカテゴリ列の検証を確認した。外れ値支持集合の復元精度、likelihood同定、実測ノイズ下の較正や数値的頑健性の比較は今回実行していない。
 
-
 ## Contamination Mixture：対数尤度と外れ値診断
 
 ContaminatedSingleTaskGPは2成分のGaussian observation modelを使う。外れ値混入率をπ、
