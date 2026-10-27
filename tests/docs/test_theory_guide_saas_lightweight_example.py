@@ -6,6 +6,7 @@ import re
 import unittest
 from pathlib import Path
 
+import pytest
 import torch
 
 GUIDE = (
@@ -16,6 +17,7 @@ GUIDE = (
 
 class SaasGuideExampleTests(unittest.TestCase):
     def test_lightweight_constructor_example(self) -> None:
+        pytest.importorskip("numpyro")
         chapter = GUIDE.read_text(encoding="utf-8")
         section = chapter.split("MCMCを実行しない基本契約の確認", 1)[1]
         match = re.search(r"```python\n(.*?)\n```", section, re.DOTALL)
