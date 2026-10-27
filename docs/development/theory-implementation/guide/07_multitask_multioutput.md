@@ -55,20 +55,29 @@ MixedMultiTaskGPではtask_featureは構造列であり、cat_dimsから除外�
 ### 異種モデルの出力所有権を確認する
 
 ~~~python
-from robotorchan.models import HeterogeneousModel
+import torch
+from robotorchan.models import HeterogeneousModel, SingleTaskGP
+from robotorchan.models.classification import BinarySingleTaskGPClassifier
 
-# regression_modelとbinary_classifierは各自の訓練データから構築済みとする。
+train_X = torch.tensor([[0.0], [0.3], [0.7], [1.0]], dtype=torch.double)
+strength_Y = torch.tensor([[1.0], [1.2], [1.5], [1.3]], dtype=torch.double)
+pass_Y = torch.tensor([0.0, 0.0, 1.0, 1.0], dtype=torch.double)
+regression_model = SingleTaskGP(train_X=train_X, train_Y=strength_Y)
+binary_classifier = BinarySingleTaskGPClassifier(train_X=train_X, train_Y=pass_Y)
 models = HeterogeneousModel(
     regression_model,
     binary_classifier,
     names=("strength", "pass"),
     output_names=("strength", "pass"),
 )
-owner = models.output_owner(1)
+X = torch.tensor([[0.5]], dtype=torch.double)
+assert models.output_owner(1) == (1, 0)
 pass_probs = models.entry_predict_proba("pass", X)
 strength_posterior = models.entry_posterior("strength", X)
+assert pass_probs.shape[-1] == 2
+assert strength_posterior.mean.shape[-1] == 1
 ~~~
 
-これは構成済みのモデル変数を前提としたAPI使用パターンで、実行可能なend-to-endデモではない。output_ownerは(global index)を(entry index, child-local index)に写し、entry_predict_probaは分類子に対してのみ有効。分類モデルのposteriorがlatentであることを忘れて出力を目的値として結合しない。
+この例はconstructor・予測APIと出力所有権の接続を示すもので、学習前の予測確率に実用的な校正精度があることを意味しない。output_ownerは(global index)を(entry index, child-local index)に写し、entry_predict_probaは分類子に対してのみ有効。分類モデルのposteriorがlatentであることを忘れて出力を目的値として結合しない。
 
 根拠：src/robotorchan/models/standard/multitask.py、standard/model_list.py、models/heterogeneous.py。独立したcross-task covarianceの数値検算・multi-output acquisitionの最適化実行は今回未実施。
