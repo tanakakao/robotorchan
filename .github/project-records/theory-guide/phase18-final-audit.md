@@ -411,3 +411,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `tests/models/uncertain/test_theory_guide_gaussian_input_kernel_reference.py`にて、入力平均と分散を連結した1DのGaussianUncertainInputKernelを対象に、解析式から個別に計算した行列と比較する。共分散の対称性、有限集合での半正定値性、diag=Trueの一致、入力分散がゼロとなる場合のRBF極限を検査する。対応する実装は`src/robotorchan/models/uncertain/uncertain_input.py`、理論ガイドは第16章。
 
 **判定：CI待ち / partial。** 訓練収束や多次元共分散の独立参照、BO性能は対象外。旧Mapping5本、174見出しverified=0、18 Phase・48章の構成を維持。
+
+## Phase 18：モデル24章の検証マトリクス
+
+`model-chapter-verification-matrix.md`を新規追加し、モデル24章ごとに掲載例の直接実行テストと独立数値照合テストの対応を整理した。既存の証拠として`tests/docs/test_theory_guide_*.py`およびGibbs・Gaussian uncertain-inputの独立参照テストのみを記載し、空欄からテスト不存在を推論しない。モデル24章と獲得関数・最適化各12章の固定体系は変更しない。旧Mapping5本と174見出しは別途検証までverifiedにしない。
+
+**判定：CI待ち / partial。** 対応表は証拠の索引であり、実装全域の品質保証でも数値収束の実証でもない。
