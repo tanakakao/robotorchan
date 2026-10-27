@@ -83,3 +83,41 @@ $$
 make_qehvi_acquisitionとmake_constrained_qehvi_acquisitionはref_pointが目的数と一致し有限値であり、partitioning.ref_pointと**完全一致**することを要求する。これに対しqNEHVI builderはX_baselineを要求し、非空の[n,d]以外を拒否する。参照点や目的値の符号が不整合ならhypervolumeの数学的意味が変わる。constrained qEHVIではetaが正値であること、分類出力重複がないことも検査する。
 
 **根拠：** src/robotorchan/acquisition/composition.py のmake_qehvi_acquisition、make_qnehvi_acquisition、make_constrained_qehvi_acquisitionと、models/heterogeneous.py。上記は静的ソース照合に基づく解説であり、joint feasibility、数値hypervolume誤差、end-to-end最適化を今回再実行したものではない。
+
+## 7. 二目的のqLogEHVI実行例
+
+次は2つの回帰GPを`ModelListGP`にまとめてposteriorを評価し、
+観測に対するnon-dominated partitioningとreference pointから
+`qLogExpectedHypervolumeImprovement`を構築する。
+
+```python
+import torch
+from botorch.acquisition.multi_objective.logei import qLogExpectedHypervolumeImprovement
+from botorch.utils.multi_objective.box_decompositions.non_dominated import (
+    FastNondominatedPartitioning,
+)
+from robotorchan.models import ModelListGP, SingleTaskGP
+
+train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
+y1 = torch.sin(5 * train_X)
+y2 = torch.cos(5 * train_X)
+model = ModelListGP(SingleTaskGP(train_X, y1), SingleTaskGP(train_X, y2))
+model.eval()
+train_Y = torch.cat((y1, y2), dim=-1)
+ref_point = train_Y.min(dim=0).values - 0.1
+partitioning = FastNondominatedPartitioning(ref_point=ref_point, Y=train_Y)
+acqf = qLogExpectedHypervolumeImprovement(
+    model=model,
+    ref_point=ref_point.tolist(),
+    partitioning=partitioning,
+)
+candidates = torch.tensor([[[0.4]]], dtype=torch.double)
+score = acqf(candidates)
+assert score.shape == (1,)
+assert torch.isfinite(score).all()
+```
+
+この例は両目的とも最大化する。reference pointは両目的で比較基準となる値で、
+予測値の単純な合計を最大化するための重みではない。
+`score`はlog-spaceの期待hypervolume improvementであり、
+学習済みモデルの最適解や独立数値検証を意味しない。
