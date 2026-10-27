@@ -91,7 +91,8 @@ acq = make_continuous_constrained_qei_acquisition(
     infeasible_cost=0.0,
 )
 value = acq(torch.tensor([[0.25]], dtype=torch.double))
-# 既存契約テストではshape [1]を確認する。
+assert value.shape == torch.Size([1])
+assert torch.isfinite(value).all()
 ~~~
 
 ### 4.3 拒否条件と検証水準
