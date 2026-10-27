@@ -9,7 +9,7 @@
 | 02 | Gradient Based | gradient_example（BoTorch backend） | — |
 | 03 | Initialization | initialization_example（explicit starts） | — |
 | 04 | Mixed / Discrete | mixed_discrete_example（fixed-feature列挙） | — |
-| 05 | Constraints | — | — |
+| 05 | Constraints | constraints_example（linear candidate） | feasibility tolerance |
 | 06 | Derivative Free | — | — |
 | 07 | Evolutionary | — | — |
 | 08 | Batch / One-shot | — | — |
@@ -30,3 +30,5 @@
 第03章は`tests/docs/test_theory_guide_optimization_initialization_example.py`で明示的な初期点を指定した公開dispatcherの実行を検査する。Sobol poolの品質、constraint-aware initialization、one-shot初期化の全面検収ではない。
 
 第04章は`tests/docs/test_theory_guide_optimization_mixed_discrete_example.py`でnative mixed optimizerのカテゴリ固定候補を直接実行する。ここでのGPは数値入力を連続扱いする簡易モデルであり、categorical kernelの学習やMixedVariableSpace dispatcherの全面検証ではない。
+
+第05章は`tests/docs/test_theory_guide_optimization_constraints_example.py`で公開dispatcherによる線形candidate制約を直接実行し、許容誤差1e-6内の候補可行性を確認する。outcome制約・非線形・inter-point・全backendの保証ではない。
