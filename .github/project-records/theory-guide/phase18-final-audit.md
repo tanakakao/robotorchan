@@ -327,3 +327,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 | 22–24 Expressive、Non-GP、Classification | 既存の概念区分・本文密度を確認、本文維持 | 今回の新規再検証対象外 |
 
 **判定：partial / review required。** 24章の存在確認と本文密度の横断点検は、各章の意味論的検収とは異なる。今回深く実装照合したのはモデル3章に限定する。特に11–17の短い章、実装のAPI例のruntime、tensor shape/dtype/device、数値参照は追加の重点確認を要する。旧Mapping保全、全174原文見出しのverified=0を維持。固定18 Phase・48章を変更しない。
+
+## Phase 18：Structured / Hierarchical / Robustモデルの本文強化
+
+前回のモデル24章の横断点検から、説明が薄い3章 `guide/11_structured_output.md`、`guide/12_hierarchical_contextual_gp.md`、`guide/14_robust_gaussian_process.md` を対象に、理論上の共分散・条件付き入力・外れ値モデリングと、公開実装ソースを照合した。参照ソースは `src/robotorchan/models/structured/{higher_order,hierarchical}.py`、`src/robotorchan/models/robust/robust.py`。Mixed HOGPで入力共分散因子のみ置換すること、hierarchical親次元とcat_dimsの重複拒否、RRPでのsingle-task/multitask実装経路を区別した。
+
+**判定：partial / review required。** Contextual familyの個別内部実装、structured posteriorの数値同値性、robust support回復性能は今回は未検証。旧Mapping5本を保全し174見出しverified=0と固定18 Phase・48章を維持。
