@@ -27,9 +27,7 @@ class HighDimensionalGuideTests(unittest.TestCase):
             exec(compile(match.group(1), str(GUIDE), "exec"), scope)
         self.assertEqual(tuple(scope["original"].shape), (1, 6))
         self.assertEqual(tuple(scope["embedded"].shape), (1, 2))
-        torch.testing.assert_close(
-            scope["strategy"].project(scope["embedded"]), scope["original"]
-        )
+        torch.testing.assert_close(scope["strategy"].project(scope["embedded"]), scope["original"])
 
 
 if __name__ == "__main__":
