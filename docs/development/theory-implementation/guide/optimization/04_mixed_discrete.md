@@ -65,3 +65,46 @@ native mixedではnonlinear candidate constraintsを使用すると、feasible�
 通常のカテゴリIDを連続座標として補間することと、カテゴリごとの固定割当てを明示することは異なる。特にone-shotのfantasy行には別々のカテゴリ値が入り得るため、[Batch/one-shot](08_batch_one_shot.md)の拡張batch契約を参照する。
 
 **証拠水準：** 上記の関係はソースの静的照合であり、独立した探索性能・数学的最適性の数値再実行ではない。
+
+## 6. 固定カテゴリ割当てによる候補探索
+
+次の例は、2列の候補で第2列を`0`または`1`に固定して
+連続の第1列を最適化する。カテゴリを連続補間して丸めるのではなく、
+`fixed_features_list`の各割当てをBoTorchへ渡す。
+
+**注意：** この小例の`SingleTaskGP`は数値列を通常の連続入力として学習する。
+したがってカテゴリkernelの学習を検証した例ではなく、
+mixed optimizerの固定割当て契約だけを示す。
+実際の非順序カテゴリ予測には`MixedSingleTaskGP`などを検討する。
+
+```python
+import torch
+from botorch.acquisition.analytic import PosteriorMean
+from robotorchan.models import SingleTaskGP
+from robotorchan.optim.backends.botorch import optimize_acqf_mixed_botorch
+
+base = torch.linspace(0, 1, 6, dtype=torch.double)
+low = torch.stack((base, torch.zeros_like(base)), dim=-1)
+high = torch.stack((base, torch.ones_like(base)), dim=-1)
+train_X = torch.cat((low, high), dim=0)
+train_Y = torch.sin(4 * train_X[:, :1]) + 0.1 * train_X[:, 1:]
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+model.eval()
+acqf = PosteriorMean(model=model)
+bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+candidate, value = optimize_acqf_mixed_botorch(
+    acq_function=acqf,
+    bounds=bounds,
+    q=1,
+    num_restarts=2,
+    fixed_features_list=[{1: 0.0}, {1: 1.0}],
+    raw_samples=16,
+)
+assert candidate.shape == (1, 2)
+assert candidate[0, 1].item() in (0.0, 1.0)
+assert torch.isfinite(value).all()
+```
+
+ここでは連続列のboundsと列1の離散的割当てを直接確認する。
+整数変数のrepair、複数カテゴリ、q-batch、制約付きmixed探索の
+全組合せを検証したことにはならない。
