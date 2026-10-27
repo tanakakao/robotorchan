@@ -9,6 +9,8 @@ from pathlib import Path
 import torch
 
 
+
+
 GUIDE = (
     Path(__file__).resolve().parents[2]
     / "docs/development/theory-implementation/guide/07_multitask_multioutput.md"
@@ -33,7 +35,7 @@ class HeterogeneousGuideExampleTests(unittest.TestCase):
         self.assertEqual(model.num_outputs, 2)
         self.assertEqual(model.output_owner(1), (1, 0))
         probabilities = scope["pass_probs"]
-        self.assertEqual(tuple(probabilities.shape), (1, 2))
+        self.assertEqual(tuple(probabilities.shape), (2,))
         self.assertTrue(torch.isfinite(probabilities).all())
         self.assertTrue(
             torch.allclose(
