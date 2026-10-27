@@ -453,3 +453,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `tests/docs/test_theory_guide_joint_encoder_examples.py`は第19章と第22章のJointEncoderGP掲載例をMarkdownから直接抽出して実行し、latent_dim=2の生成契約を確認する。検証マトリクスに両章の実行対象を追記する。
 
 **判定：CI待ち / partial。** training_lossやposteriorの数値精度、encoderの収束は未検証。旧Mapping5本・174見出し、18 Phase・48章の構成を維持。
+
+## Phase 18：TuRBOとAdditive MAP-SAAS掲載例の軽量実行
+
+`tests/docs/test_theory_guide_high_dimensional_examples.py`は第20章TuRBOStrategyと第21章AdditiveMapSaasSingleTaskGPの掲載コードを抽出し、strategyのlength・boundsとモデルのraw training tensor形状を確認する。第08章のFully Bayesian SAASはMCMC・optional dependency負荷があるため、通常の軽量テスト対象から除外した。検証マトリクスは第20・21章にのみ実行証拠を追記した。
+
+**判定：CI待ち / partial。** TuRBOの最適化収束、MAP-SAASのfit、SAAS MCMCの数値的推論精度は未認証。旧Mapping5本・174見出し、18 Phase・48章を維持。
