@@ -41,3 +41,31 @@ Active Learning (AL) は目的関数の最大値を探すBOとは区別し、未
 [検証索引](../verification/acquisition.md)で参照する`tests/acquisition/test_phase8_regression_al_formula_reference.py`は固定float64のposterior moment scoreを独立数式と比較する。分類entropyとlatent boundaryには`test_phase8_classification_al_reference.py`、BALDの固定64サンプルmomentには`test_phase8_bald_probability_variance_reference.py`がある。
 
 検証されたのは**指定したscore計算**であり、posteriorの較正、MC収束、joint q-batchのAL最適性は証明されない。旧Mappingのassertion・数値tol・未対応条件は移行台帳が検収されるまで保全する。
+
+## 6. 回帰Active Learningの最小実行例
+
+`PosteriorVariance`と`PosteriorStd`は、モデルが返す同じ潜在posteriorから
+それぞれ分散と標準偏差を取り出す。以下は`q=1`の3候補を評価する例であり、
+BOの目的値の改善量やbatch間のjoint情報量ではない。
+
+```python
+import torch
+from robotorchan.acquisition import PosteriorStd, PosteriorVariance
+from robotorchan.models import SingleTaskGP
+
+train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(4 * train_X)
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+model.eval()
+candidates = torch.tensor([[[0.15]], [[0.45]], [[0.85]]], dtype=torch.double)
+variance_score = PosteriorVariance(model)(candidates)
+std_score = PosteriorStd(model)(candidates)
+assert variance_score.shape == (3,)
+assert torch.isfinite(variance_score).all()
+assert torch.isfinite(std_score).all()
+```
+
+標準偏差は分散の非負部分の平方根であり、両者は同じ順序で候補を評価するが
+スコアの尺度は異なる。
+分類のPredictiveEntropy・BALDは別の予測確率APIを必要とするため、
+この回帰GPにそのまま適用しない。
