@@ -29,3 +29,15 @@ print(SACGP.__name__)
 上の例は公開シンボルの入口確認であり、学習・posterior実行例ではない。conditional inactive dimensionsの扱い、contextごとの入力構造、観測に存在しないcontextへの汎化条件はfamilyごとに制限がある。詳細は[モデル選択ガイド](../../../models/hierarchical_contextual.md)と[Hierarchical Notebook](../../../../examples/notebooks/12_hierarchical_gp.ipynb)、[Context Notebook](../../../../examples/notebooks/14_contextual_gp.ipynb)を参照する。
 
 [旧Model Mapping](../models.md)および[検証記録](../verification.md)は移行元の正本として保持する。API存在、静的assertion、CI成功、独立数値検証は区別する。使用例と詳しいモデル選択は[モデルガイド](../../../models/README.md)を参照する。
+
+## 条件付き入力とcontextのモデル化境界
+
+hierarchical modelでは親変数pによって子変数x_jが有効になるかが変わる。これを表すhierarchical_dependenciesは親入力列と親カテゴリ値からactiveとなる子列群への辞書であり、単なるカテゴリ集合やtask_featureの別名ではない。
+
+src/robotorchan/models/structured/hierarchical.pyのHierarchicalConditionalKernelGPはBoTorchHierarchicalConditionalKernelGPを継承する。hierarchical_dependencies、eval_hierarchical_features、separate_hierarchical_features、use_saas_prior、use_outputscale等を上流へ委譲し、robotorchanはraw tensor snapshotとExact GPのmake_mll契約を補う。
+
+MixedHierarchicalConditionalKernelGPでは、各active blockに対してcategorical／continuous／両者のadditive + product covarianceを組むローカル_MixedHierarchicalConditionalKernelを利用する。親変数の列は構造的であるためcat_dimsと重ねられず、重複するとValueErrorとなる。hierarchical_dependenciesは入力変換後の列と整合させる必要がある。
+
+Contextual GPは別familyであり、特定context間の共分散やembeddingで情報を共有するモデルである。親による子の無効化規則をcontext IDと取り違えず、SACGP・LCEAGP・LCEMGPでは個別にAPIを確認する。
+
+**検証境界：** 上記はhierarchical.pyの継承・kernel構築・negative contractのソース照合。active/inactive invarianceの数値property、未観測contextへの予測の妥当性を一括認証しない。
