@@ -19,6 +19,29 @@
 
 Fully Bayesian SAAS系は`supports_mll=False`であり、標準exact GPと同様の`model.make_mll()`→`fit_gpytorch_mll`は使わない。学習はBoTorchの`fit_fully_bayesian_model_nuts`で行う。MAP-SAASも推論方法を名称だけで決めつけず、各モデルの学習契約を確認する。
 
+## API利用例：MCMCを実行しない基本契約の確認
+
+Fully Bayesian SAASでは、モデル生成だけならNUTSを実行せずに入力shape、
+元の観測データの保持、標準MLL非対応を確認できる。ただしモデル生成時点でも
+JAX・jaxlib・NumPyroが必要なため、通常CIにこれらがなければ実行せずskipし、
+fully-bayesian用の依存関係を揃えた環境で検証する。
+
+```python
+import torch
+from robotorchan.models import SaasFullyBayesianSingleTaskGP
+
+X = torch.linspace(0.05, 0.95, 24, dtype=torch.double).reshape(8, 3)
+Y = (2.0 * X[:, :1] - X[:, 1:2]).clone()
+model = SaasFullyBayesianSingleTaskGP(train_X=X, train_Y=Y)
+assert model.supports_mll is False
+assert torch.equal(model.raw_train_X, X)
+assert torch.equal(model.raw_train_Y, Y)
+```
+
+この段階のモデルに学習済みMCMCサンプルは存在しないため、
+posteriorが使えると見なさない。次の例で推論を実行するにはPyro依存、
+MCMC設定、収束診断を別途確認する。
+
 ## API利用例：モデル生成と学習境界
 
 ```python
