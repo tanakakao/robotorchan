@@ -429,3 +429,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 第15章のJointHeteroskedasticSingleTaskGPのクラス名表示例を、training_loss、response posterior、log-noise posterior、predicted_noiseの区別を示すコードへ置き換えた。`tests/docs/test_theory_guide_heteroskedastic_example.py`がMarkdownコードを直接実行し、有限損失、潜在分布の有限性、推定観測分散の正値性、make_mll()拒否を調べる。これは学習収束やnoise較正の数値実証ではない。
 
 **判定：CI待ち / partial。** 固定18 Phase・48章、旧Mappingと174見出しの未確認状態を維持。
+
+## Phase 18：階層条件付きGPの掲載例実行
+
+第12章のSACGP名表示だけの例を、MixedHierarchicalConditionalKernelGPとhierarchical_dependenciesの具体的な設定へ更新。`tests/docs/test_theory_guide_hierarchical_example.py`は掲載コードを直接実行し、cat_dims、raw訓練tensor、ExactMarginalLogLikelihoodの生成を調べる。SACGPは別familyとしてtrain_Yvarとdecompositionが必要な点を説明。contextual全familyの実行、inactive invarianceの独立数値参照や学習収束は未検証。
+
+**判定：CI待ち / partial。** 旧Mapping5本、174見出しverified=0、固定18 Phase・48章を維持。
