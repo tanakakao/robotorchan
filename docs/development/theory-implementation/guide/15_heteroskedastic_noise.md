@@ -27,3 +27,24 @@ print(JointHeteroskedasticSingleTaskGP.__name__)
 jointモデルの`train_Y`は1出力を要求し、`num_inducing`、`num_mc_samples`、各betaは正数であることが必要。反復観測の`s²`と`s²/r`の区別は独立数値参照で確認する。noise posteriorは観測ノイズの実測校正と等価ではない。
 
 旧[モデルMapping](../models.md)・[数学的検証Mapping](../verification.md)を残し、学習ガイド本文に過去のPR/CI履歴を混入させない。[モデル選択ガイド](../../../models/robust_noise.md)には利用者向けの比較を記す。
+
+## 観測ノイズの予測と応答posteriorの違い
+
+不均一分散の観測モデルは y(x)=f(x)+epsilon(x)、Var[epsilon(x)]=v(x) と分ける。response posteriorのVar[f(x)|D]は観測ノイズv(x)の推定値とは同じではない。
+
+| 経路 | 学習アルゴリズムと実装 | 重要な注意 |
+| --- | --- | --- |
+| HeteroskedasticSingleTaskGP | models/robust/robust.py。response GPの残差平方からlog noiseをモデル化し、fit_heteroskedastic(iterations)で交互に更新 | 反復的なplug-in推定であり、2つの潜在GPをjointに積分したposteriorではない |
+| JointHeteroskedasticSingleTaskGP | models/robust/joint_heteroskedastic.py。response_modelとnoise_modelを別のSingleTaskVariationalGPとして保持 | supports_mll=False。make_mll()は例外、学習目的はtraining_loss()で計算する |
+
+単純な交互更新側のnoise_posterior(X)はlog観測分散のlatent posteriorを返し、predicted_noise(X)はその平均をexpしてnoise_floorで切り上げる。一方joint variational側のpredicted_noise(X)はlog noise posteriorの平均mu_vと分散s_v^2から
+
+$$
+\widehat v(x)=\exp(\mu_v(x)+\tfrac12 s_v^2(x))
+$$
+
+を用いるため、exp(mu_v)と同じではない。Noise GPに不確実性がある場合は両式の差が生じる。どちらも実測測定分散との校正を保証しない。
+
+Joint版のposterior(X)はresponse processを、noise_posterior(X)はlog observation varianceのlatent processを返す。train_Yは1出力、num_inducing・num_mc_samples・beta_response・beta_noiseはいずれも正値を要求する。学習時にはMLLを流用せずtraining_loss()を最小化する。
+
+根拠：src/robotorchan/models/robust/robust.py、src/robotorchan/models/robust/joint_heteroskedastic.py。今回の調査は静的source inspectionで、noiseの較正やjoint inferenceの数値再実行ではない。
