@@ -345,3 +345,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `guide/22_expressive_gp.md`へDeepGPのVariationalELBO/DeepApproximateMLL、MC DeepGPPosterior、tensor-valued observation_noise拒否、NNGP ReLU covariance recursion、Spectral Mixtureのkernel初期化とtask/mixed契約を追記した。根拠：`src/robotorchan/models/expressive/{deep_gp,infinite_width_bnn,spectral_mixture}.py`。DKLに対する既存記述を維持し、決定論的特徴写像と確率的層を区別。
 
 **判定：partial / review required。** 独立数値kernel property、学習収束、MC posterior accuracyは未再実行。固定18 Phase・48章、旧Mapping保全、174見出しverified=0を維持。
+
+## Phase 18：Non-GP posteriorとBO互換性のモデル本文照合
+
+`guide/23_non_gp_surrogates.md`にRandom Forest・Extra Trees・Gradient Boosting・Histogram Boosting・NGBoostの経験分布／Gaussian predictive distributionの意味、ensemble `[s,q,m]`軸、complete bootstrap estimators、CPU/sklearn非微分経路、観測ノイズ拒否、NGBoost独立Gaussian posteriorを追記した。根拠：`src/robotorchan/models/non_gp/{random_forest,bootstrap,gradient_boosting,posterior,ngboost,distribution_posterior}.py`。既存24章構成を維持。
+
+**判定：partial / review required。** APIの静的照合のみ。fit・posterior・MC acquisitionの数値再実行や予測不確実性の校正検収はしていない。旧Mapping5本の保全、174見出しverified=0、固定18 Phase・48章を維持。
