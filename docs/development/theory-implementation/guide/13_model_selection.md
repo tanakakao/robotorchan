@@ -44,3 +44,35 @@
 ## 5. 検証の境界
 
 モデルを作れることと、posterior sample、fantasize、q-batch、one-shot、mixed constraints、dtype/deviceまで互換であることは別。実装の分類はImplemented / Extended / Delegated / Approximated / Unsupported / Unverifiedを使い分ける。[検証索引](verification/README.md)では数式の独立数値検証、契約テスト、CI成功を分ける。旧Mappingは移行台帳の原文区間照合が済むまで保全する。
+## 6. モデルを横断した学習・posterior・獲得関数の契約
+
+モデルの選択では「posterior()が存在するか」だけでなく、**その確率変数の意味、学習目的、BoTorch acquisitionへの接続**を順番に調べる。以下は各実装章とソースの対応をたどるための比較表であり、実行済み互換性の網羅表ではない。
+
+| Family / ガイド | 学習目的・推論 | posteriorまたは予測対象 | acquisitionでの注意 |
+| --- | --- | --- | --- |
+| [Exact GP](02_gaussian_process.md) | `ExactMarginalLogLikelihood` | latent Gaussian予測（observation_noise指定に注意） | analytic EIはGaussian/単一目的等の条件が必要 |
+| [Variational GP](09_variational_gp.md) | `VariationalELBO`、inducing variables | 近似latent GP posterior | `num_data`は全観測数。ELBO構築だけではfitしない |
+| [Preference](10_preference_learning.md) | `PairwiseLaplaceMarginalLogLikelihood` | pairwise観測からのlatent utility | comparisonsは数値train_Yではなくindexの対 |
+| [Higher-Order](11_structured_output.md) | Exact GPのMLLとtensor covariance | tensor-valued response | scalar utilityを定義せずflattenしない |
+| [Heteroskedastic](15_heteroskedastic_noise.md) | response/noise交互推定またはjoint `training_loss()` | response posteriorとlog-noise posterior | jointモデルに通常の`make_mll()`を適用しない |
+| [Uncertain Input](16_uncertain_input_gp.md) | Gaussian入力不確実性をkernelに積分したExact GP | 元入力のdeterministic候補でのposterior | 訓練入力の誤差と候補実行時の摂動を分ける |
+| [Nonstationary](17_nonstationary_gp.md) | Gibbs kernelを持つExact GP | 入力依存lengthscaleのlatent posterior | 局所lengthscaleと観測ノイズを混同しない |
+| [DeepGP](22_expressive_gp.md) | DeepApproximateMLL(VariationalELBO) | MC `DeepGPPosterior` | Gaussian analytic acquisitionへの無条件接続を避ける |
+| [NNGP / Spectral Mixture](22_expressive_gp.md) | 専用kernelを持つExact GP | Gaussian GP posterior | kernel priorの意味と入力scaling/初期化を確認 |
+| [Non-GP](23_non_gp_surrogates.md) | estimator固有`fit()` | empirical `EnsemblePosterior`またはNGBoost予測分布 | 入力勾配・点間依存・校正がGPと異なる |
+| [Binary Classification](24_classification.md) | Bernoulli likelihoodのvariational学習 | `posterior(X)`はlatent、`predict_proba(X)`はclass probability | feasibilityへは確率を渡しlatent値を誤用しない |
+| [Fully Bayesian SAAS](21_advanced_high_dimensional_models.md) | BoTorch NUTS/MCMC、`supports_mll=False` | hyperparameter uncertaintyを反映するposterior | モデル/獲得関数のMCMC軸とsampling互換性を確認 |
+
+### 6.1 実装を確認する順番
+
+1. **入力形式：** 元入力Xのshapeと、task/fidelity/cat_dims等の構造列を区別する。
+2. **学習：** `fit()`、`make_mll()`、`training_loss()`、BoTorch NUTSなどから実際の経路を選ぶ。全modelが同じmethodを実装するとは限らない。
+3. **予測：** latent値、観測ノイズ付き予測、class probability、tensor出力、ensemble memberを区別する。
+4. **意思決定：** analytic/MC acquisition、classification PoF、gradient-free optimizerの必要条件を確認する。
+5. **検証：** source contractの存在、APIを呼べた事実、数式の数値一致、E2E最適化性能を区分する。
+
+### 6.2 単一の多出力モデルと異種モデルcontainer
+
+[MultiTask](07_multitask_multioutput.md)はタスク共分散を扱うモデル、`ModelListGP`は子GPの独立な合成、`HeterogeneousModel`は回帰と分類の出力意味論を保つcontainerである。`HeterogeneousModel`自身が全出力に対する共通Gaussian posteriorを作るわけではない。複数目的を構成する場合は[多目的獲得関数](acquisition/07_multiobjective.md)、分類制約は[制約付き獲得関数](acquisition/08_constraints.md)の共有posterior・出力所有権の制限を参照する。
+
+この比較は章間の意味論整合を支援する読書ガイドであり、全24章の関数・テスト・数値propertyの移行検収を完了とするものではない。
