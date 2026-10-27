@@ -68,3 +68,34 @@ candidate, score = optimize_mixed_one_shot_acqf(
 このコード断片は acqf と bounds が既に存在する場合の呼び出し形を示す。成立にはカテゴリ値がbounds内、指定次元が有効、選択肢が空でないことが必要。最適化成功を保証する実行例ではない。q>1はNotImplementedErrorであり、一般のq-batch mixed KGへ拡張済みと解釈してはいけない。
 
 **検証境界：** tests/optim/one_shot/test_mixed.pyの限定的なassertionと実装を参照する。各連続部分の大域最適性、全one-shot獲得関数への適合、全candidate制約の対応は未証明である。
+
+## 6. qKGの拡張候補と実験候補を実行して確認する
+
+通常のjoint-qでは候補の全行を実験するが、one-shotでは実験候補に
+fantasy decision variableが追加される。以下は実際の`qKnowledgeGradient`
+で拡張形状と抽出の契約を直接確認する。獲得関数の数値最大化までは行わない。
+
+```python
+import torch
+from botorch.acquisition.knowledge_gradient import qKnowledgeGradient
+from robotorchan.models import SingleTaskGP
+
+train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+train_Y = torch.sin(5 * train_X)
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+model.eval()
+acqf = qKnowledgeGradient(model=model, num_fantasies=4)
+q = 2
+augmented_q = acqf.get_augmented_q_batch_size(q)
+augmented = torch.linspace(0.1, 0.9, augmented_q, dtype=torch.double)
+augmented = augmented.reshape(1, augmented_q, 1)
+candidates = acqf.extract_candidates(augmented)
+assert augmented_q == 6
+assert augmented.shape == (1, 6, 1)
+assert candidates.shape == (1, 2, 1)
+assert torch.equal(candidates, augmented[:, :q, :])
+```
+
+この例では`q=2`、fantasy数4のため最適化対象は6行だが、実験するのは2行だけ。
+`get_augmented_q_batch_size`と`extract_candidates`はBoTorch標準の契約である。
+mixed one-shotの`q=1`制限は別実装の制限であり、この例から解除されたとはいえない。
