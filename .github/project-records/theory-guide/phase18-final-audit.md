@@ -465,3 +465,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 `tests/docs/test_theory_guide_bo_acquisition_examples.py`では第01章GP posteriorと第04章LogExpectedImprovementから候補生成までの掲載例を直接実行し、shape・有限性・bounds内候補を確認する。第08章SAAS例の通常CIはNumPyro不足でskipされる場合があり、成功済みとは数えない。第12章Contextual Multi-Outputの掲載例テストが既存マトリクスに未反映だったため追加した。
 
 **判定：CI待ち / partial。** 第13章モデル選択の導線監査、旧Mapping・174見出しの根拠照合は残る。固定18 Phase・48章を維持。
+
+## Phase 18：第13章Model Selectionの導線監査
+
+第13章で誤って第21章に向けていたFully Bayesian SAAS参照を第08章へ修正し、モデル選択の学習経路を第7節として整理した。モデル選択はナビゲーション・比較の章であり、個別の実行例と数値的根拠を持つ章とは別に判定する。章間参照とMarkdown上の空行も修正。検証マトリクスでは第13章に実行済みフラグを立てていない。
+
+**判定：CI待ち / partial。** モデル24章の全API・数値・性能の完了認定ではない。旧Mapping5本・174見出しの監査状態、固定18 Phase・48章を維持。
