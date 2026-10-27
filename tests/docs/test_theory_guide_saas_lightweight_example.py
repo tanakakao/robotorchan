@@ -17,7 +17,7 @@ GUIDE = (
 class SaasGuideExampleTests(unittest.TestCase):
     def test_lightweight_constructor_example(self) -> None:
         chapter = GUIDE.read_text(encoding="utf-8")
-        section = chapter.split("## API利用例：MCMCを実行しない基本契約の確認", 1)[1]
+        section = chapter.split("MCMCを実行しない基本契約の確認", 1)[1]
         match = re.search(r"```python\n(.*?)\n```", section, re.DOTALL)
         self.assertIsNotNone(match)
         assert match is not None
