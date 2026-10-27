@@ -14,7 +14,7 @@
 | 07 | Evolutionary | sampling_evolutionary_examples（NSGA-II） | 返却集合内の非支配性 |
 | 08 | Batch / One-shot | batch_one_shot_example（qKG） | augmented q抽出形状 |
 | 09 | High Dimensional | high_dimensional_example（HeSBO） | latent→original照合 |
-| 10 | Trust Region | — | — |
+| 10 | Trust Region | trust_region_example（TuRBO） | expand/shrink state values |
 | 11 | Hybrid | — | — |
 | 12 | Selection Guide | —（比較・選択章） | — |
 
@@ -38,3 +38,5 @@
 第08章は`tests/docs/test_theory_guide_optimization_batch_one_shot_example.py`でqKGの拡張q=6から実験候補q=2を抽出する掲載コードを直接実行する。獲得関数の最適化成功やMixed one-shot q>1対応の証拠ではない。
 
 第09章は`tests/docs/test_theory_guide_optimization_high_dimensional_example.py`でHeSBOの元6次元／潜在2次元の候補と`project`による復元を掲載コードから直接検査する。REMBO・ALEBO・BAxUS全体の精度や低次元探索のregret保証ではない。
+
+第10章は`tests/docs/test_theory_guide_optimization_trust_region_example.py`で掲載コードを直接実行し、観測後の2回成功で幅拡大、2回失敗で幅縮小する状態遷移を検査する。restart・最適化候補・regret改善の実証ではない。
