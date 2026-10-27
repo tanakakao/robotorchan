@@ -2,7 +2,7 @@
 
 本表は日本語の理論・実装ガイド第1～24章に対し、**この開発サイクルで
 直接確認した証拠のみ**を整理する。テストが空欄でも、他のテストが存在しないことを意味しない。
-各章の理解と利用は[ガイド目次](../../../../docs/development/theory-implementation/guide/README.md)
+各章の理解と利用は[ガイド目次](../../../docs/development/theory-implementation/guide/README.md)
 から始め、過去の変更履歴は本監査記録を参照する。
 
 ## 判定ルール
