@@ -8,7 +8,7 @@
 | 01 | Foundations | —（概念・導線章） | — |
 | 02 | Gradient Based | gradient_example（BoTorch backend） | — |
 | 03 | Initialization | initialization_example（explicit starts） | — |
-| 04 | Mixed / Discrete | — | — |
+| 04 | Mixed / Discrete | mixed_discrete_example（fixed-feature列挙） | — |
 | 05 | Constraints | — | — |
 | 06 | Derivative Free | — | — |
 | 07 | Evolutionary | — | — |
@@ -28,3 +28,5 @@
 異なる最適化契約を検証する。旧Mapping5本と174見出しの状態は変更しない。
 
 第03章は`tests/docs/test_theory_guide_optimization_initialization_example.py`で明示的な初期点を指定した公開dispatcherの実行を検査する。Sobol poolの品質、constraint-aware initialization、one-shot初期化の全面検収ではない。
+
+第04章は`tests/docs/test_theory_guide_optimization_mixed_discrete_example.py`でnative mixed optimizerのカテゴリ固定候補を直接実行する。ここでのGPは数値入力を連続扱いする簡易モデルであり、categorical kernelの学習やMixedVariableSpace dispatcherの全面検証ではない。
