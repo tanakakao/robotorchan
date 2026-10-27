@@ -13,7 +13,7 @@
 | 06 | Lookahead | — | — |
 | 07 | Multiobjective | — | — |
 | 08 | Constraints | constraints_example（continuous qEI） | — |
-| 09 | Active Learning | — | — |
+| 09 | Active Learning | active_learning_example（regression） | posterior-moment reference |
 | 10 | Level Set | — | — |
 | 11 | Multifidelity / Cost Aware | — | — |
 | 12 | Selection Guide | —（選択・案内章） | — |
@@ -33,3 +33,5 @@ CI未実行・失敗・skipの際は検証成功と認定しない。
 続いてBatch/Noisy、Constraints、Active Learningなど、
 独自posterior形状・制約意味論を持つ章を優先する。
 元Mappingと174見出しのverified状態を推測で変更しない。
+
+第09章の掲載例と独立moment参照は`tests/docs/test_theory_guide_acquisition_active_learning_example.py`、既存のより広い回帰AL数式検証は`tests/acquisition/test_phase8_regression_al_formula_reference.py`で確認する。分類entropyとBALDの完全な統合実行を認定するものではない。
