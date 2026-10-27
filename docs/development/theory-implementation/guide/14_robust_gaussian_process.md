@@ -28,3 +28,15 @@ print(StudentTSingleTaskGP.__name__)
 Student-tでは有限分散の自由度条件、観測ノイズとlatent uncertaintyの分離、variational fittingの収束を確認する。relevance pursuitは支持集合の復元精度を別途測る。モデル名やshape testのみから異常検知性能、校正、頑健性を結論付けない。
 
 旧[モデルMapping](../models.md)・[数学的検証Mapping](../verification.md)を残し、学習ガイド本文に過去のPR/CI履歴を混入させない。[モデル選択ガイド](../../../models/robust_noise.md)には利用者向けの比較を記す。
+
+## Robust relevance pursuitの実装と推論の切り分け
+
+外れ値に頑健なモデルを比較する際は、尤度のheavy-tail、混合汚染、観測ごとのrelevance追跡を区別する。どれもGaussian GP posteriorの標準分散を増やすだけの同一アルゴリズムではない。
+
+src/robotorchan/models/robust/robust.pyのRobustRelevancePursuitSingleTaskGPはBoTorchRobustRelevancePursuitSingleTaskGPを継承する。一方、RobustRelevancePursuitMultiTaskGPはMultiTaskGPとBoTorchのRobustRelevancePursuitMixinを組み合わせ、base likelihoodにoutlier-related noise構造を付加する。MultiTask版はlong-formatのtask_featureを明示的に受け取る。
+
+MultiTask版のto_standard_model()は現在の学習／評価モードを保持しつつ、対応するMultiTaskGPを再構築する補助経路である。raw observations・task列・選択したcovar_moduleなどは継承するが、robust推論の全操作が通常のSingleTaskGP.fit()と同一になるわけではない。
+
+MixedRobustRelevancePursuitMultiTaskGPはtask_featureを構造列として扱うため、cat_dimsと重ねるとnormalize_feature_dimsが拒否する。カテゴリ共分散の構築にはmake_mixed_covar_moduleを利用する。外れ値重みの推論やsupport選択は通常の最大周辺尤度の一段階最適化と混同しない。
+
+**検証境界：** robust.py内のclass継承、mixin初期化、task列とカテゴリ列の検証を確認した。外れ値支持集合の復元精度、likelihood同定、実測ノイズ下の較正や数値的頑健性の比較は今回実行していない。
