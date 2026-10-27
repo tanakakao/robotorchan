@@ -333,3 +333,9 @@ guide/07_multitask_multioutput.mdとguide/24_classification.mdを補充した。
 前回のモデル24章の横断点検から、説明が薄い3章 `guide/11_structured_output.md`、`guide/12_hierarchical_contextual_gp.md`、`guide/14_robust_gaussian_process.md` を対象に、理論上の共分散・条件付き入力・外れ値モデリングと、公開実装ソースを照合した。参照ソースは `src/robotorchan/models/structured/{higher_order,hierarchical}.py`、`src/robotorchan/models/robust/robust.py`。Mixed HOGPで入力共分散因子のみ置換すること、hierarchical親次元とcat_dimsの重複拒否、RRPでのsingle-task/multitask実装経路を区別した。
 
 **判定：partial / review required。** Contextual familyの個別内部実装、structured posteriorの数値同値性、robust support回復性能は今回は未検証。旧Mapping5本を保全し174見出しverified=0と固定18 Phase・48章を維持。
+
+## Phase 18：Noise / Uncertain Input / Nonstationaryモデル本文の詳細照合
+
+`guide/15_heteroskedastic_noise.md`、`guide/16_uncertain_input_gp.md`、`guide/17_nonstationary_gp.md`に、input-dependent noiseの交互学習とjoint variational loss、Gaussian uncertain-input expected RBF kernelと元入力posterior契約、Gibbs kernelの局所lengthscaleの数式およびMixed版の2分岐を追記した。確認ソースは`src/robotorchan/models/robust/{robust,joint_heteroskedastic,nonstationary}.py`および`src/robotorchan/models/uncertain/uncertain_input.py`。
+
+**判定：partial / review required。** 各familyでsourceを照合したが、独立した数値PSD・variance calibration・posterior予測精度・dtype/device組合せの再実行はしていない。旧Mapping保全、174見出しverified=0、固定18 Phase・48章を維持。
