@@ -14,7 +14,7 @@
 | 07 | Multiobjective | — | — |
 | 08 | Constraints | constraints_example（continuous qEI） | — |
 | 09 | Active Learning | active_learning_example（regression） | posterior-moment reference |
-| 10 | Level Set | — | — |
+| 10 | Level Set | level_set_example（Straddle） | posterior-moment reference |
 | 11 | Multifidelity / Cost Aware | — | — |
 | 12 | Selection Guide | —（選択・案内章） | — |
 
@@ -35,3 +35,5 @@ CI未実行・失敗・skipの際は検証成功と認定しない。
 元Mappingと174見出しのverified状態を推測で変更しない。
 
 第09章の掲載例と独立moment参照は`tests/docs/test_theory_guide_acquisition_active_learning_example.py`、既存のより広い回帰AL数式検証は`tests/acquisition/test_phase8_regression_al_formula_reference.py`で確認する。分類entropyとBALDの完全な統合実行を認定するものではない。
+
+第10章の掲載例は`tests/docs/test_theory_guide_acquisition_level_set_example.py`で直接実行し、Straddleの閾値距離とposterior標準偏差の式を別経路で確認する。境界分類の較正やbatch最適化の実証ではない。
