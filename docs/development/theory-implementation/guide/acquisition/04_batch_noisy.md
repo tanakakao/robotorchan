@@ -46,3 +46,42 @@ X_baselineの非空2D契約、posteriorのjoint sample shape、baseline pruning�
 [既存Acquisition Mapping](../../acquisition.md)はsource inspectedの実装契約、entry・テスト証拠を保持する。[Verification Mapping](../../verification.md)は独立数値参照や既存のassertionの追跡先とする。両者を消去・置き換えず、原文区間のmigration ledgerをverifiedとする際に照合する。CI成功だけで全数値契約が検証されたことにはならない。
 
 [獲得関数の基礎ガイド](../04_acquisition_function.md)、[獲得関数利用ドキュメント](../../../../optimization/README.md)、[理論Acquisition索引](../../../../theory/acquisition/README.md)にも戻れる。個別の数式、適用例や比較条件は対応する理論章と使用ガイドで読む。
+
+## 6. qLogNEIでjoint候補を評価する
+
+観測ノイズを考慮する`qLogNoisyExpectedImprovement`では、
+評価済み点`X_baseline`を渡し、候補`X`のjoint posteriorを使って
+baselineに対する改善量をMonte Carlo推定する。
+以下は獲得関数値の計算例であり、候補最適化やposteriorの独立数値照合ではない。
+
+```python
+import torch
+from botorch.acquisition.logei import qLogNoisyExpectedImprovement
+from botorch.sampling.normal import SobolQMCNormalSampler
+from robotorchan.models import SingleTaskGP
+
+train_X = torch.linspace(0.1, 0.9, 8, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(2 * torch.pi * train_X)
+train_Yvar = torch.full_like(train_Y, 0.01)
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y, train_Yvar=train_Yvar)
+model.eval()
+sampler = SobolQMCNormalSampler(sample_shape=torch.Size([32]), seed=7)
+acqf = qLogNoisyExpectedImprovement(
+    model=model,
+    X_baseline=train_X,
+    sampler=sampler,
+    prune_baseline=False,
+)
+candidates = torch.tensor(
+    [[[0.2], [0.7]], [[0.3], [0.8]]],
+    dtype=torch.double,
+)
+scores = acqf(candidates)
+assert scores.shape == (2,)
+assert torch.isfinite(scores).all()
+```
+
+`candidates`のshapeは`batch_shape × q × d`で、
+この例では2組のbatchがそれぞれ`q=2`点を同時評価する。
+各候補の値を独立に足し合わせることと、joint sampleでbatch改善量を評価することは異なる。
+`scores`はlog-spaceの獲得値であり、目的関数の観測値ではない。
