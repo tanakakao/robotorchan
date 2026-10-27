@@ -16,18 +16,18 @@
 
 | 章 | 主題 | 掲載例実行 | 独立数値照合 |
 | --- | --- | --- | --- |
-| 01 | Bayesian Optimization | — | — |
+| 01 | Bayesian Optimization | bo_acquisition_examples | — |
 | 02 | Gaussian Process | core_model_examples | — |
 | 03 | Kernel | kernel_preference_examples | — |
-| 04 | Acquisition Function | — | — |
+| 04 | Acquisition Function | bo_acquisition_examples | — |
 | 05 | Mixed Variables | core_model_examples | — |
 | 06 | Multi-Fidelity | structured_model_examples | — |
 | 07 | MultiTask / MultiOutput | structured_model_examples, heterogeneous_example | — |
-| 08 | High-Dimensional GP | saas_lightweight_example（MCMCなし） | — |
+| 08 | High-Dimensional GP | saas_lightweight_example（optional依存なしではskip） | — |
 | 09 | Variational GP | core_model_examples | — |
 | 10 | Preference Learning | kernel_preference_examples | — |
 | 11 | Structured Output | structured_model_examples | — |
-| 12 | Hierarchical / Contextual | hierarchical_example | — |
+| 12 | Hierarchical / Contextual | hierarchical_example, contextual_example | — |
 | 13 | Model Selection | — | — |
 | 14 | Robust GP | robust_model_example, contaminated_example | — |
 | 15 | Heteroskedastic Noise | heteroskedastic_example | — |
@@ -53,7 +53,7 @@
 
 この表はテストファイルの存在と対象の対応を示すものであり、
 すべての掲載コードブロックを実行したという意味ではない。
-CI成功は記録したコミットのテスト実行成功を示すが、数値計算の普遍的な正しさの証明ではない。
+CI全体が成功していても、skipされた個別テストの実行成功を意味しない。\n特に第08章のSAAS軽量例はNumPyroのない通常CI環境ではskipされる。\nそのため、optional依存を揃えたテストジョブの成功証拠を別途確認する必要がある。\nテスト実行成功も数値計算の普遍的な正しさの証明ではない。
 
 ## 以降の優先順位
 
