@@ -31,3 +31,20 @@ print(model.gibbs_kernel.local_lengthscale(X).shape)
 局所lengthscaleが正であること、固定lengthscaleの場合の定常RBFへの帰着、共分散の対称性・PSDを検査する。入力の狭い観測領域では局所パラメータの識別性が低い可能性があるため、定常baselineとの予測比較が必要。物理的な相境界が直接判明したと解釈しない。
 
 旧[モデルMapping](../models.md)・[数学的検証Mapping](../verification.md)を残し、学習ガイド本文に過去のPR/CI履歴を混入させない。[モデル選択ガイド](../../../models/robust_noise.md)には利用者向けの比較を記す。
+
+## Gibbs kernelの局所lengthscaleと実装上の制約
+
+ARDの固定lengthscale ell_jと異なり、GibbsKernelは入力位置ごとにell_j(x)=softplus(b_j+(Wx)_j)+lengthscale_floorを定義する。2点xとx'に対するcovarianceは
+
+$$
+k(x,x')=\prod_j\sqrt{\frac{2\ell_j(x)\ell_j(x')}{\ell_j(x)^2+\ell_j(x')^2}}
+\exp\left[-\sum_j\frac{(x_j-x'_j)^2}{\ell_j(x)^2+\ell_j(x')^2}\right].
+$$
+
+lengthscale_floor>0が必須で、local_lengthscale(X)は正の値を返す。全局所lengthscaleが一定ならRBFと同様のstationary covarianceに戻る。ただし入力依存のlengthscaleが存在することは、事後から実験の物理的境界が一意に同定された証拠ではない。
+
+src/robotorchan/models/robust/nonstationary.pyのNonstationarySingleTaskGPはGibbsKernelをScaleKernelで包み、SingleTaskGPへcovar_moduleとして渡す。GPのlikelihood、MLL、posteriorはBoTorch/GPyTorchへの委譲を維持する。
+
+MixedNonstationarySingleTaskGPでは連続列をGibbsで、カテゴリ列をCategoricalKernelで扱う。make_mixed_covar_moduleの加法側と交互作用側には別々のcontinuous Gibbs kernelがあり、local_lengthscale(X)は2組の長さスケールを返す。したがって1個のlengthscaleベクトルに統合してはならない。連続列が0本ならValueErrorとなる。
+
+NonstationaryMultiTaskGPとKronecker版はtaskの表現が異なり、task列を通常の連続設計座標として扱ってはいけない。根拠：src/robotorchan/models/robust/nonstationary.py。今回の照合はソース契約のみで、PSDや定常極限の独立数値テスト、定常kernelとの予測性能比較は未実施。
