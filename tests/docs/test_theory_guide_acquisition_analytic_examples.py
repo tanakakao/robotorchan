@@ -10,8 +10,7 @@ import torch
 from torch.distributions import Normal
 
 GUIDE = (
-    Path(__file__).resolve().parents[2]
-    / "docs/development/theory-implementation/guide/acquisition"
+    Path(__file__).resolve().parents[2] / "docs/development/theory-implementation/guide/acquisition"
 )
 
 
