@@ -1,5 +1,9 @@
 # 11. Structured Output GP
 
+[多出力GP章](07_multitask_multioutput.md)の分離可能な共分散と、
+[GP章](02_gaussian_process.md)の正規分布の条件付けを前提とします。
+入力数を $n$、出力軸の座標数を $M$ とし、潜在関数 $f$ と観測ノイズを含む応答 $Y$ を区別します。
+
 ## 11.1 この章で扱うこと
 
 通常の Gaussian Process（GP）回帰では、1つの入力 `x` に対して1つの scalar output `y` を予測する問題を考えます。
@@ -42,7 +46,6 @@
 
 重要なのは「出力数が多いか」ではなく、**出力の添字や座標に意味があるか**です。
 
-
 ~~~text
 通常のmulti-output
 x → [強度, 導電率, コスト]
@@ -60,7 +63,6 @@ x → [y(400 nm), y(410 nm), y(420 nm), ...]
 
 通常の scalar regression は
 
-
 $$
 x \mapsto y
 $$
@@ -68,7 +70,6 @@ $$
 です。
 
 multi-output regression なら
-
 
 $$
 x \mapsto \mathbf y
@@ -80,13 +81,11 @@ Structured Output では、さらに出力の並び方・位置関係そのも�
 
 例えばスペクトルなら
 
-
 $$
 y(x, \lambda)
 $$
 
 画像なら
-
 
 $$
 y(x, u, v)
@@ -94,13 +93,11 @@ $$
 
 時空間場なら
 
-
 $$
 y(x,t,r)
 $$
 
 のように、出力側にも座標や軸があります。
-
 
 ```text
 入力 x
@@ -126,7 +123,6 @@ $$
 
 しかし、flattenして各要素間の一般的なdense covarianceを直接表現しようとすると
 
-
 $$
 4096 \times 4096
 $$
@@ -134,7 +130,6 @@ $$
 の巨大な covariance を考える必要があります。
 
 さらに、単にflattenした表現を作っただけでは
-
 
 ```text
 隣接pixelは似ている
@@ -154,18 +149,15 @@ Structured Output GP の重要な道具が Kronecker product です。
 
 2つの covariance matrix
 
-
 $$
 K_X
 $$
-
 
 $$
 K_T
 $$
 
 から
-
 
 $$
 K = K_X \otimes K_T
@@ -174,7 +166,6 @@ $$
 を作ると、入力側と出力軸側の covariance を分離して表現できます。
 
 例えば
-
 
 ```text
 K_X
@@ -195,7 +186,6 @@ K_X ⊗ K_T
 
 最も基本的な仮定は
 
-
 $$
 k((x,t),(x',t'))
 =
@@ -207,7 +197,6 @@ $$
 これは **separable covariance** の代表的な形です。
 
 意味としては、
-
 
 ```text
 全体の相関
@@ -229,7 +218,6 @@ $$
 
 ## 11.6 HOGP と 潜在座標の Kronecker GP の違い
 
-
 ```text
 高階 GP
   └─ 出力 tensor の shape / 各軸の構造を利用する
@@ -238,8 +226,8 @@ $$
   └─ 入力 X と明示的な出力座標 T の積空間をモデル化する
 ```
 
-より具体的には、HOGPはtensor shapeの各axisを構造として扱い、
-LatentKroneckerGPは `X × T` のproduct spaceを明示します。
+より具体的には、HOGPは出力テンソルの各軸を構造として扱い、
+出力座標を明示する構成では入力と座標の直積空間 `X × T` を考えます。
 
 これは優劣ではなく**output structureの表現方法の違い**です。
 
@@ -250,7 +238,6 @@ LatentKroneckerGPは `X × T` のproduct spaceを明示します。
 ## 11.7 高階 GP とは
 
 例えば
-
 
 ```text
 観測入力: [n, d]
@@ -276,7 +263,6 @@ LatentKroneckerGPは `X × T` のproduct spaceを明示します。
 
 例えば出力が2次元なら概念的に
 
-
 $$
 K
 =
@@ -299,7 +285,6 @@ $$
 
 出力が3次元ならさらに
 
-
 $$
 K_3
 $$
@@ -310,19 +295,22 @@ $$
 
 ## 11.8.1 Mixed 高階 GP
 
+設計入力にカテゴリがある場合でも、出力テンソルの軸とは分けてモデル化します。
+例えば入力側に妥当な混合カーネル $k_X$ を使い、出力側には各軸のカーネルを使えば、
+その積で妥当な結合共分散を作れます。カテゴリの許容値や階層的な有効性は
+入力候補の制約であり、出力軸のKronecker構造からは決まりません。
+
 ---
 
 ## 11.9 なぜ Kronecker が効くのか
 
 例えば出力 shape が
 
-
 ```text
 10 × 20 × 30
 ```
 
 なら出力要素数は
-
 
 $$
 10\times20\times30=6000
@@ -332,7 +320,6 @@ $$
 
 直接6000次元の covariance を持てば
 
-
 $$
 6000^2=36,000,000
 $$
@@ -340,7 +327,6 @@ $$
 要素です。
 
 一方 Kronecker 構造なら
-
 
 ```text
 10×10
@@ -350,7 +336,15 @@ $$
 
 の小さな covariance の組み合わせとして表現できます。
 
-これが structured covariance の主要な利点です。
+この例の出力側の因子を保存する要素数は $10^2+20^2+30^2=1400$ です。
+これは出力側の共分散因子のみの比較であり、観測データや予測標本まで1400要素で済むわけではありません。
+
+さらに $K_X=Q_X\Lambda_XQ_X^\top$、$K_T=Q_T\Lambda_TQ_T^\top$ と固有分解すると、
+Kronecker積の固有ベクトルは $Q_X\otimes Q_T$、固有値は各因子の固有値の積です。
+独立で同分散のノイズ $\sigma^2I$ を加えた場合も固有ベクトルは同じで、
+固有値だけが $\lambda_i^X\lambda_j^T+\sigma^2$ になります。
+ただし $K_X\otimes K_T+\sigma^2I$ が単一のKronecker積に分解されるわけではありません。
+ノイズが座標ごとに異なる場合や欠測がある場合、この単純な対角化は一般には使えません。
 
 ---
 
@@ -361,12 +355,13 @@ HOGPは出力軸ごとの潜在座標上に共分散を構成します。潜在�
 
 ---
 
-## 11.11 `num_latent_dims`
+## 11.11 潜在座標の次元
 
-`num_latent_dims` は各 output dimension を表す latent coordinate の次元数を制御します。
+出力軸 $a$ の各位置 $i$ に潜在座標 $z_{a,i}\in\mathbb R^{r_a}$ を与え、
+共分散を $(K_a)_{ij}=k_a(z_{a,i},z_{a,j})$ と構成できます。
+$r_a$ はその出力軸を表す潜在座標の次元であり、出力位置の数とは別です。
 
 概念的には
-
 
 ```text
 output axis
@@ -385,7 +380,7 @@ latent dimensionを増やすとrepresentationの自由度は増えますが、�
 
 ---
 
-## 11.12 `learn_latent_pars`
+## 11.12 潜在座標の学習と固定
 
 出力軸の潜在座標を推定する場合と、既知の物理座標を直接使う場合では、
 共分散に課す仮定と解釈が異なります。
@@ -417,7 +412,6 @@ HOGP の posterior sampling は structured covariance を利用します。
 
 概念的には
 
-
 ```text
 prior sample
    +
@@ -438,7 +432,6 @@ HOGP は便利ですが、出力軸 covariance が Kronecker 分解できると�
 
 したがって
 
-
 ```text
 axis 1 と axis 2 の相互作用が
 単純な separable structure では表現しにくい
@@ -456,7 +449,6 @@ Kronecker は計算効率と引き換えに structural assumption を置いて�
 
 潜在座標の Kronecker GP は
 
-
 ```text
 X: 実験条件・設計変数
 T: 時間・波長・位置などの出力座標
@@ -467,7 +459,6 @@ Y: X × T 上の観測
 
 モデル化のイメージは
 
-
 $$
 y = f(x,t)
 $$
@@ -475,7 +466,6 @@ $$
 です。
 
 covariance は概念的に
-
 
 $$
 k((x,t),(x',t'))
@@ -487,7 +477,7 @@ $$
 
 ---
 
-## 11.20 `train_T`
+## 11.20 観測された出力座標
 
 Latent Kroneckerモデルでは、設計入力 $X$ と出力座標 $T$ を区別します。
 例えば、材料組成が $X$、波長が $T$、測定スペクトルが $Y$ です。
@@ -500,7 +490,6 @@ HOGP では output tensor の index / latent coordinates が中心です。
 
 潜在座標の Kronecker GP では
 
-
 ```text
 波長 = 450 nm
 時間 = 12.5 s
@@ -510,7 +499,6 @@ HOGP では output tensor の index / latent coordinates が中心です。
 のような意味のある output coordinate を直接与えられます。
 
 そのため
-
 
 ```text
 Tに物理的意味がある
@@ -529,11 +517,8 @@ Tに物理的意味がある
 
 ## 11.23 missing output への対応
 
-LatentKroneckerGPは、product-space structureを保ちながらmissing outputを扱うための
-仕組みを持ちます。
-
-つまり、すべての `X` で全 `T` が観測されていなくても扱える設計です。
-
+入力と出力座標の直積上に潜在GPを定義し、観測された成分だけで条件付けることで、
+すべての入力で全出力座標を測定していない場合も数学的に扱えます。
 
 ```text
 X1: T1 T2 T3 T4 観測
@@ -553,7 +538,6 @@ missing entries があると full Kronecker product を単純には使えませ�
 
 潜在座標の Kronecker GP は underlying latent product-space structure を維持しながら、観測された部分だけに conditioning します。
 
-
 ```text
 latent full grid
   X × T
@@ -563,16 +547,20 @@ Kronecker prior
 observed entriesのみconditioning
 ```
 
-という考え方です。
+という考え方です。完全な格子の潜在共分散を $K$、観測成分を選ぶ行列を
+$S\in\mathbb R^{N_o\times nM}$ とすれば、観測モデルは $y=Sf+\epsilon$ です。
+$N_o$ は観測した成分の数、$R\in\mathbb R^{N_o\times N_o}$ は潜在値と独立な
+零平均正規ノイズ $\epsilon$ の共分散です。
+観測共分散は $K_y=SKS^\top+R$ となり、以下では正定値と仮定します。
+欠測成分を零の観測で埋めるのではなく、観測していない成分の尤度を置かない点が重要です。
 
 ---
 
 ## 11.25 pathwise conditioning
 
-潜在座標の Kronecker GP は posterior sampling に pathwise conditioning を利用します。
+構造化GPでは、経路ごとの条件付け（pathwise conditioning）によって事後標本を構成できます。
 
 概念的には
-
 
 ```text
 1. prior function sample を生成
@@ -583,7 +571,20 @@ observed entriesのみconditioning
 
 です。
 
-posterior covariance を巨大な dense matrix として完全に構築する方法とは異なります。
+例えば平均零の事前GPから予測先と観測格子を**同時に**標本化して $f_*^0,f^0$ を得て、
+独立な観測ノイズ標本 $\epsilon^0\sim\mathcal N(0,R)$ を加え、$y^0=Sf^0+\epsilon^0$ とします。
+予測先と観測の交差共分散を $K_{*o}$、その転置を $K_{o*}$、予測先の事前共分散を $K_{**}$ とすると、
+
+$$
+f_*^{\mathrm{post}}=f_*^0+K_{*o}K_y^{-1}(y-y^0)
+$$
+
+が条件付き正規分布の標本になります。平均は $K_{*o}K_y^{-1}y$、共分散は
+$K_{**}-K_{*o}K_y^{-1}K_{o*}$ となり、通常のGP条件付けと一致します。
+ノイズがあるのに $y^0$ からノイズ標本を省くと、一般に正しい事後共分散になりません。
+必要な操作を構造化行列との積と線形系の求解として表せるため、
+巨大な事後共分散をすべて保存する方法を避けられます。
+ただし、事前標本や線形求解を近似すれば、その誤差は事後標本にも残ります。
 
 ---
 
@@ -594,25 +595,25 @@ posterior covariance を巨大な dense matrix として完全に構築する方
 
 ---
 
-## 11.27 fitting example
+## 11.27 構造化共分散の学習
 
 Latent Kroneckerモデルの学習は、入力軸と出力座標軸の共分散パラメータを推定する問題です。
 
 ---
 
-## 11.28 posterior example
+## 11.28 新しい入力と出力座標の予測
 
 新しい入力点と出力座標に対する予測では、両軸の共分散を用います。
 
 ---
 
-## 11.30 covariance modules
+## 11.30 入力軸と出力軸の共分散
 
 入力軸と出力座標軸には、それぞれ異なる共分散関数を設定できます。
 
 ---
 
-## 11.31 mean modules
+## 11.31 平均構造の選択
 
 入力と出力座標の平均構造は、それぞれの軸で異なるトレンドを表現できます。
 
@@ -620,10 +621,14 @@ Latent Kroneckerモデルの学習は、入力軸と出力座標軸の共分散�
 
 ## 11.32 高階 GP vs 潜在座標の Kronecker GP
 
+高階GPはテンソルの各軸の関係を表現する構成であり、出力座標を明示する構成は
+波長や時間などの位置での共分散を定義します。どちらも分離可能性を使えますが、
+未観測の出力位置で予測するには、その位置と既存位置との共分散が定義されている必要があります。
+単に出力の添字に潜在座標を割り当てただけでは、新しい物理座標への補間則は決まりません。
+
 ---
 
 ## 11.33 選択フロー
-
 
 ```text
 1回の実験からstructured responseが得られる
@@ -648,7 +653,6 @@ Latent Kroneckerモデルの学習は、入力軸と出力座標軸の共分散�
 
 Multi-output GP は
 
-
 ```text
 y1, y2, ..., ym
 ```
@@ -656,7 +660,6 @@ y1, y2, ..., ym
 を複数outputとして扱います。
 
 Structured Output GP はそれらの output が
-
 
 ```text
 規則的なgrid
@@ -677,7 +680,6 @@ Kronecker 構造のマルチタスク GP も Kronecker structure を利用しま
 
 ただし主な意味は
 
-
 ```text
 X × task
 ```
@@ -686,13 +688,11 @@ X × task
 
 一方 Structured Output では
 
-
 ```text
 X × output coordinate
 ```
 
 または
-
 
 ```text
 X × tensor axes
@@ -716,7 +716,6 @@ X × tensor axes
 Bayesian Optimization では最終的に「何を最大化 / 最小化するのか」を決める必要があります。
 
 structured output
-
 
 $$
 y(x,t)
@@ -750,20 +749,17 @@ $U_3(x)=-\int (Y(x,t)-y_\mathrm{target}(t))^2\,dt$ が考えられます。
 
 structured posterior から sample
 
-
 $$
 Y^{(s)}(x)
 $$
 
 を取り、各sampleに objective
 
-
 $$
 g(Y^{(s)}(x))
 $$
 
 を適用すれば、structured uncertainty を scalar objective uncertainty に伝播できます。
-
 
 ```text
 structured posterior
@@ -779,10 +775,22 @@ MC acquisition
 
 ---
 
+線形効用 $g(Y)=w^\top Y$ なら、$Y$ の事後平均と共分散を $\mu,\Sigma$ として
+$\mathbb E[g(Y)]=w^\top\mu$、$\operatorname{Var}(g(Y))=w^\top\Sigma w$ と計算できます。
+一方、二乗距離の負値 $g(Y)=-\|Y-y_{\mathrm{target}}\|^2$ なら、
+
+$$
+\mathbb E[g(Y)]= -\|\mu-y_{\mathrm{target}}\|^2-\operatorname{tr}(\Sigma).
+$$
+
+各成分の二乗偏差の期待値を展開すると、分散の和であるトレース項が現れます。
+事後平均だけへ効用を適用する方法では、この不確実性に由来する項が抜けます。
+なお、潜在曲線の効用を最適化する場合は潜在値を、次回の測定結果の効用なら
+観測ノイズも含めた応答を対象にし、どちらの共分散かを明示します。
+
 ## 11.40 non-linear objective で特に有効
 
 例えば
-
 
 ```text
 maximum peak
@@ -801,7 +809,6 @@ spectrum similarity
 目的が最適化ではなく structured response 全体の精度向上なら Active Learning として考えます。
 
 例えば
-
 
 ```text
 全波長の予測誤差を減らしたい
@@ -823,7 +830,6 @@ structured output は位置によってscaleが異なることがあります。
 
 例えばスペクトルで
 
-
 ```text
 一部band: 0〜1
 別band: 0〜1000
@@ -840,7 +846,6 @@ structured output は位置によってscaleが異なることがあります。
 通常のGPと同様、`X` は unit cube 近辺にnormalizeするのが基本です。
 
 潜在座標の Kronecker GPでは `T` のscaleもkernel lengthscaleと関係するため、
-
 
 ```text
 時間: 0〜100000
@@ -872,7 +877,6 @@ Structured GP は「構造化すれば無限に大きい出力を扱える」わ
 ## 11.45 PCAとの違い
 
 PCAで output を低次元latent vectorに圧縮してGPを作る方法もあります。
-
 
 ```text
 Y
@@ -911,7 +915,7 @@ Y_hat
 
 ---
 
-## 11.48 LatentKroneckerGPが向く場合
+## 11.48 出力座標を明示するGPが向く場合
 
 - output coordinate `T` に物理的意味がある
 - `T` 上でinterpolationしたい
@@ -929,7 +933,6 @@ Kronecker model の大きな仮定は separability です。
 
 例えば
 
-
 $$
 k((x,t),(x',t'))=k_X(x,x')k_T(t,t')
 $$
@@ -937,7 +940,6 @@ $$
 が妥当かを考えます。
 
 もし
-
 
 ```text
 あるX領域ではT方向が非常に滑らか
@@ -954,7 +956,6 @@ $$
 
 例えば
 
-
 ```text
 baseline領域: smooth
 phase transition周辺: sharp
@@ -969,7 +970,6 @@ stationary RBF / Matérn kernel だけでは表現しづらい場合、kernel拡
 ## 11.51 noise structure
 
 structured output では noise も位置依存する場合があります。
-
 
 ```text
 特定波長だけS/Nが悪い
@@ -987,7 +987,6 @@ structured output では noise も位置依存する場合があります。
 
 例えば
 
-
 ```text
 測定不能だった箇所だけmissing
 ```
@@ -1001,7 +1000,6 @@ structured output では noise も位置依存する場合があります。
 ## 11.53 extrapolation in T
 
 潜在座標の Kronecker GP は新しい `T` でposteriorを評価できますが、interpolationとextrapolationは別です。
-
 
 ```text
 train T: 400〜800 nm
@@ -1037,7 +1035,6 @@ structured output model では scalar RMSE だけでなく、構造ごとの診�
 
 random element holdout だけでなく、目的に応じて holdout を変えます。
 
-
 ```text
 new X prediction
   → Xごとholdout
@@ -1053,15 +1050,23 @@ missing-grid robustness
 
 ---
 
-## 11.57 高階 GP example
+## 11.57 二波長の応答を効用へ変換する例
 
-Higher-order Gaussian process の数値例は実装ガイドを参照してください。
+例えば2波長の潜在強度の事後平均がともに0、共分散が
+$\Sigma=\left[\begin{smallmatrix}1&0.8\\0.8&1\end{smallmatrix}\right]$ とします。
+平均強度 $(F_1+F_2)/2$ の分散は $(1+1+2\times0.8)/4=0.9$ です。
+出力を独立とすると0.5になり、同じ周辺分散でも効用の不確実性が変わります。
+目標を零とする負の二乗距離の期待値は $-2$ ですが、平均曲線だけで計算すると0です。
+実行可能な例は[実装ガイド](../guide/11_structured_output.md)を参照してください。
 
 ---
 
-## 11.58 潜在座標の Kronecker GP example
+## 11.58 格子の欠測と新しい波長での予測例
 
-Latent Kroneckerモデルの数値例は実装ガイドを参照してください。
+例えば2入力・3波長の完全な格子なら潜在値は6個、共分散は $6\times6$ です。
+5成分しか観測しなかった場合、選択行列は $5\times6$、観測共分散は $5\times5$ になります。
+新しい波長での予測は、その波長から観測済み座標への交差共分散を用いて条件付けます。
+実行可能な例は[実装ガイド](../guide/11_structured_output.md)を参照してください。
 
 ---
 
@@ -1112,13 +1117,11 @@ Latent Kroneckerモデルの数値例は実装ガイドを参照してくださ�
 
 Structured Output GP の基本は
 
-
 $$
 f(x,t)\sim\mathcal{GP}(m,k)
 $$
 
 と
-
 
 $$
 k((x,t),(x',t'))
@@ -1130,7 +1133,6 @@ $$
 
 grid全体では
 
-
 $$
 K
 =
@@ -1140,7 +1142,6 @@ $$
 となります。
 
 HOGP では複数 output axes に拡張して
-
 
 $$
 K
@@ -1156,7 +1157,6 @@ $$
 ---
 
 ## 11.63 BOとの全体像
-
 
 ```text
 X
@@ -1184,9 +1184,7 @@ next X
 
 Structured Output GP は、出力を単なる多数のscalar valuesとしてではなく、**出力側の構造を利用してモデル化するGP**です。
 
-高階 GP / 潜在座標の Kronecker GP
-
-を使います。
+高階GPや出力座標を明示するGPは、その構造を分離可能な共分散として表現する方法です。
 
 重要点は次の通りです。
 

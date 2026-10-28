@@ -1,11 +1,15 @@
 # 10. Preference Learning
 
+[GP章](02_gaussian_process.md)の事前分布と、正規分布・対数尤度の基礎を前提とします。
+候補数を $n$、比較数を $m$、候補における潜在効用のベクトルを
+$\mathbf f=(f(x_1),\ldots,f(x_n))^\top$ とします。
+以下の比較確率は、特に断らない限り潜在効用を与えた条件付き確率です。
+
 ## 10.1 この章で扱うこと
 
 通常の回帰では、各入力 `x` に対して数値 target `y` を観測します。
 
 一方、Preference Learning では絶対スコアではなく、
-
 
 ```text
 A の方が B より好ましい
@@ -35,7 +39,6 @@ B の方が C より好ましい
 ### 回帰との違いを最初に図で見る
 
 通常の回帰とPreference Learningでは、**観測しているもの**が違います。
-
 
 ~~~text
 Regression
@@ -70,13 +73,11 @@ Preference LearningでGPが直接説明しようとするのはwinner/loserのin
 
 などです。
 
-
 ```text
 このサンプルを 0〜100 点で評価してください
 ```
 
 より、
-
 
 ```text
 サンプル A と B ならどちらが良いですか？
@@ -92,7 +93,6 @@ Preference Learning は、この比較結果から背後にある **潜在的な
 
 各候補 `x` に、直接は観測できない utility
 
-
 $$
 f(x)
 $$
@@ -100,7 +100,6 @@ $$
 が存在すると仮定します。
 
 例えば
-
 
 $$
 f(x_A) > f(x_B)
@@ -111,8 +110,7 @@ $$
 ただし比較likelihoodが確率的なので、$`f(x_A) > f(x_B)`$ だからといって
 観測される比較結果が必ずA勝利になるわけではありません。
 
-ただし人間の判断や測定にはノイズがあるため、比較結果は必ずしも deterministic ではありません。
-
+人間の判断や測定のノイズを含む観測モデルと、潜在効用の順位を分けて考えます。
 
 ```text
 latent utility
@@ -137,22 +135,12 @@ $(i,j)$ から構成され、$x_i$ が $x_j$ より好まれたことを表し�
 
 ---
 
-## 10.5 `comparisons` は target value ではない
+## 10.5 比較の添字は観測スコアではない
 
-通常回帰では
-
-`観測入力` / `観測応答`
-
-を使います。
-
-Preference Learning では
-
-`datapoints` / `comparisons`
-
-を使います。
+通常回帰では、入力ごとに数値の応答を観測します。
+選好学習では、候補集合と、その候補間の勝敗を観測します。
 
 重要なのは、`comparisons` の値 `0, 1, 2, ...` は utility 値ではなく **datapoints の行index** だということです。
-
 
 ```text
 comparisons[k] = [i, j]
@@ -173,7 +161,6 @@ comparisons[k] = [i, j]
 
 2つの候補 `x_i`, `x_j` の utility を
 
-
 $$
 f_i = f(x_i),\qquad f_j = f(x_j)
 $$
@@ -182,13 +169,11 @@ $$
 
 Preference model では、
 
-
 $$
 P(i \succ j)
 $$
 
 つまり「i が j より好まれる確率」を utility difference
-
 
 $$
 f_i-f_j
@@ -197,7 +182,6 @@ $$
 から定義します。
 
 utility difference が大きく正なら、i が勝つ確率は高くなります。
-
 
 ```text
 f_i - f_j >> 0
@@ -215,7 +199,6 @@ f_i - f_j << 0
 ## 10.7 Probit likelihood
 
 基本的な形は
-
 
 $$
 P(i \succ j)
@@ -236,12 +219,28 @@ $$
 
 ---
 
+### 分母の $\sqrt2$ はどこから来るか
+
+各候補の提示時の効用を $f_i+\eta_i$ とし、比較のたびに独立な
+$\eta_i,\eta_j\sim\mathcal N(0,\sigma_{\mathrm{pref}}^2)$ が加わると仮定します。
+候補 $i$ が選ばれるのは $f_i+\eta_i>f_j+\eta_j$ のときです。
+ノイズ差の分散は $2\sigma_{\mathrm{pref}}^2$ なので、
+
+$$
+P(i\succ j\mid\mathbf f)
+=\Phi\!\left(\frac{f_i-f_j}{\sqrt2\,\sigma_{\mathrm{pref}}}\right).
+$$
+
+前の式は $\sigma_{\mathrm{pref}}=1$ に固定して効用の単位を定めたものです。
+効用とノイズの尺度を同じ正の定数倍にしても確率は変わりません。
+候補間で判断ノイズが相関するなら、差の分散からその共分散の2倍を引く必要があり、
+上の分母をそのまま使えません。
+
 ## 10.8 Probit と Logistic
 
 pairwise comparison model では logistic model もよく使われます。
 
 例えば Bradley–Terry 型なら
-
 
 $$
 P(i \succ j)
@@ -252,7 +251,6 @@ $$
 です。
 
 ここで $`\sigma`$ は sigmoid です。
-
 
 ```text
 Bradley–Terry / logistic
@@ -270,13 +268,11 @@ probit を選ぶ場合
 
 utility function `f(x)` 自体には Gaussian Process prior を置きます。
 
-
 $$
 f \sim \mathcal{GP}(m(x),k(x,x'))
 $$
 
 つまり preference data を直接 GP に入れるのではなく、
-
 
 ```text
 GP prior
@@ -297,7 +293,6 @@ observed preference
 通常の回帰では、1観測はおおむね1つの入力点へ対応します。
 Preference Learningでは、1観測が**2候補間の辺**を追加します。
 
-
 ~~~text
 datapoints = graph nodes
 comparisons = directed edges
@@ -311,7 +306,6 @@ winner → loser
 
 通常の Gaussian regression なら
 
-
 $$
 y=f(x)+\epsilon,
 \qquad
@@ -322,21 +316,20 @@ $$
 
 Preference Learning では likelihood が
 
-
 $$
 \Phi(f_i-f_j)
 $$
 
-のような nonlinear function になるため、posterior を exact Gaussian として解析的には求められません。
+のような非線形関数になるため、一般に事後分布は正規分布ではありません。
+この式では尺度定数を省いており、前節の単位ノイズの規約では引数を $(f_i-f_j)/\sqrt2$ とします。
 
-そこで pairwise GP は **Laplace approximation** を使います。
+本章では、この非共役な事後分布を扱う方法として**Laplace近似**を考えます。
 
 ---
 
 ## 10.11 Laplace approximation
 
 観測 comparison data を $`D`$ とすると、latent utilities `f` の posterior は
-
 
 $$
 p(f\mid D)
@@ -350,7 +343,6 @@ $$
 
 Laplace approximation では、まず posterior mode
 
-
 $$
 f_{MAP}
 =
@@ -360,7 +352,6 @@ $$
 を求めます。
 
 その周辺を2次近似して
-
 
 $$
 p(f\mid D)
@@ -373,7 +364,6 @@ $$
 ---
 
 ## 10.12 Laplace approximation の直感
-
 
 ```text
 本当の posterior
@@ -400,7 +390,6 @@ pairwise GP 内部では preference comparisons と GP prior の両方を考慮�
 
 概念的には
 
-
 $$
 f_{MAP}
 =
@@ -422,7 +411,6 @@ $$
 
 posterior mode の周辺で negative log posterior の Hessian を使うと、近似 covariance は概念的に
 
-
 $$
 \Sigma_{Laplace}
 \approx
@@ -440,7 +428,17 @@ $$
 
 です。
 
-比較情報が多い領域では likelihood curvature が強くなり、utility uncertainty が縮みます。
+具体的には、$K\in\mathbb R^{n\times n}$ を正定値とし、
+$W=-\nabla^2_{\mathbf f}\log p(D\mid\mathbf f)|_{\mathbf f_{MAP}}$ と定義します。
+負の対数事後密度をモードの周りでTaylor展開すると、定数項を除いて
+$\tfrac12(\mathbf f-\mathbf f_{MAP})^\top(K^{-1}+W)(\mathbf f-\mathbf f_{MAP})$ となります。
+これを正規分布の指数部と比較して上の共分散を得ます。
+
+比較ごとに勝者列を1、敗者列を $-1$ とする行列 $C\in\mathbb R^{m\times n}$ を作ると、
+独立なprobit比較の対数尤度は $C\mathbf f$ の成分ごとの和です。
+その凹性から $W=C^\top\operatorname{diag}(w_1,\ldots,w_m)C$、$w_k\ge0$ となります。
+したがって尤度が直接制約するのは効用差であり、$C\mathbf1=0$ の定数方向は制約しません。
+モードでの曲率を用いる局所近似なので、歪みや裾の形まで正確に再現するとは限りません。
 
 ---
 
@@ -450,13 +448,11 @@ pairwise data で観測されるのは utility difference です。
 
 例えば、
 
-
 $$
 f(x)\rightarrow f(x)+c
 $$
 
 として全候補に同じ定数を足しても、
-
 
 $$
 (f_i+c)-(f_j+c)=f_i-f_j
@@ -503,16 +499,28 @@ Preference Learning では通常の RMSE だけでなく、ranking quality を�
 
 ---
 
----
-
 ## 10.23 fitting
+
+カーネルのハイパーパラメータを $\theta$ とすると、候補の効用モードは
+$\mathbf f_{MAP}(\theta)$ です。零平均の事前分布に対するLaplace近似の証拠は、
+$H=K^{-1}+W$ と置いて
+
+$$
+\log p(D\mid\theta)\approx
+\log p(D\mid\mathbf f_{MAP})
+-\frac12\mathbf f_{MAP}^\top K^{-1}\mathbf f_{MAP}
+-\frac12\log|K|-\frac12\log|H|.
+$$
+
+これはモードの近くで正規近似した被積分関数を積分して得られます。
+第一項の比較への適合だけでなく、事前密度と局所曲率の項もハイパーパラメータ選択に影響します。
+モード探索の誤差と証拠の近似誤差は別であり、内側の収束だけで証拠が厳密になるわけではありません。
 
 ---
 
 ## 10.24 fitting の二重構造
 
 pairwise GP では fitting を理解するとき、2段階を区別するとよいです。
-
 
 ```text
 inner problem
@@ -529,7 +537,7 @@ outer problem
 
 ## 10.25 posterior
 
-比較観測から推論するのは、絶対的な観測スコアではなく潜在効用 $u(x)$ の事後分布です。
+比較観測から推論するのは、絶対的な観測スコアではなく潜在効用 $f(x)$ の事後分布です。
 
 ---
 
@@ -552,7 +560,6 @@ observation-noise variance を解釈しません。
 
 pairwise comparisons は graph として考えると理解しやすいです。
 
-
 ```text
 A → B
 A → C
@@ -561,7 +568,6 @@ B → D
 ```
 
 矢印を
-
 
 ```text
 winner → loser
@@ -579,7 +585,6 @@ graph connectivityは、離れた候補群の相対utilityをデータから結�
 
 例えば
 
-
 ```text
 A > B
 C > D
@@ -595,7 +600,6 @@ GP prior による input similarity が橋渡しする場合はありますが�
 
 latent utility model は基本的に
 
-
 ```text
 A > B
 B > C
@@ -605,7 +609,6 @@ B > C
 という transitive ranking を想定します。
 
 しかし実際の人間 preference では
-
 
 ```text
 A > B
@@ -622,7 +625,6 @@ C > A
 ## 10.31 noisy comparisons
 
 同じ pair を複数回評価して
-
 
 ```text
 A > B
@@ -660,7 +662,6 @@ pairwise GPはdeterministic ranking tableではなくprobabilistic likelihoodを
 
 しかし通常の binary classification とは入力構造が違います。
 
-
 ```text
 binary classification
 x → class label
@@ -681,7 +682,6 @@ Preference Learning は ranking problem と密接です。
 
 GP を使うことで、未評価の新しい `x` に対しても
 
-
 $$
 f(x)
 $$
@@ -696,7 +696,6 @@ $$
 
 ここまでの pairwise GP は、**比較データからutility posteriorを作るsurrogate model**です。
 これだけでは「次にどの2候補を比較するか」は決まりません。
-
 
 ~~~text
 pairwise GP
@@ -716,7 +715,6 @@ Acquisition optimization
 
 通常 BO では
 
-
 ```text
 x を評価
   ↓
@@ -728,7 +726,6 @@ GP regression
 です。
 
 Preference BO では
-
 
 ```text
 候補 x_i, x_j を提示
@@ -754,7 +751,6 @@ Preference Learning では absolute objective value を観測していません�
 
 そのため
 
-
 ```text
 best observed y
 ```
@@ -769,6 +765,24 @@ Preference BO では、utility model に適した acquisition function を使い
 
 Expected Utility of the Best Option（EUBO）は、提示する候補集合で得られる
 最大潜在効用の期待値を評価する獲得基準です。
+二候補の事後効用を $F_1,F_2$ とすると、
+$\operatorname{EUBO}(x_1,x_2)=\mathbb E[\max(F_1,F_2)\mid D]$ です。
+$\max(F_1,F_2)=F_2+(F_1-F_2)_+$ と分解し、同時正規近似の下で
+平均を $\mu_1,\mu_2$、差の分散を
+$s^2=\operatorname{Var}(F_1)+\operatorname{Var}(F_2)-2\operatorname{Cov}(F_1,F_2)$ とすると、
+
+$$
+\operatorname{EUBO}
+=\mu_2+\delta\Phi(\delta/s)+s\phi(\delta/s),\qquad
+\delta=\mu_1-\mu_2,\quad s>0.
+$$
+
+ここで $\phi$ は標準正規密度であり、期待改善量と同じ正規積分を用いています。
+$s=0$ では $\max(\mu_1,\mu_2)$ を使います。
+例えば両平均が0、両分散が1で、共分散が0ならEUBOは $1/\sqrt\pi\simeq0.564$、
+共分散が0.8なら $\sqrt{0.4}/\sqrt{2\pi}\simeq0.252$ です。
+周辺分散が同じでも、候補間相関によって集合の価値が変わります。
+この基準は集合内の最良効用を評価しており、比較観測後の意思決定改善量そのものとは区別します。
 
 ---
 
@@ -776,14 +790,12 @@ Expected Utility of the Best Option（EUBO）は、提示する候補集合で�
 
 最も分かりやすい preference query は2候補比較です。
 
-
 ```text
 candidate A
 candidate B
    ↓
 どちらが良い？
 ```
-
 
 ```text
 pairwise GP posterior
@@ -806,7 +818,6 @@ comparisonsに追加
 単に最も不確実な2点を比較する方法は information gathering には有効ですが、必ずしも最良候補の発見に効率的とは限りません。
 
 EUBO は utility maximization という decision objective に沿って comparison query を選ぶ考え方です。
-
 
 ```text
 uncertainty sampling
@@ -831,7 +842,6 @@ EUBO
 
 既存 datapoints が `n` 個あり、新しく2点を追加した場合、新しい comparison index は既存行数を offset として加える必要があります。
 
-
 ```text
 既存 datapoints: 0 ... n-1
 新規 point A: n
@@ -841,17 +851,15 @@ A > B
 → [n, n+1]
 ```
 
-この index 管理は preference BO 実装でよく間違える点です。
+新しい比較の添字が拡張後のどの候補を指すかを明確にすることで、異なる候補の勝敗へ置き換わることを防ぎます。
 
 ---
 
-## 10.42 `condition_on_observations`
+## 10.42 新しい比較による事後更新
 
-pairwise GP は `condition_on_observations` をサポートしますが、通常回帰モデルと違い、新しい `Y` も pairwise comparisons
-である必要があります。
+事後分布を更新するときに追加するのは、新しい候補の数値スコアではなく比較関係です。
 
 つまり
-
 
 ```text
 X = new datapoints
@@ -859,7 +867,6 @@ Y = scalar targets
 ```
 
 ではなく
-
 
 ```text
 X = new datapoints
@@ -879,10 +886,9 @@ Y = comparison indices
 
 ## 10.45 outcome standardization はどうするか
 
-通常回帰では `Standardize` を使えますが、Preference Learning では直接観測する scalar target がありません。
+通常回帰では数値応答を平均・標準偏差で標準化できますが、選好学習では直接観測する数値スコアがありません。
 
 したがって
-
 
 ```text
 observed Y を standardize
@@ -899,7 +905,6 @@ latent utility の scale は likelihood と kernel の中で扱われます。
 pairwise GP の kernel hyperparameters も preference data に基づいて学習されます。
 
 例えば lengthscale は
-
 
 ```text
 input のどの距離スケールで preference utility が変化するか
@@ -922,7 +927,6 @@ Preference dataset では
 
 全 pair を比較すると
 
-
 $$
 \frac{n(n-1)}{2}
 $$
@@ -937,13 +941,11 @@ Preference BO / Active Learning の目的の一つは、少ない comparison で
 
 同じ pair を繰り返し評価することにも意味があります。
 
-
 ```text
 A vs B を1回だけ
 ```
 
 より
-
 
 ```text
 A vs B を複数回
@@ -958,7 +960,6 @@ A vs B を複数回
 ## 10.49 evaluator variability
 
 複数人が評価する場合、
-
 
 ```text
 Person 1: A > B
@@ -981,7 +982,6 @@ Person 2: B > A
 
 好みが context に依存する場合、単純な
 
-
 $$
 f(x)
 $$
@@ -990,20 +990,17 @@ $$
 
 例えば
 
-
 $$
 f(x,c)
 $$
 
 として context `c` を入力に含める必要があります。
 
-
 ```text
 材料Aが良い
 ```
 
 ではなく
-
 
 ```text
 用途Cでは材料Aが良い
@@ -1016,7 +1013,6 @@ $$
 ## 10.51 cyclic preference が強い場合
 
 単一 scalar latent utility では
-
 
 ```text
 A > B
@@ -1042,7 +1038,6 @@ pairwise GP を無理に当てはめないことが重要です。
 
 Multi-objective BO と Preference Learning は別概念です。
 
-
 ```text
 Multi-objective BO
   → 複数の数値 objective を観測
@@ -1059,20 +1054,17 @@ Preference Learning
 
 複数 outcome
 
-
 $$
 y=f(x)\in\mathbb{R}^m
 $$
 
 は測定できるが、それをどう総合評価するかの utility
 
-
 $$
 g(y)
 $$
 
 が分からない場合を考えます。
-
 
 ```text
 x
@@ -1094,7 +1086,6 @@ utility
 
 直接 Preference BO では
 
-
 ```text
 x → latent utility
 ```
@@ -1102,7 +1093,6 @@ x → latent utility
 を直接 pairwise GP で学習します。
 
 BOPE では
-
 
 ```text
 x → outcomes y
@@ -1130,7 +1120,6 @@ y → utility
 
 絶対 utility score を定義しにくくても、
 
-
 ```text
 候補Aと候補BならA
 ```
@@ -1144,7 +1133,6 @@ y → utility
 ## 10.56 通常回帰を使った方がよい場合
 
 信頼できる absolute scalar objective が取れるなら、通常回帰の方が単純です。
-
 
 ```text
 毎回、正確な強度値が測れる
@@ -1163,7 +1151,6 @@ Preference Learning は「比較形式でしか情報が得られない / 比較
 ## 10.57 scalarization との違い
 
 複数 objective がある場合、重み付き和
-
 
 $$
 u(y)=w^T y
@@ -1204,7 +1191,6 @@ probit preference model では utility scale と noise scale が完全に独立�
 
 そのため通常 regression GP の
 
-
 ```text
 learned noise = measurement noise variance
 ```
@@ -1234,7 +1220,6 @@ Preference model では次を確認します。
 
 comparison dataset を train / validation に分け、validation pair `(i,j)` について
 
-
 ```text
 posterior mean utility_i > posterior mean utility_j ?
 ```
@@ -1248,7 +1233,6 @@ posterior mean utility_i > posterior mean utility_j ?
 ## 10.63 ranking metric
 
 ground truth ranking がある simulation では Kendall tau が便利です。
-
 
 ```text
 true order
@@ -1269,7 +1253,6 @@ Preference model は absolute utility recovery より ranking recovery が重要
 pairwise GP は point ranking だけでなく posterior uncertainty を持ちます。
 
 これにより
-
 
 ```text
 どちらが優れているか分からない領域
@@ -1300,7 +1283,6 @@ BO と Active Learning では query selection objective が異なる点に注意
 
 ## 10.66 BO と Active Learning の違い
 
-
 ```text
 Preference BO
   → 最良 utility candidate を見つけたい
@@ -1319,13 +1301,11 @@ EUBO は前者寄りです。
 
 連続最適化ではなく、既存候補集合
 
-
 $$
 \mathcal{C}=\{x_1,\dots,x_N\}
 $$
 
 から pair を選ぶ場合、全 pair に acquisition score を計算して
-
 
 $$
 (i^*,j^*)=
@@ -1341,7 +1321,6 @@ $$
 ## 10.68 preference query batch
 
 一度に複数 pair を人へ提示する場合、comparison batch 内の冗長性も問題になります。
-
 
 ```text
 A vs B
@@ -1378,6 +1357,23 @@ A vs D
 ---
 
 ## 10.72 simple example
+
+候補A・B・CについてAがBに勝ち、BがCに勝ったとします。
+これは潜在効用に対する二つの尤度因子であり、A・B・Cの数値スコアを与えてはいません。
+仮に $f_A=1.4$、$f_B=1.1$、判断ノイズ尺度が1なら、
+条件付き比較確率は $\Phi(0.3/\sqrt2)\simeq0.584$ です。
+Aの効用が高くても、Bが選ばれる可能性は残ります。
+
+実際の予測では効用自体の不確実性も積分します。Laplace近似などで
+$F_A-F_B\mid D\sim\mathcal N(\Delta,v)$ とし、新しい判断ノイズがこれと独立なら、
+
+$$
+P(A\succ B\mid D)
+=\Phi\!\left(\frac{\Delta}{\sqrt{2\sigma_{\mathrm{pref}}^2+v}}\right).
+$$
+
+これは効用差と判断ノイズ差の和が正規分布になることから得られます。
+平均効用差をprobitへ代入するだけでは $v$ が抜け、予測確率の確信度を過大に見積もり得ます。
 
 ---
 
@@ -1416,7 +1412,6 @@ absolute objective observations がないので preference-specific acquisition 
 
 ## 10.75 モデル選択フロー
 
-
 ```text
 評価対象がある
    ↓
@@ -1435,7 +1430,6 @@ absolute objective observations がないので preference-specific acquisition 
 ```
 
 さらに
-
 
 ```text
 複数 outcome は測れる
@@ -1465,11 +1459,9 @@ absolute objective observations がないので preference-specific acquisition 
 
 Preference Learning の構造は
 
-
 $$
 f\sim\mathcal{GP}(m,k)
 $$
-
 
 $$
 P(i\succ j\mid f)
@@ -1478,7 +1470,6 @@ P(i\succ j\mid f)
 \frac{f_i-f_j}{\sqrt{2}}
 \right)
 $$
-
 
 $$
 p(f\mid D)
@@ -1489,7 +1480,6 @@ $$
 です。
 
 この posterior は非Gaussianなので、
-
 
 $$
 p(f\mid D)
@@ -1505,7 +1495,6 @@ $$
 
 通常 BO:
 
-
 ```text
 objective value
       ↓
@@ -1515,7 +1504,6 @@ EI / UCB / KG
 ```
 
 Preference BO:
-
 
 ```text
 pairwise comparison
@@ -1533,22 +1521,18 @@ EUBO / preference acquisition
 
 ## 10.80 この章で覚えておくこと
 
-Preference Learning は、**絶対値ではなく比較から潜在 utility function を学ぶ方法**です。
-
-pairwise GP
-
-を利用します。
+選好学習は、**絶対値ではなく比較から潜在効用を学ぶ方法**です。本章ではGP事前分布と比較尤度を組み合わせ、Laplace近似で推論する方法を説明しました。
 
 特に重要なのは次の点です。
 
-1. `comparisons` は `[winner, loser]` の index pair
-2. latent utility `f(x)` に GP prior を置く
-4. non-Gaussian posterior を Laplace approximation する
-6. utility の absolute value より ranking が重要
-7. preference BO では EI より preference-specific acquisition を考える
-8. BoTorch では EUBO が利用できる
-9. multiple outcomes と preference を分ける場合は BOPE が有力
-10. evaluator heterogeneity や cyclic preference が強い場合は単一 utility 仮定を見直す
+1. 比較は勝者・敗者を表す候補の添字対であり、数値スコアではない
+2. 潜在効用 $f(x)$ にGP事前分布を置く
+3. 非正規の事後分布をLaplace近似で扱う
+4. 効用の絶対水準よりも、差・順位・選好確率が重要になる
+5. 選好BOでは観測最大値を前提とした改善量をそのまま使わず、比較に適した獲得基準を考える
+6. EUBOは提示集合の最良潜在効用の期待値を評価する
+7. 複数の測定応答と選好を分ける場合はBOPEが候補になる
+8. 評価者差や循環的な選好が強い場合は単一効用の仮定を見直す
 
 次章では、画像・波形・空間場などの structured output を扱う [Structured Output GP](11_structured_output.md) を説明します。
 

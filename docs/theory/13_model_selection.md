@@ -15,10 +15,12 @@
 
 ---
 
+[GP章](02_gaussian_process.md)を基礎に、前章までの観測形式・共分散構造・推論方法を比較します。
+本章のフローは候補を絞るための仮説整理であり、モデル名だけから性能の順序を決めるものではありません。
+
 ## 13.1 最初に覚える原則
 
 モデル選択の基本原則は次です。
-
 
 ```text
 まず 単一タスク GP を考える
@@ -53,7 +55,6 @@
 
 初心者はモデル一覧から選ぶより、次の順で問題を分解すると判断しやすくなります。
 
-
 ~~~text
 1. 何を観測する？        numeric / comparison
 2. outputは何？          scalar / vector / tensor / function
@@ -68,7 +69,6 @@
 特定のacquisitionでそのまま使えることは同義ではありません。
 
 ## 13.2 最重要フローチャート
-
 
 ```text
 観測データは何か？
@@ -152,7 +152,6 @@
 
 例えば、
 
-
 ```text
 A > B
 B > C
@@ -162,7 +161,6 @@ A > C
 のような preference / comparison data しか得られない場合、通常回帰へ無理に変換するべきではありません。
 
 この場合は
-
 
 ```text
 pairwise GP
@@ -181,7 +179,6 @@ pairwise GP
 
 ### scalar response
 
-
 ```text
 x → y
 ```
@@ -189,7 +186,6 @@ x → y
 これは通常の GP です。
 
 ### vector / tensor / function-valued response
-
 
 ```text
 x → spectrum
@@ -204,7 +200,6 @@ x → spatial field
 
 出力そのものが tensor として自然に表現される場合です。
 
-
 ```text
 観測応答
 [n, d1, d2, ...]
@@ -215,7 +210,6 @@ x → spatial field
 ### 潜在座標の Kronecker GP
 
 時間、波長、位置など、出力軸に明示的な座標 `T` が存在する場合です。
-
 
 ```text
 f(x, t)
@@ -237,7 +231,6 @@ f(x, t)
 
 例えば
 
-
 ```text
 temperature: continuous
 pressure: continuous
@@ -248,16 +241,11 @@ catalyst: categorical
 
 全変数は常に意味を持ちます。
 
-この場合、単一taskの基本構成なら
+この場合、単一タスクの基本構成として、連続変数とカテゴリの意味を分ける混合入力GPを検討します。
 
-
-```text
-混合入力 GP
-```
 ### Hierarchical / conditional variable
 
 例えば
-
 
 ```text
 process_type = A
@@ -273,7 +261,6 @@ process_type = B
 
 この場合は
 
-
 ```text
 Hierarchical Conditional カーネル GP
 ```
@@ -281,7 +268,6 @@ Hierarchical Conditional カーネル GP
 を使います。
 
 複数 task がある場合は
-
 
 ```text
 Hierarchical Conditional カーネル マルチタスク GP
@@ -301,7 +287,6 @@ Mixed と Hierarchical を混同しないことが重要です。
 
 例えば、
 
-
 ```text
 low fidelity simulation
 high fidelity simulation
@@ -311,7 +296,6 @@ experiment
 です。
 
 fidelity が「同じ物理量の精度レベル」を意味するなら、
-
 
 ```text
 単一タスク Multi Fidelity GP
@@ -323,14 +307,12 @@ fidelity が「同じ物理量の精度レベル」を意味するなら、
 
 ### Multi-Fidelity
 
-
 ```text
 同じ target
 異なる accuracy / cost
 ```
 
 ### Multi-task
-
 
 ```text
 関連するが異なる task
@@ -354,7 +336,6 @@ fidelity が「同じ物理量の精度レベル」を意味するなら、
 
 ### 情報共有しない
 
-
 ```text
 独立モデルの集合
 ```
@@ -369,14 +350,12 @@ fidelity が「同じ物理量の精度レベル」を意味するなら、
 
 #### すべての task を同じ X で観測
 
-
 ```text
 観測入力: [n, d]
 観測応答: [n, m]
 ```
 
 なら
-
 
 ```text
 Kronecker 構造のマルチタスク GP
@@ -388,7 +367,6 @@ Kronecker 構造のマルチタスク GP
 
 long-format 表現が自然なら
 
-
 ```text
 マルチタスク GP
 ```
@@ -399,14 +377,12 @@ long-format 表現が自然なら
 
 例えば
 
-
 ```text
 task A: temperature, pressure, flow
 task B: temperature, flow
 ```
 
 なら
-
 
 ```text
 Heterogeneous MTGP
@@ -433,7 +409,6 @@ GP](12_hierarchical_contextual_gp.md) を参照してください。
 
 例えば
 
-
 ```text
 strength
 cost
@@ -442,7 +417,6 @@ cost
 を同時最適化する場合、2つの目的を 独立モデルの集合 で独立にモデル化して qEHVI を使うこともできます。
 
 したがって
-
 
 ```text
 Multi-objective = マルチタスク GP
@@ -460,7 +434,6 @@ Multi-objective = マルチタスク GP
 
 例えば
 
-
 ```text
 context A → variables x_A
 context B → variables x_B
@@ -472,7 +445,6 @@ context B → variables x_B
 
 ### aggregated reward のみ観測
 
-
 ```text
 y = y_A + y_B
 ```
@@ -480,7 +452,6 @@ y = y_A + y_B
 のような合計値しか観測できない場合です。
 
 context 間の明示的な類似性を学習しないなら
-
 
 ```text
 context 加法 GP
@@ -490,7 +461,6 @@ context 加法 GP
 
 context 間の latent similarity を学習したいなら
 
-
 ```text
 加法的な context embedding GP
 ```
@@ -499,14 +469,12 @@ context 間の latent similarity を学習したいなら
 
 ### context-wise reward を個別観測
 
-
 ```text
 y_A
 y_B
 ```
 
 をそれぞれ観測できるなら
-
 
 ```text
 乗法的な context embedding GP
@@ -532,7 +500,6 @@ y_B
 
 ### 有効な次元が少ない
 
-
 ```text
 SAAS fully Bayesian 単一タスク GP
 ```
@@ -543,7 +510,6 @@ SAAS は多くの変数をほぼ無関係とみなし、少数の active dimensi
 
 ### 高次元 + multi-task
 
-
 ```text
 SAAS fully Bayesian マルチタスク GP
 ```
@@ -551,7 +517,6 @@ SAAS fully Bayesian マルチタスク GP
 を検討します。
 
 ### Fully Bayesian SAAS が重い
-
 
 ```text
 Additive Map SAAS 単一タスク GP
@@ -562,13 +527,11 @@ Ensemble Map SAAS 単一タスク GP
 
 ### 加法構造が妥当
 
-
 ```text
 f(x) ≈ f1(x1) + f2(x2) + ...
 ```
 
 のような構造が期待できるなら
-
 
 ```text
 直交加法 GP
@@ -614,7 +577,6 @@ Multi-task / contextual model の方が自然かもしれません。
 
 ### PCA
 
-
 ```text
 X → Z
 ```
@@ -643,7 +605,6 @@ Exact GP の主要な制約は、学習点数 `n` に対する計算コストで
 
 標準的な Exact GP では、dense covariance の分解に概ね
 
-
 $$
 O(n^3)
 $$
@@ -651,7 +612,6 @@ $$
 の計算量が現れます。
 
 データ数が増え、Exact GP がボトルネックになる場合には
-
 
 ```text
 単一タスク Variational GP
@@ -677,7 +637,6 @@ Variational GP は inducing points を使い、完全な covariance matrix を�
 
 これは頻繁に混同されます。
 
-
 ```text
 高次元
 d が大きい
@@ -690,7 +649,6 @@ n が大きい
 
 例えば
 
-
 ```text
 n = 40
 d = 100
@@ -699,7 +657,6 @@ d = 100
 なら Exact GP の `n^3` はそれほど問題でなくても、高次元性による kernel estimation と acquisition optimization が問題になります。
 
 逆に
-
 
 ```text
 n = 10000
@@ -713,7 +670,6 @@ d = 5
 ## 13.15 Step 9: noise生成過程とrobustnessを確認する
 
 「外れ値があるか」だけではなく、**なぜ観測が不確かになるのか**を分けます。
-
 
 ~~~text
 既知・固定の観測noise
@@ -751,7 +707,6 @@ replicateからnoiseを推定できる
 
 これらはモデル化が異なります。
 
-
 ```text
 noise
 → likelihood / 既知の観測分散
@@ -773,10 +728,13 @@ regime
 
 ## 13.17 モデル選択で最初に見る tensor shape
 
+以下の形状はデータの数学的な配置を表す例です。$n$ は観測点数、$d$ は設計変数の数、
+$m$ は文脈に応じて出力数または比較数を表します。タスク識別子が一列にあっても、
+その列へ通常の連続距離を仮定するわけではありません。
+
 モデル選択は数学だけでなく、データ shape を見るとかなり整理できます。
 
 ### 単一タスク GP
-
 
 ```text
 観測入力: [n, d]
@@ -785,14 +743,12 @@ regime
 
 ### Kronecker 構造のマルチタスク GP
 
-
 ```text
 観測入力: [n, d]
 観測応答: [n, m]
 ```
 
 ### マルチタスク GP
-
 
 ```text
 観測入力: [n, d + 1]
@@ -802,7 +758,6 @@ regime
 
 ### 独立モデルの集合
 
-
 ```text
 model_1(X1, Y1)
 model_2(X2, Y2)
@@ -810,7 +765,6 @@ model_2(X2, Y2)
 ```
 
 ### Heterogeneous MTGP
-
 
 ```text
 観測入力s = [X_task0, X_task1, ...]
@@ -820,7 +774,6 @@ model_2(X2, Y2)
 
 ### 高階 GP
 
-
 ```text
 観測入力: [n, d]
 観測応答: [n, d1, d2, ...]
@@ -828,17 +781,15 @@ model_2(X2, Y2)
 
 ### 潜在座標の Kronecker GP
 
-
 ```text
-観測入力
-train_T
-観測応答
+設計入力 X: [n, d]
+出力座標 T: [M]
+応答 Y: [n, M]（欠測がある場合は観測位置も区別）
 ```
 
 です。
 
 ### pairwise GP
-
 
 ```text
 datapoints: [n, d]
@@ -849,8 +800,9 @@ shape を先に整理すると、候補モデルをかなり絞れます。
 
 ---
 
-### 通常のプロセス条件最適化
+## 13.18 問題設定から考える例
 
+### 通常のプロセス条件最適化
 
 ```text
 温度
@@ -862,13 +814,11 @@ shape を先に整理すると、候補モデルをかなり絞れます。
 
 基本候補:
 
-
 ```text
 単一タスク GP
 ```
 
 ### 製法カテゴリを含む
-
 
 ```text
 温度
@@ -879,13 +829,11 @@ shape を先に整理すると、候補モデルをかなり絞れます。
 
 基本候補:
 
-
 ```text
 混合入力 GP
 ```
 
 ### 製法ごとに有効条件が違う
-
 
 ```text
 製法A → 温度
@@ -894,13 +842,11 @@ shape を先に整理すると、候補モデルをかなり絞れます。
 
 基本候補:
 
-
 ```text
 Hierarchical Conditional カーネル GP
 ```
 
 ### 簡易シミュレーションと高精度シミュレーション
-
 
 ```text
 単一タスク Multi Fidelity GP
@@ -910,20 +856,17 @@ Hierarchical Conditional カーネル GP
 
 入力定義が同じなら
 
-
 ```text
 マルチタスク GP
 ```
 
 ### 装置ごとにセンサー項目が異なる
 
-
 ```text
 Heterogeneous MTGP
 ```
 
 ### 官能評価
-
 
 ```text
 pairwise GP
@@ -933,13 +876,11 @@ pairwise GP
 
 波長座標を明示したいなら
 
-
 ```text
 潜在座標の Kronecker GP
 ```
 
 ### 画像 response
-
 
 ```text
 高階 GP
@@ -947,13 +888,11 @@ pairwise GP
 
 ### 多数のプロセス変数から少数だけが効く
 
-
 ```text
 SAAS fully Bayesian 単一タスク GP
 ```
 
 ### 大量の履歴データ
-
 
 ```text
 単一タスク Variational GP
@@ -967,7 +906,6 @@ SAAS fully Bayesian 単一タスク GP
 
 例えば SAAS を使うなら
 
-
 ```text
 単一タスク GP
 vs
@@ -976,7 +914,6 @@ SAAS
 
 Multi-task を使うなら
 
-
 ```text
 independent 単一タスク GP / 独立モデルの集合
 vs
@@ -984,7 +921,6 @@ vs
 ```
 
 Contextual model なら
-
 
 ```text
 ordinary GP
@@ -1023,7 +959,28 @@ BO ではさらに
 
 なども重要です。
 
-最終的には surrogate accuracy ではなく **optimization performance** が目的です。
+BOのためのモデル選択では、これらの予測指標に加えて、限られた予算での意思決定の成果を評価します。
+
+### 平均の誤差と予測分布の評価を分ける
+
+検証観測 $y_i$ に対する予測平均を $\mu_i$、**観測ノイズを含む**予測分散を $s_i^2>0$ とします。
+正規予測分布の平均負対数予測密度（NLPD）は、密度の対数を取ることで
+
+$$
+\operatorname{NLPD}
+=\frac1{N_v}\sum_{i=1}^{N_v}
+\left[\frac12\log(2\pi s_i^2)+\frac{(y_i-\mu_i)^2}{2s_i^2}\right]
+$$
+
+となります。$N_v$ は検証観測数です。第一項は広すぎる分布、第二項は
+分散に比べて大きい予測誤差を罰します。分散を増やすだけで改善できる指標ではありません。
+例えば $y=1$、$\mu=0$ のとき、分散1なら約1.419、分散0.01なら約48.616です。
+二つの予測平均の誤差は同じでも、後者は誤った予測に強い確信を与えています。
+RMSEはこの違いを表しません。
+
+一方、区間被覆率だけなら過度に広い区間でも高くなるため、区間幅も確認します。
+潜在関数値が既知の試験問題を評価する場合は、観測ノイズを含む予測分布とは対象が異なります。
+複数出力の同時予測を評価したい場合も、周辺のNLPDの平均だけでは相関の妥当性までは確認できません。
 
 ---
 
@@ -1035,7 +992,6 @@ BO ではさらに
 
 したがって
 
-
 ```text
 offline CV
 +
@@ -1043,6 +999,14 @@ sequential BO benchmark
 ```
 
 の両方を見るのが望ましいです。
+過去の探索が集中した領域での誤差は、未探索領域の誤差を代表するとは限りません。
+時間変化が重要なら時系列順、未知タスクへの転移が目的ならタスク単位、
+未知の設計点で構造化出力を予測するなら入力点単位で検証を分割します。
+同一入力の反復測定を学習・検証へ無作為に分散させると、未観測入力への一般化を過大評価し得ます。
+
+前処理とハイパーパラメータの選択は各学習部分で行い、検証側の値を使って再調整し続けないようにします。
+BOの逐次比較では初期データ、評価予算、ノイズ条件をそろえ、複数回の探索のばらつきも確認します。
+評価コストが異なる場合は、観測回数だけでなく累積費用や経過時間をそろえて比較します。
 
 ---
 
@@ -1052,7 +1016,6 @@ BO では posterior mean だけでなく posterior uncertainty が acquisition �
 
 そのため
 
-
 ```text
 予測平均が合っている
 ```
@@ -1060,7 +1023,6 @@ BO では posterior mean だけでなく posterior uncertainty が acquisition �
 だけでは不十分です。
 
 例えば UCB なら
-
 
 $$
 \alpha(x) = \mu(x) + \beta^{1/2}\sigma(x)
@@ -1108,7 +1070,6 @@ Surrogate model と acquisition function は別の選択問題です。
 
 例えば
 
-
 ```text
 単一タスク GP + LogEI
 単一タスク GP + UCB
@@ -1119,7 +1080,6 @@ Surrogate model と acquisition function は別の選択問題です。
 
 Multi-objective では
 
-
 ```text
 独立モデルの集合 + qLogEHVI
 ```
@@ -1127,7 +1087,6 @@ Multi-objective では
 のような組み合わせもあります。
 
 したがって
-
 
 ```text
 モデル選択
@@ -1149,7 +1108,6 @@ posterior を使って次点をどう選ぶか
 
 例えば Mixed variable では
 
-
 ```text
 混合入力 GP
 ```
@@ -1158,15 +1116,9 @@ posterior を使って次点をどう選ぶか
 
 一方でカテゴリ組合せをどう探索するかは
 
-
-```text
-optimize_acqf_mixed
-```
-
-など acquisition optimizer 側の問題です。
+離散割当ごとに連続領域を最適化する方法や、有限候補集合を探索する方法など、獲得関数の最適化側の問題です。
 
 Hierarchical model でも同様に、conditional kernel が正しくても無効な candidate を生成してよいわけではありません。
-
 
 ```text
 surrogate model
@@ -1201,7 +1153,6 @@ Gaussian 観測モデルでは、対数周辺尤度を最大化して hyperparam
 
 ### Variational ELBO
 
-
 ```text
 単一タスク Variational GP
 ```
@@ -1209,7 +1160,6 @@ Gaussian 観測モデルでは、対数周辺尤度を最大化して hyperparam
 は `変分下界（ELBO）` を使います。
 
 ### NUTS
-
 
 ```text
 SAAS fully Bayesian 単一タスク GP
@@ -1219,7 +1169,6 @@ SAAS fully Bayesian マルチタスク GP
 は Fully Bayesian inference を使います。
 
 ### Laplace approximation
-
 
 ```text
 pairwise GP
@@ -1231,17 +1180,15 @@ pairwise GP
 
 ---
 
-### Registryは「自動的な正解表」ではない
+### 対応可能な操作だけでは最適モデルは決まらない
 
-これは候補を絞るために有用ですが、
-
+必要な予測・標本化・条件付けが数学的に定義されるかを確認することは有用ですが、
 
 ~~~text
 capability = その操作・構造をサポートする
 ~~~
 
 であって、
-
 
 ~~~text
 capability = その問題に最適なモデルである
@@ -1254,7 +1201,6 @@ capability = その問題に最適なモデルである
 ## 13.28 診断フロー
 
 モデルを学習した後は次の順で確認します。
-
 
 ```text
 1. tensor shape は正しいか
@@ -1276,13 +1222,11 @@ capability = その問題に最適なモデルである
 
 例えば
 
-
 ```text
 material = 0, 1, 2
 ```
 
 として RBF kernel に入れると、
-
 
 ```text
 distance(0,1) < distance(0,2)
@@ -1291,7 +1235,6 @@ distance(0,1) < distance(0,2)
 という順序関係を暗黙に仮定します。
 
 名義カテゴリなら通常これは不適切です。
-
 
 ```text
 混合入力 GP
@@ -1306,7 +1249,6 @@ distance(0,1) < distance(0,2)
 多目的 BO で目的間相関を必ず学習する必要はありません。
 
 目的ごとに独立 surrogate を持つ
-
 
 ```text
 独立モデルの集合
@@ -1327,7 +1269,6 @@ distance(0,1) < distance(0,2)
 Variational GP が主に解決するのは `n` の大きさです。
 
 入力次元 `d` の大きさを直接解決するモデルではありません。
-
 
 ```text
 d large → SAAS / additive / dimension reduction
@@ -1354,7 +1295,6 @@ Task A には存在しない feature を 0 埋めして通常 マルチタスク
 
 Task ごとに feature structure が本質的に違う場合は
 
-
 ```text
 Heterogeneous MTGP
 ```
@@ -1368,7 +1308,6 @@ Heterogeneous MTGP
 条件付き探索空間で inactive variable を 0.5 などで埋め、通常 kernel で距離計算すると、その無意味な値が covariance に影響します。
 
 このような場合に
-
 
 ```text
 Hierarchical Conditional カーネル GP
@@ -1385,7 +1324,6 @@ Hierarchical Conditional カーネル GP
 しかし波長方向の相関を捨てることになります。
 
 波長という明示的座標があるなら
-
 
 ```text
 潜在座標の Kronecker GP
@@ -1426,7 +1364,6 @@ Hierarchical Conditional カーネル GP
 ## 13.37 計算コストの観点
 
 非常に粗い分類ですが、実務上は次の感覚を持っておくと便利です。
-
 
 ```text
 軽い
@@ -1469,7 +1406,6 @@ BO では通常、データが少ない状態から始まります。
 
 そのため domain knowledge に基づいて
 
-
 ```text
 本当に task correlation があるか
 本当に additive か
@@ -1487,13 +1423,11 @@ BO では通常、データが少ない状態から始まります。
 
 例えば探索初期は
 
-
 ```text
 単一タスク GP
 ```
 
 で始め、データが増えてから
-
 
 ```text
 SAAS
@@ -1510,7 +1444,6 @@ VariationalGP
 ## 13.40 自動モデル選択について
 
 例えばデータ schema から
-
 
 ```text
 categorical columns detected
@@ -1532,10 +1465,8 @@ large n
 
 例えば「fidelity」「task」「context」は tensor shape だけでは判定できず、意味論が必要です。
 
-そのため自動化するなら
-
-
-が現実的です。
+そのため自動化するなら、データ形式から候補を提案し、観測の意味と科学的仮定を確認してから、
+予測分布と逐次意思決定の両面で比較する手順が現実的です。
 
 ---
 
@@ -1588,20 +1519,17 @@ large n
 
 最後に最も重要な判断基準をもう一度示します。
 
-
 ```text
 単一タスク GP で十分なら 単一タスク GP を使う
 ```
 
 特殊モデルは
 
-
 ```text
 「使えるから使う」
 ```
 
 のではなく
-
 
 ```text
 「標準 GP では表現できない構造があるから使う」
@@ -1614,7 +1542,6 @@ large n
 ---
 
 ## 13.44 この章で覚えておくこと
-
 
 ```text
 普通の連続回帰
@@ -1674,7 +1601,6 @@ context-wise output
 
 モデル選択は「最も高機能なclassを探す作業」ではありません。
 
-
 ~~~text
 観測の意味
   ↓
@@ -1693,7 +1619,7 @@ validation
 
 複数の構造が同時にある場合は、それらの仮定を同時に満たすモデルを考え、予測分布と意思決定基準の適合性を検証します。
 
-本章で理論ガイドの基本的なモデル選択フローは完結します。
+本章のフローで候補を絞った後は、診断で不足している仮定だけを追加し、同じ条件の比較で改善を確認します。
 
 ## 参考文献
 
