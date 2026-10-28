@@ -93,7 +93,8 @@ def main() -> None:
         writer.writeheader()
         writer.writerows(rows)
     print(f"Notebooks inspected: {len(rows)}")
-    print(f"Notebooks with invalid Python code cells: {sum(int(r['invalid_code_cells']) > 0 for r in rows)}")
+    invalid_count = sum(int(row["invalid_code_cells"]) > 0 for row in rows)
+    print(f"Notebooks with invalid Python code cells: {invalid_count}")
     print("All execution statuses remain unverified.")
 
 
