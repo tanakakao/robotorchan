@@ -1,9 +1,11 @@
 # Neural Representation Learning for Gaussian Processes
 
+[次元削減章](18_dimensionality_reduction_gp.md)の合成カーネルと、[GP章](02_gaussian_process.md)の周辺尤度を前提とします。
+本章では固定した表現、教師あり事前学習、GPと同時に学習する表現の違いを数式で考えます。
+
 ## 直感
 
 線形 reduction では
-
 
 ```text
 z = W^T x
@@ -12,7 +14,6 @@ z = W^T x
 のような固定された線形 subspace を使います。
 
 neural representation では
-
 
 ```text
 z = encoder_theta(x)
@@ -44,7 +45,6 @@ Supervised reducerがYを使うことと、GPとjoint trainingすることは同
 
 AutoEncoder は
 
-
 ```text
 x
  -> encoder
@@ -57,7 +57,6 @@ x
 
 典型的には
 
-
 ```text
 L_AE = mean ||x - x_hat||^2
 ```
@@ -66,7 +65,6 @@ L_AE = mean ||x - x_hat||^2
 
 Autoencoder GP は encoder を reducer として先に学習し、その latent coordinate を固定して
 GP を構築します。
-
 
 ```text
 観測入力
@@ -87,13 +85,11 @@ GP marginal likelihoodの勾配は、この事前学習済みencoderの表現学
 
 Variational AutoEncoder は deterministic code ではなく latent distribution を学習します。
 
-
 ```text
 q_phi(z | x) = N(mu_phi(x), diag(sigma_phi(x)^2))
 ```
 
 典型的な VAE objective は
-
 
 ```text
 L_VAE
@@ -107,7 +103,6 @@ L_VAE
 です。
 
 VAE GP は frozen VAE の posterior-mean latent representation を GP input として使います。
-
 
 ```text
 X
@@ -130,7 +125,6 @@ outcome-prediction loss を使います。
 
 概念的には
 
-
 ```text
 L
   = L_reconstruction
@@ -151,7 +145,6 @@ Supervised VAE GP は VAE objective に outcome-aware supervision を追加し�
 
 概念的には
 
-
 ```text
 L
   = L_reconstruction
@@ -161,8 +154,7 @@ L
 
 です。
 
-`beta` は latent prior regularization の強さ、`supervised_weight` は outcome-aware loss の
-重みを制御します。
+ここで $\beta\ge0$ は潜在事前分布への正則化、$\lambda_y\ge0$ は応答予測の損失の重みです。
 
 通常の Supervised VAE GP もfrozen reducer modelであり、GP MLLとencoderをjoint training
 するモデルではありません。
@@ -173,7 +165,6 @@ training fold内へ閉じます。全dataでencoderをfitしてからGPだけを
 ## 5. joint encoder GP
 
 joint encoder GP は encoder を predictive GP model の一部として扱います。
-
 
 ```text
 X
@@ -187,15 +178,27 @@ GP predictive objective によって更新されます。
 
 基本training objectiveは
 
-
 ~~~text
 L_joint = - log p(Y | encoder_theta(X))
 ~~~
 
 です。
 
-Joint learningでは、encoderの出力を固定値として扱わず、GPの目的関数からencoderへ勾配を伝播させます。
-そのため、事前学習済みのencoderを固定する二段階学習とは異なる関数表現を獲得します。
+例えば零平均GPで、表現のパラメータを $\theta$、観測共分散を
+$K_y(\theta)=K_g(e_\theta(X),e_\theta(X))+\sigma^2I$ とします。
+カーネルのハイパーパラメータを固定しても、周辺対数尤度の勾配は
+
+$$
+\frac{\partial\log p(y\mid\theta)}{\partial\theta_j}
+=\frac12\operatorname{tr}\left[
+(\alpha\alpha^\top-K_y^{-1})\frac{\partial K_y}{\partial\theta_j}\right],
+\qquad \alpha=K_y^{-1}y
+$$
+
+となります。これは二次形式と対数行列式を微分した式です。
+連鎖律で表現へ勾配が戻るため、単なる再構成とは異なる目的で入力の幾何が変わります。
+ただし $\theta$ を点推定する通常の手順では、その重みの事後不確実性まで積分したことにはなりません。
+平均関数も $\theta$ に依存する場合は、平均の微分による項も必要です。
 
 ## 6. Hybrid Autoencoder GP
 
@@ -203,7 +206,6 @@ GP MLL のみで representation を学習すると、予測に有利でも input
 latent space になる可能性があります。
 
 Hybrid Autoencoder GP は decoder を追加し、
-
 
 ```text
 L_hybrid
@@ -213,9 +215,8 @@ L_hybrid
 
 を使います。
 
-`reconstruction_weight = 0` なら reconstruction regularization を無効化できます。
-
-reconstruction は standardized input space で計算されます。
+ここで $\lambda_{rec}=0$ なら再構成による正則化はなくなります。
+再構成損失を標準化入力で計算するか、物理単位で計算するかによって各座標の重みが変わるため、尺度を明示します。
 
 ## 7. Joint VAE
 
@@ -238,7 +239,6 @@ predictive training の一部です。
 
 VAE encoder が
 
-
 ```text
 q(z | x)
 ```
@@ -246,7 +246,6 @@ q(z | x)
 を返しても、posterior mean `mu(x)` だけを GP input にすれば latent uncertainty は失われます。
 
 representation uncertainty を反映するには、例えば
-
 
 ```text
 z_s ~ q(z | x)
@@ -257,7 +256,19 @@ p(f | x, D)
 
 のように latent samples 上の GP posterior を積分する必要があります。
 
-通常のdeterministic posteriorとuncertainty-aware posteriorは同じsemanticsではありません。
+標本数をSとし、近似標本ごとのGP予測平均を $\mu_s$、共分散を $\Sigma_s$ とすると、
+全分散により混合共分散は
+
+$$
+\bar\Sigma=\frac1S\sum_{s=1}^S\Sigma_s+
+\frac1S\sum_{s=1}^S(\mu_s-\bar\mu)(\mu_s-\bar\mu)^\top,
+\qquad \bar\mu=\frac1S\sum_s\mu_s.
+$$
+
+例えば零平均で $\operatorname{Var}(Z)=1$ のコードに対して、関数が $g(z)=z^2$ なら
+$g(\mathbb E[Z])=0$ と $\mathbb E[g(Z)]=1$ は異なります。
+平均コードへの代入は、非線形な予測を積分する操作ではありません。
+さらに、予測時のコードだけを標本化しても、学習入力の表現や表現パラメータの不確実性まで積分できるとは限りません。
 
 ## 9. Mixed neural representation
 
@@ -265,7 +276,6 @@ categorical code を continuous neural encoder へそのまま入力すると、
 意味のある Euclidean geometry として学習してしまう可能性があります。
 
 Mixed neural representationでは、カテゴリ値の順序や数値距離を誤って仮定しないよう、原則として
-
 
 ```text
 continuous X
@@ -292,13 +302,13 @@ categorical X
 
 などです。
 
-`latent_dim` は continuous input dimension を超えないという制約を持つモデルがあります。
+潜在次元は表現の容量を決めます。削減を目的とする場合は連続入力の次元以下を選びますが、
+次元を増やしても情報量が自動的に増えるわけではありません。具体的な設定制約は実装ガイドで扱います。
 
 ### Mixedではreconstruction対象もcontinuous部分
 
 Mixed joint modelではcategoryをencoderへ入れないだけでなく、
 混合入力 Hybrid Autoencoder GP のreconstruction lossもcontinuous columnsを対象にします。
-
 
 ~~~text
 continuous X
@@ -323,25 +333,15 @@ MultiTask model では task identity は representation-learning target では�
 同様に Mixed model では categorical feature、MultiFidelity model では fidelity feature の
 役割を representation features と区別する必要があります。
 
-named class の全直積を作ること自体が目的ではなく、各 feature role を保持した composition が
-重要です。
-
-- Joint Encoder マルチタスク GP
-- Joint Encoder Kronecker マルチタスク GP
-- Hybrid Autoencoder マルチタスク GP
-- Hybrid Autoencoder Kronecker マルチタスク GP
-- Joint VAE マルチタスク GP
-- Joint VAE Kronecker マルチタスク GP
-
-がpublicです。
+組合せを考える際は、表現学習の対象と構造を表す識別子の役割を保ちます。
+タスク共分散と表現上のカーネルを積にする方法や、共通入力格子でKronecker構造を使う方法があります。
 
 long-format MultiTaskではtask featureをencoderから除外し、data featuresだけをlatentへ写像してから
 task identityを再結合します。Kronecker形式ではtask identityがXの列ではなくY側のtask axisなので、
 観測入力のdata featuresをencoderへ渡せます。
 
-また 混合入力 Joint Encoder マルチタスク GP ではcategorical design columnsとtask featureの両方を
-continuous encoderから分離します。モデル名の存在から他のMixed × joint × MultiTaskの全直積まで
-自動的に実装済みと推測しないことが重要です。
+混合マルチタスクでは、カテゴリ設計変数とタスクの識別子を連続表現から分ける構成も考えられます。
+これは一つの統計的な設計であり、すべての組合せが同じ仮定や推論方法になるわけではありません。
 
 ## 11. Frozen reducer と joint model の比較
 
@@ -358,11 +358,9 @@ representationへ直接伝えられますが、encoderとkernel hyperparameter�
 optimization landscapeも変わります。どちらが良いかはデータ量・representation assumption・
 validation結果で判断します。
 
-frozen neural reducer は 次元削減 GP infrastructure を使うため、public posterior は
-original-space candidate `X` を受け、内部で encode します。
-
-joint model も public input は original space を基本とし、`forward` 内で learnable encoder を
-通します。
+どちらも元入力 $x$ に対する合成関数 $g(e_\theta(x))$ として定義できます。
+表現の学習でGPの入力次元が下がっても、元入力を探索する獲得関数の変数が自動的に減るわけではありません。
+実際の処理と設定範囲は[実装ガイド](../guide/19_neural_reduction_gp.md)を参照してください。
 
 ## 13. Bayesian optimization での注意
 
@@ -394,16 +392,13 @@ model familyは単純な性能順位ではなく、どのrepresentation assumpti
 
 ## 15. この章で覚えておくこと
 
-- neural reductionでは「frozen」「supervised pretraining」「joint training」を分けて考える
-- AE / VAEはGP objectiveを見ずにrepresentationを事前学習する
-- supervised reducerはYを見るが、GP MLLとjoint trainingするわけではない
-- Joint EncoderはExact GP MLLのgradientをencoderまで伝える
-- Hybrid AEはGP lossへcontinuous-input reconstruction regularizationを加える
-- Joint VAEの通常posteriorはposterior-mean latent codeを使う
-- uncertainty-aware posteriorはlatent uncertaintyをMC積分し、predictive momentsを近似する
-- Mixedではcontinuous representationとcategorical semanticsを分離する
-- MultiTaskではtask identityをcontinuous representationへ無条件に混ぜない
-- neural modelの自由度が大きいこと自体は、少標本BOでの性能保証ではない
+表現の固定、教師あり事前学習、GPとの同時学習は異なる学習方法です。
+教師ありのAE・VAEが応答を使うことと、GPの周辺尤度で表現を更新することは同じではありません。
+同時学習ではGPから表現へ勾配を伝え、Hybrid型では連続入力の再構成も目的に加えます。
+
+VAEの平均コードへの代入と、潜在分布を標本化して積分する予測を区別します。
+後者では成分内の分散に加え、予測平均の食い違いも不確実性へ反映されます。
+カテゴリやタスクを通常の連続入力へ無条件に混ぜず、自由度の大きさだけで少標本BOの性能を判断しません。
 
 ## 参考文献
 

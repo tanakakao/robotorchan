@@ -1,5 +1,10 @@
 # Expressive Gaussian Process Models
 
+[カーネル章](03_kernel.md)、[変分GP章](09_variational_gp.md)、[ニューラル表現章](19_neural_reduction_gp.md)を前提とします。
+本章では、決定論的な表現の学習、確率的な関数合成、事前カーネルの設計を区別します。
+入力次元をD、GP階層の層数をLとします。
+以下の表のExact GPは、正規観測尤度と固定した表現・ハイパーパラメータの下での条件付き推論を指します。
+
 ## 直感
 
 標準 Gaussian Process は kernel によって関数の smoothness や correlation structure を表します。
@@ -47,7 +52,6 @@ training contract は大きく異なります。
 
 決定論的 neural feature extractor `g_theta` を使うと、
 
-
 ```text
 z = g_theta(x)
 
@@ -59,7 +63,6 @@ k_DKL(x, x')
 ```
 
 と考えられます。
-
 
 ```text
 x
@@ -77,7 +80,6 @@ encoder へ伝わります。
 
 同じ neural encoder を使っていても、
 
-
 ```text
 frozen AE
  -> representation learning
@@ -87,7 +89,6 @@ frozen AE
 
 と
 
-
 ```text
 joint encoder GP
  -> encoder + GP joint optimization
@@ -95,8 +96,7 @@ joint encoder GP
 
 は別の statistical model です。
 
-前者は dimensionality reduction infrastructure、後者は learned kernel geometry として
-理解できます。
+前者はGPの学習中に固定された座標変換、後者は周辺尤度などの予測目的で更新するカーネルの幾何として理解できます。
 
 このため joint encoder GP は neural-reduction章と expressive-model章の両方に関係しますが、
 同じ説明を重複させるのではなく役割を分けます。
@@ -105,7 +105,6 @@ joint encoder GP
 
 混合入力 Joint Encoder GP は continuous features だけを encoder に渡し、categorical features を
 native mixed covariance 側へ保持します。
-
 
 ```text
 continuous X
@@ -121,7 +120,6 @@ categorical X
 ## 5. Deep Gaussian Process
 
 Deep GP は GP mapping 自体を階層化します。
-
 
 ```text
 x
@@ -147,17 +145,22 @@ Inducing-point変分分布を各層に導入することで計算を近似でき
 
 Deep GPの周辺尤度は中間層の確率的写像により一般に解析的に計算できません。変分推論では、誘導変数の近似事後分布を導入し、ELBOを最大化します。
 
-$
+$$
 \mathcal L_{\mathrm{ELBO}}=\mathbb E_{q(F)}[\log p(Y\mid F)]-\mathrm{KL}(q(U)\|p(U))
-$
+$$
 
-この期待値はモンテカルロ近似される場合があります。Exact GPの周辺尤度最大化とは推論対象も近似誤差も異なります。
+ここで $F$ は最終層の潜在値、$U$ は各層の誘導変数をまとめたものです。
+層ごとの事前分布と変分分布をそれぞれ積に分解する構成では、KL項は
+$\sum_{\ell=1}^L\operatorname{KL}(q(U_\ell)\Vert p(U_\ell))$ となります。
+期待対数尤度は中間層の不確実性を通じて計算し、単に各層の平均を次の層へ代入する操作とは異なります。
+例えば第1層の値が平均零・分散1でも、第2層の平均関数が二乗なら、期待値は1であって零ではありません。
+この期待値はモンテカルロ近似される場合があります。候補間の依存を保つには各層の標本も同時に生成する必要があります。
+正規尤度GPの周辺尤度最大化とは、推論対象も近似誤差も異なります。
 
 ## 8. MultiTask DeepGP
 
 task identity は単なる continuous scalar input として扱うのではなく、学習可能な task
 representation として stochastic hierarchy へ結合します。
-
 
 ```text
 data features
@@ -173,13 +176,9 @@ data features
 
 ## 10. Mixed × MultiTask DeepGP
 
-このmodelでは、
-
-- continuous featuresはcontinuous branchとして標準化
-- categorical featuresはlearnable embeddings
-- task identityはcategorical featureとは別のlearnable task embedding
-
-として分離した後、DeepGP hierarchyへ結合します。
+一つの構成では、連続入力を標準化し、カテゴリとタスクには別々の埋め込みを与えてから確率的な階層へ結合します。
+カテゴリの意味とタスク間の転移の仮定を同じものとして扱わない点が重要です。
+埋め込みを点推定する場合、その座標の不確実性まで完全に積分したことにはなりません。
 
 ## 11. Infinite-width neural network GP
 
@@ -187,7 +186,6 @@ data features
 Gaussian Process に収束する場合があります。
 
 初期 covariance は概念的に
-
 
 ```text
 K^0(x, x')
@@ -198,6 +196,22 @@ K^0(x, x')
 
 で、各 hidden layer で ReLU covariance map を再帰適用します。
 
+ReLUを $\varphi(u)=\max(u,0)$ とし、独立な零平均正規分布の重みとバイアスで、入力数に応じて重みを正規化した全結合層を考えます。
+層 $\ell$ の共分散を $K^\ell$、対角値を $q_x=K^\ell(x,x)>0$ として、
+$\vartheta=\arccos(K^\ell(x,x')/\sqrt{q_xq_{x'}})$ と置くと、
+同時正規変数のReLU積の期待値から次の再帰を得ます。
+
+$$
+K^{\ell+1}(x,x')=\sigma_b^2+
+\frac{\sigma_w^2\sqrt{q_xq_{x'}}}{2\pi}
+\{\sin\vartheta+(\pi-\vartheta)\cos\vartheta\}.
+$$
+
+対角値が零の場合は連続な極限を用います。例えばバイアスなしで同一点なら
+$\vartheta=0$ なので、次の層の分散は $\sigma_w^2q_x/2$ です。
+重み分散・活性化の規約によって層を重ねたときの分散の増減が変わるため、深さだけで表現力は比較できません。
+有限幅の学習済みネットワークや、ニューラル接線カーネルによる学習と同じモデルではありません。
+
 ## 12. 無限幅ニューラルネットワーク由来のGP
 
 適切な重み事前分布と幅の極限の下で、ニューラルネットワークの関数事前分布はGPに収束します。得られるNNGP共分散を通常のGPに用いる場合、有限幅ネットワークの重みを直接学習するわけではありません。
@@ -206,28 +220,15 @@ K^0(x, x')
 
 ## 13. Infinite-width BNN MultiTask / Kronecker
 
-- Infinite Width BNN マルチタスク GP
-- Infinite Width BNN Kronecker マルチタスク GP
-
-があります。
-
-long-format MultiTask では task feature を NNGP data kernel から除外し、task covariance 側で
-扱います。
-
-Kronecker model では NNGP kernel が data covariance を担当し、task covariance と Kronecker
-structure を構成します。
+NNGPカーネルを入力側に、タスク共分散を出力側に置く分離可能な構成を考えられます。
+タスクを添字付き観測として扱う場合、その番号をNNGPの通常の連続入力へ混ぜません。
+共通入力格子なら潜在共分散は入力因子とタスク因子のKronecker積になりますが、
+観測ノイズや欠測を含む行列が同じ積に分解できるとは限りません。
 
 ## 14. Mixed Infinite-width BNN
 
-さらに、
-
-- 混合入力 Infinite Width BNN GP
-- 混合入力 Infinite Width BNN マルチタスク GP
-- 混合入力 Infinite Width BNN Kronecker マルチタスク GP
-
-があります。
-
-Mixed model では continuous NNGP covariance と categorical covariance の役割を分離します。
+混合入力では、連続入力のNNGP共分散とカテゴリ共分散の役割を分けて、和や積として組み合わせられます。
+カーネルがNNGPに由来することは、カテゴリに数値距離を仮定する理由にはなりません。
 
 ### NNGP kernelはstationary kernelとは限らない
 
@@ -239,12 +240,13 @@ inferenceの分類、stationary / nonstationaryはcovariance structureの分類�
 
 ## 15. Spectral representation
 
-Bochner の定理により、continuous stationary kernel は spectral density と対応づけられます。
+Bochnerの定理では、連続な定常共分散は有限な非負のスペクトル**測度** $S$ により
+$k(\tau)=\int e^{2\pi i\omega\tau}\,dS(\omega)$ と表せます。
+測度が絶対連続な場合にスペクトル密度を持ちます。実数値カーネルでは対称な測度を用います。
 
 Spectral Mixture kernel は spectral density を Gaussian mixture で近似します。
 
 1次元の概念形は
-
 
 ```text
 k(tau)
@@ -260,7 +262,16 @@ k(tau)
 
 です。
 
-`mu_q` は frequency、`v_q` は spectral width、`w_q` は mixture weight に対応します。
+ここで $\tau=x-x'$ は入力差、$\mu_q$ は周波数、$v_q>0$ は周波数の分散、$w_q\ge0$ は分散への寄与です。
+例えば周波数 $\Omega\sim\mathcal N(\mu,v)$ では、特性関数から
+$\mathbb E[e^{2\pi i\Omega\tau}]=e^{-2\pi^2v\tau^2}e^{2\pi i\mu\tau}$ です。
+周波数 $\mu$ と $-\mu$ の正規密度を等重みで組み合わせると虚部が消え、表示した余弦の形になります。
+重みの和は $k(0)=\sum_qw_q$ であり、分散を1に固定しない限り必ずしも1ではありません。
+
+例えば一成分で $w=1,\mu=2,v=0.01$ なら、基本周期は0.5です。
+$\tau=0.5$ で共分散は約0.952、$\tau=0.25$ では約 $-0.988$ となります。
+負の共分散も妥当であり、半正定値性はカーネル値が常に非負であることを意味しません。
+スペクトルの幅 $v$ は周期的な相関が距離とともに減衰する速さを制御します。
 
 ## 16. Spectral Mixture Kernelのモデル化
 
@@ -274,7 +285,6 @@ Spectral Mixture kernel は柔軟ですが、基本的には stationary covarian
 
 複数の frequency を表現できることと、
 
-
 ```text
 ell = ell(x)
 ```
@@ -287,28 +297,14 @@ nonstationarity が必要なら
 
 ## 18. Spectral Mixture MultiTask / Kronecker
 
-- Spectral Mixture マルチタスク GP
-- Spectral Mixture Kronecker マルチタスク GP
-
-があります。
-
-long-format MultiTask では task feature を spectral data kernel から除外します。
-
-Kronecker model では spectral kernel を data covariance に使います。
-初期化時には multi-output `Y` の task平均を spectral initialization target として使います。
+スペクトル混合カーネルを入力側、タスク共分散を出力側に持つ分離可能な構成を考えられます。
+タスクの識別子は周波数を持つ物理座標ではありません。共通入力格子ではKronecker構造を利用できます。
+出力を平均して周波数初期値を求める方法もありますが、逆位相のタスクが相殺する場合など、
+平均が各タスクのスペクトルを代表するとは限りません。初期化は事前仮定や最終的な共分散と区別します。
 
 ## 19. Mixed Spectral Mixture
 
-さらに、
-
-- 混合入力 Spectral Mixture GP
-- 混合入力 Spectral Mixture マルチタスク GP
-- 混合入力 Spectral Mixture Kronecker マルチタスク GP
-
-があります。
-
-Mixed model では spectral structure を continuous dimensions に適用し、categorical structure を
-別 covariance branch で扱います。
+混合入力では、周波数の意味を持つ連続座標にスペクトル構造を、カテゴリには別の共分散を定義します。
 
 したがって categorical code を frequency axis として解釈しません。
 
@@ -330,8 +326,7 @@ data size、optimization stability、posterior calibration、acquisition cost、
 
 DeepGP は Monte Carlo posterior を提供するため、MC acquisition との組合せが自然です。
 
-いずれも public candidate は original design-variable space を基本とします。
-
+元入力 $x$ 上の効用を最適化する場合、獲得関数は内部表現との合成として元入力上に定義できます。
 
 ```text
 original candidate X
@@ -340,7 +335,7 @@ original candidate X
  -> acquisition
 ```
 
-利用者が candidate search のために手動で latent representation へ変換する必要はありません。
+内部表現を学習したことだけでは、実行可能な低次元の探索写像まで定まったことにはなりません。
 
 これは REMBO / ALEBO / BAxUS のような search-space strategy とは別の責務です。
 
@@ -363,15 +358,13 @@ expressive model と high-dimensional model は重なる場合がありますが
 
 ## 24. この章で覚えておくこと
 
-- expressive GPは「どこを柔軟にするか」で分類する
-- Joint neural GPはdeterministic learned feature mapとExact GPをjoint trainingする
-- DeepGPはstochastic GP hierarchyであり、variational ELBOとsample-based posteriorを使う
-- MixedMultiTaskDeepGPはcategory embeddingとtask embeddingを別構造として扱う
-- Infinite-width BNN GPは有限BNNを学習するmodelではなくanalytic NNGP kernelを使うExact GPである
-- Infinite-width ReLU kernelはExact GPでも一般にstationaryとは限らない
-- Spectral Mixture GPはstationary spectral structureを柔軟化する
-- Spectral mixture数の増加は表現力を増やすが、性能改善を保証しない
-- expressive surrogateとcandidate search strategyは別レイヤーである
+表現力を増やす場所によって、決定論的な特徴写像、確率的なGP階層、NNGP事前、スペクトル混合を区別します。
+Deep GPは潜在層の不確実性を積分するため、特徴を点推定するDKLや、有限ネットワークの重みを直接学習する方法と異なります。
+無限幅のReLU共分散は一般に非定常でも、通常のGPの条件付き推論に利用できます。
+
+スペクトル混合は定常性を保ちながら周波数構造を柔軟にします。
+成分数や深さを増やしても性能改善は保証されず、仮定・推論誤差・較正を比較する必要があります。
+カテゴリとタスクは別の構造として扱い、内部表現の柔軟性と探索空間の削減を混同しません。
 
 ## 参考文献
 
