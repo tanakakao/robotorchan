@@ -20,7 +20,7 @@ train observations → surrogate.fit / posterior(X)
              selected X → costly evaluation
 ```
 
-候補点で観測する未知の応答値と、観測前に計算する獲得関数値は異なる。獲得関数が最大化するutilityを、posterior meanの予測結果と読み替えない。analytic計算、MC sampling、fantasization、classification probability等、用いる数値表現は手法とモデルによって異なる。
+UCBでは候補の予測平均と標準偏差から探索スコアを計算する。実際の観測値は候補を実験評価した後に初めて得られる。平均と不確実性の重みを区別した式は本章の実行例と[理論章](../../../../theory/acquisition/03_confidence_bound.md)を参照する。
 
 ## 3. 実装の対応と委譲
 
@@ -39,7 +39,7 @@ train observations → surrogate.fit / posterior(X)
 
 最小化目的の符号、`beta`の慣行、analytic q=1とMC batchの数値的差異に注意。
 
-モデル側のposteriorが正しい形を返すことと、獲得関数の数学的同値性を示すことは別である。またacquisition functionの単体テストと、候補探索が可行な点を返すことは別々に検証する。
+本章の掲載例は固定`beta`でUCBを評価する。UCB式の独立数値照合は[獲得関数の検証索引](../verification/acquisition.md)を参照し、候補のboundsや制約可行性は[最適化の章](../optimization/02_gradient_based.md)で別途扱う。時変`beta`の理論的性能をこの掲載例だけから主張しない。
 
 ## 5. 数学的検証と実装の追跡
 
