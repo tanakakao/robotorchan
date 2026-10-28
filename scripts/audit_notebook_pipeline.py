@@ -95,6 +95,19 @@ def main() -> None:
     print(f"Notebooks inspected: {len(rows)}")
     invalid_count = sum(int(row["invalid_code_cells"]) > 0 for row in rows)
     print(f"Notebooks with invalid Python code cells: {invalid_count}")
+    for field in (
+        "model_fit_calls",
+        "native_fit_calls",
+        "posterior_calls",
+        "acquisition_mentions",
+        "optimizer_calls",
+        "candidate_mentions",
+    ):
+        missing = [row["notebook"] for row in rows if row[field] == "false"]
+        print(f"{field}: {len(rows) - len(missing)}/{len(rows)} notebooks")
+        if missing:
+            print(f"  Missing static evidence: {', '.join(missing)}")
+    print("These are static signals, not verified end-to-end execution results.")
     print("All execution statuses remain unverified.")
 
 
