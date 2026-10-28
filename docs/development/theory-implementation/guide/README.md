@@ -6,6 +6,57 @@
 
 [理論ガイド](../../../theory/README.md) の数式・仮定を出発点に、robotorchanの実装箇所、BoTorch等への委譲、公開API、利用上の制約、検証の根拠までを日本語で追えるようにします。既存の [Mapping原文](../README.md) と [モデル](../models.md)・[獲得関数](../acquisition.md)・[最適化](../optimization.md)・[検証](../verification.md) は移行完了まで保持します。
 
+## 最初に読む：モデルから実験候補まで
+
+本ガイドは数学の正本である理論章と並行して読むための技術書です。
+最初から全48章を読む必要はありません。まず次の順に進み、
+各章の公開APIとTensorの形、検証できた範囲を確認してください。
+
+1. **観測から予測へ：**
+   [ベイズ最適化](01_bayesian_optimization.md) →
+   [GP](02_gaussian_process.md)で`train_X[n,d]`、
+   `train_Y[n,1]`からposteriorを求めます。
+2. **予測から探索優先度へ：**
+   [獲得関数の基礎](04_acquisition_function.md) →
+   [Improvement / LogEI](acquisition/02_improvement.md)で、
+   高価な目的関数の観測値と計算上のacquisition scoreを区別します。
+3. **探索優先度から候補点へ：**
+   [最適化の基礎](optimization/01_foundations.md) →
+   [Gradient-based](optimization/02_gradient_based.md)で
+   `q × d`の候補を生成します。
+4. **実験して更新する：**
+   得られた候補で実目的関数を評価し、観測を追加してモデルを更新します。
+   候補生成だけでBOループが自動的に実行されるとは限りません。
+
+| 実行上の境界 | 主な入力と出力 | 関連章 |
+| --- | --- | --- |
+| Model | 観測`[n,d]` → posterior mean/variance | [GP](02_gaussian_process.md) |
+| Acquisition | posteriorと候補`[...,q,d]` → utility | [Improvement](acquisition/02_improvement.md) |
+| Candidate optimizer | acquisitionとbounds`[2,d]` → 候補`[q,d]` | [Gradient-based](optimization/02_gradient_based.md) |
+| 外部実験 | 候補`[q,d]` → 新しい観測Y | [BOの総論](01_bayesian_optimization.md) |
+
+### 条件に応じて分岐する
+
+- **混合変数：** [Mixedモデル](05_mixed_variables.md)と
+  [Mixed候補最適化](optimization/04_mixed_discrete.md)。
+  カテゴリ列の符号化とoptimizerのfixed-feature列挙は別の責務です。
+- **制約：** [Constrained acquisition](acquisition/08_constraints.md)と
+  [Candidate constraints](optimization/05_constraints.md)。
+  未知の出力Yへの制約と既知の候補Xへの制約を混ぜないでください。
+- **バッチ／Lookahead：** [KG](acquisition/06_lookahead.md)と
+  [Batch / one-shot](optimization/08_batch_one_shot.md)。
+  Fantasy補助変数を実験候補として扱わないでください。
+- **多目的：** [EHVI](acquisition/07_multiobjective.md)と
+  [進化的最適化](optimization/07_evolutionary.md)。
+  スカラー獲得関数の最適化とNSGA-IIによるベクトル目的探索は異なります。
+- **高次元：** [高次元探索](20_high_dimensional_search.md)と
+  [低次元座標での最適化](optimization/09_high_dimensional.md)。
+  元の実験座標Xと内部探索座標Zを区別してください。
+
+これらの経路は理解のための読書順です。全手法・全モデルの組合せを
+end-to-endで検証したことを意味しません。対応する章のテスト根拠と
+[検証索引](verification/README.md)を確認してください。
+
 ## 章構成：理論の24章と1対1対応
 
 以下の `guide/<filename>` は**配置済みパス**です。章番号とbasenameを理論側に合わせています。内容は理論から実装へ進むための解説で、未検証の詳細契約をverifiedとは扱いません。
