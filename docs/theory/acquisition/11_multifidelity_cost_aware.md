@@ -1,7 +1,9 @@
 # 11. Multi-Fidelity and Cost-aware Acquisition
 
-## 11.1 Cost-awareとMulti-Fidelityを分ける
+[マルチフィデリティGP章](../06_multi_fidelity.md)と[先読み章](06_lookahead.md)の終端価値を前提とします。
+観測する忠実度と、最終推薦を評価する目標忠実度を分け、費用を考慮する効用を考えます。
 
+## 11.1 Cost-awareとMulti-Fidelityを分ける
 
 ~~~text
 Cost-aware optimization
@@ -18,7 +20,6 @@ target fidelity、cross-fidelity information transferが必要です。cost-awar
 ## 11.2 評価の価値とコストを同時に考える
 
 Multi-Fidelity Bayesian Optimization（MFBO）では、同じ設計変数 $`x`$ を異なる fidelity $`s`$ で評価できます。
-
 
 $$
 y=f(x,s)
@@ -38,13 +39,11 @@ $$
 
 MFBO の中心的な問いは、
 
-
 ```text
 どこ x を評価するか
 ```
 
 だけでなく、
-
 
 ```text
 どの fidelity s で評価するか
@@ -55,7 +54,6 @@ MFBO の中心的な問いは、
 ## 11.3 Target fidelity
 
 通常、最終的に最適化したい target fidelity $`s^*`$ を定義します。
-
 
 $$
 x^*
@@ -70,7 +68,6 @@ $$
 ## 11.4 Fidelityとtaskの違い
 
 Multi-task と multi-fidelity は数学的に似た surrogate structure を使える場合がありますが、意思決定上の意味は異なります。
-
 
 ```text
 task
@@ -90,7 +87,6 @@ MFBO では少なくとも二つの責務があります。
 
 ### Multi-Fidelity surrogate
 
-
 $$
 p(f(x,s)\mid\mathcal D)
 $$
@@ -102,7 +98,6 @@ $$
 候補 $`(x,s)`$ を評価したとき、それが target-fidelity decision にどれだけ価値を与えるかを評価します。
 
 したがって、
-
 
 ```text
 MF model を使っている
@@ -122,13 +117,11 @@ MF acquisition を使っている
 
 MFBO acquisition は概念的に、
 
-
 $$
 \text{target-fidelity information / decision value}
 $$
 
 と
-
 
 $$
 \text{evaluation cost}
@@ -140,7 +133,6 @@ $$
 
 fidelity-dependent cost を
 
-
 $$
 c(x,s)>0
 $$
@@ -148,7 +140,6 @@ $$
 とします。
 
 単純な場合は fidelity のみで
-
 
 $$
 c(s)
@@ -170,7 +161,6 @@ cost は objective value と別の量です。高 fidelity が高い objective v
 
 候補の information / decision value を $`V(x,s)`$ とすれば、直感的な cost-aware criterion は
 
-
 $$
 \frac{V(x,s)}{c(x,s)}
 $$
@@ -182,12 +172,16 @@ $$
 ただし ratio utility があらゆる budgeted decision problem の厳密な最適 policy になるわけではありません。remaining
 budget、terminal value、並列性、固定 overhead などによって最適な cost treatment は変わります。
 
+例えば残り予算が3で、費用2・価値3の評価Aと、費用3・価値4の評価Bを一つずつ選べるとします。
+比率はAの1.5がBの $4/3$ より高いですが、Aを選ぶと残り1ではBを選べず、得る価値は3です。
+初めにBを選ぶ価値4より小さいため、比率の最大化は総予算内の最適配分と一般に一致しません。
+この例は費用と価値を固定した単純な場合であり、実際のBOでは次の観測で価値の見積もり自体も変わります。
+
 ## 11.9 Knowledge GradientとMulti-Fidelity
 
 Knowledge Gradient（KG）は候補を観測した後の terminal decision value の改善を評価するため、MFBO と自然に結び付きます。
 
 候補 $`(x,s)`$ を評価した後、target fidelity $`s^*`$ での最終 decision quality がどれだけ改善するかを
-
 
 $$
 V(x,s)
@@ -210,7 +204,6 @@ value of information を評価します。
 
 概念的には
 
-
 $$
 \alpha_{\mathrm{MFKG}}(x,s)
 =
@@ -220,7 +213,6 @@ $$
 です。
 
 cost-aware utility を組み合わせれば、
-
 
 $$
 \alpha_{\mathrm{cost}}(x,s)
@@ -242,13 +234,11 @@ MF-KG では候補 $`(x,s)`$ を観測しても、最終的に評価したい te
 
 そのため design $`x`$ を target fidelity へ写像する
 
-
 $$
 P(x,s)=(x,s^*)
 $$
 
 のような projection が重要になります。
-
 
 ```text
 candidate
@@ -279,7 +269,6 @@ MF setting ではこの current value も target fidelity 上で定義される�
 
 fidelity $`s`$ が連続なら、
 
-
 $$
 s\in[s_{\min},s_{\max}]
 $$
@@ -296,7 +285,6 @@ continuous fidelity だからといって、posterior が fidelity に対して�
 
 fidelity が
 
-
 $$
 s\in\{s_1,s_2,\ldots,s_K\}
 $$
@@ -304,7 +292,6 @@ $$
 のような離散集合の場合、continuous relaxation より各 fidelity choice を明示的に扱う optimization が自然です。
 
 例えば各 discrete fidelity を固定した acquisition optimization を比較できます。
-
 
 ```text
 s = low
@@ -325,7 +312,6 @@ s = high
 
 discrete fidelity は値が離散でも、単なる nominal categorical variable とは限りません。
 
-
 ```text
 categorical variable
     category間に順序を仮定しないことが多い
@@ -341,7 +327,6 @@ modeling semantics と acquisition semantics の両方を確認する必要が�
 ## 11.16 Multiple fidelity dimensions
 
 複数の fidelity controls
-
 
 $$
 s=(s_1,\ldots,s_k)
@@ -375,12 +360,14 @@ raw Gaussian prediction をそのまま cost とすると負値を取り得る�
 
 などを検討します。
 
-cost model uncertainty を acquisition にどう伝播させるかも別の設計問題です。
+費用の不確実性の扱いも別の設計問題です。正の費用 $C$ と価値変化 $\Delta V$ に対して、
+$\mathbb E[\Delta V/C]$ と $\mathbb E[\Delta V]/\mathbb E[C]$ は一般に異なります。
+例えば価値を常に1、費用を1か3の等確率とすれば、前者は $2/3$、後者は $1/2$ です。
+費用を平均へ代入する近似か、費用と価値の共同分布を積分するかを明示します。
 
 ## 11.18 Affine fidelity cost
 
 単純な fidelity cost は
-
 
 $$
 c(s)
@@ -392,7 +379,9 @@ $$
 
 のような affine form で表現できます。
 
-fidelity が高いほど cost が増える問題では扱いやすい近似です。
+例えば $s_j\ge0$、$w_j\ge0$、$c_0>0$ なら全忠実度で費用が正になります。
+より一般の係数や範囲では、実行可能集合の全体で $c(s)>0$ を確認する必要があります。
+忠実度が高いほど費用が増える問題では扱いやすい近似です。
 
 ただし実際の cost が非線形、段階的、hardware-dependent なら affine assumption は近似にすぎません。
 
@@ -401,7 +390,6 @@ cost model は実験系の実態に合わせて選択します。
 ## 11.19 Inverse-cost weighting
 
 cost-aware utility では、decision value を inverse cost で重み付けする考え方があります。
-
 
 ```text
 same value
@@ -419,7 +407,6 @@ higher value evaluation を優先
 
 総 budget
 
-
 $$
 B
 $$
@@ -431,14 +418,13 @@ $$
 
 したがって cost-aware acquisition を「常に最安 fidelity を選ぶ仕組み」と理解してはいけません。
 
-## 11.21 Multi-Fidelity MESは現在future extension
+## 11.21 目標忠実度の最適値に関する情報量
 
 information-theoretic acquisition も multi-fidelity へ拡張できます。
 
 候補 $`(x,s)`$ の観測が target-fidelity optimum $`f^*_{s^*}`$ について与える information gain を評価し、cost を考慮できます。
 
 概念的には
-
 
 $$
 \frac{
@@ -454,7 +440,6 @@ $$
 
 実問題では task $`t`$ と fidelity $`s`$ の両方を持つことがあります。
 
-
 $$
 f(x,t,s)
 $$
@@ -464,7 +449,6 @@ $$
 このとき surrogate は task correlation と fidelity correlation の両方を表現する必要があります。
 
 さらに acquisition は、
-
 
 ```text
 どの x
@@ -482,7 +466,6 @@ design space に continuous / categorical variables があり、さらに fideli
 optimization は mixed structure を持ちます。
 
 ただし構造列としての fidelity を通常の categorical design variable と混同しません。
-
 
 ```text
 design categorical variable
@@ -515,28 +498,22 @@ stopping rule としては、
 
 ## 11.26 この章で覚えておくこと
 
-- cost-aware optimizationとMFBOは別概念
-- MFBOではdesign xとfidelity sの両方をdecisionする
-- low fidelityの価値は安さだけでなくtarget fidelityへのinformation transferで決まる
-- MF surrogateとMF acquisitionは別の責務
-- target projectionはobserved valueの変換でもcandidate fidelityの固定でもない
-- `current_value`はtarget-fidelity terminal decisionに対応させる
-- MF-KGはfantasizationを使うone-shot value-of-information acquisition
-- cost-aware utilityはVOIとevaluation costを組み合わせるがratio policyが常にbudget-optimalとは限らない
-- MF-KGではfantasy observationsとtarget-fidelity terminal valueの整合が重要
-- mixed variableやmulti-fidelityの実装対応状況はoptimization guideで確認する
+低忠実度の価値は、安さに加えて目標忠実度への情報伝達で決まります。
+観測する忠実度と終端判断を評価する忠実度を分け、現在の価値も同じ終端目的で定義します。
+射影は観測値の高精度化や候補忠実度の固定ではありません。
+
+費用と判断改善を組み合わせる方法には複数の選択肢があり、比率の最大化が総予算の最適配分になるとは限りません。
+費用も不確実なら、期待する比率と平均値の比を区別し、候補の可行集合と残り予算も明示します。
 
 ## 11.27 まとめ
 
 Multi-Fidelity acquisition の中心は、
-
 
 ```text
 cheap or expensive?
 ```
 
 ではなく、
-
 
 ```text
 その fidelity の観測が
@@ -547,7 +524,6 @@ target-fidelity decision にどれだけ価値を与え、
 です。
 
 特に、
-
 
 ```text
 Multi-Fidelity surrogate
@@ -568,9 +544,8 @@ Acquisition optimizer
 次章 [Selection Guide](12_selection_guide.md) では、ここまでの acquisition families を problem setting
 から選択するための整理を行います。
 
-
 ## References
 
 - Wu, J., Toscano-Palmerin, S., Frazier, P. I., and Wilson, A. G. (2020), *Practical
 Multi-fidelity Bayesian Optimization for Hyperparameter Tuning*. UAI.
-projection, `AffineFidelityCostModel`, and `InverseCostWeightedUtility`.
+  目標忠実度での判断と評価費用を組み合わせる定式化を参照。

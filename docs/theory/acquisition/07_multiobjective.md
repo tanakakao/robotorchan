@@ -1,7 +1,9 @@
 # 7. Multi-objective Acquisition
 
-## 7.1 Multi-outputとMulti-objectiveを分ける
+[改善量章](02_improvement.md)と[多出力GP章](../07_multitask_multioutput.md)を前提とします。
+目的数を $m$ とし、各目的の向きを最大化へそろえます。目的空間のPareto frontと、それを実現する入力のPareto setは区別します。
 
+## 7.1 Multi-outputとMulti-objectiveを分ける
 
 ~~~text
 Multi-output model
@@ -19,7 +21,6 @@ objectivesとして扱うかというdecision semanticsが必要です。
 
 複数目的
 
-
 $$
 f(x)=\left(f_1(x),\ldots,f_m(x)\right)
 $$
@@ -34,7 +35,6 @@ dominance と Pareto front を扱います。
 ## 7.3 Pareto dominance
 
 目的ベクトル $`y,y'\in\mathbb R^m`$ に対して、$`y`$ が $`y'`$ を Pareto dominate するとは、
-
 
 $$
 y_j\ge y'_j
@@ -55,7 +55,6 @@ Pareto front の品質を測る代表的な指標が hypervolume（HV）です�
 reference point $`r`$ を Pareto front より悪い点として設定し、non-dominated objective vectors と $`r`$
 の間で支配される領域の体積を
 
-
 $$
 HV(\mathcal P;r)
 $$
@@ -70,6 +69,12 @@ Hypervolume は、
 - front が広い trade-off を覆うこと
 
 の両方を一つの scalar measure に反映できます。
+
+最大化では、基準点を上回る目的ベクトル $y$ ごとの箱 $[r_1,y_1]\times\cdots\times[r_m,y_m]$ の和集合の体積です。
+どれかの成分が基準を下回る点の箱は空とし、重なる体積は一度だけ数えます。
+例えば $r=(0,0)$、非支配集合が $\{(2,1),(1,2)\}$ なら、面積は $2+2-1=3$ です。
+新たに $(1.5,1.5)$ を追加すると、未被覆の $0.5\times0.5=0.25$ だけ改善します。
+点数が増えたことではなく、新しく覆う目的領域が価値になります。
 
 ## 7.5 Reference pointはhypervolumeの基準
 
@@ -97,8 +102,7 @@ reference point が不適切だと、
 **固定された非支配集合**とします。以下の通常の EHVI は、
 この基準集合を確定値として扱う場合の定義です。
 
-現在の Pareto set を $`\mathcal P_n`$ とし、新しい目的ベクトル $`y`$ を追加したときの hypervolume improvement を
-
+現在の非支配な目的ベクトル集合を $`\mathcal P_n`$ とし、新しい目的ベクトル $`y`$ を追加したときの hypervolume improvement を
 
 $$
 HVI(y)
@@ -115,7 +119,6 @@ $$
 ## 7.7 Expected Hypervolume Improvement
 
 候補 $`x`$ の目的ベクトルは未知なので、posterior expectation を取ります。
-
 
 $$
 EHVI(x)
@@ -134,13 +137,11 @@ $$
 
 batch candidate set
 
-
 $$
 X=(x_1,\ldots,x_q)
 $$
 
 では、q 点を同時に追加した場合の joint hypervolume improvement を評価します。
-
 
 $$
 qEHVI(X)
@@ -165,13 +166,11 @@ uncertainty も考慮し、noise-aware な hypervolume improvement を評価し�
 
 これは単目的の NEI と同じく、
 
-
 ```text
 observed incumbent / front
 ```
 
 と
-
 
 ```text
 latent incumbent / front
@@ -184,7 +183,6 @@ batch / noisy settingではqNEHVI系が重要になります。これは単にEH
 
 baseline $B$ の latent objective vectors から得られる非支配集合を
 $\mathcal P(f(B))$ とすれば、制約なしの基本的な noisy hypervolume improvement は
-
 
 $$
 q\operatorname{NEHVI}(X)
@@ -217,7 +215,6 @@ Multi-objective optimizationを扱うもう一つの方法は、目的ベクト�
 
 weight vector $`w`$ に対して
 
-
 $$
 s_w(f(x))
 $$
@@ -226,6 +223,16 @@ $$
 
 単純な weighted sum だけでなく、Pareto front の non-convex region も扱いやすい Chebyshev 型などの scalarization が利用されます。
 
+重み付き和で全ての非支配点を選べるとは限りません。
+例えば可行な目的ベクトルが $(1,0),(0,1),(0.4,0.4)$ の三つだけなら、全て非支配ですが、
+正の重みの和では中央点は最大になりません。中央の値は $0.4(w_1+w_2)$、
+端点の最大値は少なくとも $0.5(w_1+w_2)$ となるためです。
+
+最大化向けのChebyshev型の一例は、同じ尺度へそろえた目的 $\tilde y_j$ に対し
+$s_w(y)=\min_j(w_j\tilde y_j)+\rho\sum_jw_j\tilde y_j$（$w_j>0,\rho>0$）です。
+上の三点で等重み・小さい $\rho$ なら、各目的を同時にある程度達成する中央点も選べます。
+目的の正規化、重み、補助項の符号まで含めて効用を定義します。
+
 ## 7.12 ParEGO / NParEGO
 
 ParEGO は iteration ごとに scalarization weight を変えながら scalar BO を行い、Pareto front の異なる領域を探索する考え方です。
@@ -233,7 +240,6 @@ ParEGO は iteration ごとに scalarization weight を変えながら scalar BO
 Noisy / MC setting では NParEGO 系の acquisition が利用されます。
 
 Hypervolume-based methods と scalarization-based methods は同じ MOBO 問題を異なる utility design で扱います。
-
 
 ```text
 EHVI / NEHVI
@@ -262,7 +268,7 @@ EHVI と HVKG の違いは、単目的の EI と KG の違いに対応して理�
 
 複数目的が同じ入力 $`x`$ に対して correlation を持つ場合、surrogate model がその依存構造を表現できるかは acquisition quality に影響します。
 
-一方、ModelList のように目的ごとに独立 model を使う構成もあります。
+一方、目的ごとに独立した予測モデルを置く構成もあります。
 
 Multi-objective acquisitionがmulti-output posteriorを受け取れることと、surrogateがobjective間の
 dependenceをmodel化していることは別の話です。
@@ -299,20 +305,16 @@ hypervolume computation は目的数が増えるほど難しくなります。
 
 ## 7.18 この章で覚えておくこと
 
-- Multi-output modelとMulti-objective optimizationは別概念
-- Pareto dominanceは各objectiveを同じmaximize conventionへ揃えて考える
-- hypervolumeはreference pointを含めて定義されるscalar quality measure
-- reference pointは単なる数値引数ではなく評価したいobjective regionを決める
-- qEHVIはpointwise EHVI上位q点ではなくjoint hypervolume improvement
-- NEHVIはlatent baseline objectivesとlatent frontのuncertaintyを扱う
-- scalarizationはmulti-output predictionをscalar decision quantityへ写す方法でもある
-- objective間dependenceとcandidate間dependenceは別の軸
-- black-box output constraintとcandidate/input-space constraintを分ける
+多出力の予測と多目的の意思決定は別の問題です。
+EHVIは基準点と非支配な目的ベクトル集合から新しく覆う体積を評価し、
+NEHVIは基準集合の潜在値も不確実として扱います。基準点と目的の尺度は効用の定義の一部です。
+
+スカラー化では別の効用でPareto領域を探索でき、重み付き和だけでは選べない非支配点もあります。
+候補間と目的間の依存を分け、未知制約の可行性と入力の可行集合も別に定義します。
 
 ## 7.19 まとめ
 
 MOBO では単一の incumbent ではなく Pareto structure を扱います。
-
 
 ```text
 EHVI / NEHVI
@@ -330,7 +332,6 @@ HVKG
 reference point は hypervolume criterion の一部であり、noise がある場合は observed front と latent front
 の違いも考慮する必要があります。
 
-
 ## References
 
 - Daulton, S., Balandat, M., and Bakshy, E. (2020), *Differentiable Expected Hypervolume
@@ -338,3 +339,7 @@ Improvement for Parallel Multi-Objective Bayesian Optimization*. NeurIPS.
 - Daulton, S., Balandat, M., and Bakshy, E. (2021), *Parallel Bayesian Optimization of Multiple
 Noisy Objectives with Expected Hypervolume Improvement*. NeurIPS.
 - Ament, S. et al. (2023), *Unexpected Improvements to Expected Improvement for Bayesian
+  Optimization*. Advances in Neural Information Processing Systems 36.
+- Knowles, J. (2006), *ParEGO: A Hybrid Algorithm With On-Line Landscape Approximation for
+  Expensive Multiobjective Optimization Problems*. IEEE Transactions on Evolutionary Computation,
+  10(1), 50–66.

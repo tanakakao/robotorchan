@@ -1,7 +1,9 @@
 # 8. Constrained Acquisition
 
-## 8.1 最初に2種類のconstraintを分ける
+[改善量章](02_improvement.md)と、正規分布の確率計算を前提とします。
+未知制約を $c_j(x)\le0$、改善量を $I(x)\ge0$ とし、可行な結果の効用と可行確率の要件を区別します。
 
+## 8.1 最初に2種類のconstraintを分ける
 
 ~~~text
 unknown output / black-box constraint
@@ -21,13 +23,11 @@ known candidate / input-space constraint
 
 実問題では、目的関数
 
-
 $$
 f(x)
 $$
 
 を最大化するだけでなく、制約
-
 
 $$
 c_j(x)\le 0,
@@ -37,7 +37,6 @@ $$
 を満たす必要があります。
 
 このとき最適化対象は
-
 
 $$
 \max_{x\in\mathcal X} f(x)
@@ -56,7 +55,6 @@ Bayesian Optimizationではobjectiveとconstraintsの両方が高コスト・未
 
 制約 $`c(x)\le0`$ に対して posterior
 
-
 $$
 c(x)\mid\mathcal D_n
 \sim
@@ -64,7 +62,6 @@ c(x)\mid\mathcal D_n
 $$
 
 を仮定すると、feasibility probability は
-
 
 $$
 P(c(x)\le0\mid\mathcal D_n)
@@ -83,7 +80,6 @@ $P(c(x)\le0\mid\mathcal D_n)=\mathbf 1[\mu_c(x)\le0]$ です。
 ## 8.4 Objective utility と feasibility
 
 直感的な constrained acquisition は、
-
 
 $$
 \alpha_{\mathrm{constrained}}(x)
@@ -108,7 +104,6 @@ MC formulationではposterior samplesごとにobjective utilityとconstraint sat
 
 例えば improvement $I(x)$ と feasibility event $F(x)$ に対して、一般には
 
-
 $$
 \mathbb E[I(x)\mathbf 1_{F(x)}\mid\mathcal D_n]
 \ne
@@ -120,10 +115,13 @@ $$
 feasibility indicator が独立である場合などに限られます。
 目的と制約が相関する surrogate では joint samples による期待値が重要です。
 
+例えば同じ確率の二つの状態で、一方だけが可行で改善量2、もう一方が不可行で改善量0とします。
+真の可行改善の期待値は1ですが、改善量の期待値1に可行確率0.5を掛けると0.5になります。
+目的と制約を独立に組み合わせる近似は、このような依存を失います。
+
 ## 8.5 Sample-wise constraint
 
 posterior sample $`f^{(s)}(x)`$ と constraint sample $`c^{(s)}(x)`$ に対し、
-
 
 $$
 U^{(s)}(x)
@@ -136,7 +134,6 @@ $$
 
 複数 constraints なら
 
-
 $$
 \prod_{j=1}^{J}
 \mathbf 1[c_j^{(s)}(x)\le0]
@@ -144,13 +141,18 @@ $$
 
 を使えます。
 
-実装ではhard indicatorの代わりにsmooth approximationを使い、gradient-based acquisition
-optimizationを安定させる場合があります。
+数値最適化のため、指示関数を
+$w_\eta(c)=1/(1+e^{c/\eta})$、$\eta>0$ で平滑化する方法があります。
+$\eta$ は制約値と同じ単位を持ち、小さくすると硬い判定へ近づきますが、勾配が狭い境界へ集中します。
+$c=0$ では常に $w_\eta=0.5$ なので、境界を含めた指示関数 $\mathbf1[c\le0]$ の値1と同じではありません。
+連続な事後分布で境界の確率が零などの条件の下で、積分した効用の極限を考えます。
+
+また、不可行標本の効用を零にする構成では、元の効用が非負であることが重要です。
+可行な効用が負なら、零にした不可行標本の方が高い値になり得ます。改善量以外の目的には基準や罰則を別に定義します。
 
 ## 8.6 制約の符号規約を明示する
 
 output / black-box constraintの説明では
-
 
 $$
 c(x)\le0
@@ -159,13 +161,11 @@ $$
 を feasible とする convention がよく使われますが、数学的には逆符号で
 $-c(x)\ge0$ と表現しても同じ実行可能領域を定義できます。
 
-
 ```text
 c(x) <= 0 が feasible
 ```
 
 なのか
-
 
 ```text
 c(x) >= 0 が feasible
@@ -183,7 +183,6 @@ constraint の符号を誤ると acquisition は feasible / infeasible を逆に
 
 例えば
 
-
 $$
 Ax\le b
 $$
@@ -196,7 +195,6 @@ $$
 
 この二つは責務が異なります。
 
-
 ```text
 known input constraint
     acquisition optimizer の探索領域を制限
@@ -204,6 +202,8 @@ known input constraint
 unknown outcome constraint
     posterior uncertainty を含む constrained acquisition
 ```
+
+## 8.8 予測から制約付き効用まで
 
 ### Model output
 
@@ -230,7 +230,6 @@ objective utility と uncertainty / feasibility を組み合わせ、candidate v
 ## 8.9 Multi-output model と constraints
 
 例えば model が
-
 
 $$
 (f(x),c_1(x),c_2(x))
@@ -276,7 +275,6 @@ infeasible だが objective value が非常に高い観測を incumbent にす�
 
 そのため constraint posterior の uncertainty、特に
 
-
 $$
 c(x)\approx0
 $$
@@ -284,7 +282,6 @@ $$
 の領域を正しく学習することが重要です。
 
 これは level-set estimation と数学的に近い側面がありますが、目的は異なります。
-
 
 ```text
 Level-set
@@ -300,7 +297,6 @@ MOBO でも constraints の考え方は同じです。
 
 目的空間では Pareto / hypervolume utility を評価し、constraint outputs では feasibility を評価します。
 
-
 ```text
 objective outputs
     → Pareto / hypervolume utility
@@ -314,6 +310,10 @@ combined acquisition
 
 hypervolume reference point と constraint threshold は異なる概念なので混同しません。
 
+可行確率を効用へ掛けることは、$P(c_j(x)\le0\ \forall j\mid D)\ge1-\delta$ という確率制約と異なります。
+前者は大きな改善を見込んで低い可行確率を受け入れる場合もありますが、後者は候補に最低確率を課します。
+どちらも事後分布の仮定に依存する判断であり、制約違反が一度も起きない保証を自動的に意味するものではありません。
+
 ## 8.14 Safety-critical constraints
 
 制約違反そのものが許容できない safe optimization では、通常の constrained BO より強い要件があります。
@@ -326,19 +326,16 @@ safe BO では safe set expansion や high-probability safety guarantee など�
 
 ## 8.17 この章で覚えておくこと
 
-- unknown output constraintとknown candidate constraintは別layer
-- PoFはconstraint posteriorから得るfeasibility uncertaintyの一例
-- constrained acquisitionは常にobjective acquisitionとPoFの単純積ではない
-- MCではsample-wise objective utilityとconstraint satisfactionをcompositionできる
-- output constraintとcandidate constraintではsign conventionが異なり得る
-- 既知の入力制約は探索領域を制限し、未知の出力制約は確率的に扱う
-- constrained BOとsafe BOを同義にしない
-- MOBOではhypervolume reference pointとconstraint thresholdを混同しない
+既知の入力制約は候補の領域を、未知の出力制約は観測後の可行性を定めます。
+改善量と可行確率の積への分解には独立性が必要であり、一般には同時標本で可行な効用を評価します。
+平滑化を使う場合は、係数の単位、境界での値、効用が非負かどうかを確認します。
+
+可行確率による重み付け、候補への確率制約、探索全体の安全性保証は異なる条件です。
+多目的でも、ハイパーボリュームの基準点と制約閾値を混同せずに組み合わせます。
 
 ## 8.18 まとめ
 
 Constrained BO では、
-
 
 ```text
 objective
@@ -361,3 +358,10 @@ optimizer
 
 特にknown candidate constraintとunknown output constraint、constraint-aware optimizationと
 safe optimizationを混同しないようにします。
+
+## References
+
+- Gardner, J. R., Kusner, M. J., Xu, Z. E., Weinberger, K. Q., and Cunningham, J. P. (2014),
+  *Bayesian Optimization with Inequality Constraints*. ICML.
+- Gelbart, M. A., Snoek, J., and Adams, R. P. (2014), *Bayesian Optimization with Unknown
+  Constraints*. UAI.

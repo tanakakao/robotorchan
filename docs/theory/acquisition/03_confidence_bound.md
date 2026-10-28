@@ -1,7 +1,9 @@
 # 3. Confidence-bound Acquisition
 
-## 3.1 UCBを一言で理解する
+[基礎章](01_foundations.md)の正規事後分布を前提とします。
+標準偏差の係数を $\sqrt\beta$ と書き、点ごとの分位点と、全候補・全時刻を同時に覆う保証を分けて考えます。
 
+## 3.1 UCBを一言で理解する
 
 ~~~text
 UCB = 現在よさそうな候補 + まだ分からない候補へのoptimism bonus
@@ -15,7 +17,6 @@ EIがimprovementをutilityにするのに対し、UCBはposterior locationとunc
 Confidence-bound acquisition は、posterior mean と posterior uncertainty を明示的に組み合わせます。
 
 最大化問題の代表的な Upper Confidence Bound（UCB）は
-
 
 $$
 \operatorname{UCB}(x)
@@ -32,7 +33,6 @@ uncertainty の寄与を制御する parameter です。
 
 UCB は、posterior mean だけを見るのではなく、不確実な候補に対して楽観的な値を与えます。
 
-
 $$
 \sqrt{\beta}\sigma_n(x)
 $$
@@ -43,6 +43,11 @@ $$
 - 大きい $`\beta`$: exploration 寄り。
 
 この明示性は UCB の大きな特徴です。
+
+標準偏差が正の正規分布の下で、$0<\delta<1/2$ に対し
+$P(f(x)\le\mu_n(x)+\Phi^{-1}(1-\delta)\sigma_n(x)\mid\mathcal D_n)=1-\delta$ です。
+したがって $\sqrt\beta=\Phi^{-1}(1-\delta)$ と置くとUCBは点ごとの上側分位点になります。
+ただし点ごとの被覆率だけでは、探索全体の同時保証は得られません。
 
 ## 3.4 GP-UCBの理論と実用UCBを分ける
 
@@ -56,13 +61,11 @@ iteration、confidence level、探索空間、kernel / function class等に依�
 
 したがって、
 
-
 ```text
 UCB acquisition の beta
 ```
 
 と
-
 
 ```text
 特定の GP-UCB theorem が要求する beta_t
@@ -70,10 +73,26 @@ UCB acquisition の beta
 
 を同一視すべきではありません。
 
+例えば候補集合が固定した有限集合で点数が $M$、条件付き正規事後分布が正しく、
+ハイパーパラメータを既知とするベイズ設定を考えます。
+正規尾確率の上界 $P(|Z|>a)\le2e^{-a^2/2}$ と和集合上界を使えば、
+
+$$
+\beta_t=2\log\left(\frac{M\pi^2t^2}{3\delta}\right)
+$$
+
+により、全候補・全時刻についての区間の失敗確率を合計で $\delta$ 以下にできます。
+時刻 $t$ の失敗確率を $6\delta/(\pi^2t^2)$ 以下に配分し、その和が $\delta$ になるためです。
+これは有限集合と整合的な事後分布の下での一例であり、連続領域や再推定した任意のカーネルにそのまま適用する保証ではありません。
+
+この同時区間が成立し、各時刻のUCBを厳密に最大化できれば、瞬時リグレットは
+$f(x^*)-f(x_t)\le2\sqrt{\beta_t}\,\sigma_{t-1}(x_t)$ と評価できます。
+最適点を上から覆う区間と、選択点を下から覆う区間を比較することで得られます。
+累積リグレットを抑えるには、さらに選択点での分散の総和を評価する必要があります。
+
 ## 3.5 Lower Confidence Bound
 
 最小化問題では
-
 
 $$
 \operatorname{LCB}(x)
@@ -88,7 +107,6 @@ $$
 ## 3.6 EI との違い
 
 EI は improvement の期待値を計算します。UCB は posterior の location と scale を直接組み合わせます。
-
 
 ```text
 EI
@@ -109,8 +127,16 @@ qUCBをpointwise UCBの上位q点として理解するのは適切ではあり�
 batch acquisitionではcandidate間のdependenceを保持したposterior samplingとjoint utilityが
 候補集合の価値へ影響します。
 
-このためanalytic q=1 UCBがmarginal mean / varianceで評価できることと、MC qUCBが要求する
-posterior sampling capabilityを同一視しません。
+一つのバッチへの拡張は、同時正規標本 $F_j$ に対して
+
+$$
+\alpha_{qUCB}(X)=\mathbb E\left[
+\max_{j\le q}\left\{\mu_j+\sqrt{\frac{\beta\pi}{2}}\,|F_j-\mu_j|\right\}\right]
+$$
+
+と定義するものです。$q=1$ では $\mathbb E|F-\mu|=\sigma\sqrt{2/\pi}$ なので単点UCBへ戻ります。
+候補間の依存は最大値の期待値に作用するため、周辺のUCB値の順位だけでは評価できません。
+この拡張が単点の信頼保証をそのまま集合の保証へ変えるわけでもありません。
 
 q-acquisition の一般的な意味は [Batch / Noisy](04_batch_noisy.md) を参照してください。
 
@@ -121,17 +147,16 @@ UCB は uncertainty を式へ直接入れるため、posterior scale の calibra
 - $`\sigma(x)`$ の過小評価 → exploration が弱くなる。
 - $`\sigma(x)`$ の過大評価 → exploration が過剰になる。
 
-これは EI など他の acquisition にも影響しますが、UCB では $`\beta\sigma(x)`$ の形で特に見えやすくなります。
+これは EI など他の acquisition にも影響しますが、UCB では $`\sqrt\beta\,\sigma(x)`$ の形で特に見えやすくなります。
 
 ## 3.11 この章で覚えておくこと
 
-- UCBはposterior meanにuncertainty由来のoptimism bonusを加える考え方
-- betaはexploration strengthに関係するが、定義のparameterizationを確認する
-- 固定betaの実用UCBとtheorem用GP-UCB scheduleを同一視しない
-- LCBと符号反転によるmaximize conventionを混同しない
-- qUCBはpointwise UCB上位q点ではなくjoint batch acquisition
-- q=1 analytic UCBとMC qUCBではposterior requirementが異なり得る
-- uncertainty scaleの意味とcalibrationはmodel familyに依存する
+UCBは事後平均へ標準偏差に比例した楽観的な補正を加えます。
+係数の平方根の規約を確認し、点ごとの正規分位点と、探索全体で成立する信頼区間を分けます。
+固定係数の数値的な順位付けだけで、特定のリグレット保証が得られるわけではありません。
+
+最小化ではLCBや符号反転を一貫して使います。バッチへの拡張は候補の同時分布を必要とし、
+単点のUCBの上位を取る方法や、単点の信頼保証そのものと同一ではありません。
 
 ## 3.12 まとめ
 
@@ -146,3 +171,5 @@ calibration を確認することが重要です。
    Experimental Design. *Proceedings of ICML*.
 2. Balandat, M. et al. (2020). BoTorch: A Framework for Efficient Monte-Carlo Bayesian Optimization.
    *Advances in Neural Information Processing Systems 33*.
+3. Wilson, J., Hutter, F., and Deisenroth, M. (2018). Maximizing Acquisition Functions for Bayesian
+   Optimization. *Advances in Neural Information Processing Systems 31*.

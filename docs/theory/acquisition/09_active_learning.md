@@ -1,7 +1,9 @@
 # 9. Active Learning Acquisition
 
-## 9.1 BOとALはdecision purposeが違う
+[情報量章](05_information_theoretic.md)と[GP章](../02_gaussian_process.md)の条件付けを前提とします。
+観測できる候補点と、予測精度を改善したい目標点の分布を分けて定義します。
 
+## 9.1 BOとALはdecision purposeが違う
 
 ~~~text
 Bayesian Optimization
@@ -17,7 +19,6 @@ Active Learning
 ## 9.2 最適化ではなく学習を目的にする
 
 Bayesian Optimization（BO）と Active Learning（AL）は、どちらも surrogate posterior を使って次の観測点を選べますが、目的が異なります。
-
 
 ```text
 Bayesian Optimization
@@ -36,7 +37,6 @@ distribution 上の情報量などが観測価値になります。
 
 候補集合が有限 pool
 
-
 $$
 \mathcal X_{\mathrm{pool}}
 =
@@ -46,7 +46,6 @@ $$
 として与えられる場合、acquisition score を pool 上で評価して選択できます。
 
 一方、連続空間 $`\mathcal X`$ では
-
 
 $$
 x^*
@@ -61,7 +60,6 @@ $$
 ## 9.4 Posterior Variance Sampling
 
 最も直接的な uncertainty sampling は posterior variance
-
 
 $$
 \alpha_{\mathrm{Var}}(x)
@@ -78,7 +76,6 @@ $$
 ## 9.5 Posterior Standard Deviation
 
 posterior standard deviation を使えば
-
 
 $$
 \alpha_{\mathrm{Std}}(x)
@@ -105,13 +102,11 @@ AL で重要なのは、uncertainty の種類を区別することです。
 
 観測モデルを
 
-
 $$
 y(x)=f(x)+\epsilon
 $$
 
 とすると、predictive variance は概念的に
-
 
 $$
 \operatorname{Var}[y(x)\mid\mathcal D_n]
@@ -121,7 +116,7 @@ $$
 \operatorname{Var}[\epsilon]
 $$
 
-と分解できます。
+と分解できます。ここでは観測ノイズが潜在関数と独立で零平均、分散は既知か固定されていることを仮定します。
 
 追加データで減らしたいのは主に latent function に関する epistemic uncertainty です。
 
@@ -138,13 +133,11 @@ aleatoric uncertainty を追い続ける可能性があります。
 
 したがって、
 
-
 ```text
 その点がどれだけ不確実か
 ```
 
 と
-
 
 ```text
 その点を観測すると領域全体の uncertainty がどれだけ減るか
@@ -161,7 +154,6 @@ prediction qualityを改善したい場所は同一である必要がありま�
 
 関心領域または target distribution $`p_T(x)`$ に対する integrated posterior variance を
 
-
 $$
 V_n
 =
@@ -174,7 +166,6 @@ $$
 
 候補 $`x_c`$ を観測した後の posterior variance を $`\sigma_{n+1}^2`$ とすれば、expected integrated variance
 reduction は
-
 
 $$
 \Delta V(x_c)
@@ -193,11 +184,27 @@ $$
 
 Gaussian models の条件によっては posterior covariance update が観測値そのものに依存しないため、この expectation を簡略化できる場合があります。
 
+ハイパーパラメータを固定したGPで、観測前の共分散を $c_n(t,x)$、潜在分散を $v_n(x)$、
+独立な新規ノイズの分散を $\tau^2(x)$ とすると、正規分布の条件付けから
+
+$$
+v_n(t)-v_{n+1}(t)=\frac{c_n(t,x)^2}{v_n(x)+\tau^2(x)}
+$$
+
+となります。分母は観測分散で正と仮定します。
+これを目標分布で積分すれば分散削減を得られ、観測値そのものについての期待値は不要です。
+バッチ $X$ なら削減量は $C_n(t,X)(K_n(X,X)+R)^{-1}C_n(X,t)$ です。
+ここで $R$ は新しい観測のノイズ共分散です。未知のハイパーパラメータを再推定する手順では、この値非依存性は一般に保たれません。
+
+例えば目標点の潜在分散が1で、候補Aの潜在分散4・ノイズ分散100・目標との共分散1なら、
+削減は $1/104\simeq0.0096$ です。候補Bが潜在分散1・ノイズ分散0.1・共分散0.8なら、
+削減は $0.64/1.1\simeq0.582$ です。候補自身の分散が高い場所が、目標の学習に最も有益とは限りません。
+
 ## 9.9 Target distributionの意味
 
 AL の目的は「探索空間全体を均等に学ぶ」とは限りません。
 
-実運用で prediction する入力分布を p_T(x)`$ とすれば、target distribution 上で重要な領域へ acquisition を集中できます。
+実運用で予測する入力分布を $p_T(x)$ とすれば、target distribution 上で重要な領域へ acquisition を集中できます。
 
 例えば、
 
@@ -216,7 +223,6 @@ AL の目的は「探索空間全体を均等に学ぶ」とは限りません�
 
 概念的には
 
-
 $$
 \alpha_{\mathrm{NIPV}}(X)
 =
@@ -233,7 +239,8 @@ $$
 
 です。
 
-実際には integration points による数値近似を使います。
+ここで観測値を記していない条件付けは、固定したGPで将来の観測位置だけから事後共分散が決まる場合の略記です。
+一般のモデルでは将来観測についての期待値も必要です。積分は目標点と重みによって近似できます。
 
 qNIPV の重要な点は、単に q 個の高分散点を選ぶのではなく、candidate set が target region 全体の uncertainty をどのように減らすかを評価することです。
 
@@ -244,7 +251,6 @@ q > 1 の AL でも redundancy が問題になります。
 posterior variance の高い点を独立に上位 q 点選ぶと、互いに強く相関した近接点が選ばれる可能性があります。
 
 joint batch criterion は、
-
 
 $$
 X=(x_1,\ldots,x_q)
@@ -260,7 +266,6 @@ variance reduction は second-order uncertainty を基準にします。
 
 より一般には、候補観測 $`Y_x`$ と target prediction $`Y_T`$ の mutual information
 
-
 $$
 I(Y_x;Y_T\mid\mathcal D_n)
 $$
@@ -268,7 +273,6 @@ $$
 を acquisition value として使えます。
 
 これは
-
 
 ```text
 candidate を観測すると
@@ -288,7 +292,6 @@ observation の information gain を target distribution について平均し�
 
 target input を $`x_T\sim p_T`$ とすれば、概念的に
 
-
 $$
 \operatorname{EPIG}(x)
 =
@@ -302,13 +305,11 @@ $$
 
 finite target set
 
-
 $$
 T=\{x_T^{(1)},\ldots,x_T^{(M)}\}
 $$
 
 と weights $`w_j`$ を使えば、
-
 
 $$
 \operatorname{EPIG}(x)
@@ -320,10 +321,24 @@ $$
 
 として評価できます。
 
+目標重みは $w_j\ge0,\sum_jw_j=1$ とすれば目標確率分布の近似になります。
+また、各目標点の情報量を平均する操作は、目標ベクトル全体との相互情報量とは一般に異なります。
+
+候補観測と一つの目標観測が同時正規分布なら、相関を $\rho(x,t)$ として
+
+$$
+I(Y_x;Y_t\mid D)=-\frac12\log(1-\rho(x,t)^2),\qquad
+\rho(x,t)=\frac{c_n(x,t)}
+{\sqrt{(v_n(x)+\tau^2(x))(v_n(t)+\tau^2(t))}}
+$$
+
+です。ここでは二つの将来の測定ノイズを独立とし、$|\rho|<1$ を仮定します。
+同じ入力でも、同じ確率変数を両辺へ置くのか、独立なノイズを持つ二回の測定なのかを分けます。
+目標が潜在関数値なら分母の目標側ノイズ項はありません。何についての予測を学ぶかが情報量の定義を変えます。
+
 ## 9.14 EPIGとEntropy Samplingの違い
 
 candidate 自身の predictive entropy
-
 
 $$
 H(Y_x\mid\mathcal D_n)
@@ -334,7 +349,6 @@ $$
 EPIG は candidate uncertainty ではなく、candidate と target prediction の dependence を評価します。
 
 したがって、
-
 
 ```text
 Entropy / Variance Sampling
@@ -349,7 +363,6 @@ EPIG
 ## 9.15 EPIGとMESの違い
 
 どちらも mutual information を使えますが、情報対象が異なります。
-
 
 ```text
 MES
@@ -386,13 +399,11 @@ target distribution $`p_T`$ が deployment distribution と一致しない場合
 
 また pool distribution と target distribution が異なる場合、
 
-
 ```text
 どこから観測できるか
 ```
 
 と
-
 
 ```text
 どこで予測精度が必要か
@@ -407,7 +418,6 @@ target distribution $`p_T`$ が deployment distribution と一致しない場合
 観測点ごとに評価コストが異なる場合、information gain だけでなく cost も考慮できます。
 
 例えば概念的には
-
 
 $$
 \frac{\text{expected information gain}}
@@ -439,21 +449,16 @@ acquisition criterion と stopping criterion は別の責務ですが、同じ u
 
 ## 9.21 この章で覚えておくこと
 
-- BOとALはposteriorを共有できてもdecision purposeが違う
-- 事後分散基準 / Stdはcandidate自身のmarginal uncertaintyを見るq=1 criterion
-- candidate setとtarget / integration setを分ける
-- qNIPVはpointwise variance上位q点ではなくtarget-region uncertainty reductionを評価する
-- predictive varianceが高いこととreducible epistemic uncertaintyが大きいことは同義ではない
-- EPIGはcandidate自身のentropyではなくtarget predictionsとのinformation gainを見る
-- MESとEPIGはmutual informationを使ってもinformation targetが違う
-- current EPIGはq=1 single-output joint-Gaussian finite-target-set contract
-- current 事後分散基準 / Std runtimeはensemble posteriorをrejectする
-- classification-specific ALはregression uncertainty acquisitionへ無理に統合しない
+能動学習は何を効率よく予測したいかから効用を定めます。
+候補自身の分散と、観測後に目標領域で減る分散は異なり、観測ノイズと相関が両者の違いを生みます。
+固定したGPの分散更新と、ハイパーパラメータも再推定する手順を区別します。
+
+EPIGは目標予測との情報利得を平均し、候補自身のエントロピーや最適値に関するMESとは対象が異なります。
+GPの潜在分散、アンサンブルの不一致、分類の確率不確実性を同じ尺度とみなしません。
 
 ## 9.22 まとめ
 
 Active Learning acquisition は「どこが最適か」ではなく「何を効率よく学びたいか」から設計します。
-
 
 ```text
 事後分散基準 / 事後標準偏差基準
@@ -470,12 +475,10 @@ target distribution を明示すると、単なる空間充填ではなく deplo
 
 次章 [Level-set](10_level_set.md) では、関数全体ではなく指定した response level の境界を学ぶ acquisition を扱います。
 
-
 ## References
 
 - Bickford Smith, F. et al. (2023), *Prediction-Oriented Bayesian Active Learning*. AISTATS.
-EPIG measures information gained about predictions at target inputs rather than information 
-about model parameters.
+  EPIGはモデルパラメータではなく目標入力での予測を情報対象とする。
 - Kirsch, A., Rainforth, T., and Gal, Y. (2021), *Test Distribution-Aware Active Learning: A
-Principled Approach Against Distribution Shift and Outliers*. arXiv:2106.11719, for 
-target-distribution-aware predictive information gain.
+  Principled Approach Against Distribution Shift and Outliers*. arXiv:2106.11719.
+  目標分布を考慮した予測情報利得の議論を参照。

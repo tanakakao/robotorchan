@@ -1,7 +1,10 @@
 # 1. Foundations
 
-## 1.1 まず全体の流れ
+[獲得関数の概要](../04_acquisition_function.md)と[GP章](../02_gaussian_process.md)の事後分布を前提とします。
+入力を $x\in\mathcal X\subseteq\mathbb R^d$、候補の組を $X=(x_1,\ldots,x_q)$ とし、
+各候補での出力数を $m$ とします。以下では最大化を基準に、効用とその期待値の計算を分けて学びます。
 
+## 1.1 まず全体の流れ
 
 ~~~text
 observed data -> surrogate -> posterior -> objective / utility
@@ -17,20 +20,17 @@ surrogateは未知応答の予測、acquisitionは次の評価の価値付け、
 
 観測データを
 
-
 $$
 \mathcal D_n=\{(x_i,y_i)\}_{i=1}^n
 $$
 
 とし、潜在関数の posterior を
 
-
 $$
 p(f\mid\mathcal D_n)
 $$
 
 とします。逐次選択では一般に
-
 
 $$
 x_{n+1}\in\arg\max_{x\in\mathcal X}\alpha(x;\mathcal D_n)
@@ -44,7 +44,6 @@ $$
 
 候補集合 $`X`$ の未知出力を $`f(X)`$ とし、その結果から得られる効用を $`U(f(X))`$ とすれば、多くの獲得関数は概念的に
 
-
 $$
 \alpha(X)
 =
@@ -52,7 +51,9 @@ $$
 [U(f(X))]
 $$
 
-と捉えられます。
+と捉えられます。この期待値には、例えば $\mathbb E[|U(f(X))|\mid\mathcal D_n]<\infty$ という存在条件が必要です。
+多出力の標本は $q\times m$ の値を同時に持ち、効用はその組全体に作用します。
+さらに、潜在関数 $f$ の効用なのか、観測ノイズを含む次回応答 $Y$ の効用なのかも定義します。
 
 ただし、すべての手法がこの単純な形に直接書けるわけではありません。
 Information-theoretic acquisitionではentropyやmutual information、lookaheadでは
@@ -64,7 +65,6 @@ Active Learningでは予測を学ぶ価値がutilityになります。
 ## 1.4 Exploration と exploitation
 
 単一出力 Gaussian posterior
-
 
 $$
 f(x)\mid\mathcal D_n
@@ -93,14 +93,12 @@ Gaussian posteriorに対するq=1のEIやPIは代表例です。analytic formは
 
 閉形式が難しい場合、posterior sample
 
-
 $$
 f^{(s)}(X)\sim p(f(X)\mid\mathcal D_n),
 \quad s=1,\ldots,S
 $$
 
 を使って
-
 
 $$
 \alpha(X)
@@ -121,8 +119,20 @@ Monte Carlo（MC）formulation は、
 
 などへ拡張しやすいことが利点です。
 
-MC errorはsample数に依存します。最適化中にacquisition surfaceが不必要に揺れないよう、
-QMC samplingやbase samplesの扱いも実装上重要になります。
+固定した候補 $X$ で、独立同分布の標本と有限な効用分散を仮定すると、標本平均は不偏であり、
+標準誤差は $\sqrt{\operatorname{Var}(U)/S}$ です。準モンテカルロや共通の乱数も数値比較を安定させる方法ですが、
+上の独立標本の誤差式をそのまま適用できるとは限りません。
+
+また、各候補で不偏でも、同じ標本近似を最大化して選んだ候補の評価には選択の偏りが生じ得ます。
+一方、全候補で $|\hat\alpha(X)-\alpha(X)|\le\epsilon$ が成立し、近似を厳密に最大化した $\hat X$ を選べたなら、
+
+$$
+\alpha(X^*)-\alpha(\hat X)\le2\epsilon,
+\qquad X^*\in\arg\max_X\alpha(X).
+$$
+
+これは両端の近似誤差を足し、$\hat\alpha(\hat X)\ge\hat\alpha(X^*)$ を使った上界です。
+点ごとの標準誤差だけでこの一様誤差条件を得られるわけではなく、獲得関数の最適化誤差も別に残ります。
 
 ### MC samplingとjoint posterior
 
@@ -138,13 +148,11 @@ modelがmulti-outputでも、model outputとacquisitionが使う意思決定量�
 
 posterior sample $`f(X)`$ に対して scalar objective
 
-
 $$
 h(f(X))
 $$
 
 を定義し、その後 utility を評価する場合があります。
-
 
 $$
 \text{posterior}
@@ -160,13 +168,14 @@ $$
 Multi-objective BOのようにobjective vector自体を扱う場合は、この単純なscalarizationとは
 異なる基準も利用します。
 
-sample-level objectiveとPosteriorTransformも同一ではありません。前者はposterior sampleを
-utility計算用の量へ写せますが、後者はposterior representation自体を変換します。
+標本へ目的量を適用する操作と、分布そのものを変換して表す操作も区別します。
+線形変換なら正規分布を正規分布へ写せますが、非線形変換では一般に分布族が変わります。
+例えば $F\sim\mathcal N(1,1)$、$h(F)=F^2$ なら $\mathbb E[h(F)]=2$ で、
+$h(\mathbb E[F])=1$ と異なります。目的量や効用を平均に代入するだけでは、分布についての期待値を再現できません。
 
 ## 1.8 Acquisition definition と optimization
 
 獲得関数の定義と、その最大化は別問題です。
-
 
 $$
 X^*\in\arg\max_{X\in\mathcal X^q}\alpha(X)
@@ -199,14 +208,12 @@ marginal momentsだけでなくcandidate間のjoint structureが必要になる�
 
 ## 1.11 この章で覚えておくこと
 
-- acquisitionはposterior predictionそのものではなくdecision valueである
-- utilityは目的関数そのものとは限らない
-- analytic / MCは主としてacquisition valueの評価方法に関する分類である
-- q-acquisitionではcandidate集合のjoint posterior structureが重要になる
-- objectiveとPosteriorTransformは同じ責務ではない
-- acquisition definitionとcandidate optimizationを分ける
-- black-box outcome constraintとknown candidate constraintを分ける
-- posterior interfaceが同じでもuncertaintyの統計的意味が同じとは限らない
+獲得関数は予測値そのものではなく、予測分布を意思決定の価値へ変える基準です。
+目的量・効用・期待値を分け、潜在応答と次回観測のどちらを対象にするかも定義します。
+解析式とモンテカルロは評価方法の違いであり、候補集合の効用には同時分布が必要です。
+
+数値最適化の誤差、標本近似の誤差、予測モデルの不確実性は別の量です。
+未知の出力制約と既知の候補制約も分けて、必要な分布と可行集合を定義します。
 
 ## 1.12 次に読む章
 

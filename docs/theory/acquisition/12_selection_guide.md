@@ -1,5 +1,8 @@
 # 12. Acquisition Selection Guide
 
+[基礎章](01_foundations.md)から[費用を考慮する章](11_multifidelity_cost_aware.md)までの効用を比較します。
+本章では同じ予測分布でも、何を達成したいかによって選ぶ候補が変わることを確認します。
+
 ## 12.1 手法名ではなく意思決定問題から選ぶ
 
 Acquisition function は「一般に最も優れた一つ」を選ぶものではありません。
@@ -21,7 +24,6 @@ Acquisition function は「一般に最も優れた一つ」を選ぶもので�
 ## 12.2 最初の分岐: decision purpose
 
 最初に最終目的を分けます。
-
 
 ```text
 何をしたいか?
@@ -45,12 +47,11 @@ learning に使ったりするような目的不整合が起こります。
 
 代表例:
 
-- LogExpectedImprovement
-- LogProbabilityOfImprovement
+- LogEI
+- LogPI
 - Upper Confidence Bound
 
 実務上は numerical stability のため LogEI 系を第一に検討できます。
-
 
 ```text
 目的
@@ -74,7 +75,6 @@ observation noise がある場合、observed best を真の incumbent とみな�
 
 この場合は noisy acquisition を検討します。
 
-
 ```text
 single objective
     qLogNEI / noisy improvement family
@@ -91,7 +91,6 @@ baseline points の latent values に関する uncertainty を含めて candidat
 
 一度に q 点を並列評価するなら、pointwise acquisition の上位 q 点を選ぶより joint q-acquisition を検討します。
 
-
 ```text
 noise が小さい
     qLogEI / qUCB など
@@ -102,13 +101,11 @@ noise がある
 
 重要なのは、
 
-
 $$
 \alpha(x_1)+\cdots+\alpha(x_q)
 $$
 
 ではなく、
-
 
 $$
 \alpha(x_1,\ldots,x_q)
@@ -119,7 +116,6 @@ $$
 ## 12.6 非同期 BO
 
 複数 worker があり、既に評価中の pending points がある場合は、それらを無視して次候補を選ぶと重複探索が起こり得ます。
-
 
 ```text
 completed data
@@ -140,7 +136,6 @@ batch と asynchronous は同じではありません。
 
 exploration strength を明示的に扱いたい場合は UCB family が理解しやすい選択肢です。
 
-
 $$
 \mu(x)+\sqrt{\beta}\sigma(x)
 $$
@@ -154,7 +149,6 @@ UCB が常に EI より探索的という固定的なランキングではなく
 ## 12.8 Optimum について情報を得たい
 
 immediate improvement より、optimum に関する information gain を重視するなら information-theoretic BO を検討します。
-
 
 ```text
 optimum value f* について学ぶ
@@ -175,13 +169,12 @@ optimizer location x* について学ぶ
 
 candidate 自身の improvement ではなく、観測後の最終 decision がどれだけ改善するかを評価したいなら KG family を検討します。
 
-
 ```text
 one-step value of information
-    → qKnowledgeGradient
+    → qKG
 
 複数段階の adaptive decision
-    → qMultiStepLookahead
+    → 多段階先読み
 ```
 
 計算量は増えますが、remaining budget や terminal decision が重要な問題では理論的に自然です。
@@ -191,7 +184,6 @@ one-step value of information
 ## 12.10 Multi-objective BO
 
 複数 objective に trade-off があるなら Pareto structure を扱います。
-
 
 reference point、目的数、noise、計算量によって選択肢が変わります。
 
@@ -223,7 +215,6 @@ problem semantics と computational structure の両方から判断します。
 
 未知 outcome constraint がある場合は objective utility と feasibility を組み合わせます。
 
-
 ```text
 objective
     何を改善したいか
@@ -236,7 +227,6 @@ constrained acquisition
 ```
 
 一方、既知の input constraint は acquisition optimizer の feasible domain として扱える場合があります。
-
 
 ```text
 known input constraint
@@ -254,7 +244,6 @@ constraint-aware BO と safe BO は同じではありません。
 
 制約違反が一度でも許容できない問題では、通常の feasibility-weighted acquisition だけで安全性が保証されるとは限りません。
 
-
 ```text
 制約違反も観測として許容可能
     → constrained BO
@@ -268,7 +257,6 @@ constraint-aware BO と safe BO は同じではありません。
 ## 12.14 関数全体を学びたい
 
 optimization ではなく regression function を広く学びたいなら uncertainty-based AL を検討します。
-
 
 ```text
 candidate 自身の uncertainty
@@ -285,7 +273,6 @@ target region 全体の uncertainty
 予測精度が必要な target distribution / target set が明確なら EPIG のような target-aware information acquisition
 が自然です。
 
-
 ```text
 candidate が不確実
     → variance / entropy sampling
@@ -301,13 +288,11 @@ target prediction が改善する
 
 ## 12.16 Threshold boundary を学びたい
 
-
 $$
 f(x)=t
 $$
 
 の境界が目的なら level-set acquisition を使います。
-
 
 ```text
 established boundary criterion
@@ -323,10 +308,9 @@ variance × target proximity heuristic
 
 ## 12.17 Constraint boundary だけを学びたい場合
 
-c(x)\le0`$ の boundary を知りたいだけなら、問題は level-set estimation に近づきます。
+$c(x)\le0$ の境界を知りたいだけなら、問題は level-set estimation に近づきます。
 
 しかし objective optimization も必要なら constrained BO です。
-
 
 ```text
 c(x)=0 の位置を知りたい
@@ -341,7 +325,6 @@ c(x)<=0 の中で f(x) を最大化したい
 ## 12.18 Fidelity と evaluation cost が異なる
 
 複数 fidelity を選べる場合は、target-fidelity decision に対する value と cost を考えます。
-
 
 ```text
 target decision の value of information
@@ -362,7 +345,6 @@ candidate fidelity
 
 十分とは限りません。
 
-
 ```text
 MF surrogate
     fidelity間の関係を予測
@@ -381,7 +363,6 @@ optimizer は分けて考えます。
 
 例えば EI を使うかどうかは utility の問題であり、categorical variables をどう探索するかは candidate optimization の問題です。
 
-
 ```text
 acquisition
     candidate の価値を定義
@@ -399,7 +380,6 @@ Mixed model があることと Mixed 専用 acquisition が必要であること
 PCA、PLS、AE、ALEBO、SAAS、TuRBO などは surrogate representation や search strategy に関係します。
 
 一方 EI、UCB、MES などは candidate utility を定義します。
-
 
 ```text
 high-dimensional model / representation
@@ -432,13 +412,11 @@ Multi-task surrogate を使っていても、acquisition が何を意思決定�
 
 しかし、
 
-
 ```text
 model が posterior を返せる
 ```
 
 ことと
-
 
 ```text
 特定 acquisition の semantics が
@@ -456,14 +434,13 @@ model が posterior を返せる
 
 では reduction / joint utility semantics が必要です。
 
-unsupported structure を generic tensor operation で無理に通すより、意味が定義されるまで明示的に拒否する方が安全です。
+必要な同時分布や条件付けが定義されていなければ、単なる配列の変換だけでその獲得基準を評価できたとは言えません。
 
 ## 12.24 Robust optimization
 
 入力摂動や環境変数に対して robust objective を最適化する場合、まず「何を robust utility とするか」を定義します。
 
 例えば、
-
 
 $$
 \mathbb E_w[f(x,w)]
@@ -490,7 +467,6 @@ posterior sampling / Thompson sampling も finite-pool selection と相性が良
 
 posterior function sample
 
-
 $$
 \tilde f\sim p(f\mid\mathcal D)
 $$
@@ -507,7 +483,6 @@ multi-output では「何を最大化する posterior sample なのか」を obj
 理論的に同じ utility family でも、数値的に安定した formulation を優先することがあります。
 
 典型例:
-
 
 ```text
 EI
@@ -537,7 +512,6 @@ MES、KG、multi-step lookahead、high-q MOBO などでは acquisition computati
 
 選択時には、
 
-
 $$
 \text{experiment cost}
 \quad\text{vs}\quad
@@ -549,12 +523,11 @@ $$
 black-box evaluation が数日かかるなら重い acquisition が合理的でも、millisecond-level simulator では acquisition
 overhead が支配的になる可能性があります。
 
-## 12.29 推奨する選択手順: semanticsからruntimeへ
+## 12.29 推奨する選択手順: 意思決定の意味から計算要件へ
 
 実務では次の順番で整理すると acquisition family を選びやすくなります。
 
 ### Step 1: 最終目的
-
 
 ```text
 optimization?
@@ -563,7 +536,6 @@ boundary learning?
 ```
 
 ### Step 2: objective / learning target structure
-
 
 ```text
 single objective?
@@ -574,7 +546,6 @@ target task?
 
 ### Step 3: observation and evaluation process
 
-
 ```text
 noise?
 batch?
@@ -584,7 +555,6 @@ finite pool?
 
 ### Step 4: fidelity / cost structure
 
-
 ```text
 same cost?
 multiple fidelities?
@@ -592,7 +562,6 @@ different costs?
 ```
 
 ### Step 5: decision horizon
-
 
 ```text
 myopic improvement?
@@ -603,7 +572,6 @@ multi-step planning?
 
 ### Step 6: candidate-space / computational structure
 
-
 ```text
 continuous / mixed?
 high dimensional?
@@ -612,7 +580,6 @@ many objectives?
 ```
 
 ### Step 7: posterior requirement
-
 
 ~~~text
 marginal momentsだけで足りる?
@@ -623,6 +590,18 @@ fantasizeが必要?
 
 ここでmodelが返せるposteriorとacquisitionの計算契約を照合します。
 
+### 目的を変えると候補が変わる例
+
+単点の潜在予測がAで $\mathcal N(2,0.1^2)$、Bで $\mathcal N(0,0.3^2)$ とします。
+既知の比較基準を1とするEIはAでほぼ1、Bでは非常に小さいため、改善を目的とするならAを優先します。
+一方、点ごとの分散学習ではBの0.09がAの0.01より大きくなります。
+閾値0・標準偏差係数2のStraddleでも、Aは $0.2-2=-1.8$、Bは0.6なのでBを優先します。
+同じ予測を使っていても、改善・関数学習・境界学習の目的は異なります。
+
+方法を比較するときは、初期データ、ノイズ、実験回数または累積費用、獲得関数の計算時間をそろえます。
+予測の較正と意思決定の成果を分け、有限標本や内側最適化の精度に結果が敏感でないかも確認します。
+手法名が高度であることや、一回の探索で良い値を得たことだけでは性能の優劣は決まりません。
+
 ## 12.30 Problem-to-family quick map
 
 | Problem setting | Acquisition family to inspect first | Main question |
@@ -632,7 +611,7 @@ fantasizeが必要?
 | Parallel BO | q-acquisition | joint batch utility |
 | Optimum information | MES / GIBBON | information about optimum |
 | Terminal decision value | KG | value of information |
-| Multi-step planning | qMultiStepLookahead | adaptive future decisions |
+| Multi-step planning | 多段階先読み | adaptive future decisions |
 | Multi-objective | qLogEHVI / qLogNEHVI / qLogNParEGO | Pareto utility |
 | Unknown constraints | constrained acquisition | feasible utility |
 | Function learning | 事後分散基準 / qNIPV | predictive uncertainty |
@@ -651,7 +630,6 @@ one-shot auxiliary variables）を区別します。
 
 実利用時は次の順序で検討します。
 
-
 ~~~text
 problem semantics
   -> acquisition family
@@ -661,20 +639,16 @@ problem semantics
 ~~~
 ## 12.33 この章で覚えておくこと
 
-- acquisition名ではなくdecision purposeから選ぶ
-- BO、function learning、level-set learningを最初に分ける
-- multi-output modelとmulti-objective decisionを混同しない
-- noise、q-batch、pending、fantasyは別のaxis
-- unknown output constraintとknown candidate constraintを分ける
-- cost-awareとmulti-fidelityを分ける
-- information-theoretic methodでは「何についてのinformationか」を確認する
-- model capabilityとacquisition capabilityとoptimizer capabilityを別々に確認する
-- posterior requirementをmarginal moments / joint Gaussian / posterior samplesで確認する
+手法名から選ぶ前に、改善・関数学習・境界学習などの最終目的を定めます。
+目的数、制約、ノイズ、並列性、結果待ち、忠実度、費用、判断の時点を分けて整理します。
+情報基準では何が情報対象か、先読みでは何が終端価値かを確認します。
+
+その上で必要な周辺モーメント、同時分布、標本化、条件付けと、数値探索で使う可行集合を対応させます。
+同じ予測でも効用で候補が変わるため、一律の性能順位ではなく同じ条件の意思決定の成果で比較します。
 
 ## 12.34 まとめ
 
 Acquisition selection の最も重要な原則は、
-
 
 ```text
 手法名から問題を選ばない。
@@ -686,4 +660,10 @@ Acquisition selection の最も重要な原則は、
 
 同じ posterior model でも、最終目的が変われば適切な acquisition は変わります。
 
-また model、objective、constraint、acquisition、acquisition optimizer、search strategy はそれぞれ異なる責務です。
+また、予測モデル、目的量、制約、獲得効用、数値最適化、探索戦略はそれぞれ異なる責務です。
+
+## References
+
+- Frazier, P. I. (2018), *A Tutorial on Bayesian Optimization*. arXiv:1807.02811.
+- Shahriari, B., Swersky, K., Wang, Z., Adams, R. P., and de Freitas, N. (2016), *Taking the
+  Human Out of the Loop: A Review of Bayesian Optimization*. Proceedings of the IEEE, 104(1), 148–175.
