@@ -67,3 +67,15 @@ def test_markdown_only_is_not_code_evidence(tmp_path: Path) -> None:
     assert row["model_fit_calls"] == "false"
     assert row["optimizer_calls"] == "false"
     assert row["candidate_mentions"] == "false"
+
+
+def test_real_single_task_notebook_has_candidate_pipeline() -> None:
+    notebook = Path(__file__).resolve().parents[2] / "examples/notebooks/01_single_task_gp.ipynb"
+    row = audit(notebook)
+    assert int(row["parseable_code_cells"]) > 0
+    assert row["invalid_code_cells"] == "0"
+    assert row["native_fit_calls"] == "true"
+    assert row["posterior_calls"] == "true"
+    assert row["optimizer_calls"] == "true"
+    assert row["candidate_mentions"] == "true"
+    assert row["execution"] == "unverified"
