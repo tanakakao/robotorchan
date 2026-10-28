@@ -87,3 +87,26 @@ Among the remaining 24 files (21–41 plus the heterogeneous benchmark):
    constrained BO beyond its benchmark-only demonstration.
 
 No model-level `fit()` implementation is authorized by this plan.
+
+## Verified fit contract for Phase 3 models
+
+Source inspection of `models/base.py` and the standard model wrappers:
+
+| Model | Wrapper base | Existing `model.fit()` contract |
+| --- | --- | --- |
+| `SingleTaskGP` | `FittableExactGPModelMixin` | Supported (`supports_fit=True`) |
+| `MixedSingleTaskGP` | `FittableExactGPModelMixin` | Supported (`supports_fit=True`) |
+| `SingleTaskMultiFidelityGP` | `ExactGPModelMixin` | Not advertised by wrapper |
+| `MultiTaskGP` | `ExactGPModelMixin` | Not advertised by wrapper |
+| `KroneckerMultiTaskGP` | `ExactGPModelMixin` | Not advertised by wrapper |
+| `ModelListGP` | `ModelTrainingMixin` | Not advertised by wrapper |
+
+The first two notebooks can use their existing wrapper `fit()` method.
+For the remaining models, retain supported `make_mll()` +
+`fit_gpytorch_mll()` unless further runtime checks establish an
+explicitly supported fit path. Do not implement new fit methods here.
+
+**Phase 2 status:** all notebook code cells were inspected for static
+pipeline evidence, and Phase 3 model fit contracts were checked in source.
+The full public-export fit contract and notebook execution results are not
+yet verified; Phase 2 is not certified complete.
