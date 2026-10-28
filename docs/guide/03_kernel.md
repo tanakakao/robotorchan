@@ -1,51 +1,76 @@
-# Kernel：共分散関数とrobotorchanの設定
+# Kernel：共分散部品とモデル内部の構成
 
-## この章で解決する問題
+## この章で学ぶこと
 
-GPにおいて、入力点どうしの関係を共分散として表現し、予測分布の形や滑らかさの仮定を制御する。[Kernelの理論](../theory/03_kernel.md)では半正定値性、RBF、Matérn、stationarity、ARDなどの数学を説明する。この章は実装・API上の接続に重点を置く。
+[KernelのTheory](../theory/03_kernel.md)の共分散行列、RBF、Matérn、ARD、
+和・積の構成を、GPyTorchのカーネル部品へ対応付けます。
+標準GPに渡された部品がどこで評価され、混合変数用の部品がどう組み立てられるかを追います。
+条件付き分布の計算そのものは[GP Guide](02_gaussian_process.md)を参照してください。
 
-## Kernelからposteriorまで
+## 1. カーネルの定義と評価の境界
 
-Kernel `k(x,x')` は訓練点間の `K_XX`、訓練・予測点間の `K_*X`、予測点間の `K_**` を作る。観測ノイズと組み合わせた共分散を条件付けすることでposteriorの平均・分散が定まる。kernelが入力の距離をどう解釈するかはBOの探索結果にも影響する。
+[SingleTaskGP][single-task]は、`covar_module`をBoTorchの親クラスへ渡します。
+親の`forward()`は平均部品と共分散部品を評価し、潜在関数の事前分布を作ります。
+訓練点間、訓練・予測点間、予測点間で同じ部品を評価することが、
+Theory 3.2節の共分散ブロックを構成する処理に対応します。
 
-共分散行列は対称半正定値である必要がある。正のlengthscaleやカーネルのparameter制約は通常GPyTorch側のmoduleで管理される。RBFの滑らかさの仮定とMatérnの仮定は交換可能ではない。
+GPyTorchの[Kernel][g-kernels]は、カーネル計算の基底クラスです。
+`Kernel.__call__()`は`active_dims`で入力列を選び、
+`diag`などの条件に応じて具体的な`forward()`または遅延評価の表現へ進みます。
+`forward()`の中の距離計算を読む前に、どの入力列が渡るかを確認する必要があります。
 
-## 実装と所有権
+通常の行列評価では、設定により`LazyEvaluatedKernelTensor`を返せます。
+これは、呼び出した時点で常に全共分散行列を密に作る設計ではないことを意味します。
+対角のみの評価と、全ての点間共分散の評価も別です。
 
-- **Delegated:** 標準GPで用いるcovariance kernelの計算はBoTorch/GPyTorchが所有する。
-- **Extended:** `src/robotorchan/models/standard/single_task.py` の `SingleTaskGP` は `covar_module` 引数をBoTorch基底クラスへ渡す。独自の標準RBFやMatérn式を再実装しているわけではない。
-- **Implemented（専用ヘルパー）:** `src/robotorchan/models/base.py` の `make_mixed_covar_module` は、BoTorchの`CategoricalKernel`とGPyTorchの`AdditiveKernel`, `ProductKernel`, `ScaleKernel`を構成する。これは標準連続入力 `SingleTaskGP` のデフォルトkernelと同一視しない。
+## 2. Theoryの式とGPyTorchの部品
 
-標準モデルのデフォルトkernelはBoTorchバージョンと初期化条件に依存する。ソース未確認の固定kernelを断言せず、実際の `model.covar_module` を検査する。
+| Theory上の対象 | 主な実装 |
+| --- | --- |
+| RBFの距離と指数関数（3.5節） | `rbf_kernel.py`の`RBFKernel.forward()` |
+| Matérnの距離・多項式・指数関数（3.6節） | `matern_kernel.py`の`MaternKernel.forward()` |
+| 次元ごとの長さ尺度（3.9節） | `Kernel`の`raw_lengthscale`・`lengthscale` |
+| 共分散の振幅（3.8節） | `scale_kernel.py`の`ScaleKernel.forward()` |
+| カーネルの和・積（3.12・3.13節） | `kernel.py`の`AdditiveKernel`・`ProductKernel` |
+| カテゴリ一致による共分散（3.16節） | BoTorchの`CategoricalKernel.forward()` |
 
-## 最小利用例：明示的なカーネル指定
+これらのファイルは[GPyTorchのkernels][g-kernels]と
+[BoTorchのcategorical.py][b-categorical]にあります。
+数値計算は上流が担当し、robotorchanの標準モデルはこれらを受け取る拡張です。
 
-```python
-import torch
-from gpytorch.kernels import RBFKernel, ScaleKernel
-from botorch.fit import fit_gpytorch_mll
-from robotorchan.models import SingleTaskGP
+### RBF・Matérn・ARD
 
-X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
-Y = torch.cos(2 * torch.pi * X)
-kernel = ScaleKernel(RBFKernel(ard_num_dims=1))
-model = SingleTaskGP(train_X=X, train_Y=Y, covar_module=kernel)
-fit_gpytorch_mll(model.make_mll())
-print(type(model.covar_module).__name__)
-print(model.posterior(X[:2]).mean)
-```
+RBFの通常のTensor演算経路では、入力を`lengthscale`で割り、
+`covar_dist(..., square_dist=True)`で距離を求めて指数関数へ写します。
+Matérnでは距離に対する指数因子と、`nu`に応じた因子を掛けます。
+GPyTorchの`MaternKernel`が扱う`nu`は0.5・1.5・2.5です。
+勾配の要否などに応じて専用の自動微分経路も選ぶため、全条件で同じ関数本体だけを通るとは限りません。
 
-この例では意図的にRBFを選んでいる。デフォルトがRBFであるという意味ではない。学習データとモデルが同じdtype/deviceで動くことを確認する。多次元ARDの`ard_num_dims`は入力次元に合わせる。
+`ard_num_dims`は、選んだ入力列に対応する長さ尺度の数を決めます。
+`lengthscale`は、登録した制約を通じて`raw_lengthscale`から得る値です。
+正値化の変換を使う構成と、変換を無効にして下限を最適化側へ渡す構成があるため、
+全てが同じパラメータ変換を使うとは仮定しません。
 
-## 適用限界と検証
+### 振幅と和・積
 
-カテゴリ変数のラベルを連続座標上の数値距離とみなすのは不適切な場合がある。[Mixed Variablesの理論](../theory/05_mixed_variables.md)と対応章（後続Phaseで作成）でnative categoricalとone-hot等を個別に区別する。Nonstationaryや構造化kernelもこの章の標準RBF例で検証した扱いにはしない。
+`ScaleKernel`は基底カーネルの値へ`outputscale`を掛けます。
+`AdditiveKernel`は子の値を加算し、`ProductKernel`は要素ごとに掛けます。
+後者は共分散行列同士の通常の行列積ではありません。
+これが、Theoryでのカーネルの和・積を実装する箇所です。
 
-PSDと行列対称性は数学的必要条件だが、kernelのクラスが存在することだけでは独立数値検証の完了を示さない。既存[verification Mapping](../../.github/project-records/theory-guide/mapping/verification.md)のproperty別証拠と結び付ける。関連：[GP](02_gaussian_process.md)、[モデルガイド](../models/standard.md)、[標準GP Notebook](../../examples/notebooks/01_single_task_gp.ipynb)。
+標準`SingleTaskGP`の既定部品は、BoTorch 0.18.1では
+`get_covar_module_with_dim_scaled_prior()`が作るARD RBFです。
+この部品に独立した`ScaleKernel`が必ず付くわけではありません。
+部品の生成は[BoTorchのgpytorch_modules.py][b-utils]にあり、
+既定の構成と、明示的に渡したカーネルの構成を分けて読みます。
 
-## Mixed kernelの構成式と実装上の意味
+## 3. robotorchanの混合カーネル構築
 
-src/robotorchan/models/base.pyのmake_mixed_covar_moduleは、通常の連続GPのデフォルトkernelを置き換える一般規則ではなく、連続設計変数とカテゴリ設計変数のための専用構築関数である。連続次元が存在する場合の構成は概念的に
+[models/base.py][base]の`make_mixed_covar_module()`は、
+他の構造化mixedモデルで使う共通の構築関数です。
+標準の連続GP全体の既定カーネルを変更する処理ではありません。
+
+連続部を $x_c$、カテゴリ部を $x_{\mathrm{cat}}$ とすると、構成は次の式に対応します。
 
 $$
 k_{\mathrm{mixed}}(x,x')=k_c(x_c,x_c')
@@ -53,66 +78,66 @@ k_{\mathrm{mixed}}(x,x')=k_c(x_c,x_c')
 +k'_c(x_c,x'_c)k'_{\mathrm{cat}}(x_{\mathrm{cat}},x'_{\mathrm{cat}}).
 $$
 
-ここで加法項のcategorical kernelはScaleKernelで包まれ、交互作用項のcategorical kernelはunscaledである。2つのcontinuous_kernel()呼出しは別moduleを作るため、同一のパラメータ共有を前提にしてはいけない。連続次元がない場合はscaled CategoricalKernelのみを返す。GPyTorch AdditiveKernel/ProductKernel、BoTorch CategoricalKernelを組み合わせるのはrobotorchan、各kernelの数値計算は上流への委譲である。
+これは一般の混合カーネルの再導出ではなく、実装された部品の対応式です。
+$s_k$は加法側のカテゴリ部品を包む`ScaleKernel`の倍率です。
+和の最上位を`AdditiveKernel`、交互作用を`ProductKernel`で構成します。
+交互作用側のカテゴリ部品は、このヘルパーでは`ScaleKernel`で包みません。
 
-cat_dimsにはraw入力列の番号を使い、normalize_feature_dimsが負インデックスを正規化し、重複・範囲外・structural excluded_dimsとの重なりを拒否する。task/fidelity/context/hierarchyの構造列を通常のカテゴリ設計変数として無断使用しない。連続部にはget_covar_module_with_dim_scaled_priorまたは指定したcont_kernel_factoryを利用する。
+二回の`continuous_kernel()`は、それぞれ既定部品または
+`cont_kernel_factory`を呼びます。既定では別々のカーネルが生成されます。
+式の $k_c$ と $k'_c$ を同じパラメータを共有する部品とみなしません。
+独自factoryが部品を再利用する場合は、そのfactoryの設計も読む必要があります。
+連続次元がない場合は、積の項を作らずscaled categorical kernelだけを返します。
 
-このnative categorical kernel経路は、同じbase.pyに別途存在するCategoricalOneHotInputTransformとは異なる。MixedSingleTaskGPはBoTorch MixedSingleTaskGPの実装・cat_dims契約を継承するので、すべてのmixedモデルがone-hotを行うと記述してはならない。
+構築前には`normalize_feature_dims()`が負の列番号を正規化し、
+重複・範囲外・構造列との重なりを拒否します。
+`continuous_feature_dims()`は、カテゴリ列と除外された構造列の補集合を取ります。
+この処理が、カーネルに使う入力列とモデル全体の入力列を対応付けています。
 
-**検証境界：** ソースのkernel構成とカテゴリ次元の検査を確認した。独立したPSD/パラメータ推定/予測精度の全面検証は今回行っていない。
+## 4. 標準Mixedモデルとの違い
 
-## 理論章から分離した実装上の条件
+[MixedSingleTaskGP][single-task]は、この共通ヘルパーを呼びません。
+BoTorchの[gp_regression_mixed.py][b-mixed]がmixed covarianceを組み立てます。
+BoTorch側にも連続項・カテゴリ項・交互作用項がありますが、
+加法の組全体と積の組全体にもそれぞれ`ScaleKernel`を置きます。
+共通ヘルパーと部品木やパラメータ共有が同じであるとはいえません。
 
-#### 3.10 入力の正規化：実装上の補足
+この違いを保ったまま、各モデルがどの構築経路を使うかを読む必要があります。
+カテゴリの比較とone-hot変換の詳細は[Mixed Variables Guide](05_mixed_variables.md)へ集約しています。
 
-BoTorch では input transform として `Normalize` が利用できます。
+## 5. 変換・構造化共分散との関係
 
-#### 3.11 出力の標準化：実装上の補足
+入力の`Normalize`は、カーネルへ渡す座標と長さ尺度の意味を変えます。
+出力の`Standardize`は、カーネルだけでなく観測とノイズの応答スケールも変えます。
+これらはGPの入出力変換部品であり、カーネルの種類そのものではありません。
 
-BoTorch では outcome transform として `Standardize` が利用できます。
+カーネルをモデルの構造へ組み込む方法も複数あります。
+入力とタスクの共分散を組み合わせる`MultiTaskGP`、
+Kronecker構造を使う`KroneckerMultiTaskGP`は[多タスクGuide](07_multitask_multioutput.md)、
+`HierarchicalConditionalKernelGP`・`HierarchicalConditionalKernelMultiTaskGP`や
+contextの構造は[階層・文脈Guide](12_hierarchical_contextual_gp.md)を参照してください。
+これらを標準RBF部品だけの説明で置き換えることはできません。
 
-#### 3.16 Categorical kernel：実装上の補足
+## 6. 実装の担当範囲と参照先
 
-robotorchan では `MixedSingleTaskGP` がこの用途に対応します。
+RBF・Matérn・和・積・スケール・カテゴリ比較の数値計算はDelegatedです。
+robotorchanの標準モデルは部品を親へ渡すExtendedの層であり、
+共通mixedヘルパーは部品の配置と入力列の検査をImplementedとして提供します。
 
-#### 3.17 Conditional / Hierarchical kernel：実装上の補足
+行列の対称性・半正定値性という理論的要件と、
+パラメータの制約や入力列の検査が担う役割も分けて考えます。
+カーネルが妥当でも、仮定した類似性がデータに適するかは別の問題です。
 
-robotorchan では
+使用の流れは[標準GP Notebook][notebook]と[Mixed GP Notebook][mixed-notebook]、
+カテゴリ共分散の性質は[カテゴリ再符号化のテスト][category-test]へ進めます。
+上流の参照コードはBoTorch 0.18.1・GPyTorch 1.15.2を対象とします。
 
-## 数値 API と利用上の補足
-
-ライブラリ固有のモデル選択・APIについては
-[モデルドキュメント](../models/README.md) を参照してください。
-
-## 数理上の概念と具体的な識別子の対応
-
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
-
-したがって、モデル名が同じ `SingleTaskGP` でも kernel の選択・hyperparameter によって予測の性質は大きく変わります。
-
-`MultiTaskGP` や `KroneckerMultiTaskGP` の理論を理解する際の基礎になります。
-
-これは `KroneckerMultiTaskGP` の重要な考え方です。
-
-- `HierarchicalConditionalKernelGP`
-- `HierarchicalConditionalKernelMultiTaskGP`
-
-```text
-SingleTaskGP
-  └─ 入力間 covariance
-
-MixedSingleTaskGP
-  └─ 連続 + category covariance
-
-MultiTaskGP
-  └─ 入力 covariance × task covariance
-
-KroneckerMultiTaskGP
-  └─ K_X ⊗ K_T
-
-HierarchicalConditionalKernelGP
-  └─ 条件付き探索空間を考慮した covariance
-
-Contextual GP
-  └─ context 間構造を含む covariance
-```
+[single-task]: ../../src/robotorchan/models/standard/single_task.py
+[base]: ../../src/robotorchan/models/base.py
+[g-kernels]: https://github.com/cornellius-gp/gpytorch/tree/v1.15.2/gpytorch/kernels
+[b-categorical]: https://github.com/pytorch/botorch/tree/v0.18.1/botorch/models/kernels
+[b-utils]: https://github.com/pytorch/botorch/tree/v0.18.1/botorch/models/utils
+[b-mixed]: https://github.com/pytorch/botorch/tree/v0.18.1/botorch/models
+[notebook]: ../../examples/notebooks/01_single_task_gp.ipynb
+[mixed-notebook]: ../../examples/notebooks/02_mixed_single_task_gp.ipynb
+[category-test]: ../../tests/models/standard/test_phase7_mixed_categorical_reference.py

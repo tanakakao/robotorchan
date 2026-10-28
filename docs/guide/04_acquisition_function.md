@@ -1,136 +1,154 @@
-# Acquisition Function：理論から評価・候補生成まで
+# Acquisition Function：予測分布を効用へ写す実装
 
-## 1. この章で解決する問題
+## この章で学ぶこと
 
-ベイズ最適化において、代理モデルが返す**確率的な予測**を、次に評価する候補の**意思決定スコア**へ変換する方法を理解する。獲得関数の数学的定義と個別の式は[理論第4章](../theory/04_acquisition_function.md)および[Acquisition理論体系](../theory/acquisition/README.md)を正本とする。本章はその計算がrobotorchan・BoTorchのどのコンポーネントで行われるかを説明する。
+[獲得関数のTheory](../theory/04_acquisition_function.md)の4.3・4.5・4.9節を、
+予測分布、目的変換、標本、効用集約の処理へ対応付けます。
+期待効用の導出と個別手法の式はTheoryへ集約し、
+本章では標準獲得関数への委譲と、robotorchanが追加する接続処理を説明します。
 
-観測からモデルを更新した後、候補集合 `X` のposteriorを使って `α(X)` を評価する。ただし**獲得関数を評価することと、その関数を最大化して実行可能な候補を生成することは別の処理**である。
+獲得関数の評価と、その最大点を探索する処理は別です。
+獲得関数は候補のスコアを返し、候補探索はそのスコアを繰り返し評価します。
+どちらも、高価な目的関数を実験で観測する処理とは異なります。
 
-```text
-観測 (train_X, train_Y) → モデルの学習
-                              ↓
-候補 X → model.posterior(X) → objective / utility
-                              ↓
-                      acquisition α(X)
-                              ↓
-               acquisition optimizer (bounds, constraints)
-                              ↓
-                         次の候補 X*
-```
+## 1. 構成要素とクラスの関係
 
-## 2. Posteriorからutilityを構築する
-
-GP posteriorの単一点周辺分布は平均 `μ(x)` と標準偏差 `σ(x)` を持つ。一方、`q>1` の候補をまとめて扱うMC獲得関数では、複数候補間の相関を含むjoint posteriorからサンプルを取る。独立した各点の平均・分散だけで、一般のq-batch utilityを正しく復元できるとは限らない。
-
-- **Analytic（Delegated）:** 対応する正規分布の仮定のもとで閉形式評価が可能なとき、BoTorchの `LogExpectedImprovement`、`UpperConfidenceBound` などを利用する。これらをrobotorchan独自実装と呼ばない。
-- **MC（Delegated）:** BoTorch `qLogExpectedImprovement`、`qLogNoisyExpectedImprovement` などがposterior samplesをutilityに写して平均する。sample shape・`q`・objectiveとposterior output dimensionsの互換性が必要になる。
-- **Local（Implemented/Extended）:** robotorchan固有の回帰／分類Active Learningスコア、情報量・境界探索などは別途ソースと数式を照合する。すべてをBoTorch-nativeやGaussian analytic acquisitionへ還元しない。
-
-Improvementで使うincumbent `best_f` は目的の向きと同じスケールで定義する。最大化・最小化を混ぜたまま利用しない。標準EIより数値的安定性を考慮したLogEI系をデフォルト候補として扱うが、各手法の適用条件は[標準獲得関数ガイド](../optimization/standard_acquisition.md)に従う。
-
-## 3. 実装の責務・公開API
-
-| 論理コンポーネント | 実装・公開入口 | 区分と限界 |
-| --- | --- | --- |
-| Posterior | `robotorchan.models.SingleTaskGP.posterior` | **Delegated**：基礎GP posteriorはBoTorchに委譲。獲得関数ではない |
-| 標準Analytic/MC BO | `botorch.acquisition` | **Delegated**：robotorchanは標準クラスを複製・一括再exportしない |
-| 目的値や制約のbridge | `src/robotorchan/acquisition/composition.py`、`robotorchan.acquisition.make_*_acquisition` | **Extended**：入力モデル、objective、constraintの意味を上流クラスへ接続。独立した新しい獲得アルゴリズムではない |
-| Local Active Learning | `src/robotorchan/acquisition/active_learning/` | **Implemented**：PosteriorVariance、Straddle、BALD等。確率の種類に応じた契約が異なる |
-| Registry | `src/robotorchan/acquisition/registry.py`、`get_acquisition_registry_entry` | **Implemented（metadata）**：存在・compatibility metadataは数式の独立検証を意味しない |
-| Optimizer接続 | `acquisition/optimizer_compatibility.py` と `optim/` | **Extended/Delegated**：経路とbackendの責務を分離。登録済みというだけで実行可能性は保証されない |
-
-詳細な静的調査記録は[既存Acquisition Mapping](../../.github/project-records/theory-guide/mapping/acquisition.md)に保全している。旧ファイルは移行の照合検証が完了するまで削除しない。
-
-## 4. 最小の実装例：GP → analytic acquisition → optimizer
-
-```python
-import torch
-from botorch.acquisition.analytic import LogExpectedImprovement
-from botorch.fit import fit_gpytorch_mll
-from botorch.optim import optimize_acqf
-from robotorchan.models import SingleTaskGP
-
-train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
-train_Y = torch.sin(2 * torch.pi * train_X)
-model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
-fit_gpytorch_mll(model.make_mll())
-
-# 最大化問題。best_fの定義とモデル出力のスケールを揃える。
-acqf = LogExpectedImprovement(model=model, best_f=train_Y.max())
-bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
-candidate, acq_value = optimize_acqf(
-    acq_function=acqf,
-    bounds=bounds,
-    q=1,
-    num_restarts=5,
-    raw_samples=32,
-)
-print(candidate, acq_value)
-```
-
-この例は**連続入力・単一出力・q=1・制約なし**の最大化を扱う。候補点の獲得関数値は、候補点で実際に高価な目的関数を測った値ではない。使用APIは公開ソースと既存利用ガイドに照らして選定したが、その記載だけで任意条件の動作を保証するものではない。
-
-## 5. q-batch、Objective、Constraintの契約
-
-### q-batch
-
-`q` は同時に評価する候補点数であり、modelのposterior batch dimensionsとは別。analytic EIの代表例は`q=1`、`qLogExpectedImprovement`はjoint MCサンプルからq候補のimprovementを評価する。`q=1`専用のLocal Active Learning関数を、単純に`q>1`へ拡張したと考えてはいけない。
-
-### ObjectiveとConstraint
-
-- **Objective:** 複数出力posteriorや分類確率を、利用目的に応じたutilityへ変換する。単なる任意の出力列選択と同一ではない。
-- **Outcome constraints:** posteriorサンプルの目的値・可行性を獲得関数のutility側で扱う。
-- **Candidate constraints:** 候補点 `X` 自体の許容集合をoptimizer側で扱う。両者を同じAPI契約とみなさない。
-
-`src/robotorchan/acquisition/composition.py`のbridgeが扱えるmodel/objective/constraintの組合せは限定される。例えば単一無制約regression objective向け`make_qei_acquisition`と、constrained / multiobjective / classification用のhelperを交換可能と推測しない。
-
-### One-shot / mixed
-
-Knowledge Gradientなどはfantasyを含むone-shot最適化が必要になる。既存[Acquisition Mapping](../../.github/project-records/theory-guide/mapping/acquisition.md)では、通常mixed optimizerと`MIXED_ONE_SHOT`経路を区別している。一般の`q`制約だけで実行可能と判定しない。
-
-## 6. 検証範囲と未検証事項
-
-[既存Verification Mapping](../../.github/project-records/theory-guide/mapping/verification.md)のacquisition検証には、独立参照値、サンプル単位の数値照合、特定のassertionが記録されている。一方、registry登録、型・shape検査、有限値の確認、CI成功は、それだけでEI等の数式同値性やoptimizerの大域最適性を証明しない。**property、入力条件、dtype、seed、許容誤差、実際に比較した値**が一致する範囲のみ検証済みとする。
-
-- Analytic/MCの数値同値性は対象モデル、sampling、目的関数とノイズ条件に限定される。
-- `q`、pending points、fantasization、mixed variables、制約などの全組合せを検証済みとは扱わない。
-- Classification ALのclass probabilityとlatent GP posteriorを同一視しない。
-- Acquisition値の検証と、候補探索が収束・実行可能になることの検証を分ける。
-
-## 7. 関連章・参照先
-
-- [理論第4章](../theory/04_acquisition_function.md)、[Acquisition全12章](../theory/acquisition/README.md)
-- [BOの実装ガイド](01_bayesian_optimization.md)、[GP](02_gaussian_process.md)
-- [獲得関数の利用ガイド](../optimization/README.md)、[標準獲得関数](../optimization/standard_acquisition.md)
-- [旧Acquisition Mapping](../../.github/project-records/theory-guide/mapping/acquisition.md)、[Verification](../../.github/project-records/theory-guide/mapping/verification.md)
-- [統合Notebook一覧](../../examples/README.md)
-
-改善、信頼上界、情報獲得、Lookahead、多目的、Active Learning の詳細は、この Guide の獲得関数各章を参照してください。本章がそれらの数式検証と移行の完了を宣言するものではない。
-
-## 理論章から分離した実装上の条件
-
-### 4.15 Theory、利用方法、実装状況を分けて読む
-
-robotorchan では獲得関数関連の情報を次のように分離します。
-
-| 知りたいこと | 参照先 |
+| 構成要素 | 主な実装 |
 | --- | --- |
-| 獲得関数全体の概要 | 本章 |
-| 数式、理論、仮定、手法間の関係 | [Acquisition Function Theory](../theory/acquisition/README.md) |
-| API、コード例、実際の利用方法 | [Optimization guide](../optimization/README.md) |
-| 現在の対応範囲と制約 | [Acquisition integration status](../../docs-internal/contracts/optimization/acquisition-integration.md) |
+| 獲得関数の基底 | BoTorchの`AcquisitionFunction` |
+| 単一点の閉形式評価 | `AnalyticAcquisitionFunction`と個別の`forward()` |
+| 予測標本と目的値の生成 | `MCAcquisitionFunction._get_samples_and_objectives()` |
+| 標本・q次元の集約 | `SampleReducingMCAcquisitionFunction.forward()` |
+| 出力と目的の対応解決 | robotorchanの`resolve_acquisition_composition()` |
+| 目的値の向き・出力選択 | `RegressionObjective.to_botorch()` |
+| 独自の不確実性スコア | `PosteriorVariance`・`PosteriorStd`など |
 
-robotorchan は BoTorch-first を基本とします。Theory に掲載されている手法が
-robotorchan 固有実装であるとは限らず、BoTorch native の手法を直接利用する場合も
-あります。
+標準獲得関数の本体は[BoTorchのacquisition][b-acquisition]にあります。
+robotorchanは標準クラスを一括で複製・再exportする層ではありません。
+[composition.py][composition]は、目的・制約を上流のインターフェースへつなぐ層です。
+[registry.py][registry]は、目的の種類や必要な予測情報などのmetadataを保持します。
+registryの検索自体が獲得関数の計算や候補探索を実行するわけではありません。
 
-#### 4.5 Analytic と Monte Carlo：実装上の補足
+## 2. Analytic獲得関数の内部
 
-$`S`$ を増やすと一般に Monte Carlo 近似誤差は小さくなりますが、計算量は増えます。
-実際のBoTorchではQMC samplingなどを利用し、単純な独立乱数より効率的に
-期待値を近似する場合があります。
+BoTorchの`analytic.py`にある`AnalyticAcquisitionFunction._mean_and_sigma()`は、
+`model.posterior()`から平均と分散を取得します。
+標準偏差を使う場合は、分散に下限を設けて平方根を取り、qの次元を取り除きます。
+`LogExpectedImprovement`や`UpperConfidenceBound`は、この共通処理を利用します。
+これらの代表的な`forward()`は、decoratorでq=1の入力を要求します。
 
-#### 4.5 Analytic と Monte Carlo：実装上の補足
+`LogExpectedImprovement.forward()`は、平均、標準偏差、`best_f`、目的の向きから
+標準化した改善量を作り、`_log_ei_helper()`と標準偏差の対数を組み合わせます。
+通常のEIを一度計算してから対数を取る処理ではなく、
+小さな改善量を対数領域で扱う設計です。
 
-MC は batch、multi-output、nonlinear objective、constraints などへ拡張しやすく、
-BoTorch の獲得関数設計でも重要な役割を持ちます。
+`UpperConfidenceBound.forward()`は、方向をそろえた平均と、
+`beta.sqrt()`を係数とする標準偏差を加えます。
+Theoryの不確実性の重みと、実装引数`beta`の平方根を対応付けて読む必要があります。
+これらの式の計算はBoTorchへのDelegatedです。
+
+## 3. MC獲得関数の内部
+
+MC経路では、平均・分散だけでなく候補間の依存を含む同時事後分布を利用します。
+`MCAcquisitionFunction._get_samples_and_objectives()`は、
+`posterior_transform`を指定して分布を取得し、`get_posterior_samples()`で標本を生成し、
+`objective(samples, X)`で標本を目的値へ変換します。
+
+標本の形は概念的に`sample_shape × batch_shape × q × m`です。
+目的変換後には、最後の出力次元mを効用の定義に従って処理します。
+標本次元、モデルや入力のbatch次元、同時候補数qは異なる役割を持ちます。
+点ごとの周辺分布から独立に標本を作ることでは、同じ同時分布を再現できません。
+
+`SampleReducingMCAcquisitionFunction._non_reduced_forward()`は、
+各標本の目的値を個別の`_sample_forward()`へ渡し、必要なら制約重みを適用します。
+`forward()`はq次元の集約に続いて標本次元を集約します。
+
+例えば`logei.py`の`qLogExpectedImprovement`は、
+`LogImprovementMCAcquisitionFunction`を介してこの構造を継承します。
+`_sample_forward()`は`_log_improvement()`へ進み、改善量を対数領域で扱います。
+この系統では平滑化や対数領域の集約も使うため、
+全てのMCクラスを単純な「各標本の効用の算術平均」という実装に置き換えて説明しません。
+
+基底標本の生成はsamplerの責務です。
+通常の乱数とQMC標本では生成規則が異なりますが、
+獲得関数のどの標本次元を集約するかという役割は保たれます。
+詳しくは[獲得関数の基礎Guide](acquisition/01_foundations.md)へ進めます。
+
+## 4. robotorchanの目的変換と出力の所有関係
+
+異種モデルをまとめた場合、全体での出力番号と、個々のモデル内部での出力番号は異なります。
+`resolve_acquisition_composition()`は`ProblemSemantics`を検査し、
+`HeterogeneousModel.output_owner()`から所有モデルと内部出力番号を解決します。
+結果は`ObjectiveBinding`・`FeasibilityBinding`を持つ
+`AcquisitionCompositionPlan`です。
+この段階では、モデル間の共通posteriorやsamplerを作りません。
+
+[semantics/objectives.py][objectives]の`RegressionObjective.to_botorch()`は、
+標本の`local_output_index`を選び、`ObjectiveDirection.apply()`で方向をそろえる
+`GenericMCObjective`を構成します。
+[direction.py][direction]では、最大化ならそのまま、最小化なら符号を反転します。
+単なる出力列の選択と、目的の向きを含む効用への変換を区別します。
+
+`make_botorch_objective_bridge()`は、bindingが現在のモデルと一致し、
+所有モデルがBoTorchの`Model`であることを確認して、モデルとobjectiveを返します。
+`make_qei_acquisition()`は、単一の無制約回帰目的であることを確認し、
+`best_f`にも同じ方向変換を適用して`qExpectedImprovement`を構成します。
+このhelperが返すのはqEIであり、LogEIへ暗黙に置き換える処理はありません。
+
+このようにrobotorchanは接続と検査をImplemented/Extendedとして担い、
+EIの標本処理や集約は上流へ委譲します。
+複数の回帰目的を扱うbridgeは、一つのモデルが所有する同時事後分布を要求します。
+別々のモデルの周辺分布を、自動的に共通の同時事後分布とみなすことはしません。
+
+## 5. 制約と独自スコアの処理
+
+連続応答の制約と、候補入力そのものの制約は別の層で処理します。
+`make_continuous_constrained_qei_acquisition()`は、目的と制約が
+同じBoTorchモデルに属することを確認し、標本上の残差を
+`ConstrainedMCObjective`へ接続します。
+候補の境界や点間制約は、[候補制約Guide](optimization/05_constraints.md)の最適化側が担当します。
+
+分類確率を扱う場合は、予測確率の評価と、確率自体の標本生成を区別します。
+`ProbabilityObjectiveBridge`は、確率標本を生成する能力がない分類器に対して
+標本生成を拒否します。分類確率をGaussian潜在関数の値と同一視しません。
+詳細な可行性の合成は[制約Guide](acquisition/08_constraints.md)に分けます。
+
+一方、[active_learning/variance.py][variance]の`PosteriorVariance`は、
+BoTorchの`AcquisitionFunction`を継承し、分散のスコア計算を独自に実装します。
+`forward()`はq=1と出力構造を検査し、必要な出力を選んで`posterior.variance`を返します。
+`PosteriorStd`は、その値を非負へ切り詰めて平方根を取ります。
+これらの経路はensemble posteriorを拒否し、複数出力では出力選択を要求します。
+
+[Straddle][straddle]も独自の`forward()`で、標準偏差への重みから
+平均と目標水準の距離を引きます。
+標準BOのEI、分類のBALD、回帰のStraddleを、全て同じGaussian analytic実装とみなしません。
+それぞれの計算は[Active Learning Guide](acquisition/09_active_learning.md)と
+[水準集合Guide](acquisition/10_level_set.md)へ進めます。
+
+## 6. 最適化への接続と参照先
+
+[optimizer_compatibility.py][compatibility]の検査は、registryのq上限や
+one-shotの有無を見て、指定した最適化方式との不整合を返します。
+通常のmixed最適化では、拡張batchの行ごとに異なるカテゴリ割当を保持できないため、
+one-shotを別に扱います。このmetadata検査は、数値探索そのものではありません。
+
+標準獲得関数を評価する上流クラス、意味を接続するcomposition、
+独自スコアの`forward()`、候補を探索するoptimizerを分けることで、
+Theoryの期待効用がどこで計算されるかを追えます。
+
+使用と可視化は[標準GP Notebook][notebook]、
+出力所有関係やbridgeの境界条件は[compositionのテスト][composition-test]、
+標準BOの数式との対応は[解析参照テスト][analytic-test]を参照できます。
+上流コードへの参照はBoTorch 0.18.1を対象とします。
+
+[b-acquisition]: https://github.com/pytorch/botorch/tree/v0.18.1/botorch/acquisition
+[composition]: ../../src/robotorchan/acquisition/composition.py
+[registry]: ../../src/robotorchan/acquisition/registry.py
+[objectives]: ../../src/robotorchan/semantics/objectives.py
+[direction]: ../../src/robotorchan/semantics/direction.py
+[variance]: ../../src/robotorchan/acquisition/active_learning/variance.py
+[straddle]: ../../src/robotorchan/acquisition/active_learning/straddle.py
+[compatibility]: ../../src/robotorchan/acquisition/optimizer_compatibility.py
+[notebook]: ../../examples/notebooks/01_single_task_gp.ipynb
+[composition-test]: ../../tests/acquisition/test_composition.py
+[analytic-test]: ../../tests/acquisition/test_phase8_analytic_bo_gaussian_reference.py
