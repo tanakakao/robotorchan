@@ -1,46 +1,79 @@
-# Variational GP：inducing pointsとELBOの実装
+# Variational GP：誘導変数から予測分布とELBOを計算する
 
-## 理論と利用場面
+## この章で学ぶこと
 
-[Variational GP理論](../theory/09_variational_gp.md)は、観測数`n`が増えるとExact GPの密な行列計算が重くなる問題を扱う。`d`（入力次元）が大きい問題とは区別する。誘導点`Z`（通常`m<n`）とvariational distributionを用いてposteriorを近似し、ELBOを学習目的にする。これはExact GPの周辺尤度そのものを直接最大化する方法ではない。
+[Variational GPのTheory](../theory/09_variational_gp.md)の9.7〜9.10・9.20・9.31節を、
+誘導点、変分分布、変分戦略、ELBOの計算へ対応付けます。
+入力次元dの大きさではなく、観測数nに対する近似推論を主に扱います。
 
-## 実装と推論契約
+Exact GPの観測共分散をそのまま条件付ける処理と、
+誘導変数を介した変分分布から予測を作る処理は異なります。
+同じ`posterior()`という入口でも、内側で何を計算するかを分けて読みます。
 
-`src/robotorchan/models/standard/variational.py`の`SingleTaskVariationalGP`はBoTorch `SingleTaskVariationalGP`を継承する。
+## 1. 外側のモデルと内側のGP
 
-- **Delegated:** inducing-point allocation、variational strategy、posterior、input/outcome transformsはBoTorchに委譲する。
-- **Implemented（統合）:** robotorchanはraw dataを保持し、`make_mll(num_data)`がGPyTorchの`VariationalELBO`を構築する。
-- **注意:** `make_mll()`の戻り値はExact GPの`ExactMarginalLogLikelihood`ではない。`num_data`はELBOで表現する**全観測数**で、入力がminibatchのときはそのミニバッチ行数と同一とは限らない。
-- **Mixed variant:** `MixedSingleTaskVariationalGP`はnative categorical covarianceを利用する。カテゴリ変数があるからといって全variationalモデルの内部表現が同じとは限らない。
+[models/standard/variational.py][local]の`SingleTaskVariationalGP`は、
+`RawDataMixin`・`ModelTrainingMixin`・BoTorchの`SingleTaskVariationalGP`を継承します。
+robotorchanは変換前のデータを保持し、`make_mll()`を追加します。
+誘導点の配置、変分戦略、予測の主要な処理は上流へ委譲します。
 
-## 使用例：ELBOとinducing points
+| Theory上の構成要素 | 実装上の配置 |
+| --- | --- |
+| 誘導入力Z | `model.model.variational_strategy`が保持する誘導点 |
+| 変分分布 | 変分戦略が持つ`CholeskyVariationalDistribution`など |
+| 事前平均・カーネル | 内側の`_SingleTaskVariationalGP`の部品 |
+| 近似分布q(f)の計算 | GPyTorchの`VariationalStrategy` |
+| 観測の期待対数尤度 | likelihoodの`expected_log_prob()` |
+| KL項 | 変分戦略の`kl_divergence()` |
+| 学習目的の構成 | ローカルの`make_mll()`が作る`VariationalELBO` |
 
-```python
-import torch
-from robotorchan.models import SingleTaskVariationalGP
+BoTorchの[approximate_gp.py][b-models]では、外側のモデルがlikelihoodと変換を持ち、
+内側の`_SingleTaskVariationalGP`を`self.model`として保持します。
+`make_mll()`が渡すのは、外側のwrapperではなく、この内側のGPです。
+内側に変分戦略があるため、ELBOがそこからKLを取得できます。
 
-X = torch.linspace(0, 1, 30, dtype=torch.double).unsqueeze(-1)
-Y = torch.sin(6 * X)
-model = SingleTaskVariationalGP(
-    train_X=X,
-    train_Y=Y,
-    inducing_points=8,
-)
-elbo = model.make_mll(num_data=X.shape[-2])
-print(type(elbo).__name__)
-```
+## 2. 誘導点と変分分布の構成
 
-この例はモデルとELBOの構築を示すもので、パラメータ最適化を実行していない。学習時はVariational strategy・likelihood・ELBOのoptimizerステップに対応した処理が必要。モデルの`raw_train_Y`は任意入力により`None`になり得るため、必ず教師データが保持されるものとして扱わない。
+上流の`_SingleTaskVariationalGP.__init__()`は、誘導点がTensorで渡されればそれを使います。
+個数または省略であれば、allocatorに配置を委譲します。
+既定のallocatorは`GreedyVarianceReduction`です。
+誘導点の初期配置と、その後の位置をパラメータとして更新するかどうかは別の選択です。
 
-## 何を検証するか
+変分分布を指定しない場合は、`CholeskyVariationalDistribution`を構成します。
+誘導点数に対応する平均と共分散のパラメータを持ち、
+単に観測の一部を固定して残す構造ではありません。
+既定の`VariationalStrategy`は、その分布と誘導点、内側のGPを結び付けます。
 
-inducing pointの数、ELBOの符号とスケール、minibatchと`num_data`、posteriorの予測形状・数値、gradientの伝播を個別に検証する。尤度非Gaussianやmulti-outputへの拡張では同一計算路を仮定しない。shapeの一致やCI成功だけでは、近似posteriorの正確性は証明できない。
+複数出力では、出力別のbatchを持つ構成に
+`IndependentMultitaskVariationalStrategy`を重ねます。
+出力が複数あるだけで、多タスクGPのような学習された出力間共分散が追加されるわけではありません。
+構造化出力や独自の変分戦略は、同じ経路として無条件に説明しません。
 
-参考：[モデルガイド](../models/standard.md)、[Variational Notebook](../../examples/notebooks/06_variational_gp.ipynb)、[旧Mapping](../../.github/project-records/theory-guide/mapping/models.md)、[Verification](../../.github/project-records/theory-guide/mapping/verification.md)。関連：[Exact GP](02_gaussian_process.md)、[高次元GP](08_high_dimensional_gp.md)。
+## 3. 変分戦略が予測を作る計算
 
-## Exact GPとの学習目的の違いを数式から読む
+[GPyTorchのvariational_strategy.py][g-variational]にある
+`VariationalStrategy.forward()`は、誘導入力と予測入力を連結し、
+内側のGPの`forward()`から事前分布を得ます。
+そこから誘導点間、誘導点・予測点間、予測点間の共分散ブロックを分けます。
 
-Exact GPは観測値の周辺対数尤度 log p(y|X,θ)を最大化する。一方、Variational GPはinducing variables uを導入し、近似分布q(u)に対して次のevidence lower boundを最大化する。
+誘導点間の共分散にjitterを加えてCholesky因子を求め、
+`_compute_predictive_updates()`で平均と共分散の補正を計算します。
+既定戦略は白色化した変数の事前分布を標準正規として扱うため、
+保持する変分分布を、そのまま未変換のu=f(Z)の分布と読み替えません。
+
+白色化座標の平均を $m_v$、共分散を $S_v$、
+誘導点間のCholesky因子を $L_Z$、補間を $A=L_Z^{-1}K_{ZX_*}$ と書けば、
+通常の全共分散経路の補正は $A^\top m_v$ と $A^\top(S_v-I)A$ に対応します。
+`solve()`で補間を求め、事前平均・事前共分散へ補正を加える箇所が、
+Theoryの誘導変数を積分してq(f)を作る処理との接点です。
+
+学習時に対角のみで足りる条件では、分散の対角に特化した計算も選びます。
+したがって、全ての入力で同じ密な共分散補正を実体化するわけではありません。
+jitterは数値安定化であり、観測ノイズを表すlikelihoodとは別です。
+
+## 4. ELBOの各項を計算するメソッド
+
+TheoryのELBOは、観測の期待対数尤度と誘導変数のKLに分かれます。
 
 $$
 \mathcal L_{\mathrm{ELBO}}=
@@ -48,63 +81,74 @@ $$
 -\mathrm{KL}(q(u)\Vert p(u)).
 $$
 
-第1項は尤度によるデータ適合、第2項は近似posteriorとpriorの乖離に対する正則化である。訓練時のminibatch使用では、全観測数に応じた尤度項のスケーリングが必要となる。ローカルのSingleTaskVariationalGP.make_mll(num_data)が生成するのはgpytorch.mlls.VariationalELBO(likelihood=self.likelihood, model=self.model, num_data=num_data)であり、ExactMarginalLogLikelihoodではない。
+`SingleTaskVariationalGP.make_mll()`は、保持したlikelihoodと内側のGPを使い、
+`VariationalELBO(likelihood=self.likelihood, model=self.model, num_data=num_data)`を構成します。
+この時点では、観測に対する目的値の評価や最適化は実行しません。
 
-| 対象 | ローカルAPIと実装 | 境界 |
-| --- | --- | --- |
-| Gaussian regression Variational GP | models/standard/variational.pyのSingleTaskVariationalGP.make_mll() | BoTorch SingleTaskVariationalGPを継承し、inducing-point allocationとposterior計算を委譲 |
-| 二値GP分類 | models/classification/binary/standard/single_task.pyのBinarySingleTaskGPClassifier | BernoulliLikelihoodを指定し、VariationalELBOのlikelihood項がGaussian regressionと異なる |
-| Exact GP | models/base.pyのExactGPModelMixin.make_mll() | ExactMarginalLogLikelihood(self.likelihood,self)を返し、上記ELBOとは異なる |
-| Fully Bayesian SAAS | models/high_dimensional/fully_bayesian.py | supports_mll=False。BoTorchのfit_fully_bayesian_model_nuts経路で推論し、MLL factoryを使用しない |
+[GPyTorchのvariational_elbo.py][g-mlls]にある
+`VariationalELBO._log_likelihood_term()`は、
+`likelihood.expected_log_prob(target, variational_dist_f)`を求め、観測軸について足します。
+これは期待対数尤度であり、予測密度の対数を取る処理と同一ではありません。
+likelihoodを変えると、この項の計算も変わります。
 
-num_dataを省略するとraw_train_X.shape[-2]を用い、0以下はValueErrorとなる。raw_train_Yはconstructorで省略可能でNoneの場合がある。make_mll()は目的関数の生成であり、呼ぶだけでは学習処理が実行されない。non-Gaussian likelihoodの分類では、潜在関数posteriorと予測ラベル分布の確率を区別する必要がある。
+`_approximate_mll.py`の`_ApproximateMarginalLogLikelihood.forward()`は、
+その和を現在の観測数bで割り、KL項を`num_data / beta`で割ります。
+ローカルのfactoryは`beta`を指定しないため既定値1となり、
+全観測数Nを使ったKL/Nと、バッチ内の期待対数尤度の平均を組み合わせます。
+Theory 9.20節の総和形式と比較するときは、この正規化を対応付けます。
 
-**照合根拠：** src/robotorchan/models/standard/variational.py、models/classification/binary/standard/single_task.py、models/base.py、models/high_dimensional/fully_bayesian.py。ソース確認に基づく教育用の説明であり、ELBO値の独立数値検証や最適化収束をこの説明では保証しない。
+さらに登録済みの対数事前分布と追加損失も集約します。
+したがって、返り値を上の正規化前の式そのものとして数値比較しません。
+KLは既定戦略の白色化座標で計算されますが、対応する可逆変換をそろえたKLは同じ意味を持ちます。
 
-## 理論章から分離した実装上の条件
+## 5. データ保持と学習の境界
 
-### 9.56 実装 API との境界
+`num_data`を省略すると、ローカルのfactoryは`raw_train_X`の行数を使います。
+0以下は拒否します。コンストラクタに渡した入力が全データの一部なら、
+この既定値だけで全観測数が推定されるわけではありません。
+モデルを初期化する入力、現在ELBOへ渡すバッチ、正規化に使う全観測数は別です。
 
-学習器の生成、ELBO オブジェクトの取得、mini-batch の指定、事後分布取得などの
-ライブラリ固有の呼び出し方は[モデルドキュメント](../models/README.md)で扱います。
-本章では $q(u)$、ELBO、近似誤差、計算量および不確実性の理論を扱います。
+`train_Y`は任意であり、`raw_train_Y`が`None`になる場合があります。
+上流のコンストラクタに観測分散を直接渡す入口はなく、`raw_train_Yvar`も`None`です。
+raw bufferは来歴の保存であり、保存した応答が自動で全てのELBO評価へ渡る仕組みではありません。
 
----
+このモデルは標準Exact GPの便宜的な`fit()`を継承しません。
+学習では、内側のGPが作るq(f)と観測をELBOへ渡し、その目的に対するパラメータ更新を行います。
+入力・出力変換を使う場合も、バッチとモデルが同じ座標・応答スケールを使う必要があります。
 
-#### 9.31 Variational Distribution：実装上の補足
+## 6. 予測入口・Mixed・分類の拡張
 
-代表的な構成では `CholeskyVariationalDistribution` のようなGaussian
-variational distributionを利用します。実際のdefaultは利用中のupstream versionと
-constructor contractを確認します。
+上流の`ApproximateGPyTorchModel.posterior()`は、入力を変換してから
+内側のGPを評価し、必要ならlikelihoodを適用します。
+得られた分布を`GPyTorchPosterior`などへ包み、出力を逆変換します。
+学習時の期待対数尤度と、予測時にlikelihoodを適用する処理は異なる段階です。
 
-#### 9.41 Variational GP と Random Forest / Neural Network：実装上の補足
+`MixedSingleTaskVariationalGP`は、カテゴリ列を検査し、
+共通mixedヘルパーで共分散を構成して親へ渡します。
+nativeカテゴリ共分散の部品は[Mixed Guide](05_mixed_variables.md)を参照してください。
+変分戦略が同じでも、全モデルが同じ入力表現を使うわけではありません。
 
-- GP 的な posterior uncertainty
-- kernel prior
-- BoTorch acquisition function との統合
+[BinarySingleTaskGPClassifier][classifier]は、この変分モデルを拡張し、
+`BernoulliLikelihood`を渡します。
+ELBOの構成を共有していても、Gaussian回帰とは尤度項が異なります。
+予測ラベルの確率と潜在関数の分布は[分類Guide](24_classification.md)で分けて説明します。
+Fully Bayesian SAASのパラメータ積分も、このELBOの構成とは異なります。
 
-## 数値 API と利用上の補足
+## 7. 実装の担当範囲と参照先
 
-具体的なモデルの生成・学習方法は [モデルドキュメント](../models/README.md) を参照してください。
+誘導点配置、変分分布、変分戦略、予測計算はDelegatedです。
+robotorchanはrawデータ保持とELBOの構成をExtended/Implementedとして接続します。
+Exact MLL、変分ELBO、MCMCを、同じ名前の学習目的として扱わないことが要点です。
 
-モデルの初期化に使う観測、実際に ELBO に寄与する観測、予測評価に使う観測は
-区別する必要があります。データ来歴の保持方法はモデル API の責務です。
+使用とminibatch学習は[Variational Notebook][notebook]、
+wrapperとELBOの境界条件は[モデルテスト][model-test]を参照できます。
+数学的な文献はTheoryの参考文献に集約しています。
+上流コードはBoTorch 0.18.1・GPyTorch 1.15.2を対象とします。
 
-
-具体的なモデル API は [モデルドキュメント](../models/README.md) を参照してください。
-
-## 数理上の概念と具体的な識別子の対応
-
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
-
-1. Titsias, M. (2009).
-   Variational learning of inducing variables in sparse Gaussian processes.
-   *Proceedings of AISTATS*, 5, 567-574.
-2. Hensman, J., Fusi, N., and Lawrence, N. D. (2013).
-   Gaussian processes for big data. *Proceedings of UAI*.
-3. Burt, D. R., Rasmussen, C. E., and van der Wilk, M. (2020).
-   Convergence of sparse variational inference in Gaussian process regression.
-   *Journal of Machine Learning Research*, 21.
-4. BoTorch `SingleTaskVariationalGP` and GPyTorch `VariationalELBO` documentation.
-5. [Gaussian Process](../theory/02_gaussian_process.md)
-6. [High-dimensional GP](../theory/08_high_dimensional_gp.md)
+[local]: ../../src/robotorchan/models/standard/variational.py
+[b-models]: https://github.com/pytorch/botorch/tree/v0.18.1/botorch/models
+[g-variational]: https://github.com/cornellius-gp/gpytorch/tree/v1.15.2/gpytorch/variational
+[g-mlls]: https://github.com/cornellius-gp/gpytorch/tree/v1.15.2/gpytorch/mlls
+[classifier]: ../../src/robotorchan/models/classification/binary/standard/single_task.py
+[notebook]: ../../examples/notebooks/06_variational_gp.ipynb
+[model-test]: ../../tests/models/standard/test_variational_gp.py

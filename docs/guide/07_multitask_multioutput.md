@@ -1,91 +1,134 @@
-# MultiTask / MultiOutput GP：理論と実装
+# MultiTask / MultiOutput GP：相関構造と出力の所有関係
 
-## 解決する問題と数理の入口
+## この章で学ぶこと
 
-[理論の正本](../theory/07_multitask_multioutput.md)は数学的仮定・導出を担当する。本章は入力データ、アルゴリズム、公開API、上流委譲、数値検証のつながりを日本語で説明する。
+[多タスク・多出力のTheory](../theory/07_multitask_multioutput.md)の
+7.2〜7.6・7.10節を、タスク共分散、観測の配置、出力の合成へ対応付けます。
+出力が複数あるというだけでは、タスク間の依存を学習する構造は決まりません。
+本章では、相関を持つモデル、独立GPの合成、異種モデルのcontainerを分けて読みます。
 
-複数タスクの関係を使って情報を共有する。long-format multi-taskでは`train_X`の一列がtask IDを表し、`train_Y`には観測行ごとに一つの出力がある。これと同じ入力点で複数出力を観測するblock-design Kroneckerモデルは、データ構造やposteriorのshapeが異なる。
+## 1. モデル構造を決める観測の配置
 
-## 実装の責務と公開契約
+| モデル | 訓練状態と内部構造 |
+| --- | --- |
+| `MultiTaskGP` | 入力の一列がタスクを表すロング形式。各行に一つの応答を持つ |
+| `KroneckerMultiTaskGP` | 同じ入力で全タスクを観測する完全ブロック。応答はn×m |
+| `ModelListGP` | 子GPごとに訓練データを持ち、子の独立性に基づいて合成 |
+| `HeterogeneousModel` | 子ごとの予測の意味を保持し、共通posteriorを作らない |
 
-- **Extended:** `src/robotorchan/models/standard/multitask.py`の`MultiTaskGP`はBoTorch `MultiTaskGP`からlong-format契約とtask covarianceを継承し、raw-data/MLL便宜機能を付加する。
-- **Delegated:** task-conditioned GPのposterior計算はBoTorch/GPyTorch。
-- **Extended:** 同モジュールの`MixedMultiTaskGP`は`task_feature`を構造列に維持し、`cat_dims`を設計側のカテゴリ列として扱う。
-- `KroneckerMultiTaskGP`は別のblock-design実装であり、long-formatへの単純な別名ではない。
+[models/standard/multitask.py][local]の前二者は、
+`ExactGPModelMixin`とそれぞれのBoTorchモデルを継承します。
+robotorchanはrawデータ保持とMLL構成を追加し、タスク共分散や予測は上流へ委譲します。
+`KroneckerMultiTaskGP`は、ロング形式モデルの別名ではありません。
 
-## 最小の利用例
+## 2. ロング形式で共分散を組み立てる
 
-```python
-import torch
-from robotorchan.models import MultiTaskGP
-
-X = torch.tensor([[0.1, 0.0], [0.4, 0.0], [0.1, 1.0], [0.4, 1.0]], dtype=torch.double)
-Y = torch.tensor([[0.2], [0.5], [0.3], [0.7]], dtype=torch.double)
-model = MultiTaskGP(train_X=X, train_Y=Y, task_feature=1)
-print(model.posterior(X[:2]).mean)
-```
-
-コードは確認した公開APIを示す最小例であり、すべての条件での成功を保証するものではない。tensorのshape、dtype/device、入力変数の意味と、posteriorの出力構造を意識して利用する。
-
-## 検証・未検証事項
-
-既存のKronecker数値参照は固定したinput/task covarianceブロックの配列順とPSD等を対象とし、学習後posteriorの全面的な同値性を保証しない。task-indexing、データの配置、出力形状、未知taskへの一般化の制約を個別に確認する。Notebook: [Multitask](../../examples/notebooks/04_multitask_gp.ipynb)。
-
-[旧Model Mapping](../../.github/project-records/theory-guide/mapping/models.md)および[検証記録](../../.github/project-records/theory-guide/mapping/verification.md)は移行元の正本として保持する。API存在、静的assertion、CI成功、独立数値検証は区別する。使用例と詳しいモデル選択は[モデルガイド](../models/README.md)を参照する。
-
-## 追加：相関構造・出力軸・モデル合成の使い分け
-
-複数出力GPで重要なのは、同じモデル数を持つことではなく、異なる出力間に共分散を置くかどうかである。典型的なICM表現では次のような積構造を考える。
+ICMの共分散は、設計入力とタスクの部品を次のように対応付けられます。
 
 $$
 \operatorname{Cov}(f_t(x),f_{t'}(x'))=k_X(x,x')B_{tt'}.
 $$
 
-ただしこの式は概念的な構造であり、すべてのBoTorch multitask kernelや尤度をこの単一式で定義するものではない。MultiTaskGPはtask featureを入力の構造列として使い、train_Xの各行がどのtaskの観測かを表すlong-formatである。KroneckerMultiTaskGPは同じ入力で全taskを観測するblock-designでtrain_Yが[n,m]になる。後者は前者の別名ではなく、taskの位置とposteriorの形状の解釈が違う。
+BoTorchの[multitask.py][b-models]にある`MultiTaskGP.__init__()`は、
+設計入力の`data_covar_module`とタスクの`PositiveIndexKernel`を作り、積で接続します。
+この積は、各観測行のタスクを選んだカーネル値の積です。
+全入力と全タスクの直積を先に作る処理ではありません。
+Theoryの一般的なBの議論と、実装で選ばれた具体的なタスクカーネルの構成を区別します。
 
-| モデル | 教師データ・出力軸 | 相関と実装所有権 |
-| --- | --- | --- |
-| MultiTaskGP | train_Xにtask列、train_Yは各観測1値 | BoTorch MultiTaskGPのtask covarianceへ委譲。robotorchanはraw tensorとexact MLLを補う |
-| KroneckerMultiTaskGP | train_Xは設計列、train_Yは[n,m] | BoTorch KroneckerMultiTaskGPへ委譲。raw_train_Yvar=Noneで、前者のtrain_Yvar契約と異なる |
-| ModelListGP | 子GPごとに訓練X/Yを保持 | BoTorch ModelListGPを継承。子モデルの独立性を前提とする合成であり、cross-output covarianceを学習するMultiTaskGPとは異なる |
-| HeterogeneousModel | 子modelのoutput数に応じたglobal index | 回帰posteriorと分類latent posteriorの意味を混ぜないため、container自身の共通posterior()を持たない |
+`forward()`は、`_split_inputs()`でタスク列と前後の設計列を分けます。
+タスク値を内部添字へ写し、その添字を戻した入力で共分散を評価します。
+設計側の`active_dims`はタスク列を除外し、タスク側はタスク列だけを使います。
+既定平均も`MultitaskMean`としてタスクに応じて評価します。
+既知の観測分散がなければ、既定の`HadamardGaussianLikelihood`がタスク列を用いてノイズを扱い、
+分散が与えられた場合は`FixedNoiseGaussianLikelihood`へ渡します。
+観測のタスク相関と、各観測に加わるノイズは別の部品です。
 
-MixedMultiTaskGPではtask_featureは構造列であり、cat_dimsから除外する。categorical covarianceは設計列にのみ適用する。ModelListGP.make_mll()はSumMarginalLogLikelihood(self.likelihood,self)を返す一方、HeterogeneousModelは子ごとのentry_make_mll / entry_fitを提供する。異種モデル群全体に単一のGaussian posteriorや単一MLLがあると仮定しない。
+予測入口は、BoTorchの`gpytorch.py`にある`MultiTaskGPyTorchModel.posterior()`です。
+入力にタスク列があれば、その行で指定したタスクを予測します。
+タスク列がなければ、対象タスクごとに入力を展開して条件付けし、
+複数出力の分布へ戻します。タスク値の写像と、この出力軸への再配置は別の処理です。
 
-### 異種モデルの出力所有権を確認する
+## 3. Kronecker構造を使う経路
 
-~~~python
-import torch
-from robotorchan.models import HeterogeneousModel, SingleTaskGP
-from robotorchan.models.classification import BinarySingleTaskGPClassifier
+`KroneckerMultiTaskGP`は、GPyTorchの`MultitaskKernel`を使います。
+[GPyTorchのmultitask_kernel.py][g-kernels]では、
+設計側の共分散とタスク側の共分散を`KroneckerProductLinearOperator`で組み合わせます。
+これが、完全ブロックでの設計行列とタスク行列のKronecker積に対応する箇所です。
 
-train_X = torch.tensor([[0.0], [0.3], [0.7], [1.0]], dtype=torch.double)
-strength_Y = torch.tensor([[1.0], [1.2], [1.5], [1.3]], dtype=torch.double)
-pass_Y = torch.tensor([0.0, 0.0, 1.0, 1.0], dtype=torch.double)
-regression_model = SingleTaskGP(train_X=train_X, train_Y=strength_Y)
-binary_classifier = BinarySingleTaskGPClassifier(train_X=train_X, train_Y=pass_Y)
-models = HeterogeneousModel(
-    regression_model,
-    binary_classifier,
-    names=("strength", "pass"),
-    output_names=("strength", "pass"),
-)
-X = torch.tensor([[0.5]], dtype=torch.double)
-assert models.output_owner(1) == (1, 0)
-pass_probs = models.entry_predict_proba("pass", X)
-strength_posterior = models.entry_posterior("strength", X)
-assert pass_probs.shape[-1] == 2
-assert strength_posterior.mean.shape[-1] == 1
-~~~
+BoTorchの`train_full_covar`は訓練入力でこの構造を作り、
+`predictive_mean_cache`はlikelihoodのノイズ共分散を加えて、中心化した観測に対し`solve()`します。
+ここでは観測の行列をベクトル化するため、入力とタスクの配置順も計算の一部です。
+同じn×m個の値を保持していても、配列順を変えれば同じ計算にはなりません。
 
-この例はconstructor・予測APIと出力所有権の接続を示すもので、学習前の予測確率に実用的な校正精度があることを意味しない。output_ownerは(global index)を(entry index, child-local index)に写し、entry_predict_probaは分類子に対してのみ有効。分類モデルのposteriorがlatentであることを忘れて出力を目的値として結合しない。
+likelihoodには`MultitaskGaussianLikelihood`を使う構成があり、
+タスク共分散と観測ノイズの構造は別です。
+このラッパーのコンストラクタは観測ごとの`train_Yvar`を受け取らず、
+`raw_train_Yvar`にも`None`を保存します。ロング形式の既知観測分散の入口と同一ではありません。
+完全ブロックという仮定を外す場合の数学的な限界は、Theory 7.10節を参照してください。
 
-根拠：src/robotorchan/models/standard/multitask.py、standard/model_list.py、models/heterogeneous.py。独立したcross-task covarianceの数値検算・multi-output acquisitionの最適化実行は別途検証が必要。
+## 4. Mixedモデルが追加する設計共分散
 
-## 数値 API と利用上の補足
+`MixedMultiTaskGP`は`MultiTaskGP`、
+`MixedKroneckerMultiTaskGP`は`KroneckerMultiTaskGP`を拡張します。
+共通の`make_mixed_covar_module()`を使って、設計側にカテゴリと連続の共分散を組み込みます。
+この部品の構成式は[Kernel Guide](03_kernel.md)に集約しています。
 
-- [Gaussian Process](../theory/02_gaussian_process.md)
-- [Kernel](../theory/03_kernel.md)
-- [Multi-Fidelity](../theory/06_multi_fidelity.md)
-- [Hierarchical / Contextual GP](../theory/12_hierarchical_contextual_gp.md)
-- [Model documentation](../models/README.md)
+ロング形式のMixed版では、タスク列を通常の設計カテゴリから除外します。
+子カーネルがraw列番号を使うため、最上位の`active_dims`でも列の対応を保ち、
+親が非タスク列へ独自に付け替えることを避けます。
+カテゴリの符号化や許容値を扱う処理と、タスク相関を扱う部品を分ける設計です。
+
+## 5. 独立した子GPをModelListGPでまとめる
+
+[models/standard/model_list.py][model-list]の`ModelListGP`は、
+`ModelTrainingMixin`とBoTorchの`ModelListGP`を継承します。
+タスク共分散を学習するクラスではなく、独立な子GPをまとめるクラスです。
+子モデルごとに異なる訓練入力を持てることが、完全ブロックとは異なります。
+
+`raw_train_Xs`・`raw_train_Ys`・`raw_train_Yvars`は、子モデルの保存値を順に集めます。
+container全体で一つの訓練X・Yを作りません。
+`make_mll()`は`SumMarginalLogLikelihood(self.likelihood, self)`を構成し、
+子のMLLをまとめる上流の学習目的へ接続します。
+共通の予測入口があっても、子の間に学習された相関が追加されるわけではありません。
+
+## 6. 異種の予測をHeterogeneousModelで保持する
+
+[models/heterogeneous.py][heterogeneous]の`HeterogeneousModel`は、
+`torch.nn.Module`を継承し、子を`ModuleList`へ登録します。
+このためdevice変更や学習・評価モードは子へ伝わりますが、
+container自身は回帰と分類を混ぜた共通の`posterior()`を定義しません。
+
+コンストラクタは子の出力数を集め、累積した`_output_offsets`を作ります。
+`output_owner()`は全体の出力番号がどの区間に入るかを調べ、
+その子の添字と内部の出力番号を返します。
+この写像が、[Acquisition Guide](04_acquisition_function.md)で説明する目的・制約の接続に使われます。
+
+`entry_posterior()`は指定した子の分布をそのまま返し、
+`entry_make_mll()`・`entry_fit()`は子の学習処理へ接続します。
+分類では`entry_latent_posterior()`と`entry_predict_proba()`を分け、
+分類mixinを持つ子であることを検査します。
+潜在関数の分布と、ラベルに対する確率を同じ応答としてまとめないためです。
+
+これはrobotorchanがImplementedとして持つ、出力の所有関係と意味を保つ仕組みです。
+共有されたGaussian事後分布を新たに近似するアルゴリズムではありません。
+
+## 7. 実装の担当範囲と参照先
+
+タスク共分散、Kronecker演算、GPの条件付け、独立GP合成の主要処理はDelegatedです。
+rawデータとMLL構成はExtended、Mixedの部品構成と異種出力の管理はImplementedです。
+予測の出力数だけでモデルを分類せず、観測配置、共分散、出力所有関係を順に読みます。
+
+使用例は[多タスクNotebook][notebook]と[ModelList Notebook][list-notebook]、
+出力管理の境界条件は[HeterogeneousModelのテスト][container-test]、
+共分散の配列順は[Kronecker参照テスト][reference-test]を参照できます。
+上流の参照コードはBoTorch 0.18.1・GPyTorch 1.15.2です。
+
+[local]: ../../src/robotorchan/models/standard/multitask.py
+[model-list]: ../../src/robotorchan/models/standard/model_list.py
+[heterogeneous]: ../../src/robotorchan/models/heterogeneous.py
+[b-models]: https://github.com/pytorch/botorch/tree/v0.18.1/botorch/models
+[g-kernels]: https://github.com/cornellius-gp/gpytorch/tree/v1.15.2/gpytorch/kernels
+[notebook]: ../../examples/notebooks/04_multitask_gp.ipynb
+[list-notebook]: ../../examples/notebooks/05_model_list_gp.ipynb
+[container-test]: ../../tests/models/contracts/test_heterogeneous_model.py
+[reference-test]: ../../tests/models/standard/test_phase7_kronecker_covariance_reference.py

@@ -1,4 +1,4 @@
-"""Execute published fidelity, multitask, and structured-output guide snippets."""
+"""Execute the remaining structured-output example from the published guide."""
 
 from __future__ import annotations
 
@@ -26,22 +26,6 @@ class StructuredModelGuideExamplesTests(unittest.TestCase):
             torch.manual_seed(0)
             exec(compile(match.group(1), str(path), "exec"), scope)
         return scope
-
-    def test_multi_fidelity_posterior(self) -> None:
-        scope = self.run_example("06_multi_fidelity.md")
-        model = scope["model"]
-        X = scope["X"]
-        posterior = model.posterior(X[:2])
-        self.assertEqual(tuple(posterior.mean.shape[-2:]), (2, 1))
-        self.assertTrue(torch.isfinite(posterior.mean).all())
-
-    def test_multitask_posterior(self) -> None:
-        scope = self.run_example("07_multitask_multioutput.md")
-        model = scope["model"]
-        X = scope["X"]
-        posterior = model.posterior(X[:2])
-        self.assertTrue(torch.isfinite(posterior.mean).all())
-        self.assertEqual(posterior.mean.shape[-2], 2)
 
     def test_higher_order_constructor(self) -> None:
         scope = self.run_example("11_structured_output.md")
