@@ -24,9 +24,6 @@
 `optimizer="botorch"`で候補を生成し、shape・有限性・boundsを確認する。
 このテストは大域最適性・全制約・全backend互換性を証明しない。
 
-次はInitialization、Mixed / Discrete、Constraints、Batch / One-shotなどの
-異なる最適化契約を検証する。旧Mapping5本と174見出しの状態は変更しない。
-
 第03章は`tests/docs/test_theory_guide_optimization_initialization_example.py`で明示的な初期点を指定した公開dispatcherの実行を検査する。Sobol poolの品質、constraint-aware initialization、one-shot初期化の全面検収ではない。
 
 第04章は`tests/docs/test_theory_guide_optimization_mixed_discrete_example.py`でnative mixed optimizerのカテゴリ固定候補を直接実行する。ここでのGPは数値入力を連続扱いする簡易モデルであり、categorical kernelの学習やMixedVariableSpace dispatcherの全面検証ではない。
@@ -42,3 +39,28 @@
 第10章は`tests/docs/test_theory_guide_optimization_trust_region_example.py`で掲載コードを直接実行し、観測後の2回成功で幅拡大、2回失敗で幅縮小する状態遷移を検査する。restart・最適化候補・regret改善の実証ではない。
 
 第11章は`tests/docs/test_theory_guide_optimization_hybrid_example.py`で公開dispatcherのhybrid経路を通るDE→BoTorch局所探索の掲載例を直接実行し、候補shape・bounds・finiteを検査する。global stageの最適性や制約付きmixedの保証ではない。
+
+## 最適化12章の条件付き完了判定
+
+**学習導線・代表例整備：一区切り。技術的な全面検収：未完了。**
+
+第01章Foundationsと第12章Selection Guideは、理論と実装の選択・導線を
+扱う章である。第02〜11章の10章には、Markdown掲載コードを直接実行する
+テストファイルを対応付けた。PR #1525はマージ済みで、当該HEADのCIと
+Documentation linksは成功している。ただし、全環境・全掲載コードの
+個別成功や、全アルゴリズムの数値同値性を意味しない。
+
+| 監査項目 | 判定 | 保留する範囲 |
+| --- | --- | --- |
+| 12章の構成・理論への導線 | 整備済み | 数式・APIの全件照合 |
+| 第02〜11章の掲載例実行テスト | 10章に登録 | 各章のすべての例・オプション |
+| 候補のshape・bounds・有限性 | 代表例にassertionあり | 全backend・q・mixedの組合せ |
+| 入力制約の可行性 | 線形の限定例で検査 | 非線形・inter-point・penalty backend |
+| one-shot候補抽出 | qKGの拡張行と実候補を照合 | KGの獲得値最適化・mixed q>1 |
+| HeSBO座標変換・TuRBO更新 | 代表例を検査 | その他embedding・restart・regret |
+| 最適化性能・大域最適性 | **未検収** | 収束、計算効率、seed間ばらつき |
+| 旧Mapping174見出し | **保留** | 原文区間の意味・negative contract移行 |
+
+**次のゲート：** モデル24章、獲得関数12章、最適化12章を横断して
+理論参照・実装所有権・掲載コード・検証根拠・未検証境界を照合する。
+旧Mapping5本と固定18 Phase・48章の構成を維持する。

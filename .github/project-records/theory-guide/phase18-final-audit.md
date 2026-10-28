@@ -502,3 +502,22 @@ PR #1515のCIとDocumentation linksが成功し、マージされたことを確
 **判定：構造と代表例の検証整備は一区切り。獲得関数12章の完全技術検収は保留。** Gaussian EI/UCB、回帰posterior moment、affine costの参照値に関するテストはあるが、q-batch joint MC、MES/GIBBONの情報量推定誤差、classification PoF、KG最適化、EHVIの独立hypervolume照合、すべてのAPI/optimizer接続を網羅するものではない。
 
 証拠の詳細は[獲得関数12章マトリクス](acquisition-chapter-verification-matrix.md)を参照。次は最適化12章の実装導線と例の実行を点検する。旧Mapping5本、174見出しの未確認状態、固定18 Phase・48章を維持する。
+
+## 最適化12章の条件付き完了判定（PR #1525マージ後）
+
+PR #1525のCIとDocumentation linksの成功およびマージを確認した。
+最適化第02〜11章の10章にMarkdown掲載例の直接実行テストを登録した。
+第01章Foundationsと第12章Selection Guideは、実装選択・概念の学習導線として
+個別数値最適化の実証とは分けて扱う。
+
+**判定：章構成・代表的な実行例・テストへの追跡は一区切り。
+最適化12章の完全技術検収は保留。**
+線形candidate制約、Sobol poolの最大値選択、NSGA-IIの返却集合内非支配性、
+HeSBO座標復元、TuRBO状態更新、Hybrid接続の限定例はあるが、
+任意の制約・mixed・one-shot・非微分posterior・全backendの最適性は
+立証していない。独立した大域最適性・regret・計算効率の評価も別途必要である。
+
+詳細は[最適化12章マトリクス](optimization-chapter-verification-matrix.md)を参照。
+次に48章横断の学習導線と理論・実装契約を照合する。
+旧Mapping5本と174見出しのverified判定は原文検収まで変更せず、
+固定18 Phase・48章の構成を維持する。
