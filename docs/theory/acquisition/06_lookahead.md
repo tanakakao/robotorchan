@@ -1,7 +1,9 @@
 # 6. Lookahead Acquisition
 
-## 6.1 EI / MES / KGの違いから理解する
+[情報量章](05_information_theoretic.md)の情報獲得と、[GP章](../02_gaussian_process.md)の観測による条件付けを前提とします。
+本章では観測する点と、観測後に最終的に採用する点を分け、適応的な意思決定を考えます。
 
+## 6.1 EI / MES / KGの違いから理解する
 
 ~~~text
 EI   : candidate自身のimprovement
@@ -22,7 +24,6 @@ Lookahead acquisition は、候補 $`x`$ の現在の objective value だけで�
 
 現在のデータを $`\mathcal D_n`$、候補 $`x`$ の未知観測を $`Y_x`$ とすると、観測後データは
 
-
 $$
 \mathcal D_{n+1}
 =
@@ -39,7 +40,6 @@ $$
 
 候補 $`x`$ を観測した後の expected decision value が
 
-
 $$
 \mathbb E_{Y_x}
 [
@@ -48,7 +48,6 @@ V(\mathcal D_n\cup\{(x,Y_x)\})
 $$
 
 なら、one-step value of information は概念的に
-
 
 $$
 \alpha_{\mathrm{VOI}}(x)
@@ -69,8 +68,7 @@ $$
 
 Knowledge Gradient（KG）は Bayesian Optimization における代表的な value-of-information criterion です。
 
-noiseless な直感では、現在の posterior mean に基づく最良 decision value
-
+観測ノイズがあっても、終端で潜在関数の期待値を最大にする点を推薦するなら、現在の最良判断の価値は
 
 $$
 V_n
@@ -80,7 +78,6 @@ $$
 
 と、候補 $`x`$ を観測した後の posterior mean $`\mu_{n+1}`$ に基づく
 
-
 $$
 V_{n+1}
 =
@@ -88,7 +85,6 @@ V_{n+1}
 $$
 
 の expected difference を評価します。
-
 
 $$
 \operatorname{KG}(x)
@@ -101,12 +97,29 @@ $$
 実際の formulation は observation noise、terminal value、candidate representation などに応じて変わりますが、本質は
 **観測後の最終 decision quality の改善**です。
 
+同じ終端の選択集合を用い、整合的なベイズ更新と有限な期待値を仮定すると、
+条件付き期待値の反復則により
+
+$$
+\mathbb E_n[\max_{x'}\mu_{n+1}(x')]
+\ge\max_{x'}\mathbb E_n[\mu_{n+1}(x')]
+=\max_{x'}\mu_n(x').
+$$
+
+したがって理想的なKGは非負です。情報を得た後も元の判断を選べるため、期待する最適判断は悪化しません。
+ただし、一回の観測後の最大事後平均が必ず上がるという意味ではありません。
+また、ハイパーパラメータの再推定や不正確な内側最適化を含む数値手順には、別の誤差が生じます。
+
+例えば推薦候補がA・Bの二点で、Aの値は既知の0、Bは現在 $\mathcal N(-0.5,1)$ とします。
+Bをノイズなく観測すれば、その後は $\max(0,F_B)$ の良い方を推薦できます。
+現在の推薦価値は0なので、KGは $\phi(0.5)-0.5\Phi(-0.5)\simeq0.198$ です。
+これは現在Bの平均が劣っていても、観測後に判断を変える価値がある例です。
+
 ## 6.5 EI との違い
 
 EI は候補 $`x`$ 自身が incumbent を改善する期待量を評価します。
 
 KG は候補 $`x`$ の観測によって posterior 全体が更新され、その結果として最終的に選ぶ decision が改善する価値を評価します。
-
 
 ```text
 EI
@@ -123,7 +136,6 @@ KG
 未知の観測結果を仮想的に生成し、それを観測したと仮定した posterior を **fantasy model** と呼びます。
 
 概念的には
-
 
 ```text
 current posterior
@@ -150,7 +162,6 @@ KG には nested optimization が現れます。
 
 外側では「どこを観測するか」を最適化し、各 fantasy outcome の内側では「観測後にどこを最終選択するか」を最適化します。
 
-
 $$
 \max_x
 \;
@@ -162,10 +173,9 @@ $$
 
 この inner maximization が KG の計算コストと最適化難易度の大きな要因です。
 
-## 6.8 qKnowledgeGradient
+## 6.8 qKG
 
 複数候補を同時に観測する場合は、candidate batch $`X`$ の joint future observations を考えます。
-
 
 $$
 Y_X\sim p(Y_X\mid\mathcal D_n)
@@ -175,14 +185,14 @@ qKG は batch を観測した後の expected terminal decision value を評価�
 
 終端価値を $V(\mathcal D)$ と置けば、one-step batch KG は概念的に
 
-$
+$$
 q\operatorname{KG}(X)
 =
 \mathbb E_{Y_X\mid\mathcal D_n}
 [V(\mathcal D_n\cup\{(X,Y_X)\})]
 -
 V(\mathcal D_n)
-$
+$$
 
 と書けます。後段の最適な意思決定は各 fantasy outcome に応じて変わり、
 同じ固定された future candidate を全シナリオに使うわけではありません。
@@ -199,7 +209,6 @@ KG は代表的な one-step lookahead criterion です。
 より一般には、現在の候補の後にさらに複数段階の adaptive decisions を行う policy を評価できます。
 
 2-step の概念構造は
-
 
 ```text
 x1 を選ぶ
@@ -221,7 +230,6 @@ terminal decision
 
 Multi-step lookahead では future observation ごとに decision が分岐します。
 
-
 ```text
 current
  ├─ fantasy y1(a)
@@ -238,30 +246,32 @@ current
 
 ## 6.11 One-shot formulationとauxiliary decision rows
 
-重要なのはaugmented rowsのすべてが実際に評価されるcandidateではないことです。
+一段先の期待値をS個の仮想観測で近似すると、観測点 $x$ と各標本での終端判断 $x'_s$ を一緒に最適化できます。
 
+$$
+\max_{x,x'_1,\ldots,x'_S}\frac1S\sum_{s=1}^S\mu_{n+1}^{(s)}(x'_s)-V_n.
+$$
 
-~~~text
-actual candidate rows     実際に返して評価する点
-auxiliary / fantasy rows  acquisition内部の将来decisionを表す点
-~~~
+ここで $\mu_{n+1}^{(s)}$ は候補 $x$ での第s仮想観測による事後平均です。
+補助変数 $x'_s$ を最適化することで、各シナリオの内側最適化を大きな一つの問題へ表現します。
+実際に次に評価するのは観測点であり、補助的な終端判断すべてを同時に実験するわけではありません。
+バッチ観測なら実評価点はq個であり、仮想観測の個数Sや将来判断の個数とは別です。
 
-したがってoptimizerはaugmented batch全体を最適化しても、最後はone-shot acquisitionの
-extraction semanticsに従ってactual candidatesだけを返す必要があります。
-
-## 6.12 qMultiStepLookahead
+## 6.12 多段階先読み
 
 これは特定の単一 closed-form acquisition というより、stage-wise value functions と fantasy branching を組み合わせる
 framework として理解する方が適切です。
 
-各 stage で何を value とするか、terminal value をどう定義するかによって、構成される decision problem が変わります。
+各段階の価値と終端価値の定義によって意思決定問題が変わります。
+また、ある段階の判断はその時点までの観測だけに依存しなければなりません。
+同じ観測履歴の枝に異なる判断を許したり、未来の結果を先に知って選ばせたりすると、
+実行できない先読みの価値を計算してしまいます。
 
 ## 6.13 Batch と Multi-step の違い
 
 両者は混同しやすいですが、明確に異なります。
 
 ### Batch
-
 
 $$
 (x_1,\ldots,x_q)
@@ -270,7 +280,6 @@ $$
 を**観測結果を見る前に同時決定**します。
 
 ### Multi-step adaptive policy
-
 
 $$
 x_1
@@ -289,7 +298,6 @@ batch size q と lookahead depth は別の軸です。
 MES などは optimum についての information gain を直接評価します。
 
 KG は terminal decision value の expected improvement を評価します。
-
 
 ```text
 MES
@@ -327,21 +335,17 @@ lookahead depth を増やせば常に実用上優れるわけではなく、残�
 
 ## 6.18 この章で覚えておくこと
 
-- KGはcandidate valueではなく観測後のterminal decision valueの改善を評価する
-- MESのinformation gainとKGのvalue of informationは同じ基準ではない
-- fantasy outcome / modelはreal `未完了の入力集合` と別物
-- qKGはpointwise KG上位q点ではなくjoint future observationsを扱う
-- batch qとlookahead depthは別の軸
-- multi-stepでは後段decisionが前段observationへadaptiveに依存する
-- one-shot augmented rowsのすべてが実評価candidateではない
-- qKGの現在のregistry contractはposterior samples、single-output、fantasize、one-shotを要求する
-- mixed one-shotは通常の `optimize_acqf_mixed` ではなく専用optimizerを使う
-- 現在のmixed one-shot candidate generationはq=1のbounded exact-enumeration contractである
+KGは観測後の最良判断の価値を平均し、現在の判断からの改善を評価します。
+観測値への適応と整合的なベイズ更新が重要であり、情報の量を測るMESとも目的が異なります。
+ノイズがある場合でも、終端価値を明確にすれば同じ意思決定の枠組みを使えます。
+
+バッチの同時決定と多段階の適応的な方策は異なります。
+一括した数値最適化で使う補助変数の全てを実験するわけではなく、各判断はその時点までの観測だけに依存させます。
+標本数・内側最適化・分岐数の誤差と費用を考慮して先読みの深さを選びます。
 
 ## 6.19 まとめ
 
 Lookahead acquisition の中心は
-
 
 $$
 \text{value of information for future decisions}
@@ -354,7 +358,6 @@ policy を扱います。
 
 batch candidate selection と multi-step adaptive decision は別の概念であり、fantasy model
 は未知の将来観測を現在の時点で評価するための中核的な仕組みです。
-
 
 ## References
 

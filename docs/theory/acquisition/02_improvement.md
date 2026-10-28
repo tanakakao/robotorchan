@@ -1,7 +1,10 @@
 # 2. Improvement-based Acquisition
 
-## 2.1 PIとEIを一言で区別する
+[基礎章](01_foundations.md)の期待効用を前提とします。
+本章では、最大化に対する固定した比較基準を $b=f_{\mathrm{best}}$、予測標準偏差を $\sigma$ とします。
+基準が不確実な場合は[ノイズ付き改善量](04_batch_noisy.md)で別に扱います。
 
+## 2.1 PIとEIを一言で区別する
 
 ~~~text
 PI: 基準を超える確率
@@ -17,7 +20,6 @@ Improvement-based acquisition は、「現在の基準よりどれだけ良い�
 
 以下では最大化問題を考え、基準値を $`f_{\mathrm{best}}`$ とします。候補 $`x`$ の improvement は
 
-
 $$
 I(x)=\max(f(x)-f_{\mathrm{best}},0)
 $$
@@ -25,13 +27,12 @@ $$
 です。
 
 noiselessで関数値を直接観測する標準設定では、best valueを観測済み関数値の最良値として
-扱えます。ただしbest valueは常に観測yの最大値というAPI規則ではありません。
+扱えます。ただし、観測ノイズがある場合などに、その最大値が潜在関数の比較基準になるとは限りません。
 noise、objective transform、constraint等によって改善基準の意味は変わります。
 
 ## 2.3 Expected Improvement
 
 Expected Improvement（EI）は improvement の posterior expectation です。
-
 
 $$
 \operatorname{EI}(x)
@@ -41,7 +42,6 @@ $$
 
 Gaussian posterior
 
-
 $$
 f(x)\mid\mathcal D_n
 \sim
@@ -49,7 +49,6 @@ f(x)\mid\mathcal D_n
 $$
 
 に対して、$\sigma(x)>0$ のとき
-
 
 $$
 \operatorname{EI}(x)
@@ -64,17 +63,26 @@ $$
 確率密度関数です。$\sigma(x)=0$ では極限として
 $\operatorname{EI}(x)=\max(\mu(x)-f_{\mathrm{best}},0)$ を用います。
 
+標準正規変数 $Z$ を使って $f(x)=\mu+\sigma Z$ と書くと、改善が正なのは $Z>-z$ の範囲です。
+したがって
+
+$$
+\operatorname{EI}(x)=\int_{-z}^{\infty}(\mu-b+\sigma t)\phi(t)\,dt
+=(\mu-b)\Phi(z)+\sigma\phi(z).
+$$
+
+第一の積分では正規分布の対称性、第二の項では $\phi'(t)=-t\phi(t)$ を使っています。
+この導出では潜在値が正規分布で、比較基準が固定されていることが重要です。
+
 ## 2.4 EI の二つの寄与
 
 式の
-
 
 $$
 (\mu-f_{\mathrm{best}})\Phi(z)
 $$
 
 は予測平均による改善の寄与を、
-
 
 $$
 \sigma\phi(z)
@@ -83,8 +91,8 @@ $$
 は posterior uncertainty により改善が起こり得る寄与を含みます。
 
 このため EI は exploitation と exploration
-を自然に両立する代表的な基準です。ただし、これは二つの項を独立な「活用スコア」「探索スコア」として最適化しているという意味ではありません。両者は同じ improvement 
-expectation の解析式です。
+を同じ改善量の期待値の中で扱います。ただし $\mu<b$ なら第一項は負であり、
+独立した二つの非負スコアを足しているわけではありません。第二項と合わせて全体が非負になります。
 
 ## 2.5 EIを直感的に読む
 
@@ -98,7 +106,6 @@ EIは両方をimprovementという一つの確率変数の期待値として評�
 
 Probability of Improvement（PI）は改善量ではなく改善イベントの確率を評価します。
 
-
 $$
 \operatorname{PI}(x)
 =
@@ -111,20 +118,35 @@ PI は「改善するか」を直接評価しますが、大きな改善と小�
 
 例えば、わずかな改善を高確率で達成する候補と、大幅改善を中程度の確率で達成する候補では、PI は前者を好みやすく、EI は改善量も考慮します。
 
+上のPIの閉形式は $\sigma>0$ の場合です。$\sigma=0$ では
+$\operatorname{PI}=\mathbf1[\mu>b]$ であり、厳密な改善を使うなら $\mu=b$ では0です。
+分散が正で平均が基準と等しい場合のPIは0.5なので、この境界で極限と確定値を混同しません。
+
+例えば $b=0$ とし、候補Aが $\mathcal N(0.1,0.01^2)$、Bが $\mathcal N(0,1)$ なら、
+AのPIはほぼ1、EIはほぼ0.1です。BのPIは0.5ですが、EIは $1/\sqrt{2\pi}\simeq0.399$ になります。
+確実な小改善と、不確実だが大きな改善を両基準は異なる仕方で評価します。
+
+固定した $\sigma>0$ でEIを微分すると $\partial\operatorname{EI}/\partial\mu=\Phi(z)$、
+固定した平均での微分は $\partial\operatorname{EI}/\partial\sigma=\phi(z)>0$ です。
+対照的にPIの標準偏差方向の微分は $-z\phi(z)/\sigma$ であり、平均が基準を上回る場合には負になります。
+したがって「分散を増やすとどの改善基準も大きくなる」とは言えません。
+
 ## 2.7 LogEI / LogPI
 
 EI や PI は理論的には単純ですが、改善が極めて起こりにくい領域では acquisition value と gradient が数値的に非常に小さくなることがあります。
 
 LogEI系は、対応するimprovement criterionをlog-domainで数値的に安定して扱うformulationです。
-別の探索原理として扱いません。実際のlog-EI familyはunderflowやvanishing gradientを避ける
-numerically robust formulationを含むため、対応する実装定義を確認します。
+正のEIに厳密な対数を取れば単調性から最大点は変わりません。
+ただし $\log\mathbb E[I]$ と $\mathbb E[\log I]$ は別です。
+正の分散を持つ正規予測では改善が零となる確率が正なので、後者は $-\infty$ になります。
+また、極小のEIを計算してから対数を取るだけでは、途中のアンダーフローを避けられません。
+バッチ版などで正部分や最大値を滑らかに近似する場合は、その有限の近似誤差も厳密な対数変換とは区別します。
 
 実装上は、理論式の正しさだけでなく acquisition optimization に十分な gradient information が残ることが重要です。
 
 ## 2.8 Exploration parameter を追加する場合
 
 EI / PI の定義には、基準値に margin $`\xi`$ を加えて
-
 
 $$
 I_\xi(x)
@@ -140,21 +162,19 @@ $`\xi>0`$ は「単に現在値を超える」より大きな改善を要求し�
 
 最小化問題では improvement を
 
-
 $$
 I(x)=\max(f_{\mathrm{best}}-f(x),0)
 $$
 
 と定義できます。
 
-実装では objective の符号を反転して最大化 convention に統一することもあります。数式を読む際には、最大化・最小化の convention を必ず確認する必要があります。
+目的関数の符号を反転して最大化へ統一することもできます。数式を読む際には、最大化・最小化の convention を必ず確認する必要があります。
 
 ## 2.10 qEI と batch
 
 q > 1 では、単純に EI の上位 q 点を選ぶのではなく、候補集合による共同 improvement を評価します。
 
 最大化問題の概念的な q-improvement は
-
 
 $$
 I(X)
@@ -166,7 +186,6 @@ I(X)
 $$
 
 であり、
-
 
 $$
 q\operatorname{EI}(X)=\mathbb E[I(X)]
@@ -194,7 +213,6 @@ Noisy](04_batch_noisy.md) で扱います。
 
 EI と PI の本質的な違いは、
 
-
 ```text
 PI
     改善イベントの確率
@@ -208,18 +226,17 @@ EI
 Log formulation は別の意思決定原理ではなく、数値安定性を改善する実装上重要な formulation です。batch と noise はさらに joint posterior
 と latent baseline uncertainty を導入するため、q / noisy variants を独立に理解する必要があります。
 
-
 ## 2.14 この章で覚えておくこと
 
-- PIは改善eventの確率、EIは改善量の期待値
-- EIの平均・不確実性の寄与は同じimprovement expectationから生じる
-- LogEI / LogPIは別の探索目的ではなくnumerical robustnessのためのformulation
-- best valueの意味はnoiseやobjective compositionによって変わる
-- qEIはpointwise EI上位q点ではなくjoint improvement
-- NEIはlatent baseline uncertaintyを扱う
+PIは改善する確率、EIは改善量の期待値を評価します。同じ予測分布でも候補の順位が変わり得ます。
+比較基準を固定する仮定と、分散零での定義を確認し、EIの二項を独立したスコアとみなしません。
+
+厳密な対数変換は正の値の順位を保ちますが、期待値と対数の順序や有限の平滑化は区別します。
+バッチでは候補集合の共同改善を、ノイズ下では基準の潜在値の不確実性も積分します。
 
 ## References
 
 - Ament, S. et al. (2023), *Unexpected Improvements to Expected Improvement for Bayesian
-formulation.
-acquisition interfaces and log-space EI variants.
+  Optimization*. Advances in Neural Information Processing Systems 36.
+- Jones, D. R., Schonlau, M., and Welch, W. J. (1998), *Efficient Global Optimization of
+  Expensive Black-Box Functions*. Journal of Global Optimization, 13, 455–492.
