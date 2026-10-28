@@ -1,9 +1,11 @@
 # Heteroskedastic / Replicate Noise
 
+[GP章](02_gaussian_process.md)の潜在事後分布と観測ノイズを前提とします。
+本章では、潜在応答 $f$、対数ノイズ分散 $g$、同一条件の反復数 $r$ を用いて、分散の情報源を区別します。
+
 ## 直感
 
 標準 GP 回帰では、観測ノイズをすべての入力で同じ分散とすることがよくあります。
-
 
 ```text
 y_i = f(x_i) + epsilon_i
@@ -20,7 +22,6 @@ epsilon_i ~ Normal(0, sigma^2)
 ### 最初に3つのvarianceを分ける
 
 この章で最も重要なのは、次の量を同じ「GPの分散」と呼ばないことです。
-
 
 ~~~text
 Var[f(x) | D]
@@ -41,7 +42,6 @@ GP posterior の uncertainty を解釈するとき、次の区別が重要です
 
 heteroskedasticity は主に後者が入力 `x` に依存する状況です。
 
-
 ```text
 y_i = f(x_i) + epsilon_i
 epsilon_i ~ Normal(0, sigma^2(x_i))
@@ -56,7 +56,6 @@ epsilon_i ~ Normal(0, sigma^2(x_i))
 一般的な heteroskedastic GP では、response process `f(x)` に加えて noise variance を表す
 latent process を導入します。正値性を保つため、典型的には log variance をモデル化します。
 
-
 ```text
 f ~ GP(m_f, k_f)
 g ~ GP(m_g, k_g)
@@ -65,7 +64,6 @@ y_i | f_i, g_i ~ Normal(f_i, exp(g_i))
 ```
 
 これにより noise level が入力空間で滑らかに変化する構造を表現できます。
-
 
 ~~~text
 response GPをfit
@@ -78,20 +76,16 @@ log(residual^2)をnoise GPへfit
   ↓
 反復
 ~~~
-Mixed counterpartはcategorical covarianceを保持し、continuous featureとcategory identityを
-同じEuclidean geometryに押し込みません。
-
-Heteroskedastic Multi Fidelity GP ではfidelity coordinateもnoise processの入力に残るため、
-responseだけでなくobservation noiseがfidelityによって変化する構造を表現できます。
+この反復推定は一つの近似法です。学習残差はノイズの実現値そのものではなく、
+応答推定の誤差も含みます。また零残差の対数は定義できず、補正や下限が必要です。
+混合入力ではカテゴリの意味を保つ共分散を、忠実度がある場合はノイズにも忠実度依存性を考えます。
 
 ## 3. Joint heteroskedastic inference
 
 response と noise を別々の段階で推定すると、noise estimate の不確かさや両者の coupling を
 十分に反映できない場合があります。
 
-Joint Heteroskedastic 単一タスク GP は response と log-noise の latent process を joint
-objective で学習する構成です。概念的には
-
+同時推論では応答と対数ノイズの潜在過程を一つの推論問題として学習します。概念的には
 
 ```text
 q(f, g)
@@ -100,9 +94,8 @@ E_q(f,g)[log p(y | f, g)] - KL terms
 
 のように、response と noise process を同じ推論問題の中で扱います。
 
-また `predicted_noise(X)` はlog-noise posteriorがGaussianであることを利用し、
-単純な `exp(E[g])` ではなく概念的に
-
+対数ノイズの近似事後分布が正規分布 $q(g(x))=\mathcal N(m_g,v_g)$ なら、
+正規分布の積率母関数から、平均ノイズ分散は単純な `exp(E[g])` ではなく
 
 ~~~text
 E[exp(g)] = exp(E[g] + Var[g] / 2)
@@ -111,12 +104,23 @@ E[exp(g)] = exp(E[g] + Var[g] / 2)
 を使ってobservation varianceへ戻します。したがってnoise-process uncertaintyも
 posterior-mean noise varianceに反映されます。
 
-latent processが増えるため、標準exact GPより推論・最適化は複雑になります。
+例えば $m_g=0,v_g=1$ なら、平均ノイズ分散は $e^{1/2}\simeq1.649$ です。
+$e^{m_g}=1$ は対数正規分布の中央値であり、平均とは異なります。
+
+新しい観測が $y_*=f_*+\epsilon_*$ で、$f_*,g_*$ を与えた下で
+$\mathbb E[\epsilon_*\mid f_*,g_*]=0$、$\operatorname{Var}(\epsilon_*\mid f_*,g_*)=e^{g_*}$ とすると、全分散の公式より
+
+$$
+\operatorname{Var}(y_*\mid D)=\operatorname{Var}(f_*\mid D)+\mathbb E[e^{g_*}\mid D].
+$$
+
+応答とノイズ過程の事後相関があっても、この条件付き零平均の仮定の下では交差項は消えます。
+ただし、同時事後分布は一般に非正規なので、対数正規の積率の式を使う箇所は近似分布への仮定です。
+潜在過程が増えるため、通常の正規尤度GPより推論・最適化は複雑になります。
 
 ## 4. Replicate noise
 
 同一 design condition `x` を `r` 回測定できる場合、
-
 
 ```text
 y_(x,1), ..., y_(x,r)
@@ -126,13 +130,11 @@ y_(x,1), ..., y_(x,r)
 
 sample mean を
 
-
 ```text
 y_bar(x) = (1 / r) * sum_j y_(x,j)
 ```
 
 sample variance を
-
 
 ```text
 s^2(x) = 1 / (r - 1) * sum_j (y_(x,j) - y_bar(x))^2
@@ -140,13 +142,11 @@ s^2(x) = 1 / (r - 1) * sum_j (y_(x,j) - y_bar(x))^2
 
 とすると、独立 replicate を仮定した mean の variance は
 
-
 ```text
 Var[y_bar(x)] ~= s^2(x) / r
 ```
 
 です。
-
 
 ```text
 既知の観測分散 = max(s^2(x) / r, noise_floor)
@@ -154,7 +154,10 @@ Var[y_bar(x)] ~= s^2(x) / r
 
 という関係を持ちます。
 
-これは理論と実装の対応上、特に重要です。
+ここで下限値を加える操作は数値的な正則化であり、不偏な標本分散そのものとは区別します。
+また、反復から推定した分散を固定して使うことは、その推定誤差まで事後分布で積分することとは異なります。
+例えば $r=4$、標本分散 $s^2=0.36$ なら、平均の分散推定値は0.09、標準誤差は0.3です。
+個々の観測の標準偏差0.6をそのまま平均の誤差へ使うと、反復による精度の改善を表せません。
 
 ## 5. Replicate の成立条件
 
@@ -163,20 +166,24 @@ replicate と呼ぶためには「同じ条件」が何を意味するかを明�
 また各 design condition には最低2 replicate が必要です。1点だけでは unbiased sample variance
 を推定できないためです。
 
-`noise_floor` はゼロ分散や数値的に極端に小さい分散をそのまま fixed noise として渡すことを
-避けるために使います。
+ノイズ分散の下限は数値的な安定化に使えますが、反復数が少ないと分散推定自体にも大きな誤差が残ります。
+また、同一条件でも装置ドリフトなどで反復が相関していれば $s^2/r$ の式はそのまま使えません。
+各反復の分散を $\sigma^2$、異なる反復間の相関を $\rho$ とすると、共分散を足し合わせることで
+
+$$
+\operatorname{Var}(\bar y)=\frac{\sigma^2}{r}\{1+(r-1)\rho\}
+$$
+
+を得ます。例えば $r=4,\rho=0.5$ なら $0.625\sigma^2$ で、独立な場合の $0.25\sigma^2$ より大きくなります。
 
 ## 6. Mixed replicate noise
 
-混合入力 Replicate Noise 単一タスク GP では、continuous / categorical を含む raw row の同一性を
-保ったまま replicate aggregation を行います。
+混合入力では、連続・カテゴリを含む設計条件が同じかを定義してから反復観測を集約します。
 
 カテゴリ列について「近いカテゴリ」という連続距離を導入するのではなく、同じカテゴリ値を持つ
-design condition の replicate として扱います。aggregation 後の surrogate でも native mixed
-covariance を保持します。
+設計条件の反復として扱います。集約後の共分散にも、カテゴリの統計的な意味を保持します。
 
 ## 7. Multi-fidelity replicate noise
-
 
 ```text
 (x, s_low) != (x, s_high)
@@ -192,7 +199,6 @@ multi-fidelity covariance は fidelity 間の関係を別途モデル化しま�
 
 `既知の観測分散` を外部から与えられる場合は、そのvarianceを既知として使うfixed-noise modelingです。
 これは未知のnoise surfaceをresidualから推定するheteroskedastic GPとは異なります。
-
 
 ~~~text
 known 既知の観測分散
@@ -238,14 +244,12 @@ gross outlier と同じではありません。
 
 heteroskedasticity は observation variance の変化です。
 
-
 ```text
 sigma^2 = sigma^2(x)
 ```
 
 一方、nonstationary GP は latent function の covariance structure 自体が場所によって変わる
 問題です。例えば lengthscale が `x` に依存する状況です。
-
 
 ```text
 ell = ell(x)
@@ -271,13 +275,13 @@ surrogate 側の observation model が適切であることは別途必要です
 
 ## 14. この章で覚えておくこと
 
-- latent posterior varianceとobservation noise varianceを分ける
-- replicate GPの `既知の観測分散` は個々の測定varianceではなくvariance-of-the-meanである
-- known `既知の観測分散` とlearned heteroskedastic noiseは別の情報源である
-- iterative modelとjoint variational modelは同じheteroskedasticityを異なる推論契約で扱う
-- replicate groupingはraw rowのexact equalityに基づき、各groupに2観測以上必要である
-- task / fidelity / categoryはnoise modelでもそれぞれのstructural semanticsを保つ
-- noisy acquisitionを選ぶこと自体はheteroskedastic surrogateを学習することではない
+潜在関数の予測分散、1回の測定のノイズ分散、反復平均の分散は異なる量です。
+既知とする分散、残差から推定するノイズ過程、反復測定で推定する局所分散は情報源も異なります。
+反復平均を応答として使う場合は、独立性を確認したうえで平均の分散を扱います。
+
+交互推定と同時変分推論では、ノイズ推定の不確実性の扱いが変わります。
+カテゴリ・タスク・忠実度の意味をノイズ過程でも保持し、
+ノイズに対応した獲得関数を選ぶこととノイズモデル自体を学ぶことを区別します。
 
 ## 参考文献
 

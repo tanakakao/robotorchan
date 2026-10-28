@@ -1,5 +1,8 @@
 # Uncertain-input Gaussian Process
 
+[GP章](02_gaussian_process.md)の共分散と、[カーネル章](03_kernel.md)のRBFを前提とします。
+本章では入力次元を $d$ とし、入力点を確率変数とするモデルと、入力分布に対する平均応答のモデルを区別します。
+
 ## 直感
 
 通常の GP は入力 `x` が正確に既知であると仮定します。しかし材料配合量、温度、位置、
@@ -11,7 +14,6 @@ uncertain-input GP は output noise ではなく、**入力座標そのものの
 ### 最初に「どのXが不確かか」を分ける
 
 入力の不確かさには少なくとも2つの異なる問題があります。
-
 
 ~~~text
 training-input uncertainty
@@ -28,13 +30,11 @@ candidate-time perturbation
 
 観測された入力を `x_obs`、真の入力を `x_true` として、
 
-
 ```text
 x_true ~ Normal(mu_x, Sigma_x)
 ```
 
 または誤差表現として
-
 
 ```text
 x_obs = x_true + delta
@@ -43,32 +43,37 @@ delta ~ Normal(0, Sigma_x)
 
 を考えます。
 
-通常の GP kernel `k(x, x')` は確定した2点間の covariance です。入力が確率変数なら、
-必要なのは入力分布について周辺化した covariance です。
+ただし、この二つの誤差表現は追加の仮定なしに同じ条件付き分布を与えるものではありません。
+$x_{obs}=x_{true}+\delta$ から $p(x_{true}\mid x_{obs})$ を求めるには、
+真の入力の事前分布も必要です。以下では入力の条件付き分布が別途与えられたものとして考えます。
 
+通常のカーネルは確定した二点の関数値の共分散です。入力分布 $P_i,P_j$ に対して、
+**独立な二つの積分変数**を使う分布間カーネルを次のように定義できます。
 
 ```text
 k_bar(i, j)
   = E_{x_i, x_j}[k(x_i, x_j)]
 ```
 
-このexpected kernelにより、入力位置のuncertaintyをGP covarianceへ反映できます。
+このカーネルは、入力分布に対する平均関数値 $G_i=\int f(x)\,dP_i(x)$ の共分散を正確に与えます。
+固定した入力分布とGPの下で、線形汎関数 $G_i$ の集合は同時正規分布になります。
+したがって、一度だけ入力を乱数で動かして学習する処理とは異なります。
 
-ここで行っているのは「観測された `観測入力` を一度だけrandom jitterして通常GPをfitする」
-処理ではありません。各training pointを入力分布として扱い、その分布間でkernelを周辺化します。
+一方、真の観測が $f(X_i)$ という一回のランダムな入力点で得られた場合、
+入力を積分した分布は一般に正規分布ではありません。特に分散の対角項では、同じ $X_i$ を両側に用いる
+$\mathbb E[k(X_i,X_i)]$ と、独立な二標本の $\mathbb E[k(X_i,X_i')]$ は異なります。
+分布平均のカーネルをランダム入力点のモデルへ使う際は、この差を近似として扱う必要があります。
 
 ## 2. Gaussian uncertainty と RBF kernel
 
 2つの入力分布を
-
 
 ```text
 x_i ~ Normal(mu_i, Sigma_i)
 x_j ~ Normal(mu_j, Sigma_j)
 ```
 
-とし、ARD lengthscale matrix を `Lambda` とすると、expected RBF covariance は概念的に
-
+とし、二つの入力が独立で、`Lambda = diag(ell_1^2, ..., ell_d^2)` が正定値なら、分散1のRBFに対する分布間共分散は
 
 ```text
 k_bar(i, j)
@@ -89,42 +94,41 @@ k_bar(i, j)
 なお、この解析式は**Gaussian input uncertainty × RBF kernel**という組合せに依存します。
 「任意のkernelへ同じ式を適用できる」という一般則ではありません。
 
-実装では Cholesky decomposition を使って線形系と log determinant を計算し、明示的な
-matrix inverse を避けています。
+この式は差 $X_i-X_j$ が平均 $\mu_i-\mu_j$、共分散 $\Sigma_i+\Sigma_j$ の正規分布となることを使い、
+二次形式の指数関数を積分して得られます。信号分散が $\sigma_f^2$ なら右辺全体をその値で倍します。
+数値計算では逆行列そのものより、Cholesky分解による線形求解と対数行列式を使えます。
+
+例えば1次元で $\ell=1$、同じ平均を持つ分散0.25の入力分布同士なら、分布平均の分散は
+$1/\sqrt{1+0.25+0.25}\simeq0.816$ です。一方、分散1の定常RBFの $f(X)$ の分散は、
+零平均の事前分布の下で1のままです。平均応答と一回の実現値を区別する必要がある理由がここにあります。
+
+分布間カーネルの半正定値性は、特徴写像 $\phi$ の期待値を使って
+$\bar k(P,Q)=\langle\mathbb E_P[\phi(X)],\mathbb E_Q[\phi(X)]\rangle$ と表せることからも分かります。
+存在に必要な積分可能性を仮定すれば、係数 $a_i$ に対する二次形式は
+$\|\sum_i a_i\mathbb E_{P_i}[\phi(X)]\|^2\ge0$ です。
 
 ## 3. Diagonal uncertainty と full covariance
 
-Uncertain Input 単一タスク GP は2種類の training-input uncertainty 表現を受け取ります。
+正規入力分布は、対角共分散か一般の共分散で記述できます。
 
 ### 3.1 標準偏差
 
+各座標の標準偏差ベクトルを与える場合、
 
 ```text
-観測入力_std.shape == 観測入力.shape
+Sigma_x = diag(s_x^2)
 ```
 
-の場合、
-
-
-```text
-Sigma_x = diag(観測入力_std^2)
-```
-
-として各入力次元が独立な Gaussian uncertainty を表します。
+として各入力次元が独立な正規分布を表します。$s_x$ の各成分は対応する座標の標準偏差です。
 
 ### 3.2 Full covariance
 
-
-```text
-観測入力_covar.shape == 観測入力.shape[:-1] + (d, d)
-```
-
-を渡すと、入力次元間の相関を保持できます。
+共分散行列 $\Sigma_x\in\mathbb R^{d\times d}$ を与えると、同じ入力点の座標間の相関を保持できます。
 
 例えば2つのプロセス条件が同じ校正誤差を共有している場合、diagonal variance だけでは
 表現できない uncertainty structure を full covariance で扱えます。
 
-実装では covariance matrix に対して
+共分散行列には次の性質が必要です。
 
 - finite
 - symmetric
@@ -132,63 +136,55 @@ Sigma_x = diag(観測入力_std^2)
 
 を検証します。
 
-`観測入力_std` と `観測入力_covar` は同時には指定せず、必ずどちらか一方を指定します。
+標準偏差と共分散行列は同じ不確かさの別表現です。二つの独立したノイズ源として重ねて加算しません。
+また、入力点内の座標間共分散と、複数の入力点が共通の校正誤差を持つ点間依存性は別です。
+後者では一般に差の共分散が $\Sigma_i+\Sigma_j-\operatorname{Cov}(X_i,X_j)-\operatorname{Cov}(X_j,X_i)$ となり、独立入力の式をそのまま使えません。
 
 ## 4. Training representation
 
-実装内部では各 training point を
-
+各入力分布は、平均と共分散を並べて
 
 ```text
 [mu_x, vec(Sigma_x)]
 ```
 
-という augmented representation に変換し、専用 kernel が mean と covariance を分離して
-読み取ります。
+という形で表せます。ただし、並べたベクトルへ通常のユークリッド距離を適用するのではなく、
+平均・共分散として意味を分けてカーネルを評価します。
 
 ## 5. Training uncertaintyを学習しているわけではない
 
-つまりモデルが `観測入力` と `観測応答` だけから各点の入力誤差分散を自動推定するわけではありません。
-
+入力分布を既知として与えることと、入力・応答から入力誤差分散自体を推定することは異なる問題です。
 
 ~~~text
-caller
-  → observed 観測入力
-  → 観測入力_std または 観測入力_covar
-  → uncertain-input kernel
-
-model
-  → 与えられた入力分布を使ってcovarianceを計算
+外部の測定・校正
+  → 入力の平均と標準偏差、または平均と共分散
+  → 入力分布を定義
+  → 分布間の共分散を計算
 ~~~
 
 入力uncertainty自体が未知なら、そのuncertaintyをどう推定するかは別のstatistical modelが必要です。
 
 ## 6. Prediction candidate は deterministic
 
-したがって、このモデルが直接表すのは
+予測先の入力を確定値とする構成では、
 
 **uncertain training inputs + deterministic posterior query**
 
 です。
 
-「提案した candidate 自体も実行時に揺らぐ」という問題を同じ posterior call が自動的に
-解決するわけではありません。candidate perturbation は別の scenario / objective /
-acquisition layer で扱います。
+という問題を扱います。一方、提案した入力自体が実行時に揺らぐ場合は、
+その摂動分布について期待応答やリスクを別に定義します。
+例えば $X\sim\mathcal N(0,0.25)$ と $f(x)=x^2$ なら、$f(\mathbb E[X])=0$ ですが、
+$\mathbb E[f(X)]=0.25$ です。平均入力での予測だけでは実行時の平均応答にも一致しません。
 
 ## 7. Mixed uncertain input
 
 mixed search space では continuous coordinate の uncertainty と categorical identity を
 分離する必要があります。
 
-混合入力 Uncertain Input 単一タスク GP は
-
-- continuous dimensions: Gaussian uncertainty を周辺化
-- categorical dimensions: deterministic category として categorical kernel で処理
-
-します。
+一つの構成では、連続部分だけに正規入力分布を置き、カテゴリは確定値としてカテゴリ共分散で扱います。
 
 covariance は概念的に
-
 
 ```text
 K_mixed
@@ -207,7 +203,6 @@ K_mixed
 
 例えば真の category `c` が
 
-
 ```text
 P(c = c_1) = p_1
 P(c = c_2) = p_2
@@ -220,7 +215,6 @@ P(c = c_K) = p_K
 
 概念的には
 
-
 ```text
 E[k(c, c')]
   = sum_a sum_b
@@ -231,12 +225,9 @@ E[k(c, c')]
 
 ### Uncertain categoricalはdeterministic categoryのMixed GPとも違う
 
-混合入力 Uncertain Input 単一タスク GP のcategoryは確定値です。一方、
-Uncertain Categorical 単一タスク GP は1つのcategorical featureについて
-category probability vectorを明示的に受け取ります。
+確定カテゴリを持つ混合入力とは異なり、カテゴリ自体が未知なら、各入力についてカテゴリ確率ベクトルを定義します。
 
 例えば
-
 
 ~~~text
 P(material=A) = 0.7
@@ -245,14 +236,18 @@ P(material=C) = 0.1
 ~~~
 したがって、
 
-
 ~~~text
 categorical code + Gaussian jitter
 ~~~
+
+という操作とは異なります。カテゴリ共分散行列を $B$、二つの確率ベクトルを $p,q$ とすれば、
+独立なカテゴリ標本についての期待共分散は $p^\top Bq$ です。
+同じ分布での $p^\top Bp$ も平均応答の分散であり、同じランダムカテゴリを両側に使う場合の
+$\sum_c p_c B_{cc}$ とは一般に異なります。
+
 ## 9. Input noise と output noise の違い
 
 output noise は
-
 
 ```text
 y = f(x) + epsilon_y
@@ -261,7 +256,6 @@ y = f(x) + epsilon_y
 であり、同じ `x` に対する observation のばらつきです。
 
 input uncertainty は
-
 
 ```text
 x_true = x_obs + epsilon_x
@@ -285,16 +279,14 @@ output noise については
 | Environmental variable | 制御不能な w | scenario / risk |
 | Output noise | 観測 y | likelihood / noise model |
 
-candidate perturbationを
-
+実行時の入力摂動を
 
 ~~~text
 x_realized = x_candidate + delta
 ~~~
-したがってscenario数 `n_w` をsurrogateのpublic input dimensionへ追加するわけではありません。
+と定義しても、摂動標本の個数が設計変数の次元になるわけではありません。
 
 実際に最適化したいquantityが
-
 
 ```text
 E_delta[f(x + delta)]
@@ -304,16 +296,8 @@ E_delta[f(x + delta)]
 
 これは training-input uncertainty の kernel marginalization だけでは決まりません。
 
-現時点のpublic uncertain-input familyは主に
-
-- Uncertain Input 単一タスク GP
-- 混合入力 Uncertain Input 単一タスク GP
-- Uncertain Categorical 単一タスク GP
-
-です。
-
-MultiTask / MultiFidelity / dimensionality-reductionとのcross-productを一般にサポートすると
-本文から推測してはいけません。複数構造を組み合わせる場合はregistryと実装contractを確認します。
+入力不確実性にタスク・忠実度・次元削減を組み合わせる場合も、それぞれの確率モデルと座標の意味を別途定義します。
+具体的な対応範囲は[実装ガイド](../guide/16_uncertain_input_gp.md)を参照してください。
 
 ## 11. Bayesian optimization との関係
 
@@ -325,7 +309,6 @@ posterior uncertainty を誤って推定する可能性があります。
 
 したがって、
 
-
 ```text
 uncertain-input surrogate
 != robust candidate objective
@@ -335,13 +318,12 @@ uncertain-input surrogate
 
 ## 13. この章で覚えておくこと
 
-- output noiseとinput uncertaintyは異なる
-- training-input uncertaintyとcandidate-time perturbationも異なる
-- 現行continuous modelはcaller-supplied Gaussian input uncertaintyをexpected RBF kernelへ入れる
-- analytic expected-kernel式はGaussian uncertainty × RBFという仮定に依存する
-- Mixed版ではGaussian uncertaintyはcontinuous dimensionsだけに適用する
-- uncertain categorical inputはcategory probability distributionとして別modelで扱う
-- candidate robustnessはscenario / risk-objective layerで定義する
+入力位置の不確かさと観測応答のノイズ、学習入力の不確かさと実行時の摂動は、それぞれ別の問題です。
+入力分布を既知として与えることと、その分布自体を推定することも区別します。
+正規入力とRBFの解析式は、その仮定に依存した分布間共分散です。
+
+分布平均の応答と、一回のランダム入力点での応答は同じ確率変数ではありません。
+混合入力では連続部分とカテゴリの確率を分け、実行時の頑健性は期待値やリスクの目的として定義します。
 
 ## 参考文献
 

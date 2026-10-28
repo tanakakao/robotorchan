@@ -1,5 +1,8 @@
 # Robust Gaussian Process
 
+[GP章](02_gaussian_process.md)の観測尤度と、[変分GP章](09_variational_gp.md)のELBOを前提とします。
+本章では潜在値 $f_i=f(x_i)$ と残差 $r_i=y_i-f_i$ を用い、外れ値への影響を尤度の形から考えます。
+
 ## 直感
 
 標準的な Gaussian process (GP) 回帰は、観測誤差を Gaussian と置くことで
@@ -15,7 +18,6 @@
 ### 最初に「robust」の対象を分ける
 
 「robust GP」という名前だけでは、何に頑健なのかは決まりません。
-
 
 ~~~text
 Yの一部に極端な誤差
@@ -41,7 +43,6 @@ f(x)のsmoothnessやlengthscaleが場所で変化
 
 標準的な観測モデルを
 
-
 ```text
 f ~ GP(m, k)
 y_i = f(x_i) + epsilon_i
@@ -49,7 +50,6 @@ epsilon_i ~ Normal(0, sigma^2)
 ```
 
 とします。Gaussian log likelihood の負の対数は、定数項を除けば
-
 
 ```text
 (y_i - f_i)^2 / (2 sigma^2)
@@ -65,7 +65,6 @@ robust GP の各方式は、この影響を異なる仮定で緩和します。
 
 Student-t observation model は
 
-
 ```text
 y_i | f_i ~ StudentT(nu, f_i, sigma)
 ```
@@ -74,24 +73,30 @@ y_i | f_i ~ StudentT(nu, f_i, sigma)
 与えます。これは「どの点がoutlierか」を明示的に選ぶモデルではなく、
 **観測誤差全体へheavy-tailed likelihoodを置く**考え方です。
 
-実装上は
-
+非共役なStudent-t尤度を誘導点変分近似で扱う場合、観測数を $n$ として負のELBOを次のように平均化できます。
 
 ```text
 loss = (- E_q(f)[log p(y | f)] + KL[q(u) || p(u)]) / n
 ```
-- Student-t 単一タスク GP
-- 混合入力 Student-t 単一タスク GP
-- Student-t マルチタスク GP
-- 混合入力 Student-t マルチタスク GP
+ここで $q(u)$ は誘導変数の変分分布、$q(f)$ はそこから構成する潜在値の分布です。
+Student-tの尺度を $s>0$（上の `sigma` に対応）、自由度を $\nu>0$ とすると、定数を除く負対数尤度と残差方向の勾配は
 
-MultiTask 版では data covariance と task covariance を積で構成する ICM 型の構造を使い、
-Mixed MultiTask 版では task feature と categorical feature を分離します。
+$$
+\ell(r)=\frac{\nu+1}{2}\log\left(1+\frac{r^2}{\nu s^2}\right),\qquad
+\frac{d\ell}{dr}=\frac{(\nu+1)r}{\nu s^2+r^2}.
+$$
+
+Gaussianの勾配 $r/s^2$ が残差とともに増え続けるのに対し、上の勾配は大きな残差で零へ近づきます。
+例えば $s=1,\nu=3,r=10$ では勾配は $40/103\simeq0.388$ で、Gaussianの10より小さくなります。
+これは潜在値を固定した尤度の局所的な感度であり、学習済みGP全体の影響が必ず小さいという保証ではありません。
+
+また、$s$ は標準偏差ではありません。$\nu>2$ の観測誤差分散は $\nu s^2/(\nu-2)$ です。
+$\nu\le2$ では有限な分散がなく、$\nu\le1$ では平均も存在しないため、位置パラメータを期待値と解釈できません。
+入力・タスクの構造を追加しても、この尤度の意味は変わりません。
 
 ## 3. Contamination mixture
 
 少数点だけが異なる生成機構から来ると考える場合、contamination model が自然です。
-
 
 ```text
 p(y_i | f_i)
@@ -105,21 +110,28 @@ sigma_out > sigma_in > 0
 `pi` は contamination probability です。Student-t が全観測へ同じ heavy-tailed family を
 適用するのに対し、こちらは nominal component と gross-error component を明示的に分けます。
 
-
 ```text
 loss
   = (- E_q(f)[log p_mix(y | f)] + beta * KL[q(u) || p(u)]) / n
 ```
-- Contaminated 単一タスク GP
-- 混合入力 Contaminated 単一タスク GP
-- Contaminated マルチタスク GP
-- 混合入力 Contaminated マルチタスク GP
+上の目的関数で $\beta=1$ なら通常のELBOに対応します。
+KLの重みを変更した目的を、無条件に同じ周辺尤度のELBOと呼ぶことはできません。
+
+潜在成分 $z_i$ を通常なら0、異常なら1とすると、残差 $r_i$ を与えた下での異常成分の確率は
+
+$$
+P(z_i=1\mid y_i,f_i)
+=\frac{\pi\,\mathcal N(r_i;0,\sigma_{out}^2)}
+{(1-\pi)\mathcal N(r_i;0,\sigma_{in}^2)+\pi\mathcal N(r_i;0,\sigma_{out}^2)}.
+$$
+
+これはBayesの定理で混合成分を推論したもので、単に残差へ固定の閾値を当てる規則ではありません。
+潜在値 $f_i$ も未知なので、最終的な異常確率にはその事後不確実性も反映する必要があります。
 
 ## 4. Sparse correction と relevance pursuit
 
 別の考え方は、すべての観測分布を heavy-tailed に変更せず、少数の観測だけに sparse な
 補正を割り当てることです。概念的には
-
 
 ```text
 y = f(X) + a + epsilon
@@ -131,10 +143,17 @@ y = f(X) + a + epsilon
 明示します。Student-tのglobal heavy-tail assumptionや、固定mixture parameterを使う
 contamination modelとは異なる仮定です。
 
-- Robust Relevance Pursuit 単一タスク GP
-- 混合入力 Robust Relevance Pursuit 単一タスク GP
-- Robust Relevance Pursuit マルチタスク GP
-- 混合入力 Robust Relevance Pursuit マルチタスク GP
+ここで補正 $a$ を推定する平均のずれとするか、確率的な追加誤差とするかを区別します。
+例えば独立な $a_i\sim\mathcal N(0,v_i)$、$v_i\ge0$ として、非零の $v_i$ が少数なら、
+
+$$
+K_y=K_f+\sigma^2I+\operatorname{diag}(v)
+$$
+
+となります。これは少数の観測の分散を膨らませる構成です。
+決定論的な $a_i$ による平均補正と同じ推論ではありません。
+Relevance Pursuitでは、このような追加の観測分散の支持集合を選ぶ考え方を用います。
+補正の自由度を無制限にすると真の局所変化まで誤差として説明し得るため、疎性の仮定が重要です。
 
 ### Relevance Pursuitは「外れ値を削除する前処理」ではない
 
@@ -143,13 +162,11 @@ Relevance Pursuit系では、候補となる異常観測をdataframeから消し
 
 したがって、
 
-
 ~~~text
 outlier detection → 行を削除 → ordinary GP
 ~~~
 
 と
-
 
 ~~~text
 robust GP → 異常観測を含めたままobservation modelを拡張
@@ -159,16 +176,16 @@ robust GP → 異常観測を含めたままobservation modelを拡張
 
 ## 5. Mixed variables
 
-Mixed 版で robust observation mechanism 自体は変わりません。変わるのは input covariance
-です。continuous feature と categorical feature を分離し、カテゴリコードを Euclidean
-distance の連続値として解釈しません。
+混合入力でも、観測誤差の頑健性と入力共分散は別々に定義します。
+連続変数とカテゴリの意味を分け、カテゴリコードの数値差を連続距離とみなしません。
 
 特に MultiTask では、
-
 
 ```text
 K((x, t), (x', t')) = K_data(x, x') * K_task(t, t')
 ```
+
+のように分離可能な共分散を組み合わせられます。これはタスク間で入力側の相関構造を共有する仮定です。
 ## 6. Robustness の種類を混同しない
 
 | 問題 | 主な対象 | 代表的な考え方 |
@@ -188,16 +205,16 @@ objective を使うだけで training observation の外れ値に頑健になる
 
 robust likelihoodを使うときは、
 
-
 ~~~text
 latent posterior
 p(f(x) | D)
 
-observed response distribution
+conditional observation likelihood
 p(y | f(x))
 ~~~
 
-を区別します。
+を区別します。次回の観測の予測分布は、尤度を潜在事後分布で積分した
+$p(y_*\mid D)=\int p(y_*\mid f_*)p(f_*\mid D)\,df_*$ です。
 
 この違いは「将来の真の応答を最適化したい」のか、「次の noisy observation自体の分布を
 扱いたい」のかを考えるときに重要です。
@@ -223,12 +240,13 @@ surrogate robustness と decision robustness は直交する設計軸として�
 
 ## 10. この章で覚えておくこと
 
-- robust GPは「怪しい行を自動削除するGP」の総称ではない
-- Student-t、contamination、relevance pursuitは異なるobservation assumptionsを持つ
-- heteroskedasticity、input uncertainty、nonstationarityは別のdata-generating mechanismである
-- surrogate robustnessとCVaR / worst-caseなどのdecision robustnessは別の設計軸である
-- BOへ渡すlatent posteriorと、観測noiseを含むresponse distributionを区別する
-- Mixed / MultiTask化しても、robust mechanismとstructural featureの責務は分離する
+頑健なGPは、外れ値を削除する前処理ではなく、観測誤差の仮定を変える方法です。
+Student-tの重い裾、混合成分、疎な追加分散は異なる機構を表します。
+観測ノイズの入力依存性、入力位置の不確かさ、潜在関数の非定常性とも区別します。
+
+また、外れ値に頑健な予測モデルを使うことと、実行時の最悪値やCVaRを最適化することは別です。
+混合入力やマルチタスクでも、入力の構造と観測誤差の機構を分け、
+潜在応答の事後分布と次回観測の予測分布を使い分けます。
 
 ## 参考文献
 

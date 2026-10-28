@@ -1,9 +1,11 @@
 # Advanced High-dimensional Gaussian Process Models
 
+[高次元GP章](08_high_dimensional_gp.md)の疎性・加法性と、[高次元探索章](20_high_dimensional_search.md)の座標系を前提とします。
+本章では、同じ「高次元対応」でも異なる仮定と推論になる理由を比較します。
+
 ## 直感
 
 高次元問題への対応は projection だけではありません。
-
 
 ```text
 high-dimensional X
@@ -41,7 +43,6 @@ high-dimensional X
 
 ARD kernel は dimension ごとの lengthscale を持ちます。
 
-
 ```text
 k(x, x')
   = sigma^2 exp(
@@ -65,15 +66,14 @@ SAAS は多くの input dimension の effect を強く shrink し、少数の ac
 
 概念的には inverse lengthscale
 
-
 ```text
 rho_j = 1 / ell_j
 ```
 
-の多くを0付近へ縮めます。
+の多くを零付近へ縮める考え方です。ただし原著の半Cauchy事前分布を直接置く対象は逆二乗長さ尺度 $1/\ell_j^2$ であり、
+$1/\ell_j$ への事前とは密度が異なります。定義と変数変換は[8.9節](08_high_dimensional_gp.md#89-saas-prior)を参照してください。
 
 これは PCA のように
-
 
 ```text
 x -> W^T x
@@ -88,26 +88,15 @@ x -> W^T x
 
 ## 3. Fully Bayesian SAAS
 
-- SAAS fully Bayesian 単一タスク GP
-- SAAS fully Bayesian マルチタスク GP
-
-hyperparameter uncertaintyはpoint estimateへ潰さずMCMC samplesとして保持されます。
-
-これは「重要dimensionを1組に確定する」操作ではなく、SAAS priorの下で複数のhyperparameter
-samplesをposterior predictionへ反映する構成です。
-
-そのため通常の exact GP の
-
-
-という fitting contract ではありません。
-
-これは単なる実装上の違いではなく、posterior が hyperparameter posterior を積分する
-fully Bayesian model であることに対応します。
+完全ベイズ推論では、ハイパーパラメータ $\theta$ の事後分布について
+$p(f_*\mid D)=\int p(f_*\mid D,\theta)p(\theta\mid D)\,d\theta$ と予測します。
+MCMCはこの積分を標本平均で近似する方法であり、重要な座標を一組に確定する操作ではありません。
+対照的に、周辺尤度最大化やMAPでは、選んだパラメータの下での条件付き予測を使います。
+MCMC標本数・混合・収束に由来する誤差と、事前分布の構造による偏りは区別します。
 
 ## 4. Fully Bayesian MultiTask SAAS
 
 SAAS fully Bayesian マルチタスク GP は long-format task-feature representation を使います。
-
 
 ```text
 X = [data features, task feature]
@@ -117,61 +106,25 @@ task structure と data-feature sparsity は別の役割です。
 
 ## 5. Mixed Fully Bayesian SAAS
 
-- 混合入力 SAAS fully Bayesian 単一タスク GP
-- 混合入力 SAAS fully Bayesian マルチタスク GP
-
-があります。
-
-
-```text
-raw mixed X
- -> model-owned categorical one-hot
- -> SAAS model
-```
-
-です。
-
-input warping を使う場合も categorical features は warp 対象から除外します。
-
-したがって SAAS relevance の解釈は encoded dimensions を意識する必要があります。
+カテゴリがある場合、連続変数だけへの疎性と、符号化後の座標への疎性は異なる仮定です。
+例えばOne-hot符号化をすると一つの元カテゴリが複数列になるため、
+列ごとの長さ尺度を元変数一つの重要度とそのまま同一視できません。
+連続入力へのワーピングを用いる場合も、カテゴリの識別子に連続的な距離や順序を導入しないよう分けます。
 
 ## 6. MAP-SAAS
 
-fully Bayesian SAAS は MCMC cost が大きいため、MAP approximation を使う選択肢があります。
-
-- Additive Map SAAS 単一タスク GP
-- Ensemble Map SAAS 単一タスク GP
-
-`num_taus` や `taus` により複数のshrinkage scalesを扱います。
-
-ここでクラス名の Additive Map SAAS 単一タスク GP にある「Additive」を、後述する
-Orthogonal Additive Kernelの「入力componentの加法分解」と同一視しません。
-MAP-SAAS familyとOAK familyは別のmodeling assumptionsです。
-
-fully Bayesian SAASと異なりNUTSによるhyperparameter posterior integrationは行いません。
-Additive Map SAAS 単一タスク GP と Ensemble Map SAAS 単一タスク GP のposterior semanticsも
-「fully Bayesian SAASを単に高速化した同一posterior」とは扱いません。
-
-### fitting contractも分ける
+MAP型の方法は、疎性を誘導する事前分布を用いながらハイパーパラメータを点推定します。
+異なる縮小尺度の下でのカーネルを加える構成と、複数のモデルの予測を混合する構成は別です。
+例えば $K=K_1+K_2$ という一つのGPは、$p(f)=\tfrac12p_1(f)+\tfrac12p_2(f)$ という混合分布と一致しません。
+前者は潜在過程の和、後者はモデルの選択に対する分布です。
+また、複数のMAP推定を等重みで統合しても、それだけでハイパーパラメータの事後積分にはなりません。
+この「加算」を、入力ごとの主効果へ分解する加法カーネルと混同しないことが重要です。
 
 ## 7. Mixed MAP-SAAS
 
-- 混合入力 Additive Map SAAS 単一タスク GP
-- 混合入力 Ensemble Map SAAS 単一タスク GP
-
-があります。
-
-これらも categorical feature を model-owned one-hot transform で内部 encoding します。
-
-したがって
-
-
-```text
-Mixed SAAS / MAP-SAAS
-!= native categorical-kernel mixed GP
-```
-
-です。
+One-hot符号化したカテゴリへMAP-SAAS型のカーネルを使う構成と、
+カテゴリ専用の共分散を連続カーネルと組み合わせる構成は異なります。
+同じ混合入力でも、符号化と事前分布が定める情報共有の仮定を確認します。
 
 ## 8. Additive structure
 
@@ -179,7 +132,6 @@ Mixed SAAS / MAP-SAAS
 仮定は別です。
 
 additive GP は概念的に
-
 
 ```text
 f(x)
@@ -192,14 +144,23 @@ f(x)
 
 ## 9. Orthogonal Additive GP
 
-first-order additive componentsに加えて、`second_order=True` ではsecond-order interactionも
-扱います。これは任意次数のinteractionを自由に表現するkernelとは異なり、許すinteraction構造を
-明示的に制限する仮定です。
+一次の主効果に加えて二次相互作用を含む構成では、
+$f(x)=c+\sum_j f_j(x_j)+\sum_{j<k}f_{jk}(x_j,x_k)$ と表します。
+これは任意次数の相互作用を自由に表現する仮定ではありません。
+
+直交化の一つの構成は、基準確率測度 $P$ に関する関数の積分を零に条件付けるものです。
+$a(s)=\int k(s,u)dP(u)$、$c=\iint k(u,v)dP(u)dP(v)>0$ とすれば、条件付き共分散は
+
+$$
+k_\perp(s,t)=k(s,t)-\frac{a(s)a(t)}{c}
+$$
+
+です。GPの線形汎関数 $\int f(u)dP(u)$ を零に条件付ける公式から得られ、
+$\int k_\perp(s,t)dP(t)=0$ となります。直交性は基準測度を指定して初めて意味を持ちます。
 
 orthogonalization により component decomposition の解釈性を改善することが目的の1つです。
 
 この model は SAAS のような active-dimension shrinkage model ではありません。
-
 
 ```text
 SAAS:
@@ -213,38 +174,19 @@ OAK:
 
 ## 10. Mixed Orthogonal Additive GP
 
-混合入力 Orthogonal Additive GP では categorical feature を内部 one-hot encoding します。
+連続区間 $[0,1]$ の一様測度を使う場合、上の積分はGauss–Legendre求積などで近似できます。
+一方、カテゴリの確率測度 $P(c_j)=p_j$ なら、$a(s)=\sum_jp_jk(s,c_j)$、
+$c=\sum_{i,j}p_ip_jk(c_i,c_j)$ と離散和で定義します。
+連続カーネルをカテゴリカーネルへ置き換えるだけでは、直交化の測度まで整合したことにはなりません。
 
-これは単なる実装都合ではありません。
-
-upstream `OrthogonalAdditiveKernel` は continuous interval `[0, 1]` 上の
-Gauss-Legendre quadrature による orthogonalization を前提とします。
-
-標準 categorical kernel へ単純に差し替えると、この orthogonalization measure と整合しません。
-
-そのため現在は
-
-
-```text
-categorical raw feature
- -> one-hot columns
- -> original OAK
-```
-
-という fallback を使います。
-
-結果として component-level interpretation は raw categorical feature 単位ではなく、
-**encoded column 単位**になります。
-
-native categorical OAK を実装するなら discrete orthogonalization measure 自体を設計する必要が
-あります。
-
-また continuous raw inputs は upstream OAK の要件に従い `[0, 1]` にある必要があります。
+One-hot列を連続区間の座標として使う構成では、成分の解釈は符号化後の列に関するものです。
+有効なOne-hotベクトルは単体の頂点上にあるため、列ごとの独立な一様分布とは異なります。
+元カテゴリに対する効果を解釈したい場合は、この基準測度の違いを考慮する必要があります。
+具体的な符号化・入力範囲の制約は[実装ガイド](../guide/21_advanced_high_dimensional_models.md)で扱います。
 
 ## 11. Relevance pursuit は別の sparsity
 
 Robust Relevance Pursuit 単一タスク GP も sparse structure を使いますが、SAASとは対象が違います。
-
 
 ```text
 SAAS
@@ -267,7 +209,6 @@ ALEBO は objective が ambient space 内の low-dimensional linear subspace に
 
 ALEBO の共分散モデル は ALEBO search embedding と整合する Mahalanobis geometry を持つ専用 surrogate です。
 
-
 ```text
 k(z, z')
   = sigma^2 exp(
@@ -275,36 +216,32 @@ k(z, z')
     )
 ```
 
-ここで `M` が embedded coordinate の metric を表します。
+ここで $M\in\mathbb R^{d\times d}$ は対称半正定値の計量です。
+$M=B^\top B$ と書けば、距離は $\|B(z-z')\|^2$ となり、線形写像後のRBFなので妥当なカーネルです。
+任意の対称行列を使えるわけではありません。負の固有値がある方向では、
+離れた二点の共分散が対角の分散を上回り、共分散行列の半正定値性を壊し得ます。
 
 これは training data から PCA reducer を fit する 次元削減 GP とは別の考え方です。
 
 ## 13. ALEBO metric uncertainty
 
-現在の ALEBO の共分散モデル は単なるMahalanobis RBF kernelに留まりません。
+計量パラメータを $\theta$ とし、事後モードの周りで負対数事後密度のHessianを用いると、
+正定値の曲率がある場合はLaplace近似で計量の不確実性を表せます。
+平坦な方向や識別不能性があれば、この近似にも正則化や診断が必要です。
 
-実装には、
+S個の計量標本それぞれについて平均 $\mu_s$、共分散 $\Sigma_s$ の正規予測を得ると、混合分布の共分散は
 
-- metric parameter vector
-- metric log posterior
-- Hessian diagonal
-- Laplace covariance estimation
-- metric parameter sampling
-- metric-sample predictions
-- metric-marginal posterior
-- acquisition model
+$$
+\bar\Sigma=\frac1S\sum_s(\Sigma_s+\mu_s\mu_s^\top)-\bar\mu\bar\mu^\top,
+\qquad \bar\mu=\frac1S\sum_s\mu_s.
+$$
 
-が含まれます。
-
-したがって metric point estimate だけでなく、Laplace approximation を用いて metric uncertainty を
-acquisition model へ反映する経路があります。
-
-metric uncertaintyのmarginalizationでは、metric sampleごとのGaussian predictionをそのまま
-mixtureとして返すのではなく、meanとfull predictive covarianceを使ってGaussianへ
-moment matchingします。したがってmetric mixtureの高次momentまで保持するposteriorではありません。
+この平均・共分散に一致する正規分布へ置き換える方法がモーメント整合です。
+対角分散だけでなく候補間の共分散も保持できますが、多峰性や高次モーメントは保持しません。
+例えば平均 $-1,1$、分散0.25の等重み混合と、平均0・分散1.25の正規分布は、
+平均と分散は同じでも同じ確率分布ではありません。非線形効用の期待値が変わり得ます。
 
 ## 14. ALEBO の共分散モデル と ALEBO 探索
-
 
 ```text
 ALEBO の共分散モデル
@@ -347,14 +284,13 @@ SAAS / additive GP / ALEBO はそれぞれ異なる構造仮定です。
 高次元 model の Mixed 対応には複数方式があります。
 
 - native categorical covariance
-- model-owned one-hot encoding
+- One-hot符号化した列へのカーネル
 - continuous-only reduction + categorical passthrough
 - search strategy 側で discrete dimensions を構造化
 
 どの方式を使うかは underlying model の数学的構造によります。
 
-したがって `MixedXxxGP` という名前だけから、すべてが同じ categorical kernel implementation を
-持つと仮定してはいけません。
+したがって混合入力という分類だけでは、同じカテゴリ間共分散や同じ成分解釈が得られるとは限りません。
 
 ## 17. 問題構造との対応
 
@@ -375,15 +311,13 @@ predictive performance、posterior calibration、計算量、BO trajectoryを同
 
 ## 19. この章で覚えておくこと
 
-- high-dimensional対応は1種類ではなく、sparsity・additivity・subspace・representation・local searchを分ける
-- SAASは主としてoriginal axesに沿ったsparse relevanceを仮定する
-- Fully Bayesian SAASはNUTS、MAP-SAASはExact GP MLL系でtraining contractが異なる
-- Mixed SAAS / MAP-SAASはmodel-owned one-hotを使い、native categorical kernel routeとは異なる
-- OAKはlow-order additive structureを仮定し、SAASのfeature sparsityとは別概念である
-- Mixed OAKのcomponent interpretationはraw categoryではなくencoded columns上になる
-- ALEBOGPはembedded-space Mahalanobis geometryを持つfixed-noise surrogateである
-- ALEBOのmetric-marginal posteriorはmetric uncertaintyをmoment-matched Gaussianへ近似する
-- surrogate-side high-dimensional modelとsearch-side strategyを同じレイヤーとして扱わない
+高次元への対策には、元座標の疎性、低次相互作用、低次元部分空間、表現学習、局所探索という異なる仮定があります。
+SAASの疎性とOAKの加法分解、完全ベイズ推論の積分とMAPの点推定を区別します。
+One-hot符号化では成分の解釈が列単位になり、元のカテゴリの効果や離散測度と同じとは限りません。
+
+埋め込み空間のMahalanobis計量は半正定値性を満たす必要があります。
+計量の不確実性を積分する場合も、混合分布をそのまま扱う方法と、平均・共分散を合わせた正規近似は別です。
+予測モデルの幾何と、可行な候補を探す戦略は、それぞれの座標と仮定を確認して組み合わせます。
 
 ## 参考文献
 
