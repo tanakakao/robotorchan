@@ -2,10 +2,18 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 
-from scripts.audit_notebook_pipeline import audit, calls_in
+
+_SCRIPT = Path(__file__).resolve().parents[1] / "scripts/audit_notebook_pipeline.py"
+_SPEC = importlib.util.spec_from_file_location("audit_notebook_pipeline", _SCRIPT)
+assert _SPEC is not None and _SPEC.loader is not None
+_MODULE = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(_MODULE)
+audit = _MODULE.audit
+calls_in = _MODULE.calls_in
 
 
 def test_calls_in_recognizes_functions_and_methods() -> None:
