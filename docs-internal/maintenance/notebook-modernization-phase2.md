@@ -42,3 +42,16 @@ executing the notebook rather than relying on token detection.
 4. Distinguish default, slow, and excluded notebook CI manifest groups.
 5. Validate the scripts and the inventory; do not equate static detection with
    successful candidate generation.
+
+## Additional code-cell inspection (06–20)
+
+The following notebooks have no syntactic `optimize_acqf*` call and no
+`candidate` token in inspected code cells: 06, 07, 08, 09, 11, 12, 13,
+14, 15, 16, 17, 18, and 20. Notebook 10 and 19 have both signals.
+This is a **static triage result**: custom candidate APIs and runtime
+behavior require separate inspection. Each missing candidate flow is a
+modernization target in its assigned phase, not an invitation to add new
+model-level fit methods.
+
+The previous CI commit passed both CI and Documentation links. Notebook
+execution itself remains unverified by this inspection.
