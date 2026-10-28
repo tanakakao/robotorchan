@@ -1,112 +1,147 @@
-# High-dimensional GP：疎な有効次元と実装
+# High-dimensional GP：SAASの事前分布と推論の実装
 
-## この章で理解すること
+## この章で学ぶこと
 
-入力次元が大きく観測数が小さいとき、どのモデル仮定でGPの学習可能性を改善するかを見極める。**入力次元の問題と学習点数の問題は異なる**。理論・数式は[高次元GP](../theory/08_high_dimensional_gp.md)を正本とし、ここではモデルと推論方式の対応を説明する。
+[高次元GPのTheory](../theory/08_high_dimensional_gp.md)の8.9・8.11〜8.13・
+8.19〜8.23節を、SAASの変数、推論処理、事後分布の表現へ対応付けます。
+疎性を置く事前分布と、MCMCまたはMAPでパラメータを扱う計算方法を分けて読みます。
 
-## 理論から実装へ
+高次元の問題と観測数の多い問題は異なります。
+SAASは元の入力座標の長さ尺度に疎性の仮定を置く方法であり、
+PCAやAEのような新しい探索座標を生成する次元削減ではありません。
+加法モデルも別の構造仮定であり、SAASと同義ではありません。
 
-通常のARDは次元別lengthscaleを持つが、高次元・少標本では推定が不安定になりやすい。SAASは入力の大部分が弱く効くという軸方向のsparsity仮定をpriorに入れる。元の入力座標を維持するため、PCA/AEのように射影座標を生成する次元削減とは異なる。加法モデルは関数を低次元成分の和に制約する別の仮定であり、SAASと同義ではない。
+## 1. クラス構造と担当範囲
 
-## 所有権と実装経路
+| モデル | ローカルの基底と上流への接続 |
+| --- | --- |
+| `SaasFullyBayesianSingleTaskGP` | データ保持・学習能力mixinとBoTorch SAASモデルを継承 |
+| `SaasFullyBayesianMultiTaskGP` | 同じmixinと、タスク列を持つBoTorch SAASモデルを継承 |
+| `AdditiveMapSaasSingleTaskGP` | `ExactGPModelMixin`とBoTorchの加法MAP-SAASを継承 |
+| `EnsembleMapSaasSingleTaskGP` | `ExactGPModelMixin`とBoTorchのensemble MAP-SAASを継承 |
 
-| モデル / 推論 | 主要実装 | 区分・注意点 |
-| --- | --- | --- |
-| `SaasFullyBayesianSingleTaskGP` | `src/robotorchan/models/high_dimensional/fully_bayesian.py` | **Extended** raw観測保持、**Delegated** BoTorch fully Bayesian SAAS・NUTS |
-| `SaasFullyBayesianMultiTaskGP` | 同上 | **Delegated** task-feature構造・Pyro MCMC・posterior |
-| `MixedSaasFullyBayesianSingleTaskGP` | 同上 | モデル所有のone-hot入力変換を使用。通常のnative categorical kernel GPと同一視しない |
-| `AdditiveMapSaasSingleTaskGP` / `EnsembleMapSaasSingleTaskGP` | `src/robotorchan/models/high_dimensional/map_saas.py` | **Extended** データ契約、**Delegated** BoTorch MAP-SAAS family。MCMC posteriorとは異なる |
+Fully Bayesianのラッパーは[fully_bayesian.py][local-fb]、
+MAPのラッパーは[map_saas.py][local-map]にあります。
+raw観測を保存する処理と学習能力の表示を追加しますが、
+SAASの事前分布、NUTS、標準のMAPカーネルを独自に再実装していません。
 
-Fully Bayesian SAAS系は`supports_mll=False`であり、標準exact GPと同様の`model.make_mll()`→`fit_gpytorch_mll`は使わない。学習はBoTorchの`fit_fully_bayesian_model_nuts`で行う。MAP-SAASも推論方法を名称だけで決めつけず、各モデルの学習契約を確認する。
+Fully Bayesianの二クラスは`supports_mll=False`です。
+その`make_mll()`は、[ModelTrainingMixin][base]の非対応処理へ進みます。
+一方、MAPラッパーの`ExactGPModelMixin.make_mll()`は
+`ExactMarginalLogLikelihood`を構成します。
+両者の学習目的を同じ入口で扱う構成ではありません。
 
-## API利用例：MCMCを実行しない基本契約の確認
+## 2. SAASの縮小が置かれる変数
 
-Fully Bayesian SAASでは、モデル生成だけならNUTSを実行せずに入力shape、
-元の観測データの保持、標準MLL非対応を確認できる。ただしモデル生成時点でも
-JAX・jaxlib・NumPyroが必要なため、通常CIにこれらがなければ実行せずskipし、
-fully-bayesian用の依存関係を揃えた環境で検証する。
+BoTorchの[fully_bayesian.py][b-models]にある
+`SaasPyroModel.sample_lengthscale()`は、逆二乗長さ尺度を階層的に生成します。
+名前に`Pyro`が残っていますが、BoTorch 0.18.1のこの処理はNumPyroの標本生成を使います。
+識別子の名称から、実際の推論基盤を判断しません。
 
-```python
-import torch
-from robotorchan.models import SaasFullyBayesianSingleTaskGP
+`kernel_tausq`は全次元に共通する正の変数で、尺度0.1の半Cauchy分布から生成します。
+`_kernel_inv_length_sq`は各次元の局所変数で、尺度1の半Cauchy分布から生成します。
+前者をg、後者をr_jとすると、コードは $1/\ell_j^2=g r_j$ を作り、
+その逆数の平方根を`lengthscale`へ写します。
+Theory 8.9節の、逆長さ尺度と逆二乗長さ尺度を区別する必要がある箇所に対応します。
 
-X = torch.linspace(0.05, 0.95, 24, dtype=torch.double).reshape(8, 3)
-Y = (2.0 * X[:, :1] - X[:, 1:2]).clone()
-model = SaasFullyBayesianSingleTaskGP(train_X=X, train_Y=Y)
-assert model.supports_mll is False
-assert torch.equal(model.raw_train_X, X)
-assert torch.equal(model.raw_train_Y, Y)
-```
+`postprocess_mcmc_samples()`も、この積から長さ尺度を再構成します。
+中間変数を除き、JAX側の配列を訓練入力と同じdtype・deviceのTorch Tensorへ変換します。
+事前分布からの計算と、GPyTorchのカーネルへパラメータを載せる処理の接点です。
 
-この段階のモデルに学習済みMCMCサンプルは存在しないため、
-posteriorが使えると見なさない。次の例で推論を実行するにはPyro依存、
-MCMC設定、収束診断を別途確認する。
+## 3. NUTSからモデルへ標本を読み込む
 
-## API利用例：モデル生成と学習境界
+[BoTorchのfit.py][b-fit]にある`fit_fully_bayesian_model_nuts()`は、
+JAXとNumPyroの`NUTS`・`MCMC`を使います。
+`model.pyro_model.sample`を確率モデルとしてNUTSを構成し、
+warmupと標本生成を実行した後、後処理とthinningを行います。
 
-```python
-import torch
-from botorch.fit import fit_fully_bayesian_model_nuts
-from robotorchan.models import SaasFullyBayesianSingleTaskGP
+その後に`model.load_mcmc_samples()`を呼び、評価モードへ移ります。
+単一タスクの基底クラスでは、`pyro_model.load_mcmc_samples()`から
+平均、共分散、likelihood、必要な入力変換を受け取ります。
+構築時点から、学習済みのこれらの部品がそろっているわけではありません。
+`_check_if_fitted()`は、共分散部品がまだない状態での予測を拒否します。
 
-X = torch.rand(12, 5, dtype=torch.double)
-Y = (X[:, :1] - 0.3).square()
-model = SaasFullyBayesianSingleTaskGP(train_X=X, train_Y=Y)
-# 実行にはMCMCの計算時間・依存関係・seed管理が必要。
-fit_fully_bayesian_model_nuts(model, warmup_steps=32, num_samples=16, thinning=1)
-posterior = model.posterior(X[:2])
-print(posterior.mean.shape)
-```
+このように、確率モデルの定義、MCMC、後処理、Torchモデルへの読み込みは別の段階です。
+raw観測の保持はrobotorchanの役割であり、NUTSの遷移や標本の生成は上流へのDelegatedです。
+依存するJAX・NumPyroが必要な経路を、モデルのクラス名や通常のExact MLLだけで代替できません。
 
-短いMCMC設定は**API説明用**であり、推定の収束・精度を保証しない。このセッションでの実行結果ではない。
+## 4. パラメータ標本ごとの条件付けと混合分布
 
-## 制限、検証、参照
+単一タスクの基底クラスの`posterior()`は、入力にMCMC用の次元を追加して
+上流の条件付けへ進み、`GaussianMixturePosterior`へ包みます。
+各成分は、一つのハイパーパラメータ標本に条件付けたGaussian分布です。
+Theory 8.13節のパラメータ不確実性の積分を、有限個の成分で表現します。
 
-事後サンプル数、収束指標、seed、dtype、device、Pyro依存、観測数に留意する。次元選択の精度や大域探索性能は、モデル生成だけでは検証できない。高次元での候補探索（TuRBO、ALEBO、BAxUS等）は[高次元探索](../optimization/high_dimensional_search.md)と[理論第20章](../theory/20_high_dimensional_search.md)で扱い、モデル側の仮定と分離する。
+[posteriors/fully_bayesian.py][b-posteriors]の`mixture_mean`は成分平均を集約し、
+`mixture_variance`は成分内分散の平均と、成分平均のばらつきを合わせます。
+単に各成分の分散だけを平均しているわけではありません。
+標本を表す次元を、実験候補数qや独立した出力数と混同しないことが重要です。
 
-旧[モデルMapping](../../.github/project-records/theory-guide/mapping/models.md)・[Verification](../../.github/project-records/theory-guide/mapping/verification.md)は記録の正本として維持する。使用例は[SAAS Notebook](../../examples/notebooks/08_saas_gp.ipynb)、比較は[モデルガイド](../models/high_dimensional.md)。関連：[高度な高次元モデル](21_advanced_high_dimensional_models.md)、[Variational GP](09_variational_gp.md)。
+多タスクSAASでは、ロング形式のタスク列と潜在的なタスク表現を扱う
+`MultitaskSaasPyroModel`などへ接続します。
+その確率モデルと標本の読み込みもBoTorchへ委譲されます。
+タスクの配置は[多タスクGuide](07_multitask_multioutput.md)、
+SAASと他の高次元モデルの関係は[高度な高次元Guide](21_advanced_high_dimensional_models.md)へ進めます。
 
-## 理論章から分離した実装上の条件
+## 5. MAP・加法・ensembleの異なる構成
 
-#### 8.13 SAAS posteriorはmixtureになる：実装上の補足
+BoTorchの`map_saas.py`にある`add_saas_prior()`は、
+カーネルへ長さ尺度の制約と事前分布を登録します。
+`SaasPriorHelper`のclosureは、カーネルの現在値から
+`tau / lengthscale**2`を取り出して事前分布の評価へ渡します。
+固定tauを使う場合と、`raw_tau`をパラメータとして持つ場合も分かれます。
+Fully Bayesian側の中間変数と、同じ名前の変数だと仮定して読み替えません。
 
-BoTorchではMCMC sampleに対応するbatch dimensionを持つため、通常GPとposterior shapeが異なる点に注意します。
+`AdditiveMapSaasSingleTaskGP`は、
+`get_additive_map_saas_covar_module()`が作る部品を受け取ります。
+この関数はtauを生成し、SAAS priorを付けたMatérn 5/2をスケール部品で包み、
+複数の成分を`AdditiveKernel`で加算します。
+これは一つのGPの共分散を足す構造であり、複数のGP予測を混合する処理ではありません。
 
-#### 8.48 BOとの関係：実装上の補足
+`EnsembleMapSaasSingleTaskGP`は、tauごとに訓練データをbatchとして複製し、
+各成分のカーネルを構成します。`posterior()`は`GaussianMixturePosterior`を返しますが、
+その成分はNUTSで得た事後標本と同じものではありません。
+分布を包むクラスが同じでも、成分の生成方法は異なります。
+この上流クラスは単一出力・二次元の訓練入力を要求するため、全てのbatch構造へ一般化しません。
 
-BoTorchのMonte Carlo acquisition functionと組み合わせられます。
+MAPラッパーはExact MLLの構成を提供し、最適化は上流のfittingへ接続します。
+標準Exact GPの`fit()`便宜機能を、全ての高次元モデルが継承するわけではありません。
 
-## 数値 API と利用上の補足
+## 6. カテゴリ・加法構造・探索との境界
 
-具体的なモデルAPIや学習手順は[モデルドキュメント](../models/README.md)を参照してください。
+Mixed SAAS系は、モデルが所有する`CategoricalOneHotInputTransform`を使います。
+Fully Bayesian版は符号化後の入力を親へ渡し、予測入口でも同じ変換を適用します。
+Mixed MAP版ではその変換を上流の`input_transform`へ渡します。
+いずれもnative categorical kernelと同じ内部構成ではありません。
+変換と列番号の詳細は[Mixed Variables Guide](05_mixed_variables.md)にまとめています。
 
-## 数理上の概念と具体的な識別子の対応
+Theory 8.27〜8.30節の加法構造、特に`OrthogonalAdditiveGP`の考え方も、
+軸方向のSAAS priorとは異なります。
+加法共分散、疎な長さ尺度、入力の次元削減を、一つの近似手法としてまとめません。
 
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
+また、TuRBO・ALEBO・BAxUSなどの高次元探索は、候補を探す座標や領域の側の処理です。
+モデルの仮定だけで候補最適化まで決まるわけではありません。
+[高次元探索Guide](20_high_dimensional_search.md)と
+[獲得関数最適化Guide](optimization/09_high_dimensional.md)を参照してください。
 
-```text
-高次元
-  ↓
-どんな構造を仮定する？
+## 7. 実装の担当範囲と参照先
 
-少数重要変数
-  → SAAS
+SAAS prior、MCMC、MAP用カーネル、事後分布の構成は上流へのDelegatedです。
+robotorchanはデータ保持と学習能力の区別をExtendedとして加え、
+Mixed版の符号化と入力の検査をImplementedとして接続します。
+推論方式と、モデルが置く疎性・加法性の仮定を分けて読むことが要点です。
 
-少数重要変数 + 軽量化
-  → MAP-SAAS
+使用は[SAAS Notebook][notebook]と[MAP-SAAS・加法Notebook][map-notebook]、
+wrapperの接続は[単一タスクSAASのテスト][fb-test]と[Mixed MAPのテスト][map-test]を参照できます。
+文献の詳細はTheoryの参考文献へ集約しています。上流コードはBoTorch 0.18.1を対象とします。
 
-関連task + 少数重要変数
-  → Multi-task SAAS
-
-加法構造
-  → OrthogonalAdditiveGP
-```
-
-
-1. Eriksson, D., and Jankowiak, M. (2021).
-   High-dimensional Bayesian optimization with sparse axis-aligned subspaces.
-   *Proceedings of the 37th Conference on Uncertainty in Artificial Intelligence*.
-2. BoTorch SAAS, MAP-SAAS, and `OrthogonalAdditiveGP` documentation.
-3. [Gaussian Process](../theory/02_gaussian_process.md)
-4. [Kernel](../theory/03_kernel.md)
-5. [Acquisition Function](../theory/04_acquisition_function.md)
+[local-fb]: ../../src/robotorchan/models/high_dimensional/fully_bayesian.py
+[local-map]: ../../src/robotorchan/models/high_dimensional/map_saas.py
+[base]: ../../src/robotorchan/models/base.py
+[b-models]: https://github.com/pytorch/botorch/tree/v0.18.1/botorch/models
+[b-fit]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/fit.py
+[b-posteriors]: https://github.com/pytorch/botorch/tree/v0.18.1/botorch/posteriors
+[notebook]: ../../examples/notebooks/08_saas_gp.ipynb
+[map-notebook]: ../../examples/notebooks/09_map_saas_and_additive_gp.ipynb
+[fb-test]: ../../tests/models/high_dimensional/test_fully_bayesian_single_task_gp.py
+[map-test]: ../../tests/models/high_dimensional/test_mixed_map_saas.py
