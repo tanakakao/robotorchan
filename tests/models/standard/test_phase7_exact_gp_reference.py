@@ -52,3 +52,13 @@ def test_exact_gp_posterior_matches_independent_cholesky_conditioning() -> None:
         atol=2e-5,
         rtol=2e-5,
     )
+
+    # Observation noise is added after latent conditioning, before any outcome untransform.
+    noisy_posterior = model.posterior(test_x, observation_noise=torch.full_like(test_x, noise))
+    torch.testing.assert_close(noisy_posterior.mean, posterior.mean)
+    torch.testing.assert_close(
+        noisy_posterior.distribution.covariance_matrix,
+        reference_covariance + noise * torch.eye(len(test_x), dtype=torch.double),
+        atol=2e-5,
+        rtol=2e-5,
+    )

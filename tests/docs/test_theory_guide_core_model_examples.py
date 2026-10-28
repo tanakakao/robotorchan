@@ -24,22 +24,6 @@ class CoreModelGuideExamplesTests(unittest.TestCase):
             exec(compile(match.group(1), str(path), "exec"), scope)
         return scope
 
-    def test_exact_gp_posterior(self) -> None:
-        scope = self._run_first_python_block("02_gaussian_process.md")
-        posterior = scope["p"]
-        self.assertEqual(tuple(posterior.mean.shape[-2:]), (2, 1))
-        self.assertTrue(torch.isfinite(posterior.mean).all())
-        self.assertTrue(torch.isfinite(posterior.variance).all())
-
-    def test_exact_gp_conditioning_example(self) -> None:
-        path = GUIDE / "02_gaussian_process.md"
-        blocks = re.findall(r"```python\n(.*?)\n```", path.read_text(encoding="utf-8"), re.DOTALL)
-        self.assertEqual(len(blocks), 2)
-        scope: dict[str, object] = {"__name__": "__guide_conditioning_example__"}
-        exec(compile(blocks[1], str(path), "exec"), scope)
-        self.assertEqual(tuple(scope["reference_covariance"].shape), (3, 3))
-        self.assertTrue(torch.isfinite(scope["reference_mean"]).all())
-
     def test_mixed_gp_posterior(self) -> None:
         scope = self._run_first_python_block("05_mixed_variables.md")
         model = scope["model"]
