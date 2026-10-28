@@ -4,6 +4,7 @@
 
 Gaussian Process（GP）では、入力 $`x`$ と $`x'`$ の関係を kernel（共分散関数）
 
+
 $$
 k(x,x')
 $$
@@ -15,11 +16,13 @@ GPにおける kernel は、2つの入力に対応する**関数値の共分散*
 
 Kernel は、2つの入力点における関数値
 
+
 $$
 f(x), f(x')
 $$
 
 がどの程度一緒に変化しやすいか、つまり共分散を定義します。
+
 
 $$
 \operatorname{Cov}(f(x),f(x'))=k(x,x')
@@ -27,11 +30,12 @@ $$
 
 GPでは、**どのような関数を事前にもっともらしいと考えるか**の多くが kernel によって決まります。
 
-したがって、モデル名が同じ `SingleTaskGP` でも kernel の選択・hyperparameter によって予測の性質は大きく変わります。
+したがって、モデル名が同じ 単一タスク GP でも kernel の選択・hyperparameter によって予測の性質は大きく変わります。
 
 ## 3.2 Kernel matrix
 
 学習点
+
 
 $$
 X=\{x_1,\ldots,x_n\}
@@ -39,11 +43,13 @@ $$
 
 に対して kernel matrix $`K`$ を
 
+
 $$
 K_{ij}=k(x_i,x_j)
 $$
 
 と定義します。
+
 
 $$
 K=
@@ -59,6 +65,7 @@ GPではこの行列が学習点間の共分散構造を表します。
 有効な covariance kernel は、任意の有限入力集合に対してこの行列が
 **positive semidefinite（PSD; 半正定値）**になる必要があります。つまり任意の
 実ベクトル $`a`$ に対して
+
 
 $$
 a^T K a \ge 0
@@ -78,11 +85,13 @@ Kernelを読むときは、「何に依存して共分散が決まるか」を�
 
 **stationary kernel** は、絶対的な位置ではなく入力間の差 $`x-x'`$ に依存します。
 
+
 $$
 k(x,x') = \kappa(x-x')
 $$
 
 さらに **isotropic kernel** は、その差の方向ではなく距離だけに依存します。
+
 
 $$
 k(x,x') = \kappa(\|x-x'\|)
@@ -99,6 +108,7 @@ ARDでは次元ごとに異なるlengthscaleを使うため、単純な isotropi
 
 多くの代表的 kernel は入力間距離
 
+
 $$
 r=\|x-x'\|
 $$
@@ -106,6 +116,7 @@ $$
 が小さいほど大きな値を取ります。
 
 直感的には
+
 
 ```text
 入力が近い
@@ -126,6 +137,7 @@ Kernel値が大きい
 $`k(x,x')`$ は covariance であり、一般には相関係数そのものではありません。
 対応する相関係数は、分散が正なら
 
+
 $$
 \rho(x,x')
 =
@@ -139,6 +151,7 @@ $$
 ## 3.5 RBF kernel
 
 代表的な kernel の1つが RBF（Radial Basis Function）kernel、あるいは Squared Exponential kernel です。
+
 
 $$
 k_{\mathrm{RBF}}(x,x')
@@ -170,6 +183,7 @@ Matérn kernel は RBF より滑らかさの仮定が弱く、実務上柔軟で
 
 一般形は
 
+
 $$
 k_{\nu}(r)
 =
@@ -187,6 +201,7 @@ $$
 
 ### Matérn 3/2
 
+
 $$
 k(r)=
 \sigma_f^2
@@ -195,6 +210,7 @@ k(r)=
 $$
 
 ### Matérn 5/2
+
 
 $$
 k(r)=
@@ -214,6 +230,7 @@ Lengthscale $`\ell`$ は、関数が入力空間でどの程度の距離スケ�
 
 ### 小さい lengthscale
 
+
 $$
 \ell \downarrow
 $$
@@ -223,6 +240,7 @@ $$
 つまり、関数が細かく変化することを許します。
 
 ### 大きい lengthscale
+
 
 $$
 \ell \uparrow
@@ -240,6 +258,7 @@ Outputscale $`\sigma_f^2`$ は関数値がどの程度の振幅で変化する�
 
 Kernel を
 
+
 $$
 k(x,x')=\sigma_f^2\tilde{k}(x,x')
 $$
@@ -251,6 +270,7 @@ $$
 ## 3.9 ARD
 
 複数次元入力では、次元ごとに異なる lengthscale を持たせることがあります。
+
 
 $$
 r^2(x,x')
@@ -264,6 +284,7 @@ $$
 各変数が異なるスケールで目的関数へ影響する場合に有効です。
 
 例えば
+
 
 ```text
 温度      : lengthscale = 0.15
@@ -281,6 +302,7 @@ Kernel は入力間距離を使うことが多いため、入力スケールが�
 
 例えば
 
+
 ```text
 温度: 300 ～ 1500
 圧力: 0.1 ～ 1.0
@@ -290,17 +312,17 @@ Kernel は入力間距離を使うことが多いため、入力スケールが�
 
 BOでは一般に、各連続変数を
 
+
 $$
 [0,1]
 $$
 
 付近へ正規化して扱うことが推奨されます。
 
-BoTorch では input transform として `Normalize` が利用できます。
-
 ## 3.11 出力の標準化
 
 出力についても
+
 
 $$
 y' = \frac{y-\mu_y}{\sigma_y}
@@ -308,19 +330,19 @@ $$
 
 のように標準化すると、GP hyperparameter の初期値や prior と整合しやすくなります。
 
-BoTorch では outcome transform として `Standardize` が利用できます。
-
 ## 3.12 Kernel の和
 
 Kernel 同士を加算して新しい kernel を作ることができます。
 $`k_1`$ と $`k_2`$ が有効な PSD kernel なら、その和も PSD なので
 GPの covariance kernel として利用できます。
 
+
 $$
 k(x,x')=k_1(x,x')+k_2(x,x')
 $$
 
 これは関数を
+
 
 $$
 f(x)=f_1(x)+f_2(x)
@@ -329,6 +351,7 @@ $$
 という複数成分の和としてモデル化することに対応します。
 
 例えば
+
 
 ```text
 長期的な滑らかな傾向
@@ -345,6 +368,7 @@ Additive GP は、この加法的構造を高次元問題に利用します。
 Kernel の積も有効な kernel です。$`k_1`$ と $`k_2`$ が PSD kernel なら、
 点ごとの積によって得られる Gram matrix も Schur product theorem により PSD です。
 
+
 $$
 k(x,x')=k_1(x,x')k_2(x,x')
 $$
@@ -358,6 +382,7 @@ Multi-task GP では、入力 covariance と task covariance を組み合わせ�
 Multi-task GP では、単純な入力 $`x`$ だけでなく task $`t`$ も考えます。
 
 典型的には
+
 
 $$
 k((x,t),(x',t'))
@@ -376,11 +401,12 @@ $$
 
 この考え方により、あるタスクの観測を別タスクの予測に利用できます。
 
-`MultiTaskGP` や `KroneckerMultiTaskGP` の理論を理解する際の基礎になります。
+マルチタスク GP や Kronecker 構造のマルチタスク GP の理論を理解する際の基礎になります。
 
 ## 3.15 Kronecker structure
 
 全タスクが同じ入力点で観測される block design では、共分散行列に
+
 
 $$
 K = K_X \otimes K_T
@@ -388,15 +414,17 @@ $$
 
 という Kronecker product 構造が現れます。
 
-これは `KroneckerMultiTaskGP` の重要な考え方です。
+これは Kronecker 構造のマルチタスク GP の重要な考え方です。
 
 単純な SingleTask GP の
+
 
 $$
 K_X
 $$
 
 に、タスク covariance
+
 
 $$
 K_T
@@ -410,6 +438,7 @@ $$
 
 例えば
 
+
 ```text
 触媒A = 0
 触媒B = 1
@@ -417,6 +446,7 @@ $$
 ```
 
 と符号化しても、
+
 
 ```text
 A と C の距離は A と B の2倍
@@ -426,13 +456,12 @@ A と C の距離は A と B の2倍
 
 Mixed GP ではカテゴリ変数に適した covariance 構造を用いて、連続変数とカテゴリ変数を組み合わせます。
 
-robotorchan では `MixedSingleTaskGP` がこの用途に対応します。
-
 ## 3.17 Conditional / Hierarchical kernel
 
 探索空間によっては、親変数の値によって有効な子変数が変わります。
 
 例えば
+
 
 ```text
 製法 = A → 温度、時間が有効
@@ -445,10 +474,8 @@ robotorchan では `MixedSingleTaskGP` がこの用途に対応します。
 
 Hierarchical kernel は、変数が有効かどうかも含めて covariance を設計します。
 
-robotorchan では
-
-- `HierarchicalConditionalKernelGP`
-- `HierarchicalConditionalKernelMultiTaskGP`
+- Hierarchical Conditional カーネル GP
+- Hierarchical Conditional カーネル マルチタスク GP
 
 がこの考え方に対応します。
 
@@ -456,20 +483,21 @@ robotorchan では
 
 GPモデルの違いのかなりの部分は、**どのような covariance structure を仮定するか**として理解できます。
 
+
 ```text
-SingleTaskGP
+単一タスク GP
   └─ 入力間 covariance
 
-MixedSingleTaskGP
+混合入力 GP
   └─ 連続 + category covariance
 
-MultiTaskGP
+マルチタスク GP
   └─ 入力 covariance × task covariance
 
-KroneckerMultiTaskGP
+Kronecker 構造のマルチタスク GP
   └─ K_X ⊗ K_T
 
-HierarchicalConditionalKernelGP
+Hierarchical Conditional カーネル GP
   └─ 条件付き探索空間を考慮した covariance
 
 Contextual GP
@@ -519,12 +547,10 @@ Kernel は surrogate model の予測平均だけでなく、posterior uncertaint
 基本原理です。ただし任意の距離やマスク処理を既存のカーネルに適用しても、
 正半定値性が保証されるわけではありません。
 
-ライブラリ固有のモデル選択・APIについては
-[モデルドキュメント](../models/README.md) を参照してください。
-
 ## 3.22 この章で覚えておくこと
 
 Kernelについて最初に押さえるべき点は、次の関係です。
+
 
 ~~~text
 問題についての仮定

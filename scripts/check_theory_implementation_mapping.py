@@ -6,14 +6,14 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MAPPING = ROOT / "docs" / "development" / "theory-implementation"
+MAPPING = ROOT / ".github" / "project-records" / "theory-guide" / "mapping"
 FILES = ("README.md", "models.md", "acquisition.md", "optimization.md", "verification.md")
 SUBJECTS = ("models.md", "acquisition.md", "optimization.md")
 
 
 def check_mapping_consistency(root: Path = ROOT) -> list[str]:
     """Check mapping files and bidirectional navigation without interpreting theory."""
-    mapping = root / "docs" / "development" / "theory-implementation"
+    mapping = root / ".github" / "project-records" / "theory-guide" / "mapping"
     failures: list[str] = []
     for name in FILES:
         if not (mapping / name).is_file():
@@ -29,10 +29,10 @@ def check_mapping_consistency(root: Path = ROOT) -> list[str]:
         if not re.search(r"\]\(" + re.escape(name) + r"\)", evidence):
             failures.append(f"verification missing subject link: {name}")
         content = (mapping / name).read_text(encoding="utf-8")
-        for target in ("README.md", "verification.md", "../../theory/README.md"):
+        for target in ("README.md", "verification.md", "../../../../docs/theory/README.md"):
             if not re.search(r"\]\(" + re.escape(target) + r"\)", content):
                 failures.append(f"{name} missing navigation link: {target}")
-    if not re.search(r"\]\(../../theory/README\.md\)", index):
+    if not re.search(r"\]\(../../../../docs/theory/README\.md\)", index):
         failures.append("index missing canonical theory link")
     return failures
 

@@ -1,39 +1,25 @@
-# CMA-ES optimizer backend
+# CMA-ES backend
 
-CMA-ES is an optional derivative-free acquisition optimizer. It consumes a
-BoTorch `AcquisitionFunction`, tensor bounds, and a joint candidate batch
-size `q`; the optional `cmaes` package implements the evolutionary loop.
+任意依存の微分不要な獲得関数最適化器です。BoTorch `AcquisitionFunction`、Tensor の bounds、joint batch サイズ `q` を受け取り、進化計算に `cmaes` を使います。
 
-The joint `q x d` candidate batch is flattened to one CMA-ES vector and
-restored before each acquisition evaluation. The initial mean is the box
-center. `sigma` is relative to the largest box width.
+`q x d` 全体を 1 ベクトルに平坦化し、評価前に復元します。初期平均は box の中心、`sigma` は最大の box 幅に対する相対値です。
 
-Install the optional dependency with `pip install "robotorchan[cmaes]"`.
-The package is imported only when this backend is used.
+`pip install "robotorchan[cmaes]"` で導入します。追加パッケージは利用時のみ import されます。
 
-## Candidate constraints
+## 候補制約
 
-The backend accepts the shared `CandidateConstraints` contract via
-`constraints`. It evaluates candidate violation and minimizes a
-penalized objective:
+`constraints` に共通の `CandidateConstraints` を渡し、次の罰則付き目的を最小化します。
 
 ```text
 penalized_objective = -acquisition_value + constraint_penalty * violation
 ```
 
-`constraint_penalty` must be positive (default `1e6`).
-`equality_tolerance` defaults to `1e-6`. These settings apply to
-the joint q-batch constraint evaluation, including inter-point
-constraints. A finite penalty does **not** guarantee feasibility.
-Validate returned candidates against the original constraints when
-strict feasibility matters.
 
-The evolutionary loop is CPU-side; acquisition and constraint
-evaluation use the supplied tensor device and dtype. The returned
-`value` is the **unpenalized acquisition value** at the selected
-candidate, not the penalized search objective.
+`constraint_penalty` は正で既定値 `1e6`、`equality_tolerance` は既定値 `1e-6` です。点間制約を含む joint q-batch 全体に適用します。有限の罰則は実行可能性を保証しないため、必要なら返り値を元の制約で確認してください。
 
-## Usage
+進化計算の制御は CPU 側、獲得関数・制約の評価は指定 Tensor の device・dtype で行います。返される `value` は**罰則なしの獲得値**です。
+
+## 使用例
 
 ```python
 from robotorchan.optim.backends import optimize_acqf_cmaes
@@ -51,7 +37,5 @@ candidates, value = optimize_acqf_cmaes(
 )
 ```
 
-The example assumes that `acq`, `bounds`, and
-`candidate_constraints` have been constructed by the caller.
-For differences across backends, see
-[Candidate constraints](candidate-constraints.md).
+
+`acq`、`bounds`、`candidate_constraints` は呼び出し側で構築済みとします。backend 間の違いは[候補制約](candidate-constraints.md)を参照してください。

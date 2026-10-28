@@ -8,11 +8,7 @@ from pathlib import Path
 
 import torch
 
-GUIDE = (
-    Path(__file__).resolve().parents[2]
-    / "docs/development/theory-implementation/guide"
-    / "optimization"
-)
+GUIDE = Path(__file__).resolve().parents[2] / "docs/guide" / "optimization"
 
 
 class OptimizationSamplingEvolutionaryGuideTests(unittest.TestCase):

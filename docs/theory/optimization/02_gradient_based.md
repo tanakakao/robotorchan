@@ -83,6 +83,7 @@ autograd graph が構築できるだけでは十分ではありません。
 複数 restart の acquisition evaluation は並列化できます。
 これは複数 BO candidate を意味する q-batch とは別の batch dimension です。
 
+
 ```text
 restart batch: 複数の初期値を並列に最適化
 q-batch:       1つの acquisition decision が複数候補を含む

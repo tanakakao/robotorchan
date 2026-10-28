@@ -2,6 +2,7 @@
 
 ## 8.1 最初に2種類のconstraintを分ける
 
+
 ~~~text
 unknown output / black-box constraint
     実験・評価するまで値が分からない
@@ -20,11 +21,13 @@ known candidate / input-space constraint
 
 実問題では、目的関数
 
+
 $$
 f(x)
 $$
 
 を最大化するだけでなく、制約
+
 
 $$
 c_j(x)\le 0,
@@ -34,6 +37,7 @@ $$
 を満たす必要があります。
 
 このとき最適化対象は
+
 
 $$
 \max_{x\in\mathcal X} f(x)
@@ -52,6 +56,7 @@ Bayesian Optimizationではobjectiveとconstraintsの両方が高コスト・未
 
 制約 $`c(x)\le0`$ に対して posterior
 
+
 $$
 c(x)\mid\mathcal D_n
 \sim
@@ -59,6 +64,7 @@ c(x)\mid\mathcal D_n
 $$
 
 を仮定すると、feasibility probability は
+
 
 $$
 P(c(x)\le0\mid\mathcal D_n)
@@ -77,6 +83,7 @@ $P(c(x)\le0\mid\mathcal D_n)=\mathbf 1[\mu_c(x)\le0]$ です。
 ## 8.4 Objective utility と feasibility
 
 直感的な constrained acquisition は、
+
 
 $$
 \alpha_{\mathrm{constrained}}(x)
@@ -101,6 +108,7 @@ MC formulationではposterior samplesごとにobjective utilityとconstraint sat
 
 例えば improvement $I(x)$ と feasibility event $F(x)$ に対して、一般には
 
+
 $$
 \mathbb E[I(x)\mathbf 1_{F(x)}\mid\mathcal D_n]
 \ne
@@ -116,6 +124,7 @@ feasibility indicator が独立である場合などに限られます。
 
 posterior sample $`f^{(s)}(x)`$ と constraint sample $`c^{(s)}(x)`$ に対し、
 
+
 $$
 U^{(s)}(x)
 =
@@ -126,6 +135,7 @@ $$
 のように infeasible sample の utility を無効化できます。
 
 複数 constraints なら
+
 
 $$
 \prod_{j=1}^{J}
@@ -141,6 +151,7 @@ optimizationを安定させる場合があります。
 
 output / black-box constraintの説明では
 
+
 $$
 c(x)\le0
 $$
@@ -148,11 +159,13 @@ $$
 を feasible とする convention がよく使われますが、数学的には逆符号で
 $-c(x)\ge0$ と表現しても同じ実行可能領域を定義できます。
 
+
 ```text
 c(x) <= 0 が feasible
 ```
 
 なのか
+
 
 ```text
 c(x) >= 0 が feasible
@@ -170,6 +183,7 @@ constraint の符号を誤ると acquisition は feasible / infeasible を逆に
 
 例えば
 
+
 $$
 Ax\le b
 $$
@@ -182,6 +196,7 @@ $$
 
 この二つは責務が異なります。
 
+
 ```text
 known input constraint
     acquisition optimizer の探索領域を制限
@@ -189,10 +204,6 @@ known input constraint
 unknown outcome constraint
     posterior uncertainty を含む constrained acquisition
 ```
-
-## 8.8 Objective、Constraint、Posterior Transform
-
-BoTorch 的な構成を理解するには、次を分離することが重要です。
 
 ### Model output
 
@@ -219,6 +230,7 @@ objective utility と uncertainty / feasibility を組み合わせ、candidate v
 ## 8.9 Multi-output model と constraints
 
 例えば model が
+
 
 $$
 (f(x),c_1(x),c_2(x))
@@ -264,6 +276,7 @@ infeasible だが objective value が非常に高い観測を incumbent にす�
 
 そのため constraint posterior の uncertainty、特に
 
+
 $$
 c(x)\approx0
 $$
@@ -271,6 +284,7 @@ $$
 の領域を正しく学習することが重要です。
 
 これは level-set estimation と数学的に近い側面がありますが、目的は異なります。
+
 
 ```text
 Level-set
@@ -285,6 +299,7 @@ Constrained BO
 MOBO でも constraints の考え方は同じです。
 
 目的空間では Pareto / hypervolume utility を評価し、constraint outputs では feasibility を評価します。
+
 
 ```text
 objective outputs
@@ -323,6 +338,7 @@ safe BO では safe set expansion や high-probability safety guarantee など�
 ## 8.18 まとめ
 
 Constrained BO では、
+
 
 ```text
 objective

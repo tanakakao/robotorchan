@@ -1,35 +1,21 @@
-# Mixed-variable benchmark problems
+# 混合変数 benchmark 問題
 
-The benchmark suite represents categorical variables as **integer-coded
-nominal labels**, not as ordinal numeric distances. Candidate generators
-must return valid integer codes within bounds. No one-hot encoding is
-required by the problem contract.
+カテゴリは整数符号の名義ラベルであり、順序距離を表しません。候補 generator は bounds 内の合法整数符号を返す必要があります。問題契約は one-hot を要求しません。
 
-| Problem | Inputs | Objective | Constraints |
+| 問題 | 入力 | 目的 | 制約 |
 | --- | --- | --- | --- |
-| mixed_quadratic | continuous, integer, category | minimize; optimum 0 | none |
-| categorical_switch | continuous, category | maximize; optimum 1 | none |
-| mixed_process_yield | temperature, integer cycle count, recipe category | maximize; optimum 1 | recipe-dependent temperature limit; cycles <= 4 |
-| mixed_category_interaction | continuous, two categorical choices | minimize; optimum 0 | none |
+| mixed_quadratic | 連続・整数・カテゴリ | 最小化、最適値 0 | なし |
+| categorical_switch | 連続・カテゴリ | 最大化、最適値 1 | なし |
+| mixed_process_yield | 温度・整数 cycle 数・recipe | 最大化、最適値 1 | recipe 依存の温度上限、cycles <= 4 |
+| mixed_category_interaction | 連続・カテゴリ 2 個 | 最小化、最適値 0 | なし |
 
-**Process yield** has recipe-dependent response centers and upper
-temperature limits. The feasible optimum is (0.7, 3, 1).
-This exercises the interaction between categorical choices and
-continuous outcome constraints.
+Process yield は recipe ごとに応答中心と温度上限が異なり、実行可能最適点は `(0.7, 3, 1)` です。カテゴリと連続の出力制約の相互作用を調べます。
 
-**Category interaction** has a non-additive lookup table for the
-continuous response center and categorical penalty. Its optimum
-is (0.85, 1, 1), demonstrating a case where two nominal variables
-jointly determine the landscape.
+Category interaction は連続応答中心とカテゴリ罰則の非加算的な表を持ち、最適点は `(0.85, 1, 1)` です。2 つの名義変数が共同で目的の形を決めます。
 
-The existing `sobol_initial_design` and `random_candidates` functions
-round discrete coordinates. For more sophisticated mixed-variable
-optimization, use a compatible candidate generator with the same
-`(q, d)` tensor contract.
+基準法の `sobol_initial_design` と `random_candidates` は離散座標を丸めます。専用の混合最適化には同じ `(q, d)` 契約の互換 generator を使ってください。`register_mixed_problems(registry)` で登録します。
 
-Register all problems using `register_mixed_problems(registry)`.
-
-## Executable mixed-variable smoke example
+## 実行例
 
 ```python
 from robotorchan.benchmarks import (
@@ -53,11 +39,5 @@ config = BenchmarkExperimentConfig(
 trajectories = run_benchmark(config, random_candidates, registry=registry)
 ```
 
-The `mixed_quadratic` optimum is `(0.8, 2, 1)` and the
-`categorical_switch` optimum is `(0.7, 1)`. Both have optimal value
-`0` (minimize) and `1` (maximize), respectively. Categorical codes
-such as `0`, `1`, and `2` are nominal labels without an ordinal distance.
-Rounding by the baseline Sobol and random candidate generators supports
-an end-to-end smoke test, but does **not** establish uniform sampling
-across discrete levels or the quality of specialized mixed-variable
-acquisition optimization.
+
+`mixed_quadratic` の最適点は `(0.8, 2, 1)`、`categorical_switch` は `(0.7, 1)`、最適値はそれぞれ 0（最小化）と 1（最大化）です。0・1・2 などの符号に順序距離はありません。基準法の丸めは動作確認用で、離散水準の一様抽出や専用 optimizer の品質を保証しません。

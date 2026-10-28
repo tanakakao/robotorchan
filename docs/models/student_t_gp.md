@@ -1,36 +1,24 @@
-# Student-t observation GP models
+# Student-t 観測 GP モデル
 
-Student-t likelihood models are **implemented** robust surrogates for
-heavy-tailed observation residuals. They are distinct from sparse-outlier
-relevance pursuit and input-dependent Gaussian observation noise.
+Student-t 尤度を使い、裾の重い観測残差を扱うモデルです。疎な外れ値補正や、入力依存の Gaussian 観測ノイズとは異なる仮定を置きます。
 
-## Statistical model
-
+## 統計モデル
 ```text
 f(x) ~ GP
 y | f(x) ~ StudentT(df=nu, loc=f(x), scale=sigma)
 ```
+コンストラクタでは観測分散が存在するよう `df > 2` を要求します。Student-t 尤度による変分推論を使い、Gaussian 尤度の厳密な周辺尤度では学習しません。
 
-The public constructors require `df > 2` so the observation variance
-exists. These models use variational inference with a Student-t
-likelihood, not exact Gaussian marginal likelihood fitting.
+## 公開モデル
 
-## Public model families
+- `StudentTSingleTaskGP`：連続入力の単一タスク・スカラー回帰。
+- `MixedStudentTSingleTaskGP`：`cat_dims` と混合共分散による連続・カテゴリ入力。
+- `StudentTMultiTaskGP`：`task_feature` とタスク共分散による long-format の複数タスク。
+- `MixedStudentTMultiTaskGP`：long-format の複数タスクと連続・カテゴリ入力。
 
-- `StudentTSingleTaskGP`: continuous single-task scalar regression.
-- `MixedStudentTSingleTaskGP`: continuous and categorical inputs
-  with `cat_dims` and a mixed covariance.
-- `StudentTMultiTaskGP`: long-format multi-task data using
-  `task_feature` and task covariance.
-- `MixedStudentTMultiTaskGP`: long-format multi-task data with
-  mixed continuous/categorical data covariance.
+タスク列とカテゴリのデータ列は異なる構造です。タスク ID やカテゴリ符号を連続量として解釈せず、入力構造に合うモデルを選んでください。
 
-Task features and categorical data features are separate structural
-roles. Choose the matching model rather than interpreting task IDs or
-category codes as continuous measurements.
-
-## Training and posterior contract
-
+## 学習と予測分布
 ```python
 import torch
 from robotorchan.models import StudentTSingleTaskGP
@@ -47,23 +35,12 @@ model = StudentTSingleTaskGP(
 loss = model.training_loss()
 posterior = model.posterior(train_X[:3])
 ```
+`training_loss()` は Student-t 尤度の期待対数尤度と変分 KL 項を組み合わせます。微分可能な損失を適切な PyTorch optimizer で最小化してください。`supports_mll = False` で、`make_mll()` は厳密 Gaussian MLL を返さず例外になります。BoTorch 互換の `posterior()` は **潜在応答**の分布であり、Student-t の将来観測分布ではありません。
 
-`training_loss()` combines the Student-t expected log likelihood and
-variational KL term. Optimize the differentiable loss with a suitable
-PyTorch optimizer. `supports_mll = False`, and `make_mll()` raises
-rather than returning an exact Gaussian MLL. The BoTorch-compatible
-`posterior()` describes the **latent response**, not a Student-t
-predictive observation distribution.
+元の訓練入力・出力を保持し、state dictionary の読み込み時には変分キャッシュを消去します。
 
-The implementation preserves raw training inputs and outputs, and
-clears variational caches when loading a state dictionary.
+## 適用範囲と解釈
 
-## Scope and interpretation
+裾の重い尤度はモデルの仮定であり、すべてのデータで外れ値への頑健性を保証するものではありません。保留データで Gaussian モデルや他の robust モデルと予測性能・較正を比較してください。入力摂動と CVaR・最悪値による獲得効用の集約は別の最適化上の課題です。
 
-The heavy-tailed likelihood is a modeling assumption, not a guarantee
-of outlier resistance in every dataset. Verify calibration and
-predictive performance against Gaussian and other robust baselines
-on held-out data. Input perturbation and CVaR/worst-case acquisition
-risk remain separate optimization concerns.
-
-See [Robust and noise models](robust_noise.md) for model selection.
+モデル選択は [Robust / Noise](robust_noise.md) を参照してください。

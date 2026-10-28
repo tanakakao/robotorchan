@@ -102,6 +102,7 @@ categorical dimension なら allowed category である必要があります。
 Mixed surrogate が category を正しく model 化できることと、
 optimizer が category を正しく探索できることは別条件です。
 
+
 ```text
 surrogate mixed capability
     !=

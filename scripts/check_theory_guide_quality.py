@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MAPPING = Path("docs/development/theory-implementation")
+MAPPING = Path(".github/project-records/theory-guide/mapping")
 THEORY = Path("docs/theory")
 MAIN_CHAPTERS = (
     "01_bayesian_optimization",
@@ -83,7 +83,7 @@ def expected_chapters() -> tuple[Path, ...]:
 def check_guide_quality(root: Path = ROOT) -> list[str]:
     """Check structural correspondence without making mathematical claims."""
     failures: list[str] = []
-    guide = root / MAPPING / "guide"
+    guide = root / "docs" / "guide"
     theory = root / THEORY
     planned = expected_chapters()
     if len(planned) != 48 or len(set(planned)) != 48:

@@ -8,10 +8,7 @@ from pathlib import Path
 
 import torch
 
-GUIDE = (
-    Path(__file__).resolve().parents[2]
-    / "docs/development/theory-implementation/guide/optimization/03_initialization.md"
-)
+GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/optimization/03_initialization.md"
 
 
 class InitializationGuideTests(unittest.TestCase):

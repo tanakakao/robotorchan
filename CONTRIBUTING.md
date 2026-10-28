@@ -100,3 +100,9 @@ Pull Requestには次を簡潔に記載してください。
 モデルや acquisition の public capability を変更した場合は、実装だけでなく registry metadata と対応する contract test も同じ変更で更新してください。モデル名の文字列解析から capability を推測する実装は追加しません。
 
 モデル registry を変更した場合、生成物である `docs/model_coverage.json` を直接編集せず、既存の生成スクリプトを使用してください。
+
+## 文書の配置
+
+日本語の学習・利用文書は `docs/`、実装・保守の必須条件は `docs-internal/`、過去の監査・設計記録は `.github/project-records/` に置きます。数学的な定義・導出は Theory、固有 API・近似・テストとの対応は Guide に分けてください。
+
+文書の追加・移動時には [分類表](docs-internal/maintenance/documentation-inventory.json) を更新し、`python scripts/check_documentation_inventory.py` と既存の文書リンク検証を実行します。ファイル名の類似だけで統合・削除せず、数式・仮定・制約・参考文献の保全を確認してください。

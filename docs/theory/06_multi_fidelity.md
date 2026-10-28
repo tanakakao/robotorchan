@@ -6,6 +6,7 @@
 
 しかし実務では、同じ現象について精度とコストが異なる複数の評価方法を利用できる場合があります。
 
+
 ```text
 低精度シミュレーション   : 安い / 速い / 誤差が大きい
 高精度シミュレーション   : 高い / 遅い / 誤差が小さい
@@ -17,11 +18,13 @@
 
 通常のBOが
 
+
 $$
 x^*=\arg\max_x f(x)
 $$
 
 を考えるのに対して、Multi-Fidelityでは
+
 
 $$
 y=f(x,s)+\epsilon
@@ -30,6 +33,7 @@ $$
 のようにfidelity変数 $`s`$ を追加します。
 
 ここで重要なのは、最終的に欲しい解が
+
 
 $$
 x^*=\arg\max_x f(x,s_{target})
@@ -46,6 +50,7 @@ $$
 初心者はfidelityを「目的変数が複数ある」と捉えやすいですが、基本的には異なります。
 例えば同じ材料強度を、
 
+
 ~~~text
 簡易simulation   → 安いが粗い
 高精度simulation → 高価だが精密
@@ -61,6 +66,7 @@ $$
 
 Single-Fidelity BOでは、各候補 $`x`$ に対して評価方法は1つです。
 
+
 ```text
 Candidate x
    ↓
@@ -70,6 +76,7 @@ y
 ```
 
 Multi-Fidelityでは、候補だけでなく「どのfidelityで評価するか」も選択対象になります。
+
 
 ```text
 Candidate x
@@ -82,6 +89,7 @@ y
 ```
 
 したがって次の評価点は概念的に
+
 
 $$
 (x_{next},s_{next})
@@ -98,9 +106,8 @@ MFBOでは、
 
 ---
 
-## 6.3 Fidelityの例
-
 ### 計算時間
+
 
 ```text
 10 iteration
@@ -112,6 +119,7 @@ iteration数が増えるほど精度が高くなる場合です。
 
 ### メッシュ解像度
 
+
 ```text
 粗いmesh
 中程度のmesh
@@ -122,6 +130,7 @@ CAEや流体解析などで典型的です。
 
 ### データ量
 
+
 ```text
 10 % data
 50 % data
@@ -131,6 +140,7 @@ CAEや流体解析などで典型的です。
 機械学習モデルの性能評価などで利用できます。
 
 ### 物理モデル
+
 
 ```text
 簡易モデル
@@ -147,6 +157,7 @@ CAEや流体解析などで典型的です。
 
 例えば
 
+
 ```text
 low
 medium
@@ -156,6 +167,7 @@ high
 という3水準があっても、これを単なるカテゴリ変数として扱うだけではfidelityの特徴を十分に利用できない場合があります。
 
 Fidelityには通常、
+
 
 ```text
 精度または近似レベル
@@ -171,11 +183,13 @@ target fidelityとの統計的な関係
 
 特にcontinuous fidelityなら
 
+
 $$
 s\in[0,1]
 $$
 
 として
+
 
 ```text
 s = 0.1  : low fidelity
@@ -193,11 +207,13 @@ s = 1.0  : target fidelity
 
 Multi-Fidelity GPでは、設計変数 $`x`$ とfidelity $`s`$ をまとめて入力とします。
 
+
 $$
 \tilde{x}=(x,s)
 $$
 
 そして
+
 
 $$
 f(x,s)\sim\mathcal{GP}(m(x,s),k((x,s),(x',s')))
@@ -207,6 +223,7 @@ $$
 
 重要なのはkernelが、設計変数とfidelityの構造を通して異なる観測間の
 covarianceを表現することです。概念的には
+
 
 ```text
 設計点 x の関係
@@ -227,6 +244,7 @@ fidelity s の関係
 Multi-Fidelityが有効なのは、低fidelityと高fidelityの間に情報共有できる関係があるためです。
 
 例えば
+
 
 ```text
 low fidelity  : 全体傾向は合うがbiasがある
@@ -250,6 +268,7 @@ high fidelity : 正確だが高コスト
 例えばlow fidelityが常にtargetより小さめに出るbiasを持っていても、
 設計変数に対する増減傾向が共有されていれば有用な場合があります。
 
+
 ~~~text
 low    : 値そのものにはbiasがあるが、良い領域・悪い領域の傾向は似る
 target : 絶対値は異なるが、lowから情報を受け取れる
@@ -264,11 +283,13 @@ Multi-Fidelityで最終的に最適化したいfidelityをtarget fidelityと考�
 
 例えば
 
+
 $$
 s_{target}=1
 $$
 
 なら、最終目的は
+
 
 $$
 x^*=\arg\max_x f(x,1)
@@ -288,6 +309,7 @@ $$
 
 評価コストを
 
+
 $$
 c(x,s)
 $$
@@ -296,6 +318,7 @@ $$
 
 単純にはfidelityだけに依存して
 
+
 $$
 c(s)
 $$
@@ -303,6 +326,7 @@ $$
 としても構いません。
 
 例えば
+
 
 ```text
 s = 0.2 → cost = 1
@@ -322,11 +346,13 @@ acquisition設計によって異なります。
 
 候補 $`(x,s)`$ の価値を $`V(x,s)`$ とすると、直感的には
 
+
 $$
 \frac{V(x,s)}{c(x,s)}
 $$
 
 のように、単位コスト当たりの価値を評価できます。
+
 
 ```text
 高fidelity
@@ -339,8 +365,6 @@ $$
 ```
 
 重要なのは「最も安いfidelity」でも「最も正確なfidelity」でもなく、**現在のposteriorに対して最も費用対効果の高い評価**を選ぶことです。
-
-BoTorchではcost-aware utilityをacquisition設計へ組み込むための部品が用意されています。
 
 ---
 
@@ -366,6 +390,7 @@ Knowledge Gradient (KG) は、ある候補を観測することで「観測後�
 
 現在のposterior meanに基づく最良値を
 
+
 $$
 V_n=\max_x \mu_n(x,s_{target})
 $$
@@ -373,6 +398,7 @@ $$
 とします。
 
 候補 $`(x,s)`$ を観測した後のposteriorを $`\mu_{n+1}`$ とすると、KGは概念的に
+
 
 $$
 \operatorname{KG}(x,s)
@@ -388,6 +414,7 @@ $$
 です。
 
 つまり、
+
 
 ```text
 今の最良判断
@@ -414,6 +441,7 @@ Multi-Fidelity KGでは、target fidelity以外の観測も「targetでの意思
 
 さらにcost-awareにすれば、概念的には
 
+
 $$
 \alpha(x,s)
 \approx
@@ -423,6 +451,7 @@ $$
 として評価できます。
 
 これにより、
+
 
 ```text
 序盤
@@ -472,11 +501,13 @@ Fidelity をカテゴリ設計変数と同一視すると、評価精度やコ�
 
 例えば通常の設計変数が2次元なら
 
+
 $$
 x=(x_1,x_2)
 $$
 
 ですが、fidelityを追加すると
+
 
 $$
 \tilde{x}=(x_1,x_2,s)
@@ -495,6 +526,7 @@ fidelity 間の相関を明示的に仮定するモデルでは、事前共分�
 
 Fidelityが連続値なら
 
+
 $$
 s\in[0,1]
 $$
@@ -502,6 +534,7 @@ $$
 として扱えます。
 
 例えば
+
 
 ```text
 0.1 → very low fidelity
@@ -522,6 +555,7 @@ $$
 
 実際の評価方法が
 
+
 ```text
 cheap simulator
 expensive simulator
@@ -533,6 +567,7 @@ experiment
 このとき、optimizerが存在しない中間fidelityを生成してはいけません。
 
 例えば
+
 
 ```text
 s ∈ {0.2, 0.6, 1.0}
@@ -548,6 +583,7 @@ fidelity値を固定した複数問題として候補探索する考え方が利
 候補にする、という責務分離です。
 
 つまり
+
 
 ```text
 Multi-Fidelity model
@@ -571,6 +607,7 @@ Multi-Fidelity の確率モデルは $(x,s)$ に関する事後分布を定義�
 
 一方、
 
+
 ```text
 どのxを選ぶか
 どのfidelityを選ぶか
@@ -579,6 +616,7 @@ Multi-Fidelity の確率モデルは $(x,s)$ に関する事後分布を定義�
 を決めるのはacquisition functionとacquisition optimizerです。
 
 したがって
+
 
 ```text
 Fidelity-aware probabilistic model
@@ -604,6 +642,7 @@ MFBOでは、現在の候補 $`(x,s)`$ を評価した価値を考える一方�
 
 概念的には
 
+
 $$
 P(x,s)=(x,s_{target})
 $$
@@ -611,6 +650,7 @@ $$
 です。
 
 例えば
+
 
 ```text
 candidate   = [temperature, pressure, 0.3]
@@ -627,6 +667,7 @@ projection  = [temperature, pressure, 1.0]
 
 KG系の獲得関数では、現在の情報だけでtarget fidelity上の最適判断をしたときの価値を基準にします。
 
+
 $$
 \max_x \mu_n(x,s_{target})
 $$
@@ -637,11 +678,13 @@ $$
 
 これは
 
+
 ```text
 候補を評価
 ```
 
 だけでなく
+
 
 ```text
 候補を評価したらposteriorがどう変わるか
@@ -658,6 +701,7 @@ $$
 
 例えば
 
+
 $$
 c(s)=a+bs^p
 $$
@@ -666,11 +710,13 @@ $$
 
 一方、実際の実験時間が設計条件にも依存するなら
 
+
 $$
 c(x,s)
 $$
 
 を学習することも考えられます。
+
 
 ```text
 cost既知
@@ -689,6 +735,7 @@ cost不明
 「acquisition valueをcostで割ればよい」とだけ考えると危険です。
 
 例えばcostが極端に小さいlow fidelityが、target fidelityについてほとんど情報を持たない場合があります。
+
 
 ```text
 very cheap
@@ -713,6 +760,7 @@ almost no information
 
 MFBOでは「何回評価できるか」より「総コストをいくら使えるか」の方が自然な場合があります。
 
+
 $$
 \sum_{i=1}^{n} c(x_i,s_i)\le B
 $$
@@ -720,6 +768,7 @@ $$
 ここで $`B`$ は総budgetです。
 
 例えば
+
 
 ```text
 low fidelity  = 1 unit
@@ -749,6 +798,7 @@ Multi-Fidelityは常に有効ではありません。
 
 逆に
 
+
 ```text
 low fidelityがあまり安くない
 low fidelityとtargetが無相関
@@ -770,6 +820,7 @@ Multi-FidelityとMulti-Taskは似ています。
 
 ### Multi-Fidelity
 
+
 ```text
 low fidelity
 high fidelity
@@ -778,6 +829,7 @@ high fidelity
 には精度やcostの順序があり、通常は明確なtarget fidelityがあります。
 
 ### Multi-Task
+
 
 ```text
 material A
@@ -799,6 +851,7 @@ material C
 
 実際の問題では
 
+
 ```text
 temperature : continuous
 catalyst    : categorical
@@ -808,6 +861,7 @@ fidelity    : continuous / discrete
 のようにMixed + Multi-Fidelityになることがあります。
 
 この場合、
+
 
 ```text
 モデル側
@@ -823,6 +877,7 @@ optimizer側
 探索候補ではカテゴリの許容値と fidelity の実行可能集合を同時に守ります。
 
 したがってMixed × Multi-Fidelityでも
+
 
 ```text
 surrogate  : category構造 + fidelity構造
@@ -840,6 +895,7 @@ Fidelityはobjectiveではありません。
 
 例えば
 
+
 ```text
 強度を最大化
 コストを最小化
@@ -848,6 +904,7 @@ Fidelityはobjectiveではありません。
 はmulti-objectiveです。
 
 一方
+
 
 ```text
 簡易simulation
@@ -858,6 +915,7 @@ Fidelityはobjectiveではありません。
 は同じ目的値を異なるfidelityで評価しています。
 
 したがって
+
 
 ```text
 Multi-Objective
@@ -917,8 +975,6 @@ $\mathcal D=\{(x_i,s_i,y_i)\}_{i=1}^{n}$ として表せます。
 この4点が曖昧なまま Multi-Fidelity の確率モデルを選んでも、
 MFBOとしての意思決定問題は定義できません。
 
-## 6.31 よくある誤解
-
 ### 「低fidelityをたくさん取れば必ず得」
 
 低fidelityがtargetについて情報を持たなければ有効ではありません。
@@ -950,6 +1006,7 @@ Multi-Fidelity BOの中心は、
 ことです。
 
 構造を整理すると
+
 
 ```text
 Design x + Fidelity s
@@ -991,6 +1048,6 @@ Acquisition optimization
 2. Kandasamy, K., Dasarathy, G., Oliva, J. B., Schneider, J., and Póczos, B. (2017).
    Multi-fidelity Bayesian optimisation with continuous approximations.
    *Proceedings of the 34th International Conference on Machine Learning*.
-3. BoTorch `SingleTaskMultiFidelityGP`, multi-fidelity, and cost-aware documentation.
+3. BoTorch 単一タスク Multi Fidelity GP, multi-fidelity, and cost-aware documentation.
 4. [Acquisition Function](04_acquisition_function.md)
 5. [Mixed Variables](05_mixed_variables.md)

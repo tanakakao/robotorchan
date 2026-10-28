@@ -1,7 +1,6 @@
 # Preference Learning: PairwiseGP Implementation
 
-This guide contains executable API examples relocated from the theory chapter.
-For mathematical assumptions, see [Preference Learning Theory](../theory/10_preference_learning.md).
+理論章から分離した実行可能な API 例をまとめます。数学的な仮定は[Preference Learning 理論](../theory/10_preference_learning.md)を参照してください。
 
 ## 10.20 robotorchan の `PairwiseGP`
 

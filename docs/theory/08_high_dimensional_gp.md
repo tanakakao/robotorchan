@@ -4,6 +4,7 @@
 
 入力次元が増えると、通常の Gaussian Process（GP）と Bayesian Optimization（BO）は急速に難しくなります。
 
+
 ```text
 低次元
   └─ 少数の観測でも空間全体をある程度カバーできる
@@ -31,6 +32,7 @@
 10次元なら低次元、100次元なら高次元、という普遍的な閾値はありません。
 難しさは少なくとも
 
+
 ~~~text
 入力次元 d
 観測数 n
@@ -53,6 +55,7 @@ acquisitionを最適化する難しさ
 
 入力を
 
+
 $$
 x\in\mathbb{R}^d
 $$
@@ -66,6 +69,7 @@ $$
 3. 有効な探索点を少数の評価で見つけること
 
 特に、評価回数が少ない高次元BOでは
+
 
 ```text
 dimension ↑
@@ -89,6 +93,7 @@ acquisition optimizationも難しくなる
 
 各変数を10分割するとします。
 
+
 ```text
 1次元: 10 grid points
 2次元: 100 grid points
@@ -97,6 +102,7 @@ acquisition optimizationも難しくなる
 ```
 
 一般には各次元を `k` 分割すると
+
 
 $$
 k^d
@@ -111,6 +117,7 @@ BOはgrid searchよりはるかに効率的ですが、**空間体積が指数�
 ## 8.4 高次元でもBOが使える理由
 
 高次元BOが成立する重要な理由は、多くの実問題で
+
 
 $$
 d_{\text{effective}} \ll d
@@ -130,6 +137,7 @@ $$
 ただし文献によってeffective dimensionの厳密な定義は異なるため、
 単一の指標として固定せず「関数変動を説明する実質的な自由度」と捉えます。
 
+
 ```text
 100 dimensions
     ↓
@@ -148,6 +156,7 @@ SAASはこの考え方を、GPのlengthscale priorとして組み込みます。
 
 RBF kernelなら
 
+
 $$
 k(x,x')
 =
@@ -163,6 +172,7 @@ $$
 
 ここで
 
+
 $$
 \ell_j
 $$
@@ -170,6 +180,7 @@ $$
 が第 `j` 次元のlengthscaleです。
 
 直感的には
+
 
 ```text
 lengthscale 小
@@ -195,6 +206,7 @@ ARDは有用ですが、高次元・少数データでは各lengthscaleを自由
 
 例えば
 
+
 ```text
 observations = 30
 input dimensions = 100
@@ -218,6 +230,7 @@ input dimensions = 100
 ### 高次元BOには少なくとも2つの難しさがある
 
 高次元対策は大きく分けると、
+
 
 ~~~text
 surrogate側
@@ -250,6 +263,7 @@ SAASは
 
 例えば100次元でも
 
+
 ```text
 x1   important
 x2   unimportant
@@ -270,11 +284,13 @@ SAASはこのsparsityを、inverse lengthscaleへの階層priorで表現しま�
 
 lengthscaleを
 
+
 $$
 \ell_j
 $$
 
 とすると、inverse lengthscaleを
+
 
 $$
 \rho_j=\frac{1}{\ell_j}
@@ -283,6 +299,7 @@ $$
 と考えます。
 
 すると
+
 
 ```text
 重要な変数
@@ -298,6 +315,7 @@ $$
 
 つまりSAASでは、ほとんどの
 
+
 $$
 \rho_j
 $$
@@ -312,9 +330,11 @@ SAASでは、典型的にはhierarchical half-Cauchy priorを使います。
 
 概念的には
 
+
 $$
 \tau \sim \operatorname{HalfCauchy}(\beta)
 $$
+
 
 $$
 \rho_j \sim \operatorname{HalfCauchy}(\tau)
@@ -331,6 +351,7 @@ $$
 
 階層priorによりglobal shrinkageと各次元の局所的なescapeを組み合わせます。
 Half-Cauchyのheavy tailによって、
+
 
 ```text
 大多数のρ_j
@@ -359,6 +380,7 @@ posterior上で
 
 したがって
 
+
 ```text
 SAAS = Bayesian variable selection
 ```
@@ -374,6 +396,7 @@ SAAS = Bayesian variable selection
 ## 8.11 Fully Bayesian inference
 
 通常のGPでハイパーパラメータを周辺尤度最大化する場合、一般に得られるのは点推定です。MAP推定では事前分布も考慮した事後モードを用います。Fully Bayesian推論ではハイパーパラメータ $\theta$ の事後分布を積分し、
+
 
 $$
 p(f_*\mid D)=\int p(f_*\mid D,\theta)p(\theta\mid D)\,d\theta
@@ -393,6 +416,7 @@ NUTS（No-U-Turn Sampler）はHamiltonian Monte Carloの一種で、軌道長を
 
 MCMCで複数のhyperparameter sample
 
+
 $$
 \theta_1,\theta_2,\ldots,\theta_S
 $$
@@ -400,6 +424,7 @@ $$
 を得ると、それぞれに対応するGP posteriorがあります。
 
 そのためposteriorは概念的に
+
 
 $$
 p(f_*\mid D)
@@ -410,8 +435,6 @@ p(f_*\mid D,\theta_s)
 $$
 
 というmixtureになります。
-
-BoTorchではMCMC sampleに対応するbatch dimensionを持つため、通常GPとposterior shapeが異なる点に注意します。
 
 ---
 
@@ -445,6 +468,7 @@ Fully Bayesian SAASの主な利点は
 
 特に
 
+
 ```text
 dimension 高い
 observation 少ない
@@ -466,6 +490,7 @@ NUTSでは多数のMCMC stepが必要です。
 
 さらに各stepでGP likelihood計算を行うため、データ数 `n` が増えると負荷が大きくなります。
 
+
 ```text
 高次元 + 少数データ
   → SAAS向き
@@ -484,6 +509,7 @@ SAASBOは「評価が高価でデータ数は少ない」というBO本来の条
 
 高次元GPでは、Fully Bayesian SAAS以外にMAP-SAASもあります。
 
+
 ```text
 Fully Bayesian SAAS
   └─ hyperparameter posteriorをMCMCでサンプリング
@@ -493,6 +519,7 @@ MAP-SAAS
 ```
 
 一般に
+
 
 ```text
 Fully Bayesian
@@ -530,6 +557,7 @@ MAP-SAASでは、SAAS型の縮小事前分布を用いながら点推定でハ�
 
 比較するときは「どちらが上位か」ではなく、
 
+
 ~~~text
 Fully Bayesian SAAS
   → MCMCでhyperparameter uncertaintyを積分
@@ -565,6 +593,7 @@ SAASの重要な制約は **axis-aligned** であることです。
 
 つまり
 
+
 ```text
 重要な方向 = x1, x7, x20
 ```
@@ -572,6 +601,7 @@ SAASの重要な制約は **axis-aligned** であることです。
 のように、元の座標軸に沿った少数変数が重要だと仮定します。
 
 一方、真の関数が
+
 
 $$
 z=x_1+x_2+x_3+x_4
@@ -598,11 +628,13 @@ $$
 
 例えば
 
+
 ~~~text
 f(x) ≈ g(x_2, x_8)
 ~~~
 
 なら元の軸そのものが重要なのでSAASの仮定と整合します。一方、
+
 
 ~~~text
 f(x) ≈ g(Ax)
@@ -620,6 +652,7 @@ f(x) ≈ g(Ax)
 
 例えば
 
+
 $$
 f(x)
 =
@@ -633,6 +666,7 @@ $$
 と仮定します。
 
 この場合、本来の `d` 次元関数を直接学習する代わりに、`d` 個の1次元関数を学習できます。
+
 
 ```text
 通常GP
@@ -656,6 +690,7 @@ Additive Kernelは、入力次元ごとの寄与を足し合わせることで�
 
 完全な加法モデルでは $f(x)=c+\sum_i f_i(x_i)$ ですが、変数間相互作用がある場合は
 
+
 $$
 f(x)=c+\sum_i f_i(x_i)+\sum_{i<j}f_{ij}(x_i,x_j)
 $$
@@ -668,6 +703,7 @@ $$
 
 両者はどちらも高次元問題を扱えますが、仮定が異なります。
 
+
 ```text
 SAAS
   └─ 多数の変数のうち少数だけが重要
@@ -677,6 +713,7 @@ Additive GP
 ```
 
 例えば
+
 
 ```text
 100変数中5変数だけ重要
@@ -695,6 +732,7 @@ Additive GP
 実際の問題は両者の中間にあります。
 
 例えば
+
 
 $$
 f(x)
@@ -722,6 +760,7 @@ $$
 
 例えば
 
+
 $$
 x^*=\arg\max_x \alpha(x)
 $$
@@ -748,6 +787,7 @@ modelingとcandidate optimizationの両方を考えます。
 
 TuRBOでは概念的に
 
+
 ```text
 global domain
     ↓
@@ -761,6 +801,7 @@ local GP / local acquisition optimization
 BAxUSでは低次元subspaceを使いながら必要に応じて次元を拡張します。
 
 これらはSAASとは異なるアプローチです。
+
 
 ```text
 SAAS
@@ -783,6 +824,7 @@ BAxUS
 
 PCAは
 
+
 $$
 \operatorname{Var}(X)
 $$
@@ -790,6 +832,7 @@ $$
 を大きく説明する方向を残します。
 
 しかしBOで重要なのは
+
 
 $$
 Y
@@ -799,11 +842,13 @@ $$
 
 したがって
 
+
 ```text
 Xの分散が大きい方向
 ```
 
 と
+
 
 ```text
 objectiveに重要な方向
@@ -819,11 +864,13 @@ PCAは有力なpreprocessingですが、高次元BOの万能解ではありま�
 
 Deep Kernel Learning（DKL）では
 
+
 $$
 z=g_\phi(x)
 $$
 
 というneural network embeddingを作り、latent space上でGPを使います。
+
 
 ```text
 high-dimensional x
@@ -834,6 +881,7 @@ posterior
 ```
 
 これはSAASとは異なります。
+
 
 ```text
 SAAS
@@ -853,6 +901,7 @@ DKL
 
 重要なのは
 
+
 $$
 \frac{n}{d}
 $$
@@ -869,6 +918,7 @@ $$
 
 例えば
 
+
 ```text
 50 dimensions, n=30
 ```
@@ -876,6 +926,7 @@ $$
 でも5変数だけが重要ならSAASが有効かもしれません。
 
 一方
+
 
 ```text
 20 dimensions, n=200
@@ -896,6 +947,7 @@ SAASを第一候補にしやすいのは
 - model fittingにMCMC時間を使える
 
 という場合です。
+
 
 ```text
 high d
@@ -935,6 +987,7 @@ expensive objective
 
 MAP-SAASは
 
+
 ```text
 SAAS priorは使いたい
     +
@@ -970,8 +1023,6 @@ NUTSは重すぎる
 | Fully Bayesian MCMC | ハイパーパラメータの事後不確実性を積分 |
 | 複数MAP推定の統合 | 複数設定の予測を統合するが、厳密な事後積分ではない |
 
-具体的なモデルAPIや学習手順は[モデルドキュメント](../models/README.md)を参照してください。
-
 ---
 
 ## 8.43 構造仮定を選ぶフロー
@@ -992,8 +1043,6 @@ NUTSは重すぎる
 | データ数そのものが大きい | Variational GPも検討 |
 
 ---
-
-## 8.45 よくある誤解
 
 ### 「20次元を超えたらSAAS」
 
@@ -1044,6 +1093,7 @@ SAASではMCMCやiterationごとに重要dimensionが変わることがありま
 
 特に初期データが少ない場合、これは自然です。
 
+
 ```text
 iteration 1
   x3, x8が重要
@@ -1067,6 +1117,7 @@ iteration 20
 
 最終的なBO loopは通常と同じです。
 
+
 ```text
 observations
     ↓
@@ -1082,8 +1133,6 @@ next candidate
 ```
 
 SAAS専用のacquisition functionが必須なわけではありません。
-
-BoTorchのMonte Carlo acquisition functionと組み合わせられます。
 
 例えば
 
@@ -1105,6 +1154,7 @@ BoTorchのMonte Carlo acquisition functionと組み合わせられます。
 
 モデルと最適化の責務を分けると整理しやすくなります。
 
+
 ```text
 SAAS / Additive GP
   └─ 高次元関数をどうmodelingするか
@@ -1125,6 +1175,7 @@ Acquisition Optimizer
 高次元BOで最も重要なのは、**名目次元だけで手法を決めず、どのような低次元構造を
 問題に仮定できるか**です。
 
+
 ```text
 高次元
   ↓
@@ -1140,10 +1191,11 @@ Acquisition Optimizer
   → Multi-task SAAS
 
 加法構造
-  → OrthogonalAdditiveGP
+  → 直交加法 GP
 ```
 
 理論上の中心は、SAASでは
+
 
 $$
 \rho_j=1/\ell_j
@@ -1152,6 +1204,7 @@ $$
 にsparsity-inducing hierarchical priorを置き、多くのinverse lengthscaleを0付近へshrinkすることです。
 
 一方、Additive GPでは
+
 
 $$
 f(x)=c+\sum_i f_i(x_i)
@@ -1177,7 +1230,7 @@ $$
 1. Eriksson, D., and Jankowiak, M. (2021).
    High-dimensional Bayesian optimization with sparse axis-aligned subspaces.
    *Proceedings of the 37th Conference on Uncertainty in Artificial Intelligence*.
-2. BoTorch SAAS, MAP-SAAS, and `OrthogonalAdditiveGP` documentation.
+2. BoTorch SAAS, MAP-SAAS, and 直交加法 GP documentation.
 3. [Gaussian Process](02_gaussian_process.md)
 4. [Kernel](03_kernel.md)
 5. [Acquisition Function](04_acquisition_function.md)

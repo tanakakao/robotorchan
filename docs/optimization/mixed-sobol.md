@@ -1,30 +1,15 @@
-# Mixed-variable Sobol sampling
+# 混合変数の Sobol サンプリング
 
-Mixed Sobol uses the same `MixedVariableSpace` contract as Mixed Random while
-retaining a meaningful low-discrepancy interpretation.
+Mixed Random と同じ `MixedVariableSpace` を使い、構造化領域での低 discrepancy の解釈を保ちます。まず通常の連続 box で scrambled Sobol 点を生成し、正規化座標を離散逆 CDF で写します。
 
-A scrambled Sobol point is first generated in the ordinary continuous box. For
-structured coordinates, its normalized coordinate is then mapped through a
-discrete inverse CDF:
+- 整数次元：全合法整数に等幅の bin を割り当てる。
+- カテゴリ次元：明示的なカテゴリ集合に等幅の bin を割り当てる。
+- 連続次元：元の Sobol 座標を保持する。
 
-- integer dimensions use equal-width bins over every legal integer;
-- categorical dimensions use equal-width bins over the explicit category set;
-- continuous dimensions retain the original Sobol coordinate.
+最寄り値への丸めではありません。カテゴリの数値符号を距離や補間先として使わず、宣言順は bin の割当だけを決めます。等幅の bin では各カテゴリの周辺確率が等しくなります。
 
-This is not nearest-value rounding. Category numeric labels are never treated as
-distances or interpolation targets. Their declared order only determines the
-inverse-CDF bin assignment. With uniform bins, every category has equal marginal
-probability.
+構造化座標ごとの 1 次元 Sobol 層化は保ちますが、離散化により同じ値が繰り返されます。混合領域上の連続 Sobol net や、カテゴリ空間上の数学的に連続な Sobol 列を主張するものではありません。
 
-The mapping preserves one-dimensional Sobol stratification for each structured
-coordinate, although discretization necessarily creates repeated values and the
-result is not a continuous Sobol net in the original mixed domain. This limitation
-is explicit: the implementation claims structured low-discrepancy sampling, not
-a mathematically continuous Sobol sequence over categorical space.
+q-batch は次元 `q * d` の engine で生成し、各点・座標の組に専用の Sobol 次元を使います。fixed features は混合写像の後に適用し、`MixedVariableSpace` で検証します。
 
-q-batches are generated from a Sobol engine of dimension `q * d`, so every
-point-coordinate pair occupies its own Sobol dimension. Fixed features are
-applied after the mixed mapping and validated by `MixedVariableSpace`.
-
-This design is suitable as a sampling baseline and initialization mechanism. It
-does not imply an ordinal metric between categorical values.
+サンプリング基準法と初期化に利用できます。カテゴリ値間の順序距離は仮定しません。

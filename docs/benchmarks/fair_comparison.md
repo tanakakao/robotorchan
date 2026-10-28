@@ -1,19 +1,8 @@
-# Fair comparison protocol
+# 公平比較の手順
 
-Phase 23 introduces `FairComparisonProtocol(first, second)` for
-pairwise strategy comparisons. Both configurations must agree on:
+`FairComparisonProtocol(first, second)` で戦略を対にして比較します。問題 ID、seed 集合と順序、初期設計数、追加評価予算、q、dtype、device を一致させ、戦略名は異なるものにします。
 
-- Problem identifier, seed set and seed order
-- Initial design size and additional evaluation budget
-- Batch size `q`, dtype and device
-
-The strategy names must differ. The protocol checks **configured**
-fairness before any run. After running both strategies with
-`run_benchmark`, call `validate_trajectories(first_runs, second_runs)`
-to confirm seed order, total evaluation counts, and exact equality of
-initial X, observed Y, ground-truth Y, constraints, and costs.
-
-For example:
+実行前は設定の公平性を確認します。両戦略を `run_benchmark` で実行後、`validate_trajectories(first_runs, second_runs)` で seed 順、総評価数、初期 X・観測 Y・真値 Y・制約・費用の厳密一致を検証します。
 
 ```python
 protocol = FairComparisonProtocol(random_config, sobol_config)
@@ -22,10 +11,5 @@ sobol_runs = run_benchmark(sobol_config, sobol_candidates, registry=registry)
 protocol.validate_trajectories(random_runs, sobol_runs)
 ```
 
-This guards against accidentally comparing different initial designs
-or unequal budgets. It does **not** prove equal model-fitting time,
-hardware utilization, acquisition optimization effort, observation
-noise streams after the initial design, or algorithmic hyperparameter
-budgets. Report these separately. Paired performance analysis can use
-`compare_paired_curves` after extracting metric curves from validated
-trajectories.
+
+初期設計や予算の取り違えを防ぐもので、学習時間、ハードウェア利用率、獲得関数最適化の労力、初期設計後のノイズ系列、hyperparameter 予算の同一性は保証しません。それらは別途報告してください。検証済み軌跡から指標を抽出し、`compare_paired_curves` で対応差を分析できます。

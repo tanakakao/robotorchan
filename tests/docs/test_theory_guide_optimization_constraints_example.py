@@ -8,10 +8,7 @@ from pathlib import Path
 
 import torch
 
-GUIDE = (
-    Path(__file__).resolve().parents[2]
-    / "docs/development/theory-implementation/guide/optimization/05_constraints.md"
-)
+GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/optimization/05_constraints.md"
 
 
 class OptimizationConstraintsGuideTests(unittest.TestCase):

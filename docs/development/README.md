@@ -1,64 +1,10 @@
-# Development documentation
+# 開発ガイド
 
-このディレクトリでは、robotorchan の現在も有効な開発契約を管理します。
+ライブラリを拡張・保守するための学習用ガイドです。まず[貢献手順](../../CONTRIBUTING.md)で開発環境と品質確認の流れを確認してください。
 
-## Current contracts
+- [アーキテクチャの読み方](architecture.md)：モデル・予測・獲得関数・探索の責務を理解する。
+- [学習 API](training_api.md)：Exact GP の周辺尤度と Joint neural model の学習目的を区別する。
+- [リリース手順](releasing.md)：バージョン・配布物・公開の手順を確認する。
+- [理論と実装のガイド](../guide/README.md)：数理から実装とテストへ辿る。
 
-現在仕様の source of truth として扱う恒久文書は次のとおりです。
-
-- [`acquisition-architecture.md`](acquisition-architecture.md): acquisition の責務と custom 実装境界
-- [`architecture.md`](architecture.md): BoTorch extension としての package / API 設計、リポジトリ配置責務
-- [`model_design_guidelines.md`](model_design_guidelines.md): model 追加・変更時の設計原則
-- [`kronecker_research_gates.md`](kronecker_research_gates.md): 未実装 Kronecker 拡張の統計・実装ゲート
-- [`classification_ordinal_research_gates.md`](classification_ordinal_research_gates.md): 分類・ordinal model / AL の統計・実装ゲート
-- [`input_perturbation_contract.md`](input_perturbation_contract.md): decision-time input perturbation の認定契約
-- [`external_non_gp_surrogates.md`](external_non_gp_surrogates.md): 未実装 external non-GP adapter の統合契約
-- [`training_api.md`](training_api.md): `make_mll()` と training API の契約
-- [`releasing.md`](releasing.md): version、GitHub Release、PyPI 公開手順
-- [`repository-structure-cleanup-contracts.md`](repository-structure-cleanup-contracts.md): package 境界と安全な整理の契約
-- [`documentation-structure-contract.md`](documentation-structure-contract.md): documentation の責務分離と継続的な検証範囲
-- [`benchmark-persistence-schema-boundaries.md`](benchmark-persistence-schema-boundaries.md): benchmark JSON schema の互換性境界
-
-## Heterogeneous E2E verification records
-
-The following historical test records document what was checked, not current public API specifications or performance certifications. Current usage and support boundaries belong in the [Optimization guides](../optimization/README.md), while measured evaluation protocols belong in the [Benchmark guides](../benchmarks/README.md). Overlapping regression and surrogate-variation coverage is consolidated in the regression guide. The remaining records retain distinct test contracts and should not be merged solely to reduce file count.
-
-- [Binary classification verification](heterogeneous-e2e-classification.md)
-- [Regression and surrogate-variation verification](heterogeneous-e2e-regression.md)
-- [Runtime and shape compatibility](heterogeneous-e2e-runtime-compatibility.md)
-- [Negative-path and edge-failure tests](heterogeneous-e2e-edge-failures.md)
-- [Final cross-phase verification audit](heterogeneous-e2e-verification.md)
-
-## Temporary design records
-
-audit、prototype、feasibility、gap、個別 model design の文書は恒久仕様ではありません。
-現在も必要な判断は、対応する model guide、theory、または上記の恒久文書へ統合します。
-統合後の一時文書は削除し、実装経緯は Git 履歴と Pull Request に残します。
-
-次の情報は恒久文書として新規追加しません。
-
-- Phase ごとの進行記録や closeout
-- 特定時点の実装件数や gap のスナップショット
-- 解消済み feasibility audit
-- 実装前 prototype の結果だけを記録した文書
-- 現行コードと重複する public seam / runtime contract の確認記録
-
-## Documentation ownership
-
-公開モデルの利用方法は [Models](../models/README.md)、理論的背景は
-[Theory](../theory/README.md)、最適化手順は
-[Optimization](../optimization/README.md) を正とします。
-
-public model の documentation coverage は
-[model_coverage.json](../model_coverage.json) と対応する coverage test を正とします。
-
-利用者に必要な現行仕様を development 文書だけに置かないことを原則とします。
-このディレクトリには、開発者が継続的に守る必要がある契約だけを残します。
-
-## Change policy
-
-API 変更時に旧 alias、deprecated wrapper、互換関数、互換 Markdown を残しません。
-実装、呼び出し側、テスト、Notebook、ドキュメントを同じ現行仕様へ完全移行します。
-
-過去の実装経緯が必要な場合は Git 履歴と Pull Request を参照し、
-現在仕様の文書へ履歴を混在させません。
+実装が守るべき詳細な条件は[内部契約](../../docs-internal/README.md)、過去時点の監査・検証結果は[プロジェクト記録](../../.github/project-records/README.md)で管理します。内部資料も公開リポジトリの一部であり、アクセス制限を意味しません。

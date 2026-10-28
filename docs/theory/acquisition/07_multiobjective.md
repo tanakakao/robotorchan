@@ -2,6 +2,7 @@
 
 ## 7.1 Multi-outputとMulti-objectiveを分ける
 
+
 ~~~text
 Multi-output model
     1つのxに対して複数の出力を予測するmodel contract
@@ -18,6 +19,7 @@ objectivesとして扱うかというdecision semanticsが必要です。
 
 複数目的
 
+
 $$
 f(x)=\left(f_1(x),\ldots,f_m(x)\right)
 $$
@@ -32,6 +34,7 @@ dominance と Pareto front を扱います。
 ## 7.3 Pareto dominance
 
 目的ベクトル $`y,y'\in\mathbb R^m`$ に対して、$`y`$ が $`y'`$ を Pareto dominate するとは、
+
 
 $$
 y_j\ge y'_j
@@ -51,6 +54,7 @@ Pareto front の品質を測る代表的な指標が hypervolume（HV）です�
 
 reference point $`r`$ を Pareto front より悪い点として設定し、non-dominated objective vectors と $`r`$
 の間で支配される領域の体積を
+
 
 $$
 HV(\mathcal P;r)
@@ -95,6 +99,7 @@ reference point が不適切だと、
 
 現在の Pareto set を $`\mathcal P_n`$ とし、新しい目的ベクトル $`y`$ を追加したときの hypervolume improvement を
 
+
 $$
 HVI(y)
 =
@@ -110,6 +115,7 @@ $$
 ## 7.7 Expected Hypervolume Improvement
 
 候補 $`x`$ の目的ベクトルは未知なので、posterior expectation を取ります。
+
 
 $$
 EHVI(x)
@@ -128,11 +134,13 @@ $$
 
 batch candidate set
 
+
 $$
 X=(x_1,\ldots,x_q)
 $$
 
 では、q 点を同時に追加した場合の joint hypervolume improvement を評価します。
+
 
 $$
 qEHVI(X)
@@ -157,11 +165,13 @@ uncertainty も考慮し、noise-aware な hypervolume improvement を評価し�
 
 これは単目的の NEI と同じく、
 
+
 ```text
 observed incumbent / front
 ```
 
 と
+
 
 ```text
 latent incumbent / front
@@ -174,6 +184,7 @@ batch / noisy settingではqNEHVI系が重要になります。これは単にEH
 
 baseline $B$ の latent objective vectors から得られる非支配集合を
 $\mathcal P(f(B))$ とすれば、制約なしの基本的な noisy hypervolume improvement は
+
 
 $$
 q\operatorname{NEHVI}(X)
@@ -206,6 +217,7 @@ Multi-objective optimizationを扱うもう一つの方法は、目的ベクト�
 
 weight vector $`w`$ に対して
 
+
 $$
 s_w(f(x))
 $$
@@ -221,6 +233,7 @@ ParEGO は iteration ごとに scalarization weight を変えながら scalar BO
 Noisy / MC setting では NParEGO 系の acquisition が利用されます。
 
 Hypervolume-based methods と scalarization-based methods は同じ MOBO 問題を異なる utility design で扱います。
+
 
 ```text
 EHVI / NEHVI
@@ -300,6 +313,7 @@ hypervolume computation は目的数が増えるほど難しくなります。
 
 MOBO では単一の incumbent ではなく Pareto structure を扱います。
 
+
 ```text
 EHVI / NEHVI
     Pareto front の hypervolume improvement
@@ -324,4 +338,3 @@ Improvement for Parallel Multi-Objective Bayesian Optimization*. NeurIPS.
 - Daulton, S., Balandat, M., and Bakshy, E. (2021), *Parallel Bayesian Optimization of Multiple
 Noisy Objectives with Expected Hypervolume Improvement*. NeurIPS.
 - Ament, S. et al. (2023), *Unexpected Improvements to Expected Improvement for Bayesian
-Optimization*, for log-space improvement formulations used by modern BoTorch APIs.

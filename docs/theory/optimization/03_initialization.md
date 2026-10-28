@@ -84,6 +84,7 @@ continuous unconstrained problem と同じ initialization を
 high-dimensional embedding、trust region、hybrid optimization では、
 initialization を行う座標系や探索領域自体が変わることがあります。
 
+
 ```text
 public input space
 latent / embedded space
@@ -91,15 +92,6 @@ trust-region local space
 ```
 
 どの座標系で initial conditions を生成するかを明示する必要があります。
-
-## 3.9 実装ガイドへの参照
-
-実装固有の対応範囲は
-[Acquisition initialization](../../optimization/initialization.md) と
-[Initialization compatibility](../../optimization/initialization-compatibility.md)
-を source of truth とします。
-
-理論上利用可能な heuristic が、すべての backend で公開されているとは限りません。
 
 ## 参考文献
 

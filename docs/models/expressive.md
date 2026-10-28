@@ -72,34 +72,20 @@ task identityを入力へ追加せず、task covarianceはKronecker multi-task�
 
 ### Mixed Spectral Mixture × Kronecker multi-task
 
-`MixedSpectralMixtureKroneckerMultiTaskGP` keeps raw block-design inputs and applies the
-Spectral Mixture kernel only to continuous design dimensions. Categorical dimensions use the
-native mixed categorical covariance and its continuous-categorical interaction. Task identity is
-not inserted into X; the task covariance remains the independent Kronecker task factor.
+`MixedSpectralMixtureKroneckerMultiTaskGP` は元の block-design 入力を保ち、Spectral Mixture kernel を連続設計列だけに適用します。カテゴリには標準 Mixed 共分散と連続・カテゴリ相互作用を使います。X に task ID を挿入せず、task 共分散を独立の Kronecker 因子として保ちます。
 
-Negative `cat_dims` are normalized in raw-input coordinates. Candidate optimization should use
-`optimize_acqf_mixed` with explicit categorical fixed-feature configurations.
+負の `cat_dims` は元入力座標で正規化します。候補最適化にはカテゴリの固定設定を明示した `optimize_acqf_mixed` を使ってください。
 
 
 ## Infinite-width BNN × Kronecker multi-task
 
-`InfiniteWidthBNNKroneckerMultiTaskGP` keeps the block-design contract
-`train_X[..., n, d]` and `train_Y[..., n, m]`. The infinite-width ReLU NNGP
-kernel defines only the data covariance factor, while the Kronecker task
-covariance remains separate. Task identity is therefore not encoded in `train_X`.
+`InfiniteWidthBNNKroneckerMultiTaskGP` は `train_X[..., n, d]`・`train_Y[..., n, m]` の block-design 契約を保ちます。無限幅 ReLU NNGP はデータ共分散だけを定め、task 共分散は別因子です。X に task ID を符号化しません。
 
-The model exposes `depth`, `weight_variance`, `bias_variance`, and optional ARD
-for the NNGP data kernel. It supports the common exact-GP MLL, posterior sampling,
-scalarized Monte Carlo acquisition, and continuous `optimize_acqf` workflows.
+NNGP kernel には `depth`、`weight_variance`、`bias_variance`、任意の ARD を設定できます。共通 Exact GP MLL、posterior sampling、スカラー化 MC 獲得関数、連続 `optimize_acqf` に対応します。
 
 
 ### Mixed Infinite-width BNN × Kronecker multi-task
 
-`MixedInfiniteWidthBNNKroneckerMultiTaskGP` preserves raw block-design inputs
-`train_X[..., n, d]` and outputs `train_Y[..., n, m]`. Continuous dimensions use the
-infinite-width ReLU NNGP covariance, categorical dimensions use the shared mixed categorical
-covariance and interaction path, and the task covariance remains a separate Kronecker factor.
-Task identity is not inserted into X.
+`MixedInfiniteWidthBNNKroneckerMultiTaskGP` は元の block-design 入出力を保ちます。連続列には無限幅 ReLU NNGP、カテゴリ列には共通 Mixed 共分散と相互作用を使い、task は別の Kronecker 因子にします。X に task ID を挿入しません。
 
-`cat_dims` uses raw-input coordinates and accepts negative indices. Mixed candidate optimization
-uses `optimize_acqf_mixed` with explicit categorical fixed-feature configurations.
+`cat_dims` は元入力座標で負の index も受け取ります。Mixed 候補最適化は、カテゴリ固定設定を明示した `optimize_acqf_mixed` を使います。

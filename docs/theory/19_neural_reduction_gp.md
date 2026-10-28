@@ -4,6 +4,7 @@
 
 線形 reduction では
 
+
 ```text
 z = W^T x
 ```
@@ -11,6 +12,7 @@ z = W^T x
 のような固定された線形 subspace を使います。
 
 neural representation では
+
 
 ```text
 z = encoder_theta(x)
@@ -42,6 +44,7 @@ Supervised reducerがYを使うことと、GPとjoint trainingすることは同
 
 AutoEncoder は
 
+
 ```text
 x
  -> encoder
@@ -54,20 +57,22 @@ x
 
 典型的には
 
+
 ```text
 L_AE = mean ||x - x_hat||^2
 ```
 
 です。
 
-`AutoEncoderGP` は encoder を reducer として先に学習し、その latent coordinate を固定して
+Autoencoder GP は encoder を reducer として先に学習し、その latent coordinate を固定して
 GP を構築します。
 
+
 ```text
-train_X
+観測入力
  -> fit AE once
  -> frozen encoder
- -> latent train_X
+ -> latent 観測入力
  -> GP
 ```
 
@@ -76,17 +81,19 @@ GP marginal likelihoodの勾配は、この事前学習済みencoderの表現学
 つまりfrozen AEが保存しようとするのは主にXのreconstruction informationです。
 それが目的関数Yに重要な情報と一致するかは別途validationする必要があります。
 
-この点が `JointEncoderGP` との本質的な違いです。
+この点が joint encoder GP との本質的な違いです。
 
 ## 2. VAE GP
 
 Variational AutoEncoder は deterministic code ではなく latent distribution を学習します。
+
 
 ```text
 q_phi(z | x) = N(mu_phi(x), diag(sigma_phi(x)^2))
 ```
 
 典型的な VAE objective は
+
 
 ```text
 L_VAE
@@ -99,9 +106,8 @@ L_VAE
 
 です。
 
-`VAEGP` は frozen VAE の posterior-mean latent representation を GP input として使います。
+VAE GP は frozen VAE の posterior-mean latent representation を GP input として使います。
 
-したがって通常の `VAEGP.posterior(X)` は
 
 ```text
 X
@@ -119,10 +125,11 @@ VAE を使っているだけで representation uncertainty が GP posterior へ�
 reconstruction に最適な latent direction と、`Y` の予測に重要な direction は一致しないことが
 あります。
 
-`SupervisedAutoEncoderGP` は reducer の事前学習時に reconstruction loss に加えて
+Supervised Autoencoder GP は reducer の事前学習時に reconstruction loss に加えて
 outcome-prediction loss を使います。
 
 概念的には
+
 
 ```text
 L
@@ -140,9 +147,10 @@ data leakage に注意する必要があります。
 
 ## 4. Supervised VAE
 
-`SupervisedVAEGP` は VAE objective に outcome-aware supervision を追加します。
+Supervised VAE GP は VAE objective に outcome-aware supervision を追加します。
 
 概念的には
+
 
 ```text
 L
@@ -156,15 +164,16 @@ L
 `beta` は latent prior regularization の強さ、`supervised_weight` は outcome-aware loss の
 重みを制御します。
 
-通常の `SupervisedVAEGP` もfrozen reducer modelであり、GP MLLとencoderをjoint training
+通常の Supervised VAE GP もfrozen reducer modelであり、GP MLLとencoderをjoint training
 するモデルではありません。
 
 Supervised AE / VAEではYを使ってreducerをfitするため、cross-validationではencoder fittingも
 training fold内へ閉じます。全dataでencoderをfitしてからGPだけをfold分割するとleakageになります。
 
-## 5. JointEncoderGP
+## 5. joint encoder GP
 
-`JointEncoderGP` は encoder を predictive GP model の一部として扱います。
+joint encoder GP は encoder を predictive GP model の一部として扱います。
+
 
 ```text
 X
@@ -178,6 +187,7 @@ GP predictive objective によって更新されます。
 
 基本training objectiveは
 
+
 ~~~text
 L_joint = - log p(Y | encoder_theta(X))
 ~~~
@@ -187,12 +197,13 @@ L_joint = - log p(Y | encoder_theta(X))
 Joint learningでは、encoderの出力を固定値として扱わず、GPの目的関数からencoderへ勾配を伝播させます。
 そのため、事前学習済みのencoderを固定する二段階学習とは異なる関数表現を獲得します。
 
-## 6. HybridAutoEncoderGP
+## 6. Hybrid Autoencoder GP
 
 GP MLL のみで representation を学習すると、予測に有利でも input structure を強く潰した
 latent space になる可能性があります。
 
-`HybridAutoEncoderGP` は decoder を追加し、
+Hybrid Autoencoder GP は decoder を追加し、
+
 
 ```text
 L_hybrid
@@ -208,7 +219,7 @@ reconstruction は standardized input space で計算されます。
 
 ## 7. Joint VAE
 
-`JointVAEGP` 系では probabilistic encoder と GP predictive objective を同時に扱います。
+Joint VAE GP 系では probabilistic encoder と GP predictive objective を同時に扱います。
 
 VAE の
 
@@ -218,16 +229,15 @@ VAE の
 
 と GP likelihood / marginal objective を組み合わせます。
 
-重要なのは、joint VAE が単なる `VAEGP` の別名ではないことです。
+重要なのは、joint VAE が単なる VAE GP の別名ではないことです。
 
-`VAEGP` は fitted reducer を固定して GP を構築するのに対し、joint VAE では encoder が
+VAE GP は fitted reducer を固定して GP を構築するのに対し、joint VAE では encoder が
 predictive training の一部です。
-
-joint model の学習では `training_loss()` を使います。
 
 ## 8. Latent uncertainty
 
 VAE encoder が
+
 
 ```text
 q(z | x)
@@ -236,6 +246,7 @@ q(z | x)
 を返しても、posterior mean `mu(x)` だけを GP input にすれば latent uncertainty は失われます。
 
 representation uncertainty を反映するには、例えば
+
 
 ```text
 z_s ~ q(z | x)
@@ -246,14 +257,7 @@ p(f | x, D)
 
 のように latent samples 上の GP posterior を積分する必要があります。
 
-`JointVAEGP.uncertainty_aware_posterior()` はこの考え方を Monte Carlo 近似し、
-latent-sample posterior mixture の moment を近似します。
-
 通常のdeterministic posteriorとuncertainty-aware posteriorは同じsemanticsではありません。
-
-さらに `uncertainty_aware_posterior()` はlatent-sampleごとのGP posteriorをそのまま返すAPIではなく、
-Monte Carloで得たpredictive momentsをmoment matchingしてGaussian posteriorとして返します。
-したがって一般の非Gaussian mixture posteriorを完全に保持する操作とは区別します。
 
 ## 9. Mixed neural representation
 
@@ -261,6 +265,7 @@ categorical code を continuous neural encoder へそのまま入力すると、
 意味のある Euclidean geometry として学習してしまう可能性があります。
 
 Mixed neural representationでは、カテゴリ値の順序や数値距離を誤って仮定しないよう、原則として
+
 
 ```text
 continuous X
@@ -278,12 +283,12 @@ categorical X
 
 例えば、
 
-- `MixedAutoEncoderGP`
-- `MixedSupervisedAutoEncoderGP`
-- `MixedVAEGP`
-- `MixedSupervisedVAEGP`
-- `MixedJointEncoderGP`
-- `MixedHybridAutoEncoderGP`
+- 混合入力 Autoencoder GP
+- 混合入力 Supervised Autoencoder GP
+- 混合入力 VAE GP
+- 混合入力 Supervised VAE GP
+- 混合入力 Joint Encoder GP
+- 混合入力 Hybrid Autoencoder GP
 
 などです。
 
@@ -292,7 +297,8 @@ categorical X
 ### Mixedではreconstruction対象もcontinuous部分
 
 Mixed joint modelではcategoryをencoderへ入れないだけでなく、
-`MixedHybridAutoEncoderGP` のreconstruction lossもcontinuous columnsを対象にします。
+混合入力 Hybrid Autoencoder GP のreconstruction lossもcontinuous columnsを対象にします。
+
 
 ~~~text
 continuous X
@@ -320,24 +326,20 @@ MultiTask model では task identity は representation-learning target では�
 named class の全直積を作ること自体が目的ではなく、各 feature role を保持した composition が
 重要です。
 
-### 現行MultiTask / Kroneckerのjoint family
-
-現在はjoint representationについても
-
-- `JointEncoderMultiTaskGP`
-- `JointEncoderKroneckerMultiTaskGP`
-- `HybridAutoEncoderMultiTaskGP`
-- `HybridAutoEncoderKroneckerMultiTaskGP`
-- `JointVAEMultiTaskGP`
-- `JointVAEKroneckerMultiTaskGP`
+- Joint Encoder マルチタスク GP
+- Joint Encoder Kronecker マルチタスク GP
+- Hybrid Autoencoder マルチタスク GP
+- Hybrid Autoencoder Kronecker マルチタスク GP
+- Joint VAE マルチタスク GP
+- Joint VAE Kronecker マルチタスク GP
 
 がpublicです。
 
 long-format MultiTaskではtask featureをencoderから除外し、data featuresだけをlatentへ写像してから
 task identityを再結合します。Kronecker形式ではtask identityがXの列ではなくY側のtask axisなので、
-train_Xのdata featuresをencoderへ渡せます。
+観測入力のdata featuresをencoderへ渡せます。
 
-また `MixedJointEncoderMultiTaskGP` ではcategorical design columnsとtask featureの両方を
+また 混合入力 Joint Encoder マルチタスク GP ではcategorical design columnsとtask featureの両方を
 continuous encoderから分離します。モデル名の存在から他のMixed × joint × MultiTaskの全直積まで
 自動的に実装済みと推測しないことが重要です。
 
@@ -348,7 +350,6 @@ continuous encoderから分離します。モデル名の存在から他のMixed
 | Encoder fitting | GP構築前 | GPと同時 |
 | GP objectiveからencoderへの勾配 | なし | あり |
 | Latent basis | GP fitting中は固定 | training中に変化 |
-| 学習契約 | reducer fit + GP fit | `training_loss()` |
 | Reconstruction regularization | reducer側 | Hybrid等でjoint |
 | 実装複雑性 | 比較的低い | 高い |
 
@@ -357,19 +358,11 @@ representationへ直接伝えられますが、encoderとkernel hyperparameter�
 optimization landscapeも変わります。どちらが良いかはデータ量・representation assumption・
 validation結果で判断します。
 
-## 12. BoTorch compatibility
-
-frozen neural reducer は `ReducedGP` infrastructure を使うため、public posterior は
+frozen neural reducer は 次元削減 GP infrastructure を使うため、public posterior は
 original-space candidate `X` を受け、内部で encode します。
 
 joint model も public input は original space を基本とし、`forward` 内で learnable encoder を
 通します。
-
-重要なのは、encoder が存在しても acquisition function から見た model interface は
-BoTorch posterior contract を維持することです。
-
-一方で joint auxiliary loss は標準 MLL fit helper だけでは表現できないため、
-training loop は `training_loss()` contract に従います。
 
 ## 13. Bayesian optimization での注意
 
@@ -398,14 +391,6 @@ model familyは単純な性能順位ではなく、どのrepresentation assumpti
 - BO trajectory の再現性
 
 です。
-
-## 14. 理論と実装の境界
-
-Neural reductionでは、encoderの事前学習とGPとの共同学習を区別します。
-また、潜在変数の不確実性を点推定に置き換える場合、予測分布の分散が過小評価される可能性があります。
-Mixed入力では連続変数の表現学習とカテゴリ共分散を区別し、Multi-task入力ではタスク構造を適切に保持します。
-
-モデルごとのAPI、学習手順、事後分布の呼び出し方は[高次元入力モデル](../models/high_dimensional_inputs.md)を参照してください。
 
 ## 15. この章で覚えておくこと
 

@@ -1,130 +1,64 @@
-# Mixed one-shot acquisition optimization
+# Mixed one-shot 獲得関数の最適化
 
-## Scope
+## 適用範囲
 
-robotorchan supports runtime evaluation and correctness-first candidate optimization of
-mixed one-shot acquisition functions when the underlying model supports the required
-fantasy operation. This includes mixed qKG and mixed multi-fidelity qMFKG with categorical
-values that may differ between the observed candidate and fantasy decision points.
+必要な fantasy 操作をモデルが提供する場合に、mixed one-shot の評価と候補最適化を行います。実候補と fantasy 意思決定点でカテゴリが異なる mixed qKG・mixed 多忠実度 qMFKG を含みます。
 
-## Why `optimize_acqf_mixed` is not sufficient for qKG
+## 通常の `optimize_acqf_mixed` では不十分な理由
 
-BoTorch one-shot knowledge-gradient acquisitions optimize an augmented batch. The first
-rows represent the candidates that will actually be evaluated, while additional rows
-represent fantasy decision points used internally by the acquisition.
+one-shot KG は実験候補と内部の fantasy 意思決定点を含む拡張 batch を最適化します。通常の `optimize_acqf_mixed` は `fixed_features_list` の各割当を batch 全体へ適用するため、実候補と全 fantasy 点のカテゴリが同じになります。
 
-`optimize_acqf_mixed` applies each entry in `fixed_features_list` to the complete
-augmented batch. For a categorical feature, this therefore fixes the observed candidate
-and every fantasy decision point to the same category.
+fantasy posterior の最適カテゴリは観測候補と異なり得るため、この制限は一般には正しくありません。通常の mixed optimizer を qKG・qMFKG の汎用解法として案内しません。
 
-That restriction is not generally valid. A fantasy posterior can have its optimum in a
-different category from the category of the observed candidate.
+## 現在の対応
 
-Consequently, robotorchan must not present ordinary `optimize_acqf_mixed` as a correct
-general optimizer for mixed qKG or mixed qMFKG.
+- mixed qMFKG モデルの構築、目標 fidelity 上の incumbent 最適化。
+- コスト効用、目標 fidelity 射影、one-shot 評価。
+- fantasy 意思決定点間で異なるカテゴリ。
+- `optimize_mixed_one_shot_acqf` による q=1 の行別カテゴリ厳密列挙。
 
-## Current support
+q > 1 と厳密列挙の上限を超える割当空間は未対応です。実行検証には、カテゴリをまたぐ明示的拡張 batch と、実際の mixed qKG・qMFKG による候補生成を含みます。
 
-The current runtime contract is:
+## 初期化
 
-- mixed qMFKG model construction: supported;
-- target-fidelity incumbent optimization: supported;
-- cost-aware utility and target-fidelity projection: supported;
-- one-shot acquisition evaluation: supported;
-- different categories across fantasy decision points: supported;
-- mixed one-shot candidate optimization for `q=1`: supported by
-  `optimize_mixed_one_shot_acqf` using exact row-wise categorical enumeration;
-- larger `q` and categorical assignment spaces above the configured exact-enumeration limit:
-  intentionally unsupported.
+各行の厳密なカテゴリ割当ごとに拡張 batch 全体を平坦化し、条件付き連続最適化問題として BoTorch の標準初期化を使います。カテゴリを拡張行ごとに固定することで、実候補と fantasy 行で異なるカテゴリを保ちます。
 
-Runtime coverage includes both explicit cross-category augmented batches and candidate
-generation with real mixed qKG and mixed qMFKG acquisitions.
+連続 qKG・qMFKG が専用 one-shot 初期化を使う経路とは異なります。この helper は q=1 と自動初期化のみが対象で、公開 API として明示的な拡張 `batch_initial_conditions` を受け付けるとは主張しません。
 
-## Initialization contract
+## 最適化の契約
 
-The mixed one-shot path does not use ordinary mixed initialization over the public q-batch.
-For each exact row-wise categorical assignment, it flattens the complete augmented batch into
-one conditional continuous optimization problem. BoTorch then generates standard initial
-conditions in that flattened space while the categorical coordinates are fixed for each
-augmented row. This preserves different categories for actual and fantasy rows without copying
-or replacing BoTorch's initialization heuristic.
+カテゴリ割当は拡張行ごとに変化でき、全行共通の固定値とはしません。最適化後の実候補抽出は BoTorch one-shot の意味を保ちます。テストには実候補と fantasy 最適点のカテゴリが異なる場合を含めます。
 
-This is intentionally different from continuous qKG / qMFKG, where native `optimize_acqf`
-detects the one-shot acquisition and uses BoTorch's dedicated one-shot initializer. The mixed
-helper remains `q=1` and automatic-initialization only; it does not claim a public explicit
-augmented `batch_initial_conditions` contract.
+q=1 と有限で上限のある割当空間を対象とし、範囲外では通常の mixed optimizer に fallback せず失敗します。
 
-## Optimizer contract
+## 処理手順
 
-The mixed one-shot optimizer preserves the distinction between actual candidates
-and fantasy decision points. In particular, it must allow categorical assignments to vary
-by augmented-batch row rather than applying one fixed assignment to every row.
+実 batch サイズ q、拡張サイズ q_aug に対して、拡張行ごとのカテゴリ割当行列を用います。
 
-The implementation also preserves BoTorch one-shot semantics for extracting the
-actual candidates from the optimized augmented batch. Runtime tests must include a case
-where the selected candidate category and at least one fantasy optimum category differ.
+1. 実候補行の合法なカテゴリを列挙する。
+2. fantasy 行のカテゴリを独立に割り当てる。
+3. 各割当の下で連続座標を最適化する。
+4. 条件付き最適値間で獲得値を比較する。
+5. one-shot の抽出規則で実候補だけを返す。
 
-The current exact implementation is deliberately scoped to `q=1` and bounded finite
-categorical assignment spaces. It fails explicitly outside that contract rather than
-falling back to ordinary `optimize_acqf_mixed`.
+現行の厳密経路は q=1 の有限カテゴリが対象です。枝刈り・近似探索を行うとは主張しません。多カテゴリ・大きな q の高速化は将来の性能拡張であり、正しさの要件とは分けます。
 
+### 不変条件
 
-## Optimizer design
+- fantasy 行は実候補と異なるカテゴリを選べる。
+- 条件付き連続最適化中のカテゴリ座標は固定する。
+- fidelity は最適化変数として残し、目標への射影は獲得関数が担う。
+- 獲得関数には拡張 batch 全体を渡す。
+- 返り値から fantasy 行を除外する。
+- 報告獲得値は最適化した拡張 batch に対応する。
+- 通常の non-one-shot mixed は BoTorch 標準 mixed optimizer を使う。
 
-The implemented mixed one-shot optimizer treats categorical assignments as part of the augmented
-batch state rather than as global fixed features.
+列挙前にカテゴリ列、非空の値集合、bounds 内の値を検証します。不正な固定値を bounds 外へ逃がしません。大きすぎる割当空間は明示的に拒否します。
 
-For an acquisition with actual batch size `q` and augmented size `q_aug`, define a
-categorical assignment matrix with one assignment per augmented row. The optimizer therefore:
+## 経路の選択と列挙上限
 
-1. enumerates feasible categorical assignments for the actual candidate rows;
-2. allows fantasy rows to use assignments independently from the actual rows;
-3. optimizes continuous coordinates conditionally on each augmented categorical assignment;
-4. compares acquisition values across the resulting conditional optima;
-5. returns only the actual candidates using the acquisition's one-shot extraction semantics.
+通常の連続獲得関数は `optimize_acqf`、通常の Mixed は `optimize_acqf_mixed`、mixed one-shot qKG・qMFKG は専用 helper を使います。
 
-The current implementation targets `q=1` and finite categorical alternatives. This keeps
-the combinatorial search explicit and correct without claiming pruning or approximate
-search. Multi-category and larger-`q` acceleration are future performance extensions, not
-requirements for semantic correctness.
+平坦化は条件付き連続最適化に限り、カテゴリ固定列は拡張行ごとに構成します。抽出は獲得関数の `extract_candidates` に委譲します。qMFKG の実候補 fidelity は bounds 内で最適化し、全拡張行を目標 fidelity に固定しません。
 
-### Correctness invariants
-
-The implementation must satisfy all of the following:
-
-- a fantasy row may select a different category from the observed candidate;
-- categorical coordinates remain fixed during conditional continuous optimization;
-- fidelity coordinates remain optimizable; target-fidelity projection remains an acquisition-level
-  concern;
-- the acquisition receives the complete augmented batch;
-- returned candidates exclude fantasy decision rows;
-- the reported acquisition value corresponds to the optimized augmented batch;
-- ordinary non-one-shot mixed acquisitions continue to use BoTorch's native mixed optimizer.
-
-The implementation must fail explicitly when the categorical assignment space is too large
-for the exact enumeration path rather than silently falling back to a semantically
-restricted optimizer. Categorical feature indices, non-empty value sets, and categorical values
-inside the supplied bounds are validated before enumeration; invalid fixed categorical values
-must not be allowed to escape the candidate bounds.
-
-## Phase 5 candidate-optimizer audit
-
-The candidate-optimization paths remain intentionally separate:
-
-- ordinary continuous acquisitions use BoTorch `optimize_acqf`;
-- ordinary mixed acquisitions use BoTorch `optimize_acqf_mixed`;
-- mixed one-shot qKG/qMFKG use `optimize_mixed_one_shot_acqf`.
-
-The dedicated one-shot path flattens the augmented batch only for conditional continuous
-optimization. Categorical fixed-feature indices are constructed per augmented row, so actual and
-fantasy rows remain independent. Candidate extraction is delegated back to the one-shot
-acquisition through `extract_candidates`.
-
-For qMFKG, the observed candidate fidelity remains an optimization variable within the supplied
-bounds. Target-fidelity projection and cost-aware semantics belong to the acquisition itself and
-are not implemented by pinning every augmented row to a target fidelity.
-
-The exact enumeration guard is computed over the full augmented categorical state:
-`row_assignment_count ** augmented_q`. The current `q=1` contract and
-`max_assignments` guard therefore bound the correctness-first combinatorial path explicitly.
-Larger batches and scalable categorical search remain future extensions, not implicit fallbacks.
+列挙規模は `row_assignment_count ** augmented_q` です。q=1 と `max_assignments` で組合せ経路を明示的に制限します。大きな batch や scalable なカテゴリ探索へ暗黙に切り替えません。

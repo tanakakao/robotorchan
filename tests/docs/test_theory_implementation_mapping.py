@@ -26,7 +26,7 @@ class MappingConsistencyTests(unittest.TestCase):
     def test_missing_return_link_is_reported(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            mapping = root / "docs" / "development" / "theory-implementation"
+            mapping = root / ".github" / "project-records" / "theory-guide" / "mapping"
             mapping.mkdir(parents=True)
             for name in MODULE.FILES:
                 (mapping / name).write_text("", encoding="utf-8")

@@ -8,10 +8,7 @@ from pathlib import Path
 
 import torch
 
-GUIDE = (
-    Path(__file__).resolve().parents[2]
-    / "docs/development/theory-implementation/guide/optimization/09_high_dimensional.md"
-)
+GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/optimization/09_high_dimensional.md"
 
 
 class HighDimensionalGuideTests(unittest.TestCase):

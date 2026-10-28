@@ -4,7 +4,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_acquisition_architecture_documents_botorch_first_contract() -> None:
-    path = REPO_ROOT / "docs" / "development" / "acquisition-architecture.md"
+    path = REPO_ROOT / "docs-internal" / "architecture" / "acquisition-architecture.md"
     text = path.read_text(encoding="utf-8")
 
     assert "BoTorch-first" in text

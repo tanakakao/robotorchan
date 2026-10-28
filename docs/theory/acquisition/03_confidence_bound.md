@@ -2,6 +2,7 @@
 
 ## 3.1 UCBを一言で理解する
 
+
 ~~~text
 UCB = 現在よさそうな候補 + まだ分からない候補へのoptimism bonus
 ~~~
@@ -14,6 +15,7 @@ EIがimprovementをutilityにするのに対し、UCBはposterior locationとunc
 Confidence-bound acquisition は、posterior mean と posterior uncertainty を明示的に組み合わせます。
 
 最大化問題の代表的な Upper Confidence Bound（UCB）は
+
 
 $$
 \operatorname{UCB}(x)
@@ -29,6 +31,7 @@ uncertainty の寄与を制御する parameter です。
 ## 3.3 Confidence bound と optimism
 
 UCB は、posterior mean だけを見るのではなく、不確実な候補に対して楽観的な値を与えます。
+
 
 $$
 \sqrt{\beta}\sigma_n(x)
@@ -53,11 +56,13 @@ iteration、confidence level、探索空間、kernel / function class等に依�
 
 したがって、
 
+
 ```text
 UCB acquisition の beta
 ```
 
 と
+
 
 ```text
 特定の GP-UCB theorem が要求する beta_t
@@ -68,6 +73,7 @@ UCB acquisition の beta
 ## 3.5 Lower Confidence Bound
 
 最小化問題では
+
 
 $$
 \operatorname{LCB}(x)
@@ -82,6 +88,7 @@ $$
 ## 3.6 EI との違い
 
 EI は improvement の期待値を計算します。UCB は posterior の location と scale を直接組み合わせます。
+
 
 ```text
 EI
@@ -116,32 +123,6 @@ UCB は uncertainty を式へ直接入れるため、posterior scale の calibra
 
 これは EI など他の acquisition にも影響しますが、UCB では $`\beta\sigma(x)`$ の形で特に見えやすくなります。
 
-## 3.9 beta の意味を API と混同しない
-
-文献によって
-
-$$
-\mu(x)+\sqrt{\beta}\sigma(x)
-$$
-
-と書く場合と、
-
-$$
-\mu(x)+\beta\sigma(x)
-$$
-
-と書く場合があります。
-
-したがって parameter 名だけで探索強度を比較せず、**係数が式のどこへ入る定義なのか**を確認する必要があります。BoTorch API を使う場合も、そのバージョンの定義を確認します。
-
-## 3.10 BoTorch / robotorchan との対応
-
-BoTorch は analytic UCB と MC batch variant を提供しています。robotorchan は標準 UCB をローカルに再実装せず、BoTorch
-native path を利用します。
-
-利用方法は [Standard acquisition](../../optimization/standard_acquisition.md)、現在の統合範囲は [Acquisition
-integration status](../../optimization/acquisition-integration.md) を参照してください。
-
 ## 3.11 この章で覚えておくこと
 
 - UCBはposterior meanにuncertainty由来のoptimism bonusを加える考え方
@@ -151,7 +132,6 @@ integration status](../../optimization/acquisition-integration.md) を参照し�
 - qUCBはpointwise UCB上位q点ではなくjoint batch acquisition
 - q=1 analytic UCBとMC qUCBではposterior requirementが異なり得る
 - uncertainty scaleの意味とcalibrationはmodel familyに依存する
-- robotorchanは標準UCB/qUCBを再実装せずBoTorch-native pathを使う
 
 ## 3.12 まとめ
 

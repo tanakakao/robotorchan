@@ -1,30 +1,15 @@
-# Multi-seed statistical evaluation
+# 多 seed の統計評価
 
-The benchmark statistics API supplements normal-approximation curve summaries
-with **seed-level percentile bootstrap confidence intervals**.
+正規近似に加え、seed 単位の percentile bootstrap 信頼区間を提供します。
 
-`bootstrap_curves({seed: metric_curve, ...})` returns pointwise mean and
-bootstrap confidence bounds. The bootstrap resamples **whole independent
-seed trajectories**, rather than individual evaluation steps, preserving
-within-trajectory dependence. Identical `seed` and `n_resamples` values
-reproduce the same interval.
+`bootstrap_curves({seed: metric_curve, ...})` は点ごとの平均と区間を返します。評価時点をばらして再抽出せず、独立 seed の軌跡全体を再抽出して軌跡内の依存を保ちます。同じ `seed`・`n_resamples` で同じ区間を再現します。
 
-`compare_paired_bootstrap(first, second)` computes first-minus-second
-curves for matching seed identifiers and resamples the paired differences.
-`probability_positive` is the empirical fraction of bootstrap mean
-differences above zero. It is **not** a Bayesian posterior probability
-or a formal p-value.
+`compare_paired_bootstrap(first, second)` は対応 seed の first-minus-second 曲線を計算して差を再抽出します。`probability_positive` は bootstrap 平均差が正となった経験的割合で、Bayesian 事後確率や正式な p 値ではありません。
 
-Use `FairComparisonProtocol` to validate identical experimental settings
-and initial observations before comparing curves. See the
-[Comparative fairness protocol](comparative-fairness-protocol.md).
-Report the number of independent seeds, interval confidence, bootstrap
-resamples, metric orientation, and evaluation budget.
+比較前に `FairComparisonProtocol` で設定と初期観測の一致を確認してください。[公平性契約](../../docs-internal/contracts/benchmarks/comparative-fairness-protocol.md)に従い、独立 seed 数、信頼水準、再抽出数、指標方向、予算を報告します。
 
-Important limitations:
-
-- Bounds are **pointwise**, not simultaneous bands.
-- Percentile bootstrap can be unreliable with very few independent seeds.
-- A single-seed interval collapses to a point and provides no uncertainty estimate.
-- Bootstrap intervals alone do not correct for multiple comparisons.
-- Missing or non-finite metric curves are rejected by the shared curve validator.
+- 区間は点ごとで、同時信頼帯ではありません。
+- 独立 seed が少ない場合は不安定です。
+- 1 seed の区間は点に縮退し、不確実性を推定できません。
+- 多重比較補正は行いません。
+- 欠損・非有限曲線は共通 validator が拒否します。

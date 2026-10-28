@@ -2,6 +2,7 @@
 
 ## 6.1 EI / MES / KGの違いから理解する
 
+
 ~~~text
 EI   : candidate自身のimprovement
 MES  : optimumについて得られるinformation
@@ -21,6 +22,7 @@ Lookahead acquisition は、候補 $`x`$ の現在の objective value だけで�
 
 現在のデータを $`\mathcal D_n`$、候補 $`x`$ の未知観測を $`Y_x`$ とすると、観測後データは
 
+
 $$
 \mathcal D_{n+1}
 =
@@ -37,6 +39,7 @@ $$
 
 候補 $`x`$ を観測した後の expected decision value が
 
+
 $$
 \mathbb E_{Y_x}
 [
@@ -45,6 +48,7 @@ V(\mathcal D_n\cup\{(x,Y_x)\})
 $$
 
 なら、one-step value of information は概念的に
+
 
 $$
 \alpha_{\mathrm{VOI}}(x)
@@ -67,6 +71,7 @@ Knowledge Gradient（KG）は Bayesian Optimization における代表的な val
 
 noiseless な直感では、現在の posterior mean に基づく最良 decision value
 
+
 $$
 V_n
 =
@@ -75,6 +80,7 @@ $$
 
 と、候補 $`x`$ を観測した後の posterior mean $`\mu_{n+1}`$ に基づく
 
+
 $$
 V_{n+1}
 =
@@ -82,6 +88,7 @@ V_{n+1}
 $$
 
 の expected difference を評価します。
+
 
 $$
 \operatorname{KG}(x)
@@ -100,6 +107,7 @@ EI は候補 $`x`$ 自身が incumbent を改善する期待量を評価しま�
 
 KG は候補 $`x`$ の観測によって posterior 全体が更新され、その結果として最終的に選ぶ decision が改善する価値を評価します。
 
+
 ```text
 EI
     candidate の function value による improvement
@@ -115,6 +123,7 @@ KG
 未知の観測結果を仮想的に生成し、それを観測したと仮定した posterior を **fantasy model** と呼びます。
 
 概念的には
+
 
 ```text
 current posterior
@@ -141,6 +150,7 @@ KG には nested optimization が現れます。
 
 外側では「どこを観測するか」を最適化し、各 fantasy outcome の内側では「観測後にどこを最終選択するか」を最適化します。
 
+
 $$
 \max_x
 \;
@@ -152,11 +162,10 @@ $$
 
 この inner maximization が KG の計算コストと最適化難易度の大きな要因です。
 
-BoTorch では fantasy points / fantasy samples と acquisition optimization を組み合わせてこの構造を扱います。
-
 ## 6.8 qKnowledgeGradient
 
 複数候補を同時に観測する場合は、candidate batch $`X`$ の joint future observations を考えます。
+
 
 $$
 Y_X\sim p(Y_X\mid\mathcal D_n)
@@ -191,6 +200,7 @@ KG は代表的な one-step lookahead criterion です。
 
 2-step の概念構造は
 
+
 ```text
 x1 を選ぶ
     ↓
@@ -211,6 +221,7 @@ terminal decision
 
 Multi-step lookahead では future observation ごとに decision が分岐します。
 
+
 ```text
 current
  ├─ fantasy y1(a)
@@ -227,11 +238,8 @@ current
 
 ## 6.11 One-shot formulationとauxiliary decision rows
 
-nested inner optimizationをそのまま繰り返す代わりに、BoTorchのone-shot lookahead acquisitionでは
-actual candidateとfuture / fantasy decision variablesを一つのaugmented optimization problemへ
-組み込む場合があります。
-
 重要なのはaugmented rowsのすべてが実際に評価されるcandidateではないことです。
+
 
 ~~~text
 actual candidate rows     実際に返して評価する点
@@ -242,9 +250,6 @@ auxiliary / fantasy rows  acquisition内部の将来decisionを表す点
 extraction semanticsに従ってactual candidatesだけを返す必要があります。
 
 ## 6.12 qMultiStepLookahead
-
-BoTorch の `qMultiStepLookahead` は、複数段階の fantasy decisions を含む lookahead acquisition
-を構成するための一般的な枠組みです。
 
 これは特定の単一 closed-form acquisition というより、stage-wise value functions と fantasy branching を組み合わせる
 framework として理解する方が適切です。
@@ -257,6 +262,7 @@ framework として理解する方が適切です。
 
 ### Batch
 
+
 $$
 (x_1,\ldots,x_q)
 $$
@@ -264,6 +270,7 @@ $$
 を**観測結果を見る前に同時決定**します。
 
 ### Multi-step adaptive policy
+
 
 $$
 x_1
@@ -282,6 +289,7 @@ batch size q と lookahead depth は別の軸です。
 MES などは optimum についての information gain を直接評価します。
 
 KG は terminal decision value の expected improvement を評価します。
+
 
 ```text
 MES
@@ -317,21 +325,11 @@ Lookahead acquisition は通常、
 
 lookahead depth を増やせば常に実用上優れるわけではなく、残り evaluation budget と acquisition computation cost のバランスが必要です。
 
-## 6.17 BoTorch / robotorchan との対応
-
-BoTorch は `qKnowledgeGradient` と `qMultiStepLookahead` を提供し、fantasy model を使った lookahead
-optimization をサポートします。
-
-robotorchan はこれらの標準手法を再実装せず、BoTorch native path を基本とします。
-
-利用上の位置付けは [Lookahead optimization guide](../../optimization/lookahead.md)、現在の統合状況は [Acquisition
-integration status](../../optimization/acquisition-integration.md) を参照してください。
-
 ## 6.18 この章で覚えておくこと
 
 - KGはcandidate valueではなく観測後のterminal decision valueの改善を評価する
 - MESのinformation gainとKGのvalue of informationは同じ基準ではない
-- fantasy outcome / modelはreal `X_pending` と別物
+- fantasy outcome / modelはreal `未完了の入力集合` と別物
 - qKGはpointwise KG上位q点ではなくjoint future observationsを扱う
 - batch qとlookahead depthは別の軸
 - multi-stepでは後段decisionが前段observationへadaptiveに依存する
@@ -343,6 +341,7 @@ integration status](../../optimization/acquisition-integration.md) を参照し�
 ## 6.19 まとめ
 
 Lookahead acquisition の中心は
+
 
 $$
 \text{value of information for future decisions}
@@ -363,5 +362,3 @@ batch candidate selection と multi-step adaptive decision は別の概念であ
 Sequential Information Collection*. SIAM Journal on Control and Optimization.
 - Jiang, S. et al. (2020), *Efficient Nonmyopic Bayesian Optimization via One-Shot Multi-Step
 Trees*. NeurIPS.
-- BoTorch documentation, *Acquisition Functions*, for current Knowledge Gradient and multi-step
-lookahead APIs.

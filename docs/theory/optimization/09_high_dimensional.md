@@ -26,7 +26,7 @@ d が大きくなると、
 
 ### Model-side reduction
 
-PCA、PLS、AE、VAE、JointEncoderGP などで surrogate が扱う representation を変えます。
+PCA、PLS、AE、VAE、joint encoder GP などで surrogate が扱う representation を変えます。
 
     X_original -> representation Z -> surrogate
 
@@ -75,12 +75,10 @@ minimum-norm reconstruction であり、元の点の一意な復元ではあり�
 
 元空間 box を latent space へ写した領域は一般に単純な axis-aligned box ではありません。
 
-LatentSpaceStrategy では linear image の coordinate-wise outer bounds を探索 bounds とします。
+Latent Space 探索 では linear image の coordinate-wise outer bounds を探索 bounds とします。
 
 したがって latent box 内の点を reconstruct すると元空間 bounds を外れる場合があります。
 元空間 box への射影は境界を満たしますが、latent 空間での探索幾何を変化させます。
-
-このため metadata には
 
 - feasibility_projection_distance
 - latent_round_trip_distance
@@ -173,19 +171,11 @@ metric initialization、multi-start MAP、
 reference diagonal Laplace approximation、metric sampling、moment-matched acquisition model
 までを実装範囲としています。
 
-これは単なる acquisition optimizer wrapper ではなく、
-ALEBO の search geometry と surrogate geometry を対応させる構成です。
-
 ## 9.11 ALEBO の candidate optimization
 
-ALEBOStrategy は feasible embedded polytope 内で acquisition を最適化します。
+ALEBO 探索 は feasible embedded polytope 内で acquisition を最適化します。
 
-返却 contract は
-
-    SearchResult.candidates -> original/public space
-    metadata["embedded_candidates"] -> embedded space
-
-です。
+探索座標と実験対象の元座標を区別し、候補を評価する空間を明示します。
 
 joint q-batch では feasible embedded initial conditions を使います。
 
@@ -211,7 +201,7 @@ BAxUS は sparse embedding と trust region を組み合わせ、
 これにより最初から ambient dimension 全体を探索せず、
 必要に応じて search capacity を増やします。
 
-## 9.13 BAxUSState
+## 9.13 BAxUS の状態
 
 BAxUSは探索の進行状況と評価予算に応じて埋め込み次元と局所探索領域を適応させます。
 探索が停滞した場合に部分空間を拡張し、探索可能な方向を増やします。
@@ -253,9 +243,6 @@ Trust Region 一般と TuRBO の詳細は次章で扱います。
 
 ## 9.16 Lengthscale-weighted target region
 
-BoTorch BAxUS tutorial では target-space GP の ARD lengthscale を使って
-trust-region shape を調整します。
-
 search strategy と surrogate を分離する構成では、
 strategy 内で別の target-space GP を fit しません。
 
@@ -271,12 +258,9 @@ target bin B_j に対して
 適切な original-space ARD lengthscale が取得できない場合は isotropic weight に
 fallback します。
 
-これは BoTorch tutorial と完全に同じ surrogate configuration ではなく、
-これはモデルの表現と探索空間の設計を区別する観点から理解できます。
-
 ## 9.17 BAxUS Thompson Sampling
 
-BAxUSThompsonSamplingStrategy は target trust region 内に有限 candidate pool を作り、
+BAx USThompson Sampling 探索 は target trust region 内に有限 candidate pool を作り、
 posterior sample に基づいて候補を選びます。
 
 各 candidate は incumbent から sparse perturbation され、
@@ -328,7 +312,7 @@ categorical-aware representation が必要です。
 
 ## 9.21 Reconstruction と embedding の違い
 
-LatentSpaceStrategy と REMBO / HeSBO / ALEBO / BAxUS は似ていますが、
+Latent Space 探索 と REMBO / HeSBO / ALEBO / BAxUS は似ていますが、
 低次元座標の由来が異なります。
 
 | Strategy | Low-dimensional space | Mapping |
@@ -376,22 +360,6 @@ ALEBOでは計量を考慮したモデル構造も手法の仮定に含まれま
 ライブラリ固有の状態管理と対応制約は [高次元探索の実装ガイド](../../optimization/high_dimensional_implementation.md) を参照してください。
 
 ---
-
-## 9.26 実装上の境界
-
-高次元 BO の性能は
-
-    surrogate expressiveness
-    + acquisition function
-    + acquisition search strategy
-
-の組合せで決まります。
-
-比較実験では surrogate 差を探索アルゴリズム差として誤認しないよう、
-条件を統制する必要があります。
-
-モデル側の高次元対応については model theory、
-Trust Region / TuRBO は次章で扱います。
 
 ## 参考文献
 

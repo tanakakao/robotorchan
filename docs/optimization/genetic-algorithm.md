@@ -1,28 +1,14 @@
-# Genetic Algorithm optimizer backend
+# Genetic Algorithm backend
 
-Phase 8 adds a native real-valued Genetic Algorithm (GA) backend for acquisition
-optimization. It has no additional package dependency and uses PyTorch tensors for
-population generation, selection, crossover, mutation, and batched acquisition
-evaluation.
+実数値の Genetic Algorithm（GA）による獲得関数最適化器です。追加依存は不要で、集団生成・選択・交叉・変異・バッチ評価に PyTorch Tensor を使います。
 
-A population member represents the complete joint `q x d` candidate. Internally
-it is flattened to `q*d`; the acquisition function receives `[population, q, d]`.
-This makes q-batch optimization joint rather than optimizing each candidate
-independently.
+個体は joint 候補 `q x d` 全体です。内部では `q*d` に平坦化し、獲得関数には `[population, q, d]` を渡します。各候補を独立に最適化しません。
 
-The implementation uses elitism, tournament selection, arithmetic crossover, and
-Gaussian mutation scaled by each variable range. Mutation is clipped to the box.
-A dedicated local `torch.Generator` provides reproducibility without mutating the
-global random stream.
+エリート保存、トーナメント選択、算術交叉、変数範囲でスケールした Gaussian 変異を使い、変異後は box に収めます。専用のローカル `torch.Generator` を使い、グローバル乱数系列を変更しません。
 
-Because the population remains on the bounds tensor device, this backend supports
-GPU-resident evolutionary operations and batched GPU acquisition evaluation.
+集団は bounds の device に保持され、GPU 上の進化演算と獲得関数のバッチ評価に対応します。
 
-This backend operates on continuous coordinates; integer and categorical genes
-are handled by the separate mixed-variable GA backend. Candidate constraints
-are supported using feasibility-first ranking: feasible candidates are preferred
-to infeasible candidates, with violation used to rank infeasible candidates.
-See [Candidate constraints](candidate-constraints.md).
+連続座標が対象です。整数・カテゴリには別の Mixed GA を使います。候補制約では実行可能な個体を優先し、実行不可能な個体間は違反量で順位付けします。[候補制約](candidate-constraints.md)も参照してください。
 
 ```python
 from robotorchan.optim.backends import optimize_acqf_ga

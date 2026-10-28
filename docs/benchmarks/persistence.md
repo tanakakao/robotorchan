@@ -1,7 +1,6 @@
-# Benchmark result persistence (Phase 13)
+# 軌跡単位の結果保存
 
-Benchmark trajectories can be exported to and loaded from versioned JSON
-without Python pickle execution:
+Python pickle を実行せず、version 付き JSON で軌跡を入出力します。
 
 ```python
 from robotorchan.benchmarks import load_trajectory, save_trajectory
@@ -10,18 +9,9 @@ save_trajectory(trajectory, "run-42.json")
 restored = load_trajectory("run-42.json")
 ```
 
-The format preserves seed, initial design count, input points, observed
-objectives, ground-truth objectives, constraint residuals, evaluation costs,
-and tensor dtype (`float32` or `float64`). Tensors are loaded on CPU.
-A `schema_version` field supports explicit compatibility checks.
 
-Malformed shapes, unsupported dtypes, missing tensor fields, nonfinite
-values and incompatible versions are rejected. The JSON is intended for
-**reproducible result inspection**, not as a model checkpoint. To reproduce
-the full experiment, retain the problem definition, algorithm configuration,
-library versions and seed alongside the trajectory; these metadata are not
-yet embedded in this minimal schema.
+seed、初期設計数、X、観測目的、真値目的、制約残差、費用、dtype（float32・float64）を保持し、Tensor は CPU に読み込みます。`schema_version` で互換性を明示的に確認します。
 
-JSON decimal encoding does not guarantee bit-for-bit preservation of all
-floating-point states or RNG states. No legacy aliases or pickle fallback
-are provided.
+不正な形状、未対応 dtype、必須 Tensor の欠落、非有限値、非互換 version は拒否します。結果を再現可能に検査するための形式で、モデル checkpoint ではありません。完全な再現には、この最小 schema に含まれない問題定義・アルゴリズム設定・ライブラリ version・seed も保存してください。
+
+JSON の十進表現は全浮動小数点状態や RNG 状態の bit 単位の保持を保証しません。legacy alias と pickle fallback はありません。

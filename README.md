@@ -67,6 +67,8 @@ print(posterior.mean)
 6. **獲得関数・探索を確認する:** [Optimization guides](docs/optimization/README.md)
 7. **コードを動かす:** [Examples / Notebook一覧](examples/README.md)
 
+理論から実装へ進むには [日本語実装ガイド](docs/guide/README.md) を参照してください。開発の必須条件は [内部契約](docs-internal/README.md)、過去の検証は [プロジェクト記録](.github/project-records/README.md) にまとめています。
+
 より専門的な課題では次のドキュメントを参照してください。
 
 - **理論から理解する:** [`docs/theory/README.md`](docs/theory/README.md)
@@ -79,9 +81,9 @@ print(posterior.mean)
 - **Robust / Noise / Uncertaintyを選ぶ:** [`docs/models/robust_noise.md`](docs/models/robust_noise.md)
 - **高次元出力モデルを選ぶ:** [`docs/models/high_dimensional_outputs.md`](docs/models/high_dimensional_outputs.md)
 - **実際にどう使うか:** [`examples/README.md`](examples/README.md)
-- **Notebook体系と責務:** [`docs/development/notebook-executable-documentation.md`](docs/development/notebook-executable-documentation.md)
+- **Notebook体系と責務:** [`docs-internal/maintenance/notebook-executable-documentation.md`](docs-internal/maintenance/notebook-executable-documentation.md)
 - **高次元の探索戦略:** [`docs/optimization/high_dimensional_search.md`](docs/optimization/high_dimensional_search.md)
-- **設計方針・内部構造:** [`docs/development/architecture.md`](docs/development/architecture.md)
+- **設計方針・内部構造:** [`docs-internal/architecture/architecture.md`](docs-internal/architecture/architecture.md)
 - **リリース手順:** [`docs/development/releasing.md`](docs/development/releasing.md)
 
 モデルごとの実行可能な Jupyter Notebook は [`examples/notebooks/`](examples/notebooks/) にあります。
@@ -155,7 +157,7 @@ robotorchan の public model API は多数の派生モデルを含むため、RE
 
 BoTorch 標準の acquisition function をそのまま利用できることを基本とし、robotorchan 固有の Active Learning / sampling 拡張として `PosteriorVariance`, `PosteriorStd`, `Straddle`, `RandomizedStraddle`, `BoundaryVariance`, `ExpectedPredictiveInformationGain`、分類向けの `PredictiveEntropy`, `MarginUncertainty`, `ProbabilityVariance`, `BALD`, `LatentStraddle`、Thompson candidate selection などを提供します。
 
-理論は [Acquisition Function Theory](docs/theory/acquisition/README.md)、利用方法と適用範囲は [Optimization guides](docs/optimization/README.md) と [Acquisition integration status](docs/optimization/acquisition-integration.md) を参照してください。
+理論は [Acquisition Function Theory](docs/theory/acquisition/README.md)、利用方法と適用範囲は [Optimization guides](docs/optimization/README.md) と [Acquisition integration status](docs-internal/contracts/optimization/acquisition-integration.md) を参照してください。
 
 ## 特殊な学習方法
 

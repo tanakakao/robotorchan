@@ -1,7 +1,6 @@
-# Hybrid global-to-local acquisition optimization
+# 大域探索と局所探索を組み合わせる最適化
 
-Phase 11 adds a two-stage optimizer that combines global derivative-free search
-with BoTorch local refinement.
+微分不要の大域探索と BoTorch の局所改良を組み合わせます。
 
 ```text
 DE or CMA-ES
@@ -10,9 +9,8 @@ DE or CMA-ES
     -> refined candidate
 ```
 
-The global stage is useful when the acquisition landscape is multimodal or a
-local gradient-based optimizer is sensitive to initialization. The local stage
-retains BoTorch's native constrained optimization behavior.
+
+多峰的な獲得関数や初期値に敏感な勾配法に対して、大域段階で有望な候補を探します。局所段階では BoTorch の制約付き最適化を使います。
 
 ```python
 from robotorchan.optim.backends import optimize_acqf_hybrid
@@ -29,21 +27,9 @@ candidates, value = optimize_acqf_hybrid(
 )
 ```
 
-The implemented global stage supports `de`, `cmaes`, and `mixed_ga` by name,
-plus a compatible custom optimizer callable. Candidate constraints are supplied
-to both stages. Each global backend retains its own constraint-handling semantics;
-see [Candidate constraints](candidate-constraints.md).
 
-Only one local restart is currently accepted. Duplicating the same global candidate
-across multiple restarts provides no additional initialization diversity, so
-`num_restarts > 1` is rejected rather than pretending to perform independent
-multi-start refinement. Distinct global restart generation can be added later.
+大域段階には `de`、`cmaes`、`mixed_ga` または互換 custom callable を指定できます。候補制約は両段階へ渡し、backend 固有の処理を保ちます。[候補制約](candidate-constraints.md)を参照してください。
 
-`fixed_features` is supported and forwarded to the global and local stages.
-When `variable_space` declares integer or categorical dimensions, the caller
-must also supply `mixed_fixed_features_list` for the BoTorch mixed local stage.
-Every configuration must fix each structured dimension, either directly or
-through common `fixed_features`. The global optimizer must support the declared
-variable types; `cmaes` does not accept `variable_space` through this path.
-Unsupported combinations fail explicitly rather than silently dropping
-structured coordinates.
+現在の局所段階は restart を 1 回だけ受け付けます。同じ大域候補の複製は初期値の多様性を増やさないため、`num_restarts > 1` は拒否します。異なる大域初期値からの restart は将来の拡張です。
+
+`fixed_features` は両段階へ渡します。`variable_space` に整数・カテゴリを宣言する場合、BoTorch mixed 局所段階用の `mixed_fixed_features_list` も必要です。各設定は共通 `fixed_features` または個別設定で全構造化次元を固定してください。大域最適化器にも宣言した変数型への対応が必要で、この経路の `cmaes` は `variable_space` を受け付けません。未対応の組合せは明示的に拒否します。

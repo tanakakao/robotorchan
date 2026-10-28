@@ -6,30 +6,30 @@ robotorchan のモデル・探索戦略を、再現可能な条件で比較す�
 
 比較実験を再現・解釈する際は、次の順に確認してください。
 
-1. **問題定義**: [Problem contract](problem-contract.md)、[Problem registry](problem-registry.md)、[Standard problems](single_objective.md)、[Heterogeneous problems](heterogeneous-problems.md)
-2. **実行条件**: [Experiment configuration](experiment-configuration.md)、[Execution profiles](execution_profiles.md)、[Environment provenance](environment_provenance.md)、[Fairness protocol](comparative-fairness-protocol.md)
+1. **問題定義**: [Problem contract](../../docs-internal/contracts/benchmarks/problem-contract.md)、[Problem registry](problem-registry.md)、[Standard problems](single_objective.md)、[Heterogeneous problems](heterogeneous-problems.md)
+2. **実行条件**: [Experiment configuration](experiment-configuration.md)、[Execution profiles](execution_profiles.md)、[Environment provenance](environment_provenance.md)、[Fairness protocol](../../docs-internal/contracts/benchmarks/comparative-fairness-protocol.md)
 3. **評価・集計**: [Metrics](metrics.md)、[Multi-seed statistics](multiseed_statistics.md)、[Comparative experiment matrix](comparative-experiment-matrix.md)、[Empirical evaluation protocol](empirical-evaluation-protocol.md)
-4. **結果と証拠**: [Reporting](reporting.md)、[Empirical measured report](empirical-measured-report.md)、[Empirical evaluation status](empirical-evaluation.md)
+4. **結果と証拠**: [Reporting](reporting.md)、[Empirical measured report](../../docs-internal/contracts/benchmarks/empirical-measured-report.md)、[Empirical evaluation status](../../.github/project-records/benchmarks/empirical-evaluation.md)
 
 実行可能なベンチマークやレポート生成手順が存在しても、実測比較が完了したことや最適化性能の優位性が認定されたことは意味しません。各レポートの実行状態・評価条件・証拠を確認してください。
 
 ## Heterogeneous end-to-end benchmark
 
 - [Synthetic problem and reference feasibility](heterogeneous-e2e-benchmark.md)
-- [Reproducible benchmark report generator](heterogeneous-e2e-benchmark-report.md)
+- [Reproducible benchmark report generator](../../.github/project-records/benchmarks/heterogeneous-e2e-benchmark-report.md)
 - [Sequential closed-loop smoke evaluation](heterogeneous-e2e-closed-loop.md)
 - [Random, Sobol, qEI baselines and paired multi-seed evaluation](heterogeneous-e2e-multiseed.md)
 
-These documents define a synthetic problem and an executable report protocol; neither constitutes a certified measured performance result.
+合成問題と実行可能な報告手順を定めていますが、それだけで認定済みの実測性能結果になるわけではありません。
 
 ## Historical benchmark audit records
 
-These dated audit snapshots are retained as historical evidence, **not** as current implementation, current release status, or measured optimization results. Their Phase numbers belong to different development cycles and are not one continuous roadmap. Earlier statements about missing features, report formats, CI status, or provisional future work may have been superseded by later merges. Consult current benchmark contracts, latest `main`, and actual execution artifacts before making capability or performance claims.
+日付付き監査は履歴として保存し、現行実装・release 状態・実測性能の根拠とは区別します。Phase 番号は異なる開発サイクルに属し、一続きの roadmap ではありません。欠落機能、報告形式、CI、将来計画の記述は後の変更で古くなり得るため、最新の契約・実装・実測 artifact を確認してください。
 
-- [Comparative capability audit (2026-10-09)](comparative-capability-matrix.md)
-- [Comparative benchmark validation and release criteria](comparative-benchmark-validation.md)
-- [Benchmark Phase 30 release-readiness review](release_readiness.md)
-- [Empirical performance coverage and execution gates (2026-10-11)](empirical-evaluation.md)
+- [Comparative capability audit (2026-10-09)](../../.github/project-records/benchmarks/comparative-capability-matrix.md)
+- [Comparative benchmark validation and release criteria](../../.github/project-records/benchmarks/comparative-benchmark-validation.md)
+- [Benchmark Phase 30 release-readiness review](../../.github/project-records/benchmarks/release_readiness.md)
+- [Empirical performance coverage and execution gates (2026-10-11)](../../.github/project-records/benchmarks/empirical-evaluation.md)
 
 ## Expressive surrogate models
 
@@ -37,10 +37,7 @@ These dated audit snapshots are retained as historical evidence, **not** as curr
 
 ## Non-GP surrogates
 
-`benchmarks/non_gp_surrogates.py` provides a deterministic predictive diagnostic for the
-implemented empirical non-GP surrogates. It is an executable benchmark rather than a permanent
-performance ranking: raw ensemble spread is not treated as calibrated uncertainty without a
-separate calibration study.
+`benchmarks/non_gp_surrogates.py` は経験 non-GP surrogate の決定的な予測診断です。実行可能な benchmark であり恒久的な性能順位ではありません。較正実験なしに生の ensemble spread を較正済み不確実性とみなしません。
 
 ## High-dimensional Bayesian optimization
 
@@ -55,6 +52,4 @@ separate calibration study.
 
 ## Capability benchmark
 
-`robotorchan.benchmarks.capability` is a library-level structural benchmark for registry filtering
-and recommendation consistency. It is intentionally separate from predictive or BO-performance
-benchmarks: counts of compatible models or recommendations are not measures of model quality.
+`robotorchan.benchmarks.capability` は registry 絞り込みと推奨整合性の構造的 benchmark です。予測・BO 性能とは独立で、互換モデル数・推奨数は品質指標ではありません。

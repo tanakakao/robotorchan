@@ -1,54 +1,30 @@
-# Optimizer benchmark suite
+# 最適化器のベンチマーク
 
-`robotorchan.benchmarks` provides a common measurement harness for scalar acquisition
-optimizers.
+`robotorchan.benchmarks` はスカラー獲得関数最適化器を共通の方法で測定します。
 
 ```python
 from robotorchan.benchmarks import benchmark_optimizer, benchmark_optimizers
 ```
 
-The benchmark layer is deliberately separate from optimizer implementations. It does not choose
-a preferred optimizer and does not alter optimizer budgets.
 
-## Common measurements
+測定層は実装から独立し、推奨最適化器の選択や予算の変更を行いません。
 
-Each `BenchmarkResult` records:
+## 共通の測定値
 
-- returned candidate,
-- raw acquisition value at that candidate,
-- wall-clock runtime,
-- number of q-batches evaluated by the acquisition,
-- wall time normalized by acquisition evaluations in serialization-friendly records,
-- candidate-space feasibility when constraints are supplied,
-- optimizer seed.
+`BenchmarkResult` は候補、罰則なし獲得値、実時間、評価した q-batch 数、直列化可能な評価 1 回当たり時間、制約指定時の最終実行可能性、seed を記録します。
 
-Acquisition evaluations are counted at the q-batch level. A vectorized call
-with shape `[128, q, d]` therefore counts as 128 evaluations rather than one
-Python call.
+`[128, q, d]` のベクトル化呼び出しは Python 呼び出し 1 回ではなく 128 評価です。
 
-## Fair comparisons
+## 公平な比較
 
-Optimizer-specific budgets are not directly interchangeable. For example,
-`raw_samples`, DE population/generations, GA population/generations, and PSO
-swarm/iterations imply different acquisition evaluation counts. Reports should
-therefore show both wall time and measured acquisition evaluations. Serialized benchmark records
-also include seconds per acquisition evaluation as a derived diagnostic. It must not replace the
-raw metrics because vectorization and backend overhead can differ substantially.
+`raw_samples`、DE・GA の集団数と世代数、PSO の粒子数と反復数は直接交換できません。実時間と実測評価数の両方を示してください。評価 1 回当たり秒数は派生診断であり、ベクトル化・backend overhead の差があるため元指標を置き換えません。
 
-For stochastic methods, use several seeds and summarize the distribution of
-candidate quality rather than relying on one run.
+確率的手法は複数 seed で候補品質の分布を要約します。
 
-## Constraints
+## 制約
 
-The harness reports final candidate feasibility independently of the
-optimizer's internal penalty or exact-constraint mechanism. This makes
-constraint failures visible instead of treating a high penalized internal
-score as successful optimization.
+内部の罰則や厳密制約処理から独立に、最終候補の実行可能性を報告します。内部スコアが高いだけで違反候補を成功とみなさないためです。
 
-## Intended benchmark problems
+## 対象問題
 
-The reusable harness can support common problem suites including smooth continuous,
-multimodal, q-batch, mixed/discrete, constrained, noisy, and higher-dimensional cases.
-
-Optional backends such as CMA-ES should only enter a benchmark matrix when
-their optional dependency is installed.
+滑らかな連続問題、多峰性、q-batch、mixed・discrete、制約、ノイズ、高次元などに再利用できます。CMA-ES などは追加依存を導入した場合だけ比較対象に含めます。

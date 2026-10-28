@@ -176,27 +176,13 @@ candidate constraintは入力座標に対する既知制約です。constrained 
 
 ## Asynchronous evaluations and fantasization
 
-TuRBO does not introduce a second asynchronous scheduler. Unresolved evaluations are
-`X_pending` acquisition context, while `TuRBOState` is updated only from completed objective
-values.
+TuRBO は独自の非同期 scheduler を追加しません。未完了評価は獲得関数の `X_pending` とし、`TuRBOState` は完了した目的値だけで更新します。
 
-`TuRBOStrategy.optimize()` consumes the acquisition exactly as configured. Pending-point
-lifecycle remains native to the acquisition: configure `X_pending` through the acquisition
-constructor or BoTorch `set_X_pending()` before calling TuRBO. TuRBO does not snapshot and
-restore pending state because some acquisitions, including incremental noisy improvement,
-materialize pending points into acquisition-specific baseline state rather than a uniform
-`X_pending` attribute.
+`TuRBOStrategy.optimize()` は設定済みの獲得関数をそのまま使います。pending の管理は上流の責務で、呼び出し前にコンストラクタや `set_X_pending()` で設定してください。incremental noisy improvement などは pending を固有の baseline 状態へ取り込むため、TuRBO が一律に snapshot・復元しません。
 
-This means an asynchronous worker loop can keep `batch_size=1`, update TuRBO when one evaluation
-finishes, rebuild the surrogate from completed observations, and generate the replacement
-candidate while the other workers remain in `X_pending`. Pending evaluations themselves never
-increment the TuRBO success or failure counters.
+非同期 worker は batch_size=1 のまま、1 評価の完了で状態と surrogate を更新し、他の未完了点を `X_pending` に残して補充候補を生成できます。pending 自体は成功・失敗 counter を増やしません。
 
-For Thompson sampling, `X_pending` is used to remove matching rows from the finite local
-candidate pool. This prevents redispatch of an unresolved pool point but does not pretend to
-provide fantasy-aware Thompson sampling. If posterior uncertainty should condition on unresolved
-evaluations, construct the appropriate fantasy model using the model's existing `fantasize()`
-contract and pass that model to `thompson_sample()`.
+Thompson sampling では有限な局所プールから `X_pending` と一致する行を除外し、未完了点の再投入を防ぎます。fantasy-aware sampling を提供する意味ではありません。未完了評価への条件付けが必要ならモデルの `fantasize()` 契約で構築したモデルを `thompson_sample()` に渡します。
 
 Fantasization therefore remains a model/acquisition responsibility:
 
@@ -204,9 +190,7 @@ Fantasization therefore remains a model/acquisition responsibility:
 - acquisition `X_pending` owns pending-point semantics for compatible acquisitions;
 - TuRBO owns local trust-region geometry and completed-result state transitions.
 
-Fantasy batch dimensions are not TuRBO q-batch dimensions and never alter
-`TuRBOState.batch_size`. Kronecker models remain subject to their existing explicit
-fantasization limitation rather than receiving a TuRBO-specific workaround.
+fantasy batch 軸と TuRBO の q-batch 軸は異なり、`TuRBOState.batch_size` を変更しません。Kronecker モデルの既存の明示的な fantasization 制限も維持します。
 
 
 
@@ -312,32 +296,17 @@ robotorchanのTuRBOStrategyへ持ち込みません。
 
 ## Multi-fidelity search
 
-Multi-fidelity coordinates are structural search variables, not ordinary TuRBO geometry
-coordinates. `TuRBOStrategy.optimize_multifidelity(...)` therefore shrinks only the design
-coordinates around the current incumbent and restores every declared fidelity coordinate to its
-global bounds. The acquisition remains responsible for deciding which fidelity is worth
-observing.
+fidelity は構造化探索変数です。`optimize_multifidelity(...)` は incumbent 周辺の設計座標だけを縮め、全 fidelity 座標を大域 bounds に戻します。どの fidelity を観測するかは獲得関数が決めます。
 
-This is compatible with BoTorch-native multi-fidelity acquisitions such as
-`qMultiFidelityKnowledgeGradient`. Target-fidelity projection and cost-aware utilities remain
-acquisition-owned; TuRBO does not fix the evaluated candidate to the target fidelity or duplicate
-BoTorch's multi-fidelity logic.
+`qMultiFidelityKnowledgeGradient` などと接続でき、目標 fidelity 射影とコスト効用は獲得関数が担います。TuRBO が実験候補を目標 fidelity に固定したり上流の多忠実度処理を重複したりしません。
 
-For direct geometry use, `turbo_multifidelity_trust_region_bounds(...)` accepts positive or
-negative fidelity indices, rejects duplicates, and requires at least one non-fidelity design
-dimension.
+幾何を直接使う `turbo_multifidelity_trust_region_bounds(...)` は正・負の fidelity index を受け取り、重複を拒否します。fidelity 以外の設計次元が少なくとも 1 個必要です。
 
 ### State semantics across fidelities
 
-Raw observations from different fidelities are not automatically comparable as TuRBO incumbent
-utilities. A cheap low-fidelity observation can have a numerically larger raw value without being
-a better target-fidelity design. `update_state(..., state_values=...)` is the explicit mechanism
-for this distinction: `values` records the observed scalar result, while `state_values` supplies
-the caller-owned decision utility used for success/failure and center movement.
+fidelity 間の生観測値は incumbent 効用として自動比較できません。低 fidelity の値が大きくても目標 fidelity で優れているとは限らないため、`update_state(..., state_values=...)` を使います。`values` は観測 scalar、`state_values` は成功・失敗と中心移動に使う呼び出し側の効用です。
 
-For example, a workflow may use a target-fidelity posterior utility for `state_values`, or update
-the center only from completed target-fidelity evaluations. robotorchan does not silently infer a
-cross-fidelity scalar utility.
+たとえば目標 fidelity の posterior utility を `state_values` に渡すか、目標 fidelity の完了評価だけで中心を更新します。fidelity をまたぐ効用を自動推定しません。
 
 ```python
 result = strategy.optimize_multifidelity(
@@ -353,67 +322,36 @@ strategy.update_state(
 )
 ```
 
-This Phase 15 integration is a single-region TuRBO strategy combined with native multi-fidelity
-acquisition semantics. It is not a separate multi-fidelity trust-region algorithm, and it does
-not add MF-MES or implicit fidelity scheduling.
+単一 region の TuRBO と標準多忠実度獲得関数の組合せです。別の多忠実度 trust-region アルゴリズム、MF-MES、暗黙の fidelity scheduling を追加するものではありません。
 
 
 ## Strategy API contract
 
-`TuRBOStrategy` follows the common `SearchStrategy` contract for acquisition optimization:
-`optimize(acq_function, q=...)` returns a `SearchResult` whose candidates are always in public
-input coordinates. TuRBO-specific structure is exposed by explicit methods rather than a single
-catch-all optimizer signature.
+`TuRBOStrategy` は共通の `SearchStrategy` 契約に従います。`optimize(acq_function, q=...)` が返す `SearchResult` の候補は常に公開入力座標です。専用構造は単一の万能引数ではなく明示的なメソッドで表します。
 
 - `optimize(...)`: continuous acquisition optimization inside the current trust region.
 - `optimize_mixed(...)`: exact discrete assignments plus a local continuous region.
 - `optimize_multifidelity(...)`: local design coordinates with global fidelity coordinates.
 - `thompson_sample(...)`: posterior-sampling candidate generation from a local candidate pool.
 
-All four candidate-generation paths use the same core metadata keys: `trust_region_center`,
-`trust_region_bounds`, `trust_region_length`, `success_counter`, `failure_counter`,
-`restart_count`, `batch_size`, `candidate_generation`, and `candidate_constraints`. Additional
-path-specific diagnostics are additive; for example, mixed search reports discrete dimensions
-and multi-fidelity search reports `fidelity_dims`.
+4 つの候補生成経路は `trust_region_center`、`trust_region_bounds`、`trust_region_length`、`success_counter`、`failure_counter`、`restart_count`、`batch_size`、`candidate_generation`、`candidate_constraints` を共通 metadata とします。Mixed の離散次元、多忠実度の `fidelity_dims` などの診断は追加情報です。
 
-State transitions remain separate from candidate generation. `optimize*` and `thompson_sample`
-do not update the TuRBO state. Completed observations are applied explicitly with
-`update_state(...)`, and a triggered restart is resolved explicitly with `restart(...)`. This
-keeps asynchronous completion order and caller-owned robust or multi-fidelity state utilities
-outside candidate-generation side effects.
+`optimize*`・`thompson_sample` は状態を更新しません。完了観測を `update_state(...)` で明示適用し、必要な restart を `restart(...)` で解決します。非同期完了順や robust・多忠実度の効用を候補生成の副作用から分離します。
 
 
 ## Benchmark and validation
 
-`benchmarks/turbo.py` provides matched Global BO and TuRBO trajectories for Ackley,
-Rosenbrock, and Levy. The default dimensions are 20, 50, and 100, with repeated seeds.
-Both methods start from the same scrambled Sobol initialization for each function, dimension,
-and seed. The output records best observed value, simple regret, and TuRBO trust-region length.
+`benchmarks/turbo.py` は Ackley・Rosenbrock・Levy の Global BO と TuRBO を、既定 20・50・100 次元と複数 seed で比較します。関数・次元・seed ごとに同じ scrambled Sobol 初期化を使い、最良観測値、simple regret、trust-region length を記録します。
 
-The benchmark is intended for empirical comparison and regression investigation. CI verifies
-objective contracts and short multi-iteration execution only; it does not assert that TuRBO
-must statistically outperform Global BO on a small or fixed random sample. Performance claims
-should be based on repeated benchmark runs and reported uncertainty, not a CI pass/fail rule.
+実測比較と回帰調査のための benchmark です。CI は目的契約と短い反復実行を確認し、固定少数 sample で TuRBO が必ず勝つことを要求しません。性能の主張には反復実験と不確実性の報告が必要です。
 
 
 ## Final support boundary
 
-The implemented strategy is a single-region, stateful TuRBO search layer. Continuous
-acquisition optimization, posterior-sampling candidate generation, synchronous q-batches,
-explicit pending-point filtering for Thompson sampling, candidate constraints, robust/noisy
-caller-owned state utilities, mixed search with exact discrete assignments, and multi-fidelity
-design-only trust regions are covered by dedicated tests.
+実装は単一 region の状態付き探索層です。連続最適化、posterior sampling、同期 q-batch、Thompson の明示的 pending 除外、候補制約、呼び出し側の robust・noisy 効用、厳密離散割当の Mixed、多忠実度の設計座標のみの trust region は専用テストで確認します。
 
-The following are deliberately not implied by `TuRBOStrategy`: MORBO-style multi-region
-multi-objective optimization, MF-MES, Hamming or graph trust regions for large discrete spaces,
-automatic schedulers for asynchronous workers, or latent-space trust regions for dimensionality
-reduction models. Reduced-space surrogate models continue to expose a public/raw-space TuRBO
-region unless a separate strategy explicitly owns latent geometry.
+MORBO 型の複数 region 多目的最適化、MF-MES、大規模離散空間の Hamming・graph region、worker の自動 scheduler、次元削減モデルの潜在 trust region は含意しません。別戦略が潜在幾何を所有しない限り、reduced surrogate でも元入力空間の region を公開します。
 
-For mixed and multi-fidelity geometry, integer/categorical/fidelity coordinates are structural.
-They retain their global domains and are excluded from ARD weight normalization. Only ordinary
-design dimensions determine the geometric-mean normalization used for local trust-region widths.
+整数・カテゴリ・fidelity は大域領域を保つ構造化座標で、ARD 重みの正規化から除外します。通常の設計次元だけで、局所幅用の幾何平均正規化を計算します。
 
-The runnable minimal loop is `examples/turbo.py`. Empirical comparisons are available through
-`benchmarks/turbo.py`; benchmark results should be interpreted across repeated seeds rather than
-as a CI-enforced superiority claim.
+最小ループは `examples/turbo.py`、実測比較は `benchmarks/turbo.py` です。複数 seed の結果として解釈し、CI が強制する優越性とみなさないでください。

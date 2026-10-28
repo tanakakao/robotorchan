@@ -1,6 +1,6 @@
-# Phase 32: evidence-backed empirical visualization
+# 実測根拠に基づく可視化
 
-Render charts from an existing complete Phase 31 artifact directory:
+完全な既存 artifact ディレクトリから描画します。
 
 ```python
 from robotorchan.benchmarks.empirical_visualization import render_empirical_charts
@@ -8,12 +8,7 @@ from robotorchan.benchmarks.empirical_visualization import render_empirical_char
 render_empirical_charts("results/branin_q1_artifacts", "results/branin_q1_charts")
 ```
 
-This requires optional `matplotlib` and creates `performance.svg`,
-`timing.svg`, and `provenance.json`. The performance chart plots
-mean truth-based regret or hypervolume across ten seeds from evaluation
-budget 0 through 50. The timing chart plots mean elapsed wall-clock time.
 
-The renderer refuses missing/incomplete source artifacts and existing
-destinations. Cohorts remain separated by problem, q and noise condition.
-The figures are descriptive and do not establish statistical superiority.
-No expensive benchmark experiments are executed by this module.
+任意依存の `matplotlib` が必要で、`performance.svg`、`timing.svg`、`provenance.json` を生成します。性能図は追加予算 0–50 に対する 10 seed の真値 regret または hypervolume 平均、時間図は平均実時間を示します。
+
+入力の欠落・不完全性と既存の出力先を拒否し、問題・q・ノイズ条件を混ぜません。図は記述的なもので統計的優越性を示しません。このモジュールは benchmark 実験を実行しません。

@@ -13,6 +13,7 @@
 入力 \(x\in\mathcal X\) とタスク \(t\) に対して、
 Intrinsic Coregionalization Model（ICM）は次の共分散を用います。
 
+
 $$
 \operatorname{Cov}\bigl(f_t(x),f_{t'}(x')\bigr)
 =
@@ -22,6 +23,7 @@ $$
 ここで \(k_X\) は妥当な入力カーネル、\(B\succeq0\) はタスク共分散行列です。
 
 低ランクのパラメータ化は次のとおりです。
+
 
 $$
 B=WW^\top+\operatorname{diag}(v),
@@ -36,6 +38,7 @@ $$
 ICMは分離可能であり、タスク共分散を除いて共通の入力カーネル形状を仮定します。
 より柔軟なLinear Model of Coregionalization（LMC）は次の和を用います。
 
+
 $$
 k\big((x,t),(x',t')\big)
 =
@@ -44,14 +47,13 @@ $$
 
 これにより共有潜在過程ごとに異なる入力長さ尺度を持たせられます。
 
-## 7.3 観測配置
-
 ### ロング形式の観測
 
 観測は \((x_i,t_i,y_i)\) の組で表します。
 タスクごとに異なる \(x_i\) を観測でき、一部のタスク・入力の組が欠測でも構いません。
 
 共分散行列は各要素について次のように構成します。
+
 
 $$
 K_{ij}=k_X(x_i,x_j)B_{t_i t_j}.
@@ -66,6 +68,8 @@ $$
 
 $
 K_{\mathrm{latent}}=B\otimes K_X.
+
+
 $$
 
 この構造は行列演算の効率化に利用できます。
@@ -99,6 +103,8 @@ y_i=f_{t_i}(x_i)+\epsilon_i,
 \operatorname{Cov}(\epsilon_i,\epsilon_j)
 =
 \delta_{ij}\sigma^2_{t_i}(x_i)
+
+
 $$
 
 ここでは観測ノイズの独立性を仮定しています。
@@ -117,6 +123,8 @@ $$
 \operatorname{Var}[g(x)]
 =
 w^\top\Sigma(x)w.
+
+
 $$
 
 非対角共分散を無視すると、スカラー化した目的や同時制約の不確実性を
@@ -227,4 +235,3 @@ $$
 - [Kernel](03_kernel.md)
 - [Multi-Fidelity](06_multi_fidelity.md)
 - [Hierarchical / Contextual GP](12_hierarchical_contextual_gp.md)
-- [Model documentation](../models/README.md)

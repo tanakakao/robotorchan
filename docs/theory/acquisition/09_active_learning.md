@@ -2,6 +2,7 @@
 
 ## 9.1 BOとALはdecision purposeが違う
 
+
 ~~~text
 Bayesian Optimization
     良いdecision / candidateを効率よく見つける
@@ -16,6 +17,7 @@ Active Learning
 ## 9.2 最適化ではなく学習を目的にする
 
 Bayesian Optimization（BO）と Active Learning（AL）は、どちらも surrogate posterior を使って次の観測点を選べますが、目的が異なります。
+
 
 ```text
 Bayesian Optimization
@@ -34,6 +36,7 @@ distribution 上の情報量などが観測価値になります。
 
 候補集合が有限 pool
 
+
 $$
 \mathcal X_{\mathrm{pool}}
 =
@@ -43,6 +46,7 @@ $$
 として与えられる場合、acquisition score を pool 上で評価して選択できます。
 
 一方、連続空間 $`\mathcal X`$ では
+
 
 $$
 x^*
@@ -58,6 +62,7 @@ $$
 
 最も直接的な uncertainty sampling は posterior variance
 
+
 $$
 \alpha_{\mathrm{Var}}(x)
 =
@@ -68,13 +73,12 @@ $$
 
 を最大化する方法です。
 
-posterior variance が大きい点は、現在の surrogate がその latent function value を十分に知らない領域です。
-
 この基準は objective value の大小を使わないため、最適値探索ではなく function learning に自然です。
 
 ## 9.5 Posterior Standard Deviation
 
 posterior standard deviation を使えば
+
 
 $$
 \alpha_{\mathrm{Std}}(x)
@@ -101,11 +105,13 @@ AL で重要なのは、uncertainty の種類を区別することです。
 
 観測モデルを
 
+
 $$
 y(x)=f(x)+\epsilon
 $$
 
 とすると、predictive variance は概念的に
+
 
 $$
 \operatorname{Var}[y(x)\mid\mathcal D_n]
@@ -126,17 +132,19 @@ aleatoric uncertainty を追い続ける可能性があります。
 
 ## 9.7 Pointwise uncertaintyからtarget-region reductionへ
 
-PosteriorVariance はその候補自身の uncertainty を評価します。
+事後分散基準 はその候補自身の uncertainty を評価します。
 
 しかし候補 $`x`$ を観測すると、GP の covariance structure により他の点 $`x'`$ の uncertainty も変化します。
 
 したがって、
+
 
 ```text
 その点がどれだけ不確実か
 ```
 
 と
+
 
 ```text
 その点を観測すると領域全体の uncertainty がどれだけ減るか
@@ -153,6 +161,7 @@ prediction qualityを改善したい場所は同一である必要がありま�
 
 関心領域または target distribution $`p_T(x)`$ に対する integrated posterior variance を
 
+
 $$
 V_n
 =
@@ -165,6 +174,7 @@ $$
 
 候補 $`x_c`$ を観測した後の posterior variance を $`\sigma_{n+1}^2`$ とすれば、expected integrated variance
 reduction は
+
 
 $$
 \Delta V(x_c)
@@ -202,12 +212,10 @@ AL の目的は「探索空間全体を均等に学ぶ」とは限りません�
 
 ## 9.10 Negative Integrated Posterior Variance
 
-BoTorch の qNegativeIntegratedPosteriorVariance（qNIPV）は、candidate batch を観測した後の integrated
-posterior variance を基準に candidate set を評価する考え方です。
-
 最小化したい posterior variance を負号によって最大化問題として扱います。
 
 概念的には
+
 
 $$
 \alpha_{\mathrm{NIPV}}(X)
@@ -237,6 +245,7 @@ posterior variance の高い点を独立に上位 q 点選ぶと、互いに強�
 
 joint batch criterion は、
 
+
 $$
 X=(x_1,\ldots,x_q)
 $$
@@ -251,6 +260,7 @@ variance reduction は second-order uncertainty を基準にします。
 
 より一般には、候補観測 $`Y_x`$ と target prediction $`Y_T`$ の mutual information
 
+
 $$
 I(Y_x;Y_T\mid\mathcal D_n)
 $$
@@ -258,6 +268,7 @@ $$
 を acquisition value として使えます。
 
 これは
+
 
 ```text
 candidate を観測すると
@@ -277,6 +288,7 @@ observation の information gain を target distribution について平均し�
 
 target input を $`x_T\sim p_T`$ とすれば、概念的に
 
+
 $$
 \operatorname{EPIG}(x)
 =
@@ -290,11 +302,13 @@ $$
 
 finite target set
 
+
 $$
 T=\{x_T^{(1)},\ldots,x_T^{(M)}\}
 $$
 
 と weights $`w_j`$ を使えば、
+
 
 $$
 \operatorname{EPIG}(x)
@@ -310,6 +324,7 @@ $$
 
 candidate 自身の predictive entropy
 
+
 $$
 H(Y_x\mid\mathcal D_n)
 $$
@@ -319,6 +334,7 @@ $$
 EPIG は candidate uncertainty ではなく、candidate と target prediction の dependence を評価します。
 
 したがって、
+
 
 ```text
 Entropy / Variance Sampling
@@ -333,6 +349,7 @@ EPIG
 ## 9.15 EPIGとMESの違い
 
 どちらも mutual information を使えますが、情報対象が異なります。
+
 
 ```text
 MES
@@ -363,20 +380,19 @@ classification では、
 ただし classification posterior は Gaussian regression posterior と同じ構造ではありません。latent function
 uncertainty、class probability uncertainty、label entropy を区別する必要があります。
 
-本章は robotorchan の現在の regression acquisition theory を中心に扱い、classification-specific acquisition
-を同じ数式へ無理に統合しません。
-
 ## 9.17 Distribution shift
 
 target distribution $`p_T`$ が deployment distribution と一致しない場合、target-aware AL は誤った領域を重視する可能性があります。
 
 また pool distribution と target distribution が異なる場合、
 
+
 ```text
 どこから観測できるか
 ```
 
 と
+
 
 ```text
 どこで予測精度が必要か
@@ -391,6 +407,7 @@ target distribution $`p_T`$ が deployment distribution と一致しない場合
 観測点ごとに評価コストが異なる場合、information gain だけでなく cost も考慮できます。
 
 例えば概念的には
+
 
 $$
 \frac{\text{expected information gain}}
@@ -420,39 +437,26 @@ AL では optimum discovery 以外の stopping rule が自然です。
 
 acquisition criterion と stopping criterion は別の責務ですが、同じ uncertainty objective に基づいて設計できる場合があります。
 
-## 9.20 BoTorch / robotorchanとの対応
-
-BoTorch は qNegativeIntegratedPosteriorVariance など experimental-design 向け acquisition を提供しています。
-
-robotorchan は regression AL 向けに PosteriorVariance、PosteriorStd、ExpectedPredictiveInformationGain
-を提供し、BoTorch native で十分な手法は再実装しません。
-
-現在の robotorchan-specific acquisition には q、structured output、ensemble posterior
-などに明示的な適用範囲があります。Theory 上の一般形と現在の実装範囲を混同せず、詳細は次を参照してください。
-
-- [Regression Active Learning guide](../../optimization/regression_active_learning.md)
-- [EPIG guide](../../optimization/epig.md)
-- [Acquisition integration status](../../optimization/acquisition-integration.md)
-
 ## 9.21 この章で覚えておくこと
 
 - BOとALはposteriorを共有できてもdecision purposeが違う
-- PosteriorVariance / Stdはcandidate自身のmarginal uncertaintyを見るq=1 criterion
+- 事後分散基準 / Stdはcandidate自身のmarginal uncertaintyを見るq=1 criterion
 - candidate setとtarget / integration setを分ける
 - qNIPVはpointwise variance上位q点ではなくtarget-region uncertainty reductionを評価する
 - predictive varianceが高いこととreducible epistemic uncertaintyが大きいことは同義ではない
 - EPIGはcandidate自身のentropyではなくtarget predictionsとのinformation gainを見る
 - MESとEPIGはmutual informationを使ってもinformation targetが違う
 - current EPIGはq=1 single-output joint-Gaussian finite-target-set contract
-- current PosteriorVariance / Std runtimeはensemble posteriorをrejectする
+- current 事後分散基準 / Std runtimeはensemble posteriorをrejectする
 - classification-specific ALはregression uncertainty acquisitionへ無理に統合しない
 
 ## 9.22 まとめ
 
 Active Learning acquisition は「どこが最適か」ではなく「何を効率よく学びたいか」から設計します。
 
+
 ```text
-PosteriorVariance / PosteriorStd
+事後分散基準 / 事後標準偏差基準
     candidate 自身の uncertainty
 
 Integrated variance / qNIPV

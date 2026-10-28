@@ -1,7 +1,6 @@
-# Benchmark problem registry
+# 問題 registry
 
-The registry stores **factories**, not problem instances. This prevents shared
-mutable tensors or evaluator state between independent benchmark runs.
+可変 Tensor や評価器状態を実験間で共有しないよう、instance ではなく factory を保存します。
 
 ```python
 import torch
@@ -25,13 +24,7 @@ problem = get_problem("quadratic")
 assert "quadratic" in list_problems()
 ```
 
-A local `BenchmarkProblemRegistry()` is recommended for tests and independent
-experiments. Duplicate names, unknown names, and invalid factory results fail
-explicitly. Registry listings are sorted to ensure stable output.
 
-The registry itself does not implicitly register built-in problem families
-on import. Branin, Hartmann, constrained, multiobjective, and heterogeneous
-problems are defined separately and can be registered explicitly for a run.
-Importing the registry module does not change the global random seed.
-See the [End-to-end benchmark guide](end_to_end.md) for explicit
-registration and execution.
+テスト・独立実験にはローカルな `BenchmarkProblemRegistry()` を推奨します。重複名、未知名、不正な factory 結果は明示的に失敗し、一覧はソートして安定化します。
+
+import 時に標準問題を暗黙登録せず、global seed も変更しません。Branin・Hartmann・制約・多目的・異種問題は実行ごとに明示的に登録します。[全体手順](end_to_end.md)を参照してください。

@@ -39,7 +39,7 @@ class GuideQualityTests(unittest.TestCase):
                 dest.write_text("# preserved\n", encoding="utf-8")
             for relative in MODULE.expected_chapters():
                 src = root / MODULE.THEORY / relative
-                dst = root / MODULE.MAPPING / "guide" / relative
+                dst = root / "docs" / "guide" / relative
                 src.parent.mkdir(parents=True, exist_ok=True)
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 src.write_text("# theory\n", encoding="utf-8")
@@ -47,7 +47,7 @@ class GuideQualityTests(unittest.TestCase):
                     "# Guide\n\n## Explanation\n\n[Theory](../../../theory/ref.md)\n",
                     encoding="utf-8",
                 )
-            broken = root / MODULE.MAPPING / "guide" / "13_model_selection.md"
+            broken = root / "docs" / "guide" / "13_model_selection.md"
             broken.write_text("# only a heading\n", encoding="utf-8")
             failures = MODULE.check_guide_quality(root)
         self.assertIn("missing explanatory sections: 13_model_selection.md", failures)

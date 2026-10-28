@@ -1,42 +1,21 @@
-# Multi-objective benchmark suite
+# 多目的 benchmark 問題
 
-The suite now includes:
-
-| Problem | Variables | Objectives | Directions | Pareto metadata |
+| 問題 | 変数数 | 目的数 | 方向 | Pareto 情報 |
 | --- | ---: | ---: | --- | --- |
-| Biobjective linear | 1 | 2 | maximize/maximize | sampled analytic front |
-| Branin-Currin | 2 | 2 | maximize/maximize | reference point only |
-| DTLZ2 | 7 | 3 | minimize/minimize/minimize | sampled analytic front |
-| ZDT1 | 6 | 2 | minimize/minimize | sampled analytic front |
+| Biobjective linear | 1 | 2 | 両方最大化 | 解析 front の標本 |
+| Branin-Currin | 2 | 2 | 両方最大化 | reference point のみ |
+| DTLZ2 | 7 | 3 | すべて最小化 | 解析 front の標本 |
+| ZDT1 | 6 | 2 | 両方最小化 | 解析 front の標本 |
 
-Branin-Currin uses the standard negative-Branin/Currin convention,
-with normalized inputs on [0, 1]^2 and a conservative maximization
-reference point (-310, -1). Its true Pareto front is not claimed to
-be analytically known; `reference_front` is intentionally absent.
-At the Currin boundary x2=0, the exponential term is defined by its
-continuous limit, avoiding NaNs.
+Branin-Currin は標準の negative-Branin・Currin、入力 [0, 1]^2、最大化 reference point `(-310, -1)` を使います。解析的な真の Pareto front は認定せず `reference_front` を持ちません。Currin の x2=0 では指数項の連続極限を使い NaN を避けます。
 
-`register_multiobjective_problems(registry)` registers all four
-problems. Hypervolume comparisons should use a common fixed reference
-point, and transform minimization objectives consistently before
-computing hypervolume. This phase extends benchmark problem coverage,
-not the multiobjective BO acquisition strategy.
+`register_multiobjective_problems(registry)` で登録します。比較では reference point を固定し、最小化の向きを一貫して変換してください。問題定義だけで多目的獲得戦略の品質は示せません。
 
-## Reference-front and direction contract
+## Front と方向
 
-For `biobjective_linear`, the analytic Pareto front is `(x, 1 - x)`.
-For `zdt1`, the front is `(u, 1 - sqrt(u))`. For `dtlz2`, the
-three-objective front lies on the positive unit sphere. Stored
-`reference_front` tensors are finite **samples** of these analytic
-fronts, not exact continuous representations. `branin_currin` has a
-reference point but no analytically certified stored Pareto front.
+`biobjective_linear` は `(x, 1-x)`、`zdt1` は `(u, 1-sqrt(u))`、`dtlz2` は正の単位球面が解析 front です。保存された `reference_front` は有限標本で、連続 front の厳密表現ではありません。`branin_currin` には reference point のみあります。
 
-Reference points are specified in each problem's **native objective
-direction**. For example, the biobjective maximization problem uses
-`(-0.1, -0.1)` while the minimization examples use `(1.1, ...)`.
-Transform both observed objectives and reference points consistently
-with `problem.to_maximization(...)` before computing hypervolume with a
-maximization-based implementation. Do not compare untransformed values.
+reference point は元の目的方向で定義します。最大化の例では `(-0.1, -0.1)`、最小化では `(1.1, ...)` です。最大化用 hypervolume 実装へ渡す前に、目的値と reference point の両方を `problem.to_maximization(...)` で揃えてください。
 
 ```python
 from robotorchan.benchmarks import (
@@ -50,5 +29,5 @@ problem = registry.create("zdt1")
 print(problem.reference_front.shape)
 ```
 
-These problem definitions alone do not establish qEHVI/qNEHVI
-integration correctness or optimization performance.
+
+これらの定義だけでは qEHVI・qNEHVI の接続の正しさや最適化性能を保証しません。

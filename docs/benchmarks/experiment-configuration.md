@@ -1,8 +1,6 @@
-# Benchmark experiment configuration
+# 実験設定
 
-`BenchmarkExperimentConfig` is a frozen, JSON-compatible record describing
-the experimental protocol independently of any GP, acquisition function,
-optimizer, or result persistence implementation.
+`BenchmarkExperimentConfig` は GP・獲得関数・optimizer・保存実装から独立した、変更不能で JSON 互換のプロトコル記録です。
 
 ```python
 from robotorchan.benchmarks import BenchmarkExperimentConfig
@@ -22,17 +20,14 @@ restored = BenchmarkExperimentConfig.from_dict(record)
 assert restored == config
 ```
 
-- `problem` is resolved against a registry with `resolve_problem(registry)`.
-- `strategy` is an identifier only; dispatch is reserved for the runner.
-- `seeds` are unique nonnegative integers, with ordering retained.
-- `initial_points` are evaluated before the optimization budget.
-- `evaluation_budget` counts **additional evaluations**, not BO iterations.
-- `q` is the requested batch size; a final partial batch is permitted.
-- `dtype` is float32 or float64; `device` is cpu or cuda.
-- `to_dict` and `from_dict` support JSON roundtrips, rejecting unknown fields.
 
-A configuration alone does not modify the global RNG, allocate CUDA tensors,
-train models, or run a benchmark. The
-[Closed-loop benchmark runner](closed-loop-runner.md) handles per-seed
-execution and initial-design pairing. Record the observation-noise policy
-and environment separately for reproducible comparisons.
+- `problem` は `resolve_problem(registry)` で解決します。
+- `strategy` は識別子で、対応する処理は runner 側で接続します。
+- `seeds` は重複しない非負整数で、順序を保持します。
+- `initial_points` は最適化予算より前に評価します。
+- `evaluation_budget` は BO 反復数でなく追加評価数です。
+- `q` は要求 batch 数で、最後の部分 batch を許可します。
+- `dtype` は float32・float64、`device` は cpu・cuda です。
+- `to_dict`・`from_dict` は未知フィールドを拒否して JSON 往復に対応します。
+
+設定を作るだけでは global RNG の変更、CUDA Tensor の確保、学習、実験実行は行いません。[runner](closed-loop-runner.md)が seed ごとの実行と初期設計の対応を担います。ノイズ方針と環境は別途記録してください。

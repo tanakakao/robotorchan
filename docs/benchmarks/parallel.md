@@ -1,23 +1,11 @@
-# Sequential, batch and asynchronous benchmark comparison
+# 逐次・batch・非同期の比較
 
-`run_parallel_comparison(config, batch_size=3, max_concurrency=2)`
-runs three random-search baselines using the same problem, seeds,
-initial designs and candidate evaluation budget:
+`run_parallel_comparison(config, batch_size=3, max_concurrency=2)` は同じ問題・seed・初期設計・候補評価予算で Random の 3 経路を比較します。
 
-- **Sequential:** q=1, with each observation available before the next proposal.
-- **Synchronous batch:** q=batch_size, with observations updated after each batch.
-- **Asynchronous:** q=batch_size and bounded concurrency; completed observations
-  are immediately available while unfinished proposals remain pending.
+- 逐次：q=1、次の提案前に観測を反映。
+- 同期 batch：q=batch_size、batch ごとに観測更新。
+- 非同期：q=batch_size、並列数を制限し、完了観測を即時反映。未完了候補は pending。
 
-The asynchronous baseline uses fixed positive durations of one **simulated**
-time unit per candidate. Its `simulated_makespan` is not measured wall time.
-The `completion_order` property records submission indices in completion
-order. The runner tracks pending candidates and records observed/truth
-values separately.
+非同期では候補ごとに正の固定 duration 1 を使います。`simulated_makespan` は論理時間であり実時間ではありません。`completion_order` は完了順の投入 index を記録し、pending と観測値・真値を分離します。
 
-This phase compares execution semantics, not optimizer quality. The
-baseline is random search, and the three arms consume the same number
-of candidate evaluations, not necessarily the same number of proposal
-updates or the same simulated elapsed time. All arms use matching initial
-designs. The async runner now recreates problem factories per seed to
-prevent stateful observation RNG leakage across independent runs.
+比較対象は実行の意味で、optimizer の品質ではありません。3 経路は評価数を揃えますが、提案更新数や論理経過時間は揃いません。初期設計は共通です。非同期 runner も seed ごとに factory を再生成し、状態付き観測 RNG の漏れを防ぎます。

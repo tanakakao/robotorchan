@@ -1,9 +1,8 @@
-# Objective and PosteriorTransform
+# Objective と PosteriorTransform
 
-This guide defines the runtime responsibility boundary for objectives, posterior transforms,
-constraints, and robust scenario aggregation.
+objective、posterior transform、制約、robust scenario 集約の責務を分けます。
 
-## Canonical pipeline
+## 標準の処理順
 
 ```text
 X
@@ -16,93 +15,68 @@ X
 -> acquisition optimization
 ```
 
-For decision-time input perturbation, scenarios are introduced before posterior evaluation:
+
+意思決定時の入力摂動では posterior 評価前に scenario を導入します。
 
 ```text
 X -> perturbation scenarios -> posterior -> sampling -> objective -> scenario risk aggregation
 ```
 
-Input perturbation is not a generic objective responsibility.
+
+入力摂動は汎用 objective の責務ではありません。
 
 ## PosteriorTransform
 
-A `PosteriorTransform` changes the posterior distribution before analytic or Monte Carlo
-acquisition evaluation. Use BoTorch's native transform objects directly when the model posterior
-supports them.
+解析的・MC 獲得関数の評価前に posterior 分布を変換します。モデルが対応する BoTorch 標準 transform を直接使います。
 
-Affine scalarization should normally use `ScalarizedPosteriorTransform`. For
-`Z = offset + w^T Y`, a compatible Gaussian posterior must preserve both transformed mean and
-cross-output covariance:
+アフィンなスカラー化には通常 `ScalarizedPosteriorTransform` を使います。`Z = offset + w^T Y` では Gaussian posterior の平均と出力間共分散の両方を変換します。
 
 ```text
 E[Z] = offset + w^T E[Y]
 Var[Z] = w^T Cov[Y] w
 ```
 
-A model must not manufacture this covariance from marginal variances alone. Specialized posterior
-types may therefore explicitly reject transforms whose required distribution structure they do
-not expose.
+
+周辺分散だけから共分散を作り出してはいけません。必要な分布構造を公開しない特殊 posterior は、その transform を明示的に拒否できます。
 
 ## MC Objective
 
-An `MCAcquisitionObjective` transforms posterior samples rather than the posterior distribution.
-Its conceptual shape contract is:
+`MCAcquisitionObjective` は分布自体でなく posterior sample を変換します。
 
 ```text
 sample_shape x batch_shape x q x m
 -> sample_shape x batch_shape x q
 ```
 
-Use native BoTorch objectives where they express the required semantics. `GenericMCObjective`
-is the ordinary extension point for custom nonlinear sample objectives.
 
-Posterior transforms and MC objectives are not interchangeable abstractions.
+必要な意味を表せる標準 objective を使い、非線形の custom sample objective には `GenericMCObjective` を使います。posterior transform と MC objective は交換可能ではありません。
 
-## Multi-objective acquisition
+## 多目的獲得関数
 
-Hypervolume acquisitions such as qLogEHVI and qLogNEHVI retain the objective vector required for
-hypervolume calculations. Scalarization is therefore not the default multi-objective contract.
-Scalarization-based strategies such as qLogNParEGO are separate workflows.
+qLogEHVI・qLogNEHVI は hypervolume に必要な目的ベクトルを維持します。スカラー化は多目的の既定動作ではなく、qLogNParEGO などの別経路です。
 
-## Constraints
+## 制約
 
-Outcome constraints and candidate constraints are distinct.
+出力制約はモデル化した未知の実行可能性を獲得関数と合成します。候補制約は既知の X の関数であり `robotorchan.optim` が担当します。両者を一つの抽象化にまとめません。
 
-Outcome constraints represent unknown feasibility through modeled outcomes and are composed with
-compatible acquisitions. Candidate constraints are known functions of `X` and belong to
-`robotorchan.optim`.
+## Robust scenario 集約
 
-Do not combine these concepts into a shared constraints abstraction.
+入力摂動から scenario を作り、posterior 評価・sampling 後に scenario 軸を risk 集約します。posterior sample 軸と scenario 軸は別に保ちます。
 
-## Robust scenario aggregation
+`robotorchan.objectives.risk` の class は scenario 集約器です。実際に native 契約を満たさない限り `MCAcquisitionObjective` の代用品としません。BoTorch の risk objective が目的を満たすなら標準経路を使います。
 
-Decision-time perturbation creates candidate scenarios before posterior evaluation. Posterior
-sampling and scenario sampling remain separate axes. Risk aggregation reduces the scenario axis
-after modeled outcomes have been evaluated.
+## モデル固有の対応
 
-The classes in `robotorchan.objectives.risk` are scenario aggregators; they must not be presented
-as drop-in `MCAcquisitionObjective` instances unless they actually implement that native
-contract. When BoTorch provides a risk-measure objective with the required semantics, prefer the
-native path rather than adding a parallel wrapper.
+`posterior_transform=` が同じ書式でも、すべての変換を受け付けるわけではありません。
 
-## Model-specific transform support
+- 標準・Mixed Gaussian Exact GP は通常 BoTorch へ委譲する。
+- 入力削減モデルでは posterior 構築前に入力を変換し、transform は公開 posterior に作用する。
+- 出力削減モデルは元出力の意味を保つ必要がある。
+- 経験 ensemble・確率的 posterior は Gaussian 分布構造が必要な変換を拒否し得る。
+- Kronecker など特殊経路は、数学的に正当化した追加実装がなければ上流の制約に従う。
 
-Uniform `posterior_transform=` syntax does not imply universal transform compatibility.
+未対応の組合せは意味を暗黙に変更せず拒否します。
 
-- Standard and mixed Gaussian exact-GP paths normally delegate native transforms to BoTorch.
-- Reduced-input models apply input reduction before posterior construction; transforms still act
-  on the public posterior.
-- Output-reduced models must preserve original-output semantics before claiming transform support.
-- Empirical ensemble and stochastic posterior types may reject transforms requiring Gaussian
-  distribution structure.
-- Kronecker or other specialized BoTorch posterior paths follow their upstream transform
-  limitations unless robotorchan has a mathematically justified implementation.
+## 拡張方針
 
-Unsupported combinations should fail explicitly rather than silently changing semantics.
-
-## Extension policy
-
-Add a robotorchan-specific objective or transform only when a demonstrated semantic gap remains
-after considering native BoTorch APIs. New abstractions must define tensor axes, gradient
-behavior, composition with acquisitions, and model/posterior compatibility through executable
-tests.
+標準 API で埋まらない意味上の不足がある場合に限り追加します。Tensor 軸、勾配、獲得関数との合成、モデル・posterior 互換性を実行テストで定義してください。

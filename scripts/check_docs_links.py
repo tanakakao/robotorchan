@@ -34,10 +34,18 @@ def strip_fenced_code(content: str) -> str:
     return "\n".join(lines)
 
 
+def markdown_sources(root: Path) -> list[Path]:
+    """Include public docs, engineering docs, records, and repository entry points."""
+    roots = ("docs", "docs-internal", ".github", "examples", "benchmarks")
+    return sorted(
+        set(root.glob("*.md")) | {path for name in roots for path in (root / name).rglob("*.md")}
+    )
+
+
 def check_links(root: Path) -> list[str]:
     """Return missing local targets for Markdown files under docs/."""
     failures = []
-    for source in sorted((root / "docs").rglob("*.md")):
+    for source in markdown_sources(root):
         content = strip_fenced_code(source.read_text(encoding="utf-8"))
         for match in LINK_RE.finditer(content):
             raw = match.group(1).strip("<>")
@@ -65,7 +73,7 @@ def main() -> int:
     if failures:
         print(f"Found {len(failures)} missing local Markdown link targets.", file=sys.stderr)
         return 1
-    print("Local Markdown link targets under docs/ are valid.")
+    print("Local Markdown link targets throughout the repository are valid.")
     return 0
 
 

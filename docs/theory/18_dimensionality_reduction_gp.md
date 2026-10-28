@@ -6,6 +6,7 @@
 \(z=T(x)\in\mathbb R^d\)（\(d<D\)）とします。
 削減入力を用いる代理モデルでは次を仮定します。
 
+
 $$
 f(x)\approx g(T(x)),\qquad g\sim\mathcal{GP}(m_z,k_z).
 $$
@@ -21,6 +22,7 @@ $$
 中心化された観測行列 \(X_c\in\mathbb R^{n\times D}\) に対して、
 PCAは標本分散が大きくなる直交方向を選びます。
 \(V_d\in\mathbb R^{D\times d}\) を上位の右特異ベクトルとすると、表現は次のとおりです。
+
 
 $$
 z=V_d^\top(x-\bar x).
@@ -43,6 +45,7 @@ PLSは目的変数を利用するため、成分数の選択を含む射影の�
 
 ランダムな線形写像 \(R\in\mathbb R^{d\times D}\) は次の表現を与えます。
 
+
 $$
 z=Rx.
 $$
@@ -54,6 +57,7 @@ $$
 ## 5. 誘導される共分散と識別可能性
 
 固定された変換 \(T\) に対して、削減入力GPは次の共分散を誘導します。
+
 
 $$
 k_x(x,x')=k_z(T(x),T(x')).
@@ -70,12 +74,14 @@ $$
 
 \(y\in\mathbb R^M\) の線形な出力表現を次のように仮定します。
 
+
 $$
 y\approx \mu_y+A z_y,\qquad A\in\mathbb R^{M\times r}.
 $$
 
 削減空間の予測分布の平均を \(\mu_z\)、共分散を \(\Sigma_z\) とすると、
 復元された出力のモーメントは次のようになります。
+
 
 $$
 \mathbb E[y]\approx\mu_y+A\mu_z,
@@ -96,6 +102,7 @@ $$
 数値コードを通常のユークリッド射影に含めると、根拠のない距離が生じます。
 
 混合入力では、連続設計変数だけを削減する方法が考えられます。
+
 
 $$
 T(x_{\mathrm{cont}},x_{\mathrm{cat}})
@@ -182,5 +189,3 @@ $
 - [Neural reduction GP](19_neural_reduction_gp.md)
 - [High-dimensional search](20_high_dimensional_search.md)
 - [MultiTask / MultiOutput](07_multitask_multioutput.md)
-- [Input-reduction model guide](../models/high_dimensional_inputs.md)
-- [Output-reduction model guide](../models/high_dimensional_outputs.md)

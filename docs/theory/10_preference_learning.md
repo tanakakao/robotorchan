@@ -6,18 +6,13 @@
 
 一方、Preference Learning では絶対スコアではなく、
 
+
 ```text
 A の方が B より好ましい
 B の方が C より好ましい
 ```
 
 という **比較結果** だけを観測します。
-
-robotorchan では BoTorch の
-
-`PairwiseGP`
-
-を BoTorch-compatible wrapper として提供しています。
 
 本章では、
 
@@ -27,12 +22,11 @@ robotorchan では BoTorch の
 - probit model
 - GP prior
 - Laplace approximation
-- `PairwiseLaplaceMarginalLogLikelihood`
+- `Laplace 近似対数周辺尤度`
 - posterior utility
 - pairwise BO
 - Expected Utility of Best Option (EUBO)
 - BOPE との関係
-- robotorchan API
 
 を順に整理します。
 
@@ -41,6 +35,7 @@ robotorchan では BoTorch の
 ### 回帰との違いを最初に図で見る
 
 通常の回帰とPreference Learningでは、**観測しているもの**が違います。
+
 
 ~~~text
 Regression
@@ -75,11 +70,13 @@ Preference LearningでGPが直接説明しようとするのはwinner/loserのin
 
 などです。
 
+
 ```text
 このサンプルを 0〜100 点で評価してください
 ```
 
 より、
+
 
 ```text
 サンプル A と B ならどちらが良いですか？
@@ -95,6 +92,7 @@ Preference Learning は、この比較結果から背後にある **潜在的な
 
 各候補 `x` に、直接は観測できない utility
 
+
 $$
 f(x)
 $$
@@ -102,6 +100,7 @@ $$
 が存在すると仮定します。
 
 例えば
+
 
 $$
 f(x_A) > f(x_B)
@@ -113,6 +112,7 @@ $$
 観測される比較結果が必ずA勝利になるわけではありません。
 
 ただし人間の判断や測定にはノイズがあるため、比較結果は必ずしも deterministic ではありません。
+
 
 ```text
 latent utility
@@ -135,15 +135,13 @@ B > A
 比較データは、候補集合 $X=(x_1,\ldots,x_n)$ と勝者・敗者の添字対
 $(i,j)$ から構成され、$x_i$ が $x_j$ より好まれたことを表します。
 
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
 ---
 
 ## 10.5 `comparisons` は target value ではない
 
 通常回帰では
 
-`train_X` / `train_Y`
+`観測入力` / `観測応答`
 
 を使います。
 
@@ -154,6 +152,7 @@ Preference Learning では
 を使います。
 
 重要なのは、`comparisons` の値 `0, 1, 2, ...` は utility 値ではなく **datapoints の行index** だということです。
+
 
 ```text
 comparisons[k] = [i, j]
@@ -174,6 +173,7 @@ comparisons[k] = [i, j]
 
 2つの候補 `x_i`, `x_j` の utility を
 
+
 $$
 f_i = f(x_i),\qquad f_j = f(x_j)
 $$
@@ -182,11 +182,13 @@ $$
 
 Preference model では、
 
+
 $$
 P(i \succ j)
 $$
 
 つまり「i が j より好まれる確率」を utility difference
+
 
 $$
 f_i-f_j
@@ -195,6 +197,7 @@ $$
 から定義します。
 
 utility difference が大きく正なら、i が勝つ確率は高くなります。
+
 
 ```text
 f_i - f_j >> 0
@@ -211,9 +214,8 @@ f_i - f_j << 0
 
 ## 10.7 Probit likelihood
 
-BoTorch の `PairwiseGP` は default で **probit likelihood** を使います。
-
 基本的な形は
+
 
 $$
 P(i \succ j)
@@ -232,9 +234,6 @@ $$
 
 です。
 
-Chu & Ghahramani の定式化では denominator にノイズscale $`\sigma`$ を含めますが、BoTorch はこの scale を明示的に
-likelihood parameter として分離せず、function scale を kernel の `ScaleKernel` で表現します。
-
 ---
 
 ## 10.8 Probit と Logistic
@@ -242,6 +241,7 @@ likelihood parameter として分離せず、function scale を kernel の `Scal
 pairwise comparison model では logistic model もよく使われます。
 
 例えば Bradley–Terry 型なら
+
 
 $$
 P(i \succ j)
@@ -253,13 +253,12 @@ $$
 
 ここで $`\sigma`$ は sigmoid です。
 
-一方 `PairwiseGP` の default は probit です。
 
 ```text
 Bradley–Terry / logistic
   → sigmoid
 
-PairwiseGP default
+probit を選ぶ場合
   → Gaussian CDF / probit
 ```
 
@@ -271,11 +270,13 @@ PairwiseGP default
 
 utility function `f(x)` 自体には Gaussian Process prior を置きます。
 
+
 $$
 f \sim \mathcal{GP}(m(x),k(x,x'))
 $$
 
 つまり preference data を直接 GP に入れるのではなく、
+
 
 ```text
 GP prior
@@ -296,6 +297,7 @@ observed preference
 通常の回帰では、1観測はおおむね1つの入力点へ対応します。
 Preference Learningでは、1観測が**2候補間の辺**を追加します。
 
+
 ~~~text
 datapoints = graph nodes
 comparisons = directed edges
@@ -309,6 +311,7 @@ winner → loser
 
 通常の Gaussian regression なら
 
+
 $$
 y=f(x)+\epsilon,
 \qquad
@@ -319,19 +322,21 @@ $$
 
 Preference Learning では likelihood が
 
+
 $$
 \Phi(f_i-f_j)
 $$
 
 のような nonlinear function になるため、posterior を exact Gaussian として解析的には求められません。
 
-そこで `PairwiseGP` は **Laplace approximation** を使います。
+そこで pairwise GP は **Laplace approximation** を使います。
 
 ---
 
 ## 10.11 Laplace approximation
 
 観測 comparison data を $`D`$ とすると、latent utilities `f` の posterior は
+
 
 $$
 p(f\mid D)
@@ -345,6 +350,7 @@ $$
 
 Laplace approximation では、まず posterior mode
 
+
 $$
 f_{MAP}
 =
@@ -354,6 +360,7 @@ $$
 を求めます。
 
 その周辺を2次近似して
+
 
 $$
 p(f\mid D)
@@ -366,6 +373,7 @@ $$
 ---
 
 ## 10.12 Laplace approximation の直感
+
 
 ```text
 本当の posterior
@@ -382,15 +390,16 @@ Gaussian で局所近似
 
 です。
 
-このため `PairwiseGP` は名前に GP とありますが、標準 `SingleTaskGP` と posterior fitting の仕組みが異なります。
+このため pairwise GP は名前に GP とありますが、標準 単一タスク GP と posterior fitting の仕組みが異なります。
 
 ---
 
 ## 10.13 MAP utility
 
-`PairwiseGP` 内部では preference comparisons と GP prior の両方を考慮して latent utility の MAP 解を求めます。
+pairwise GP 内部では preference comparisons と GP prior の両方を考慮して latent utility の MAP 解を求めます。
 
 概念的には
+
 
 $$
 f_{MAP}
@@ -413,6 +422,7 @@ $$
 
 posterior mode の周辺で negative log posterior の Hessian を使うと、近似 covariance は概念的に
 
+
 $$
 \Sigma_{Laplace}
 \approx
@@ -434,34 +444,19 @@ $$
 
 ---
 
-## 10.15 PairwiseGP の default kernel
-
-BoTorch の `PairwiseGP` は default で scaled RBF kernel を使います。
-
-```text
-RBF kernel
-  → input similarity
-
-ScaleKernel
-  → latent utility scale
-```
-
-probit preference model では observation-noise scale と utility scale の識別が通常回帰ほど単純ではないため、BoTorch は
-kernel output scale を使う設計です。
-
----
-
 ## 10.16 utility の絶対値は重要ではない
 
 pairwise data で観測されるのは utility difference です。
 
 例えば、
 
+
 $$
 f(x)\rightarrow f(x)+c
 $$
 
 として全候補に同じ定数を足しても、
+
 
 $$
 (f_i+c)-(f_j+c)=f_i-f_j
@@ -490,16 +485,12 @@ Preference Learning では通常の RMSE だけでなく、ranking quality を�
 
 などです。
 
-BoTorch の preference tutorial でも、latent value の絶対値ではなく ranking correlation を評価に利用しています。
-
 ---
 
 ## 10.18 duplicate datapoints の consolidation
 
 同じ入力が繰り返し現れる場合、比較関係を保ちながら重複候補を統合できます。
 この操作は観測数とユニークな候補数の違いに注意が必要です。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
@@ -508,37 +499,20 @@ BoTorch の preference tutorial でも、latent value の絶対値ではなく r
 観測時の候補・比較と、重複統合後に推論へ用いる候補・比較は区別します。
 統合前後で添字付けが変化し得ます。
 
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
 ---
 
-## 10.20 robotorchan の `PairwiseGP`
-
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
 ---
-
-## 10.21 constructor
-
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
----
-
-## 10.22 `make_mll()`
-
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
 ## 10.23 fitting
 
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
 ---
 
 ## 10.24 fitting の二重構造
 
-PairwiseGP では fitting を理解するとき、2段階を区別するとよいです。
+pairwise GP では fitting を理解するとき、2段階を区別するとよいです。
+
 
 ```text
 inner problem
@@ -557,24 +531,17 @@ outer problem
 
 比較観測から推論するのは、絶対的な観測スコアではなく潜在効用 $u(x)$ の事後分布です。
 
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
 ---
 
 ## 10.26 posterior mean の解釈
 
 潜在効用の事後平均による順位付けは可能ですが、絶対水準より候補間の相対関係が重要です。
 
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
 ---
 
 ## 10.27 observation noise の扱い
 
-通常の regression GP では `posterior(..., observation_noise=True)` で observation noise を含む predictive
-distribution を考えます。
-
-PairwiseGP の probit preference model では noise と utility scale の識別が異なるため、通常回帰と同じ意味で
+pairwise GP の probit preference model では noise と utility scale の識別が異なるため、通常回帰と同じ意味で
 observation-noise variance を解釈しません。
 
 したがって preference model の uncertainty と regression noise を同一視しないことが重要です。
@@ -585,6 +552,7 @@ observation-noise variance を解釈しません。
 
 pairwise comparisons は graph として考えると理解しやすいです。
 
+
 ```text
 A → B
 A → C
@@ -593,6 +561,7 @@ B → D
 ```
 
 矢印を
+
 
 ```text
 winner → loser
@@ -610,6 +579,7 @@ graph connectivityは、離れた候補群の相対utilityをデータから結�
 
 例えば
 
+
 ```text
 A > B
 C > D
@@ -625,6 +595,7 @@ GP prior による input similarity が橋渡しする場合はありますが�
 
 latent utility model は基本的に
 
+
 ```text
 A > B
 B > C
@@ -634,6 +605,7 @@ B > C
 という transitive ranking を想定します。
 
 しかし実際の人間 preference では
+
 
 ```text
 A > B
@@ -651,6 +623,7 @@ C > A
 
 同じ pair を複数回評価して
 
+
 ```text
 A > B
 A > B
@@ -660,7 +633,7 @@ A > B
 
 となることは自然です。
 
-PairwiseGPはdeterministic ranking tableではなくprobabilistic likelihoodを使うため、
+pairwise GPはdeterministic ranking tableではなくprobabilistic likelihoodを使うため、
 このような矛盾した観測にも有限のlikelihoodを与えられます。
 
 ただし矛盾がそのまま1個の「uncertainty parameter」へ変換されるわけではありません。
@@ -687,6 +660,7 @@ PairwiseGPはdeterministic ranking tableではなくprobabilistic likelihoodを�
 
 しかし通常の binary classification とは入力構造が違います。
 
+
 ```text
 binary classification
 x → class label
@@ -695,7 +669,7 @@ preference learning
 (x_i, x_j) → i > j
 ```
 
-さらに PairwiseGP は pair 自体ではなく、各候補に latent utility function `f(x)` を置いています。
+さらに pairwise GP は pair 自体ではなく、各候補に latent utility function `f(x)` を置いています。
 
 ---
 
@@ -706,6 +680,7 @@ Preference Learning は ranking problem と密接です。
 ただし目的は単に既存候補を並べ替えることだけではありません。
 
 GP を使うことで、未評価の新しい `x` に対しても
+
 
 $$
 f(x)
@@ -719,11 +694,12 @@ $$
 
 ### Preference LearningとPreference BOは別の層
 
-ここまでの `PairwiseGP` は、**比較データからutility posteriorを作るsurrogate model**です。
+ここまでの pairwise GP は、**比較データからutility posteriorを作るsurrogate model**です。
 これだけでは「次にどの2候補を比較するか」は決まりません。
 
+
 ~~~text
-PairwiseGP
+pairwise GP
   → preference surrogate
 
 Preference acquisition
@@ -740,6 +716,7 @@ Acquisition optimization
 
 通常 BO では
 
+
 ```text
 x を評価
   ↓
@@ -752,12 +729,13 @@ GP regression
 
 Preference BO では
 
+
 ```text
 候補 x_i, x_j を提示
   ↓
 どちらが良いか比較を観測
   ↓
-PairwiseGP
+pairwise GP
   ↓
 latent utility posterior
   ↓
@@ -776,6 +754,7 @@ Preference Learning では absolute objective value を観測していません�
 
 そのため
 
+
 ```text
 best observed y
 ```
@@ -791,13 +770,12 @@ Preference BO では、utility model に適した acquisition function を使い
 Expected Utility of the Best Option（EUBO）は、提示する候補集合で得られる
 最大潜在効用の期待値を評価する獲得基準です。
 
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
 ---
 
 ## 10.38 q=2 の直感
 
 最も分かりやすい preference query は2候補比較です。
+
 
 ```text
 candidate A
@@ -806,10 +784,9 @@ candidate B
 どちらが良い？
 ```
 
-BoTorch の preference BO tutorial では `q=2` として EUBO を最適化する例があります。
 
 ```text
-PairwiseGP posterior
+pairwise GP posterior
       ↓
 EUBO
       ↓
@@ -830,6 +807,7 @@ comparisonsに追加
 
 EUBO は utility maximization という decision objective に沿って comparison query を選ぶ考え方です。
 
+
 ```text
 uncertainty sampling
   → knowledge acquisition 重視
@@ -847,13 +825,12 @@ EUBO
 潜在効用を比較観測から推論し、次の比較候補を選び、比較結果を追加して
 事後分布を更新する反復過程です。
 
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
 ---
 
 ## 10.41 新しい比較の index 更新
 
 既存 datapoints が `n` 個あり、新しく2点を追加した場合、新しい comparison index は既存行数を offset として加える必要があります。
+
 
 ```text
 既存 datapoints: 0 ... n-1
@@ -870,10 +847,11 @@ A > B
 
 ## 10.42 `condition_on_observations`
 
-`PairwiseGP` は `condition_on_observations` をサポートしますが、通常回帰モデルと違い、新しい `Y` も pairwise comparisons
+pairwise GP は `condition_on_observations` をサポートしますが、通常回帰モデルと違い、新しい `Y` も pairwise comparisons
 である必要があります。
 
 つまり
+
 
 ```text
 X = new datapoints
@@ -881,6 +859,7 @@ Y = scalar targets
 ```
 
 ではなく
+
 
 ```text
 X = new datapoints
@@ -891,21 +870,10 @@ Y = comparison indices
 
 ---
 
-## 10.43 raw data API
-
-比較学習では、入力候補と勝者・敗者の関係が教師情報です。
-通常の実数値回帰ターゲットと同一視しません。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
----
-
 ## 10.44 input normalization
 
 入力の尺度が大きく異なる場合、カーネルの距離尺度を適切に設定するため
 正規化が有効になることがあります。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
@@ -914,6 +882,7 @@ Y = comparison indices
 通常回帰では `Standardize` を使えますが、Preference Learning では直接観測する scalar target がありません。
 
 したがって
+
 
 ```text
 observed Y を standardize
@@ -927,9 +896,10 @@ latent utility の scale は likelihood と kernel の中で扱われます。
 
 ## 10.46 hyperparameter fitting
 
-PairwiseGP の kernel hyperparameters も preference data に基づいて学習されます。
+pairwise GP の kernel hyperparameters も preference data に基づいて学習されます。
 
 例えば lengthscale は
+
 
 ```text
 input のどの距離スケールで preference utility が変化するか
@@ -952,6 +922,7 @@ Preference dataset では
 
 全 pair を比較すると
 
+
 $$
 \frac{n(n-1)}{2}
 $$
@@ -966,11 +937,13 @@ Preference BO / Active Learning の目的の一つは、少ない comparison で
 
 同じ pair を繰り返し評価することにも意味があります。
 
+
 ```text
 A vs B を1回だけ
 ```
 
 より
+
 
 ```text
 A vs B を複数回
@@ -986,6 +959,7 @@ A vs B を複数回
 
 複数人が評価する場合、
 
+
 ```text
 Person 1: A > B
 Person 2: B > A
@@ -993,7 +967,7 @@ Person 2: B > A
 
 は measurement noise ではなく preference heterogeneity かもしれません。
 
-単一 `PairwiseGP` は基本的に1つの latent utility function を想定するため、個人差が大きい場合は
+単一 pairwise GP は基本的に1つの latent utility function を想定するため、個人差が大きい場合は
 
 - evaluator ID を task として扱う
 - hierarchical model
@@ -1007,6 +981,7 @@ Person 2: B > A
 
 好みが context に依存する場合、単純な
 
+
 $$
 f(x)
 $$
@@ -1015,17 +990,20 @@ $$
 
 例えば
 
+
 $$
 f(x,c)
 $$
 
 として context `c` を入力に含める必要があります。
 
+
 ```text
 材料Aが良い
 ```
 
 ではなく
+
 
 ```text
 用途Cでは材料Aが良い
@@ -1038,6 +1016,7 @@ $$
 ## 10.51 cyclic preference が強い場合
 
 単一 scalar latent utility では
+
 
 ```text
 A > B
@@ -1055,13 +1034,14 @@ C > A
 
 を検討します。
 
-PairwiseGP を無理に当てはめないことが重要です。
+pairwise GP を無理に当てはめないことが重要です。
 
 ---
 
 ## 10.52 preference learning と multi-objective
 
 Multi-objective BO と Preference Learning は別概念です。
+
 
 ```text
 Multi-objective BO
@@ -1077,9 +1057,8 @@ Preference Learning
 
 ## 10.53 BOPE
 
-BoTorch には Bayesian Optimization with Preference Exploration、つまり **BOPE** の考え方があります。
-
 複数 outcome
+
 
 $$
 y=f(x)\in\mathbb{R}^m
@@ -1087,11 +1066,13 @@ $$
 
 は測定できるが、それをどう総合評価するかの utility
 
+
 $$
 g(y)
 $$
 
 が分からない場合を考えます。
+
 
 ```text
 x
@@ -1113,13 +1094,15 @@ utility
 
 直接 Preference BO では
 
+
 ```text
 x → latent utility
 ```
 
-を直接 PairwiseGP で学習します。
+を直接 pairwise GP で学習します。
 
 BOPE では
+
 
 ```text
 x → outcomes y
@@ -1147,13 +1130,14 @@ y → utility
 
 絶対 utility score を定義しにくくても、
 
+
 ```text
 候補Aと候補BならA
 ```
 
 という判断は可能です。
 
-このとき PairwiseGP で expert utility を学習することができます。
+このとき pairwise GP で expert utility を学習することができます。
 
 ---
 
@@ -1161,12 +1145,13 @@ y → utility
 
 信頼できる absolute scalar objective が取れるなら、通常回帰の方が単純です。
 
+
 ```text
 毎回、正確な強度値が測れる
-→ SingleTaskGP
+→ 単一タスク GP
 
 最終評価が人の総合判断で数値化しにくい
-→ PairwiseGP を検討
+→ pairwise GP を検討
 ```
 
 です。
@@ -1179,6 +1164,7 @@ Preference Learning は「比較形式でしか情報が得られない / 比較
 
 複数 objective がある場合、重み付き和
 
+
 $$
 u(y)=w^T y
 $$
@@ -1189,9 +1175,9 @@ $$
 
 ---
 
-## 10.58 PairwiseGP の計算コスト
+## 10.58 pairwise GP の計算コスト
 
-PairwiseGP では latent utility MAP と Laplace approximation が必要なため、standard exact GP regression より
+pairwise GP では latent utility MAP と Laplace approximation が必要なため、standard exact GP regression より
 fitting が重くなる場合があります。
 
 特に
@@ -1210,17 +1196,14 @@ fitting が重くなる場合があります。
 Laplace近似や行列分解では数値的な安定化が必要です。
 安定化の強さと最適化収束精度は近似結果に影響します。
 
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
 ---
 
 ## 10.60 comparison noise と scale
 
 probit preference model では utility scale と noise scale が完全に独立には識別できません。
 
-BoTorch は likelihood 内で明示的な $`\sigma`$ を持たせる代わりに、kernel output scale 側で function scale を扱います。
-
 そのため通常 regression GP の
+
 
 ```text
 learned noise = measurement noise variance
@@ -1251,6 +1234,7 @@ Preference model では次を確認します。
 
 comparison dataset を train / validation に分け、validation pair `(i,j)` について
 
+
 ```text
 posterior mean utility_i > posterior mean utility_j ?
 ```
@@ -1264,6 +1248,7 @@ posterior mean utility_i > posterior mean utility_j ?
 ## 10.63 ranking metric
 
 ground truth ranking がある simulation では Kendall tau が便利です。
+
 
 ```text
 true order
@@ -1281,9 +1266,10 @@ Preference model は absolute utility recovery より ranking recovery が重要
 
 ## 10.64 uncertainty の利用
 
-PairwiseGP は point ranking だけでなく posterior uncertainty を持ちます。
+pairwise GP は point ranking だけでなく posterior uncertainty を持ちます。
 
 これにより
+
 
 ```text
 どちらが優れているか分からない領域
@@ -1314,6 +1300,7 @@ BO と Active Learning では query selection objective が異なる点に注意
 
 ## 10.66 BO と Active Learning の違い
 
+
 ```text
 Preference BO
   → 最良 utility candidate を見つけたい
@@ -1332,11 +1319,13 @@ EUBO は前者寄りです。
 
 連続最適化ではなく、既存候補集合
 
+
 $$
 \mathcal{C}=\{x_1,\dots,x_N\}
 $$
 
 から pair を選ぶ場合、全 pair に acquisition score を計算して
+
 
 $$
 (i^*,j^*)=
@@ -1353,6 +1342,7 @@ $$
 
 一度に複数 pair を人へ提示する場合、comparison batch 内の冗長性も問題になります。
 
+
 ```text
 A vs B
 A vs C
@@ -1365,7 +1355,7 @@ A vs D
 
 ---
 
-## 10.69 PairwiseGP と classifier の使い分け
+## 10.69 pairwise GP と classifier の使い分け
 
 例えば product A/B のどちらを選ぶかだけを予測したいなら pair-input classifier でも実装できます。
 
@@ -1376,13 +1366,7 @@ A vs D
 - BO に使いたい
 - posterior uncertainty が欲しい
 
-なら latent utility model である PairwiseGP が自然です。
-
----
-
-## 10.70 robotorchan Notebook
-
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
+なら latent utility model である pairwise GP が自然です。
 
 ---
 
@@ -1391,13 +1375,9 @@ A vs D
 比較観測の原データと、推論用に整理したデータを区別することは
 推定結果の再現性と解釈に重要です。
 
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
 ---
 
 ## 10.72 simple example
-
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
 
 ---
 
@@ -1406,11 +1386,7 @@ A vs D
 潜在効用の事後平均を最大にする点は、一つの意思決定基準です。
 ただし事後不確実性を考慮する探索基準とは異なります。
 
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
 ---
-
-## 10.74 よくある誤解
 
 ### 「comparisons の数字が score」
 
@@ -1420,7 +1396,7 @@ A vs D
 
 違います。`i` が winner、`j` が loser です。
 
-### 「PairwiseGP は binary classifier」
+### 「pairwise GP は binary classifier」
 
 単純な classifier ではなく、候補ごとの latent utility GP を学習します。
 
@@ -1428,7 +1404,7 @@ A vs D
 
 基本的には relative scale / ranking が重要です。
 
-### 「PairwiseGP は Exact Gaussian regression」
+### 「pairwise GP は Exact Gaussian regression」
 
 違います。probit likelihood と Laplace approximation を使います。
 
@@ -1440,24 +1416,26 @@ absolute objective observations がないので preference-specific acquisition 
 
 ## 10.75 モデル選択フロー
 
+
 ```text
 評価対象がある
    ↓
 信頼できる absolute scalar score を取得できる？
  ├─ Yes
- │    └─ SingleTaskGP 等
+ │    └─ 単一タスク GP 等
  │
  └─ No
       ↓
       pairwise comparison なら安定して得られる？
        ├─ Yes
-       │    └─ PairwiseGP
+       │    └─ pairwise GP
        │
        └─ No
             └─ 別の preference / ordinal model を検討
 ```
 
 さらに
+
 
 ```text
 複数 outcome は測れる
@@ -1475,7 +1453,7 @@ absolute objective observations がないので preference-specific acquisition 
 | 観測・仮定 | 対応する考え方 |
 |---|---|
 | scalar targetを直接観測 | regression GP |
-| pairwise comparisonを観測 | `PairwiseGP` |
+| pairwise comparisonを観測 | pairwise GP |
 | 複数outcomeは観測でき、utilityを比較で学ぶ | BOPE型の分離 |
 | ordinal scoreを直接観測 | ordinal model |
 | evaluator差を明示的に表現したい | hierarchical / multitask preference model |
@@ -1483,19 +1461,15 @@ absolute objective observations がないので preference-specific acquisition 
 
 ---
 
-## 10.77 robotorchan で覚えておく API
-
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
----
-
 ## 10.78 数学的な全体像
 
 Preference Learning の構造は
 
+
 $$
 f\sim\mathcal{GP}(m,k)
 $$
+
 
 $$
 P(i\succ j\mid f)
@@ -1504,6 +1478,7 @@ P(i\succ j\mid f)
 \frac{f_i-f_j}{\sqrt{2}}
 \right)
 $$
+
 
 $$
 p(f\mid D)
@@ -1514,6 +1489,7 @@ $$
 です。
 
 この posterior は非Gaussianなので、
+
 
 $$
 p(f\mid D)
@@ -1529,6 +1505,7 @@ $$
 
 通常 BO:
 
+
 ```text
 objective value
       ↓
@@ -1539,10 +1516,11 @@ EI / UCB / KG
 
 Preference BO:
 
+
 ```text
 pairwise comparison
       ↓
-PairwiseGP
+pairwise GP
       ↓
 latent utility posterior
       ↓
@@ -1557,9 +1535,7 @@ EUBO / preference acquisition
 
 Preference Learning は、**絶対値ではなく比較から潜在 utility function を学ぶ方法**です。
 
-robotorchan では
-
-`PairwiseGP`
+pairwise GP
 
 を利用します。
 
@@ -1567,9 +1543,7 @@ robotorchan では
 
 1. `comparisons` は `[winner, loser]` の index pair
 2. latent utility `f(x)` に GP prior を置く
-3. default likelihood は probit
 4. non-Gaussian posterior を Laplace approximation する
-5. `make_mll()` は `PairwiseLaplaceMarginalLogLikelihood`
 6. utility の absolute value より ranking が重要
 7. preference BO では EI より preference-specific acquisition を考える
 8. BoTorch では EUBO が利用できる
@@ -1589,6 +1563,6 @@ robotorchan では
 3. Astudillo, R. et al. (2023).
    qEUBO: A decision-theoretic acquisition function for preferential Bayesian optimization.
    *Proceedings of AISTATS*.
-4. BoTorch `PairwiseGP`, preference BO, and BOPE documentation.
+4. BoTorch pairwise GP, preference BO, and BOPE documentation.
 5. [Gaussian Process](02_gaussian_process.md)
 6. [Acquisition Function](04_acquisition_function.md)

@@ -10,6 +10,7 @@
 
 材料開発で、温度と圧力を変えながら材料強度を最大化する問題を考えます。
 
+
 ```text
 入力 x = 温度、圧力
 評価 f(x) = その条件で実験して得られる材料強度
@@ -28,11 +29,13 @@ BO は、現在もっとも良さそうな条件だけでなく、まだ十分�
 
 典型的には、次の問題を考えます。
 
+
 $$
 x^* = \arg\max_{x \in \mathcal{X}} f(x)
 $$
 
 または最小化問題
+
 
 $$
 x^* = \arg\min_{x \in \mathcal{X}} f(x)
@@ -65,6 +68,7 @@ $`x^*`$ に対応します。
 
 勾配法では、目的関数の勾配
 
+
 $$
 \nabla f(x)
 $$
@@ -74,6 +78,7 @@ $$
 一方、ベイズ最適化では目的関数そのものではなく、観測データから作った**代理モデル（surrogate model）**を使って、次に評価すべき点を選びます。
 
 BOでは、最適化対象の真の関数 `f(x)` は直接には分かりません。代わりに、これまでの観測
+
 
 $$
 \mathcal{D}_n = \{(x_i, y_i)\}_{i=1}^n
@@ -86,6 +91,7 @@ $`\mathcal{D}_n`$ は、入力 $`x_i`$ と観測値 $`y_i`$ の組を $`n`$ 個�
 
 観測値にはノイズが含まれる場合があり、一般には
 
+
 $$
 y_i = f(x_i) + \epsilon_i
 $$
@@ -94,6 +100,7 @@ $$
 
 ここで $`f(x_i)`$ は潜在的な真の関数値、$`\epsilon_i`$ は観測ノイズです。
 典型的な GP 回帰では
+
 
 $$
 \epsilon_i \sim \mathcal{N}(0, \sigma_{\mathrm{noise}}^2)
@@ -123,6 +130,7 @@ GPはある点 `x` に対して単一の予測値だけでなく、
 
 GP の場合、単一点については典型的に
 
+
 $$
 f(x) \mid \mathcal{D}_n
 \sim
@@ -139,11 +147,13 @@ Monte Carlo acquisition で重要になります。
 
 代理モデルの予測分布を使って、次に評価する候補点の価値を数値化する関数です。
 
+
 $$
 \alpha(x; \mathcal{D}_n)
 $$
 
 と書き、次の評価点を
+
 
 $$
 x_{n+1} = \arg\max_{x \in \mathcal{X}} \alpha(x; \mathcal{D}_n)
@@ -193,11 +203,13 @@ BOは以下の逐次ループで進みます。
 
 数式で表すと、まず
 
+
 $$
 \mathcal{D}_n
 $$
 
 から posterior
+
 
 $$
 p(f \mid \mathcal{D}_n)
@@ -206,6 +218,7 @@ $$
 を構築します。これを posterior（事後分布）と呼びます。
 
 Bayes の定理との関係を概念的に書けば、
+
 
 $$
 p(f \mid \mathcal{D}_n)
@@ -219,6 +232,7 @@ $`p(f \mid \mathcal{D}_n)`$ はデータを見た後の posterior です。
 
 そこから acquisition function
 
+
 $$
 \alpha(x; \mathcal{D}_n)
 $$
@@ -227,11 +241,13 @@ $$
 
 その後、
 
+
 $$
 x_{n+1}=\arg\max_x \alpha(x; \mathcal{D}_n)
 $$
 
 を選び、実験またはシミュレーションで
+
 
 $$
 y_{n+1}=f(x_{n+1})+\epsilon
@@ -240,6 +256,7 @@ $$
 を取得します。
 
 そして
+
 
 $$
 \mathcal{D}_{n+1}=\mathcal{D}_n\cup\{(x_{n+1},y_{n+1})\}
@@ -254,6 +271,7 @@ BOでは、単に予測精度が高いだけでは十分ではありません。
 次点を選択するためには、**どこが分かっていて、どこが分かっていないか**をモデルが表現できる必要があります。
 
 Gaussian Process は予測値を
+
 
 $$
 f(x_*) \mid \mathcal{D}
@@ -274,6 +292,7 @@ kernel、likelihood、prior、推論方法などの仮定がデータに適し�
 posterior uncertainty も不適切になり得ます。
 
 この性質により、例えば UCB は
+
 
 $$
 \alpha_{\mathrm{UCB}}(x)
@@ -313,13 +332,12 @@ kernel や prior、surrogate model、candidate-search strategy にも依存し�
 
 といった問題が発生します。
 
-このため robotorchan では、SAAS GP や Additive GP などの高次元向けモデルも扱います。
-
 ## 1.9 Multi-objective Bayesian Optimization
 
 目的が複数ある場合は、単一の最良値ではなく Pareto front を探索します。
 
 例えば
+
 
 $$
 \mathbf{f}(x)
@@ -331,19 +349,19 @@ $$
 
 目的同士が競合する場合、ある目的を改善すると別の目的が悪化することがあります。そのため、単一の最適解ではなく非劣解集合を求めます。
 
-BoTorch では EHVI / NEHVI 系の獲得関数が代表的です。
-
 ## 1.10 制約付きベイズ最適化
 
 実務では、性能だけでなく制約を満たす必要があります。
 
 例えば
 
+
 $$
 \max_x f(x)
 $$
 
 subject to
+
 
 $$
 g_j(x) \le 0
@@ -364,6 +382,7 @@ $$
 
 複数の実験を同時に実施できる場合は、1点ではなく `q` 点を同時に選びます。
 
+
 $$
 X_{\mathrm{next}}
 =\{x_1,\ldots,x_q\}
@@ -372,8 +391,6 @@ $$
 単純に「1点用 acquisition の上位 $`q`$ 点」を選べばよいとは限りません。
 候補同士の依存関係や joint utility を考慮する必要があります。
 
-BoTorch の `qEI`, `qUCB`, `qNEHVI` などは batch BO を扱えます。
-
 ### 1.11.1 Asynchronous Bayesian Optimization
 
 複数の評価が同時に終了するとは限りません。一部の実験が実行中でも次の候補を決めたい場合、
@@ -381,74 +398,11 @@ BoTorch の `qEI`, `qUCB`, `qNEHVI` などは batch BO を扱えます。
 
 これは複数点をまとめて選ぶ batch BO と関連しますが、同じ概念ではありません。
 
-## 1.12 robotorchan との関係
-
-robotorchan では、BO全体を以下のように分けて考えます。
-
-```text
-データ
-  ↓
-Surrogate model
-  ↓
-Posterior distribution
-  ↓
-Acquisition function
-  ↓
-Acquisition optimization
-  ↓
-Candidate
-  ↓
-実験・シミュレーション
-  ↓
-データ更新
-```
-
-`docs/models.md` はこのうち surrogate model の選択を中心に説明しています。
-
-本理論ガイドでは、その背景となる GP・Kernel・Multi-task・Multi-Fidelity などを順に説明します。
-
-## 1.12.1 実装では BO loop をさらに分解する
-
-初心者が最初に覚える中心構造は、
-
-```text
-データ
- -> surrogate model
- -> uncertainty を含む予測
- -> acquisition function
- -> 次の候補
-```
-
-です。
-
-理論上は surrogate と acquisition の2要素で説明できても、実装では次の責務を分けます。
-
-```text
-model
- -> posterior
- -> transform / objective
- -> sampling
- -> acquisition
- -> initialization
- -> acquisition optimization
- -> evaluation
- -> model update
-```
-
-batch / asynchronous BO では pending points と fantasization がこの loop に加わります。
-TuRBO のような trust-region method では candidate optimization 側に stateful search geometry が加わります。
-
-この分解は単なるソフトウェア設計ではありません。
-posterior sample の依存構造、objective の適用位置、initial conditions、
-pending-point semantics などが BO の意思決定結果を変え得るためです。
-
-詳細な実装境界は [理論ガイドREADME](README.md) の
-「BO 周辺基盤の理論と実装ガイド」を参照してください。
-
 ## 1.13 この章で覚えておくこと
 
 BO の本質は、単に高精度な予測モデルを作ることではありません。
 **限られた評価予算の中で、現在の情報を使って次の評価を逐次的に決めること**にあります。
+
 
 ```text
 高価な未知関数 f(x)

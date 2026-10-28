@@ -22,6 +22,7 @@ Acquisition function は「一般に最も優れた一つ」を選ぶもので�
 
 最初に最終目的を分けます。
 
+
 ```text
 何をしたいか?
 │
@@ -50,6 +51,7 @@ learning に使ったりするような目的不整合が起こります。
 
 実務上は numerical stability のため LogEI 系を第一に検討できます。
 
+
 ```text
 目的
     incumbent を改善する点を探す
@@ -72,6 +74,7 @@ observation noise がある場合、observed best を真の incumbent とみな�
 
 この場合は noisy acquisition を検討します。
 
+
 ```text
 single objective
     qLogNEI / noisy improvement family
@@ -88,6 +91,7 @@ baseline points の latent values に関する uncertainty を含めて candidat
 
 一度に q 点を並列評価するなら、pointwise acquisition の上位 q 点を選ぶより joint q-acquisition を検討します。
 
+
 ```text
 noise が小さい
     qLogEI / qUCB など
@@ -98,11 +102,13 @@ noise がある
 
 重要なのは、
 
+
 $$
 \alpha(x_1)+\cdots+\alpha(x_q)
 $$
 
 ではなく、
+
 
 $$
 \alpha(x_1,\ldots,x_q)
@@ -113,6 +119,7 @@ $$
 ## 12.6 非同期 BO
 
 複数 worker があり、既に評価中の pending points がある場合は、それらを無視して次候補を選ぶと重複探索が起こり得ます。
+
 
 ```text
 completed data
@@ -133,6 +140,7 @@ batch と asynchronous は同じではありません。
 
 exploration strength を明示的に扱いたい場合は UCB family が理解しやすい選択肢です。
 
+
 $$
 \mu(x)+\sqrt{\beta}\sigma(x)
 $$
@@ -146,6 +154,7 @@ UCB が常に EI より探索的という固定的なランキングではなく
 ## 12.8 Optimum について情報を得たい
 
 immediate improvement より、optimum に関する information gain を重視するなら information-theoretic BO を検討します。
+
 
 ```text
 optimum value f* について学ぶ
@@ -166,6 +175,7 @@ optimizer location x* について学ぶ
 
 candidate 自身の improvement ではなく、観測後の最終 decision がどれだけ改善するかを評価したいなら KG family を検討します。
 
+
 ```text
 one-step value of information
     → qKnowledgeGradient
@@ -182,19 +192,6 @@ one-step value of information
 
 複数 objective に trade-off があるなら Pareto structure を扱います。
 
-```text
-hypervolume improvement を直接評価
-    → qLogEHVI
-
-noise を考慮
-    → qLogNEHVI
-
-scalarization で Pareto front を探索
-    → qLogNParEGO
-
-将来の multi-objective decision value
-    → HVKG（理論上の選択肢。現在の robotorchan runtime-validated integration 外）
-```
 
 reference point、目的数、noise、計算量によって選択肢が変わります。
 
@@ -226,6 +223,7 @@ problem semantics と computational structure の両方から判断します。
 
 未知 outcome constraint がある場合は objective utility と feasibility を組み合わせます。
 
+
 ```text
 objective
     何を改善したいか
@@ -238,6 +236,7 @@ constrained acquisition
 ```
 
 一方、既知の input constraint は acquisition optimizer の feasible domain として扱える場合があります。
+
 
 ```text
 known input constraint
@@ -255,6 +254,7 @@ constraint-aware BO と safe BO は同じではありません。
 
 制約違反が一度でも許容できない問題では、通常の feasibility-weighted acquisition だけで安全性が保証されるとは限りません。
 
+
 ```text
 制約違反も観測として許容可能
     → constrained BO
@@ -269,20 +269,22 @@ constraint-aware BO と safe BO は同じではありません。
 
 optimization ではなく regression function を広く学びたいなら uncertainty-based AL を検討します。
 
+
 ```text
 candidate 自身の uncertainty
-    → PosteriorVariance / PosteriorStd
+    → 事後分散基準 / 事後標準偏差基準
 
 target region 全体の uncertainty
     → qNIPV / integrated variance reduction
 ```
 
-PosteriorVariance は単純で解釈しやすい一方、candidate を観測した結果ほかの場所の uncertainty がどう減るかは直接評価しません。
+事後分散基準 は単純で解釈しやすい一方、candidate を観測した結果ほかの場所の uncertainty がどう減るかは直接評価しません。
 
 ## 12.15 Deployment distribution 上の prediction を学びたい
 
 予測精度が必要な target distribution / target set が明確なら EPIG のような target-aware information acquisition
 が自然です。
+
 
 ```text
 candidate が不確実
@@ -299,11 +301,13 @@ target prediction が改善する
 
 ## 12.16 Threshold boundary を学びたい
 
+
 $$
 f(x)=t
 $$
 
 の境界が目的なら level-set acquisition を使います。
+
 
 ```text
 established boundary criterion
@@ -313,11 +317,8 @@ randomized exploration coefficient
     → RandomizedStraddle
 
 variance × target proximity heuristic
-    → BoundaryVariance
+    → 分散と境界近接度の積による基準
 ```
-
-BoundaryVariance は robotorchan-specific heuristic であり、literature named method として扱いません。
-
 詳細は [Level-set Acquisition](10_level_set.md) を参照してください。
 
 ## 12.17 Constraint boundary だけを学びたい場合
@@ -325,6 +326,7 @@ BoundaryVariance は robotorchan-specific heuristic であり、literature named
 c(x)\le0`$ の boundary を知りたいだけなら、問題は level-set estimation に近づきます。
 
 しかし objective optimization も必要なら constrained BO です。
+
 
 ```text
 c(x)=0 の位置を知りたい
@@ -339,6 +341,7 @@ c(x)<=0 の中で f(x) を最大化したい
 ## 12.18 Fidelity と evaluation cost が異なる
 
 複数 fidelity を選べる場合は、target-fidelity decision に対する value と cost を考えます。
+
 
 ```text
 target decision の value of information
@@ -359,6 +362,7 @@ candidate fidelity
 
 十分とは限りません。
 
+
 ```text
 MF surrogate
     fidelity間の関係を予測
@@ -377,6 +381,7 @@ optimizer は分けて考えます。
 
 例えば EI を使うかどうかは utility の問題であり、categorical variables をどう探索するかは candidate optimization の問題です。
 
+
 ```text
 acquisition
     candidate の価値を定義
@@ -394,6 +399,7 @@ Mixed model があることと Mixed 専用 acquisition が必要であること
 PCA、PLS、AE、ALEBO、SAAS、TuRBO などは surrogate representation や search strategy に関係します。
 
 一方 EI、UCB、MES などは candidate utility を定義します。
+
 
 ```text
 high-dimensional model / representation
@@ -420,19 +426,19 @@ Multi-task surrogate を使っていても、acquisition が何を意思決定�
 
 では問題が異なります。
 
-MultiTaskGP を使っていることだけで multi-task experimental design が自動的に定義されるわけではありません。
+マルチタスク GP を使っていることだけで multi-task experimental design が自動的に定義されるわけではありません。
 
 ## 12.23 Model capability と acquisition capability を混同しない
 
-robotorchan には Mixed、MultiTask、Multi-Fidelity、高次元、ロバスト、表現力の高い surrogate models があります。
-
 しかし、
+
 
 ```text
 model が posterior を返せる
 ```
 
 ことと
+
 
 ```text
 特定 acquisition の semantics が
@@ -457,6 +463,7 @@ unsupported structure を generic tensor operation で無理に通すより、�
 入力摂動や環境変数に対して robust objective を最適化する場合、まず「何を robust utility とするか」を定義します。
 
 例えば、
+
 
 $$
 \mathbb E_w[f(x,w)]
@@ -483,6 +490,7 @@ posterior sampling / Thompson sampling も finite-pool selection と相性が良
 
 posterior function sample
 
+
 $$
 \tilde f\sim p(f\mid\mathcal D)
 $$
@@ -499,6 +507,7 @@ multi-output では「何を最大化する posterior sample なのか」を obj
 理論的に同じ utility family でも、数値的に安定した formulation を優先することがあります。
 
 典型例:
+
 
 ```text
 EI
@@ -528,6 +537,7 @@ MES、KG、multi-step lookahead、high-q MOBO などでは acquisition computati
 
 選択時には、
 
+
 $$
 \text{experiment cost}
 \quad\text{vs}\quad
@@ -545,6 +555,7 @@ overhead が支配的になる可能性があります。
 
 ### Step 1: 最終目的
 
+
 ```text
 optimization?
 function learning?
@@ -552,6 +563,7 @@ boundary learning?
 ```
 
 ### Step 2: objective / learning target structure
+
 
 ```text
 single objective?
@@ -562,6 +574,7 @@ target task?
 
 ### Step 3: observation and evaluation process
 
+
 ```text
 noise?
 batch?
@@ -571,6 +584,7 @@ finite pool?
 
 ### Step 4: fidelity / cost structure
 
+
 ```text
 same cost?
 multiple fidelities?
@@ -578,6 +592,7 @@ different costs?
 ```
 
 ### Step 5: decision horizon
+
 
 ```text
 myopic improvement?
@@ -588,6 +603,7 @@ multi-step planning?
 
 ### Step 6: candidate-space / computational structure
 
+
 ```text
 continuous / mixed?
 high dimensional?
@@ -597,6 +613,7 @@ many objectives?
 
 ### Step 7: posterior requirement
 
+
 ~~~text
 marginal momentsだけで足りる?
 joint Gaussian structureが必要?
@@ -605,11 +622,6 @@ fantasizeが必要?
 ~~~
 
 ここでmodelが返せるposteriorとacquisitionの計算契約を照合します。
-
-### Step 8: implementation / optimizer contract
-
-最後に現在のrobotorchan / BoTorch integration、optimizer compatibility、runtime validationを確認します。
-Theoryで定義できることと、現在の実行可能workflowは同義ではありません。
 
 ## 12.30 Problem-to-family quick map
 
@@ -623,37 +635,12 @@ Theoryで定義できることと、現在の実行可能workflowは同義では
 | Multi-step planning | qMultiStepLookahead | adaptive future decisions |
 | Multi-objective | qLogEHVI / qLogNEHVI / qLogNParEGO | Pareto utility |
 | Unknown constraints | constrained acquisition | feasible utility |
-| Function learning | PosteriorVariance / qNIPV | predictive uncertainty |
+| Function learning | 事後分散基準 / qNIPV | predictive uncertainty |
 | Target-aware AL | EPIG | information about target predictions |
 | Boundary learning | Straddle family | uncertainty near threshold |
 | Multi-fidelity | MF-KG + cost-aware utility | target-fidelity value per cost |
 
 この表は開始点であり、ランキングではありません。
-
-## 12.31 robotorchanのドキュメント層
-
-手法を選んだ後は、目的に応じて参照先を分けます。
-
-```text
-docs/theory/acquisition/
-    WHY
-    理論・数式・関係性
-
-docs/optimization/
-    HOW
-    API・使用例・現在の適用範囲
-
-docs/optimization/acquisition-integration.md
-    STATUS
-    現在の integration / limitation
-
-src/robotorchan/acquisition/
-    IMPLEMENTATION
-```
-
-Theory に記載されていることは、robotorchan がすべて独自実装していることを意味しません。
-
-BoTorch native で十分な標準 acquisition は再実装せず、robotorchan-specific acquisition が必要な領域だけを補完します。
 
 ## 12.31.1 理論と実行可能性を分ける
 
@@ -664,6 +651,7 @@ one-shot auxiliary variables）を区別します。
 
 実利用時は次の順序で検討します。
 
+
 ~~~text
 problem semantics
   -> acquisition family
@@ -671,13 +659,6 @@ problem semantics
   -> acquisition/optimizer compatibility
   -> executable validation
 ~~~
-
-現在のregistry名、対応するposterior、q-batch、mixed one-shot、ensemble、
-multi-fidelity、制約などの実装条件は
-[Acquisition integration status](../../optimization/acquisition-integration.md) と
-各optimization guideを参照してください。理論上の適用可能性は、現在のruntime
-supportを保証しません。
-
 ## 12.33 この章で覚えておくこと
 
 - acquisition名ではなくdecision purposeから選ぶ
@@ -689,12 +670,11 @@ supportを保証しません。
 - information-theoretic methodでは「何についてのinformationか」を確認する
 - model capabilityとacquisition capabilityとoptimizer capabilityを別々に確認する
 - posterior requirementをmarginal moments / joint Gaussian / posterior samplesで確認する
-- registryはcompatibility surfaceであり、catalogでもruntime validationの代替でもない
-- Theory coverageはrobotorchan-owned implementationやruntime supportを意味しない
 
 ## 12.34 まとめ
 
 Acquisition selection の最も重要な原則は、
+
 
 ```text
 手法名から問題を選ばない。
@@ -707,6 +687,3 @@ Acquisition selection の最も重要な原則は、
 同じ posterior model でも、最終目的が変われば適切な acquisition は変わります。
 
 また model、objective、constraint、acquisition、acquisition optimizer、search strategy はそれぞれ異なる責務です。
-
-この分離を保つことで、robotorchan の多様な surrogate models と BoTorch の acquisition ecosystem
-を組み合わせても、問題設定の意味を失わずに設計できます。

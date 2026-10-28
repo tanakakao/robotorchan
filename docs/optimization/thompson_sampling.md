@@ -1,10 +1,8 @@
-# Thompson sampling and posterior sampling
+# Thompson sampling と事後分布のサンプリング
 
-This guide separates **finite candidate-set selection** from continuous acquisition optimization.
+有限候補集合からの選択と連続領域上の獲得関数最適化を分けて扱います。
 
-For a finite candidate pool, robotorchan provides `select_thompson_candidates`. It delegates
-posterior sampling and maximization to BoTorch's `MaxPosteriorSampling` and only adds a small,
-explicit contract for candidate shape and sampling count.
+有限プールには `select_thompson_candidates` を使います。事後サンプリングと最大化は BoTorch `MaxPosteriorSampling` に委譲し、候補形状とサンプル数の明示的な契約を追加します。
 
 ```python
 from robotorchan.acquisition import select_thompson_candidates
@@ -12,31 +10,17 @@ from robotorchan.acquisition import select_thompson_candidates
 selected = select_thompson_candidates(model, choices, num_samples=4)
 ```
 
-This is useful when the feasible domain is already enumerated, including many discrete or
-mixed-variable workflows. With `replacement=False` (the default), a batch contains distinct
-rows from the supplied candidate set.
 
-## Why this is not an acquisition-function wrapper
+実行可能な領域を列挙済みの離散・混合変数問題に適しています。既定の `replacement=False` では、同じ batch 内で異なる候補行を選びます。
 
-Thompson sampling is naturally expressed as posterior sampling followed by selection of a
-sample maximizer. BoTorch already supplies the sampling primitive, so robotorchan does not
-introduce a synthetic Thompson acquisition class or duplicate posterior sampling logic.
+## 獲得関数 wrapper を設けない理由
 
-## Continuous domains
+Thompson sampling は、関数を事後分布から引き、その最大点を選ぶ操作です。BoTorch の既存機能を使い、人工的な獲得関数 class や重複したサンプリング処理を追加しません。
 
-Continuous Thompson sampling additionally requires a strategy for maximizing a sampled
-function over bounds. That is an optimization concern and is deliberately not hidden inside
-the finite-pool helper. High-dimensional strategies such as trust-region or embedding-based
-search may require different sampled-function optimization paths.
+## 連続領域
 
-## Compatibility
+連続領域ではサンプル関数を bounds 内で最大化する探索戦略も必要です。この最適化を有限プール用 helper に隠しません。trust region や embedding による高次元探索では、異なる探索経路が必要になる場合があります。
 
-The helper requires a BoTorch-compatible model posterior. Compatibility therefore follows
-the model/posterior contract rather than a GP-specific type check. Model families with
-special posterior semantics should be validated by focused integration tests before being
-listed as supported. This candidate-generation path is distinct from MC acquisition sampling;
-see [Posterior sampling](posterior-sampling.md) for the full sampler taxonomy.
+## 互換性
 
-
-For the broader theory and method relationships, see
-[Acquisition theory](../theory/acquisition/12_selection_guide.md).
+BoTorch 互換の posterior が必要です。GP の型判定ではなくモデル・posterior の契約に従います。特別な posterior の意味を持つモデルは、対応を宣言する前に個別の統合テストで確認してください。候補生成のこの経路は MC 獲得関数用 sampling とは異なります。[Posterior sampling](posterior-sampling.md)と[選択の理論](../theory/acquisition/12_selection_guide.md)を参照してください。

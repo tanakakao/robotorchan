@@ -1,14 +1,8 @@
-# Phase 5 gap closure: BoTorch GP benchmark strategy
+# BoTorch GP の benchmark 戦略
 
-`make_botorch_gp_strategy` plugs native BoTorch `SingleTaskGP`,
-`fit_gpytorch_mll`, `qExpectedImprovement` or
-`qNoisyExpectedImprovement`, and `optimize_acqf` into the existing
-`run_benchmark` candidate callback.
+`make_botorch_gp_strategy` は BoTorch `SingleTaskGP`、`fit_gpytorch_mll`、`qExpectedImprovement` または `qNoisyExpectedImprovement`、`optimize_acqf` を `run_benchmark` の候補 callback に接続します。
 
-The strategy is deliberately restricted to unconstrained, continuous,
-single-objective benchmarks. It trains on observed values only, converts
-minimization to maximization internally, and does not access truth or
-known optimal values during candidate selection.
+対象は制約なし・連続・単一目的です。観測値だけで学習し、最小化は内部で最大化へ変換します。候補選択時に真値や既知の最適値へアクセスしません。
 
 ```python
 from robotorchan.benchmarks import (
@@ -33,8 +27,5 @@ trajectory = run_benchmark(config, strategy, registry=registry)[0]
 print(trajectory.X.shape)
 ```
 
-The benchmark runner's Sobol initial design depends only on problem,
-seed, dtype and device, so Random and GP strategies can use matched
-initial conditions. This is a smoke-test baseline, not a performance
-claim. Fair multi-seed comparisons and noisy-objective experiments
-belong to later phases.
+
+初期 Sobol 設計は問題・seed・dtype・device のみに依存し、Random と GP の初期条件を揃えられます。これは動作確認の基準法で、性能の主張ではありません。公平な多 seed 比較やノイズ実験は別途プロトコルに従って行ってください。

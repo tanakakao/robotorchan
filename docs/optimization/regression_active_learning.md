@@ -1,17 +1,10 @@
-# Regression active learning
+# 回帰 Active Learning
 
-This guide adds uncertainty-based active learning for **continuous regression outputs**.
-Classification-specific acquisitions remain outside the current scope.
+連続回帰出力の不確実性を使う選択です。分類専用の獲得関数とは区別します。
 
-## Pointwise uncertainty
+## 点ごとの不確実性
 
-robotorchan provides two small q=1 acquisition functions:
-
-- `PosteriorVariance`: maximize posterior variance;
-- `PosteriorStd`: maximize posterior standard deviation.
-
-Both follow BoTorch's `AcquisitionFunction` interface and can therefore be passed to
-`optimize_acqf` for single-candidate selection.
+q=1 の `PosteriorVariance` は事後分散、`PosteriorStd` は事後標準偏差を最大化します。いずれも BoTorch `AcquisitionFunction` に従い、単一候補の選択に `optimize_acqf` を使えます。
 
 ```python
 from robotorchan.acquisition import PosteriorVariance
@@ -19,13 +12,12 @@ from robotorchan.acquisition import PosteriorVariance
 acqf = PosteriorVariance(model)
 ```
 
-For multi-output posteriors, specify `output_index`. robotorchan does not silently sum or
-average outputs because that would impose an application-specific utility.
 
-## Batch integrated variance reduction
+多出力では `output_index` を指定します。問題固有の効用を勝手に課すことになるため、出力の合計・平均を暗黙に取りません。
 
-For batch pure exploration, use BoTorch's native
-`qNegIntegratedPosteriorVariance` directly:
+## Batch の積分分散削減
+
+純粋探索には BoTorch 標準の `qNegIntegratedPosteriorVariance` を直接使います。
 
 ```python
 from botorch.acquisition.active_learning import qNegIntegratedPosteriorVariance
@@ -33,43 +25,21 @@ from botorch.acquisition.active_learning import qNegIntegratedPosteriorVariance
 acqf = qNegIntegratedPosteriorVariance(model=model, mc_points=target_points)
 ```
 
-This criterion values a batch by its expected reduction of posterior uncertainty over the
-integration points. robotorchan does not wrap or re-export it.
 
-## Scope
+積分点上の事後不確実性の期待削減量で batch を評価します。wrapper や再公開は追加しません。
 
-These acquisitions are regression active-learning tools. Level-set and boundary learning
-are handled separately, while predictive-information methods such as EPIG are documented separately.
+## 適用範囲
 
+回帰の Active Learning 用です。level-set・境界学習、EPIG など予測情報量に基づく選択は別のガイドを参照してください。[理論](../theory/acquisition/09_active_learning.md)に関係を示します。
 
-For the broader theory and method relationships, see
-[Acquisition theory](../theory/acquisition/09_active_learning.md).
+## 確率的な non-GP surrogate
 
+意味のある周辺モーメントを公開する non-GP にも `PosteriorVariance`・`PosteriorStd` を使えます。`NGBoostSurrogate` は Gaussian 予測分布からモーメントを供給する基準経路です。
 
-## Probabilistic non-GP surrogates
+すべての Gaussian posterior 用獲得関数が使える意味ではありません。`ExpectedPredictiveInformationGain` は joint Gaussian 共分散を必要としますが、通常の NGBoost は独立な予測周辺分布だけを公開します。予測分散だけでは epistemic・aleatoric 不確実性を分離できないため、BALD もこの契約の対象外です。
 
-Moment-based regression AL is not restricted to Gaussian processes. A non-GP model may use
-`PosteriorVariance` and `PosteriorStd` when its BoTorch posterior exposes statistically meaningful
-marginal moments. `NGBoostSurrogate` is the reference distributional non-GP path: its Gaussian
-predictive distribution supplies these moments directly.
+## 経験 ensemble surrogate
 
-This does not make every Gaussian-posterior acquisition valid. In particular,
-`ExpectedPredictiveInformationGain` requires the joint Gaussian covariance contract, while plain
-NGBoost only exposes independent predictive marginals. BALD is also outside this contract because
-predictive variance alone does not identify epistemic and aleatoric uncertainty separately.
+現在の `PosteriorVariance`・`PosteriorStd` は ensemble posterior を拒否します。`_is_ensemble` のモデルと BoTorch `EnsemblePosterior` の直接の返り値を含みます。
 
-
-## Empirical ensemble surrogates
-
-The current runtime contract intentionally rejects ensemble posteriors in `PosteriorVariance` and
-`PosteriorStd`. This includes models marked with `_is_ensemble` and direct BoTorch
-`EnsemblePosterior` results.
-
-Tree ensembles can expose an empirical spread across members, but robotorchan does not currently
-treat that spread as the uncertainty contract for these acquisition functions. Supporting
-RandomForest / ExtraTrees active learning therefore requires a separately certified ensemble-aware
-criterion rather than relying on the Gaussian-posterior path.
-
-This matches the executable scope described in
-[Active Learning acquisition theory](../theory/acquisition/09_active_learning.md) and the
-[regression active-learning notebook](../../examples/notebooks/28_active_learning_acquisition.ipynb).
+tree ensemble のメンバー間の広がりは、この獲得関数の不確実性契約としては認定していません。RandomForest・ExtraTrees の Active Learning には ensemble を明示的に扱う別の基準と検証が必要です。[理論](../theory/acquisition/09_active_learning.md)と[Notebook](../../examples/notebooks/28_active_learning_acquisition.ipynb)に示す実行範囲と一致させています。

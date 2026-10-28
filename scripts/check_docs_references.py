@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
-from check_docs_links import LINK_RE, ROOT, strip_fenced_code
+from check_docs_links import LINK_RE, ROOT, markdown_sources, strip_fenced_code
 
 DEFINITION_RE = re.compile(r"^\s{0,3}\[([^\]]+)\]:\s*<?([^\s>]+)>?", re.MULTILINE)
 REFERENCE_RE = re.compile(r"(?<!!)\[([^\]]+)\]\[([^\]]*)\]")
@@ -44,7 +44,7 @@ def anchors(text: str) -> set[str]:
 def check_reference_anchors(root: Path) -> list[str]:
     """Report invalid local reference links and Markdown fragments."""
     failures = []
-    documents = sorted((root / "docs").rglob("*.md"))
+    documents = markdown_sources(root)
     for source in documents:
         content = strip_fenced_code(source.read_text(encoding="utf-8"))
         definitions = {normalize(label): url for label, url in DEFINITION_RE.findall(content)}
@@ -57,11 +57,14 @@ def check_reference_anchors(root: Path) -> list[str]:
                 links.append(definitions[label])
         for url in links:
             parsed = urlsplit(url)
-            if not parsed.fragment or parsed.scheme or parsed.netloc:
+            if parsed.scheme or parsed.netloc:
                 continue
             target = (source.parent / unquote(parsed.path)).resolve() if parsed.path else source
-            if not target.is_relative_to(root.resolve()) or not target.is_file():
-                continue  # Existing local-path checker owns missing targets.
+            if not target.is_relative_to(root.resolve()) or not target.exists():
+                failures.append(f"{source.relative_to(root)}: missing reference target: {url}")
+                continue
+            if not parsed.fragment:
+                continue
             if target.suffix.lower() != ".md":
                 continue
             fragment = unquote(parsed.fragment)

@@ -7,10 +7,6 @@ Hybrid acquisition optimization は、1つの numerical optimizer に全探索�
 
 代表的な hybrid optimization は
 
-    global derivative-free search
-      -> promising joint q-batch
-      -> BoTorch local refinement
-
 という **global-to-local** 構成です。
 
 これは複数 optimizer の多数決や、候補を単純に比較する ensemble ではありません。
@@ -60,8 +56,6 @@ q-batch acquisition の場合、global stage から local stage まで
 
 ## 11.5 Initialization としての global search
 
-通常の multi-start BoTorch optimization では、raw samples などから initial conditions を選びます。
-
 Hybrid backend では global optimizer 自体が initial-condition generator の役割を持ちます。
 
     global optimizer
@@ -107,10 +101,6 @@ candidate constraints は global stage と local stage の両方へ渡されま�
 
 | Global stage | Global constraint handling | Local stage |
 | --- | --- | --- |
-| DE | feasibility-first | BoTorch native |
-| CMA-ES | penalty | BoTorch native |
-| Mixed GA | feasibility-first | BoTorch mixed native |
-| custom callable | callable の contract に依存 | BoTorch native / mixed native |
 
 したがって Hybrid の制約処理を単一の「penalty method」と理解するのは不正確です。
 
@@ -119,11 +109,7 @@ global stage で infeasible landscape をどう探索するかは選択した op
 
 ## 11.9 Nonlinear constraints
 
-nonlinear candidate constraints が存在する場合、local BoTorch stage では
-
     constrained local optimization
-
-が default として設定されます。
 
 制約付き局所最適化では初期点の実行可能性と数値安定性に注意が必要です。
 
@@ -151,9 +137,6 @@ Mixed-variable hybrid では構造化された変数空間を扱います。
 
 integer / categorical dimension が存在する場合、global stage と local stage の双方で
 structured variable semantics を保持する必要があります。
-
-現在の構成では global optimizer として Mixed GA を利用でき、
-local stage は BoTorch mixed optimization を使えます。
 
 local stage に渡す `mixed_fixed_features_list` は、各 entry が
 すべての structured dimension を固定していなければなりません。
@@ -235,7 +218,6 @@ Hybrid method を理解するときは、少なくとも次の4層を分けま�
 | Search domain | global box, trust region, embedded polytope |
 | Global numerical search | DE, CMA-ES, Mixed GA |
 | Hand-off | explicit batch initial condition |
-| Local numerical search | BoTorch continuous / mixed optimization |
 
 この分離により「global exploration」と「acquisition exploration」を混同しにくくなります。
 

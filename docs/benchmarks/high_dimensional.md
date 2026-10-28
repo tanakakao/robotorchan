@@ -1,29 +1,17 @@
-# High-dimensional benchmark problems
+# 高次元 benchmark 問題
 
-These deterministic, tensor-native minimization problems provide
-controlled ambient dimension and effective dimensionality.
+周囲次元と有効次元を制御した、Tensor 上で評価できる決定的な最小化問題です。
 
-| Problem | Ambient dimension | Active structure | Known minimum |
+| 問題 | 周囲次元 | 有効な構造 | 既知の最小値 |
 | --- | ---: | --- | ---: |
-| sparse_sphere_50 | 50 | first four coordinates; 46 irrelevant | 0 |
-| rotated_subspace_40 | 40 | two dense orthogonal projections | 0 |
-| interaction_chain_30 | 30 | ten coordinates with adjacent pair interactions | 0 |
+| sparse_sphere_50 | 50 | 最初の 4 座標。残り 46 は無関係 | 0 |
+| rotated_subspace_40 | 40 | 密な直交射影 2 個 | 0 |
+| interaction_chain_30 | 30 | 最初の 10 座標と隣接相互作用 | 0 |
 
-**Sparse sphere:** sum of squared deviations from 0.3 in the first
-four coordinates. The remaining 46 dimensions have no effect.
+Sparse sphere は最初の 4 座標の 0.3 からの二乗偏差和です。Rotated subspace は `X - 0.5` の、正規化した全 1 方向と半分正・半分負の方向への射影二乗ノルムです。中心で最小となり、38 次元の零空間方向には一定です。
 
-**Rotated subspace:** the squared norm of two projections of
-`X - 0.5` onto normalized all-ones and half-positive/half-negative
-directions. The optimum is achieved at the center; the objective is
-constant along the 38-dimensional null space.
+Interaction chain は最初の 10 座標の 0.4 からの二乗偏差と、隣接偏差間の二乗差を加えます。残り 20 座標は影響しません。
 
-**Interaction chain:** squared deviations from 0.4 in the first ten
-coordinates, plus squared differences between adjacent deviations.
-The remaining 20 dimensions are irrelevant.
+全次元の bounds は [0, 1] です。既知の最小値を用いて標準 GP・SAAS・射影・trust region を真値 regret で比較できますが、問題定義と統合テスト自体は順位付けの証拠ではありません。
 
-All problems use bounds [0, 1] in every dimension. Known minima allow
-truth-based simple regret comparisons between standard GP, SAAS,
-projection-based and trust-region search strategies. This phase adds
-the problem definitions and integration tests, not a benchmark ranking.
-
-Register using `register_high_dimensional_problems(registry)`.
+`register_high_dimensional_problems(registry)` で登録します。

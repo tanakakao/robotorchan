@@ -1,251 +1,60 @@
-# Non-GP Surrogates for Bayesian Optimization
+# ベイズ最適化の non-GP surrogate
 
-## 0. 最初に理解すること
+## 1. 予測表現と統計的な意味
 
-non-GP surrogateでもBayesian optimizationに参加できます。必要なのはGPであることではなく、
-acquisitionが必要とするpredictive representationを提供できることです。
+BO に必要なのは GP という名称ではなく、獲得効用に必要な予測分布またはサンプリング可能な予測表現です。経験 ensemble の予測を次で表します。
 
-| Family | posteriorが表すもの | uncertaintyの主な意味 |
-| --- | --- | --- |
-| Exact GP | GP posterior | model条件下のposterior uncertainty |
-| Random Forest / Extra Trees | tree predictions | tree disagreement |
-| Bootstrap boosting | complete bootstrap models | resampling/model disagreement |
-| NGBoost | conditional predictive distribution | fitted predictive-law variance |
-
-同じ `posterior()` interfaceを持つことと、同じ統計的posteriorを意味することは別です。
-
-## 1. Posterior interface without a Gaussian process
-
-Bayesian optimization requires a predictive distribution or a sampleable predictive representation;
-it does not require every surrogate to be a Gaussian Process. For an empirical ensemble with
-predictions $`f_s(X)`$, robotorchan represents
 
 $$
 \{f_1(X),\ldots,f_S(X)\}
 $$
-as an `EnsemblePosterior` with shape `... x S x q x m`. Here $`S`$ is the ensemble dimension,
-$`q`$ the candidate batch size, and $`m`$ the number of outputs. Monte Carlo acquisition functions
-can sample from this discrete empirical distribution.
 
-The empirical mean and variance summarize ensemble predictions, but their interpretation depends on
-how the ensemble was generated. They are not automatically a Bayesian posterior mean and variance.
+S はメンバー数、q は候補数、m は出力数です。経験分布から Monte Carlo sample を引けますが、平均・分散の統計的解釈は ensemble の作り方に依存します。自動的に Bayesian 事後平均・事後分散になるわけではありません。
 
-## 2. Random Forest and Extra Trees
+## 2. Random Forest と Extra Trees
 
-For Random Forest and Extra Trees, a fitted tree is used as one empirical prediction member. Random
-Forest obtains diversity from bootstrap/data sampling and feature selection;
-Extra Trees adds stronger split randomization.
+各学習済み tree の予測を一つのメンバーとします。Random Forest はデータ再抽出と特徴選択、Extra Trees はさらに強い分割ランダム化で多様性を作ります。tree 間の不一致は epistemic 不確実性の近似指標になり得ますが、観測ノイズの同定や較正済みの信用区間を保証しません。
 
-現行forest surrogateでは、sklearn ensemble内部の各tree predictionをempirical memberとして使います。
-これはcomplete modelを複数回bootstrap fitするboosting surrogateとは異なります。
+## 3. Boosting stage を sample とみなせない理由
 
-The resulting tree disagreement can be useful as an
-epistemic heuristic, but it
-does not by itself identify observation noise or guarantee calibrated credible intervals.
+Gradient boosting は加算形を持ちます。
 
-## 3. Why boosting stages are not posterior samples
-
-A gradient boosting predictor has additive form
 
 $$
 F_M(x)=F_0(x)+\sum_{j=1}^{M}\eta h_j(x).
 $$
-The stage predictors $`h_j`$ are trained sequentially to correct residual structure. They are not
-exchangeable draws from a predictive distribution. Treating their spread as posterior uncertainty
-would therefore give the ensemble dimension the wrong statistical meaning.
 
-robotorchan instead draws bootstrap datasets $`D_s`$, fits a complete boosting model $`F^{(s)}_M`$
-on each dataset, and uses
+各 h_j は残差構造を補正するよう逐次学習され、予測分布からの交換可能な抽出ではありません。stage 間の広がりを事後不確実性とみなすと統計的な意味を取り違えます。
+
+代わりに独立な bootstrap データ D_s ごとに完成した boosting モデルを学習し、次を経験予測 sample として扱います。
+
 
 $$
 \{F^{(1)}_M(X),\ldots,F^{(S)}_M(X)\}
 $$
-as empirical predictive samples.
 
-## 4. Multi-output samples
+histogram-based boosting でも、stage ではなく完成したモデルをメンバーとする考え方は同じです。
 
-For $`m>1`$, each bootstrap member produces a vector prediction. Outputs belonging to the same
-bootstrap member retain a shared resampling index, while output-specific regressors can still be
-fitted independently. This preserves member alignment but should not be described as a fully
-Bayesian cross-output covariance model.
+## 4. 多出力と候補間の依存
 
-## 5. Acquisition functions
+m > 1 では各 bootstrap メンバーが予測ベクトルを返します。同じメンバー内で再抽出 index を共有すれば出力の対応を保てますが、出力別回帰器を独立に学習した場合、完全な Bayesian 出力間共分散モデルとは解釈しません。
 
-Compatible MC acquisitions can consume a sampleable posterior through the BoTorch interface.
-qEIやqEHVIも候補ですが、output数などacquisition固有のrequirementsを満たす必要があります。
+同じメンバーを候補 batch 全体に適用すると予測パターンの依存を保持できます。ただし GP の条件付き共分散と同じ生成機構ではありません。Gaussian の周辺平均・分散だけから候補間の joint Gaussian 相関を仮定することもできません。
 
-sampleableであることだけから全MC acquisition対応とは推論しません。
-Analytic Gaussian acquisitions are not generally justified for empirical ensemble posteriors.
+## 5. 獲得関数と探索
 
-sklearn tree and boosting prediction is piecewise/non-differentiable with respect to candidate input
-and crosses a CPU/numpy boundary. Acquisition maximization therefore uses gradient-free candidate
-search rather than `optimize_acqf`'s gradient-based path.
+経験分布には必要な条件を満たす sample-based 効用を使います。sample 可能というだけで、任意の MC 効用、joint Gaussian、条件付き再推論へ対応するとは限りません。解析的 Gaussian 獲得関数は一般には正当化されません。
 
-## 6. Constraints
+tree 予測は区分的で、候補入力への微分が存在しない・有用でない場合があります。勾配に依存しない候補探索を組み合わせます。整数・カテゴリを含む候補の幾何と、予測モデルは別の責務です。
 
-Constraint handling belongs at the acquisition/objective layer. If output $`g(x)`$ represents a
-constraint, feasibility can be defined by a callable such as $`g(x)\leq0`$ while the surrogate
-continues to model outputs. This separation permits the same fitted surrogate to support different
-decision policies.
+## 6. 出力制約と意思決定
 
-## 7. Distributional surrogate: NGBoost
+出力 g(x) が制約を表す場合、たとえば g(x) <= 0 を実行可能とする効用を定義できます。surrogate は出力をモデル化し、意思決定側が実行可能性を扱います。既知の入力制約・bounds と混同せず、同じ予測モデルを異なる意思決定規則へ利用できます。
 
-`NGBoostSurrogate` differs from empirical tree ensembles. It predicts a conditional probability
-distribution rather than treating boosting stages as posterior members. The initial robotorchan
-adapter uses a Gaussian NGBoost predictive law and exposes its mean, variance, and samples through
-the BoTorch posterior interface.
+## 7. NGBoost の分布的予測
 
-このvarianceはNGBoostが学習したGaussian conditional predictive lawのscaleであり、
-GPのlatent-function posterior varianceへ読み替えません。
+NGBoost は boosting stage を posterior メンバーとせず、条件付き予測分布を学習します。Gaussian の予測則を使う場合、次の形です。
 
-This predictive distribution represents total conditional predictive uncertainty. It must not be
-called a Gaussian Process posterior, and it does not by itself provide the epistemic / aleatoric
-decomposition required by BALD. MC BO and moment-based regression Active Learning can use the
-sampleable distribution when their assumptions are satisfied; analytic GP acquisition compatibility
-must not be inferred merely from Gaussian marginal predictions.
-
-## 8. uncertaintyの意味をmodel familyごとに読む
-
-forestではtree disagreement、bootstrap boostingではresampled complete-model disagreement、
-NGBoostではconditional predictive-law scaleです。GP posterior uncertaintyとは生成機構が異なります。
-
-uncertainty-based BO / Active Learningでは、scoreの式だけでなく、その入力となるuncertaintyの統計的意味を確認します。
-
-## 8. Calibration and benchmarking
-
-An empirical ensemble standard deviation is useful only after checking its behavior on the target
-problem. Useful diagnostics include predictive RMSE, interval coverage after defining an interval
-construction rule, BO simple regret, and computational cost.
-A deterministic predictive benchmark can provide regression diagnostics,
-but it must not claim that raw ensemble spread is calibrated without a dedicated calibration study.
-
-
-## 9. 実装上の fitting contract
-
-robotorchan の non-GP surrogate は BoTorch `Model` interface を提供しますが、GP marginal
-likelihood を持ちません。constructor で raw training data を保持し、`fit()` を明示的に呼びます。
-
-したがって GP の `make_mll()` / `fit_gpytorch_mll()` contract を適用しません。
-
-## 10. HistGradientBoostingSurrogate
-
-`HistGradientBoostingSurrogate` も complete bootstrap models を predictive members とします。
-boosting stage の spread を posterior とするのではなく、独立 bootstrap resamples 上で fit した
-complete `HistGradientBoostingRegressor` の predictions を使います。
-
-## 11. Multi-output bootstrap contract
-
-`BootstrapEnsembleSurrogate` は `train_Y` の `n x m` output を扱えます。multi-output の場合も
-同一 ensemble member 内では同じ bootstrap row indices を共有します。
-
-ただし output-specific regressors が独立に fit されるため、member alignment があることを
-MultiTask GP / Kronecker GP の fully modeled cross-output covariance と同一視しません。
-
-`output_indices` は valid range、non-empty、duplicateなしを要求します。
-
-## 12. Mixed tree inputs の意味
-
-Random Forest / Extra Trees は `cat_dims` の category values を検証します。
-
-ただし sklearn tree backend が raw numeric category codes を native categorical variable として
-扱うわけではありません。threshold split は数値コード上で行われます。
-
-したがって
-
-```text
-cat_dims validation
-!= native categorical split semantics
-```
-
-です。
-
-## 13. Observation-noise semantics
-
-現在の empirical tree / boosting surrogate は
-`posterior(..., observation_noise=True)` による追加 noise modeling を提供しません。
-
-ensemble spread を observation noise とみなして自動加算することもありません。
-
-これは GP の latent-function posterior と likelihood noise の分離とは異なります。
-
-## 14. IndexSampler と MC acquisition
-
-`validate_non_gp_acquisition` は empirical non-GP model に `MCAcquisitionFunction` を要求します。
-
-explicit sampler が設定される場合は `IndexSampler` を要求します。
-これは continuous Gaussian base samples ではなく ensemble member indices を sampling するためです。
-
-qEI / qEHVI など sample-based acquisition と接続できても、すべての acquisition が自動的に
-互換になるわけではありません。
-
-joint Gaussian、fantasize、multi-output、MultiFidelity などの追加要件は別途満たす必要があります。
-
-## 15. Capability-based compatibility
-
-robotorchan は model / acquisition registry の metadata から static compatibility を判定します。
-
-non-GP model では特に、
-
-- `non_gp`
-- `ensemble_posterior`
-- `supports_multi_output`
-- `supports_posterior_samples`
-- `posterior_sampling_type`
-- `supports_fantasize`
-
-が重要です。
-
-BoTorch `Model` を継承していることだけから acquisition compatibility を推論しません。
-
-## 16. TreeEnsembleSearchStrategy
-
-sklearn tree / boosting prediction は candidate input に関して piecewise / non-differentiable で、
-CPU / NumPy boundary も通ります。
-
-robotorchan は `TreeEnsembleSearchStrategy` により gradient-free random candidate search を
-提供します。
-
-この strategy は、
-
-- continuous bounds
-- integer dimensions
-- categorical allowed values
-- non-GP MC acquisition validation
-
-を扱います。
-
-integer dimensions は feasible integer range、categorical dimensions は明示された allowed values
-から sampling します。
-
-これは GP の gradient-based `optimize_acqf` / `optimize_acqf_mixed` route とは別です。
-
-## 17. Output constraints と candidate constraints
-
-output constraint は objective / acquisition layer で扱います。
-
-一方、bounds、integer dimensions、categorical allowed values のような candidate geometry は
-search strategy が扱います。
-
-surrogate、decision policy、candidate feasibility の責務を分離することが重要です。
-
-## 18. NGBoost の現在の実装境界
-
-現在の `NGBoostSurrogate` は、
-
-- single-output
-- Gaussian `Normal` predictive law
-- explicit `fit()`
-- sampleable `GaussianDistributionPosterior`
-- additional observation noise unsupported
-
-という contract です。
-
-NGBoost library 一般が複数 distribution を扱えることと、robotorchan adapter が現在公開している
-capability は区別します。
-
-## 19. NGBoost uncertainty
-
-現在の adapter は
 
 ```text
 Y | X=x
@@ -255,103 +64,41 @@ Y | X=x
    )
 ```
 
-という conditional predictive distribution を返します。
 
-この variance は GP の epistemic posterior variance と同じものではありません。
+この分散は学習した条件付き予測則の scale であり、GP の潜在関数の事後分散ではありません。単一予測分布だけから epistemic・aleatoric を一意に分解できず、分散だけを根拠に BALD のような分解を要求する基準へ適用できません。
 
-また単一 predictive distribution から epistemic / aleatoric uncertainty を一意に分解できないため、
-BALD のような decomposition を必要とする acquisition へ predictive variance だけを根拠に
-適用してはいけません。
+モーメントに基づく回帰 Active Learning や MC BO は、それぞれの仮定を満たせば利用できます。ただし Gaussian 周辺予測があるだけで、解析的 GP 効用や候補間共分散に対応するとは推論しません。
 
-## 20. Active Learning
+## 8. 較正と評価
 
-non-GP surrogate でも predictive variance、interval width、sample disagreement を利用する
-regression Active Learning は可能です。
+forest の tree disagreement、bootstrap boosting の完成モデル間の不一致、分布的 boosting の予測 scale は異なる量です。不確実性スコアの式だけでなく、その入力の生成機構を確認してください。
 
-ただし uncertainty score の statistical meaning は model family ごとに異なります。
+予測 RMSE、区間構成規則を定めた後の coverage、BO simple regret、計算費用を対象問題で評価します。決定的な予測 benchmark だけで、生の ensemble spread が較正済みとは主張できません。分散・区間幅・sample 不一致を使う Active Learning も、モデルごとの統計的解釈と検証が必要です。
 
-empirical tree spread や NGBoost variance を単に BALD と呼ばないことが重要です。
+## 9. GP family との境界
 
-## 21. GP family との境界
-
-| Family | Predictive representation | Fitting | Input gradient |
+| Family | 予測表現 | 推論・学習 | 入力勾配 |
 | --- | --- | --- | --- |
-| Exact GP | Gaussian posterior | MLL | Yes |
-| Fully Bayesian GP | integrated GP posterior | MCMC | Yes |
-| DeepGP | stochastic variational posterior | variational | Yes |
-| Tree ensemble | empirical members | estimator fit | No |
-| Bootstrap boosting | empirical complete models | repeated fit | No |
-| NGBoost | conditional distribution | distributional boosting | No |
+| Exact GP | Gaussian posterior | 周辺尤度 | 通常あり |
+| Fully Bayesian GP | hyperparameter を積分した GP posterior | MCMC | 条件付き経路ではあり |
+| DeepGP | 確率的変分 posterior | 変分推論 | 再パラメータ化できる経路であり |
+| Tree ensemble | 経験メンバー | 推定器の学習 | 通常なし |
+| Bootstrap boosting | 経験的な完成モデル | 再抽出と反復学習 | 通常なし |
+| NGBoost | 条件付き分布 | 分布的 boosting | tree 予測では通常なし |
 
-Infinite-width BNN GP や Spectral Mixture GP は特殊な kernel を使っても GP family です。
-
-Random Forest、Extra Trees、boosting、NGBoost は non-GP surrogate です。
-
-high-dimensional / expressive という用途ラベルではなく predictive model と inference semantics で
-分類します。
-
-## 22. candidate間のjoint uncertainty
-
-`GaussianDistributionPosterior` は各candidateのmean / varianceからGaussian sampleを生成します。
-現行NGBoost adapterはGPのようなcandidate間posterior covariance matrixを構築しません。
-
-したがってGaussian marginal predictionだけからjoint Gaussian correlationを前提にするmethodとの
-互換性を推論しません。empirical ensembleでは同じmemberをcandidate batch全体へ適用するため
-prediction patternは保持されますが、これもGP covarianceと同じ意味ではありません。
-
-## 23. 実装との対応
-
-現在の理論章で保持すべき実装契約は次です。
-
-- non-GP model は BoTorch interface を持つが GP ではない
-- empirical ensemble は `EnsemblePosterior` を使う
-- forest系は各tree prediction、boosting系は各complete bootstrap modelをmemberにする
-- Random Forest / Extra Trees は現在 single-output
-- `cat_dims` validation は native categorical tree semantics を意味しない
-- boosting stages 自体を posterior members にしない
-- Gradient / HistGradient Boosting は complete bootstrap models を members にする
-- bootstrap boosting は multi-output を扱える
-- shared bootstrap index は full Bayesian cross-output covariance を意味しない
-- empirical ensemble MC acquisition の explicit sampler は `IndexSampler`
-- NGBoost Gaussian predictive posterior は Gaussian MC sampler を使う
-- analytic Gaussian acquisition を empirical ensemble に適用しない
-- TreeEnsembleSearchStrategy は gradient-free search を行う
-- integer / categorical candidate sampling は search strategy が扱う
-- capability registry で acquisition requirements を確認する
-- 現NGBoost adapterは single-output Gaussian predictive law
-- NGBoost posteriorはcandidate間GP covarianceを構築しない
-- NGBoost variance を GP posterior variance と同一視しない
-- BALD compatibility を predictive variance だけから推論しない
-
-## 24. この章で覚えておくこと
-
-- BoTorch `Posterior` interfaceとBayesian posteriorという統計的意味は同一ではない
-- forest、bootstrap boosting、NGBoostではuncertaintyの生成機構が異なる
-- boosting stageそのものをposterior sampleとして扱わない
-- ensemble disagreementをobservation noiseやcalibrated epistemic uncertaintyと決めつけない
-- NGBoostのGaussian marginalだけからcandidate間joint Gaussian covarianceを仮定しない
-- sampleable posteriorでも全acquisitionへ自動対応するわけではない
-- tree系candidate optimizationはgradient-free searchと組み合わせる
+無限幅 BNN の共分散や Spectral Mixture を使う GP は、特殊な kernel でも GP です。用途上の「高次元」「表現力」ではなく、予測モデルと推論の意味で分類します。
 
 ## 参考文献
 
-1. Breiman, L. (2001).
-   Random forests. *Machine Learning*, 45, 5-32.
-2. Geurts, P., Ernst, D., and Wehenkel, L. (2006).
-   Extremely randomized trees. *Machine Learning*, 63, 3-42.
-3. Friedman, J. H. (2001).
-   Greedy function approximation: A gradient boosting machine.
-   *The Annals of Statistics*, 29(5), 1189-1232.
-4. Duan, T., Avati, A., Ding, D. Y., Basu, S., Ng, A. Y., and Schuler, A. (2020).
-   NGBoost: Natural gradient boosting for probabilistic prediction.
-   *International Conference on Machine Learning*.
-5. Wilson, J., Hutter, F., and Deisenroth, M. (2018).
-   Maximizing acquisition functions for Bayesian optimization.
-   *Advances in Neural Information Processing Systems*.
+1. Breiman, L. (2001). Random forests. *Machine Learning*, 45, 5-32.
+2. Geurts, P., Ernst, D., and Wehenkel, L. (2006). Extremely randomized trees. *Machine Learning*, 63, 3-42.
+3. Friedman, J. H. (2001). Greedy function approximation: A gradient boosting machine. *The Annals of Statistics*, 29(5), 1189-1232.
+4. Duan, T., Avati, A., Ding, D. Y., Basu, S., Ng, A. Y., and Schuler, A. (2020). NGBoost: Natural gradient boosting for probabilistic prediction. *International Conference on Machine Learning*.
+5. Wilson, J., Hutter, F., and Deisenroth, M. (2018). Maximizing acquisition functions for Bayesian optimization. *Advances in Neural Information Processing Systems*.
 
 ## 関連章
 
-- [Acquisition Functions](04_acquisition_function.md)
-- [Advanced High-dimensional Models](21_advanced_high_dimensional_models.md)
-- [Expressive GP](22_expressive_gp.md)
-- [High-dimensional Search](20_high_dimensional_search.md)
+- [獲得関数](04_acquisition_function.md)
+- [高次元モデル](21_advanced_high_dimensional_models.md)
+- [表現力の高い GP](22_expressive_gp.md)
+- [高次元探索](20_high_dimensional_search.md)

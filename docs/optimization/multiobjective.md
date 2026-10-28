@@ -1,13 +1,10 @@
-# Multi-objective acquisition functions
+# 多目的獲得関数
 
-This guide keeps standard multi-objective Bayesian optimization on BoTorch's native acquisition
-APIs. robotorchan models are tested against these APIs rather than hidden behind local aliases.
+BoTorch 標準 API を直接使い、モデルとの接続をテストします。ローカルな alias は設けません。
 
 ## Hypervolume improvement
 
-For noiseless or effectively deterministic observations, prefer
-`qLogExpectedHypervolumeImprovement` (qLogEHVI). For noisy observations, prefer
-`qLogNoisyExpectedHypervolumeImprovement` (qLogNEHVI).
+ノイズのない観測には `qLogExpectedHypervolumeImprovement`（qLogEHVI）、ノイズのある観測には `qLogNoisyExpectedHypervolumeImprovement`（qLogNEHVI）を推奨します。
 
 ```python
 from botorch.acquisition.multi_objective.logei import (
@@ -21,14 +18,12 @@ acqf = qLogExpectedHypervolumeImprovement(
 )
 ```
 
-The reference point must be dominated by the objective values whose hypervolume should count.
-robotorchan does not guess this value because its meaning is problem-specific.
+
+計上対象の目的値が reference point を支配するよう設定します。問題固有の意味を持つため、自動推定しません。
 
 ## qLogNParEGO
 
-For scalarization-based multi-objective optimization, BoTorch provides `qLogNParEGO`.
-It is useful when hypervolume-based optimization becomes inconvenient or a decomposition-based
-search is preferred.
+hypervolume の扱いが難しい場合や分解型探索を選ぶ場合、BoTorch `qLogNParEGO` によるスカラー化を利用できます。
 
 ```python
 from botorch.acquisition.multi_objective.parego import qLogNParEGO
@@ -40,58 +35,32 @@ acqf = qLogNParEGO(
 )
 ```
 
-Weights define one scalarized subproblem. Repeated BO iterations normally vary them to explore
-the Pareto frontier.
 
-## Multi-objective Knowledge Gradient
+重みは一つのスカラー部分問題を定めます。通常は BO の反復ごとに変化させ、Pareto front を探索します。
 
-BoTorch also provides hypervolume Knowledge Gradient for non-myopic multi-objective BO.
-It remains a native BoTorch path rather than a robotorchan wrapper. Because its fantasy-tree
-optimization is materially heavier than EHVI/NEHVI, use it when the value of lookahead
-justifies the additional cost.
+## 多目的 Knowledge Gradient
 
-## Constraints and custom objectives
+BoTorch の hypervolume KG は非近視眼的な選択肢ですが、fantasy 木の最適化は EHVI・NEHVI より重くなります。追加費用に見合う lookahead の価値を確認してください。独自 wrapper は設けません。
 
-The registry's `supports_constraints` flag describes a supported BoTorch composition path. It
-does not mean robotorchan creates constraint callables, feasibility conventions, objectives, or
-reference points automatically. These remain problem-specific BoTorch inputs.
+## 制約と custom objective
 
-qLogEHVI, qLogNEHVI, and qLogNParEGO are registered as multi-objective paths. qLogNParEGO was
-already runtime-tested in robotorchan and is now represented in the capability registry as well,
-so documentation, executable coverage, and recommendation metadata agree.
+registry の `supports_constraints` は BoTorch の合成経路への対応を表します。制約 callable、実行可能性の符号、objective、reference point を自動構築する意味ではありません。
 
-## Candidate constraints versus outcome constraints
+qLogEHVI・qLogNEHVI・qLogNParEGO を多目的経路として登録しています。qLogNParEGO は実行テストと capability registry の両方で表現され、文書・実行範囲・推奨 metadata を一致させています。
 
-Multi-objective acquisition constraints and candidate-space constraints are separate layers.
+## 候補制約と出力制約
 
-- BoTorch acquisition `constraints=[...]` evaluates feasibility from posterior samples in
-  outcome space. Its convention is `c(Y) <= 0`.
-- robotorchan `CandidateConstraints.nonlinear_inequality_constraints` is passed to acquisition
-  optimization and evaluates the proposed input. Its convention is `g(X) >= 0`.
+- 獲得関数の `constraints=[...]` は posterior sample の出力空間で `c(Y) <= 0` を実行可能とします。
+- `CandidateConstraints.nonlinear_inequality_constraints` は候補最適化時の入力を評価し、`g(X) >= 0` を実行可能とします。
 
-The two can be used simultaneously. A qLogEHVI or qLogNEHVI acquisition may therefore model
-outcome feasibility while `optimize_acqf_botorch` independently restricts which X values may
-be proposed. Candidate constraints do not alter the Pareto objectives or reference point, and
-outcome constraints do not replace candidate-space feasibility checks.
+両方を同時に使えます。qLogEHVI・qLogNEHVI の出力実行可能性と、`optimize_acqf_botorch` による入力の制限は独立です。候補制約は目的や reference point を変更せず、出力制約は入力の実行可能性検査を代替しません。
 
-For q-batch multi-objective optimization, intra-point nonlinear candidate constraints apply to
-each proposed X. Inter-point nonlinear constraints retain the same joint-q semantics as in
-single-objective optimization.
+点内制約は各候補 X に適用し、点間制約は単一目的と同じ joint-q の意味を保ちます。
 
 ## Hypervolume Knowledge Gradient
 
-Hypervolume Knowledge Gradient remains a BoTorch-native future integration item. The current
-repository does not contain executable HVKG integration coverage, so robotorchan must not present
-it as runtime-validated merely because BoTorch exposes the algorithm. Adding it should include
-model compatibility, fantasy semantics, and candidate-optimization tests before registry support
-is declared.
+HVKG は BoTorch に存在しますが、このリポジトリには実行可能な統合検証がありません。現時点では将来の統合対象であり、実行検証済みとは扱いません。registry で対応を宣言するには、モデル互換性、fantasy の意味、候補最適化のテストが必要です。
 
-## Scope
+## 検証範囲
 
-The validated standard multi-objective surface covers qLogEHVI, qLogNEHVI, and qLogNParEGO.
-Constraint composition and custom objectives remain explicit BoTorch inputs. Multi-fidelity
-hypervolume lookahead and HVKG are not part of the current validated contract.
-
-
-For the broader theory and method relationships, see
-[Acquisition theory](../theory/acquisition/07_multiobjective.md).
+標準の検証済み範囲は qLogEHVI・qLogNEHVI・qLogNParEGO です。制約と custom objective は明示的な BoTorch 入力です。HVKG と多忠実度 hypervolume lookahead は含みません。[多目的理論](../theory/acquisition/07_multiobjective.md)も参照してください。

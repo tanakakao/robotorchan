@@ -2,6 +2,7 @@
 
 ## 1.1 まず全体の流れ
 
+
 ~~~text
 observed data -> surrogate -> posterior -> objective / utility
               -> acquisition value -> candidate optimization -> next candidate
@@ -16,17 +17,20 @@ surrogateは未知応答の予測、acquisitionは次の評価の価値付け、
 
 観測データを
 
+
 $$
 \mathcal D_n=\{(x_i,y_i)\}_{i=1}^n
 $$
 
 とし、潜在関数の posterior を
 
+
 $$
 p(f\mid\mathcal D_n)
 $$
 
 とします。逐次選択では一般に
+
 
 $$
 x_{n+1}\in\arg\max_{x\in\mathcal X}\alpha(x;\mathcal D_n)
@@ -39,6 +43,7 @@ $$
 ## 1.3 Posterior と utility
 
 候補集合 $`X`$ の未知出力を $`f(X)`$ とし、その結果から得られる効用を $`U(f(X))`$ とすれば、多くの獲得関数は概念的に
+
 
 $$
 \alpha(X)
@@ -59,6 +64,7 @@ Active Learningでは予測を学ぶ価値がutilityになります。
 ## 1.4 Exploration と exploitation
 
 単一出力 Gaussian posterior
+
 
 $$
 f(x)\mid\mathcal D_n
@@ -87,12 +93,14 @@ Gaussian posteriorに対するq=1のEIやPIは代表例です。analytic formは
 
 閉形式が難しい場合、posterior sample
 
+
 $$
 f^{(s)}(X)\sim p(f(X)\mid\mathcal D_n),
 \quad s=1,\ldots,S
 $$
 
 を使って
+
 
 $$
 \alpha(X)
@@ -130,11 +138,13 @@ modelがmulti-outputでも、model outputとacquisitionが使う意思決定量�
 
 posterior sample $`f(X)`$ に対して scalar objective
 
+
 $$
 h(f(X))
 $$
 
 を定義し、その後 utility を評価する場合があります。
+
 
 $$
 \text{posterior}
@@ -156,6 +166,7 @@ utility計算用の量へ写せますが、後者はposterior representation自�
 ## 1.8 Acquisition definition と optimization
 
 獲得関数の定義と、その最大化は別問題です。
+
 
 $$
 X^*\in\arg\max_{X\in\mathcal X^q}\alpha(X)
@@ -185,18 +196,6 @@ acquisitionとソフトウェア上別の責務でも、意思決定品質には
 Exact GPのposterior variance、ensemble disagreement、distributional regressionのpredictive
 varianceを同じ統計量だとは仮定しません。batchやinformation-based acquisitionでは、
 marginal momentsだけでなくcandidate間のjoint structureが必要になる場合もあります。
-
-## 1.10 BoTorch / robotorchan との対応
-
-BoTorchはanalytic / MC acquisition、objective、posterior transform、sampler、
-acquisition optimizerを分離した設計を採用しています。
-
-robotorchanのcapability metadataではposterior requirementをmarginal moments、joint Gaussian、
-posterior samplesに分けます。さらにq、multi-output、ensemble、fantasization等が重なります。
-
-robotorchanもBoTorch-firstとし、BoTorch native acquisitionが目的を満たす場合は
-ローカルwrapperを作りません。現在の対応状況は
-[Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
 
 ## 1.11 この章で覚えておくこと
 

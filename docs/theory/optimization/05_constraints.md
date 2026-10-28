@@ -257,4 +257,3 @@ native enforcement、penalty、feasibility-first、repair、projection を選び
    Proceedings of the Congress on Evolutionary Computation.
 3. Nocedal, J., & Wright, S. J. (2006).
    *Numerical Optimization*. Springer.
-4. BoTorch documentation. *Optimization* and candidate-constraint API.

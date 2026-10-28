@@ -153,8 +153,6 @@ GPU 上で surrogate を評価できても、探索手法全体が GPU-native �
 
 などの search strategy があります。
 
-これらは「DEかBoTorchか」と同じ選択軸ではありません。
-
     search strategy
       -> search coordinates / domain
       -> optimizer backend
@@ -186,9 +184,6 @@ Mixed problem では、少なくとも次を確認します。
 3. fixed-feature enumeration が必要か
 4. candidate constraints が structured variable と整合するか
 5. q-batchでも discrete assignment が維持されるか
-
-現在の主な経路は explicit BoTorch mixed、Mixed GA、
-および対応範囲内のDE / PSOです。
 
 Random / Sobol による mixed-variable sampling では、
 general candidate constraintsはunsupportedです。
@@ -233,9 +228,6 @@ acquisitionのoutput shapeとoptimizerのobjective contractを確認します。
 
 と分けられます。
 
-REMBO、BAxUS、TuRBOは search strategy 側、
-BoTorch、DE、GA、PSOなどは numerical backend 側です。
-
 Hybridは複数backendをstageとして接続する orchestration です。
 
 この区別を保つと、機能の組合せ可否を名前だけで判断することを避けられます。
@@ -248,11 +240,6 @@ Hybridは複数backendをstageとして接続する orchestration です。
 4. candidate gradient の利用可能性を確認する
 5. fixed features と探索座標系を確認する
 6. 評価コストと計算予算を考慮する
-
-## 12.27 理論と実装の対応
-
-数学的に適用可能な手法が、特定の実装ですべて利用可能とは限りません。
-実際の対応状況は [Optimization guides](../../optimization/README.md) を参照してください。
 
 ## 12.28 特殊な最適化構造
 
@@ -268,14 +255,6 @@ continuous scalar optimization と異なる構造を持ちます。
 
 optimizerを変更するときは、少なくとも
 
-    variable semantics
-    q semantics
-    constraint semantics
-    initialization semantics
-    coordinate system
-    dtype / device
-    API surface
-
 が維持されるか確認します。
 
 同じ acquisition value を最大化する backend でも、
@@ -288,9 +267,6 @@ optimizerを変更するときは、少なくとも
 runtime-facingな最新情報は
 
 - [Optimization guides](../../optimization/README.md)
-- [Constraint handling metadata](../../optimization/constraint-handling-metadata.md)
-- [Initialization compatibility](../../optimization/initialization-compatibility.md)
-- [Optimizer runtime contract](../../optimization/runtime-contract.md)
 
 を確認してください。
 

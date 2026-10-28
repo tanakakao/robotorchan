@@ -1,26 +1,17 @@
-# Phase 14 — Batch / Async benchmark simulation
+# Batch・非同期 benchmark simulation
 
-The existing `run_benchmark` remains the synchronous baseline. Use
-`run_async_benchmark` to compare sequential (`max_concurrency=1`) and
-capacity-limited asynchronous evaluations (`max_concurrency>1`).
+同期基準法は `run_benchmark` です。`run_async_benchmark` で逐次（`max_concurrency=1`）と並列数を制限した非同期（`max_concurrency>1`）を比較します。
 
-## Contract
+## 条件
 
-- `BenchmarkExperimentConfig.q` limits the number of candidates requested per
-  generator call. `max_concurrency` limits simultaneous pending evaluations.
-- The candidate callback receives `(problem, completed_X, completed_Y,
-  pending_X, q, generator)`. Only completed observations are available for fitting.
-- A duration callback receives one candidate `(d,)` and returns a finite,
-  strictly positive duration in **simulated logical-time units**.
-- Initial design observations are assumed complete at simulated time zero.
-  They do not consume the new-evaluation budget.
-- Events are recorded in submission order, with `submission_index`,
-  `completion_index`, `submitted_at` and `completed_at`.
-  Tied completion times are resolved in submission order.
-- `simulated_makespan` is **not** measured wall-clock time. Real execution,
-  cancellations, worker failures and checkpoint/resume are out of scope.
+- `BenchmarkExperimentConfig.q` は generator 1 呼び出し当たりの候補数、`max_concurrency` は同時 pending 評価数の上限です。
+- callback は `(problem, completed_X, completed_Y, pending_X, q, generator)` を受け取り、学習に使えるのは完了観測だけです。
+- duration callback は候補 `(d,)` から有限・厳密に正の**論理シミュレーション時間**を返します。
+- 初期設計は時刻 0 で完了済みとし、新規評価予算を消費しません。
+- event は投入順に記録し、`submission_index`、`completion_index`、`submitted_at`、`completed_at` を保持します。同時完了は投入順で解決します。
+- `simulated_makespan` は実測の実時間ではありません。実 worker、cancel、worker 障害、checkpoint・再開は対象外です。
 
-## Example
+## 使用例
 
 ```python
 import torch
@@ -60,6 +51,5 @@ result = run_async_benchmark(
 print(result.completion_order, result.simulated_makespan)
 ```
 
-For fair comparisons, hold the initial design, budget, seed, duration model
-and concurrency fixed as appropriate. The baseline models the scheduling
-contract; it does not yet simulate true worker execution or real-time latency.
+
+比較では初期設計、予算、seed、duration model、必要に応じ concurrency を揃えてください。これは scheduling の意味をモデル化する基準法であり、実 worker や実際の遅延を再現するものではありません。
