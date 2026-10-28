@@ -6,7 +6,7 @@
 
 ドキュメント全体では、[プロジェクトREADME](../README.md) → [Getting Started](../docs/README.md) →
 [モデル選択](../docs/getting_started/model_selection.md) → [Model guides](../docs/models/README.md) →
-[理論確認](../docs/theory/README.md) → **実行例（現在地）**、という導線を想定しています。モデルの背景を確認したい場合は対応する理論章へ戻り、実装詳細が必要な場合は [architecture](../docs/development/architecture.md) を参照してください。
+[理論確認](../docs/theory/README.md) → **実行例（現在地）**、という導線を想定しています。モデルの背景を確認したい場合は対応する理論章へ戻り、実装詳細が必要な場合は [architecture](../docs-internal/architecture/architecture.md) を参照してください。
 
 ## インストール
 
@@ -36,9 +36,9 @@ python examples/unified_api_workflow.py
 ## Notebook の方針
 
 Notebook の標準構成・metadata・Tier A/B/C の要件は、
-[`notebook-authoring-standard.md`](../docs/development/notebook-authoring-standard.md) を
+[`notebook-authoring-standard.md`](../docs-internal/maintenance/notebook-authoring-standard.md) を
 source of truth とします。CI の default / slow / specialist 実行方針は
-[`notebook-ci.md`](../docs/development/notebook-ci.md) を参照してください。
+[`notebook-ci.md`](../docs-internal/maintenance/notebook-ci.md) を参照してください。
 
 各 Notebook は単体で理解でき、上から順番に実行できる構成にします。説明文と見出しは原則として日本語とし、モデル名・API名・Bayesian Optimization / posterior / likelihood など、コードと対応付けた方が分かりやすい技術用語は英語表記を残します。
 
