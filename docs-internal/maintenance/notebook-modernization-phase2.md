@@ -55,3 +55,35 @@ model-level fit methods.
 
 The previous CI commit passed both CI and Documentation links. Notebook
 execution itself remains unverified by this inspection.
+
+## Remaining notebook inspection (21–41 and heterogeneous benchmark)
+
+All 44 notebook files listed in `examples/run_notebooks.py` have now been
+inspected for code-cell training, posterior, optimizer and candidate tokens.
+This is a **static inspection**, not notebook execution.
+
+Among the remaining 24 files (21–41 plus the heterogeneous benchmark):
+
+- Both `optimize_acqf*` calls and candidate tokens appear in 26, 27,
+  28_active_learning, 28_regression_active_learning, 29, 30, 31, 32, 33,
+  35, 36_end_to_end, 36_sequential, 37, 38, and 39.
+- Neither signal appears in 21, 22, 24, 25, 40, 41, and
+  heterogeneous_bo_benchmark_phase19.
+- 23 and 34 mention candidates without a matching `optimize_acqf*` call.
+  These require manual review for custom or strategy-based optimization.
+- The absence of a literal `.posterior()` call in a workflow notebook
+  does not mean it cannot propose a candidate.
+
+### Phase handoff priorities
+
+1. Phase 3: implement candidate optimization for 05; review `fit()`
+   compatibility in 01–04.
+2. Phase 4–7: prioritize missing candidate flows in 06–09, 11–18,
+   20–22; preserve model-specific training and original-space mapping.
+3. Phase 8–10: add candidate flows in 24, 25, 40, 41; review 39's
+   classifier probability and acquisition semantics.
+4. Phase 11–13: preserve existing optimizer examples, inspect the
+   strategy-specific candidate path in 34, and expand heterogeneous
+   constrained BO beyond its benchmark-only demonstration.
+
+No model-level `fit()` implementation is authorized by this plan.
