@@ -1,5 +1,9 @@
 # 9. Variational Gaussian Process
 
+[GP章](02_gaussian_process.md)の条件付き正規分布と、期待値・KLダイバージェンスの基礎を前提とします。
+以下の導出では、ハイパーパラメータと誘導点を固定した零平均GPを考えます。
+入力次元を $d$、観測数を $n$、誘導点数を $m$ とし、観測は潜在値を与えた下で条件付き独立とします。
+
 ## 9.1 この章で扱うこと
 
 前章では、高次元入力に対して SAAS や Additive GP を使う考え方を説明しました。
@@ -7,7 +11,6 @@
 本章では別の問題、**データ数が増えて Exact GP の計算が重くなる問題**を扱います。
 
 ここで重要なのは、
-
 
 ```text
 高次元問題
@@ -21,13 +24,11 @@
 
 例えば
 
-
 ```text
 n = 50, d = 100
 ```
 
 は高次元・少数データ問題ですが、
-
 
 ```text
 n = 100,000, d = 5
@@ -57,7 +58,6 @@ n = 100,000, d = 5
 
 前章と本章の役割を図にすると、
 
-
 ~~~text
 入力次元 d が大きい
   → 関数構造・探索空間が難しい
@@ -77,13 +77,11 @@ Variational GPへ変えるだけでは入力次元側の難しさは解消され
 
 通常の Gaussian Process regression では、学習データ
 
-
 $$
 X = [x_1, x_2, \dots, x_n]
 $$
 
 に対して共分散行列
-
 
 $$
 K_{XX}\in\mathbb{R}^{n\times n}
@@ -93,7 +91,6 @@ $$
 
 観測ノイズを含めると
 
-
 $$
 K_y = K_{XX} + \sigma_n^2 I
 $$
@@ -101,7 +98,6 @@ $$
 です。
 
 posterior mean や marginal likelihood の計算では、典型的にこの行列の Cholesky 分解
-
 
 $$
 K_y = LL^\top
@@ -115,7 +111,6 @@ $$
 
 密な `n x n` 共分散行列に対する Cholesky 分解は、概ね
 
-
 $$
 O(n^3)
 $$
@@ -123,7 +118,6 @@ $$
 の計算量を必要とします。
 
 メモリも
-
 
 $$
 O(n^2)
@@ -133,13 +127,11 @@ $$
 
 したがって
 
-
 ```text
 n = 1,000
 ```
 
 程度なら Exact GP が現実的な場合がありますが、
-
 
 ```text
 n = 10,000
@@ -181,7 +173,8 @@ BO は一般に「評価が高価でデータ数が少ない」問題に向い�
 
 ## 9.5 Sparse GP の基本思想
 
-大規模 GP では、全 `n` 点を同じ重さで直接扱う代わりに、少数の代表点を使って latent function を近似します。
+大規模GPでは、全観測を通じて学習しながら、少数の誘導変数で事後分布を表現する方法を考えます。
+観測の重みを一律に減らす方法ではありません。
 
 この入力位置を **inducing points** と呼びます。
 
@@ -190,13 +183,11 @@ BO は一般に「評価が高価でデータ数が少ない」問題に向い�
 
 入力位置を
 
-
 $$
 Z = [z_1, z_2, \dots, z_m]
 $$
 
 とし、通常
-
 
 $$
 m \ll n
@@ -206,13 +197,11 @@ $$
 
 対応する latent function value を
 
-
 $$
 u = f(Z)
 $$
 
 とします。
-
 
 ```text
 training points
@@ -237,7 +226,6 @@ inducing point は、単に training data を `m` 点だけ残して残りを捨
 
 一方 Variational GP では、全観測データの likelihood を通じて
 
-
 $$
 q(u)
 $$
@@ -245,7 +233,6 @@ $$
 という inducing variable の分布を学習します。
 
 つまり
-
 
 ```text
 subsampling
@@ -264,7 +251,6 @@ Variational GP
 
 inducing points `Z` に対応する latent values を
 
-
 $$
 u=f(Z)
 $$
@@ -272,7 +258,6 @@ $$
 とします。
 
 GP prior から
-
 
 $$
 p(u)=\mathcal{N}(0,K_{ZZ})
@@ -282,7 +267,6 @@ $$
 
 また training latent values
 
-
 $$
 f=f(X)
 $$
@@ -291,13 +275,11 @@ $$
 
 Variational GP では、難しい posterior
 
-
 $$
 p(u\mid y)
 $$
 
 の代わりに
-
 
 $$
 q(u)
@@ -311,7 +293,6 @@ $$
 
 代表的には
 
-
 $$
 q(u)=\mathcal{N}(m,S)
 $$
@@ -320,8 +301,12 @@ $$
 
 ここで
 
-- `m` は variational mean
-- `S` は variational covariance
+- この式の $m$ は $m$ 次元の変分平均ベクトルです。
+- $S\in\mathbb R^{m\times m}$ は変分共分散行列で、有限のKLを扱うため正定値とします。
+
+誘導点数にも $m$ を使っているため、以下の導出では平均ベクトルを $m_u$ と書き分けます。
+つまり $q(u)=\mathcal N(m_u,S)$ であり、上式と同じ分布です。
+また $K_{ZZ}\in\mathbb R^{m\times m}$ は正定値と仮定します。
 
 です。
 
@@ -332,10 +317,31 @@ Exact GP では posterior が解析的に得られる Gaussian regression でも
 
 ---
 
+### 誘導変数から関数値の分布を構成する
+
+$f=f(X)\in\mathbb R^n$、$u=f(Z)\in\mathbb R^m$ とし、
+$A=K_{XZ}K_{ZZ}^{-1}\in\mathbb R^{n\times m}$ と置きます。
+GPの条件付き正規分布から
+
+$$
+p(f\mid u)=\mathcal N(Au,K_{XX}-AK_{ZX})
+$$
+
+です。この条件付き分布は事前分布のものを保ち、誘導変数だけを $q(u)$ に置き換えて積分すると、
+
+$$
+q(f)=\int p(f\mid u)q(u)\,du
+=\mathcal N(Am_u,K_{XX}+A(S-K_{ZZ})A^\top)
+$$
+
+を得ます。共分散の第一の表し方は
+$K_{XX}-AK_{ZX}+ASA^\top$ であり、条件付き残差共分散と誘導変数の不確実性の和です。
+低ランク項 $ASA^\top$ だけにすると、誘導変数で説明できない不確実性を失います。
+新しい入力での予測も、$X$ をその入力集合へ置き換えて構成します。
+
 ## 9.9 Variational Inference の目的
 
 本当に欲しい posterior は
-
 
 $$
 p(u\mid y)
@@ -344,7 +350,6 @@ $$
 ですが、これを直接扱う代わりに `q(u)` を近づけます。
 
 理想的には
-
 
 $$
 q(u) \approx p(u\mid y)
@@ -360,13 +365,11 @@ $$
 
 log marginal likelihood は
 
-
 $$
 \log p(y)
 $$
 
 ですが、Variational GP ではこれを直接最大化する代わりに下限
-
 
 $$
 \mathcal{L}_{ELBO}
@@ -378,7 +381,6 @@ $$
 
 基本形は
 
-
 $$
 \mathcal{L}_{ELBO}
 =
@@ -387,10 +389,23 @@ $$
 \operatorname{KL}(q(u)\|p(u))
 $$
 
-です。
+です。ここで $q(f,u)=p(f\mid u)q(u)$ と置くと、
+
+$$
+\begin{aligned}
+\log p(y)-\mathcal L_{ELBO}
+&=\operatorname{KL}\bigl(q(f,u)\Vert p(f,u\mid y)\bigr)\ge0.
+\end{aligned}
+$$
+
+この恒等式は、KLの中でBayesの定理
+$p(f,u\mid y)=p(y\mid f)p(f\mid u)p(u)/p(y)$ を代入し、
+共通の $p(f\mid u)$ を消去することで得られます。
+単に $q(u)$ と $p(u\mid y)$ を近づけるだけでなく、
+事前の条件付き分布を保つという近似分布族全体の制約があることが重要です。
+下限と証拠の差が零になるのは、この分布族で真の同時事後分布を表せた場合です。
 
 2項の役割を分けると、
-
 
 ```text
 期待 log likelihood
@@ -408,7 +423,6 @@ KL divergence
 
 ELBOは概念的には
 
-
 ```text
 観測を説明する期待 log likelihood
     -
@@ -418,7 +432,6 @@ q(u) を prior p(u) から動かすコスト
 です。
 
 これは通常の marginal likelihood にある
-
 
 ```text
 fit
@@ -430,10 +443,21 @@ Occam's razor
 
 ---
 
+潜在値を与えた下で条件付き独立で、共通のノイズ分散 $\sigma_n^2>0$ を持つ正規観測なら、各尤度項も具体的に計算できます。
+$q(f_i)$ の平均を $\mu_i$、分散を $v_i$ とすると、
+
+$$
+\mathbb E_{q(f_i)}[\log p(y_i\mid f_i)]
+=-\frac12\log(2\pi\sigma_n^2)
+-\frac{(y_i-\mu_i)^2+v_i}{2\sigma_n^2}.
+$$
+
+二乗残差の期待値を展開すると、平均の残差に $v_i$ が加わります。
+したがって変分平均だけを尤度へ代入する操作は、ELBOの期待対数尤度とは異なります。
+
 ## 9.12 Variational GP の計算量
 
 inducing point 数を `m`、観測数を `n` とすると、標準的な sparse variational GP では典型的に
-
 
 $$
 O(nm^2 + m^3)
@@ -443,7 +467,6 @@ $$
 
 `m << n` なら Exact GP の
 
-
 $$
 O(n^3)
 $$
@@ -451,7 +474,6 @@ $$
 より大幅に軽くできます。
 
 mini-batch size を `b` とすると、1 step あたりのデータ依存部分は概ね
-
 
 $$
 O(bm^2)
@@ -479,7 +501,6 @@ inducing point 数 `m` を増やすとvariational familyの表現力は増えま
 - optimization が重くなる
 
 ため、トレードオフがあります。
-
 
 ```text
 m 小
@@ -533,10 +554,10 @@ Variational GP は一般に $\log p(y)$ の下界である ELBO を最大化し�
 
 ## 9.19 ELBO と KL 正則化
 
-$
+$$
 \mathcal L=\sum_{i=1}^{n}\mathbb E_{q(f_i)}[\log p(y_i\mid f_i)]
 -\operatorname{KL}(q(u)\Vert p(u)).
-$
+$$
 
 第一項は観測データへの適合、第二項は誘導変数の変分分布と事前分布の乖離を表します。
 
@@ -546,14 +567,23 @@ $
 
 観測 $n$ 件から一様に抽出した mini-batch $B$（サイズ $b$）では、
 
-$
+$$
 \widehat{\mathcal L}_B
 =\frac{n}{b}\sum_{i\in B}\mathbb E_{q(f_i)}[\log p(y_i\mid f_i)]
 -\operatorname{KL}(q(u)\Vert p(u)).
-$
+$$
 
-これは独立観測・一様サンプリングのもとで全データ ELBO の不偏推定量です。
-非一様サンプリングでは適切な重み付けが必要です。
+これは尤度が観測ごとに分解でき、一様サンプリングする場合の全データELBOの不偏推定量です。
+各期待対数尤度を $\ell_i$ と置き、サイズ $b$ の部分集合を一様に選ぶと、
+$\mathbb E[\mathbf1(i\in B)]=b/n$ なので
+$\mathbb E[(n/b)\sum_{i\in B}\ell_i]=\sum_i\ell_i$ となります。
+KL項は全誘導変数に対して一度だけ引き、尤度項と同じ $n/b$ 倍にはしません。
+
+例えば $n=1000$、$b=100$、バッチ内の各 $\ell_i=-2$、KLが5なら、
+全データ尺度の推定ELBOは $10\times(-200)-5=-2005$ です。
+観測1件当たりの尺度では $-2.005$ であり、全データ尺度を $n$ で割った値です。
+異なる尺度の損失を比較するときは、KL項も同じ尺度へそろえます。
+非一様サンプリングでは選択確率に応じた重み付けが必要です。
 
 ---
 
@@ -574,7 +604,6 @@ Mini-batch の確率的勾配を用いる場合、学習率、batch size、誘�
 ## 9.23 Stochastic Variational GP
 
 Variational GP の大きな利点は、likelihood term がデータ点ごとに分解できるため minibatch 化しやすいことです。
-
 
 ```text
 100,000 points
@@ -608,6 +637,12 @@ Mini-batch 学習では、観測ごとの期待対数尤度をサンプリング
 
 ## 9.26 データ来歴と統計的推論
 
+誘導点の初期化に使った観測集合と、尤度に含める観測集合は同じとは限りません。
+前者は近似分布の配置、後者は学習するデータの情報量を決めます。
+例えば過去の観測から誘導点を選んでも、尤度を新しい観測だけで再最適化すると、
+過去の観測を含めた全データELBOを最適化したことにはなりません。
+追加学習を行う際も、どの観測をどの重みで目的関数に含めたかを明確にします。
+
 ---
 
 ## 9.27 Variational approximation と入力構造
@@ -632,14 +667,18 @@ Gaussian likelihood では共役性により Exact GP の事後分布を解析�
 
 ## 9.30 Variational Strategy
 
-変分戦略は、誘導変数 $u$ と近似分布 $q(u)$ から $q(f)$ を構成する方法を定めます。Whitening は事前共分散で再パラメータ化することで、変分最適化の条件数を改善する場合があります。具体的なパラメータ化は推論手法の選択に依存します。
+変分戦略は、誘導変数 $u$ と近似分布 $q(u)$ から $q(f)$ を構成する方法を定めます。
+例えば $K_{ZZ}=LL^\top$ とCholesky分解し、$u=Lv$ と置くホワイトニングでは、
+事前分布は $p(v)=\mathcal N(0,I)$ です。$q(v)=\mathcal N(a,C)$ なら、
+$q(u)=\mathcal N(La,LCL^\top)$ となり、同じ分布を異なる座標で表現します。
+可逆変換ではKLダイバージェンスは変わらず、分布族そのものより最適化の座標を変える操作です。
+条件数を改善する場合がありますが、近似誤差が自動的に消えるわけではありません。
 
 ---
 
 ## 9.31 Variational Distribution
 
 これは
-
 
 $$
 q(u)=\mathcal{N}(m,S)
@@ -705,13 +744,11 @@ Variational GP は近似モデルなので、Exact GP と比べて posterior が
 
 しかし BO では acquisition function が
 
-
 $$
 \mu(x)
 $$
 
 だけでなく
-
 
 $$
 \sigma(x)
@@ -751,7 +788,6 @@ posterior evaluation自体のbatchingやmemoryも別途考えます。
 
 前章の SAAS と本章の Variational GP は、解決する問題が異なります。
 
-
 ```text
 SAAS
   → d が大きく、少数変数だけが重要
@@ -762,13 +798,11 @@ Variational GP
 
 したがって
 
-
 ```text
 high d + small n
 ```
 
 なら SAAS が自然ですが、
-
 
 ```text
 low d + large n
@@ -781,7 +815,6 @@ low d + large n
 ## 9.40 high d + large n は難しい
 
 もし
-
 
 ```text
 high dimensional
@@ -827,7 +860,6 @@ BO では uncertainty quality と optimization performance を含めて比較し
 
 例えば
 
-
 ```text
 m = 32
 m = 64
@@ -853,7 +885,6 @@ m = 256
 ## 9.43 inducing point の位置を確認する
 
 低次元なら inducing point を可視化できます。
-
 
 ```text
 training data cloud
@@ -895,7 +926,6 @@ ELBO が安定していない状態で posterior を BO に使わないことが
 
 最低限、
 
-
 ```text
 ELBO / loss
 ```
@@ -920,7 +950,6 @@ loss が下がっていても、BO に必要な uncertainty が良いとは限�
 
 mini-batch size `b` も重要です。
 
-
 ```text
 b 小
   + memory small
@@ -942,7 +971,6 @@ GP では kernel computation もあるため、GPU memory と inducing point 数
 Variational GP でも likelihood を通じて observation noise を学習します。
 
 Gaussian likelihood なら概念的には
-
 
 $$
 y=f(x)+\epsilon,
@@ -973,7 +1001,6 @@ $$
 ## 9.50 large-data BO の loop
 
 大規模データで BO を行う場合は、概念的に
-
 
 ```text
 large historical dataset
@@ -1016,7 +1043,6 @@ retraining / incremental-style update
 ## 9.52 小規模データでは Exact GP が第一候補
 
 Variational GP は近似を導入するため、小規模データで無理に使う必要はありません。
-
 
 ```text
 small n
@@ -1070,9 +1096,9 @@ Exact GP が十分速いなら、posterior approximation error を増やさな�
 ただし、実装で追加の regularization や別 objective を組み合わせる場合まで
 「常に同じ ELBO」と一般化しないことが重要です。
 
-### 「mini-batch size が `num_data`」
+### 「mini-batch size が全観測数」
 
-違います。`num_data` は全 training dataset の観測数です。
+バッチサイズ $b$ は一回の更新で参照する件数、全観測数 $n$ はELBOの尤度項を復元するための件数です。
 
 ### 「Variational GP なら uncertainty は Exact GP と同じ」
 
@@ -1105,13 +1131,11 @@ Variational GP を使う場合は少なくとも次を確認します。
 
 Variational GP の中心は、
 
-
 $$
 p(f\mid y)
 $$
 
 を直接扱う代わりに inducing variables `u` を導入し、
-
 
 $$
 q(u)=\mathcal{N}(m,S)
@@ -1120,7 +1144,6 @@ $$
 を学習することです。
 
 その objective が
-
 
 $$
 \mathcal{L}_{ELBO}
@@ -1139,7 +1162,6 @@ $$
 ## 9.59 この章で覚えておくこと
 
 Variational GP は、**大量データに対して GP の probabilistic surrogate を維持しながら計算量を下げる方法**です。
-
 
 ```text
 Exact GP
