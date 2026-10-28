@@ -1,4 +1,4 @@
-# robotorchan documentation
+# robotorchan ドキュメント
 
 このディレクトリは、robotorchan の利用方法、モデル選択、理論、ベンチマーク、開発者向け情報をまとめる入口です。
 
@@ -38,14 +38,14 @@
 
 現在は次の文書があります。
 
-- [Architecture](development/architecture.md)
-- [Acquisition architecture](development/acquisition-architecture.md)
-- [Model design guidelines](development/model_design_guidelines.md)
+- [Architecture](../docs-internal/architecture/architecture.md)
+- [Acquisition architecture](../docs-internal/architecture/acquisition-architecture.md)
+- [Model design guidelines](../docs-internal/contracts/model_design_guidelines.md)
 - [Training API](development/training_api.md)
-- [Executable Notebook Documentation](development/notebook-executable-documentation.md)
-- [Notebook executable-documentation architecture](development/notebook-executable-documentation-architecture.md)
-- [Notebook authoring standard](development/notebook-authoring-standard.md)
-- [Notebook CI](development/notebook-ci.md)
+- [Executable Notebook Documentation](../docs-internal/maintenance/notebook-executable-documentation.md)
+- [Notebook executable-documentation architecture](../docs-internal/architecture/notebook-executable-documentation-architecture.md)
+- [Notebook authoring standard](../docs-internal/maintenance/notebook-authoring-standard.md)
+- [Notebook CI](../docs-internal/maintenance/notebook-ci.md)
 - [Objective / PosteriorTransform](optimization/objective-posterior-transform.md)
 - [Release procedure](development/releasing.md)
 
@@ -98,3 +98,9 @@ docs/
 このファイルは `MODEL_REGISTRY` から生成されるため、README に件数を重複して固定しません。
 
 coverage は「ファイルが存在する」だけではなく、モデル選択 → 統計的仮定 → 実行例へ辿るためのナビゲーション契約として扱います。代表Notebookは同じモデルファミリーや学習契約を共有する複数variantを扱う場合があります。
+
+## 理論から実装へ進む
+
+[Getting Started](getting_started/README.md) → [Theory](theory/README.md) → [Guide](guide/README.md) → [Models](models/README.md) → [Notebook](../examples/README.md) の順に学習できます。各資料には独立してアクセスできます。
+
+開発者向けの解説は [Development](development/README.md)、実装の必須条件は [Engineering documentation](../docs-internal/README.md)、過去の監査結果は [Project records](../.github/project-records/README.md) に分けています。

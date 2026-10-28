@@ -1,16 +1,14 @@
-# Benchmark execution profiles
+# 実行 profile
 
-Execution profiles provide reusable experiment sizes without changing
-the benchmark runner or implicitly selecting a device.
+runner や device を暗黙に変更せず、再利用可能な実験規模を指定します。
 
-| Profile | Seeds | Initial points | New evaluations per seed | q |
+| Profile | Seed 数 | 初期点数 | Seed ごとの新規評価数 | q |
 | --- | ---: | ---: | ---: | ---: |
 | smoke | 1 | 4 | 4 | 1 |
 | standard | 3 | 8 | 40 | 1 |
 | extended | 5 | 16 | 100 | 4 |
 
-All profiles default to CPU and float64. The evaluation budget excludes
-initial design points. The final batch can be smaller than q.
+既定は CPU・float64 です。予算は初期設計を含まず、最後は q 未満でも構いません。
 
 ```python
 from robotorchan.benchmarks import get_execution_profile, run_benchmark
@@ -21,16 +19,7 @@ config = profile.make_config(problem="branin", strategy="random")
 trajectories = run_benchmark(config, random_candidates, registry=registry)
 ```
 
-Precision and device may be overridden explicitly:
-`get_execution_profile("standard", dtype="float32", device="cuda")`.
-CUDA availability is checked when requesting the profile. The profile
-does not guarantee that a particular problem, strategy, or optional
-dependency supports CUDA or float32; those are validated by execution.
 
-The presets are resource budgets, not benchmark performance baselines.
-They are distinct from the larger, separately specified cohorts in the
-[Empirical evaluation protocol](empirical-evaluation-protocol.md).
-For fair comparisons, use the same profile and problem registry across
-strategies, and record the resulting configuration in result artifacts.
-See the [Comparative fairness protocol](comparative-fairness-protocol.md)
-for pairing and evaluation-axis requirements.
+`get_execution_profile("standard", dtype="float32", device="cuda")` のように明示的に変更できます。CUDA の存在は要求時に検査しますが、問題・戦略・任意依存の CUDA・float32 対応は実行で別途検証します。
+
+profile は資源予算であり性能基準ではありません。[実測プロトコル](empirical-evaluation-protocol.md)の大きな cohort とは別です。戦略間で profile と registry を揃え、設定を結果に保存してください。対応付けと評価軸は[公平性契約](../../docs-internal/contracts/benchmarks/comparative-fairness-protocol.md)を参照してください。

@@ -1,0 +1,132 @@
+# Benchmark engineering reference
+
+# Comparative optimization benchmark: execution and eligibility matrix
+
+This document converts the [fairness protocol](comparative-fairness-protocol.md)
+into an executable planning matrix. The statuses below are **static
+eligibility assessments**, not results of executed benchmarks.
+
+## Experiment profiles
+
+| Comparison tier | Seeds | Initial points | New evaluations | q | Precision | Device |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+| Smoke | 1 | 4 | 4 | 1 | float64 | CPU |
+| Standard (legacy) | 5 | 20 | 40 | 1, 3 | float64 | CPU |
+| Empirical Standard | 10 | 20 | 50 | 1, 3 | float64 | CPU |
+| Full | 20 | 30 | 100 | 1, 3, 5 | float64 | CPU |
+| Full CUDA | 20 | 30 | 100 | 1, 3, 5 | float64 | CUDA, separately |
+
+The new `empirical_standard` tier is the default for the empirical performance
+evaluation cycle. The older `standard` tier remains available for historical
+comparability; do not pool results across these tiers. For q=3, the last
+batch contains two candidates because the new-evaluation budget is 50.
+Each method must use identical seeds and initial designs, with separate
+strata for q=1 and q=3.
+
+These are comparison tiers, **not** the existing `get_execution_profile`
+presets. Each q value is a separate stratum. Use seeds 0 through N-1
+for each tier; record the actual seed mapping. The evaluation budget
+counts newly evaluated points, not initial points or optimizer calls.
+
+## Method eligibility by problem family
+
+Status key: **baseline** = candidate generator exists, but requires
+oracle-access review; **integration** = component-level integration
+exists, but no verified benchmark strategy; **blocked** = a required
+metric or reproducibility contract is missing; **not applicable** =
+the acquisition does not match the problem's objective structure.
+
+| Problem | Random | Sobol | qEI | qNEI | qEHVI | qNEHVI |
+| --- | --- | --- | --- | --- | --- | --- |
+| branin | baseline | integration | baseline | baseline | not applicable | not applicable |
+| hartmann6 | baseline | integration | baseline | baseline | not applicable | not applicable |
+| noisy_quadratic | blocked | blocked | blocked | blocked | not applicable | not applicable |
+| branin_currin | baseline | integration | not applicable | not applicable | integration | integration |
+| dtlz2 (3 objectives) | blocked | blocked | not applicable | not applicable | blocked | blocked |
+| strength_pass | baseline | integration | blocked | blocked | not applicable | not applicable |
+| strength_conductivity_pass | baseline | integration | not applicable | not applicable | blocked | blocked |
+
+The `noisy_quadratic` case is a registered noisy single-objective
+alternative. No `noisy_branin` problem was verified in the inspected
+source; adding it requires a separate implementation and tests.
+
+`strength_conductivity_pass` is a two-regression-objective plus
+classification-feasibility scenario. Its classification-constrained
+qEHVI/qNEHVI integrations are *marginal PoF-weighted approximations*,
+not exact joint-MC constrained hypervolume improvement. Do not pool
+them with exact constrained methods.
+
+## Independent classification and continuous constraints
+
+The existing `strength_pass` benchmark is registered by
+`register_regression_binary_problems`. Continuous-constrained Hartmann
+requires a separate eligibility review.
+Treat classification labels as 0/1 observations, never as signed
+constraint margins used to train the classifier. The runner does not
+provide observed Pass/Fail label history to candidate callbacks;
+classification-constrained acquisition cells remain blocked.
+
+## Mandatory gate: oracle access
+
+The runner supports `restrict_candidate_problem=True` to provide a
+`CandidateProblemView` instead of the full truth-bearing
+`BenchmarkProblem` to candidate callbacks. This restriction is
+opt-in; a default runner invocation does not certify oracle isolation.
+
+For publishable comparisons, enable the restricted view, verify that
+candidate callbacks consume only observed data and approved public
+metadata, and retain runtime evidence of this isolation. No strategy
+may inspect `evaluate_truth`, `objective`, `optimal_value`, future
+observations, or hidden feasibility margins. Reference points may be
+provided to multiobjective methods only under a predeclared policy
+applied identically to comparable methods.
+
+See the [Empirical execution contract](empirical-execution-contract.md)
+for the full required runner settings.
+
+## Mandatory gate: execution validation
+
+For each scheduled cell:
+
+1. Verify registration and strategy callback construction on the
+   pinned commit, including objective direction and q support.
+2. Verify same initial X per seed across strategies, equal number
+   of new evaluations and correct final partial batch.
+3. Verify no oracle leakage and no unintended observation-noise
+   leakage, including accidental use of a full `BenchmarkProblem` view.
+4. Verify reproducible independent seed streams, and paired noise
+   policy for noisy cases.
+5. Verify truth-only metric, reference point, feasibility sign and
+   metric curve alignment at 0 through evaluation budget.
+6. Verify fit, acquisition and optimizer settings, failure policy,
+   timing and package/hardware metadata are persisted.
+7. For 3+ objectives, validate hypervolume against an independent
+   implementation; for HV regret, fix an independent reference HV.
+8. Run a smoke test before standard/full execution; mark failures
+   and unsupported combinations rather than silently skipping.
+
+## Execution sequence
+
+- **Smoke:** exercise candidate callback, budget accounting,
+  objective/constraint semantics and storage for each eligible cell.
+  One seed cannot support performance claims.
+- **Standard (legacy):** five paired seeds, q=1 and q=3, fixed acquisition
+  settings, and seed-resampled uncertainty intervals.
+- **Empirical Standard:** ten paired seeds, twenty initial points, fifty
+  additional evaluations, q=1 and q=3, with the same evaluation budget
+  across methods and paired uncertainty intervals.
+- **Full:** twenty paired seeds and q=1/3/5, after standard acceptance;
+  CPU and CUDA results must not be pooled for timing.
+
+Keep a machine-readable manifest of each cell's problem, method,
+tier, q, seed, configuration, eligibility decision, reason,
+commit SHA, execution status and artifact path. The `ComparativeExperimentCell` validator in
+`src/robotorchan/benchmarks/comparative_matrix.py` enforces tier,
+seeds, budget, q, device, dtype and ineligible problem/method pairs.
+It does not certify strategy callback safety or runtime execution.
+
+## Phase 3 acceptance
+
+The experiment matrix and configuration validator are implemented.
+No cell is yet certified for scientific comparison until callback
+safety, observed-label access and execution are verified.

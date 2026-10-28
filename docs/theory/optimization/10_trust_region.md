@@ -36,7 +36,7 @@ TuRBO (Trust Region Bayesian Optimization) は局所 BO と adaptive trust regio
 
 ## 10.3 Persistent state
 
-`TuRBOState` は少なくとも次を保持します。
+TuRBO の状態 は少なくとも次を保持します。
 
 - `dim`
 - `batch_size`
@@ -46,8 +46,6 @@ TuRBO (Trust Region Bayesian Optimization) は局所 BO と adaptive trust regio
 - `best_value`
 - `observed_best_value`
 - `restart_triggered`, `restart_count`
-
-default failure tolerance は
 
     ceil(max(4 / batch_size, dim / batch_size))
 
@@ -126,9 +124,6 @@ caller が明示的に決めて scalar へ還元します。
 混同しないための境界です。
 
 ## 10.8 Center update
-
-`TuRBOStrategy.update_state(..., candidates=X)` に candidate を渡した場合、
-meaningful improvement を生んだ batch 内 candidate が新しい center になります。
 
 candidate を渡さない場合、state value は更新されても center は暗黙には変更されません。
 
@@ -219,8 +214,6 @@ TuRBO は acquisition maximization 以外に posterior sampling path も持ち�
 
 `generate_turbo_thompson_choices()` は local bounds 内に Sobol perturbation pool を生成します。
 
-default perturbation probability は
-
     p = min(20 / dim, 1)
 
 です。
@@ -272,9 +265,6 @@ trust-region length が下限を下回った場合、局所探索領域を再初
 
 ## 10.20 Restart center
 
-`TuRBOStrategy.restart()` は明示的な center を受け取るか、
-指定がなければ global bounds 内の scrambled Sobol point を新しい center として生成します。
-
 seed を指定すれば再現可能です。
 
 したがって restart は単なる length reset ではなく、
@@ -287,17 +277,7 @@ seed を指定すれば再現可能です。
 
 典型的な利用順序は次です。
 
-    fit surrogate
-      -> build acquisition
-      -> strategy.optimize(...) or strategy.thompson_sample(...)
-      -> evaluate objective
-      -> strategy.update_state(...)
-      -> append observations
-      -> refit surrogate
-
 restart が trigger された場合は、次の candidate generation 前に
-
-    strategy.restart(...)
 
 を実行します。
 

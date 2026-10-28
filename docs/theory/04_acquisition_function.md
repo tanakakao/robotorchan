@@ -7,17 +7,20 @@ posterior distribution を使って、**次にどこを評価するか**を決�
 
 現在までの観測データを
 
+
 $$
 \mathcal{D}_n = \{(x_i, y_i)\}_{i=1}^n
 $$
 
 とし、候補点 $`x`$ に対する獲得関数を
 
+
 $$
 \alpha(x; \mathcal{D}_n)
 $$
 
 と書くと、逐次評価では典型的に
+
 
 $$
 x_{n+1}
@@ -30,6 +33,7 @@ $$
 
 獲得関数は、surrogate model の予測そのものではありません。posterior に含まれる
 予測値、不確実性、相関構造などを、**次の観測の価値**へ変換する意思決定層です。
+
 
 ```text
 observations
@@ -54,6 +58,7 @@ candidate
 ### 予測と意思決定を分けて考える
 
 例えば2つの候補A、Bについて、posteriorが次のような状態だとします。
+
 
 ~~~text
 A: 予測平均は高いが、すでによく調べられていて不確実性が小さい
@@ -86,6 +91,7 @@ improvement、confidence bound、information gain、value of information など�
 
 単一出力 GP では、候補点 $`x`$ に対して典型的に
 
+
 $$
 f(x) \mid \mathcal{D}_n
 \sim
@@ -115,11 +121,13 @@ $$
 
 Expected Improvement（EI）は、最大化問題なら概念的に
 
+
 $$
 I(x) = \max(f(x)-f_{\mathrm{best}}, 0)
 $$
 
 という improvement の期待値を評価します。つまり
+
 
 $$
 \operatorname{EI}(x)
@@ -138,6 +146,7 @@ Probability of Improvement（PI）は改善量ではなく改善確率を評価�
 
 Upper Confidence Bound（UCB）は、posterior mean と uncertainty を直接組み合わせる
 考え方です。
+
 
 $$
 \operatorname{UCB}(x)
@@ -167,6 +176,7 @@ posterior samples を使って期待効用を近似する Monte Carlo（MC）acq
 
 MC では概念的に
 
+
 $$
 \alpha(X)
 \approx
@@ -176,13 +186,6 @@ U(f^{(s)}(X))
 $$
 
 のように評価します。
-
-$`S`$ を増やすと一般に Monte Carlo 近似誤差は小さくなりますが、計算量は増えます。
-実際のBoTorchではQMC samplingなどを利用し、単純な独立乱数より効率的に
-期待値を近似する場合があります。
-
-MC は batch、multi-output、nonlinear objective、constraints などへ拡張しやすく、
-BoTorch の獲得関数設計でも重要な役割を持ちます。
 
 analytic acquisition と MC acquisition の違いは「どちらが高度か」ではありません。
 必要な期待値を閉形式で正確に計算できる設定なら analytic が有効であり、
@@ -194,6 +197,7 @@ analytic acquisition と MC acquisition の違いは「どちらが高度か」�
 
 1点ずつ評価する逐次 BO だけでなく、複数点を同時に評価する batch BO があります。
 候補集合を
+
 
 $$
 X = \{x_1,\ldots,x_q\}
@@ -233,6 +237,7 @@ Knowledge Gradient（KG）は、候補を観測した後に最終的な意思決
 
 複数目的
 
+
 $$
 f(x)=(f_1(x),\ldots,f_m(x))
 $$
@@ -253,6 +258,7 @@ NParEGO のように scalarization を利用する方法や、lookahead を組�
 
 実問題では、目的関数だけでなく
 
+
 $$
 g_j(x) \le 0
 $$
@@ -263,6 +269,7 @@ $$
 また、**model output、objective、acquisition function は別の責務**です。
 multi-output model から得た posterior sample を scalar objective へ変換してから
 utility を計算する場合もあります。
+
 
 ```text
 model posterior
@@ -279,6 +286,7 @@ acquisition value
 ここでいう制約は、未知の応答を surrogate model で推定する **output / black-box constraint**
 です。一方、組成和、変数間の大小関係、既知の線形設計則など、candidate の入力座標そのものに
 課す制約は acquisition function ではなく acquisition optimization の責務です。
+
 
 ```text
 output constraint:     g(x) <= 0  → model / acquisition composition
@@ -305,6 +313,7 @@ integrated variance reduction、predictive information gain などが基準に�
 
 目的は、指定した target $`t`$ に対して
 
+
 $$
 f(x)=t
 $$
@@ -325,6 +334,7 @@ $$
 
 Multi-Fidelity BO では、
 
+
 ```text
 その観測から得られる情報価値
                 ×
@@ -341,6 +351,7 @@ fidelity / evaluation cost
 ## 4.12 Acquisition Function とその最適化は別問題
 
 獲得関数を定義することと、それを最大化することは別の問題です。
+
 
 $$
 \text{acquisition definition}
@@ -382,21 +393,6 @@ transform などの設計と獲得関数は、ソフトウェア上は責務を�
 これは手法の優劣表ではありません。同じposteriorを使っていても、
 **何を意思決定上の価値と定義するか**によって適切な acquisition family が変わります。
 
-## 4.15 Theory、利用方法、実装状況を分けて読む
-
-robotorchan では獲得関数関連の情報を次のように分離します。
-
-| 知りたいこと | 参照先 |
-| --- | --- |
-| 獲得関数全体の概要 | 本章 |
-| 数式、理論、仮定、手法間の関係 | [Acquisition Function Theory](acquisition/README.md) |
-| API、コード例、実際の利用方法 | [Optimization guide](../optimization/README.md) |
-| 現在の対応範囲と制約 | [Acquisition integration status](../optimization/acquisition-integration.md) |
-
-robotorchan は BoTorch-first を基本とします。Theory に掲載されている手法が
-robotorchan 固有実装であるとは限らず、BoTorch native の手法を直接利用する場合も
-あります。
-
 ## 4.16 詳細理論への入口
 
 詳細理論は次の順序で整理します。
@@ -426,6 +422,7 @@ Acquisition Function は、surrogate model の posterior を
 という意思決定へ変換する層です。最も重要なのは、acquisition function が
 「真の目的関数」でも「posterior mean」でもなく、**限られた評価予算を次にどこへ
 使うかを決めるための utility** だと理解することです。
+
 
 ```text
 Model

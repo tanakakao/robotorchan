@@ -1,19 +1,13 @@
 # BoundaryVariance
 
-`BoundaryVariance` is a robotorchan-specific level-set heuristic. It is not exposed as a
-named BoTorch acquisition and the current implementation should not be cited as a standard
-literature algorithm.
+`BoundaryVariance` は robotorchan 固有の level-set 推定用ヒューリスティックです。BoTorch の標準獲得関数や文献上の標準アルゴリズムとして引用しないでください。
 
-For posterior mean `mu(x)`, variance `v(x)`, and target level `t`, the score is
+事後平均 `mu(x)`、分散 `v(x)`、目標水準 `t` に対して、スコアは次の通りです。
 
-`v(x) * exp(-0.5 * ((mu(x) - t) / sqrt(v(x))) ** 2)`.
+`v(x) * exp(-0.5 * ((mu(x) - t) / sqrt(v(x))) ** 2)`
 
-The first factor prefers uncertain locations. The second suppresses locations whose posterior
-mean is far from the requested boundary relative to posterior uncertainty.
+分散の項は不確実な点を優先し、指数の項は不確実性に比べて平均が境界から遠い点を抑えます。
 
-Unlike `Straddle`, `BoundaryVariance` has no `beta` exploration multiplier. Earlier versions
-inherited `beta` from `Straddle` even though the score never used it; that misleading API has
-been removed rather than retained as a compatibility argument.
+`Straddle` と異なり `beta` は持ちません。以前の未使用引数は削除され、互換引数としても受け取りません。
 
-The acquisition currently supports q=1 and rejects ensemble posteriors until their reduction
-semantics are explicitly defined.
+現在は q=1 に対応し、集約の意味が未定義の ensemble posterior は拒否します。

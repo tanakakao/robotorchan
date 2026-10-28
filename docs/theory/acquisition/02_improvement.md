@@ -2,6 +2,7 @@
 
 ## 2.1 PIとEIを一言で区別する
 
+
 ~~~text
 PI: 基準を超える確率
 EI: 基準をどれだけ超えるかという改善量の期待値
@@ -15,6 +16,7 @@ LogPI / LogEIは別の探索原理ではなく、数値計算を安定化するf
 Improvement-based acquisition は、「現在の基準よりどれだけ良い結果を得られるか」を候補の価値とします。
 
 以下では最大化問題を考え、基準値を $`f_{\mathrm{best}}`$ とします。候補 $`x`$ の improvement は
+
 
 $$
 I(x)=\max(f(x)-f_{\mathrm{best}},0)
@@ -30,6 +32,7 @@ noise、objective transform、constraint等によって改善基準の意味は�
 
 Expected Improvement（EI）は improvement の posterior expectation です。
 
+
 $$
 \operatorname{EI}(x)
 =
@@ -38,6 +41,7 @@ $$
 
 Gaussian posterior
 
+
 $$
 f(x)\mid\mathcal D_n
 \sim
@@ -45,6 +49,7 @@ f(x)\mid\mathcal D_n
 $$
 
 に対して、$\sigma(x)>0$ のとき
+
 
 $$
 \operatorname{EI}(x)
@@ -63,11 +68,13 @@ $\operatorname{EI}(x)=\max(\mu(x)-f_{\mathrm{best}},0)$ を用います。
 
 式の
 
+
 $$
 (\mu-f_{\mathrm{best}})\Phi(z)
 $$
 
 は予測平均による改善の寄与を、
+
 
 $$
 \sigma\phi(z)
@@ -90,6 +97,7 @@ EIは両方をimprovementという一つの確率変数の期待値として評�
 ## 2.6 Probability of Improvement
 
 Probability of Improvement（PI）は改善量ではなく改善イベントの確率を評価します。
+
 
 $$
 \operatorname{PI}(x)
@@ -117,6 +125,7 @@ numerically robust formulationを含むため、対応する実装定義を確�
 
 EI / PI の定義には、基準値に margin $`\xi`$ を加えて
 
+
 $$
 I_\xi(x)
 =
@@ -130,6 +139,7 @@ $`\xi>0`$ は「単に現在値を超える」より大きな改善を要求し�
 ## 2.9 Minimize 問題
 
 最小化問題では improvement を
+
 
 $$
 I(x)=\max(f_{\mathrm{best}}-f(x),0)
@@ -145,6 +155,7 @@ q > 1 では、単純に EI の上位 q 点を選ぶのではなく、候補集�
 
 最大化問題の概念的な q-improvement は
 
+
 $$
 I(X)
 =
@@ -155,6 +166,7 @@ I(X)
 $$
 
 であり、
+
 
 $$
 q\operatorname{EI}(X)=\mathbb E[I(X)]
@@ -182,6 +194,7 @@ Noisy](04_batch_noisy.md) で扱います。
 
 EI と PI の本質的な違いは、
 
+
 ```text
 PI
     改善イベントの確率
@@ -208,7 +221,5 @@ Log formulation は別の意思決定原理ではなく、数値安定性を改�
 ## References
 
 - Ament, S. et al. (2023), *Unexpected Improvements to Expected Improvement for Bayesian
-Optimization*. arXiv:2310.20708. BoTorch's log-EI family follows this numerically robust 
 formulation.
-- BoTorch documentation, *Acquisition Functions*, for the current analytic / Monte Carlo
 acquisition interfaces and log-space EI variants.

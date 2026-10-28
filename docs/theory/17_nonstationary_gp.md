@@ -6,6 +6,7 @@
 等方性はより強い条件であり、共分散が \(\|x-x'\|\) のような距離のみに依存します。
 ARD付きRBFカーネルは異方的であっても定常です。
 
+
 $$
 k_{\mathrm{RBF}}(x,x')
 =\sigma_f^2\exp\left(
@@ -23,6 +24,7 @@ $$
 
 座標 \(d\) の局所長さ尺度を \(\ell_d(x)>0\) とします。
 Gibbs型共分散は次のように表せます。
+
 
 $$
 k(x,x')=\sigma_f^2
@@ -47,6 +49,7 @@ $$
 ## 3. 局所長さ尺度のパラメータ化
 
 有限次元のパラメータ化の一例は次のとおりです。
+
 
 $$
 \ell_d(x)
@@ -74,6 +77,7 @@ softplusと正の下限値により長さ尺度の正値性を保証します。
 
 マルチタスクデータに対する分離可能な構成は次のとおりです。
 
+
 $$
 k\big((x,t),(x',t')\big)
 =
@@ -82,6 +86,7 @@ $$
 
 入力側の共分散を非定常とし、タスク側の共分散で離散タスク間の関係を表現できます。
 完全な直積観測配置では、観測順序の取り方を除いてKronecker構造になります。
+
 
 $$
 K=K_{\mathrm{task}}\otimes K_{\mathrm{data}}.
@@ -148,4 +153,3 @@ $
 - [Heteroskedastic / Replicate Noise](15_heteroskedastic_noise.md)
 - [Uncertain-input Gaussian Process](16_uncertain_input_gp.md)
 - [MultiTask / MultiOutput](07_multitask_multioutput.md)
-- [Library-specific nonstationary GP models](../models/nonstationary_gp.md)

@@ -17,6 +17,7 @@ Batch / noisy BOでは、次を同じ意味で使わないことが重要です�
 
 1回の実験サイクルで q 点を同時に評価する場合、候補集合
 
+
 $$
 X=(x_1,\ldots,x_q)
 $$
@@ -24,6 +25,7 @@ $$
 全体に対して acquisition value を定義します。
 
 重要なのは、
+
 
 $$
 \alpha_q(X)
@@ -43,6 +45,7 @@ Gaussian GPではcovariance matrixがこのdependenceを表しますが、一般
 
 候補集合に対する Gaussian posterior は概念的に
 
+
 $$
 f(X)\mid\mathcal D_n
 \sim
@@ -60,6 +63,7 @@ f(X) によって依存構造を保った batch utility を定義できます。
 
 最大化問題で q 点のうち最も良い結果による improvement を
 
+
 $$
 I(X)
 =
@@ -70,6 +74,7 @@ I(X)
 $$
 
 とすれば、
+
 
 $$
 q\operatorname{EI}(X)
@@ -87,6 +92,7 @@ $$
 
 観測モデルを
 
+
 $$
 y(x)=f(x)+\epsilon,
 \qquad
@@ -97,6 +103,7 @@ $$
 
 noise があると、観測値
 
+
 $$
 \max_i y_i
 $$
@@ -105,11 +112,13 @@ $$
 
 したがって noisy BO では、
 
+
 ```text
 observed best
 ```
 
 と
+
 
 ```text
 latent function の best
@@ -126,6 +135,7 @@ uncertainty を考慮します。
 
 最大化問題で baseline B={b_1,...,b_m} と候補集合 X={x_1,...,x_q} を考えると、
 代表的な joint noisy improvement は
+
 
 $$
 q\operatorname{NEI}(X)
@@ -160,12 +170,10 @@ qNEIはさらにcandidate batchのjoint posteriorを扱うため、
 
 NEI 系では baseline set が重要です。baseline は「何と比較して improvement を測るか」を posterior 上で定義するために使われます。
 
-baseline の選び方は単なる API detail ではなく、acquisition の計算量や意思決定対象に影響します。大規模 baseline では pruning
-などの計算上の工夫が重要になる場合があります。
-
 ## 4.8 Pending points と非同期BO
 
 並列実験では、すでに評価を開始したが結果が返っていない点
+
 
 $$
 X_{\mathrm{pending}}
@@ -183,6 +191,7 @@ lookahead の仮想観測は別の概念です。
 
 batch candidates の生成には、q 点を一度に joint optimization する方法だけでなく、1点ずつ条件付きで追加する sequential greedy
 strategy もあります。
+
 
 ```text
 candidate 1 を選ぶ
@@ -208,6 +217,7 @@ fantasy modelが本質的です。一方、すべてのq-acquisitionやasync wor
 `fantasize()` を必要とするわけではありません。
 
 したがって次を分けます。
+
 
 ~~~text
 q > 1              同時に選ぶ候補集合
@@ -263,6 +273,7 @@ q を増やすと候補集合の joint dimension が増え、MC sampling と acq
 ## 4.16 まとめ
 
 Batch / noisy BO では、単一点の acquisition intuition だけでは不十分です。
+
 
 ```text
 q > 1

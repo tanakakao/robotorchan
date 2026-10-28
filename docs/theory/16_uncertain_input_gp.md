@@ -8,12 +8,10 @@
 uncertain-input GP は output noise ではなく、**入力座標そのものの不確かさ**を covariance
 計算へ組み込みます。
 
-この問題は candidate perturbation や environmental scenario と関連しますが、robotorchan では
-training-input uncertainty と decision-time perturbation を明確に分けます。
-
 ### 最初に「どのXが不確かか」を分ける
 
 入力の不確かさには少なくとも2つの異なる問題があります。
+
 
 ~~~text
 training-input uncertainty
@@ -30,11 +28,13 @@ candidate-time perturbation
 
 観測された入力を `x_obs`、真の入力を `x_true` として、
 
+
 ```text
 x_true ~ Normal(mu_x, Sigma_x)
 ```
 
 または誤差表現として
+
 
 ```text
 x_obs = x_true + delta
@@ -46,6 +46,7 @@ delta ~ Normal(0, Sigma_x)
 通常の GP kernel `k(x, x')` は確定した2点間の covariance です。入力が確率変数なら、
 必要なのは入力分布について周辺化した covariance です。
 
+
 ```text
 k_bar(i, j)
   = E_{x_i, x_j}[k(x_i, x_j)]
@@ -53,15 +54,13 @@ k_bar(i, j)
 
 このexpected kernelにより、入力位置のuncertaintyをGP covarianceへ反映できます。
 
-ここで行っているのは「観測された `train_X` を一度だけrandom jitterして通常GPをfitする」
+ここで行っているのは「観測された `観測入力` を一度だけrandom jitterして通常GPをfitする」
 処理ではありません。各training pointを入力分布として扱い、その分布間でkernelを周辺化します。
 
 ## 2. Gaussian uncertainty と RBF kernel
 
-robotorchan の `GaussianUncertainInputKernel` は Gaussian input uncertainty と RBF kernel の
-組み合わせに対する解析的な expected covariance を実装します。
-
 2つの入力分布を
+
 
 ```text
 x_i ~ Normal(mu_i, Sigma_i)
@@ -69,6 +68,7 @@ x_j ~ Normal(mu_j, Sigma_j)
 ```
 
 とし、ARD lengthscale matrix を `Lambda` とすると、expected RBF covariance は概念的に
+
 
 ```text
 k_bar(i, j)
@@ -94,26 +94,29 @@ matrix inverse を避けています。
 
 ## 3. Diagonal uncertainty と full covariance
 
-`UncertainInputSingleTaskGP` は2種類の training-input uncertainty 表現を受け取ります。
+Uncertain Input 単一タスク GP は2種類の training-input uncertainty 表現を受け取ります。
 
 ### 3.1 標準偏差
 
+
 ```text
-train_X_std.shape == train_X.shape
+観測入力_std.shape == 観測入力.shape
 ```
 
 の場合、
 
+
 ```text
-Sigma_x = diag(train_X_std^2)
+Sigma_x = diag(観測入力_std^2)
 ```
 
 として各入力次元が独立な Gaussian uncertainty を表します。
 
 ### 3.2 Full covariance
 
+
 ```text
-train_X_covar.shape == train_X.shape[:-1] + (d, d)
+観測入力_covar.shape == 観測入力.shape[:-1] + (d, d)
 ```
 
 を渡すと、入力次元間の相関を保持できます。
@@ -129,11 +132,12 @@ train_X_covar.shape == train_X.shape[:-1] + (d, d)
 
 を検証します。
 
-`train_X_std` と `train_X_covar` は同時には指定せず、必ずどちらか一方を指定します。
+`観測入力_std` と `観測入力_covar` は同時には指定せず、必ずどちらか一方を指定します。
 
 ## 4. Training representation
 
 実装内部では各 training point を
+
 
 ```text
 [mu_x, vec(Sigma_x)]
@@ -142,23 +146,15 @@ train_X_covar.shape == train_X.shape[:-1] + (d, d)
 という augmented representation に変換し、専用 kernel が mean と covariance を分離して
 読み取ります。
 
-これはユーザー向け raw feature space を変更するための feature engineering ではありません。
-`raw_train_X` は元の入力を保持し、augmentation は model 内部の covariance 計算のための
-private representation です。
-
-この区別により、外部 API では元の feature dimension を維持できます。
-
 ## 5. Training uncertaintyを学習しているわけではない
 
-現行 `UncertainInputSingleTaskGP` の `train_X_std` / `train_X_covar` は、
-callerが与えるuncertainty metadataです。
+つまりモデルが `観測入力` と `観測応答` だけから各点の入力誤差分散を自動推定するわけではありません。
 
-つまりモデルが `train_X` と `train_Y` だけから各点の入力誤差分散を自動推定するわけではありません。
 
 ~~~text
 caller
-  → observed train_X
-  → train_X_std または train_X_covar
+  → observed 観測入力
+  → 観測入力_std または 観測入力_covar
   → uncertain-input kernel
 
 model
@@ -168,9 +164,6 @@ model
 入力uncertainty自体が未知なら、そのuncertaintyをどう推定するかは別のstatistical modelが必要です。
 
 ## 6. Prediction candidate は deterministic
-
-現在の `UncertainInputSingleTaskGP.posterior(X)` は candidate `X` を deterministic として
-扱います。内部では candidate covariance をゼロにして augmented representation を作ります。
 
 したがって、このモデルが直接表すのは
 
@@ -187,7 +180,7 @@ acquisition layer で扱います。
 mixed search space では continuous coordinate の uncertainty と categorical identity を
 分離する必要があります。
 
-`MixedUncertainInputSingleTaskGP` は
+混合入力 Uncertain Input 単一タスク GP は
 
 - continuous dimensions: Gaussian uncertainty を周辺化
 - categorical dimensions: deterministic category として categorical kernel で処理
@@ -195,6 +188,7 @@ mixed search space では continuous coordinate の uncertainty と categorical 
 します。
 
 covariance は概念的に
+
 
 ```text
 K_mixed
@@ -213,6 +207,7 @@ K_mixed
 
 例えば真の category `c` が
 
+
 ```text
 P(c = c_1) = p_1
 P(c = c_2) = p_2
@@ -225,6 +220,7 @@ P(c = c_K) = p_K
 
 概念的には
 
+
 ```text
 E[k(c, c')]
   = sum_a sum_b
@@ -233,41 +229,30 @@ E[k(c, c')]
 
 です。
 
-robotorchan の `UncertainCategoricalSingleTaskGP` は、continuous coordinate uncertainty
-とは分離してこの問題を扱います。
-
-詳細は
-[uncertain categorical GP](../models/uncertain_categorical_gp.md) を参照してください。
-
 ### Uncertain categoricalはdeterministic categoryのMixed GPとも違う
 
-`MixedUncertainInputSingleTaskGP` のcategoryは確定値です。一方、
-`UncertainCategoricalSingleTaskGP` は1つのcategorical featureについて
+混合入力 Uncertain Input 単一タスク GP のcategoryは確定値です。一方、
+Uncertain Categorical 単一タスク GP は1つのcategorical featureについて
 category probability vectorを明示的に受け取ります。
 
 例えば
+
 
 ~~~text
 P(material=A) = 0.7
 P(material=B) = 0.2
 P(material=C) = 0.1
 ~~~
-
-のような入力です。現行実装のexpected categorical covarianceは、学習されるPSDな
-category covariance matrixをこの確率分布で両側から平均化します。
-
 したがって、
+
 
 ~~~text
 categorical code + Gaussian jitter
 ~~~
-
-ではありません。また現行public modelは「複数のuncertain categorical columnsを
-一般的に自動処理するAPI」と解釈しないことが重要です。
-
 ## 9. Input noise と output noise の違い
 
 output noise は
+
 
 ```text
 y = f(x) + epsilon_y
@@ -276,6 +261,7 @@ y = f(x) + epsilon_y
 であり、同じ `x` に対する observation のばらつきです。
 
 input uncertainty は
+
 
 ```text
 x_true = x_obs + epsilon_x
@@ -292,8 +278,6 @@ output noise については
 
 ## 10. Training-input uncertainty と candidate perturbation
 
-robotorchan では次を区別します。
-
 | 問題 | 不確かな対象 | 主な処理層 |
 | --- | --- | --- |
 | Training-input uncertainty | 過去の観測 X | surrogate kernel |
@@ -303,17 +287,14 @@ robotorchan では次を区別します。
 
 candidate perturbationを
 
+
 ~~~text
 x_realized = x_candidate + delta
 ~~~
-
-とする場合、現行のrobust BO pipelineではBoTorchの `InputPerturbation` が
-posterior評価時にnominal candidateをscenario axisへ展開し、ExpectationやCVaRなどの
-risk objectiveがそのaxisを集約できます。
-
 したがってscenario数 `n_w` をsurrogateのpublic input dimensionへ追加するわけではありません。
 
 実際に最適化したいquantityが
+
 
 ```text
 E_delta[f(x + delta)]
@@ -323,13 +304,11 @@ E_delta[f(x + delta)]
 
 これは training-input uncertainty の kernel marginalization だけでは決まりません。
 
-### 現行scopeを越えて推測しない
-
 現時点のpublic uncertain-input familyは主に
 
-- `UncertainInputSingleTaskGP`
-- `MixedUncertainInputSingleTaskGP`
-- `UncertainCategoricalSingleTaskGP`
+- Uncertain Input 単一タスク GP
+- 混合入力 Uncertain Input 単一タスク GP
+- Uncertain Categorical 単一タスク GP
 
 です。
 
@@ -346,6 +325,7 @@ posterior uncertainty を誤って推定する可能性があります。
 
 したがって、
 
+
 ```text
 uncertain-input surrogate
 != robust candidate objective
@@ -353,37 +333,12 @@ uncertain-input surrogate
 
 です。両方が必要な問題では、それぞれを独立した層として合成します。
 
-## 12. 実装との対応
-
-現在の理論章で保持すべき実装契約は次です。
-
-- continuous training-input uncertaintyはcaller-supplied Gaussianとして扱う
-- uncertainty metadata自体をtrain_X / train_Yから自動推定するモデルではない
-- RBF covariance を入力分布について解析的に周辺化する
-- diagonal uncertainty は `train_X_std`
-- correlated uncertainty は `train_X_covar`
-- covariance は finite / symmetric / positive semidefinite を要求
-- training representation は `[mean, flattened covariance]`
-- `posterior(X)` の candidate は deterministic
-- Mixed 版では continuous uncertainty と categorical identity を分離
-- categorical uncertainty は専用モデルで扱う
-- candidate perturbation / environmental scenarioは別layer
-- robust candidate evaluationでは `InputPerturbation` とrisk objectiveを独立に合成できる
-- current public uncertain-input familyからMultiTask等の未実装cross-productを推測しない
-
-実装仕様は [uncertain-input GP](../models/uncertain_input_gp.md)、
-[full-covariance uncertain-input GP](../models/full_covariance_uncertain_input_gp.md)、
-[mixed uncertain-input GP](../models/mixed_uncertain_input_gp.md)、
-[uncertain categorical GP](../models/uncertain_categorical_gp.md) を参照してください。
-
 ## 13. この章で覚えておくこと
 
 - output noiseとinput uncertaintyは異なる
 - training-input uncertaintyとcandidate-time perturbationも異なる
 - 現行continuous modelはcaller-supplied Gaussian input uncertaintyをexpected RBF kernelへ入れる
 - analytic expected-kernel式はGaussian uncertainty × RBFという仮定に依存する
-- `train_X_std` / `train_X_covar` は学習される量ではなく入力metadataである
-- `posterior(X)` のquery candidateは現行実装ではdeterministicである
 - Mixed版ではGaussian uncertaintyはcontinuous dimensionsだけに適用する
 - uncertain categorical inputはcategory probability distributionとして別modelで扱う
 - candidate robustnessはscenario / risk-objective layerで定義する

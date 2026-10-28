@@ -1,23 +1,18 @@
-# Benchmark metrics (Phase 11)
+# Benchmark 指標
 
-All metrics use deterministic **ground-truth** responses rather than noisy
-observations. Outcome constraints follow `g(X) >= 0`.
+ノイズ観測ではなく決定的な真値を使います。出力制約は `g(X) >= 0` です。
 
-| Metric | Scope | Interpretation |
+| 指標 | 対象 | 意味 |
 | --- | --- | --- |
-| `feasibility_rate` | any objective count | fraction of feasible evaluations |
-| `cumulative_feasibility_rate` | any objective count | prefix feasibility fraction |
-| `simple_regret_curve` | single objective, known optimum | best feasible truth regret |
-| `hypervolume_2d` | two maximization objectives | exact dominated union area |
-| `hypervolume_curve` | two objectives | feasible hypervolume after each evaluation |
+| `feasibility_rate` | 任意の目的数 | 実行可能な評価の割合 |
+| `cumulative_feasibility_rate` | 任意の目的数 | prefix ごとの割合 |
+| `simple_regret_curve` | 単一目的・既知の最適値 | 最良の実行可能真値の regret |
+| `hypervolume_2d` | 最大化 2 目的 | 支配された領域の厳密な和集合面積 |
+| `hypervolume_curve` | 2 目的 | 各評価後の実行可能 hypervolume |
 
-`simple_regret_curve` yields `+inf` until the first feasible point is
-observed. For problems without constraints, all evaluations are feasible.
+最初の実行可能点までは `simple_regret_curve` が `+inf` を返します。制約なしでは全点を実行可能とします。
 
-Hypervolume converts both objectives and the reference point to maximization
-orientation before calculation. The 2D implementation handles dominated and
-duplicate points. It does not yet cover 3+ objectives, statistical aggregation
-over seeds, or hypervolume regret against an analytic Pareto front.
+hypervolume は目的と reference point を最大化の向きへ揃えてから計算し、支配点・重複点を扱います。3 目的以上、seed 間統計、解析的 Pareto front に対する hypervolume regret はこの 2D 実装の対象外です。
 
 ```python
 from robotorchan.benchmarks import (

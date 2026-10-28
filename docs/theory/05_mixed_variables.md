@@ -18,6 +18,7 @@
 
 名義ラベル \(c,c'\) に対する妥当なカーネルの一例は次のとおりです。
 
+
 $$
 k_{\mathrm{cat}}(c,c')
 =
@@ -40,6 +41,7 @@ $$
 
 別の代表例はHamming距離に基づくカーネルです。
 
+
 $$
 k_{\mathrm{cat}}(c,c')
 =
@@ -60,6 +62,7 @@ $$
 \(k_c\) を連続カーネル、\(k_d\) をカテゴリカーネルとします。
 基本的な混合カーネルには次の2種類があります。
 
+
 $$
 k_{\mathrm{add}}(x,x')
 =
@@ -69,6 +72,7 @@ k_d(x_{\mathrm{cat}},x'_{\mathrm{cat}})
 $$
 
 and
+
 
 $$
 k_{\mathrm{prod}}(x,x')
@@ -98,6 +102,7 @@ One-hot符号化も可能ですが、符号化後に通常の連続カーネル�
 ## 5.5 代理モデルと探索空間制約
 
 混合変数のベイズ最適化問題は次のように表せます。
+
 
 $$
 \max_{x\in\mathcal X_{\mathrm{feasible}}}
@@ -178,6 +183,7 @@ $$
 カテゴリの割当集合を $\mathcal C$、割当 $c$ の下で実行可能な連続領域を
 $\mathcal X_c$ とすると、混合獲得関数の最適化は次のように分解できます。
 
+
 $$
 \max_{c\in\mathcal C}\;\max_{x\in\mathcal X_c}\alpha(x,c).
 $$
@@ -189,6 +195,7 @@ $|\mathcal C|=\prod_{j=1}^{p}L_j$ に依存します。
 
 一方、実行可能な候補を有限集合
 $\mathcal S=\{x^{(1)},\ldots,x^{(M)}\}$ として与える場合は、
+
 
 $$
 x_{\mathrm{next}}=\operatorname*{arg\,max}_{x\in\mathcal S}\alpha(x).
@@ -214,4 +221,3 @@ $$
 - [Acquisition Function](04_acquisition_function.md)
 - [Hierarchical / Contextual GP](12_hierarchical_contextual_gp.md)
 - [Multi-task / Multi-output](07_multitask_multioutput.md)
-- [Mixed-variable model documentation](../models/README.md)

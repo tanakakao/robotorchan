@@ -1,82 +1,13 @@
-# Phase 6C: Joint variational heteroskedastic GP design
+# Joint Heteroskedastic GP
 
-## Goal
+応答と対数ノイズ分散の 2 つの潜在 GP を、Monte Carlo 近似による joint ELBO で同時学習します。残差からノイズ GP を交互に推定する反復モデルとは推論目的が異なります。
 
-Phase 6A/6B established the practical iterative two-GP model. Phase 6C defines
-the statistically stronger joint variational model before adding a second
-public implementation.
+## 利用方法と制約
 
-For latent response and log-noise processes,
+`JointHeteroskedasticSingleTaskGP` の `training_loss()` を PyTorch optimizer で最小化し、`posterior(test_X)` で潜在応答、`predicted_noise(test_X)` で観測ノイズを取得します。`num_inducing` と正の `noise_floor` を指定できます。`supports_mll = False` であり、Exact GP の `make_mll()` を使う経路ではありません。
 
-```text
-f(x) ~ GP
-g(x) ~ GP
-y | f, g ~ Normal(f(x), exp(g(x)))
-```
+## 理論・実装・検証を辿る
 
-the inference objective must optimize both latent processes together rather
-than turning fitted residuals into fixed targets.
+[理論](../theory/15_heteroskedastic_noise.md)と[実装ガイド](../guide/15_heteroskedastic_noise.md)で仮定・推論方法・近似を確認できます。[ソース](../../src/robotorchan/models/robust/joint_heteroskedastic.py)から API と処理を確認してください。
 
-## Required architecture
-
-The joint model should use two variational latent GPs, `f` and `g`, with
-separate inducing points and variational distributions. Training minimizes a
-Monte Carlo estimate of the negative ELBO:
-
-```text
--E_q(f,g)[log p(y | f, g)]
-+ beta_f KL[q(f) || p(f)]
-+ beta_g KL[q(g) || p(g)]
-```
-
-The observation log likelihood is evaluated directly with
-`variance = exp(g).clamp_min(noise_floor)`.
-
-## Public API target
-
-```python
-model = JointHeteroskedasticSingleTaskGP(
-    train_X,
-    train_Y,
-    num_inducing=32,
-    noise_floor=1e-6,
-)
-
-loss = model.training_loss()
-posterior = model.posterior(test_X)
-noise = model.predicted_noise(test_X)
-```
-
-The class must not pretend to support `make_mll()`: the joint ELBO is not an
-ExactMarginalLogLikelihood. It should follow robotorchan's existing
-variational-model training contract.
-
-## Compatibility requirements
-
-Before the class becomes public, tests must prove:
-
-- gradients reach response and noise variational parameters;
-- `training_loss()` is finite;
-- `posterior(X)` satisfies the BoTorch scalar-model contract;
-- `predicted_noise(X)` is positive and supports batch/q dimensions;
-- dtype/device migration invalidates or avoids stale caches;
-- state_dict round trips both latent processes;
-- MC acquisitions accept the response posterior;
-- scenario generation and risk aggregation remain external composition.
-
-## Boundaries
-
-Do not create Mixed/Reduced/MultiTask variants in Phase 6C. Those combinations
-are considered only after the base joint model is numerically validated.
-
-Do not replace the iterative `HeteroskedasticSingleTaskGP` silently. The
-iterative and joint models have different inference contracts. If a later
-decision removes the iterative model, perform a complete API migration rather
-than adding aliases or deprecated wrappers.
-
-## Implementation gate
-
-Implementation should reuse the repository's variational training conventions
-rather than introducing a one-off optimizer API. The next subphase first
-audits `SingleTaskVariationalGP` and its training tests, then implements the
-two-latent ELBO against that contract.
+過去の設計条件・数式・検証要件は[設計記録](../../.github/project-records/model-design/joint_heteroskedastic_gp.md)に原文を保存しています。そこでの将来計画や Phase の完了条件は現在の対応保証ではありません。現在のモデル選択は[モデル索引](README.md)を参照してください。

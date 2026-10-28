@@ -4,6 +4,7 @@
 
 高次元問題への対応は projection だけではありません。
 
+
 ```text
 high-dimensional X
  -> projection
@@ -40,6 +41,7 @@ high-dimensional X
 
 ARD kernel は dimension ごとの lengthscale を持ちます。
 
+
 ```text
 k(x, x')
   = sigma^2 exp(
@@ -63,6 +65,7 @@ SAAS は多くの input dimension の effect を強く shrink し、少数の ac
 
 概念的には inverse lengthscale
 
+
 ```text
 rho_j = 1 / ell_j
 ```
@@ -70,6 +73,7 @@ rho_j = 1 / ell_j
 の多くを0付近へ縮めます。
 
 これは PCA のように
+
 
 ```text
 x -> W^T x
@@ -84,12 +88,8 @@ x -> W^T x
 
 ## 3. Fully Bayesian SAAS
 
-robotorchan の
-
-- `SaasFullyBayesianSingleTaskGP`
-- `SaasFullyBayesianMultiTaskGP`
-
-は BoTorch の fully Bayesian SAAS implementation をラップします。
+- SAAS fully Bayesian 単一タスク GP
+- SAAS fully Bayesian マルチタスク GP
 
 hyperparameter uncertaintyはpoint estimateへ潰さずMCMC samplesとして保持されます。
 
@@ -98,21 +98,16 @@ samplesをposterior predictionへ反映する構成です。
 
 そのため通常の exact GP の
 
-```text
-fit_gpytorch_mll(model.make_mll())
-```
 
 という fitting contract ではありません。
-
-robotorchan でも `supports_mll = False` とし、fitting は BoTorch の
-`fit_fully_bayesian_model_nuts` に委譲します。
 
 これは単なる実装上の違いではなく、posterior が hyperparameter posterior を積分する
 fully Bayesian model であることに対応します。
 
 ## 4. Fully Bayesian MultiTask SAAS
 
-`SaasFullyBayesianMultiTaskGP` は long-format task-feature representation を使います。
+SAAS fully Bayesian マルチタスク GP は long-format task-feature representation を使います。
+
 
 ```text
 X = [data features, task feature]
@@ -120,23 +115,13 @@ X = [data features, task feature]
 
 task structure と data-feature sparsity は別の役割です。
 
-MultiTask SAAS は「task ID 自体を sparse input feature として選択する」モデルではなく、
-BoTorch の multitask SAAS structure を通じて task covariance と data covariance を扱います。
-
 ## 5. Mixed Fully Bayesian SAAS
 
-robotorchan には
-
-- `MixedSaasFullyBayesianSingleTaskGP`
-- `MixedSaasFullyBayesianMultiTaskGP`
+- 混合入力 SAAS fully Bayesian 単一タスク GP
+- 混合入力 SAAS fully Bayesian マルチタスク GP
 
 があります。
 
-これらは raw mixed-space API を維持しながら、モデル内部で categorical features を one-hot
-encoding して SAAS model へ渡します。
-
-重要なのは、この family が robotorchan の一般的な native categorical kernel route と
-同一ではないことです。
 
 ```text
 raw mixed X
@@ -154,43 +139,32 @@ input warping を使う場合も categorical features は warp 対象から除�
 
 fully Bayesian SAAS は MCMC cost が大きいため、MAP approximation を使う選択肢があります。
 
-robotorchan:
-
-- `AdditiveMapSaasSingleTaskGP`
-- `EnsembleMapSaasSingleTaskGP`
-
-BoTorch の MAP-SAAS model を raw-data retention contract とともに提供します。
+- Additive Map SAAS 単一タスク GP
+- Ensemble Map SAAS 単一タスク GP
 
 `num_taus` や `taus` により複数のshrinkage scalesを扱います。
 
-ここでクラス名の `AdditiveMapSaasSingleTaskGP` にある「Additive」を、後述する
+ここでクラス名の Additive Map SAAS 単一タスク GP にある「Additive」を、後述する
 Orthogonal Additive Kernelの「入力componentの加法分解」と同一視しません。
 MAP-SAAS familyとOAK familyは別のmodeling assumptionsです。
 
 fully Bayesian SAASと異なりNUTSによるhyperparameter posterior integrationは行いません。
-`AdditiveMapSaasSingleTaskGP` と `EnsembleMapSaasSingleTaskGP` のposterior semanticsも
+Additive Map SAAS 単一タスク GP と Ensemble Map SAAS 単一タスク GP のposterior semanticsも
 「fully Bayesian SAASを単に高速化した同一posterior」とは扱いません。
 
 ### fitting contractも分ける
 
-現行robotorchanではFully Bayesian SAASは `supports_mll = False` で、
-BoTorchのNUTS fittingを使います。
-
-一方MAP-SAAS wrappersは `ExactGPModelMixin` を持つため、通常のMLL fitting contractへ
-接続できます。したがって「SAAS」という共通名だけから同じtraining APIだと考えません。
-
 ## 7. Mixed MAP-SAAS
 
-robotorchan には
-
-- `MixedAdditiveMapSaasSingleTaskGP`
-- `MixedEnsembleMapSaasSingleTaskGP`
+- 混合入力 Additive Map SAAS 単一タスク GP
+- 混合入力 Ensemble Map SAAS 単一タスク GP
 
 があります。
 
 これらも categorical feature を model-owned one-hot transform で内部 encoding します。
 
 したがって
+
 
 ```text
 Mixed SAAS / MAP-SAAS
@@ -199,15 +173,13 @@ Mixed SAAS / MAP-SAAS
 
 です。
 
-raw API では category values をそのまま渡せますが、内部 sparsity geometry は encoded numeric
-space 上に構成されます。
-
 ## 8. Additive structure
 
 高次元関数が少数 active dimensions に依存するという仮定と、関数が component の和であるという
 仮定は別です。
 
 additive GP は概念的に
+
 
 ```text
 f(x)
@@ -220,8 +192,6 @@ f(x)
 
 ## 9. Orthogonal Additive GP
 
-`OrthogonalAdditiveGP` は BoTorch の Orthogonal Additive Kernel を利用します。
-
 first-order additive componentsに加えて、`second_order=True` ではsecond-order interactionも
 扱います。これは任意次数のinteractionを自由に表現するkernelとは異なり、許すinteraction構造を
 明示的に制限する仮定です。
@@ -229,6 +199,7 @@ first-order additive componentsに加えて、`second_order=True` ではsecond-o
 orthogonalization により component decomposition の解釈性を改善することが目的の1つです。
 
 この model は SAAS のような active-dimension shrinkage model ではありません。
+
 
 ```text
 SAAS:
@@ -242,7 +213,7 @@ OAK:
 
 ## 10. Mixed Orthogonal Additive GP
 
-`MixedOrthogonalAdditiveGP` では categorical feature を内部 one-hot encoding します。
+混合入力 Orthogonal Additive GP では categorical feature を内部 one-hot encoding します。
 
 これは単なる実装都合ではありません。
 
@@ -252,6 +223,7 @@ Gauss-Legendre quadrature による orthogonalization を前提とします。
 標準 categorical kernel へ単純に差し替えると、この orthogonalization measure と整合しません。
 
 そのため現在は
+
 
 ```text
 categorical raw feature
@@ -271,7 +243,8 @@ native categorical OAK を実装するなら discrete orthogonalization measure 
 
 ## 11. Relevance pursuit は別の sparsity
 
-`RobustRelevancePursuitSingleTaskGP` も sparse structure を使いますが、SAASとは対象が違います。
+Robust Relevance Pursuit 単一タスク GP も sparse structure を使いますが、SAASとは対象が違います。
+
 
 ```text
 SAAS
@@ -287,12 +260,13 @@ Robust relevance pursuit
 
 詳細は [Robust Gaussian Process](14_robust_gaussian_process.md) を参照してください。
 
-## 12. ALEBOGP
+## 12. ALEBO の共分散モデル
 
 ALEBO は objective が ambient space 内の low-dimensional linear subspace に依存するという
 仮定を利用します。
 
-`ALEBOGP` は ALEBO search embedding と整合する Mahalanobis geometry を持つ専用 surrogate です。
+ALEBO の共分散モデル は ALEBO search embedding と整合する Mahalanobis geometry を持つ専用 surrogate です。
+
 
 ```text
 k(z, z')
@@ -303,13 +277,11 @@ k(z, z')
 
 ここで `M` が embedded coordinate の metric を表します。
 
-これは training data から PCA reducer を fit する `ReducedGP` とは別の考え方です。
+これは training data から PCA reducer を fit する 次元削減 GP とは別の考え方です。
 
 ## 13. ALEBO metric uncertainty
 
-現在の `ALEBOGP` は単なるMahalanobis RBF kernelに留まりません。
-
-また `train_Yvar` は必須で、現行ALEBOGPはfixed-noise single-output modelとして構成されます。
+現在の ALEBO の共分散モデル は単なるMahalanobis RBF kernelに留まりません。
 
 実装には、
 
@@ -331,13 +303,14 @@ metric uncertaintyのmarginalizationでは、metric sampleごとのGaussian pred
 mixtureとして返すのではなく、meanとfull predictive covarianceを使ってGaussianへ
 moment matchingします。したがってmetric mixtureの高次momentまで保持するposteriorではありません。
 
-## 14. ALEBOGP と ALEBOStrategy
+## 14. ALEBO の共分散モデル と ALEBO 探索
+
 
 ```text
-ALEBOGP
+ALEBO の共分散モデル
  -> embedded-space surrogate geometry
 
-ALEBOStrategy
+ALEBO 探索
  -> feasible target-space candidate search
 ```
 
@@ -399,29 +372,6 @@ SAAS / additive GP / ALEBO はそれぞれ異なる構造仮定です。
 model misspecificationを増やす可能性があります。
 
 predictive performance、posterior calibration、計算量、BO trajectoryを同じ条件で比較します。
-
-## 18. 実装との対応
-
-現在の理論章で保持すべき実装契約は次です。
-
-- fully Bayesian SAAS は BoTorch NUTS fitting を利用し MLL-style fitting ではない
-- SAAS SingleTask / MultiTask が存在する
-- Mixed SAAS は model-owned one-hot encoding を使う
-- categorical dimensions は input warping 対象から除外する
-- MAP-SAASはAdditive / Ensemble variantsを持つ
-- MAP-SAAS wrappersはExactGP MLL fitting contractを持ち、Fully Bayesian SAASとはtraining APIが異なる
-- AdditiveMapSaasの名称をOAKのadditive input decompositionと同一視しない
-- Mixed MAP-SAAS も model-owned one-hot encoding を使う
-- OAK は additive decomposition であり SAAS sparsity とは別
-- Mixed OAK は continuous orthogonalizationを維持するため one-hot fallback を使う
-- Mixed OAK component interpretation は encoded-column space 上
-- relevance pursuit の sparsity は observation-side robustness
-- ALEBOGP は Mahalanobis embedded-space surrogate
-- ALEBOGPはfixed-noise single-output modelで `train_Yvar` を必要とする
-- ALEBOGPはmetric uncertaintyのLaplace / sampling経路を持つ
-- metric-marginal posteriorはsample mixtureをGaussianへmoment matchingする
-- ALEBOGP と ALEBOStrategy は別責務
-- model reduction と search-space reduction を区別する
 
 ## 19. この章で覚えておくこと
 

@@ -1,54 +1,27 @@
-# DeepGP models and input contracts
+# DeepGP モデルと入力の条件
 
-robotorchan provides `SingleTaskDeepGP`, `MixedSingleTaskDeepGP`, `MultiTaskDeepGP`, and `MixedMultiTaskDeepGP`. These are variational Deep Gaussian Process models,
-not exact GP wrappers. Choose the variant from the input and task structure.
+`SingleTaskDeepGP`、`MixedSingleTaskDeepGP`、`MultiTaskDeepGP`、`MixedMultiTaskDeepGP` は変分 Deep Gaussian Process モデルです。Exact GP wrapper とは推論方法が異なります。入力とタスクの構造に応じて選びます。
 
-## Single-task continuous inputs
+## 単一タスク・連続入力
 
-`SingleTaskDeepGP` uses a hierarchy of stochastic GP layers for
-single-task regression. It exposes a Monte Carlo posterior for BoTorch
-acquisition integration; stochastic DeepGP trajectories must not be
-interpreted as an exact Gaussian posterior.
+`SingleTaskDeepGP` は確率的な GP 層の階層で単一タスク回帰を行います。BoTorch の獲得関数には Monte Carlo posterior を公開します。確率的な DeepGP の軌跡を厳密な Gaussian posterior と解釈しないでください。
 
-## Mixed continuous and categorical inputs
+## 連続・カテゴリ入力
 
-`MixedSingleTaskDeepGP` accepts the original mixed input space and
-requires `cat_dims`. It standardizes continuous features while encoding
-categorical features with **learned embeddings** before the DeepGP
-layers. Integer category IDs are not treated as continuous distances.
+`MixedSingleTaskDeepGP` は元の混合入力を受け取り、`cat_dims` を要求します。連続特徴を標準化し、カテゴリ特徴を**学習可能な embedding** に変換してから DeepGP 層へ渡します。整数のカテゴリ ID を連続距離として扱いません。
 
-Categorical feature indices may be negative. Category values must be
-non-negative, integer-valued, contiguous, and zero-based in training
-data. At least one continuous feature is required. The learned
-embedding is a model-specific representation, not the exact-GP
-`MixedSingleTaskGP` categorical kernel.
+カテゴリ列の位置には負のインデックスも使えます。訓練データのカテゴリ値は、非負・整数・0 始まり・欠番なしである必要があります。連続特徴は少なくとも 1 列必要です。この embedding はモデル固有の表現であり、Exact GP の `MixedSingleTaskGP` が使うカテゴリカーネルとは異なります。
 
-## Multi-task long-format inputs
+## 複数タスク・long-format 入力
 
-`MultiTaskDeepGP` accepts a long-format task feature and embeds task
-identity separately from standardized data features. Pass original
-long-format inputs to `posterior()` and `training_loss()`.
-This is distinct from block-design `train_Y[n, m]` models.
+`MultiTaskDeepGP` は long-format のタスク列を受け取り、標準化したデータ特徴とは別にタスク ID を embedding へ変換します。`posterior()` と `training_loss()` には元の long-format 入力を渡します。`train_Y[n, m]` を使う block-design モデルとは区別してください。
 
-## Mixed multi-task long-format inputs
+## 混合入力の複数タスク
 
-`MixedMultiTaskDeepGP` combines a long-format `task_feature` with
-`cat_dims` for categorical data features. Task identity and category
-values receive separate learned embeddings, while continuous data
-features are standardized. The task feature must not appear in
-`cat_dims`, and at least one continuous data feature is required.
-Task and category IDs must be contiguous, zero-based integers in
-the training data. Pass original long-format inputs to the model.
+`MixedMultiTaskDeepGP` は long-format の `task_feature` と、カテゴリのデータ列を表す `cat_dims` を組み合わせます。タスク ID とカテゴリ値には別々の embedding を学習し、連続データ特徴は標準化します。タスク列を `cat_dims` に含めることはできず、連続データ特徴が少なくとも 1 列必要です。訓練データのタスク ID とカテゴリ ID は、0 始まりで欠番のない整数にしてください。モデルには元の long-format 入力を渡します。
 
-## Training and acquisition integration
+## 学習と獲得関数への接続
 
-DeepGP training uses a variational objective rather than the exact
-GP marginal likelihood fitting path. Posterior sampling preserves
-stochastic layers and supports batched candidate evaluation under
-the model's tested shape contracts. Verify acquisition compatibility
-and the chosen optimization backend before assuming a specific
-candidate-search path is supported.
+学習は変分目的を使い、Exact GP の周辺尤度を最適化する経路とは異なります。posterior sampling は確率的な層を保持し、テスト対象の形状条件に従ってバッチ候補を評価します。特定の候補探索が使えると仮定する前に、獲得関数と最適化 backend の互換性を確認してください。
 
-See [Expressive model families](expressive.md) and
-[Expressive BoTorch integration](expressive_botorch_integration.md)
-for model-family selection and integration boundaries.
+ファミリーの選択と接続条件は [表現力の高いモデル](expressive.md)、[BoTorch との接続](expressive_botorch_integration.md) を参照してください。

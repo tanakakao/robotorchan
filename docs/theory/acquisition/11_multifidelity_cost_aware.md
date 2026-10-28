@@ -2,6 +2,7 @@
 
 ## 11.1 Cost-awareとMulti-Fidelityを分ける
 
+
 ~~~text
 Cost-aware optimization
     evaluation costをdecision utilityへ組み込む
@@ -17,6 +18,7 @@ target fidelity、cross-fidelity information transferが必要です。cost-awar
 ## 11.2 評価の価値とコストを同時に考える
 
 Multi-Fidelity Bayesian Optimization（MFBO）では、同じ設計変数 $`x`$ を異なる fidelity $`s`$ で評価できます。
+
 
 $$
 y=f(x,s)
@@ -36,11 +38,13 @@ $$
 
 MFBO の中心的な問いは、
 
+
 ```text
 どこ x を評価するか
 ```
 
 だけでなく、
+
 
 ```text
 どの fidelity s で評価するか
@@ -51,6 +55,7 @@ MFBO の中心的な問いは、
 ## 11.3 Target fidelity
 
 通常、最終的に最適化したい target fidelity $`s^*`$ を定義します。
+
 
 $$
 x^*
@@ -65,6 +70,7 @@ $$
 ## 11.4 Fidelityとtaskの違い
 
 Multi-task と multi-fidelity は数学的に似た surrogate structure を使える場合がありますが、意思決定上の意味は異なります。
+
 
 ```text
 task
@@ -84,6 +90,7 @@ MFBO では少なくとも二つの責務があります。
 
 ### Multi-Fidelity surrogate
 
+
 $$
 p(f(x,s)\mid\mathcal D)
 $$
@@ -95,6 +102,7 @@ $$
 候補 $`(x,s)`$ を評価したとき、それが target-fidelity decision にどれだけ価値を与えるかを評価します。
 
 したがって、
+
 
 ```text
 MF model を使っている
@@ -114,11 +122,13 @@ MF acquisition を使っている
 
 MFBO acquisition は概念的に、
 
+
 $$
 \text{target-fidelity information / decision value}
 $$
 
 と
+
 
 $$
 \text{evaluation cost}
@@ -130,6 +140,7 @@ $$
 
 fidelity-dependent cost を
 
+
 $$
 c(x,s)>0
 $$
@@ -137,6 +148,7 @@ $$
 とします。
 
 単純な場合は fidelity のみで
+
 
 $$
 c(s)
@@ -158,6 +170,7 @@ cost は objective value と別の量です。高 fidelity が高い objective v
 
 候補の information / decision value を $`V(x,s)`$ とすれば、直感的な cost-aware criterion は
 
+
 $$
 \frac{V(x,s)}{c(x,s)}
 $$
@@ -174,6 +187,7 @@ budget、terminal value、並列性、固定 overhead などによって最適�
 Knowledge Gradient（KG）は候補を観測した後の terminal decision value の改善を評価するため、MFBO と自然に結び付きます。
 
 候補 $`(x,s)`$ を評価した後、target fidelity $`s^*`$ での最終 decision quality がどれだけ改善するかを
+
 
 $$
 V(x,s)
@@ -196,6 +210,7 @@ value of information を評価します。
 
 概念的には
 
+
 $$
 \alpha_{\mathrm{MFKG}}(x,s)
 =
@@ -205,6 +220,7 @@ $$
 です。
 
 cost-aware utility を組み合わせれば、
+
 
 $$
 \alpha_{\mathrm{cost}}(x,s)
@@ -226,11 +242,13 @@ MF-KG では候補 $`(x,s)`$ を観測しても、最終的に評価したい te
 
 そのため design $`x`$ を target fidelity へ写像する
 
+
 $$
 P(x,s)=(x,s^*)
 $$
 
 のような projection が重要になります。
+
 
 ```text
 candidate
@@ -261,6 +279,7 @@ MF setting ではこの current value も target fidelity 上で定義される�
 
 fidelity $`s`$ が連続なら、
 
+
 $$
 s\in[s_{\min},s_{\max}]
 $$
@@ -277,6 +296,7 @@ continuous fidelity だからといって、posterior が fidelity に対して�
 
 fidelity が
 
+
 $$
 s\in\{s_1,s_2,\ldots,s_K\}
 $$
@@ -284,6 +304,7 @@ $$
 のような離散集合の場合、continuous relaxation より各 fidelity choice を明示的に扱う optimization が自然です。
 
 例えば各 discrete fidelity を固定した acquisition optimization を比較できます。
+
 
 ```text
 s = low
@@ -304,6 +325,7 @@ s = high
 
 discrete fidelity は値が離散でも、単なる nominal categorical variable とは限りません。
 
+
 ```text
 categorical variable
     category間に順序を仮定しないことが多い
@@ -319,6 +341,7 @@ modeling semantics と acquisition semantics の両方を確認する必要が�
 ## 11.16 Multiple fidelity dimensions
 
 複数の fidelity controls
+
 
 $$
 s=(s_1,\ldots,s_k)
@@ -358,6 +381,7 @@ cost model uncertainty を acquisition にどう伝播させるかも別の設�
 
 単純な fidelity cost は
 
+
 $$
 c(s)
 =
@@ -378,6 +402,7 @@ cost model は実験系の実態に合わせて選択します。
 
 cost-aware utility では、decision value を inverse cost で重み付けする考え方があります。
 
+
 ```text
 same value
     ↓
@@ -393,6 +418,7 @@ higher value evaluation を優先
 ## 11.20 Budgetとcost-aware acquisition
 
 総 budget
+
 
 $$
 B
@@ -413,6 +439,7 @@ information-theoretic acquisition も multi-fidelity へ拡張できます。
 
 概念的には
 
+
 $$
 \frac{
 I(Y_{x,s};f^*_{s^*}\mid\mathcal D)
@@ -423,13 +450,10 @@ $$
 
 です。
 
-MF-KGがterminal decision valueを基準にするのに対し、MF-MES系はoptimumに関するinformation gainを
-基準にします。ただしMF-MESは現在のrobotorchan runtime-validated contractには含まれず、future
-extensionです。理論上の存在をintegration supportの主張にしません。
-
 ## 11.22 Multi-FidelityとMulti-Taskの組合せ
 
 実問題では task $`t`$ と fidelity $`s`$ の両方を持つことがあります。
+
 
 $$
 f(x,t,s)
@@ -440,6 +464,7 @@ $$
 このとき surrogate は task correlation と fidelity correlation の両方を表現する必要があります。
 
 さらに acquisition は、
+
 
 ```text
 どの x
@@ -457,6 +482,7 @@ design space に continuous / categorical variables があり、さらに fideli
 optimization は mixed structure を持ちます。
 
 ただし構造列としての fidelity を通常の categorical design variable と混同しません。
+
 
 ```text
 design categorical variable
@@ -487,18 +513,6 @@ stopping rule としては、
 
 などが考えられます。
 
-## 11.25 BoTorch / robotorchanとの対応
-
-BoTorch は Multi-Fidelity Knowledge Gradient、cost-aware utility、fidelity cost
-model、target-fidelity projection、および discrete fidelity を扱う acquisition optimization primitives 
-を提供しています。
-
-robotorchan はこれらの標準機能を再実装せず、BoTorch native path を基本とします。
-
-利用上の位置付けは [Multi-Fidelity / Cost-aware optimization
-guide](../../optimization/multifidelity-cost-aware.md)、現在の統合状況は [Acquisition integration 
-status](../../optimization/acquisition-integration.md) を参照してください。
-
 ## 11.26 この章で覚えておくこと
 
 - cost-aware optimizationとMFBOは別概念
@@ -516,11 +530,13 @@ status](../../optimization/acquisition-integration.md) を参照してくださ�
 
 Multi-Fidelity acquisition の中心は、
 
+
 ```text
 cheap or expensive?
 ```
 
 ではなく、
+
 
 ```text
 その fidelity の観測が
@@ -531,6 +547,7 @@ target-fidelity decision にどれだけ価値を与え、
 です。
 
 特に、
+
 
 ```text
 Multi-Fidelity surrogate
@@ -556,5 +573,4 @@ Acquisition optimizer
 
 - Wu, J., Toscano-Palmerin, S., Frazier, P. I., and Wilson, A. G. (2020), *Practical
 Multi-fidelity Bayesian Optimization for Hyperparameter Tuning*. UAI.
-- BoTorch documentation and tutorials for `qMultiFidelityKnowledgeGradient`, target-fidelity
 projection, `AffineFidelityCostModel`, and `InverseCostWeightedUtility`.

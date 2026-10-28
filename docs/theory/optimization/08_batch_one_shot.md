@@ -78,7 +78,7 @@ greedy approximation なので、一般に joint optimum と一致する保証�
 
 asynchronous BO では、すでに評価を開始したが結果が未観測の点があります。
 
-これを X_pending とすると、新しい candidate は
+これを 未完了の入力集合 とすると、新しい candidate は
 
     observed data + pending locations
 
@@ -91,7 +91,7 @@ acquisition によっては pending locations を内部の fantasy / sampling se
 組み込んで価値を調整します。
 
 したがって asynchronous support は optimizer だけの性質ではなく、
-acquisition が X_pending をどう扱うかにも依存します。
+acquisition が 未完了の入力集合 をどう扱うかにも依存します。
 
 ## 8.7 Fantasy と sequential selection の違い
 
@@ -100,7 +100,7 @@ sequential batch construction と fantasy model は関連しますが同一で�
 sequential helper:
 
     candidate を1点選ぶ
-      -> X_pending に追加
+      -> 未完了の入力集合 に追加
       -> 同じ acquisition を再最適化
 
 fantasy model:
@@ -267,18 +267,13 @@ one-shot acquisition に candidate constraint を組み合わせる場合は、
 | 目的 | Optimization structure |
 | --- | --- |
 | q点を同時決定 | joint q-batch |
-| q点を貪欲に構築 | sequential + X_pending |
-| 実行中評価を考慮 | asynchronous + X_pending-aware acquisition |
+| q点を貪欲に構築 | sequential + 未完了の入力集合 |
+| 実行中評価を考慮 | asynchronous + 未完了の入力集合-aware acquisition |
 | KG | one-shot + specialized KG initialization |
 | multi-step lookahead | one-shot augmented tree |
 | mixed one-shot | row-specific categorical handling |
 
 backend の capability だけでなく acquisition の tensor contract を確認することが重要です。
-
-## 8.20 実装ガイドへの参照
-
-実際の optimizer の対応範囲、初期化 API、pending-state contract は
-[Optimization guides](../../optimization/README.md) を参照してください。
 
 ## 参考文献
 

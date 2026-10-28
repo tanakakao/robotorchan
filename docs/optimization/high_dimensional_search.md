@@ -254,14 +254,14 @@ ALEBOの公開参照実装では、MAP推定後にMahalanobis kernelのCholesky�
 
 ### Multi-fidelity candidate constraints
 
-`OriginalSpaceStrategy` can combine `CandidateConstraints` with `fixed_features`. A target fidelity can therefore be fixed with, for example, `fixed_features={fidelity_dim: 1.0}` while linear equality or inequality constraints remain expressed in the same raw/public input coordinates. This delegates both mechanisms to BoTorch `optimize_acqf`; output/black-box constraints remain a separate acquisition-level concern.
+`OriginalSpaceStrategy` は `CandidateConstraints` と `fixed_features` を併用できます。たとえば `fixed_features={fidelity_dim: 1.0}` で fidelity を固定し、線形等式・不等式を同じ元入力座標で指定します。両方を BoTorch `optimize_acqf` へ委譲し、出力・black-box 制約は獲得関数側で別に扱います。
 
 
 ### Constraints with embedding and latent search
 
-Candidate constraints are defined in public/original input coordinates. They must not be forwarded unchanged to an optimizer operating in REMBO, HeSBO, BAxUS, or learned latent coordinates, because the tuple indices and coefficients would then describe a different constraint. These strategies therefore reject non-empty `CandidateConstraints` until an exact strategy-specific mapping is implemented. This is intentional capability validation rather than silent approximate feasibility.
+候補制約は元の公開入力座標で定義します。REMBO・HeSBO・BAxUS・学習した潜在座標へ同じ tuple を渡すと、index と係数の意味が変わります。厳密な戦略固有写像がない限り、これらは非空の `CandidateConstraints` を拒否します。近似的な実行可能性へ暗黙に切り替えません。
 
-ALEBO is different: its existing linear inequalities describe the **internal ALEBO embedding polytope** that keeps projected candidates inside the public box. Those internal inequalities are not user process constraints and must not be interpreted as general `CandidateConstraints` support.
+ALEBO 内部の線形不等式は、投影先を公開 box 内に保つ embedding polytope のためのものです。利用者の process 制約や、一般の `CandidateConstraints` 対応を意味しません。
 
 
 ### Candidate-constraint support matrix
@@ -277,4 +277,4 @@ ALEBO is different: its existing linear inequalities describe the **internal ALE
 | `ALEBOStrategy` | internal polytope only | ALEBO feasibility inequalities are internal and are not user `CandidateConstraints` |
 | `RandomSearchStrategy` / `TreeEnsembleSearchStrategy` / `TuRBOStrategy` | not exposed | no general candidate-constraint contract is currently claimed |
 
-`CandidateConstraints` also covers BoTorch-compatible nonlinear inequality constraints where the selected strategy supports them. Embedded / latent strategies still reject unmapped public-space constraints. This matrix describes optimizer feasibility only; it is independent of acquisition-level output/black-box constraint support.
+対応戦略では BoTorch 互換の非線形不等式も `CandidateConstraints` に含められます。embedded・latent 戦略は写像のない元空間の制約を引き続き拒否します。この対応表は optimizer の実行可能性だけを表し、獲得関数の出力・black-box 制約とは独立です。

@@ -1,129 +1,13 @@
-# Full-covariance uncertain training inputs
+# 相関のある不確実入力
 
-## Purpose
+入力誤差が次元間で相関している場合、各観測の Gaussian 入力分布を完全な共分散行列で表します。対角標準偏差は独立誤差に対応し、共通の校正誤差などによる相関には完全共分散を使います。
 
-`UncertainInputSingleTaskGP` supports diagonal Gaussian uncertainty and **correlated uncertainty between input dimensions** for observed training inputs.
+## 利用方法と制約
 
-For observation `i`:
+`UncertainInputSingleTaskGP` の `train_X_cov` は観測ごとに対称な半正定値共分散を表します。`train_X_std` と同時に指定しません。期待 RBF 共分散の計算では安定した線形代数を使い、逆行列を直接形成することを要求しません。候補摂動・環境 scenario は別の層で扱います。
 
-```text
-x_i,true ~ Normal(mu_i, Sigma_i)
-y_i = f(x_i,true) + epsilon_i
-```
+## 理論・実装・検証を辿る
 
-where `Sigma_i` is a full positive-semidefinite covariance matrix.
+[理論](../theory/16_uncertain_input_gp.md)と[実装ガイド](../guide/16_uncertain_input_gp.md)で仮定・推論方法・近似を確認できます。[ソース](../../src/robotorchan/models/uncertain/uncertain_input.py)から API と処理を確認してください。
 
-This is a surrogate-level uncertainty model. Candidate-time perturbation and
-environmental scenarios remain separate compositional layers.
-
-## Why this is a distinct extension
-
-Diagonal `train_X_std` assumes independent location errors across dimensions.
-That is often insufficient when process settings, calibration errors, or derived
-features share a common source of uncertainty.
-
-For an RBF kernel with metric matrix `Lambda`, the covariance between two
-Gaussian input distributions can be evaluated analytically:
-
-```text
-S_ij = Sigma_i + Sigma_j
-
-E[k(x_i, x_j)] =
-|Lambda|^(1/2) |Lambda + S_ij|^(-1/2)
-* exp(
-    -1/2 (mu_i - mu_j)^T
-    (Lambda + S_ij)^(-1)
-    (mu_i - mu_j)
-  )
-```
-
-The implementation should use stable linear algebra (`cholesky_ex`,
-triangular solves, and log-determinants) rather than explicit matrix inverses or
-determinants.
-
-## API
-
-Use one uncertainty representation per model construction.
-
-Diagonal uncertainty remains:
-
-```python
-UncertainInputSingleTaskGP(
-    train_X,
-    train_Y,
-    train_X_std=train_X_std,
-)
-```
-
-Full covariance should use:
-
-```python
-UncertainInputSingleTaskGP(
-    train_X,
-    train_Y,
-    train_X_covar=train_X_covar,
-)
-```
-
-with
-
-```text
-train_X_covar.shape == train_X.shape[:-1] + (d, d)
-```
-
-Exactly one of `train_X_std` and `train_X_covar` must be supplied. Do not
-introduce a second compatibility class or an alias.
-
-## Validation
-
-The full covariance input must:
-
-- be finite;
-- be symmetric within a documented numerical tolerance;
-- be positive semidefinite;
-- match the dtype/device and batch/sample shape of `train_X`.
-
-Small numerical jitter may be used only inside stable factorization. It must not
-silently redefine invalid covariance matrices as valid.
-
-## Required equivalence tests
-
-1. A diagonal `train_X_covar = diag(train_X_std ** 2)` must reproduce the
-   diagonal implementation within numerical tolerance.
-2. Zero covariance must recover the deterministic RBF covariance.
-3. Nonzero off-diagonal covariance must change the expected kernel relative to
-   the diagonal approximation.
-4. Batched observations must preserve covariance shape semantics.
-
-## Lifecycle and BoTorch gates
-
-- raw full covariance metadata survives dtype/device migration;
-- state-dict roundtrip preserves predictions;
-- `make_mll()` remains the exact-GP training contract;
-- posterior supports batch/q dimensions;
-- qMC acquisition smoke tests remain green;
-- candidate-time scenario perturbation remains independently composable.
-
-## Scope boundaries
-
-This model does not add:
-
-- mixed categorical uncertain-input models;
-- Reduced/PCA/PLS uncertain-input wrappers;
-- multitask uncertain-input wrappers;
-- learned input-noise covariance;
-- cross-observation covariance between different training rows.
-
-The supplied `Sigma_i` describes uncertainty among feature dimensions for the
-same observation.
-
-## Implementation sequence
-
-1. Refactor the Phase 8 kernel representation so diagonal and full covariance
-   use one mathematically consistent expected-RBF path where practical.
-2. Add `train_X_covar` validation and raw-data retention.
-3. Implement stable expected-kernel evaluation.
-4. Add diagonal-equivalence, zero-covariance, correlation-sensitivity, shape,
-   serialization, dtype/device, posterior, and acquisition tests.
-5. Run Ruff lint/format and the Python 3.11/3.12/3.13, package, notebook, and
-   optional-dependency CI gates.
+過去の設計条件・数式・検証要件は[設計記録](../../.github/project-records/model-design/full_covariance_uncertain_input_gp.md)に原文を保存しています。そこでの将来計画や Phase の完了条件は現在の対応保証ではありません。現在のモデル選択は[モデル索引](README.md)を参照してください。

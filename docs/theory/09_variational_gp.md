@@ -8,6 +8,7 @@
 
 ここで重要なのは、
 
+
 ```text
 高次元問題
   └─ 入力次元 d が大きい
@@ -20,11 +21,13 @@
 
 例えば
 
+
 ```text
 n = 50, d = 100
 ```
 
 は高次元・少数データ問題ですが、
+
 
 ```text
 n = 100,000, d = 5
@@ -33,8 +36,6 @@ n = 100,000, d = 5
 は低次元・大規模データ問題です。
 
 後者では、通常の Exact GP が必要とする共分散行列の計算がボトルネックになります。
-
-具体的なモデルの生成・学習方法は [モデルドキュメント](../models/README.md) を参照してください。
 
 本章では、
 
@@ -56,6 +57,7 @@ n = 100,000, d = 5
 
 前章と本章の役割を図にすると、
 
+
 ~~~text
 入力次元 d が大きい
   → 関数構造・探索空間が難しい
@@ -75,11 +77,13 @@ Variational GPへ変えるだけでは入力次元側の難しさは解消され
 
 通常の Gaussian Process regression では、学習データ
 
+
 $$
 X = [x_1, x_2, \dots, x_n]
 $$
 
 に対して共分散行列
+
 
 $$
 K_{XX}\in\mathbb{R}^{n\times n}
@@ -89,6 +93,7 @@ $$
 
 観測ノイズを含めると
 
+
 $$
 K_y = K_{XX} + \sigma_n^2 I
 $$
@@ -96,6 +101,7 @@ $$
 です。
 
 posterior mean や marginal likelihood の計算では、典型的にこの行列の Cholesky 分解
+
 
 $$
 K_y = LL^\top
@@ -109,6 +115,7 @@ $$
 
 密な `n x n` 共分散行列に対する Cholesky 分解は、概ね
 
+
 $$
 O(n^3)
 $$
@@ -116,6 +123,7 @@ $$
 の計算量を必要とします。
 
 メモリも
+
 
 $$
 O(n^2)
@@ -125,11 +133,13 @@ $$
 
 したがって
 
+
 ```text
 n = 1,000
 ```
 
 程度なら Exact GP が現実的な場合がありますが、
+
 
 ```text
 n = 10,000
@@ -180,11 +190,13 @@ BO は一般に「評価が高価でデータ数が少ない」問題に向い�
 
 入力位置を
 
+
 $$
 Z = [z_1, z_2, \dots, z_m]
 $$
 
 とし、通常
+
 
 $$
 m \ll n
@@ -194,11 +206,13 @@ $$
 
 対応する latent function value を
 
+
 $$
 u = f(Z)
 $$
 
 とします。
+
 
 ```text
 training points
@@ -223,6 +237,7 @@ inducing point は、単に training data を `m` 点だけ残して残りを捨
 
 一方 Variational GP では、全観測データの likelihood を通じて
 
+
 $$
 q(u)
 $$
@@ -230,6 +245,7 @@ $$
 という inducing variable の分布を学習します。
 
 つまり
+
 
 ```text
 subsampling
@@ -248,6 +264,7 @@ Variational GP
 
 inducing points `Z` に対応する latent values を
 
+
 $$
 u=f(Z)
 $$
@@ -255,6 +272,7 @@ $$
 とします。
 
 GP prior から
+
 
 $$
 p(u)=\mathcal{N}(0,K_{ZZ})
@@ -264,6 +282,7 @@ $$
 
 また training latent values
 
+
 $$
 f=f(X)
 $$
@@ -272,11 +291,13 @@ $$
 
 Variational GP では、難しい posterior
 
+
 $$
 p(u\mid y)
 $$
 
 の代わりに
+
 
 $$
 q(u)
@@ -289,6 +310,7 @@ $$
 ## 9.8 Variational Distribution
 
 代表的には
+
 
 $$
 q(u)=\mathcal{N}(m,S)
@@ -314,6 +336,7 @@ Exact GP では posterior が解析的に得られる Gaussian regression でも
 
 本当に欲しい posterior は
 
+
 $$
 p(u\mid y)
 $$
@@ -321,6 +344,7 @@ $$
 ですが、これを直接扱う代わりに `q(u)` を近づけます。
 
 理想的には
+
 
 $$
 q(u) \approx p(u\mid y)
@@ -336,11 +360,13 @@ $$
 
 log marginal likelihood は
 
+
 $$
 \log p(y)
 $$
 
 ですが、Variational GP ではこれを直接最大化する代わりに下限
+
 
 $$
 \mathcal{L}_{ELBO}
@@ -351,6 +377,7 @@ $$
 を最大化します。
 
 基本形は
+
 
 $$
 \mathcal{L}_{ELBO}
@@ -363,6 +390,7 @@ $$
 です。
 
 2項の役割を分けると、
+
 
 ```text
 期待 log likelihood
@@ -380,6 +408,7 @@ KL divergence
 
 ELBOは概念的には
 
+
 ```text
 観測を説明する期待 log likelihood
     -
@@ -389,6 +418,7 @@ q(u) を prior p(u) から動かすコスト
 です。
 
 これは通常の marginal likelihood にある
+
 
 ```text
 fit
@@ -404,6 +434,7 @@ Occam's razor
 
 inducing point 数を `m`、観測数を `n` とすると、標準的な sparse variational GP では典型的に
 
+
 $$
 O(nm^2 + m^3)
 $$
@@ -412,6 +443,7 @@ $$
 
 `m << n` なら Exact GP の
 
+
 $$
 O(n^3)
 $$
@@ -419,6 +451,7 @@ $$
 より大幅に軽くできます。
 
 mini-batch size を `b` とすると、1 step あたりのデータ依存部分は概ね
+
 
 $$
 O(bm^2)
@@ -446,6 +479,7 @@ inducing point 数 `m` を増やすとvariational familyの表現力は増えま
 - optimization が重くなる
 
 ため、トレードオフがあります。
+
 
 ```text
 m 小
@@ -541,6 +575,7 @@ Mini-batch の確率的勾配を用いる場合、学習率、batch size、誘�
 
 Variational GP の大きな利点は、likelihood term がデータ点ごとに分解できるため minibatch 化しやすいことです。
 
+
 ```text
 100,000 points
     ↓
@@ -573,9 +608,6 @@ Mini-batch 学習では、観測ごとの期待対数尤度をサンプリング
 
 ## 9.26 データ来歴と統計的推論
 
-モデルの初期化に使う観測、実際に ELBO に寄与する観測、予測評価に使う観測は
-区別する必要があります。データ来歴の保持方法はモデル API の責務です。
-
 ---
 
 ## 9.27 Variational approximation と入力構造
@@ -606,11 +638,8 @@ Gaussian likelihood では共役性により Exact GP の事後分布を解析�
 
 ## 9.31 Variational Distribution
 
-代表的な構成では `CholeskyVariationalDistribution` のようなGaussian
-variational distributionを利用します。実際のdefaultは利用中のupstream versionと
-constructor contractを確認します。
-
 これは
+
 
 $$
 q(u)=\mathcal{N}(m,S)
@@ -676,11 +705,13 @@ Variational GP は近似モデルなので、Exact GP と比べて posterior が
 
 しかし BO では acquisition function が
 
+
 $$
 \mu(x)
 $$
 
 だけでなく
+
 
 $$
 \sigma(x)
@@ -720,6 +751,7 @@ posterior evaluation自体のbatchingやmemoryも別途考えます。
 
 前章の SAAS と本章の Variational GP は、解決する問題が異なります。
 
+
 ```text
 SAAS
   → d が大きく、少数変数だけが重要
@@ -730,11 +762,13 @@ Variational GP
 
 したがって
 
+
 ```text
 high d + small n
 ```
 
 なら SAAS が自然ですが、
+
 
 ```text
 low d + large n
@@ -747,6 +781,7 @@ low d + large n
 ## 9.40 high d + large n は難しい
 
 もし
+
 
 ```text
 high dimensional
@@ -777,7 +812,6 @@ Variational GP の利点は、
 
 - GP 的な posterior uncertainty
 - kernel prior
-- BoTorch acquisition function との統合
 
 を維持しやすい点です。
 
@@ -792,6 +826,7 @@ BO では uncertainty quality と optimization performance を含めて比較し
 `m` を選ぶときは、固定ルールより実験的比較が重要です。
 
 例えば
+
 
 ```text
 m = 32
@@ -818,6 +853,7 @@ m = 256
 ## 9.43 inducing point の位置を確認する
 
 低次元なら inducing point を可視化できます。
+
 
 ```text
 training data cloud
@@ -859,6 +895,7 @@ ELBO が安定していない状態で posterior を BO に使わないことが
 
 最低限、
 
+
 ```text
 ELBO / loss
 ```
@@ -883,6 +920,7 @@ loss が下がっていても、BO に必要な uncertainty が良いとは限�
 
 mini-batch size `b` も重要です。
 
+
 ```text
 b 小
   + memory small
@@ -904,6 +942,7 @@ GP では kernel computation もあるため、GPU memory と inducing point 数
 Variational GP でも likelihood を通じて observation noise を学習します。
 
 Gaussian likelihood なら概念的には
+
 
 $$
 y=f(x)+\epsilon,
@@ -934,6 +973,7 @@ $$
 ## 9.50 large-data BO の loop
 
 大規模データで BO を行う場合は、概念的に
+
 
 ```text
 large historical dataset
@@ -977,6 +1017,7 @@ retraining / incremental-style update
 
 Variational GP は近似を導入するため、小規模データで無理に使う必要はありません。
 
+
 ```text
 small n
   → Exact GP
@@ -1011,8 +1052,6 @@ Exact GP が十分速いなら、posterior approximation error を増やさな�
 
 ---
 
-## 9.55 よくある誤解
-
 ### 「Variational GP は高次元用」
 
 主目的は `n` が大きい場合の scalability です。高次元対策とは別です。
@@ -1041,14 +1080,6 @@ Exact GP が十分速いなら、posterior approximation error を増やさな�
 
 ---
 
-## 9.56 実装 API との境界
-
-学習器の生成、ELBO オブジェクトの取得、mini-batch の指定、事後分布取得などの
-ライブラリ固有の呼び出し方は[モデルドキュメント](../models/README.md)で扱います。
-本章では $q(u)$、ELBO、近似誤差、計算量および不確実性の理論を扱います。
-
----
-
 ## 9.57 診断項目
 
 Variational GP を使う場合は少なくとも次を確認します。
@@ -1074,11 +1105,13 @@ Variational GP を使う場合は少なくとも次を確認します。
 
 Variational GP の中心は、
 
+
 $$
 p(f\mid y)
 $$
 
 を直接扱う代わりに inducing variables `u` を導入し、
+
 
 $$
 q(u)=\mathcal{N}(m,S)
@@ -1087,6 +1120,7 @@ $$
 を学習することです。
 
 その objective が
+
 
 $$
 \mathcal{L}_{ELBO}
@@ -1106,6 +1140,7 @@ $$
 
 Variational GP は、**大量データに対して GP の probabilistic surrogate を維持しながら計算量を下げる方法**です。
 
+
 ```text
 Exact GP
   n x n covariance
@@ -1117,9 +1152,6 @@ Variational GP
   ELBO optimization
   mini-batch possible
 ```
-
-具体的なモデル API は [モデルドキュメント](../models/README.md) を参照してください。
-
 特に覚えておきたい点は次の通りです。
 
 1. 高次元問題と大規模データ問題は別
@@ -1144,6 +1176,6 @@ Variational GP
 3. Burt, D. R., Rasmussen, C. E., and van der Wilk, M. (2020).
    Convergence of sparse variational inference in Gaussian process regression.
    *Journal of Machine Learning Research*, 21.
-4. BoTorch `SingleTaskVariationalGP` and GPyTorch `VariationalELBO` documentation.
+4. BoTorch 単一タスク Variational GP and GPyTorch `変分下界（ELBO）` documentation.
 5. [Gaussian Process](02_gaussian_process.md)
 6. [High-dimensional GP](08_high_dimensional_gp.md)

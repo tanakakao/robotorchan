@@ -56,13 +56,7 @@ joint optimization の代わりに、candidate を1点ずつ選択し、
 Wilson et al. は代表的 acquisition に対して、
 batch maximization と greedy construction の関係を理論的に整理しています。
 
-joint と sequential は単なる API option の違いではなく、
-解く inner optimization problem の構造が異なります。
-
 ## 1.6 Sample Average Approximation
-
-BoTorch 系の MC acquisition では、base samples を固定した
-sample-average approximation を candidate input に関して最適化できます。
 
 概念的には
 
@@ -101,9 +95,6 @@ penalty 法では有限の重みだけで厳密な実行可能性が保証され
 局所勾配法、random / quasi-random sampling、進化計算、mixed-variable search、
 trust-region search、hybrid optimization は異なる探索原理です。
 search geometry と数値 optimizer の選択は分離して考えます。
-
-ライブラリ固有の対応状況と API は
-[Optimization guides](../../optimization/README.md) を参照してください。
 
 ## 参考文献
 

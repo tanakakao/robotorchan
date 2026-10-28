@@ -9,10 +9,7 @@ from pathlib import Path
 import pytest
 import torch
 
-GUIDE = (
-    Path(__file__).resolve().parents[2]
-    / "docs/development/theory-implementation/guide/08_high_dimensional_gp.md"
-)
+GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/08_high_dimensional_gp.md"
 
 
 class SaasGuideExampleTests(unittest.TestCase):

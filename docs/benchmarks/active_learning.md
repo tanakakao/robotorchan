@@ -1,35 +1,18 @@
-# Active learning boundary benchmarks
+# Active Learning の境界問題
 
-Phase 20 adds two deterministic binary classification ground truths:
+決定的な二値分類の真値を持つ 2 問題を提供します。
 
-- `circle_boundary`: a closed level-set boundary centered at `(0.5, 0.5)`.
-- `wave_boundary`: a nonlinear sinusoidal decision boundary.
+- `circle_boundary`：中心 `(0.5, 0.5)` の閉じた境界。
+- `wave_boundary`：正弦波による非線形境界。
 
-Both operate on `[0, 1]^2`. Signed boundary margins are available
-from `circle_margin(X)` and `wave_margin(X)`. A nonnegative margin
-defines class 1, including the boundary; negative margins define class 0.
-Use `active_learning_labels(X, boundary="circle"|"wave")` to
-generate canonical 0/1 training labels.
+どちらも `[0, 1]^2` 上で定義し、符号付き margin は `circle_margin(X)`・`wave_margin(X)` で取得します。境界を含む非負 margin は class 1、負は class 0 です。正準の 0/1 label は `active_learning_labels(X, boundary="circle"|"wave")` で生成します。
 
-The existing `BenchmarkProblem` contract requires an objective.
-These problems use a **constant zero dummy objective** and expose
-boundary truth as one outcome constraint. Optimization regret is
-therefore **not an active-learning performance measure**.
+`BenchmarkProblem` が目的を要求するため、定数 0 の dummy objective と、境界真値を表す出力制約 1 本を使います。最適化 regret は Active Learning 性能の指標になりません。
 
-To compare active-learning strategies, use a fixed, independently
-generated reference set and track after each acquisition budget:
+独立に生成して固定した reference 集合を使い、獲得予算ごとに次を記録してください。
 
-- `classification_accuracy(labels, predictive_probabilities)`
-- `brier_score(labels, predictive_probabilities)`
-- `boundary_mae(true_margin, predicted_margin)` when a signed
-  margin predictor is available
+- `classification_accuracy(labels, predictive_probabilities)`：閾値 0.5 の正解率。
+- `brier_score(labels, predictive_probabilities)`：確率の較正・識別を評価する Brier score。
+- `boundary_mae(true_margin, predicted_margin)`：符号付き margin を予測できる場合の平均絶対誤差。幾何的な Hausdorff 距離ではありません。
 
-Classification accuracy uses a 0.5 probability threshold. The Brier
-score evaluates predictive probability calibration and discrimination,
-not just class predictions. Boundary MAE measures margin prediction
-error, not geometric Hausdorff distance.
-
-A random candidate strategy and seeded runner provide a reproducible
-smoke test. This phase does **not** implement model training, predictive
-entropy, BALD, boundary-straddle acquisition, or learning-curve
-orchestration; those need an active-learning experiment runner.
+ランダム候補と seed 付き runner は再現可能な smoke test 用です。この問題定義自体はモデル学習、予測 entropy、BALD、boundary-straddle、学習曲線の実行制御を提供しません。それらには Active Learning 実験用 runner が必要です。

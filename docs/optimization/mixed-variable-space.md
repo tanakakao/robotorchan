@@ -1,18 +1,14 @@
-# Mixed-variable search-space contract
+# 混合変数の探索空間
 
-`MixedVariableSpace` describes variable semantics in public/raw candidate
-coordinates. It is separate from surrogate-model categorical kernels, candidate
-constraints, and numerical optimizer backends.
+`MixedVariableSpace` は公開された元の候補座標で変数の意味を定義します。surrogate のカテゴリカーネル、候補制約、数値最適化 backend とは別の層です。
 
-A dimension has exactly one owner:
+各次元の型は一つだけです。
 
-- dimensions omitted from structured metadata are continuous;
-- `integer_dims` use every integer in `ceil(lower) .. floor(upper)`;
-- `categorical_values` define an explicit finite unordered domain.
+- 構造化 metadata にない次元は連続値。
+- `integer_dims` は `ceil(lower) .. floor(upper)` の全整数。
+- `categorical_values` は明示的な有限・順序なし集合。
 
-The contract rejects duplicate ownership, out-of-range dimensions, integer
-bounds containing no legal integer, empty or duplicate categorical domains,
-non-finite values, and categorical values outside the public bounds.
+型の重複、範囲外の次元、合法整数のない bounds、空・重複カテゴリ、非有限値、bounds 外のカテゴリを拒否します。
 
 ```python
 space = MixedVariableSpace(
@@ -22,29 +18,17 @@ space = MixedVariableSpace(
 )
 ```
 
-## q-batch semantics
 
-Variable metadata is defined per public feature dimension, not per flattened
-q-batch coordinate. An optimizer handling `q > 1` applies the same variable
-semantics independently to each candidate row. Inter-point relationships remain
-the responsibility of `CandidateConstraints`.
+## q-batch の意味
+
+metadata は平坦化した q-batch 座標ではなく公開特徴次元ごとに定義します。q > 1 では各候補行に同じ変数の意味を適用します。点間の関係は `CandidateConstraints` が担います。
 
 ## Fixed features
 
-`validate_fixed_features` checks fixed values in the same public coordinates.
-Integer fixed values must be integral and categorical fixed values must belong
-to the declared category set. This prevents a backend from silently repairing
-an invalid fixed feature.
+`validate_fixed_features` は同じ元座標で固定値を検証します。整数固定値は整数、カテゴリ固定値は宣言集合の要素である必要があり、不正な固定値を backend が暗黙に修復することを防ぎます。
 
-## Responsibility boundary
+## 責務の境界
 
-`MixedVariableSpace` says which values are legal. It does not define how they
-are searched. A GA may use categorical mutation, DE may support only continuous
-and integer subsets, and gradient optimizers may reject all structured
-dimensions. Those choices belong to optimizer capabilities and runtime
-validation.
+この契約は合法な値を定め、探索手法は定めません。カテゴリ変異や構造化次元の扱いは backend の capability と runtime 検証に従います。対応状況は [DE](differential-evolution.md) など各 backend の説明を参照してください。
 
-The contract also does not replace BoTorch `fixed_features_list`.
-`MixedSpaceStrategy` remains the BoTorch-first enumerated mixed path. Later
-integration may derive or validate backend-specific representations from the
-shared variable-space contract without changing BoTorch constraint semantics.
+BoTorch の `fixed_features_list` を置き換えません。`MixedSpaceStrategy` は BoTorch による列挙経路です。共通の変数空間から backend 固有表現を導出・検証する場合も、BoTorch の制約の意味を変えません。

@@ -1,32 +1,20 @@
-# Multiple learned outcome constraints
+# 複数の学習対象となる出力制約
 
-Phase 19 adds two single-objective benchmarks maximizing Yield:
+Yield を最大化する 2 問題です。
 
-- `yield_two_binary_constraints`: two binary Pass/Fail conditions.
-- `yield_binary_continuous_constraints`: one binary Pass/Fail
-  condition and one continuous temperature limit.
+- `yield_two_binary_constraints`：二値 Pass/Fail 条件 2 本。
+- `yield_binary_continuous_constraints`：二値 Pass/Fail と連続温度制限。
 
-The objective is `1-(x0-0.8)^2-(x1-0.2)^2` for `x0,x1 in [0,1]`.
-All truth constraints follow `g(X) >= 0`.
+目的は `1-(x0-0.8)^2-(x1-0.2)^2`、x0・x1 は [0,1]、制約真値は `g(X) >= 0` です。
 
-| Constraint | Truth margin | Interpretation |
+| 制約 | 真値 margin | 意味 |
 | --- | --- | --- |
-| Pass | `x1 - 0.2 - 0.4*x0` | Binary feasibility |
-| Reliability | `0.4 - x0` | Second binary feasibility |
-| Temperature | `0.8 - x1` | Continuous limit |
+| Pass | `x1 - 0.2 - 0.4*x0` | 二値実行可能性 |
+| Reliability | `0.4 - x0` | 第 2 の二値実行可能性 |
+| Temperature | `0.8 - x1` | 連続の上限 |
 
-The first problem uses Pass and Reliability. The second uses Pass and
-Temperature. The constrained optima are respectively
-`(0.4, 0.36)` with Yield `0.8144`, and
-`(0.8/1.16, 0.2+0.4*(0.8/1.16))` with Yield approximately
-`0.911724`.
+第 1 問題は Pass・Reliability を使い、最適点 `(0.4, 0.36)`、Yield `0.8144` です。第 2 は Pass・Temperature を使い、最適点 `(0.8/1.16, 0.2+0.4*(0.8/1.16))`、Yield 約 `0.911724` です。
 
-`binary_constraint_labels(X)` produces canonical 0/1 labels
-for the first problem's two binary constraints. In the mixed problem,
-train the binary Pass model using the **first** label column and a
-regression model on the continuous Temperature margin.
+`binary_constraint_labels(X)` は第 1 問題の 2 列の 0/1 label を返します。混合問題では最初の列で Pass 分類器を、Temperature margin で回帰モデルを学習します。
 
-Signed truth margins support reproducible feasibility metrics; they
-are not classifier training labels. The phase provides benchmark
-fixtures, registry exports and tests, but does not yet train surrogate
-models or evaluate joint predictive feasibility.
+符号付き margin は真値の実行可能性評価用で、分類訓練 label ではありません。fixtures・registry・テストの提供だけでは、surrogate 学習や joint 予測実行可能性を検証したことにはなりません。

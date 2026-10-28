@@ -1,12 +1,8 @@
 # Expected Predictive Information Gain
 
-This guide adds regression EPIG as a robotorchan-specific active-learning acquisition.
-EPIG targets predictive usefulness: a candidate is valuable when observing it is expected to
-reduce uncertainty for predictions drawn from a target input distribution.
+回帰 EPIG は、候補の観測により予測先の入力分布に対する不確実性をどれだけ減らせるかを評価する robotorchan の Active Learning 獲得関数です。
 
-For Gaussian regression, mutual information between a candidate observation and a target
-observation has a closed form. robotorchan averages this quantity over a finite target set,
-optionally using target-distribution weights.
+Gaussian 回帰では候補観測と予測対象観測の相互情報量を閉形式で計算できます。有限の target 集合上で平均し、必要なら対象分布の重みを付けます。
 
 ```python
 from robotorchan.acquisition import ExpectedPredictiveInformationGain
@@ -20,15 +16,9 @@ acqf = ExpectedPredictiveInformationGain(
 scores = acqf(candidate_X)
 ```
 
-The initial implementation intentionally supports q=1 and single-output Gaussian regression.
-It does not pretend to be the classification/ensemble EPIG estimator from the broader active
-learning literature. Batch EPIG requires joint conditioning semantics and belongs in a future
-extension rather than an independent-score approximation.
 
-The target set is part of the acquisition definition. Using a representative deployment/test
-distribution makes EPIG prediction-oriented; using an arbitrary pool changes the question the
-acquisition optimizes.
+現在は q=1 の単一出力 Gaussian 回帰が対象です。文献の分類・ensemble EPIG 推定器とは異なります。batch EPIG には joint conditioning の定義が必要で、独立スコアの近似で代用しません。
 
+target 集合も獲得関数の定義の一部です。運用・テスト分布を代表する集合なら予測重視の選択になりますが、任意のプールを使えば最適化する問い自体が変わります。
 
-For the broader theory and method relationships, see
-[Acquisition theory](../theory/acquisition/09_active_learning.md).
+理論と関連手法は [Active Learning](../theory/acquisition/09_active_learning.md) を参照してください。

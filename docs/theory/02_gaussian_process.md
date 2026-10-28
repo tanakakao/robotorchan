@@ -13,6 +13,7 @@ Gaussian Process（GP）を理解するには、まず「予測値を1つ返す�
 
 1つの実数値 $`z`$ が正規分布に従うことを
 
+
 $$
 z \sim \mathcal{N}(\mu, \sigma^2)
 $$
@@ -24,9 +25,11 @@ $$
 
 複数の値をまとめたベクトルについては、
 
+
 $$
 \mathbf{z} = [z_1, \ldots, z_n]^T
 $$
+
 
 $$
 \mathbf{z} \sim \mathcal{N}(\boldsymbol{\mu}, \Sigma)
@@ -46,6 +49,7 @@ Gaussian Process（GP）は、**未知の関数に対する確率分布を表す
 
 通常の回帰では、例えば
 
+
 $$
 y = w^T x + b
 $$
@@ -53,6 +57,7 @@ $$
 のように有限個のパラメータ $`w`$, $`b`$ を学習します。
 
 一方、GPでは未知関数 $`f(x)`$ に対して
+
 
 $$
 f(x) \sim \mathcal{GP}(m(x), k(x,x'))
@@ -69,11 +74,13 @@ $$
 
 GPの重要な特徴は、任意の有限個の入力点
 
+
 $$
 X = \{x_1,\ldots,x_n\}
 $$
 
 における関数値ベクトル
+
 
 $$
 \mathbf{f} = [f(x_1),\ldots,f(x_n)]^T
@@ -81,15 +88,18 @@ $$
 
 が多変量正規分布に従うことです。
 
+
 $$
 \mathbf{f} \sim \mathcal{N}(\mathbf{m}, K)
 $$
 
 ここで
 
+
 $$
 \mathbf{m}_i = m(x_i)
 $$
+
 
 $$
 K_{ij} = k(x_i,x_j)
@@ -105,6 +115,7 @@ GPでは「近い入力点では似た関数値を取りやすい」といった
 
 このとき、入力点同士の類似度を
 
+
 $$
 k(x,x')
 $$
@@ -114,6 +125,7 @@ $$
 類似度が大きい点では、関数値も強く相関すると仮定します。
 
 つまり GP は、
+
 
 ```text
 入力空間の近さ・類似性
@@ -133,11 +145,13 @@ Kernel
 
 一般に
 
+
 $$
 y_i = f(x_i) + \epsilon_i
 $$
 
 とし、
+
 
 $$
 \epsilon_i \sim \mathcal{N}(0,\sigma_n^2)
@@ -146,6 +160,7 @@ $$
 と仮定します。
 
 このとき観測値 $`y`$ の共分散行列は
+
 
 $$
 K_y = K + \sigma_n^2 I
@@ -161,11 +176,13 @@ $$
 
 GPでは、データを見る前には未知関数に対して事前分布を持ちます。
 
+
 $$
 f \sim \mathcal{GP}(m,k)
 $$
 
 観測データ
+
 
 $$
 \mathcal{D}=\{X,y\}
@@ -174,6 +191,7 @@ $$
 を得ると、ベイズ則により関数の分布を更新します。
 
 更新後の分布を posterior（事後分布）と呼びます。概念的には Bayes 則
+
 
 $$
 p(f \mid \mathcal{D}) \propto p(\mathcal{D} \mid f) p(f)
@@ -190,6 +208,7 @@ BOでは、この posterior の予測平均だけでなく予測不確実性も�
 学習入力を $`X`$、予測したい点を $`x_*`$ とします。
 
 学習点における観測値と、予測点における未知関数値の同時分布は
+
 
 $$
 \begin{bmatrix}
@@ -212,6 +231,7 @@ $$
 
 ここで
 
+
 $$
 k_* =
 \begin{bmatrix}
@@ -220,6 +240,7 @@ k(x_1,x_*)\\
 k(x_n,x_*)
 \end{bmatrix}
 $$
+
 
 $$
 k_{**}=k(x_*,x_*)
@@ -233,6 +254,7 @@ $$
 
 多変量正規分布の条件付き分布から、posterior mean は
 
+
 $$
 \mu(x_*)
 =
@@ -244,6 +266,7 @@ $$
 となります。
 
 posterior variance は
+
 
 $$
 \sigma^2(x_*)
@@ -264,6 +287,7 @@ $$
 
 平均関数を 0 とすれば
 
+
 $$
 \mu(x_*) = k_*^T(K+\sigma_n^2I)^{-1}y
 $$
@@ -273,6 +297,7 @@ $$
 ## 2.7 予測平均の意味
 
 posterior mean
+
 
 $$
 \mu(x_*)
@@ -288,6 +313,7 @@ $$
 
 posterior variance
 
+
 $$
 \sigma^2(x_*)
 $$
@@ -299,11 +325,13 @@ $$
 ここで $`\sigma^2(x_*)`$ は、潜在的な関数値 $`f(x_*)`$ の posterior variance です。
 将来のノイズ付き観測を
 
+
 $$
 y_* = f(x_*) + \epsilon_*
 $$
 
 とすると、独立な Gaussian noise のもとでは
+
 
 $$
 \operatorname{Var}(y_* \mid \mathcal{D})
@@ -321,11 +349,13 @@ posterior covariance は観測入力、kernel、noise などから決まり、
 
 通常の点予測モデルでは
 
+
 ```text
 x → y_hat
 ```
 
 ですが、GPでは
+
 
 ```text
 x → Normal(mu(x), sigma^2(x))
@@ -349,7 +379,7 @@ x → Normal(mu(x), sigma^2(x))
 そのため実務では、
 
 - ノイズをモデルに推定させる
-- 既知の測定分散 `train_Yvar` を与える
+- 既知の測定分散 `既知の観測分散` を与える
 
 といった扱いが重要です。
 
@@ -358,6 +388,7 @@ x → Normal(mu(x), sigma^2(x))
 Kernel には lengthscale や outputscale などの hyperparameter があります。
 
 例えば RBF kernel では
+
 
 $$
 k(x,x')
@@ -385,6 +416,7 @@ Exact GP では hyperparameter を Marginal Log Likelihood（MLL）最大化に�
 
 観測値 $`y`$ の周辺尤度は
 
+
 $$
 p(y\mid X,\theta)
 =
@@ -394,6 +426,7 @@ $$
 です。
 
 その対数は
+
 
 $$
 \log p(y\mid X,\theta)
@@ -418,6 +451,7 @@ $$
 
 実装上は、
 
+
 $$
 (K+\sigma_n^2I)^{-1}
 $$
@@ -427,11 +461,13 @@ $$
 密な $`n \times n`$ 共分散行列を直接扱う標準的な Exact GP では、
 Cholesky 分解が主要な計算になります。その代表的な計算量は概ね
 
+
 $$
 \mathcal{O}(n^3)
 $$
 
 メモリ量は
+
 
 $$
 \mathcal{O}(n^2)
@@ -446,6 +482,7 @@ $$
 ## 2.13 ARD
 
 入力次元ごとに異なる lengthscale を持たせることを Automatic Relevance Determination（ARD）と呼びます。
+
 
 $$
 k(x,x')
@@ -479,6 +516,7 @@ lengthscale、outputscale、noise level などの有限個の hyperparameter は
 単一出力 GP はスカラー値の潜在関数 \\(f(x)\\) に共分散
 \\(k(x,x')\\) を置きます。複数出力の場合は出力添字 \\(t\\) を導入し、
 
+
 $$
 \\operatorname{Cov}(f_t(x),f_{t'}(x'))
 = k((x,t),(x',t'))
@@ -488,11 +526,6 @@ $$
 異なる出力間の共分散はゼロです。一方、MultiTask GP では出力間の相関を
 利用して情報共有できます。詳しくは
 [Multi-task / Multi-output](07_multitask_multioutput.md) を参照してください。
-
-モデルの生成、学習、事後分布取得の API は
-[モデルドキュメント](../models/README.md) に記載します。
-
-## 2.17 GPの強みと弱み
 
 ### 強み
 
@@ -511,6 +544,7 @@ $$
 ## 2.18 この章で覚えておくこと
 
 最初は次の流れを押さえると、GPの全体像を見失いにくくなります。
+
 
 ~~~text
 入力点

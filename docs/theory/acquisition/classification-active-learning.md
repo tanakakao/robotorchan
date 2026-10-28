@@ -1,56 +1,29 @@
-# Classification Active Learning
+# 分類の Active Learning
 
-Classification acquisitions keep latent-function uncertainty, class-probability uncertainty,
-and predictive label uncertainty separate.
+分類では、潜在関数、class 確率、予測 label の不確実性を分けます。同じ曖昧な label 予測でも、観測過程のノイズが大きい場合と、学習データ不足でモデルが不確かな場合は異なります。
 
-- `PredictiveEntropy` scores posterior-predictive class entropy.
-- `MarginUncertainty` scores ambiguity between the two most probable classes.
-- `ProbabilityVariance` estimates posterior variance of class probabilities from samples.
-- `BALD` estimates mutual information between the predicted label and latent uncertainty.
-- `LatentStraddle` is binary-only and scores uncertainty around the latent boundary `f(x) = 0`.
+## 主な基準
 
-All five acquisitions currently support `q=1`. The probability-based acquisitions use the
-common classification prediction contract so they can extend to multiclass models without
-hard-coding Bernoulli labels. `LatentStraddle` remains explicitly binary because its zero
-latent boundary has binary-classification semantics.
+- 予測 entropy：平均した予測 class 分布の曖昧さを測ります。
+- Margin：最も確率の高い 2 class の差が小さい点を優先します。
+- 確率分散：モデル・パラメータの不確実性に由来する class 確率の変動を測ります。
+- BALD：予測 label と潜在の不確実性の相互情報量です。予測 entropy から条件付き entropy の期待値を引きます。
+- 潜在境界の straddle：二値問題で潜在応答が 0 を横切る境界付近を、不確実性も含めて評価します。
 
+周辺の予測分散や class 確率だけでは、epistemic・aleatoric 成分を一意に分離できません。必要な確率構造を持たないモデルで BALD を計算したことにしてはいけません。
 
-## Ensemble classification
+## Ensemble
 
-Classification ensembles use the same acquisition classes through the probability-space model
-contract. No ensemble-specific acquisition wrapper is required.
+メンバーの予測確率を重み付き平均すると予測分布が得られます。BALD 型の差は、その予測 entropy とメンバーごとの entropy の重み付き期待値から計算します。重みが事後モデル確率なら Bayesian model averaging の解釈に対応します。任意の経験 ensemble の不一致が較正された Bayesian 不確実性になるわけではありません。
 
-- `PredictiveEntropy` needs only the ensemble predictive mean from `predict_proba(X)`.
-- `MarginUncertainty` needs only the predictive class-probability vector.
-- `ProbabilityVariance` uses between-member probability variance.
-- `BALD` uses predictive entropy minus weighted expected member entropy.
+異種モデル間では共通の潜在関数が存在するとは限りません。class 確率空間で比較できても、潜在 0 境界を同じ意味で扱えるとは仮定しません。
 
-For weighted ensembles, all four scores inherit the normalized model weights from the
-`ClassificationEnsemblePosterior`. Thus Bayesian model averaging weights, when supplied as
-posterior model probabilities, also propagate into active-learning scores.
+## 較正と意思決定
 
-`LatentStraddle` is intentionally excluded from heterogeneous ensembles because different
-members need not share a latent function or even a latent probabilistic representation.
+温度 scaling などの事後較正は class 確率を変えます。entropy・margin・確率 sample を使う基準もそれに応じて変わりますが、確率の較正自体が潜在 GP の事後分布を更新するわけではありません。
 
+較正の品質は学習から独立した保留データで確認します。NLL・Brier・ECE・MCE は診断指標であり、獲得関数とは役割が異なります。較正した確率を BO の実行可能性に使う場合も同様です。
 
-## Calibration and acquisition semantics
+## Batch への注意
 
-Post-hoc probability calibration composes with probability-space classification acquisitions through
-the existing prediction contract. A `CalibratedBinaryClassifier` therefore changes the
-probabilities consumed by predictive entropy and margin uncertainty, and it calibrates posterior
-probability samples before probability variance and BALD are computed.
-
-The same rule applies to classifier-backed feasibility in Bayesian optimization:
-`ClassificationProbabilityOfFeasibility` consumes `predict_proba`, so a calibrated classifier
-produces calibrated feasibility probabilities without a separate calibration-specific acquisition
-wrapper. The calibration transform remains differentiable for temperature scaling, preserving
-gradient-based candidate optimization.
-
-`LatentStraddle` is intentionally different. It operates on the latent GP decision boundary and
-therefore delegates to the unchanged latent posterior. Post-hoc probability calibration does not
-change its score. This distinction prevents probability calibration from being misrepresented as a
-change to the latent GP posterior.
-
-Calibration quality should be checked on held-out data before calibrated probabilities are used for
-BO constraints or active-learning decisions. NLL, Brier score, ECE, and MCE are diagnostics rather
-than acquisition functions.
+点ごとのスコア上位を q 個取ることと、q 点の joint な情報利得を最適化することは異なります。batch の基準には候補間の依存と joint conditioning の定義が必要です。

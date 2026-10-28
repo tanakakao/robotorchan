@@ -101,9 +101,9 @@ candidates, score = optimize_acqf(
 
 ## 6. 対応範囲と検証
 
-- 公開API: [Acquisition architecture](../development/acquisition-architecture.md)
+- 公開API: [Acquisition architecture](../../docs-internal/architecture/acquisition-architecture.md)
 - モデル学習: [Training API](../development/training_api.md)
-- 獲得関数の対応範囲: [Acquisition integration](acquisition-integration.md)
+- 獲得関数の対応範囲: [Acquisition integration](../../docs-internal/contracts/optimization/acquisition-integration.md)
 - Optimizer: [Public optimizer API](public-optimizer-api.md)
 
 モデル×獲得関数×Optimizerの全組み合わせを動作保証するものではありません。

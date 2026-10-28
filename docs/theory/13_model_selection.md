@@ -2,9 +2,6 @@
 
 この章では、これまで説明してきた Gaussian Process（GP）モデルを、**問題設定から逆算して選ぶ方法**を整理します。
 
-`robotorchan` には標準 GP、Mixed、Multi-Fidelity、Multi-task、Variational、SAAS、Preference、Structured
-Output、Hierarchical、Contextual など多くのモデルがあります。
-
 しかし、モデル数が増えるほど重要になるのは「最も高度なモデルを使うこと」ではなく、
 
 > **データ生成過程に必要な構造だけをモデルへ入れること**
@@ -13,8 +10,8 @@ Output、Hierarchical、Contextual など多くのモデルがあります。
 
 複雑なモデルには、より強い仮定、より多いハイパーパラメータ、より高い計算コストが伴います。
 
-したがって本章では、通常のscalar regressionなら `SingleTaskGP` を比較基準に置きつつ、
-**観測形式や構造が最初から異なる問題を無理にSingleTaskGPへ変換しない**方針を採用します。
+したがって本章では、通常のscalar regressionなら 単一タスク GP を比較基準に置きつつ、
+**観測形式や構造が最初から異なる問題を無理に単一タスク GP へ変換しない**方針を採用します。
 
 ---
 
@@ -22,8 +19,9 @@ Output、Hierarchical、Contextual など多くのモデルがあります。
 
 モデル選択の基本原則は次です。
 
+
 ```text
-まず SingleTaskGP を考える
+まず 単一タスク GP を考える
         ↓
 標準 GP では表現できない構造がある？
         ↓
@@ -47,13 +45,14 @@ Output、Hierarchical、Contextual など多くのモデルがあります。
 - 親変数によって有効な変数が変わる
 - context decomposition がある
 
-この「なぜ標準 GP では足りないのか」を言語化できない場合、まず `SingleTaskGP` をベースラインにするのが安全です。
+この「なぜ標準 GP では足りないのか」を言語化できない場合、まず 単一タスク GP をベースラインにするのが安全です。
 
 ---
 
 ### モデル名より先に7つの質問をする
 
 初心者はモデル一覧から選ぶより、次の順で問題を分解すると判断しやすくなります。
+
 
 ~~~text
 1. 何を観測する？        numeric / comparison
@@ -70,57 +69,56 @@ Output、Hierarchical、Contextual など多くのモデルがあります。
 
 ## 13.2 最重要フローチャート
 
-robotorchan のモデル選択を大きくまとめると次のようになります。
 
 ```text
 観測データは何か？
 │
 ├─ pairwise comparison
-│    └─ PairwiseGP
+│    └─ pairwise GP
 │
 └─ numeric response
      │
      ├─ structured output？
-     │    ├─ tensor / grid → HigherOrderGP
-     │    └─ explicit output coordinate T → LatentKroneckerGP
+     │    ├─ tensor / grid → 高階 GP
+     │    └─ explicit output coordinate T → 潜在座標の Kronecker GP
      │
      └─ scalar / ordinary output
           │
           ├─ conditional hierarchy？
-          │    ├─ single task → HierarchicalConditionalKernelGP
-          │    └─ multi-task → HierarchicalConditionalKernelMultiTaskGP
+          │    ├─ single task → Hierarchical Conditional カーネル GP
+          │    └─ multi-task → Hierarchical Conditional カーネル マルチタスク GP
           │
           ├─ context decomposition？
-          │    ├─ aggregated reward, independent context effect → SACGP
-          │    ├─ aggregated reward, learned context similarity → LCEAGP
-          │    └─ context-wise outputs observed → LCEMGP
+          │    ├─ aggregated reward, independent context effect → context 加法 GP
+          │    ├─ aggregated reward, learned context similarity → 加法的な context embedding GP
+          │    └─ context-wise outputs observed → 乗法的な context embedding GP
           │
           ├─ multi-task / multi-output？
-          │    ├─ independent outputs → ModelListGP
-          │    ├─ same X for all tasks → KroneckerMultiTaskGP
-          │    ├─ different X, same feature structure → MultiTaskGP
-          │    └─ task-specific feature structure → HeterogeneousMTGP
+          │    ├─ independent outputs → 独立モデルの集合
+          │    ├─ same X for all tasks → Kronecker 構造のマルチタスク GP
+          │    ├─ different X, same feature structure → マルチタスク GP
+          │    └─ task-specific feature structure → Heterogeneous MTGP
           │
           ├─ fidelity dimension？
-          │    └─ SingleTaskMultiFidelityGP
+          │    └─ 単一タスク Multi Fidelity GP
           │
           ├─ categorical variable？
-          │    └─ MixedSingleTaskGP
+          │    └─ 混合入力 GP
           │
           └─ continuous ordinary regression
                │
                ├─ high dimensional？
                │    ├─ sparse effective dimension → SAAS
                │    ├─ lighter SAAS approximation → MAP-SAAS
-               │    └─ additive structure → OrthogonalAdditiveGP
+               │    └─ additive structure → 直交加法 GP
                │
                ├─ many observations？
-               │    └─ SingleTaskVariationalGP
+               │    └─ 単一タスク Variational GP
                │
                ├─ strong sparse outliers？
-               │    └─ RobustRelevancePursuitSingleTaskGP
+               │    └─ Robust Relevance Pursuit 単一タスク GP
                │
-               └─ otherwise → SingleTaskGP
+               └─ otherwise → 単一タスク GP
 ```
 
 この順序は絶対ではありません。
@@ -154,6 +152,7 @@ robotorchan のモデル選択を大きくまとめると次のようになり�
 
 例えば、
 
+
 ```text
 A > B
 B > C
@@ -164,8 +163,9 @@ A > C
 
 この場合は
 
+
 ```text
-PairwiseGP
+pairwise GP
 ```
 
 がcomparison likelihoodを持つ候補です。通常のnumeric regressionとは観測modelが異なるため、
@@ -181,6 +181,7 @@ PairwiseGP
 
 ### scalar response
 
+
 ```text
 x → y
 ```
@@ -188,6 +189,7 @@ x → y
 これは通常の GP です。
 
 ### vector / tensor / function-valued response
+
 
 ```text
 x → spectrum
@@ -198,20 +200,22 @@ x → spatial field
 
 この場合、各要素を独立 output として扱うよりも、output 内の相関構造を使う方が自然なことがあります。
 
-### HigherOrderGP
+### 高階 GP
 
 出力そのものが tensor として自然に表現される場合です。
 
+
 ```text
-train_Y
+観測応答
 [n, d1, d2, ...]
 ```
 
 画像、空間分布、多次元グリッドなどに向きます。
 
-### LatentKroneckerGP
+### 潜在座標の Kronecker GP
 
 時間、波長、位置など、出力軸に明示的な座標 `T` が存在する場合です。
+
 
 ```text
 f(x, t)
@@ -233,6 +237,7 @@ f(x, t)
 
 例えば
 
+
 ```text
 temperature: continuous
 pressure: continuous
@@ -245,16 +250,14 @@ catalyst: categorical
 
 この場合、単一taskの基本構成なら
 
+
 ```text
-MixedSingleTaskGP
+混合入力 GP
 ```
-
-が候補です。ただし現行robotorchanには多くのMixed variantがあるため、
-**mixedであることは他の構造を捨てる理由ではありません**。
-
 ### Hierarchical / conditional variable
 
 例えば
+
 
 ```text
 process_type = A
@@ -270,16 +273,18 @@ process_type = B
 
 この場合は
 
+
 ```text
-HierarchicalConditionalKernelGP
+Hierarchical Conditional カーネル GP
 ```
 
 を使います。
 
 複数 task がある場合は
 
+
 ```text
-HierarchicalConditionalKernelMultiTaskGP
+Hierarchical Conditional カーネル マルチタスク GP
 ```
 
 です。
@@ -296,6 +301,7 @@ Mixed と Hierarchical を混同しないことが重要です。
 
 例えば、
 
+
 ```text
 low fidelity simulation
 high fidelity simulation
@@ -306,8 +312,9 @@ experiment
 
 fidelity が「同じ物理量の精度レベル」を意味するなら、
 
+
 ```text
-SingleTaskMultiFidelityGP
+単一タスク Multi Fidelity GP
 ```
 
 が候補になります。
@@ -316,12 +323,14 @@ SingleTaskMultiFidelityGP
 
 ### Multi-Fidelity
 
+
 ```text
 同じ target
 異なる accuracy / cost
 ```
 
 ### Multi-task
+
 
 ```text
 関連するが異なる task
@@ -335,7 +344,7 @@ SingleTaskMultiFidelityGP
 
 ## 13.7 Step 5: 複数 task / output をどう扱うか
 
-複数の response があるからといって、必ず MultiTaskGP を使うわけではありません。
+複数の response があるからといって、必ず マルチタスク GP を使うわけではありません。
 
 最初に確認するのは
 
@@ -345,8 +354,9 @@ SingleTaskMultiFidelityGP
 
 ### 情報共有しない
 
+
 ```text
-ModelListGP
+独立モデルの集合
 ```
 
 が自然です。
@@ -359,15 +369,17 @@ ModelListGP
 
 #### すべての task を同じ X で観測
 
+
 ```text
-train_X: [n, d]
-train_Y: [n, m]
+観測入力: [n, d]
+観測応答: [n, m]
 ```
 
 なら
 
+
 ```text
-KroneckerMultiTaskGP
+Kronecker 構造のマルチタスク GP
 ```
 
 が候補です。
@@ -376,8 +388,9 @@ KroneckerMultiTaskGP
 
 long-format 表現が自然なら
 
+
 ```text
-MultiTaskGP
+マルチタスク GP
 ```
 
 です。
@@ -386,6 +399,7 @@ MultiTaskGP
 
 例えば
 
+
 ```text
 task A: temperature, pressure, flow
 task B: temperature, flow
@@ -393,8 +407,9 @@ task B: temperature, flow
 
 なら
 
+
 ```text
-HeterogeneousMTGP
+Heterogeneous MTGP
 ```
 
 を検討します。
@@ -418,17 +433,19 @@ GP](12_hierarchical_contextual_gp.md) を参照してください。
 
 例えば
 
+
 ```text
 strength
 cost
 ```
 
-を同時最適化する場合、2つの目的を `ModelListGP` で独立にモデル化して qEHVI を使うこともできます。
+を同時最適化する場合、2つの目的を 独立モデルの集合 で独立にモデル化して qEHVI を使うこともできます。
 
 したがって
 
+
 ```text
-Multi-objective = MultiTaskGP
+Multi-objective = マルチタスク GP
 ```
 
 ではありません。
@@ -443,6 +460,7 @@ Multi-objective = MultiTaskGP
 
 例えば
 
+
 ```text
 context A → variables x_A
 context B → variables x_B
@@ -454,6 +472,7 @@ context B → variables x_B
 
 ### aggregated reward のみ観測
 
+
 ```text
 y = y_A + y_B
 ```
@@ -462,21 +481,24 @@ y = y_A + y_B
 
 context 間の明示的な類似性を学習しないなら
 
+
 ```text
-SACGP
+context 加法 GP
 ```
 
 を検討します。
 
 context 間の latent similarity を学習したいなら
 
+
 ```text
-LCEAGP
+加法的な context embedding GP
 ```
 
 です。
 
 ### context-wise reward を個別観測
+
 
 ```text
 y_A
@@ -485,8 +507,9 @@ y_B
 
 をそれぞれ観測できるなら
 
+
 ```text
-LCEMGP
+乗法的な context embedding GP
 ```
 
 が候補です。
@@ -509,8 +532,9 @@ LCEMGP
 
 ### 有効な次元が少ない
 
+
 ```text
-SaasFullyBayesianSingleTaskGP
+SAAS fully Bayesian 単一タスク GP
 ```
 
 が強力な候補です。
@@ -519,22 +543,25 @@ SAAS は多くの変数をほぼ無関係とみなし、少数の active dimensi
 
 ### 高次元 + multi-task
 
+
 ```text
-SaasFullyBayesianMultiTaskGP
+SAAS fully Bayesian マルチタスク GP
 ```
 
 を検討します。
 
 ### Fully Bayesian SAAS が重い
 
+
 ```text
-AdditiveMapSaasSingleTaskGP
-EnsembleMapSaasSingleTaskGP
+Additive Map SAAS 単一タスク GP
+Ensemble Map SAAS 単一タスク GP
 ```
 
 が軽量な候補になります。
 
 ### 加法構造が妥当
+
 
 ```text
 f(x) ≈ f1(x1) + f2(x2) + ...
@@ -542,8 +569,9 @@ f(x) ≈ f1(x1) + f2(x2) + ...
 
 のような構造が期待できるなら
 
+
 ```text
-OrthogonalAdditiveGP
+直交加法 GP
 ```
 
 も候補です。
@@ -586,6 +614,7 @@ Multi-task / contextual model の方が自然かもしれません。
 
 ### PCA
 
+
 ```text
 X → Z
 ```
@@ -614,6 +643,7 @@ Exact GP の主要な制約は、学習点数 `n` に対する計算コストで
 
 標準的な Exact GP では、dense covariance の分解に概ね
 
+
 $$
 O(n^3)
 $$
@@ -622,8 +652,9 @@ $$
 
 データ数が増え、Exact GP がボトルネックになる場合には
 
+
 ```text
-SingleTaskVariationalGP
+単一タスク Variational GP
 ```
 
 を検討します。
@@ -646,6 +677,7 @@ Variational GP は inducing points を使い、完全な covariance matrix を�
 
 これは頻繁に混同されます。
 
+
 ```text
 高次元
 d が大きい
@@ -658,6 +690,7 @@ n が大きい
 
 例えば
 
+
 ```text
 n = 40
 d = 100
@@ -666,6 +699,7 @@ d = 100
 なら Exact GP の `n^3` はそれほど問題でなくても、高次元性による kernel estimation と acquisition optimization が問題になります。
 
 逆に
+
 
 ```text
 n = 10000
@@ -680,9 +714,10 @@ d = 5
 
 「外れ値があるか」だけではなく、**なぜ観測が不確かになるのか**を分けます。
 
+
 ~~~text
 既知・固定の観測noise
-  → train_Yvar / likelihood
+  → 既知の観測分散 / likelihood
 
 入力位置によってnoise varianceが変わる
   → heteroskedastic model
@@ -702,8 +737,6 @@ replicateからnoiseを推定できる
 
 これらは同じ「予測が不安定」という症状でも、仮定しているdata-generating processが異なります。
 
-## 13.16 noise・outlier・regimeを区別する
-
 ### noise
 
 同じ `x` を繰り返しても少し異なる値が出る現象です。
@@ -718,9 +751,10 @@ replicateからnoiseを推定できる
 
 これらはモデル化が異なります。
 
+
 ```text
 noise
-→ likelihood / train_Yvar
+→ likelihood / 既知の観測分散
 
 outlier
 → robust / contaminated model
@@ -741,29 +775,33 @@ regime
 
 モデル選択は数学だけでなく、データ shape を見るとかなり整理できます。
 
-### SingleTaskGP
+### 単一タスク GP
+
 
 ```text
-train_X: [n, d]
-train_Y: [n, 1]
+観測入力: [n, d]
+観測応答: [n, 1]
 ```
 
-### KroneckerMultiTaskGP
+### Kronecker 構造のマルチタスク GP
+
 
 ```text
-train_X: [n, d]
-train_Y: [n, m]
+観測入力: [n, d]
+観測応答: [n, m]
 ```
 
-### MultiTaskGP
+### マルチタスク GP
+
 
 ```text
-train_X: [n, d + 1]
+観測入力: [n, d + 1]
                  ↑ task feature
-train_Y: [n, 1]
+観測応答: [n, 1]
 ```
 
-### ModelListGP
+### 独立モデルの集合
+
 
 ```text
 model_1(X1, Y1)
@@ -771,32 +809,36 @@ model_2(X2, Y2)
 ...
 ```
 
-### HeterogeneousMTGP
+### Heterogeneous MTGP
+
 
 ```text
-train_Xs = [X_task0, X_task1, ...]
+観測入力s = [X_task0, X_task1, ...]
 ```
 
 で、各 `X_task` の列数が異なり得ます。
 
-### HigherOrderGP
+### 高階 GP
+
 
 ```text
-train_X: [n, d]
-train_Y: [n, d1, d2, ...]
+観測入力: [n, d]
+観測応答: [n, d1, d2, ...]
 ```
 
-### LatentKroneckerGP
+### 潜在座標の Kronecker GP
+
 
 ```text
-train_X
+観測入力
 train_T
-train_Y
+観測応答
 ```
 
 です。
 
-### PairwiseGP
+### pairwise GP
+
 
 ```text
 datapoints: [n, d]
@@ -807,9 +849,8 @@ shape を先に整理すると、候補モデルをかなり絞れます。
 
 ---
 
-## 13.18 代表的な材料・製造問題への対応
-
 ### 通常のプロセス条件最適化
+
 
 ```text
 温度
@@ -821,11 +862,13 @@ shape を先に整理すると、候補モデルをかなり絞れます。
 
 基本候補:
 
+
 ```text
-SingleTaskGP
+単一タスク GP
 ```
 
 ### 製法カテゴリを含む
+
 
 ```text
 温度
@@ -836,11 +879,13 @@ SingleTaskGP
 
 基本候補:
 
+
 ```text
-MixedSingleTaskGP
+混合入力 GP
 ```
 
 ### 製法ごとに有効条件が違う
+
 
 ```text
 製法A → 温度
@@ -849,90 +894,102 @@ MixedSingleTaskGP
 
 基本候補:
 
+
 ```text
-HierarchicalConditionalKernelGP
+Hierarchical Conditional カーネル GP
 ```
 
 ### 簡易シミュレーションと高精度シミュレーション
 
+
 ```text
-SingleTaskMultiFidelityGP
+単一タスク Multi Fidelity GP
 ```
 
 ### 複数装置間で情報共有
 
 入力定義が同じなら
 
+
 ```text
-MultiTaskGP
+マルチタスク GP
 ```
 
 ### 装置ごとにセンサー項目が異なる
 
+
 ```text
-HeterogeneousMTGP
+Heterogeneous MTGP
 ```
 
 ### 官能評価
 
+
 ```text
-PairwiseGP
+pairwise GP
 ```
 
 ### スペクトル全体を予測
 
 波長座標を明示したいなら
 
+
 ```text
-LatentKroneckerGP
+潜在座標の Kronecker GP
 ```
 
 ### 画像 response
 
+
 ```text
-HigherOrderGP
+高階 GP
 ```
 
 ### 多数のプロセス変数から少数だけが効く
 
+
 ```text
-SaasFullyBayesianSingleTaskGP
+SAAS fully Bayesian 単一タスク GP
 ```
 
 ### 大量の履歴データ
 
+
 ```text
-SingleTaskVariationalGP
+単一タスク Variational GP
 ```
 
 ---
 
 ## 13.19 ベースライン比較を必ず行う
 
-特殊モデルを採用するときも、可能なら `SingleTaskGP` と比較することを推奨します。
+特殊モデルを採用するときも、可能なら 単一タスク GP と比較することを推奨します。
 
 例えば SAAS を使うなら
 
+
 ```text
-SingleTaskGP
+単一タスク GP
 vs
 SAAS
 ```
 
 Multi-task を使うなら
 
+
 ```text
-independent SingleTaskGP / ModelListGP
+independent 単一タスク GP / 独立モデルの集合
 vs
-MultiTaskGP
+マルチタスク GP
 ```
 
 Contextual model なら
 
+
 ```text
 ordinary GP
 vs
-SACGP / LCEAGP
+context 加法 GP / 加法的な context embedding GP
 ```
 
 を比較します。
@@ -978,6 +1035,7 @@ BO ではさらに
 
 したがって
 
+
 ```text
 offline CV
 +
@@ -994,6 +1052,7 @@ BO では posterior mean だけでなく posterior uncertainty が acquisition �
 
 そのため
 
+
 ```text
 予測平均が合っている
 ```
@@ -1001,6 +1060,7 @@ BO では posterior mean だけでなく posterior uncertainty が acquisition �
 だけでは不十分です。
 
 例えば UCB なら
+
 
 $$
 \alpha(x) = \mu(x) + \beta^{1/2}\sigma(x)
@@ -1048,23 +1108,26 @@ Surrogate model と acquisition function は別の選択問題です。
 
 例えば
 
+
 ```text
-SingleTaskGP + LogEI
-SingleTaskGP + UCB
-SingleTaskGP + KG
+単一タスク GP + LogEI
+単一タスク GP + UCB
+単一タスク GP + KG
 ```
 
 は同じ model でも探索方針が異なります。
 
 Multi-objective では
 
+
 ```text
-ModelListGP + qLogEHVI
+独立モデルの集合 + qLogEHVI
 ```
 
 のような組み合わせもあります。
 
 したがって
+
 
 ```text
 モデル選択
@@ -1086,13 +1149,15 @@ posterior を使って次点をどう選ぶか
 
 例えば Mixed variable では
 
+
 ```text
-MixedSingleTaskGP
+混合入力 GP
 ```
 
 は surrogate model です。
 
 一方でカテゴリ組合せをどう探索するかは
+
 
 ```text
 optimize_acqf_mixed
@@ -1101,6 +1166,7 @@ optimize_acqf_mixed
 など acquisition optimizer 側の問題です。
 
 Hierarchical model でも同様に、conditional kernel が正しくても無効な candidate を生成してよいわけではありません。
+
 
 ```text
 surrogate model
@@ -1123,8 +1189,6 @@ acquisition optimization
 - candidate optimizer が探索空間を扱えるか
 - pending observations を扱えるか
 
-robotorchan では model / acquisition / objective / optimizer を分離しているため、これらを個別に検証します。
-
 ---
 
 ## 13.27 学習方法から見た分類
@@ -1133,34 +1197,32 @@ robotorchan では model / acquisition / objective / optimizer を分離して�
 
 ### Exact MLL
 
-多くの Exact GP wrapper は
-
-周辺尤度を最大化してカーネルなどのハイパーパラメータを推定します。
-具体的な学習APIは各モデルの実装ガイドを参照してください。
-
-で学習します。
+Gaussian 観測モデルでは、対数周辺尤度を最大化して hyperparameter を学習できます。
 
 ### Variational ELBO
 
+
 ```text
-SingleTaskVariationalGP
+単一タスク Variational GP
 ```
 
-は `VariationalELBO` を使います。
+は `変分下界（ELBO）` を使います。
 
 ### NUTS
 
+
 ```text
-SaasFullyBayesianSingleTaskGP
-SaasFullyBayesianMultiTaskGP
+SAAS fully Bayesian 単一タスク GP
+SAAS fully Bayesian マルチタスク GP
 ```
 
 は Fully Bayesian inference を使います。
 
 ### Laplace approximation
 
+
 ```text
-PairwiseGP
+pairwise GP
 ```
 
 では preference likelihood に対して Laplace approximation が使われます。
@@ -1171,17 +1233,15 @@ PairwiseGP
 
 ### Registryは「自動的な正解表」ではない
 
-現行robotorchanのmodel registryには、mixed、multitask、inference方式、
-high-dimensional strategy、robustness、multi-fidelity、structured-output、
-preference、posterior sampling、fantasizationなどのcapability metadataがあります。
-
 これは候補を絞るために有用ですが、
+
 
 ~~~text
 capability = その操作・構造をサポートする
 ~~~
 
 であって、
+
 
 ~~~text
 capability = その問題に最適なモデルである
@@ -1194,6 +1254,7 @@ capability = その問題に最適なモデルである
 ## 13.28 診断フロー
 
 モデルを学習した後は次の順で確認します。
+
 
 ```text
 1. tensor shape は正しいか
@@ -1215,11 +1276,13 @@ capability = その問題に最適なモデルである
 
 例えば
 
+
 ```text
 material = 0, 1, 2
 ```
 
 として RBF kernel に入れると、
+
 
 ```text
 distance(0,1) < distance(0,2)
@@ -1229,27 +1292,29 @@ distance(0,1) < distance(0,2)
 
 名義カテゴリなら通常これは不適切です。
 
+
 ```text
-MixedSingleTaskGP
+混合入力 GP
 ```
 
 を検討します。
 
 ---
 
-## 13.30 よくある誤選択 2: multi-objective だから MultiTaskGP
+## 13.30 よくある誤選択 2: multi-objective だから マルチタスク GP
 
 多目的 BO で目的間相関を必ず学習する必要はありません。
 
 目的ごとに独立 surrogate を持つ
 
+
 ```text
-ModelListGP
+独立モデルの集合
 ```
 
 は非常に自然な選択です。
 
-MultiTaskGP は「複数目的だから」ではなく
+マルチタスク GP は「複数目的だから」ではなく
 
 > task 間の covariance を利用したい
 
@@ -1262,6 +1327,7 @@ MultiTaskGP は「複数目的だから」ではなく
 Variational GP が主に解決するのは `n` の大きさです。
 
 入力次元 `d` の大きさを直接解決するモデルではありません。
+
 
 ```text
 d large → SAAS / additive / dimension reduction
@@ -1284,12 +1350,13 @@ fidelity は通常、同じ target に対する近似精度や評価コストの
 
 ## 13.33 よくある誤選択 5: 欠損 feature を 0 埋めして通常 GP
 
-Task A には存在しない feature を 0 埋めして通常 MultiTaskGP へ入れると、0 という値に物理的意味があるかのように扱われる可能性があります。
+Task A には存在しない feature を 0 埋めして通常 マルチタスク GP へ入れると、0 という値に物理的意味があるかのように扱われる可能性があります。
 
 Task ごとに feature structure が本質的に違う場合は
 
+
 ```text
-HeterogeneousMTGP
+Heterogeneous MTGP
 ```
 
 を検討します。
@@ -1302,8 +1369,9 @@ HeterogeneousMTGP
 
 このような場合に
 
+
 ```text
-HierarchicalConditionalKernelGP
+Hierarchical Conditional カーネル GP
 ```
 
 が有効です。
@@ -1318,8 +1386,9 @@ HierarchicalConditionalKernelGP
 
 波長という明示的座標があるなら
 
+
 ```text
-LatentKroneckerGP
+潜在座標の Kronecker GP
 ```
 
 を検討できます。
@@ -1330,27 +1399,27 @@ LatentKroneckerGP
 
 | 問題構造 | 基本候補 | 主な理由 |
 |---|---|---|
-| 通常の連続単一出力 | `SingleTaskGP` | 基準モデル |
-| 連続 + categorical | `MixedSingleTaskGP` | カテゴリ距離を適切に扱う |
-| fidelity | `SingleTaskMultiFidelityGP` | cost / fidelity correlation |
-| related tasks | `MultiTaskGP` | task covariance |
-| same X for every task | `KroneckerMultiTaskGP` | block / Kronecker structure |
-| independent outputs | `ModelListGP` | 不要な相関を仮定しない |
-| task-specific features | `HeterogeneousMTGP` | heterogeneous feature spaces |
-| many observations | `SingleTaskVariationalGP` | inducing-point approximation |
-| preference comparisons | `PairwiseGP` | latent utility model |
-| high-d sparse effects | `SaasFullyBayesianSingleTaskGP` | sparse effective dimension |
-| high-d multitask | `SaasFullyBayesianMultiTaskGP` | SAAS + task sharing |
+| 通常の連続単一出力 | 単一タスク GP | 基準モデル |
+| 連続 + categorical | 混合入力 GP | カテゴリ距離を適切に扱う |
+| fidelity | 単一タスク Multi Fidelity GP | cost / fidelity correlation |
+| related tasks | マルチタスク GP | task covariance |
+| same X for every task | Kronecker 構造のマルチタスク GP | block / Kronecker structure |
+| independent outputs | 独立モデルの集合 | 不要な相関を仮定しない |
+| task-specific features | Heterogeneous MTGP | heterogeneous feature spaces |
+| many observations | 単一タスク Variational GP | inducing-point approximation |
+| preference comparisons | pairwise GP | latent utility model |
+| high-d sparse effects | SAAS fully Bayesian 単一タスク GP | sparse effective dimension |
+| high-d multitask | SAAS fully Bayesian マルチタスク GP | SAAS + task sharing |
 | lighter SAAS | MAP-SAAS models | NUTS を避ける |
-| additive high-d | `OrthogonalAdditiveGP` | additive structure |
-| sparse outliers | `RobustRelevancePursuitSingleTaskGP` | robust modeling |
-| tensor output | `HigherOrderGP` | output tensor covariance |
-| explicit output axis | `LatentKroneckerGP` | X × T product space |
-| conditional variables | `HierarchicalConditionalKernelGP` | active dimensions |
+| additive high-d | 直交加法 GP | additive structure |
+| sparse outliers | Robust Relevance Pursuit 単一タスク GP | robust modeling |
+| tensor output | 高階 GP | output tensor covariance |
+| explicit output axis | 潜在座標の Kronecker GP | X × T product space |
+| conditional variables | Hierarchical Conditional カーネル GP | active dimensions |
 | conditional + multitask | hierarchical conditional multi-task GP | hierarchy + task covariance |
-| contextual additive reward | `SACGP` | context decomposition |
-| latent context similarity | `LCEAGP` | learned embeddings |
-| context-wise outputs | `LCEMGP` | contextual multi-output |
+| contextual additive reward | context 加法 GP | context decomposition |
+| latent context similarity | 加法的な context embedding GP | learned embeddings |
+| context-wise outputs | 乗法的な context embedding GP | contextual multi-output |
 
 ---
 
@@ -1358,13 +1427,14 @@ LatentKroneckerGP
 
 非常に粗い分類ですが、実務上は次の感覚を持っておくと便利です。
 
+
 ```text
 軽い
 │
-├─ SingleTaskGP
-├─ MixedSingleTaskGP
-├─ ModelListGP（小規模）
-├─ MultiTaskGP（小規模）
+├─ 単一タスク GP
+├─ 混合入力 GP
+├─ 独立モデルの集合（小規模）
+├─ マルチタスク GP（小規模）
 │
 ├─ structured / hierarchical / contextual exact models
 │
@@ -1399,6 +1469,7 @@ BO では通常、データが少ない状態から始まります。
 
 そのため domain knowledge に基づいて
 
+
 ```text
 本当に task correlation があるか
 本当に additive か
@@ -1416,15 +1487,17 @@ BO では通常、データが少ない状態から始まります。
 
 例えば探索初期は
 
+
 ```text
-SingleTaskGP
+単一タスク GP
 ```
 
 で始め、データが増えてから
 
+
 ```text
 SAAS
-MultiTaskGP
+マルチタスク GP
 VariationalGP
 ```
 
@@ -1436,16 +1509,15 @@ VariationalGP
 
 ## 13.40 自動モデル選択について
 
-robotorchan の将来的な拡張として、自動モデル候補生成も考えられます。
-
 例えばデータ schema から
+
 
 ```text
 categorical columns detected
-→ MixedSingleTaskGP candidate
+→ 混合入力 GP candidate
 
 task feature exists
-→ MultiTaskGP candidate
+→ マルチタスク GP candidate
 
 very high d
 → SAAS candidate
@@ -1462,43 +1534,8 @@ large n
 
 そのため自動化するなら
 
-```text
-schema-based candidate suggestion
-+
-user-defined semantic metadata
-```
 
 が現実的です。
-
----
-
-## 13.41 robotorchan で推奨する実務フロー
-
-モデル選択から BO 実行までをまとめると次の流れです。
-
-```text
-1. optimization target を定義
-        ↓
-2. input / output schema を整理
-        ↓
-3. task / fidelity / context / hierarchy を整理
-        ↓
-4. 最小構造の surrogate を選ぶ
-        ↓
-5. baseline model と比較
-        ↓
-6. posterior diagnostics
-        ↓
-7. acquisition function を選ぶ
-        ↓
-8. candidate optimizer を選ぶ
-        ↓
-9. candidate validity を確認
-        ↓
-10. sequential benchmark / real experiment
-```
-
-この順序で考えると、モデルと探索ロジックが混ざりにくくなります。
 
 ---
 
@@ -1551,17 +1588,20 @@ user-defined semantic metadata
 
 最後に最も重要な判断基準をもう一度示します。
 
+
 ```text
-SingleTaskGP で十分なら SingleTaskGP を使う
+単一タスク GP で十分なら 単一タスク GP を使う
 ```
 
 特殊モデルは
+
 
 ```text
 「使えるから使う」
 ```
 
 のではなく
+
 
 ```text
 「標準 GP では表現できない構造があるから使う」
@@ -1575,66 +1615,65 @@ SingleTaskGP で十分なら SingleTaskGP を使う
 
 ## 13.44 この章で覚えておくこと
 
+
 ```text
 普通の連続回帰
-→ SingleTaskGP
+→ 単一タスク GP
 
 categorical
-→ MixedSingleTaskGP
+→ 混合入力 GP
 
 fidelity
-→ SingleTaskMultiFidelityGP
+→ 単一タスク Multi Fidelity GP
 
 related tasks
-→ MultiTaskGP / KroneckerMultiTaskGP
+→ マルチタスク GP / Kronecker 構造のマルチタスク GP
 
 independent outputs
-→ ModelListGP
+→ 独立モデルの集合
 
 task-specific feature spaces
-→ HeterogeneousMTGP
+→ Heterogeneous MTGP
 
 large n
-→ SingleTaskVariationalGP
+→ 単一タスク Variational GP
 
 preference
-→ PairwiseGP
+→ pairwise GP
 
 high d + sparse effective dimensions
 → SAAS / MAP-SAAS
 
 additive high-dimensional structure
-→ OrthogonalAdditiveGP
+→ 直交加法 GP
 
 sparse outliers
-→ RobustRelevancePursuitSingleTaskGP
+→ Robust Relevance Pursuit 単一タスク GP
 
 tensor output
-→ HigherOrderGP
+→ 高階 GP
 
 explicit output coordinates
-→ LatentKroneckerGP
+→ 潜在座標の Kronecker GP
 
 conditional active variables
-→ HierarchicalConditionalKernelGP
+→ Hierarchical Conditional カーネル GP
 
 conditional + multi-task
-→ HierarchicalConditionalKernelMultiTaskGP
+→ Hierarchical Conditional カーネル マルチタスク GP
 
 context decomposition + aggregated reward
-→ SACGP / LCEAGP
+→ context 加法 GP / 加法的な context embedding GP
 
 context-wise output
-→ LCEMGP
+→ 乗法的な context embedding GP
 ```
-
-ここまでの理論章と [`docs/models.md`](../models.md)、実行 Notebook を併用することで、理論・API・実装例を相互に参照しながらモデルを選択できます。
-
 ---
 
 ### 最終的な考え方
 
 モデル選択は「最も高機能なclassを探す作業」ではありません。
+
 
 ~~~text
 観測の意味
@@ -1652,14 +1691,7 @@ validation
 
 という順に絞ります。
 
-複数の特殊構造が同時にある場合は、registryのcapabilityを使って**交差する候補群**を確認し、
-その後に実装contractとvalidationを確認します。モデル名から機能を推測しないことも重要です。
-
-## 次に読むもの
-
-- 実際のモデル API と使い所: [`docs/models.md`](../models.md)
-- 実行可能な例: [`examples/notebooks/`](../../examples/notebooks/)
-- BoTorch / robotorchan 内部設計: [`docs/development/architecture.md`](../development/architecture.md)
+複数の構造が同時にある場合は、それらの仮定を同時に満たすモデルを考え、予測分布と意思決定基準の適合性を検証します。
 
 本章で理論ガイドの基本的なモデル選択フローは完結します。
 

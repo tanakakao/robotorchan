@@ -2,6 +2,7 @@
 
 ## 5.1 EI / UCBとの違いから理解する
 
+
 ~~~text
 EI / UCB
     次のcandidateで高い目的値を得られそうか
@@ -33,6 +34,7 @@ Active Learning の predictive information gain は別の対象を持つため�
 
 離散確率変数 $`Z`$ の entropy は
 
+
 $$
 H(Z)
 =
@@ -42,6 +44,7 @@ $$
 です。
 
 連続変数では differential entropy
+
 
 $$
 H(Z)
@@ -58,6 +61,7 @@ Entropyはuncertaintyの尺度ですが、acquisitionで重要なのは現在の
 
 未知量 $`Z`$ と候補 $`x`$ で得られる将来観測 $`Y_x`$ の mutual information は
 
+
 $$
 I(Z;Y_x\mid\mathcal D_n)
 =
@@ -73,11 +77,13 @@ $$
 
 これは次のexpected uncertainty reductionです。
 
+
 ~~~text
 観測前のuncertainty - 観測後に残るexpected uncertainty
 ~~~
 
 対称性から
+
 
 $$
 I(Z;Y_x\mid\mathcal D_n)
@@ -95,6 +101,7 @@ $$
 
 最大化問題では、少なくとも次の二つは別のrandom quantityです。
 
+
 ~~~text
 optimizer location x*: どこが最大か
 optimum value f*:       最大値はいくつか
@@ -108,6 +115,7 @@ optimum value f*:       最大値はいくつか
 Entropy Search 系は、最適化問題を「未知の optimum について効率よく学習する問題」として捉えます。
 
 optimizer location を
+
 
 $$
 x^*
@@ -124,6 +132,7 @@ optimum identificationに有益な候補を評価し得ます。
 
 Max-value Entropy Search（MES）は optimizer location $`x^*`$ ではなく、最大値
 
+
 $$
 f^*
 =
@@ -133,6 +142,7 @@ $$
 について得られる情報を最大化します。
 
 概念的には
+
 
 $$
 \alpha_{\mathrm{MES}}(x)
@@ -176,6 +186,7 @@ Information-theoretic acquisition は exploration-oriented に見えますが、
 
 posterior variance は
 
+
 ```text
 その点の関数値がどれだけ不確実か
 ```
@@ -183,6 +194,7 @@ posterior variance は
 を評価します。
 
 MES は
+
 
 ```text
 その観測が optimum value についてどれだけ教えるか
@@ -202,6 +214,7 @@ MES は
 
 候補集合 $`X`$ に対しては
 
+
 $$
 I(Y_X;Z\mid\mathcal D_n)
 $$
@@ -218,6 +231,7 @@ redundancyを表します。
 ## 5.13 MES と Knowledge Gradient の違い
 
 MES と Knowledge Gradient（KG）はどちらも myopic improvement より先を意識しますが、最適化対象は異なります。
+
 
 ```text
 MES
@@ -238,6 +252,7 @@ Active Learning でも mutual information を利用できますが、情報対�
 
 したがって、
 
+
 ```text
 MES
     optimum value が情報対象
@@ -250,24 +265,6 @@ EPIG
 
 EPIG は [Active Learning](09_active_learning.md) で扱います。
 
-## 5.15 BoTorch / robotorchan との対応
-
-BoTorchはMESとGIBBONを含むinformation-theoretic acquisitionを提供しています。
-robotorchanはBoTorch-nativeで利用可能な標準手法を再実装しません。
-
-現在のintegration guideはMES / GIBBONをnative pathとして扱います。一方、robotorchanの
-capability registryはBoTorch acquisition全件のcatalogではなく、MES / GIBBONのentryがないことを
-「利用不可」とは解釈しません。
-
-またinformation-theoretic acquisitionのposterior requirementは手法ごとに確認します。
-「information-theoreticだからPOSTERIOR_SAMPLES」と一括して決めず、optimum-value sampling、
-conditional entropy、joint Gaussian structure等、実際の計算経路が要求するcontractを見ます。
-
-利用上の位置付けは
-[Information-theoretic optimization guide](../../optimization/information_theoretic.md)、
-現在の統合状況は
-[Acquisition integration status](../../optimization/acquisition-integration.md) を参照してください。
-
 ## 5.16 この章で覚えておくこと
 
 - information-theoretic acquisitionでは最初にinformation targetを確認する
@@ -278,11 +275,11 @@ conditional entropy、joint Gaussian structure等、実際の計算経路が要�
 - GIBBONはMESを単純にq点へ並べたものではなくbatch redundancyを考慮する
 - observation noise由来のentropyが高くてもoptimum informationが大きいとは限らない
 - MESとKGはinformation gainとdecision valueという異なる価値基準を持つ
-- registryにentryがないことをBoTorch-native acquisitionの利用不可とは解釈しない
 
 ## 5.17 まとめ
 
 Information-theoretic acquisition を理解するときは、必ず
+
 
 $$
 \text{information about what?}
@@ -301,5 +298,4 @@ MES は optimum value、PES は optimizer location、predictive AL は predictio
   Optimization*. ICML.
 - Moss, H. B. et al. (2021), *GIBBON: General-purpose Information-Based Bayesian
   Optimisation*. JMLR.
-- BoTorch documentation, *Acquisition Functions*, for current native MES and lower-bound
   max-value entropy interfaces.

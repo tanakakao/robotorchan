@@ -1,23 +1,14 @@
-# Engineering-inspired benchmark problems
+# 工学に着想を得た問題
 
-These deterministic design benchmarks exercise physical design tradeoffs
-and outcome constraints using the standard `g(X) >= 0` convention.
-They are **nondimensionalized illustrative engineering models**, not
-validated high-fidelity structural or thermal simulations.
+物理的な設計の trade-off と `g(X) >= 0` の出力制約を調べる決定的問題です。無次元化した説明用モデルであり、検証済みの高精度構造・熱 simulation ではありません。
 
-| Problem | Inputs | Minimized objective | Feasibility conditions |
+| 問題 | 入力 | 最小化目的 | 実行可能条件 |
 | --- | --- | --- | --- |
-| cantilever_beam | beam width b and height h, both 0.2–2 | cross-sectional area b*h | b*h^2 >= 0.2 and b*h^3 >= 0.1 |
-| thermal_management | insulation i (0–2), cooling c (0–1) | i + 2*c^2 | i+c >= 1 and c <= 0.8 |
+| cantilever_beam | 幅 b・高さ h、各 0.2–2 | 断面積 b*h | b*h^2 >= 0.2、b*h^3 >= 0.1 |
+| thermal_management | 断熱 i（0–2）、冷却 c（0–1） | i + 2*c^2 | i+c >= 1、c <= 0.8 |
 
-The cantilever constraints model normalized bending stress and
-deflection limits. The thermal benchmark represents temperature
-reduction versus cooling capacity and operating cost.
+前者は正規化した曲げ応力・たわみ制限、後者は温度低下と冷却能力・運用費用の関係を表します。
 
-Both problems expose two continuous inputs, one minimization objective
-and two deterministic outcome constraints. Known global optimum values
-are intentionally omitted until analytically certified; feasible and
-infeasible reference designs are tested.
+どちらも連続入力 2 個、最小化目的 1 個、決定的な出力制約 2 本です。解析的な認定前の大域最適値は掲載せず、実行可能・違反の参照設計をテストします。
 
-Register with `register_engineering_problems(registry)` and run through
-`run_benchmark` using any compatible candidate generator.
+`register_engineering_problems(registry)` で登録し、互換候補 generator と `run_benchmark` で実行してください。

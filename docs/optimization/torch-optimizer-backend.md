@@ -1,24 +1,12 @@
-# PyTorch acquisition optimizer backend
+# PyTorch backend
 
-robotorchan provides a BoTorch-native PyTorch optimizer path without replacing the
-BoTorch acquisition-function API. The backend calls `botorch.optim.optimize_acqf`
-for restart initialization and candidate selection, while
-`botorch.generation.gen.gen_candidates_torch` performs local optimization.
+BoTorch の獲得関数 API を維持し、restart 初期化と候補選択に `botorch.optim.optimize_acqf`、局所最適化に `botorch.generation.gen.gen_candidates_torch` を使います。
 
-Supported optimizer names are `adam`, `adamw`, and `sgd`. A
-`torch.optim.Optimizer` subclass can also be supplied directly. Adam is the
-default. LBFGS is intentionally not advertised because BoTorch
-`gen_candidates_torch` manages its own closure and stopping loop; treating
-LBFGS as interchangeable would require optimizer-specific semantics and tests.
+`adam`、`adamw`、`sgd` または `torch.optim.Optimizer` の subclass を指定できます。既定は Adam です。BoTorch が closure と停止ループを管理するため、固有の意味とテストが必要な LBFGS は対応対象としません。
 
-The backend supports continuous box bounds, q-batches, fixed features, tensor
-device/dtype preservation, and GPU execution when the acquisition function and
-tensors are on GPU. Candidate-space constraints are not supported by this backend and are rejected
-explicitly rather than approximated with a silent penalty. Use a compatible
-backend for constrained candidate search; see
-[Candidate constraints](candidate-constraints.md).
+連続 box、q-batch、fixed features、device・dtype の保持に対応します。獲得関数と Tensor が GPU 上にあれば GPU で実行できます。候補制約は未対応として拒否し、暗黙の罰則で近似しません。制約付き探索には[対応する backend](candidate-constraints.md)を使ってください。
 
-Example:
+## 使用例
 
 ```python
 from robotorchan.optim.backends import optimize_acqf_torch

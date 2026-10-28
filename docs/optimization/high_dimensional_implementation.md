@@ -1,6 +1,6 @@
 # High-dimensional optimization: implementation notes
 
-This guide preserves robotorchan-specific search strategy contracts separated from [high-dimensional optimization theory](../theory/optimization/09_high_dimensional.md).
+[高次元最適化の理論](../theory/optimization/09_high_dimensional.md)から分離した、robotorchan の探索戦略固有の条件を説明します。
 
 ## 9.13 BAxUSState
 

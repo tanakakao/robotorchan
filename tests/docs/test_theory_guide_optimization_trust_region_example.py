@@ -6,10 +6,7 @@ import re
 import unittest
 from pathlib import Path
 
-GUIDE = (
-    Path(__file__).resolve().parents[2]
-    / "docs/development/theory-implementation/guide/optimization/10_trust_region.md"
-)
+GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/optimization/10_trust_region.md"
 
 
 class TrustRegionGuideTests(unittest.TestCase):

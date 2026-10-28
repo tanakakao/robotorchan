@@ -9,10 +9,7 @@ from pathlib import Path
 import torch
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-GUIDE = (
-    Path(__file__).resolve().parents[2]
-    / "docs/development/theory-implementation/guide/12_hierarchical_contextual_gp.md"
-)
+GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/12_hierarchical_contextual_gp.md"
 
 
 class ContextualGuideExampleTests(unittest.TestCase):

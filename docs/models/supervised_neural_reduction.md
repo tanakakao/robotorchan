@@ -1,48 +1,13 @@
-# Supervised neural input reduction
+# 教師ありニューラル次元削減
 
-Phase 6 adds `SupervisedAutoEncoderInputReducer`, a supervised nonlinear input reducer for high-dimensional continuous inputs.
+`SupervisedAutoEncoderInputReducer` は入力再構成と補助的な出力予測の損失を合わせ、教師ありの非線形表現を学習します。出力を使わない AE と異なり、GP の周辺尤度で encoder を同時学習する joint DKL とも異なります。
 
-## Objective
+## 利用方法と制約
 
-The reducer learns a latent representation `Z = encoder(X)` using two losses:
+`latent_dim`、`hidden_dims`、`supervised_weight`、`epochs` を設定し、`fit(train_X, train_Y)` の後に `transform(train_X)` を呼びます。学習後の encoder・decoder・補助 head は固定されますが、入力に対する変換の微分は保ちます。補助 head は最終予測モデルではなく診断用です。公開 wrapper は `SupervisedAutoEncoderGP` です。
 
-```text
-L = L_reconstruction + supervised_weight * L_supervised
-```
+## 理論・実装・検証を辿る
 
-`L_reconstruction` is the MSE between standardized inputs and their decoder reconstruction. `L_supervised` is the MSE between standardized outcomes and predictions from a linear auxiliary head attached to the latent representation.
+[理論](../theory/19_neural_reduction_gp.md)と[実装ガイド](../guide/19_neural_reduction_gp.md)で仮定・推論方法・近似を確認できます。[ソース](../../src/robotorchan/models/high_dimensional/reduced/supervised_neural.py)から API と処理を確認してください。
 
-Unlike `AutoEncoderInputReducer`, the representation therefore uses `Y` during pretraining. Unlike joint DKL, the encoder is still frozen after pretraining and is not optimized by the GP marginal likelihood.
-
-## Usage
-
-```python
-from robotorchan.reduction import (
-    SupervisedAutoEncoderInputReducer,
-)
-
-reducer = SupervisedAutoEncoderInputReducer(
-    latent_dim=4,
-    hidden_dims=(64, 32),
-    supervised_weight=1.0,
-    epochs=200,
-)
-reducer.fit(train_X, train_Y)
-train_Z = reducer.transform(train_X)
-```
-
-The reducer accepts scalar or multi-output regression targets. Outcomes are standardized by default so the auxiliary loss is less sensitive to output scale.
-
-## Lifecycle
-
-The encoder, decoder, and auxiliary prediction head are frozen after fitting. `transform(X)` remains differentiable with respect to `X`, which is required when the reducer is later attached to a `ReducedGP` and acquisition functions are optimized in the original input space.
-
-The auxiliary head is a representation-learning aid rather than the final predictive model. `predict_auxiliary(X)` is exposed mainly for diagnostics. Phase 7 will add the public `SupervisedAutoEncoderGP` wrapper that uses the frozen supervised representation as the GP input.
-
-## Relation to other reducers
-
-- PCA-GP: unsupervised linear representation.
-- PLS-GP: supervised linear representation.
-- AE-GP: unsupervised nonlinear representation.
-- Supervised AE-GP: supervised nonlinear representation with frozen pretraining.
-- DKL / joint encoder-GP: supervised nonlinear representation learned jointly through the GP objective; planned separately because its training lifecycle differs.
+過去の設計条件・数式・検証要件は[設計記録](../../.github/project-records/model-design/supervised_neural_reduction.md)に原文を保存しています。そこでの将来計画や Phase の完了条件は現在の対応保証ではありません。現在のモデル選択は[モデル索引](README.md)を参照してください。

@@ -1,69 +1,55 @@
-# Posterior sampling
+# 事後分布のサンプリング
 
-Robotorchan follows a BoTorch-first sampling policy. Sampling behavior is selected from the
-posterior contract; model family names do not determine the sampler.
+BoTorch を基盤とし、モデルの名前ではなく posterior の契約から sampler を選びます。
 
-## Posterior-to-sampler mapping
+## Posterior と sampler の対応
 
-| Posterior semantics | Preferred BoTorch sampler | Representative models |
+| Posterior の意味 | BoTorch sampler | 代表モデル |
 | --- | --- | --- |
-| Gaussian | `SobolQMCNormalSampler` | SingleTask, MultiTask, Kronecker, mixed, multi-fidelity, reduced, robust Gaussian, NGBoost adapter |
-| Empirical ensemble | `IndexSampler` | RandomForest, ExtraTrees, GradientBoosting, HistGradientBoosting |
-| Stochastic / empirical trajectory | `StochasticSampler` | DeepGP families |
-| Actual `PosteriorList` | `ListSampler` | only when the returned posterior is a `PosteriorList` |
+| Gaussian | `SobolQMCNormalSampler` | SingleTask、MultiTask、Kronecker、Mixed、多忠実度、reduced、robust Gaussian、NGBoost adapter |
+| 経験 ensemble | `IndexSampler` | RandomForest、ExtraTrees、GradientBoosting、HistGradientBoosting |
+| 確率的・経験的軌跡 | `StochasticSampler` | DeepGP |
+| 実際の `PosteriorList` | `ListSampler` | 返り値が `PosteriorList` の場合のみ |
 
-`ModelListGP` must not be mapped to `ListSampler` by model name. For homogeneous Gaussian
-submodels, BoTorch can return a joint Gaussian multi-output posterior, so normal samplers are
-the correct path.
+`ModelListGP` という名前だけで `ListSampler` を選びません。同種の Gaussian submodel なら joint Gaussian の多出力 posterior が返り、normal sampler が適切です。
 
-`make_model_sampler` is an integration helper driven by model capability metadata. It is not
-part of the top-level acquisition public API and does not replace direct BoTorch sampler use.
+`make_model_sampler` は capability metadata に基づく統合 helper です。獲得関数のトップレベル公開 API ではなく、BoTorch sampler の直接利用を置き換えません。
 
 ## Joint sampling
 
-Multi-output, MultiTask, and Kronecker posteriors are sampled jointly. Do not split outputs or
-tasks into independent samplers when the posterior already represents their covariance.
+多出力・MultiTask・Kronecker の共分散を持つ posterior は joint にサンプルします。出力・タスクを独立 sampler へ分割しないでください。
 
-For DeepGP, `DeepGPPosterior` stores complete predictive trajectories. `StochasticSampler`
-delegates to `posterior.rsample()`, preserving trajectory-level resampling without pretending
-that the empirical posterior is Gaussian or QMC-normal.
+`DeepGPPosterior` は予測軌跡全体を保持します。`StochasticSampler` が `posterior.rsample()` に委譲し、Gaussian や QMC-normal とみなさず軌跡単位で再抽出します。
 
-## Shape and reproducibility
+## 形状と再現性
 
-Sampling follows the BoTorch shape contract:
+BoTorch の形状契約に従います。
 
 ```text
 sample_shape x batch_shape x q x output_shape
 ```
 
-Gaussian normal samplers support base-sample reuse for common random numbers. Empirical
-ensemble and stochastic posteriors follow their own BoTorch sampler contracts; identical
-behavior must not be inferred from the word "sampling" alone.
 
-## Sampling and candidate gradients
+Gaussian normal sampler は共通乱数のため base sample を再利用できます。経験 ensemble と確率的 posterior は各 sampler 固有の契約に従い、同一動作を仮定しません。
 
-Sampler compatibility does not imply gradient-based optimization compatibility.
+## 候補に対する勾配
 
-Gaussian GP, mixed continuous dimensions, MultiTask, Kronecker, reduced-space GP, robust
-Gaussian GP, and current DeepGP trajectories preserve candidate gradients in their tested
-paths. Scikit-learn tree ensembles and the NGBoost adapter cross a NumPy / external-estimator
-boundary, so their posterior samples are not differentiable with respect to candidate inputs.
-Use an optimization strategy compatible with the model boundary.
+sampling の互換性と勾配最適化の互換性は別です。Gaussian GP、Mixed の連続次元、MultiTask、Kronecker、reduced、robust Gaussian、現在の DeepGP 軌跡はテスト対象経路で候補勾配を保ちます。scikit-learn tree ensemble と NGBoost は NumPy・外部推定器を経由するため、候補入力に対して微分できません。モデルの境界に合う探索戦略を使ってください。
 
-## MC acquisition sampling
+## MC 獲得関数
 
-MC acquisition sampling integrates over uncertain model outcomes:
+モデル出力の不確実性を積分します。
 
 ```text
 model -> posterior -> MCSampler -> objective / outcome constraint -> acquisition
 ```
 
-Outcome constraints are evaluated from sampled model outputs. They are separate from known
-candidate/input-space constraints, which belong to acquisition optimization.
 
-## Input perturbation is a separate uncertainty layer
+出力制約はモデルの sample から評価します。候補最適化が担う既知の入力制約とは別です。
 
-Candidate perturbation is not a responsibility of the posterior sampler:
+## 入力摂動
+
+候補摂動は posterior sampler の責務ではありません。
 
 ```text
 candidate X
@@ -73,27 +59,20 @@ candidate X
 -> risk aggregation across scenarios
 ```
 
-The scenario axis and posterior MC sample axis remain distinct. Risk measures such as
-Expectation, MeanVariance, and CVaR reduce the scenario axis after posterior sampling.
 
-## Thompson sampling is candidate generation
+scenario 軸と posterior MC 軸を区別し、Expectation・MeanVariance・CVaR などは posterior sampling 後に scenario 軸を集約します。
 
-Finite-pool Thompson sampling is also distinct from MC integration. Robotorchan delegates to
-BoTorch `MaxPosteriorSampling` through `select_thompson_candidates`:
+## Thompson sampling
+
+有限プールからの候補生成は MC 積分とは別です。`select_thompson_candidates` を通じて BoTorch `MaxPosteriorSampling` に委譲します。
 
 ```text
 model -> posterior over choices -> MaxPosteriorSampling -> selected candidates
 ```
 
-This path works with compatible Gaussian and empirical ensemble posteriors. Multi-output
-posterior sampling requires an explicit scalarizing objective.
 
-## Custom sampler policy
+互換 Gaussian・経験 ensemble posterior に使えます。多出力では明示的なスカラー化 objective が必要です。
 
-A robotorchan-specific sampler should be added only when a current posterior cannot be sampled
-correctly by BoTorch's existing sampler ecosystem and the missing statistical semantics are
-well defined and testable.
+## Custom sampler
 
-The current audited model set does not require a custom sampler. Gaussian, empirical ensemble,
-DeepGP stochastic trajectory, and finite-pool Thompson workflows are covered by BoTorch-native
-sampling primitives.
+BoTorch の既存機能では正しく sample できない統計的な意味があり、それを定義・検証できる場合に限り追加します。現在の対象モデルでは独自 sampler は不要で、Gaussian、経験 ensemble、DeepGP 軌跡、有限プール Thompson は上流の機能で扱います。

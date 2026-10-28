@@ -1,37 +1,31 @@
-# Nonstationary Gaussian-process models
+# 非定常 Gaussian Process
 
-robotorchan implements exact GP models with input-dependent latent
-process smoothness. These models use a Gibbs covariance kernel and
-must not be confused with heteroskedastic observation-noise models.
+入力によって潜在関数の滑らかさが変わる Exact GP です。Gibbs 共分散を使い、観測ノイズが入力依存になる heteroskedastic モデルとは区別します。
 
-## Covariance and local lengthscales
+## 共分散と局所 lengthscale
 
-The `GibbsKernel` uses an affine, positive lengthscale field:
+`GibbsKernel` は正のアフィン lengthscale 場を使います。
 
 ```text
 ell(x) = softplus(a + B x) + lengthscale_floor
 ```
 
-The resulting Gibbs covariance allows smoothness to vary across the
-input space. The kernel learns its intercept and slope parameters
-jointly with the GP model. `lengthscale_floor` must be positive.
 
-## Implemented model families
+切片・傾きのパラメータを GP と同時学習し、入力空間で滑らかさを変化させます。`lengthscale_floor` は正です。
 
-| Model | Input structure | Local-lengthscale diagnostic |
+## モデル
+
+| モデル | 入力構造 | 局所 lengthscale の診断 |
 | --- | --- | --- |
-| `NonstationarySingleTaskGP` | Continuous single-task | `local_lengthscale(X)` |
-| `MixedNonstationarySingleTaskGP` | Mixed single-task, `cat_dims` | Tuple of additive and interaction continuous-branch lengthscales |
-| `NonstationaryMultiTaskGP` | Long-format task feature | Data-feature lengthscales, excluding task identity |
-| `MixedNonstationaryMultiTaskGP` | Long-format task + mixed data | Tuple of continuous-branch lengthscales |
-| `NonstationaryKroneckerMultiTaskGP` | Block-design multi-output | `local_lengthscale(X)` on data features |
+| `NonstationarySingleTaskGP` | 連続・単一タスク | `local_lengthscale(X)` |
+| `MixedNonstationarySingleTaskGP` | Mixed・単一タスク、`cat_dims` | 加法・相互作用の連続 branch の組 |
+| `NonstationaryMultiTaskGP` | long-format task 列 | task ID を除くデータ特徴の値 |
+| `MixedNonstationaryMultiTaskGP` | long-format task と Mixed データ | 連続 branch の組 |
+| `NonstationaryKroneckerMultiTaskGP` | block-design 多出力 | データ特徴の `local_lengthscale(X)` |
 
-Mixed models apply the Gibbs kernel to continuous data features and
-combine it with categorical covariance. A mixed model requires at
-least one continuous data dimension. `task_feature` and `cat_dims`
-identify distinct structural features and must not overlap.
+Mixed は連続データ列に Gibbs kernel を適用し、カテゴリ共分散と合成します。連続データ列が 1 個以上必要で、`task_feature` と `cat_dims` は重複できません。
 
-## Example: single-task nonstationary GP
+## 単一タスクの例
 
 ```python
 import torch
@@ -53,23 +47,14 @@ posterior = model.posterior(test_X)
 local_scales = model.local_lengthscale(test_X)
 ```
 
-The exact-GP variants support the usual `make_mll()` fitting path,
-BoTorch posterior interface, and raw training-data retention.
-The local-lengthscale diagnostic reports learned kernel structure;
-it is not a direct estimate of observation noise or causal regime
-boundaries.
 
-## Modeling boundaries
+通常の `make_mll()` 学習、BoTorch posterior、元訓練データの保持に対応します。lengthscale 診断は学習したカーネル構造で、観測ノイズや因果的な regime 境界の直接推定ではありません。
 
-- **Heteroskedastic GP:** input-dependent observation variance.
-- **Nonstationary GP:** input-dependent latent covariance/smoothness.
-- **Uncertain-input GP:** uncertain training input coordinates.
-- **Risk-aware acquisition:** decision-time objective aggregation.
+## モデル化の境界
 
-The implemented family uses affine lengthscale fields. Neural or
-GP-driven lengthscale fields and change-point kernels are not implied
-by these APIs. Validate performance against stationary baselines,
-particularly when data are sparse.
+- Heteroskedastic GP：入力依存の観測分散。
+- 非定常 GP：入力依存の潜在共分散・滑らかさ。
+- 不確実入力 GP：訓練座標の不確実性。
+- Risk-aware acquisition：意思決定時の目的集約。
 
-See [Robust and noise models](robust_noise.md) and
-[Model selection](../getting_started/model_selection.md).
+この API が扱うのはアフィン lengthscale 場です。neural・GP 駆動の場や change-point kernel の対応を意味しません。特に疎なデータでは定常基準法と比較してください。[Robust / Noise](robust_noise.md)と[モデル選択](../getting_started/model_selection.md)も参照してください。

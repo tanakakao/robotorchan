@@ -1,45 +1,27 @@
-# Candidate constraints across optimizer backends
+# 最適化 backend ごとの候補制約
 
-Candidate-space constraints are specified with the shared
-`CandidateConstraints` contract. They restrict which input candidates
-may be proposed; they are distinct from outcome constraints used to
-construct constrained acquisition functions.
+`CandidateConstraints` は提案可能な入力候補を制限する共通契約です。獲得関数を構成する出力制約とは区別します。
 
-## Backend-specific enforcement
+## Backend ごとの適用方法
 
-| Backend | Candidate constraint handling |
+| Backend | 候補制約の扱い |
 | --- | --- |
-| BoTorch / BoTorch-mixed | Forward supported linear and nonlinear constraints to BoTorch |
-| Differential Evolution | Wrap shared violation evaluation in SciPy `NonlinearConstraint` |
-| CMA-ES | Penalize constraint violation in the search objective |
-| Continuous GA | Rank feasible candidates ahead of infeasible candidates |
-| Mixed-variable GA | Use feasibility-first ranking with mixed-domain operators |
-| PSO | Penalize violation in particle scores; return the raw acquisition value |
-| Hybrid | Pass constraints to both global and BoTorch local stages; handling depends on the global backend |
-| Random / Sobol | Candidate constraints are unsupported and explicitly rejected |
-| PyTorch candidate generator | Candidate constraints are unsupported and explicitly rejected |
+| BoTorch / BoTorch-mixed | 対応する線形・非線形制約を BoTorch に渡す |
+| Differential Evolution | 共通違反量を SciPy `NonlinearConstraint` に変換する |
+| CMA-ES | 探索目的に違反の罰則を加える |
+| Continuous GA | 実行可能な候補を優先する |
+| Mixed-variable GA | 混合領域の演算子と実行可能性優先の順位付けを使う |
+| PSO | 粒子のスコアに罰則を加え、返り値には元の獲得値を使う |
+| Hybrid | 大域・局所の両段階に渡す。大域段階の扱いは backend に従う |
+| Random / Sobol | 未対応として明示的に拒否する |
+| PyTorch candidate generator | 未対応として明示的に拒否する |
 
-The derivative-free backends reuse the same constraint evaluation
-contract but **do not share a single penalty algorithm**.
-CMA-ES and PSO accept a positive `constraint_penalty`; do not assume this
-parameter controls Differential Evolution or GA feasibility handling.
-Hybrid uses the selected global backend's handling (DE, CMA-ES, or Mixed GA)
-followed by BoTorch local refinement; its stages do not share one penalty rule.
+微分不要の backend は制約評価を共有しますが、同一の罰則法は使いません。CMA-ES と PSO の正の `constraint_penalty` が DE や GA の処理を制御するわけではありません。Hybrid は DE・CMA-ES・Mixed GA による大域探索と BoTorch の局所改良を組み合わせ、段階ごとの処理を保ちます。
 
-The shared `equality_tolerance` defaults to `1e-6`. Supported
-constraints include intra-point and inter-point q-batch conditions.
-Derivative-free backends require valid tensor outputs from nonlinear
-constraint callables, not differentiability. Gradient-based BoTorch
-optimization has additional differentiability requirements.
+`equality_tolerance` は既定で `1e-6` です。点内制約と q-batch の点間制約に対応します。微分不要の backend でも制約 callable は有効な Tensor を返す必要があります。BoTorch の勾配法では微分可能性も必要です。
 
-## Feasibility and validation
+## 実行可能性の確認
 
-Constraint handling does not guarantee that every optimization run
-returns a feasible candidate. In particular, penalty-based CMA-ES or PSO
-runs can return infeasible results, and feasibility-first ranking
-depends on the evaluated population. Check the returned candidate
-against the original constraints when strict feasibility matters.
+制約対応は毎回実行可能な候補を返す保証ではありません。CMA-ES・PSO の罰則法は違反候補を返す場合があり、実行可能性優先の順位付けも評価した集団に依存します。厳密な実行可能性が必要なら返り値を元の制約で確認してください。
 
-Do not silently replace an unsupported candidate constraint with an
-outcome feasibility weight or an approximate search-space penalty.
-Inspect the selected backend's capability contract before dispatch.
+未対応の候補制約を出力の実行可能性重みや近似罰則へ暗黙に置き換えません。dispatch 前に backend の capability を確認してください。

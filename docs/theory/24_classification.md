@@ -6,6 +6,7 @@ GP分類はラベル自体にガウス観測ノイズを仮定せず、
 実数値の潜在関数を通じて離散ラベルをモデル化します。
 二値観測 \(y_i\in\{0,1\}\) に対して、次を仮定します。
 
+
 $$
 f\sim\mathcal{GP}(m,k),\qquad
 y_i\mid f_i\sim\operatorname{Bernoulli}(\pi(f_i)),
@@ -23,6 +24,7 @@ $$
 \(f=(f_1,\ldots,f_n)\) とデータ
 \(\mathcal D=\{(x_i,y_i)\}_{i=1}^n\) に対し、Bayesの定理から次を得ます。
 
+
 $$
 p(f\mid\mathcal D)
 =\frac{p(f)\prod_{i=1}^n p(y_i\mid f_i)}
@@ -39,6 +41,7 @@ Bernoulli尤度はガウス事前分布に共役ではないため、
 誘導点 \(Z\) 上の誘導変数を \(u=f(Z)\) とし、
 変分分布 \(q(u)\) を導入すると、潜在分布の近似は次のとおりです。
 
+
 $$
 q(f)=\int p(f\mid u)q(u)\,du.
 $$
@@ -54,6 +57,8 @@ $
 \mathbb E_{q(f_i)}[\log p(y_i\mid f_i)]
 -
 \operatorname{KL}\!\left(q(u)\,\|\,p(u)\right).
+
+
 $$
 
 この下界はJensenの不等式から導かれます。
@@ -74,6 +79,8 @@ $$
 p(y_*=1\mid x,\mathcal D)
 \approx
 \int \pi(f_*)q(f_*\mid\mathcal D)\,df_*.
+
+
 $$
 
 **一般に \(\bar p_*(x)\neq\pi(\mathbb E_q[f_*])\) です。**
@@ -96,6 +103,8 @@ $$
 \underbrace{\mathbb E_q[\pi(f_*)(1-\pi(f_*))]}_{\text{conditional label variance}}
 +
 \underbrace{\operatorname{Var}_q[\pi(f_*)]}_{\text{probability uncertainty}}.
+
+
 $$
 
 probitリンクで周辺分布が \(q(f_*)=\mathcal N(\mu_*,s_*^2)\) のとき、
@@ -103,6 +112,8 @@ probitリンクで周辺分布が \(q(f_*)=\mathcal N(\mu_*,s_*^2)\) のとき�
 
 $$
 \bar p_*=\Phi\!\left(\frac{\mu_*}{\sqrt{1+s_*^2}}\right).
+
+
 $$
 
 logisticリンクでは、近似なしに同じ恒等式は成立しません。
@@ -115,6 +126,8 @@ $$
 H[y_*\mid x,\mathcal D]
 =
 -\sum_{c=1}^{C}\bar p_c(x)\log\bar p_c(x).
+
+
 $$
 
 これは将来のラベルの不確実性を測り、潜在モデルの不確実性だけを表すものではありません。
@@ -126,6 +139,8 @@ I(y_*;f_*\mid x,\mathcal D)
 H[y_*\mid x,\mathcal D]
 -
 \mathbb E_{q(f_*)}\!\left[H[y_*\mid f_*]\right].
+
+
 $$
 
 予測エントロピーが大きくても情報利得が大きいとは限りません。
@@ -147,6 +162,8 @@ $$
 p(y=c\mid f(x))
 =
 \frac{\exp(f_c(x))}{\sum_{j=1}^{C}\exp(f_j(x))}.
+
+
 $$
 
 潜在関数は事前に独立でも、多出力共分散を通じて相関していても構いません。
@@ -253,6 +270,3 @@ Bernoulli尤度と予測クラス確率の定義を自動的に変えるもの�
 - [Dimensionality Reduction GP](18_dimensionality_reduction_gp.md)
 - [Expressive GP Models](22_expressive_gp.md)
 - [Classification Active Learning](acquisition/classification-active-learning.md)
-
-ライブラリ固有のモデル群、予測API、対応する組合せについては
-[分類モデルガイド](../models/classification.md)を参照してください。

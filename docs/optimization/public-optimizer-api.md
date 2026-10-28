@@ -1,47 +1,28 @@
-# Optimizer public API
+# 最適化器の公開 API
 
-robotorchan keeps BoTorch's acquisition-function vocabulary and adds an optional named optimizer selector.
+BoTorch の獲得関数体系を保ち、任意の名前付き optimizer 選択を追加します。入口は `from robotorchan.optim import optimize_acqf` です。既定の `optimizer="botorch"` は BoTorch 標準 backend に委譲します。`botorch.optim.optimize_acqf` の直接利用も有効です。
 
-The public entry point is `from robotorchan.optim import optimize_acqf`. The default `optimizer="botorch"` delegates to the BoTorch-native backend. Existing direct use of `botorch.optim.optimize_acqf` remains valid.
+## 名前付き backend
 
-## Named backends
+`botorch`、`torch_adam`、`torch_adamw`、`torch_sgd`、`random`、`sobol`、`de`、`cmaes`、`ga`、`pso`、`hybrid` を選べます。
 
-The convenience dispatcher exposes `botorch`, `torch_adam`, `torch_adamw`, `torch_sgd`, `random`, `sobol`, `de`, `cmaes`, `ga`, `pso`, and `hybrid`.
+backend 固有の制御は `optimizer_options`、BoTorch と意味が同じ共通引数は明示的な引数に置きます。未対応の組合せは引数を無視せず拒否します。
 
-Backend-specific controls belong in `optimizer_options`. Common BoTorch-shaped arguments stay explicit when they have the same semantics. Unsupported combinations fail explicitly rather than silently dropping an argument.
+Mixed GA とベクトル値 NSGA-II は `robotorchan.optim.backends` の専用 API です。通常の scalar continuous 呼び出しと同一視しません。追加の runtime 依存が必要なのはこの集合では CMA-ES のみで、`cmaes` extra を導入してください。
 
-Mixed-variable GA and vector-valued NSGA-II remain explicit specialist APIs under `robotorchan.optim.backends`; they are not disguised as ordinary scalar continuous `optimize_acqf` calls.
+## 構造化変数空間
 
-CMA-ES is the only optimizer backend in this set with an additional optional runtime dependency. Install the `cmaes` extra when that backend is required.
+通常の bounds、q、制約、fixed features と併せて `MixedVariableSpace` で整数・カテゴリを宣言できます。連続変数は暗黙です。
 
+実行前に変数型と capability を照合し、未対応の座標を丸め・無視しません。固定値も整数・カテゴリ領域に対して検証します。
 
-## Structured variable spaces
+backend の直接利用と低水準引数も公開されています。`MixedVariableSpace` は共通 dispatch の契約であり、低水準引数を置き換えません。曖昧な二重宣言を拒否する backend に両方を渡すとエラーになります。
 
-The public dispatcher accepts an optional `MixedVariableSpace` alongside the usual
-BoTorch-shaped `bounds`, `q`, constraints, and fixed features. This is the unified
-robotorchan layer for declaring integer and categorical coordinates; continuous
-coordinates remain implicit.
+対応する Random・Sobol・DE・GA・PSO・Hybrid へ変数空間を渡します。勾配 Torch は整数・カテゴリ、PSO はカテゴリを拒否します。`optimizer="botorch"` は連続最適化です。BoTorch の mixed 列挙には `fixed_features_list` が明示される専用 mixed backend を使います。
 
-The dispatcher validates the requested variable types against optimizer capability
-metadata before backend execution. Unsupported combinations therefore fail explicitly
-instead of silently rounding or ignoring structured coordinates. Common fixed features
-are also validated against the declared integer and categorical domains.
+## 候補制約
 
-Backend functions remain public for direct BoTorch-style use. `MixedVariableSpace`
-does not replace backend-specific low-level arguments; it provides a reusable contract
-for the unified dispatcher. Supplying both representations to a backend that forbids
-ambiguous duplicate declarations remains an error.
-
-Random and Sobol sampling, DE, GA, PSO, and Hybrid receive the declared variable space
-when supported. Gradient Torch optimizers reject integer or categorical spaces. PSO
-rejects categorical spaces. The plain `optimizer="botorch"` dispatch path remains the
-continuous BoTorch optimizer; callers needing BoTorch mixed enumeration should use the
-explicit mixed backend where its `fixed_features_list` semantics are visible.
-
-
-## Candidate constraints
-
-Candidate-space constraints are public from `robotorchan.optim`:
+`robotorchan.optim` から公開しています。
 
 ```python
 import torch
@@ -61,40 +42,21 @@ candidate, value = optimize_acqf(
 )
 ```
 
-The nonlinear tuple is the BoTorch-native `(callable, is_intrapoint)` contract rather than a
-robotorchan-specific DSL. Feasibility means `g(X) >= 0`. An intra-point callable receives one
-candidate `[d]`; an inter-point callable receives the joint q-batch `[q, d]`.
 
-The public typing aliases `LinearConstraint`, `NonlinearConstraint`, and
-`NonlinearConstraintCallable` are also exported from `robotorchan.optim`. They are optional
-typing conveniences; users do not need to instantiate wrapper classes around BoTorch-compatible
-constraint tuples.
+非線形 tuple は BoTorch 標準の `(callable, is_intrapoint)` です。実行可能性は `g(X) >= 0`、点内 callable の入力は `[d]`、点間は `[q, d]` です。
 
-Candidate constraints are distinct from outcome constraints supplied to constrained acquisition
-functions. Outcome constraints use the acquisition function's own BoTorch contract and are not
-passed through `CandidateConstraints`.
+型 alias `LinearConstraint`、`NonlinearConstraint`、`NonlinearConstraintCallable` も公開しますが、標準 tuple を別 class で包む必要はありません。
 
-## BoTorch initial-condition generators
+出力制約は獲得関数固有の BoTorch 契約に従い、`CandidateConstraints` を経由しません。
 
-The default `optimizer="botorch"` path exposes BoTorch-compatible
-`batch_initial_conditions`, `ic_generator`, and `ic_gen_kwargs`. This is especially
-important for nonlinear candidate constraints: BoTorch requires feasible restart points,
-so callers may either provide explicit feasible initial conditions or provide an
-initial-condition generator that constructs them.
+## BoTorch 初期値 generator
 
-These arguments retain their BoTorch semantics and are forwarded only to the BoTorch
-backend. Named non-BoTorch optimizers reject `ic_generator` and `ic_gen_kwargs`
-instead of silently ignoring them.
+既定経路は `batch_initial_conditions`、`ic_generator`、`ic_gen_kwargs` を公開します。特に非線形候補制約では実行可能な restart が必要なため、明示的な初期値またはそれを構成する generator を指定できます。
 
+BoTorch の意味を保って同 backend だけへ渡します。他の名前付き最適化器は generator 引数を無視せず拒否します。
 
-### Nonlinear feasibility failures
+### 非線形の実行可能性エラー
 
-For nonlinear candidate constraints, explicit `batch_initial_conditions` are validated before
-BoTorch optimization. Their shape, dtype, device, finiteness, box bounds, and nonlinear
-feasibility must be valid for every restart. An invalid explicit restart fails immediately
-instead of being forwarded to the local optimizer.
+明示的初期値の形状、dtype、device、有限性、box、非線形実行可能性を全 restart で検証し、不正なら最適化前に失敗します。
 
-robotorchan does not attempt to prove that an arbitrary nonlinear feasible region is
-non-empty. When a custom `ic_generator` cannot construct feasible restarts, or when the
-underlying BoTorch/SciPy optimization fails after valid initialization, the original
-failure is propagated. There is no silent unconstrained fallback.
+任意の非線形実行可能領域が非空であることは証明しません。generator が実行可能点を作れない場合や、妥当な初期化後に BoTorch・SciPy が失敗した場合は元のエラーを伝えます。無制約探索への暗黙の fallback はありません。

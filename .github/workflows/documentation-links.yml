@@ -29,3 +29,11 @@ jobs:
         run: python -m unittest discover -s tests/docs -p test_theory_guide_quality.py
       - name: Check 48 theory-guide chapter correspondence
         run: python scripts/check_theory_guide_quality.py
+      - name: Test documentation inventory and expanded link coverage
+        run: python -m unittest discover -s tests/docs -p test_documentation_inventory.py
+      - name: Check documentation inventory coverage
+        run: python scripts/check_documentation_inventory.py
+      - name: Test Theory and Guide ownership boundaries
+        run: python -m unittest discover -s tests/docs -p test_documentation_boundaries.py
+      - name: Check Theory ownership and Guide source references
+        run: python scripts/check_documentation_boundaries.py

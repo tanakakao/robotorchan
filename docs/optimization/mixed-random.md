@@ -1,25 +1,12 @@
-# Mixed-variable random sampling
+# 混合変数のランダムサンプリング
 
-The random acquisition optimizer accepts the public `MixedVariableSpace`
-contract.
+ランダム獲得関数最適化器は `MixedVariableSpace` を受け取ります。q-batch の各点に対して次を適用します。
 
-For each sampled q-batch:
+- 連続次元は bounds 内の一様分布。
+- 整数次元は `ceil(lower) ... floor(upper)` の全合法整数上の一様分布。
+- カテゴリ次元は明示的な許容集合上の一様分布。
+- fixed features はサンプリング後に適用し、変数空間との整合性を検証する。
 
-- continuous dimensions are sampled uniformly inside their bounds;
-- integer dimensions are sampled uniformly from every legal integer in
-  `ceil(lower) ... floor(upper)`;
-- categorical dimensions are sampled uniformly from their explicit allowed set;
-- fixed features are applied after sampling and are validated against the
-  variable-space contract.
+宣言した領域から直接サンプリングし、整数・カテゴリを連続サンプルの丸めで生成しません。同じ変数の意味を q-batch の各行へ独立に適用します。固定 seed で連続・構造化座標の両方を再現できます。
 
-This is direct sampling from the declared domain. Integer and categorical
-coordinates are not produced by continuous sampling followed by rounding.
-
-The same variable semantics apply independently to every point in a q-batch.
-A fixed seed reproduces both the continuous and structured coordinates.
-
-Mixed-variable Sobol sampling is also implemented. It maps scrambled Sobol
-coordinates through a discrete inverse CDF for integer and categorical domains
-instead of treating categorical labels as continuous distances. See
-[Mixed-variable Sobol sampling](mixed-sobol.md) for its discretization contract
-and low-discrepancy limitations.
+[Mixed Sobol](mixed-sobol.md) は scrambled Sobol 座標を離散逆 CDF で整数・カテゴリへ写します。カテゴリ符号を連続距離として扱いません。離散化の規則と低 discrepancy の限界は同ページを参照してください。

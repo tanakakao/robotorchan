@@ -8,10 +8,7 @@ from pathlib import Path
 
 import torch
 
-GUIDE = (
-    Path(__file__).resolve().parents[2]
-    / "docs/development/theory-implementation/guide/acquisition/10_level_set.md"
-)
+GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/acquisition/10_level_set.md"
 
 
 class LevelSetGuideExampleTests(unittest.TestCase):

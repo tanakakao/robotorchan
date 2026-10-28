@@ -1,7 +1,6 @@
-# Resumable benchmark execution
+# Benchmark の保存と再開
 
-The benchmark runner supports single-seed checkpointing and deterministic
-continuation under the conditions below.
+次の条件で、単一 seed の checkpoint と決定的な継続に対応します。
 
 ```python
 from robotorchan.benchmarks import (
@@ -21,21 +20,9 @@ finished, _ = run_resumable_benchmark(
 )
 ```
 
-The checkpoint stores the full trajectory prefix, experiment configuration,
-and the run-local PyTorch generator state. The schema is versioned JSON;
-loading does not execute Python objects. Only one configured seed is
-supported per checkpoint. A completed checkpoint is safe to pass again
-and produces no new evaluations.
 
-**Determinism:** Exact continuation is supported when the candidate
-generator is a pure function of the supplied history and run-local RNG.
-Generators with internal state, global random generators, optimizer
-state, pending asynchronous evaluations, or nondeterministic evaluation
-noise cannot be resumed exactly by this interface. The checkpoint
-is written after a completed batch, not mid-batch. The caller must
-explicitly persist the returned checkpoint; there is no automatic
-periodic saving or atomic writer.
+checkpoint は軌跡の prefix、実験設定、run-local の PyTorch generator 状態を version 付き JSON で保存し、読み込みで Python オブジェクトを実行しません。1 checkpoint は設定済み seed 1 個のみを扱います。完了済み checkpoint を再度渡しても新規評価を行いません。
 
-Completed-run [result files](storage.md) and resumable checkpoint files
-have distinct schemas. A saved result file alone does not preserve the
-run-local generator state needed for exact continuation.
+履歴と run-local RNG の純粋関数である候補 generator なら厳密に継続できます。内部状態、global RNG、optimizer 状態、pending 非同期評価、非決定的ノイズはこの契約だけでは厳密に復元できません。保存位置は batch 完了後で、batch の途中ではありません。呼び出し側が返された checkpoint を明示的に永続化し、自動定期保存や atomic writer は提供しません。
+
+完了結果の[保存形式](storage.md)とは別 schema です。結果ファイルだけでは継続に必要な generator 状態を保持できません。

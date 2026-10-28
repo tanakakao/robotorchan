@@ -1,72 +1,43 @@
-# Benchmarking: end-to-end guide
+# Benchmark の全体手順
 
-This guide connects the benchmark problem registry, execution profiles, closed-loop
-runner, truth-based metrics, multi-seed reporting, result storage, and checkpointing.
+問題 registry、profile、closed-loop runner、真値指標、多 seed 報告、結果保存、checkpoint を接続します。
 
-## Quick start
+## 最初の実行
 
-Run the self-contained example from the repository root:
+リポジトリルートで自己完結した例を実行します。
 
 ```bash
 python examples/benchmark_end_to_end.py
 ```
 
-It creates `benchmark_outputs/branin_random_results.json`,
-`benchmark_outputs/branin_random_report.json`, and
-`benchmark_outputs/branin_random_report.csv`.
 
-The example explicitly registers Branin in a local registry, obtains the
-`smoke` execution profile, runs seeded random search, saves trajectories,
-reloads them, computes truth-based simple regret, and exports the report.
+`benchmark_outputs/branin_random_results.json`、`branin_random_report.json`、`branin_random_report.csv` を生成します。ローカル registry へ Branin を登録し、smoke profile で Random を実行、軌跡を保存・再読込し、真値 simple regret と報告を出力します。
 
-## Experiment contracts
+## 実験の条件
 
-- `BenchmarkExperimentConfig.evaluation_budget` counts *new* evaluations
-  only; the initial design is additional.
-- `q` is the requested candidate batch size. The last batch may be smaller.
-- A `BenchmarkProblemRegistry` must contain the named problem. Importing
-  a problem module does not implicitly register it.
-- `BenchmarkTrajectory.Y_observed` is what the strategy sees;
-  `Y_truth` is for evaluation metrics. Do not leak truth to candidate selection.
-- Feasibility constraints use `g(X) >= 0`. `simple_regret_curve`
-  requires a known single-objective optimum; `hypervolume_curve`
-  requires two objectives and a reference point.
-- Report curves include the initial design. CSV `evaluation_index=0`
-  is the first *initial* observation, not the first proposed candidate.
+- `evaluation_budget` は新規評価数のみで、初期設計は別です。
+- q は要求 batch 数で、最後は小さくても構いません。
+- registry に問題を明示登録します。import だけでは登録しません。
+- 戦略には `Y_observed` のみを見せ、`Y_truth` は指標に使います。
+- 実行可能性は `g(X) >= 0`。simple regret は既知の単一目的最適値、hypervolume は 2 目的と reference point が必要です。
+- 報告曲線は初期設計を含みます。CSV の `evaluation_index=0` は最初の初期観測で、最初の追加候補ではありません。
 
-## Comparing strategies
+## 戦略比較
 
-Use the same problem, seeds, initial design settings, budget, q, dtype,
-and device for every strategy. Compute the same metric on every seed.
-Pass `{seed: curve}` mappings to `make_metric_report`, using
-`interval_method="bootstrap"` for seed-resampled confidence intervals.
-Use `compare_paired_curves` or `compare_paired_bootstrap` for
-seed-aligned differences. The `smoke` profile contains only one seed:
-use `standard` or `extended` for multi-seed uncertainty analysis.
+問題、seed、初期設計、予算、q、dtype、device を揃え、全 seed で同じ指標を計算します。`{seed: curve}` を `make_metric_report` に渡し、seed 再抽出には `interval_method="bootstrap"` を使います。対応差は `compare_paired_curves`・`compare_paired_bootstrap` で求めます。smoke は 1 seed なので、不確実性分析には standard・extended を使ってください。
 
-## Storage and resumption
+## 保存と再開
 
-`save_benchmark_results` and `load_benchmark_results` persist complete
-trajectories as versioned JSON. For interruption and continuation, use
-`run_resumable_benchmark` and the separate checkpoint save/load APIs.
-The resumable runner accepts **one seed** per invocation and saves the
-run-local generator state. Exact continuation requires the strategy to
-depend only on that generator and the stored trajectory; external optimizer
-state, global RNG and stochastic observation noise are not captured.
+`save_benchmark_results`・`load_benchmark_results` は完了軌跡の JSON 保存用です。中断継続には `run_resumable_benchmark` と専用 checkpoint API を使います。1 呼び出し 1 seed で run-local generator 状態を保存します。厳密な継続には保存履歴と当該 generator のみに依存する戦略が必要で、外部 optimizer 状態、global RNG、確率的観測ノイズは復元しません。
 
-## Reproducibility and limitations
+## 再現性と限界
 
-Store the exact configuration and environment/package versions alongside
-reports. Use identical initial designs and seed sets for paired comparisons.
-Benchmark profiles are fixed resource presets, not quality guarantees.
-CUDA support is problem- and strategy-dependent; requesting a CUDA profile
-only checks CUDA availability. Do not compare wall-clock measurements across
-different hardware as if they were algorithm-only differences.
+正確な設定・環境・package version を報告と併せて保存し、対応比較では初期設計と seed 集合を一致させます。profile は資源の規則で品質保証ではありません。CUDA profile は存在確認だけを行い、問題・戦略の対応は別です。異なるハードウェアの実時間差をアルゴリズム差だけで解釈しないでください。
 
-## Related documentation
+## 関連資料
 
-- [Final audit and release-readiness criteria](release_readiness.md)
-- [Execution profiles](execution_profiles.md)
-- [Result storage](storage.md)
-- [Checkpointing](checkpoint.md)
-- [Multi-seed reporting](reporting.md)
+- [過去の release 判定](../../.github/project-records/benchmarks/release_readiness.md)
+- [Profile](execution_profiles.md)
+- [結果保存](storage.md)
+- [Checkpoint](checkpoint.md)
+- [多 seed 報告](reporting.md)

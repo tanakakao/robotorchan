@@ -8,10 +8,7 @@ from pathlib import Path
 
 import torch
 
-GUIDE = (
-    Path(__file__).resolve().parents[2]
-    / "docs/development/theory-implementation/guide/acquisition/09_active_learning.md"
-)
+GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/acquisition/09_active_learning.md"
 
 
 class ActiveLearningGuideTests(unittest.TestCase):
