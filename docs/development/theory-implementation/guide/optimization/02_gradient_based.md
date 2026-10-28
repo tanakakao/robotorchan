@@ -35,11 +35,11 @@ BoTorch `optimize_acqf`のmulti-start local searchと、robotorchan内のfirst-o
 
 入力gradientが存在することだけではoptimizerや非線形制約への適合性は証明されない。
 
-最適化器が候補を返すことと、その候補が厳密な大域最適解であることは違う。候補座標の型、bounds、fixed features、constraint tolerance、q軸、one-shot追加変数、random seed等を適用先に合わせる。モデルの学習後posteriorが有限でも、candidate探索の収束は別途確認する。
+この章のBoTorch backendは複数の初期点から局所探索する。`num_restarts`と`raw_samples`は学習データ数ではなく探索初期化の設定である。返却候補のshape・bounds・有限性は第5節で確認するが、非凸獲得関数の大域最大値であることまでは保証しない。非線形制約の可行性は[Candidate constraints](05_constraints.md)で別に検証する。
 
 ## 4. 検証と使い方の入口
 
-最低限の確認順序は、**(1) 問題の型→(2) 数理契約→(3) optimizer dispatch→(4) backend→(5) 制約と出力shape→(6) 再現実験**である。CI成功だけで全backend・全constraint・全qに対して正しいとは主張しない。
+まず第5節の`optimize_acqf`例で、(1)モデルのposterior、(2)UCBの候補スコア、(3)BoTorch backendによる最大化、(4)候補`[q,d]`の返却を順に追う。その後、初期点の指定は[Initialization](03_initialization.md)、カテゴリ列の固定列挙は[Mixed / Discrete](04_mixed_discrete.md)で確認する。
 
 [Optimization利用ガイド](../../../../optimization/README.md)、[理論Optimization索引](../../../../theory/optimization/README.md)、[旧Optimization Mapping](../../optimization.md)、[Verification](../../verification.md)を参照。原文は章別照合完了まで削除しない。
 
