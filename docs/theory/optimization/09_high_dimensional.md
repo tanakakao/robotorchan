@@ -1,5 +1,8 @@
 # High-dimensional Acquisition Search
 
+[入力次元削減](../18_dimensionality_reduction_gp.md)と[高次元探索](../20_high_dimensional_search.md)を前提とします。
+本章では、特徴の削減、候補の再構成、探索部分空間を分け、射影で何が保存されるかを考えます。
+
 ## 9.1 問題設定
 
 Bayesian Optimization では surrogate model の学習だけでなく、
@@ -10,7 +13,7 @@ Bayesian Optimization では surrogate model の学習だけでなく、
 
 d が大きくなると、
 
-- global candidate search の volume が急増する
+- 一定の解像度で候補空間を覆うための点数が急増する
 - multistart initialization が良い basin を捉えにくくなる
 - q-batch では decision dimension が qd まで増える
 - local optimizer が局所解へ依存しやすくなる
@@ -63,27 +66,31 @@ optimizer は latent coordinate Z を探索し、acquisition evaluation の直�
 
 と戻します。
 
-現在対応する reconstruction は PCA と Gaussian random projection です。
+線形な再構成の例として、PCAとランダム射影を考えます。
 
 PCA reconstruction は retained PCA subspace への再構成であり、
 削除した component を復元するものではありません。
 
 RandomProjection reconstruction は Moore-Penrose pseudoinverse による
-minimum-norm reconstruction であり、元の点の一意な復元ではありません。
+minimum-norm reconstructionであり、元の点の一意な復元ではありません。
+zがRの像にあるとき、射影 $z=Rx$ を満たす解は一般に $x=R^+z+v$、$v\in\ker R$ と書けます。
+例えば $R=(1,-1)$、元の箱が $[0,1]^2$、$z=1$ なら、最小ノルム解は $(0.5,-0.5)$ で箱を外れます。
+一方、零空間の $(0.5,0.5)$ を加えた $(1,0)$ は同じzを持つ可行な点です。
+射影先が元の箱の像に入っていても、選んだ再構成が可行とは限りません。
 
 ## 9.5 Latent bounds と feasible set
 
 元空間 box を latent space へ写した領域は一般に単純な axis-aligned box ではありません。
 
-Latent Space 探索 では linear image の coordinate-wise outer bounds を探索 bounds とします。
+線形像を座標ごとの最小値・最大値で囲むと、一般に元の像より広い外接箱になります。
 
 したがって latent box 内の点を reconstruct すると元空間 bounds を外れる場合があります。
 元空間 box への射影は境界を満たしますが、latent 空間での探索幾何を変化させます。
 
-- feasibility_projection_distance
-- latent_round_trip_distance
-
-を保存し、reconstruction / projection distortion を診断できます。
+例えば再構成 $S(z)$、元の箱への射影 $\Pi$、入力削減 $T$ に対し、
+$\|\Pi(S(z))-S(z)\|$ は可行化で動いた距離、
+$\|T(\Pi(S(z)))-z\|$ は戻った潜在座標のずれです。
+異なる座標系の二つの量であり、単位をそろえずに同じ誤差として足しません。
 
 ## 9.6 REMBO
 
@@ -167,9 +174,8 @@ Cholesky factor U に対して metric を
 
 で測られます。
 
-metric initialization、multi-start MAP、
-reference diagonal Laplace approximation、metric sampling、moment-matched acquisition model
-までを実装範囲としています。
+計量を点推定するか、Laplace近似などで計量の不確実性を積分するかは別の推論設計です。
+混合分布と、その平均・共分散を合わせた正規近似の違いは[高次元モデル章](../21_advanced_high_dimensional_models.md)で扱います。
 
 ## 9.11 ALEBO の candidate optimization
 
@@ -225,7 +231,11 @@ subspace expansion では
 を保持します。
 
 既存 target coordinate は child bins へ複製されるため、
-expansion 前の search space を細分化する nested subspace として扱えます。
+元の部分空間を新しい空間の中へ保持できます。
+例えば以前の写像が $x=(z_1,-z_1,z_2)$、分割後が $x=(u_1,-u_2,u_3)$ なら、
+$u_1=u_2=z_1,u_3=z_2$ と置くことで既存点を同じ元座標へ写せます。
+子座標の許容範囲にもこの複製を含めることが必要です。
+この保存は既存観測を一貫して再表現する条件であり、拡張後の予測精度改善を保証するものではありません。
 
 ## 9.15 BAxUS と Trust Region
 
@@ -243,24 +253,21 @@ Trust Region 一般と TuRBO の詳細は次章で扱います。
 
 ## 9.16 Lengthscale-weighted target region
 
-search strategy と surrogate を分離する構成では、
-strategy 内で別の target-space GP を fit しません。
-
-original-space acquisition model が ARD lengthscale l_i を公開している場合、
-target bin B_j に対して
+元空間のARD距離を $\Delta x^\top D\Delta x$、$D=\operatorname{diag}(1/\ell_i^2)$、
+埋め込みを $x=Bz$ とすれば、誘導される計量は $B^\top DB$ です。
+各元座標が一つの部分空間座標へ符号付きで割り当てられる場合は非対角項が消え、
+bin集合 $B_j$ に対して次の長さ尺度になります。
 
     l_target,j = 1 / sqrt(sum_(i in B_j) 1 / l_i^2)
 
-という induced metric を使います。
-
-その後、weight の geometric mean が1になるよう正規化します。
-
-適切な original-space ARD lengthscale が取得できない場合は isotropic weight に
-fallback します。
+例えば同じbinに入る元座標の長さ尺度が1と2なら、誘導長さ尺度は $1/\sqrt{1+1/4}\simeq0.894$ です。
+符号は二乗されるため、この対角計量では消えます。密な一般の埋め込みでは非対角項も生じるので、同じ式は使えません。
+重みを使う場合は幾何平均を1にするなどの尺度規約を定めます。
+元空間の適切な計量がない場合、等方的な領域を選ぶことも一つの仮定であり、潜在長さ尺度を無条件に流用しません。
 
 ## 9.17 BAxUS Thompson Sampling
 
-BAx USThompson Sampling 探索 は target trust region 内に有限 candidate pool を作り、
+BAxUSのThompson samplingは target trust region 内に有限 candidate pool を作り、
 posterior sample に基づいて候補を選びます。
 
 各 candidate は incumbent から sparse perturbation され、
@@ -273,9 +280,8 @@ posterior sample に基づいて候補を選びます。
 どの dimension も変更されなかった candidate には最低1次元の perturbation を強制します。
 
 target-space pool を original space へ射影し、
-共通 surrogate model に対する MaxPosteriorSampling で candidate を選択します。
-
-この strategy でも独立した target-space GP は学習しません。
+元空間の予測モデルから同時関数標本を生成して、その標本上で候補を選ぶ構成を考えられます。
+この構成では独立した部分空間GPを学ぶのではなく、元空間のモデルへ探索写像を合成します。
 
 ## 9.18 q-batch と高次元 search
 
@@ -360,6 +366,12 @@ ALEBOでは計量を考慮したモデル構造も手法の仮定に含まれま
 ライブラリ固有の状態管理と対応制約は [高次元探索の実装ガイド](../../optimization/high_dimensional_implementation.md) を参照してください。
 
 ---
+
+## この章で覚えておくこと
+
+次元を減らす写像と、候補を元空間へ戻す写像は同じものではありません。
+再構成の非一意性、箱への射影、計量の変換を分けて考えます。
+部分空間を拡張するときも、既存点を同じ元座標へ戻せることと性能改善は別の性質です。
 
 ## 参考文献
 

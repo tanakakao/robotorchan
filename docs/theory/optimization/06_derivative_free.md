@@ -1,5 +1,8 @@
 # Derivative-free Acquisition Optimization
 
+[基礎章](01_foundations.md)と[候補制約章](05_constraints.md)を前提とします。
+本章では、勾配を使わないことと、変数型や制約を考慮しないことを区別します。
+
 ## 6.1 目的
 
 獲得関数最適化では、候補点 X に対して
@@ -30,6 +33,10 @@ integer dimension は legal integer set、categorical dimension は allowed cate
 
 したがって mixed space でも、category code 間に人工的な距離を仮定しません。
 
+連続値の一様乱数を整数へ丸める操作は、整数集合からの一様抽出とは異なる場合があります。
+例えば $[0,2]$ の一様乱数を最も近い整数へ丸めると、0・1・2の確率は $1/4,1/2,1/4$ です。
+整数を等確率にしたければ、直接離散抽出するなど、意図した分布で生成します。
+
 ## 6.3 Sobol search
 
 Sobol sequence は low-discrepancy sequence により、擬似乱数より均一な
@@ -54,6 +61,18 @@ Sampling optimizer の利点は次です。
 
 一方、有限 sample なので global optimum を保証しません。
 dimension と q が増えるほど qd 次元空間の被覆には多くの sample が必要です。
+
+非空の有限標本集合を $\mathcal S$、非空でコンパクトな可行領域を $\mathcal F$ とし、
+全ての標本が可行で、効用がL-Lipschitz連続なら、
+被覆半径 $h=\sup_{X\in\mathcal F}\min_{Z\in\mathcal S}\|X-Z\|$ に対して
+
+$$
+\max_{X\in\mathcal F}\alpha(X)-\max_{Z\in\mathcal S}\alpha(Z)\le Lh
+$$
+
+と評価できます。最適点に近い標本との効用差をLipschitz性で抑えるためです。
+ただし未知のLや被覆半径を、有限個の評価だけで正確に把握できるとは限りません。
+非滑らかな木モデルなどに、この連続性の上界をそのまま適用しません。
 
 ## 6.5 q-batch は joint decision variable
 
@@ -89,6 +108,8 @@ penalty method は acquisition value から lambda × violation を引いた sco
 feasibility-first は feasible candidate を infeasible candidate より優先し、
 infeasible 同士では violation の小ささを優先します。
 
+例えば独立な提案の可行確率がpなら、一つの可行点を得るまでの提案回数の期待値は $1/p$ です。
+等式制約が低次元の面を作る場合など、pが零なら棄却を繰り返しても厳密な可行点は得られません。
 詳細は [Candidate Constraint Optimization](05_constraints.md) を参照してください。
 
 ## 6.8 Structured repair
@@ -142,6 +163,12 @@ mixed / non-smooth / tree-based では derivative-free backend の価値が高�
      -> backend capability
 
 を確認します。
+
+## この章で覚えておくこと
+
+勾配を使わない探索でも、候補の分布、変数型、制約の設計は必要です。
+有限集合から最良点を選ぶ品質は、効用の規則性と集合の被覆に依存します。
+棄却や丸めを追加したときは、実際に生成される候補の分布と可行性を確認します。
 
 ## 参考文献
 

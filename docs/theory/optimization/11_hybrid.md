@@ -5,9 +5,8 @@
 Hybrid acquisition optimization は、1つの numerical optimizer に全探索責務を持たせず、
 異なる性質を持つ探索段階を接続します。
 
-代表的な hybrid optimization は
-
-という **global-to-local** 構成です。
+代表的な構成は、広域探索で得た候補を初期値として局所探索へ渡す**global-to-local**方式です。
+ここでglobalは広い領域を探索する役割を指し、大域最適性の証明を意味しません。
 
 これは複数 optimizer の多数決や、候補を単純に比較する ensemble ではありません。
 前段の出力を後段の initial condition として渡す、明示的な二段最適化です。
@@ -43,11 +42,8 @@ global stage は acquisition を joint q-batch として最適化し、
 
 を返します。
 
-local stage には
-
-    batch_initial_conditions = X_global.unsqueeze(0)
-
-として渡します。
+局所段階でも、この行列全体を一つの初期解として扱います。
+複数の初期解を使うなら、q×dの行列を初期解ごとに用意します。
 
 つまり global stage の上位 q 個の independent point を後から束ねるのではありません。
 
@@ -56,22 +52,22 @@ q-batch acquisition の場合、global stage から local stage まで
 
 ## 11.5 Initialization としての global search
 
-Hybrid backend では global optimizer 自体が initial-condition generator の役割を持ちます。
-
-    global optimizer
-      -> one promising q-batch
-      -> explicit batch_initial_conditions
-      -> local optimization
-
-そのため local stage では `raw_samples=None` です。
-
-global search と local initialization は独立した処理ではなく、
-global candidate がそのまま local start になります。
+二段階法では、広域探索が局所法の初期値生成を兼ねます。
+局所段階のために別の無関係な候補を生成するのではなく、得られた有望なq点組から改善を始めます。
+一組だけを渡す設計と、異なる複数の組を渡して再始動する設計は区別します。
+どちらの場合も、局所法が要求する可行性や勾配の条件を引き渡し時に満たす必要があります。
 
 ## 11.6 Local restart diversity
 
 同じ初期点を複製しても探索 basin の多様性は増えません。
-複数 restart を使う場合は、異なる global candidates を初期値として渡すことが有効です。
+複数restartを使う場合は、異なる広域候補を初期値として渡すことが有効です。
+
+同じ可行集合 $\mathcal F$、同じ固定された効用 $\hat\alpha$ を使い、可行な初期解を $X_0$、
+局所法の可行な返り値を $X_L$ とします。両者を再比較して良い方を残せば
+$\hat\alpha(X_{return})\ge\hat\alpha(X_0)$ です。
+これが二段階法で初期解を保存する理由です。局所法が必ず改善するという仮定は不要です。
+ただしMC標本を途中で変えた場合や、最後に修復して点を動かした場合は同じ比較にはなりません。
+修復後の点で効用と制約を再評価し、標本近似上の改善を真の期待効用の改善と同一視しません。
 
 ## 11.7 Global optimizer と gradient
 
@@ -90,8 +86,7 @@ Hybrid 全体としては local refinement に必要な differentiability を失
 
 は同じ意味ではありません。
 
-局所段階に勾配が必要な場合は、
-この local-stage requirement を表します。
+したがって、広域段階で不連続な修復を使えても、局所段階で微分する目的関数と座標変換には必要な正則性が求められます。
 
 ## 11.8 Constraint semantics は stage-dependent
 
@@ -101,15 +96,17 @@ candidate constraints は global stage と local stage の両方へ渡されま�
 
 | Global stage | Global constraint handling | Local stage |
 | --- | --- | --- |
+| ペナルティで探索 | 違反候補が残り得る | 可行初期点を要するなら先に修復・選別する |
+| 可行性優先で探索 | 可行点があれば優先する | 引き渡す点の残差を再確認する |
+| 可行な変数変換で探索 | 変換が保つ制約に限定される | 元の変数と制約へ整合させる |
 
+これは制約処理の組合せ例であり、各手法に一意の方式が決まるわけではありません。
 したがって Hybrid の制約処理を単一の「penalty method」と理解するのは不正確です。
 
 最終 candidate は local stage の constraint semantics も満たす必要がありますが、
 global stage で infeasible landscape をどう探索するかは選択した optimizer に依存します。
 
 ## 11.9 Nonlinear constraints
-
-    constrained local optimization
 
 制約付き局所最適化では初期点の実行可能性と数値安定性に注意が必要です。
 
@@ -120,16 +117,11 @@ stage 間で同一とは限りません。
 
 ## 11.10 Fixed features
 
-fixed features は global stage と local stage の両方で一貫して維持する必要があります。
-local stage にも引き継がれます。
-
-Mixed local stage では common fixed features と
-`mixed_fixed_features_list` の各 discrete configuration を merge します。
-
-同じ dimension に矛盾する値が指定された場合は error になります。
-
-ただし段階間で固定座標が異なると、
-`optimizer="hybrid"` と `fixed_features` の組合せは拒否されます。
+固定座標は両段階で同じ値を維持します。
+例えば共通の固定条件 $x_j=a$ と、ある離散割当の条件 $x_j=c_j$ があるなら、
+$a\ne c_j$ の枝の可行集合は空です。後から片方を上書きして解決しません。
+固定値が元の許容集合に属することも必要です。
+段階間で固定条件を変えると、異なる最適化問題を解くことになります。
 
 ## 11.11 Mixed-variable Hybrid
 
@@ -138,8 +130,8 @@ Mixed-variable hybrid では構造化された変数空間を扱います。
 integer / categorical dimension が存在する場合、global stage と local stage の双方で
 structured variable semantics を保持する必要があります。
 
-local stage に渡す `mixed_fixed_features_list` は、各 entry が
-すべての structured dimension を固定していなければなりません。
+連続局所法を各離散割当に適用する構成なら、枝ごとに整数・カテゴリ座標を固定し、
+連続座標だけを微分して改善します。全変数を一度連続化して後から丸める方法とは異なります。
 
 これにより local refinement 中に categorical / integer coordinate を
 continuous variable として誤って動かすことを防ぎます。
@@ -201,7 +193,8 @@ Hybrid で扱うには、各段階で augmented variables の意味と制約を�
 
 Hybrid optimization は global-to-local な optimizer composition を表します。
 一方、TuRBO は探索領域の geometry と state adaptation を表します。
-両者を組み合わせる場合は局所領域、状態更新、restart と初期化の整合が必要です。
+両者を組み合わせる場合は局所領域、状態更新、restartと初期化の整合が必要です。
+この場合の広域段階も信頼領域内を探索します。globalという名称だけで、元の全領域を探索したとはいえません。
 
 ## 11.20 Hybrid と high-dimensional embedding
 
@@ -217,7 +210,8 @@ Hybrid method を理解するときは、少なくとも次の4層を分けま�
 | --- | --- |
 | Search domain | global box, trust region, embedded polytope |
 | Global numerical search | DE, CMA-ES, Mixed GA |
-| Hand-off | explicit batch initial condition |
+| Hand-off | q点組を保った初期解の引き渡し |
+| Local numerical search | 勾配法・制約付き局所法による改善 |
 
 この分離により「global exploration」と「acquisition exploration」を混同しにくくなります。
 
@@ -268,6 +262,12 @@ batch / one-shot semantics は
 [Batch and One-shot Optimization](08_batch_one_shot.md) を参照してください。
 
 Trust Region は [Trust-region Optimization](10_trust_region.md) を参照してください。
+
+## この章で覚えておくこと
+
+二段階探索では、広域段階の有望解を局所段階へ引き継ぎます。
+同じ効用・可行集合・座標の意味を保ち、各段階で必要な微分可能性と可行な初期値を用意します。
+初期解を保存して比較することで、同じ標本近似上での不要な悪化を避けられます。
 
 ## 参考文献
 
