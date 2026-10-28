@@ -1,5 +1,10 @@
 # 4. Acquisition Function
 
+本章では、事後分布から期待効用を定義し、次の実験候補を選ぶまでの関係を学びます。
+[GP章](02_gaussian_process.md)の予測平均・共分散と、期待値の基礎を前提とします。
+最大化を基準とし、$x\in\mathcal X$ を一つの候補、$X$ を複数候補の組、
+$n$ を取得済みの観測数とします。
+
 ## 4.1 Acquisition Function とは
 
 ベイズ最適化では、Gaussian Process（GP）などの surrogate model から得られる
@@ -7,20 +12,17 @@ posterior distribution を使って、**次にどこを評価するか**を決�
 
 現在までの観測データを
 
-
 $$
 \mathcal{D}_n = \{(x_i, y_i)\}_{i=1}^n
 $$
 
 とし、候補点 $`x`$ に対する獲得関数を
 
-
 $$
 \alpha(x; \mathcal{D}_n)
 $$
 
 と書くと、逐次評価では典型的に
-
 
 $$
 x_{n+1}
@@ -33,7 +35,6 @@ $$
 
 獲得関数は、surrogate model の予測そのものではありません。posterior に含まれる
 予測値、不確実性、相関構造などを、**次の観測の価値**へ変換する意思決定層です。
-
 
 ```text
 observations
@@ -58,7 +59,6 @@ candidate
 ### 予測と意思決定を分けて考える
 
 例えば2つの候補A、Bについて、posteriorが次のような状態だとします。
-
 
 ~~~text
 A: 予測平均は高いが、すでによく調べられていて不確実性が小さい
@@ -91,7 +91,6 @@ improvement、confidence bound、information gain、value of information など�
 
 単一出力 GP では、候補点 $`x`$ に対して典型的に
 
-
 $$
 f(x) \mid \mathcal{D}_n
 \sim
@@ -121,13 +120,11 @@ $$
 
 Expected Improvement（EI）は、最大化問題なら概念的に
 
-
 $$
 I(x) = \max(f(x)-f_{\mathrm{best}}, 0)
 $$
 
 という improvement の期待値を評価します。つまり
-
 
 $$
 \operatorname{EI}(x)
@@ -142,11 +139,34 @@ $$
 確率変数だからです。EIは「改善する確率」だけでなく、
 **改善した場合にどれくらい大きく改善するか**も同時に考慮します。
 
+### 正規事後分布での期待改善量の導出
+
+比較基準 $b=f_{\mathrm{best}}$ を既知の定数とし、
+$f(x)=\mu_n(x)+\sigma_n(x)Z$、$Z\sim\mathcal N(0,1)$ と書きます。
+$\sigma_n(x)>0$ のとき $z=(\mu_n(x)-b)/\sigma_n(x)$ と置くと、
+改善が正となるのは $Z>-z$ の範囲です。標準正規分布の密度を $\phi$、累積分布を $\Phi$ として、
+
+$$
+\begin{aligned}
+\operatorname{EI}(x)
+&=\int_{-z}^{\infty}(\mu_n(x)-b+\sigma_n(x)t)\phi(t)\,dt\\
+&=(\mu_n(x)-b)\Phi(z)+\sigma_n(x)\phi(z).
+\end{aligned}
+$$
+
+最後の等号は $\phi'(t)=-t\phi(t)$ と正規分布の対称性から得られます。
+$\sigma_n(x)=0$ では確定値の改善 $\max(\mu_n(x)-b,0)$ を使います。
+例えば $\mu_n(x)=b$、$\sigma_n(x)=0.2$ ならEIは
+$0.2/\sqrt{2\pi}\simeq0.0798$ で、予測平均が基準と同じでも正の価値があります。
+
 Probability of Improvement（PI）は改善量ではなく改善確率を評価します。
+上と同じ仮定で $\operatorname{PI}(x)=\Phi(z)$ です。
+平均が基準と等しく分散が正ならPIは標準偏差によらず0.5ですが、EIは標準偏差に比例します。
+これが改善する確率と改善量を評価することの違いです。
+PIは厳密な改善 $f(x)>b$ の確率なので、分散ゼロで平均も基準と一致すれば0になります。
 
 Upper Confidence Bound（UCB）は、posterior mean と uncertainty を直接組み合わせる
 考え方です。
-
 
 $$
 \operatorname{UCB}(x)
@@ -154,7 +174,11 @@ $$
 \mu_n(x)+\sqrt{\beta}\,\sigma_n(x)
 $$
 
-これらの導出、LogEI / LogPI、パラメータの意味は詳細章で扱います。
+ここで $\beta\ge0$ は不確実性への重みです。
+正規分布の点ごとの上側分位点は $\mu_n(x)+\Phi^{-1}(1-\delta)\sigma_n(x)$ なので、
+$0<\delta<1/2$ に対して $\sqrt\beta=\Phi^{-1}(1-\delta)$ と置くと同じ形になります。
+ただし、この点ごとの解釈だけで全候補・全時刻を同時に覆う信頼保証は得られません。
+LogEI / LogPIや信頼係数の設定の詳細は、次の各章で扱います。
 
 - [Improvement-based acquisition](acquisition/02_improvement.md)
 - [Confidence-bound acquisition](acquisition/03_confidence_bound.md)
@@ -165,7 +189,8 @@ $$
 重要なのは「獲得関数を最大化する」という外側の最適化と、
 「目的関数を最大化したいか最小化したいか」を区別することです。
 
-実装では objective transform などによって向きをそろえる場合があります。
+最小化なら効用を $\max(f_{\mathrm{best}}-f(x),0)$ とするか、
+$g=-f$ として最大化へ向きをそろえます。
 したがって、数式を利用するときは $`f_{\mathrm{best}}`$ の定義や improvement の符号が
 最大化・最小化のどちらを前提としているか確認する必要があります。
 
@@ -176,7 +201,6 @@ posterior samples を使って期待効用を近似する Monte Carlo（MC）acq
 
 MC では概念的に
 
-
 $$
 \alpha(X)
 \approx
@@ -185,7 +209,15 @@ $$
 U(f^{(s)}(X))
 $$
 
-のように評価します。
+のように評価します。ここで $S$ は標本数、$f^{(s)}(X)$ は
+候補集合 $X$ の**同時事後分布**からの第 $s$ 標本、$U$ は集合全体の効用です。
+例えば $q$ 点の期待改善量なら $U(v)=\max(\max_{i\le q}v_i-b,0)$ と置けます。
+各候補を独立に標本化すると、相関を含む本来の同時分布とは異なる期待値になります。
+
+独立同分布の標本と有限な効用分散を仮定すれば、標本平均は不偏であり、
+標準誤差は $S^{-1/2}$ に比例します。有限標本で最大化した獲得関数には近似誤差が残ります。
+また、数値計算中の乱数を固定すると候補間の比較が安定する場合がありますが、
+それだけで最適候補の正確性が保証されるわけではありません。
 
 analytic acquisition と MC acquisition の違いは「どちらが高度か」ではありません。
 必要な期待値を閉形式で正確に計算できる設定なら analytic が有効であり、
@@ -197,7 +229,6 @@ analytic acquisition と MC acquisition の違いは「どちらが高度か」�
 
 1点ずつ評価する逐次 BO だけでなく、複数点を同時に評価する batch BO があります。
 候補集合を
-
 
 $$
 X = \{x_1,\ldots,x_q\}
@@ -237,7 +268,6 @@ Knowledge Gradient（KG）は、候補を観測した後に最終的な意思決
 
 複数目的
 
-
 $$
 f(x)=(f_1(x),\ldots,f_m(x))
 $$
@@ -258,7 +288,6 @@ NParEGO のように scalarization を利用する方法や、lookahead を組�
 
 実問題では、目的関数だけでなく
 
-
 $$
 g_j(x) \le 0
 $$
@@ -270,7 +299,6 @@ $$
 multi-output model から得た posterior sample を scalar objective へ変換してから
 utility を計算する場合もあります。
 
-
 ```text
 model posterior
     ↓
@@ -281,12 +309,18 @@ utility
 acquisition value
 ```
 
+例えば目的改善を $I(x)\ge0$、制約の可行性を
+$A(x)=\{g_j(x)\le0\ \text{for all }j\}$ とすれば、制約付き期待改善は
+$\mathbb E[I(x)\mathbf1_{A(x)}\mid\mathcal D_n]$ と定義できます。
+これがEIと可行確率の積に分解できるのは、事後分布で改善量と可行性が独立な場合です。
+さらに各制約の可行確率を掛けるには、制約間の条件付き独立性も必要です。
+相関出力の場合は同時分布を用いる必要があります。
+
 詳細は [Constrained acquisition](acquisition/08_constraints.md) で扱います。
 
 ここでいう制約は、未知の応答を surrogate model で推定する **output / black-box constraint**
 です。一方、組成和、変数間の大小関係、既知の線形設計則など、candidate の入力座標そのものに
 課す制約は acquisition function ではなく acquisition optimization の責務です。
-
 
 ```text
 output constraint:     g(x) <= 0  → model / acquisition composition
@@ -313,7 +347,6 @@ integrated variance reduction、predictive information gain などが基準に�
 
 目的は、指定した target $`t`$ に対して
 
-
 $$
 f(x)=t
 $$
@@ -334,15 +367,11 @@ $$
 
 Multi-Fidelity BO では、
 
-
-```text
-その観測から得られる情報価値
-                ×
-fidelity / evaluation cost
-```
-
-という関係を考えます。Knowledge Gradient と cost-aware utility を組み合わせる
-アプローチはその代表例です。
+候補 $(x,s)$ を忠実度 $s$ で観測したときの、目標忠実度に対する情報価値と
+評価コスト $c(x,s)>0$ を組み合わせます。例えば、期待する意思決定の改善量を
+$V(x,s)$ とすれば、$V(x,s)/c(x,s)$ は単位コスト当たりの価値です。
+これは費用を考慮する方法の一つであり、限られた総予算の下での最適戦略と常に一致するわけではありません。
+Knowledge Gradientと費用に応じた効用を組み合わせる方法は、その代表例です。
 
 詳細は
 [Multi-Fidelity and cost-aware acquisition](acquisition/11_multifidelity_cost_aware.md)
@@ -351,7 +380,6 @@ fidelity / evaluation cost
 ## 4.12 Acquisition Function とその最適化は別問題
 
 獲得関数を定義することと、それを最大化することは別の問題です。
-
 
 $$
 \text{acquisition definition}
@@ -410,8 +438,8 @@ transform などの設計と獲得関数は、ソフトウェア上は責務を�
 11. [Multi-Fidelity / Cost-aware](acquisition/11_multifidelity_cost_aware.md)
 12. [Selection Guide](acquisition/12_selection_guide.md)
 
-詳細章では、現在の本章に含まれていた EI、PI、UCB、KG、EHVI、NEHVI などを
-削除するのではなく、より体系的に移行・拡張します。
+詳細章では、EI・PI・UCBの導出から、KGによる先読み、多目的のEHVI・NEHVIまで、
+それぞれの効用・統計的仮定・近似方法を確認できます。
 
 ## 4.17 この章で覚えておくこと
 
@@ -422,7 +450,6 @@ Acquisition Function は、surrogate model の posterior を
 という意思決定へ変換する層です。最も重要なのは、acquisition function が
 「真の目的関数」でも「posterior mean」でもなく、**限られた評価予算を次にどこへ
 使うかを決めるための utility** だと理解することです。
-
 
 ```text
 Model
