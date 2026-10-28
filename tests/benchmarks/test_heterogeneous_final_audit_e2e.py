@@ -58,7 +58,7 @@ def test_notebook_and_report_document_same_experiment() -> None:
     source = "\n".join(
         "".join(cell["source"]) for cell in notebook["cells"] if cell["cell_type"] == "code"
     )
-    report = (root / "docs" / "benchmarks" / "heterogeneous-e2e-benchmark-report.md").read_text(
+    report = (root / ".github" / "project-records" / "benchmarks" / "heterogeneous-e2e-benchmark-report.md").read_text(
         encoding="utf-8"
     )
     assert "SEEDS = (1901, 1902, 1903)" in source
