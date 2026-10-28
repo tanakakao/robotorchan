@@ -24,14 +24,6 @@ class CoreModelGuideExamplesTests(unittest.TestCase):
             exec(compile(match.group(1), str(path), "exec"), scope)
         return scope
 
-    def test_mixed_gp_posterior(self) -> None:
-        scope = self._run_first_python_block("05_mixed_variables.md")
-        model = scope["model"]
-        X = scope["X"]
-        posterior = model.posterior(X[:2])
-        self.assertEqual(tuple(posterior.mean.shape[-2:]), (2, 1))
-        self.assertTrue(torch.isfinite(posterior.mean).all())
-
     def test_variational_gp_elbo(self) -> None:
         scope = self._run_first_python_block("09_variational_gp.md")
         model = scope["model"]

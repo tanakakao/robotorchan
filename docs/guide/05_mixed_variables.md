@@ -1,59 +1,140 @@
-# Mixed Variables：理論と実装
+# Mixed Variables：カテゴリ表現と共分散の実装
 
-## 解決する問題と数理の入口
+## この章で学ぶこと
 
-[理論の正本](../theory/05_mixed_variables.md)は数学的仮定・導出を担当する。本章は入力データ、アルゴリズム、公開API、上流委譲、数値検証のつながりを日本語で説明する。
+[Mixed VariablesのTheory](../theory/05_mixed_variables.md)の5.2〜5.6節を、
+カテゴリ比較、混合共分散、one-hot変換、候補探索の処理へ対応付けます。
+同じ混合変数でも、モデルごとにカテゴリを扱う実装経路は異なります。
+本章では、BoTorchの標準Mixedモデルと、robotorchanの構造化モデル用の共通部品を分けます。
 
-連続変数とカテゴリ変数を同時に扱う。整数のカテゴリラベルを連続量の距離と誤認すると、カテゴリの番号付けで共分散が変わってしまう。native categorical kernelは等値性に基づく共分散で、カテゴリを単純な数値距離とみなさない。学習前後でカテゴリ符号を一貫して保つ。
+## 1. 標準MixedSingleTaskGPの継承構造
 
-## 実装の責務と公開契約
+[models/standard/single_task.py][single-task]の`MixedSingleTaskGP`は、
+`FittableExactGPModelMixin`とBoTorchの`MixedSingleTaskGP`を継承します。
+コンストラクタはrawな訓練データをコピーし、カテゴリ列などを親へ渡した後に
+共通のデータ保持処理へ接続します。
+`make_mll()`と`fit()`の構成は[GP Guide](02_gaussian_process.md)と共通です。
 
-- **Extended:** `src/robotorchan/models/standard/single_task.py`の`MixedSingleTaskGP`はBoTorch `MixedSingleTaskGP`のラッパーで、raw tensor保持と共通学習契約を追加する。
-- **Delegated:** GP推論、native mixed covarianceとposteriorの主要処理はBoTorch/GPyTorch。
-- **Implemented:** `src/robotorchan/models/base.py`の`normalize_feature_dims`と`make_mixed_covar_module`は他のmixed構造モデル向けの共通補助機能。全モデルが同じmixed kernelを用いるわけではない。
-- `cat_dims`はraw入力列に対応し、task/fidelity/context等の構造列と同一視しない。
+カテゴリ共分散の構築とGP推論は、親の[gp_regression_mixed.py][b-models]へ委譲します。
+このラッパーは、独自の`make_mixed_covar_module()`で親の部品を上書きしません。
+また、ラッパーの`cat_dims`保存値と、親が内部で正規化して使う列番号は区別します。
+入力検査が全てrobotorchanの共通ヘルパーを通るわけではありません。
 
-## 最小の利用例
+## 2. カテゴリ比較が共分散になるまで
 
-```python
-import torch
-from robotorchan.models import MixedSingleTaskGP
+BoTorchの[CategoricalKernel][b-kernels]は、GPyTorchの`Kernel`を継承します。
+`forward()`は二つの入力のカテゴリ値を`!=`で比較し、不一致を表すTensorを作ります。
+それを列ごとの長さ尺度で割り、通常の経路ではカテゴリ列について平均し、
+符号を反転した指数関数へ渡します。
+これはTheory 5.2節の、カテゴリ同一性に基づく共分散を計算する箇所です。
 
-X = torch.tensor([[0.1, 0.0], [0.3, 1.0], [0.8, 0.0], [0.9, 1.0]], dtype=torch.double)
-Y = torch.tensor([[0.2], [0.8], [0.6], [0.4]], dtype=torch.double)
-model = MixedSingleTaskGP(train_X=X, train_Y=Y, cat_dims=[1])
-print(model.posterior(X[:2]).mean)
-```
+カテゴリ番号の差や大小を距離として使う処理ではありません。
+そのため、同一性を保つ一対一の再符号化では、同じパラメータの共分散が保たれます。
+これはカテゴリ表現の性質であり、番号を変えたモデルが常に同じ学習経路を通るという主張ではありません。
 
-コードは確認した公開APIを示す最小例であり、すべての条件での成功を保証するものではない。tensorのshape、dtype/device、入力変数の意味と、posteriorの出力構造を意識して利用する。
+`Kernel.__call__()`の`active_dims`が、比較対象の入力列を選びます。
+カテゴリ列へ通常の連続入力用の正規化を無条件に適用すると、
+モデルと候補の間で同一性の比較がずれる場合があります。
+BoTorchのMixedモデルが受け取る入力変換も、カテゴリ列を変更しないことが前提です。
 
-## 検証・未検証事項
+## 3. 連続項・カテゴリ項・交互作用項
 
-カテゴリ名の置換に対する共分散の不変性は、同じ条件でのカテゴリIDの付け替えを比較するpropertyであり、全mixed variantの検証完了を意味しない。BoTorch-native categorical kernel、内部one-hot、embedding、passthroughをモデルごとに区別する。関連Notebook: [Mixed GP](../../examples/notebooks/02_mixed_single_task_gp.ipynb)。
+BoTorchの`MixedSingleTaskGP.__init__()`は、カテゴリ列とそれ以外の列を分けます。
+連続部がある場合、連続とカテゴリの加法項、および両者の積の項を組み立てます。
+加法の組と積の組をそれぞれ`ScaleKernel`で包み、加法側のカテゴリ部品にもスケールを置きます。
+連続部がなければ、scaled categorical kernelだけを作ります。
+この部品構成が、Theory 5.3節の和と相互作用に対応します。
 
-[旧Model Mapping](../../.github/project-records/theory-guide/mapping/models.md)および[検証記録](../../.github/project-records/theory-guide/mapping/verification.md)は移行元の正本として保持する。API存在、静的assertion、CI成功、独立数値検証は区別する。使用例と詳しいモデル選択は[モデルガイド](../models/README.md)を参照する。
+一方、[models/base.py][base]の`make_mixed_covar_module()`は、
+他のmixedモデル向けの共通構築関数です。
+連続項・scaledカテゴリ項・積の項を`AdditiveKernel`で組み合わせますが、
+BoTorch標準Mixedモデルと同じスケール部品の配置ではありません。
+対応式と部品ごとの違いは[Kernel Guide](03_kernel.md)にまとめています。
 
-## カテゴリ共分散と符号化の実装境界
+共通ヘルパーは、`normalize_feature_dims()`でraw入力列を正規化してから
+構造列を除外し、残りの連続列とカテゴリ列を子カーネルの`active_dims`に割り当てます。
+負の列番号は正規化し、その後に重複、範囲外、構造列との重なりを拒否します。
+カテゴリ共分散を構成することと、入力列の意味を検査することは別の処理です。
 
-カテゴリcを数値的な距離として扱うRBFと、カテゴリ同一性に基づくcategorical kernelは異なる。カテゴリ番号を付け替えても同じカテゴリ同士の同一性が保存される場合、native categorical kernelの共分散構造は変わらないというのが重要なpropertyである。連続設計座標x_cとカテゴリcを組み合わせると、専用mixed covariance helperは概念的に連続項・カテゴリ項・交互作用項を足し合わせる。
+## 4. 構造列を通常のカテゴリ列と分ける
 
-src/robotorchan/models/standard/single_task.pyのMixedSingleTaskGPはBoTorchMixedSingleTaskGPを直接継承し、BoTorch-native mixed kernelとposterior推論を上流へ委譲する。一方、src/robotorchan/models/base.pyのmake_mixed_covar_moduleはrobotorchanが他の構造化mixed family向けに加法・積kernelを構成するための実装で、MixedSingleTaskGPの内部kernelを必ず上書きするものではない。
+| モデル系 | 主な実装とカテゴリの扱い |
+| --- | --- |
+| `MixedSingleTaskGP` | BoTorchがnative mixed covarianceを構成 |
+| `MixedMultiTaskGP` | 共通mixedヘルパーで設計共分散を構成し、タスク列を除外 |
+| `MixedSingleTaskMultiFidelityGP` | 同ヘルパーから忠実度列を除外し、上流の忠実度モデルへ接続 |
+| `MixedSaasFullyBayesianSingleTaskGP` | モデルがone-hot変換を所有し、符号化後にSAASモデルへ接続 |
 
-| モデル系 | カテゴリの取扱い | 確認するべき契約 |
-| --- | --- | --- |
-| MixedSingleTaskGP | BoTorch native mixed categorical kernel | train_Xはraw [n,d]、cat_dimsはraw列番号。raw snapshotsとMLL便宜APIを追加 |
-| MixedMultiTaskGP | 設計変数上のnative mixed covariance | task_featureはstructuralでありcat_dimsに入れない |
-| MixedSingleTaskMultiFidelityGP | 設計変数上のnative mixed covarianceとBoTorch fidelity kernel | fidelity列をcat_dimsから除外。linear_truncated=Trueは拒否 |
-| MixedSaasFullyBayesianSingleTaskGP | モデル所有のone-hot入力変換 | native mixed kernel経路とは異なる。カテゴリ列とencoded次元を区別 |
+[multitask.py][multitask]の`MixedMultiTaskGP`は、`MultiTaskGP`を拡張します。
+`task_feature`を通常の設計カテゴリに混ぜず、タスク共分散はBoTorch側に任せます。
+共通ヘルパーの子カーネルはraw列番号を使うため、最上位の`active_dims`でも
+元の列配置を維持し、親が非タスク列だけへ再番号付けすることを避けます。
 
-raw train_Xのカテゴリ列を実験側で任意に丸めるのではなく、学習・posterior・optimizerの全境界で同じ符号と候補値を使う。負のcat_dimsやtask/fidelityとの重複を扱う場合は、各モデルのnormalize_feature_dims呼出しを確認する。これはBoTorchMixedSingleTaskGPの全入力検証を代替する主張ではない。
+[multi_fidelity.py][fidelity]の`MixedSingleTaskMultiFidelityGP`は、
+`SingleTaskMultiFidelityGP`を拡張し、忠実度列を設計共分散から除外します。
+`linear_truncated=True`では忠実度カーネルが全入力の共分散を所有するため、
+この組合せを拒否します。カテゴリの列番号を追加するだけで、
+どの忠実度カーネルとも合成できる設計ではありません。
 
-**検証境界：** 上記の継承と共分散構成はソース照合。カテゴリラベル付け替えの数値不変性・探索候補の可行性は別途独立実験が必要。
+## 5. one-hot変換を所有するモデル
 
-## 数値 API と利用上の補足
+[fully_bayesian.py][fully-bayesian]の`MixedSaasFullyBayesianSingleTaskGP`は、
+`SaasFullyBayesianSingleTaskGP`を拡張し、
+`CategoricalOneHotInputTransform`を使って訓練入力を符号化します。
+この経路は、カテゴリ比較のnative kernelを組み立てる経路とは異なります。
 
-- [Kernel](../theory/03_kernel.md)
-- [Acquisition Function](../theory/04_acquisition_function.md)
-- [Hierarchical / Contextual GP](../theory/12_hierarchical_contextual_gp.md)
-- [Multi-task / Multi-output](../theory/07_multitask_multioutput.md)
-- [Mixed-variable model documentation](../models/README.md)
+`CategoricalOneHotInputTransform.__init__()`は、訓練データで観測したカテゴリ値を
+列ごとに収集・整列し、bufferへ保存します。
+`transform()`はその値との等値比較からone-hot列を作り、
+カテゴリ以外の列と順に連結します。未知のカテゴリは、全て零の符号へ黙って写さず拒否します。
+
+raw列がone-hotの複数列へ変わるため、符号化後の入力次元と列番号も変わります。
+`encoded_scalar_index()`は、カテゴリ以外のraw列に対応する符号化後の位置を求めます。
+カテゴリ列は一つのスカラー位置にならないので、この操作では拒否します。
+
+モデルの`posterior()`はraw入力を同じ変換へ通してから親へ渡します。
+外部で別のカテゴリ入力変換を同時に渡すことは拒否し、
+訓練と予測の符号化をモデル自身が一致させます。
+入力warpingを使う場合も、カテゴリ列を対象から除外して列番号を変換します。
+
+## 6. 予測モデルと候補探索の境界
+
+整数で保存された値が、数量か名義カテゴリかによってカーネルの意味は変わります。
+標準Mixedモデルは、`cat_dims`以外の列を連続側の部品へ渡します。
+数量を表す整数を含めたからといって、予測モデル自身が候補を整数へ丸めるわけではありません。
+
+候補探索側では、[MixedVariableSpace][variable-space]などが
+入力列の型と許容値を保持します。
+[BoTorch mixed backend][mixed-backend]では、離散割当を固定する設定を
+上流の`optimize_acqf_mixed()`へ渡します。
+この探索の処理と、カテゴリ同一性を使う予測カーネルの計算は異なる責務です。
+学習・予測・候補生成で同じraw列とカテゴリ値を対応付ける必要があります。
+
+q点を同時に選ぶ場合やone-shotの補助変数を含む場合は、割当の単位も変わります。
+詳しくは[混合変数最適化Guide](optimization/04_mixed_discrete.md)と
+[バッチ・先読みGuide](optimization/08_batch_one_shot.md)を参照してください。
+
+## 7. 実装の担当範囲と参照先
+
+標準Mixedモデルの共分散と推論はDelegated、
+rawデータ保持と学習入口はExtendedです。
+構造化モデル向けの部品構成、入力列の検査、one-hot変換はImplementedです。
+モデル名だけから、全てが同じカーネルや符号化を使うとは判断できません。
+
+使用例は[Mixed GP Notebook][notebook]、
+標準モデルの接続は[上流との対応テスト][model-test]、
+カテゴリの同一性と共分散の関係は[再符号化の参照テスト][reference-test]を参照できます。
+上流の参照コードはBoTorch 0.18.1を対象とします。
+
+[single-task]: ../../src/robotorchan/models/standard/single_task.py
+[base]: ../../src/robotorchan/models/base.py
+[multitask]: ../../src/robotorchan/models/standard/multitask.py
+[fidelity]: ../../src/robotorchan/models/standard/multi_fidelity.py
+[fully-bayesian]: ../../src/robotorchan/models/high_dimensional/fully_bayesian.py
+[b-models]: https://github.com/pytorch/botorch/tree/v0.18.1/botorch/models
+[b-kernels]: https://github.com/pytorch/botorch/tree/v0.18.1/botorch/models/kernels
+[variable-space]: ../../src/robotorchan/optim/domains/variable_space.py
+[mixed-backend]: ../../src/robotorchan/optim/backends/botorch.py
+[notebook]: ../../examples/notebooks/02_mixed_single_task_gp.ipynb
+[model-test]: ../../tests/models/standard/test_mixed_single_task_gp.py
+[reference-test]: ../../tests/models/standard/test_phase7_mixed_categorical_reference.py

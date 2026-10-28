@@ -1,4 +1,4 @@
-"""Run kernel and preference examples from the published Japanese guide."""
+"""Run the remaining preference example from the published Japanese guide."""
 
 from __future__ import annotations
 
@@ -26,15 +26,6 @@ class KernelPreferenceGuideExamplesTests(unittest.TestCase):
             torch.manual_seed(0)
             exec(compile(match.group(1), str(path), "exec"), scope)
         return scope
-
-    def test_kernel_gp_example(self) -> None:
-        scope = self.run_example("03_kernel.md")
-        model = scope["model"]
-        X = scope["X"]
-        posterior = model.posterior(X[:2])
-        self.assertEqual(tuple(posterior.mean.shape[-2:]), (2, 1))
-        self.assertTrue(torch.isfinite(posterior.mean).all())
-        self.assertTrue(torch.isfinite(posterior.variance).all())
 
     def test_pairwise_preference_example(self) -> None:
         scope = self.run_example("10_preference_learning.md")
