@@ -7167,6 +7167,11 @@
       "path": "docs-internal/verification/optimization/README.md",
       "category": "Engineering",
       "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/maintenance/notebook-modernization-phase2.md",
+      "category": "Engineering",
+      "reason": "Notebook更新の静的証拠とPhase 3作業範囲を記録する開発用資料。"
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
