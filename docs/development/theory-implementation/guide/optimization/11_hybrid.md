@@ -42,3 +42,45 @@ joint q×dを保持し、global候補の独立top-qへの置換をしない。�
 最低限の確認順序は、**(1) 問題の型→(2) 数理契約→(3) optimizer dispatch→(4) backend→(5) 制約と出力shape→(6) 再現実験**である。CI成功だけで全backend・全constraint・全qに対して正しいとは主張しない。
 
 [Optimization利用ガイド](../../../../optimization/README.md)、[理論Optimization索引](../../../../theory/optimization/README.md)、[旧Optimization Mapping](../../optimization.md)、[Verification](../../verification.md)を参照。原文は章別照合完了まで削除しない。
+
+## 5. Differential EvolutionからBoTorch局所探索へ接続する
+
+以下は公開dispatcherの`optimizer="hybrid"`を使用し、
+Differential Evolution（DE）で得たjoint候補を
+BoTorchの局所最適化の`batch_initial_conditions`に渡す実行例である。
+内部handoffでは`[q,d]`から`[1,q,d]`へ次元が追加され、
+局所探索後には実験候補`[q,d]`を返す。
+
+```python
+import torch
+from botorch.acquisition.analytic import PosteriorMean
+from robotorchan.models import SingleTaskGP
+from robotorchan.optim import optimize_acqf
+
+train_X = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(4 * train_X)
+model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
+model.eval()
+acqf = PosteriorMean(model=model)
+bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+candidate, score = optimize_acqf(
+    acq_function=acqf,
+    bounds=bounds,
+    q=1,
+    optimizer="hybrid",
+    seed=7,
+    optimizer_options={
+        "global_optimizer": "de",
+        "global_options": {"options": {"maxiter": 2, "popsize": 4}},
+        "num_restarts": 1,
+    },
+)
+assert candidate.shape == (1, 1)
+assert torch.isfinite(candidate).all()
+assert torch.isfinite(score).all()
+assert torch.all(candidate >= bounds[0])
+assert torch.all(candidate <= bounds[1])
+```
+
+この例はDEから局所探索への実行経路と候補のboundsを確認する。
+DE自体の大域最適性、複数restart、mixed変数、非線形制約の可行性は検証していない。

@@ -15,7 +15,7 @@
 | 08 | Batch / One-shot | batch_one_shot_example（qKG） | augmented q抽出形状 |
 | 09 | High Dimensional | high_dimensional_example（HeSBO） | latent→original照合 |
 | 10 | Trust Region | trust_region_example（TuRBO） | expand/shrink state values |
-| 11 | Hybrid | — | — |
+| 11 | Hybrid | hybrid_example（DE→BoTorch local） | shape / bounds / finite |
 | 12 | Selection Guide | —（比較・選択章） | — |
 
 `gradient_example`は
@@ -40,3 +40,5 @@
 第09章は`tests/docs/test_theory_guide_optimization_high_dimensional_example.py`でHeSBOの元6次元／潜在2次元の候補と`project`による復元を掲載コードから直接検査する。REMBO・ALEBO・BAxUS全体の精度や低次元探索のregret保証ではない。
 
 第10章は`tests/docs/test_theory_guide_optimization_trust_region_example.py`で掲載コードを直接実行し、観測後の2回成功で幅拡大、2回失敗で幅縮小する状態遷移を検査する。restart・最適化候補・regret改善の実証ではない。
+
+第11章は`tests/docs/test_theory_guide_optimization_hybrid_example.py`で公開dispatcherのhybrid経路を通るDE→BoTorch局所探索の掲載例を直接実行し、候補shape・bounds・finiteを検査する。global stageの最適性や制約付きmixedの保証ではない。
