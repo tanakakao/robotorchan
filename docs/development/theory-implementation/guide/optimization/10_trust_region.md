@@ -47,3 +47,40 @@ success ⇔ b > b_best + r * max(1, abs(b_best))
 | Observation update | 実評価値と`state_values`の責務分離 | noise不確実性の厳密な最適制御 |
 
 代表的な契約テストは`tests/optim/trust_region/test_turbo_strategy.py`。旧[Optimization Mapping](../../optimization.md)のassertion evidenceと[Verification Mapping](../../verification.md)に既存の数値参照記録がある。CI成功と特定state invariantの検査から、TuRBOの総合的な収束や一般化性能を証明したとは扱わない。旧原文は台帳が検収されるまで保全する。
+
+## 5. 観測結果から局所領域を拡大・縮小する実行例
+
+次は`TuRBOState`を作成し、**完了した観測値**に基づいて長さを更新する。
+`success_tolerance=2`で2回成功すると幅を2倍にし、
+`failure_tolerance=2`で2回失敗すると幅を半分にする。
+
+```python
+import torch
+from robotorchan.optim.trust_region.turbo import TuRBOState, update_turbo_state
+
+state = TuRBOState(
+    dim=2,
+    batch_size=1,
+    length=0.4,
+    success_tolerance=2,
+    failure_tolerance=2,
+)
+state = update_turbo_state(state, torch.tensor([0.5], dtype=torch.double))
+assert state.length == 0.4
+assert state.success_counter == 1
+state = update_turbo_state(state, torch.tensor([0.7], dtype=torch.double))
+assert state.length == 0.8
+assert state.success_counter == 0
+state = update_turbo_state(state, torch.tensor([0.6], dtype=torch.double))
+assert state.length == 0.8
+assert state.failure_counter == 1
+state = update_turbo_state(state, torch.tensor([0.6], dtype=torch.double))
+assert state.length == 0.4
+assert state.failure_counter == 0
+assert state.best_value == 0.7
+assert state.observed_best_value == 0.7
+```
+
+`update_turbo_state`が受け取る`values`は獲得関数のscoreではなく、
+実際に評価した目的値である。ここでは閾値に対する成功・失敗の
+状態遷移のみを確認し、探索戦略を走らせたregretやrestart性能は検証しない。
