@@ -1,5 +1,8 @@
 # Batch and One-shot Acquisition Optimization
 
+[獲得関数の先読み章](../acquisition/06_lookahead.md)と[初期化章](03_initialization.md)を前提とします。
+本章では、実験する候補、将来観測の標本、補助的な判断変数を区別して数値問題を構成します。
+
 ## 8.1 目的
 
 Bayesian Optimization で複数候補を扱うときは、少なくとも次の概念を区別する必要があります。
@@ -68,6 +71,11 @@ joint q-batch を一度に解く代わりに、1点ずつ選択して batch を�
 これは最初から q 点を joint optimize することとは異なります。
 greedy approximation なので、一般に joint optimum と一致する保証はありません。
 
+集合の効用 $\alpha(S)$ に対する貪欲な構成なら、既選択集合Sを固定して
+$\alpha(S\cup\{x\})-\alpha(S)$ の大きい点を順に選びます。
+未知の結果があることを反映する方法と、結果を観測したことにしてモデルを更新する方法は同じではありません。
+特に予測平均を確定した観測結果として扱う操作は、未知結果の分布を積分する操作とは異なります。
+
 ## 8.5 Sequential selection と pending state
 
 各ステップで選んだ候補を pending set に追加し、後続の獲得関数に反映します。
@@ -135,9 +143,13 @@ one-shot formulation は実際に評価する q 個の候補に加え、
 最適化後は augmented solution から実際の候補を抽出します。
 したがって初期条件も補助変数を含む空間で定義する必要があります。
 
+一つの終端判断を各仮想観測で選ぶ単純なKGでは、現在のq点に加え、S個の標本にそれぞれ一つの判断を置きます。
+入力次元がdなら、拡張した決定変数の数は $d(q+S)$ です。
+Sを増やすと期待値の近似は精密になり得ますが、最適化の次元も増えます。
+
 ## 8.10 Knowledge Gradient の one-shot optimization
 
-qKnowledgeGradient は代表的な one-shot acquisition です。
+バッチKnowledge Gradientは、一括した拡張最適化で扱える代表例です。
 
 fantasy points は実験候補ではなく、future terminal decision を近似するための
 auxiliary optimization variables です。
@@ -152,9 +164,9 @@ auxiliary optimization variables です。
 fantasy decision の初期値は実際の候補とは異なる役割を持つため、
 その構造を考慮した初期化が重要です。
 
-## 8.11 qMultiStepLookahead
+## 8.11 多段階先読み
 
-qMultiStepLookahead は複数段階の adaptive decision tree を one-shot 形式で表現します。
+多段階先読みでは、複数段階の適応的な判断木を一括した拡張問題で表現できます。
 
 future stage ごとに fantasy branching があるため、
 augmented q-batch は horizon と fantasy count に応じて急速に大きくなります。
@@ -167,6 +179,11 @@ augmented q-batch は horizon と fantasy count に応じて急速に大きく�
 
 batch q は現在同時に選ぶ candidate 数です。
 lookahead depth は将来観測後に何段階の adaptive decision を評価するかを表します。
+
+例えば現在一つの候補を選び、次の観測を2枝、その後を各3枝に近似し、各段階に一つの判断を置くと、
+拡張変数には $1+2+2\times3=9$ 点分が現れます。
+これは9点を今から並列実験するという意味ではなく、実際の観測履歴に応じて通る枝は一つです。
+同じ履歴を共有する判断は同じ変数で表し、未来の結果を先に知って判断する構造を許しません。
 
 ## 8.12 Multi-step の augmented initialization
 
@@ -200,6 +217,10 @@ augmented row ごとに categorical assignment を区別する必要がありま
 小規模な離散集合なら row-specific assignment を列挙し、
 連続部分問題を条件付きで最適化できます。
 
+例えば仮想観測が等確率の二通りで、終端判断のカテゴリA・Bの価値がそれぞれ $(1,0)$ と $(0,1)$ なら、
+結果ごとにカテゴリを選ぶ期待価値は1です。二つの補助判断を同じカテゴリへ固定すると、最良でも0.5になります。
+異なる観測結果への適応を数値変数の割当で消してしまうことが、単なる探索精度の差以上の問題です。
+
 ## 8.15 Mixed one-shot の組合せ爆発
 
 1 row あたりの categorical assignment 数を C、
@@ -222,7 +243,7 @@ augmented row 数を q_aug とすると、単純列挙数は
 | --- | --- | --- |
 | optimizer variable | q candidates | q candidates + auxiliary variables |
 | optimizer batch size | q | q_aug |
-| returned candidates | optimized q rows | extract_candidates の結果 |
+| 返す実評価候補 | 最適化したq点 | 拡張解から実評価に対応するq点を抽出 |
 | fantasy variables | 通常はoptimizer変数ではない | optimizer変数に含み得る |
 | initialization | q rows | q_aug rows |
 | mixed handling |通常のmixed semantics | augmented row semanticsが必要 |
@@ -273,7 +294,13 @@ one-shot acquisition に candidate constraint を組み合わせる場合は、
 | multi-step lookahead | one-shot augmented tree |
 | mixed one-shot | row-specific categorical handling |
 
-backend の capability だけでなく acquisition の tensor contract を確認することが重要です。
+数値手法の適用条件だけでなく、各決定変数がどの観測と判断を表すかを確認することが重要です。
+
+## この章で覚えておくこと
+
+同時候補、逐次選択、先読みの補助判断はそれぞれ異なる最適化変数を使います。
+補助変数を追加すると将来の適応的な判断を表せますが、次元と離散割当の数も増えます。
+現在の実験候補だけを返すまで、各変数の意味と制約を保つ必要があります。
 
 ## 参考文献
 

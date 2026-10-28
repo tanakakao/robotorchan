@@ -1,5 +1,8 @@
 # Evolutionary and Population-based Optimization
 
+[微分不要の探索章](06_derivative_free.md)と[候補制約章](05_constraints.md)を前提とします。
+集団サイズとBOの候補数qは別です。前者は数値探索で比較する解の数、後者は一度に評価する実験候補の数です。
+
 ## 7.1 共通構造
 
 population-based optimizer は複数の candidate を保持し、
@@ -21,7 +24,15 @@ Differential Evolution (DE) は population 内の個体差分を mutation direct
 
 です。
 
-trial vector を crossover で作り、objective が改善すれば target vector と置き換えます。
+ここで差分の係数 $F>0$ を定め、通常は互いに異なる個体の添字 $r_1,r_2,r_3$ を選びます。
+例えば基準個体が $(0.2,0.4)$、差分を取る二個体が $(0.7,0.2),(0.1,0.5)$、$F=0.5$ なら、
+変異ベクトルは $(0.5,0.25)$ です。これはまだ境界や制約を満たすとは限りません。
+
+交叉の一例では、座標ごとに確率CRで変異ベクトルを採用し、それ以外は元の個体を使います。
+$0\le CR\le1$ とし、少なくとも一座標を変異側から取る規則を加えると、交叉が元の個体だけを選ぶことを防げます。
+ただし両者の座標値が一致する場合など、結果が同じになる可能性は残ります。
+同じ決定論的な効用で改善した試行だけを受理すれば、個体の評価値は減りませんが、集団の大域収束までは保証しません。
+毎回異なるモンテカルロ近似値を使う場合は、この単調性も真の期待効用については成立するとは限りません。
 
 acquisition maximization は符号を反転すれば minimization としても定式化できます。
 
@@ -46,12 +57,17 @@ coordinate-wise gradient を使わず、変数間の相関を covariance に学�
 標準的な CMA-ES は連続空間の探索分布を前提とします。
 離散変数を扱う場合は別途 encoding や離散化の設計が必要です。
 
-candidate constraint は
+候補制約を扱う一つの構成は、
 
     J(X) = -alpha(X) + lambda V(X)
 
-という penalty objective で処理します。
-したがって penalty coefficient は探索挙動に影響します。
+というペナルティ目的を最小化する方法です。
+したがってペナルティ係数は探索挙動に影響します。
+集団サイズを $\lambda$、平均の更新に使う上位数を $1\le\mu\le\lambda$ とします。
+探索分布の平均は、例えば上位の標本を $x_{i:\lambda}$、正の重みを $w_i$ として
+$m_{new}=\sum_{i=1}^{\mu}w_i x_{i:\lambda}$、$\sum_iw_i=1$ と更新します。
+共分散や歩幅の更新には順位と探索履歴も使います。単に全標本の共分散を計算する操作とは異なります。
+この探索共分散は提案の形を定める量であり、GPの関数値の事後共分散ではありません。
 
 ## 7.4 Genetic Algorithm
 
@@ -60,7 +76,7 @@ Genetic Algorithm (GA) は selection、crossover、mutation、elitism を組み�
 連続空間の GA では tournament selection、arithmetic crossover、
 Gaussian mutation などの演算を利用できます。
 
-constraint がある場合は scalar penalty だけに依存せず、feasibility-first ranking を使います。
+制約がある場合には、例えばペナルティの加算とは別に、実行可能性を優先する順位付けを選べます。
 
 概念的な ordering は次の通りです。
 
@@ -97,12 +113,13 @@ Particle Swarm Optimization (PSO) は particle の位置と速度を
 
 で更新します。
 
-p_i は personal best、g は global best です。
+ここでp_iは個体の過去の最良位置、gは群れの最良位置です。wは慣性、c1・c2は引力の係数、
+r1・r2は通常、座標ごとに生成する一様乱数です。最良位置と乱数の役割を分けます。
 
 box bounds に対する clipping や integer dimension の repair を組み込めます。
 categorical variable には別途離散的な位置更新規則が必要です。
 
-constraint は acquisition value から lambda × violation を引いた penalty score に反映されます。
+制約を、獲得効用から違反量のペナルティを引いたスコアへ反映する設計も可能です。
 
 ## 7.7 NSGA-II
 
@@ -112,6 +129,9 @@ population を Pareto dominance に基づく non-dominated front へ分け、
 
 複数目的の評価ベクトルに対して Pareto 優越関係を定義し、
 非劣解集合の近似と多様性の維持を目指します。
+混雑距離では、各目的ごとに並べた近隣の値の差を、その目的の集団内範囲で割って足します。
+両端の点を優先する規則を用い、範囲が零の目的は零除算しないよう別に扱います。
+この距離は目的空間の多様性の指標であり、元の入力空間の距離そのものではありません。
 
 ### qEHVI / qNEHVI との違い
 
@@ -179,12 +199,18 @@ population optimizer は expensive black-box objective を直接大量評価す�
 | continuous non-smooth | DE / CMA-ES / GA / PSO |
 | integerを含む | DE / PSO / Mixed GA / sampling |
 | unordered categoricalを含む | Mixed GA / sampling |
-| scale依存penaltyを避けたいconstraint | DE / GA / Mixed GA |
+| 単位に依存するペナルティを避けたい制約 | 実行可能性優先などの比較規則を組み込む |
 | 真のvector objective | NSGA-II |
 
 これは性能順位ではありません。
 実際の選択は dimension、q、constraint、mixed structure、
 acquisition evaluation cost、budget に依存します。
+
+## この章で覚えておくこと
+
+集団法は複数の探索解を更新する方法であり、BOの実験候補数を増やす操作ではありません。
+差分・共分散・速度・遺伝的演算が表す探索の幾何を、予測モデルの不確実性と区別します。
+制約処理と離散演算は別に定め、大域最適性を手法名だけから仮定しません。
 
 ## 参考文献
 

@@ -17,6 +17,8 @@ acquisition optimizer は手法名だけでなく、最適化問題の構造に�
 
 理論上の適用可能性と、個別ライブラリの実装上の対応状況は区別します。
 
+本章では、[基礎](01_foundations.md)から[二段階探索](11_hybrid.md)までの条件を、手法の選択へ結び付けます。
+
 ## 12.2 まず変数型を確認する
 
 連続変数は勾配法や連続探索に適し、整数・カテゴリ変数にはその離散構造を保つ探索が必要です。
@@ -91,9 +93,7 @@ inter-point constraint は q-batch 全体の候補間関係を定義します。
 
 ## 12.15 Joint q-batch
 
-多くの scalar acquisition backend は `q_batch=True` です。
-
-これは
+同時q点の最適化では
 
     X in R^(q x d)
 
@@ -137,7 +137,10 @@ fixed features は探索空間の一部座標を定数に固定する操作で�
 ## 12.19 計算環境と評価コスト
 
 acquisition の評価コストと数値 optimizer の評価回数を区別します。
-GPU 上で surrogate を評価できても、探索手法全体が GPU-native とは限りません。
+GPU上で予測を評価できても、探索手法全体がGPU上で完結するとは限りません。
+獲得関数の評価回数をK、一回の費用をCとすると、評価に使う仕事量の目安はKCです。
+MC標本数Nを増やすこととKを増やすことは別であり、どちらも実験へ返す候補数qとは異なります。
+一括評価、勾配計算、データ転送、並列化の効率もあるため、KCをそのまま実時間とはみなしません。
 
 ## 12.20 High-dimensional search
 
@@ -145,7 +148,7 @@ GPU 上で surrogate を評価できても、探索手法全体が GPU-native �
 
 高次元探索には
 
-- LatentSpace
+- 学習済み表現による潜在空間探索
 - REMBO
 - HeSBO
 - ALEBO
@@ -185,8 +188,8 @@ Mixed problem では、少なくとも次を確認します。
 4. candidate constraints が structured variable と整合するか
 5. q-batchでも discrete assignment が維持されるか
 
-Random / Sobol による mixed-variable sampling では、
-general candidate constraintsはunsupportedです。
+無制約の箱上のRandom/Sobol点を丸めるだけでは、一般の候補制約は保証されません。
+可行点を直接生成する変換、棄却、修復などを別途設計し、修復後の点で制約と効用を評価します。
 
 ## 12.23 MultiFidelity selection
 
@@ -195,8 +198,8 @@ MultiFidelity model を使うことと、optimizer backend の選択は別です
 fidelity coordinate を通常の design variable と同じように局所化すると、
 探索意図が変わる場合があります。
 
-TuRBO MultiFidelity path では design dimensionsだけをlocalizeし、
-fidelity dimensionsはglobal rangeに残します。
+一つの設計は、設計座標だけを局所化し、忠実度座標には元の許容範囲を保つ方法です。
+忠実度も局所化する設計なら、費用と精度のトレードオフに与える影響を別に検討します。
 
 また qMFKG など one-shot acquisitionでは augmented optimization contract も確認します。
 
@@ -241,6 +244,20 @@ Hybridは複数backendをstageとして接続する orchestration です。
 5. fixed features と探索座標系を確認する
 6. 評価コストと計算予算を考慮する
 
+## 12.27 小さな問題から選択を考える
+
+例えば次の問題は、同じ「獲得関数の最大化」でも必要な操作が異なります。
+
+| 問題の構造 | 選択の考え方 | 注意点 |
+| --- | --- | --- |
+| $\alpha(x)=-(x-0.7)^2,\ x\in[0,1]$ | 勾配法で0.7へ改善できる | この例の凹性は一般の獲得関数にはない |
+| $\alpha(\operatorname{round}(x))$ | 整数を直接列挙・探索する | 丸めた関数の勾配は区間内で零になる |
+| q=2で $|x_1-x_2|\ge0.8$ | 二点を一つの可行な組として探索する | 個別の可行性判定だけでは距離を保証できない |
+| 一段先読みの将来判断も最適化する | 補助変数を含む拡張問題を解く | 返す実候補と将来の判断変数を区別する |
+
+最初に目的関数と可行集合を書けば、必要な変数型、勾配、同時点数の意味が明確になります。
+その後に初期化と計算予算を選ぶことで、手法名だけに基づく選択を避けられます。
+
 ## 12.28 特殊な最適化構造
 
 Mixed、one-shot、vector-valued objective、trust-region search は通常の
@@ -253,12 +270,16 @@ continuous scalar optimization と異なる構造を持ちます。
 
 ## 12.30 最終確認
 
-optimizerを変更するときは、少なくとも
+最適化手法を変更するときは、何を同じ問題として維持するかを確認します。
+効用の定義とMC標本の扱い、変数の座標系と型、固定座標、制約の符号と可行集合、
+q点の同時判断や補助変数の意味が一致している必要があります。
 
-が維持されるか確認します。
+返り値では、有限な効用値、修復後の座標、制約残差を確認します。
+滑らかな問題の局所的な停止条件を満たしても、それだけで大域最適性は示せません。
+異なる手法の比較は、同じ効用と可行集合、同程度の予算に基づいて解釈します。
 
-同じ acquisition value を最大化する backend でも、
-これらの contract が異なれば完全なdrop-in replacementではありません。
+獲得関数が何を評価するか、探索戦略がどこを探索するか、数値手法がどう候補を改善するかを分けると、
+各手法の適用条件と限界を一貫して判断できます。
 
 ## 12.31 関連ドキュメント
 
