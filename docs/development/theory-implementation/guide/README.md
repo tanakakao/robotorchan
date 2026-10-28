@@ -57,6 +57,8 @@
 end-to-endで検証したことを意味しません。対応する章のテスト根拠と
 [検証索引](verification/README.md)を確認してください。
 
+具体的なソースの所有権と例外経路は、[モデル→獲得関数→Optimizerの公開API契約](appendix/cross-layer-api-contracts.md)を参照してください。
+
 ## 章構成：理論の24章と1対1対応
 
 以下の `guide/<filename>` は**配置済みパス**です。章番号とbasenameを理論側に合わせています。内容は理論から実装へ進むための解説で、未検証の詳細契約をverifiedとは扱いません。
