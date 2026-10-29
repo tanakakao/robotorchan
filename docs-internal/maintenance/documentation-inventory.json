@@ -7064,17 +7064,12 @@
   ],
   "generated_documents": [
     {
-      "path": ".github/project-records/README.md",
+      "path": ".github/project-records/benchmarks/probability-objective-e2e.md",
       "category": "Project Record",
       "reason": "責務別の入口または理論と実装を接続する学習文書。"
     },
     {
       "path": ".github/project-records/benchmarks/README.md",
-      "category": "Project Record",
-      "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": ".github/project-records/benchmarks/probability-objective-e2e.md",
       "category": "Project Record",
       "reason": "責務別の入口または理論と実装を接続する学習文書。"
     },
@@ -7094,8 +7089,78 @@
       "reason": "責務別の入口または理論と実装を接続する学習文書。"
     },
     {
+      "path": ".github/project-records/README.md",
+      "category": "Project Record",
+      "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
       "path": ".github/project-records/theory-guide/README.md",
       "category": "Project Record",
+      "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/architecture/optimization/README.md",
+      "category": "Engineering",
+      "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/architecture/README.md",
+      "category": "Engineering",
+      "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/contracts/benchmarks/README.md",
+      "category": "Engineering",
+      "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/contracts/optimization/README.md",
+      "category": "Engineering",
+      "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/contracts/README.md",
+      "category": "Engineering",
+      "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/contracts/theory-guide/README.md",
+      "category": "Engineering",
+      "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/maintenance/notebook-modernization-phase2.md",
+      "category": "Engineering",
+      "reason": "Notebook更新の静的証拠とPhase 3作業範囲を記録する開発用資料。"
+    },
+    {
+      "path": "docs-internal/maintenance/notebook-phase14-coverage-audit.md",
+      "category": "Engineering Reference",
+      "reason": "Notebook候補提案の網羅性と実行証拠を追跡する開発用監査文書。"
+    },
+    {
+      "path": "docs-internal/maintenance/README.md",
+      "category": "Engineering",
+      "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/README.md",
+      "category": "Engineering",
+      "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/verification/benchmarks/README.md",
+      "category": "Engineering",
+      "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/verification/optimization/README.md",
+      "category": "Engineering",
+      "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/verification/README.md",
+      "category": "Engineering",
       "reason": "責務別の入口または理論と実装を接続する学習文書。"
     },
     {
@@ -7112,66 +7177,6 @@
       "path": "docs/guide/optimization/README.md",
       "category": "Guide",
       "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": "docs-internal/README.md",
-      "category": "Engineering",
-      "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": "docs-internal/architecture/README.md",
-      "category": "Engineering",
-      "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": "docs-internal/architecture/optimization/README.md",
-      "category": "Engineering",
-      "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": "docs-internal/contracts/README.md",
-      "category": "Engineering",
-      "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": "docs-internal/contracts/benchmarks/README.md",
-      "category": "Engineering",
-      "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": "docs-internal/contracts/optimization/README.md",
-      "category": "Engineering",
-      "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": "docs-internal/contracts/theory-guide/README.md",
-      "category": "Engineering",
-      "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": "docs-internal/maintenance/README.md",
-      "category": "Engineering",
-      "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": "docs-internal/verification/README.md",
-      "category": "Engineering",
-      "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": "docs-internal/verification/benchmarks/README.md",
-      "category": "Engineering",
-      "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": "docs-internal/verification/optimization/README.md",
-      "category": "Engineering",
-      "reason": "責務別の入口または理論と実装を接続する学習文書。"
-    },
-    {
-      "path": "docs-internal/maintenance/notebook-modernization-phase2.md",
-      "category": "Engineering",
-      "reason": "Notebook更新の静的証拠とPhase 3作業範囲を記録する開発用資料。"
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
