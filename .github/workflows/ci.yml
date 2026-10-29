@@ -260,6 +260,13 @@ jobs:
         run: python -c "import ngboost; from robotorchan.models import NGBoostSurrogate; print(NGBoostSurrogate)"
       - name: NGBoost surrogate tests
         run: pytest tests/models/non_gp/test_ngboost_surrogate.py
+      - name: Execute NGBoost notebook example
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python examples/run_notebooks.py
+          --only 25_non_gp_surrogates.ipynb
+          --timeout 600
 
   cmaes-extra:
     runs-on: ubuntu-latest
