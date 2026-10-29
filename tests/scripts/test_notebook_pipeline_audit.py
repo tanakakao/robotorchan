@@ -74,7 +74,8 @@ def test_real_single_task_notebook_has_candidate_pipeline() -> None:
     row = audit(notebook)
     assert int(row["parseable_code_cells"]) > 0
     assert row["invalid_code_cells"] == "0"
-    assert row["native_fit_calls"] == "true"
+    assert row["model_fit_calls"] == "true"
+    assert row["native_fit_calls"] == "false"
     assert row["posterior_calls"] == "true"
     assert row["optimizer_calls"] == "true"
     assert row["candidate_mentions"] == "true"
