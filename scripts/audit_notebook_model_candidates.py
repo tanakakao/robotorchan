@@ -99,8 +99,10 @@ def main() -> int:
     result = render()
     if args.check:
         rows = build_rows()
-        counts = {status: sum(row["status"] == status for row in rows)
-                  for status in ("static_pipeline", "partial", "unverified")}
+        counts = {
+            status: sum(row["status"] == status for row in rows)
+            for status in ("static_pipeline", "partial", "unverified")
+        }
         print(f"Model candidate static audit: {counts}")
         if not rows:
             return 1
