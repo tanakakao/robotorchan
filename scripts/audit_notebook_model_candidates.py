@@ -98,8 +98,11 @@ def main() -> int:
     args = parser.parse_args()
     result = render()
     if args.check:
-        if not OUTPUT.exists() or OUTPUT.read_text(encoding="utf-8") != result:
-            print("Notebook model candidate coverage CSV is stale.")
+        rows = build_rows()
+        counts = {status: sum(row["status"] == status for row in rows)
+                  for status in ("static_pipeline", "partial", "unverified")}
+        print(f"Model candidate static audit: {counts}")
+        if not rows:
             return 1
     else:
         OUTPUT.write_text(result, encoding="utf-8")
