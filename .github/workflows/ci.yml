@@ -157,6 +157,34 @@ jobs:
           MPLBACKEND: Agg
         run: python examples/run_notebooks.py --timeout 300
 
+  notebook-expressive-non-gp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install CPU PyTorch
+        run: python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
+      - name: Install notebook dependencies
+        run: python -m pip install -e ".[examples]"
+      - name: Execute expressive surrogate notebook
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python examples/run_notebooks.py
+          --only 24_expressive_surrogate_gp.ipynb
+          --timeout 600
+      - name: Execute non-GP surrogate notebook
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python examples/run_notebooks.py
+          --only 25_non_gp_surrogates.ipynb
+          --timeout 600
+
   notebook-structured:
     runs-on: ubuntu-latest
 
