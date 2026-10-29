@@ -35,6 +35,9 @@ jobs:
       - name: Verify generated model coverage
         if: matrix.python-version == '3.11'
         run: python scripts/generate_model_coverage.py --check
+      - name: Audit model-to-notebook candidate evidence
+        if: matrix.python-version == '3.11'
+        run: python scripts/audit_notebook_model_candidates.py --check
       - name: Audit model registry evidence and documentation paths
         if: matrix.python-version == '3.11'
         run: >-
