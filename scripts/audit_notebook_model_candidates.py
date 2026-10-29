@@ -22,14 +22,23 @@ def inspect_notebook(path: Path) -> tuple[set[str], bool, bool]:
         if cell["cell_type"] == "code"
     )
     constructors: set[str] = set()
+    imports: dict[str, str] = {}
     for cell in notebook["cells"]:
         if cell["cell_type"] != "code":
             continue
         source = cell["source"]
         tree = ast.parse("".join(source) if isinstance(source, list) else source)
         for node in ast.walk(tree):
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-                constructors.add(node.func.id)
+            if isinstance(node, ast.ImportFrom):
+                for alias in node.names:
+                    imports[alias.asname or alias.name] = alias.name
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            if isinstance(node.func, ast.Name):
+                constructors.add(imports.get(node.func.id, node.func.id))
+            elif isinstance(node.func, ast.Attribute):
+                constructors.add(node.func.attr)
     candidate = any(
         token in code
         for token in ("optimize_acqf(", "optimize_acqf_mixed(", "candidate_pool", "candidate =")
@@ -104,6 +113,10 @@ def main() -> int:
             for status in ("static_pipeline", "partial", "unverified")
         }
         print(f"Model candidate static audit: {counts}")
+        print("Unverified model names (mapped notebook):")
+        for row in rows:
+            if row["status"] == "unverified":
+                print(f"  {row['model']}: {row['notebook']}")
         if not rows:
             return 1
     else:
