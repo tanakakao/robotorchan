@@ -157,6 +157,23 @@ jobs:
           MPLBACKEND: Agg
         run: python examples/run_notebooks.py --timeout 300
 
+  notebook-structured:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install CPU PyTorch
+        run: python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
+      - name: Install notebook dependencies
+        run: python -m pip install -e ".[examples]"
+      - name: Execute structured-output notebook
+        env:
+          MPLBACKEND: Agg
+        run: python examples/run_notebooks.py --only 11_structured_output_gp.ipynb --timeout 600
+
   notebook-saas:
     runs-on: ubuntu-latest
 
