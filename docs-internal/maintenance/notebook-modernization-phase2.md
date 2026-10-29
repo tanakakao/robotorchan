@@ -110,3 +110,30 @@ explicitly supported fit path. Do not implement new fit methods here.
 pipeline evidence, and Phase 3 model fit contracts were checked in source.
 The full public-export fit contract and notebook execution results are not
 yet verified; Phase 2 is not certified complete.
+
+## Phase 2 decision and bounded handoff
+
+**Phase 2 static-audit deliverables are complete.** All 44 manifest notebooks
+were inspected, pipeline evidence scripts and tests are in place, CI and
+documentation checks passed at commit `e8a775c`, and Phase 3's six model
+fit contracts were checked against source.
+
+This is **not** a claim that all public model classes have runtime-verified
+`fit()` support or that any notebook was executed during this audit.
+Full public-model fit coverage remains `unverified` in the model inventory;
+do not replace it with inferred support. The notebook execution column also
+remains `unverified`. These are tracked verification gaps, not blockers
+for beginning model-by-model notebook modernization.
+
+**Phase 3 acceptance criteria:**
+
+1. Update 01 and 02 to use the already-supported `model.fit()` path,
+   including their sequential BO loops.
+2. Keep `fit_gpytorch_mll(model.make_mll())` for 03, 04, and 05 unless
+   a supported fit contract is established.
+3. Add a compatible multiobjective acquisition, bounded optimization,
+   candidate proposal, and objective evaluation to 05.
+4. Preserve valid mixed categories, fidelity semantics, and multitask
+   output handling in 02–04.
+5. Execute all five updated notebooks and record concrete CI or local
+   execution evidence; do not treat static token matches as success.
