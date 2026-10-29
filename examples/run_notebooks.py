@@ -145,6 +145,12 @@ def main() -> None:
         default=300,
         help="1セルあたりのタイムアウト秒数。既定値は 300 秒です。",
     )
+    parser.add_argument(
+        "--only",
+        action="append",
+        choices=DEFAULT_NOTEBOOKS + SLOW_NOTEBOOKS + EXCLUDED_NOTEBOOKS,
+        help="指定したNotebookのみ実行します。複数回指定できます。",
+    )
     args = parser.parse_args()
 
     validate_notebook_manifest()
@@ -154,6 +160,8 @@ def main() -> None:
         notebook_names.extend(SLOW_NOTEBOOKS)
     if args.include_excluded:
         notebook_names.extend(EXCLUDED_NOTEBOOKS)
+    if args.only:
+        notebook_names = list(dict.fromkeys(args.only))
 
     missing = [name for name in notebook_names if not (NOTEBOOK_DIR / name).exists()]
     if missing:
