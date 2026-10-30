@@ -93,6 +93,46 @@ function, whereas multitask and output-reduction examples use posterior-mean
 ranking of finite candidates. The latter do not demonstrate acquisition
 optimization and should not be described as full Bayesian optimization.
 
+
+## Neural reduced GP notebook coverage (29 registry mappings)
+
+Notebook: `examples/notebooks/20_neural_reduction_gp.ipynb`. Commit
+`9368b590ae16de9763cf70c91874257197fc43b0` passed CI run
+`41013845874`, including the `notebook-neural-reduced` job, which executes
+the complete notebook with `--timeout 600`.
+
+All 29 registry-mapped classes are now explicitly instantiated in the notebook:
+
+- Frozen single-task: `AutoEncoderGP`, `VAEGP`,
+  `SupervisedAutoEncoderGP`, `SupervisedVAEGP`.
+- Mixed frozen single-task: `MixedAutoEncoderGP`, `MixedVAEGP`,
+  `MixedSupervisedAutoEncoderGP`, `MixedSupervisedVAEGP`.
+- Joint single-task: `JointEncoderGP`, `HybridAutoEncoderGP`,
+  `JointVAEGP`, `MixedJointEncoderGP`, `MixedHybridAutoEncoderGP`,
+  `MixedJointVAEGP`.
+- Long-format multitask: `AutoEncoderMultiTaskGP`, `VAEMultiTaskGP`,
+  `SupervisedAutoEncoderMultiTaskGP`, `SupervisedVAEMultiTaskGP`,
+  `JointEncoderMultiTaskGP`, `HybridAutoEncoderMultiTaskGP`,
+  `JointVAEMultiTaskGP`, `MixedJointEncoderMultiTaskGP`.
+- Block-design multitask: `AutoEncoderKroneckerMultiTaskGP`,
+  `VAEKroneckerMultiTaskGP`,
+  `SupervisedAutoEncoderKroneckerMultiTaskGP`,
+  `SupervisedVAEKroneckerMultiTaskGP`,
+  `JointEncoderKroneckerMultiTaskGP`,
+  `HybridAutoEncoderKroneckerMultiTaskGP`,
+  `JointVAEKroneckerMultiTaskGP`.
+
+All examples exercise fitting, posterior inference, candidate proposal and
+objective evaluation. Frozen reducers use `fit_gpytorch_mll(model.make_mll())`;
+joint neural representations use `training_loss()` with an Adam optimizer.
+Some single-task examples use BoTorch acquisition optimization; many mixed and
+multitask examples select the highest posterior mean from a finite candidate
+pool. The latter are **not acquisition-optimized BO**, and successful CI
+execution does not imply statistical performance or robustness across seeds.
+
+This closes the notebook-20 *mapped-model execution* gap, not the full
+142-model registry-wide coverage audit.
+
 ## Registry-to-notebook static audit baseline
 
 The Python 3.11 CI job in run `40966360099` executed
