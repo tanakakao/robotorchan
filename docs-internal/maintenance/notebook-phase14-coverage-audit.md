@@ -66,6 +66,33 @@ These five examples have CI execution evidence, distinct from the
 registry-wide static heuristic counts. Other mapped model variants remain
 subject to individual inspection.
 
+## Reduced GP notebook coverage (20 registry mappings)
+
+Notebook: `examples/notebooks/19_reduced_gp.ipynb`. CI run
+`40991445939` passed the `notebook-reduced` job, which executes this
+notebook end-to-end (commit `361b726451dea6cc6cc8f14f1e472e4734ced982`).
+
+Fifteen mapped model classes are explicitly instantiated in notebook code:
+
+- Single-task: `PCAGP`, `PLSGP`, `RandomProjectionGP`, `ReducedGP`.
+- Mixed single-task: `MixedPCAGP`, `MixedPLSGP`,
+  `MixedRandomProjectionGP`.
+- Long-format multitask: `PCAMultiTaskGP`, `PLSMultiTaskGP`,
+  `RandomProjectionMultiTaskGP`, `MixedReducedMultiTaskGP`.
+- Block-design multitask: `PCAKroneckerMultiTaskGP`,
+  `PLSKroneckerMultiTaskGP`, `RandomProjectionKroneckerMultiTaskGP`,
+  `MixedReducedKroneckerMultiTaskGP`.
+
+Five mapped models still need direct notebook examples:
+`MixedReducedGP`, `OutputPCAGP`, `OutputPLSGP`,
+`ReducedKroneckerMultiTaskGP`, and `ReducedMultiTaskGP`.
+
+These counts represent explicit class references in executable code, not
+coverage of all possible model configurations. Single-task examples use MC
+acquisition; multitask examples currently use posterior-mean ranking over a
+finite candidate pool. The latter are candidate proposals, but not
+acquisition-optimized BO examples.
+
 ## Registry-to-notebook static audit baseline
 
 The Python 3.11 CI job in run `40966360099` executed
