@@ -45,6 +45,27 @@ The initial run `40880413823` failed because notebook 24 imported
 The notebook now imports it from `robotorchan.models.expressive.deep_gp`.
 The corrected CI run passed all 11 jobs, and Documentation links passed.
 
+## Non-GP notebook execution evidence
+
+CI run `40977583875` (commit `507818e4c05a341c74deeb1ac123a9e4d2bf8398`)
+passed all 11 jobs, including `notebook-expressive-non-gp` and
+`ngboost-extra`. The notebook `25_non_gp_surrogates.ipynb` now executes
+candidate proposals and objective evaluations for Random Forest, Extra Trees,
+Gradient Boosting, Histogram Gradient Boosting, and NGBoost.
+
+The standard notebook job runs without the optional NGBoost dependency and
+skips that section; the `ngboost-extra` job installs the dependency and
+executes the complete notebook. NGBoost's custom
+`GaussianDistributionPosterior` requires an explicit `IIDNormalSampler`
+for BoTorch MC acquisition because automatic sampler dispatch does not
+recognize that posterior class. This is a notebook-level compatibility
+solution, not a claim that BoTorch's default sampler dispatch supports the
+custom posterior.
+
+These five examples have CI execution evidence, distinct from the
+registry-wide static heuristic counts. Other mapped model variants remain
+subject to individual inspection.
+
 ## Registry-to-notebook static audit baseline
 
 The Python 3.11 CI job in run `40966360099` executed
