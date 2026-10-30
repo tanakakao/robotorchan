@@ -68,30 +68,30 @@ subject to individual inspection.
 
 ## Reduced GP notebook coverage (20 registry mappings)
 
-Notebook: `examples/notebooks/19_reduced_gp.ipynb`. CI run
-`40991445939` passed the `notebook-reduced` job, which executes this
-notebook end-to-end (commit `361b726451dea6cc6cc8f14f1e472e4734ced982`).
+Notebook: `examples/notebooks/19_reduced_gp.ipynb`. The CI run
+`40995535501` passed on commit `1b2db43c3ad3a1c7f00b3ea1246727a41582183a`,
+including the `notebook-reduced` execution job.
 
-Fifteen mapped model classes are explicitly instantiated in notebook code:
+All 20 mapped model classes are explicitly instantiated in notebook code:
 
-- Single-task: `PCAGP`, `PLSGP`, `RandomProjectionGP`, `ReducedGP`.
-- Mixed single-task: `MixedPCAGP`, `MixedPLSGP`,
-  `MixedRandomProjectionGP`.
+- Single-task input reduction: `PCAGP`, `PLSGP`,
+  `RandomProjectionGP`, `ReducedGP`.
+- Mixed single-task input reduction: `MixedPCAGP`, `MixedPLSGP`,
+  `MixedRandomProjectionGP`, `MixedReducedGP`.
 - Long-format multitask: `PCAMultiTaskGP`, `PLSMultiTaskGP`,
-  `RandomProjectionMultiTaskGP`, `MixedReducedMultiTaskGP`.
+  `RandomProjectionMultiTaskGP`, `MixedReducedMultiTaskGP`,
+  `ReducedMultiTaskGP`.
 - Block-design multitask: `PCAKroneckerMultiTaskGP`,
   `PLSKroneckerMultiTaskGP`, `RandomProjectionKroneckerMultiTaskGP`,
-  `MixedReducedKroneckerMultiTaskGP`.
+  `MixedReducedKroneckerMultiTaskGP`, `ReducedKroneckerMultiTaskGP`.
+- Output reduction: `OutputPCAGP`, `OutputPLSGP`.
 
-Five mapped models still need direct notebook examples:
-`MixedReducedGP`, `OutputPCAGP`, `OutputPLSGP`,
-`ReducedKroneckerMultiTaskGP`, and `ReducedMultiTaskGP`.
-
-These counts represent explicit class references in executable code, not
-coverage of all possible model configurations. Single-task examples use MC
-acquisition; multitask examples currently use posterior-mean ranking over a
-finite candidate pool. The latter are candidate proposals, but not
-acquisition-optimized BO examples.
+All examples include model fitting, posterior prediction, candidate selection,
+and an objective evaluation. This is one CI execution of the complete notebook,
+not exhaustive configuration coverage. Some examples use a BoTorch acquisition
+function, whereas multitask and output-reduction examples use posterior-mean
+ranking of finite candidates. The latter do not demonstrate acquisition
+optimization and should not be described as full Bayesian optimization.
 
 ## Registry-to-notebook static audit baseline
 
