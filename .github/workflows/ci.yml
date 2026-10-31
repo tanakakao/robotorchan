@@ -35,6 +35,9 @@ jobs:
       - name: Verify generated model coverage
         if: matrix.python-version == '3.11'
         run: python scripts/generate_model_coverage.py --check
+      - name: Audit model-to-notebook candidate evidence
+        if: matrix.python-version == '3.11'
+        run: python scripts/audit_notebook_model_candidates.py --check
       - name: Audit model registry evidence and documentation paths
         if: matrix.python-version == '3.11'
         run: >-
@@ -157,6 +160,76 @@ jobs:
           MPLBACKEND: Agg
         run: python examples/run_notebooks.py --timeout 300
 
+  notebook-expressive-non-gp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install CPU PyTorch
+        run: python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
+      - name: Install notebook dependencies
+        run: python -m pip install -e ".[examples]"
+      - name: Execute expressive surrogate notebook
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python examples/run_notebooks.py
+          --only 24_expressive_surrogate_gp.ipynb
+          --timeout 600
+      - name: Execute non-GP surrogate notebook
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python examples/run_notebooks.py
+          --only 25_non_gp_surrogates.ipynb
+          --timeout 600
+
+  notebook-reduced:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install CPU PyTorch
+        run: python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
+      - name: Install notebook dependencies
+        run: python -m pip install -e ".[examples]"
+      - name: Execute linear and mixed reduced GP notebook
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python examples/run_notebooks.py
+          --only 19_reduced_gp.ipynb
+          --timeout 600
+
+  notebook-neural-reduced:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install CPU PyTorch
+        run: python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
+      - name: Install notebook dependencies
+        run: python -m pip install -e ".[examples]"
+      - name: Execute neural reduced GP notebook
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python examples/run_notebooks.py
+          --only 20_neural_reduction_gp.ipynb
+          --timeout 600
+
   notebook-structured:
     runs-on: ubuntu-latest
 
@@ -223,12 +296,19 @@ jobs:
           python-version: "3.11"
       - name: Install CPU PyTorch
         run: python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
-      - name: Install NGBoost dependencies
-        run: python -m pip install -e ".[dev,ngboost]"
+      - name: Install NGBoost and notebook dependencies
+        run: python -m pip install -e ".[dev,examples,ngboost]"
       - name: Optional dependency smoke test
         run: python -c "import ngboost; from robotorchan.models import NGBoostSurrogate; print(NGBoostSurrogate)"
       - name: NGBoost surrogate tests
         run: pytest tests/models/non_gp/test_ngboost_surrogate.py
+      - name: Execute NGBoost notebook example
+        env:
+          MPLBACKEND: Agg
+        run: >-
+          python examples/run_notebooks.py
+          --only 25_non_gp_surrogates.ipynb
+          --timeout 600
 
   cmaes-extra:
     runs-on: ubuntu-latest
