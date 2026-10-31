@@ -204,24 +204,39 @@ examples in this phase:
 | 19 reduced GP | 20 | CI run `40995535501` |
 | 20 neural reduction GP | 29 | CI run `41013845874` |
 | 24 expressive GP | 16 | CI run `41150143395` |
-| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |
+| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |\n| 16 noise models | 10 | CI run `41157626014` |
 
-These account for 70 mapped entries. The remaining 72 mappings require
+These account for 70 mapped entries. Notebook 16 adds 10 more verified mappings,\nfor 80 total. The remaining 62 mappings require
 individual verification; this does not mean that all 72 are absent from
 notebooks or unexecutable. Do not sum the old static heuristic statuses with
 these executed counts.
 
-The largest next target is notebook 16 (`16_noise_models.ipynb`), which
-has 10 mapped entries. Inspection of its current source finds a complete
-candidate-and-evaluation example for `ReplicateNoiseSingleTaskGP` only;
-the other nine mapped variants are not explicitly constructed there.
-The notebook already calls the existing `model.fit()` for that example.
-No new model fitting API should be added to close this coverage gap.
+## Noise-model notebook coverage (10 registry mappings)
 
-Next inspect the constructors, likelihoods and training contracts of the
-nine remaining noise models before adding short executable examples.
-For non-Gaussian, heteroskedastic or joint-noise models, do not assume the
-same fitting path or posterior semantics as a standard exact GP.
+Notebook: `examples/notebooks/16_noise_models.ipynb`. Commit
+`c5adf3391bf1244015ba418843ae8416abdf74aa` passed CI run
+`41157626014`, including the default `notebooks` execution job.
+
+All 10 registry-mapped classes now have examples with fitting, posterior
+prediction, finite-pool candidate proposal, and objective evaluation:
+
+- Replicate-noise: `ReplicateNoiseSingleTaskGP`,
+  `MixedReplicateNoiseSingleTaskGP`, `ReplicateNoiseMultiFidelityGP`.
+- Iterative heteroskedastic: `HeteroskedasticSingleTaskGP`,
+  `MixedHeteroskedasticSingleTaskGP`, `HeteroskedasticMultiTaskGP`,
+  `MixedHeteroskedasticMultiTaskGP`, `HeteroskedasticMultiFidelityGP`.
+- Joint variational heteroskedastic: `JointHeteroskedasticSingleTaskGP`,
+  `MixedJointHeteroskedasticSingleTaskGP`.
+
+Existing training APIs are used without adding model-level `fit()`:
+`fit_heteroskedastic(iterations=1)` for iterative noise models,
+`training_loss()` with Adam for joint variational models, and BoTorch
+`fit_gpytorch_mll(model.make_mll())` for the replicate multi-fidelity
+model, which has no `fit()` method. The initial incorrect `fit()`
+call failed CI run `41156283308`; the corrected run `41156812536`
+passed. Candidates are posterior-mean finite-pool selections, **not
+acquisition-optimized Bayesian optimization**. One successful CI run
+does not establish multi-seed stability or optimality.
 
 ## Next audit sequence
 
