@@ -192,6 +192,37 @@ family coverage. Record execution evidence per model variant before upgrading
 any status to `covered`. Keep model `fit()` compatibility as an independent
 dimension, without implementing new fitting methods in this phase.
 
+## Registry reconciliation after expressive coverage
+
+The registry maps 142 public model entries to 20 representative notebooks.
+Executed notebook coverage is distinct from registry mapping or static-token
+classification. The following notebooks have explicit, CI-executed model-level
+examples in this phase:
+
+| Notebook | Mapped entries | Evidence |
+| --- | ---: | --- |
+| 19 reduced GP | 20 | CI run `40995535501` |
+| 20 neural reduction GP | 29 | CI run `41013845874` |
+| 24 expressive GP | 16 | CI run `41150143395` |
+| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |
+
+These account for 70 mapped entries. The remaining 72 mappings require
+individual verification; this does not mean that all 72 are absent from
+notebooks or unexecutable. Do not sum the old static heuristic statuses with
+these executed counts.
+
+The largest next target is notebook 16 (`16_noise_models.ipynb`), which
+has 10 mapped entries. Inspection of its current source finds a complete
+candidate-and-evaluation example for `ReplicateNoiseSingleTaskGP` only;
+the other nine mapped variants are not explicitly constructed there.
+The notebook already calls the existing `model.fit()` for that example.
+No new model fitting API should be added to close this coverage gap.
+
+Next inspect the constructors, likelihoods and training contracts of the
+nine remaining noise models before adding short executable examples.
+For non-Gaussian, heteroskedastic or joint-noise models, do not assume the
+same fitting path or posterior semantics as a standard exact GP.
+
 ## Next audit sequence
 
 1. Cross-reference public model exports against notebooks, including variants
