@@ -204,9 +204,9 @@ examples in this phase:
 | 19 reduced GP | 20 | CI run `40995535501` |
 | 20 neural reduction GP | 29 | CI run `41013845874` |
 | 24 expressive GP | 16 | CI run `41150143395` |
-| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |\n| 16 noise models | 10 | CI run `41157626014` |\n| 15 robust observation models | 8 | CI run `41159977362` |
+| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |\n| 16 noise models | 10 | CI run `41157626014` |\n| 15 robust observation models | 8 | CI run `41159977362` |\n| 09 MAP-SAAS and additive GP | 7 | CI run `41165276107` |
 
-These account for 70 mapped entries. Notebook 16 adds 10 more verified mappings,\nfor 80 total. Notebook 15 adds 8 verified mappings, for 88 total.\nThe remaining 54 mappings require
+These account for 70 mapped entries. Notebook 16 adds 10 more verified mappings,\nfor 80 total. Notebook 15 adds 8 verified mappings, for 88 total. Notebook 09 adds 7 verified mappings, for 95 total.\nThe remaining 47 mappings require
 individual verification; this does not mean that all 72 are absent from
 notebooks or unexecutable. Do not sum the old static heuristic statuses with
 these executed counts.
@@ -257,6 +257,28 @@ evaluates the synthetic objective. The multitask candidates fix the
 task feature to task 0. These are posterior-ranking examples, **not
 acquisition-optimized BO**. CI execution does not establish
 multi-seed robustness or optimization performance.
+
+## MAP-SAAS and additive notebook coverage (7 registry mappings)
+
+Notebook: `examples/notebooks/09_map_saas_and_additive_gp.ipynb`.
+Commit `bfc5fdceee767c2e97b88c821d48c99da743d0a5`
+passed CI run `41165276107`, including notebook execution.
+
+All seven registry-mapped classes have fit, acquisition optimization,
+candidate proposal, and objective evaluation examples:
+
+- `AdditiveMapSaasSingleTaskGP`,
+  `EnsembleMapSaasSingleTaskGP`, `OrthogonalAdditiveGP`.
+- `MixedAdditiveMapSaasSingleTaskGP`,
+  `MixedEnsembleMapSaasSingleTaskGP`, `MixedOrthogonalAdditiveGP`.
+- `ALEBOGP` with known observation variance.
+
+Examples use BoTorch `qLogExpectedImprovement` and `optimize_acqf`.
+Mixed-input models optimize separately with each observed categorical
+value fixed, then choose the highest-acquisition candidate. This
+demonstrates acquisition optimization rather than posterior-mean
+ranking, but does not establish global optimality or multi-seed
+performance.
 
 ## Next audit sequence
 
