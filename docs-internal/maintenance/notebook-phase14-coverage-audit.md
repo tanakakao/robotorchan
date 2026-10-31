@@ -212,11 +212,11 @@ examples in this phase:
 | 14 contextual GP | 6 | CI run `41172687822` |
 | 04 multitask GP | 5 | CI run `41177219776` |
 | 18 nonstationary GP | 5 | CI run `41178611160` |
-| 13 heterogeneous multitask GP | 4 | CI run `41181618304` |\n| 11 structured output GP | 4 | CI run `41183118583` |\n| 10 robust GP | 2 | CI run `41185454540`; 2 MultiTask variants blocked |\n| 08 fully Bayesian SAAS GP | 4 | CI run `41190752302` |\n| 17 uncertain-input GP | 3 | CI run `41192156012` |\n| 06 variational GP | 2 | CI run `41193496332` |
+| 13 heterogeneous multitask GP | 4 | CI run `41181618304` |\n| 11 structured output GP | 4 | CI run `41183118583` |\n| 10 robust GP | 2 | CI run `41185454540`; 2 MultiTask variants blocked |\n| 08 fully Bayesian SAAS GP | 4 | CI run `41190752302` |\n| 17 uncertain-input GP | 3 | CI run `41192156012` |\n| 06 variational GP | 2 | CI run `41193496332` |\n| 01, 02, 07 baseline GP and preference | 3 | CI run `41193496332` |
 
 The first four notebooks account for 70 mapped entries. Subsequent
-notebooks add 67 verified mappings, for **137 / 142** in total.
-The remaining **5** mappings include two blocked robust MultiTask variants.
+notebooks add 70 verified mappings, for **140 / 142** in total.
+The remaining **2** mappings include two blocked robust MultiTask variants.
 These counts describe executed model examples, not global
 optimization performance or mathematical correctness.
 
@@ -491,6 +491,25 @@ job explicitly executed the notebook to completion.
 Both examples use existing `make_mll(num_data=...)` and
 Adam; no model-level fit API was added. Short training runs
 do not establish convergence or candidate optimality.
+
+## Baseline single-task, mixed and preference GP (3 mappings)
+
+CI run `41193496332`, job `notebooks`, explicitly started
+and completed each of these unchanged notebooks:
+
+- `01_single_task_gp.ipynb`: `SingleTaskGP` fit,
+  qLogEI optimization, objective evaluation and short BO loop.
+- `02_mixed_single_task_gp.ipynb`: `MixedSingleTaskGP`
+  fit, categorical enumeration, qLogEI and short mixed BO loop.
+- `07_pairwise_gp.ipynb`: `PairwiseGP` preference model,
+  `AnalyticExpectedUtilityOfBestOption` optimization and
+  synthetic pairwise preference evaluation. This is not
+  scalar-objective regression.
+
+No code changes were needed for these three notebooks.
+The two remaining registry mappings are the blocked
+robust relevance-pursuit MultiTask variants; neither is
+counted as fully verified.
 
 ## Next audit sequence
 
