@@ -204,12 +204,21 @@ examples in this phase:
 | 19 reduced GP | 20 | CI run `40995535501` |
 | 20 neural reduction GP | 29 | CI run `41013845874` |
 | 24 expressive GP | 16 | CI run `41150143395` |
-| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |\n| 16 noise models | 10 | CI run `41157626014` |\n| 15 robust observation models | 8 | CI run `41159977362` |\n| 09 MAP-SAAS and additive GP | 7 | CI run `41165276107` |\n| 03 multi-fidelity GP | 7 | CI run `41166885750` |\n| 14 contextual GP | 6 | CI run `41172687822` |\n| 04 multitask GP | 5 | CI run `41177219776` |\n| 18 nonstationary GP | 5 | CI run `41178611160` |
+| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |
+| 16 noise models | 10 | CI run `41157626014` |
+| 15 robust observation models | 8 | CI run `41159977362` |
+| 09 MAP-SAAS and additive GP | 7 | CI run `41165276107` |
+| 03 multi-fidelity GP | 7 | CI run `41166885750` |
+| 14 contextual GP | 6 | CI run `41172687822` |
+| 04 multitask GP | 5 | CI run `41177219776` |
+| 18 nonstationary GP | 5 | CI run `41178611160` |
+| 13 heterogeneous multitask GP | 4 | CI run `41181618304` |
 
-These account for 70 mapped entries. Notebook 16 adds 10 more verified mappings,\nfor 80 total. Notebook 15 adds 8 verified mappings, for 88 total. Notebook 09 adds 7 verified mappings, for 95 total. Notebook 03 adds 7 verified mappings, for 102 total.\nThe remaining 40 mappings require
-individual verification; this does not mean that all 72 are absent from
-notebooks or unexecutable. Do not sum the old static heuristic statuses with
-these executed counts.
+The first four notebooks account for 70 mapped entries. Subsequent
+notebooks add 52 verified mappings, for **122 / 142** in total.
+The remaining **20** mappings require individual verification.
+These counts describe executed model examples, not global
+optimization performance or mathematical correctness.
 
 ## Noise-model notebook coverage (10 registry mappings)
 
@@ -363,6 +372,25 @@ passed CI run `41178611160`, including the notebook job.
 The new examples fit models with existing `make_mll()`
 and evaluate synthetic objectives. Finite-pool posterior-mean
 ranking is not acquisition-function optimization.
+
+## Heterogeneous and hierarchical multi-task coverage (4 mappings)
+
+Notebook: `examples/notebooks/13_heterogeneous_multitask_gp.ipynb`.
+Commit `3af753606a37835b50f62fbe8380af2cc45e99bd`
+passed CI run `41181618304`. The `notebooks` job log
+explicitly records execution start and successful completion.
+
+- `HeterogeneousMTGP`: task-specific feature subsets,
+  target-task posterior, candidate evaluation and refitting.
+- `MixedHeterogeneousMTGP`: global categorical feature
+  index, valid category enumeration and target-task evaluation.
+- `HierarchicalConditionalKernelMultiTaskGP`: branch-aware
+  candidate pool with target-task posterior selection.
+- `MixedHierarchicalConditionalKernelMultiTaskGP`:
+  branch-aware pool with an additional categorical variable.
+
+All four use finite-pool posterior-mean candidate selection;
+this is not acquisition-function optimization.
 
 ## Next audit sequence
 
