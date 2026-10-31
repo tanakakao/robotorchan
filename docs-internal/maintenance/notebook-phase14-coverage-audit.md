@@ -212,7 +212,7 @@ examples in this phase:
 | 14 contextual GP | 6 | CI run `41172687822` |
 | 04 multitask GP | 5 | CI run `41177219776` |
 | 18 nonstationary GP | 5 | CI run `41178611160` |
-| 13 heterogeneous multitask GP | 4 | CI run `41181618304` |
+| 13 heterogeneous multitask GP | 4 | CI run `41181618304` |\n| 11 structured output GP | 4 | CI run `41183118583` |
 
 The first four notebooks account for 70 mapped entries. Subsequent
 notebooks add 52 verified mappings, for **122 / 142** in total.
@@ -391,6 +391,24 @@ explicitly records execution start and successful completion.
 
 All four use finite-pool posterior-mean candidate selection;
 this is not acquisition-function optimization.
+
+## Structured-output GP notebook coverage (4 mappings)
+
+Notebook: `examples/notebooks/11_structured_output_gp.ipynb`.
+Commit `6b379c0404c6b78cca10b520d0211f92f8601a40`
+passed CI run `41183118583`. The `notebook-structured` job
+explicitly executed this notebook and completed successfully.
+
+- `HigherOrderGP` and `LatentKroneckerGP`: existing
+  training, structured posterior, scalar spectral-mean
+  utility and candidate evaluation.
+- `MixedHigherOrderGP` and `MixedLatentKroneckerGP`:
+  categorical design dimension with finite category
+  enumeration, structured posterior, spectral-mean utility
+  and synthetic objective evaluation.
+
+All four select from finite pools using posterior-mean
+utilities, not acquisition-function optimization.
 
 ## Next audit sequence
 
