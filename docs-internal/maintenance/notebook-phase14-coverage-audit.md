@@ -204,7 +204,7 @@ examples in this phase:
 | 19 reduced GP | 20 | CI run `40995535501` |
 | 20 neural reduction GP | 29 | CI run `41013845874` |
 | 24 expressive GP | 16 | CI run `41150143395` |
-| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |\n| 16 noise models | 10 | CI run `41157626014` |\n| 15 robust observation models | 8 | CI run `41159977362` |\n| 09 MAP-SAAS and additive GP | 7 | CI run `41165276107` |\n| 03 multi-fidelity GP | 7 | CI run `41166885750` |
+| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |\n| 16 noise models | 10 | CI run `41157626014` |\n| 15 robust observation models | 8 | CI run `41159977362` |\n| 09 MAP-SAAS and additive GP | 7 | CI run `41165276107` |\n| 03 multi-fidelity GP | 7 | CI run `41166885750` |\n| 14 contextual GP | 6 | CI run `41172687822` |
 
 These account for 70 mapped entries. Notebook 16 adds 10 more verified mappings,\nfor 80 total. Notebook 15 adds 8 verified mappings, for 88 total. Notebook 09 adds 7 verified mappings, for 95 total. Notebook 03 adds 7 verified mappings, for 102 total.\nThe remaining 40 mappings require
 individual verification; this does not mean that all 72 are absent from
@@ -301,6 +301,27 @@ and synthetic objective evaluation examples:
 
 The six additional workflows are **not** cost-aware fidelity-selection
 policies. CI validates execution, not multi-seed optimization quality.
+
+## Contextual GP notebook coverage (6 registry mappings)
+
+Notebook: `examples/notebooks/14_contextual_gp.ipynb`.
+Commit `1fb0063ac708271bcb69066f9c44b22fa41d035c`
+passed CI run `41172687822`, including the notebook jobs.
+
+The six mapped classes have fit, posterior, candidate proposal,
+and synthetic objective evaluation examples:
+
+- `SACGP` and `LCEAGP`: aggregated contextual reward;
+  finite-pool posterior-mean ranking.
+- `LCEMGP` and `MixedLCEMGP`: context-specific output
+  selection; mixed candidates retain valid categorical values.
+- `HierarchicalConditionalKernelGP` and
+  `MixedHierarchicalConditionalKernelGP`: finite candidate
+  pools enumerate structural branches and vary active
+  parameters while fixing inactive parameters.
+
+These are finite-pool candidate-selection examples, not
+acquisition-optimized BO. CI establishes execution only.
 
 ## Next audit sequence
 
