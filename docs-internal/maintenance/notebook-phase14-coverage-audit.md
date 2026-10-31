@@ -204,9 +204,9 @@ examples in this phase:
 | 19 reduced GP | 20 | CI run `40995535501` |
 | 20 neural reduction GP | 29 | CI run `41013845874` |
 | 24 expressive GP | 16 | CI run `41150143395` |
-| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |\n| 16 noise models | 10 | CI run `41157626014` |
+| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |\n| 16 noise models | 10 | CI run `41157626014` |\n| 15 robust observation models | 8 | CI run `41159977362` |
 
-These account for 70 mapped entries. Notebook 16 adds 10 more verified mappings,\nfor 80 total. The remaining 62 mappings require
+These account for 70 mapped entries. Notebook 16 adds 10 more verified mappings,\nfor 80 total. Notebook 15 adds 8 verified mappings, for 88 total.\nThe remaining 54 mappings require
 individual verification; this does not mean that all 72 are absent from
 notebooks or unexecutable. Do not sum the old static heuristic statuses with
 these executed counts.
@@ -237,6 +237,26 @@ call failed CI run `41156283308`; the corrected run `41156812536`
 passed. Candidates are posterior-mean finite-pool selections, **not
 acquisition-optimized Bayesian optimization**. One successful CI run
 does not establish multi-seed stability or optimality.
+
+## Robust observation notebook coverage (8 registry mappings)
+
+Notebook: `examples/notebooks/15_robust_observation_models.ipynb`.
+Commit `1a00372c756cca7e5d890806e3dcf0731bf8532d`
+passed CI run `41159977362`, including the default notebook
+execution job. All eight mapped classes are instantiated and exercised:
+
+- Student-t: `StudentTSingleTaskGP`, `MixedStudentTSingleTaskGP`,
+  `StudentTMultiTaskGP`, `MixedStudentTMultiTaskGP`.
+- Contamination: `ContaminatedSingleTaskGP`,
+  `MixedContaminatedSingleTaskGP`, `ContaminatedMultiTaskGP`,
+  `MixedContaminatedMultiTaskGP`.
+
+The notebook trains via existing `training_loss()` and Adam,
+evaluates posterior means, proposes finite-pool candidates, and
+evaluates the synthetic objective. The multitask candidates fix the
+task feature to task 0. These are posterior-ranking examples, **not
+acquisition-optimized BO**. CI execution does not establish
+multi-seed robustness or optimization performance.
 
 ## Next audit sequence
 
