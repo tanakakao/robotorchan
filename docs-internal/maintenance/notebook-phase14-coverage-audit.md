@@ -212,11 +212,11 @@ examples in this phase:
 | 14 contextual GP | 6 | CI run `41172687822` |
 | 04 multitask GP | 5 | CI run `41177219776` |
 | 18 nonstationary GP | 5 | CI run `41178611160` |
-| 13 heterogeneous multitask GP | 4 | CI run `41181618304` |\n| 11 structured output GP | 4 | CI run `41183118583` |\n| 10 robust GP | 2 | CI run `41185454540`; 2 MultiTask variants blocked |\n| 08 fully Bayesian SAAS GP | 4 | CI run `41190752302` |
+| 13 heterogeneous multitask GP | 4 | CI run `41181618304` |\n| 11 structured output GP | 4 | CI run `41183118583` |\n| 10 robust GP | 2 | CI run `41185454540`; 2 MultiTask variants blocked |\n| 08 fully Bayesian SAAS GP | 4 | CI run `41190752302` |\n| 17 uncertain-input GP | 3 | CI run `41192156012` |
 
 The first four notebooks account for 70 mapped entries. Subsequent
-notebooks add 62 verified mappings, for **132 / 142** in total.
-The remaining **10** mappings include two blocked robust MultiTask variants.
+notebooks add 65 verified mappings, for **135 / 142** in total.
+The remaining **7** mappings include two blocked robust MultiTask variants.
 These counts describe executed model examples, not global
 optimization performance or mathematical correctness.
 
@@ -452,6 +452,28 @@ explicitly executed this notebook to completion.
 All four examples use deliberately short MCMC runs for CI.
 Successful execution does not establish MCMC convergence,
 posterior calibration or candidate optimality.
+
+## Uncertain-input GP notebook coverage (3 mappings)
+
+Notebook: `examples/notebooks/17_uncertain_input_gp.ipynb`.
+Commit `7a03fb1ca1b14bf9d3d201ecaf2c95fc25aef843`
+passed CI run `41192156012`; the default `notebooks` job
+explicitly started and completed this notebook.
+
+- `UncertainInputSingleTaskGP`: training-input uncertainty,
+  MLL fitting, posterior, qLogEI optimization and evaluation.
+- `MixedUncertainInputSingleTaskGP`: continuous training-input
+  uncertainty, deterministic categories, MLL fitting and
+  category-enumerated qLogEI candidate evaluation.
+- `UncertainCategoricalSingleTaskGP`: fitted model with
+  category-probability posterior, fixed-probability
+  finite-pool posterior-mean selection and evaluation.
+
+The categorical-probability example does not implement
+acquisition-function optimization. The other two treat
+candidate inputs as deterministic even though training
+locations are uncertain. CI execution does not establish
+optimization quality or posterior calibration.
 
 ## Next audit sequence
 
