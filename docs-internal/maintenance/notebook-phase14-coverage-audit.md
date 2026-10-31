@@ -511,6 +511,44 @@ The two remaining registry mappings are the blocked
 robust relevance-pursuit MultiTask variants; neither is
 counted as fully verified.
 
+## Robust MultiTask fitting diagnosis and handoff
+
+Source: `src/robotorchan/models/robust/robust.py`.
+
+The `RobustRelevancePursuitMultiTaskGP` constructor calls
+`MultiTaskGP.__init__`, then
+`RobustRelevancePursuitMixin.__init__` to wrap the base
+likelihood with sparse-outlier noise. The mixed subclass
+supplies a mixed covariance kernel and inherits the same
+fitting path. Its `to_standard_model()` reuses the
+robust model's `likelihood`, `mean_module` and
+`covar_module`; it does **not** construct an independent
+non-robust model with a fresh standard likelihood.
+
+Observed evidence: notebook CI run `41184540509`
+failed while fitting the non-mixed robust MultiTask model
+with `fit_gpytorch_mll(model.make_mll())`. CI run
+`41185031121` failed with the same tensor-dimension
+RuntimeError after switching to `to_standard_model()`.
+The exception arose in the GPyTorch marginal
+log-likelihood / multivariate-normal log-probability path.
+
+This evidence does not isolate the root cause to a
+specific likelihood implementation or prove that the
+mixed subclass fails identically. Follow-up model-layer
+work should independently reproduce both variants with
+small deterministic inputs, inspect target/event and
+batch shapes throughout the likelihood/MLL path, verify
+`custom_fit` dispatch and relevance-pursuit support
+updates, and add regression tests before claiming
+robust fitting support. Avoid treating a non-robust
+surrogate's successful candidate generation as proof
+that robust MultiTask fitting works.
+
+No model-layer changes or new fit APIs are authorized
+in this notebook-only PR. These two mappings remain
+blocked, with 140 / 142 verified.
+
 ## Next audit sequence
 
 1. Cross-reference public model exports against notebooks, including variants
