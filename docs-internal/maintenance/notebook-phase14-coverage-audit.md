@@ -212,11 +212,11 @@ examples in this phase:
 | 14 contextual GP | 6 | CI run `41172687822` |
 | 04 multitask GP | 5 | CI run `41177219776` |
 | 18 nonstationary GP | 5 | CI run `41178611160` |
-| 13 heterogeneous multitask GP | 4 | CI run `41181618304` |\n| 11 structured output GP | 4 | CI run `41183118583` |\n| 10 robust GP | 2 | CI run `41185454540`; 2 MultiTask variants blocked |
+| 13 heterogeneous multitask GP | 4 | CI run `41181618304` |\n| 11 structured output GP | 4 | CI run `41183118583` |\n| 10 robust GP | 2 | CI run `41185454540`; 2 MultiTask variants blocked |\n| 08 fully Bayesian SAAS GP | 4 | CI run `41190752302` |
 
 The first four notebooks account for 70 mapped entries. Subsequent
-notebooks add 58 verified mappings, for **128 / 142** in total.
-The remaining **14** mappings include two blocked robust MultiTask variants.
+notebooks add 62 verified mappings, for **132 / 142** in total.
+The remaining **10** mappings include two blocked robust MultiTask variants.
 These counts describe executed model examples, not global
 optimization performance or mathematical correctness.
 
@@ -432,6 +432,26 @@ started and completed this notebook.
 The notebook explicitly reports these limitations instead
 of claiming successful robust MultiTask training. Model-level
 fitting repairs remain outside the notebook-update scope.
+
+## Fully Bayesian SAAS notebook coverage (4 mappings)
+
+Notebook: `examples/notebooks/08_saas_gp.ipynb`.
+Commit `52b3cb99ef2642533f513f5ded8df8d29c3a081b`
+passed CI run `41190752302`. The `notebook-saas` job
+explicitly executed this notebook to completion.
+
+- `SaasFullyBayesianSingleTaskGP`: NUTS fitting, posterior,
+  qLogEI candidate optimization and synthetic evaluation.
+- `SaasFullyBayesianMultiTaskGP`: NUTS fitting with target
+  task 1 selected, qLogEI over design variables and evaluation.
+- `MixedSaasFullyBayesianSingleTaskGP`: NUTS fitting and
+  category-enumerated `optimize_acqf_mixed`.
+- `MixedSaasFullyBayesianMultiTaskGP`: NUTS fitting with
+  target task 1 and categorical candidate enumeration.
+
+All four examples use deliberately short MCMC runs for CI.
+Successful execution does not establish MCMC convergence,
+posterior calibration or candidate optimality.
 
 ## Next audit sequence
 
