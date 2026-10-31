@@ -212,11 +212,11 @@ examples in this phase:
 | 14 contextual GP | 6 | CI run `41172687822` |
 | 04 multitask GP | 5 | CI run `41177219776` |
 | 18 nonstationary GP | 5 | CI run `41178611160` |
-| 13 heterogeneous multitask GP | 4 | CI run `41181618304` |\n| 11 structured output GP | 4 | CI run `41183118583` |
+| 13 heterogeneous multitask GP | 4 | CI run `41181618304` |\n| 11 structured output GP | 4 | CI run `41183118583` |\n| 10 robust GP | 2 | CI run `41185454540`; 2 MultiTask variants blocked |
 
 The first four notebooks account for 70 mapped entries. Subsequent
-notebooks add 52 verified mappings, for **122 / 142** in total.
-The remaining **20** mappings require individual verification.
+notebooks add 58 verified mappings, for **128 / 142** in total.
+The remaining **14** mappings include two blocked robust MultiTask variants.
 These counts describe executed model examples, not global
 optimization performance or mathematical correctness.
 
@@ -409,6 +409,29 @@ explicitly executed this notebook and completed successfully.
 
 All four select from finite pools using posterior-mean
 utilities, not acquisition-function optimization.
+
+## Robust relevance-pursuit notebook (2 verified, 2 blocked)
+
+Notebook: `examples/notebooks/10_robust_gp.ipynb`.
+Commit `0e3c0983976a85ea543b816ce93b1799d4ed524b`
+passed CI run `41185454540`; the `notebooks` job explicitly
+started and completed this notebook.
+
+- Verified: `RobustRelevancePursuitSingleTaskGP` and
+  `MixedRobustRelevancePursuitSingleTaskGP` execute model
+  fitting, qLogEI acquisition optimization, and candidate
+  objective evaluation. Mixed search enumerates categories.
+- Blocked: `RobustRelevancePursuitMultiTaskGP` and
+  `MixedRobustRelevancePursuitMultiTaskGP` are not counted.
+  Fitting the former raised a tensor-dimension RuntimeError
+  in the GPyTorch marginal log likelihood. The attempted
+  `to_standard_model()` fallback also failed. The latter
+  has not been individually executed through fitting.
+  Do not infer it has the identical failure without testing.
+
+The notebook explicitly reports these limitations instead
+of claiming successful robust MultiTask training. Model-level
+fitting repairs remain outside the notebook-update scope.
 
 ## Next audit sequence
 
