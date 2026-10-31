@@ -133,6 +133,38 @@ execution does not imply statistical performance or robustness across seeds.
 This closes the notebook-20 *mapped-model execution* gap, not the full
 142-model registry-wide coverage audit.
 
+## Expressive GP notebook coverage (16 registry mappings)
+
+Notebook: `examples/notebooks/24_expressive_surrogate_gp.ipynb`.
+Commit `d143b92c72649a9aec57da148767b6b479c033ef` passed
+CI run `41150143395`, including the `notebook-expressive-non-gp` job.
+
+All 16 registry-mapped expressive model classes are now explicitly instantiated:
+
+- Single-task exact GP: `InfiniteWidthBNNGP`, `SpectralMixtureGP`,
+  `MixedInfiniteWidthBNNGP`, `MixedSpectralMixtureGP`.
+- Long-format multitask exact GP: `InfiniteWidthBNNMultiTaskGP`,
+  `SpectralMixtureMultiTaskGP`, `MixedInfiniteWidthBNNMultiTaskGP`,
+  `MixedSpectralMixtureMultiTaskGP`.
+- Block-design multitask exact GP:
+  `InfiniteWidthBNNKroneckerMultiTaskGP`,
+  `SpectralMixtureKroneckerMultiTaskGP`,
+  `MixedInfiniteWidthBNNKroneckerMultiTaskGP`,
+  `MixedSpectralMixtureKroneckerMultiTaskGP`.
+- Deep GP: `SingleTaskDeepGP`, `MultiTaskDeepGP`,
+  `MixedSingleTaskDeepGP`, `MixedMultiTaskDeepGP`.
+
+The notebook exercises fitting, posterior prediction, candidate selection and
+objective evaluation. Deep GP models use short Adam loops on
+`training_loss()`; Kronecker models use the BoTorch torch optimizer to avoid
+SciPy fallback prior-resampling failures. Candidates are selected by posterior
+mean from a finite pool, **not by optimizing a BO acquisition function**.
+The notebook also demonstrates `JointEncoderGP`, which is mapped to notebook
+20 and is not counted among these 16 classes.
+
+The passing CI run verifies these lightweight examples only. It does not
+establish multi-seed robustness, acquisition optimality or broader configurations.
+
 ## Registry-to-notebook static audit baseline
 
 The Python 3.11 CI job in run `40966360099` executed
