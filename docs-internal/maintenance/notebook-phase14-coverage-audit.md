@@ -204,7 +204,7 @@ examples in this phase:
 | 19 reduced GP | 20 | CI run `40995535501` |
 | 20 neural reduction GP | 29 | CI run `41013845874` |
 | 24 expressive GP | 16 | CI run `41150143395` |
-| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |\n| 16 noise models | 10 | CI run `41157626014` |\n| 15 robust observation models | 8 | CI run `41159977362` |\n| 09 MAP-SAAS and additive GP | 7 | CI run `41165276107` |\n| 03 multi-fidelity GP | 7 | CI run `41166885750` |\n| 14 contextual GP | 6 | CI run `41172687822` |
+| 25 non-GP | 5 | CI run `40977583875`, including NGBoost |\n| 16 noise models | 10 | CI run `41157626014` |\n| 15 robust observation models | 8 | CI run `41159977362` |\n| 09 MAP-SAAS and additive GP | 7 | CI run `41165276107` |\n| 03 multi-fidelity GP | 7 | CI run `41166885750` |\n| 14 contextual GP | 6 | CI run `41172687822` |\n| 04 multitask GP | 5 | CI run `41177219776` |
 
 These account for 70 mapped entries. Notebook 16 adds 10 more verified mappings,\nfor 80 total. Notebook 15 adds 8 verified mappings, for 88 total. Notebook 09 adds 7 verified mappings, for 95 total. Notebook 03 adds 7 verified mappings, for 102 total.\nThe remaining 40 mappings require
 individual verification; this does not mean that all 72 are absent from
@@ -322,6 +322,27 @@ and synthetic objective evaluation examples:
 
 These are finite-pool candidate-selection examples, not
 acquisition-optimized BO. CI establishes execution only.
+
+## Multi-task GP notebook coverage (5 registry mappings)
+
+Notebook: `examples/notebooks/04_multitask_gp.ipynb`.
+Commit `6e6556c00ebbc6aea88d6572231f2326b351392f`
+passed CI run `41177219776`, including the notebook job.
+
+- `MultiTaskGP`: target-task `qLogExpectedImprovement`
+  over design variables; task identity is not optimized.
+- `KroneckerMultiTaskGP`: MC sample scalarization and
+  `qLogExpectedImprovement`; observations update all tasks
+  at each shared design point.
+- `MixedMultiTaskGP`: target-task acquisition, with
+  categorical assignments enumerated.
+- `MixedKroneckerMultiTaskGP`: MC scalarization with
+  categorical assignments enumerated and block-design evaluation.
+- `ModelListGP`: independent child GPs fitted with a summed
+  marginal log likelihood, then MC-scalarized acquisition.
+
+All five paths include posterior and synthetic objective evaluation.
+CI validates execution, not global candidate optimality.
 
 ## Next audit sequence
 
