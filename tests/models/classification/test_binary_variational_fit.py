@@ -37,6 +37,4 @@ def test_binary_variational_fit_preserves_probability_contract(model_type: type)
     probabilities = model.predict_proba(X[:3])
     assert probabilities.shape == (3, 2)
     assert torch.isfinite(probabilities).all()
-    torch.testing.assert_close(
-        probabilities.sum(dim=-1), torch.ones(3, dtype=X.dtype)
-    )
+    torch.testing.assert_close(probabilities.sum(dim=-1), torch.ones(3, dtype=X.dtype))
