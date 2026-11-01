@@ -108,3 +108,13 @@ Bernoulli変分ELBOであり、回帰用Gaussian likelihoodには変更しませ
 `SingleTaskVariationalGP.fit(epochs=..., lr=..., batch_size=...)` を継承します。
 `make_mll()` がBernoulli ELBOを返すため、分類用likelihoodのまま学習します。
 Notebook 39では `fit()` から候補提案までの流れを確認できます。
+
+## Extended binary classification models
+
+高次元MAP-SAAS、ラベルノイズ、および候補入力不確実性を扱うBinary GPは、
+標準Binary Variational GPの `fit()` を継承します。代表的な派生モデルについて、
+ミニバッチ学習と学習後の確率予測を契約テストで確認します。
+
+GP分類アンサンブルは学習済みメンバーを集約するモデルであり、
+アンサンブル自体に `fit()` があるとはみなしません。各メンバーの学習と
+アンサンブルの構築は区別してください。非GP分類器の学習APIも別契約です。
