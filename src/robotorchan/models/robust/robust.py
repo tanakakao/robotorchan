@@ -12,6 +12,7 @@ from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
 from gpytorch.likelihoods import (
     FixedNoiseGaussianLikelihood,
+    GaussianLikelihood,
     Likelihood,
 )
 from gpytorch.means import Mean
@@ -65,6 +66,12 @@ class RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin
         self._robust_all_tasks = all_tasks
         self._robust_validate_task_values = validate_task_values
 
+        # The default long-format MultiTaskGP likelihood introduces a task-noise
+        # batch dimension that is incompatible with sparse-outlier support noise.
+        # Use a scalar Gaussian base likelihood when none was explicitly supplied.
+        if likelihood is None and train_Yvar is None:
+            likelihood = GaussianLikelihood().to(train_X)
+
         MultiTaskGP.__init__(
             self,
             train_X=train_X,
@@ -100,7 +107,9 @@ class RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin
             task_feature=self._robust_task_feature,
             likelihood=self.likelihood,
             mean_module=self.mean_module,
-            covar_module=self.covar_module,
+            # MultiTaskGP adds its own task kernel; passing the complete
+            # covariance would append a second task kernel and break state loading.
+            covar_module=self.covar_module.kernels[0],
             output_tasks=self._robust_output_tasks,
             rank=self._robust_rank,
             all_tasks=self._robust_all_tasks,
