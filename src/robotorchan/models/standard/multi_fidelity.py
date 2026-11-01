@@ -83,6 +83,8 @@ class MixedSingleTaskMultiFidelityGP(SingleTaskMultiFidelityGP):
     separate mixed design covariance.
     """
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
