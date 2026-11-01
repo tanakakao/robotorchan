@@ -21,6 +21,7 @@ robotorchanではExact GP wrapperの `make_mll()` と、Joint neural modelの `t
 将来ほかのモデルに `fit()` を追加する場合も、以下の区別を維持してください。
 
 - Exact GP: `make_mll()` とBoTorchの `fit_gpytorch_mll` を利用できる状態を保つ
+- Pairwise GP: Laplace近似MLLを維持し、Gaussian Exact GPのMLLに置き換えない
 - Variational GP: 適切なELBOとデータ数・最適化設定を扱い、Exact GP用MLLに置換しない
 - Joint neural / robust GP: モデル固有の `training_loss()` や学習手順を維持する
 - Fully Bayesian GP: MCMC等の固有手順を考慮し、一般の勾配法と同一視しない
@@ -56,3 +57,10 @@ model.fit(optimizer_kwargs={"options": {"maxiter": 100}})
 `SumMarginalLogLikelihood` をBoTorchの `fit_gpytorch_mll` に渡します。
 従来の `fit_gpytorch_mll(model.make_mll())` も引き続き使用できます。
 特殊損失、Variational GP、MCMC、Joint Neuralの学習手順は置き換えません。
+
+## Pairwise preference GP
+
+`PairwiseGP` は `model.fit()` に対応しています。内部では
+`PairwiseLaplaceMarginalLogLikelihood` を `fit_gpytorch_mll` で最適化します。
+比較データの勝敗関係を学習するモデルであり、通常の回帰用Exact GPとは
+異なるMLLを維持します。従来の `fit_gpytorch_mll(model.make_mll())` も使用できます。
