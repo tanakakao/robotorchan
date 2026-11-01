@@ -81,3 +81,27 @@ def test_mixed_robust_multitask_rejects_task_as_category() -> None:
             task_feature=-1,
             cat_dims=[-1],
         )
+
+
+@pytest.mark.parametrize("mixed", [False, True])
+def test_robust_multitask_mll_forward_and_backward(mixed: bool) -> None:
+    """Regression: sparse-outlier likelihood must accept long-format task targets."""
+    train_x, train_y = _long_format_data()
+    if mixed:
+        categories = (torch.arange(train_x.shape[0]) % 2).to(train_x).unsqueeze(-1)
+        train_x = torch.cat((train_x[:, :1], categories, train_x[:, 1:]), dim=-1)
+        model = MixedRobustRelevancePursuitMultiTaskGP(
+            train_x, train_y, task_feature=-1, cat_dims=[1]
+        )
+    else:
+        model = RobustRelevancePursuitMultiTaskGP(train_x, train_y, task_feature=-1)
+
+    model.train()
+    model.likelihood.train()
+    mll = model.make_mll()
+    output = model(*model.train_inputs)
+    loss = -mll(output, model.train_targets)
+    assert loss.ndim == 0
+    assert torch.isfinite(loss)
+    loss.backward()
+    assert any(parameter.grad is not None for parameter in model.parameters())
