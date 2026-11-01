@@ -19,6 +19,7 @@
 import torch
 from robotorchan.models import HigherOrderGP
 
+torch.manual_seed(0)
 X = torch.tensor([[0.1], [0.4], [0.8]], dtype=torch.double)
 Y = torch.rand(3, 2, 2, dtype=torch.double)
 model = HigherOrderGP(train_X=X, train_Y=Y)
@@ -50,271 +51,113 @@ MixedHigherOrderGPはdesign入力だけをカテゴリ＋連続のmixed kernel�
 
 **注意：** posteriorが多次元tensor出力を表す場合、tensorを単純にflattenしてscalar acquisitionへ渡しても意味論的な目的の定義にはならない。最大・積分・特定画素などのfunctionalを別に定義する必要がある。今回の根拠はconstructorとkernel差し替え処理のソース確認であり、tensor posteriorの数値的同値性・学習収束は未検証である。
 
-## 実装補足：理論本文から分離した対応情報
+## HigherOrderGPの出力軸と学習
 
-### 11.14 robotorchan の HOGP wrapper
+`HigherOrderGP`は`train_X: [n,d]`と`train_Y: [n,r1,...,rk]`を受け取る。
+例えば画像なら`[n,h,w]`であり、単なる出力ベクトルと違い、各軸に共分散構造を置く。
+`num_latent_dims`、`learn_latent_pars`、`latent_init`は出力軸の潜在座標を制御する。
+これは波長や時刻などの既知の物理座標をそのまま与えることとは異なる。
 
-Higher-order Gaussian process は入力と出力軸の共分散構造を分離して扱います。
+構造化出力用のoutcome transformとKroneckerの線形代数を維持して学習する。
+以下は上の構築例に続けるHOGP用の学習経路である。
 
-具体的なAPI・実行例は [Structured Output implementation](../models/structured_output.md) を参照してください。
+```python
+from botorch.fit import fit_gpytorch_mll_torch
+from linear_operator.settings import _fast_solves
 
----
-
-
-### 11.29 robotorchan の raw data API
-
-観測時の入力・出力座標・応答と、推論時に内部変換された表現を区別します。
-
-具体的なAPI・実行例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
----
-
-
-### 11.56 robotorchan Notebook
-
-理論を用いた数値例は実装ガイドのNotebook案内を参照してください。
-
-具体的なAPI・実行例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
----
-
-## 理論章から分離した実装上の条件
-
-#### 11.1 この章で扱うこと：実装上の補足
-
-robotorchan では主に
-
-#### 11.1 この章で扱うこと：実装上の補足
-
-- structured output とは何か
-- vector output と tensor output の違い
-- separable covariance
-- Kronecker product
-- `HigherOrderGP`
-- latent output coordinates
-- `LatentKroneckerGP`
-- missing outputs
-- pathwise conditioning
-- iterative inference
-- structured output と Bayesian Optimization
-- robotorchan での使い分け
-
-#### 11.6 HOGP と LatentKroneckerGP の違い：実装上の補足
-
-robotorchan で最も重要な区別です。
-
-#### 11.7 HigherOrderGP とは：実装上の補足
-
-BoTorch の `HigherOrderGP` は tensor-valued output のための GP です。
-
-#### 11.7 HigherOrderGP とは：実装上の補足
-
-BoTorch の説明でいう “higher-order” は、予測対象が matrix / tensor であることを意味します。
-
-#### 11.8.1 Mixed HigherOrderGP：実装上の補足
-
-現在の robotorchan には `MixedHigherOrderGP` があります。
-
-#### 11.8.1 Mixed HigherOrderGP：実装上の補足
-
-HOGP の Kronecker factorization は design-input factor と tensor-output axes の factor を分離します。
-Mixed版はこのうち **design-input covarianceだけ**を robotorchan の mixed covariance に置き換え、
-tensor-output側の Kronecker structure は維持します。
-
-#### 11.8.1 Mixed HigherOrderGP：実装上の補足
-
-したがって `cat_dims` は `train_X` の categorical design columns を表し、
-output-axis coordinate の指定ではありません。
-
-#### 11.17 HOGP posterior sampling：実装上の補足
-
-BoTorchのHOGP posteriorはstructured sampling pathを利用します。
-Matheron型のconditioningは、その構造を保ったposterior samplingを理解するための
-重要な考え方です。
-
-#### 11.42 output normalization：実装上の補足
-
-BoTorch の HOGP は structured output 用の outcome transform を持ち、default transformも利用します。
-
-#### 11.64 この章で覚えておくこと：実装上の補足
-
-robotorchan では主に
-
-## 数値 API と利用上の補足
-
-また現在の Mixed wrapper は design-input covariance を内部管理するため、
-custom `covar_modules` との同時指定はサポートしません。
-これは HOGP 理論上の制約ではなく、現在の public implementation contract です。
-
-実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-具体的なAPI・実行例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-具体的なAPI・実行例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-具体的なAPI・実行例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-具体的なAPI・実行例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-具体的なAPI・実行例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-具体的なAPI・実行例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-実装例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-具体的なAPI・実行例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-具体的なAPI・実行例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-具体的なAPI・実行例は [Structured Output implementation](../models/structured_output.md) を参照してください。
-
-## 数理上の概念と具体的な識別子の対応
-
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
-
-`HigherOrderGP` / `LatentKroneckerGP`
-
-```text
-HigherOrderGP
-  └─ 出力 tensor の shape / 各軸の構造を利用する
-
-LatentKroneckerGP
-  └─ 入力 X と明示的な出力座標 T の積空間をモデル化する
+with _fast_solves(True):
+    fit_gpytorch_mll_torch(
+        model.make_mll(),
+        step_limit=25,
+    )
+posterior = model.posterior(X[:2])
+assert posterior.mean.shape == (2, 2, 2)
 ```
 
+HOGPのstructured posteriorは出力shapeを保ち、構造を使ったsampling pathを持つ。
+Matheron型のconditioningはこのsamplingを理解するための基礎となる。
+単に通常のExact GPと同じSciPy最適化器へ置き換える前に、
+[構造化出力モデルガイド](../models/structured_output.md)の学習上の注意を確認する。
 
-# HigherOrderGP
+## LatentKroneckerGPの明示的な出力座標
 
-```text
-train_X: [n, d]
-train_Y: [n, h, w]
+`LatentKroneckerGP`は`X × T`の積空間をモデル化する。
+例えば`train_X: [n,d]`、`train_T: [m,1]`、`train_Y: [n,m]`でスペクトルを表す。
+`T`は波長・時刻・位置などの座標であり、単なるカテゴリtask IDと同じではない。
+観測部分へのconditioning、反復線形ソルバ、pathwise posterior samplingはBoTorchへ委譲する。
+
+```python
+from botorch.fit import fit_gpytorch_mll
+from robotorchan.models import LatentKroneckerGP
+
+train_X = torch.linspace(0, 1, 5, dtype=torch.double).unsqueeze(-1)
+train_T = torch.linspace(0, 1, 4, dtype=torch.double).unsqueeze(-1)
+train_Y = torch.sin(train_X + train_T.transpose(-1, -2))
+latent_model = LatentKroneckerGP(train_X, train_T, train_Y)
+test_T = torch.tensor([[0.25], [0.75]], dtype=torch.double)
+with latent_model.use_iterative_methods():
+    fit_gpytorch_mll(
+        latent_model.make_mll(),
+        optimizer_kwargs={"options": {"maxiter": 25}},
+    )
+    prediction = latent_model.posterior(train_X[:2], test_T)
+mean = prediction.mean.reshape(2, 2)
+assert torch.isfinite(mean).all()
 ```
 
+BoTorch 0.18.1のこのposteriorは、`mean`をXとTの積に沿う平坦な形で返す。
+このbatchなしの例では要素数4の値を`[test_X数, test_T数]`へ戻している。
+posterior sampleとmomentのshapeを同じと推測せず、batch次元も含めて確認する。
 
-# LatentKroneckerGP
+新しい`test_T`で予測できるが、補間と外挿の信頼性を区別する。
+`T`の尺度はlengthscaleに関係するため、物理単位と変換を明示する。
+欠損出力への対応は上流のmasking契約に従い、欠損自体が応答に依存する場合の
+統計的な偏りまで自動的に解消するものではない。
 
-## 11.19 LatentKroneckerGP とは
+入力と出力座標には別々に`covar_module_X` / `covar_module_T`、
+`mean_module_X` / `mean_module_T`を指定できる。
+`MixedLatentKroneckerGP`はX側だけをmixed共分散にする。
+このモデルでも`cat_dims`は`train_X`の列であり、`train_T`の指定ではない。
 
-`LatentKroneckerGP` は
-
-LatentKroneckerGP では
-
-LatentKroneckerGP は underlying latent product-space structure を維持しながら、観測された部分だけに conditioning します。
-
-LatentKroneckerGP は posterior sampling に pathwise conditioning を利用します。
-
-## 11.32 HigherOrderGP vs LatentKroneckerGP
+## モデルを選ぶ基準
 
 | 観点 | HigherOrderGP | LatentKroneckerGP |
-|---|---|---|
-| 主用途 | tensor-valued output | X × T product-space output |
-| output coordinate | latent / tensor axis | 明示的 `T` |
-| 画像 | 得意 | T設計次第 |
-| スペクトル | 可能 | 特に自然 |
-| 時系列 | 可能 | 特に自然 |
-| 新しい出力座標 | 基本的に軸shape依存 | `test_T` で自然 |
-| missing outputs | 構造上制約あり | missing entries を意識した設計 |
-| posterior sampling | Matheron's rule | pathwise conditioning |
-| fitting | `_fast_solves` + torch optimizer | iterative methods |
-| raw固有API | `raw_train_X`, `raw_train_Y` | `raw_train_X`, `raw_train_T`, `raw_train_Y` |
+| --- | --- | --- |
+| 主な応答 | 画像などのtensor | 時刻・波長などの座標に沿った応答 |
+| 出力側の表現 | 各tensor軸の潜在座標 | 明示的な`T` |
+| 新しい出力位置 | 学習したtensor軸の構造に依存 | `test_T`で指定 |
+| 学習上の要点 | `_fast_solves`とPyTorch optimizer | `use_iterative_methods()` |
+| 固有のraw API | `raw_train_X`, `raw_train_Y` | 左に加えて`raw_train_T` |
+| Mixed版 | `MixedHigherOrderGP` | `MixedLatentKroneckerGP` |
 
-```text
-1回の実験からstructured responseが得られる
-        ↓
-出力軸に物理的な座標 T がある？
-  ├─ Yes
-  │    ↓
-  │   新しいTで補間したい / 欠損Tがある？
-  │    ├─ Yes → LatentKroneckerGP
-  │    └─ No  → LatentKroneckerGP または HOGP
-  │
-  └─ No
-       ↓
-       tensor shape 自体が重要？
-        ├─ Yes → HigherOrderGP
-        └─ No  → 通常の multi-output GP も検討
-```
+いずれも`raw_train_Yvar`は`None`であり、raw値は変換・masking前の入力snapshotである。
+raw値と内部の変換済み・masking済みデータを区別する。
 
+少数の独立出力なら`ModelListGP`、関連タスクなら`MultiTaskGP`や
+`KroneckerMultiTaskGP`も検討する。Kronecker構造の利用だけでは、
+タスク共分散と物理出力座標のモデルを同一視できない。
+出力数が多くても軸構造がなければ、出力削減・潜在モデルが適することがある。
+Kronecker計算の効率は分離可能共分散という仮定と引き換えである。
 
-したがって単に output 数が多いだけなら HOGP / LatentKroneckerGP が必ずしも必要ではありません。
+## BOへ接続するときの目的と検証範囲
 
-## 11.35 KroneckerMultiTaskGP との違い
+代理モデルは応答全体の分布を返す。BO側では、特定位置、ピーク、積分値、
+目標スペクトルからの距離など、何を最大化するかを別に定義する。
+非線形functionalはposterior sampleへ適用し、不確実性を伝播する。
+平均値へfunctionalを適用した結果が期待utilityと一致するとは限らない。
+Objective / PosteriorTransformと獲得関数がtensorの軸を扱えるかも確認する。
 
-`KroneckerMultiTaskGP` も Kronecker structure を利用します。
+[HOGPテスト](../../tests/models/structured/test_higher_order_gp.py)と
+[LatentKroneckerテスト](../../tests/models/structured/test_latent_kronecker_gp.py)は、
+上流とのコンストラクタ・posteriorの互換性、raw保持、dtype変換などを確認する。
+個々の数値一致と、学習の収束・全structured objectiveへの互換性は別の検証である。
+[Structured Output Notebook](../../examples/notebooks/11_structured_output_gp.ipynb)に
+学習・posterior比較・新しい`test_T`での予測例がある。
 
-## 11.36 ModelListGP との違い
-
-`LatentKroneckerGP`では `T` のscaleもkernel lengthscaleと関係するため、
-
-一方 HOGP / LatentKroneckerGP は output structure を GP covariance の中で直接扱います。
-
-なら LatentKroneckerGP が候補です。
-
-LatentKroneckerGP が missing entries を扱えるとしても、missingnessが informative なら注意が必要です。
-
-`LatentKroneckerGP` は新しい `T` でposteriorを評価できますが、interpolationとextrapolationは別です。
-
-## 11.57 HigherOrderGP example
-
-## 11.58 LatentKroneckerGP example
-
-### 「LatentKroneckerGP の T は task ID」
-
-| 出力構造 | 対応する考え方 |
-|---|---|
-| scalar response | scalar GP |
-| 少数の独立outputs | independent / `ModelListGP` |
-| related task labels | multi-task GP |
-| tensor axesそのものに構造がある | `HigherOrderGP` |
-| 明示的なoutput coordinate `T` がある | `LatentKroneckerGP` |
-| mixed design X + tensor output | `MixedHigherOrderGP` |
-| mixed design X + explicit `T` | `MixedLatentKroneckerGP` |
-| 非常に巨大で低rankなoutput | reduction / latent modelも検討 |
-
-`HigherOrderGP` / `LatentKroneckerGP`
-
-1. HOGP は tensor-valued output の各軸に Kronecker structure を利用する
-2. LatentKroneckerGP は `X × T` のproduct-space model
-3. `T` は時間・波長・位置などの明示的なoutput coordinateとして使える
-4. LatentKroneckerGP は新しい `T` でposteriorを評価できる
-5. LatentKroneckerGP はmissing output entriesを意識した設計
-6. HOGP fittingでは Kronecker / linear-operator structure を壊さない solver と optimizer の選択が重要
-7. LatentKroneckerGP では iterative methods が重要
-8. Kronecker efficiency は separable covariance assumption と引き換え
-9. BOではstructured responseから何を最適化するかobjectiveを明示する
-10. posterior sample上でobjectiveを評価するとstructured uncertaintyを伝播できる
+## 参考文献
 
 1. Zhe, S., Xing, W., and Kirby, R. M. (2019).
-   Scalable high-order Gaussian process regression.
-   *Proceedings of AISTATS*.
+   Scalable high-order Gaussian process regression. *Proceedings of AISTATS*.
 2. BoTorch `HigherOrderGP` and `LatentKroneckerGP` documentation.
-3. [Gaussian Process](../theory/02_gaussian_process.md)
-4. [Kernel](../theory/03_kernel.md)
-5. [Multi-task / Multi-output](../theory/07_multitask_multioutput.md)
-
-## 専用処理の補足
-
-| 観点 | 高階 GP | 潜在座標の Kronecker GP |
-|---|---|---|
-| 主用途 | tensor-valued output | X × T product-space output |
-| output coordinate | latent / tensor axis | 明示的 `T` |
-| 画像 | 得意 | T設計次第 |
-| スペクトル | 可能 | 特に自然 |
-| 時系列 | 可能 | 特に自然 |
-| 新しい出力座標 | 基本的に軸shape依存 | `test_T` で自然 |
-| missing outputs | 構造上制約あり | missing entries を意識した設計 |
-| posterior sampling | Matheron's rule | pathwise conditioning |
-| fitting | `_fast_solves` + torch optimizer | iterative methods |
-| raw固有API | `raw_観測入力`, `raw_観測応答` | `raw_観測入力`, `raw_train_T`, `raw_観測応答` |
+3. [Gaussian Process](../theory/02_gaussian_process.md)、
+   [Kernel](../theory/03_kernel.md)、[Multi-task / Multi-output](../theory/07_multitask_multioutput.md)。

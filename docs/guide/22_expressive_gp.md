@@ -119,7 +119,8 @@ covariance recursion を解析的に計算します。
 
 #### 18. Spectral Mixture MultiTask / Kronecker：実装上の補足
 
-現在の実装には
+Spectral MixtureのMultiTask / Kronecker版と、それぞれのMixed版がある。
+下の対応一覧で具体名を確認する。
 
 #### 21. Bayesian optimization との接続：実装上の補足
 
@@ -141,7 +142,7 @@ Joint neural GP、Infinite-width BNN GP、Spectral Mixture GP は Exact GP-compa
 
 ## 数値 API と利用上の補足
 
-現在は `混合入力 マルチタスク Deep GP` も実装されています。
+現在は`MixedMultiTaskDeepGP`も実装されています。
 
 これは「MixedとMultiTaskを名前だけ組み合わせたwrapper」ではなく、category identityとtask
 identityを別のstructural variablesとして扱うためのcontractです。
@@ -167,7 +168,8 @@ JointEncoderGP
 native mixed covariance 側へ保持します。
 
 
-このため standard `MultiTaskGP` の exact task covariance と同一の構造ではありません。
+DeepGPのtask / category embeddingは確率的な階層表現の一部であり、
+standard `MultiTaskGP`のExact task covarianceと同一の構造ではありません。
 
 現在は `MixedMultiTaskDeepGP` も実装されています。
 

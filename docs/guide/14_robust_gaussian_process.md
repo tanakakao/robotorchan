@@ -108,7 +108,7 @@ Student-tやContaminatedのtraining_loss()と交換可能ではない。
 
 ### 9. 実装との対応
 
-理論章で特に重要な実装契約は次です。
+対応する公開実装の契約は次のとおりです。
 
 - Student-t / contamination は variational inferenceで `training_loss()` を使う
 - Student-t は `df > 2`
@@ -122,90 +122,36 @@ Student-tやContaminatedのtraining_loss()と交換可能ではない。
 
 API の詳細はコードとモデルガイドを優先してください。
 
-#### 直感：実装上の補足
+### Student-t・contamination・relevance pursuitの違い
 
-robust GP では「外れ値を除去する」のではなく、**どの確率機構が通常の Gaussian noise
-から外れるのか**をモデル化します。robotorchan では主に次の3系統を区別します。
+`StudentTSingleTaskGP`は`StudentTLikelihood`とvariational GPを組み合わせる。
+`training_loss()`は期待log likelihoodとinducing-variable KLを評価する。
+`df > 2`は有限な観測分散を持つ範囲にAPIを限定する条件である。
+`num_likelihood_samples`は期待値のMonte Carlo近似数、`beta`はKL項の重みとなる。
 
-#### 2. Student-t likelihood：実装上の補足
+`ContaminatedSingleTaskGP`はlatent functionのMonte Carlo sampleに対して
+mixture log likelihoodの期待値を近似する。
+`contamination_probability`、`inlier_scale`、`outlier_scale`は固定constructor parametersであり、
+これらを全て自動推定するモデルではない。
+`contamination_diagnostic(X, Y)`はposterior meanの残差に基づく近似的なcomponent確率を返す。
+診断結果は観測を自動削除する指示や、真の外れ値ラベルではない。
 
-robotorchan の `StudentTSingleTaskGP` は `StudentTLikelihood` と variational GP を
-組み合わせます。Gaussian likelihood の exact marginal likelihood ではないため、
-`make_mll()` ではなく `training_loss()` による variational objective を使用します。
+relevance pursuitのsparse-support更新と最適化は上流の契約に従う。
+観測側の疎な外れ値構造と、高次元モデルの入力側のsparsityを区別する。
+Student-t、contamination、relevance pursuitを同じ学習目的へ置き換えない。
 
-#### 3. Contamination mixture：実装上の補足
+### Mixed・MultiTaskの構造と公開モデル
 
-robotorchan の `ContaminatedSingleTaskGP` はこの mixture likelihood を明示的に評価し、
-latent functionのMonte Carlo sampleに対してexpected mixture log likelihoodを近似します。
+| 系統 | 単一タスク | Mixed | MultiTask | Mixed MultiTask |
+| --- | --- | --- | --- | --- |
+| Student-t | `StudentTSingleTaskGP` | `MixedStudentTSingleTaskGP` | `StudentTMultiTaskGP` | `MixedStudentTMultiTaskGP` |
+| Contamination | `ContaminatedSingleTaskGP` | `MixedContaminatedSingleTaskGP` | `ContaminatedMultiTaskGP` | `MixedContaminatedMultiTaskGP` |
+| Relevance pursuit | `RobustRelevancePursuitSingleTaskGP` | `MixedRobustRelevancePursuitSingleTaskGP` | `RobustRelevancePursuitMultiTaskGP` | `MixedRobustRelevancePursuitMultiTaskGP` |
 
-#### 3. Contamination mixture：実装上の補足
+Mixed版はnative categorical covarianceを保つ。
+MultiTask版の`task_feature`はタスクを表す構造列であり、カテゴリ設計変数と区別する。
 
-現行実装では `contamination_probability`、`inlier_scale`、`outlier_scale` はconstructorで
-与える固定値です。したがって、この3値までposteriorから自動学習するmixture modelと
-解釈しないことが重要です。
-
-#### 4. Sparse correction と relevance pursuit：実装上の補足
-
-robotorchan:
-
-#### 5. Mixed variables：実装上の補足
-
-
-という構造を基本とし、`task_feature` を categorical design feature と混同しないことが
-重要です。
-
-#### 6. Robustness の種類を混同しない：実装上の補足
-
-robotorchan では少なくとも次を区別します。
-
-#### latent posteriorと観測分布を区別する：実装上の補足
-
-robotorchanのStudent-t / contaminationモデルが `posterior(X)` でBO側へ公開するのは
-**latent response posterior** です。heavy-tailed observation noiseやcontamination mixtureを
-そのままacquisition sampleとして返す、という意味ではありません。
-
-#### 7. Bayesian optimization との関係：実装上の補足
-
-Student-t / contamination 系は variational inference を使うため、標準 exact GP と
-training API が異なる点にも注意します。特に `make_mll()` を一律に呼ぶコードではなく、
-モデルの training contract を確認する必要があります。
-
-## 数値 API と利用上の補足
-
-
-に対応する形で expected log likelihood と inducing-variable KL を評価します。
-`df > 2` を要求しているのは、観測分散が有限になる領域に API を限定するためです。
-
-対応実装:
-
-
-`num_likelihood_samples` は期待値の Monte Carlo 近似数、`beta` は KL 項の重みです。
-`contamination_diagnostic(X, Y)` は posterior mean に対する残差から、各観測が
-contaminated component に属する近似確率を返します。これは観測を自動削除する API ではなく、
-診断量です。
-
-対応実装:
-
-実装の具体的な sparse-support 更新規則や最適化契約は、理論上の一般的な relevance pursuit
-と区別し、モデル実装とテストを source of truth とします。
-
-実装ガイドは [Robust / Noise model guide](../models/robust_noise.md) を参照してください。
-
-## 数理上の概念と具体的な識別子の対応
-
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
-
-- `StudentTSingleTaskGP`
-- `MixedStudentTSingleTaskGP`
-- `StudentTMultiTaskGP`
-- `MixedStudentTMultiTaskGP`
-
-- `ContaminatedSingleTaskGP`
-- `MixedContaminatedSingleTaskGP`
-- `ContaminatedMultiTaskGP`
-- `MixedContaminatedMultiTaskGP`
-
-- `RobustRelevancePursuitSingleTaskGP`
-- `MixedRobustRelevancePursuitSingleTaskGP`
-- `RobustRelevancePursuitMultiTaskGP`
-- `MixedRobustRelevancePursuitMultiTaskGP`
+Student-t / contaminationの`posterior(X)`がBOへ公開するのはlatent response posteriorである。
+heavy-tailed noiseや観測mixture全体を、そのままacquisitionのsampleへ加える意味ではない。
+入力不確かさ、入力依存ノイズ、潜在関数の非定常性も別の生成機構として扱う。
+APIの詳細と関連する検証は[Robust / Noiseモデルガイド](../models/robust_noise.md)を参照する。

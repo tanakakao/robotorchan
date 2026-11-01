@@ -108,7 +108,9 @@ DE自体の大域最適性、複数restart、mixed変数、非線形制約の可
 
 #### 11.9 Nonlinear constraints：実装上の補足
 
-nonlinear candidate constraints が存在する場合、local BoTorch stage では
+nonlinear candidate constraintsがある場合、局所BoTorch段階には
+可行な初期条件または対応するinitializerが必要となる。大域段階の候補を
+無検査で局所段階へ引き継いでよいとは限らない。
 
 #### 11.11 Mixed-variable Hybrid：実装上の補足
 
@@ -126,4 +128,6 @@ local stage は BoTorch mixed optimization を使えます。
 
 ## 数値 API と利用上の補足
 
-が default として設定されます。
+非線形候補制約がある場合、現在の実装は局所段階の`batch_limit`を
+未指定なら1に設定する。大域段階と局所段階で制約の扱いは異なるため、
+最終候補の可行性を確認する。詳細は[Hybrid利用ガイド](../../optimization/hybrid-optimizer.md)を参照する。

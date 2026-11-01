@@ -60,7 +60,7 @@ MixedUncertainInputSingleTaskGPはカテゴリ列の不確実性を正規分布�
 
 ### 12. 実装との対応
 
-現在の理論章で保持すべき実装契約は次です。
+対応する公開実装の契約は次のとおりです。
 
 - continuous training-input uncertaintyはcaller-supplied Gaussianとして扱う
 - uncertainty metadata自体をtrain_X / train_Yから自動推定するモデルではない
@@ -81,141 +81,47 @@ MixedUncertainInputSingleTaskGPはカテゴリ列の不確実性を正規分布�
 [mixed uncertain-input GP](../models/mixed_uncertain_input_gp.md)、
 [uncertain categorical GP](../models/uncertain_categorical_gp.md) を参照してください。
 
-#### 直感：実装上の補足
+### 連続入力の不確かさと内部表現
 
-この問題は candidate perturbation や environmental scenario と関連しますが、robotorchan では
-training-input uncertainty と decision-time perturbation を明確に分けます。
+`UncertainInputSingleTaskGP`は、次のどちらか一方を必ず受け取る。
 
-#### 2. Gaussian uncertainty と RBF kernel：実装上の補足
+| 引数 | shapeと意味 |
+| --- | --- |
+| `train_X_std` | `train_X.shape`。対角共分散`diag(std²)`の標準偏差 |
+| `train_X_covar` | `train_X.shape[:-1] + (d,d)`。相関を含む共分散 |
 
-robotorchan の `GaussianUncertainInputKernel` は Gaussian input uncertainty と RBF kernel の
-組み合わせに対する解析的な expected covariance を実装します。
-
-#### 5. Training uncertaintyを学習しているわけではない：実装上の補足
-
-現行 `UncertainInputSingleTaskGP` の `train_X_std` / `train_X_covar` は、
-callerが与えるuncertainty metadataです。
-
-#### 6. Prediction candidate は deterministic：実装上の補足
-
-現在の `UncertainInputSingleTaskGP.posterior(X)` は candidate `X` を deterministic として
-扱います。内部では candidate covariance をゼロにして augmented representation を作ります。
-
-#### 8. Categorical uncertainty：実装上の補足
-
-robotorchan の `UncertainCategoricalSingleTaskGP` は、continuous coordinate uncertainty
-とは分離してこの問題を扱います。
-
-#### Uncertain categoricalはdeterministic categoryのMixed GPとも違う：実装上の補足
-
-
-のような入力です。現行実装のexpected categorical covarianceは、学習されるPSDな
-category covariance matrixをこの確率分布で両側から平均化します。
-
-#### Uncertain categoricalはdeterministic categoryのMixed GPとも違う：実装上の補足
-
-
-ではありません。また現行public modelは「複数のuncertain categorical columnsを
-一般的に自動処理するAPI」と解釈しないことが重要です。
-
-#### 10. Training-input uncertainty と candidate perturbation：実装上の補足
-
-robotorchan では次を区別します。
-
-#### 10. Training-input uncertainty と candidate perturbation：実装上の補足
-
-
-とする場合、現行のrobust BO pipelineではBoTorchの `InputPerturbation` が
-posterior評価時にnominal candidateをscenario axisへ展開し、ExpectationやCVaRなどの
-risk objectiveがそのaxisを集約できます。
-
-#### 現行scopeを越えて推測しない：実装上の補足
-
-#### 現行scopeを越えて推測しない
-
-#### 13. この章で覚えておくこと：実装上の補足
-
-- output noiseとinput uncertaintyは異なる
-- training-input uncertaintyとcandidate-time perturbationも異なる
-- 現行continuous modelはcaller-supplied Gaussian input uncertaintyをexpected RBF kernelへ入れる
-- analytic expected-kernel式はGaussian uncertainty × RBFという仮定に依存する
-- `train_X_std` / `train_X_covar` は学習される量ではなく入力metadataである
-- `posterior(X)` のquery candidateは現行実装ではdeterministicである
-- Mixed版ではGaussian uncertaintyはcontinuous dimensionsだけに適用する
-- uncertain categorical inputはcategory probability distributionとして別modelで扱う
-- candidate robustnessはscenario / risk-objective layerで定義する
-
-## 数値 API と利用上の補足
-
-この区別により、外部 API では元の feature dimension を維持できます。
-
-詳細は
-[uncertain categorical GP](../models/uncertain_categorical_gp.md) を参照してください。
-
-- output noiseとinput uncertaintyは異なる
-- training-input uncertaintyとcandidate-time perturbationも異なる
-- 現行continuous modelはcaller-supplied Gaussian input uncertaintyをexpected RBF kernelへ入れる
-- analytic expected-kernel式はGaussian uncertainty × RBFという仮定に依存する
-- `posterior(X)` のquery candidateは現行実装ではdeterministicである
-- Mixed版ではGaussian uncertaintyはcontinuous dimensionsだけに適用する
-- uncertain categorical inputはcategory probability distributionとして別modelで扱う
-- candidate robustnessはscenario / risk-objective layerで定義する
-
-## 数理上の概念と具体的な識別子の対応
-
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
-
-ここで行っているのは「観測された `train_X` を一度だけrandom jitterして通常GPをfitする」
-処理ではありません。各training pointを入力分布として扱い、その分布間でkernelを周辺化します。
-
-`UncertainInputSingleTaskGP` は2種類の training-input uncertainty 表現を受け取ります。
+Mixed版の不確かさのshapeは、全特徴数ではなく連続列数に合わせる。
+共分散はfinite・symmetric・positive semidefiniteである必要がある。
+`GaussianUncertainInputKernel`はGaussian入力分布に対するRBF covarianceの期待値を解析的に評価する。
+一度random jitterした入力を通常GPへ渡す処理とは異なる。
 
 ```text
-train_X_std.shape == train_X.shape
+caller: train_X + train_X_std または train_X_covar
+  → model内部で [mean, flattened covariance] に拡張
+  → 入力分布間のexpected kernel
+  → posterior
 ```
 
+`raw_train_X`と公開候補`X`は元の特徴空間を維持する。
+augmentationはprivate representationであり、入力誤差を`train_X` / `train_Y`から
+自動推定する機能ではない。`posterior(X)`は候補の共分散を0とするdeterministic queryを扱う。
 
-```text
-Sigma_x = diag(train_X_std^2)
-```
+### 確定カテゴリと不確かなカテゴリ
 
+`MixedUncertainInputSingleTaskGP`は、連続入力にGaussian uncertaintyを与え、
+カテゴリは確定値としてnative categorical covarianceに保持する。
+一方、`UncertainCategoricalSingleTaskGP`は1つのカテゴリ特徴について
+category probability vectorを受け取る。
+期待categorical covarianceは、学習されるPSDなcategory covariance matrixを
+確率ベクトルで両側から平均化する。
+単なるカテゴリ番号へのGaussian noiseでも、複数の不確かなカテゴリ列を
+自動処理する一般的なAPIでもない。
+詳細は[カテゴリ不確かさのガイド](../models/uncertain_categorical_gp.md)を参照する。
 
-```text
-train_X_covar.shape == train_X.shape[:-1] + (d, d)
-```
+### 候補実行時の摂動との違い
 
-
-`train_X_std` と `train_X_covar` は同時には指定せず、必ずどちらか一方を指定します。
-
-これはユーザー向け raw feature space を変更するための feature engineering ではありません。
-`raw_train_X` は元の入力を保持し、augmentation は model 内部の covariance 計算のための
-private representation です。
-
-つまりモデルが `train_X` と `train_Y` だけから各点の入力誤差分散を自動推定するわけではありません。
-
-~~~text
-caller
-  → observed train_X
-  → train_X_std または train_X_covar
-  → uncertain-input kernel
-
-model
-  → 与えられた入力分布を使ってcovarianceを計算
-~~~
-
-
-`MixedUncertainInputSingleTaskGP` は
-
-`MixedUncertainInputSingleTaskGP` のcategoryは確定値です。一方、
-`UncertainCategoricalSingleTaskGP` は1つのcategorical featureについて
-category probability vectorを明示的に受け取ります。
-
-- `UncertainInputSingleTaskGP`
-- `MixedUncertainInputSingleTaskGP`
-- `UncertainCategoricalSingleTaskGP`
-
-## 専用処理の補足
-
-これはユーザー向け raw feature space を変更するための feature engineering ではありません。
-`raw_観測入力` は元の入力を保持し、augmentation は model 内部の covariance 計算のための
-private representation です。
+訓練入力の測定誤差と、選んだ候補を実行するときの摂動は別の層である。
+後者ではBoTorchの`InputPerturbation`でnominal candidateをscenarioへ展開し、
+ExpectationやCVaRなどのrisk objectiveで集約する構成を検討する。
+expected RBF kernelの解析式はGaussian uncertaintyとRBFの仮定に依存し、
+任意の摂動分布・kernelや、全MultiTask派生への対応を意味しない。

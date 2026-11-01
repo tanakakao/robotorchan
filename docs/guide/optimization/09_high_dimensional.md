@@ -4,7 +4,9 @@
 
 [理論の対応章](../../theory/optimization/09_high_dimensional.md)を正本とする。高次元の入力空間 `X ∈ R^D`でsurrogateモデルを縮約することと、獲得関数を低次元の探索変数 `Z ∈ R^d`で最大化することは別の操作である。[高次元探索の全体ガイド](../20_high_dimensional_search.md)ではモデル内部の座標・探索座標・元の実験座標を区別する。
 
-この章では`src/robotorchan/optim/embedding/`および`optim/latent/`のSearchStrategyを対象とする。モデルとacquisitionの公開入力は元の`X`のままで、探索中だけ`Z`を使用する。
+この章では`src/robotorchan/optim/embedding/`および`optim/latent/`のSearchStrategyを対象とする。最終候補は元の`X`で返すが、acquisitionが評価する座標はstrategyごとに異なる。
+REMBO / HeSBO等は投影して元空間のacquisitionを評価し、ALEBOはembedded-spaceの
+`ALEBOGP`とacquisitionを使う。
 
 ## 2. HeSBO：疎なhash embeddingとclipping
 
@@ -118,44 +120,25 @@ torch.testing.assert_close(strategy.project(embedded), original)
 モデル側の高次元対応については model theory、
 Trust Region / TuRBO は次章で扱います。
 
-#### 9.5 Latent bounds と feasible set：実装上の補足
+### 公開候補と埋め込み候補の追跡
 
-このため metadata には
+`SearchResult.candidates`は元の実験座標、
+`metadata["embedded_candidates"]`は埋め込み座標を表す。
+metadataの有無と内容はstrategyごとの契約を確認する。
+`LatentSpaceStrategy`はlinear imageのcoordinate-wise outer boundsで探索し、
+`ALEBOStrategy`はfeasible embedded polytope内で最適化する。
+ALEBOではsurrogateのMahalanobis geometryとsearch geometryを対応付けるため、
+単なるoptimizer wrapperとして交換しない。
 
-#### 9.11 ALEBO の candidate optimization：実装上の補足
+### BAxUSの状態と候補pool
 
-    SearchResult.candidates -> original/public space
-    metadata["embedded_candidates"] -> embedded space
+`BAxUSThompsonSamplingStrategy`はtarget trust region内に有限candidate poolを作り、
+posterior sampleで候補を選ぶ。target-spaceの状態、embedding split、
+予算管理は`BAxUSState`とstrategyが担当する。
+BoTorch tutorialにはtarget-space GPのARDを使う構成があるが、
+この実装は元空間lengthscaleのembeddingへの集約を使う経路も持つため、
+同一のsurrogate設定とみなさない。
 
-#### 9.16 Lengthscale-weighted target region：実装上の補足
-
-BoTorch BAxUS tutorial では target-space GP の ARD lengthscale を使って
-trust-region shape を調整します。
-
-#### 9.16 Lengthscale-weighted target region：実装上の補足
-
-これは BoTorch tutorial と完全に同じ surrogate configuration ではなく、
-これはモデルの表現と探索空間の設計を区別する観点から理解できます。
-
-## 数値 API と利用上の補足
-
-これは単なる acquisition optimizer wrapper ではなく、
-ALEBO の search geometry と surrogate geometry を対応させる構成です。
-
-## 数理上の概念と具体的な識別子の対応
-
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
-
-PCA、PLS、AE、VAE、JointEncoderGP などで surrogate が扱う representation を変えます。
-
-LatentSpaceStrategy では linear image の coordinate-wise outer bounds を探索 bounds とします。
-
-ALEBOStrategy は feasible embedded polytope 内で acquisition を最適化します。
-
-## 9.13 BAxUSState
-
-BAxUSThompsonSamplingStrategy は target trust region 内に有限 candidate pool を作り、
-posterior sample に基づいて候補を選びます。
-
-LatentSpaceStrategy と REMBO / HeSBO / ALEBO / BAxUS は似ていますが、
-低次元座標の由来が異なります。
+PCA、PLS、AE、VAE、`JointEncoderGP`はsurrogateの表現を変える。
+REMBO / HeSBO / ALEBO / BAxUSと`LatentSpaceStrategy`は候補探索の座標を扱い、
+低次元座標の由来や公開空間への写像が異なる。

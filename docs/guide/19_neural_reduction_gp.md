@@ -54,143 +54,55 @@ AEは入力分布の再構成、supervised reducerはYに関連する特徴、jo
 
 参照：[Neural reduction Notebook](../../examples/notebooks/20_neural_reduction_gp.ipynb)、[モデルガイド](../models/reduced.md)、[旧Mapping](../../.github/project-records/theory-guide/mapping/models.md)、[Verification](../../.github/project-records/theory-guide/mapping/verification.md)、[Dimensionality Reduction](18_dimensionality_reduction_gp.md)。
 
-## 理論章から分離した実装上の条件
+## 6. Frozenとjointの公開モデル
 
-### 14. 理論と実装の境界
-
-Neural reductionでは、encoderの事前学習とGPとの共同学習を区別します。
-また、潜在変数の不確実性を点推定に置き換える場合、予測分布の分散が過小評価される可能性があります。
-Mixed入力では連続変数の表現学習とカテゴリ共分散を区別し、Multi-task入力ではタスク構造を適切に保持します。
-
-モデルごとのAPI、学習手順、事後分布の呼び出し方は[高次元入力モデル](../models/high_dimensional_inputs.md)を参照してください。
-
-#### 2. VAE GP：実装上の補足
-
-したがって通常の `VAEGP.posterior(X)` は
-
-#### 7. Joint VAE：実装上の補足
-
-joint model の学習では `training_loss()` を使います。
-
-#### 現行MultiTask / Kroneckerのjoint family：実装上の補足
-
-#### 現行MultiTask / Kroneckerのjoint family
-
-#### 11. Frozen reducer と joint model の比較：実装上の補足
-
-| 項目 | Frozen AE/VAE | Joint / Hybrid |
+| 項目 | Frozen AE / VAE | Joint / Hybrid |
 | --- | --- | --- |
-| Encoder fitting | GP構築前 | GPと同時 |
-| GP objectiveからencoderへの勾配 | なし | あり |
-| Latent basis | GP fitting中は固定 | training中に変化 |
-| 学習契約 | reducer fit + GP fit | `training_loss()` |
-| Reconstruction regularization | reducer側 | Hybrid等でjoint |
-| 実装複雑性 | 比較的低い | 高い |
+| Encoderの学習 | GP構築前のreducer fitting | GPの予測目的と同時 |
+| GPからencoderへの勾配 | なし | あり |
+| GP学習中の潜在基底 | 固定 | 変化する |
+| 学習経路 | reducer fitとGP fit | `training_loss()`または対応する`fit()` |
+| Reconstruction regularization | reducer側 | Hybrid等のjoint objective |
 
-#### 12. BoTorch compatibility：実装上の補足
+`AutoEncoderGP`は事前学習したencoderを固定してGPを構築する。
+`VAEGP`もfrozen reducerで、通常の`posterior(X)`にはlatent posterior meanを使う。
+`SupervisedAutoEncoderGP`はreducer学習にoutcome-prediction lossを加え、
+`SupervisedVAEGP`はVAE objectiveへoutcome-aware supervisionを加える。
+このsupervised reducerも、GP MLLとencoderを共同学習するモデルではない。
 
-### 12. BoTorch compatibility
+`JointEncoderGP`はencoderをpredictive GPの一部として学習する。
+`HybridAutoEncoderGP`はdecoderを加え、予測目的とreconstructionを組み合わせる。
+`JointVAEGP`はprobabilistic encoderとGP predictive objectiveを共同で扱う。
+joint auxiliary lossは標準MLL helperだけでは表せないため、
+[Joint neural training](../models/joint_neural_training.md)の学習契約に従う。
 
-#### 12. BoTorch compatibility：実装上の補足
+## 7. VAEのlatent uncertainty
 
-重要なのは、encoder が存在しても acquisition function から見た model interface は
-BoTorch posterior contract を維持することです。
+latent変数を平均だけに置き換えると、表現の不確実性を失う場合がある。
+`JointVAEGP.uncertainty_aware_posterior()`はlatent sampleごとのGP予測から
+Monte Carloでpredictive momentsを求め、Gaussian posteriorへmoment matchingする。
+各sampleのposteriorを保持した一般の非Gaussian mixtureを返すAPIとは異なる。
 
-#### 12. BoTorch compatibility：実装上の補足
+frozen reducerでもjoint modelでも、公開posteriorは元空間の候補`X`を受けて内部でencodeする。
+frozen familyは`ReducedGP`の座標変換・posterior復元の基盤を利用する。
+encoderの存在だけでacquisitionの互換性を判断せず、posterior typeとshapeを確認する。
 
-一方で joint auxiliary loss は標準 MLL fit helper だけでは表現できないため、
-training loop は `training_loss()` contract に従います。
+## 8. Mixed・MultiTask・Kroneckerで保つ構造
 
-## 数値 API と利用上の補足
+Mixedのfrozen familyには`MixedAutoEncoderGP`、`MixedSupervisedAutoEncoderGP`、
+`MixedVAEGP`、`MixedSupervisedVAEGP`がある。
+joint側には`MixedJointEncoderGP`、`MixedHybridAutoEncoderGP`があり、
+カテゴリ列をcontinuous encoderから分離する。
+Mixed Hybridのreconstruction lossもcontinuous columnsを対象とする。
 
-`Joint VAE GP.uncertainty_aware_posterior()` はこの考え方を Monte Carlo 近似し、
-latent-sample posterior mixture の moment を近似します。
-
-さらに `uncertainty_aware_posterior()` はlatent-sampleごとのGP posteriorをそのまま返すAPIではなく、
-Monte Carloで得たpredictive momentsをmoment matchingしてGaussian posteriorとして返します。
-したがって一般の非Gaussian mixture posteriorを完全に保持する操作とは区別します。
-
-現在はjoint representationについても
-
-| 項目 | Frozen AE/VAE | Joint / Hybrid |
+| joint family | Long-format MultiTask | Kronecker MultiTask |
 | --- | --- | --- |
-| Encoder fitting | GP構築前 | GPと同時 |
-| GP objectiveからencoderへの勾配 | なし | あり |
-| Latent basis | GP fitting中は固定 | training中に変化 |
-| 学習契約 | reducer fit + GP fit | `training_loss()` |
-| Reconstruction regularization | reducer側 | Hybrid等でjoint |
-| 実装複雑性 | 比較的低い | 高い |
+| Encoder | `JointEncoderMultiTaskGP` | `JointEncoderKroneckerMultiTaskGP` |
+| Hybrid AE | `HybridAutoEncoderMultiTaskGP` | `HybridAutoEncoderKroneckerMultiTaskGP` |
+| VAE | `JointVAEMultiTaskGP` | `JointVAEKroneckerMultiTaskGP` |
 
-## 数理上の概念と具体的な識別子の対応
-
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
-
-`AutoEncoderGP` は encoder を reducer として先に学習し、その latent coordinate を固定して
-GP を構築します。
-
-```text
-train_X
- -> fit AE once
- -> frozen encoder
- -> latent train_X
- -> GP
-```
-
-
-この点が `JointEncoderGP` との本質的な違いです。
-
-`VAEGP` は frozen VAE の posterior-mean latent representation を GP input として使います。
-
-`SupervisedAutoEncoderGP` は reducer の事前学習時に reconstruction loss に加えて
-outcome-prediction loss を使います。
-
-`SupervisedVAEGP` は VAE objective に outcome-aware supervision を追加します。
-
-通常の `SupervisedVAEGP` もfrozen reducer modelであり、GP MLLとencoderをjoint training
-するモデルではありません。
-
-## 5. JointEncoderGP
-
-`JointEncoderGP` は encoder を predictive GP model の一部として扱います。
-
-## 6. HybridAutoEncoderGP
-
-`HybridAutoEncoderGP` は decoder を追加し、
-
-`JointVAEGP` 系では probabilistic encoder と GP predictive objective を同時に扱います。
-
-重要なのは、joint VAE が単なる `VAEGP` の別名ではないことです。
-
-`VAEGP` は fitted reducer を固定して GP を構築するのに対し、joint VAE では encoder が
-predictive training の一部です。
-
-`JointVAEGP.uncertainty_aware_posterior()` はこの考え方を Monte Carlo 近似し、
-latent-sample posterior mixture の moment を近似します。
-
-- `MixedAutoEncoderGP`
-- `MixedSupervisedAutoEncoderGP`
-- `MixedVAEGP`
-- `MixedSupervisedVAEGP`
-- `MixedJointEncoderGP`
-- `MixedHybridAutoEncoderGP`
-
-Mixed joint modelではcategoryをencoderへ入れないだけでなく、
-`MixedHybridAutoEncoderGP` のreconstruction lossもcontinuous columnsを対象にします。
-
-- `JointEncoderMultiTaskGP`
-- `JointEncoderKroneckerMultiTaskGP`
-- `HybridAutoEncoderMultiTaskGP`
-- `HybridAutoEncoderKroneckerMultiTaskGP`
-- `JointVAEMultiTaskGP`
-- `JointVAEKroneckerMultiTaskGP`
-
-long-format MultiTaskではtask featureをencoderから除外し、data featuresだけをlatentへ写像してから
-task identityを再結合します。Kronecker形式ではtask identityがXの列ではなくY側のtask axisなので、
-train_Xのdata featuresをencoderへ渡せます。
-
-また `MixedJointEncoderMultiTaskGP` ではcategorical design columnsとtask featureの両方を
-continuous encoderから分離します。モデル名の存在から他のMixed × joint × MultiTaskの全直積まで
-自動的に実装済みと推測しないことが重要です。
-
-frozen neural reducer は `ReducedGP` infrastructure を使うため、public posterior は
-original-space candidate `X` を受け、内部で encode します。
+long formatでは`task_feature`をencoderから除外し、data featuresの潜在表現と
+タスク識別子を再結合する。Kronecker形式ではtask identityがYの軸なので、
+Xのdata featuresをencodeする。
+`MixedJointEncoderMultiTaskGP`はcategorical design columnsとtask featureの両方を分離する。
+これらの名前からMixed × joint × MultiTaskの全直積への対応を推測しない。

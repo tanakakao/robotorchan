@@ -84,7 +84,7 @@ mll = PairwiseLaplaceMarginalLogLikelihood(
 
 ## 10.23 fitting
 
-通常の robotorchan exact GP と同様、
+`model.fit()` を呼ぶか、MLLを明示してBoTorchの学習関数を使えます。
 
 ```python
 from botorch.fit import fit_gpytorch_mll
@@ -185,6 +185,8 @@ PairwiseLaplaceMarginalLogLikelihood
 
 
 ## Additional API examples and implementation notes
+
+以下では、比較index、重複統合、raw snapshot、予測と候補選択の契約を補足します。
 
 ## 10.4 Pairwise comparison data
 

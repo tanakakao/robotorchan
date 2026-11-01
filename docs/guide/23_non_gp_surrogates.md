@@ -200,7 +200,7 @@ capability は区別します。
 
 ### 23. 実装との対応
 
-現在の理論章で保持すべき実装契約は次です。
+対応する公開実装の契約は次のとおりです。
 
 - non-GP model は BoTorch interface を持つが GP ではない
 - empirical ensemble は `EnsemblePosterior` を使う
@@ -224,7 +224,7 @@ capability は区別します。
 
 #### 1. Posterior interface without a Gaussian process：実装上の補足
 
-BO には予測分布または sample 可能な表現が必要で、すべての surrogate が GP である必要はありません。経験 ensemble の予測を f_s(X) とすると、実装では次のメンバー集合を表します。
+BO には予測分布または sample 可能な表現が必要で、すべての surrogate が GP である必要はありません。経験 ensemble の予測を f_s(X) とすると、各member indexを通じて同じ予測器の出力を候補集合全体へ対応付けます。
 
 #### 2. Random Forest and Extra Trees：実装上の補足
 
@@ -233,11 +233,11 @@ BO には予測分布または sample 可能な表現が必要で、すべての
 
 #### 3. Why boosting stages are not posterior samples：実装上の補足
 
-robotorchan は bootstrap データ D_s ごとに完成した boosting モデル F_M^(s) を学習し、次を経験予測 sample として使います。
+robotorchan は bootstrap データ D_s ごとに完成した boosting モデル F_M^(s) を学習し、その完成済みモデルの予測を経験予測sampleとして使います。
 
 #### 5. Acquisition functions：実装上の補足
 
-Compatible MC acquisitions can consume a sampleable posterior through the BoTorch interface.
+互換なMC acquisitionは、BoTorch interfaceを通じてsample可能なposteriorを利用できます。
 qEIやqEHVIも候補ですが、output数などacquisition固有のrequirementsを満たす必要があります。
 
 #### 5. Acquisition functions：実装上の補足
@@ -250,7 +250,8 @@ sklearn の tree・boosting 予測は入力に対し区分的・非微分で、C
 
 #### 19. NGBoost uncertainty：実装上の補足
 
-現在の adapter は
+現在のadapterが返す分散は条件付き予測分散であり、
+GPのlatent posterior varianceや較正済みepistemic uncertaintyとは同一視しません。
 
 #### 22. candidate間のjoint uncertainty：実装上の補足
 
@@ -269,10 +270,9 @@ sklearn の tree・boosting 予測は入力に対し区分的・非微分で、C
 
 ## 数理上の概念と具体的な識別子の対応
 
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
+`HistGradientBoostingSurrogate`も、前節のbootstrap方式を使います。
 
-
-## 10. HistGradientBoostingSurrogate
+### HistGradientBoostingSurrogate
 
 `HistGradientBoostingSurrogate` も complete bootstrap models を predictive members とします。
 boosting stage の spread を posterior とするのではなく、独立 bootstrap resamples 上で fit した

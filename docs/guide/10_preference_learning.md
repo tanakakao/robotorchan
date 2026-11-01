@@ -28,7 +28,7 @@ print(type(model.make_mll()).__name__)
 
 ## 検証・未検証事項
 
-比較は`(勝者index, 敗者index)`の契約で扱う。比較グラフの連結性、正則化、Laplace approximationと潜在utilityの尺度を区別する。静的API検査を「全ての比較集合で学習成功」と読み替えない。対応する既存テスト・Notebookの正確な参照は移行時に照合する。
+比較は`(勝者index, 敗者index)`の契約で扱う。比較グラフの連結性、正則化、Laplace approximationと潜在utilityの尺度を区別する。静的API検査を「全ての比較集合で学習成功」と読み替えない。既存テストとNotebookは後半の節から参照できる。
 
 [旧Model Mapping](../../.github/project-records/theory-guide/mapping/models.md)および[検証記録](../../.github/project-records/theory-guide/mapping/verification.md)は移行元の正本として保持する。API存在、静的assertion、CI成功、独立数値検証は区別する。使用例と詳しいモデル選択は[モデルガイド](../models/README.md)を参照する。
 
@@ -40,340 +40,89 @@ src/robotorchan/models/preference/pairwise.pyのPairwiseGPはBoTorch PairwiseGP�
 
 make_mll()はPairwiseLaplaceMarginalLogLikelihood(self.likelihood,self)を返す。ExactGPModelMixinのExactMarginalLogLikelihoodでも、VariationalELBOでもない。例えばcomparisons=[[1,0],[1,2]]は候補1が0と2に優越する観測を表すが、utilityの絶対尺度・ランキングの全順序・データの比較整合性を自動保証しない。
 
-priorとlikelihoodの指定、comparison indexの有効範囲、モデルの数値条件、Laplace近似の収束は個別に検査すべき事項である。make_mll()が存在することはfit()の共通実装が存在することの証拠ではない。
+priorとlikelihoodの指定、comparison indexの有効範囲、モデルの数値条件、Laplace近似の収束は個別に検査すべき事項である。現行の`PairwiseGP.fit()`は`fit_gpytorch_mll(self.make_mll())`へ委譲する。全モデルに同じ`fit()`シグネチャがあるわけではない。
 
 **検証境界：** ソースのconstructor・make_mll・raw保持を照合。比較グラフに対するposteriorの数学的整合、収束、選好予測性能はこの説明だけでは独立数値テストの完了を保証しない。
 
-## 実装補足：理論本文から分離した対応情報
+## カーネル・尤度・utilityの尺度
 
-### 10.20 robotorchan の `PairwiseGP`
+BoTorchの既定構成はscaled RBF kernelとprobit likelihoodを使う。
+Bradley–Terryモデルのlogistic linkと、Gaussian CDFによるprobit linkを区別する。
+比較尤度のノイズ尺度と潜在utilityの尺度は、通常の数値回帰と同じ形では識別できない。
+BoTorchの既定likelihoodでは独立な観測ノイズ分散を推定する代わりに、
+`ScaleKernel`のoutput scaleも含めたutilityの尺度を扱う。
+通常の回帰GPの`observation_noise=True`を、同じ意味の比較ノイズ指定と解釈しない。
 
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
+学習では、比較とGP priorの下で潜在utilityのMAPを求める内部処理と、
+Laplace近似MLLを通じたカーネルのハイパーパラメータ最適化を区別する。
+utilityの絶対値には任意性があるため、ランキングや比較確率を目的に合う指標で評価する。
+MAPとLaplace近似を必要とする分、通常のExact GP回帰より学習が重くなる場合がある。
 
----
+## 学習・予測とrawデータ
 
+コンストラクタ例に続けて、モデル固有の学習経路を使用できる。
 
-### 10.43 raw data API
-
-比較学習では、入力候補と勝者・敗者の関係が教師情報です。
-通常の実数値回帰ターゲットと同一視しません。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
----
-
-
-### 10.70 robotorchan Notebook
-
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
----
-
-
-### 10.77 robotorchan で覚えておく API
-
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
----
-
-## 理論章から分離した実装上の条件
-
-### 10.15 PairwiseGP の default kernel
-
-BoTorch の `PairwiseGP` は default で scaled RBF kernel を使います。
-
-```text
-RBF kernel
-  → input similarity
-
-ScaleKernel
-  → latent utility scale
+```python
+model.fit(optimizer_kwargs={"options": {"maxiter": 50}})
+posterior = model.posterior(points)
+assert torch.isfinite(posterior.mean).all()
+assert torch.isfinite(posterior.variance).all()
 ```
 
-probit preference model では observation-noise scale と utility scale の識別が通常回帰ほど単純ではないため、BoTorch は
-kernel output scale を使う設計です。
+`make_mll()`を用いてBoTorchの学習関数を直接呼ぶ方法も使える。
+`raw_datapoints`と`raw_comparisons`は、重複点の統合や入力変換前のコンストラクタ入力である。
+`raw_train_Y`は提供しない。新しい比較を`condition_on_observations()`へ渡す場合の`Y`も
+実数値の回帰ターゲットではなく、BoTorchの比較index契約に従う。
 
----
+[Pairwise wrapperテスト](../../tests/models/preference/test_pairwise_gp.py)は、
+コンストラクタの互換性、raw snapshot、重複統合前のデータ保持、MLLの型、
+上流posteriorとの数値一致を確認する。
+[学習API](../development/training_api.md)では`fit()`の系統別契約を説明する。
+この検証は全比較グラフでの近似収束や選好の較正を保証しない。
 
-#### 10.1 この章で扱うこと：実装上の補足
+## 次に比較する候補とBOPE
 
-robotorchan では BoTorch の
-
-#### 10.1 この章で扱うこと：実装上の補足
-
-を BoTorch-compatible wrapper として提供しています。
-
-#### 10.1 この章で扱うこと：実装上の補足
-
-- preference data
-- latent utility
-- pairwise comparison likelihood
-- probit model
-- GP prior
-- Laplace approximation
-- `PairwiseLaplaceMarginalLogLikelihood`
-- posterior utility
-- pairwise BO
-- Expected Utility of Best Option (EUBO)
-- BOPE との関係
-- robotorchan API
-
-#### 10.7 Probit likelihood：実装上の補足
-
-BoTorch の `PairwiseGP` は default で **probit likelihood** を使います。
-
-#### 10.7 Probit likelihood：実装上の補足
-
-Chu & Ghahramani の定式化では denominator にノイズscale $`\sigma`$ を含めますが、BoTorch はこの scale を明示的に
-likelihood parameter として分離せず、function scale を kernel の `ScaleKernel` で表現します。
-
-#### 10.17 relative scale と評価指標：実装上の補足
-
-BoTorch の preference tutorial でも、latent value の絶対値ではなく ranking correlation を評価に利用しています。
-
-#### 10.21 constructor：実装上の補足
-
-### 10.21 constructor
-
-#### 10.22 `make_mll()`：実装上の補足
-
-### 10.22 `make_mll()`
-
-#### 10.27 observation noise の扱い：実装上の補足
-
-通常の regression GP では `posterior(..., observation_noise=True)` で observation noise を含む predictive
-distribution を考えます。
-
-#### 10.38 q=2 の直感：実装上の補足
-
-
-BoTorch の preference BO tutorial では `q=2` として EUBO を最適化する例があります。
-
-#### 10.53 BOPE：実装上の補足
-
-BoTorch には Bayesian Optimization with Preference Exploration、つまり **BOPE** の考え方があります。
-
-#### 10.60 comparison noise と scale：実装上の補足
-
-BoTorch は likelihood 内で明示的な $`\sigma`$ を持たせる代わりに、kernel output scale 側で function scale を扱います。
-
-#### 10.80 この章で覚えておくこと：実装上の補足
-
-robotorchan では
-
-## 数値 API と利用上の補足
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-一方 `pairwise GP` の default は probit です。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-具体的な API と実行例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-実装例は [Preference Learning implementation](../models/preference_learning.md) を参照してください。
-
-1. `comparisons` は `[winner, loser]` の index pair
-2. latent utility `f(x)` に GP prior を置く
-3. default likelihood は probit
-4. non-Gaussian posterior を Laplace approximation する
-5. `make_mll()` は `Laplace 近似対数周辺尤度`
-6. utility の absolute value より ranking が重要
-7. preference BO では EI より preference-specific acquisition を考える
-8. BoTorch では EUBO が利用できる
-9. multiple outcomes と preference を分ける場合は BOPE が有力
-10. evaluator heterogeneity や cyclic preference が強い場合は単一 utility 仮定を見直す
-
-## 数理上の概念と具体的な識別子の対応
-
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
-
-`train_X` / `train_Y`
-
-一方 `PairwiseGP` の default は probit です。
+`PairwiseGP`は比較データからutility posteriorを作る代理モデルである。
+次の比較対象は、EUBOなどのpreference acquisitionと対応する候補最適化で選ぶ。
+BoTorchのpreference BOには`q=2`で比較する2候補を選ぶ構成がある。
 
 ```text
-Bradley–Terry / logistic
-  → sigmoid
-
-PairwiseGP default
-  → Gaussian CDF / probit
+候補の比較を観測
+  → PairwiseGPを学習
+  → utility posterior
+  → EUBO等で次のquery pairを選ぶ
+  → 新しい比較をcomparisonsへ追加
 ```
 
+BOPEでは、測定可能な複数outcomeの代理モデルと、outcomeに対する人の選好モデルを分ける。
+例えば材料特性を数値測定し、総合的な好みを比較で取得する場合に検討する。
+単一`PairwiseGP`を二値分類器やGaussian回帰器として扱わない。
 
-そこで `PairwiseGP` は **Laplace approximation** を使います。
+| 得られる観測・仮定 | 検討する構成 |
+| --- | --- |
+| 信頼できる実数スコア | `SingleTaskGP`などの回帰モデル |
+| 候補間の優劣 | `PairwiseGP`とpreference acquisition |
+| 複数outcomeの数値と総合的な選好 | BOPE型のoutcome / utility分離 |
+| 絶対的な二値ラベル | [分類モデル](24_classification.md) |
+| 順序尺度のスコア | 観測形式に合うordinal model |
+| 評価者の個人差 | 評価者構造を表すpreference modelを検討 |
+| 強い循環選好 | 単一のscalar utility仮定を再検討 |
 
-このため `PairwiseGP` は名前に GP とありますが、標準 `SingleTaskGP` と posterior fitting の仕組みが異なります。
+最後の3行は問題のモデル化を検討するための分類であり、
+robotorchanが専用のordinal・評価者別モデルを提供するという宣言ではない。
+比較が不整合な場合や個人差が大きい場合も、単一utilityへ無理に集約しない。
 
-`PairwiseGP` 内部では preference comparisons と GP prior の両方を考慮して latent utility の MAP 解を求めます。
+## 実行例と参考文献
 
-PairwiseGP では fitting を理解するとき、2段階を区別するとよいです。
+APIの詳細は[Preferenceモデルガイド](../models/preference_learning.md)、
+学習から候補生成までは[Preference Notebook](../../examples/notebooks/07_pairwise_gp.ipynb)を参照する。
 
-PairwiseGP の probit preference model では noise と utility scale の識別が異なるため、通常回帰と同じ意味で
-observation-noise variance を解釈しません。
-
-
-さらに PairwiseGP は pair 自体ではなく、各候補に latent utility function `f(x)` を置いています。
-
-ここまでの `PairwiseGP` は、**比較データからutility posteriorを作るsurrogate model**です。
-これだけでは「次にどの2候補を比較するか」は決まりません。
-
-~~~text
-PairwiseGP
-  → preference surrogate
-
-Preference acquisition
-  → 次に比較する候補を評価
-
-Acquisition optimization
-  → 実際のquery pairを決定
-~~~
-
-
-```text
-候補 x_i, x_j を提示
-  ↓
-どちらが良いか比較を観測
-  ↓
-PairwiseGP
-  ↓
-latent utility posterior
-  ↓
-次の比較候補を選ぶ
-```
-
-
-```text
-PairwiseGP posterior
-      ↓
-EUBO
-      ↓
-2候補を選ぶ
-      ↓
-比較結果を取得
-      ↓
-comparisonsに追加
-```
-
-
-`PairwiseGP` は `condition_on_observations` をサポートしますが、通常回帰モデルと違い、新しい `Y` も pairwise comparisons
-である必要があります。
-
-PairwiseGP の kernel hyperparameters も preference data に基づいて学習されます。
-
-単一 `PairwiseGP` は基本的に1つの latent utility function を想定するため、個人差が大きい場合は
-
-PairwiseGP を無理に当てはめないことが重要です。
-
-
-を直接 PairwiseGP で学習します。
-
-このとき PairwiseGP で expert utility を学習することができます。
-
-```text
-毎回、正確な強度値が測れる
-→ SingleTaskGP
-
-最終評価が人の総合判断で数値化しにくい
-→ PairwiseGP を検討
-```
-
-
-## 10.58 PairwiseGP の計算コスト
-
-PairwiseGP では latent utility MAP と Laplace approximation が必要なため、standard exact GP regression より
-fitting が重くなる場合があります。
-
-PairwiseGP は point ranking だけでなく posterior uncertainty を持ちます。
-
-## 10.69 PairwiseGP と classifier の使い分け
-
-なら latent utility model である PairwiseGP が自然です。
-
-### 「PairwiseGP は binary classifier」
-
-### 「PairwiseGP は Exact Gaussian regression」
-
-```text
-評価対象がある
-   ↓
-信頼できる absolute scalar score を取得できる？
- ├─ Yes
- │    └─ SingleTaskGP 等
- │
- └─ No
-      ↓
-      pairwise comparison なら安定して得られる？
-       ├─ Yes
-       │    └─ PairwiseGP
-       │
-       └─ No
-            └─ 別の preference / ordinal model を検討
-```
-
-
-| 観測・仮定 | 対応する考え方 |
-|---|---|
-| scalar targetを直接観測 | regression GP |
-| pairwise comparisonを観測 | `PairwiseGP` |
-| 複数outcomeは観測でき、utilityを比較で学ぶ | BOPE型の分離 |
-| ordinal scoreを直接観測 | ordinal model |
-| evaluator差を明示的に表現したい | hierarchical / multitask preference model |
-| 強いcyclic preferenceがある | scalar utility仮定を再検討 |
-
-```text
-pairwise comparison
-      ↓
-PairwiseGP
-      ↓
-latent utility posterior
-      ↓
-EUBO / preference acquisition
-```
-
-
-1. `comparisons` は `[winner, loser]` の index pair
-2. latent utility `f(x)` に GP prior を置く
-3. default likelihood は probit
-4. non-Gaussian posterior を Laplace approximation する
-5. `make_mll()` は `PairwiseLaplaceMarginalLogLikelihood`
-6. utility の absolute value より ranking が重要
-7. preference BO では EI より preference-specific acquisition を考える
-8. BoTorch では EUBO が利用できる
-9. multiple outcomes と preference を分ける場合は BOPE が有力
-10. evaluator heterogeneity や cyclic preference が強い場合は単一 utility 仮定を見直す
-
-1. Chu, W., and Ghahramani, Z. (2005).
-   Preference learning with Gaussian processes.
-   *Proceedings of the 22nd International Conference on Machine Learning*, 137-144.
-2. Lin, Z. J. et al. (2022).
-   Preference exploration for efficient Bayesian optimization with multiple outcomes.
-   *Proceedings of AISTATS*.
-3. Astudillo, R. et al. (2023).
-   qEUBO: A decision-theoretic acquisition function for preferential Bayesian optimization.
-   *Proceedings of AISTATS*.
+1. Chu, W., and Ghahramani, Z. (2005). Preference learning with Gaussian processes.
+   *Proceedings of ICML*, 137–144.
+2. Lin, Z. J. et al. (2022). Preference exploration for efficient Bayesian optimization
+   with multiple outcomes. *Proceedings of AISTATS*.
+3. Astudillo, R. et al. (2023). qEUBO: A decision-theoretic acquisition function
+   for preferential Bayesian optimization. *Proceedings of AISTATS*.
 4. BoTorch `PairwiseGP`, preference BO, and BOPE documentation.
-5. [Gaussian Process](../theory/02_gaussian_process.md)
-6. [Acquisition Function](../theory/04_acquisition_function.md)
+5. [Gaussian Process](../theory/02_gaussian_process.md)と
+   [Acquisition Function](../theory/04_acquisition_function.md)。

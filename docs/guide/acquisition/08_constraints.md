@@ -142,3 +142,9 @@ BoTorchのConstrainedMCObjectiveへ渡すsample-wise constraint、分類PoFを�
 #### Unknown output / black-box constraints：実装上の補足
 
 BoTorch 的な構成を理解するには、次を分離することが重要です。
+
+- 観測した応答のsampleに課す制約：残差が0以下なら可行とする。
+- 分類モデルからの可行確率：latent値ではなく確率を使い、決定論的なPoFと確率sampleを区別する。
+- 候補座標への既知制約：`CandidateConstraints`として候補optimizerへ渡す。
+
+各層の対応を確認し、ある層の制約を別の層へ暗黙に変換しない。

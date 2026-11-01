@@ -91,7 +91,7 @@ predicted_noise(X)
 
 ### 13. 実装との対応
 
-理論章で保持すべき実装契約は次です。
+対応する公開実装の契約は次のとおりです。
 
 - heteroskedasticityはoutput noiseの入力依存性
 - iterative heteroskedastic modelはresidualからlog-noise GPを交互にfit
@@ -112,97 +112,38 @@ predicted_noise(X)
 [Replicate noise GP](../models/replicate_noise_gp.md)、
 [Joint heteroskedastic GP](../models/joint_heteroskedastic_gp.md) を参照してください。
 
-#### 直感：実装上の補足
+### 既知の分散・反復測定・未知のnoise surface
 
-robotorchan では noise の扱いを少なくとも次の3種類に分けます。
+| 情報源 | GPへ渡す量・学習する量 |
+| --- | --- |
+| 外部から既知の分散を与える | fixed-noiseとして`train_Yvar`を利用 |
+| 同一条件の反復測定 | 各group meanの観測分散を推定して`train_Yvar`へ渡す |
+| 入力依存の未知のnoise | noise process自体を推定 |
 
-#### 最初に3つのvarianceを分ける：実装上の補足
+反復測定が独立で同じ分散を持つとき、個々の測定の不偏標本分散を`s²(x)`、
+反復数を`r`として、平均の分散は`s²(x)/r`となる。
+実装は`train_Yvar = max(s²(x)/r, noise_floor)`を使う。
+raw rowのexact equalityでgroup化するため、丸め誤差で別groupになる場合がある。
+各groupに2観測以上が必要であり、意味上の同一条件を推測して結合しない。
 
+`MixedReplicateNoiseSingleTaskGP`はカテゴリの同一性を維持し、
+`ReplicateNoiseMultiFidelityGP`ではfidelityもgroupの同一性に含める。
+異なるfidelityでの測定を同一条件のreplicateとしてまとめない。
 
-replicateが独立で同じ分散を持つなら、最後の量はおおよそ `s^2(x) / r` です。
-robotorchanのreplicate modelが `train_Yvar` に渡すのは個々の測定値のvarianceではなく、
-この**平均値の観測variance**です。
+### Iterativeとjointの推論経路
 
-#### 2. Heteroskedastic GP：実装上の補足
+`HeteroskedasticSingleTaskGP.fit_heteroskedastic()`は、responseの推定と
+残差に基づくlog-noise GPの学習を交互に行うtwo-GP手順である。
+`HeteroskedasticMultiTaskGP` / `MixedHeteroskedasticMultiTaskGP`は
+responseとnoiseの両方でtaskを構造として扱う。
+`HeteroskedasticMultiFidelityGP`ではnoise processにもfidelity座標を保持する。
 
-robotorchanの `HeteroskedasticSingleTaskGP` は、一般論としての完全なjoint inferenceではなく、
-**実用的なiterative two-GP procedure**です。`fit_heteroskedastic()` は概ね
+`JointHeteroskedasticSingleTaskGP`はresponseとlog-noiseのlatent processを
+同じMonte Carlo variational objectiveで学習する。
+通常のExact MLLへの置き換えではなく`training_loss()`を使う。
+これらの推論手順と、`noise_posterior()`・`predicted_noise()`の変換は
+前節の数式と[Jointモデルガイド](../models/joint_heteroskedastic_gp.md)で確認する。
 
-#### 2. Heteroskedastic GP：実装上の補足
-
-さらに現行実装には `HeteroskedasticMultiTaskGP` と
-`MixedHeteroskedasticMultiTaskGP` があります。MultiTask版ではtask featureを
-design-sideのcategorical featureとして扱わず、response GPとnoise GPの両方で
-task covarianceを持つstructural featureとして扱います。
-
-#### 3. Joint heteroskedastic inference：実装上の補足
-
-ここで「joint」とは、responseとnoiseの2つのlatent processを同じMonte Carlo
-variational objectiveで学習するという意味です。現行実装では
-`make_mll()` ではなく `training_loss()` を使います。
-
-#### 4. Replicate noise：実装上の補足
-
-robotorchan の replicate-noise 実装は exact duplicate の design row を group 化し、
-group mean と unbiased sample variance を計算します。GP に渡す `train_Yvar` は
-replicate variance そのものではなく **mean variance** であり、
-
-#### 5. Replicate の成立条件：実装上の補足
-
-robotorchan の aggregation は raw input row の exact duplicate を同一条件として扱います。
-したがって連続値に丸め誤差がある場合、意味的には同一条件でも別 group になる可能性があります。
-
-#### 7. Multi-fidelity replicate noise：実装上の補足
-
-robotorchan には `ReplicateNoiseMultiFidelityGP` もあります。ここでは fidelity feature も
-raw design row の一部なので、
-
-## 数値 API と利用上の補足
-
-
-という処理を行います。`noise_posterior(X)` はlog observation varianceのlatent posterior、
-`predicted_noise(X)` はその平均から変換したnoise varianceを返します。
-
-モデル固有の training contract は
-[Joint heteroskedastic GP](../models/joint_heteroskedastic_gp.md) を参照してください。
-
-## 数理上の概念と具体的な識別子の対応
-
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
-
-`HeteroskedasticMultiFidelityGP` ではfidelity coordinateもnoise processの入力に残るため、
-responseだけでなくobservation noiseがfidelityによって変化する構造を表現できます。
-
-`JointHeteroskedasticSingleTaskGP` は response と log-noise の latent process を joint
-objective で学習する構成です。概念的には
-
-```text
-train_Yvar = max(s^2(x) / r, noise_floor)
-```
-
-
-`MixedReplicateNoiseSingleTaskGP` では、continuous / categorical を含む raw row の同一性を
-保ったまま replicate aggregation を行います。
-
-`train_Yvar` を外部から与えられる場合は、そのvarianceを既知として使うfixed-noise modelingです。
-これは未知のnoise surfaceをresidualから推定するheteroskedastic GPとは異なります。
-
-~~~text
-known train_Yvar
-  → noiseを観測・推定済みとしてresponse GPへ渡す
-
-heteroskedastic GP
-  → Xからnoise process自体を学習する
-
-replicate GP
-  → replicateから各group meanのvarianceを推定してtrain_Yvarへ渡す
-~~~
-
-
-- latent posterior varianceとobservation noise varianceを分ける
-- replicate GPの `train_Yvar` は個々の測定varianceではなくvariance-of-the-meanである
-- known `train_Yvar` とlearned heteroskedastic noiseは別の情報源である
-- iterative modelとjoint variational modelは同じheteroskedasticityを異なる推論契約で扱う
-- replicate groupingはraw rowのexact equalityに基づき、各groupに2観測以上必要である
-- task / fidelity / categoryはnoise modelでもそれぞれのstructural semanticsを保つ
-- noisy acquisitionを選ぶこと自体はheteroskedastic surrogateを学習することではない
+`posterior(X).variance`はlatent responseの不確実性であり、個々の観測ノイズや
+平均値の観測分散と区別する。noisy acquisitionを選ぶことだけで
+heteroskedastic surrogateを学習したことにはならない。

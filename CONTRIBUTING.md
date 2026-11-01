@@ -5,17 +5,19 @@ robotorchanへの貢献を歓迎します。
 ## 開発環境
 
 Python 3.11以上を使用してください。
+仮想環境とCPU版PyTorchの準備は[インストール手順](docs/getting_started/installation.md)を参照してください。
+既にチェックアウトがある場合は、そのディレクトリを利用してください。
 
 ```bash
 git clone https://github.com/tanakakao/robotorchan.git
 cd robotorchan
-pip install -e ".[dev,examples]"
+python -m pip install -e ".[dev,examples]"
 ```
 
 Fully Bayesianモデルを変更する場合は、必要に応じて次も導入してください。
 
 ```bash
-pip install -e ".[dev,examples,fully-bayesian]"
+python -m pip install -e ".[dev,examples,fully-bayesian]"
 ```
 
 ## 変更方針

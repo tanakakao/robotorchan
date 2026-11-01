@@ -23,15 +23,21 @@ maintains its own `README.md`. Model coverage is tracked separately in
 
 ## Validation gates
 
-The `Documentation links` workflow runs:
+The `Documentation links` workflow runs the regression tests for its checkers and
+the following validation commands:
 
-1. `python -m unittest discover -s tests/docs -p test_docs_links.py`
-2. `python scripts/check_docs_links.py`
-3. `python scripts/check_notebook_links.py`
-4. `python scripts/check_docs_references.py`
+1. `python scripts/check_docs_links.py`
+2. `python scripts/check_notebook_links.py`
+3. `python scripts/check_docs_references.py`
+4. `python scripts/check_theory_implementation_mapping.py`
+5. `python scripts/check_theory_guide_quality.py`
+6. `python scripts/check_documentation_inventory.py`
+7. `python scripts/check_documentation_boundaries.py`
 
 These checks validate supported local Markdown targets, notebook Markdown-cell
-targets, reference-style links, and Markdown heading fragments. The workflow
+targets, reference-style links, Markdown heading fragments, theory-to-implementation
+references, the fixed 48-chapter guide layout, inventory coverage, and ownership
+boundaries. The workflow
 runs on pull requests and pushes to `main` using Python 3.11.
 
 The link checkers scan root Markdown, `docs/`, `docs-internal/`, `.github/`,
@@ -42,7 +48,9 @@ separate CI responsibility described in [Notebook CI](notebook-ci.md).
 
 Model coverage is generated and checked separately by
 `python scripts/generate_model_coverage.py --check` in the main CI workflow;
-it is not one of the four Documentation links checks.
+it is not part of the Documentation links workflow. Notebook JSON schemas are
+checked separately by `python scripts/check_notebook_schema.py` in
+`.github/workflows/notebook-schema.yml`.
 
 ## Maintenance decisions
 

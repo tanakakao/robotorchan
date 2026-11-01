@@ -111,14 +111,16 @@ meaningful improvement を生んだ batch 内 candidate が新しい center に�
 
     strategy.restart(...)
 
-## 数値 API と利用上の補足
+## 6. 既定値と呼び出し側の責務
 
-default failure tolerance は
+failure toleranceの自動既定値は第2節の
+`ceil(max(4 / batch_size, dim / batch_size))`である。
+Thompson candidate poolでの既定perturbation probabilityは`min(20 / dim, 1)`で、
+全次元が未変更となった候補は少なくとも1次元を変更する。
+これらは異なる役割の設定であり、成功・失敗判定の閾値と混同しない。
 
-default perturbation probability は
-
-## 数理上の概念と具体的な識別子の対応
-
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
-
-`TuRBOState` は少なくとも次を保持します。
+`TuRBOState`は第2節の長さ・counter・best値・restart情報と、
+入力次元・batch sizeを保持する。
+モデルの学習、実験の実行、観測の追加は呼び出し側が担当する。
+restartは通常の観測追加とは別の状態遷移として扱う。
+詳細は[TuRBO利用ガイド](../../optimization/turbo.md)を参照する。

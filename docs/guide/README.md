@@ -14,7 +14,9 @@
 | Notebooks | 使用方法、実行例、実験、結果の可視化 |
 | API Reference | 公開API、引数、戻り値、使用上の契約 |
 | Tests | 正当性、回帰、境界条件の検証 |
-| Development | 開発記録、監査履歴、進行管理、CI関連情報 |
+| Development | 開発者向け解説、学習API、リリース手順 |
+| Engineering documentation | 設計・API・数値契約、CIと文書の保守規則（`docs-internal/`） |
+| Project records | 過去の設計・移行・監査記録（`.github/project-records/`） |
 
 ## 最初に読む：モデルから実験候補まで
 

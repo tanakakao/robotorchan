@@ -134,7 +134,8 @@ NSGA-II（多目的探索）、BoTorch native mixed、mixed one-shotは上記Opt
 
 #### 12.20 High-dimensional search：実装上の補足
 
-これらは「DEかBoTorchか」と同じ選択軸ではありません。
+REMBO、HeSBO、ALEBO、TuRBO、BAxUSによる探索空間の構成は、
+「DEかBoTorchか」という数値backendの選択とは別の軸である。
 
 #### 12.22 Mixed-variable selection：実装上の補足
 

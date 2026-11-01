@@ -111,7 +111,8 @@ mixed one-shotの`q=1`制限は別実装の制限であり、この例から解�
 
 以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
 
-これを X_pending とすると、新しい candidate は
+未完了の実験点を`X_pending`で表す。新しい候補を選ぶ際は、
+そのpending点を考慮するacquisitionへ渡す。
 
 したがって asynchronous support は optimizer だけの性質ではなく、
 acquisition が X_pending をどう扱うかにも依存します。

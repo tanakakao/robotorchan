@@ -49,7 +49,7 @@
 - [Objective / PosteriorTransform](optimization/objective-posterior-transform.md)
 - [Release procedure](development/releasing.md)
 
-開発文書には現在も有効な設計原則・公開契約・リリース手順だけを残し、Phase記録や解消済みauditはGit/PR履歴で追跡します。
+現在も有効な設計原則・公開契約は `docs-internal/`、開発者向け解説・リリース手順は `docs/development/` に整理しています。過去のPhase記録や監査結果は [Project records](../.github/project-records/README.md) とGit/PR履歴で追跡します。
 
 ## 情報設計
 
@@ -62,7 +62,10 @@
 | Optimization | 探索戦略、獲得・最適化側の実務ガイド |
 | Theory | なぜ使えるか、数式、統計的仮定 |
 | Benchmarks | 比較条件、評価方法、実験結果 |
-| Development | architecture、設計原則、training / Notebook contract、CI、release |
+| Guide | 理論と実装の対応、処理経路、APIの使い分け |
+| Development | 開発者向け解説、学習API、リリース手順 |
+| Engineering documentation (`docs-internal/`) | architecture、設計原則、API・数値契約、Notebook・CIの保守規則 |
+| Project records (`.github/project-records/`) | 過去の設計・移行・監査記録 |
 
 ## 網羅性に関する方針
 
@@ -86,6 +89,7 @@ docs/
 ├── models/
 ├── optimization/
 ├── theory/
+├── guide/
 ├── benchmarks/
 └── development/
 ```

@@ -62,7 +62,7 @@ robotorchanが保持するraw_train_X/Y/Yvarはconstructor入力のsnapshotで�
 
 ### 18. 実装との対応
 
-現在の理論章で保持すべき実装契約は次です。
+この章に対応する公開実装の契約は次のとおりです。
 
 - fully Bayesian SAAS は BoTorch NUTS fitting を利用し MLL-style fitting ではない
 - SAAS SingleTask / MultiTask が存在する
@@ -83,122 +83,31 @@ robotorchanが保持するraw_train_X/Y/Yvarはconstructor入力のsnapshotで�
 - ALEBOGP と ALEBOStrategy は別責務
 - model reduction と search-space reduction を区別する
 
-#### 3. Fully Bayesian SAAS：実装上の補足
+### 公開モデルと学習経路
 
-robotorchan の
+| 系統 | モデル | 学習と座標の注意 |
+| --- | --- | --- |
+| Fully Bayesian | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` | NUTS。`supports_mll=False` |
+| Mixed Fully Bayesian | `MixedSaasFullyBayesianSingleTaskGP`, `MixedSaasFullyBayesianMultiTaskGP` | model-owned one-hot encoding |
+| MAP-SAAS | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP` | Exact GP MLLの学習契約 |
+| Mixed MAP-SAAS | `MixedAdditiveMapSaasSingleTaskGP`, `MixedEnsembleMapSaasSingleTaskGP` | raw入力とencoded geometryを分ける |
+| Orthogonal additive | `OrthogonalAdditiveGP`, `MixedOrthogonalAdditiveGP` | 入力componentの加法分解 |
+| Embedded-space | `ALEBOGP` | fixed-noise single-output。`train_Yvar`が必須 |
 
-#### 3. Fully Bayesian SAAS：実装上の補足
+Fully Bayesianモデルの`fit()`はNUTSへ委譲する。
+直接呼ぶ場合はBoTorchの`fit_fully_bayesian_model_nuts`を使う。
+`fit_gpytorch_mll(model.make_mll())`をFully Bayesian SAASへ適用しない。
+MultiTask版のtask列はlong-formatの構造列であり、
+通常の入力特徴としてtask ID自体をsparse selectionするという意味ではない。
 
-は BoTorch の fully Bayesian SAAS implementation をラップします。
+Mixed SAASのraw APIには元のカテゴリ値を渡すが、疎性のgeometryはencoded numeric space上にある。
+MAP-SAASではNUTSによるhyperparameter integrationを行わず、
+AdditiveとEnsembleのposterior semanticsも個別に確認する。
+`AdditiveMapSaasSingleTaskGP`の名称を、Orthogonal Additive Kernelの
+入力component分解と同一視しない。
+MAP-SAASの`ExactGPModelMixin`、表現削減の`ReducedGP`、
+観測側の外れ値を扱う`RobustRelevancePursuitSingleTaskGP`も役割が異なる。
 
-#### 3. Fully Bayesian SAAS：実装上の表現
-
-```text
-fit_gpytorch_mll(model.make_mll())
-```
-
-#### 3. Fully Bayesian SAAS：実装上の補足
-
-robotorchan でも `supports_mll = False` とし、fitting は BoTorch の
-`fit_fully_bayesian_model_nuts` に委譲します。
-
-#### 4. Fully Bayesian MultiTask SAAS：実装上の補足
-
-MultiTask SAAS は「task ID 自体を sparse input feature として選択する」モデルではなく、
-BoTorch の multitask SAAS structure を通じて task covariance と data covariance を扱います。
-
-#### 5. Mixed Fully Bayesian SAAS：実装上の補足
-
-robotorchan には
-
-#### 5. Mixed Fully Bayesian SAAS：実装上の補足
-
-重要なのは、この family が robotorchan の一般的な native categorical kernel route と
-同一ではないことです。
-
-#### 6. MAP-SAAS：実装上の補足
-
-robotorchan:
-
-#### 6. MAP-SAAS：実装上の補足
-
-BoTorch の MAP-SAAS model を raw-data retention contract とともに提供します。
-
-#### fitting contractも分ける：実装上の補足
-
-現行robotorchanではFully Bayesian SAASは `supports_mll = False` で、
-BoTorchのNUTS fittingを使います。
-
-#### 7. Mixed MAP-SAAS：実装上の補足
-
-robotorchan には
-
-#### 9. Orthogonal Additive GP：実装上の補足
-
-`OrthogonalAdditiveGP` は BoTorch の Orthogonal Additive Kernel を利用します。
-
-#### 13. ALEBO metric uncertainty：実装上の補足
-
-また `train_Yvar` は必須で、現行ALEBOGPはfixed-noise single-output modelとして構成されます。
-
-## 数値 API と利用上の補足
-
-これらは raw mixed-space API を維持しながら、モデル内部で categorical features を one-hot
-encoding して SAAS model へ渡します。
-
-一方MAP-SAAS wrappersは `Exact GP Model Mixin` を持つため、通常のMLL fitting contractへ
-接続できます。したがって「SAAS」という共通名だけから同じtraining APIだと考えません。
-
-raw API では category values をそのまま渡せますが、内部 sparsity geometry は encoded numeric
-space 上に構成されます。
-
-## 数理上の概念と具体的な識別子の対応
-
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
-
-- `SaasFullyBayesianSingleTaskGP`
-- `SaasFullyBayesianMultiTaskGP`
-
-`SaasFullyBayesianMultiTaskGP` は long-format task-feature representation を使います。
-
-- `MixedSaasFullyBayesianSingleTaskGP`
-- `MixedSaasFullyBayesianMultiTaskGP`
-
-- `AdditiveMapSaasSingleTaskGP`
-- `EnsembleMapSaasSingleTaskGP`
-
-ここでクラス名の `AdditiveMapSaasSingleTaskGP` にある「Additive」を、後述する
-Orthogonal Additive Kernelの「入力componentの加法分解」と同一視しません。
-MAP-SAAS familyとOAK familyは別のmodeling assumptionsです。
-
-fully Bayesian SAASと異なりNUTSによるhyperparameter posterior integrationは行いません。
-`AdditiveMapSaasSingleTaskGP` と `EnsembleMapSaasSingleTaskGP` のposterior semanticsも
-「fully Bayesian SAASを単に高速化した同一posterior」とは扱いません。
-
-一方MAP-SAAS wrappersは `ExactGPModelMixin` を持つため、通常のMLL fitting contractへ
-接続できます。したがって「SAAS」という共通名だけから同じtraining APIだと考えません。
-
-- `MixedAdditiveMapSaasSingleTaskGP`
-- `MixedEnsembleMapSaasSingleTaskGP`
-
-`MixedOrthogonalAdditiveGP` では categorical feature を内部 one-hot encoding します。
-
-`RobustRelevancePursuitSingleTaskGP` も sparse structure を使いますが、SAASとは対象が違います。
-
-## 12. ALEBOGP
-
-`ALEBOGP` は ALEBO search embedding と整合する Mahalanobis geometry を持つ専用 surrogate です。
-
-これは training data から PCA reducer を fit する `ReducedGP` とは別の考え方です。
-
-現在の `ALEBOGP` は単なるMahalanobis RBF kernelに留まりません。
-
-## 14. ALEBOGP と ALEBOStrategy
-
-```text
-ALEBOGP
- -> embedded-space surrogate geometry
-
-ALEBOStrategy
- -> feasible target-space candidate search
-```
+ALEBOのmetric uncertaintyでは、Laplace / samplingによるmetric sampleごとの
+posteriorをGaussianへmoment matchingする経路がある。
+`ALEBOGP`の予測と`ALEBOStrategy`の候補探索は別の責務である。

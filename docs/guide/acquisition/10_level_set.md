@@ -87,101 +87,39 @@ Theory は将来の拡張可能性を説明できますが、現在の利用可�
 - [BoundaryVariance guide](../../optimization/boundary-variance.md)
 - [Acquisition integration status](../../../docs-internal/contracts/optimization/acquisition-integration.md)
 
-## 理論章から分離した実装上の条件
+## 実装ごとのscoreと由来
 
-#### 10.6 Straddle：実装上の補足
+| acquisition | score・係数の意味 | 由来 |
+| --- | --- | --- |
+| `Straddle` | `beta * std - abs(mean - target)` | 既存のlevel-set / boundary-learning criterion |
+| `RandomizedStraddle` | 正のrandom variableから探索係数を生成 | 文献に基づくrandomized straddle family |
+| `BoundaryVariance` | varianceとstandardized target proximityを組み合わせる | robotorchan固有のheuristic |
 
-robotorchan で扱う形は
+`RandomizedStraddle`はselection round内で1つのrandom coefficientを固定する。
+候補ごとの再評価で係数を無関係に再抽選すると、同じ獲得関数を最適化する契約にならない。
+`BoundaryVariance`にはStraddleのような`beta` parameterを設けていない。
+APIの対称性だけを理由に係数を追加すると、別のheuristicを定義することになる。
 
-#### 10.11 Randomized Straddle：実装上の補足
+Straddleの固定`beta`は実装上の探索係数であり、理論の時変confidence scheduleと
+自動的に同一にはならない。数学的背景と文献は
+[対応する理論章](../../theory/acquisition/10_level_set.md)を参照する。
+`BoundaryVariance`を文献上の名前付き手法として引用しない。
 
-robotorchan の実装が参照する randomized straddle 系の考え方では、正の random variable から探索係数を生成し、
+## 適用範囲と他の意思決定との違い
 
-#### 10.13 Randomized Straddleのprovenance：実装上の補足
-
-Randomized Straddle は robotorchan 固有の名称を付けた heuristic ではなく、randomized straddle に関する既存研究に基づく
-acquisition family として扱います。
-
-#### 10.13 Randomized Straddleのprovenance：実装上の補足
-
-Theory では手法の原理を説明し、現在の具体的な実装挙動は [Level-set guide](../../optimization/level_set_learning.md) と
-[Acquisition integration status](../../../docs-internal/contracts/optimization/acquisition-integration.md) を正とします。
-
-#### 10.14 BoundaryVariance：実装上の補足
-
-BoundaryVariance は robotorchan-specific heuristic です。
-
-#### 10.17 Literature methodとlibrary-specific heuristicを分ける：実装上の補足
-
-robotorchan の theory docs では provenance を明確にします。
-
-#### 10.17 Literature methodとlibrary-specific heuristicを分ける：実装上の表現
+現在のlocal acquisitionはscalarized regressionの`q=1`を対象とする。
+multi-outputやstructured outputでは境界を定めるscalar quantityを定義し、
+ensembleなど未定義のreduction semanticsへ拡張しない。
+pointwise scoreの上位q点を選ぶことは、joint batch utilityの最適化ではない。
 
 ```text
-Straddle
-    established level-set / boundary-learning criterion
-
-Randomized Straddle
-    literature-based randomized acquisition family
-
-BoundaryVariance
-    robotorchan-specific heuristic
+PosteriorVariance → 関数全体の不確実性を減らす
+Straddle / BoundaryVariance → 閾値付近を学ぶ
 ```
 
-#### 10.21 Batch Level-set Learning：実装上の補足
-
-robotorchan-specific q=1 acquisitions が存在することは、任意 q の joint semantics が自動的に定義されることを意味しません。
-
-#### 10.25 この章で覚えておくこと：実装上の補足
-
-- function learningとlevel-set learningは同じuncertaintyを使えても目的が違う
-- level setとexcursion setを区別する
-- Straddleは `beta * std - abs(mean - target)` のq=1 criterion
-- fixed betaは実装上のexploration parameterで、理論confidence scheduleと自動的に同一ではない
-- RandomizedStraddleはselection round内で1つのrandom coefficientを固定する
-- BoundaryVarianceはrobotorchan-specific heuristicで、beta parameterを持たない
-- multi-outputやstructured outputでは、境界を定義するscalar quantityが必要
-- pointwise score上位q点はjoint batch level-set acquisitionではない
-- level-set estimation、constrained BO、classification ALはboundaryを共有してもdecision purposeが違う
-
-#### 10.26 まとめ：実装上の表現
-
-```text
-Straddle
-    uncertainty - target distance
-
-Randomized Straddle
-    randomized exploration coefficient を持つ literature-based family
-
-BoundaryVariance
-    variance × standardized target proximity
-    robotorchan-specific heuristic
-```
-
-#### 10.26 まとめ：実装上の補足
-
-`BoundaryVariance` は robotorchan 固有であり、文献上の名前付き獲得手法としての引用先はありません。
-
-## 数値 API と利用上の補足
-
-したがって API 上の対称性だけを理由に $`\beta`$ を追加すると、定義されていない parameter を持つ別の heuristic に変わってしまいます。
-
-Theory と public API の双方で、この違いを維持することが重要です。
-
-## 数理上の概念と具体的な識別子の対応
-
-以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
-
-したがって BoundaryVariance は、
-
-BoundaryVariance の定義には Straddle のような $`\beta`$ exploration parameter はありません。
-
-PosteriorVariance は
-
-```text
-PosteriorVariance
-    function learning
-
-Straddle / BoundaryVariance
-    boundary learning
-```
+level setとexcursion set、level-set estimationとconstrained BO、
+分類Active Learningは、境界を扱っていても意思決定目的が異なる。
+現在のAPI定義と統合範囲は
+[Level-set guide](../../optimization/level_set_learning.md)、
+[BoundaryVariance guide](../../optimization/boundary-variance.md)、
+[Acquisition integration status](../../../docs-internal/contracts/optimization/acquisition-integration.md)を参照する。
