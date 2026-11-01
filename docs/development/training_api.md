@@ -34,6 +34,26 @@ robotorchanではExact GP wrapperの `make_mll()` と、Joint neural modelの `t
 引き続き直接利用できることが前提です。
 対応しない学習方式は無理に汎用化せず、明確なCapabilityとエラーで示します。
 
+## 学習API対応表
+
+| モデル系統 | 学習方法 | 確認対象 |
+| --- | --- | --- |
+| 標準Exact GP・Mixed・MultiTask・MultiFidelity | `fit(optimizer_kwargs=...)` | Exact GP契約 |
+| ModelListGP | `fit(optimizer_kwargs=...)` | SumMarginalLogLikelihood |
+| PairwiseGP | `fit()` | Pairwise Laplace MLL |
+| Variational GP・Mixed | `fit(epochs=..., lr=..., batch_size=...)` | 変分ELBO |
+| Fully Bayesian SAAS | `fit(warmup_steps=..., num_samples=..., ...)` | NUTS |
+| Joint neural GP | `fit(epochs=..., lr=...)` | モデル固有のtraining_loss |
+| DeepGP・Binary DeepGP | `fit(epochs=..., lr=..., ...)` | 変分ELBO |
+| Binary variational GP・派生分類GP | `fit(epochs=..., lr=..., batch_size=...)` | Bernoulli ELBO |
+| Scikit-learn・Bootstrap分類 | `fit()` | 非GP分類器の学習 |
+| GP・Heterogeneous分類アンサンブル | メンバーを個別に学習 | 集約層にfitなし |
+
+この表は統一シグネチャを意味しません。モデルの学習目的・バックエンドに応じて
+引数と最適化手法は異なります。個々のモデルで `supports_fit` の有無や
+`make_mll()` の対応を確認し、非対応の学習方式を推測して呼び出さないでください。
+分類アンサンブルは学習済みメンバーの確率予測を集約します。
+
 ## 標準Exact GPの便利な学習API
 
 対応する標準Exact GPモデルは以下のように学習できます。
@@ -56,7 +76,8 @@ model.fit(optimizer_kwargs={"options": {"maxiter": 100}})
 対応するMixed派生モデルで利用できます。`ModelListGP` でも `fit()` を利用でき、
 `SumMarginalLogLikelihood` をBoTorchの `fit_gpytorch_mll` に渡します。
 従来の `fit_gpytorch_mll(model.make_mll())` も引き続き使用できます。
-特殊損失、Variational GP、MCMC、Joint Neuralの学習手順は置き換えません。
+モデル固有の特殊損失、Variational GP、MCMC、Joint Neuralの学習方式は、
+Exact GP向けのMLL最適化には置き換えません。各系統のfit契約を使用します。
 
 ## Pairwise preference GP
 
