@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import torch
-
 from botorch.models import SingleTaskVariationalGP as BoTorchSingleTaskVariationalGP
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
