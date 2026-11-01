@@ -5,7 +5,7 @@ import torch
 from botorch.fit import fit_gpytorch_mll
 
 from robotorchan.models import MixedSingleTaskGP, SingleTaskGP, SingleTaskVariationalGP
-from robotorchan.models.base import UnsupportedModelOperationError
+from robotorchan.models.base import FittableExactGPModelMixin, UnsupportedModelOperationError
 from robotorchan.models.non_gp.random_forest import RandomForestSurrogate
 
 
@@ -66,8 +66,9 @@ def test_specialized_families_do_not_inherit_exact_fit() -> None:
     X, Y = _regression_data()
     variational = SingleTaskVariationalGP(X, Y)
     forest = RandomForestSurrogate(X, Y, n_estimators=4, random_state=0)
-    assert not variational.supports_fit
-    assert not hasattr(variational, "fit")
+    assert variational.supports_fit
+    assert callable(variational.fit)
+    assert not isinstance(variational, FittableExactGPModelMixin)
     assert forest.supports_fit
     assert forest.fit() is None
 
