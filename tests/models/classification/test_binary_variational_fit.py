@@ -12,7 +12,11 @@ from robotorchan.models.classification import (
 
 @pytest.mark.parametrize(
     "model_type",
-    [BinarySingleTaskGPClassifier, MixedBinarySingleTaskGPClassifier, MultiTaskBinaryGPClassifier],
+    [
+        BinarySingleTaskGPClassifier,
+        MixedBinarySingleTaskGPClassifier,
+        MultiTaskBinaryGPClassifier,
+    ],
 )
 def test_binary_variational_fit_preserves_probability_contract(model_type: type) -> None:
     torch.manual_seed(0)
