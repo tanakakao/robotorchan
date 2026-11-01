@@ -118,3 +118,11 @@ Notebook 39では `fit()` から候補提案までの流れを確認できます
 GP分類アンサンブルは学習済みメンバーを集約するモデルであり、
 アンサンブル自体に `fit()` があるとはみなしません。各メンバーの学習と
 アンサンブルの構築は区別してください。非GP分類器の学習APIも別契約です。
+
+## Non-GP binary classification
+
+Scikit-learn系Binary分類器とBootstrap分類アンサンブルは、
+`fit()`（引数なし）で保存済みの訓練データを学習します。
+GPの `fit(epochs=..., lr=..., batch_size=...)` とは異なる契約です。
+`is_fitted` で学習済み状態を確認し、学習後に `predict_proba()` を使用します。
+Scikit-learnはoptional dependencyのままとし、未導入環境では該当テストをskipします。
