@@ -18,7 +18,7 @@ from torch import Tensor
 
 from robotorchan.models.base import (
     ContinuousKernelFactory,
-    ExactGPModelMixin,
+    FittableExactGPModelMixin,
     make_mixed_covar_module,
     normalize_feature_dims,
 )
@@ -29,8 +29,10 @@ from robotorchan.reduction.input import (
 )
 
 
-class SingleTaskMultiFidelityGP(ExactGPModelMixin, BoTorchSingleTaskMultiFidelityGP):
+class SingleTaskMultiFidelityGP(FittableExactGPModelMixin, BoTorchSingleTaskMultiFidelityGP):
     """BoTorch ``SingleTaskMultiFidelityGP`` with robotorchan conveniences."""
+
+    supports_fit = True
 
     def __init__(
         self,
