@@ -10,9 +10,7 @@ def test_deep_gp_fit_updates_parameters_and_posterior() -> None:
     torch.manual_seed(0)
     X = torch.rand(10, 2, dtype=torch.double)
     Y = torch.sin(X[:, :1])
-    model = SingleTaskDeepGP(
-        X, Y, hidden_dims=(2,), num_inducing=4, posterior_samples=8
-    )
+    model = SingleTaskDeepGP(X, Y, hidden_dims=(2,), num_inducing=4, posterior_samples=8)
     before = [parameter.detach().clone() for parameter in model.parameters()]
     assert model.supports_fit
     assert model.fit(epochs=2, lr=0.01, num_likelihood_samples=4) is None
