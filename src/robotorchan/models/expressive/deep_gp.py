@@ -85,6 +85,7 @@ class SingleTaskDeepGP(
     following phase rather than approximating the DeepGP as an exact GP.
     """
 
+    supports_fit = True
     supports_mll = True
 
     def __init__(
@@ -155,6 +156,31 @@ class SingleTaskDeepGP(
                 reference=train_X,
             )
         self.likelihood = GaussianLikelihood().to(train_X)
+
+    def fit(
+        self,
+        *,
+        epochs: int = 100,
+        lr: float = 0.01,
+        num_likelihood_samples: int = 8,
+    ) -> None:
+        """Train DeepGP layers using the model's variational ELBO loss."""
+        if epochs <= 0:
+            raise ValueError("epochs must be positive.")
+        if lr <= 0:
+            raise ValueError("lr must be positive.")
+        if num_likelihood_samples <= 0:
+            raise ValueError("num_likelihood_samples must be positive.")
+        optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+        self.train()
+        self.likelihood.train()
+        for _ in range(epochs):
+            optimizer.zero_grad()
+            loss = self.training_loss(num_likelihood_samples=num_likelihood_samples)
+            loss.backward()
+            optimizer.step()
+        self.eval()
+        self.likelihood.eval()
 
     def transform_inputs(self, X: Tensor) -> Tensor:
         """Apply the model-owned input standardization."""
