@@ -11,7 +11,7 @@ This document defines the maintained documentation ownership and validation scop
 | `docs/optimization/` | Acquisition, candidate generation, search strategies |
 | `docs/theory/` | Mathematical foundations, assumptions, derivations |
 | `docs/benchmarks/` | Experiment protocols, metrics, evidence, reproducibility |
-| `docs/guide/` | Japanese theory-to-implementation learning chapters |
+| `docs/guide/` | Theory-to-source mappings, class structure, internal flow and design decisions |
 | `docs/development/` | Japanese developer learning and release guides |
 | `docs-internal/` | Normative architecture, API and numerical contracts, maintenance |
 | `.github/project-records/` | Historical designs and audit evidence |
@@ -82,10 +82,38 @@ benchmark performance.
 Human-facing learning and usage prose under `docs/` is Japanese. Preserve Python
 identifiers, code and mathematical notation. Detailed engineering requirements
 may be English under `docs-internal/`. Theory explains mathematical concepts;
-concrete classes, runtime support, code references and examples belong in Guide.
+Guide explains concrete classes, internal computations, delegation and design decisions.
+Usage examples belong in Notebooks or API references, and executable checks belong in Tests.
 Historical phase decisions belong in project records or the inventory notes.
 
 `python scripts/check_documentation_boundaries.py` checks concrete local class
 names and package instructions in Theory, Guide source paths, and phase records.
 Its regression tests run in the existing Documentation links job. Structural
 checks do not establish mathematical correctness or replace content review.
+
+## Guide content contract
+
+Guide is technical explanation of how Theory is implemented in source code.
+It is not a usage tutorial, an example collection, or a verification report.
+The responsibility categories are fixed:
+
+- Theory: mathematics, derivations, assumptions, algorithms.
+- Guide: theory-to-implementation mappings, class structure, internal flow, design decisions.
+- Notebooks: usage, executable examples, experiments, visualization.
+- API Reference: public APIs, arguments, return values, usage contracts.
+- Tests: correctness, regressions, boundary conditions.
+- Development: development records, audit history, phase management, CI information.
+
+Preserve useful implementation explanations and link to existing material instead of duplicating it.
+Check the actual source for classes, methods, file paths, and mathematical computations.
+Distinguish BoTorch / GPyTorch delegation from robotorchan implementations.
+Document approximations and unsupported combinations where they affect the computation.
+
+Guide code is optional. Only real source excerpts or computations needed to explain implementation
+belong there. Data generation, model instantiation, fit/predict calls, plotting, assertions for
+verification, and CI/audit outcomes belong in their existing owners.
+When removing a usage snippet consumed by a test, preserve its numerical checks in Tests without
+requiring Guide to retain the tutorial. Do not create another example unless it fills a real gap.
+
+A chapter is complete when a reader can identify the class, method, and internal operation that
+realize the corresponding Theory formula or algorithm. Link checks alone do not establish this.

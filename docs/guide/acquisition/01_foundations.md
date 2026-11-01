@@ -1,55 +1,22 @@
 # Foundations：理論から実装へ
 
-## 1. この章で解決する問い
+## この章で解決する問い
 
 posterior → objective / utility → acquisition score → optimizer → candidate。モデル予測は意思決定価値そのものではない。
 
-数学的な定義・仮定・導出は[理論の対応章](../../theory/acquisition/01_foundations.md)が正本であり、この章は**数式の計算対象 → 実装の所有権 → 公開API → 探索上の制約**をつなぐ日本語実装ガイドである。
+数学的な定義・仮定・導出は[理論の対応章](../../theory/acquisition/01_foundations.md)が正本であり、
+この章は**数式の計算対象 → クラス構造 → 内部処理 → 近似と制限**をつなぐ日本語実装ガイドである。
 
-## 2. posteriorからcandidateへの処理の流れ
+## 実装の対応と委譲
 
-```text
-train observations → surrogate.fit / posterior(X)
-                                     ↓
-                          objective / utility
-                                     ↓
-                  acquisition function α(X)
-                                     ↓
-                    candidate optimizer
-                                     ↓
-             selected X → costly evaluation
-```
+BoTorch標準acquisitionとrobotorchanのlocal ALクラスを区別。
+`src/robotorchan/acquisition/registry.py`のmetadataは数式実装や全optimizer互換性の証明ではない。
 
-候補点で観測する未知の応答値と、観測前に計算する獲得関数値は異なる。獲得関数が最大化するutilityを、posterior meanの予測結果と読み替えない。analytic計算、MC sampling、fantasization、classification probability等、用いる数値表現は手法とモデルによって異なる。
-
-## 3. 実装の対応と委譲
-
-BoTorch標準acquisitionとrobotorchanのlocal ALクラスを区別。`src/robotorchan/acquisition/registry.py`のmetadataは数式実装や全optimizer互換性の証明ではない。
-
-参照する代表的な公開APIは ``botorch.acquisition.analytic.LogExpectedImprovement``。ここでは**名前・責務の参照**であり、すべてのモデルやoptimizerとの組合せを実行検証済みとするものではない。
-
-| 層 | 何を担当するか | 検証上の要点 |
-| --- | --- | --- |
-| surrogate | posterior、必要に応じてclass probability | posterior type、出力軸、学習方式 |
-| acquisition | utilityの期待値・近似または探索score | 定義した数式、方向、q、sample形状 |
-| semantic bridge | objective/constraintの意味論変換 | objectiveとclassification feasibilityの分離 |
-| optimizer | 入力境界、fixed features、candidate constraintsを満たす候補検索 | one-shot/gradient/mixedの対応、最適化失敗の検出 |
-
-## 4. 採用時の確認と注意事項
+## 採用時の確認と注意事項
 
 観測値の尺度、posterior shape、最大化/最小化の向きを統一する。
 
-モデル側のposteriorが正しい形を返すことと、獲得関数の数学的同値性を示すことは別である。またacquisition functionの単体テストと、候補探索が可行な点を返すことは別々に検証する。
-
-## 5. 数学的検証と実装の追跡
-
-[既存Acquisition Mapping](../../../.github/project-records/theory-guide/mapping/acquisition.md)はsource inspectedの実装契約、entry・テスト証拠を保持する。[Verification Mapping](../../../.github/project-records/theory-guide/mapping/verification.md)は独立数値参照や既存のassertionの追跡先とする。両者を消去・置き換えず、原文区間のmigration ledgerをverifiedとする際に照合する。CI成功だけで全数値契約が検証されたことにはならない。
-
-[獲得関数の基礎ガイド](../04_acquisition_function.md)、[獲得関数利用ドキュメント](../../optimization/README.md)、[理論Acquisition索引](../../theory/acquisition/README.md)にも戻れる。個別の数式、適用例や比較条件は対応する理論章と使用ガイドで読む。
-
-## 実装補足：理論本文から分離した対応情報
-
-### 1.10 BoTorch / robotorchan との対応
+### BoTorch / robotorchan との対応
 
 BoTorchはanalytic / MC acquisition、objective、posterior transform、sampler、
 acquisition optimizerを分離した設計を採用しています。
@@ -57,6 +24,19 @@ acquisition optimizerを分離した設計を採用しています。
 robotorchanのcapability metadataではposterior requirementをmarginal moments、joint Gaussian、
 posterior samplesに分けます。さらにq、multi-output、ensemble、fantasization等が重なります。
 
-robotorchanもBoTorch-firstとし、BoTorch native acquisitionが目的を満たす場合は
-ローカルwrapperを作りません。現在の対応状況は
-[Acquisition integration status](../../../docs-internal/contracts/optimization/acquisition-integration.md) を参照してください。
+robotorchanもBoTorch-firstとし、BoTorch native acquisitionが目的を満たす場合はローカルwrapperを作りません。現在の対応状況は
+[統合契約](../../../docs-internal/contracts/optimization/acquisition-integration.md)
+を参照してください。
+
+## acquisitionの基底と計算の所有権
+
+BoTorchの`AcquisitionFunction`はモデルを保持し、具体的な`forward()`は派生クラスが実装します。analytic系はposteriorのmoment、
+MC系はsamplerで得た応答をobjectiveへ通した量を計算します。これらの共通構造は[BoTorchのacquisition基底][b-base]が担当します。
+
+robotorchanの[registry](../../../src/robotorchan/acquisition/registry.py)は計算クラスとcapabilityを結び付け、
+[compatibility](../../../src/robotorchan/acquisition/compatibility.py)が
+posteriorの表現・出力数・samplingなどの条件を照合します。registry自体は獲得関数値を計算しません。
+[composition](../../../src/robotorchan/acquisition/composition.py)は
+目的の方向とモデル内の出力位置をBoTorchのobjectiveへ接続します。
+
+[b-base]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/acquisition/acquisition.py

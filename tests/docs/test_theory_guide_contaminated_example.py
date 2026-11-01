@@ -1,26 +1,21 @@
-"""Execute the contamination-mixture example in the theory implementation guide."""
+"""Preserve runtime and numerical checks independently of Guide prose."""
 
 from __future__ import annotations
 
-import re
 import unittest
 from pathlib import Path
 
 import torch
 
-GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/14_robust_gaussian_process.md"
+CASES = Path(__file__).with_name("runtime_cases") / "14_robust_gaussian_process_contamination.py"
 
 
 class ContaminatedGuideExampleTests(unittest.TestCase):
     def test_contamination_snippet_and_training_contract(self) -> None:
-        section = GUIDE.read_text(encoding="utf-8").split("## Contamination Mixture", 1)[1]
-        match = re.search(r"~~~python\n(.*?)\n~~~", section, re.DOTALL)
-        self.assertIsNotNone(match)
-        assert match is not None
-        scope: dict[str, object] = {"__name__": "__guide_example__"}
+        scope: dict[str, object] = {"__name__": "__runtime_case__"}
         with torch.random.fork_rng():
             torch.manual_seed(0)
-            exec(compile(match.group(1), str(GUIDE), "exec"), scope)
+            exec(compile(CASES.read_text(encoding="utf-8"), str(CASES), "exec"), scope)
         model = scope["model"]
         self.assertFalse(model.supports_mll)
         self.assertTrue(torch.isfinite(scope["loss"]))

@@ -1,30 +1,22 @@
-"""Execute the conditional-kernel example directly from the Japanese guide."""
+"""Preserve runtime and numerical checks independently of Guide prose."""
 
 from __future__ import annotations
 
-import re
 import unittest
 from pathlib import Path
 
 import torch
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/12_hierarchical_contextual_gp.md"
+CASES = Path(__file__).with_name("runtime_cases") / "12_hierarchical_contextual_gp.py"
 
 
 class HierarchicalGuideExampleTests(unittest.TestCase):
     def test_mixed_hierarchical_example(self) -> None:
-        match = re.search(
-            r"```python\n(.*?)\n```",
-            GUIDE.read_text(encoding="utf-8"),
-            re.DOTALL,
-        )
-        self.assertIsNotNone(match)
-        assert match is not None
-        scope: dict[str, object] = {"__name__": "__guide_example__"}
+        scope: dict[str, object] = {"__name__": "__runtime_case__"}
         with torch.random.fork_rng():
             torch.manual_seed(0)
-            exec(compile(match.group(1), str(GUIDE), "exec"), scope)
+            exec(compile(CASES.read_text(encoding="utf-8"), str(CASES), "exec"), scope)
         model = scope["model"]
         self.assertEqual(model.cat_dims, (0,))
         self.assertTrue(torch.equal(model.raw_train_X, scope["train_X"]))

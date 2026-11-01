@@ -1,30 +1,22 @@
-"""Execute derivative-free and evolutionary optimization guide code."""
+"""Preserve runtime and numerical checks independently of Guide prose."""
 
 from __future__ import annotations
 
-import re
 import unittest
 from pathlib import Path
 
 import torch
 
-GUIDE = Path(__file__).resolve().parents[2] / "docs/guide" / "optimization"
+CASES = Path(__file__).with_name("runtime_cases") / "optimization"
 
 
 class OptimizationSamplingEvolutionaryGuideTests(unittest.TestCase):
     def execute(self, filename: str, fence: str) -> dict[str, object]:
-        path = GUIDE / filename
-        match = re.search(
-            rf"{re.escape(fence)}python\n(.*?)\n{re.escape(fence)}",
-            path.read_text(encoding="utf-8"),
-            re.DOTALL,
-        )
-        self.assertIsNotNone(match)
-        assert match is not None
-        scope: dict[str, object] = {"__name__": "__guide_example__"}
+        path = (CASES / filename).with_suffix(".py")
+        scope: dict[str, object] = {"__name__": "__runtime_case__"}
         with torch.random.fork_rng():
             torch.manual_seed(0)
-            exec(compile(match.group(1), str(path), "exec"), scope)
+            exec(compile(path.read_text(encoding="utf-8"), str(path), "exec"), scope)
         return scope
 
     def test_sobol_sampled_candidate(self) -> None:

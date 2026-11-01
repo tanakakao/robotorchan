@@ -1,26 +1,21 @@
-"""Run the published qLogNEI batch/noisy acquisition example."""
+"""Preserve runtime and numerical checks independently of Guide prose."""
 
 from __future__ import annotations
 
-import re
 import unittest
 from pathlib import Path
 
 import torch
 
-GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/acquisition/04_batch_noisy.md"
+CASES = Path(__file__).with_name("runtime_cases") / "acquisition/04_batch_noisy.py"
 
 
 class BatchNoisyGuideExampleTests(unittest.TestCase):
     def test_qlognei_batch_shape_and_finiteness(self) -> None:
-        section = GUIDE.read_text(encoding="utf-8").split("## 6.", 1)[1]
-        match = re.search(r"```python\n(.*?)\n```", section, re.DOTALL)
-        self.assertIsNotNone(match)
-        assert match is not None
-        scope: dict[str, object] = {"__name__": "__guide_example__"}
+        scope: dict[str, object] = {"__name__": "__runtime_case__"}
         with torch.random.fork_rng():
             torch.manual_seed(0)
-            exec(compile(match.group(1), str(GUIDE), "exec"), scope)
+            exec(compile(CASES.read_text(encoding="utf-8"), str(CASES), "exec"), scope)
         self.assertEqual(tuple(scope["candidates"].shape), (2, 2, 1))
         self.assertEqual(tuple(scope["scores"].shape), (2,))
         self.assertTrue(torch.isfinite(scope["scores"]).all())

@@ -1,128 +1,106 @@
-# Preference Learning：理論と実装
+# Preference Learning：比較尤度からLaplace近似への実装経路
 
-## 解決する問題と数理の入口
+## この章の対象
 
-[理論の正本](../theory/10_preference_learning.md)は数学的仮定・導出を担当する。本章は入力データ、アルゴリズム、公開API、上流委譲、数値検証のつながりを日本語で説明する。
+[選好学習のTheory](../theory/10_preference_learning.md)で説明した比較確率、
+潜在utilityのMAP推定、Laplace近似が、どの処理で計算されるかを追います。robotorchanの`PairwiseGP`はデータ保持と学習入口を拡張し、
+比較尤度・推論・条件付けはBoTorchへ委譲します。上流の内部処理はBoTorch 0.18.1のソースに基づきます。
 
-数値スコアではなく候補点の対比較（どちらが好ましいか）から潜在utilityを推定する。単一目的の数値回帰における`train_Y`と比較indexを同一視しない。対比較の向き、比較の重複統合、観測尤度の仮定を確認する。
+## Theoryの構成要素と処理の対応
 
-## 実装の責務と公開契約
+Theoryの潜在utilityを $u$、訓練点の共分散を $K$ とします。比較尤度の負の対数Hessianを $C$ とすると、
+Laplace近似の共分散は $(K^{-1}+C)^{-1}$ です。式の導出はTheoryの10.6・10.7・10.11・10.13・10.14節を参照してください。
 
-- **Extended:** `src/robotorchan/models/preference/pairwise.py`の`PairwiseGP`はBoTorch `PairwiseGP`を継承し、元のdatapoints/comparisonsをraw snapshotsとして保存する。
-- **Delegated:** Laplace近似、重複の統合、posterior、pairwise likelihoodはBoTorch。
-- **Implemented（接続）:** `make_mll()`は`PairwiseLaplaceMarginalLogLikelihood`を返す。標準GPの`ExactMarginalLogLikelihood`ではない。
+| 理論上の構成要素 | 実装するクラス・メソッド | 計算の担当 |
+| --- | --- | --- |
+| 勝者と敗者のutility差 | `PairwiseGP.set_train_data()`の比較行列`D` | BoTorch |
+| probit比較確率 | `PairwiseProbitLikelihood._calc_z()`・`p()` | BoTorch |
+| 負の対数尤度の勾配・Hessian | `negative_log_gradient_sum()`・`negative_log_hessian_sum()` | BoTorch |
+| utilityのMAP推定 | `PairwiseGP._update()`・`_grad_posterior_f()` | BoTorch・SciPy |
+| Laplace近似共分散 | `PairwiseGP.forward()`の学習モード | BoTorch・PyTorch |
+| 近似対数周辺尤度 | `PairwiseLaplaceMarginalLogLikelihood.forward()` | BoTorch |
+| 新しい点での予測 | `PairwiseGP.forward()`の評価モード・`posterior()` | BoTorch |
+| 元の比較データの保持 | `RawDataMixin._store_raw_tensor()` | robotorchan |
+| 学習目的の構成と最適化への接続 | wrapperの`make_mll()`・`fit()` | robotorchanからBoTorchへ委譲 |
 
-## 最小の利用例
+表の`PairwiseGP`の内部メソッドは、特記したwrapper部分を除きBoTorchの実装です。robotorchan側に別のLaplaceソルバはありません。
 
-```python
-import torch
-from robotorchan.models import PairwiseGP
+## 継承とデータの来歴
 
-points = torch.tensor([[0.1], [0.5], [0.9]], dtype=torch.double)
-comparisons = torch.tensor([[1, 0], [1, 2]], dtype=torch.long)
-model = PairwiseGP(datapoints=points, comparisons=comparisons)
-print(type(model.make_mll()).__name__)
-```
+[wrapper][wrapper]の継承は
+`PairwiseGP(RawDataMixin, ModelTrainingMixin, BoTorchPairwiseGP)`です。`BoTorchPairwiseGP`はimport時の別名で、
+上流クラスは`Model`・`GP`・`FantasizeMixin`を継承します。Gaussian回帰の`ExactGP`を継承する構造とは異なります。
 
-コードは確認した公開APIを示す最小例であり、すべての条件での成功を保証するものではない。tensorのshape、dtype/device、入力変数の意味と、posteriorの出力構造を意識して利用する。
+wrapperのコンストラクタは、親を初期化する前に`datapoints`と`comparisons`を`detach().clone()`します。親の初期化後に、
+[RawDataMixin][base]がコピーを非永続bufferとして登録します。`raw_datapoints`・`raw_comparisons`は入力の来歴であり、
+`raw_train_Y`へ比較indexを詰め替える設計ではありません。
 
-## 検証・未検証事項
+上流の`_consolidate_duplicates()`は近接・重複点を統合し、比較indexを再対応付けます。
+このためrawデータと推論用の`datapoints`・`comparisons`はshapeが異なる場合があります。
+`train_inputs`・`train_targets`は上流の学習関数へ接続するための状態であり、wrapperが保存したsnapshotとは別です。
 
-比較は`(勝者index, 敗者index)`の契約で扱う。比較グラフの連結性、正則化、Laplace approximationと潜在utilityの尺度を区別する。静的API検査を「全ての比較集合で学習成功」と読み替えない。既存テストとNotebookは後半の節から参照できる。
+## 比較indexを尤度の計算へ変換する
 
-[旧Model Mapping](../../.github/project-records/theory-guide/mapping/models.md)および[検証記録](../../.github/project-records/theory-guide/mapping/verification.md)は移行元の正本として保持する。API存在、静的assertion、CI成功、独立数値検証は区別する。使用例と詳しいモデル選択は[モデルガイド](../models/README.md)を参照する。
+BoTorchの`set_train_data()`は、比較の各行について勝者の列を+1、敗者の列を−1とする行列`D`を構成します。
+これにより`D @ utility`が全比較のutility差をまとめて表します。
 
-## Pairwise likelihoodとLaplace MLLの実装上の違い
+既定の[PairwiseProbitLikelihood][likelihood]の`_calc_z()`は、その差を $\sqrt{2}$ で割ります。
+Theory 10.7節の独立な比較ノイズの差に対応し、上流実装ではノイズ尺度を1に固定しています。`p()`は標準正規CDFを適用します。
+Bradley–Terry型のlogistic linkとは別の尤度です。
 
-候補xiとxjの潜在utility u(x)について、比較データがiをjより好むと表す場合は、確率的にP(i≻j|u_i,u_j)をlikelihoodで定義する。比較の行に観測されるのは連続値y_iではなく、候補のindexの組である。
+数値上は`z`を`[-3,3]`へclampし、極端な比較確率での不安定さを抑えます。勾配とHessianは正規密度・CDFに由来するhazard量と`D`から集計します。
+これは理想的なprobit式に対する安定化処理であり、clampの存在も数式との対応に含まれます。
 
-src/robotorchan/models/preference/pairwise.pyのPairwiseGPはBoTorch PairwiseGPを継承し、datapoints・comparisons・pairwise likelihood・入力変換を親へ渡す。Laplace approximation、重複点のconsolidation、utility posteriorの演算はBoTorchの担当となり、robotorchanはconstructorのraw_datapoints/raw_comparisonsをdetach/cloneしたsnapshotとして保持する。
+既定カーネルはARD RBFを包む`ScaleKernel`で、平均は固定された`ConstantMean`です。比較ノイズ尺度とutility尺度を別々に同定する代わりに、
+kernel output scaleで尺度を扱います。`posterior()`の`observation_noise`は上流で無視され、回帰GPと同じノイズ加算にはなりません。
 
-make_mll()はPairwiseLaplaceMarginalLogLikelihood(self.likelihood,self)を返す。ExactGPModelMixinのExactMarginalLogLikelihoodでも、VariationalELBOでもない。例えばcomparisons=[[1,0],[1,2]]は候補1が0と2に優越する観測を表すが、utilityの絶対尺度・ランキングの全順序・データの比較整合性を自動保証しない。
+## MAP utilityを解く内部更新
 
-priorとlikelihoodの指定、comparison indexの有効範囲、モデルの数値条件、Laplace近似の収束は個別に検査すべき事項である。現行の`PairwiseGP.fit()`は`fit_gpytorch_mll(self.make_mll())`へ委譲する。全モデルに同じ`fit()`シグネチャがあるわけではない。
+`_update()`は、現在のカーネルで`_update_covar()`を呼んだ後、負の対数事後密度の停留条件をSciPyの`optimize.fsolve()`で解きます。
+`_grad_posterior_f()`は比較尤度の勾配に、Cholesky solveで計算する $K^{-1}(u-m)$ を加えます。
+`_hess_posterior_f()`はpriorとlikelihoodのHessianを組み合わせます。
 
-**検証境界：** ソースのconstructor・make_mll・raw保持を照合。比較グラフに対するposteriorの数学的整合、収束、選好予測性能はこの説明だけでは独立数値テストの完了を保証しない。
+初期値には前回解を再利用し、未設定なら勝数に基づく値へ小さな摂動を加えます。SciPy側の解法はCPUで動き、batchは個別に処理されます。
+`xtol`・`maxfev`はこの内部解法の停止条件であり、カーネルの学習回数ではありません。
 
-## カーネル・尤度・utilityの尺度
+得られたMAP点から`_util_newton_updates()`でPyTorch上のNewton更新を行い、カーネルパラメータへ勾配がつながるutilityを構成します。
+比較データに対するMAP推定と、ハイパーパラメータの最適化を分離しつつ接続するためです。`PairwiseGP`ではコンストラクタの親初期化中にもこの内部更新が起こり得ます。
+単にオブジェクトを構築するだけの軽いGaussian回帰wrapperとは処理が異なります。
 
-BoTorchの既定構成はscaled RBF kernelとprobit likelihoodを使う。
-Bradley–Terryモデルのlogistic linkと、Gaussian CDFによるprobit linkを区別する。
-比較尤度のノイズ尺度と潜在utilityの尺度は、通常の数値回帰と同じ形では識別できない。
-BoTorchの既定likelihoodでは独立な観測ノイズ分散を推定する代わりに、
-`ScaleKernel`のoutput scaleも含めたutilityの尺度を扱う。
-通常の回帰GPの`observation_noise=True`を、同じ意味の比較ノイズ指定と解釈しない。
+## Laplace共分散と近似周辺尤度
 
-学習では、比較とGP priorの下で潜在utilityのMAPを求める内部処理と、
-Laplace近似MLLを通じたカーネルのハイパーパラメータ最適化を区別する。
-utilityの絶対値には任意性があるため、ランキングや比較確率を目的に合う指標で評価する。
-MAPとLaplace近似を必要とする分、通常のExact GP回帰より学習が重くなる場合がある。
+学習モードの`forward()`はMAP点を平均として、共分散を$K-K(I+CK)^{-1}CK$ の形で構成します。
+これはTheory 10.14節の $(K^{-1}+C)^{-1}$ の変形です。実装は`torch.linalg.solve()`を使い、Hessianを含む逆行列を式どおりに二重に反転しません。
 
-## 学習・予測とrawデータ
+wrapperの`make_mll()`が作るのは、
+[PairwiseLaplaceMarginalLogLikelihood][pairwise]です。
+その`forward()`はMAP点での比較log likelihood、priorの二次形式、`I + K @ likelihood_hess`のlog determinantを組み合わせ、
+負の対数事後項には0以上へのclampを適用し、登録されたパラメータpriorの対数確率も加えます。したがってGaussian観測を厳密積分した`ExactMarginalLogLikelihood`
+とは別の学習目的です。
 
-コンストラクタ例に続けて、モデル固有の学習経路を使用できる。
+wrapperの`fit()`は、この目的を`fit_gpytorch_mll()`へ渡します。最適化器の選択は上流のfittingに委譲し、wrapperに独自のパラメータ更新則はありません。
 
-```python
-model.fit(optimizer_kwargs={"options": {"maxiter": 50}})
-posterior = model.posterior(points)
-assert torch.isfinite(posterior.mean).all()
-assert torch.isfinite(posterior.variance).all()
-```
+## 予測と近似上の制限
 
-`make_mll()`を用いてBoTorchの学習関数を直接呼ぶ方法も使える。
-`raw_datapoints`と`raw_comparisons`は、重複点の統合や入力変換前のコンストラクタ入力である。
-`raw_train_Y`は提供しない。新しい比較を`condition_on_observations()`へ渡す場合の`Y`も
-実数値の回帰ターゲットではなく、BoTorchの比較index契約に従う。
+評価モードの`forward()`は、訓練側のMAP utilityとHessianを再利用します。予測平均は、
+Cholesky solveで得る $K^{-1}(\hat u-m)$ へ交差共分散を掛け、予測点のprior meanを加えます。
+共分散補正は`hlcov_eye = C @ K + I`をキャッシュし、`solve(hlcov_eye, C @ K_X*)`を使って構成します。比較グラフ由来の`C`自体が特異でも、
+その逆を直接必要としない表現です。
 
-[Pairwise wrapperテスト](../../tests/models/preference/test_pairwise_gp.py)は、
-コンストラクタの互換性、raw snapshot、重複統合前のデータ保持、MLLの型、
-上流posteriorとの数値一致を確認する。
-[学習API](../development/training_api.md)では`fit()`の系統別契約を説明する。
-この検証は全比較グラフでの近似収束や選好の較正を保証しない。
+`posterior()`はこの分布を`GPyTorchPosterior`に包みます。返るGaussianは非Gaussianな比較posteriorのLaplace近似であり、
+潜在utilityを厳密にGaussianとして条件付けた結果ではありません。共分散のCholesky処理にはjitterによる安定化も入ります。
 
-## 次に比較する候補とBOPE
+単一utilityの表現では、評価者間の差や循環選好を独立した構造としてモデル化しません。EUBOなどの次の比較対象の選択、BOPEのoutcomeモデルと選好モデルの分離は、
+このwrapperの推論とは別の層です。獲得関数側の接続は[Lookaheadの実装](acquisition/06_lookahead.md)も参照してください。
 
-`PairwiseGP`は比較データからutility posteriorを作る代理モデルである。
-次の比較対象は、EUBOなどのpreference acquisitionと対応する候補最適化で選ぶ。
-BoTorchのpreference BOには`q=2`で比較する2候補を選ぶ構成がある。
+## 関連資料
 
-```text
-候補の比較を観測
-  → PairwiseGPを学習
-  → utility posterior
-  → EUBO等で次のquery pairを選ぶ
-  → 新しい比較をcomparisonsへ追加
-```
+実行手順は[Preference Notebook][notebook]、引数と利用方法は[モデルのAPI資料](../models/preference_learning.md)、
+境界条件の確認は[Pairwiseテスト][tests]を参照してください。理論の参考文献は対応するTheory章にまとめています。
 
-BOPEでは、測定可能な複数outcomeの代理モデルと、outcomeに対する人の選好モデルを分ける。
-例えば材料特性を数値測定し、総合的な好みを比較で取得する場合に検討する。
-単一`PairwiseGP`を二値分類器やGaussian回帰器として扱わない。
-
-| 得られる観測・仮定 | 検討する構成 |
-| --- | --- |
-| 信頼できる実数スコア | `SingleTaskGP`などの回帰モデル |
-| 候補間の優劣 | `PairwiseGP`とpreference acquisition |
-| 複数outcomeの数値と総合的な選好 | BOPE型のoutcome / utility分離 |
-| 絶対的な二値ラベル | [分類モデル](24_classification.md) |
-| 順序尺度のスコア | 観測形式に合うordinal model |
-| 評価者の個人差 | 評価者構造を表すpreference modelを検討 |
-| 強い循環選好 | 単一のscalar utility仮定を再検討 |
-
-最後の3行は問題のモデル化を検討するための分類であり、
-robotorchanが専用のordinal・評価者別モデルを提供するという宣言ではない。
-比較が不整合な場合や個人差が大きい場合も、単一utilityへ無理に集約しない。
-
-## 実行例と参考文献
-
-APIの詳細は[Preferenceモデルガイド](../models/preference_learning.md)、
-学習から候補生成までは[Preference Notebook](../../examples/notebooks/07_pairwise_gp.ipynb)を参照する。
-
-1. Chu, W., and Ghahramani, Z. (2005). Preference learning with Gaussian processes.
-   *Proceedings of ICML*, 137–144.
-2. Lin, Z. J. et al. (2022). Preference exploration for efficient Bayesian optimization
-   with multiple outcomes. *Proceedings of AISTATS*.
-3. Astudillo, R. et al. (2023). qEUBO: A decision-theoretic acquisition function
-   for preferential Bayesian optimization. *Proceedings of AISTATS*.
-4. BoTorch `PairwiseGP`, preference BO, and BOPE documentation.
-5. [Gaussian Process](../theory/02_gaussian_process.md)と
-   [Acquisition Function](../theory/04_acquisition_function.md)。
+[wrapper]: ../../src/robotorchan/models/preference/pairwise.py
+[base]: ../../src/robotorchan/models/base.py
+[pairwise]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/models/pairwise_gp.py
+[likelihood]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/models/likelihoods/pairwise.py
+[notebook]: ../../examples/notebooks/07_pairwise_gp.ipynb
+[tests]: ../../tests/models/preference/test_pairwise_gp.py

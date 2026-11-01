@@ -1,26 +1,21 @@
-"""Execute the one-shot Knowledge Gradient example from the Japanese guide."""
+"""Preserve runtime and numerical checks independently of Guide prose."""
 
 from __future__ import annotations
 
-import re
 import unittest
 from pathlib import Path
 
 import torch
 
-GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/acquisition/06_lookahead.md"
+CASES = Path(__file__).with_name("runtime_cases") / "acquisition/06_lookahead.py"
 
 
 class LookaheadGuideTests(unittest.TestCase):
     def test_qkg_augmented_candidates_example(self) -> None:
-        chapter = GUIDE.read_text(encoding="utf-8")
-        match = re.search(r"~~~python\n(.*?)\n~~~", chapter, re.DOTALL)
-        self.assertIsNotNone(match)
-        assert match is not None
-        scope: dict[str, object] = {"__name__": "__guide_example__"}
+        scope: dict[str, object] = {"__name__": "__runtime_case__"}
         with torch.random.fork_rng():
             torch.manual_seed(0)
-            exec(compile(match.group(1), str(GUIDE), "exec"), scope)
+            exec(compile(CASES.read_text(encoding="utf-8"), str(CASES), "exec"), scope)
         self.assertEqual(scope["augmented_q"], 17)
         self.assertEqual(tuple(scope["experimental_candidates"].shape), (1, 1, 1))
 
