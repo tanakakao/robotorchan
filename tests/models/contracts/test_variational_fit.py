@@ -13,9 +13,7 @@ def test_variational_fit_updates_parameters(mixed: bool) -> None:
     if mixed:
         categories = (torch.arange(12) % 2).to(train_X).unsqueeze(-1)
         train_X = torch.cat([train_X, categories], dim=-1)
-        model = MixedSingleTaskVariationalGP(
-            train_X, train_Y, cat_dims=[1], inducing_points=4
-        )
+        model = MixedSingleTaskVariationalGP(train_X, train_Y, cat_dims=[1], inducing_points=4)
     else:
         model = SingleTaskVariationalGP(train_X, train_Y, inducing_points=4)
 
@@ -25,8 +23,7 @@ def test_variational_fit_updates_parameters(mixed: bool) -> None:
     assert model.supports_fit is True
     assert not model.training
     assert any(
-        not torch.equal(old, new)
-        for old, new in zip(before, model.parameters(), strict=True)
+        not torch.equal(old, new) for old, new in zip(before, model.parameters(), strict=True)
     )
     assert torch.isfinite(model.posterior(train_X[:2]).mean).all()
 
