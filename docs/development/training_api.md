@@ -15,7 +15,7 @@ robotorchanではExact GP wrapperの `make_mll()` と、Joint neural modelの `t
 `fit()` は、学習方式が定義済みのモデルで、コンストラクタに渡した学習データから学習するための便利な入口です。
 例えば `RandomForestSurrogate.fit()` は内部のscikit-learn推定器を学習します。
 `SingleTaskGP`、`MixedSingleTaskGP`、標準のMultiTask / Kronecker / MultiFidelity GPと
-そのMixed派生モデルでは `fit()` も利用できます。全モデル共通の
+そのMixed派生モデル、`ModelListGP` では `fit()` も利用できます。全モデル共通の
 `fit()` は保証していません。
 
 将来ほかのモデルに `fit()` を追加する場合も、以下の区別を維持してください。
@@ -52,6 +52,7 @@ model.fit(optimizer_kwargs={"options": {"maxiter": 100}})
 `fit()` は `None` を返し、BoTorchの `fit_gpytorch_mll(model.make_mll())`
 を内部で使用します。従来の直接呼び出しも利用できます。
 この便利なAPIは標準のSingleTask、MultiTask、Kronecker MultiTask、MultiFidelity GPと
-対応するMixed派生モデルで利用できます。`ModelListGP` は従来の
-`fit_gpytorch_mll(model.make_mll())` を使用します。
+対応するMixed派生モデルで利用できます。`ModelListGP` でも `fit()` を利用でき、
+`SumMarginalLogLikelihood` をBoTorchの `fit_gpytorch_mll` に渡します。
+従来の `fit_gpytorch_mll(model.make_mll())` も引き続き使用できます。
 特殊損失、Variational GP、MCMC、Joint Neuralの学習手順は置き換えません。
