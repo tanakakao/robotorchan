@@ -102,3 +102,21 @@ def test_deep_gp_classifier_rejects_nonfinite_threshold(threshold: float) -> Non
 
     with pytest.raises(ValueError, match="finite"):
         model.predict_class(train_X[:2], threshold=threshold, num_samples=4)
+
+
+def test_deep_gp_classifier_fit_preserves_bernoulli_training() -> None:
+    train_X, train_Y = _data()
+    model = BinarySingleTaskDeepGPClassifier(
+        train_X, train_Y, hidden_dims=(2,), num_inducing=4, posterior_samples=4
+    )
+    before = [parameter.detach().clone() for parameter in model.parameters()]
+    assert model.supports_fit
+    assert model.fit(epochs=2, lr=0.01, num_likelihood_samples=2) is None
+    assert not model.training
+    assert not model.likelihood.training
+    assert any(
+        not torch.equal(old, new) for old, new in zip(before, model.parameters(), strict=True)
+    )
+    probabilities = model.predict_proba(train_X[:3], num_samples=4)
+    assert probabilities.shape == (3, 2)
+    assert torch.isfinite(probabilities).all()
