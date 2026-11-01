@@ -126,3 +126,12 @@ Scikit-learn系Binary分類器とBootstrap分類アンサンブルは、
 GPの `fit(epochs=..., lr=..., batch_size=...)` とは異なる契約です。
 `is_fitted` で学習済み状態を確認し、学習後に `predict_proba()` を使用します。
 Scikit-learnはoptional dependencyのままとし、未導入環境では該当テストをskipします。
+
+## Classification ensembles
+
+`GPBinaryClassificationEnsemble` と
+`HeterogeneousBinaryClassificationEnsemble` は、学習済みのメンバーモデルを
+受け取り、確率予測を集約するコンポジション層です。アンサンブル本体には
+`fit()` を追加しません。各メンバーをそれぞれの学習APIで学習してから
+アンサンブルを構築してください。重み付き異種アンサンブルでは、
+`predict_proba()` が各メンバーの確率の重み付き平均を返します。
