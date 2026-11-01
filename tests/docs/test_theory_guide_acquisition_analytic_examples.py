@@ -1,28 +1,23 @@
-"""Execute acquisition guide snippets and compare analytic formulas independently."""
+"""Preserve runtime and numerical checks independently of Guide prose."""
 
 from __future__ import annotations
 
-import re
 import unittest
 from pathlib import Path
 
 import torch
 from torch.distributions import Normal
 
-GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/acquisition"
+CASES = Path(__file__).with_name("runtime_cases") / "acquisition"
 
 
 class AcquisitionGuideExamplesTests(unittest.TestCase):
     def run_example(self, chapter: str) -> dict[str, object]:
-        path = GUIDE / chapter
-        section = path.read_text(encoding="utf-8").split("## 6.", 1)[1]
-        match = re.search(r"```python\n(.*?)\n```", section, re.DOTALL)
-        self.assertIsNotNone(match)
-        assert match is not None
-        scope: dict[str, object] = {"__name__": "__guide_example__"}
+        path = (CASES / chapter).with_suffix(".py")
+        scope: dict[str, object] = {"__name__": "__runtime_case__"}
         with torch.random.fork_rng():
             torch.manual_seed(0)
-            exec(compile(match.group(1), str(path), "exec"), scope)
+            exec(compile(path.read_text(encoding="utf-8"), str(path), "exec"), scope)
         return scope
 
     def test_log_expected_improvement_reference(self) -> None:

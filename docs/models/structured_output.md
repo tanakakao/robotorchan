@@ -16,6 +16,9 @@ Theory: [Structured Output](../theory/11_structured_output.md)
 
 ## API examples and fitting notes
 
+HOGPとLatentKroneckerでは学習とposteriorの処理経路が異なります。
+それぞれの例で、構築したモデルに対応する学習方法を使ってください。
+
 ## 11.14 robotorchan の HOGP wrapper
 
 現在の wrapper は BoTorch の挙動をそのまま利用し、主に
@@ -132,7 +135,15 @@ with model.use_iterative_methods():
 
 とします。
 
-posterior mean は `test_X × test_T` のstructured responseになります。
+posteriorは `test_X × test_T` の応答を表しますが、momentとsampleのshapeを区別します。
+BoTorch 0.18.1では `posterior.mean` はXとTの積に沿って平坦に返されるため、
+batchなしの表示用データは次のように戻せます。
+
+```python
+mean = posterior.mean.reshape(test_X.shape[-2], test_T.shape[-2])
+```
+
+batch入力ではbroadcast後のbatch shapeも保持してください。
 
 ---
 
@@ -306,6 +317,8 @@ raw data は constructor input provenance であり、内部 transformed state �
 
 
 ## Additional API examples and usage notes
+
+以下は潜在座標・物理的な出力座標・共分散・objectiveを選ぶための補足です。
 
 ## 11.10 HOGP の latent representation
 
@@ -516,14 +529,18 @@ def objective(Y):
 
 なら target wavelength 最大化です。
 
-積分面積なら概念的に
+出力座標に沿った積分面積なら、座標間隔を含めて計算します。
+例えば `train_T` が1次元の出力座標を昇順に並べた `[m,1]` のTensorで、
+`Y` の最後の軸がその座標に対応する場合は、台形則を使えます。
 
 ```python
 def objective(Y):
-    return Y.mean(dim=-1)
+    return torch.trapezoid(Y, x=train_T.squeeze(-1), dim=-1)
 ```
 
-です。
+とします。新しい `test_T` で予測する場合は、積分にもその座標を使います。
+単純な `Y.mean(dim=-1)` は座標間隔を考慮しない平均であり、
+一般の不等間隔グリッド上の積分とは異なります。
 
 target spectrum に近づけるなら
 

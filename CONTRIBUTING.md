@@ -5,17 +5,19 @@ robotorchanへの貢献を歓迎します。
 ## 開発環境
 
 Python 3.11以上を使用してください。
+仮想環境とCPU版PyTorchの準備は[インストール手順](docs/getting_started/installation.md)を参照してください。
+既にチェックアウトがある場合は、そのディレクトリを利用してください。
 
 ```bash
 git clone https://github.com/tanakakao/robotorchan.git
 cd robotorchan
-pip install -e ".[dev,examples]"
+python -m pip install -e ".[dev,examples]"
 ```
 
 Fully Bayesianモデルを変更する場合は、必要に応じて次も導入してください。
 
 ```bash
-pip install -e ".[dev,examples,fully-bayesian]"
+python -m pip install -e ".[dev,examples,fully-bayesian]"
 ```
 
 ## 変更方針
@@ -106,3 +108,11 @@ Pull Requestには次を簡潔に記載してください。
 日本語の学習・利用文書は `docs/`、実装・保守の必須条件は `docs-internal/`、過去の監査・設計記録は `.github/project-records/` に置きます。数学的な定義・導出は Theory、固有 API・近似・テストとの対応は Guide に分けてください。
 
 文書の追加・移動時には [分類表](docs-internal/maintenance/documentation-inventory.json) を更新し、`python scripts/check_documentation_inventory.py` と既存の文書リンク検証を実行します。ファイル名の類似だけで統合・削除せず、数式・仮定・制約・参考文献の保全を確認してください。
+
+## Guideの責務
+
+GuideはTheoryの数式・アルゴリズムと実際のクラス・メソッド・内部処理を対応付ける技術文書です。
+BoTorch・GPyTorchへの委譲とrobotorchanの独自拡張を明示してください。
+使用例はNotebook・API資料、正当性の検証はTests、監査・CI履歴は開発資料に分けます。
+既存の説明を再掲せず参照し、Guideに必要なコードは実在する実装の理解に使うものへ限定します。
+詳細は[文書構造の契約](docs-internal/maintenance/documentation-structure-contract.md)を参照してください。

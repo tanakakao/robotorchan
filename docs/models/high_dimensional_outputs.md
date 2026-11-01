@@ -45,7 +45,7 @@ model = OutputPCAGP(
 )
 
 posterior = model.posterior(X)
-# posterior.mean[..., -1] は元の出力次元 m
+# posterior.mean.shape[-1] は元の出力次元 m
 ```
 
 ### PCA component を目的関数にしない
@@ -53,12 +53,16 @@ posterior = model.posterior(X)
 PCA component は元の目的変数ではありません。BO の objective は復元後の元 Y 空間で定義します。
 
 ```python
+from botorch.acquisition.objective import GenericMCObjective
+
 objective = GenericMCObjective(lambda samples, X=None: samples[..., 10])
 ```
 
 多目的の場合も同様です。
 
 ```python
+from botorch.acquisition.multi_objective.objective import IdentityMCMultiOutputObjective
+
 objective = IdentityMCMultiOutputObjective(outcomes=[2, 7, 10])
 ```
 
@@ -92,7 +96,7 @@ train_Y: [n, height, width]
 
 ```text
 train_X: [n, d]
-train_T: [m, d_t]
+train_T: [m, 1]
 train_Y: [n, m]
 ```
 
@@ -115,6 +119,8 @@ Y = 各波長での強度
 - 周波数
 
 `T` に意味があり、未観測の `T` での補間や出力軸方向の構造を学習したい場合に適しています。
+現在のBoTorch 0.18系のモデルは、最後の次元が1の出力座標を要求します。
+一般の多次元出力座標をそのまま渡せるAPIとは区別してください。
 
 BoTorch の `LatentKroneckerGP` が持つ missing-output 処理もそのまま利用します。
 
@@ -338,7 +344,7 @@ torch.save(state, "model.pt")
 Reducer 単体でも round-trip できます。
 
 ```python
-from robotorchan.models.reduction import PCAInputReducer
+from robotorchan.reduction import PCAInputReducer
 
 reducer = PCAInputReducer(n_components=5)
 reducer.fit(train_X)

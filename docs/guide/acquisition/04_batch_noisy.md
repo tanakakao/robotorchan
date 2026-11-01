@@ -1,92 +1,47 @@
 # Batch / Noisy / Pending：理論から実装へ
 
-## 1. この章で解決する問い
+## この章で解決する問い
 
 q点のjoint utilityは通常、1点のacquisitionの単純和ではない。noise、q、pending、fantasizationは独立の設計軸である。
 
-数学的な定義・仮定・導出は[理論の対応章](../../theory/acquisition/04_batch_noisy.md)が正本であり、この章は**数式の計算対象 → 実装の所有権 → 公開API → 探索上の制約**をつなぐ日本語実装ガイドである。
+数学的な定義・仮定・導出は[理論の対応章](../../theory/acquisition/04_batch_noisy.md)が正本であり、
+この章は**数式の計算対象 → クラス構造 → 内部処理 → 近似と制限**をつなぐ日本語実装ガイドである。
 
-## 2. posteriorからcandidateへの処理の流れ
+## 実装の対応と委譲
 
-```text
-train observations → surrogate.fit / posterior(X)
-                                     ↓
-                          objective / utility
-                                     ↓
-                  acquisition function α(X)
-                                     ↓
-                    candidate optimizer
-                                     ↓
-             selected X → costly evaluation
-```
+`qLogExpectedImprovement`・`qLogNoisyExpectedImprovement`はBoTorch-native。
+`make_qnei_acquisition`はX_baselineとsemantic objectiveをつなぐ。
 
-候補点で観測する未知の応答値と、観測前に計算する獲得関数値は異なる。獲得関数が最大化するutilityを、posterior meanの予測結果と読み替えない。analytic計算、MC sampling、fantasization、classification probability等、用いる数値表現は手法とモデルによって異なる。
-
-## 3. 実装の対応と委譲
-
-`qLogExpectedImprovement`・`qLogNoisyExpectedImprovement`はBoTorch-native。`make_qnei_acquisition`はX_baselineとsemantic objectiveをつなぐ。
-
-参照する代表的な公開APIは ``botorch.acquisition.logei.qLogNoisyExpectedImprovement``。ここでは**名前・責務の参照**であり、すべてのモデルやoptimizerとの組合せを実行検証済みとするものではない。
-
-| 層 | 何を担当するか | 検証上の要点 |
-| --- | --- | --- |
-| surrogate | posterior、必要に応じてclass probability | posterior type、出力軸、学習方式 |
-| acquisition | utilityの期待値・近似または探索score | 定義した数式、方向、q、sample形状 |
-| semantic bridge | objective/constraintの意味論変換 | objectiveとclassification feasibilityの分離 |
-| optimizer | 入力境界、fixed features、candidate constraintsを満たす候補検索 | one-shot/gradient/mixedの対応、最適化失敗の検出 |
-
-## 4. 採用時の確認と注意事項
+## 採用時の確認と注意事項
 
 X_baselineの非空2D契約、posteriorのjoint sample shape、baseline pruningとpending points、MC seedを区別。
 
-モデル側のposteriorが正しい形を返すことと、獲得関数の数学的同値性を示すことは別である。またacquisition functionの単体テストと、候補探索が可行な点を返すことは別々に検証する。
+## qLogNEIでjoint候補を評価する
 
-## 5. 数学的検証と実装の追跡
+観測ノイズを考慮する`qLogNoisyExpectedImprovement`では、評価済み点`X_baseline`を渡し、
+候補`X`のjoint posteriorを使ってbaselineに対する改善量をMonte Carlo推定する。
 
-[既存Acquisition Mapping](../../../.github/project-records/theory-guide/mapping/acquisition.md)はsource inspectedの実装契約、entry・テスト証拠を保持する。[Verification Mapping](../../../.github/project-records/theory-guide/mapping/verification.md)は独立数値参照や既存のassertionの追跡先とする。両者を消去・置き換えず、原文区間のmigration ledgerをverifiedとする際に照合する。CI成功だけで全数値契約が検証されたことにはならない。
+## 関連する実装資料
 
-[獲得関数の基礎ガイド](../04_acquisition_function.md)、[獲得関数利用ドキュメント](../../optimization/README.md)、[理論Acquisition索引](../../theory/acquisition/README.md)にも戻れる。個別の数式、適用例や比較条件は対応する理論章と使用ガイドで読む。
+baseline の選び方は単なる API detail ではなく、acquisition の計算量や意思決定対象に影響します。
+大規模 baseline では pruningなどの計算上の工夫が重要になる場合があります。
 
-## 6. qLogNEIでjoint候補を評価する
+## sample-wise utilityからjoint q-batchへ
 
-観測ノイズを考慮する`qLogNoisyExpectedImprovement`では、
-評価済み点`X_baseline`を渡し、候補`X`のjoint posteriorを使って
-baselineに対する改善量をMonte Carlo推定する。
-以下は獲得関数値の計算例であり、候補最適化やposteriorの独立数値照合ではない。
+`qLogExpectedImprovement`は`LogImprovementMCAcquisitionFunction`を通して
+`SampleReducingMCAcquisitionFunction`を継承します。`_sample_forward()`が各応答sampleの改善量をlog-spaceで滑らかに近似し、
+基底の`forward()`が候補軸を集約してからsample軸を集約します。Theoryの「同じsample内でq候補を比較し、そのutilityを期待する」順序に対応します。
+数値的な平滑化を含むため、有限MC計算を厳密期待値と同一視しません。
 
-```python
-import torch
-from botorch.acquisition.logei import qLogNoisyExpectedImprovement
-from botorch.sampling.normal import SobolQMCNormalSampler
-from robotorchan.models import SingleTaskGP
+`qLogNoisyExpectedImprovement`は`CachedCholeskyMCSamplerMixin`も継承します。
+`_get_samples_and_objectives()`がbaselineと新しい候補のjoint sampleを扱い、
+`compute_best_f()`がbaseline sampleごとの比較基準を用意します。観測済みYの単一最大値だけを全sampleの基準に固定する計算とは異なります。
+`set_X_pending()`は未完了候補を扱う状態であり、実観測を追加する操作ではありません。
 
-train_X = torch.linspace(0.1, 0.9, 8, dtype=torch.double).unsqueeze(-1)
-train_Y = torch.sin(2 * torch.pi * train_X)
-train_Yvar = torch.full_like(train_Y, 0.01)
-model = SingleTaskGP(train_X=train_X, train_Y=train_Y, train_Yvar=train_Yvar)
-model.eval()
-sampler = SobolQMCNormalSampler(sample_shape=torch.Size([32]), seed=7)
-acqf = qLogNoisyExpectedImprovement(
-    model=model,
-    X_baseline=train_X,
-    sampler=sampler,
-    prune_baseline=False,
-)
-candidates = torch.tensor(
-    [[[0.2], [0.7]], [[0.3], [0.8]]],
-    dtype=torch.double,
-)
-scores = acqf(candidates)
-assert scores.shape == (2,)
-assert torch.isfinite(scores).all()
-```
+これらの推定・キャッシュ処理は[BoTorchのlogei.py][logei]が担当します。
+robotorchanの[composition.py](../../../src/robotorchan/acquisition/composition.py)の
+`make_qnei_acquisition()`は、baselineとsemantic objectiveをこの上流処理へ接続します。
 
-`candidates`のshapeは`batch_shape × q × d`で、
-この例では2組のbatchがそれぞれ`q=2`点を同時評価する。
-各候補の値を独立に足し合わせることと、joint sampleでbatch改善量を評価することは異なる。
-`scores`はlog-spaceの獲得値であり、目的関数の観測値ではない。
+[logei]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/acquisition/logei.py
 
-## 数値 API と利用上の補足
-
-baseline の選び方は単なる API detail ではなく、acquisition の計算量や意思決定対象に影響します。大規模 baseline では pruning
-などの計算上の工夫が重要になる場合があります。
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/32_batch_async_fantasization.ipynb)を参照してください。

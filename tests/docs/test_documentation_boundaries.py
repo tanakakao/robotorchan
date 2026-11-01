@@ -8,10 +8,26 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
-from check_documentation_boundaries import check_boundaries
+from check_documentation_boundaries import check_boundaries, guide_usage_blocks
 
 
 class BoundaryTests(unittest.TestCase):
+    def test_guide_rejects_workflow_and_top_level_assertions(self) -> None:
+        for code in (
+            "model = SingleTaskGP(X, Y)",
+            "result = surrogate.posterior(X)",
+            "assert scores.isfinite().all()",
+        ):
+            with self.subTest(code=code):
+                self.assertEqual(guide_usage_blocks(f"```python\n{code}\n```"), [1])
+
+    def test_source_definition_can_explain_delegation(self) -> None:
+        text = "```python\ndef posterior(self, X):\n    return super().posterior(X)\n```"
+        self.assertEqual(guide_usage_blocks(text), [])
+
+    def test_tilde_fence_workflow_is_also_reported(self) -> None:
+        self.assertEqual(guide_usage_blocks("~~~python\nclassifier.fit()\n~~~"), [1])
+
     def test_repository(self) -> None:
         self.assertEqual(check_boundaries(), [])
 

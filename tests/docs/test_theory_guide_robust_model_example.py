@@ -1,29 +1,21 @@
-"""Execute the Student-t robust GP example directly from the guide."""
+"""Preserve runtime and numerical checks independently of Guide prose."""
 
 from __future__ import annotations
 
-import re
 import unittest
 from pathlib import Path
 
 import torch
 
-GUIDE = Path(__file__).resolve().parents[2] / "docs/guide/14_robust_gaussian_process.md"
+CASES = Path(__file__).with_name("runtime_cases") / "14_robust_gaussian_process.py"
 
 
 class RobustGuideExampleTests(unittest.TestCase):
     def test_student_t_guide_example(self) -> None:
-        match = re.search(
-            r"```python\n(.*?)\n```",
-            GUIDE.read_text(encoding="utf-8"),
-            re.DOTALL,
-        )
-        self.assertIsNotNone(match, "Missing Student-t code example")
-        assert match is not None
-        scope: dict[str, object] = {"__name__": "__guide_example__"}
+        scope: dict[str, object] = {"__name__": "__runtime_case__"}
         with torch.random.fork_rng():
             torch.manual_seed(0)
-            exec(compile(match.group(1), str(GUIDE), "exec"), scope)
+            exec(compile(CASES.read_text(encoding="utf-8"), str(CASES), "exec"), scope)
         model = scope["model"]
         loss = scope["loss"]
         posterior = scope["posterior"]

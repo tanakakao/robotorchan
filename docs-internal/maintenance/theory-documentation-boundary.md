@@ -15,7 +15,8 @@ implementation schedule or evidence that any individual chapter has been audited
 | General mathematical algorithms, numerical properties, and asymptotic complexity | `docs/theory/` |
 | Model names, constructors, arguments, fit/predict usage, and supported combinations | `docs/models/` |
 | Acquisition/optimizer configuration, dispatch, supported constraints, and examples | `docs/optimization/` |
-| Internal contracts, implementation decisions, capabilities, and backend compatibility | `docs/development/` |
+| Japanese developer explanations and release procedures | `docs/development/` |
+| Internal contracts, implementation decisions, capabilities, and backend compatibility | `docs-internal/` |
 | Executable demonstrations and workflows | `examples/notebooks/` |
 
 A paper's algorithm and its mathematical pseudocode are theoretical content.

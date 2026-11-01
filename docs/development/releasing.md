@@ -26,6 +26,7 @@ Semantic Versioningを基本とし、Git tag / GitHub Releaseは `v{version}` �
 6. 必要に応じてローカルでも配布物を確認します。
 
 ```bash
+python -m pip install build twine
 python -m build
 python -m twine check dist/*
 ```

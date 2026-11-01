@@ -1,6 +1,7 @@
 # 候補最適化の実装ガイド
 
-数式と仮定は [Theory](../../theory/optimization/README.md)、使い方は [Optimization](../../optimization/README.md) を参照してください。各章は対応する理論、実装、近似と検証範囲を説明します。
+数式と仮定は [Theory](../../theory/optimization/README.md)、使い方は
+[Optimization](../../optimization/README.md) を参照してください。各章は対応する理論、実装、内部処理と近似上の制限を説明します。
 
 - [Inner optimization：獲得関数最適化の実装ガイド](01_foundations.md)
 - [Gradient-based：獲得関数最適化の実装ガイド](02_gradient_based.md)
