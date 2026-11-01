@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from typing import Any
+
+from botorch.fit import fit_gpytorch_mll
 from botorch.models import PairwiseGP as BoTorchPairwiseGP
 from botorch.models.likelihoods.pairwise import PairwiseLikelihood
 from botorch.models.pairwise_gp import PairwiseLaplaceMarginalLogLikelihood
@@ -20,6 +23,7 @@ class PairwiseGP(RawDataMixin, ModelTrainingMixin, BoTorchPairwiseGP):
     adds retention of caller-supplied preference data and ``make_mll()``.
     """
 
+    supports_fit = True
     supports_mll = True
 
     def __init__(
@@ -64,6 +68,10 @@ class PairwiseGP(RawDataMixin, ModelTrainingMixin, BoTorchPairwiseGP):
     def raw_comparisons(self) -> Tensor | None:
         """Caller-supplied pairwise comparisons before consolidation."""
         return self._get_raw_tensor("comparisons")
+
+    def fit(self, *, optimizer_kwargs: dict[str, Any] | None = None) -> None:
+        """Fit the pairwise Laplace MLL with BoTorch's native optimizer."""
+        fit_gpytorch_mll(self.make_mll(), optimizer_kwargs=optimizer_kwargs)
 
     def make_mll(self) -> PairwiseLaplaceMarginalLogLikelihood:
         """Construct the Laplace-approximated marginal log likelihood."""
