@@ -2,7 +2,8 @@
 
 robotorchanではExact GP wrapperの `make_mll()` と、Joint neural modelの `training_loss()` を役割で分けます。
 
-- 通常のExact GP / frozen reducer model: `fit_gpytorch_mll(model.make_mll())`
+- `supports_fit=True` のExact GP: `model.fit()`（内部ではBoTorchのMLL最適化）
+- その他のExact GP / frozen reducer model: `fit_gpytorch_mll(model.make_mll())`
 - Joint neural model: optimizerで `model.training_loss()` を最小化
 
 この区別により `make_mll()` の共通Exact GP契約を保ったまま、GP MLL以外のreconstruction / KL regularizationを欠落させず学習できます。
@@ -13,7 +14,8 @@ robotorchanではExact GP wrapperの `make_mll()` と、Joint neural modelの `t
 
 `fit()` は、学習方式が定義済みのモデルで、コンストラクタに渡した学習データから学習するための便利な入口です。
 例えば `RandomForestSurrogate.fit()` は内部のscikit-learn推定器を学習します。
-`SingleTaskGP` と `MixedSingleTaskGP` では `fit()` も利用できます。全モデル共通の
+`SingleTaskGP`、`MixedSingleTaskGP`、標準のMultiTask / Kronecker / MultiFidelity GPと
+そのMixed派生モデルでは `fit()` も利用できます。全モデル共通の
 `fit()` は保証していません。
 
 将来ほかのモデルに `fit()` を追加する場合も、以下の区別を維持してください。
@@ -33,7 +35,7 @@ robotorchanではExact GP wrapperの `make_mll()` と、Joint neural modelの `t
 
 ## 標準Exact GPの便利な学習API
 
-標準 `SingleTaskGP` と `MixedSingleTaskGP`は以下のように学習できます。
+対応する標準Exact GPモデルは以下のように学習できます。
 
 ```python
 model = SingleTaskGP(train_X, train_Y)
@@ -49,5 +51,7 @@ model.fit(optimizer_kwargs={"options": {"maxiter": 100}})
 
 `fit()` は `None` を返し、BoTorchの `fit_gpytorch_mll(model.make_mll())`
 を内部で使用します。従来の直接呼び出しも利用できます。
-この便利なAPIは、現時点で標準の2モデルだけが対応します。
+この便利なAPIは標準のSingleTask、MultiTask、Kronecker MultiTask、MultiFidelity GPと
+対応するMixed派生モデルで利用できます。`ModelListGP` は従来の
+`fit_gpytorch_mll(model.make_mll())` を使用します。
 特殊損失、Variational GP、MCMC、Joint Neuralの学習手順は置き換えません。

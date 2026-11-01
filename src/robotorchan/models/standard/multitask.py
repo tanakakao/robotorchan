@@ -21,13 +21,13 @@ from torch import Tensor
 
 from robotorchan.models.base import (
     ContinuousKernelFactory,
-    ExactGPModelMixin,
+    FittableExactGPModelMixin,
     make_mixed_covar_module,
     normalize_feature_dims,
 )
 
 
-class MultiTaskGP(ExactGPModelMixin, BoTorchMultiTaskGP):
+class MultiTaskGP(FittableExactGPModelMixin, BoTorchMultiTaskGP):
     """BoTorch ``MultiTaskGP`` with robotorchan convenience features.
 
     BoTorch's long-format multi-task representation is preserved unchanged:
@@ -35,6 +35,8 @@ class MultiTaskGP(ExactGPModelMixin, BoTorchMultiTaskGP):
     outcome per row. robotorchan only retains the caller-supplied raw tensors
     and provides the common exact-GP training interface.
     """
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -90,6 +92,8 @@ class MixedMultiTaskGP(MultiTaskGP):
     The data covariance follows robotorchan's shared mixed-kernel convention:
     continuous + categorical + continuous/categorical interaction.
     """
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -152,7 +156,7 @@ class MixedMultiTaskGP(MultiTaskGP):
         self.cat_dims = tuple(normalized_cat_dims)
 
 
-class KroneckerMultiTaskGP(ExactGPModelMixin, BoTorchKroneckerMultiTaskGP):
+class KroneckerMultiTaskGP(FittableExactGPModelMixin, BoTorchKroneckerMultiTaskGP):
     """BoTorch ``KroneckerMultiTaskGP`` with robotorchan conveniences.
 
     This preserves BoTorch's block-design representation, where every task is
@@ -160,6 +164,8 @@ class KroneckerMultiTaskGP(ExactGPModelMixin, BoTorchKroneckerMultiTaskGP):
     ``raw_train_Yvar`` is retained as ``None`` because the upstream constructor
     does not accept per-observation ``train_Yvar``.
     """
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -203,6 +209,8 @@ class MixedKroneckerMultiTaskGP(KroneckerMultiTaskGP):
     ``train_Y`` rather than in ``train_X``. Therefore ``cat_dims`` applies
     directly to the columns of ``train_X`` used by the data covariance.
     """
+
+    supports_fit = True
 
     def __init__(
         self,
