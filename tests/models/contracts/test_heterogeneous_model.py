@@ -625,11 +625,13 @@ def test_entry_fit_delegates_explicit_non_gp_training() -> None:
 
 def test_entry_fit_rejects_entry_without_explicit_fit_contract() -> None:
     train_X = torch.rand(6, 2)
-    regression = KroneckerMultiTaskGP(train_X, torch.rand(6, 2))
-    model = HeterogeneousModel(regression, names=["strength"])
+    classifier = BinarySingleTaskGPClassifier(
+        train_X, torch.tensor([0, 1, 0, 1, 0, 1])
+    )
+    model = HeterogeneousModel(classifier, names=["pass"])
 
     with pytest.raises(TypeError, match=r"does not provide fit\(\)"):
-        model.entry_fit("strength")
+        model.entry_fit("pass")
 
 
 def test_heterogeneous_model_does_not_define_global_training_objective() -> None:
