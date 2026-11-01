@@ -45,9 +45,7 @@ def test_bootstrap_binary_fit_contract() -> None:
     torch.manual_seed(15)
     X = torch.rand(32, 2, dtype=torch.double)
     Y = (X[:, 0] > 0.5).to(dtype=X.dtype)
-    model = BootstrapGradientBoostingBinaryClassifier(
-        X, Y, n_members=3, random_state=4
-    )
+    model = BootstrapGradientBoostingBinaryClassifier(X, Y, n_members=3, random_state=4)
     assert not model.is_fitted
     assert model.fit() is None
     assert model.is_fitted
