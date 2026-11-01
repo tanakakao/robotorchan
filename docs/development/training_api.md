@@ -22,7 +22,7 @@ robotorchanではExact GP wrapperの `make_mll()` と、Joint neural modelの `t
 
 - Exact GP: `make_mll()` とBoTorchの `fit_gpytorch_mll` を利用できる状態を保つ
 - Pairwise GP: Laplace近似MLLを維持し、Gaussian Exact GPのMLLに置き換えない
-- Variational GP: 適切なELBOとデータ数・最適化設定を扱い、Exact GP用MLLに置換しない
+- Variational GP: `fit(epochs=..., lr=..., batch_size=...)` でELBOをAdam最適化する。Exact GP用MLLに置換しない
 - Joint neural / robust GP: モデル固有の `training_loss()` や学習手順を維持する
 - Fully Bayesian GP: MCMC等の固有手順を考慮し、一般の勾配法と同一視しない
 - Non-GP: 既存の `fit()` と学習済み状態のチェックを維持する
@@ -64,3 +64,11 @@ model.fit(optimizer_kwargs={"options": {"maxiter": 100}})
 `PairwiseLaplaceMarginalLogLikelihood` を `fit_gpytorch_mll` で最適化します。
 比較データの勝敗関係を学習するモデルであり、通常の回帰用Exact GPとは
 異なるMLLを維持します。従来の `fit_gpytorch_mll(model.make_mll())` も使用できます。
+
+## Variational GP
+
+`SingleTaskVariationalGP` と `MixedSingleTaskVariationalGP` は
+`model.fit(epochs=60, lr=0.03, batch_size=64)` を利用できます。
+コンストラクタで `train_Y` を指定する必要があります。
+`batch_size` を省略すると全件学習になります。ELBOの `num_data` は
+minibatchのサイズではなく、保持された学習データの全件数です。
