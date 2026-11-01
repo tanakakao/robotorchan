@@ -94,3 +94,10 @@ Exact GPのMLL最適化とは異なります。
 `fit(epochs=..., lr=..., num_likelihood_samples=...)` に対応します。
 `training_loss()` の変分ELBOをAdamで最適化し、Exact GPのMLL最適化には
 置き換えません。学習後は評価モードに切り替わります。
+
+## Binary DeepGP classification
+
+`BinarySingleTaskDeepGPClassifier` はDeepGPの `fit(epochs=..., lr=...,
+num_likelihood_samples=...)` を継承します。学習損失は分類器が定義する
+Bernoulli変分ELBOであり、回帰用Gaussian likelihoodには変更しません。
+学習後は `predict_proba()` でクラス確率を取得できます。
