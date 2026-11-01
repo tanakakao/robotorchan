@@ -58,7 +58,6 @@ class SaasFullyBayesianSingleTaskGP(
             disable_progbar=disable_progbar,
         )
 
-
     def __init__(
         self,
         train_X: Tensor,
@@ -160,7 +159,6 @@ class SaasFullyBayesianMultiTaskGP(
             train_Y=raw_train_Y,
             train_Yvar=raw_train_Yvar,
         )
-
 
 class MixedSaasFullyBayesianSingleTaskGP(SaasFullyBayesianSingleTaskGP):
     """Fully Bayesian SAAS GP with model-owned categorical one-hot encoding."""
