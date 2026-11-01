@@ -121,7 +121,6 @@ class SaasFullyBayesianMultiTaskGP(
             disable_progbar=disable_progbar,
         )
 
-
     def __init__(
         self,
         train_X: Tensor,
