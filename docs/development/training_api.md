@@ -87,3 +87,10 @@ Exact GPのMLL最適化とは異なります。
 でモデル固有の `training_loss()` をAdam最適化します。Joint VAEとMixed派生モデルも
 継承した `fit()` を使用できます。再構成損失やKL項を含む場合も、
 `training_loss()` の定義を変更せずに学習します。
+
+## Deep Gaussian Process
+
+`SingleTaskDeepGP` とそのMultiTask・Mixed派生モデルは
+`fit(epochs=..., lr=..., num_likelihood_samples=...)` に対応します。
+`training_loss()` の変分ELBOをAdamで最適化し、Exact GPのMLL最適化には
+置き換えません。学習後は評価モードに切り替わります。
