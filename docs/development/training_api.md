@@ -80,3 +80,10 @@ minibatchのサイズではなく、保持された学習データの全件数�
 でBoTorchのNUTS学習を実行します。Mixed派生モデルも同じ契約です。
 `supports_fit=True` ですが `supports_mll=False` のままであり、
 Exact GPのMLL最適化とは異なります。
+
+## Joint neural GP
+
+`JointEncoderGP` と `HybridAutoEncoderGP` は `fit(epochs=..., lr=...)`
+でモデル固有の `training_loss()` をAdam最適化します。Joint VAEとMixed派生モデルも
+継承した `fit()` を使用できます。再構成損失やKL項を含む場合も、
+`training_loss()` の定義を変更せずに学習します。

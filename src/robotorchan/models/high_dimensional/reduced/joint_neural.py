@@ -30,6 +30,23 @@ class JointEncoderGP(ExactGPModelMixin, BoTorchSingleTaskGP):
     optimization contract for all jointly trained neural GP variants.
     """
 
+    supports_fit = True
+
+    def fit(self, *, epochs: int = 100, lr: float = 0.01) -> None:
+        """Optimize the model-specific joint training loss with Adam."""
+        if epochs <= 0:
+            raise ValueError("epochs must be positive.")
+        if lr <= 0:
+            raise ValueError("lr must be positive.")
+        optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+        self.train()
+        for _ in range(epochs):
+            optimizer.zero_grad()
+            loss = self.training_loss()
+            loss.backward()
+            optimizer.step()
+        self.eval()
+
     def __init__(
         self,
         train_X: Tensor,
