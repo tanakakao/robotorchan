@@ -159,6 +159,7 @@ class SaasFullyBayesianMultiTaskGP(
             train_Yvar=raw_train_Yvar,
         )
 
+
 class MixedSaasFullyBayesianSingleTaskGP(SaasFullyBayesianSingleTaskGP):
     """Fully Bayesian SAAS GP with model-owned categorical one-hot encoding."""
 
