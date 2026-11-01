@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import Any, ClassVar
 
+from botorch.fit import fit_gpytorch_mll
 from botorch.models import ModelListGP as BoTorchModelListGP
 from gpytorch.mlls import SumMarginalLogLikelihood
 from torch import Tensor
@@ -20,6 +21,7 @@ class ModelListGP(ModelTrainingMixin, BoTorchModelListGP):
     ``raw_train_X`` / ``raw_train_Y`` attributes at the container level.
     """
 
+    supports_fit: ClassVar[bool] = True
     supports_mll: ClassVar[bool] = True
 
     @property
@@ -36,6 +38,10 @@ class ModelListGP(ModelTrainingMixin, BoTorchModelListGP):
     def raw_train_Yvars(self) -> tuple[Tensor | None, ...]:
         """Return each child model's retained observation variances, if available."""
         return tuple(getattr(model, "raw_train_Yvar", None) for model in self.models)
+
+    def fit(self, *, optimizer_kwargs: dict[str, Any] | None = None) -> None:
+        """Fit the child exact GPs using BoTorch's summed MLL optimizer."""
+        fit_gpytorch_mll(self.make_mll(), optimizer_kwargs=optimizer_kwargs)
 
     def make_mll(self) -> SumMarginalLogLikelihood:
         """Construct the summed marginal log likelihood for the child models."""
