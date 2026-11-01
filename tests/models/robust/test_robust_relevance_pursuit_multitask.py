@@ -139,3 +139,23 @@ def test_robust_multitask_fit_and_posterior(mixed: bool) -> None:
     posterior = model.posterior(train_x[:4])
     assert torch.isfinite(posterior.mean).all()
     assert torch.isfinite(posterior.variance).all()
+
+
+@pytest.mark.parametrize("mixed", [False, True])
+def test_robust_multitask_fit_and_posterior(mixed: bool) -> None:
+    """Both robust multitask variants must fit and predict without shape errors."""
+    train_x, train_y = _long_format_data()
+    if mixed:
+        categories = (torch.arange(train_x.shape[0]) % 2).to(train_x).unsqueeze(-1)
+        train_x = torch.cat((train_x[:, :1], categories, train_x[:, 1:]), dim=-1)
+        model = MixedRobustRelevancePursuitMultiTaskGP(
+            train_x, train_y, task_feature=-1, cat_dims=[1]
+        )
+    else:
+        model = RobustRelevancePursuitMultiTaskGP(train_x, train_y, task_feature=-1)
+
+    fit_gpytorch_mll(model.make_mll())
+    model.eval()
+    posterior = model.posterior(train_x[:4])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
