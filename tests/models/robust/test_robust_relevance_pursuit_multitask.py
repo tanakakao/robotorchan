@@ -100,6 +100,18 @@ def test_robust_multitask_mll_forward_and_backward(mixed: bool) -> None:
     model.likelihood.train()
     mll = model.make_mll()
     output = model(*model.train_inputs)
+    observed = model.likelihood(output)
+    assert observed.event_shape == model.train_targets.shape, (
+        f"mixed={mixed}, latent_batch={output.batch_shape}, "
+        f"observed_batch={observed.batch_shape}, "
+        f"observed_event={observed.event_shape}, "
+        f"target={model.train_targets.shape}"
+    )
+    assert observed.batch_shape == torch.Size(), (
+        f"mixed={mixed}, latent_batch={output.batch_shape}, "
+        f"observed_batch={observed.batch_shape}; "
+        "sparse-outlier support batch is incompatible with scalar MLL"
+    )
     loss = -mll(output, model.train_targets)
     assert loss.ndim == 0
     assert torch.isfinite(loss)
