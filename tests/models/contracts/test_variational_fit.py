@@ -26,7 +26,7 @@ def test_variational_fit_updates_parameters(mixed: bool) -> None:
     assert not model.training
     assert any(
         not torch.equal(old, new)
-        for old, new in zip(before, model.parameters())
+        for old, new in zip(before, model.parameters(), strict=True)
     )
     assert torch.isfinite(model.posterior(train_X[:2]).mean).all()
 
