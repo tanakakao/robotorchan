@@ -101,3 +101,10 @@ Exact GPのMLL最適化とは異なります。
 num_likelihood_samples=...)` を継承します。学習損失は分類器が定義する
 Bernoulli変分ELBOであり、回帰用Gaussian likelihoodには変更しません。
 学習後は `predict_proba()` でクラス確率を取得できます。
+
+## Binary variational GP classification
+
+`BinarySingleTaskGPClassifier` とMixed・MultiTask派生モデルは、
+`SingleTaskVariationalGP.fit(epochs=..., lr=..., batch_size=...)` を継承します。
+`make_mll()` がBernoulli ELBOを返すため、分類用likelihoodのまま学習します。
+Notebook 39では `fit()` から候補提案までの流れを確認できます。
