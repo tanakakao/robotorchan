@@ -72,3 +72,11 @@ model.fit(optimizer_kwargs={"options": {"maxiter": 100}})
 コンストラクタで `train_Y` を指定する必要があります。
 `batch_size` を省略すると全件学習になります。ELBOの `num_data` は
 minibatchのサイズではなく、保持された学習データの全件数です。
+
+## Fully Bayesian SAAS GP
+
+`SaasFullyBayesianSingleTaskGP` と `SaasFullyBayesianMultiTaskGP` は
+`fit(warmup_steps=..., num_samples=..., thinning=..., disable_progbar=...)`
+でBoTorchのNUTS学習を実行します。Mixed派生モデルも同じ契約です。
+`supports_fit=True` ですが `supports_mll=False` のままであり、
+Exact GPのMLL最適化とは異なります。
