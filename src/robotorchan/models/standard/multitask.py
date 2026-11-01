@@ -93,6 +93,8 @@ class MixedMultiTaskGP(MultiTaskGP):
     continuous + categorical + continuous/categorical interaction.
     """
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -207,6 +209,8 @@ class MixedKroneckerMultiTaskGP(KroneckerMultiTaskGP):
     ``train_Y`` rather than in ``train_X``. Therefore ``cat_dims`` applies
     directly to the columns of ``train_X`` used by the data covariance.
     """
+
+    supports_fit = True
 
     def __init__(
         self,
