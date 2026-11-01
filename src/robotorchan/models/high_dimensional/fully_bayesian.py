@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import torch
+from botorch.fit import fit_fully_bayesian_model_nuts
 from botorch.models.fully_bayesian import (
     SaasFullyBayesianSingleTaskGP as BoTorchSaasFullyBayesianSingleTaskGP,
 )
@@ -37,7 +38,25 @@ class SaasFullyBayesianSingleTaskGP(
     explicit through ``supports_mll = False``.
     """
 
+    supports_fit = True
     supports_mll = False
+
+    def fit(
+        self,
+        *,
+        warmup_steps: int = 512,
+        num_samples: int = 256,
+        thinning: int = 16,
+        disable_progbar: bool = True,
+    ) -> None:
+        """Fit the fully Bayesian model using BoTorch's NUTS routine."""
+        fit_fully_bayesian_model_nuts(
+            self,
+            warmup_steps=warmup_steps,
+            num_samples=num_samples,
+            thinning=thinning,
+            disable_progbar=disable_progbar,
+        )
 
     def __init__(
         self,
@@ -82,7 +101,25 @@ class SaasFullyBayesianMultiTaskGP(
     is performed with ``fit_fully_bayesian_model_nuts`` rather than an MLL.
     """
 
+    supports_fit = True
     supports_mll = False
+
+    def fit(
+        self,
+        *,
+        warmup_steps: int = 512,
+        num_samples: int = 256,
+        thinning: int = 16,
+        disable_progbar: bool = True,
+    ) -> None:
+        """Fit the fully Bayesian model using BoTorch's NUTS routine."""
+        fit_fully_bayesian_model_nuts(
+            self,
+            warmup_steps=warmup_steps,
+            num_samples=num_samples,
+            thinning=thinning,
+            disable_progbar=disable_progbar,
+        )
 
     def __init__(
         self,
