@@ -107,7 +107,9 @@ class RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin
             task_feature=self._robust_task_feature,
             likelihood=self.likelihood,
             mean_module=self.mean_module,
-            covar_module=self.covar_module,
+            # MultiTaskGP adds its own task kernel; passing the complete
+            # covariance would append a second task kernel and break state loading.
+            covar_module=self.covar_module.kernels[0],
             output_tasks=self._robust_output_tasks,
             rank=self._robust_rank,
             all_tasks=self._robust_all_tasks,
