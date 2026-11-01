@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import torch
+
 from botorch.models import SingleTaskVariationalGP as BoTorchSingleTaskVariationalGP
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
@@ -38,6 +40,7 @@ class SingleTaskVariationalGP(
     and a ``VariationalELBO`` factory.
     """
 
+    supports_fit = True
     supports_mll = True
 
     def __init__(
@@ -96,6 +99,48 @@ class SingleTaskVariationalGP(
     def raw_train_Yvar(self) -> None:
         """Return ``None`` because the upstream constructor has no train_Yvar."""
         return None
+
+    def fit(
+        self,
+        *,
+        epochs: int = 60,
+        lr: float = 0.03,
+        batch_size: int | None = None,
+    ) -> None:
+        """Train the variational ELBO with Adam on stored observations.
+
+        The full observation count is retained in the ELBO even when using
+        minibatches. This is distinct from exact-GP MLL optimization.
+        """
+        train_Y = self.raw_train_Y
+        if train_Y is None:
+            raise ValueError("fit() requires train_Y at construction.")
+        if epochs <= 0 or lr <= 0:
+            raise ValueError("epochs and lr must be positive.")
+        n = self.raw_train_X.shape[-2]
+        if batch_size is None:
+            batch_size = n
+        if batch_size <= 0:
+            raise ValueError("batch_size must be positive.")
+
+        loader = torch.utils.data.DataLoader(
+            torch.utils.data.TensorDataset(self.raw_train_X, train_Y),
+            batch_size=batch_size,
+            shuffle=True,
+        )
+        self.train()
+        self.likelihood.train()
+        optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+        mll = self.make_mll(num_data=n)
+        for _ in range(epochs):
+            for batch_X, batch_Y in loader:
+                optimizer.zero_grad()
+                output = self.model(batch_X)
+                loss = -mll(output, batch_Y.squeeze(-1))
+                loss.backward()
+                optimizer.step()
+        self.eval()
+        self.likelihood.eval()
 
     def make_mll(self, num_data: int | None = None) -> VariationalELBO:
         """Construct the variational evidence lower bound.
