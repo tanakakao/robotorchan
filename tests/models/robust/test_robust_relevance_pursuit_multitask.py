@@ -1,5 +1,6 @@
 import pytest
 import torch
+from botorch.fit import fit_gpytorch_mll
 from botorch.models.likelihoods.sparse_outlier_noise import SparseOutlierGaussianLikelihood
 from gpytorch.kernels import AdditiveKernel, ProductKernel
 from gpytorch.mlls import ExactMarginalLogLikelihood
@@ -117,3 +118,24 @@ def test_robust_multitask_mll_forward_and_backward(mixed: bool) -> None:
     assert torch.isfinite(loss)
     loss.backward()
     assert any(parameter.grad is not None for parameter in model.parameters())
+
+
+@pytest.mark.parametrize("mixed", [False, True])
+def test_robust_multitask_fit_and_posterior(mixed: bool) -> None:
+    """Both variants must fit and predict without replacing the robust likelihood."""
+    train_x, train_y = _long_format_data()
+    if mixed:
+        categories = (torch.arange(train_x.shape[0]) % 2).to(train_x).unsqueeze(-1)
+        train_x = torch.cat((train_x[:, :1], categories, train_x[:, 1:]), dim=-1)
+        model = MixedRobustRelevancePursuitMultiTaskGP(
+            train_x, train_y, task_feature=-1, cat_dims=[1]
+        )
+    else:
+        model = RobustRelevancePursuitMultiTaskGP(train_x, train_y, task_feature=-1)
+
+    fit_gpytorch_mll(model.make_mll())
+    model.eval()
+    assert isinstance(model.likelihood, SparseOutlierGaussianLikelihood)
+    posterior = model.posterior(train_x[:4])
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
