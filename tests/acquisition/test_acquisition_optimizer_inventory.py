@@ -1,7 +1,7 @@
 """Contract tests for the static three-layer inventory."""
 
-import importlib.util
 from pathlib import Path
+import importlib.util
 
 
 _SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "audit_acquisition_optimizer_matrix.py"
