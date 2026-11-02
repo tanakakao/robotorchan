@@ -1,6 +1,15 @@
 """Contract tests for the static three-layer inventory."""
 
-from scripts.audit_acquisition_optimizer_matrix import build_inventory
+import importlib.util
+from pathlib import Path
+
+
+_SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "audit_acquisition_optimizer_matrix.py"
+_SPEC = importlib.util.spec_from_file_location("audit_acquisition_optimizer_matrix", _SCRIPT)
+assert _SPEC is not None and _SPEC.loader is not None
+_MODULE = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(_MODULE)
+build_inventory = _MODULE.build_inventory
 
 
 def test_inventory_covers_registered_public_metadata() -> None:
