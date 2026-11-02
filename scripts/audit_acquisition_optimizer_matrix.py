@@ -13,6 +13,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from robotorchan.acquisition.compatibility import check_model_acquisition_compatibility
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.registry import MODEL_REGISTRY
@@ -61,10 +62,23 @@ def build_inventory() -> dict[str, Any]:
         name: _serialize(asdict(capabilities))
         for name, capabilities in sorted(OPTIMIZER_CAPABILITIES.items())
     }
+    model_acquisition = {
+        model_name: {
+            acquisition_name: {
+                "status": "static_compatible" if result.compatible else "static_incompatible",
+                "reasons": list(result.reasons),
+                "runtime_verified": False,
+            }
+            for acquisition_name in sorted(ACQUISITION_REGISTRY)
+            for result in [check_model_acquisition_compatibility(model_name, acquisition_name)]
+        }
+        for model_name in sorted(MODEL_REGISTRY)
+    }
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "verification": "static_only",
         "models": dict(sorted(models.items())),
+        "model_acquisition_static": model_acquisition,
         "acquisitions": acquisitions,
         "optimizers": optimizers,
         "specialized_optimizer_paths": [
@@ -75,6 +89,7 @@ def build_inventory() -> dict[str, Any]:
             "Registry membership does not establish runtime compatibility.",
             "Specialized paths and composition factories require separate validation.",
             "No model-acquisition-optimizer triple is marked supported by this report.",
+            "Classification models are not evaluated by the regression registry checker.",
         ],
     }
 
