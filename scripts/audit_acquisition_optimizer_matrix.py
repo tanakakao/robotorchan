@@ -70,9 +70,7 @@ def build_inventory() -> dict[str, Any]:
                 "runtime_verified": False,
             }
             for acquisition_name in sorted(ACQUISITION_REGISTRY)
-            for result in [
-                check_model_acquisition_compatibility(model_name, acquisition_name)
-            ]
+            for result in [check_model_acquisition_compatibility(model_name, acquisition_name)]
         }
         for model_name in sorted(MODEL_REGISTRY)
     }
