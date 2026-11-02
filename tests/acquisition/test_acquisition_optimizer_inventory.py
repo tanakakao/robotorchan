@@ -28,3 +28,18 @@ def test_inventory_does_not_claim_runtime_compatibility() -> None:
     report = build_inventory()
     assert "compatibility" not in report
     assert "optimize_mixed_one_shot_acqf" in report["specialized_optimizer_paths"]
+
+
+def test_static_model_acquisition_matrix_is_not_runtime_evidence() -> None:
+    from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
+    from robotorchan.models.registry import MODEL_REGISTRY
+
+    report = build_inventory()
+    matrix = report["model_acquisition_static"]
+    assert set(matrix) == set(MODEL_REGISTRY)
+    for acquisitions in matrix.values():
+        assert set(acquisitions) == set(ACQUISITION_REGISTRY)
+        for result in acquisitions.values():
+            assert result["status"] in {"static_compatible", "static_incompatible"}
+            assert result["runtime_verified"] is False
+            assert isinstance(result["reasons"], list)
