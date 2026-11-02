@@ -43,3 +43,18 @@ def test_static_model_acquisition_matrix_is_not_runtime_evidence() -> None:
             assert result["status"] in {"static_compatible", "static_incompatible"}
             assert result["runtime_verified"] is False
             assert isinstance(result["reasons"], list)
+
+
+def test_classification_static_matrix_covers_registered_pairs() -> None:
+    from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
+    from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
+
+    report = build_inventory()
+    matrix = report["classification_acquisition_static"]
+    assert set(matrix) == set(CLASSIFICATION_MODEL_REGISTRY)
+    for acquisitions in matrix.values():
+        assert set(acquisitions) == set(ACQUISITION_REGISTRY)
+        for result in acquisitions.values():
+            assert result["status"] in {"static_compatible", "static_incompatible"}
+            assert result["runtime_verified"] is False
+            assert isinstance(result["reasons"], list)
