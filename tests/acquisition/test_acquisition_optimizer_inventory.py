@@ -3,11 +3,7 @@
 import importlib.util
 from pathlib import Path
 
-_SCRIPT = (
-    Path(__file__).resolve().parents[2]
-    / "scripts"
-    / "audit_acquisition_optimizer_matrix.py"
-)
+_SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "audit_acquisition_optimizer_matrix.py"
 _SPEC = importlib.util.spec_from_file_location("audit_acquisition_optimizer_matrix", _SCRIPT)
 assert _SPEC is not None and _SPEC.loader is not None
 _MODULE = importlib.util.module_from_spec(_SPEC)
@@ -22,9 +18,7 @@ def test_inventory_covers_registered_public_metadata() -> None:
     from robotorchan.optim.capabilities import OPTIMIZER_CAPABILITIES
 
     report = build_inventory()
-    assert set(report["models"]) == set(MODEL_REGISTRY) | set(
-        CLASSIFICATION_MODEL_REGISTRY
-    )
+    assert set(report["models"]) == set(MODEL_REGISTRY) | set(CLASSIFICATION_MODEL_REGISTRY)
     assert set(report["acquisitions"]) == set(ACQUISITION_REGISTRY)
     assert set(report["optimizers"]) == set(OPTIMIZER_CAPABILITIES)
     assert report["verification"] == "static_only"
