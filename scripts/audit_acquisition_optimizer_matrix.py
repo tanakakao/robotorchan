@@ -226,9 +226,7 @@ def build_inventory() -> dict[str, Any]:
             "integer": capabilities.integer,
             "categorical": capabilities.categorical,
             "mixed": capabilities.mixed,
-            "path_type": (
-                "specialized" if name in specialized_optimizers else "dispatcher"
-            ),
+            "path_type": ("specialized" if name in specialized_optimizers else "dispatcher"),
             "verification": "declared_capability_not_runtime_evidence",
         }
         for name, capabilities in sorted(all_optimizers.items())
