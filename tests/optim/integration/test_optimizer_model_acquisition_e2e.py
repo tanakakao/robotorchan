@@ -172,9 +172,7 @@ def test_registered_regression_acquisition_optimizer_q1_matrix(
             model, best_f=model.train_targets.max(), sampler=sampler
         ),
         "qSimpleRegret": lambda: qSimpleRegret(model, sampler=sampler),
-        "qUpperConfidenceBound": lambda: qUpperConfidenceBound(
-            model, beta=0.1, sampler=sampler
-        ),
+        "qUpperConfidenceBound": lambda: qUpperConfidenceBound(model, beta=0.1, sampler=sampler),
     }
     optimizers = {
         "botorch": (optimize_acqf_botorch, {"num_restarts": 2, "raw_samples": 16}),
