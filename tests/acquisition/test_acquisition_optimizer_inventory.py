@@ -95,11 +95,38 @@ def test_acquisition_optimizer_matrix_is_conservative_and_complete() -> None:
     for acquisition_name, optimizers in matrix.items():
         assert set(optimizers) == expected_optimizers
         for result in optimizers.values():
-            assert result["status"] in {"unverified", "requires_specialized_path"}
-            assert result["runtime_verified"] is False
+            assert result["status"] in {
+                "unverified",
+                "requires_specialized_path",
+                "verified_for_binary_single_task_gp_q1",
+            }
+            assert result["runtime_verified"] == (
+                result["status"] == "verified_for_binary_single_task_gp_q1"
+            )
             assert isinstance(result["optimizer_requires_grad"], bool)
             assert isinstance(result["reasons"], list)
         if ACQUISITION_REGISTRY[acquisition_name].capabilities.one_shot:
             assert all(
                 result["status"] == "requires_specialized_path" for result in optimizers.values()
             )
+
+
+def test_classification_q1_evidence_is_scoped_to_verified_pairs() -> None:
+    report = build_inventory()
+    matrix = report["acquisition_optimizer_static"]
+    acquisitions = {
+        "BALD",
+        "LatentStraddle",
+        "MarginUncertainty",
+        "PredictiveEntropy",
+        "ProbabilityVariance",
+    }
+    for acquisition_name in acquisitions:
+        for optimizer_name in ("ga", "random"):
+            result = matrix[acquisition_name][optimizer_name]
+            assert result["status"] == "verified_for_binary_single_task_gp_q1"
+            assert result["runtime_verified"] is True
+            assert len(result["evidence"]) == 1
+            assert result["evidence"][0].startswith("tests/acquisition/")
+    assert matrix["BALD"]["cmaes"]["runtime_verified"] is False
+    assert matrix["qKnowledgeGradient"]["ga"]["runtime_verified"] is False
