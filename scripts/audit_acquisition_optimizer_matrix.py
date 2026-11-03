@@ -212,9 +212,7 @@ def build_inventory() -> dict[str, Any]:
                 optimizer_name: {
                     "status": "verified_for_single_task_gp_q1",
                     "runtime_verified": True,
-                    "evidence": [
-                        "tests/optim/integration/test_optimizer_model_acquisition_e2e.py"
-                    ],
+                    "evidence": ["tests/optim/integration/test_optimizer_model_acquisition_e2e.py"],
                     "scope": "SingleTaskGP, q=1, unconstrained, continuous",
                 }
                 for optimizer_name in ("botorch", "ga", "pso", "sobol")
