@@ -94,13 +94,13 @@ def test_multiobjective_acquisition_optimizer_q1_matrix(
         )
     elif acquisition_name == "qLogNEHVI":
         acquisition = qLogNoisyExpectedHypervolumeImprovement(
-            model=model, ref_point=ref_point.tolist(), X_baseline=train_x,
-            prune_baseline=False
+            model=model, ref_point=ref_point.tolist(), X_baseline=train_x, prune_baseline=False
         )
     else:
         acquisition = qLogNParEGO(
-            model=model, X_baseline=train_x,
-            scalarization_weights=torch.tensor([0.4, 0.6], dtype=torch.double)
+            model=model,
+            X_baseline=train_x,
+            scalarization_weights=torch.tensor([0.4, 0.6], dtype=torch.double),
         )
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     optimizers = {
