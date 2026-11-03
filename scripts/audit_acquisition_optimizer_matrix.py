@@ -336,7 +336,6 @@ def build_inventory() -> dict[str, Any]:
     }
 
 
-
 def build_summary(report: dict[str, Any]) -> dict[str, Any]:
     """Summarize audit coverage without promoting declared support to verified."""
     variable_types = ("continuous", "integer", "categorical", "mixed")
