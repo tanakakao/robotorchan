@@ -83,9 +83,7 @@ def build_inventory() -> dict[str, Any]:
         acquisition_name: {
             optimizer_name: {
                 "status": (
-                    "requires_specialized_path"
-                    if entry.capabilities.one_shot
-                    else "unverified"
+                    "requires_specialized_path" if entry.capabilities.one_shot else "unverified"
                 ),
                 "reasons": (
                     ["One-shot acquisition requires a specialized optimization path."]
