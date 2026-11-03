@@ -163,3 +163,23 @@ def test_runtime_evidence_coverage_counts_match_matrix() -> None:
     assert coverage["unverified_or_specialized_pairs"] == total - verified
     assert len(coverage["verified_pairs"]) == verified
     assert report["verification"] == "static_inventory_with_scoped_runtime_evidence"
+
+
+def test_unverified_triage_covers_exactly_remaining_pairs() -> None:
+    report = build_inventory()
+    matrix = report["acquisition_optimizer_static"]
+    coverage = report["acquisition_optimizer_coverage"]
+    unverified = coverage["unverified_pairs"]
+    expected = {
+        (acquisition_name, optimizer_name)
+        for acquisition_name, results in matrix.items()
+        for optimizer_name, result in results.items()
+        if not result["runtime_verified"]
+    }
+    assert {(item["acquisition"], item["optimizer"]) for item in unverified} == expected
+    assert len(unverified) == coverage["unverified_or_specialized_pairs"]
+    assert {item["triage_group"] for item in unverified} <= {
+        "classification_existing_model",
+        "other_acquisitions",
+        "specialized_path",
+    }
