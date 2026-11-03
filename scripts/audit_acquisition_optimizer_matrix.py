@@ -1,7 +1,7 @@
 """Inventory model, acquisition, and optimizer contracts without running optimization.
 
 Run: python scripts/audit_acquisition_optimizer_matrix.py --output /tmp/bo-matrix.json
-The report is static metadata, not evidence of runtime compatibility.
+The report combines static metadata with explicitly scoped runtime test evidence.
 """
 
 from __future__ import annotations
@@ -172,9 +172,25 @@ def build_inventory() -> dict[str, Any]:
         }
         for model_name, entry in sorted(CLASSIFICATION_MODEL_REGISTRY.items())
     }
+    verified_pairs = [
+        (acquisition_name, optimizer_name)
+        for acquisition_name, optimizer_results in acquisition_optimizer.items()
+        for optimizer_name, result in optimizer_results.items()
+        if result["runtime_verified"]
+    ]
+    total_pairs = sum(len(results) for results in acquisition_optimizer.values())
     return {
-        "schema_version": 3,
-        "verification": "static_only",
+        "schema_version": 4,
+        "verification": "static_inventory_with_scoped_runtime_evidence",
+        "acquisition_optimizer_coverage": {
+            "total_pairs": total_pairs,
+            "scoped_runtime_verified_pairs": len(verified_pairs),
+            "unverified_or_specialized_pairs": total_pairs - len(verified_pairs),
+            "verified_pairs": [
+                {"acquisition": acquisition_name, "optimizer": optimizer_name}
+                for acquisition_name, optimizer_name in verified_pairs
+            ],
+        },
         "models": dict(sorted(models.items())),
         "model_acquisition_static": model_acquisition,
         "classification_acquisition_static": classification_acquisition,
