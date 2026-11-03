@@ -132,12 +132,21 @@ def test_classification_q1_evidence_is_scoped_to_verified_pairs() -> None:
     assert matrix["qKnowledgeGradient"]["ga"]["runtime_verified"] is False
 
 
-def test_botorch_q1_evidence_is_predictive_entropy_only() -> None:
+def test_botorch_q1_evidence_covers_five_classification_acquisitions() -> None:
     matrix = build_inventory()["acquisition_optimizer_static"]
-    verified = matrix["PredictiveEntropy"]["botorch"]
-    assert verified["runtime_verified"] is True
-    assert verified["evidence"] == ["tests/acquisition/test_classification_acqf_optimizer_smoke.py"]
-    assert matrix["BALD"]["botorch"]["runtime_verified"] is False
+    for acquisition_name in (
+        "BALD",
+        "LatentStraddle",
+        "MarginUncertainty",
+        "PredictiveEntropy",
+        "ProbabilityVariance",
+    ):
+        verified = matrix[acquisition_name]["botorch"]
+        assert verified["runtime_verified"] is True
+        assert verified["evidence"] == [
+            "tests/acquisition/test_classification_acqf_optimizer_smoke.py"
+        ]
+    assert matrix["qKnowledgeGradient"]["botorch"]["runtime_verified"] is False
 
 
 def test_torch_and_hybrid_q1_evidence_is_scoped_to_predictive_entropy() -> None:
