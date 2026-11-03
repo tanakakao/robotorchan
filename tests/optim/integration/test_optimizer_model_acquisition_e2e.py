@@ -124,3 +124,31 @@ def test_single_task_gp_ucb_runs_with_sampling_ga_and_pso() -> None:
         assert value.numel() == 1
         assert candidate.dtype == torch.double
         assert 0.0 <= candidate.item() <= 1.0
+
+
+@pytest.mark.parametrize("acquisition_name", ["ei", "ucb"])
+@pytest.mark.parametrize("optimizer_name", ["botorch", "ga", "pso", "sobol"])
+def test_regression_acquisition_optimizer_q1_matrix(
+    acquisition_name: str, optimizer_name: str
+) -> None:
+    model = _fit_model()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    acquisition = (
+        ExpectedImprovement(model, best_f=model.train_targets.max())
+        if acquisition_name == "ei"
+        else UpperConfidenceBound(model, beta=0.1)
+    )
+    optimizers = {
+        "botorch": (optimize_acqf_botorch, {"num_restarts": 2, "raw_samples": 16}),
+        "ga": (optimize_acqf_ga, {"population_size": 16, "generations": 3, "seed": 3}),
+        "pso": (optimize_acqf_pso, {"swarm_size": 16, "iterations": 3, "seed": 3}),
+        "sobol": (optimize_acqf_sampling, {"num_samples": 32, "method": "sobol", "seed": 3}),
+    }
+    optimizer, kwargs = optimizers[optimizer_name]
+    candidate, value = optimizer(acquisition, bounds, q=1, **kwargs)
+
+    assert candidate.shape == (1, 1)
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
