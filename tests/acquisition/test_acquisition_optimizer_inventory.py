@@ -136,7 +136,5 @@ def test_botorch_q1_evidence_is_predictive_entropy_only() -> None:
     matrix = build_inventory()["acquisition_optimizer_static"]
     verified = matrix["PredictiveEntropy"]["botorch"]
     assert verified["runtime_verified"] is True
-    assert verified["evidence"] == [
-        "tests/acquisition/test_classification_acqf_optimizer_smoke.py"
-    ]
+    assert verified["evidence"] == ["tests/acquisition/test_classification_acqf_optimizer_smoke.py"]
     assert matrix["BALD"]["botorch"]["runtime_verified"] is False
