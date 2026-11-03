@@ -58,3 +58,27 @@ def test_classification_static_matrix_covers_registered_pairs() -> None:
             assert result["status"] in {"static_compatible", "static_incompatible"}
             assert result["runtime_verified"] is False
             assert isinstance(result["reasons"], list)
+
+
+def test_inventory_covers_specialized_optimizer_capabilities() -> None:
+    from dataclasses import asdict
+
+    from robotorchan.optim.capabilities import (
+        BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
+        MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+        NSGA2_OPTIMIZER_CAPABILITIES,
+    )
+
+    report = build_inventory()
+    specialized = report["specialized_optimizers"]
+    assert set(specialized) == {
+        "optimize_acqf_mixed_botorch",
+        "optimize_acqf_mixed_ga",
+        "optimize_vector_nsga2",
+    }
+    assert specialized["optimize_acqf_mixed_botorch"]["mixed"] is True
+    assert specialized["optimize_acqf_mixed_ga"]["categorical"] is True
+    assert specialized["optimize_vector_nsga2"]["q_batch"] is False
+    assert asdict(NSGA2_OPTIMIZER_CAPABILITIES)["q_batch"] is False
+    assert BOTORCH_MIXED_OPTIMIZER_CAPABILITIES.mixed
+    assert MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES.mixed
