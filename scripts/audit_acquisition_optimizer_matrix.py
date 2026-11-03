@@ -336,12 +336,46 @@ def build_inventory() -> dict[str, Any]:
     }
 
 
+
+def build_summary(report: dict[str, Any]) -> dict[str, Any]:
+    """Summarize audit coverage without promoting declared support to verified."""
+    variable_types = ("continuous", "integer", "categorical", "mixed")
+    coverage = report["acquisition_variable_type_coverage"]
+    status_counts = {
+        variable_type: {
+            "runtime_verified_scoped": 0,
+            "declared_only": 0,
+            "declared_unverified": 0,
+            "not_declared": 0,
+        }
+        for variable_type in variable_types
+    }
+    for optimizer_results in coverage.values():
+        for entry in optimizer_results.values():
+            for variable_type in variable_types:
+                status_counts[variable_type][entry[variable_type]] += 1
+    return {
+        "schema_version": report["schema_version"],
+        "acquisition_optimizer_coverage": {
+            key: value
+            for key, value in report["acquisition_optimizer_coverage"].items()
+            if key not in ("verified_pairs", "unverified_pairs")
+        },
+        "variable_type_status_counts": status_counts,
+        "gap_triage_counts": report["gap_triage_counts"],
+        "limitations": report["limitations"],
+    }
+
+
 def main() -> int:
     """Print or write the inventory JSON."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--summary", action="store_true")
     args = parser.parse_args()
-    report = json.dumps(build_inventory(), ensure_ascii=False, indent=2) + "\n"
+    inventory = build_inventory()
+    data = build_summary(inventory) if args.summary else inventory
+    report = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
     if args.output is None:
         print(report, end="")
     else:
