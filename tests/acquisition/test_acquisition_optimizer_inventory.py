@@ -143,7 +143,9 @@ def test_botorch_q1_evidence_covers_five_classification_acquisitions() -> None:
     ):
         verified = matrix[acquisition_name]["botorch"]
         assert verified["runtime_verified"] is True
-        assert verified["evidence"] == ["tests/acquisition/test_classification_acqf_optimizer_smoke.py"]
+        assert verified["evidence"] == [
+            "tests/acquisition/test_classification_acqf_optimizer_smoke.py"
+        ]
     assert matrix["qKnowledgeGradient"]["botorch"]["runtime_verified"] is False
 
 
