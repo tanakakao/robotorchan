@@ -20,7 +20,12 @@ from robotorchan.acquisition.compatibility import (
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.registry import MODEL_REGISTRY
-from robotorchan.optim.capabilities import OPTIMIZER_CAPABILITIES
+from robotorchan.optim.capabilities import (
+    BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
+    MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+    NSGA2_OPTIMIZER_CAPABILITIES,
+    OPTIMIZER_CAPABILITIES,
+)
 
 
 def _serialize(value: Any) -> Any:
@@ -65,6 +70,11 @@ def build_inventory() -> dict[str, Any]:
         name: _serialize(asdict(capabilities))
         for name, capabilities in sorted(OPTIMIZER_CAPABILITIES.items())
     }
+    specialized_optimizers = {
+        "optimize_acqf_mixed_botorch": BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
+        "optimize_acqf_mixed_ga": MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+        "optimize_vector_nsga2": NSGA2_OPTIMIZER_CAPABILITIES,
+    }
     model_acquisition = {
         model_name: {
             acquisition_name: {
@@ -99,6 +109,10 @@ def build_inventory() -> dict[str, Any]:
         "classification_acquisition_static": classification_acquisition,
         "acquisitions": acquisitions,
         "optimizers": optimizers,
+        "specialized_optimizers": {
+            name: _serialize(asdict(capabilities))
+            for name, capabilities in sorted(specialized_optimizers.items())
+        },
         "specialized_optimizer_paths": [
             "optimize_acqf_sequential",
             "optimize_mixed_one_shot_acqf",
