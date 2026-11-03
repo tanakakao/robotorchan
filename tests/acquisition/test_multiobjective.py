@@ -1,3 +1,4 @@
+import pytest
 import torch
 from botorch.acquisition.multi_objective.logei import (
     qLogExpectedHypervolumeImprovement,
@@ -9,6 +10,12 @@ from botorch.utils.multi_objective.box_decompositions.non_dominated import (
 )
 
 from robotorchan.models import ModelListGP, SingleTaskGP
+from robotorchan.optim.backends import (
+    optimize_acqf_botorch,
+    optimize_acqf_ga,
+    optimize_acqf_pso,
+    optimize_acqf_sampling,
+)
 
 
 def _model() -> tuple[ModelListGP, torch.Tensor]:
@@ -69,3 +76,43 @@ def test_native_qlognparego_is_compatible() -> None:
 
     assert value.shape == torch.Size([1])
     assert torch.isfinite(value).all()
+
+
+@pytest.mark.parametrize("acquisition_name", ["qLogEHVI", "qLogNEHVI", "qLogNParEGO"])
+@pytest.mark.parametrize("optimizer_name", ["botorch", "ga", "pso", "sobol"])
+def test_multiobjective_acquisition_optimizer_q1_matrix(
+    acquisition_name: str, optimizer_name: str
+) -> None:
+    model, train_x = _model()
+    with torch.no_grad():
+        train_y = model.posterior(train_x).mean
+    ref_point = train_y.min(dim=0).values - 0.1
+    if acquisition_name == "qLogEHVI":
+        partitioning = FastNondominatedPartitioning(ref_point=ref_point, Y=train_y)
+        acquisition = qLogExpectedHypervolumeImprovement(
+            model=model, ref_point=ref_point.tolist(), partitioning=partitioning
+        )
+    elif acquisition_name == "qLogNEHVI":
+        acquisition = qLogNoisyExpectedHypervolumeImprovement(
+            model=model, ref_point=ref_point.tolist(), X_baseline=train_x,
+            prune_baseline=False
+        )
+    else:
+        acquisition = qLogNParEGO(
+            model=model, X_baseline=train_x,
+            scalarization_weights=torch.tensor([0.4, 0.6], dtype=torch.double)
+        )
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    optimizers = {
+        "botorch": (optimize_acqf_botorch, {"num_restarts": 2, "raw_samples": 16}),
+        "ga": (optimize_acqf_ga, {"population_size": 16, "generations": 3, "seed": 3}),
+        "pso": (optimize_acqf_pso, {"swarm_size": 16, "iterations": 3, "seed": 3}),
+        "sobol": (optimize_acqf_sampling, {"num_samples": 32, "method": "sobol", "seed": 3}),
+    }
+    optimizer, kwargs = optimizers[optimizer_name]
+    candidate, value = optimizer(acquisition, bounds, q=1, **kwargs)
+    assert candidate.shape == (1, 1)
+    assert torch.isfinite(candidate).all()
+    assert torch.isfinite(value).all()
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
