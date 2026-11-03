@@ -207,3 +207,21 @@ def test_external_regression_evidence_is_separate_from_registered_matrix() -> No
             for result in results.values()
         )
     assert set(report["acquisition_optimizer_static"]) == set(report["acquisitions"])
+
+
+def test_registered_regression_q1_runtime_evidence_is_scoped() -> None:
+    report = build_inventory()
+    matrix = report["acquisition_optimizer_static"]
+    for acquisition_name in (
+        "qLogExpectedImprovement",
+        "qSimpleRegret",
+        "qUpperConfidenceBound",
+    ):
+        for optimizer_name in ("botorch", "ga", "pso", "sobol"):
+            result = matrix[acquisition_name][optimizer_name]
+            assert result["status"] == "verified_for_single_task_gp_q1"
+            assert result["runtime_verified"]
+            assert result["evidence"] == [
+                "tests/optim/integration/test_optimizer_model_acquisition_e2e.py"
+            ]
+            assert "SingleTaskGP" in result["reasons"][0]
