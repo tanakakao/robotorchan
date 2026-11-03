@@ -21,7 +21,7 @@ def test_inventory_covers_registered_public_metadata() -> None:
     assert set(report["models"]) == set(MODEL_REGISTRY) | set(CLASSIFICATION_MODEL_REGISTRY)
     assert set(report["acquisitions"]) == set(ACQUISITION_REGISTRY)
     assert set(report["optimizers"]) == set(OPTIMIZER_CAPABILITIES)
-    assert report["verification"] == "static_only"
+    assert report["verification"] == "static_inventory_with_scoped_runtime_evidence"
 
 
 def test_inventory_does_not_claim_runtime_compatibility() -> None:
