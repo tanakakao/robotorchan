@@ -257,7 +257,7 @@ def test_optimizer_variable_type_matrix_matches_capabilities() -> None:
 
     report = build_inventory()
     matrix = report["optimizer_variable_type_matrix"]
-    assert report["schema_version"] == 6
+    assert report["schema_version"] == 7
     assert set(matrix) == set(OPTIMIZER_CAPABILITIES) | set(report["specialized_optimizers"])
     for name, capabilities in OPTIMIZER_CAPABILITIES.items():
         entry = matrix[name]
@@ -294,3 +294,33 @@ def test_acquisition_variable_type_coverage_keeps_runtime_scope() -> None:
                     "runtime_verified_scoped" if result["runtime_verified"] else "declared_only"
                 )
             assert entry["continuous"] == expected_continuous
+
+
+def test_variable_type_gap_queue_matches_coverage() -> None:
+    report = build_inventory()
+    coverage = report["acquisition_variable_type_coverage"]
+    queue = report["variable_type_gap_queue"]
+    expected = [
+        (
+            acquisition_name,
+            optimizer_name,
+            variable_type,
+            entry[variable_type],
+        )
+        for acquisition_name, optimizer_results in coverage.items()
+        for optimizer_name, entry in optimizer_results.items()
+        for variable_type in ("continuous", "integer", "categorical", "mixed")
+        if entry[variable_type] != "runtime_verified_scoped"
+    ]
+    actual = [
+        (
+            item["acquisition"],
+            item["optimizer"],
+            item["variable_type"],
+            item["status"],
+        )
+        for item in queue
+    ]
+    assert actual == expected
+    assert all(item["optimizer_path_type"] in ("dispatcher", "specialized") for item in queue)
+    assert all(item["status"] != "runtime_verified_scoped" for item in queue)

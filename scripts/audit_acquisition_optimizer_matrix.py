@@ -251,10 +251,26 @@ def build_inventory() -> dict[str, Any]:
                 "acquisition_optimizer_status": result["status"],
                 "optimizer_path_type": variable_types["path_type"],
             }
+    variable_type_gap_queue = [
+        {
+            "acquisition": acquisition_name,
+            "optimizer": optimizer_name,
+            "variable_type": variable_type,
+            "status": status,
+            "optimizer_path_type": entry["optimizer_path_type"],
+            "acquisition_optimizer_status": entry["acquisition_optimizer_status"],
+        }
+        for acquisition_name, optimizer_results in acquisition_variable_type_coverage.items()
+        for optimizer_name, entry in optimizer_results.items()
+        for variable_type in ("continuous", "integer", "categorical", "mixed")
+        for status in [entry[variable_type]]
+        if status in ("declared_only", "declared_unverified", "not_declared")
+    ]
     return {
-        "schema_version": 6,
+        "schema_version": 7,
         "optimizer_variable_type_matrix": optimizer_variable_types,
         "acquisition_variable_type_coverage": acquisition_variable_type_coverage,
+        "variable_type_gap_queue": variable_type_gap_queue,
         "verification": "static_inventory_with_scoped_runtime_evidence",
         "acquisition_optimizer_coverage": {
             "total_pairs": total_pairs,
