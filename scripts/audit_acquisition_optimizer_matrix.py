@@ -41,6 +41,23 @@ def _serialize(value: Any) -> Any:
     return value
 
 
+# Runtime evidence is limited to the exact model, acquisition, backend, and q.
+# CMA-ES tests use a mocked solver and are not end-to-end solver evidence.
+_CLASSIFICATION_Q1_EVIDENCE = {
+    "random": "tests/acquisition/test_classification_random_search_runtime.py",
+    "ga": "tests/acquisition/test_classification_ga_runtime.py",
+}
+_CLASSIFICATION_Q1_ACQUISITIONS = frozenset(
+    {
+        "BALD",
+        "LatentStraddle",
+        "MarginUncertainty",
+        "PredictiveEntropy",
+        "ProbabilityVariance",
+    }
+)
+
+
 def build_inventory() -> dict[str, Any]:
     """Collect registered capabilities without claiming runtime support."""
     models = {
@@ -97,6 +114,15 @@ def build_inventory() -> dict[str, Any]:
         }
         for acquisition_name, entry in sorted(ACQUISITION_REGISTRY.items())
     }
+    for acquisition_name in _CLASSIFICATION_Q1_ACQUISITIONS:
+        for optimizer_name, test_path in _CLASSIFICATION_Q1_EVIDENCE.items():
+            result = acquisition_optimizer[acquisition_name][optimizer_name]
+            result["status"] = "verified_for_binary_single_task_gp_q1"
+            result["runtime_verified"] = True
+            result["evidence"] = [test_path]
+            result["reasons"] = [
+                "Verified only for BinarySingleTaskGPClassifier, q=1, unconstrained."
+            ]
     model_acquisition = {
         model_name: {
             acquisition_name: {
@@ -142,7 +168,7 @@ def build_inventory() -> dict[str, Any]:
         ],
         "limitations": [
             "Registry membership does not establish runtime compatibility.",
-            "Acquisition-optimizer status is conservative and does not imply support.",
+            "Acquisition-optimizer evidence applies only to its stated model and test scope.",
             "One-shot paths require separate verification; q=1 does not remove this need.",
             "Specialized paths and composition factories require separate validation.",
             "No model-acquisition-optimizer triple is marked supported by this report.",
