@@ -334,14 +334,11 @@ def test_gap_triage_partitions_queue_without_claiming_support() -> None:
         "runtime_validation_candidates",
         "specialized_path_review",
     }
-    assert report["gap_triage_counts"] == {
-        name: len(items) for name, items in triage.items()
-    }
+    assert report["gap_triage_counts"] == {name: len(items) for name, items in triage.items()}
     queue = report["variable_type_gap_queue"]
     assert sum(report["gap_triage_counts"].values()) == len(queue)
     assert all(
-        item["status"] == "not_declared"
-        for item in triage["capability_extension_candidates"]
+        item["status"] == "not_declared" for item in triage["capability_extension_candidates"]
     )
     assert all(
         item["status"] in ("declared_only", "declared_unverified")
@@ -360,9 +357,5 @@ def test_gap_triage_partitions_queue_without_claiming_support() -> None:
         else:
             group = "runtime_validation_candidates"
         expected.append((group, item))
-    actual = [
-        (group, item)
-        for group, items in triage.items()
-        for item in items
-    ]
+    actual = [(group, item) for group, items in triage.items() for item in items]
     assert sorted(actual, key=str) == sorted(expected, key=str)
