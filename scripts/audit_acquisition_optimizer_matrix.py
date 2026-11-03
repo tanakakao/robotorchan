@@ -178,6 +178,22 @@ def build_inventory() -> dict[str, Any]:
         for optimizer_name, result in optimizer_results.items()
         if result["runtime_verified"]
     ]
+    unverified_pairs = [
+        {
+            "acquisition": acquisition_name,
+            "optimizer": optimizer_name,
+            "triage_group": (
+                "specialized_path"
+                if result["status"] == "requires_specialized_path"
+                else "classification_existing_model"
+                if acquisition_name in _CLASSIFICATION_Q1_ACQUISITIONS
+                else "other_acquisitions"
+            ),
+        }
+        for acquisition_name, optimizer_results in acquisition_optimizer.items()
+        for optimizer_name, result in optimizer_results.items()
+        if not result["runtime_verified"]
+    ]
     total_pairs = sum(len(results) for results in acquisition_optimizer.values())
     return {
         "schema_version": 4,
@@ -186,6 +202,7 @@ def build_inventory() -> dict[str, Any]:
             "total_pairs": total_pairs,
             "scoped_runtime_verified_pairs": len(verified_pairs),
             "unverified_or_specialized_pairs": total_pairs - len(verified_pairs),
+            "unverified_pairs": unverified_pairs,
             "verified_pairs": [
                 {"acquisition": acquisition_name, "optimizer": optimizer_name}
                 for acquisition_name, optimizer_name in verified_pairs
