@@ -266,11 +266,27 @@ def build_inventory() -> dict[str, Any]:
         for status in [entry[variable_type]]
         if status in ("declared_only", "declared_unverified", "not_declared")
     ]
+    gap_triage = {
+        "runtime_validation_candidates": [],
+        "capability_extension_candidates": [],
+        "specialized_path_review": [],
+    }
+    for item in variable_type_gap_queue:
+        if item["acquisition_optimizer_status"] == "requires_specialized_path":
+            group = "specialized_path_review"
+        elif item["status"] == "not_declared":
+            group = "capability_extension_candidates"
+        else:
+            group = "runtime_validation_candidates"
+        gap_triage[group].append(item)
+    gap_triage_counts = {name: len(items) for name, items in gap_triage.items()}
     return {
-        "schema_version": 7,
+        "schema_version": 8,
         "optimizer_variable_type_matrix": optimizer_variable_types,
         "acquisition_variable_type_coverage": acquisition_variable_type_coverage,
         "variable_type_gap_queue": variable_type_gap_queue,
+        "gap_triage": gap_triage,
+        "gap_triage_counts": gap_triage_counts,
         "verification": "static_inventory_with_scoped_runtime_evidence",
         "acquisition_optimizer_coverage": {
             "total_pairs": total_pairs,
