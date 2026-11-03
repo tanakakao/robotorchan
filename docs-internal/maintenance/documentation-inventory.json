@@ -7164,6 +7164,11 @@
       "reason": "責務別の入口または理論と実装を接続する学習文書。"
     },
     {
+      "path": "docs/development/acquisition-optimizer-compatibility-handoff.md",
+      "category": "Engineering",
+      "reason": "Acquisition-optimizer compatibility audit handoff and scoped verification workflow."
+    },
+    {
       "path": "docs/development/architecture.md",
       "category": "Guide",
       "reason": "責務別の入口または理論と実装を接続する学習文書。"
