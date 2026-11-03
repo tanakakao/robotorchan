@@ -207,6 +207,20 @@ def build_inventory() -> dict[str, Any]:
                 for acquisition_name, optimizer_name in verified_pairs
             ],
         },
+        "external_botorch_acquisition_runtime_evidence": {
+            acquisition_name: {
+                optimizer_name: {
+                    "status": "verified_for_single_task_gp_q1",
+                    "runtime_verified": True,
+                    "evidence": [
+                        "tests/optim/integration/test_optimizer_model_acquisition_e2e.py"
+                    ],
+                    "scope": "SingleTaskGP, q=1, unconstrained, continuous",
+                }
+                for optimizer_name in ("botorch", "ga", "pso", "sobol")
+            }
+            for acquisition_name in ("ExpectedImprovement", "UpperConfidenceBound")
+        },
         "models": dict(sorted(models.items())),
         "model_acquisition_static": model_acquisition,
         "classification_acquisition_static": classification_acquisition,
@@ -226,7 +240,8 @@ def build_inventory() -> dict[str, Any]:
             "Acquisition-optimizer evidence applies only to its stated model and test scope.",
             "One-shot paths require separate verification; q=1 does not remove this need.",
             "Specialized paths and composition factories require separate validation.",
-            "No model-acquisition-optimizer triple is marked supported by this report.",
+            "Registry matrix does not mark model-acquisition-optimizer triples supported.",
+            "External BoTorch acquisition evidence is separate from registered acquisitions.",
             "Classification pairs use capability metadata only, not runtime posterior checks.",
         ],
     }
