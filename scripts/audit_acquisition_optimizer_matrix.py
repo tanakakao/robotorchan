@@ -133,6 +133,23 @@ def build_inventory() -> dict[str, Any]:
     botorch_result["reasons"] = [
         "Verified only for BinarySingleTaskGPClassifier, q=1, unconstrained."
     ]
+    for optimizer_name in ("torch_adam", "torch_adamw", "torch_sgd"):
+        result = acquisition_optimizer["PredictiveEntropy"][optimizer_name]
+        result["status"] = "verified_for_binary_single_task_gp_q1"
+        result["runtime_verified"] = True
+        result["evidence"] = [
+            "tests/acquisition/test_classification_torch_optimizer_runtime.py"
+        ]
+        result["reasons"] = [
+            "Verified only for BinarySingleTaskGPClassifier, q=1, unconstrained."
+        ]
+    hybrid_result = acquisition_optimizer["PredictiveEntropy"]["hybrid"]
+    hybrid_result["status"] = "verified_for_binary_single_task_gp_q1"
+    hybrid_result["runtime_verified"] = True
+    hybrid_result["evidence"] = ["tests/acquisition/test_classification_hybrid_runtime.py"]
+    hybrid_result["reasons"] = [
+        "Verified only for BinarySingleTaskGPClassifier, q=1, unconstrained, DE global search."
+    ]
     model_acquisition = {
         model_name: {
             acquisition_name: {
