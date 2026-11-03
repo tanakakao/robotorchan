@@ -148,3 +148,20 @@ def test_torch_and_hybrid_q1_evidence_is_scoped_to_predictive_entropy() -> None:
         assert result["runtime_verified"] is True
         assert len(result["evidence"]) == 1
         assert matrix["BALD"][optimizer_name]["runtime_verified"] is False
+
+
+def test_runtime_evidence_coverage_counts_match_matrix() -> None:
+    report = build_inventory()
+    coverage = report["acquisition_optimizer_coverage"]
+    matrix = report["acquisition_optimizer_static"]
+    total = sum(len(results) for results in matrix.values())
+    verified = sum(
+        result["runtime_verified"]
+        for results in matrix.values()
+        for result in results.values()
+    )
+    assert coverage["total_pairs"] == total
+    assert coverage["scoped_runtime_verified_pairs"] == verified
+    assert coverage["unverified_or_specialized_pairs"] == total - verified
+    assert len(coverage["verified_pairs"]) == verified
+    assert report["verification"] == "static_inventory_with_scoped_runtime_evidence"
