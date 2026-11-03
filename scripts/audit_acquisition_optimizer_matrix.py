@@ -154,9 +154,7 @@ def build_inventory() -> dict[str, Any]:
             result = acquisition_optimizer[acquisition_name][optimizer_name]
             result["status"] = "verified_for_single_task_gp_q1"
             result["runtime_verified"] = True
-            result["evidence"] = [
-                "tests/optim/integration/test_optimizer_model_acquisition_e2e.py"
-            ]
+            result["evidence"] = ["tests/optim/integration/test_optimizer_model_acquisition_e2e.py"]
             result["reasons"] = ["Verified only for SingleTaskGP, q=1, continuous, unconstrained."]
     model_acquisition = {
         model_name: {
