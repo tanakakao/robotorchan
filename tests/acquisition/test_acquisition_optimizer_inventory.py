@@ -9,6 +9,7 @@ assert _SPEC is not None and _SPEC.loader is not None
 _MODULE = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_MODULE)
 build_inventory = _MODULE.build_inventory
+build_summary = _MODULE.build_summary
 
 
 def test_inventory_covers_registered_public_metadata() -> None:
@@ -359,3 +360,20 @@ def test_gap_triage_partitions_queue_without_claiming_support() -> None:
         expected.append((group, item))
     actual = [(group, item) for group, items in triage.items() for item in items]
     assert sorted(actual, key=str) == sorted(expected, key=str)
+
+
+def test_audit_summary_preserves_variable_type_scope() -> None:
+    report = build_inventory()
+    summary = build_summary(report)
+    assert summary["schema_version"] == report["schema_version"]
+    assert summary["gap_triage_counts"] == report["gap_triage_counts"]
+    assert summary["limitations"] == report["limitations"]
+    assert "verified_pairs" not in summary["acquisition_optimizer_coverage"]
+    assert "unverified_pairs" not in summary["acquisition_optimizer_coverage"]
+    total_pairs = report["acquisition_optimizer_coverage"]["total_pairs"]
+    for variable_type in ("continuous", "integer", "categorical", "mixed"):
+        counts = summary["variable_type_status_counts"][variable_type]
+        assert sum(counts.values()) == total_pairs
+        if variable_type != "continuous":
+            assert counts["runtime_verified_scoped"] == 0
+        assert counts["runtime_verified_scoped"] >= 0
