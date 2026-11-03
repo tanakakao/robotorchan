@@ -158,6 +158,19 @@ def build_inventory() -> dict[str, Any]:
             result["runtime_verified"] = True
             result["evidence"] = ["tests/optim/integration/test_optimizer_model_acquisition_e2e.py"]
             result["reasons"] = ["Verified only for SingleTaskGP, q=1, continuous, unconstrained."]
+    for acquisition_name in (
+        "qLogExpectedHypervolumeImprovement",
+        "qLogNParEGO",
+        "qLogNoisyExpectedHypervolumeImprovement",
+    ):
+        for optimizer_name in ("botorch", "ga", "pso", "sobol"):
+            result = acquisition_optimizer[acquisition_name][optimizer_name]
+            result["status"] = "verified_for_model_list_gp_q1"
+            result["runtime_verified"] = True
+            result["evidence"] = ["tests/acquisition/test_multiobjective.py"]
+            result["reasons"] = [
+                "Verified only for two-output ModelListGP, q=1, continuous, unconstrained."
+            ]
     model_acquisition = {
         model_name: {
             acquisition_name: {
