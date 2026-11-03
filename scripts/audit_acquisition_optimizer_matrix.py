@@ -220,8 +220,22 @@ def build_inventory() -> dict[str, Any]:
         if not result["runtime_verified"]
     ]
     total_pairs = sum(len(results) for results in acquisition_optimizer.values())
+    optimizer_variable_types = {
+        name: {
+            "continuous": capabilities.continuous,
+            "integer": capabilities.integer,
+            "categorical": capabilities.categorical,
+            "mixed": capabilities.mixed,
+            "path_type": (
+                "specialized" if name in specialized_optimizers else "dispatcher"
+            ),
+            "verification": "declared_capability_not_runtime_evidence",
+        }
+        for name, capabilities in sorted(all_optimizers.items())
+    }
     return {
-        "schema_version": 4,
+        "schema_version": 5,
+        "optimizer_variable_type_matrix": optimizer_variable_types,
         "verification": "static_inventory_with_scoped_runtime_evidence",
         "acquisition_optimizer_coverage": {
             "total_pairs": total_pairs,
