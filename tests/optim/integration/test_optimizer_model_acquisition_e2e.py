@@ -5,9 +5,9 @@ import torch
 from botorch.acquisition.analytic import ExpectedImprovement, UpperConfidenceBound
 from botorch.acquisition.logei import qLogExpectedImprovement
 from botorch.acquisition.monte_carlo import qSimpleRegret, qUpperConfidenceBound
-from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.fit import fit_gpytorch_mll
 from botorch.models import SingleTaskGP
+from botorch.sampling.normal import SobolQMCNormalSampler
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.optim.backends import (
