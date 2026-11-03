@@ -82,3 +82,27 @@ def test_inventory_covers_specialized_optimizer_capabilities() -> None:
     assert asdict(NSGA2_OPTIMIZER_CAPABILITIES)["q_batch"] is False
     assert BOTORCH_MIXED_OPTIMIZER_CAPABILITIES.mixed
     assert MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES.mixed
+
+
+def test_acquisition_optimizer_matrix_is_conservative_and_complete() -> None:
+    from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
+    from robotorchan.optim.capabilities import OPTIMIZER_CAPABILITIES
+
+    report = build_inventory()
+    matrix = report["acquisition_optimizer_static"]
+    expected_optimizers = set(OPTIMIZER_CAPABILITIES) | set(
+        report["specialized_optimizers"]
+    )
+    assert set(matrix) == set(ACQUISITION_REGISTRY)
+    for acquisition_name, optimizers in matrix.items():
+        assert set(optimizers) == expected_optimizers
+        for result in optimizers.values():
+            assert result["status"] in {"unverified", "requires_specialized_path"}
+            assert result["runtime_verified"] is False
+            assert isinstance(result["optimizer_requires_grad"], bool)
+            assert isinstance(result["reasons"], list)
+        if ACQUISITION_REGISTRY[acquisition_name].capabilities.one_shot:
+            assert all(
+                result["status"] == "requires_specialized_path"
+                for result in optimizers.values()
+            )
