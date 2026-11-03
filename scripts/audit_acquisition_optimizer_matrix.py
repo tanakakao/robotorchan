@@ -129,9 +129,7 @@ def build_inventory() -> dict[str, Any]:
     botorch_result = acquisition_optimizer["PredictiveEntropy"]["botorch"]
     botorch_result["status"] = "verified_for_binary_single_task_gp_q1"
     botorch_result["runtime_verified"] = True
-    botorch_result["evidence"] = [
-        "tests/acquisition/test_classification_acqf_optimizer_smoke.py"
-    ]
+    botorch_result["evidence"] = ["tests/acquisition/test_classification_acqf_optimizer_smoke.py"]
     botorch_result["reasons"] = [
         "Verified only for BinarySingleTaskGPClassifier, q=1, unconstrained."
     ]
