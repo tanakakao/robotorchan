@@ -46,6 +46,9 @@ def _serialize(value: Any) -> Any:
 _CLASSIFICATION_Q1_EVIDENCE = {
     "random": "tests/acquisition/test_classification_random_search_runtime.py",
     "ga": "tests/acquisition/test_classification_ga_runtime.py",
+    "de": "tests/acquisition/test_classification_de_runtime.py",
+    "pso": "tests/acquisition/test_classification_pso_runtime.py",
+    "sobol": "tests/acquisition/test_classification_sobol_search_runtime.py",
 }
 _CLASSIFICATION_Q1_ACQUISITIONS = frozenset(
     {
@@ -123,6 +126,15 @@ def build_inventory() -> dict[str, Any]:
             result["reasons"] = [
                 "Verified only for BinarySingleTaskGPClassifier, q=1, unconstrained."
             ]
+    botorch_result = acquisition_optimizer["PredictiveEntropy"]["botorch"]
+    botorch_result["status"] = "verified_for_binary_single_task_gp_q1"
+    botorch_result["runtime_verified"] = True
+    botorch_result["evidence"] = [
+        "tests/acquisition/test_classification_acqf_optimizer_smoke.py"
+    ]
+    botorch_result["reasons"] = [
+        "Verified only for BinarySingleTaskGPClassifier, q=1, unconstrained."
+    ]
     model_acquisition = {
         model_name: {
             acquisition_name: {
