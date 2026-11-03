@@ -75,6 +75,30 @@ def build_inventory() -> dict[str, Any]:
         "optimize_acqf_mixed_ga": MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
         "optimize_vector_nsga2": NSGA2_OPTIMIZER_CAPABILITIES,
     }
+    all_optimizers = {
+        **OPTIMIZER_CAPABILITIES,
+        **specialized_optimizers,
+    }
+    acquisition_optimizer = {
+        acquisition_name: {
+            optimizer_name: {
+                "status": (
+                    "requires_specialized_path"
+                    if entry.capabilities.one_shot
+                    else "unverified"
+                ),
+                "reasons": (
+                    ["One-shot acquisition requires a specialized optimization path."]
+                    if entry.capabilities.one_shot
+                    else []
+                ),
+                "optimizer_requires_grad": capabilities.requires_grad,
+                "runtime_verified": False,
+            }
+            for optimizer_name, capabilities in sorted(all_optimizers.items())
+        }
+        for acquisition_name, entry in sorted(ACQUISITION_REGISTRY.items())
+    }
     model_acquisition = {
         model_name: {
             acquisition_name: {
@@ -108,6 +132,7 @@ def build_inventory() -> dict[str, Any]:
         "model_acquisition_static": model_acquisition,
         "classification_acquisition_static": classification_acquisition,
         "acquisitions": acquisitions,
+        "acquisition_optimizer_static": acquisition_optimizer,
         "optimizers": optimizers,
         "specialized_optimizers": {
             name: _serialize(asdict(capabilities))
@@ -119,6 +144,8 @@ def build_inventory() -> dict[str, Any]:
         ],
         "limitations": [
             "Registry membership does not establish runtime compatibility.",
+            "Acquisition-optimizer status is conservative and does not imply support.",
+            "One-shot paths require separate verification; q=1 does not remove this need.",
             "Specialized paths and composition factories require separate validation.",
             "No model-acquisition-optimizer triple is marked supported by this report.",
             "Classification pairs use capability metadata only, not runtime posterior checks.",
