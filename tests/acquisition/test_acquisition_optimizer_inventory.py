@@ -216,6 +216,8 @@ def test_registered_regression_q1_runtime_evidence_is_scoped() -> None:
     matrix = report["acquisition_optimizer_static"]
     for acquisition_name in (
         "qLogExpectedImprovement",
+        "qLogNoisyExpectedImprovement",
+        "qProbabilityOfImprovement",
         "qSimpleRegret",
         "qUpperConfidenceBound",
     ):

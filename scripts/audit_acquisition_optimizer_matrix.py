@@ -147,6 +147,8 @@ def build_inventory() -> dict[str, Any]:
     ]
     for acquisition_name in (
         "qLogExpectedImprovement",
+        "qLogNoisyExpectedImprovement",
+        "qProbabilityOfImprovement",
         "qSimpleRegret",
         "qUpperConfidenceBound",
     ):
