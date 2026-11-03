@@ -145,6 +145,17 @@ def build_inventory() -> dict[str, Any]:
     hybrid_result["reasons"] = [
         "Verified only for BinarySingleTaskGPClassifier, q=1, unconstrained, DE global search."
     ]
+    for acquisition_name in (
+        "qLogExpectedImprovement",
+        "qSimpleRegret",
+        "qUpperConfidenceBound",
+    ):
+        for optimizer_name in ("botorch", "ga", "pso", "sobol"):
+            result = acquisition_optimizer[acquisition_name][optimizer_name]
+            result["status"] = "verified_for_single_task_gp_q1"
+            result["runtime_verified"] = True
+            result["evidence"] = ["tests/optim/integration/test_optimizer_model_acquisition_e2e.py"]
+            result["reasons"] = ["Verified only for SingleTaskGP, q=1, continuous, unconstrained."]
     model_acquisition = {
         model_name: {
             acquisition_name: {
