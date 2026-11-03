@@ -257,7 +257,7 @@ def test_optimizer_variable_type_matrix_matches_capabilities() -> None:
 
     report = build_inventory()
     matrix = report["optimizer_variable_type_matrix"]
-    assert report["schema_version"] == 5
+    assert report["schema_version"] == 6
     assert set(matrix) == set(OPTIMIZER_CAPABILITIES) | set(report["specialized_optimizers"])
     for name, capabilities in OPTIMIZER_CAPABILITIES.items():
         entry = matrix[name]
@@ -270,3 +270,27 @@ def test_optimizer_variable_type_matrix_matches_capabilities() -> None:
         assert entry["path_type"] == "specialized"
         for variable_type in ("continuous", "integer", "categorical", "mixed"):
             assert entry[variable_type] == capabilities[variable_type]
+
+
+def test_acquisition_variable_type_coverage_keeps_runtime_scope() -> None:
+    report = build_inventory()
+    coverage = report["acquisition_variable_type_coverage"]
+    matrix = report["acquisition_optimizer_static"]
+    variable_types = report["optimizer_variable_type_matrix"]
+    assert set(coverage) == set(matrix)
+    for acquisition_name, optimizer_results in matrix.items():
+        assert set(coverage[acquisition_name]) == set(optimizer_results)
+        for optimizer_name, result in optimizer_results.items():
+            entry = coverage[acquisition_name][optimizer_name]
+            declared = variable_types[optimizer_name]
+            assert entry["acquisition_optimizer_status"] == result["status"]
+            assert entry["optimizer_path_type"] == declared["path_type"]
+            for variable_type in ("integer", "categorical", "mixed"):
+                expected = "declared_unverified" if declared[variable_type] else "not_declared"
+                assert entry[variable_type] == expected
+            expected_continuous = "not_declared"
+            if declared["continuous"]:
+                expected_continuous = (
+                    "runtime_verified_scoped" if result["runtime_verified"] else "declared_only"
+                )
+            assert entry["continuous"] == expected_continuous
