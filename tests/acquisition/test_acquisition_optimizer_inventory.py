@@ -90,9 +90,7 @@ def test_acquisition_optimizer_matrix_is_conservative_and_complete() -> None:
 
     report = build_inventory()
     matrix = report["acquisition_optimizer_static"]
-    expected_optimizers = set(OPTIMIZER_CAPABILITIES) | set(
-        report["specialized_optimizers"]
-    )
+    expected_optimizers = set(OPTIMIZER_CAPABILITIES) | set(report["specialized_optimizers"])
     assert set(matrix) == set(ACQUISITION_REGISTRY)
     for acquisition_name, optimizers in matrix.items():
         assert set(optimizers) == expected_optimizers
@@ -103,6 +101,5 @@ def test_acquisition_optimizer_matrix_is_conservative_and_complete() -> None:
             assert isinstance(result["reasons"], list)
         if ACQUISITION_REGISTRY[acquisition_name].capabilities.one_shot:
             assert all(
-                result["status"] == "requires_specialized_path"
-                for result in optimizers.values()
+                result["status"] == "requires_specialized_path" for result in optimizers.values()
             )
