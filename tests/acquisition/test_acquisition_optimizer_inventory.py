@@ -138,3 +138,13 @@ def test_botorch_q1_evidence_is_predictive_entropy_only() -> None:
     assert verified["runtime_verified"] is True
     assert verified["evidence"] == ["tests/acquisition/test_classification_acqf_optimizer_smoke.py"]
     assert matrix["BALD"]["botorch"]["runtime_verified"] is False
+
+
+def test_torch_and_hybrid_q1_evidence_is_scoped_to_predictive_entropy() -> None:
+    matrix = build_inventory()["acquisition_optimizer_static"]
+    for optimizer_name in ("hybrid", "torch_adam", "torch_adamw", "torch_sgd"):
+        result = matrix["PredictiveEntropy"][optimizer_name]
+        assert result["status"] == "verified_for_binary_single_task_gp_q1"
+        assert result["runtime_verified"] is True
+        assert len(result["evidence"]) == 1
+        assert matrix["BALD"][optimizer_name]["runtime_verified"] is False
