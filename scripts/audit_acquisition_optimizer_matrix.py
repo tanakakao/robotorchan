@@ -137,12 +137,8 @@ def build_inventory() -> dict[str, Any]:
         result = acquisition_optimizer["PredictiveEntropy"][optimizer_name]
         result["status"] = "verified_for_binary_single_task_gp_q1"
         result["runtime_verified"] = True
-        result["evidence"] = [
-            "tests/acquisition/test_classification_torch_optimizer_runtime.py"
-        ]
-        result["reasons"] = [
-            "Verified only for BinarySingleTaskGPClassifier, q=1, unconstrained."
-        ]
+        result["evidence"] = ["tests/acquisition/test_classification_torch_optimizer_runtime.py"]
+        result["reasons"] = ["Verified only for BinarySingleTaskGPClassifier, q=1, unconstrained."]
     hybrid_result = acquisition_optimizer["PredictiveEntropy"]["hybrid"]
     hybrid_result["status"] = "verified_for_binary_single_task_gp_q1"
     hybrid_result["runtime_verified"] = True
