@@ -250,3 +250,23 @@ def test_multiobjective_q1_evidence_is_scoped() -> None:
             assert result["runtime_verified"]
             assert result["evidence"] == ["tests/acquisition/test_multiobjective.py"]
             assert "ModelListGP" in result["reasons"][0]
+
+
+def test_optimizer_variable_type_matrix_matches_capabilities() -> None:
+    from robotorchan.optim.capabilities import OPTIMIZER_CAPABILITIES
+
+    report = build_inventory()
+    matrix = report["optimizer_variable_type_matrix"]
+    assert report["schema_version"] == 5
+    assert set(matrix) == set(OPTIMIZER_CAPABILITIES) | set(report["specialized_optimizers"])
+    for name, capabilities in OPTIMIZER_CAPABILITIES.items():
+        entry = matrix[name]
+        assert entry["path_type"] == "dispatcher"
+        for variable_type in ("continuous", "integer", "categorical", "mixed"):
+            assert entry[variable_type] == getattr(capabilities, variable_type)
+        assert entry["verification"] == "declared_capability_not_runtime_evidence"
+    for name, capabilities in report["specialized_optimizers"].items():
+        entry = matrix[name]
+        assert entry["path_type"] == "specialized"
+        for variable_type in ("continuous", "integer", "categorical", "mixed"):
+            assert entry[variable_type] == capabilities[variable_type]
