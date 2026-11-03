@@ -192,3 +192,18 @@ def test_unverified_triage_covers_exactly_remaining_pairs() -> None:
         "other_acquisitions",
         "specialized_path",
     }
+
+
+def test_external_regression_evidence_is_separate_from_registered_matrix() -> None:
+    report = build_inventory()
+    evidence = report["external_botorch_acquisition_runtime_evidence"]
+    assert set(evidence) == {"ExpectedImprovement", "UpperConfidenceBound"}
+    for results in evidence.values():
+        assert set(results) == {"botorch", "ga", "pso", "sobol"}
+        assert all(result["runtime_verified"] for result in results.values())
+        assert all(
+            result["evidence"]
+            == ["tests/optim/integration/test_optimizer_model_acquisition_e2e.py"]
+            for result in results.values()
+        )
+    assert set(report["acquisition_optimizer_static"]) == set(report["acquisitions"])
