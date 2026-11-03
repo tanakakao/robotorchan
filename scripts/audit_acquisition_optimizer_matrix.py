@@ -243,9 +243,7 @@ def build_inventory() -> dict[str, Any]:
                 )
             acquisition_variable_type_coverage[acquisition_name][optimizer_name] = {
                 "continuous": continuous_status,
-                "integer": (
-                    "declared_unverified" if variable_types["integer"] else "not_declared"
-                ),
+                "integer": ("declared_unverified" if variable_types["integer"] else "not_declared"),
                 "categorical": (
                     "declared_unverified" if variable_types["categorical"] else "not_declared"
                 ),
