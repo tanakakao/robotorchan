@@ -100,10 +100,15 @@ def test_acquisition_optimizer_matrix_is_conservative_and_complete() -> None:
                 "requires_specialized_path",
                 "verified_for_binary_single_task_gp_q1",
                 "verified_for_single_task_gp_q1",
+                "verified_for_model_list_gp_q1",
             }
             assert result["runtime_verified"] == (
                 result["status"]
-                in {"verified_for_binary_single_task_gp_q1", "verified_for_single_task_gp_q1"}
+                in {
+                    "verified_for_binary_single_task_gp_q1",
+                    "verified_for_model_list_gp_q1",
+                    "verified_for_single_task_gp_q1",
+                }
             )
             assert isinstance(result["optimizer_requires_grad"], bool)
             assert isinstance(result["reasons"], list)
@@ -229,3 +234,19 @@ def test_registered_regression_q1_runtime_evidence_is_scoped() -> None:
                 "tests/optim/integration/test_optimizer_model_acquisition_e2e.py"
             ]
             assert "SingleTaskGP" in result["reasons"][0]
+
+
+def test_multiobjective_q1_evidence_is_scoped() -> None:
+    report = build_inventory()
+    matrix = report["acquisition_optimizer_static"]
+    for acquisition_name in (
+        "qLogExpectedHypervolumeImprovement",
+        "qLogNParEGO",
+        "qLogNoisyExpectedHypervolumeImprovement",
+    ):
+        for optimizer_name in ("botorch", "ga", "pso", "sobol"):
+            result = matrix[acquisition_name][optimizer_name]
+            assert result["status"] == "verified_for_model_list_gp_q1"
+            assert result["runtime_verified"]
+            assert result["evidence"] == ["tests/acquisition/test_multiobjective.py"]
+            assert "ModelListGP" in result["reasons"][0]
