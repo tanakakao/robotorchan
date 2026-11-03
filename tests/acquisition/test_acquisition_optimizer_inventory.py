@@ -99,9 +99,11 @@ def test_acquisition_optimizer_matrix_is_conservative_and_complete() -> None:
                 "unverified",
                 "requires_specialized_path",
                 "verified_for_binary_single_task_gp_q1",
+                "verified_for_single_task_gp_q1",
             }
             assert result["runtime_verified"] == (
-                result["status"] == "verified_for_binary_single_task_gp_q1"
+                result["status"]
+                in {"verified_for_binary_single_task_gp_q1", "verified_for_single_task_gp_q1"}
             )
             assert isinstance(result["optimizer_requires_grad"], bool)
             assert isinstance(result["reasons"], list)
