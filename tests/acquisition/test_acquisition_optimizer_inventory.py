@@ -257,7 +257,7 @@ def test_optimizer_variable_type_matrix_matches_capabilities() -> None:
 
     report = build_inventory()
     matrix = report["optimizer_variable_type_matrix"]
-    assert report["schema_version"] == 7
+    assert report["schema_version"] == 8
     assert set(matrix) == set(OPTIMIZER_CAPABILITIES) | set(report["specialized_optimizers"])
     for name, capabilities in OPTIMIZER_CAPABILITIES.items():
         entry = matrix[name]
@@ -324,3 +324,38 @@ def test_variable_type_gap_queue_matches_coverage() -> None:
     assert actual == expected
     assert all(item["optimizer_path_type"] in ("dispatcher", "specialized") for item in queue)
     assert all(item["status"] != "runtime_verified_scoped" for item in queue)
+
+
+def test_gap_triage_partitions_queue_without_claiming_support() -> None:
+    report = build_inventory()
+    triage = report["gap_triage"]
+    assert set(triage) == {
+        "capability_extension_candidates",
+        "runtime_validation_candidates",
+        "specialized_path_review",
+    }
+    assert report["gap_triage_counts"] == {name: len(items) for name, items in triage.items()}
+    queue = report["variable_type_gap_queue"]
+    assert sum(report["gap_triage_counts"].values()) == len(queue)
+    assert all(
+        item["status"] == "not_declared" for item in triage["capability_extension_candidates"]
+    )
+    assert all(
+        item["status"] in ("declared_only", "declared_unverified")
+        for item in triage["runtime_validation_candidates"]
+    )
+    assert all(
+        item["acquisition_optimizer_status"] == "requires_specialized_path"
+        for item in triage["specialized_path_review"]
+    )
+    expected = []
+    for item in queue:
+        if item["acquisition_optimizer_status"] == "requires_specialized_path":
+            group = "specialized_path_review"
+        elif item["status"] == "not_declared":
+            group = "capability_extension_candidates"
+        else:
+            group = "runtime_validation_candidates"
+        expected.append((group, item))
+    actual = [(group, item) for group, items in triage.items() for item in items]
+    assert sorted(actual, key=str) == sorted(expected, key=str)
