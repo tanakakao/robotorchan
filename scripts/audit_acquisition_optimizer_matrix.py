@@ -231,38 +231,28 @@ def build_inventory() -> dict[str, Any]:
         }
         for name, capabilities in sorted(all_optimizers.items())
     }
-    acquisition_variable_type_coverage = {
-        acquisition_name: {
-            optimizer_name: {
-                "continuous": (
-                    "runtime_verified_scoped"
-                    if result["runtime_verified"] and optimizer_variable_types[optimizer_name]["continuous"]
-                    else "declared_only"
-                    if optimizer_variable_types[optimizer_name]["continuous"]
-                    else "not_declared"
-                ),
+    acquisition_variable_type_coverage = {}
+    for acquisition_name, optimizer_results in sorted(acquisition_optimizer.items()):
+        acquisition_variable_type_coverage[acquisition_name] = {}
+        for optimizer_name, result in sorted(optimizer_results.items()):
+            variable_types = optimizer_variable_types[optimizer_name]
+            continuous_status = "not_declared"
+            if variable_types["continuous"]:
+                continuous_status = (
+                    "runtime_verified_scoped" if result["runtime_verified"] else "declared_only"
+                )
+            acquisition_variable_type_coverage[acquisition_name][optimizer_name] = {
+                "continuous": continuous_status,
                 "integer": (
-                    "declared_unverified"
-                    if optimizer_variable_types[optimizer_name]["integer"]
-                    else "not_declared"
+                    "declared_unverified" if variable_types["integer"] else "not_declared"
                 ),
                 "categorical": (
-                    "declared_unverified"
-                    if optimizer_variable_types[optimizer_name]["categorical"]
-                    else "not_declared"
+                    "declared_unverified" if variable_types["categorical"] else "not_declared"
                 ),
-                "mixed": (
-                    "declared_unverified"
-                    if optimizer_variable_types[optimizer_name]["mixed"]
-                    else "not_declared"
-                ),
+                "mixed": "declared_unverified" if variable_types["mixed"] else "not_declared",
                 "acquisition_optimizer_status": result["status"],
-                "optimizer_path_type": optimizer_variable_types[optimizer_name]["path_type"],
+                "optimizer_path_type": variable_types["path_type"],
             }
-            for optimizer_name, result in sorted(optimizer_results.items())
-        }
-        for acquisition_name, optimizer_results in sorted(acquisition_optimizer.items())
-    }
     return {
         "schema_version": 6,
         "optimizer_variable_type_matrix": optimizer_variable_types,
