@@ -156,9 +156,7 @@ def test_runtime_evidence_coverage_counts_match_matrix() -> None:
     matrix = report["acquisition_optimizer_static"]
     total = sum(len(results) for results in matrix.values())
     verified = sum(
-        result["runtime_verified"]
-        for results in matrix.values()
-        for result in results.values()
+        result["runtime_verified"] for results in matrix.values() for result in results.values()
     )
     assert coverage["total_pairs"] == total
     assert coverage["scoped_runtime_verified_pairs"] == verified
