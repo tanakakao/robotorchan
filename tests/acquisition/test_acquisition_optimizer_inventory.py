@@ -122,7 +122,7 @@ def test_classification_q1_evidence_is_scoped_to_verified_pairs() -> None:
         "ProbabilityVariance",
     }
     for acquisition_name in acquisitions:
-        for optimizer_name in ("ga", "random"):
+        for optimizer_name in ("de", "ga", "pso", "random", "sobol"):
             result = matrix[acquisition_name][optimizer_name]
             assert result["status"] == "verified_for_binary_single_task_gp_q1"
             assert result["runtime_verified"] is True
@@ -130,3 +130,13 @@ def test_classification_q1_evidence_is_scoped_to_verified_pairs() -> None:
             assert result["evidence"][0].startswith("tests/acquisition/")
     assert matrix["BALD"]["cmaes"]["runtime_verified"] is False
     assert matrix["qKnowledgeGradient"]["ga"]["runtime_verified"] is False
+
+
+def test_botorch_q1_evidence_is_predictive_entropy_only() -> None:
+    matrix = build_inventory()["acquisition_optimizer_static"]
+    verified = matrix["PredictiveEntropy"]["botorch"]
+    assert verified["runtime_verified"] is True
+    assert verified["evidence"] == [
+        "tests/acquisition/test_classification_acqf_optimizer_smoke.py"
+    ]
+    assert matrix["BALD"]["botorch"]["runtime_verified"] is False
