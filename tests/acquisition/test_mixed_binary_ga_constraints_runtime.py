@@ -30,7 +30,7 @@ def test_mixed_binary_mixed_ga_linear_inequality() -> None:
             (
                 torch.tensor([0], dtype=torch.long),
                 torch.tensor([1.0], dtype=torch.double),
-                0.0,
+                0.25,
             ),
         ),
     )
@@ -50,5 +50,5 @@ def test_mixed_binary_mixed_ga_linear_inequality() -> None:
     assert torch.isfinite(candidates).all()
     assert torch.isfinite(value).all()
     assert ((candidates >= bounds[0]) & (candidates <= bounds[1])).all()
-    assert candidates[0, 0].item() >= 0.0
+    assert candidates[0, 0].item() >= 0.25
     assert candidates[0, 1].item() in (0.0, 1.0)
