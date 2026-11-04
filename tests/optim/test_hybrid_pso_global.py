@@ -52,8 +52,6 @@ def test_hybrid_forwards_mixed_space_to_pso_global_stage():
     assert global_backend.call_args.kwargs["variable_space"] is space
     assert global_backend.call_args.kwargs["seed"] == 17
     assert global_backend.call_args.kwargs["swarm_size"] == 8
-    assert local_backend.call_args.kwargs["fixed_features_list"] == [
-        {1: 2.0, 2: 30.0}
-    ]
+    assert local_backend.call_args.kwargs["fixed_features_list"] == [{1: 2.0, 2: 30.0}]
     torch.testing.assert_close(candidate, global_candidate)
     assert value.item() == 32.5
