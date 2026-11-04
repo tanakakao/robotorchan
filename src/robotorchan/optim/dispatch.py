@@ -18,12 +18,14 @@ from robotorchan.optim.backends.cmaes import optimize_acqf_cmaes
 from robotorchan.optim.backends.differential_evolution import optimize_acqf_de
 from robotorchan.optim.backends.genetic_algorithm import optimize_acqf_ga
 from robotorchan.optim.backends.hybrid import optimize_acqf_hybrid
+from robotorchan.optim.backends.mixed_cmaes import optimize_acqf_mixed_cmaes
 from robotorchan.optim.backends.mixed_genetic_algorithm import optimize_acqf_mixed_ga
 from robotorchan.optim.backends.pso import optimize_acqf_pso
 from robotorchan.optim.backends.sampling import optimize_acqf_sampling
 from robotorchan.optim.backends.torch import optimize_acqf_torch
 from robotorchan.optim.capabilities import (
     BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
+    MIXED_CMAES_OPTIMIZER_CAPABILITIES,
     MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
     OPTIMIZER_CAPABILITIES,
     get_optimizer_capabilities,
@@ -79,6 +81,8 @@ def optimize_acqf(
     has_discrete = variable_space is not None and bool(
         variable_space.integer_dims or variable_space.categorical_dims
     )
+    if name == "cmaes" and has_discrete:
+        capabilities = MIXED_CMAES_OPTIMIZER_CAPABILITIES
     if name == "ga" and has_discrete:
         capabilities = MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES
     if name == "botorch" and has_discrete:
@@ -241,6 +245,17 @@ def optimize_acqf(
             **backend_options,
         )
     if name == "cmaes":
+        if has_discrete:
+            return optimize_acqf_mixed_cmaes(
+                acq_function,
+                bounds,
+                q,
+                seed=seed,
+                constraints=constraints,
+                fixed_features=fixed_features,
+                variable_space=variable_space,
+                **backend_options,
+            )
         return optimize_acqf_cmaes(
             acq_function,
             bounds,
