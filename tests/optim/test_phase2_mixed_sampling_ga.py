@@ -30,9 +30,7 @@ def mixed_space():
 def test_mixed_optimizers_return_legal_joint_candidates(optimizer, q, mixed_space):
     bounds, space = mixed_space
     options = (
-        {"population_size": 24, "generations": 4}
-        if optimizer == "ga"
-        else {"num_samples": 64}
+        {"population_size": 24, "generations": 4} if optimizer == "ga" else {"num_samples": 64}
     )
     candidate, value = optimize_acqf(
         SumAcquisition(),
@@ -56,9 +54,7 @@ def test_mixed_optimizers_return_legal_joint_candidates(optimizer, q, mixed_spac
 def test_mixed_optimizers_are_seed_reproducible(optimizer, mixed_space):
     bounds, space = mixed_space
     options = (
-        {"population_size": 24, "generations": 4}
-        if optimizer == "ga"
-        else {"num_samples": 64}
+        {"population_size": 24, "generations": 4} if optimizer == "ga" else {"num_samples": 64}
     )
     kwargs = {
         "optimizer": optimizer,
@@ -76,9 +72,7 @@ def test_mixed_optimizers_are_seed_reproducible(optimizer, mixed_space):
 def test_mixed_optimizers_preserve_fixed_discrete_features(optimizer, mixed_space):
     bounds, space = mixed_space
     options = (
-        {"population_size": 24, "generations": 4}
-        if optimizer == "ga"
-        else {"num_samples": 64}
+        {"population_size": 24, "generations": 4} if optimizer == "ga" else {"num_samples": 64}
     )
     candidate, _ = optimize_acqf(
         SumAcquisition(),
