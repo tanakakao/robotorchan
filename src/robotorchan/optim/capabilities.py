@@ -215,6 +215,9 @@ HYBRID_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
         interpoint_nonlinear=ConstraintHandling.PENALTY,
     ),
     continuous=True,
+    integer=True,
+    categorical=True,
+    mixed=True,
     requires_grad=True,
     linear_inequality_constraints=True,
     linear_equality_constraints=True,
@@ -222,7 +225,7 @@ HYBRID_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     interpoint_nonlinear_constraints=True,
     q_batch=True,
     sequential=False,
-    fixed_features=False,
+    fixed_features=True,
     gpu=False,
     batch_evaluation=False,
 )
