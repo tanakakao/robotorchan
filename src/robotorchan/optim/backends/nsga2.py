@@ -274,7 +274,7 @@ def optimize_vector_nsga2_mixed(
             offspring, lower, upper, mutation_rate, mutation_scale, generator
         )
         offspring = _repair_mixed_nsga2(
-            offspring, variable_space, generator, resample=False
+            offspring, variable_space, generator, resample=False, mutation_rate=mutation_rate
         )
         combined = torch.cat([population, offspring], dim=0)
         combined_values = _evaluate(objective, combined)
@@ -290,6 +290,7 @@ def _repair_mixed_nsga2(
     generator: torch.Generator,
     *,
     resample: bool,
+    mutation_rate: float = 0.0,
 ) -> Tensor:
     """Map discrete coordinates to legal values without categorical distances."""
     population = population.clone()
@@ -320,12 +321,16 @@ def _repair_mixed_nsga2(
             )
             population[:, dim] = allowed[indices]
         else:
-            # Mutation is a categorical resampling event, not a numeric perturbation.
+            mutate = torch.rand(
+                population.shape[0], device=population.device, generator=generator
+            ) < mutation_rate
             indices = torch.randint(
                 allowed.numel(),
                 (population.shape[0],),
                 device=population.device,
                 generator=generator,
             )
-            population[:, dim] = allowed[indices]
+            population[:, dim] = torch.where(
+                mutate, allowed[indices], population[:, dim]
+            )
     return population
