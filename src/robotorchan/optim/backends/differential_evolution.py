@@ -38,8 +38,8 @@ def optimize_acqf_de(
     The joint ``q x d`` candidate batch is flattened into one DE decision
     vector. Acquisition evaluation is performed on the original tensor
     device and dtype. Integer coordinates are repaired before acquisition
-    and constraint evaluation. Unordered categorical coordinates are rejected
-    rather than assigned an artificial numeric geometry.
+    and constraint evaluation. Categorical coordinates are represented by
+    discrete indices internally and decoded before evaluation.
     """
     validate_bounds(bounds)
     if variable_space is not None:
@@ -54,18 +54,17 @@ def optimize_acqf_de(
         categorical_values = dict(categorical_values or {})
     integer_dims = tuple(integer_dims)
     _validate_structured_dims(integer_dims, categorical_values, bounds)
-    if categorical_values:
-        raise NotImplementedError(
-            "Differential Evolution does not support unordered categorical variables. "
-            "Use Mixed GA or a sampling backend instead."
-        )
     if q < 1:
         raise ValueError("q must be at least 1.")
     candidate_constraints = constraints or CandidateConstraints()
+    search_bounds = bounds.clone()
+    for dim, values in categorical_values.items():
+        search_bounds[0, dim] = 0
+        search_bounds[1, dim] = len(values) - 1
     scipy_bounds = list(
         zip(
-            bounds[0].detach().cpu().tolist() * q,
-            bounds[1].detach().cpu().tolist() * q,
+            search_bounds[0].detach().cpu().tolist() * q,
+            search_bounds[1].detach().cpu().tolist() * q,
             strict=True,
         )
     )
@@ -77,7 +76,7 @@ def optimize_acqf_de(
         candidate = torch.as_tensor(
             flat_candidate, dtype=bounds.dtype, device=bounds.device
         ).reshape(q, bounds.shape[-1])
-        candidate = _repair_structured_dims(candidate, integer_dims, categorical_values, bounds)
+        candidate = _decode_de_candidate(candidate, integer_dims, categorical_values, bounds)
         candidate = apply_fixed_features(candidate, fixed_features)
         with torch.no_grad():
             value = acq_function(candidate.unsqueeze(0))
@@ -117,7 +116,7 @@ def optimize_acqf_de(
         dtype=bounds.dtype,
         device=bounds.device,
     ).reshape(q, bounds.shape[-1])
-    candidates = _repair_structured_dims(candidates, integer_dims, categorical_values, bounds)
+    candidates = _decode_de_candidate(candidates, integer_dims, categorical_values, bounds)
     candidates = apply_fixed_features(candidates, fixed_features)
     with torch.no_grad():
         acquisition_value = acq_function(candidates.unsqueeze(0)).reshape(())
@@ -172,3 +171,18 @@ def _repair_structured_dims(
         distances = (result[..., dim, None] - legal_values).abs()
         result[..., dim] = legal_values[distances.argmin(dim=-1)]
     return result
+
+
+def _decode_de_candidate(
+    candidate: Tensor,
+    integer_dims: tuple[int, ...],
+    categorical_values: dict[int, Sequence[float]],
+    bounds: Tensor,
+) -> Tensor:
+    """Decode categorical index coordinates without using category-value distances."""
+    decoded = _repair_structured_dims(candidate, integer_dims, {}, bounds)
+    for dim, values in categorical_values.items():
+        legal = torch.as_tensor(values, dtype=decoded.dtype, device=decoded.device)
+        index = decoded[..., dim].round().long().clamp(0, len(values) - 1)
+        decoded[..., dim] = legal[index]
+    return decoded
