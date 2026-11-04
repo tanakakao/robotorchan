@@ -440,3 +440,38 @@ def test_interpoint_nonlinear_callable_receives_each_joint_q_batch() -> None:
     assert violation.shape == torch.Size([2])
     assert torch.all(violation == 0)
     assert seen_shapes == [torch.Size([2, 1]), torch.Size([2, 1])]
+
+
+def test_de_mixed_qbatch_constraints_receive_decoded_categories() -> None:
+    from robotorchan.optim.domains.variable_space import MixedVariableSpace
+
+    bounds = torch.tensor([[0.0, 0.0, 10.0], [1.0, 3.0, 90.0]], dtype=torch.double)
+    space = MixedVariableSpace(
+        bounds,
+        integer_dims=(1,),
+        categorical_values={2: (10.0, 30.0, 90.0)},
+    )
+    seen: list[Tensor] = []
+
+    def constraint(X: Tensor) -> Tensor:
+        assert X.shape == (2, 3)
+        assert torch.equal(X[:, 1], X[:, 1].round())
+        assert torch.all(torch.isin(X[:, 2], X.new_tensor([10.0, 30.0, 90.0])))
+        seen.append(X.clone())
+        return X.new_tensor(1.0)
+
+    constraints = CandidateConstraints(nonlinear_inequality_constraints=((constraint, False),))
+    candidates, value = optimize_acqf_de(
+        _Target(),
+        bounds,
+        q=2,
+        variable_space=space,
+        constraints=constraints,
+        seed=61,
+        options={"maxiter": 2, "popsize": 5},
+    )
+
+    assert seen
+    assert candidates.shape == (2, 3)
+    assert torch.all(torch.isin(candidates[:, 2], bounds.new_tensor([10.0, 30.0, 90.0])))
+    assert value.ndim == 0
