@@ -81,15 +81,21 @@ def test_pso_supports_continuous_integer_space() -> None:
     assert 0.0 <= float(candidate[0, 1]) <= 4.0
 
 
-def test_pso_rejects_categorical_variable_space() -> None:
+def test_pso_supports_categorical_variable_space() -> None:
     from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
-    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
-    variable_space = MixedVariableSpace(bounds, categorical_values={1: [0.0, 1.0, 2.0]})
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 90.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(bounds, categorical_values={1: [10.0, 90.0, 30.0]})
 
-    try:
-        optimize_acqf_pso(_Quadratic(), bounds, q=1, variable_space=variable_space)
-    except ValueError as error:
-        assert "does not support categorical" in str(error)
-    else:
-        raise AssertionError("Expected categorical PSO to be rejected.")
+    candidate, value = optimize_acqf_pso(
+        _Quadratic(),
+        bounds,
+        q=1,
+        variable_space=variable_space,
+        swarm_size=24,
+        iterations=8,
+        seed=19,
+    )
+    assert candidate.shape == (1, 2)
+    assert candidate[0, 1].item() in {10.0, 90.0, 30.0}
+    torch.testing.assert_close(value.reshape(()), _Quadratic()(candidate.unsqueeze(0)).reshape(()))
