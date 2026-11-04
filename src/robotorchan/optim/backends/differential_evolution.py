@@ -93,7 +93,7 @@ def optimize_acqf_de(
             candidate = torch.as_tensor(
                 flat_candidate, dtype=bounds.dtype, device=bounds.device
             ).reshape(q, bounds.shape[-1])
-            candidate = _repair_structured_dims(candidate, integer_dims, categorical_values, bounds)
+            candidate = _decode_de_candidate(candidate, integer_dims, categorical_values, bounds)
             candidate = apply_fixed_features(candidate, fixed_features)
             violation = candidate_constraint_violation(
                 candidate.unsqueeze(0),
