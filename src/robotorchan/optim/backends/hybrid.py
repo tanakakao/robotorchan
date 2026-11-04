@@ -14,6 +14,7 @@ from robotorchan.optim.backends.botorch import (
 )
 from robotorchan.optim.backends.cmaes import optimize_acqf_cmaes
 from robotorchan.optim.backends.differential_evolution import optimize_acqf_de
+from robotorchan.optim.backends.mixed_cmaes import optimize_acqf_mixed_cmaes
 from robotorchan.optim.backends.mixed_genetic_algorithm import optimize_acqf_mixed_ga
 from robotorchan.optim.backends.pso import optimize_acqf_pso
 from robotorchan.optim.constraints.contracts import CandidateConstraints
@@ -68,13 +69,24 @@ def optimize_acqf_hybrid(
                         f"dimension; missing {sorted(missing)}."
                     )
 
-    optimizer = _resolve_global_optimizer(global_optimizer)
+    has_discrete = variable_space is not None and bool(
+        variable_space.integer_dims or variable_space.categorical_dims
+    )
+    optimizer = (
+        optimize_acqf_mixed_cmaes
+        if global_optimizer == "cmaes" and has_discrete
+        else _resolve_global_optimizer(global_optimizer)
+    )
     resolved_global_options = dict(global_options or {})
     resolved_global_options.setdefault("constraints", constraints)
     resolved_global_options.setdefault("seed", seed)
-    if variable_space is not None and global_optimizer != "cmaes":
+    if variable_space is not None and (global_optimizer != "cmaes" or has_discrete):
         resolved_global_options.setdefault("variable_space", variable_space)
     if fixed_features is not None:
+        if global_optimizer == "cmaes" and not has_discrete:
+            raise NotImplementedError(
+                "Continuous CMA-ES global search does not support fixed_features."
+            )
         resolved_global_options.setdefault("fixed_features", fixed_features)
     global_candidate, _ = optimizer(
         acq_function,
