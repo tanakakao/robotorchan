@@ -65,7 +65,9 @@ def optimize_acqf_mixed_cmaes(
         if dim in variable_space.categorical_dims:
             values = variable_space.categorical_values[dim]
             if len(values) < 2:
-                raise ValueError("Categorical CMA-ES requires at least two values per free category.")
+                raise ValueError(
+                    "Categorical CMA-ES requires at least two values per free category."
+                )
             categorical.append(index)
             c_space.append(len(values))
         elif dim in variable_space.integer_dims:
