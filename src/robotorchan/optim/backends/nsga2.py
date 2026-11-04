@@ -306,9 +306,21 @@ def _repair_mixed_nsga2(
                 generator=generator,
             ).to(population.dtype)
         else:
-            population[:, dim] = (
-                population[:, dim].round().clamp(torch.ceil(lower[dim]), torch.floor(upper[dim]))
+            mutate = (
+                torch.rand(population.shape[0], device=population.device, generator=generator)
+                < mutation_rate
             )
+            sampled = torch.randint(
+                int(torch.ceil(lower[dim]).item()),
+                int(torch.floor(upper[dim]).item()) + 1,
+                (population.shape[0],),
+                device=population.device,
+                generator=generator,
+            ).to(population.dtype)
+            inherited = population[:, dim].round().clamp(
+                torch.ceil(lower[dim]), torch.floor(upper[dim])
+            )
+            population[:, dim] = torch.where(mutate, sampled, inherited)
     for dim, categories in (space.categorical_values or {}).items():
         allowed = torch.as_tensor(categories, dtype=population.dtype, device=population.device)
         if resample:
