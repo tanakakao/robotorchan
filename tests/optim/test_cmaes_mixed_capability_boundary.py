@@ -41,13 +41,15 @@ def test_cmaes_dispatch_rejects_unsupported_discrete_space_before_backend(
         integer_dims=integer_dims,
         categorical_values=categorical_values,
     )
-    with patch("robotorchan.optim.dispatch.optimize_acqf_cmaes") as backend:
-        with pytest.raises(NotImplementedError, match=message):
-            optimize_acqf(
-                SumAcquisition(),
-                bounds,
-                q=1,
-                optimizer="cmaes",
-                variable_space=space,
-            )
+    with (
+        patch("robotorchan.optim.dispatch.optimize_acqf_cmaes") as backend,
+        pytest.raises(NotImplementedError, match=message),
+    ):
+        optimize_acqf(
+            SumAcquisition(),
+            bounds,
+            q=1,
+            optimizer="cmaes",
+            variable_space=space,
+        )
     backend.assert_not_called()
