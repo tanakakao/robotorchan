@@ -269,7 +269,11 @@ def optimize_vector_nsga2_mixed(
                 < crossover_rate * 0.5
             )
             offspring[:, dim] = torch.where(choose_b, parents_b[:, dim], parents_a[:, dim])
+        discrete_dims = (*variable_space.integer_dims, *variable_space.categorical_dims)
+        inherited_discrete = offspring[:, discrete_dims].clone() if discrete_dims else None
         offspring = _mutate(offspring, lower, upper, mutation_rate, mutation_scale, generator)
+        if inherited_discrete is not None:
+            offspring[:, discrete_dims] = inherited_discrete
         offspring = _repair_mixed_nsga2(
             offspring, variable_space, generator, resample=False, mutation_rate=mutation_rate
         )
