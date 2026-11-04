@@ -98,8 +98,7 @@ def optimize_acqf(
             _reject_backend_options(name, backend_options)
             if fixed_features_list is None:
                 raise ValueError(
-                    "Mixed BoTorch optimization requires "
-                    "optimizer_options['fixed_features_list']."
+                    "Mixed BoTorch optimization requires optimizer_options['fixed_features_list']."
                 )
             if not isinstance(fixed_features_list, list) or not fixed_features_list:
                 raise ValueError("fixed_features_list must be a nonempty list of dictionaries.")
