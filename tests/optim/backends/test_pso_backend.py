@@ -99,3 +99,41 @@ def test_pso_supports_categorical_variable_space() -> None:
     assert candidate.shape == (1, 2)
     assert candidate[0, 1].item() in {10.0, 90.0, 30.0}
     torch.testing.assert_close(value.reshape(()), _Quadratic()(candidate.unsqueeze(0)).reshape(()))
+
+
+def test_pso_mixed_qbatch_evaluations_preserve_discrete_legality() -> None:
+    from robotorchan.optim.domains.variable_space import MixedVariableSpace
+
+    class CheckedMixedAcquisition(AcquisitionFunction):
+        def __init__(self) -> None:
+            torch.nn.Module.__init__(self)
+            self.calls = 0
+
+        def forward(self, X: Tensor) -> Tensor:
+            assert X.shape[-2:] == (2, 3)
+            assert torch.all(X[..., 1] == X[..., 1].round())
+            assert torch.all((X[..., 1] >= 0) & (X[..., 1] <= 4))
+            assert torch.all(torch.isin(X[..., 2], X.new_tensor([10.0, 30.0, 90.0])))
+            self.calls += 1
+            return -((X[..., 0] - 0.6) ** 2).sum(dim=-1)
+
+    bounds = torch.tensor([[0.0, 0.0, 10.0], [1.0, 4.0, 90.0]], dtype=torch.double)
+    space = MixedVariableSpace(
+        bounds,
+        integer_dims=(1,),
+        categorical_values={2: (10.0, 30.0, 90.0)},
+    )
+    acquisition = CheckedMixedAcquisition()
+    candidate, value = optimize_acqf_pso(
+        acquisition,
+        bounds,
+        q=2,
+        swarm_size=16,
+        iterations=5,
+        seed=17,
+        variable_space=space,
+    )
+
+    assert acquisition.calls == 7
+    assert candidate.shape == (2, 3)
+    assert value.ndim == 0
