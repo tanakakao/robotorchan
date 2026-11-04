@@ -38,8 +38,6 @@ def optimize_acqf_pso(
     if variable_space is not None:
         if integer_dims:
             raise ValueError("Use variable_space or integer_dims, not both.")
-        if variable_space.categorical_dims:
-            raise ValueError("PSO does not support categorical variables.")
         if not torch.equal(variable_space.bounds, bounds):
             raise ValueError("variable_space bounds must match bounds.")
         integer_dims = variable_space.integer_dims
@@ -53,8 +51,13 @@ def optimize_acqf_pso(
     generator = make_generator(bounds, seed)
 
     d = bounds.shape[-1]
-    lower = bounds[0].repeat(q)
-    upper = bounds[1].repeat(q)
+    categorical_values = dict(variable_space.categorical_values) if variable_space else {}
+    search_bounds = bounds.clone()
+    for dim, values in categorical_values.items():
+        search_bounds[0, dim] = 0
+        search_bounds[1, dim] = len(values) - 1
+    lower = search_bounds[0].repeat(q)
+    upper = search_bounds[1].repeat(q)
     span = upper - lower
     positions = lower + span * torch.rand(
         swarm_size, q * d, dtype=bounds.dtype, device=bounds.device, generator=generator
@@ -69,7 +72,7 @@ def optimize_acqf_pso(
 
     scores, _ = _evaluate(
         acq_function,
-        _repair_integer_positions(positions, integer_dims, bounds, q),
+        _decode_positions(positions, integer_dims, categorical_values, bounds, q),
         q,
         d,
         candidate_constraints,
@@ -96,7 +99,9 @@ def optimize_acqf_pso(
             + social * r2 * (global_position - positions)
         )
         positions = torch.maximum(torch.minimum(positions + velocities, upper), lower)
-        repaired_positions = _repair_integer_positions(positions, integer_dims, bounds, q)
+        repaired_positions = _decode_positions(
+            positions, integer_dims, categorical_values, bounds, q
+        )
         scores, _ = _evaluate(
             acq_function,
             repaired_positions,
@@ -115,8 +120,8 @@ def optimize_acqf_pso(
             global_score = personal_scores[best_index].clone()
             global_position = personal_positions[best_index].clone()
 
-    candidate = _repair_integer_positions(
-        global_position.unsqueeze(0), integer_dims, bounds, q
+    candidate = _decode_positions(
+        global_position.unsqueeze(0), integer_dims, categorical_values, bounds, q
     ).reshape(q, d)
     candidate = apply_fixed_features(candidate, fixed_features)
     with torch.no_grad():
@@ -196,4 +201,24 @@ def _repair_integer_positions(
     upper = torch.floor(bounds[1, index])
     candidates[..., index] = candidates[..., index].round()
     candidates[..., index] = torch.maximum(torch.minimum(candidates[..., index], upper), lower)
+    return candidates.reshape(positions.shape[0], q * d)
+
+
+def _decode_positions(
+    positions: Tensor,
+    integer_dims: tuple[int, ...],
+    categorical_values: dict[int, tuple[float, ...]],
+    bounds: Tensor,
+    q: int,
+) -> Tensor:
+    """Decode category indices into public values before acquisition evaluation."""
+    decoded = _repair_integer_positions(positions, integer_dims, bounds, q)
+    if not categorical_values:
+        return decoded
+    d = bounds.shape[-1]
+    candidates = decoded.reshape(positions.shape[0], q, d).clone()
+    for dim, values in categorical_values.items():
+        legal = torch.as_tensor(values, dtype=positions.dtype, device=positions.device)
+        index = candidates[..., dim].round().long().clamp(0, len(values) - 1)
+        candidates[..., dim] = legal[index]
     return candidates.reshape(positions.shape[0], q * d)
