@@ -267,7 +267,7 @@ def test_optimizer_variable_type_matrix_matches_capabilities() -> None:
 
     report = build_inventory()
     matrix = report["optimizer_variable_type_matrix"]
-    assert report["schema_version"] == 10
+    assert report["schema_version"] == 11
     assert set(matrix) == set(OPTIMIZER_CAPABILITIES) | set(report["specialized_optimizers"])
     for name, capabilities in OPTIMIZER_CAPABILITIES.items():
         entry = matrix[name]
@@ -386,3 +386,17 @@ def test_audit_summary_preserves_variable_type_scope() -> None:
         if variable_type != "continuous":
             assert counts["runtime_verified_scoped"] == 0
         assert counts["runtime_verified_scoped"] >= 0
+
+
+def test_mixed_vector_nsga2_runtime_evidence_is_not_scalar_acquisition_evidence() -> None:
+    report = build_inventory()
+    evidence = report["specialized_vector_optimizer_runtime_evidence"]
+    assert set(evidence) == {"optimize_vector_nsga2_mixed"}
+    result = evidence["optimize_vector_nsga2_mixed"]
+    assert result["runtime_verified"] is True
+    assert result["status"] == "verified_for_unconstrained_mixed_vector_objective"
+    assert result["evidence"] == ["tests/optim/backends/test_nsga2_mixed_backend.py"]
+    assert "No candidate constraints" in result["scope"]
+    assert report["optimizer_variable_type_matrix"]["optimize_vector_nsga2_mixed"]["mixed"]
+    for optimizers in report["acquisition_optimizer_static"].values():
+        assert optimizers["optimize_vector_nsga2_mixed"]["runtime_verified"] is False
