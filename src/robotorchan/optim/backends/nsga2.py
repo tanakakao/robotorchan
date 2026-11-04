@@ -244,9 +244,7 @@ def optimize_vector_nsga2_mixed(
     validate_bounds(bounds)
     if not torch.equal(variable_space.bounds, bounds):
         raise ValueError("variable_space bounds must match bounds.")
-    _validate(
-        bounds, population_size, generations, crossover_rate, mutation_rate, mutation_scale
-    )
+    _validate(bounds, population_size, generations, crossover_rate, mutation_rate, mutation_scale)
     generator = make_generator(bounds, seed)
     lower, upper = bounds
     population = lower + (upper - lower) * torch.rand(
@@ -266,13 +264,12 @@ def optimize_vector_nsga2_mixed(
         parents_b = _binary_tournament(population, ranks, crowding, generator)
         offspring = _crossover(parents_a, parents_b, crossover_rate, generator)
         for dim in (*variable_space.integer_dims, *variable_space.categorical_dims):
-            choose_b = torch.rand(
-                population_size, device=bounds.device, generator=generator
-            ) < crossover_rate * 0.5
+            choose_b = (
+                torch.rand(population_size, device=bounds.device, generator=generator)
+                < crossover_rate * 0.5
+            )
             offspring[:, dim] = torch.where(choose_b, parents_b[:, dim], parents_a[:, dim])
-        offspring = _mutate(
-            offspring, lower, upper, mutation_rate, mutation_scale, generator
-        )
+        offspring = _mutate(offspring, lower, upper, mutation_rate, mutation_scale, generator)
         offspring = _repair_mixed_nsga2(
             offspring, variable_space, generator, resample=False, mutation_rate=mutation_rate
         )
@@ -305,13 +302,11 @@ def _repair_mixed_nsga2(
                 generator=generator,
             ).to(population.dtype)
         else:
-            population[:, dim] = population[:, dim].round().clamp(
-                torch.ceil(lower[dim]), torch.floor(upper[dim])
+            population[:, dim] = (
+                population[:, dim].round().clamp(torch.ceil(lower[dim]), torch.floor(upper[dim]))
             )
     for dim, categories in (space.categorical_values or {}).items():
-        allowed = torch.as_tensor(
-            categories, dtype=population.dtype, device=population.device
-        )
+        allowed = torch.as_tensor(categories, dtype=population.dtype, device=population.device)
         if resample:
             indices = torch.randint(
                 allowed.numel(),
@@ -321,16 +316,15 @@ def _repair_mixed_nsga2(
             )
             population[:, dim] = allowed[indices]
         else:
-            mutate = torch.rand(
-                population.shape[0], device=population.device, generator=generator
-            ) < mutation_rate
+            mutate = (
+                torch.rand(population.shape[0], device=population.device, generator=generator)
+                < mutation_rate
+            )
             indices = torch.randint(
                 allowed.numel(),
                 (population.shape[0],),
                 device=population.device,
                 generator=generator,
             )
-            population[:, dim] = torch.where(
-                mutate, allowed[indices], population[:, dim]
-            )
+            population[:, dim] = torch.where(mutate, allowed[indices], population[:, dim])
     return population
