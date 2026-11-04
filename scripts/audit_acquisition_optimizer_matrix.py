@@ -285,7 +285,7 @@ def build_inventory() -> dict[str, Any]:
         gap_triage[group].append(item)
     gap_triage_counts = {name: len(items) for name, items in gap_triage.items()}
     return {
-        "schema_version": 10,
+        "schema_version": 11,
         "optimizer_variable_type_matrix": optimizer_variable_types,
         "acquisition_variable_type_coverage": acquisition_variable_type_coverage,
         "variable_type_gap_queue": variable_type_gap_queue,
@@ -301,6 +301,18 @@ def build_inventory() -> dict[str, Any]:
                 {"acquisition": acquisition_name, "optimizer": optimizer_name}
                 for acquisition_name, optimizer_name in verified_pairs
             ],
+        },
+        "specialized_vector_optimizer_runtime_evidence": {
+            "optimize_vector_nsga2_mixed": {
+                "status": "verified_for_unconstrained_mixed_vector_objective",
+                "runtime_verified": True,
+                "evidence": ["tests/optim/backends/test_nsga2_mixed_backend.py"],
+                "scope": (
+                    "Batched two-objective maximization; one continuous, one integer, "
+                    "one categorical dimension; legal values, non-dominance, seed "
+                    "reproducibility, and mutation endpoints. No candidate constraints."
+                ),
+            },
         },
         "external_botorch_acquisition_runtime_evidence": {
             acquisition_name: {
@@ -334,6 +346,7 @@ def build_inventory() -> dict[str, Any]:
             "One-shot paths require separate verification; q=1 does not remove this need.",
             "Specialized paths and composition factories require separate validation.",
             "Mixed CMA-ES has backend and Hybrid routing tests, not per-acquisition evidence.",
+            "Mixed vector NSGA-II runtime evidence does not verify scalar acquisitions.",
             "Registry matrix does not mark model-acquisition-optimizer triples supported.",
             "External BoTorch acquisition evidence is separate from registered acquisitions.",
             "Classification pairs use capability metadata only, not runtime posterior checks.",
