@@ -8,6 +8,7 @@ import torch
 from torch import Tensor
 
 from robotorchan.optim.backend_support.runtime import make_generator, validate_bounds
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 VectorObjective = Callable[[Tensor], Tensor]
 
@@ -221,3 +222,125 @@ def _validate(
         raise ValueError("mutation_rate must lie between 0 and 1.")
     if mutation_scale < 0:
         raise ValueError("mutation_scale must be non-negative.")
+
+
+def optimize_vector_nsga2_mixed(
+    objective: VectorObjective,
+    bounds: Tensor,
+    *,
+    variable_space: MixedVariableSpace,
+    population_size: int = 128,
+    generations: int = 100,
+    crossover_rate: float = 0.9,
+    mutation_rate: float = 0.1,
+    mutation_scale: float = 0.1,
+    seed: int | None = None,
+) -> tuple[Tensor, Tensor]:
+    """Optimize vector objectives with discrete-safe NSGA-II genetic operators.
+
+    Nominal categories are sampled or inherited, never interpolated or ordered.
+    The returned population contains only non-dominated legal candidates.
+    """
+    validate_bounds(bounds)
+    if not torch.equal(variable_space.bounds, bounds):
+        raise ValueError("variable_space bounds must match bounds.")
+    _validate(bounds, population_size, generations, crossover_rate, mutation_rate, mutation_scale)
+    generator = make_generator(bounds, seed)
+    lower, upper = bounds
+    population = lower + (upper - lower) * torch.rand(
+        population_size,
+        bounds.shape[-1],
+        dtype=bounds.dtype,
+        device=bounds.device,
+        generator=generator,
+    )
+    population = _repair_mixed_nsga2(population, variable_space, generator, resample=True)
+    for generation in range(generations):
+        values = _evaluate(objective, population)
+        if generation == generations - 1:
+            break
+        ranks, crowding = _rank_and_crowding(values)
+        parents_a = _binary_tournament(population, ranks, crowding, generator)
+        parents_b = _binary_tournament(population, ranks, crowding, generator)
+        offspring = _crossover(parents_a, parents_b, crossover_rate, generator)
+        for dim in (*variable_space.integer_dims, *variable_space.categorical_dims):
+            choose_b = (
+                torch.rand(population_size, device=bounds.device, generator=generator)
+                < crossover_rate * 0.5
+            )
+            offspring[:, dim] = torch.where(choose_b, parents_b[:, dim], parents_a[:, dim])
+        discrete_dims = (*variable_space.integer_dims, *variable_space.categorical_dims)
+        inherited_discrete = offspring[:, discrete_dims].clone() if discrete_dims else None
+        offspring = _mutate(offspring, lower, upper, mutation_rate, mutation_scale, generator)
+        if inherited_discrete is not None:
+            offspring[:, discrete_dims] = inherited_discrete
+        offspring = _repair_mixed_nsga2(
+            offspring, variable_space, generator, resample=False, mutation_rate=mutation_rate
+        )
+        combined = torch.cat([population, offspring], dim=0)
+        combined_values = _evaluate(objective, combined)
+        population = _environmental_select(combined, combined_values, population_size)
+    values = _evaluate(objective, population)
+    ranks, _ = _rank_and_crowding(values)
+    return population[ranks == 0], values[ranks == 0]
+
+
+def _repair_mixed_nsga2(
+    population: Tensor,
+    space: MixedVariableSpace,
+    generator: torch.Generator,
+    *,
+    resample: bool,
+    mutation_rate: float = 0.0,
+) -> Tensor:
+    """Map discrete coordinates to legal values without categorical distances."""
+    population = population.clone()
+    lower, upper = space.bounds
+    for dim in space.integer_dims:
+        if resample:
+            population[:, dim] = torch.randint(
+                int(torch.ceil(lower[dim]).item()),
+                int(torch.floor(upper[dim]).item()) + 1,
+                (population.shape[0],),
+                device=population.device,
+                generator=generator,
+            ).to(population.dtype)
+        else:
+            mutate = (
+                torch.rand(population.shape[0], device=population.device, generator=generator)
+                < mutation_rate
+            )
+            sampled = torch.randint(
+                int(torch.ceil(lower[dim]).item()),
+                int(torch.floor(upper[dim]).item()) + 1,
+                (population.shape[0],),
+                device=population.device,
+                generator=generator,
+            ).to(population.dtype)
+            inherited = (
+                population[:, dim].round().clamp(torch.ceil(lower[dim]), torch.floor(upper[dim]))
+            )
+            population[:, dim] = torch.where(mutate, sampled, inherited)
+    for dim, categories in (space.categorical_values or {}).items():
+        allowed = torch.as_tensor(categories, dtype=population.dtype, device=population.device)
+        if resample:
+            indices = torch.randint(
+                allowed.numel(),
+                (population.shape[0],),
+                device=population.device,
+                generator=generator,
+            )
+            population[:, dim] = allowed[indices]
+        else:
+            mutate = (
+                torch.rand(population.shape[0], device=population.device, generator=generator)
+                < mutation_rate
+            )
+            indices = torch.randint(
+                allowed.numel(),
+                (population.shape[0],),
+                device=population.device,
+                generator=generator,
+            )
+            population[:, dim] = torch.where(mutate, allowed[indices], population[:, dim])
+    return population

@@ -21,4 +21,29 @@ pareto_X, pareto_values = optimize_vector_nsga2(
 
 PyTorch によるバッチ評価、非支配ソート、crowding distance、二者トーナメント、交叉、変異、エリート保存の環境選択を使います。
 
-現在は候補制約なしの連続変数が対象です。scalar `optimize_acqf` とは接続しません。制約付き多目的進化最適化と NSGA-III は未対応であり、BoTorch のスカラー獲得関数契約と混同しません。
+連続変数には `optimize_vector_nsga2`、整数・カテゴリを含む混合変数には
+`optimize_vector_nsga2_mixed` を使います。どちらも候補制約は未対応で、
+scalar `optimize_acqf` とは接続しません。制約付き多目的進化最適化と NSGA-III は未対応であり、BoTorch のスカラー獲得関数契約と混同しません。
+
+## Mixed NSGA-II
+
+```python
+from robotorchan.optim.backends import optimize_vector_nsga2_mixed
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
+
+space = MixedVariableSpace(
+    bounds,
+    integer_dims=(1,),
+    categorical_values={2: (10.0, 30.0, 90.0)},
+)
+pareto_X, pareto_values = optimize_vector_nsga2_mixed(
+    vector_objective,
+    bounds,
+    variable_space=space,
+    seed=123,
+)
+```
+
+整数値は範囲内の整数へ修復し、カテゴリ値は親から継承または許容値集合から
+再サンプリングします。カテゴリの数値間距離を交叉・突然変異に使いません。
+固定変数・制約付き最適化は未対応です。
