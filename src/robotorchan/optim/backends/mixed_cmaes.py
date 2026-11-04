@@ -43,8 +43,7 @@ def optimize_acqf_mixed_cmaes(
         from cmaes import CatCMAwM
     except ImportError as error:
         raise ImportError(
-            "Mixed CMA-ES requires the optional 'cmaes' dependency. "
-            "Install robotorchan[cmaes]."
+            "Mixed CMA-ES requires the optional 'cmaes' dependency. Install robotorchan[cmaes]."
         ) from error
 
     d = bounds.shape[-1]
@@ -83,8 +82,12 @@ def optimize_acqf_mixed_cmaes(
             x_space.append([float(bounds[0, dim]), float(bounds[1, dim])])
     if not (continuous or integer or categorical):
         candidate = torch.stack(
-            [torch.tensor([fixed[dim] for dim in range(d)], dtype=bounds.dtype,
-                          device=bounds.device) for _ in range(q)]
+            [
+                torch.tensor(
+                    [fixed[dim] for dim in range(d)], dtype=bounds.dtype, device=bounds.device
+                )
+                for _ in range(q)
+            ]
         )
         with torch.no_grad():
             return candidate, acq_function(candidate.unsqueeze(0)).reshape(())
