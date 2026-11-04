@@ -83,13 +83,13 @@ def test_unsupported_constraint_handling_is_explicit() -> None:
     assert capabilities.constraint_handling.interpoint_nonlinear is ConstraintHandling.UNSUPPORTED
 
 
-def test_pso_capabilities_do_not_overstate_categorical_mixed_support() -> None:
+def test_pso_capabilities_include_categorical_mixed_support() -> None:
     capabilities = PSO_OPTIMIZER_CAPABILITIES
 
     assert capabilities.continuous
     assert capabilities.integer
-    assert not capabilities.categorical
-    assert not capabilities.mixed
+    assert capabilities.categorical
+    assert capabilities.mixed
 
 
 def test_botorch_nonlinear_capability_metadata_matches_handling_mode() -> None:
