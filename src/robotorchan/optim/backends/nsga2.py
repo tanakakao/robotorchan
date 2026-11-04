@@ -317,8 +317,8 @@ def _repair_mixed_nsga2(
                 device=population.device,
                 generator=generator,
             ).to(population.dtype)
-            inherited = population[:, dim].round().clamp(
-                torch.ceil(lower[dim]), torch.floor(upper[dim])
+            inherited = (
+                population[:, dim].round().clamp(torch.ceil(lower[dim]), torch.floor(upper[dim]))
             )
             population[:, dim] = torch.where(mutate, sampled, inherited)
     for dim, categories in (space.categorical_values or {}).items():
