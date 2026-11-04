@@ -15,10 +15,11 @@ from robotorchan.optim.backends.botorch import (
 from robotorchan.optim.backends.cmaes import optimize_acqf_cmaes
 from robotorchan.optim.backends.differential_evolution import optimize_acqf_de
 from robotorchan.optim.backends.mixed_genetic_algorithm import optimize_acqf_mixed_ga
+from robotorchan.optim.backends.pso import optimize_acqf_pso
 from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
-GlobalOptimizerName = Literal["de", "cmaes", "mixed_ga"]
+GlobalOptimizerName = Literal["de", "cmaes", "mixed_ga", "pso"]
 GlobalOptimizer = Callable[..., tuple[Tensor, Tensor]]
 
 
@@ -134,8 +135,10 @@ def _resolve_global_optimizer(
         return optimize_acqf_cmaes
     if optimizer == "mixed_ga":
         return optimize_acqf_mixed_ga
+    if optimizer == "pso":
+        return optimize_acqf_pso
     raise ValueError(
-        "global_optimizer must be 'de', 'cmaes', 'mixed_ga', or a compatible callable."
+        "global_optimizer must be 'de', 'cmaes', 'mixed_ga', 'pso', or a compatible callable."
     )
 
 
