@@ -10,7 +10,10 @@ from botorch.optim.initializers import TGenInitialConditions
 from torch import Tensor
 
 from robotorchan.optim.backend_support.runtime import validate_bounds
-from robotorchan.optim.backends.botorch import optimize_acqf_botorch
+from robotorchan.optim.backends.botorch import (
+    optimize_acqf_botorch,
+    optimize_acqf_mixed_botorch,
+)
 from robotorchan.optim.backends.cmaes import optimize_acqf_cmaes
 from robotorchan.optim.backends.differential_evolution import optimize_acqf_de
 from robotorchan.optim.backends.genetic_algorithm import optimize_acqf_ga
@@ -20,6 +23,7 @@ from robotorchan.optim.backends.pso import optimize_acqf_pso
 from robotorchan.optim.backends.sampling import optimize_acqf_sampling
 from robotorchan.optim.backends.torch import optimize_acqf_torch
 from robotorchan.optim.capabilities import (
+    BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
     MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
     OPTIMIZER_CAPABILITIES,
     get_optimizer_capabilities,
@@ -72,8 +76,13 @@ def optimize_acqf(
     validate_candidate_constraints(constraints, bounds=bounds, q=q, sequential=sequential)
     name = optimizer.lower()
     capabilities = get_optimizer_capabilities(name)
-    if name == "ga" and variable_space is not None and variable_space.is_mixed:
+    has_discrete = variable_space is not None and bool(
+        variable_space.integer_dims or variable_space.categorical_dims
+    )
+    if name == "ga" and has_discrete:
         capabilities = MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES
+    if name == "botorch" and has_discrete:
+        capabilities = BOTORCH_MIXED_OPTIMIZER_CAPABILITIES
     _validate_requested_capabilities(
         name,
         capabilities,
@@ -84,10 +93,50 @@ def optimize_acqf(
     )
 
     if name == "botorch":
-        if variable_space is not None and variable_space.is_mixed:
-            raise NotImplementedError(
-                "optimizer='botorch' does not consume MixedVariableSpace directly; "
-                "use the explicit BoTorch mixed backend or a mixed-capable named optimizer."
+        if has_discrete:
+            fixed_features_list = backend_options.pop("fixed_features_list", None)
+            _reject_backend_options(name, backend_options)
+            if fixed_features_list is None:
+                raise ValueError(
+                    "Mixed BoTorch optimization requires optimizer_options['fixed_features_list']."
+                )
+            if not isinstance(fixed_features_list, list) or not fixed_features_list:
+                raise ValueError("fixed_features_list must be a nonempty list of dictionaries.")
+            structured_dims = set(variable_space.integer_dims) | set(
+                variable_space.categorical_dims
+            )
+            resolved_configs = []
+            for config in fixed_features_list:
+                if not isinstance(config, dict):
+                    raise TypeError("Each fixed_features_list entry must be a dictionary.")
+                merged = dict(config)
+                for dim, value in (fixed_features or {}).items():
+                    if dim in merged and float(merged[dim]) != float(value):
+                        raise ValueError(f"Conflicting fixed feature at dimension {dim}.")
+                    merged[dim] = value
+                variable_space.validate_fixed_features(merged)
+                if not structured_dims.issubset(merged):
+                    raise ValueError(
+                        "Each fixed_features_list entry must fix every discrete dimension."
+                    )
+                resolved_configs.append(merged)
+            if sequential:
+                raise NotImplementedError(
+                    "Mixed BoTorch dispatch does not support sequential optimization."
+                )
+            _reject_seed(name, seed)
+            return optimize_acqf_mixed_botorch(
+                acq_function,
+                bounds,
+                q,
+                num_restarts,
+                resolved_configs,
+                raw_samples,
+                options=options,
+                constraints=constraints,
+                batch_initial_conditions=batch_initial_conditions,
+                ic_generator=ic_generator,
+                ic_gen_kwargs=ic_gen_kwargs,
             )
         _reject_backend_options(name, backend_options)
         return optimize_acqf_botorch(
@@ -160,7 +209,7 @@ def optimize_acqf(
             **backend_options,
         )
     if name == "ga":
-        if variable_space is not None and variable_space.is_mixed:
+        if has_discrete:
             return optimize_acqf_mixed_ga(
                 acq_function,
                 bounds,
