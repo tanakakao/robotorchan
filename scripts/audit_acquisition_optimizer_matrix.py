@@ -24,6 +24,7 @@ from robotorchan.optim.capabilities import (
     BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
     MIXED_CMAES_OPTIMIZER_CAPABILITIES,
     MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+    MIXED_NSGA2_OPTIMIZER_CAPABILITIES,
     NSGA2_OPTIMIZER_CAPABILITIES,
     OPTIMIZER_CAPABILITIES,
 )
@@ -96,6 +97,7 @@ def build_inventory() -> dict[str, Any]:
         "optimize_acqf_mixed_cmaes": MIXED_CMAES_OPTIMIZER_CAPABILITIES,
         "optimize_acqf_mixed_ga": MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
         "optimize_vector_nsga2": NSGA2_OPTIMIZER_CAPABILITIES,
+        "optimize_vector_nsga2_mixed": MIXED_NSGA2_OPTIMIZER_CAPABILITIES,
     }
     all_optimizers = {
         **OPTIMIZER_CAPABILITIES,
@@ -283,7 +285,7 @@ def build_inventory() -> dict[str, Any]:
         gap_triage[group].append(item)
     gap_triage_counts = {name: len(items) for name, items in gap_triage.items()}
     return {
-        "schema_version": 9,
+        "schema_version": 10,
         "optimizer_variable_type_matrix": optimizer_variable_types,
         "acquisition_variable_type_coverage": acquisition_variable_type_coverage,
         "variable_type_gap_queue": variable_type_gap_queue,
