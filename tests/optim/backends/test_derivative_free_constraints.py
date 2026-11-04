@@ -248,14 +248,17 @@ def test_de_rejects_categorical_variable_space() -> None:
     bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
     variable_space = MixedVariableSpace(bounds, categorical_values={1: [0.0, 1.0, 2.0]})
 
-    with pytest.raises(NotImplementedError, match="unordered categorical"):
-        optimize_acqf_de(
-            _Target(),
-            bounds,
-            q=1,
-            variable_space=variable_space,
-            seed=37,
-        )
+    candidates, value = optimize_acqf_de(
+        _Target(),
+        bounds,
+        q=1,
+        variable_space=variable_space,
+        seed=37,
+        options={"maxiter": 5, "popsize": 5},
+    )
+    assert candidates.shape == (1, 2)
+    assert candidates[0, 1].item() in {0.0, 1.0, 2.0}
+    assert value.numel() == 1
 
 
 def test_de_rejects_full_mixed_space_with_categorical_dimension() -> None:
@@ -268,14 +271,18 @@ def test_de_rejects_full_mixed_space_with_categorical_dimension() -> None:
         categorical_values={2: [0.0, 1.0, 2.0]},
     )
 
-    with pytest.raises(NotImplementedError, match="unordered categorical"):
-        optimize_acqf_de(
-            _Target(target=0.9),
-            bounds,
-            q=1,
-            variable_space=variable_space,
-            seed=41,
-        )
+    candidates, value = optimize_acqf_de(
+        _Target(target=0.9),
+        bounds,
+        q=1,
+        variable_space=variable_space,
+        seed=41,
+        options={"maxiter": 5, "popsize": 5},
+    )
+    assert candidates.shape == (1, 3)
+    assert candidates[0, 1].item() == round(candidates[0, 1].item())
+    assert candidates[0, 2].item() in {0.0, 1.0, 2.0}
+    assert value.numel() == 1
 
 
 def test_de_constraint_handling_is_independent_of_acquisition_scale() -> None:
