@@ -138,8 +138,7 @@ def _resolve_global_optimizer(
     if optimizer == "pso":
         return optimize_acqf_pso
     raise ValueError(
-        "global_optimizer must be 'de', 'cmaes', 'mixed_ga', 'pso', "
-        "or a compatible callable."
+        "global_optimizer must be 'de', 'cmaes', 'mixed_ga', 'pso', or a compatible callable."
     )
 
 
