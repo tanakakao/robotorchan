@@ -22,6 +22,7 @@ from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGI
 from robotorchan.models.registry import MODEL_REGISTRY
 from robotorchan.optim.capabilities import (
     BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
+    MIXED_CMAES_OPTIMIZER_CAPABILITIES,
     MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
     NSGA2_OPTIMIZER_CAPABILITIES,
     OPTIMIZER_CAPABILITIES,
@@ -92,6 +93,7 @@ def build_inventory() -> dict[str, Any]:
     }
     specialized_optimizers = {
         "optimize_acqf_mixed_botorch": BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
+        "optimize_acqf_mixed_cmaes": MIXED_CMAES_OPTIMIZER_CAPABILITIES,
         "optimize_acqf_mixed_ga": MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
         "optimize_vector_nsga2": NSGA2_OPTIMIZER_CAPABILITIES,
     }
@@ -281,7 +283,7 @@ def build_inventory() -> dict[str, Any]:
         gap_triage[group].append(item)
     gap_triage_counts = {name: len(items) for name, items in gap_triage.items()}
     return {
-        "schema_version": 8,
+        "schema_version": 9,
         "optimizer_variable_type_matrix": optimizer_variable_types,
         "acquisition_variable_type_coverage": acquisition_variable_type_coverage,
         "variable_type_gap_queue": variable_type_gap_queue,
@@ -329,6 +331,7 @@ def build_inventory() -> dict[str, Any]:
             "Acquisition-optimizer evidence applies only to its stated model and test scope.",
             "One-shot paths require separate verification; q=1 does not remove this need.",
             "Specialized paths and composition factories require separate validation.",
+            "Mixed CMA-ES has backend and Hybrid routing tests, not per-acquisition evidence.",
             "Registry matrix does not mark model-acquisition-optimizer triples supported.",
             "External BoTorch acquisition evidence is separate from registered acquisitions.",
             "Classification pairs use capability metadata only, not runtime posterior checks.",
