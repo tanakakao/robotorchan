@@ -460,9 +460,7 @@ def test_de_mixed_qbatch_constraints_receive_decoded_categories() -> None:
         seen.append(X.clone())
         return X.new_tensor(1.0)
 
-    constraints = CandidateConstraints(
-        nonlinear_inequality_constraints=((constraint, False),)
-    )
+    constraints = CandidateConstraints(nonlinear_inequality_constraints=((constraint, False),))
     candidates, value = optimize_acqf_de(
         _Target(),
         bounds,
