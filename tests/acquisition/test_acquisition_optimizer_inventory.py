@@ -68,6 +68,7 @@ def test_inventory_covers_specialized_optimizer_capabilities() -> None:
         BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
         MIXED_CMAES_OPTIMIZER_CAPABILITIES,
         MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+        MIXED_NSGA2_OPTIMIZER_CAPABILITIES,
         NSGA2_OPTIMIZER_CAPABILITIES,
     )
 
@@ -78,15 +79,19 @@ def test_inventory_covers_specialized_optimizer_capabilities() -> None:
         "optimize_acqf_mixed_cmaes",
         "optimize_acqf_mixed_ga",
         "optimize_vector_nsga2",
+        "optimize_vector_nsga2_mixed",
     }
     assert specialized["optimize_acqf_mixed_botorch"]["mixed"] is True
     assert specialized["optimize_acqf_mixed_cmaes"]["categorical"] is True
     assert specialized["optimize_acqf_mixed_ga"]["categorical"] is True
     assert specialized["optimize_vector_nsga2"]["q_batch"] is False
+    assert specialized["optimize_vector_nsga2_mixed"]["mixed"] is True
+    assert specialized["optimize_vector_nsga2_mixed"]["q_batch"] is False
     assert asdict(NSGA2_OPTIMIZER_CAPABILITIES)["q_batch"] is False
     assert BOTORCH_MIXED_OPTIMIZER_CAPABILITIES.mixed
     assert MIXED_CMAES_OPTIMIZER_CAPABILITIES.mixed
     assert MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES.mixed
+    assert MIXED_NSGA2_OPTIMIZER_CAPABILITIES.mixed
 
 
 def test_acquisition_optimizer_matrix_is_conservative_and_complete() -> None:
@@ -262,7 +267,7 @@ def test_optimizer_variable_type_matrix_matches_capabilities() -> None:
 
     report = build_inventory()
     matrix = report["optimizer_variable_type_matrix"]
-    assert report["schema_version"] == 9
+    assert report["schema_version"] == 10
     assert set(matrix) == set(OPTIMIZER_CAPABILITIES) | set(report["specialized_optimizers"])
     for name, capabilities in OPTIMIZER_CAPABILITIES.items():
         entry = matrix[name]

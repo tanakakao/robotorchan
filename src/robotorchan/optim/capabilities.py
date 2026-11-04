@@ -257,6 +257,18 @@ NSGA2_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 )
 
 
+MIXED_NSGA2_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    continuous=True,
+    integer=True,
+    categorical=True,
+    mixed=True,
+    requires_grad=False,
+    q_batch=False,
+    gpu=True,
+    batch_evaluation=True,
+)
+
+
 PSO_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     constraint_handling=ConstraintHandlingCapabilities(
         linear_inequality=ConstraintHandling.PENALTY,
