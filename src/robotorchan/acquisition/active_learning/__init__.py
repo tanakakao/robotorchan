@@ -15,15 +15,15 @@ from robotorchan.acquisition.active_learning.variance import qPosteriorStd, qPos
 
 __all__ = [
     "BALD",
-    "qBoundaryVariance",
     "ExpectedPredictiveInformationGain",
     "LatentStraddle",
     "MarginUncertainty",
     "PredictiveEntropy",
     "ProbabilityVariance",
-    "qRandomizedStraddle",
-    "qStraddle",
+    "qBoundaryVariance",
     "qJointPosteriorEntropy",
     "qPosteriorStd",
     "qPosteriorVariance",
+    "qRandomizedStraddle",
+    "qStraddle",
 ]
