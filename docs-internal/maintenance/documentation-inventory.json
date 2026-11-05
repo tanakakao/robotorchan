@@ -7182,6 +7182,11 @@
       "path": "docs/guide/optimization/README.md",
       "category": "Guide",
       "reason": "責務別の入口または理論と実装を接続する学習文書。"
+    },
+    {
+      "path": "docs-internal/q-batch-phase1-inventory.md",
+      "category": "Engineering",
+      "reason": "Static q-batch acquisition and optimizer inventory with explicit verification limits."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
