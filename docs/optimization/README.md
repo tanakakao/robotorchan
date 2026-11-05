@@ -6,13 +6,13 @@ surrogate model とは独立した candidate search / optimization の利用者�
 - [Standard acquisition functions](standard_acquisition.md): single-objective BO の推奨獲得関数とBoTorch直接利用方針
 - [Thompson sampling](thompson_sampling.md): finite candidate set向けposterior samplingと連続探索との責務分離
 - [Regression active learning](regression_active_learning.md): posterior uncertaintyとintegrated variance reduction
-- [Level-set and boundary learning](level_set_learning.md): Straddleと境界推定
-- [Information-theoretic acquisitions](information_theoretic.md): MES、GIBBON、Randomized Straddle
+- [Level-set and boundary learning](level_set_learning.md): qStraddleと境界推定
+- [Information-theoretic acquisitions](information_theoretic.md): MES、GIBBON、Randomized qStraddle
 - [Lookahead acquisitions](lookahead.md): Knowledge Gradientとmulti-step lookahead
 - [Multi-objective acquisitions](multiobjective.md): qLogEHVI、qLogNEHVI、qLogNParEGO
 - [Multi-fidelity and cost-aware acquisitions](multifidelity-cost-aware.md): MF-KGとcost-aware utility
 - [Expected Predictive Information Gain](epig.md): 予測指向の回帰Active Learning
-- [BoundaryVariance](boundary-variance.md): robotorchan固有の境界探索ヒューリスティック
+- [qBoundaryVariance](boundary-variance.md): robotorchan固有の境界探索ヒューリスティック
 - [Acquisition integration](../../docs-internal/contracts/optimization/acquisition-integration.md): 対応範囲と制約
 - [Mixed one-shot optimization](mixed-one-shot-optimization.md): qKG / qMFKG のmixed候補最適化境界
 - [High-dimensional search](high_dimensional_search.md): Original space、Random Search、latent search、REMBO、HeSBO、ALEBO、TuRBO、BAxUS
