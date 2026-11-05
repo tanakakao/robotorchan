@@ -27,9 +27,7 @@ class _MixedJointAcquisition(AcquisitionFunction):
         ("sobol", {"num_samples": 24}),
     ],
 )
-def test_mixed_joint_q_batch_contract(
-    optimizer: str, optimizer_options: dict, q: int
-) -> None:
+def test_mixed_joint_q_batch_contract(optimizer: str, optimizer_options: dict, q: int) -> None:
     bounds = torch.tensor([[0.0, 1.0, 10.0], [1.0, 3.0, 30.0]], dtype=torch.double)
     space = MixedVariableSpace(
         bounds,
