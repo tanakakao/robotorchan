@@ -120,7 +120,9 @@ def optimize_acqf_hybrid(
             raw_samples=None,
             options=options,
             constraints=candidate_constraints,
-            batch_initial_conditions=initial_conditions,
+            batch_initial_conditions=(
+                initial_conditions if q == 1 else initial_conditions[:, :1, :]
+            ),
         )
 
     return optimize_acqf_botorch(

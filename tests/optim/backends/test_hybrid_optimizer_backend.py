@@ -314,3 +314,44 @@ def test_hybrid_real_mixed_ga_global_and_botorch_local_runtime() -> None:
     assert float(candidate[0, 1]) in {10.0, 30.0, 90.0}
     assert torch.isfinite(value)
     torch.testing.assert_close(value, _MixedQuadratic()(candidate.unsqueeze(0)).reshape(()))
+
+
+def test_hybrid_real_mixed_ga_qbatch_with_integer_and_category() -> None:
+    class _MixedQuadratic(AcquisitionFunction):
+        def __init__(self) -> None:
+            torch.nn.Module.__init__(self)
+            self.X_pending = None
+
+        def set_X_pending(self, X_pending: Tensor | None = None) -> None:
+            self.X_pending = X_pending
+
+        def forward(self, X: Tensor) -> Tensor:
+            return -((X[..., 0] - 0.65) ** 2).sum(dim=-1)
+
+    bounds = torch.tensor([[0.0, 1.0, 10.0], [1.0, 2.0, 90.0]], dtype=torch.double)
+    space = MixedVariableSpace(
+        bounds,
+        integer_dims=(1,),
+        categorical_values={2: (10.0, 30.0, 90.0)},
+    )
+    acquisition = _MixedQuadratic()
+    candidate, value = optimize_acqf_hybrid(
+        acquisition,
+        bounds,
+        q=2,
+        global_optimizer="mixed_ga",
+        global_options={"population_size": 16, "generations": 4},
+        local_options={"maxiter": 20},
+        variable_space=space,
+        mixed_fixed_features_list=[
+            {1: integer, 2: category} for integer in (1.0, 2.0) for category in (10.0, 30.0, 90.0)
+        ],
+        seed=43,
+    )
+
+    assert candidate.shape == (2, 3)
+    assert candidate.dtype == bounds.dtype
+    assert torch.all(torch.isin(candidate[:, 1], candidate.new_tensor([1.0, 2.0])))
+    assert torch.all(torch.isin(candidate[:, 2], candidate.new_tensor([10.0, 30.0, 90.0])))
+    assert torch.isfinite(value)
+    torch.testing.assert_close(value, acquisition(candidate.unsqueeze(0)).reshape(()))
