@@ -43,7 +43,7 @@ def test_non_gp_inference_is_not_applicable() -> None:
 def test_map_saas_ensemble_rejects_variance_active_learning() -> None:
     result = check_model_acquisition_compatibility(
         "EnsembleMapSaasSingleTaskGP",
-        "PosteriorVariance",
+        "qPosteriorVariance",
     )
 
     assert not result.compatible
