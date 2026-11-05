@@ -19,11 +19,11 @@ __all__ = [
     "ExpectedPredictiveInformationGain",
     "LatentStraddle",
     "MarginUncertainty",
-    "qPosteriorStd",
-    "qPosteriorVariance",
     "PredictiveEntropy",
     "ProbabilityVariance",
     "RandomizedStraddle",
     "Straddle",
     "qJointPosteriorEntropy",
+    "qPosteriorStd",
+    "qPosteriorVariance",
 ]
