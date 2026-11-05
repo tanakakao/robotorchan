@@ -44,7 +44,7 @@ q>1では各候補の周辺分散を平均して単一のbatch scoreを返す。
   数学的score / 参照：`beta * sigma_latent - abs(mu_latent)`
   実装所有権と使用するモデルAPI：`classification.py`で`latent_posterior(X)`に基づき境界を評価
 
-`Straddle`、`RandomizedStraddle`、`BoundaryVariance`は[Level Set章](10_level_set.md)へ、
+`qStraddle`、`qRandomizedStraddle`、`qBoundaryVariance`は[Level Set章](10_level_set.md)へ、
 `ExpectedPredictiveInformationGain`は[情報理論章](05_information_theoretic.md)へ分ける。
 上表のALクラスはBoTorch-native EI等とは異なるローカル実装である。
 
@@ -62,7 +62,7 @@ q>1では各候補の周辺分散を平均して単一のbatch scoreを返す。
 ## 具体的な使い分け
 
 回帰の関数値をできるだけ広く学習する単一点候補には`qPosteriorVariance(model)`が基準となる。未知境界`f(x)=t`の周辺へ集中したい場合は
-[Level Set章](10_level_set.md)のStraddle系を選ぶ。分類ラベルの不確実性を狙う場合は`PredictiveEntropy(classifier)`、モデルパラメータ不
+[Level Set章](10_level_set.md)のqStraddle系を選ぶ。分類ラベルの不確実性を狙う場合は`PredictiveEntropy(classifier)`、モデルパラメータ不
 確実性によるラベル情報を狙う場合は`BALD(classifier)`とし、予測確率の意味論を確認する。
 
 この使い分けは推薦基準であり、特定のモデル・optimizer組合せの実行可能性を保証しない。AL optimizerはcandidate constraints、
