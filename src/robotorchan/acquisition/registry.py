@@ -43,7 +43,7 @@ ACQUISITION_REGISTRY: dict[str, AcquisitionRegistryEntry] = {
     )
     for name in ("BoundaryVariance", "RandomizedStraddle", "Straddle")
 }
-for name in ("PosteriorStd", "PosteriorVariance"):
+for name in ("qPosteriorStd", "qPosteriorVariance"):
     ACQUISITION_REGISTRY[name] = _active_learning(
         name,
         max_q=None,
