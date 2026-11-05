@@ -18,9 +18,7 @@ class _JointQuadratic(AcquisitionFunction):
         center = torch.linspace(0.2, 0.8, X.shape[-2], dtype=X.dtype, device=X.device)
         target = center.unsqueeze(-1)
         fit = -(X - target).square().sum(dim=(-1, -2))
-        interaction = -0.1 * (X[..., 1:, :] - X[..., :-1, :]).square().sum(
-            dim=(-1, -2)
-        )
+        interaction = -0.1 * (X[..., 1:, :] - X[..., :-1, :]).square().sum(dim=(-1, -2))
         return fit + interaction
 
 
