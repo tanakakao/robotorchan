@@ -49,6 +49,10 @@ def optimize_acqf_hybrid(
         raise ValueError("q must be at least 1.")
     if num_restarts < 1:
         raise ValueError("num_restarts must be at least 1.")
+    if num_restarts > 1:
+        raise ValueError(
+            "num_restarts > 1 requires distinct global seeds and is not supported yet."
+        )
     if variable_space is not None:
         variable_space.validate_fixed_features(fixed_features)
         if mixed_fixed_features_list is not None:
@@ -96,10 +100,6 @@ def optimize_acqf_hybrid(
     )
 
     initial_conditions = global_candidate.unsqueeze(0)
-    if num_restarts > 1:
-        raise ValueError(
-            "num_restarts > 1 requires distinct global seeds and is not supported yet."
-        )
     options = dict(local_options or {})
     candidate_constraints = constraints or CandidateConstraints()
     if candidate_constraints.has_nonlinear_constraints:
