@@ -5,8 +5,8 @@
 Active Learning (AL) は目的関数の最大値を探すBOとは区別し、未観測の応答・分類境界について情報を得るために候補を選ぶ。
 [理論9章](../../theory/acquisition/09_active_learning.md)を数理的正本とする。
 
-回帰ではposteriorの平均 `mu(x)` と分散 `v(x)` を取り、`PosteriorVariance(x)=v(x)`、
-`PosteriorStd(x)=sqrt(max(v(x),0))` を評価する。この二つは非負分散上で順位は単調に対応するが、utilityの**尺度**は異なる。
+回帰ではposteriorの平均 `mu(x)` と分散 `v(x)` を取り、`qPosteriorVariance(x)=v(x)`、
+`qPosteriorStd(x)=sqrt(max(v(x),0))` を評価する。この二つは非負分散上で順位は単調に対応するが、utilityの**尺度**は異なる。
 これらはq=1の周辺情報量であり、q個を同時に評価するjoint acquisitionではない。
 
 分類では観測ラベル確率 `p(y|x,D)` と潜在GPの確率変数を区別する。ラベルのpredictive entropy `H(Y|x,D)=-sum_c p_c log p_c` と、
@@ -14,14 +14,14 @@ Active Learning (AL) は目的関数の最大値を探すBOとは区別し、未
 
 ## 実装への対応
 
-- **`PosteriorVariance`**
+- **`qPosteriorVariance`**
   数学的score / 参照：`v(x)`
-  実装所有権と使用するモデルAPI：`active_learning/variance.py::PosteriorVariance.forward`でImplemented。
+  実装所有権と使用するモデルAPI：`active_learning/variance.py::qPosteriorVariance.forward`でImplemented。
   momentsは`model.posterior(X)`へDelegated
 
-- **`PosteriorStd`**
+- **`qPosteriorStd`**
   数学的score / 参照：`sqrt(max(v(x),0))`
-  実装所有権と使用するモデルAPI：`variance.py::PosteriorStd.forward`がvarianceの返値にclampとsqrtを適用（Extended）
+  実装所有権と使用するモデルAPI：`variance.py::qPosteriorStd.forward`がvarianceの返値にclampとsqrtを適用（Extended）
 
 - **`PredictiveEntropy`**
   数学的score / 参照：`-sum p_c log p_c`
@@ -53,7 +53,7 @@ Active Learning (AL) は目的関数の最大値を探すBOとは区別し、未
 `X`の形は通常`batch_shape × 1 × d`であり、acquisitionの返値はcandidate batchに対するscalar scoreとなる。
 対象のregression/classification AL registryはいずれも`max_q=1`。よって`q=2`のjoint最適化を保証しない。
 
-`PosteriorVariance`はmulti-output posteriorで`output_index`が無ければ明示的に拒否する。指定時はその出力次元だけを抽出する。
+`qPosteriorVariance`はmulti-output posteriorで`output_index`が無ければ明示的に拒否する。指定時はその出力次元だけを抽出する。
 またstructured-output posteriorやensemble posteriorも明示的に拒否する（decoratorがあってもguardは優先される）。
 
 分類の`PredictiveEntropy`は`predict_proba`を要求する。確率varianceとBALDは`num_samples>=2`を要求し、
@@ -61,7 +61,7 @@ Active Learning (AL) は目的関数の最大値を探すBOとは区別し、未
 
 ## 具体的な使い分け
 
-回帰の関数値をできるだけ広く学習する単一点候補には`PosteriorVariance(model)`が基準となる。未知境界`f(x)=t`の周辺へ集中したい場合は
+回帰の関数値をできるだけ広く学習する単一点候補には`qPosteriorVariance(model)`が基準となる。未知境界`f(x)=t`の周辺へ集中したい場合は
 [Level Set章](10_level_set.md)のStraddle系を選ぶ。分類ラベルの不確実性を狙う場合は`PredictiveEntropy(classifier)`、モデルパラメータ不
 確実性によるラベル情報を狙う場合は`BALD(classifier)`とし、予測確率の意味論を確認する。
 
@@ -70,9 +70,9 @@ continuous/discrete、batch shapeに別途対応している必要がある。
 
 ### BoTorch / robotorchanとの対応
 
-BoTorch は qNegativeIntegratedPosteriorVariance など experimental-design 向け acquisition を提供しています。
+BoTorch は qNegativeIntegratedqPosteriorVariance など experimental-design 向け acquisition を提供しています。
 
-robotorchan は regression AL 向けに PosteriorVariance、PosteriorStd、
+robotorchan は regression AL 向けに qPosteriorVariance、qPosteriorStd、
 ExpectedPredictiveInformationGainを提供し、BoTorch native で十分な手法は再実装しません。
 
 現在の robotorchan-specific acquisition には q、structured output、ensemble posteriorなどに明示的な適用範囲があります。
@@ -90,7 +90,7 @@ posterior variance が大きい点は、現在の surrogate がその latent fun
 
 #### Negative Integrated Posterior Variance：実装上の補足
 
-BoTorch の qNegativeIntegratedPosteriorVariance（qNIPV）は、
+BoTorch の qNegativeIntegratedqPosteriorVariance（qNIPV）は、
 candidate batch を観測した後の integrated posterior variance を基準に candidate set を評価する考え方です。
 
 #### RegressionとClassification：実装上の補足
@@ -102,21 +102,21 @@ classification-specific acquisitionを同じ数式へ無理に統合しません
 
 以下は理論で一般的な概念名に分けた箇所の、具体的なモデル・変数・処理の対応です。数学的な導出は対応する Theory 章を参照してください。
 
-PosteriorVariance はその候補自身の uncertainty を評価します。
+qPosteriorVariance はその候補自身の uncertainty を評価します。
 
 - BOとALはposteriorを共有できてもdecision purposeが違う
-- PosteriorVariance / Stdはcandidate自身のmarginal uncertaintyを見るq=1 criterion
+- qPosteriorVariance / Stdはcandidate自身のmarginal uncertaintyを見るq=1 criterion
 - candidate setとtarget / integration setを分ける
 - qNIPVはpointwise variance上位q点ではなくtarget-region uncertainty reductionを評価する
 - predictive varianceが高いこととreducible epistemic uncertaintyが大きいことは同義ではない
 - EPIGはcandidate自身のentropyではなくtarget predictionsとのinformation gainを見る
 - MESとEPIGはmutual informationを使ってもinformation targetが違う
 - current EPIGはq=1 single-output joint-Gaussian finite-target-set contract
-- current PosteriorVariance / Std runtimeはensemble posteriorをrejectする
+- current qPosteriorVariance / Std runtimeはensemble posteriorをrejectする
 - classification-specific ALはregression uncertainty acquisitionへ無理に統合しない
 
 ```text
-PosteriorVariance / PosteriorStd
+qPosteriorVariance / qPosteriorStd
     candidate 自身の uncertainty
 
 Integrated variance / qNIPV
@@ -129,8 +129,8 @@ EPIG
 ## marginal uncertaintyを抽出するローカル実装
 
 [variance.py](../../../src/robotorchan/acquisition/active_learning/variance.py)の
-`PosteriorVariance`はBoTorchの`AcquisitionFunction`を継承します。`forward()`はposteriorの分散を取得し、
-出力軸を選択してq軸を取り除きます。`PosteriorStd`はそれを継承し、非負へclampしてから平方根を取ります。posteriorの構成はモデルへ委譲しますが、
+`qPosteriorVariance`はBoTorchの`AcquisitionFunction`を継承します。`forward()`はposteriorの分散を取得し、
+出力軸を選択してq軸を取り除きます。`qPosteriorStd`はそれを継承し、非負へclampしてから平方根を取ります。posteriorの構成はモデルへ委譲しますが、
 uncertaintyをscoreへ変換する処理は独自実装です。
 
 structured outputやensembleには一意なreductionを定義していないため、型・shapeの条件で拒否します。
