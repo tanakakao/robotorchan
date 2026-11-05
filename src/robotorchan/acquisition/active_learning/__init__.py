@@ -9,20 +9,20 @@ from robotorchan.acquisition.active_learning.classification import (
 )
 from robotorchan.acquisition.active_learning.epig import ExpectedPredictiveInformationGain
 from robotorchan.acquisition.active_learning.joint_entropy import qJointPosteriorEntropy
-from robotorchan.acquisition.active_learning.randomized_straddle import RandomizedStraddle
-from robotorchan.acquisition.active_learning.straddle import BoundaryVariance, Straddle
+from robotorchan.acquisition.active_learning.randomized_straddle import qRandomizedStraddle
+from robotorchan.acquisition.active_learning.straddle import qBoundaryVariance, qStraddle
 from robotorchan.acquisition.active_learning.variance import qPosteriorStd, qPosteriorVariance
 
 __all__ = [
     "BALD",
-    "BoundaryVariance",
+    "qBoundaryVariance",
     "ExpectedPredictiveInformationGain",
     "LatentStraddle",
     "MarginUncertainty",
     "PredictiveEntropy",
     "ProbabilityVariance",
-    "RandomizedStraddle",
-    "Straddle",
+    "qRandomizedStraddle",
+    "qStraddle",
     "qJointPosteriorEntropy",
     "qPosteriorStd",
     "qPosteriorVariance",
