@@ -169,3 +169,39 @@ def test_mixed_ga_tracks_best_candidate_across_generations_by_deb_order() -> Non
     )
 
     assert candidate[0, 0] <= 0.25 + 1e-8
+
+
+def test_mixed_ga_qbatch_evaluations_preserve_discrete_legality() -> None:
+    class CheckedMixedAcquisition(AcquisitionFunction):
+        def __init__(self) -> None:
+            torch.nn.Module.__init__(self)
+            self.calls = 0
+
+        def forward(self, X: Tensor) -> Tensor:
+            assert X.shape[-2:] == (2, 3)
+            assert torch.equal(X[..., 1], X[..., 1].round())
+            assert torch.all((X[..., 1] >= 0) & (X[..., 1] <= 4))
+            assert torch.all(torch.isin(X[..., 2], X.new_tensor([10.0, 30.0, 90.0])))
+            self.calls += 1
+            return -((X[..., 0] - 0.6) ** 2).sum(dim=-1)
+
+    bounds = torch.tensor([[0.0, 0.0, 10.0], [1.0, 4.0, 90.0]], dtype=torch.double)
+    space = MixedVariableSpace(
+        bounds,
+        integer_dims=(1,),
+        categorical_values={2: (10.0, 30.0, 90.0)},
+    )
+    acquisition = CheckedMixedAcquisition()
+    candidates, value = optimize_acqf_mixed_ga(
+        acquisition,
+        bounds,
+        q=2,
+        variable_space=space,
+        population_size=24,
+        generations=6,
+        seed=29,
+    )
+
+    assert acquisition.calls == 7
+    assert candidates.shape == (2, 3)
+    assert value.ndim == 0
