@@ -2,7 +2,7 @@
 
 import torch
 
-from robotorchan.acquisition import BoundaryVariance, qPosteriorStd, qPosteriorVariance, Straddle
+from robotorchan.acquisition import BoundaryVariance, Straddle, qPosteriorStd, qPosteriorVariance
 from robotorchan.models import SingleTaskGP
 
 
