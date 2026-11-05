@@ -320,6 +320,10 @@ def test_hybrid_real_mixed_ga_qbatch_with_integer_and_category() -> None:
     class _MixedQuadratic(AcquisitionFunction):
         def __init__(self) -> None:
             torch.nn.Module.__init__(self)
+            self.X_pending = None
+
+        def set_X_pending(self, X_pending: Tensor | None = None) -> None:
+            self.X_pending = X_pending
 
         def forward(self, X: Tensor) -> Tensor:
             return -((X[..., 0] - 0.65) ** 2).sum(dim=-1)
