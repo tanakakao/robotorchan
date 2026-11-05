@@ -324,21 +324,28 @@ def build_inventory() -> dict[str, Any]:
                 },
                 "mixed_q": {
                     "status": (
-                        "solver_optional_not_guaranteed" if name == "cmaes"
-                        else "sequential_backend" if name == "botorch"
+                        "solver_optional_not_guaranteed"
+                        if name == "cmaes"
+                        else "sequential_backend"
+                        if name == "botorch"
                         else "runtime_test_present"
-                    ) if name in _MIXED_Q_OPTIMIZER_EVIDENCE else "unverified",
+                    )
+                    if name in _MIXED_Q_OPTIMIZER_EVIDENCE
+                    else "unverified",
                     "evidence": (
                         [_MIXED_Q_OPTIMIZER_EVIDENCE[name]]
-                        if name in _MIXED_Q_OPTIMIZER_EVIDENCE else []
+                        if name in _MIXED_Q_OPTIMIZER_EVIDENCE
+                        else []
                     ),
                 },
                 "mixed_interpoint_inequality": {
-                    "status": "runtime_test_present" if name in _INTERPOINT_Q_OPTIMIZER_EVIDENCE
+                    "status": "runtime_test_present"
+                    if name in _INTERPOINT_Q_OPTIMIZER_EVIDENCE
                     else "unverified",
                     "evidence": (
                         [_INTERPOINT_Q_OPTIMIZER_EVIDENCE[name]]
-                        if name in _INTERPOINT_Q_OPTIMIZER_EVIDENCE else []
+                        if name in _INTERPOINT_Q_OPTIMIZER_EVIDENCE
+                        else []
                     ),
                 },
                 "registered_acquisition_pairs_verified_q_gt_1": False,
