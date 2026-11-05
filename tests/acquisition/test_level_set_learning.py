@@ -23,15 +23,16 @@ def test_level_set_acquisition_returns_finite_batch_values(acquisition_class: ty
     assert torch.isfinite(value).all()
 
 
-def test_straddle_validates_beta_and_q() -> None:
+def test_straddle_validates_beta_and_accepts_q_batch() -> None:
     model = _model()
 
     with pytest.raises(ValueError, match="non-negative"):
         Straddle(model, target=0.0, beta=-1.0)
 
     X = torch.tensor([[[0.25], [0.75]]], dtype=torch.double)
-    with pytest.raises(ValueError, match="q=1"):
-        Straddle(model, target=0.0)(X)
+    acquisition = Straddle(model, target=0.0)
+    marginal = acquisition(X.transpose(0, 1))
+    torch.testing.assert_close(acquisition(X), marginal.mean().unsqueeze(0))
 
 
 def test_straddle_score_matches_definition() -> None:
