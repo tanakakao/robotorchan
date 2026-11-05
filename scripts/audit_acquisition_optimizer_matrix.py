@@ -92,6 +92,7 @@ _INTERPOINT_Q_OPTIMIZER_EVIDENCE = {
     "ga": "tests/optim/contracts/test_mixed_q_batch_interpoint_constraints.py",
 }
 
+
 def build_inventory() -> dict[str, Any]:
     """Collect registered capabilities without claiming runtime support."""
     models = {
