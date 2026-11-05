@@ -500,3 +500,20 @@ def test_hybrid_real_mixed_cmaes_qbatch_with_integer_and_category() -> None:
     assert acquisition.X_pending is None
     assert torch.isfinite(value)
     torch.testing.assert_close(value, acquisition(candidate.unsqueeze(0)).reshape(()))
+
+
+
+def test_hybrid_rejects_unsupported_restarts_before_global_search() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    global_optimizer = Mock()
+
+    with pytest.raises(ValueError, match="num_restarts > 1"):
+        optimize_acqf_hybrid(
+            _Quadratic(),
+            bounds,
+            q=1,
+            global_optimizer=global_optimizer,
+            num_restarts=2,
+        )
+
+    global_optimizer.assert_not_called()
