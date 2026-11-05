@@ -35,9 +35,9 @@ def _active_learning(
 
 ACQUISITION_REGISTRY: dict[str, AcquisitionRegistryEntry] = {}
 for name in (
-    "BoundaryVariance",
-    "RandomizedStraddle",
-    "Straddle",
+    "qBoundaryVariance",
+    "qRandomizedStraddle",
+    "qStraddle",
     "qPosteriorStd",
     "qPosteriorVariance",
 ):
