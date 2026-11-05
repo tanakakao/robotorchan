@@ -7,7 +7,7 @@ Active Learning (AL) は目的関数の最大値を探すBOとは区別し、未
 
 回帰ではposteriorの平均 `mu(x)` と分散 `v(x)` を取り、`qPosteriorVariance(x)=v(x)`、
 `qPosteriorStd(x)=sqrt(max(v(x),0))` を評価する。この二つは非負分散上で順位は単調に対応するが、utilityの**尺度**は異なる。
-これらはq=1の周辺情報量であり、q個を同時に評価するjoint acquisitionではない。
+q>1では各候補の周辺分散を平均して単一のbatch scoreを返す。候補間の相関や重複は考慮しない。
 
 分類では観測ラベル確率 `p(y|x,D)` と潜在GPの確率変数を区別する。ラベルのpredictive entropy `H(Y|x,D)=-sum_c p_c log p_c` と、
 モデルの`mutual_information`で評価するBALDは同じ計算ではない。
@@ -51,7 +51,7 @@ Active Learning (AL) は目的関数の最大値を探すBOとは区別し、未
 ## 入出力shapeと拒否条件
 
 `X`の形は通常`batch_shape × 1 × d`であり、acquisitionの返値はcandidate batchに対するscalar scoreとなる。
-対象のregression/classification AL registryはいずれも`max_q=1`。よって`q=2`のjoint最適化を保証しない。
+`qPosteriorVariance`と`qPosteriorStd`はq>1に対応し、q軸の平均分散を使う。分類ALは引き続き`max_q=1`。
 
 `qPosteriorVariance`はmulti-output posteriorで`output_index`が無ければ明示的に拒否する。指定時はその出力次元だけを抽出する。
 またstructured-output posteriorやensemble posteriorも明示的に拒否する（decoratorがあってもguardは優先される）。
@@ -70,7 +70,7 @@ continuous/discrete、batch shapeに別途対応している必要がある。
 
 ### BoTorch / robotorchanとの対応
 
-BoTorch は qNegativeIntegratedqPosteriorVariance など experimental-design 向け acquisition を提供しています。
+BoTorch は qNegIntegratedPosteriorVariance など experimental-design 向け acquisition を提供しています。
 
 robotorchan は regression AL 向けに qPosteriorVariance、qPosteriorStd、
 ExpectedPredictiveInformationGainを提供し、BoTorch native で十分な手法は再実装しません。
@@ -90,7 +90,7 @@ posterior variance が大きい点は、現在の surrogate がその latent fun
 
 #### Negative Integrated Posterior Variance：実装上の補足
 
-BoTorch の qNegativeIntegratedqPosteriorVariance（qNIPV）は、
+BoTorch の qNegIntegratedPosteriorVariance（qNIPV）は、
 candidate batch を観測した後の integrated posterior variance を基準に candidate set を評価する考え方です。
 
 #### RegressionとClassification：実装上の補足
@@ -105,7 +105,7 @@ classification-specific acquisitionを同じ数式へ無理に統合しません
 qPosteriorVariance はその候補自身の uncertainty を評価します。
 
 - BOとALはposteriorを共有できてもdecision purposeが違う
-- qPosteriorVariance / Stdはcandidate自身のmarginal uncertaintyを見るq=1 criterion
+- qPosteriorVariance / Stdはq>1でもcandidate自身のmarginal uncertaintyを平均する
 - candidate setとtarget / integration setを分ける
 - qNIPVはpointwise variance上位q点ではなくtarget-region uncertainty reductionを評価する
 - predictive varianceが高いこととreducible epistemic uncertaintyが大きいことは同義ではない
@@ -130,7 +130,7 @@ EPIG
 
 [variance.py](../../../src/robotorchan/acquisition/active_learning/variance.py)の
 `qPosteriorVariance`はBoTorchの`AcquisitionFunction`を継承します。`forward()`はposteriorの分散を取得し、
-出力軸を選択してq軸を取り除きます。`qPosteriorStd`はそれを継承し、非負へclampしてから平方根を取ります。posteriorの構成はモデルへ委譲しますが、
+出力軸を選択し、q軸の平均を返します。`qPosteriorStd`はそれを継承し、非負へclampしてから平方根を取ります。posteriorの構成はモデルへ委譲しますが、
 uncertaintyをscoreへ変換する処理は独自実装です。
 
 structured outputやensembleには一意なreductionを定義していないため、型・shapeの条件で拒否します。
@@ -139,3 +139,14 @@ EPIGの内部は[情報理論章](05_information_theoretic.md)へ分けていま
 
 使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/28_regression_active_learning.ipynb)を参照してください
 。
+
+
+## q-batchの評価方式
+
+`qPosteriorVariance`は候補集合の周辺分散の平均を最大化する。
+`qPosteriorStd`はその平均分散の平方根を返す。両者ともq=1で従来の値と一致する。
+候補間の相関を直接評価しないため、候補の重複を避ける保証はない。
+
+`qJointPosteriorEntropy`は単一出力のGaussian posteriorに対し、
+候補集合の共分散行列を用いてjoint differential entropyを評価する。
+これは候補自身の不確実性に基づく基準であり、外部のtarget分布に対するEPIGとは異なる。
