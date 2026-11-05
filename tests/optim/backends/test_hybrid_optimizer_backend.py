@@ -351,6 +351,11 @@ def test_hybrid_real_mixed_ga_qbatch_with_integer_and_category() -> None:
 
     assert candidate.shape == (2, 3)
     assert candidate.dtype == bounds.dtype
+    assert candidate.device == bounds.device
+    assert torch.isfinite(candidate).all()
+    assert torch.all(candidate >= bounds[0])
+    assert torch.all(candidate <= bounds[1])
+    assert acquisition.X_pending is None
     assert torch.all(torch.isin(candidate[:, 1], candidate.new_tensor([1.0, 2.0])))
     assert torch.all(torch.isin(candidate[:, 2], candidate.new_tensor([10.0, 30.0, 90.0])))
     assert torch.isfinite(value)
