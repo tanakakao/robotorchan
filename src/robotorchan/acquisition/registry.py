@@ -41,14 +41,20 @@ ACQUISITION_REGISTRY: dict[str, AcquisitionRegistryEntry] = {
             "structured outputs require scalarization",
         ),
     )
-    for name in ("BoundaryVariance", "RandomizedStraddle", "Straddle")
+    for name in ()
 }
-for name in ("qPosteriorStd", "qPosteriorVariance"):
+for name in (
+    "BoundaryVariance",
+    "RandomizedStraddle",
+    "Straddle",
+    "qPosteriorStd",
+    "qPosteriorVariance",
+):
     ACQUISITION_REGISTRY[name] = _active_learning(
         name,
         max_q=None,
         limitations=(
-            "q>1 uses mean marginal variance without candidate diversity",
+            "q>1 aggregates marginal scores without candidate diversity",
             "ensemble posteriors are not supported",
             "structured outputs require scalarization",
         ),
