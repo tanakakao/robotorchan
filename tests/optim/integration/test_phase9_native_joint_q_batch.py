@@ -43,9 +43,7 @@ def test_registered_joint_acquisition_optimizer_q_batch(
             model, best_f=train_y.max(), sampler=sampler
         ),
         "qSimpleRegret": lambda: qSimpleRegret(model, sampler=sampler),
-        "qUpperConfidenceBound": lambda: qUpperConfidenceBound(
-            model, beta=0.1, sampler=sampler
-        ),
+        "qUpperConfidenceBound": lambda: qUpperConfidenceBound(model, beta=0.1, sampler=sampler),
     }
     acquisition = acquisitions[acquisition_name]()
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
