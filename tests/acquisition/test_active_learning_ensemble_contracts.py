@@ -1,7 +1,7 @@
 import torch
 from botorch.posteriors.ensemble import EnsemblePosterior
 
-from robotorchan.acquisition import BoundaryVariance, PosteriorVariance, Straddle
+from robotorchan.acquisition import BoundaryVariance, qPosteriorVariance, Straddle
 from robotorchan.acquisition.registry import get_acquisition_registry_entry
 
 
@@ -14,7 +14,7 @@ class _EnsembleModel:
 
 
 def test_posterior_variance_rejects_ensemble_posterior() -> None:
-    acquisition = PosteriorVariance(_EnsembleModel())
+    acquisition = qPosteriorVariance(_EnsembleModel())
     try:
         acquisition(torch.tensor([[[0.2]]], dtype=torch.double))
     except ValueError as error:
@@ -53,7 +53,7 @@ class _FlaggedEnsembleModel:
 
 def test_active_learning_rejects_flagged_ensemble_before_posterior() -> None:
     acquisitions = [
-        PosteriorVariance(_FlaggedEnsembleModel()),
+        qPosteriorVariance(_FlaggedEnsembleModel()),
         Straddle(_FlaggedEnsembleModel(), target=0.0),
         BoundaryVariance(_FlaggedEnsembleModel(), target=0.0),
     ]
@@ -71,8 +71,8 @@ def test_active_learning_rejects_flagged_ensemble_before_posterior() -> None:
 def test_pointwise_active_learning_registry_rejects_ensemble_support() -> None:
     for name in (
         "BoundaryVariance",
-        "PosteriorStd",
-        "PosteriorVariance",
+        "qPosteriorStd",
+        "qPosteriorVariance",
         "RandomizedStraddle",
         "Straddle",
     ):
