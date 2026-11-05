@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import torch
 
-from robotorchan.acquisition import qPosteriorVariance, PredictiveEntropy
+from robotorchan.acquisition import PredictiveEntropy, qPosteriorVariance
 from robotorchan.acquisition.optimizer_compatibility import (
     CandidateOptimizer,
     check_acquisition_optimizer_compatibility,
