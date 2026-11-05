@@ -70,8 +70,9 @@ def test_regression_acquisition_q_one_batch_shape() -> None:
     score = acquisition(X)
     assert score.shape == (3,)
     assert torch.isfinite(score).all()
-    with pytest.raises(ValueError, match="q=1"):
-        acquisition(train_X[:4].reshape(2, 2, 1))
+    batch = train_X[:4].reshape(2, 2, 1)
+    expected = model.posterior(batch).variance.squeeze(-1).mean(dim=-1)
+    torch.testing.assert_close(acquisition(batch), expected)
 
 
 def test_classification_acquisition_predictive_semantics_and_q() -> None:
