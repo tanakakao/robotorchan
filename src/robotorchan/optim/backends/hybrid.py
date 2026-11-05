@@ -76,6 +76,17 @@ def optimize_acqf_hybrid(
     has_discrete = variable_space is not None and bool(
         variable_space.integer_dims or variable_space.categorical_dims
     )
+    if (
+        has_discrete
+        and constraints is not None
+        and any(
+            not is_intrapoint for _, is_intrapoint in constraints.nonlinear_inequality_constraints
+        )
+    ):
+        raise ValueError(
+            "BoTorch mixed acquisition optimization does not support "
+            "inter-point nonlinear constraints."
+        )
     optimizer = (
         optimize_acqf_mixed_cmaes
         if global_optimizer == "cmaes" and has_discrete
