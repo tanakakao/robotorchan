@@ -24,12 +24,12 @@ def test_posterior_variance_and_std_are_consistent() -> None:
     assert torch.allclose(std.square(), variance)
 
 
-def test_posterior_variance_rejects_batch_q() -> None:
+def test_posterior_variance_averages_batch_q() -> None:
     model = _model()
     X = torch.tensor([[[0.25], [0.75]]], dtype=torch.double)
 
-    with pytest.raises(ValueError, match="q=1"):
-        qPosteriorVariance(model)(X)
+    expected = model.posterior(X).variance.squeeze(-1).mean(dim=-1)
+    torch.testing.assert_close(qPosteriorVariance(model)(X), expected)
 
 
 def test_native_negative_integrated_posterior_variance() -> None:
