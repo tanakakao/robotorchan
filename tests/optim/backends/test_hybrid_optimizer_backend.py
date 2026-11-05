@@ -502,7 +502,6 @@ def test_hybrid_real_mixed_cmaes_qbatch_with_integer_and_category() -> None:
     torch.testing.assert_close(value, acquisition(candidate.unsqueeze(0)).reshape(()))
 
 
-
 def test_hybrid_rejects_unsupported_restarts_before_global_search() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     global_optimizer = Mock()
