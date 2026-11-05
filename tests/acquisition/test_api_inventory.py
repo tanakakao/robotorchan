@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import torch
 
-from robotorchan.acquisition import PosteriorVariance, PredictiveEntropy
+from robotorchan.acquisition import qPosteriorVariance, PredictiveEntropy
 from robotorchan.acquisition.optimizer_compatibility import (
     CandidateOptimizer,
     check_acquisition_optimizer_compatibility,
@@ -45,8 +45,8 @@ def test_native_botorch_acquisitions_are_metadata_only() -> None:
 
 def test_public_custom_acquisition_signatures_preserve_specific_parameters() -> None:
     report = build_inventory()["exports"]
-    assert report["PosteriorVariance"]["kind"] == "local_acquisition_class"
-    assert "output_index" in report["PosteriorVariance"]["parameters"]
+    assert report["qPosteriorVariance"]["kind"] == "local_acquisition_class"
+    assert "output_index" in report["qPosteriorVariance"]["parameters"]
     assert "target" in report["Straddle"]["parameters"]
     assert "num_samples" in report["BALD"]["parameters"]
     assert report["make_qei_acquisition"]["kind"] == "composition_or_support_helper"
@@ -65,7 +65,7 @@ def test_regression_acquisition_q_one_batch_shape() -> None:
     train_X = torch.linspace(0.0, 1.0, 8, dtype=torch.double).unsqueeze(-1)
     train_Y = torch.sin(train_X)
     model = SingleTaskGP(train_X, train_Y)
-    acquisition = PosteriorVariance(model)
+    acquisition = qPosteriorVariance(model)
     X = train_X[:3].unsqueeze(1)
     score = acquisition(X)
     assert score.shape == (3,)
