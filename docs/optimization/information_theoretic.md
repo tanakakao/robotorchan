@@ -28,18 +28,18 @@ acqf = qLowerBoundMaxValueEntropy(model=model, candidate_set=candidate_set)
 
 これらの標準 class は robotorchan の統合テスト対象ですが、alias や wrapper は設けません。
 
-## Randomized Straddle
+## Randomized qStraddle
 
-level-set 推定には `RandomizedStraddle` があります。Inatsu et al. (2024) に従い、手調整の信頼係数を自由度 2 のカイ二乗分布からの抽出に置き換え、Straddle スコアで `sqrt(beta_t)` として使います。
+level-set 推定には `qRandomizedStraddle` があります。Inatsu et al. (2024) に従い、手調整の信頼係数を自由度 2 のカイ二乗分布からの抽出に置き換え、qStraddle スコアで `sqrt(beta_t)` として使います。
 
 ```python
-from robotorchan.acquisition import RandomizedStraddle
+from robotorchan.acquisition import qRandomizedStraddle
 
 generator = torch.Generator().manual_seed(0)
-acqf = RandomizedStraddle(model, target=0.0, generator=generator)
+acqf = qRandomizedStraddle(model, target=0.0, generator=generator)
 ```
 
 
 generator を渡すと実験を再現できます。候補選択の 1 ラウンド中は係数を固定して最適化目的を安定させ、次のラウンドで `resample()` を呼びます。
 
-BoTorch に必要な機能がある場合、独自の MES・PES・JES 実装は追加しません。entropy・相互情報量・MES・GIBBON は[情報理論](../theory/acquisition/05_information_theoretic.md)、`RandomizedStraddle` は [level-set 理論](../theory/acquisition/10_level_set.md)を参照してください。
+BoTorch に必要な機能がある場合、独自の MES・PES・JES 実装は追加しません。entropy・相互情報量・MES・GIBBON は[情報理論](../theory/acquisition/05_information_theoretic.md)、`qRandomizedStraddle` は [level-set 理論](../theory/acquisition/10_level_set.md)を参照してください。
