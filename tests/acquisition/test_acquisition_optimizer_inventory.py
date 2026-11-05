@@ -267,7 +267,7 @@ def test_optimizer_variable_type_matrix_matches_capabilities() -> None:
 
     report = build_inventory()
     matrix = report["optimizer_variable_type_matrix"]
-    assert report["schema_version"] == 11
+    assert report["schema_version"] == 12
     assert set(matrix) == set(OPTIMIZER_CAPABILITIES) | set(report["specialized_optimizers"])
     for name, capabilities in OPTIMIZER_CAPABILITIES.items():
         entry = matrix[name]
