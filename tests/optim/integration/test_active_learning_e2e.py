@@ -2,7 +2,7 @@
 
 import torch
 
-from robotorchan.acquisition import qPosteriorVariance, Straddle
+from robotorchan.acquisition import Straddle, qPosteriorVariance
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim.backends import optimize_acqf_botorch
 
