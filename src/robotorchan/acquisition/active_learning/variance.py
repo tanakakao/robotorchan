@@ -10,7 +10,7 @@ from botorch.utils.transforms import average_over_ensemble_models
 from torch import Tensor
 
 
-class PosteriorVariance(AcquisitionFunction):
+class qPosteriorVariance(AcquisitionFunction):
     """Select batches by mean marginal posterior variance (without diversity)."""
 
     def __init__(self, model: Model, *, output_index: int | None = None) -> None:
@@ -22,14 +22,14 @@ class PosteriorVariance(AcquisitionFunction):
         """Return mean marginal variance across q candidates."""
 
         if getattr(self.model, "_is_ensemble", False):
-            raise ValueError("PosteriorVariance does not yet support ensemble posteriors.")
+            raise ValueError("qPosteriorVariance does not yet support ensemble posteriors.")
         posterior = self.model.posterior(X)
         if isinstance(posterior, EnsemblePosterior):
-            raise ValueError("PosteriorVariance does not yet support ensemble posteriors.")
+            raise ValueError("qPosteriorVariance does not yet support ensemble posteriors.")
         variance = posterior.variance
         if variance.ndim != X.ndim:
             raise ValueError(
-                "PosteriorVariance does not support structured-output posteriors; "
+                "qPosteriorVariance does not support structured-output posteriors; "
                 "scalarize the model output first."
             )
 
@@ -46,7 +46,7 @@ class PosteriorVariance(AcquisitionFunction):
         return variance.squeeze(-1).mean(dim=-1)
 
 
-class PosteriorStd(PosteriorVariance):
+class qPosteriorStd(qPosteriorVariance):
     """Select batches by square root of mean marginal posterior variance."""
 
     def forward(self, X: Tensor) -> Tensor:
