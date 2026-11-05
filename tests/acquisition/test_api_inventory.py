@@ -47,7 +47,7 @@ def test_public_custom_acquisition_signatures_preserve_specific_parameters() -> 
     report = build_inventory()["exports"]
     assert report["qPosteriorVariance"]["kind"] == "local_acquisition_class"
     assert "output_index" in report["qPosteriorVariance"]["parameters"]
-    assert "target" in report["Straddle"]["parameters"]
+    assert "target" in report["qStraddle"]["parameters"]
     assert "num_samples" in report["BALD"]["parameters"]
     assert report["make_qei_acquisition"]["kind"] == "composition_or_support_helper"
 
