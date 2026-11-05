@@ -155,7 +155,7 @@ robotorchan の public model API は多数の派生モデルを含むため、RE
 
 ### Acquisition / Active Learning
 
-BoTorch 標準の acquisition function をそのまま利用できることを基本とし、robotorchan 固有の Active Learning / sampling 拡張として `PosteriorVariance`, `PosteriorStd`, `Straddle`, `RandomizedStraddle`, `BoundaryVariance`, `ExpectedPredictiveInformationGain`、分類向けの `PredictiveEntropy`, `MarginUncertainty`, `ProbabilityVariance`, `BALD`, `LatentStraddle`、Thompson candidate selection などを提供します。
+BoTorch 標準の acquisition function をそのまま利用できることを基本とし、robotorchan 固有の Active Learning / sampling 拡張として `qPosteriorVariance`, `qPosteriorStd`, `Straddle`, `RandomizedStraddle`, `BoundaryVariance`, `ExpectedPredictiveInformationGain`、分類向けの `PredictiveEntropy`, `MarginUncertainty`, `ProbabilityVariance`, `BALD`, `LatentStraddle`、Thompson candidate selection などを提供します。
 
 理論は [Acquisition Function Theory](docs/theory/acquisition/README.md)、利用方法と適用範囲は [Optimization guides](docs/optimization/README.md) と [Acquisition integration status](docs-internal/contracts/optimization/acquisition-integration.md) を参照してください。
 
