@@ -340,9 +340,7 @@ def test_hybrid_real_mixed_ga_qbatch_with_integer_and_category() -> None:
         local_options={"maxiter": 20},
         variable_space=space,
         mixed_fixed_features_list=[
-            {1: integer, 2: category}
-            for integer in (1.0, 2.0)
-            for category in (10.0, 30.0, 90.0)
+            {1: integer, 2: category} for integer in (1.0, 2.0) for category in (10.0, 30.0, 90.0)
         ],
         seed=43,
     )
