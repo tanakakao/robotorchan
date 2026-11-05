@@ -48,4 +48,6 @@ def test_straddle_q4_optimizes_candidates() -> None:
         acquisition, bounds, q=4, num_samples=48, method="sobol", seed=17
     )
     assert candidates.shape == (4, 1)
-    torch.testing.assert_close(value.reshape(()), acquisition(candidates.unsqueeze(0)).reshape(()))
+    torch.testing.assert_close(
+        value.reshape(()), acquisition(candidates.unsqueeze(0)).reshape(())
+    )
