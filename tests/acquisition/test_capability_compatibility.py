@@ -66,7 +66,7 @@ def test_single_task_gp_supports_scalar_active_learning() -> None:
 
 
 def test_structured_output_requires_scalarization() -> None:
-    result = check_model_acquisition_compatibility("HigherOrderGP", "PosteriorVariance")
+    result = check_model_acquisition_compatibility("HigherOrderGP", "qPosteriorVariance")
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "structured-output posteriors require scalarization" in result.reasons
 
@@ -83,7 +83,7 @@ def test_epig_rejects_multitask_model() -> None:
 def test_random_forest_rejects_variance_active_learning() -> None:
     result = check_model_acquisition_compatibility(
         "RandomForestSurrogate",
-        "PosteriorVariance",
+        "qPosteriorVariance",
     )
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "acquisition does not support ensemble posteriors" in result.reasons
@@ -123,7 +123,7 @@ def test_epig_rejects_model_list_multi_output_model() -> None:
 
 
 def test_ngboost_supports_marginal_variance_active_learning() -> None:
-    result = check_model_acquisition_compatibility("NGBoostSurrogate", "PosteriorVariance")
+    result = check_model_acquisition_compatibility("NGBoostSurrogate", "qPosteriorVariance")
     assert result.status is CompatibilityStatus.COMPATIBLE
 
 

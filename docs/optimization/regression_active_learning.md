@@ -4,12 +4,12 @@
 
 ## 点ごとの不確実性
 
-q=1 の `PosteriorVariance` は事後分散、`PosteriorStd` は事後標準偏差を最大化します。いずれも BoTorch `AcquisitionFunction` に従い、単一候補の選択に `optimize_acqf` を使えます。
+q=1 の `qPosteriorVariance` は事後分散、`qPosteriorStd` は事後標準偏差を最大化します。いずれも BoTorch `AcquisitionFunction` に従い、単一候補の選択に `optimize_acqf` を使えます。
 
 ```python
-from robotorchan.acquisition import PosteriorVariance
+from robotorchan.acquisition import qPosteriorVariance
 
-acqf = PosteriorVariance(model)
+acqf = qPosteriorVariance(model)
 ```
 
 
@@ -17,12 +17,12 @@ acqf = PosteriorVariance(model)
 
 ## Batch の積分分散削減
 
-純粋探索には BoTorch 標準の `qNegIntegratedPosteriorVariance` を直接使います。
+純粋探索には BoTorch 標準の `qNegIntegratedqPosteriorVariance` を直接使います。
 
 ```python
-from botorch.acquisition.active_learning import qNegIntegratedPosteriorVariance
+from botorch.acquisition.active_learning import qNegIntegratedqPosteriorVariance
 
-acqf = qNegIntegratedPosteriorVariance(model=model, mc_points=target_points)
+acqf = qNegIntegratedqPosteriorVariance(model=model, mc_points=target_points)
 ```
 
 
@@ -34,12 +34,12 @@ acqf = qNegIntegratedPosteriorVariance(model=model, mc_points=target_points)
 
 ## 確率的な non-GP surrogate
 
-意味のある周辺モーメントを公開する non-GP にも `PosteriorVariance`・`PosteriorStd` を使えます。`NGBoostSurrogate` は Gaussian 予測分布からモーメントを供給する基準経路です。
+意味のある周辺モーメントを公開する non-GP にも `qPosteriorVariance`・`qPosteriorStd` を使えます。`NGBoostSurrogate` は Gaussian 予測分布からモーメントを供給する基準経路です。
 
 すべての Gaussian posterior 用獲得関数が使える意味ではありません。`ExpectedPredictiveInformationGain` は joint Gaussian 共分散を必要としますが、通常の NGBoost は独立な予測周辺分布だけを公開します。予測分散だけでは epistemic・aleatoric 不確実性を分離できないため、BALD もこの契約の対象外です。
 
 ## 経験 ensemble surrogate
 
-現在の `PosteriorVariance`・`PosteriorStd` は ensemble posterior を拒否します。`_is_ensemble` のモデルと BoTorch `EnsemblePosterior` の直接の返り値を含みます。
+現在の `qPosteriorVariance`・`qPosteriorStd` は ensemble posterior を拒否します。`_is_ensemble` のモデルと BoTorch `EnsemblePosterior` の直接の返り値を含みます。
 
 tree ensemble のメンバー間の広がりは、この獲得関数の不確実性契約としては認定していません。RandomForest・ExtraTrees の Active Learning には ensemble を明示的に扱う別の基準と検証が必要です。[理論](../theory/acquisition/09_active_learning.md)と[Notebook](../../examples/notebooks/28_active_learning_acquisition.ipynb)に示す実行範囲と一致させています。

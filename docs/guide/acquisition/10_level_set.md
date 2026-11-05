@@ -58,7 +58,7 @@ multi-outputやstructured outputでは境界を定めるscalar quantityを定義
 pointwise scoreの上位q点を選ぶことは、joint batch utilityの最適化ではない。
 
 ```text
-PosteriorVariance → 関数全体の不確実性を減らす
+qPosteriorVariance → 関数全体の不確実性を減らす
 Straddle / BoundaryVariance → 閾値付近を学ぶ
 ```
 

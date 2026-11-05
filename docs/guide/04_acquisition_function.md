@@ -21,7 +21,7 @@
 | 標本・q次元の集約 | `SampleReducingMCAcquisitionFunction.forward()` |
 | 出力と目的の対応解決 | robotorchanの`resolve_acquisition_composition()` |
 | 目的値の向き・出力選択 | `RegressionObjective.to_botorch()` |
-| 独自の不確実性スコア | `PosteriorVariance`・`PosteriorStd`など |
+| 独自の不確実性スコア | `qPosteriorVariance`・`qPosteriorStd`など |
 
 標準獲得関数の本体は[BoTorchのacquisition][b-acquisition]にあります。
 robotorchanは標準クラスを一括で複製・再exportする層ではありません。
@@ -113,10 +113,10 @@ EIの標本処理や集約は上流へ委譲します。
 標本生成を拒否します。分類確率をGaussian潜在関数の値と同一視しません。
 詳細な可行性の合成は[制約Guide](acquisition/08_constraints.md)に分けます。
 
-一方、[active_learning/variance.py][variance]の`PosteriorVariance`は、
+一方、[active_learning/variance.py][variance]の`qPosteriorVariance`は、
 BoTorchの`AcquisitionFunction`を継承し、分散のスコア計算を独自に実装します。
 `forward()`はq=1と出力構造を検査し、必要な出力を選んで`posterior.variance`を返します。
-`PosteriorStd`は、その値を非負へ切り詰めて平方根を取ります。
+`qPosteriorStd`は、その値を非負へ切り詰めて平方根を取ります。
 これらの経路はensemble posteriorを拒否し、複数出力では出力選択を要求します。
 
 [Straddle][straddle]も独自の`forward()`で、標準偏差への重みから

@@ -2,7 +2,7 @@ import pytest
 import torch
 from botorch.acquisition.active_learning import qNegIntegratedPosteriorVariance
 
-from robotorchan.acquisition import PosteriorStd, PosteriorVariance
+from robotorchan.acquisition import qPosteriorStd, qPosteriorVariance
 from robotorchan.models import SingleTaskGP
 
 
@@ -16,20 +16,20 @@ def test_posterior_variance_and_std_are_consistent() -> None:
     model = _model()
     X = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
 
-    variance = PosteriorVariance(model)(X)
-    std = PosteriorStd(model)(X)
+    variance = qPosteriorVariance(model)(X)
+    std = qPosteriorStd(model)(X)
 
     assert variance.shape == torch.Size([2])
     assert torch.isfinite(variance).all()
     assert torch.allclose(std.square(), variance)
 
 
-def test_posterior_variance_rejects_batch_q() -> None:
+def test_posterior_variance_averages_batch_q() -> None:
     model = _model()
     X = torch.tensor([[[0.25], [0.75]]], dtype=torch.double)
 
-    with pytest.raises(ValueError, match="q=1"):
-        PosteriorVariance(model)(X)
+    expected = model.posterior(X).variance.squeeze(-1).mean(dim=-1)
+    torch.testing.assert_close(qPosteriorVariance(model)(X), expected)
 
 
 def test_native_negative_integrated_posterior_variance() -> None:
@@ -49,4 +49,4 @@ def test_posterior_variance_validates_output_index() -> None:
     X = torch.tensor([[[0.5]]], dtype=torch.double)
 
     with pytest.raises(ValueError, match="output_index"):
-        PosteriorVariance(model, output_index=1)(X)
+        qPosteriorVariance(model, output_index=1)(X)

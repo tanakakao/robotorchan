@@ -19,10 +19,16 @@ def test_active_learning_rejects_bo_constraint_semantics() -> None:
         ProblemSpec(purpose=ProblemPurpose.ACTIVE_LEARNING, constrained=True)
 
 
-def test_q_greater_than_one_excludes_q1_active_learning_acquisitions() -> None:
+def test_q_greater_than_one_includes_only_batch_capable_active_learning() -> None:
     spec = ProblemSpec(
         purpose=ProblemPurpose.ACTIVE_LEARNING,
         q=2,
     )
 
-    assert recommend_compatible_workflows(spec) == ()
+    recommendations = recommend_compatible_workflows(spec)
+    assert recommendations
+    assert {item.acquisition_name for item in recommendations} == {
+        "qJointPosteriorEntropy",
+        "qPosteriorStd",
+        "qPosteriorVariance",
+    }

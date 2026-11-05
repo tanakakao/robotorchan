@@ -13,7 +13,7 @@ Level-set estimation
     指定response levelの上下・境界を学ぶ
 ~~~
 
-PosteriorVarianceのようなfunction-learning criterionは「どこが不確実か」を見ます。一方、level-set
+qPosteriorVarianceのようなfunction-learning criterionは「どこが不確実か」を見ます。一方、level-set
 criterionは「そのuncertaintyが指定thresholdの分類を変え得るか」まで見ます。
 
 ## 10.2 最適値ではなく境界を学ぶ
@@ -357,7 +357,7 @@ uncertainty の scale と target proximity は variance と standardized Gaussia
 ここで定義した分散と境界近接度の積は、Straddleと同じ手法でも、無作為化Straddleの期待値でもありません。
 補助的なヒューリスティックを文献の手法と混同せず、目的、数式、適用範囲を定めて評価します。
 
-## 10.18 PosteriorVarianceとの違い
+## 10.18 qPosteriorVarianceとの違い
 
 事後分散基準 は
 

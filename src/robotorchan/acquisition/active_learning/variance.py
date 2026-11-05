@@ -10,8 +10,8 @@ from botorch.utils.transforms import average_over_ensemble_models
 from torch import Tensor
 
 
-class PosteriorVariance(AcquisitionFunction):
-    """Select q=1 inputs with high posterior variance."""
+class qPosteriorVariance(AcquisitionFunction):
+    """Select batches by mean marginal posterior variance (without diversity)."""
 
     def __init__(self, model: Model, *, output_index: int | None = None) -> None:
         super().__init__(model=model)
@@ -19,21 +19,17 @@ class PosteriorVariance(AcquisitionFunction):
 
     @average_over_ensemble_models
     def forward(self, X: Tensor) -> Tensor:
-        """Evaluate posterior variance for q=1 scalar-output candidates."""
-        if X.shape[-2] != 1:
-            raise ValueError(
-                "PosteriorVariance supports q=1; use qNegIntegratedPosteriorVariance for batch AL."
-            )
+        """Return mean marginal variance across q candidates."""
 
         if getattr(self.model, "_is_ensemble", False):
-            raise ValueError("PosteriorVariance does not yet support ensemble posteriors.")
+            raise ValueError("qPosteriorVariance does not yet support ensemble posteriors.")
         posterior = self.model.posterior(X)
         if isinstance(posterior, EnsemblePosterior):
-            raise ValueError("PosteriorVariance does not yet support ensemble posteriors.")
+            raise ValueError("qPosteriorVariance does not yet support ensemble posteriors.")
         variance = posterior.variance
         if variance.ndim != X.ndim:
             raise ValueError(
-                "PosteriorVariance does not support structured-output posteriors; "
+                "qPosteriorVariance does not support structured-output posteriors; "
                 "scalarize the model output first."
             )
 
@@ -47,12 +43,12 @@ class PosteriorVariance(AcquisitionFunction):
         elif num_outputs != 1:
             raise ValueError("output_index is required for multi-output posteriors.")
 
-        return variance.squeeze(-1).squeeze(-1)
+        return variance.squeeze(-1).mean(dim=-1)
 
 
-class PosteriorStd(PosteriorVariance):
-    """Select q=1 inputs with high posterior standard deviation."""
+class qPosteriorStd(qPosteriorVariance):
+    """Select batches by square root of mean marginal posterior variance."""
 
     def forward(self, X: Tensor) -> Tensor:
-        """Evaluate posterior standard deviation for q=1 candidates."""
+        """Return the square root of the batch mean variance."""
         return torch.sqrt(super().forward(X).clamp_min(0.0))
