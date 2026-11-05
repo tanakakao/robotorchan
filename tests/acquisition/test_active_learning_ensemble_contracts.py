@@ -1,7 +1,7 @@
 import torch
 from botorch.posteriors.ensemble import EnsemblePosterior
 
-from robotorchan.acquisition import BoundaryVariance, qPosteriorVariance, Straddle
+from robotorchan.acquisition import BoundaryVariance, Straddle, qPosteriorVariance
 from robotorchan.acquisition.registry import get_acquisition_registry_entry
 
 
