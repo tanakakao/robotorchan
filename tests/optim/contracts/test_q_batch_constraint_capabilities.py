@@ -43,7 +43,7 @@ def test_interpoint_linear_constraint_joint_batch(optimizer: str, q: int) -> Non
             (
                 torch.tensor([[0, 0], [1, 0]]),
                 torch.tensor([1.0, 1.0], dtype=torch.double),
-                0.0,
+                0.2,
             ),
         ),
     )
@@ -65,5 +65,5 @@ def test_interpoint_linear_constraint_joint_batch(optimizer: str, q: int) -> Non
     assert candidates.shape == (q, 1)
     assert torch.all(candidates >= bounds[0])
     assert torch.all(candidates <= bounds[1])
-    assert (candidates[0, 0] + candidates[1, 0]).item() >= 0.0
+    assert (candidates[0, 0] + candidates[1, 0]).item() >= 0.2 - 1e-8
     torch.testing.assert_close(value.reshape(()), acquisition(candidates.unsqueeze(0)).reshape(()))
