@@ -75,7 +75,7 @@ def test_ngboost_surrogate_fit_posterior_and_mc_acquisition() -> None:
 
 @pytest.mark.skipif(not NGBOOST_AVAILABLE, reason="optional ngboost dependency is not installed")
 def test_ngboost_supports_posterior_variance_active_learning() -> None:
-    from robotorchan.acquisition import PosteriorStd, PosteriorVariance
+    from robotorchan.acquisition import qPosteriorStd, qPosteriorVariance
     from robotorchan.models import NGBoostSurrogate
 
     train_x = torch.linspace(0, 1, 12, dtype=torch.double).unsqueeze(-1)
@@ -89,8 +89,8 @@ def test_ngboost_supports_posterior_variance_active_learning() -> None:
     )
     model.fit()
     candidates = torch.tensor([[[0.15]], [[0.55]], [[0.9]]], dtype=torch.double)
-    variance = PosteriorVariance(model)(candidates)
-    std = PosteriorStd(model)(candidates)
+    variance = qPosteriorVariance(model)(candidates)
+    std = qPosteriorStd(model)(candidates)
     assert variance.shape == torch.Size([3])
     assert torch.isfinite(variance).all()
     assert torch.all(variance >= 0)
