@@ -47,9 +47,7 @@ class Straddle(AcquisitionFunction):
 
     @average_over_ensemble_models
     def forward(self, X: Tensor) -> Tensor:
-        """Evaluate the straddle score for q=1 candidates."""
-        if X.shape[-2] != 1:
-            raise ValueError("Straddle supports q=1.")
+        """Return mean marginal Straddle score across the q candidates."""
         if getattr(self.model, "_is_ensemble", False):
             raise ValueError("Straddle does not yet support ensemble posteriors.")
         posterior = self.model.posterior(X)
@@ -60,7 +58,7 @@ class Straddle(AcquisitionFunction):
         std = variance.clamp_min(0.0).sqrt()
         target = torch.as_tensor(self.target, dtype=mean.dtype, device=mean.device)
         score = self.beta * std - (mean - target).abs()
-        return score.squeeze(-1).squeeze(-1)
+        return score.squeeze(-1).mean(dim=-1)
 
 
 class BoundaryVariance(Straddle):
@@ -83,9 +81,7 @@ class BoundaryVariance(Straddle):
 
     @average_over_ensemble_models
     def forward(self, X: Tensor) -> Tensor:
-        """Evaluate variance weighted by Gaussian target proximity."""
-        if X.shape[-2] != 1:
-            raise ValueError("BoundaryVariance supports q=1.")
+        """Return mean boundary-weighted variance across q candidates."""
         if getattr(self.model, "_is_ensemble", False):
             raise ValueError("BoundaryVariance does not yet support ensemble posteriors.")
         posterior = self.model.posterior(X)
@@ -97,4 +93,4 @@ class BoundaryVariance(Straddle):
         scale = variance.sqrt().clamp_min(torch.finfo(variance.dtype).eps)
         proximity = torch.exp(-0.5 * ((mean - target) / scale).square())
         score = variance * proximity
-        return score.squeeze(-1).squeeze(-1)
+        return score.squeeze(-1).mean(dim=-1)
