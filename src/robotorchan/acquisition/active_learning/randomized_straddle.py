@@ -54,9 +54,7 @@ class RandomizedStraddle(Straddle):
 
     @average_over_ensemble_models
     def forward(self, X: Tensor) -> Tensor:
-        """Evaluate one fixed randomized Straddle surface."""
-        if X.shape[-2] != 1:
-            raise ValueError("RandomizedStraddle supports q=1.")
+        """Evaluate a batch with one shared random coefficient per round."""
         if getattr(self.model, "_is_ensemble", False):
             raise ValueError("RandomizedStraddle does not yet support ensemble posteriors.")
         posterior = self.model.posterior(X)
@@ -68,4 +66,4 @@ class RandomizedStraddle(Straddle):
         target = torch.as_tensor(self.target, dtype=mean.dtype, device=mean.device)
         beta = self._beta_for(mean)
         score = beta.sqrt() * std - (mean - target).abs()
-        return score.squeeze(-1).squeeze(-1)
+        return score.squeeze(-1).mean(dim=-1)
