@@ -91,9 +91,7 @@ def test_q_batch_limit_matches_active_learning_registry() -> None:
 
 def test_q_batch_accepts_marginal_variance_acquisitions() -> None:
     for name in ("qPosteriorVariance", "qPosteriorStd", "qJointPosteriorEntropy"):
-        result = check_acquisition_optimizer_compatibility(
-            name, CandidateOptimizer.CONTINUOUS, q=4
-        )
+        result = check_acquisition_optimizer_compatibility(name, CandidateOptimizer.CONTINUOUS, q=4)
         assert result.compatible
 
 
