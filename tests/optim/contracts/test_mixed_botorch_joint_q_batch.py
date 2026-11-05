@@ -10,6 +10,7 @@ from robotorchan.optim import MixedVariableSpace, optimize_acqf
 class _JointAcquisition(AcquisitionFunction):
     def __init__(self) -> None:
         super().__init__(model=None)
+        self.X_pending = None
 
     def forward(self, X: torch.Tensor) -> torch.Tensor:
         fit = -(X[..., 0] - 0.6).square().sum(dim=-1)
