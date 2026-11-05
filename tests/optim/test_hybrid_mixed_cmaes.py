@@ -113,7 +113,7 @@ def test_hybrid_runs_real_mixed_cmaes_global_stage():
 
 
 @pytest.mark.parametrize("global_optimizer", ["de", "cmaes", "mixed_ga", "pso"])
-def test_hybrid_mixed_qbatch_handoff_preserves_global_candidates(global_optimizer):
+def test_hybrid_mixed_qbatch_handoff_uses_single_point_initial_conditions(global_optimizer):
     bounds = torch.tensor([[0.0, 0.0, 10.0], [1.0, 4.0, 90.0]], dtype=torch.double)
     space = MixedVariableSpace(
         bounds,
@@ -149,7 +149,7 @@ def test_hybrid_mixed_qbatch_handoff_preserves_global_candidates(global_optimize
     global_stage.assert_called_once()
     assert global_stage.call_args.kwargs["variable_space"] is space
     initial = local_stage.call_args.kwargs["batch_initial_conditions"]
-    torch.testing.assert_close(initial, global_candidate.unsqueeze(0))
+    torch.testing.assert_close(initial, global_candidate[:1].unsqueeze(0))
     assert local_stage.call_args.kwargs["q"] == 2
     assert local_stage.call_args.kwargs["fixed_features_list"] == [{1: 1.0, 2: 90.0}]
     torch.testing.assert_close(candidates, global_candidate)
