@@ -52,3 +52,40 @@ def test_mixed_cmaes_respects_fixed_categorical_values():
         seed=5,
     )
     assert candidate[0, 1].item() == 30.0
+
+
+def test_mixed_cmaes_qbatch_evaluations_preserve_discrete_legality():
+    class CheckedAcquisition(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.calls = 0
+
+        def forward(self, candidates):
+            assert candidates.shape == (1, 2, 3)
+            assert torch.equal(candidates[..., 1], candidates[..., 1].round())
+            assert torch.all(
+                torch.isin(candidates[..., 2], candidates.new_tensor([10.0, 30.0, 90.0]))
+            )
+            self.calls += 1
+            return -((candidates[..., 0] - 0.5) ** 2).sum(dim=(-1, -2))
+
+    bounds = torch.tensor([[0.0, 1.0, 10.0], [1.0, 3.0, 90.0]], dtype=torch.double)
+    space = MixedVariableSpace(
+        bounds,
+        integer_dims=(1,),
+        categorical_values={2: (90.0, 10.0, 30.0)},
+    )
+    acquisition = CheckedAcquisition()
+    candidates, value = optimize_acqf_mixed_cmaes(
+        acquisition,
+        bounds,
+        q=2,
+        variable_space=space,
+        population_size=8,
+        max_generations=3,
+        seed=19,
+    )
+
+    assert acquisition.calls >= 2
+    assert candidates.shape == (2, 3)
+    assert value.ndim == 0
