@@ -538,3 +538,22 @@ def test_hybrid_mixed_rejects_interpoint_nonlinear_before_global_search() -> Non
         )
 
     global_optimizer.assert_not_called()
+
+
+@pytest.mark.parametrize("configs", [None, []])
+def test_hybrid_mixed_requires_nonempty_configs_before_global_search(configs) -> None:
+    bounds = torch.tensor([[0.0, 10.0], [1.0, 90.0]], dtype=torch.double)
+    space = MixedVariableSpace(bounds, categorical_values={1: (10.0, 30.0, 90.0)})
+    global_optimizer = Mock()
+
+    with pytest.raises(ValueError, match="requires mixed_fixed_features_list"):
+        optimize_acqf_hybrid(
+            _Quadratic(),
+            bounds,
+            q=2,
+            global_optimizer=global_optimizer,
+            variable_space=space,
+            mixed_fixed_features_list=configs,
+        )
+
+    global_optimizer.assert_not_called()
