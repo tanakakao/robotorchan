@@ -516,3 +516,25 @@ def test_hybrid_rejects_unsupported_restarts_before_global_search() -> None:
         )
 
     global_optimizer.assert_not_called()
+
+
+def test_hybrid_mixed_rejects_interpoint_nonlinear_before_global_search() -> None:
+    bounds = torch.tensor([[0.0, 10.0], [1.0, 90.0]], dtype=torch.double)
+    space = MixedVariableSpace(bounds, categorical_values={1: (10.0, 30.0, 90.0)})
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda X: X.sum() - 1.0, False),)
+    )
+    global_optimizer = Mock()
+
+    with pytest.raises(ValueError, match="inter-point nonlinear constraints"):
+        optimize_acqf_hybrid(
+            _Quadratic(),
+            bounds,
+            q=2,
+            global_optimizer=global_optimizer,
+            constraints=constraints,
+            variable_space=space,
+            mixed_fixed_features_list=[{1: 10.0}, {1: 30.0}, {1: 90.0}],
+        )
+
+    global_optimizer.assert_not_called()
