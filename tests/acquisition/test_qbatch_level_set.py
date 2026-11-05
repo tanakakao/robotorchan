@@ -3,13 +3,13 @@
 import pytest
 import torch
 
-from robotorchan.acquisition import BoundaryVariance, RandomizedStraddle, Straddle
+from robotorchan.acquisition import qBoundaryVariance, qRandomizedStraddle, qStraddle
 from robotorchan.acquisition.registry import get_acquisition_registry_entry
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim.backends import optimize_acqf_sampling
 
 
-@pytest.mark.parametrize("acquisition_type", [Straddle, BoundaryVariance, RandomizedStraddle])
+@pytest.mark.parametrize("acquisition_type", [qStraddle, qBoundaryVariance, qRandomizedStraddle])
 @pytest.mark.parametrize("q", [1, 2, 4])
 def test_level_set_batch_is_mean_of_pointwise_scores(acquisition_type: type, q: int) -> None:
     train_x = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
@@ -28,7 +28,7 @@ def test_randomized_straddle_resample_changes_shared_coefficient() -> None:
     train_x = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
     model = SingleTaskGP(train_x, train_x.sin())
     model.eval()
-    acquisition = RandomizedStraddle(
+    acquisition = qRandomizedStraddle(
         model, target=0.0, generator=torch.Generator().manual_seed(12)
     )
     X = torch.tensor([[[0.2], [0.6], [0.8]]], dtype=torch.double)
@@ -42,7 +42,7 @@ def test_straddle_q4_optimizes_candidates() -> None:
     train_x = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
     model = SingleTaskGP(train_x, (5 * train_x).sin())
     model.eval()
-    acquisition = Straddle(model, target=0.0)
+    acquisition = qStraddle(model, target=0.0)
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     candidates, value = optimize_acqf_sampling(
         acquisition, bounds, q=4, num_samples=48, method="sobol", seed=17
