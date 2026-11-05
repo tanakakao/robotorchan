@@ -1,6 +1,6 @@
 import pytest
 import torch
-from botorch.acquisition.active_learning import qNegIntegratedqPosteriorVariance
+from botorch.acquisition.active_learning import qNegIntegratedPosteriorVariance
 
 from robotorchan.acquisition import qPosteriorStd, qPosteriorVariance
 from robotorchan.models import SingleTaskGP
@@ -35,7 +35,7 @@ def test_posterior_variance_rejects_batch_q() -> None:
 def test_native_negative_integrated_posterior_variance() -> None:
     model = _model()
     mc_points = torch.linspace(0.0, 1.0, 16, dtype=torch.double).unsqueeze(-1)
-    acquisition = qNegIntegratedqPosteriorVariance(model=model, mc_points=mc_points)
+    acquisition = qNegIntegratedPosteriorVariance(model=model, mc_points=mc_points)
     X = torch.tensor([[[0.3], [0.7]]], dtype=torch.double)
 
     value = acquisition(X)
