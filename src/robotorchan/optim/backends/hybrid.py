@@ -60,7 +60,7 @@ def optimize_acqf_hybrid(
                 variable_space.validate_fixed_features(config)
         structured_dims = set(variable_space.integer_dims) | set(variable_space.categorical_dims)
         if structured_dims:
-            if mixed_fixed_features_list is None:
+            if not mixed_fixed_features_list:
                 raise ValueError(
                     "Structured hybrid optimization requires mixed_fixed_features_list "
                     "for the BoTorch mixed local stage."
