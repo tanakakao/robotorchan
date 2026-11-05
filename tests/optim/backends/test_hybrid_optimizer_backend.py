@@ -454,7 +454,6 @@ def test_hybrid_real_mixed_de_qbatch_with_integer_and_category() -> None:
     torch.testing.assert_close(value, acquisition(candidate.unsqueeze(0)).reshape(()))
 
 
-
 def test_hybrid_real_mixed_cmaes_qbatch_with_integer_and_category() -> None:
     pytest.importorskip("cmaes")
 
