@@ -63,6 +63,35 @@ _CLASSIFICATION_Q1_ACQUISITIONS = frozenset(
 )
 
 
+# Generic joint-q optimizer evidence uses synthetic acquisitions, not registered pairs.
+# This must not be promoted to acquisition-optimizer runtime verification.
+_JOINT_Q_OPTIMIZER_EVIDENCE = {
+    "botorch": "tests/optim/contracts/test_native_joint_q_batch_contract.py",
+    "cmaes": "tests/optim/contracts/test_cmaes_hybrid_joint_q_batch.py",
+    "de": "tests/optim/contracts/test_joint_q_batch_contract.py",
+    "ga": "tests/optim/contracts/test_joint_q_batch_contract.py",
+    "hybrid": "tests/optim/contracts/test_cmaes_hybrid_joint_q_batch.py",
+    "pso": "tests/optim/contracts/test_joint_q_batch_contract.py",
+    "random": "tests/optim/contracts/test_joint_q_batch_contract.py",
+    "sobol": "tests/optim/contracts/test_joint_q_batch_contract.py",
+    "torch_adam": "tests/optim/contracts/test_native_joint_q_batch_contract.py",
+    "torch_adamw": "tests/optim/contracts/test_native_joint_q_batch_contract.py",
+    "torch_sgd": "tests/optim/contracts/test_native_joint_q_batch_contract.py",
+}
+_MIXED_Q_OPTIMIZER_EVIDENCE = {
+    "botorch": "tests/optim/contracts/test_mixed_botorch_joint_q_batch.py",
+    "cmaes": "tests/optim/contracts/test_mixed_cmaes_joint_q_batch.py",
+    "de": "tests/optim/contracts/test_mixed_de_joint_q_batch.py",
+    "ga": "tests/optim/contracts/test_mixed_joint_q_batch_contract.py",
+    "pso": "tests/optim/contracts/test_mixed_joint_q_batch_contract.py",
+    "random": "tests/optim/contracts/test_mixed_joint_q_batch_contract.py",
+    "sobol": "tests/optim/contracts/test_mixed_joint_q_batch_contract.py",
+}
+_INTERPOINT_Q_OPTIMIZER_EVIDENCE = {
+    "de": "tests/optim/contracts/test_mixed_de_q_batch_interpoint_constraints.py",
+    "ga": "tests/optim/contracts/test_mixed_q_batch_interpoint_constraints.py",
+}
+
 def build_inventory() -> dict[str, Any]:
     """Collect registered capabilities without claiming runtime support."""
     models = {
@@ -285,7 +314,37 @@ def build_inventory() -> dict[str, Any]:
         gap_triage[group].append(item)
     gap_triage_counts = {name: len(items) for name, items in gap_triage.items()}
     return {
-        "schema_version": 11,
+        "schema_version": 12,
+        "q_batch_optimizer_contracts": {
+            name: {
+                "q_values": [1, 2, 4],
+                "joint_synthetic_acquisition": {
+                    "status": "solver_mock_only" if name == "cmaes" else "runtime_test_present",
+                    "evidence": [_JOINT_Q_OPTIMIZER_EVIDENCE[name]],
+                },
+                "mixed_q": {
+                    "status": (
+                        "solver_optional_not_guaranteed" if name == "cmaes"
+                        else "sequential_backend" if name == "botorch"
+                        else "runtime_test_present"
+                    ) if name in _MIXED_Q_OPTIMIZER_EVIDENCE else "unverified",
+                    "evidence": (
+                        [_MIXED_Q_OPTIMIZER_EVIDENCE[name]]
+                        if name in _MIXED_Q_OPTIMIZER_EVIDENCE else []
+                    ),
+                },
+                "mixed_interpoint_inequality": {
+                    "status": "runtime_test_present" if name in _INTERPOINT_Q_OPTIMIZER_EVIDENCE
+                    else "unverified",
+                    "evidence": (
+                        [_INTERPOINT_Q_OPTIMIZER_EVIDENCE[name]]
+                        if name in _INTERPOINT_Q_OPTIMIZER_EVIDENCE else []
+                    ),
+                },
+                "registered_acquisition_pairs_verified_q_gt_1": False,
+            }
+            for name in sorted(OPTIMIZER_CAPABILITIES)
+        },
         "optimizer_variable_type_matrix": optimizer_variable_types,
         "acquisition_variable_type_coverage": acquisition_variable_type_coverage,
         "variable_type_gap_queue": variable_type_gap_queue,
@@ -342,6 +401,8 @@ def build_inventory() -> dict[str, Any]:
         ],
         "limitations": [
             "Registry membership does not establish runtime compatibility.",
+            "Synthetic joint-q optimizer tests do not verify registered acquisition pairs.",
+            "Mixed BoTorch q-batch uses sequential candidate generation, not joint optimization.",
             "Acquisition-optimizer evidence applies only to its stated model and test scope.",
             "One-shot paths require separate verification; q=1 does not remove this need.",
             "Specialized paths and composition factories require separate validation.",
@@ -379,6 +440,7 @@ def build_summary(report: dict[str, Any]) -> dict[str, Any]:
             if key not in ("verified_pairs", "unverified_pairs")
         },
         "variable_type_status_counts": status_counts,
+        "q_batch_optimizer_contracts": report["q_batch_optimizer_contracts"],
         "gap_triage_counts": report["gap_triage_counts"],
         "limitations": report["limitations"],
     }
