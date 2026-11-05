@@ -20,9 +20,7 @@ class _JointAcquisition(AcquisitionFunction):
 def test_unsupported_linear_constraints_rejected(optimizer: str, q: int) -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
-        inequality_constraints=(
-            (torch.tensor([0]), torch.tensor([1.0], dtype=torch.double), 0.2),
-        ),
+        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0], dtype=torch.double), 0.2),),
     )
     with pytest.raises(NotImplementedError, match="linear inequalities"):
         optimize_acqf(
