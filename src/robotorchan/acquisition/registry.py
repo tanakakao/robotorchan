@@ -48,6 +48,18 @@ ACQUISITION_REGISTRY: dict[str, AcquisitionRegistryEntry] = {
         "Straddle",
     )
 }
+ACQUISITION_REGISTRY["qJointPosteriorEntropy"] = AcquisitionRegistryEntry(
+    acquisition_name="qJointPosteriorEntropy",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.ACTIVE_LEARNING,
+        posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+        max_q=None,
+        supports_multi_output=False,
+        requires_single_output=True,
+    ),
+    implementation_strategy="robotorchan joint Gaussian batch entropy",
+    limitations=("requires a single-output joint Gaussian posterior",),
+)
 ACQUISITION_REGISTRY["ExpectedPredictiveInformationGain"] = _active_learning(
     "ExpectedPredictiveInformationGain",
     posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
