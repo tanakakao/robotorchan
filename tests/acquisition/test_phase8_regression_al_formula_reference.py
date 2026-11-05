@@ -2,7 +2,7 @@
 
 import torch
 
-from robotorchan.acquisition import BoundaryVariance, PosteriorStd, PosteriorVariance, Straddle
+from robotorchan.acquisition import BoundaryVariance, qPosteriorStd, qPosteriorVariance, Straddle
 from robotorchan.models import SingleTaskGP
 
 
@@ -27,8 +27,8 @@ def test_regression_al_scores_match_independent_moment_formulas() -> None:
         expected_boundary = variance.clamp_min(0.0) * torch.exp(
             -0.5 * ((mean - target) / scale).square()
         )
-        actual_variance = PosteriorVariance(model)(candidates)
-        actual_std = PosteriorStd(model)(candidates)
+        actual_variance = qPosteriorVariance(model)(candidates)
+        actual_std = qPosteriorStd(model)(candidates)
         actual_straddle = Straddle(model, target=target, beta=beta)(candidates)
         actual_boundary = BoundaryVariance(model, target=target)(candidates)
 
