@@ -285,3 +285,32 @@ def test_hybrid_runtime_preserves_dtype_and_improves_qbatch() -> None:
     assert torch.isfinite(value).all()
     initial_value = _Quadratic()(global_candidate.unsqueeze(0)).reshape(())
     assert value >= initial_value
+
+
+def test_hybrid_real_mixed_ga_global_and_botorch_local_runtime() -> None:
+    class _MixedQuadratic(AcquisitionFunction):
+        def __init__(self) -> None:
+            torch.nn.Module.__init__(self)
+
+        def forward(self, X: Tensor) -> Tensor:
+            return -((X[..., 0] - 0.7) ** 2).sum(dim=-1)
+
+    bounds = torch.tensor([[0.0, 10.0], [1.0, 90.0]], dtype=torch.double)
+    space = MixedVariableSpace(bounds, categorical_values={1: (10.0, 30.0, 90.0)})
+    candidate, value = optimize_acqf_hybrid(
+        _MixedQuadratic(),
+        bounds,
+        q=1,
+        global_optimizer="mixed_ga",
+        global_options={"population_size": 16, "generations": 4},
+        local_options={"maxiter": 20},
+        variable_space=space,
+        mixed_fixed_features_list=[{1: 10.0}, {1: 30.0}, {1: 90.0}],
+        seed=37,
+    )
+
+    assert candidate.shape == (1, 2)
+    assert candidate.dtype == bounds.dtype
+    assert float(candidate[0, 1]) in {10.0, 30.0, 90.0}
+    assert torch.isfinite(value)
+    torch.testing.assert_close(value, _MixedQuadratic()(candidate.unsqueeze(0)).reshape(()))
