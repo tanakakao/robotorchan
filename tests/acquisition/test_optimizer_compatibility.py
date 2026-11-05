@@ -77,7 +77,7 @@ def test_standard_acquisition_rejects_mixed_one_shot_optimizer() -> None:
 
 
 def test_q_batch_limit_matches_active_learning_registry() -> None:
-    for name in ("PosteriorVariance", "PredictiveEntropy", "BALD"):
+    for name in ("qPosteriorVariance", "PredictiveEntropy", "BALD"):
         accepted = check_acquisition_optimizer_compatibility(
             name, CandidateOptimizer.CONTINUOUS, q=1
         )
