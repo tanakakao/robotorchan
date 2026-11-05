@@ -102,13 +102,13 @@ Theoryで定義できることと、現在の実行可能workflowは同義では
 
 ```text
 candidate 自身の uncertainty
-    → PosteriorVariance / PosteriorStd
+    → qPosteriorVariance / qPosteriorStd
 
 target region 全体の uncertainty
     → qNIPV / integrated variance reduction
 ```
 
-PosteriorVariance は単純で解釈しやすい一方、candidate を観測した結果ほかの場所の uncertainty がどう減るかは直接評価しません。
+qPosteriorVariance は単純で解釈しやすい一方、candidate を観測した結果ほかの場所の uncertainty がどう減るかは直接評価しません。
 
 ```text
 established boundary criterion
@@ -133,7 +133,7 @@ MultiTaskGP を使っていることだけで multi-task experimental design が
 | Multi-step planning | qMultiStepLookahead | adaptive future decisions |
 | Multi-objective | qLogEHVI / qLogNEHVI / qLogNParEGO | Pareto utility |
 | Unknown constraints | constrained acquisition | feasible utility |
-| Function learning | PosteriorVariance / qNIPV | predictive uncertainty |
+| Function learning | qPosteriorVariance / qNIPV | predictive uncertainty |
 | Target-aware AL | EPIG | information about target predictions |
 | Boundary learning | Straddle family | uncertainty near threshold |
 | Multi-fidelity | MF-KG + cost-aware utility | target-fidelity value per cost |
