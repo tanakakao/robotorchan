@@ -17,13 +17,14 @@ def _active_learning(
     supports_multi_output: bool = True,
     requires_single_output: bool = False,
     limitations: tuple[str, ...] = (),
+    max_q: int | None = 1,
 ) -> AcquisitionRegistryEntry:
     return AcquisitionRegistryEntry(
         acquisition_name=name,
         capabilities=AcquisitionCapabilities(
             purpose=AcquisitionPurpose.ACTIVE_LEARNING,
             posterior_requirement=posterior_requirement,
-            max_q=1,
+            max_q=max_q,
             supports_multi_output=supports_multi_output,
             requires_single_output=requires_single_output,
         ),
@@ -40,14 +41,19 @@ ACQUISITION_REGISTRY: dict[str, AcquisitionRegistryEntry] = {
             "structured outputs require scalarization",
         ),
     )
-    for name in (
-        "BoundaryVariance",
-        "PosteriorStd",
-        "PosteriorVariance",
-        "RandomizedStraddle",
-        "Straddle",
-    )
+    for name in ("BoundaryVariance", "RandomizedStraddle", "Straddle")
 }
+for name in ("PosteriorStd", "PosteriorVariance"):
+    ACQUISITION_REGISTRY[name] = _active_learning(
+        name,
+        max_q=None,
+        limitations=(
+            "q>1 uses mean marginal variance without candidate diversity",
+            "ensemble posteriors are not supported",
+            "structured outputs require scalarization",
+        ),
+    )
+
 ACQUISITION_REGISTRY["qJointPosteriorEntropy"] = AcquisitionRegistryEntry(
     acquisition_name="qJointPosteriorEntropy",
     capabilities=AcquisitionCapabilities(
