@@ -322,7 +322,7 @@ def test_hybrid_real_mixed_ga_qbatch_with_integer_and_category() -> None:
             torch.nn.Module.__init__(self)
 
         def forward(self, X: Tensor) -> Tensor:
-            return -((X[..., 0] - 0.65) ** 2).sum(dim=(-2, -1))
+            return -((X[..., 0] - 0.65) ** 2).sum(dim=-1)
 
     bounds = torch.tensor([[0.0, 1.0, 10.0], [1.0, 2.0, 90.0]], dtype=torch.double)
     space = MixedVariableSpace(
