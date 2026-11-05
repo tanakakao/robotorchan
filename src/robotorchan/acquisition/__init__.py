@@ -11,6 +11,7 @@ from robotorchan.acquisition.active_learning import (
     PredictiveEntropy,
     ProbabilityVariance,
     RandomizedStraddle,
+    qJointPosteriorEntropy,
     Straddle,
 )
 from robotorchan.acquisition.capabilities import (
@@ -73,6 +74,7 @@ __all__ = [
     "RandomizedStraddle",
     "SampleShapeContract",
     "Straddle",
+    "qJointPosteriorEntropy",
     "get_acquisition_registry_entry",
     "make_botorch_multiobjective_bridge",
     "make_botorch_objective_bridge",
