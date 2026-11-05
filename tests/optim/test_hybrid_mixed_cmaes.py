@@ -120,9 +120,7 @@ def test_hybrid_mixed_qbatch_handoff_preserves_global_candidates(global_optimize
         integer_dims=(1,),
         categorical_values={2: (10.0, 30.0, 90.0)},
     )
-    global_candidate = torch.tensor(
-        [[0.2, 1.0, 90.0], [0.8, 3.0, 10.0]], dtype=torch.double
-    )
+    global_candidate = torch.tensor([[0.2, 1.0, 90.0], [0.8, 3.0, 10.0]], dtype=torch.double)
     backend = {
         "de": "optimize_acqf_de",
         "cmaes": "optimize_acqf_mixed_cmaes",
