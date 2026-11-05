@@ -60,7 +60,7 @@ scalarization で Pareto front を探索
 
 #### Threshold boundary を学びたい：実装上の補足
 
-BoundaryVariance は robotorchan-specific heuristic であり、literature named method として扱いません。
+qBoundaryVariance は robotorchan-specific heuristic であり、literature named method として扱いません。
 
 #### Model capability と acquisition capability を混同しない：実装上の補足
 
@@ -112,13 +112,13 @@ qPosteriorVariance は単純で解釈しやすい一方、candidate を観測し
 
 ```text
 established boundary criterion
-    → Straddle
+    → qStraddle
 
 randomized exploration coefficient
-    → RandomizedStraddle
+    → qRandomizedStraddle
 
 variance × target proximity heuristic
-    → BoundaryVariance
+    → qBoundaryVariance
 ```
 
 MultiTaskGP を使っていることだけで multi-task experimental design が自動的に定義されるわけではありません。
@@ -135,7 +135,7 @@ MultiTaskGP を使っていることだけで multi-task experimental design が
 | Unknown constraints | constrained acquisition | feasible utility |
 | Function learning | qPosteriorVariance / qNIPV | predictive uncertainty |
 | Target-aware AL | EPIG | information about target predictions |
-| Boundary learning | Straddle family | uncertainty near threshold |
+| Boundary learning | qStraddle family | uncertainty near threshold |
 | Multi-fidelity | MF-KG + cost-aware utility | target-fidelity value per cost |
 
 ## 要求能力から互換性の理由を組み立てる
