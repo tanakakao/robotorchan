@@ -10,7 +10,7 @@ from botorch.utils.transforms import average_over_ensemble_models
 from torch import Tensor
 
 
-class Straddle(AcquisitionFunction):
+class qStraddle(AcquisitionFunction):
     """Prefer uncertain points whose posterior mean is near a target level."""
 
     def __init__(
@@ -31,7 +31,7 @@ class Straddle(AcquisitionFunction):
     def _select_output(self, value: Tensor, X: Tensor) -> Tensor:
         if value.ndim != X.ndim:
             raise ValueError(
-                "Straddle does not support structured-output posteriors; "
+                "qStraddle does not support structured-output posteriors; "
                 "scalarize the model output first."
             )
         num_outputs = value.shape[-1]
@@ -47,12 +47,12 @@ class Straddle(AcquisitionFunction):
 
     @average_over_ensemble_models
     def forward(self, X: Tensor) -> Tensor:
-        """Return mean marginal Straddle score across the q candidates."""
+        """Return mean marginal qStraddle score across the q candidates."""
         if getattr(self.model, "_is_ensemble", False):
-            raise ValueError("Straddle does not yet support ensemble posteriors.")
+            raise ValueError("qStraddle does not yet support ensemble posteriors.")
         posterior = self.model.posterior(X)
         if isinstance(posterior, EnsemblePosterior):
-            raise ValueError("Straddle does not yet support ensemble posteriors.")
+            raise ValueError("qStraddle does not yet support ensemble posteriors.")
         mean = self._select_output(posterior.mean, X)
         variance = self._select_output(posterior.variance, X)
         std = variance.clamp_min(0.0).sqrt()
@@ -61,11 +61,11 @@ class Straddle(AcquisitionFunction):
         return score.squeeze(-1).mean(dim=-1)
 
 
-class BoundaryVariance(Straddle):
+class qBoundaryVariance(qStraddle):
     """Weight posterior variance by proximity to a target boundary.
 
     This is a robotorchan-specific heuristic rather than a named BoTorch or
-    literature acquisition. Unlike Straddle, it has no exploration multiplier.
+    literature acquisition. Unlike qStraddle, it has no exploration multiplier.
     """
 
     def __init__(
@@ -83,10 +83,10 @@ class BoundaryVariance(Straddle):
     def forward(self, X: Tensor) -> Tensor:
         """Return mean boundary-weighted variance across q candidates."""
         if getattr(self.model, "_is_ensemble", False):
-            raise ValueError("BoundaryVariance does not yet support ensemble posteriors.")
+            raise ValueError("qBoundaryVariance does not yet support ensemble posteriors.")
         posterior = self.model.posterior(X)
         if isinstance(posterior, EnsemblePosterior):
-            raise ValueError("BoundaryVariance does not yet support ensemble posteriors.")
+            raise ValueError("qBoundaryVariance does not yet support ensemble posteriors.")
         mean = self._select_output(posterior.mean, X)
         variance = self._select_output(posterior.variance, X).clamp_min(0.0)
         target = torch.as_tensor(self.target, dtype=mean.dtype, device=mean.device)
