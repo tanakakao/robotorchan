@@ -1,4 +1,4 @@
-"""Mixed continuous/categorical batch candidate generation with joint Gaussian EPIG."""
+"""Joint qEPIG over continuous inputs with an enumerated shared category."""
 
 import torch
 from botorch.models import MixedSingleTaskGP
@@ -7,7 +7,7 @@ from botorch.optim import optimize_acqf
 from robotorchan.acquisition import qJointExpectedPredictiveInformationGain
 
 
-def test_joint_epig_optimizes_mixed_batch() -> None:
+def test_joint_epig_optimizes_batch_with_shared_enumerated_category() -> None:
     train_X = torch.tensor(
         [
             [0.0, 0.0],
