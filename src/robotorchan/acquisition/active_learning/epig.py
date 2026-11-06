@@ -78,3 +78,13 @@ class ExpectedPredictiveInformationGain(AcquisitionFunction):
         weights = self.target_weights.to(dtype=X.dtype, device=X.device)
         weights = weights / weights.sum()
         return (information * weights).sum(dim=-1)
+
+
+class qExpectedPredictiveInformationGain(ExpectedPredictiveInformationGain):
+    """Mean marginal Gaussian EPIG across q candidates, not joint information gain."""
+
+    def forward(self, X: Tensor) -> Tensor:
+        if X.shape[-2] < 1:
+            raise ValueError("qExpectedPredictiveInformationGain requires q >= 1.")
+        marginal = super().forward(X.unsqueeze(-2))
+        return marginal.mean(dim=-1)

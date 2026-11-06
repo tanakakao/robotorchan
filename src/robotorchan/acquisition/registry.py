@@ -63,6 +63,18 @@ ACQUISITION_REGISTRY["qJointPosteriorEntropy"] = AcquisitionRegistryEntry(
     implementation_strategy="robotorchan joint Gaussian batch entropy",
     limitations=("requires a single-output joint Gaussian posterior",),
 )
+ACQUISITION_REGISTRY["qExpectedPredictiveInformationGain"] = _active_learning(
+    "qExpectedPredictiveInformationGain",
+    max_q=None,
+    posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+    supports_multi_output=False,
+    requires_single_output=True,
+    limitations=(
+        "mean marginal information gain, not joint batch information",
+        "requires a single-output Gaussian posterior",
+        "ensemble posteriors are not supported",
+    ),
+)
 ACQUISITION_REGISTRY["ExpectedPredictiveInformationGain"] = _active_learning(
     "ExpectedPredictiveInformationGain",
     posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
