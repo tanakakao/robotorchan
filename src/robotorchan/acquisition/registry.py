@@ -151,6 +151,12 @@ ACQUISITION_REGISTRY.update(
             supports_ensemble=True,
             max_q=None,
         ),
+        "qLatentStraddle": _classification_active_learning(
+            "qLatentStraddle",
+            target=AcquisitionTarget.LATENT,
+            posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+            max_q=None,
+        ),
         "LatentStraddle": _classification_active_learning(
             "LatentStraddle",
             target=AcquisitionTarget.LATENT,
