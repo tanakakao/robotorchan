@@ -30,6 +30,6 @@ def test_joint_epig_uses_full_candidate_covariance(q: int) -> None:
         model, target_X, observation_noise=0.1
     )
     actual = acquisition(X)
-    expected = -0.5 * torch.log1p(torch.tensor(-q * 0.04 / 1.21))
+    expected = -0.5 * torch.log1p(torch.tensor(-q * 0.04 / 1.21, dtype=torch.double))
     assert actual.shape == torch.Size([1])
     torch.testing.assert_close(actual, expected.reshape(1))
