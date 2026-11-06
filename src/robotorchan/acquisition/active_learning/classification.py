@@ -108,6 +108,26 @@ class MarginUncertainty(AcquisitionFunction):
         return score.squeeze(-1)
 
 
+class qPredictiveEntropy(PredictiveEntropy):
+    """Mean marginal class entropy over a batch; not joint label entropy."""
+
+    def forward(self, X: Tensor) -> Tensor:
+        probabilities = self.classification_model.predict_proba(X)
+        return _entropy(probabilities).mean(dim=-1)
+
+
+class qMarginUncertainty(MarginUncertainty):
+    """Mean marginal top-two class uncertainty over a batch."""
+
+    def forward(self, X: Tensor) -> Tensor:
+        probabilities = self.classification_model.predict_proba(X)
+        if probabilities.shape[-1] < 2:
+            raise ValueError("qMarginUncertainty requires at least two classes.")
+        top_two = probabilities.topk(k=2, dim=-1).values
+        score = 1.0 - (top_two[..., 0] - top_two[..., 1])
+        return score.mean(dim=-1)
+
+
 class ProbabilityVariance(AcquisitionFunction):
     """Prefer inputs with high posterior variance of class probabilities."""
 
