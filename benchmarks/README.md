@@ -21,6 +21,17 @@
 - `high_dimensional_acqf_optimization.py`: acquisition optimization benchmark
 - `expressive_predictive.py`: expressive surrogate predictive benchmark
 - `non_gp_surrogates.py`: empirical non-GP surrogate predictive diagnostics
-- `turbo.py`: Ackley / Rosenbrock / Levy で Global BO と TuRBO を比較する再現可能 benchmark
+- `q_epig_batch_comparison.py`: marginal / joint / pending-aware qEPIG の同一予算比較\n- `turbo.py`: Ackley / Rosenbrock / Levy で Global BO と TuRBO を比較する再現可能 benchmark
 
 実装の正は各スクリプトと `tests/benchmarks/` です。文書側には、再現に必要な条件と比較結果を誤解しないための境界を残します。
+
+## qEPIG batch comparison
+
+```bash
+uv run python benchmarks/q_epig_batch_comparison.py --seed 0 --q 2
+```
+
+各手法について獲得関数値、同一の joint EPIG / pending 条件付き EPIG、候補間最小距離、
+最適化時間を JSON Lines 形式で出力します。獲得関数値そのものは目的関数が異なるため、
+手法間で直接比較しないでください。候補間距離は多様性の診断値であり、最適化性能の証明ではありません。
+単一 seed の例は動作確認用です。統計的な優劣の主張には複数 seed と反復評価が必要です。
