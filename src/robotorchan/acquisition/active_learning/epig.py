@@ -155,12 +155,22 @@ class qConditionalExpectedPredictiveInformationGain(qJointExpectedPredictiveInfo
             raise ValueError("X_pending must have shape (n_pending, d).")
         if X_pending.shape[-2] < 1:
             raise ValueError("X_pending must contain at least one pending candidate.")
-        self.register_buffer("pending_candidates", X_pending.detach().clone())
+        self.register_buffer("X_pending", X_pending.detach().clone())
+
+    def set_X_pending(self, X_pending: Tensor | None = None) -> None:
+        """Update pending locations using the BoTorch acquisition API."""
+        if X_pending is not None:
+            if X_pending.ndim != 2 or X_pending.shape[-1] != self.target_X.shape[-1]:
+                raise ValueError("X_pending must have shape (n_pending, d).")
+            X_pending = X_pending.detach().clone()
+        self.X_pending = X_pending
 
     def forward(self, X: Tensor) -> Tensor:
         if X.shape[-2] < 1:
             raise ValueError("qConditionalExpectedPredictiveInformationGain requires q >= 1.")
-        pending = self.pending_candidates.to(dtype=X.dtype, device=X.device)
+        if self.X_pending is None or self.X_pending.shape[-2] == 0:
+            return super().forward(X)
+        pending = self.X_pending.to(dtype=X.dtype, device=X.device)
         pending = pending.expand(*X.shape[:-2], *pending.shape)
         joint = torch.cat((pending, X), dim=-2)
         return super().forward(joint) - super().forward(pending)
