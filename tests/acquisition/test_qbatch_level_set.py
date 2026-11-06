@@ -17,9 +17,9 @@ def test_level_set_batch_is_mean_of_pointwise_scores(acquisition_type: type, q: 
     model.eval()
     acquisition = acquisition_type(model, target=0.0)
     X = torch.linspace(0.1, 0.9, q, dtype=torch.double).reshape(1, q, 1)
-    expected = torch.stack(
-        [acquisition(X[..., i : i + 1, :]) for i in range(q)], dim=-1
-    ).mean(dim=-1)
+    expected = torch.stack([acquisition(X[..., i : i + 1, :]) for i in range(q)], dim=-1).mean(
+        dim=-1
+    )
     torch.testing.assert_close(acquisition(X), expected)
     assert get_acquisition_registry_entry(acquisition_type.__name__).capabilities.max_q is None
 
@@ -48,6 +48,4 @@ def test_straddle_q4_optimizes_candidates() -> None:
         acquisition, bounds, q=4, num_samples=48, method="sobol", seed=17
     )
     assert candidates.shape == (4, 1)
-    torch.testing.assert_close(
-        value.reshape(()), acquisition(candidates.unsqueeze(0)).reshape(())
-    )
+    torch.testing.assert_close(value.reshape(()), acquisition(candidates.unsqueeze(0)).reshape(()))
