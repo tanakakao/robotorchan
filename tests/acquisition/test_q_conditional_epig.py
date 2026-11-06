@@ -48,7 +48,5 @@ def test_conditional_epig_pending_updates_and_clear() -> None:
     assert torch.isfinite(acquisition(X)).all()
     acquisition.set_X_pending(None)
     assert acquisition.X_pending is None
-    expected = qJointExpectedPredictiveInformationGain(
-        model, target, observation_noise=1e-3
-    )(X)
+    expected = qJointExpectedPredictiveInformationGain(model, target, observation_noise=1e-3)(X)
     torch.testing.assert_close(acquisition(X), expected)
