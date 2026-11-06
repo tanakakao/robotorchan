@@ -21,7 +21,9 @@ from robotorchan.models.classification import BinarySingleTaskGPClassifier
     [(qPredictiveEntropy, PredictiveEntropy), (qMarginUncertainty, MarginUncertainty)],
 )
 @pytest.mark.parametrize("q", [1, 2, 4])
-def test_q_classification_scores_are_mean_marginals(batch_type: type, point_type: type, q: int) -> None:
+def test_q_classification_scores_are_mean_marginals(
+    batch_type: type, point_type: type, q: int
+) -> None:
     train_x = torch.tensor([[0.0], [0.3], [0.7], [1.0]], dtype=torch.double)
     train_y = torch.tensor([0.0, 0.0, 1.0, 1.0], dtype=torch.double)
     model = BinarySingleTaskGPClassifier(train_x, train_y, inducing_points=4)
