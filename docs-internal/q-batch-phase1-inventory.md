@@ -20,6 +20,7 @@ acquisitions.
 | Evidence | Scope | What it does not establish |
 | --- | --- | --- |
 | `tests/optim/contracts/test_native_joint_q_batch_contract.py` | Generic joint-q optimizer contracts | Every registered acquisition/backend pair |
+| `tests/optim/integration/test_phase9_native_joint_q_batch.py` | Four registered BoTorch acquisitions × BoTorch/Sobol, q=2 and q=4, SingleTaskGP | Mixed, constrained, other optimizers or other models |
 | `tests/optim/contracts/test_joint_q_batch_contract.py` | Selected derivative-free joint-q contracts | All constraints and mixed variable domains |
 | `tests/acquisition/test_q_joint_epig_constraints_e2e.py` | Joint EPIG with BoTorch linear constraints, q=2 | Arbitrary nonlinear or inter-point constraints |
 | `tests/acquisition/test_q_joint_epig_mixed_e2e.py` | Mixed GP and independently selected q=2 categorical values | Native joint-q mixed BoTorch optimizer support |
