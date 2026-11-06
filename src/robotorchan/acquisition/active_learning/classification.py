@@ -151,6 +151,17 @@ class ProbabilityVariance(AcquisitionFunction):
         return variance.mean(dim=-1).squeeze(-1)
 
 
+class qProbabilityVariance(ProbabilityVariance):
+    """Mean marginal class-probability variance; no joint batch information."""
+
+    def forward(self, X: Tensor) -> Tensor:
+        variance = self.classification_model.probability_variance(
+            X,
+            num_samples=self.num_samples,
+        )
+        return variance.mean(dim=-1).reshape(X.shape[:-1]).mean(dim=-1)
+
+
 class BALD(AcquisitionFunction):
     """Bayesian active learning by disagreement for classification."""
 
