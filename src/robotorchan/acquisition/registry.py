@@ -70,7 +70,7 @@ ACQUISITION_REGISTRY["qConditionalExpectedPredictiveInformationGain"] = _active_
     supports_multi_output=False,
     requires_single_output=True,
     limitations=(
-        "requires observed pending candidate locations and a joint Gaussian posterior",
+        "pending candidate locations are optional; a joint Gaussian posterior is required",
         "does not model uncertain pending outcomes or fantasization",
     ),
 )
