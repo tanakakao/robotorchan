@@ -113,7 +113,7 @@ class qPredictiveEntropy(PredictiveEntropy):
 
     def forward(self, X: Tensor) -> Tensor:
         probabilities = self.classification_model.predict_proba(X)
-        return _entropy(probabilities).mean(dim=-1)
+        return _entropy(probabilities).reshape(X.shape[:-1]).mean(dim=-1)
 
 
 class qMarginUncertainty(MarginUncertainty):
