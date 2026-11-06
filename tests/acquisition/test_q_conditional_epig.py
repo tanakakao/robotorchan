@@ -23,8 +23,8 @@ def test_conditional_epig_subtracts_pending_information() -> None:
     with patch.object(
         qJointExpectedPredictiveInformationGain,
         "forward",
-        side_effect=lambda points: points.shape[-2] * torch.ones(
-            points.shape[:-2], dtype=points.dtype
+        side_effect=lambda points: (
+            points.shape[-2] * torch.ones(points.shape[:-2], dtype=points.dtype)
         ),
     ) as forward:
         result = acquisition(X)
