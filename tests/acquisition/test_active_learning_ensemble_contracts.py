@@ -1,7 +1,7 @@
 import torch
 from botorch.posteriors.ensemble import EnsemblePosterior
 
-from robotorchan.acquisition import BoundaryVariance, Straddle, qPosteriorVariance
+from robotorchan.acquisition import qBoundaryVariance, qStraddle, qPosteriorVariance
 from robotorchan.acquisition.registry import get_acquisition_registry_entry
 
 
@@ -24,7 +24,7 @@ def test_posterior_variance_rejects_ensemble_posterior() -> None:
 
 
 def test_straddle_rejects_ensemble_posterior() -> None:
-    acquisition = Straddle(_EnsembleModel(), target=0.0)
+    acquisition = qStraddle(_EnsembleModel(), target=0.0)
     try:
         acquisition(torch.tensor([[[0.2]]], dtype=torch.double))
     except ValueError as error:
@@ -34,7 +34,7 @@ def test_straddle_rejects_ensemble_posterior() -> None:
 
 
 def test_boundary_variance_rejects_ensemble_posterior() -> None:
-    acquisition = BoundaryVariance(_EnsembleModel(), target=0.0)
+    acquisition = qBoundaryVariance(_EnsembleModel(), target=0.0)
     try:
         acquisition(torch.tensor([[[0.2]]], dtype=torch.double))
     except ValueError as error:
@@ -54,8 +54,8 @@ class _FlaggedEnsembleModel:
 def test_active_learning_rejects_flagged_ensemble_before_posterior() -> None:
     acquisitions = [
         qPosteriorVariance(_FlaggedEnsembleModel()),
-        Straddle(_FlaggedEnsembleModel(), target=0.0),
-        BoundaryVariance(_FlaggedEnsembleModel(), target=0.0),
+        qStraddle(_FlaggedEnsembleModel(), target=0.0),
+        qBoundaryVariance(_FlaggedEnsembleModel(), target=0.0),
     ]
     X = torch.tensor([[[0.2]]], dtype=torch.double)
 
@@ -70,11 +70,11 @@ def test_active_learning_rejects_flagged_ensemble_before_posterior() -> None:
 
 def test_pointwise_active_learning_registry_rejects_ensemble_support() -> None:
     for name in (
-        "BoundaryVariance",
+        "qBoundaryVariance",
         "qPosteriorStd",
         "qPosteriorVariance",
-        "RandomizedStraddle",
-        "Straddle",
+        "qRandomizedStraddle",
+        "qStraddle",
     ):
         entry = get_acquisition_registry_entry(name)
         assert entry.capabilities.supports_ensemble is False
