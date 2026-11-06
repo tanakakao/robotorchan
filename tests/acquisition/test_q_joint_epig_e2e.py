@@ -22,7 +22,7 @@ def test_joint_epig_optimizes_two_distinct_candidates_with_fixed_feature() -> No
     acquisition = qJointExpectedPredictiveInformationGain(
         model, target_X, observation_noise=1e-3
     )
-    bounds = torch.tensor([[0.0, 0.5], [1.0, 0.5]], dtype=torch.double)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
     candidates, values = optimize_acqf(
         acquisition,
         bounds=bounds,
