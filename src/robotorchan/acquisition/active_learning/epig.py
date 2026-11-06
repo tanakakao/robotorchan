@@ -131,3 +131,36 @@ class qJointExpectedPredictiveInformationGain(ExpectedPredictiveInformationGain)
             return information.mean(dim=-1)
         weights = self.target_weights.to(dtype=X.dtype, device=X.device)
         return (information * (weights / weights.sum())).sum(dim=-1)
+
+
+class qConditionalExpectedPredictiveInformationGain(qJointExpectedPredictiveInformationGain):
+    """Incremental joint EPIG of X conditioned on pending candidate observations."""
+
+    def __init__(
+        self,
+        model: Model,
+        target_X: Tensor,
+        X_pending: Tensor,
+        *,
+        observation_noise: float | Tensor = 0.0,
+        target_weights: Tensor | None = None,
+    ) -> None:
+        super().__init__(
+            model,
+            target_X,
+            observation_noise=observation_noise,
+            target_weights=target_weights,
+        )
+        if X_pending.ndim != 2 or X_pending.shape[-1] != target_X.shape[-1]:
+            raise ValueError("X_pending must have shape (n_pending, d).")
+        if X_pending.shape[-2] < 1:
+            raise ValueError("X_pending must contain at least one pending candidate.")
+        self.register_buffer("pending_candidates", X_pending.detach().clone())
+
+    def forward(self, X: Tensor) -> Tensor:
+        if X.shape[-2] < 1:
+            raise ValueError("qConditionalExpectedPredictiveInformationGain requires q >= 1.")
+        pending = self.pending_candidates.to(dtype=X.dtype, device=X.device)
+        pending = pending.expand(*X.shape[:-2], *pending.shape)
+        joint = torch.cat((pending, X), dim=-2)
+        return super().forward(joint) - super().forward(pending)

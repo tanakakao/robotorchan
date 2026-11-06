@@ -41,6 +41,7 @@ def test_acquisition_public_api_is_intentionally_small() -> None:
         "make_sample_classification_feasibility_bridge",
         "qBALD",
         "qBoundaryVariance",
+        "qConditionalExpectedPredictiveInformationGain",
         "qExpectedPredictiveInformationGain",
         "qJointExpectedPredictiveInformationGain",
         "qJointPosteriorEntropy",

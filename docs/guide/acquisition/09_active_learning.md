@@ -195,3 +195,12 @@ q>1は周辺スコアの平均であり、候補間の相関や多様性は直�
 `qExpectedPredictiveInformationGain`とは異なり、重複した候補の情報を区別できる。
 単一出力のガウス事後分布と有限のターゲット集合を対象とし、
 EnsemblePosteriorには対応しない。
+
+## Pending候補を考慮したJoint EPIG
+
+`qConditionalExpectedPredictiveInformationGain`は、既に評価待ちの候補
+`X_pending`があるとき、新規候補`X`の追加情報量
+`I(Y_t;Y_X | Y_pending)`を評価する。
+実装はJoint EPIGの差分`I(Y_t;Y_pending,X)-I(Y_t;Y_pending)`を使用する。
+候補位置を条件にしたガウス情報量であり、未観測の結果をサンプリングする
+fantasizationとは異なる。単一出力ガウス回帰のみ対応する。

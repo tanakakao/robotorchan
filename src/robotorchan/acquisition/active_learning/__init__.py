@@ -14,6 +14,7 @@ from robotorchan.acquisition.active_learning.classification import (
 )
 from robotorchan.acquisition.active_learning.epig import (
     ExpectedPredictiveInformationGain,
+    qConditionalExpectedPredictiveInformationGain,
     qExpectedPredictiveInformationGain,
     qJointExpectedPredictiveInformationGain,
 )
@@ -31,6 +32,7 @@ __all__ = [
     "ProbabilityVariance",
     "qBALD",
     "qBoundaryVariance",
+    "qConditionalExpectedPredictiveInformationGain",
     "qExpectedPredictiveInformationGain",
     "qJointExpectedPredictiveInformationGain",
     "qJointPosteriorEntropy",
