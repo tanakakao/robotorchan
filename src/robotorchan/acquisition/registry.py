@@ -131,6 +131,13 @@ ACQUISITION_REGISTRY.update(
             supports_ensemble=True,
             max_q=None,
         ),
+        "qProbabilityVariance": _classification_active_learning(
+            "qProbabilityVariance",
+            target=AcquisitionTarget.CLASS_PROBABILITY,
+            posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
+            supports_ensemble=True,
+            max_q=None,
+        ),
         "qPredictiveEntropy": _classification_active_learning(
             "qPredictiveEntropy",
             target=AcquisitionTarget.LABEL_UNCERTAINTY,
