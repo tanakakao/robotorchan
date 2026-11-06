@@ -121,8 +121,10 @@ class qJointExpectedPredictiveInformationGain(ExpectedPredictiveInformationGain)
         target_var = covariance[..., q, q] + noise
         factor = torch.linalg.cholesky(candidate_cov)
         explained = (
-            cross_cov.transpose(-2, -1) @ torch.cholesky_solve(cross_cov, factor)
-        ).squeeze(-1).squeeze(-1)
+            (cross_cov.transpose(-2, -1) @ torch.cholesky_solve(cross_cov, factor))
+            .squeeze(-1)
+            .squeeze(-1)
+        )
         residual = (target_var - explained).clamp_min(torch.finfo(X.dtype).tiny)
         information = 0.5 * (target_var / residual).log()
         if self.target_weights is None:
