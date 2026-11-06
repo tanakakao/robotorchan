@@ -19,9 +19,7 @@ def test_joint_epig_optimizes_two_distinct_candidates_with_fixed_feature() -> No
     model = SingleTaskGP(train_X, train_Y)
     model.eval()
     target_X = torch.tensor([[0.2, 0.5], [0.8, 0.5]], dtype=torch.double)
-    acquisition = qJointExpectedPredictiveInformationGain(
-        model, target_X, observation_noise=1e-3
-    )
+    acquisition = qJointExpectedPredictiveInformationGain(model, target_X, observation_noise=1e-3)
     bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
     candidates, values = optimize_acqf(
         acquisition,
@@ -37,8 +35,6 @@ def test_joint_epig_optimizes_two_distinct_candidates_with_fixed_feature() -> No
     torch.testing.assert_close(candidates[:, 1], torch.full((2,), 0.5, dtype=torch.double))
     assert (candidates[:, 0] >= 0).all() and (candidates[:, 0] <= 1).all()
 
-    marginal = qExpectedPredictiveInformationGain(
-        model, target_X, observation_noise=1e-3
-    )
+    marginal = qExpectedPredictiveInformationGain(model, target_X, observation_noise=1e-3)
     assert marginal(candidates.unsqueeze(0)).isfinite().all()
     assert acquisition(candidates.unsqueeze(0)).isfinite().all()
