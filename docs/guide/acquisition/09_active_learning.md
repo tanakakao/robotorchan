@@ -156,3 +156,16 @@ EPIGの内部は[情報理論章](05_information_theoretic.md)へ分けていま
 `qPredictiveEntropy`、`qMarginUncertainty`、`qProbabilityVariance`はq>=1に対応し、各候補の分類不確実性スコアを平均する。`qProbabilityVariance`はクラス方向の平均も取る。
 これらは**周辺スコアの集約**であり、ラベルのjoint entropyや候補間の多様性を評価する獲得関数ではない。
 従来の`PredictiveEntropy`、`MarginUncertainty`、`ProbabilityVariance`はq=1のまま維持する。
+
+## 二値分類のJoint qBALD
+
+`qBALD`は二値分類に限定して、q個のラベルベクトルの同時分布から
+`I(Y_X; θ | D) = H(Y_X | D) - E_θ[H(Y_X | θ)]`を推定する。
+同一の事後サンプルに対してq点のクラス確率を条件付き独立に結合し、
+全`2**q`通りのラベルを列挙する。候補ごとのBALD平均とは異なり、
+予測ラベル間の情報重複を考慮する。
+
+計算量がqに対して指数的に増えるため、現在は`1 <= q <= 8`とする。
+モデルの`sample_class_probabilities(X)`がq点間で整合する同時事後サンプルを
+返すことが前提であり、独立サンプリングするモデルには適用できない。
+多クラスおよび大規模バッチへの拡張は対象外とする。
