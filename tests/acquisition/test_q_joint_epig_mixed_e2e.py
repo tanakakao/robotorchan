@@ -2,7 +2,7 @@
 
 import torch
 from botorch.models import MixedSingleTaskGP
-from botorch.optim import optimize_acqf_mixed
+from botorch.optim import optimize_acqf
 
 from robotorchan.acquisition import qJointExpectedPredictiveInformationGain
 
@@ -25,16 +25,19 @@ def test_joint_epig_optimizes_mixed_batch() -> None:
     target_X = torch.tensor([[0.25, 0.0], [0.75, 1.0]], dtype=torch.double)
     acquisition = qJointExpectedPredictiveInformationGain(model, target_X, observation_noise=1e-3)
     bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
-    candidates, value = optimize_acqf_mixed(
-        acq_function=acquisition,
-        bounds=bounds,
-        q=2,
-        num_restarts=2,
-        raw_samples=16,
-        sequential=False,
-        fixed_features_list=[{1: 0.0}, {1: 1.0}],
-        options={"maxiter": 30},
-    )
+    results = [
+        optimize_acqf(
+            acq_function=acquisition,
+            bounds=bounds,
+            q=2,
+            num_restarts=2,
+            raw_samples=16,
+            fixed_features={1: category},
+            options={"maxiter": 30},
+        )
+        for category in (0.0, 1.0)
+    ]
+    candidates, value = max(results, key=lambda result: result[1].item())
     assert candidates.shape == (2, 2)
     assert torch.isfinite(value).all()
     assert ((candidates[:, 0] >= 0) & (candidates[:, 0] <= 1)).all()
