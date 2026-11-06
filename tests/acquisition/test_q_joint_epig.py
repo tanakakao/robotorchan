@@ -1,28 +1,29 @@
 """Joint Gaussian EPIG contracts."""
 
-from unittest.mock import Mock
+from types import SimpleNamespace
 
 import pytest
 import torch
+from botorch.models.model import Model
 
 from robotorchan.acquisition.active_learning.epig import qJointExpectedPredictiveInformationGain
 
 
 @pytest.mark.parametrize("q", [1, 2, 4])
 def test_joint_epig_uses_full_candidate_covariance(q: int) -> None:
-    model = Mock()
-    model.num_outputs = 1
-    model._is_ensemble = False
+    class CovarianceModel(Model):
+        @property
+        def num_outputs(self) -> int:
+            return 1
 
-    def posterior(X: torch.Tensor) -> Mock:
-        covariance = torch.eye(q + 1, dtype=torch.double)
-        covariance[:q, q] = 0.2
-        covariance[q, :q] = 0.2
-        result = Mock()
-        result.mvn.covariance_matrix = covariance.expand(*X.shape[:-2], q + 1, q + 1)
-        return result
+        def posterior(self, X: torch.Tensor, **kwargs: object) -> object:
+            covariance = torch.eye(q + 1, dtype=torch.double)
+            covariance[:q, q] = 0.2
+            covariance[q, :q] = 0.2
+            matrix = covariance.expand(*X.shape[:-2], q + 1, q + 1)
+            return SimpleNamespace(mvn=SimpleNamespace(covariance_matrix=matrix))
 
-    model.posterior.side_effect = posterior
+    model = CovarianceModel()
     target_X = torch.tensor([[0.5]], dtype=torch.double)
     X = torch.linspace(0.0, 1.0, q, dtype=torch.double).reshape(1, q, 1)
     acquisition = qJointExpectedPredictiveInformationGain(
