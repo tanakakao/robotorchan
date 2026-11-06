@@ -214,9 +214,9 @@ class qBALD(BALD):
         conditional_joint = selected.prod(dim=-1)
         predictive_joint = conditional_joint.mean(dim=0)
         predictive_entropy = -torch.special.xlogy(predictive_joint, predictive_joint).sum(dim=-1)
-        conditional_entropy = -torch.special.xlogy(conditional_joint, conditional_joint).sum(
-            dim=-1
-        ).mean(dim=0)
+        conditional_entropy = (
+            -torch.special.xlogy(conditional_joint, conditional_joint).sum(dim=-1).mean(dim=0)
+        )
         return (predictive_entropy - conditional_entropy).clamp_min(0.0)
 
 
