@@ -31,12 +31,8 @@ def run_benchmark(seed: int, q: int) -> list[dict[str, float | int | str]]:
     pending = torch.tensor([[0.35]], dtype=torch.double)
     noise = 1e-3
     acquisitions = {
-        "marginal": qExpectedPredictiveInformationGain(
-            model, target_X, observation_noise=noise
-        ),
-        "joint": qJointExpectedPredictiveInformationGain(
-            model, target_X, observation_noise=noise
-        ),
+        "marginal": qExpectedPredictiveInformationGain(model, target_X, observation_noise=noise),
+        "joint": qJointExpectedPredictiveInformationGain(model, target_X, observation_noise=noise),
         "conditional": qConditionalExpectedPredictiveInformationGain(
             model, target_X, X_pending=pending, observation_noise=noise
         ),
