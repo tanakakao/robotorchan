@@ -169,3 +169,11 @@ EPIGの内部は[情報理論章](05_information_theoretic.md)へ分けていま
 モデルの`sample_class_probabilities(X)`がq点間で整合する同時事後サンプルを
 返すことが前提であり、独立サンプリングするモデルには適用できない。
 多クラスおよび大規模バッチへの拡張は対象外とする。
+
+## 潜在決定境界の複数候補評価
+
+`qLatentStraddle`は二値分類の潜在決定境界（潜在値0）を対象とし、
+各候補の`beta * sqrt(variance) - abs(mean)`をq方向に平均する。
+q=1では既存の`LatentStraddle`と同じ定義になる。
+q>1は周辺スコアの平均であり、候補間の相関や多様性は直接評価しない。
+既存の`LatentStraddle`はq=1専用のまま維持する。
