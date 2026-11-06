@@ -17,9 +17,7 @@ def test_qbald_matches_exact_joint_label_information(q: int) -> None:
     model = BinarySingleTaskGPClassifier(train_x, train_y, inducing_points=4)
     X = torch.linspace(0.1, 0.9, q, dtype=torch.double).reshape(1, q, 1)
     positive = torch.tensor([0.2, 0.8], dtype=torch.double).reshape(2, 1, 1)
-    probabilities = torch.stack(
-        [(1 - positive).expand(2, 1, q), positive.expand(2, 1, q)], dim=-1
-    )
+    probabilities = torch.stack([(1 - positive).expand(2, 1, q), positive.expand(2, 1, q)], dim=-1)
     with patch.object(model, "sample_class_probabilities", return_value=probabilities):
         value = qBALD(model, num_samples=2)(X)
     labels = torch.cartesian_prod(*[torch.arange(2) for _ in range(q)]).reshape(-1, q)
@@ -29,10 +27,9 @@ def test_qbald_matches_exact_joint_label_information(q: int) -> None:
         probabilities[..., 0].unsqueeze(-2),
     ).prod(dim=-1)
     marginal = joint.mean(dim=0)
-    expected = (
-        -torch.special.xlogy(marginal, marginal).sum(dim=-1)
-        + torch.special.xlogy(joint, joint).sum(dim=-1).mean(dim=0)
-    )
+    expected = -torch.special.xlogy(marginal, marginal).sum(dim=-1) + torch.special.xlogy(
+        joint, joint
+    ).sum(dim=-1).mean(dim=0)
     assert value.shape == torch.Size([1])
     torch.testing.assert_close(value, expected)
     assert get_acquisition_registry_entry("qBALD").capabilities.max_q == 8
