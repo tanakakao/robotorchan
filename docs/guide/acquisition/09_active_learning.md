@@ -150,3 +150,9 @@ EPIGの内部は[情報理論章](05_information_theoretic.md)へ分けていま
 `qJointPosteriorEntropy`は単一出力のGaussian posteriorに対し、
 候補集合の共分散行列を用いてjoint differential entropyを評価する。
 これは候補自身の不確実性に基づく基準であり、外部のtarget分布に対するEPIGとは異なる。
+
+## 分類モデルのq-batch周辺不確実性
+
+`qPredictiveEntropy`と`qMarginUncertainty`はq>=1に対応し、各候補の分類不確実性スコアを平均する。
+これらは**周辺スコアの集約**であり、ラベルのjoint entropyや候補間の多様性を評価する獲得関数ではない。
+従来の`PredictiveEntropy`と`MarginUncertainty`はq=1のまま維持する。
