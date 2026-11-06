@@ -81,6 +81,7 @@ def _classification_active_learning(
     target: AcquisitionTarget,
     posterior_requirement: PosteriorRequirement,
     supports_ensemble: bool = False,
+    max_q: int | None = 1,
 ) -> AcquisitionRegistryEntry:
     return AcquisitionRegistryEntry(
         acquisition_name=name,
@@ -89,7 +90,7 @@ def _classification_active_learning(
             posterior_requirement=posterior_requirement,
             observation_types=frozenset({ObservationType.CLASSIFICATION}),
             target=target,
-            max_q=1,
+            max_q=max_q,
             supports_multi_output=False,
             supports_ensemble=supports_ensemble,
         ),
@@ -122,6 +123,20 @@ ACQUISITION_REGISTRY.update(
             target=AcquisitionTarget.LABEL_UNCERTAINTY,
             posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
             supports_ensemble=True,
+        ),
+        "qMarginUncertainty": _classification_active_learning(
+            "qMarginUncertainty",
+            target=AcquisitionTarget.CLASS_PROBABILITY,
+            posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+            supports_ensemble=True,
+            max_q=None,
+        ),
+        "qPredictiveEntropy": _classification_active_learning(
+            "qPredictiveEntropy",
+            target=AcquisitionTarget.LABEL_UNCERTAINTY,
+            posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+            supports_ensemble=True,
+            max_q=None,
         ),
         "LatentStraddle": _classification_active_learning(
             "LatentStraddle",
