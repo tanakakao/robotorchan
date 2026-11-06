@@ -177,3 +177,12 @@ EPIGの内部は[情報理論章](05_information_theoretic.md)へ分けていま
 q=1では既存の`LatentStraddle`と同じ定義になる。
 q>1は周辺スコアの平均であり、候補間の相関や多様性は直接評価しない。
 既存の`LatentStraddle`はq=1専用のまま維持する。
+
+## 回帰EPIGの複数候補評価
+
+`qExpectedPredictiveInformationGain`は、既存のガウス回帰EPIGを各候補で
+評価してq方向に平均する。q=1では既存の
+`ExpectedPredictiveInformationGain`と同じ値になる。
+これは周辺EPIGの平均であり、複数候補の同時観測による情報利得や
+候補間の冗長性を評価するJoint EPIGではない。
+単一出力のガウス事後分布を必要とし、EnsemblePosteriorには対応しない。
