@@ -1,5 +1,7 @@
 """q-batch marginal classification active-learning contracts."""
 
+from unittest.mock import patch
+
 import pytest
 import torch
 
@@ -44,9 +46,10 @@ def test_q_probability_variance_averages_class_and_candidate_dimensions(q: int) 
     train_y = torch.tensor([0.0, 0.0, 1.0, 1.0], dtype=torch.double)
     model = BinarySingleTaskGPClassifier(train_x, train_y, inducing_points=4)
     X = torch.linspace(0.1, 0.9, q, dtype=torch.double).reshape(1, q, 1)
-    torch.manual_seed(42)
-    expected = model.probability_variance(X, num_samples=16).mean(dim=-1).mean(dim=-1)
-    torch.manual_seed(42)
-    actual = qProbabilityVariance(model, num_samples=16)(X)
+    variance = torch.arange(1, 2 * q + 1, dtype=torch.double).reshape(1, q, 2)
+    expected = variance.mean(dim=-1).mean(dim=-1)
+    with patch.object(model, "probability_variance", return_value=variance) as predict:
+        actual = qProbabilityVariance(model, num_samples=16)(X)
+    predict.assert_called_once_with(X, num_samples=16)
     assert actual.shape == torch.Size([1])
     torch.testing.assert_close(actual, expected)
