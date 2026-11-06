@@ -88,3 +88,46 @@ class qExpectedPredictiveInformationGain(ExpectedPredictiveInformationGain):
             raise ValueError("qExpectedPredictiveInformationGain requires q >= 1.")
         marginal = super().forward(X.unsqueeze(-2))
         return marginal.mean(dim=-1)
+
+
+class qJointExpectedPredictiveInformationGain(ExpectedPredictiveInformationGain):
+    """Joint Gaussian information gain between a candidate batch and target points."""
+
+    def forward(self, X: Tensor) -> Tensor:
+        q = X.shape[-2]
+        if q < 1:
+            raise ValueError("qJointExpectedPredictiveInformationGain requires q >= 1.")
+        if self.model.num_outputs != 1:
+            raise ValueError("Joint EPIG requires a single-output model.")
+        if getattr(self.model, "_is_ensemble", False):
+            raise ValueError("Joint EPIG does not support ensemble posteriors.")
+
+        target_X = self.target_X.to(dtype=X.dtype, device=X.device)
+        n_target = target_X.shape[-2]
+        candidate_X = X.unsqueeze(-3).expand(*X.shape[:-2], n_target, q, X.shape[-1])
+        target_batch = target_X.expand(*X.shape[:-2], n_target, X.shape[-1])
+        joint_X = torch.cat((candidate_X, target_batch.unsqueeze(-2)), dim=-2)
+        posterior = self.model.posterior(joint_X)
+        if isinstance(posterior, EnsemblePosterior):
+            raise ValueError("Joint EPIG does not support ensemble posteriors.")
+        covariance = posterior.mvn.covariance_matrix
+        noise = self.observation_noise.to(dtype=X.dtype, device=X.device)
+        if noise.numel() != 1 or not torch.isfinite(noise).all() or (noise < 0).any():
+            raise ValueError("Joint EPIG requires finite non-negative scalar observation noise.")
+        candidate_cov = covariance[..., :q, :q]
+        identity = torch.eye(q, dtype=X.dtype, device=X.device)
+        candidate_cov = candidate_cov + noise * identity
+        cross_cov = covariance[..., :q, q].unsqueeze(-1)
+        target_var = covariance[..., q, q] + noise
+        factor = torch.linalg.cholesky(candidate_cov)
+        explained = (
+            (cross_cov.transpose(-2, -1) @ torch.cholesky_solve(cross_cov, factor))
+            .squeeze(-1)
+            .squeeze(-1)
+        )
+        residual = (target_var - explained).clamp_min(torch.finfo(X.dtype).tiny)
+        information = 0.5 * (target_var / residual).log()
+        if self.target_weights is None:
+            return information.mean(dim=-1)
+        weights = self.target_weights.to(dtype=X.dtype, device=X.device)
+        return (information * (weights / weights.sum())).sum(dim=-1)

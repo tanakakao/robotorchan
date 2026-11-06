@@ -186,3 +186,12 @@ q>1は周辺スコアの平均であり、候補間の相関や多様性は直�
 これは周辺EPIGの平均であり、複数候補の同時観測による情報利得や
 候補間の冗長性を評価するJoint EPIGではない。
 単一出力のガウス事後分布を必要とし、EnsemblePosteriorには対応しない。
+
+## Joint EPIG（ガウス回帰）
+
+`qJointExpectedPredictiveInformationGain`は候補集合の同時観測と各ターゲット点の
+相互情報量を計算し、ターゲット点について重み付き平均する。
+候補間の共分散を含む条件付き分散を使うため、周辺EPIGを平均する
+`qExpectedPredictiveInformationGain`とは異なり、重複した候補の情報を区別できる。
+単一出力のガウス事後分布と有限のターゲット集合を対象とし、
+EnsemblePosteriorには対応しない。
