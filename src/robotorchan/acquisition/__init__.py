@@ -13,6 +13,7 @@ from robotorchan.acquisition.active_learning import (
     qPosteriorStd,
     qPosteriorVariance,
     qPredictiveEntropy,
+    qProbabilityVariance,
     qRandomizedStraddle,
     qStraddle,
 )
@@ -96,6 +97,7 @@ __all__ = [
     "qPosteriorStd",
     "qPosteriorVariance",
     "qPredictiveEntropy",
+    "qProbabilityVariance",
     "qRandomizedStraddle",
     "qStraddle",
     "resolve_acquisition_composition",
