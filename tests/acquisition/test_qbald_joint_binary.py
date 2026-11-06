@@ -22,7 +22,7 @@ def test_qbald_matches_exact_joint_label_information(q: int) -> None:
     )
     with patch.object(model, "sample_class_probabilities", return_value=probabilities):
         value = qBALD(model, num_samples=2)(X)
-    labels = torch.cartesian_prod(*[torch.arange(2) for _ in range(q)])
+    labels = torch.cartesian_prod(*[torch.arange(2) for _ in range(q)]).reshape(-1, q)
     joint = torch.where(
         labels == 1,
         probabilities[..., 1].unsqueeze(-2),
