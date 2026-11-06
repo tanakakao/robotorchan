@@ -2,7 +2,7 @@
 
 import torch
 
-from robotorchan.acquisition import Straddle, qPosteriorVariance
+from robotorchan.acquisition import qPosteriorVariance, qStraddle
 from robotorchan.models import SingleTaskGP
 from robotorchan.optim.backends import optimize_acqf_botorch
 
@@ -35,7 +35,7 @@ def test_posterior_variance_active_learning_runs_through_optimizer() -> None:
 
 
 def test_straddle_level_set_learning_runs_through_optimizer() -> None:
-    candidate, value = _optimize(Straddle(_model(), target=0.1))
+    candidate, value = _optimize(qStraddle(_model(), target=0.1))
 
     assert candidate.shape == torch.Size([1, 1])
     assert value.numel() == 1

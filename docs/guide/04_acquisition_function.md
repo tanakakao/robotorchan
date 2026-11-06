@@ -119,9 +119,9 @@ BoTorchの`AcquisitionFunction`を継承し、分散のスコア計算を独自�
 `qPosteriorStd`は、その値を非負へ切り詰めて平方根を取ります。
 これらの経路はensemble posteriorを拒否し、複数出力では出力選択を要求します。
 
-[Straddle][straddle]も独自の`forward()`で、標準偏差への重みから
+[qStraddle][straddle]も独自の`forward()`で、標準偏差への重みから
 平均と目標水準の距離を引きます。
-標準BOのEI、分類のBALD、回帰のStraddleを、全て同じGaussian analytic実装とみなしません。
+標準BOのEI、分類のBALD、回帰のqStraddleを、全て同じGaussian analytic実装とみなしません。
 それぞれの計算は[Active Learning Guide](acquisition/09_active_learning.md)と
 [水準集合Guide](acquisition/10_level_set.md)へ進めます。
 

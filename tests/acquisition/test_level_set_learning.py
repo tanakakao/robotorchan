@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from robotorchan.acquisition import BoundaryVariance, Straddle
+from robotorchan.acquisition import qBoundaryVariance, qStraddle
 from robotorchan.models import SingleTaskGP
 
 
@@ -11,7 +11,7 @@ def _model() -> SingleTaskGP:
     return SingleTaskGP(train_X, train_Y)
 
 
-@pytest.mark.parametrize("acquisition_class", [Straddle, BoundaryVariance])
+@pytest.mark.parametrize("acquisition_class", [qStraddle, qBoundaryVariance])
 def test_level_set_acquisition_returns_finite_batch_values(acquisition_class: type) -> None:
     model = _model()
     X = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
@@ -23,15 +23,16 @@ def test_level_set_acquisition_returns_finite_batch_values(acquisition_class: ty
     assert torch.isfinite(value).all()
 
 
-def test_straddle_validates_beta_and_q() -> None:
+def test_straddle_validates_beta_and_accepts_q_batch() -> None:
     model = _model()
 
     with pytest.raises(ValueError, match="non-negative"):
-        Straddle(model, target=0.0, beta=-1.0)
+        qStraddle(model, target=0.0, beta=-1.0)
 
     X = torch.tensor([[[0.25], [0.75]]], dtype=torch.double)
-    with pytest.raises(ValueError, match="q=1"):
-        Straddle(model, target=0.0)(X)
+    acquisition = qStraddle(model, target=0.0)
+    marginal = acquisition(X.transpose(0, 1))
+    torch.testing.assert_close(acquisition(X), marginal.mean().unsqueeze(0))
 
 
 def test_straddle_score_matches_definition() -> None:
@@ -42,6 +43,6 @@ def test_straddle_score_matches_definition() -> None:
 
     posterior = model.posterior(X)
     expected = beta * posterior.variance.sqrt() - (posterior.mean - target).abs()
-    actual = Straddle(model, target=target, beta=beta)(X)
+    actual = qStraddle(model, target=target, beta=beta)(X)
 
     assert torch.allclose(actual, expected.squeeze(-1).squeeze(-1))

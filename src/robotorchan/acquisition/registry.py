@@ -33,22 +33,19 @@ def _active_learning(
     )
 
 
-ACQUISITION_REGISTRY: dict[str, AcquisitionRegistryEntry] = {
-    name: _active_learning(
-        name,
-        limitations=(
-            "ensemble posteriors are not supported",
-            "structured outputs require scalarization",
-        ),
-    )
-    for name in ("BoundaryVariance", "RandomizedStraddle", "Straddle")
-}
-for name in ("qPosteriorStd", "qPosteriorVariance"):
+ACQUISITION_REGISTRY: dict[str, AcquisitionRegistryEntry] = {}
+for name in (
+    "qBoundaryVariance",
+    "qRandomizedStraddle",
+    "qStraddle",
+    "qPosteriorStd",
+    "qPosteriorVariance",
+):
     ACQUISITION_REGISTRY[name] = _active_learning(
         name,
         max_q=None,
         limitations=(
-            "q>1 uses mean marginal variance without candidate diversity",
+            "q>1 aggregates marginal scores without candidate diversity",
             "ensemble posteriors are not supported",
             "structured outputs require scalarization",
         ),

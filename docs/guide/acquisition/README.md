@@ -12,6 +12,6 @@
 - [Multi-objective / EHVI：理論から実装へ](07_multiobjective.md)
 - [Constrained Acquisition：制約の定義域と合成の責務](08_constraints.md)
 - [Active Learning：数式とローカル実装の接続](09_active_learning.md)
-- [Level-set / Straddle：理論から実装へ](10_level_set.md)
+- [Level-set / qStraddle：理論から実装へ](10_level_set.md)
 - [Multi-Fidelity / Cost-aware：理論から実装へ](11_multifidelity_cost_aware.md)
 - [Acquisition Selection Guide：理論から実装へ](12_selection_guide.md)

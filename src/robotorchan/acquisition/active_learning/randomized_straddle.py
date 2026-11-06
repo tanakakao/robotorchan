@@ -1,4 +1,4 @@
-"""Randomized Straddle for level-set estimation."""
+"""Randomized qStraddle for level-set estimation."""
 
 from __future__ import annotations
 
@@ -8,11 +8,11 @@ from botorch.posteriors.ensemble import EnsemblePosterior
 from botorch.utils.transforms import average_over_ensemble_models
 from torch import Tensor
 
-from robotorchan.acquisition.active_learning.straddle import Straddle
+from robotorchan.acquisition.active_learning.straddle import qStraddle
 
 
-class RandomizedStraddle(Straddle):
-    """Straddle with one randomized confidence coefficient per selection round."""
+class qRandomizedStraddle(qStraddle):
+    """qStraddle with one randomized confidence coefficient per selection round."""
 
     def __init__(
         self,
@@ -54,18 +54,16 @@ class RandomizedStraddle(Straddle):
 
     @average_over_ensemble_models
     def forward(self, X: Tensor) -> Tensor:
-        """Evaluate one fixed randomized Straddle surface."""
-        if X.shape[-2] != 1:
-            raise ValueError("RandomizedStraddle supports q=1.")
+        """Evaluate a batch with one shared random coefficient per round."""
         if getattr(self.model, "_is_ensemble", False):
-            raise ValueError("RandomizedStraddle does not yet support ensemble posteriors.")
+            raise ValueError("qRandomizedStraddle does not yet support ensemble posteriors.")
         posterior = self.model.posterior(X)
         if isinstance(posterior, EnsemblePosterior):
-            raise ValueError("RandomizedStraddle does not yet support ensemble posteriors.")
+            raise ValueError("qRandomizedStraddle does not yet support ensemble posteriors.")
         mean = self._select_output(posterior.mean, X)
         variance = self._select_output(posterior.variance, X)
         std = variance.clamp_min(0.0).sqrt()
         target = torch.as_tensor(self.target, dtype=mean.dtype, device=mean.device)
         beta = self._beta_for(mean)
         score = beta.sqrt() * std - (mean - target).abs()
-        return score.squeeze(-1).squeeze(-1)
+        return score.squeeze(-1).mean(dim=-1)
