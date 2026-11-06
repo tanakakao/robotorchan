@@ -23,9 +23,7 @@ def test_joint_epig_optimizes_mixed_batch() -> None:
     model = MixedSingleTaskGP(train_X, train_Y, cat_dims=[1])
     model.eval()
     target_X = torch.tensor([[0.25, 0.0], [0.75, 1.0]], dtype=torch.double)
-    acquisition = qJointExpectedPredictiveInformationGain(
-        model, target_X, observation_noise=1e-3
-    )
+    acquisition = qJointExpectedPredictiveInformationGain(model, target_X, observation_noise=1e-3)
     bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
     candidates, value = optimize_acqf_mixed(
         acq_function=acquisition,
