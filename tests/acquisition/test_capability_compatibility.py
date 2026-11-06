@@ -60,7 +60,7 @@ def test_registry_covers_public_acquisition_classes() -> None:
 
 
 def test_single_task_gp_supports_scalar_active_learning() -> None:
-    result = check_model_acquisition_compatibility("SingleTaskGP", "Straddle")
+    result = check_model_acquisition_compatibility("SingleTaskGP", "qStraddle")
     assert result.status is CompatibilityStatus.COMPATIBLE
     assert result.compatible
 
@@ -163,7 +163,7 @@ def test_static_compatibility_does_not_imply_runtime_validation() -> None:
 
 def test_binary_classifier_rejects_regression_active_learning_acquisition() -> None:
     model = get_classification_model_entry("binary.standard").capabilities
-    result = check_capabilities_acquisition_compatibility(model, "Straddle")
+    result = check_capabilities_acquisition_compatibility(model, "qStraddle")
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "acquisition does not support classification observations" in result.reasons
 
