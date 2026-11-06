@@ -124,6 +124,12 @@ ACQUISITION_REGISTRY.update(
             posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
             supports_ensemble=True,
         ),
+        "qBALD": _classification_active_learning(
+            "qBALD",
+            target=AcquisitionTarget.LABEL_UNCERTAINTY,
+            posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
+            max_q=8,
+        ),
         "qMarginUncertainty": _classification_active_learning(
             "qMarginUncertainty",
             target=AcquisitionTarget.CLASS_PROBABILITY,
