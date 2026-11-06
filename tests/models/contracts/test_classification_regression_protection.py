@@ -63,6 +63,7 @@ def test_regression_acquisitions_do_not_silently_become_classification_only() ->
             "ProbabilityVariance",
             "qMarginUncertainty",
             "qPredictiveEntropy",
+            "qProbabilityVariance",
         }:
             continue
         assert ObservationType.REGRESSION in entry.capabilities.observation_types, name
