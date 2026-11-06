@@ -140,7 +140,7 @@ class qConditionalExpectedPredictiveInformationGain(qJointExpectedPredictiveInfo
         self,
         model: Model,
         target_X: Tensor,
-        X_pending: Tensor,
+        X_pending: Tensor | None = None,
         *,
         observation_noise: float | Tensor = 0.0,
         target_weights: Tensor | None = None,
@@ -151,11 +151,8 @@ class qConditionalExpectedPredictiveInformationGain(qJointExpectedPredictiveInfo
             observation_noise=observation_noise,
             target_weights=target_weights,
         )
-        if X_pending.ndim != 2 or X_pending.shape[-1] != target_X.shape[-1]:
-            raise ValueError("X_pending must have shape (n_pending, d).")
-        if X_pending.shape[-2] < 1:
-            raise ValueError("X_pending must contain at least one pending candidate.")
-        self.register_buffer("X_pending", X_pending.detach().clone())
+        self.register_buffer("X_pending", None)
+        self.set_X_pending(X_pending)
 
     def set_X_pending(self, X_pending: Tensor | None = None) -> None:
         """Update pending locations using the BoTorch acquisition API."""

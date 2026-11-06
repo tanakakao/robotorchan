@@ -50,3 +50,19 @@ def test_conditional_epig_pending_updates_and_clear() -> None:
     assert acquisition.X_pending is None
     expected = qJointExpectedPredictiveInformationGain(model, target, observation_noise=1e-3)(X)
     torch.testing.assert_close(acquisition(X), expected)
+
+
+def test_conditional_epig_starts_without_pending_candidates() -> None:
+    train_X = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    model = SingleTaskGP(train_X, train_X.square())
+    model.eval()
+    target = torch.tensor([[0.8]], dtype=torch.double)
+    X = torch.tensor([[[0.4]]], dtype=torch.double)
+    acquisition = qConditionalExpectedPredictiveInformationGain(
+        model, target, observation_noise=1e-3
+    )
+    assert acquisition.X_pending is None
+    baseline = qJointExpectedPredictiveInformationGain(model, target, observation_noise=1e-3)
+    torch.testing.assert_close(acquisition(X), baseline(X))
+    acquisition.set_X_pending(torch.tensor([[0.2]], dtype=torch.double))
+    assert torch.isfinite(acquisition(X)).all()
