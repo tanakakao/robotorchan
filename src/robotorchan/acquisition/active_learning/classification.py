@@ -185,6 +185,43 @@ class BALD(AcquisitionFunction):
         return mutual_information.squeeze(-1)
 
 
+class qBALD(BALD):
+    """Joint binary-label information gain using coherent posterior samples.
+
+    Enumerates 2**q label vectors, so q is limited to eight. Unlike a
+    marginal BALD average, this accounts for redundant candidate information.
+    """
+
+    def forward(self, X: Tensor) -> Tensor:
+        q = X.shape[-2]
+        if not 1 <= q <= 8:
+            raise ValueError("qBALD requires 1 <= q <= 8 for exact label enumeration.")
+        if self.classification_model.num_classes != 2:
+            raise ValueError("qBALD currently requires binary classification.")
+        samples = self.classification_model.sample_class_probabilities(
+            X, sample_shape=torch.Size([self.num_samples])
+        )
+        if samples.shape[-2:] != (q, 2):
+            raise ValueError("sample_class_probabilities must preserve q and class dimensions.")
+        labels = torch.cartesian_prod(
+            *[torch.arange(2, device=X.device) for _ in range(q)]
+        ).reshape(-1, q)
+        selected = torch.where(
+            labels == 1,
+            samples[..., 1].unsqueeze(-2),
+            samples[..., 0].unsqueeze(-2),
+        )
+        conditional_joint = selected.prod(dim=-1)
+        predictive_joint = conditional_joint.mean(dim=0)
+        predictive_entropy = -torch.special.xlogy(
+            predictive_joint, predictive_joint
+        ).sum(dim=-1)
+        conditional_entropy = -torch.special.xlogy(
+            conditional_joint, conditional_joint
+        ).sum(dim=-1).mean(dim=0)
+        return (predictive_entropy - conditional_entropy).clamp_min(0.0)
+
+
 class LatentStraddle(AcquisitionFunction):
     """Binary classification straddle score around the latent decision boundary."""
 
