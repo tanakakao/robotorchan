@@ -45,6 +45,7 @@ def test_acquisition_public_api_is_intentionally_small() -> None:
         "qPosteriorStd",
         "qPosteriorVariance",
         "qPredictiveEntropy",
+        "qProbabilityVariance",
         "qRandomizedStraddle",
         "qStraddle",
         "resolve_acquisition_composition",
