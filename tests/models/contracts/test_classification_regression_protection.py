@@ -62,6 +62,7 @@ def test_regression_acquisitions_do_not_silently_become_classification_only() ->
             "PredictiveEntropy",
             "ProbabilityVariance",
             "qBALD",
+            "qLatentStraddle",
             "qMarginUncertainty",
             "qPredictiveEntropy",
             "qProbabilityVariance",
