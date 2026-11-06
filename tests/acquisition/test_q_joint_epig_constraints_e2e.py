@@ -16,9 +16,7 @@ def test_joint_epig_respects_linear_candidate_constraints() -> None:
     model = SingleTaskGP(train_X, train_Y)
     model.eval()
     target_X = torch.tensor([[0.2], [0.8]], dtype=torch.double)
-    acquisition = qJointExpectedPredictiveInformationGain(
-        model, target_X, observation_noise=1e-3
-    )
+    acquisition = qJointExpectedPredictiveInformationGain(model, target_X, observation_noise=1e-3)
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     candidates, value = optimize_acqf(
         acq_function=acquisition,
@@ -27,7 +25,7 @@ def test_joint_epig_respects_linear_candidate_constraints() -> None:
         num_restarts=2,
         raw_samples=16,
         inequality_constraints=[
-            (torch.tensor([0]), torch.tensor([-1.0], dtype=torch.double), -0.8)
+            (torch.tensor([0]), torch.tensor([-1.0], dtype=torch.double), -0.8),
         ],
         options={"maxiter": 30},
     )
