@@ -65,6 +65,7 @@ ACQUISITION_REGISTRY["qJointPosteriorEntropy"] = AcquisitionRegistryEntry(
 )
 ACQUISITION_REGISTRY["qExpectedPredictiveInformationGain"] = _active_learning(
     "qExpectedPredictiveInformationGain",
+    max_q=None,
     posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
     supports_multi_output=False,
     requires_single_output=True,
