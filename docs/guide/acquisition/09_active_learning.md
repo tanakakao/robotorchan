@@ -153,6 +153,6 @@ EPIGの内部は[情報理論章](05_information_theoretic.md)へ分けていま
 
 ## 分類モデルのq-batch周辺不確実性
 
-`qPredictiveEntropy`と`qMarginUncertainty`はq>=1に対応し、各候補の分類不確実性スコアを平均する。
+`qPredictiveEntropy`、`qMarginUncertainty`、`qProbabilityVariance`はq>=1に対応し、各候補の分類不確実性スコアを平均する。`qProbabilityVariance`はクラス方向の平均も取る。
 これらは**周辺スコアの集約**であり、ラベルのjoint entropyや候補間の多様性を評価する獲得関数ではない。
-従来の`PredictiveEntropy`と`MarginUncertainty`はq=1のまま維持する。
+従来の`PredictiveEntropy`、`MarginUncertainty`、`ProbabilityVariance`はq=1のまま維持する。
