@@ -31,6 +31,7 @@ def test_joint_epig_optimizes_mixed_batch() -> None:
         q=2,
         num_restarts=2,
         raw_samples=16,
+        sequential=False,
         fixed_features_list=[{1: 0.0}, {1: 1.0}],
         options={"maxiter": 30},
     )
