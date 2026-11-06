@@ -245,3 +245,14 @@ class LatentStraddle(AcquisitionFunction):
         variance = posterior.variance.clamp_min(0.0)
         score = self.beta * variance.sqrt() - mean.abs()
         return score.squeeze(-1).squeeze(-1)
+
+
+class qLatentStraddle(LatentStraddle):
+    """Mean marginal latent decision-boundary straddle over q candidates."""
+
+    def forward(self, X: Tensor) -> Tensor:
+        posterior = self.classification_model.latent_posterior(X)
+        mean = posterior.mean
+        variance = posterior.variance.clamp_min(0.0)
+        score = self.beta * variance.sqrt() - mean.abs()
+        return score.reshape(X.shape[:-1]).mean(dim=-1)
