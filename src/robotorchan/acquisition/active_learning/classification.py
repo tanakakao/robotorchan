@@ -125,7 +125,7 @@ class qMarginUncertainty(MarginUncertainty):
             raise ValueError("qMarginUncertainty requires at least two classes.")
         top_two = probabilities.topk(k=2, dim=-1).values
         score = 1.0 - (top_two[..., 0] - top_two[..., 1])
-        return score.mean(dim=-1)
+        return score.reshape(X.shape[:-1]).mean(dim=-1)
 
 
 class ProbabilityVariance(AcquisitionFunction):
