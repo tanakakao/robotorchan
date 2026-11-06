@@ -1,4 +1,39 @@
-# q-batch Phase 1: static implementation inventory
+# q-batch implementation inventory and verification boundaries
+
+This document records the original 2026-11-05 static inventory and the subsequent
+q>1 implementation work. The original counts below are historical, **not** the
+current acquisition registry or a current compatibility matrix.
+
+For the current registered acquisitions, read
+`src/robotorchan/acquisition/registry.py`. For optimizer capability declarations
+and scoped runtime evidence, generate the report using
+`scripts/audit_acquisition_optimizer_matrix.py`.
+
+## Post-inventory updates (2026-11-07)
+
+The original 11 q=1 active-learning entries no longer describe the complete
+registry. q variants now include marginal aggregation, joint Gaussian entropy,
+joint and conditional Gaussian EPIG, and classification qBALD. These variants
+have different semantics and cannot be counted as interchangeable joint
+acquisitions.
+
+| Evidence | Scope | What it does not establish |
+| --- | --- | --- |
+| `tests/optim/contracts/test_native_joint_q_batch_contract.py` | Generic joint-q optimizer contracts | Every registered acquisition/backend pair |
+| `tests/optim/contracts/test_joint_q_batch_contract.py` | Selected derivative-free joint-q contracts | All constraints and mixed variable domains |
+| `tests/acquisition/test_q_joint_epig_constraints_e2e.py` | Joint EPIG with BoTorch linear constraints, q=2 | Arbitrary nonlinear or inter-point constraints |
+| `tests/acquisition/test_q_joint_epig_mixed_e2e.py` | Mixed GP and independently selected q=2 categorical values | Native joint-q mixed BoTorch optimizer support |
+| `tests/acquisition/test_q_conditional_epig_async_e2e.py` | Pending-aware joint EPIG with BoTorch optimizer, q=2 | Model fantasization or full async experiment lifecycle |
+| `benchmarks/q_epig_batch_comparison.py` | Runnable marginal/joint/conditional EPIG comparison | Statistical superiority or all acquisitions |
+
+**Completion criterion:** use the live registry and scoped evidence to identify
+unimplemented q semantics or unsupported optimizer contracts. Do not expand
+every Cartesian-product combination into tests merely because it is unverified.
+Mark mathematically incompatible combinations as such. One-shot acquisition
+functions, sequential mixed optimization, and q=1-only acquisitions need
+separate interpretation.
+
+## Original static inventory (2026-11-05; historical snapshot)
 
 This report audits the `main` branch as inspected on 2026-11-05. It is a **static source audit**, not evidence of successful q=2 or q=4 runtime tests. Do not equate capability declarations with verified behavior.
 
