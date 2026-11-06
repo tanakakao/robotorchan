@@ -58,7 +58,9 @@ def test_conditional_epig_starts_without_pending_candidates() -> None:
     model.eval()
     target = torch.tensor([[0.8]], dtype=torch.double)
     X = torch.tensor([[[0.4]]], dtype=torch.double)
-    acquisition = qConditionalExpectedPredictiveInformationGain(model, target, observation_noise=1e-3)
+    acquisition = qConditionalExpectedPredictiveInformationGain(
+        model, target, observation_noise=1e-3
+    )
     assert acquisition.X_pending is None
     baseline = qJointExpectedPredictiveInformationGain(model, target, observation_noise=1e-3)
     torch.testing.assert_close(acquisition(X), baseline(X))
