@@ -30,6 +30,7 @@ def test_q_greater_than_one_includes_only_batch_capable_active_learning() -> Non
     assert {item.acquisition_name for item in recommendations} == {
         "qBoundaryVariance",
         "qExpectedPredictiveInformationGain",
+        "qJointExpectedPredictiveInformationGain",
         "qJointPosteriorEntropy",
         "qPosteriorStd",
         "qPosteriorVariance",
