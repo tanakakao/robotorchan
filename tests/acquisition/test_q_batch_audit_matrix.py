@@ -16,10 +16,12 @@ def test_q_batch_optimizer_contracts_cover_dispatch_registry() -> None:
     report = build_inventory()
     contracts = report["q_batch_optimizer_contracts"]
     assert set(contracts) == set(report["optimizers"])
-    for entry in contracts.values():
+    for name, entry in contracts.items():
         assert entry["q_values"] == [1, 2, 4]
         assert entry["joint_synthetic_acquisition"]["evidence"]
-        assert not entry["registered_acquisition_pairs_verified_q_gt_1"]
+        assert entry["registered_acquisition_pairs_verified_q_gt_1"] is (
+            name in {"botorch", "sobol"}
+        )
 
 
 def test_mixed_botorch_is_not_mislabeled_joint() -> None:
