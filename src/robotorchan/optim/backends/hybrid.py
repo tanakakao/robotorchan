@@ -23,6 +23,7 @@ from robotorchan.optim.constraints.contracts import (
     NonlinearConstraint,
     resolve_candidate_constraints,
 )
+from robotorchan.optim.constraints.evaluation import candidate_is_feasible
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 GlobalOptimizerName = Literal["de", "cmaes", "mixed_ga", "pso"]
@@ -136,6 +137,17 @@ def optimize_acqf_hybrid(
         q,
         **resolved_global_options,
     )
+
+    if candidate_constraints.has_constraints and not bool(
+        candidate_is_feasible(
+            global_candidate.unsqueeze(0),
+            candidate_constraints,
+            equality_tolerance=resolved_global_options.get("equality_tolerance", 1e-6),
+        ).all()
+    ):
+        raise ValueError(
+            "Hybrid global optimizer returned a candidate that violates candidate constraints."
+        )
 
     initial_conditions = global_candidate.unsqueeze(0)
     options = dict(local_options or {})
