@@ -221,3 +221,24 @@ def test_mixed_ga_rejects_infeasible_categorical_constraint() -> None:
             generations=2,
             seed=7,
         )
+
+
+@pytest.mark.parametrize(
+    ("fixed_features", "message"),
+    [
+        ({1: 1.5}, "integer value"),
+        ({2: 15.0}, "categorical values"),
+    ],
+)
+def test_mixed_ga_validates_direct_fixed_features(fixed_features, message) -> None:
+    bounds = torch.tensor([[0.0, 0.0, 10.0], [1.0, 5.0, 30.0]], dtype=torch.double)
+
+    with pytest.raises(ValueError, match=message):
+        optimize_acqf_mixed_ga(
+            _MixedTargetAcquisition(),
+            bounds,
+            q=1,
+            integer_dims=(1,),
+            categorical_values={2: [10.0, 20.0, 30.0]},
+            fixed_features=fixed_features,
+        )

@@ -73,6 +73,12 @@ def optimize_acqf_mixed_ga(
         mutation_rate=mutation_rate,
         mutation_scale=mutation_scale,
     )
+    if variable_space is None and fixed_features:
+        MixedVariableSpace(
+            bounds,
+            integer_dims=integer_dims,
+            categorical_values=categorical_values,
+        ).validate_fixed_features(fixed_features)
     candidate_constraints = resolve_candidate_constraints(
         constraints,
         inequality_constraints=inequality_constraints,
