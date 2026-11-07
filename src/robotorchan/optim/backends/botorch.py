@@ -128,7 +128,7 @@ def optimize_acqf_mixed_botorch(
         batch_initial_conditions,
         candidate_constraints,
         bounds=bounds,
-        q=q,
+        q=1 if q > 1 else q,
     )
     return botorch_optimize_acqf_mixed(
         acq_function=acq_function,
