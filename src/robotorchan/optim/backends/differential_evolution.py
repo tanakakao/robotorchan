@@ -8,12 +8,18 @@ from typing import Any
 import numpy as np
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
-from scipy.optimize import NonlinearConstraint, differential_evolution
+from scipy.optimize import NonlinearConstraint as SciPyNonlinearConstraint
+from scipy.optimize import differential_evolution
 from torch import Tensor
 
 from robotorchan.optim.backend_support.operations import apply_fixed_features
 from robotorchan.optim.backend_support.runtime import validate_bounds
-from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.contracts import (
+    CandidateConstraints,
+    LinearConstraint,
+    NonlinearConstraint,
+    resolve_candidate_constraints,
+)
 from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
@@ -25,6 +31,9 @@ def optimize_acqf_de(
     *,
     options: dict[str, Any] | None = None,
     constraints: CandidateConstraints | None = None,
+    inequality_constraints: tuple[LinearConstraint, ...] | None = None,
+    equality_constraints: tuple[LinearConstraint, ...] | None = None,
+    nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
     fixed_features: dict[int, float | Tensor] | None = None,
     seed: int | None = None,
     constraint_penalty: float = 1e6,
@@ -56,7 +65,12 @@ def optimize_acqf_de(
     _validate_structured_dims(integer_dims, categorical_values, bounds)
     if q < 1:
         raise ValueError("q must be at least 1.")
-    candidate_constraints = constraints or CandidateConstraints()
+    candidate_constraints = resolve_candidate_constraints(
+        constraints,
+        inequality_constraints=inequality_constraints,
+        equality_constraints=equality_constraints,
+        nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+    )
     search_bounds = bounds.clone()
     for dim, values in categorical_values.items():
         search_bounds[0, dim] = 0
@@ -102,7 +116,7 @@ def optimize_acqf_de(
             ).reshape(())
             return -float(violation.detach().cpu())
 
-        scipy_constraints = (NonlinearConstraint(feasibility, 0.0, np.inf),)
+        scipy_constraints = (SciPyNonlinearConstraint(feasibility, 0.0, np.inf),)
 
     result = differential_evolution(
         objective,

@@ -15,7 +15,12 @@ from botorch.optim import optimize_acqf_mixed as botorch_optimize_acqf_mixed
 from botorch.optim.initializers import TGenInitialConditions
 from torch import Tensor
 
-from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.contracts import (
+    CandidateConstraints,
+    LinearConstraint,
+    NonlinearConstraint,
+    resolve_candidate_constraints,
+)
 from robotorchan.optim.constraints.validation import (
     validate_candidate_constraints,
     validate_nonlinear_initial_conditions,
@@ -31,6 +36,9 @@ def optimize_acqf_botorch(
     *,
     options: dict[str, Any] | None = None,
     constraints: CandidateConstraints | None = None,
+    inequality_constraints: tuple[LinearConstraint, ...] | None = None,
+    equality_constraints: tuple[LinearConstraint, ...] | None = None,
+    nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
     fixed_features: dict[int, float] | None = None,
     batch_initial_conditions: Tensor | None = None,
     sequential: bool = False,
@@ -38,7 +46,12 @@ def optimize_acqf_botorch(
     ic_gen_kwargs: dict[str, Any] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Delegate original-space acquisition optimization to BoTorch."""
-    candidate_constraints = constraints or CandidateConstraints()
+    candidate_constraints = resolve_candidate_constraints(
+        constraints,
+        inequality_constraints=inequality_constraints,
+        equality_constraints=equality_constraints,
+        nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+    )
     validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q, sequential=sequential)
     resolved_options = _options_for_nonlinear_constraints(
         options,
@@ -82,12 +95,20 @@ def optimize_acqf_mixed_botorch(
     *,
     options: dict[str, Any] | None = None,
     constraints: CandidateConstraints | None = None,
+    inequality_constraints: tuple[LinearConstraint, ...] | None = None,
+    equality_constraints: tuple[LinearConstraint, ...] | None = None,
+    nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
     batch_initial_conditions: Tensor | None = None,
     ic_generator: TGenInitialConditions | None = None,
     ic_gen_kwargs: dict[str, Any] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Delegate enumerated mixed-space acquisition optimization to BoTorch."""
-    candidate_constraints = constraints or CandidateConstraints()
+    candidate_constraints = resolve_candidate_constraints(
+        constraints,
+        inequality_constraints=inequality_constraints,
+        equality_constraints=equality_constraints,
+        nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+    )
     validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
     if any(
         not is_intrapoint

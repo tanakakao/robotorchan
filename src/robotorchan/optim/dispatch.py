@@ -30,7 +30,12 @@ from robotorchan.optim.capabilities import (
     OPTIMIZER_CAPABILITIES,
     get_optimizer_capabilities,
 )
-from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.contracts import (
+    CandidateConstraints,
+    LinearConstraint,
+    NonlinearConstraint,
+    resolve_candidate_constraints,
+)
 from robotorchan.optim.constraints.validation import validate_candidate_constraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
@@ -59,6 +64,9 @@ def optimize_acqf(
     raw_samples: int | None = 512,
     options: dict[str, Any] | None = None,
     constraints: CandidateConstraints | None = None,
+    inequality_constraints: tuple[LinearConstraint, ...] | None = None,
+    equality_constraints: tuple[LinearConstraint, ...] | None = None,
+    nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
     fixed_features: dict[int, float | Tensor] | None = None,
     batch_initial_conditions: Tensor | None = None,
     sequential: bool = False,
@@ -69,6 +77,12 @@ def optimize_acqf(
     variable_space: MixedVariableSpace | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Optimize an acquisition function using a named robotorchan backend."""
+    constraints = resolve_candidate_constraints(
+        constraints,
+        inequality_constraints=inequality_constraints,
+        equality_constraints=equality_constraints,
+        nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+    )
     validate_bounds(bounds)
     if q < 1:
         raise ValueError("q must be at least 1.")

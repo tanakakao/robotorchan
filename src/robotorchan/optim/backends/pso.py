@@ -10,7 +10,12 @@ from torch import Tensor
 
 from robotorchan.optim.backend_support.operations import apply_fixed_features
 from robotorchan.optim.backend_support.runtime import make_generator, validate_bounds
-from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.contracts import (
+    CandidateConstraints,
+    LinearConstraint,
+    NonlinearConstraint,
+    resolve_candidate_constraints,
+)
 from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
@@ -27,6 +32,9 @@ def optimize_acqf_pso(
     social: float = 1.49618,
     seed: int | None = None,
     constraints: CandidateConstraints | None = None,
+    inequality_constraints: tuple[LinearConstraint, ...] | None = None,
+    equality_constraints: tuple[LinearConstraint, ...] | None = None,
+    nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
     fixed_features: dict[int, float | Tensor] | None = None,
     constraint_penalty: float = 1e6,
     equality_tolerance: float = 1e-6,
@@ -47,7 +55,12 @@ def optimize_acqf_pso(
     _validate(bounds, q, swarm_size, iterations, inertia, cognitive, social)
     if constraint_penalty <= 0:
         raise ValueError("constraint_penalty must be positive.")
-    candidate_constraints = constraints or CandidateConstraints()
+    candidate_constraints = resolve_candidate_constraints(
+        constraints,
+        inequality_constraints=inequality_constraints,
+        equality_constraints=equality_constraints,
+        nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+    )
     generator = make_generator(bounds, seed)
 
     d = bounds.shape[-1]
