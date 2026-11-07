@@ -332,8 +332,52 @@ def build_inventory() -> dict[str, Any]:
             group = "runtime_validation_candidates"
         gap_triage[group].append(item)
     gap_triage_counts = {name: len(items) for name, items in gap_triage.items()}
+    q_batch_acquisition_coverage = {}
+    for acquisition_name, entry in sorted(ACQUISITION_REGISTRY.items()):
+        max_q = entry.capabilities.max_q
+        verified = {
+            optimizer_name: result["q_batch_runtime_evidence"]
+            for optimizer_name, result in acquisition_optimizer[acquisition_name].items()
+            if "q_batch_runtime_evidence" in result
+        }
+        q_batch_acquisition_coverage[acquisition_name] = {
+            "max_q": max_q,
+            "q_gt_1_declared": max_q is None or max_q > 1,
+            "q_gt_1_runtime_evidence": verified,
+            "q_gt_1_runtime_verified": bool(verified),
+            "semantics": (
+                "joint_binary_labels"
+                if acquisition_name == "qBALD"
+                else "joint_gaussian"
+                if acquisition_name in {
+                    "qJointPosteriorEntropy",
+                    "qJointExpectedPredictiveInformationGain",
+                }
+                else "conditional_joint_gaussian"
+                if acquisition_name == "qConditionalExpectedPredictiveInformationGain"
+                else "marginal_aggregate"
+                if acquisition_name in {
+                    "qBoundaryVariance",
+                    "qExpectedPredictiveInformationGain",
+                    "qLatentStraddle",
+                    "qMarginUncertainty",
+                    "qPosteriorStd",
+                    "qPosteriorVariance",
+                    "qPredictiveEntropy",
+                    "qProbabilityVariance",
+                    "qRandomizedStraddle",
+                    "qStraddle",
+                }
+                else "botorch_native"
+                if entry.implementation_strategy.startswith("BoTorch-native")
+                else "q1_only"
+                if max_q == 1
+                else "unspecified"
+            ),
+        }
     return {
         "schema_version": 12,
+        "q_batch_acquisition_coverage": q_batch_acquisition_coverage,
         "q_batch_optimizer_contracts": {
             name: {
                 "q_values": [1, 2, 4],
@@ -470,6 +514,20 @@ def build_summary(report: dict[str, Any]) -> dict[str, Any]:
         },
         "variable_type_status_counts": status_counts,
         "q_batch_optimizer_contracts": report["q_batch_optimizer_contracts"],
+        "q_batch_acquisition_counts": {
+            "declared_q_gt_1": sum(
+                item["q_gt_1_declared"]
+                for item in report["q_batch_acquisition_coverage"].values()
+            ),
+            "runtime_verified_q_gt_1": sum(
+                item["q_gt_1_runtime_verified"]
+                for item in report["q_batch_acquisition_coverage"].values()
+            ),
+            "q1_only": sum(
+                item["max_q"] == 1
+                for item in report["q_batch_acquisition_coverage"].values()
+            ),
+        },
         "gap_triage_counts": report["gap_triage_counts"],
         "limitations": report["limitations"],
     }
