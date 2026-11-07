@@ -94,6 +94,31 @@ def test_hybrid_rejects_infeasible_global_candidate_before_local_refinement() ->
     local.assert_not_called()
 
 
+def test_hybrid_honors_global_equality_tolerance() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        equality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.5),)
+    )
+    global_optimizer = Mock(
+        return_value=(torch.tensor([[0.5001]], dtype=torch.double), torch.tensor(-0.1))
+    )
+
+    with patch(
+        "robotorchan.optim.backends.hybrid.optimize_acqf_botorch",
+        return_value=(torch.tensor([[0.5]], dtype=torch.double), torch.tensor(0.0)),
+    ) as local:
+        optimize_acqf_hybrid(
+            _Quadratic(),
+            bounds,
+            q=1,
+            global_optimizer=global_optimizer,
+            global_options={"equality_tolerance": 1e-3},
+            constraints=constraints,
+        )
+
+    local.assert_called_once()
+
+
 def test_hybrid_sets_batch_limit_for_nonlinear_constraints() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
