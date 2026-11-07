@@ -12,7 +12,10 @@ from robotorchan.optim.backends import optimize_vector_nsga2
 from robotorchan.optim.capabilities import (
     BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
     BOTORCH_OPTIMIZER_CAPABILITIES,
+    CMAES_OPTIMIZER_CAPABILITIES,
     DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES,
+    HYBRID_OPTIMIZER_CAPABILITIES,
+    MIXED_CMAES_OPTIMIZER_CAPABILITIES,
     OPTIMIZER_CAPABILITIES,
     PSO_OPTIMIZER_CAPABILITIES,
     ConstraintHandling,
@@ -140,3 +143,17 @@ def test_phase3_high_dimensional_strategies_are_public() -> None:
             TuRBOStrategy,
         )
     )
+
+
+def test_feasible_return_backends_advertise_feasibility_first() -> None:
+    for capabilities in (
+        CMAES_OPTIMIZER_CAPABILITIES,
+        MIXED_CMAES_OPTIMIZER_CAPABILITIES,
+        HYBRID_OPTIMIZER_CAPABILITIES,
+        PSO_OPTIMIZER_CAPABILITIES,
+    ):
+        handling = capabilities.constraint_handling
+        assert handling.linear_inequality is ConstraintHandling.FEASIBILITY_FIRST
+        assert handling.linear_equality is ConstraintHandling.FEASIBILITY_FIRST
+        assert handling.nonlinear_inequality is ConstraintHandling.FEASIBILITY_FIRST
+        assert handling.interpoint_nonlinear is ConstraintHandling.FEASIBILITY_FIRST
