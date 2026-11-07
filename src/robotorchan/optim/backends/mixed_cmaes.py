@@ -104,6 +104,13 @@ def optimize_acqf_mixed_cmaes(
             ]
         )
         with torch.no_grad():
+            violation = candidate_constraint_violation(
+                candidate.unsqueeze(0),
+                candidate_constraints,
+                equality_tolerance=equality_tolerance,
+            )
+            if bool((violation > 0).any()):
+                raise ValueError("The only available mixed candidate violates constraints.")
             return candidate, acq_function(candidate.unsqueeze(0)).reshape(())
 
     kwargs: dict = {"seed": seed}
