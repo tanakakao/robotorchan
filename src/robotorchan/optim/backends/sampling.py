@@ -8,6 +8,14 @@ from torch import Tensor
 from torch.quasirandom import SobolEngine
 
 from robotorchan.optim.backend_support.runtime import make_generator, validate_bounds
+from robotorchan.optim.constraints.contracts import (
+    CandidateConstraints,
+    LinearConstraint,
+    NonlinearConstraint,
+    resolve_candidate_constraints,
+)
+from robotorchan.optim.constraints.evaluation import candidate_is_feasible
+from robotorchan.optim.constraints.validation import validate_candidate_constraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 
@@ -58,6 +66,10 @@ def optimize_acqf_sampling(
     seed: int | None = None,
     variable_space: MixedVariableSpace | None = None,
     fixed_features: dict[int, float | Tensor] | None = None,
+    constraints: CandidateConstraints | None = None,
+    inequality_constraints: tuple[LinearConstraint, ...] | None = None,
+    equality_constraints: tuple[LinearConstraint, ...] | None = None,
+    nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Return the best acquisition-valued q-batch from sampled candidates."""
     validate_bounds(bounds)
@@ -74,6 +86,14 @@ def optimize_acqf_sampling(
             raise ValueError("variable_space bounds must match bounds.")
         variable_space.validate_fixed_features(fixed_features)
 
+    candidate_constraints = resolve_candidate_constraints(
+        constraints,
+        inequality_constraints=inequality_constraints,
+        equality_constraints=equality_constraints,
+        nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+    )
+    validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
+
     samples = sample_candidate_batches(
         bounds,
         num_samples,
@@ -86,6 +106,12 @@ def optimize_acqf_sampling(
     elif variable_space is not None:
         samples = _apply_mixed_random_semantics(samples, variable_space, seed)
     samples = _apply_fixed_features(samples, fixed_features)
+
+    if candidate_constraints.has_constraints:
+        feasible = candidate_is_feasible(samples, candidate_constraints)
+        if not bool(feasible.any()):
+            raise ValueError("Sampling found no feasible candidate among the sampled batches.")
+        samples = samples[feasible]
 
     return select_best_sampled_batch(acq_function, samples)
 
