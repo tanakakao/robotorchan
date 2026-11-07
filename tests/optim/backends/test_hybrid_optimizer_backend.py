@@ -336,6 +336,30 @@ def test_hybrid_runtime_preserves_dtype_and_improves_qbatch() -> None:
     assert value >= initial_value
 
 
+def test_hybrid_real_nonlinear_constraint_runtime() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[0] - 0.2, True),)
+    )
+    global_candidate = torch.tensor([[0.4]], dtype=torch.double)
+
+    def global_optimizer(*args, **kwargs):
+        return global_candidate, _Quadratic()(global_candidate.unsqueeze(0)).reshape(())
+
+    candidate, value = optimize_acqf_hybrid(
+        _Quadratic(),
+        bounds,
+        q=1,
+        global_optimizer=global_optimizer,
+        local_options={"maxiter": 30},
+        constraints=constraints,
+    )
+
+    assert candidate.shape == (1, 1)
+    assert float(candidate[0, 0]) >= 0.2 - 1e-6
+    torch.testing.assert_close(value, _Quadratic()(candidate.unsqueeze(0)).reshape(()))
+
+
 def test_hybrid_real_constrained_qbatch_runtime() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
