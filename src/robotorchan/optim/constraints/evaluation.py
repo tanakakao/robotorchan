@@ -22,8 +22,16 @@ def candidate_constraint_violation(
     if constraints is None:
         return violation
     for constraint in constraints.inequality_constraints:
-        residual = _linear_residual(candidates, constraint)
-        violation = violation + torch.relu(-residual)
+        indices, coefficients, rhs = constraint
+        if indices.ndim == 1:
+            coefficients = coefficients.to(device=candidates.device, dtype=candidates.dtype)
+            residual = (candidates[..., indices.to(candidates.device)] * coefficients).sum(
+                dim=-1
+            ) - rhs
+            violation = violation + torch.relu(-residual).sum(dim=-1)
+        else:
+            residual = _linear_residual(candidates, constraint)
+            violation = violation + torch.relu(-residual)
     for constraint in constraints.equality_constraints:
         indices, coefficients, rhs = constraint
         if indices.ndim == 1:
