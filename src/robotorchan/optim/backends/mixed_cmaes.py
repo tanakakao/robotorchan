@@ -15,6 +15,7 @@ from robotorchan.optim.constraints.contracts import (
     resolve_candidate_constraints,
 )
 from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
+from robotorchan.optim.constraints.validation import validate_candidate_constraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 
@@ -43,6 +44,7 @@ def optimize_acqf_mixed_cmaes(
         equality_constraints=equality_constraints,
         nonlinear_inequality_constraints=nonlinear_inequality_constraints,
     )
+    validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
     if not torch.equal(variable_space.bounds, bounds):
         raise ValueError("variable_space bounds must match bounds.")
     if q < 1 or max_generations < 1:
