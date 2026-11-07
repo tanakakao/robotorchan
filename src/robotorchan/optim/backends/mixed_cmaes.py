@@ -8,7 +8,7 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
 from robotorchan.optim.backend_support.runtime import validate_bounds
-from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.contracts import CandidateConstraints, LinearConstraint, NonlinearConstraint, resolve_candidate_constraints
 from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
@@ -23,6 +23,9 @@ def optimize_acqf_mixed_cmaes(
     max_generations: int = 200,
     seed: int | None = None,
     constraints: CandidateConstraints | None = None,
+    inequality_constraints: tuple[LinearConstraint, ...] | None = None,
+    equality_constraints: tuple[LinearConstraint, ...] | None = None,
+    nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
     fixed_features: dict[int, float | Tensor] | None = None,
     constraint_penalty: float = 1e6,
     equality_tolerance: float = 1e-6,
@@ -101,7 +104,12 @@ def optimize_acqf_mixed_cmaes(
         c_space=c_space or None,
         **kwargs,
     )
-    candidate_constraints = constraints or CandidateConstraints()
+    candidate_constraints = resolve_candidate_constraints(
+        constraints,
+        inequality_constraints=inequality_constraints,
+        equality_constraints=equality_constraints,
+        nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+    )
     best_candidate: Tensor | None = None
     best_score = float("-inf")
     for _ in range(max_generations):
