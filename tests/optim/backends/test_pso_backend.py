@@ -156,3 +156,16 @@ def test_pso_rejects_infeasible_result() -> None:
             seed=11,
             constraints=constraints,
         )
+
+
+def test_pso_rejects_fractional_fixed_integer_value() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 4.0]], dtype=torch.double)
+
+    with pytest.raises(ValueError, match="integer value"):
+        optimize_acqf_pso(
+            _Quadratic(),
+            bounds,
+            q=1,
+            integer_dims=(1,),
+            fixed_features={1: 1.5},
+        )
