@@ -59,6 +59,11 @@ def optimize_acqf_mixed_ga(
     else:
         categorical_values = dict(categorical_values or {})
         integer_dims = tuple(integer_dims)
+        MixedVariableSpace(
+            bounds,
+            integer_dims=integer_dims,
+            categorical_values=categorical_values,
+        ).validate_fixed_features(fixed_features)
     validate_bounds(bounds)
     _validate_configuration(
         q=q,
