@@ -17,6 +17,7 @@ from robotorchan.optim.constraints.contracts import (
     resolve_candidate_constraints,
 )
 from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
+from robotorchan.optim.constraints.validation import validate_candidate_constraints
 
 
 def optimize_acqf_cmaes(
@@ -50,6 +51,7 @@ def optimize_acqf_cmaes(
         equality_constraints=equality_constraints,
         nonlinear_inequality_constraints=nonlinear_inequality_constraints,
     )
+    validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
     if constraint_penalty <= 0:
         raise ValueError("constraint_penalty must be positive.")
 
