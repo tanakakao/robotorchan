@@ -89,3 +89,19 @@ def test_mixed_cmaes_qbatch_evaluations_preserve_discrete_legality():
     assert acquisition.calls >= 2
     assert candidates.shape == (2, 3)
     assert value.ndim == 0
+
+
+def test_mixed_cmaes_rejects_infeasible_return() -> None:
+    bounds = torch.tensor([[0.0, 10.0], [1.0, 90.0]], dtype=torch.double)
+    space = MixedVariableSpace(bounds, categorical_values={1: (10.0, 90.0)})
+    with pytest.raises(ValueError, match="found no feasible candidate"):
+        optimize_acqf_mixed_cmaes(
+            SumAcquisition(),
+            bounds,
+            q=1,
+            variable_space=space,
+            inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 2.0),),
+            population_size=8,
+            max_generations=2,
+            seed=11,
+        )
