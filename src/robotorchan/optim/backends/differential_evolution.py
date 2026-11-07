@@ -8,7 +8,8 @@ from typing import Any
 import numpy as np
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
-from scipy.optimize import NonlinearConstraint, differential_evolution
+from scipy.optimize import NonlinearConstraint as SciPyNonlinearConstraint
+from scipy.optimize import differential_evolution
 from torch import Tensor
 
 from robotorchan.optim.backend_support.operations import apply_fixed_features
@@ -115,7 +116,7 @@ def optimize_acqf_de(
             ).reshape(())
             return -float(violation.detach().cpu())
 
-        scipy_constraints = (NonlinearConstraint(feasibility, 0.0, np.inf),)
+        scipy_constraints = (SciPyNonlinearConstraint(feasibility, 0.0, np.inf),)
 
     result = differential_evolution(
         objective,
