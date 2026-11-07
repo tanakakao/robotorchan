@@ -100,19 +100,20 @@ def _linear_residual(candidates: Tensor, constraint: LinearConstraint) -> Tensor
 
 def _evaluate_intrapoint_callable(callable_, candidates: Tensor) -> Tensor:
     flat = candidates.reshape(-1, candidates.shape[-1])
-    values = [_validate_nonlinear_value(callable_(candidate), candidate) for candidate in flat]
+    values = [validate_nonlinear_value(callable_(candidate), candidate) for candidate in flat]
     return torch.stack(values).reshape(candidates.shape[:-1])
 
 
 def _evaluate_interpoint_callable(callable_, candidates: Tensor) -> Tensor:
     if candidates.ndim == 2:
-        return _validate_nonlinear_value(callable_(candidates), candidates)
+        return validate_nonlinear_value(callable_(candidates), candidates)
     flat = candidates.reshape(-1, candidates.shape[-2], candidates.shape[-1])
-    values = [_validate_nonlinear_value(callable_(candidate), candidate) for candidate in flat]
+    values = [validate_nonlinear_value(callable_(candidate), candidate) for candidate in flat]
     return torch.stack(values).reshape(candidates.shape[:-2])
 
 
-def _validate_nonlinear_value(value: object, candidate: Tensor) -> Tensor:
+def validate_nonlinear_value(value: object, candidate: Tensor) -> Tensor:
+    """Validate the shared scalar, dtype, device and finiteness contract."""
     if not isinstance(value, Tensor):
         raise TypeError("Nonlinear candidate constraint callable must return a Tensor.")
     if value.numel() != 1:
@@ -120,7 +121,9 @@ def _validate_nonlinear_value(value: object, candidate: Tensor) -> Tensor:
     if value.device != candidate.device:
         raise ValueError("Nonlinear candidate constraint callable must preserve candidate device.")
     if value.dtype != candidate.dtype:
-        raise ValueError("Nonlinear candidate constraint callable must preserve candidate dtype.")
+        raise ValueError(
+            "Nonlinear candidate constraint values must use the same dtype as candidates."
+        )
     if not torch.isfinite(value).all():
-        raise ValueError("Nonlinear candidate constraint callable must return a finite value.")
+        raise ValueError("Nonlinear candidate constraint values must be finite.")
     return value.reshape(())
