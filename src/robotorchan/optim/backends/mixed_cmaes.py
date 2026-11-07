@@ -126,6 +126,8 @@ def optimize_acqf_mixed_cmaes(
     )
     best_candidate: Tensor | None = None
     best_score = float("-inf")
+    best_feasible_candidate: Tensor | None = None
+    best_feasible_value = float("-inf")
     for _ in range(max_generations):
         solutions = []
         for _ in range(optimizer.population_size):
@@ -157,6 +159,10 @@ def optimize_acqf_mixed_cmaes(
                 equality_tolerance=equality_tolerance,
             ).reshape(())
             score = float(value.reshape(())) - constraint_penalty * float(violation)
+            raw_value = float(value.reshape(()))
+            if float(violation) <= 0 and raw_value > best_feasible_value:
+                best_feasible_value = raw_value
+                best_feasible_candidate = candidate.clone()
             solutions.append((solution, -score))
             if score > best_score:
                 best_score = score
@@ -164,6 +170,10 @@ def optimize_acqf_mixed_cmaes(
         optimizer.tell(solutions)
         if optimizer.should_stop():
             break
+    if candidate_constraints.has_constraints:
+        if best_feasible_candidate is None:
+            raise ValueError("Mixed CMA-ES found no feasible candidate.")
+        best_candidate = best_feasible_candidate
     if best_candidate is None:
         raise RuntimeError("Mixed CMA-ES did not generate any candidate.")
     with torch.no_grad():
