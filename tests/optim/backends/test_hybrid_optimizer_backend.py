@@ -72,6 +72,28 @@ def test_hybrid_forwards_constraints_to_global_and_local_stages() -> None:
     assert torch.equal(local_kwargs["batch_initial_conditions"], expected_initial_conditions)
 
 
+def test_hybrid_rejects_infeasible_global_candidate_before_local_refinement() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.5),)
+    )
+    global_optimizer = Mock(
+        return_value=(torch.tensor([[0.3]], dtype=torch.double), torch.tensor(-0.1))
+    )
+
+    with patch("robotorchan.optim.backends.hybrid.optimize_acqf_botorch") as local:
+        with pytest.raises(ValueError, match="violates candidate constraints"):
+            optimize_acqf_hybrid(
+                _Quadratic(),
+                bounds,
+                q=1,
+                global_optimizer=global_optimizer,
+                constraints=constraints,
+            )
+
+    local.assert_not_called()
+
+
 def test_hybrid_sets_batch_limit_for_nonlinear_constraints() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
