@@ -162,9 +162,7 @@ def test_sampling_dispatch_forwards_linear_constraints(optimizer: str) -> None:
         optimizer=optimizer,
         raw_samples=128,
         seed=17,
-        inequality_constraints=(
-            (torch.tensor([0]), torch.tensor([-1.0]), -0.4),
-        ),
+        inequality_constraints=((torch.tensor([0]), torch.tensor([-1.0]), -0.4),),
     )
 
     assert candidate[0, 0] <= 0.4 + 1e-6
@@ -182,7 +180,5 @@ def test_sampling_dispatch_rejects_impossible_constraints(optimizer: str) -> Non
             optimizer=optimizer,
             raw_samples=32,
             seed=17,
-            inequality_constraints=(
-                (torch.tensor([0]), torch.tensor([1.0]), 2.0),
-            ),
+            inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 2.0),),
         )
