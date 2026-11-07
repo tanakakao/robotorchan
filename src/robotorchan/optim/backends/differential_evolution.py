@@ -134,6 +134,14 @@ def optimize_acqf_de(
     ).reshape(q, bounds.shape[-1])
     candidates = _decode_de_candidate(candidates, integer_dims, categorical_values, bounds)
     candidates = apply_fixed_features(candidates, fixed_features)
+    if candidate_constraints.has_constraints:
+        violation = candidate_constraint_violation(
+            candidates.unsqueeze(0),
+            candidate_constraints,
+            equality_tolerance=equality_tolerance,
+        )
+        if bool((violation > 0).any()):
+            raise ValueError("Differential Evolution found no feasible candidate.")
     with torch.no_grad():
         acquisition_value = acq_function(candidates.unsqueeze(0)).reshape(())
     return candidates, acquisition_value

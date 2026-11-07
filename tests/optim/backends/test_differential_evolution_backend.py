@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import numpy as np
+import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from scipy.optimize import OptimizeResult
@@ -79,3 +80,25 @@ def test_de_rejects_unordered_categorical_variables() -> None:
     assert candidates.shape == (1, 2)
     assert candidates[0, 1].item() in {0.0, 1.0, 2.0}
     assert value.numel() == 1
+
+
+def test_de_rejects_infeasible_decoded_mixed_result() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
+
+    def fake_de(objective, scipy_bounds, **kwargs):
+        return OptimizeResult(x=np.array([0.5, 0.4]))
+
+    with (
+        patch(
+            "robotorchan.optim.backends.differential_evolution.differential_evolution",
+            side_effect=fake_de,
+        ),
+        pytest.raises(ValueError, match="no feasible candidate"),
+    ):
+        optimize_acqf_de(
+            _QuadraticAcquisition(),
+            bounds,
+            q=1,
+            categorical_values={1: [0.0, 2.0]},
+            inequality_constraints=((torch.tensor([1]), torch.tensor([1.0]), 1.0),),
+        )
