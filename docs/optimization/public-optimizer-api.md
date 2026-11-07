@@ -45,6 +45,24 @@ candidate, value = optimize_acqf(
 
 非線形 tuple は BoTorch 標準の `(callable, is_intrapoint)` です。実行可能性は `g(X) >= 0`、点内 callable の入力は `[d]`、点間は `[q, d]` です。
 
+共通の `optimize_acqf` と対応する個別 backend 関数では、`CandidateConstraints` に
+まとめず、BoTorch と同じ名前の制約引数を直接指定することもできます。
+
+```python
+candidate, value = optimize_acqf(
+    acquisition,
+    bounds,
+    q=1,
+    optimizer="ga",
+    inequality_constraints=linear_inequalities,
+    equality_constraints=linear_equalities,
+)
+```
+
+`constraints=CandidateConstraints(...)` も引き続き利用できます。両形式は同じ
+共通評価処理へ正規化され、同時指定は `ValueError` になります。
+未対応の制約形式は optimizer の capability 検査で拒否します。
+
 型 alias `LinearConstraint`、`NonlinearConstraint`、`NonlinearConstraintCallable` も公開しますが、標準 tuple を別 class で包む必要はありません。
 
 出力制約は獲得関数固有の BoTorch 契約に従い、`CandidateConstraints` を経由しません。
