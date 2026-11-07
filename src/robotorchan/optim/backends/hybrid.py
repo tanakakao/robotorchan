@@ -17,7 +17,7 @@ from robotorchan.optim.backends.differential_evolution import optimize_acqf_de
 from robotorchan.optim.backends.mixed_cmaes import optimize_acqf_mixed_cmaes
 from robotorchan.optim.backends.mixed_genetic_algorithm import optimize_acqf_mixed_ga
 from robotorchan.optim.backends.pso import optimize_acqf_pso
-from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.contracts import CandidateConstraints, LinearConstraint, NonlinearConstraint, resolve_candidate_constraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 GlobalOptimizerName = Literal["de", "cmaes", "mixed_ga", "pso"]
@@ -34,6 +34,9 @@ def optimize_acqf_hybrid(
     num_restarts: int = 1,
     local_options: dict[str, Any] | None = None,
     constraints: CandidateConstraints | None = None,
+    inequality_constraints: tuple[LinearConstraint, ...] | None = None,
+    equality_constraints: tuple[LinearConstraint, ...] | None = None,
+    nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
     fixed_features: dict[int, float | Tensor] | None = None,
     seed: int | None = None,
     variable_space: MixedVariableSpace | None = None,
@@ -112,7 +115,12 @@ def optimize_acqf_hybrid(
 
     initial_conditions = global_candidate.unsqueeze(0)
     options = dict(local_options or {})
-    candidate_constraints = constraints or CandidateConstraints()
+    candidate_constraints = resolve_candidate_constraints(
+        constraints,
+        inequality_constraints=inequality_constraints,
+        equality_constraints=equality_constraints,
+        nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+    )
     if candidate_constraints.has_nonlinear_constraints:
         options.setdefault("batch_limit", 1)
 
