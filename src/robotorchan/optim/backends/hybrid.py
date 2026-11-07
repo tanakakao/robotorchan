@@ -139,7 +139,11 @@ def optimize_acqf_hybrid(
     )
 
     if candidate_constraints.has_constraints and not bool(
-        candidate_is_feasible(global_candidate.unsqueeze(0), candidate_constraints).all()
+        candidate_is_feasible(
+            global_candidate.unsqueeze(0),
+            candidate_constraints,
+            equality_tolerance=resolved_global_options.get("equality_tolerance", 1e-6),
+        ).all()
     ):
         raise ValueError(
             "Hybrid global optimizer returned a candidate that violates candidate constraints."
