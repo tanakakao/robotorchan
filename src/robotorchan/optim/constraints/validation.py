@@ -7,6 +7,7 @@ from botorch.exceptions.errors import UnsupportedError
 from torch import Tensor
 
 from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.evaluation import validate_nonlinear_value
 
 
 def validate_candidate_constraints(
@@ -98,20 +99,7 @@ def validate_nonlinear_initial_conditions(
             else:
                 values = [constraint(restart)]
             for value in values:
-                if not isinstance(value, Tensor) or value.numel() != 1:
-                    raise ValueError(
-                        "Nonlinear constraint callables must return one scalar Tensor."
-                    )
-                if value.device != restart.device:
-                    raise ValueError(
-                        "Nonlinear constraint values must use the same device as candidates."
-                    )
-                if value.dtype != restart.dtype:
-                    raise ValueError(
-                        "Nonlinear constraint values must use the same dtype as candidates."
-                    )
-                if not torch.isfinite(value).all():
-                    raise ValueError("Nonlinear constraint values must be finite.")
+                value = validate_nonlinear_value(value, restart)
                 if value.detach().item() < -tolerance:
                     raise ValueError(
                         "batch_initial_conditions must be feasible for all nonlinear "
