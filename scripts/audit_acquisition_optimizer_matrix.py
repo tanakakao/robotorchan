@@ -349,14 +349,16 @@ def build_inventory() -> dict[str, Any]:
                 "joint_binary_labels"
                 if acquisition_name == "qBALD"
                 else "joint_gaussian"
-                if acquisition_name in {
+                if acquisition_name
+                in {
                     "qJointPosteriorEntropy",
                     "qJointExpectedPredictiveInformationGain",
                 }
                 else "conditional_joint_gaussian"
                 if acquisition_name == "qConditionalExpectedPredictiveInformationGain"
                 else "marginal_aggregate"
-                if acquisition_name in {
+                if acquisition_name
+                in {
                     "qBoundaryVariance",
                     "qExpectedPredictiveInformationGain",
                     "qLatentStraddle",
@@ -516,16 +518,14 @@ def build_summary(report: dict[str, Any]) -> dict[str, Any]:
         "q_batch_optimizer_contracts": report["q_batch_optimizer_contracts"],
         "q_batch_acquisition_counts": {
             "declared_q_gt_1": sum(
-                item["q_gt_1_declared"]
-                for item in report["q_batch_acquisition_coverage"].values()
+                item["q_gt_1_declared"] for item in report["q_batch_acquisition_coverage"].values()
             ),
             "runtime_verified_q_gt_1": sum(
                 item["q_gt_1_runtime_verified"]
                 for item in report["q_batch_acquisition_coverage"].values()
             ),
             "q1_only": sum(
-                item["max_q"] == 1
-                for item in report["q_batch_acquisition_coverage"].values()
+                item["max_q"] == 1 for item in report["q_batch_acquisition_coverage"].values()
             ),
         },
         "gap_triage_counts": report["gap_triage_counts"],
