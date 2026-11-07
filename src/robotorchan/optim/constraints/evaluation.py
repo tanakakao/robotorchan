@@ -25,8 +25,16 @@ def candidate_constraint_violation(
         residual = _linear_residual(candidates, constraint)
         violation = violation + torch.relu(-residual)
     for constraint in constraints.equality_constraints:
-        residual = _linear_residual(candidates, constraint)
-        violation = violation + torch.relu(residual.abs() - equality_tolerance)
+        indices, coefficients, rhs = constraint
+        if indices.ndim == 1:
+            coefficients = coefficients.to(device=candidates.device, dtype=candidates.dtype)
+            residual = (candidates[..., indices.to(candidates.device)] * coefficients).sum(
+                dim=-1
+            ) - rhs
+            violation = violation + torch.relu(residual.abs() - equality_tolerance).sum(dim=-1)
+        else:
+            residual = _linear_residual(candidates, constraint)
+            violation = violation + torch.relu(residual.abs() - equality_tolerance)
     for callable_, is_intrapoint in constraints.nonlinear_inequality_constraints:
         if is_intrapoint:
             values = _evaluate_intrapoint_callable(callable_, candidates)
