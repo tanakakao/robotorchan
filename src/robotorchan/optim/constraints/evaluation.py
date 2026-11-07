@@ -121,7 +121,9 @@ def validate_nonlinear_value(value: object, candidate: Tensor) -> Tensor:
     if value.device != candidate.device:
         raise ValueError("Nonlinear candidate constraint callable must preserve candidate device.")
     if value.dtype != candidate.dtype:
-        raise ValueError("Nonlinear candidate constraint values must use the same dtype as candidates.")
+        raise ValueError(
+            "Nonlinear candidate constraint values must use the same dtype as candidates."
+        )
     if not torch.isfinite(value).all():
         raise ValueError("Nonlinear candidate constraint values must be finite.")
     return value.reshape(())
