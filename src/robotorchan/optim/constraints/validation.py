@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from math import isfinite
+
 import torch
 from botorch.exceptions.errors import UnsupportedError
 from torch import Tensor
@@ -66,6 +68,8 @@ def validate_nonlinear_initial_conditions(
     tolerance: float = 1e-8,
 ) -> None:
     """Validate explicit restart points before nonlinear BoTorch optimization."""
+    if not isfinite(tolerance) or tolerance < 0:
+        raise ValueError("tolerance must be finite and non-negative.")
     if batch_initial_conditions is None or not constraints.has_nonlinear_constraints:
         return
     if batch_initial_conditions.ndim != 3:
