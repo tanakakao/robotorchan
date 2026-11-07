@@ -10,7 +10,12 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
 from robotorchan.optim.backend_support.runtime import validate_bounds
-from robotorchan.optim.constraints.contracts import CandidateConstraints, LinearConstraint, NonlinearConstraint, resolve_candidate_constraints
+from robotorchan.optim.constraints.contracts import (
+    CandidateConstraints,
+    LinearConstraint,
+    NonlinearConstraint,
+    resolve_candidate_constraints,
+)
 from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
 
 
