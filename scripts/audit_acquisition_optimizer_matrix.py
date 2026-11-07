@@ -217,12 +217,12 @@ def build_inventory() -> dict[str, Any]:
     for acquisition_name, optimizer_names in _REGISTERED_Q_BATCH_EVIDENCE.items():
         for optimizer_name in optimizer_names:
             result = acquisition_optimizer[acquisition_name][optimizer_name]
-            result["status"] = "verified_for_single_task_gp_q2_q4"
-            result["runtime_verified"] = True
-            result["evidence"] = [_REGISTERED_Q_BATCH_TEST]
-            result["reasons"] = [
-                "Verified only for SingleTaskGP, q=2 and q=4, continuous, unconstrained."
-            ]
+            result["q_batch_runtime_evidence"] = {
+                "q_values": [2, 4],
+                "model": "SingleTaskGP",
+                "domain": "continuous_unconstrained",
+                "evidence": [_REGISTERED_Q_BATCH_TEST],
+            }
     model_acquisition = {
         model_name: {
             acquisition_name: {
