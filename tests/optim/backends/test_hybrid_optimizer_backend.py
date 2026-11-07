@@ -336,6 +336,28 @@ def test_hybrid_runtime_preserves_dtype_and_improves_qbatch() -> None:
     assert value >= initial_value
 
 
+def test_hybrid_real_constrained_qbatch_runtime() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.2),)
+    )
+    candidate, value = optimize_acqf_hybrid(
+        _Quadratic(),
+        bounds,
+        q=2,
+        global_optimizer="mixed_ga",
+        global_options={"population_size": 24, "generations": 5},
+        local_options={"maxiter": 30},
+        constraints=constraints,
+        seed=61,
+    )
+
+    assert candidate.shape == (2, 1)
+    assert torch.all(candidate >= 0.2 - 1e-6)
+    assert torch.all(candidate <= bounds[1])
+    torch.testing.assert_close(value, _Quadratic()(candidate.unsqueeze(0)).reshape(()))
+
+
 def test_hybrid_real_mixed_ga_global_and_botorch_local_runtime() -> None:
     class _MixedQuadratic(AcquisitionFunction):
         def __init__(self) -> None:
