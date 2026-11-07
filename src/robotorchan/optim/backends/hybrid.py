@@ -17,7 +17,12 @@ from robotorchan.optim.backends.differential_evolution import optimize_acqf_de
 from robotorchan.optim.backends.mixed_cmaes import optimize_acqf_mixed_cmaes
 from robotorchan.optim.backends.mixed_genetic_algorithm import optimize_acqf_mixed_ga
 from robotorchan.optim.backends.pso import optimize_acqf_pso
-from robotorchan.optim.constraints.contracts import CandidateConstraints, LinearConstraint, NonlinearConstraint, resolve_candidate_constraints
+from robotorchan.optim.constraints.contracts import (
+    CandidateConstraints,
+    LinearConstraint,
+    NonlinearConstraint,
+    resolve_candidate_constraints,
+)
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 GlobalOptimizerName = Literal["de", "cmaes", "mixed_ga", "pso"]
@@ -48,6 +53,13 @@ def optimize_acqf_hybrid(
     is then supplied to BoTorch as an explicit batch initial condition, preserving
     BoTorch's constrained local-optimization semantics.
     """
+    candidate_constraints = resolve_candidate_constraints(
+        constraints,
+        inequality_constraints=inequality_constraints,
+        equality_constraints=equality_constraints,
+        nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+    )
+    constraints = candidate_constraints
     if q < 1:
         raise ValueError("q must be at least 1.")
     if num_restarts < 1:
@@ -115,12 +127,7 @@ def optimize_acqf_hybrid(
 
     initial_conditions = global_candidate.unsqueeze(0)
     options = dict(local_options or {})
-    candidate_constraints = resolve_candidate_constraints(
-        constraints,
-        inequality_constraints=inequality_constraints,
-        equality_constraints=equality_constraints,
-        nonlinear_inequality_constraints=nonlinear_inequality_constraints,
-    )
+
     if candidate_constraints.has_nonlinear_constraints:
         options.setdefault("batch_limit", 1)
 
