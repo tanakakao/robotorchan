@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from math import isfinite
 
 import torch
 from torch import Tensor
@@ -118,8 +119,12 @@ def _validate_linear_constraint(constraint: object, *, name: str) -> None:
         raise TypeError(f"{name} indices must use an integer dtype.")
     if not coefficients.is_floating_point():
         raise TypeError(f"{name} coefficients must use a floating dtype.")
-    if not isinstance(rhs, (int, float)):
+    if not torch.isfinite(coefficients).all():
+        raise ValueError(f"{name} coefficients must be finite.")
+    if isinstance(rhs, bool) or not isinstance(rhs, (int, float)):
         raise TypeError(f"{name} rhs must be a real scalar.")
+    if not isfinite(rhs):
+        raise ValueError(f"{name} rhs must be finite.")
 
 
 def _validate_nonlinear_constraint(constraint: object) -> None:
