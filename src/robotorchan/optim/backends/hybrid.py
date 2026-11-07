@@ -108,7 +108,19 @@ def optimize_acqf_hybrid(
         else _resolve_global_optimizer(global_optimizer)
     )
     resolved_global_options = dict(global_options or {})
-    resolved_global_options.setdefault("constraints", constraints)
+    if any(
+        name in resolved_global_options
+        for name in (
+            "constraints",
+            "equality_constraints",
+            "inequality_constraints",
+            "nonlinear_inequality_constraints",
+        )
+    ):
+        raise ValueError(
+            "Specify candidate constraints on optimize_acqf_hybrid, not in global_options."
+        )
+    resolved_global_options["constraints"] = candidate_constraints
     resolved_global_options.setdefault("seed", seed)
     if variable_space is not None and (global_optimizer != "cmaes" or has_discrete):
         resolved_global_options.setdefault("variable_space", variable_space)
