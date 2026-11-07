@@ -1,5 +1,6 @@
 """Tests for particle-swarm acquisition optimization."""
 
+import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
@@ -137,3 +138,21 @@ def test_pso_mixed_qbatch_evaluations_preserve_discrete_legality() -> None:
     assert acquisition.calls == 7
     assert candidate.shape == (2, 3)
     assert value.ndim == 0
+
+
+def test_pso_rejects_infeasible_result() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 2.0),)
+    )
+
+    with pytest.raises(ValueError, match="PSO found no feasible candidate"):
+        optimize_acqf_pso(
+            _Quadratic(),
+            bounds,
+            q=1,
+            swarm_size=16,
+            iterations=4,
+            seed=11,
+            constraints=constraints,
+        )
