@@ -211,6 +211,7 @@ def optimize_acqf(
             num_samples=num_samples,
             method=name,
             seed=seed,
+            constraints=constraints,
             fixed_features=fixed_features,
             variable_space=variable_space,
             **backend_options,

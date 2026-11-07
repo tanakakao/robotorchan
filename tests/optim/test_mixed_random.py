@@ -1,5 +1,6 @@
 """Tests for mixed-variable random acquisition optimization."""
 
+import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 
@@ -149,3 +150,35 @@ def test_mixed_sobol_categorical_bins_are_balanced() -> None:
     counts = torch.stack([(mapped[..., 0] == value).sum() for value in (10.0, 20.0, 30.0)])
 
     assert int(counts.max() - counts.min()) <= 1
+
+
+@pytest.mark.parametrize("optimizer", ["random", "sobol"])
+def test_sampling_dispatch_forwards_linear_constraints(optimizer: str) -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    candidate, value = optimize_acqf(
+        SumAcquisition(),
+        bounds,
+        q=1,
+        optimizer=optimizer,
+        raw_samples=128,
+        seed=17,
+        inequality_constraints=((torch.tensor([0]), torch.tensor([-1.0]), -0.4),),
+    )
+
+    assert candidate[0, 0] <= 0.4 + 1e-6
+    torch.testing.assert_close(value, candidate.sum())
+
+
+@pytest.mark.parametrize("optimizer", ["random", "sobol"])
+def test_sampling_dispatch_rejects_impossible_constraints(optimizer: str) -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    with pytest.raises(ValueError, match="no feasible candidate"):
+        optimize_acqf(
+            SumAcquisition(),
+            bounds,
+            q=1,
+            optimizer=optimizer,
+            raw_samples=32,
+            seed=17,
+            inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 2.0),),
+        )

@@ -110,11 +110,21 @@ TORCH_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 
 SAMPLING_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    constraint_handling=ConstraintHandlingCapabilities(
+        linear_inequality=ConstraintHandling.REJECTION,
+        linear_equality=ConstraintHandling.REJECTION,
+        nonlinear_inequality=ConstraintHandling.REJECTION,
+        interpoint_nonlinear=ConstraintHandling.REJECTION,
+    ),
     continuous=True,
     integer=True,
     categorical=True,
     mixed=True,
     requires_grad=False,
+    linear_inequality_constraints=True,
+    linear_equality_constraints=True,
+    nonlinear_inequality_constraints=True,
+    interpoint_nonlinear_constraints=True,
     q_batch=True,
     fixed_features=True,
     gpu=True,
