@@ -18,6 +18,7 @@ from robotorchan.optim.constraints.contracts import (
 from robotorchan.optim.constraints.evaluation import (
     candidate_constraint_violation,
     feasibility_first_ranks,
+    is_better_feasible_candidate,
 )
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
@@ -119,7 +120,7 @@ def optimize_acqf_mixed_ga(
         generation_best = scores.argmax()
         candidate_value = values[generation_best]
         candidate_violation = violation[generation_best]
-        if best_candidate is None or _is_better_candidate(
+        if best_candidate is None or is_better_feasible_candidate(
             candidate_value,
             candidate_violation,
             best_value,
@@ -197,25 +198,6 @@ def _evaluate_population(
         candidates, constraints, equality_tolerance=equality_tolerance
     )
     return feasibility_first_ranks(scores, violation), scores, violation
-
-
-def _is_better_candidate(
-    value: Tensor,
-    violation: Tensor,
-    best_value: Tensor | None,
-    best_violation: Tensor | None,
-) -> bool:
-    if best_value is None or best_violation is None:
-        return True
-    feasible = bool(violation <= 0)
-    best_feasible = bool(best_violation <= 0)
-    if feasible != best_feasible:
-        return feasible
-    if feasible:
-        return bool(value > best_value)
-    if violation != best_violation:
-        return bool(violation < best_violation)
-    return bool(value > best_value)
 
 
 def _tournament_select(

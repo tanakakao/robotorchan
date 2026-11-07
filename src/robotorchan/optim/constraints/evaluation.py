@@ -67,6 +67,25 @@ def feasibility_first_ranks(values: Tensor, violation: Tensor) -> Tensor:
     return ranks
 
 
+def is_better_feasible_candidate(
+    value: Tensor,
+    violation: Tensor,
+    best_value: Tensor | None,
+    best_violation: Tensor | None,
+) -> bool:
+    if best_value is None or best_violation is None:
+        return True
+    feasible = bool(violation <= 0)
+    best_feasible = bool(best_violation <= 0)
+    if feasible != best_feasible:
+        return feasible
+    if feasible:
+        return bool(value > best_value)
+    if violation != best_violation:
+        return bool(violation < best_violation)
+    return bool(value > best_value)
+
+
 def candidate_is_feasible(
     candidates: Tensor,
     constraints: CandidateConstraints | None,
