@@ -88,15 +88,17 @@ def test_de_rejects_infeasible_decoded_mixed_result() -> None:
     def fake_de(objective, scipy_bounds, **kwargs):
         return OptimizeResult(x=np.array([0.5, 0.4]))
 
-    with patch(
-        "robotorchan.optim.backends.differential_evolution.differential_evolution",
-        side_effect=fake_de,
+    with (
+        patch(
+            "robotorchan.optim.backends.differential_evolution.differential_evolution",
+            side_effect=fake_de,
+        ),
+        pytest.raises(ValueError, match="no feasible candidate"),
     ):
-        with pytest.raises(ValueError, match="no feasible candidate"):
-            optimize_acqf_de(
-                _QuadraticAcquisition(),
-                bounds,
-                q=1,
-                categorical_values={1: [0.0, 2.0]},
-                inequality_constraints=((torch.tensor([1]), torch.tensor([1.0]), 1.0),),
-            )
+        optimize_acqf_de(
+            _QuadraticAcquisition(),
+            bounds,
+            q=1,
+            categorical_values={1: [0.0, 2.0]},
+            inequality_constraints=((torch.tensor([1]), torch.tensor([1.0]), 1.0),),
+        )
