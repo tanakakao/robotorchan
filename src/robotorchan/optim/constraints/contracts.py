@@ -132,3 +132,27 @@ def _validate_nonlinear_constraint(constraint: object) -> None:
         raise TypeError("Nonlinear candidate constraint must contain a callable.")
     if not isinstance(is_intrapoint, bool):
         raise TypeError("Nonlinear candidate constraint is_intrapoint must be bool.")
+
+
+def resolve_candidate_constraints(
+    constraints: CandidateConstraints | None = None,
+    *,
+    inequality_constraints: tuple[LinearConstraint, ...] | None = None,
+    equality_constraints: tuple[LinearConstraint, ...] | None = None,
+    nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+) -> CandidateConstraints:
+    """Normalize direct BoTorch-style arguments and the structured contract."""
+    direct = (
+        inequality_constraints,
+        equality_constraints,
+        nonlinear_inequality_constraints,
+    )
+    if constraints is not None and any(value is not None for value in direct):
+        raise ValueError("Use either constraints or individual constraint arguments, not both.")
+    if constraints is not None:
+        return constraints
+    return CandidateConstraints(
+        inequality_constraints=tuple(inequality_constraints or ()),
+        equality_constraints=tuple(equality_constraints or ()),
+        nonlinear_inequality_constraints=tuple(nonlinear_inequality_constraints or ()),
+    )
