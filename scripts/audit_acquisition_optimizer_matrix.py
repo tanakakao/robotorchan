@@ -78,6 +78,15 @@ _JOINT_Q_OPTIMIZER_EVIDENCE = {
     "torch_adamw": "tests/optim/contracts/test_native_joint_q_batch_contract.py",
     "torch_sgd": "tests/optim/contracts/test_native_joint_q_batch_contract.py",
 }
+# Registered acquisition/backend q=2 and q=4 evidence from real GP runtime tests.
+# This does not establish mixed, constrained, or other model compatibility.
+_REGISTERED_Q_BATCH_EVIDENCE = {
+    "qLogExpectedImprovement": ("botorch", "sobol"),
+    "qProbabilityOfImprovement": ("botorch", "sobol"),
+    "qSimpleRegret": ("botorch", "sobol"),
+    "qUpperConfidenceBound": ("botorch", "sobol"),
+}
+_REGISTERED_Q_BATCH_TEST = "tests/optim/integration/test_phase9_native_joint_q_batch.py"
 _MIXED_Q_OPTIMIZER_EVIDENCE = {
     "botorch": "tests/optim/contracts/test_mixed_botorch_joint_q_batch.py",
     "cmaes": "tests/optim/contracts/test_mixed_cmaes_joint_q_batch.py",
@@ -205,6 +214,15 @@ def build_inventory() -> dict[str, Any]:
             result["reasons"] = [
                 "Verified only for two-output ModelListGP, q=1, continuous, unconstrained."
             ]
+    for acquisition_name, optimizer_names in _REGISTERED_Q_BATCH_EVIDENCE.items():
+        for optimizer_name in optimizer_names:
+            result = acquisition_optimizer[acquisition_name][optimizer_name]
+            result["q_batch_runtime_evidence"] = {
+                "q_values": [2, 4],
+                "model": "SingleTaskGP",
+                "domain": "continuous_unconstrained",
+                "evidence": [_REGISTERED_Q_BATCH_TEST],
+            }
     model_acquisition = {
         model_name: {
             acquisition_name: {
@@ -349,7 +367,10 @@ def build_inventory() -> dict[str, Any]:
                         else []
                     ),
                 },
-                "registered_acquisition_pairs_verified_q_gt_1": False,
+                "registered_acquisition_pairs_verified_q_gt_1": any(
+                    name in optimizer_names
+                    for optimizer_names in _REGISTERED_Q_BATCH_EVIDENCE.values()
+                ),
             }
             for name in sorted(OPTIMIZER_CAPABILITIES)
         },
