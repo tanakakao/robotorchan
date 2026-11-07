@@ -5,9 +5,13 @@ q>1 implementation work. The original counts below are historical, **not** the
 current acquisition registry or a current compatibility matrix.
 
 For the current registered acquisitions, read
-`src/robotorchan/acquisition/registry.py`. For optimizer capability declarations
-and scoped runtime evidence, generate the report using
-`scripts/audit_acquisition_optimizer_matrix.py`.
+`src/robotorchan/acquisition/registry.py`. For optimizer capability declarations,
+q-batch acquisition semantics, and scoped runtime evidence, generate the report
+using `scripts/audit_acquisition_optimizer_matrix.py --summary` (counts) or
+`python scripts/audit_acquisition_optimizer_matrix.py` (full matrix). The
+`q_batch_acquisition_coverage` field distinguishes declared q support, known
+batch semantics, and directly verified acquisition/backend pairs. An empty
+runtime-evidence field means *not verified in this report*, not unsupported.
 
 ## Post-inventory updates (2026-11-07)
 
