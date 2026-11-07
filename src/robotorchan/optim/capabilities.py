@@ -157,10 +157,10 @@ DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 CMAES_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     constraint_handling=ConstraintHandlingCapabilities(
-        linear_inequality=ConstraintHandling.PENALTY,
-        linear_equality=ConstraintHandling.PENALTY,
-        nonlinear_inequality=ConstraintHandling.PENALTY,
-        interpoint_nonlinear=ConstraintHandling.PENALTY,
+        linear_inequality=ConstraintHandling.FEASIBILITY_FIRST,
+        linear_equality=ConstraintHandling.FEASIBILITY_FIRST,
+        nonlinear_inequality=ConstraintHandling.FEASIBILITY_FIRST,
+        interpoint_nonlinear=ConstraintHandling.FEASIBILITY_FIRST,
     ),
     continuous=True,
     requires_grad=False,
@@ -236,10 +236,10 @@ MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 HYBRID_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     constraint_handling=ConstraintHandlingCapabilities(
-        linear_inequality=ConstraintHandling.PENALTY,
-        linear_equality=ConstraintHandling.PENALTY,
-        nonlinear_inequality=ConstraintHandling.PENALTY,
-        interpoint_nonlinear=ConstraintHandling.PENALTY,
+        linear_inequality=ConstraintHandling.FEASIBILITY_FIRST,
+        linear_equality=ConstraintHandling.FEASIBILITY_FIRST,
+        nonlinear_inequality=ConstraintHandling.FEASIBILITY_FIRST,
+        interpoint_nonlinear=ConstraintHandling.FEASIBILITY_FIRST,
     ),
     continuous=True,
     integer=True,
@@ -281,10 +281,10 @@ MIXED_NSGA2_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 PSO_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     constraint_handling=ConstraintHandlingCapabilities(
-        linear_inequality=ConstraintHandling.PENALTY,
-        linear_equality=ConstraintHandling.PENALTY,
-        nonlinear_inequality=ConstraintHandling.PENALTY,
-        interpoint_nonlinear=ConstraintHandling.PENALTY,
+        linear_inequality=ConstraintHandling.FEASIBILITY_FIRST,
+        linear_equality=ConstraintHandling.FEASIBILITY_FIRST,
+        nonlinear_inequality=ConstraintHandling.FEASIBILITY_FIRST,
+        interpoint_nonlinear=ConstraintHandling.FEASIBILITY_FIRST,
     ),
     continuous=True,
     integer=True,
