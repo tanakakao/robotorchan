@@ -37,6 +37,12 @@ def optimize_acqf_mixed_cmaes(
 ) -> tuple[Tensor, Tensor]:
     """Optimize mixed domains with upstream CatCMAwM, without ordinal category encoding."""
     validate_bounds(bounds)
+    candidate_constraints = resolve_candidate_constraints(
+        constraints,
+        inequality_constraints=inequality_constraints,
+        equality_constraints=equality_constraints,
+        nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+    )
     if not torch.equal(variable_space.bounds, bounds):
         raise ValueError("variable_space bounds must match bounds.")
     if q < 1 or max_generations < 1:
@@ -108,12 +114,6 @@ def optimize_acqf_mixed_cmaes(
         z_space=z_space or None,
         c_space=c_space or None,
         **kwargs,
-    )
-    candidate_constraints = resolve_candidate_constraints(
-        constraints,
-        inequality_constraints=inequality_constraints,
-        equality_constraints=equality_constraints,
-        nonlinear_inequality_constraints=nonlinear_inequality_constraints,
     )
     best_candidate: Tensor | None = None
     best_score = float("-inf")
