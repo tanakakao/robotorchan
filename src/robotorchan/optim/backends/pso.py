@@ -54,6 +54,10 @@ def optimize_acqf_pso(
     integer_dims = tuple(integer_dims)
     _validate_integer_dims(integer_dims, bounds)
     _validate(bounds, q, swarm_size, iterations, inertia, cognitive, social)
+    if variable_space is None and fixed_features:
+        MixedVariableSpace(bounds, integer_dims=integer_dims).validate_fixed_features(
+            fixed_features
+        )
     if constraint_penalty <= 0:
         raise ValueError("constraint_penalty must be positive.")
     candidate_constraints = resolve_candidate_constraints(
