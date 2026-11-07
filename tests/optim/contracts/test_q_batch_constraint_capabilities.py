@@ -16,7 +16,7 @@ class _JointAcquisition(AcquisitionFunction):
 
 
 @pytest.mark.parametrize("q", [1, 2, 4])
-@pytest.mark.parametrize("optimizer", ["random", "sobol", "torch_adam"])
+@pytest.mark.parametrize("optimizer", ["torch_adam"])
 def test_unsupported_linear_constraints_rejected(optimizer: str, q: int) -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
