@@ -17,6 +17,7 @@ from robotorchan.optim.constraints.contracts import (
 from robotorchan.optim.constraints.evaluation import (
     candidate_constraint_violation,
     feasibility_first_ranks,
+    is_better_feasible_candidate,
 )
 
 
@@ -74,8 +75,9 @@ def optimize_acqf_ga(
 
     best_candidate: Tensor | None = None
     best_value: Tensor | None = None
+    best_violation: Tensor | None = None
     for generation in range(generations):
-        scores = _evaluate_population(
+        scores, values, violations = _evaluate_population(
             acq_function,
             population,
             q,
@@ -85,8 +87,13 @@ def optimize_acqf_ga(
             fixed_features,
         )
         generation_best = scores.argmax()
-        if best_value is None or scores[generation_best] > best_value:
-            best_value = scores[generation_best].detach().clone()
+        candidate_value = values[generation_best]
+        candidate_violation = violations[generation_best]
+        if is_better_feasible_candidate(
+            candidate_value, candidate_violation, best_value, best_violation
+        ):
+            best_value = candidate_value.detach().clone()
+            best_violation = candidate_violation.detach().clone()
             best_candidate = population[generation_best].detach().clone()
         if generation == generations - 1:
             break
@@ -120,7 +127,7 @@ def _evaluate_population(
     constraints: CandidateConstraints,
     equality_tolerance: float,
     fixed_features: dict[int, float | Tensor] | None,
-) -> Tensor:
+) -> tuple[Tensor, Tensor, Tensor]:
     candidates = population.reshape(population.shape[0], q, d)
     candidates = apply_fixed_features(candidates, fixed_features)
     with torch.no_grad():
@@ -133,7 +140,7 @@ def _evaluate_population(
     violation = candidate_constraint_violation(
         candidates, constraints, equality_tolerance=equality_tolerance
     )
-    return feasibility_first_ranks(scores, violation)
+    return feasibility_first_ranks(scores, violation), scores, violation
 
 
 def _tournament_select(
