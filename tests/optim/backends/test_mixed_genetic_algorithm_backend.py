@@ -205,3 +205,19 @@ def test_mixed_ga_qbatch_evaluations_preserve_discrete_legality() -> None:
     assert acquisition.calls == 7
     assert candidates.shape == (2, 3)
     assert value.ndim == 0
+
+
+def test_mixed_ga_rejects_infeasible_categorical_constraint() -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
+
+    with pytest.raises(ValueError, match="no feasible candidate"):
+        optimize_acqf_mixed_ga(
+            _MixedTargetAcquisition(),
+            bounds,
+            q=1,
+            categorical_values={1: [0.0, 2.0]},
+            inequality_constraints=((torch.tensor([1]), torch.tensor([1.0]), 3.0),),
+            population_size=12,
+            generations=2,
+            seed=7,
+        )
