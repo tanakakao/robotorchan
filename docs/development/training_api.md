@@ -156,3 +156,10 @@ Scikit-learnはoptional dependencyのままとし、未導入環境では該当�
 `fit()` を追加しません。各メンバーをそれぞれの学習APIで学習してから
 アンサンブルを構築してください。重み付き異種アンサンブルでは、
 `predict_proba()` が各メンバーの確率の重み付き平均を返します。
+
+## Multi-fidelity GPのインポートとfit
+
+`SingleTaskMultiFidelityGP` の便利な `fit()` を使う場合は、
+`from robotorchan.models import SingleTaskMultiFidelityGP` として読み込みます。
+BoTorch本体の同名クラスには、この便利な `fit()` はありません。
+`type(model).__module__` で実際のインポート元を確認できます。
