@@ -124,6 +124,12 @@ def optimize_acqf_mixed_botorch(
         batch_initial_conditions,
         ic_generator,
     )
+    validate_nonlinear_initial_conditions(
+        batch_initial_conditions,
+        candidate_constraints,
+        bounds=bounds,
+        q=q,
+    )
     return botorch_optimize_acqf_mixed(
         acq_function=acq_function,
         bounds=bounds,
