@@ -30,7 +30,12 @@ from robotorchan.optim.capabilities import (
     OPTIMIZER_CAPABILITIES,
     get_optimizer_capabilities,
 )
-from robotorchan.optim.constraints.contracts import CandidateConstraints, LinearConstraint, NonlinearConstraint, resolve_candidate_constraints
+from robotorchan.optim.constraints.contracts import (
+    CandidateConstraints,
+    LinearConstraint,
+    NonlinearConstraint,
+    resolve_candidate_constraints,
+)
 from robotorchan.optim.constraints.validation import validate_candidate_constraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
