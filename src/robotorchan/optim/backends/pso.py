@@ -85,7 +85,7 @@ def optimize_acqf_pso(
         - 1.0
     ) * span
 
-    scores, _ = _evaluate(
+    scores, raw_values, feasible = _evaluate(
         acq_function,
         _decode_positions(positions, integer_dims, categorical_values, bounds, q),
         q,
@@ -95,6 +95,13 @@ def optimize_acqf_pso(
         equality_tolerance,
         fixed_features,
     )
+    best_feasible_position: Tensor | None = None
+    best_feasible_value = float("-inf")
+    if bool(feasible.any()):
+        feasible_values = raw_values.masked_fill(~feasible, float("-inf"))
+        index = int(feasible_values.argmax())
+        best_feasible_position = positions[index].clone()
+        best_feasible_value = float(raw_values[index])
     personal_positions = positions.clone()
     personal_scores = scores.clone()
     best_index = personal_scores.argmax()
@@ -117,7 +124,7 @@ def optimize_acqf_pso(
         repaired_positions = _decode_positions(
             positions, integer_dims, categorical_values, bounds, q
         )
-        scores, _ = _evaluate(
+        scores, raw_values, feasible = _evaluate(
             acq_function,
             repaired_positions,
             q,
@@ -127,6 +134,12 @@ def optimize_acqf_pso(
             equality_tolerance,
             fixed_features,
         )
+        if bool(feasible.any()):
+            feasible_values = raw_values.masked_fill(~feasible, float("-inf"))
+            index = int(feasible_values.argmax())
+            if float(raw_values[index]) > best_feasible_value:
+                best_feasible_position = positions[index].clone()
+                best_feasible_value = float(raw_values[index])
         improved = scores > personal_scores
         personal_positions[improved] = positions[improved]
         personal_scores[improved] = scores[improved]
@@ -135,6 +148,10 @@ def optimize_acqf_pso(
             global_score = personal_scores[best_index].clone()
             global_position = personal_positions[best_index].clone()
 
+    if candidate_constraints.has_constraints:
+        if best_feasible_position is None:
+            raise ValueError("PSO found no feasible candidate.")
+        global_position = best_feasible_position
     candidate = _decode_positions(
         global_position.unsqueeze(0), integer_dims, categorical_values, bounds, q
     ).reshape(q, d)
@@ -153,7 +170,7 @@ def _evaluate(
     constraint_penalty: float,
     equality_tolerance: float,
     fixed_features: dict[int, float | Tensor] | None,
-) -> tuple[Tensor, Tensor]:
+) -> tuple[Tensor, Tensor, Tensor]:
     candidates = positions.reshape(positions.shape[0], q, d)
     candidates = apply_fixed_features(candidates, fixed_features)
     with torch.no_grad():
@@ -164,7 +181,7 @@ def _evaluate(
     violation = candidate_constraint_violation(
         candidates, constraints, equality_tolerance=equality_tolerance
     )
-    return raw_values - constraint_penalty * violation, raw_values
+    return raw_values - constraint_penalty * violation, raw_values, violation <= 0
 
 
 def _validate(
