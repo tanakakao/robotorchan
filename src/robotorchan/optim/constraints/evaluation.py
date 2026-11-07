@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from math import isfinite
+
 import torch
 from torch import Tensor
 
@@ -15,6 +17,8 @@ def candidate_constraint_violation(
     equality_tolerance: float = 1e-6,
 ) -> Tensor:
     """Return non-negative total violation for each candidate q-batch."""
+    if not isfinite(equality_tolerance) or equality_tolerance < 0:
+        raise ValueError("equality_tolerance must be finite and non-negative.")
     if candidates.ndim < 2:
         raise ValueError("candidates must end in [q, d].")
     batch_shape = candidates.shape[:-2]
