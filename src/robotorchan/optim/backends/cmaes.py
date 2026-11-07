@@ -80,6 +80,8 @@ def optimize_acqf_cmaes(
     optimizer = CMA(mean=mean, sigma=resolved_sigma, **optimizer_options)
     best_candidate: np.ndarray | None = None
     best_penalized_objective = float("inf")
+    best_feasible_candidate: np.ndarray | None = None
+    best_feasible_value = float("-inf")
 
     for _ in range(max_generations):
         solutions: list[tuple[np.ndarray, float]] = []
@@ -95,6 +97,9 @@ def optimize_acqf_cmaes(
                 equality_tolerance=equality_tolerance,
             ).reshape(())
             penalized_objective = -value + constraint_penalty * float(violation.detach().cpu())
+            if float(violation.detach().cpu()) <= 0 and value > best_feasible_value:
+                best_feasible_value = value
+                best_feasible_candidate = flat_candidate.copy()
             solutions.append((flat_candidate, penalized_objective))
             if penalized_objective < best_penalized_objective:
                 best_penalized_objective = penalized_objective
@@ -103,6 +108,10 @@ def optimize_acqf_cmaes(
         if optimizer.should_stop():
             break
 
+    if candidate_constraints.has_constraints:
+        if best_feasible_candidate is None:
+            raise ValueError("CMA-ES found no feasible candidate.")
+        best_candidate = best_feasible_candidate
     if best_candidate is None:
         raise RuntimeError("CMA-ES did not generate any candidate.")
     candidates = torch.as_tensor(
