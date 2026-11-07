@@ -35,7 +35,7 @@ def test_constraint_violation_matches_explicit_q_batch_reference() -> None:
     expected = []
     for batch in candidates.tolist():
         first, second = batch
-        intra_linear = max(0.0, 0.9 - min(sum(first), sum(second)))
+        intra_linear = sum(max(0.0, 0.9 - sum(point)) for point in batch)
         inter_linear = max(0.0, -0.3 - (first[0] - second[0]))
         equality = sum(max(0.0, abs(point[1] - 0.5) - tolerance) for point in batch)
         intra_nonlinear = sum(max(0.0, 0.1 - x * y) for x, y in batch)
