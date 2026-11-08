@@ -15,7 +15,13 @@ from botorch.generation.gen import gen_candidates_torch
 from botorch.optim import optimize_acqf as botorch_optimize_acqf
 from torch import Tensor
 
-from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.contracts import (
+    CandidateConstraints,
+    LinearConstraint,
+    resolve_candidate_constraints,
+)
+from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
+from robotorchan.optim.constraints.validation import validate_candidate_constraints
 
 TorchOptimizerName = Literal["adam", "adamw", "sgd"]
 
@@ -36,6 +42,7 @@ def optimize_acqf_torch(
     optimizer: TorchOptimizerName | type[torch.optim.Optimizer] = "adam",
     options: dict[str, Any] | None = None,
     constraints: CandidateConstraints | None = None,
+    inequality_constraints: tuple[LinearConstraint, ...] | None = None,
     fixed_features: dict[int, float | Tensor] | None = None,
     batch_initial_conditions: Tensor | None = None,
     timeout_sec: float | None = None,
@@ -45,17 +52,23 @@ def optimize_acqf_torch(
     BoTorch remains responsible for restart initialization and best-candidate
     selection. ``gen_candidates_torch`` performs differentiable local optimization.
 
-    Candidate constraints are rejected explicitly for now. Constraint handling
-    belongs to the dedicated cross-optimizer constraint phase.
+    Linear inequalities use a differentiable penalty during local search and
+    require a feasible final candidate. Other constraints remain unsupported.
     """
     if q < 1:
         raise ValueError("q must be at least 1.")
     if num_restarts < 1:
         raise ValueError("num_restarts must be at least 1.")
-    candidate_constraints = constraints or CandidateConstraints()
-    if candidate_constraints.has_constraints:
-        raise ValueError(
-            "The PyTorch optimizer backend does not support candidate constraints yet."
+    candidate_constraints = resolve_candidate_constraints(
+        constraints, inequality_constraints=inequality_constraints
+    )
+    validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
+    if (
+        candidate_constraints.equality_constraints
+        or candidate_constraints.nonlinear_inequality_constraints
+    ):
+        raise NotImplementedError(
+            "PyTorch optimizers currently support linear inequalities only."
         )
 
     optimizer_class = _resolve_torch_optimizer(optimizer)
@@ -64,8 +77,13 @@ def optimize_acqf_torch(
         optimizer=optimizer_class,
         timeout_sec=timeout_sec,
     )
-    return botorch_optimize_acqf(
-        acq_function=acq_function,
+    search_function = (
+        _PenalizedAcquisition(acq_function, candidate_constraints)
+        if candidate_constraints.inequality_constraints
+        else acq_function
+    )
+    candidate, value = botorch_optimize_acqf(
+        acq_function=search_function,
         bounds=bounds,
         q=q,
         num_restarts=num_restarts,
@@ -75,6 +93,29 @@ def optimize_acqf_torch(
         batch_initial_conditions=batch_initial_conditions,
         gen_candidates=gen_candidates,
     )
+    if candidate_constraints.inequality_constraints:
+        violation = candidate_constraint_violation(candidate, candidate_constraints)
+        if bool((violation > 0).any()):
+            raise ValueError("PyTorch optimizer found no feasible candidate.")
+        with torch.no_grad():
+            value = acq_function(candidate)
+    return candidate, value
+
+
+class _PenalizedAcquisition(AcquisitionFunction):
+    """Apply a differentiable linear-inequality penalty during torch search."""
+
+    def __init__(
+        self, acquisition: AcquisitionFunction, constraints: CandidateConstraints
+    ) -> None:
+        super().__init__(model=getattr(acquisition, "model", None))
+        self.acquisition = acquisition
+        self.constraints = constraints
+
+    def forward(self, X: Tensor) -> Tensor:
+        value = self.acquisition(X)
+        violation = candidate_constraint_violation(X, self.constraints)
+        return value - 1e4 * violation
 
 
 def _resolve_torch_optimizer(
