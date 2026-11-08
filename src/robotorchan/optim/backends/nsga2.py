@@ -32,6 +32,7 @@ def optimize_vector_nsga2(
     seed: int | None = None,
     constraints: CandidateConstraints | None = None,
     inequality_constraints: tuple[LinearConstraint, ...] | None = None,
+    equality_constraints: tuple[LinearConstraint, ...] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Approximate a Pareto set with a native, batched NSGA-II implementation.
 
@@ -50,7 +51,7 @@ def optimize_vector_nsga2(
         mutation_scale,
     )
     candidate_constraints = _resolve_nsga2_constraints(
-        constraints, inequality_constraints, bounds=bounds
+        constraints, inequality_constraints, equality_constraints, bounds=bounds
     )
     generator = make_generator(bounds, seed)
     lower, upper = bounds
@@ -61,6 +62,7 @@ def optimize_vector_nsga2(
         device=bounds.device,
         generator=generator,
     )
+    population = _project_nsga2_equalities(population, candidate_constraints, bounds)
     for generation in range(generations):
         values = _evaluate(objective, population)
         if generation == generations - 1:
@@ -71,6 +73,7 @@ def optimize_vector_nsga2(
         parents_b = _binary_tournament(population, ranks, crowding, generator)
         offspring = _crossover(parents_a, parents_b, crossover_rate, generator)
         offspring = _mutate(offspring, lower, upper, mutation_rate, mutation_scale, generator)
+        offspring = _project_nsga2_equalities(offspring, candidate_constraints, bounds)
         combined = torch.cat([population, offspring], dim=0)
         combined_values = _evaluate(objective, combined)
         combined_violations = _nsga2_violations(combined, candidate_constraints)
@@ -287,7 +290,11 @@ def optimize_vector_nsga2_mixed(
         raise ValueError("variable_space bounds must match bounds.")
     _validate(bounds, population_size, generations, crossover_rate, mutation_rate, mutation_scale)
     candidate_constraints = _resolve_nsga2_constraints(
-        constraints, inequality_constraints, bounds=bounds, variable_space=variable_space
+        constraints,
+        inequality_constraints,
+        equality_constraints,
+        bounds=bounds,
+        variable_space=variable_space,
     )
     generator = make_generator(bounds, seed)
     lower, upper = bounds
@@ -299,6 +306,7 @@ def optimize_vector_nsga2_mixed(
         generator=generator,
     )
     population = _repair_mixed_nsga2(population, variable_space, generator, resample=True)
+    population = _project_nsga2_equalities(population, candidate_constraints, bounds)
     for generation in range(generations):
         values = _evaluate(objective, population)
         if generation == generations - 1:
@@ -322,6 +330,7 @@ def optimize_vector_nsga2_mixed(
         offspring = _repair_mixed_nsga2(
             offspring, variable_space, generator, resample=False, mutation_rate=mutation_rate
         )
+        offspring = _project_nsga2_equalities(offspring, candidate_constraints, bounds)
         combined = torch.cat([population, offspring], dim=0)
         combined_values = _evaluate(objective, combined)
         combined_violations = _nsga2_violations(combined, candidate_constraints)
@@ -401,28 +410,58 @@ def _repair_mixed_nsga2(
 def _resolve_nsga2_constraints(
     constraints: CandidateConstraints | None,
     inequality_constraints: tuple[LinearConstraint, ...] | None,
+    equality_constraints: tuple[LinearConstraint, ...] | None,
     *,
     bounds: Tensor,
     variable_space: MixedVariableSpace | None = None,
 ) -> CandidateConstraints:
     resolved = resolve_candidate_constraints(
-        constraints, inequality_constraints=inequality_constraints
+        constraints,
+        inequality_constraints=inequality_constraints,
+        equality_constraints=equality_constraints,
     )
     validate_candidate_constraints(resolved, bounds=bounds, q=1)
-    if resolved.equality_constraints or resolved.nonlinear_inequality_constraints:
-        raise NotImplementedError(
-            "NSGA-II currently supports linear inequalities only; "
-            "other constraints are scheduled for later phases."
-        )
+    if resolved.nonlinear_inequality_constraints:
+        raise NotImplementedError("NSGA-II does not support nonlinear constraints yet.")
     if variable_space is not None:
         discrete = set(variable_space.integer_dims) | set(variable_space.categorical_dims)
-        for indices, _, _ in resolved.inequality_constraints:
+        for indices, _, _ in (
+            *resolved.inequality_constraints,
+            *resolved.equality_constraints,
+        ):
             dimensions = indices if indices.ndim == 1 else indices[:, 1]
             if any(int(dim) in discrete for dim in dimensions):
                 raise ValueError(
                     "Mixed NSGA-II constraints may reference continuous dimensions only."
                 )
     return resolved
+
+
+def _project_nsga2_equalities(
+    population: Tensor, constraints: CandidateConstraints, bounds: Tensor
+) -> Tensor:
+    """Project continuous candidates onto linear equalities when possible.
+
+    Bounds are enforced after projection; infeasible intersections remain subject
+    to the existing final feasibility check.
+    """
+    if not constraints.equality_constraints:
+        return population
+    rows = []
+    targets = []
+    for indices, coefficients, rhs in constraints.equality_constraints:
+        if indices.ndim != 1:
+            raise NotImplementedError("NSGA-II does not support inter-point equalities.")
+        row = torch.zeros(bounds.shape[-1], dtype=bounds.dtype, device=bounds.device)
+        row.scatter_add_(0, indices.to(bounds.device), coefficients.to(bounds))
+        rows.append(row)
+        targets.append(rhs)
+    matrix = torch.stack(rows)
+    rhs_vector = torch.as_tensor(targets, dtype=bounds.dtype, device=bounds.device)
+    residual = rhs_vector - population @ matrix.T
+    correction = residual @ torch.linalg.pinv(matrix).T
+    projected = population + correction
+    return projected.clamp(min=bounds[0], max=bounds[1])
 
 
 def _nsga2_violations(population: Tensor, constraints: CandidateConstraints) -> Tensor:
