@@ -458,9 +458,7 @@ def _resolve_nsga2_constraints(
         for indices, _, _ in resolved.equality_constraints:
             dimensions = indices if indices.ndim == 1 else indices[:, 1]
             if any(int(dim) in categorical | integer for dim in dimensions):
-                raise ValueError(
-                    "Mixed NSGA-II linear equalities require continuous dimensions."
-                )
+                raise ValueError("Mixed NSGA-II linear equalities require continuous dimensions.")
     return resolved
 
 
