@@ -77,14 +77,23 @@ class CandidateConstraints:
         tolerance = self.nonlinear_equality_tolerance
         if not isfinite(tolerance) or tolerance < 0:
             raise ValueError("nonlinear_equality_tolerance must be finite and non-negative.")
-        inequalities = list(self.nonlinear_inequality_constraints)
+        # dataclasses.replace copies init fields, including previously expanded inequalities.
+        # Drop only expansions created by this contract before applying the current tolerance.
+        inequalities = [
+            constraint
+            for constraint in self.nonlinear_inequality_constraints
+            if not getattr(constraint[0], "_robotorchan_equality_expansion", False)
+        ]
         for function, is_intrapoint in self.nonlinear_equality_constraints:
-            inequalities.extend(
-                (
-                    (lambda x, fn=function, tol=tolerance: fn(x) + tol, is_intrapoint),
-                    (lambda x, fn=function, tol=tolerance: tol - fn(x), is_intrapoint),
-                )
-            )
+            def lower(x: Tensor, fn=function, tol=tolerance) -> Tensor:
+                return fn(x) + tol
+
+            def upper(x: Tensor, fn=function, tol=tolerance) -> Tensor:
+                return tol - fn(x)
+
+            lower._robotorchan_equality_expansion = True  # type: ignore[attr-defined]
+            upper._robotorchan_equality_expansion = True  # type: ignore[attr-defined]
+            inequalities.extend(((lower, is_intrapoint), (upper, is_intrapoint)))
         object.__setattr__(self, "nonlinear_inequality_constraints", tuple(inequalities))
 
     @property
@@ -183,6 +192,10 @@ def resolve_candidate_constraints(
     if constraints is not None and any(value is not None for value in direct):
         raise ValueError("Use either constraints or individual constraint arguments, not both.")
     if constraints is not None:
+        if nonlinear_equality_tolerance != 1e-6:
+            raise ValueError(
+                "Set nonlinear_equality_tolerance on CandidateConstraints when using constraints."
+            )
         return constraints
     return CandidateConstraints(
         inequality_constraints=tuple(inequality_constraints or ()),
