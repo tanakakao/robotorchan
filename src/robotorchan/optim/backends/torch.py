@@ -81,7 +81,10 @@ def optimize_acqf_torch(
     )
     search_function = (
         _PenalizedAcquisition(acq_function, candidate_constraints)
-        if candidate_constraints.inequality_constraints or candidate_constraints.equality_constraints
+        if (
+            candidate_constraints.inequality_constraints
+            or candidate_constraints.equality_constraints
+        )
         else acq_function
     )
     candidate, value = botorch_optimize_acqf(
