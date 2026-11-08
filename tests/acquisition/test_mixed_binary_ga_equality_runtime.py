@@ -1,5 +1,6 @@
 """Linear equality candidate constraints for mixed binary GA optimization."""
 
+import pytest
 import torch
 
 from robotorchan.acquisition.active_learning.classification import PredictiveEntropy
