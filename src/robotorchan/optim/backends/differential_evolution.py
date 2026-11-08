@@ -82,7 +82,8 @@ def optimize_acqf_de(
     validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
     validate_mixed_constraint_dimensions(
         candidate_constraints,
-        variable_space or MixedVariableSpace(
+        variable_space
+        or MixedVariableSpace(
             bounds, integer_dims=integer_dims, categorical_values=categorical_values
         ),
     )
