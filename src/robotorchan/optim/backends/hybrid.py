@@ -107,6 +107,21 @@ def optimize_acqf_hybrid(
             "BoTorch mixed acquisition optimization does not support "
             "inter-point nonlinear constraints."
         )
+    if (
+        has_discrete
+        and q > 1
+        and any(
+            indices.ndim == 2
+            for indices, _, _ in (
+                *candidate_constraints.inequality_constraints,
+                *candidate_constraints.equality_constraints,
+            )
+        )
+    ):
+        raise ValueError(
+            "Mixed Hybrid q-batch optimization cannot preserve inter-point linear "
+            "constraints during sequential BoTorch mixed local refinement."
+        )
     optimizer = (
         optimize_acqf_mixed_cmaes
         if global_optimizer == "cmaes" and has_discrete
