@@ -20,7 +20,10 @@ from robotorchan.optim.constraints.evaluation import (
     feasibility_first_ranks,
     is_better_feasible_candidate,
 )
-from robotorchan.optim.constraints.validation import validate_candidate_constraints
+from robotorchan.optim.constraints.validation import (
+    validate_candidate_constraints,
+    validate_mixed_constraint_dimensions,
+)
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 
@@ -90,6 +93,12 @@ def optimize_acqf_mixed_ga(
         nonlinear_equality_tolerance=nonlinear_equality_tolerance,
     )
     validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
+    validate_mixed_constraint_dimensions(
+        candidate_constraints,
+        variable_space if variable_space is not None else MixedVariableSpace(
+            bounds, integer_dims=integer_dims, categorical_values=categorical_values
+        ) if "integer_dims" in locals() and "categorical_values" in locals() else None,
+    )
     generator = make_generator(bounds, seed)
     d = bounds.shape[-1]
     lower = bounds[0].repeat(q)
