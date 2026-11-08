@@ -10,6 +10,7 @@ from torch import Tensor
 
 from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.constraints.evaluation import validate_nonlinear_value
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 
 def validate_candidate_constraints(
@@ -109,3 +110,22 @@ def validate_nonlinear_initial_conditions(
                         "batch_initial_conditions must be feasible for all nonlinear "
                         f"constraints; restart {restart_index} is infeasible."
                     )
+
+
+def validate_mixed_constraint_dimensions(
+    constraints: CandidateConstraints,
+    variable_space: MixedVariableSpace | None,
+) -> None:
+    """Reject categorical coordinates in mixed-space linear constraints."""
+    if variable_space is None:
+        return
+    categorical = set(variable_space.categorical_dims)
+    for indices, _, _ in (
+        *constraints.inequality_constraints,
+        *constraints.equality_constraints,
+    ):
+        dimensions = indices if indices.ndim == 1 else indices[:, 1]
+        if any(int(dim) in categorical for dim in dimensions):
+            raise ValueError(
+                "Mixed-variable linear constraints cannot reference categorical dimensions."
+            )
