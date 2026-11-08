@@ -195,24 +195,24 @@ def optimize_acqf_hybrid(
                 initial_conditions if q == 1 else initial_conditions[:, :1, :]
             ),
         )
-
     else:
         local_candidate, local_value = optimize_acqf_botorch(
-        acq_function=acq_function,
-        bounds=bounds,
-        q=q,
-        num_restarts=num_restarts,
-        raw_samples=None,
-        options=options,
-        constraints=candidate_constraints,
-        fixed_features=fixed_features,
-        batch_initial_conditions=initial_conditions,
-    )
+            acq_function=acq_function,
+            bounds=bounds,
+            q=q,
+            num_restarts=num_restarts,
+            raw_samples=None,
+            options=options,
+            constraints=candidate_constraints,
+            fixed_features=fixed_features,
+            batch_initial_conditions=initial_conditions,
+        )
 
     if candidate_constraints.has_constraints and not bool(
         candidate_is_feasible(
             local_candidate.unsqueeze(0),
             candidate_constraints,
+            equality_tolerance=resolved_global_options.get("equality_tolerance", 1e-6),
         ).all()
     ):
         raise ValueError(
