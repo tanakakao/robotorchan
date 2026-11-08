@@ -107,9 +107,7 @@ def optimize_acqf_torch(
 class _PenalizedAcquisition(AcquisitionFunction):
     """Apply a differentiable linear-inequality penalty during torch search."""
 
-    def __init__(
-        self, acquisition: AcquisitionFunction, constraints: CandidateConstraints
-    ) -> None:
+    def __init__(self, acquisition: AcquisitionFunction, constraints: CandidateConstraints) -> None:
         super().__init__(model=getattr(acquisition, "model", None))
         self.acquisition = acquisition
         self.constraints = constraints
