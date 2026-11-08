@@ -100,7 +100,7 @@ class TuRBOMultiRegionState:
             raise ValueError("Y must have shape [n, 1].")
         if not torch.isfinite(X).all() or not torch.isfinite(Y).all():
             raise ValueError("training data must be finite.")
-        if torch.any(X < self.bounds[0]) or torch.any(X > self.bounds[1]):
+        if torch.any(self.bounds[0] > X) or torch.any(self.bounds[1] < X):
             raise ValueError("training inputs must lie inside bounds.")
         region = self.region(region_id)
         region.train_X = X.to(self.bounds).detach().clone()
