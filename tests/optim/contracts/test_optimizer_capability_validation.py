@@ -24,23 +24,14 @@ def test_public_optimizer_names_have_capabilities() -> None:
         assert get_optimizer_capabilities(name).continuous
 
 
-def test_torch_dispatch_rejects_unsupported_nonlinear_from_capabilities() -> None:
-    bounds = torch.tensor([[0.0], [1.0]])
-    constraints = CandidateConstraints(
-        nonlinear_inequality_constraints=((lambda x: x[0] - 0.2, True),)
-    )
-    try:
-        optimize_acqf(
-            object(),  # type: ignore[arg-type]
-            bounds,
-            q=1,
-            optimizer="torch_adam",
-            constraints=constraints,
-        )
-    except NotImplementedError as exc:
-        assert "nonlinear constraints" in str(exc)
-    else:
-        raise AssertionError("Unsupported constraints should fail before backend execution.")
+def test_torch_capabilities_advertise_nonlinear_penalty() -> None:
+    from robotorchan.optim.capabilities import ConstraintHandling
+
+    for name in ("torch_adam", "torch_adamw", "torch_sgd"):
+        capabilities = get_optimizer_capabilities(name)
+        assert capabilities.nonlinear_inequality_constraints
+        assert capabilities.interpoint_nonlinear_constraints
+        assert capabilities.constraint_handling.nonlinear_inequality == ConstraintHandling.PENALTY
 
 
 def test_unseeded_generator_uses_global_rng() -> None:
