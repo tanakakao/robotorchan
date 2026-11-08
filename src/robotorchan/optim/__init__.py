@@ -26,7 +26,6 @@ from robotorchan.optim.constraints.contracts import (
     LinearConstraint,
     NonlinearConstraint,
     NonlinearConstraintCallable,
-    NumericOnlyConstraint,
 )
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 from robotorchan.optim.domains import MixedVariableSpace
@@ -98,7 +97,6 @@ __all__ = [
     "MixedVariableSpace",
     "NonlinearConstraint",
     "NonlinearConstraintCallable",
-    "NumericOnlyConstraint",
     "OptimizerCapabilities",
     "OptimizerName",
     "OriginalSpaceStrategy",
