@@ -36,9 +36,7 @@ def test_interpoint_nonlinear_equality_tolerance() -> None:
             (lambda x: tolerance - residual(x), False),
         )
     )
-    candidates = torch.tensor(
-        [[[0.4], [0.6]], [[0.4], [0.7]]], dtype=torch.double
-    )
+    candidates = torch.tensor([[[0.4], [0.6]], [[0.4], [0.7]]], dtype=torch.double)
     violations = candidate_constraint_violation(candidates, constraints)
     torch.testing.assert_close(violations[0], torch.zeros_like(violations[0]))
     assert violations[1] > 0
