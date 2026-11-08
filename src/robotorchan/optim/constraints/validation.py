@@ -8,7 +8,7 @@ import torch
 from botorch.exceptions.errors import UnsupportedError
 from torch import Tensor
 
-from robotorchan.optim.constraints.contracts import CandidateConstraints, NumericOnlyConstraint
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.constraints.evaluation import validate_nonlinear_value
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
@@ -120,25 +120,6 @@ def validate_mixed_constraint_dimensions(
     if variable_space is None:
         return
     categorical = set(variable_space.categorical_dims)
-    for function, _ in (
-        *constraints.nonlinear_inequality_constraints,
-        *constraints.nonlinear_equality_constraints,
-    ):
-        if getattr(function, "_robotorchan_equality_expansion", False):
-            continue
-        if categorical:
-            if not isinstance(function, NumericOnlyConstraint):
-                raise ValueError(
-                    "Mixed nonlinear constraints require NumericOnlyConstraint "
-                    "to exclude categorical dimensions."
-                )
-            if any(
-                dim >= variable_space.input_dim or dim in categorical
-                for dim in function.dimensions
-            ):
-                raise ValueError(
-                    "NumericOnlyConstraint dimensions must exclude categorical dimensions."
-                )
     for indices, _, _ in (
         *constraints.inequality_constraints,
         *constraints.equality_constraints,
@@ -148,4 +129,3 @@ def validate_mixed_constraint_dimensions(
             raise ValueError(
                 "Mixed-variable linear constraints cannot reference categorical dimensions."
             )
-
