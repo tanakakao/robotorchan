@@ -46,6 +46,7 @@ def optimize_acqf_torch(
     fixed_features: dict[int, float | Tensor] | None = None,
     batch_initial_conditions: Tensor | None = None,
     timeout_sec: float | None = None,
+    constraint_mode: Literal["strict", "penalty"] = "strict",
 ) -> tuple[Tensor, Tensor]:
     """Optimize a BoTorch acquisition function with a ``torch.optim`` backend.
 
@@ -53,8 +54,11 @@ def optimize_acqf_torch(
     selection. ``gen_candidates_torch`` performs differentiable local optimization.
 
     Linear inequalities use a differentiable penalty during local search and
-    require a feasible final candidate. Other constraints remain unsupported.
+    either reject infeasible final candidates (strict) or return them (penalty).
+    Other constraints remain unsupported.
     """
+    if constraint_mode not in {"strict", "penalty"}:
+        raise ValueError("constraint_mode must be either strict or penalty.")
     if q < 1:
         raise ValueError("q must be at least 1.")
     if num_restarts < 1:
@@ -95,7 +99,7 @@ def optimize_acqf_torch(
     )
     if candidate_constraints.inequality_constraints:
         violation = candidate_constraint_violation(candidate, candidate_constraints)
-        if bool((violation > 0).any()):
+        if constraint_mode == "strict" and bool((violation > 0).any()):
             raise ValueError("PyTorch optimizer found no feasible candidate.")
         with torch.no_grad():
             value = acq_function(candidate)
