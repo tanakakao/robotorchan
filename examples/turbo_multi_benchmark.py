@@ -79,9 +79,7 @@ def run_experiment(
                 best = float(region.train_Y.max().item())
                 region.state = replace(region.state, best_value=best, observed_best_value=best)
         _fit_local_models(manager)
-        X, region_ids, _ = manager.propose_batch(
-            q=q, n_candidates=128, seed=seed + 3000 + step
-        )
+        X, region_ids, _ = manager.propose_batch(q=q, n_candidates=128, seed=seed + 3000 + step)
         manager.update_regions(X, _evaluate(function, X), region_ids)
         history.append(max(float(r.history_Y.max()) for r in manager.regions))
     return history
