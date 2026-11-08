@@ -82,7 +82,7 @@ def test_de_rejects_unordered_categorical_variables() -> None:
     assert value.numel() == 1
 
 
-def test_de_rejects_infeasible_decoded_mixed_result() -> None:
+def test_de_rejects_categorical_constraint_dimension() -> None:
     bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
 
     def fake_de(objective, scipy_bounds, **kwargs):
@@ -93,7 +93,7 @@ def test_de_rejects_infeasible_decoded_mixed_result() -> None:
             "robotorchan.optim.backends.differential_evolution.differential_evolution",
             side_effect=fake_de,
         ),
-        pytest.raises(ValueError, match="no feasible candidate"),
+        pytest.raises(ValueError, match="categorical dimensions"),
     ):
         optimize_acqf_de(
             _QuadraticAcquisition(),
