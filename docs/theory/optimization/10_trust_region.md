@@ -329,3 +329,56 @@ batch / sequential / one-shot optimization は
    *High-Dimensional Bayesian Optimization with Sparse Axis-Aligned Subspaces*.
    Proceedings of the Thirty-Seventh Conference on Uncertainty in Artificial Intelligence.
 4. BoTorch documentation and tutorials for TuRBO and high-dimensional Bayesian optimization.
+
+
+## TuRBO-m：複数の局所探索領域
+
+TuRBO-1は単一のtrust regionを更新するのに対し、TuRBO-mは\(m\)個の領域
+\(\mathcal{R}_{1,t},\ldots,\mathcal{R}_{m,t}\)を並行して維持します。
+領域\(j\)には中心\(c_{j,t}\)、幅\(L_{j,t}\)、局所観測集合
+\(\mathcal{D}_{j,t}\)、予測モデル\(p_j(f\mid\mathcal{D}_{j,t})\)、
+成功・失敗カウンタを持たせます。各領域の状態は独立に変化します。
+
+### 領域間の競争とバッチ割り当て
+
+各領域で有限な候補集合\(C_{j,t}\subseteq\mathcal{R}_{j,t}\)を作り、
+局所GPから事後関数のサンプル\(\tilde f_{j,k}\)を取得します。
+\(k=1,\ldots,q\)に対して、まだ選ばれていない候補のうち
+
+\[
+(j_k,x_k)=\operatorname*{arg\,max}_{j,\,x\in C_{j,t}\setminus S_{k-1}}
+\tilde f_{j,k}(x)
+\]
+
+を選択し、\(S_k=S_{k-1}\cup\{x_k\}\)とします。
+このとき各領域への割当数は
+\(q_j=\sum_{k=1}^{q}\mathbf{1}[j_k=j]\)となり、
+\(\sum_j q_j=q\)です。\(q_j=0\)の領域はその反復で観測による
+状態更新を行いません。必要に応じて\(q_j\leq c_j\)という
+領域別上限を課すこともできます。
+
+この競争は有限候補集合上のThompson Samplingに基づく近似であり、
+領域間の確率的な最適割当を厳密に解くものではありません。
+
+### 領域別の更新とRestart
+
+観測\((x_k,y_k)\)は候補を生成した領域\(j_k\)に帰属させます。
+領域\(j\)の成功判定には、その領域へ帰属した観測の最大値と
+従前の局所最良値を使用します。領域幅\(L_j\)と成功・失敗
+カウンタは他の領域に影響せず更新されます。
+
+領域が十分に縮小した場合、その領域だけを再始動します。
+再始動では局所モデルと現在の局所学習集合を作り直し、
+過去の観測履歴を別に保持できます。これにより局所探索を再開しつつ、
+探索全体の既観測最良値を失わずに済みます。
+
+### 比較に必要な条件
+
+TuRBO-1とTuRBO-mの性能を比較する場合は、初期評価点数、
+追加評価予算、バッチサイズ、目的関数、乱数seed、停止条件を揃えます。
+単一seedでの到達値は性能優位性の根拠にはならず、
+複数seedの最良値推移や評価回数に対するregretを比較します。
+
+理論上の領域間競争は、局所GPの較正、候補集合の密度、
+領域の重複、再始動規則などに依存します。領域数を増やせば
+必ず性能が改善するという保証はありません。
