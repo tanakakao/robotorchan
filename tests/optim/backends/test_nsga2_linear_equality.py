@@ -17,9 +17,7 @@ def test_nsga2_linear_equality_projects_population() -> None:
         population_size=16,
         generations=2,
         seed=3,
-        equality_constraints=(
-            (torch.tensor([0, 1]), torch.tensor([1.0, 1.0]), 1.0),
-        ),
+        equality_constraints=((torch.tensor([0, 1]), torch.tensor([1.0, 1.0]), 1.0),),
     )
     assert candidates.shape[0] > 0
     assert values.shape == (candidates.shape[0], 2)
