@@ -43,6 +43,7 @@ def optimize_acqf_torch(
     options: dict[str, Any] | None = None,
     constraints: CandidateConstraints | None = None,
     inequality_constraints: tuple[LinearConstraint, ...] | None = None,
+    equality_constraints: tuple[LinearConstraint, ...] | None = None,
     fixed_features: dict[int, float | Tensor] | None = None,
     batch_initial_conditions: Tensor | None = None,
     timeout_sec: float | None = None,
@@ -53,7 +54,7 @@ def optimize_acqf_torch(
     BoTorch remains responsible for restart initialization and best-candidate
     selection. ``gen_candidates_torch`` performs differentiable local optimization.
 
-    Linear inequalities use a differentiable penalty during local search and
+    Linear constraints use a differentiable penalty during local search and
     either reject infeasible final candidates (strict) or return them (penalty).
     Other constraints remain unsupported.
     """
@@ -64,14 +65,13 @@ def optimize_acqf_torch(
     if num_restarts < 1:
         raise ValueError("num_restarts must be at least 1.")
     candidate_constraints = resolve_candidate_constraints(
-        constraints, inequality_constraints=inequality_constraints
+        constraints,
+        inequality_constraints=inequality_constraints,
+        equality_constraints=equality_constraints,
     )
     validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
-    if (
-        candidate_constraints.equality_constraints
-        or candidate_constraints.nonlinear_inequality_constraints
-    ):
-        raise NotImplementedError("PyTorch optimizers currently support linear inequalities only.")
+    if candidate_constraints.nonlinear_inequality_constraints:
+        raise NotImplementedError("PyTorch optimizers do not support nonlinear constraints yet.")
 
     optimizer_class = _resolve_torch_optimizer(optimizer)
     gen_candidates = partial(
@@ -81,7 +81,7 @@ def optimize_acqf_torch(
     )
     search_function = (
         _PenalizedAcquisition(acq_function, candidate_constraints)
-        if candidate_constraints.inequality_constraints
+        if candidate_constraints.inequality_constraints or candidate_constraints.equality_constraints
         else acq_function
     )
     candidate, value = botorch_optimize_acqf(
@@ -95,7 +95,7 @@ def optimize_acqf_torch(
         batch_initial_conditions=batch_initial_conditions,
         gen_candidates=gen_candidates,
     )
-    if candidate_constraints.inequality_constraints:
+    if candidate_constraints.inequality_constraints or candidate_constraints.equality_constraints:
         violation = candidate_constraint_violation(candidate, candidate_constraints)
         if constraint_mode == "strict" and bool((violation > 0).any()):
             raise ValueError("PyTorch optimizer found no feasible candidate.")
@@ -105,7 +105,7 @@ def optimize_acqf_torch(
 
 
 class _PenalizedAcquisition(AcquisitionFunction):
-    """Apply a differentiable linear-inequality penalty during torch search."""
+    """Apply a differentiable linear-constraint penalty during torch search."""
 
     def __init__(self, acquisition: AcquisitionFunction, constraints: CandidateConstraints) -> None:
         super().__init__(model=getattr(acquisition, "model", None))
