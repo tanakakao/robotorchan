@@ -1,6 +1,5 @@
 """Cross-cutting optimizer correctness regressions found by E2E review."""
 
-import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
@@ -35,17 +34,19 @@ def test_mixed_ga_returns_raw_acquisition_value_under_constraints() -> None:
     acq = _PreferZero()
     constraints = _lower_bound_constraint()
 
-    with pytest.raises(ValueError, match="continuous dimensions only"):
-        optimize_acqf_mixed_ga(
-            acq,
-            bounds,
-            q=1,
-            integer_dims=(0,),
-            population_size=32,
-            generations=8,
-            seed=8,
-            constraints=constraints,
-        )
+    candidate, value = optimize_acqf_mixed_ga(
+        acq,
+        bounds,
+        q=1,
+        integer_dims=(0,),
+        population_size=32,
+        generations=8,
+        seed=8,
+        constraints=constraints,
+    )
+
+    expected = acq(candidate.unsqueeze(0)).reshape(())
+    assert torch.allclose(value, expected)
 
 
 def test_cmaes_returns_feasible_candidate_under_strong_penalty() -> None:
