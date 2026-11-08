@@ -8,7 +8,7 @@
 
 | optimizer | 線形不等式 | 線形等式 | 非線形不等式 | 非線形等式 | 整数・カテゴリ | q>1 |
 | --- | --- | --- | --- | --- | --- | --- |
-| botorch | ○ | ○ | ○ | ○* | ×（専用Mixed APIあり） | ○ |
+| botorch | ○ | ○ | ○ | ○* | ○（離散変数の明示設定が必要） | ○ |
 | torch_adam / adamw / sgd | △ | △ | △ | △* | × | ○ |
 | random / sobol | ○ | ○ | ○ | ○* | ○ | ○ |
 | de | ○ | ○ | ○ | ○* | ○ | ○ |
@@ -30,8 +30,11 @@
 ## q-batch・Mixedの制限
 
 - 候補間制約（inter-point）はjoint q-batchが必要です。逐次最適化では扱えません。
-- BoTorch Mixedは専用APIでfixed featuresを列挙します。
-  inter-point nonlinear制約や、一部のq>1 inter-point linear制約は非対応です。
+- BoTorch Mixedは公開`optimize_acqf(..., optimizer="botorch")`から利用できます。
+  離散変数を宣言した`variable_space`と、すべての離散次元を固定する
+  `optimizer_options={"fixed_features_list": [...]}`が必要です。
+  内部でMixed BoTorch backendに委譲します。inter-point nonlinear制約や、
+  一部のq>1 inter-point linear制約は非対応です。
 - Mixedの線形制約でカテゴリ座標を直接参照することはできません。
   整数座標の扱いはbackend固有の制限に従います。
 - Mixed Hybridはq>1の候補間線形制約をローカル段階で維持できないため拒否します。
