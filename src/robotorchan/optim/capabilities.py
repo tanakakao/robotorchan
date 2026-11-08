@@ -102,8 +102,10 @@ BOTORCH_MIXED_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 TORCH_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
     constraint_handling=ConstraintHandlingCapabilities(
         linear_inequality=ConstraintHandling.PENALTY,
+        linear_equality=ConstraintHandling.PENALTY,
     ),
     continuous=True,
+    linear_equality_constraints=True,
     linear_inequality_constraints=True,
     requires_grad=True,
     q_batch=True,
