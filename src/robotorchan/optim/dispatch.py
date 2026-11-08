@@ -36,7 +36,10 @@ from robotorchan.optim.constraints.contracts import (
     NonlinearConstraint,
     resolve_candidate_constraints,
 )
-from robotorchan.optim.constraints.validation import validate_candidate_constraints
+from robotorchan.optim.constraints.validation import (
+    validate_candidate_constraints,
+    validate_mixed_constraint_dimensions,
+)
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 OptimizerName = Literal[
@@ -94,6 +97,7 @@ def optimize_acqf(
         raise ValueError("variable_space bounds must match bounds.")
     backend_options = dict(optimizer_options or {})
     validate_candidate_constraints(constraints, bounds=bounds, q=q, sequential=sequential)
+    validate_mixed_constraint_dimensions(constraints, variable_space)
     name = optimizer.lower()
     capabilities = get_optimizer_capabilities(name)
     has_discrete = variable_space is not None and bool(
