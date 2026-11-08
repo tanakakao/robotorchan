@@ -291,6 +291,9 @@ def optimize_vector_nsga2_mixed(
     if not torch.equal(variable_space.bounds, bounds):
         raise ValueError("variable_space bounds must match bounds.")
     _validate(bounds, population_size, generations, crossover_rate, mutation_rate, mutation_scale)
+    candidate_constraints = _resolve_nsga2_constraints(
+        constraints, inequality_constraints, bounds=bounds, variable_space=variable_space
+    )
     generator = make_generator(bounds, seed)
     lower, upper = bounds
     population = lower + (upper - lower) * torch.rand(
@@ -305,7 +308,8 @@ def optimize_vector_nsga2_mixed(
         values = _evaluate(objective, population)
         if generation == generations - 1:
             break
-        ranks, crowding = _rank_and_crowding(values)
+        violations = _nsga2_violations(population, candidate_constraints)
+        ranks, crowding = _rank_and_crowding(values, violations)
         parents_a = _binary_tournament(population, ranks, crowding, generator)
         parents_b = _binary_tournament(population, ranks, crowding, generator)
         offspring = _crossover(parents_a, parents_b, crossover_rate, generator)
@@ -325,7 +329,10 @@ def optimize_vector_nsga2_mixed(
         )
         combined = torch.cat([population, offspring], dim=0)
         combined_values = _evaluate(objective, combined)
-        population = _environmental_select(combined, combined_values, population_size)
+        combined_violations = _nsga2_violations(combined, candidate_constraints)
+        population = _environmental_select(
+            combined, combined_values, population_size, combined_violations
+        )
     values = _evaluate(objective, population)
     violations = _nsga2_violations(population, candidate_constraints)
     if not bool((violations <= 0).any()):
