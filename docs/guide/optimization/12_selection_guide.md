@@ -108,12 +108,12 @@ sample_candidate_batchesの出力shapeは[N,q,d]。select_best_sampled_batchは�
 
 - **fixed_features、candidate constraints、mixed variables**
   botorch：backend capabilitiesに依存
-  torch_adam / torch_adamw / torch_sgd：fixed_featuresは処理、candidate constraintsは明示拒否、mixed非対応
+  torch_adam / torch_adamw / torch_sgd：fixed_featuresとcandidate constraintsを処理。制約はペナルティ探索＋最終可行性検査（既定strict）であり、mixed非対応
   random / sobol / DE / CMA-ES / GA / PSO / hybrid：各backendのcapabilityに依存。mixed時のGAは別backendへ分岐
 
 上表はsrc/robotorchan/optim/dispatch.pyによる**dispatch契約**である。capabilitiesに対応があることと、
 各backendで特定の等式・非線形制約の実行が成功することは同一ではない。
-とくにPyTorch backendはCandidateConstraints.has_constraintsが真ならValueErrorを送出し、制約違反を黙って許容するわけではない。
+PyTorch backendは制約を受け付け、既定のstrictモードでは違反した最終候補をValueErrorで拒否する。penaltyモードでは違反候補が返る場合がある。
 direct seed指定もtorch_*では拒否される。
 
 ### named dispatcherに含まれない経路
