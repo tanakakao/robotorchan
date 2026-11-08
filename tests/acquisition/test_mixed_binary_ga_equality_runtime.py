@@ -47,4 +47,3 @@ def test_mixed_binary_mixed_ga_categorical_equality() -> None:
             generations=3,
             seed=7,
         )
-
