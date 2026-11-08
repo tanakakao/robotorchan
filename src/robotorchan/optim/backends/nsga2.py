@@ -421,7 +421,9 @@ def _resolve_nsga2_constraints(
         for indices, _, _ in resolved.inequality_constraints:
             dimensions = indices if indices.ndim == 1 else indices[:, 1]
             if any(int(dim) in discrete for dim in dimensions):
-                raise ValueError("Mixed NSGA-II constraints may reference continuous dimensions only.")
+                raise ValueError(
+                    "Mixed NSGA-II constraints may reference continuous dimensions only."
+                )
     return resolved
 
 
