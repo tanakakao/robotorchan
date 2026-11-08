@@ -1,5 +1,6 @@
 """Tests for the optimizer benchmark harness."""
 
+import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
@@ -86,7 +87,7 @@ def test_benchmark_optimizers_runs_multiple_seeds() -> None:
     assert all(result.name == "random" for result in results)
 
 
-def test_benchmark_reports_positive_violation_for_infeasible_result() -> None:
+def test_benchmark_rejects_infeasible_ga_result() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
         inequality_constraints=(
@@ -98,20 +99,17 @@ def test_benchmark_reports_positive_violation_for_infeasible_result() -> None:
         )
     )
 
-    result = benchmark_optimizer(
-        "ga",
-        optimize_acqf_ga,
-        _Quadratic(),
-        bounds,
-        1,
-        optimizer_kwargs={"population_size": 16, "generations": 3},
-        constraints=constraints,
-        seed=11,
-    )
-
-    assert result.feasible is False
-    assert result.constraint_violation is not None
-    assert result.constraint_violation > 0
+    with pytest.raises(ValueError, match="no feasible candidate"):
+        benchmark_optimizer(
+            "ga",
+            optimize_acqf_ga,
+            _Quadratic(),
+            bounds,
+            1,
+            optimizer_kwargs={"population_size": 16, "generations": 3},
+            constraints=constraints,
+            seed=11,
+        )
 
 
 def test_benchmark_result_records_are_serialization_friendly() -> None:

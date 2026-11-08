@@ -115,6 +115,10 @@ def optimize_acqf_ga(
 
     if best_candidate is None or best_value is None:
         raise RuntimeError("Genetic Algorithm did not generate any candidate.")
+    if candidate_constraints.has_constraints and (
+        best_violation is None or bool((best_violation > 0).any())
+    ):
+        raise ValueError("Genetic Algorithm found no feasible candidate.")
     candidate = apply_fixed_features(best_candidate.reshape(q, bounds.shape[-1]), fixed_features)
     with torch.no_grad():
         value = acq_function(candidate.unsqueeze(0)).reshape(())
