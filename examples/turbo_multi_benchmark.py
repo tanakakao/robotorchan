@@ -7,11 +7,11 @@ one-versus-multiple trust-region comparison, not a TuRBOStrategy API benchmark.
 
 from __future__ import annotations
 
-import torch
 from botorch.fit import fit_gpytorch_mll
 from botorch.models import SingleTaskGP
 from botorch.test_functions.synthetic import Ackley, Levy, Rosenbrock
 from gpytorch.mlls import ExactMarginalLogLikelihood
+import torch
 from torch.quasirandom import SobolEngine
 
 from robotorchan.optim.trust_region import TuRBOMultiRegionState
