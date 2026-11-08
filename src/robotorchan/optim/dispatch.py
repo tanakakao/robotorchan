@@ -175,6 +175,7 @@ def optimize_acqf(
         _reject_initial_condition_generator(name, ic_generator, ic_gen_kwargs)
         _reject_seed(name, seed)
         _reject_sequential(name, sequential)
+        constraint_mode = backend_options.pop("constraint_mode", "strict")
         _reject_backend_options(name, backend_options)
         return optimize_acqf_torch(
             acq_function,
@@ -185,6 +186,7 @@ def optimize_acqf(
             optimizer=name.removeprefix("torch_"),
             options=options,
             constraints=constraints,
+            constraint_mode=constraint_mode,
             fixed_features=fixed_features,
             batch_initial_conditions=batch_initial_conditions,
         )

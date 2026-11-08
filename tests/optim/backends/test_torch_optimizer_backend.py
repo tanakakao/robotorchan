@@ -58,24 +58,40 @@ def test_torch_backend_accepts_torch_optimizer_class() -> None:
     assert mocked.call_args.kwargs["gen_candidates"].keywords["optimizer"] is torch.optim.AdamW
 
 
-def test_torch_backend_rejects_constraints_explicitly() -> None:
+def test_torch_backend_linear_constraint_modes() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
-        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.0),)
+        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.5),)
     )
-    try:
-        optimize_acqf_torch(
+    candidate = torch.tensor([[0.25]], dtype=torch.double)
+    with patch(
+        "robotorchan.optim.backends.torch.botorch_optimize_acqf",
+        return_value=(candidate, torch.tensor(-0.0625, dtype=torch.double)),
+    ):
+        try:
+            optimize_acqf_torch(
+                _DummyAcquisition(),
+                bounds,
+                q=1,
+                num_restarts=2,
+                raw_samples=8,
+                constraints=constraints,
+            )
+        except ValueError as error:
+            assert "no feasible candidate" in str(error)
+        else:
+            raise AssertionError("Strict mode must reject infeasible candidates.")
+        returned, value = optimize_acqf_torch(
             _DummyAcquisition(),
             bounds,
             q=1,
             num_restarts=2,
             raw_samples=8,
             constraints=constraints,
+            constraint_mode="penalty",
         )
-    except ValueError as error:
-        assert "does not support candidate constraints yet" in str(error)
-    else:
-        raise AssertionError("Expected constrained PyTorch optimization to be rejected.")
+    torch.testing.assert_close(returned, candidate)
+    torch.testing.assert_close(value.reshape(()), torch.tensor(-0.0625, dtype=torch.double))
 
 
 def test_torch_backend_rejects_unknown_optimizer_name() -> None:
