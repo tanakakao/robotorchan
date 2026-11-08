@@ -16,20 +16,19 @@ class _JointAcquisition(AcquisitionFunction):
 
 
 @pytest.mark.parametrize("q", [1, 2, 4])
-@pytest.mark.parametrize("optimizer", ["torch_adam"])
-def test_unsupported_linear_constraints_rejected(optimizer: str, q: int) -> None:
+def test_torch_linear_constraints_supported(q: int) -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     constraints = CandidateConstraints(
         inequality_constraints=((torch.tensor([0]), torch.tensor([1.0], dtype=torch.double), 0.2),),
     )
-    with pytest.raises(NotImplementedError, match="linear inequalities"):
-        optimize_acqf(
-            _JointAcquisition(),
-            bounds,
-            q=q,
-            optimizer=optimizer,
-            constraints=constraints,
-        )
+    candidates, value = optimize_acqf(
+        _JointAcquisition(), bounds, q=q, optimizer="torch_adam",
+        constraints=constraints, num_restarts=2, raw_samples=16,
+        optimizer_options={"constraint_mode": "penalty"},
+        options={"maxiter": 10},
+    )
+    assert candidates.shape == (q, 1)
+    assert torch.isfinite(value).all()
 
 
 @pytest.mark.parametrize("q", [2, 4])
