@@ -157,7 +157,7 @@ class TuRBOMultiRegionState:
                 posterior = region.model.posterior(choices)
                 samples = posterior.rsample(sample_shape=torch.Size([q]))
             if samples.shape != (q, n_candidates, 1):
-                raise ValueError("each region model must return scalar posterior samples [q, n, 1].")
+                raise ValueError("region posterior samples must have shape [q, n, 1].")
             pools.append(choices)
             scores.append(samples.squeeze(-1))
             region_ids.append(
