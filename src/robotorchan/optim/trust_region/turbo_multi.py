@@ -121,7 +121,6 @@ class TuRBOMultiRegionState:
         region.history_X = torch.cat((region.history_X, new_X))
         region.history_Y = torch.cat((region.history_Y, new_Y))
 
-
     def thompson_sample(
         self,
         *,
