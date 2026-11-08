@@ -7,11 +7,13 @@ one-versus-multiple trust-region comparison, not a TuRBOStrategy API benchmark.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
+import torch
 from botorch.fit import fit_gpytorch_mll
 from botorch.models import SingleTaskGP
 from botorch.test_functions.synthetic import Ackley, Levy, Rosenbrock
 from gpytorch.mlls import ExactMarginalLogLikelihood
-import torch
 from torch.quasirandom import SobolEngine
 
 from robotorchan.optim.trust_region import TuRBOMultiRegionState
@@ -59,6 +61,11 @@ def run_experiment(
         region = manager.region(index)
         best_index = int(Y.argmax().item())
         region.center = X[best_index].clone()
+        region.state = replace(
+            region.state,
+            best_value=float(Y.max().item()),
+            observed_best_value=float(Y.max().item()),
+        )
     history = [max(float(r.train_Y.max()) for r in manager.regions)]
     for step in range(n_steps):
         for index, region in enumerate(manager.regions):
@@ -69,6 +76,10 @@ def run_experiment(
                 )
                 manager.append_observations(index, X, _evaluate(function, X))
                 region.center = X[int(region.train_Y.argmax().item())].clone()
+                best = float(region.train_Y.max().item())
+                region.state = replace(
+                    region.state, best_value=best, observed_best_value=best
+                )
         _fit_local_models(manager)
         X, region_ids, _ = manager.propose_batch(
             q=q, n_candidates=128, seed=seed + 3000 + step
