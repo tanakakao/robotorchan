@@ -20,22 +20,27 @@ class QuadraticAcquisition(AcquisitionFunction):
 
 
 @pytest.mark.parametrize("optimizer", ["adam", "adamw", "sgd"])
-@pytest.mark.parametrize("kind", ["nonlinear"])
-def test_torch_optimizer_explicitly_rejects_unsupported_candidate_constraints(
-    optimizer: str, kind: str
-) -> None:
-    """Do not silently ignore candidate constraints during gradient search."""
+def test_torch_nonlinear_penalty_and_strict_mode(optimizer: str, monkeypatch) -> None:
+    from unittest.mock import Mock
+
+    from robotorchan.optim.backends import torch as backend
+
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.float64)
+    candidate = torch.tensor([[0.1]], dtype=torch.float64)
     constraints = CandidateConstraints(
         nonlinear_inequality_constraints=((lambda x: x[0] - 0.2, True),)
     )
-
-    with pytest.raises(NotImplementedError, match="do not support nonlinear constraints"):
+    mocked = Mock(return_value=(candidate, torch.tensor(0.0, dtype=bounds.dtype)))
+    monkeypatch.setattr(backend, "botorch_optimize_acqf", mocked)
+    with pytest.raises(ValueError, match="no feasible candidate"):
         optimize_acqf_torch(
-            QuadraticAcquisition(),
-            torch.tensor([[0.0], [1.0]], dtype=torch.float64),
-            q=1,
-            num_restarts=1,
-            raw_samples=4,
-            optimizer=optimizer,
-            constraints=constraints,
+            QuadraticAcquisition(), bounds, q=1, num_restarts=1, raw_samples=4,
+            optimizer=optimizer, constraints=constraints,
         )
+    returned, _ = optimize_acqf_torch(
+        QuadraticAcquisition(), bounds, q=1, num_restarts=1, raw_samples=4,
+        optimizer=optimizer, constraints=constraints, constraint_mode="penalty",
+    )
+    torch.testing.assert_close(returned, candidate)
+    penalized = mocked.call_args.kwargs["acq_function"]
+    assert penalized(candidate.unsqueeze(0)).item() < -1.0
