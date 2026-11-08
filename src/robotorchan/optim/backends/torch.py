@@ -71,9 +71,7 @@ def optimize_acqf_torch(
         candidate_constraints.equality_constraints
         or candidate_constraints.nonlinear_inequality_constraints
     ):
-        raise NotImplementedError(
-            "PyTorch optimizers currently support linear inequalities only."
-        )
+        raise NotImplementedError("PyTorch optimizers currently support linear inequalities only.")
 
     optimizer_class = _resolve_torch_optimizer(optimizer)
     gen_candidates = partial(
