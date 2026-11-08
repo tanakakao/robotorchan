@@ -279,6 +279,7 @@ def optimize_vector_nsga2_mixed(
     seed: int | None = None,
     constraints: CandidateConstraints | None = None,
     inequality_constraints: tuple[LinearConstraint, ...] | None = None,
+    equality_constraints: tuple[LinearConstraint, ...] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Optimize vector objectives with discrete-safe NSGA-II genetic operators.
 
