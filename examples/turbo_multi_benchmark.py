@@ -84,7 +84,9 @@ def main() -> None:
     for problem in problems:
         print(type(problem).__name__)
         for n_regions in (1, 3):
-            history = run_experiment(problem, n_regions=n_regions)
+            history = run_experiment(
+                problem, n_regions=n_regions, initial_per_region=15 // n_regions
+            )
             print(f"  regions={n_regions}: initial={history[0]:.4f}, final={history[-1]:.4f}")
     print("Scores are negative function values; larger is better.")
 
