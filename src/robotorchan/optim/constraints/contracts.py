@@ -85,6 +85,7 @@ class CandidateConstraints:
             if not getattr(constraint[0], "_robotorchan_equality_expansion", False)
         ]
         for function, is_intrapoint in self.nonlinear_equality_constraints:
+
             def lower(x: Tensor, fn=function, tol=tolerance) -> Tensor:
                 return fn(x) + tol
 
