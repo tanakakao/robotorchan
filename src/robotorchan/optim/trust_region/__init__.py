@@ -12,8 +12,11 @@ from robotorchan.optim.trust_region.turbo import (
     turbo_trust_region_bounds,
     update_turbo_state,
 )
+from robotorchan.optim.trust_region.turbo_multi import TuRBOMultiRegionState, TuRBORegion
 
 __all__ = [
+    "TuRBOMultiRegionState",
+    "TuRBORegion",
     "TuRBOState",
     "TuRBOStrategy",
     "generate_turbo_restart_center",
