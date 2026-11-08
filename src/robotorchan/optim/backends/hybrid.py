@@ -107,11 +107,15 @@ def optimize_acqf_hybrid(
             "BoTorch mixed acquisition optimization does not support "
             "inter-point nonlinear constraints."
         )
-    if has_discrete and q > 1 and any(
-        indices.ndim == 2
-        for indices, _, _ in (
-            *candidate_constraints.inequality_constraints,
-            *candidate_constraints.equality_constraints,
+    if (
+        has_discrete
+        and q > 1
+        and any(
+            indices.ndim == 2
+            for indices, _, _ in (
+                *candidate_constraints.inequality_constraints,
+                *candidate_constraints.equality_constraints,
+            )
         )
     ):
         raise ValueError(
