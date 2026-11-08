@@ -40,7 +40,14 @@ class CandidateConstraints:
     ``callable(X) >= 0``. With ``is_intrapoint=True`` it receives ``[d]``;
     otherwise it receives the joint q-batch ``[q, d]``. Inter-point constraints
     therefore require joint q-batch optimization; BoTorch does not support them
-    for greedy sequential optimization. The callable must
+    for greedy sequential optimization. Nonlinear equality h(X) = 0 is not
+    a native BoTorch constraint type. To impose a tolerance epsilon without
+    introducing a separate API, provide two nonlinear inequalities:
+    (lambda X: h(X) + epsilon, is_intrapoint) and
+    (lambda X: epsilon - h(X), is_intrapoint). This enforces
+    abs(h(X)) <= epsilon when the backend returns feasible candidates.
+    Penalty-mode optimizers may return infeasible candidates by design.
+    The callable must
     preserve device and floating dtype. Gradient-based optimizers additionally
     require differentiability with respect to candidate coordinates;
     derivative-free backends do not. Python callables are runtime objects and have no
