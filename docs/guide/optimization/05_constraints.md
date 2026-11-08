@@ -72,12 +72,13 @@ $$
 | Continuous BoTorch | NATIVE | 線形・非線形制約をBoTorchへ渡す。inter-point nonlinearも対応するが、feasible初期点が必要 |
 | Native mixed BoTorch | NATIVE | fixed_features_listで混合値を列挙。inter-point nonlinearは拒否 |
 | Adam / AdamW / SGD | UNSUPPORTED | CandidateConstraintsが非空なら明示拒否 |
-| Random / Sobol | UNSUPPORTED | 候補のサンプリング・argmaxだけでは制約の可行性を保証しない |
+| Random / Sobol | FEASIBILITY_FILTER | サンプリングしたjoint候補を制約でフィルタし、可行候補の中から最大値を選ぶ。可行候補が得られなければValueError |
 | DE / GA / Mixed GA | FEASIBILITY_FIRST | 制約違反量を用いる順位付け。常に可行点を返す保証ではない |
-| CMA-ES / PSO / Hybrid | PENALTY | acquisitionスコアから制約違反分を減点する近似。有限ペナルティでは違反が残り得る |
+| CMA-ES / PSO | PENALTY | 探索中に違反量を評価する。返却候補の可行性はbackend実装で別途確認する | 
+| Hybrid | GLOBAL→LOCAL | global候補を検証し、local候補が制約違反または獲得関数値を改善しない場合はglobal候補を維持する |
 | NSGA-II | 別API | vector objective用であり、scalar獲得関数のcandidate制約dispatchに含まれない |
 
-FEASIBILITY_FIRSTは可行性を順位に反映する方式であり、PENALTYは概念的には次のようにacquisitionと違反量をトレードオフさせる。
+FEASIBILITY_FILTERはサンプリングした候補から可行なものだけを残す方式である。FEASIBILITY_FIRSTは可行性を順位に反映する方式であり、PENALTYは概念的には次のようにacquisitionと違反量をトレードオフさせる。
 
 $$
 A_{\mathrm{penalty}}(X)=A(X)-\lambda V(X).
