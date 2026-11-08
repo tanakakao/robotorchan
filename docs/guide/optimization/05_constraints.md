@@ -16,6 +16,10 @@
   契約：同形式のtuple
   可行条件とshape：線形式が`rhs`と等しい。数値許容誤差に注意
 
+- **nonlinear equality**
+  契約：`(callable, is_intrapoint)` と `nonlinear_equality_tolerance`
+  可行条件：`abs(h(X)) <= epsilon`。内部で2つの非線形不等式へ変換
+
 - **nonlinear inequality**
   契約：`(callable, is_intrapoint)`
   可行条件とshape：callableが返す**scalar Tensor >= 0**
@@ -120,6 +124,7 @@ gradient backendでは微分可能性が必要となる。BoTorch nativeは非�
 | --- | --- | --- |
 | 線形制約・固定変数・候補間制約とjoint q-batch | [31_acquisition_optimization](../../../examples/notebooks/31_acquisition_optimization.ipynb) | 5〜8 |
 | 非線形不等式・実行可能領域の可視化 | [38_nonlinear_candidate_constraints](../../../examples/notebooks/38_nonlinear_candidate_constraints.ipynb) | 3〜4 |
+| 非線形等式・許容誤差内の候補提案 | [38_nonlinear_candidate_constraints](../../../examples/notebooks/38_nonlinear_candidate_constraints.ipynb) | 4a |
 | 非線形候補間制約とjoint q-batch | [38_nonlinear_candidate_constraints](../../../examples/notebooks/38_nonlinear_candidate_constraints.ipynb) | 5〜6 |
 
 Mixed変数を含む候補間制約はbackendごとに対応が異なります。Mixed GA / DEには
