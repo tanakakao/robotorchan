@@ -1,6 +1,5 @@
 """Trust-region acquisition search strategies."""
 
-from robotorchan.optim.trust_region.turbo_multi import TuRBOMultiRegionState, TuRBORegion
 from robotorchan.optim.trust_region.turbo import (
     TuRBOState,
     TuRBOStrategy,
@@ -13,6 +12,7 @@ from robotorchan.optim.trust_region.turbo import (
     turbo_trust_region_bounds,
     update_turbo_state,
 )
+from robotorchan.optim.trust_region.turbo_multi import TuRBOMultiRegionState, TuRBORegion
 
 __all__ = [
     "TuRBOMultiRegionState",
