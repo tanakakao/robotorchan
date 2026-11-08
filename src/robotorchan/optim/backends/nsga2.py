@@ -57,7 +57,7 @@ def optimize_vector_nsga2(
         inequality_constraints,
         equality_constraints,
         nonlinear_inequality_constraints,
-        bounds=bounds
+        bounds=bounds,
     )
     generator = make_generator(bounds, seed)
     lower, upper = bounds
