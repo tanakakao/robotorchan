@@ -34,12 +34,23 @@ def test_torch_nonlinear_penalty_and_strict_mode(optimizer: str, monkeypatch) ->
     monkeypatch.setattr(backend, "botorch_optimize_acqf", mocked)
     with pytest.raises(ValueError, match="no feasible candidate"):
         optimize_acqf_torch(
-            QuadraticAcquisition(), bounds, q=1, num_restarts=1, raw_samples=4,
-            optimizer=optimizer, constraints=constraints,
+            QuadraticAcquisition(),
+            bounds,
+            q=1,
+            num_restarts=1,
+            raw_samples=4,
+            optimizer=optimizer,
+            constraints=constraints,
         )
     returned, _ = optimize_acqf_torch(
-        QuadraticAcquisition(), bounds, q=1, num_restarts=1, raw_samples=4,
-        optimizer=optimizer, constraints=constraints, constraint_mode="penalty",
+        QuadraticAcquisition(),
+        bounds,
+        q=1,
+        num_restarts=1,
+        raw_samples=4,
+        optimizer=optimizer,
+        constraints=constraints,
+        constraint_mode="penalty",
     )
     torch.testing.assert_close(returned, candidate)
     penalized = mocked.call_args.kwargs["acq_function"]
