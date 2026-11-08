@@ -1,5 +1,7 @@
 """Focused TuRBO-m region update and restart tests."""
 
+from dataclasses import replace
+
 import torch
 
 from robotorchan.optim.trust_region import TuRBOMultiRegionState
@@ -32,8 +34,6 @@ def test_restart_clears_only_active_region_and_keeps_history():
         torch.tensor([[1.0], [2.0]]),
         torch.tensor([0, 1]),
     )
-    from dataclasses import replace
-
     region = manager.region(0)
     region.state = replace(region.state, restart_triggered=True)
     manager.restart_region(0, center=torch.tensor([0.4]))
