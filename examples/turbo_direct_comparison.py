@@ -91,10 +91,9 @@ def compare(
         for region_id, region in enumerate(multi.regions):
             if region.state.restart_triggered:
                 multi.restart_region(region_id, seed=seed + 3000 + step * n_regions + region_id)
-                X_init = _initial(
-                    bounds, len(indices[region_id]), seed + 4000 + step * n_regions + region_id
-                )
-                Y_init = _evaluate(problem, X_init)
+                # Reuse prior observations: restart must not consume hidden evaluations.
+                X_init = region.history_X[: len(indices[region_id])].clone()
+                Y_init = region.history_Y[: len(indices[region_id])].clone()
                 multi.append_observations(region_id, X_init, Y_init)
                 idx = int(Y_init.argmax().item())
                 region.center = X_init[idx].clone()
