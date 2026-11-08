@@ -152,7 +152,7 @@ def optimize_acqf_hybrid(
                 "Continuous CMA-ES global search does not support fixed_features."
             )
         resolved_global_options.setdefault("fixed_features", fixed_features)
-    global_candidate, _ = optimizer(
+    global_candidate, global_value = optimizer(
         acq_function,
         bounds,
         q,
@@ -215,9 +215,7 @@ def optimize_acqf_hybrid(
             equality_tolerance=resolved_global_options.get("equality_tolerance", 1e-6),
         ).all()
     ):
-        raise ValueError(
-            "Hybrid local optimizer returned a candidate that violates candidate constraints."
-        )
+        return global_candidate, global_value
     return local_candidate, local_value
 
 
