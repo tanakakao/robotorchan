@@ -54,6 +54,14 @@ TuRBOなどは同じ`optimizer=`文字列で選ぶ12番目以降のbackendでは
 capability descriptorの`constraint_handling`はnative、feasibility-first、penalty、unsupportedなどの戦略を区別する。
 * *penalty方式が返した候補をhard-feasibleと断定できない**。制約型・backend別に候補値を検算する。
 
+## Torch backendの制約処理
+
+`torch_adam`、`torch_adamw`、`torch_sgd`は`CandidateConstraints`を受け付けます。
+内部では微分可能な違反量を獲得関数から減点し、既定の`constraint_mode="strict"`では
+最終候補が制約を満たさなければ`ValueError`を送出します。
+`constraint_mode="penalty"`では違反を許容して返す可能性があるため、利用者側で可行性を確認してください。
+これらはBoTorchのnative制約最適化とは異なり、等式・非線形制約の厳密な充足を保証するものではありません。
+
 ## 非線形の初期点と探索座標
 
 `validate_nonlinear_initial_conditions`は明示的な`batch_initial_conditions`に対し、`[num_restarts,q,d]`形、
@@ -75,7 +83,7 @@ $$
 | --- | --- | --- |
 | Continuous BoTorch | NATIVE | 線形・非線形制約をBoTorchへ渡す。inter-point nonlinearも対応するが、feasible初期点が必要 |
 | Native mixed BoTorch | NATIVE | fixed_features_listで混合値を列挙。inter-point nonlinearは拒否 |
-| Adam / AdamW / SGD | UNSUPPORTED | CandidateConstraintsが非空なら明示拒否 |
+| Adam / AdamW / SGD | PENALTY + FINAL CHECK | 微分可能な違反量をペナルティとして探索し、既定の`constraint_mode="strict"`では違反候補を拒否。`penalty`では違反候補を返す場合がある |
 | Random / Sobol | FEASIBILITY_FILTER | サンプリングしたjoint候補を制約でフィルタし、可行候補の中から最大値を選ぶ。可行候補が得られなければValueError |
 | DE / GA / Mixed GA | FEASIBILITY_FIRST | 制約違反量を用いる順位付け。常に可行点を返す保証ではない |
 | CMA-ES / PSO | PENALTY | 探索中に違反量を評価する。返却候補の可行性はbackend実装で別途確認する | 
