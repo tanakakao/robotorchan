@@ -35,6 +35,8 @@ def optimize_vector_nsga2(
     inequality_constraints: tuple[LinearConstraint, ...] | None = None,
     equality_constraints: tuple[LinearConstraint, ...] | None = None,
     nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+    nonlinear_equality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+    nonlinear_equality_tolerance: float = 1e-6,
 ) -> tuple[Tensor, Tensor]:
     """Approximate a Pareto set with a native, batched NSGA-II implementation.
 
@@ -57,6 +59,8 @@ def optimize_vector_nsga2(
         inequality_constraints,
         equality_constraints,
         nonlinear_inequality_constraints,
+        nonlinear_equality_constraints,
+        nonlinear_equality_tolerance,
         bounds=bounds,
     )
     generator = make_generator(bounds, seed)
@@ -287,6 +291,8 @@ def optimize_vector_nsga2_mixed(
     inequality_constraints: tuple[LinearConstraint, ...] | None = None,
     equality_constraints: tuple[LinearConstraint, ...] | None = None,
     nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+    nonlinear_equality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+    nonlinear_equality_tolerance: float = 1e-6,
 ) -> tuple[Tensor, Tensor]:
     """Optimize vector objectives with discrete-safe NSGA-II genetic operators.
 
@@ -302,6 +308,8 @@ def optimize_vector_nsga2_mixed(
         inequality_constraints,
         equality_constraints,
         nonlinear_inequality_constraints,
+        nonlinear_equality_constraints,
+        nonlinear_equality_tolerance,
         bounds=bounds,
         variable_space=variable_space,
     )
@@ -421,6 +429,8 @@ def _resolve_nsga2_constraints(
     inequality_constraints: tuple[LinearConstraint, ...] | None,
     equality_constraints: tuple[LinearConstraint, ...] | None,
     nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None,
+    nonlinear_equality_constraints: tuple[NonlinearConstraint, ...] | None,
+    nonlinear_equality_tolerance: float,
     *,
     bounds: Tensor,
     variable_space: MixedVariableSpace | None = None,
@@ -430,6 +440,8 @@ def _resolve_nsga2_constraints(
         inequality_constraints=inequality_constraints,
         equality_constraints=equality_constraints,
         nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+        nonlinear_equality_constraints=nonlinear_equality_constraints,
+        nonlinear_equality_tolerance=nonlinear_equality_tolerance,
     )
     validate_candidate_constraints(resolved, bounds=bounds, q=1)
     if any(not intrapoint for _, intrapoint in resolved.nonlinear_inequality_constraints):
