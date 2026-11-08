@@ -210,7 +210,7 @@ def test_mixed_ga_qbatch_evaluations_preserve_discrete_legality() -> None:
 def test_mixed_ga_rejects_infeasible_categorical_constraint() -> None:
     bounds = torch.tensor([[0.0, 0.0, 10.0], [1.0, 5.0, 30.0]], dtype=torch.double)
 
-    with pytest.raises(ValueError, match="continuous dimensions only"):
+    with pytest.raises(ValueError, match="categorical dimensions"):
         optimize_acqf_mixed_ga(
             _MixedTargetAcquisition(),
             bounds,
