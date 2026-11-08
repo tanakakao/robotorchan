@@ -8,6 +8,13 @@ import torch
 from torch import Tensor
 
 from robotorchan.optim.backend_support.runtime import make_generator, validate_bounds
+from robotorchan.optim.constraints.contracts import (
+    CandidateConstraints,
+    LinearConstraint,
+    resolve_candidate_constraints,
+)
+from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
+from robotorchan.optim.constraints.validation import validate_candidate_constraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 VectorObjective = Callable[[Tensor], Tensor]
@@ -23,6 +30,8 @@ def optimize_vector_nsga2(
     mutation_rate: float = 0.1,
     mutation_scale: float = 0.1,
     seed: int | None = None,
+    constraints: CandidateConstraints | None = None,
+    inequality_constraints: tuple[LinearConstraint, ...] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Approximate a Pareto set with a native, batched NSGA-II implementation.
 
@@ -40,6 +49,12 @@ def optimize_vector_nsga2(
         mutation_rate,
         mutation_scale,
     )
+    candidate_constraints = _resolve_nsga2_constraints(
+        constraints, inequality_constraints, bounds=bounds
+    )
+    candidate_constraints = _resolve_nsga2_constraints(
+        constraints, inequality_constraints, bounds=bounds, variable_space=variable_space
+    )
     generator = make_generator(bounds, seed)
     lower, upper = bounds
     population = lower + (upper - lower) * torch.rand(
@@ -53,17 +68,24 @@ def optimize_vector_nsga2(
         values = _evaluate(objective, population)
         if generation == generations - 1:
             break
-        ranks, crowding = _rank_and_crowding(values)
+        violations = _nsga2_violations(population, candidate_constraints)
+        ranks, crowding = _rank_and_crowding(values, violations)
         parents_a = _binary_tournament(population, ranks, crowding, generator)
         parents_b = _binary_tournament(population, ranks, crowding, generator)
         offspring = _crossover(parents_a, parents_b, crossover_rate, generator)
         offspring = _mutate(offspring, lower, upper, mutation_rate, mutation_scale, generator)
         combined = torch.cat([population, offspring], dim=0)
         combined_values = _evaluate(objective, combined)
-        population = _environmental_select(combined, combined_values, population_size)
+        combined_violations = _nsga2_violations(combined, candidate_constraints)
+        population = _environmental_select(
+            combined, combined_values, population_size, combined_violations
+        )
     values = _evaluate(objective, population)
-    ranks, _ = _rank_and_crowding(values)
-    mask = ranks == 0
+    violations = _nsga2_violations(population, candidate_constraints)
+    if not bool((violations <= 0).any()):
+        raise ValueError("NSGA-II found no feasible candidate.")
+    ranks, _ = _rank_and_crowding(values, violations)
+    mask = (ranks == 0) & (violations <= 0)
     return population[mask], values[mask]
 
 
@@ -77,13 +99,33 @@ def _evaluate(objective: VectorObjective, population: Tensor) -> Tensor:
     return values
 
 
-def _rank_and_crowding(values: Tensor) -> tuple[Tensor, Tensor]:
+def _rank_and_crowding(
+    values: Tensor, violations: Tensor | None = None
+) -> tuple[Tensor, Tensor]:
     n = values.shape[0]
     dominates = torch.zeros((n, n), dtype=torch.bool, device=values.device)
     for i in range(n):
         no_worse = (values[i] >= values).all(dim=1)
         strictly_better = (values[i] > values).any(dim=1)
         dominates[i] = no_worse & strictly_better
+    if violations is not None:
+        feasible = violations <= 0
+        dominates = torch.where(
+            feasible[:, None] & ~feasible[None, :],
+            True,
+            dominates,
+        )
+        dominates = torch.where(
+            ~feasible[:, None] & feasible[None, :],
+            False,
+            dominates,
+        )
+        both_infeasible = ~feasible[:, None] & ~feasible[None, :]
+        dominates = torch.where(
+            both_infeasible,
+            violations[:, None] < violations[None, :],
+            dominates,
+        )
     domination_count = dominates.sum(dim=0)
     ranks = torch.full((n,), -1, dtype=torch.long, device=values.device)
     remaining = domination_count.clone()
@@ -132,8 +174,10 @@ def _binary_tournament(
     return population[torch.where(choose_first, first, second)]
 
 
-def _environmental_select(population: Tensor, values: Tensor, size: int) -> Tensor:
-    ranks, crowding = _rank_and_crowding(values)
+def _environmental_select(
+    population: Tensor, values: Tensor, size: int, violations: Tensor | None = None
+) -> Tensor:
+    ranks, crowding = _rank_and_crowding(values, violations)
     selected: list[Tensor] = []
     count = 0
     for rank in range(int(ranks.max().item()) + 1):
@@ -235,6 +279,8 @@ def optimize_vector_nsga2_mixed(
     mutation_rate: float = 0.1,
     mutation_scale: float = 0.1,
     seed: int | None = None,
+    constraints: CandidateConstraints | None = None,
+    inequality_constraints: tuple[LinearConstraint, ...] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Optimize vector objectives with discrete-safe NSGA-II genetic operators.
 
@@ -281,8 +327,12 @@ def optimize_vector_nsga2_mixed(
         combined_values = _evaluate(objective, combined)
         population = _environmental_select(combined, combined_values, population_size)
     values = _evaluate(objective, population)
-    ranks, _ = _rank_and_crowding(values)
-    return population[ranks == 0], values[ranks == 0]
+    violations = _nsga2_violations(population, candidate_constraints)
+    if not bool((violations <= 0).any()):
+        raise ValueError("Mixed NSGA-II found no feasible candidate.")
+    ranks, _ = _rank_and_crowding(values, violations)
+    mask = (ranks == 0) & (violations <= 0)
+    return population[mask], values[mask]
 
 
 def _repair_mixed_nsga2(
@@ -344,3 +394,32 @@ def _repair_mixed_nsga2(
             )
             population[:, dim] = torch.where(mutate, allowed[indices], population[:, dim])
     return population
+
+
+def _resolve_nsga2_constraints(
+    constraints: CandidateConstraints | None,
+    inequality_constraints: tuple[LinearConstraint, ...] | None,
+    *,
+    bounds: Tensor,
+    variable_space: MixedVariableSpace | None = None,
+) -> CandidateConstraints:
+    resolved = resolve_candidate_constraints(
+        constraints, inequality_constraints=inequality_constraints
+    )
+    validate_candidate_constraints(resolved, bounds=bounds, q=1)
+    if resolved.equality_constraints or resolved.nonlinear_inequality_constraints:
+        raise NotImplementedError(
+            "NSGA-II currently supports linear inequalities only; "
+            "other constraints are scheduled for later phases."
+        )
+    if variable_space is not None:
+        discrete = set(variable_space.integer_dims) | set(variable_space.categorical_dims)
+        for indices, _, _ in resolved.inequality_constraints:
+            dimensions = indices if indices.ndim == 1 else indices[:, 1]
+            if any(int(dim) in discrete for dim in dimensions):
+                raise ValueError("Mixed NSGA-II constraints may reference continuous dimensions only.")
+    return resolved
+
+
+def _nsga2_violations(population: Tensor, constraints: CandidateConstraints) -> Tensor:
+    return candidate_constraint_violation(population.unsqueeze(-2), constraints)
