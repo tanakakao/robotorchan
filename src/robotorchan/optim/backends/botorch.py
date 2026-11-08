@@ -118,14 +118,11 @@ def optimize_acqf_mixed_botorch(
         nonlinear_equality_tolerance=nonlinear_equality_tolerance,
     )
     validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
-    if (
-        q > 1
-        and any(
-            indices.ndim == 2
-            for indices, _, _ in (
-                *candidate_constraints.inequality_constraints,
-                *candidate_constraints.equality_constraints,
-            )
+    if q > 1 and any(
+        indices.ndim == 2
+        for indices, _, _ in (
+            *candidate_constraints.inequality_constraints,
+            *candidate_constraints.equality_constraints,
         )
     ):
         raise ValueError(
