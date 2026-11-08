@@ -24,6 +24,29 @@ NonlinearConstraint = tuple[NonlinearConstraintCallable, bool]
 
 
 @dataclass(frozen=True)
+class NumericOnlyConstraint:
+    """Adapt a nonlinear callable to explicitly selected numeric coordinates.
+
+    The wrapped function receives only ``X[..., dimensions]``. This makes
+    categorical coordinates inaccessible to the wrapped function.
+    """
+
+    function: NonlinearConstraintCallable
+    dimensions: tuple[int, ...]
+
+    def __post_init__(self) -> None:
+        if not callable(self.function):
+            raise TypeError("function must be callable.")
+        if not self.dimensions or len(set(self.dimensions)) != len(self.dimensions):
+            raise ValueError("dimensions must be nonempty and unique.")
+        if any(not isinstance(dim, int) or dim < 0 for dim in self.dimensions):
+            raise ValueError("dimensions must contain non-negative integers.")
+
+    def __call__(self, x: Tensor) -> Tensor:
+        return self.function(x[..., list(self.dimensions)])
+
+
+@dataclass(frozen=True)
 class CandidateConstraints:
     """Candidate-space constraints for compatible search strategies.
 
