@@ -77,9 +77,7 @@ def run_experiment(
                 manager.append_observations(index, X, _evaluate(function, X))
                 region.center = X[int(region.train_Y.argmax().item())].clone()
                 best = float(region.train_Y.max().item())
-                region.state = replace(
-                    region.state, best_value=best, observed_best_value=best
-                )
+                region.state = replace(region.state, best_value=best, observed_best_value=best)
         _fit_local_models(manager)
         X, region_ids, _ = manager.propose_batch(
             q=q, n_candidates=128, seed=seed + 3000 + step
