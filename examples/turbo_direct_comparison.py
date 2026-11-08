@@ -98,9 +98,7 @@ def compare(
                 idx = int(Y_init.argmax().item())
                 region.center = X_init[idx].clone()
                 best = float(Y_init.max().item())
-                region.state = replace(
-                    region.state, best_value=best, observed_best_value=best
-                )
+                region.state = replace(region.state, best_value=best, observed_best_value=best)
             multi.set_model(region_id, _fit(region.train_X, region.train_Y))
         X, ids, _ = multi.propose_batch(q=q, n_candidates=128, seed=seed + 5000 + step)
         Y = _evaluate(problem, X)
