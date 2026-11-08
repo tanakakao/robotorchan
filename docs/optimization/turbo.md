@@ -1,5 +1,7 @@
 # TuRBO search strategy
 
+複数Trust RegionのTuRBO-mについては[TuRBO-mの実装ガイド](turbo-m.md)を参照してください。
+
 `TuRBOStrategy` は surrogate model の内部表現ではなく、公開された元入力空間で trust region を管理します。
 
 ```python
