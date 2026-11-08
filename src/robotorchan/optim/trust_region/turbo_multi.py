@@ -128,6 +128,7 @@ class TuRBOMultiRegionState:
         q: int,
         n_candidates: int = 256,
         seed: int | None = None,
+        max_per_region: int | None = None,
     ) -> tuple[Tensor, Tensor]:
         """Select a global batch across regions using independent posterior draws.
 
@@ -138,8 +139,11 @@ class TuRBOMultiRegionState:
             raise ValueError("q must be at least 1.")
         if n_candidates < 1:
             raise ValueError("n_candidates must be at least 1.")
-        if q > self.n_trust_regions * n_candidates:
-            raise ValueError("q exceeds the combined candidate pool.")
+        if max_per_region is not None and max_per_region < 1:
+            raise ValueError("max_per_region must be positive.")
+        capacity = min(n_candidates, max_per_region or n_candidates)
+        if q > self.n_trust_regions * capacity:
+            raise ValueError("q exceeds the combined region allocation capacity.")
 
         pools: list[Tensor] = []
         scores: list[Tensor] = []
@@ -167,17 +171,43 @@ class TuRBOMultiRegionState:
         candidates = torch.cat(pools, dim=0)
         sample_scores = torch.cat(scores, dim=1)
         identifiers = torch.cat(region_ids)
-        selected: list[Tensor] = []
+        selected: list[int] = []
+        counts = torch.zeros(self.n_trust_regions, dtype=torch.long, device=candidates.device)
         available = torch.ones(candidates.shape[0], dtype=torch.bool, device=candidates.device)
         for sample_index in range(q):
+            if max_per_region is not None:
+                available &= counts[identifiers] < max_per_region
             ranked = sample_scores[sample_index].masked_fill(~available, float("-inf"))
             if not torch.isfinite(ranked).any():
                 raise ValueError("no finite posterior sample remains for selection.")
             winner = int(torch.argmax(ranked).item())
             selected.append(winner)
+            counts[int(identifiers[winner].item())] += 1
             available[winner] = False
         chosen = torch.tensor(selected, dtype=torch.long, device=candidates.device)
         return candidates[chosen], identifiers[chosen]
+
+    def propose_batch(
+        self,
+        *,
+        q: int,
+        n_candidates: int = 256,
+        seed: int | None = None,
+        max_per_region: int | None = None,
+    ) -> tuple[Tensor, Tensor, Tensor]:
+        """Propose q points and report the adaptive allocation to each region.
+
+        No fixed regional quotas are imposed unless max_per_region is supplied.
+        Returns candidates [q, d], origin IDs [q], and counts [m].
+        """
+        candidates, region_ids = self.thompson_sample(
+            q=q,
+            n_candidates=n_candidates,
+            seed=seed,
+            max_per_region=max_per_region,
+        )
+        counts = torch.bincount(region_ids, minlength=self.n_trust_regions)
+        return candidates, region_ids, counts
 
     def update_regions(
         self,
