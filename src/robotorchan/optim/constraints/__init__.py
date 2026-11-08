@@ -5,6 +5,7 @@ from robotorchan.optim.constraints.contracts import (
     LinearConstraint,
     NonlinearConstraint,
     NonlinearConstraintCallable,
+    NumericOnlyConstraint,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "LinearConstraint",
     "NonlinearConstraint",
     "NonlinearConstraintCallable",
+    "NumericOnlyConstraint",
 ]
