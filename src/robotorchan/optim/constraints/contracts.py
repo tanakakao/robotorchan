@@ -42,7 +42,8 @@ class CandidateConstraints:
     therefore require joint q-batch optimization; BoTorch does not support them
     for greedy sequential optimization. Nonlinear equality h(X) = 0 is not
     a native BoTorch constraint type. To impose a tolerance epsilon without
-    introducing a separate API, provide two nonlinear inequalities:
+    changing the backend API, the nonlinear_equality_constraints argument
+    converts each equality into two nonlinear inequalities:
     (lambda X: h(X) + epsilon, is_intrapoint) and
     (lambda X: epsilon - h(X), is_intrapoint). This enforces
     abs(h(X)) <= epsilon when the backend returns feasible candidates.
@@ -57,6 +58,8 @@ class CandidateConstraints:
     inequality_constraints: tuple[LinearConstraint, ...] = ()
     equality_constraints: tuple[LinearConstraint, ...] = ()
     nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] = ()
+    nonlinear_equality_constraints: tuple[NonlinearConstraint, ...] = ()
+    nonlinear_equality_tolerance: float = 1e-6
 
     def __post_init__(self) -> None:
         """Validate constraint structure without evaluating user callables."""
@@ -66,8 +69,23 @@ class CandidateConstraints:
         ):
             for constraint in constraints:
                 _validate_linear_constraint(constraint, name=name)
-        for constraint in self.nonlinear_inequality_constraints:
+        for constraint in (
+            *self.nonlinear_inequality_constraints,
+            *self.nonlinear_equality_constraints,
+        ):
             _validate_nonlinear_constraint(constraint)
+        tolerance = self.nonlinear_equality_tolerance
+        if not isfinite(tolerance) or tolerance < 0:
+            raise ValueError("nonlinear_equality_tolerance must be finite and non-negative.")
+        inequalities = list(self.nonlinear_inequality_constraints)
+        for function, is_intrapoint in self.nonlinear_equality_constraints:
+            inequalities.extend(
+                (
+                    (lambda x, fn=function, tol=tolerance: fn(x) + tol, is_intrapoint),
+                    (lambda x, fn=function, tol=tolerance: tol - fn(x), is_intrapoint),
+                )
+            )
+        object.__setattr__(self, "nonlinear_inequality_constraints", tuple(inequalities))
 
     @property
     def has_linear_constraints(self) -> bool:
@@ -152,12 +170,15 @@ def resolve_candidate_constraints(
     inequality_constraints: tuple[LinearConstraint, ...] | None = None,
     equality_constraints: tuple[LinearConstraint, ...] | None = None,
     nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+    nonlinear_equality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+    nonlinear_equality_tolerance: float = 1e-6,
 ) -> CandidateConstraints:
     """Normalize direct BoTorch-style arguments and the structured contract."""
     direct = (
         inequality_constraints,
         equality_constraints,
         nonlinear_inequality_constraints,
+        nonlinear_equality_constraints,
     )
     if constraints is not None and any(value is not None for value in direct):
         raise ValueError("Use either constraints or individual constraint arguments, not both.")
@@ -167,4 +188,6 @@ def resolve_candidate_constraints(
         inequality_constraints=tuple(inequality_constraints or ()),
         equality_constraints=tuple(equality_constraints or ()),
         nonlinear_inequality_constraints=tuple(nonlinear_inequality_constraints or ()),
+        nonlinear_equality_constraints=tuple(nonlinear_equality_constraints or ()),
+        nonlinear_equality_tolerance=nonlinear_equality_tolerance,
     )
