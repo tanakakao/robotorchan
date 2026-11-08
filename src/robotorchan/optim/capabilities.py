@@ -269,7 +269,15 @@ HYBRID_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 
 NSGA2_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    constraint_handling=ConstraintHandlingCapabilities(
+        linear_inequality=ConstraintHandling.FEASIBILITY_FIRST,
+        linear_equality=ConstraintHandling.PROJECTION,
+        nonlinear_inequality=ConstraintHandling.FEASIBILITY_FIRST,
+    ),
     continuous=True,
+    linear_inequality_constraints=True,
+    linear_equality_constraints=True,
+    nonlinear_inequality_constraints=True,
     requires_grad=False,
     q_batch=False,
     gpu=True,
@@ -278,10 +286,18 @@ NSGA2_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
 
 
 MIXED_NSGA2_OPTIMIZER_CAPABILITIES = OptimizerCapabilities(
+    constraint_handling=ConstraintHandlingCapabilities(
+        linear_inequality=ConstraintHandling.FEASIBILITY_FIRST,
+        linear_equality=ConstraintHandling.PROJECTION,
+        nonlinear_inequality=ConstraintHandling.FEASIBILITY_FIRST,
+    ),
     continuous=True,
     integer=True,
     categorical=True,
     mixed=True,
+    linear_inequality_constraints=True,
+    linear_equality_constraints=True,
+    nonlinear_inequality_constraints=True,
     requires_grad=False,
     q_batch=False,
     gpu=True,
