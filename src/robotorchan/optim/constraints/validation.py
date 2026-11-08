@@ -116,16 +116,16 @@ def validate_mixed_constraint_dimensions(
     constraints: CandidateConstraints,
     variable_space: MixedVariableSpace | None,
 ) -> None:
-    """Restrict mixed-space linear constraints to continuous coordinates."""
+    """Reject categorical coordinates in mixed-space linear constraints."""
     if variable_space is None:
         return
-    structured = set(variable_space.integer_dims) | set(variable_space.categorical_dims)
+    categorical = set(variable_space.categorical_dims)
     for indices, _, _ in (
         *constraints.inequality_constraints,
         *constraints.equality_constraints,
     ):
         dimensions = indices if indices.ndim == 1 else indices[:, 1]
-        if any(int(dim) in structured for dim in dimensions):
+        if any(int(dim) in categorical for dim in dimensions):
             raise ValueError(
-                "Mixed-variable linear constraints may reference continuous dimensions only."
+                "Mixed-variable linear constraints cannot reference categorical dimensions."
             )
