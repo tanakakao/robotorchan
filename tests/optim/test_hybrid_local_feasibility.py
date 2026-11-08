@@ -26,3 +26,20 @@ def test_hybrid_falls_back_to_feasible_global_result() -> None:
         candidate, value = optimize_acqf_hybrid(None, bounds, q=1, constraints=constraints)
     torch.testing.assert_close(candidate, torch.tensor([[0.75]], dtype=torch.double))
     torch.testing.assert_close(value, torch.tensor(0.0))
+
+
+def test_hybrid_preserves_better_feasible_global_result() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    with (
+        patch(
+            "robotorchan.optim.backends.hybrid.optimize_acqf_de",
+            return_value=(torch.tensor([[0.75]], dtype=torch.double), torch.tensor(2.0)),
+        ),
+        patch(
+            "robotorchan.optim.backends.hybrid.optimize_acqf_botorch",
+            return_value=(torch.tensor([[0.50]], dtype=torch.double), torch.tensor(1.0)),
+        ),
+    ):
+        candidate, value = optimize_acqf_hybrid(None, bounds, q=1)
+    torch.testing.assert_close(candidate, torch.tensor([[0.75]], dtype=torch.double))
+    torch.testing.assert_close(value, torch.tensor(2.0))
