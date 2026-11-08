@@ -216,6 +216,8 @@ def optimize_acqf_hybrid(
         ).all()
     ):
         return global_candidate, global_value
+    if bool(global_value.reshape(-1).max() > local_value.reshape(-1).max()):
+        return global_candidate, global_value
     return local_candidate, local_value
 
 
