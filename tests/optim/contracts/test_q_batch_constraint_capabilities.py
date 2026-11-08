@@ -22,8 +22,13 @@ def test_torch_linear_constraints_supported(q: int) -> None:
         inequality_constraints=((torch.tensor([0]), torch.tensor([1.0], dtype=torch.double), 0.2),),
     )
     candidates, value = optimize_acqf(
-        _JointAcquisition(), bounds, q=q, optimizer="torch_adam",
-        constraints=constraints, num_restarts=2, raw_samples=16,
+        _JointAcquisition(),
+        bounds,
+        q=q,
+        optimizer="torch_adam",
+        constraints=constraints,
+        num_restarts=2,
+        raw_samples=16,
         optimizer_options={"constraint_mode": "penalty"},
         options={"maxiter": 10},
     )
