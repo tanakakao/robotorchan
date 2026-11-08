@@ -42,7 +42,8 @@ class CandidateConstraints:
     therefore require joint q-batch optimization; BoTorch does not support them
     for greedy sequential optimization. Nonlinear equality h(X) = 0 is not
     a native BoTorch constraint type. To impose a tolerance epsilon without
-    introducing a separate API, provide two nonlinear inequalities:
+    changing the backend API, the nonlinear_equality_constraints argument
+    converts each equality into two nonlinear inequalities:
     (lambda X: h(X) + epsilon, is_intrapoint) and
     (lambda X: epsilon - h(X), is_intrapoint). This enforces
     abs(h(X)) <= epsilon when the backend returns feasible candidates.
