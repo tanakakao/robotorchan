@@ -111,6 +111,7 @@ def test_benchmark_rejects_infeasible_ga_result() -> None:
             seed=11,
         )
 
+
 def test_benchmark_result_records_are_serialization_friendly() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     results = benchmark_optimizers(
