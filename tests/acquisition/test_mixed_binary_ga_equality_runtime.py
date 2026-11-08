@@ -35,16 +35,17 @@ def test_mixed_binary_mixed_ga_categorical_equality() -> None:
         ),
     )
 
-    candidates, value = optimize_acqf_mixed_ga(
-        acquisition,
-        bounds,
-        q=1,
-        categorical_values={1: [0.0, 1.0]},
-        constraints=constraints,
-        population_size=16,
-        generations=3,
-        seed=7,
-    )
+    with pytest.raises(ValueError, match="categorical dimensions"):
+        optimize_acqf_mixed_ga(
+            acquisition,
+            bounds,
+            q=1,
+            categorical_values={1: [0.0, 1.0]},
+            constraints=constraints,
+            population_size=16,
+            generations=3,
+            seed=7,
+        )
 
     assert candidates.shape == torch.Size([1, 2])
     assert torch.isfinite(candidates).all()
