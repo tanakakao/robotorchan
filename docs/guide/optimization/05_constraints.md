@@ -16,6 +16,10 @@
   契約：同形式のtuple
   可行条件とshape：線形式が`rhs`と等しい。数値許容誤差に注意
 
+- **nonlinear equality**
+  契約：`(callable, is_intrapoint)` と `nonlinear_equality_tolerance`
+  可行条件：`abs(h(X)) <= epsilon`。内部で2つの非線形不等式へ変換
+
 - **nonlinear inequality**
   契約：`(callable, is_intrapoint)`
   可行条件とshape：callableが返す**scalar Tensor >= 0**
@@ -111,5 +115,19 @@ gradient backendでは微分可能性が必要となる。BoTorch nativeは非�
 `CandidateConstraints`はimmutableなデータ表現であり、探索更新は行いません。BoTorchのnative制約へ委譲する経路と、
 ローカルの違反量で順位付けする経路を同じhard-feasibility保証として扱わないことが重要です。
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/38_nonlinear_candidate_constraints.ipynb)を参照し
-てください。
+## 実行例とGuideの対応
+
+このGuideは制約の数学的意味とbackendへの委譲・制限を説明します。実行可能なコード、
+候補の確認、可視化は既存Notebookに集約しています。
+
+| 確認したい内容 | Notebook | 対応する節 |
+| --- | --- | --- |
+| 線形制約・固定変数・候補間制約とjoint q-batch | [31_acquisition_optimization](../../../examples/notebooks/31_acquisition_optimization.ipynb) | 5〜8 |
+| 非線形不等式・実行可能領域の可視化 | [38_nonlinear_candidate_constraints](../../../examples/notebooks/38_nonlinear_candidate_constraints.ipynb) | 3〜4 |
+| 非線形等式・許容誤差内の候補提案 | [38_nonlinear_candidate_constraints](../../../examples/notebooks/38_nonlinear_candidate_constraints.ipynb) | 4a |
+| 非線形候補間制約とjoint q-batch | [38_nonlinear_candidate_constraints](../../../examples/notebooks/38_nonlinear_candidate_constraints.ipynb) | 5〜6 |
+
+Mixed変数を含む候補間制約はbackendごとに対応が異なります。Mixed GA / DEには
+公開dispatcherを経由するq-batch制約テストがありますが、Mixed Hybridのq>1における
+候補間線形制約はローカル段階で維持できないため明示的に拒否します。
+対応状況をすべてのoptimizerへ一般化せず、利用するbackendの制限を確認してください。
