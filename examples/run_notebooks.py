@@ -66,6 +66,7 @@ EXCLUDED_NOTEBOOKS = [
     "23_high_dimensional_bo_benchmark.ipynb",
     "24_expressive_surrogate_gp.ipynb",
     "25_non_gp_surrogates.ipynb",
+    "turbo_multi_benchmark.ipynb",
 ]
 
 
