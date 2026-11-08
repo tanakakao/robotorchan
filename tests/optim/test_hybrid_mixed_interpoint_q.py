@@ -21,11 +21,13 @@ def test_mixed_hybrid_rejects_interpoint_linear_q_batch() -> None:
     bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
     space = MixedVariableSpace(bounds, categorical_values={1: (0.0, 1.0)})
     constraints = CandidateConstraints(
-        equality_constraints=((
-            torch.tensor([[0, 0], [1, 0]]),
-            torch.tensor([1.0, -1.0], dtype=torch.double),
-            0.0,
-        ),)
+        equality_constraints=(
+            (
+                torch.tensor([[0, 0], [1, 0]]),
+                torch.tensor([1.0, -1.0], dtype=torch.double),
+                0.0,
+            ),
+        )
     )
     with pytest.raises(ValueError, match="cannot preserve inter-point linear"):
         optimize_acqf_hybrid(
