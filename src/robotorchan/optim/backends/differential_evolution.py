@@ -21,7 +21,10 @@ from robotorchan.optim.constraints.contracts import (
     resolve_candidate_constraints,
 )
 from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
-from robotorchan.optim.constraints.validation import validate_candidate_constraints
+from robotorchan.optim.constraints.validation import (
+    validate_candidate_constraints,
+    validate_mixed_constraint_dimensions,
+)
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 
@@ -77,6 +80,12 @@ def optimize_acqf_de(
         nonlinear_equality_tolerance=nonlinear_equality_tolerance,
     )
     validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
+    validate_mixed_constraint_dimensions(
+        candidate_constraints,
+        variable_space if variable_space is not None else MixedVariableSpace(
+            bounds, integer_dims=integer_dims, categorical_values=categorical_values
+        ) if "integer_dims" in locals() and "categorical_values" in locals() else None,
+    )
     search_bounds = bounds.clone()
     for dim, values in categorical_values.items():
         search_bounds[0, dim] = 0
