@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
+import math
 
 import torch
 from torch import Tensor
 
 from robotorchan.optim.trust_region.turbo import (
     TuRBOState,
+    generate_turbo_restart_center,
     generate_turbo_thompson_choices,
     turbo_trust_region_bounds,
 )
@@ -39,8 +41,7 @@ class TuRBORegion:
 class TuRBOMultiRegionState:
     """Manage region-local data without implementing cross-region selection.
 
-    Candidate generation, observation attribution and restart policy are
-    introduced in subsequent TuRBO-m phases.
+    Region-local observations, state updates and restarts are managed here.
     """
 
     def __init__(
@@ -177,3 +178,111 @@ class TuRBOMultiRegionState:
             available[winner] = False
         chosen = torch.tensor(selected, dtype=torch.long, device=candidates.device)
         return candidates[chosen], identifiers[chosen]
+
+
+    def update_regions(
+        self,
+        X: Tensor,
+        Y: Tensor,
+        region_ids: Tensor,
+        *,
+        relative_improvement: float = 1e-3,
+    ) -> None:
+        """Attribute completed observations and update each participating region.
+
+        Success counts once per evaluated regional batch; failure counts the
+        number of evaluated points assigned to that region.
+        """
+        if X.ndim != 2 or X.shape[1] != self.bounds.shape[1]:
+            raise ValueError("X must have shape [q, d].")
+        if Y.shape != (X.shape[0], 1):
+            raise ValueError("Y must have shape [q, 1].")
+        if region_ids.shape != (X.shape[0],):
+            raise ValueError("region_ids must have shape [q].")
+        if X.shape[0] == 0:
+            raise ValueError("at least one observation is required.")
+        if region_ids.dtype not in (torch.int32, torch.int64):
+            raise ValueError("region_ids must be integer indices.")
+        if torch.any(region_ids < 0) or torch.any(region_ids >= self.n_trust_regions):
+            raise ValueError("region_ids contain an invalid region.")
+        if not math.isfinite(relative_improvement) or relative_improvement < 0:
+            raise ValueError("relative_improvement must be finite and non-negative.")
+        # Validate the full batch before mutating any region.
+        if not torch.isfinite(X).all() or not torch.isfinite(Y).all():
+            raise ValueError("observations must be finite.")
+        if torch.any(self.bounds[0] > X) or torch.any(self.bounds[1] < X):
+            raise ValueError("observations must lie inside bounds.")
+
+        for index, region in enumerate(self.regions):
+            mask = region_ids == index
+            if not mask.any():
+                continue
+            local_X, local_Y = X[mask], Y[mask]
+            if region.state.restart_triggered:
+                raise ValueError(f"region {index} requires restart before updating.")
+            previous_best = region.state.best_value
+            best_index = int(local_Y.argmax().item())
+            candidate_best = float(local_Y[best_index].item())
+            threshold = relative_improvement * max(1.0, abs(previous_best))
+            success = not math.isfinite(previous_best) or (
+                candidate_best > previous_best + threshold
+            )
+            successes = region.state.success_counter + 1 if success else 0
+            failures = 0 if success else region.state.failure_counter + local_Y.shape[0]
+            length = region.state.length
+            if successes >= region.state.success_tolerance:
+                length = min(2.0 * length, region.state.length_max)
+                successes = 0
+            elif failures >= region.state.failure_tolerance:
+                length /= 2.0
+                failures = 0
+            self.append_observations(index, local_X, local_Y)
+            if candidate_best > previous_best:
+                region.center = local_X[best_index].to(self.bounds).detach().clone()
+            region.state = replace(
+                region.state,
+                length=length,
+                success_counter=successes,
+                failure_counter=failures,
+                best_value=max(previous_best, candidate_best),
+                observed_best_value=max(region.state.observed_best_value, candidate_best),
+                restart_triggered=length < region.state.length_min,
+            )
+
+    def restart_region(
+        self,
+        region_id: int,
+        *,
+        center: Tensor | None = None,
+        seed: int | None = None,
+        length: float = 0.8,
+    ) -> None:
+        """Restart only one exhausted region while retaining its observation history."""
+        region = self.region(region_id)
+        if not region.state.restart_triggered:
+            raise ValueError("region must have restart_triggered=True.")
+        if not math.isfinite(length) or not (
+            region.state.length_min <= length <= region.state.length_max
+        ):
+            raise ValueError("restart length must be within state length bounds.")
+        if center is None:
+            center = generate_turbo_restart_center(self.bounds, seed=seed)
+        if center.shape != region.center.shape or not torch.isfinite(center).all():
+            raise ValueError("restart center must be finite with shape [d].")
+        if torch.any(self.bounds[0] > center) or torch.any(self.bounds[1] < center):
+            raise ValueError("restart center must lie inside bounds.")
+        region.center = center.to(self.bounds).detach().clone()
+        region.state = replace(
+            region.state,
+            length=length,
+            success_counter=0,
+            failure_counter=0,
+            best_value=float("-inf"),
+            observed_best_value=float("-inf"),
+            restart_triggered=False,
+            restart_count=region.state.restart_count + 1,
+        )
+        region.train_X = self.bounds.new_empty((0, self.bounds.shape[1]))
+        region.train_Y = self.bounds.new_empty((0, 1))
+        region.model = None
+        region.dimension_weights = None
