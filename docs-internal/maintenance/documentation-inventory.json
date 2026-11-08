@@ -7192,6 +7192,11 @@
       "path": "docs/optimization/constraint-support-matrix.md",
       "category": "Guide",
       "reason": "Optimizer別の候補制約対応状況を一覧化した利用者向け参照表。"
+    },
+    {
+      "path": "docs/optimization/turbo-m.md",
+      "category": "Guide",
+      "reason": "TuRBO-m公開API、Notebook導線、制限事項をまとめた利用者向け文書。"
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
