@@ -94,6 +94,46 @@ def test_torch_backend_linear_constraint_modes() -> None:
     torch.testing.assert_close(value.reshape(()), torch.tensor(-0.0625, dtype=torch.double))
 
 
+def test_torch_backend_linear_equality_modes() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        equality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.5),)
+    )
+    candidate = torch.tensor([[0.25]], dtype=torch.double)
+    with (
+        patch(
+            "robotorchan.optim.backends.torch.botorch_optimize_acqf",
+            return_value=(candidate, torch.tensor(-0.0625, dtype=torch.double)),
+        ) as mocked,
+        torch.no_grad(),
+    ):
+        try:
+            optimize_acqf_torch(
+                _DummyAcquisition(),
+                bounds,
+                q=1,
+                num_restarts=2,
+                raw_samples=8,
+                constraints=constraints,
+            )
+        except ValueError as error:
+            assert "no feasible candidate" in str(error)
+        else:
+            raise AssertionError("Strict mode must reject infeasible equalities.")
+        returned, value = optimize_acqf_torch(
+            _DummyAcquisition(),
+            bounds,
+            q=1,
+            num_restarts=2,
+            raw_samples=8,
+            constraints=constraints,
+            constraint_mode="penalty",
+        )
+    assert mocked.call_args.kwargs["acq_function"] is not None
+    torch.testing.assert_close(returned, candidate)
+    torch.testing.assert_close(value.reshape(()), torch.tensor(-0.0625, dtype=torch.double))
+
+
 def test_torch_backend_rejects_unknown_optimizer_name() -> None:
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     try:

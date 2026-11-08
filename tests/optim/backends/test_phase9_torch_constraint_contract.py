@@ -20,20 +20,16 @@ class QuadraticAcquisition(AcquisitionFunction):
 
 
 @pytest.mark.parametrize("optimizer", ["adam", "adamw", "sgd"])
-@pytest.mark.parametrize("kind", ["equality", "nonlinear"])
+@pytest.mark.parametrize("kind", ["nonlinear"])
 def test_torch_optimizer_explicitly_rejects_unsupported_candidate_constraints(
     optimizer: str, kind: str
 ) -> None:
     """Do not silently ignore candidate constraints during gradient search."""
-    linear = (torch.tensor([0]), torch.tensor([1.0]), 0.2)
-    if kind == "equality":
-        constraints = CandidateConstraints(equality_constraints=(linear,))
-    else:
-        constraints = CandidateConstraints(
-            nonlinear_inequality_constraints=((lambda x: x[0] - 0.2, True),)
-        )
+    constraints = CandidateConstraints(
+        nonlinear_inequality_constraints=((lambda x: x[0] - 0.2, True),)
+    )
 
-    with pytest.raises(NotImplementedError, match="linear inequalities only"):
+    with pytest.raises(NotImplementedError, match="do not support nonlinear constraints"):
         optimize_acqf_torch(
             QuadraticAcquisition(),
             torch.tensor([[0.0], [1.0]], dtype=torch.float64),
