@@ -91,7 +91,7 @@ def test_torch_backend_linear_constraint_modes() -> None:
             constraint_mode="penalty",
         )
     torch.testing.assert_close(returned, candidate)
-    torch.testing.assert_close(value.reshape(()), torch.tensor(-0.0625))
+    torch.testing.assert_close(value.reshape(()), torch.tensor(-0.0625, dtype=torch.double))
 
 
 def test_torch_backend_rejects_unknown_optimizer_name() -> None:
