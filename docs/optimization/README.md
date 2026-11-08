@@ -19,6 +19,7 @@ surrogate model とは独立した candidate search / optimization の利用者�
 - [TuRBO](turbo.md): stateful trust-region strategy の詳細
 - [Optimizer architecture](../../docs-internal/architecture/optimization/optimizer-architecture.md): search strategy、backend、dispatch の責務境界
 - [Public optimizer API](public-optimizer-api.md): named backend と structured variable space の利用方法
+- [Candidate constraint support matrix](constraint-support-matrix.md): optimizer別の線形・非線形・Mixed・q-batch対応表
 - [Constraint handling metadata](../../docs-internal/contracts/optimization/constraint-handling-metadata.md): backend ごとの制約処理 semantics
 - [Candidate constraints](candidate-constraints.md): backend別の制約適用方式と実行可能性の注意点
 - [Capability runtime contract](../../docs-internal/contracts/optimization/capability-runtime-contract.md): optimizer capability registryとdispatch検証

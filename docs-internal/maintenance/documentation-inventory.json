@@ -7187,6 +7187,11 @@
       "path": "docs-internal/q-batch-phase1-inventory.md",
       "category": "Engineering",
       "reason": "Static q-batch acquisition and optimizer inventory with explicit verification limits."
+    },
+    {
+      "path": "docs/optimization/constraint-support-matrix.md",
+      "category": "Guide",
+      "reason": "Optimizer別の候補制約対応状況を一覧化した利用者向け参照表。"
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
