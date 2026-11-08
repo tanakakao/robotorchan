@@ -120,6 +120,8 @@ def optimize_acqf_hybrid(
             "equality_constraints",
             "inequality_constraints",
             "nonlinear_inequality_constraints",
+            "nonlinear_equality_constraints",
+            "nonlinear_equality_tolerance",
         )
     ):
         raise ValueError(
