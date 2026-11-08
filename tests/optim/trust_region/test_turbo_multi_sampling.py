@@ -47,9 +47,7 @@ def test_batch_allocation_tracks_winners_and_respects_region_capacity():
     manager = TuRBOMultiRegionState(bounds, torch.tensor([[0.2], [0.8]]))
     manager.set_model(0, _Model(2.0))
     manager.set_model(1, _Model(1.0))
-    X, region_ids, counts = manager.propose_batch(
-        q=4, n_candidates=4, max_per_region=2, seed=123
-    )
+    X, region_ids, counts = manager.propose_batch(q=4, n_candidates=4, max_per_region=2, seed=123)
     assert X.shape == (4, 1)
     assert region_ids.tolist() == [0, 0, 1, 1]
     assert counts.tolist() == [2, 2]
