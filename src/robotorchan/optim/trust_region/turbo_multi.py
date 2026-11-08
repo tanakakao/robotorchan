@@ -8,7 +8,11 @@ from typing import Any
 import torch
 from torch import Tensor
 
-from robotorchan.optim.trust_region.turbo import TuRBOState, turbo_trust_region_bounds
+from robotorchan.optim.trust_region.turbo import (
+    TuRBOState,
+    generate_turbo_thompson_choices,
+    turbo_trust_region_bounds,
+)
 
 
 @dataclass
@@ -116,3 +120,60 @@ class TuRBOMultiRegionState:
         region.train_Y = torch.cat((previous_Y, new_Y))
         region.history_X = torch.cat((region.history_X, new_X))
         region.history_Y = torch.cat((region.history_Y, new_Y))
+
+    def thompson_sample(
+        self,
+        *,
+        q: int,
+        n_candidates: int = 256,
+        seed: int | None = None,
+    ) -> tuple[Tensor, Tensor]:
+        """Select a global batch across regions using independent posterior draws.
+
+        Returns candidate points [q, d] and their region indices [q].
+        Region-local fitted, single-output models must be registered first.
+        """
+        if q < 1:
+            raise ValueError("q must be at least 1.")
+        if n_candidates < 1:
+            raise ValueError("n_candidates must be at least 1.")
+        if q > self.n_trust_regions * n_candidates:
+            raise ValueError("q exceeds the combined candidate pool.")
+
+        pools: list[Tensor] = []
+        scores: list[Tensor] = []
+        region_ids: list[Tensor] = []
+        for index, region in enumerate(self.regions):
+            if region.model is None:
+                raise ValueError(f"region {index} has no fitted model.")
+            choices = generate_turbo_thompson_choices(
+                region.center,
+                self.trust_region_bounds(index),
+                n_candidates=n_candidates,
+                seed=None if seed is None else seed + index,
+            )
+            with torch.no_grad():
+                posterior = region.model.posterior(choices)
+                samples = posterior.rsample(sample_shape=torch.Size([q]))
+            if samples.shape != (q, n_candidates, 1):
+                raise ValueError("region posterior samples must have shape [q, n, 1].")
+            pools.append(choices)
+            scores.append(samples.squeeze(-1))
+            region_ids.append(
+                torch.full((n_candidates,), index, dtype=torch.long, device=choices.device)
+            )
+
+        candidates = torch.cat(pools, dim=0)
+        sample_scores = torch.cat(scores, dim=1)
+        identifiers = torch.cat(region_ids)
+        selected: list[Tensor] = []
+        available = torch.ones(candidates.shape[0], dtype=torch.bool, device=candidates.device)
+        for sample_index in range(q):
+            ranked = sample_scores[sample_index].masked_fill(~available, float("-inf"))
+            if not torch.isfinite(ranked).any():
+                raise ValueError("no finite posterior sample remains for selection.")
+            winner = int(torch.argmax(ranked).item())
+            selected.append(winner)
+            available[winner] = False
+        chosen = torch.tensor(selected, dtype=torch.long, device=candidates.device)
+        return candidates[chosen], identifiers[chosen]
