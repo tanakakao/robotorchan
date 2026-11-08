@@ -88,3 +88,37 @@ def test_hybrid_joint_q_batch_contract(q: int) -> None:
         rtol=1e-7,
         atol=1e-7,
     )
+
+
+def test_hybrid_joint_q_batch_interpoint_linear_constraint_e2e() -> None:
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    acquisition = _JointAcquisition()
+    constraint = (
+        torch.tensor([[0, 0], [1, 0]]),
+        torch.tensor([1.0, 1.0], dtype=torch.double),
+        1.2,
+    )
+
+    def global_optimizer(acq_function, bounds, q, **kwargs):
+        candidate = torch.tensor([[0.6], [0.7]], dtype=bounds.dtype)
+        return candidate, acq_function(candidate.unsqueeze(0)).reshape(())
+
+    candidates, value = optimize_acqf(
+        acquisition,
+        bounds,
+        q=2,
+        optimizer="hybrid",
+        inequality_constraints=(constraint,),
+        optimizer_options={
+            "global_optimizer": global_optimizer,
+            "local_options": {"maxiter": 20},
+        },
+    )
+    assert candidates.shape == (2, 1)
+    assert float(candidates.sum()) >= 1.2 - 1e-7
+    torch.testing.assert_close(
+        value.reshape(()),
+        acquisition(candidates.unsqueeze(0)).reshape(()),
+        rtol=1e-6,
+        atol=1e-6,
+    )
