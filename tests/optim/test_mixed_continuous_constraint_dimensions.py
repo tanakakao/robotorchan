@@ -14,12 +14,11 @@ def test_reject_categorical_linear_constraint_dimensions() -> None:
         integer_dims=(1,),
         categorical_values={2: (0.0, 1.0, 2.0)},
     )
-    for dim in (2,):
-        constraint = (torch.tensor([dim]), torch.tensor([1.0]), 0.5)
-        with pytest.raises(ValueError, match="categorical dimensions"):
-            validate_mixed_constraint_dimensions(
-                CandidateConstraints(inequality_constraints=(constraint,)), space
-            )
+    constraint = (torch.tensor([2]), torch.tensor([1.0]), 0.5)
+    with pytest.raises(ValueError, match="categorical dimensions"):
+        validate_mixed_constraint_dimensions(
+            CandidateConstraints(inequality_constraints=(constraint,)), space
+        )
 
 
 def test_accept_numeric_interpoint_linear_constraint() -> None:
