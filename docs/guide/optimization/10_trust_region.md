@@ -108,3 +108,51 @@ restartは通常の観測追加とは別の状態遷移として扱う。詳細�
 状態遷移・幾何・pool生成はローカル実装であり、GP fittingの内部ではありません。勾配による候補生成を選んだときの数値探索は、指定されたbackendが担当します。
 
 使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/34_turbo_trust_region.ipynb)を参照してください。
+
+
+## TuRBO-m：理論から実装への対応
+
+[Trust Regionの理論](../../theory/optimization/10_trust_region.md)の
+「TuRBO-m：複数の局所探索領域」節で説明した領域集合と候補競争は、
+`src/robotorchan/optim/trust_region/turbo_multi.py`の
+`TuRBOMultiRegionState`で実現する。
+
+| 理論上の概念 | 実装要素 | 注意点 |
+| --- | --- | --- |
+| 領域ごとの中心・局所観測集合 | `TuRBORegion.center`、`train_X`、`train_Y` | 各領域で独立に保持 |
+| 領域別の局所GP | `TuRBORegion.model`、`set_model` | モデルの生成・fitは呼び出し側の責務 |
+| 領域ごとの局所境界 | `trust_region_bounds(region_id)` | `turbo_trust_region_bounds`を再利用 |
+| 局所候補集合 | `generate_turbo_thompson_choices` | 領域ごとのSobol候補pool |
+| 事後サンプルによる領域間競争 | `thompson_sample(q=...)` | 全領域の候補を比較し、重複行を選択しない |
+| 動的な候補数割当 | `propose_batch(q=...)` | `region_ids`と領域別`counts`を返す |
+| 観測の領域帰属 | `update_regions(X, Y, region_ids)` | 候補生成時のIDを評価完了後も保持 |
+| 独立した領域の再始動 | `restart_region(region_id)` | 他領域を変更せず、局所モデルと学習集合をリセット |
+
+### 状態遷移の意味
+
+TuRBO-1の`update_turbo_state`は1回の完了バッチに対して
+成功・失敗を1回判定する。一方、現行TuRBO-mの
+`update_regions`は、領域ごとの割当数が異なる場合を扱うため、
+成功はその領域の完了バッチにつき1回、失敗は帰属観測点数に応じて
+カウントする。**同一の状態遷移規則ではない**ことに注意する。
+`failure_tolerance`の解釈を含め、直接比較時にはこの差を明記する。
+
+`restart_region`では局所`best_value`と`observed_best_value`を
+初期化し、`history_X`・`history_Y`を残す。
+これはTuRBO-1の`restart_turbo_state`が最良値を保持する仕様とは
+異なる。履歴に含まれる全体最良値と、再始動した局所領域の
+成功判定基準を区別するためである。
+
+### モデル学習との接続
+
+`TuRBOMultiRegionState`はGPのfitを自動実行しない。
+呼び出し側は各領域の`train_X`・`train_Y`を使って
+BoTorchの`SingleTaskGP`をfitし、`set_model`へ登録する。
+次に`propose_batch`で候補と`region_ids`を取得し、
+目的関数の評価後に`update_regions`へ渡す。
+Restartした領域には初期観測値を用意してGPを再構築する。
+
+学習と評価を含む実行例は
+[Notebook](../../../examples/notebooks/turbo_multi_benchmark.ipynb)に集約した。
+公開APIの使い方と制約は
+[TuRBO-m利用ドキュメント](../../optimization/turbo-m.md)を参照する。
