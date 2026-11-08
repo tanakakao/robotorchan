@@ -447,16 +447,18 @@ def _resolve_nsga2_constraints(
     if any(not intrapoint for _, intrapoint in resolved.nonlinear_inequality_constraints):
         raise NotImplementedError("NSGA-II supports intra-point nonlinear constraints only.")
     if variable_space is not None:
-        discrete = set(variable_space.integer_dims) | set(variable_space.categorical_dims)
-        for indices, _, _ in (
-            *resolved.inequality_constraints,
-            *resolved.equality_constraints,
-        ):
+        categorical = set(variable_space.categorical_dims)
+        integer = set(variable_space.integer_dims)
+        for indices, _, _ in resolved.inequality_constraints:
             dimensions = indices if indices.ndim == 1 else indices[:, 1]
-            if any(int(dim) in discrete for dim in dimensions):
+            if any(int(dim) in categorical for dim in dimensions):
                 raise ValueError(
-                    "Mixed NSGA-II constraints may reference continuous dimensions only."
+                    "Mixed NSGA-II linear constraints cannot reference categorical dimensions."
                 )
+        for indices, _, _ in resolved.equality_constraints:
+            dimensions = indices if indices.ndim == 1 else indices[:, 1]
+            if any(int(dim) in categorical | integer for dim in dimensions):
+                raise ValueError("Mixed NSGA-II linear equalities require continuous dimensions.")
     return resolved
 
 
