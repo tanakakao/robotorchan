@@ -179,7 +179,6 @@ class TuRBOMultiRegionState:
         chosen = torch.tensor(selected, dtype=torch.long, device=candidates.device)
         return candidates[chosen], identifiers[chosen]
 
-
     def update_regions(
         self,
         X: Tensor,
