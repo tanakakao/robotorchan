@@ -182,7 +182,7 @@ def optimize_acqf_hybrid(
         resolved_fixed_features_list = _merge_fixed_features_list(
             mixed_fixed_features_list or [], fixed_features
         )
-        return optimize_acqf_mixed_botorch(
+        local_candidate, local_value = optimize_acqf_mixed_botorch(
             acq_function=acq_function,
             bounds=bounds,
             q=q,
@@ -196,7 +196,8 @@ def optimize_acqf_hybrid(
             ),
         )
 
-    return optimize_acqf_botorch(
+    else:
+        local_candidate, local_value = optimize_acqf_botorch(
         acq_function=acq_function,
         bounds=bounds,
         q=q,
@@ -207,6 +208,17 @@ def optimize_acqf_hybrid(
         fixed_features=fixed_features,
         batch_initial_conditions=initial_conditions,
     )
+
+    if candidate_constraints.has_constraints and not bool(
+        candidate_is_feasible(
+            local_candidate.unsqueeze(0),
+            candidate_constraints,
+        ).all()
+    ):
+        raise ValueError(
+            "Hybrid local optimizer returned a candidate that violates candidate constraints."
+        )
+    return local_candidate, local_value
 
 
 def _resolve_global_optimizer(
