@@ -96,9 +96,7 @@ def _evaluate(objective: VectorObjective, population: Tensor) -> Tensor:
     return values
 
 
-def _rank_and_crowding(
-    values: Tensor, violations: Tensor | None = None
-) -> tuple[Tensor, Tensor]:
+def _rank_and_crowding(values: Tensor, violations: Tensor | None = None) -> tuple[Tensor, Tensor]:
     n = values.shape[0]
     dominates = torch.zeros((n, n), dtype=torch.bool, device=values.device)
     for i in range(n):
