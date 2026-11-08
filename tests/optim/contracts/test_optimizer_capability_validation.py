@@ -24,10 +24,10 @@ def test_public_optimizer_names_have_capabilities() -> None:
         assert get_optimizer_capabilities(name).continuous
 
 
-def test_torch_dispatch_rejects_constraints_from_capabilities() -> None:
+def test_torch_dispatch_rejects_unsupported_equalities_from_capabilities() -> None:
     bounds = torch.tensor([[0.0], [1.0]])
     constraints = CandidateConstraints(
-        inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.2),)
+        equality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.2),)
     )
     try:
         optimize_acqf(
@@ -38,7 +38,7 @@ def test_torch_dispatch_rejects_constraints_from_capabilities() -> None:
             constraints=constraints,
         )
     except NotImplementedError as exc:
-        assert "linear inequalities" in str(exc)
+        assert "linear equalities" in str(exc)
     else:
         raise AssertionError("Unsupported constraints should fail before backend execution.")
 
