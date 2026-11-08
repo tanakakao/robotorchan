@@ -76,9 +76,9 @@ def optimize_acqf_pso(
     validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
     validate_mixed_constraint_dimensions(
         candidate_constraints,
-        variable_space if variable_space is not None else MixedVariableSpace(
+        variable_space or MixedVariableSpace(
             bounds, integer_dims=integer_dims, categorical_values=categorical_values
-        ) if "integer_dims" in locals() and "categorical_values" in locals() else None,
+        ),
     )
     generator = make_generator(bounds, seed)
 
