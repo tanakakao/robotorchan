@@ -39,6 +39,8 @@ def optimize_acqf_botorch(
     inequality_constraints: tuple[LinearConstraint, ...] | None = None,
     equality_constraints: tuple[LinearConstraint, ...] | None = None,
     nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+    nonlinear_equality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+    nonlinear_equality_tolerance: float = 1e-6,
     fixed_features: dict[int, float] | None = None,
     batch_initial_conditions: Tensor | None = None,
     sequential: bool = False,
@@ -51,6 +53,8 @@ def optimize_acqf_botorch(
         inequality_constraints=inequality_constraints,
         equality_constraints=equality_constraints,
         nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+        nonlinear_equality_constraints=nonlinear_equality_constraints,
+        nonlinear_equality_tolerance=nonlinear_equality_tolerance,
     )
     validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q, sequential=sequential)
     resolved_options = _options_for_nonlinear_constraints(
@@ -98,6 +102,8 @@ def optimize_acqf_mixed_botorch(
     inequality_constraints: tuple[LinearConstraint, ...] | None = None,
     equality_constraints: tuple[LinearConstraint, ...] | None = None,
     nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+    nonlinear_equality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+    nonlinear_equality_tolerance: float = 1e-6,
     batch_initial_conditions: Tensor | None = None,
     ic_generator: TGenInitialConditions | None = None,
     ic_gen_kwargs: dict[str, Any] | None = None,
@@ -108,6 +114,8 @@ def optimize_acqf_mixed_botorch(
         inequality_constraints=inequality_constraints,
         equality_constraints=equality_constraints,
         nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+        nonlinear_equality_constraints=nonlinear_equality_constraints,
+        nonlinear_equality_tolerance=nonlinear_equality_tolerance,
     )
     validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
     if any(
