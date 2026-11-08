@@ -132,7 +132,10 @@ def validate_mixed_constraint_dimensions(
                     "Mixed nonlinear constraints require NumericOnlyConstraint "
                     "to exclude categorical dimensions."
                 )
-            if any(dim >= variable_space.input_dim or dim in categorical for dim in function.dimensions):
+            if any(
+                dim >= variable_space.input_dim or dim in categorical
+                for dim in function.dimensions
+            ):
                 raise ValueError(
                     "NumericOnlyConstraint dimensions must exclude categorical dimensions."
                 )
