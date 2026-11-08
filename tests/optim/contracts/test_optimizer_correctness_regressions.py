@@ -1,5 +1,6 @@
 """Cross-cutting optimizer correctness regressions found by E2E review."""
 
+import pytest
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
