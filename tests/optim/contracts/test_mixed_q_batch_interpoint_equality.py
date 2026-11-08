@@ -33,14 +33,26 @@ def test_mixed_ga_interpoint_equality_contract(q: int) -> None:
             ),
         ),
     )
-    with pytest.raises(ValueError, match="continuous dimensions only"):
-        optimize_acqf(
-            _JointAcquisition(),
-            bounds,
-            q=q,
-            optimizer="ga",
-            variable_space=space,
-            constraints=constraints,
-            optimizer_options={"population_size": 100, "generations": 30},
-            seed=23,
-        )
+    acquisition = _JointAcquisition()
+    candidates, value = optimize_acqf(
+        acquisition,
+        bounds,
+        q=q,
+        optimizer="ga",
+        variable_space=space,
+        constraints=constraints,
+        optimizer_options={"population_size": 100, "generations": 30},
+        seed=23,
+    )
+    assert candidates.shape == (q, 3)
+    assert torch.isfinite(candidates).all()
+    assert torch.all(candidates >= bounds[0])
+    assert torch.all(candidates <= bounds[1])
+    assert torch.equal(candidates[:, 1], candidates[:, 1].round())
+    assert torch.all(torch.isin(candidates[:, 2], candidates.new_tensor([10.0, 30.0])))
+    assert candidates[:, 1].sum().item() == float(q)
+    assert bool(candidate_is_feasible(candidates.unsqueeze(0), constraints).item())
+    torch.testing.assert_close(
+        value.reshape(()),
+        acquisition(candidates.unsqueeze(0)).reshape(()),
+    )
