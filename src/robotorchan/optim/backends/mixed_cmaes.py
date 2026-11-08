@@ -32,6 +32,8 @@ def optimize_acqf_mixed_cmaes(
     inequality_constraints: tuple[LinearConstraint, ...] | None = None,
     equality_constraints: tuple[LinearConstraint, ...] | None = None,
     nonlinear_inequality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+    nonlinear_equality_constraints: tuple[NonlinearConstraint, ...] | None = None,
+    nonlinear_equality_tolerance: float = 1e-6,
     fixed_features: dict[int, float | Tensor] | None = None,
     constraint_penalty: float = 1e6,
     equality_tolerance: float = 1e-6,
@@ -43,6 +45,8 @@ def optimize_acqf_mixed_cmaes(
         inequality_constraints=inequality_constraints,
         equality_constraints=equality_constraints,
         nonlinear_inequality_constraints=nonlinear_inequality_constraints,
+        nonlinear_equality_constraints=nonlinear_equality_constraints,
+        nonlinear_equality_tolerance=nonlinear_equality_tolerance,
     )
     validate_candidate_constraints(candidate_constraints, bounds=bounds, q=q)
     if not torch.equal(variable_space.bounds, bounds):
