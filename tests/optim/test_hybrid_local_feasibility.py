@@ -22,7 +22,7 @@ def test_hybrid_falls_back_to_feasible_global_result() -> None:
             "robotorchan.optim.backends.hybrid.optimize_acqf_botorch",
             return_value=(torch.tensor([[0.25]], dtype=torch.double), torch.tensor(1.0)),
         ),
-     ):
+    ):
         candidate, value = optimize_acqf_hybrid(None, bounds, q=1, constraints=constraints)
     torch.testing.assert_close(candidate, torch.tensor([[0.75]], dtype=torch.double))
     torch.testing.assert_close(value, torch.tensor(0.0))
