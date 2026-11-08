@@ -8,9 +8,11 @@ from typing import Any
 import torch
 from torch import Tensor
 
-from robotorchan.optim.trust_region.turbo import generate_turbo_thompson_choices
-
-from robotorchan.optim.trust_region.turbo import TuRBOState, turbo_trust_region_bounds
+from robotorchan.optim.trust_region.turbo import (
+    TuRBOState,
+    generate_turbo_thompson_choices,
+    turbo_trust_region_bounds,
+)
 
 
 @dataclass
