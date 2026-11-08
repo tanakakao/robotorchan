@@ -52,9 +52,6 @@ def optimize_vector_nsga2(
     candidate_constraints = _resolve_nsga2_constraints(
         constraints, inequality_constraints, bounds=bounds
     )
-    candidate_constraints = _resolve_nsga2_constraints(
-        constraints, inequality_constraints, bounds=bounds, variable_space=variable_space
-    )
     generator = make_generator(bounds, seed)
     lower, upper = bounds
     population = lower + (upper - lower) * torch.rand(
