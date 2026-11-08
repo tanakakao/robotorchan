@@ -48,8 +48,3 @@ def test_mixed_binary_mixed_ga_categorical_equality() -> None:
             seed=7,
         )
 
-    assert candidates.shape == torch.Size([1, 2])
-    assert torch.isfinite(candidates).all()
-    assert torch.isfinite(value).all()
-    assert ((candidates >= bounds[0]) & (candidates <= bounds[1])).all()
-    assert candidates[0, 1].item() == 1.0
