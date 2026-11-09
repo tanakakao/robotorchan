@@ -15,3 +15,4 @@
 - [Level-set / qStraddle：理論から実装へ](10_level_set.md)
 - [Multi-Fidelity / Cost-aware：理論から実装へ](11_multifidelity_cost_aware.md)
 - [Acquisition Selection Guide：理論から実装へ](12_selection_guide.md)
+- [Classification Active Learning：理論から実装へ](13_classification_active_learning.md)
