@@ -70,6 +70,7 @@ EXCLUDED_NOTEBOOKS = [
     "turbo_multi_benchmark.ipynb",
     "safe_bo_benchmark.ipynb",
     "safe_bo_usage_guide.ipynb",
+    "safe_bo_mixed_q_batch.ipynb",
 ]
 
 
