@@ -44,6 +44,18 @@ def sample_candidate_batches(
     raise ValueError("method must be either 'random' or 'sobol'.")
 
 
+def sample_mixed_candidate_batches(
+    variable_space: MixedVariableSpace,
+    num_samples: int,
+    q: int = 1,
+    *,
+    seed: int | None = None,
+) -> Tensor:
+    """Draw legal mixed-variable Sobol batches using shared sampling semantics."""
+    samples = sample_candidate_batches(variable_space.bounds, num_samples, q, seed=seed)
+    return _apply_mixed_sobol_semantics(samples, variable_space)
+
+
 def select_best_sampled_batch(
     acq_function: AcquisitionFunction,
     samples: Tensor,
