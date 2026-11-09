@@ -6,9 +6,7 @@ from pathlib import Path
 
 def test_turbo_multifidelity_cost_budget_loop() -> None:
     example = (
-        Path(__file__).resolve().parents[2]
-        / "examples"
-        / "turbo_multifidelity_cost_budget.py"
+        Path(__file__).resolve().parents[2] / "examples" / "turbo_multifidelity_cost_budget.py"
     )
     spec = importlib.util.spec_from_file_location("turbo_multifidelity_cost_budget", example)
     assert spec is not None and spec.loader is not None
