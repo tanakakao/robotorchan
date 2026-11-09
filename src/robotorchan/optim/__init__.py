@@ -48,6 +48,7 @@ from robotorchan.optim.one_shot import (
     gen_augmented_one_shot_initial_conditions,
     optimize_mixed_one_shot_acqf,
 )
+from robotorchan.optim.safe import optimize_safe_acqf
 from robotorchan.optim.strategies import (
     MixedSpaceStrategy,
     OriginalSpaceStrategy,
@@ -118,6 +119,7 @@ __all__ = [
     "optimize_acqf",
     "optimize_acqf_sequential",
     "optimize_mixed_one_shot_acqf",
+    "optimize_safe_acqf",
     "restart_turbo_state",
     "turbo_dimension_weights_from_model",
     "turbo_mixed_trust_region_bounds",
