@@ -56,3 +56,23 @@ MF-MES は現在の実行検証範囲外です。candidate set、fidelity、コ�
 ## 責務の境界
 
 モデル選択と fidelity 次元の宣言は surrogate 側の責務です。多目的・多忠実度 lookahead と MF-MES を実行検証済み経路として案内しません。[多忠実度の理論](../theory/acquisition/11_multifidelity_cost_aware.md)を参照してください。
+
+
+## 学習型コストモデルと予算管理
+
+コストが未知なら、既存のrobotorchan `SingleTaskGP`をコストの
+surrogateとして学習し、BoTorchの`InverseCostWeightedUtility`に渡します。
+負の予測コストによる不正な重み付けを避けるため、実測コストが厳密に正なら
+`log(cost)`を学習し、`GenericMCObjective`で`exp`に戻す方法が使えます。
+
+`use_mean=True`とこの変換の組み合わせは
+`exp(E[log(cost)])`であり、`E[cost]`そのものではありません。
+モデルの不確実性まで考慮する場合は、cost objectiveとMC評価を
+目的に合わせて設計してください。コストがゼロになり得る場合は、
+log変換前の扱いを別途定義する必要があります。
+
+[実行可能な学習型コスト例](../../examples/learned_multifidelity_cost.py)では、
+cost GPの学習、正値化したコスト効用、Phase 2の`CostBudget`による
+予測費用の予約と実測費用の精算を接続します。
+この例はcost utilityの動作を示すものであり、
+MF-KGの全closed-loop最適化はPhase 4の対象です。
