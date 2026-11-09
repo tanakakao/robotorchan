@@ -21,6 +21,13 @@
 
 [理論ガイド](theory/README.md) は、ベイズ最適化、Gaussian Process、獲得関数から、高次元・ロバスト・入力不確かさ・次元削減までを扱います。
 
+### 安全制約付きベイズ最適化を扱いたい
+
+- [Safe BOの理論](theory/25_safe_bayesian_optimization.md)
+- [Safe BOの実装ガイド](optimization/safe_bayesian_optimization.md)
+- [日本語利用Notebook](../examples/notebooks/safe_bo_usage_guide.ipynb)
+- [比較Notebook](../examples/notebooks/safe_bo_benchmark.ipynb)
+
 ### 高次元問題を扱いたい
 
 - [高次元入力](models/high_dimensional_inputs.md)

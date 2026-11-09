@@ -7202,6 +7202,16 @@
       "path": "docs/optimization/cost-budget.md",
       "category": "Guide",
       "reason": "Evaluation-cost budget accounting API and workflow integration guidance."
+    },
+    {
+      "path": "docs/optimization/safe_bayesian_optimization.md",
+      "category": "Guide",
+      "reason": "Safe BO公開APIと理論の対応、制限事項、Notebook導線を説明する日本語ガイド。"
+    },
+    {
+      "path": "docs/theory/25_safe_bayesian_optimization.md",
+      "category": "Theory",
+      "reason": "Safe BOの安全集合、信頼区間、初期安全点、保証の仮定を説明する純理論章。"
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
