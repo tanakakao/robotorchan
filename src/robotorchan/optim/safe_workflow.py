@@ -9,6 +9,7 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from torch import Tensor
 
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.optim.safe import optimize_safe_acqf
 from robotorchan.optim.safe_expansion import propose_safe_expansion
 from robotorchan.semantics.safety import SafetySpecification
@@ -26,6 +27,7 @@ class SafeBOWorkflow:
 
     specification: SafetySpecification
     bounds: Tensor
+    variable_space: MixedVariableSpace | None = None
 
     def __post_init__(self) -> None:
         if self.bounds.ndim != 2 or self.bounds.shape != (2, self.specification.initial_X.shape[1]):
@@ -35,6 +37,21 @@ class SafeBOWorkflow:
             and (self.specification.initial_X <= self.bounds[1]).all()
         ):
             raise ValueError("Observed safe seeds must lie within bounds.")
+        if self.variable_space is not None:
+            if not torch.equal(self.variable_space.bounds, self.bounds):
+                raise ValueError("variable_space bounds must match bounds.")
+            initial_X = self.specification.initial_X
+            for dim in self.variable_space.integer_dims:
+                if not bool((initial_X[:, dim] == initial_X[:, dim].round()).all()):
+                    raise ValueError("Initial safe seeds must respect integer dimensions.")
+            for dim in self.variable_space.categorical_dims:
+                values = torch.as_tensor(
+                    self.variable_space.categorical_values[dim],
+                    dtype=initial_X.dtype,
+                    device=initial_X.device,
+                )
+                if not bool(torch.isin(initial_X[:, dim], values).all()):
+                    raise ValueError("Initial safe seeds must respect categorical values.")
         self._observed_X = self.specification.initial_X.clone()
         self._observed_constraints = self.specification.observed_constraints.clone()
         self._pending: Tensor | None = None
@@ -63,6 +80,7 @@ class SafeBOWorkflow:
             "beta": self.specification.beta,
             "num_samples": num_samples,
             "seed": seed,
+            "variable_space": self.variable_space,
         }
         if mode == "objective":
             if acq_function is None:
