@@ -15,6 +15,7 @@ def test_log_cost_gp_utility_and_budget_settlement() -> None:
     )
     observed_costs = 0.2 + 0.5 * train_X[:, :1] + train_X[:, 1:]
     cost_model = SingleTaskGP(train_X, observed_costs.log())
+    cost_model.fit()
     cost_model.eval()
     objective = GenericMCObjective(lambda samples, X=None: samples.squeeze(-1).exp())
     utility = InverseCostWeightedUtility(
