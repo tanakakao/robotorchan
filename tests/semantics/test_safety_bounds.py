@@ -50,9 +50,7 @@ def test_tolerance_accepts_near_boundary() -> None:
     model = _Model(torch.tensor([[0.50001]]), torch.zeros(1, 1))
     constraint = (ContinuousConstraint(0, 0.5),)
     _, strict = safety_confidence_bounds(model, torch.zeros(1, 1), constraint)
-    _, relaxed = safety_confidence_bounds(
-        model, torch.zeros(1, 1), constraint, tolerance=0.0001
-    )
+    _, relaxed = safety_confidence_bounds(model, torch.zeros(1, 1), constraint, tolerance=0.0001)
     assert not strict.item()
     assert relaxed.item()
 
@@ -69,6 +67,4 @@ def test_invalid_beta(beta: float) -> None:
 def test_negative_variance_rejected() -> None:
     model = _Model(torch.zeros(1, 1), -torch.ones(1, 1))
     with pytest.raises(ValueError, match="variance"):
-        safety_confidence_bounds(
-            model, torch.zeros(1, 1), (ContinuousConstraint(0, 0.0),)
-        )
+        safety_confidence_bounds(model, torch.zeros(1, 1), (ContinuousConstraint(0, 0.0),))
