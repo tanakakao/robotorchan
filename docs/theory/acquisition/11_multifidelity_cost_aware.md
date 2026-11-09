@@ -544,14 +544,9 @@ Acquisition optimizer
 次章 [Selection Guide](12_selection_guide.md) では、ここまでの acquisition families を problem setting
 から選択するための整理を行います。
 
-## References
-
-- Wu, J., Toscano-Palmerin, S., Frazier, P. I., and Wilson, A. G. (2020), *Practical
-Multi-fidelity Bayesian Optimization for Hyperparameter Tuning*. UAI.
-  目標忠実度での判断と評価費用を組み合わせる定式化を参照。
 
 
-## 11. 費用予算と意思決定の違い
+## 11.28 費用予算と意思決定の違い
 
 費用を割り引いた獲得関数を最大化することと、有限予算内で最適な
 評価系列を選ぶことは一般に一致しません。予算を $B$、
@@ -592,3 +587,10 @@ Trust Regionを設計空間 $\mathcal X$ に設ける場合、
 忠実度の偏りを改善と誤認する可能性があります。
 目標忠実度への推定値を比較する方法もありますが、
 その判定にはsurrogateの誤差が含まれます。
+
+
+## References
+
+- Wu, J., Toscano-Palmerin, S., Frazier, P. I., and Wilson, A. G. (2020), *Practical
+Multi-fidelity Bayesian Optimization for Hyperparameter Tuning*. UAI.
+  目標忠実度での判断と評価費用を組み合わせる定式化を参照。
