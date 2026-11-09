@@ -30,6 +30,7 @@ from robotorchan.semantics.ordinal import (
 )
 from robotorchan.semantics.problem import ProblemSemantics
 from robotorchan.semantics.safety import SafetySpecification
+from robotorchan.semantics.safety_bounds import safety_confidence_bounds
 
 __all__ = [
     "ClassificationConstraint",
@@ -52,4 +53,5 @@ __all__ = [
     "SampleResidualFeasibility",
     "SemanticConstraint",
     "SemanticObjective",
+    "safety_confidence_bounds",
 ]
