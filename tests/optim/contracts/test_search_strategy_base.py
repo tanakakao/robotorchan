@@ -152,6 +152,7 @@ def test_public_optim_exports_are_complete() -> None:
 
     expected = {
         "ALEBOStrategy",
+        "SafeBOWorkflow",
         "SearchResult",
         "SearchStrategy",
         "SobolSearchStrategy",
