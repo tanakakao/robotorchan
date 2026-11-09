@@ -52,9 +52,7 @@ def optimize_safe_acqf(
     if safe_choices.shape[0] == 0:
         raise RuntimeError("No posterior-safe candidates were found in the sampled pool.")
 
-    candidate, value = optimize_acqf_discrete(
-        acq_function=acq_function, q=1, choices=safe_choices
-    )
+    candidate, value = optimize_acqf_discrete(acq_function=acq_function, q=1, choices=safe_choices)
     with torch.no_grad():
         _, verified = safety_confidence_bounds(
             safety_model, candidate.unsqueeze(0), constraints, beta=beta, tolerance=tolerance
