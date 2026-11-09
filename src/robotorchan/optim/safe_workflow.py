@@ -109,7 +109,8 @@ class SafeBOWorkflow:
             raise RuntimeError("Call ask() before tell().")
         if candidate.shape != self._pending.shape or not torch.equal(candidate, self._pending):
             raise ValueError("candidate must match the pending ask() candidate.")
-        if observed_constraints.shape != (self._pending.shape[0], len(self.specification.constraints)):
+        expected_shape = (self._pending.shape[0], len(self.specification.constraints))
+        if observed_constraints.shape != expected_shape:
             raise ValueError("observed_constraints must have shape [q, m].")
         if not observed_constraints.is_floating_point() or not bool(
             torch.isfinite(observed_constraints).all()
