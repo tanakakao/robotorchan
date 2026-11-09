@@ -9,6 +9,8 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.optim.optimize import optimize_acqf_discrete
 from torch import Tensor
 
+from robotorchan.optim.backends.sampling import sample_mixed_candidate_batches
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.semantics.constraints import ContinuousConstraint
 from robotorchan.semantics.safety_bounds import safety_confidence_bounds
 
@@ -23,10 +25,11 @@ def optimize_safe_acqf(
     tolerance: float = 0.0,
     num_samples: int = 1024,
     seed: int | None = None,
+    variable_space: MixedVariableSpace | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Select the best posterior-safe candidate from a Sobol pool.
 
-    Only continuous q=1 optimization is supported. This finite-pool search
+    Continuous and mixed-variable q=1 optimization are supported. This finite-pool search
     can miss safe regions; it does not certify global safety or optimality.
     An empty predicted-safe pool raises instead of returning an unsafe point.
     """
@@ -39,9 +42,14 @@ def optimize_safe_acqf(
     if isinstance(num_samples, bool) or not isinstance(num_samples, int) or num_samples < 1:
         raise ValueError("num_samples must be a positive integer.")
 
-    engine = torch.quasirandom.SobolEngine(bounds.shape[1], scramble=True, seed=seed)
-    unit = engine.draw(num_samples).to(dtype=bounds.dtype, device=bounds.device)
-    choices = bounds[0] + (bounds[1] - bounds[0]) * unit
+    if variable_space is not None and not torch.equal(variable_space.bounds, bounds):
+        raise ValueError("variable_space bounds must match bounds.")
+    if variable_space is None:
+        engine = torch.quasirandom.SobolEngine(bounds.shape[1], scramble=True, seed=seed)
+        unit = engine.draw(num_samples).to(dtype=bounds.dtype, device=bounds.device)
+        choices = bounds[0] + (bounds[1] - bounds[0]) * unit
+    else:
+        choices = sample_mixed_candidate_batches(variable_space, num_samples, seed=seed).squeeze(1)
     with torch.no_grad():
         _, safe_mask = safety_confidence_bounds(
             safety_model, choices.unsqueeze(-2), constraints, beta=beta, tolerance=tolerance
