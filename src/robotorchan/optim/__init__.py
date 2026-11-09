@@ -50,6 +50,7 @@ from robotorchan.optim.one_shot import (
 )
 from robotorchan.optim.safe import optimize_safe_acqf
 from robotorchan.optim.safe_expansion import propose_safe_expansion
+from robotorchan.optim.safe_workflow import SafeBOWorkflow
 from robotorchan.optim.strategies import (
     MixedSpaceStrategy,
     OriginalSpaceStrategy,
@@ -106,6 +107,7 @@ __all__ = [
     "REMBOStrategy",
     "RandomProjectionReconstruction",
     "RandomSearchStrategy",
+    "SafeBOWorkflow",
     "SearchResult",
     "SearchStrategy",
     "SobolSearchStrategy",
