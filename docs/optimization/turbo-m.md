@@ -49,3 +49,80 @@ NotebookはAckley・Rosenbrock・Levy（2次元）で、1領域と3領域を比�
 - 混合変数、非同期評価、多目的、MORBO、制約付き領域間候補選択は今回の対象外です。
 - `region_ids`は候補生成時のものを評価完了時まで保持してください。
 - ベンチマークは機能確認用の小規模例であり、統計的な優劣を示すものではありません。
+
+
+## Phase 8：対応状況と検証の到達点
+
+この表は実装コードと既存のTuRBO-mテストを対象とした機能棚卸しです。
+性能上の優位性や、すべての実行環境での動作を証明するものではありません。
+
+| 項目 | TuRBO-1（`TuRBOStrategy`） | TuRBO-m（`TuRBOMultiRegionState`） |
+| --- | --- | --- |
+| 連続変数・単一目的 | 対応 | 対応 |
+| 独立した複数のTrust Region | 対象外 | 対応 |
+| 領域別のGPデータとモデル参照 | 対象外 | 対応 |
+| Thompson Sampling候補生成 | 対応 | 対応 |
+| q-batch候補提案 | 対応 | 対応 |
+| 領域間の動的q割当 | 対象外 | 対応 |
+| 領域別観測帰属と状態更新 | 対象外 | 対応 |
+| Restart | 対応 | 領域別に対応 |
+| Mixed / discrete | 個別の既存経路あり | 未対応 |
+| CandidateConstraints | 個別の既存経路あり | 未対応 |
+| 非同期pending点 | 個別の既存経路あり | 未対応 |
+| 多目的・multi-fidelity | 本比較の対象外 | 未対応 |
+
+### 既存の検証資産
+
+- `tests/optim/trust_region/test_turbo_multi_state.py`：領域別データと状態管理
+- `tests/optim/trust_region/test_turbo_multi_sampling.py`：領域間候補競争と割当
+- `tests/optim/trust_region/test_turbo_multi_updates.py`：観測帰属、成功・失敗カウント、局所Restart
+- `examples/notebooks/turbo_multi_benchmark.ipynb`：GP fit、候補提案、観測更新、再始動をつなぐ例
+- `examples/turbo_multi_benchmark.py`：Ackley、Rosenbrock、Levyの小規模比較
+
+### 実装確認で区別すべき仕様
+
+TuRBO-mの`update_regions`では、成功は割当領域の完了バッチにつき1回、
+失敗はその領域に割り当てた点数分を加算します。
+一方、TuRBO-1の`update_turbo_state`は完了バッチにつき1回の判定です。
+この差はベンチマークの解釈に影響するため、同一アルゴリズムとみなして
+性能を比較しません。
+
+TuRBO-mのRestartでは対象領域の局所最良値とモデルを初期化し、
+`history_X`と`history_Y`を保持します。TuRBO-1のRestartが
+最良値を保持する規則とは区別します。
+
+### 完了判定
+
+**連続・単一目的・同期q-batchのTuRBO-m機能実装は完了。**
+既存テストは上記の責務に沿って配置済みです。
+ただし、以下は検証済みとは主張しません。
+
+- 既存`TuRBOStrategy`を直接用いた、評価予算を揃えた性能比較
+- 複数seedに基づく統計的な性能評価
+- 新規NotebookをCI上で実行した結果（Notebookはmanual区分）
+- 未対応領域（Mixed、制約、非同期、多目的など）の動作
+
+このため**機能実装の完了**と**ベンチマークによる性能評価の完了**は
+別の判定とします。性能比較は必要になった際の独立したベンチマーク作業とし、
+本Phaseの完了条件に無制限な追加テストを含めません。
+
+
+### TuRBO-1との直接性能比較（手動実行）
+
+`examples/turbo_direct_comparison.py`は既存の`TuRBOStrategy`と
+`TuRBOMultiRegionState`を直接呼び出して比較する追加ベンチマークです。
+
+```bash
+python examples/turbo_direct_comparison.py --seeds 3 --steps 8 --regions 3
+```
+
+Ackley、Rosenbrock、Levy（各2次元）で、共通の初期15評価点、
+反復ごとの同一q=2、同じ追加評価回数を使用します。
+初期観測をTuRBO-1は全点、TuRBO-mは領域別に分割して学習するため、
+各GPの学習データ量は同一ではありません。これは比較対象の方式の差です。
+Restart時には既存観測を再利用し、追加の目的関数評価を隠れて消費しません。
+
+最終bestの平均・標準偏差を表示しますが、3 seedの結果だけで
+統計的優位性を結論付けません。領域の更新規則も両方式で異なります。
+**このスクリプトの実行結果は本PR作成時点では未検証**であり、
+性能向上の実測値を記載していません。
