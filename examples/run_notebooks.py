@@ -68,6 +68,8 @@ EXCLUDED_NOTEBOOKS = [
     "24_expressive_surrogate_gp.ipynb",
     "25_non_gp_surrogates.ipynb",
     "turbo_multi_benchmark.ipynb",
+    "safe_bo_benchmark.ipynb",
+    "safe_bo_usage_guide.ipynb",
 ]
 
 
