@@ -25,7 +25,7 @@ TuRBO-mは、複数のTrust Regionを独立して管理し、各領域のGPか�
 5. `update_regions(X, Y, region_ids)`で観測を元の領域へ返します。
 6. `restart_triggered`の領域だけ`restart_region`を実行し、初期データの再取得とGP再学習を行います。
 
-実際の学習ループは [実行用Python例](../../examples/turbo_multi_benchmark.py) と [Notebook](../../examples/notebooks/turbo_multi_benchmark.ipynb) を参照してください。Notebookは、GP学習、q-batch提案、観測更新、Restartを含む一連の処理を実行します。
+実際の学習ループは [実行用Python例](../../examples/turbo_multi_benchmark.py) と [Notebook](../../examples/notebooks/43_turbo_multi_benchmark.ipynb) を参照してください。Notebookは、GP学習、q-batch提案、観測更新、Restartを含む一連の処理を実行します。
 
 ## TuRBO-1との違い
 
@@ -76,7 +76,7 @@ NotebookはAckley・Rosenbrock・Levy（2次元）で、1領域と3領域を比�
 - `tests/optim/trust_region/test_turbo_multi_state.py`：領域別データと状態管理
 - `tests/optim/trust_region/test_turbo_multi_sampling.py`：領域間候補競争と割当
 - `tests/optim/trust_region/test_turbo_multi_updates.py`：観測帰属、成功・失敗カウント、局所Restart
-- `examples/notebooks/turbo_multi_benchmark.ipynb`：GP fit、候補提案、観測更新、再始動をつなぐ例
+- `examples/notebooks/43_turbo_multi_benchmark.ipynb`：GP fit、候補提案、観測更新、再始動をつなぐ例
 - `examples/turbo_multi_benchmark.py`：Ackley、Rosenbrock、Levyの小規模比較
 
 ### 実装確認で区別すべき仕様

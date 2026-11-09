@@ -130,6 +130,11 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`39_classification_active_learning.ipynb`](notebooks/39_classification_active_learning.ipynb) | Binary GP Classification / AL | 利用可能 |
 | [`40_classification_robust_uncertain.ipynb`](notebooks/40_classification_robust_uncertain.ipynb) | Robust / Uncertain-input Classification | 利用可能 |
 | [`41_classification_probability_layers.ipynb`](notebooks/41_classification_probability_layers.ipynb) | Ensemble / Calibration / Reliability / Conformal | 利用可能 |
+| [`42_heterogeneous_bo_benchmark.ipynb`](notebooks/42_heterogeneous_bo_benchmark.ipynb) | Heterogeneous BO benchmark | 利用可能 |
+| [`43_turbo_multi_benchmark.ipynb`](notebooks/43_turbo_multi_benchmark.ipynb) | TuRBO-m benchmark | 利用可能 |
+| [`44_safe_bo_usage_guide.ipynb`](notebooks/44_safe_bo_usage_guide.ipynb) | Safe BO 日本語利用ガイド | 利用可能 |
+| [`45_safe_bo_benchmark.ipynb`](notebooks/45_safe_bo_benchmark.ipynb) | Safe BO benchmark | 利用可能 |
+| [`46_safe_bo_mixed_q_batch.ipynb`](notebooks/46_safe_bo_mixed_q_batch.ipynb) | Safe BO Mixed / q-batch | 利用可能 |
 
 ## Benchmark
 

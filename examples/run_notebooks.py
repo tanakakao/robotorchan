@@ -63,14 +63,14 @@ SLOW_NOTEBOOKS = [
 
 EXCLUDED_NOTEBOOKS = [
     "37_multifidelity_cost_aware.ipynb",
-    "heterogeneous_bo_benchmark_phase19.ipynb",
+    "42_heterogeneous_bo_benchmark.ipynb",
     "23_high_dimensional_bo_benchmark.ipynb",
     "24_expressive_surrogate_gp.ipynb",
     "25_non_gp_surrogates.ipynb",
-    "turbo_multi_benchmark.ipynb",
-    "safe_bo_benchmark.ipynb",
-    "safe_bo_usage_guide.ipynb",
-    "safe_bo_mixed_q_batch.ipynb",
+    "43_turbo_multi_benchmark.ipynb",
+    "45_safe_bo_benchmark.ipynb",
+    "44_safe_bo_usage_guide.ipynb",
+    "46_safe_bo_mixed_q_batch.ipynb",
 ]
 
 
