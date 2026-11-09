@@ -6,7 +6,6 @@ Run with: python examples/learned_multifidelity_cost.py
 import torch
 from botorch.acquisition.cost_aware import InverseCostWeightedUtility
 from botorch.acquisition.objective import GenericMCObjective
-from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import SingleTaskGP
 from robotorchan.workflow import CostBudget
