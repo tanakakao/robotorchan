@@ -4,7 +4,6 @@ import importlib.util
 from pathlib import Path
 
 
-
 def test_mfkg_cost_budget_loop() -> None:
     example = Path(__file__).resolve().parents[2] / "examples" / "mfkg_cost_budget_loop.py"
     spec = importlib.util.spec_from_file_location("mfkg_cost_budget_loop", example)
