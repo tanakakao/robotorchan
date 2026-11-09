@@ -16,6 +16,6 @@
 - [10. Level-set Acquisition](10_level_set.md)
 - [11. Multi-Fidelity and Cost-aware Acquisition](11_multifidelity_cost_aware.md)
 - [12. Acquisition Selection Guide](12_selection_guide.md)
-- [分類の Active Learning](classification-active-learning.md)
+- [13. 分類の Active Learning](13_classification_active_learning.md)
 
 数式の前提・適用範囲と参考文献を各章で確認してください。理論上定義できることと、数値近似の精度・計算可能性は区別します。
