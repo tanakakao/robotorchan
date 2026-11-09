@@ -144,3 +144,22 @@ target fidelityの最適値に関する情報量という要件を満たすと�
 **Phase 5結論：現時点でrobotorchanのMF-MES対応完了とは判定しない。**
 公開BoTorch APIの確認と最小の統合実験が次の実装着手条件です。
 MF-KGのPhase 4までの成果とは独立した拡張候補として扱います。
+
+
+## TuRBO × Cost-aware（Phase 6）
+
+[実行例](../../examples/turbo_multifidelity_cost_budget.py)では、
+既存の`TuRBOStrategy.optimize_multifidelity`にBoTorchの
+`qMultiFidelityKnowledgeGradient`と`InverseCostWeightedUtility`を渡し、
+`CostBudget`で評価費用を予約・精算します。
+
+Trust Regionの局所化は設計変数だけに適用し、fidelity座標は大域範囲を
+維持します。評価候補をtarget fidelityに固定しません。
+一方、TuRBOのsuccess/failureとcenterの更新はfidelity間で比較可能な
+`state_values`を用います。例では評価前モデルのtarget-fidelity posterior
+meanを使用しますが、これは**推定効用**であり、実際のtarget-fidelity評価値
+ではありません。状態判定の精度はsurrogateに依存します。
+
+初期観測費用は予算対象外です。残予算より予測費用が大きい候補は評価せず
+停止します。安い候補への再最適化、同時評価、worker schedulingは行いません。
+本例は既知のアフィンコストを使う同期`q=1`の統合例です。
