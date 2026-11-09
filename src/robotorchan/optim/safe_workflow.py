@@ -71,9 +71,10 @@ class SafeBOWorkflow:
         mode: SafeSelectionMode = "objective",
         acq_function: AcquisitionFunction | None = None,
         num_samples: int = 1024,
+        q: int = 1,
         seed: int | None = None,
     ) -> Tensor:
-        """Propose one posterior-safe candidate; requires tell before next ask."""
+        """Propose a posterior-safe batch; requires tell before next ask."""
         if self._pending is not None:
             raise RuntimeError("Call tell() before requesting another candidate.")
         kwargs = {
@@ -81,6 +82,7 @@ class SafeBOWorkflow:
             "num_samples": num_samples,
             "seed": seed,
             "variable_space": self.variable_space,
+            "q": q,
         }
         if mode == "objective":
             if acq_function is None:
@@ -107,8 +109,8 @@ class SafeBOWorkflow:
             raise RuntimeError("Call ask() before tell().")
         if candidate.shape != self._pending.shape or not torch.equal(candidate, self._pending):
             raise ValueError("candidate must match the pending ask() candidate.")
-        if observed_constraints.shape != (1, len(self.specification.constraints)):
-            raise ValueError("observed_constraints must have shape [1, m].")
+        if observed_constraints.shape != (self._pending.shape[0], len(self.specification.constraints)):
+            raise ValueError("observed_constraints must have shape [q, m].")
         if not observed_constraints.is_floating_point() or not bool(
             torch.isfinite(observed_constraints).all()
         ):
