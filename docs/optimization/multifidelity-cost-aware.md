@@ -185,3 +185,29 @@ CSVには`policy`、`seed`、`step`、累積費用`spent`、
 
 初期観測費用とacquisition最適化の計算時間は比較予算に含めません。
 少数seedの比較は性能優越性を示す統計的根拠にはなりません。
+
+
+## 対応範囲のまとめ
+
+以下は公開APIと実行例に基づく範囲です。
+理論上の適用可能性を全組み合わせの実行保証と混同しません。
+
+| 機能 | 状態 | 実行経路・制限 |
+| --- | --- | --- |
+| Multi-Fidelity GP | 対応 | `SingleTaskMultiFidelityGP` |
+| 既知の正の評価費用 | 対応 | BoTorch `AffineFidelityCostModel` |
+| 学習型の正の評価費用 | 統合例あり | log-cost GP、予測誤差は別途考慮 |
+| MF-KG + cost utility | 統合例あり | BoTorch-native、同期`q=1` |
+| 予算予約・実費精算 | 対応 | `CostBudget`、予測費用超過候補は停止 |
+| TuRBO + MF-KG + cost | 統合例あり | 設計変数だけを局所化、状態は推定効用 |
+| MF-KG vs Random比較 | ベンチマークあり | 少数seed、合成oracle指標 |
+| MF-MES専用経路 | 未検証 | 通常MESをMF-MESとみなさない |
+| 非同期・joint q-batch予算運用 | 未対応 | 予約の並列運用・budget-aware最適化は別課題 |
+| 学習型費用 × TuRBOの全組合せ | 未検証 | 個別の実行例を組み合わせただけでは保証しない |
+
+### 文書の読み分け
+
+- [Theory](../theory/acquisition/11_multifidelity_cost_aware.md)：費用と情報価値、予算制約、評価指標の数学的意味。
+- [Guide](../guide/acquisition/11_multifidelity_cost_aware.md)：BoTorchへの委譲とrobotorchanの実装接続。
+- [Notebook](../../examples/notebooks/37_multifidelity_cost_aware.ipynb)：候補生成と費用対性能の実行・可視化。
+- 本文書：実行可能な経路と制限事項。
