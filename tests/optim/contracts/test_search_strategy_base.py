@@ -202,6 +202,7 @@ def test_public_optim_exports_are_complete() -> None:
         "optimize_acqf_sequential",
         "optimize_mixed_one_shot_acqf",
         "optimize_safe_acqf",
+        "propose_safe_expansion",
         "LinearConstraint",
         "MixedSpaceStrategy",
         "MixedVariableSpace",
