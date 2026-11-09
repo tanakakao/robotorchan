@@ -24,9 +24,7 @@ def main() -> None:
     cost_model.eval()
 
     # This uses exp(E[log(cost)]), a positive plug-in estimate, not E[cost].
-    cost_objective = GenericMCObjective(
-        lambda samples, X=None: samples.squeeze(-1).exp()
-    )
+    cost_objective = GenericMCObjective(lambda samples, X=None: samples.squeeze(-1).exp())
     cost_utility = InverseCostWeightedUtility(
         cost_model=cost_model,
         cost_objective=cost_objective,
