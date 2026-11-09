@@ -40,7 +40,7 @@ def propose_safe_expansion(
     unit = engine.draw(num_samples).to(dtype=bounds.dtype, device=bounds.device)
     choices = bounds[0] + (bounds[1] - bounds[0]) * unit
     with torch.no_grad():
-        margins, safe = safety_confidence_bounds(
+        _, safe = safety_confidence_bounds(
             safety_model, choices.unsqueeze(-2), constraints, beta=beta, tolerance=tolerance
         )
         posterior = safety_model.posterior(choices.unsqueeze(-2))
