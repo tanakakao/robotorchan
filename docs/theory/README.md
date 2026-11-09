@@ -28,6 +28,7 @@
 - [Expressive Gaussian Process Models](22_expressive_gp.md)
 - [Non-GP Surrogates for Bayesian Optimization](23_non_gp_surrogates.md)
 - [ガウス過程による分類](24_classification.md)
+- [Safe Bayesian Optimization](25_safe_bayesian_optimization.md)
 - [獲得関数の詳細理論](acquisition/README.md)
 - [候補最適化の詳細理論](optimization/README.md)
 
