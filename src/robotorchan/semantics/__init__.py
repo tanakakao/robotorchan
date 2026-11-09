@@ -47,9 +47,9 @@ __all__ = [
     "ProbabilityResidualFeasibility",
     "ProblemSemantics",
     "RegressionObjective",
+    "SafetySpecification",
     "SampleProbabilityOfFeasibility",
     "SampleResidualFeasibility",
     "SemanticConstraint",
     "SemanticObjective",
-    "SafetySpecification",
 ]
