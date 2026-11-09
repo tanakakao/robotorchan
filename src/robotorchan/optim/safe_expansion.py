@@ -7,7 +7,10 @@ from collections.abc import Sequence
 import torch
 from torch import Tensor
 
-from robotorchan.optim.backends.sampling import sample_mixed_candidate_batches
+from robotorchan.optim.backends.sampling import (
+    sample_candidate_batches,
+    sample_mixed_candidate_batches,
+)
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.semantics.constraints import ContinuousConstraint
 from robotorchan.semantics.safety_bounds import safety_confidence_bounds
@@ -23,6 +26,7 @@ def propose_safe_expansion(
     num_samples: int = 1024,
     seed: int | None = None,
     variable_space: MixedVariableSpace | None = None,
+    q: int = 1,
 ) -> tuple[Tensor, Tensor]:
     """Choose a conservative safe point with large safety uncertainty.
 
@@ -39,6 +43,41 @@ def propose_safe_expansion(
     if isinstance(num_samples, bool) or not isinstance(num_samples, int) or num_samples < 1:
         raise ValueError("num_samples must be a positive integer.")
 
+    if isinstance(q, bool) or not isinstance(q, int) or q < 1:
+        raise ValueError("q must be a positive integer.")
+    if q > 1 and variable_space is not None:
+        raise ValueError("Mixed q-batch Safe BO is reserved for Phase 4.")
+    if q > 1:
+        batches = sample_candidate_batches(bounds, num_samples, q, seed=seed)
+        with torch.no_grad():
+            _, safe = safety_confidence_bounds(
+                safety_model, batches, constraints, beta=beta, tolerance=tolerance
+            )
+            widths = safety_model.posterior(batches).variance.sqrt()
+        if safe.shape != (num_samples, q):
+            raise ValueError("safety model must return one decision per batch point.")
+        output_indices = []
+        for constraint in constraints:
+            index = constraint.output
+            if isinstance(index, str):
+                if not hasattr(safety_model, "resolve_output"):
+                    raise TypeError("Named safety outputs require model.resolve_output.")
+                index = safety_model.resolve_output(index)
+            output_indices.append(index)
+        safe_batches = safe.all(dim=-1)
+        if not bool(safe_batches.any()):
+            raise RuntimeError("No posterior-safe candidate batches were found for expansion.")
+        scores = widths[..., output_indices].sum(dim=(-1, -2))
+        scores = scores.masked_fill(~safe_batches, -torch.inf)
+        selected = scores.argmax()
+        candidate = batches[selected]
+        with torch.no_grad():
+            _, verified = safety_confidence_bounds(
+                safety_model, candidate, constraints, beta=beta, tolerance=tolerance
+            )
+        if not bool(verified.all()):
+            raise RuntimeError("Expansion batch failed posterior safety recheck.")
+        return candidate, scores[selected]
     if variable_space is not None and not torch.equal(variable_space.bounds, bounds):
         raise ValueError("variable_space bounds must match bounds.")
     if variable_space is None:
