@@ -5,9 +5,7 @@ from pathlib import Path
 
 
 def test_random_baseline_respects_budget_and_records_target_diagnostic() -> None:
-    benchmark = (
-        Path(__file__).resolve().parents[2] / "benchmarks" / "multifidelity_cost_budget.py"
-    )
+    benchmark = Path(__file__).resolve().parents[2] / "benchmarks" / "multifidelity_cost_budget.py"
     spec = importlib.util.spec_from_file_location("multifidelity_cost_budget", benchmark)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
