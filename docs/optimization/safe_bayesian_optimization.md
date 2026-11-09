@@ -40,11 +40,32 @@
 | GPの自動再学習 | 未対応 |
 | SafeOptの厳密な拡張点・到達可能性 | 未対応 |
 | 時間全体にわたる確率的安全保証 | 未対応 |
-| Mixed、`q>1`、非同期、MF、複数目的 | 今回の範囲外 |
+| 整数・カテゴリ・Mixed入力 `q=1` | 対応（`MixedVariableSpace`） |
+| 連続入力 `q>1` | 対応（有限バッチ候補集合） |
+| Mixed入力 `q>1` | 対応（有限バッチ候補集合） |
+| 非同期、MF、複数目的への専用拡張 | 今回の範囲外 |
+
+## Mixed変数とバッチ提案の実装
+
+`MixedVariableSpace` は連続・整数・カテゴリ変数の合法値を定義する。`variable_space` を指定すると、既存のMixed Sobolサンプリングで整数値とカテゴリ値を合法集合へ写像する。安全性を判定してから候補を選択するため、Mixed最適化バックエンドで安全制約を後付けする方式ではない。
+
+`q=1` では安全な離散候補を `optimize_acqf_discrete` で評価する。`q>1` では連続・Mixedともに複数の候補バッチをサンプリングし、**バッチ内のすべての点**が事後信頼区間による安全条件を満たすバッチだけを残す。目的関数モードではバッチ獲得関数を最大化し、探索モードでは制約出力の予測標準偏差の合計を最大化する。安全なバッチがなければ例外となる。
+
+`SafeBOWorkflow.ask(q=...)` の返り値は `[q, d]`、`tell(candidate, observed_constraints)` の観測値は `[q, m]` である。すべてのバッチ観測が揃ってから `tell()` を呼ぶ同期方式であり、部分観測や非同期実験は扱わない。
+
+| 変数タイプ | `q=1` | `q>1` | 選択方式 |
+|---|---|---|---|
+| Continuous | 対応 | 対応 | q=1は離散獲得関数最適化、q>1はJoint有限バッチ候補評価 |
+| Integer | 対応 | 対応 | `MixedVariableSpace` の整数合法値へ写像 |
+| Categorical | 対応 | 対応 | `MixedVariableSpace` のカテゴリ集合へ写像 |
+| Mixed | 対応 | 対応 | Mixed Sobol候補生成とJoint有限バッチ候補評価 |
+
+このJoint方式は候補バッチのサンプル評価であり、勾配ベースの連続Joint最適化やSequential greedyではない。`q>1` で全候補の事後安全性を検査しても、実測の安全性を保証するものではない。
 
 ## Notebook
 
 - [Safe BO日本語利用ガイド](../../examples/notebooks/safe_bo_usage_guide.ipynb)：設定、学習、候補提案、観測登録、再学習、探索モード切替
+- [Safe BO Mixed・qバッチ利用例](../../examples/notebooks/safe_bo_mixed_q_batch.ipynb)：Mixed入力、q>1、ask/tell、探索モード
 - [Safe BO比較実験](../../examples/notebooks/safe_bo_benchmark.ipynb)：予測平均制約、保守的信頼区間、安全集合内探索の比較
 
 両Notebookは手動実行対象であり、登録や構文検査だけでは実行成功の証拠にならない。
