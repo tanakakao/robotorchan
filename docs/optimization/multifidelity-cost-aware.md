@@ -163,3 +163,25 @@ meanを使用しますが、これは**推定効用**であり、実際のtarget
 初期観測費用は予算対象外です。残予算より予測費用が大きい候補は評価せず
 停止します。安い候補への再最適化、同時評価、worker schedulingは行いません。
 本例は既知のアフィンコストを使う同期`q=1`の統合例です。
+
+
+## 同一費用予算での比較（Phase 7）
+
+[ベンチマーク](../../benchmarks/multifidelity_cost_budget.py)と
+[Notebook](../../examples/notebooks/37_multifidelity_cost_aware.ipynb)では、
+同じ初期観測、同じseed、同じ評価費用上限の下で
+cost-aware MF-KGとrandom探索を比較します。
+
+```bash
+python benchmarks/multifidelity_cost_budget.py --seeds 2 --budget 3 --output results.csv
+```
+
+CSVには`policy`、`seed`、`step`、累積費用`spent`、
+残予算`remaining`、選択した`fidelity`、
+`best_target_oracle`を記録します。
+`best_target_oracle`は合成目的関数をtarget fidelityで追加評価した
+**診断値**であり、学習データへ追加せず、予算へ課金しません。
+現実の実験で無料のtarget fidelity観測が可能という意味ではありません。
+
+初期観測費用とacquisition最適化の計算時間は比較予算に含めません。
+少数seedの比較は性能優越性を示す統計的根拠にはなりません。
