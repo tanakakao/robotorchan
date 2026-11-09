@@ -29,6 +29,7 @@ from robotorchan.semantics.ordinal import (
     OrdinalProbabilityObjective,
 )
 from robotorchan.semantics.problem import ProblemSemantics
+from robotorchan.semantics.safety import SafetySpecification
 
 __all__ = [
     "ClassificationConstraint",
@@ -46,6 +47,7 @@ __all__ = [
     "ProbabilityResidualFeasibility",
     "ProblemSemantics",
     "RegressionObjective",
+    "SafetySpecification",
     "SampleProbabilityOfFeasibility",
     "SampleResidualFeasibility",
     "SemanticConstraint",
