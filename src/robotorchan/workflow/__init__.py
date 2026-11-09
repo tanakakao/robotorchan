@@ -1,5 +1,6 @@
 """Capability-aware problem selection and recommendation workflows."""
 
+from robotorchan.workflow.cost_budget import CostBudget
 from robotorchan.workflow.problem import (
     ObjectiveType,
     OutputType,
@@ -17,6 +18,7 @@ from robotorchan.workflow.selector import (
 )
 
 __all__ = [
+    "CostBudget",
     "ModelSelectionResult",
     "ObjectiveType",
     "OutputType",
