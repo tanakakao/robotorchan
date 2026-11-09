@@ -63,7 +63,9 @@ def optimize_safe_acqf(
             raise ValueError("safety model must return one safety decision per batch point.")
         safe_batches = batches[safe_mask.all(dim=-1)]
         if safe_batches.shape[0] == 0:
-            raise RuntimeError("No posterior-safe candidate batches were found in the sampled pool.")
+            raise RuntimeError(
+                "No posterior-safe candidate batches were found in the sampled pool."
+            )
         candidate, value = select_best_sampled_batch(acq_function, safe_batches)
         with torch.no_grad():
             _, verified = safety_confidence_bounds(
