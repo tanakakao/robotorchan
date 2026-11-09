@@ -7197,6 +7197,11 @@
       "path": "docs/optimization/turbo-m.md",
       "category": "Guide",
       "reason": "TuRBO-m公開API、Notebook導線、制限事項をまとめた利用者向け文書。"
+    },
+    {
+      "path": "docs/optimization/cost-budget.md",
+      "category": "Guide",
+      "reason": "Evaluation-cost budget accounting API and workflow integration guidance."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
