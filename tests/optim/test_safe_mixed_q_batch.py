@@ -36,9 +36,7 @@ def space() -> MixedVariableSpace:
 
 
 @pytest.mark.parametrize("mode", ["objective", "expansion"])
-def test_mixed_batch_is_legal_and_posterior_safe(
-    space: MixedVariableSpace, mode: str
-) -> None:
+def test_mixed_batch_is_legal_and_posterior_safe(space: MixedVariableSpace, mode: str) -> None:
     kwargs = {
         "bounds": space.bounds,
         "constraints": (ContinuousConstraint(0, 0.6),),
