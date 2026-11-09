@@ -45,10 +45,14 @@ def propose_safe_expansion(
 
     if isinstance(q, bool) or not isinstance(q, int) or q < 1:
         raise ValueError("q must be a positive integer.")
-    if q > 1 and variable_space is not None:
-        raise ValueError("Mixed q-batch Safe BO is reserved for Phase 4.")
+    if variable_space is not None and not torch.equal(variable_space.bounds, bounds):
+        raise ValueError("variable_space bounds must match bounds.")
     if q > 1:
-        batches = sample_candidate_batches(bounds, num_samples, q, seed=seed)
+        batches = (
+            sample_candidate_batches(bounds, num_samples, q, seed=seed)
+            if variable_space is None
+            else sample_mixed_candidate_batches(variable_space, num_samples, q=q, seed=seed)
+        )
         with torch.no_grad():
             _, safe = safety_confidence_bounds(
                 safety_model, batches, constraints, beta=beta, tolerance=tolerance
@@ -78,8 +82,6 @@ def propose_safe_expansion(
         if not bool(verified.all()):
             raise RuntimeError("Expansion batch failed posterior safety recheck.")
         return candidate, scores[selected]
-    if variable_space is not None and not torch.equal(variable_space.bounds, bounds):
-        raise ValueError("variable_space bounds must match bounds.")
     if variable_space is None:
         engine = torch.quasirandom.SobolEngine(bounds.shape[1], scramble=True, seed=seed)
         unit = engine.draw(num_samples).to(dtype=bounds.dtype, device=bounds.device)
