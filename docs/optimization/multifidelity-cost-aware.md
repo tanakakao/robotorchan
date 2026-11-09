@@ -98,3 +98,49 @@ BoTorch標準のMF-KGと`CostBudget`を接続し、
   利用側で実験記録と整合させてください。
 - この例は同期・逐次の`q=1`です。非同期の同時予約や
   複数候補のjoint batch運用は対象外です。
+
+
+## MF-MES実装可否の整理（Phase 5）
+
+MF-MES（Multi-Fidelity Max-value Entropy Search）は、最終的なtarget
+fidelityでの最適値について、候補`(x, s)`を評価することで得られる
+情報量をコストと合わせて評価する手法です。通常のMESの
+`qMaxValueEntropy`を多忠実度モデルに渡しただけでは、
+target fidelityの最適値に関する情報量という要件を満たすとは限りません。
+
+### 既存実装と不足点
+
+| 項目 | 現状 | 判断 |
+| --- | --- | --- |
+| 通常のMES / GIBBON | BoTorchの`qMaxValueEntropy` / `qLowerBoundMaxValueEntropy`を統合テスト済み | 再利用 |
+| Multi-Fidelity GP | robotorchanのモデルとBoTorchのMF-KG連携を検証済み | 再利用 |
+| Cost model / budget | 既知・学習型costと`CostBudget`の接続例あり | 再利用 |
+| MF-MES acquisition | robotorchan内に実行検証済みの専用経路なし | 未対応 |
+| MF-MES候補生成・閉ループ | 専用の候補生成テストなし | 未対応 |
+
+### 実装判断の順序
+
+1. 使用するBoTorchバージョンに、target-fidelity optimumの
+   サンプリングとfidelity間の条件付き情報量を扱う公開MF-MES APIが
+   存在するか確認する。**本Phaseでは上流APIの存在を確定していない。**
+2. 公開APIが利用できるなら、robotorchan独自クラスを追加せず、
+   fidelity projection、target fidelity上のcandidate set、
+   cost utility、optimizerを組み合わせて小さな統合テストを行う。
+3. 公開APIがない場合、通常のMESにcost重みを付けただけの実装を
+   MF-MESと呼ばない。必要な情報量近似、fidelity間相関の条件付け、
+   計算量を明示した別途のアルゴリズム設計が必要となる。
+4. 追加アルゴリズムの必要性が確認されるまでは、
+   実行検証済みのcost-aware MF-KGを推奨経路として維持する。
+
+### 最小限の検証条件
+
+- 評価fidelityとtarget fidelityが異なるケースを含める。
+- candidate setのfidelityと最適値の定義を混同しない。
+- コストが正で有限であること、acquisition値が有限であることを確認する。
+- `q=1`の候補提案までを先に検証し、batch・mixed・非同期は
+  初回実装の必須条件にしない。
+- MF-KGとの性能比較は、実行可能なMF-MES経路が確立してから行う。
+
+**Phase 5結論：現時点でrobotorchanのMF-MES対応完了とは判定しない。**
+公開BoTorch APIの確認と最小の統合実験が次の実装着手条件です。
+MF-KGのPhase 4までの成果とは独立した拡張候補として扱います。
