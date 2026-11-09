@@ -153,6 +153,6 @@ BoTorchの`SingleTaskGP`をfitし、`set_model`へ登録する。
 Restartした領域には初期観測値を用意してGPを再構築する。
 
 学習と評価を含む実行例は
-[Notebook](../../../examples/notebooks/turbo_multi_benchmark.ipynb)に集約した。
+[Notebook](../../../examples/notebooks/43_turbo_multi_benchmark.ipynb)に集約した。
 公開APIの使い方と制約は
 [TuRBO-m利用ドキュメント](../../optimization/turbo-m.md)を参照する。
