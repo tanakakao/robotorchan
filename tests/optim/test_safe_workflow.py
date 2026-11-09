@@ -34,9 +34,7 @@ def _workflow() -> SafeBOWorkflow:
 
 def test_ask_tell_records_observation_and_prevents_double_ask() -> None:
     workflow = _workflow()
-    candidate = workflow.ask(
-        _SafetyModel(), acq_function=_Acquisition(), num_samples=64, seed=4
-    )
+    candidate = workflow.ask(_SafetyModel(), acq_function=_Acquisition(), num_samples=64, seed=4)
     assert candidate.item() <= 0.5
     with pytest.raises(RuntimeError, match="tell"):
         workflow.ask(_SafetyModel(), acq_function=_Acquisition())
