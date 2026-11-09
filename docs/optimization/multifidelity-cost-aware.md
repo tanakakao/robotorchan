@@ -76,3 +76,25 @@ cost GPの学習、正値化したコスト効用、Phase 2の`CostBudget`によ
 予測費用の予約と実測費用の精算を接続します。
 この例はcost utilityの動作を示すものであり、
 MF-KGの全closed-loop最適化はPhase 4の対象です。
+
+
+## MF-KGの逐次Closed-loop（Phase 4）
+
+[実行例](../../examples/mfkg_cost_budget_loop.py)は、
+BoTorch標準のMF-KGと`CostBudget`を接続し、
+各反復でモデルの再学習、target fidelityでの`current_value`計算、
+評価候補の最適化、費用予約、評価、実費精算を行います。
+
+- 評価候補のfidelityは`[0.5, 1.0]`で最適化し、
+  `project_to_target`は最終価値の評価にだけ用います。
+- 評価費用は既知の`AffineFidelityCostModel`を使用します。
+  Phase 3の学習型cost surrogateへの差し替えは可能ですが、
+  本例ではobjective側の逐次更新を明確にするため固定しています。
+- 初期観測費用は予算計算の対象外です。必要なら
+  `CostBudget.record`で初期費用を計上してください。
+- 予測費用が残予算を超えた場合は停止します。
+  別の安い候補の探索や候補集合の予算制約付き最適化は行いません。
+- 評価例外では予約を取り消します。評価済みだが実費が不明な場合は
+  利用側で実験記録と整合させてください。
+- この例は同期・逐次の`q=1`です。非同期の同時予約や
+  複数候補のjoint batch運用は対象外です。
