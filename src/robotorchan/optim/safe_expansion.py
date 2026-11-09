@@ -7,6 +7,8 @@ from collections.abc import Sequence
 import torch
 from torch import Tensor
 
+from robotorchan.optim.backends.sampling import sample_mixed_candidate_batches
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.semantics.constraints import ContinuousConstraint
 from robotorchan.semantics.safety_bounds import safety_confidence_bounds
 
@@ -20,6 +22,7 @@ def propose_safe_expansion(
     tolerance: float = 0.0,
     num_samples: int = 1024,
     seed: int | None = None,
+    variable_space: MixedVariableSpace | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Choose a conservative safe point with large safety uncertainty.
 
@@ -36,9 +39,14 @@ def propose_safe_expansion(
     if isinstance(num_samples, bool) or not isinstance(num_samples, int) or num_samples < 1:
         raise ValueError("num_samples must be a positive integer.")
 
-    engine = torch.quasirandom.SobolEngine(bounds.shape[1], scramble=True, seed=seed)
-    unit = engine.draw(num_samples).to(dtype=bounds.dtype, device=bounds.device)
-    choices = bounds[0] + (bounds[1] - bounds[0]) * unit
+    if variable_space is not None and not torch.equal(variable_space.bounds, bounds):
+        raise ValueError("variable_space bounds must match bounds.")
+    if variable_space is None:
+        engine = torch.quasirandom.SobolEngine(bounds.shape[1], scramble=True, seed=seed)
+        unit = engine.draw(num_samples).to(dtype=bounds.dtype, device=bounds.device)
+        choices = bounds[0] + (bounds[1] - bounds[0]) * unit
+    else:
+        choices = sample_mixed_candidate_batches(variable_space, num_samples, seed=seed).squeeze(1)
     with torch.no_grad():
         _, safe = safety_confidence_bounds(
             safety_model, choices.unsqueeze(-2), constraints, beta=beta, tolerance=tolerance
