@@ -1,6 +1,6 @@
 # Safe Bayesian Optimization 実装ガイド
 
-[Safe BOの理論](../theory/25_safe_bayesian_optimization.md)で導入した安全集合と信頼区間が、robotorchanでどのように実装されるかを説明する。実行可能なコードは[日本語利用Notebook](../../examples/notebooks/safe_bo_usage_guide.ipynb)に集約する。
+[Safe BOの理論](../theory/25_safe_bayesian_optimization.md)で導入した安全集合と信頼区間が、robotorchanでどのように実装されるかを説明する。実行可能なコードは[日本語利用Notebook](../../examples/notebooks/44_safe_bo_usage_guide.ipynb)に集約する。
 
 ## 理論と実装の対応
 
@@ -64,8 +64,8 @@
 
 ## Notebook
 
-- [Safe BO日本語利用ガイド](../../examples/notebooks/safe_bo_usage_guide.ipynb)：設定、学習、候補提案、観測登録、再学習、探索モード切替
-- [Safe BO Mixed・qバッチ利用例](../../examples/notebooks/safe_bo_mixed_q_batch.ipynb)：Mixed入力、q>1、ask/tell、探索モード
-- [Safe BO比較実験](../../examples/notebooks/safe_bo_benchmark.ipynb)：予測平均制約、保守的信頼区間、安全集合内探索の比較
+- [Safe BO日本語利用ガイド](../../examples/notebooks/44_safe_bo_usage_guide.ipynb)：設定、学習、候補提案、観測登録、再学習、探索モード切替
+- [Safe BO Mixed・qバッチ利用例](../../examples/notebooks/46_safe_bo_mixed_q_batch.ipynb)：Mixed入力、q>1、ask/tell、探索モード
+- [Safe BO比較実験](../../examples/notebooks/45_safe_bo_benchmark.ipynb)：予測平均制約、保守的信頼区間、安全集合内探索の比較
 
 両Notebookは手動実行対象であり、登録や構文検査だけでは実行成功の証拠にならない。
