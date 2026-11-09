@@ -85,9 +85,10 @@ def experiment(policy: str, seed: int, total_budget: float) -> list[dict[str, fl
         budget.settle(f"evaluation-{step}", measured_cost)
         train_X = torch.cat((train_X, candidate))
         train_Y = torch.cat((train_Y, new_Y))
-        # Only target-fidelity observations are directly comparable as observed incumbents.
-        if bool(torch.isclose(candidate[0, 1], torch.tensor(1.0, dtype=dtype))):
-            best_target = max(best_target, float(new_Y.max().item()))
+        # Synthetic benchmark oracle: evaluate each proposed design at target fidelity.
+        # This diagnostic is not supplied to the surrogate or charged to the budget.
+        target_value = objective(project(candidate))
+        best_target = max(best_target, float(target_value.max().item()))
         rows.append(
             {
                 "policy": policy,
@@ -96,7 +97,7 @@ def experiment(policy: str, seed: int, total_budget: float) -> list[dict[str, fl
                 "spent": budget.spent,
                 "remaining": budget.remaining,
                 "fidelity": float(candidate[0, 1].item()),
-                "best_observed_target": best_target,
+                "best_target_oracle": best_target,
             }
         )
     return rows
