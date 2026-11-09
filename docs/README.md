@@ -25,8 +25,8 @@
 
 - [Safe BOの理論](theory/25_safe_bayesian_optimization.md)
 - [Safe BOの実装ガイド](optimization/safe_bayesian_optimization.md)
-- [日本語利用Notebook](../examples/notebooks/safe_bo_usage_guide.ipynb)
-- [比較Notebook](../examples/notebooks/safe_bo_benchmark.ipynb)
+- [日本語利用Notebook](../examples/notebooks/44_safe_bo_usage_guide.ipynb)
+- [比較Notebook](../examples/notebooks/45_safe_bo_benchmark.ipynb)
 
 ### 高次元問題を扱いたい
 
