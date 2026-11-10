@@ -29,7 +29,8 @@ def run_trial(*, method: str, seed: int, rounds: int) -> list[float]:
     datapoints = torch.tensor([[0.0], [0.4], [0.8], [1.0]], dtype=torch.double)
     comparisons = torch.tensor([[1, 0], [2, 3], [1, 2]], dtype=torch.long)
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
-    optimum = utility(torch.linspace(0, 1, 2001, dtype=torch.double).unsqueeze(-1)).max()
+    grid = torch.linspace(0, 1, 2001, dtype=torch.double).unsqueeze(-1)
+    optimum = utility(grid).max()
     regrets = [float(optimum - utility(datapoints).max())]
 
     for _ in range(rounds):
@@ -78,8 +79,10 @@ def main() -> None:
             dtype=torch.double,
         )
         mean = curves.mean(dim=0)
-        print(f"{method}: mean simple regret by round = {[round(v, 5) for v in mean.tolist()]}")
-        print(f"{method}: final regret mean={mean[-1]:.5f}, std={curves[:, -1].std(unbiased=False):.5f}")
+        curve = [round(v, 5) for v in mean.tolist()]
+        print(f"{method}: mean simple regret by round = {curve}")
+        final_std = curves[:, -1].std(unbiased=False)
+        print(f"{method}: final regret mean={mean[-1]:.5f}, std={final_std:.5f}")
 
 
 if __name__ == "__main__":
