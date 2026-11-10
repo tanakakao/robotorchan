@@ -29,6 +29,7 @@ def propose_rgpe_candidate(
     raw_samples: int = 128,
     num_restarts: int = 8,
     seed: int = 0,
+    q: int = 1,
     cat_dims: list[int] | None = None,
     fixed_features_list: list[dict[int, float]] | None = None,
 ) -> tuple[Tensor, Tensor]:
@@ -38,8 +39,9 @@ def propose_rgpe_candidate(
     computes RGPE ranking weights, then maximizes analytic EI. The caller
     evaluates the proposed candidate and appends the observation before
     the next call. Mixed inputs require cat_dims and fixed_features_list.
-    Only single-output, q=1 BO is supported.
-    Returns (candidate of shape (1, d), model weights).
+    For q>1, greedily condition on posterior-mean fantasies after each
+    proposal, without updating RGPE ranking weights. Single-output only.
+    Returns (candidate of shape (q, d), model weights).
     """
     if target_x.ndim != 2 or target_x.shape[0] < 3:
         raise ValueError("target_x must have shape (n, d) with n >= 3")
@@ -52,6 +54,8 @@ def propose_rgpe_candidate(
         raise ValueError("target observations must be finite")
     if not bool(((target_x >= bounds[0]) & (target_x <= bounds[1])).all()):
         raise ValueError("target_x must lie within bounds")
+    if q < 1:
+        raise ValueError("q must be positive")
     if raw_samples < 1 or num_restarts < 1:
         raise ValueError("raw_samples and num_restarts must be positive")
 
@@ -95,26 +99,42 @@ def propose_rgpe_candidate(
         n_bootstrap=n_bootstrap,
         seed=seed,
     )
-    ensemble = RGPEModel(source_models, target_model, weights)
     best_f = y.max().item() if maximize else y.min().item()
-    acquisition = ExpectedImprovement(ensemble, best_f=best_f, maximize=maximize)
+    candidates = []
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(seed)
-        if fixed_features_list is None:
-            candidate, _ = optimize_acqf(
-                acquisition,
-                bounds=bounds,
-                q=1,
-                num_restarts=num_restarts,
-                raw_samples=raw_samples,
+        for _ in range(q):
+            ensemble = RGPEModel(source_models, target_model, weights)
+            acquisition = ExpectedImprovement(
+                ensemble, best_f=best_f, maximize=maximize
             )
-        else:
-            candidate, _ = optimize_acqf_mixed(
-                acquisition,
-                bounds=bounds,
-                q=1,
-                num_restarts=num_restarts,
-                raw_samples=raw_samples,
-                fixed_features_list=fixed_features_list,
+            if fixed_features_list is None:
+                candidate, _ = optimize_acqf(
+                    acquisition,
+                    bounds=bounds,
+                    q=1,
+                    num_restarts=num_restarts,
+                    raw_samples=raw_samples,
+                )
+            else:
+                candidate, _ = optimize_acqf_mixed(
+                    acquisition,
+                    bounds=bounds,
+                    q=1,
+                    num_restarts=num_restarts,
+                    raw_samples=raw_samples,
+                    fixed_features_list=fixed_features_list,
+                )
+            candidates.append(candidate.detach())
+            if len(candidates) == q:
+                break
+            with torch.no_grad():
+                fantasy = target_model.posterior(candidate).mean.detach()
+            target_model = target_model.condition_on_observations(
+                X=candidate, Y=fantasy
             )
-    return candidate.detach(), weights.detach()
+            fantasy_value = fantasy.item()
+            best_f = max(best_f, fantasy_value) if maximize else min(
+                best_f, fantasy_value
+            )
+    return torch.cat(candidates, dim=0), weights.detach()
