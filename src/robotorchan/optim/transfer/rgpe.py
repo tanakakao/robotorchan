@@ -72,13 +72,9 @@ def rgpe_weights(
     generator = torch.Generator(device=y.device).manual_seed(seed)
     counts = y.new_zeros(len(predictions))
     for _ in range(n_bootstrap):
-        indices = torch.randint(
-            i.numel(), (i.numel(),), generator=generator, device=y.device
-        )
+        indices = torch.randint(i.numel(), (i.numel(),), generator=generator, device=y.device)
         batch_loss = losses[:, indices].mean(dim=-1)
-        best = torch.where(
-            eligible, batch_loss, torch.full_like(batch_loss, float("inf"))
-        )
+        best = torch.where(eligible, batch_loss, torch.full_like(batch_loss, float("inf")))
         winners = best == best.min()
         counts += winners.to(y.dtype) / winners.sum()
     return counts / n_bootstrap
