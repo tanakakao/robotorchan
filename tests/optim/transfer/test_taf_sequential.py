@@ -74,7 +74,6 @@ def test_taf_sequential_mixed_rejects_unsupported_category():
         )
 
 
-
 def test_taf_sequential_greedy_q_two(monkeypatch):
     x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
     y = torch.tensor([[0.0], [1.0], [0.0]], dtype=torch.double)
@@ -89,8 +88,6 @@ def test_taf_sequential_greedy_q_two(monkeypatch):
         return torch.tensor([[value]], dtype=torch.double), torch.tensor(0.0)
 
     monkeypatch.setattr(taf_sequential, "optimize_acqf", fake_optimize)
-    candidate = taf_sequential.propose_taf_candidate(
-        [], x, y, bounds, torch.ones(1), q=2
-    )
+    candidate = taf_sequential.propose_taf_candidate([], x, y, bounds, torch.ones(1), q=2)
     assert candidate.shape == (2, 1)
     assert torch.equal(candidate[:, 0], torch.tensor([0.25, 0.75], dtype=torch.double))
