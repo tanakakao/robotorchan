@@ -534,3 +534,32 @@ EUBOの統合テストと逐次ループテストはCIで検証されていま�
 最小構成のPreference BOとしては、比較データの学習、
 EUBOによる2候補提案、フィードバックの蓄積と再学習、
 評価用ベンチマークおよび日本語資料が揃っています。
+
+
+---
+
+## Mixed Preference BO：機能対応表
+
+| 項目 | 対応状況 | 実装 |
+| --- | --- | --- |
+| 連続変数のPairwiseGP | 対応 | `PairwiseGP` |
+| カテゴリ・Mixed入力 | 対応 | `MixedPairwiseGP` |
+| 2候補のAnalytic EUBO | 対応 | BoTorch `AnalyticExpectedUtilityOfBestOption` |
+| Mixedの2候補同時最適化 | 対応 | `optimize_mixed_preference_pair` |
+| Mixed逐次1ペア比較 | 対応 | `run_mixed_preference_loop` |
+| 1ラウンドに複数の独立ペア | 対応 | `run_mixed_preference_batch_loop` |
+| 同一ラウンド内のペア重複回避 | 対応 | 順序反転も同一視 |
+| ペア間の距離制御 | ヒューリスティック | `min_pair_distance` |
+| 過去の全観測点との重複回避 | 未対応 | — |
+| q>2のjoint EUBO | 未対応 | — |
+| listwise順位フィードバック | 未対応 | — |
+
+`pairs_per_step` は比較ペアの数であり、EUBOの `q` ではありません。
+例えば `pairs_per_step=3` は独立した `q=2` の比較を3組提案します。
+各ラウンドではモデルを1回学習し、3組の勝者・敗者を比較履歴に追加します。
+
+カテゴリ組合せは候補2点について列挙するため、大規模な離散空間では
+探索コストが増えます。距離条件を満たす代替候補が見つからなければ
+例外が発生します。実行例は
+[Mixed Preference BO Notebook](../../examples/notebooks/47_mixed_preference_bo.ipynb)
+を参照してください。

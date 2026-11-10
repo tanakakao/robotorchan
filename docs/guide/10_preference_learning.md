@@ -132,3 +132,31 @@ EUBOとランダム比較の評価は
 [likelihood]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/models/likelihoods/pairwise.py
 [notebook]: ../../examples/notebooks/07_pairwise_gp.ipynb
 [tests]: ../../tests/models/preference/test_pairwise_gp.py
+
+
+## Mixed Preference BO：理論と実装の接続
+
+`MixedPairwiseGP` は、連続変数とカテゴリ変数を含む入力に対して、
+`make_mixed_covar_module` で構成した共分散を `ScaleKernel` で包み、
+BoTorchの `PairwiseGP` に渡します。比較尤度とLaplace近似は引き続きBoTorchが担当します。
+
+2候補の選好を尋ねる場合、`AnalyticExpectedUtilityOfBestOption` (EUBO) は
+`q=2` のペアを評価します。`optimize_mixed_preference_pair` は2候補それぞれの
+カテゴリ割当てを列挙し、残る連続次元をBoTorchの `optimize_acqf(q=2)` で
+同時最適化します。BoTorchの通常の逐次Mixed最適化で `q=1` に分割することはしません。
+
+`run_mixed_preference_loop` は1ラウンドに1ペア、
+`run_mixed_preference_batch_loop` は1ラウンドに複数の独立したペアを提案します。
+後者も同一の事後分布から個別の `q=2` EUBOを評価する方式であり、
+`q>2` のjoint acquisitionやlistwise比較尤度ではありません。
+フィードバックは各ペアの勝者index（0または1）で、
+比較履歴には各ペアの `[winner, loser]` の行を追加します。
+
+重複回避は同一ラウンドで選ばれたペア同士を対象とし、順序を入れ替えた
+同一ペアも検出します。`min_pair_distance` はboundsで正規化した連続次元の
+差とカテゴリの一致・不一致を使うヒューリスティックです。
+重複時はランダムな代替候補をEUBOで選びますが、厳密な最適性や
+過去の全観測点との重複回避は保証しません。
+
+実行例は [Mixed Preference BO Notebook](../../examples/notebooks/47_mixed_preference_bo.ipynb)
+を参照してください。
