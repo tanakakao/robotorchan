@@ -129,8 +129,14 @@ def test_rgpe_joint_q_two_uses_joint_optimizer(monkeypatch):
 
     monkeypatch.setattr(rgpe_sequential, "optimize_acqf", fake_optimize)
     result = rgpe_sequential.propose_rgpe_candidate(
-        [], x, y, bounds, q=2, batch_strategy="joint",
-        n_bootstrap=8, mc_samples=16,
+        [],
+        x,
+        y,
+        bounds,
+        q=2,
+        batch_strategy="joint",
+        n_bootstrap=8,
+        mc_samples=16,
     )
     candidate = result[0] if isinstance(result, tuple) else result
     assert candidate.shape == (2, 1)
