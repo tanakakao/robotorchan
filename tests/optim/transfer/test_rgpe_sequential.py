@@ -20,7 +20,8 @@ def test_sequential_rgpe_proposes_one_candidate(monkeypatch):
 
     def fake_optimize(acq_function, *, bounds, q, num_restarts, raw_samples):
         assert q == 1
-        assert torch.isfinite(acq_function(torch.tensor([[[0.25]]], dtype=torch.double))).all()
+        query = torch.tensor([[[0.25]]], dtype=torch.double)
+        assert torch.isfinite(acq_function(query)).all()
         return torch.tensor([[0.25]], dtype=torch.double), torch.tensor(0.0)
 
     monkeypatch.setattr(rgpe_sequential, "optimize_acqf", fake_optimize)
