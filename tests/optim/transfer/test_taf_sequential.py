@@ -91,3 +91,24 @@ def test_taf_sequential_greedy_q_two(monkeypatch):
     candidate = taf_sequential.propose_taf_candidate([], x, y, bounds, torch.ones(1), q=2)
     assert candidate.shape == (2, 1)
     assert torch.equal(candidate[:, 0], torch.tensor([0.25, 0.75], dtype=torch.double))
+
+
+def test_taf_joint_q_two_uses_joint_optimizer(monkeypatch):
+    x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
+    y = torch.tensor([[0.0], [1.0], [0.0]], dtype=torch.double)
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    monkeypatch.setattr(taf_sequential, "fit_gpytorch_mll", lambda *_: None)
+
+    def fake_optimize(acq_function, *, bounds, q, num_restarts, raw_samples):
+        assert q == 2
+        candidate = torch.tensor([[0.25], [0.75]], dtype=torch.double)
+        assert torch.isfinite(acq_function(candidate.unsqueeze(0))).all()
+        return candidate, torch.tensor(0.0)
+
+    monkeypatch.setattr(taf_sequential, "optimize_acqf", fake_optimize)
+    result = taf_sequential.propose_taf_candidate(
+        [], x, y, bounds, torch.ones(1), q=2, batch_strategy="joint",
+        mc_samples=16,
+    )
+    candidate = result[0] if isinstance(result, tuple) else result
+    assert candidate.shape == (2, 1)
