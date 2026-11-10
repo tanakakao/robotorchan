@@ -1,6 +1,7 @@
 """Minimal compatibility check for mixed covariance with PairwiseGP."""
 
 import torch
+from gpytorch.kernels import ScaleKernel
 
 from robotorchan.models import PairwiseGP
 from robotorchan.models.base import make_mixed_covar_module
@@ -18,10 +19,8 @@ def test_pairwise_gp_with_mixed_covariance() -> None:
         ],
         dtype=torch.double,
     )
-    comparisons = torch.tensor(
-        [[1, 0], [2, 3], [1, 2]], dtype=torch.long
-    )
-    covariance = make_mixed_covar_module(input_dim=2, cat_dims=[1])
+    comparisons = torch.tensor([[1, 0], [2, 3], [1, 2]], dtype=torch.long)
+    covariance = ScaleKernel(make_mixed_covar_module(input_dim=2, cat_dims=[1]))
     model = PairwiseGP(
         datapoints=datapoints,
         comparisons=comparisons,
