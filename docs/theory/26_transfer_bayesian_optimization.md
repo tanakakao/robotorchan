@@ -60,3 +60,36 @@ a_{\mathrm{TAF}}(x)=w_t\operatorname{EI}_t(x)
 
 - Feurer, Letham, Bakshy (2018), *Scalable Meta-Learning for Bayesian Optimization using Ranking-Weighted Gaussian Process Ensembles*.
 - Wistuba, Schilling, Schmidt-Thieme (2018), *Scalable Gaussian Process-Based Transfer Surrogates for Hyperparameter Optimization*.
+
+## 6. Mixed入力と複数候補提案
+
+Mixed入力では連続変数とカテゴリ変数を同じ入力ベクトルで表し、
+カテゴリ次元を指定してGPのカーネルと探索方法を切り替える。
+カテゴリ値は順序尺度として連続最適化せず、許可された割当を列挙する。
+
+`q>1` の候補選択には二つの考え方がある。
+
+### Sequential greedy
+
+1点目を選んだ後、その点のターゲット事後平均を仮想観測値として条件付けし、
+次の点を選ぶ。これを `q` 点まで繰り返す。
+観測していない点の値を平均値で代用する近似であり、バッチ内の
+重み再推定は行わない。
+
+### Joint batch
+
+候補集合 `X=(x_1,...,x_q)` を同時に評価する。
+最大化のターゲットMC qEIは
+
+\\[
+\\operatorname{qEI}(X)=\\mathbb{E}\\left[\\max\\left(\\max_{j=1}^{q} f_t(x_j)-f_t^*,0\\right)\\right]
+\\]
+
+であり、同時事後分布により候補間の相関を考慮する。
+RGPEではモーメント整合したアンサンブルposteriorにqEIを適用する。
+TAFではターゲットのqEIに、各ソースモデルの
+\\(\\max(\\max_j\\mu_i(x_j)-f_t^*,0)\\) を加重する。
+最小化では改善量の符号を反転する。
+
+JointはSequentialより同時最適化の次元が増えるため計算負荷が大きくなり得る。
+両方式とも候補を提案するだけで、目的関数の評価は呼び出し側が行う。
