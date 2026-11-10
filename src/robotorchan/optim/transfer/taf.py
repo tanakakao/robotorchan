@@ -28,9 +28,7 @@ class TransferAcquisitionFunction(AnalyticAcquisitionFunction):
         *,
         maximize: bool = True,
     ) -> None:
-        if target_model.num_outputs != 1 or any(
-            model.num_outputs != 1 for model in source_models
-        ):
+        if target_model.num_outputs != 1 or any(model.num_outputs != 1 for model in source_models):
             raise ValueError("TAF supports scalar-output models only")
         if weights.ndim != 1 or weights.numel() != len(source_models) + 1:
             raise ValueError("weights must include each source and the target")
@@ -43,9 +41,7 @@ class TransferAcquisitionFunction(AnalyticAcquisitionFunction):
         self.register_buffer("weights", weights.detach().clone())
         self.register_buffer("best_f", torch.as_tensor(best_f).detach().clone())
         self.maximize = maximize
-        self.target_ei = ExpectedImprovement(
-            target_model, best_f=best_f, maximize=maximize
-        )
+        self.target_ei = ExpectedImprovement(target_model, best_f=best_f, maximize=maximize)
 
     def forward(self, X: Tensor) -> Tensor:
         """Evaluate TAF for t-batch x 1 x d inputs."""
