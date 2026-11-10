@@ -158,5 +158,5 @@ BoTorchの `PairwiseGP` に渡します。比較尤度とLaplace近似は引き�
 重複時はランダムな代替候補をEUBOで選びますが、厳密な最適性や
 過去の全観測点との重複回避は保証しません。
 
-実行例は [Mixed Preference BO Notebook](../../examples/notebooks/08_mixed_preference_bo.ipynb)
+実行例は [Mixed Preference BO Notebook](../../examples/notebooks/47_mixed_preference_bo.ipynb)
 を参照してください。
