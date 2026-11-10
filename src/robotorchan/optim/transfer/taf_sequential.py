@@ -13,6 +13,7 @@ from gpytorch.mlls import ExactMarginalLogLikelihood
 from torch import Tensor
 
 from robotorchan.optim.transfer.taf import TransferAcquisitionFunction
+from robotorchan.optim.transfer.taf_joint import qTransferAcquisitionFunction
 
 
 def propose_taf_candidate(
@@ -27,6 +28,8 @@ def propose_taf_candidate(
     num_restarts: int = 8,
     seed: int = 0,
     q: int = 1,
+    batch_strategy: str = "sequential",
+    mc_samples: int = 128,
     cat_dims: list[int] | None = None,
     fixed_features_list: list[dict[int, float]] | None = None,
 ) -> Tensor:
@@ -36,7 +39,7 @@ def propose_taf_candidate(
     entry per source model plus one for the target model. Evaluate the
     candidate externally, append the observation, and call again for
     sequential BO. Mixed inputs require cat_dims and fixed_features_list.
-    For q>1, greedily condition on posterior-mean fantasies after each
+    For sequential q>1, greedily condition on posterior-mean fantasies after each
     proposal, keeping source weights fixed. Scalar output only.
     """
     if target_x.ndim != 2 or target_x.shape[0] < 2:
@@ -52,6 +55,10 @@ def propose_taf_candidate(
         raise ValueError("bounds must be finite")
     if not bool(((target_x >= bounds[0]) & (target_x <= bounds[1])).all()):
         raise ValueError("target_x must lie within bounds")
+    if batch_strategy not in ("sequential", "joint"):
+        raise ValueError("batch_strategy must be 'sequential' or 'joint'")
+    if mc_samples < 1:
+        raise ValueError("mc_samples must be positive")
     if q < 1:
         raise ValueError("q must be positive")
     if raw_samples < 1 or num_restarts < 1:
@@ -86,6 +93,36 @@ def propose_taf_candidate(
     fit_gpytorch_mll(ExactMarginalLogLikelihood(target_model.likelihood, target_model))
     target_model.eval()
     incumbent = y.max().item() if maximize else y.min().item()
+
+    if batch_strategy == "joint" and q > 1:
+        acquisition = qTransferAcquisitionFunction(
+            source_models,
+            target_model,
+            weights,
+            best_f=incumbent,
+            maximize=maximize,
+            mc_samples=mc_samples,
+        )
+        with torch.random.fork_rng(devices=[]):
+            torch.manual_seed(seed)
+            if fixed_features_list is None:
+                candidate, _ = optimize_acqf(
+                    acquisition,
+                    bounds=bounds,
+                    q=q,
+                    num_restarts=num_restarts,
+                    raw_samples=raw_samples,
+                )
+            else:
+                candidate, _ = optimize_acqf_mixed(
+                    acquisition,
+                    bounds=bounds,
+                    q=q,
+                    num_restarts=num_restarts,
+                    raw_samples=raw_samples,
+                    fixed_features_list=fixed_features_list,
+                )
+        return candidate.detach()
     candidates = []
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(seed)
