@@ -7,9 +7,9 @@ from collections.abc import Sequence
 import torch
 from botorch.acquisition.analytic import ExpectedImprovement
 from botorch.fit import fit_gpytorch_mll
-from botorch.models import SingleTaskGP
+from botorch.models import MixedSingleTaskGP, SingleTaskGP
 from botorch.models.model import Model
-from botorch.optim import optimize_acqf
+from botorch.optim import optimize_acqf, optimize_acqf_mixed
 from gpytorch.mlls import ExactMarginalLogLikelihood
 from torch import Tensor
 
@@ -29,13 +29,16 @@ def propose_rgpe_candidate(
     raw_samples: int = 128,
     num_restarts: int = 8,
     seed: int = 0,
+    cat_dims: list[int] | None = None,
+    fixed_features_list: list[dict[int, float]] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Propose one candidate from fitted source models and target observations.
 
     Each call fits a target SingleTaskGP and independent LOO target GPs,
     computes RGPE ranking weights, then maximizes analytic EI. The caller
     evaluates the proposed candidate and appends the observation before
-    the next call. Only continuous, single-output, q=1 BO is supported.
+    the next call. Mixed inputs require cat_dims and fixed_features_list.
+    Only single-output, q=1 BO is supported.
     Returns (candidate of shape (1, d), model weights).
     """
     if target_x.ndim != 2 or target_x.shape[0] < 3:
@@ -52,11 +55,38 @@ def propose_rgpe_candidate(
     if raw_samples < 1 or num_restarts < 1:
         raise ValueError("raw_samples and num_restarts must be positive")
 
+    if (cat_dims is None) != (fixed_features_list is None):
+        raise ValueError("cat_dims and fixed_features_list must be provided together")
+    if cat_dims is not None:
+        if not cat_dims or len(set(cat_dims)) != len(cat_dims):
+            raise ValueError("cat_dims must contain unique categorical dimensions")
+        if any(index < 0 or index >= d for index in cat_dims):
+            raise ValueError("cat_dims must be valid input dimensions")
+        if not fixed_features_list or any(
+            set(features) != set(cat_dims) for features in fixed_features_list
+        ):
+            raise ValueError("fixed_features_list must specify every categorical dimension")
+        if any(
+            not any(
+                all(bool(target_x[row, index] == features[index]) for index in cat_dims)
+                for features in fixed_features_list
+            )
+            for row in range(n)
+        ):
+            raise ValueError("target_x contains unsupported categorical assignments")
     y = target_y.reshape(n, 1)
-    target_model = SingleTaskGP(target_x, y)
+    target_model = (
+        MixedSingleTaskGP(target_x, y, cat_dims=cat_dims)
+        if cat_dims is not None
+        else SingleTaskGP(target_x, y)
+    )
     fit_gpytorch_mll(ExactMarginalLogLikelihood(target_model.likelihood, target_model))
     target_model.eval()
-    loo = target_loo_predictions(target_x, y)
+    loo = (
+        target_loo_predictions(target_x, y, cat_dims=cat_dims)
+        if cat_dims is not None
+        else target_loo_predictions(target_x, y)
+    )
     weights = rgpe_weights(
         source_models,
         target_x,
@@ -70,11 +100,21 @@ def propose_rgpe_candidate(
     acquisition = ExpectedImprovement(ensemble, best_f=best_f, maximize=maximize)
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(seed)
-        candidate, _ = optimize_acqf(
-            acquisition,
-            bounds=bounds,
-            q=1,
-            num_restarts=num_restarts,
-            raw_samples=raw_samples,
-        )
+        if fixed_features_list is None:
+            candidate, _ = optimize_acqf(
+                acquisition,
+                bounds=bounds,
+                q=1,
+                num_restarts=num_restarts,
+                raw_samples=raw_samples,
+            )
+        else:
+            candidate, _ = optimize_acqf_mixed(
+                acquisition,
+                bounds=bounds,
+                q=1,
+                num_restarts=num_restarts,
+                raw_samples=raw_samples,
+                fixed_features_list=fixed_features_list,
+            )
     return candidate.detach(), weights.detach()
