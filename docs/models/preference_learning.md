@@ -561,5 +561,5 @@ EUBOによる2候補提案、フィードバックの蓄積と再学習、
 カテゴリ組合せは候補2点について列挙するため、大規模な離散空間では
 探索コストが増えます。距離条件を満たす代替候補が見つからなければ
 例外が発生します。実行例は
-[Mixed Preference BO Notebook](../../examples/notebooks/08_mixed_preference_bo.ipynb)
+[Mixed Preference BO Notebook](../../examples/notebooks/47_mixed_preference_bo.ipynb)
 を参照してください。
