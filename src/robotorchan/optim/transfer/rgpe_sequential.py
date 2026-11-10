@@ -105,9 +105,7 @@ def propose_rgpe_candidate(
         torch.manual_seed(seed)
         for _ in range(q):
             ensemble = RGPEModel(source_models, target_model, weights)
-            acquisition = ExpectedImprovement(
-                ensemble, best_f=best_f, maximize=maximize
-            )
+            acquisition = ExpectedImprovement(ensemble, best_f=best_f, maximize=maximize)
             if fixed_features_list is None:
                 candidate, _ = optimize_acqf(
                     acquisition,
@@ -130,11 +128,7 @@ def propose_rgpe_candidate(
                 break
             with torch.no_grad():
                 fantasy = target_model.posterior(candidate).mean.detach()
-            target_model = target_model.condition_on_observations(
-                X=candidate, Y=fantasy
-            )
+            target_model = target_model.condition_on_observations(X=candidate, Y=fantasy)
             fantasy_value = fantasy.item()
-            best_f = max(best_f, fantasy_value) if maximize else min(
-                best_f, fantasy_value
-            )
+            best_f = max(best_f, fantasy_value) if maximize else min(best_f, fantasy_value)
     return torch.cat(candidates, dim=0), weights.detach()
