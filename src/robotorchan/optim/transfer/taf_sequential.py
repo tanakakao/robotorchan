@@ -119,11 +119,7 @@ def propose_taf_candidate(
                 break
             with torch.no_grad():
                 fantasy = target_model.posterior(candidate).mean.detach()
-            target_model = target_model.condition_on_observations(
-                X=candidate, Y=fantasy
-            )
+            target_model = target_model.condition_on_observations(X=candidate, Y=fantasy)
             fantasy_value = fantasy.item()
-            incumbent = max(incumbent, fantasy_value) if maximize else min(
-                incumbent, fantasy_value
-            )
+            incumbent = max(incumbent, fantasy_value) if maximize else min(incumbent, fantasy_value)
     return torch.cat(candidates, dim=0)
