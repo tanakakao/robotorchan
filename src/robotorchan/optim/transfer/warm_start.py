@@ -52,8 +52,7 @@ def select_warm_start_points(
         if not keys or any(set(features) != keys for features in fixed_features_list):
             raise ValueError("fixed_features_list must fix the same nonempty dimensions")
         if any(
-            not isinstance(index, int) or index < 0 or index >= bounds.shape[1]
-            for index in keys
+            not isinstance(index, int) or index < 0 or index >= bounds.shape[1] for index in keys
         ):
             raise ValueError("fixed feature indices must be valid input dimensions")
         assignments = []
