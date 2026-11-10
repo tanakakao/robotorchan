@@ -195,7 +195,8 @@ def _select_diverse_pair(
         for dim, value in fixed_features_list[assignment_indices[i, j].item()].items():
             candidates[i, j, dim] = value
     eligible = [
-        pair for pair in candidates
+        pair
+        for pair in candidates
         if _pair_is_distinct(pair, selected, bounds, cat_dims, min_pair_distance)
     ]
     if not eligible:
