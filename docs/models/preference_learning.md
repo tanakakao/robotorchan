@@ -504,3 +504,33 @@ best_x = test_X[best_idx]
 新しい獲得関数は、EUBOでは満たせない具体的な要件が確認された場合に限り、
 使用するBoTorchバージョンの公開APIと互換性を調べて追加します。
 現時点では独自ラッパーや追加テストは不要と判断します。
+
+## 対応範囲と検証状況
+
+以下は、公開API・統合テスト・実行例に基づく対応範囲です。
+「対応」はすべての最適化器や獲得関数との互換性を意味しません。
+
+| 機能 | 状態 | 根拠・注意点 |
+| --- | --- | --- |
+| Pairwise GPによる潜在効用の学習 | 対応 | `PairwiseGP.fit()`、既存モデルテスト |
+| winner/loser形式の比較データ | 対応 | `comparisons`は候補行の添字対 |
+| 比較データの追加と再学習 | 対応 | [逐次データテスト](../../tests/models/preference/test_sequential_preference_data.py) |
+| Analytic EUBOによる2候補提案 | 対応 | [EUBO統合テスト](../../tests/acquisition/test_preference_eubo.py) |
+| EUBOと比較結果による逐次ループ | 対応 | [逐次ループテスト](../../tests/acquisition/test_preference_sequential_loop.py) |
+| 既知の比較対象を固定したEUBO提案 | Notebookに例あり | [PairwiseGP Notebook](../../examples/notebooks/07_pairwise_gp.ipynb)の`previous_winner` |
+| EUBOとランダム比較の性能比較 | 実行スクリプトあり | [合成ベンチマーク](../../examples/preference_eubo_benchmark.py)。優位性の実測・保証とは別 |
+| Preference専用の情報利得獲得関数 | 未実装 | 分類用BALDは直接流用しない |
+| Mixed変数・q>2の比較集合 | 未検証・対象外 | この拡張の完了条件には含めない |
+| Multiobjective BOPE | 対象外 | outcomeモデルと選好モデルの分離が必要 |
+
+### 検証と制限
+
+EUBOの統合テストと逐次ループテストはCIで検証されています。
+理論・Guide・Notebookを追加した変更では、CI・Notebook構造検証・
+ドキュメントリンク検証が成功しました。
+ただし、Notebookの全セルを実行した結果や、ベンチマークの性能優位性を
+これらのチェックが証明するものではありません。
+
+最小構成のPreference BOとしては、比較データの学習、
+EUBOによる2候補提案、フィードバックの蓄積と再学習、
+評価用ベンチマークおよび日本語資料が揃っています。
