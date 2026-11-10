@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import torch
 from botorch.fit import fit_gpytorch_mll
-from botorch.models import SingleTaskGP
+from botorch.models import MixedSingleTaskGP, SingleTaskGP
 from gpytorch.mlls import ExactMarginalLogLikelihood
 from torch import Tensor
 
 
-def target_loo_predictions(train_x: Tensor, train_y: Tensor) -> Tensor:
+def target_loo_predictions(
+    train_x: Tensor, train_y: Tensor, *, cat_dims: list[int] | None = None
+) -> Tensor:
     """Fit n independent scalar SingleTaskGP models, omitting each point once.
 
     This deliberately uses refitting rather than in-sample predictions.
@@ -27,7 +29,11 @@ def target_loo_predictions(train_x: Tensor, train_y: Tensor) -> Tensor:
     predictions = []
     for index in range(n):
         mask = torch.arange(n, device=train_x.device) != index
-        model = SingleTaskGP(train_x[mask], targets[mask])
+        model = (
+            MixedSingleTaskGP(train_x[mask], targets[mask], cat_dims=cat_dims)
+            if cat_dims is not None
+            else SingleTaskGP(train_x[mask], targets[mask])
+        )
         mll = ExactMarginalLogLikelihood(model.likelihood, model)
         fit_gpytorch_mll(mll)
         model.eval()
