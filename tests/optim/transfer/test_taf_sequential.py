@@ -107,7 +107,13 @@ def test_taf_joint_q_two_uses_joint_optimizer(monkeypatch):
 
     monkeypatch.setattr(taf_sequential, "optimize_acqf", fake_optimize)
     result = taf_sequential.propose_taf_candidate(
-        [], x, y, bounds, torch.ones(1), q=2, batch_strategy="joint",
+        [],
+        x,
+        y,
+        bounds,
+        torch.ones(1),
+        q=2,
+        batch_strategy="joint",
         mc_samples=16,
     )
     candidate = result[0] if isinstance(result, tuple) else result
