@@ -30,6 +30,7 @@ EXPECTED_MIXED_MODELS = {
     "MixedNonstationaryMultiTaskGP",
     "MixedNonstationarySingleTaskGP",
     "MixedOrthogonalAdditiveGP",
+    "MixedPairwiseGP",
     "MixedPCAGP",
     "MixedPLSGP",
     "MixedRandomProjectionGP",
@@ -60,7 +61,6 @@ INTENTIONALLY_ABSENT = {
     "MixedALEBOGP",
     "MixedLCEAGP",
     "MixedModelListGP",
-    "MixedPairwiseGP",
     "MixedSACGP",
 }
 
