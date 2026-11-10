@@ -49,7 +49,11 @@ class qTransferAcquisitionFunction(AcquisitionFunction):
             model=target_model,
             best_f=best_f if maximize else -best_f,
             sampler=SobolQMCNormalSampler(sample_shape=torch.Size([mc_samples])),
-            objective=None if maximize else GenericMCObjective(lambda samples, X=None: -samples.squeeze(-1)),
+            objective=(
+                None
+                if maximize
+                else GenericMCObjective(lambda samples, X=None: -samples.squeeze(-1))
+            ),
         )
 
     def forward(self, X: Tensor) -> Tensor:
