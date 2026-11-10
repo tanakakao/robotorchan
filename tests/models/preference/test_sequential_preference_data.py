@@ -13,9 +13,7 @@ def test_sequential_preference_data_rebuild_and_refit() -> None:
     model.fit(optimizer_kwargs={"options": {"maxiter": 10}})
 
     # One additional comparison of existing points and one new candidate.
-    new_datapoints = torch.cat(
-        (datapoints, torch.tensor([[0.75]], dtype=datapoints.dtype)), dim=0
-    )
+    new_datapoints = torch.cat((datapoints, torch.tensor([[0.75]], dtype=datapoints.dtype)), dim=0)
     new_comparisons = torch.cat(
         (
             comparisons,
