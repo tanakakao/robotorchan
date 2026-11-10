@@ -115,9 +115,8 @@ def run_mixed_preference_batch_loop(
             pairs.append(pair.detach())
         batch = torch.stack(pairs)
         winners = feedback(batch.clone())
-        if (
-            len(winners) != pairs_per_step
-            or any(type(winner) is not int or winner not in (0, 1) for winner in winners)
+        if len(winners) != pairs_per_step or any(
+            type(winner) is not int or winner not in (0, 1) for winner in winners
         ):
             raise ValueError("feedback must return one winner index (0 or 1) per pair.")
         offset = points.shape[0]
