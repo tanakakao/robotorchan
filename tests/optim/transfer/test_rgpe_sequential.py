@@ -54,9 +54,7 @@ def test_sequential_rgpe_mixed_uses_discrete_optimizer(monkeypatch):
         lambda train_x, train_y, *, cat_dims: train_y.reshape(-1),
     )
 
-    def fake_optimize(
-        acq_function, *, bounds, q, num_restarts, raw_samples, fixed_features_list
-    ):
+    def fake_optimize(acq_function, *, bounds, q, num_restarts, raw_samples, fixed_features_list):
         assert q == 1
         assert fixed_features_list == assignments
         assert torch.isfinite(acq_function(x[:1].unsqueeze(0))).all()
@@ -76,7 +74,10 @@ def test_sequential_rgpe_mixed_rejects_unsupported_category():
     bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]])
     with pytest.raises(ValueError, match="unsupported categorical"):
         rgpe_sequential.propose_rgpe_candidate(
-            [], x, y, bounds,
+            [],
+            x,
+            y,
+            bounds,
             cat_dims=[1],
             fixed_features_list=[{1: 0.0}, {1: 1.0}],
         )
