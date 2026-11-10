@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import torch
-from torch import Tensor
 from botorch.models.model import Model
 from botorch.utils.sampling import draw_sobol_samples
+from torch import Tensor
 
 
 def select_warm_start_points(
