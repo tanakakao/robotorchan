@@ -51,11 +51,16 @@ def select_warm_start_points(
         keys = set(fixed_features_list[0])
         if not keys or any(set(features) != keys for features in fixed_features_list):
             raise ValueError("fixed_features_list must fix the same nonempty dimensions")
-        if any(not isinstance(index, int) or index < 0 or index >= bounds.shape[1] for index in keys):
+        if any(
+            not isinstance(index, int) or index < 0 or index >= bounds.shape[1]
+            for index in keys
+        ):
             raise ValueError("fixed feature indices must be valid input dimensions")
         assignments = []
         for features in fixed_features_list:
-            values = torch.as_tensor([features[index] for index in sorted(keys)], dtype=bounds.dtype)
+            values = torch.as_tensor(
+                [features[index] for index in sorted(keys)], dtype=bounds.dtype
+            )
             if not bool(torch.isfinite(values).all()):
                 raise ValueError("fixed feature values must be finite")
             if any(not bounds[0, index] <= features[index] <= bounds[1, index] for index in keys):
