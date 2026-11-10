@@ -13,6 +13,7 @@ RGPE、TAFの処理経路を説明する。使用コードと実験結果はNote
 | RGPE予測分布 | `optim.transfer.rgpe_model.RGPEModel` | BoTorch `Model`のposteriorを実装 |
 | RGPE逐次候補 | `optim.transfer.rgpe_sequential.propose_rgpe_candidate` | BoTorch EIと`optimize_acqf` |
 | TAF獲得関数 | `optim.transfer.taf.TransferAcquisitionFunction` | BoTorch `AnalyticAcquisitionFunction`を継承 |
+| Joint TAF獲得関数 | `optim.transfer.taf_joint.qTransferAcquisitionFunction` | BoTorch MC qEIとソース平均改善量の結合 |
 | TAF逐次候補 | `optim.transfer.taf_sequential.propose_taf_candidate` | `SingleTaskGP`学習と`optimize_acqf` |
 
 ## Warm-startの内部経路
@@ -40,7 +41,29 @@ RGPE、TAFの処理経路を説明する。使用コードと実験結果はNote
 ## 実装上の境界
 
 - 逐次関数は**目的関数を評価しない**。新しい観測の追加は呼び出し側が行う。
-- 対象は連続変数・単目的・`q=1`。Mixed、複数候補同時提案は対象外。
+- 対象は連続変数・Mixed変数（カテゴリは `cat_dims` と `fixed_features_list` を併用）・単目的。
+- `q=1` は従来の解析的EI、`q>1` は `batch_strategy="sequential"`（既定）または `"joint"`。
+- Mixedの候補最適化はBoTorch `optimize_acqf_mixed` に委譲する。
 - RGPEではLOOモデルの繰り返し学習に計算コストがかかる。
 - TAFは固定重みのため、負の転移を自動検知・抑制するとは限らない。
 - 性能の比較は`examples/benchmarks/transfer_bo.py`で行う。
+
+## Mixedとバッチ候補の処理経路
+
+両候補提案関数は、カテゴリ列を `cat_dims` で指定し、
+探索対象のカテゴリ割当を `fixed_features_list` に列挙する。
+ターゲットモデルには `MixedSingleTaskGP` を用いる。
+ソースモデルは同じ入力表現と出力次元を持つ必要がある。
+
+| `batch_strategy` | `q` | 獲得関数 | 最適化 |
+| --- | --- | --- | --- |
+| `sequential` | 1 | RGPE: EI / TAF: analytic TAF | `optimize_acqf(_mixed)` |
+| `sequential` | 2以上 | 1点ずつ解析的獲得関数、ターゲットGPを平均値fantasyで条件付け | `q=1` を繰り返す |
+| `joint` | 2以上 | RGPE: ensemble posteriorのMC qEI / TAF: target MC qEI + source meanの最大改善量 | `q>1` を同時最適化 |
+
+Sequentialのfantasyは**未評価の仮想観測**であり、実際の評価値ではない。
+RGPE重みとTAFの指定重みは、バッチ内で固定する。
+Joint TAFのソース項は決定論的な平均改善量で、ソースの予測分布をサンプリングしない。
+Joint RGPEのMC qEIはモーメント整合したGaussian posteriorを使う近似である。
+
+実行可能な例は `examples/notebooks/48_transfer_bayesian_optimization.ipynb` に置く。
