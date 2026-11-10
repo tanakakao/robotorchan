@@ -3,7 +3,7 @@
 import torch
 from gpytorch.kernels import ScaleKernel
 
-from robotorchan.models import PairwiseGP
+from robotorchan.models import MixedPairwiseGP, PairwiseGP
 from robotorchan.models.base import make_mixed_covar_module
 
 
@@ -35,3 +35,20 @@ def test_pairwise_gp_with_mixed_covariance() -> None:
     assert torch.isfinite(posterior.mean).all()
     assert torch.isfinite(posterior.variance).all()
     assert (posterior.variance >= 0).all()
+
+
+def test_mixed_pairwise_gp_public_model() -> None:
+    """The public mixed model reuses the existing pairwise fit and posterior."""
+    datapoints = torch.tensor(
+        [[0.0, 0.0], [0.3, 1.0], [0.7, 0.0], [1.0, 1.0]],
+        dtype=torch.double,
+    )
+    comparisons = torch.tensor([[1, 0], [2, 3], [1, 2]], dtype=torch.long)
+    model = MixedPairwiseGP(datapoints, comparisons, cat_dims=[1])
+    assert model.cat_dims == (1,)
+    assert isinstance(model.covar_module, ScaleKernel)
+    model.fit(optimizer_kwargs={"options": {"maxiter": 10}})
+    model.eval()
+    posterior = model.posterior(datapoints)
+    assert torch.isfinite(posterior.mean).all()
+    assert torch.isfinite(posterior.variance).all()
