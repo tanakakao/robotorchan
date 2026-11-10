@@ -6566,11 +6566,11 @@
       "editing_notes": "Mathematical concepts are library independent; concrete identifiers and runtime instructions are retained in the linked Guide or historical index."
     },
     {
-      "current_path": "docs/theory/acquisition/classification-active-learning.md",
+      "current_path": "docs/theory/acquisition/13_classification_active_learning.md",
       "category": "Theory",
       "language": "English",
       "action": "SPLIT",
-      "destination": "docs/theory/acquisition/classification-active-learning.md",
+      "destination": "docs/theory/acquisition/13_classification_active_learning.md",
       "reason": "数式・導出・統計的仮定の正本を維持し、固有APIや現在の実装状態のみGuideへ分離する。",
       "baseline_sha256": "d83df36b0cf0995c9d680184c4792964228465bd0b47e18c5cfca40f5dc4a514",
       "headings": [
@@ -6580,7 +6580,7 @@
       ],
       "routing_status": "applied",
       "extracted_destinations": [
-        "docs/guide/acquisition/classification-active-learning.md"
+        "docs/guide/acquisition/13_classification_active_learning.md"
       ],
       "editing_notes": "Mathematical concepts are library independent; concrete identifiers and runtime instructions are retained in the linked Guide or historical index."
     },
