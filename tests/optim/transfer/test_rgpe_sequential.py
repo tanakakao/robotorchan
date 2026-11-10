@@ -25,9 +25,7 @@ def test_sequential_rgpe_proposes_one_candidate(monkeypatch):
         return torch.tensor([[0.25]], dtype=torch.double), torch.tensor(0.0)
 
     monkeypatch.setattr(rgpe_sequential, "optimize_acqf", fake_optimize)
-    candidate, weights = rgpe_sequential.propose_rgpe_candidate(
-        [], x, y, bounds, n_bootstrap=8
-    )
+    candidate, weights = rgpe_sequential.propose_rgpe_candidate([], x, y, bounds, n_bootstrap=8)
     assert candidate.shape == (1, 1)
     assert torch.equal(candidate, torch.tensor([[0.25]], dtype=torch.double))
     assert torch.equal(weights, torch.ones(1, dtype=torch.double))
