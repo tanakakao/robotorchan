@@ -139,7 +139,7 @@ assertion evidence:
 and `tests/acquisition/test_public_api.py`. The
 classification-specific theoretical distinction is
 documented in
-`docs/theory/acquisition/classification-active-learning.md`.
+`docs/theory/acquisition/13_classification_active_learning.md`.
 
 ### ExpectedPredictiveInformationGain (regression)
 

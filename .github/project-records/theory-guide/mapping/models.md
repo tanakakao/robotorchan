@@ -404,7 +404,7 @@ The shared entry point is `docs/models/classification.md`, which distinguishes
 latent GP posterior, predictive class probabilities, robust observation
 channels, non-GP classifiers, and ensembles. It links to
 `docs/theory/24_classification.md` for GP classification theory and
-`docs/theory/acquisition/classification-active-learning.md` for acquisition
+`docs/theory/acquisition/13_classification_active_learning.md` for acquisition
 semantics. These are **shared family references**, not verified per-model
 mathematical derivations or proof that each model has a runnable notebook.
 

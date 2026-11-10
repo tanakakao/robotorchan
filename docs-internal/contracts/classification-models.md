@@ -148,7 +148,7 @@ multiclass追加時も `predict_proba` とprobability samplingの契約を維持
 binary implementationへ閉じ込めます。
 
 詳細理論は [Gaussian Process Classification](../../docs/theory/24_classification.md) と
-[Classification Active Learning](../../docs/theory/acquisition/classification-active-learning.md) を参照してください。
+[Classification Active Learning](../../docs/theory/acquisition/13_classification_active_learning.md) を参照してください。
 
 
 ## Robust probability transforms

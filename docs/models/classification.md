@@ -76,4 +76,4 @@ bootstrap ensemble はデータを再抽出して完成した分類器を複数�
 
 multiclass 共通の metadata・確率ベクトル契約は準備されていますが、公開 multiclass classifier は未実装です。Bernoulli、0.5 閾値、潜在 0 境界は binary 実装に閉じ込めます。Multi-Fidelity、高次元・robust の組合せ、batch・非同期・fantasization の可否は class 名から推測せず capability とテストを確認してください。
 
-数理は[分類理論](../theory/24_classification.md)、実装との対応は[分類ガイド](../guide/24_classification.md)、選択基準は[分類 Active Learning](../theory/acquisition/classification-active-learning.md)から辿れます。API 形状・対応行列・未対応条件の正本は[内部契約](../../docs-internal/contracts/classification-models.md)です。
+数理は[分類理論](../theory/24_classification.md)、実装との対応は[分類ガイド](../guide/24_classification.md)、選択基準は[分類 Active Learning](../theory/acquisition/13_classification_active_learning.md)から辿れます。API 形状・対応行列・未対応条件の正本は[内部契約](../../docs-internal/contracts/classification-models.md)です。

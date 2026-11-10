@@ -1,6 +1,6 @@
 # 分類 Active Learning の実装条件
 
-[理論](../../theory/acquisition/classification-active-learning.md)で潜在・確率・label の不確実性を区別した後、実装の入力を確認します
+[理論](../../theory/acquisition/13_classification_active_learning.md)で潜在・確率・label の不確実性を区別した後、実装の入力を確認します
 。
 
 ## 基準と予測 API

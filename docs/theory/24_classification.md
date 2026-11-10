@@ -149,7 +149,7 @@ $$
 
 これらはGP事後分布そのものの性質ではなく、*候補選択の目的*です。
 獲得関数の理論は[能動学習](acquisition/09_active_learning.md)と
-[分類能動学習](acquisition/classification-active-learning.md)を参照してください。
+[分類能動学習](acquisition/13_classification_active_learning.md)を参照してください。
 
 ## 5. 多クラス分類
 
@@ -269,4 +269,4 @@ Bernoulli尤度と予測クラス確率の定義を自動的に変えるもの�
 - [High-dimensional GP](08_high_dimensional_gp.md)
 - [Dimensionality Reduction GP](18_dimensionality_reduction_gp.md)
 - [Expressive GP Models](22_expressive_gp.md)
-- [Classification Active Learning](acquisition/classification-active-learning.md)
+- [Classification Active Learning](acquisition/13_classification_active_learning.md)
