@@ -7,6 +7,7 @@ from collections.abc import Sequence
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.monte_carlo import qExpectedImprovement
+from botorch.acquisition.objective import GenericMCObjective
 from botorch.models.model import Model
 from botorch.sampling.normal import SobolQMCNormalSampler
 from torch import Tensor
@@ -60,10 +61,3 @@ class qTransferAcquisitionFunction(AcquisitionFunction):
             improvement = mean - incumbent if self.maximize else incumbent - mean
             result = result + weight * improvement.max(dim=-1).values.clamp_min(0)
         return result
-
-
-from botorch.acquisition.objective import GenericMCObjective
-
-
-def _NegateObjective() -> GenericMCObjective:
-    return GenericMCObjective(lambda samples, X=None: -samples.squeeze(-1))
