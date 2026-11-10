@@ -12,7 +12,11 @@ from botorch.models.transforms.input import InputTransform
 from gpytorch.kernels import ScaleKernel
 from torch import Tensor
 
-from robotorchan.models.base import ModelTrainingMixin, RawDataMixin
+from robotorchan.models.base import (
+    ModelTrainingMixin,
+    RawDataMixin,
+    make_mixed_covar_module,
+)
 
 
 class PairwiseGP(RawDataMixin, ModelTrainingMixin, BoTorchPairwiseGP):
@@ -76,3 +80,42 @@ class PairwiseGP(RawDataMixin, ModelTrainingMixin, BoTorchPairwiseGP):
     def make_mll(self) -> PairwiseLaplaceMarginalLogLikelihood:
         """Construct the Laplace-approximated marginal log likelihood."""
         return PairwiseLaplaceMarginalLogLikelihood(self.likelihood, self)
+
+
+class MixedPairwiseGP(PairwiseGP):
+    """Pairwise preference GP with a native mixed-variable covariance."""
+
+    def __init__(
+        self,
+        datapoints: Tensor,
+        comparisons: Tensor,
+        cat_dims: list[int],
+        likelihood: PairwiseLikelihood | None = None,
+        input_transform: InputTransform | None = None,
+        *,
+        jitter: float = 1e-6,
+        xtol: float | None = None,
+        consolidate_rtol: float = 0.0,
+        consolidate_atol: float = 1e-4,
+        maxfev: int | None = None,
+    ) -> None:
+        """Construct a mixed kernel and delegate preference inference to BoTorch."""
+        covar_module = ScaleKernel(
+            make_mixed_covar_module(
+                input_dim=datapoints.shape[-1],
+                cat_dims=cat_dims,
+            )
+        )
+        super().__init__(
+            datapoints=datapoints,
+            comparisons=comparisons,
+            likelihood=likelihood,
+            covar_module=covar_module,
+            input_transform=input_transform,
+            jitter=jitter,
+            xtol=xtol,
+            consolidate_rtol=consolidate_rtol,
+            consolidate_atol=consolidate_atol,
+            maxfev=maxfev,
+        )
+        self.cat_dims = tuple(cat_dims)
