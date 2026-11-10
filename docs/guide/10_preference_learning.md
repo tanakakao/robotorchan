@@ -93,6 +93,34 @@ Cholesky solveで得る $K^{-1}(\hat u-m)$ へ交差共分散を掛け、予測�
 単一utilityの表現では、評価者間の差や循環選好を独立した構造としてモデル化しません。EUBOなどの次の比較対象の選択、BOPEのoutcomeモデルと選好モデルの分離は、
 このwrapperの推論とは別の層です。獲得関数側の接続は[Lookaheadの実装](acquisition/06_lookahead.md)も参照してください。
 
+## EUBOによる逐次選好最適化の実装経路
+
+比較結果から次の候補を選ぶ処理は、モデル本体ではなく獲得関数と最適化器が担当します。
+
+| 処理 | 公開API | 担当 |
+| --- | --- | --- |
+| 比較データから潜在効用を推定 | `robotorchan.models.PairwiseGP` | robotorchan wrapper / BoTorch |
+| モデルを再学習 | `PairwiseGP.fit()` | robotorchanからBoTorchへ委譲 |
+| 次の2候補の期待効用を評価 | `AnalyticExpectedUtilityOfBestOption(pref_model=model)` | BoTorch |
+| 2候補を探索 | `optimize_acqf(q=2)` | BoTorch |
+| 比較結果を蓄積 | `torch.cat` と winner/loser index | 利用側のワークフロー |
+
+`AnalyticExpectedUtilityOfBestOption`は`PairwiseGP`のposteriorを用います。
+`q=2`では2点を同時に提案します。`previous_winner`を指定する既存Notebookの
+`q=1`例は、既知候補と新規候補を比較する別の利用形態です。
+
+比較の各行は常に`[winner, loser]`で、両者は`datapoints`の行番号を参照します。
+新しい2点を末尾に追加するときは、追加前の点数をoffsetとして比較indexを作成します。
+新しい比較を反映する際は、蓄積済みの`datapoints`と`comparisons`から
+`PairwiseGP`を再構築し、`fit()`します。上流の内部状態を直接書き換えません。
+
+対応する統合テストは
+[EUBO統合テスト](../../tests/acquisition/test_preference_eubo.py)と
+[逐次ループテスト](../../tests/acquisition/test_preference_sequential_loop.py)です。
+EUBOとランダム比較の評価は
+[EUBOベンチマーク](../../examples/preference_eubo_benchmark.py)で行います。
+これは合成効用を使う例であり、EUBOが常に優れるという保証ではありません。
+
 ## 関連資料
 
 実行手順は[Preference Notebook][notebook]、引数と利用方法は[モデルのAPI資料](../models/preference_learning.md)、
