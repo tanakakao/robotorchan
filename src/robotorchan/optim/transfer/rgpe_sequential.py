@@ -12,8 +12,8 @@ from botorch.fit import fit_gpytorch_mll
 from botorch.models import MixedSingleTaskGP, SingleTaskGP
 from botorch.models.model import Model
 from botorch.optim import optimize_acqf, optimize_acqf_mixed
-from gpytorch.mlls import ExactMarginalLogLikelihood
 from botorch.sampling.normal import SobolQMCNormalSampler
+from gpytorch.mlls import ExactMarginalLogLikelihood
 from torch import Tensor
 
 from robotorchan.optim.transfer.loo import target_loo_predictions
