@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from itertools import product
 from typing import Any
 
 import torch
@@ -77,6 +78,8 @@ def run_mixed_preference_batch_loop(
     feedback: Callable[[Tensor], list[int]],
     pairs_per_step: int,
     steps: int = 1,
+    min_pair_distance: float = 0.0,
+    diversity_samples: int = 64,
     fit_optimizer_kwargs: dict[str, Any] | None = None,
     num_restarts: int = 2,
     raw_samples: int = 16,
@@ -86,10 +89,15 @@ def run_mixed_preference_batch_loop(
 
     The model is fitted once per round. Each pair is optimized independently
     against the same posterior; no joint q>2 acquisition or listwise ranking
-    is assumed. Diversity and duplicate handling are separate concerns.
+    is assumed. Pair duplicates (including reversed order) are rejected;
+    optional minimum distance uses bounds-normalized continuous coordinates.
     feedback(pairs) receives shape (pairs_per_step, 2, d) and returns one
     winner index (0 or 1) for each pair.
     """
+    if min_pair_distance < 0:
+        raise ValueError("min_pair_distance must be nonnegative.")
+    if diversity_samples < 1:
+        raise ValueError("diversity_samples must be at least 1.")
     if pairs_per_step < 1:
         raise ValueError("pairs_per_step must be at least 1.")
     if steps < 1:
@@ -112,7 +120,18 @@ def run_mixed_preference_batch_loop(
                 raw_samples=raw_samples,
                 options=options,
             )
-            pairs.append(pair.detach())
+            pair = pair.detach()
+            if not _pair_is_distinct(pair, pairs, bounds, cat_dims, min_pair_distance):
+                pair = _select_diverse_pair(
+                    acquisition,
+                    bounds,
+                    fixed_features_list,
+                    cat_dims,
+                    pairs,
+                    min_pair_distance,
+                    diversity_samples,
+                )
+            pairs.append(pair)
         batch = torch.stack(pairs)
         winners = feedback(batch.clone())
         if len(winners) != pairs_per_step or any(
@@ -132,3 +151,59 @@ def run_mixed_preference_batch_loop(
         preferences = torch.cat((preferences, new_comparisons), dim=0)
         proposed_batches.append(batch)
     return points, preferences, proposed_batches
+
+
+def _pair_is_distinct(
+    pair: Tensor,
+    selected: list[Tensor],
+    bounds: Tensor,
+    cat_dims: list[int],
+    min_pair_distance: float,
+) -> bool:
+    """Reject unordered duplicate pairs and optionally near-duplicate pairs."""
+    scale = (bounds[1] - bounds[0]).clamp_min(1e-12)
+    for previous in selected:
+        for ordering in (previous, previous.flip(0)):
+            diff = (pair - ordering).abs() / scale
+            for dim in cat_dims:
+                diff[:, dim] = (pair[:, dim] != ordering[:, dim]).to(diff.dtype)
+            if diff.amax().item() <= max(min_pair_distance, 1e-8):
+                return False
+    return True
+
+
+def _select_diverse_pair(
+    acquisition: AnalyticExpectedUtilityOfBestOption,
+    bounds: Tensor,
+    fixed_features_list: list[dict[int, float]],
+    cat_dims: list[int],
+    selected: list[Tensor],
+    min_pair_distance: float,
+    diversity_samples: int,
+) -> Tensor:
+    """Choose the highest-EUBO feasible pair from a bounded random pool."""
+    dimension = bounds.shape[-1]
+    candidates = bounds[0] + torch.rand(
+        diversity_samples, 2, dimension, dtype=bounds.dtype, device=bounds.device
+    ) * (bounds[1] - bounds[0])
+    assignment_indices = torch.randint(
+        len(fixed_features_list),
+        (diversity_samples, 2),
+        device=bounds.device,
+    )
+    for i, j in product(range(diversity_samples), range(2)):
+        for dim, value in fixed_features_list[assignment_indices[i, j].item()].items():
+            candidates[i, j, dim] = value
+    eligible = [
+        pair for pair in candidates
+        if _pair_is_distinct(pair, selected, bounds, cat_dims, min_pair_distance)
+    ]
+    if not eligible:
+        raise RuntimeError(
+            "No distinct preference pair found; reduce min_pair_distance "
+            "or increase diversity_samples."
+        )
+    pool = torch.stack(eligible)
+    with torch.no_grad():
+        values = acquisition(pool).reshape(-1)
+    return pool[values.argmax()].detach()
