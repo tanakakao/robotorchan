@@ -111,8 +111,8 @@ def propose_rgpe_candidate(
     best_f = y.max().item() if maximize else y.min().item()
     if batch_strategy == "joint" and q > 1:
         ensemble = RGPEModel(source_models, target_model, weights)
-        objective = None if maximize else GenericMCObjective(
-            lambda samples, X=None: -samples.squeeze(-1)
+        objective = (
+            None if maximize else GenericMCObjective(lambda samples, X=None: -samples.squeeze(-1))
         )
         acquisition = qExpectedImprovement(
             ensemble,
@@ -124,13 +124,19 @@ def propose_rgpe_candidate(
             torch.manual_seed(seed)
             if fixed_features_list is None:
                 candidate, _ = optimize_acqf(
-                    acquisition, bounds=bounds, q=q,
-                    num_restarts=num_restarts, raw_samples=raw_samples,
+                    acquisition,
+                    bounds=bounds,
+                    q=q,
+                    num_restarts=num_restarts,
+                    raw_samples=raw_samples,
                 )
             else:
                 candidate, _ = optimize_acqf_mixed(
-                    acquisition, bounds=bounds, q=q,
-                    num_restarts=num_restarts, raw_samples=raw_samples,
+                    acquisition,
+                    bounds=bounds,
+                    q=q,
+                    num_restarts=num_restarts,
+                    raw_samples=raw_samples,
                     fixed_features_list=fixed_features_list,
                 )
         return candidate.detach(), weights.detach()
