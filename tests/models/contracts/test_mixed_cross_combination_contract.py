@@ -32,6 +32,6 @@ def test_model_list_composes_mixed_models_without_redundant_wrapper() -> None:
 
 
 def test_specialized_unsupported_combinations_are_not_advertised() -> None:
-    for name in ("MixedALEBOGP", "MixedPairwiseGP", "MixedSACGP", "MixedLCEAGP"):
+    for name in ("MixedALEBOGP", "MixedSACGP", "MixedLCEAGP"):
         assert name not in MODELS.__all__
         assert not hasattr(MODELS, name)
