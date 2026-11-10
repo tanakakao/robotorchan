@@ -10,9 +10,7 @@ from robotorchan.models import PairwiseGP
 def test_pairwise_gp_analytic_eubo_proposes_a_comparison_pair() -> None:
     torch.manual_seed(0)
     datapoints = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
-    comparisons = torch.tensor(
-        [[1, 0], [2, 1], [2, 3], [3, 4], [4, 5]], dtype=torch.long
-    )
+    comparisons = torch.tensor([[1, 0], [2, 1], [2, 3], [3, 4], [4, 5]], dtype=torch.long)
     model = PairwiseGP(datapoints=datapoints, comparisons=comparisons)
     model.fit(optimizer_kwargs={"options": {"maxiter": 10}})
     model.eval()
