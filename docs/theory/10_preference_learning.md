@@ -1536,6 +1536,40 @@ EUBO / preference acquisition
 
 次章では、画像・波形・空間場などの structured output を扱う [Structured Output GP](11_structured_output.md) を説明します。
 
+## 10.81 逐次選好最適化とSimple Regret
+
+選好ベイズ最適化では、比較観測の履歴を $D_t$ とすると、
+反復 $t$ ごとに潜在効用の事後分布 $p(f\mid D_t)$ を更新し、
+次に比較する候補集合 $X_t$ を獲得関数で選びます。
+
+2候補のEUBOは、概念的には
+
+$
+\alpha_{\mathrm{EUBO}}(x_1,x_2)
+=
+\mathbb{E}_{f\mid D_t}
+\left[\max\{f(x_1),f(x_2)\}\right]
+$
+
+を評価します。これは直接観測できない効用を事後分布で積分する基準であり、
+比較の勝率を単純に最大化する基準とは異なります。
+比較結果を得た後は、勝者と敗者の添字を観測履歴へ追加します。
+
+合成問題で真の効用 $f^*$ が既知なら、これまで評価した候補集合
+$\mathcal X_t$ に対するSimple Regretを
+
+$
+r_t = \max_{x\in\mathcal X} f^*(x)
+      - \max_{x\in\mathcal X_t} f^*(x)
+$
+
+として評価できます。実際の選好問題では真の効用が不明なため、
+この指標を直接計算できるとは限りません。また、比較ノイズ、
+獲得関数の近似最適化、モデルの仮定により、各試行でEUBOが
+ランダム選択より優れる保証はありません。
+
+---
+
 ## 参考文献
 
 1. Chu, W., and Ghahramani, Z. (2005).
