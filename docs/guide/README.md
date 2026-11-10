@@ -1,5 +1,10 @@
 # 理論と実装をつなぐ日本語技術ガイド — 章構成
 
+## Transfer Bayesian Optimization
+
+- [Transfer BO：理論と実装の対応](26_transfer_bayesian_optimization.md)
+- [実行Notebook](../../examples/notebooks/45_transfer_bayesian_optimization.ipynb)
+
 ## このガイドの目的
 
 [Theory](../theory/README.md)の数式・アルゴリズムが、robotorchanのどのクラス・
