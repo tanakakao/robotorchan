@@ -80,3 +80,31 @@ def test_multiple_sources_reject_mixed_inputs():
             source_x=torch.tensor([[0.2]]),
             source_datasets=[(torch.tensor([[0.3]]), torch.tensor([1.0]))],
         )
+
+
+def test_mixed_warm_start_filters_invalid_categories_and_fills():
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
+    result = select_warm_start_points(
+        bounds,
+        5,
+        source_x=torch.tensor([[0.2, 1.0], [0.8, 1.5], [0.3, 2.0]]),
+        source_y=torch.tensor([3.0, 10.0, 2.0]),
+        fixed_features_list=[{1: 1.0}, {1: 2.0}],
+        seed=3,
+    )
+    assert result.shape == (5, 2)
+    assert torch.equal(result[:2], torch.tensor([[0.2, 1.0], [0.3, 2.0]]))
+    assert set(result[:, 1].tolist()) == {1.0, 2.0}
+    assert len(torch.unique(result, dim=0)) == 5
+
+
+def test_mixed_warm_start_rejects_inconsistent_assignments():
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]])
+    with pytest.raises(ValueError, match="same nonempty dimensions"):
+        select_warm_start_points(
+            bounds,
+            2,
+            source_x=torch.tensor([[0.5, 1.0]]),
+            source_y=torch.tensor([1.0]),
+            fixed_features_list=[{1: 1.0}, {0: 0.0}],
+        )
