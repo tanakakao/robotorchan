@@ -9,7 +9,7 @@ import torch
 from botorch.acquisition.preference import AnalyticExpectedUtilityOfBestOption
 from torch import Tensor
 
-from robotorchan.models import MixedPairwiseGP
+from robotorchan.models.preference.pairwise import MixedPairwiseGP
 from robotorchan.optim.preference import optimize_mixed_preference_pair
 
 
