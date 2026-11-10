@@ -96,20 +96,30 @@ def propose_taf_candidate(
 
     if batch_strategy == "joint" and q > 1:
         acquisition = qTransferAcquisitionFunction(
-            source_models, target_model, weights,
-            best_f=incumbent, maximize=maximize, mc_samples=mc_samples,
+            source_models,
+            target_model,
+            weights,
+            best_f=incumbent,
+            maximize=maximize,
+            mc_samples=mc_samples,
         )
         with torch.random.fork_rng(devices=[]):
             torch.manual_seed(seed)
             if fixed_features_list is None:
                 candidate, _ = optimize_acqf(
-                    acquisition, bounds=bounds, q=q,
-                    num_restarts=num_restarts, raw_samples=raw_samples,
+                    acquisition,
+                    bounds=bounds,
+                    q=q,
+                    num_restarts=num_restarts,
+                    raw_samples=raw_samples,
                 )
             else:
                 candidate, _ = optimize_acqf_mixed(
-                    acquisition, bounds=bounds, q=q,
-                    num_restarts=num_restarts, raw_samples=raw_samples,
+                    acquisition,
+                    bounds=bounds,
+                    q=q,
+                    num_restarts=num_restarts,
+                    raw_samples=raw_samples,
                     fixed_features_list=fixed_features_list,
                 )
         return candidate.detach()
