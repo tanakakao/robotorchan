@@ -479,3 +479,28 @@ best_x = test_X[best_idx]
 これにより比較データしか与えていなくても、latent utility posterior に基づいて好ましい領域を推定できます。
 
 ---
+
+---
+
+## 10.80 Preference acquisition の選定（Phase 5）
+
+現行の単一utility・2候補比較のワークフローでは、BoTorch標準の
+`AnalyticExpectedUtilityOfBestOption`（EUBO）を採用します。
+
+| 手法 | 現状 | 判断 |
+| --- | --- | --- |
+| Analytic EUBO | Phase 3・4で統合テストを追加 | 2候補比較の標準 |
+| Posterior mean ranking | `PairwiseGP.posterior()`で実行可能 | 評価・ベースライン用 |
+| Monte Carlo best-option utility | preference用の統合は未実装 | 必要性が明確になった場合に検討 |
+| Preference-specific information gain | preference用の統合は未実装 | 観測モデル・目的関数の検証が必要 |
+| Classification BALD | 分類用の獲得関数として存在 | pairwise preferenceへ直接流用しない |
+| Multiobjective / outcome-model BOPE | 現行スコープ外 | 別テーマで検討 |
+
+現在の実行経路は、`PairwiseGP`の学習、EUBOの構築、
+`optimize_acqf(q=2)`による比較候補の提案、比較結果の追加、
+蓄積データでの再学習です。Phase 3の統合テストとPhase 4の
+逐次ループテストがこの組み合わせを対象にしています。
+
+新しい獲得関数は、EUBOでは満たせない具体的な要件が確認された場合に限り、
+使用するBoTorchバージョンの公開APIと互換性を調べて追加します。
+現時点では独自ラッパーや追加テストは不要と判断します。
