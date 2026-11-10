@@ -34,7 +34,8 @@ def propose_taf_candidate(
     The supplied weights are fixed during this proposal and must have one
     entry per source model plus one for the target model. Evaluate the
     candidate externally, append the observation, and call again for
-    sequential BO. Mixed inputs require cat_dims and fixed_features_list.\n    Scalar output and q=1 only.
+    sequential BO. Mixed inputs require cat_dims and fixed_features_list.
+    Scalar output and q=1 only.
     """
     if target_x.ndim != 2 or target_x.shape[0] < 2:
         raise ValueError("target_x must have shape (n, d) with n >= 2")
