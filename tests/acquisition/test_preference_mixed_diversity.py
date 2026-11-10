@@ -25,9 +25,7 @@ def test_diverse_fallback_raises_for_exhausted_discrete_space() -> None:
     bounds = torch.tensor([[0.0], [0.0]], dtype=torch.double)
     pair = torch.zeros(2, 1, dtype=torch.double)
     try:
-        _select_diverse_pair(
-            None, bounds, [{0: 0.0}], [0], [pair], 0.0, 8
-        )
+        _select_diverse_pair(None, bounds, [{0: 0.0}], [0], [pair], 0.0, 8)
     except RuntimeError as error:
         assert "No distinct preference pair" in str(error)
     else:
