@@ -83,7 +83,6 @@ def test_sequential_rgpe_mixed_rejects_unsupported_category():
         )
 
 
-
 def test_rgpe_sequential_greedy_q_two(monkeypatch):
     x = torch.tensor([[0.0], [0.5], [1.0]], dtype=torch.double)
     y = torch.tensor([[0.0], [1.0], [0.0]], dtype=torch.double)
