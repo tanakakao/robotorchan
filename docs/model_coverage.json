@@ -346,6 +346,11 @@
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",
       "notebook": "examples/notebooks/19_reduced_gp.ipynb"
     },
+    "MixedPairwiseGP": {
+      "guide": "docs/models/preference.md",
+      "theory": "docs/theory/10_preference_learning.md",
+      "notebook": "examples/notebooks/07_pairwise_gp.ipynb"
+    },
     "MixedRandomProjectionGP": {
       "guide": "docs/models/reduced.md",
       "theory": "docs/theory/18_dimensionality_reduction_gp.md",

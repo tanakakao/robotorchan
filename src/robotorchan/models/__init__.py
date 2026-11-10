@@ -115,7 +115,7 @@ from robotorchan.models.non_gp.gradient_boosting import GradientBoostingSurrogat
 from robotorchan.models.non_gp.hist_gradient_boosting import HistGradientBoostingSurrogate
 from robotorchan.models.non_gp.ngboost import NGBoostSurrogate
 from robotorchan.models.non_gp.random_forest import RandomForestSurrogate
-from robotorchan.models.preference.pairwise import PairwiseGP
+from robotorchan.models.preference.pairwise import MixedPairwiseGP, PairwiseGP
 from robotorchan.models.registry import get_model_registry_entry
 from robotorchan.models.robust.contaminated import (
     ContaminatedMultiTaskGP,
@@ -270,6 +270,7 @@ __all__ = [
     "MixedOrthogonalAdditiveGP",
     "MixedPCAGP",
     "MixedPLSGP",
+    "MixedPairwiseGP",
     "MixedRandomProjectionGP",
     "MixedReducedGP",
     "MixedReducedKroneckerMultiTaskGP",
