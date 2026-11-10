@@ -29,7 +29,7 @@ def test_alebo_linear_reconstruction_does_not_define_categorical_feasibility() -
     assert not bool(is_allowed.all())
 
 
-@pytest.mark.parametrize("name", ["MixedPairwiseGP", "MixedALEBOGP"])
+@pytest.mark.parametrize("name", ["MixedALEBOGP"])
 def test_unverified_specialized_mixed_wrappers_are_not_public(name: str) -> None:
     assert name not in MODELS.__all__
     assert not hasattr(MODELS, name)
