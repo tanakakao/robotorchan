@@ -107,4 +107,5 @@ def test_rgpe_sequential_greedy_q_two(monkeypatch):
         [], x, y, bounds, q=2, n_bootstrap=8
     )
     assert candidate.shape == (2, 1)
+    assert torch.equal(weights, torch.ones(1, dtype=torch.double))
     assert torch.equal(candidate[:, 0], torch.tensor([0.25, 0.75], dtype=torch.double))
