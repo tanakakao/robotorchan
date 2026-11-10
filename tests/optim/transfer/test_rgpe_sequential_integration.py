@@ -9,7 +9,9 @@ from robotorchan.optim.transfer.rgpe_sequential import propose_rgpe_candidate
 def test_rgpe_sequential_two_iterations():
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     x = torch.tensor([[0.0], [0.4], [1.0]], dtype=torch.double)
-    objective = lambda values: -((values - 0.7) ** 2)
+    def objective(values):
+        return -((values - 0.7) ** 2)
+
     y = objective(x)
     source_model = SingleTaskGP(x, y)
 
