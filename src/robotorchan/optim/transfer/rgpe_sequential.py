@@ -6,11 +6,14 @@ from collections.abc import Sequence
 
 import torch
 from botorch.acquisition.analytic import ExpectedImprovement
+from botorch.acquisition.monte_carlo import qExpectedImprovement
+from botorch.acquisition.objective import GenericMCObjective
 from botorch.fit import fit_gpytorch_mll
 from botorch.models import MixedSingleTaskGP, SingleTaskGP
 from botorch.models.model import Model
 from botorch.optim import optimize_acqf, optimize_acqf_mixed
 from gpytorch.mlls import ExactMarginalLogLikelihood
+from botorch.sampling.normal import SobolQMCNormalSampler
 from torch import Tensor
 
 from robotorchan.optim.transfer.loo import target_loo_predictions
@@ -30,6 +33,8 @@ def propose_rgpe_candidate(
     num_restarts: int = 8,
     seed: int = 0,
     q: int = 1,
+    batch_strategy: str = "sequential",
+    mc_samples: int = 128,
     cat_dims: list[int] | None = None,
     fixed_features_list: list[dict[int, float]] | None = None,
 ) -> tuple[Tensor, Tensor]:
@@ -39,7 +44,7 @@ def propose_rgpe_candidate(
     computes RGPE ranking weights, then maximizes analytic EI. The caller
     evaluates the proposed candidate and appends the observation before
     the next call. Mixed inputs require cat_dims and fixed_features_list.
-    For q>1, greedily condition on posterior-mean fantasies after each
+    For sequential q>1, greedily condition on posterior-mean fantasies after each
     proposal, without updating RGPE ranking weights. Single-output only.
     Returns (candidate of shape (q, d), model weights).
     """
@@ -54,6 +59,10 @@ def propose_rgpe_candidate(
         raise ValueError("target observations must be finite")
     if not bool(((target_x >= bounds[0]) & (target_x <= bounds[1])).all()):
         raise ValueError("target_x must lie within bounds")
+    if batch_strategy not in ("sequential", "joint"):
+        raise ValueError("batch_strategy must be 'sequential' or 'joint'")
+    if mc_samples < 1:
+        raise ValueError("mc_samples must be positive")
     if q < 1:
         raise ValueError("q must be positive")
     if raw_samples < 1 or num_restarts < 1:
@@ -100,6 +109,32 @@ def propose_rgpe_candidate(
         seed=seed,
     )
     best_f = y.max().item() if maximize else y.min().item()
+    if batch_strategy == "joint" and q > 1:
+        ensemble = RGPEModel(source_models, target_model, weights)
+        objective = None if maximize else GenericMCObjective(
+            lambda samples, X=None: -samples.squeeze(-1)
+        )
+        acquisition = qExpectedImprovement(
+            ensemble,
+            best_f=best_f if maximize else -best_f,
+            sampler=SobolQMCNormalSampler(sample_shape=torch.Size([mc_samples])),
+            objective=objective,
+        )
+        with torch.random.fork_rng(devices=[]):
+            torch.manual_seed(seed)
+            if fixed_features_list is None:
+                candidate, _ = optimize_acqf(
+                    acquisition, bounds=bounds, q=q,
+                    num_restarts=num_restarts, raw_samples=raw_samples,
+                )
+            else:
+                candidate, _ = optimize_acqf_mixed(
+                    acquisition, bounds=bounds, q=q,
+                    num_restarts=num_restarts, raw_samples=raw_samples,
+                    fixed_features_list=fixed_features_list,
+                )
+        return candidate.detach(), weights.detach()
+
     candidates = []
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(seed)
