@@ -160,9 +160,7 @@ def test_rgpe_mixed_q_two_integration(monkeypatch, batch_strategy):
 
     calls = []
 
-    def fake_optimize(
-        acq_function, *, bounds, q, num_restarts, raw_samples, fixed_features_list
-    ):
+    def fake_optimize(acq_function, *, bounds, q, num_restarts, raw_samples, fixed_features_list):
         assert fixed_features_list == assignments
         assert q == (2 if batch_strategy == "joint" else 1)
         candidate = x[1:3] if q == 2 else x[1 + len(calls) : 2 + len(calls)]
