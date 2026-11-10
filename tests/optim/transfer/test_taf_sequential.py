@@ -118,3 +118,45 @@ def test_taf_joint_q_two_uses_joint_optimizer(monkeypatch):
     )
     candidate = result[0] if isinstance(result, tuple) else result
     assert candidate.shape == (2, 1)
+
+
+@pytest.mark.parametrize("batch_strategy", ["sequential", "joint"])
+def test_taf_mixed_q_two_integration(monkeypatch, batch_strategy):
+    x = torch.tensor(
+        [[0.0, 0.0], [0.5, 1.0], [1.0, 0.0], [0.2, 1.0]],
+        dtype=torch.double,
+    )
+    y = torch.tensor([[0.0], [1.0], [0.2], [0.7]], dtype=torch.double)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    assignments = [{1: 0.0}, {1: 1.0}]
+    monkeypatch.setattr(taf_sequential, "fit_gpytorch_mll", lambda *_: None)
+
+    calls = []
+
+    def fake_optimize(acq_function, *, bounds, q, num_restarts, raw_samples, fixed_features_list):
+        assert fixed_features_list == assignments
+        assert q == (2 if batch_strategy == "joint" else 1)
+        candidate = x[1:3] if q == 2 else x[1 + len(calls) : 2 + len(calls)]
+        if batch_strategy == "joint":
+            value = acq_function(candidate.unsqueeze(0))
+            assert torch.isfinite(value).all()
+        calls.append(q)
+        return candidate, torch.tensor(0.0)
+
+    monkeypatch.setattr(taf_sequential, "optimize_acqf_mixed", fake_optimize)
+    result = taf_sequential.propose_taf_candidate(
+        [],
+        x,
+        y,
+        bounds,
+        torch.ones(1),
+        q=2,
+        batch_strategy=batch_strategy,
+        cat_dims=[1],
+        fixed_features_list=assignments,
+        mc_samples=16,
+    )
+    candidate = result[0] if isinstance(result, tuple) else result
+    assert candidate.shape == (2, 2)
+    assert set(candidate[:, 1].tolist()) <= {0.0, 1.0}
+    assert calls == ([2] if batch_strategy == "joint" else [1, 1])
