@@ -233,6 +233,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
 # Capability groups are explicit metadata. Do not derive them from class names.
 _MIXED_MODELS = frozenset(
     {
+        "MixedPairwiseGP",
         "MixedSingleTaskMultiFidelityGP",
         "MixedSingleTaskVariationalGP",
         "MixedMultiTaskGP",
@@ -840,7 +841,7 @@ _register_family(
     strategy="hierarchical or contextual GP",
 )
 _register_family(
-    ("PairwiseGP",),
+    ("MixedPairwiseGP", "PairwiseGP"),
     guide="docs/models/preference.md",
     theory="docs/theory/10_preference_learning.md",
     notebook="examples/notebooks/07_pairwise_gp.ipynb",
