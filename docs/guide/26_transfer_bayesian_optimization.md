@@ -1,5 +1,7 @@
 # Transfer Bayesian Optimization：理論と実装の対応
 
+[最終対応表（Phase 9）](27_transfer_bo_compatibility.md)
+
 [理論章](../theory/26_transfer_bayesian_optimization.md)で扱うWarm-start、
 RGPE、TAFの処理経路を説明する。使用コードと実験結果はNotebookに集約する。
 
