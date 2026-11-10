@@ -115,10 +115,10 @@ Cholesky solveで得る $K^{-1}(\hat u-m)$ へ交差共分散を掛け、予測�
 `PairwiseGP`を再構築し、`fit()`します。上流の内部状態を直接書き換えません。
 
 対応する統合テストは
-[Phase 3 EUBOテスト](../../tests/acquisition/test_preference_eubo.py)と
-[Phase 4逐次ループテスト](../../tests/acquisition/test_preference_sequential_loop.py)です。
+[EUBO統合テスト](../../tests/acquisition/test_preference_eubo.py)と
+[逐次ループテスト](../../tests/acquisition/test_preference_sequential_loop.py)です。
 EUBOとランダム比較の評価は
-[Phase 6ベンチマーク](../../examples/preference_eubo_benchmark.py)で行います。
+[EUBOベンチマーク](../../examples/preference_eubo_benchmark.py)で行います。
 これは合成効用を使う例であり、EUBOが常に優れるという保証ではありません。
 
 ## 関連資料
