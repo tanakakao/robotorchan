@@ -26,6 +26,7 @@ def propose_taf_candidate(
     raw_samples: int = 128,
     num_restarts: int = 8,
     seed: int = 0,
+    q: int = 1,
     cat_dims: list[int] | None = None,
     fixed_features_list: list[dict[int, float]] | None = None,
 ) -> Tensor:
@@ -35,7 +36,8 @@ def propose_taf_candidate(
     entry per source model plus one for the target model. Evaluate the
     candidate externally, append the observation, and call again for
     sequential BO. Mixed inputs require cat_dims and fixed_features_list.
-    Scalar output and q=1 only.
+    For q>1, greedily condition on posterior-mean fantasies after each
+    proposal, keeping source weights fixed. Scalar output only.
     """
     if target_x.ndim != 2 or target_x.shape[0] < 2:
         raise ValueError("target_x must have shape (n, d) with n >= 2")
@@ -50,6 +52,8 @@ def propose_taf_candidate(
         raise ValueError("bounds must be finite")
     if not bool(((target_x >= bounds[0]) & (target_x <= bounds[1])).all()):
         raise ValueError("target_x must lie within bounds")
+    if q < 1:
+        raise ValueError("q must be positive")
     if raw_samples < 1 or num_restarts < 1:
         raise ValueError("raw_samples and num_restarts must be positive")
 
@@ -82,30 +86,40 @@ def propose_taf_candidate(
     fit_gpytorch_mll(ExactMarginalLogLikelihood(target_model.likelihood, target_model))
     target_model.eval()
     incumbent = y.max().item() if maximize else y.min().item()
-    acquisition = TransferAcquisitionFunction(
-        source_models,
-        target_model,
-        weights,
-        best_f=incumbent,
-        maximize=maximize,
-    )
+    candidates = []
     with torch.random.fork_rng(devices=[]):
         torch.manual_seed(seed)
-        if fixed_features_list is None:
-            candidate, _ = optimize_acqf(
-                acquisition,
-                bounds=bounds,
-                q=1,
-                num_restarts=num_restarts,
-                raw_samples=raw_samples,
+        for _ in range(q):
+            acquisition = TransferAcquisitionFunction(
+                source_models,
+                target_model,
+                weights,
+                best_f=incumbent,
+                maximize=maximize,
             )
-        else:
-            candidate, _ = optimize_acqf_mixed(
-                acquisition,
-                bounds=bounds,
-                q=1,
-                num_restarts=num_restarts,
-                raw_samples=raw_samples,
-                fixed_features_list=fixed_features_list,
-            )
-    return candidate.detach()
+            if fixed_features_list is None:
+                candidate, _ = optimize_acqf(
+                    acquisition,
+                    bounds=bounds,
+                    q=1,
+                    num_restarts=num_restarts,
+                    raw_samples=raw_samples,
+                )
+            else:
+                candidate, _ = optimize_acqf_mixed(
+                    acquisition,
+                    bounds=bounds,
+                    q=1,
+                    num_restarts=num_restarts,
+                    raw_samples=raw_samples,
+                    fixed_features_list=fixed_features_list,
+                )
+            candidates.append(candidate.detach())
+            if len(candidates) == q:
+                break
+            with torch.no_grad():
+                fantasy = target_model.posterior(candidate).mean.detach()
+            target_model = target_model.condition_on_observations(X=candidate, Y=fantasy)
+            fantasy_value = fantasy.item()
+            incumbent = max(incumbent, fantasy_value) if maximize else min(incumbent, fantasy_value)
+    return torch.cat(candidates, dim=0)
