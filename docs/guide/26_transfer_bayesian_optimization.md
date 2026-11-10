@@ -7,12 +7,19 @@ RGPE、TAFの処理経路を説明する。使用コードと実験結果はNote
 
 | 理論上の役割 | robotorchan実装 | BoTorchとの関係 |
 | --- | --- | --- |
+| Warm-start初期点選択 | `optim.transfer.warm_start.select_warm_start_points` | ソース観測点の選択とBoTorch Sobol補完 |
 | RGPEランキング重み | `optim.transfer.rgpe.rgpe_weights` | ソースとターゲットの損失比較を独自実装 |
 | ターゲットLOO | `optim.transfer.loo.target_loo_predictions` | `SingleTaskGP`を分割ごとに再学習 |
 | RGPE予測分布 | `optim.transfer.rgpe_model.RGPEModel` | BoTorch `Model`のposteriorを実装 |
 | RGPE逐次候補 | `optim.transfer.rgpe_sequential.propose_rgpe_candidate` | BoTorch EIと`optimize_acqf` |
 | TAF獲得関数 | `optim.transfer.taf.TransferAcquisitionFunction` | BoTorch `AnalyticAcquisitionFunction`を継承 |
 | TAF逐次候補 | `optim.transfer.taf_sequential.propose_taf_candidate` | `SingleTaskGP`学習と`optimize_acqf` |
+
+## Warm-startの内部経路
+
+`select_warm_start_points`はソース観測またはモデルの予測に基づいて
+ターゲットの初期評価候補を選択し、不足分をSobol点で補う。
+ソースの目的値はターゲット観測として流用せず、候補点をターゲットで評価する。
 
 ## RGPEの内部経路
 
