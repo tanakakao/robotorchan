@@ -36,8 +36,6 @@ def test_taf_rejects_invalid_weights_and_q():
     model = SingleTaskGP(x, y)
     with pytest.raises(ValueError, match="sum to one"):
         TransferAcquisitionFunction([], model, torch.tensor([0.5]), best_f=0.0)
-    acquisition = TransferAcquisitionFunction(
-        [], model, torch.tensor([1.0]), best_f=0.0
-    )
+    acquisition = TransferAcquisitionFunction([], model, torch.tensor([1.0]), best_f=0.0)
     with pytest.raises(ValueError, match="q=1"):
         acquisition(torch.tensor([[[0.25], [0.75]]], dtype=torch.double))
