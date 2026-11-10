@@ -7212,6 +7212,16 @@
       "path": "docs/theory/25_safe_bayesian_optimization.md",
       "category": "Theory",
       "reason": "Safe BOの安全集合、信頼区間、初期安全点、保証の仮定を説明する純理論章。"
+    },
+    {
+      "path": "docs/guide/26_transfer_bayesian_optimization.md",
+      "category": "Guide",
+      "reason": "Transfer BOの理論とRGPE・TAF実装の対応を説明する日本語技術ガイド。"
+    },
+    {
+      "path": "docs/theory/26_transfer_bayesian_optimization.md",
+      "category": "Theory",
+      "reason": "Transfer BO、RGPE、TAF、負の転移を説明する日本語理論章。"
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
