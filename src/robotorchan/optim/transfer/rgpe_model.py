@@ -66,8 +66,7 @@ class RGPEModel(Model):
         weight_shape = (-1,) + (1,) * (means_tensor.ndim - 1)
         weighted_mean = (weights.reshape(weight_shape) * means_tensor).sum(dim=0)
         second_moment = (
-            weights.reshape((-1,) + (1,) * (covariance_tensor.ndim - 1))
-            * covariance_tensor
+            weights.reshape((-1,) + (1,) * (covariance_tensor.ndim - 1)) * covariance_tensor
         ).sum(dim=0)
         deviations = means_tensor - weighted_mean.unsqueeze(0)
         between = torch.einsum("m,m...i,m...j->...ij", weights, deviations, deviations)
