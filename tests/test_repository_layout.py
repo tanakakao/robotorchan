@@ -70,7 +70,14 @@ def test_capability_workflow_is_owned_by_one_package() -> None:
 
 
 def test_concrete_optimizer_strategies_are_owned_by_strategy_package() -> None:
-    strategy_modules = {"mixed.py", "original.py", "random.py", "sobol.py", "tree.py"}
+    strategy_modules = {
+        "combinatorial.py",
+        "mixed.py",
+        "original.py",
+        "random.py",
+        "sobol.py",
+        "tree.py",
+    }
     optim_root = SOURCE_ROOT / "optim"
     assert not any((optim_root / name).exists() for name in strategy_modules)
 

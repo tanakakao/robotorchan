@@ -52,6 +52,7 @@ from robotorchan.optim.safe import optimize_safe_acqf
 from robotorchan.optim.safe_expansion import propose_safe_expansion
 from robotorchan.optim.safe_workflow import SafeBOWorkflow
 from robotorchan.optim.strategies import (
+    HammingLocalSearchStrategy,
     MixedSpaceStrategy,
     OriginalSpaceStrategy,
     RandomSearchStrategy,
@@ -92,6 +93,7 @@ __all__ = [
     "CandidateConstraints",
     "ConstraintHandling",
     "ConstraintHandlingCapabilities",
+    "HammingLocalSearchStrategy",
     "HeSBOStrategy",
     "LatentReconstruction",
     "LatentSpaceStrategy",
