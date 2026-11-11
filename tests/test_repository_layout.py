@@ -71,6 +71,7 @@ def test_capability_workflow_is_owned_by_one_package() -> None:
 
 def test_concrete_optimizer_strategies_are_owned_by_strategy_package() -> None:
     strategy_modules = {
+        "bocs.py",
         "combinatorial.py",
         "mixed.py",
         "original.py",
