@@ -77,10 +77,7 @@ def propose(method: str, X: Tensor, Y: Tensor, domain: Tensor, seed: int, iterat
     if method == "numeric_gp":
         model = SingleTaskGP(X, Y)
         fit_gpytorch_mll(ExactMarginalLogLikelihood(model.likelihood, model))
-    elif method == "mixed_gp":
-        model = MixedSingleTaskGP(X, Y, cat_dims=list(range(X.shape[-1])))
-        model.fit()
-    elif method == "mixed_ga":
+    elif method in ("mixed_gp", "mixed_ga"):
         model = MixedSingleTaskGP(X, Y, cat_dims=list(range(X.shape[-1])))
         model.fit()
     else:
