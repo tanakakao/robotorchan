@@ -7237,6 +7237,11 @@
       "path": "docs/theory/26_transfer_bayesian_optimization.md",
       "category": "Theory",
       "reason": "Transfer BO、RGPE、TAF、負の転移を説明する日本語理論章。"
+    },
+    {
+      "path": ".github/project-records/combinatorial-bo/phase11-completion-assessment.md",
+      "category": "Project Record",
+      "reason": "Phase 11 completion decision, implementation matrix and outstanding Phase 9 benchmark scope."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
