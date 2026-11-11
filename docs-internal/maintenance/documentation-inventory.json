@@ -7064,6 +7064,11 @@
   ],
   "generated_documents": [
     {
+      "path": "examples/combinatorial_bo_benchmark.md",
+      "category": "Engineering",
+      "reason": "Phase 9 combinatorial benchmark methodology and limitations."
+    },
+    {
       "path": ".github/project-records/benchmarks/probability-objective-e2e.md",
       "category": "Project Record",
       "reason": "責務別の入口または理論と実装を接続する学習文書。"
