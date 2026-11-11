@@ -7,7 +7,11 @@ import torch
 
 
 def _load_benchmark():
-    path = Path(__file__).resolve().parents[2] / "examples" / "combinatorial_bo_benchmark.py"
+    path = (
+        Path(__file__).resolve().parents[2]
+        / "examples"
+        / "combinatorial_bo_benchmark.py"
+    )
     spec = importlib.util.spec_from_file_location("combinatorial_bo_benchmark", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -30,9 +34,7 @@ def test_seed_aligned_budget_and_unique_proposals(monkeypatch):
     assert len(rows) == 2 * 2 * len(methods)
     for seed in range(2):
         for method in methods:
-            series = [
-                row for row in rows if row["seed"] == seed and row["method"] == method
-            ]
+            series = [row for row in rows if row["seed"] == seed and row["method"] == method]
             assert [row["evaluations"] for row in series] == [3, 4]
             assert series[1]["best_value"] >= series[0]["best_value"]
 
