@@ -8,10 +8,8 @@ from robotorchan.models.standard import BOCSSurrogate, bocs_quadratic_features
 
 
 def test_quadratic_features_and_posterior():
-    X = torch.tensor(
-        [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]], dtype=torch.double
-    )
-    Y = (1 + 2 * X[:, :1] + 3 * X[:, 1:2] + 4 * X[:, :1] * X[:, 1:2])
+    X = torch.tensor([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]], dtype=torch.double)
+    Y = 1 + 2 * X[:, :1] + 3 * X[:, 1:2] + 4 * X[:, :1] * X[:, 1:2]
     assert bocs_quadratic_features(X).tolist() == [
         [1.0, 0.0, 0.0, 0.0],
         [1.0, 1.0, 0.0, 0.0],
