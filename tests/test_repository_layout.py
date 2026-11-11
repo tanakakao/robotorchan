@@ -163,6 +163,7 @@ def test_candidate_domains_have_dedicated_ownership() -> None:
     domain_root = optim_root / "domains"
     assert {path.name for path in domain_root.glob("*.py")} == {
         "__init__.py",
+        "combinatorial.py",
         "variable_space.py",
     }
 
