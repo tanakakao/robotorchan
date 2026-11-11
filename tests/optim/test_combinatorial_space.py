@@ -47,3 +47,25 @@ def test_reject_continuous_and_invalid_center():
     )
     with pytest.raises(ValueError, match="illegal"):
         hamming_neighbors(torch.tensor([0.5, 0.]), discrete)
+
+
+def test_float32_fractional_categories_do_not_include_center():
+    space = MixedVariableSpace(
+        torch.tensor([[0.0], [1.0]]), categorical_values={0: (0.1, 0.2)}
+    )
+    center = torch.tensor([0.1])
+    neighbors = hamming_neighbors(center, space)
+    assert neighbors.shape == (1, 1)
+    assert hamming_distance(center, neighbors, space).tolist() == [1]
+
+
+def test_large_integer_domain_distance_does_not_enumerate():
+    space = MixedVariableSpace(
+        torch.tensor([[0.0], [1_000_000_000.0]], dtype=torch.double),
+        integer_dims=(0,),
+    )
+    assert hamming_distance(
+        torch.tensor([0.0], dtype=torch.double),
+        torch.tensor([1_000_000_000.0], dtype=torch.double),
+        space,
+    ).item() == 1
