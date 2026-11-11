@@ -1,5 +1,6 @@
 """Concrete acquisition-search strategies in the public input space."""
 
+from robotorchan.optim.strategies.bocs import propose_bocs_candidate, run_bocs_sequential
 from robotorchan.optim.strategies.combinatorial import HammingLocalSearchStrategy
 from robotorchan.optim.strategies.mixed import MixedSpaceStrategy
 from robotorchan.optim.strategies.original import OriginalSpaceStrategy
@@ -14,4 +15,6 @@ __all__ = [
     "RandomSearchStrategy",
     "SobolSearchStrategy",
     "TreeEnsembleSearchStrategy",
+    "propose_bocs_candidate",
+    "run_bocs_sequential",
 ]
