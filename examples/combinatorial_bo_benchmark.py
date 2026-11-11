@@ -94,7 +94,10 @@ def propose(method: str, X: Tensor, Y: Tensor, domain: Tensor, seed: int, iterat
         return available[torch.argmax(values)].unsqueeze(0)
 
     bounds = torch.stack((torch.zeros(X.shape[-1]), torch.ones(X.shape[-1]))).double()
-    space = MixedVariableSpace(bounds=bounds, integer_dims=tuple(range(X.shape[-1])))
+    space = MixedVariableSpace(
+        bounds=bounds,
+        categorical_values={index: (0.0, 1.0) for index in range(X.shape[-1])},
+    )
     excluded = tuple(tuple(row.tolist()) for row in X)
     if method == "mixed_ga":
         # GA cannot exclude previously observed points directly. Use its candidate
