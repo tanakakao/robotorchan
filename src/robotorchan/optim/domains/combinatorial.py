@@ -23,32 +23,43 @@ def _levels(space: MixedVariableSpace) -> tuple[tuple[float, ...], ...]:
         else:
             lower = int(torch.ceil(space.bounds[0, dim]).item())
             upper = int(torch.floor(space.bounds[1, dim]).item())
-            result.append(tuple(range(lower, upper + 1)))
+            result.append(range(lower, upper + 1))
     return tuple(result)
 
 
 def hamming_distance(x: Tensor, y: Tensor, space: MixedVariableSpace) -> Tensor:
     """Count differing discrete coordinates, broadcasting leading dimensions."""
-    levels = _levels(space)
-    if x.shape[-1] != len(levels) or y.shape[-1] != len(levels):
+    if space.continuous_dims:
+        raise ValueError("Hamming search requires a fully discrete MixedVariableSpace.")
+    if x.shape[-1] != space.input_dim or y.shape[-1] != space.input_dim:
         raise ValueError("Candidate feature dimension does not match the space.")
-    _validate_points(x, levels, space)
-    _validate_points(y, levels, space)
+    _validate_points(x, space)
+    _validate_points(y, space)
     return (x != y).sum(dim=-1)
 
 
 def _validate_points(
     points: Tensor,
-    levels: tuple[tuple[float, ...], ...],
     space: MixedVariableSpace,
 ) -> None:
-    if points.ndim < 1 or points.shape[-1] != len(levels):
+    if points.ndim < 1 or points.shape[-1] != space.input_dim:
         raise ValueError("Candidates must end with the space's feature dimension.")
     if not torch.isfinite(points).all():
         raise ValueError("Candidates must be finite.")
-    for dim, values in enumerate(levels):
-        allowed = torch.tensor(values, dtype=points.dtype, device=points.device)
-        if not torch.isin(points[..., dim], allowed).all():
+    for dim in range(space.input_dim):
+        values = points[..., dim]
+        if dim in space.integer_dims:
+            valid = (
+                (values == values.round())
+                & (values >= space.bounds[0, dim])
+                & (values <= space.bounds[1, dim])
+            )
+        else:
+            allowed = torch.as_tensor(
+                space.categorical_values[dim], dtype=points.dtype, device=points.device
+            )
+            valid = torch.isin(values, allowed)
+        if not valid.all():
             raise ValueError(f"Candidate contains an illegal value at dimension {dim}.")
 
 
@@ -65,17 +76,17 @@ def hamming_neighbors(
     CandidateConstraints contract. Empty neighborhoods return shape [0, d].
     """
     levels = _levels(space)
-    _validate_points(center, levels, space)
+    _validate_points(center, space)
     if center.ndim != 1:
         raise ValueError("center must have shape [d].")
     excluded_keys = set(excluded)
     candidates = []
     for dim, values in enumerate(levels):
         for value in values:
-            if value == center[dim].item():
-                continue
             neighbor = center.clone()
             neighbor[dim] = value
+            if neighbor[dim] == center[dim]:
+                continue
             key = tuple(neighbor.tolist())
             if key not in excluded_keys:
                 excluded_keys.add(key)
