@@ -16,7 +16,9 @@ from pathlib import Path
 
 import torch
 from botorch.acquisition.analytic import UpperConfidenceBound
+from botorch.fit import fit_gpytorch_mll
 from botorch.models import SingleTaskGP
+from gpytorch.mlls import ExactMarginalLogLikelihood
 from torch import Tensor
 
 from robotorchan.models.standard import COMBOSurrogate
@@ -66,9 +68,6 @@ def propose(
 
     if method == "mixed_gp":
         model = SingleTaskGP(X, Y)
-        from botorch.fit import fit_gpytorch_mll
-        from gpytorch.mlls import ExactMarginalLogLikelihood
-
         fit_gpytorch_mll(ExactMarginalLogLikelihood(model.likelihood, model))
     else:
         model = COMBOSurrogate(X, Y)
@@ -84,9 +83,7 @@ def propose(
     space = MixedVariableSpace(bounds=bounds, integer_dims=tuple(range(X.shape[-1])))
     excluded = tuple(tuple(row.tolist()) for row in X)
     if method == "hamming":
-        strategy = HammingLocalSearchStrategy(
-            space, available, excluded=excluded, max_steps=10
-        )
+        strategy = HammingLocalSearchStrategy(space, available, excluded=excluded, max_steps=10)
     elif method == "discrete_tr":
         center = X[torch.argmax(Y.flatten())]
         radius = min(2, X.shape[-1])
@@ -158,7 +155,11 @@ def main() -> None:
         writer.writeheader()
         writer.writerows(rows)
     for method in METHODS:
-        final = [row["best_value"] for row in rows if row["method"] == method and row["evaluations"] == args.initial + args.steps]
+        final = [
+            row["best_value"]
+            for row in rows
+            if row["method"] == method and row["evaluations"] == args.initial + args.steps
+        ]
         print(f"{method}: mean best={sum(final) / len(final):.3f}")
     print(f"Saved {args.output}")
 
