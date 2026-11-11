@@ -82,7 +82,7 @@ def propose(method: str, X: Tensor, Y: Tensor, domain: Tensor, seed: int, iterat
         model.fit()
     else:
         model = COMBOSurrogate(X, Y)
-        model.fit()
+        fit_gpytorch_mll(ExactMarginalLogLikelihood(model.likelihood, model))
     model.eval()
     acquisition = UpperConfidenceBound(model, beta=0.2)
     if method in ("numeric_gp", "mixed_gp"):
