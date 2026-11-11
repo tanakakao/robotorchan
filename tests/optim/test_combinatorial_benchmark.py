@@ -4,7 +4,6 @@ import importlib.util
 from pathlib import Path
 
 
-
 def _load_benchmark():
     path = (
         Path(__file__).resolve().parents[2]
