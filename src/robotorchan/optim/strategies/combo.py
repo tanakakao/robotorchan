@@ -6,6 +6,8 @@ from collections.abc import Callable
 
 import torch
 from botorch.acquisition.analytic import UpperConfidenceBound
+from botorch.fit import fit_gpytorch_mll
+from gpytorch.mlls import ExactMarginalLogLikelihood
 from torch import Tensor
 
 from robotorchan.models.standard.combo import COMBOSurrogate
@@ -33,7 +35,7 @@ def propose_combo_candidate(
         raise ValueError("beta must be nonnegative.")
     model = COMBOSurrogate(train_X, train_Y)
     if fit_model:
-        model.fit()
+        fit_gpytorch_mll(ExactMarginalLogLikelihood(model.likelihood, model))
     model.eval()
     indices = torch.arange(2**d, device=train_X.device)
     bits = torch.arange(d, device=train_X.device)
