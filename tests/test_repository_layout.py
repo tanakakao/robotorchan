@@ -73,6 +73,7 @@ def test_concrete_optimizer_strategies_are_owned_by_strategy_package() -> None:
     strategy_modules = {
         "bocs.py",
         "combinatorial.py",
+        "combo.py",
         "mixed.py",
         "original.py",
         "random.py",
