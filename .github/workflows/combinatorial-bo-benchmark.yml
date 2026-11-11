@@ -19,13 +19,16 @@ jobs:
         run: python -m pip install -e .
       - name: Run real nine-method benchmark
         run: |
-          python examples/combinatorial_bo_benchmark.py \
+          set -o pipefail
+          python -u examples/combinatorial_bo_benchmark.py \
             --seeds 2 --steps 2 --dimensions 3 --initial 3 \
-            --output combinatorial_bo_results.csv
+            --output combinatorial_bo_results.csv 2>&1 | tee combinatorial_bo_benchmark.log
       - name: Save benchmark observations
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: combinatorial-bo-results
-          path: combinatorial_bo_results.csv
+          path: |
+            combinatorial_bo_results.csv
+            combinatorial_bo_benchmark.log
           if-no-files-found: warn
