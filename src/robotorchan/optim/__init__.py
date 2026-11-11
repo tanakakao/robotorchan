@@ -62,7 +62,6 @@ from robotorchan.optim.strategies import (
 from robotorchan.optim.trust_region import (
     DiscreteTrustRegionState,
     DiscreteTrustRegionStrategy,
-    update_discrete_trust_region,
     TuRBOState,
     TuRBOStrategy,
     generate_turbo_restart_center,
@@ -72,6 +71,7 @@ from robotorchan.optim.trust_region import (
     turbo_mixed_trust_region_bounds,
     turbo_multifidelity_trust_region_bounds,
     turbo_trust_region_bounds,
+    update_discrete_trust_region,
     update_turbo_state,
 )
 
