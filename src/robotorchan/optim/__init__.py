@@ -28,7 +28,7 @@ from robotorchan.optim.constraints.contracts import (
     NonlinearConstraintCallable,
 )
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
-from robotorchan.optim.domains import MixedVariableSpace
+from robotorchan.optim.domains import MixedVariableSpace, hamming_distance, hamming_neighbors
 from robotorchan.optim.embedding import (
     ALEBOStrategy,
     BAxUSState,
@@ -119,6 +119,8 @@ __all__ = [
     "generate_turbo_restart_center",
     "generate_turbo_thompson_choices",
     "get_optimizer_capabilities",
+    "hamming_distance",
+    "hamming_neighbors",
     "optimize_acqf",
     "optimize_acqf_sequential",
     "optimize_mixed_one_shot_acqf",

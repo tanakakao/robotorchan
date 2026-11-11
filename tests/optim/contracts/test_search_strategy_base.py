@@ -161,6 +161,8 @@ def test_public_optim_exports_are_complete() -> None:
         "OptimizerName",
         "gen_augmented_one_shot_initial_conditions",
         "get_optimizer_capabilities",
+        "hamming_distance",
+        "hamming_neighbors",
         "OriginalSpaceStrategy",
         "RandomSearchStrategy",
         "LatentReconstruction",
