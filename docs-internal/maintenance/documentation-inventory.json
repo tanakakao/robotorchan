@@ -7064,6 +7064,16 @@
   ],
   "generated_documents": [
     {
+      "path": "docs/theory/27_combinatorial_bayesian_optimization.md",
+      "category": "Theory",
+      "reason": "Phase 10 combinatorial BO mathematical background."
+    },
+    {
+      "path": "docs/guide/27_combinatorial_bayesian_optimization.md",
+      "category": "Guide",
+      "reason": "Phase 10 combinatorial BO implementation mapping."
+    },
+    {
       "path": "examples/combinatorial_bo_benchmark.md",
       "category": "Engineering",
       "reason": "Phase 9 combinatorial benchmark methodology and limitations."
