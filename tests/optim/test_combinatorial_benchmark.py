@@ -52,3 +52,16 @@ def test_random_and_sobol_propose_unseen_points():
         proposal = benchmark.propose(method, X, Y, domain, seed=1, iteration=0)
         assert proposal.shape == (1, 3)
         assert not bool((proposal == X).all(dim=-1).any())
+
+
+def test_mixed_gp_and_mixed_ga_real_proposals():
+    """Exercise both Phase 9 additions without replacing their optimizers."""
+    benchmark = _load_benchmark()
+    domain = benchmark.binary_domain(3)
+    X = domain[[0, 3, 6]]
+    Y = benchmark.oracle(X)
+    for method in ("mixed_gp", "mixed_ga"):
+        candidate = benchmark.propose(method, X, Y, domain, seed=0, iteration=0)
+        assert candidate.shape == (1, 3)
+        assert bool((domain == candidate).all(dim=-1).any())
+        assert not bool((candidate == X).all(dim=-1).any())
