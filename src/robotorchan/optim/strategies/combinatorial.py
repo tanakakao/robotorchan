@@ -39,7 +39,10 @@ class HammingLocalSearchStrategy(SearchStrategy):
             raise ValueError("initial_points must have shape [num_restarts, d].")
         if initial_points.shape[0] == 0:
             raise ValueError("initial_points must contain at least one restart.")
-        if initial_points.dtype != space.bounds.dtype or initial_points.device != space.bounds.device:
+        if (
+            initial_points.dtype != space.bounds.dtype
+            or initial_points.device != space.bounds.device
+        ):
             raise ValueError("initial_points must match the space bounds dtype and device.")
         if max_steps < 1:
             raise ValueError("max_steps must be positive.")
