@@ -4,7 +4,7 @@ import pytest
 import torch
 from botorch.acquisition.analytic import PosteriorMean
 
-from robotorchan.models import BOCSSurrogate, bocs_quadratic_features
+from robotorchan.models.standard import BOCSSurrogate, bocs_quadratic_features
 
 
 def test_quadratic_features_and_posterior():
