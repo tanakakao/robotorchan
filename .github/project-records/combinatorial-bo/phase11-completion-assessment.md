@@ -48,7 +48,7 @@ requirements for this binary core.
 
 ## Reference material
 
-- [Japanese theory](../../docs/theory/27_combinatorial_bayesian_optimization.md)
-- [Implementation guide](../../docs/guide/27_combinatorial_bayesian_optimization.md)
-- [Executable notebook](../../examples/notebooks/49_combinatorial_bayesian_optimization.ipynb)
-- [Benchmark protocol and caveats](../../examples/combinatorial_bo_benchmark.md)
+- [Japanese theory](../../../docs/theory/27_combinatorial_bayesian_optimization.md)
+- [Implementation guide](../../../docs/guide/27_combinatorial_bayesian_optimization.md)
+- [Executable notebook](../../../examples/notebooks/49_combinatorial_bayesian_optimization.ipynb)
+- [Benchmark protocol and caveats](../../../examples/combinatorial_bo_benchmark.md)
