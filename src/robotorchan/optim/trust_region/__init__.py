@@ -1,5 +1,10 @@
 """Trust-region acquisition search strategies."""
 
+from robotorchan.optim.trust_region.discrete import (
+    DiscreteTrustRegionState,
+    DiscreteTrustRegionStrategy,
+    update_discrete_trust_region,
+)
 from robotorchan.optim.trust_region.turbo import (
     TuRBOState,
     TuRBOStrategy,
@@ -15,6 +20,9 @@ from robotorchan.optim.trust_region.turbo import (
 from robotorchan.optim.trust_region.turbo_multi import TuRBOMultiRegionState, TuRBORegion
 
 __all__ = [
+    "DiscreteTrustRegionState",
+    "DiscreteTrustRegionStrategy",
+    "update_discrete_trust_region",
     "TuRBOMultiRegionState",
     "TuRBORegion",
     "TuRBOState",
