@@ -33,9 +33,7 @@ def test_constraints_exclusions_and_q_contract():
     space = MixedVariableSpace(bounds, integer_dims=(0, 1))
     starts = torch.tensor([[0.0, 0.0], [1.0, 0.0]], dtype=torch.double)
     constraints = CandidateConstraints(
-        inequality_constraints=(
-            (torch.tensor([0, 1]), torch.tensor([-1.0, -1.0]), -1.0),
-        )
+        inequality_constraints=((torch.tensor([0, 1]), torch.tensor([-1.0, -1.0]), -1.0),)
     )
     strategy = HammingLocalSearchStrategy(
         space, starts, constraints=constraints, excluded=((1.0, 1.0),)
@@ -49,8 +47,6 @@ def test_constraints_exclusions_and_q_contract():
 
 def test_no_eligible_start_raises():
     space = MixedVariableSpace(torch.tensor([[0.0], [1.0]]), integer_dims=(0,))
-    strategy = HammingLocalSearchStrategy(
-        space, torch.tensor([[0.0]]), excluded=((0.0,),)
-    )
+    strategy = HammingLocalSearchStrategy(space, torch.tensor([[0.0]]), excluded=((0.0,),))
     with pytest.raises(ValueError, match="No feasible"):
         strategy.optimize(TargetAcquisition(torch.tensor([1.0])))
