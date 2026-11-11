@@ -170,6 +170,7 @@ def test_public_optim_exports_are_complete() -> None:
         "PCAReconstruction",
         "RandomProjectionReconstruction",
         "REMBOStrategy",
+        "HammingLocalSearchStrategy",
         "HeSBOStrategy",
         "TreeEnsembleSearchStrategy",
         "TuRBOState",
