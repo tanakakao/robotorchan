@@ -64,4 +64,4 @@ def test_mixed_gp_and_mixed_ga_real_proposals():
         candidate = benchmark.propose(method, X, Y, domain, seed=0, iteration=0)
         assert candidate.shape == (1, 3)
         assert bool((domain == candidate).all(dim=-1).any())
-        assert not bool((X == candidate).all(dim=-1).any())
+        assert not bool((candidate == X).all(dim=-1).any())
