@@ -22,7 +22,6 @@ from robotorchan.optim.trust_region.turbo_multi import TuRBOMultiRegionState, Tu
 __all__ = [
     "DiscreteTrustRegionState",
     "DiscreteTrustRegionStrategy",
-    "update_discrete_trust_region",
     "TuRBOMultiRegionState",
     "TuRBORegion",
     "TuRBOState",
@@ -34,5 +33,6 @@ __all__ = [
     "turbo_mixed_trust_region_bounds",
     "turbo_multifidelity_trust_region_bounds",
     "turbo_trust_region_bounds",
+    "update_discrete_trust_region",
     "update_turbo_state",
 ]
