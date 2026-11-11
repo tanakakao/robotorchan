@@ -1,6 +1,7 @@
 """Standard BoTorch-compatible surrogate models."""
 
 from robotorchan.models.standard.bocs import BOCSSurrogate, bocs_quadratic_features
+from robotorchan.models.standard.combo import BinaryGraphDiffusionKernel, COMBOSurrogate
 from robotorchan.models.standard.model_list import ModelListGP
 from robotorchan.models.standard.multi_fidelity import (
     AdditiveMapSaasMultiFidelityGP,
@@ -26,6 +27,8 @@ from robotorchan.models.standard.variational import (
 __all__ = [
     "AdditiveMapSaasMultiFidelityGP",
     "BOCSSurrogate",
+    "BinaryGraphDiffusionKernel",
+    "COMBOSurrogate",
     "KroneckerMultiTaskGP",
     "MapSaasMultiFidelityGP",
     "MixedKroneckerMultiTaskGP",
