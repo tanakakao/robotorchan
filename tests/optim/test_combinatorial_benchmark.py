@@ -3,7 +3,6 @@
 import importlib.util
 from pathlib import Path
 
-import torch
 
 
 def _load_benchmark():
@@ -22,7 +21,7 @@ def _load_benchmark():
 def test_seed_aligned_budget_and_unique_proposals(monkeypatch):
     benchmark = _load_benchmark()
     methods = ("random", "sobol", "mixed_gp", "hamming", "discrete_tr", "bocs", "combo")
-    assert benchmark.METHODS == methods
+    assert methods == benchmark.METHODS
 
     def next_unseen(method, X, Y, domain, seed, iteration):
         del method, Y, seed, iteration
@@ -47,4 +46,4 @@ def test_random_and_sobol_propose_unseen_points():
     for method in ("random", "sobol"):
         proposal = benchmark.propose(method, X, Y, domain, seed=1, iteration=0)
         assert proposal.shape == (1, 3)
-        assert not bool((X == proposal).all(dim=-1).any())
+        assert not bool((proposal == X).all(dim=-1).any())
