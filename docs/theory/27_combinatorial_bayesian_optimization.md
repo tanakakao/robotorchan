@@ -1,6 +1,6 @@
 # 組合せベイズ最適化（Combinatorial Bayesian Optimization）
 
-本章では、離散空間でベイズ最適化を行う理由から、Hamming近傍探索、離散Trust Region、BOCS、COMBOまでを順に説明します。**数学的な考え方と原著論文のアルゴリズム**を扱い、robotorchan固有のAPI・対応範囲は[実装ガイド](../guide/27_combinatorial_bayesian_optimization.md)に分離します。
+本章では、離散空間でベイズ最適化を行う理由から、Hamming近傍探索、離散Trust Region、BOCS、COMBOまでを順に説明します。**数学的な考え方と原著論文のアルゴリズム**を扱い、ライブラリ固有のAPI・対応範囲は[実装ガイド](../guide/27_combinatorial_bayesian_optimization.md)に分離します。
 
 ## 1. 問題設定：なぜ組合せ空間は難しいか
 
