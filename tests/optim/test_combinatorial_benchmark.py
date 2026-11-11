@@ -15,7 +15,17 @@ def _load_benchmark():
 
 def test_seed_aligned_budget_and_unique_proposals(monkeypatch):
     benchmark = _load_benchmark()
-    methods = ("random", "sobol", "mixed_gp", "hamming", "discrete_tr", "bocs", "combo")
+    methods = (
+        "random",
+        "sobol",
+        "numeric_gp",
+        "mixed_gp",
+        "mixed_ga",
+        "hamming",
+        "discrete_tr",
+        "bocs",
+        "combo",
+    )
     assert methods == benchmark.METHODS
 
     def next_unseen(method, X, Y, domain, seed, iteration):
