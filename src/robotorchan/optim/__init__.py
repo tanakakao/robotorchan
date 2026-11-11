@@ -59,7 +59,9 @@ from robotorchan.optim.strategies import (
     SobolSearchStrategy,
     TreeEnsembleSearchStrategy,
     propose_bocs_candidate,
+    propose_combo_candidate,
     run_bocs_sequential,
+    run_combo_sequential,
 )
 from robotorchan.optim.trust_region import (
     DiscreteTrustRegionState,
@@ -135,9 +137,11 @@ __all__ = [
     "optimize_mixed_one_shot_acqf",
     "optimize_safe_acqf",
     "propose_bocs_candidate",
+    "propose_combo_candidate",
     "propose_safe_expansion",
     "restart_turbo_state",
     "run_bocs_sequential",
+    "run_combo_sequential",
     "turbo_dimension_weights_from_model",
     "turbo_mixed_trust_region_bounds",
     "turbo_multifidelity_trust_region_bounds",
