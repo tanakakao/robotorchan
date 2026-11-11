@@ -1,5 +1,10 @@
 # 理論と実装をつなぐ日本語技術ガイド — 章構成
 
+## Combinatorial Bayesian Optimization
+
+- [組合せBO：理論と実装の対応](27_combinatorial_bayesian_optimization.md)
+- [実行Notebook](../../examples/notebooks/49_combinatorial_bayesian_optimization.ipynb)
+
 ## Transfer Bayesian Optimization
 
 - [Transfer BO：理論と実装の対応](26_transfer_bayesian_optimization.md)
