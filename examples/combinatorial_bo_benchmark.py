@@ -44,9 +44,7 @@ def binary_domain(d: int) -> Tensor:
     return torch.tensor(list(itertools.product((0.0, 1.0), repeat=d)), dtype=torch.double)
 
 
-def propose(
-    method: str, X: Tensor, Y: Tensor, domain: Tensor, seed: int, iteration: int
-) -> Tensor:
+def propose(method: str, X: Tensor, Y: Tensor, domain: Tensor, seed: int, iteration: int) -> Tensor:
     unseen = ~(domain[:, None, :] == X[None, :, :]).all(dim=-1).any(dim=-1)
     available = domain[unseen]
     if available.shape[0] == 0:
