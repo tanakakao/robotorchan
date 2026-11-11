@@ -21,17 +21,28 @@ from botorch.models import SingleTaskGP
 from gpytorch.mlls import ExactMarginalLogLikelihood
 from torch import Tensor
 
-from robotorchan.models.standard import COMBOSurrogate
+from robotorchan.models.standard import COMBOSurrogate, MixedSingleTaskGP
 from robotorchan.optim import (
     DiscreteTrustRegionState,
     DiscreteTrustRegionStrategy,
     HammingLocalSearchStrategy,
     MixedVariableSpace,
+    optimize_acqf,
     propose_bocs_candidate,
     propose_combo_candidate,
 )
 
-METHODS = ("random", "sobol", "mixed_gp", "hamming", "discrete_tr", "bocs", "combo")
+METHODS = (
+    "random",
+    "sobol",
+    "numeric_gp",
+    "mixed_gp",
+    "mixed_ga",
+    "hamming",
+    "discrete_tr",
+    "bocs",
+    "combo",
+)
 
 
 def oracle(X: Tensor) -> Tensor:
@@ -63,22 +74,45 @@ def propose(method: str, X: Tensor, Y: Tensor, domain: Tensor, seed: int, iterat
         distances = (available != target).sum(dim=-1)
         return available[torch.argmin(distances)].unsqueeze(0)
 
-    if method == "mixed_gp":
+    if method == "numeric_gp":
         model = SingleTaskGP(X, Y)
         fit_gpytorch_mll(ExactMarginalLogLikelihood(model.likelihood, model))
+    elif method in ("mixed_gp", "mixed_ga"):
+        model = MixedSingleTaskGP(X, Y, cat_dims=list(range(X.shape[-1])))
+        model.fit()
     else:
         model = COMBOSurrogate(X, Y)
         model.fit()
     model.eval()
     acquisition = UpperConfidenceBound(model, beta=0.2)
-    if method == "mixed_gp":
+    if method in ("numeric_gp", "mixed_gp"):
         with torch.no_grad():
             values = acquisition(available.unsqueeze(-2))
         return available[torch.argmax(values)].unsqueeze(0)
 
     bounds = torch.stack((torch.zeros(X.shape[-1]), torch.ones(X.shape[-1]))).double()
-    space = MixedVariableSpace(bounds=bounds, integer_dims=tuple(range(X.shape[-1])))
+    space = MixedVariableSpace(
+        bounds=bounds,
+        categorical_values={index: (0.0, 1.0) for index in range(X.shape[-1])},
+    )
     excluded = tuple(tuple(row.tolist()) for row in X)
+    if method == "mixed_ga":
+        # GA cannot exclude previously observed points directly. Use its candidate
+        # when novel; otherwise select the best unseen point under the same UCB.
+        candidate, _ = optimize_acqf(
+            acquisition,
+            bounds,
+            q=1,
+            optimizer="ga",
+            variable_space=space,
+            seed=seed * 1000 + iteration,
+            optimizer_options={"population_size": 32, "generations": 25},
+        )
+        if bool((candidate == X).all(dim=-1).any()):
+            with torch.no_grad():
+                scores = acquisition(available.unsqueeze(-2))
+            return available[torch.argmax(scores)].unsqueeze(0)
+        return candidate
     if method == "hamming":
         strategy = HammingLocalSearchStrategy(space, available, excluded=excluded, max_steps=10)
     elif method == "discrete_tr":
