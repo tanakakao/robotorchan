@@ -52,12 +52,13 @@ def update_discrete_trust_region(
     failures = state.failures + 1
     if failures >= state.failure_tolerance:
         if state.radius == state.min_radius:
-            return replace(
-                state, successes=0, failures=0, restart_triggered=True
-            )
+            return replace(state, successes=0, failures=0, restart_triggered=True)
         return replace(
-            state, radius=max(state.min_radius, state.radius - 1),
-            successes=0, failures=0, restart_triggered=False
+            state,
+            radius=max(state.min_radius, state.radius - 1),
+            successes=0,
+            failures=0,
+            restart_triggered=False,
         )
     return replace(state, successes=0, failures=failures, restart_triggered=False)
 
@@ -97,9 +98,7 @@ class DiscreteTrustRegionStrategy(HammingLocalSearchStrategy):
         )
         self.state = state
 
-    def optimize(
-        self, acq_function: AcquisitionFunction, *, q: int = 1
-    ) -> SearchResult:
+    def optimize(self, acq_function: AcquisitionFunction, *, q: int = 1) -> SearchResult:
         """Search the current discrete trust region."""
         result = super().optimize(acq_function, q=q)
         return SearchResult(
