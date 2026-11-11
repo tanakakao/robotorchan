@@ -28,7 +28,7 @@ def propose_bocs_candidate(
     """
     if train_X.ndim != 2 or train_X.shape[1] < 1:
         raise ValueError("train_X must have shape [n, d].")
-    n, d = train_X.shape
+    d = train_X.shape[1]
     if d > max_dimensions or max_dimensions < 1 or max_dimensions > 20:
         raise ValueError("Binary dimension exceeds the configured enumeration limit.")
     if beta < 0:
