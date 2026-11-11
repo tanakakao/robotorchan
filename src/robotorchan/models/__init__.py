@@ -1,6 +1,7 @@
 """Surrogate-model extensions and BoTorch-compatible wrappers."""
 
 from robotorchan.models.base import UnsupportedModelOperationError
+from robotorchan.models.standard.bocs import BOCSSurrogate, bocs_quadratic_features
 from robotorchan.models.capabilities import (
     DocumentationLinks,
     HighDimensionalStrategy,
@@ -195,6 +196,8 @@ from robotorchan.models.uncertain.uncertain_input import (
 )
 
 __all__ = [
+    "BOCSSurrogate",
+    "bocs_quadratic_features",
     "ALEBOGP",
     "LCEAGP",
     "LCEMGP",
