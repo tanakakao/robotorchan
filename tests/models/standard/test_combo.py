@@ -8,9 +8,7 @@ from robotorchan.models.standard import BinaryGraphDiffusionKernel, COMBOSurroga
 
 
 def test_binary_diffusion_kernel_is_symmetric_and_positive_definite():
-    X = torch.tensor(
-        [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]], dtype=torch.double
-    )
+    X = torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]], dtype=torch.double)
     kernel = BinaryGraphDiffusionKernel(2).double()
     covariance = kernel(X).to_dense()
     assert torch.allclose(covariance, covariance.T)
@@ -19,9 +17,7 @@ def test_binary_diffusion_kernel_is_symmetric_and_positive_definite():
 
 
 def test_combo_surrogate_posterior_and_botorch_acquisition():
-    X = torch.tensor(
-        [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]], dtype=torch.double
-    )
+    X = torch.tensor([[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]], dtype=torch.double)
     Y = X.sum(dim=-1, keepdim=True)
     model = COMBOSurrogate(X, Y)
     model.eval()
