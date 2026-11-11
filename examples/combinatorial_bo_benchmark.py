@@ -31,7 +31,6 @@ from robotorchan.optim import (
     propose_combo_candidate,
 )
 
-
 METHODS = ("random", "sobol", "mixed_gp", "hamming", "discrete_tr", "bocs", "combo")
 
 
@@ -120,7 +119,7 @@ def run_benchmark(
             start = time.perf_counter()
             for iteration in range(steps):
                 candidate = propose(method, X, Y, domain, seed, iteration)
-                if bool((X == candidate).all(dim=-1).any()):
+                if bool((candidate == X).all(dim=-1).any()):
                     raise RuntimeError(f"{method} proposed an already observed candidate.")
                 X = torch.cat((X, candidate), dim=0)
                 Y = torch.cat((Y, oracle(candidate)), dim=0)
