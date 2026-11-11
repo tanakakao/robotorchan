@@ -1,7 +1,6 @@
 """Surrogate-model extensions and BoTorch-compatible wrappers."""
 
 from robotorchan.models.base import UnsupportedModelOperationError
-from robotorchan.models.standard.bocs import BOCSSurrogate, bocs_quadratic_features
 from robotorchan.models.capabilities import (
     DocumentationLinks,
     HighDimensionalStrategy,
@@ -196,20 +195,13 @@ from robotorchan.models.uncertain.uncertain_input import (
 )
 
 __all__ = [
-    "BOCSSurrogate",
-    "bocs_quadratic_features",
     "ALEBOGP",
-    "LCEAGP",
-    "LCEMGP",
-    "PCAGP",
-    "PLSGP",
-    "SACGP",
-    "VAEGP",
     "AdditiveMapSaasMultiFidelityGP",
     "AdditiveMapSaasSingleTaskGP",
     "AutoEncoderGP",
     "AutoEncoderKroneckerMultiTaskGP",
     "AutoEncoderMultiTaskGP",
+    "BOCSSurrogate",
     "ContaminatedMultiTaskGP",
     "ContaminatedSingleTaskGP",
     "DocumentationLinks",
@@ -242,6 +234,8 @@ __all__ = [
     "JointVAEKroneckerMultiTaskGP",
     "JointVAEMultiTaskGP",
     "KroneckerMultiTaskGP",
+    "LCEAGP",
+    "LCEMGP",
     "LatentKroneckerGP",
     "MapSaasMultiFidelityGP",
     "MixedAdditiveMapSaasSingleTaskGP",
@@ -308,9 +302,11 @@ __all__ = [
     "OrthogonalAdditiveGP",
     "OutputPCAGP",
     "OutputPLSGP",
+    "PCAGP",
     "PCAKroneckerMultiTaskGP",
     "PCAMultiFidelityGP",
     "PCAMultiTaskGP",
+    "PLSGP",
     "PLSKroneckerMultiTaskGP",
     "PLSMultiFidelityGP",
     "PLSMultiTaskGP",
@@ -329,6 +325,7 @@ __all__ = [
     "RobustRelevancePursuitMultiTaskGP",
     "RobustRelevancePursuitSingleTaskGP",
     "RobustnessType",
+    "SACGP",
     "SaasFullyBayesianMultiTaskGP",
     "SaasFullyBayesianSingleTaskGP",
     "SingleTaskDeepGP",
@@ -350,7 +347,9 @@ __all__ = [
     "UncertainCategoricalSingleTaskGP",
     "UncertainInputSingleTaskGP",
     "UnsupportedModelOperationError",
+    "VAEGP",
     "VAEKroneckerMultiTaskGP",
     "VAEMultiTaskGP",
+    "bocs_quadratic_features",
     "get_model_registry_entry",
 ]
