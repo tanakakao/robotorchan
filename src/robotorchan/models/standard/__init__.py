@@ -24,9 +24,8 @@ from robotorchan.models.standard.variational import (
 )
 
 __all__ = [
-    "BOCSSurrogate",
-    "bocs_quadratic_features",
     "AdditiveMapSaasMultiFidelityGP",
+    "BOCSSurrogate",
     "KroneckerMultiTaskGP",
     "MapSaasMultiFidelityGP",
     "MixedKroneckerMultiTaskGP",
@@ -42,4 +41,5 @@ __all__ = [
     "SingleTaskGP",
     "SingleTaskMultiFidelityGP",
     "SingleTaskVariationalGP",
+    "bocs_quadratic_features",
 ]
