@@ -11,7 +11,11 @@ from torch import Tensor
 from robotorchan.optim.base import SearchResult, SearchStrategy
 from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.constraints.evaluation import candidate_is_feasible
-from robotorchan.optim.domains.combinatorial import _validate_points, hamming_neighbors
+from robotorchan.optim.domains.combinatorial import (
+    _validate_points,
+    hamming_distance,
+    hamming_neighbors,
+)
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 
@@ -31,6 +35,8 @@ class HammingLocalSearchStrategy(SearchStrategy):
         constraints: CandidateConstraints | None = None,
         excluded: Iterable[tuple[float, ...]] = (),
         max_steps: int = 100,
+        trust_region_center: Tensor | None = None,
+        trust_region_radius: int | None = None,
     ) -> None:
         super().__init__(space.bounds)
         if space.continuous_dims:
@@ -52,6 +58,23 @@ class HammingLocalSearchStrategy(SearchStrategy):
         self.constraints = constraints
         self.excluded = set(excluded)
         self.max_steps = max_steps
+        if (trust_region_center is None) != (trust_region_radius is None):
+            raise ValueError("Trust-region center and radius must be provided together.")
+        if trust_region_center is not None:
+            if trust_region_center.shape != (space.input_dim,):
+                raise ValueError("trust_region_center must have shape [d].")
+            if (
+                trust_region_center.dtype != space.bounds.dtype
+                or trust_region_center.device != space.bounds.device
+            ):
+                raise ValueError("Trust-region center must match bounds dtype and device.")
+            _validate_points(trust_region_center, space)
+            if not 1 <= trust_region_radius <= space.input_dim:
+                raise ValueError("Trust-region radius must be between 1 and d.")
+            self.trust_region_center = trust_region_center.detach().clone()
+        else:
+            self.trust_region_center = None
+        self.trust_region_radius = trust_region_radius
 
     def optimize(
         self,
@@ -77,6 +100,11 @@ class HammingLocalSearchStrategy(SearchStrategy):
         starts = self.initial_points
         if self.constraints is not None and self.constraints.has_constraints:
             starts = starts[candidate_is_feasible(starts.unsqueeze(-2), self.constraints)]
+        if self.trust_region_center is not None:
+            starts = starts[
+                hamming_distance(starts, self.trust_region_center, self.space)
+                <= self.trust_region_radius
+            ]
         for start in starts:
             if tuple(start.tolist()) in self.excluded:
                 continue
@@ -87,6 +115,11 @@ class HammingLocalSearchStrategy(SearchStrategy):
                 neighbors = hamming_neighbors(
                     current, self.space, constraints=self.constraints, excluded=self.excluded
                 )
+                if self.trust_region_center is not None:
+                    neighbors = neighbors[
+                        hamming_distance(neighbors, self.trust_region_center, self.space)
+                        <= self.trust_region_radius
+                    ]
                 if neighbors.shape[0] == 0:
                     break
                 values = evaluate(neighbors)
