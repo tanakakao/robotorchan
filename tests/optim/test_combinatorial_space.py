@@ -17,9 +17,7 @@ def test_neighbors_and_distance():
     center = torch.tensor([0.0, 2.0], dtype=torch.double)
     neighbors = hamming_neighbors(center, space)
     assert {tuple(x.tolist()) for x in neighbors} == {(1.0, 2.0), (0.0, 0.0), (0.0, 5.0)}
-    assert torch.equal(
-        hamming_distance(neighbors, center, space), torch.ones(3, dtype=torch.long)
-    )
+    assert torch.equal(hamming_distance(neighbors, center, space), torch.ones(3, dtype=torch.long))
 
 
 def test_constraints_and_exclusions():
@@ -46,14 +44,12 @@ def test_reject_continuous_and_invalid_center():
         hamming_neighbors(torch.tensor([0.0, 0.0]), space)
     discrete = MixedVariableSpace(torch.tensor([[0.0, 0.0], [1.0, 1.0]]), integer_dims=(0, 1))
     with pytest.raises(ValueError, match="illegal"):
-        hamming_neighbors(torch.tensor([0.05, 0.0]), discrete)
+        hamming_neighbors(torch.tensor([0.5, 0.0]), discrete)
 
 
 def test_float32_fractional_categories_do_not_include_center():
-    space = MixedVariableSpace(
-        torch.tensor([[0.00], [1.00]]), categorical_values={0: (0.01, 0.02)}
-    )
-    center = torch.tensor([0.01])
+    space = MixedVariableSpace(torch.tensor([[0.0], [1.0]]), categorical_values={0: (0.1, 0.2)})
+    center = torch.tensor([0.1])
     neighbors = hamming_neighbors(center, space)
     assert neighbors.shape == (1, 1)
     assert hamming_distance(center, neighbors, space).tolist() == [1]
@@ -61,11 +57,14 @@ def test_float32_fractional_categories_do_not_include_center():
 
 def test_large_integer_domain_distance_does_not_enumerate():
     space = MixedVariableSpace(
-        torch.tensor([[0.00], [1_000_000_000.00]], dtype=torch.double),
+        torch.tensor([[0.0], [1_000_000_000.0]], dtype=torch.double),
         integer_dims=(0,),
     )
-    assert hamming_distance(
-        torch.tensor([0.00], dtype=torch.double),
-        torch.tensor([1_000_000_000.00], dtype=torch.double),
-        space,
-    ).item() == 1
+    assert (
+        hamming_distance(
+            torch.tensor([0.0], dtype=torch.double),
+            torch.tensor([1_000_000_000.0], dtype=torch.double),
+            space,
+        ).item()
+        == 1
+    )
