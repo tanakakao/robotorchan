@@ -20,9 +20,7 @@ def bocs_quadratic_features(X: Tensor) -> Tensor:
         raise ValueError("X must have a positive final dimension.")
     d = X.shape[-1]
     i, j = torch.triu_indices(d, d, offset=1, device=X.device)
-    return torch.cat(
-        (torch.ones_like(X[..., :1]), X, X[..., i] * X[..., j]), dim=-1
-    )
+    return torch.cat((torch.ones_like(X[..., :1]), X, X[..., i] * X[..., j]), dim=-1)
 
 
 class BOCSSurrogate(Model):
