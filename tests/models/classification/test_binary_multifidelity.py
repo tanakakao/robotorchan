@@ -2,6 +2,8 @@
 
 import pytest
 import torch
+from botorch.models.kernels.downsampling import DownsamplingKernel
+from botorch.models.kernels.exponential_decay import ExponentialDecayKernel
 from gpytorch.mlls import VariationalELBO
 
 from robotorchan.models.classification import (
@@ -52,3 +54,17 @@ def test_multifidelity_binary_rejects_invalid_fidelity(kwargs):
     X, Y = _training_data()
     with pytest.raises(ValueError):
         MultiFidelityBinaryGPClassifier(X, Y, **kwargs)
+
+
+def test_multifidelity_binary_native_fidelity_kernels():
+    X, Y = _training_data()
+    iteration = MultiFidelityBinaryGPClassifier(X, Y, iteration_fidelity=1)
+    data = MultiFidelityBinaryGPClassifier(X, Y, data_fidelities=[1])
+    assert any(
+        isinstance(kernel, ExponentialDecayKernel)
+        for kernel in iteration.model.covar_module.base_kernel.kernels
+    )
+    assert any(
+        isinstance(kernel, DownsamplingKernel)
+        for kernel in data.model.covar_module.base_kernel.kernels
+    )
