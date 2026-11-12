@@ -55,10 +55,10 @@ class MultiFidelityBinaryGPClassifier(BinarySingleTaskGPClassifier):
             if iteration_fidelity is None
             else normalize_feature_dims([iteration_fidelity], input_dim, name="iteration_fidelity")
         )
-        data_dims = normalize_feature_dims(
-            () if data_fidelities is None else data_fidelities,
-            input_dim,
-            name="data_fidelities",
+        data_dims = (
+            []
+            if data_fidelities is None
+            else normalize_feature_dims(data_fidelities, input_dim, name="data_fidelities")
         )
         fidelity_dims = list(iteration_dims) + list(data_dims)
         if not fidelity_dims:
