@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from botorch.models.kernels.downsampling import DownsamplingKernel
+from botorch.models.kernels.exponential_decay import ExponentialDecayKernel
 from botorch.models.transforms.input import InputTransform
 from botorch.models.utils.inducing_point_allocators import InducingPointAllocator
-from gpytorch.kernels import MaternKernel, ProductKernel, RBFKernel, ScaleKernel
+from gpytorch.kernels import MaternKernel, ProductKernel, ScaleKernel
 from gpytorch.means import Mean
 from gpytorch.variational import VariationalStrategy, _VariationalDistribution, _VariationalStrategy
 from torch import Tensor
@@ -20,10 +22,9 @@ from robotorchan.models.classification.binary.standard.single_task import (
 class MultiFidelityBinaryGPClassifier(BinarySingleTaskGPClassifier):
     """Bernoulli variational GP with separate design and fidelity covariance.
 
-    Fidelity inputs are modeled as continuous features. The product kernel
-    correlates observations across fidelity levels without treating fidelity
-    as a class label or a task index. This phase uses public GPyTorch kernels;
-    it does not claim equivalence to BoTorch's linear-truncated fidelity prior.
+    Fidelity inputs use BoTorch's native exponential-decay and downsampling
+    kernels. The product structure follows the non-linear-truncated
+    multi-fidelity model; the linear-truncated prior is not supported.
     """
 
     def __init__(
@@ -69,8 +70,11 @@ class MultiFidelityBinaryGPClassifier(BinarySingleTaskGPClassifier):
             raise ValueError("At least one non-fidelity design feature is required.")
 
         design_kernel = MaternKernel(nu=nu, ard_num_dims=len(design_dims), active_dims=design_dims)
-        fidelity_kernel = RBFKernel(ard_num_dims=len(fidelity_dims), active_dims=fidelity_dims)
-        covar_module = ScaleKernel(ProductKernel(design_kernel, fidelity_kernel))
+        kernels = [design_kernel]
+        if iteration_dims:
+            kernels.append(ExponentialDecayKernel(active_dims=iteration_dims))
+        kernels.extend(DownsamplingKernel(active_dims=[dim]) for dim in data_dims)
+        covar_module = ScaleKernel(ProductKernel(*kernels))
         super().__init__(
             train_X=train_X,
             train_Y=train_Y,
