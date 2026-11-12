@@ -52,16 +52,14 @@ class MultiFidelityBinaryGPClassifier(BinarySingleTaskGPClassifier):
         iteration_dims = (
             []
             if iteration_fidelity is None
-            else normalize_feature_dims(
-                [iteration_fidelity], input_dim, name="iteration_fidelity"
-            )
+            else normalize_feature_dims([iteration_fidelity], input_dim, name="iteration_fidelity")
         )
         data_dims = normalize_feature_dims(
             () if data_fidelities is None else data_fidelities,
             input_dim,
             name="data_fidelities",
         )
-        fidelity_dims = iteration_dims + data_dims
+        fidelity_dims = list(iteration_dims) + list(data_dims)
         if not fidelity_dims:
             raise ValueError("At least one fidelity feature must be specified.")
         if len(set(fidelity_dims)) != len(fidelity_dims):
@@ -70,12 +68,8 @@ class MultiFidelityBinaryGPClassifier(BinarySingleTaskGPClassifier):
         if not design_dims:
             raise ValueError("At least one non-fidelity design feature is required.")
 
-        design_kernel = MaternKernel(
-            nu=nu, ard_num_dims=len(design_dims), active_dims=design_dims
-        )
-        fidelity_kernel = RBFKernel(
-            ard_num_dims=len(fidelity_dims), active_dims=fidelity_dims
-        )
+        design_kernel = MaternKernel(nu=nu, ard_num_dims=len(design_dims), active_dims=design_dims)
+        fidelity_kernel = RBFKernel(ard_num_dims=len(fidelity_dims), active_dims=fidelity_dims)
         covar_module = ScaleKernel(ProductKernel(design_kernel, fidelity_kernel))
         super().__init__(
             train_X=train_X,
