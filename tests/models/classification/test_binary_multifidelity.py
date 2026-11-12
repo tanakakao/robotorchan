@@ -20,9 +20,7 @@ def _training_data():
 
 def test_multifidelity_binary_training_and_predictions():
     X, Y = _training_data()
-    model = MultiFidelityBinaryGPClassifier(
-        X, Y, data_fidelities=[1], inducing_points=6
-    )
+    model = MultiFidelityBinaryGPClassifier(X, Y, data_fidelities=[1], inducing_points=6)
     assert isinstance(model.make_mll(), VariationalELBO)
     model.fit(epochs=2, lr=0.01)
     query = torch.tensor([[0.4, 0.25], [0.4, 1.0]], dtype=torch.double)
@@ -31,18 +29,13 @@ def test_multifidelity_binary_training_and_predictions():
     probabilities = model.predict_proba(query)
     assert probabilities.shape == (2, 2)
     assert torch.isfinite(probabilities).all()
-    torch.testing.assert_close(
-        probabilities.sum(dim=-1), torch.ones(2, dtype=torch.double)
-    )
+    torch.testing.assert_close(probabilities.sum(dim=-1), torch.ones(2, dtype=torch.double))
     assert model.fidelity_dims == (1,)
     assert model.design_dims == (0,)
 
 
 def test_multifidelity_binary_registry():
-    assert (
-        get_classification_model_class("binary.multifidelity")
-        is MultiFidelityBinaryGPClassifier
-    )
+    assert get_classification_model_class("binary.multifidelity") is MultiFidelityBinaryGPClassifier
 
 
 @pytest.mark.parametrize(
