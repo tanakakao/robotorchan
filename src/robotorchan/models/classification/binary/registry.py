@@ -71,12 +71,12 @@ from robotorchan.models.classification.binary.standard.multitask import (
     KroneckerMultiTaskBinaryGPClassifier,
     MultiTaskBinaryGPClassifier,
 )
-from robotorchan.models.classification.binary.standard.spectral_mixture import (
-    SpectralMixtureBinaryGPClassifier,
-)
 from robotorchan.models.classification.binary.standard.single_task import (
     BinarySingleTaskGPClassifier,
     MixedBinarySingleTaskGPClassifier,
+)
+from robotorchan.models.classification.binary.standard.spectral_mixture import (
+    SpectralMixtureBinaryGPClassifier,
 )
 from robotorchan.models.classification.binary.uncertain.uncertain_categorical import (
     UncertainCategoricalBinarySingleTaskGPClassifier,
