@@ -67,9 +67,6 @@ from robotorchan.models.classification.binary.uncertain import (
 
 __all__ = [
     "ALEBOBinarySingleTaskGPClassifier",
-    "binary_cost_sensitive_prediction",
-    "binary_cost_sensitive_threshold",
-    "binary_expected_decision_cost",
     "BinarySingleTaskDeepGPClassifier",
     "BinarySingleTaskGPClassifier",
     "BootstrapBinaryClassificationEnsemble",
@@ -88,7 +85,6 @@ __all__ = [
     "HistGradientBoostingBinaryClassifier",
     "InputDependentLabelNoiseBinarySingleTaskGPClassifier",
     "InputDependentLabelNoiseLikelihood",
-    "inverse_frequency_class_weights",
     "JointEncoderBinaryGPClassifier",
     "KroneckerMultiTaskBinaryGPClassifier",
     "LabelNoiseBernoulliLikelihood",
@@ -112,8 +108,12 @@ __all__ = [
     "RobustClassificationMetadata",
     "SaasBinarySingleTaskGPClassifier",
     "SklearnBinaryClassifier",
-    "SpectralMixtureBinaryGPClassifier",
     "UncertainBinaryClassificationMixin",
     "UncertainCategoricalBinarySingleTaskGPClassifier",
     "UncertainClassificationMetadata",
-]
+    "binary_cost_sensitive_prediction",
+    "binary_cost_sensitive_threshold",
+    "binary_expected_decision_cost",
+    "inverse_frequency_class_weights",
+]    "SpectralMixtureBinaryGPClassifier",
+
