@@ -53,6 +53,7 @@ from robotorchan.models.classification.binary.standard import (
     MixedMultiFidelityBinaryGPClassifier,
     MultiFidelityBinaryGPClassifier,
     MultiTaskBinaryGPClassifier,
+    SpectralMixtureBinaryGPClassifier,
 )
 from robotorchan.models.classification.binary.uncertain import (
     ClassificationInputUncertaintyType,
@@ -94,6 +95,7 @@ __all__ = [
     "MixedNonstationaryBinarySingleTaskGPClassifier",
     "MultiFidelityBinaryGPClassifier",
     "MultiTaskBinaryGPClassifier",
+    "SpectralMixtureBinaryGPClassifier",
     "NonGPBinaryClassificationMixin",
     "NonstationaryBinarySingleTaskGPClassifier",
     "NonstationaryMultiTaskBinaryGPClassifier",
