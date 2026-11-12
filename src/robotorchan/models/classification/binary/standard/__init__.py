@@ -16,5 +16,6 @@ __all__ = [
     "BinarySingleTaskGPClassifier",
     "KroneckerMultiTaskBinaryGPClassifier",
     "MixedBinarySingleTaskGPClassifier",
+    "MultiFidelityBinaryGPClassifier",
     "MultiTaskBinaryGPClassifier",
 ]
