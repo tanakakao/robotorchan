@@ -64,6 +64,7 @@ from robotorchan.models.classification.binary.robust.replicate import (
     ReplicateLabelBinarySingleTaskGPClassifier,
 )
 from robotorchan.models.classification.binary.standard.multi_fidelity import (
+    MixedMultiFidelityBinaryGPClassifier,
     MultiFidelityBinaryGPClassifier,
 )
 from robotorchan.models.classification.binary.standard.multitask import (
@@ -192,6 +193,12 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
         MultiFidelityBinaryGPClassifier,
         "standard",
         _binary_capabilities(),
+    ),
+    (
+        "binary.mixed_multifidelity",
+        MixedMultiFidelityBinaryGPClassifier,
+        "standard",
+        _binary_capabilities(input_type=InputType.MIXED),
     ),
     (
         "binary.multitask",

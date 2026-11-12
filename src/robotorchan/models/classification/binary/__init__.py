@@ -50,6 +50,7 @@ from robotorchan.models.classification.binary.standard import (
     BinarySingleTaskGPClassifier,
     KroneckerMultiTaskBinaryGPClassifier,
     MixedBinarySingleTaskGPClassifier,
+    MixedMultiFidelityBinaryGPClassifier,
     MultiFidelityBinaryGPClassifier,
     MultiTaskBinaryGPClassifier,
 )
@@ -89,6 +90,7 @@ __all__ = [
     "LabelNoiseBinarySingleTaskGPClassifier",
     "MapSaasBinarySingleTaskGPClassifier",
     "MixedBinarySingleTaskGPClassifier",
+    "MixedMultiFidelityBinaryGPClassifier",
     "MixedNonstationaryBinarySingleTaskGPClassifier",
     "MultiFidelityBinaryGPClassifier",
     "MultiTaskBinaryGPClassifier",

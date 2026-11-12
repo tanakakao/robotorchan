@@ -746,7 +746,7 @@ correctness of that optional uncertainty propagation.
 
 ## Classification documentation mapping at registry-ID granularity
 
-Unlike regression `MODEL_REGISTRY`, the 30 entries in
+Unlike regression `MODEL_REGISTRY`, the 31 entries in
 `CLASSIFICATION_MODEL_REGISTRY` do **not** carry individual guide, theory,
 or notebook metadata. The following is a documentation-ownership convention
 derived from the implemented binary registry and existing shared references,
@@ -754,7 +754,7 @@ not an assertion that every entry has its own notebook.
 
 | Binary registry ID subset | Shared usage guide | Shared theoretical reference | Notebook verification |
 | --- | --- | --- | --- |
-| `binary.standard`, `binary.mixed`, `binary.multifidelity`, `binary.multitask`, `binary.kronecker_multitask` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
+| `binary.standard`, `binary.mixed`, `binary.multifidelity`, `binary.mixed_multifidelity`, `binary.multitask`, `binary.kronecker_multitask` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
 | `binary.map_saas`, `binary.saas`, `binary.reduced`, `binary.pca`, `binary.pls`, `binary.random_projection`, `binary.alebo`, `binary.joint_encoder` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
 | `binary.deep_gp` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
 | `binary.ensemble.gp`, `binary.ensemble.heterogeneous` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
