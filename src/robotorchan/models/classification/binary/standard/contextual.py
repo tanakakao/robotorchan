@@ -30,7 +30,8 @@ def _index_kernel(
     resolved_rank = 1 if rank is None else rank
     if not isinstance(resolved_rank, int) or not 1 <= resolved_rank <= count:
         raise ValueError("rank must be between 1 and the number of indexed levels.")
-    return IndexKernel(num_tasks=count, rank=resolved_rank, active_dims=[feature]), count, resolved_rank
+    kernel = IndexKernel(num_tasks=count, rank=resolved_rank, active_dims=[feature])
+    return kernel, count, resolved_rank
 
 
 class ContextualBinaryGPClassifier(BinarySingleTaskGPClassifier):
