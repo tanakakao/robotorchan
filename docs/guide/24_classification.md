@@ -144,7 +144,7 @@ Theoryのlink関数を介した期待値は、このlatent分布から予測ラ�
 使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/39_classification_active_learning.ipynb)を参照してくださ
 い。
 
-## 拡張モデルの使い分け（Phase 9）
+## 拡張二値分類モデルの使い分け
 
 評価忠実度が異なる場合は`MultiFidelityBinaryGPClassifier`、
 連続とカテゴリの混在には`MixedMultiFidelityBinaryGPClassifier`を選びます。
