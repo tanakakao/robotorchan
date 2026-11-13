@@ -106,3 +106,5 @@ NNGPは**無限幅ニューラルネットワークに対応する解析的カ�
 学習から候補提案までの例は
 [分類拡張Notebook](../../examples/notebooks/47_binary_classification_extensions.ipynb)を参照してください。
 比較コードは[ベンチマーク](../../benchmarks/binary_classification_extensions.py)にあります。
+
+モデル別の入力・q-batch対応・検証範囲は[二値分類拡張の対応表](binary_classification_extension_matrix.md)を参照してください。

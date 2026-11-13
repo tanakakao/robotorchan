@@ -7242,6 +7242,11 @@
       "path": ".github/project-records/combinatorial-bo/phase11-completion-assessment.md",
       "category": "Project Record",
       "reason": "Phase 11 completion decision, implementation matrix and outstanding Phase 9 benchmark scope."
+    },
+    {
+      "path": "docs/models/binary_classification_extension_matrix.md",
+      "category": "Models",
+      "reason": "Phase 10 binary classification extension support matrix and evidence-based completion status."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
