@@ -12,6 +12,9 @@ from robotorchan.models.classification.binary.standard.single_task import (
     BinarySingleTaskGPClassifier,
     MixedBinarySingleTaskGPClassifier,
 )
+from robotorchan.models.classification.binary.standard.spectral_mixture import (
+    SpectralMixtureBinaryGPClassifier,
+)
 
 __all__ = [
     "BinarySingleTaskGPClassifier",
@@ -20,4 +23,5 @@ __all__ = [
     "MixedMultiFidelityBinaryGPClassifier",
     "MultiFidelityBinaryGPClassifier",
     "MultiTaskBinaryGPClassifier",
+    "SpectralMixtureBinaryGPClassifier",
 ]

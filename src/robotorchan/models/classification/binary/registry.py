@@ -75,6 +75,9 @@ from robotorchan.models.classification.binary.standard.single_task import (
     BinarySingleTaskGPClassifier,
     MixedBinarySingleTaskGPClassifier,
 )
+from robotorchan.models.classification.binary.standard.spectral_mixture import (
+    SpectralMixtureBinaryGPClassifier,
+)
 from robotorchan.models.classification.binary.uncertain.uncertain_categorical import (
     UncertainCategoricalBinarySingleTaskGPClassifier,
 )
@@ -199,6 +202,12 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
         MixedMultiFidelityBinaryGPClassifier,
         "standard",
         _binary_capabilities(input_type=InputType.MIXED),
+    ),
+    (
+        "binary.spectral_mixture",
+        SpectralMixtureBinaryGPClassifier,
+        "standard",
+        _binary_capabilities(),
     ),
     (
         "binary.multitask",
