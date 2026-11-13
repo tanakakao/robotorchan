@@ -6,5 +6,5 @@
 
 Preference learning は noisy regression の代替ではありません。観測された情報そのものが比較である場合に選択します。
 
-Notebook: [Pairwise GP](../../examples/notebooks/07_pairwise_gp.ipynb)  
+Notebook: [Pairwise GP](../../examples/notebooks/07_pairwise_gp.ipynb) / [Mixed Preference BO](../../examples/notebooks/47_mixed_preference_bo.ipynb)  
 Theory: [Preference Learning](../theory/10_preference_learning.md)
