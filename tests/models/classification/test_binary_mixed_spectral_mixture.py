@@ -27,8 +27,7 @@ def test_mixed_spectral_mixture_training_and_prediction():
     assert isinstance(model.make_mll(), VariationalELBO)
     assert isinstance(model.model.covar_module, AdditiveKernel)
     assert any(
-        isinstance(kernel, SpectralMixtureKernel)
-        for kernel in model.model.covar_module.kernels
+        isinstance(kernel, SpectralMixtureKernel) for kernel in model.model.covar_module.kernels
     )
     model.fit(epochs=2, lr=0.01)
     probabilities = model.predict_proba(X[:3])
