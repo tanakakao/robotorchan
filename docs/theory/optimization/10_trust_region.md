@@ -801,7 +801,7 @@ TuRBO-1とTuRBO-mを比較するときは、同じ目的関数・初期評価数
 
 - [理論と公開APIの対応ガイド](../../guide/optimization/10_trust_region.md)
 - [TuRBO-mの利用ガイド](../../optimization/turbo-m.md)
-- [TuRBO-mの実行Notebook](../../../examples/notebooks/turbo_multi_benchmark.ipynb)
+- [TuRBO-mの実行Notebook](../../../examples/notebooks/43_turbo_multi_benchmark.ipynb)
 
 最初は「複数の場所を同時に調べ、良い場所へ実験回数を回す」という
 直感を押さえ、その後に$q_j$の式、TSの式、成功・失敗の式を
