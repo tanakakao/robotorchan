@@ -70,7 +70,7 @@ Warm-startは初期点の選択法であり、RGPEのモデル統合や
 TAFの獲得関数統合とは異なる。
 
 Mixed空間では、許可されたカテゴリ割当を
-\`fixed_features_list\` で指定して候補を選ぶ。
+`fixed_features_list` で指定して候補を選ぶ。
 
 ## 4. RGPE：ランキング損失によるモデル重み
 
@@ -143,7 +143,7 @@ w_i=\frac{1}{B}\sum_{b=1}^{B}v_i^{(b)},
 \]
 
 第2項はモデル間の予測平均の不一致による不確実性である。
-\`RGPEModel\` はこの二つのモーメントに一致する**単一Gaussian分布**を返す。
+アンサンブル事後分布はこの二つのモーメントに一致する**単一Gaussian分布**を返す。
 これは厳密なGaussian mixtureそのものではなく近似である。
 
 1点提案にはこの近似posteriorに対する解析的EIを使い、
@@ -181,10 +181,10 @@ RGPEのランキング重みをTAFが自動推定するわけではない。
 
 と表す。カテゴリを整数コードで入力しても、コード間の差を
 連続距離として解釈すべきではない。
-本実装ではカテゴリ列を \`cat_dims\` で指定して
-BoTorchの \`MixedSingleTaskGP\` を用い、
-\`fixed_features_list\` に許可カテゴリの割当を列挙して
-\`optimize_acqf_mixed\` に候補探索を委譲する。
+本実装ではカテゴリ列を `cat_dims` で指定して
+BoTorchのMixed入力対応GPを用い、
+`fixed_features_list` に許可カテゴリの割当を列挙して
+`optimize_acqf_mixed` に候補探索を委譲する。
 
 ソース・ターゲットモデルは同じ入力表現と次元を使う必要がある。
 候補間制約や任意の組合せ制約まで自動的に扱うという意味ではない。
@@ -217,7 +217,7 @@ BoTorchの \`MixedSingleTaskGP\` を用い、
 
 候補間の同時事後共分散を考慮するため、
 各点のEIの単純和とは異なる。実装はBoTorchの
-\`qExpectedImprovement\` とSobol QMCサンプラーを利用する。
+`qExpectedImprovement` とSobol QMCサンプラーを利用する。
 
 RGPEではモーメント整合したensemble posteriorをqEIに渡す。
 TAFのJoint版は
