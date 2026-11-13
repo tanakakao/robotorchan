@@ -28,6 +28,16 @@
 - [日本語利用Notebook](../examples/notebooks/44_safe_bo_usage_guide.ipynb)
 - [比較Notebook](../examples/notebooks/45_safe_bo_benchmark.ipynb)
 
+### 最近のBO拡張を使いたい
+
+探索機能の入口は [Optimization guides](optimization/README.md) です。
+Safe BO は [実装ガイド](optimization/safe_bayesian_optimization.md)、
+TuRBO-m は [専用ガイド](optimization/turbo-m.md) を参照してください。
+Mixed・q-batch・候補制約の組合せは
+[対応表](optimization/constraint-support-matrix.md) を先に確認してください。
+Preference BO のモデル入口は [モデルガイド](models/README.md)、
+組合せ探索の公開入口は `robotorchan.optim` です。
+
 ### 高次元問題を扱いたい
 
 - [高次元入力](models/high_dimensional_inputs.md)
