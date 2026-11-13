@@ -17,7 +17,9 @@ from robotorchan.models.classification.binary.standard.single_task import (
 )
 
 
-def _index_kernel(train_X: Tensor, feature: int, rank: int | None) -> tuple[IndexKernel, int, int]:
+def _index_kernel(
+    train_X: Tensor, feature: int, rank: int | None
+) -> tuple[IndexKernel, int, int]:
     values = torch.unique(train_X[..., feature])
     if not torch.isfinite(values).all() or not torch.equal(values, values.round()):
         raise ValueError("Structural feature values must be finite integer identifiers.")
@@ -49,7 +51,9 @@ class ContextualBinaryGPClassifier(BinarySingleTaskGPClassifier):
         inducing_point_allocator: InducingPointAllocator | None = None,
         input_transform: InputTransform | None = None,
     ) -> None:
-        context = normalize_feature_dims([context_feature], train_X.shape[-1], name="context_feature")[0]
+        context = normalize_feature_dims(
+            [context_feature], train_X.shape[-1], name="context_feature"
+        )[0]
         data_dims = [i for i in range(train_X.shape[-1]) if i != context]
         if not data_dims:
             raise ValueError("At least one non-context feature is required.")
