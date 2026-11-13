@@ -1,5 +1,8 @@
 """Standard binary classification surrogate models."""
 
+from robotorchan.models.classification.binary.standard.mixed_spectral_mixture import (
+    MixedSpectralMixtureBinaryGPClassifier,
+)
 from robotorchan.models.classification.binary.standard.multi_fidelity import (
     MixedMultiFidelityBinaryGPClassifier,
     MultiFidelityBinaryGPClassifier,
@@ -21,6 +24,7 @@ __all__ = [
     "KroneckerMultiTaskBinaryGPClassifier",
     "MixedBinarySingleTaskGPClassifier",
     "MixedMultiFidelityBinaryGPClassifier",
+    "MixedSpectralMixtureBinaryGPClassifier",
     "MultiFidelityBinaryGPClassifier",
     "MultiTaskBinaryGPClassifier",
     "SpectralMixtureBinaryGPClassifier",
