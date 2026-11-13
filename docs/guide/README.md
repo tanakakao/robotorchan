@@ -36,7 +36,7 @@ Guide本文へその履歴を取り込みません。
 
 ## 最初に読む：モデルから実験候補まで
 
-本ガイドは数学の正本である理論章と並行して読むための技術書です。最初から全48章を読む必要はありません。まず次の順に進み、各章で、数式に対応する部品と内部の処理経路を確認してください。
+本ガイドは数学の正本である理論章と並行して読むための技術書です。最初からすべての章を読む必要はありません。まず次の順に進み、各章で、数式に対応する部品と内部の処理経路を確認してください。
 
 1. **観測から予測へ：** [ベイズ最適化](01_bayesian_optimization.md) →[GP](02_gaussian_process.md)で`train_X[n,d]`、
    `train_Y[n,1]`からposteriorを求める実装を追います。
@@ -70,9 +70,9 @@ Guide本文へその履歴を取り込みません。
 [モデル・獲得関数・最適化の契約](../../docs-internal/contracts/theory-guide/cross-layer-api-contracts.md)
 も参照できます。
 
-## 章構成：理論の24章と1対1対応
+## 章構成：理論の主要章と実装ガイドの対応
 
-TheoryとGuideは章番号とファイル名を対応させています。以下の表から、数学的な説明と、その実装を読む章へ進めます。
+TheoryとGuideは主要章の章番号とファイル名を対応させています。以下の表から、数学的な説明と、その実装を読む章へ進めます。
 
 | 理論の正本 | 実装の解説 |
 | --- | --- |
@@ -100,6 +100,9 @@ TheoryとGuideは章番号とファイル名を対応させています。以下
 | [22_expressive_gp.md][link44] | [Guide][link45] |
 | [23_non_gp_surrogates.md][link46] | [Guide][link47] |
 | [24_classification.md][link48] | [Guide][link49] |
+| [25_safe_bayesian_optimization.md](../theory/25_safe_bayesian_optimization.md) | [Safe BOの利用ガイド](../optimization/safe_bayesian_optimization.md) |
+| [26_transfer_bayesian_optimization.md](../theory/26_transfer_bayesian_optimization.md) | [Guide](26_transfer_bayesian_optimization.md) |
+| [27_combinatorial_bayesian_optimization.md](../theory/27_combinatorial_bayesian_optimization.md) | [Guide](27_combinatorial_bayesian_optimization.md) |
 
 ## 獲得関数：理論12サブ章と1対1対応
 
