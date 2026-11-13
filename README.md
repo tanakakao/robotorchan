@@ -49,6 +49,27 @@ print(posterior.mean)
 
 より詳しいモデル選択と実行例は [モデルガイド](docs/models.md) と [examples](examples/README.md) を参照してください。
 
+## ベイズ最適化の実行フローと拡張
+
+robotorchan では、**surrogate model** で目的関数や制約の事後分布を学習し、
+**acquisition function** で次の観測候補の価値を定義し、
+**optimizer / search strategy** でその候補を探索します。
+モデル・獲得関数・探索アルゴリズムは別々の責務を持ちます。
+
+- **単目的・多目的・Active Learning**: BoTorch 標準の獲得関数を優先し、分類・境界探索・情報量に関する拡張も利用できます。
+- **候補最適化**: BoTorch、Random、Sobol、DE、CMA-ES、GA、PSO、Hybrid などの backend を公開 dispatcher から選択できます。多目的探索では NSGA-II 系の対応範囲を個別に確認してください。
+- **Mixed / q-batch / 既知の入力制約**: 連続・整数・カテゴリ変数、joint / sequential な候補選択、線形・非線形・候補間制約は、backend と acquisition の組合せによって対応範囲が異なります。すべての組合せを保証するものではありません。
+- **局所探索**: TuRBO-1 / TuRBO-m や離散 trust region など、状態を持つ探索戦略を扱います。
+- **Safe BO**: 未知の出力安全制約をモデル化し、安全と判定された候補集合から提案します。理論上の無条件の安全保証を意味しません。
+- **Preference BO**: PairwiseGP と比較観測を使う選好ベースの探索を扱います。
+- **Transfer BO**: 過去タスク情報を活用する Warm-start / RGPE / TAF 系のワークフローを扱います。
+- **Combinatorial BO**: Hamming 近傍、離散 trust region、BOCS / COMBO 系の候補探索を扱います。
+- **Cost-aware / Multi-Fidelity**: fidelity と評価コスト・予算を考慮した探索を扱います。
+
+各拡張の実装済み・部分対応・制限は [Optimization guides](docs/optimization/README.md)、
+[optimizer別の制約対応表](docs/optimization/constraint-support-matrix.md)、
+[Notebook一覧](examples/README.md) から確認してください。
+
 ## Capability-aware workflow
 
 問題要件を `ProblemSpec` で宣言し、model registry、selector、model-acquisition compatibility、recommendation、capability benchmark を一貫した metadata で接続します。モデル名から能力を推測せず、互換候補と不適合理由を明示的に扱います。
