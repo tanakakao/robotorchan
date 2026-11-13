@@ -5,12 +5,12 @@
 
 `robotorchan` は [BoTorch](https://botorch.org/) をベースにした、ベイズ最適化・Active Learning 向けの研究開発用 Python ライブラリです。
 
-BoTorch-native なモデル構成を維持しながら、raw training data の保持、`supports_fit` / `fit()` / `make_mll()` などの学習インターフェースと、高次元・Mixed・Robust・Multi-task / Multi-output 問題向けのモデルや探索戦略を提供します。
+BoTorch-native なモデル構成を維持しながら、raw training data の保持、`make_mll()` などの共通インターフェースと、高次元・Mixed・Robust・Multi-task / Multi-output 問題向けのモデルや探索戦略を提供します。
 
 ## 主な特徴
 
 - **BoTorch-native**: BoTorch / GPyTorch のモデル・posterior・acquisition function と組み合わせやすい設計
-- **モデル学習 API**: raw training data、`supports_fit` / `supports_mll`、対応モデルの `fit()` / `make_mll()` を提供。学習方式はモデルごとに異なります
+- **統一モデル API**: raw training data、`supports_mll`、`make_mll()` などを共通化
 - **幅広い surrogate**: 標準 GP、Mixed、Multi-Fidelity、Multi-task / Multi-output、Robust / Noise / Input uncertainty をサポート
 - **高次元・表現力**: PCA / PLS / Random Projection、AE / VAE、SAAS、DeepGP、Infinite-width BNN GP、Spectral Mixture GP を提供
 - **Non-GP surrogate**: Random Forest、Extra Trees、Gradient Boosting 系を共通の探索フローで利用可能
@@ -32,6 +32,7 @@ pip install -e .
 
 ```python
 import torch
+from botorch.fit import fit_gpytorch_mll
 from robotorchan.models import SingleTaskGP
 
 torch.set_default_dtype(torch.double)
@@ -40,21 +41,11 @@ train_X = torch.rand(20, 2)
 train_Y = torch.sin(2 * torch.pi * train_X[:, :1]) + 0.2 * train_X[:, 1:2]
 
 model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
-model.fit()
+fit_gpytorch_mll(model.make_mll())
 
 posterior = model.posterior(torch.rand(5, 2))
 print(posterior.mean)
 ```
-
-`SingleTaskGP.fit()` は内部でBoTorchの `fit_gpytorch_mll(model.make_mll())` を呼び出します。
-直接MLLを最適化する従来の書き方も利用できます。
-
-学習方式はモデルによって異なります。標準・Mixed・MultiTask・MultiFidelityの
-対応Exact GPでは `fit()`、Variational GP・二値分類GPではELBO学習用の
-`fit(epochs=..., lr=...)`、Fully Bayesian SAASではNUTS用の `fit()`、
-Joint Neural GPでは固有の `training_loss()` を最適化する `fit()` を使用します。
-すべてのモデルが `fit()` に対応するわけではなく、引数も共通ではありません。
-詳細は [学習API対応表](docs/development/training_api.md) を参照してください。
 
 より詳しいモデル選択と実行例は [モデルガイド](docs/models.md) と [examples](examples/README.md) を参照してください。
 
@@ -158,10 +149,8 @@ model.raw_train_Y
 model.raw_train_Yvar
 model.raw_data
 model.raw_data_names
-model.supports_fit
 model.supports_mll
-model.make_mll()  # 対応モデルのみ
-# model.fit()     # supports_fit=True の対応モデルのみ
+model.make_mll()
 ```
 
 `raw_*` は **wrapper 構築時に渡された入力のスナップショット** です。
