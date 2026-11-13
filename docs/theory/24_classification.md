@@ -270,3 +270,35 @@ Bernoulli尤度と予測クラス確率の定義を自動的に変えるもの�
 - [Dimensionality Reduction GP](18_dimensionality_reduction_gp.md)
 - [Expressive GP Models](22_expressive_gp.md)
 - [Classification Active Learning](acquisition/13_classification_active_learning.md)
+
+## 9. 拡張分類モデルの共分散仮定
+
+Bernoulli likelihoodと変分ELBOは共通ですが、潜在GPの共分散が異なります。
+
+- **Multi-Fidelity:** 設計座標のカーネルと、忠実度に対するBoTorchの
+  `ExponentialDecayKernel` / `DownsamplingKernel`を積で結びます。
+  観測コストの違いは共分散モデルと別に扱います。
+- **Spectral Mixture:** スペクトルをGaussian mixtureとして近似する
+  `SpectralMixtureKernel`で、周期性や複数周波数成分を表現します。
+- **Contextual:** 共有GP成分とContextごとの偏差成分を加算します。
+- **Hierarchical:** 共有成分、Group成分、Subgroup成分を加算します。
+  Subgroupは一意の親Groupを持つ必要があります。
+- **Infinite-width BNN:** 無限幅ReLUネットワークのNNGPカーネルを
+  解析的に再帰計算します。有限幅BNNの学習でもNTK回帰でもありません。
+- **Mixed:** カテゴリ座標と連続座標を別の共分散成分で扱います。
+  カテゴリIDの数値差を連続距離として解釈しません。
+
+### q-batchの周辺集約と同時情報利得
+
+`qPredictiveEntropy`などの周辺集約は
+\(q^{-1}\sum_{i=1}^{q}a(x_i)\)であり、点間の冗長性を直接減点しません。
+対して`qBALD`はラベルベクトル\(Y_{1:q}\)と潜在関数\(F_{1:q}\)の
+相互情報量を近似します。
+
+\[
+I(Y_{1:q};F_{1:q}\mid D)
+=H(Y_{1:q}\mid D)
+-\mathbb E_{F_{1:q}\mid D}[H(Y_{1:q}\mid F_{1:q})].
+\]
+
+現行実装は二値ラベルの\(2^q\)通りを列挙するため\(q\leq8\)です。
