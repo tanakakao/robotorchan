@@ -28,9 +28,7 @@ def run(seed: int, epochs: int) -> list[dict[str, float | int | str]]:
     train_X, test_X = X[:48], X[48:]
     train_Y, test_Y = Y[:48], Y[48:]
     factories = {
-        "standard": lambda: BinarySingleTaskGPClassifier(
-            train_X, train_Y, inducing_points=12
-        ),
+        "standard": lambda: BinarySingleTaskGPClassifier(train_X, train_Y, inducing_points=12),
         "spectral_mixture": lambda: SpectralMixtureBinaryGPClassifier(
             train_X, train_Y, num_mixtures=2, inducing_points=12
         ),
@@ -48,9 +46,7 @@ def run(seed: int, epochs: int) -> list[dict[str, float | int | str]]:
         with torch.no_grad():
             predicted = model.predict_proba(test_X)[..., 1].clamp(1e-7, 1 - 1e-7)
         brier = (predicted - test_Y).square().mean().item()
-        nll = -(
-            test_Y * predicted.log() + (1 - test_Y) * torch.log1p(-predicted)
-        ).mean().item()
+        nll = -(test_Y * predicted.log() + (1 - test_Y) * torch.log1p(-predicted)).mean().item()
         accuracy = ((predicted >= 0.5) == test_Y.bool()).double().mean().item()
         results.append(
             {
@@ -87,9 +83,12 @@ def main() -> None:
         subset = [row for row in rows if row["model"] == name]
         print(
             name,
-            "brier", sum(float(row["brier"]) for row in subset) / len(subset),
-            "nll", sum(float(row["nll"]) for row in subset) / len(subset),
-            "accuracy", sum(float(row["accuracy"]) for row in subset) / len(subset),
+            "brier",
+            sum(float(row["brier"]) for row in subset) / len(subset),
+            "nll",
+            sum(float(row["nll"]) for row in subset) / len(subset),
+            "accuracy",
+            sum(float(row["accuracy"]) for row in subset) / len(subset),
         )
 
 
