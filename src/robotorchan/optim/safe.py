@@ -1,4 +1,4 @@
-"""Safe q=1 candidate selection over a continuous Sobol candidate pool."""
+"""Posterior-safe candidate selection from continuous or mixed finite pools."""
 
 from __future__ import annotations
 
@@ -34,8 +34,9 @@ def optimize_safe_acqf(
 ) -> tuple[Tensor, Tensor]:
     """Select the best posterior-safe candidate from a Sobol pool.
 
-    Continuous q-batch and mixed-variable q=1 optimization are supported. This finite-pool search
-    can miss safe regions; it does not certify global safety or optimality.
+    Continuous and mixed-variable q-batch optimization are supported using finite
+    candidate pools. This search can miss safe regions and does not certify
+    global safety or optimality.
     An empty predicted-safe pool raises instead of returning an unsafe point.
     """
     if bounds.ndim != 2 or bounds.shape[0] != 2 or bounds.shape[1] == 0:
