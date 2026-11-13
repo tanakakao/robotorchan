@@ -136,6 +136,14 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`45_safe_bo_benchmark.ipynb`](notebooks/45_safe_bo_benchmark.ipynb) | Safe BO benchmark | 利用可能 |
 | [`46_safe_bo_mixed_q_batch.ipynb`](notebooks/46_safe_bo_mixed_q_batch.ipynb) | Safe BO Mixed / q-batch | 利用可能 |
 | [`47_binary_classification_extensions.ipynb`](notebooks/47_binary_classification_extensions.ipynb) | 拡張Binary GP / Mixed / q-batch Active Learning | 利用可能 |
+| [`37_multifidelity_cost_aware.ipynb`](notebooks/37_multifidelity_cost_aware.ipynb) | Multi-Fidelity / Cost-aware BO | 利用可能 |
+| [`47_mixed_preference_bo.ipynb`](notebooks/47_mixed_preference_bo.ipynb) | Mixed Preference BO | 利用可能 |
+| [`48_transfer_bayesian_optimization.ipynb`](notebooks/48_transfer_bayesian_optimization.ipynb) | Transfer BO | 利用可能 |
+| [`49_combinatorial_bayesian_optimization.ipynb`](notebooks/49_combinatorial_bayesian_optimization.ipynb) | Combinatorial BO | 利用可能 |
+
+番号は既存のファイル名をそのまま表示しています。`37_` と `47_` には複数のNotebookがあり、
+番号だけでは一意に特定できません。既存リンクを壊さないよう、このドキュメント更新では
+ファイル名の変更を行いません。
 
 ## Benchmark
 
