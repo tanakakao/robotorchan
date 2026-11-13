@@ -48,6 +48,8 @@ from robotorchan.models.classification.binary.robust import (
 )
 from robotorchan.models.classification.binary.standard import (
     BinarySingleTaskGPClassifier,
+    ContextualBinaryGPClassifier,
+    HierarchicalBinaryGPClassifier,
     KroneckerMultiTaskBinaryGPClassifier,
     MixedBinarySingleTaskGPClassifier,
     MixedMultiFidelityBinaryGPClassifier,
@@ -70,6 +72,8 @@ __all__ = [
     "ALEBOBinarySingleTaskGPClassifier",
     "BinarySingleTaskDeepGPClassifier",
     "BinarySingleTaskGPClassifier",
+    "ContextualBinaryGPClassifier",
+    "HierarchicalBinaryGPClassifier",
     "BootstrapBinaryClassificationEnsemble",
     "BootstrapGradientBoostingBinaryClassifier",
     "ClassificationInputUncertaintyType",
