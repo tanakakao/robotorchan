@@ -31,6 +31,22 @@ surrogate model とは独立した candidate search / optimization の利用者�
 - [Initialization compatibility](../../docs-internal/verification/optimization/initialization-compatibility.md): Acquisition × Optimizer ×
   Initialization の最終互換表
 
+## 追加の探索ワークフロー
+
+最近追加された探索ワークフローは、通常の surrogate model・acquisition function・
+candidate optimizer と役割を区別して利用してください。公開 API の存在だけで
+すべての Mixed / q-batch / constraint の組合せが動作するとは限りません。
+
+- **Safe BO**: [Safe Bayesian Optimization](safe_bayesian_optimization.md) — 安全出力制約と候補選択を分離
+- **TuRBO-m**: [Multi trust region](turbo-m.md) — 複数 trust region の状態管理
+- **Combinatorial BO**: `HammingLocalSearchStrategy`、`DiscreteTrustRegionStrategy`、`propose_bocs_candidate`、`propose_combo_candidate` などを `robotorchan.optim` から公開
+- **Preference BO**: `PairwiseGP` / `MixedPairwiseGP` は `robotorchan.models` の公開モデル。通常の回帰 target と比較データを混同しない
+- **Transfer BO / Cost-aware BO**: タスク間情報や fidelity・評価予算を使う機能。詳細は該当する利用ガイドと公開APIを確認
+
+候補最適化の対応可否は [Public optimizer API](public-optimizer-api.md)、
+[Candidate constraint support matrix](constraint-support-matrix.md)、
+[Candidate constraints](candidate-constraints.md) を正とします。
+
 高次元 surrogate の選択は [High-dimensional models](../models/high_dimensional.md) を参照してください。
 
 ## Heterogeneous end-to-end validation
