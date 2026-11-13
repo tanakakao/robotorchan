@@ -17,9 +17,7 @@ from robotorchan.models.classification.binary.standard.single_task import (
 )
 
 
-def _index_kernel(
-    train_X: Tensor, feature: int, rank: int | None
-) -> tuple[IndexKernel, int, int]:
+def _index_kernel(train_X: Tensor, feature: int, rank: int | None) -> tuple[IndexKernel, int, int]:
     values = torch.unique(train_X[..., feature])
     if not torch.isfinite(values).all() or not torch.equal(values, values.round()):
         raise ValueError("Structural feature values must be finite integer identifiers.")
