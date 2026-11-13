@@ -6,7 +6,6 @@
 
 ```python
 import torch
-from botorch.fit import fit_gpytorch_mll
 from robotorchan.models import SingleTaskGP
 
 torch.set_default_dtype(torch.double)
@@ -15,7 +14,7 @@ train_X = torch.rand(20, 2)
 train_Y = torch.sin(2 * torch.pi * train_X[:, :1]) + 0.2 * train_X[:, 1:2]
 
 model = SingleTaskGP(train_X=train_X, train_Y=train_Y)
-fit_gpytorch_mll(model.make_mll())
+model.fit()
 
 test_X = torch.rand(5, 2)
 posterior = model.posterior(test_X)
@@ -34,8 +33,9 @@ model.raw_train_Y
 model.raw_train_Yvar
 model.raw_data
 model.raw_data_names
+model.supports_fit
 model.supports_mll
-model.make_mll()
+model.make_mll()  # 対応モデルのみ
 ```
 
 `raw_*` はコンストラクタに渡された training data のスナップショットです。
