@@ -174,22 +174,20 @@ python examples/run_notebooks.py --include-slow --timeout 900
 
 ## Notebook CI
 
-GitHub Actions の `notebooks` job では Python 3.11 / CPU 環境を使用し、次の Notebook を実行します。
+GitHub Actions の `notebooks` job は Python 3.11 / CPU 環境で
+`examples/run_notebooks.py` の `DEFAULT_NOTEBOOKS` を実行します。
+実行対象の正本は同スクリプトのmanifestです。番号の一覧をここに重複管理しません。
 
-```text
-01, 02, 03, 04, 05, 06, 07,
-09, 10,
-12, 13, 14, 15, 16, 17, 18,
-19, 20, 21, 22,
-26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36
-```
+`SLOW_NOTEBOOKS` の `08_saas_gp.ipynb` と
+`11_structured_output_gp.ipynb` は通常の `notebooks` job から外れますが、
+専用の `notebook-saas` / `notebook-structured` job で実行します。
+`EXCLUDED_NOTEBOOKS` は通常の一括実行対象外で、個別のCI jobで実行するものと
+手動実行を想定するものが含まれます。特定のNotebookのCI実行状況は
+`.github/workflows/ci.yml` と関連workflowを確認してください。
 
-以下は通常の Pull Request CI から除外します。
-
-- `08_saas_gp.ipynb`: NUTS / MCMC を使うため実行時間の変動が大きい
-- `11_structured_output_gp.ipynb`: HOGP / LatentKroneckerGP の学習が比較的重く、通常の軽量CIから分離した方が安定する
-
-`08` のwrapper自体は既存の `fully-bayesian-extra` job でテストします。重いNotebookも必要に応じて `examples/run_notebooks.py --include-slow` で明示的に実行できます。
+`--include-slow` は `SLOW_NOTEBOOKS` のみ追加します。
+`EXCLUDED_NOTEBOOKS` も一括実行する場合は `--include-excluded` を指定できます。
+特定の1件を確認する場合は `--only ファイル名.ipynb` を使用してください。
 
 CIでは `MPLBACKEND=Agg` を使用し、GUIを必要とせずMatplotlibの描画セルを実行します。
 
