@@ -20,8 +20,8 @@ from robotorchan.models.classification import get_classification_model_class
 @pytest.mark.parametrize(
     ("model_id", "kwargs", "features"),
     [
-        ("binary.multifidelity", {"fidelity_features": [1]}, 2),
-        ("binary.mixed_multifidelity", {"cat_dims": [1], "fidelity_features": [2]}, 3),
+        ("binary.multifidelity", {"data_fidelities": [1]}, 2),
+        ("binary.mixed_multifidelity", {"cat_dims": [1], "data_fidelities": [2]}, 3),
         ("binary.spectral_mixture", {"num_mixtures": 2}, 1),
         ("binary.mixed_spectral_mixture", {"cat_dims": [1], "num_mixtures": 2}, 2),
         ("binary.contextual", {"context_feature": 1}, 2),
@@ -41,12 +41,14 @@ def test_extended_binary_models_support_qbatch_active_learning(model_id, kwargs,
             (
                 x,
                 torch.tensor([0.0, 1.0] * 6, dtype=x.dtype),
-                torch.tensor([0.0, 2.0, 1.0, 3.0] * 3, dtype=x.dtype),
+                torch.tensor([0.0, 1.0] * 6, dtype=x.dtype),
             ),
             dim=-1,
         )
     Y = (x > 0.5).long()
     model_class = get_classification_model_class(model_id)
+    if model_id == "binary.hierarchical":
+        X[:, 2] = torch.tensor([0.0, 2.0, 1.0, 3.0] * 3, dtype=x.dtype)
     model = model_class(X, Y, inducing_points=6, **kwargs)
     model.eval()
     for q in (1, 2, 3):
