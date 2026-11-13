@@ -4,6 +4,10 @@ from robotorchan.models.classification.binary.standard.contextual import (
     ContextualBinaryGPClassifier,
     HierarchicalBinaryGPClassifier,
 )
+from robotorchan.models.classification.binary.standard.infinite_width_bnn import (
+    InfiniteWidthBNNBinaryGPClassifier,
+    MixedInfiniteWidthBNNBinaryGPClassifier,
+)
 from robotorchan.models.classification.binary.standard.mixed_spectral_mixture import (
     MixedSpectralMixtureBinaryGPClassifier,
 )
@@ -27,8 +31,10 @@ __all__ = [
     "BinarySingleTaskGPClassifier",
     "ContextualBinaryGPClassifier",
     "HierarchicalBinaryGPClassifier",
+    "InfiniteWidthBNNBinaryGPClassifier",
     "KroneckerMultiTaskBinaryGPClassifier",
     "MixedBinarySingleTaskGPClassifier",
+    "MixedInfiniteWidthBNNBinaryGPClassifier",
     "MixedMultiFidelityBinaryGPClassifier",
     "MixedSpectralMixtureBinaryGPClassifier",
     "MultiFidelityBinaryGPClassifier",

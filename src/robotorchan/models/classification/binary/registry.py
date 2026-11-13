@@ -67,6 +67,10 @@ from robotorchan.models.classification.binary.standard.contextual import (
     ContextualBinaryGPClassifier,
     HierarchicalBinaryGPClassifier,
 )
+from robotorchan.models.classification.binary.standard.infinite_width_bnn import (
+    InfiniteWidthBNNBinaryGPClassifier,
+    MixedInfiniteWidthBNNBinaryGPClassifier,
+)
 from robotorchan.models.classification.binary.standard.mixed_spectral_mixture import (
     MixedSpectralMixtureBinaryGPClassifier,
 )
@@ -233,6 +237,18 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
         HierarchicalBinaryGPClassifier,
         "standard",
         _binary_capabilities(task_type=TaskType.MULTITASK),
+    ),
+    (
+        "binary.infinite_width_bnn",
+        InfiniteWidthBNNBinaryGPClassifier,
+        "standard",
+        _binary_capabilities(),
+    ),
+    (
+        "binary.mixed_infinite_width_bnn",
+        MixedInfiniteWidthBNNBinaryGPClassifier,
+        "standard",
+        _binary_capabilities(input_type=InputType.MIXED),
     ),
     (
         "binary.multitask",
