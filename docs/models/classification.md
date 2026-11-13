@@ -54,7 +54,7 @@ labels = model.predict_class(X)
 
 ## Active Learning と BO 制約
 
-`PredictiveEntropy`・`MarginUncertainty` は予測 class 確率、`ProbabilityVariance`・`BALD` は確率 sample や ensemble の情報、`LatentStraddle` は二値の潜在境界を使います。現在はいずれも q=1 です。潜在 posterior が Gaussian というだけで回帰用獲得関数に対応するとはみなしません。
+`PredictiveEntropy`・`MarginUncertainty` は予測 class 確率、`ProbabilityVariance`・`BALD` は確率 sample や ensemble の情報、`LatentStraddle` は二値の潜在境界を使います。単一点版は q=1 です。q-batch版は別途提供されます。潜在 posterior が Gaussian というだけで回帰用獲得関数に対応するとはみなしません。
 
 `ClassificationProbabilityOfFeasibility` は指定 class の実行可能確率を取得し、`FeasibilityWeightedAcquisition` は目的獲得値に重みを掛けます。q-batch の既定 `product` は点間独立の近似、`minimum` は保守的なスコアで、joint 分類 posterior を作るものではありません。既知の入力に対する `CandidateConstraints` とは別の層です。
 
@@ -77,3 +77,32 @@ bootstrap ensemble はデータを再抽出して完成した分類器を複数�
 multiclass 共通の metadata・確率ベクトル契約は準備されていますが、公開 multiclass classifier は未実装です。Bernoulli、0.5 閾値、潜在 0 境界は binary 実装に閉じ込めます。Multi-Fidelity、高次元・robust の組合せ、batch・非同期・fantasization の可否は class 名から推測せず capability とテストを確認してください。
 
 数理は[分類理論](../theory/24_classification.md)、実装との対応は[分類ガイド](../guide/24_classification.md)、選択基準は[分類 Active Learning](../theory/acquisition/13_classification_active_learning.md)から辿れます。API 形状・対応行列・未対応条件の正本は[内部契約](../../docs-internal/contracts/classification-models.md)です。
+
+## 拡張二値分類モデル（Phase 2〜8）
+
+| 入力・仮定 | モデル | 主な指定 |
+| --- | --- | --- |
+| 連続入力・異なる評価忠実度 | `MultiFidelityBinaryGPClassifier` | `data_fidelities` / `iteration_fidelity` |
+| Mixed・異なる評価忠実度 | `MixedMultiFidelityBinaryGPClassifier` | `cat_dims`, fidelity列 |
+| 周期性・複数周波数成分 | `SpectralMixtureBinaryGPClassifier` | `num_mixtures` |
+| Mixed・周期性 | `MixedSpectralMixtureBinaryGPClassifier` | `cat_dims`, `num_mixtures` |
+| Context別の偏差 | `ContextualBinaryGPClassifier` | `context_feature` |
+| Group / Subgroup階層 | `HierarchicalBinaryGPClassifier` | `group_feature`, `subgroup_feature` |
+| 無限幅ReLU NNGPカーネル | `InfiniteWidthBNNBinaryGPClassifier` | `depth`, `weight_variance` |
+| Mixed・無限幅ReLU NNGP | `MixedInfiniteWidthBNNBinaryGPClassifier` | `cat_dims`, `depth` |
+
+すべてBernoulli likelihoodを持つ変分GP分類器です。Fidelity列は設計変数とは別に扱い、
+Context / Group / Subgroupには非負整数IDを指定します。Subgroup IDは異なるGroup間で再利用できません。
+NNGPは**無限幅ニューラルネットワークに対応する解析的カーネル**であり、有限幅BNNの重みを学習しません。
+
+### q-batch Active Learning
+
+`qPredictiveEntropy`、`qMarginUncertainty`、`qProbabilityVariance`、
+`qLatentStraddle`は候補ごとの**周辺スコアの平均**です。
+`qBALD`は潜在関数の同時サンプルからラベルベクトルを列挙し、
+候補間の冗長性を考慮します（binaryのみ、`1 <= q <= 8`）。
+単一点用の`PredictiveEntropy`等とは区別してください。
+
+学習から候補提案までの例は
+[分類拡張Notebook](../../examples/notebooks/47_binary_classification_extensions.ipynb)を参照してください。
+比較コードは[ベンチマーク](../../benchmarks/binary_classification_extensions.py)にあります。

@@ -135,6 +135,7 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`44_safe_bo_usage_guide.ipynb`](notebooks/44_safe_bo_usage_guide.ipynb) | Safe BO 日本語利用ガイド | 利用可能 |
 | [`45_safe_bo_benchmark.ipynb`](notebooks/45_safe_bo_benchmark.ipynb) | Safe BO benchmark | 利用可能 |
 | [`46_safe_bo_mixed_q_batch.ipynb`](notebooks/46_safe_bo_mixed_q_batch.ipynb) | Safe BO Mixed / q-batch | 利用可能 |
+| [`47_binary_classification_extensions.ipynb`](notebooks/47_binary_classification_extensions.ipynb) | 拡張Binary GP / Mixed / q-batch Active Learning | 利用可能 |
 
 ## Benchmark
 

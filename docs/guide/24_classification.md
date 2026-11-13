@@ -143,3 +143,16 @@ Theoryのlink関数を介した期待値は、このlatent分布から予測ラ�
 
 使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/39_classification_active_learning.ipynb)を参照してくださ
 い。
+
+## 拡張二値分類モデルの使い分け
+
+評価忠実度が異なる場合は`MultiFidelityBinaryGPClassifier`、
+連続とカテゴリの混在には`MixedMultiFidelityBinaryGPClassifier`を選びます。
+周期的な境界にはSpectral Mixture、Contextごとの差にはContextual、
+親子構造を持つデータにはHierarchicalを検討します。
+ReLUネットワーク由来の非定常なカーネルを試す場合はInfinite-width BNNを選びます。
+
+どのモデルでも、学習には`fit()`、クラス確率には`predict_proba()`、
+潜在関数には`posterior()`を使用します。各モデルの構築引数と選択表は
+[モデル一覧](../models/classification.md)、実行コードは
+[分類拡張Notebook](../../examples/notebooks/47_binary_classification_extensions.ipynb)を参照してください。
