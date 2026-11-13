@@ -190,11 +190,9 @@ Safe BOの性能は最良目的関数値だけでは評価できない。少な�
 
 予測上の安全と実測上の安全は混同しない。比較では安全性と最適化性能のトレードオフを明示する。
 
-## 11. 理論とrobotorchanの実装範囲
+## 11. 理論上の適用範囲と限界
 
-robotorchanのSafe BOは、事後信頼区間に基づく安全フィルタ、有限候補集合での目的関数選択、安全集合内の不確実性探索、Mixed入力およびq-batch候補提案を提供する。
-
-一方、**SafeOptの厳密なexpander集合、到達可能性の証明、時間全体にわたる確率的安全保証、非同期q-batch制御**は、この構成からは導かれない。理論上の概念と実装の対応は[Safe BO実装ガイド](../optimization/safe_bayesian_optimization.md)を参照する。実行例は[日本語利用Notebook](../../examples/notebooks/safe_bo_usage_guide.ipynb)および[Mixed・q-batch Notebook](../../examples/notebooks/safe_bo_mixed_q_batch.ipynb)にまとめる。
+信頼区間に基づく安全フィルタ、有限候補集合での探索、Mixed入力およびq-batchへの拡張は、予測上の安全性を評価するための枠組みである。一方、SafeOptの厳密なexpander集合や到達可能性の証明、時間全体にわたる確率的安全保証は、有限候補の信頼区間判定のみからは導かれない。非同期の評価結果を逐次反映する探索も、同期バッチとは別の問題として扱う必要がある。
 
 ## 参考文献
 
