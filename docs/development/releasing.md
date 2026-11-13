@@ -21,7 +21,7 @@ Semantic Versioningを基本とし、Git tag / GitHub Releaseは `v{version}` �
 1. `main` が最新で、CIが成功していることを確認します。
 2. `pyproject.toml` の `project.version` を次のversionへ更新します。
 3. `CITATION.cff` の `version` も同じversionへ更新します。
-4. `CHANGELOG.md` の対象versionを確定し、リリース日を記録します。
+4. `CHANGELOG.md` の対象versionとリリースノートを確認し、実際の公開日にリリース日を記録します。
 5. version変更をPull Request経由で `main` にマージします。
 6. 必要に応じてローカルでも配布物を確認します。
 
@@ -31,7 +31,7 @@ python -m build
 python -m twine check dist/*
 ```
 
-7. `main` の対象commitに `v{version}` tagを作成します。
+7. 最終的なドキュメント修正PRをマージした後、最新 `main` の対象commitに `v{version}` tagを作成します。古いCI検証済みcommitにタグを固定しないでください。
 8. 同じtagからGitHub Releaseを公開します。
 9. `Publish to PyPI` workflowの成功を確認します。
 10. PyPIから通常インストールできることを確認します。
@@ -67,7 +67,9 @@ PyPIへの認証にはTrusted Publishing (OIDC) を使用します。PyPI API to
 - workflow: `publish.yml`
 - environment: `pypi`
 
-GitHub側でも `pypi` environment を作成し、必要に応じてrequired reviewerを設定してください。公開jobだけがこのenvironmentとOIDC権限を使用します。
+GitHub側でも `pypi` environment を作成し、必要に応じてrequired reviewerを設定してください。
+これらの設定が実際に有効かどうかは、リポジトリ内のworkflowだけでは検証できません。
+初回GitHub Releaseを公開する前にPyPI側のTrusted Publisher登録とGitHub側のenvironmentを確認してください。公開jobだけがこのenvironmentとOIDC権限を使用します。
 
 ## LICENSE
 

@@ -20,7 +20,7 @@ BoTorch-native なモデル構成を維持しながら、raw training data の�
 
 ## Quick Start
 
-開発版をインストール:
+開発版をインストール（PyPI公開前）:
 
 ```bash
 git clone https://github.com/tanakakao/robotorchan.git
@@ -113,7 +113,7 @@ robotorchan では、**surrogate model** で目的関数や制約の事後分布
 
 ## インストール
 
-現在はリポジトリから開発版を利用します。
+初回PyPI公開まではリポジトリから開発版を利用します。公開後は `pip install robotorchan` でインストールできます。
 
 ```bash
 git clone https://github.com/tanakakao/robotorchan.git
