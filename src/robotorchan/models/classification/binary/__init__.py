@@ -108,6 +108,7 @@ __all__ = [
     "RobustClassificationMetadata",
     "SaasBinarySingleTaskGPClassifier",
     "SklearnBinaryClassifier",
+    "SpectralMixtureBinaryGPClassifier",
     "UncertainBinaryClassificationMixin",
     "UncertainCategoricalBinarySingleTaskGPClassifier",
     "UncertainClassificationMetadata",
@@ -115,5 +116,4 @@ __all__ = [
     "binary_cost_sensitive_threshold",
     "binary_expected_decision_cost",
     "inverse_frequency_class_weights",
-]    "SpectralMixtureBinaryGPClassifier",
-
+]
