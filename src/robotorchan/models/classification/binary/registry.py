@@ -104,6 +104,7 @@ def _binary_capabilities(
     high_dimensional: HighDimensionalStrategy = HighDimensionalStrategy.NONE,
     posterior_sampling_type: PosteriorSamplingType = PosteriorSamplingType.GAUSSIAN,
     supports_multi_output: bool = False,
+    multi_fidelity: bool = False,
     robustness: frozenset[RobustnessType] = frozenset(),
 ) -> ModelCapabilities:
     """Build reviewed capabilities shared by binary variational classifiers."""
@@ -115,6 +116,7 @@ def _binary_capabilities(
         high_dimensional=high_dimensional,
         robustness=robustness,
         supports_multi_output=supports_multi_output,
+        multi_fidelity=multi_fidelity,
         supports_posterior_samples=True,
         supports_probability_samples=True,
         posterior_sampling_type=posterior_sampling_type,
@@ -206,13 +208,13 @@ BINARY_CLASSIFICATION_MODEL_SPECS = (
         "binary.multifidelity",
         MultiFidelityBinaryGPClassifier,
         "standard",
-        _binary_capabilities(),
+        _binary_capabilities(multi_fidelity=True),
     ),
     (
         "binary.mixed_multifidelity",
         MixedMultiFidelityBinaryGPClassifier,
         "standard",
-        _binary_capabilities(input_type=InputType.MIXED),
+        _binary_capabilities(input_type=InputType.MIXED, multi_fidelity=True),
     ),
     (
         "binary.spectral_mixture",
