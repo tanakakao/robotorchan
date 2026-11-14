@@ -48,7 +48,6 @@ $$
 
 **直感：** 予測が五分五分の点を優先します。ただし、ラベル固有の偶然性だけでも高いEntropyになります。そのため情報利得と同一ではありません。
 
-公開API：PredictiveEntropy。単一点版は現在 $q=1$ を要求します。
 
 ## 13.3 Margin Uncertainty：クラス確率の接戦
 
@@ -67,7 +66,6 @@ $$
 
 $p=0.5$ なら1、$p=0.9$ なら0.2です。二値の単一点ではEntropyと同じ順位を与えますが、**値の尺度は異なります**。多クラスでは上位2クラス以外の確率を直接評価しないため、Entropyと同じ順位になるとは限りません。
 
-公開API：MarginUncertainty。
 
 ## 13.4 Probability Variance：成功確率そのものの事後分散
 
@@ -90,7 +88,6 @@ $$
 
 **注意：** これはラベルのBernoulli分散 $\bar p(1-\bar p)$ とは異なります。
 
-公開API：ProbabilityVariance。num_samples引数でMonte Carloのサンプル数を設定できます。
 
 ## 13.5 BALD：ラベルから得られるモデル情報
 
@@ -118,7 +115,6 @@ Aではラベルは予測しづらくてもモデルの知識はすでに十分�
 
 **Entropy最大とBALD最大は一致するとは限りません。** ただし、どの問題でもBALDが優れているという主張ではありません。
 
-公開API：BALD。実装はモデルのmutual_information契約を用い、num_samplesで推定精度と計算負荷を調整します。
 
 ## 13.6 Latent Straddle：潜在境界付近を探索する
 
@@ -135,17 +131,16 @@ $$
 
 **潜在ゼロ境界は任意の確率閾値による意思決定境界と同義ではありません。** この指標は現行実装では二値分類用です。スコアが負でも最大化して比較します。
 
-公開API：LatentStraddle。betaの既定値は1.96です。
 
 ## 13.7 目的に応じた選択
 
 | 目的 | 獲得関数 | 対象 |
 | --- | --- | --- |
-| 次のラベルが曖昧な点を知る | PredictiveEntropy | 平均予測確率 |
-| クラスの接戦を知る | MarginUncertainty | 上位2クラスの確率差 |
-| 成功確率の推定を改善したい | ProbabilityVariance | 確率の事後分散 |
+| 次のラベルが曖昧な点を知る | 予測エントロピー基準 | 平均予測確率 |
+| クラスの接戦を知る | マージン不確実性基準 | 上位2クラスの確率差 |
+| 成功確率の推定を改善したい | 確率分散基準 | 確率の事後分散 |
 | 追加ラベルから情報を得たい | BALD | 相互情報量 |
-| 潜在ゼロ境界を調べたい | LatentStraddle | 潜在平均と標準偏差 |
+| 潜在ゼロ境界を調べたい | 潜在Straddle基準 | 潜在平均と標準偏差 |
 
 予測したクラス1確率そのものを最大化したい場合、または可行確率を安全制約として使いたい場合は、別の最適化目的です。Active Learningの「学習価値」と混同しないでください。
 
@@ -155,7 +150,7 @@ $q=2$ は次に提案する**2点の候補**を表し、2クラス分類の意�
 
 ### 周辺スコア集約型
 
-qPredictiveEntropy、qMarginUncertainty、qProbabilityVariance、qLatentStraddleは、各候補点のスコアを
+q予測エントロピー基準、qマージン不確実性基準、q確率分散基準、q潜在Straddle基準は、各候補点のスコアを
 
 $$
 a_{\mathrm{marginal}}(x_{1:q})
@@ -164,9 +159,9 @@ $$
 
 で平均します。この計算は**同時ラベル分布を評価しません**。近接した候補が互いに情報を重複させる場合にも、直接の重複ペナルティはありません。
 
-### qBALD：同時情報利得
+### バッチBALD：同時情報利得
 
-qBALDはラベルベクトル $Y_{1:q}$ と潜在ベクトル $F_{1:q}$ の相互情報量を使用します。
+バッチBALDはラベルベクトル $Y_{1:q}$ と潜在ベクトル $F_{1:q}$ の相互情報量を使用します。
 
 $$
 I(Y_{1:q};F_{1:q}\mid\mathcal D)
@@ -177,39 +172,34 @@ $$
 
 実装は同じ潜在事後サンプルから得た確率を用いて、二値ラベルの $2^q$ 通りの組合せを列挙します。$q=2$ なら (0,0)、(0,1)、(1,0)、(1,1) の4通りです。指数的な計算量のため、現行実装は**二値かつ $1\le q\le8$**に制限しています。
 
-qBALDは点間の依存を考慮できますが、選択候補が必ず一定以上離れることまでは保証しません。単一点版のPredictiveEntropyなどは $q=1$ 専用であり、q-batch版とは区別します。
+バッチBALDは点間の依存を考慮できますが、選択候補が必ず一定以上離れることまでは保証しません。単一点版の予測エントロピー基準などは $q=1$ 専用であり、q-batch版とは区別します。
 
 ## 13.9 Ensemble、校正、信頼性
 
 複数の分類器のクラス確率を重み付き平均してensemble予測分布を作れます。メンバーごとのEntropyと、平均予測分布のEntropyとの差を計算して不一致を測ることもできます。
 
-ただし、任意の経験ensembleの不一致を、厳密に校正されたBayesian事後不確実性と同一視しないでください。異種モデルには共通の潜在関数がない場合もあり、LatentStraddleをそのまま適用できません。
+ただし、任意の経験ensembleの不一致を、厳密に校正されたBayesian事後不確実性と同一視しないでください。異種モデルには共通の潜在関数がない場合もあり、潜在Straddle基準をそのまま適用できません。
 
 Temperature Scaling等の確率校正は予測確率を変えるため、EntropyやMarginなどにも影響し得ます。一方、校正だけでは潜在GPの事後分布は更新されません。校正の品質は学習から独立したデータを使い、NLL、Brier Score、ECEなどで確認します。
 
-## 13.10 robotorchanの公開APIとNotebook
+## 13.10 理論と学習資料のつながり
 
-- [分類獲得関数の実装](../../../src/robotorchan/acquisition/active_learning/classification.py)
-- [39番：分類GPとActive Learning](../../../examples/notebooks/39_classification_active_learning.ipynb)
-- [47番：拡張モデルとq-batch](../../../examples/notebooks/47_binary_classification_extensions.ipynb)
-- [分類モデル一覧](../../models/classification.md)
-- [二値分類の対応表](../../models/binary_classification_extension_matrix.md)
+分類GPの数理は[分類理論](../24_classification.md)にまとめています。
+基礎的な分類と能動学習については
+[39番Notebook](../../../examples/notebooks/39_classification_active_learning.ipynb)、
+複数候補の選択については
+[47番Notebook](../../../examples/notebooks/47_binary_classification_extensions.ipynb)
+で可視化された具体例を確認できます。
 
-~~~python
-from robotorchan.acquisition import BALD, PredictiveEntropy
-
-entropy_acq = PredictiveEntropy(model)
-bald_acq = BALD(model, num_samples=64)
-~~~
-
-上記のmodelは、必要な分類予測APIを持つ学習済みモデルを表します。単一点用獲得関数への候補形状は通常 batch_shape × 1 × d です。Mixedや各種制約との組合せについては、名前から全対応を推測せず実装・テストと対応表を確認してください。
+この理論章ではモデルに必要な数学的条件を説明し、公開APIの選び方や
+コードの実行手順は[分類ガイド](../../guide/24_classification.md)に委ねます。
 
 ### 理解度チェック
 
 1. 予測確率が0.5なら、モデルの知識も必ず不足していますか？ → **いいえ**。成功確率が既知でもラベルは偶然に揺れます。
 2. EntropyとBALDの違いは？ → **BALDはラベルを得たときの潜在モデルの情報利得を評価**します。
-3. qPredictiveEntropyはラベルベクトルの同時Entropyですか？ → **いいえ**。周辺Entropyの平均です。
-4. qBALDは何を追加で考えますか？ → **候補の同時予測分布と相互情報量**です。
+3. q予測エントロピー基準はラベルベクトルの同時Entropyですか？ → **いいえ**。周辺Entropyの平均です。
+4. バッチBALDは何を追加で考えますか？ → **候補の同時予測分布と相互情報量**です。
 
 ### 参考文献
 
