@@ -104,7 +104,7 @@ TheoryとGuideは主要章の章番号とファイル名を対応させていま
 | [26_transfer_bayesian_optimization.md](../theory/26_transfer_bayesian_optimization.md) | [Guide](26_transfer_bayesian_optimization.md) |
 | [27_combinatorial_bayesian_optimization.md](../theory/27_combinatorial_bayesian_optimization.md) | [Guide](27_combinatorial_bayesian_optimization.md) |
 
-## 獲得関数：理論12サブ章と1対1対応
+## 獲得関数：理論13サブ章と1対1対応
 
 | 理論の正本 | 実装の解説 |
 | --- | --- |
@@ -120,6 +120,7 @@ TheoryとGuideは主要章の章番号とファイル名を対応させていま
 | [acquisition/10_level_set.md][link68] | [Guide][link69] |
 | [acquisition/11_multifidelity_cost_aware.md][link70] | [Guide][link71] |
 | [acquisition/12_selection_guide.md][link72] | [Guide][link73] |
+| [13_classification_active_learning.md](../theory/acquisition/13_classification_active_learning.md) | [Guide](acquisition/13_classification_active_learning.md) |
 
 ## 獲得関数の最適化：理論12サブ章と1対1対応
 
@@ -137,6 +138,28 @@ TheoryとGuideは主要章の章番号とファイル名を対応させていま
 | [optimization/10_trust_region.md][link91] | [Guide][link92] |
 | [optimization/11_hybrid.md][link93] | [Guide][link94] |
 | [optimization/12_selection_guide.md][link95] | [Guide][link96] |
+
+## 分類を初めて学ぶ方への導線
+
+二値分類の確率モデルを理解するには、
+[分類理論](../theory/24_classification.md)から始め、
+[分類Guide](24_classification.md)で公開APIと潜在事後の対応を確認し、
+[39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)で
+学習・予測・候補選択の順に実行します。
+
+実務上の入力揺らぎや誤ラベルは
+[40番Notebook](../../examples/notebooks/40_classification_robust_uncertain.ipynb)、
+確率校正とEnsembleは
+[41番Notebook](../../examples/notebooks/41_classification_probability_layers.ipynb)、
+各種拡張モデルとq-batchは
+[47番Notebook](../../examples/notebooks/47_binary_classification_extensions.ipynb)
+を参照します。
+
+獲得関数の数理的な違いは
+[分類Active Learning理論](../theory/acquisition/13_classification_active_learning.md)、
+実装との対応は
+[分類Active Learning Guide](acquisition/13_classification_active_learning.md)
+で説明します。
 
 ## 各章の執筆契約
 
