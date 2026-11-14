@@ -3,6 +3,41 @@
 [GP章](02_gaussian_process.md)の潜在事後分布と、[変分GP章](09_variational_gp.md)のELBOを前提とします。
 本章では、潜在値・成功確率・ラベルそれぞれの不確実性を区別し、確率予測から意思決定へつなぎます。
 
+## はじめに：分類GPを初めて学ぶ方へ
+
+この章の中心的な問いは「入力条件から、次に観測するラベルが1になる確率をどう求めるか」です。
+例えば製造条件を入力 $x$、合格を $y=1$、不合格を $y=0$ とします。
+分類GPはラベルを直接ガウス分布で説明するのではなく、観測できない連続関数 $f(x)$ を考えます。
+
+| 記号 | 意味 | 例 |
+| --- | --- | --- |
+| $x$ | 入力条件 | 温度・圧力 |
+| $y$ | 観測ラベル | 合格1、不合格0 |
+| $\mathcal D$ | 観測済みデータ | 条件と合否の組 |
+| $f(x)$ | 潜在関数 | 合格しやすさを表す実数値 |
+| $\pi(f)$ | リンク関数 | 実数を0〜1の条件付き確率へ変換 |
+| $\bar p(x)$ | 事後予測確率 | 次のラベルが1になる確率 |
+
+~~~text
+実験条件 x と観測済みの0/1ラベル
+  ↓
+GPによる潜在関数の学習：q(f(x) | D)
+  ↓
+Bernoulli尤度を介した積分
+  ↓
+事後予測確率 P(y=1 | x, D)
+  ↓
+必要なら分類判断、またはActive Learningで次の候補を選択
+~~~
+
+最初に第1・3・4節の意味を理解し、次に第2節で学習方法を確認すると読みやすくなります。
+基礎は[GP理論](02_gaussian_process.md)と[変分GP](09_variational_gp.md)、
+実行例は[39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)を参照してください。
+
+**回帰との違い：** 通常のGP回帰は連続値とGaussian尤度を扱います。
+分類ではラベルは0/1ですが、潜在関数は連続値です。
+潜在値0.8を「80%の成功確率」と読むことはできません。
+
 ## 1. 問題設定
 
 GP分類はラベル自体にガウス観測ノイズを仮定せず、
@@ -20,6 +55,23 @@ $\pi(f)=1/(1+\exp(-f))$ やprobit $\pi(f)=\Phi(f)$ を利用できます。
 潜在値の事前分布は多変量正規分布ですが、条件付き観測分布はBernoulli分布です。
 潜在値の事後分布は一般にガウス分布ではありません。
 予測ラベル分布はBernoulli分布であり、ガウス分布ではありません。
+
+### 1.1 Bernoulli尤度の意味
+
+潜在値 $f(x)$ を固定し、$p=\pi(f(x))$ とおくと
+
+$
+p(y\mid f(x))=p^y(1-p)^{1-y}, \quad y\in\{0,1\}.
+$
+
+例えば $p=0.8$ のとき、合格ラベル1を観測する確率は0.8、
+不合格ラベル0を観測する確率は0.2です。
+これは「潜在値が確定しているときの条件付き確率」であり、
+潜在値の推定に不確実性がある場合の事後予測確率とは区別します。
+
+logisticリンクの場合は $f=0$ で $p=0.5$、
+$f>0$ で $p>0.5$ となります。
+実際の予測確率は第3節にある積分で求めます。
 
 ## 2. 事後推論
 
@@ -65,6 +117,31 @@ $$
 尤度の期待値には数値積分やMonte Carlo推定が必要な場合があります。
 ミニバッチ学習ではデータ適合項を全データ数に合わせてスケーリングします。
 ELBOはGP回帰で用いる厳密なガウス周辺対数尤度とは異なります。
+
+### 2.2 なぜ近似推論とELBOが必要か
+
+第2節のBayes式は、GP事前分布と観測ラベルの尤度を掛けて、
+すべての潜在値について積分し正規化します。
+Bernoulli尤度はGaussian事前分布と共役ではなく、
+厳密な事後分布を一般に解析計算できません。
+
+そこで誘導点 $Z$ と変分分布 $q(u)$ を使って近似します。
+誘導点は追加の実験結果ではなく、GPを近似するための代表位置です。
+
+ELBOは大きく二つの項から成り立ちます。
+
+| 項 | 役割 |
+| --- | --- |
+| データ適合項：期待対数尤度 | 観測した0/1ラベルを説明しやすくする |
+| KL項 | 近似事後が事前分布から極端に離れないようにする |
+
+ELBOを最大化するとデータ適合を高めつつKLの乖離を抑えます。
+ただしELBOの改善は別データでのAccuracyや確率校正を保証しません。
+第2.1節の数式は、その二つの要素を数学的に表しています。
+
+実装では標準分類器を作成し、fit()でBernoulli ELBOの学習を行います。
+入力の作り方、学習回数、図の表示は
+[分類Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)にあります。
 
 ## 3. 潜在不確実性と予測確率
 
@@ -115,6 +192,30 @@ $f_*-Z$ の平均は $\mu_*$、分散は $s_*^2+1$ なので、正となる確�
 平均への代入値 $\Phi(1)\simeq0.841$ よりも確信が弱くなります。
 logisticリンクでは、近似なしに同じ恒等式は成立しません。
 
+### 3.1 潜在平均の変換と予測確率は異なる
+
+第3節のprobit例を使います。
+潜在分布が $q(f_*)=\mathcal N(1,3)$ であれば、
+潜在平均にリンクを適用した値は $\Phi(1)\simeq0.841$ です。
+一方、潜在分布を積分すると $\Phi(1/\sqrt{4})\simeq0.691$ です。
+前者は分布の不確実性を無視した計算であり、
+後者がprobit尤度とこの近似分布に対する事後予測確率です。
+
+**不確実性の3段階：**
+
+| 量 | 何の不確実性か |
+| --- | --- |
+| $\operatorname{Var}[f_*]$ | GP潜在値そのもの |
+| $\operatorname{Var}[\pi(f_*)]$ | クラス1になる確率の推定 |
+| $\bar p_*(1-\bar p_*)$ | 将来観測するラベル |
+
+例えば成功確率が確実に0.5だと分かっていても、
+次のラベルは0か1か分かりません。
+確率の事後分散は0でもラベルの予測分散は0.25になります。
+逆に、成功確率がほぼ0かほぼ1かをモデルが判断できないときも、
+平均予測確率は0.5になり得ます。
+これがEntropyとBALDを区別する理由です。
+
 ## 4. 分類の不確実性と能動学習
 
 $C$ クラスの予測エントロピーは次のとおりです。
@@ -150,6 +251,24 @@ $$
 これらはGP事後分布そのものの性質ではなく、*候補選択の目的*です。
 獲得関数の理論は[能動学習](acquisition/09_active_learning.md)と
 [分類能動学習](acquisition/13_classification_active_learning.md)を参照してください。
+
+### 4.1 EntropyとBALDを具体例で比較
+
+次の二つの状況は、ともに平均予測確率が0.5になる極限的な例です。
+
+| 候補 | モデルの考え方 | Predictive Entropy | BALD |
+| --- | --- | --- | --- |
+| A | 成功確率はほぼ確実に0.5 | 高い | ほぼ0 |
+| B | 成功確率は0付近か1付近か未確定 | 高い | 高い |
+
+Aは次のラベルが不確かでも、成功確率の推定に新たな知識を得にくい状況です。
+Bは次のラベルを観測することでモデルの不確実性を減らせる可能性があります。
+したがって「ラベル予測の曖昧さを減らしたい」のか
+「モデルについて情報を得たい」のかで獲得関数を選びます。
+
+この例は理論的な解釈であり、任意の実データでの候補順位を保証しません。
+[39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)
+では両スコアと候補の位置を可視化します。
 
 ## 5. 多クラス分類
 
@@ -248,30 +367,7 @@ Bernoulli尤度と予測クラス確率の定義を自動的に変えるもの�
 入力次元削減の対象となる連続設計座標とは統計的な意味が異なります。
 単一の射影に無条件で含めると、根拠のない距離を導入する可能性があります。
 
-## 7. 参考文献
-
-- Rasmussen, C. E., & Williams, C. K. I. (2006).
-  *Gaussian Processes for Machine Learning*, Chapter 3.
-- Hensman, J., Matthews, A. G. de G., & Ghahramani, Z. (2015).
-  *Scalable Variational Gaussian Process Classification*. AISTATS.
-- Gal, Y., Islam, R., & Ghahramani, Z. (2017).
-  *Deep Bayesian Active Learning with Image Data*. ICML.
-- Eriksson, D., & Jankowiak, M. (2021).
-  *High-Dimensional Bayesian Optimization with Sparse Axis-Aligned Subspaces*. UAI.
-- Houlsby, N., Huszár, F., Ghahramani, Z., & Lengyel, M. (2011).
-  *Bayesian Active Learning for Classification and Preference Learning*.
-
-## 8. 関連理論
-
-- [Variational GP](09_variational_gp.md)
-- [Mixed Variables](05_mixed_variables.md)
-- [Multi-task / Multi-output](07_multitask_multioutput.md)
-- [High-dimensional GP](08_high_dimensional_gp.md)
-- [Dimensionality Reduction GP](18_dimensionality_reduction_gp.md)
-- [Expressive GP Models](22_expressive_gp.md)
-- [Classification Active Learning](acquisition/13_classification_active_learning.md)
-
-## 9. 拡張分類モデルの共分散仮定
+## 7. 拡張分類モデルの共分散仮定
 
 Bernoulli likelihoodと変分ELBOは共通ですが、潜在GPの共分散が異なります。
 
@@ -302,3 +398,45 @@ I(Y_{1:q};F_{1:q}\mid D)
 \]
 
 現行実装は二値ラベルの\(2^q\)通りを列挙するため\(q\leq8\)です。
+
+### 初学者向け確認問題
+
+1. 潜在平均が0.8なら成功確率は0.8ですか？
+   **いいえ。** リンク関数と潜在分布を介して計算します。
+2. Entropyが高ければBALDも必ず高いですか？
+   **いいえ。** ラベル固有のランダムさだけでもEntropyは高くなります。
+3. q=2は二値分類を指しますか？
+   **いいえ。** 同時に提案する候補点が2点という意味です。
+
+### 次に学ぶ資料
+
+- [分類ガイド](../guide/24_classification.md)：モデルの選び方と公開API
+- [39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)：標準GP分類とActive Learning
+- [40番Notebook](../../examples/notebooks/40_classification_robust_uncertain.ipynb)：ノイズと入力不確実性
+- [41番Notebook](../../examples/notebooks/41_classification_probability_layers.ipynb)：校正とアンサンブル
+- [47番Notebook](../../examples/notebooks/47_binary_classification_extensions.ipynb)：拡張モデルとq-batch
+
+## 8. 関連理論
+
+- [Variational GP](09_variational_gp.md)
+- [Mixed Variables](05_mixed_variables.md)
+- [Multi-task / Multi-output](07_multitask_multioutput.md)
+- [High-dimensional GP](08_high_dimensional_gp.md)
+- [Dimensionality Reduction GP](18_dimensionality_reduction_gp.md)
+- [Expressive GP Models](22_expressive_gp.md)
+- [Classification Active Learning](acquisition/13_classification_active_learning.md)
+
+
+## 9. 参考文献
+
+- Rasmussen, C. E., & Williams, C. K. I. (2006).
+  *Gaussian Processes for Machine Learning*, Chapter 3.
+- Hensman, J., Matthews, A. G. de G., & Ghahramani, Z. (2015).
+  *Scalable Variational Gaussian Process Classification*. AISTATS.
+- Gal, Y., Islam, R., & Ghahramani, Z. (2017).
+  *Deep Bayesian Active Learning with Image Data*. ICML.
+- Eriksson, D., & Jankowiak, M. (2021).
+  *High-Dimensional Bayesian Optimization with Sparse Axis-Aligned Subspaces*. UAI.
+- Houlsby, N., Huszár, F., Ghahramani, Z., & Lengyel, M. (2011).
+  *Bayesian Active Learning for Classification and Preference Learning*.
+
