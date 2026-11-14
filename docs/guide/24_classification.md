@@ -3,8 +3,7 @@
 ## 分類GPの確率モデル
 
 二値ラベル`y∈{0,1}`を扱うとき、実数値潜在関数`f(x)`へGP priorを置き、Bernoulli likelihood経由でラベルを生成する。
-[理論第24章](../theory/24_classification.md)のとおり、Gaussian priorにBernoulli尤度は非共役なので、通常は近似推論（variationalなど
-）が必要となる。
+[理論第24章](../theory/24_classification.md)のとおり、Gaussian priorにBernoulli尤度は非共役なので、通常は近似推論（variationalなど）が必要となる。
 
 **`posterior(X)`はlatent posteriorであって、成功確率ではない。** `predict_proba(X)`はclass probabilities、
 `predict_class(X)`は決定規則に従うラベルを返す。これらを混同すると、constrained BOやActive Learningの数式の対象が変わってしまう。
@@ -141,8 +140,61 @@ Theoryのlink関数を介した期待値は、このlatent分布から予測ラ�
 
 [binary]: ../../src/robotorchan/models/classification/binary/standard/single_task.py
 
-使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/39_classification_active_learning.ipynb)を参照してくださ
-い。
+使用手順と結果の可視化は[39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)を参照してください。
+
+## 不確実性・確率校正・予測集合の責務分離
+
+[分類理論の第6.2節](../theory/24_classification.md)では、
+ラベルの誤記録、候補入力の揺らぎ、Ensembleによる確率のばらつき、
+確率校正、OOD、Conformalの違いを説明しています。
+これらはすべて「不確実性」と関連しますが、
+操作する確率分布もモデルの契約も異なります。
+
+| 問題 | 対応する実装 | 予測への影響 |
+| --- | --- | --- |
+| 観測ラベルの誤記録 | LabelNoiseBinarySingleTaskGPClassifier | 観測ラベルのBernoulli尤度を変更 |
+| 候補入力の揺らぎ | ContinuousUncertainInputBinarySingleTaskGPClassifier | 摂動後の入力に対する予測確率を平均 |
+| モデル間の不一致 | ClassificationEnsemblePosterior | メンバー確率の平均と分散を計算 |
+| 予測確率の校正 | TemperatureScalingCalibrator | クラス確率を温度で変換 |
+| 校正後の分類器 | CalibratedBinaryClassifier | 確率の予測と確率サンプルへ校正を適用 |
+| 予測集合の構成 | SplitConformalClassifier | 保留データに基づいて予測集合を返す |
+
+LabelNoiseBinarySingleTaskGPClassifierでは、
+観測されたラベルの確率とラベル反転前の確率を区別します。
+標準のpredict_probaは観測過程を含む予測です。
+ラベル反転前の確率はpredict_clean_probaを参照します。
+
+ContinuousUncertainInputBinarySingleTaskGPClassifierの
+predict_proba_with_input_uncertaintyは、
+候補時点の連続入力にGaussian摂動を加えて確率を平均します。
+これは訓練入力自体の測定誤差を自動で修正する手法ではありません。
+
+Temperature ScalingとSplit Conformalはどちらも
+保留データを使いますが、前者は確率を変換し、
+後者は指定された被覆率を目指す予測集合を構成します。
+Conformalの被覆率は交換可能性などの仮定に依存し、
+各入力における条件付き被覆率を保証するわけではありません。
+
+対応する実行例は
+[40番Notebook](../../examples/notebooks/40_classification_robust_uncertain.ipynb)
+と[41番Notebook](../../examples/notebooks/41_classification_probability_layers.ipynb)
+です。41番ではConformalの概念を説明しますが、
+予測集合の実際の算出は行っていません。
+
+## 単一点とq-batchの分類Active Learning
+
+[分類獲得関数の理論](../theory/acquisition/13_classification_active_learning.md)
+では、予測Entropy、Margin、Probability Variance、BALD、
+潜在Straddleの数学的な違いを説明しています。
+[獲得関数Guide](acquisition/13_classification_active_learning.md)
+では、それぞれが要求するモデルの公開メソッドと
+q-batchの対応方式を確認できます。
+
+単一点のPredictiveEntropy等はq=1用であり、
+qPredictiveEntropy等の4種類は周辺スコアを平均します。
+一方qBALDは、二値ラベルの同時情報利得を扱い、
+現行実装ではq=1〜8に限定されます。
+候補間の重複を直接考慮するかどうかが異なります。
 
 ## 拡張二値分類モデルの使い分け
 
