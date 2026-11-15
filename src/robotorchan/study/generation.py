@@ -14,6 +14,7 @@ from torch.quasirandom import SobolEngine
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.base import SearchStrategy
 from robotorchan.optim.dispatch import optimize_acqf
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.study.search_space import SearchSpace
 from robotorchan.study.trial import Trial
 
@@ -34,6 +35,7 @@ class CandidateGenerator:
         optimizer_kwargs: Mapping[str, Any] | None = None,
         n_initial_trials: int = 3,
         seed: int | None = None,
+        variable_space: MixedVariableSpace | None = None,
     ) -> None:
         if direction not in {"maximize", "minimize"}:
             raise ValueError("direction must be 'maximize' or 'minimize'.")
@@ -44,6 +46,11 @@ class CandidateGenerator:
         if not isinstance(optimizer, (str, SearchStrategy)):
             raise TypeError("optimizer must be a backend name or SearchStrategy.")
         self.space = space
+        if variable_space is not None:
+            bounds = torch.tensor(list(space.bounds.values()), dtype=torch.double).T
+            if not torch.allclose(variable_space.bounds.to(dtype=bounds.dtype), bounds):
+                raise ValueError("variable_space bounds must match Study bounds.")
+        self.variable_space = variable_space
         self.direction = direction
         self.model = model
         self.model_kwargs = dict(model_kwargs or {})
@@ -58,11 +65,23 @@ class CandidateGenerator:
         return torch.tensor(list(self.space.bounds.values()), dtype=torch.double).T
 
     def propose(self, completed: list[Trial]) -> dict[str, float]:
-        """Generate a single candidate, preserving declared parameter order."""
+        """Generate one candidate using the existing q-batch implementation."""
+        return self.propose_batch(completed, q=1)[0]
+
+    def propose_batch(self, completed: list[Trial], *, q: int) -> list[dict[str, float]]:
+        """Generate q joint candidates from completed observations."""
+        if isinstance(q, bool) or not isinstance(q, int) or q < 1:
+            raise ValueError("q must be a positive integer.")
         bounds = self._bounds()
         if len(completed) < self.n_initial_trials:
-            point = self._sobol.draw(1).to(dtype=bounds.dtype)
-            candidate = bounds[0] + (bounds[1] - bounds[0]) * point
+            points = self._sobol.draw(q).to(dtype=bounds.dtype)
+            candidate = bounds[0] + (bounds[1] - bounds[0]) * points
+            if self.variable_space is not None:
+                for dim in self.variable_space.integer_dims:
+                    candidate[:, dim] = candidate[:, dim].round()
+                for dim, values in self.variable_space.categorical_values.items():
+                    index = torch.clamp((points[:, dim] * len(values)).long(), max=len(values) - 1)
+                    candidate[:, dim] = torch.tensor(values, dtype=bounds.dtype)[index]
         else:
             names = tuple(self.space.bounds)
             train_x = torch.tensor(
@@ -86,17 +105,38 @@ class CandidateGenerator:
                 kwargs.setdefault("X_baseline", train_x)
             acq = self.acquisition(**kwargs)
             if isinstance(self.optimizer, SearchStrategy):
+                if self.variable_space is not None:
+                    raise ValueError("Mixed variable_space requires a named optimizer backend.")
                 if not torch.allclose(self.optimizer.bounds.to(dtype=bounds.dtype), bounds):
                     raise ValueError("SearchStrategy bounds must match Study bounds.")
                 if self.optimizer_kwargs:
                     raise ValueError("optimizer_kwargs cannot accompany SearchStrategy.")
-                candidate = self.optimizer.optimize(acq, q=1).candidates
+                candidate = self.optimizer.optimize(acq, q=q).candidates
             else:
                 options = dict(self.optimizer_kwargs)
                 options.setdefault("num_restarts", 5)
                 options.setdefault("raw_samples", 64)
-                candidate, _ = optimize_acqf(acq, bounds, q=1, optimizer=self.optimizer, **options)
-        if candidate.shape != (1, len(self.space.bounds)):
-            raise ValueError("Optimizer must return candidates with shape [1, d].")
-        point = candidate[0].detach().tolist()
-        return dict(zip(self.space.bounds, point, strict=True))
+                candidate, _ = optimize_acqf(
+                    acq,
+                    bounds,
+                    q=q,
+                    optimizer=self.optimizer,
+                    variable_space=self.variable_space,
+                    **options,
+                )
+        if candidate.shape != (q, len(self.space.bounds)):
+            raise ValueError("Optimizer must return candidates with shape [q, d].")
+        results = []
+        for point in candidate.detach().tolist():
+            params = dict(zip(self.space.bounds, point, strict=True))
+            self.space.validate(params)
+            if self.variable_space is not None:
+                vector = torch.tensor(point, dtype=bounds.dtype)
+                for dim in self.variable_space.integer_dims:
+                    if vector[dim] != vector[dim].round():
+                        raise ValueError("Optimizer returned a non-integer candidate.")
+                for dim, values in self.variable_space.categorical_values.items():
+                    if point[dim] not in values:
+                        raise ValueError("Optimizer returned an invalid categorical candidate.")
+            results.append(params)
+        return results

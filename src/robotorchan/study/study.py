@@ -11,6 +11,7 @@ from botorch.acquisition.logei import qLogExpectedImprovement
 
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.base import SearchStrategy
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.study.generation import CandidateGenerator
 from robotorchan.study.search_space import SearchSpace
 from robotorchan.study.trial import Trial, TrialState
@@ -32,6 +33,7 @@ class Study:
         optimizer_kwargs: Mapping[str, Any] | None = None,
         n_initial_trials: int = 3,
         seed: int | None = None,
+        variable_space: MixedVariableSpace | None = None,
     ) -> None:
         self.search_space = search_space
         self._generator = CandidateGenerator(
@@ -45,6 +47,7 @@ class Study:
             optimizer_kwargs=optimizer_kwargs,
             n_initial_trials=n_initial_trials,
             seed=seed,
+            variable_space=variable_space,
         )
         self._trials: dict[int, Trial] = {}
         self._next_number = 0
@@ -150,9 +153,13 @@ class Study:
 
     def ask(self) -> Trial:
         """Propose and start a single trial."""
-        completed = [t for t in self.trials if t.state is TrialState.COMPLETE]
-        trial = self.add_trial(self._generator.propose(completed))
-        return self.start_trial(trial.number)
+        return self.ask_batch(1)[0]
+
+    def ask_batch(self, q: int) -> tuple[Trial, ...]:
+        """Propose and register q joint candidates as running trials."""
+        completed = [trial for trial in self.trials if trial.state is TrialState.COMPLETE]
+        candidates = self._generator.propose_batch(completed, q=q)
+        return tuple(self.start_trial(self.add_trial(params).number) for params in candidates)
 
     def tell(
         self,
@@ -228,8 +235,9 @@ def create_study(
     optimizer_kwargs: Mapping[str, Any] | None = None,
     n_initial_trials: int = 3,
     seed: int | None = None,
+    variable_space: MixedVariableSpace | None = None,
 ) -> Study:
-    """Create an in-memory single-objective continuous Study."""
+    """Create an in-memory single-objective Study."""
     if not isinstance(search_space, SearchSpace):
         search_space = SearchSpace(search_space)
     return Study(
@@ -243,4 +251,5 @@ def create_study(
         optimizer_kwargs=optimizer_kwargs,
         n_initial_trials=n_initial_trials,
         seed=seed,
+        variable_space=variable_space,
     )
