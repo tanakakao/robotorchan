@@ -21,6 +21,9 @@ from robotorchan.models.classification.multiclass.standard.single_task import (
     MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
 )
+from robotorchan.models.classification.ordinal.standard.single_task import (
+    OrdinalSingleTaskGPClassifier,
+)
 
 ClassificationModelType: TypeAlias = type[nn.Module]
 
@@ -96,6 +99,24 @@ def _make_registry() -> dict[str, ClassificationModelRegistryEntry]:
                     input_type=InputType.MIXED,
                     inference=InferenceType.VARIATIONAL,
                     supports_multi_output=True,
+                    supports_posterior_samples=True,
+                    supports_probability_samples=True,
+                    posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
+                ),
+            ),
+        ),
+        num_classes=None,
+    )
+    _register_fragment(
+        registry,
+        (
+            (
+                "ordinal.standard",
+                OrdinalSingleTaskGPClassifier,
+                "ordinal",
+                ModelCapabilities(
+                    observation_type=ObservationType.CLASSIFICATION,
+                    inference=InferenceType.VARIATIONAL,
                     supports_posterior_samples=True,
                     supports_probability_samples=True,
                     posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
