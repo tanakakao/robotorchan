@@ -195,6 +195,8 @@ class qBALD(BALD):
     def forward(self, X: Tensor) -> Tensor:
         q = X.shape[-2]
         num_classes = self.classification_model.num_classes
+        if num_classes == 2 and not 1 <= q <= 8:
+            raise ValueError("qBALD requires 1 <= q <= 8 for exact label enumeration.")
         if q < 1 or num_classes**q > 256:
             raise ValueError("qBALD requires q >= 1 and num_classes**q <= 256.")
         samples = self.classification_model.sample_class_probabilities(
