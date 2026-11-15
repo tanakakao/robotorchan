@@ -36,7 +36,6 @@ class Study:
         seed: int | None = None,
         variable_space: MixedVariableSpace | None = None,
         constraints: CandidateConstraints | None = None,
-    constraints: CandidateConstraints | None = None,
     ) -> None:
         self.search_space = search_space
         self._generator = CandidateGenerator(
