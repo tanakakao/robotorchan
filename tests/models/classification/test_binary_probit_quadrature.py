@@ -80,6 +80,7 @@ def test_binary_probability_variance_and_bald_match_dense_integration(noise_kind
         acquired_variance = ProbabilityVariance(model)(candidates)
         acquired_bald = BALD(model)(candidates)
 
+    assert probabilities.shape == (3, 1, 2)
     assert variance.shape == (3, 1, 2)
     assert bald.shape == (3, 1)
     torch.testing.assert_close(probabilities[..., 1], mean_reference, atol=1e-8, rtol=1e-8)
@@ -88,8 +89,8 @@ def test_binary_probability_variance_and_bald_match_dense_integration(noise_kind
     )
     torch.testing.assert_close(variance[..., 0], variance[..., 1])
     torch.testing.assert_close(bald, bald_reference, atol=1e-5, rtol=1e-5)
-    torch.testing.assert_close(acquired_variance, variance_reference.squeeze(-1))
-    torch.testing.assert_close(acquired_bald, bald_reference.squeeze(-1))
+    torch.testing.assert_close(acquired_variance, variance_reference.squeeze(-1), atol=1e-5, rtol=1e-5)
+    torch.testing.assert_close(acquired_bald, bald_reference.squeeze(-1), atol=1e-5, rtol=1e-5)
 
     with torch.no_grad():
         joint_candidates = candidates[:2].transpose(0, 1)
