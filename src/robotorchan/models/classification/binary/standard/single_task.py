@@ -65,7 +65,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             input_transform=input_transform,
         )
         self._store_raw_tensor("train_Y", raw_train_Y)
-        self._probability_quadrature = GaussHermiteQuadrature1D(num_locs=64).to(train_X)
+        self._probability_quadrature = GaussHermiteQuadrature1D(num_locs=128).to(train_X)
 
     def load_state_dict(
         self,
@@ -140,11 +140,10 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
 
         latent = self.latent_posterior(X, **kwargs)
         mean_positive = self.likelihood(latent.distribution).probs
-        second_moment = self._probability_quadrature(
-            lambda values: self.likelihood.forward(values).probs.square(),
+        variance = self._probability_quadrature(
+            lambda values: (self.likelihood.forward(values).probs - mean_positive).square(),
             latent.distribution,
-        )
-        variance = (second_moment - mean_positive.square()).clamp_min(0.0)
+        ).clamp_min(0.0)
         if variance.shape[-1:] == (1,):
             variance = variance.squeeze(-1)
         return torch.stack((variance, variance), dim=-1)
