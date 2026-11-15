@@ -227,3 +227,63 @@ Active Learningでは既存の `PredictiveEntropy`、`MarginUncertainty`、
 
 [40番の実行Notebook](../../examples/notebooks/40_multiclass_classification_active_learning.ipynb)と
 [対応表](../models/multiclass-active-learning.md)も参照してください。
+
+
+### はじめてのマルチクラス分類：入力と出力
+
+たとえば設備の状態を「正常・注意・異常」に分けるとき、
+ラベルはそれぞれ \`0, 1, 2\` とします。
+入力 \`train_X\` は \`[観測数, 特徴量数]\`、ラベル \`train_Y\` は
+\`[観測数]\` の整数テンソルです。
+
+~~~python
+import torch
+
+from robotorchan.models.classification import MulticlassSingleTaskGPClassifier
+
+X = torch.rand(18, 2, dtype=torch.double)
+y = (torch.arange(18) % 3).long()
+model = MulticlassSingleTaskGPClassifier(
+    X, y, num_classes=3, inducing_points=6
+)
+model.fit(epochs=5, lr=0.03)
+probabilities = model.predict_proba(X[:3], num_samples=32)
+print(probabilities.shape)  # [3, 3] = 3点 × 3クラス
+~~~
+
+予測確率が \`[0.7, 0.2, 0.1]\` なら、
+最も確からしいのはクラス0ですが、クラス1・2の可能性も残ります。
+\`predict_class\` は確率が最大のクラスを選びます。
+\`posterior\` の潜在値を直接「70%」などと解釈しないでください。
+
+### 獲得関数を選ぶための考え方
+
+| 方法 | 何を優先するか | 最初の選択として |
+| --- | --- | --- |
+| PredictiveEntropy | ラベル予測が曖昧な点 | シンプルな不確実性サンプリング |
+| MarginUncertainty | 上位2クラスの確率が近い点 | クラス境界を重点的に探索 |
+| ProbabilityVariance | GPサンプル間でクラス確率が変動する点 | モデル側の不確実性を調べる |
+| BALD | 潜在GPについて情報を得られそうな点 | ノイズとモデル不確実性を区別したい場合 |
+| qBALD | 複数候補を同時に測る際の情報量 | 小さなqで候補間の依存を考慮 |
+
+いずれも「最も正しく分類できる点」を直接選ぶ関数ではありません。
+**どの点を追加測定すると学習に役立ちそうか**を評価します。
+
+### 二値分類から移行するときの注意
+
+二値分類のBernoulliモデルでは成功確率1つでラベル分布を表せますが、
+マルチクラスではクラス数 \`C\` 個の確率が必要です。
+\`LatentStraddle\` の「潜在関数0が境界」という前提は
+そのまま使えません。マルチクラスではクラス間の潜在値の差が境界を決めます。
+
+Mixedモデルでは \`cat_dims\` を指定しますが、
+探索側の \`MixedVariableSpace\` や \`fixed_features_list\` は別途設定します。
+モデルをMixedにしただけでは、候補生成器がカテゴリ制約を自動的に理解するわけではありません。
+
+### よくあるつまずき
+
+- **確率の和が1にならない？** 最後のクラス軸で合計してください。
+- **学習回数を増やせば必ず良くなる？** 過学習や不安定な最適化もあるため、検証データで確認してください。
+- **Entropyが高いのにBALDが低い？** ラベル自体が曖昧でも、追加データでモデルが学習できる不確実性とは限りません。
+- **qを増やしたらqBALDが失敗した？** 組合せ数 \`C**q\` の上限を確認してください。
+- **Accuracyが高ければ十分？** クラス不均衡や確率校正を考慮し、混同行列・NLL・Brier scoreも確認してください。
