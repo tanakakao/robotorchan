@@ -29,7 +29,9 @@ def is_feasible(
     q, _ = candidates.shape
     validate_candidate_constraints(
         constraints,
-        bounds=torch.stack((candidates.min(dim=0).values - 1, candidates.max(dim=0).values + 1)),
+        bounds=torch.stack(
+            (candidates.min(dim=0).values - 1, candidates.max(dim=0).values + 1)
+        ),
         q=q,
     )
     validate_mixed_constraint_dimensions(constraints, variable_space)
