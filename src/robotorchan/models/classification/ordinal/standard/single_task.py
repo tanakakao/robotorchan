@@ -5,7 +5,13 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 from torch.distributions import Categorical
+from gpytorch.kernels import Kernel
 
+from robotorchan.models.base import (
+    ContinuousKernelFactory,
+    make_mixed_covar_module,
+    normalize_feature_dims,
+)
 from robotorchan.models.classification.base import (
     ClassificationLikelihoodFamily,
     ClassificationModelMixin,
@@ -28,6 +34,7 @@ class OrdinalSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVariatio
         train_Y: Tensor,
         *,
         num_classes: int,
+        covar_module: Kernel | None = None,
         inducing_points: Tensor | int | None = None,
         learn_inducing_points: bool = True,
     ) -> None:
@@ -43,6 +50,7 @@ class OrdinalSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVariatio
             train_Y=labels.to(dtype=train_X.dtype).unsqueeze(-1),
             likelihood=OrderedProbitLikelihood(num_classes),
             num_outputs=1,
+            covar_module=covar_module,
             inducing_points=inducing_points,
             learn_inducing_points=learn_inducing_points,
         )
@@ -92,3 +100,37 @@ class OrdinalSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVariatio
 
     def predict_class(self, X: Tensor, **kwargs: object) -> Tensor:
         return self.predict_proba(X, **kwargs).argmax(dim=-1)
+
+
+class MixedOrdinalSingleTaskGPClassifier(OrdinalSingleTaskGPClassifier):
+    """Ordinal GP using the shared native mixed categorical covariance."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        cat_dims: list[int],
+        cont_kernel_factory: ContinuousKernelFactory | None = None,
+        inducing_points: Tensor | int | None = None,
+        learn_inducing_points: bool = True,
+    ) -> None:
+        normalized_cat_dims = normalize_feature_dims(
+            cat_dims, train_X.shape[-1], name="cat_dims"
+        )
+        covar_module = make_mixed_covar_module(
+            input_dim=train_X.shape[-1],
+            cat_dims=normalized_cat_dims,
+            batch_shape=train_X.shape[:-2],
+            cont_kernel_factory=cont_kernel_factory,
+        )
+        super().__init__(
+            train_X,
+            train_Y,
+            num_classes=num_classes,
+            covar_module=covar_module,
+            inducing_points=inducing_points,
+            learn_inducing_points=learn_inducing_points,
+        )
+        self.cat_dims = tuple(normalized_cat_dims)
