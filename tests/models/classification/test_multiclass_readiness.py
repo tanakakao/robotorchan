@@ -60,4 +60,4 @@ def test_validate_class_indices_rejects_noncanonical_labels(
 
 def test_registry_namespace_is_ready_for_future_multiclass_ids() -> None:
     assert list_classification_models(prefix="binary.")
-    assert list_classification_models(prefix="multiclass.") == ("multiclass.standard",)
+    assert list_classification_models(prefix="multiclass.") == ("multiclass.standard", "multiclass.mixed")
