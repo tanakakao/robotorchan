@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import torch
-from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
 from botorch.posteriors.gpytorch import GPyTorchPosterior
-from torch import nn
+from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
 from gpytorch.likelihoods import SoftmaxLikelihood
-from torch import Tensor
-from torch.utils.data import DataLoader, TensorDataset
+from torch import Tensor, nn
 from torch.distributions import Categorical
+from torch.utils.data import DataLoader, TensorDataset
 
 from robotorchan.models.classification.base import (
     ClassificationLikelihoodFamily,
