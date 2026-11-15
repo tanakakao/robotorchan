@@ -91,6 +91,7 @@ from robotorchan.models.classification.ordinal.standard.single_task import (
 )
 from robotorchan.models.classification.posterior import (
     ClassificationEnsemblePosterior,
+    ClassificationProbabilityPosterior,
     make_classification_ensemble_posterior,
 )
 from robotorchan.models.classification.probability import (
@@ -120,6 +121,7 @@ __all__ = [
     "BootstrapGradientBoostingBinaryClassifier",
     "CalibratedBinaryClassifier",
     "ClassificationEnsemblePosterior",
+    "ClassificationProbabilityPosterior",
     "ClassificationInputUncertaintyType",
     "ClassificationLikelihoodFamily",
     "ClassificationMetadata",
