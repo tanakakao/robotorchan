@@ -159,9 +159,7 @@ class Study:
         """Propose and register q joint candidates as running trials."""
         completed = [trial for trial in self.trials if trial.state is TrialState.COMPLETE]
         candidates = self._generator.propose_batch(completed, q=q)
-        return tuple(
-            self.start_trial(self.add_trial(params).number) for params in candidates
-        )
+        return tuple(self.start_trial(self.add_trial(params).number) for params in candidates)
 
     def tell(
         self,
