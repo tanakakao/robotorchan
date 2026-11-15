@@ -879,3 +879,30 @@ I(Y_{1:q};F_{1:q}\mid D)
 - Houlsby, N., Huszár, F., Ghahramani, Z., & Lengyel, M. (2011).
   *Bayesian Active Learning for Classification and Preference Learning*.
 
+
+
+## マルチクラス分類への拡張
+
+クラス数が \(C\geq3\) の場合、入力 \(x\) に対して
+潜在関数 \(f_1(x),\ldots,f_C(x)\) を考えます。
+softmaxにより、潜在関数が与えられたときのクラス確率を定義します。
+
+$$
+P(y=c\mid f(x)) =
+\frac{\exp(f_c(x))}{\sum_{k=1}^{C}\exp(f_k(x))}.
+$$
+
+学習データ \(D\) を観測した後の予測確率は
+\(p_c(x)=E_{f\mid D}[P(y=c\mid f(x))]\) です。
+一般に「潜在関数の平均へsoftmaxを適用した値」とは一致しません。
+変分GPの潜在事後分布からサンプルを取り、期待値を近似します。
+
+予測エントロピー \(H[y\mid x,D]=-\sum_c p_c(x)\log p_c(x)\) は
+予測ラベルの曖昧さを表します。BALDは予測エントロピーから
+潜在関数を固定したときの条件付きエントロピーの期待値を引き、
+モデルの不確実性による情報獲得を評価します。
+
+複数候補のjoint qBALDでは、候補間の依存も考慮しますが、
+ラベルの組合せ数は \(C^q\) で増加します。
+[40番Multiclass Notebook](../../examples/notebooks/40_multiclass_classification_active_learning.ipynb)
+に学習から候補提案までの例を示します。
