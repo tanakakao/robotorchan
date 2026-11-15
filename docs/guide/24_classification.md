@@ -91,15 +91,11 @@ Gauss–Hermite求積で求める `variance` は、
 X = torch.tensor([[0.2], [0.5], [0.8]], dtype=torch.double)
 
 ordinal_posterior = ordinal_model.probability_posterior(X)
-multiclass_posterior = multiclass_model.probability_posterior(
-    X, num_samples=1024, seed=7
-)
+multiclass_posterior = multiclass_model.probability_posterior(X, num_samples=1024, seed=7)
 
 mean = multiclass_posterior.mean  # [3, C]: 各クラスの平均確率
 variance = multiclass_posterior.variance  # [3, C]: 確率の事後分散
-lower, upper = multiclass_posterior.credible_interval(
-    0.95, num_samples=4096
-)
+lower, upper = multiclass_posterior.credible_interval(0.95, num_samples=4096)
 # lower/upper は各クラス別の周辺95%信用区間。
 # 「すべてのクラスが同時に95%で範囲内」という意味ではない。
 ```
