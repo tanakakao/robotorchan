@@ -200,6 +200,4 @@ class MixedMulticlassSingleTaskGPClassifier(MulticlassSingleTaskGPClassifier):
             inducing_points=inducing_points,
             learn_inducing_points=learn_inducing_points,
         )
-        self.cat_dims = normalize_feature_dims(
-            cat_dims, train_X.shape[-1], name="cat_dims"
-        )
+        self.cat_dims = normalize_feature_dims(cat_dims, train_X.shape[-1], name="cat_dims")
