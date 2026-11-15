@@ -1,5 +1,6 @@
 """Focused tests for the ordinal GP core."""
 
+import pytest
 import torch
 
 from robotorchan.models.classification import OrdinalSingleTaskGPClassifier
@@ -44,3 +45,62 @@ def test_ordinal_gp_fit_prediction_and_registry() -> None:
     assert model.predict_class(test_X).shape == (4,)
     assert model.predictive_distribution(test_X).probs.shape == (4, 3)
     assert model.sample_class_probabilities(test_X, sample_shape=torch.Size([3])).shape == (3, 4, 3)
+
+
+def test_ordered_probit_preserves_stochastic_class_order() -> None:
+    """Higher latent quality must shift mass toward higher ordered labels."""
+    likelihood = OrderedProbitLikelihood(5).double()
+    latent = torch.linspace(-6.0, 6.0, 13, dtype=torch.double)
+    probabilities = likelihood.class_probabilities(latent)
+
+    assert probabilities.shape == (13, 5)
+    assert torch.isfinite(probabilities).all()
+    assert (probabilities >= 0).all()
+    torch.testing.assert_close(probabilities.sum(-1), torch.ones(13, dtype=torch.double))
+    cumulative = probabilities.cumsum(-1)[:, :-1]
+    assert (cumulative[1:] <= cumulative[:-1] + 1e-12).all()
+
+
+def test_ordinal_four_class_gaussian_marginalization_matches_sampling() -> None:
+    """Analytic predictive class probabilities integrate latent uncertainty."""
+    torch.manual_seed(37)
+    X = torch.linspace(0.0, 1.0, 12, dtype=torch.double).unsqueeze(-1)
+    Y = torch.bucketize(
+        X[:, 0].contiguous(),
+        torch.tensor([0.25, 0.5, 0.75], dtype=torch.double),
+    )
+    model = OrdinalSingleTaskGPClassifier(
+        X, Y, num_classes=4, inducing_points=6
+    )
+    model.fit(epochs=2, lr=0.01)
+
+    test_X = torch.tensor([[0.1], [0.45], [0.9]], dtype=torch.double)
+    analytic = model.predict_proba(test_X)
+    torch.manual_seed(91)
+    monte_carlo = model.sample_class_probabilities(
+        test_X, sample_shape=torch.Size([4096])
+    ).mean(dim=0)
+
+    assert model.class_labels == (0, 1, 2, 3)
+    assert model.posterior(test_X).mean.shape == (3, 1)
+    assert model.predictive_distribution(test_X).probs.shape == (3, 4)
+    assert analytic.shape == (3, 4)
+    assert torch.isfinite(analytic).all()
+    torch.testing.assert_close(analytic.sum(-1), torch.ones(3, dtype=torch.double))
+    torch.testing.assert_close(analytic, monte_carlo, atol=0.035, rtol=0.0)
+
+
+def test_ordinal_rejects_invalid_class_labels() -> None:
+    X = torch.linspace(0.0, 1.0, 5, dtype=torch.double).unsqueeze(-1)
+    good = torch.tensor([0, 1, 2, 0, 1])
+
+    with pytest.raises(ValueError, match="at least 3"):
+        OrdinalSingleTaskGPClassifier(X, good, num_classes=2)
+    with pytest.raises(TypeError, match="integer dtype"):
+        OrdinalSingleTaskGPClassifier(X, good.double(), num_classes=3)
+    with pytest.raises(ValueError, match="Class indices"):
+        OrdinalSingleTaskGPClassifier(X, good - 1, num_classes=3)
+    with pytest.raises(ValueError, match="Class indices"):
+        OrdinalSingleTaskGPClassifier(X, good + 2, num_classes=3)
+    with pytest.raises(ValueError, match="shape"):
+        OrdinalSingleTaskGPClassifier(X, good[:-1], num_classes=3)
