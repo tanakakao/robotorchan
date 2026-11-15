@@ -205,14 +205,13 @@ class qBALD(BALD):
         labels = torch.cartesian_prod(
             *[torch.arange(num_classes, device=X.device) for _ in range(q)]
         ).reshape(-1, q)
-        label_index = labels.reshape(
-            *((1,) * (samples.ndim - 2)), labels.shape[0], q, 1
+        label_index = labels.reshape(*((1,) * (samples.ndim - 2)), labels.shape[0], q, 1)
+        selected = (
+            samples.unsqueeze(-3)
+            .expand(*samples.shape[:-2], labels.shape[0], q, num_classes)
+            .gather(-1, label_index.expand(*samples.shape[:-2], labels.shape[0], q, 1))
+            .squeeze(-1)
         )
-        selected = samples.unsqueeze(-3).expand(
-            *samples.shape[:-2], labels.shape[0], q, num_classes
-        ).gather(-1, label_index.expand(
-            *samples.shape[:-2], labels.shape[0], q, 1
-        )).squeeze(-1)
         conditional_joint = selected.prod(dim=-1)
         predictive_joint = conditional_joint.mean(dim=0)
         predictive_entropy = -torch.special.xlogy(predictive_joint, predictive_joint).sum(dim=-1)
