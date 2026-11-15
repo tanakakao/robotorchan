@@ -116,6 +116,11 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             positive = positive.squeeze(-1)
         return torch.stack((1.0 - positive, positive), dim=-1)
 
+    def _positive_probability_from_latent(self, values: Tensor, X: Tensor) -> Tensor:
+        """Evaluate the observed-label link for supplied latent values."""
+        del X
+        return self.likelihood.forward(values).probs
+
     def probability_variance(
         self,
         X: Tensor,
@@ -139,9 +144,9 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             raise ValueError("method must be 'quadrature' or 'mc'.")
 
         latent = self.latent_posterior(X, **kwargs)
-        mean_positive = self.likelihood(latent.distribution).probs
+        mean_positive = self.predictive_distribution(X, **kwargs).probs
         variance = self._probability_quadrature(
-            lambda values: (self.likelihood.forward(values).probs - mean_positive).square(),
+            lambda values: (self._positive_probability_from_latent(values, X) - mean_positive).square(),
             latent.distribution,
         ).clamp_min(0.0)
         if variance.shape[-1:] == (1,):
@@ -167,7 +172,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
         latent = self.latent_posterior(X, **kwargs)
 
         def entropy(values: Tensor) -> Tensor:
-            positive = self.likelihood.forward(values).probs
+            positive = self._positive_probability_from_latent(values, X)
             return -torch.special.xlogy(positive, positive) - torch.special.xlogy(
                 1.0 - positive, 1.0 - positive
             )
