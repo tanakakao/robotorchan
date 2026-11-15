@@ -7247,6 +7247,11 @@
       "path": "docs/models/binary_classification_extension_matrix.md",
       "category": "Models",
       "reason": "Phase 10 binary classification extension support matrix and evidence-based completion status."
+    },
+    {
+      "path": "docs/models/multiclass-active-learning.md",
+      "category": "Models",
+      "reason": "Multiclass active-learning acquisition compatibility and tested mixed-variable constraint integration."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
