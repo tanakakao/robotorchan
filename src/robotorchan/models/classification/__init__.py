@@ -84,10 +84,10 @@ from robotorchan.models.classification.multiclass.standard.single_task import (
     MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
 )
+from robotorchan.models.classification.ordinal.likelihood import OrderedProbitLikelihood
 from robotorchan.models.classification.ordinal.standard.single_task import (
     OrdinalSingleTaskGPClassifier,
 )
-from robotorchan.models.classification.ordinal.likelihood import OrderedProbitLikelihood
 from robotorchan.models.classification.posterior import (
     ClassificationEnsemblePosterior,
     make_classification_ensemble_posterior,
