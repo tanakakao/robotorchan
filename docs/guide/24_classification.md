@@ -294,12 +294,12 @@ Ordinal GPは出力ラベルの順序を使うモデルであって、
 
 | モデル | 入力 | registry ID | 尤度・潜在関数 |
 | --- | --- | --- | --- |
-| \`OrdinalSingleTaskGPClassifier\` | 連続変数 | \`ordinal.standard\` | Ordered probit・単一潜在GP |
-| \`MixedOrdinalSingleTaskGPClassifier\` | 連続＋カテゴリ | \`ordinal.mixed\` | 同じOrdered probit・Mixed kernel |
+| `OrdinalSingleTaskGPClassifier` | 連続変数 | `ordinal.standard` | Ordered probit・単一潜在GP |
+| `MixedOrdinalSingleTaskGPClassifier` | 連続＋カテゴリ | `ordinal.mixed` | 同じOrdered probit・Mixed kernel |
 
-順序ラベルには0から始まる整数 \`0, ..., C-1\` を渡し、
-\`num_classes=C\`（3以上）を指定します。
-\`train_Y\` は \`[n]\` または \`[n, 1]\` を受け付けます。
+順序ラベルには0から始まる整数 `0, ..., C-1` を渡し、
+`num_classes=C`（3以上）を指定します。
+`train_Y` は `[n]` または `[n, 1]` を受け付けます。
 クラスラベルを文字列のまま渡す暗黙エンコードは行いません。
 業務上のラベル名は別の対応表で保持してください。
 
@@ -307,37 +307,37 @@ Ordinal GPは出力ラベルの順序を使うモデルであって、
 
 | 理論上の量 | 公開API / 実装 | 重要な注意 |
 | --- | --- | --- |
-| 変分GPによる潜在分布 $q(f)$ | \`posterior(X)\` / \`latent_posterior(X)\` | クラス確率ではない |
-| 閾値 $b_1,\ldots,b_{C-1}$ | \`model.likelihood.thresholds\` | $b_1=0$、残りは増分で単調化 |
-| $P(y=c\mid f)$ | \`OrderedProbitLikelihood.class_probabilities\` | 潜在値を固定した条件付き確率 |
-| $P(y=c\mid X,\mathcal D)$ | \`predict_proba(X)\` | Gaussian潜在分布を積分した予測確率 |
-| 予測ラベル分布 | \`predictive_distribution(X)\` | \`Categorical\` |
-| 予測クラス | \`predict_class(X)\` | 最大確率クラス（argmax） |
-| 潜在関数サンプル | \`sample_latent(X)\` | 通常は最終次元1 |
-| 条件付き確率サンプル | \`sample_class_probabilities(X)\` | 出力最終次元はクラス数 |
-| 学習 | \`fit(epochs=..., lr=...)\` | 非Gaussian尤度に対する変分学習 |
+| 変分GPによる潜在分布 $q(f)$ | `posterior(X)` / `latent_posterior(X)` | クラス確率ではない |
+| 閾値 $b_1,\ldots,b_{C-1}$ | `model.likelihood.thresholds` | $b_1=0$、残りは増分で単調化 |
+| $P(y=c\mid f)$ | `OrderedProbitLikelihood.class_probabilities` | 潜在値を固定した条件付き確率 |
+| $P(y=c\mid X,\mathcal D)$ | `predict_proba(X)` | Gaussian潜在分布を積分した予測確率 |
+| 予測ラベル分布 | `predictive_distribution(X)` | `Categorical` |
+| 予測クラス | `predict_class(X)` | 最大確率クラス（argmax） |
+| 潜在関数サンプル | `sample_latent(X)` | 通常は最終次元1 |
+| 条件付き確率サンプル | `sample_class_probabilities(X)` | 出力最終次元はクラス数 |
+| 学習 | `fit(epochs=..., lr=...)` | 非Gaussian尤度に対する変分学習 |
 
-\`OrderedProbitLikelihood\` はGPyTorchの \`Likelihood\` を継承し、
-単調な閾値を \`softplus\` の累積和で構築します。
-\`expected_log_prob\` では \`GaussHermiteQuadrature1D\` を利用します。
-\`OrdinalSingleTaskGPClassifier\` は既存の
-\`SingleTaskVariationalGP\` を基底として学習と誘導点管理を再利用します。
-\`MixedOrdinalSingleTaskGPClassifier\` はさらに
-\`make_mixed_covar_module\` を使い、
+`OrderedProbitLikelihood` はGPyTorchの `Likelihood` を継承し、
+単調な閾値を `softplus` の累積和で構築します。
+`expected_log_prob` では `GaussHermiteQuadrature1D` を利用します。
+`OrdinalSingleTaskGPClassifier` は既存の
+`SingleTaskVariationalGP` を基底として学習と誘導点管理を再利用します。
+`MixedOrdinalSingleTaskGPClassifier` はさらに
+`make_mixed_covar_module` を使い、
 Ordinal尤度や事後確率の計算を重複実装しません。
 
-\`predict_proba\` では潜在事後の平均 $\mu$ と分散 $s^2$ を使い、
+`predict_proba` では潜在事後の平均 $\mu$ と分散 $s^2$ を使い、
 $\Phi((b-\mu)/\sqrt{1+s^2})$ の差から各クラス確率を計算します。
 そのため、潜在平均を単に閾値関数へ代入する計算とは異なります。
-一方 \`sample_class_probabilities\` は潜在GPの同時サンプルから
+一方 `sample_class_probabilities` は潜在GPの同時サンプルから
 条件付き確率を作るため、BALDやqBALDへ利用できます。
 
 ### 最初の利用手順
 
-1. 実測された順序ラベルを \`0,1,\ldots,C-1\` に対応付ける。
-2. 入力 \`train_X\` とラベル \`train_Y\` を作り、モデルを初期化する。
-3. \`fit()\` で学習し、\`likelihood.thresholds\` の順序を確認する。
-4. \`predict_proba(X)\` で確率とクラス順を確認する。
+1. 実測された順序ラベルを `0,1,\ldots,C-1` に対応付ける。
+2. 入力 `train_X` とラベル `train_Y` を作り、モデルを初期化する。
+3. `fit()` で学習し、`likelihood.thresholds` の順序を確認する。
+4. `predict_proba(X)` で確率とクラス順を確認する。
 5. 未評価候補で獲得関数を評価し、候補生成器へ渡す。
 6. **提案後に初めて**ラベルを観測し、データへ追加して再学習する。
 
@@ -350,28 +350,28 @@ $\Phi((b-\mu)/\sqrt{1+s^2})$ の差から各クラス確率を計算します。
 
 | 獲得関数 | q=1 | q>1で使う関数 | 候補間相関 |
 | --- | --- | --- | --- |
-| 予測Entropy | \`PredictiveEntropy\` | \`qPredictiveEntropy\` | 周辺平均のみ |
-| Margin | \`MarginUncertainty\` | \`qMarginUncertainty\` | 周辺平均のみ |
-| 確率分散 | \`ProbabilityVariance\` | \`qProbabilityVariance\` | 周辺平均のみ |
-| 情報利得 | \`BALD\` | \`qBALD\` | 潜在同時サンプルを利用 |
+| 予測Entropy | `PredictiveEntropy` | `qPredictiveEntropy` | 周辺平均のみ |
+| Margin | `MarginUncertainty` | `qMarginUncertainty` | 周辺平均のみ |
+| 確率分散 | `ProbabilityVariance` | `qProbabilityVariance` | 周辺平均のみ |
+| 情報利得 | `BALD` | `qBALD` | 潜在同時サンプルを利用 |
 
-\`qBALD\` のjoint情報量はモンテカルロ推定であり、
-ラベルベクトルの列挙上限は \`C**q <= 256\` です。
+`qBALD` のjoint情報量はモンテカルロ推定であり、
+ラベルベクトルの列挙上限は `C**q <= 256` です。
 単にq個の予測確率が得られることは、どの獲得関数でも
 joint q最適化できることを保証しません。
-\`LatentStraddle\` は二値の潜在ゼロ境界用なので、
+`LatentStraddle` は二値の潜在ゼロ境界用なので、
 Ordinalモデルへは適用できません。
 
 ### Mixed入力と候補探索
 
-\`MixedOrdinalSingleTaskGPClassifier(..., cat_dims=[1])\` は
+`MixedOrdinalSingleTaskGPClassifier(..., cat_dims=[1])` は
 入力の2列目をカテゴリとみなし、共通Mixed kernelを使います。
-モデルに \`cat_dims\` を渡しても、
+モデルに `cat_dims` を渡しても、
 最適化器の探索空間に許容カテゴリ値は自動登録されません。
-探索側で \`MixedVariableSpace\` を設定し、
-\`optimize_acqf_sampling\` の \`variable_space\` に渡します。
+探索側で `MixedVariableSpace` を設定し、
+`optimize_acqf_sampling` の `variable_space` に渡します。
 
-\`CandidateConstraints\` は候補入力の可行域を制限します。
+`CandidateConstraints` は候補入力の可行域を制限します。
 **予測した品質クラスに対する安全確率制約ではありません。**
 後者は独立に確率制約用の獲得関数を設計する必要があります。
 
