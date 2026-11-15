@@ -236,20 +236,10 @@ Active Learningでは既存の `PredictiveEntropy`、`MarginUncertainty`、
 入力 `train_X` は `[観測数, 特徴量数]`、ラベル `train_Y` は
 `[観測数]` の整数テンソルです。
 
-~~~python
-import torch
-
-from robotorchan.models.classification import MulticlassSingleTaskGPClassifier
-
-X = torch.rand(18, 2, dtype=torch.double)
-y = (torch.arange(18) % 3).long()
-model = MulticlassSingleTaskGPClassifier(
-    X, y, num_classes=3, inducing_points=6
-)
-model.fit(epochs=5, lr=0.03)
-probabilities = model.predict_proba(X[:3], num_samples=32)
-print(probabilities.shape)  # [3, 3] = 3点 × 3クラス
-~~~
+実行例では `MulticlassSingleTaskGPClassifier` に `num_classes=3` を指定し、
+`fit()` の後に `predict_proba()` を呼び出します。
+3点を予測した場合の出力形状は `[3, 3]`（3点 × 3クラス）です。
+コードは[40番Notebook](../../examples/notebooks/40_multiclass_classification_active_learning.ipynb)にまとめています。
 
 予測確率が `[0.7, 0.2, 0.1]` なら、
 最も確からしいのはクラス0ですが、クラス1・2の可能性も残ります。
