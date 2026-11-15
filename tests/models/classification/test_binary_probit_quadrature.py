@@ -62,13 +62,13 @@ def test_binary_probability_variance_and_bald_match_dense_integration(noise_kind
             positive = 0.1 + 0.7 * positive
 
         weights = density[:, None, None]
-        mean_reference = torch.trapezoid(positive * weights, grid, dim=0)
-        second_reference = torch.trapezoid(positive.square() * weights, grid, dim=0)
+        mean_reference = torch.trapezoid(positive * weights, grid, dim=0).squeeze(-1)
+        second_reference = torch.trapezoid(positive.square() * weights, grid, dim=0).squeeze(-1)
         variance_reference = (second_reference - mean_reference.square()).clamp_min(0.0)
         conditional_entropy = -torch.special.xlogy(
             positive, positive
         ) - torch.special.xlogy(1.0 - positive, 1.0 - positive)
-        expected_entropy = torch.trapezoid(conditional_entropy * weights, grid, dim=0)
+        expected_entropy = torch.trapezoid(conditional_entropy * weights, grid, dim=0).squeeze(-1)
         predictive_entropy = -torch.special.xlogy(
             mean_reference, mean_reference
         ) - torch.special.xlogy(1.0 - mean_reference, 1.0 - mean_reference)
@@ -80,17 +80,17 @@ def test_binary_probability_variance_and_bald_match_dense_integration(noise_kind
         acquired_variance = ProbabilityVariance(model)(candidates)
         acquired_bald = BALD(model)(candidates)
 
-    assert probabilities.shape == (3, 1, 2)
-    assert variance.shape == (3, 1, 2)
-    assert bald.shape == (3, 1)
+    assert probabilities.shape == (3, 2)
+    assert variance.shape == (3, 2)
+    assert bald.shape == (3,)
     torch.testing.assert_close(probabilities[..., 1], mean_reference, atol=1e-8, rtol=1e-8)
     torch.testing.assert_close(
         variance[..., 1], variance_reference, atol=1e-5, rtol=1e-5
     )
     torch.testing.assert_close(variance[..., 0], variance[..., 1])
     torch.testing.assert_close(bald, bald_reference, atol=1e-5, rtol=1e-5)
-    torch.testing.assert_close(acquired_variance, variance_reference.squeeze(-1), atol=1e-5, rtol=1e-5)
-    torch.testing.assert_close(acquired_bald, bald_reference.squeeze(-1), atol=1e-5, rtol=1e-5)
+    torch.testing.assert_close(acquired_variance, variance_reference, atol=1e-5, rtol=1e-5)
+    torch.testing.assert_close(acquired_bald, bald_reference, atol=1e-5, rtol=1e-5)
 
     with torch.no_grad():
         joint_candidates = candidates[:2].transpose(0, 1)
@@ -130,7 +130,7 @@ def test_binary_mc_fallback_remains_available() -> None:
     with torch.no_grad():
         variance = model.probability_variance(candidates, num_samples=64, method="mc")
         bald = model.mutual_information(candidates, num_samples=64, method="mc")
-    assert variance.shape == (2, 1, 2)
-    assert bald.shape == (2, 1)
+    assert variance.shape == (2, 2)
+    assert bald.shape == (2,)
     assert torch.isfinite(variance).all()
     assert torch.isfinite(bald).all()
