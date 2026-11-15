@@ -36,6 +36,6 @@ def test_default_gp_acquisition_optimizer_loop() -> None:
     )
     for _ in range(4):
         trial = study.ask()
-        study.tell(trial, -(trial.params["x"] - 0.3) ** 2)
+        study.tell(trial, -((trial.params["x"] - 0.3) ** 2))
     assert len(study.trials) == 4
     assert all(trial.state is TrialState.COMPLETE for trial in study.trials)
