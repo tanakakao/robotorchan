@@ -186,9 +186,7 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
         )
         predictive = samples.mean(dim=0)
         predictive_entropy = -torch.special.xlogy(predictive, predictive).sum(dim=-1)
-        conditional_entropy = (
-            -torch.special.xlogy(samples, samples).sum(dim=-1).mean(dim=0)
-        )
+        conditional_entropy = -torch.special.xlogy(samples, samples).sum(dim=-1).mean(dim=0)
         return (predictive_entropy - conditional_entropy).clamp_min(0.0)
 
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> Categorical:
