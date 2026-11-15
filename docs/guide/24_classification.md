@@ -31,7 +31,7 @@ import torch
 X = torch.linspace(0.0, 1.0, 20).unsqueeze(-1)
 probability_posterior = model.probability_posterior(X)
 
-mean = probability_posterior.mean       # [20, 2]
+mean = probability_posterior.mean  # [20, 2]
 variance = probability_posterior.variance  # [20, 2]
 samples = probability_posterior.rsample(torch.Size([1000]))  # [1000, 20, 2]
 lower, upper = probability_posterior.credible_interval(0.95)
