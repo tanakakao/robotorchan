@@ -7,12 +7,14 @@ from dataclasses import replace
 from math import isfinite
 from typing import Any
 
+import torch
 from botorch.acquisition.logei import qLogExpectedImprovement
 
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.base import SearchStrategy
 from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
+from robotorchan.study.feasibility import is_feasible
 from robotorchan.study.generation import CandidateGenerator
 from robotorchan.study.search_space import SearchSpace
 from robotorchan.study.trial import Trial, TrialState
@@ -162,7 +164,7 @@ class Study:
         """Propose and register q joint candidates as running trials."""
         completed = [trial for trial in self.trials if trial.state is TrialState.COMPLETE]
         candidates = self._generator.propose_batch(completed, q=q)
-        return tuple(self.start_trial(self.add_trial(params).number) for params in candidates)
+        return tuple(self.start_trial(self._register_trial(params).number) for params in candidates)
 
     def tell(
         self,
@@ -187,8 +189,36 @@ class Study:
         raise ValueError("tell() only accepts COMPLETE or FAIL as terminal states.")
 
     def add_trial(self, params: Mapping[str, float]) -> Trial:
-        """Register an externally supplied candidate in WAITING state."""
+        """Register a feasible externally supplied candidate in WAITING state."""
+        return self._register_trial(params, check_constraints=True)
+
+    def _register_trial(
+        self, params: Mapping[str, float], *, check_constraints: bool = False
+    ) -> Trial:
         self.search_space.validate(params)
+        if self._generator.variable_space is not None:
+            names = tuple(self.search_space.bounds)
+            candidate = torch.tensor(
+                [params[name] for name in names], dtype=torch.double
+            ).unsqueeze(0)
+            variable_space = self._generator.variable_space
+            for dim in variable_space.integer_dims:
+                if candidate[0, dim] != candidate[0, dim].round():
+                    raise ValueError("Trial integer parameter must be integral.")
+            for dim, values in variable_space.categorical_values.items():
+                if candidate[0, dim].item() not in values:
+                    raise ValueError("Trial categorical parameter is not allowed.")
+        else:
+            candidate = torch.tensor(
+                [params[name] for name in self.search_space.bounds],
+                dtype=torch.double,
+            ).unsqueeze(0)
+        if check_constraints and not is_feasible(
+            candidate,
+            self._generator.constraints,
+            variable_space=self._generator.variable_space,
+        ):
+            raise ValueError("Trial parameters violate CandidateConstraints.")
         trial = Trial(number=self._next_number, params=params)
         self._trials[trial.number] = trial
         self._next_number += 1

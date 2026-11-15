@@ -1,0 +1,38 @@
+"""Feasibility checks for Study candidates in public search coordinates."""
+
+from __future__ import annotations
+
+import torch
+from torch import Tensor
+
+from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.constraints.evaluation import candidate_constraint_violation
+from robotorchan.optim.constraints.validation import (
+    validate_candidate_constraints,
+    validate_mixed_constraint_dimensions,
+)
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
+
+
+def is_feasible(
+    candidates: Tensor,
+    constraints: CandidateConstraints | None,
+    *,
+    variable_space: MixedVariableSpace | None = None,
+    tolerance: float = 1e-7,
+) -> bool:
+    """Check a [q, d] batch using the shared constraint evaluator."""
+    if constraints is None or not constraints.has_constraints:
+        return True
+    if candidates.ndim != 2:
+        raise ValueError("Candidates must have shape [q, d].")
+    validate_candidate_constraints(
+        constraints,
+        bounds=torch.stack((candidates.min(dim=0).values - 1, candidates.max(dim=0).values + 1)),
+        q=candidates.shape[0],
+    )
+    validate_mixed_constraint_dimensions(constraints, variable_space)
+    violation = candidate_constraint_violation(
+        candidates, constraints, equality_tolerance=tolerance
+    )
+    return bool(torch.all(violation <= tolerance))
