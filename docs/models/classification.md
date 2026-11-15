@@ -177,3 +177,40 @@ Phase 3 tests cover continuous Sobol candidate generation, Mixed Sobol
 sampling with a linear input constraint, q=1 and q-batch acquisitions,
 and the qBALD enumeration limit. They do not establish compatibility with
 every optimization backend or guarantee better selection performance.
+
+## Ordinal GP：Active Learningのラベル効率比較
+
+順序回帰の基本動作（標準／Mixed、確率予測、q-batch候補提案）は
+[52番Notebook](../../examples/notebooks/52_ordinal_classification_active_learning.ipynb)
+で確認できます。次に、**同じラベル予算で追加ラベルをどう選ぶか**を
+比較したい場合は独立したベンチマークを使います。
+
+[ordinal_active_learning.py](../../examples/benchmarks/ordinal_active_learning.py)
+は3段階の合成順序ラベルを使い、次の手法を同条件で比較します。
+
+| 比較する選択手法 | 実際に使う方法 | 何を優先するか |
+| --- | --- | --- |
+| `random` | 未観測プールから一様ランダムに選ぶ | 比較用の基準 |
+| `entropy` | 既存`PredictiveEntropy`を最大化 | 予測ラベルの曖昧さ |
+| `bald` | 既存`BALD`を最大化 | 潜在モデルに関する情報量 |
+
+それぞれ同じseed、初期ラベル付き15点、未観測候補75点、独立保留30点、
+追加ラベル予算・学習条件から開始します。各ラウンドでは未観測候補から1点を選び、
+**選択した後**にそのラベルを学習データへ追加してモデルを学習し直します。
+連続入力と、カテゴリ列を持つMixed入力の双方を評価します。
+
+```bash
+python examples/benchmarks/ordinal_active_learning.py --seeds 3 --budget 5 --epochs 8
+```
+
+出力は`ordinal_al_results.csv`です。seed・Mixedフラグ・方法・追加ラベル数ごとに、
+Accuracy（高いほどよい）、NLL（低いほどよい）、
+Brier score（低いほどよい）、
+ordinal MAE（クラス番号の絶対誤差、低いほどよい）を記録します。
+MAEは**クラス番号の間隔を同じ尺度とみなせる場合のみ**物理的に解釈してください。
+
+このベンチマークは**合成データの実行・比較可能性を確認するもの**で、
+Ordinal GPや特定の獲得関数が一般に優れている証拠ではありません。
+単一点`q=1`の逐次ラベル取得を比較し、`qBALD`のjoint batch性能を
+比較するものではありません。実務での性能評価には複数生成過程、クラス不均衡、
+ラベル誤差、評価のばらつき、計算時間・ラベルコストの検討が必要です。
