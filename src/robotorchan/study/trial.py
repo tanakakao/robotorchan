@@ -34,9 +34,7 @@ class Trial:
         if any(not isinstance(name, str) or not name for name in params):
             raise ValueError("Parameter names must be nonempty strings.")
         if any(
-            isinstance(value, bool)
-            or not isinstance(value, (int, float))
-            or not isfinite(value)
+            isinstance(value, bool) or not isinstance(value, (int, float)) or not isfinite(value)
             for value in params.values()
         ):
             raise ValueError("Parameter values must be finite numbers.")
