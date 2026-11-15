@@ -54,6 +54,67 @@ class Study:
         """Return immutable trial snapshots in registration order."""
         return tuple(self._trials.values())
 
+    @property
+    def best_trial(self) -> Trial:
+        """Return the best completed trial, or raise if none exists."""
+        completed = [trial for trial in self.trials if trial.state is TrialState.COMPLETE]
+        if not completed:
+            raise ValueError("No completed trials are available.")
+        key = lambda trial: trial.value
+        return (
+            max(completed, key=key)
+            if self._generator.direction == "maximize"
+            else min(completed, key=key)
+        )
+
+    @property
+    def best_value(self) -> float:
+        """Return the best completed objective value."""
+        return self.best_trial.value
+
+    @property
+    def best_params(self) -> Mapping[str, float]:
+        """Return the best completed trial parameters."""
+        return self.best_trial.params
+
+    def optimize(
+        self,
+        objective: Callable[[Trial], float],
+        n_trials: int,
+        *,
+        callbacks: list[Callable[[Study, Trial], None]] | None = None,
+        catch: tuple[type[Exception], ...] = (),
+    ) -> None:
+        """Run sequential ask/evaluate/tell with optional failure handling.
+
+        Objective receives a Trial and returns one finite scalar. Exceptions
+        matching catch mark the trial failed; other exceptions are re-raised
+        after marking the trial failed. Callback errors propagate.
+        """
+        if not callable(objective):
+            raise TypeError("objective must be callable.")
+        if isinstance(n_trials, bool) or not isinstance(n_trials, int) or n_trials < 0:
+            raise ValueError("n_trials must be a non-negative integer.")
+        if not isinstance(catch, tuple) or any(
+            not isinstance(exc, type) or not issubclass(exc, Exception) for exc in catch
+        ):
+            raise TypeError("catch must be a tuple of Exception subclasses.")
+        callbacks = list(callbacks or [])
+        if not all(callable(callback) for callback in callbacks):
+            raise TypeError("callbacks must contain callables.")
+        for _ in range(n_trials):
+            trial = self.ask()
+            try:
+                value = objective(trial)
+                finished = self.tell(trial, value)
+            except Exception as exc:
+                if self.get_trial(trial.number).state is TrialState.RUNNING:
+                    finished = self.tell(trial, state=TrialState.FAIL)
+                if not isinstance(exc, catch):
+                    raise
+            for callback in callbacks:
+                callback(self, finished)
+
     def get_trial(self, number: int) -> Trial:
         """Return a snapshot by ID; raise KeyError for unknown IDs."""
         return self._trials[number]
