@@ -84,7 +84,9 @@ class CandidateGenerator:
             candidate = None
             for _ in range(2048):
                 points = (
-                    torch.rand(q, len(self.space.bounds), generator=self._random, dtype=bounds.dtype)
+                    torch.rand(
+                        q, len(self.space.bounds), generator=self._random, dtype=bounds.dtype
+                    )
                     if self.constraints is not None and self.constraints.has_constraints
                     else self._sobol.draw(q).to(dtype=bounds.dtype)
                 )
