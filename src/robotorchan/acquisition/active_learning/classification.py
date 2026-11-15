@@ -186,31 +186,33 @@ class BALD(AcquisitionFunction):
 
 
 class qBALD(BALD):
-    """Joint binary-label information gain using coherent posterior samples.
+    """Exact joint label information gain for bounded multiclass batches.
 
-    Enumerates 2**q label vectors, so q is limited to eight. Unlike a
-    marginal BALD average, this accounts for redundant candidate information.
+    Enumerates all C**q label vectors. A 256-vector cap prevents
+    exponential memory growth while preserving exact enumeration.
     """
 
     def forward(self, X: Tensor) -> Tensor:
         q = X.shape[-2]
-        if not 1 <= q <= 8:
-            raise ValueError("qBALD requires 1 <= q <= 8 for exact label enumeration.")
-        if self.classification_model.num_classes != 2:
-            raise ValueError("qBALD currently requires binary classification.")
+        num_classes = self.classification_model.num_classes
+        if q < 1 or num_classes**q > 256:
+            raise ValueError("qBALD requires q >= 1 and num_classes**q <= 256.")
         samples = self.classification_model.sample_class_probabilities(
             X, sample_shape=torch.Size([self.num_samples])
         )
-        if samples.shape[-2:] != (q, 2):
+        if samples.shape[-2:] != (q, num_classes):
             raise ValueError("sample_class_probabilities must preserve q and class dimensions.")
         labels = torch.cartesian_prod(
-            *[torch.arange(2, device=X.device) for _ in range(q)]
+            *[torch.arange(num_classes, device=X.device) for _ in range(q)]
         ).reshape(-1, q)
-        selected = torch.where(
-            labels == 1,
-            samples[..., 1].unsqueeze(-2),
-            samples[..., 0].unsqueeze(-2),
+        label_index = labels.reshape(
+            *((1,) * (samples.ndim - 2)), labels.shape[0], q, 1
         )
+        selected = samples.unsqueeze(-3).expand(
+            *samples.shape[:-2], labels.shape[0], q, num_classes
+        ).gather(-1, label_index.expand(
+            *samples.shape[:-2], labels.shape[0], q, 1
+        )).squeeze(-1)
         conditional_joint = selected.prod(dim=-1)
         predictive_joint = conditional_joint.mean(dim=0)
         predictive_entropy = -torch.special.xlogy(predictive_joint, predictive_joint).sum(dim=-1)
