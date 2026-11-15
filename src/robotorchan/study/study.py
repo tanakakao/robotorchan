@@ -19,20 +19,32 @@ from robotorchan.study.trial import Trial, TrialState
 class Study:
     """Manage experiment trials with stable, monotonically increasing IDs."""
 
-    def __init__(self, search_space: SearchSpace, *, direction: str = "maximize",
-                 model: Callable[..., Any] = SingleTaskGP,
-                 model_kwargs: Mapping[str, Any] | None = None,
-                 acquisition: Callable[..., Any] = qLogExpectedImprovement,
-                 acquisition_kwargs: Mapping[str, Any] | None = None,
-                 optimizer: str | SearchStrategy = "botorch",
-                 optimizer_kwargs: Mapping[str, Any] | None = None,
-                 n_initial_trials: int = 3, seed: int | None = None) -> None:
+    def __init__(
+        self,
+        search_space: SearchSpace,
+        *,
+        direction: str = "maximize",
+        model: Callable[..., Any] = SingleTaskGP,
+        model_kwargs: Mapping[str, Any] | None = None,
+        acquisition: Callable[..., Any] = qLogExpectedImprovement,
+        acquisition_kwargs: Mapping[str, Any] | None = None,
+        optimizer: str | SearchStrategy = "botorch",
+        optimizer_kwargs: Mapping[str, Any] | None = None,
+        n_initial_trials: int = 3,
+        seed: int | None = None,
+    ) -> None:
         self.search_space = search_space
         self._generator = CandidateGenerator(
-            search_space, direction=direction, model=model, model_kwargs=model_kwargs,
-            acquisition=acquisition, acquisition_kwargs=acquisition_kwargs,
-            optimizer=optimizer, optimizer_kwargs=optimizer_kwargs,
-            n_initial_trials=n_initial_trials, seed=seed,
+            search_space,
+            direction=direction,
+            model=model,
+            model_kwargs=model_kwargs,
+            acquisition=acquisition,
+            acquisition_kwargs=acquisition_kwargs,
+            optimizer=optimizer,
+            optimizer_kwargs=optimizer_kwargs,
+            n_initial_trials=n_initial_trials,
+            seed=seed,
         )
         self._trials: dict[int, Trial] = {}
         self._next_number = 0
@@ -114,8 +126,14 @@ def create_study(
     if not isinstance(search_space, SearchSpace):
         search_space = SearchSpace(search_space)
     return Study(
-        search_space, direction=direction, model=model, model_kwargs=model_kwargs,
-        acquisition=acquisition, acquisition_kwargs=acquisition_kwargs,
-        optimizer=optimizer, optimizer_kwargs=optimizer_kwargs,
-        n_initial_trials=n_initial_trials, seed=seed,
+        search_space,
+        direction=direction,
+        model=model,
+        model_kwargs=model_kwargs,
+        acquisition=acquisition,
+        acquisition_kwargs=acquisition_kwargs,
+        optimizer=optimizer,
+        optimizer_kwargs=optimizer_kwargs,
+        n_initial_trials=n_initial_trials,
+        seed=seed,
     )
