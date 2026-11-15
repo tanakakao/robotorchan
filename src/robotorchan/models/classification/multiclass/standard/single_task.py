@@ -24,7 +24,9 @@ from robotorchan.models.classification.base import (
     ClassificationModelMixin,
     LatentOutputStructure,
 )
-from robotorchan.models.classification.posterior import ClassificationProbabilityPosterior
+from robotorchan.models.classification.posterior.probability import (
+    ClassificationProbabilityPosterior,
+)
 from robotorchan.models.classification.validation import validate_class_indices
 from robotorchan.models.standard.variational import SingleTaskVariationalGP
 
