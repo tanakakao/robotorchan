@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import torch
-from gpytorch.distributions import MultitaskMultivariateNormal
+from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
+from botorch.posteriors.gpytorch import GPyTorchPosterior
+from torch import nn
 from gpytorch.likelihoods import SoftmaxLikelihood
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
@@ -53,6 +55,14 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
             learn_inducing_points=learn_inducing_points,
         )
         self._store_raw_tensor("train_Y", labels.detach().clone().long())
+        self.class_models = nn.ModuleList(
+            SingleTaskVariationalGP(
+                train_X=train_X,
+                num_outputs=1,
+                inducing_points=inducing_points,
+                learn_inducing_points=learn_inducing_points,
+            ) for _ in range(num_classes)
+        )
 
     def fit(
         self,
@@ -76,17 +86,37 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
         )
         self.train()
         self.likelihood.train()
-        optimizer = torch.optim.Adam(self.parameters(), lr=lr)
-        mll = self.make_mll(num_data=n)
+        optimizer = torch.optim.Adam(self.class_models.parameters(), lr=lr)
         for _ in range(epochs):
             for batch_X, batch_Y in loader:
                 optimizer.zero_grad()
-                latent = MultitaskMultivariateNormal.from_batch_mvn(self.model(batch_X))
-                loss = -mll(latent, batch_Y.squeeze(-1).long())
+                samples = torch.stack(
+                    [gp.model(batch_X).rsample() for gp in self.class_models], dim=-1
+                )
+                log_probs = samples.log_softmax(dim=-1)
+                log_likelihood = log_probs.gather(
+                    -1, batch_Y.long().reshape(-1, 1)
+                ).mean()
+                kl = sum(
+                    gp.model.variational_strategy.kl_divergence().sum()
+                    for gp in self.class_models
+                )
+                loss = -log_likelihood + kl / n
                 loss.backward()
                 optimizer.step()
         self.eval()
         self.likelihood.eval()
+
+    def posterior(self, X: Tensor, **kwargs: object) -> GPyTorchPosterior:
+        """Return independent class-wise latent GP posterior."""
+        distributions = [gp.model(X) for gp in self.class_models]
+        means = torch.stack([dist.mean for dist in distributions], dim=-2)
+        covariances = torch.stack(
+            [dist.lazy_covariance_matrix.to_dense() for dist in distributions],
+            dim=-3,
+        )
+        batch_mvn = MultivariateNormal(means, covariances)
+        return GPyTorchPosterior(MultitaskMultivariateNormal.from_batch_mvn(batch_mvn))
 
     @property
     def num_classes(self) -> int:
