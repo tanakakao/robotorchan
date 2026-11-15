@@ -80,9 +80,7 @@ class CandidateGenerator:
                 for dim in self.variable_space.integer_dims:
                     candidate[:, dim] = candidate[:, dim].round()
                 for dim, values in self.variable_space.categorical_values.items():
-                    index = torch.clamp(
-                        (points[:, dim] * len(values)).long(), max=len(values) - 1
-                    )
+                    index = torch.clamp((points[:, dim] * len(values)).long(), max=len(values) - 1)
                     candidate[:, dim] = torch.tensor(values, dtype=bounds.dtype)[index]
         else:
             names = tuple(self.space.bounds)
