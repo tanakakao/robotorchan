@@ -165,7 +165,7 @@ class Study:
         """Propose and register q joint candidates as running trials."""
         completed = [trial for trial in self.trials if trial.state is TrialState.COMPLETE]
         candidates = self._generator.propose_batch(completed, q=q)
-        return tuple(self.start_trial(self.add_trial(params).number) for params in candidates)
+        return tuple(self.start_trial(self._register_trial(params).number) for params in candidates)
 
     def tell(
         self,
@@ -190,7 +190,12 @@ class Study:
         raise ValueError("tell() only accepts COMPLETE or FAIL as terminal states.")
 
     def add_trial(self, params: Mapping[str, float]) -> Trial:
-        """Register an externally supplied candidate in WAITING state."""
+        """Register a feasible externally supplied candidate in WAITING state."""
+        return self._register_trial(params, check_constraints=True)
+
+    def _register_trial(
+        self, params: Mapping[str, float], *, check_constraints: bool = False
+    ) -> Trial:
         self.search_space.validate(params)
         if self._generator.variable_space is not None:
             names = tuple(self.search_space.bounds)
@@ -209,7 +214,7 @@ class Study:
                 [params[name] for name in self.search_space.bounds],
                 dtype=torch.double,
             ).unsqueeze(0)
-        if not is_feasible(
+        if check_constraints and not is_feasible(
             candidate,
             self._generator.constraints,
             variable_space=self._generator.variable_space,
