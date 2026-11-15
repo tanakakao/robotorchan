@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import torch
+from gpytorch.kernels import Kernel
 from torch import Tensor
 from torch.distributions import Categorical
-from gpytorch.kernels import Kernel
 
 from robotorchan.models.base import (
     ContinuousKernelFactory,
