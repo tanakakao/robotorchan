@@ -27,10 +27,10 @@ Classification families are added according to classification semantics rather t
 | standard single-task / mixed / multitask | implemented | direct latent-classification counterparts exist |
 | high-dimensional SAAS / MAP-SAAS / reduction / ALEBO | implemented | classification-specific inference is explicit |
 | expressive DeepGP | implemented | stochastic latent hierarchy has a binary counterpart |
-| expressive spectral mixture / infinite-width BNN | not implemented | no binary wrapper has been reviewed yet |
+| expressive spectral mixture / infinite-width BNN | implemented | binary and Mixed variants expose reviewed covariance wrappers |
 | structured output / HOGP | not implemented | structured regression outputs are not class-probability outputs |
-| hierarchical / contextual | not implemented | requires a classification-specific likelihood and prediction contract |
-| multi-fidelity | planned | Phase 31: classification-native variational MF model is meaningful; regression exact GP is not reusable directly |
+| hierarchical / contextual | implemented | binary classifiers expose explicit group/context feature contracts |
+| multi-fidelity | implemented | classification-native variational MF models; no exact Gaussian regression likelihood substitution |
 | robust label noise / contamination / replicates | implemented | classification-native label semantics |
 | input-dependent label noise | implemented | flip rates are functions of input X |
 | Student-t likelihood | intentionally unsupported | no Bernoulli residual analogue |
@@ -45,9 +45,11 @@ sampling capability は異なります。GP分類はlatent posteriorを持ち、
 クラス確率を予測してもGaussian latent posteriorを持つとは限りません。
 ensembleは構成モデル間の確率サンプルを提供できる一方、deterministic non-GP分類器の
 単一の予測確率からepistemic samplingを捏造してはいけません。
-現在のclassification ALは `q=1` かつsingle-outputのみを明示的にサポートするため、
-multitask classifierは互換性判定で保守的にrejectします。これはモデル自体がAL不能という
-意味ではなく、task selection / scalarizationの契約が未定義なためです。
+分類Active Learningには単一点用とq-batch用の獲得関数があります。
+`qPredictiveEntropy`・`qMarginUncertainty`・`qProbabilityVariance` は各候補の周辺値を平均し、
+`qBALD` は候補間の相関した潜在サンプルとラベルベクトルの列挙を利用します。
+MultiTask分類への汎用的なtask selection / scalarizationの契約は未定義であり、
+特定のモデルと獲得関数・optimizerの互換性は個別に確認します。
 
 ## Robust cross-family composition
 
@@ -110,8 +112,13 @@ callerが渡したtraining dataはraw training-data contractに従って保持�
 
 ## Active Learning
 
-分類用には `PredictiveEntropy`, `MarginUncertainty`, `ProbabilityVariance`, `BALD`,
-`LatentStraddle` を提供します。現在はいずれも `q=1` です。
+分類用の単一点獲得関数は `PredictiveEntropy`, `MarginUncertainty`,
+`ProbabilityVariance`, `BALD`, `LatentStraddle`（q=1）です。
+`qPredictiveEntropy`, `qMarginUncertainty`, `qProbabilityVariance`,
+`qBALD`, `qLatentStraddle` をq-batch用に公開します。
+ただし `LatentStraddle` / `qLatentStraddle` は二値分類の潜在0境界専用です。
+他の周辺q-acquisitionは平均集約であり、joint qBALDは有限サンプルによる情報量推定です。
+ラベルベクトルの完全列挙には `C**q <= 256` の上限があります。
 
 回帰用acquisitionは、classifierのlatent posteriorがGaussianだからという理由だけでは互換と
 みなしません。registry / capability compatibilityはclassification observation semanticsを
@@ -122,30 +129,35 @@ callerが渡したtraining dataはraw training-data contractに従って保持�
 標準binary GP classifierはBernoulli likelihoodを持つvariational GPです。`make_mll()` は
 `VariationalELBO`を構築します。exact Gaussian GPと同じfitting contractだと仮定しないでください。
 
-## Multiclass-ready contract
+## Multiclass / Ordinal contract
 
-multiclass実装はまだ公開していませんが、共通classification contractはbinary固有値を持ちません。
+マルチクラスGPおよび順序GPは公開済みです。共通classification contractはbinary固有値を持ちません。
 
 - `ClassificationMetadata.num_classes` は任意の2以上のクラス数を表現可能
 - `class_labels` はprobability最終次元の順序を定義
-- `CATEGORICAL` likelihoodと `PER_CLASS` latent structureを表現可能
+- マルチクラスGPは `CATEGORICAL` 尤度と `PER_CLASS` 潜在構造、
+  順序GPは `CATEGORICAL` 尤度と `SINGLE` 潜在構造を公開
 - canonical multiclass tensor labelは `0..C-1` の整数class indexとして検証可能
 - 0.5 threshold、Bernoulli likelihood、latent zero boundaryはbinary実装へ限定
-- PredictiveEntropy / MarginUncertainty / ProbabilityVariance / BALDはclass probability
-  vectorを扱うため、モデル側契約が実装されればmulticlassへ拡張可能
+- PredictiveEntropy / MarginUncertainty / ProbabilityVariance / BALDは
+  標準・Mixedのマルチクラスおよび順序GPで結合テスト済み
 - LatentStraddleはlatent zero boundaryに依存するためbinary-onlyのまま
 
 ## 制約と今後の拡張
 
 現在の主要な境界は次です。
 
-- multiclass classifierは未実装
-- classification ALはq=1
+- ordinal / multiclassの全派生familyや全optimizer組合せは未検証
+- 周辺q-acquisitionは候補間の重複を評価しない
+- joint qBALDは `C**q <= 256` の計算量上限を持つ
 - regression familyを機械的に1対1移植しない
 - Gaussian observation-noise modelをclassification noise modelとして再利用しない
 
-multiclass追加時も `predict_proba` とprobability samplingの契約を維持し、Bernoulli固有処理を
-binary implementationへ閉じ込めます。
+分類モデルの拡張時も `predict_proba` とprobability samplingの契約を維持し、
+Bernoulli固有処理をbinary implementationへ閉じ込めます。
+Ordinal GPは単一潜在GPと単調なOrdered-probit閾値を利用し、
+`predict_proba` は潜在Gaussian分布を周辺化したクラス確率を返します。
+`ordinal.standard` / `ordinal.mixed` はいずれも3クラス以上を要求します。
 
 詳細理論は [Gaussian Process Classification](../../docs/theory/24_classification.md) と
 [Classification Active Learning](../../docs/theory/acquisition/13_classification_active_learning.md) を参照してください。
