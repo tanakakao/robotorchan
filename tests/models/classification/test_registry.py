@@ -29,7 +29,7 @@ def test_binary_standard_resolves_to_public_classifier() -> None:
 def test_registry_uses_stable_unique_ids() -> None:
     names = list_classification_models()
     assert len(names) == len(set(names)) == len(CLASSIFICATION_MODEL_REGISTRY)
-    assert all(name.startswith(("binary.", "multiclass.")) for name in names)
+    assert all(name.startswith(("binary.", "multiclass.", "ordinal.")) for name in names)
 
 
 def test_prefix_filter_is_multiclass_ready() -> None:
