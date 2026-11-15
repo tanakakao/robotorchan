@@ -851,7 +851,7 @@ I(Y_{1:q};F_{1:q}\mid D)
 
 - [分類ガイド](../guide/24_classification.md)：モデルの選び方と公開API
 - [39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)：標準GP分類とActive Learning
-- [51番Notebook](../../examples/notebooks/40_classification_robust_uncertain.ipynb)：ノイズと入力不確実性
+- [40番Notebook](../../examples/notebooks/40_classification_robust_uncertain.ipynb)：ノイズと入力不確実性
 - [41番Notebook](../../examples/notebooks/41_classification_probability_layers.ipynb)：校正とアンサンブル
 - [47番Notebook](../../examples/notebooks/47_binary_classification_extensions.ipynb)：拡張モデルとq-batch
 
@@ -958,3 +958,79 @@ joint qBALDはラベルベクトルの同時分布を使って評価します。
 - Active Learningの優劣は、同じラベル予算での性能推移を複数シードで比較する必要があります。
 
 これらの指標は異なる性質を測るため、1つだけで性能を判断しないでください。
+
+
+### 二値分類から何が変わるのか
+
+二値分類は `y ∈ {0,1}` で、潜在関数 `f(x)` をリンク関数に通して
+Bernoulli分布の成功確率を表します。マルチクラス分類は
+`y ∈ {0,…,C−1}` で、各クラスに対応する潜在関数
+`f_0(x),…,f_{C−1}(x)` からCategorical分布を作ります。
+
+| 観点 | 二値分類 | マルチクラス分類 |
+| --- | --- | --- |
+| 観測ラベル | 0または1 | 0からC−1の整数 |
+| 潜在関数 | 通常は1つ | 現行実装ではクラスごとに1つ |
+| リンク関数 | Sigmoid等 | Softmax |
+| 尤度 | Bernoulli | Categorical（SoftmaxLikelihood） |
+| 出力確率 | 1つの成功確率で十分 | C個の確率の合計が1 |
+| 不確実性 | 最大エントロピーはlog 2 | 最大エントロピーはlog C |
+
+クラスが3つのとき、潜在値が `(2, 1, 0)` なら、
+softmaxは概ね `(0.665, 0.245, 0.090)` です。
+潜在値は確率ではなく、全クラスの**相対的な差**が重要です。
+すべての潜在値に同じ定数を足してもsoftmaxの結果は変わりません。
+
+### なぜ変分推論とモンテカルロサンプリングが必要なのか
+
+GPは潜在関数に事前分布を置きます。しかしCategorical尤度とGP事前分布の
+組合せでは、観測後の潜在関数の事後分布を一般に解析的に計算できません。
+そのため、誘導点を使う変分近似によって潜在GPの分布を学習します。
+
+今回のマルチクラス分類モデルは、クラスごとに独立した
+変分GPを持ち、クラスの潜在サンプルをsoftmaxに通した
+対数尤度とKL正則化項を使って学習します。
+**独立した潜在GP**とは、クラスごとの潜在過程の近似構造についての
+仮定であり、softmax後のクラス確率が独立という意味ではありません。
+クラス確率は合計1の制約で結び付いています。
+
+予測時に求めたいのは
+次の事後期待値です。
+
+$
+p(y=c\mid x,D)=\mathbb{E}_{f\mid D}[\operatorname{softmax}(f(x))_c].
+$
+softmaxは非線形なので一般に
+期待値のsoftmaxとsoftmaxの期待値は一致しません。
+`predict_proba` は潜在GPのサンプルを複数回取り、
+softmax後の確率を平均して近似します。
+`num_samples` を増やすとモンテカルロ誤差は通常小さくなりますが、
+モデル自体の誤差が消えるわけではありません。
+
+### 予測が曖昧な点と、学習によって改善できる点
+
+3クラスの予測確率が `(1/3, 1/3, 1/3)` に近いと、
+予測エントロピーは最大の `log 3` に近づきます。
+ただし、その曖昧さが観測ノイズによるものなら、
+ラベルを追加しても必ずしも改善しません。
+
+BALDは
+予測ラベルのエントロピーから、潜在関数が既知のときの
+条件付きエントロピーの事後期待値を引いて、
+モデルの潜在関数に関する情報を得られる候補を優先します。
+したがってEntropyとBALDで提案順位が違っても不具合ではありません。
+少数データ、強いノイズ、クラス不均衡では特に違いを確認してください。
+
+### Active Learningの実験サイクルと検証
+
+1. ラベル付きデータでモデルを学習する。
+2. 未測定候補の獲得関数値を計算し、候補を提案する。
+3. 提案した条件で実験・検査を行い、初めてラベルを取得する。
+4. 取得したラベルを学習データへ追加し、再学習する。
+5. 同じラベル予算でRandom Sampling等と比較する。
+
+評価用データはこのサイクルに混ぜず、最後まで独立に保ちます。
+Accuracyだけでなく、NLL・Brier score・クラス別Recallも確認してください。
+実行できる2ラウンドの例は
+[51番Notebook](../../examples/notebooks/51_multiclass_classification_active_learning.ipynb)
+を参照してください。
