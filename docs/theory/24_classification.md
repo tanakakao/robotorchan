@@ -1100,7 +1100,7 @@ $1-\Phi(-0.3)\approx0.618$ です。
 閾値が入れ替わると中間クラスの確率が負になるため、
 学習中も $b_1<\cdots<b_{C-1}$ を守る必要があります。
 
-現行の \`OrderedProbitLikelihood\` では $b_1=0$ に固定し、
+現行の `OrderedProbitLikelihood` では $b_1=0$ に固定し、
 残りは正の増分 $\delta_j$ を累積して構築します。
 
 $$
@@ -1130,7 +1130,7 @@ $$
 
 第一項は観測した順序ラベルをどれだけ説明できるか、
 第二項は誘導変数の近似分布が事前分布から離れすぎないようにする項です。
-現行実装はGPyTorchの \`GaussHermiteQuadrature1D\` により
+現行実装はGPyTorchの `GaussHermiteQuadrature1D` により
 期待対数尤度を数値積分し、BoTorch系の変分GP学習を利用します。
 
 閾値とGPパラメータはデータから推定するため、
@@ -1164,10 +1164,10 @@ $$
 潜在不確実性 $s_*^2$ が大きい場合に、
 潜在平均 $\mu_*$ だけを使う確率とは異なります。
 
-\`posterior(X)\` は潜在GPの分布（通常は最終次元1）、
-\`predict_proba(X)\` は $C$ クラスの確率ベクトル、
-\`predict_class(X)\` はその最大確率クラスを返します。
-\`sample_class_probabilities(X)\` は潜在事後サンプルそれぞれを
+`posterior(X)` は潜在GPの分布（通常は最終次元1）、
+`predict_proba(X)` は $C$ クラスの確率ベクトル、
+`predict_class(X)` はその最大確率クラスを返します。
+`sample_class_probabilities(X)` は潜在事後サンプルそれぞれを
 Ordered-probitに通した**条件付き確率サンプル**です。
 平均予測確率と確率サンプルを同じものとして扱いません。
 
@@ -1187,10 +1187,10 @@ Ordered-probitに通した**条件付き確率サンプル**です。
 同じ候補を選ぶとは限りません。
 
 複数候補 $q>1$ の場合、
-\`qPredictiveEntropy\`・\`qMarginUncertainty\`・
-\`qProbabilityVariance\` は各候補の周辺スコアを平均します。
+`qPredictiveEntropy`・`qMarginUncertainty`・
+`qProbabilityVariance` は各候補の周辺スコアを平均します。
 そのため候補間の重複情報を直接は考慮しません。
-一方、\`qBALD\` は潜在関数の**相関した同時サンプル**から
+一方、`qBALD` は潜在関数の**相関した同時サンプル**から
 同時ラベルベクトルの情報量をモンテカルロ推定します。
 ラベルベクトルの列挙は $C^q\le256$ に制限されます。
 3クラスなら $q=5$ は243通り、$q=6$ は729通りとなり上限を超えます。
@@ -1198,15 +1198,15 @@ Ordered-probitに通した**条件付き確率サンプル**です。
 
 ### 7. Mixed入力と順序ラベルの違い
 
-\`MixedOrdinalSingleTaskGPClassifier\` は、**入力側**にカテゴリ列がある場合のモデルです。
+`MixedOrdinalSingleTaskGPClassifier` は、**入力側**にカテゴリ列がある場合のモデルです。
 入力のカテゴリ値（例えば設備A・B・C）には順序が不要です。
 それに対して**出力側**のラベル（例えば正常・注意・異常）には順序があります。
 両者を混同しないでください。
 
-モデルの \`cat_dims\` はカーネルへカテゴリ列を知らせます。
-候補生成の \`MixedVariableSpace\` は許されるカテゴリ値を指定します。
+モデルの `cat_dims` はカーネルへカテゴリ列を知らせます。
+候補生成の `MixedVariableSpace` は許されるカテゴリ値を指定します。
 これらは異なる責務であり、自動的には連動しません。
-入力への線形制約 \`CandidateConstraints\` は
+入力への線形制約 `CandidateConstraints` は
 予測クラスが安全である確率の制約と同じではありません。
 
 ### 8. 読み方・評価上の注意
