@@ -7,15 +7,17 @@ from typing import TypeAlias
 
 from torch import nn
 
-from robotorchan.models.capabilities import ModelCapabilities
 from robotorchan.models.classification.binary.registry import (
     BINARY_CLASSIFICATION_MODEL_SPECS,
 )
-from robotorchan.models.classification.multiclass import MulticlassSingleTaskGPClassifier
 from robotorchan.models.capabilities import (
     InferenceType,
+    ModelCapabilities,
     ObservationType,
     PosteriorSamplingType,
+)
+from robotorchan.models.classification.multiclass.standard.single_task import (
+    MulticlassSingleTaskGPClassifier,
 )
 
 ClassificationModelType: TypeAlias = type[nn.Module]
