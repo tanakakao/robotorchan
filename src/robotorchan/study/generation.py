@@ -11,8 +11,9 @@ from botorch.acquisition.logei import qLogExpectedImprovement
 from torch import Tensor
 from torch.quasirandom import SobolEngine
 
-from robotorchan.models import SingleTaskGP
-from robotorchan.optim import SearchStrategy, optimize_acqf
+from robotorchan.models.standard.single_task import SingleTaskGP
+from robotorchan.optim.base import SearchStrategy
+from robotorchan.optim.dispatch import optimize_acqf
 from robotorchan.study.search_space import SearchSpace
 from robotorchan.study.trial import Trial
 
