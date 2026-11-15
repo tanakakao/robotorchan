@@ -25,6 +25,8 @@ class SpectralMixtureGP(SingleTaskGP):
     periodic, quasi-periodic, and multi-scale stationary structure.
     """
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
