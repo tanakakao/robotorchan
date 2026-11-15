@@ -186,10 +186,11 @@ class BALD(AcquisitionFunction):
 
 
 class qBALD(BALD):
-    """Exact joint label information gain for bounded multiclass batches.
+    """Monte Carlo estimate of joint label information gain for q candidates.
 
-    Enumerates all C**q label vectors. A 256-vector cap prevents
-    exponential memory growth while preserving exact enumeration.
+    Enumerates all C**q label vectors for each latent posterior sample.
+    This enumeration is exact, but the posterior expectation is estimated
+    using finite Monte Carlo samples. The 256-vector cap bounds runtime.
     """
 
     def forward(self, X: Tensor) -> Tensor:
