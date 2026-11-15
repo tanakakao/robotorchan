@@ -225,3 +225,21 @@ Notebook は利用方法を示すドキュメントであり、unit test の代�
 生成、local candidate最適化、評価、`update_state()`、必要時の`restart()`という責務分離を
 そのまま示します。Mixed / MultiFidelity / constraints / robust utility の詳細は
 `docs/optimization/turbo.md` を参照してください。
+
+## Ordinal GP の比較ベンチマーク
+
+[順序分類のベンチマーク](benchmarks/ordinal_active_learning.py)は、
+連続入力とMixed入力に対して、Random・Predictive Entropy・BALDで
+順序ラベルを追加する順番と保留データの指標を比較します。
+
+```bash
+python examples/benchmarks/ordinal_active_learning.py --seeds 3 --budget 5 --epochs 8
+```
+
+同じseed内の比較手法は初期ラベル、候補プール、保留データ、ラベル予算を共有します。
+Accuracy・NLL・Brier score・ordinal MAEをCSVへ記録します。
+これは合成データの再現可能な`q=1`比較であり、実環境での優劣を保証しません。
+モデルの数理・利用APIは
+[Ordinal GP 理論](../docs/theory/24_classification.md)、
+[Ordinal GP Guide](../docs/guide/24_classification.md)と
+[52番Notebook](notebooks/52_ordinal_classification_active_learning.ipynb)を参照してください。
