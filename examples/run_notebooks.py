@@ -75,7 +75,7 @@ EXCLUDED_NOTEBOOKS = [
     "47_mixed_preference_bo.ipynb",
     "48_transfer_bayesian_optimization.ipynb",
     "49_combinatorial_bayesian_optimization.ipynb",
-    "study_phase7_mixed_batch_constraints.ipynb",
+    "50_study_ask_tell_mixed_q_batch.ipynb",
 ]
 
 
