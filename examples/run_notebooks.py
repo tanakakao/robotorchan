@@ -51,6 +51,7 @@ DEFAULT_NOTEBOOKS = [
     "37_outcome_constrained_bo.ipynb",
     "38_nonlinear_candidate_constraints.ipynb",
     "39_classification_active_learning.ipynb",
+    "51_multiclass_classification_active_learning.ipynb",
     "40_classification_robust_uncertain.ipynb",
     "41_classification_probability_layers.ipynb",
     "42_heterogeneous_constrained_bo.ipynb",

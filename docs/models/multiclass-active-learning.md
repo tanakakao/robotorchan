@@ -44,3 +44,26 @@ contract remains unchanged.
 
 This document describes tested integration paths, not a blanket guarantee
 that every optimizer and constraint combination is supported.
+
+
+## Reproducible benchmark (Phase 5)
+
+Run the standalone comparison with:
+
+```console
+python examples/benchmarks/multiclass_active_learning.py --seeds 3 --budget 5 --epochs 8
+```
+
+The script writes `multiclass_al_results.csv` with one row per seed,
+input type (continuous or Mixed), acquisition method, and labeling step.
+It compares random pool sampling against predictive-entropy selection.
+Both methods use the same initial 15 labeled examples, 75 candidate
+pool points, 30 held-out test points, and label budget for each seed.
+
+The reported metrics are held-out accuracy (higher is better),
+negative log likelihood (lower is better), and multiclass Brier score
+(lower is better). This is a **synthetic smoke benchmark**, not evidence
+that one acquisition is generally superior. Repeat with more seeds,
+multiple data-generating processes, class imbalance and realistic
+label costs before drawing performance conclusions. Training uses a
+small number of epochs for speed; tune this separately for serious use.
