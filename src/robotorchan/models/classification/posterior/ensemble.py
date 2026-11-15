@@ -76,9 +76,8 @@ class ClassificationEnsemblePosterior(EnsemblePosterior):
         This also supports a single member with nonzero weight without division
         by zero, preserving the existing robotorchan contract.
         """
-        shape = (self.num_members,) + (1,) * (self._probabilities.ndim - 1)
-        deviations = self._probabilities - self.mean.unsqueeze(0)
-        return (deviations.square() * self.weights.reshape(shape)).sum(dim=0)
+        deviations = self.values - self.mean.unsqueeze(-3)
+        return (deviations.square() * self.weights[..., None, None]).sum(dim=-3)
 
     @property
     def predictive_entropy(self) -> Tensor:
@@ -91,11 +90,10 @@ class ClassificationEnsemblePosterior(EnsemblePosterior):
     @property
     def expected_class_entropy(self) -> Tensor:
         """Return mean entropy of member predictive distributions."""
-        tiny = torch.finfo(self._probabilities.dtype).tiny
-        safe = self._probabilities.clamp_min(tiny)
+        tiny = torch.finfo(self.dtype).tiny
+        safe = self.values.clamp_min(tiny)
         entropy = -torch.special.xlogy(safe, safe).sum(dim=-1)
-        shape = (self.num_members,) + (1,) * (entropy.ndim - 1)
-        return (entropy * self._weights.reshape(shape)).sum(dim=0)
+        return (entropy * self.weights[..., None]).sum(dim=-2)
 
     @property
     def mutual_information(self) -> Tensor:
@@ -135,7 +133,7 @@ class ClassificationEnsemblePosterior(EnsemblePosterior):
         tail = (1.0 - confidence_level) / 2.0
         lower_index = (cumulative >= tail).int().argmax(dim=0, keepdim=True)
         upper_index = (cumulative >= 1.0 - tail).int().argmax(dim=0, keepdim=True)
-        event_shape = self.probabilities.shape[1:]
+        event_shape = self.mean.shape
         lower = sorted_values.gather(0, lower_index).reshape(event_shape)
         upper = sorted_values.gather(0, upper_index).reshape(event_shape)
         return lower, upper
