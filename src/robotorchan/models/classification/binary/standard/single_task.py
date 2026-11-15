@@ -153,9 +153,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
         variance = preserve_q(self.probability_variance(X, **kwargs))
 
         def quantiles(level: float) -> tuple[Tensor, Tensor]:
-            tail = torch.tensor(
-                (1.0 + level) / 2.0, dtype=latent.dtype, device=latent.device
-            )
+            tail = torch.tensor((1.0 + level) / 2.0, dtype=latent.dtype, device=latent.device)
             z = torch.special.ndtri(tail)
             sigma = latent.variance.clamp_min(0.0).sqrt()
             lower_f = latent.mean - z * sigma
