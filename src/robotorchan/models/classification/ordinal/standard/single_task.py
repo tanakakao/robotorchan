@@ -116,9 +116,7 @@ class MixedOrdinalSingleTaskGPClassifier(OrdinalSingleTaskGPClassifier):
         inducing_points: Tensor | int | None = None,
         learn_inducing_points: bool = True,
     ) -> None:
-        normalized_cat_dims = normalize_feature_dims(
-            cat_dims, train_X.shape[-1], name="cat_dims"
-        )
+        normalized_cat_dims = normalize_feature_dims(cat_dims, train_X.shape[-1], name="cat_dims")
         covar_module = make_mixed_covar_module(
             input_dim=train_X.shape[-1],
             cat_dims=normalized_cat_dims,
