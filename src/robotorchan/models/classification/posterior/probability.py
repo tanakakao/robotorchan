@@ -65,7 +65,7 @@ class ClassificationProbabilityPosterior(Posterior):
     def batch_range(self) -> tuple[int, int]:
         return self._latent_posterior.batch_range
 
-    def _extended_shape(self, sample_shape: torch.Size = torch.Size()) -> torch.Size:
+    def _extended_shape(self, sample_shape: torch.Size = torch.Size()) -> torch.Size:  # noqa: B008
         return sample_shape + self._mean.shape
 
     def rsample(self, sample_shape: torch.Size | None = None) -> Tensor:
