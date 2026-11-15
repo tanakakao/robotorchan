@@ -22,6 +22,9 @@ from robotorchan.models.base import (
 )
 from robotorchan.models.classification.binary.base import BinaryClassificationMixin
 from robotorchan.models.classification.binary.validation import validate_binary_labels
+from robotorchan.models.classification.posterior.probability import (
+    ClassificationProbabilityPosterior,
+)
 from robotorchan.models.standard.variational import SingleTaskVariationalGP
 
 
@@ -115,6 +118,61 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
         if positive.shape[-1:] == (1,):
             positive = positive.squeeze(-1)
         return torch.stack((1.0 - positive, positive), dim=-1)
+
+    def probability_posterior(
+        self,
+        X: Tensor,
+        **kwargs: object,
+    ) -> ClassificationProbabilityPosterior:
+        """Return a BoTorch posterior over both class probabilities.
+
+        The posterior preserves the q axis even where the legacy
+        predict_proba and probability_variance methods squeeze q=1.
+        """
+
+        latent = self.latent_posterior(X, **kwargs)
+
+        def probability_samples(values: Tensor) -> Tensor:
+            positive = self._positive_probability_from_latent(values, X)
+            if positive.shape == values.shape:
+                positive = positive.squeeze(-1)
+            if positive.shape != values.shape[:-1]:
+                raise ValueError("Likelihood probabilities must preserve latent candidate axes.")
+            return torch.stack((1.0 - positive, positive), dim=-1)
+
+        target_shape = (*latent.mean.shape[:-1], self.num_classes)
+
+        def preserve_q(values: Tensor) -> Tensor:
+            if values.shape == target_shape:
+                return values
+            if target_shape[-2] == 1 and values.shape == (*target_shape[:-2], self.num_classes):
+                return values.unsqueeze(-2)
+            raise ValueError("Class-probability moments do not match the latent posterior.")
+
+        mean = preserve_q(self.predict_proba(X, **kwargs))
+        variance = preserve_q(self.probability_variance(X, **kwargs))
+
+        def quantiles(level: float) -> tuple[Tensor, Tensor]:
+            tail = torch.tensor(
+                (1.0 + level) / 2.0, dtype=latent.dtype, device=latent.device
+            )
+            z = torch.special.ndtri(tail)
+            sigma = latent.variance.clamp_min(0.0).sqrt()
+            lower_f = latent.mean - z * sigma
+            upper_f = latent.mean + z * sigma
+            lower_positive = probability_samples(lower_f)[..., 1]
+            upper_positive = probability_samples(upper_f)[..., 1]
+            lower = torch.stack((1.0 - upper_positive, lower_positive), dim=-1)
+            upper = torch.stack((1.0 - lower_positive, upper_positive), dim=-1)
+            return lower, upper
+
+        return ClassificationProbabilityPosterior(
+            latent,
+            sample_transform=probability_samples,
+            mean=mean,
+            variance=variance,
+            quantile_transform=quantiles,
+        )
 
     def _positive_probability_from_latent(self, values: Tensor, X: Tensor) -> Tensor:
         """Evaluate the observed-label link for supplied latent values."""
