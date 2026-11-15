@@ -9,6 +9,7 @@ from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import BernoulliLikelihood
 from gpytorch.means import Mean
 from gpytorch.mlls import VariationalELBO
+from gpytorch.utils.quadrature import GaussHermiteQuadrature1D
 from gpytorch.utils.memoize import clear_cache_hook
 from gpytorch.variational import VariationalStrategy, _VariationalDistribution, _VariationalStrategy
 from torch import Tensor, nn
@@ -64,6 +65,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             input_transform=input_transform,
         )
         self._store_raw_tensor("train_Y", raw_train_Y)
+        self._probability_quadrature = GaussHermiteQuadrature1D(num_locs=64).to(train_X)
 
     def load_state_dict(
         self,
@@ -113,6 +115,86 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
         if positive.shape[-1:] == (1,):
             positive = positive.squeeze(-1)
         return torch.stack((1.0 - positive, positive), dim=-1)
+
+    def probability_variance(
+        self,
+        X: Tensor,
+        *,
+        num_samples: int = 128,
+        method: str = "quadrature",
+        **kwargs: object,
+    ) -> Tensor:
+        """Return epistemic class-probability variance using Gaussian quadrature.
+
+        The default integrates the squared likelihood probability over the
+        marginal latent Gaussian. Unlike Bernoulli predictive variance, this
+        measures uncertainty about the probability itself. The num_samples
+        argument is retained for compatibility and controls method="mc" only.
+        """
+        if num_samples < 2:
+            raise ValueError("num_samples must be at least 2.")
+        if method == "mc":
+            return super().probability_variance(X, num_samples=num_samples, **kwargs)
+        if method != "quadrature":
+            raise ValueError("method must be 'quadrature' or 'mc'.")
+
+        latent = self.latent_posterior(X, **kwargs)
+        mean_positive = self.likelihood(latent.distribution).probs
+        second_moment = self._probability_quadrature(
+            lambda values: self.likelihood.forward(values).probs.square(),
+            latent.distribution,
+        )
+        variance = (second_moment - mean_positive.square()).clamp_min(0.0)
+        if variance.shape[-1:] == (1,):
+            variance = variance.squeeze(-1)
+        return torch.stack((variance, variance), dim=-1)
+
+    def expected_class_entropy(
+        self,
+        X: Tensor,
+        *,
+        num_samples: int = 128,
+        method: str = "quadrature",
+        **kwargs: object,
+    ) -> Tensor:
+        """Integrate conditional label entropy over the latent Gaussian."""
+        if num_samples < 2:
+            raise ValueError("num_samples must be at least 2.")
+        if method == "mc":
+            return super().expected_class_entropy(X, num_samples=num_samples, **kwargs)
+        if method != "quadrature":
+            raise ValueError("method must be 'quadrature' or 'mc'.")
+
+        latent = self.latent_posterior(X, **kwargs)
+
+        def entropy(values: Tensor) -> Tensor:
+            positive = self.likelihood.forward(values).probs
+            return -torch.special.xlogy(positive, positive) - torch.special.xlogy(
+                1.0 - positive, 1.0 - positive
+            )
+
+        result = self._probability_quadrature(entropy, latent.distribution)
+        return result.squeeze(-1) if result.shape[-1:] == (1,) else result
+
+    def mutual_information(
+        self,
+        X: Tensor,
+        *,
+        num_samples: int = 128,
+        method: str = "quadrature",
+        **kwargs: object,
+    ) -> Tensor:
+        """Return BALD from predictive entropy minus conditional entropy."""
+        if num_samples < 2:
+            raise ValueError("num_samples must be at least 2.")
+        if method == "mc":
+            return super().mutual_information(X, num_samples=num_samples, **kwargs)
+        if method != "quadrature":
+            raise ValueError("method must be 'quadrature' or 'mc'.")
+
+        predictive = self.predictive_entropy(X, **kwargs)
+        conditional = self.expected_class_entropy(X, method="quadrature", **kwargs)
+        return (predictive - conditional).clamp_min(0.0)
 
     def predictive_variance(self, X: Tensor, **kwargs: object) -> Tensor:
         """Return Bernoulli variance for each class probability."""
