@@ -14,7 +14,10 @@ def _training_data() -> tuple[torch.Tensor, torch.Tensor]:
     continuous = torch.linspace(0, 1, 12, dtype=torch.double)
     categorical = (torch.arange(12) % 2).to(dtype=torch.double)
     train_X = torch.stack((continuous, categorical), dim=-1)
-    train_Y = torch.bucketize(continuous + 0.2 * categorical, torch.tensor([0.4, 0.8], dtype=torch.double))
+    train_Y = torch.bucketize(
+        continuous + 0.2 * categorical,
+        torch.tensor([0.4, 0.8], dtype=torch.double),
+    )
     return train_X, train_Y
 
 
