@@ -35,6 +35,4 @@ def test_mixed_multiclass_registry_and_invalid_cat_dims() -> None:
     X = torch.rand(6, 2)
     y = (torch.arange(6) % 3).long()
     with pytest.raises(ValueError):
-        MixedMulticlassSingleTaskGPClassifier(
-            X, y, num_classes=3, cat_dims=[2]
-        )
+        MixedMulticlassSingleTaskGPClassifier(X, y, num_classes=3, cat_dims=[2])
