@@ -26,8 +26,8 @@
 二値Probit GPの `BinarySingleTaskGPClassifier`（Mixed等の標準派生モデルを含む）では、
 `predict_proba` は潜在ガウス分布を解析的に積分します。
 さらに `probability_variance` と `mutual_information` は、
-デフォルトでGPyTorchの64点Gauss–Hermite求積法を利用します。
-確率分散は `E[p_f^2] - E[p_f]^2`、BALDは
+デフォルトでGPyTorchの128点Gauss–Hermite求積法を利用します。
+確率分散は数値安定性を考慮した `E[(p_f - E[p_f])^2]`、BALDは
 `H(E[p_f]) - E[H(p_f)]` で計算し、観測ラベルのBernoulli分散
 `E[p_f](1-E[p_f])` とは区別します。
 確率分散・BALDの計算は決定論的ですが、数値求積には近似誤差があります。
