@@ -99,9 +99,7 @@ class CandidateGenerator:
                             (points[:, dim] * len(values)).long(), max=len(values) - 1
                         )
                         proposal[:, dim] = torch.tensor(values, dtype=bounds.dtype)[index]
-                if is_feasible(
-                    proposal, self.constraints, variable_space=self.variable_space
-                ):
+                if is_feasible(proposal, self.constraints, variable_space=self.variable_space):
                     candidate = proposal
                     break
             if candidate is None:
