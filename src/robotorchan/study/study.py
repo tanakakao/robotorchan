@@ -74,8 +74,8 @@ class Study:
         """Complete or fail a running trial after external evaluation."""
         number = trial.number if isinstance(trial, Trial) else trial
         current = self.get_trial(number)
-        if isinstance(trial, Trial) and trial != current:
-            raise ValueError("Trial snapshot does not match the current Study trial.")
+        if isinstance(trial, Trial) and trial.params != current.params:
+            raise ValueError("Trial parameters do not match the current Study trial.")
         if state is TrialState.COMPLETE:
             if value is None:
                 raise ValueError("Completed trials require an observation.")
