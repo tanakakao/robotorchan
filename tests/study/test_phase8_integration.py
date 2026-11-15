@@ -28,9 +28,7 @@ def test_mixed_constrained_joint_batch_external_validation() -> None:
         integer_dims=(1,),
     )
     constraints = CandidateConstraints(
-        inequality_constraints=(
-            (torch.tensor([[0, 1], [1, 1]]), torch.tensor([1.0, 1.0]), 6.0),
-        ),
+        inequality_constraints=((torch.tensor([[0, 1], [1, 1]]), torch.tensor([1.0, 1.0]), 6.0),),
     )
     study = create_study(
         search_space={"x": (0.0, 1.0), "count": (1.0, 4.0)},
