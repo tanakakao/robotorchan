@@ -1,7 +1,9 @@
 # Classification and ordinal research gates
 
-この文書は classification / ordinal model と対応する Active Learning を public API に
-追加する前に満たすべき、現在有効な統計・実装契約を定義します。
+この文書は classification / ordinal model と対応する Active Learning の
+公開前研究ゲートを定義した資料です。現在の対応範囲は
+[分類モデル契約](classification-models.md)と公開registry・結合テストを正本とします。
+標準・Mixed順序GP、分類Active Learning、q-batchは実装済みです。
 
 ## Binary GP classification
 
@@ -70,6 +72,7 @@ public model / acquisition を追加する前に少なくとも次を確認し�
 - capability metadata と実装の一致
 - no regression-shaped fake classifier API
 
-この領域は regression correctness defect ではなく独立した future capability です。
-実装を開始した後も、未検証の Mixed / MultiTask / ordinal cross-product を自動的に
-capability claim へ昇格させません。
+分類拡張は回帰APIとは独立した機能として実装されました。
+実装済みの標準・Mixed順序GPと分類獲得関数の連携を超えて、
+未検証のMultiTask・optimizer・ordinal固有の新規獲得関数を
+capability claimへ昇格させません。
