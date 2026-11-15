@@ -17,6 +17,9 @@ from robotorchan.models.classification import (
     MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
 )
+from robotorchan.optim.backends.sampling import optimize_acqf_sampling
+from robotorchan.optim.constraints.contracts import CandidateConstraints
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.optim.strategies.sobol import SobolSearchStrategy
 
 
@@ -115,3 +118,35 @@ def test_multiclass_sobol_search_strategy(
     assert torch.isfinite(result.candidates).all()
     assert result.acquisition_value is not None
     assert torch.isfinite(result.acquisition_value)
+
+
+def test_mixed_multiclass_constrained_sampling() -> None:
+    torch.manual_seed(31)
+    X = torch.rand(15, 2, dtype=torch.double)
+    X[:, 1] = torch.arange(15) % 3
+    y = (torch.arange(15) % 3).long()
+    model = MixedMulticlassSingleTaskGPClassifier(
+        X, y, num_classes=3, cat_dims=[1], inducing_points=6
+    )
+    model.fit(epochs=2, lr=0.01)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
+    variable_space = MixedVariableSpace(bounds, categorical_values={1: (0.0, 1.0, 2.0)})
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (torch.tensor([0]), torch.tensor([1.0], dtype=torch.double), 0.25),
+        ),
+    )
+    candidates, value = optimize_acqf_sampling(
+        qPredictiveEntropy(model),
+        bounds,
+        q=2,
+        num_samples=32,
+        method="sobol",
+        seed=7,
+        variable_space=variable_space,
+        constraints=constraints,
+    )
+    assert candidates.shape == (2, 2)
+    assert (candidates[:, 0] >= 0.25).all()
+    assert torch.isin(candidates[:, 1], torch.tensor([0.0, 1.0, 2.0])).all()
+    assert torch.isfinite(value)
