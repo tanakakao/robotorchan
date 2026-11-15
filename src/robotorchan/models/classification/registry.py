@@ -17,10 +17,12 @@ from robotorchan.models.capabilities import (
 from robotorchan.models.classification.binary.registry import (
     BINARY_CLASSIFICATION_MODEL_SPECS,
 )
-from robotorchan.models.classification.ordinal import OrdinalSingleTaskGPClassifier
 from robotorchan.models.classification.multiclass.standard.single_task import (
     MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
+)
+from robotorchan.models.classification.ordinal.standard.single_task import (
+    OrdinalSingleTaskGPClassifier,
 )
 
 ClassificationModelType: TypeAlias = type[nn.Module]
