@@ -128,7 +128,7 @@ def test_binary_mc_fallback_remains_available() -> None:
     with torch.no_grad():
         variance = model.probability_variance(candidates, num_samples=64, method="mc")
         bald = model.mutual_information(candidates, num_samples=64, method="mc")
-    assert variance.shape == (2, 2)
-    assert bald.shape == (2,)
+    assert variance.shape == (2, 1, 2)
+    assert bald.shape == (2, 1)
     assert torch.isfinite(variance).all()
     assert torch.isfinite(bald).all()
