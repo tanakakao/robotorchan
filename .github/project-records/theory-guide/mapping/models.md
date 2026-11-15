@@ -754,7 +754,7 @@ not an assertion that every entry has its own notebook.
 
 | Classification registry ID subset | Shared usage guide | Shared theoretical reference | Notebook verification |
 | --- | --- | --- | --- |
-| `multiclass.standard` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Phase 2 smoke test; notebook pending Phase 5 |
+| `multiclass.standard`, `multiclass.mixed` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Phase 2 smoke test; notebook pending Phase 5 |
 | `binary.standard`, `binary.mixed`, `binary.multifidelity`, `binary.mixed_multifidelity`, `binary.spectral_mixture`, `binary.mixed_spectral_mixture`, `binary.contextual`, `binary.hierarchical`, `binary.infinite_width_bnn`, `binary.mixed_infinite_width_bnn`, `binary.multitask`, `binary.kronecker_multitask` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
 | `binary.map_saas`, `binary.saas`, `binary.reduced`, `binary.pca`, `binary.pls`, `binary.random_projection`, `binary.alebo`, `binary.joint_encoder` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
 | `binary.deep_gp` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
