@@ -23,9 +23,7 @@ def test_mixed_multiclass_fit_and_probability_contract() -> None:
     probabilities = model.predict_proba(test_X, num_samples=16)
     assert probabilities.shape == (1, 4, 3)
     assert torch.isfinite(probabilities).all()
-    assert torch.allclose(
-        probabilities.sum(dim=-1), torch.ones_like(probabilities[..., 0])
-    )
+    assert torch.allclose(probabilities.sum(dim=-1), torch.ones_like(probabilities[..., 0]))
     assert model.cat_dims == (1,)
 
 
