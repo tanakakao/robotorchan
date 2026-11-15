@@ -67,6 +67,6 @@ def test_infeasible_initial_space_fails_bounded() -> None:
         inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 2.0),),
     )
     study = create_study(search_space={"x": (0.0, 1.0)}, constraints=constraints)
-    with pytest.raises(RuntimeError, match="256 attempts"):
+    with pytest.raises(RuntimeError, match="2048 attempts"):
         study.ask()
     assert not study.trials
