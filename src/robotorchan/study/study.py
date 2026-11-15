@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import replace
 from math import isfinite
+from typing import Any
 
 import torch
-from typing import Any
 
 from botorch.acquisition.logei import qLogExpectedImprovement
 
