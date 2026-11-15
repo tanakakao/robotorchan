@@ -7,9 +7,8 @@ from dataclasses import replace
 from math import isfinite
 from typing import Any
 
-import torch
-
 from botorch.acquisition.logei import qLogExpectedImprovement
+import torch
 
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.base import SearchStrategy
