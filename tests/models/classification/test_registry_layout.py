@@ -19,7 +19,11 @@ def test_binary_registry_specs_are_owned_by_binary_package() -> None:
 def test_shared_registry_composes_binary_specs() -> None:
     model_ids = tuple(spec[0] for spec in BINARY_CLASSIFICATION_MODEL_SPECS)
 
-    assert tuple(CLASSIFICATION_MODEL_REGISTRY) == (*model_ids, "multiclass.standard", "multiclass.mixed")
+    assert tuple(CLASSIFICATION_MODEL_REGISTRY) == (
+        *model_ids,
+        "multiclass.standard",
+        "multiclass.mixed",
+    )
     assert CLASSIFICATION_MODEL_REGISTRY["binary.standard"].model_class is (
         BinarySingleTaskGPClassifier
     )
