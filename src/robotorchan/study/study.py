@@ -11,6 +11,7 @@ from botorch.acquisition.logei import qLogExpectedImprovement
 
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.base import SearchStrategy
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.study.generation import CandidateGenerator
 from robotorchan.study.search_space import SearchSpace
@@ -34,6 +35,7 @@ class Study:
         n_initial_trials: int = 3,
         seed: int | None = None,
         variable_space: MixedVariableSpace | None = None,
+        constraints: CandidateConstraints | None = None,
     ) -> None:
         self.search_space = search_space
         self._generator = CandidateGenerator(
@@ -48,6 +50,7 @@ class Study:
             n_initial_trials=n_initial_trials,
             seed=seed,
             variable_space=variable_space,
+            constraints=constraints,
         )
         self._trials: dict[int, Trial] = {}
         self._next_number = 0
@@ -236,6 +239,7 @@ def create_study(
     n_initial_trials: int = 3,
     seed: int | None = None,
     variable_space: MixedVariableSpace | None = None,
+    constraints: CandidateConstraints | None = None,
 ) -> Study:
     """Create an in-memory single-objective Study."""
     if not isinstance(search_space, SearchSpace):
@@ -252,4 +256,5 @@ def create_study(
         n_initial_trials=n_initial_trials,
         seed=seed,
         variable_space=variable_space,
+        constraints=constraints,
     )
