@@ -8,22 +8,39 @@ from torch.distributions import Normal
 
 from robotorchan.acquisition import BALD, ProbabilityVariance
 from robotorchan.models.classification import BinarySingleTaskGPClassifier
+from robotorchan.models.classification.binary.robust.input_dependent_noise import (
+    InputDependentLabelNoiseBinarySingleTaskGPClassifier,
+)
 from robotorchan.models.classification.binary.robust.label_noise import (
     LabelNoiseBinarySingleTaskGPClassifier,
 )
 
 
-@pytest.mark.parametrize("label_noise", [False, True])
-def test_binary_probability_variance_and_bald_match_dense_integration(label_noise: bool) -> None:
+@pytest.mark.parametrize("noise_kind", ["none", "fixed", "input_dependent"])
+def test_binary_probability_variance_and_bald_match_dense_integration(noise_kind: str) -> None:
     """Check likelihood moments against a separately discretized Gaussian integral."""
     train_x = torch.tensor([[0.0], [0.3], [0.7], [1.0]], dtype=torch.float64)
     train_y = torch.tensor([0.0, 0.0, 1.0, 1.0], dtype=torch.float64)
-    if label_noise:
+    if noise_kind == "fixed":
         model = LabelNoiseBinarySingleTaskGPClassifier(
             train_x,
             train_y,
             false_positive_rate=0.1,
             false_negative_rate=0.2,
+            inducing_points=4,
+        )
+    elif noise_kind == "input_dependent":
+
+        def noise_rates(X: torch.Tensor) -> torch.Tensor:
+            return torch.stack(
+                (torch.full_like(X[..., 0], 0.1), torch.full_like(X[..., 0], 0.2)),
+                dim=-1,
+            )
+
+        model = InputDependentLabelNoiseBinarySingleTaskGPClassifier(
+            train_x,
+            train_y,
+            noise_rate_model=noise_rates,
             inducing_points=4,
         )
     else:
@@ -41,7 +58,7 @@ def test_binary_probability_variance_and_bald_match_dense_integration(label_nois
         density = torch.exp(-grid.square() / 2.0) / math.sqrt(2.0 * math.pi)
         values = mu.unsqueeze(0) + grid[:, None, None] * sigma.unsqueeze(0)
         positive = Normal(0.0, 1.0).cdf(values)
-        if label_noise:
+        if noise_kind != "none":
             positive = 0.1 + 0.7 * positive
 
         weights = density[:, None, None]
@@ -73,6 +90,13 @@ def test_binary_probability_variance_and_bald_match_dense_integration(label_nois
     torch.testing.assert_close(bald, bald_reference, atol=1e-5, rtol=1e-5)
     torch.testing.assert_close(acquired_variance, variance_reference.squeeze(-1))
     torch.testing.assert_close(acquired_bald, bald_reference.squeeze(-1))
+
+    with torch.no_grad():
+        joint_candidates = candidates[:2].transpose(0, 1)
+        joint_variance = model.probability_variance(joint_candidates)
+        joint_bald_marginal = model.mutual_information(joint_candidates)
+    assert joint_variance.shape == (1, 2, 2)
+    assert joint_bald_marginal.shape == (1, 2)
 
 
 def test_binary_probability_uncertainty_is_deterministic_and_differentiable() -> None:
