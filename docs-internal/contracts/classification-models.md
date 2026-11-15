@@ -504,34 +504,36 @@ separate concepts.
 | Capability | Current classification status | Contract |
 |---|---|---|
 | batched tensor evaluation | SUPPORTED | classifiers may evaluate multiple points in one tensor |
-| joint q-batch AL utility | UNSUPPORTED | current PredictiveEntropy, MarginUncertainty, ProbabilityVariance, BALD, and LatentStraddle are pointwise and require q=1 |
-| optimizer-side q > 1 from pointwise AL | UNSUPPORTED as joint utility | repeated/greedy selection needs an explicit diversity or conditioning policy |
+| joint q-batch AL utility | SUPPORTED via qBALD | enumerated joint labels with correlated latent samples; Monte Carlo information estimate, `C**q <= 256` |
+| optimizer-side q > 1 from pointwise AL | SUPPORTED as marginal mean only | qPredictiveEntropy, qMarginUncertainty and qProbabilityVariance average per-point scores; do not claim joint diversity |
 | X_pending on current classification AL | UNSUPPORTED | pending points are not silently ignored or converted into a penalty |
 | asynchronous classification AL | DEFER | requires a defined pending-point policy, not only storage of unresolved X |
 | variational GP classification fantasize | DEFER | ExactGP fantasy semantics are not claimed for Bernoulli variational inference |
 | deterministic non-GP fantasize | UNSUPPORTED | no latent posterior exists from which to construct fantasy observations |
 | empirical ensemble fantasize | UNSUPPORTED | member disagreement is not a substitute for a conditioned fantasy model |
 
-The q=1 restriction is semantic rather than a tensor-shape limitation. Pointwise entropy or BALD
-evaluated on a tensor of q candidates does not become a joint batch acquisition merely by summing
-or averaging scores. A future batch classifier acquisition must define redundancy/diversity or
-joint information gain explicitly.
+Pointwise acquisitions require q=1. Their supported q-batch marginal counterparts explicitly
+average per-candidate scores and do not account for redundancy. In contrast, `qBALD`
+computes joint information gain using correlated latent posterior samples and exact
+label-vector enumeration per sample; the posterior expectation remains Monte Carlo estimated.
+For binary models the public limit is q<=8; for any class count C, `C**q <= 256`.
 
 Likewise, unresolved `X_pending` belongs to the acquisition policy. Current classification
 acquisitions do not expose `X_pending`, so they must not advertise asynchronous support. A future
 async policy may penalize proximity, condition on pseudo/fantasy labels, or use a joint
 information-theoretic objective, but that choice must be explicit.
 
-Classification GP models use variational Bernoulli inference. They therefore do not inherit the
-exact-Gaussian assumption that a posterior draw can always be appended through the standard
-ExactGP fantasy lifecycle. Any future `fantasize` implementation must define how variational
+Classification GPs use task-specific non-Gaussian likelihoods with variational inference:
+Bernoulli for binary, Softmax-Categorical for regular multiclass, and Ordered-probit for ordinal.
+They therefore do not inherit the exact-Gaussian assumption that a posterior draw can always
+be appended through the standard ExactGP fantasy lifecycle. Any future `fantasize` implementation must define how variational
 parameters, inducing points, likelihood observations, and fantasy batch dimensions are updated.
 
 Candidate q, posterior Monte Carlo sample dimensions, ensemble-member dimensions, uncertain-input
 scenario dimensions, and any future fantasy dimensions remain independent axes.
 
 
-### Multiclass readiness
+### Implemented multiclass and ordinal models
 
 The common classification contract is class-count agnostic: class probabilities use the final tensor
 dimension, `class_labels` defines its ordering, and probability samples retain that class axis.
@@ -541,19 +543,22 @@ binary-only API redesign.
 
 Binary-specific semantics remain isolated under `classification/binary`: Bernoulli likelihood,
 the scalar latent decision boundary, threshold-based `predict_class`, label flip false-positive /
-false-negative channels, and `LatentStraddle`. A future multiclass family must use categorical /
-softmax likelihood semantics and a per-class or otherwise explicit latent-output structure rather
-than inheriting `BinaryClassificationMixin`.
+false-negative channels, and `LatentStraddle`. The implemented multiclass GP uses a Categorical /
+Softmax observation model with per-class latent GPs. The implemented ordinal GP uses a
+Categorical / Ordered-probit observation model with one latent GP and monotone thresholds.
+Neither treats ordinal labels as continuous regression targets.
 
-The public registry is assembled from task-specific fragments. Adding
-`MULTICLASS_CLASSIFICATION_MODEL_SPECS` should therefore extend the registry without rewriting the
-binary fragment or changing existing stable IDs. Multiclass model entries may use a dynamic
-`num_classes=None` registry value when class count is constructor/data dependent; the instantiated
-model remains responsible for concrete `num_classes` and `class_labels`.
+The public registry is assembled from binary specifications and dedicated multiclass /
+ordinal fragments. Stable public IDs are `multiclass.standard`, `multiclass.mixed`,
+`ordinal.standard`, and `ordinal.mixed`. These registry entries use `num_classes=None`
+because class count is a constructor parameter; each instantiated model exposes concrete
+`num_classes` and `class_labels`.
 
-Multiclass readiness does not imply that a multiclass surrogate is implemented. In particular,
-multiclass calibration, class-conditional robustness, cost-sensitive decisions, latent-boundary
-acquisitions, and structured/multitask latent shapes require their own semantic review.
+The standard and Mixed multiclass/ordinal surrogates are implemented and covered by
+classification Active Learning integration tests. This does not advertise every
+multiclass calibration, class-conditional robustness, cost-sensitive decision,
+latent-boundary acquisition, structured/multitask model, or optimizer combination.
+Those extensions require their own semantic review.
 
 
 ### Registry and capability matrix
