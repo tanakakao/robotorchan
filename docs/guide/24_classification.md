@@ -56,11 +56,59 @@ BoTorchの `TransformedPosterior` は前後でサンプル形状が
 分類確率2次元へ変化するため、既存の潜在Posteriorを内部で使用し、
 分類確率の出力形状のみを扱う軽量な `Posterior` 拡張を用います。
 
-**対象範囲：** 今回の新規実装は二値Probit GP系を対象とします。
-多クラスSoftmaxおよびOrdinalは共通ラッパーを再利用可能ですが、
-それぞれの事後分散推定と信用区間の方式は別途確認が必要です。
-Ensembleには既存の `ClassificationEnsemblePosterior` が存在し、
-メンバー間のばらつきとGPの潜在不確実性を混同しません。
+## Ordinal GP・マルチクラスGPの確率Posterior
+
+Ordinal GPとマルチクラスGPにも、
+二値Probit GPと同じ `probability_posterior(X)` を提供します。
+`posterior(X)` は引き続き潜在GPの分布であり、
+`probability_posterior(X)` がクラス確率の事後分布です。
+いずれのモデルも最終軸にクラスを並べます。
+
+| モデル | `mean` の計算 | `variance` の計算 | `credible_interval` |
+| --- | --- | --- | --- |
+| Binary Probit GP | 解析的 | Gauss–Hermite求積 | 潜在Gaussian分位点の単調変換 |
+| Ordinal GP | 解析的 | 64点Gauss–Hermite求積 | クラスごとのMC周辺分位点 |
+| Multiclass Softmax GP | 同一QMCサンプルの平均 | 同一QMCサンプルの分散 | クラスごとのMC周辺分位点 |
+
+Ordinal GPのクラス0・最終クラスは潜在値に対して単調ですが、
+**中間クラスの確率は一般に単調ではありません。**
+したがって二値Probitの区間式を一律には使えません。
+現段階では全クラスを同じMC分位点の方法で扱います。
+Gauss–Hermite求積で求める `variance` は、
+実際に観測するカテゴリラベルのBernoulli分散ではありません。
+
+マルチクラスGPのSoftmax変換後の確率は、
+一般に解析的な平均・分散を求められません。
+そこでBoTorchの `SobolQMCNormalSampler` を再利用し、
+**同じ潜在事後サンプル**から平均と分散を計算します。
+`num_samples` はモーメントを推定するQMCのサンプル数、
+`seed` は推定の再現性を制御します。
+既存の `predict_proba(X)` は独立のMC推定を行うため、
+多クラスでは両者の数値が完全一致するとは限りません。
+
+```python
+# OrdinalSingleTaskGPClassifier または MulticlassSingleTaskGPClassifier
+X = torch.tensor([[0.2], [0.5], [0.8]], dtype=torch.double)
+
+ordinal_posterior = ordinal_model.probability_posterior(X)
+multiclass_posterior = multiclass_model.probability_posterior(X, num_samples=1024, seed=7)
+
+mean = multiclass_posterior.mean  # [3, C]: 各クラスの平均確率
+variance = multiclass_posterior.variance  # [3, C]: 確率の事後分散
+lower, upper = multiclass_posterior.credible_interval(0.95, num_samples=4096)
+# lower/upper は各クラス別の周辺95%信用区間。
+# 「すべてのクラスが同時に95%で範囲内」という意味ではない。
+```
+
+`rsample()` と `rsample_from_base_samples()` は、
+どちらも潜在GPの同時分布から確率ベクトルを生成します。
+したがってクラスの確率和は1になり、候補間の潜在相関も維持します。
+Mixed版のOrdinal・マルチクラスGPでも同じAPIを使用できます。
+獲得関数の内部実装は従来どおりで、今回の変更による置き換えは行いません。
+
+Ensembleには既存の `ClassificationEnsemblePosterior` が存在します。
+これはメンバー間の確率の分布であり、単一GPの潜在事後分布とは
+不確実性の意味が異なります。Ensembleとの統一は別途検討します。
 
 ## モデル群の選択
 

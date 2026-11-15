@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import torch
 from gpytorch.kernels import Kernel
+from gpytorch.utils.quadrature import GaussHermiteQuadrature1D
 from torch import Tensor
 from torch.distributions import Categorical
 
@@ -18,6 +19,9 @@ from robotorchan.models.classification.base import (
     LatentOutputStructure,
 )
 from robotorchan.models.classification.ordinal.likelihood import OrderedProbitLikelihood
+from robotorchan.models.classification.posterior.probability import (
+    ClassificationProbabilityPosterior,
+)
 from robotorchan.models.classification.validation import validate_class_indices
 from robotorchan.models.standard.variational import SingleTaskVariationalGP
 
@@ -55,6 +59,7 @@ class OrdinalSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVariatio
             learn_inducing_points=learn_inducing_points,
         )
         self._store_raw_tensor("train_Y", labels.detach().clone().long())
+        self._probability_quadrature = GaussHermiteQuadrature1D(num_locs=64).to(train_X)
 
     @property
     def num_classes(self) -> int:
@@ -86,6 +91,41 @@ class OrdinalSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVariatio
             dim=-1,
         ).clamp_min(0.0)
         return probabilities / probabilities.sum(dim=-1, keepdim=True)
+
+    def probability_posterior(
+        self,
+        X: Tensor,
+        **kwargs: object,
+    ) -> ClassificationProbabilityPosterior:
+        """Return ordinal class-probability uncertainty as a BoTorch Posterior.
+
+        Mean probabilities are analytic; epistemic variances use one-dimensional
+        Gaussian quadrature. Credible limits use marginal posterior samples,
+        since probabilities of interior ordinal classes are not monotone in f.
+        """
+        latent = self.latent_posterior(X, **kwargs)
+        mean = self.predict_proba(X, **kwargs)
+
+        def probability_samples(values: Tensor) -> Tensor:
+            return self.likelihood.class_probabilities(values.squeeze(-1))
+
+        variances = []
+        for index in range(self.num_classes):
+            reference = mean[..., index]
+            variance = self._probability_quadrature(
+                lambda values, reference=reference, index=index: (
+                    self.likelihood.class_probabilities(values)[..., index] - reference
+                ).square(),
+                latent.distribution,
+            )
+            variances.append(variance.clamp_min(0.0))
+        variance = torch.stack(variances, dim=-1)
+        return ClassificationProbabilityPosterior(
+            latent,
+            sample_transform=probability_samples,
+            mean=mean,
+            variance=variance,
+        )
 
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> Categorical:
         return Categorical(probs=self.predict_proba(X, **kwargs))
