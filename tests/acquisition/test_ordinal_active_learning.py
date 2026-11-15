@@ -27,16 +27,14 @@ from robotorchan.optim.strategies.sobol import SobolSearchStrategy
 def model(request: pytest.FixtureRequest) -> OrdinalSingleTaskGPClassifier:
     torch.manual_seed(37)
     X = torch.rand(15, 2, dtype=torch.double)
-    y = torch.bucketize(X[:, 0], torch.tensor([0.35, 0.7], dtype=torch.double))
+    y = torch.bucketize(X[:, 0].contiguous(), torch.tensor([0.35, 0.7], dtype=torch.double))
     if request.param:
         X[:, 1] = torch.arange(15) % 3
         classifier = MixedOrdinalSingleTaskGPClassifier(
             X, y, num_classes=3, cat_dims=[1], inducing_points=6
         )
     else:
-        classifier = OrdinalSingleTaskGPClassifier(
-            X, y, num_classes=3, inducing_points=6
-        )
+        classifier = OrdinalSingleTaskGPClassifier(X, y, num_classes=3, inducing_points=6)
     classifier.fit(epochs=2, lr=0.01)
     return classifier
 
