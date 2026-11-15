@@ -34,7 +34,7 @@
 
 ```python
 variance = model.probability_variance(test_X)  # [..., 2] (q=1で末尾の1次元を省略)
-bald = model.mutual_information(test_X)        # [...], q>1では[..., q]
+bald = model.mutual_information(test_X)  # [...], q>1では[..., q]
 
 # 比較検証などで従来のMC推定を明示的に利用する場合
 variance_mc = model.probability_variance(test_X, method="mc", num_samples=2048)
