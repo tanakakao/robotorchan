@@ -96,8 +96,7 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
                 log_probs = samples.log_softmax(dim=-1)
                 log_likelihood = log_probs.gather(-1, batch_Y.long().reshape(-1, 1)).mean()
                 kl = sum(
-                    gp.model.variational_strategy.kl_divergence().sum()
-                    for gp in self.class_models
+                    gp.model.variational_strategy.kl_divergence().sum() for gp in self.class_models
                 )
                 loss = -log_likelihood + kl / n
                 loss.backward()
