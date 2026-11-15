@@ -190,10 +190,11 @@ Conformalの被覆率は交換可能性などの仮定に依存し、
 では、それぞれが要求するモデルの公開メソッドと
 q-batchの対応方式を確認できます。
 
-単一点のPredictiveEntropy等はq=1用であり、
-qPredictiveEntropy等の4種類は周辺スコアを平均します。
-一方qBALDは、二値ラベルの同時情報利得を扱い、
-現行実装ではq=1〜8に限定されます。
+単一点のPredictiveEntropy等はq=1用です。
+qPredictiveEntropy・qMarginUncertainty・qProbabilityVariance・qLatentStraddleは
+周辺スコアを平均します。一方qBALDは同時ラベル情報利得を推定し、
+二値ではq=1〜8、マルチクラスと順序分類ではクラス数Cについて
+`C**q <= 256`の上限があります。
 候補間の重複を直接考慮するかどうかが異なります。
 
 ## 拡張二値分類モデルの使い分け
