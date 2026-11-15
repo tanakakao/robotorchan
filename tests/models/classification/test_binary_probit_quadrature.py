@@ -65,9 +65,9 @@ def test_binary_probability_variance_and_bald_match_dense_integration(noise_kind
         mean_reference = torch.trapezoid(positive * weights, grid, dim=0).squeeze(-1)
         second_reference = torch.trapezoid(positive.square() * weights, grid, dim=0).squeeze(-1)
         variance_reference = (second_reference - mean_reference.square()).clamp_min(0.0)
-        conditional_entropy = -torch.special.xlogy(
-            positive, positive
-        ) - torch.special.xlogy(1.0 - positive, 1.0 - positive)
+        conditional_entropy = -torch.special.xlogy(positive, positive) - torch.special.xlogy(
+            1.0 - positive, 1.0 - positive
+        )
         expected_entropy = torch.trapezoid(conditional_entropy * weights, grid, dim=0).squeeze(-1)
         predictive_entropy = -torch.special.xlogy(
             mean_reference, mean_reference
@@ -84,9 +84,7 @@ def test_binary_probability_variance_and_bald_match_dense_integration(noise_kind
     assert variance.shape == (3, 2)
     assert bald.shape == (3,)
     torch.testing.assert_close(probabilities[..., 1], mean_reference, atol=1e-8, rtol=1e-8)
-    torch.testing.assert_close(
-        variance[..., 1], variance_reference, atol=1e-5, rtol=1e-5
-    )
+    torch.testing.assert_close(variance[..., 1], variance_reference, atol=1e-5, rtol=1e-5)
     torch.testing.assert_close(variance[..., 0], variance[..., 1])
     torch.testing.assert_close(bald, bald_reference, atol=1e-5, rtol=1e-5)
     torch.testing.assert_close(acquired_variance, variance_reference, atol=1e-5, rtol=1e-5)
