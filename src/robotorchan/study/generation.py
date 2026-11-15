@@ -95,9 +95,7 @@ class CandidateGenerator:
                 options = dict(self.optimizer_kwargs)
                 options.setdefault("num_restarts", 5)
                 options.setdefault("raw_samples", 64)
-                candidate, _ = optimize_acqf(
-                    acq, bounds, q=1, optimizer=self.optimizer, **options
-                )
+                candidate, _ = optimize_acqf(acq, bounds, q=1, optimizer=self.optimizer, **options)
         if candidate.shape != (1, len(self.space.bounds)):
             raise ValueError("Optimizer must return candidates with shape [1, d].")
         point = candidate[0].detach().tolist()
