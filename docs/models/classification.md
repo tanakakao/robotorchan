@@ -46,7 +46,9 @@ labels = model.predict_class(X)
 
 ## 予測・学習の使い分け
 
-`posterior(X)` は潜在関数の分布であり、class probability ではありません。確率には `predict_proba`、class の決定には `predict_class`、観測 label の分布には `predictive_distribution` を使います。`sample_latent` と `sample_class_probabilities` も別の量です。label は 0/1 を渡し、文字列や任意整数の暗黙変換は行いません。
+`posterior(X)` は潜在関数の分布であり、class probability ではありません。確率には `predict_proba`、class の決定には `predict_class`、観測 label の分布には `predictive_distribution` を使います。`sample_latent` と `sample_class_probabilities` も別の量です。二値分類ではラベルは0/1、
+マルチクラス・順序分類では0から`num_classes - 1`までの整数を指定します。
+文字列や任意整数の暗黙変換は行いません。
 
 標準 binary GP は Bernoulli 尤度の変分モデルです。`make_mll()` は `VariationalELBO` を構成します。Exact Gaussian GP と同じ学習契約と仮定しないでください。元データは raw training-data 契約に従い保持します。
 
@@ -115,7 +117,7 @@ NNGPは**無限幅ニューラルネットワークに対応する解析的カ�
 モデル別の入力・q-batch対応・検証範囲は[二値分類拡張の対応表](binary_classification_extension_matrix.md)を参照してください。
 
 
-# Ordinal GP: Active Learning and candidate generation
+# Ordinal GP：Active Learningと候補生成
 
 数理の導出は[分類GP理論](../theory/24_classification.md)、
 実装との対応は[分類Guide](../guide/24_classification.md)、
