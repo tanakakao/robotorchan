@@ -9,8 +9,8 @@ from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import BernoulliLikelihood
 from gpytorch.means import Mean
 from gpytorch.mlls import VariationalELBO
-from gpytorch.utils.quadrature import GaussHermiteQuadrature1D
 from gpytorch.utils.memoize import clear_cache_hook
+from gpytorch.utils.quadrature import GaussHermiteQuadrature1D
 from gpytorch.variational import VariationalStrategy, _VariationalDistribution, _VariationalStrategy
 from torch import Tensor, nn
 from torch.distributions import Bernoulli
@@ -99,7 +99,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
         """Return ``[P(y=0), P(y=1)]`` along the final dimension."""
         positive = self.predictive_distribution(X, **kwargs).probs
-        if positive.shape == (*X.shape[:-1], 1):
+        if positive.shape[-1:] == (1,):
             positive = positive.squeeze(-1)
         return torch.stack((1.0 - positive, positive), dim=-1)
 
@@ -151,7 +151,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             ).square(),
             latent.distribution,
         ).clamp_min(0.0)
-        if variance.shape == (*X.shape[:-1], 1):
+        if variance.shape[-1:] == (1,):
             variance = variance.squeeze(-1)
         return torch.stack((variance, variance), dim=-1)
 
@@ -175,12 +175,16 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
 
         def entropy(values: Tensor) -> Tensor:
             positive = self._positive_probability_from_latent(values, X)
-            return -torch.special.xlogy(positive, positive) - torch.special.xlogy(
-                1.0 - positive, 1.0 - positive
+            # Bernoulli likelihoods can saturate exactly at 0 or 1.
+            # Bound both sides to avoid undefined xlogy gradients at those limits.
+            eps = torch.finfo(positive.dtype).eps
+            safe = positive.clamp(min=eps, max=1.0 - eps)
+            return -torch.special.xlogy(safe, safe) - torch.special.xlogy(
+                1.0 - safe, 1.0 - safe
             )
 
         result = self._probability_quadrature(entropy, latent.distribution)
-        return result.squeeze(-1) if result.shape == (*X.shape[:-1], 1) else result
+        return result.squeeze(-1) if result.shape[-1:] == (1,) else result
 
     def mutual_information(
         self,
