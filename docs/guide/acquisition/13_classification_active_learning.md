@@ -23,6 +23,30 @@
 必要なモデル側メソッドが存在しない場合は、対応済みとみなさず
 公開APIの契約を確認してください。
 
+二値Probit GPの `BinarySingleTaskGPClassifier`（Mixed等の標準派生モデルを含む）では、
+`predict_proba` は潜在ガウス分布を解析的に積分します。
+さらに `probability_variance` と `mutual_information` は、
+デフォルトでGPyTorchの64点Gauss–Hermite求積法を利用します。
+確率分散は `E[p_f^2] - E[p_f]^2`、BALDは
+`H(E[p_f]) - E[H(p_f)]` で計算し、観測ラベルのBernoulli分散
+`E[p_f](1-E[p_f])` とは区別します。
+確率分散・BALDの計算は決定論的ですが、数値求積には近似誤差があります。
+
+```python
+variance = model.probability_variance(test_X)  # [..., q, 2]
+bald = model.mutual_information(test_X)        # [..., q]
+
+# 比較検証などで従来のMC推定を明示的に利用する場合
+variance_mc = model.probability_variance(test_X, method="mc", num_samples=2048)
+bald_mc = model.mutual_information(test_X, method="mc", num_samples=2048)
+```
+
+既存の `num_samples` 引数は互換性のために保持しますが、
+二値Probit GPのデフォルト（`method="quadrature"`）では使用しません。
+`method="mc"` の場合にのみサンプル数を指定します。
+この改善は二値の標準GP尤度系を対象とし、マルチクラス、
+校正後モデル、Ensembleや非GP分類器の推定方法を変更するものではありません。
+
 LatentStraddleは二値分類専用です。
 同じ確率でも潜在分布とラベル分布は異なるため、
 確率だけを返すNon-GPモデルには潜在境界の基準を
