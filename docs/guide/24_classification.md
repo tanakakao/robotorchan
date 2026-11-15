@@ -18,6 +18,50 @@
 | 不確実性の学習 | `model.make_mll()`など | Bernoulli likelihoodに対するvariational目的（Exact Gaussian MLLではない） |
 | 目的／制約へ接続 | `robotorchan.acquisition.composition` | 確率objective・classification feasibilityのbridge |
 
+## 分類確率のBoTorch Posterior（標準二値Probit GP）
+
+`BinarySingleTaskGPClassifier` では、潜在関数に対する
+`posterior(X)` と、分類確率に対する `probability_posterior(X)` を
+区別して使用できます。後者はBoTorchの `Posterior` を継承しており、
+`mean`・`variance`・`rsample`・`rsample_from_base_samples` を提供します。
+
+```python
+import torch
+
+X = torch.linspace(0.0, 1.0, 20).unsqueeze(-1)
+probability_posterior = model.probability_posterior(X)
+
+mean = probability_posterior.mean  # [20, 2]
+variance = probability_posterior.variance  # [20, 2]
+samples = probability_posterior.rsample(torch.Size([1000]))  # [1000, 20, 2]
+lower, upper = probability_posterior.credible_interval(0.95)
+```
+
+ここで `variance` は分類確率そのものの事後分散であり、
+観測ラベルのBernoulli分散ではありません。
+二値Probitでは潜在関数がGaussianで、観測確率が単調変換なので、
+各クラスの等確率両側95%信用区間は**サンプリングせずに**求められます。
+クラス0の下限は「クラス1の上限」を1から引いて計算します。
+`credible_interval` はrobotorchanの拡張であり、
+BoTorchの共通 `Posterior` インターフェースに含まれるものではありません。
+
+BoTorchのPosteriorに合わせて、この新APIでは候補次元 `q` を維持します。
+例えば入力が `[batch, 1, d]` なら
+`probability_posterior(X).mean` は `[batch, 1, 2]` を返します。
+従来の `predict_proba(X)` が `[batch, 2]` を返す場合でも、
+既存APIの返却形状は変更しません。
+
+BoTorchの `TransformedPosterior` は前後でサンプル形状が
+同じであることを前提としています。今回は潜在出力1次元から
+分類確率2次元へ変化するため、既存の潜在Posteriorを内部で使用し、
+分類確率の出力形状のみを扱う軽量な `Posterior` 拡張を用います。
+
+**対象範囲：** 今回の新規実装は二値Probit GP系を対象とします。
+多クラスSoftmaxおよびOrdinalは共通ラッパーを再利用可能ですが、
+それぞれの事後分散推定と信用区間の方式は別途確認が必要です。
+Ensembleには既存の `ClassificationEnsemblePosterior` が存在し、
+メンバー間のばらつきとGPの潜在不確実性を混同しません。
+
 ## モデル群の選択
 
 `BinarySingleTaskGPClassifier`は連続入力の基礎モデル。
