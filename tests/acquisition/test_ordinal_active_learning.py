@@ -108,3 +108,27 @@ def test_ordinal_mixed_constrained_sampling(
     assert (candidates[:, 0] >= 0.25).all()
     assert torch.isin(candidates[:, 1], torch.tensor([0.0, 1.0, 2.0])).all()
     assert torch.isfinite(value)
+
+
+def test_ordinal_qbald_matches_bald_for_one_candidate(
+    model: OrdinalSingleTaskGPClassifier,
+) -> None:
+    """q=1 joint label information reduces to the single-point BALD score."""
+    X = model.raw_train_X[:4].unsqueeze(-2)
+    torch.manual_seed(23)
+    marginal_score = BALD(model, num_samples=128)(X)
+    torch.manual_seed(23)
+    joint_score = qBALD(model, num_samples=128)(X)
+
+    assert joint_score.shape == (4,)
+    assert torch.isfinite(joint_score).all()
+    torch.testing.assert_close(joint_score, marginal_score, atol=1e-6, rtol=1e-6)
+
+
+def test_ordinal_rejects_binary_latent_straddle(
+    model: OrdinalSingleTaskGPClassifier,
+) -> None:
+    from robotorchan.acquisition.active_learning.classification import LatentStraddle
+
+    with pytest.raises(ValueError, match="binary classification"):
+        LatentStraddle(model)
