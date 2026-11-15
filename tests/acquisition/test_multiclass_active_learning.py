@@ -13,11 +13,11 @@ from robotorchan.acquisition.active_learning.classification import (
     qPredictiveEntropy,
     qProbabilityVariance,
 )
-from robotorchan.optim.strategies.sobol import SobolSearchStrategy
 from robotorchan.models.classification import (
     MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
 )
+from robotorchan.optim.strategies.sobol import SobolSearchStrategy
 
 
 @pytest.fixture
