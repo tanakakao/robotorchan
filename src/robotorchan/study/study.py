@@ -239,7 +239,7 @@ def create_study(
     seed: int | None = None,
     variable_space: MixedVariableSpace | None = None,
 ) -> Study:
-    """Create an in-memory single-objective continuous Study."""
+    """Create an in-memory single-objective Study."""
     if not isinstance(search_space, SearchSpace):
         search_space = SearchSpace(search_space)
     return Study(
@@ -253,4 +253,5 @@ def create_study(
         optimizer_kwargs=optimizer_kwargs,
         n_initial_trials=n_initial_trials,
         seed=seed,
+        variable_space=variable_space,
     )
