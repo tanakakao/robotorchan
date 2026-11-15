@@ -6,6 +6,7 @@ import torch
 
 from robotorchan.acquisition import BALD, ProbabilityVariance
 from robotorchan.models.classification import BinarySingleTaskGPClassifier
+from robotorchan.models.classification.base import ClassificationModelMixin
 
 
 def test_bald_and_probability_variance_match_sample_moment_references() -> None:
@@ -40,6 +41,9 @@ def test_bald_and_probability_variance_match_sample_moment_references() -> None:
         return samples
 
     model.sample_class_probabilities = MethodType(fixed_probability_samples, model)
+    # Verify the generic MC fallback separately from the binary GP quadrature path.
+    model.probability_variance = MethodType(ClassificationModelMixin.probability_variance, model)
+    model.mutual_information = MethodType(ClassificationModelMixin.mutual_information, model)
     with torch.no_grad():
         sample_mean = samples.mean(dim=0)
         centered = samples - sample_mean

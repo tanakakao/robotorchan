@@ -69,8 +69,13 @@ class InputDependentLabelNoiseLikelihood(BernoulliLikelihood):
         rates = self.flip_probabilities(X)
         false_positive = rates[..., 0]
         false_negative = rates[..., 1]
-        if clean_probability.shape[-1:] == (1,):
+        input_shape = X.shape[:-1]
+        if clean_probability.shape[-len(input_shape) :] == input_shape:
+            pass
+        elif clean_probability.shape[-len(input_shape) - 1 :] == (*input_shape, 1):
             clean_probability = clean_probability.squeeze(-1)
+        else:
+            raise ValueError("Likelihood probabilities must align with candidate input shape.")
         return false_positive + (1.0 - false_positive - false_negative) * clean_probability
 
     def forward(
@@ -133,6 +138,10 @@ class InputDependentLabelNoiseBinarySingleTaskGPClassifier(
             noise_rate_model,
             max_flip_probability=max_flip_probability,
         )
+
+    def _positive_probability_from_latent(self, values: Tensor, X: Tensor) -> Tensor:
+        """Apply the observed-label link with candidate-dependent flip rates."""
+        return self.likelihood.forward(values, X=X).probs
 
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> Bernoulli:
         """Return observed-label predictions using input-dependent flip rates."""
