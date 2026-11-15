@@ -13,6 +13,7 @@ from torch.quasirandom import SobolEngine
 
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.base import SearchStrategy
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.dispatch import optimize_acqf
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.study.search_space import SearchSpace
@@ -36,6 +37,7 @@ class CandidateGenerator:
         n_initial_trials: int = 3,
         seed: int | None = None,
         variable_space: MixedVariableSpace | None = None,
+        constraints: CandidateConstraints | None = None,
     ) -> None:
         if direction not in {"maximize", "minimize"}:
             raise ValueError("direction must be 'maximize' or 'minimize'.")
@@ -51,6 +53,7 @@ class CandidateGenerator:
             if not torch.allclose(variable_space.bounds.to(dtype=bounds.dtype), bounds):
                 raise ValueError("variable_space bounds must match Study bounds.")
         self.variable_space = variable_space
+        self.constraints = constraints
         self.direction = direction
         self.model = model
         self.model_kwargs = dict(model_kwargs or {})
@@ -74,6 +77,12 @@ class CandidateGenerator:
             raise ValueError("q must be a positive integer.")
         bounds = self._bounds()
         if len(completed) < self.n_initial_trials:
+            if self.constraints is not None and self.constraints.has_constraints:
+                raise NotImplementedError(
+                    "Constrained initial Study candidates are not yet supported. "
+                    "Register feasible initial trials with add_trial()/start_trial()/tell() "
+                    "before requesting model-based constrained candidates."
+                )
             points = self._sobol.draw(q).to(dtype=bounds.dtype)
             candidate = bounds[0] + (bounds[1] - bounds[0]) * points
             if self.variable_space is not None:
@@ -105,6 +114,8 @@ class CandidateGenerator:
                 kwargs.setdefault("X_baseline", train_x)
             acq = self.acquisition(**kwargs)
             if isinstance(self.optimizer, SearchStrategy):
+                if self.constraints is not None and self.constraints.has_constraints:
+                    raise ValueError("CandidateConstraints requires a named optimizer backend.")
                 if self.variable_space is not None:
                     raise ValueError("Mixed variable_space requires a named optimizer backend.")
                 if not torch.allclose(self.optimizer.bounds.to(dtype=bounds.dtype), bounds):
@@ -122,6 +133,7 @@ class CandidateGenerator:
                     q=q,
                     optimizer=self.optimizer,
                     variable_space=self.variable_space,
+                    constraints=self.constraints,
                     **options,
                 )
         if candidate.shape != (q, len(self.space.bounds)):
