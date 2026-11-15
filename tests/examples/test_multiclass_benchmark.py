@@ -38,9 +38,7 @@ def test_multiclass_benchmark_dataset(benchmark, mixed: bool) -> None:
 
 @pytest.mark.parametrize("mixed", [False, True])
 def test_multiclass_benchmark_smoke(benchmark, mixed: bool) -> None:
-    rows = benchmark.evaluate(
-        13, mixed=mixed, method="entropy", budget=0, epochs=1
-    )
+    rows = benchmark.evaluate(13, mixed=mixed, method="entropy", budget=0, epochs=1)
     assert len(rows) == 1
     row = rows[0]
     assert row["seed"] == 13
