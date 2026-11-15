@@ -65,10 +65,7 @@ def test_ordinal_four_class_gaussian_marginalization_matches_sampling() -> None:
     """Analytic predictive class probabilities integrate latent uncertainty."""
     torch.manual_seed(37)
     X = torch.linspace(0.0, 1.0, 12, dtype=torch.double).unsqueeze(-1)
-    Y = torch.bucketize(
-        X[:, 0].contiguous(),
-        torch.tensor([0.25, 0.5, 0.75], dtype=torch.double),
-    )
+    Y = torch.bucketize(X[:, 0].contiguous(), torch.tensor([0.25, 0.5, 0.75], dtype=torch.double))
     model = OrdinalSingleTaskGPClassifier(X, Y, num_classes=4, inducing_points=6)
     model.fit(epochs=2, lr=0.01)
 
