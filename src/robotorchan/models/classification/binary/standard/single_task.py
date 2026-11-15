@@ -146,7 +146,9 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
         latent = self.latent_posterior(X, **kwargs)
         mean_positive = self.predictive_distribution(X, **kwargs).probs
         variance = self._probability_quadrature(
-            lambda values: (self._positive_probability_from_latent(values, X) - mean_positive).square(),
+            lambda values: (
+                self._positive_probability_from_latent(values, X) - mean_positive
+            ).square(),
             latent.distribution,
         ).clamp_min(0.0)
         if variance.shape[-1:] == (1,):
