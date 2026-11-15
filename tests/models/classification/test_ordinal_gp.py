@@ -3,7 +3,7 @@
 import torch
 
 from robotorchan.models.classification import OrdinalSingleTaskGPClassifier
-from robotorchan.models.classification.ordinal_likelihood import OrderedProbitLikelihood
+from robotorchan.models.classification.ordinal.likelihood import OrderedProbitLikelihood
 from robotorchan.models.classification.registry import get_classification_model_class
 
 
@@ -16,7 +16,7 @@ def test_ordered_probit_thresholds_and_probabilities() -> None:
     probabilities = likelihood.class_probabilities(torch.linspace(-3, 3, 7))
     assert probabilities.shape == (7, 5)
     assert torch.all(probabilities >= 0)
-    torch.testing.assert_close(probabilities.sum(-1), torch.ones(7))
+    torch.testing.assert_close(probabilities.sum(-1), torch.ones(7, dtype=torch.double))
 
 
 def test_ordinal_gp_fit_prediction_and_registry() -> None:
