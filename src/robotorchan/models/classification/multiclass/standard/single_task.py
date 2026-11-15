@@ -6,6 +6,7 @@ from copy import deepcopy
 
 import torch
 from botorch.posteriors.gpytorch import GPyTorchPosterior
+from botorch.sampling.normal import SobolQMCNormalSampler
 from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
 from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import SoftmaxLikelihood
@@ -23,6 +24,7 @@ from robotorchan.models.classification.base import (
     ClassificationModelMixin,
     LatentOutputStructure,
 )
+from robotorchan.models.classification.posterior import ClassificationProbabilityPosterior
 from robotorchan.models.classification.validation import validate_class_indices
 from robotorchan.models.standard.variational import SingleTaskVariationalGP
 
@@ -155,6 +157,35 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
             X, sample_shape=torch.Size([num_samples]), **kwargs
         )
         return samples.mean(dim=0)
+
+    def probability_posterior(
+        self,
+        X: Tensor,
+        *,
+        num_samples: int = 1024,
+        seed: int = 0,
+        **kwargs: object,
+    ) -> ClassificationProbabilityPosterior:
+        """Return a class-probability Posterior with shared QMC moment samples.
+
+        Softmax-normal moments have no general closed form. The mean and
+        epistemic variance are estimated from the same seeded Sobol samples,
+        preserving joint latent dependence across candidates and classes.
+        """
+        if num_samples < 2:
+            raise ValueError("num_samples must be at least 2.")
+        latent = self.latent_posterior(X, **kwargs)
+        sampler = SobolQMCNormalSampler(
+            sample_shape=torch.Size([num_samples]),
+            seed=seed,
+        )
+        probabilities = sampler(latent).softmax(dim=-1)
+        return ClassificationProbabilityPosterior(
+            latent,
+            sample_transform=lambda values: values.softmax(dim=-1),
+            mean=probabilities.mean(dim=0),
+            variance=probabilities.var(dim=0, unbiased=False),
+        )
 
     def probability_variance(
         self,
