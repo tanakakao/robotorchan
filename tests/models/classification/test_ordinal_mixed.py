@@ -23,14 +23,11 @@ def _training_data() -> tuple[torch.Tensor, torch.Tensor]:
 
 def test_mixed_ordinal_fit_and_probabilities() -> None:
     train_X, train_Y = _training_data()
-    model = MixedOrdinalSingleTaskGPClassifier(
-        train_X, train_Y, num_classes=3, cat_dims=[1]
-    )
+    model = MixedOrdinalSingleTaskGPClassifier(train_X, train_Y, num_classes=3, cat_dims=[1])
     assert model.cat_dims == (1,)
     assert get_classification_model_entry("ordinal.mixed").model_class is type(model)
     assert (
-        get_classification_model_entry("ordinal.mixed").capabilities.input_type
-        is InputType.MIXED
+        get_classification_model_entry("ordinal.mixed").capabilities.input_type is InputType.MIXED
     )
     model.fit(epochs=2, lr=0.01)
     test_X = train_X[:3]
@@ -44,9 +41,7 @@ def test_ordinal_q_batch_probabilities_preserve_shape() -> None:
     train_X, train_Y = _training_data()
     for model in (
         OrdinalSingleTaskGPClassifier(train_X[:, :1], train_Y, num_classes=3),
-        MixedOrdinalSingleTaskGPClassifier(
-            train_X, train_Y, num_classes=3, cat_dims=[1]
-        ),
+        MixedOrdinalSingleTaskGPClassifier(train_X, train_Y, num_classes=3, cat_dims=[1]),
     ):
         test_X = train_X[:6, : model.raw_train_X.shape[-1]].reshape(
             2, 3, model.raw_train_X.shape[-1]
