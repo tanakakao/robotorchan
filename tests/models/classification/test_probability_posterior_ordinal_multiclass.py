@@ -36,9 +36,7 @@ def _model(kind: str, mixed: bool) -> object:
 @pytest.mark.parametrize("kind", ["ordinal", "multiclass"])
 @pytest.mark.parametrize("mixed", [False, True])
 @pytest.mark.parametrize("q", [1, 2])
-def test_probability_posterior_preserves_botorch_contract(
-    kind: str, mixed: bool, q: int
-) -> None:
+def test_probability_posterior_preserves_botorch_contract(kind: str, mixed: bool, q: int) -> None:
     model = _model(kind, mixed)
     X = torch.tensor([[[0.2], [0.8]]], dtype=torch.double)[:, :q]
     if mixed:
@@ -100,9 +98,7 @@ def test_ordinal_probability_posterior_matches_dense_gaussian_integration() -> N
     )
     torch.testing.assert_close(posterior.mean, model.predict_proba(X), atol=0, rtol=0)
     torch.testing.assert_close(posterior.mean, expected_mean, atol=1e-5, rtol=1e-5)
-    torch.testing.assert_close(
-        posterior.variance, expected_variance, atol=1e-5, rtol=1e-4
-    )
+    torch.testing.assert_close(posterior.variance, expected_variance, atol=1e-5, rtol=1e-4)
     assert posterior.variance.max() < 0.25
 
 
@@ -116,9 +112,7 @@ def test_multiclass_probability_moments_are_seeded_and_mc_consistent() -> None:
     torch.testing.assert_close(first.variance, second.variance, atol=0, rtol=0)
     torch.manual_seed(123)
     reference = model.sample_class_probabilities(X, torch.Size([8192]))
-    torch.testing.assert_close(
-        first.mean, reference.mean(dim=0), atol=0.025, rtol=0.04
-    )
+    torch.testing.assert_close(first.mean, reference.mean(dim=0), atol=0.025, rtol=0.04)
     torch.testing.assert_close(
         first.variance, reference.var(dim=0, unbiased=False), atol=0.025, rtol=0.08
     )
