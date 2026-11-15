@@ -99,7 +99,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
         """Return ``[P(y=0), P(y=1)]`` along the final dimension."""
         positive = self.predictive_distribution(X, **kwargs).probs
-        if positive.shape[-1:] == (1,):
+        if positive.shape == (*X.shape[:-1], 1):
             positive = positive.squeeze(-1)
         return torch.stack((1.0 - positive, positive), dim=-1)
 
@@ -151,7 +151,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             ).square(),
             latent.distribution,
         ).clamp_min(0.0)
-        if variance.shape[-1:] == (1,):
+        if variance.shape == (*X.shape[:-1], 1):
             variance = variance.squeeze(-1)
         return torch.stack((variance, variance), dim=-1)
 
@@ -180,7 +180,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             )
 
         result = self._probability_quadrature(entropy, latent.distribution)
-        return result.squeeze(-1) if result.shape[-1:] == (1,) else result
+        return result.squeeze(-1) if result.shape == (*X.shape[:-1], 1) else result
 
     def mutual_information(
         self,
