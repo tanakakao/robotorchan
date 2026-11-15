@@ -72,9 +72,9 @@ def test_ordinal_four_class_gaussian_marginalization_matches_sampling() -> None:
     test_X = torch.tensor([[0.1], [0.45], [0.9]], dtype=torch.double)
     analytic = model.predict_proba(test_X)
     torch.manual_seed(91)
-    monte_carlo = model.sample_class_probabilities(
-        test_X, sample_shape=torch.Size([4096])
-    ).mean(dim=0)
+    monte_carlo = model.sample_class_probabilities(test_X, sample_shape=torch.Size([4096])).mean(
+        dim=0
+    )
 
     assert model.class_labels == (0, 1, 2, 3)
     assert model.posterior(test_X).mean.shape == (3, 1)
