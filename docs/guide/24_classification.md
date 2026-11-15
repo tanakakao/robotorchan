@@ -208,3 +208,22 @@ ReLUネットワーク由来の非定常なカーネルを試す場合はInfinit
 潜在関数には`posterior()`を使用します。各モデルの構築引数と選択表は
 [モデル一覧](../models/classification.md)、実行コードは
 [分類拡張Notebook](../../examples/notebooks/47_binary_classification_extensions.ipynb)を参照してください。
+
+
+## マルチクラス分類GPの利用
+
+`MulticlassSingleTaskGPClassifier` は3クラス以上の分類に対応します。
+カテゴリ入力を含む場合は `MixedMulticlassSingleTaskGPClassifier` に
+`cat_dims` を指定します。ラベルは `0, ..., C-1` の整数です。
+
+`posterior(X)` はクラスごとの潜在GP分布であり、クラス確率ではありません。
+`predict_proba(X)` は形状 `[..., q, C]` の事後予測確率を返します。
+分類確率の最後の軸は合計1になります。
+
+Active Learningでは既存の `PredictiveEntropy`、`MarginUncertainty`、
+`ProbabilityVariance`、`BALD` と各q版を共通利用できます。
+`qBALD` はラベルの組合せ数 `C**q <= 256` に制限されます。
+`LatentStraddle` は二値分類専用であり、マルチクラスには使えません。
+
+[40番の実行Notebook](../../examples/notebooks/40_multiclass_classification_active_learning.ipynb)と
+[対応表](../models/multiclass-active-learning.md)も参照してください。
