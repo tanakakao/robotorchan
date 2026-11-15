@@ -7,9 +7,17 @@ from typing import TypeAlias
 
 from torch import nn
 
-from robotorchan.models.capabilities import ModelCapabilities
+from robotorchan.models.capabilities import (
+    InferenceType,
+    ModelCapabilities,
+    ObservationType,
+    PosteriorSamplingType,
+)
 from robotorchan.models.classification.binary.registry import (
     BINARY_CLASSIFICATION_MODEL_SPECS,
+)
+from robotorchan.models.classification.multiclass.standard.single_task import (
+    MulticlassSingleTaskGPClassifier,
 )
 
 ClassificationModelType: TypeAlias = type[nn.Module]
@@ -60,6 +68,25 @@ def _make_registry() -> dict[str, ClassificationModelRegistryEntry]:
         registry,
         BINARY_CLASSIFICATION_MODEL_SPECS,
         num_classes=2,
+    )
+    _register_fragment(
+        registry,
+        (
+            (
+                "multiclass.standard",
+                MulticlassSingleTaskGPClassifier,
+                "standard",
+                ModelCapabilities(
+                    observation_type=ObservationType.CLASSIFICATION,
+                    inference=InferenceType.VARIATIONAL,
+                    supports_multi_output=True,
+                    supports_posterior_samples=True,
+                    supports_probability_samples=True,
+                    posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
+                ),
+            ),
+        ),
+        num_classes=None,
     )
     return registry
 

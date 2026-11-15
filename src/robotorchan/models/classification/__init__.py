@@ -80,6 +80,9 @@ from robotorchan.models.classification.conformal import (
     conformal_quantile,
 )
 from robotorchan.models.classification.model_list import ClassificationModelList
+from robotorchan.models.classification.multiclass.standard.single_task import (
+    MulticlassSingleTaskGPClassifier,
+)
 from robotorchan.models.classification.posterior import (
     ClassificationEnsemblePosterior,
     make_classification_ensemble_posterior,
@@ -148,6 +151,7 @@ __all__ = [
     "MixedSpectralMixtureBinaryGPClassifier",
     "MultiFidelityBinaryGPClassifier",
     "MultiTaskBinaryGPClassifier",
+    "MulticlassSingleTaskGPClassifier",
     "NonGPBinaryClassificationMixin",
     "NonstationaryBinarySingleTaskGPClassifier",
     "NonstationaryMultiTaskBinaryGPClassifier",

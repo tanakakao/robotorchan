@@ -32,8 +32,8 @@ def test_all_classification_models_have_complete_binary_capabilities() -> None:
     for model_id, entry in CLASSIFICATION_MODEL_REGISTRY.items():
         capabilities = entry.capabilities
 
-        assert model_id.startswith("binary.")
-        assert entry.num_classes == 2
+        assert model_id.startswith(("binary.", "multiclass."))
+        assert entry.num_classes == (2 if model_id.startswith("binary.") else None)
         assert capabilities.observation_type is ObservationType.CLASSIFICATION
         if capabilities.non_gp and not capabilities.ensemble_posterior:
             assert not capabilities.supports_posterior_samples
