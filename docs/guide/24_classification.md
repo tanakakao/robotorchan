@@ -176,7 +176,7 @@ Conformalの被覆率は交換可能性などの仮定に依存し、
 各入力における条件付き被覆率を保証するわけではありません。
 
 対応する実行例は
-[40番Notebook](../../examples/notebooks/40_classification_robust_uncertain.ipynb)
+[51番Notebook](../../examples/notebooks/40_classification_robust_uncertain.ipynb)
 と[41番Notebook](../../examples/notebooks/41_classification_probability_layers.ipynb)
 です。41番ではConformalの概念を説明しますが、
 予測集合の実際の算出は行っていません。
@@ -225,7 +225,7 @@ Active Learningでは既存の `PredictiveEntropy`、`MarginUncertainty`、
 `qBALD` はラベルの組合せ数 `C**q <= 256` に制限されます。
 `LatentStraddle` は二値分類専用であり、マルチクラスには使えません。
 
-[40番の実行Notebook](../../examples/notebooks/40_multiclass_classification_active_learning.ipynb)と
+[51番の実行Notebook](../../examples/notebooks/51_multiclass_classification_active_learning.ipynb)と
 [対応表](../models/multiclass-active-learning.md)も参照してください。
 
 
@@ -239,7 +239,7 @@ Active Learningでは既存の `PredictiveEntropy`、`MarginUncertainty`、
 実行例では `MulticlassSingleTaskGPClassifier` に `num_classes=3` を指定し、
 `fit()` の後に `predict_proba()` を呼び出します。
 3点を予測した場合の出力形状は `[3, 3]`（3点 × 3クラス）です。
-コードは[40番Notebook](../../examples/notebooks/40_multiclass_classification_active_learning.ipynb)にまとめています。
+コードは[51番Notebook](../../examples/notebooks/51_multiclass_classification_active_learning.ipynb)にまとめています。
 
 予測確率が `[0.7, 0.2, 0.1]` なら、
 最も確からしいのはクラス0ですが、クラス1・2の可能性も残ります。
