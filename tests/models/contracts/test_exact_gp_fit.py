@@ -94,14 +94,27 @@ def test_registered_exact_gp_subclasses_require_explicit_fit_opt_in() -> None:
     """Prevent unreviewed public subclasses from inheriting verified fitting."""
     from robotorchan.models import (
         NonstationarySingleTaskGP,
-        SpectralMixtureGP,
         UncertainInputSingleTaskGP,
     )
 
     for model_class in (
         NonstationarySingleTaskGP,
-        SpectralMixtureGP,
         UncertainInputSingleTaskGP,
     ):
         assert issubclass(model_class, SingleTaskGP)
         assert model_class.supports_fit is False
+
+
+def test_spectral_mixture_gp_fit_and_posterior() -> None:
+    """Spectral mixture exact GP explicitly opts in to native MLL fitting."""
+    from robotorchan.models import SpectralMixtureGP
+
+    X, Y = _regression_data()
+    model = SpectralMixtureGP(X, Y, num_mixtures=2)
+    assert model.supports_fit
+    assert model.make_mll().model is model
+    assert model.fit(optimizer_kwargs={"options": {"maxiter": 2}}) is None
+    with torch.no_grad():
+        posterior = model.posterior(X[:2])
+    assert posterior.mean.shape == (2, 1)
+    assert torch.isfinite(posterior.mean).all()
