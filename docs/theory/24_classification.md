@@ -851,7 +851,7 @@ I(Y_{1:q};F_{1:q}\mid D)
 
 - [分類ガイド](../guide/24_classification.md)：モデルの選び方と公開API
 - [39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)：標準GP分類とActive Learning
-- [40番Notebook](../../examples/notebooks/40_classification_robust_uncertain.ipynb)：ノイズと入力不確実性
+- [51番Notebook](../../examples/notebooks/40_classification_robust_uncertain.ipynb)：ノイズと入力不確実性
 - [41番Notebook](../../examples/notebooks/41_classification_probability_layers.ipynb)：校正とアンサンブル
 - [47番Notebook](../../examples/notebooks/47_binary_classification_extensions.ipynb)：拡張モデルとq-batch
 
@@ -904,7 +904,7 @@ $$
 
 複数候補のjoint qBALDでは、候補間の依存も考慮しますが、
 ラベルの組合せ数は \(C^q\) で増加します。
-[40番Multiclass Notebook](../../examples/notebooks/40_multiclass_classification_active_learning.ipynb)
+[51番Multiclass Notebook](../../examples/notebooks/51_multiclass_classification_active_learning.ipynb)
 に学習から候補提案までの例を示します。
 
 
