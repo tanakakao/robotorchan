@@ -100,8 +100,6 @@ class ClassificationProbabilityPosterior(Posterior):
             raise ValueError("num_samples must be at least 2.")
         samples = self.rsample(torch.Size([num_samples]))
         tail = (1.0 - confidence_level) / 2.0
-        limits = torch.tensor(
-            [tail, 1.0 - tail], device=samples.device, dtype=samples.dtype
-        )
+        limits = torch.tensor([tail, 1.0 - tail], device=samples.device, dtype=samples.dtype)
         lower, upper = torch.quantile(samples, limits, dim=0).unbind(0)
         return lower, upper
