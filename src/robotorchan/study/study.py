@@ -64,13 +64,30 @@ class Study:
         trial = self.add_trial(self._generator.propose(completed))
         return self.start_trial(trial.number)
 
-    def tell(self, trial: Trial | int, value: float) -> Trial:
-        """Record an observation for a running trial."""
+    def tell(
+        self,
+        trial: Trial | int,
+        value: float | None = None,
+        *,
+        state: TrialState = TrialState.COMPLETE,
+    ) -> Trial:
+        """Complete or fail a running trial after external evaluation."""
         number = trial.number if isinstance(trial, Trial) else trial
-        return self.complete_trial(number, value)
+        current = self.get_trial(number)
+        if isinstance(trial, Trial) and trial.params != current.params:
+            raise ValueError("Trial parameters do not match the current Study trial.")
+        if state is TrialState.COMPLETE:
+            if value is None:
+                raise ValueError("Completed trials require an observation.")
+            return self.complete_trial(number, value)
+        if state is TrialState.FAIL:
+            if value is not None:
+                raise ValueError("Failed trials must not contain an observation.")
+            return self.fail_trial(number)
+        raise ValueError("tell() only accepts COMPLETE or FAIL as terminal states.")
 
     def add_trial(self, params: Mapping[str, float]) -> Trial:
-        """Register a candidate without generating it (Phase 3)."""
+        """Register an externally supplied candidate in WAITING state."""
         self.search_space.validate(params)
         trial = Trial(number=self._next_number, params=params)
         self._trials[trial.number] = trial
