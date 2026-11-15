@@ -111,17 +111,17 @@ def _make_registry() -> dict[str, ClassificationModelRegistryEntry]:
         registry,
         (
             (
-            "ordinal.standard",
-            OrdinalSingleTaskGPClassifier,
-            "ordinal",
-            ModelCapabilities(
-                observation_type=ObservationType.CLASSIFICATION,
-                inference=InferenceType.VARIATIONAL,
-                supports_posterior_samples=True,
-                supports_probability_samples=True,
-                posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
-            ),
-            ),
+                "ordinal.standard",
+                OrdinalSingleTaskGPClassifier,
+                "ordinal",
+                ModelCapabilities(
+                    observation_type=ObservationType.CLASSIFICATION,
+                    inference=InferenceType.VARIATIONAL,
+                    supports_posterior_samples=True,
+                    supports_probability_samples=True,
+                    posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
+                ),
+                ),
         ),
         num_classes=None,
     )
