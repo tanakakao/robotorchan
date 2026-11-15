@@ -7,14 +7,14 @@ from typing import TypeAlias
 
 from torch import nn
 
-from robotorchan.models.classification.binary.registry import (
-    BINARY_CLASSIFICATION_MODEL_SPECS,
-)
 from robotorchan.models.capabilities import (
     InferenceType,
     ModelCapabilities,
     ObservationType,
     PosteriorSamplingType,
+)
+from robotorchan.models.classification.binary.registry import (
+    BINARY_CLASSIFICATION_MODEL_SPECS,
 )
 from robotorchan.models.classification.multiclass.standard.single_task import (
     MulticlassSingleTaskGPClassifier,
