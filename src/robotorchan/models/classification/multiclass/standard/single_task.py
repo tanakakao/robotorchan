@@ -2,14 +2,22 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+
 import torch
 from botorch.posteriors.gpytorch import GPyTorchPosterior
 from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
+from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import SoftmaxLikelihood
 from torch import Tensor, nn
 from torch.distributions import Categorical
 from torch.utils.data import DataLoader, TensorDataset
 
+from robotorchan.models.base import (
+    ContinuousKernelFactory,
+    make_mixed_covar_module,
+    normalize_feature_dims,
+)
 from robotorchan.models.classification.base import (
     ClassificationLikelihoodFamily,
     ClassificationModelMixin,
@@ -31,6 +39,7 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
         train_Y: Tensor,
         *,
         num_classes: int,
+        covar_module: Kernel | None = None,
         inducing_points: Tensor | int | None = None,
         learn_inducing_points: bool = True,
     ) -> None:
@@ -58,6 +67,7 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
             SingleTaskVariationalGP(
                 train_X=train_X,
                 num_outputs=1,
+                covar_module=deepcopy(covar_module),
                 inducing_points=inducing_points,
                 learn_inducing_points=learn_inducing_points,
             )
@@ -159,3 +169,35 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
 
     def predict_class(self, X: Tensor, **kwargs: object) -> Tensor:
         return self.predict_proba(X, **kwargs).argmax(dim=-1)
+
+
+class MixedMulticlassSingleTaskGPClassifier(MulticlassSingleTaskGPClassifier):
+    """Multiclass variational GP with native categorical covariance."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        cat_dims: list[int],
+        cont_kernel_factory: ContinuousKernelFactory | None = None,
+        inducing_points: Tensor | int | None = None,
+        learn_inducing_points: bool = True,
+    ) -> None:
+        """Construct independent class GPs sharing the mixed-kernel specification."""
+        covar_module = make_mixed_covar_module(
+            input_dim=train_X.shape[-1],
+            cat_dims=cat_dims,
+            batch_shape=train_X.shape[:-2],
+            cont_kernel_factory=cont_kernel_factory,
+        )
+        super().__init__(
+            train_X,
+            train_Y,
+            num_classes=num_classes,
+            covar_module=covar_module,
+            inducing_points=inducing_points,
+            learn_inducing_points=learn_inducing_points,
+        )
+        self.cat_dims = normalize_feature_dims(cat_dims, train_X.shape[-1], name="cat_dims")

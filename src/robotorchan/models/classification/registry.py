@@ -9,6 +9,7 @@ from torch import nn
 
 from robotorchan.models.capabilities import (
     InferenceType,
+    InputType,
     ModelCapabilities,
     ObservationType,
     PosteriorSamplingType,
@@ -17,6 +18,7 @@ from robotorchan.models.classification.binary.registry import (
     BINARY_CLASSIFICATION_MODEL_SPECS,
 )
 from robotorchan.models.classification.multiclass.standard.single_task import (
+    MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
 )
 
@@ -78,6 +80,20 @@ def _make_registry() -> dict[str, ClassificationModelRegistryEntry]:
                 "standard",
                 ModelCapabilities(
                     observation_type=ObservationType.CLASSIFICATION,
+                    inference=InferenceType.VARIATIONAL,
+                    supports_multi_output=True,
+                    supports_posterior_samples=True,
+                    supports_probability_samples=True,
+                    posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
+                ),
+            ),
+            (
+                "multiclass.mixed",
+                MixedMulticlassSingleTaskGPClassifier,
+                "mixed",
+                ModelCapabilities(
+                    observation_type=ObservationType.CLASSIFICATION,
+                    input_type=InputType.MIXED,
                     inference=InferenceType.VARIATIONAL,
                     supports_multi_output=True,
                     supports_posterior_samples=True,
