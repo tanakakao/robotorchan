@@ -16,6 +16,7 @@ from robotorchan.optim.base import SearchStrategy
 from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.dispatch import optimize_acqf
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
+from robotorchan.study.feasibility import is_feasible
 from robotorchan.study.search_space import SearchSpace
 from robotorchan.study.trial import Trial
 
@@ -77,20 +78,27 @@ class CandidateGenerator:
             raise ValueError("q must be a positive integer.")
         bounds = self._bounds()
         if len(completed) < self.n_initial_trials:
-            if self.constraints is not None and self.constraints.has_constraints:
-                raise NotImplementedError(
-                    "Constrained initial Study candidates are not yet supported. "
-                    "Register feasible initial trials with add_trial()/start_trial()/tell() "
-                    "before requesting model-based constrained candidates."
+            candidate = None
+            for _ in range(256):
+                points = self._sobol.draw(q).to(dtype=bounds.dtype)
+                proposal = bounds[0] + (bounds[1] - bounds[0]) * points
+                if self.variable_space is not None:
+                    for dim in self.variable_space.integer_dims:
+                        proposal[:, dim] = proposal[:, dim].round()
+                    for dim, values in self.variable_space.categorical_values.items():
+                        index = torch.clamp(
+                            (points[:, dim] * len(values)).long(), max=len(values) - 1
+                        )
+                        proposal[:, dim] = torch.tensor(values, dtype=bounds.dtype)[index]
+                if is_feasible(
+                    proposal, self.constraints, variable_space=self.variable_space
+                ):
+                    candidate = proposal
+                    break
+            if candidate is None:
+                raise RuntimeError(
+                    "Unable to generate a feasible initial q-batch after 256 attempts."
                 )
-            points = self._sobol.draw(q).to(dtype=bounds.dtype)
-            candidate = bounds[0] + (bounds[1] - bounds[0]) * points
-            if self.variable_space is not None:
-                for dim in self.variable_space.integer_dims:
-                    candidate[:, dim] = candidate[:, dim].round()
-                for dim, values in self.variable_space.categorical_values.items():
-                    index = torch.clamp((points[:, dim] * len(values)).long(), max=len(values) - 1)
-                    candidate[:, dim] = torch.tensor(values, dtype=bounds.dtype)[index]
         else:
             names = tuple(self.space.bounds)
             train_x = torch.tensor(
@@ -136,6 +144,8 @@ class CandidateGenerator:
                     constraints=self.constraints,
                     **options,
                 )
+        if not is_feasible(candidate, self.constraints, variable_space=self.variable_space):
+            raise ValueError("Optimizer returned candidates violating CandidateConstraints.")
         if candidate.shape != (q, len(self.space.bounds)):
             raise ValueError("Optimizer must return candidates with shape [q, d].")
         results = []
