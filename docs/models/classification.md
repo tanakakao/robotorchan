@@ -1,8 +1,8 @@
 # Classification models
 
 robotorchan の classification model は、BoTorch-compatible なlatent posteriorと、分類固有の
-class probability / label predictionを分離します。現在はbinary classificationを実装し、
-共通契約は将来のmulticlassを想定しています。
+class probability / label predictionを分離します。現在は二値分類・マルチクラス分類・
+順序分類（Ordinal GP）を公開しており、モデルごとの出力構造は異なります。
 
 ## 最初に使うモデル
 
@@ -33,6 +33,8 @@ labels = model.predict_class(X)
 | --- | --- |
 | 通常の連続入力binary classification | `BinarySingleTaskGPClassifier` |
 | continuous + categorical | `MixedBinarySingleTaskGPClassifier` |
+| 順序なしの3クラス以上 | `MulticlassSingleTaskGPClassifier` / `MixedMulticlassSingleTaskGPClassifier` |
+| 順序ありの3クラス以上 | `OrdinalSingleTaskGPClassifier` / `MixedOrdinalSingleTaskGPClassifier` |
 | task featureを持つlong-format data | `MultiTaskBinaryGPClassifier` |
 | 全taskが同じXを共有するblock design | `KroneckerMultiTaskBinaryGPClassifier` |
 | 独立classifierの合成 | `ClassificationModelList` |
@@ -74,7 +76,9 @@ bootstrap ensemble はデータを再抽出して完成した分類器を複数�
 
 ## 対応範囲を確認する
 
-multiclass 共通の metadata・確率ベクトル契約は準備されていますが、公開 multiclass classifier は未実装です。Bernoulli、0.5 閾値、潜在 0 境界は binary 実装に閉じ込めます。Multi-Fidelity、高次元・robust の組合せ、batch・非同期・fantasization の可否は class 名から推測せず capability とテストを確認してください。
+multiclassおよびordinal classifierは実装済みです。通常のmulticlassはクラスごとの
+潜在GPとSoftmax、ordinalは単一潜在GPと単調なOrdered-probit閾値を利用します。
+Bernoulli、0.5 閾値、潜在 0 境界は binary 実装に閉じ込めます。Multi-Fidelity、高次元・robust の組合せ、batch・非同期・fantasization の可否は class 名から推測せず capability とテストを確認してください。
 
 数理は[分類理論](../theory/24_classification.md)、実装との対応は[分類ガイド](../guide/24_classification.md)、選択基準は[分類 Active Learning](../theory/acquisition/13_classification_active_learning.md)から辿れます。API 形状・対応行列・未対応条件の正本は[内部契約](../../docs-internal/contracts/classification-models.md)です。
 
@@ -100,7 +104,8 @@ NNGPは**無限幅ニューラルネットワークに対応する解析的カ�
 `qPredictiveEntropy`、`qMarginUncertainty`、`qProbabilityVariance`、
 `qLatentStraddle`は候補ごとの**周辺スコアの平均**です。
 `qBALD`は潜在関数の同時サンプルからラベルベクトルを列挙し、
-候補間の冗長性を考慮します（binaryのみ、`1 <= q <= 8`）。
+候補間の冗長性を考慮します。binaryは`1 <= q <= 8`、
+多クラス・順序分類では`C**q <= 256`の列挙上限があります。
 単一点用の`PredictiveEntropy`等とは区別してください。
 
 学習から候補提案までの例は
@@ -111,6 +116,11 @@ NNGPは**無限幅ニューラルネットワークに対応する解析的カ�
 
 
 # Ordinal GP: Active Learning and candidate generation
+
+数理の導出は[分類GP理論](../theory/24_classification.md)、
+実装との対応は[分類Guide](../guide/24_classification.md)、
+学習から2ラウンドの候補提案・Mixed探索までの実行例は
+[52番 Ordinal GP Notebook](../../examples/notebooks/52_ordinal_classification_active_learning.ipynb)を参照してください。
 
 Ordinal labels (0, 1, ..., C-1) have a **known order**. Unlike ordinary
 multiclass classification, the ordered-probit model uses a single latent
