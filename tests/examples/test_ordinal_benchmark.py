@@ -9,10 +9,7 @@ import pytest
 import torch
 
 BENCHMARK = (
-    Path(__file__).resolve().parents[2]
-    / "examples"
-    / "benchmarks"
-    / "ordinal_active_learning.py"
+    Path(__file__).resolve().parents[2] / "examples" / "benchmarks" / "ordinal_active_learning.py"
 )
 
 
@@ -43,9 +40,7 @@ def test_ordinal_benchmark_dataset(benchmark, mixed: bool) -> None:
 def test_ordinal_benchmark_shared_initial_metrics(benchmark, mixed: bool) -> None:
     """All acquisition methods start with exactly the same model and holdout."""
     rows = [
-        benchmark.evaluate(
-            13, mixed=mixed, method=method, budget=0, epochs=1, num_samples=8
-        )[0]
+        benchmark.evaluate(13, mixed=mixed, method=method, budget=0, epochs=1, num_samples=8)[0]
         for method in benchmark.METHODS
     ]
     for row in rows:
@@ -68,9 +63,7 @@ def test_ordinal_benchmark_shared_initial_metrics(benchmark, mixed: bool) -> Non
     [(False, "random"), (False, "entropy"), (True, "entropy"), (True, "bald")],
 )
 def test_ordinal_benchmark_selection_step(benchmark, mixed: bool, method: str) -> None:
-    rows = benchmark.evaluate(
-        17, mixed=mixed, method=method, budget=1, epochs=1, num_samples=8
-    )
+    rows = benchmark.evaluate(17, mixed=mixed, method=method, budget=1, epochs=1, num_samples=8)
     assert len(rows) == 2
     assert [row["labels_added"] for row in rows] == [0, 1]
     assert all(row["method"] == method for row in rows)
@@ -83,6 +76,4 @@ def test_ordinal_benchmark_input_validation(benchmark) -> None:
     with pytest.raises(ValueError, match="budget"):
         benchmark.evaluate(1, mixed=False, method="random", budget=76, epochs=1)
     with pytest.raises(ValueError, match="num_samples"):
-        benchmark.evaluate(
-            1, mixed=False, method="random", budget=0, epochs=1, num_samples=1
-        )
+        benchmark.evaluate(1, mixed=False, method="random", budget=0, epochs=1, num_samples=1)
