@@ -13,6 +13,7 @@ from robotorchan.acquisition.active_learning.classification import (
     qPredictiveEntropy,
     qProbabilityVariance,
 )
+from robotorchan.optim.strategies.sobol import SobolSearchStrategy
 from robotorchan.models.classification import (
     MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
@@ -102,3 +103,15 @@ def test_multiclass_uncertainty_sample_contract(
         model.probability_variance(X, num_samples=1)
     with pytest.raises(ValueError, match="at least 2"):
         model.mutual_information(X, num_samples=1)
+
+
+def test_multiclass_sobol_search_strategy(
+    model: MulticlassSingleTaskGPClassifier,
+) -> None:
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    strategy = SobolSearchStrategy(bounds, num_samples=8, seed=11)
+    result = strategy.optimize(qPredictiveEntropy(model), q=2)
+    assert result.candidates.shape == (2, 2)
+    assert torch.isfinite(result.candidates).all()
+    assert result.acquisition_value is not None
+    assert torch.isfinite(result.acquisition_value)
