@@ -184,12 +184,8 @@ def test_ensemble_exact_weighted_marginal_credible_intervals() -> None:
     weights = torch.tensor([0.6, 0.3, 0.1], dtype=torch.double)
     posterior = ClassificationEnsemblePosterior(_probabilities(), weights=weights)
     lower, upper = posterior.credible_interval(0.9)
-    torch.testing.assert_close(
-        lower, torch.tensor([[0.6, 0.2], [0.2, 0.6]], dtype=torch.double)
-    )
-    torch.testing.assert_close(
-        upper, torch.tensor([[0.8, 0.4], [0.4, 0.8]], dtype=torch.double)
-    )
+    torch.testing.assert_close(lower, torch.tensor([[0.6, 0.2], [0.2, 0.6]], dtype=torch.double))
+    torch.testing.assert_close(upper, torch.tensor([[0.8, 0.4], [0.4, 0.8]], dtype=torch.double))
     lower_again, upper_again = posterior.credible_interval(0.9, num_samples=8)
     torch.testing.assert_close(lower, lower_again, atol=0.0, rtol=0.0)
     torch.testing.assert_close(upper, upper_again, atol=0.0, rtol=0.0)
