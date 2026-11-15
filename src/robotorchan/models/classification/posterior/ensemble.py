@@ -49,7 +49,10 @@ class ClassificationEnsemblePosterior(EnsemblePosterior):
             raise ValueError("At least one ensemble weight must be positive.")
         self._probabilities = probabilities
         # BoTorch stores ensemble members in the -3 axis, not the first axis.
-        values = probabilities.unsqueeze(-2) if probabilities.ndim == 2 else probabilities.movedim(0, -3)
+        if probabilities.ndim == 2:
+            values = probabilities.unsqueeze(-2)
+        else:
+            values = probabilities.movedim(0, -3)
         super().__init__(values=values, weights=weights)
 
     @property
