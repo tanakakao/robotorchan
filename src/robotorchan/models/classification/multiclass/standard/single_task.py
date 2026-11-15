@@ -156,6 +156,41 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
         )
         return samples.mean(dim=0)
 
+    def probability_variance(
+        self,
+        X: Tensor,
+        *,
+        num_samples: int = 128,
+        **kwargs: object,
+    ) -> Tensor:
+        """Estimate variance of each class probability over latent GP samples."""
+        if num_samples < 2:
+            raise ValueError("num_samples must be at least 2.")
+        samples = self.sample_class_probabilities(
+            X, sample_shape=torch.Size([num_samples]), **kwargs
+        )
+        return samples.var(dim=0, unbiased=False)
+
+    def mutual_information(
+        self,
+        X: Tensor,
+        *,
+        num_samples: int = 128,
+        **kwargs: object,
+    ) -> Tensor:
+        """Estimate BALD information between labels and latent GP functions."""
+        if num_samples < 2:
+            raise ValueError("num_samples must be at least 2.")
+        samples = self.sample_class_probabilities(
+            X, sample_shape=torch.Size([num_samples]), **kwargs
+        )
+        predictive = samples.mean(dim=0)
+        predictive_entropy = -torch.special.xlogy(predictive, predictive).sum(dim=-1)
+        conditional_entropy = (
+            -torch.special.xlogy(samples, samples).sum(dim=-1).mean(dim=0)
+        )
+        return (predictive_entropy - conditional_entropy).clamp_min(0.0)
+
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> Categorical:
         return Categorical(probs=self.predict_proba(X, **kwargs))
 
