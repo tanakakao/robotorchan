@@ -9,10 +9,9 @@ from typing import Any
 
 from botorch.acquisition.logei import qLogExpectedImprovement
 
-from robotorchan.models import SingleTaskGP
-from robotorchan.optim import SearchStrategy
+from robotorchan.models.standard.single_task import SingleTaskGP
+from robotorchan.optim.base import SearchStrategy
 from robotorchan.study.generation import CandidateGenerator
-
 from robotorchan.study.search_space import SearchSpace
 from robotorchan.study.trial import Trial, TrialState
 
