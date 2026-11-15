@@ -121,7 +121,7 @@ def _make_registry() -> dict[str, ClassificationModelRegistryEntry]:
                     supports_probability_samples=True,
                     posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
                 ),
-                ),
+            ),
         ),
         num_classes=None,
     )
