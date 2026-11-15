@@ -151,10 +151,10 @@ class CandidateGenerator:
                     constraints=self.constraints,
                     **options,
                 )
-        if not is_feasible(candidate, self.constraints, variable_space=self.variable_space):
-            raise ValueError("Optimizer returned candidates violating CandidateConstraints.")
         if candidate.shape != (q, len(self.space.bounds)):
             raise ValueError("Optimizer must return candidates with shape [q, d].")
+        if not is_feasible(candidate, self.constraints, variable_space=self.variable_space):
+            raise ValueError("Optimizer returned candidates violating CandidateConstraints.")
         results = []
         for point in candidate.detach().tolist():
             params = dict(zip(self.space.bounds, point, strict=True))
