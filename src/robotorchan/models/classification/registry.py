@@ -17,6 +17,7 @@ from robotorchan.models.capabilities import (
 from robotorchan.models.classification.binary.registry import (
     BINARY_CLASSIFICATION_MODEL_SPECS,
 )
+from robotorchan.models.classification.ordinal import OrdinalSingleTaskGPClassifier
 from robotorchan.models.classification.multiclass.standard.single_task import (
     MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
@@ -102,6 +103,22 @@ def _make_registry() -> dict[str, ClassificationModelRegistryEntry]:
                 ),
             ),
         ),
+        num_classes=None,
+    )
+    _register_fragment(
+        registry,
+        ((
+            "ordinal.standard",
+            OrdinalSingleTaskGPClassifier,
+            "ordinal",
+            ModelCapabilities(
+                observation_type=ObservationType.CLASSIFICATION,
+                inference=InferenceType.VARIATIONAL,
+                supports_posterior_samples=True,
+                supports_probability_samples=True,
+                posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
+            ),
+        ),),
         num_classes=None,
     )
     return registry
