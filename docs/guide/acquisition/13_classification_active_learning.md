@@ -29,12 +29,12 @@
 デフォルトでGPyTorchの128点Gauss–Hermite求積法を利用します。
 確率分散は数値安定性を考慮した `E[(p_f - E[p_f])^2]`、BALDは
 `H(E[p_f]) - E[H(p_f)]` で計算し、観測ラベルのBernoulli分散
-`E[p_f](1-E[p_f])` とは区別します。
+予測平均確率から計算するBernoulli分散とは区別します。
 確率分散・BALDの計算は決定論的ですが、数値求積には近似誤差があります。
 
 ```python
-variance = model.probability_variance(test_X)  # [..., q, 2]
-bald = model.mutual_information(test_X)        # [..., q]
+variance = model.probability_variance(test_X)  # [..., 2] (q=1で末尾の1次元を省略)
+bald = model.mutual_information(test_X)        # [...], q>1では[..., q]
 
 # 比較検証などで従来のMC推定を明示的に利用する場合
 variance_mc = model.probability_variance(test_X, method="mc", num_samples=2048)
