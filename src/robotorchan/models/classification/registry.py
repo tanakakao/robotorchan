@@ -71,19 +71,21 @@ def _make_registry() -> dict[str, ClassificationModelRegistryEntry]:
     )
     _register_fragment(
         registry,
-        ((
-            "multiclass.standard",
-            MulticlassSingleTaskGPClassifier,
-            "standard",
-            ModelCapabilities(
-                observation_type=ObservationType.CLASSIFICATION,
-                inference=InferenceType.VARIATIONAL,
-                supports_multi_output=True,
-                supports_posterior_samples=True,
-                supports_probability_samples=True,
-                posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
+        (
+            (
+                "multiclass.standard",
+                MulticlassSingleTaskGPClassifier,
+                "standard",
+                ModelCapabilities(
+                    observation_type=ObservationType.CLASSIFICATION,
+                    inference=InferenceType.VARIATIONAL,
+                    supports_multi_output=True,
+                    supports_posterior_samples=True,
+                    supports_probability_samples=True,
+                    posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
+                ),
             ),
-        ),),
+        ),
         num_classes=None,
     )
     return registry
