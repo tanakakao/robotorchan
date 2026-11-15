@@ -22,9 +22,7 @@ def test_ordered_probit_thresholds_and_probabilities() -> None:
 def test_ordinal_gp_fit_prediction_and_registry() -> None:
     torch.manual_seed(7)
     train_X = torch.linspace(0, 1, 15, dtype=torch.double).unsqueeze(-1)
-    train_Y = torch.bucketize(
-        train_X.squeeze(-1), torch.tensor([0.3, 0.65], dtype=torch.double)
-    )
+    train_Y = torch.bucketize(train_X.squeeze(-1), torch.tensor([0.3, 0.65], dtype=torch.double))
     model = OrdinalSingleTaskGPClassifier(train_X, train_Y, num_classes=3)
     assert get_classification_model_class("ordinal.standard") is type(model)
     assert torch.equal(model.raw_train_Y, train_Y)
@@ -42,11 +40,7 @@ def test_ordinal_gp_fit_prediction_and_registry() -> None:
     assert posterior.mean.shape == (4, 1)
     probabilities = model.predict_proba(test_X)
     assert probabilities.shape == (4, 3)
-    torch.testing.assert_close(
-        probabilities.sum(dim=-1), torch.ones(4, dtype=torch.double)
-    )
+    torch.testing.assert_close(probabilities.sum(dim=-1), torch.ones(4, dtype=torch.double))
     assert model.predict_class(test_X).shape == (4,)
     assert model.predictive_distribution(test_X).probs.shape == (4, 3)
-    assert model.sample_class_probabilities(
-        test_X, sample_shape=torch.Size([3])
-    ).shape == (3, 4, 3)
+    assert model.sample_class_probabilities(test_X, sample_shape=torch.Size([3])).shape == (3, 4, 3)
