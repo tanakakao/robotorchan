@@ -23,6 +23,7 @@ def test_shared_registry_composes_binary_specs() -> None:
         *model_ids,
         "multiclass.standard",
         "multiclass.mixed",
+        "ordinal.mixed",
         "ordinal.standard",
     )
     assert CLASSIFICATION_MODEL_REGISTRY["binary.standard"].model_class is (
