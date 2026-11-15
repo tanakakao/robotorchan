@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from collections.abc import Mapping
+from dataclasses import dataclass
 from enum import StrEnum
 from math import isfinite
 from types import MappingProxyType
-from typing import Mapping
 
 
 class TrialState(StrEnum):
