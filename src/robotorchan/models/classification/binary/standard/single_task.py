@@ -179,9 +179,7 @@ class BinarySingleTaskGPClassifier(BinaryClassificationMixin, SingleTaskVariatio
             # Bound both sides to avoid undefined xlogy gradients at those limits.
             eps = torch.finfo(positive.dtype).eps
             safe = positive.clamp(min=eps, max=1.0 - eps)
-            return -torch.special.xlogy(safe, safe) - torch.special.xlogy(
-                1.0 - safe, 1.0 - safe
-            )
+            return -torch.special.xlogy(safe, safe) - torch.special.xlogy(1.0 - safe, 1.0 - safe)
 
         result = self._probability_quadrature(entropy, latent.distribution)
         return result.squeeze(-1) if result.shape[-1:] == (1,) else result
