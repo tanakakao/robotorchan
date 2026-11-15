@@ -43,6 +43,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+dataframe = [
+  "pandas>=2.0",
+]
 fully-bayesian = [
   "botorch[fully_bayesian]>=0.18.1,<0.19",
 ]

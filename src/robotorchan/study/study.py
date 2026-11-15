@@ -54,6 +54,38 @@ class Study:
         """Return immutable trial snapshots in registration order."""
         return tuple(self._trials.values())
 
+    def trials_dataframe(self, *, states: tuple[TrialState, ...] | None = None) -> Any:
+        """Export trial snapshots as a pandas DataFrame.
+
+        Columns are number, state, value, followed by named search-space
+        parameters in declaration order. Non-complete values are missing.
+        """
+        try:
+            import pandas as pd
+        except ImportError as exc:
+            raise ImportError(
+                "DataFrame export requires pandas. Install robotorchan[dataframe]."
+            ) from exc
+
+        if states is not None and (
+            not isinstance(states, tuple)
+            or any(not isinstance(state, TrialState) for state in states)
+        ):
+            raise TypeError("states must be a tuple of TrialState values.")
+        names = tuple(self.search_space.bounds)
+        columns = ["number", "state", "value", *names]
+        rows = [
+            {
+                "number": trial.number,
+                "state": trial.state.value,
+                "value": trial.value,
+                **trial.params,
+            }
+            for trial in self.trials
+            if states is None or trial.state in states
+        ]
+        return pd.DataFrame.from_records(rows, columns=columns)
+
     @property
     def best_trial(self) -> Trial:
         """Return the best completed trial, or raise if none exists."""
