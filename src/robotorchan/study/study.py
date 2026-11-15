@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import replace
 from math import isfinite
+
+import torch
 from typing import Any
 
 from botorch.acquisition.logei import qLogExpectedImprovement
@@ -13,6 +15,7 @@ from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.base import SearchStrategy
 from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
+from robotorchan.study.feasibility import is_feasible
 from robotorchan.study.generation import CandidateGenerator
 from robotorchan.study.search_space import SearchSpace
 from robotorchan.study.trial import Trial, TrialState
@@ -189,6 +192,29 @@ class Study:
     def add_trial(self, params: Mapping[str, float]) -> Trial:
         """Register an externally supplied candidate in WAITING state."""
         self.search_space.validate(params)
+        if self._generator.variable_space is not None:
+            names = tuple(self.search_space.bounds)
+            candidate = torch.tensor(
+                [params[name] for name in names], dtype=torch.double
+            ).unsqueeze(0)
+            variable_space = self._generator.variable_space
+            for dim in variable_space.integer_dims:
+                if candidate[0, dim] != candidate[0, dim].round():
+                    raise ValueError("Trial integer parameter must be integral.")
+            for dim, values in variable_space.categorical_values.items():
+                if candidate[0, dim].item() not in values:
+                    raise ValueError("Trial categorical parameter is not allowed.")
+        else:
+            candidate = torch.tensor(
+                [params[name] for name in self.search_space.bounds],
+                dtype=torch.double,
+            ).unsqueeze(0)
+        if not is_feasible(
+            candidate,
+            self._generator.constraints,
+            variable_space=self._generator.variable_space,
+        ):
+            raise ValueError("Trial parameters violate CandidateConstraints.")
         trial = Trial(number=self._next_number, params=params)
         self._trials[trial.number] = trial
         self._next_number += 1
