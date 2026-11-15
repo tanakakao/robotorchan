@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import torch
+from botorch.posteriors.ensemble import EnsemblePosterior
 from torch import Tensor
 
 
-class ClassificationEnsemblePosterior:
+class ClassificationEnsemblePosterior(EnsemblePosterior):
     """Classification posterior represented by member probability vectors.
 
     The member axis is always the leading dimension and the class axis is
@@ -47,7 +48,9 @@ class ClassificationEnsemblePosterior:
         if not bool(weights.sum() > 0.0):
             raise ValueError("At least one ensemble weight must be positive.")
         self._probabilities = probabilities
-        self._weights = weights / weights.sum()
+        # BoTorch stores ensemble members in the -3 axis, not the first axis.
+        values = probabilities.unsqueeze(-2) if probabilities.ndim == 2 else probabilities.movedim(0, -3)
+        super().__init__(values=values, weights=weights)
 
     @property
     def probabilities(self) -> Tensor:
@@ -55,14 +58,9 @@ class ClassificationEnsemblePosterior:
         return self._probabilities
 
     @property
-    def weights(self) -> Tensor:
-        """Return normalized member weights."""
-        return self._weights
-
-    @property
     def num_members(self) -> int:
         """Return the number of empirical posterior members."""
-        return self._probabilities.shape[0]
+        return self.ensemble_size
 
     @property
     def num_classes(self) -> int:
@@ -70,17 +68,17 @@ class ClassificationEnsemblePosterior:
         return self._probabilities.shape[-1]
 
     @property
-    def mean(self) -> Tensor:
-        """Return the ensemble-mean class probability."""
-        shape = (self.num_members,) + (1,) * (self._probabilities.ndim - 1)
-        return (self._probabilities * self._weights.reshape(shape)).sum(dim=0)
-
-    @property
     def variance(self) -> Tensor:
-        """Return epistemic class-probability variance across members."""
+        """Return population probability variance across ensemble members.
+
+        Unlike the Bessel-corrected sample variance of BoTorch EnsemblePosterior,
+        weights represent discrete posterior probabilities, not frequency weights.
+        This also supports a single member with nonzero weight without division
+        by zero, preserving the existing robotorchan contract.
+        """
         shape = (self.num_members,) + (1,) * (self._probabilities.ndim - 1)
         deviations = self._probabilities - self.mean.unsqueeze(0)
-        return (deviations.square() * self._weights.reshape(shape)).sum(dim=0)
+        return (deviations.square() * self.weights.reshape(shape)).sum(dim=0)
 
     @property
     def predictive_entropy(self) -> Tensor:
@@ -104,19 +102,43 @@ class ClassificationEnsemblePosterior:
         """Return BALD-style epistemic disagreement."""
         return (self.predictive_entropy - self.expected_class_entropy).clamp_min(0.0)
 
-    def rsample(self, sample_shape: torch.Size | None = None) -> Tensor:
-        """Sample member probability vectors from the empirical posterior."""
-        resolved_shape = torch.Size([1]) if sample_shape is None else torch.Size(sample_shape)
-        if not resolved_shape:
-            raise ValueError("sample_shape must contain at least one sample dimension.")
-        num_samples = resolved_shape.numel()
-        indices = torch.multinomial(
-            self._weights,
-            num_samples,
-            replacement=True,
-        )
-        samples = self._probabilities.index_select(0, indices)
-        return samples.reshape(*resolved_shape, *self._probabilities.shape[1:])
+    @property
+    def base_sample_shape(self) -> torch.Size:
+        """Integer index samples have shape sample_shape + batch_shape."""
+        return self.batch_shape
+
+    @property
+    def batch_range(self) -> tuple[int, int]:
+        """The ensemble's t-batch axes, excluding the member and event axes."""
+        return (0, len(self.batch_shape))
+
+    def credible_interval(
+        self,
+        confidence_level: float = 0.95,
+        *,
+        num_samples: int = 4096,
+    ) -> tuple[Tensor, Tensor]:
+        """Return exact marginal equal-tailed quantiles of the discrete members.
+
+        The optional sample count matches the GP probability-posterior API,
+        but is unused: weighted quantiles here require no Monte Carlo sampling.
+        Intervals describe disagreement between member mean probabilities,
+        not the latent uncertainty within an individual GP.
+        """
+        del num_samples
+        if not 0.0 < confidence_level < 1.0:
+            raise ValueError("confidence_level must be strictly between zero and one.")
+        values = self.probabilities.reshape(self.num_members, -1)
+        sorted_values, indices = values.sort(dim=0)
+        weight_columns = self.weights[:, None].expand_as(values)
+        cumulative = weight_columns.gather(0, indices).cumsum(dim=0)
+        tail = (1.0 - confidence_level) / 2.0
+        lower_index = (cumulative >= tail).int().argmax(dim=0, keepdim=True)
+        upper_index = (cumulative >= 1.0 - tail).int().argmax(dim=0, keepdim=True)
+        event_shape = self.probabilities.shape[1:]
+        lower = sorted_values.gather(0, lower_index).reshape(event_shape)
+        upper = sorted_values.gather(0, upper_index).reshape(event_shape)
+        return lower, upper
 
 
 def make_classification_ensemble_posterior(
