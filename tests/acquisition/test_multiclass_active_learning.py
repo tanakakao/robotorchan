@@ -21,9 +21,7 @@ def model() -> MulticlassSingleTaskGPClassifier:
     torch.manual_seed(23)
     X = torch.rand(15, 2, dtype=torch.double)
     y = (torch.arange(15) % 3).long()
-    classifier = MulticlassSingleTaskGPClassifier(
-        X, y, num_classes=3, inducing_points=6
-    )
+    classifier = MulticlassSingleTaskGPClassifier(X, y, num_classes=3, inducing_points=6)
     classifier.fit(epochs=2, lr=0.01)
     return classifier
 
