@@ -60,12 +60,9 @@ class Study:
         completed = [trial for trial in self.trials if trial.state is TrialState.COMPLETE]
         if not completed:
             raise ValueError("No completed trials are available.")
-        key = lambda trial: trial.value
-        return (
-            max(completed, key=key)
-            if self._generator.direction == "maximize"
-            else min(completed, key=key)
-        )
+        if self._generator.direction == "maximize":
+            return max(completed, key=lambda trial: trial.value)
+        return min(completed, key=lambda trial: trial.value)
 
     @property
     def best_value(self) -> float:
