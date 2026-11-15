@@ -44,9 +44,9 @@ def dataset(seed: int, *, mixed: bool) -> tuple[torch.Tensor, torch.Tensor]:
     generator = torch.Generator().manual_seed(seed)
     X = torch.rand(DATASET_SIZE, 2, generator=generator, dtype=torch.double)
     if mixed:
-        X[:, 1] = torch.randint(
-            0, NUM_CLASSES, (DATASET_SIZE,), generator=generator
-        ).to(dtype=X.dtype)
+        X[:, 1] = torch.randint(0, NUM_CLASSES, (DATASET_SIZE,), generator=generator).to(
+            dtype=X.dtype
+        )
     return X, labels(X, mixed=mixed)
 
 
@@ -76,9 +76,7 @@ def heldout_metrics(
     with torch.no_grad():
         probabilities = model.predict_proba(test_X).clamp_min(1e-12)
         predicted = probabilities.argmax(dim=-1)
-        one_hot = torch.nn.functional.one_hot(
-            test_y, num_classes=NUM_CLASSES
-        ).to(probabilities)
+        one_hot = torch.nn.functional.one_hot(test_y, num_classes=NUM_CLASSES).to(probabilities)
         return {
             "accuracy": (predicted == test_y).double().mean().item(),
             "nll": -probabilities.gather(1, test_y[:, None]).log().mean().item(),
@@ -129,9 +127,7 @@ def evaluate(
             break
 
         if method == "random":
-            position = torch.randint(
-                len(pool_idx), (1,), generator=random_generator
-            ).item()
+            position = torch.randint(len(pool_idx), (1,), generator=random_generator).item()
         else:
             with torch.no_grad():
                 pool = X[pool_idx].unsqueeze(-2)
