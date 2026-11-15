@@ -43,9 +43,7 @@ class Study:
         """Record a single finite objective observation exactly once."""
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not isfinite(value):
             raise ValueError("Observation must be a finite number.")
-        return self._transition(
-            number, TrialState.RUNNING, TrialState.COMPLETE, value=float(value)
-        )
+        return self._transition(number, TrialState.RUNNING, TrialState.COMPLETE, value=float(value))
 
     def fail_trial(self, number: int) -> Trial:
         """Mark a running trial as failed."""
