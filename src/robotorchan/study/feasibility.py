@@ -28,7 +28,7 @@ def is_feasible(
         raise ValueError("Candidates must have shape [q, d].")
     validate_candidate_constraints(
         constraints,
-        bounds=torch.stack((candidates.min(dim=0).values - 1, candidates.max(dim=0).values + 1))
+        bounds=torch.stack((candidates.min(dim=0).values - 1, candidates.max(dim=0).values + 1)),
         q=candidates.shape[0],
     )
     validate_mixed_constraint_dimensions(constraints, variable_space)
