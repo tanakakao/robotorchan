@@ -134,6 +134,10 @@ class InputDependentLabelNoiseBinarySingleTaskGPClassifier(
             max_flip_probability=max_flip_probability,
         )
 
+    def _positive_probability_from_latent(self, values: Tensor, X: Tensor) -> Tensor:
+        """Apply the observed-label link with candidate-dependent flip rates."""
+        return self.likelihood.forward(values, X=X).probs
+
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> Bernoulli:
         """Return observed-label predictions using input-dependent flip rates."""
         latent = self.latent_posterior(X, **kwargs)
