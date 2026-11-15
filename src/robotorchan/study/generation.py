@@ -64,6 +64,9 @@ class CandidateGenerator:
         self.optimizer_kwargs = dict(optimizer_kwargs or {})
         self.n_initial_trials = n_initial_trials
         self._sobol = SobolEngine(len(space.bounds), scramble=True, seed=seed)
+        self._random = torch.Generator()
+        if seed is not None:
+            self._random.manual_seed(seed)
 
     def _bounds(self) -> Tensor:
         return torch.tensor(list(self.space.bounds.values()), dtype=torch.double).T
@@ -79,8 +82,12 @@ class CandidateGenerator:
         bounds = self._bounds()
         if len(completed) < self.n_initial_trials:
             candidate = None
-            for _ in range(256):
-                points = self._sobol.draw(q).to(dtype=bounds.dtype)
+            for _ in range(2048):
+                points = (
+                    torch.rand(q, len(self.space.bounds), generator=self._random, dtype=bounds.dtype)
+                    if self.constraints is not None and self.constraints.has_constraints
+                    else self._sobol.draw(q).to(dtype=bounds.dtype)
+                )
                 proposal = bounds[0] + (bounds[1] - bounds[0]) * points
                 if self.variable_space is not None:
                     for dim in self.variable_space.integer_dims:
@@ -97,7 +104,7 @@ class CandidateGenerator:
                     break
             if candidate is None:
                 raise RuntimeError(
-                    "Unable to generate a feasible initial q-batch after 256 attempts."
+                    "Unable to generate a feasible initial q-batch after 2048 attempts."
                 )
         else:
             names = tuple(self.space.bounds)
