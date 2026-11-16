@@ -1,7 +1,7 @@
 # 組合せベイズ最適化：理論と実装の対応
 
 [理論](../theory/27_combinatorial_bayesian_optimization.md) /
-[実行Notebook](../../examples/notebooks/49_combinatorial_bayesian_optimization.ipynb) /
+[実行Notebook](../../examples/notebooks/53_combinatorial_bayesian_optimization.ipynb) /
 [性能比較](../../examples/combinatorial_bo_benchmark.md)
 
 ## 対応表

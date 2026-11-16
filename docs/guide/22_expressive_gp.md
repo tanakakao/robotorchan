@@ -217,4 +217,4 @@ finite MCのposteriorを、単層Exact GPのGaussian解析分布と同一視し�
 決定論的なencoderとExact GPの接続は[ニューラル表現の章](19_neural_reduction_gp.md)、
 NNGPの共分散再帰とSpectral Mixtureは前節の各kernel実装へ分けて追えます。
 
-使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/24_expressive_surrogate_gp.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/22_expressive_surrogate_gp.ipynb)を参照してください。

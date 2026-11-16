@@ -82,5 +82,5 @@ level setとexcursion set、level-set estimationとconstrained BO、分類Active
 
 [randomized]: ../../../src/robotorchan/acquisition/active_learning/randomized_straddle.py
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/28_active_learning_acquisition.ipynb)を参照してくださ
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/34_active_learning_acquisition.ipynb)を参照してくださ
 い。

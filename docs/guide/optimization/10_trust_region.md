@@ -107,7 +107,7 @@ restartは通常の観測追加とは別の状態遷移として扱う。詳細�
 
 状態遷移・幾何・pool生成はローカル実装であり、GP fittingの内部ではありません。勾配による候補生成を選んだときの数値探索は、指定されたbackendが担当します。
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/34_turbo_trust_region.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/47_turbo_trust_region.ipynb)を参照してください。
 
 
 ## TuRBO-m：理論から実装への対応
@@ -153,6 +153,6 @@ BoTorchの`SingleTaskGP`をfitし、`set_model`へ登録する。
 Restartした領域には初期観測値を用意してGPを再構築する。
 
 学習と評価を含む実行例は
-[Notebook](../../../examples/notebooks/43_turbo_multi_benchmark.ipynb)に集約した。
+[Notebook](../../../examples/notebooks/56_turbo_multi_benchmark.ipynb)に集約した。
 公開APIの使い方と制約は
 [TuRBO-m利用ドキュメント](../../optimization/turbo-m.md)を参照する。
