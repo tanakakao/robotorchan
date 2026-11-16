@@ -21,6 +21,10 @@ mll = model.make_mll()
 X = torch.rand(5, 3, dtype=torch.double)
 latent = model.posterior(X)
 probabilities = model.predict_proba(X)
+probability_posterior = model.probability_posterior(X)
+probability_mean = probability_posterior.mean
+probability_variance = probability_posterior.variance
+lower, upper = probability_posterior.credible_interval(0.95)
 labels = model.predict_class(X)
 ```
 
@@ -52,13 +56,51 @@ labels = model.predict_class(X)
 
 標準 binary GP は Bernoulli 尤度の変分モデルです。`make_mll()` は `VariationalELBO` を構成します。Exact Gaussian GP と同じ学習契約と仮定しないでください。元データは raw training-data 契約に従い保持します。
 
+### 分類確率Posteriorと不確実性の使い分け
+
+`posterior(X)` は**潜在GPの事後分布**、`predict_proba(X)` は
+**平均予測クラス確率**です。クラス確率そのものの不確実性は
+`probability_posterior(X)` の `mean` / `variance` で確認します。
+このPosteriorはBoTorchの `Posterior` としてサンプリングできます。
+`credible_interval(0.95)` はクラス確率の**周辺95%信用区間**であり、
+観測ラベルの予測区間でも、全クラスの同時95%領域でもありません。
+
+| 対象モデル | `probability_posterior(X).mean` | `variance` | `credible_interval` |
+| --- | --- | --- | --- |
+| 標準Binary Probit GP | 解析的 | Gauss–Hermite求積 | 潜在Gaussian分位点の単調変換（MC不要） |
+| Ordinal GP | 解析的 | Gauss–Hermite求積 | 潜在サンプルによるクラス別MC分位点 |
+| Multiclass Softmax GP | 同一QMCサンプルから推定 | 同一QMCサンプルから推定 | クラス別MC分位点 |
+| 分類Ensemble | メンバー確率の加重平均 | メンバー間の加重分散 | 加重経験分布の分位点 |
+
+Standard/MixedのOrdinal・Multiclass GPで利用できますが、
+全分類モデルに同じ確率Posterior APIが実装されていることを意味しません。
+Ensembleの分散は**メンバー間の予測のばらつき**であり、
+個々のGPの潜在事後分散ではありません。
+
+`probability_variance(X)` と `ProbabilityVariance` は
+**クラス確率の事後分散**を評価し、観測ラベルのBernoulli分散とは区別します。
+標準Binary Probit GPの `probability_variance` および
+`mutual_information`（BALD）はGauss–Hermite求積が既定です。
+`method="mc"` を指定すると従来のMC方式も利用でき、
+このときのみ `num_samples` がMCサンプル数を制御します。
+Ordinal/Multiclassの単一点獲得関数は既存のMC経路を利用するため、
+確率PosteriorのQMC/求積と有限サンプルで厳密一致するとは限りません。
+
+実装と形状は[分類ガイド](../guide/24_classification.md)、
+獲得関数との対応は[分類Active Learningガイド](../guide/acquisition/13_classification_active_learning.md)、
+可視化は[39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)、
+[41番Notebook](../../examples/notebooks/41_classification_probability_layers.ipynb)、
+[51番Notebook](../../examples/notebooks/51_multiclass_classification_active_learning.ipynb)、
+[52番Notebook](../../examples/notebooks/52_ordinal_classification_active_learning.ipynb)
+を参照してください。
+
 ## Robust モデル
 
 誤 label・汚染・反復 label・入力依存の信頼性は観測過程として表します。連続残差用の Student-t を binary label に機械的に移植しません。非定常性は潜在共分散を変える別の機構です。likelihood と互換潜在モデルの合成を優先し、全 family の直積 class を作りません。具体的な registry ID と組合せ条件は[詳細契約](../../docs-internal/contracts/classification-models.md)にまとめています。
 
 ## Active Learning と BO 制約
 
-`PredictiveEntropy`・`MarginUncertainty` は予測 class 確率、`ProbabilityVariance`・`BALD` は確率 sample や ensemble の情報、`LatentStraddle` は二値の潜在境界を使います。単一点版は q=1 です。q-batch版は別途提供されます。潜在 posterior が Gaussian というだけで回帰用獲得関数に対応するとはみなしません。
+`PredictiveEntropy`・`MarginUncertainty` は予測クラス確率を評価します。`ProbabilityVariance` はクラス確率そのものの事後分散、`BALD` は潜在関数とラベルの相互情報量（Ensembleではメンバー間の不一致）を評価します。標準Binary Probit GPのProbability VarianceとBALDは既定でGauss–Hermite求積を使い、MCサンプリングは必須ではありません。`LatentStraddle` は二値の潜在境界を使います。単一点版は `q=1` 専用で、`qPredictiveEntropy`・`qMarginUncertainty`・`qProbabilityVariance` は周辺スコア平均、`qBALD` は候補間の依存を含む同時ラベル情報利得です。潜在 posterior がGaussianというだけで回帰用獲得関数に対応するとはみなしません。
 
 `ClassificationProbabilityOfFeasibility` は指定 class の実行可能確率を取得し、`FeasibilityWeightedAcquisition` は目的獲得値に重みを掛けます。q-batch の既定 `product` は点間独立の近似、`minimum` は保守的なスコアで、joint 分類 posterior を作るものではありません。既知の入力に対する `CandidateConstraints` とは別の層です。
 
