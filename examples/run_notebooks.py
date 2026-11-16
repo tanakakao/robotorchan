@@ -38,7 +38,6 @@ DEFAULT_NOTEBOOKS = [
     "26_standard_acquisition.ipynb",
     "27_multiobjective_acquisition.ipynb",
     "28_active_learning_acquisition.ipynb",
-    "28_regression_active_learning.ipynb",
     "29_objective_posterior_transform.ipynb",
     "30_posterior_sampling.ipynb",
     "31_acquisition_optimization.ipynb",
@@ -47,15 +46,16 @@ DEFAULT_NOTEBOOKS = [
     "34_turbo_trust_region.ipynb",
     "35_robust_input_perturbation.ipynb",
     "36_end_to_end_workflows.ipynb",
-    "36_sequential_bo_workflow.ipynb",
     "37_outcome_constrained_bo.ipynb",
     "38_nonlinear_candidate_constraints.ipynb",
     "39_classification_active_learning.ipynb",
-    "51_multiclass_classification_active_learning.ipynb",
-    "52_ordinal_classification_active_learning.ipynb",
     "40_classification_robust_uncertain.ipynb",
     "41_classification_probability_layers.ipynb",
-    "42_heterogeneous_constrained_bo.ipynb",
+    "51_multiclass_classification_active_learning.ipynb",
+    "52_ordinal_classification_active_learning.ipynb",
+    "53_regression_active_learning.ipynb",
+    "54_sequential_bo_workflow.ipynb",
+    "56_heterogeneous_constrained_bo.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [
@@ -64,20 +64,20 @@ SLOW_NOTEBOOKS = [
 ]
 
 EXCLUDED_NOTEBOOKS = [
-    "37_multifidelity_cost_aware.ipynb",
-    "42_heterogeneous_bo_benchmark.ipynb",
     "23_high_dimensional_bo_benchmark.ipynb",
     "24_expressive_surrogate_gp.ipynb",
     "25_non_gp_surrogates.ipynb",
+    "42_heterogeneous_bo_benchmark.ipynb",
     "43_turbo_multi_benchmark.ipynb",
-    "45_safe_bo_benchmark.ipynb",
     "44_safe_bo_usage_guide.ipynb",
+    "45_safe_bo_benchmark.ipynb",
     "46_safe_bo_mixed_q_batch.ipynb",
     "47_binary_classification_extensions.ipynb",
-    "47_mixed_preference_bo.ipynb",
     "48_transfer_bayesian_optimization.ipynb",
     "49_combinatorial_bayesian_optimization.ipynb",
     "50_study_ask_tell_mixed_q_batch.ipynb",
+    "55_multifidelity_cost_aware.ipynb",
+    "57_mixed_preference_bo.ipynb",
 ]
 
 
