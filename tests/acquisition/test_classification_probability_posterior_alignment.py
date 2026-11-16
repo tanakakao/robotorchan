@@ -53,7 +53,8 @@ def test_posterior_mean_and_probability_variance_match_active_learning(kind: str
     x = torch.tensor([[[0.2]], [[0.5]], [[0.8]]], dtype=torch.double)
     kwargs = {"num_samples": 1024, "seed": 7} if kind == "multiclass" else {}
     posterior = model.probability_posterior(x, **kwargs)
-    assert posterior.mean.shape == posterior.variance.shape == (3, 1, model.num_classes)
+    expected_shape = (3, model.num_classes) if kind == "ensemble" else (3, 1, model.num_classes)
+    assert posterior.mean.shape == posterior.variance.shape == expected_shape
 
     # Entropy depends on predictive label probabilities, not epistemic variance.
     entropy = PredictiveEntropy(model)(x)
