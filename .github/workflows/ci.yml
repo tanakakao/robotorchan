@@ -178,14 +178,14 @@ jobs:
           MPLBACKEND: Agg
         run: >-
           python examples/run_notebooks.py
-          --only 24_expressive_surrogate_gp.ipynb
+          --only 22_expressive_surrogate_gp.ipynb
           --timeout 600
       - name: Execute non-GP surrogate notebook
         env:
           MPLBACKEND: Agg
         run: >-
           python examples/run_notebooks.py
-          --only 25_non_gp_surrogates.ipynb
+          --only 23_non_gp_surrogates.ipynb
           --timeout 600
 
   notebook-reduced:
@@ -206,7 +206,7 @@ jobs:
           MPLBACKEND: Agg
         run: >-
           python examples/run_notebooks.py
-          --only 19_reduced_gp.ipynb
+          --only 18_reduced_gp.ipynb
           --timeout 600
 
   notebook-neural-reduced:
@@ -227,7 +227,7 @@ jobs:
           MPLBACKEND: Agg
         run: >-
           python examples/run_notebooks.py
-          --only 20_neural_reduction_gp.ipynb
+          --only 19_neural_reduction_gp.ipynb
           --timeout 600
 
   notebook-structured:
@@ -245,7 +245,7 @@ jobs:
       - name: Execute structured-output notebook
         env:
           MPLBACKEND: Agg
-        run: python examples/run_notebooks.py --only 11_structured_output_gp.ipynb --timeout 600
+        run: python examples/run_notebooks.py --only 09_structured_output_gp.ipynb --timeout 600
 
   notebook-saas:
     runs-on: ubuntu-latest
@@ -262,7 +262,7 @@ jobs:
       - name: Execute SAAS notebook
         env:
           MPLBACKEND: Agg
-        run: python examples/run_notebooks.py --only 08_saas_gp.ipynb --timeout 600
+        run: python examples/run_notebooks.py --only 07_saas_gp.ipynb --timeout 600
 
   fully-bayesian-extra:
     runs-on: ubuntu-latest
@@ -307,7 +307,7 @@ jobs:
           MPLBACKEND: Agg
         run: >-
           python examples/run_notebooks.py
-          --only 25_non_gp_surrogates.ipynb
+          --only 23_non_gp_surrogates.ipynb
           --timeout 600
 
   cmaes-extra:
