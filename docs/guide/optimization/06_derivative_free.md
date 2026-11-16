@@ -26,4 +26,4 @@ finite samplesはglobal optimumの保証にならない。mixed variable、fixed
 固定特徴やmixed domainの変換は、その評価より前に`optimize_acqf_sampling()`が処理します。有限集合上の最大化はローカル実装であり、
 BoTorchへ連続最適化を依頼する経路ではありません。
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/31_acquisition_optimization.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/39_acquisition_optimization.ipynb)を参照してください。

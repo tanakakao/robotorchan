@@ -44,4 +44,4 @@ robotorchanの[composition.py](../../../src/robotorchan/acquisition/composition.
 
 [logei]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/acquisition/logei.py
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/32_batch_async_fantasization.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/40_batch_async_fantasization.ipynb)を参照してください。

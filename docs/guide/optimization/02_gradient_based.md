@@ -33,4 +33,4 @@ BoTorch側の候補生成は[generation/gen.py][gen]、多初期値の制御は[
 [gen]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/generation/gen.py
 [optimize]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/optim/optimize.py
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/31_acquisition_optimization.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/39_acquisition_optimization.ipynb)を参照してください。

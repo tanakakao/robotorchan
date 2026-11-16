@@ -43,4 +43,4 @@ robotorchanの[composition.py](../../../src/robotorchan/acquisition/composition.
 
 [analytic]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/acquisition/analytic.py
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/26_standard_acquisition.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/32_standard_acquisition.ipynb)を参照してください。
