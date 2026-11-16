@@ -16,6 +16,13 @@ from robotorchan.models.classification.posterior.ensemble import (
 )
 
 
+def _restore_legacy_q_one_shape(values: Tensor, X: Tensor, *, has_class_axis: bool) -> Tensor:
+    """Keep legacy q=1 prediction shapes without changing Posterior axes."""
+    if X.ndim >= 3 and X.shape[-2] == 1:
+        return values.squeeze(-2 if has_class_axis else -1)
+    return values
+
+
 class GPBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Module):
     """Model-uncertainty ensemble of independently fitted binary GP classifiers."""
 
@@ -54,15 +61,27 @@ class GPBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Module):
         **kwargs: object,
     ) -> ClassificationEnsemblePosterior:
         """Return the empirical posterior over complete GP member predictions."""
-        probabilities = torch.stack(
-            [member.predict_proba(X, **kwargs) for member in self.members],
-            dim=0,
-        )
-        return make_classification_ensemble_posterior(probabilities)
+        expected_shape = (*X.shape[:-1], self.num_classes)
+        member_probabilities = []
+        for member in self.members:
+            probabilities = member.predict_proba(X, **kwargs)
+            if probabilities.shape != expected_shape:
+                squeezed_shape = (*X.shape[:-2], self.num_classes)
+                if X.ndim < 3 or X.shape[-2] != 1 or probabilities.shape != squeezed_shape:
+                    raise ValueError(
+                        "Ensemble member probabilities must preserve the candidate axis "
+                        f"or squeeze q=1; expected {expected_shape}, "
+                        f"got {tuple(probabilities.shape)}."
+                    )
+                probabilities = probabilities.unsqueeze(-2)
+            member_probabilities.append(probabilities)
+        return make_classification_ensemble_posterior(torch.stack(member_probabilities))
 
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
         """Return the ensemble-mean predictive class probability."""
-        return self.probability_posterior(X, **kwargs).mean
+        return _restore_legacy_q_one_shape(
+            self.probability_posterior(X, **kwargs).mean, X, has_class_axis=True
+        )
 
     def sample_class_probabilities(
         self,
@@ -71,7 +90,11 @@ class GPBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Module):
         **kwargs: object,
     ) -> Tensor:
         """Sample complete GP member predictive probabilities."""
-        return self.probability_posterior(X, **kwargs).rsample(sample_shape)
+        return _restore_legacy_q_one_shape(
+            self.probability_posterior(X, **kwargs).rsample(sample_shape),
+            X,
+            has_class_axis=True,
+        )
 
     def probability_variance(
         self,
@@ -82,7 +105,9 @@ class GPBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Module):
     ) -> Tensor:
         """Return between-member epistemic probability variance."""
         del num_samples
-        return self.probability_posterior(X, **kwargs).variance
+        return _restore_legacy_q_one_shape(
+            self.probability_posterior(X, **kwargs).variance, X, has_class_axis=True
+        )
 
     def predictive_distribution(self, X: Tensor, **kwargs: object) -> Categorical:
         """Return a categorical distribution from ensemble-mean probabilities."""
@@ -95,7 +120,11 @@ class GPBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Module):
 
     def predictive_entropy(self, X: Tensor, **kwargs: object) -> Tensor:
         """Return entropy of the ensemble-mean predictive distribution."""
-        return self.probability_posterior(X, **kwargs).predictive_entropy
+        return _restore_legacy_q_one_shape(
+            self.probability_posterior(X, **kwargs).predictive_entropy,
+            X,
+            has_class_axis=False,
+        )
 
     def expected_class_entropy(
         self,
@@ -106,7 +135,11 @@ class GPBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Module):
     ) -> Tensor:
         """Return mean predictive entropy across complete GP members."""
         del num_samples
-        return self.probability_posterior(X, **kwargs).expected_class_entropy
+        return _restore_legacy_q_one_shape(
+            self.probability_posterior(X, **kwargs).expected_class_entropy,
+            X,
+            has_class_axis=False,
+        )
 
     def mutual_information(
         self,
@@ -117,7 +150,11 @@ class GPBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Module):
     ) -> Tensor:
         """Return between-member BALD-style disagreement."""
         del num_samples
-        return self.probability_posterior(X, **kwargs).mutual_information
+        return _restore_legacy_q_one_shape(
+            self.probability_posterior(X, **kwargs).mutual_information,
+            X,
+            has_class_axis=False,
+        )
 
     def predict_class(
         self,

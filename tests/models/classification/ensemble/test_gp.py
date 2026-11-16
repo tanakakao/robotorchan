@@ -2,6 +2,8 @@
 
 import pytest
 import torch
+from botorch.sampling.get_sampler import get_sampler
+from botorch.sampling.index_sampler import IndexSampler
 
 from robotorchan.acquisition.compatibility import (
     CompatibilityStatus,
@@ -101,3 +103,69 @@ def test_gp_ensemble_supports_probability_space_active_learning() -> None:
 
     latent = check_capabilities_acquisition_compatibility(capabilities, "LatentStraddle")
     assert latent.status is CompatibilityStatus.INCOMPATIBLE
+
+
+@pytest.mark.parametrize("q", [1, 2])
+def test_gp_ensemble_posterior_preserves_q_and_legacy_prediction_shape(q: int) -> None:
+    members = _members()
+    ensemble = GPBinaryClassificationEnsemble(*members)
+    X = members[0].raw_train_X[: 2 * q].reshape(2, q, 1)
+    posterior = ensemble.probability_posterior(X)
+    expected_members = torch.stack(
+        [
+            member.predict_proba(X).unsqueeze(-2) if q == 1 else member.predict_proba(X)
+            for member in members
+        ]
+    )
+
+    assert posterior.probabilities.shape == (2, 2, q, 2)
+    assert posterior.mean.shape == posterior.variance.shape == (2, q, 2)
+    assert posterior.base_sample_shape == torch.Size([2])
+    assert posterior.batch_range == (0, 1)
+    torch.testing.assert_close(posterior.probabilities, expected_members)
+    torch.testing.assert_close(posterior.mean, expected_members.mean(dim=0))
+    torch.testing.assert_close(posterior.variance, expected_members.var(dim=0, unbiased=False))
+
+    expected_shape = (2, 2) if q == 1 else (2, q, 2)
+    assert ensemble.predict_proba(X).shape == expected_shape
+    assert ensemble.probability_variance(X).shape == expected_shape
+    assert ensemble.sample_class_probabilities(X, torch.Size([5])).shape == (5, *expected_shape)
+    expected_score_shape = (2,) if q == 1 else (2, q)
+    assert ensemble.predictive_entropy(X).shape == expected_score_shape
+    assert ensemble.expected_class_entropy(X).shape == expected_score_shape
+    assert ensemble.mutual_information(X).shape == expected_score_shape
+
+    sampler = get_sampler(posterior, sample_shape=torch.Size([5]), seed=7)
+    assert isinstance(sampler, IndexSampler)
+    sampled = sampler(posterior)
+    assert sampled.shape == (5, 2, q, 2)
+    torch.testing.assert_close(sampled.sum(-1), torch.ones_like(sampled[..., 0]))
+
+
+def test_gp_ensemble_q_one_index_sampler_selects_members_per_batch() -> None:
+    members = _members()
+    ensemble = GPBinaryClassificationEnsemble(*members)
+    X = members[0].raw_train_X[:2].unsqueeze(-2)
+    posterior = ensemble.probability_posterior(X)
+    indices = torch.tensor([[0, 1], [1, 0], [1, 1]])
+
+    samples = posterior.rsample_from_base_samples(torch.Size([3]), indices)
+
+    assert samples.shape == (3, 2, 1, 2)
+    torch.testing.assert_close(samples[0, 0], posterior.probabilities[0, 0])
+    torch.testing.assert_close(samples[0, 1], posterior.probabilities[1, 1])
+    torch.testing.assert_close(samples[1, 0], posterior.probabilities[1, 0])
+    torch.testing.assert_close(samples[1, 1], posterior.probabilities[0, 1])
+
+
+def test_gp_ensemble_q_one_preserves_multiple_batch_dimensions() -> None:
+    members = _members()
+    ensemble = GPBinaryClassificationEnsemble(*members)
+    X = members[0].raw_train_X[:6].reshape(2, 3, 1, 1)
+    posterior = ensemble.probability_posterior(X)
+
+    assert posterior.mean.shape == (2, 3, 1, 2)
+    assert posterior.batch_shape == torch.Size([2, 3])
+    assert posterior.base_sample_shape == torch.Size([2, 3])
+    assert posterior.rsample(torch.Size([4])).shape == (4, 2, 3, 1, 2)
+    assert ensemble.predict_proba(X).shape == (2, 3, 2)

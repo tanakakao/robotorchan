@@ -136,6 +136,21 @@ BoTorchの `IndexSampler` が選択され、
 各候補で独立にメンバーを引く場合と異なり、
 メンバー間の予測パターンを保持します。
 
+特に`GPBinaryClassificationEnsemble`では、
+入力形状`[batch, 1, d]`のとき、各メンバーの従来の
+`predict_proba`が`q=1`の候補軸を省略します。
+`probability_posterior(X)`では候補軸を**内部で復元**し、
+`posterior.mean`・`posterior.variance`を
+`[batch, 1, classes]`として返します。
+これによりBoTorchの`IndexSampler`はバッチを候補と取り違えず、
+**バッチごとにメンバーを選び、各バッチの候補間では同一メンバーを保持**します。
+
+一方、同種GP Ensembleの既存`predict_proba(X)`・
+`probability_variance(X)`・`sample_class_probabilities(X)`などは
+`q=1`で候補軸を省略する**従来の返却形状を維持**します。
+新しいPosterior契約と旧予測APIでは形状が異なる点に注意してください。
+入力`[n, d]`や`q>1`の既存動作は変更しません。
+
 分散は従来のrobotorchanと同じ
 `sum(w_i * (p_i - mean)^2)` であり、
 BoTorchの `EnsemblePosterior.variance` が使う補正付き標本分散とは
