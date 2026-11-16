@@ -70,7 +70,8 @@ class GPBinaryClassificationEnsemble(BinaryClassificationMixin, nn.Module):
                 if X.ndim < 3 or X.shape[-2] != 1 or probabilities.shape != squeezed_shape:
                     raise ValueError(
                         "Ensemble member probabilities must preserve the candidate axis "
-                        f"or squeeze q=1; expected {expected_shape}, got {tuple(probabilities.shape)}."
+                        f"or squeeze q=1; expected {expected_shape}, "
+                        f"got {tuple(probabilities.shape)}."
                     )
                 probabilities = probabilities.unsqueeze(-2)
             member_probabilities.append(probabilities)
