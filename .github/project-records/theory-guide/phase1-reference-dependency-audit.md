@@ -35,7 +35,7 @@
 | --- | --- | --- |
 | `README.md` | `src/robotorchan/models/registry.py`, `src/robotorchan/acquisition/registry.py`, `scripts/generate_model_coverage.py`, `docs/model_coverage.json` | registryと生成成果物のsource of truth |
 | `models.md` | `tests/models/standard/test_mixed_single_task_gp.py`, `tests/models/standard/test_phase7_kronecker_covariance_reference.py`, `tests/models/classification/robust/test_label_noise.py` | model family別のassertion根拠 |
-| `acquisition.md` | `tests/acquisition/test_phase5_native_integration.py`, `tests/acquisition/test_epig.py`, `examples/notebooks/28_regression_active_learning.ipynb` | acquisitionの実装・テスト・実行例 |
+| `acquisition.md` | `tests/acquisition/test_phase5_native_integration.py`, `tests/acquisition/test_epig.py`, `examples/notebooks/53_regression_active_learning.ipynb` | acquisitionの実装・テスト・実行例 |
 | `optimization.md` | `tests/optim/one_shot/test_mixed.py`, `tests/optim/embedding/test_baxus_reference_schedule.py`, `tests/optim/trust_region/test_turbo_strategy.py` | one-shot、embedding、stateful strategy |
 | `verification.md` | `tests/models/classification/test_phase7_binary_probit_reference.py`, `tests/acquisition/test_phase8_bald_probability_variance_reference.py`, `tests/optim/trust_region/test_phase9_turbo_geometry_reference.py` | 数値参照のproperty-specific証拠 |
 
@@ -72,7 +72,7 @@ GitHubの作業ブランチ上で、以下の10ファイルを直接取得でき
 | Classification numerical test | `tests/models/classification/test_phase7_binary_probit_reference.py` | 存在確認 |
 | Acquisition numerical test | `tests/acquisition/test_phase8_bald_probability_variance_reference.py` | 存在確認 |
 | Optimization numerical test | `tests/optim/trust_region/test_phase9_turbo_geometry_reference.py` | 存在確認 |
-| Notebook | `examples/notebooks/28_regression_active_learning.ipynb` | 存在確認 |
+| Notebook | `examples/notebooks/53_regression_active_learning.ipynb` | 存在確認 |
 | Model registry | `src/robotorchan/models/registry.py` | 存在確認 |
 | Acquisition registry | `src/robotorchan/acquisition/registry.py` | 存在確認 |
 | Optimizer dispatch | `src/robotorchan/optim/dispatch.py` | 存在確認 |
@@ -134,7 +134,7 @@ GitHubの作業ブランチ上で、以下の10ファイルを直接取得でき
 | test | `tests/models/classification/robust/test_label_noise.py` | 直接取得成功 |
 | artifact | `docs/model_coverage.json` | 直接取得成功 |
 | checker | `scripts/check_theory_implementation_mapping.py` | 直接取得成功 |
-| notebook | `examples/notebooks/28_regression_active_learning.ipynb` | 直接取得成功 |
+| notebook | `examples/notebooks/53_regression_active_learning.ipynb` | 直接取得成功 |
 | theory | `docs/theory/acquisition/09_active_learning.md` | 直接取得成功 |
 | theory | `docs/theory/optimization/09_high_dimensional.md` | 直接取得成功 |
 
