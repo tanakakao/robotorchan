@@ -137,7 +137,7 @@ structured outputやensembleには一意なreductionを定義していないた�
 これは将来の応答をfantasizeしてtarget全体を評価するBoTorchのqNIPVとも、候補とtargetの情報量を計算するEPIGとも異なる計算です。
 EPIGの内部は[情報理論章](05_information_theoretic.md)へ分けています。
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/28_regression_active_learning.ipynb)を参照してください
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/53_regression_active_learning.ipynb)を参照してください
 。
 
 
