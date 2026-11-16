@@ -28,8 +28,8 @@
 さらに `probability_variance` と `mutual_information` は、
 デフォルトでGPyTorchの128点Gauss–Hermite求積法を利用します。
 確率分散は数値安定性を考慮した `E[(p_f - E[p_f])^2]`、BALDは
-`H(E[p_f]) - E[H(p_f)]` で計算し、観測ラベルのBernoulli分散
-予測平均確率から計算するBernoulli分散とは区別します。
+`H(E[p_f]) - E[H(p_f)]` で計算します。これは観測ラベルの
+Bernoulli分散 `E[p_f] * (1 - E[p_f])` とは異なる量です。
 確率分散・BALDの計算は決定論的ですが、数値求積には近似誤差があります。
 
 ```python
@@ -51,6 +51,54 @@ LatentStraddleは二値分類専用です。
 同じ確率でも潜在分布とラベル分布は異なるため、
 確率だけを返すNon-GPモデルには潜在境界の基準を
 無条件に適用できません。
+
+## 分類確率Posteriorと獲得関数の数値整合
+
+分類GPの `posterior(X)` は潜在関数の事後分布です。
+`probability_posterior(X)` は確率ベクトルの事後分布であり、
+`mean` と `variance` を提供します。
+`credible_interval(0.95)` は**クラス確率そのものの周辺信用区間**です。
+観測ラベルの予測集合でも、全クラスの同時信用領域でもありません。
+
+| モデル | 確率の平均 | 確率の事後分散 | 区間の計算 |
+| --- | --- | --- | --- |
+| 二値Probit GP | 解析的 | Gauss–Hermite求積 | 潜在Gaussian分位点を変換 |
+| Ordinal GP | 解析的 | Gauss–Hermite求積 | MCによる周辺分位点 |
+| マルチクラスGP | 同じQMCサンプルから平均 | 同じQMCサンプルから分散 | MCによる周辺分位点 |
+| Ensemble | メンバーの加重平均 | メンバー間の加重分散 | 加重経験分位点 |
+
+**不確実性の対象を混同しないことが重要です。**
+`ProbabilityVariance` はクラスごとの
+`probability_posterior(X).variance` を平均した量に対応します。
+これは観測ラベルのBernoulli/Categorical分散ではありません。
+`PredictiveEntropy` は平均予測確率のエントロピー、
+`BALD` は予測エントロピーから平均条件付きエントロピーを引いた量です。
+`credible_interval` の上下限を獲得関数スコアとしてそのまま代用しません。
+
+二値Probitでは、確率分散とBALDは決定論的なガウス求積を使います。
+Ordinalとマルチクラスでは、既存の獲得関数は
+潜在確率サンプルに基づくMC推定を利用します。
+マルチクラスの確率Posterior平均・分散は別途seed指定可能なQMC推定なので、
+**独立な有限サンプルでは数値が完全一致する必要はありません。**
+一致すべき数式を、参照サンプルや数値積分と比較してください。
+Ensembleはメンバー間の離散分布に基づくため、
+GP個体内部の不確実性が含まれるとは限りません。
+
+```python
+# X の形状は [batch, q, d]。q=1の場合を想定。
+posterior = model.probability_posterior(X)
+probability_mean = posterior.mean
+probability_variance = posterior.variance
+lower, upper = posterior.credible_interval(0.95)
+# 2クラスProbitならProbabilityVarianceは分散のクラス平均。
+```
+
+実行例は
+[39番（二値Probit）](../../../examples/notebooks/39_classification_active_learning.ipynb)、
+[41番（Ensemble）](../../../examples/notebooks/41_classification_probability_layers.ipynb)、
+[51番（マルチクラス）](../../../examples/notebooks/51_multiclass_classification_active_learning.ipynb)、
+[52番（Ordinal）](../../../examples/notebooks/52_ordinal_classification_active_learning.ipynb)
+にあります。
 
 ## q-batchの実装方式
 
