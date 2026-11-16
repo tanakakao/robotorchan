@@ -83,8 +83,9 @@ Ensembleの分散は**メンバー間の予測のばらつき**であり、
 `mutual_information`（BALD）はGauss–Hermite求積が既定です。
 `method="mc"` を指定すると従来のMC方式も利用でき、
 このときのみ `num_samples` がMCサンプル数を制御します。
-Ordinal/Multiclassの単一点獲得関数は既存のMC経路を利用するため、
+Ordinal/Multiclassの `ProbabilityVariance` と `BALD` は既存のMC経路を使うため、
 確率PosteriorのQMC/求積と有限サンプルで厳密一致するとは限りません。
+一方、予測EntropyとMarginは平均予測クラス確率に基づく別の指標です。
 
 実装と形状は[分類ガイド](../guide/24_classification.md)、
 獲得関数との対応は[分類Active Learningガイド](../guide/acquisition/13_classification_active_learning.md)、
