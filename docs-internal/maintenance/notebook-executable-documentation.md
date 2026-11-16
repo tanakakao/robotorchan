@@ -31,20 +31,20 @@ Use these entry points for common tasks:
 | Mixed-variable BO | `02_mixed_single_task_gp.ipynb` |
 | Multi-Fidelity / cost-aware BO | `03_multi_fidelity_gp.ipynb` |
 | MultiTask / Kronecker | `04_multitask_gp.ipynb` |
-| High-dimensional surrogate reduction | `19_reduced_gp.ipynb` |
-| Standard acquisition functions | `26_standard_acquisition.ipynb` |
-| Multi-objective BO | `27_multiobjective_acquisition.ipynb` |
-| Regression active learning | `28_active_learning_acquisition.ipynb` |
-| Objective / PosteriorTransform | `29_objective_posterior_transform.ipynb` |
-| Posterior sampling | `30_posterior_sampling.ipynb` |
-| Acquisition optimization / known candidate constraints | `31_acquisition_optimization.ipynb` |
-| Batch / async / fantasization | `32_batch_async_fantasization.ipynb` |
-| Acquisition initialization | `33_acquisition_initialization.ipynb` |
-| TuRBO / trust region | `34_turbo_trust_region.ipynb` |
-| Robust input perturbation | `35_robust_input_perturbation.ipynb` |
-| Sequential -> batch -> async integrated workflow | `36_end_to_end_workflows.ipynb` |
-| Unknown outcome / black-box constraints | `37_outcome_constrained_bo.ipynb` |
-| Binary classification active learning | `39_classification_active_learning.ipynb` |
+| High-dimensional surrogate reduction | `18_reduced_gp.ipynb` |
+| Standard acquisition functions | `32_standard_acquisition.ipynb` |
+| Multi-objective BO | `33_multiobjective_acquisition.ipynb` |
+| Regression active learning | `34_active_learning_acquisition.ipynb` |
+| Objective / PosteriorTransform | `36_objective_posterior_transform.ipynb` |
+| Posterior sampling | `37_posterior_sampling.ipynb` |
+| Acquisition optimization / known candidate constraints | `39_acquisition_optimization.ipynb` |
+| Batch / async / fantasization | `40_batch_async_fantasization.ipynb` |
+| Acquisition initialization | `38_acquisition_initialization.ipynb` |
+| TuRBO / trust region | `47_turbo_trust_region.ipynb` |
+| Robust input perturbation | `48_robust_input_perturbation.ipynb` |
+| Sequential -> batch -> async integrated workflow | `45_end_to_end_workflows.ipynb` |
+| Unknown outcome / black-box constraints | `41_outcome_constrained_bo.ipynb` |
+| Binary classification active learning | `26_classification_active_learning.ipynb` |
 
 The complete model-family notebook list remains in `examples/README.md`.
 

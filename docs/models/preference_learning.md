@@ -106,7 +106,7 @@ PairwiseGP 専用の学習 objective です。
 実行例は
 
 ```text
-examples/notebooks/07_pairwise_gp.ipynb
+examples/notebooks/24_pairwise_gp.ipynb
 ```
 
 にあります。
@@ -517,7 +517,7 @@ best_x = test_X[best_idx]
 | 比較データの追加と再学習 | 対応 | [逐次データテスト](../../tests/models/preference/test_sequential_preference_data.py) |
 | Analytic EUBOによる2候補提案 | 対応 | [EUBO統合テスト](../../tests/acquisition/test_preference_eubo.py) |
 | EUBOと比較結果による逐次ループ | 対応 | [逐次ループテスト](../../tests/acquisition/test_preference_sequential_loop.py) |
-| 既知の比較対象を固定したEUBO提案 | Notebookに例あり | [PairwiseGP Notebook](../../examples/notebooks/07_pairwise_gp.ipynb)の`previous_winner` |
+| 既知の比較対象を固定したEUBO提案 | Notebookに例あり | [PairwiseGP Notebook](../../examples/notebooks/24_pairwise_gp.ipynb)の`previous_winner` |
 | EUBOとランダム比較の性能比較 | 実行スクリプトあり | [合成ベンチマーク](../../examples/preference_eubo_benchmark.py)。優位性の実測・保証とは別 |
 | Preference専用の情報利得獲得関数 | 未実装 | 分類用BALDは直接流用しない |
 | Mixed変数・q>2の比較集合 | 未検証・対象外 | この拡張の完了条件には含めない |
@@ -561,5 +561,5 @@ EUBOによる2候補提案、フィードバックの蓄積と再学習、
 カテゴリ組合せは候補2点について列挙するため、大規模な離散空間では
 探索コストが増えます。距離条件を満たす代替候補が見つからなければ
 例外が発生します。実行例は
-[Mixed Preference BO Notebook](../../examples/notebooks/57_mixed_preference_bo.ipynb)
+[Mixed Preference BO Notebook](../../examples/notebooks/25_mixed_preference_bo.ipynb)
 を参照してください。

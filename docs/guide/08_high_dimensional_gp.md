@@ -141,7 +141,7 @@ wrapperの接続は[単一タスクSAASのテスト][fb-test]と[Mixed MAPのテ
 [b-models]: https://github.com/pytorch/botorch/tree/v0.18.1/botorch/models
 [b-fit]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/fit.py
 [b-posteriors]: https://github.com/pytorch/botorch/tree/v0.18.1/botorch/posteriors
-[notebook]: ../../examples/notebooks/08_saas_gp.ipynb
-[map-notebook]: ../../examples/notebooks/09_map_saas_and_additive_gp.ipynb
+[notebook]: ../../examples/notebooks/07_saas_gp.ipynb
+[map-notebook]: ../../examples/notebooks/08_map_saas_and_additive_gp.ipynb
 [fb-test]: ../../tests/models/high_dimensional/test_fully_bayesian_single_task_gp.py
 [map-test]: ../../tests/models/high_dimensional/test_mixed_map_saas.py

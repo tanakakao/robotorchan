@@ -10,7 +10,7 @@
 
 `HigherOrderGP` と `LatentKroneckerGP` は「出力次元が多い」という理由だけで交換可能ではありません。出力軸を tensor structure として扱うか、明示的座標として扱うかで選択します。
 
-Notebook: [Structured output](../../examples/notebooks/11_structured_output_gp.ipynb)  
+Notebook: [Structured output](../../examples/notebooks/09_structured_output_gp.ipynb)  
 Theory: [Structured Output](../theory/11_structured_output.md)
 
 
@@ -230,7 +230,7 @@ categorical design columnsを表し、`train_T` の列をcategorical指定する
 実行例は
 
 ```text
-examples/notebooks/11_structured_output_gp.ipynb
+examples/notebooks/09_structured_output_gp.ipynb
 ```
 
 です。
