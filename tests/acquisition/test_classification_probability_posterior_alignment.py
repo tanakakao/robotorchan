@@ -39,13 +39,9 @@ def _classifier(kind: str):
             torch.tensor([0.35, 0.65], dtype=torch.double),
         )
         classifier_type = (
-            OrdinalSingleTaskGPClassifier
-            if kind == "ordinal"
-            else MulticlassSingleTaskGPClassifier
+            OrdinalSingleTaskGPClassifier if kind == "ordinal" else MulticlassSingleTaskGPClassifier
         )
-        classifier = classifier_type(
-            train_x, labels, num_classes=3, inducing_points=4
-        )
+        classifier = classifier_type(train_x, labels, num_classes=3, inducing_points=4)
     classifier.eval()
     return classifier
 
@@ -61,9 +57,7 @@ def test_posterior_mean_and_probability_variance_match_active_learning(kind: str
 
     # Entropy depends on predictive label probabilities, not epistemic variance.
     entropy = PredictiveEntropy(model)(x)
-    posterior_entropy = -torch.special.xlogy(
-        posterior.mean, posterior.mean
-    ).sum(dim=-1).squeeze(-1)
+    posterior_entropy = -torch.special.xlogy(posterior.mean, posterior.mean).sum(dim=-1).squeeze(-1)
     atol = 0.05 if kind == "multiclass" else 1e-6
     torch.testing.assert_close(entropy, posterior_entropy, atol=atol, rtol=atol)
 
@@ -86,9 +80,7 @@ def test_mc_active_learning_scores_match_direct_conditional_probability_samples(
     model = _classifier(kind)
     x = torch.tensor([[[0.2]], [[0.5]], [[0.8]]], dtype=torch.double)
     torch.manual_seed(43)
-    samples = model.sample_class_probabilities(
-        x, sample_shape=torch.Size([256])
-    )
+    samples = model.sample_class_probabilities(x, sample_shape=torch.Size([256]))
     variance_reference = samples.var(dim=0, unbiased=False).mean(dim=-1).squeeze(-1)
     mean = samples.mean(dim=0)
     predictive_entropy = -torch.special.xlogy(mean, mean).sum(dim=-1)
@@ -121,6 +113,4 @@ def test_q_probability_variance_uses_marginal_posterior_variance(kind: str) -> N
     )
     posterior = model.probability_posterior(x)
     expected = posterior.variance.mean(dim=-1).mean(dim=-1)
-    torch.testing.assert_close(
-        qProbabilityVariance(model)(x), expected, atol=1e-6, rtol=1e-6
-    )
+    torch.testing.assert_close(qProbabilityVariance(model)(x), expected, atol=1e-6, rtol=1e-6)
