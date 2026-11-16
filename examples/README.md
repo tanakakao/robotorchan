@@ -87,6 +87,11 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 
 ## Notebook 一覧
 
+番号順に掲載します。内容の近いNotebookを探せるように分野別に区切り、
+実行区分（default / slow / excluded）は `run_notebooks.py` のmanifestで管理します。
+
+### 基本GP・モデル構築
+
 | Notebook | 主なモデル | 状態 |
 |---|---|---|
 | [`01_single_task_gp.ipynb`](notebooks/01_single_task_gp.ipynb) | `SingleTaskGP` | 利用可能 |
@@ -107,6 +112,11 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`16_noise_models.ipynb`](notebooks/16_noise_models.ipynb) | Replicate Noise | 利用可能 |
 | [`17_uncertain_input_gp.ipynb`](notebooks/17_uncertain_input_gp.ipynb) | Uncertain Input / Categorical | 利用可能 |
 | [`18_nonstationary_gp.ipynb`](notebooks/18_nonstationary_gp.ipynb) | Nonstationary GP | 利用可能 |
+
+### 次元削減・モデル拡張
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
 | [`19_reduced_gp.ipynb`](notebooks/19_reduced_gp.ipynb) | PCA / PLS / Random Projection | 利用可能 |
 | [`20_neural_reduction_gp.ipynb`](notebooks/20_neural_reduction_gp.ipynb) | AE / VAE / Supervised AE | 利用可能 |
 | [`21_reduced_multitask_gp.ipynb`](notebooks/21_reduced_multitask_gp.ipynb) | Reduced MultiTask | 利用可能 |
@@ -114,6 +124,11 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`23_high_dimensional_bo_benchmark.ipynb`](notebooks/23_high_dimensional_bo_benchmark.ipynb) | 高次元BO benchmark | 利用可能 / benchmark解説 |
 | [`24_expressive_surrogate_gp.ipynb`](notebooks/24_expressive_surrogate_gp.ipynb) | DKL / I-BNN / Spectral Mixture / DeepGP | 利用可能 / 解説中心 |
 | [`25_non_gp_surrogates.ipynb`](notebooks/25_non_gp_surrogates.ipynb) | Random Forest / Extra Trees / Gradient Boosting / NGBoost | 利用可能 |
+
+### 獲得関数・最適化
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
 | [`26_standard_acquisition.ipynb`](notebooks/26_standard_acquisition.ipynb) | Standard BO acquisition | 利用可能 |
 | [`27_multiobjective_acquisition.ipynb`](notebooks/27_multiobjective_acquisition.ipynb) | Multi-objective acquisition | 利用可能 |
 | [`28_active_learning_acquisition.ipynb`](notebooks/28_active_learning_acquisition.ipynb) | Regression Active Learning | 利用可能 |
@@ -124,12 +139,22 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`33_acquisition_initialization.ipynb`](notebooks/33_acquisition_initialization.ipynb) | Acquisition Initialization | 利用可能 |
 | [`34_turbo_trust_region.ipynb`](notebooks/34_turbo_trust_region.ipynb) | TuRBO / Trust Region | 利用可能 |
 | [`35_robust_input_perturbation.ipynb`](notebooks/35_robust_input_perturbation.ipynb) | Robust BO / Input Perturbation | 利用可能 |
+
+### BOワークフロー・制約・分類
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
 | [`36_end_to_end_workflows.ipynb`](notebooks/36_end_to_end_workflows.ipynb) | Sequential / Batch / Async E2E | 利用可能 |
 | [`37_outcome_constrained_bo.ipynb`](notebooks/37_outcome_constrained_bo.ipynb) | Outcome-constrained BO | 利用可能 |
 | [`38_nonlinear_candidate_constraints.ipynb`](notebooks/38_nonlinear_candidate_constraints.ipynb) | Nonlinear candidate constraints | 利用可能 |
 | [`39_classification_active_learning.ipynb`](notebooks/39_classification_active_learning.ipynb) | Binary GP Classification / AL | 利用可能 |
 | [`40_classification_robust_uncertain.ipynb`](notebooks/40_classification_robust_uncertain.ipynb) | Robust / Uncertain-input Classification | 利用可能 |
 | [`41_classification_probability_layers.ipynb`](notebooks/41_classification_probability_layers.ipynb) | Ensemble / Calibration / Reliability / Conformal | 利用可能 |
+
+### 応用・ベンチマーク・Study
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
 | [`42_heterogeneous_bo_benchmark.ipynb`](notebooks/42_heterogeneous_bo_benchmark.ipynb) | Heterogeneous BO benchmark | 利用可能 |
 | [`43_turbo_multi_benchmark.ipynb`](notebooks/43_turbo_multi_benchmark.ipynb) | TuRBO-m benchmark | 利用可能 |
 | [`44_safe_bo_usage_guide.ipynb`](notebooks/44_safe_bo_usage_guide.ipynb) | Safe BO 日本語利用ガイド | 利用可能 |
@@ -141,11 +166,17 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`50_study_ask_tell_mixed_q_batch.ipynb`](notebooks/50_study_ask_tell_mixed_q_batch.ipynb) | Study / Ask-and-Tell | 利用可能 |
 | [`51_multiclass_classification_active_learning.ipynb`](notebooks/51_multiclass_classification_active_learning.ipynb) | Multiclass GP分類 / Active Learning | 利用可能 |
 | [`52_ordinal_classification_active_learning.ipynb`](notebooks/52_ordinal_classification_active_learning.ipynb) | 順序GP分類 / Mixed / q-batch / Ask-and-Tell | 利用可能 |
+
+### 追加Notebook（既存番号を維持して重複解消）
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
 | [`53_regression_active_learning.ipynb`](notebooks/53_regression_active_learning.ipynb) | Regression Active Learning | 利用可能 |
 | [`54_sequential_bo_workflow.ipynb`](notebooks/54_sequential_bo_workflow.ipynb) | Sequential BO workflow | 利用可能 |
 | [`55_multifidelity_cost_aware.ipynb`](notebooks/55_multifidelity_cost_aware.ipynb) | Multi-Fidelity / Cost-aware BO | 利用可能 |
 | [`56_heterogeneous_constrained_bo.ipynb`](notebooks/56_heterogeneous_constrained_bo.ipynb) | Heterogeneous constrained BO | 利用可能 |
 | [`57_mixed_preference_bo.ipynb`](notebooks/57_mixed_preference_bo.ipynb) | Mixed Preference BO | 利用可能 |
+
 
 ## Benchmark
 
