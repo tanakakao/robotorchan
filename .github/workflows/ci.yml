@@ -25,7 +25,7 @@ jobs:
       - name: Install CPU PyTorch
         run: python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
       - name: Install
-        run: python -m pip install -e ".[dev]"
+        run: python -m pip install -e ".[dev,dataframe]"
       - name: Lint
         if: matrix.python-version == '3.11'
         run: ruff check .
@@ -132,7 +132,7 @@ jobs:
         working-directory: /tmp
         run: >-
           /tmp/robotorchan-smoke/bin/python -c
-          "from importlib.metadata import metadata; extras = set(metadata('robotorchan').get_all('Provides-Extra') or []); expected = {'fully-bayesian', 'examples', 'dev', 'ngboost', 'cmaes'}; missing = expected - extras; assert not missing, f'missing extras: {sorted(missing)}'; print(sorted(extras))"
+          "from importlib.metadata import metadata; extras = set(metadata('robotorchan').get_all('Provides-Extra') or []); expected = {'fully-bayesian', 'examples', 'dev', 'ngboost', 'cmaes', 'dataframe'}; missing = expected - extras; assert not missing, f'missing extras: {sorted(missing)}'; print(sorted(extras))"
       - name: Check dependency consistency
         working-directory: /tmp
         run: /tmp/robotorchan-smoke/bin/python -m pip check
