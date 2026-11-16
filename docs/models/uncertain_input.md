@@ -20,5 +20,5 @@ Input uncertainty は「出力観測にノイズがある」問題とは異な�
 
 input uncertainty、heteroskedastic output noise、robust risk/scenario evaluation は別レイヤーです。何が不確かなのかを明確にしてからモデルを選択してください。
 
-Notebook: [Uncertain input](../../examples/notebooks/17_uncertain_input_gp.ipynb)  
+Notebook: [Uncertain input](../../examples/notebooks/16_uncertain_input_gp.ipynb)  
 Theory: [Uncertain-input GP](../theory/16_uncertain_input_gp.md)

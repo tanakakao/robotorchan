@@ -43,7 +43,7 @@ DeepGPはvariational objectiveを用いるため学習方法が異なります�
 ## 関連資料
 
 Theory: [Expressive GP models](../theory/22_expressive_gp.md)  
-Notebook: [Expressive surrogate GP](../../examples/notebooks/24_expressive_surrogate_gp.ipynb)  
+Notebook: [Expressive surrogate GP](../../examples/notebooks/22_expressive_surrogate_gp.ipynb)  
 Benchmark: [Predictive benchmark](../benchmarks/expressive_predictive.md)
 
 

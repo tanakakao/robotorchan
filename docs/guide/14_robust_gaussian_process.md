@@ -134,4 +134,4 @@ robotorchanはこのモデル固有の目的とデータ保持を接続します
 `training_loss()`はsample方向に平均したlog likelihoodへ変分KLを加えます。`contamination_diagnostic()`は別経路で、
 posterior meanの残差から混合成分の近似確率を求めます。この診断を潜在変数の厳密な事後推論と取り違えない設計です。
 
-使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/15_robust_observation_models.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/14_robust_observation_models.ipynb)を参照してください。

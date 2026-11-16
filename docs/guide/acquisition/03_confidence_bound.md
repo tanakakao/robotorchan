@@ -73,4 +73,4 @@ robotorchan側の条件照合は[registry](../../../src/robotorchan/acquisition/
 [analytic]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/acquisition/analytic.py
 [mc]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/acquisition/monte_carlo.py
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/26_standard_acquisition.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/32_standard_acquisition.ipynb)を参照してください。

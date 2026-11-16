@@ -7,7 +7,7 @@ NOTEBOOK = (
     Path(__file__).resolve().parents[2]
     / "examples"
     / "notebooks"
-    / "42_heterogeneous_bo_benchmark.ipynb"
+    / "55_heterogeneous_bo_benchmark.ipynb"
 )
 
 

@@ -32,7 +32,7 @@ Bernoulli尤度を介した積分
 
 最初に第1・3・4節の意味を理解し、次に第2節で学習方法を確認すると読みやすくなります。
 基礎は[GP理論](02_gaussian_process.md)と[変分GP](09_variational_gp.md)、
-実行例は[39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)を参照してください。
+実行例は[26番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)を参照してください。
 
 **回帰との違い：** 通常のGP回帰は連続値とGaussian尤度を扱います。
 分類ではラベルは0/1ですが、潜在関数は連続値です。
@@ -141,7 +141,7 @@ ELBOを最大化するとデータ適合を高めつつKLの乖離を抑えま�
 
 実装では標準分類器を作成し、fit()でBernoulli ELBOの学習を行います。
 入力の作り方、学習回数、図の表示は
-[分類Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)にあります。
+[分類Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)にあります。
 
 ## 3. 潜在不確実性と予測確率
 
@@ -267,7 +267,7 @@ Bは次のラベルを観測することでモデルの不確実性を減らせ�
 「モデルについて情報を得たい」のかで獲得関数を選びます。
 
 この例は理論的な解釈であり、任意の実データでの候補順位を保証しません。
-[39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)
+[26番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)
 では両スコアと候補の位置を可視化します。
 
 ## 5. 多クラス分類
@@ -820,7 +820,7 @@ Mixed Infinite-width NNGPでは、上記の連続入力用カーネルを
 この章では数学的な仮定を説明しました。
 実行例・モデルの選択・APIの詳細は
 [分類ガイド](../guide/24_classification.md)と
-[拡張分類Notebook](../../examples/notebooks/47_binary_classification_extensions.ipynb)
+[拡張分類Notebook](../../examples/notebooks/27_binary_classification_extensions.ipynb)
 を参照してください。
 
 ### q-batchの周辺集約と同時情報利得
@@ -850,10 +850,10 @@ I(Y_{1:q};F_{1:q}\mid D)
 ### 次に学ぶ資料
 
 - [分類ガイド](../guide/24_classification.md)：モデルの選び方と公開API
-- [39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)：標準GP分類とActive Learning
-- [40番Notebook](../../examples/notebooks/40_classification_robust_uncertain.ipynb)：ノイズと入力不確実性
-- [41番Notebook](../../examples/notebooks/41_classification_probability_layers.ipynb)：校正とアンサンブル
-- [47番Notebook](../../examples/notebooks/47_binary_classification_extensions.ipynb)：拡張モデルとq-batch
+- [26番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)：標準GP分類とActive Learning
+- [28番Notebook](../../examples/notebooks/28_classification_robust_uncertain.ipynb)：ノイズと入力不確実性
+- [29番Notebook](../../examples/notebooks/29_classification_probability_layers.ipynb)：校正とアンサンブル
+- [27番Notebook](../../examples/notebooks/27_binary_classification_extensions.ipynb)：拡張モデルとq-batch
 
 ## 8. 関連理論
 
@@ -904,7 +904,7 @@ $$
 
 複数候補のjoint batch BALDでは、候補間の依存も考慮しますが、
 ラベルの組合せ数は \(C^q\) で増加します。
-[51番Multiclass Notebook](../../examples/notebooks/51_multiclass_classification_active_learning.ipynb)
+[51番Multiclass Notebook](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)
 に学習から候補提案までの例を示します。
 
 
@@ -1032,7 +1032,7 @@ BALDは
 評価用データはこのサイクルに混ぜず、最後まで独立に保ちます。
 Accuracyだけでなく、NLL・Brier score・クラス別Recallも確認してください。
 実行できる2ラウンドの例は
-[51番Notebook](../../examples/notebooks/51_multiclass_classification_active_learning.ipynb)
+[30番Notebook](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)
 を参照してください。
 
 
@@ -1220,5 +1220,5 @@ MAEの解釈に注意してください。保留データとクラス別の誤�
 数式から実装への対応は
 [分類GP Guide](../guide/24_classification.md)を、
 学習・予測・候補提案・Mixed入力・2ラウンドの更新は
-[52番 Ordinal GP Notebook](../../examples/notebooks/52_ordinal_classification_active_learning.ipynb)
+[52番 Ordinal GP Notebook](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)
 を参照してください。

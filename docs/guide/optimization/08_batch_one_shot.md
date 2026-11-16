@@ -96,4 +96,4 @@ candidate を1点選ぶ-> X_pending に追加-> 同じ acquisition を再最適�
 一つのカテゴリを拡張batch全体へ固定する通常のmixed探索とは変数構造が異なります。割当数はカテゴリの組合せと拡張qに依存して増えるため、`max_assignments`で上限を持ち、
 現在は実候補q=1へ限定します。列挙・行ごとの固定化はローカル拡張で、fantasyモデルと終端価値はBoTorchが担当します。
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/32_batch_async_fantasization.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/40_batch_async_fantasization.ipynb)を参照してください。

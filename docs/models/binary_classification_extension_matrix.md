@@ -41,7 +41,7 @@ Mixed候補の探索にはカテゴリ値を固定できるoptimizer等を選ん
 | 理論 | `docs/theory/24_classification.md` | 追記済み |
 | 利用ガイド | `docs/guide/24_classification.md` | 追記済み |
 | モデル選択 | `docs/models/classification.md` | 追記済み |
-| 日本語Notebook | `examples/notebooks/47_binary_classification_extensions.ipynb` | 追加済み |
+| 日本語Notebook | `examples/notebooks/27_binary_classification_extensions.ipynb` | 追加済み |
 | 比較スクリプト | `benchmarks/binary_classification_extensions.py` | 追加済み |
 | q-batch統合テスト | `tests/acquisition/test_qbatch_extended_binary_models.py` | 追加済み |
 

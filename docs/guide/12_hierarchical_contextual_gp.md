@@ -20,8 +20,8 @@
 
 conditional inactive dimensionsの扱い、contextごとの入力構造、観測に存在しないcontextへの汎化条件はfamilyごとに制限がある。詳細は
 [モデル選択ガイド](../models/hierarchical_contextual.md)と
-[Hierarchical Notebook](../../examples/notebooks/12_hierarchical_gp.ipynb)、
-[Context Notebook](../../examples/notebooks/14_contextual_gp.ipynb)を参照する。
+[Hierarchical Notebook](../../examples/notebooks/10_hierarchical_gp.ipynb)、
+[Context Notebook](../../examples/notebooks/12_contextual_gp.ipynb)を参照する。
 
 ## 条件付き入力とcontextのモデル化境界
 

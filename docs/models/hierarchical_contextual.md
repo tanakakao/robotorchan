@@ -16,5 +16,5 @@ Multi-task版として `HierarchicalConditionalKernelMultiTaskGP` と `MixedHier
 
 context が単なるカテゴリ列なのか、分解可能な構造・taskとして意味を持つのかを確認して選択してください。
 
-Notebook: [Hierarchical](../../examples/notebooks/12_hierarchical_gp.ipynb)、[Heterogeneous](../../examples/notebooks/13_heterogeneous_multitask_gp.ipynb)、[Contextual](../../examples/notebooks/14_contextual_gp.ipynb)  
+Notebook: [Hierarchical](../../examples/notebooks/10_hierarchical_gp.ipynb)、[Heterogeneous](../../examples/notebooks/11_heterogeneous_multitask_gp.ipynb)、[Contextual](../../examples/notebooks/12_contextual_gp.ipynb)  
 Theory: [Hierarchical / Contextual](../theory/12_hierarchical_contextual_gp.md)

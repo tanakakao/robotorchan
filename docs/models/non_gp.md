@@ -55,7 +55,7 @@ credible interval を意味しません。
 データでは tree / boosting surrogate を比較対象にできます。モデル選択は固定的な優劣ではなく、
 予測誤差、uncertainty diagnostics、BO の regret、計算時間を同じ問題設定で比較して判断します。
 
-Notebook: [Non-GP surrogate](../../examples/notebooks/25_non_gp_surrogates.ipynb)  
+Notebook: [Non-GP surrogate](../../examples/notebooks/23_non_gp_surrogates.ipynb)  
 Theory: [Empirical ensemble surrogate](../theory/23_non_gp_surrogates.md)
 
 

@@ -49,7 +49,7 @@ The corrected CI run passed all 11 jobs, and Documentation links passed.
 
 CI run `40977583875` (commit `507818e4c05a341c74deeb1ac123a9e4d2bf8398`)
 passed all 11 jobs, including `notebook-expressive-non-gp` and
-`ngboost-extra`. The notebook `25_non_gp_surrogates.ipynb` now executes
+`ngboost-extra`. The notebook `23_non_gp_surrogates.ipynb` now executes
 candidate proposals and objective evaluations for Random Forest, Extra Trees,
 Gradient Boosting, Histogram Gradient Boosting, and NGBoost.
 
@@ -68,7 +68,7 @@ subject to individual inspection.
 
 ## Reduced GP notebook coverage (20 registry mappings)
 
-Notebook: `examples/notebooks/19_reduced_gp.ipynb`. The CI run
+Notebook: `examples/notebooks/18_reduced_gp.ipynb`. The CI run
 `40995535501` passed on commit `1b2db43c3ad3a1c7f00b3ea1246727a41582183a`,
 including the `notebook-reduced` execution job.
 
@@ -96,7 +96,7 @@ optimization and should not be described as full Bayesian optimization.
 
 ## Neural reduced GP notebook coverage (29 registry mappings)
 
-Notebook: `examples/notebooks/20_neural_reduction_gp.ipynb`. Commit
+Notebook: `examples/notebooks/19_neural_reduction_gp.ipynb`. Commit
 `9368b590ae16de9763cf70c91874257197fc43b0` passed CI run
 `41013845874`, including the `notebook-neural-reduced` job, which executes
 the complete notebook with `--timeout 600`.
@@ -135,7 +135,7 @@ This closes the notebook-20 *mapped-model execution* gap, not the full
 
 ## Expressive GP notebook coverage (16 registry mappings)
 
-Notebook: `examples/notebooks/24_expressive_surrogate_gp.ipynb`.
+Notebook: `examples/notebooks/22_expressive_surrogate_gp.ipynb`.
 Commit `d143b92c72649a9aec57da148767b6b479c033ef` passed
 CI run `41150143395`, including the `notebook-expressive-non-gp` job.
 
@@ -222,7 +222,7 @@ optimization performance or mathematical correctness.
 
 ## Noise-model notebook coverage (10 registry mappings)
 
-Notebook: `examples/notebooks/16_noise_models.ipynb`. Commit
+Notebook: `examples/notebooks/15_noise_models.ipynb`. Commit
 `c5adf3391bf1244015ba418843ae8416abdf74aa` passed CI run
 `41157626014`, including the default `notebooks` execution job.
 
@@ -249,7 +249,7 @@ does not establish multi-seed stability or optimality.
 
 ## Robust observation notebook coverage (8 registry mappings)
 
-Notebook: `examples/notebooks/15_robust_observation_models.ipynb`.
+Notebook: `examples/notebooks/14_robust_observation_models.ipynb`.
 Commit `1a00372c756cca7e5d890806e3dcf0731bf8532d`
 passed CI run `41159977362`, including the default notebook
 execution job. All eight mapped classes are instantiated and exercised:
@@ -269,7 +269,7 @@ multi-seed robustness or optimization performance.
 
 ## MAP-SAAS and additive notebook coverage (7 registry mappings)
 
-Notebook: `examples/notebooks/09_map_saas_and_additive_gp.ipynb`.
+Notebook: `examples/notebooks/08_map_saas_and_additive_gp.ipynb`.
 Commit `bfc5fdceee767c2e97b88c821d48c99da743d0a5`
 passed CI run `41165276107`, including notebook execution.
 
@@ -313,7 +313,7 @@ policies. CI validates execution, not multi-seed optimization quality.
 
 ## Contextual GP notebook coverage (6 registry mappings)
 
-Notebook: `examples/notebooks/14_contextual_gp.ipynb`.
+Notebook: `examples/notebooks/12_contextual_gp.ipynb`.
 Commit `1fb0063ac708271bcb69066f9c44b22fa41d035c`
 passed CI run `41172687822`, including the notebook jobs.
 
@@ -355,7 +355,7 @@ CI validates execution, not global candidate optimality.
 
 ## Nonstationary GP notebook coverage (5 registry mappings)
 
-Notebook: `examples/notebooks/18_nonstationary_gp.ipynb`.
+Notebook: `examples/notebooks/17_nonstationary_gp.ipynb`.
 Commit `07d22182dcb3c191ee276209a36de79e03e17b04`
 passed CI run `41178611160`, including the notebook job.
 
@@ -375,7 +375,7 @@ ranking is not acquisition-function optimization.
 
 ## Heterogeneous and hierarchical multi-task coverage (4 mappings)
 
-Notebook: `examples/notebooks/13_heterogeneous_multitask_gp.ipynb`.
+Notebook: `examples/notebooks/11_heterogeneous_multitask_gp.ipynb`.
 Commit `3af753606a37835b50f62fbe8380af2cc45e99bd`
 passed CI run `41181618304`. The `notebooks` job log
 explicitly records execution start and successful completion.
@@ -394,7 +394,7 @@ this is not acquisition-function optimization.
 
 ## Structured-output GP notebook coverage (4 mappings)
 
-Notebook: `examples/notebooks/11_structured_output_gp.ipynb`.
+Notebook: `examples/notebooks/09_structured_output_gp.ipynb`.
 Commit `6b379c0404c6b78cca10b520d0211f92f8601a40`
 passed CI run `41183118583`. The `notebook-structured` job
 explicitly executed this notebook and completed successfully.
@@ -412,7 +412,7 @@ utilities, not acquisition-function optimization.
 
 ## Robust relevance-pursuit notebook (2 verified, 2 blocked)
 
-Notebook: `examples/notebooks/10_robust_gp.ipynb`.
+Notebook: `examples/notebooks/13_robust_gp.ipynb`.
 Commit `0e3c0983976a85ea543b816ce93b1799d4ed524b`
 passed CI run `41185454540`; the `notebooks` job explicitly
 started and completed this notebook.
@@ -435,7 +435,7 @@ fitting repairs remain outside the notebook-update scope.
 
 ## Fully Bayesian SAAS notebook coverage (4 mappings)
 
-Notebook: `examples/notebooks/08_saas_gp.ipynb`.
+Notebook: `examples/notebooks/07_saas_gp.ipynb`.
 Commit `52b3cb99ef2642533f513f5ded8df8d29c3a081b`
 passed CI run `41190752302`. The `notebook-saas` job
 explicitly executed this notebook to completion.
@@ -455,7 +455,7 @@ posterior calibration or candidate optimality.
 
 ## Uncertain-input GP notebook coverage (3 mappings)
 
-Notebook: `examples/notebooks/17_uncertain_input_gp.ipynb`.
+Notebook: `examples/notebooks/16_uncertain_input_gp.ipynb`.
 Commit `7a03fb1ca1b14bf9d3d201ecaf2c95fc25aef843`
 passed CI run `41192156012`; the default `notebooks` job
 explicitly started and completed this notebook.
@@ -501,7 +501,7 @@ and completed each of these unchanged notebooks:
   qLogEI optimization, objective evaluation and short BO loop.
 - `02_mixed_single_task_gp.ipynb`: `MixedSingleTaskGP`
   fit, categorical enumeration, qLogEI and short mixed BO loop.
-- `07_pairwise_gp.ipynb`: `PairwiseGP` preference model,
+- `24_pairwise_gp.ipynb`: `PairwiseGP` preference model,
   `AnalyticExpectedUtilityOfBestOption` optimization and
   synthetic pairwise preference evaluation. This is not
   scalar-objective regression.

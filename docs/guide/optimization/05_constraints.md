@@ -130,10 +130,10 @@ gradient backendでは微分可能性が必要となる。BoTorch nativeは非�
 
 | 確認したい内容 | Notebook | 対応する節 |
 | --- | --- | --- |
-| 線形制約・固定変数・候補間制約とjoint q-batch | [31_acquisition_optimization](../../../examples/notebooks/31_acquisition_optimization.ipynb) | 5〜8 |
-| 非線形不等式・実行可能領域の可視化 | [38_nonlinear_candidate_constraints](../../../examples/notebooks/38_nonlinear_candidate_constraints.ipynb) | 3〜4 |
-| 非線形等式・許容誤差内の候補提案 | [38_nonlinear_candidate_constraints](../../../examples/notebooks/38_nonlinear_candidate_constraints.ipynb) | 4a |
-| 非線形候補間制約とjoint q-batch | [38_nonlinear_candidate_constraints](../../../examples/notebooks/38_nonlinear_candidate_constraints.ipynb) | 5〜6 |
+| 線形制約・固定変数・候補間制約とjoint q-batch | [31_acquisition_optimization](../../../examples/notebooks/39_acquisition_optimization.ipynb) | 5〜8 |
+| 非線形不等式・実行可能領域の可視化 | [38_nonlinear_candidate_constraints](../../../examples/notebooks/42_nonlinear_candidate_constraints.ipynb) | 3〜4 |
+| 非線形等式・許容誤差内の候補提案 | [38_nonlinear_candidate_constraints](../../../examples/notebooks/42_nonlinear_candidate_constraints.ipynb) | 4a |
+| 非線形候補間制約とjoint q-batch | [38_nonlinear_candidate_constraints](../../../examples/notebooks/42_nonlinear_candidate_constraints.ipynb) | 5〜6 |
 
 Mixed変数を含む候補間制約はbackendごとに対応が異なります。Mixed GA / DEには
 公開dispatcherを経由するq-batch制約テストがありますが、Mixed Hybridのq>1における

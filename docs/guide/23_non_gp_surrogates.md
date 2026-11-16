@@ -288,4 +288,4 @@ BoTorchの`EnsemblePosterior`へ接続します。
 boostingの学習更新はscikit-learnが担当し、ローカル実装はbootstrapの対応付け、元データ保持、予測tensorの軸構成を担当します。
 BoTorchのposterior型を利用しても、木の予測がGPの条件付き分布へ変わるわけではありません。
 
-使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/25_non_gp_surrogates.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/23_non_gp_surrogates.ipynb)を参照してください。

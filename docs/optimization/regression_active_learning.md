@@ -42,4 +42,4 @@ acqf = qNegIntegratedqPosteriorVariance(model=model, mc_points=target_points)
 
 現在の `qPosteriorVariance`・`qPosteriorStd` は ensemble posterior を拒否します。`_is_ensemble` のモデルと BoTorch `EnsemblePosterior` の直接の返り値を含みます。
 
-tree ensemble のメンバー間の広がりは、この獲得関数の不確実性契約としては認定していません。RandomForest・ExtraTrees の Active Learning には ensemble を明示的に扱う別の基準と検証が必要です。[理論](../theory/acquisition/09_active_learning.md)と[Notebook](../../examples/notebooks/28_active_learning_acquisition.ipynb)に示す実行範囲と一致させています。
+tree ensemble のメンバー間の広がりは、この獲得関数の不確実性契約としては認定していません。RandomForest・ExtraTrees の Active Learning には ensemble を明示的に扱う別の基準と検証が必要です。[理論](../theory/acquisition/09_active_learning.md)と[Notebook](../../examples/notebooks/34_active_learning_acquisition.ipynb)に示す実行範囲と一致させています。

@@ -18,7 +18,7 @@ original-paper reproduction or statistical superiority.
 | COMBO BO | `propose_combo_candidate`, `run_combo_sequential` | Binary, single objective, q=1 | Enumerated UCB; no general mixed/constraint interface |
 | Benchmark | `examples/combinatorial_bo_benchmark.py` | Small binary, q=1 | Random/Sobol/numeric-GP/Hamming/TR/BOCS/COMBO; missing Mixed GA and actual MixedSingleTaskGP |
 | Theory / Guide | `docs/theory/27_combinatorial_bayesian_optimization.md`, `docs/guide/27_combinatorial_bayesian_optimization.md` | Explanations and API mapping | Distinguish research algorithms from implemented approximations |
-| Notebook | `examples/notebooks/49_combinatorial_bayesian_optimization.ipynb` | Small binary example | Manual CI execution classification |
+| Notebook | `examples/notebooks/53_combinatorial_bayesian_optimization.ipynb` | Small binary example | Manual CI execution classification |
 
 ## Verification and scope
 
@@ -50,5 +50,5 @@ requirements for this binary core.
 
 - [Japanese theory](../../../docs/theory/27_combinatorial_bayesian_optimization.md)
 - [Implementation guide](../../../docs/guide/27_combinatorial_bayesian_optimization.md)
-- [Executable notebook](../../../examples/notebooks/49_combinatorial_bayesian_optimization.ipynb)
+- [Executable notebook](../../../examples/notebooks/53_combinatorial_bayesian_optimization.ipynb)
 - [Benchmark protocol and caveats](../../../examples/combinatorial_bo_benchmark.md)

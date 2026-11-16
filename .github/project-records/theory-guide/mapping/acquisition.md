@@ -108,7 +108,7 @@ information criteria.
 `docs/theory/acquisition/10_level_set.md`,
 `docs/optimization/level_set_learning.md`,
 `docs/optimization/boundary-variance.md` and
-`examples/notebooks/28_regression_active_learning.ipynb`.
+`examples/notebooks/35_regression_active_learning.ipynb`.
 The named files are source/test references, not evidence
 that every combination has been numerically verified.
 

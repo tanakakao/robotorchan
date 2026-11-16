@@ -41,5 +41,5 @@ robotorchanは[非線形初期値の検査][validation]とbackendの受入条件
 [initializers]: https://github.com/pytorch/botorch/blob/v0.18.1/botorch/optim/initializers.py
 [validation]: ../../../src/robotorchan/optim/constraints/validation.py
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/33_acquisition_initialization.ipynb)を参照してください
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/38_acquisition_initialization.ipynb)を参照してください
 。

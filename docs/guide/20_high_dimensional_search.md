@@ -202,4 +202,4 @@ surrogateを学習
 stateはsurrogate parameterではない。実験評価・観測追加・モデルの再学習は呼び出し側が担当し、strategyが暗黙に所有しない。この分離を保ち、
 同じsurrogate / acquisitionで探索法の違いを比較する。
 
-使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/34_turbo_trust_region.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/47_turbo_trust_region.ipynb)を参照してください。

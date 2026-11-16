@@ -102,4 +102,4 @@ Kronecker形式ではtask identityがYの軸なので、Xのdata featuresをenco
 `training_loss()`が予測目的とVAE側の項を組み合わせます。`uncertainty_aware_posterior()`はlatent sampleごとの予測momentを集計し、
 平均の変動も含めてGaussianへmoment matchingします。通常の潜在平均だけによる予測と、この周辺化の近似は別メソッドです。
 
-使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/20_neural_reduction_gp.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/19_neural_reduction_gp.ipynb)を参照してください。

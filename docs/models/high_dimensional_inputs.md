@@ -128,7 +128,7 @@ public API は「すべての reducer × すべての task/mixed 形式」の機
 | lifecycle | state_dict復元後のreducer依存training input再同期 | 完了 |
 | benchmark | 高次元long-format MultiTaskの比較benchmark | 完了 |
 
-モデル選択とbenchmarkの詳細は `docs/high_dimensional_model_selection.md`、実行例は `examples/notebooks/23_high_dimensional_bo_benchmark.ipynb` を参照してください。
+モデル選択とbenchmarkの詳細は `docs/high_dimensional_model_selection.md`、実行例は `examples/notebooks/54_high_dimensional_bo_benchmark.ipynb` を参照してください。
 
 ## 次の拡張候補
 

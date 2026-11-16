@@ -89,10 +89,10 @@ Ordinal/Multiclassの `ProbabilityVariance` と `BALD` は既存のMC経路を�
 
 実装と形状は[分類ガイド](../guide/24_classification.md)、
 獲得関数との対応は[分類Active Learningガイド](../guide/acquisition/13_classification_active_learning.md)、
-可視化は[39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)、
-[41番Notebook](../../examples/notebooks/41_classification_probability_layers.ipynb)、
-[51番Notebook](../../examples/notebooks/51_multiclass_classification_active_learning.ipynb)、
-[52番Notebook](../../examples/notebooks/52_ordinal_classification_active_learning.ipynb)
+可視化は[26番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)、
+[29番Notebook](../../examples/notebooks/29_classification_probability_layers.ipynb)、
+[30番Notebook](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)、
+[31番Notebook](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)
 を参照してください。
 
 ## Robust モデル
@@ -154,7 +154,7 @@ NNGPは**無限幅ニューラルネットワークに対応する解析的カ�
 単一点用の`PredictiveEntropy`等とは区別してください。
 
 学習から候補提案までの例は
-[分類拡張Notebook](../../examples/notebooks/47_binary_classification_extensions.ipynb)を参照してください。
+[分類拡張Notebook](../../examples/notebooks/27_binary_classification_extensions.ipynb)を参照してください。
 比較コードは[ベンチマーク](../../benchmarks/binary_classification_extensions.py)にあります。
 
 モデル別の入力・q-batch対応・検証範囲は[二値分類拡張の対応表](binary_classification_extension_matrix.md)を参照してください。
@@ -165,7 +165,7 @@ NNGPは**無限幅ニューラルネットワークに対応する解析的カ�
 数理の導出は[分類GP理論](../theory/24_classification.md)、
 実装との対応は[分類Guide](../guide/24_classification.md)、
 学習から2ラウンドの候補提案・Mixed探索までの実行例は
-[52番 Ordinal GP Notebook](../../examples/notebooks/52_ordinal_classification_active_learning.ipynb)を参照してください。
+[52番 Ordinal GP Notebook](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)を参照してください。
 
 Ordinal labels (0, 1, ..., C-1) have a **known order**. Unlike ordinary
 multiclass classification, the ordered-probit model uses a single latent
@@ -226,7 +226,7 @@ every optimization backend or guarantee better selection performance.
 ## Ordinal GP：Active Learningのラベル効率比較
 
 順序回帰の基本動作（標準／Mixed、確率予測、q-batch候補提案）は
-[52番Notebook](../../examples/notebooks/52_ordinal_classification_active_learning.ipynb)
+[31番Notebook](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)
 で確認できます。次に、**同じラベル予算で追加ラベルをどう選ぶか**を
 比較したい場合は独立したベンチマークを使います。
 

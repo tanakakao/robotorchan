@@ -35,4 +35,4 @@ bounds・q・変数型・制約を検査した後、backendごとの関数へ分
 上流の初期化・局所探索へ委譲し、Random / Sobolは独自の有限pool選択を行います。Theoryの内側の最大化問題は共通ですが、探索の近似と制約処理は経路ごとに異なります。
 戻る獲得値は数値探索で計算したutilityであり、外部の目的関数の新しい観測ではありません。
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/31_acquisition_optimization.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/39_acquisition_optimization.ipynb)を参照してください。

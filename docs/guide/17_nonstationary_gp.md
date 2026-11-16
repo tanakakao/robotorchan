@@ -65,4 +65,4 @@ NonstationaryMultiTaskGPとKronecker版はtaskの表現が異なり、task列を
 `NonstationarySingleTaskGP`は`SingleTaskGP`を継承して、`ScaleKernel(GibbsKernel(...))`を共分散部品として注入します。
 局所lengthscaleの写像とGibbs計算は独自実装ですが、Gaussian観測のMLL、条件付け、posteriorは標準GPの上流経路を再利用します。
 
-使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/18_nonstationary_gp.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/17_nonstationary_gp.ipynb)を参照してください。

@@ -87,6 +87,10 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 
 ## Notebook 一覧
 
+理論の基礎からモデル構築、獲得関数、最適化、応用へ進める順に01〜57を採番しています。CIの実行順・実行区分は `run_notebooks.py` で管理します。
+
+### GPの基礎
+
 | Notebook | 主なモデル | 状態 |
 |---|---|---|
 | [`01_single_task_gp.ipynb`](notebooks/01_single_task_gp.ipynb) | `SingleTaskGP` | 利用可能 |
@@ -95,58 +99,103 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`04_multitask_gp.ipynb`](notebooks/04_multitask_gp.ipynb) | `MultiTaskGP`, `KroneckerMultiTaskGP` | 利用可能 |
 | [`05_model_list_gp.ipynb`](notebooks/05_model_list_gp.ipynb) | `ModelListGP` | 利用可能 |
 | [`06_variational_gp.ipynb`](notebooks/06_variational_gp.ipynb) | `SingleTaskVariationalGP` | 利用可能 |
-| [`07_pairwise_gp.ipynb`](notebooks/07_pairwise_gp.ipynb) | `PairwiseGP` | 利用可能 |
-| [`08_saas_gp.ipynb`](notebooks/08_saas_gp.ipynb) | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` | 利用可能 / 通常CI対象外 |
-| [`09_map_saas_and_additive_gp.ipynb`](notebooks/09_map_saas_and_additive_gp.ipynb) | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`, `OrthogonalAdditiveGP` | 利用可能 |
-| [`10_robust_gp.ipynb`](notebooks/10_robust_gp.ipynb) | `RobustRelevancePursuitSingleTaskGP` | 利用可能 |
-| [`11_structured_output_gp.ipynb`](notebooks/11_structured_output_gp.ipynb) | `HigherOrderGP`, `LatentKroneckerGP` | 利用可能 / 通常CI対象外 |
-| [`12_hierarchical_gp.ipynb`](notebooks/12_hierarchical_gp.ipynb) | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` | 利用可能 |
-| [`13_heterogeneous_multitask_gp.ipynb`](notebooks/13_heterogeneous_multitask_gp.ipynb) | `HeterogeneousMTGP` | 利用可能 |
-| [`14_contextual_gp.ipynb`](notebooks/14_contextual_gp.ipynb) | `SACGP`, `LCEAGP`, `LCEMGP` | 利用可能 |
-| [`15_robust_observation_models.ipynb`](notebooks/15_robust_observation_models.ipynb) | Student-t, Contaminated | 利用可能 |
-| [`16_noise_models.ipynb`](notebooks/16_noise_models.ipynb) | Replicate Noise | 利用可能 |
-| [`17_uncertain_input_gp.ipynb`](notebooks/17_uncertain_input_gp.ipynb) | Uncertain Input / Categorical | 利用可能 |
-| [`18_nonstationary_gp.ipynb`](notebooks/18_nonstationary_gp.ipynb) | Nonstationary GP | 利用可能 |
-| [`19_reduced_gp.ipynb`](notebooks/19_reduced_gp.ipynb) | PCA / PLS / Random Projection | 利用可能 |
-| [`20_neural_reduction_gp.ipynb`](notebooks/20_neural_reduction_gp.ipynb) | AE / VAE / Supervised AE | 利用可能 |
-| [`21_reduced_multitask_gp.ipynb`](notebooks/21_reduced_multitask_gp.ipynb) | Reduced MultiTask | 利用可能 |
-| [`22_mixed_reduced_gp.ipynb`](notebooks/22_mixed_reduced_gp.ipynb) | Mixed PCA / PLS | 利用可能 |
-| [`23_high_dimensional_bo_benchmark.ipynb`](notebooks/23_high_dimensional_bo_benchmark.ipynb) | 高次元BO benchmark | 利用可能 / benchmark解説 |
-| [`24_expressive_surrogate_gp.ipynb`](notebooks/24_expressive_surrogate_gp.ipynb) | DKL / I-BNN / Spectral Mixture / DeepGP | 利用可能 / 解説中心 |
-| [`25_non_gp_surrogates.ipynb`](notebooks/25_non_gp_surrogates.ipynb) | Random Forest / Extra Trees / Gradient Boosting / NGBoost | 利用可能 |
-| [`26_standard_acquisition.ipynb`](notebooks/26_standard_acquisition.ipynb) | Standard BO acquisition | 利用可能 |
-| [`27_multiobjective_acquisition.ipynb`](notebooks/27_multiobjective_acquisition.ipynb) | Multi-objective acquisition | 利用可能 |
-| [`28_active_learning_acquisition.ipynb`](notebooks/28_active_learning_acquisition.ipynb) | Regression Active Learning | 利用可能 |
-| [`29_objective_posterior_transform.ipynb`](notebooks/29_objective_posterior_transform.ipynb) | Objective / PosteriorTransform | 利用可能 |
-| [`30_posterior_sampling.ipynb`](notebooks/30_posterior_sampling.ipynb) | Posterior / Sampling | 利用可能 |
-| [`31_acquisition_optimization.ipynb`](notebooks/31_acquisition_optimization.ipynb) | Acquisition Optimization | 利用可能 |
-| [`32_batch_async_fantasization.ipynb`](notebooks/32_batch_async_fantasization.ipynb) | Batch / Async / Fantasization | 利用可能 |
-| [`33_acquisition_initialization.ipynb`](notebooks/33_acquisition_initialization.ipynb) | Acquisition Initialization | 利用可能 |
-| [`34_turbo_trust_region.ipynb`](notebooks/34_turbo_trust_region.ipynb) | TuRBO / Trust Region | 利用可能 |
-| [`35_robust_input_perturbation.ipynb`](notebooks/35_robust_input_perturbation.ipynb) | Robust BO / Input Perturbation | 利用可能 |
-| [`36_end_to_end_workflows.ipynb`](notebooks/36_end_to_end_workflows.ipynb) | Sequential / Batch / Async E2E | 利用可能 |
-| [`37_outcome_constrained_bo.ipynb`](notebooks/37_outcome_constrained_bo.ipynb) | Outcome-constrained BO | 利用可能 |
-| [`38_nonlinear_candidate_constraints.ipynb`](notebooks/38_nonlinear_candidate_constraints.ipynb) | Nonlinear candidate constraints | 利用可能 |
-| [`39_classification_active_learning.ipynb`](notebooks/39_classification_active_learning.ipynb) | Binary GP Classification / AL | 利用可能 |
-| [`40_classification_robust_uncertain.ipynb`](notebooks/40_classification_robust_uncertain.ipynb) | Robust / Uncertain-input Classification | 利用可能 |
-| [`41_classification_probability_layers.ipynb`](notebooks/41_classification_probability_layers.ipynb) | Ensemble / Calibration / Reliability / Conformal | 利用可能 |
-| [`42_heterogeneous_bo_benchmark.ipynb`](notebooks/42_heterogeneous_bo_benchmark.ipynb) | Heterogeneous BO benchmark | 利用可能 |
-| [`43_turbo_multi_benchmark.ipynb`](notebooks/43_turbo_multi_benchmark.ipynb) | TuRBO-m benchmark | 利用可能 |
-| [`44_safe_bo_usage_guide.ipynb`](notebooks/44_safe_bo_usage_guide.ipynb) | Safe BO 日本語利用ガイド | 利用可能 |
-| [`45_safe_bo_benchmark.ipynb`](notebooks/45_safe_bo_benchmark.ipynb) | Safe BO benchmark | 利用可能 |
-| [`46_safe_bo_mixed_q_batch.ipynb`](notebooks/46_safe_bo_mixed_q_batch.ipynb) | Safe BO Mixed / q-batch | 利用可能 |
-| [`47_binary_classification_extensions.ipynb`](notebooks/47_binary_classification_extensions.ipynb) | 拡張Binary GP / Mixed / q-batch Active Learning | 利用可能 |
-| [`37_multifidelity_cost_aware.ipynb`](notebooks/37_multifidelity_cost_aware.ipynb) | Multi-Fidelity / Cost-aware BO | 利用可能 |
-| [`47_mixed_preference_bo.ipynb`](notebooks/47_mixed_preference_bo.ipynb) | Mixed Preference BO | 利用可能 |
-| [`48_transfer_bayesian_optimization.ipynb`](notebooks/48_transfer_bayesian_optimization.ipynb) | Transfer BO | 利用可能 |
-| [`49_combinatorial_bayesian_optimization.ipynb`](notebooks/49_combinatorial_bayesian_optimization.ipynb) | Combinatorial BO | 利用可能 |
-| [`50_study_ask_tell_mixed_q_batch.ipynb`](notebooks/50_study_ask_tell_mixed_q_batch.ipynb) | Study / Ask-and-Tell | 利用可能 |
-| [`51_multiclass_classification_active_learning.ipynb`](notebooks/51_multiclass_classification_active_learning.ipynb) | Multiclass GP分類 / Active Learning | 利用可能 |
-| [`52_ordinal_classification_active_learning.ipynb`](notebooks/52_ordinal_classification_active_learning.ipynb) | 順序GP分類 / Mixed / q-batch / Ask-and-Tell | 利用可能 |
 
-番号は既存のファイル名をそのまま表示しています。`37_` と `47_` には複数のNotebookがあり、
-番号だけでは一意に特定できません。既存リンクを壊さないよう、このドキュメント更新では
-ファイル名の変更を行いません。
+### 発展的なGPモデル
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
+| [`07_saas_gp.ipynb`](notebooks/07_saas_gp.ipynb) | `SaasFullyBayesianSingleTaskGP`, `SaasFullyBayesianMultiTaskGP` | 利用可能 / 通常CI対象外 |
+| [`08_map_saas_and_additive_gp.ipynb`](notebooks/08_map_saas_and_additive_gp.ipynb) | `AdditiveMapSaasSingleTaskGP`, `EnsembleMapSaasSingleTaskGP`, `OrthogonalAdditiveGP` | 利用可能 |
+| [`09_structured_output_gp.ipynb`](notebooks/09_structured_output_gp.ipynb) | `HigherOrderGP`, `LatentKroneckerGP` | 利用可能 / 通常CI対象外 |
+| [`10_hierarchical_gp.ipynb`](notebooks/10_hierarchical_gp.ipynb) | `HierarchicalConditionalKernelGP`, `HierarchicalConditionalKernelMultiTaskGP` | 利用可能 |
+| [`11_heterogeneous_multitask_gp.ipynb`](notebooks/11_heterogeneous_multitask_gp.ipynb) | `HeterogeneousMTGP` | 利用可能 |
+| [`12_contextual_gp.ipynb`](notebooks/12_contextual_gp.ipynb) | `SACGP`, `LCEAGP`, `LCEMGP` | 利用可能 |
+| [`13_robust_gp.ipynb`](notebooks/13_robust_gp.ipynb) | `RobustRelevancePursuitSingleTaskGP` | 利用可能 |
+| [`14_robust_observation_models.ipynb`](notebooks/14_robust_observation_models.ipynb) | Student-t, Contaminated | 利用可能 |
+| [`15_noise_models.ipynb`](notebooks/15_noise_models.ipynb) | Replicate Noise | 利用可能 |
+| [`16_uncertain_input_gp.ipynb`](notebooks/16_uncertain_input_gp.ipynb) | Uncertain Input / Categorical | 利用可能 |
+| [`17_nonstationary_gp.ipynb`](notebooks/17_nonstationary_gp.ipynb) | Nonstationary GP | 利用可能 |
+
+### 次元削減・表現力の高いモデル
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
+| [`18_reduced_gp.ipynb`](notebooks/18_reduced_gp.ipynb) | PCA / PLS / Random Projection | 利用可能 |
+| [`19_neural_reduction_gp.ipynb`](notebooks/19_neural_reduction_gp.ipynb) | AE / VAE / Supervised AE | 利用可能 |
+| [`20_reduced_multitask_gp.ipynb`](notebooks/20_reduced_multitask_gp.ipynb) | Reduced MultiTask | 利用可能 |
+| [`21_mixed_reduced_gp.ipynb`](notebooks/21_mixed_reduced_gp.ipynb) | Mixed PCA / PLS | 利用可能 |
+| [`22_expressive_surrogate_gp.ipynb`](notebooks/22_expressive_surrogate_gp.ipynb) | DKL / I-BNN / Spectral Mixture / DeepGP | 利用可能 / 解説中心 |
+| [`23_non_gp_surrogates.ipynb`](notebooks/23_non_gp_surrogates.ipynb) | Random Forest / Extra Trees / Gradient Boosting / NGBoost | 利用可能 |
+
+### 選好学習
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
+| [`24_pairwise_gp.ipynb`](notebooks/24_pairwise_gp.ipynb) | `PairwiseGP` | 利用可能 |
+| [`25_mixed_preference_bo.ipynb`](notebooks/25_mixed_preference_bo.ipynb) | Mixed Preference BO | 利用可能 |
+
+### 分類・分類Active Learning
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
+| [`26_classification_active_learning.ipynb`](notebooks/26_classification_active_learning.ipynb) | Binary GP Classification / AL | 利用可能 |
+| [`27_binary_classification_extensions.ipynb`](notebooks/27_binary_classification_extensions.ipynb) | 拡張Binary GP / Mixed / q-batch Active Learning | 利用可能 |
+| [`28_classification_robust_uncertain.ipynb`](notebooks/28_classification_robust_uncertain.ipynb) | Robust / Uncertain-input Classification | 利用可能 |
+| [`29_classification_probability_layers.ipynb`](notebooks/29_classification_probability_layers.ipynb) | Ensemble / Calibration / Reliability / Conformal | 利用可能 |
+| [`30_multiclass_classification_active_learning.ipynb`](notebooks/30_multiclass_classification_active_learning.ipynb) | Multiclass GP分類 / Active Learning | 利用可能 |
+| [`31_ordinal_classification_active_learning.ipynb`](notebooks/31_ordinal_classification_active_learning.ipynb) | 順序GP分類 / Mixed / q-batch / Ask-and-Tell | 利用可能 |
+
+### 獲得関数・Posterior・Sampling
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
+| [`32_standard_acquisition.ipynb`](notebooks/32_standard_acquisition.ipynb) | Standard BO acquisition | 利用可能 |
+| [`33_multiobjective_acquisition.ipynb`](notebooks/33_multiobjective_acquisition.ipynb) | Multi-objective acquisition | 利用可能 |
+| [`34_active_learning_acquisition.ipynb`](notebooks/34_active_learning_acquisition.ipynb) | Regression Active Learning | 利用可能 |
+| [`35_regression_active_learning.ipynb`](notebooks/35_regression_active_learning.ipynb) | Regression Active Learning | 利用可能 |
+| [`36_objective_posterior_transform.ipynb`](notebooks/36_objective_posterior_transform.ipynb) | Objective / PosteriorTransform | 利用可能 |
+| [`37_posterior_sampling.ipynb`](notebooks/37_posterior_sampling.ipynb) | Posterior / Sampling | 利用可能 |
+
+### 候補最適化・制約
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
+| [`38_acquisition_initialization.ipynb`](notebooks/38_acquisition_initialization.ipynb) | Acquisition Initialization | 利用可能 |
+| [`39_acquisition_optimization.ipynb`](notebooks/39_acquisition_optimization.ipynb) | Acquisition Optimization | 利用可能 |
+| [`40_batch_async_fantasization.ipynb`](notebooks/40_batch_async_fantasization.ipynb) | Batch / Async / Fantasization | 利用可能 |
+| [`41_outcome_constrained_bo.ipynb`](notebooks/41_outcome_constrained_bo.ipynb) | Outcome-constrained BO | 利用可能 |
+| [`42_nonlinear_candidate_constraints.ipynb`](notebooks/42_nonlinear_candidate_constraints.ipynb) | Nonlinear candidate constraints | 利用可能 |
+| [`43_heterogeneous_constrained_bo.ipynb`](notebooks/43_heterogeneous_constrained_bo.ipynb) | Heterogeneous constrained BO | 利用可能 |
+
+### BO実行フロー・Study
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
+| [`44_sequential_bo_workflow.ipynb`](notebooks/44_sequential_bo_workflow.ipynb) | Sequential BO workflow | 利用可能 |
+| [`45_end_to_end_workflows.ipynb`](notebooks/45_end_to_end_workflows.ipynb) | Sequential / Batch / Async E2E | 利用可能 |
+| [`46_study_ask_tell_mixed_q_batch.ipynb`](notebooks/46_study_ask_tell_mixed_q_batch.ipynb) | Study / Ask-and-Tell | 利用可能 |
+
+### 高度なBayesian Optimization
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
+| [`47_turbo_trust_region.ipynb`](notebooks/47_turbo_trust_region.ipynb) | TuRBO / Trust Region | 利用可能 |
+| [`48_robust_input_perturbation.ipynb`](notebooks/48_robust_input_perturbation.ipynb) | Robust BO / Input Perturbation | 利用可能 |
+| [`49_multifidelity_cost_aware.ipynb`](notebooks/49_multifidelity_cost_aware.ipynb) | Multi-Fidelity / Cost-aware BO | 利用可能 |
+| [`50_safe_bo_usage_guide.ipynb`](notebooks/50_safe_bo_usage_guide.ipynb) | Safe BO 日本語利用ガイド | 利用可能 |
+| [`51_safe_bo_mixed_q_batch.ipynb`](notebooks/51_safe_bo_mixed_q_batch.ipynb) | Safe BO Mixed / q-batch | 利用可能 |
+| [`52_transfer_bayesian_optimization.ipynb`](notebooks/52_transfer_bayesian_optimization.ipynb) | Transfer BO | 利用可能 |
+| [`53_combinatorial_bayesian_optimization.ipynb`](notebooks/53_combinatorial_bayesian_optimization.ipynb) | Combinatorial BO | 利用可能 |
+
+### ベンチマーク
+
+| Notebook | 主なモデル | 状態 |
+|---|---|---|
+| [`54_high_dimensional_bo_benchmark.ipynb`](notebooks/54_high_dimensional_bo_benchmark.ipynb) | 高次元BO benchmark | 利用可能 / benchmark解説 |
+| [`55_heterogeneous_bo_benchmark.ipynb`](notebooks/55_heterogeneous_bo_benchmark.ipynb) | Heterogeneous BO benchmark | 利用可能 |
+| [`56_turbo_multi_benchmark.ipynb`](notebooks/56_turbo_multi_benchmark.ipynb) | TuRBO-m benchmark | 利用可能 |
+| [`57_safe_bo_benchmark.ipynb`](notebooks/57_safe_bo_benchmark.ipynb) | Safe BO benchmark | 利用可能 |
+
 
 ## Benchmark
 
@@ -168,7 +217,7 @@ python examples/run_notebooks.py
 python examples/run_notebooks.py --timeout 600
 ```
 
-通常CIから除外している `08_saas_gp.ipynb` と `11_structured_output_gp.ipynb` も含めて実行する場合は、必要な optional dependency をインストールしてから `--include-slow` を付けます。
+通常CIから除外している `07_saas_gp.ipynb` と `09_structured_output_gp.ipynb` も含めて実行する場合は、必要な optional dependency をインストールしてから `--include-slow` を付けます。
 
 ```bash
 pip install -e ".[examples,fully-bayesian]"
@@ -181,8 +230,8 @@ GitHub Actions の `notebooks` job は Python 3.11 / CPU 環境で
 `examples/run_notebooks.py` の `DEFAULT_NOTEBOOKS` を実行します。
 実行対象の正本は同スクリプトのmanifestです。番号の一覧をここに重複管理しません。
 
-`SLOW_NOTEBOOKS` の `08_saas_gp.ipynb` と
-`11_structured_output_gp.ipynb` は通常の `notebooks` job から外れますが、
+`SLOW_NOTEBOOKS` の `07_saas_gp.ipynb` と
+`09_structured_output_gp.ipynb` は通常の `notebooks` job から外れますが、
 専用の `notebook-saas` / `notebook-structured` job で実行します。
 `EXCLUDED_NOTEBOOKS` は通常の一括実行対象外で、個別のCI jobで実行するものと
 手動実行を想定するものが含まれます。特定のNotebookのCI実行状況は
@@ -242,4 +291,4 @@ Accuracy・NLL・Brier score・ordinal MAEをCSVへ記録します。
 モデルの数理・利用APIは
 [Ordinal GP 理論](../docs/theory/24_classification.md)、
 [Ordinal GP Guide](../docs/guide/24_classification.md)と
-[52番Notebook](notebooks/52_ordinal_classification_active_learning.ipynb)を参照してください。
+[31番Notebook](notebooks/31_ordinal_classification_active_learning.ipynb)を参照してください。
