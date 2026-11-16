@@ -141,7 +141,10 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`50_study_ask_tell_mixed_q_batch.ipynb`](notebooks/50_study_ask_tell_mixed_q_batch.ipynb) | Study / Ask-and-Tell | 利用可能 |
 | [`51_multiclass_classification_active_learning.ipynb`](notebooks/51_multiclass_classification_active_learning.ipynb) | Multiclass GP分類 / Active Learning | 利用可能 |
 | [`52_ordinal_classification_active_learning.ipynb`](notebooks/52_ordinal_classification_active_learning.ipynb) | 順序GP分類 / Mixed / q-batch / Ask-and-Tell | 利用可能 |
+| [`53_regression_active_learning.ipynb`](notebooks/53_regression_active_learning.ipynb) | Regression Active Learning | 利用可能 |
+| [`54_sequential_bo_workflow.ipynb`](notebooks/54_sequential_bo_workflow.ipynb) | Sequential BO workflow | 利用可能 |
 | [`55_multifidelity_cost_aware.ipynb`](notebooks/55_multifidelity_cost_aware.ipynb) | Multi-Fidelity / Cost-aware BO | 利用可能 |
+| [`56_heterogeneous_constrained_bo.ipynb`](notebooks/56_heterogeneous_constrained_bo.ipynb) | Heterogeneous constrained BO | 利用可能 |
 | [`57_mixed_preference_bo.ipynb`](notebooks/57_mixed_preference_bo.ipynb) | Mixed Preference BO | 利用可能 |
 
 ## Benchmark
