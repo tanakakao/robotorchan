@@ -102,7 +102,7 @@ TuRBOの改善判定が推定値に依存する点は、この接続の重要な
 
 [費用比較ベンチマーク](../../../benchmarks/multifidelity_cost_budget.py)は
 MF-KGとrandomを同じ評価費用予算で比較し、
-[Notebook](../../../examples/notebooks/37_multifidelity_cost_aware.ipynb)で可視化します。
+[Notebook](../../../examples/notebooks/55_multifidelity_cost_aware.ipynb)で可視化します。
 `best_target_oracle`は合成関数から求める診断値で、
 学習や実験予算に含めていません。
 
