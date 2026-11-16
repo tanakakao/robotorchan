@@ -144,15 +144,15 @@ TheoryとGuideは主要章の章番号とファイル名を対応させていま
 二値分類の確率モデルを理解するには、
 [分類理論](../theory/24_classification.md)から始め、
 [分類Guide](24_classification.md)で公開APIと潜在事後の対応を確認し、
-[39番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)で
+[26番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)で
 学習・予測・候補選択の順に実行します。
 
 実務上の入力揺らぎや誤ラベルは
-[40番Notebook](../../examples/notebooks/28_classification_robust_uncertain.ipynb)、
+[28番Notebook](../../examples/notebooks/28_classification_robust_uncertain.ipynb)、
 確率校正とEnsembleは
-[41番Notebook](../../examples/notebooks/29_classification_probability_layers.ipynb)、
+[29番Notebook](../../examples/notebooks/29_classification_probability_layers.ipynb)、
 各種拡張モデルとq-batchは
-[47番Notebook](../../examples/notebooks/27_binary_classification_extensions.ipynb)
+[27番Notebook](../../examples/notebooks/27_binary_classification_extensions.ipynb)
 を参照します。
 
 獲得関数の数理的な違いは

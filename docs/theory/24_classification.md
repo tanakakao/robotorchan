@@ -32,7 +32,7 @@ Bernoulli尤度を介した積分
 
 最初に第1・3・4節の意味を理解し、次に第2節で学習方法を確認すると読みやすくなります。
 基礎は[GP理論](02_gaussian_process.md)と[変分GP](09_variational_gp.md)、
-実行例は[39番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)を参照してください。
+実行例は[26番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)を参照してください。
 
 **回帰との違い：** 通常のGP回帰は連続値とGaussian尤度を扱います。
 分類ではラベルは0/1ですが、潜在関数は連続値です。
@@ -267,7 +267,7 @@ Bは次のラベルを観測することでモデルの不確実性を減らせ�
 「モデルについて情報を得たい」のかで獲得関数を選びます。
 
 この例は理論的な解釈であり、任意の実データでの候補順位を保証しません。
-[39番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)
+[26番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)
 では両スコアと候補の位置を可視化します。
 
 ## 5. 多クラス分類
@@ -850,10 +850,10 @@ I(Y_{1:q};F_{1:q}\mid D)
 ### 次に学ぶ資料
 
 - [分類ガイド](../guide/24_classification.md)：モデルの選び方と公開API
-- [39番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)：標準GP分類とActive Learning
-- [40番Notebook](../../examples/notebooks/28_classification_robust_uncertain.ipynb)：ノイズと入力不確実性
-- [41番Notebook](../../examples/notebooks/29_classification_probability_layers.ipynb)：校正とアンサンブル
-- [47番Notebook](../../examples/notebooks/27_binary_classification_extensions.ipynb)：拡張モデルとq-batch
+- [26番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)：標準GP分類とActive Learning
+- [28番Notebook](../../examples/notebooks/28_classification_robust_uncertain.ipynb)：ノイズと入力不確実性
+- [29番Notebook](../../examples/notebooks/29_classification_probability_layers.ipynb)：校正とアンサンブル
+- [27番Notebook](../../examples/notebooks/27_binary_classification_extensions.ipynb)：拡張モデルとq-batch
 
 ## 8. 関連理論
 
@@ -1032,7 +1032,7 @@ BALDは
 評価用データはこのサイクルに混ぜず、最後まで独立に保ちます。
 Accuracyだけでなく、NLL・Brier score・クラス別Recallも確認してください。
 実行できる2ラウンドの例は
-[51番Notebook](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)
+[30番Notebook](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)
 を参照してください。
 
 

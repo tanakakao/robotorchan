@@ -186,9 +186,9 @@ Temperature Scaling等の確率校正は予測確率を変えるため、Entropy
 
 分類GPの数理は[分類理論](../24_classification.md)にまとめています。
 基礎的な分類と能動学習については
-[39番Notebook](../../../examples/notebooks/26_classification_active_learning.ipynb)、
+[26番Notebook](../../../examples/notebooks/26_classification_active_learning.ipynb)、
 複数候補の選択については
-[47番Notebook](../../../examples/notebooks/27_binary_classification_extensions.ipynb)
+[27番Notebook](../../../examples/notebooks/27_binary_classification_extensions.ipynb)
 で可視化された具体例を確認できます。
 
 この理論章ではモデルに必要な数学的条件を説明し、公開APIの選び方や

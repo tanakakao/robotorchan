@@ -4,8 +4,8 @@
 の不確実性の定義に対し、ここでは実装で参照する予測API、
 獲得関数、q-batchの評価方式、確率校正との関係を整理します。
 数式の導出はTheory、実行コードと可視化は
-[39番Notebook](../../../examples/notebooks/26_classification_active_learning.ipynb)
-と[47番Notebook](../../../examples/notebooks/27_binary_classification_extensions.ipynb)
+[26番Notebook](../../../examples/notebooks/26_classification_active_learning.ipynb)
+と[27番Notebook](../../../examples/notebooks/27_binary_classification_extensions.ipynb)
 を参照してください。
 
 ## 単一点の分類獲得関数
@@ -157,9 +157,9 @@ NLL、Brier Score、ECEなどの診断を
 - [分類モデルGuide](../24_classification.md)：潜在事後・クラス確率・構造モデル
 - [モデル選択資料](../../models/classification.md)：分類モデルと対応範囲
 - [二値分類拡張対応表](../../models/binary_classification_extension_matrix.md)：q-batchとモデル構成
-- [39番Notebook](../../../examples/notebooks/26_classification_active_learning.ipynb)：EntropyとBALDの可視化
-- [41番Notebook](../../../examples/notebooks/29_classification_probability_layers.ipynb)：Ensembleと確率校正
-- [47番Notebook](../../../examples/notebooks/27_binary_classification_extensions.ipynb)：Mixedとq=2
+- [26番Notebook](../../../examples/notebooks/26_classification_active_learning.ipynb)：EntropyとBALDの可視化
+- [29番Notebook](../../../examples/notebooks/29_classification_probability_layers.ipynb)：Ensembleと確率校正
+- [27番Notebook](../../../examples/notebooks/27_binary_classification_extensions.ipynb)：Mixedとq=2
 - [分類契約](../../../docs-internal/contracts/classification-models.md)：出力形状と非対応条件
 
 Theoryは数理、Guideは実装対応、Notebookは実行例という

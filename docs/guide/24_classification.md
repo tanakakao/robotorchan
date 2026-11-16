@@ -299,7 +299,7 @@ Theoryのlink関数を介した期待値は、このlatent分布から予測ラ�
 
 [binary]: ../../src/robotorchan/models/classification/binary/standard/single_task.py
 
-使用手順と結果の可視化は[39番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)を参照してください。
+使用手順と結果の可視化は[26番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)を参照してください。
 
 ## 不確実性・確率校正・予測集合の責務分離
 
@@ -335,8 +335,8 @@ Conformalの被覆率は交換可能性などの仮定に依存し、
 各入力における条件付き被覆率を保証するわけではありません。
 
 対応する実行例は
-[51番Notebook](../../examples/notebooks/28_classification_robust_uncertain.ipynb)
-と[41番Notebook](../../examples/notebooks/29_classification_probability_layers.ipynb)
+[28番Notebook](../../examples/notebooks/28_classification_robust_uncertain.ipynb)
+と[29番Notebook](../../examples/notebooks/29_classification_probability_layers.ipynb)
 です。41番ではConformalの概念を説明しますが、
 予測集合の実際の算出は行っていません。
 
@@ -399,7 +399,7 @@ Active Learningでは既存の `PredictiveEntropy`、`MarginUncertainty`、
 実行例では `MulticlassSingleTaskGPClassifier` に `num_classes=3` を指定し、
 `fit()` の後に `predict_proba()` を呼び出します。
 3点を予測した場合の出力形状は `[3, 3]`（3点 × 3クラス）です。
-コードは[51番Notebook](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)にまとめています。
+コードは[30番Notebook](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)にまとめています。
 
 予測確率が `[0.7, 0.2, 0.1]` なら、
 最も確からしいのはクラス0ですが、クラス1・2の可能性も残ります。

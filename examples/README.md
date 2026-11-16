@@ -291,4 +291,4 @@ Accuracy・NLL・Brier score・ordinal MAEをCSVへ記録します。
 モデルの数理・利用APIは
 [Ordinal GP 理論](../docs/theory/24_classification.md)、
 [Ordinal GP Guide](../docs/guide/24_classification.md)と
-[52番Notebook](notebooks/31_ordinal_classification_active_learning.ipynb)を参照してください。
+[31番Notebook](notebooks/31_ordinal_classification_active_learning.ipynb)を参照してください。
