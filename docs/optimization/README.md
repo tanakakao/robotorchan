@@ -39,10 +39,10 @@ candidate optimizer と役割を区別して利用してください。公開 AP
 
 - **Safe BO**: [Safe Bayesian Optimization](safe_bayesian_optimization.md) — 安全出力制約と候補選択を分離
 - **TuRBO-m**: [Multi trust region](turbo-m.md) — 複数 trust region の状態管理
-- **Combinatorial BO**: `HammingLocalSearchStrategy`、`DiscreteTrustRegionStrategy`、`propose_bocs_candidate`、`propose_combo_candidate` などを `robotorchan.optim` から公開。[実装ガイド](../guide/27_combinatorial_bayesian_optimization.md) / [Notebook](../../examples/notebooks/49_combinatorial_bayesian_optimization.ipynb)
-- **Preference BO**: `PairwiseGP` / `MixedPairwiseGP` は `robotorchan.models` の公開モデル。通常の回帰 target と比較データを混同しない。[モデルガイド](../models/preference.md) / [Mixed Notebook](../../examples/notebooks/57_mixed_preference_bo.ipynb)
-- **Transfer BO**: 過去タスク情報を使う探索。[実装ガイド](../guide/26_transfer_bayesian_optimization.md) / [Notebook](../../examples/notebooks/48_transfer_bayesian_optimization.ipynb)
-- **Cost-aware / Multi-Fidelity BO**: fidelity・評価コスト・予算を使う探索。[ガイド](multifidelity-cost-aware.md) / [予算管理](cost-budget.md) / [Notebook](../../examples/notebooks/55_multifidelity_cost_aware.ipynb)
+- **Combinatorial BO**: `HammingLocalSearchStrategy`、`DiscreteTrustRegionStrategy`、`propose_bocs_candidate`、`propose_combo_candidate` などを `robotorchan.optim` から公開。[実装ガイド](../guide/27_combinatorial_bayesian_optimization.md) / [Notebook](../../examples/notebooks/53_combinatorial_bayesian_optimization.ipynb)
+- **Preference BO**: `PairwiseGP` / `MixedPairwiseGP` は `robotorchan.models` の公開モデル。通常の回帰 target と比較データを混同しない。[モデルガイド](../models/preference.md) / [Mixed Notebook](../../examples/notebooks/25_mixed_preference_bo.ipynb)
+- **Transfer BO**: 過去タスク情報を使う探索。[実装ガイド](../guide/26_transfer_bayesian_optimization.md) / [Notebook](../../examples/notebooks/52_transfer_bayesian_optimization.ipynb)
+- **Cost-aware / Multi-Fidelity BO**: fidelity・評価コスト・予算を使う探索。[ガイド](multifidelity-cost-aware.md) / [予算管理](cost-budget.md) / [Notebook](../../examples/notebooks/49_multifidelity_cost_aware.ipynb)
 
 候補最適化の対応可否は [Public optimizer API](public-optimizer-api.md)、
 [Candidate constraint support matrix](constraint-support-matrix.md)、

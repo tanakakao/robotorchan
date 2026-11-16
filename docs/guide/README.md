@@ -3,12 +3,12 @@
 ## Combinatorial Bayesian Optimization
 
 - [組合せBO：理論と実装の対応](27_combinatorial_bayesian_optimization.md)
-- [実行Notebook](../../examples/notebooks/49_combinatorial_bayesian_optimization.ipynb)
+- [実行Notebook](../../examples/notebooks/53_combinatorial_bayesian_optimization.ipynb)
 
 ## Transfer Bayesian Optimization
 
 - [Transfer BO：理論と実装の対応](26_transfer_bayesian_optimization.md)
-- [実行Notebook](../../examples/notebooks/48_transfer_bayesian_optimization.ipynb)
+- [実行Notebook](../../examples/notebooks/52_transfer_bayesian_optimization.ipynb)
 
 ## このガイドの目的
 
@@ -144,15 +144,15 @@ TheoryとGuideは主要章の章番号とファイル名を対応させていま
 二値分類の確率モデルを理解するには、
 [分類理論](../theory/24_classification.md)から始め、
 [分類Guide](24_classification.md)で公開APIと潜在事後の対応を確認し、
-[39番Notebook](../../examples/notebooks/39_classification_active_learning.ipynb)で
+[39番Notebook](../../examples/notebooks/26_classification_active_learning.ipynb)で
 学習・予測・候補選択の順に実行します。
 
 実務上の入力揺らぎや誤ラベルは
-[40番Notebook](../../examples/notebooks/40_classification_robust_uncertain.ipynb)、
+[40番Notebook](../../examples/notebooks/28_classification_robust_uncertain.ipynb)、
 確率校正とEnsembleは
-[41番Notebook](../../examples/notebooks/41_classification_probability_layers.ipynb)、
+[41番Notebook](../../examples/notebooks/29_classification_probability_layers.ipynb)、
 各種拡張モデルとq-batchは
-[47番Notebook](../../examples/notebooks/47_binary_classification_extensions.ipynb)
+[47番Notebook](../../examples/notebooks/27_binary_classification_extensions.ipynb)
 を参照します。
 
 獲得関数の数理的な違いは
