@@ -104,6 +104,7 @@ def test_gp_ensemble_supports_probability_space_active_learning() -> None:
     latent = check_capabilities_acquisition_compatibility(capabilities, "LatentStraddle")
     assert latent.status is CompatibilityStatus.INCOMPATIBLE
 
+
 @pytest.mark.parametrize("q", [1, 2])
 def test_gp_ensemble_posterior_preserves_q_and_legacy_prediction_shape(q: int) -> None:
     members = _members()
