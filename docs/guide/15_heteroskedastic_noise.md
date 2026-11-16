@@ -133,4 +133,4 @@ noisy acquisitionを選ぶことだけでheteroskedastic surrogateを学習し�
 
 [joint]: ../../src/robotorchan/models/robust/joint_heteroskedastic.py
 
-使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/16_noise_models.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/15_noise_models.ipynb)を参照してください。

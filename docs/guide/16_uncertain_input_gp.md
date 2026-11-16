@@ -114,4 +114,4 @@ Gaussianで平均化したRBFの行列式因子と二次形式を評価します
 `MixedGaussianUncertainInputKernel.forward()`がexpected RBFとカテゴリ共分散を掛けます。
 Gaussian GPの条件付けはこのkernelを利用する上流経路へ残ります。
 
-使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/17_uncertain_input_gp.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/16_uncertain_input_gp.ipynb)を参照してください。

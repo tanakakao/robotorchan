@@ -68,4 +68,4 @@ PCA・PLSの基底計算は[reduction/input.py](../../src/robotorchan/reduction/
 出力の平均・共分散の復元は[reduction/output.py](../../src/robotorchan/reduction/output.py)が担当します。GPの条件付けを再実装せず、
 その前後の座標変換を独自に接続する設計です。
 
-使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/19_reduced_gp.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/18_reduced_gp.ipynb)を参照してください。

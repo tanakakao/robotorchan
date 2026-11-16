@@ -90,7 +90,7 @@ Objective / PosteriorTransformと獲得関数がtensorの軸を扱えるかも�
 [HOGPテスト](../../tests/models/structured/test_higher_order_gp.py)と
 [LatentKroneckerテスト](../../tests/models/structured/test_latent_kronecker_gp.py)は、
 境界条件はリンク先のテストを参照する。
-[Structured Output Notebook](../../examples/notebooks/11_structured_output_gp.ipynb)に
+[Structured Output Notebook](../../examples/notebooks/09_structured_output_gp.ipynb)に
 学習・posterior比較・新しい`test_T`での予測例がある。
 
 ## 参考文献
