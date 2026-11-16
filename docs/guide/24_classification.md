@@ -106,9 +106,61 @@ lower, upper = multiclass_posterior.credible_interval(0.95, num_samples=4096)
 Mixed版のOrdinal・マルチクラスGPでも同じAPIを使用できます。
 獲得関数の内部実装は従来どおりで、今回の変更による置き換えは行いません。
 
-Ensembleには既存の `ClassificationEnsemblePosterior` が存在します。
-これはメンバー間の確率の分布であり、単一GPの潜在事後分布とは
-不確実性の意味が異なります。Ensembleとの統一は別途検討します。
+## EnsembleのBoTorch Posteriorとの整合
+
+`ClassificationEnsemblePosterior` はBoTorch公開APIの
+`EnsemblePosterior` を継承します。
+メンバーの確率ベクトルをそのまま利用し、
+`mean`、`variance`、`rsample`、
+`rsample_from_base_samples` をBoTorchのPosterior契約で扱います。
+
+```python
+import torch
+from botorch.sampling.get_sampler import get_sampler
+
+# GPBinaryClassificationEnsemble、HeterogeneousBinaryClassificationEnsemble
+# などの既存の分類Ensembleを使用する
+posterior = ensemble.probability_posterior(test_X)
+
+mean = posterior.mean
+variance = posterior.variance
+lower, upper = posterior.credible_interval(0.95)
+
+sampler = get_sampler(posterior, sample_shape=torch.Size([128]), seed=7)
+samples = sampler(posterior)
+```
+
+BoTorchの `IndexSampler` が選択され、
+**1回のサンプルにつき各バッチのEnsembleメンバーを1つ選択**します。
+同じバッチの `q` 個の候補には同一メンバーを用いるため、
+各候補で独立にメンバーを引く場合と異なり、
+メンバー間の予測パターンを保持します。
+
+分散は従来のrobotorchanと同じ
+`sum(w_i * (p_i - mean)^2)` であり、
+BoTorchの `EnsemblePosterior.variance` が使う補正付き標本分散とは
+意図的に異なります。
+`credible_interval` はクラスごとに
+メンバーの**加重経験分布の正確な周辺分位点**を計算します。
+メンバー数が少ない場合は離散的な限界値になり、
+信用区間の校正や同時被覆を保証するものではありません。
+`num_samples` 引数は共通API互換のため保持されますが、
+この経験分布の区間計算では使用しません。
+
+| 確率Posterior | 不確実性の意味 | 信用区間の計算 |
+| --- | --- | --- |
+| 単一GP（二値・多クラス・Ordinal） | 潜在関数の事後分布に由来 | 解析的／求積／MC |
+| 分類Ensemble | 完成済みメンバー予測の不一致 | 加重経験分位点 |
+
+**注意：** GP Ensembleであっても、
+今回の `probability_posterior` はメンバーの平均予測確率を集計します。
+各メンバー内部のGP潜在不確実性をさらに周辺化した
+階層的な混合Posteriorではありません。
+各メンバーの潜在Posteriorを見る場合は
+`member_latent_posteriors(X)` を使います。
+既存の `predict_proba`、`probability_variance`、
+Active Learning獲得関数の計算内容は変更しません。
+
 
 ## モデル群の選択
 
