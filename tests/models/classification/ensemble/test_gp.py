@@ -112,9 +112,7 @@ def test_gp_ensemble_posterior_preserves_q_and_legacy_prediction_shape(q: int) -
     posterior = ensemble.probability_posterior(X)
     expected_members = torch.stack(
         [
-            member.predict_proba(X).unsqueeze(-2)
-            if q == 1
-            else member.predict_proba(X)
+            member.predict_proba(X).unsqueeze(-2) if q == 1 else member.predict_proba(X)
             for member in members
         ]
     )
@@ -125,16 +123,12 @@ def test_gp_ensemble_posterior_preserves_q_and_legacy_prediction_shape(q: int) -
     assert posterior.batch_range == (0, 1)
     torch.testing.assert_close(posterior.probabilities, expected_members)
     torch.testing.assert_close(posterior.mean, expected_members.mean(dim=0))
-    torch.testing.assert_close(
-        posterior.variance, expected_members.var(dim=0, unbiased=False)
-    )
+    torch.testing.assert_close(posterior.variance, expected_members.var(dim=0, unbiased=False))
 
     expected_shape = (2, 2) if q == 1 else (2, q, 2)
     assert ensemble.predict_proba(X).shape == expected_shape
     assert ensemble.probability_variance(X).shape == expected_shape
-    assert ensemble.sample_class_probabilities(X, torch.Size([5])).shape == (
-        5, *expected_shape
-    )
+    assert ensemble.sample_class_probabilities(X, torch.Size([5])).shape == (5, *expected_shape)
     expected_score_shape = (2,) if q == 1 else (2, q)
     assert ensemble.predictive_entropy(X).shape == expected_score_shape
     assert ensemble.expected_class_entropy(X).shape == expected_score_shape
@@ -174,4 +168,3 @@ def test_gp_ensemble_q_one_preserves_multiple_batch_dimensions() -> None:
     assert posterior.base_sample_shape == torch.Size([2, 3])
     assert posterior.rsample(torch.Size([4])).shape == (4, 2, 3, 1, 2)
     assert ensemble.predict_proba(X).shape == (2, 3, 2)
-
