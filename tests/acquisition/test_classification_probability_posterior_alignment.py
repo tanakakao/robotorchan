@@ -80,6 +80,9 @@ def test_mc_active_learning_scores_match_direct_conditional_probability_samples(
 ) -> None:
     model = _classifier(kind)
     x = torch.tensor([[[0.2]], [[0.5]], [[0.8]]], dtype=torch.double)
+    # Variational parameters may be initialized on first posterior evaluation.
+    # Warm up the model before setting the reference sampling seed.
+    _ = model.latent_posterior(x)
     torch.manual_seed(43)
     samples = model.sample_class_probabilities(x, sample_shape=torch.Size([256]))
     variance_reference = samples.var(dim=0, unbiased=False).mean(dim=-1).squeeze(-1)
