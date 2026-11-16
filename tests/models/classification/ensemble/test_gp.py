@@ -135,11 +135,10 @@ def test_gp_ensemble_posterior_preserves_q_and_legacy_prediction_shape(q: int) -
     assert ensemble.sample_class_probabilities(X, torch.Size([5])).shape == (
         5, *expected_shape
     )
-    assert ensemble.predictive_entropy(X).shape == (2,) if q == 1 else (2, q)
-    assert ensemble.expected_class_entropy(X).shape == (
-        (2,) if q == 1 else (2, q)
-    )
-    assert ensemble.mutual_information(X).shape == ((2,) if q == 1 else (2, q))
+    expected_score_shape = (2,) if q == 1 else (2, q)
+    assert ensemble.predictive_entropy(X).shape == expected_score_shape
+    assert ensemble.expected_class_entropy(X).shape == expected_score_shape
+    assert ensemble.mutual_information(X).shape == expected_score_shape
 
     sampler = get_sampler(posterior, sample_shape=torch.Size([5]), seed=7)
     assert isinstance(sampler, IndexSampler)
