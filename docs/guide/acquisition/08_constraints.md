@@ -168,4 +168,4 @@ BoTorch 的な構成を理解するには、次を分離することが重要で
 
 各層の対応を確認し、ある層の制約を別の層へ暗黙に変換しない。
 
-使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/37_outcome_constrained_bo.ipynb)を参照してください。
+使用手順と結果の可視化は[対応するNotebook](../../../examples/notebooks/41_outcome_constrained_bo.ipynb)を参照してください。

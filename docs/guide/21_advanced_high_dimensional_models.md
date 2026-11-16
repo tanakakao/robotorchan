@@ -51,7 +51,7 @@ Fully Bayesian SAASはハイパーパラメータのposteriorをMCMCで近似し
 [既存Mapping](../../.github/project-records/theory-guide/mapping/models.md)・
 [Verification](../../.github/project-records/theory-guide/mapping/verification.md)は履歴を保持する。利用者向け：
 [High-dimensional models](../models/high_dimensional.md)、
-[MAP-SAAS Notebook](../../examples/notebooks/09_map_saas_and_additive_gp.ipynb)、
+[MAP-SAAS Notebook](../../examples/notebooks/08_map_saas_and_additive_gp.ipynb)、
 [High-dimensional search](../optimization/high_dimensional_search.md)。関連：
 [高次元GP](08_high_dimensional_gp.md)、[低次元表現の理論](../theory/18_dimensionality_reduction_gp.md)、
 [探索strategyの理論](../theory/20_high_dimensional_search.md)。

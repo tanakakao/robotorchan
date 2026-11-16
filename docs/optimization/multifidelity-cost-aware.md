@@ -168,7 +168,7 @@ meanを使用しますが、これは**推定効用**であり、実際のtarget
 ## 同一費用予算での比較（Phase 7）
 
 [ベンチマーク](../../benchmarks/multifidelity_cost_budget.py)と
-[Notebook](../../examples/notebooks/55_multifidelity_cost_aware.ipynb)では、
+[Notebook](../../examples/notebooks/49_multifidelity_cost_aware.ipynb)では、
 同じ初期観測、同じseed、同じ評価費用上限の下で
 cost-aware MF-KGとrandom探索を比較します。
 
@@ -209,5 +209,5 @@ CSVには`policy`、`seed`、`step`、累積費用`spent`、
 
 - [Theory](../theory/acquisition/11_multifidelity_cost_aware.md)：費用と情報価値、予算制約、評価指標の数学的意味。
 - [Guide](../guide/acquisition/11_multifidelity_cost_aware.md)：BoTorchへの委譲とrobotorchanの実装接続。
-- [Notebook](../../examples/notebooks/55_multifidelity_cost_aware.ipynb)：候補生成と費用対性能の実行・可視化。
+- [Notebook](../../examples/notebooks/49_multifidelity_cost_aware.ipynb)：候補生成と費用対性能の実行・可視化。
 - 本文書：実行可能な経路と制限事項。

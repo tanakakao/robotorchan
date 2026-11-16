@@ -67,7 +67,7 @@ RGPE重みとTAFの指定重みは、バッチ内で固定する。
 Joint TAFのソース項は決定論的な平均改善量で、ソースの予測分布をサンプリングしない。
 Joint RGPEのMC qEIはモーメント整合したGaussian posteriorを使う近似である。
 
-実行可能な例は `examples/notebooks/48_transfer_bayesian_optimization.ipynb` に置く。
+実行可能な例は `examples/notebooks/52_transfer_bayesian_optimization.ipynb` に置く。
 
 ## 対応マトリクス
 
