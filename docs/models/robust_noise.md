@@ -44,5 +44,5 @@ Multi-Fidelity では、`ReplicateNoiseMultiFidelityGP` と `HeteroskedasticMult
 
 Relevance Pursuit × Kronecker / Multi-Fidelity は、既存 single-task likelihood mixin をそのまま再利用できないため専用設計が必要です。実装不能という意味ではなく、専用 likelihood / outlier structure の設計価値と保守コストを評価してから prototype する候補です。
 
-Notebook: [Robust GP](../../examples/notebooks/10_robust_gp.ipynb)、[Robust observation](../../examples/notebooks/15_robust_observation_models.ipynb)、[Noise models](../../examples/notebooks/16_noise_models.ipynb)、[Nonstationary](../../examples/notebooks/18_nonstationary_gp.ipynb)  
+Notebook: [Robust GP](../../examples/notebooks/13_robust_gp.ipynb)、[Robust observation](../../examples/notebooks/14_robust_observation_models.ipynb)、[Noise models](../../examples/notebooks/15_noise_models.ipynb)、[Nonstationary](../../examples/notebooks/17_nonstationary_gp.ipynb)  
 Theory: [Robust GP](../theory/14_robust_gaussian_process.md)、[Heteroskedastic noise](../theory/15_heteroskedastic_noise.md)、[Nonstationary GP](../theory/17_nonstationary_gp.md)

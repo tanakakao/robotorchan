@@ -43,27 +43,27 @@ Hierarchical / Preference の各ガイドから、個別モデル、Theory、Not
 | 全タスクを同じ X で測定 | `KroneckerMultiTaskGP` | [04](../examples/notebooks/04_multitask_gp.ipynb) |
 | 出力ごとに独立 GP | `ModelListGP` | [05](../examples/notebooks/05_model_list_gp.ipynb) |
 | Exact GP が重い大規模データ | `SingleTaskVariationalGP` | [06](../examples/notebooks/06_variational_gp.ipynb) |
-| 比較・選好データ | `PairwiseGP` | [07](../examples/notebooks/07_pairwise_gp.ipynb) |
-| 高次元・少数の有効変数 | `SaasFullyBayesianSingleTaskGP` | [08](../examples/notebooks/08_saas_gp.ipynb) |
-| 高次元・マルチタスク | `SaasFullyBayesianMultiTaskGP` | [08](../examples/notebooks/08_saas_gp.ipynb) |
-| 高次元・MAP-SAAS | `AdditiveMapSaasSingleTaskGP` / `EnsembleMapSaasSingleTaskGP` | [09](../examples/notebooks/09_map_saas_and_additive_gp.ipynb) |
-| 加法構造を仮定 | `OrthogonalAdditiveGP` | [09](../examples/notebooks/09_map_saas_and_additive_gp.ipynb) |
-| 外れ値の影響を抑えたい | `RobustRelevancePursuitSingleTaskGP` | [10](../examples/notebooks/10_robust_gp.ipynb) |
-| 裾の重い観測ノイズを扱いたい | `StudentTSingleTaskGP` | [15](../examples/notebooks/15_robust_observation_models.ipynb) |
-| 一部の観測が汚染分布に由来する | `ContaminatedSingleTaskGP` | [15](../examples/notebooks/15_robust_observation_models.ipynb) |
-| 入力位置で観測ノイズが変わる | `HeteroskedasticSingleTaskGP` / `JointHeteroskedasticSingleTaskGP` | [16](../examples/notebooks/16_noise_models.ipynb) |
-| 同一条件の反復測定からノイズを推定 | `ReplicateNoiseSingleTaskGP` | [16](../examples/notebooks/16_noise_models.ipynb) |
-| 入力空間で滑らかさが変化する | `NonstationarySingleTaskGP` | [18](../examples/notebooks/18_nonstationary_gp.ipynb) |
-| 連続入力自体に測定不確かさがある | `UncertainInputSingleTaskGP` | [17](../examples/notebooks/17_uncertain_input_gp.ipynb) |
-| カテゴリ入力に確率的不確かさがある | `UncertainCategoricalSingleTaskGP` | [17](../examples/notebooks/17_uncertain_input_gp.ipynb) |
-| テンソル出力 | `HigherOrderGP` | [11](../examples/notebooks/11_structured_output_gp.ipynb) |
-| 時間・波長・位置など明示的な出力軸 | `LatentKroneckerGP` | [11](../examples/notebooks/11_structured_output_gp.ipynb) |
-| 条件によって有効変数が変わる | `HierarchicalConditionalKernelGP` | [12](../examples/notebooks/12_hierarchical_gp.ipynb) |
-| 階層探索 + マルチタスク | `HierarchicalConditionalKernelMultiTaskGP` | [12](../examples/notebooks/12_hierarchical_gp.ipynb) |
-| タスクごとに特徴量構造が異なる | `HeterogeneousMTGP` | [13](../examples/notebooks/13_heterogeneous_multitask_gp.ipynb) |
-| Context ごとの加法構造 | `SACGP` | [14](../examples/notebooks/14_contextual_gp.ipynb) |
-| Context 間の潜在関係を学習 | `LCEAGP` | [14](../examples/notebooks/14_contextual_gp.ipynb) |
-| Context / Task を multi-output として扱う | `LCEMGP` | [14](../examples/notebooks/14_contextual_gp.ipynb) |
+| 比較・選好データ | `PairwiseGP` | [07](../examples/notebooks/24_pairwise_gp.ipynb) |
+| 高次元・少数の有効変数 | `SaasFullyBayesianSingleTaskGP` | [08](../examples/notebooks/07_saas_gp.ipynb) |
+| 高次元・マルチタスク | `SaasFullyBayesianMultiTaskGP` | [08](../examples/notebooks/07_saas_gp.ipynb) |
+| 高次元・MAP-SAAS | `AdditiveMapSaasSingleTaskGP` / `EnsembleMapSaasSingleTaskGP` | [09](../examples/notebooks/08_map_saas_and_additive_gp.ipynb) |
+| 加法構造を仮定 | `OrthogonalAdditiveGP` | [09](../examples/notebooks/08_map_saas_and_additive_gp.ipynb) |
+| 外れ値の影響を抑えたい | `RobustRelevancePursuitSingleTaskGP` | [10](../examples/notebooks/13_robust_gp.ipynb) |
+| 裾の重い観測ノイズを扱いたい | `StudentTSingleTaskGP` | [15](../examples/notebooks/14_robust_observation_models.ipynb) |
+| 一部の観測が汚染分布に由来する | `ContaminatedSingleTaskGP` | [15](../examples/notebooks/14_robust_observation_models.ipynb) |
+| 入力位置で観測ノイズが変わる | `HeteroskedasticSingleTaskGP` / `JointHeteroskedasticSingleTaskGP` | [16](../examples/notebooks/15_noise_models.ipynb) |
+| 同一条件の反復測定からノイズを推定 | `ReplicateNoiseSingleTaskGP` | [16](../examples/notebooks/15_noise_models.ipynb) |
+| 入力空間で滑らかさが変化する | `NonstationarySingleTaskGP` | [18](../examples/notebooks/17_nonstationary_gp.ipynb) |
+| 連続入力自体に測定不確かさがある | `UncertainInputSingleTaskGP` | [17](../examples/notebooks/16_uncertain_input_gp.ipynb) |
+| カテゴリ入力に確率的不確かさがある | `UncertainCategoricalSingleTaskGP` | [17](../examples/notebooks/16_uncertain_input_gp.ipynb) |
+| テンソル出力 | `HigherOrderGP` | [11](../examples/notebooks/09_structured_output_gp.ipynb) |
+| 時間・波長・位置など明示的な出力軸 | `LatentKroneckerGP` | [11](../examples/notebooks/09_structured_output_gp.ipynb) |
+| 条件によって有効変数が変わる | `HierarchicalConditionalKernelGP` | [12](../examples/notebooks/10_hierarchical_gp.ipynb) |
+| 階層探索 + マルチタスク | `HierarchicalConditionalKernelMultiTaskGP` | [12](../examples/notebooks/10_hierarchical_gp.ipynb) |
+| タスクごとに特徴量構造が異なる | `HeterogeneousMTGP` | [13](../examples/notebooks/11_heterogeneous_multitask_gp.ipynb) |
+| Context ごとの加法構造 | `SACGP` | [14](../examples/notebooks/12_contextual_gp.ipynb) |
+| Context 間の潜在関係を学習 | `LCEAGP` | [14](../examples/notebooks/12_contextual_gp.ipynb) |
+| Context / Task を multi-output として扱う | `LCEMGP` | [14](../examples/notebooks/12_contextual_gp.ipynb) |
 
 ## 3. robotorchan 共通 API
 
@@ -171,7 +171,7 @@ inducing point を使う近似 GP です。Exact GP の計算量がボトルネ�
 
 通常の `train_Y` ではなく `datapoints` と `comparisons` を使います。
 
-**Notebook:** [07_pairwise_gp.ipynb](../examples/notebooks/07_pairwise_gp.ipynb)
+**Notebook:** [24_pairwise_gp.ipynb](../examples/notebooks/24_pairwise_gp.ipynb)
 
 ## 9. 高次元モデル
 
@@ -181,31 +181,31 @@ SAAS prior と NUTS を使う fully Bayesian GP です。高次元空間で少�
 
 計算コストは高く、`supports_mll=False` です。
 
-**Notebook:** [08_saas_gp.ipynb](../examples/notebooks/08_saas_gp.ipynb)
+**Notebook:** [07_saas_gp.ipynb](../examples/notebooks/07_saas_gp.ipynb)
 
 ### `SaasFullyBayesianMultiTaskGP`
 
 SAAS の multi-task 版です。高次元性とタスク間共有の両方を扱います。
 
-**Notebook:** [08_saas_gp.ipynb](../examples/notebooks/08_saas_gp.ipynb)
+**Notebook:** [07_saas_gp.ipynb](../examples/notebooks/07_saas_gp.ipynb)
 
 ### `AdditiveMapSaasSingleTaskGP`
 
 MAP 推定を使う SAAS 系モデルです。Fully Bayesian SAAS より軽量な高次元モデル候補です。
 
-**Notebook:** [09_map_saas_and_additive_gp.ipynb](../examples/notebooks/09_map_saas_and_additive_gp.ipynb)
+**Notebook:** [08_map_saas_and_additive_gp.ipynb](../examples/notebooks/08_map_saas_and_additive_gp.ipynb)
 
 ### `EnsembleMapSaasSingleTaskGP`
 
 複数の MAP-SAAS 設定を ensemble として扱います。NUTS を避けつつ SAAS 的な高次元モデリングを行いたい場合に候補になります。
 
-**Notebook:** [09_map_saas_and_additive_gp.ipynb](../examples/notebooks/09_map_saas_and_additive_gp.ipynb)
+**Notebook:** [08_map_saas_and_additive_gp.ipynb](../examples/notebooks/08_map_saas_and_additive_gp.ipynb)
 
 ### `OrthogonalAdditiveGP`
 
 1次・低次の加法構造を仮定する高次元 GP です。目的関数が少数変数の加法的な寄与で近似できると考えられる場合に向きます。
 
-**Notebook:** [09_map_saas_and_additive_gp.ipynb](../examples/notebooks/09_map_saas_and_additive_gp.ipynb)
+**Notebook:** [08_map_saas_and_additive_gp.ipynb](../examples/notebooks/08_map_saas_and_additive_gp.ipynb)
 
 ### `RobustRelevancePursuitSingleTaskGP`
 
@@ -213,7 +213,7 @@ MAP 推定を使う SAAS 系モデルです。Fully Bayesian SAAS より軽量�
 
 外れ値に見えるデータが実際には別レジームなら、階層・タスク・混合モデルの方が適切なことがあります。
 
-**Notebook:** [10_robust_gp.ipynb](../examples/notebooks/10_robust_gp.ipynb)
+**Notebook:** [13_robust_gp.ipynb](../examples/notebooks/13_robust_gp.ipynb)
 
 ## 10. Robust / Noise / Input Uncertainty
 
@@ -274,7 +274,7 @@ robotorchan には continuous 版の単純な alias ではなく、native catego
 
 出力テンソルの各軸そのものに構造的意味がある場合に向きます。
 
-**Notebook:** [11_structured_output_gp.ipynb](../examples/notebooks/11_structured_output_gp.ipynb)
+**Notebook:** [09_structured_output_gp.ipynb](../examples/notebooks/09_structured_output_gp.ipynb)
 
 ### `LatentKroneckerGP`
 
@@ -282,7 +282,7 @@ robotorchan には continuous 版の単純な alias ではなく、native catego
 
 新しい `T` グリッドで補間・予測したい場合に特に自然です。
 
-**Notebook:** [11_structured_output_gp.ipynb](../examples/notebooks/11_structured_output_gp.ipynb)
+**Notebook:** [09_structured_output_gp.ipynb](../examples/notebooks/09_structured_output_gp.ipynb)
 
 ## 12. 階層・条件付き探索空間
 
@@ -296,13 +296,13 @@ robotorchan には continuous 版の単純な alias ではなく、native catego
 
 通常の mixed model では表しにくい「条件付きで存在する変数」を扱えます。
 
-**Notebook:** [12_hierarchical_gp.ipynb](../examples/notebooks/12_hierarchical_gp.ipynb)
+**Notebook:** [10_hierarchical_gp.ipynb](../examples/notebooks/10_hierarchical_gp.ipynb)
 
 ### `HierarchicalConditionalKernelMultiTaskGP`
 
 上記に task covariance を加えた multi-task 版です。
 
-**Notebook:** [12_hierarchical_gp.ipynb](../examples/notebooks/12_hierarchical_gp.ipynb)
+**Notebook:** [10_hierarchical_gp.ipynb](../examples/notebooks/10_hierarchical_gp.ipynb)
 
 ## 13. Heterogeneous Multi-task
 
@@ -312,7 +312,7 @@ robotorchan には continuous 版の単純な alias ではなく、native catego
 
 各タスクで別々の `train_Xs` / `train_Ys` を持ち、`feature_indices` で共通の full feature space へ対応付けます。
 
-**Notebook:** [13_heterogeneous_multitask_gp.ipynb](../examples/notebooks/13_heterogeneous_multitask_gp.ipynb)
+**Notebook:** [11_heterogeneous_multitask_gp.ipynb](../examples/notebooks/11_heterogeneous_multitask_gp.ipynb)
 
 ## 14. Contextual GP
 
@@ -320,13 +320,13 @@ robotorchan には continuous 版の単純な alias ではなく、native catego
 
 入力を context ごとの成分へ分解し、構造的な加法関係を利用する Contextual GP です。
 
-**Notebook:** [14_contextual_gp.ipynb](../examples/notebooks/14_contextual_gp.ipynb)
+**Notebook:** [12_contextual_gp.ipynb](../examples/notebooks/12_contextual_gp.ipynb)
 
 ### `LCEAGP`
 
 context の潜在 embedding を学習し、context 間の関係もモデル化する additive contextual GP です。
 
-**Notebook:** [14_contextual_gp.ipynb](../examples/notebooks/14_contextual_gp.ipynb)
+**Notebook:** [12_contextual_gp.ipynb](../examples/notebooks/12_contextual_gp.ipynb)
 
 ### `LCEMGP`
 
@@ -334,7 +334,7 @@ context / task を multi-output として扱い、context 特徴量や embedding
 
 `SACGP` / `LCEAGP` が集約報酬を扱う contextual model であるのに対し、`LCEMGP` は context 別出力を観測できる場合に向きます。
 
-**Notebook:** [14_contextual_gp.ipynb](../examples/notebooks/14_contextual_gp.ipynb)
+**Notebook:** [12_contextual_gp.ipynb](../examples/notebooks/12_contextual_gp.ipynb)
 
 ## 15. 実務的な選び方
 
@@ -363,20 +363,20 @@ context / task を multi-output として扱い、context 特徴量や embedding
 4. [MultiTaskGP / KroneckerMultiTaskGP](../examples/notebooks/04_multitask_gp.ipynb)
 5. [ModelListGP](../examples/notebooks/05_model_list_gp.ipynb)
 6. [SingleTaskVariationalGP](../examples/notebooks/06_variational_gp.ipynb)
-7. [PairwiseGP](../examples/notebooks/07_pairwise_gp.ipynb)
-8. [Fully Bayesian SAAS](../examples/notebooks/08_saas_gp.ipynb)
-9. [MAP-SAAS / OrthogonalAdditiveGP](../examples/notebooks/09_map_saas_and_additive_gp.ipynb)
-10. [RobustRelevancePursuitSingleTaskGP](../examples/notebooks/10_robust_gp.ipynb)
-11. [HigherOrderGP / LatentKroneckerGP](../examples/notebooks/11_structured_output_gp.ipynb)
-12. [Hierarchical GP](../examples/notebooks/12_hierarchical_gp.ipynb)
-13. [HeterogeneousMTGP](../examples/notebooks/13_heterogeneous_multitask_gp.ipynb)
-14. [Contextual GP](../examples/notebooks/14_contextual_gp.ipynb)
-15. [Student-t / Contaminated observation models](../examples/notebooks/15_robust_observation_models.ipynb)
-16. [Heteroskedastic / Replicate Noise](../examples/notebooks/16_noise_models.ipynb)
-17. [Uncertain Input / Uncertain Categorical](../examples/notebooks/17_uncertain_input_gp.ipynb)
-18. [Nonstationary GP](../examples/notebooks/18_nonstationary_gp.ipynb)
-19. [PCA / PLS / Random Projection](../examples/notebooks/19_reduced_gp.ipynb)
-20. [Neural Reduction GP](../examples/notebooks/20_neural_reduction_gp.ipynb)
-21. [Reduced MultiTask GP](../examples/notebooks/21_reduced_multitask_gp.ipynb)
-22. [Mixed Reduced GP](../examples/notebooks/22_mixed_reduced_gp.ipynb)
-23. [High-dimensional BO benchmark](../examples/notebooks/23_high_dimensional_bo_benchmark.ipynb)
+7. [PairwiseGP](../examples/notebooks/24_pairwise_gp.ipynb)
+8. [Fully Bayesian SAAS](../examples/notebooks/07_saas_gp.ipynb)
+9. [MAP-SAAS / OrthogonalAdditiveGP](../examples/notebooks/08_map_saas_and_additive_gp.ipynb)
+10. [RobustRelevancePursuitSingleTaskGP](../examples/notebooks/13_robust_gp.ipynb)
+11. [HigherOrderGP / LatentKroneckerGP](../examples/notebooks/09_structured_output_gp.ipynb)
+12. [Hierarchical GP](../examples/notebooks/10_hierarchical_gp.ipynb)
+13. [HeterogeneousMTGP](../examples/notebooks/11_heterogeneous_multitask_gp.ipynb)
+14. [Contextual GP](../examples/notebooks/12_contextual_gp.ipynb)
+15. [Student-t / Contaminated observation models](../examples/notebooks/14_robust_observation_models.ipynb)
+16. [Heteroskedastic / Replicate Noise](../examples/notebooks/15_noise_models.ipynb)
+17. [Uncertain Input / Uncertain Categorical](../examples/notebooks/16_uncertain_input_gp.ipynb)
+18. [Nonstationary GP](../examples/notebooks/17_nonstationary_gp.ipynb)
+19. [PCA / PLS / Random Projection](../examples/notebooks/18_reduced_gp.ipynb)
+20. [Neural Reduction GP](../examples/notebooks/19_neural_reduction_gp.ipynb)
+21. [Reduced MultiTask GP](../examples/notebooks/20_reduced_multitask_gp.ipynb)
+22. [Mixed Reduced GP](../examples/notebooks/21_mixed_reduced_gp.ipynb)
+23. [High-dimensional BO benchmark](../examples/notebooks/54_high_dimensional_bo_benchmark.ipynb)

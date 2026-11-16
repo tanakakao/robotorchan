@@ -73,5 +73,5 @@ DeepGP KroneckerもHoldであり、公開済みモデルとして扱いません
 
 次元削減と multi-task を組み合わせる `ReducedMultiTaskGP` / `ReducedKroneckerMultiTaskGP` 系、および PCA / PLS / Random Projection / AE / VAE / supervised / joint 系の named wrappers は [Reduced models](reduced.md) で整理します。
 
-Notebook: [Multi-task](../../examples/notebooks/04_multitask_gp.ipynb)、[Heterogeneous](../../examples/notebooks/13_heterogeneous_multitask_gp.ipynb)、[Reduced multi-task](../../examples/notebooks/21_reduced_multitask_gp.ipynb)  
+Notebook: [Multi-task](../../examples/notebooks/04_multitask_gp.ipynb)、[Heterogeneous](../../examples/notebooks/11_heterogeneous_multitask_gp.ipynb)、[Reduced multi-task](../../examples/notebooks/20_reduced_multitask_gp.ipynb)  
 Theory: [Multi-task / Multi-output](../theory/07_multitask_multioutput.md)

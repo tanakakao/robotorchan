@@ -36,6 +36,6 @@ one-shotの補助decision、未完了のpending点、実験する候補も別の
 ## 使用手順と実装を読む資料
 
 実際の観測追加・学習・候補生成・可視化は、既存の
-[End-to-End Notebook](../../../examples/notebooks/36_end_to_end_workflows.ipynb)にあります。
+[End-to-End Notebook](../../../examples/notebooks/45_end_to_end_workflows.ipynb)にあります。
 このページでは同じ実行手順を再掲しません。クラスと呼び出し経路は上記のソース、公開引数の詳細は
 [モデル資料](../../models/README.md)と[候補最適化資料](../../optimization/README.md)を参照してください。

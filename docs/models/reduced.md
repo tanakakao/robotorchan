@@ -26,5 +26,5 @@ named wrappers は PCA / PLS / Random Projection / AutoEncoder / VAE / Supervise
 
 次元削減は情報を捨てる操作です。入力分散をよく説明する方向が目的関数に重要とは限らないため、PCAだけでなく supervised reduction や PLS が妥当な場合があります。Neural reducer は柔軟ですが、小標本では representation learning 自体の不確かさと過学習を考慮する必要があります。
 
-Notebook: [Classical reduction](../../examples/notebooks/19_reduced_gp.ipynb)、[Neural reduction](../../examples/notebooks/20_neural_reduction_gp.ipynb)、[Reduced multi-task](../../examples/notebooks/21_reduced_multitask_gp.ipynb)、[Mixed reduced](../../examples/notebooks/22_mixed_reduced_gp.ipynb)  
+Notebook: [Classical reduction](../../examples/notebooks/18_reduced_gp.ipynb)、[Neural reduction](../../examples/notebooks/19_neural_reduction_gp.ipynb)、[Reduced multi-task](../../examples/notebooks/20_reduced_multitask_gp.ipynb)、[Mixed reduced](../../examples/notebooks/21_mixed_reduced_gp.ipynb)  
 Theory: [Dimensionality reduction](../theory/18_dimensionality_reduction_gp.md)、[Neural reduction](../theory/19_neural_reduction_gp.md)

@@ -56,9 +56,9 @@
 
 ## 実行例
 
-- [Acquisition Optimization Notebook](../../examples/notebooks/31_acquisition_optimization.ipynb):
+- [Acquisition Optimization Notebook](../../examples/notebooks/39_acquisition_optimization.ipynb):
   線形・候補間制約とjoint q-batch
-- [Nonlinear Candidate Constraints Notebook](../../examples/notebooks/38_nonlinear_candidate_constraints.ipynb):
+- [Nonlinear Candidate Constraints Notebook](../../examples/notebooks/42_nonlinear_candidate_constraints.ipynb):
   非線形不等式、非線形等式（許容誤差）、候補間非線形制約
 - [Candidate constraint Guide](../guide/optimization/05_constraints.md):
   数学的契約、backendへの委譲、実装上の制限

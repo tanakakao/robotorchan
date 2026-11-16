@@ -38,5 +38,5 @@ Ensemble MAP-SAAS × Multi-Fidelity は、member-specific SAAS state と `Gaussi
 
 Notebookは代表例を共有します。ALEBOは独立したNotebookを持たず、現在は高次元モデル/探索ガイドと benchmark を主な実行導線とします。
 
-Notebook: [SAAS](../../examples/notebooks/08_saas_gp.ipynb)、[MAP-SAAS / Additive](../../examples/notebooks/09_map_saas_and_additive_gp.ipynb)、[Multi-Fidelity](../../examples/notebooks/03_multi_fidelity_gp.ipynb)  
+Notebook: [SAAS](../../examples/notebooks/07_saas_gp.ipynb)、[MAP-SAAS / Additive](../../examples/notebooks/08_map_saas_and_additive_gp.ipynb)、[Multi-Fidelity](../../examples/notebooks/03_multi_fidelity_gp.ipynb)  
 Theory: [High-dimensional GP](../theory/08_high_dimensional_gp.md)、[Advanced high-dimensional models](../theory/21_advanced_high_dimensional_models.md)、[Multi-Fidelity](../theory/06_multi_fidelity.md)
