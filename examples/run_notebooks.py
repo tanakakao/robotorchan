@@ -84,6 +84,10 @@ EXCLUDED_NOTEBOOKS = [
 def validate_notebook_manifest() -> None:
     """Notebook ファイルが実行区分へ明示的に分類されていることを確認する。"""
     discovered = {path.name for path in NOTEBOOK_DIR.glob("*.ipynb")}
+    prefixes = [name.split("_", 1)[0] for name in discovered]
+    expected = [f"{number:02d}" for number in range(1, len(discovered) + 1)]
+    if sorted(prefixes) != expected:
+        raise ValueError("Notebook の番号は 01 から重複・欠番なく連続させてください。")
     groups = {
         "default": set(DEFAULT_NOTEBOOKS),
         "slow": set(SLOW_NOTEBOOKS),
