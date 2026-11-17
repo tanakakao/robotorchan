@@ -66,13 +66,8 @@ def render(root: Path) -> str:
     for problem in PROBLEMS:
         for q in BATCH_SIZES:
             report = reports[problem, q]
-            means = [
-                sum(report["final_metric_by_seed"][strategy]) / 10
-                for strategy in STRATEGIES
-            ]
-            lines.append(
-                f"| {problem} | {q} | " + " | ".join(f"{v:.6f}" for v in means) + " |"
-            )
+            means = [sum(report["final_metric_by_seed"][strategy]) / 10 for strategy in STRATEGIES]
+            lines.append(f"| {problem} | {q} | " + " | ".join(f"{v:.6f}" for v in means) + " |")
     lines += [
         "",
         "## Mean elapsed seconds (descriptive only)",
@@ -84,12 +79,9 @@ def render(root: Path) -> str:
         for q in BATCH_SIZES:
             report = reports[problem, q]
             means = [
-                sum(report["elapsed_seconds_by_seed"][strategy]) / 10
-                for strategy in STRATEGIES
+                sum(report["elapsed_seconds_by_seed"][strategy]) / 10 for strategy in STRATEGIES
             ]
-            lines.append(
-                f"| {problem} | {q} | " + " | ".join(f"{v:.3f}" for v in means) + " |"
-            )
+            lines.append(f"| {problem} | {q} | " + " | ".join(f"{v:.3f}" for v in means) + " |")
     lines += ["", "## Paired improvements over baselines", ""]
     for problem in PROBLEMS:
         for q in BATCH_SIZES:
