@@ -131,16 +131,57 @@ def render(root: Path) -> str:
     return "\n".join(lines)
 
 
+def plot_final_regret(root: Path, destination: Path) -> None:
+    """Show every seed rather than suppressing variability; matplotlib is optional."""
+    if destination.exists():
+        raise FileExistsError(f"Refusing to overwrite: {destination}")
+    try:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError as exc:
+        raise ImportError("Install matplotlib to render the optional figure.") from exc
+
+    fig, axes = plt.subplots(2, 2, figsize=(12, 8), sharey=False)
+    try:
+        for ax, (problem, q) in zip(
+            axes.flat,
+            ((problem, q) for problem in PROBLEMS for q in BATCH_SIZES),
+            strict=True,
+        ):
+            report = json.loads(
+                (root / f"{problem}-q{q}" / "report.json").read_text(encoding="utf-8")
+            )
+            for index, strategy in enumerate(STRATEGIES):
+                values = report["final_metric_by_seed"][strategy]
+                ax.scatter([index] * 10, values, alpha=0.55)
+                ax.plot(index, sum(values) / 10, marker="_", markersize=16, color="black")
+            ax.set(
+                title=f"{problem}, q={q} (10 seeds)",
+                ylabel="Final simple regret (lower is better)",
+            )
+            ax.set_xticks(range(len(STRATEGIES)), STRATEGIES)
+        fig.tight_layout()
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(destination)
+    finally:
+        plt.close(fig)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("artifact_root", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument("--figure", type=Path, help="Optional per-seed final-regret SVG")
     args = parser.parse_args()
     if args.output.exists():
         raise FileExistsError(f"Refusing to overwrite: {args.output}")
     result = render(args.artifact_root)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(result, encoding="utf-8")
+    if args.figure is not None:
+        plot_final_regret(args.artifact_root, args.figure)
 
 
 if __name__ == "__main__":
