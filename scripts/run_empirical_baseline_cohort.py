@@ -11,10 +11,16 @@ from pathlib import Path
 
 import torch
 
-from robotorchan.benchmarks.comparative_baselines import run_comparative_baseline
+from robotorchan.benchmarks.comparative_baselines import (
+    run_comparative_baseline,
+    sobol_candidates,
+)
 from robotorchan.benchmarks.comparative_matrix import ComparativeExperimentCell
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.empirical_runtime_evidence import runtime_breakdown
+from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
+from robotorchan.benchmarks.runner import random_candidates, run_benchmark
+from robotorchan.benchmarks.standard_problems import register_standard_problems
 
 
 def main() -> int:
@@ -40,6 +46,7 @@ def main() -> int:
         "git_sha": args.git_sha,
         "status": "running",
         "scope": "measured_random_sobol_baselines_not_bayesian_optimization",
+        "tier": "empirical_standard" if args.seeds == 10 else "diagnostic_two_seed",
     }
     rows = []
     try:
@@ -52,9 +59,38 @@ def main() -> int:
                 evaluation_budget=50,
                 q=args.q,
             )
-            runs = run_comparative_baseline(
-                ComparativeExperimentCell(tier="empirical_standard", config=config)
-            )
+            if args.seeds == 10:
+                runs = run_comparative_baseline(
+                    ComparativeExperimentCell(tier="empirical_standard", config=config)
+                )
+            else:
+                # A two-seed diagnostic is not an empirical-standard cohort.
+                registry = BenchmarkProblemRegistry()
+                register_standard_problems(registry)
+                if strategy == "random":
+                    candidate_generator = random_candidates
+                else:
+
+                    def candidate_generator(
+                        problem, X, Y, q, generator, *, initial_points=config.initial_points
+                    ):
+                        return sobol_candidates(
+                            problem,
+                            X,
+                            Y,
+                            q,
+                            generator,
+                            initial_points=initial_points,
+                        )
+
+                runs = run_benchmark(
+                    config,
+                    candidate_generator,
+                    registry=registry,
+                    restrict_candidate_problem=True,
+                    independent_rng_streams=True,
+                    isolate_strategy_rng=True,
+                )
             if {run.seed for run in runs} != set(range(args.seeds)):
                 raise ValueError("Missing or duplicated seeds.")
             for run in runs:
