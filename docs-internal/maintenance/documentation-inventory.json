@@ -7257,6 +7257,11 @@
       "path": "docs-internal/maintenance/notebook-renumbering-2026-11.md",
       "category": "Maintenance",
       "reason": "Notebookの概念的学習順への再採番に伴う旧・新ファイル名の対応表を保全する。"
+    },
+    {
+      "path": "docs-internal/verification/benchmarks/phase3-four-cell-evidence.md",
+      "category": "Verification",
+      "reason": "Four measured 10-seed benchmark cohorts, original experiment provenance, exploratory q comparisons and reproducibility instructions."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
