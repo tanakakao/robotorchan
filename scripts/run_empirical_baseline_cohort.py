@@ -15,12 +15,12 @@ from robotorchan.benchmarks.comparative_baselines import (
     run_comparative_baseline,
     sobol_candidates,
 )
-from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
-from robotorchan.benchmarks.runner import random_candidates, run_benchmark
-from robotorchan.benchmarks.standard_problems import register_standard_problems
 from robotorchan.benchmarks.comparative_matrix import ComparativeExperimentCell
 from robotorchan.benchmarks.config import BenchmarkExperimentConfig
 from robotorchan.benchmarks.empirical_runtime_evidence import runtime_breakdown
+from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
+from robotorchan.benchmarks.runner import random_candidates, run_benchmark
+from robotorchan.benchmarks.standard_problems import register_standard_problems
 
 
 def main() -> int:
@@ -70,10 +70,10 @@ def main() -> int:
                 if strategy == "random":
                     candidate_generator = random_candidates
                 else:
-                    def candidate_generator(problem, X, Y, q, generator):
+                    def candidate_generator(problem, X, Y, q, generator, *, initial_points=config.initial_points):
                         return sobol_candidates(
                             problem, X, Y, q, generator,
-                            initial_points=config.initial_points,
+                            initial_points=initial_points,
                         )
                 runs = run_benchmark(
                     config,
