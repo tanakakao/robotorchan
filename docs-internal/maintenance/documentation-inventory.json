@@ -7262,6 +7262,11 @@
       "path": "docs-internal/verification/benchmarks/phase3-four-cell-evidence.md",
       "category": "Verification",
       "reason": "Four measured 10-seed benchmark cohorts, original experiment provenance, exploratory q comparisons and reproducibility instructions."
+    },
+    {
+      "path": "docs/benchmarks/quickstart.md",
+      "category": "Benchmarks",
+      "reason": "Phase 5 public quickstart for benchmark execution, saved empirical report reproduction, interpretation, and provenance."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
