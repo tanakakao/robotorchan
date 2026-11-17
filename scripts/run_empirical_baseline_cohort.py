@@ -75,9 +75,14 @@ def main() -> int:
                         problem, X, Y, q, generator, *, initial_points=config.initial_points
                     ):
                         return sobol_candidates(
-                            problem, X, Y, q, generator,
+                            problem,
+                            X,
+                            Y,
+                            q,
+                            generator,
                             initial_points=initial_points,
                         )
+
                 runs = run_benchmark(
                     config,
                     candidate_generator,
