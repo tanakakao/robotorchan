@@ -70,6 +70,7 @@ def main() -> int:
                 if strategy == "random":
                     candidate_generator = random_candidates
                 else:
+
                     def candidate_generator(
                         problem, X, Y, q, generator, *, initial_points=config.initial_points
                     ):
