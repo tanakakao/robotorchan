@@ -102,7 +102,7 @@ def summarize_empirical_directory(directory: str | Path) -> dict[str, object]:
             generator = torch.Generator().manual_seed(2026)
             indices = torch.randint(10, (10000, 10), generator=generator)
             bootstrap = differences[indices].mean(dim=1)
-            bounds = torch.quantile(bootstrap, torch.tensor([0.025, 0.975]))
+            bounds = torch.quantile(bootstrap, bootstrap.new_tensor([0.025, 0.975]))
             comparisons.append(
                 {
                     "strategy": strategy,
