@@ -45,4 +45,7 @@ def test_invalid_context_rejected():
     with pytest.raises(ValueError, match="dtype"):
         optimizer.optimize(acq_function=QuadraticAcquisition(), context=torch.tensor([0.5]))
     with pytest.raises(ValueError, match="outside bounds"):
-        optimizer.optimize(\n            acq_function=QuadraticAcquisition(),\n            context=torch.tensor([1.5], dtype=torch.double),\n        )
+        optimizer.optimize(
+            acq_function=QuadraticAcquisition(),
+            context=torch.tensor([1.5], dtype=torch.double),
+        )
