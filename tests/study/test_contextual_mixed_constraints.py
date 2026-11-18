@@ -9,9 +9,7 @@ from robotorchan.study import create_study
 
 
 def test_mixed_context_and_decision_q_batch() -> None:
-    bounds = torch.tensor(
-        [[0.0, 0.0, 0.0], [1.0, 4.0, 2.0]], dtype=torch.double
-    )
+    bounds = torch.tensor([[0.0, 0.0, 0.0], [1.0, 4.0, 2.0]], dtype=torch.double)
     variable_space = MixedVariableSpace(
         bounds=bounds, integer_dims=(1,), categorical_values={2: (0.0, 2.0)}
     )
