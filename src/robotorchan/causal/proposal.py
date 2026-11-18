@@ -8,7 +8,7 @@ from math import isfinite, log
 from typing import Literal
 
 import torch
-from botorch.acquisition.logei import LogExpectedImprovement
+from botorch.acquisition.analytic import LogExpectedImprovement
 
 from robotorchan.causal.intervention import HardIntervention
 from robotorchan.causal.surrogate import InterventionGPSurrogate
