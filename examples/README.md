@@ -33,6 +33,10 @@ python examples/unified_api_workflow.py
 
 契約の詳細は [Unified API workflow](../docs/optimization/unified-api-workflow.md) にまとめています。
 
+## ベンチマークとの使い分け
+
+モデル・獲得関数の学習例は以下の Notebook を参照してください。複数 seed の公平な実測比較や保存済み結果の再生成には [Benchmark Quickstart](../docs/benchmarks/quickstart.md) を使用します。Notebook の1回の実行結果だけでは性能の優位性を判断できません。
+
 ## Notebook の方針
 
 Notebook の標準構成・metadata・Tier A/B/C の要件は、
