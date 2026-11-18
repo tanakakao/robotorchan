@@ -60,7 +60,7 @@ jobs:
           PY
       - name: Retain trajectories, manifest, report and failure evidence
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: empirical-${{ inputs.problem }}-q${{ inputs.q }}-${{ github.run_id }}
           path: empirical-cohort/
