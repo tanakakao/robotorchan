@@ -21,6 +21,7 @@ Initial public release (release date to be set when `v0.1.0` is published).
 - BoTorch-first surrogate models for regression, binary classification, and active learning.
 - Acquisition optimization, mixed-variable and q-batch candidate selection, and constraint handling.
 - TuRBO, cost-aware / multi-fidelity, safe, preference, transfer, and combinatorial BO workflows.
+- Known-DAG Causal BO with hard interventions, per-set GPs, LogEI, ask/tell, and benchmarks.
 - Japanese guides, theory documentation, and executable notebooks.
 - Python distribution packaging and GitHub Actions validation for wheel and sdist.
 
