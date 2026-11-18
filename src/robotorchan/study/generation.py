@@ -90,7 +90,11 @@ class CandidateGenerator:
         if any(type(dim) is not int or dim < 0 or dim >= bounds.shape[1] for dim in fixed):
             raise ValueError("Fixed feature indices must refer to Study dimensions.")
         for dim, value in fixed.items():
-            if not isinstance(value, (int, float)) or not torch.isfinite(torch.tensor(value)):
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not torch.isfinite(torch.tensor(value, dtype=bounds.dtype))
+            ):
                 raise ValueError("Fixed feature values must be finite numbers.")
             if not bounds[0, dim] <= value <= bounds[1, dim]:
                 raise ValueError("Fixed feature value is outside Study bounds.")
