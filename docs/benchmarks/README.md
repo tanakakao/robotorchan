@@ -2,6 +2,8 @@
 
 robotorchan のモデル・探索戦略を、再現可能な条件で比較するためのベンチマーク文書です。
 
+初めて利用する場合は [Benchmark Quickstart](quickstart.md) から、実行・保存・実測レポートの再生成・結果解釈まで順に確認できます。
+
 ## Comparative optimization benchmark navigation
 
 比較実験を再現・解釈する際は、次の順に確認してください。
