@@ -32,9 +32,7 @@ def main() -> None:
     parser.add_argument("--optimizer", choices=("botorch", "sobol"), default="botorch")
     parser.add_argument("--num-restarts", type=int, default=3)
     parser.add_argument("--raw-samples", type=int, default=32)
-    parser.add_argument(
-        "--output", type=Path, default=Path("benchmark_results/causal_bo.csv")
-    )
+    parser.add_argument("--output", type=Path, default=Path("benchmark_results/causal_bo.csv"))
     args = parser.parse_args()
     trajectories = run_causal_benchmark(
         seeds=args.seeds,
@@ -46,9 +44,17 @@ def main() -> None:
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     fields = (
-        "method", "seed", "evaluation", "is_initial", "intervention_set",
-        "intervention_values", "outcome_truth", "best_truth",
-        "simple_regret", "evaluation_cost", "cumulative_cost",
+        "method",
+        "seed",
+        "evaluation",
+        "is_initial",
+        "intervention_set",
+        "intervention_values",
+        "outcome_truth",
+        "best_truth",
+        "simple_regret",
+        "evaluation_cost",
+        "cumulative_cost",
     )
     with args.output.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)

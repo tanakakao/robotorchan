@@ -94,9 +94,7 @@ def make_causal_synthetic_scenario(
             "X": lambda parents: 0.2,
             "Z": lambda parents: 0.3,
             "M": lambda parents: 0.25 + 0.75 * parents["X"],
-            "Y": lambda parents: -(
-                (parents["M"] - 0.8) ** 2 + 0.5 * (parents["Z"] - 0.65) ** 2
-            ),
+            "Y": lambda parents: -((parents["M"] - 0.8) ** 2 + 0.5 * (parents["Z"] - 0.65) ** 2),
         },
     )
     return CausalBenchmarkScenario(
