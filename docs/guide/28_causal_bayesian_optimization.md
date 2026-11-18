@@ -43,7 +43,7 @@ GPそのものを新しく実装してはいません。`robotorchan.models.stan
 各集合の獲得値は元の目的値ではなく**LogEI**です。選択スコアは、集合ごとの固定コスト`c(S)>0`について
 
 \[
-\mathrm{score}(S)=\log\operatorname{EI}_S(x_S^\star)-\log c(S)
+\mathrm{score}(S)=\log\mathrm{EI}_S(x_S^\star)-\log c(S)
 \]
 
 として比較します。`log_expected_improvement`・`intervention_cost`・`log_utility`を`CausalInterventionProposal`に分けて返すのは、目的関数の実測値と意思決定のスコアを混同しないためです。コストの指定がない集合は1です。
