@@ -11,12 +11,12 @@
 
 | 理論の部品 | 実装と所有モジュール | 処理・境界 |
 | --- | --- | --- |
-| 既知DAG \(G\) | `CausalGraph` — `robotorchan.causal.graph` | 親集合、ノード集合、非巡回性、安定したトポロジカル順序 |
-| 構造方程式 \(f_j\) | `StructuralCausalModel` — `robotorchan.causal.scm` | ユーザー提供の親値から各ノードを順序評価 |
+| 既知DAG $G$ | `CausalGraph` — `robotorchan.causal.graph` | 親集合、ノード集合、非巡回性、安定したトポロジカル順序 |
+| 構造方程式 $f_j$ | `StructuralCausalModel` — `robotorchan.causal.scm` | ユーザー提供の親値から各ノードを順序評価 |
 | `do(S=x_S)` | `HardIntervention` — `robotorchan.causal.intervention` | ノードの方程式を固定値で置換 |
-| 介入データ \(\mathcal D_S\) | `CausalObservation` — `robotorchan.causal.data` | 観測値と実際の介入有無を明示して分離 |
-| \(f_S\) のGP | `InterventionGPSurrogate` — `robotorchan.causal.surrogate` | 完全に同じ介入集合のデータだけで既存GPを学習 |
-| \(\arg\max_{S,x_S}\mathrm{EI}/c(S)\) | `propose_causal_intervention` — `robotorchan.causal.proposal` | BoTorchの`LogExpectedImprovement`と既存Optimizerに委譲 |
+| 介入データ $\mathcal D_S$ | `CausalObservation` — `robotorchan.causal.data` | 観測値と実際の介入有無を明示して分離 |
+| $f_S$ のGP | `InterventionGPSurrogate` — `robotorchan.causal.surrogate` | 完全に同じ介入集合のデータだけで既存GPを学習 |
+| $\arg\max_{S,x_S}\mathrm{EI}/c(S)$ | `propose_causal_intervention` — `robotorchan.causal.proposal` | BoTorchの`LogExpectedImprovement`と既存Optimizerに委譲 |
 | 次の実験と履歴 | `CausalBOStudy` / `CausalTrial` — `robotorchan.causal.workflow` | Sobol初期化、`ask`・`tell`、状態と再学習 |
 | 実測比較 | `run_causal_benchmark` — `robotorchan.benchmarks.causal` | 同一初期介入の3手法・最良値・コスト・regretを記録 |
 
@@ -42,9 +42,9 @@ GPそのものを新しく実装してはいません。`robotorchan.models.stan
 
 各集合の獲得値は元の目的値ではなく**LogEI**です。選択スコアは、集合ごとの固定コスト`c(S)>0`について
 
-\[
-\mathrm{score}(S)=\log\operatorname{EI}_S(x_S^\star)-\log c(S)
-\]
+$$
+\mathrm{score}(S)=\log\mathrm{EI}_S(x_S^\star)-\log c(S)
+$$
 
 として比較します。`log_expected_improvement`・`intervention_cost`・`log_utility`を`CausalInterventionProposal`に分けて返すのは、目的関数の実測値と意思決定のスコアを混同しないためです。コストの指定がない集合は1です。
 
