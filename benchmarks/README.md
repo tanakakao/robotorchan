@@ -35,3 +35,13 @@ uv run python benchmarks/q_epig_batch_comparison.py --seed 0 --q 2
 最適化時間を JSON Lines 形式で出力します。獲得関数値そのものは目的関数が異なるため、
 手法間で直接比較しないでください。候補間距離は多様性の診断値であり、最適化性能の証明ではありません。
 単一 seed の例は動作確認用です。統計的な優劣の主張には複数 seed と反復評価が必要です。
+
+
+## Known-DAG Causal BO benchmark
+
+Run `python benchmarks/causal_bo.py --seeds 0,1,2 --iterations 5`
+to compare CBO, fixed-full-intervention GP-BO and Random Search from
+identical initial hard-intervention experiments. Per-evaluation CSV
+and seed-aggregated JSON outputs include best outcome, simple regret,
+and cumulative intervention cost. Interpretation and limitations are
+in [docs/benchmarks/README.md](../docs/benchmarks/README.md).

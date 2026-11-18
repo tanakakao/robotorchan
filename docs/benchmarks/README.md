@@ -55,3 +55,58 @@ robotorchan のモデル・探索戦略を、再現可能な条件で比較す�
 ## Capability benchmark
 
 `robotorchan.benchmarks.capability` は registry 絞り込みと推奨整合性の構造的 benchmark です。予測・BO 性能とは独立で、互換モデル数・推奨数は品質指標ではありません。
+
+## Causal BO: known-DAG intervention benchmark
+
+`run_causal_benchmark` evaluates a deterministic four-node SCM
+`X → M → Y ← Z`, where `M = 0.25 + 0.75 X` and
+
+```text
+Y = -(M - 0.8)^2 - 0.5 (Z - 0.65)^2
+```
+
+The **known optimum** is `Y=0` for the joint hard intervention
+`do(X=0.73333..., Z=0.65)`. The user supplies the DAG and structural
+equations; no causal structure inference or observational causal
+identification is performed.
+
+Strategies:
+
+- **CBO**: sequential `CausalBOStudy.ask/tell`, choosing `{X}`, `{Z}`
+  or `{X,Z}`, using native BoTorch LogEI and optional per-set cost ranking
+- **GP-BO (fixed-set)**: a regular `SingleTaskGP` with the same LogEI and
+  `optimize_acqf`, choosing continuous values only for `do(X,Z)`
+- **Random Search**: uniform choice among the same three intervention sets,
+  then uniformly random continuous values
+
+For a given seed, every strategy receives **exactly the same initial
+evaluations**, including `n_initial_per_set` experiments from each set.
+The fixed-set GP trains **only on full-intervention observations**, not
+the partial-intervention data, because these are different mechanisms.
+CBO trains one GP per set. Every strategy receives the same number of
+additional evaluations and same acquisition optimizer configuration for
+the two GP-based methods; cost spent is **not** constrained to be equal.
+
+The default per-evaluation costs are `c({X})=1`, `c({Z})=1.5`, and
+`c({X,Z})=3`. Report the best true intervention outcome, nonnegative
+simple regret against `Y=0`, and cumulative intervention cost after
+**every** evaluation, including the common initialization.
+Comparison by number of evaluations does *not* imply equal-cost comparison.
+Likewise, the random strategy has access to different intervention sets
+than the fixed-set GP-BO baseline; do not describe this as an isolated
+test of causal reasoning.
+
+Run manually (the full multi-seed performance experiment is **not**
+executed as part of CI):
+
+```bash
+python benchmarks/causal_bo.py --seeds 0,1,2 --n-initial-per-set 2 --iterations 5
+```
+
+The script emits per-evaluation CSV records and a JSON file of
+seed-aggregated best-value, simple-regret and cumulative-cost curves
+using the existing `summarize_curves` utility. Fixed seeds isolate
+strategy-side PyTorch RNG; the deterministic SCM has no observation
+noise. Tests verify mechanics and reproducibility, but **do not**
+establish statistical superiority of CBO; use additional scenarios,
+seeds and cost budgets before making performance claims.

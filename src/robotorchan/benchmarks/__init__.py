@@ -24,6 +24,13 @@ from robotorchan.benchmarks.botorch_strategy import (
     botorch_gp_candidates,
     make_botorch_gp_strategy,
 )
+from robotorchan.benchmarks.causal import (
+    CausalBenchmarkScenario,
+    CausalBenchmarkStep,
+    CausalBenchmarkTrajectory,
+    make_causal_synthetic_scenario,
+    run_causal_benchmark,
+)
 from robotorchan.benchmarks.checkpoint import (
     BenchmarkCheckpoint,
     load_benchmark_checkpoint,
@@ -190,6 +197,9 @@ __all__ = [
     "BenchmarkResult",
     "BenchmarkTrajectory",
     "BootstrapCurveSummary",
+    "CausalBenchmarkScenario",
+    "CausalBenchmarkStep",
+    "CausalBenchmarkTrajectory",
     "CountingAcquisition",
     "CurveSummary",
     "FairComparisonProtocol",
@@ -243,6 +253,7 @@ __all__ = [
     "load_trajectory",
     "log_loss",
     "make_botorch_gp_strategy",
+    "make_causal_synthetic_scenario",
     "make_metric_report",
     "mixed_category_interaction",
     "mixed_process_yield",
@@ -275,6 +286,7 @@ __all__ = [
     "rotated_subspace_40",
     "run_async_benchmark",
     "run_benchmark",
+    "run_causal_benchmark",
     "run_parallel_comparison",
     "run_resumable_benchmark",
     "sample_pass_labels",
