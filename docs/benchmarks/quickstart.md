@@ -53,6 +53,10 @@ SVG を出力する場合のみ `matplotlib` が必要です。スクリプト�
 - Actions artifact は保存期限があります。再現性のため、manifest・report・trajectory・commit SHA と依存バージョンを別途保全してください。
 - 実測の統計的な解釈は [評価契約](../../docs-internal/contracts/benchmarks/empirical-evaluation-protocol.md) に従います。
 
-## 5. 関連資料
+## 5. Notebookとの使い分け
+
+[Notebook一覧](../../examples/README.md) はモデルの学習・posterior・獲得関数・候補提案を理解する入口です。Benchmark Suite の実験条件・複数seedの統計比較を再現する場合は、このページの Python 例と保存済み実測レポートを使用してください。Notebook の単発実行結果を、上記4条件の実測証拠と混同しないでください。
+
+## 6. 関連資料
 
 [全体手順](end_to_end.md) / [結果の報告](reporting.md) / [実測評価プロトコル](empirical-evaluation-protocol.md) / [保存](storage.md) / [Checkpoint](checkpoint.md)
