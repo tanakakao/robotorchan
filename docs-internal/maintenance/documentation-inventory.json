@@ -7064,6 +7064,11 @@
   ],
   "generated_documents": [
     {
+      "path": "benchmarks/CONTEXTUAL_POLICY.md",
+      "category": "Benchmarks",
+      "reason": "Phase 7 synthetic contextual-policy evaluation baseline, scope, and reproducibility instructions."
+    },
+    {
       "path": "docs/theory/27_combinatorial_bayesian_optimization.md",
       "category": "Theory",
       "reason": "Phase 10 combinatorial BO mathematical background."
