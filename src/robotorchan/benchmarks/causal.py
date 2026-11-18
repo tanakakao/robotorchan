@@ -172,7 +172,9 @@ def _make_steps(
     for index, record in enumerate(records):
         if record.intervention is None:
             raise ValueError("A causal benchmark requires performed interventions.")
-        nodes = tuple(node for node in scenario.graph.topological_order if node in record.intervention.values)
+        nodes = tuple(
+            node for node in scenario.graph.topological_order if node in record.intervention.values
+        )
         outcome = float(record.values["Y"])
         best = max(best, outcome)
         cost = scenario.costs[frozenset(nodes)]

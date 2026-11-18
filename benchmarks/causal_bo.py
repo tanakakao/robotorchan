@@ -63,7 +63,13 @@ def main() -> None:
                         "is_initial": step.is_initial,
                         "intervention_set": "+".join(step.intervention_nodes),
                         "intervention_values": json.dumps(
-                            dict(zip(step.intervention_nodes, step.intervention_values, strict=True))
+                            dict(
+                                zip(
+                                    step.intervention_nodes,
+                                    step.intervention_values,
+                                    strict=True,
+                                )
+                            )
                         ),
                         "outcome_truth": step.outcome_truth,
                         "best_truth": step.best_truth,
