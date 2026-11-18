@@ -21,8 +21,8 @@ def objective(x: float, context: float) -> float:
 def run(seed: int = 7, n_trials: int = 8) -> dict[str, float]:
     """Fit two independent Studies with identical observation context sequences.
 
-    Each Study spends n_trials evaluations. A separate final recommendation is
-    generated but not evaluated against the objective during training.
+    Each Study spends n_trials evaluations. Reported metrics summarize
+    training observations; no held-out policy recommendation is evaluated.
     """
     if n_trials < 3:
         raise ValueError("n_trials must be at least 3.")
