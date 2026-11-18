@@ -75,11 +75,27 @@ class CandidateGenerator:
         """Generate one candidate using the existing q-batch implementation."""
         return self.propose_batch(completed, q=1)[0]
 
-    def propose_batch(self, completed: list[Trial], *, q: int) -> list[dict[str, float]]:
+    def propose_batch(
+        self,
+        completed: list[Trial],
+        *,
+        q: int,
+        fixed_features: Mapping[int, float] | None = None,
+    ) -> list[dict[str, float]]:
         """Generate q joint candidates from completed observations."""
         if isinstance(q, bool) or not isinstance(q, int) or q < 1:
             raise ValueError("q must be a positive integer.")
         bounds = self._bounds()
+        fixed = dict(fixed_features or {})
+        if any(type(dim) is not int or dim < 0 or dim >= bounds.shape[1] for dim in fixed):
+            raise ValueError("Fixed feature indices must refer to Study dimensions.")
+        for dim, value in fixed.items():
+            if not isinstance(value, (int, float)) or not torch.isfinite(torch.tensor(value)):
+                raise ValueError("Fixed feature values must be finite numbers.")
+            if not bounds[0, dim] <= value <= bounds[1, dim]:
+                raise ValueError("Fixed feature value is outside Study bounds.")
+        if self.variable_space is not None:
+            self.variable_space.validate_fixed_features(fixed)
         if len(completed) < self.n_initial_trials:
             candidate = None
             for _ in range(2048):
@@ -99,6 +115,8 @@ class CandidateGenerator:
                             (points[:, dim] * len(values)).long(), max=len(values) - 1
                         )
                         proposal[:, dim] = torch.tensor(values, dtype=bounds.dtype)[index]
+                for dim, value in fixed.items():
+                    proposal[:, dim] = value
                 if is_feasible(proposal, self.constraints, variable_space=self.variable_space):
                     candidate = proposal
                     break
@@ -129,6 +147,8 @@ class CandidateGenerator:
                 kwargs.setdefault("X_baseline", train_x)
             acq = self.acquisition(**kwargs)
             if isinstance(self.optimizer, SearchStrategy):
+                if fixed:
+                    raise ValueError("Context-fixed proposals require a named optimizer backend.")
                 if self.constraints is not None and self.constraints.has_constraints:
                     raise ValueError("CandidateConstraints requires a named optimizer backend.")
                 if self.variable_space is not None:
@@ -142,6 +162,8 @@ class CandidateGenerator:
                 options = dict(self.optimizer_kwargs)
                 options.setdefault("num_restarts", 5)
                 options.setdefault("raw_samples", 64)
+                if fixed and "fixed_features" in options:
+                    raise ValueError("optimizer_kwargs must not override context fixed features.")
                 candidate, _ = optimize_acqf(
                     acq,
                     bounds,
@@ -149,10 +171,16 @@ class CandidateGenerator:
                     optimizer=self.optimizer,
                     variable_space=self.variable_space,
                     constraints=self.constraints,
+                    fixed_features=fixed or None,
                     **options,
                 )
         if candidate.shape != (q, len(self.space.bounds)):
             raise ValueError("Optimizer must return candidates with shape [q, d].")
+        for dim, value in fixed.items():
+            if not torch.allclose(
+                candidate[:, dim], torch.full_like(candidate[:, dim], value), atol=1e-8, rtol=0
+            ):
+                raise ValueError("Optimizer did not preserve the supplied context.")
         if not is_feasible(candidate, self.constraints, variable_space=self.variable_space):
             raise ValueError("Optimizer returned candidates violating CandidateConstraints.")
         results = []
