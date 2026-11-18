@@ -169,9 +169,7 @@ class Study:
         """Propose a trial for the observed context, if configured."""
         return self.ask_batch(1, context=context)[0]
 
-    def ask_batch(
-        self, q: int, *, context: Mapping[str, float] | None = None
-    ) -> tuple[Trial, ...]:
+    def ask_batch(self, q: int, *, context: Mapping[str, float] | None = None) -> tuple[Trial, ...]:
         """Propose q joint candidates sharing one observed context."""
         if self.context_names:
             if context is None or set(context) != set(self.context_names):
