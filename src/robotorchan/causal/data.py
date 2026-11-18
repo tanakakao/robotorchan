@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from math import isfinite
 from types import MappingProxyType
 
@@ -16,22 +16,23 @@ class CausalObservation:
 
     values: Mapping[str, float]
     intervention: HardIntervention | None = None
-    _validated: bool = field(default=False, init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         if not self.values:
             raise ValueError("Observed values must not be empty.")
-        copied = dict(self.values)
-        for name, value in copied.items():
+        copied: dict[str, float] = {}
+        for name, value in self.values.items():
             if not isinstance(name, str) or not name:
                 raise ValueError("Observed variable names must be nonempty.")
             if isinstance(value, bool) or not isinstance(value, (int, float)):
                 raise TypeError("Observed values must be real scalars.")
-            if not isfinite(float(value)):
+            number = float(value)
+            if not isfinite(number):
                 raise ValueError("Observed values must be finite.")
+            copied[name] = number
         if self.intervention is not None:
             for name, value in self.intervention.values.items():
-                if name not in copied or float(copied[name]) != float(value):
+                if name not in copied or copied[name] != value:
                     raise ValueError("Observed values must match the intervention.")
         object.__setattr__(self, "values", MappingProxyType(copied))
 

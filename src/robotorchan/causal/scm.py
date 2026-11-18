@@ -1,4 +1,4 @@
-"""Simple structural causal model with user-supplied equations."""
+"""Deterministic structural causal models with user-supplied equations."""
 
 from __future__ import annotations
 
@@ -13,10 +13,11 @@ StructuralEquation = Callable[[Mapping[str, float]], float]
 
 
 class StructuralCausalModel:
-    """Evaluate an acyclic SCM; exogenous inputs are supplied by the caller.
+    """Evaluate a known-DAG deterministic SCM with hard interventions.
 
-    Equations receive a read-only mapping containing the values of their
-    declared parents only. No causal structure is inferred.
+    Each equation receives a read-only map of its declared parent values.
+    No causal discovery, stochastic exogenous noise, or effect identification
+    from observational data is performed.
     """
 
     def __init__(
@@ -29,7 +30,7 @@ class StructuralCausalModel:
         if not all(callable(equation) for equation in equations.values()):
             raise TypeError("Structural equations must be callable.")
         self.graph = graph
-        self._equations = dict(equations)
+        self._equations = MappingProxyType(dict(equations))
 
     def evaluate(
         self,

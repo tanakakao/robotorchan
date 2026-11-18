@@ -3,19 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from types import MappingProxyType
 
 
 class CausalGraph:
-    """A validated, immutable DAG with a deterministic topological ordering."""
+    """A validated DAG with a read-only parent map and stable topological order."""
 
     def __init__(self, parents: Mapping[str, Sequence[str]]) -> None:
         nodes = tuple(parents)
         if not nodes or any(not isinstance(n, str) or not n for n in nodes):
             raise ValueError("Graph must contain nonempty string node names.")
-        if len(nodes) != len(set(nodes)):
-            raise ValueError("Node names must be unique.")
+
         normalized: dict[str, tuple[str, ...]] = {}
         for node, incoming in parents.items():
+            if isinstance(incoming, (str, bytes)):
+                raise TypeError(f"Parents for {node} must be a sequence, not a string.")
             edges = tuple(incoming)
             if len(edges) != len(set(edges)):
                 raise ValueError(f"Duplicate parents for {node}.")
@@ -24,6 +26,7 @@ class CausalGraph:
             if node in edges:
                 raise ValueError(f"Self-loop at {node}.")
             normalized[node] = edges
+
         order: list[str] = []
         visiting: set[str] = set()
         visited: set[str] = set()
@@ -42,7 +45,7 @@ class CausalGraph:
 
         for node in nodes:
             visit(node)
-        self._parents = normalized
+        self._parents = MappingProxyType(normalized)
         self._order = tuple(order)
 
     @property
