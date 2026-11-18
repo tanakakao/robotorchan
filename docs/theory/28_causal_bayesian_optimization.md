@@ -40,17 +40,17 @@ $$
 一方、温度を外部から強制的に $x$ に設定する場合は
 
 $$
-P(Y \mid \operatorname{do}(X=x))
+P(Y \mid \mathrm{do}(X=x))
 $$
 
-と書きます。$\operatorname{do}(X=x)$ は、**変数 $X$ の値を外部から $x$ に設定する操作**を示す記号です。関数の名前が`do`だからといって、これを書くだけで実験が実施されるわけではありません。
+と書きます。$\mathrm{do}(X=x)$ は、**変数 $X$ の値を外部から $x$ に設定する操作**を示す記号です。関数の名前が`do`だからといって、これを書くだけで実験が実施されるわけではありません。
 
 一般には、次の2つは一致しません。
 
 $$
 P(Y \mid X=x)
 \ne
-P(Y \mid \operatorname{do}(X=x))
+P(Y \mid \mathrm{do}(X=x))
 $$
 
 ただし、すべての場合に必ず異なるという意味でもありません。交絡などの影響がなく、必要な仮定が成り立てば一致する場合もあります。
@@ -103,7 +103,7 @@ $$
 
 $$
 \begin{aligned}
-\mathbb{E}[Y\mid\operatorname{do}(X=x)]
+\mathbb{E}[Y\mid\mathrm{do}(X=x)]
 &=x+\mathbb{E}[U]\\
 &=x.
 \end{aligned}
@@ -123,8 +123,8 @@ $$
 > $$
 > \mathbb{E}[U\mid X=x]
 > =
-> \frac{\operatorname{Var}(U)}
-> {\operatorname{Var}(U)+\operatorname{Var}(\varepsilon_X)}x
+> \frac{\mathrm{Var}(U)}
+> {\mathrm{Var}(U)+\mathrm{Var}(\varepsilon_X)}x
 > $$
 >
 > です。正規分布の計算を知らなくても、以降は「観測と介入は別物」と理解できれば読み進められます。
@@ -167,10 +167,10 @@ DAGの矢印は、「散布図で相関が見えた」だけで確定できる�
 一般形は
 
 $$
-V_j=f_j\bigl(\operatorname{Pa}(V_j),U_j\bigr)
+V_j=f_j\bigl(\mathrm{Pa}(V_j),U_j\bigr)
 $$
 
-です。$V_j$ は対象の変数、$\operatorname{Pa}(V_j)$ はその親、$U_j$ はモデル外から入る要因（外生変数）です。
+です。$V_j$ は対象の変数、$\mathrm{Pa}(V_j)$ はその親、$U_j$ はモデル外から入る要因（外生変数）です。
 
 たとえば、次の決定的な合成モデルを使ってみましょう。
 
@@ -224,9 +224,9 @@ $$
 | 実施した操作 | $X$ | $Z$ | $M$ | $Y$ |
 | --- | ---: | ---: | ---: | ---: |
 | 介入なし | 0.2 | 0.3 | 0.4 | -0.22125 |
-| $\operatorname{do}(X=0.8)$ | 0.8 | 0.3 | 0.85 | -0.06375 |
-| $\operatorname{do}(Z=0.65)$ | 0.2 | 0.65 | 0.4 | -0.16 |
-| $\operatorname{do}(X=0.7333\ldots,Z=0.65)$ | 約0.7333 | 0.65 | 0.8 | 0 |
+| $\mathrm{do}(X=0.8)$ | 0.8 | 0.3 | 0.85 | -0.06375 |
+| $\mathrm{do}(Z=0.65)$ | 0.2 | 0.65 | 0.4 | -0.16 |
+| $\mathrm{do}(X=0.7333\ldots,Z=0.65)$ | 約0.7333 | 0.65 | 0.8 | 0 |
 
 この例では、**温度だけを変える**場合より、**温度と圧力を両方変える**場合のほうが、高い目的値を達成できます。一方、2つの操作には追加コストがかかるかもしれません。ここから「どの変数を、いくつにするか」を同時に選ぶ動機が生まれます。
 
@@ -241,7 +241,7 @@ $$
 通常のBOでは、設定する入力 $x$ が決まった種類の変数だとして、その値を探します。
 
 $$
-x^\star\in\operatorname*{arg\,max}_{x\in\mathcal X} f(x)
+x^\star\in\arg\max_{x\in\mathcal X} f(x)
 $$
 
 たとえば「温度と圧力は毎回必ず両方設定する」という実験では、$x=(X,Z)$ の最適値を探します。
@@ -257,7 +257,7 @@ CBOでは、変数を操作する**集合 $S$** も候補にします。
 操作値を $x_S$ と書くと、介入したときの期待目的値は
 
 $$
-f_S(x_S)=\mathbb{E}[Y\mid\operatorname{do}(S=x_S)]
+f_S(x_S)=\mathbb{E}[Y\mid\mathrm{do}(S=x_S)]
 $$
 
 と表せます。ここで $S$ は**どの変数を操作するか**、$x_S$ は**いくつに設定するか**です。
@@ -266,7 +266,7 @@ $$
 
 $$
 (S^\star,x_S^\star)\in
-\operatorname*{arg\,max}_{S\in\mathcal S,\ x_S\in\mathcal X_S}
+\arg\max_{S\in\mathcal S,\ x_S\in\mathcal X_S}
 f_S(x_S)
 $$
 
@@ -315,15 +315,15 @@ $$
 
 $$
 \mathcal D_S=
-\{(x_{S,i},y_i):\operatorname{do}(S=x_{S,i})\text{ を実施した}\}
+\{(x_{S,i},y_i):\mathrm{do}(S=x_{S,i})\text{ を実施した}\}
 $$
 
 と記録します。たとえば次の2種類の実験は、異なるデータ群です。
 
 | 実験 | GPへの入力 | 他の変数 |
 | --- | --- | --- |
-| $\operatorname{do}(X=0.5)$ | $[0.5]$ | $Z$ は自然な状態 |
-| $\operatorname{do}(X=0.5,Z=0.65)$ | $[0.5,0.65]$ | $X,Z$ の両方を固定 |
+| $\mathrm{do}(X=0.5)$ | $[0.5]$ | $Z$ は自然な状態 |
+| $\mathrm{do}(X=0.5,Z=0.65)$ | $[0.5,0.65]$ | $X,Z$ の両方を固定 |
 
 「どちらも $X=0.5$ なのだから同じ訓練データにする」という扱いはできません。**介入していない変数の決まり方が違う**ためです。
 
@@ -354,7 +354,7 @@ $$
 GPによる事後分布のもとで、この改善量を平均したものが**Expected Improvement（EI、期待改善量）**です。
 
 $$
-\operatorname{EI}_S(x_S)
+\mathrm{EI}_S(x_S)
 =
 \mathbb E[I_S(x_S)\mid\mathcal D_S]
 $$
@@ -374,7 +374,7 @@ $$
 $$
 \begin{aligned}
 z&=\frac{\mu-b}{\sigma},\\
-\operatorname{EI}
+\mathrm{EI}
 &=(\mu-b)\Phi(z)+\sigma\phi(z)
 \end{aligned}
 $$
@@ -390,7 +390,7 @@ $$
 EIは非常に小さな値になることがあります。そのまま最適化すると数値計算が不安定になるため、BoTorchには対数空間で扱う`LogExpectedImprovement`があります。
 
 $$
-\operatorname{LogEI}_S(x_S)=\log\operatorname{EI}_S(x_S)
+\mathrm{LogEI}_S(x_S)=\log\mathrm{EI}_S(x_S)
 $$
 
 対数関数は単調増加なので、正のEIの最大化とLogEIの最大化では候補の順位が変わりません。**LogEIは別の目的関数ではなく、EIを数値的に安定して最適化する表現**です。
@@ -400,30 +400,30 @@ $$
 各集合で有望な介入値を探した後、**期待改善量を介入コストで割った値**を集合間で比較します。
 
 $$
-\operatorname{utility}(S)=
-\frac{\operatorname{EI}_S(x_S^\star)}{c(S)}
+\mathrm{utility}(S)=
+\frac{\mathrm{EI}_S(x_S^\star)}{c(S)}
 $$
 
 たとえば、次の2つの候補があるとします（いずれも説明用の仮のEIです）。
 
 | 候補 | EI | コスト | EI / コスト |
 | --- | ---: | ---: | ---: |
-| $\operatorname{do}(X=x)$ | 0.08 | 1 | **0.08** |
-| $\operatorname{do}(X=x,Z=z)$ | 0.12 | 3 | 0.04 |
+| $\mathrm{do}(X=x)$ | 0.08 | 1 | **0.08** |
+| $\mathrm{do}(X=x,Z=z)$ | 0.12 | 3 | 0.04 |
 
 この例では、**EI自体は2変数介入のほうが大きい**ものの、費用当たりのEIは温度だけの介入のほうが大きくなります。
 
 実装ではLogEIを利用するため、次のスコアを最大化します。
 
 $$
-\operatorname{score}(S)
+\mathrm{score}(S)
 =
-\log\operatorname{EI}_S(x_S^\star)-\log c(S)
+\log\mathrm{EI}_S(x_S^\star)-\log c(S)
 =
-\log\frac{\operatorname{EI}_S(x_S^\star)}{c(S)}
+\log\frac{\mathrm{EI}_S(x_S^\star)}{c(S)}
 $$
 
-**$\log\operatorname{EI}$ を $c(S)$ で直接割るのではありません。** この違いは実装を読むときに特に重要です。
+**$\log\mathrm{EI}$ を $c(S)$ で直接割るのではありません。** この違いは実装を読むときに特に重要です。
 
 なお、ここでは介入集合ごとのコストを**正の定数**とします。介入値によって費用が変わる場合や、安全制約・総予算を考慮する場合は、追加の設計が必要です。
 
@@ -437,16 +437,16 @@ CBOの候補提案は、概念的に次の2段階です。
 数式で書くと、
 
 $$
-x_S^\star\in\operatorname*{arg\,max}_{x_S\in\mathcal X_S}
-\log\operatorname{EI}_S(x_S)
+x_S^\star\in\arg\max_{x_S\in\mathcal X_S}
+\log\mathrm{EI}_S(x_S)
 $$
 
 および
 
 $$
-S^\star\in\operatorname*{arg\,max}_{S\in\mathcal S}
+S^\star\in\arg\max_{S\in\mathcal S}
 \left[
-\log\operatorname{EI}_S(x_S^\star)-\log c(S)
+\log\mathrm{EI}_S(x_S^\star)-\log c(S)
 \right]
 $$
 
