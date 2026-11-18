@@ -191,4 +191,4 @@ GPの事後不確実性、観測雑音、Context分布推定誤差は別途扱�
 5. Ament, S., Daulton, S., Eriksson, D., Balandat, M., and Bakshy, E. (2023). *Unexpected Improvements to Expected Improvement for Bayesian Optimization*. NeurIPS. LogEIの数値安定性に関する研究。
 6. Balandat, M. et al. (2020). *BoTorch: A Framework for Efficient Monte-Carlo Bayesian Optimization*. NeurIPS. BoTorchのモジュラーなモデル・獲得関数・最適化構成。
 
-参考文献は理論の背景であり、robotorchanの各APIの実装検証を直接保証するものではありません。
+参考文献は理論の背景であり、特定のソフトウェア実装の正当性を直接保証するものではありません。
