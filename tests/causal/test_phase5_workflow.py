@@ -86,6 +86,9 @@ def test_rejects_invalid_workflow_configuration():
         CausalBOStudy(graph, "Y", (("Y",),), {"Y": (0.0, 1.0)})
     with pytest.raises(ValueError, match="positive"):
         CausalBOStudy(
-            graph, "Y", (("X",),), {"X": (0.0, 1.0)},
+            graph,
+            "Y",
+            (("X",),),
+            {"X": (0.0, 1.0)},
             intervention_costs={frozenset({"X"}): 0.0},
         )

@@ -181,8 +181,7 @@ class CausalBOStudy:
 
         counts = {
             key: sum(
-                trial.state is TrialState.COMPLETE
-                and frozenset(trial.intervention.values) == key
+                trial.state is TrialState.COMPLETE and frozenset(trial.intervention.values) == key
                 for trial in self._trials.values()
             )
             for key in self.intervention_sets
