@@ -7267,6 +7267,16 @@
       "path": "docs/benchmarks/quickstart.md",
       "category": "Benchmarks",
       "reason": "Phase 5 public quickstart for benchmark execution, saved empirical report reproduction, interpretation, and provenance."
+    },
+    {
+      "path": "docs/theory/28_causal_bayesian_optimization.md",
+      "category": "Theory",
+      "reason": "Known-DAG causal BO mathematical foundations, do-operator, intervention GP and cost-aware EI."
+    },
+    {
+      "path": "docs/guide/28_causal_bayesian_optimization.md",
+      "category": "Guide",
+      "reason": "Causal BO theory-to-implementation mapping and public API constraints."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",

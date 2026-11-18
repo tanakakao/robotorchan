@@ -28,6 +28,13 @@
 - [日本語利用Notebook](../examples/notebooks/50_safe_bo_usage_guide.ipynb)
 - [比較Notebook](../examples/notebooks/57_safe_bo_benchmark.ipynb)
 
+### 因果ベイズ最適化を学びたい
+
+- [Causal BOの理論](theory/28_causal_bayesian_optimization.md)
+- [Causal BOの実装ガイド](guide/28_causal_bayesian_optimization.md)
+- [介入候補提案とAsk-and-Tell Notebook](../examples/notebooks/58_causal_bayesian_optimization.ipynb)
+- [Causal BOとGP-BO・Random比較Notebook](../examples/notebooks/59_causal_bo_benchmark.ipynb)
+
 ### 最近のBO拡張を使いたい
 
 探索機能の入口は [Optimization guides](optimization/README.md) です。
