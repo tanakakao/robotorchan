@@ -26,7 +26,7 @@
 
 `CausalGraph`のコンストラクタは親ノードの存在、親集合内の重複、自己ループ、循環を検査し、`topological_order`と`parents_of`を提供します。このDAGは**事前にユーザーが与えるもの**であり、観測値から学習・識別する処理はありません。
 
-`StructuralCausalModel.evaluate(intervention)`はトポロジカル順にノードを処理します。各ノードについて、介入値が与えられていればその値を採用し、そうでなければ`equations[node](parent_values)`を評価します。Hard interventionを実行したときの「**そのノードの生成方程式だけを置換**」という理論操作に対応します。
+`StructuralCausalModel.evaluate(intervention)`はトポロジカル順にノードを処理します。各ノードについて、介入値が与えられていればその値を採用し、そうでなければ`equations`辞書から該当ノードの関数を取り出し、親ノードの値を渡して評価します。Hard interventionを実行したときの「**そのノードの生成方程式だけを置換**」という理論操作に対応します。
 
 `CausalObservation`は`values`と`intervention`を一緒に保持します。`intervention=None`は観測のみを意味し、`is_interventional`は`False`です。介入レコードには、固定したノードの値と`values`中の値が完全一致する契約があります。これにより、観測しただけの`X=x`を実行済みの`do(X=x)`として誤登録しにくくしています。
 
