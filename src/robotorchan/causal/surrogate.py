@@ -56,9 +56,7 @@ class InterventionGPSurrogate:
         wanted = set(selected)
         self.graph = graph
         self.outcome = outcome
-        self.intervention_nodes = tuple(
-            node for node in graph.topological_order if node in wanted
-        )
+        self.intervention_nodes = tuple(node for node in graph.topological_order if node in wanted)
 
         inputs: list[list[float]] = []
         targets: list[list[float]] = []

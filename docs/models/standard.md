@@ -42,7 +42,10 @@ excluded from GP training; each selected intervention set has its own GP.
 ```python
 import torch
 from robotorchan.causal import (
-    CausalGraph, CausalObservation, HardIntervention, InterventionGPSurrogate,
+    CausalGraph,
+    CausalObservation,
+    HardIntervention,
+    InterventionGPSurrogate,
 )
 
 graph = CausalGraph({"X": (), "Y": ("X",)})
