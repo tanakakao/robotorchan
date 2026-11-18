@@ -80,5 +80,5 @@ def test_custom_scenario_rejects_missing_full_set_and_incomplete_costs():
         run_causal_benchmark(scenario=missing_full, n_iterations=0)
 
     missing_cost = replace(scenario, costs={frozenset({"X"}): 1.0})
-    with pytest.raises(ValueError, match="scenario.costs"):
+    with pytest.raises(ValueError, match=r"scenario\.costs"):
         run_causal_benchmark(scenario=missing_cost, n_iterations=0)

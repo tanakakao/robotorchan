@@ -118,6 +118,23 @@ jobs:
         run: >-
           /tmp/robotorchan-smoke/bin/python -c
           "import pathlib, robotorchan; from importlib.metadata import version; from robotorchan.models import SingleTaskGP; p = pathlib.Path(robotorchan.__file__).resolve(); assert '/site-packages/' in p.as_posix(), p; assert robotorchan.__version__ == version('robotorchan'); print(p); print(robotorchan.__version__); print(SingleTaskGP)"
+      - name: Smoke test Causal BO public API in installed wheel
+        working-directory: /tmp
+        run: |
+          /tmp/robotorchan-smoke/bin/python - <<'PY'
+          from robotorchan.causal import (
+              CausalBOStudy, CausalGraph, HardIntervention,
+              InterventionGPSurrogate, propose_causal_intervention,
+          )
+          from robotorchan.benchmarks import (
+              make_causal_synthetic_scenario, run_causal_benchmark,
+          )
+          scenario = make_causal_synthetic_scenario()
+          record = scenario.evaluate(HardIntervention({"X": 0.5}))
+          assert record.is_interventional and "Y" in record.values
+          print(CausalBOStudy, CausalGraph, InterventionGPSurrogate)
+          print(propose_causal_intervention, run_causal_benchmark)
+          PY
       - name: Validate installed distribution metadata
         working-directory: /tmp
         run: >-
