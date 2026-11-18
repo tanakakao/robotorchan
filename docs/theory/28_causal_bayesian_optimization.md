@@ -552,7 +552,36 @@ robotorchanのこの機能が扱うのは、**既知DAG・指定された介入�
 
 ## 参考文献・関連資料
 
-- Judea Pearl, *Causality: Models, Reasoning, and Inference*, 2nd ed., Cambridge University Press, 2009.
+### 初めて学ぶ人におすすめの順番
+
+1. **因果推論の導入**：Pearl・Glymour・Jewell (2016) で「相関と介入」「DAG」「交絡」の基本をつかむ。
+2. **因果モデルの仕組み**：Peters・Janzing・Schölkopf (2017) でSCMと介入分布を詳しく学ぶ。
+3. **普通のベイズ最適化**：Frazier (2018) でGP・EI・逐次的な実験選択を復習する。
+4. **CBOの原著**：Agliettiほか (2020) で、介入集合を選択する動機と観測・介入の活用を理解する。
+5. **現在のLogEI実装を理解する**：Amentほか (2023) で、EIの数値的な問題とLogEIの導入理由を確認する。
+
+最初からすべてを読む必要はありません。特に**1 → 3 → 4**の順で読むと、この章の流れとつながりやすくなります。
+
+### 因果推論の基礎
+
+- **Pearl, J., Glymour, M., & Jewell, N. P. (2016).** *Causal Inference in Statistics: A Primer*. Wiley. [出版社の紹介](https://www.wiley.com/en-us/Causal%20Inference%20in%20Statistics%3A%20A%20Primer-p-9781119186847) — 相関・交絡・DAG・介入を初めて学ぶ人向けの短い入門書。
+- **Peters, J., Janzing, D., & Schölkopf, B. (2017).** *Elements of Causal Inference: Foundations and Learning Algorithms*. MIT Press. [研究機関の書誌・公開PDF案内](https://is.mpg.de/ei/en/publications/petjansch17) — SCM、介入分布、因果モデルの前提を機械学習の観点で詳しく扱う。
+- **Pearl, J. (2009).** *Causality: Models, Reasoning, and Inference*, 2nd ed. Cambridge University Press. — do演算子・因果グラフ・因果推論の体系的な原典。最初から通読するより辞典的に参照するとよい。
+- **Hernán, M. A., & Robins, J. M. (2020).** *Causal Inference: What If*. Chapman & Hall/CRC. [著者による無料公開版](https://miguelhernan.org/whatifbook) — 観測研究と介入による因果効果の違いを別の枠組みから学ぶ参考書。
+
+### 因果ベイズ最適化の原著
+
+- **Aglietti, V., Lu, X., Paleyes, A., & González, J. (2020).** [*Causal Bayesian Optimization*](https://proceedings.mlr.press/v108/aglietti20a.html). *Proceedings of the 23rd International Conference on Artificial Intelligence and Statistics (AISTATS)*, PMLR 108, 3155–3164. — 介入集合を選ぶ最適化と、因果構造を用いた逐次意思決定を扱う**CBOの主要な原著論文**。
+
+**原著とrobotorchanの機能範囲の違い：** Agliettiほか (2020) は、観測データからdo-calculusを通じて推定した介入効果と、実際の介入結果を組み合わせる考え方も含みます。**現在のrobotorchanの基本CBOは、それを完全再現したものではありません。** 既知のDAG、実施済みのHard intervention、介入集合ごとの独立GP、既存LogEIに基づく候補提案を中心としています。したがって、原著を引用することは、観測データからの因果効果同定まで実装済みだと主張することではありません。
+
+### GP・ベイズ最適化・獲得関数
+
+- **Frazier, P. I. (2018).** [*A Tutorial on Bayesian Optimization*](https://arxiv.org/abs/1807.02811). arXiv:1807.02811. — GPによる予測、Expected Improvement、逐次最適化の体系的なチュートリアル。
+- **Ament, S., Daulton, S., Eriksson, D., Balandat, M., & Bakshy, E. (2023).** [*Unexpected Improvements to Expected Improvement for Bayesian Optimization*](https://proceedings.neurips.cc/paper/2023/hash/419f72cbd568ad62183f8132a3605a2a-Abstract-Conference.html). *Advances in Neural Information Processing Systems 36 (NeurIPS 2023)*. — EIの数値的な不安定性と、LogEIによる改善を説明する論文。
+
+### robotorchanの関連章・実行例
+
 - [第1章：ベイズ最適化とは](01_bayesian_optimization.md)
 - [第2章：Gaussian Process](02_gaussian_process.md)
 - [第4章：Acquisition Function](04_acquisition_function.md)
