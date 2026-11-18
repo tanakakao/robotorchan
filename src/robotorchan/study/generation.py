@@ -148,9 +148,7 @@ class CandidateGenerator:
             acq = self.acquisition(**kwargs)
             if isinstance(self.optimizer, SearchStrategy):
                 if fixed:
-                    raise ValueError(
-                        "Context-fixed proposals require a named optimizer backend."
-                    )
+                    raise ValueError("Context-fixed proposals require a named optimizer backend.")
                 if self.constraints is not None and self.constraints.has_constraints:
                     raise ValueError("CandidateConstraints requires a named optimizer backend.")
                 if self.variable_space is not None:
