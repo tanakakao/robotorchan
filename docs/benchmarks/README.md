@@ -58,6 +58,13 @@ robotorchan のモデル・探索戦略を、再現可能な条件で比較す�
 
 ## Causal BO: known-DAG intervention benchmark
 
+カスタムの`CausalBenchmarkScenario`を渡す場合、`bounds`の全介入変数を同時に
+操作する**全変数介入集合**を`intervention_sets`に含めてください。通常のGP-BOは
+この集合を固定して探索し、**一覧の末尾にある集合を使うわけではありません**。
+また、`costs`にはすべての介入集合のコストを定義してください。不完全な設定は
+比較を開始する前に明示的なエラーになります。
+
+
 因果介入の意味とベンチマークの読み方は
 [理論28章](../theory/28_causal_bayesian_optimization.md)、
 [実装ガイド28章](../guide/28_causal_bayesian_optimization.md)、

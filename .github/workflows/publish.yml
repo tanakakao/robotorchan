@@ -109,6 +109,23 @@ jobs:
           python -c
           "import robotorchan; from robotorchan.models import SingleTaskGP; print('robotorchan import OK')"
 
+      - name: Smoke-test Causal BO public API
+        run: |
+          python - <<'PY'
+          from robotorchan.causal import (
+              CausalBOStudy, CausalGraph, HardIntervention,
+              InterventionGPSurrogate, propose_causal_intervention,
+          )
+          from robotorchan.benchmarks import (
+              make_causal_synthetic_scenario, run_causal_benchmark,
+          )
+          scenario = make_causal_synthetic_scenario()
+          record = scenario.evaluate(HardIntervention({"X": 0.5}))
+          assert record.is_interventional and "Y" in record.values
+          print(CausalBOStudy, CausalGraph, InterventionGPSurrogate)
+          print(propose_causal_intervention, run_causal_benchmark)
+          PY
+
       - name: Upload distributions
         uses: actions/upload-artifact@v7
         with:
