@@ -186,6 +186,40 @@ class Study:
         candidates = self._generator.propose_batch(completed, q=q, fixed_features=fixed)
         return tuple(self.start_trial(self._register_trial(params).number) for params in candidates)
 
+    def ask_contexts(self, contexts: list[Mapping[str, float]]) -> tuple[Trial, ...]:
+        """Propose one candidate per observed context using independent q=1 searches.
+
+        This is not joint q-batch acquisition optimization. CandidateConstraints
+        must be intra-point because different contexts are optimized separately.
+        """
+        if not self.context_names:
+            raise ValueError("ask_contexts requires configured context_names.")
+        if not isinstance(contexts, list) or not contexts:
+            raise ValueError("contexts must be a nonempty list of context mappings.")
+        for context in contexts:
+            if not isinstance(context, Mapping) or set(context) != set(self.context_names):
+                raise ValueError("Each context must specify exactly the configured context_names.")
+        constraints = self._generator.constraints
+        if constraints is not None:
+            linear = (*constraints.inequality_constraints, *constraints.equality_constraints)
+            if any(indices.ndim == 2 for indices, _, _ in linear) or any(
+                not intrapoint for _, intrapoint in constraints.nonlinear_inequality_constraints
+            ):
+                raise NotImplementedError(
+                    "ask_contexts does not support inter-point CandidateConstraints."
+                )
+        names = tuple(self.search_space.bounds)
+        completed = [trial for trial in self.trials if trial.state is TrialState.COMPLETE]
+        candidates = [
+            self._generator.propose_batch(
+                completed,
+                q=1,
+                fixed_features={names.index(name): context[name] for name in self.context_names},
+            )[0]
+            for context in contexts
+        ]
+        return tuple(self.start_trial(self._register_trial(params).number) for params in candidates)
+
     def tell(
         self,
         trial: Trial | int,
