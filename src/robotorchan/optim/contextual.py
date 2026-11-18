@@ -74,8 +74,7 @@ class ContextualOptimizer:
         if q < 1:
             raise ValueError("q must be positive.")
         if any(
-            key in optimizer_kwargs
-            for key in ("fixed_features", "variable_space", "constraints")
+            key in optimizer_kwargs for key in ("fixed_features", "variable_space", "constraints")
         ):
             raise ValueError(
                 "Fixed features, variable space and constraints are owned by ContextualOptimizer."
