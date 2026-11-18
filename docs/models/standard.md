@@ -30,3 +30,44 @@ Theory: [Variational GP](../theory/09_variational_gp.md)
 ## 選択基準
 
 カテゴリがあるだけなら Mixed、fidelity 構造があるなら Multi-Fidelity、データ量による exact inference の計算負荷が主問題なら Variational を検討します。これらは排他的なラベルではなく、実装が対応する範囲では複数の問題軸を同時に扱えます。
+
+## Known-DAG / Intervention GP (Causal BO Phase 3)
+
+`InterventionGPSurrogate` is a thin adapter over the existing
+`SingleTaskGP` for an **explicitly performed hard-intervention set**. It does
+not discover a causal graph or identify effects from observational data.
+Observational records and intervention records for other target sets are
+excluded from GP training; each selected intervention set has its own GP.
+
+```python
+import torch
+from robotorchan.causal import (
+    CausalGraph,
+    CausalObservation,
+    HardIntervention,
+    InterventionGPSurrogate,
+)
+
+graph = CausalGraph({"X": (), "Y": ("X",)})
+records = [
+    CausalObservation({"X": x, "Y": x * x}, HardIntervention({"X": x}))
+    for x in (0.0, 0.3, 0.6, 1.0)
+]
+surrogate = InterventionGPSurrogate(graph, "Y", ("X",), records)
+surrogate.fit()
+posterior = surrogate.posterior(torch.tensor([[0.4]], dtype=torch.double))
+print(posterior.mean, posterior.variance)
+```
+
+The feature order of posterior inputs follows the DAG topological order
+restricted to the intervention nodes; query shape is `[..., q, d]`. The
+`surrogate.model` attribute exposes the existing native BoTorch-compatible
+`SingleTaskGP` for future acquisition integration.
+
+At least two records with **exactly the specified intervention variables**
+are needed. The GP uses the existing inferred-noise defaults. Its predicted
+response is interpretable as an empirical response under the performed
+intervention regime only if background experimental conditions are comparable.
+In particular, `E[Y | X=x]` from observational data is not automatically
+`E[Y | do(X=x)]`. Cross-set information sharing, candidate generation,
+intervention cost, and a complete CBO loop are not implemented in Phase 3.
