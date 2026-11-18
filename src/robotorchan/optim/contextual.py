@@ -73,8 +73,13 @@ class ContextualOptimizer:
             raise ValueError("context must contain only finite values.")
         if q < 1:
             raise ValueError("q must be positive.")
-        if any(\n            key in optimizer_kwargs\n            for key in ("fixed_features", "variable_space", "constraints")\n        ):
-            raise ValueError(\n                "Fixed features, variable space and constraints are owned by ContextualOptimizer."\n            )
+        if any(
+            key in optimizer_kwargs
+            for key in ("fixed_features", "variable_space", "constraints")
+        ):
+            raise ValueError(
+                "Fixed features, variable space and constraints are owned by ContextualOptimizer."
+            )
         fixed = {index: context[pos].item() for pos, index in enumerate(self.context_indices)}
         for index, value in fixed.items():
             if value < self.bounds[0, index].item() or value > self.bounds[1, index].item():
@@ -95,7 +100,9 @@ class ContextualOptimizer:
             raise RuntimeError("Optimizer returned unexpected candidate shape.")
         # Do not silently repair a backend that fails to preserve fixed context.
         for index, fixed_value in fixed.items():
-            expected = torch.as_tensor(\n                fixed_value, dtype=candidates.dtype, device=candidates.device\n            )
+            expected = torch.as_tensor(
+                fixed_value, dtype=candidates.dtype, device=candidates.device
+            )
             if not torch.allclose(candidates[:, index], expected.expand(q), atol=1e-6, rtol=0):
                 raise RuntimeError(f"Optimizer did not preserve context dimension {index}.")
         return candidates, value
