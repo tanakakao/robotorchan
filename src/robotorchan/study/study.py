@@ -203,7 +203,7 @@ class Study:
         if constraints is not None:
             linear = (*constraints.inequality_constraints, *constraints.equality_constraints)
             if any(indices.ndim == 2 for indices, _, _ in linear) or any(
-                not is_intrapoint for _, is_intrapoint in constraints.nonlinear_inequality_constraints
+                not intrapoint for _, intrapoint in constraints.nonlinear_inequality_constraints
             ):
                 raise NotImplementedError(
                     "ask_contexts does not support inter-point CandidateConstraints."
