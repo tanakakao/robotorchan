@@ -71,3 +71,54 @@ intervention regime only if background experimental conditions are comparable.
 In particular, `E[Y | X=x]` from observational data is not automatically
 `E[Y | do(X=x)]`. Cross-set information sharing, candidate generation,
 intervention cost, and a complete CBO loop are not implemented in Phase 3.
+
+## Causal BO Phase 5: Sequential Ask-and-Tell
+
+`CausalBOStudy` is a dedicated in-memory intervention workflow, separate
+from the ordinary `Study` parameter search space. It reuses the shared
+`TrialState` lifecycle and the Phase 3 and Phase 4 GP/LogEI implementation.
+It does **not** learn a causal graph or infer interventional effects from
+observational-only data.
+
+```python
+from robotorchan.causal import CausalBOStudy, CausalGraph
+from robotorchan.study import TrialState
+
+graph = CausalGraph({"X": (), "Z": (), "Y": ("X", "Z")})
+study = CausalBOStudy(
+    graph, "Y", (("X",), ("Z",)),
+    {"X": (0.0, 1.0), "Z": (0.0, 1.0)},
+    n_initial_trials=2,
+    optimizer="sobol",
+    seed=3,
+)
+for _ in range(6):
+    trial = study.ask()
+    # Replace this with the actual hard-intervention experiment:
+    y = sum(value * value for value in trial.intervention.values.values())
+    study.tell(trial, y)
+
+print(len(study.observations), study.trials[-1].state)
+```
+
+**Cold start:** each configured intervention set receives
+`n_initial_trials` completed Sobol interventions (at least 2 per set),
+using the existing `sample_candidate_batches` helper. The next
+`ask()` fits one existing `InterventionGPSurrogate` per set and delegates
+the best intervention selection to `propose_causal_intervention`.
+A successful `tell()` invalidates cached models so the next model-based
+`ask()` refits with the latest interventional observations.
+
+`tell(trial, outcome)` records a scalar outcome; an optional mapping of
+measured graph nodes is also supported, with required intervention-value
+consistency. `tell(trial, state=TrialState.FAIL)` records failure without
+adding training data. `trials` includes failed and running experiments;
+`observations` only includes completed hard interventions. Trials receive
+monotonically increasing IDs; a second `ask()` while a trial is running,
+or repeated `tell()`, is rejected.
+
+This Phase 5 flow is sequential `q=1` only. It does not implement
+parallel or persistent trials, mixed variables, categorical interventions,
+causal discovery, observational-data adjustment, or stochastic causal graph
+inference. A workflow cannot be used to claim that associations learned
+from purely observational records are causal effects.
