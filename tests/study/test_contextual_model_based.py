@@ -26,9 +26,7 @@ class _Acquisition:
 
 def test_model_based_mixed_q_batch_passes_context_to_dispatch() -> None:
     bounds = torch.tensor([[0.0, 0.0, 0.0], [1.0, 3.0, 2.0]], dtype=torch.double)
-    space = MixedVariableSpace(
-        bounds=bounds, integer_dims=(1,), categorical_values={2: (0.0, 2.0)}
-    )
+    space = MixedVariableSpace(bounds=bounds, integer_dims=(1,), categorical_values={2: (0.0, 2.0)})
     configs = [{1: 0.0, 2: 0.0}, {1: 1.0, 2: 2.0}]
     study = create_study(
         search_space={"decision": (0.0, 1.0), "integer": (0.0, 3.0), "category": (0.0, 2.0)},
