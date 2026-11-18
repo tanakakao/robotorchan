@@ -80,6 +80,7 @@ EXCLUDED_NOTEBOOKS = [
     "56_turbo_multi_benchmark.ipynb",
     "57_safe_bo_benchmark.ipynb",
     "59_causal_bo_benchmark.ipynb",
+    "60_contextual_bayesian_optimization.ipynb",
 ]
 
 

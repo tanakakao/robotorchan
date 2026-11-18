@@ -32,6 +32,7 @@
 - [26. Transfer Bayesian Optimization](26_transfer_bayesian_optimization.md)
 - [27. 組合せベイズ最適化](27_combinatorial_bayesian_optimization.md)
 - [28. 因果ベイズ最適化（Causal BO）](28_causal_bayesian_optimization.md)
+- [29. Contextual Bayesian Optimization（文脈付きBO）](29_contextual_bayesian_optimization.md)
 - [獲得関数の詳細理論](acquisition/README.md)
 - [候補最適化の詳細理論](optimization/README.md)
 
