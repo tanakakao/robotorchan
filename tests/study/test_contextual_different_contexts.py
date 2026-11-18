@@ -1,5 +1,7 @@
 """Different-context candidate proposals use independent q=1 optimization."""
 
+from unittest.mock import patch
+
 import pytest
 import torch
 
@@ -53,3 +55,41 @@ def test_ask_contexts_rejects_interpoint_constraints() -> None:
     with pytest.raises(NotImplementedError, match="inter-point"):
         study.ask_contexts([{"ambient": 0.2}, {"ambient": 0.8}])
     assert not study.trials
+
+
+class _Model:
+    def __init__(self, train_x, train_y):
+        self.train_x = train_x
+
+    def fit(self):
+        return self
+
+
+class _Acquisition:
+    def __init__(self, model, best_f):
+        self.model = model
+
+
+def test_ask_contexts_model_based_dispatches_independent_q1() -> None:
+    study = create_study(
+        search_space={"decision": (0.0, 1.0), "ambient": (0.0, 1.0)},
+        context_names=("ambient",),
+        model=_Model,
+        acquisition=_Acquisition,
+        n_initial_trials=1,
+        seed=10,
+    )
+    first = study.ask(context={"ambient": 0.3})
+    study.tell(first, 0.5)
+    with patch("robotorchan.study.generation.optimize_acqf") as optimize:
+        optimize.side_effect = [
+            (torch.tensor([[0.4, 0.2]], dtype=torch.double), torch.tensor(0.0)),
+            (torch.tensor([[0.6, 0.8]], dtype=torch.double), torch.tensor(0.0)),
+        ]
+        trials = study.ask_contexts([{"ambient": 0.2}, {"ambient": 0.8}])
+    assert len(trials) == 2
+    assert [call.kwargs["q"] for call in optimize.call_args_list] == [1, 1]
+    assert [call.kwargs["fixed_features"] for call in optimize.call_args_list] == [
+        {1: 0.2},
+        {1: 0.8},
+    ]
