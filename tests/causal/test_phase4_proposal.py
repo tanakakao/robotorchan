@@ -22,10 +22,7 @@ def fitted_groups():
         for x in (0.0, 0.25, 0.5, 0.75):
             do = HardIntervention({node: x})
             records.append(CausalObservation({node: x, "Y": x * x}, do))
-    groups = [
-        InterventionGPSurrogate(graph, "Y", (node,), records)
-        for node in ("X", "Z")
-    ]
+    groups = [InterventionGPSurrogate(graph, "Y", (node,), records) for node in ("X", "Z")]
     for group in groups:
         group.fit()
     return groups
@@ -68,9 +65,7 @@ def test_rejects_incompatible_inputs(fitted_groups):
     with pytest.raises(ValueError, match="bounds"):
         propose_causal_intervention(fitted_groups[:1], {"Z": (0.0, 1.0)})
     with pytest.raises(ValueError, match="once"):
-        propose_causal_intervention(
-            fitted_groups[:1] * 2, {"X": (0.0, 1.0)}
-        )
+        propose_causal_intervention(fitted_groups[:1] * 2, {"X": (0.0, 1.0)})
     with pytest.raises(ValueError, match="positive"):
         propose_causal_intervention(
             fitted_groups[:1],
@@ -78,6 +73,4 @@ def test_rejects_incompatible_inputs(fitted_groups):
             intervention_costs={frozenset({"X"}): 0.0},
         )
     with pytest.raises(ValueError, match="direction"):
-        propose_causal_intervention(
-            fitted_groups[:1], {"X": (0.0, 1.0)}, direction="invalid"
-        )
+        propose_causal_intervention(fitted_groups[:1], {"X": (0.0, 1.0)}, direction="invalid")
