@@ -10,7 +10,7 @@
 2. DAG・構造方程式・`do`演算子を使って「介入後に何が変わるか」を説明できる。
 3. 介入集合ごとのGPとExpected Improvementが、次の実験選択につながることを理解できる。
 
-robotorchanの関数との対応は[実装ガイド](../guide/28_causal_bayesian_optimization.md)、実際に提案から実験登録まで試す手順は[Notebook 58](../../examples/notebooks/58_causal_bayesian_optimization.ipynb)、比較結果の読み方は[Notebook 59](../../examples/notebooks/59_causal_bo_benchmark.ipynb)に分けています。
+関数と実装上の対応は[実装ガイド](../guide/28_causal_bayesian_optimization.md)、実際に提案から実験登録まで試す手順は[Notebook 58](../../examples/notebooks/58_causal_bayesian_optimization.ipynb)、比較結果の読み方は[Notebook 59](../../examples/notebooks/59_causal_bo_benchmark.ipynb)に分けています。
 
 ## 1. まず「観測」と「介入」を区別する
 
@@ -156,7 +156,7 @@ DAGの矢印は、「散布図で相関が見えた」だけで確定できる�
 
 本章でいう**既知のDAG**は、「どの方向に影響があるかを利用者がすでに決めている」という意味です。未知の矢印をデータから自動探索する**因果構造学習（causal discovery）**とは異なります。
 
-robotorchanのCausal BOの基礎機能は、この既知の構造と、実際に実施した介入の記録を前提にします。
+本章では、因果構造が既知であり、実際に実施した介入の記録が得られる場合を考えます。
 
 ## 3. SCM：矢印に具体的な計算式を与える
 
@@ -232,7 +232,7 @@ $$
 
 ### 3.5 Hard interventionと本章の範囲
 
-このように変数を特定値へ完全に固定する操作を**Hard intervention（ハード介入）**と呼びます。一般のSCMには外生雑音を含むものもありますが、本章で実行する`StructuralCausalModel`の例は**利用者が与えた決定的な構造方程式**を評価します。未知のDAGを推定する機能や、観測データだけから介入効果を同定する機能ではありません。
+このように変数を特定値へ完全に固定する操作を**Hard intervention（ハード介入）**と呼びます。一般のSCMには外生雑音を含むものもありますが、ここで扱う合成例は**決定的な構造方程式**を用いて値を計算します。未知のDAGを推定する機能や、観測データだけから介入効果を同定する機能ではありません。
 
 ## 4. 通常のBOとCBOは何を最適化するのか
 
@@ -327,7 +327,7 @@ $$
 
 「どちらも $X=0.5$ なのだから同じ訓練データにする」という扱いはできません。**介入していない変数の決まり方が違う**ためです。
 
-現在のrobotorchanの基本構成では、集合 $S$ ごとに独立したGPを学習します。これは観測だけのデータを因果的な介入結果として扱わないための設計です。ただし、集合間の情報共有や交絡の識別を自動で行う高度な因果モデルではありません。
+本章では、介入集合 $S$ ごとに独立したGPを学習する、基本的な構成を考えます。これは観測だけのデータを因果的な介入結果として扱わないための設計です。ただし、集合間の情報共有や交絡の識別を自動で行う高度な因果モデルではありません。
 
 ### 5.3 GPの「不確実性」は因果構造の正しさを保証しない
 
@@ -450,7 +450,7 @@ S^\star\in\operatorname*{arg\,max}_{S\in\mathcal S}
 \right]
 $$
 
-です。robotorchanは、既存のBoTorch`LogExpectedImprovement`と候補最適化APIを再利用します。**目的値の最大化**と**獲得関数の最大化**は別の操作です。
+です。**目的値の最大化**と**獲得関数の最大化**は別の操作です。実装上の対応は[Guide](../guide/28_causal_bayesian_optimization.md)を参照してください。
 
 ## 7. Ask-and-Tell：候補提案と実験結果を往復させる
 
@@ -544,7 +544,7 @@ $$
 | 介入GP | 未実験の介入値の結果をどう予測するか | 介入集合ごとの実測データからGPを学習 |
 | ベイズ最適化 | 次はどの介入実験を行うべきか | LogEIと必要に応じた介入コストで候補を選択 |
 
-robotorchanのこの機能が扱うのは、**既知DAG・指定された介入集合・連続変数・単一目的・逐次$q=1$・集合ごとの独立GP・集合単位の固定コスト**です。
+本章で扱う基本設定は、**既知DAG・指定された介入集合・連続変数・単一目的・逐次$q=1$・集合ごとの独立GP・集合単位の固定コスト**です。
 
 対象外となるのは、未知の因果構造の発見、観測データだけからの因果効果同定、未知の交絡の自動補正、カテゴリ・混合介入、並列バッチ介入、候補値依存コストなどです。GPの予測確信度は実機の安全性や因果仮定の正しさの保証ではありません。
 
@@ -573,14 +573,14 @@ robotorchanのこの機能が扱うのは、**既知DAG・指定された介入�
 
 - **Aglietti, V., Lu, X., Paleyes, A., & González, J. (2020).** [*Causal Bayesian Optimization*](https://proceedings.mlr.press/v108/aglietti20a.html). *Proceedings of the 23rd International Conference on Artificial Intelligence and Statistics (AISTATS)*, PMLR 108, 3155–3164. — 介入集合を選ぶ最適化と、因果構造を用いた逐次意思決定を扱う**CBOの主要な原著論文**。
 
-**原著とrobotorchanの機能範囲の違い：** Agliettiほか (2020) は、観測データからdo-calculusを通じて推定した介入効果と、実際の介入結果を組み合わせる考え方も含みます。**現在のrobotorchanの基本CBOは、それを完全再現したものではありません。** 既知のDAG、実施済みのHard intervention、介入集合ごとの独立GP、既存LogEIに基づく候補提案を中心としています。したがって、原著を引用することは、観測データからの因果効果同定まで実装済みだと主張することではありません。
+**原著と本章の扱う範囲の違い：** Agliettiほか (2020) は、観測データからdo-calculusを通じて推定した介入効果と、実際の介入結果を組み合わせる考え方も含みます。一方、**本章は原著の全手法を解説するものではありません。** 既知のDAG、実施済みのHard intervention、介入集合ごとの独立GP、LogEIに基づく候補選択を中心に説明しています。観測データからの因果効果同定は扱っていません。具体的な対応範囲は[実装ガイド](../guide/28_causal_bayesian_optimization.md)を参照してください。
 
 ### GP・ベイズ最適化・獲得関数
 
 - **Frazier, P. I. (2018).** [*A Tutorial on Bayesian Optimization*](https://arxiv.org/abs/1807.02811). arXiv:1807.02811. — GPによる予測、Expected Improvement、逐次最適化の体系的なチュートリアル。
 - **Ament, S., Daulton, S., Eriksson, D., Balandat, M., & Bakshy, E. (2023).** [*Unexpected Improvements to Expected Improvement for Bayesian Optimization*](https://proceedings.neurips.cc/paper/2023/hash/419f72cbd568ad62183f8132a3605a2a-Abstract-Conference.html). *Advances in Neural Information Processing Systems 36 (NeurIPS 2023)*. — EIの数値的な不安定性と、LogEIによる改善を説明する論文。
 
-### robotorchanの関連章・実行例
+### 関連章・実行例
 
 - [第1章：ベイズ最適化とは](01_bayesian_optimization.md)
 - [第2章：Gaussian Process](02_gaussian_process.md)
