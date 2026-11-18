@@ -27,6 +27,7 @@ from robotorchan.optim.constraints.contracts import (
     NonlinearConstraint,
     NonlinearConstraintCallable,
 )
+from robotorchan.optim.contextual import ContextualOptimizer
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 from robotorchan.optim.domains import MixedVariableSpace, hamming_distance, hamming_neighbors
 from robotorchan.optim.embedding import (
@@ -100,6 +101,7 @@ __all__ = [
     "CandidateConstraints",
     "ConstraintHandling",
     "ConstraintHandlingCapabilities",
+    "ContextualOptimizer",
     "DiscreteTrustRegionState",
     "DiscreteTrustRegionStrategy",
     "HammingLocalSearchStrategy",

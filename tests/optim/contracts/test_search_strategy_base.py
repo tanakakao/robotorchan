@@ -200,6 +200,7 @@ def test_public_optim_exports_are_complete() -> None:
         "SAMPLING_OPTIMIZER_CAPABILITIES",
         "TORCH_OPTIMIZER_CAPABILITIES",
         "CandidateConstraints",
+        "ContextualOptimizer",
         "ConstraintHandling",
         "ConstraintHandlingCapabilities",
         "DiscreteTrustRegionState",
