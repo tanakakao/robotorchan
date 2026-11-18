@@ -38,8 +38,17 @@ class Study:
         seed: int | None = None,
         variable_space: MixedVariableSpace | None = None,
         constraints: CandidateConstraints | None = None,
+        context_names: tuple[str, ...] = (),
     ) -> None:
         self.search_space = search_space
+        names = tuple(search_space.bounds)
+        if (
+            len(set(context_names)) != len(context_names)
+            or any(name not in names for name in context_names)
+            or len(context_names) == len(names)
+        ):
+            raise ValueError("context_names must be unique known dimensions with decisions left.")
+        self.context_names = tuple(context_names)
         self._generator = CandidateGenerator(
             search_space,
             direction=direction,
@@ -156,14 +165,27 @@ class Study:
         """Return a snapshot by ID; raise KeyError for unknown IDs."""
         return self._trials[number]
 
-    def ask(self) -> Trial:
-        """Propose and start a single trial."""
-        return self.ask_batch(1)[0]
+    def ask(self, *, context: Mapping[str, float] | None = None) -> Trial:
+        """Propose a trial for the observed context, if configured."""
+        return self.ask_batch(1, context=context)[0]
 
-    def ask_batch(self, q: int) -> tuple[Trial, ...]:
-        """Propose and register q joint candidates as running trials."""
+    def ask_batch(
+        self, q: int, *, context: Mapping[str, float] | None = None
+    ) -> tuple[Trial, ...]:
+        """Propose q joint candidates sharing one observed context."""
+        if self.context_names:
+            if context is None or set(context) != set(self.context_names):
+                raise ValueError("context must specify exactly the configured context_names.")
+        elif context is not None:
+            raise ValueError("This Study has no configured context_names.")
+        names = tuple(self.search_space.bounds)
+        fixed = (
+            {names.index(name): context[name] for name in self.context_names}
+            if context is not None
+            else None
+        )
         completed = [trial for trial in self.trials if trial.state is TrialState.COMPLETE]
-        candidates = self._generator.propose_batch(completed, q=q)
+        candidates = self._generator.propose_batch(completed, q=q, fixed_features=fixed)
         return tuple(self.start_trial(self._register_trial(params).number) for params in candidates)
 
     def tell(
@@ -270,6 +292,7 @@ def create_study(
     seed: int | None = None,
     variable_space: MixedVariableSpace | None = None,
     constraints: CandidateConstraints | None = None,
+    context_names: tuple[str, ...] = (),
 ) -> Study:
     """Create an in-memory single-objective Study."""
     if not isinstance(search_space, SearchSpace):
@@ -287,4 +310,5 @@ def create_study(
         seed=seed,
         variable_space=variable_space,
         constraints=constraints,
+        context_names=context_names,
     )
