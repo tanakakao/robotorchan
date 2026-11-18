@@ -1,5 +1,11 @@
 # 理論と実装をつなぐ日本語技術ガイド — 章構成
 
+## Contextual Bayesian Optimization
+
+- [Contextual BOの理論](../theory/29_contextual_bayesian_optimization.md)
+- [Contextual BO：理論と実装の対応](29_contextual_bayesian_optimization.md)
+
+
 ## Causal Bayesian Optimization
 
 - [Causal BOの理論](../theory/28_causal_bayesian_optimization.md)
