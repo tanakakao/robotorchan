@@ -1,5 +1,7 @@
 """Minimal known-SCM benchmark mechanics and shared-initialization checks."""
 
+from dataclasses import replace
+
 import pytest
 import torch
 
@@ -49,3 +51,34 @@ def test_initial_seeds_repeat_and_validate_config():
         run_causal_benchmark(seeds=(1, 1), n_iterations=0)
     with pytest.raises(ValueError, match="at least 2"):
         run_causal_benchmark(n_initial_per_set=1, n_iterations=0)
+
+
+def test_custom_scenario_full_intervention_is_independent_of_set_order():
+    scenario = make_causal_synthetic_scenario()
+    reordered = replace(
+        scenario,
+        intervention_sets=(("X", "Z"), ("Z",), ("X",)),
+    )
+    runs = run_causal_benchmark(
+        seeds=(7,),
+        scenario=reordered,
+        n_initial_per_set=2,
+        n_iterations=1,
+        optimizer="sobol",
+        num_restarts=2,
+        raw_samples=16,
+    )
+    gp_bo = next(item for item in runs if item.method == "gp_bo")
+    assert set(gp_bo.steps[-1].intervention_nodes) == {"X", "Z"}
+    assert all(item.steps[:6] == runs[0].steps[:6] for item in runs)
+
+
+def test_custom_scenario_rejects_missing_full_set_and_incomplete_costs():
+    scenario = make_causal_synthetic_scenario()
+    missing_full = replace(scenario, intervention_sets=(("X",), ("Z",)))
+    with pytest.raises(ValueError, match="full-intervention"):
+        run_causal_benchmark(scenario=missing_full, n_iterations=0)
+
+    missing_cost = replace(scenario, costs={frozenset({"X"}): 1.0})
+    with pytest.raises(ValueError, match="scenario.costs"):
+        run_causal_benchmark(scenario=missing_cost, n_iterations=0)

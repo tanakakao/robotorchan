@@ -108,6 +108,15 @@ def make_causal_synthetic_scenario(
     )
 
 
+def _full_intervention_nodes(scenario: CausalBenchmarkScenario) -> tuple[str, ...]:
+    """Locate the full intervention set independent of its configured position."""
+    all_variables = frozenset(scenario.bounds)
+    for nodes in scenario.intervention_sets:
+        if frozenset(nodes) == all_variables:
+            return nodes
+    raise ValueError("The benchmark requires a full-intervention set covering all bounds.")
+
+
 def _gp_bo_intervention(
     scenario: CausalBenchmarkScenario,
     records: Sequence[CausalObservation],
@@ -117,7 +126,7 @@ def _gp_bo_intervention(
     raw_samples: int,
 ) -> HardIntervention:
     """Conventional GP-BO restricted to the fixed full-intervention design space."""
-    nodes = scenario.intervention_sets[-1]
+    nodes = _full_intervention_nodes(scenario)
     key = frozenset(nodes)
     relevant = [record for record in records if frozenset(record.intervention.values) == key]
     train_X = torch.tensor(
@@ -224,6 +233,10 @@ def run_causal_benchmark(
         raise ValueError("raw_samples must be positive.")
 
     problem = make_causal_synthetic_scenario() if scenario is None else scenario
+    _full_intervention_nodes(problem)
+    configured_sets = {frozenset(nodes) for nodes in problem.intervention_sets}
+    if set(problem.costs) != configured_sets:
+        raise ValueError("scenario.costs must define a cost for every intervention set.")
     initial_points = n_initial_per_set * len(problem.intervention_sets)
     result: list[CausalBenchmarkTrajectory] = []
     for seed in seed_list:
