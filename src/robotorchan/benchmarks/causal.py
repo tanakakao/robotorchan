@@ -12,13 +12,11 @@ from torch import Tensor
 
 from robotorchan.benchmarks.random_streams import make_stream_generator
 from robotorchan.benchmarks.strategy_rng import strategy_rng_scope
-from robotorchan.causal import (
-    CausalBOStudy,
-    CausalGraph,
-    CausalObservation,
-    HardIntervention,
-    StructuralCausalModel,
-)
+from robotorchan.causal.data import CausalObservation
+from robotorchan.causal.graph import CausalGraph
+from robotorchan.causal.intervention import HardIntervention
+from robotorchan.causal.scm import StructuralCausalModel
+from robotorchan.causal.workflow import CausalBOStudy
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 
