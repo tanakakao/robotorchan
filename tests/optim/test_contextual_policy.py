@@ -22,9 +22,7 @@ def test_monte_carlo_policy_values_reproducible_and_close() -> None:
     weights = torch.tensor([1.0, 3.0], dtype=torch.double)
     outcomes = torch.tensor([[2.0, 6.0], [5.0, 1.0]], dtype=torch.double)
     generator = torch.Generator().manual_seed(42)
-    estimate = monte_carlo_policy_value(
-        outcomes, weights, n_samples=20000, generator=generator
-    )
+    estimate = monte_carlo_policy_value(outcomes, weights, n_samples=20000, generator=generator)
     expected = expected_policy_value(outcomes, weights)
     torch.testing.assert_close(estimate, expected, atol=0.08, rtol=0)
     again = monte_carlo_policy_value(
@@ -54,6 +52,4 @@ def test_invalid_outcomes_and_sample_count_rejected() -> None:
     with pytest.raises(ValueError, match="dtype and device"):
         expected_policy_value(torch.tensor([1.0, 2.0], dtype=torch.float), weights)
     with pytest.raises(ValueError, match="n_samples"):
-        monte_carlo_policy_value(
-            torch.tensor([1.0, 2.0], dtype=torch.double), weights, n_samples=0
-        )
+        monte_carlo_policy_value(torch.tensor([1.0, 2.0], dtype=torch.double), weights, n_samples=0)
