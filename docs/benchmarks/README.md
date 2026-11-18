@@ -58,6 +58,13 @@ robotorchan のモデル・探索戦略を、再現可能な条件で比較す�
 
 ## Causal BO: known-DAG intervention benchmark
 
+因果介入の意味とベンチマークの読み方は
+[理論28章](../theory/28_causal_bayesian_optimization.md)、
+[実装ガイド28章](../guide/28_causal_bayesian_optimization.md)、
+[比較Notebook 59](../../examples/notebooks/59_causal_bo_benchmark.ipynb)を参照してください。
+Notebookは既存の比較ランナーを呼び出し、実測結果の意味を説明する役割です。
+
+
 `run_causal_benchmark` evaluates a deterministic four-node SCM
 `X → M → Y ← Z`, where `M = 0.25 + 0.75 X` and
 

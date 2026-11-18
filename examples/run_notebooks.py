@@ -56,6 +56,7 @@ DEFAULT_NOTEBOOKS = [
     "45_end_to_end_workflows.ipynb",
     "47_turbo_trust_region.ipynb",
     "48_robust_input_perturbation.ipynb",
+    "58_causal_bayesian_optimization.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [
@@ -78,6 +79,7 @@ EXCLUDED_NOTEBOOKS = [
     "55_heterogeneous_bo_benchmark.ipynb",
     "56_turbo_multi_benchmark.ipynb",
     "57_safe_bo_benchmark.ipynb",
+    "59_causal_bo_benchmark.ipynb",
 ]
 
 

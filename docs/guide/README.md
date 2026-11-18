@@ -1,5 +1,12 @@
 # 理論と実装をつなぐ日本語技術ガイド — 章構成
 
+## Causal Bayesian Optimization
+
+- [Causal BOの理論](../theory/28_causal_bayesian_optimization.md)
+- [因果BO：理論と実装の対応](28_causal_bayesian_optimization.md)
+- [介入候補提案・Ask-and-Tell Notebook](../../examples/notebooks/58_causal_bayesian_optimization.ipynb)
+- [比較・Benchmark Notebook](../../examples/notebooks/59_causal_bo_benchmark.ipynb)
+
 ## Combinatorial Bayesian Optimization
 
 - [組合せBO：理論と実装の対応](27_combinatorial_bayesian_optimization.md)
@@ -103,6 +110,7 @@ TheoryとGuideは主要章の章番号とファイル名を対応させていま
 | [25_safe_bayesian_optimization.md](../theory/25_safe_bayesian_optimization.md) | [Safe BOの利用ガイド](../optimization/safe_bayesian_optimization.md) |
 | [26_transfer_bayesian_optimization.md](../theory/26_transfer_bayesian_optimization.md) | [Guide](26_transfer_bayesian_optimization.md) |
 | [27_combinatorial_bayesian_optimization.md](../theory/27_combinatorial_bayesian_optimization.md) | [Guide](27_combinatorial_bayesian_optimization.md) |
+| [28_causal_bayesian_optimization.md](../theory/28_causal_bayesian_optimization.md) | [Guide](28_causal_bayesian_optimization.md) |
 
 ## 獲得関数：理論13サブ章と1対1対応
 

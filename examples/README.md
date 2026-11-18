@@ -91,7 +91,7 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 
 ## Notebook 一覧
 
-理論の基礎からモデル構築、獲得関数、最適化、応用へ進める順に01〜57を採番しています。CIの実行順・実行区分は `run_notebooks.py` で管理します。
+理論の基礎からモデル構築、獲得関数、最適化、応用へ進める順に01〜59を採番しています。CIの実行順・実行区分は `run_notebooks.py` で管理します。
 
 ### GPの基礎
 
@@ -191,6 +191,12 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`52_transfer_bayesian_optimization.ipynb`](notebooks/52_transfer_bayesian_optimization.ipynb) | Transfer BO | 利用可能 |
 | [`53_combinatorial_bayesian_optimization.ipynb`](notebooks/53_combinatorial_bayesian_optimization.ipynb) | Combinatorial BO | 利用可能 |
 
+### 因果ベイズ最適化
+
+| Notebook | 主な機能 | 状態 |
+|---|---|---|
+| [`58_causal_bayesian_optimization.ipynb`](notebooks/58_causal_bayesian_optimization.ipynb) | 既知DAG、do介入、GP、LogEI、Ask-and-Tell | 利用可能 / 手動実行 |
+
 ### ベンチマーク
 
 | Notebook | 主なモデル | 状態 |
@@ -199,6 +205,7 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 | [`55_heterogeneous_bo_benchmark.ipynb`](notebooks/55_heterogeneous_bo_benchmark.ipynb) | Heterogeneous BO benchmark | 利用可能 |
 | [`56_turbo_multi_benchmark.ipynb`](notebooks/56_turbo_multi_benchmark.ipynb) | TuRBO-m benchmark | 利用可能 |
 | [`57_safe_bo_benchmark.ipynb`](notebooks/57_safe_bo_benchmark.ipynb) | Safe BO benchmark | 利用可能 |
+| [`59_causal_bo_benchmark.ipynb`](notebooks/59_causal_bo_benchmark.ipynb) | Causal BO / 固定集合GP-BO / Randomの比較 | 利用可能 / 手動実行 |
 
 
 ## Benchmark
