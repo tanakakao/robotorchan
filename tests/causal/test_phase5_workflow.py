@@ -52,11 +52,11 @@ def test_failed_trial_retries_and_preserves_experiment_history():
     with pytest.raises(ValueError, match="match"):
         workflow.tell(retry, {"X": 9.0, "Y": 1.0})
     assert workflow.get_trial(retry.number).state is TrialState.RUNNING
-    assert workflow.tell(retry, 1.0).state is TrialState.COMPLETE
+    assert workflow.tell(retry, {"Y": 1.0}).state is TrialState.COMPLETE
     assert len(workflow.observations) == 1
 
 
-def test_gp_selection_and_refit_after_completed_tell(monkeypatch):
+def test_gp_selection_and_refit_after_completed_tell():
     workflow = _workflow(sets=(("X",),))
     for _ in range(2):
         trial = workflow.ask()

@@ -156,7 +156,7 @@ class CausalBOStudy:
                     if record.intervention is not None
                 )
                 if count < self.n_initial_trials:
-                    raise RuntimeError("Complete initial interventions for every set before fitting.")
+                    raise RuntimeError("Complete initial interventions in all sets before fitting.")
 
             fitted = []
             for key in self.intervention_sets:
@@ -187,7 +187,9 @@ class CausalBOStudy:
             )
             for key in self.intervention_sets
         }
-        uninitialized = [key for key in self.intervention_sets if counts[key] < self.n_initial_trials]
+        uninitialized = [
+            key for key in self.intervention_sets if counts[key] < self.n_initial_trials
+        ]
         proposal: CausalInterventionProposal | None = None
         if uninitialized:
             chosen = min(uninitialized, key=lambda key: counts[key])
@@ -258,7 +260,7 @@ class CausalBOStudy:
             if values is None:
                 raise ValueError("Completed trials require measured outcome values.")
             if isinstance(values, Mapping):
-                measurements = dict(values)
+                measurements = {**current.intervention.values, **values}
             else:
                 measurements = {**current.intervention.values, self.outcome: values}
             if self.outcome not in measurements:

@@ -86,7 +86,9 @@ from robotorchan.study import TrialState
 
 graph = CausalGraph({"X": (), "Z": (), "Y": ("X", "Z")})
 study = CausalBOStudy(
-    graph, "Y", (("X",), ("Z",)),
+    graph,
+    "Y",
+    (("X",), ("Z",)),
     {"X": (0.0, 1.0), "Z": (0.0, 1.0)},
     n_initial_trials=2,
     optimizer="sobol",
