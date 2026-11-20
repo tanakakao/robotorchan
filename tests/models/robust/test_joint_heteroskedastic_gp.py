@@ -67,15 +67,11 @@ def test_joint_state_dict_round_trip() -> None:
 def test_mixed_joint_state_dict_round_trip_and_repeated_posteriors() -> None:
     X, Y = _data()
     mixed_X = torch.cat((X, (torch.arange(X.shape[0]) % 2).to(X)), dim=-1)
-    model = MixedJointHeteroskedasticSingleTaskGP(
-        mixed_X, Y, cat_dims=[1], num_inducing=6
-    )
+    model = MixedJointHeteroskedasticSingleTaskGP(mixed_X, Y, cat_dims=[1], num_inducing=6)
     model.eval()
     expected_mean = model.posterior(mixed_X).mean.detach().clone()
     expected_noise = model.predicted_noise(mixed_X).detach().clone()
-    restored = MixedJointHeteroskedasticSingleTaskGP(
-        mixed_X, Y, cat_dims=[1], num_inducing=6
-    )
+    restored = MixedJointHeteroskedasticSingleTaskGP(mixed_X, Y, cat_dims=[1], num_inducing=6)
     restored.load_state_dict(model.state_dict())
     restored.eval()
     for _ in range(2):
