@@ -130,7 +130,7 @@ class JointHeteroskedasticSingleTaskGP(RawDataMixin, nn.Module):
         log_noise_samples = noise_dist.rsample(torch.Size([samples]))
         variance = log_noise_samples.exp().clamp_min(self.noise_floor)
         log_likelihood = -0.5 * (
-            math.log(2 * math.pi) + log_noise_samples + (Y - response_samples).square() / variance
+            math.log(2 * math.pi) + variance.log() + (Y - response_samples).square() / variance
         )
         expected_log_likelihood = log_likelihood.mean(0).sum()
 
