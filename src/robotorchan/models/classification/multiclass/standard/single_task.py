@@ -36,6 +36,7 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
 
     likelihood_family = ClassificationLikelihoodFamily.CATEGORICAL
     latent_output_structure = LatentOutputStructure.PER_CLASS
+    supports_mll = False
 
     def __init__(
         self,
@@ -76,6 +77,19 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
                 learn_inducing_points=learn_inducing_points,
             )
             for _ in range(num_classes)
+        )
+
+    def make_mll(self, num_data: int | None = None) -> None:
+        """Reject the inherited ELBO, which targets an unused upstream GP.
+
+        Multiclass training uses independent class-wise latent GPs and a
+        custom softmax variational objective in fit(). The inherited
+        SingleTaskVariationalGP.make_mll() instead targets self.model,
+        which is not used by fit() or posterior().
+        """
+        raise NotImplementedError(
+            "Multiclass GP uses a class-wise variational objective in fit(); "
+            "the inherited single-model VariationalELBO is not applicable."
         )
 
     def fit(
