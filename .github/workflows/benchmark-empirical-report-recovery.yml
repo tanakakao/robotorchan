@@ -75,7 +75,7 @@ jobs:
           PY
       - name: Preserve report and source evidence
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: recovered-empirical-report-${{ github.run_id }}
           path: empirical-cohort/
