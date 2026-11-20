@@ -20,9 +20,7 @@ def test_multiclass_does_not_expose_unrelated_single_gp_mll(mixed: bool) -> None
             train_x, train_y, num_classes=3, cat_dims=[1], inducing_points=4
         )
     else:
-        model = MulticlassSingleTaskGPClassifier(
-            train_x, train_y, num_classes=3, inducing_points=4
-        )
+        model = MulticlassSingleTaskGPClassifier(train_x, train_y, num_classes=3, inducing_points=4)
 
     assert model.supports_fit is True
     assert model.supports_mll is False
