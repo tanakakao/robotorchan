@@ -3,7 +3,10 @@
 import torch
 from botorch.acquisition import qUpperConfidenceBound
 
-from robotorchan.models import JointHeteroskedasticSingleTaskGP
+from robotorchan.models import (
+    JointHeteroskedasticSingleTaskGP,
+    MixedJointHeteroskedasticSingleTaskGP,
+)
 
 
 def _data() -> tuple[torch.Tensor, torch.Tensor]:
@@ -59,3 +62,18 @@ def test_joint_state_dict_round_trip() -> None:
     restored.eval()
     assert torch.allclose(expected_mean, restored.posterior(X).mean)
     assert torch.allclose(expected_noise, restored.predicted_noise(X))
+
+
+def test_mixed_joint_state_dict_round_trip_and_repeated_posteriors() -> None:
+    X, Y = _data()
+    mixed_X = torch.cat((X, (torch.arange(X.shape[0]) % 2).to(X).unsqueeze(-1)), dim=-1)
+    model = MixedJointHeteroskedasticSingleTaskGP(mixed_X, Y, cat_dims=[1], num_inducing=6)
+    model.eval()
+    expected_mean = model.posterior(mixed_X).mean.detach().clone()
+    expected_noise = model.predicted_noise(mixed_X).detach().clone()
+    restored = MixedJointHeteroskedasticSingleTaskGP(mixed_X, Y, cat_dims=[1], num_inducing=6)
+    restored.load_state_dict(model.state_dict())
+    restored.eval()
+    for _ in range(2):
+        torch.testing.assert_close(restored.posterior(mixed_X).mean, expected_mean)
+        torch.testing.assert_close(restored.predicted_noise(mixed_X), expected_noise)
