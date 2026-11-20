@@ -23,6 +23,11 @@ def test_joint_training_loss_matches_clamped_gaussian_reference(mixed: bool) -> 
     else:
         model = JointHeteroskedasticSingleTaskGP(x, y, **kwargs)
 
+    # Initialize lazy variational parameters before comparing seeded draws.
+    # The first forward pass can consume RNG and invalidate seed replay.
+    model.response_model.model(x)
+    model.noise_model.model(x)
+
     # Independently reconstruct the Gaussian negative ELBO from latent draws.
     torch.manual_seed(123)
     response = model.response_model.model(x).rsample(torch.Size([3]))
