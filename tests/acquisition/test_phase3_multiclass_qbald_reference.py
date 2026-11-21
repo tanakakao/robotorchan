@@ -23,6 +23,9 @@ class FixedClassProbabilityModel(Model):
     def posterior(self, X: torch.Tensor, **kwargs: object) -> object:
         raise NotImplementedError("qBALD uses sample_class_probabilities, not posterior.")
 
+    def mutual_information(self, X: torch.Tensor, *, num_samples: int = 128) -> torch.Tensor:
+        raise NotImplementedError("qBALD uses joint probability samples, not marginal MI.")
+
     def sample_class_probabilities(
         self, X: torch.Tensor, sample_shape: torch.Size | None = None
     ) -> torch.Tensor:
