@@ -78,9 +78,7 @@ def execute(
     for seed in range(seeds):
         try:
             rows = run(seed=seed, budget=budget, epochs=epochs)
-            lookup = {
-                (str(row["strategy"]), int(row["labels_added"])): row for row in rows
-            }
+            lookup = {(str(row["strategy"]), int(row["labels_added"])): row for row in rows}
             expected = {(strategy, step) for strategy in STRATEGIES for step in range(budget + 1)}
             if set(lookup) != expected:
                 raise ValueError("Incomplete or duplicate strategy/step records.")
