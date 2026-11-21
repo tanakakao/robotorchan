@@ -7322,6 +7322,11 @@
       "path": "docs-internal/audits/scientific-validity-phase5-pairing.md",
       "category": "Verification",
       "reason": "Phase 5 archived trajectory comparison of q=1 and q=3 initial designs and objective values."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-phase5-all-strategy-pairing.md",
+      "category": "Verification",
+      "reason": "Phase 5 direct archived all-strategy initial pairing, budget checks, and artifact SHA-256 provenance."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
