@@ -7327,6 +7327,11 @@
       "path": "docs-internal/audits/scientific-validity-phase5-all-strategy-pairing.md",
       "category": "Verification",
       "reason": "Phase 5 direct archived all-strategy initial pairing, budget checks, and artifact SHA-256 provenance."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-phase5-active-learning-eligibility.md",
+      "category": "Verification",
+      "reason": "Phase 5 active-learning empirical capability audit, leakage/fairness gates, and minimal adaptive study design."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
