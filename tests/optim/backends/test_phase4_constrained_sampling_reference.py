@@ -32,16 +32,11 @@ def test_constrained_q2_sampling_matches_explicit_feasible_argmax(method: str) -
         )
     )
     pool = sample_candidate_batches(bounds, count, q=2, method=method, seed=seed)
-    feasible = (
-        (pool[..., 0] <= 0.8).all(dim=-1)
-        & (pool[..., 0].sum(dim=-1) <= 1.1)
-    )
+    feasible = (pool[..., 0] <= 0.8).all(dim=-1) & (pool[..., 0].sum(dim=-1) <= 1.1)
     assert feasible.any()
     assert (~feasible).any()
     scores = pool[..., 0].sum(dim=-1)
-    expected_index = torch.where(
-        feasible, scores, torch.full_like(scores, -torch.inf)
-    ).argmax()
+    expected_index = torch.where(feasible, scores, torch.full_like(scores, -torch.inf)).argmax()
     expected_candidate = pool[expected_index]
     expected_value = scores[expected_index]
 
