@@ -7332,6 +7332,11 @@
       "path": "docs-internal/audits/scientific-validity-phase5-active-learning-eligibility.md",
       "category": "Verification",
       "reason": "Phase 5 active-learning empirical capability audit, leakage/fairness gates, and minimal adaptive study design."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-phase5-al-reuse.md",
+      "category": "Verification",
+      "reason": "Phase 5 existing adaptive kernel-entropy and GP classification example reuse, with fair binary GP experiment boundaries."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
