@@ -24,7 +24,7 @@ class FixedClassProbabilityModel(Model):
         self, X: torch.Tensor, sample_shape: torch.Size | None = None
     ) -> torch.Tensor:
         assert sample_shape == torch.Size([self.samples.shape[0]])
-        assert X.shape[-2:] == self.samples.shape[-2:-1] + (1,)
+        assert X.shape[-2:] == (*self.samples.shape[-2:-1], 1)
         return self.samples
 
 
