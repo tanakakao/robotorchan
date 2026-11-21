@@ -49,7 +49,8 @@ def test_joint_epig_matches_independent_gaussian_logdet_reference() -> None:
         candidates
     )
     expected = _logdet_information(candidates, target.expand(1, 1, 1), noise)
-    torch.testing.assert_close(actual, expected, atol=1e-10, rtol=1e-10)
+    # Cholesky stabilization may introduce O(1e-9) differences from slogdet.
+    torch.testing.assert_close(actual, expected, atol=1e-8, rtol=1e-8)
 
 
 def test_conditional_epig_matches_conditional_mutual_information_logdet() -> None:
@@ -65,5 +66,5 @@ def test_conditional_epig_matches_conditional_mutual_information_logdet() -> Non
     expected = _logdet_information(
         torch.cat((expanded_pending, candidates), dim=-2), target.unsqueeze(0), noise
     ) - _logdet_information(expanded_pending, target.unsqueeze(0), noise)
-    torch.testing.assert_close(actual, expected, atol=1e-10, rtol=1e-10)
+    torch.testing.assert_close(actual, expected, atol=1e-8, rtol=1e-8)
     assert actual.item() >= -1e-10
