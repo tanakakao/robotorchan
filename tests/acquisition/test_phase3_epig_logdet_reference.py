@@ -26,7 +26,7 @@ class FixedKernelGaussianModel(Model):
         return SimpleNamespace(mvn=SimpleNamespace(covariance_matrix=covariance))
 
 
-def _logdet_information(candidate: torch.Tensor, target: torch.Tensor, noise: float) -> torch.Tensor:
+def _logdet_information(\n    candidate: torch.Tensor, target: torch.Tensor, noise: float\n) -> torch.Tensor:
     # I(Y_candidates; Y_target) = (log|Sigma_C| + log|Sigma_T| - log|Sigma_CT|)/2.
     combined = torch.cat((candidate, target), dim=-2)
     distances = combined.unsqueeze(-2) - combined.unsqueeze(-3)
