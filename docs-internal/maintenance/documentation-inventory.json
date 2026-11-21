@@ -7307,6 +7307,11 @@
       "path": "docs-internal/audits/scientific-validity-phase4.md",
       "category": "Verification",
       "reason": "Phase 4 optimizer and candidate-constraint audit evidence, scoped limitations, and exit decision."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-phase5-inventory.md",
+      "category": "Verification",
+      "reason": "Phase 5 empirical reliability evidence inventory, reuse plan, provenance limitations, and execution gates."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
