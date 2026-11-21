@@ -48,7 +48,10 @@ def run(*, seed: int = 0, budget: int = 2, epochs: int = 8) -> list[dict[str, fl
             model.eval()
             with torch.no_grad():
                 probabilities = model.predict_proba(reference)[..., 1].reshape(-1, 1)
-                if probabilities.shape != reference_labels.shape or not torch.isfinite(probabilities).all():
+                if (
+                    probabilities.shape != reference_labels.shape
+                    or not torch.isfinite(probabilities).all()
+                ):
                     raise ValueError("Invalid GP reference probabilities.")
                 results.append({
                     "strategy": strategy,
