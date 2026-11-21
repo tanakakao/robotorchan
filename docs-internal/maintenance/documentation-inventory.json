@@ -7312,6 +7312,11 @@
       "path": "docs-internal/audits/scientific-validity-phase5-inventory.md",
       "category": "Verification",
       "reason": "Phase 5 empirical reliability evidence inventory, reuse plan, provenance limitations, and execution gates."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-phase5-provenance.md",
+      "category": "Verification",
+      "reason": "Phase 5 four-cell artifact metadata and original experiment source comparison, with outstanding pairing checks."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
