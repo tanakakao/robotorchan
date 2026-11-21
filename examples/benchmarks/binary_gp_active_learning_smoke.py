@@ -24,14 +24,24 @@ def run(*, seed: int = 0, budget: int = 2, epochs: int = 8) -> list[dict[str, fl
     """Compare acquisition policies with the same fitted binary GP predictor."""
     if budget < 1 or epochs < 1:
         raise ValueError("budget and epochs must be positive.")
-    reference = torch.quasirandom.SobolEngine(2, scramble=True, seed=93827).draw(1024).double()
+    reference = (
+        torch.quasirandom.SobolEngine(2, scramble=True, seed=93827).draw(1024).double()
+    )
     reference_labels = active_learning_labels(reference, boundary="wave")
-    initial = torch.quasirandom.SobolEngine(
-        2, scramble=True, seed=derive_stream_seed(seed, "initial_design")
-    ).draw(20).double()
-    pool = torch.quasirandom.SobolEngine(
-        2, scramble=True, seed=derive_stream_seed(seed, "candidate")
-    ).draw(256).double()
+    initial = (
+        torch.quasirandom.SobolEngine(
+            2, scramble=True, seed=derive_stream_seed(seed, "initial_design")
+        )
+        .draw(20)
+        .double()
+    )
+    pool = (
+        torch.quasirandom.SobolEngine(
+            2, scramble=True, seed=derive_stream_seed(seed, "candidate")
+        )
+        .draw(256)
+        .double()
+    )
     # Labels for pool candidates are intentionally not computed before selection.
     results: list[dict[str, float | int | str]] = []
     for strategy in ("random", "sobol", "predictive_entropy"):
@@ -53,13 +63,15 @@ def run(*, seed: int = 0, budget: int = 2, epochs: int = 8) -> list[dict[str, fl
                     or not torch.isfinite(probabilities).all()
                 ):
                     raise ValueError("Invalid GP reference probabilities.")
-                results.append({
-                    "strategy": strategy,
-                    "seed": seed,
-                    "labels_added": step,
-                    "accuracy": float(classification_accuracy(reference_labels, probabilities)),
-                    "brier": float(brier_score(reference_labels, probabilities)),
-                })
+                results.append(
+                    {
+                        "strategy": strategy,
+                        "seed": seed,
+                        "labels_added": step,
+                        "accuracy": float(classification_accuracy(reference_labels, probabilities)),
+                        "brier": float(brier_score(reference_labels, probabilities)),
+                    }
+                )
                 if step == budget:
                     break
                 if strategy == "random":
