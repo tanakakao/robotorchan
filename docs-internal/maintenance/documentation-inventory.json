@@ -7297,6 +7297,11 @@
       "path": "docs-internal/audits/scientific-validity-phase2.md",
       "category": "Verification",
       "reason": "Phase 2 scientific validity audit evidence, scoped findings, limitations, and exit criteria for GP models."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-phase3.md",
+      "category": "Verification",
+      "reason": "Phase 3 acquisition mathematics audit evidence, scoped limitations, and exit decision."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
