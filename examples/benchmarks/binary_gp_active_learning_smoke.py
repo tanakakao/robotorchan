@@ -24,9 +24,7 @@ def run(*, seed: int = 0, budget: int = 2, epochs: int = 8) -> list[dict[str, fl
     """Compare acquisition policies with the same fitted binary GP predictor."""
     if budget < 1 or epochs < 1:
         raise ValueError("budget and epochs must be positive.")
-    reference = (
-        torch.quasirandom.SobolEngine(2, scramble=True, seed=93827).draw(1024).double()
-    )
+    reference = torch.quasirandom.SobolEngine(2, scramble=True, seed=93827).draw(1024).double()
     reference_labels = active_learning_labels(reference, boundary="wave")
     initial = (
         torch.quasirandom.SobolEngine(
@@ -36,9 +34,7 @@ def run(*, seed: int = 0, budget: int = 2, epochs: int = 8) -> list[dict[str, fl
         .double()
     )
     pool = (
-        torch.quasirandom.SobolEngine(
-            2, scramble=True, seed=derive_stream_seed(seed, "candidate")
-        )
+        torch.quasirandom.SobolEngine(2, scramble=True, seed=derive_stream_seed(seed, "candidate"))
         .draw(256)
         .double()
     )
