@@ -16,9 +16,7 @@ def test_binary_gp_active_learning_real_closed_loop(tmp_path, monkeypatch):
     # No surrogate/acquisition stubs: fit all three real GP classifiers,
     # select one candidate, and refit all three models.
     output = tmp_path / "real-gp-al"
-    manifest = multiseed.execute(
-        output, git_sha="test-runtime", seeds=1, budget=1, epochs=1
-    )
+    manifest = multiseed.execute(output, git_sha="test-runtime", seeds=1, budget=1, epochs=1)
     assert manifest["status"] == "complete"
     assert manifest["completed_seeds"] == [0]
     assert manifest["failed_seeds"] == []
