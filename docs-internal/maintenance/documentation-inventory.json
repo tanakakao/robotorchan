@@ -7317,6 +7317,11 @@
       "path": "docs-internal/audits/scientific-validity-phase5-provenance.md",
       "category": "Verification",
       "reason": "Phase 5 four-cell artifact metadata and original experiment source comparison, with outstanding pairing checks."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-phase5-pairing.md",
+      "category": "Verification",
+      "reason": "Phase 5 archived trajectory comparison of q=1 and q=3 initial designs and objective values."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
