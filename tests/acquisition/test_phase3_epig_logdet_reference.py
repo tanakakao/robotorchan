@@ -20,9 +20,7 @@ class FixedKernelGaussianModel(Model):
         # A positive-definite covariance independent of the acquisition implementation.
         distances = X.unsqueeze(-2) - X.unsqueeze(-3)
         covariance = torch.exp(-distances.square().sum(dim=-1) / 0.5)
-        covariance = covariance + 0.05 * torch.eye(
-            X.shape[-2], dtype=X.dtype, device=X.device
-        )
+        covariance = covariance + 0.05 * torch.eye(X.shape[-2], dtype=X.dtype, device=X.device)
         return SimpleNamespace(mvn=SimpleNamespace(covariance_matrix=covariance))
 
 
@@ -33,9 +31,7 @@ def _logdet_information(
     combined = torch.cat((candidate, target), dim=-2)
     distances = combined.unsqueeze(-2) - combined.unsqueeze(-3)
     covariance = torch.exp(-distances.square().sum(dim=-1) / 0.5)
-    covariance = covariance + (0.05 + noise) * torch.eye(
-        combined.shape[-2], dtype=combined.dtype
-    )
+    covariance = covariance + (0.05 + noise) * torch.eye(combined.shape[-2], dtype=combined.dtype)
     q = candidate.shape[-2]
     return 0.5 * (
         torch.linalg.slogdet(covariance[..., :q, :q]).logabsdet
@@ -49,9 +45,9 @@ def test_joint_epig_matches_independent_gaussian_logdet_reference() -> None:
     target = torch.tensor([[0.25]], dtype=torch.double)
     candidates = torch.tensor([[[0.0], [0.7]]], dtype=torch.double)
     noise = 0.1
-    actual = qJointExpectedPredictiveInformationGain(
-        model, target, observation_noise=noise
-    )(candidates)
+    actual = qJointExpectedPredictiveInformationGain(model, target, observation_noise=noise)(
+        candidates
+    )
     expected = _logdet_information(candidates, target.expand(1, 1, 1), noise)
     torch.testing.assert_close(actual, expected, atol=1e-10, rtol=1e-10)
 
