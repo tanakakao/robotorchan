@@ -7292,6 +7292,11 @@
       "path": "docs/guide/28_causal_bayesian_optimization.md",
       "category": "Guide",
       "reason": "Causal BO theory-to-implementation mapping and public API constraints."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-phase2.md",
+      "category": "Verification",
+      "reason": "Phase 2 scientific validity audit evidence, scoped findings, limitations, and exit criteria for GP models."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
