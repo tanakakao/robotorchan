@@ -20,6 +20,9 @@ class FixedClassProbabilityModel(Model):
     def num_outputs(self) -> int:
         return 1
 
+    def posterior(self, X: torch.Tensor, **kwargs: object) -> object:
+        raise NotImplementedError("qBALD uses sample_class_probabilities, not posterior.")
+
     def sample_class_probabilities(
         self, X: torch.Tensor, sample_shape: torch.Size | None = None
     ) -> torch.Tensor:
