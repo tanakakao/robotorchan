@@ -24,7 +24,11 @@ from robotorchan.models.classification.ordinal.standard.single_task import (
 )
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.models.standard.single_task import SingleTaskGP
-from robotorchan.semantics import ClassificationConstraint, ProblemSemantics, RegressionObjective
+from robotorchan.semantics import (
+    ClassificationConstraint,
+    ProblemSemantics,
+    RegressionObjective,
+)
 
 
 @pytest.mark.parametrize("classifier_kind", ["multiclass", "ordinal"])
@@ -72,7 +76,10 @@ def test_class_set_weighting_preserves_native_q_acquisition(
         )
     else:
         semantics = ProblemSemantics(
-            objectives=(RegressionObjective("objective_1"), RegressionObjective("objective_2")),
+            objectives=(
+                RegressionObjective("objective_1"),
+                RegressionObjective("objective_2"),
+            ),
             constraints=(constraint,),
         )
         ref_point = torch.tensor([0.0, 0.0], dtype=torch.double)
