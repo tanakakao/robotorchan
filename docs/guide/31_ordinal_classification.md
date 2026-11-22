@@ -1,0 +1,133 @@
+# 31. 順序GP分類：理論と実装の対応
+
+数学的な背景は[理論31章](../theory/31_ordinal_classification.md)を参照してください。モデルの構築・学習・不確実性評価・候補提案は[Notebook 31](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)で実行できます。
+
+## クラス確率と潜在GPの事後分布
+
+`posterior(X)` は潜在GPの事後分布、`predict_proba(X)` は観測ラベルの事後予測確率、`probability_posterior(X)` はクラス確率の不確実性を表します。これらは別の量です。
+
+`probability_posterior(X)` の `mean` / `variance` / `credible_interval` は**クラスごとの周辺的な量**であり、全クラスが同時に指定された信用区間に入るという意味ではありません。候補間の依存関係を捨てない評価では、同時潜在サンプルの扱いを確認します。
+
+## Ordered-probitに基づく分類確率Posterior
+
+順序GPでは `predict_proba(X)` の周辺平均クラス確率をGaussian潜在事後から解析的に求めます。`probability_posterior(X)` の確率分散はGauss–Hermite求積、信用区間はクラスごとのモンテカルロ周辺分位点を用います。中間クラスの確率は潜在値に対して一般に単調ではないため、二値probitと同じ単調変換の区間公式は使えません。
+
+## 順序GPの公開APIと獲得関数
+
+### 順序分類を選ぶ判断基準
+
+製造品質の「不良・要確認・良好」のようにラベル間に**順序**があり、
+隣接クラスの関係を学習に使いたい場合はOrdinal GPを選びます。
+設備A・B・Cのように順序のないラベルなら、通常のマルチクラス分類を検討します。
+Ordinal GPは出力ラベルの順序を使うモデルであって、
+入力にカテゴリ変数があること自体を意味しません。
+
+現行の公開モデルは次の2つです。
+
+| モデル | 入力 | registry ID | 尤度・潜在関数 |
+| --- | --- | --- | --- |
+| `OrdinalSingleTaskGPClassifier` | 連続変数 | `ordinal.standard` | Ordered probit・単一潜在GP |
+| `MixedOrdinalSingleTaskGPClassifier` | 連続＋カテゴリ | `ordinal.mixed` | 同じOrdered probit・Mixed kernel |
+
+順序ラベルには0から始まる整数 `0, ..., C-1` を渡し、
+`num_classes=C`（3以上）を指定します。
+`train_Y` は `[n]` または `[n, 1]` を受け付けます。
+クラスラベルを文字列のまま渡す暗黙エンコードは行いません。
+業務上のラベル名は別の対応表で保持してください。
+
+### 数式から公開メソッドまで
+
+| 理論上の量 | 公開API / 実装 | 重要な注意 |
+| --- | --- | --- |
+| 変分GPによる潜在分布 $q(f)$ | `posterior(X)` / `latent_posterior(X)` | クラス確率ではない |
+| 閾値 $b_1,\ldots,b_{C-1}$ | `model.likelihood.thresholds` | $b_1=0$、残りは増分で単調化 |
+| $P(y=c\mid f)$ | `OrderedProbitLikelihood.class_probabilities` | 潜在値を固定した条件付き確率 |
+| $P(y=c\mid X,\mathcal D)$ | `predict_proba(X)` | Gaussian潜在分布を積分した予測確率 |
+| 予測ラベル分布 | `predictive_distribution(X)` | `Categorical` |
+| 予測クラス | `predict_class(X)` | 最大確率クラス（argmax） |
+| 潜在関数サンプル | `sample_latent(X)` | 通常は最終次元1 |
+| 条件付き確率サンプル | `sample_class_probabilities(X)` | 出力最終次元はクラス数 |
+| 学習 | `fit(epochs=..., lr=...)` | 非Gaussian尤度に対する変分学習 |
+
+`OrderedProbitLikelihood` はGPyTorchの `Likelihood` を継承し、
+単調な閾値を `softplus` の累積和で構築します。
+`expected_log_prob` では `GaussHermiteQuadrature1D` を利用します。
+`OrdinalSingleTaskGPClassifier` は既存の
+`SingleTaskVariationalGP` を基底として学習と誘導点管理を再利用します。
+`MixedOrdinalSingleTaskGPClassifier` はさらに
+`make_mixed_covar_module` を使い、
+Ordinal尤度や事後確率の計算を重複実装しません。
+
+`predict_proba` では潜在事後の平均 $\mu$ と分散 $s^2$ を使い、
+$\Phi((b-\mu)/\sqrt{1+s^2})$ の差から各クラス確率を計算します。
+そのため、潜在平均を単に閾値関数へ代入する計算とは異なります。
+一方 `sample_class_probabilities` は潜在GPの同時サンプルから
+条件付き確率を作るため、BALDやqBALDへ利用できます。
+
+### 最初の利用手順
+
+1. 実測された順序ラベルを `0,1,\ldots,C-1` に対応付ける。
+2. 入力 `train_X` とラベル `train_Y` を作り、モデルを初期化する。
+3. `fit()` で学習し、`likelihood.thresholds` の順序を確認する。
+4. `predict_proba(X)` で確率とクラス順を確認する。
+5. 未評価候補で獲得関数を評価し、候補生成器へ渡す。
+6. **提案後に初めて**ラベルを観測し、データへ追加して再学習する。
+
+**候補を提示しただけではActive Learningは完了しません。**
+提案・ラベル観測・追加学習の一連の流れは
+[31番 Notebook](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)
+で確認できます。
+
+### Active Learningとq-batch
+
+| 獲得関数 | q=1 | q>1で使う関数 | 候補間相関 |
+| --- | --- | --- | --- |
+| 予測Entropy | `PredictiveEntropy` | `qPredictiveEntropy` | 周辺平均のみ |
+| Margin | `MarginUncertainty` | `qMarginUncertainty` | 周辺平均のみ |
+| 確率分散 | `ProbabilityVariance` | `qProbabilityVariance` | 周辺平均のみ |
+| 情報利得 | `BALD` | `qBALD` | 潜在同時サンプルを利用 |
+
+`qBALD` のjoint情報量はモンテカルロ推定であり、
+ラベルベクトルの列挙上限は `C**q <= 256` です。
+単にq個の予測確率が得られることは、どの獲得関数でも
+joint q最適化できることを保証しません。
+`LatentStraddle` は二値の潜在ゼロ境界用なので、
+Ordinalモデルへは適用できません。
+
+### Mixed入力と候補探索
+
+`MixedOrdinalSingleTaskGPClassifier(..., cat_dims=[1])` は
+入力の2列目をカテゴリとみなし、共通Mixed kernelを使います。
+モデルに `cat_dims` を渡しても、
+最適化器の探索空間に許容カテゴリ値は自動登録されません。
+探索側で `MixedVariableSpace` を設定し、
+`optimize_acqf_sampling` の `variable_space` に渡します。
+
+`CandidateConstraints` は候補入力の可行域を制限します。
+**予測した品質クラスに対する安全確率制約ではありません。**
+後者は独立に確率制約用の獲得関数を設計する必要があります。
+
+### 検証・適用の制約
+
+Notebookの小規模学習は実行可能な使い方を確認するためのものです。
+少数のepochで精度・確率校正・ラベル効率が保証されるわけではありません。
+順序ラベルにはNLL・Brier score・クラス別Recallを確認し、
+順序差に意味があるときに限りMAEも参考にします。
+候補提案の性能評価は、独立したテストデータと
+Random Samplingを含む複数シードのラベル予算比較で実施します。
+
+理論上の導出は
+[順序GP理論](../theory/31_ordinal_classification.md)、
+公開モデルの選び分けは
+[分類モデル一覧](../models/classification.md)を参照してください。
+
+## 回帰モデルとの合成
+
+[61番Notebook](../../examples/notebooks/61_heterogeneous_classification_constraints.ipynb)では、回帰GP（単目的・多目的）と順序GPを合成し、許容される順序クラス集合の確率で獲得関数を重み付けします。
+
+## 実装の参照
+
+- `src/robotorchan/models/classification/ordinal/standard/single_task.py`
+- `src/robotorchan/models/classification/ordinal/likelihood.py`
+- `src/robotorchan/models/classification/posterior/probability.py`
+- [二値分類の共通基礎ガイド](24_classification.md)

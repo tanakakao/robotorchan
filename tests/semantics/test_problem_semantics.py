@@ -112,3 +112,26 @@ def test_problem_semantics_preserves_validation_boundaries() -> None:
             objectives=(RegressionObjective("strength"),),
             constraints=(ClassificationConstraint("cost"),),
         ).validate(model)
+
+
+def test_multiclass_classifier_is_one_semantic_classification_output() -> None:
+    """Multiclass latent logits must not become separate categorical outcomes."""
+    from robotorchan.models.classification.multiclass.standard.single_task import (
+        MulticlassSingleTaskGPClassifier,
+    )
+
+    X = torch.linspace(0.0, 1.0, 9, dtype=torch.double).unsqueeze(-1)
+    labels = torch.tensor([0, 0, 0, 1, 1, 1, 2, 2, 2])
+    regression = SingleTaskGP(X, (X - 0.4).square())
+    classifier = MulticlassSingleTaskGPClassifier(X, labels, num_classes=3, inducing_points=4)
+    model = HeterogeneousModel(regression, classifier, output_names=["score", "quality"])
+    assert model.entry_num_outputs == (1, 1)
+    assert model.output_owner(model.resolve_output("quality")) == (1, 0)
+    assert model.output_classification_metadata("quality").num_classes == 3
+
+    semantics = ProblemSemantics(
+        objectives=(RegressionObjective("score"),),
+        constraints=(ClassificationConstraint("quality", feasible_classes=(1, 2)),),
+    )
+    semantics.validate(model)
+    assert semantics.resolve_constraint_outputs(model) == (1,)

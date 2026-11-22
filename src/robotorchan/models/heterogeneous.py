@@ -16,7 +16,11 @@ from robotorchan.models.classification.base import (
 
 
 def _num_outputs(model: nn.Module) -> int:
-    """Return a model's declared number of outputs."""
+    """Return the number of semantic outputs, not categorical latent logits."""
+    if isinstance(model, ClassificationModelMixin):
+        # One categorical observation has one semantic output even when its
+        # underlying multiclass GP exposes one latent value per class.
+        return 1
     num_outputs = getattr(model, "num_outputs", 1)
     if not isinstance(num_outputs, int) or isinstance(num_outputs, bool) or num_outputs < 1:
         raise ValueError("num_outputs must be a positive integer when declared.")

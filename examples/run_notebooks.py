@@ -57,6 +57,7 @@ DEFAULT_NOTEBOOKS = [
     "47_turbo_trust_region.ipynb",
     "48_robust_input_perturbation.ipynb",
     "58_causal_bayesian_optimization.ipynb",
+    "61_heterogeneous_classification_constraints.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [
