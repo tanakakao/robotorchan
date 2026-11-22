@@ -1,5 +1,11 @@
 # 理論と実装をつなぐ日本語技術ガイド — 章構成
 
+## 異種モデルの分類制約付きベイズ最適化
+
+- [理論](../theory/30_heterogeneous_classification_constraints.md)
+- [実装ガイド](30_heterogeneous_classification_constraints.md)
+- [実行Notebook](../../examples/notebooks/60_heterogeneous_classification_constraints.ipynb)
+
 ## Contextual Bayesian Optimization
 
 - [Contextual BOの理論](../theory/29_contextual_bayesian_optimization.md)
