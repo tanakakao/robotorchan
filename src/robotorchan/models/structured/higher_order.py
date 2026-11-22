@@ -9,6 +9,7 @@ from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
 from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import Likelihood
+from linear_operator.settings import _fast_solves
 from torch import Tensor
 
 from robotorchan.models.base import (
@@ -31,8 +32,9 @@ class HigherOrderGP(ExactGPModelMixin, BoTorchHigherOrderGP):
     supports_fit = True
 
     def fit(self, *, step_limit: int = 75) -> None:
-        """Fit with BoTorch's torch optimizer; caller controls fast-solve settings."""
-        fit_gpytorch_mll_torch(self.make_mll(), step_limit=step_limit)
+        """Fit using BoTorch's torch optimizer with its required fast-solve setting."""
+        with _fast_solves(True):
+            fit_gpytorch_mll_torch(self.make_mll(), step_limit=step_limit)
 
     def __init__(
         self,
