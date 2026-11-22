@@ -17,9 +17,7 @@ def test_latent_kronecker_posterior_moments_and_samples(mixed, standardize):
     X = torch.linspace(0.1, 0.9, 5, dtype=dtype).unsqueeze(-1)
     kwargs = {}
     if mixed:
-        X = torch.cat(
-            [X, (torch.arange(5) % 2).to(dtype).unsqueeze(-1)], dim=-1
-        )
+        X = torch.cat([X, (torch.arange(5) % 2).to(dtype).unsqueeze(-1)], dim=-1)
         kwargs["cat_dims"] = [1]
     T = torch.linspace(0, 1, 3, dtype=dtype).unsqueeze(-1)
     Y = 6 + 2 * torch.sin(X[:, :1] * 3 + T.squeeze(-1))
@@ -53,12 +51,8 @@ def test_latent_kronecker_posterior_moments_and_samples(mixed, standardize):
         # Identical base samples must produce identical physical-scale pathwise
         # samples, including in the Standardize case (no double transform).
         sample_shape = torch.Size([2])
-        base_samples = torch.randn(
-            sample_shape + raw.base_sample_shape, dtype=dtype
-        )
+        base_samples = torch.randn(sample_shape + raw.base_sample_shape, dtype=dtype)
         raw_samples = raw.rsample_from_base_samples(sample_shape, base_samples)
-        wrapped_samples = posterior.rsample_from_base_samples(
-            sample_shape, base_samples
-        )
+        wrapped_samples = posterior.rsample_from_base_samples(sample_shape, base_samples)
         torch.testing.assert_close(wrapped_samples, raw_samples)
         assert wrapped_samples.shape[-2:] == (test_X.shape[-2], T.shape[-2])
