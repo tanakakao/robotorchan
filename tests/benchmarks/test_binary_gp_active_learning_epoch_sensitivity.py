@@ -51,8 +51,9 @@ def test_binary_gp_al_epoch_comparison(tmp_path, monkeypatch):
     assert len(result) == 6
     assert all(row["n"] == 2 for row in result)
     accuracy = next(
-        row for row in result if row["strategy"] == "predictive_entropy"
-        and row["metric"] == "accuracy"
+        row
+        for row in result
+        if row["strategy"] == "predictive_entropy" and row["metric"] == "accuracy"
     )
     assert accuracy["mean_change"] == pytest.approx(0.1)
     assert accuracy["sd_change"] == pytest.approx(0)
