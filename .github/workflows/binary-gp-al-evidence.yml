@@ -1,0 +1,64 @@
+name: Binary GP active learning paired evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      protocol:
+        description: Run a quick real-GP check or the full ten-seed cohort
+        required: true
+        type: choice
+        options: [smoke, full]
+        default: smoke
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install CPU PyTorch
+        run: python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Run paired binary GP active learning
+        env:
+          PROTOCOL: ${{ inputs.protocol }}
+          BENCHMARK_SHA: ${{ github.sha }}
+        run: |
+          set -o pipefail
+          if [ "$PROTOCOL" = "full" ]; then
+            SEEDS=10
+            BUDGET=50
+            EPOCHS=8
+          else
+            SEEDS=1
+            BUDGET=1
+            EPOCHS=2
+          fi
+          python -u examples/benchmarks/binary_gp_active_learning_multiseed.py \
+            --output gp-al-evidence --git-sha "$BENCHMARK_SHA" \
+            --seeds "$SEEDS" --budget "$BUDGET" --epochs "$EPOCHS" \
+            2>&1 | tee gp-al-run.log
+          python examples/benchmarks/binary_gp_active_learning_analyze.py \
+            gp-al-evidence | tee gp-al-analysis.jsonl
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path("gp-al-evidence/manifest.json").read_text())
+          assert manifest["status"] == "complete", manifest
+          PY
+      - name: Retain raw evidence, failures and analysis
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: gp-al-${{ inputs.protocol }}-${{ github.run_id }}
+          path: |
+            gp-al-evidence/
+            gp-al-run.log
+            gp-al-analysis.jsonl
+          if-no-files-found: warn
+          retention-days: 30
