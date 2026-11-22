@@ -23,8 +23,14 @@ def test_higher_order_fit_uses_torch_optimizer(mixed):
     cls = MixedHigherOrderGP if mixed else HigherOrderGP
     model = cls(train_X=X, train_Y=Y, **({"cat_dims": [1]} if mixed else {}))
     assert model.supports_fit is True
-    with patch("robotorchan.models.structured.higher_order.fit_gpytorch_mll_torch") as fit:
+    with (
+        patch("robotorchan.models.structured.higher_order._fast_solves") as fast_solves,
+        patch("robotorchan.models.structured.higher_order.fit_gpytorch_mll_torch") as fit,
+    ):
         assert model.fit(step_limit=2) is None
+    fast_solves.assert_called_once_with(True)
+    fast_solves.return_value.__enter__.assert_called_once_with()
+    fast_solves.return_value.__exit__.assert_called_once()
     fit.assert_called_once()
     args, kwargs = fit.call_args
     assert isinstance(args[0], ExactMarginalLogLikelihood)
