@@ -23,6 +23,7 @@ from torch import Tensor
 from robotorchan.models.base import (
     ContinuousKernelFactory,
     ExactGPModelMixin,
+    FittableExactGPModelMixin,
     make_mixed_covar_module,
     normalize_feature_dims,
 )
@@ -36,6 +37,8 @@ from robotorchan.models.standard.multitask import (
 
 class RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin):
     """Long-format multi-task GP with sparse outlier relevance pursuit."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -125,6 +128,8 @@ class RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin
 class MixedRobustRelevancePursuitMultiTaskGP(RobustRelevancePursuitMultiTaskGP):
     """Robust relevance-pursuit MultiTaskGP for mixed data features."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -189,10 +194,12 @@ class MixedRobustRelevancePursuitMultiTaskGP(RobustRelevancePursuitMultiTaskGP):
 
 
 class RobustRelevancePursuitSingleTaskGP(
-    ExactGPModelMixin,
+    FittableExactGPModelMixin,
     BoTorchRobustRelevancePursuitSingleTaskGP,
 ):
     """BoTorch robust relevance-pursuit GP with robotorchan conveniences."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -230,6 +237,8 @@ class RobustRelevancePursuitSingleTaskGP(
 
 class MixedRobustRelevancePursuitSingleTaskGP(RobustRelevancePursuitSingleTaskGP):
     """Robust relevance-pursuit GP with native mixed categorical covariance."""
+
+    supports_fit = True
 
     def __init__(
         self,
