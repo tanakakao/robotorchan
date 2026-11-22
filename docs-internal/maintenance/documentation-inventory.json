@@ -7352,6 +7352,11 @@
       "path": "docs-internal/audits/scientific-validity-phase5-gp-al-epoch-sensitivity-results.md",
       "category": "Verification",
       "reason": "Phase 5 paired ten-seed binary GP active-learning fit-epoch sensitivity results, Actions provenance, and bounded interpretation."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-phase6.md",
+      "category": "Verification",
+      "reason": "Phase 6 scientific-validity audit synthesis of existing numerical references, reproducibility, paired benchmarks, and limitations."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
