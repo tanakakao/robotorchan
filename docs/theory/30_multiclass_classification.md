@@ -47,7 +47,7 @@ softmaxは全クラスの潜在値に同じ定数を加えても変化しませ�
 
 誘導変数 \(\boldsymbol u\) に変分分布 \(q(\boldsymbol u)\) を置き、これが誘導する \(\boldsymbol f\) の周辺分布 \(q(\boldsymbol f)\) を使います。典型的な変分目的は
 
-$
+$$
 \mathcal L
 =
 \sum_{i=1}^{n}
@@ -57,7 +57,7 @@ $
 \right]
 -
 \operatorname{KL}\bigl(q(\boldsymbol u)\,\|\,p(\boldsymbol u)\bigr).
-$
+$$
 
 前項は観測ラベルへの対数確率を高くし、後項は変分分布がGP事前分布から過度に離れることを抑えます。softmaxの非線形性によって期待対数尤度は一般に解析積分できず、モンテカルロ法などで近似します。
 
@@ -67,23 +67,23 @@ $
 
 学習後の予測確率は
 
-$
+$$
 p_c(x)=
 \int
 \frac{\exp(f_c(x))}
 {\sum_{j=0}^{C-1}\exp(f_j(x))}
 q(\boldsymbol f(x))\,d\boldsymbol f(x).
-$
+$$
 
 潜在事後サンプル \(\boldsymbol f^{(s)}(x)\sim q(\boldsymbol f(x))\) を \(S\) 個得られるなら、
 
-$
+$$
 \widehat p_c(x)
 =
 \frac{1}{S}\sum_{s=1}^{S}
 \frac{\exp(f_c^{(s)}(x))}
 {\sum_{j=0}^{C-1}\exp(f_j^{(s)}(x))}
-$
+$$
 
 と近似します。ここで、\(\operatorname{softmax}(\mathbb E[\boldsymbol f])\) と \(\mathbb E[\operatorname{softmax}(\boldsymbol f)]\) は一般に一致しません。モンテカルロサンプルを増やすと積分の近似誤差は低減し得ますが、学習データ不足やモデルの仮定違反から生じる誤差まで解消されるわけではありません。
 
@@ -91,14 +91,14 @@ $
 
 予測確率 \(p_c(x)\) を用いる予測エントロピーは
 
-$
+$$
 H(C\mid x,\mathcal D)
 =-\sum_{c=0}^{C-1}p_c(x)\log p_c(x).
-$
+$$
 
 これは**次に得るラベルの不確実性全体**を表します。これに対してBALDの情報利得は
 
-$
+$$
 I(C;\boldsymbol f\mid x,\mathcal D)
 =
 H(C\mid x,\mathcal D)
@@ -107,7 +107,7 @@ H(C\mid x,\mathcal D)
 \left[
 H(C\mid x,\boldsymbol f(x))
 \right].
-$
+$$
 
 右辺の第2項は潜在関数の値を仮に知っても残るラベルの偶然性です。したがって、Entropyが高くても、モデルを学ぶ余地が小さければBALDは低くなり得ます。多数候補の**同時**情報利得では、候補間の潜在GPの相関も扱う必要があります。候補ごとのEntropyの平均は、この同時情報利得とは異なります。
 
@@ -227,9 +227,9 @@ GPは潜在関数に事前分布を置きます。しかしCategorical尤度とG
 予測時に求めたいのは
 次の事後期待値です。
 
-$
+$$
 p(y=c\mid x,D)=\mathbb{E}_{f\mid D}[\operatorname{softmax}(f(x))_c].
-$
+$$
 softmaxは非線形なので一般に
 期待値のsoftmaxとsoftmaxの期待値は一致しません。
 予測確率は潜在GPのサンプルを複数回取り、
@@ -274,18 +274,18 @@ Accuracyだけでなく、NLL・Brier score・クラス別Recallも確認して�
 
 多クラス負の対数尤度（NLL）は
 
-$
+$$
 \operatorname{NLL}
 =-\frac1n\sum_{i=1}^{n}\log p_{i,y_i}
-$
+$$
 
 であり、真のクラスへ極端に小さい確率を与えた予測を強く罰します。多クラスBrier scoreは
 
-$
+$$
 \operatorname{Brier}
 =\frac1n\sum_{i=1}^{n}\sum_{c=0}^{C-1}
 \left(p_{ic}-\boldsymbol1[y_i=c]\right)^2
-$
+$$
 
 のように定義できます（\(C\) で正規化する流儀もあるため、比較時は定義を明記します）。特に少数クラスでは、全体のAccuracyに加えてクラス別Recallや混同行列を確認してください。
 
