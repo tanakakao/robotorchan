@@ -82,7 +82,6 @@ EXCLUDED_NOTEBOOKS = [
     "59_causal_bo_benchmark.ipynb",
     "60_contextual_bayesian_optimization.ipynb",
     "61_heterogeneous_classification_constraints.ipynb",
-    "62_heterogeneous_multiobjective_classification.ipynb",
 ]
 
 
