@@ -26,8 +26,10 @@ class ClassificationProbabilityOfFeasibility(nn.Module):
             selected = (feasible_class,)
         else:
             if not feasible_classes or any(
-                not isinstance(index, int) or isinstance(index, bool)
-                or not 0 <= index < num_classes for index in feasible_classes
+                not isinstance(index, int)
+                or isinstance(index, bool)
+                or not 0 <= index < num_classes
+                for index in feasible_classes
             ):
                 raise ValueError("feasible_classes must contain valid class indices.")
             if len(set(feasible_classes)) != len(feasible_classes):
