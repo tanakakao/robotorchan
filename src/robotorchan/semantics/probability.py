@@ -13,6 +13,7 @@ class ClassificationProbabilityOfFeasibility(nn.Module):
         model: nn.Module,
         *,
         feasible_class: int = 1,
+        feasible_classes: tuple[int, ...] | None = None,
     ) -> None:
         """Initialize a classifier-backed probability adapter."""
         super().__init__()
@@ -21,12 +22,24 @@ class ClassificationProbabilityOfFeasibility(nn.Module):
         num_classes = getattr(model, "num_classes", None)
         if not isinstance(num_classes, int) or num_classes < 2:
             raise TypeError("model must expose an integer num_classes >= 2.")
-        if not 0 <= feasible_class < num_classes:
+        if feasible_classes is None:
+            selected = (feasible_class,)
+        else:
+            if not feasible_classes or any(
+                not isinstance(index, int) or isinstance(index, bool)
+                or not 0 <= index < num_classes for index in feasible_classes
+            ):
+                raise ValueError("feasible_classes must contain valid class indices.")
+            if len(set(feasible_classes)) != len(feasible_classes):
+                raise ValueError("feasible_classes must not contain duplicates.")
+            selected = tuple(feasible_classes)
+        if any(not 0 <= index < num_classes for index in selected):
             raise ValueError("feasible_class is outside the classifier class range.")
         self.model = model
-        self.feasible_class = feasible_class
+        self.feasible_class = feasible_class if feasible_classes is None else None
+        self.feasible_classes = selected
 
     def forward(self, X: Tensor) -> Tensor:
         """Return per-candidate P(feasible | X, D)."""
         probabilities = self.model.predict_proba(X)
-        return probabilities[..., self.feasible_class]
+        return probabilities[..., list(self.feasible_classes)].sum(dim=-1)
