@@ -7352,6 +7352,11 @@
       "path": "docs-internal/audits/scientific-validity-phase5-gp-al-epoch-sensitivity-results.md",
       "category": "Verification",
       "reason": "Phase 5 paired ten-seed binary GP active-learning fit-epoch sensitivity results, Actions provenance, and bounded interpretation."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-final-report.md",
+      "category": "Verification",
+      "reason": "Consolidated scientific validity audit outcomes, cross-domain evidence, corrected defects, bounded limitations, and final scoped closure decision."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
