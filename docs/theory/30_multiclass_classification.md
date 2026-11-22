@@ -5,12 +5,12 @@
 ## 1. 多クラスの確率モデル
 
 $C>2$ の場合、潜在関数のベクトル
-$f_1(x),\ldots,f_C(x)$ とsoftmaxリンクを持つカテゴリ尤度を使う方法があります。
+$f_0(x),\ldots,f_{C-1}(x)$ とsoftmaxリンクを持つカテゴリ尤度を使う方法があります。
 
 $$
 p(y=c\mid f(x))
 =
-\frac{\exp(f_c(x))}{\sum_{j=1}^{C}\exp(f_j(x))}.
+\frac{\exp(f_c(x))}{\sum_{j=0}^{C-1}\exp(f_j(x))}.
 $$
 
 潜在関数は事前に独立でも、多出力共分散を通じて相関していても構いません。
@@ -21,7 +21,7 @@ p(y=c\mid x,\mathcal D)
 =
 \mathbb E_{p(f(x)\mid\mathcal D)}
 \left[
-\frac{\exp(f_c(x))}{\sum_j\exp(f_j(x))}
+\frac{\exp(f_c(x))}{\sum_{j=0}^{C-1}\exp(f_j(x))}
 \right].
 $$
 
@@ -40,6 +40,77 @@ softmaxは全クラスの潜在値に同じ定数を加えても変化しませ�
 各クラスの潜在平均にsoftmaxを適用するだけでは、一般に
 事後不確実性を正しく反映できません。
 
+
+## 2.1 非共役な分類を変分推論で扱う理由
+
+入力とラベルのデータを \(\mathcal D=\{(x_i,y_i)\}_{i=1}^{n}\)、潜在関数のクラス別ベクトルを \(\boldsymbol f(x)\) とします。GaussianなGP事前分布とCategorical（softmax）尤度の積から得られる真の事後分布は、一般にGaussian分布に戻りません。したがって、通常のGP回帰と同じ閉形式の条件付きGaussian事後分布だけでは分類ラベルを扱えません。
+
+誘導変数 \(\boldsymbol u\) に変分分布 \(q(\boldsymbol u)\) を置き、これが誘導する \(\boldsymbol f\) の周辺分布 \(q(\boldsymbol f)\) を使います。典型的な変分目的は
+
+$
+\mathcal L
+=
+\sum_{i=1}^{n}
+\mathbb E_{q(\boldsymbol f(x_i))}
+\left[
+\log P(y_i\mid \boldsymbol f(x_i))
+\right]
+-
+\operatorname{KL}\bigl(q(\boldsymbol u)\,\|\,p(\boldsymbol u)\bigr).
+$
+
+前項は観測ラベルへの対数確率を高くし、後項は変分分布がGP事前分布から過度に離れることを抑えます。softmaxの非線形性によって期待対数尤度は一般に解析積分できず、モンテカルロ法などで近似します。
+
+**注意：** クラスごとの潜在GPを独立に置いても、softmax後のクラス確率は互いに独立ではありません。全クラスの確率が必ず1に合計されるためです。潜在GPの依存構造はモデルの仮定であり、すべてのマルチクラスGPが独立な潜在GPを使うという意味ではありません。
+
+## 2.2 予測確率は事後期待値である
+
+学習後の予測確率は
+
+$
+p_c(x)=
+\int
+\frac{\exp(f_c(x))}
+{\sum_{j=0}^{C-1}\exp(f_j(x))}
+q(\boldsymbol f(x))\,d\boldsymbol f(x).
+$
+
+潜在事後サンプル \(\boldsymbol f^{(s)}(x)\sim q(\boldsymbol f(x))\) を \(S\) 個得られるなら、
+
+$
+\widehat p_c(x)
+=
+\frac{1}{S}\sum_{s=1}^{S}
+\frac{\exp(f_c^{(s)}(x))}
+{\sum_{j=0}^{C-1}\exp(f_j^{(s)}(x))}
+$
+
+と近似します。ここで、\(\operatorname{softmax}(\mathbb E[\boldsymbol f])\) と \(\mathbb E[\operatorname{softmax}(\boldsymbol f)]\) は一般に一致しません。モンテカルロサンプルを増やすと積分の近似誤差は低減し得ますが、学習データ不足やモデルの仮定違反から生じる誤差まで解消されるわけではありません。
+
+## 2.3 予測EntropyとBALDの違いを式で確認する
+
+予測確率 \(p_c(x)\) を用いる予測エントロピーは
+
+$
+H(C\mid x,\mathcal D)
+=-\sum_{c=0}^{C-1}p_c(x)\log p_c(x).
+$
+
+これは**次に得るラベルの不確実性全体**を表します。これに対してBALDの情報利得は
+
+$
+I(C;\boldsymbol f\mid x,\mathcal D)
+=
+H(C\mid x,\mathcal D)
+-
+\mathbb E_{q(\boldsymbol f(x))}
+\left[
+H(C\mid x,\boldsymbol f(x))
+\right].
+$
+
+右辺の第2項は潜在関数の値を仮に知っても残るラベルの偶然性です。したがって、Entropyが高くても、モデルを学ぶ余地が小さければBALDは低くなり得ます。多数候補の**同時**情報利得では、候補間の潜在GPの相関も扱う必要があります。候補ごとのEntropyの平均は、この同時情報利得とは異なります。
+
 ## 3. 予測・学習・Active Learningへの拡張
 
 クラス数が \(C\geq3\) の場合、入力 \(x\) に対して
@@ -48,7 +119,7 @@ softmaxにより、潜在関数が与えられたときのクラス確率を定�
 
 $$
 P(y=c\mid f(x)) =
-\frac{\exp(f_c(x))}{\sum_{k=1}^{C}\exp(f_k(x))}.
+\frac{\exp(f_c(x))}{\sum_{k=0}^{C-1}\exp(f_k(x))}.
 $$
 
 学習データ \(D\) を観測した後の予測確率は
@@ -195,6 +266,28 @@ Accuracyだけでなく、NLL・Brier score・クラス別Recallも確認して�
 を参照してください。
 
 
+
+
+## 3.1 確率校正とモデル評価の具体式
+
+保留データ \((x_i,y_i)\) に対して、モデルがクラス \(c\) の確率 \(p_{ic}\) を予測したとします。Accuracyは最大確率クラスの一致率ですが、予測確率そのものの妥当性までは測れません。
+
+多クラス負の対数尤度（NLL）は
+
+$
+\operatorname{NLL}
+=-\frac1n\sum_{i=1}^{n}\log p_{i,y_i}
+$
+
+であり、真のクラスへ極端に小さい確率を与えた予測を強く罰します。多クラスBrier scoreは
+
+$
+\operatorname{Brier}
+=\frac1n\sum_{i=1}^{n}\sum_{c=0}^{C-1}
+\left(p_{ic}-\boldsymbol1[y_i=c]\right)^2
+$
+
+のように定義できます（\(C\) で正規化する流儀もあるため、比較時は定義を明記します）。特に少数クラスでは、全体のAccuracyに加えてクラス別Recallや混同行列を確認してください。
 
 ## 4. 関連資料と参考文献
 
