@@ -100,5 +100,11 @@ def test_latent_kronecker_gp_matches_upstream_posterior() -> None:
     with upstream.use_iterative_methods():
         upstream_posterior = upstream.posterior(test_X, test_T)
 
-    torch.testing.assert_close(wrapper_posterior.mean, upstream_posterior.mean)
-    torch.testing.assert_close(wrapper_posterior.variance, upstream_posterior.variance)
+    # The wrapper exposes moments in original outcome units. The upstream
+    # LatentKronecker posterior exposes standardized moments instead.
+    expected_mean, expected_variance = upstream.outcome_transform.untransform(
+        upstream_posterior.mean.unsqueeze(-1),
+        upstream_posterior.variance.unsqueeze(-1),
+    )
+    torch.testing.assert_close(wrapper_posterior.mean, expected_mean.squeeze(-1))
+    torch.testing.assert_close(wrapper_posterior.variance, expected_variance.squeeze(-1))
