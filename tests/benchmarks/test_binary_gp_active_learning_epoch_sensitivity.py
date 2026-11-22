@@ -58,7 +58,7 @@ def test_binary_gp_al_epoch_comparison(tmp_path, monkeypatch):
     assert accuracy["sd_change"] == pytest.approx(0)
     manifest_path = high / "manifest.json"
     manifest = json.loads(manifest_path.read_text())
-    manifest["budget"] = 2
+    manifest["reference_seed"] = 12345
     manifest_path.write_text(json.dumps(manifest))
     with pytest.raises(ValueError, match="protocols differ"):
         analyzer.compare(low, high)
