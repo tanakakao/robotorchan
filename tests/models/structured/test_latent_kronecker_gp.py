@@ -107,6 +107,4 @@ def test_latent_kronecker_gp_matches_upstream_posterior() -> None:
         upstream_posterior.variance.unsqueeze(-1),
     )
     torch.testing.assert_close(wrapper_posterior.mean, expected_mean.squeeze(-1))
-    torch.testing.assert_close(
-        wrapper_posterior.variance, expected_variance.squeeze(-1)
-    )
+    torch.testing.assert_close(wrapper_posterior.variance, expected_variance.squeeze(-1))
