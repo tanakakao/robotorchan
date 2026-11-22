@@ -31,9 +31,7 @@ def test_hierarchical_fit_delegates_to_native_mll(model_class, multitask, mixed)
     temperature = torch.linspace(0.2, 0.8, n, dtype=dtype).unsqueeze(-1)
     pressure = torch.linspace(0.8, 0.2, n, dtype=dtype).unsqueeze(-1)
     X = torch.cat([common, parent, temperature, pressure], dim=-1)
-    Y = torch.sin(common * 3) + torch.where(
-        parent == 0, 0.5 * temperature, -0.5 * pressure
-    )
+    Y = torch.sin(common * 3) + torch.where(parent == 0, 0.5 * temperature, -0.5 * pressure)
     kwargs = {
         "hierarchical_dependencies": {1: {0: [2], 1: [3]}},
         "use_saas_prior": False,
