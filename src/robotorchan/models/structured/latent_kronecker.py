@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from botorch.fit import fit_gpytorch_mll
 from botorch.models.latent_kronecker_gp import (
     LatentKroneckerGP as BoTorchLatentKroneckerGP,
 )
@@ -29,6 +30,13 @@ class LatentKroneckerGP(ExactGPModelMixin, BoTorchLatentKroneckerGP):
     BoTorch. robotorchan retains caller-supplied ``train_X``, ``train_T``, and
     ``train_Y`` before upstream broadcasting, masking, or transformations.
     """
+
+    supports_fit = True
+
+    def fit(self, *, optimizer_kwargs: dict | None = None) -> None:
+        """Fit the native MLL in BoTorch's iterative-methods context."""
+        with self.use_iterative_methods():
+            fit_gpytorch_mll(self.make_mll(), optimizer_kwargs=optimizer_kwargs)
 
     def __init__(
         self,

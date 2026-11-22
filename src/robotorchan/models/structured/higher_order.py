@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from botorch.fit import fit_gpytorch_mll_torch
 from botorch.models.higher_order_gp import HigherOrderGP as BoTorchHigherOrderGP
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
 from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import Likelihood
+from linear_operator.settings import _fast_solves
 from torch import Tensor
 
 from robotorchan.models.base import (
@@ -24,8 +26,15 @@ class HigherOrderGP(ExactGPModelMixin, BoTorchHigherOrderGP):
     Tensor-output covariance structure, latent parameters, transforms, posterior
     sampling, and specialized Kronecker solves remain delegated to BoTorch.
     robotorchan only retains caller-supplied raw training tensors and provides
-    the common exact-GP ``make_mll()`` helper.
+    the common exact-GP ``make_mll()`` helper and a torch-based ``fit()`` entry point.
     """
+
+    supports_fit = True
+
+    def fit(self, *, step_limit: int = 75) -> None:
+        """Fit using BoTorch's torch optimizer with its required fast-solve setting."""
+        with _fast_solves(True):
+            fit_gpytorch_mll_torch(self.make_mll(), step_limit=step_limit)
 
     def __init__(
         self,
