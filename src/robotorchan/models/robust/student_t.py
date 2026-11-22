@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import torch
 from botorch.posteriors.gpytorch import GPyTorchPosterior
 from gpytorch.kernels import IndexKernel, MaternKernel, ProductKernel
 from gpytorch.likelihoods import StudentTLikelihood
@@ -14,7 +15,28 @@ from robotorchan.models.standard.variational import (
 )
 
 
-class _StudentTGPBase(RawDataMixin, nn.Module):
+class _RobustObservationFitMixin:
+    """Adam fitting for variational models with explicit observation losses."""
+
+    supports_fit = True
+
+    def fit(self, *, steps: int = 100, lr: float = 0.03) -> None:
+        """Minimize the model's existing training_loss() for the requested steps."""
+        if steps < 1:
+            raise ValueError("steps must be at least 1.")
+        if not 0 < lr < float("inf"):
+            raise ValueError("lr must be positive and finite.")
+        self.train()
+        optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+        for _ in range(steps):
+            optimizer.zero_grad()
+            loss = self.training_loss()
+            loss.backward()
+            optimizer.step()
+        self.eval()
+
+
+class _StudentTGPBase(_RobustObservationFitMixin, RawDataMixin, nn.Module):
     """Shared Student-t variational training and posterior contract."""
 
     supports_mll = False

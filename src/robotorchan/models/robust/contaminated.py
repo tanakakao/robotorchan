@@ -9,14 +9,17 @@ from botorch.posteriors.gpytorch import GPyTorchPosterior
 from torch import Tensor, nn
 
 from robotorchan.models.base import RawDataMixin
-from robotorchan.models.robust.student_t import _multitask_covar_module
+from robotorchan.models.robust.student_t import (
+    _multitask_covar_module,
+    _RobustObservationFitMixin,
+)
 from robotorchan.models.standard.variational import (
     MixedSingleTaskVariationalGP,
     SingleTaskVariationalGP,
 )
 
 
-class ContaminatedSingleTaskGP(RawDataMixin, nn.Module):
+class ContaminatedSingleTaskGP(_RobustObservationFitMixin, RawDataMixin, nn.Module):
     """Scalar variational GP with fixed nominal/contamination noise components."""
 
     supports_mll = False
