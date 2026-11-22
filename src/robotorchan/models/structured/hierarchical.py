@@ -25,7 +25,7 @@ from gpytorch.priors import Prior
 from torch import Tensor
 from torch.nn import ModuleList
 
-from robotorchan.models.base import ExactGPModelMixin, normalize_feature_dims
+from robotorchan.models.base import FittableExactGPModelMixin, normalize_feature_dims
 
 
 class _MixedHierarchicalConditionalKernel(HierarchicalConditionalKernel):
@@ -86,10 +86,12 @@ def _parent_dims(hierarchical_dependencies: dict[int, dict[int | float, list[int
 
 
 class HierarchicalConditionalKernelGP(
-    ExactGPModelMixin,
+    FittableExactGPModelMixin,
     BoTorchHierarchicalConditionalKernelGP,
 ):
     """BoTorch hierarchical single-task GP with robotorchan conveniences."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -125,6 +127,8 @@ class HierarchicalConditionalKernelGP(
 
 class MixedHierarchicalConditionalKernelGP(HierarchicalConditionalKernelGP):
     """Hierarchical GP with native categorical covariance inside active blocks."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -177,10 +181,12 @@ class MixedHierarchicalConditionalKernelGP(HierarchicalConditionalKernelGP):
 
 
 class HierarchicalConditionalKernelMultiTaskGP(
-    ExactGPModelMixin,
+    FittableExactGPModelMixin,
     BoTorchHierarchicalConditionalKernelMultiTaskGP,
 ):
     """BoTorch hierarchical multi-task GP with robotorchan conveniences."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -230,6 +236,8 @@ class HierarchicalConditionalKernelMultiTaskGP(
 
 class MixedHierarchicalConditionalKernelMultiTaskGP(HierarchicalConditionalKernelMultiTaskGP):
     """Hierarchical multi-task GP with native categorical data covariance."""
+
+    supports_fit = True
 
     def __init__(
         self,
