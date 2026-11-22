@@ -7357,6 +7357,11 @@
       "path": "docs-internal/audits/scientific-validity-phase6.md",
       "category": "Verification",
       "reason": "Phase 6 scientific-validity audit synthesis of existing numerical references, reproducibility, paired benchmarks, and limitations."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-phase7.md",
+      "category": "Verification",
+      "reason": "Phase 7 scientific-validity audit closure: merged defect fixes, regression evidence, CI outcomes, and residual scope limits."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
