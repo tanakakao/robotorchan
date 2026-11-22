@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import torch
+from botorch.fit import fit_gpytorch_mll
 from botorch.models.heterogeneous_mtgp import HeterogeneousMTGP as BoTorchHeterogeneousMTGP
 from botorch.models.kernels.categorical import CategoricalKernel
 from botorch.models.kernels.heterogeneous_multitask import (
@@ -24,6 +25,11 @@ class HeterogeneousMTGP(RawDataMixin, ModelTrainingMixin, BoTorchHeterogeneousMT
     """BoTorch heterogeneous MTGP with grouped raw-data retention."""
 
     supports_mll = True
+    supports_fit = True
+
+    def fit(self, *, optimizer_kwargs: dict | None = None) -> None:
+        """Fit the native exact MLL while retaining heterogeneous task inputs."""
+        fit_gpytorch_mll(self.make_mll(), optimizer_kwargs=optimizer_kwargs)
 
     def __init__(
         self,
@@ -195,6 +201,8 @@ class MixedHeterogeneousMTGP(HeterogeneousMTGP):
     covariance. Continuous-only subsets keep the upstream Matern + optional
     SAAS-prior construction.
     """
+
+    supports_fit = True
 
     def __init__(
         self,
