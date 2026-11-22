@@ -1,0 +1,52 @@
+# 30. 異種モデルによる分類制約付きベイズ最適化
+
+## 1. 何を最適化するのか
+
+製造条件 `x` に対して、強度などの連続値 `f(x)` を大きくしたい一方、検査結果 `C(x)` が許容カテゴリ集合 `S` に入る条件を考えます。連続値は回帰GP、検査結果は二値・多クラス・順序分類器で別々に予測できます。
+
+分類器が出力するクラス確率を `p_k(x)=P(C(x)=k | D_C)` とすると、許容クラス集合に属する確率は
+
+$$
+p_S(x)=\sum_{k\in S}p_k(x).
+$$
+
+例えば「良好」「要再検査」「不良」の3クラスで、前二者を許容するなら、`S={0,1}` として二つの確率を足します。**順序分類でも確率の合計は同じ**ですが、順序の意味を無視して任意のクラス集合を自動的に選ぶわけではありません。
+
+## 2. 獲得関数への確率重み付け
+
+回帰GPの事後分布に基づく qEI を `a_{qEI}(X)`、候補バッチを `X=(x_1,...,x_q)` とします。分類器の許容確率を独立な因子として扱う簡便な獲得関数は
+
+$$
+a_{weighted}(X)=a_{qEI}(X)\prod_{i=1}^{q}p_S(x_i).
+$$
+
+複数の分類制約 `j` がある場合は、各候補点でさらに確率因子を掛け合わせます。これは**周辺確率の積による近似**であり、候補点間や分類器間の相関を考慮した厳密な同時実行可能確率ではありません。q>1 の場合も qEI 自体の回帰GP事後サンプリングと、分類側の確率積を区別してください。
+
+確率重み付けは、分類上の実行可能性が低い候補の優先度を下げる**ソフトな判断**です。確率が正である限り候補を完全には排除しません。
+
+## 3. 確率閾値制約とは異なる
+
+「許容クラス確率が80%以上」の条件は
+
+$$
+p_S(x)\ge 0.8
+$$
+
+という**ハードな候補制約**です。上記の重み付きqEIを最大化しても、この不等式の成立は保証されません。robotorchanの `make_classification_constrained_qei_acquisition` は閾値付き制約を受け取ると明示的に拒否します。閾値を厳密に守る必要がある場合は、適切な候補制約の定式化とOptimizer側の対応を別途確認してください。
+
+## 4. 実装上の前提
+
+- 回帰目的は1つ、分類制約は1つ以上を想定します。
+- 回帰モデルと分類モデルの**結合事後分布を仮定しません**。
+- `q_reduction="product"` は候補間の積、`"minimum"` は候補間の最小確率を用いる別の保守的なスコアです。後者も厳密な同時確率ではありません。
+- Mixed変数の扱いは候補最適化器の責務です。モデルが整数・カテゴリを適切に扱えるかどうかは別途検証が必要です。
+- pending points や異種モデルの joint fantasization はこの重み付きラッパーでは非対応です。
+
+## 参考文献
+
+1. Jones, Schonlau, Welch (1998), *Efficient Global Optimization of Expensive Black-Box Functions*, Journal of Global Optimization. DOI: 10.1023/A:1008306431147.
+2. Gardner et al. (2014), *Bayesian Optimization with Inequality Constraints*, ICML, PMLR 32.
+3. Balandat et al. (2020), *BoTorch: A Framework for Efficient Monte-Carlo Bayesian Optimization*, NeurIPS.
+4. Hernández-Lobato et al. (2016), *Predictive Entropy Search for Bayesian Optimization with Unknown Constraints*, ICML, PMLR 48.
+
+本章の確率積は実装上の近似として明示したもので、参考文献の全手法がこの近似を採用するという意味ではありません。
