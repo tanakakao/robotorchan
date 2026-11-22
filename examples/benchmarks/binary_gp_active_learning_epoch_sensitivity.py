@@ -53,7 +53,10 @@ def load(root: Path) -> tuple[dict, dict]:
         for strategy in STRATEGIES
         for step in range(manifest["budget"] + 1)
     }
-    if set(values) != expected or set(manifest.get("completed_seeds", [])) != set(manifest["seeds"]):
+    if (
+        set(values) != expected
+        or set(manifest.get("completed_seeds", [])) != set(manifest["seeds"])
+    ):
         raise ValueError(f"Unpaired or incomplete curves: {root}")
     return manifest, values
 
