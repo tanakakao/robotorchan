@@ -114,6 +114,8 @@ class MixedGaussianUncertainInputKernel(Kernel):
 class UncertainInputSingleTaskGP(SingleTaskGP):
     """Single-task GP integrating Gaussian uncertainty in observed input locations."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -171,6 +173,8 @@ class UncertainInputSingleTaskGP(SingleTaskGP):
 
 class MixedUncertainInputSingleTaskGP(SingleTaskGP):
     """Exact GP with uncertain continuous training inputs and deterministic categories."""
+
+    supports_fit = True
 
     def __init__(
         self,
