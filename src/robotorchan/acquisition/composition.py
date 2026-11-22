@@ -283,7 +283,7 @@ def make_sample_classification_feasibility_bridge(
         raise TypeError("Classifier must support epistemic class-probability samples.")
 
     sample_class_probabilities = classifier.sample_class_probabilities
-    feasible_class = probability.feasible_class
+    feasible_classes = probability.feasible_classes
 
     def sample_probability(
         X: Tensor,
@@ -295,7 +295,7 @@ def make_sample_classification_feasibility_bridge(
             sample_shape=sample_shape,
             **kwargs,
         )
-        return probabilities[..., feasible_class]
+        return probabilities[..., list(feasible_classes)].sum(dim=-1)
 
     return SampleProbabilityOfFeasibility(sample_probability)
 
