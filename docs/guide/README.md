@@ -1,9 +1,15 @@
 # 理論と実装をつなぐ日本語技術ガイド — 章構成
 
+## 分類GP：二値・マルチクラス・順序分類
+
+- [二値分類の理論](../theory/24_classification.md) / [実装ガイド](24_classification.md)
+- [マルチクラス分類の理論](../theory/30_multiclass_classification.md) / [実装ガイド](30_multiclass_classification.md) / [Notebook 30](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)
+- [順序分類の理論](../theory/31_ordinal_classification.md) / [実装ガイド](31_ordinal_classification.md) / [Notebook 31](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)
+
 ## 異種モデルの分類制約付きベイズ最適化
 
-- [理論](../theory/30_heterogeneous_classification_constraints.md)
-- [実装ガイド](30_heterogeneous_classification_constraints.md)
+- [理論](../theory/32_heterogeneous_classification_constraints.md)
+- [実装ガイド](32_heterogeneous_classification_constraints.md)
 - [単目的・多目的回帰 × 多クラス／順序分類 Notebook](../../examples/notebooks/61_heterogeneous_classification_constraints.ipynb)
 
 ## Contextual Bayesian Optimization
