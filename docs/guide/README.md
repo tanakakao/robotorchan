@@ -4,7 +4,8 @@
 
 - [理論](../theory/30_heterogeneous_classification_constraints.md)
 - [実装ガイド](30_heterogeneous_classification_constraints.md)
-- [実行Notebook](../../examples/notebooks/60_heterogeneous_classification_constraints.ipynb)
+- [単目的回帰 × 多クラス／順序分類 Notebook](../../examples/notebooks/60_heterogeneous_classification_constraints.ipynb)
+- [多目的回帰 × 多クラス／順序分類 Notebook](../../examples/notebooks/61_heterogeneous_multiobjective_classification.ipynb)
 
 ## Contextual Bayesian Optimization
 
