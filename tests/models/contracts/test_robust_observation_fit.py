@@ -57,9 +57,7 @@ def test_observation_model_fit_runs_native_training_loss(family, mixed, multitas
     torch.testing.assert_close(model.raw_train_Y, Y)
 
 
-@pytest.mark.parametrize(
-    "steps,lr", [(0, 0.03), (1, 0.0), (1, -0.1), (1, float("inf"))]
-)
+@pytest.mark.parametrize("steps,lr", [(0, 0.03), (1, 0.0), (1, -0.1), (1, float("inf"))])
 def test_observation_fit_rejects_invalid_optimizer_settings(steps, lr):
     X = torch.linspace(0.1, 0.9, 6, dtype=torch.double).unsqueeze(-1)
     Y = torch.sin(2 * torch.pi * X)
