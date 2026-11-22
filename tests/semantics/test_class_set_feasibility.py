@@ -22,9 +22,7 @@ def test_single_class_backward_compatibility():
 
 def test_class_set_probability_and_grad_shape():
     X = torch.zeros(2, 3, 2)
-    pof = ClassificationProbabilityOfFeasibility(
-        _Classifier(), feasible_classes=(0, 2, 3)
-    )
+    pof = ClassificationProbabilityOfFeasibility(_Classifier(), feasible_classes=(0, 2, 3))
     torch.testing.assert_close(pof(X), torch.full((2, 3), 0.8))
 
 
