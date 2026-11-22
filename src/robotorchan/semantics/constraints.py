@@ -135,7 +135,11 @@ class ClassificationConstraint:
         entry_index, _ = self.resolve_owner(model)
         return ClassificationProbabilityOfFeasibility(
             model[entry_index],
-            feasible_class=self.resolve_feasible_class(model) if self.feasible_classes is None else 1,
+            feasible_class=(
+                self.resolve_feasible_class(model)
+                if self.feasible_classes is None
+                else 1
+            ),
             feasible_classes=self.resolve_feasible_classes(model),
         )
 
