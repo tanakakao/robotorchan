@@ -13,14 +13,16 @@ from botorch.models.transforms.outcome import OutcomeTransform
 from botorch.utils.types import DEFAULT, _DefaultType
 from torch import Tensor
 
-from robotorchan.models.base import CategoricalOneHotInputTransform, ExactGPModelMixin
+from robotorchan.models.base import CategoricalOneHotInputTransform, FittableExactGPModelMixin
 
 
 class AdditiveMapSaasSingleTaskGP(
-    ExactGPModelMixin,
+    FittableExactGPModelMixin,
     BoTorchAdditiveMapSaasSingleTaskGP,
 ):
-    """BoTorch additive MAP-SAAS GP with robotorchan raw-data retention."""
+    """BoTorch additive MAP-SAAS GP with raw-data retention and native MLL fitting."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -47,10 +49,12 @@ class AdditiveMapSaasSingleTaskGP(
 
 
 class EnsembleMapSaasSingleTaskGP(
-    ExactGPModelMixin,
+    FittableExactGPModelMixin,
     BoTorchEnsembleMapSaasSingleTaskGP,
 ):
-    """BoTorch ensemble MAP-SAAS GP with robotorchan raw-data retention."""
+    """BoTorch ensemble MAP-SAAS GP with raw-data retention and native MLL fitting."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -80,6 +84,8 @@ class EnsembleMapSaasSingleTaskGP(
 
 class MixedAdditiveMapSaasSingleTaskGP(AdditiveMapSaasSingleTaskGP):
     """Additive MAP-SAAS GP with model-owned categorical one-hot encoding."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -117,6 +123,8 @@ class MixedAdditiveMapSaasSingleTaskGP(AdditiveMapSaasSingleTaskGP):
 
 class MixedEnsembleMapSaasSingleTaskGP(EnsembleMapSaasSingleTaskGP):
     """Ensemble MAP-SAAS GP with model-owned categorical one-hot encoding."""
+
+    supports_fit = True
 
     def __init__(
         self,
