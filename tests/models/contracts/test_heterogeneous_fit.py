@@ -17,15 +17,13 @@ def test_heterogeneous_fit_delegates_to_native_mll(mixed):
             dtype=torch.double,
         ),
         torch.tensor(
-            [[0.15, 0.0, 0.20], [0.35, 1.0, 0.40],
-             [0.65, 0.0, 0.70], [0.90, 1.0, 0.95]],
+            [[0.15, 0.0, 0.20], [0.35, 1.0, 0.40], [0.65, 0.0, 0.70], [0.90, 1.0, 0.95]],
             dtype=torch.double,
         ),
     ]
     train_Ys = [
         train_Xs[0][:, :1] + 0.2 * train_Xs[0][:, 1:2],
-        train_Xs[1][:, :1] + 0.2 * train_Xs[1][:, 1:2]
-        + 0.1 * train_Xs[1][:, 2:3],
+        train_Xs[1][:, :1] + 0.2 * train_Xs[1][:, 1:2] + 0.1 * train_Xs[1][:, 2:3],
     ]
     kwargs = {"cat_dims": [1]} if mixed else {}
     model_class = MixedHeterogeneousMTGP if mixed else HeterogeneousMTGP
