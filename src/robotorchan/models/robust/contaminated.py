@@ -10,8 +10,8 @@ from torch import Tensor, nn
 
 from robotorchan.models.base import RawDataMixin
 from robotorchan.models.robust.student_t import (
-    _RobustObservationFitMixin,
     _multitask_covar_module,
+    _RobustObservationFitMixin,
 )
 from robotorchan.models.standard.variational import (
     MixedSingleTaskVariationalGP,
