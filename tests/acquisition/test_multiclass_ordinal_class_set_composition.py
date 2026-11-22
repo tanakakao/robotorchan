@@ -83,9 +83,7 @@ def test_class_set_weighting_preserves_native_q_acquisition(
             constraints=(constraint,),
         )
         ref_point = torch.tensor([0.0, 0.0], dtype=torch.double)
-        partitioning = NondominatedPartitioning(
-            ref_point=ref_point, Y=train_y[labels >= 1]
-        )
+        partitioning = NondominatedPartitioning(ref_point=ref_point, Y=train_y[labels >= 1])
         acquisition = make_constrained_qehvi_acquisition(
             model,
             semantics,
@@ -110,6 +108,8 @@ def test_class_set_weighting_preserves_native_q_acquisition(
     assert torch.isfinite(weighted_value).all()
     assert ((per_candidate_pof >= 0) & (per_candidate_pof <= 1)).all()
     torch.testing.assert_close(
-        weighted_value, raw_objective * per_candidate_pof.prod(dim=-1),
-        rtol=1e-5, atol=1e-6,
+        weighted_value,
+        raw_objective * per_candidate_pof.prod(dim=-1),
+        rtol=1e-5,
+        atol=1e-6,
     )
