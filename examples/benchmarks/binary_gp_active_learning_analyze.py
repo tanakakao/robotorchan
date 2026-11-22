@@ -58,8 +58,7 @@ def analyze(root: str | Path) -> list[dict[str, object]]:
                 endpoint_diffs.append(differences[-1])
                 # Trapezoidal area divided by observation budget; retains step zero.
                 area_diffs.append(
-                    (sum(differences[1:-1]) + (differences[0] + differences[-1]) / 2)
-                    / budget
+                    (sum(differences[1:-1]) + (differences[0] + differences[-1]) / 2) / budget
                 )
             for statistic, values in (("endpoint", endpoint_diffs), ("normalized_auc", area_diffs)):
                 results.append(
