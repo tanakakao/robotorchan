@@ -1,0 +1,48 @@
+name: Binary GP AL fit-epoch sensitivity
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sensitivity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install CPU PyTorch
+        run: python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Run paired 8-epoch and 32-epoch cohorts
+        env:
+          BENCHMARK_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          for EPOCHS in 8 32; do
+            python -u examples/benchmarks/binary_gp_active_learning_multiseed.py \
+              --output "gp-al-epochs-${EPOCHS}" --git-sha "$BENCHMARK_SHA" \
+              --seeds 10 --budget 50 --epochs "$EPOCHS" \
+              2>&1 | tee "gp-al-epochs-${EPOCHS}.log"
+            python examples/benchmarks/binary_gp_active_learning_analyze.py \
+              "gp-al-epochs-${EPOCHS}" > "gp-al-analysis-${EPOCHS}.jsonl"
+          done
+          python examples/benchmarks/binary_gp_active_learning_epoch_sensitivity.py \
+            gp-al-epochs-8 gp-al-epochs-32 | tee gp-al-epoch-comparison.jsonl
+      - name: Upload raw cohorts and comparison even on failure
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: gp-al-epoch-sensitivity-${{ github.run_id }}
+          path: |
+            gp-al-epochs-8/
+            gp-al-epochs-32/
+            gp-al-epochs-8.log
+            gp-al-epochs-32.log
+            gp-al-analysis-8.jsonl
+            gp-al-analysis-32.jsonl
+            gp-al-epoch-comparison.jsonl
+          if-no-files-found: warn
+          retention-days: 30
