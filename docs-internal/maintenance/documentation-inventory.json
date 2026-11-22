@@ -7342,6 +7342,11 @@
       "path": "docs-internal/audits/scientific-validity-phase5-gp-al-multiseed.md",
       "category": "Verification",
       "reason": "Phase 5 binary GP active-learning multi-seed evidence protocol, provenance and limitations."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-phase5-gp-al-full-results.md",
+      "category": "Verification",
+      "reason": "Phase 5 real ten-seed binary GP active-learning evidence, paired performance interpretation, raw Actions provenance, and limitations."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
