@@ -486,8 +486,7 @@ def make_classification_constrained_qei_acquisition(
         objective=bridge.objective,
     )
     probabilities = [
-        make_classification_feasibility_bridge(model, binding)
-        for binding in plan.feasibility
+        make_classification_feasibility_bridge(model, binding) for binding in plan.feasibility
     ]
     return FeasibilityWeightedAcquisition(
         acquisition,
