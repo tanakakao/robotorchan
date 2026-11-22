@@ -14,14 +14,16 @@ from gpytorch.module import Module
 from torch import Tensor
 
 from robotorchan.models.base import (
-    ExactGPModelMixin,
+    FittableExactGPModelMixin,
     make_mixed_covar_module,
     normalize_feature_dims,
 )
 
 
-class SACGP(ExactGPModelMixin, BoTorchSACGP):
+class SACGP(FittableExactGPModelMixin, BoTorchSACGP):
     """BoTorch structural-additive contextual GP with robotorchan conveniences."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -43,8 +45,10 @@ class SACGP(ExactGPModelMixin, BoTorchSACGP):
         self._store_supervised_training_data(raw_train_X, raw_train_Y, raw_train_Yvar)
 
 
-class LCEAGP(ExactGPModelMixin, BoTorchLCEAGP):
+class LCEAGP(FittableExactGPModelMixin, BoTorchLCEAGP):
     """BoTorch latent-context-embedding additive GP with raw-data retention."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -76,8 +80,10 @@ class LCEAGP(ExactGPModelMixin, BoTorchLCEAGP):
         self._store_supervised_training_data(raw_train_X, raw_train_Y, raw_train_Yvar)
 
 
-class LCEMGP(ExactGPModelMixin, BoTorchLCEMGP):
+class LCEMGP(FittableExactGPModelMixin, BoTorchLCEMGP):
     """BoTorch latent-context-embedding multi-output GP with common raw-data API."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -127,6 +133,8 @@ class MixedLCEMGP(LCEMGP):
     categorical columns in caller-supplied ``train_X``. The task feature is
     structural and cannot be included in ``cat_dims``.
     """
+
+    supports_fit = True
 
     def __init__(
         self,
