@@ -24,7 +24,11 @@ def test_contextual_fit_delegates_to_native_mll(model_class):
         if model_class is MixedLCEMGP:
             category = (torch.arange(8) % 2).to(torch.double).unsqueeze(-1)
             X = torch.cat([category, x, task], dim=-1)
-            kwargs = {"task_feature": 2, "cat_dims": [0]}
+            kwargs = {
+                "task_feature": 2,
+                "cat_dims": [0],
+                "context_cat_feature": torch.tensor([[0.0], [1.0]], dtype=torch.double),
+            }
         else:
             X = torch.cat([x, task], dim=-1)
             kwargs = {"task_feature": 1}
