@@ -111,6 +111,8 @@ class AugmentedUncertainCategoricalKernel(Kernel):
 class UncertainCategoricalSingleTaskGP(SingleTaskGP):
     """Exact GP marginalizing explicit uncertainty in one categorical feature."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X_cont: Tensor,

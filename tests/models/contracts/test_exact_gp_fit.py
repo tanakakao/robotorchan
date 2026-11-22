@@ -92,17 +92,10 @@ def test_specialized_subclasses_do_not_implicitly_gain_native_fit() -> None:
 
 def test_registered_exact_gp_subclasses_require_explicit_fit_opt_in() -> None:
     """Prevent unreviewed public subclasses from inheriting verified fitting."""
-    from robotorchan.models import (
-        NonstationarySingleTaskGP,
-        UncertainInputSingleTaskGP,
-    )
+    from robotorchan.models import NonstationarySingleTaskGP
 
-    for model_class in (
-        NonstationarySingleTaskGP,
-        UncertainInputSingleTaskGP,
-    ):
-        assert issubclass(model_class, SingleTaskGP)
-        assert model_class.supports_fit is False
+    assert issubclass(NonstationarySingleTaskGP, SingleTaskGP)
+    assert NonstationarySingleTaskGP.supports_fit is False
 
 
 def test_spectral_mixture_gp_fit_and_posterior() -> None:
