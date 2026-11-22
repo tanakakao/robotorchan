@@ -7362,6 +7362,11 @@
       "path": "docs-internal/audits/scientific-validity-phase7.md",
       "category": "Verification",
       "reason": "Phase 7 scientific-validity audit closure: merged defect fixes, regression evidence, CI outcomes, and residual scope limits."
+    },
+    {
+      "path": "docs-internal/audits/scientific-validity-phase8-final.md",
+      "category": "Verification",
+      "reason": "Phase 8 final scientific-validity audit: scoped evidence, conditional release-quality decision, limitations and closure."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
