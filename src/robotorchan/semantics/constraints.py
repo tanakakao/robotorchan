@@ -68,6 +68,7 @@ class ClassificationConstraint:
 
     output: int | str
     feasible_class: int | object = 1
+    feasible_classes: tuple[object, ...] | None = None
     probability_threshold: float | None = None
 
     def __post_init__(self) -> None:
@@ -90,7 +91,7 @@ class ClassificationConstraint:
         metadata = model.output_classification_metadata(output_index)
         if metadata is None:
             raise TypeError("ClassificationConstraint requires classification metadata.")
-        self.resolve_feasible_class(model)
+        self.resolve_feasible_classes(model)
         return output_index
 
     def resolve_feasible_class(self, model: HeterogeneousModel) -> int:
@@ -105,6 +106,23 @@ class ClassificationConstraint:
             argument_name="feasible_class",
         )
 
+    def resolve_feasible_classes(self, model: HeterogeneousModel) -> tuple[int, ...]:
+        """Resolve one or more class labels to unique probability indices."""
+        if self.feasible_classes is None:
+            return (self.resolve_feasible_class(model),)
+        if not isinstance(self.feasible_classes, tuple) or not self.feasible_classes:
+            raise ValueError("feasible_classes must be a nonempty tuple.")
+        metadata = model.output_classification_metadata(self.output)
+        if metadata is None:
+            raise TypeError("ClassificationConstraint requires classification metadata.")
+        indices = tuple(
+            resolve_class(value, metadata, argument_name="feasible_classes")
+            for value in self.feasible_classes
+        )
+        if len(set(indices)) != len(indices):
+            raise ValueError("feasible_classes must not contain duplicates.")
+        return indices
+
     def resolve_owner(self, model: HeterogeneousModel) -> tuple[int, int]:
         """Resolve the referenced output to its entry and local output index."""
         return model.output_owner(self.resolve_output(model))
@@ -117,7 +135,8 @@ class ClassificationConstraint:
         entry_index, _ = self.resolve_owner(model)
         return ClassificationProbabilityOfFeasibility(
             model[entry_index],
-            feasible_class=self.resolve_feasible_class(model),
+            feasible_class=self.resolve_feasible_class(model) if self.feasible_classes is None else 1,
+            feasible_classes=self.resolve_feasible_classes(model),
         )
 
     def to_probability_constraint(
