@@ -7367,6 +7367,16 @@
       "path": "docs-internal/audits/scientific-validity-phase8-final.md",
       "category": "Verification",
       "reason": "Phase 8 final scientific-validity audit: scoped evidence, conditional release-quality decision, limitations and closure."
+    },
+    {
+      "path": "docs/theory/30_heterogeneous_classification_constraints.md",
+      "category": "Theory",
+      "reason": "Mathematical formulation and limitations of classification feasibility weighting."
+    },
+    {
+      "path": "docs/guide/30_heterogeneous_classification_constraints.md",
+      "category": "Guide",
+      "reason": "Implementation mapping for heterogeneous classification-constrained acquisition."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
