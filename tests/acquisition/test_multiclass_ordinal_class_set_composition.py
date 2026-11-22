@@ -94,14 +94,23 @@ def test_class_set_weighting_preserves_native_q_acquisition(
 
     # t-batch=2, simultaneous candidate count q and input dimension d=1.
     candidates = torch.linspace(0.20, 0.80, 2 * q, dtype=torch.double).view(2, q, 1)
-    with torch.no_grad():
-        raw_objective = acquisition.objective_acquisition(candidates)
-        # Multiclass.predict_proba uses MC sampling. Compare using identical
-        # random draws rather than incorrectly treating MC estimates as exact.
-        torch.manual_seed(913)
-        per_candidate_pof = acquisition.probability_of_feasibility(candidates)
-        torch.manual_seed(913)
-        weighted_value = acquisition(candidates)
+    # Capture the exact PoF used *inside this forward call*: multiclass
+    # predict_proba re-samples latent GP draws, so a separate call is not
+    # guaranteed to return the same Monte Carlo estimate.
+    observed_pof = []
+
+    def capture_pof(_module, _inputs, output):
+        observed_pof.append(output.detach().clone())
+
+    handle = acquisition.probability_of_feasibility.register_forward_hook(capture_pof)
+    try:
+        with torch.no_grad():
+            raw_objective = acquisition.objective_acquisition(candidates)
+            weighted_value = acquisition(candidates)
+    finally:
+        handle.remove()
+    assert len(observed_pof) == 1
+    per_candidate_pof = observed_pof[0]
 
     assert per_candidate_pof.shape == (2, q)
     assert raw_objective.shape == weighted_value.shape == (2,)
