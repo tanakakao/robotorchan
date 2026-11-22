@@ -444,6 +444,57 @@ def make_mixed_constrained_qei_acquisition(
     return acquisition
 
 
+def make_classification_constrained_qei_acquisition(
+    model: HeterogeneousModel,
+    semantics: ProblemSemantics,
+    *,
+    best_f: float | Tensor,
+    sampler: MCSampler | None = None,
+    q_reduction: str = "product",
+) -> AcquisitionFunction:
+    """Weight regression qEI by class-set feasibility probabilities.
+
+    The classifier outputs may be binary, multiclass, or ordinal. This is
+    *soft probability weighting*, not enforcement of a probability threshold.
+    Classifiers are treated as independent marginal feasibility factors.
+    """
+    plan = resolve_acquisition_composition(model, semantics)
+    if len(plan.objectives) != 1:
+        raise ValueError("Classification-constrained qEI requires exactly one objective.")
+    objective_binding = plan.objectives[0]
+    if not isinstance(objective_binding.objective, RegressionObjective):
+        raise TypeError("Classification-constrained qEI requires RegressionObjective.")
+    if not plan.feasibility:
+        raise ValueError("Classification-constrained qEI requires classification constraints.")
+    if any(
+        not isinstance(binding.representation, ProbabilityOfFeasibility)
+        for binding in plan.feasibility
+    ):
+        raise TypeError(
+            "Only unthresholded classification probabilities are supported; "
+            "probability thresholds require a separate constrained optimizer."
+        )
+    outputs = [binding.output_index for binding in plan.feasibility]
+    if len(set(outputs)) != len(outputs):
+        raise ValueError("Repeated classification output constraints are not independent.")
+
+    bridge = make_botorch_objective_bridge(model, objective_binding)
+    acquisition = qExpectedImprovement(
+        model=bridge.model,
+        best_f=objective_binding.objective.direction.apply(torch.as_tensor(best_f)),
+        sampler=sampler,
+        objective=bridge.objective,
+    )
+    probabilities = [
+        make_classification_feasibility_bridge(model, binding) for binding in plan.feasibility
+    ]
+    return FeasibilityWeightedAcquisition(
+        acquisition,
+        IndependentFeasibilityAggregator(probabilities),
+        q_reduction=q_reduction,
+    )
+
+
 def make_qnei_acquisition(
     model: HeterogeneousModel,
     semantics: ProblemSemantics,
