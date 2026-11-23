@@ -43,9 +43,7 @@ class _GPScmMCLogEI(AcquisitionFunction):
         self.mc_samples = mc_samples
         self.mc_seed = mc_seed
         # optimize_causal_acqfs reads the acquisition's registered dtype/device.
-        self.register_buffer(
-            "_dtype_marker", torch.empty(0, dtype=scm.dtype, device=scm.device)
-        )
+        self.register_buffer("_dtype_marker", torch.empty(0, dtype=scm.dtype, device=scm.device))
 
     def forward(self, X: Tensor) -> Tensor:
         """Return log MC-EI per t-batch, using the same RNG stream per call."""
