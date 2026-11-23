@@ -83,7 +83,7 @@ def optimize_causal_acqfs(
             raise TypeError("Each acquisition must be a BoTorch AcquisitionFunction.")
         group = frozenset(nodes)
         if group in seen:
-            raise ValueError("Each intervention set must appear only once, regardless of node order.")
+            raise ValueError("Each intervention set must appear only once.")
         seen.add(group)
         required.update(nodes)
 
