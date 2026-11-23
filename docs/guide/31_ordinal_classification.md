@@ -131,3 +131,26 @@ Random Samplingを含む複数シードのラベル予算比較で実施しま�
 - `src/robotorchan/models/classification/ordinal/likelihood.py`
 - `src/robotorchan/models/classification/posterior/probability.py`
 - [二値分類の共通基礎ガイド](24_classification.md)
+
+
+## 非定常・Spectral Mixtureカーネル
+
+順序分類はクラスごとに独立したGPを置くのではなく、
+**単一の潜在GPと順序付き閾値**を利用します。
+これらのモデルでは、その潜在GPの共分散のみを差し替えます。
+
+- `NonstationaryOrdinalGPClassifier`：入力依存の局所長さ尺度を持つGibbsカーネル
+- `SpectralMixtureOrdinalGPClassifier`：周期的・複数周波数の定常共分散
+- `MixedNonstationaryOrdinalGPClassifier`：連続＋カテゴリ入力の非定常共分散
+- `MixedSpectralMixtureOrdinalGPClassifier`：連続＋カテゴリ入力のSpectral Mixture共分散
+
+標準の順序モデルと同じ`fit()`、`predict_proba()`、
+`posterior()`を使用します。非定常の連続入力モデルでは
+`local_lengthscale(X)`で局所的な滑らかさを確認できます。
+カテゴリ変数の探索可能値はモデルの`cat_dims`とは別に候補生成側で管理します。
+
+理論上、Gibbsカーネルは場所による滑らかさの変化を表し、
+Spectral Mixtureは定常な周波数構造を表します。
+順序尤度の閾値の意味はどちらのカーネルでも変わりません。
+詳細は[非定常GP](../theory/17_nonstationary_gp.md)と
+[表現力の高いGP](../theory/22_expressive_gp.md)を参照してください。

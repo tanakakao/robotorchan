@@ -83,7 +83,15 @@ from robotorchan.models.classification.expressive.joint_encoder import (
     JointEncoderMulticlassGPClassifier,
     JointEncoderOrdinalGPClassifier,
 )
+from robotorchan.models.classification.expressive.nonstationary import (
+    MixedNonstationaryMulticlassGPClassifier,
+    MixedNonstationaryOrdinalGPClassifier,
+    NonstationaryMulticlassGPClassifier,
+    NonstationaryOrdinalGPClassifier,
+)
 from robotorchan.models.classification.expressive.spectral_mixture import (
+    MixedSpectralMixtureMulticlassGPClassifier,
+    MixedSpectralMixtureOrdinalGPClassifier,
     SpectralMixtureMulticlassGPClassifier,
     SpectralMixtureOrdinalGPClassifier,
 )
@@ -167,14 +175,20 @@ __all__ = [
     "MixedMultiFidelityBinaryGPClassifier",
     "MixedMulticlassSingleTaskGPClassifier",
     "MixedNonstationaryBinarySingleTaskGPClassifier",
+    "MixedNonstationaryMulticlassGPClassifier",
+    "MixedNonstationaryOrdinalGPClassifier",
     "MixedOrdinalSingleTaskGPClassifier",
     "MixedSpectralMixtureBinaryGPClassifier",
+    "MixedSpectralMixtureMulticlassGPClassifier",
+    "MixedSpectralMixtureOrdinalGPClassifier",
     "MultiFidelityBinaryGPClassifier",
     "MultiTaskBinaryGPClassifier",
     "MulticlassSingleTaskGPClassifier",
     "NonGPBinaryClassificationMixin",
     "NonstationaryBinarySingleTaskGPClassifier",
     "NonstationaryMultiTaskBinaryGPClassifier",
+    "NonstationaryMulticlassGPClassifier",
+    "NonstationaryOrdinalGPClassifier",
     "OrderedProbitLikelihood",
     "OrdinalSingleTaskGPClassifier",
     "PCABinarySingleTaskGPClassifier",

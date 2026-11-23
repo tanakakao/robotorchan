@@ -93,3 +93,26 @@ Mixedモデルでは `cat_dims` を指定しますが、
 - `src/robotorchan/models/classification/multiclass/standard/single_task.py`
 - `src/robotorchan/models/classification/posterior/probability.py`
 - [二値分類の共通基礎ガイド](24_classification.md)
+
+
+## 非定常・Spectral Mixtureカーネル
+
+マルチクラス分類では各クラスの潜在GPの共分散を変更します。
+既存の`MulticlassSingleTaskGPClassifier`を基礎として、
+`NonstationaryMulticlassGPClassifier`と
+`SpectralMixtureMulticlassGPClassifier`を提供します。
+カテゴリ入力を含む場合は、それぞれ
+`MixedNonstationaryMulticlassGPClassifier`、
+`MixedSpectralMixtureMulticlassGPClassifier`を利用します。
+
+非定常モデルは既存の`GibbsKernel`を使い、入力に応じた局所長さ尺度を学習します。
+`local_lengthscale(X)`はクラスごとの値を返します。
+Spectral Mixtureは複数周波数の定常共分散であり、非定常性と同義ではありません。
+混合変数では連続列だけにこれらのカーネルを適用し、
+カテゴリ列には既存の混合共分散構成を再利用します。
+
+`fit()`、`predict_proba()`、分類用獲得関数の処理経路は
+標準マルチクラスモデルと共通です。候補探索では
+`cat_dims`だけでなく、候補側にも許容カテゴリ値を指定してください。
+非定常カーネルの数学的背景は[非定常GP](../theory/17_nonstationary_gp.md)、
+Spectral Mixtureの背景は[表現力の高いGP](../theory/22_expressive_gp.md)を参照してください。
