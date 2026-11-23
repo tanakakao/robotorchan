@@ -41,9 +41,10 @@ class CausalBOStudy:
     """Sequential intervention experiments without causal-structure discovery.
 
     The default mode retains independent intervention-set GPs and the
-    existing per-set Sobol cold start. In gp_scm mode, provided observational
-    records fit shared structural mechanisms and one initial Sobol intervention
-    establishes the measured incumbent for MC expected improvement.
+    existing per-set Sobol cold start. In gp_scm mode, observed data
+    fit shared structural mechanisms. At least one real Sobol intervention
+    establishes the incumbent; additional Sobol trials are proposed only if
+    a conditional mechanism still lacks two usable measured records.
     Only one RUNNING trial is allowed at a time.
     """
 
