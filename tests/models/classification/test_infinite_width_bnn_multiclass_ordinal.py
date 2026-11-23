@@ -53,14 +53,18 @@ def test_infinite_width_bnn_classification_fit_predict_and_propose(model_type):
     pool = x[:8]
     with torch.no_grad():
         probs = model.predict_proba(pool)
-        posterior = model.probability_posterior(pool, **(
+        posterior_kwargs = (
             {"num_samples": 16, "seed": 42}
-            if isinstance(model, (
-                InfiniteWidthBNNMulticlassGPClassifier,
-                MixedInfiniteWidthBNNMulticlassGPClassifier,
-            ))
+            if isinstance(
+                model,
+                (
+                    InfiniteWidthBNNMulticlassGPClassifier,
+                    MixedInfiniteWidthBNNMulticlassGPClassifier,
+                ),
+            )
             else {}
-        ))
+        )
+        posterior = model.probability_posterior(pool, **posterior_kwargs)
         acquisition = PredictiveEntropy(model)(pool.unsqueeze(-2))
         batch_scores = qPredictiveEntropy(model)(pool.reshape(4, 2, 3))
     assert probs.shape == (8, 3)
