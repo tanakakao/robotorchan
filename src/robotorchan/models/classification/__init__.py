@@ -96,6 +96,20 @@ from robotorchan.models.classification.expressive.spectral_mixture import (
     SpectralMixtureOrdinalGPClassifier,
 )
 from robotorchan.models.classification.model_list import ClassificationModelList
+from robotorchan.models.classification.multiclass.high_dimensional.alebo import (
+    ALEBOMulticlassGPClassifier,
+    ALEBOOrdinalGPClassifier,
+)
+from robotorchan.models.classification.multiclass.high_dimensional.reduced import (
+    PCAMulticlassGPClassifier,
+    PCAOrdinalGPClassifier,
+    PLSMulticlassGPClassifier,
+    PLSOrdinalGPClassifier,
+    RandomProjectionMulticlassGPClassifier,
+    RandomProjectionOrdinalGPClassifier,
+    ReducedMulticlassGPClassifier,
+    ReducedOrdinalGPClassifier,
+)
 from robotorchan.models.classification.multiclass.standard.single_task import (
     MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
@@ -130,6 +144,8 @@ from robotorchan.models.classification.reliability import (
 __all__ = [
     "CLASSIFICATION_MODEL_REGISTRY",
     "ALEBOBinarySingleTaskGPClassifier",
+    "ALEBOMulticlassGPClassifier",
+    "ALEBOOrdinalGPClassifier",
     "BinaryClassificationMixin",
     "BinarySingleTaskDeepGPClassifier",
     "BinarySingleTaskGPClassifier",
@@ -192,11 +208,19 @@ __all__ = [
     "OrderedProbitLikelihood",
     "OrdinalSingleTaskGPClassifier",
     "PCABinarySingleTaskGPClassifier",
+    "PCAMulticlassGPClassifier",
+    "PCAOrdinalGPClassifier",
     "PLSBinarySingleTaskGPClassifier",
+    "PLSMulticlassGPClassifier",
+    "PLSOrdinalGPClassifier",
     "ProbabilityCalibrator",
     "RandomForestBinaryClassifier",
     "RandomProjectionBinarySingleTaskGPClassifier",
+    "RandomProjectionMulticlassGPClassifier",
+    "RandomProjectionOrdinalGPClassifier",
     "ReducedBinarySingleTaskGPClassifier",
+    "ReducedMulticlassGPClassifier",
+    "ReducedOrdinalGPClassifier",
     "ReplicateLabelBinarySingleTaskGPClassifier",
     "RobustBinaryClassificationMixin",
     "RobustClassificationMetadata",
