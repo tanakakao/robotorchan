@@ -119,7 +119,9 @@ variance = samples.var(0, unbiased=False)
 
 上記は実装したモデル単体APIの例。`sample_intervention`はモデルが返す観測結果のサンプルであり、BoTorch `Posterior`であると偽らない。summaryは既存Tensorの集約操作を利用し、不必要な独自posterior型を公開しない。モデルから介入に関係なく`fit`、ノード条件付きモデルの予測、do予測を独立して使える設計とする。
 
-実装ファイル：`src/robotorchan/causal/gp_scm.py`。テスト：`tests/causal/test_gp_scm.py`。入力の観測・介入状態は既存`CausalObservation`と`HardIntervention`をそのまま使用。新たな独自GP、事後分布クラス、専用SCM用Optimizerは追加しない。\n\n### 学習規則
+実装ファイル：`src/robotorchan/causal/gp_scm.py`。テスト：`tests/causal/test_gp_scm.py`。入力の観測・介入状態は既存`CausalObservation`と`HardIntervention`をそのまま使用。新たな独自GP、事後分布クラス、専用SCM用Optimizerは追加しない。
+
+### 学習規則
 
 - 入力：既知DAGと`CausalObservation`。観測データと介入データを区別して受け取る。
 - 非rootノード`V_j`：実際に**そのノード自体へ介入していない**記録のみから`P(V_j | Pa_j)`を既存`SingleTaskGP`等で学習。親の値とノード値が揃ったレコードに限定する。親への介入があっても`V_j`自身の生成機構が変わっていなければ利用可能（mechanism invarianceが前提）。
@@ -148,13 +150,17 @@ variance = samples.var(0, unbiased=False)
 - **現段階**：構造に沿ったMCサンプル評価のみ公開し、BoTorch `Model`や`Posterior`の完全互換を主張しない。非rootの条件付きGPには従来の`SingleTaskGP.posterior`を再利用する。直接的なMC獲得関数・Study統合は後続Phaseの担当。
 - 候補値に対する推論でMC乱数が変わると獲得関数の数値最適化が不安定になるため、共通乱数・固定base samples等の扱いをPhase 4〜5の狭い機能テストで確認する。
 
-## 6. Phase 5 — Study統合契約
+## 6. Phase 5 — Study統合契約（実装）
 
 - `CausalBOStudy`の既定値と既存`ask()`/`tell()`契約は**介入集合別GP方式**のまま維持する。
-- GP-SCM方式を追加するときも`CausalBOStudy`の新ループは作らず、内部のモデル構築・候補提案経路だけ切り替える。
-- 現状の`tell(trial, scalar)`は介入ノード値と成果`Y`しか含まず、**中間ノード`Z`等の親子の値が揃わない場合がある**。GP-SCM学習に必要な完全ノード観測が足りなければ、観測の追加要求または明示エラーとする。欠測ノードをSCMから勝手に「実測」扱いしない。
-- 完了／失敗状態、単一RUNNING試行、Trial番号、初期Sobol、履歴、コストは既存処理を流用する。因果GP-SCMは観測データから学習できるため、既存の「各介入集合に少なくとも`n_initial_trials`件」のcold-start要件を新方式へ機械的に転用しない。モデルごとに必要なデータと初期介入方針を明示する。
-- モデル単体のdo予測とStudyを分離し、`CausalBOStudy`なしの単発提案が可能であることを受け入れ条件とする。
+- `model_type="gp_scm"`を明示したときのみ`GPStructuralCausalModel`を`fit()`してキャッシュする。初期`observational_data`は純観測`CausalObservation(intervention=None)`限定で、Studyの成功Trialとは別管理。
+- `propose_gp_scm_intervention(..., best_f, ...)`を公開し、Studyなしでも単発で介入集合と値を最適化可能。内部`_GPScmMCLogEI`はBoTorch `AcquisitionFunction`を利用するが、構造モデルを偽の`Model`/`Posterior`に変換しない。
+- MCの各評価では固定seedとfork_rngを使い再現性を確保する。形状の違う評価間の完全な共通base samplesは未保証であり、MC EIの0改善領域では勾配が平坦になり得る。改善基準`best_f`は実介入の成功Trialのみで決める。
+
+- 新しいStudyループを作らず、`CausalBOStudy`の既存のTrial状態・履歴・`ask()`/`tell()`を再利用し、モデル構築・提案経路だけを切り替える。
+- `tell(trial, scalar)`は従来互換で許容するが、**中間ノード`Z`等を測定しない限り**GP-SCMの条件付き機構に十分なレコードが確保できず、`fit()`時に明示的な不足エラーとなる。観測していないノードをSCMから勝手に「実測」として補完しない。
+- 完了／失敗状態、単一RUNNING試行、Trial番号、初期Sobol、履歴、コストは既存処理を再利用。GP-SCM方式は介入による実測`best_f`を確保する**最初の1試行のみSobol**とし、その後は条件付き機構の学習データ要件に従う。集合ごとの`n_initial_trials`は要求しない。
+- モデル単体のdo予測とStudyを分離し、`CausalBOStudy`なしの単発提案も公開する。対象テスト：`tests/causal/test_gp_scm_study.py`。
 
 ## 7. 後続Phaseの受け入れ条件（境界を固定する）
 
