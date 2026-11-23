@@ -8,10 +8,10 @@ from robotorchan.models.classification import (
     PCAOrdinalGPClassifier,
     PLSMulticlassGPClassifier,
     PLSOrdinalGPClassifier,
-    ReducedMulticlassGPClassifier,
-    ReducedOrdinalGPClassifier,
     RandomProjectionMulticlassGPClassifier,
     RandomProjectionOrdinalGPClassifier,
+    ReducedMulticlassGPClassifier,
+    ReducedOrdinalGPClassifier,
 )
 from robotorchan.reduction.input import PCAInputReducer
 
