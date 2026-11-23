@@ -79,6 +79,10 @@ from robotorchan.models.classification.conformal import (
     classification_nonconformity_scores,
     conformal_quantile,
 )
+from robotorchan.models.classification.joint_encoder import (
+    JointEncoderMulticlassGPClassifier,
+    JointEncoderOrdinalGPClassifier,
+)
 from robotorchan.models.classification.model_list import ClassificationModelList
 from robotorchan.models.classification.multiclass.standard.single_task import (
     MixedMulticlassSingleTaskGPClassifier,
@@ -147,6 +151,8 @@ __all__ = [
     "InputDependentLabelNoiseBinarySingleTaskGPClassifier",
     "InputDependentLabelNoiseLikelihood",
     "JointEncoderBinaryGPClassifier",
+    "JointEncoderMulticlassGPClassifier",
+    "JointEncoderOrdinalGPClassifier",
     "KroneckerMultiTaskBinaryGPClassifier",
     "LabelNoiseBernoulliLikelihood",
     "LabelNoiseBinarySingleTaskGPClassifier",
