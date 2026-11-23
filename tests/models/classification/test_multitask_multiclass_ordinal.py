@@ -5,6 +5,8 @@ import torch
 from gpytorch.kernels import IndexKernel, ProductKernel
 
 from robotorchan.models.classification import (
+    KroneckerMultiTaskMulticlassGPClassifier,
+    KroneckerMultiTaskOrdinalGPClassifier,
     MultiTaskMulticlassGPClassifier,
     MultiTaskOrdinalGPClassifier,
 )
@@ -54,3 +56,42 @@ def test_multitask_rejects_noninteger_and_negative_task_ids(model_type):
         task[0, 0] = invalid
         with pytest.raises(ValueError, match="task_feature"):
             model_type(torch.cat((x, task), dim=-1), y, task_feature=-1, num_classes=3)
+
+
+@pytest.mark.parametrize(
+    "model_type",
+    [KroneckerMultiTaskMulticlassGPClassifier, KroneckerMultiTaskOrdinalGPClassifier],
+)
+def test_block_design_multitask_fit_predict_proposal(model_type):
+    torch.manual_seed(19)
+    train_X = torch.rand(12, 2, dtype=torch.double)
+    train_Y = torch.stack((torch.arange(12) % 3, (torch.arange(12) + 1) % 3), dim=-1)
+    model = model_type(train_X, train_Y, num_classes=3, rank=2)
+    assert model.num_tasks == 2
+    model.fit(epochs=2, lr=0.005)
+    candidates = torch.rand(7, 2, dtype=torch.double)
+    with torch.no_grad():
+        probabilities = model.predict_proba(candidates)
+        entropy = -torch.special.xlogy(probabilities, probabilities).sum(-1)
+        next_index = int(entropy.mean(dim=-1).argmax())
+        proposed = candidates[next_index]
+    assert probabilities.shape == (7, 2, 3)
+    torch.testing.assert_close(
+        probabilities.sum(-1), torch.ones(7, 2, dtype=torch.double), atol=1e-5, rtol=1e-5
+    )
+    assert model.predict_class(candidates).shape == (7, 2)
+    assert proposed.shape == (2,)
+    # Joint latent posterior is flattened over the task rows.
+    assert model.posterior(candidates).mean.shape[-2] == 14
+    with pytest.raises(ValueError, match="Expected block-design candidate"):
+        model.predict_proba(torch.rand(3, 3, dtype=torch.double))
+
+
+@pytest.mark.parametrize(
+    "model_type",
+    [KroneckerMultiTaskMulticlassGPClassifier, KroneckerMultiTaskOrdinalGPClassifier],
+)
+def test_block_design_requires_matching_observation_grid(model_type):
+    x = torch.rand(5, 2, dtype=torch.double)
+    with pytest.raises(ValueError, match="train_Y"):
+        model_type(x, torch.zeros(4, 2, dtype=torch.long), num_classes=3)
