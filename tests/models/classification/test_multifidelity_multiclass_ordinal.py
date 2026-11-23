@@ -34,21 +34,17 @@ def test_multifidelity_fit_predict_probability_and_candidate(model_type):
         x[:, 1] = torch.arange(15) % 2
     y = torch.arange(15) % 3
     kwargs = {"cat_dims": [1]} if mixed else {}
-    model = model_type(
-        x, y, num_classes=3, iteration_fidelity=-1, **kwargs
-    )
+    model = model_type(x, y, num_classes=3, iteration_fidelity=-1, **kwargs)
     kernel = (
         model.class_models[0].model.covar_module
-        if isinstance(model, (MultiFidelityMulticlassGPClassifier,
-                              MixedMultiFidelityMulticlassGPClassifier))
+        if isinstance(
+            model, (MultiFidelityMulticlassGPClassifier, MixedMultiFidelityMulticlassGPClassifier)
+        )
         else model.model.covar_module
     )
     assert isinstance(kernel, ScaleKernel)
     assert isinstance(kernel.base_kernel, ProductKernel)
-    assert any(
-        isinstance(part, ExponentialDecayKernel)
-        for part in kernel.base_kernel.kernels
-    )
+    assert any(isinstance(part, ExponentialDecayKernel) for part in kernel.base_kernel.kernels)
     model.fit(epochs=2, lr=0.005)
     candidates = x[:8].clone()
     with torch.no_grad():
@@ -57,8 +53,10 @@ def test_multifidelity_fit_predict_probability_and_candidate(model_type):
         selected = candidates[entropy.argmax()]
     assert probabilities.shape == (8, 3)
     torch.testing.assert_close(
-        probabilities.sum(-1), torch.ones(8, dtype=torch.double),
-        atol=1e-5, rtol=1e-5,
+        probabilities.sum(-1),
+        torch.ones(8, dtype=torch.double),
+        atol=1e-5,
+        rtol=1e-5,
     )
     assert selected.shape == (4,)
 
