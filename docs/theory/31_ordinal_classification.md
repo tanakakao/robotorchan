@@ -232,3 +232,35 @@ MAEの解釈に注意してください。保留データとクラス別の誤�
 - [61番Notebook：回帰×分類制約付きBO](../../examples/notebooks/61_heterogeneous_classification_constraints.ipynb)
 - Chu, W., & Ghahramani, Z. (2005). *Gaussian Processes for Ordinal Regression*. Journal of Machine Learning Research 6, 1019–1041.
 - Rasmussen, C. E., & Williams, C. K. I. (2006). *Gaussian Processes for Machine Learning*, Chapter 3.
+
+
+## 高次元入力と順序プロビット
+
+高次元入力 $x\in\mathbb R^D$ に固定した次元削減
+$T:\mathbb R^D\to\mathbb R^d$ を適用し、単一の潜在関数
+$f(T(x))$ をGPでモデル化します。潜在事後を
+$\mathcal N(\mu(T(x)),s^2(T(x)))$ と近似すると、
+閾値 $b_c$ による順序クラス確率は
+
+$$
+p(y=c\mid x,\mathcal D)=
+\Phi\left(\frac{b_{c+1}-\mu(T(x))}{\sqrt{1+s^2(T(x))}}\right)
+-\Phi\left(\frac{b_c-\mu(T(x))}{\sqrt{1+s^2(T(x))}}\right).
+$$
+
+PCAは入力分散を重視し、PLSは順序ラベルの数値符号化と入力の関係を
+利用します。順序カテゴリの番号を等間隔と仮定したPLS変換が、
+実際のカテゴリ間隔を反映するとは限りません。
+Random Projectionは教師信号を用いずに縮約します。
+
+ALEBOを用いる場合、GPへの入力は元の $x$ ではなく低次元探索座標 $z$ です。
+実験条件 $x$ への写像はALEBO探索戦略が担います。
+Mahalanobisカーネルの採用は順序プロビット尤度や閾値の定義を変更しません。
+
+縮約後の識別性能、NLL、Brier score、順序ラベル誤差を保留データで比較します。
+縮約器を評価データまで含めて学習するとデータ漏洩になるため、
+訓練データでのみfitしてください。
+
+**参考文献**：Chu & Ghahramani (2005), *Gaussian Processes for Ordinal
+Regression*; Letham et al. (2020), *Re-examining Linear Embeddings for
+High-Dimensional Bayesian Optimization*.
