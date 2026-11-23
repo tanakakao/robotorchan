@@ -104,9 +104,8 @@ class OrdinalSingleTaskDeepGPClassifier(ClassificationModelMixin, SingleTaskDeep
         # Posterior stores correlated DeepGP trajectories. Average class
         # probabilities over these trajectories, not over a Gaussian surrogate.
         latent = self.latent_posterior(X, num_samples=resolved)
-        return self.likelihood.class_probabilities(
-            latent._samples.squeeze(-1)
-        ).mean(dim=0)
+        trajectories = latent.rsample(torch.Size([resolved]))
+        return self.likelihood.class_probabilities(trajectories.squeeze(-1)).mean(dim=0)
 
     def probability_posterior(
         self,
@@ -116,7 +115,8 @@ class OrdinalSingleTaskDeepGPClassifier(ClassificationModelMixin, SingleTaskDeep
     ) -> ClassificationProbabilityPosterior:
         resolved = self.posterior_samples if num_samples is None else int(num_samples)
         latent = self.latent_posterior(X, num_samples=resolved)
-        samples = self.likelihood.class_probabilities(latent._samples.squeeze(-1))
+        trajectories = latent.rsample(torch.Size([resolved]))
+        samples = self.likelihood.class_probabilities(trajectories.squeeze(-1))
         return ClassificationProbabilityPosterior(
             latent,
             sample_transform=lambda values: self.likelihood.class_probabilities(
