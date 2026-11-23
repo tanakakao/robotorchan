@@ -249,3 +249,117 @@ def test_rejects_invalid_gpscm_setup(graph_and_observations, fitted_model):
             best_f=0.5,
             direction="invalid",
         )
+
+
+
+def test_gp_scm_initialization_collects_missing_mechanism_records():
+    """Do-only Y measurements can bootstrap a GP if root X is observed already."""
+    graph = CausalGraph({"X": (), "Y": ("X",)})
+    root_data = [
+        CausalObservation({"X": 0.1}),
+        CausalObservation({"X": 0.9}),
+    ]
+    study = CausalBOStudy(
+        graph,
+        "Y",
+        (("X",),),
+        {"X": (0.0, 1.0)},
+        model_type="gp_scm",
+        observational_data=root_data,
+        n_initial_trials=1,
+        optimizer="sobol",
+        raw_samples=8,
+        mc_samples=16,
+    )
+    for step in range(2):
+        trial = study.ask()
+        assert trial.proposal is None
+        assert trial.number == step
+        x = trial.intervention.values["X"]
+        study.tell(trial, {"Y": 1.0 + x})
+    assert len(study.observations) == 2
+    assert isinstance(study.fit(), GPStructuralCausalModel)
+
+    proposed = study.ask()
+    assert isinstance(proposed.proposal, CausalAcquisitionProposal)
+    assert 0.0 <= proposed.intervention.values["X"] <= 1.0
+
+
+def test_gp_scm_reports_unidentifiable_root_instead_of_repeating_sobol():
+    """A root manipulated by every available intervention needs observational data."""
+    graph = CausalGraph({"X": (), "Y": ("X",)})
+    study = CausalBOStudy(
+        graph,
+        "Y",
+        (("X",),),
+        {"X": (0.0, 1.0)},
+        model_type="gp_scm",
+    )
+    first = study.ask()
+    study.tell(first, {"Y": 0.7})
+    with pytest.raises(ValueError, match="observational_data"):
+        study.ask()
+    assert len(study.trials) == 1
+
+
+def test_gp_scm_requests_missing_intermediate_measurements_in_tell():
+    """Do not pretend unmeasured mediators were observed."""
+    graph = CausalGraph({"X": (), "Z": ("X",), "Y": ("Z",)})
+    study = CausalBOStudy(
+        graph,
+        "Y",
+        (("X",),),
+        {"X": (0.0, 1.0)},
+        model_type="gp_scm",
+        observational_data=[
+            CausalObservation({"X": 0.1}),
+            CausalObservation({"X": 0.9}),
+        ],
+    )
+    first = study.ask()
+    study.tell(first, {"Y": 0.7})  # Z is unknown, not an inferred measurement
+    with pytest.raises(ValueError, match=r"tell\\(\\)"):
+        study.ask()
+    assert len(study.trials) == 1
+
+
+def test_constant_root_mc_logei_matches_exact_improvement_and_cost():
+    """Known root-only do model has an analytic EI for both directions."""
+    graph = CausalGraph({"X": (), "Y": ()})
+    model = GPStructuralCausalModel(
+        graph,
+        [
+            CausalObservation({"X": 0.1, "Y": 1.0}),
+            CausalObservation({"X": 0.9, "Y": 1.0}),
+        ],
+    )
+    model.fit()
+    X = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double)
+    for maximize, incumbent in ((True, 0.75), (False, 1.25)):
+        acquisition = _GPScmMCLogEI(
+            model,
+            nodes=("X",),
+            outcome="Y",
+            best_f=incumbent,
+            maximize=maximize,
+            mc_samples=32,
+            mc_seed=11,
+        )
+        native_values = acquisition(X)
+        torch.testing.assert_close(
+            native_values,
+            torch.full((2,), log(0.25), dtype=torch.double),
+        )
+    selected = propose_gp_scm_intervention(
+        model,
+        [("X",)],
+        {"X": (0.0, 1.0)},
+        outcome="Y",
+        best_f=0.75,
+        optimizer="sobol",
+        raw_samples=8,
+        intervention_costs={frozenset({"X"}): 2.0},
+        mc_samples=16,
+    )
+    assert isclose(selected.acquisition_value, log(0.25), abs_tol=1e-10)
+    assert isclose(selected.ranking_score, log(0.125), abs_tol=1e-10)
