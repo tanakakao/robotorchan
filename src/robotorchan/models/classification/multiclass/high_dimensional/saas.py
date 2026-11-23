@@ -34,9 +34,7 @@ class _SparseARDMulticlassPriorMixin:
         return total
 
 
-class SaasMulticlassGPClassifier(
-    _SparseARDMulticlassPriorMixin, MulticlassSingleTaskGPClassifier
-):
+class SaasMulticlassGPClassifier(_SparseARDMulticlassPriorMixin, MulticlassSingleTaskGPClassifier):
     """Multiclass variational GP with independent class-wise SAAS-style ARD priors."""
 
     def __init__(
@@ -91,9 +89,7 @@ class MapSaasMulticlassGPClassifier(
     ) -> None:
         if tau <= 0.0:
             raise ValueError("tau must be positive.")
-        covar_module = MapSaasBinarySingleTaskGPClassifier._make_sparse_covar_module(
-            train_X, tau
-        )
+        covar_module = MapSaasBinarySingleTaskGPClassifier._make_sparse_covar_module(train_X, tau)
         super().__init__(train_X, train_Y, num_classes=num_classes, covar_module=covar_module)
         self.tau = float(tau)
 
@@ -111,8 +107,6 @@ class MapSaasOrdinalGPClassifier(OrdinalSingleTaskGPClassifier):
     ) -> None:
         if tau <= 0.0:
             raise ValueError("tau must be positive.")
-        covar_module = MapSaasBinarySingleTaskGPClassifier._make_sparse_covar_module(
-            train_X, tau
-        )
+        covar_module = MapSaasBinarySingleTaskGPClassifier._make_sparse_covar_module(train_X, tau)
         super().__init__(train_X, train_Y, num_classes=num_classes, covar_module=covar_module)
         self.tau = float(tau)
