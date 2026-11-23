@@ -148,6 +148,7 @@ from robotorchan.models.classification.reliability import (
 )
 
 __all__ = [
+    "CLASSIFICATION_MODEL_REGISTRY",
     "ALEBOBinarySingleTaskGPClassifier",
     "ALEBOMulticlassGPClassifier",
     "ALEBOOrdinalGPClassifier",
@@ -156,7 +157,6 @@ __all__ = [
     "BinarySingleTaskGPClassifier",
     "BootstrapBinaryClassificationEnsemble",
     "BootstrapGradientBoostingBinaryClassifier",
-    "CLASSIFICATION_MODEL_REGISTRY",
     "CalibratedBinaryClassifier",
     "ClassificationEnsemblePosterior",
     "ClassificationInputUncertaintyType",
