@@ -55,8 +55,13 @@ def test_standalone_native_mc_proposal_and_determinism(fitted_model):
     assert isfinite(result.ranking_score)
 
     acquisition = _GPScmMCLogEI(
-        fitted_model, nodes=("X",), outcome="Y", best_f=0.5,
-        maximize=True, mc_samples=32, mc_seed=23,
+        fitted_model,
+        nodes=("X",),
+        outcome="Y",
+        best_f=0.5,
+        maximize=True,
+        mc_samples=32,
+        mc_seed=23,
     )
     X = torch.tensor([[[0.25]], [[0.75]]], dtype=torch.double, requires_grad=True)
     torch.manual_seed(101)
@@ -196,7 +201,8 @@ def test_rejects_invalid_gpscm_setup(graph_and_observations, fitted_model):
         CausalBOStudy(*args, observational_data=observations)
     with pytest.raises(ValueError, match="not contain do-interventions"):
         CausalBOStudy(
-            *args, model_type="gp_scm",
+            *args,
+            model_type="gp_scm",
             observational_data=[
                 CausalObservation(
                     {"X": 0.1, "Z": 0.15, "Y": 0.45},
@@ -211,23 +217,35 @@ def test_rejects_invalid_gpscm_setup(graph_and_observations, fitted_model):
 
     with pytest.raises(ValueError, match="only once"):
         propose_gp_scm_intervention(
-            fitted_model, [("X", "Z"), ("Z", "X")],
+            fitted_model,
+            [("X", "Z"), ("Z", "X")],
             {"X": (0, 1), "Z": (0, 1)},
-            outcome="Y", best_f=1.0,
+            outcome="Y",
+            best_f=1.0,
         )
     with pytest.raises(ValueError, match="positive finite"):
         propose_gp_scm_intervention(
-            fitted_model, [("X",)], {"X": (0, 1)},
-            outcome="Y", best_f=1.0,
+            fitted_model,
+            [("X",)],
+            {"X": (0, 1)},
+            outcome="Y",
+            best_f=1.0,
             intervention_costs={frozenset({"X"}): 0.0},
         )
     with pytest.raises(ValueError, match="finite interventional"):
         propose_gp_scm_intervention(
-            fitted_model, [("X",)], {"X": (0, 1)},
-            outcome="Y", best_f=float("nan"),
+            fitted_model,
+            [("X",)],
+            {"X": (0, 1)},
+            outcome="Y",
+            best_f=float("nan"),
         )
     with pytest.raises(ValueError, match="direction"):
         propose_gp_scm_intervention(
-            fitted_model, [("X",)], {"X": (0, 1)},
-            outcome="Y", best_f=0.5, direction="invalid",
+            fitted_model,
+            [("X",)],
+            {"X": (0, 1)},
+            outcome="Y",
+            best_f=0.5,
+            direction="invalid",
         )
