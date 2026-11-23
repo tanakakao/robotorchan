@@ -2,6 +2,7 @@
 
 from robotorchan.causal.data import CausalObservation
 from robotorchan.causal.gp_scm import GPStructuralCausalModel
+from robotorchan.causal.gp_scm_proposal import propose_gp_scm_intervention
 from robotorchan.causal.graph import CausalGraph
 from robotorchan.causal.intervention import HardIntervention
 from robotorchan.causal.proposal import (
@@ -27,4 +28,5 @@ __all__ = [
     "StructuralCausalModel",
     "optimize_causal_acqfs",
     "propose_causal_intervention",
+    "propose_gp_scm_intervention",
 ]
