@@ -109,7 +109,7 @@ def test_opt_in_gp_scm_uses_same_real_interventions_without_extra_observations()
 def test_benchmark_rejects_unsupported_methods_and_mc_configuration():
     with pytest.raises(ValueError, match="nonempty and unique"):
         run_causal_benchmark(methods=("cbo", "cbo"), n_iterations=0)
-    with pytest.raises(ValueError, match="AVAILABLE_METHODS|methods must belong"):
+    with pytest.raises(ValueError, match="methods must belong"):
         run_causal_benchmark(methods=("unknown",), n_iterations=0)
     with pytest.raises(ValueError, match="mc_samples"):
         run_causal_benchmark(mc_samples=0, n_iterations=0)
