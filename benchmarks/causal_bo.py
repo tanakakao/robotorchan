@@ -33,15 +33,16 @@ def main() -> None:
     parser.add_argument("--num-restarts", type=int, default=3)
     parser.add_argument("--raw-samples", type=int, default=32)
     parser.add_argument(
-        "--include-gp-scm", action="store_true",
+        "--include-gp-scm",
+        action="store_true",
         help="Include GP-SCM trained only on the same measured initial interventions.",
     )
     parser.add_argument("--mc-samples", type=int, default=64)
     parser.add_argument("--mc-seed", type=int, default=0)
     parser.add_argument("--output", type=Path, default=Path("benchmark_results/causal_bo.csv"))
     args = parser.parse_args()
-    methods = ("cbo", "gp_bo", "random", "gp_scm") if args.include_gp_scm else (
-        "cbo", "gp_bo", "random"
+    methods = (
+        ("cbo", "gp_bo", "random", "gp_scm") if args.include_gp_scm else ("cbo", "gp_bo", "random")
     )
     trajectories = run_causal_benchmark(
         seeds=args.seeds,
@@ -110,7 +111,8 @@ def main() -> None:
             "mc_seed": args.mc_seed if args.include_gp_scm else None,
             "gp_scm_data_policy": (
                 "Same performed initial interventions, no extra observational data"
-                if args.include_gp_scm else "not included"
+                if args.include_gp_scm
+                else "not included"
             ),
             "truth_optimum": 0.0,
             "costs": {"X": 1.0, "Z": 1.5, "X+Z": 3.0},
