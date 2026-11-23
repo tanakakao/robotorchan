@@ -95,7 +95,7 @@ Mixedモデルでは `cat_dims` を指定しますが、
 - [二値分類の共通基礎ガイド](24_classification.md)
 
 
-## Phase 4：非定常・Spectral Mixtureカーネル
+## 非定常・Spectral Mixtureカーネル
 
 マルチクラス分類では各クラスの潜在GPの共分散を変更します。
 既存の`MulticlassSingleTaskGPClassifier`を基礎として、
