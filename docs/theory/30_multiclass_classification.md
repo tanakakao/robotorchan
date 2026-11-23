@@ -322,7 +322,7 @@ SAAS型モデルでは逆長さ尺度 $\rho_j=1/\ell_j$ に原点近くを好む
 Half-Cauchy事前分布を置き、多くの入力次元の効果を小さくすることを促します。
 
 $$
-\rho_j\sim\operatorname{HalfCauchy}(\tau),\qquad j=1,\ldots,D.
+\rho_j\sim\mathrm{HalfCauchy}(\tau),\qquad j=1,\ldots,D.
 $$
 
 ここで $\tau$ は固定する縮小スケールです。
