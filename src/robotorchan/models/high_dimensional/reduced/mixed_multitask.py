@@ -23,6 +23,8 @@ from robotorchan.reduction.base import InputReducer
 class MixedReducedMultiTaskGP(MixedMultiTaskGP):
     """Long-format mixed multi-task GP reducing continuous data features only."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -135,6 +137,8 @@ class MixedReducedMultiTaskGP(MixedMultiTaskGP):
 
 class MixedReducedKroneckerMultiTaskGP(MixedKroneckerMultiTaskGP):
     """Kronecker mixed multi-task GP reducing continuous input features only."""
+
+    supports_fit = True
 
     def __init__(
         self,

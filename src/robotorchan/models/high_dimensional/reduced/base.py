@@ -14,7 +14,7 @@ from gpytorch.means import Mean
 from gpytorch.module import Module
 from torch import Tensor
 
-from robotorchan.models.base import ExactGPModelMixin
+from robotorchan.models.base import FittableExactGPModelMixin
 from robotorchan.models.high_dimensional.reduced.mixed import MixedReducedGP
 from robotorchan.reduction.base import InputReducer, OutputReducer
 from robotorchan.reduction.input import (
@@ -51,7 +51,7 @@ class ReductionMixin:
         return self.output_reducer.restore_posterior(posterior)
 
 
-class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
+class ReducedGP(ReductionMixin, FittableExactGPModelMixin, BoTorchSingleTaskGP):
     """Single-task GP with optional frozen input and output reduction.
 
     Training and candidate inputs are accepted in the original input space.
@@ -86,6 +86,8 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
         outcome_transform: Optional BoTorch outcome transform in latent output space.
         input_transform: Optional BoTorch input transform in latent input space.
     """
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -277,6 +279,8 @@ class ReducedGP(ReductionMixin, ExactGPModelMixin, BoTorchSingleTaskGP):
 class PCAGP(ReducedGP):
     """Single-task GP using a frozen PCA projection of the input space."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -296,6 +300,8 @@ class PCAGP(ReducedGP):
 
 class PLSGP(ReducedGP):
     """Single-task GP using a supervised PLS projection of the input space."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -322,6 +328,8 @@ class PLSGP(ReducedGP):
 class RandomProjectionGP(ReducedGP):
     """Single-task GP using a frozen Gaussian random input projection."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -345,6 +353,8 @@ class RandomProjectionGP(ReducedGP):
 class MixedPCAGP(MixedReducedGP):
     """Mixed GP using PCA on continuous inputs and passthrough categories."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -366,6 +376,8 @@ class MixedPCAGP(MixedReducedGP):
 
 class MixedPLSGP(MixedReducedGP):
     """Mixed GP using supervised PLS on continuous inputs."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -389,6 +401,8 @@ class MixedPLSGP(MixedReducedGP):
 
 class MixedRandomProjectionGP(MixedReducedGP):
     """Mixed GP using a Gaussian projection on continuous inputs."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -495,6 +509,8 @@ class MixedAutoEncoderGP(MixedReducedGP):
 class OutputPCAGP(ReducedGP):
     """Single-task GP modeling a PCA-compressed high-dimensional output space."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -517,6 +533,8 @@ class OutputPCAGP(ReducedGP):
 
 class OutputPLSGP(ReducedGP):
     """Single-task GP modeling a supervised PLS-compressed output space."""
+
+    supports_fit = True
 
     def __init__(
         self,

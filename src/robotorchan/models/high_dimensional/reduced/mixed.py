@@ -15,7 +15,7 @@ from gpytorch.kernels import Kernel
 from gpytorch.likelihoods import Likelihood
 from torch import Tensor
 
-from robotorchan.models.base import ExactGPModelMixin, normalize_feature_dims
+from robotorchan.models.base import FittableExactGPModelMixin, normalize_feature_dims
 from robotorchan.reduction.base import InputReducer
 
 
@@ -170,13 +170,15 @@ class MixedInputReducer:
         return self.transform(X)
 
 
-class MixedReducedGP(ExactGPModelMixin, BoTorchMixedSingleTaskGP):
+class MixedReducedGP(FittableExactGPModelMixin, BoTorchMixedSingleTaskGP):
     """Mixed single-task GP with reduction applied only to continuous inputs.
 
     Public inputs remain in the original mixed space. Continuous columns are
     projected into a frozen latent representation while categorical columns
     bypass the reducer unchanged and are appended after the latent block.
     """
+
+    supports_fit = True
 
     def __init__(
         self,
