@@ -7,13 +7,13 @@ import torch
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import (
+    VAEGP,
     AutoEncoderGP,
     AutoEncoderMultiTaskGP,
     JointEncoderMultiTaskGP,
     JointVAEGP,
     MixedAutoEncoderGP,
     SupervisedVAEGP,
-    VAEGP,
 )
 
 
