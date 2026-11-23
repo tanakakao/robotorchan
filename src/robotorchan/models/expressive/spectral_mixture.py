@@ -74,6 +74,8 @@ class SpectralMixtureGP(SingleTaskGP):
 class SpectralMixtureMultiTaskGP(MultiTaskGP):
     """Long-format multi-task GP with a spectral-mixture data kernel."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -125,6 +127,8 @@ class SpectralMixtureMultiTaskGP(MultiTaskGP):
 class SpectralMixtureKroneckerMultiTaskGP(KroneckerMultiTaskGP):
     """Block-design Kronecker multi-task GP with spectral data covariance."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -171,6 +175,8 @@ class SpectralMixtureKroneckerMultiTaskGP(KroneckerMultiTaskGP):
 
 class MixedSpectralMixtureKroneckerMultiTaskGP(KroneckerMultiTaskGP):
     """Mixed block-design Kronecker GP with spectral continuous covariance."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -240,6 +246,8 @@ class MixedSpectralMixtureKroneckerMultiTaskGP(KroneckerMultiTaskGP):
 class MixedSpectralMixtureGP(SingleTaskGP):
     """Mixed-input exact GP with a spectral-mixture continuous kernel."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -293,6 +301,8 @@ class MixedSpectralMixtureGP(SingleTaskGP):
 
 class MixedSpectralMixtureMultiTaskGP(MultiTaskGP):
     """Mixed long-format multi-task GP with a spectral-mixture data kernel."""
+
+    supports_fit = True
 
     def __init__(
         self,
