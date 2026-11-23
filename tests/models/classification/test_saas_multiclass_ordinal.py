@@ -61,3 +61,22 @@ def test_sparse_ard_rejects_nonpositive_scale(model_type):
     )
     with pytest.raises(ValueError, match="must be positive"):
         model_type(train_X, train_Y, num_classes=3, **kwargs)
+
+
+@pytest.mark.parametrize(
+    "model_type", [SaasMulticlassGPClassifier, MapSaasMulticlassGPClassifier]
+)
+def test_multiclass_saas_prior_contributes_gradient(model_type):
+    """Sparse prior must enter the multiclass objective, not only be registered."""
+    x = torch.rand(9, 4, dtype=torch.double)
+    y = torch.arange(9) % 3
+    model = model_type(x, y, num_classes=3)
+    log_prior = model._log_kernel_prior()
+    assert torch.isfinite(log_prior)
+    assert log_prior.requires_grad
+    log_prior.backward()
+    grads = [
+        gp.model.covar_module.base_kernel.raw_lengthscale.grad
+        for gp in model.class_models
+    ]
+    assert all(grad is not None and torch.isfinite(grad).all() for grad in grads)
