@@ -133,11 +133,11 @@ Random Samplingを含む複数シードのラベル予算比較で実施しま�
 - [二値分類の共通基礎ガイド](24_classification.md)
 
 
-## Phase 4：非定常・Spectral Mixtureカーネル
+## 非定常・Spectral Mixtureカーネル
 
 順序分類はクラスごとに独立したGPを置くのではなく、
 **単一の潜在GPと順序付き閾値**を利用します。
-Phase 4ではその潜在GPの共分散のみを差し替えます。
+これらのモデルでは、その潜在GPの共分散のみを差し替えます。
 
 - `NonstationaryOrdinalGPClassifier`：入力依存の局所長さ尺度を持つGibbsカーネル
 - `SpectralMixtureOrdinalGPClassifier`：周期的・複数周波数の定常共分散
