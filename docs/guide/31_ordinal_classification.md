@@ -200,7 +200,7 @@ ALEBOでは `ALEBOOrdinalGPClassifier` に
 [31番Notebook](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)のPhase 6節を参照してください。
 
 
-## Phase 7：タスク相関GP分類（MultiTask／Block形式）
+## タスク相関GP分類（MultiTask／Block形式）
 
 `MultiTaskOrdinalGPClassifier` は、入力の1列を整数タスクIDとする**Long形式**に対応します。
 `task_feature` でその列を、`rank` でICMタスク共分散のランクを指定します。
@@ -220,4 +220,4 @@ Block形式の予測確率の形状は `[q, m, C]` で、タスクごとに最�
 **予測確率の形状と潜在Posteriorの形状は一致しません**。
 
 学習、予測確率、タスク別グラフ、予測エントロピーに基づく候補提案は
-[31番Notebook](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)のPhase 7節を参照してください。
+[31番Notebook](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)のタスク相関節を参照してください。
