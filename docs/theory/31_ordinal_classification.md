@@ -347,3 +347,23 @@ Mixed入力ではカテゴリ変数にカテゴリ用共分散を、連続設計
 
 **参考文献**：Wu et al. (2020), *Practical Multi-fidelity Bayesian Optimization for Hyperparameter Tuning*;
 Kandasamy et al. (2017), *Multi-fidelity Bayesian Optimisation with Continuous Approximations*.
+
+
+## Deep Gaussian Processによる順序分類
+
+通常のGPでは、観測データを条件付けた潜在関数の事後分布をガウス分布として扱うことができます。一方、Deep GPでは複数の確率的なGP写像を合成するため、最終的な潜在関数の分布は一般にガウス分布ではありません。
+
+単一の深層潜在関数 $f(x)$ と順序閾値 $b_1<\cdots<b_{C-1}$ を使用します。順序確率は $p(y=c\mid f)=\Phi(b_{c+1}-f)-\Phi(b_c-f)$（端点は無限大）で求めます。学習ではOrdered Probit尤度に対する変分ELBOを用います。
+
+予測時のクラス確率は、潜在事後のサンプル $f^{(s)}(x)$ から
+
+$$
+\hat p(y=c\mid\mathcal D,x)=
+\frac{1}{S}\sum_{s=1}^S p(y=c\mid f^{(s)}(x))
+$$
+
+として推定します。ここで $S$ はモンテカルロサンプル数です。潜在事後平均にリンク関数を適用するだけでは、一般にこの期待値と一致しません。
+
+クラス確率の分散やBALDも同じサンプルから推定できますが、サンプル数による誤差があります。今回のモデルは既存の `SingleTaskDeepGP` の確率的階層を再利用し、ガウス事後を前提とする通常のExact GP獲得関数と同一視しません。
+
+**参考文献**：Damianou and Lawrence (2013), *Deep Gaussian Processes*; Salimbeni and Deisenroth (2017), *Doubly Stochastic Variational Inference for Deep Gaussian Processes*; Chu and Ghahramani (2005), *Gaussian Processes for Ordinal Regression*.
