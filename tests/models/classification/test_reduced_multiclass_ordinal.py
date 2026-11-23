@@ -8,14 +8,12 @@ from robotorchan.models.classification import (
     PCAOrdinalGPClassifier,
     PLSMulticlassGPClassifier,
     PLSOrdinalGPClassifier,
+    ReducedMulticlassGPClassifier,
+    ReducedOrdinalGPClassifier,
     RandomProjectionMulticlassGPClassifier,
     RandomProjectionOrdinalGPClassifier,
 )
 from robotorchan.reduction.input import PCAInputReducer
-from robotorchan.models.classification import (
-    ReducedMulticlassGPClassifier,
-    ReducedOrdinalGPClassifier,
-)
 
 
 @pytest.mark.parametrize(
