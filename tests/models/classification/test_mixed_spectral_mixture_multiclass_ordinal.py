@@ -19,9 +19,7 @@ def test_mixed_spectral_mixture_fit_and_candidate(model_class):
     continuous = torch.linspace(-1.0, 1.0, 12, dtype=torch.double).unsqueeze(-1)
     category = (torch.arange(12) % 2).to(continuous).unsqueeze(-1)
     x = torch.cat((continuous, category), dim=-1)
-    y = torch.bucketize(
-        continuous.squeeze(-1), torch.tensor([-0.3, 0.3], dtype=continuous.dtype)
-    )
+    y = torch.bucketize(continuous.squeeze(-1), torch.tensor([-0.3, 0.3], dtype=continuous.dtype))
     model = model_class(x, y, num_classes=3, cat_dims=[1], num_mixtures=2)
     model.fit(epochs=2, lr=0.01)
     candidates = x[:5]
