@@ -95,3 +95,40 @@ def test_block_design_requires_matching_observation_grid(model_type):
     x = torch.rand(5, 2, dtype=torch.double)
     with pytest.raises(ValueError, match="train_Y"):
         model_type(x, torch.zeros(4, 2, dtype=torch.long), num_classes=3)
+
+
+@pytest.mark.parametrize(
+    "model_type",
+    [KroneckerMultiTaskMulticlassGPClassifier, KroneckerMultiTaskOrdinalGPClassifier],
+)
+def test_block_design_probability_posterior_and_acquisition_shapes(model_type):
+    """Probability posterior uses the same flattened candidate axis as latent GP."""
+    torch.manual_seed(31)
+    train_X = torch.rand(8, 2, dtype=torch.double)
+    train_Y = torch.stack((torch.arange(8) % 3, (torch.arange(8) + 1) % 3), dim=1)
+    model = model_type(train_X, train_Y, num_classes=3)
+    model.fit(epochs=2, lr=0.005)
+    candidates = torch.rand(3, 2, dtype=torch.double)
+    with torch.no_grad():
+        block_prob = model.predict_proba(candidates)
+        probability_posterior = (
+            model.probability_posterior(candidates, num_samples=16, seed=11)
+            if isinstance(model, KroneckerMultiTaskMulticlassGPClassifier)
+            else model.probability_posterior(candidates)
+        )
+        sampled_prob = model.sample_class_probabilities(
+            candidates, sample_shape=torch.Size([4])
+        )
+        entropy = model.predictive_entropy(candidates)
+        information = model.mutual_information(candidates, num_samples=4)
+    assert block_prob.shape == (3, 2, 3)
+    assert probability_posterior.mean.shape == (6, 3)
+    assert probability_posterior.variance.shape == (6, 3)
+    assert probability_posterior.rsample(torch.Size([2])).shape == (2, 6, 3)
+    assert sampled_prob.shape == (4, 3, 2, 3)
+    assert entropy.shape == (3, 2)
+    assert information.shape == (3, 2)
+    if isinstance(model, KroneckerMultiTaskOrdinalGPClassifier):
+        torch.testing.assert_close(
+            probability_posterior.mean.reshape(3, 2, 3), block_prob
+        )
