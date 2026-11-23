@@ -139,7 +139,7 @@ def test_missing_data_and_direct_interventions_are_not_imputed() -> None:
         CausalObservation({"X": 0.2, "Y": 42.0}, HardIntervention({"Y": 42.0})),
     ]
     model = GPStructuralCausalModel(graph, records)
-    with pytest.raises(ValueError, match="Node 'Y'.*two complete"):
+    with pytest.raises(ValueError, match=r"Node 'Y'.*two complete"):
         model.fit()
     with pytest.raises(RuntimeError, match="Fit"):
         model.sample_intervention(HardIntervention({"X": 0.5}), outcome="Y")
@@ -151,7 +151,7 @@ def test_unobserved_root_does_not_get_a_fictitious_prior() -> None:
         CausalObservation({"X": 0.0, "Y": 1.0}, HardIntervention({"X": 0.0})),
         CausalObservation({"X": 1.0, "Y": 2.0}, HardIntervention({"X": 1.0})),
     ]
-    with pytest.raises(ValueError, match="Node 'X'.*two complete"):
+    with pytest.raises(ValueError, match=r"Node 'X'.*two complete"):
         GPStructuralCausalModel(graph, records).fit()
 
 
