@@ -74,11 +74,7 @@ class SpectralMixtureOrdinalGPClassifier(OrdinalSingleTaskGPClassifier):
 
 
 def _mixed_spectral_kernel(train_X: Tensor, cat_dims: list[int], num_mixtures: int):
-    if (
-        not isinstance(num_mixtures, int)
-        or isinstance(num_mixtures, bool)
-        or num_mixtures < 1
-    ):
+    if not isinstance(num_mixtures, int) or isinstance(num_mixtures, bool) or num_mixtures < 1:
         raise ValueError("num_mixtures must be a positive integer.")
     categories = normalize_feature_dims(cat_dims, train_X.shape[-1], name="cat_dims")
     continuous = [dim for dim in range(train_X.shape[-1]) if dim not in categories]
