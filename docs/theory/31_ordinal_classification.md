@@ -292,3 +292,30 @@ Brier score、順序ラベル誤差を比較することが重要です。
 **参考文献**：Chu & Ghahramani (2005), *Gaussian Processes for Ordinal
 Regression*; Eriksson & Jankowiak (2021), *High-Dimensional Bayesian
 Optimization with Sparse Axis-Aligned Subspaces*.
+
+
+## タスク間相関を持つ順序GP分類
+
+設備や工程ごとに品質段階（不良・要確認・良好など）を予測する場合、
+単一の順序潜在関数をタスク $t$ にも依存させることができます。
+ICMカーネルは
+
+$$
+k((x,t),(x',t'))=k_x(x,x')B_{tt'}
+$$
+
+と定義し、タスク間の共分散 $B$ を学習します。
+順序分類で利用する潜在GPの事後分布はこのカーネルから得られ、
+予測ラベル確率は従来の順序プロビット閾値で計算します。
+
+この構成では**全タスクが順序クラスの意味と閾値を共有**します。
+同じクラス番号が設備ごとに異なる意味を持つ場合や、
+タスク固有の閾値が必要な場合は別のモデル化が必要です。
+また、Block形式は各入力で全タスクのラベルが揃う実験に適し、
+欠測を含む観測にはLong形式が適します。
+
+タスク共分散がKronecker積として表現可能であることと、
+分類推論で厳密なKronecker専用アルゴリズムを使用することは同義ではありません。
+
+**参考文献**：Chu & Ghahramani (2005), *Gaussian Processes for Ordinal
+Regression*; Bonilla, Chai & Williams (2008), *Multi-task Gaussian Process Prediction*.
