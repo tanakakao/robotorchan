@@ -99,11 +99,11 @@ optimize_causal_acqfs(
 
 Phase 3の対象テストは`tests/causal/test_native_acquisition_selection.py`および従来の`tests/causal/test_phase4_proposal.py`。native`PosteriorMean`、`UpperConfidenceBound`、`LogExpectedImprovement`、複数集合の次元・順序・明示コストスコア、不正な候補／スコア、従来の最小化・LogEIの扱いを確認する。大規模なOptimizer互換性監査は行わない。
 
-## 5. Phase 4 — 確率的GP-SCMの設計
+## 5. Phase 4 — 確率的GP-SCMの実装契約
 
 ### 既存SCMとは別クラス
 
-新規公開クラス候補を`GPStructuralCausalModel`とする。決定論的な`StructuralCausalModel.evaluate`を変更せず、**1つの確率的な構造因果モデル**を構成する。
+`GPStructuralCausalModel`を独立した公開クラスとして実装。決定論的な`StructuralCausalModel.evaluate`を変更せず、**1つの確率的な構造因果モデル**を構成する。
 
 ```python
 model = GPStructuralCausalModel(graph, observations)
@@ -117,9 +117,9 @@ mean = samples.mean(0)
 variance = samples.var(0, unbiased=False)
 ```
 
-上記は**目標APIの例**であり現時点で使用可能なコードではない。`sample_intervention`はモデルが返す観測結果のサンプルであり、BoTorch `Posterior`であると偽らない。summaryは既存Tensorの集約操作を利用し、不必要な独自posterior型を公開しない。モデルから介入に関係なく`fit`、ノード条件付きモデルの予測、do予測を独立して使える設計とする。
+上記は実装したモデル単体APIの例。`sample_intervention`はモデルが返す観測結果のサンプルであり、BoTorch `Posterior`であると偽らない。summaryは既存Tensorの集約操作を利用し、不必要な独自posterior型を公開しない。モデルから介入に関係なく`fit`、ノード条件付きモデルの予測、do予測を独立して使える設計とする。
 
-### 学習規則
+実装ファイル：`src/robotorchan/causal/gp_scm.py`。テスト：`tests/causal/test_gp_scm.py`。入力の観測・介入状態は既存`CausalObservation`と`HardIntervention`をそのまま使用。新たな独自GP、事後分布クラス、専用SCM用Optimizerは追加しない。\n\n### 学習規則
 
 - 入力：既知DAGと`CausalObservation`。観測データと介入データを区別して受け取る。
 - 非rootノード`V_j`：実際に**そのノード自体へ介入していない**記録のみから`P(V_j | Pa_j)`を既存`SingleTaskGP`等で学習。親の値とノード値が揃ったレコードに限定する。親への介入があっても`V_j`自身の生成機構が変わっていなければ利用可能（mechanism invarianceが前提）。
@@ -143,9 +143,9 @@ variance = samples.var(0, unbiased=False)
 
 ### BoTorchへの接続
 
-- **必須**：モデル単体の`fit`とTensorベースの介入サンプル評価。単一の`HardIntervention`を引数にとる便宜APIとは別に、BoTorchの候補Tensor `X[...,q,d_S]`を受ける内部経路を設ける（`HardIntervention`はPython floatに変換するので、最適化の微分計算に直接用いない）。
+- **実装済み**：モデル単体の`fit`、`sample_intervention`、Tensorベースの`sample_interventions(X, intervention_nodes, outcome)`、`mechanism_posterior`。BoTorchの候補Tensor `X[..., q, d_S]`を直接受けて微分を伝播し、`HardIntervention`（Python floatへ変換）を微分経路に使用しない。
 - **条件付き**：標準`Posterior`の`rsample`、`base_sample_shape`、`rsample_from_base_samples`、dtype/device、batch/q/event形状、必要な自動微分の契約を満たせる場合に限り、BoTorchの既存MC獲得関数（例：qLogEI系）へ接続する。完全な契約を満たす前に`botorch.models.Model`の継承や`posterior()`互換性を宣言しない。
-- 契約を満たせない最初の段階では、明示したMCサンプル評価と既存Optimizerで実現できる範囲に限定する。内部で`SingleTaskGP`の`posterior`は引き続き再利用する。
+- **現段階**：構造に沿ったMCサンプル評価のみ公開し、BoTorch `Model`や`Posterior`の完全互換を主張しない。非rootの条件付きGPには従来の`SingleTaskGP.posterior`を再利用する。直接的なMC獲得関数・Study統合は後続Phaseの担当。
 - 候補値に対する推論でMC乱数が変わると獲得関数の数値最適化が不安定になるため、共通乱数・固定base samples等の扱いをPhase 4〜5の狭い機能テストで確認する。
 
 ## 6. Phase 5 — Study統合契約

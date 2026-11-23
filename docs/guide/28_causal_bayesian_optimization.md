@@ -92,6 +92,24 @@ LogEI以外の獲得関数でも介入集合ごとの候補を提案する場合
 
 従来の`propose_causal_intervention`は互換性のためLogEI専用のままです。全介入集合に共通の`best_f`を設定し、内部で上記の薄い選択処理を利用します。既存の`CausalInterventionProposal`にある`log_expected_improvement`、`intervention_cost`、`log_utility`の意味は変更していません。
 
+### 4.2 GP-SCM：条件付きGPとdo介入の伝播
+
+`GPStructuralCausalModel`（`src/robotorchan/causal/gp_scm.py`）は既知DAGと`CausalObservation`から、**ひとつの構造因果モデル**として各ノードの生成機構を学習します。既存の`StructuralCausalModel`は決定論的方程式の評価であり、GP-SCMとは独立です。従来の`InterventionGPSurrogate`は「介入集合ごとの観測応答GP」であり、条件付き機構を共有するGP-SCMとは学習対象が異なります。
+
+非rootノード`V`には、`CausalGraph.parents_of(V)`で定まる親列を入力とする既存`SingleTaskGP`を作成して`fit()`を委譲します。**V自身が介入された記録だけ**をVの機構学習から除外します。親ノードへの介入ではVの機構を置換しないため、親値とV値が実測されていれば学習に利用できます。観測・介入のどちらであっても、必要な親・子の測定値が欠けたレコードはそのノードの学習から除外します。ノードごとに少なくとも2件の有効なレコードが必要です。
+
+親のないrootノードは、介入されていない実測値から平均と標本標準偏差を推定し、**経験的な正規近似**で扱います。観測値が一定ならそのrootは決定論的とし、不明なrootに架空の標準正規分布を与えません。各非rootのモデルは`model.mechanisms`から取得でき、`model.mechanism_posterior(node, X)`は通常のBoTorch `Posterior`を返します。rootはGPではないため`mechanism_posterior`の対象外です。
+
+推論時は、介入されたノードの親からの流入を切り、指定値で生成機構を置換します。予測対象に必要な祖先だけをDAG順に処理し、その他のノードではroot分布または条件付きGPの`posterior(...).rsample()`で不確実性を伝播します。**`P(Y\mid X=x)`と`P(Y\mid do(X=x))`は異なります**。これらの出力を混同しません。
+
+- `sample_intervention(HardIntervention(...), outcome="Y", sample_shape=torch.Size([1024]))`は単一介入の`[1024]`のTensorサンプルを返します。
+- `sample_interventions(X, intervention_nodes=("X",), outcome="Y", ...)`は候補`X[..., q, d_S]`に対して`[*sample_shape, ..., q]`のサンプルを返し、Tensor経路の自動微分を保ちます。ここでの`q`は評価点の次元であり、q-batch最適化を実装するものではありません。
+- `observation_noise`を指定すると非root GPの観測ノイズを含む`Posterior`を使います。rootの分散は外生的ばらつきとして常に伝播します。
+
+機構ごとの不確実性を伝播させた介入予測は一般に**ガウス分布ではありません**。GP-SCM全体を単一のBoTorch`Model.posterior()`として公開せず、サンプルをそのまま返します。この段階ではBoTorchの解析的EIやqLogEIへ直接接続できると主張しません。モデル単体の介入サンプリングと、次段階のStudyへの候補選択統合を分離しています。
+
+既知DAGの因果的妥当性、未観測交絡の不在、機構の不変性、介入する親値の十分な学習データ範囲を前提とします。観測データがあるだけで因果効果を自動識別できるという保証ではありません。
+
 ## 5. CBO Workflowと試行状態の保持
 
 `CausalBOStudy`は通常の`Study`と異なり、試行の入力を**変数値だけでなく介入集合付き**の`HardIntervention`として管理します。`CausalTrial`は`number`・`intervention`・`state`・`observation`・`proposal`を保持し、状態には共通の`TrialState`を再利用します。
@@ -113,6 +131,6 @@ LogEI以外の獲得関数でも介入集合ごとの候補を提案する場合
 
 ## 7. 現状の対応範囲
 
-現在の機能は既知DAG、ユーザー指定のSCM、連続的なHard intervention、単一目的、`q=1`、集合ごとの独立GP、正の固定介入コストです。DAGの因果方向が誤っている場合や、現実の未観測交絡が支配的な場合の因果効果を保証しません。並列試行、観測データのみからの因果識別、構造探索、候補に依存するコストやカテゴリ変数は実装していません。
+現在の機能は既知DAG、ユーザー指定の決定論的SCM、確率的GP-SCMによる機構学習と介入サンプリング、連続的なHard intervention、単一目的、集合ごとの独立GP、正の固定介入コストです。GP-SCMのサンプリングでは複数候補Tensorの評価ができますが、Studyと候補最適化は引き続き`q=1`です。DAGの因果方向が誤っている場合や、現実の未観測交絡が支配的な場合の因果効果を保証しません。並列試行、観測データのみからの因果識別、構造探索、候補に依存するコストやカテゴリ変数は実装していません。
 
 詳細な実行手順は[Notebook 58](../../examples/notebooks/58_causal_bayesian_optimization.ipynb)、評価プロトコルは[Benchmark資料](../benchmarks/README.md)を参照してください。
