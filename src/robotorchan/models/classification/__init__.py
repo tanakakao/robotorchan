@@ -83,6 +83,10 @@ from robotorchan.models.classification.expressive.joint_encoder import (
     JointEncoderMulticlassGPClassifier,
     JointEncoderOrdinalGPClassifier,
 )
+from robotorchan.models.classification.expressive.spectral_mixture import (
+    SpectralMixtureMulticlassGPClassifier,
+    SpectralMixtureOrdinalGPClassifier,
+)
 from robotorchan.models.classification.model_list import ClassificationModelList
 from robotorchan.models.classification.multiclass.standard.single_task import (
     MixedMulticlassSingleTaskGPClassifier,
@@ -186,6 +190,8 @@ __all__ = [
     "SaasBinarySingleTaskGPClassifier",
     "SklearnBinaryClassifier",
     "SpectralMixtureBinaryGPClassifier",
+    "SpectralMixtureMulticlassGPClassifier",
+    "SpectralMixtureOrdinalGPClassifier",
     "SplitConformalClassifier",
     "TemperatureScalingCalibrator",
     "UncertainBinaryClassificationMixin",
