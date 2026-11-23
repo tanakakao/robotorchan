@@ -78,6 +78,20 @@ $$
 
 このAPIではすべてのモデルが**同一のDAGインスタンス・同じ目的ノード**を参照し、介入集合が重複してはいけません。これは共通の改善基準で比べるための実装上の前提です。`direction="minimize"`も使用できますが、Batch・Mixed・候補値依存コストは現在のPhaseの対象外です。
 
+### 4.1 ユーザー指定のBoTorch獲得関数による介入候補選択
+
+LogEI以外の獲得関数でも介入集合ごとの候補を提案する場合、`CausalAcquisitionProposal`と`optimize_causal_acqfs`（`src/robotorchan/causal/proposal.py`）を利用します。獲得関数自体の生成は利用者側または上位処理が担当し、たとえばBoTorchの`PosteriorMean`や`UpperConfidenceBound`を既存の`InterventionGPSurrogate.model`から構築できます。独自の獲得関数ファクトリやモデルの再ラップはありません。
+
+**単一集合**では、従来どおりBoTorchの`AcquisitionFunction`を`robotorchan.optim.dispatch.optimize_acqf`へ直接渡すだけで十分です。`optimize_causal_acqfs`は、**複数の介入集合から1つを選ぶ**ための薄いヘルパーです。
+
+このヘルパーでは、キーを`("X", "Z")`のような**順序付きノードtuple**、値を構築済みのBoTorch `AcquisitionFunction`とする辞書を渡します。キーの順序が各獲得関数へ渡される候補テンソル`X[..., 1, d_S]`の列順です。同じ介入集合を並べ替えて重複登録することはできません。各集合は既存の`optimize_acqf(..., q=1)`で独立に最適化します。
+
+集合間で獲得関数値を比較できるとは限らないため、`score(nodes, native_acq_value)`を**必須引数**として明示します。戻り値は有限な実数とし、その最大値を選びます。返す`CausalAcquisitionProposal`の`acquisition_value`はBoTorchの生の獲得値、`ranking_score`はこのスコアです。
+
+`LogExpectedImprovement`なら共通`best_f`を用いた値に対して`log_ei - log(cost)`の補正が使えます。一方、`PosteriorMean`や`UpperConfidenceBound`の値は改善量ではなく、同じコスト式を機械的に適用しません。利用者は比較する獲得関数の目的・尺度・パラメータを揃える必要があります。
+
+従来の`propose_causal_intervention`は互換性のためLogEI専用のままです。全介入集合に共通の`best_f`を設定し、内部で上記の薄い選択処理を利用します。既存の`CausalInterventionProposal`にある`log_expected_improvement`、`intervention_cost`、`log_utility`の意味は変更していません。
+
 ## 5. CBO Workflowと試行状態の保持
 
 `CausalBOStudy`は通常の`Study`と異なり、試行の入力を**変数値だけでなく介入集合付き**の`HardIntervention`として管理します。`CausalTrial`は`number`・`intervention`・`state`・`observation`・`proposal`を保持し、状態には共通の`TrialState`を再利用します。
