@@ -278,3 +278,36 @@ $$
 - Rasmussen, C. E., & Williams, C. K. I. (2006). *Gaussian Processes for Machine Learning*, Chapter 3.
 - Hensman, J., Matthews, A. G. de G., & Ghahramani, Z. (2015). *Scalable Variational Gaussian Process Classification*. AISTATS.
 - Houlsby, N., Huszár, F., Ghahramani, Z., & Lengyel, M. (2011). *Bayesian Active Learning for Classification and Preference Learning*.
+
+
+## 高次元入力：固定次元削減とALEBO
+
+入力 $x\in\mathbb R^D$ が高次元であると、GPの距離尺度の推定は難しくなります。
+固定した変換 $T:\mathbb R^D\to\mathbb R^d$（$d<D$）を用いる方法では、
+クラス $c$ の潜在関数を $f_c(T(x))$ とモデル化します。PCAは入力の分散、
+PLSは入力とラベルを数値化した応答との共分散、Random Projectionはランダムな
+線形写像を利用します。**PLSで整数クラス番号を連続量として扱うと、クラス番号の
+割り当てに依存する**ため、名義尺度の多クラス分類では注意が必要です。
+クラス番号の置換で結果が変わる可能性があり、PCAやランダム射影との比較が重要です。
+
+マルチクラス分類の確率は、低次元化しても
+$$
+p(y=c\mid x,\mathcal D)
+=\mathbb E_{f\mid\mathcal D}
+\left[\frac{\exp f_c(T(x))}{\sum_{j=0}^{C-1}\exp f_j(T(x))}\right]
+$$
+であり、潜在GPの平均値にsoftmaxを適用するだけでは一般に一致しません。
+
+ALEBOは固定の次元削減モデルとは逆向きの発想で、低次元探索座標
+$z\in\mathbb R^d$ から元の探索空間へ候補を写像します。
+ALEBO分類モデルが受け取るのは **$z$** であり、元の $x$ ではありません。
+Mahalanobisカーネルは埋め込み座標での幾何を表します。
+分類モデルが探索空間への逆写像や実験制約を自動で処理するわけではありません。
+
+固定変換が重要な識別情報を捨てると、GPの学習を改善しても失われた情報は
+復元できません。独立した評価データでNLL・Brier score・クラス別Recallを比較し、
+元の入力次元、縮約次元、変換の学習データ、乱数シードを記録します。
+
+**参考文献**：Binois, Ginsbourger & Roustant (2018), *On the Choice of the
+Low-Dimensional Domain for Global Optimization*; Letham et al. (2020),
+*Re-examining Linear Embeddings for High-Dimensional Bayesian Optimization*.
