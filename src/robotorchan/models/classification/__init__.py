@@ -142,7 +142,8 @@ from robotorchan.models.classification.reliability import (
 )
 
 __all__ = [
-    "CLASSIFICATION_MODEL_REGISTRY",    "ALEBOBinarySingleTaskGPClassifier",
+    "CLASSIFICATION_MODEL_REGISTRY",
+    "ALEBOBinarySingleTaskGPClassifier",
     "ALEBOMulticlassGPClassifier",
     "ALEBOOrdinalGPClassifier",
     "binary_cost_sensitive_prediction",
