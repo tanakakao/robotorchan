@@ -118,11 +118,14 @@ class _BlockTaskInputMixin:
         features = train_X[:, None, :].expand(n, m, dim)
         task_ids = torch.arange(m, device=train_X.device, dtype=train_X.dtype)
         task_column = task_ids.view(1, m, 1).expand(n, m, 1)
-        return torch.cat((features, task_column), dim=-1).reshape(n * m, dim + 1), train_Y.reshape(-1)
+        long_X = torch.cat((features, task_column), dim=-1).reshape(n * m, dim + 1)
+        return long_X, train_Y.reshape(-1)
 
     def _long_candidates(self, X: Tensor) -> Tensor:
         if X.ndim != 2 or X.shape[1] != self.block_input_dim:
-            raise ValueError(f"Expected block-design candidate X of shape [q, {self.block_input_dim}].")
+            raise ValueError(
+                f"Expected block-design candidate X of shape [q, {self.block_input_dim}]."
+            )
         q = X.shape[0]
         features = X[:, None, :].expand(q, self.num_tasks, self.block_input_dim)
         task_ids = torch.arange(self.num_tasks, device=X.device, dtype=X.dtype)
