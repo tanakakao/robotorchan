@@ -311,3 +311,33 @@ Mahalanobisカーネルは埋め込み座標での幾何を表します。
 **参考文献**：Binois, Ginsbourger & Roustant (2018), *On the Choice of the
 Low-Dimensional Domain for Global Optimization*; Letham et al. (2020),
 *Re-examining Linear Embeddings for High-Dimensional Bayesian Optimization*.
+
+
+## SAAS型疎ARD事前分布による高次元マルチクラス分類
+
+高次元入力 $x\in\mathbb R^D$ で全特徴が同じ程度に重要とは限りません。
+ARD Matérnカーネルは各入力次元に長さ尺度 $\ell_j$ を持ち、
+$\ell_j$ が大きい次元では予測がその特徴に対して変化しにくくなります。
+SAAS型モデルでは逆長さ尺度 $\rho_j=1/\ell_j$ に原点近くを好む
+Half-Cauchy事前分布を置き、多くの入力次元の効果を小さくすることを促します。
+
+$$
+\rho_j\sim\operatorname{HalfCauchy}(\tau),\qquad j=1,\ldots,D.
+$$
+
+ここで $\tau$ は固定する縮小スケールです。
+本実装は既存の二値分類のSAAS型／MAP-SAAS型カーネル生成器を再利用し、
+**各クラスの潜在変分GPに独立したカーネル**を配置します。
+Softmax分類確率は各潜在GPの事後サンプルをSoftmaxへ通して求めます。
+固定したスケールのHalf-Cauchy事前分布を使用することは、
+グローバル・ローカル尺度を階層的に積分する完全Bayesian SAASと同義ではありません。
+また、`MapSaasMulticlassGPClassifier` は既存MAP-SAAS型のカーネル構成を
+再利用した変分分類モデルであり、完全Bayesian MCMC推論を実行しません。
+
+実験では重要な変数の識別が改善するか、保留データでのNLL、
+Brier score、クラス別Recallを比較してください。少数データでは特徴の
+選択が不安定になる可能性があります。
+
+**参考文献**：Eriksson & Jankowiak (2021), *High-Dimensional Bayesian
+Optimization with Sparse Axis-Aligned Subspaces*;
+Rasmussen & Williams (2006), *Gaussian Processes for Machine Learning*.
