@@ -369,3 +369,31 @@ Block形式が成立するのは同じ入力を各タスクで観測した場合
 
 **参考文献**：Bonilla, Chai & Williams (2008), *Multi-task Gaussian Process Prediction*;
 Álvarez, Rosasco & Lawrence (2012), *Kernels for Vector-Valued Functions: A Review*.
+
+
+## Multi-Fidelity分類：測定条件の精度を入力として表す
+
+実験のシミュレーション精度や測定回数など、忠実度（fidelity）$s$ を入力の一部として扱います。
+通常の設計変数 $x$ と分けて、分類用の潜在GPに次の積共分散を使用します。
+
+$$
+k((x,s),(x',s')) = \sigma^2 k_x(x,x')k_s(s,s').
+$$
+
+$k_s$ にはBoTorchが提供する Exponential Decay カーネル
+（反復忠実度）またはDownsamplingカーネル（データ忠実度）を使います。
+これにより、異なる忠実度の観測が同じ潜在関数の推定に寄与します。
+
+マルチクラスでは各クラスの潜在関数にこの共分散を使い、クラス確率はSoftmaxで統合します。
+
+Mixed入力ではカテゴリ変数にカテゴリ用共分散を、連続設計変数に連続共分散を使い、
+忠実度の入力列はカテゴリ変数と混同せずに分離します。
+
+忠実度が高くなるほど観測誤差が必ず小さくなるとは仮定しません。
+また、これは**忠実度を含む分類サロゲートモデル**であり、
+評価コストを使った候補選択やMulti-Fidelity Knowledge Gradientまでを
+自動的に実行するものではありません。
+忠実度のスケールと高忠実度での保留データ予測性能を別途確認する必要があります。
+
+**参考文献**：Wu et al. (2020), *Practical Multi-fidelity Bayesian Optimization for Hyperparameter Tuning*;
+Kandasamy et al. (2017), *Multi-fidelity Bayesian Optimisation with Continuous Approximations*.
