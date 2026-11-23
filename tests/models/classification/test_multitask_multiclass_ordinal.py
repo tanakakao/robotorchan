@@ -83,8 +83,13 @@ def test_block_design_multitask_fit_predict_proposal(model_type):
     assert proposed.shape == (2,)
     # Joint latent posterior is flattened over the task rows.
     assert model.posterior(candidates).mean.shape[-2] == 14
+    if isinstance(model, KroneckerMultiTaskOrdinalGPClassifier):
+        long_candidates = torch.cat(
+            (candidates, torch.zeros(7, 1, dtype=torch.double)), dim=-1
+        )
+        assert model.predict_proba(long_candidates).shape == (7, 3)
     with pytest.raises(ValueError, match="Expected block-design candidate"):
-        model.predict_proba(torch.rand(3, 3, dtype=torch.double))
+        model.predict_proba(torch.rand(3, 4, dtype=torch.double))
 
 
 @pytest.mark.parametrize(
@@ -116,9 +121,7 @@ def test_block_design_probability_posterior_and_acquisition_shapes(model_type):
             if isinstance(model, KroneckerMultiTaskMulticlassGPClassifier)
             else model.probability_posterior(candidates)
         )
-        sampled_prob = model.sample_class_probabilities(
-            candidates, sample_shape=torch.Size([4])
-        )
+        sampled_prob = model.sample_class_probabilities(candidates, sample_shape=torch.Size([4]))
         entropy = model.predictive_entropy(candidates)
         information = model.mutual_information(candidates, num_samples=4)
     assert block_prob.shape == (3, 2, 3)
@@ -129,6 +132,4 @@ def test_block_design_probability_posterior_and_acquisition_shapes(model_type):
     assert entropy.shape == (3, 2)
     assert information.shape == (3, 2)
     if isinstance(model, KroneckerMultiTaskOrdinalGPClassifier):
-        torch.testing.assert_close(
-            probability_posterior.mean.reshape(3, 2, 3), block_prob
-        )
+        torch.testing.assert_close(probability_posterior.mean.reshape(3, 2, 3), block_prob)
