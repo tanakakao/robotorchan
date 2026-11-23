@@ -54,7 +54,11 @@ class ReducedMulticlassGPClassifier(_ReducedInputMixin, MulticlassSingleTaskGPCl
     """Multiclass classifier with a frozen, reusable input reducer."""
 
     def __init__(
-        self, train_X: Tensor, train_Y: Tensor, *, num_classes: int,
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
         input_reducer: InputReducer,
     ) -> None:
         reduced = (
@@ -71,7 +75,11 @@ class ReducedOrdinalGPClassifier(_ReducedInputMixin, OrdinalSingleTaskGPClassifi
     """Ordinal-probit classifier with a frozen, reusable input reducer."""
 
     def __init__(
-        self, train_X: Tensor, train_Y: Tensor, *, num_classes: int,
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
         input_reducer: InputReducer,
     ) -> None:
         reduced = (
@@ -85,54 +93,110 @@ class ReducedOrdinalGPClassifier(_ReducedInputMixin, OrdinalSingleTaskGPClassifi
 
 
 class PCAMulticlassGPClassifier(ReducedMulticlassGPClassifier):
-    def __init__(self, train_X: Tensor, train_Y: Tensor, *, num_classes: int,
-                 n_components: int, center: bool = True) -> None:
-        super().__init__(train_X, train_Y, num_classes=num_classes,
-                         input_reducer=PCAInputReducer(
-                             n_components=n_components, center=center
-                         ))
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        n_components: int,
+        center: bool = True,
+    ) -> None:
+        super().__init__(
+            train_X,
+            train_Y,
+            num_classes=num_classes,
+            input_reducer=PCAInputReducer(n_components=n_components, center=center),
+        )
 
 
 class PCAOrdinalGPClassifier(ReducedOrdinalGPClassifier):
-    def __init__(self, train_X: Tensor, train_Y: Tensor, *, num_classes: int,
-                 n_components: int, center: bool = True) -> None:
-        super().__init__(train_X, train_Y, num_classes=num_classes,
-                         input_reducer=PCAInputReducer(
-                             n_components=n_components, center=center
-                         ))
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        n_components: int,
+        center: bool = True,
+    ) -> None:
+        super().__init__(
+            train_X,
+            train_Y,
+            num_classes=num_classes,
+            input_reducer=PCAInputReducer(n_components=n_components, center=center),
+        )
 
 
 class PLSMulticlassGPClassifier(ReducedMulticlassGPClassifier):
-    def __init__(self, train_X: Tensor, train_Y: Tensor, *, num_classes: int,
-                 n_components: int, center: bool = True, eps: float = 1e-12) -> None:
-        super().__init__(train_X, train_Y, num_classes=num_classes,
-                         input_reducer=PLSInputReducer(
-                             n_components=n_components, center=center, eps=eps
-                         ))
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        n_components: int,
+        center: bool = True,
+        eps: float = 1e-12,
+    ) -> None:
+        super().__init__(
+            train_X,
+            train_Y,
+            num_classes=num_classes,
+            input_reducer=PLSInputReducer(n_components=n_components, center=center, eps=eps),
+        )
 
 
 class PLSOrdinalGPClassifier(ReducedOrdinalGPClassifier):
-    def __init__(self, train_X: Tensor, train_Y: Tensor, *, num_classes: int,
-                 n_components: int, center: bool = True, eps: float = 1e-12) -> None:
-        super().__init__(train_X, train_Y, num_classes=num_classes,
-                         input_reducer=PLSInputReducer(
-                             n_components=n_components, center=center, eps=eps
-                         ))
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        n_components: int,
+        center: bool = True,
+        eps: float = 1e-12,
+    ) -> None:
+        super().__init__(
+            train_X,
+            train_Y,
+            num_classes=num_classes,
+            input_reducer=PLSInputReducer(n_components=n_components, center=center, eps=eps),
+        )
 
 
 class RandomProjectionMulticlassGPClassifier(ReducedMulticlassGPClassifier):
-    def __init__(self, train_X: Tensor, train_Y: Tensor, *, num_classes: int,
-                 n_components: int, random_state: int = 0) -> None:
-        super().__init__(train_X, train_Y, num_classes=num_classes,
-                         input_reducer=RandomProjectionInputReducer(
-                             n_components=n_components, random_state=random_state
-                         ))
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        n_components: int,
+        random_state: int = 0,
+    ) -> None:
+        super().__init__(
+            train_X,
+            train_Y,
+            num_classes=num_classes,
+            input_reducer=RandomProjectionInputReducer(n_components=n_components, random_state=random_state),
+        )
 
 
 class RandomProjectionOrdinalGPClassifier(ReducedOrdinalGPClassifier):
-    def __init__(self, train_X: Tensor, train_Y: Tensor, *, num_classes: int,
-                 n_components: int, random_state: int = 0) -> None:
-        super().__init__(train_X, train_Y, num_classes=num_classes,
-                         input_reducer=RandomProjectionInputReducer(
-                             n_components=n_components, random_state=random_state
-                         ))
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        n_components: int,
+        random_state: int = 0,
+    ) -> None:
+        super().__init__(
+            train_X,
+            train_Y,
+            num_classes=num_classes,
+            input_reducer=RandomProjectionInputReducer(n_components=n_components, random_state=random_state),
+        )
