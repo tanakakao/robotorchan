@@ -318,7 +318,7 @@ def test_gp_scm_requests_missing_intermediate_measurements_in_tell():
     )
     first = study.ask()
     study.tell(first, {"Y": 0.7})  # Z is unknown, not an inferred measurement
-    with pytest.raises(ValueError, match=r"tell\\(\\)"):
+    with pytest.raises(ValueError, match="include these measurements"):
         study.ask()
     assert len(study.trials) == 1
 
