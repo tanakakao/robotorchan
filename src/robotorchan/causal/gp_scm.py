@@ -209,10 +209,7 @@ class GPStructuralCausalModel:
             raise ValueError("sample_shape must have positive dimensions.")
 
         prefix = shape + X.shape[:-1]
-        fixed = {
-            node: X[..., column].expand(prefix)
-            for column, node in enumerate(nodes)
-        }
+        fixed = {node: X[..., column].expand(prefix) for column, node in enumerate(nodes)}
         # Only ancestors required to predict the outcome; a hard intervention
         # blocks the edges entering its target.
         required: set[str] = set()
