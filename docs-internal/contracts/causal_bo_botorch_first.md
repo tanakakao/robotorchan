@@ -67,7 +67,7 @@ Phase 2はユーザー要望に合わせてNetworkX専用から**複数の入力
 - pgmpy・causal-learnの専用アダプタは追加しない。公開NetworkX変換が利用可能な場合は利用者側で変換する。
 - Phase 2の範囲は型変換とガイドおよび対象テストに限定する。GP-SCM・最適化の実装はPhase 3以降とする。
 
-## 4. Phase 3 — native獲得関数と複数介入集合の責務分離
+## 4. Phase 3 — native獲得関数と複数介入集合の責務分離（実装）
 
 ### 単一集合：追加APIなし
 
@@ -75,7 +75,7 @@ BoTorch `AcquisitionFunction`インスタンスを`optimize_acqf`に**直接**�
 
 ### 複数集合：必要な時だけ薄い束ね役
 
-現在の`propose_causal_intervention(surrogates, bounds, ...)`はLogEI専用のまま公開互換性を維持。内部重複をなくすため、Phase 3で以下の**最小限の汎用補助API**を追加する方針とする：
+`propose_causal_intervention(surrogates, bounds, ...)`はLogEI専用のまま公開互換性を維持。内部の最適化・候補検証・順位付けを再利用するため、以下の**最小限の汎用補助API**を実装した：
 
 ```python
 optimize_causal_acqfs(
@@ -95,9 +95,9 @@ optimize_causal_acqfs(
 - `CausalAcquisitionProposal`は`intervention: HardIntervention`、`acquisition_value: float`、`ranking_score: float`のみを持つ最小の新しい結果型。既存`CausalInterventionProposal`の`log_expected_improvement`/`log_utility`という**LogEI固有のフィールドを別の獲得関数に流用しない**。
 - `score`は既存LogEI経路では`log_ei - log(cost)`。一般の`UCB`や`PosteriorMean`は改善量でないため、この変換を適用しない。
 - 複数集合で比較可能な実務上の条件：同じターゲット、同じ目的の単位・方向、同じ改善基準（EI系）、同じ獲得関数の定義・ハイパーパラメータ。異なるモデル出力変換やコスト正規化に注意する。
-- `propose_causal_intervention`の旧来の戻り値は維持。呼出内部のみ薄い補助処理へ委譲してもよい。機能上の理由がなければ`acqf`を必須の専用ラッパーで包まない。
+- `propose_causal_intervention`の旧来の戻り値を維持し、候補選択のみ薄い補助処理へ委譲する。nativeの`acqf`を専用ラッパーで包まない。
 
-Phase 3のテストでは、単一集合のnative `LogExpectedImprovement`、複数集合の共通`best_f`、最小化、固定コスト、介入ノード順、既存LogEIの同等性を優先する。大規模なOptimizer互換性監査は行わない。
+Phase 3の対象テストは`tests/causal/test_native_acquisition_selection.py`および従来の`tests/causal/test_phase4_proposal.py`。native`PosteriorMean`、`UpperConfidenceBound`、`LogExpectedImprovement`、複数集合の次元・順序・明示コストスコア、不正な候補／スコア、従来の最小化・LogEIの扱いを確認する。大規模なOptimizer互換性監査は行わない。
 
 ## 5. Phase 4 — 確率的GP-SCMの設計
 
