@@ -43,9 +43,7 @@ def test_parent_dict_edge_list_and_matrix_agree() -> None:
             CausalGraph.from_edges(graph.to_edges(), nodes=graph.nodes).to_adjacency_matrix()
             == graph.to_adjacency_matrix()
         )
-        reloaded = CausalGraph.from_adjacency_matrix(
-            graph.to_adjacency_matrix(), nodes=graph.nodes
-        )
+        reloaded = CausalGraph.from_adjacency_matrix(graph.to_adjacency_matrix(), nodes=graph.nodes)
         assert reloaded.to_edges() == graph.to_edges()
 
 
