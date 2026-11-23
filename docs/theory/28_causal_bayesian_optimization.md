@@ -574,7 +574,7 @@ $
 
 $X$ は親のない **root** です。$f_Z$ は「温度 $X$ から中間状態 $Z$」
 への生成機構、$f_Y$ は「中間状態 $Z$ から品質 $Y$」への生成機構です。
-未知の関数 $f_Z,f_Y$ をそれぞれ既存のBoTorch `SingleTaskGP`で学習します。
+未知の関数 $f_Z,f_Y$ をそれぞれGP回帰によって学習します。
 
 ここで「GP-SCMが1つ」とは、**1つの因果モデルが2つのGP機構と
 root分布をまとめて管理する**という意味です。1つの巨大なGPに
@@ -678,7 +678,7 @@ $
 
 数式に出てくるGPの平均・共分散の計算、カーネル学習、`fit()`、
 `posterior()`は**BoTorch/GPyTorchの既存実装**に委譲します。
-robotorchanでGP回帰の学習アルゴリズムを作り直してはいません。
+既存のGP回帰モデルの理論と実装を再利用でき、因果的な伝播のためにGP回帰そのものを再定義する必要はありません。
 
 親のないrootノードには入力次元0のGPを無理に当てはめず、
 実測から推定した平均と標本標準偏差を使う経験的正規近似を採用します。
@@ -700,7 +700,7 @@ GP-SCMから $P(Y\mid\mathrm{do}(S=x_S),\mathcal D,G)$ を
 1. 介入ノード $j\in S$ では $v_j^{(m)}=x_j$ に固定する。
 2. 非介入rootでは、学習済みの経験分布から $v_j^{(m)}$ をサンプリングする。
 3. 非介入・非rootでは、すでに生成した親値を入力として
-   `SingleTaskGP.posterior(...).rsample()` で $v_j^{(m)}$ を生成する。
+   条件付きGPの事後分布から $v_j^{(m)}$ を生成する。
 4. 目的ノード $Y$ の値を $y^{(m)}$ として保存する。
 
 $M$ 本のサンプルから、介入平均と分散を次のように近似できます。
@@ -798,7 +798,7 @@ PyTorchの`fork_rng`で呼び出し元の乱数状態を復元します。
 一方、EIの改善基準 $b$ は、実際に`do`を実施して測定した
 $Y$ の最良値に基づきます。
 
-`CausalBOStudy(model_type="gp_scm")`では、初期観測データが十分なら
+GP-SCMを用いる逐次的な実験計画では、初期観測データが十分なら
 `study.fit()`で機構学習を開始できます。しかし、実介入の
 結果がまだない場合は、最初にSobolで1件の介入を発行し、
 その結果を`tell()`で登録してからEIで候補を選びます。
@@ -864,7 +864,7 @@ GP-SCMはその記録に含まれる親・中間・目的ノードの測定値�
 
 DAGの観測と介入の違い、条件付きGP、確率的伝播、
 獲得関数、Studyによる試行管理を**別の責務**として理解すると、
-robotorchanがBoTorchの既存機能をどこで再利用しているかも明確になります。
+GP回帰と因果的な介入伝播をどこで分けて考えるべきかも明確になります。
 
 
 ## 13. どこまでが因果推論で、どこからが最適化か
@@ -912,7 +912,7 @@ robotorchanがBoTorchの既存機能をどこで再利用しているかも明�
 
 ### GP-SCMと構造の共有
 
-- **Aglietti, V., Damoulas, T., Álvarez, M. A., & González, J. (2020).** [*Multi-task Causal Learning with Gaussian Processes*](https://proceedings.neurips.cc/paper_files/paper/2020/hash/45c166d697d65080d54501403b433256-Abstract.html). *NeurIPS 2020*. — 介入応答の情報共有を扱うDAG-GP研究。robotorchanの単純なノード条件付きGP-SCMとはモデル化が異なり、DAG-GPの完全実装を意味しません。
+- **Aglietti, V., Damoulas, T., Álvarez, M. A., & González, J. (2020).** [*Multi-task Causal Learning with Gaussian Processes*](https://proceedings.neurips.cc/paper_files/paper/2020/hash/45c166d697d65080d54501403b433256-Abstract.html). *NeurIPS 2020*. — 介入応答の情報共有を扱うDAG-GP研究。ここで説明したノード条件付きGP-SCMとはモデル化が異なり、DAG-GPの説明そのものではありません。
 - **Aglietti, V., Malek, A., Ktena, I., & Chiappa, S. (2023).** [*Constrained Causal Bayesian Optimization*](https://proceedings.mlr.press/v202/aglietti23a.html). *ICML 2023*. — 安全・実行可能性制約を伴うCBOの発展例。現在のGP-SCM提案器はこの制約付き獲得関数を実装していません。
 
 ### GP・ベイズ最適化・獲得関数
