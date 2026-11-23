@@ -160,7 +160,7 @@ def test_insufficient_full_nodes_are_explicit_not_imputed(graph_and_observations
     first = study.ask()
     study.tell(first, 0.4)
     assert len(study.observations) == 1
-    with pytest.raises(ValueError, match="Node 'X'.*two complete"):
+    with pytest.raises(ValueError, match=r"Node 'X'.*two complete"):
         study.fit()
     with pytest.raises(ValueError, match="two complete"):
         study.ask()
