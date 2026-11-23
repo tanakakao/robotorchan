@@ -96,6 +96,12 @@ from robotorchan.models.classification.expressive.spectral_mixture import (
     SpectralMixtureOrdinalGPClassifier,
 )
 from robotorchan.models.classification.model_list import ClassificationModelList
+from robotorchan.models.classification.multiclass.deep_gp import (
+    MulticlassSingleTaskDeepGPClassifier,
+)
+from robotorchan.models.classification.ordinal.deep_gp import (
+    OrdinalSingleTaskDeepGPClassifier,
+)
 from robotorchan.models.classification.multiclass.high_dimensional.alebo import (
     ALEBOMulticlassGPClassifier,
     ALEBOOrdinalGPClassifier,
@@ -227,6 +233,7 @@ __all__ = [
     "MultiTaskBinaryGPClassifier",
     "MultiTaskMulticlassGPClassifier",
     "MultiTaskOrdinalGPClassifier",
+    "MulticlassSingleTaskDeepGPClassifier",
     "MulticlassSingleTaskGPClassifier",
     "NonGPBinaryClassificationMixin",
     "NonstationaryBinarySingleTaskGPClassifier",
@@ -234,6 +241,7 @@ __all__ = [
     "NonstationaryMulticlassGPClassifier",
     "NonstationaryOrdinalGPClassifier",
     "OrderedProbitLikelihood",
+    "OrdinalSingleTaskDeepGPClassifier",
     "OrdinalSingleTaskGPClassifier",
     "PCABinarySingleTaskGPClassifier",
     "PCAMulticlassGPClassifier",
