@@ -32,6 +32,8 @@ from robotorchan.reduction.neural import (
 class ReducedMultiTaskGP(MultiTaskGP):
     """Long-format multi-task GP reducing data features but not task identity."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -134,6 +136,8 @@ class ReducedMultiTaskGP(MultiTaskGP):
 class ReducedKroneckerMultiTaskGP(KroneckerMultiTaskGP):
     """Block-design Kronecker multi-task GP with frozen input reduction."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -210,6 +214,8 @@ class ReducedKroneckerMultiTaskGP(KroneckerMultiTaskGP):
 class PCAMultiTaskGP(ReducedMultiTaskGP):
     """Long-format multi-task GP using PCA over non-task input features."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -232,6 +238,8 @@ class PCAMultiTaskGP(ReducedMultiTaskGP):
 class PCAKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
     """Block-design Kronecker multi-task GP using PCA over input features."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -251,6 +259,8 @@ class PCAKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
 
 class RandomProjectionMultiTaskGP(ReducedMultiTaskGP):
     """Long-format multi-task GP using a frozen random projection."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -276,6 +286,8 @@ class RandomProjectionMultiTaskGP(ReducedMultiTaskGP):
 
 class RandomProjectionKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
     """Block-design Kronecker multi-task GP using a frozen random projection."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -305,6 +317,8 @@ class PLSMultiTaskGP(ReducedMultiTaskGP):
     one supervised sample while task identity remains modeled exclusively by
     the multi-task GP covariance.
     """
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -337,6 +351,8 @@ class PLSKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
     This lets the latent input representation capture directions associated
     with covariance across the complete task-output matrix.
     """
+
+    supports_fit = True
 
     def __init__(
         self,
