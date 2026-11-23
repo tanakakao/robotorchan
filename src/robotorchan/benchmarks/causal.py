@@ -13,6 +13,8 @@ from torch import Tensor
 from robotorchan.benchmarks.random_streams import make_stream_generator
 from robotorchan.benchmarks.strategy_rng import strategy_rng_scope
 from robotorchan.causal.data import CausalObservation
+from robotorchan.causal.gp_scm import GPStructuralCausalModel
+from robotorchan.causal.gp_scm_proposal import propose_gp_scm_intervention
 from robotorchan.causal.graph import CausalGraph
 from robotorchan.causal.intervention import HardIntervention
 from robotorchan.causal.scm import StructuralCausalModel
@@ -21,6 +23,7 @@ from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 
 METHODS = ("cbo", "gp_bo", "random")
+AVAILABLE_METHODS = (*METHODS, "gp_scm")
 
 
 @dataclass(frozen=True, slots=True)
@@ -150,6 +153,35 @@ def _gp_bo_intervention(
     return HardIntervention(dict(zip(nodes, candidate[0].tolist(), strict=True)))
 
 
+def _gp_scm_intervention(
+    scenario: CausalBenchmarkScenario,
+    records: Sequence[CausalObservation],
+    *,
+    optimizer: OptimizerName,
+    num_restarts: int,
+    raw_samples: int,
+    mc_samples: int,
+    mc_seed: int,
+) -> HardIntervention:
+    """Fit shared known-DAG mechanisms on the same prior do observations."""
+    model = GPStructuralCausalModel(scenario.graph, records)
+    model.fit()
+    candidate = propose_gp_scm_intervention(
+        model,
+        scenario.intervention_sets,
+        scenario.bounds,
+        outcome="Y",
+        best_f=max(record.values["Y"] for record in records),
+        intervention_costs=scenario.costs,
+        optimizer=optimizer,
+        num_restarts=num_restarts,
+        raw_samples=raw_samples,
+        mc_samples=mc_samples,
+        mc_seed=mc_seed,
+    )
+    return candidate.intervention
+
+
 def _random_intervention(
     scenario: CausalBenchmarkScenario, generator: torch.Generator
 ) -> HardIntervention:
@@ -209,10 +241,16 @@ def run_causal_benchmark(
     optimizer: OptimizerName = "botorch",
     num_restarts: int = 3,
     raw_samples: int = 32,
+    methods: Sequence[str] = METHODS,
+    mc_samples: int = 64,
+    mc_seed: int = 0,
 ) -> tuple[CausalBenchmarkTrajectory, ...]:
-    """Compare CBO, fixed-full-intervention GP-BO and Random Search per seed.
+    """Compare selected methods with identical hard-intervention starts per seed.
 
-    All three methods begin with exactly identical hard-intervention records.
+    Defaults preserve CBO, fixed-set GP-BO and Random Search. Opt-in gp_scm
+    learns shared GP mechanisms on the *same* fully measured do records; it
+    receives no additional observational dataset, avoiding unequal data access.
+    All selected methods begin with exactly identical hard-intervention records.
     Trial counts are paired; total financial cost is intentionally *reported*,
     not fixed to the same ceiling. The conventional GP only trains on the
     full-set subset of shared initial data, avoiding invalid do/conditional
@@ -231,6 +269,15 @@ def run_causal_benchmark(
         raise ValueError("num_restarts must be positive.")
     if type(raw_samples) is not int or raw_samples < 1:
         raise ValueError("raw_samples must be positive.")
+    selected_methods = tuple(methods)
+    if not selected_methods or len(set(selected_methods)) != len(selected_methods):
+        raise ValueError("methods must be nonempty and unique.")
+    if any(method not in AVAILABLE_METHODS for method in selected_methods):
+        raise ValueError(f"methods must belong to {AVAILABLE_METHODS}.")
+    if type(mc_samples) is not int or mc_samples < 1:
+        raise ValueError("mc_samples must be positive.")
+    if type(mc_seed) is not int or mc_seed < 0:
+        raise ValueError("mc_seed must be a nonnegative integer.")
 
     problem = make_causal_synthetic_scenario() if scenario is None else scenario
     _full_intervention_nodes(problem)
@@ -258,7 +305,7 @@ def run_causal_benchmark(
             study.tell(trial, observation.values)
         initial_records = study.observations
 
-        for method in METHODS:
+        for method in selected_methods:
             records = list(initial_records)
             generator = make_stream_generator(seed, "causal_random", torch.device("cpu"))
             for iteration in range(n_iterations):
@@ -266,6 +313,16 @@ def run_causal_benchmark(
                     if method == "cbo":
                         trial = study.ask()
                         intervention = trial.intervention
+                    elif method == "gp_scm":
+                        intervention = _gp_scm_intervention(
+                            problem,
+                            records,
+                            optimizer=optimizer,
+                            num_restarts=num_restarts,
+                            raw_samples=raw_samples,
+                            mc_samples=mc_samples,
+                            mc_seed=mc_seed + seed,
+                        )
                     elif method == "gp_bo":
                         intervention = _gp_bo_intervention(
                             problem,
