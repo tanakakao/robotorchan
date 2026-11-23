@@ -110,6 +110,12 @@ from robotorchan.models.classification.multiclass.high_dimensional.reduced impor
     ReducedMulticlassGPClassifier,
     ReducedOrdinalGPClassifier,
 )
+from robotorchan.models.classification.multiclass.high_dimensional.saas import (
+    MapSaasMulticlassGPClassifier,
+    MapSaasOrdinalGPClassifier,
+    SaasMulticlassGPClassifier,
+    SaasOrdinalGPClassifier,
+)
 from robotorchan.models.classification.multiclass.standard.single_task import (
     MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
@@ -142,7 +148,6 @@ from robotorchan.models.classification.reliability import (
 )
 
 __all__ = [
-    "CLASSIFICATION_MODEL_REGISTRY",
     "ALEBOBinarySingleTaskGPClassifier",
     "ALEBOMulticlassGPClassifier",
     "ALEBOOrdinalGPClassifier",
@@ -151,6 +156,7 @@ __all__ = [
     "BinarySingleTaskGPClassifier",
     "BootstrapBinaryClassificationEnsemble",
     "BootstrapGradientBoostingBinaryClassifier",
+    "CLASSIFICATION_MODEL_REGISTRY",
     "CalibratedBinaryClassifier",
     "ClassificationEnsemblePosterior",
     "ClassificationInputUncertaintyType",
@@ -186,6 +192,8 @@ __all__ = [
     "LabelNoiseBinarySingleTaskGPClassifier",
     "LatentOutputStructure",
     "MapSaasBinarySingleTaskGPClassifier",
+    "MapSaasMulticlassGPClassifier",
+    "MapSaasOrdinalGPClassifier",
     "MixedBinarySingleTaskGPClassifier",
     "MixedInfiniteWidthBNNBinaryGPClassifier",
     "MixedMultiFidelityBinaryGPClassifier",
@@ -226,6 +234,8 @@ __all__ = [
     "RobustClassificationMetadata",
     "RobustProbabilityTransform",
     "SaasBinarySingleTaskGPClassifier",
+    "SaasMulticlassGPClassifier",
+    "SaasOrdinalGPClassifier",
     "SklearnBinaryClassifier",
     "SpectralMixtureBinaryGPClassifier",
     "SpectralMixtureMulticlassGPClassifier",
