@@ -117,6 +117,8 @@ from robotorchan.models.classification.multiclass.high_dimensional.saas import (
     SaasOrdinalGPClassifier,
 )
 from robotorchan.models.classification.multiclass.standard.multitask import (
+    KroneckerMultiTaskMulticlassGPClassifier,
+    KroneckerMultiTaskOrdinalGPClassifier,
     MultiTaskMulticlassGPClassifier,
     MultiTaskOrdinalGPClassifier,
 )
@@ -192,6 +194,8 @@ __all__ = [
     "JointEncoderMulticlassGPClassifier",
     "JointEncoderOrdinalGPClassifier",
     "KroneckerMultiTaskBinaryGPClassifier",
+    "KroneckerMultiTaskMulticlassGPClassifier",
+    "KroneckerMultiTaskOrdinalGPClassifier",
     "LabelNoiseBernoulliLikelihood",
     "LabelNoiseBinarySingleTaskGPClassifier",
     "LatentOutputStructure",
