@@ -132,9 +132,7 @@ def test_multifidelity_classification_acquisition_and_probability_posterior(mode
         q_scores = qPredictiveEntropy(model)(pool[:6].reshape(3, 2, 3))
         joint_scores = qBALD(model, num_samples=8)(pool[:6].reshape(3, 2, 3))
         if isinstance(model, MultiFidelityMulticlassGPClassifier):
-            probability_posterior = model.probability_posterior(
-                pool, num_samples=16, seed=10
-            )
+            probability_posterior = model.probability_posterior(pool, num_samples=16, seed=10)
         else:
             probability_posterior = model.probability_posterior(pool)
     assert scores.shape == (7,)
@@ -156,9 +154,7 @@ def test_mixed_multifidelity_metadata_and_data_fidelity(model_type):
     x = torch.rand(9, 4, dtype=torch.double)
     x[:, 1] = (torch.arange(9) % 2).to(torch.double)
     y = torch.arange(9) % 3
-    model = model_type(
-        x, y, num_classes=3, cat_dims=[1], data_fidelities=[-1]
-    )
+    model = model_type(x, y, num_classes=3, cat_dims=[1], data_fidelities=[-1])
     assert model.cat_dims == (1,)
     assert model.fidelity_dims == (3,)
     assert model.data_fidelities == (3,)
