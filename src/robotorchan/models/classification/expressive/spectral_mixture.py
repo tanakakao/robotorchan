@@ -14,7 +14,9 @@ from robotorchan.models.classification.ordinal.standard.single_task import (
 )
 
 
-def _spectral_kernel(train_X: Tensor, train_Y: Tensor, num_mixtures: int) -> SpectralMixtureKernel:
+def _spectral_kernel(
+    train_X: Tensor, train_Y: Tensor, num_mixtures: int
+) -> SpectralMixtureKernel:
     if train_X.ndim != 2 or train_X.shape[0] < 2:
         raise ValueError("train_X must have shape [n, d] with n >= 2.")
     if num_mixtures < 1:
@@ -73,7 +75,9 @@ class SpectralMixtureOrdinalGPClassifier(OrdinalSingleTaskGPClassifier):
         )
 
 
-def _mixed_spectral_kernel(train_X: Tensor, train_Y: Tensor, cat_dims: list[int], num_mixtures: int):
+def _mixed_spectral_kernel(
+    train_X: Tensor, train_Y: Tensor, cat_dims: list[int], num_mixtures: int
+):
     if not isinstance(num_mixtures, int) or isinstance(num_mixtures, bool) or num_mixtures < 1:
         raise ValueError("num_mixtures must be a positive integer.")
     categories = normalize_feature_dims(cat_dims, train_X.shape[-1], name="cat_dims")
