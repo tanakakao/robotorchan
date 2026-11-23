@@ -226,6 +226,6 @@ Block形式の予測確率の形状は `[q, m, C]` で、タスクごとに最�
 
 Block形式の `predict_proba(X)`、`sample_class_probabilities(X)`、`predictive_entropy(X)` はタスク軸を保持します。例えば候補が `q` 点、タスクが `m` 個、クラスが `C` 個なら、予測確率は `[q, m, C]`、予測エントロピーは `[q, m]` です。
 
-一方、`posterior(X)` と `probability_posterior(X)` はBoTorchの候補軸を保つため、内部Long形式の `q*m` 点を使います。前者は潜在GPの事後分布、後者は確率事後分布であり、`probability_posterior(X).mean` の形状は `[q*m, C]` です。タスク別に表示する場合は `[q, m, C]` にreshapeします。
+一方、`posterior(X)` と `probability_posterior(X)` はBoTorchの候補軸を保つため、内部Long形式の `q*m` 点を使います。Block形式モデルの `predict_proba(X)` は通常は元入力の `[q,d]` を受け取り `[q,m,C]` を返しますが、内部計算との整合性のため明示的なタスクID列を付けたLong形式 `[q,d+1]` も受け取り、この場合は `[q,C]` を返します。前者は潜在GPの事後分布、後者は確率事後分布であり、`probability_posterior(X).mean` の形状は `[q*m, C]` です。タスク別に表示する場合は `[q, m, C]` にreshapeします。
 
 `mutual_information(X)` はタスクごとに `[q, m]` のBALDスコアを返します。複数タスクを同じ入力で観測する場合、エントロピーやBALDのタスク平均などを使って入力点を提案できます。ただし、この単純な集約は**タスク間の同時情報量を厳密に最適化したものではありません**。
