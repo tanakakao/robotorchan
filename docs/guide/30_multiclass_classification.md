@@ -141,3 +141,22 @@ ALEBOでは `ALEBOMulticlassGPClassifier` に
 この例の学習ラベルはAPI説明用の人工データです。
 モデル精度やALの改善を示すベンチマークではありません。
 実験では保留データを分け、NLL・Brier score・クラス別指標を確認します。
+
+
+## 高次元の疎ARDモデル：SAAS型とMAP-SAAS型
+
+`SaasMulticlassGPClassifier` は `global_scale` を、
+`MapSaasMulticlassGPClassifier` は `tau` を正の値として指定します。
+どちらも入力は元の特徴量の次元のままで、PCA等の縮約を事前に要求しません。
+
+使用の流れは次のとおりです。
+
+1. 元の高次元入力 `train_X` とクラスラベル `train_Y` でモデルを構築する
+2. `num_classes` を指定し、`model.fit(epochs=..., lr=...)` で学習する
+3. 未測定の高次元候補を `model.predict_proba(candidate_X)` に渡す
+4. 予測確率からエントロピーなどの獲得スコアを計算し、候補を選ぶ
+
+これは**変分分類モデルに疎ARD事前分布を導入する実装**です。
+完全Bayesian SAASのMCMC推論とは区別してください。
+実行できる学習・予測・候補提案・可視化は
+[30番Notebook](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)のPhase 6節を参照してください。
