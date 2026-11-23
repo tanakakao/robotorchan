@@ -2,11 +2,11 @@
 import pytest
 import torch
 
+from robotorchan.acquisition.active_learning.classification import PredictiveEntropy
 from robotorchan.models.classification import (
     JointEncoderMulticlassGPClassifier,
     JointEncoderOrdinalGPClassifier,
 )
-from robotorchan.acquisition.active_learning.classification import PredictiveEntropy
 
 
 @pytest.mark.parametrize(
@@ -21,7 +21,7 @@ def test_joint_encoder_training_and_probability_candidate(cls):
     model.fit(epochs=2, lr=0.01)
     assert any(
         not torch.allclose(a, b)
-        for a, b in zip(before, model.encoder.parameters())
+        for a, b in zip(before, model.encoder.parameters(), strict=True)
     )
     candidates = torch.linspace(-0.9, 0.9, 5, dtype=x.dtype).unsqueeze(-1)
     latent = model.posterior(candidates)
