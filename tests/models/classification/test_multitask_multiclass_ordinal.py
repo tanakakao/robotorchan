@@ -84,9 +84,7 @@ def test_block_design_multitask_fit_predict_proposal(model_type):
     # Joint latent posterior is flattened over the task rows.
     assert model.posterior(candidates).mean.shape[-2] == 14
     if isinstance(model, KroneckerMultiTaskOrdinalGPClassifier):
-        long_candidates = torch.cat(
-            (candidates, torch.zeros(7, 1, dtype=torch.double)), dim=-1
-        )
+        long_candidates = torch.cat((candidates, torch.zeros(7, 1, dtype=torch.double)), dim=-1)
         assert model.predict_proba(long_candidates).shape == (7, 3)
     with pytest.raises(ValueError, match="Expected block-design candidate"):
         model.predict_proba(torch.rand(3, 4, dtype=torch.double))
