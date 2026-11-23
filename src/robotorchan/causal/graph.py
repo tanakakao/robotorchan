@@ -76,7 +76,12 @@ class CausalGraph:
                 source, target = edge
             except (TypeError, ValueError) as exc:
                 raise ValueError("Each edge must be a (source, target) pair.") from exc
-            if not isinstance(source, str) or not source or not isinstance(target, str) or not target:
+            if (
+                not isinstance(source, str)
+                or not source
+                or not isinstance(target, str)
+                or not target
+            ):
                 raise ValueError("Edge nodes must be nonempty strings.")
             pairs.append((source, target))
 
@@ -159,9 +164,7 @@ class CausalGraph:
 
     def to_edges(self) -> tuple[tuple[str, str], ...]:
         """Return directed (source, target) pairs, preserving parent order."""
-        return tuple(
-            (parent, node) for node in self.nodes for parent in self.parents_of(node)
-        )
+        return tuple((parent, node) for node in self.nodes for parent in self.parents_of(node))
 
     def to_adjacency_matrix(self) -> tuple[tuple[int, ...], ...]:
         """Return a binary adjacency matrix in self.nodes order (source rows)."""
