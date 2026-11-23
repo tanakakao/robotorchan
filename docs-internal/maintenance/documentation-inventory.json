@@ -7060,6 +7060,15 @@
         "## TuRBO"
       ],
       "routing_status": "retained"
+    },
+    {
+      "current_path": "docs-internal/contracts/causal_bo_botorch_first.md",
+      "category": "Engineering contracts",
+      "language": "Japanese",
+      "action": "KEEP",
+      "destination": "docs-internal/contracts/causal_bo_botorch_first.md",
+      "reason": "Causal BO Phase 1 のBoTorch-first公開API・GP-SCM設計契約。後続Phaseの実装境界として保持する。",
+      "routing_status": "retained"
     }
   ],
   "generated_documents": [

@@ -3,6 +3,7 @@
 Engineering reference and historical evidence; follow the linked document for its scope.
 
 - [benchmark persistence schema boundaries](benchmark-persistence-schema-boundaries.md)
+- [Causal BO — BoTorch-first API and GP-SCM design contract](causal_bo_botorch_first.md)
 - [classification_ordinal_research_gates](classification_ordinal_research_gates.md)
 - [external_non_gp_surrogates](external_non_gp_surrogates.md)
 - [input_perturbation_contract](input_perturbation_contract.md)
