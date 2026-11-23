@@ -341,3 +341,31 @@ Brier score、クラス別Recallを比較してください。少数データで
 **参考文献**：Eriksson & Jankowiak (2021), *High-Dimensional Bayesian
 Optimization with Sparse Axis-Aligned Subspaces*;
 Rasmussen & Williams (2006), *Gaussian Processes for Machine Learning*.
+
+
+## タスク間相関を持つマルチクラスGP
+
+複数の設備や製造ラインなどで、同一のクラス集合を予測するとします。
+単純にタスクごとに独立した分類器を作ると、他タスクの観測情報が共有されません。
+ICM（intrinsic coregionalization model）は、入力 $x$ とタスクID $t$ の組に対して
+
+$$
+k((x,t),(x',t'))=k_x(x,x')B_{tt'}
+$$
+
+という積カーネルを使用します。ここで $B$ は半正定値のタスク共分散行列です。
+各クラスの潜在関数にはタスク共分散を持つGPを置きますが、
+クラスラベルの確率は**タスクを固定した潜在値のsoftmax**を周辺化して得ます。
+タスク相関とクラス間のsoftmax依存は異なる概念です。
+
+Long形式では、1行に通常の入力特徴と整数のタスクIDを含めます。
+Block形式では、各入力条件について全タスクの観測ラベルを並べます。
+Block形式が成立するのは同じ入力を各タスクで観測した場合です。
+欠損タスクがあるならLong形式を使います。
+
+タスク共分散を持つICMカーネルはKronecker形の共分散を表せますが、
+**分類用の変分推論がKronecker専用の高速線形代数を用いているとは限りません**。
+実装の推論アルゴリズムとカーネル構造を区別してください。
+
+**参考文献**：Bonilla, Chai & Williams (2008), *Multi-task Gaussian Process Prediction*;
+Álvarez, Rosasco & Lawrence (2012), *Kernels for Vector-Valued Functions: A Review*.
