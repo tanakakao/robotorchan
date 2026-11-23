@@ -38,18 +38,26 @@ def _prepare_features(
     mean = train_X.mean(0) if standardize else torch.zeros_like(train_X[0])
     scale = (
         train_X.std(0, unbiased=False).clamp_min(eps)
-        if standardize else torch.ones_like(train_X[0])
+        if standardize
+        else torch.ones_like(train_X[0])
     )
     devices = []
     if train_X.is_cuda:
-        devices = [train_X.device.index if train_X.device.index is not None
-                   else torch.cuda.current_device()]
+        devices = [
+            train_X.device.index
+            if train_X.device.index is not None
+            else torch.cuda.current_device()
+        ]
     with torch.random.fork_rng(devices=devices):
         torch.manual_seed(random_state)
         encoder = (
             make_feature_network(
-                train_X.shape[-1], latent_dim, hidden_dims, activation,
-                device=train_X.device, dtype=train_X.dtype,
+                train_X.shape[-1],
+                latent_dim,
+                hidden_dims,
+                activation,
+                device=train_X.device,
+                dtype=train_X.dtype,
             )
             if feature_extractor is None
             else feature_extractor.to(device=train_X.device, dtype=train_X.dtype)
@@ -67,7 +75,11 @@ class _JointEncoderInputs:
     latent_dim: int
 
     def _install_encoder(
-        self, train_X: Tensor, encoder: nn.Module, mean: Tensor, scale: Tensor,
+        self,
+        train_X: Tensor,
+        encoder: nn.Module,
+        mean: Tensor,
+        scale: Tensor,
         latent_dim: int,
     ) -> None:
         self.latent_dim = latent_dim
@@ -88,15 +100,28 @@ class JointEncoderOrdinalGPClassifier(_JointEncoderInputs, OrdinalSingleTaskGPCl
     """Ordered-probit variational GP with jointly learned neural input features."""
 
     def __init__(
-        self, train_X: Tensor, train_Y: Tensor, *, num_classes: int,
-        latent_dim: int, hidden_dims: tuple[int, ...] = (64, 32),
-        activation: str = "gelu", standardize: bool = True,
-        eps: float = 1e-8, random_state: int = 0,
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        latent_dim: int,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
         feature_extractor: nn.Module | None = None,
     ) -> None:
         encoder, mean, scale, features = _prepare_features(
-            train_X, latent_dim, hidden_dims, activation, standardize,
-            eps, random_state, feature_extractor,
+            train_X,
+            latent_dim,
+            hidden_dims,
+            activation,
+            standardize,
+            eps,
+            random_state,
+            feature_extractor,
         )
         super().__init__(features, train_Y, num_classes=num_classes)
         self._install_encoder(train_X, encoder, mean, scale, latent_dim)
@@ -105,7 +130,10 @@ class JointEncoderOrdinalGPClassifier(_JointEncoderInputs, OrdinalSingleTaskGPCl
         return super().posterior(self.encode(X), **kwargs)
 
     def fit(
-        self, *, epochs: int = 60, lr: float = 0.03,
+        self,
+        *,
+        epochs: int = 60,
+        lr: float = 0.03,
         batch_size: int | None = None,
     ) -> None:
         if epochs <= 0 or lr <= 0:
@@ -116,7 +144,8 @@ class JointEncoderOrdinalGPClassifier(_JointEncoderInputs, OrdinalSingleTaskGPCl
             raise ValueError("batch_size must be positive.")
         loader = DataLoader(
             TensorDataset(self.raw_train_X, self.raw_train_Y),
-            batch_size=batch_size, shuffle=True,
+            batch_size=batch_size,
+            shuffle=True,
         )
         self.train()
         optimizer = torch.optim.Adam(self.parameters(), lr=lr)
@@ -132,20 +161,34 @@ class JointEncoderOrdinalGPClassifier(_JointEncoderInputs, OrdinalSingleTaskGPCl
 
 
 class JointEncoderMulticlassGPClassifier(
-    _JointEncoderInputs, MulticlassSingleTaskGPClassifier,
+    _JointEncoderInputs,
+    MulticlassSingleTaskGPClassifier,
 ):
     """Independent class GPs with a shared, jointly learned neural encoder."""
 
     def __init__(
-        self, train_X: Tensor, train_Y: Tensor, *, num_classes: int,
-        latent_dim: int, hidden_dims: tuple[int, ...] = (64, 32),
-        activation: str = "gelu", standardize: bool = True,
-        eps: float = 1e-8, random_state: int = 0,
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        latent_dim: int,
+        hidden_dims: tuple[int, ...] = (64, 32),
+        activation: str = "gelu",
+        standardize: bool = True,
+        eps: float = 1e-8,
+        random_state: int = 0,
         feature_extractor: nn.Module | None = None,
     ) -> None:
         encoder, mean, scale, features = _prepare_features(
-            train_X, latent_dim, hidden_dims, activation, standardize,
-            eps, random_state, feature_extractor,
+            train_X,
+            latent_dim,
+            hidden_dims,
+            activation,
+            standardize,
+            eps,
+            random_state,
+            feature_extractor,
         )
         super().__init__(features, train_Y, num_classes=num_classes)
         self._install_encoder(train_X, encoder, mean, scale, latent_dim)
@@ -154,7 +197,10 @@ class JointEncoderMulticlassGPClassifier(
         return super().posterior(self.encode(X), **kwargs)
 
     def fit(
-        self, *, epochs: int = 60, lr: float = 0.03,
+        self,
+        *,
+        epochs: int = 60,
+        lr: float = 0.03,
         batch_size: int | None = None,
     ) -> None:
         if epochs <= 0 or lr <= 0:
@@ -165,7 +211,8 @@ class JointEncoderMulticlassGPClassifier(
             raise ValueError("batch_size must be positive.")
         loader = DataLoader(
             TensorDataset(self.raw_train_X, self.raw_train_Y),
-            batch_size=batch_size, shuffle=True,
+            batch_size=batch_size,
+            shuffle=True,
         )
         self.train()
         optimizer = torch.optim.Adam(
@@ -182,7 +229,8 @@ class JointEncoderMulticlassGPClassifier(
                 )
                 log_probs = samples.log_softmax(dim=-1)
                 log_likelihood = log_probs.gather(
-                    -1, batch_Y.long().reshape(-1, 1),
+                    -1,
+                    batch_Y.long().reshape(-1, 1),
                 ).mean()
                 kl = sum(
                     gp.model.variational_strategy.kl_divergence().sum()
