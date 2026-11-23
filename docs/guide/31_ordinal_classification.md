@@ -198,3 +198,26 @@ ALEBOでは `ALEBOOrdinalGPClassifier` に
 完全Bayesian SAASのMCMC推論とは区別してください。
 実行できる学習・予測・候補提案・可視化は
 [31番Notebook](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)のPhase 6節を参照してください。
+
+
+## Phase 7：タスク相関GP分類（MultiTask／Block形式）
+
+`MultiTaskOrdinalGPClassifier` は、入力の1列を整数タスクIDとする**Long形式**に対応します。
+`task_feature` でその列を、`rank` でICMタスク共分散のランクを指定します。
+各行の `train_Y` は1つのクラス番号です。
+未知のタスク番号での予測は学習時のタスク索引範囲を超えるため対象にしません。
+
+`KroneckerMultiTaskOrdinalGPClassifier` は共有入力と、全タスクのラベルを並べた
+`train_Y`（形状 `[n, m]`）を受け取り、内部でLong形式へ展開します。
+名称は既存二値分類とのAPI対応を表すもので、
+**厳密Kronecker GPの専用推論を意味しません**。
+
+モデルの `fit(epochs=..., lr=...)` 後、Long形式では候補の各行にタスクIDを付け、
+Block形式では元の入力候補だけを `predict_proba` に渡します。
+Block形式の予測確率の形状は `[q, m, C]` で、タスクごとに最後のクラス軸が1へ正規化されます。
+複数タスクに対する提案スコアは、実験目的に合わせてタスク間の平均・最大・重み付き和などを定めます。
+潜在 `posterior()` は内部のLong形式（`q*m` 点）で評価するため、
+**予測確率の形状と潜在Posteriorの形状は一致しません**。
+
+学習、予測確率、タスク別グラフ、予測エントロピーに基づく候補提案は
+[31番Notebook](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)のPhase 7節を参照してください。
