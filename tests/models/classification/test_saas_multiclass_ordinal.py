@@ -32,10 +32,7 @@ def test_sparse_ard_fit_predict_and_entropy_candidate(model_type):
     )
     base_kernel = kernel.base_kernel if isinstance(kernel, ScaleKernel) else kernel
     assert base_kernel.ard_num_dims == 5
-    assert any(
-        name == "saas_inv_lengthscale_prior"
-        for name, *_ in base_kernel.named_priors()
-    )
+    assert any(name == "saas_inv_lengthscale_prior" for name, *_ in base_kernel.named_priors())
     model.fit(epochs=2, lr=0.005)
     candidate_X = torch.rand(9, 5, dtype=torch.double)
     with torch.no_grad():
@@ -63,9 +60,7 @@ def test_sparse_ard_rejects_nonpositive_scale(model_type):
         model_type(train_X, train_Y, num_classes=3, **kwargs)
 
 
-@pytest.mark.parametrize(
-    "model_type", [SaasMulticlassGPClassifier, MapSaasMulticlassGPClassifier]
-)
+@pytest.mark.parametrize("model_type", [SaasMulticlassGPClassifier, MapSaasMulticlassGPClassifier])
 def test_multiclass_saas_prior_contributes_gradient(model_type):
     """Sparse prior must enter the multiclass objective, not only be registered."""
     x = torch.rand(9, 4, dtype=torch.double)
