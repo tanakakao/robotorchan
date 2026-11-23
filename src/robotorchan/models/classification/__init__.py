@@ -79,7 +79,7 @@ from robotorchan.models.classification.conformal import (
     classification_nonconformity_scores,
     conformal_quantile,
 )
-from robotorchan.models.classification.joint_encoder import (
+from robotorchan.models.classification.expressive.joint_encoder import (
     JointEncoderMulticlassGPClassifier,
     JointEncoderOrdinalGPClassifier,
 )
