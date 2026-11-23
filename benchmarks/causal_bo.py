@@ -32,8 +32,18 @@ def main() -> None:
     parser.add_argument("--optimizer", choices=("botorch", "sobol"), default="botorch")
     parser.add_argument("--num-restarts", type=int, default=3)
     parser.add_argument("--raw-samples", type=int, default=32)
+    parser.add_argument(
+        "--include-gp-scm",
+        action="store_true",
+        help="Include GP-SCM trained only on the same measured initial interventions.",
+    )
+    parser.add_argument("--mc-samples", type=int, default=64)
+    parser.add_argument("--mc-seed", type=int, default=0)
     parser.add_argument("--output", type=Path, default=Path("benchmark_results/causal_bo.csv"))
     args = parser.parse_args()
+    methods = (
+        ("cbo", "gp_bo", "random", "gp_scm") if args.include_gp_scm else ("cbo", "gp_bo", "random")
+    )
     trajectories = run_causal_benchmark(
         seeds=args.seeds,
         n_initial_per_set=args.n_initial_per_set,
@@ -41,6 +51,9 @@ def main() -> None:
         optimizer=args.optimizer,
         num_restarts=args.num_restarts,
         raw_samples=args.raw_samples,
+        methods=methods,
+        mc_samples=args.mc_samples,
+        mc_seed=args.mc_seed,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     fields = (
@@ -93,13 +106,21 @@ def main() -> None:
             "optimizer": args.optimizer,
             "num_restarts": args.num_restarts,
             "raw_samples": args.raw_samples,
+            "methods": list(methods),
+            "mc_samples": args.mc_samples if args.include_gp_scm else None,
+            "mc_seed": args.mc_seed if args.include_gp_scm else None,
+            "gp_scm_data_policy": (
+                "Same performed initial interventions, no extra observational data"
+                if args.include_gp_scm
+                else "not included"
+            ),
             "truth_optimum": 0.0,
             "costs": {"X": 1.0, "Z": 1.5, "X+Z": 3.0},
             "comparison": "equal evaluation count, not equal cumulative cost",
         },
         "methods": {},
     }
-    for method in ("cbo", "gp_bo", "random"):
+    for method in methods:
         selected = [item for item in trajectories if item.method == method]
         metrics = {}
         for field, prop in (

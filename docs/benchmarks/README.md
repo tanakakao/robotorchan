@@ -110,6 +110,56 @@ Likewise, the random strategy has access to different intervention sets
 than the fixed-set GP-BO baseline; do not describe this as an isolated
 test of causal reasoning.
 
+### Optional GP-SCM baseline and shared initialization
+
+The default benchmark continues to compare `cbo`, `gp_bo`, and `random`.
+To **opt in** to a fourth `gp_scm` strategy, run:
+
+```bash
+python benchmarks/causal_bo.py --include-gp-scm --seeds 0,1,2,3,4 \
+    --n-initial-per-set 2 --iterations 5 --mc-samples 128 --mc-seed 17
+```
+
+The fourth strategy fits a `GPStructuralCausalModel` to **the exact same
+performed hard-intervention initialization records** as the other strategies.
+No extra observational dataset is passed. The known DAG and the recorded
+`X, Z, M, Y` values are used to fit node-specific mechanisms, and
+`propose_gp_scm_intervention` selects a candidate via MC expected
+improvement per set cost using the existing optimizer dispatch. The baseline
+does not implement the original Aglietti et al. algorithm in full and makes no
+claim to identify latent confounding or discover the DAG.
+
+For a single seed, every included method shares identical first six hard
+interventions. Thereafter, the number of additional interventions is equal,
+but **total cumulative cost is not fixed**. GP-SCM uses measured intermediate
+nodes that set-specific GP-BO does not model, so a performance difference may
+also reflect information utilization, not solely causal structure.
+This is a synthetic deterministic SCM with known optimum. Real-world BO
+often lacks a known optimum, so simple regret needs a different reference.
+
+API examples:
+```python
+from robotorchan.benchmarks import run_causal_benchmark
+
+trajectories = run_causal_benchmark(
+    seeds=(0, 1),
+    n_initial_per_set=2,
+    n_iterations=2,
+    optimizer="sobol",
+    raw_samples=16,
+    methods=("cbo", "gp_bo", "random", "gp_scm"),
+    mc_samples=32,
+    mc_seed=17,
+)
+```
+
+`methods` is optional; omitting it retains the prior three-method API.
+`mc_samples` and `mc_seed` configure only the GP-SCM Monte Carlo
+acquisition. The benchmark script records the selected methods, seeds and
+GP-SCM configuration in its summary JSON. The resulting curves are actual
+evaluations when run; this documentation does not supply fabricated
+performance numbers. For the tutorial and plots, see [Notebook 59](../../examples/notebooks/59_causal_bo_benchmark.ipynb).
+
 Run manually (the full multi-seed performance experiment is **not**
 executed as part of CI):
 

@@ -172,13 +172,116 @@ GP-SCMの候補選択では、BoTorch `AcquisitionFunction`を継承した内部
 
 Studyを使わずに単発最適化をしたい場合は、学習済み`GPStructuralCausalModel`を`propose_gp_scm_intervention(model, intervention_sets, bounds, outcome="Y", best_f=...)`へ直接渡せます。ここでの`best_f`は実介入の測定結果に基づいて指定してください。
 
+
+### 5.2 GP-SCMのfitと予測：どのメソッドが何を返すか
+
+GP-SCMをStudyから分離して実行する場合、次の4段階で考えます。
+
+1. **DAGとレコードを準備**：観測データは`CausalObservation(values)`、実介入は`CausalObservation(values, HardIntervention(...))`として区別する。
+2. **`GPStructuralCausalModel.fit()`**：非rootには親変数を入力とする`SingleTaskGP`を学習し、rootには介入されていない自然観測値の経験Normal近似を用いる。
+3. **`mechanism_posterior(node, X)`**：特定ノードの条件付きGPを調べる。ここでの`X`の列順は**`graph.parents_of(node)`**に従う。
+4. **`sample_interventions(X, intervention_nodes, outcome)`**：介入先を固定してDAGを伝播させ、最終的な目的変数のMCサンプルを取得する。別途`propose_gp_scm_intervention`で候補の選択も可能。
+
+| 入力／出力 | 型と形状 | 理論上の意味 |
+| --- | --- | --- |
+| 条件付きGPの入力 | `X[..., q, d_parent]` | `Pa(V)` を与える条件付き予測 |
+| `mechanism_posterior`の結果 | BoTorch `Posterior` | 条件付き関数のGP事後 |
+| do予測の入力 | `X[..., q, d_S]` | 介入集合`S`を固定する候補点 |
+| `sample_interventions`の結果 | Tensor `[M, ..., q]`（`sample_shape=[M]`） | DAGを伝播した介入結果のMCサンプル |
+| `sample_intervention`の結果 | Tensor `[M]`（`sample_shape=[M]`） | 1件のHard interventionの結果 |
+| `CausalAcquisitionProposal` | `intervention`、`acquisition_value`、`ranking_score` | 選択された介入と、異なる2種類の獲得スコア |
+
+`d_parent`と`d_S`は一般に異なります。非rootモデルの予測に渡す親入力を、
+そのまま介入集合の入力だと思って混ぜないでください。
+
+### 5.3 非rootのGPが使用する行の具体例
+
+`X → Z → Y` の既知DAGで、次の3種類の実験を考えます。
+
+| レコード | Xの経験分布 | ZのGP `f_Z(X)` | YのGP `f_Y(Z)` |
+| --- | --- | --- | --- |
+| 全ノードの自然観測 | 使う | 使う | 使う |
+| `do(X=x)`、X/Z/Y測定 | 除外 | 使う | 使う |
+| `do(Z=z)`、X/Z/Y測定 | 使う | 除外 | 使う |
+
+例えば、`do(X=x)`の実験で観測したZは「外部から設定した値」ではなく、
+Xを操作した後も動作しているZの**生成機構の出力**です。そのためZの学習に利用できます。
+逆に、`do(Z=z)`で実験担当者が固定したZ値をZの生成機構の正解として学習させるのは誤りです。
+
+現実の介入記録に親や中間ノードの測定がない場合、該当機構の学習には使えません。
+学習に使える行が2件未満なら`fit()`でエラーになります。
+`tell(trial, y)`は既存モードとの互換性を維持していますが、GP-SCMで中間値が必要なら
+`tell(trial, {"Z": measured_z, "Y": measured_y})`のように登録してください。
+
+### 5.4 MC分布・予測区間のグラフを描く
+
+学習済み`model`が`GPStructuralCausalModel`、候補が1変数介入`do(X=x)`の場合、
+`sample_interventions`は予測分布のサンプルを返します。
+
+```python
+import torch
+
+grid = torch.linspace(0.0, 1.0, 31, dtype=torch.double)
+samples = model.sample_interventions(
+    grid[:, None, None],
+    intervention_nodes=("X",),
+    outcome="Y",
+    sample_shape=torch.Size([256]),
+)
+samples = samples.squeeze(-1)  # [256, 31]
+mean = samples.mean(dim=0)
+lower = torch.quantile(samples, 0.025, dim=0)
+upper = torch.quantile(samples, 0.975, dim=0)
+```
+
+これは`Posterior.mean ± 1.96 * std`と同じ計算ではありません。
+非線形なGP-SCMでは介入予測の分布はガウスとは限らず、
+サンプルの2.5/97.5%分位点を示すほうが適切です。
+ただし、**DAGの妥当性や交絡の有無を含む頻度論的な信頼区間ではありません**。
+rootの分布を正規近似する仮定の妥当性にも注意してください。
+
+完全な学習・可視化・提案・再学習例は
+[Notebook 58](../../examples/notebooks/58_causal_bayesian_optimization.ipynb)を参照してください。
+
+### 5.5 獲得関数の選択と数値的な制限
+
+GP-SCMの`propose_gp_scm_intervention`は、`AcquisitionFunction`を利用する
+**専用MC LogEI**を組み合わせ、既存の`optimize_causal_acqfs`へ候補最適化と集合比較を委譲します。
+内部で`GPStructuralCausalModel`をBoTorchの`Model`に偽装したり、
+独自の`Posterior`を生成したりしません。
+
+各集合のMC獲得値は、有限MCサンプルの期待改善量`EI`を正の浮動小数下限でクランプした後の対数です。
+集合間の選択スコアは`log(EI) - log(cost)`です。従来の
+`CausalInterventionProposal`のLogEI固有フィールドをそのままGP-SCMの結果に流用せず、
+`CausalAcquisitionProposal`で生の獲得値とランキングスコアを分離します。
+
+固定`mc_seed`とPyTorch`fork_rng`により**同じ評価条件の再現性**はありますが、
+形状の異なる候補バッチ間で完全に同じbase samplesを共有する仕組みはありません。
+また、改善がほぼ0の領域ではMC-LogEIが平坦化する可能性があります。
+**BoTorch標準の`qLogExpectedImprovement`と同一の数値安定性は保証しません**。
+候補を増やしたりMCサンプル数を変えたりして感度を確認してください。
+
+### 5.6 モデル選択の判断
+
+| 実務の状況 | 現状での適切な入口 |
+| --- | --- |
+| 介入集合ごとの実験結果と最終Yだけを持つ | `InterventionGPSurrogate` + native BoTorch acqf |
+| 複数介入集合をcost-awareに比較したい | `propose_causal_intervention`または`optimize_causal_acqfs` |
+| DAGが既知で中間ノードも実測できる | `GPStructuralCausalModel.fit()` + `sample_interventions()` |
+| GP-SCMのMC-EIで次の実験を単発提案 | `propose_gp_scm_intervention` |
+| 実験管理も含めて逐次最適化 | `CausalBOStudy(model_type="gp_scm")`または既定モード |
+
+これらはいずれも**候補提案のAPI**です。実験装置の操作、安全条件の満足、
+因果グラフの識別を自動保証するものではありません。
+
+
 ## 6. Benchmarkの実装と評価契約
 
-`make_causal_synthetic_scenario`は既知の4ノードDAGと決定的なSCMを返します。`run_causal_benchmark`は同じシードについて各集合2件ずつの**共通初期実験**を作り、CBO、固定`do(X,Z)`の通常GP-BO、Random Searchを比べます。普通のGP-BOはその初期履歴から`do(X,Z)`のデータだけで`SingleTaskGP`を学習し、`LogExpectedImprovement`と`optimize_acqf`で値を最適化します。
+`make_causal_synthetic_scenario`は既知の4ノードDAGと決定的なSCMを返します。`run_causal_benchmark`は同じシードについて各集合2件ずつの**共通初期実験**を作り、既定ではCBO、固定`do(X,Z)`の通常GP-BO、Random Searchを比べます。オプション`methods=("cbo", "gp_bo", "random", "gp_scm")`でGP-SCMも比較できます。GP-SCMには追加の観測専用データを与えず、他方式と同じ初期実介入の全ノード測定記録からGP機構を学習します。普通のGP-BOはその初期履歴から`do(X,Z)`のデータだけで`SingleTaskGP`を学習し、`LogExpectedImprovement`と`optimize_acqf`で値を最適化します。
 
 `CausalBenchmarkStep`は`outcome_truth`、`best_truth`、`simple_regret`、`evaluation_cost`、`cumulative_cost`を評価ごとに持ちます。`CausalBenchmarkTrajectory`の`best_curve`・`regret_curve`・`cost_curve`を、`robotorchan.benchmarks.comparison.summarize_curves`で複数シード集計できます。
 
-**同じ評価回数と同じ累積コストは異なる条件です。** さらに固定集合GP-BOとCBOでは探索可能な介入集合の種類が異なります。Notebook 59の図だけで「因果推論が通常GPより優れる」と結論づけてはいけません。SCMには介入と反事実に必要な構造を入力しており、構造推定アルゴリズムの比較ではありません。
+**同じ評価回数と同じ累積コストは異なる条件です。** さらに固定集合GP-BOとCBOでは探索可能な介入集合の種類が異なります。GP-SCMが中間ノードの測定値を利用する点も含め、Notebook 59の図だけで「因果推論が通常GPより優れる」と結論づけてはいけません。SCMには介入と反事実に必要な構造を入力しており、構造推定アルゴリズムの比較ではありません。
 
 ## 7. 現状の対応範囲
 
