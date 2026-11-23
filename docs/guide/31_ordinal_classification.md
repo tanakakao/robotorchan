@@ -162,30 +162,7 @@ Spectral Mixtureは定常な周波数構造を表します。
 以下は**候補プールから予測エントロピーが最大の点を1点選ぶ**例です。
 これは候補提案までの最小例であり、連続空間の獲得関数最適化ではありません。
 
-```python
-import torch
-from robotorchan.models.classification import (
-    PCAOrdinalGPClassifier,
-)
-
-torch.manual_seed(42)
-train_X = torch.rand(24, 8, dtype=torch.double)
-train_Y = torch.arange(24) % 3
-model = PCAOrdinalGPClassifier(
-    train_X, train_Y, num_classes=3, n_components=3
-)
-model.fit(epochs=10, lr=0.01)
-
-# 候補点は縮約後の3次元ではなく、元の8次元で指定します。
-candidate_X = torch.rand(128, 8, dtype=torch.double)
-with torch.no_grad():
-    probabilities = model.predict_proba(candidate_X)
-    entropy = -torch.special.xlogy(probabilities, probabilities).sum(-1)
-    best_index = int(entropy.argmax())
-    proposed_X = candidate_X[best_index]
-print("提案点:", proposed_X)
-print("クラス確率:", probabilities[best_index])
-```
+**実行手順：** 訓練データ `train_X`（例：8次元）とクラスラベル `train_Y` を用意し、`n_components=3` でPCA分類モデルを構築します。`fit(epochs=10, lr=0.01)` で学習後、元の8次元の候補プールを `predict_proba(candidate_X)` に渡します。各候補のクラス確率から予測エントロピーを求め、最大の候補を選びます。学習・予測・候補提案を実際に実行するコードは、対応する分類Notebookにまとめます。
 
 `PLSOrdinalGPClassifier` および
 `RandomProjectionOrdinalGPClassifier` も
