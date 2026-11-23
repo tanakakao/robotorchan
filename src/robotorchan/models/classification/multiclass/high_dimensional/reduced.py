@@ -180,7 +180,9 @@ class RandomProjectionMulticlassGPClassifier(ReducedMulticlassGPClassifier):
             train_X,
             train_Y,
             num_classes=num_classes,
-            input_reducer=RandomProjectionInputReducer(n_components=n_components, random_state=random_state),
+            input_reducer=RandomProjectionInputReducer(
+                n_components=n_components, random_state=random_state
+            ),
         )
 
 
@@ -198,5 +200,7 @@ class RandomProjectionOrdinalGPClassifier(ReducedOrdinalGPClassifier):
             train_X,
             train_Y,
             num_classes=num_classes,
-            input_reducer=RandomProjectionInputReducer(n_components=n_components, random_state=random_state),
+            input_reducer=RandomProjectionInputReducer(
+                n_components=n_components, random_state=random_state
+            ),
         )
