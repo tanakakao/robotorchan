@@ -23,14 +23,12 @@ from robotorchan.models.robust.nonstationary import GibbsKernel
 def _gibbs_covariance(train_X: Tensor, lengthscale_floor: float) -> ScaleKernel:
     if train_X.ndim != 2 or train_X.shape[0] < 2:
         raise ValueError("train_X must have shape [n, d] with n >= 2.")
-    return ScaleKernel(
-        GibbsKernel(train_X.shape[-1], lengthscale_floor=lengthscale_floor)
-    ).to(train_X)
+    return ScaleKernel(GibbsKernel(train_X.shape[-1], lengthscale_floor=lengthscale_floor)).to(
+        train_X
+    )
 
 
-def _mixed_gibbs_covariance(
-    train_X: Tensor, cat_dims: list[int], lengthscale_floor: float
-):
+def _mixed_gibbs_covariance(train_X: Tensor, cat_dims: list[int], lengthscale_floor: float):
     normalized = normalize_feature_dims(cat_dims, train_X.shape[-1], name="cat_dims")
     continuous = continuous_feature_dims(train_X.shape[-1], cat_dims=normalized)
     if not continuous:
@@ -77,10 +75,7 @@ class NonstationaryMulticlassGPClassifier(MulticlassSingleTaskGPClassifier):
     def local_lengthscale(self, X: Tensor) -> Tensor:
         """Return local lengthscales for each class GP, stacked on axis zero."""
         return torch.stack(
-            [
-                gp.model.covar_module.base_kernel.local_lengthscale(X)
-                for gp in self.class_models
-            ],
+            [gp.model.covar_module.base_kernel.local_lengthscale(X) for gp in self.class_models],
             dim=0,
         )
 
