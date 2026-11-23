@@ -19,6 +19,8 @@ class SupervisedAutoEncoderGP(ReducedGP):
     frozen and used as the deterministic input reducer for ``ReducedGP``.
     """
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -61,6 +63,8 @@ class SupervisedAutoEncoderGP(ReducedGP):
 
 class MixedSupervisedAutoEncoderGP(MixedReducedGP):
     """Mixed GP with an outcome-aware frozen AE over continuous inputs only."""
+
+    supports_fit = True
 
     def __init__(
         self,
