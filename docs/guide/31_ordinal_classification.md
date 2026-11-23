@@ -154,3 +154,51 @@ Spectral Mixtureは定常な周波数構造を表します。
 順序尤度の閾値の意味はどちらのカーネルでも変わりません。
 詳細は[非定常GP](../theory/17_nonstationary_gp.md)と
 [表現力の高いGP](../theory/22_expressive_gp.md)を参照してください。
+
+
+## 高次元分類：PCA・PLS・Random Projection・ALEBO
+
+この節では、入力を縮約するモデルとALEBOの座標系を区別します。
+以下は**候補プールから予測エントロピーが最大の点を1点選ぶ**例です。
+これは候補提案までの最小例であり、連続空間の獲得関数最適化ではありません。
+
+```python
+import torch
+from robotorchan.models.classification import (
+    PCAOrdinalGPClassifier,
+)
+
+torch.manual_seed(42)
+train_X = torch.rand(24, 8, dtype=torch.double)
+train_Y = torch.arange(24) % 3
+model = PCAOrdinalGPClassifier(
+    train_X, train_Y, num_classes=3, n_components=3
+)
+model.fit(epochs=10, lr=0.01)
+
+# 候補点は縮約後の3次元ではなく、元の8次元で指定します。
+candidate_X = torch.rand(128, 8, dtype=torch.double)
+with torch.no_grad():
+    probabilities = model.predict_proba(candidate_X)
+    entropy = -torch.special.xlogy(probabilities, probabilities).sum(-1)
+    best_index = int(entropy.argmax())
+    proposed_X = candidate_X[best_index]
+print("提案点:", proposed_X)
+print("クラス確率:", probabilities[best_index])
+```
+
+`PLSOrdinalGPClassifier` および
+`RandomProjectionOrdinalGPClassifier` も
+`n_components` を指定して同じ手順で利用できます。
+ただし、PLSはラベルの数値表現に依存するため、特に多クラス分類では
+クラス番号の置換に対する感度を検証してください。
+
+ALEBOでは `ALEBOOrdinalGPClassifier` に
+**埋め込み空間の学習座標と候補座標**を渡します。
+元の探索空間の候補をそのまま渡さないでください。
+埋め込みの構築、元の実験条件への射影、実行可能領域の処理は
+`ALEBOStrategy` 側の責務です。
+
+この例の学習ラベルはAPI説明用の人工データです。
+モデル精度やALの改善を示すベンチマークではありません。
+実験では保留データを分け、NLL・Brier score・クラス別指標を確認します。
