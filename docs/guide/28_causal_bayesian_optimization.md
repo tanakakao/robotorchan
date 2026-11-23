@@ -121,6 +121,56 @@ LogEI以外の獲得関数でも介入集合ごとの候補を提案する場合
 
 `trials`には失敗・実行中の試行も残り、`observations`は成功した介入実験だけを含みます。`q=1`の逐次実験のみを想定するため、実行中のTrialがある状態で次の`ask()`はできません。候補提案が、実際の装置で介入を実施する機能ではない点に注意してください。
 
+### 5.1 GP-SCMを選択する場合（Phase 5）
+
+`CausalBOStudy`の既定値`model_type="intervention_gp"`は変更していません。既存の介入集合別GP、集合ごとに`n_initial_trials`回のSobol初期化、`ask()`と`tell()`、Trialの成功・失敗状態をそのまま利用できます。
+
+GP-SCMを使う場合だけ`model_type="gp_scm"`を指定します。既知DAGに加えて、親ノード・中間ノード・目的ノードの値を測定した**純粋な観測データ**を`observational_data`で渡してください。観測レコードは構造方程式の学習に使いますが、`Study.observations`（完了した実介入Trial）には混入させません。
+
+```python
+from robotorchan.causal import (
+    CausalBOStudy,
+    CausalGraph,
+    CausalObservation,
+)
+
+graph = CausalGraph({"X": (), "Z": ("X",), "Y": ("Z",)})
+observed = [
+    CausalObservation({"X": x, "Z": 1.5 * x, "Y": 0.3 + 1.5 * x})
+    for x in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+]
+study = CausalBOStudy(
+    graph, "Y",
+    intervention_sets=(("X",), ("Z",)),
+    bounds={"X": (0.0, 1.0), "Z": (0.0, 1.5)},
+    model_type="gp_scm",
+    observational_data=observed,
+    optimizer="sobol",
+    mc_samples=128,
+    mc_seed=7,
+    seed=7,
+)
+
+# まず一件の実介入をSobolで提案：これは改善基準best_fの取得に必要
+trial = study.ask()
+# 実際に介入・測定してから、中間変数も含む測定値を登録する
+# 例：do(X=x)を実施してX、Z、Yの値を取得した場合
+x = trial.intervention.values["X"]
+study.tell(trial, {"Z": 1.5 * x, "Y": 0.3 + 1.5 * x})
+
+# 以後、GP-SCMによるMC期待改善量の比較で介入集合と値を提案
+next_trial = study.ask()
+print(next_trial.intervention.values, next_trial.proposal)
+```
+
+最初の一件は`best_f`を**実介入で測定した目的値**から得るための初期試行です。GP-SCMモードでは従来の「集合ごとに`n_initial_trials`件」という制約を機械的には適用しません。構造モデル自体は`study.fit()`で観測データだけからも学習できます。その後の`ask()`は、親ノード・中間ノードの必要な実測値が不足していて`fit()`できない場合に、明示的にエラーを返します。未測定値を推測して「実測」として学習することはありません。
+
+GP-SCMの候補選択では、BoTorch `AcquisitionFunction`を継承した内部の**MC LogEI**を使います。介入集合ごとに`sample_interventions`で`q=1`の候補をMC評価し、`log(EI) - log(cost)`で比較して、最終的な最適化は既存の`optimize_acqf`に委譲します。MCの乱数は固定seedで評価ごとに再現し、呼び出し元の乱数状態を保持します。ただし形状が異なる評価呼び出し間で完全な共通base samplesを保証するものではなく、MC近似による変動や勾配の平坦化があり得ます。BoTorch標準の`qLogEI`そのものではありません。
+
+`study.fit()`はGP-SCMモードでは`GPStructuralCausalModel`を返し、既存モードでは従来どおり`InterventionGPSurrogate`のtupleを返します。成功した`tell()`はキャッシュを無効化し、失敗したTrialでは再学習しません。`CausalTrial.proposal`はGP-SCMモードでは`CausalAcquisitionProposal`となり、獲得値と集合間比較スコアを区別して記録します。
+
+Studyを使わずに単発最適化をしたい場合は、学習済み`GPStructuralCausalModel`を`propose_gp_scm_intervention(model, intervention_sets, bounds, outcome="Y", best_f=...)`へ直接渡せます。ここでの`best_f`は実介入の測定結果に基づいて指定してください。
+
 ## 6. Benchmarkの実装と評価契約
 
 `make_causal_synthetic_scenario`は既知の4ノードDAGと決定的なSCMを返します。`run_causal_benchmark`は同じシードについて各集合2件ずつの**共通初期実験**を作り、CBO、固定`do(X,Z)`の通常GP-BO、Random Searchを比べます。普通のGP-BOはその初期履歴から`do(X,Z)`のデータだけで`SingleTaskGP`を学習し、`LogExpectedImprovement`と`optimize_acqf`で値を最適化します。
