@@ -39,8 +39,9 @@ def test_parent_dict_edge_list_and_matrix_agree() -> None:
         CausalGraph.from_adjacency_matrix(adjacency, nodes=names),
     ):
         _assert_same_dag(graph)
-        assert CausalGraph.from_edges(graph.to_edges(), nodes=graph.nodes).to_adjacency_matrix() == (
-            graph.to_adjacency_matrix()
+        assert (
+            CausalGraph.from_edges(graph.to_edges(), nodes=graph.nodes).to_adjacency_matrix()
+            == graph.to_adjacency_matrix()
         )
         assert CausalGraph.from_adjacency_matrix(
             graph.to_adjacency_matrix(), nodes=graph.nodes
