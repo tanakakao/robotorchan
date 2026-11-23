@@ -74,9 +74,10 @@ def test_joint_neural_fit_uses_specialized_training_loss(model_class):
 def test_joint_multitask_fit_validates_options(epochs, lr):
     X = torch.rand(8, 6, dtype=torch.double)
     Y = torch.sin(4 * X[:, :1])
-    task_X = torch.cat([X, torch.zeros(len(X), 1, dtype=X.dtype)], dim=-1)
+    task = (torch.arange(len(X)) % 2).to(X).unsqueeze(-1)
+    task_X = torch.cat([X, task], dim=-1)
     model = JointEncoderMultiTaskGP(
-        task_X, Y, task_feature=6, latent_dim=2, hidden_dims=(8,)
+        task_X, Y + 0.2 * task, task_feature=6, latent_dim=2, hidden_dims=(8,)
     )
     with pytest.raises(ValueError):
         model.fit(epochs=epochs, lr=lr)
