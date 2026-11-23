@@ -8,7 +8,6 @@ Gaussian Posterior.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from math import isfinite
 from types import MappingProxyType
 from typing import Any
 
