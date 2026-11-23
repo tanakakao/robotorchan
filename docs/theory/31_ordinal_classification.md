@@ -282,7 +282,7 @@ $$
 順序プロビットのクラス確率は、従来どおり潜在Gaussian事後を
 閾値尤度で積分して計算します。
 
-`SaasOrdinalGPClassifier` と `MapSaasOrdinalGPClassifier` は、
+SAAS型の順序分類モデル と MAP-SAAS型の順序分類モデル は、
 二値分類で利用する既存の疎ARDカーネル生成器を再利用します。
 学習は既存の順序分類用変分学習を用い、完全Bayesian SAASの
 MCMCによるハイパーパラメータ積分は行いません。
