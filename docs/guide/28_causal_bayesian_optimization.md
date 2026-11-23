@@ -26,6 +26,34 @@
 
 `CausalGraph`のコンストラクタは親ノードの存在、親集合内の重複、自己ループ、循環を検査し、`topological_order`と`parents_of`を提供します。このDAGは**事前にユーザーが与えるもの**であり、観測値から学習・識別する処理はありません。
 
+### 2.1 既知DAGの入力形式
+
+`CausalGraph`は**既知の有向非巡回グラフ**（DAG）を共通表現として保持します。従来の親ノード辞書に加え、Pythonのエッジリスト、隣接行列、NetworkX `DiGraph`から生成できます。どの形式でも同じDAG検証（ノード名・自己ループ・循環）が適用され、`StructuralCausalModel`や`CausalBOStudy`への引数は変更ありません。グラフ構造をデータから推定する機能ではありません。
+
+```python
+from robotorchan.causal import CausalGraph
+
+# 従来どおり：ノード -> 親ノードの列
+parents = {"X": (), "Z": ("X",), "Y": ("X", "Z")}
+graph = CausalGraph(parents)
+
+# 有向エッジリスト：原因 -> 結果
+graph = CausalGraph.from_edges([("X", "Z"), ("X", "Y"), ("Z", "Y")])
+
+# 隣接行列：行が原因、列が結果、A(i, j) == 1 が i -> j
+nodes = ("X", "Z", "Y")
+adjacency = [[0, 1, 1], [0, 0, 1], [0, 0, 0]]
+graph = CausalGraph.from_adjacency_matrix(adjacency, nodes=nodes)
+
+# NetworkX は必要な場合にだけ使用（pip install robotorchan[causal]）
+# import networkx as nx
+# graph = CausalGraph.from_networkx(nx.DiGraph([("X", "Z"), ("Z", "Y")]))
+```
+
+隣接行列にはNumPy配列・密なPyTorch Tensor・Pythonの二次元列を渡せますが、値は**0または1のみ**です。重み付き行列、無向グラフ、不明方向エッジ、循環は対象外です。行列では`nodes`が必須で、その並びを行と列の共通順序として扱います。エッジリストでは`nodes`を省略できますが、**孤立ノード**を残すには`nodes=("X", "Z", "Y", "isolated")`のように明示してください。すべてのノード名は空でない文字列です。
+
+`graph.to_edges()`、`graph.to_adjacency_matrix()`で変換でき、隣接行列の順序は`graph.nodes`と一致します。NetworkXが必要な場合のみ`graph.to_networkx()`を呼びます。元のグラフと異なる新しい`DiGraph`を返すため、変更しても`CausalGraph`の内容は変わりません。
+
 `StructuralCausalModel.evaluate(intervention)`はトポロジカル順にノードを処理します。各ノードについて、介入値が与えられていればその値を採用し、そうでなければ`equations`辞書から該当ノードの関数を取り出し、親ノードの値を渡して評価します。Hard interventionを実行したときの「**そのノードの生成方程式だけを置換**」という理論操作に対応します。
 
 `CausalObservation`は`values`と`intervention`を一緒に保持します。`intervention=None`は観測のみを意味し、`is_interventional`は`False`です。介入レコードには、固定したノードの値と`values`中の値が完全一致する契約があります。これにより、観測しただけの`X=x`を実行済みの`do(X=x)`として誤登録しにくくしています。

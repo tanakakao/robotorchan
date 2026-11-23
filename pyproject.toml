@@ -43,6 +43,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+causal = [
+  "networkx>=3.0",
+]
 dataframe = [
   "pandas>=2.0",
 ]
