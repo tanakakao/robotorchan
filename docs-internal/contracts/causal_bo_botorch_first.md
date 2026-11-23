@@ -57,7 +57,7 @@ Phase 2はユーザー要望に合わせてNetworkX専用から**複数の入力
 | --- | --- | --- |
 | 親ノード辞書（従来） | `CausalGraph({"X": (), "Y": ("X",)})` | `node -> parents` |
 | 有向エッジリスト | `CausalGraph.from_edges([("X", "Y")], nodes=("X", "Y"))` | `(source, target)` は `source -> target` |
-| 隣接行列（list / NumPy / dense torch） | `CausalGraph.from_adjacency_matrix(A, nodes=("X", "Y"))` | `A[i][j]=1` は `nodes[i] -> nodes[j]` |
+| 隣接行列（list / NumPy / dense torch） | `CausalGraph.from_adjacency_matrix(A, nodes=("X", "Y"))` | `A(i, j)=1` は `nodes[i] -> nodes[j]` |
 | NetworkX DiGraph | `CausalGraph.from_networkx(nx_graph)` | `networkx.DiGraph` の有向エッジ |
 
 - 出力は`to_edges()`、`to_adjacency_matrix()`、`to_networkx()`。行列は**0/1のみ**、順序は`CausalGraph.nodes`。Node名は従来どおり非空文字列（数値から文字列への自動変換はしない）。
