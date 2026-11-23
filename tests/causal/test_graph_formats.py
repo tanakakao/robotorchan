@@ -49,7 +49,7 @@ def test_parent_dict_edge_list_and_matrix_agree() -> None:
 
 
 def test_edges_infer_nodes_and_keep_explicit_isolates() -> None:
-    inferred = CausalGraph.from_edges((edge for edge in [("Y", "X"), ("X", "Z")]))
+    inferred = CausalGraph.from_edges(edge for edge in [("Y", "X"), ("X", "Z")])
     assert inferred.nodes == ("Y", "X", "Z")
     assert inferred.topological_order == ("Y", "X", "Z")
     empty = CausalGraph.from_edges([], nodes=("A", "B"))
