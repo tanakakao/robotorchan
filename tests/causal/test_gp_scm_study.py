@@ -251,7 +251,6 @@ def test_rejects_invalid_gpscm_setup(graph_and_observations, fitted_model):
         )
 
 
-
 def test_gp_scm_initialization_collects_missing_mechanism_records():
     """Do-only Y measurements can bootstrap a GP if root X is observed already."""
     graph = CausalGraph({"X": (), "Y": ("X",)})
