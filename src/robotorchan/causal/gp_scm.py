@@ -243,7 +243,9 @@ class GPStructuralCausalModel:
                 posterior = self._mechanisms[node].posterior(
                     parent_values, observation_noise=observation_noise
                 )
-                values[node] = posterior.rsample().squeeze(-1)
+                # MC trajectories already occupy the leading input batch dimensions.
+                # BoTorch's default rsample() adds another leading singleton dimension.
+                values[node] = posterior.rsample(sample_shape=torch.Size()).squeeze(-1)
             if not bool(torch.isfinite(values[node]).all()):
                 raise ValueError(f"Non-finite propagated values for node {node!r}.")
         return values[outcome]
