@@ -108,7 +108,8 @@ def optimize_causal_acqfs(
         if reference is None:
             reference = next(acquisition.buffers(), None)
         dtype = (
-            reference.dtype if reference is not None and reference.is_floating_point()
+            reference.dtype
+            if reference is not None and reference.is_floating_point()
             else torch.double
         )
         device = reference.device if reference is not None else torch.device("cpu")
