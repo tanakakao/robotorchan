@@ -1,4 +1,5 @@
 """Targeted tests for jointly trained multiclass / ordinal neural GP classifiers."""
+
 import pytest
 import torch
 
@@ -20,19 +21,18 @@ def test_joint_encoder_training_and_probability_candidate(cls):
     before = [p.detach().clone() for p in model.encoder.parameters()]
     model.fit(epochs=2, lr=0.01)
     assert any(
-        not torch.allclose(a, b)
-        for a, b in zip(before, model.encoder.parameters(), strict=True)
+        not torch.allclose(a, b) for a, b in zip(before, model.encoder.parameters(), strict=True)
     )
     candidates = torch.linspace(-0.9, 0.9, 5, dtype=x.dtype).unsqueeze(-1)
     latent = model.posterior(candidates)
-    assert latent.mean.shape[-2:] == (
-        5, 3 if cls is JointEncoderMulticlassGPClassifier else 1
-    )
+    assert latent.mean.shape[-2:] == (5, 3 if cls is JointEncoderMulticlassGPClassifier else 1)
     probabilities = model.predict_proba(candidates)
     assert probabilities.shape == (5, 3)
     torch.testing.assert_close(
-        probabilities.sum(dim=-1), torch.ones(5, dtype=x.dtype),
-        atol=1e-5, rtol=1e-5,
+        probabilities.sum(dim=-1),
+        torch.ones(5, dtype=x.dtype),
+        atol=1e-5,
+        rtol=1e-5,
     )
     probability_posterior = model.probability_posterior(candidates)
     assert probability_posterior.mean.shape == (5, 3)
