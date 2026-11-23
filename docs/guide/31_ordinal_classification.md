@@ -283,3 +283,28 @@ Deep GPの潜在事後は一般にガウスではないため、通常のGPに�
 入力はまず連続設計変数の `[n,d]` を対象とします。Mixed入力を使う場合はカテゴリ変数を単に実数へ変換しただけで同等とは見なしません。カーネル型モデルとDeep GPの性能比較は保留データで行ってください。
 
 実行例は[Notebook 31](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)を参照してください。
+
+
+## InfiniteWidthBNN（無限幅NNGPカーネル）分類
+
+`InfiniteWidthBNNOrdinalGPClassifier`（連続入力）と
+`MixedInfiniteWidthBNNOrdinalGPClassifier`（連続・カテゴリ混在入力）が利用できます。
+`depth`（ReLUの層数）、`weight_variance`、`bias_variance`、
+`ard`、`eps` は、既存の二値InfiniteWidthBNN分類器と同じ意味です。
+Mixed版では `cat_dims` にカテゴリ特徴の列インデックスを与えます。
+少なくとも1つの連続特徴とカテゴリ特徴が必要です。
+
+通常の分類モデルと同様に、`fit()`、`predict_proba()`、
+`probability_posterior()`、`predict_class()`を使用できます。
+候補提案には既存の`PredictiveEntropy`や`qPredictiveEntropy`を利用します。
+`qPredictiveEntropy`は周辺スコアの平均であり、候補間依存を考慮した
+同時情報量の最適化ではありません。
+
+**InfiniteWidthBNNとDeepGPは別モデルです。** 前者は単一GPのカーネルとして
+無限幅ReLUネットワークから導かれた共分散を使用します。後者は複数の
+確率的なGP層を合成し、非ガウス潜在事後をサンプルで扱います。
+NNGPカーネルを用いた分類も、非ガウス尤度に対する変分推論が必要です。
+
+学習・クラス確率と候補提案・Mixed入力の例は
+[Notebook 31](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)
+を参照してください。
