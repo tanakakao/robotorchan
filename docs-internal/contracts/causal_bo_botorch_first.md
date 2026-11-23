@@ -49,20 +49,23 @@ candidate, value = optimize_acqf(acqf, bounds_tensor, q=1)
 
 注：`best_f`と`bounds_tensor`は利用者がその集合と目的尺度に合わせて指定する。`model=surrogate`ではなく`model=surrogate.model`を渡す（現行wrapper自体はBoTorch `Model`のサブクラスではない）。独自のモデル互換ラッパーは不要。
 
-## 3. Phase 2 — グラフの相互運用
+## 3. Phase 2 — グラフの相互運用（実装）
 
-追加する公開APIの候補（このPRでは未実装）：
+Phase 2はユーザー要望に合わせてNetworkX専用から**複数の入力形式**へ変更した。`CausalGraph`の辞書コンストラクタはそのまま残し、以下の**独立した明示的コンバータ**を追加する。`from_any`のような曖昧な自動判定や、新しいDAGフレームワークは作らない。
 
-```python
-CausalGraph.from_networkx(graph) -> CausalGraph
-causal_graph.to_networkx() -> networkx.DiGraph
-```
+| 入力 | API | 向き・順序 |
+| --- | --- | --- |
+| 親ノード辞書（従来） | `CausalGraph({"X": (), "Y": ("X",)})` | `node -> parents` |
+| 有向エッジリスト | `CausalGraph.from_edges([("X", "Y")], nodes=("X", "Y"))` | `(source, target)` は `source -> target` |
+| 隣接行列（list / NumPy / dense torch） | `CausalGraph.from_adjacency_matrix(A, nodes=("X", "Y"))` | `A[i][j]=1` は `nodes[i] -> nodes[j]` |
+| NetworkX DiGraph | `CausalGraph.from_networkx(nx_graph)` | `networkx.DiGraph` の有向エッジ |
 
-- `networkx`はoptional dependencyとして遅延import。未インストール時は使用箇所で明瞭な`ImportError`。
-- `nx.DiGraph`のみ対象。無向・混合・多重・循環を拒否。ノード形式は既存契約に合わせ**空でない文字列**だけを許可。自動文字列変換しない。
-- `graph.nodes`の挿入順、孤立ノード、エッジ方向を保持する。親の順序は`DiGraph.predecessors`の列挙順を使用し、元の親辞書と意味的に一致することを検査する。DAGの位相順序は非一意であり、完全一致は要求しない。
-- 既存`CausalGraph({...})`は変更しない。`to_networkx`は新しいグラフを返し、内部状態を外部に露出しない。
-- pgmpy・causal-learnの専用変換は対象外。両者のNetworkX変換を介して使える範囲をGuideに記載する。
+- 出力は`to_edges()`、`to_adjacency_matrix()`、`to_networkx()`。行列は**0/1のみ**、順序は`CausalGraph.nodes`。Node名は従来どおり非空文字列（数値から文字列への自動変換はしない）。
+- 孤立ノードはエッジリストで`nodes=`を指定するか、辞書・行列・NetworkXの明示ノードから保持する。エッジリストに`nodes=`を与えない場合は初出順に推定する。
+- `networkx`は`pip install robotorchan[causal]`で使えるoptional dependency。使用時だけimport。無向・多重・循環・非対応ノード型は明示エラー。
+- 従来の`CausalGraph`のDAG検証へ集約し、`StructuralCausalModel`、`CausalBOStudy`の既存引数を変更しない。
+- pgmpy・causal-learnの専用アダプタは追加しない。公開NetworkX変換が利用可能な場合は利用者側で変換する。
+- Phase 2の範囲は型変換とガイドおよび対象テストに限定する。GP-SCM・最適化の実装はPhase 3以降とする。
 
 ## 4. Phase 3 — native獲得関数と複数介入集合の責務分離
 
@@ -157,7 +160,7 @@ variance = samples.var(0, unbiased=False)
 
 | Phase | 追加範囲 | 必要な確認 |
 | --- | --- | --- |
-| 2 | NetworkX入出力のみ | 孤立ノード、順序、循環、非文字列、optional依存、既存辞書コンストラクタ |
+| 2 | 辞書・エッジリスト・隣接行列・NetworkXのDAG入出力 | 孤立ノード、順序、行列方向、循環、非文字列、optional依存、既存辞書コンストラクタ |
 | 3 | native acqfでの集合最適化と比較 | q=1、`LogEI`既存整合、異なる介入次元・順序、costの尺度、数値の有限性 |
 | 4 | 条件付きGP-SCMとdoサンプリング | 観測 vs 実介入、介入ノード機構の置換、root処理、欠測、既知SCM、MCの予測特性 |
 | 5 | 同じStudyで2方式の選択 | ask/tell、失敗、キャッシュ無効化、観測ノード不足、既存既定挙動、単発下層API |
