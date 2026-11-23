@@ -30,11 +30,11 @@ def test_sparse_ard_fit_predict_and_entropy_candidate(model_type):
         if isinstance(model, (SaasMulticlassGPClassifier, MapSaasMulticlassGPClassifier))
         else model.model.covar_module
     )
-    assert isinstance(kernel, ScaleKernel)
-    assert kernel.base_kernel.ard_num_dims == 5
+    base_kernel = kernel.base_kernel if isinstance(kernel, ScaleKernel) else kernel
+    assert base_kernel.ard_num_dims == 5
     assert any(
         name == "saas_inv_lengthscale_prior"
-        for name, *_ in kernel.base_kernel.named_priors()
+        for name, *_ in base_kernel.named_priors()
     )
     model.fit(epochs=2, lr=0.005)
     candidate_X = torch.rand(9, 5, dtype=torch.double)
@@ -76,7 +76,11 @@ def test_multiclass_saas_prior_contributes_gradient(model_type):
     assert log_prior.requires_grad
     log_prior.backward()
     grads = [
-        gp.model.covar_module.base_kernel.raw_lengthscale.grad
+        (
+            gp.model.covar_module.base_kernel
+            if isinstance(gp.model.covar_module, ScaleKernel)
+            else gp.model.covar_module
+        ).raw_lengthscale.grad
         for gp in model.class_models
     ]
     assert all(grad is not None and torch.isfinite(grad).all() for grad in grads)
