@@ -28,9 +28,7 @@ def fitted_scm() -> GPStructuralCausalModel:
         },
     )
     records = [
-        CausalObservation(
-            {"X": x, "Z": 2.0 * x, "Y": 1.0 + 2.0 * x}
-        )
+        CausalObservation({"X": x, "Z": 2.0 * x, "Y": 1.0 + 2.0 * x})
         for x in (0.05, 0.15, 0.3, 0.5, 0.7, 0.85, 0.95)
     ]
     for intervention in (
@@ -53,9 +51,7 @@ def test_fit_uses_native_models_and_excludes_intervened_mechanisms(fitted_scm) -
     assert model.mechanisms["Y"].raw_train_X.shape == (9, 1)
     # Intervening on Y must not leak the imposed Y=10 value into Y training.
     assert float(model.mechanisms["Y"].raw_train_Y.max()) < 10.0
-    posterior = model.mechanism_posterior(
-        "Y", torch.tensor([[0.3], [0.7]], dtype=DTYPE)
-    )
+    posterior = model.mechanism_posterior("Y", torch.tensor([[0.3], [0.7]], dtype=DTYPE))
     assert posterior.mean.shape == (2, 1)
     assert torch.isfinite(posterior.variance).all()
     with pytest.raises(ValueError, match="Root nodes"):
@@ -79,9 +75,7 @@ def test_intervention_overrides_equation_and_has_mc_uncertainty(fitted_scm) -> N
 
 def test_tensor_interventions_keep_candidate_shape_and_gradients(fitted_scm) -> None:
     model = fitted_scm
-    candidates = torch.tensor(
-        [[[0.15], [0.65]]], dtype=DTYPE, requires_grad=True
-    )
+    candidates = torch.tensor([[[0.15], [0.65]]], dtype=DTYPE, requires_grad=True)
     draws = model.sample_interventions(
         candidates, intervention_nodes=("X",), outcome="Y", sample_shape=torch.Size([8])
     )
@@ -113,10 +107,7 @@ def test_observation_noise_is_passed_to_botorch_posterior(fitted_scm, monkeypatc
 
 def test_root_distribution_is_empirical_and_constant_root_is_deterministic() -> None:
     graph = CausalGraph({"X": (), "I": ()})
-    records = [
-        CausalObservation({"X": x, "I": 1.0})
-        for x in (0.0, 2.0, 4.0)
-    ]
+    records = [CausalObservation({"X": x, "I": 1.0}) for x in (0.0, 2.0, 4.0)]
     model = GPStructuralCausalModel(graph, records)
     model.fit()
     torch.manual_seed(42)
@@ -165,9 +156,7 @@ def test_parent_order_is_followed_for_native_gp_inputs() -> None:
     model.fit()
     torch.testing.assert_close(
         model.mechanisms["Y"].raw_train_X,
-        torch.tensor(
-            [[0.4, 0.1], [0.7, 0.3], [0.1, 0.6], [0.8, 0.9]], dtype=DTYPE
-        ),
+        torch.tensor([[0.4, 0.1], [0.7, 0.3], [0.1, 0.6], [0.8, 0.9]], dtype=DTYPE),
     )
 
 
