@@ -90,8 +90,18 @@ class MultiFidelityMulticlassGPClassifier(MulticlassSingleTaskGPClassifier):
             design_kernel=covar_module,
         )
         super().__init__(train_X, train_Y, num_classes=num_classes, covar_module=kernel)
-        self.iteration_fidelity = iteration_fidelity
-        self.data_fidelities = tuple(data_fidelities or ())
+        self.iteration_fidelity = (
+            normalize_feature_dims(
+                [iteration_fidelity], train_X.shape[-1], name="iteration_fidelity"
+            )[0]
+            if iteration_fidelity is not None
+            else None
+        )
+        self.data_fidelities = tuple(
+            normalize_feature_dims(data_fidelities, train_X.shape[-1], name="data_fidelities")
+            if data_fidelities is not None
+            else ()
+        )
         self.fidelity_dims = fidelity_dims
         self.design_dims = design_dims
 
@@ -120,8 +130,18 @@ class MultiFidelityOrdinalGPClassifier(OrdinalSingleTaskGPClassifier):
             design_kernel=covar_module,
         )
         super().__init__(train_X, train_Y, num_classes=num_classes, covar_module=kernel)
-        self.iteration_fidelity = iteration_fidelity
-        self.data_fidelities = tuple(data_fidelities or ())
+        self.iteration_fidelity = (
+            normalize_feature_dims(
+                [iteration_fidelity], train_X.shape[-1], name="iteration_fidelity"
+            )[0]
+            if iteration_fidelity is not None
+            else None
+        )
+        self.data_fidelities = tuple(
+            normalize_feature_dims(data_fidelities, train_X.shape[-1], name="data_fidelities")
+            if data_fidelities is not None
+            else ()
+        )
         self.fidelity_dims = fidelity_dims
         self.design_dims = design_dims
 
