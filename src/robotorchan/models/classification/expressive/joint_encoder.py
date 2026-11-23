@@ -3,6 +3,7 @@
 The encoder is optimized together with the existing variational GP(s).  The
 observation likelihood, probability posterior, and AL APIs are inherited.
 """
+
 from __future__ import annotations
 
 import torch
@@ -233,8 +234,7 @@ class JointEncoderMulticlassGPClassifier(
                     batch_Y.long().reshape(-1, 1),
                 ).mean()
                 kl = sum(
-                    gp.model.variational_strategy.kl_divergence().sum()
-                    for gp in self.class_models
+                    gp.model.variational_strategy.kl_divergence().sum() for gp in self.class_models
                 )
                 loss = -log_likelihood + kl / n
                 loss.backward()
