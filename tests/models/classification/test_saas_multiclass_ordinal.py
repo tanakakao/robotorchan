@@ -93,5 +93,5 @@ def test_map_saas_multiclass_includes_all_registered_kernel_priors():
             registered_names.append(name)
             expected = expected + prior.log_prob(closure(module)).sum()
     assert any(name.endswith("saas_inv_lengthscale_prior") for name in registered_names)
-    assert any(name.endswith("lengthscale_prior") for name in registered_names)
+    assert any(name.split(".")[-1] == "lengthscale_prior" for name in registered_names)
     torch.testing.assert_close(model._log_kernel_prior(), expected)
