@@ -429,6 +429,8 @@ class MixedRandomProjectionGP(MixedReducedGP):
 class AutoEncoderGP(ReducedGP):
     """Single-task GP using a frozen autoencoder representation of the inputs."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -467,6 +469,8 @@ class AutoEncoderGP(ReducedGP):
 
 class MixedAutoEncoderGP(MixedReducedGP):
     """Mixed GP with a frozen autoencoder over continuous inputs only."""
+
+    supports_fit = True
 
     def __init__(
         self,

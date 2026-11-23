@@ -175,6 +175,8 @@ class HybridAutoEncoderGP(JointEncoderGP):
     the original inputs. Use :meth:`training_loss` for joint optimization.
     """
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -234,6 +236,8 @@ class HybridAutoEncoderGP(JointEncoderGP):
 class MixedJointEncoderGP(JointEncoderGP):
     """Joint encoder GP with continuous-only representation and native categories."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -288,6 +292,8 @@ class MixedJointEncoderGP(JointEncoderGP):
 
 class MixedHybridAutoEncoderGP(MixedJointEncoderGP):
     """Mixed joint encoder GP with continuous-only reconstruction regularization."""
+
+    supports_fit = True
 
     def __init__(
         self,

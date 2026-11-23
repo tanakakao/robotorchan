@@ -24,6 +24,8 @@ class JointVAEGP(JointEncoderGP):
     joint GP, reconstruction, and KL optimization.
     """
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -234,6 +236,8 @@ class JointVAEGP(JointEncoderGP):
 
 class MixedJointVAEGP(MixedJointEncoderGP):
     """Joint VAE GP with continuous latent representation and native categories."""
+
+    supports_fit = True
 
     def __init__(
         self,

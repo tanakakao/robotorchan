@@ -379,6 +379,8 @@ class PLSKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
 class AutoEncoderMultiTaskGP(ReducedMultiTaskGP):
     """Long-format multi-task GP using a frozen autoencoder representation."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -420,6 +422,8 @@ class AutoEncoderMultiTaskGP(ReducedMultiTaskGP):
 class AutoEncoderKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
     """Block-design Kronecker multi-task GP using a frozen autoencoder."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -458,6 +462,8 @@ class AutoEncoderKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
 
 class VAEMultiTaskGP(ReducedMultiTaskGP):
     """Long-format multi-task GP using a frozen VAE posterior-mean representation."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -501,6 +507,8 @@ class VAEMultiTaskGP(ReducedMultiTaskGP):
 
 class VAEKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
     """Block-design Kronecker multi-task GP using a frozen VAE representation."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -548,6 +556,8 @@ class SupervisedAutoEncoderMultiTaskGP(ReducedMultiTaskGP):
     task identity remains represented only by the multi-task GP.
     """
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -593,6 +603,8 @@ class SupervisedAutoEncoderMultiTaskGP(ReducedMultiTaskGP):
 class SupervisedAutoEncoderKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
     """Kronecker multi-task GP using a multi-output supervised autoencoder."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -635,6 +647,8 @@ class SupervisedAutoEncoderKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
 
 class SupervisedVAEMultiTaskGP(ReducedMultiTaskGP):
     """Long-format multi-task GP using an outcome-aware frozen VAE."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -682,6 +696,8 @@ class SupervisedVAEMultiTaskGP(ReducedMultiTaskGP):
 
 class SupervisedVAEKroneckerMultiTaskGP(ReducedKroneckerMultiTaskGP):
     """Kronecker multi-task GP using a multi-output supervised frozen VAE."""
+
+    supports_fit = True
 
     def __init__(
         self,

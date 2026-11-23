@@ -14,6 +14,8 @@ from robotorchan.reduction.neural import SupervisedVAEInputReducer, VAEInputRedu
 class VAEGP(ReducedGP):
     """Single-task GP using a frozen VAE posterior-mean input representation."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -54,6 +56,8 @@ class VAEGP(ReducedGP):
 
 class SupervisedVAEGP(ReducedGP):
     """Single-task GP using a supervised frozen VAE representation."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -100,6 +104,8 @@ class SupervisedVAEGP(ReducedGP):
 class MixedVAEGP(MixedReducedGP):
     """Mixed GP with a frozen VAE over continuous inputs only."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -142,6 +148,8 @@ class MixedVAEGP(MixedReducedGP):
 
 class MixedSupervisedVAEGP(MixedReducedGP):
     """Mixed GP with an outcome-aware frozen VAE over continuous inputs only."""
+
+    supports_fit = True
 
     def __init__(
         self,

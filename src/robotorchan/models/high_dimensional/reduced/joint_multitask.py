@@ -21,8 +21,33 @@ from robotorchan.models.standard.multitask import (
 )
 
 
-class JointEncoderMultiTaskGP(MultiTaskGP):
+class _JointMultiTaskFitMixin:
+    """Train the encoder and GP together using the model-specific loss."""
+
+    supports_fit = True
+
+    def fit(self, *, epochs: int = 100, lr: float = 0.01) -> None:
+        """Minimize training_loss() with Adam; preserve reconstruction and KL terms."""
+        if epochs < 1:
+            raise ValueError("epochs must be positive.")
+        if not 0 < lr < float("inf"):
+            raise ValueError("lr must be positive and finite.")
+        self.train()
+        self.likelihood.train()
+        optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+        for _ in range(epochs):
+            optimizer.zero_grad()
+            loss = self.training_loss()
+            loss.backward()
+            optimizer.step()
+        self.eval()
+        self.likelihood.eval()
+
+
+class JointEncoderMultiTaskGP(_JointMultiTaskFitMixin, MultiTaskGP):
     """Long-format multi-task GP with a GP-MLL-trained neural encoder."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -107,8 +132,10 @@ class JointEncoderMultiTaskGP(MultiTaskGP):
         return -self.make_mll()(function_dist, self.train_targets, task_indices)
 
 
-class JointEncoderKroneckerMultiTaskGP(KroneckerMultiTaskGP):
+class JointEncoderKroneckerMultiTaskGP(_JointMultiTaskFitMixin, KroneckerMultiTaskGP):
     """Kronecker multi-task GP with a GP-MLL-trained neural encoder."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -210,6 +237,8 @@ class _HybridMixin:
 class HybridAutoEncoderMultiTaskGP(_HybridMixin, JointEncoderMultiTaskGP):
     """Long-format joint encoder GP with reconstruction regularization."""
 
+    supports_fit = True
+
     def __init__(self, *args: Any, reconstruction_weight: float = 1.0, **kwargs: Any) -> None:
         if reconstruction_weight < 0:
             raise ValueError("reconstruction_weight must be non-negative.")
@@ -228,6 +257,8 @@ class HybridAutoEncoderMultiTaskGP(_HybridMixin, JointEncoderMultiTaskGP):
 
 class HybridAutoEncoderKroneckerMultiTaskGP(_HybridMixin, JointEncoderKroneckerMultiTaskGP):
     """Kronecker joint encoder GP with reconstruction regularization."""
+
+    supports_fit = True
 
     def __init__(self, *args: Any, reconstruction_weight: float = 1.0, **kwargs: Any) -> None:
         if reconstruction_weight < 0:
@@ -272,6 +303,8 @@ class _JointVAEMixin(_HybridMixin):
 class JointVAEMultiTaskGP(_JointVAEMixin, HybridAutoEncoderMultiTaskGP):
     """Long-format jointly trained VAE representation and multi-task GP."""
 
+    supports_fit = True
+
     def __init__(self, *args: Any, beta: float = 1.0, **kwargs: Any) -> None:
         if beta < 0:
             raise ValueError("beta must be non-negative.")
@@ -289,6 +322,8 @@ class JointVAEMultiTaskGP(_JointVAEMixin, HybridAutoEncoderMultiTaskGP):
 class JointVAEKroneckerMultiTaskGP(_JointVAEMixin, HybridAutoEncoderKroneckerMultiTaskGP):
     """Kronecker jointly trained VAE representation and multi-task GP."""
 
+    supports_fit = True
+
     def __init__(self, *args: Any, beta: float = 1.0, **kwargs: Any) -> None:
         if beta < 0:
             raise ValueError("beta must be non-negative.")
@@ -303,8 +338,10 @@ class JointVAEKroneckerMultiTaskGP(_JointVAEMixin, HybridAutoEncoderKroneckerMul
         )
 
 
-class MixedJointEncoderMultiTaskGP(MixedMultiTaskGP):
+class MixedJointEncoderMultiTaskGP(_JointMultiTaskFitMixin, MixedMultiTaskGP):
     """Long-format mixed-input DKL preserving categories and task identity."""
+
+    supports_fit = True
 
     def __init__(
         self,
