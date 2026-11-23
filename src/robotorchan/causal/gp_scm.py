@@ -54,9 +54,10 @@ class GPStructuralCausalModel:
                 raise TypeError("observations must contain CausalObservation records.")
             if set(record.values) - set(graph.nodes):
                 raise ValueError("Observations contain nodes absent from the causal graph.")
-            if record.intervention is not None:
-                if set(record.intervention.values) - set(graph.nodes):
-                    raise ValueError("Interventions contain nodes absent from the causal graph.")
+            if record.intervention is not None and (
+                set(record.intervention.values) - set(graph.nodes)
+            ):
+                raise ValueError("Interventions contain nodes absent from the causal graph.")
 
         self.graph = graph
         self.observations = records
@@ -149,7 +150,7 @@ class GPStructuralCausalModel:
         intervention: HardIntervention,
         *,
         outcome: str,
-        sample_shape: torch.Size = torch.Size([128]),
+        sample_shape: torch.Size | None = None,
         observation_noise: bool = False,
     ) -> Tensor:
         """Sample scalar outcomes under one do-intervention.
@@ -179,7 +180,7 @@ class GPStructuralCausalModel:
         *,
         intervention_nodes: Sequence[str],
         outcome: str,
-        sample_shape: torch.Size = torch.Size([128]),
+        sample_shape: torch.Size | None = None,
         observation_noise: bool = False,
     ) -> Tensor:
         """Propagate posterior samples of do(intervention_nodes = X).
@@ -201,7 +202,7 @@ class GPStructuralCausalModel:
             raise ValueError("intervention_nodes must belong to the causal graph.")
         self._check_tensor(X, len(nodes))
         try:
-            shape = torch.Size(sample_shape)
+            shape = torch.Size([128]) if sample_shape is None else torch.Size(sample_shape)
         except (TypeError, ValueError) as exc:
             raise ValueError("sample_shape must be a nonempty torch.Size.") from exc
         if not shape or any(n < 1 for n in shape):
