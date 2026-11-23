@@ -79,3 +79,19 @@ def test_multiclass_saas_prior_contributes_gradient(model_type):
         for gp in model.class_models
     ]
     assert all(grad is not None and torch.isfinite(grad).all() for grad in grads)
+
+
+def test_map_saas_multiclass_includes_all_registered_kernel_priors():
+    """The native MAP-SAAS RBF prior must accompany the sparse prior."""
+    x = torch.rand(9, 4, dtype=torch.double)
+    y = torch.arange(9) % 3
+    model = MapSaasMulticlassGPClassifier(x, y, num_classes=3)
+    expected = x.new_zeros(())
+    registered_names = []
+    for gp in model.class_models:
+        for name, module, prior, closure, _ in gp.model.named_priors():
+            registered_names.append(name)
+            expected = expected + prior.log_prob(closure(module)).sum()
+    assert any(name.endswith("saas_inv_lengthscale_prior") for name in registered_names)
+    assert any(name.endswith("lengthscale_prior") for name in registered_names)
+    torch.testing.assert_close(model._log_kernel_prior(), expected)
