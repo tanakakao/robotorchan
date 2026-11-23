@@ -32,7 +32,10 @@ def test_sparse_ard_fit_predict_and_entropy_candidate(model_type):
     )
     assert isinstance(kernel, ScaleKernel)
     assert kernel.base_kernel.ard_num_dims == 5
-    assert "saas_inv_lengthscale_prior" in dict(kernel.base_kernel.named_priors())
+    assert any(
+        name == "saas_inv_lengthscale_prior"
+        for name, *_ in kernel.base_kernel.named_priors()
+    )
     model.fit(epochs=2, lr=0.005)
     candidate_X = torch.rand(9, 5, dtype=torch.double)
     with torch.no_grad():
