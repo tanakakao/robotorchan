@@ -99,9 +99,7 @@ def test_opt_in_gp_scm_uses_same_real_interventions_without_extra_observations()
     assert all(item.initial_points == 6 and len(item.steps) == 7 for item in runs)
     assert runs[0].steps[:6] == runs[1].steps[:6] == runs[2].steps[:6]
     gp_scm = next(item for item in runs if item.method == "gp_scm")
-    assert set(gp_scm.steps[-1].intervention_nodes) in (
-        {"X"}, {"Z"}, {"X", "Z"}
-    )
+    assert set(gp_scm.steps[-1].intervention_nodes) in ({"X"}, {"Z"}, {"X", "Z"})
     assert gp_scm.steps[-1].simple_regret >= 0.0
     assert gp_scm.steps[-1].cumulative_cost > gp_scm.steps[5].cumulative_cost
 
