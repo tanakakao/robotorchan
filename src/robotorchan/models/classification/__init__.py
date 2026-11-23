@@ -116,6 +116,10 @@ from robotorchan.models.classification.multiclass.high_dimensional.saas import (
     SaasMulticlassGPClassifier,
     SaasOrdinalGPClassifier,
 )
+from robotorchan.models.classification.multiclass.standard.multitask import (
+    MultiTaskMulticlassGPClassifier,
+    MultiTaskOrdinalGPClassifier,
+)
 from robotorchan.models.classification.multiclass.standard.single_task import (
     MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
@@ -207,6 +211,8 @@ __all__ = [
     "MixedSpectralMixtureOrdinalGPClassifier",
     "MultiFidelityBinaryGPClassifier",
     "MultiTaskBinaryGPClassifier",
+    "MultiTaskMulticlassGPClassifier",
+    "MultiTaskOrdinalGPClassifier",
     "MulticlassSingleTaskGPClassifier",
     "NonGPBinaryClassificationMixin",
     "NonstationaryBinarySingleTaskGPClassifier",
