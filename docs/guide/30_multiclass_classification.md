@@ -191,3 +191,40 @@ Block形式の `predict_proba(X)`、`sample_class_probabilities(X)`、`predictiv
 一方、`posterior(X)` と `probability_posterior(X)` はBoTorchの候補軸を保つため、内部Long形式の `q*m` 点を使います。前者は潜在GPの事後分布、後者は確率事後分布であり、`probability_posterior(X).mean` の形状は `[q*m, C]` です。タスク別に表示する場合は `[q, m, C]` にreshapeします。
 
 `mutual_information(X)` はタスクごとに `[q, m]` のBALDスコアを返します。複数タスクを同じ入力で観測する場合、エントロピーやBALDのタスク平均などを使って入力点を提案できます。ただし、この単純な集約は**タスク間の同時情報量を厳密に最適化したものではありません**。
+
+
+## Multi-Fidelity分類：連続入力とMixed入力
+
+`MultiFidelityMulticlassGPClassifier` は通常の設計変数と忠実度を含む入力を扱い、
+`MixedMultiFidelityMulticlassGPClassifier` はカテゴリ設計変数も扱います。
+`iteration_fidelity` には反復型忠実度の列インデックス、
+`data_fidelities` にはデータ型忠実度の列インデックスを指定します。
+少なくとも一つの忠実度列が必要で、カテゴリ列と忠実度列は重複できません。
+
+入力列の一例は「連続設計値、カテゴリID、忠実度」です。
+`train_Y` は0から始まるクラスラベルとし、`num_classes` を指定します。
+`fit()`、`predict_proba()`、`probability_posterior()`、
+`predictive_entropy()` などは分類モデルと同じ契約で使用できます。
+
+候補提案では、評価したい忠実度を決めてから候補点プールの
+`predict_proba(candidate_X)` を求め、予測エントロピーなどを比較できます。
+評価コストが違う場合、単純にエントロピーが最大の点を選ぶだけでは
+費用対効果を最適化したことにはなりません。低／高忠実度での
+予測差と必要な評価費用を区別して解釈してください。
+
+具体的な学習・確率予測・低高忠実度比較グラフ・候補提案は
+[Notebook 30](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)を参照してください。
+
+
+### 既存のActive Learning獲得関数との接続
+
+`PredictiveEntropy(model)`、`qPredictiveEntropy(model)`、`qBALD(model)` は、
+忠実度列を含む候補点をそのまま受け取ります。単一点獲得関数には候補形状 `[..., 1, d]`、
+q-batch獲得関数には `[..., q, d]` を渡します。
+q-batchではすべての候補に同じ高忠実度を与える例をNotebookに追加しています。
+`qBALD` はクラス数 `C` と候補数 `q` に対して `C**q <= 256` の制約を持つため、
+多数候補には周辺スコアを用いるかバッチ構成を検討してください。
+
+予測エントロピーとBALDはラベルの不確実性を指標としますが、
+低忠実度を測定した場合に高忠実度の予測がどれだけ改善するかという
+**忠実度をまたぐ情報価値**や**評価コスト**を最適化する指標ではありません。
