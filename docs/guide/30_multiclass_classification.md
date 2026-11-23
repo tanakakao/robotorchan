@@ -228,3 +228,20 @@ q-batchではすべての候補に同じ高忠実度を与える例をNotebook�
 予測エントロピーとBALDはラベルの不確実性を指標としますが、
 低忠実度を測定した場合に高忠実度の予測がどれだけ改善するかという
 **忠実度をまたぐ情報価値**や**評価コスト**を最適化する指標ではありません。
+
+
+## Deep GP分類：確率的階層と候補提案
+
+`MulticlassSingleTaskDeepGPClassifier` は複数GP層から成る確率的な潜在モデルです。`hidden_dims` で中間層の幅、`num_inducing` で誘導点の数、`posterior_samples` で予測時の潜在サンプル数を指定します。
+
+- `fit(epochs=..., lr=..., num_likelihood_samples=...)`：各GP層の変分パラメータと分類尤度を学習
+- `posterior(X)`：潜在関数のBoTorch互換事後分布（非ガウス・サンプル表現）
+- `predict_proba(X)`：潜在事後をクラス確率へ変換し、モンテカルロ平均した `[q,C]`
+- `probability_posterior(X)`：クラス確率の期待値と事後分散を持つPosterior
+- `PredictiveEntropy(model)`、`qPredictiveEntropy(model)`、`qBALD(model)`：既存のActive Learning獲得関数による候補提案
+
+Deep GPの潜在事後は一般にガウスではないため、通常のGPにおける正規分布の閉形式公式を使いません。予測確率や獲得関数の値にはサンプル誤差があり、精密な比較には乱数シード・サンプル数・学習収束の確認が必要です。
+
+入力はまず連続設計変数の `[n,d]` を対象とします。Mixed入力を使う場合はカテゴリ変数を単に実数へ変換しただけで同等とは見なしません。カーネル型モデルとDeep GPの性能比較は保留データで行ってください。
+
+実行例は[Notebook 30](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)を参照してください。
