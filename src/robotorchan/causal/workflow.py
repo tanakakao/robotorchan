@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from math import isfinite
 from types import MappingProxyType
@@ -11,9 +11,15 @@ from typing import Literal
 import torch
 
 from robotorchan.causal.data import CausalObservation
+from robotorchan.causal.gp_scm import GPStructuralCausalModel
+from robotorchan.causal.gp_scm_proposal import propose_gp_scm_intervention
 from robotorchan.causal.graph import CausalGraph
 from robotorchan.causal.intervention import HardIntervention
-from robotorchan.causal.proposal import CausalInterventionProposal, propose_causal_intervention
+from robotorchan.causal.proposal import (
+    CausalAcquisitionProposal,
+    CausalInterventionProposal,
+    propose_causal_intervention,
+)
 from robotorchan.causal.surrogate import InterventionGPSurrogate
 from robotorchan.optim.backends.sampling import sample_candidate_batches
 from robotorchan.optim.dispatch import OptimizerName
@@ -28,16 +34,17 @@ class CausalTrial:
     intervention: HardIntervention
     state: TrialState
     observation: CausalObservation | None = None
-    proposal: CausalInterventionProposal | None = None
+    proposal: CausalInterventionProposal | CausalAcquisitionProposal | None = None
 
 
 class CausalBOStudy:
     """Sequential intervention experiments without causal-structure discovery.
 
-    Each intervention set gets independent initial Sobol experiments and a
-    Phase 3 GP. After all sets have at least ``n_initial_trials`` completed
-    interventions, ask() lazily fits/refits their GPs and delegates selection
-    to the Phase 4 proposal API. Only one RUNNING trial is allowed at a time.
+    The default mode retains independent intervention-set GPs and the
+    existing per-set Sobol cold start. In gp_scm mode, provided observational
+    records fit shared structural mechanisms and one initial Sobol intervention
+    establishes the measured incumbent for MC expected improvement.
+    Only one RUNNING trial is allowed at a time.
     """
 
     def __init__(
@@ -56,6 +63,10 @@ class CausalBOStudy:
         seed: int | None = None,
         dtype: torch.dtype = torch.double,
         device: torch.device | str | None = None,
+        model_type: Literal["intervention_gp", "gp_scm"] = "intervention_gp",
+        observational_data: Iterable[CausalObservation] | None = None,
+        mc_samples: int = 128,
+        mc_seed: int = 0,
     ) -> None:
         if not isinstance(graph, CausalGraph):
             raise TypeError("graph must be a CausalGraph.")
@@ -67,6 +78,20 @@ class CausalBOStudy:
             raise ValueError("n_initial_trials must be at least 2 for the GP.")
         if num_restarts < 1 or raw_samples < 1:
             raise ValueError("num_restarts and raw_samples must be positive.")
+        if model_type not in ("intervention_gp", "gp_scm"):
+            raise ValueError("model_type must be 'intervention_gp' or 'gp_scm'.")
+        if mc_samples < 1 or not isinstance(mc_seed, int) or mc_seed < 0:
+            raise ValueError("mc_samples must be positive and mc_seed nonnegative.")
+        prior = tuple(() if observational_data is None else observational_data)
+        if model_type == "intervention_gp" and prior:
+            raise ValueError("observational_data is only used with model_type='gp_scm'.")
+        for record in prior:
+            if not isinstance(record, CausalObservation):
+                raise TypeError("observational_data must contain CausalObservation records.")
+            if record.intervention is not None:
+                raise ValueError("observational_data must not contain do-interventions.")
+            if set(record.values) - set(graph.nodes):
+                raise ValueError("observational_data contains unknown graph nodes.")
 
         sets: list[frozenset[str]] = []
         for nodes in intervention_sets:
@@ -120,8 +145,13 @@ class CausalBOStudy:
         self.seed = seed
         self.dtype = dtype
         self.device = device
+        self.model_type = model_type
+        self.observational_data = prior
+        self.mc_samples = mc_samples
+        self.mc_seed = mc_seed
         self._trials: dict[int, CausalTrial] = {}
         self._surrogates: tuple[InterventionGPSurrogate, ...] | None = None
+        self._gp_scm: GPStructuralCausalModel | None = None
 
     @property
     def trials(self) -> tuple[CausalTrial, ...]:
@@ -141,12 +171,25 @@ class CausalBOStudy:
         """Return a registered trial snapshot by its monotonic number."""
         return self._trials[number]
 
-    def fit(self) -> tuple[InterventionGPSurrogate, ...]:
-        """Fit or reuse Phase 3 GPs for every intervention set.
+    def fit(self) -> tuple[InterventionGPSurrogate, ...] | GPStructuralCausalModel:
+        """Fit and cache either independent GPs or the shared GP-SCM.
 
-        The cached GPs are invalidated by each successful tell(); the next
-        call to fit() or model-based ask() rebuilds them from completed data.
+        In gp_scm mode, mechanism-specific record requirements replace
+        the legacy per-intervention-set cold-start requirement.
+        Completed do records and observational_data keep their identities.
         """
+        if self.model_type == "gp_scm":
+            if self._gp_scm is None:
+                model = GPStructuralCausalModel(
+                    self.graph,
+                    (*self.observational_data, *self.observations),
+                    dtype=self.dtype,
+                    device=self.device,
+                )
+                model.fit()
+                self._gp_scm = model
+            return self._gp_scm
+
         if self._surrogates is None:
             records = self.observations
             for key in self.intervention_sets:
@@ -186,10 +229,15 @@ class CausalBOStudy:
             )
             for key in self.intervention_sets
         }
-        uninitialized = [
-            key for key in self.intervention_sets if counts[key] < self.n_initial_trials
-        ]
-        proposal: CausalInterventionProposal | None = None
+        if self.model_type == "gp_scm":
+            # One actual intervention is required to establish EI's best_f.
+            # The GP-SCM itself may fit from observational_data alone.
+            uninitialized = [self.intervention_sets[0]] if not self.observations else []
+        else:
+            uninitialized = [
+                key for key in self.intervention_sets if counts[key] < self.n_initial_trials
+            ]
+        proposal: CausalInterventionProposal | CausalAcquisitionProposal | None = None
         if uninitialized:
             chosen = min(uninitialized, key=lambda key: counts[key])
             nodes = tuple(node for node in self.graph.topological_order if node in chosen)
@@ -210,15 +258,43 @@ class CausalBOStudy:
             )[-1, 0]
             intervention = HardIntervention(dict(zip(nodes, candidate.tolist(), strict=True)))
         else:
-            proposal = propose_causal_intervention(
-                self.fit(),
-                self.bounds,
-                direction=self.direction,
-                intervention_costs=self.intervention_costs,
-                optimizer=self.optimizer,
-                num_restarts=self.num_restarts,
-                raw_samples=self.raw_samples,
-            )
+            if self.model_type == "gp_scm":
+                prior_outcomes = [record.values[self.outcome] for record in self.observations]
+                incumbent = (
+                    max(prior_outcomes) if self.direction == "maximize" else min(prior_outcomes)
+                )
+                model = self.fit()
+                assert isinstance(model, GPStructuralCausalModel)
+                groups = [
+                    tuple(node for node in self.graph.topological_order if node in group)
+                    for group in self.intervention_sets
+                ]
+                proposal = propose_gp_scm_intervention(
+                    model,
+                    groups,
+                    self.bounds,
+                    outcome=self.outcome,
+                    best_f=incumbent,
+                    direction=self.direction,
+                    intervention_costs=self.intervention_costs,
+                    optimizer=self.optimizer,
+                    num_restarts=self.num_restarts,
+                    raw_samples=self.raw_samples,
+                    mc_samples=self.mc_samples,
+                    mc_seed=self.mc_seed,
+                )
+            else:
+                model = self.fit()
+                assert isinstance(model, tuple)
+                proposal = propose_causal_intervention(
+                    model,
+                    self.bounds,
+                    direction=self.direction,
+                    intervention_costs=self.intervention_costs,
+                    optimizer=self.optimizer,
+                    num_restarts=self.num_restarts,
+                    raw_samples=self.raw_samples,
+                )
             intervention = proposal.intervention
 
         number = len(self._trials)
@@ -277,4 +353,5 @@ class CausalBOStudy:
         self._trials[number] = updated
         if updated.state is TrialState.COMPLETE:
             self._surrogates = None
+            self._gp_scm = None
         return updated
