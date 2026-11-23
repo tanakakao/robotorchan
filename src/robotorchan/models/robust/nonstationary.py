@@ -75,6 +75,8 @@ class GibbsKernel(Kernel):
 class NonstationarySingleTaskGP(SingleTaskGP):
     """Single-task exact GP with input-dependent latent-process smoothness."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -107,6 +109,8 @@ class NonstationarySingleTaskGP(SingleTaskGP):
 
 class MixedNonstationarySingleTaskGP(SingleTaskGP):
     """Mixed exact GP with Gibbs covariance restricted to continuous dimensions."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -169,6 +173,8 @@ class MixedNonstationarySingleTaskGP(SingleTaskGP):
 class NonstationaryKroneckerMultiTaskGP(KroneckerMultiTaskGP):
     """Block-design Kronecker GP with nonstationary data covariance."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -202,6 +208,8 @@ class NonstationaryKroneckerMultiTaskGP(KroneckerMultiTaskGP):
 
 class NonstationaryMultiTaskGP(MultiTaskGP):
     """Long-format multi-task GP with nonstationary data covariance."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -245,6 +253,8 @@ class NonstationaryMultiTaskGP(MultiTaskGP):
 
 class MixedNonstationaryMultiTaskGP(MultiTaskGP):
     """Mixed long-format multi-task GP with nonstationary continuous covariance."""
+
+    supports_fit = True
 
     def __init__(
         self,

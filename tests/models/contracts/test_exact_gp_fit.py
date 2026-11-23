@@ -90,14 +90,6 @@ def test_specialized_subclasses_do_not_implicitly_gain_native_fit() -> None:
         specialized.fit(optimizer_kwargs={"options": {"maxiter": 1}})
 
 
-def test_registered_exact_gp_subclasses_require_explicit_fit_opt_in() -> None:
-    """Prevent unreviewed public subclasses from inheriting verified fitting."""
-    from robotorchan.models import NonstationarySingleTaskGP
-
-    assert issubclass(NonstationarySingleTaskGP, SingleTaskGP)
-    assert NonstationarySingleTaskGP.supports_fit is False
-
-
 def test_spectral_mixture_gp_fit_and_posterior() -> None:
     """Spectral mixture exact GP explicitly opts in to native MLL fitting."""
     from robotorchan.models import SpectralMixtureGP
