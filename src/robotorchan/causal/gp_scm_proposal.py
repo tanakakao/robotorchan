@@ -88,7 +88,7 @@ def propose_gp_scm_intervention(
     """
     if not isinstance(model, GPStructuralCausalModel):
         raise TypeError("model must be a GPStructuralCausalModel.")
-    model.mechanisms  # Ensure fit() has completed, including root-only models.
+    _ = model.mechanisms  # Ensure fit() completed, including root-only models.
     if outcome not in model.graph.nodes:
         raise ValueError("outcome must belong to the causal graph.")
     if direction not in ("maximize", "minimize"):
