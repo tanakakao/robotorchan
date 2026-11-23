@@ -208,6 +208,15 @@ class KroneckerMultiTaskOrdinalGPClassifier(_BlockTaskInputMixin, MultiTaskOrdin
             return values.reshape(*values.shape[:-2], X.shape[0], self.num_tasks, self.num_classes)
         return values
 
+    def probability_posterior(self, X: Tensor, **kwargs: object):
+        """Keep the BoTorch probability posterior's flattened candidate axis.
+
+        Its latent posterior has q * num_tasks input rows, so probability
+        moments must use the same axis. For task-shaped means, use
+        predict_proba(X), which returns [q, num_tasks, num_classes].
+        """
+        return super().probability_posterior(self._long_candidates(X), **kwargs)
+
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
         probabilities = super().predict_proba(self._long_candidates(X), **kwargs)
         return probabilities.reshape(X.shape[0], self.num_tasks, self.num_classes)
