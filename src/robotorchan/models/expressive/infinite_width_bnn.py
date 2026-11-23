@@ -89,6 +89,8 @@ class InfiniteWidthReLUKernel(Kernel):
 class InfiniteWidthBNNGP(SingleTaskGP):
     """Exact GP using the infinite-width ReLU neural-network kernel."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -128,6 +130,8 @@ class InfiniteWidthBNNMultiTaskGP(MultiTaskGP):
     from the NNGP data kernel. The public input remains the original
     long-format representation.
     """
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -174,6 +178,8 @@ class InfiniteWidthBNNMultiTaskGP(MultiTaskGP):
 class InfiniteWidthBNNKroneckerMultiTaskGP(KroneckerMultiTaskGP):
     """Block-design Kronecker GP with an infinite-width ReLU data kernel."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -217,6 +223,8 @@ class InfiniteWidthBNNKroneckerMultiTaskGP(KroneckerMultiTaskGP):
 
 class MixedInfiniteWidthBNNKroneckerMultiTaskGP(KroneckerMultiTaskGP):
     """Mixed block-design Kronecker GP with an infinite-width ReLU data kernel."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -277,6 +285,8 @@ class MixedInfiniteWidthBNNKroneckerMultiTaskGP(KroneckerMultiTaskGP):
 class MixedInfiniteWidthBNNGP(SingleTaskGP):
     """Mixed-input exact GP using an infinite-width ReLU continuous kernel."""
 
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -327,6 +337,8 @@ class MixedInfiniteWidthBNNGP(SingleTaskGP):
 
 class MixedInfiniteWidthBNNMultiTaskGP(MultiTaskGP):
     """Mixed long-format multi-task GP with an infinite-width ReLU data kernel."""
+
+    supports_fit = True
 
     def __init__(
         self,
