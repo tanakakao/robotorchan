@@ -7,14 +7,14 @@ import torch
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.models import (
+    PCAGP,
+    PLSGP,
     MixedPCAGP,
     MixedReducedKroneckerMultiTaskGP,
     MixedReducedMultiTaskGP,
     OutputPCAGP,
-    PCAGP,
     PCAKroneckerMultiTaskGP,
     PCAMultiTaskGP,
-    PLSGP,
     RandomProjectionGP,
     ReducedGP,
 )
