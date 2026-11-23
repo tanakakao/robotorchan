@@ -50,6 +50,8 @@ def _mixed_kernel(
     ard: bool,
     eps: float,
 ):
+    if not cat_dims:
+        raise ValueError("Mixed infinite-width BNN requires categorical features.")
     cats = normalize_feature_dims(cat_dims, train_X.shape[-1], name="cat_dims")
     if not cats:
         raise ValueError("Mixed infinite-width BNN requires categorical features.")
