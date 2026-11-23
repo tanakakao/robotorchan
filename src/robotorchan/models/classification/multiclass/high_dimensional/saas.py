@@ -23,14 +23,13 @@ from robotorchan.models.classification.ordinal.standard.single_task import (
 
 
 class _SparseARDMulticlassPriorMixin:
-    """Include registered sparse inverse-lengthscale priors during fitting."""
+    """Include each class GP covariance prior in the variational objective."""
 
     def _log_kernel_prior(self) -> Tensor:
         total = self.raw_train_X.new_zeros(())
         for gp in self.class_models:
-            for name, module, prior, closure, _ in gp.model.named_priors():
-                if name.endswith("saas_inv_lengthscale_prior"):
-                    total = total + prior.log_prob(closure(module)).sum()
+            for _, module, prior, closure, _ in gp.model.named_priors():
+                total = total + prior.log_prob(closure(module)).sum()
         return total
 
 
