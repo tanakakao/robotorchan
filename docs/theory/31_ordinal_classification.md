@@ -364,6 +364,6 @@ $$
 
 として推定します。ここで $S$ はモンテカルロサンプル数です。潜在事後平均にリンク関数を適用するだけでは、一般にこの期待値と一致しません。
 
-クラス確率の分散やBALDも同じサンプルから推定できますが、サンプル数による誤差があります。今回のモデルは既存の `SingleTaskDeepGP` の確率的階層を再利用し、ガウス事後を前提とする通常のExact GP獲得関数と同一視しません。
+クラス確率の分散やBALDも同じサンプルから推定できますが、サンプル数による誤差があります。今回のモデルは既存の 既存の深層ガウス過程の確率的階層を再利用し、ガウス事後を前提とする通常のExact GP獲得関数と同一視しません。
 
 **参考文献**：Damianou and Lawrence (2013), *Deep Gaussian Processes*; Salimbeni and Deisenroth (2017), *Doubly Stochastic Variational Inference for Deep Gaussian Processes*; Chu and Ghahramani (2005), *Gaussian Processes for Ordinal Regression*.
