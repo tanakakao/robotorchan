@@ -119,9 +119,7 @@ class OrdinalSingleTaskDeepGPClassifier(ClassificationModelMixin, SingleTaskDeep
         samples = self.likelihood.class_probabilities(trajectories.squeeze(-1))
         return ClassificationProbabilityPosterior(
             latent,
-            sample_transform=lambda values: self.likelihood.class_probabilities(
-                values.squeeze(-1)
-            ),
+            sample_transform=lambda values: self.likelihood.class_probabilities(values.squeeze(-1)),
             mean=samples.mean(dim=0),
             variance=samples.var(dim=0, unbiased=False),
         )
