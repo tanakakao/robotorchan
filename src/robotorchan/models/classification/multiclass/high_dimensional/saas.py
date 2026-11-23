@@ -22,7 +22,21 @@ from robotorchan.models.classification.ordinal.standard.single_task import (
 )
 
 
-class SaasMulticlassGPClassifier(MulticlassSingleTaskGPClassifier):
+class _SparseARDMulticlassPriorMixin:
+    """Include registered sparse inverse-lengthscale priors during fitting."""
+
+    def _log_kernel_prior(self) -> Tensor:
+        total = self.raw_train_X.new_zeros(())
+        for gp in self.class_models:
+            for name, module, prior, closure, _ in gp.model.named_priors():
+                if name.endswith("saas_inv_lengthscale_prior"):
+                    total = total + prior.log_prob(closure(module)).sum()
+        return total
+
+
+class SaasMulticlassGPClassifier(
+    _SparseARDMulticlassPriorMixin, MulticlassSingleTaskGPClassifier
+):
     """Multiclass variational GP with independent class-wise SAAS-style ARD priors."""
 
     def __init__(
@@ -62,7 +76,9 @@ class SaasOrdinalGPClassifier(OrdinalSingleTaskGPClassifier):
         self.global_scale = float(global_scale)
 
 
-class MapSaasMulticlassGPClassifier(MulticlassSingleTaskGPClassifier):
+class MapSaasMulticlassGPClassifier(
+    _SparseARDMulticlassPriorMixin, MulticlassSingleTaskGPClassifier
+):
     """Multiclass variational GP using the existing MAP-SAAS-style kernel factory."""
 
     def __init__(
