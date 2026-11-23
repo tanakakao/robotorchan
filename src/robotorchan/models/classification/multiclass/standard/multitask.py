@@ -218,6 +218,8 @@ class KroneckerMultiTaskOrdinalGPClassifier(_BlockTaskInputMixin, MultiTaskOrdin
         return super().probability_posterior(self._long_candidates(X), **kwargs)
 
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
+        if X.ndim == 2 and X.shape[1] == self.block_input_dim + 1:
+            return super().predict_proba(X, **kwargs)
         probabilities = super().predict_proba(self._long_candidates(X), **kwargs)
         return probabilities.reshape(X.shape[0], self.num_tasks, self.num_classes)
 
