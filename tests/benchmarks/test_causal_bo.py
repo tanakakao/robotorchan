@@ -82,3 +82,36 @@ def test_custom_scenario_rejects_missing_full_set_and_incomplete_costs():
     missing_cost = replace(scenario, costs={frozenset({"X"}): 1.0})
     with pytest.raises(ValueError, match=r"scenario\.costs"):
         run_causal_benchmark(scenario=missing_cost, n_iterations=0)
+
+
+def test_opt_in_gp_scm_uses_same_real_interventions_without_extra_observations():
+    runs = run_causal_benchmark(
+        seeds=(3,),
+        n_initial_per_set=2,
+        n_iterations=1,
+        methods=("cbo", "gp_scm", "random"),
+        optimizer="sobol",
+        raw_samples=12,
+        mc_samples=16,
+        mc_seed=7,
+    )
+    assert {item.method for item in runs} == {"cbo", "gp_scm", "random"}
+    assert all(item.initial_points == 6 and len(item.steps) == 7 for item in runs)
+    assert runs[0].steps[:6] == runs[1].steps[:6] == runs[2].steps[:6]
+    gp_scm = next(item for item in runs if item.method == "gp_scm")
+    assert set(gp_scm.steps[-1].intervention_nodes) in (
+        {"X"}, {"Z"}, {"X", "Z"}
+    )
+    assert gp_scm.steps[-1].simple_regret >= 0.0
+    assert gp_scm.steps[-1].cumulative_cost > gp_scm.steps[5].cumulative_cost
+
+
+def test_benchmark_rejects_unsupported_methods_and_mc_configuration():
+    with pytest.raises(ValueError, match="nonempty and unique"):
+        run_causal_benchmark(methods=("cbo", "cbo"), n_iterations=0)
+    with pytest.raises(ValueError, match="AVAILABLE_METHODS|methods must belong"):
+        run_causal_benchmark(methods=("unknown",), n_iterations=0)
+    with pytest.raises(ValueError, match="mc_samples"):
+        run_causal_benchmark(mc_samples=0, n_iterations=0)
+    with pytest.raises(ValueError, match="mc_seed"):
+        run_causal_benchmark(mc_seed=-1, n_iterations=0)
