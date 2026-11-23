@@ -95,7 +95,7 @@ from robotorchan.models.classification.expressive.spectral_mixture import (
     SpectralMixtureMulticlassGPClassifier,
     SpectralMixtureOrdinalGPClassifier,
 )
-from robotorchan.models.classification.high_dimensional.reduced import (
+from robotorchan.models.classification.multiclass.high_dimensional.reduced import (
     PCAMulticlassGPClassifier,
     PCAOrdinalGPClassifier,
     PLSMulticlassGPClassifier,
