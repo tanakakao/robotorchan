@@ -140,7 +140,8 @@ observed = [
     for x in (0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
 ]
 study = CausalBOStudy(
-    graph, "Y",
+    graph,
+    "Y",
     intervention_sets=(("X",), ("Z",)),
     bounds={"X": (0.0, 1.0), "Z": (0.0, 1.5)},
     model_type="gp_scm",
