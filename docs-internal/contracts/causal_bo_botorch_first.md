@@ -162,6 +162,20 @@ variance = samples.var(0, unbiased=False)
 - 完了／失敗状態、単一RUNNING試行、Trial番号、初期Sobol、履歴、コストは既存処理を再利用。GP-SCM方式は介入による実測`best_f`を確保する**最初の1試行のみSobol**とし、その後は条件付き機構の学習データ要件に従う。集合ごとの`n_initial_trials`は要求しない。
 - モデル単体のdo予測とStudyを分離し、`CausalBOStudy`なしの単発提案も公開する。対象テスト：`tests/causal/test_gp_scm_study.py`。
 
+## 6.1. 詳細理論・Notebook・Benchmarkの整合性（Phase 6）
+
+このPhaseでは**GP-SCMの内部GPや獲得関数を再実装しない**。Phase 4/5の既存APIを教材・比較に接続する。
+
+- [理論28章](../../docs/theory/28_causal_bayesian_optimization.md)：truncated factorization、親条件付きGP、root分布、GP-SCMの介入サンプリング、MC-EI、観測と実介入のbest_f区別、識別可能性と数値的な制限を初心者にも追える数式とともに説明
+- [Guide 28章](../../docs/guide/28_causal_bayesian_optimization.md)：入力形状、データ行の選別、モデル別fit/posterior、単発提案、Studyによる再学習、MCの限界を公開APIベースで説明
+- [Notebook 58](../../examples/notebooks/58_causal_bayesian_optimization.ipynb)：従来集合別GPを残し、GP-SCMの条件付きGP、do分布の分位点、MC-EI、単発候補提案、Ask-and-Tell再学習を追加。グラフあり
+- [Notebook 59](../../examples/notebooks/59_causal_bo_benchmark.ipynb)：既存3方式の実測比較にGP-SCMを任意追加し、同一初期介入、cost軸・regret軸を明示
+- [Benchmark](../../src/robotorchan/benchmarks/causal.py)：既定の3手法`METHODS`は変更せず、`methods`指定で`gp_scm`を任意追加。全方式同じ初期**実介入**データ、GP-SCMだけへの追加観測はなし
+- [CLI](../../benchmarks/causal_bo.py)：`--include-gp-scm`、`--mc-samples`、`--mc-seed`を指定でき、実行条件をsummary JSONに保存
+- [対象テスト](../../tests/benchmarks/test_causal_bo.py)：既定方式の互換性、共通初期履歴と追加方式、MC引数の検証
+
+比較する介入集合は同一でも、機構別GP-SCMは中間変数を使用し、集合別GPは目的値を直接学習するという**情報利用法の違い**がある。数値的な優劣を文書やNotebookへ固定値として書かない。未知交絡・DAGの誤指定、観測欠測、rootモデルの近似、不確実性の較正は今回の合成実行だけでは検証できない。
+
 ## 7. 後続Phaseの受け入れ条件（境界を固定する）
 
 | Phase | 追加範囲 | 必要な確認 |
