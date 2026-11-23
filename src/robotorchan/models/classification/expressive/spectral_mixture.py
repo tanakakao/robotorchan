@@ -14,7 +14,7 @@ from robotorchan.models.classification.ordinal.standard.single_task import (
 )
 
 
-def _spectral_kernel(train_X: Tensor, num_mixtures: int) -> SpectralMixtureKernel:
+def _spectral_kernel(train_X: Tensor, train_Y: Tensor, num_mixtures: int) -> SpectralMixtureKernel:
     if train_X.ndim != 2 or train_X.shape[0] < 2:
         raise ValueError("train_X must have shape [n, d] with n >= 2.")
     if num_mixtures < 1:
@@ -23,7 +23,7 @@ def _spectral_kernel(train_X: Tensor, num_mixtures: int) -> SpectralMixtureKerne
         num_mixtures=num_mixtures,
         ard_num_dims=train_X.shape[-1],
     ).to(train_X)
-    kernel.initialize_from_data(train_X, train_X.new_zeros(train_X.shape[0]))
+    kernel.initialize_from_data(train_X, train_Y.to(dtype=train_X.dtype).reshape(-1))
     return kernel
 
 
@@ -44,7 +44,7 @@ class SpectralMixtureMulticlassGPClassifier(MulticlassSingleTaskGPClassifier):
             train_X,
             train_Y,
             num_classes=num_classes,
-            covar_module=_spectral_kernel(train_X, num_mixtures),
+            covar_module=_spectral_kernel(train_X, train_Y, num_mixtures),
             inducing_points=inducing_points,
             learn_inducing_points=learn_inducing_points,
         )
@@ -73,7 +73,7 @@ class SpectralMixtureOrdinalGPClassifier(OrdinalSingleTaskGPClassifier):
         )
 
 
-def _mixed_spectral_kernel(train_X: Tensor, cat_dims: list[int], num_mixtures: int):
+def _mixed_spectral_kernel(train_X: Tensor, train_Y: Tensor, cat_dims: list[int], num_mixtures: int):
     if not isinstance(num_mixtures, int) or isinstance(num_mixtures, bool) or num_mixtures < 1:
         raise ValueError("num_mixtures must be a positive integer.")
     categories = normalize_feature_dims(cat_dims, train_X.shape[-1], name="cat_dims")
@@ -90,7 +90,7 @@ def _mixed_spectral_kernel(train_X: Tensor, cat_dims: list[int], num_mixtures: i
         )
         kernel.initialize_from_data(
             train_X[..., active_dims],
-            train_X.new_zeros(train_X.shape[0]),
+            train_Y.to(dtype=train_X.dtype).reshape(-1),
         )
         return kernel
 
@@ -117,7 +117,7 @@ class MixedSpectralMixtureMulticlassGPClassifier(MulticlassSingleTaskGPClassifie
         inducing_points: Tensor | int | None = None,
         learn_inducing_points: bool = True,
     ) -> None:
-        kernel, categories = _mixed_spectral_kernel(train_X, cat_dims, num_mixtures)
+        kernel, categories = _mixed_spectral_kernel(train_X, train_Y, cat_dims, num_mixtures)
         super().__init__(
             train_X,
             train_Y,
