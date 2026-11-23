@@ -214,3 +214,17 @@ Block形式の `predict_proba(X)`、`sample_class_probabilities(X)`、`predictiv
 
 具体的な学習・確率予測・低高忠実度比較グラフ・候補提案は
 [Notebook 30](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)を参照してください。
+
+
+### 既存のActive Learning獲得関数との接続
+
+`PredictiveEntropy(model)`、`qPredictiveEntropy(model)`、`qBALD(model)` は、
+忠実度列を含む候補点をそのまま受け取ります。単一点獲得関数には候補形状 `[..., 1, d]`、
+q-batch獲得関数には `[..., q, d]` を渡します。
+q-batchではすべての候補に同じ高忠実度を与える例をNotebookに追加しています。
+`qBALD` はクラス数 `C` と候補数 `q` に対して `C**q <= 256` の制約を持つため、
+多数候補には周辺スコアを用いるかバッチ構成を検討してください。
+
+予測エントロピーとBALDはラベルの不確実性を指標としますが、
+低忠実度を測定した場合に高忠実度の予測がどれだけ改善するかという
+**忠実度をまたぐ情報価値**や**評価コスト**を最適化する指標ではありません。
