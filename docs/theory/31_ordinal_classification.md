@@ -264,3 +264,31 @@ Mahalanobisカーネルの採用は順序プロビット尤度や閾値の定義
 **参考文献**：Chu & Ghahramani (2005), *Gaussian Processes for Ordinal
 Regression*; Letham et al. (2020), *Re-examining Linear Embeddings for
 High-Dimensional Bayesian Optimization*.
+
+
+## SAAS型疎ARD事前分布による高次元順序分類
+
+順序分類ではクラスごとにGPを置く代わりに、単一の潜在関数
+$f(x)$ と順序閾値を用います。高次元入力については、
+ARDカーネルの各逆長さ尺度 $\rho_j=1/\ell_j$ に
+Half-Cauchy事前分布を置いて多数の特徴の寄与を小さくする方法を利用できます。
+
+$$
+\rho_j\sim\mathrm{HalfCauchy}(\tau).
+$$
+
+縮小事前分布は**入力の関連性**に作用します。
+クラス間の順序や閾値を変更するものではありません。
+順序プロビットのクラス確率は、従来どおり潜在Gaussian事後を
+閾値尤度で積分して計算します。
+
+SAAS型の順序分類モデル と MAP-SAAS型の順序分類モデル は、
+二値分類で利用する既存の疎ARDカーネル生成器を再利用します。
+学習は既存の順序分類用変分学習を用い、完全Bayesian SAASの
+MCMCによるハイパーパラメータ積分は行いません。
+この違いを明示した上で、通常の順序GPと保留データのNLL、
+Brier score、順序ラベル誤差を比較することが重要です。
+
+**参考文献**：Chu & Ghahramani (2005), *Gaussian Processes for Ordinal
+Regression*; Eriksson & Jankowiak (2021), *High-Dimensional Bayesian
+Optimization with Sparse Axis-Aligned Subspaces*.

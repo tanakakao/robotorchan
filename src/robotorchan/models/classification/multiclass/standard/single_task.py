@@ -92,6 +92,10 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
             "the inherited single-model VariationalELBO is not applicable."
         )
 
+    def _log_kernel_prior(self) -> Tensor:
+        """Optional covariance prior term for the class-wise variational objective."""
+        return self.raw_train_X.new_zeros(())
+
     def fit(
         self,
         *,
@@ -126,7 +130,7 @@ class MulticlassSingleTaskGPClassifier(ClassificationModelMixin, SingleTaskVaria
                 kl = sum(
                     gp.model.variational_strategy.kl_divergence().sum() for gp in self.class_models
                 )
-                loss = -log_likelihood + kl / n
+                loss = -log_likelihood + kl / n - self._log_kernel_prior() / n
                 loss.backward()
                 optimizer.step()
         self.eval()
