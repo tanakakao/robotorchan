@@ -228,7 +228,7 @@ samples = model.sample_interventions(
     outcome="Y",
     sample_shape=torch.Size([256]),
 )
-samples = samples.squeeze(-1)   # [256, 31]
+samples = samples.squeeze(-1)  # [256, 31]
 mean = samples.mean(dim=0)
 lower = torch.quantile(samples, 0.025, dim=0)
 upper = torch.quantile(samples, 0.975, dim=0)
