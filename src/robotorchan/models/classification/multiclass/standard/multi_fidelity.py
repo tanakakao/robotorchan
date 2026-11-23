@@ -238,7 +238,9 @@ def _get_fidelity_dims(
     input_dim = train_X.shape[-1]
     dims = []
     if iteration_fidelity is not None:
-        dims.extend(normalize_feature_dims([iteration_fidelity], input_dim, name="iteration_fidelity"))
+        dims.extend(
+            normalize_feature_dims([iteration_fidelity], input_dim, name="iteration_fidelity")
+        )
     if data_fidelities is not None:
         dims.extend(normalize_feature_dims(data_fidelities, input_dim, name="data_fidelities"))
     if not dims:
