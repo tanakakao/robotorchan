@@ -261,9 +261,7 @@ class CausalBOStudy:
             if self.model_type == "gp_scm":
                 prior_outcomes = [record.values[self.outcome] for record in self.observations]
                 incumbent = (
-                    max(prior_outcomes)
-                    if self.direction == "maximize"
-                    else min(prior_outcomes)
+                    max(prior_outcomes) if self.direction == "maximize" else min(prior_outcomes)
                 )
                 model = self.fit()
                 assert isinstance(model, GPStructuralCausalModel)
