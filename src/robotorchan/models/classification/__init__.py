@@ -90,6 +90,8 @@ from robotorchan.models.classification.expressive.nonstationary import (
     NonstationaryOrdinalGPClassifier,
 )
 from robotorchan.models.classification.expressive.spectral_mixture import (
+    MixedSpectralMixtureMulticlassGPClassifier,
+    MixedSpectralMixtureOrdinalGPClassifier,
     SpectralMixtureMulticlassGPClassifier,
     SpectralMixtureOrdinalGPClassifier,
 )
@@ -177,6 +179,8 @@ __all__ = [
     "MixedNonstationaryOrdinalGPClassifier",
     "MixedOrdinalSingleTaskGPClassifier",
     "MixedSpectralMixtureBinaryGPClassifier",
+    "MixedSpectralMixtureMulticlassGPClassifier",
+    "MixedSpectralMixtureOrdinalGPClassifier",
     "MultiFidelityBinaryGPClassifier",
     "MultiTaskBinaryGPClassifier",
     "MulticlassSingleTaskGPClassifier",
