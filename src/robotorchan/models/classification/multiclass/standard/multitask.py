@@ -69,9 +69,7 @@ class MultiTaskMulticlassGPClassifier(MulticlassSingleTaskGPClassifier):
         num_classes: int,
         rank: int | None = None,
     ) -> None:
-        kernel, task_dim, num_tasks, resolved_rank = _task_covar_module(
-            train_X, task_feature, rank
-        )
+        kernel, task_dim, num_tasks, resolved_rank = _task_covar_module(train_X, task_feature, rank)
         super().__init__(train_X, train_Y, num_classes=num_classes, covar_module=kernel)
         self.task_feature = task_dim
         self.num_tasks = num_tasks
@@ -90,9 +88,7 @@ class MultiTaskOrdinalGPClassifier(OrdinalSingleTaskGPClassifier):
         num_classes: int,
         rank: int | None = None,
     ) -> None:
-        kernel, task_dim, num_tasks, resolved_rank = _task_covar_module(
-            train_X, task_feature, rank
-        )
+        kernel, task_dim, num_tasks, resolved_rank = _task_covar_module(train_X, task_feature, rank)
         super().__init__(train_X, train_Y, num_classes=num_classes, covar_module=kernel)
         self.task_feature = task_dim
         self.num_tasks = num_tasks
@@ -106,9 +102,7 @@ class _BlockTaskInputMixin:
     num_tasks: int
 
     @staticmethod
-    def _make_long_training_data(
-        train_X: Tensor, train_Y: Tensor
-    ) -> tuple[Tensor, Tensor]:
+    def _make_long_training_data(train_X: Tensor, train_Y: Tensor) -> tuple[Tensor, Tensor]:
         if train_X.ndim != 2 or train_Y.ndim != 2:
             raise ValueError("train_X and train_Y must have shapes [n, d] and [n, m].")
         n, dim = train_X.shape
@@ -158,9 +152,7 @@ class KroneckerMultiTaskMulticlassGPClassifier(
         self, train_X: Tensor, train_Y: Tensor, *, num_classes: int, rank: int | None = None
     ) -> None:
         long_X, long_Y = self._make_long_training_data(train_X, train_Y)
-        super().__init__(
-            long_X, long_Y, task_feature=-1, num_classes=num_classes, rank=rank
-        )
+        super().__init__(long_X, long_Y, task_feature=-1, num_classes=num_classes, rank=rank)
         self.block_input_dim = train_X.shape[-1]
 
     def posterior(self, X: Tensor, **kwargs: object):
@@ -177,9 +169,7 @@ class KroneckerMultiTaskMulticlassGPClassifier(
             self._posterior_input(X), sample_shape=sample_shape, **kwargs
         )
         if block:
-            return values.reshape(
-                *values.shape[:-2], X.shape[0], self.num_tasks, self.num_classes
-            )
+            return values.reshape(*values.shape[:-2], X.shape[0], self.num_tasks, self.num_classes)
         return values
 
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
@@ -191,18 +181,14 @@ class KroneckerMultiTaskMulticlassGPClassifier(
         return self.predict_proba(X, **kwargs).argmax(dim=-1)
 
 
-class KroneckerMultiTaskOrdinalGPClassifier(
-    _BlockTaskInputMixin, MultiTaskOrdinalGPClassifier
-):
+class KroneckerMultiTaskOrdinalGPClassifier(_BlockTaskInputMixin, MultiTaskOrdinalGPClassifier):
     """Block-design ordinal GP using variational ICM rather than exact Kronecker algebra."""
 
     def __init__(
         self, train_X: Tensor, train_Y: Tensor, *, num_classes: int, rank: int | None = None
     ) -> None:
         long_X, long_Y = self._make_long_training_data(train_X, train_Y)
-        super().__init__(
-            long_X, long_Y, task_feature=-1, num_classes=num_classes, rank=rank
-        )
+        super().__init__(long_X, long_Y, task_feature=-1, num_classes=num_classes, rank=rank)
         self.block_input_dim = train_X.shape[-1]
 
     def posterior(self, X: Tensor, **kwargs: object):
@@ -219,9 +205,7 @@ class KroneckerMultiTaskOrdinalGPClassifier(
             self._posterior_input(X), sample_shape=sample_shape, **kwargs
         )
         if block:
-            return values.reshape(
-                *values.shape[:-2], X.shape[0], self.num_tasks, self.num_classes
-            )
+            return values.reshape(*values.shape[:-2], X.shape[0], self.num_tasks, self.num_classes)
         return values
 
     def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
