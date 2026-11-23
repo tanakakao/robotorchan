@@ -35,11 +35,17 @@ class ALEBOMulticlassGPClassifier(MulticlassSingleTaskGPClassifier):
     """Class-wise variational GP with an ALEBO Mahalanobis covariance."""
 
     def __init__(
-        self, train_X: Tensor, train_Y: Tensor, *, num_classes: int,
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
         projection: Tensor | None = None,
     ) -> None:
         super().__init__(
-            train_X, train_Y, num_classes=num_classes,
+            train_X,
+            train_Y,
+            num_classes=num_classes,
             covar_module=_alebo_kernel(train_X, projection),
         )
 
@@ -62,11 +68,17 @@ class ALEBOOrdinalGPClassifier(OrdinalSingleTaskGPClassifier):
     """Ordered-probit GP with ALEBO Mahalanobis geometry."""
 
     def __init__(
-        self, train_X: Tensor, train_Y: Tensor, *, num_classes: int,
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
         projection: Tensor | None = None,
     ) -> None:
         super().__init__(
-            train_X, train_Y, num_classes=num_classes,
+            train_X,
+            train_Y,
+            num_classes=num_classes,
             covar_module=_alebo_kernel(train_X, projection),
         )
 
