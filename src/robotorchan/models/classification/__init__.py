@@ -99,9 +99,6 @@ from robotorchan.models.classification.model_list import ClassificationModelList
 from robotorchan.models.classification.multiclass.deep_gp import (
     MulticlassSingleTaskDeepGPClassifier,
 )
-from robotorchan.models.classification.ordinal.deep_gp import (
-    OrdinalSingleTaskDeepGPClassifier,
-)
 from robotorchan.models.classification.multiclass.high_dimensional.alebo import (
     ALEBOMulticlassGPClassifier,
     ALEBOOrdinalGPClassifier,
@@ -137,6 +134,9 @@ from robotorchan.models.classification.multiclass.standard.multitask import (
 from robotorchan.models.classification.multiclass.standard.single_task import (
     MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
+)
+from robotorchan.models.classification.ordinal.deep_gp import (
+    OrdinalSingleTaskDeepGPClassifier,
 )
 from robotorchan.models.classification.ordinal.likelihood import OrderedProbitLikelihood
 from robotorchan.models.classification.ordinal.standard.single_task import (
