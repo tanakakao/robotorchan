@@ -6,7 +6,7 @@ import pytest
 import torch
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models import PCAMultiTaskGP, MixedPCAGP, MixedPLSGP
+from robotorchan.models import MixedPCAGP, MixedPLSGP, PCAMultiTaskGP
 
 
 @pytest.mark.parametrize("model_name", ["pca_multitask", "mixed_pca", "mixed_pls"])
