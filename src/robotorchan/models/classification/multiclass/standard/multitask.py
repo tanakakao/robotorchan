@@ -97,3 +97,133 @@ class MultiTaskOrdinalGPClassifier(OrdinalSingleTaskGPClassifier):
         self.task_feature = task_dim
         self.num_tasks = num_tasks
         self.rank = resolved_rank
+
+
+class _BlockTaskInputMixin:
+    """Expand shared inputs into long-format task observations and candidates."""
+
+    block_input_dim: int
+    num_tasks: int
+
+    @staticmethod
+    def _make_long_training_data(
+        train_X: Tensor, train_Y: Tensor
+    ) -> tuple[Tensor, Tensor]:
+        if train_X.ndim != 2 or train_Y.ndim != 2:
+            raise ValueError("train_X and train_Y must have shapes [n, d] and [n, m].")
+        n, dim = train_X.shape
+        if train_Y.shape[0] != n or train_Y.shape[1] < 1:
+            raise ValueError("train_Y must have shape [n, num_tasks] with num_tasks >= 1.")
+        m = train_Y.shape[1]
+        features = train_X[:, None, :].expand(n, m, dim)
+        task_ids = torch.arange(m, device=train_X.device, dtype=train_X.dtype)
+        task_column = task_ids.view(1, m, 1).expand(n, m, 1)
+        return torch.cat((features, task_column), dim=-1).reshape(n * m, dim + 1), train_Y.reshape(-1)
+
+    def _long_candidates(self, X: Tensor) -> Tensor:
+        if X.ndim != 2 or X.shape[1] != self.block_input_dim:
+            raise ValueError(f"Expected block-design candidate X of shape [q, {self.block_input_dim}].")
+        q = X.shape[0]
+        features = X[:, None, :].expand(q, self.num_tasks, self.block_input_dim)
+        task_ids = torch.arange(self.num_tasks, device=X.device, dtype=X.dtype)
+        task_column = task_ids.view(1, self.num_tasks, 1).expand(q, self.num_tasks, 1)
+        return torch.cat((features, task_column), dim=-1).reshape(
+            q * self.num_tasks, self.block_input_dim + 1
+        )
+
+    def _posterior_input(self, X: Tensor) -> Tensor:
+        if X.ndim != 2:
+            raise ValueError("X must be a two-dimensional tensor.")
+        if X.shape[1] == self.block_input_dim:
+            return self._long_candidates(X)
+        if X.shape[1] == self.block_input_dim + 1:
+            return X
+        raise ValueError(f"Expected {self.block_input_dim} or {self.block_input_dim + 1} features.")
+
+
+class KroneckerMultiTaskMulticlassGPClassifier(
+    _BlockTaskInputMixin, MultiTaskMulticlassGPClassifier
+):
+    """Block-design multiclass GP using the variational ICM backend.
+
+    The name mirrors the binary model API; this is not an exact Kronecker GP.
+    The latent posterior exposes flattened [q * num_tasks, num_classes] events.
+    The probability API returns [q, num_tasks, num_classes].
+    """
+
+    def __init__(
+        self, train_X: Tensor, train_Y: Tensor, *, num_classes: int, rank: int | None = None
+    ) -> None:
+        long_X, long_Y = self._make_long_training_data(train_X, train_Y)
+        super().__init__(
+            long_X, long_Y, task_feature=-1, num_classes=num_classes, rank=rank
+        )
+        self.block_input_dim = train_X.shape[-1]
+
+    def posterior(self, X: Tensor, **kwargs: object):
+        return super().posterior(self._posterior_input(X), **kwargs)
+
+    def sample_class_probabilities(
+        self,
+        X: Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> Tensor:
+        block = X.shape[-1] == self.block_input_dim
+        values = super().sample_class_probabilities(
+            self._posterior_input(X), sample_shape=sample_shape, **kwargs
+        )
+        if block:
+            return values.reshape(
+                *values.shape[:-2], X.shape[0], self.num_tasks, self.num_classes
+            )
+        return values
+
+    def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
+        long_X = self._long_candidates(X)
+        probabilities = super().predict_proba(long_X, **kwargs)
+        return probabilities.reshape(X.shape[0], self.num_tasks, self.num_classes)
+
+    def predict_class(self, X: Tensor, **kwargs: object) -> Tensor:
+        return self.predict_proba(X, **kwargs).argmax(dim=-1)
+
+
+class KroneckerMultiTaskOrdinalGPClassifier(
+    _BlockTaskInputMixin, MultiTaskOrdinalGPClassifier
+):
+    """Block-design ordinal GP using variational ICM rather than exact Kronecker algebra."""
+
+    def __init__(
+        self, train_X: Tensor, train_Y: Tensor, *, num_classes: int, rank: int | None = None
+    ) -> None:
+        long_X, long_Y = self._make_long_training_data(train_X, train_Y)
+        super().__init__(
+            long_X, long_Y, task_feature=-1, num_classes=num_classes, rank=rank
+        )
+        self.block_input_dim = train_X.shape[-1]
+
+    def posterior(self, X: Tensor, **kwargs: object):
+        return super().posterior(self._posterior_input(X), **kwargs)
+
+    def sample_class_probabilities(
+        self,
+        X: Tensor,
+        sample_shape: torch.Size | None = None,
+        **kwargs: object,
+    ) -> Tensor:
+        block = X.shape[-1] == self.block_input_dim
+        values = super().sample_class_probabilities(
+            self._posterior_input(X), sample_shape=sample_shape, **kwargs
+        )
+        if block:
+            return values.reshape(
+                *values.shape[:-2], X.shape[0], self.num_tasks, self.num_classes
+            )
+        return values
+
+    def predict_proba(self, X: Tensor, **kwargs: object) -> Tensor:
+        probabilities = super().predict_proba(self._long_candidates(X), **kwargs)
+        return probabilities.reshape(X.shape[0], self.num_tasks, self.num_classes)
+
+    def predict_class(self, X: Tensor, **kwargs: object) -> Tensor:
+        return self.predict_proba(X, **kwargs).argmax(dim=-1)
