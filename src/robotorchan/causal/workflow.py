@@ -41,9 +41,10 @@ class CausalBOStudy:
     """Sequential intervention experiments without causal-structure discovery.
 
     The default mode retains independent intervention-set GPs and the
-    existing per-set Sobol cold start. In gp_scm mode, provided observational
-    records fit shared structural mechanisms and one initial Sobol intervention
-    establishes the measured incumbent for MC expected improvement.
+    existing per-set Sobol cold start. In gp_scm mode, observed data
+    fit shared structural mechanisms. At least one real Sobol intervention
+    establishes the incumbent; additional Sobol trials are proposed only if
+    a conditional mechanism still lacks two usable measured records.
     Only one RUNNING trial is allowed at a time.
     """
 
@@ -74,12 +75,13 @@ class CausalBOStudy:
             raise ValueError("outcome must belong to the graph.")
         if direction not in {"maximize", "minimize"}:
             raise ValueError("direction must be 'maximize' or 'minimize'.")
-        if n_initial_trials < 2:
-            raise ValueError("n_initial_trials must be at least 2 for the GP.")
-        if num_restarts < 1 or raw_samples < 1:
-            raise ValueError("num_restarts and raw_samples must be positive.")
         if model_type not in ("intervention_gp", "gp_scm"):
             raise ValueError("model_type must be 'intervention_gp' or 'gp_scm'.")
+        minimum = 2 if model_type == "intervention_gp" else 1
+        if type(n_initial_trials) is not int or n_initial_trials < minimum:
+            raise ValueError(f"n_initial_trials must be at least {minimum} for {model_type}.")
+        if num_restarts < 1 or raw_samples < 1:
+            raise ValueError("num_restarts and raw_samples must be positive.")
         if mc_samples < 1 or not isinstance(mc_seed, int) or mc_seed < 0:
             raise ValueError("mc_samples must be positive and mc_seed nonnegative.")
         prior = tuple(() if observational_data is None else observational_data)
@@ -217,6 +219,22 @@ class CausalBOStudy:
             self._surrogates = tuple(fitted)
         return self._surrogates
 
+    def _missing_gp_scm_mechanisms(self) -> tuple[str, ...]:
+        """List mechanisms lacking two measured, non-manipulated training records."""
+        records = (*self.observational_data, *self.observations)
+        missing = []
+        for node in self.graph.topological_order:
+            parents = self.graph.parents_of(node)
+            count = sum(
+                node in record.values
+                and all(parent in record.values for parent in parents)
+                and (record.intervention is None or node not in record.intervention.values)
+                for record in records
+            )
+            if count < 2:
+                missing.append(node)
+        return tuple(missing)
+
     def ask(self) -> CausalTrial:
         """Register one RUNNING intervention, using Sobol before the GP phase."""
         if any(trial.state is TrialState.RUNNING for trial in self._trials.values()):
@@ -230,9 +248,54 @@ class CausalBOStudy:
             for key in self.intervention_sets
         }
         if self.model_type == "gp_scm":
-            # One actual intervention is required to establish EI's best_f.
-            # The GP-SCM itself may fit from observational_data alone.
-            uninitialized = [self.intervention_sets[0]] if not self.observations else []
+            missing = self._missing_gp_scm_mechanisms()
+            if not self.observations:
+                # One real do experiment is necessary to establish EI's incumbent.
+                # Keep the historical first-set initialization when no data is missing.
+                uninitialized = [self.intervention_sets[0]]
+            elif missing:
+                unreachable = [
+                    node
+                    for node in missing
+                    if all(node in group for group in self.intervention_sets)
+                ]
+                if unreachable:
+                    raise ValueError(
+                        "GP-SCM needs two complete, non-intervened observations of "
+                        f"{unreachable}; supply observational_data or intervention sets "
+                        "that leave these nodes unmanipulated."
+                    )
+                last_record = self.observations[-1]
+                unavailable = [
+                    node
+                    for node in missing
+                    if node not in last_record.intervention.values
+                    and (
+                        node not in last_record.values
+                        or any(
+                            parent not in last_record.values
+                            for parent in self.graph.parents_of(node)
+                        )
+                    )
+                ]
+                if unavailable:
+                    raise ValueError(
+                        "GP-SCM needs measured values for nodes and their parents: "
+                        f"{unavailable}; include these measurements in tell()."
+                    )
+                # Continue Sobol only until every native conditional mechanism
+                # has enough real records. Favor sets that leave missing nodes
+                # unmanipulated; fitted-mode acquisition selection is unchanged.
+                coverage = {
+                    group: sum(node not in group for node in missing)
+                    for group in self.intervention_sets
+                }
+                best_coverage = max(coverage.values())
+                uninitialized = [
+                    group for group, value in coverage.items() if value == best_coverage
+                ]
+            else:
+                uninitialized = []
         else:
             uninitialized = [
                 key for key in self.intervention_sets if counts[key] < self.n_initial_trials
