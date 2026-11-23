@@ -274,7 +274,7 @@ ARDカーネルの各逆長さ尺度 $\rho_j=1/\ell_j$ に
 Half-Cauchy事前分布を置いて多数の特徴の寄与を小さくする方法を利用できます。
 
 $$
-\rho_j\sim\operatorname{HalfCauchy}(\tau).
+\rho_j\sim\mathrm{HalfCauchy}(\tau).
 $$
 
 縮小事前分布は**入力の関連性**に作用します。
