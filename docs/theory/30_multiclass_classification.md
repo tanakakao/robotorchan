@@ -331,7 +331,7 @@ $$
 Softmax分類確率は各潜在GPの事後サンプルをSoftmaxへ通して求めます。
 固定したスケールのHalf-Cauchy事前分布を使用することは、
 グローバル・ローカル尺度を階層的に積分する完全Bayesian SAASと同義ではありません。
-また、`MapSaasMulticlassGPClassifier` は既存MAP-SAAS型のカーネル構成を
+また、MAP-SAAS型のマルチクラス分類モデル は既存MAP-SAAS型のカーネル構成を
 再利用した変分分類モデルであり、完全Bayesian MCMC推論を実行しません。
 
 実験では重要な変数の識別が改善するか、保留データでのNLL、
