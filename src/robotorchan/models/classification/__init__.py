@@ -95,6 +95,16 @@ from robotorchan.models.classification.expressive.spectral_mixture import (
     SpectralMixtureMulticlassGPClassifier,
     SpectralMixtureOrdinalGPClassifier,
 )
+from robotorchan.models.classification.high_dimensional.reduced import (
+    PCAMulticlassGPClassifier,
+    PCAOrdinalGPClassifier,
+    PLSMulticlassGPClassifier,
+    PLSOrdinalGPClassifier,
+    RandomProjectionMulticlassGPClassifier,
+    RandomProjectionOrdinalGPClassifier,
+    ReducedMulticlassGPClassifier,
+    ReducedOrdinalGPClassifier,
+)
 from robotorchan.models.classification.model_list import ClassificationModelList
 from robotorchan.models.classification.multiclass.standard.single_task import (
     MixedMulticlassSingleTaskGPClassifier,
@@ -128,13 +138,13 @@ from robotorchan.models.classification.reliability import (
 )
 
 __all__ = [
-    "CLASSIFICATION_MODEL_REGISTRY",
     "ALEBOBinarySingleTaskGPClassifier",
     "BinaryClassificationMixin",
     "BinarySingleTaskDeepGPClassifier",
     "BinarySingleTaskGPClassifier",
     "BootstrapBinaryClassificationEnsemble",
     "BootstrapGradientBoostingBinaryClassifier",
+    "CLASSIFICATION_MODEL_REGISTRY",
     "CalibratedBinaryClassifier",
     "ClassificationEnsemblePosterior",
     "ClassificationInputUncertaintyType",
@@ -192,11 +202,19 @@ __all__ = [
     "OrderedProbitLikelihood",
     "OrdinalSingleTaskGPClassifier",
     "PCABinarySingleTaskGPClassifier",
+    "PCAMulticlassGPClassifier",
+    "PCAOrdinalGPClassifier",
     "PLSBinarySingleTaskGPClassifier",
+    "PLSMulticlassGPClassifier",
+    "PLSOrdinalGPClassifier",
     "ProbabilityCalibrator",
     "RandomForestBinaryClassifier",
     "RandomProjectionBinarySingleTaskGPClassifier",
+    "RandomProjectionMulticlassGPClassifier",
+    "RandomProjectionOrdinalGPClassifier",
     "ReducedBinarySingleTaskGPClassifier",
+    "ReducedMulticlassGPClassifier",
+    "ReducedOrdinalGPClassifier",
     "ReplicateLabelBinarySingleTaskGPClassifier",
     "RobustBinaryClassificationMixin",
     "RobustClassificationMetadata",
