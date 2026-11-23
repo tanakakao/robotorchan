@@ -40,7 +40,7 @@ graph = CausalGraph(parents)
 # 有向エッジリスト：原因 -> 結果
 graph = CausalGraph.from_edges([("X", "Z"), ("X", "Y"), ("Z", "Y")])
 
-# 隣接行列：行が原因、列が結果、A[i][j] == 1 が i -> j
+# 隣接行列：行が原因、列が結果、A(i, j) == 1 が i -> j
 nodes = ("X", "Z", "Y")
 adjacency = [[0, 1, 1], [0, 0, 1], [0, 0, 0]]
 graph = CausalGraph.from_adjacency_matrix(adjacency, nodes=nodes)
