@@ -121,7 +121,7 @@ LogEI以外の獲得関数でも介入集合ごとの候補を提案する場合
 
 `trials`には失敗・実行中の試行も残り、`observations`は成功した介入実験だけを含みます。`q=1`の逐次実験のみを想定するため、実行中のTrialがある状態で次の`ask()`はできません。候補提案が、実際の装置で介入を実施する機能ではない点に注意してください。
 
-### 5.1 GP-SCMを選択する場合（Phase 5）
+### 5.1 GP-SCMを選択する場合
 
 `CausalBOStudy`の既定値`model_type="intervention_gp"`は変更していません。既存の介入集合別GP、集合ごとに`n_initial_trials`回のSobol初期化、`ask()`と`tell()`、Trialの成功・失敗状態をそのまま利用できます。
 
