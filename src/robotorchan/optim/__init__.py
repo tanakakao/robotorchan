@@ -53,6 +53,7 @@ from robotorchan.optim.one_shot import (
 from robotorchan.optim.safe import optimize_safe_acqf
 from robotorchan.optim.safe_expansion import propose_safe_expansion
 from robotorchan.optim.safe_workflow import SafeBOWorkflow
+from robotorchan.optim.search_factory import create_search_strategy, list_search_strategies
 from robotorchan.optim.strategies import (
     HammingLocalSearchStrategy,
     MixedSpaceStrategy,
@@ -130,6 +131,7 @@ __all__ = [
     "TuRBOStrategy",
     "apply_fixed_features",
     "create_optimizer",
+    "create_search_strategy",
     "gen_augmented_one_shot_initial_conditions",
     "generate_turbo_restart_center",
     "generate_turbo_thompson_choices",
@@ -137,6 +139,7 @@ __all__ = [
     "hamming_distance",
     "hamming_neighbors",
     "list_optimizers",
+    "list_search_strategies",
     "optimize_acqf",
     "optimize_acqf_sequential",
     "optimize_mixed_one_shot_acqf",
