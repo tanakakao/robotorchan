@@ -98,21 +98,21 @@ def test_uncertain_category_fit_exact_weighted_predictions_and_candidate(model_t
     categories = torch.tensor([0., 1.], dtype=torch.double)
     weights = torch.tensor([[0.3, 0.7]], dtype=torch.double).expand(5, 2)
     with torch.no_grad():
+        torch.manual_seed(17)
         mixed = model.predict_proba_with_category_uncertainty(
             pool,
             category_values=categories,
             category_probabilities=weights,
         )
-        first = pool.clone()
-        first[:, 1] = 0
-        second = pool.clone()
-        second[:, 1] = 1
+        expanded = pool.unsqueeze(-2).expand(5, 2, 2).clone()
+        expanded[..., 1] = categories
         torch.manual_seed(17)
-        p0 = model.predict_proba(first)
-        torch.manual_seed(17)
-        p1 = model.predict_proba(second)
+        direct = model.predict_proba(expanded)
         scores = PredictiveEntropy(model)(pool.unsqueeze(-2))
     assert mixed.shape == (5, 3)
+    torch.testing.assert_close(
+        mixed, (direct * weights.unsqueeze(-1)).sum(dim=-2), atol=1e-5, rtol=1e-5
+    )
     torch.testing.assert_close(
         mixed.sum(-1), torch.ones(5, dtype=torch.double), atol=1e-5, rtol=1e-5
     )
