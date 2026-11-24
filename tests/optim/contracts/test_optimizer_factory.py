@@ -92,8 +92,8 @@ def test_vector_optimizer_preserves_pareto_contract() -> None:
     def objective(X: torch.Tensor) -> torch.Tensor:
         return torch.stack([-X[:, 0].square(), -(X[:, 0] - 1).square()], dim=-1)
 
-    configured = create_optimizer("optimize_vector_nsga2", population_size=16, generations=3, seed=4)
-    candidates, values = configured(objective, bounds)
+    optimizer = create_optimizer("optimize_vector_nsga2", population_size=16, generations=3, seed=4)
+    candidates, values = optimizer(objective, bounds)
     assert candidates.ndim == 2
     assert values.shape == (candidates.shape[0], 2)
     torch.testing.assert_close(values, objective(candidates))
