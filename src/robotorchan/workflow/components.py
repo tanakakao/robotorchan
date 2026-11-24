@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
-from robotorchan.models.capabilities import InputType, ObservationType
+from robotorchan.models.capabilities import InputType, ObservationType, TaskType
 from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.registry import MODEL_REGISTRY
 from robotorchan.optim.capabilities import (
@@ -61,6 +61,49 @@ def _unknown(name: str) -> ComponentSelection:
     return ComponentSelection(name, SelectionStatus.UNKNOWN, ("capability metadata unavailable",))
 
 
+def _special_model(spec: ProblemSpec, name: str) -> ComponentSelection:
+    if name in ("BOCSSurrogate", "COMBOSurrogate", "RGPEModel", "InterventionGPSurrogate"):
+        reasons = []
+        if spec.observation_kind is not ObservationKind.REGRESSION:
+            reasons.append("requires regression observations")
+        if spec.output_type is OutputType.MULTI or spec.preference or spec.multi_fidelity:
+            reasons.append("requires scalar non-preference single-fidelity observations")
+        if spec.task_type is not TaskType.SINGLE:
+            reasons.append("requires single-task observations")
+        if name in ("BOCSSurrogate", "COMBOSurrogate"):
+            if spec.input_type is not InputType.MIXED:
+                reasons.append("requires a binary discrete domain")
+            conditions = ("all design coordinates must be binary",)
+        elif name == "RGPEModel":
+            conditions = ("requires compatible scalar Gaussian source and target models",)
+        else:
+            conditions = ("requires a known DAG and fixed intervention data; use native model",)
+        return _result(name, reasons, conditions)
+    if name in ("GPStructuralCausalModel", "StructuralCausalModel"):
+        return _result(
+            name,
+            [],
+            ("requires a known DAG and causal intervention workflow; not a BoTorch Model",),
+        )
+    kinds = {
+        "CalibratedBinaryClassifier": ObservationKind.BINARY,
+        "CalibratedMulticlassClassifier": ObservationKind.MULTICLASS,
+        "CalibratedOrdinalClassifier": ObservationKind.ORDINAL,
+        "BootstrapMulticlassClassificationEnsemble": ObservationKind.MULTICLASS,
+        "SklearnBinaryClassifier": ObservationKind.BINARY,
+        "SklearnMulticlassClassifier": ObservationKind.MULTICLASS,
+    }
+    if name in kinds or name == "ClassificationModelList":
+        kind = kinds.get(name)
+        reasons = []
+        if spec.observation_kind is ObservationKind.REGRESSION or (
+            kind is not None and kind is not spec.observation_kind
+        ):
+            reasons.append("observation kind does not match")
+        return _result(name, reasons, ("capabilities depend on supplied estimator or members",))
+    return _unknown(name)
+
+
 def _model(spec: ProblemSpec, name: str) -> ComponentSelection:
     entry = MODEL_REGISTRY.get(name)
     kind = ObservationKind.REGRESSION
@@ -73,7 +116,7 @@ def _model(spec: ProblemSpec, name: str) -> ComponentSelection:
             if name in (item.model_id, item.model_class.__name__)
         ]
         if not matches:
-            return _unknown(name)
+            return _special_model(spec, name)
         item = matches[0]
         caps = item.capabilities
         kind = ObservationKind(item.model_id.split(".", 1)[0])

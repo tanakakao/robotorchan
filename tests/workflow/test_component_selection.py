@@ -102,7 +102,6 @@ def test_specialized_acquisition_requirements() -> None:
     assert acquisitions["qJointEntropySearch"].status is SelectionStatus.CONDITIONAL
 
 
-
 def test_model_selector_agrees_with_component_selection() -> None:
     for kind in ("regression", "binary", "multiclass", "ordinal"):
         spec = ProblemSpec(purpose="active_learning", observation_kind=kind)
@@ -125,3 +124,16 @@ def test_unknown_inventory_entries_remain_explicit() -> None:
     for group in (result.models, result.acquisitions, result.optimizers, result.search_strategies):
         assert group[0].status is SelectionStatus.UNKNOWN
         assert group[0].reasons
+
+
+def test_special_model_contracts() -> None:
+    spec = ProblemSpec(purpose="bayesian_optimization", input_type="mixed")
+    models = {item.name: item for item in evaluate_components(spec).models}
+    for name in ("BOCSSurrogate", "COMBOSurrogate", "RGPEModel", "InterventionGPSurrogate"):
+        assert models[name].status is SelectionStatus.CONDITIONAL
+    assert models["GPStructuralCausalModel"].status is SelectionStatus.CONDITIONAL
+    assert models["CalibratedOrdinalClassifier"].status is SelectionStatus.INCOMPATIBLE
+    spec = ProblemSpec(purpose="active_learning", observation_kind="ordinal")
+    models = {item.name: item for item in evaluate_components(spec).models}
+    assert models["CalibratedOrdinalClassifier"].status is SelectionStatus.CONDITIONAL
+    assert models["BOCSSurrogate"].status is SelectionStatus.INCOMPATIBLE

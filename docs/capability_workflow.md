@@ -103,3 +103,10 @@ Factory names without reliable metadata remain unknown, including generic
 wrappers whose capabilities depend on their supplied base model. This is not
 an assertion that the implementation is unsupported. Acquisition limitations
 are included in conditional selection reasons.
+
+Specialized constructors are also classified when their contracts are known:
+BOCS and COMBO require binary design coordinates; RGPE requires scalar Gaussian
+source/target models; causal surrogates require intervention data and a known
+DAG. SCMs are not native BoTorch models. Calibrated classifiers and generic
+classification ensembles require checks of the supplied base estimator or
+members. These entries are conditional, not automatically recommended.
