@@ -49,6 +49,7 @@ def test_capability_workflow_is_owned_by_one_package() -> None:
     workflow_root = SOURCE_ROOT / "workflow"
     assert {path.name for path in workflow_root.glob("*.py")} == {
         "__init__.py",
+        "components.py",
         "cost_budget.py",
         "problem.py",
         "recommendation.py",
@@ -58,6 +59,7 @@ def test_capability_workflow_is_owned_by_one_package() -> None:
     test_root = REPOSITORY_ROOT / "tests"
     workflow_test_names = {
         "test_capability_workflow.py",
+        "test_component_selection.py",
         "test_problem.py",
         "test_problem_contracts.py",
         "test_problem_objective_output_contract.py",
