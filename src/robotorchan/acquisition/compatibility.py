@@ -5,7 +5,7 @@ from enum import StrEnum
 
 from robotorchan.acquisition.capabilities import AcquisitionTarget, PosteriorRequirement
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
-from robotorchan.models.capabilities import ModelCapabilities
+from robotorchan.models.capabilities import ModelCapabilities, TaskType
 from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.registry import MODEL_REGISTRY
 
@@ -67,7 +67,11 @@ def check_capabilities_acquisition_compatibility(
         reasons.append("structured-output posteriors require scalarization")
     if (
         model_capabilities.supports_multi_output
-        and not probability_space_classification
+        and (
+            not probability_space_classification
+            or model_capabilities.task_type is TaskType.MULTITASK
+            or model_capabilities.structured_output
+        )
         and not acquisition_capabilities.supports_multi_output
     ):
         reasons.append("acquisition does not support multi-output posteriors")
