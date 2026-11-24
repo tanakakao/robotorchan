@@ -270,3 +270,14 @@ NNGPカーネルを用いた分類も、非ガウス尤度に対する変分推�
 学習・クラス確率と候補提案・Mixed入力の例は
 [Notebook 30](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)
 を参照してください。
+
+
+## Contextual・Hierarchical分類モデル（Phase 10）
+
+`ContextualMulticlassGPClassifier` は、コンテキストを表す整数IDを入力列の一つとして受け取ります。例えば `train_X=[design_x, context_id]` として `context_feature=-1` を指定し、`rank` でコンテキスト間の相関の階数を制御します。
+
+`HierarchicalMulticlassGPClassifier` は、グループとサブグループの階層を受け取ります。例えば `train_X=[design_x, group_id, subgroup_id]` として `group_feature=-2`、`subgroup_feature=-1` を指定します。サブグループIDはグループをまたいで再利用できません（グローバルに一意）。同じサブグループIDが複数グループに属するとエラーになります。
+
+両モデルとも `num_classes` を指定し、既存の分類APIで `fit()`、`predict_proba()`、`probability_posterior()`、`PredictiveEntropy(model)`、`qPredictiveEntropy(model)` を利用します。候補は**既知のコンテキスト／グループIDを明示**して提案し、その条件における分類の不確実性を評価します。コンテキストIDやグループIDを連続最適化してはいけません。新しい未知IDへの外挿は保証しません。
+
+共通＋偏差という加法共分散を使うため、単純なOne-hot入力やカテゴリを連続量として解釈する手法とは異なります。詳しい動作例とグラフは[Notebook 30](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)を参照してください。
