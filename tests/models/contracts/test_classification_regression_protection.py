@@ -74,7 +74,9 @@ def test_regression_acquisitions_do_not_silently_become_classification_only() ->
 
 def test_preference_acquisitions_require_preference_models() -> None:
     names = {
-        name for name, entry in ACQUISITION_REGISTRY.items() if entry.capabilities.requires_preference
+        name
+        for name, entry in ACQUISITION_REGISTRY.items()
+        if entry.capabilities.requires_preference
     }
     assert names == {
         "AnalyticExpectedUtilityOfBestOption",

@@ -444,6 +444,8 @@ _STOCHASTIC_POSTERIOR_MODELS = frozenset(
 
 _POSTERIOR_SAMPLING_MODELS = frozenset(
     {
+        "PairwiseGP",
+        "MixedPairwiseGP",
         name
         for name in MODEL_REGISTRY
         if MODEL_REGISTRY[name].capabilities.supports_posterior_samples
