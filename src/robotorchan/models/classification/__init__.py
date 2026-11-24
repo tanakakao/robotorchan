@@ -74,10 +74,20 @@ from robotorchan.models.classification.calibration import (
     expected_calibration_error,
     maximum_calibration_error,
 )
+from robotorchan.models.classification.calibration.multiclass import (
+    CalibratedMulticlassClassifier,
+    CalibratedOrdinalClassifier,
+)
 from robotorchan.models.classification.conformal import (
     SplitConformalClassifier,
     classification_nonconformity_scores,
     conformal_quantile,
+)
+from robotorchan.models.classification.decision import (
+    multiclass_cost_sensitive_prediction,
+    multiclass_expected_decision_cost,
+    ordinal_cost_matrix,
+    ordinal_cost_sensitive_prediction,
 )
 from robotorchan.models.classification.expressive.joint_encoder import (
     JointEncoderMulticlassGPClassifier,
@@ -222,6 +232,8 @@ __all__ = [
     "BootstrapGradientBoostingOrdinalClassifier",
     "BootstrapMulticlassClassificationEnsemble",
     "CalibratedBinaryClassifier",
+    "CalibratedMulticlassClassifier",
+    "CalibratedOrdinalClassifier",
     "ClassificationEnsemblePosterior",
     "ClassificationInputUncertaintyType",
     "ClassificationLikelihoodFamily",
@@ -362,6 +374,10 @@ __all__ = [
     "make_classification_ensemble_posterior",
     "max_probability_reliability",
     "maximum_calibration_error",
+    "multiclass_cost_sensitive_prediction",
+    "multiclass_expected_decision_cost",
+    "ordinal_cost_matrix",
+    "ordinal_cost_sensitive_prediction",
     "robust_class_probability",
     "validate_binary_labels",
 ]

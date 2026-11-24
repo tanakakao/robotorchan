@@ -560,3 +560,43 @@ $$
 マルチクラスの非GP分類器は0からC−1までのクラス確率を返し、観測されなかったクラスの確率列は0で補います。 クラス確率が真に校正されているかは別途検証が必要です。
 
 **参考文献：** Breiman (2001), *Random Forests*; Geurts, Ernst and Wehenkel (2006), *Extremely randomized trees*; Lakshminarayanan, Pritzel and Blundell (2017), *Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles*; Dietterich (2000), *Ensemble Methods in Machine Learning*.
+
+
+## 確率校正、Conformal予測集合、意思決定とActive Learning
+
+GP分類の予測確率は、モデルの尤度・潜在GP事後を通じた確率ですが、その値が頻度論的に校正されているとは限りません。確率ベクトル $p(x)$ に温度 $T>0$ を適用する場合、
+
+$$
+p_c^{(T)}(x)=\frac{p_c(x)^{1/T}}{\sum_j p_j(x)^{1/T}}
+$$
+
+とします。$T$ は学習に使わなかった検証データで負の対数尤度を最小化して推定します。GPの潜在Posteriorは変更しませんが、クラス確率のエントロピーと確率サンプルの分布は変化します。
+
+Split Conformalでは、独立に保留した校正集合の真のクラス $y_i$ に対し、非適合度 $s_i=1-p_{y_i}(x_i)$ を計算します。校正データ数を $n$、要求する誤り率を $\alpha$ として、
+
+$$
+\widehat{q}=\mathrm{Quantile}_{\lceil(n+1)(1-\alpha)\rceil/n}(s_1,\ldots,s_n)
+$$
+
+を有限標本補正付きで選び、予測集合を
+
+$$
+\Gamma(x)=\{c:1-p_c(x)\leq\widehat{q}\}
+$$
+
+と定義します。基礎モデルの学習や温度校正に使っていないデータでConformal校正を行い、校正例と将来のテスト例が交換可能（exchangeable）であれば、標準的なsplit conformalの**周辺被覆率**が保証されます。特定クラスごとの被覆率、条件付き被覆率、分布シフト下の保証ではありません。
+
+誤分類コストを $C_{a,y}$（行：採用する行動 $a$、列：真のクラス $y$）と定義します。条件付き期待損失およびBayes決定は
+
+$$
+R(a\mid x)=\sum_y C_{a,y}p_y(x),\qquad
+a^\star(x)=\arg\min_a R(a\mid x)
+$$
+
+です。確率の最大クラスを選ぶことと最小期待損失の判断は一般に異なります。
+
+マルチクラス分類では用途に合わせた非対称コスト行列を指定できます。
+
+Active Learningは目的別に使い分けます。PredictiveEntropyは予測ラベルの不確実性、BALDは認識論的な不一致、qPredictiveEntropyはバッチ内の**周辺エントロピー平均**を評価します。Bayes決定の最小期待リスクが高い点をプールから選ぶことは可能ですが、これはリスクの高い点を調べるヒューリスティクスであり、観測後の期待リスク減少（value of information）を計算するものではありません。またConformal集合の大きさは直接的な情報利得ではありません。
+
+**参考文献：** Guo et al. (2017), *On Calibration of Modern Neural Networks*; Vovk, Gammerman and Shafer (2005), *Algorithmic Learning in a Random World*; Angelopoulos and Bates (2023), *Conformal Prediction: A Gentle Introduction*; Houlsby et al. (2011), *Bayesian Active Learning for Classification and Preference Learning*; Berger (1985), *Statistical Decision Theory and Bayesian Analysis*.
