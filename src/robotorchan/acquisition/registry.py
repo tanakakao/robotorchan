@@ -280,3 +280,45 @@ ACQUISITION_REGISTRY.update(
         ),
     }
 )
+
+
+# Native analytic acquisitions have a single-candidate contract.
+for name in (
+    "ExpectedImprovement",
+    "LogExpectedImprovement",
+    "ProbabilityOfImprovement",
+    "UpperConfidenceBound",
+    "PosteriorMean",
+    "NoisyExpectedImprovement",
+    "LogNoisyExpectedImprovement",
+):
+    ACQUISITION_REGISTRY[name] = AcquisitionRegistryEntry(
+        acquisition_name=name,
+        capabilities=AcquisitionCapabilities(
+            purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+            posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+            max_q=1,
+            requires_single_output=True,
+        ),
+        implementation_strategy="BoTorch-native analytic acquisition",
+        limitations=("requires a compatible scalar posterior or posterior transform",),
+    )
+
+ACQUISITION_REGISTRY.update(
+    {
+        "qExpectedImprovement": _botorch_bo("qExpectedImprovement", supports_constraints=True),
+        "qNoisyExpectedImprovement": _botorch_bo(
+            "qNoisyExpectedImprovement", supports_constraints=True
+        ),
+        "qExpectedHypervolumeImprovement": _botorch_bo(
+            "qExpectedHypervolumeImprovement",
+            supports_constraints=True,
+            supports_multi_objective=True,
+        ),
+        "qNoisyExpectedHypervolumeImprovement": _botorch_bo(
+            "qNoisyExpectedHypervolumeImprovement",
+            supports_constraints=True,
+            supports_multi_objective=True,
+        ),
+    }
+)
