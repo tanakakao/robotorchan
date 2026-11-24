@@ -68,7 +68,9 @@ def test_continuous_input_covariance_and_invalid_uncertainty(model_type):
     diag = torch.diag_embed(torch.full_like(pool, 0.01))
     with torch.no_grad():
         assert model.sample_uncertain_inputs(pool, input_covar=diag, num_samples=3).shape == (
-            3, 4, 2
+            3,
+            4,
+            2,
         )
     with pytest.raises(ValueError, match="Exactly one"):
         model.sample_uncertain_inputs(pool)
@@ -95,7 +97,7 @@ def test_uncertain_category_fit_exact_weighted_predictions_and_candidate(model_t
     model = model_type(x, y, num_classes=3, cat_dims=[1], uncertain_cat_dim=1)
     model.fit(epochs=2, lr=0.005)
     pool = x[:5].clone()
-    categories = torch.tensor([0., 1.], dtype=torch.double)
+    categories = torch.tensor([0.0, 1.0], dtype=torch.double)
     weights = torch.tensor([[0.3, 0.7]], dtype=torch.double).expand(5, 2)
     with torch.no_grad():
         torch.manual_seed(17)
@@ -137,6 +139,6 @@ def test_uncertain_category_rejects_invalid_support(model_type):
     with pytest.raises(ValueError, match="sum to one"):
         model.predict_proba_with_category_uncertainty(
             x[:3],
-            category_values=torch.tensor([0., 1.], dtype=torch.double),
+            category_values=torch.tensor([0.0, 1.0], dtype=torch.double),
             category_probabilities=torch.ones(3, 2, dtype=torch.double),
         )
