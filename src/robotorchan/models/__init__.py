@@ -1,5 +1,9 @@
 """Surrogate-model extensions and BoTorch-compatible wrappers."""
 
+from collections.abc import Callable
+from importlib import import_module
+from typing import Any, TypeVar, overload
+
 from robotorchan.models.base import UnsupportedModelOperationError
 from robotorchan.models.capabilities import (
     DocumentationLinks,
@@ -34,6 +38,7 @@ from robotorchan.models.expressive.spectral_mixture import (
     SpectralMixtureKroneckerMultiTaskGP,
     SpectralMixtureMultiTaskGP,
 )
+from robotorchan.models.factory import list_model_names, public_constructors, resolve_model_class
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.models.high_dimensional.alebo import ALEBOGP
 from robotorchan.models.high_dimensional.fully_bayesian import (
@@ -349,5 +354,45 @@ __all__ = [
     "UnsupportedModelOperationError",
     "VAEKroneckerMultiTaskGP",
     "VAEMultiTaskGP",
+    "create_model",
+    "get_model_class",
     "get_model_registry_entry",
+    "list_models",
 ]
+
+
+T = TypeVar("T")
+
+
+def _factory_constructors() -> dict[str, type]:
+    # Discovery belongs at the public facade, not in implementation modules.
+    return public_constructors(
+        import_module(__name__),
+        import_module("robotorchan.models.classification"),
+    )
+
+
+def list_models() -> tuple[str, ...]:
+    """List public concrete model names and existing classification IDs."""
+    return list_model_names(_factory_constructors())
+
+
+def get_model_class(name: str, /) -> type:
+    """Resolve a public model constructor by exact name or registry ID."""
+    return resolve_model_class(name, _factory_constructors())
+
+
+@overload
+def create_model(model: Callable[..., T], /, *args: Any, **kwargs: Any) -> T: ...
+
+
+@overload
+def create_model(model: str, /, *args: Any, **kwargs: Any) -> Any: ...
+
+
+def create_model(model: str | Callable[..., T], /, *args: Any, **kwargs: Any) -> T | Any:
+    """Call the original constructor without fitting or transforming arguments."""
+    constructor = get_model_class(model) if isinstance(model, str) else model
+    if not callable(constructor):
+        raise TypeError("model must be a registered name, class or callable")
+    return constructor(*args, **kwargs)

@@ -23,7 +23,10 @@ EXCLUDED_PUBLIC_EXPORTS = (
     "RobustnessType",
     "TaskType",
     "UnsupportedModelOperationError",
+    "create_model",
+    "get_model_class",
     "get_model_registry_entry",
+    "list_models",
 )
 COVERAGE_CONTRACT = {
     "guide": "model-family guide that names or covers the public model family",

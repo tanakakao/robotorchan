@@ -13,7 +13,10 @@
     "RobustnessType",
     "TaskType",
     "UnsupportedModelOperationError",
-    "get_model_registry_entry"
+    "create_model",
+    "get_model_class",
+    "get_model_registry_entry",
+    "list_models"
   ],
   "models": {
     "ALEBOGP": {
