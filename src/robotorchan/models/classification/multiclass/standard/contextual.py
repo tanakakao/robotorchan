@@ -57,9 +57,9 @@ def _contextual_kernel(
 ) -> tuple[AdditiveKernel, int, int, int]:
     if train_X.ndim != 2:
         raise ValueError("train_X must have shape [n, d].")
-    context = normalize_feature_dims(
-        [context_feature], train_X.shape[-1], name="context_feature"
-    )[0]
+    context = normalize_feature_dims([context_feature], train_X.shape[-1], name="context_feature")[
+        0
+    ]
     dimensions = [dim for dim in range(train_X.shape[-1]) if dim != context]
     if not dimensions:
         raise ValueError("At least one non-context feature is required.")
@@ -90,9 +90,7 @@ def _hierarchical_kernel(
     dimensions = [dim for dim in range(train_X.shape[-1]) if dim not in (group, subgroup)]
     if not dimensions:
         raise ValueError("At least one non-hierarchical feature is required.")
-    group_kernel, num_groups, resolved_group_rank = _structural_kernel(
-        train_X, group, group_rank
-    )
+    group_kernel, num_groups, resolved_group_rank = _structural_kernel(train_X, group, group_rank)
     subgroup_kernel, num_subgroups, resolved_subgroup_rank = _structural_kernel(
         train_X, subgroup, subgroup_rank
     )
@@ -129,9 +127,7 @@ class ContextualMulticlassGPClassifier(MulticlassSingleTaskGPClassifier):
         num_classes: int,
         rank: int | None = None,
     ) -> None:
-        kernel, context, count, resolved_rank = _contextual_kernel(
-            train_X, context_feature, rank
-        )
+        kernel, context, count, resolved_rank = _contextual_kernel(train_X, context_feature, rank)
         super().__init__(train_X, train_Y, num_classes=num_classes, covar_module=kernel)
         self.context_feature = context
         self.num_contexts = count
@@ -150,9 +146,7 @@ class ContextualOrdinalGPClassifier(OrdinalSingleTaskGPClassifier):
         num_classes: int,
         rank: int | None = None,
     ) -> None:
-        kernel, context, count, resolved_rank = _contextual_kernel(
-            train_X, context_feature, rank
-        )
+        kernel, context, count, resolved_rank = _contextual_kernel(train_X, context_feature, rank)
         super().__init__(train_X, train_Y, num_classes=num_classes, covar_module=kernel)
         self.context_feature = context
         self.num_contexts = count
