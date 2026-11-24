@@ -525,7 +525,7 @@ $$
 Split Conformalでは、独立に保留した校正集合の真のクラス $y_i$ に対し、非適合度 $s_i=1-p_{y_i}(x_i)$ を計算します。校正データ数を $n$、要求する誤り率を $\alpha$ として、
 
 $$
-\widehat{q}=\operatorname{Quantile}_{\lceil(n+1)(1-\alpha)\rceil/n}(s_1,\ldots,s_n)
+\widehat{q}=\mathrm{Quantile}_{\lceil(n+1)(1-\alpha)\rceil/n}(s_1,\ldots,s_n)
 $$
 
 を有限標本補正付きで選び、予測集合を
