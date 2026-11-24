@@ -9,9 +9,7 @@ import torch
 from torch import Tensor
 
 
-def multiclass_expected_decision_cost(
-    probabilities: Tensor, *, cost_matrix: Tensor
-) -> Tensor:
+def multiclass_expected_decision_cost(probabilities: Tensor, *, cost_matrix: Tensor) -> Tensor:
     """Return expected cost per action from class posterior probabilities.
 
     Given C[a,y] = loss for action a when truth is y, this returns
@@ -26,8 +24,10 @@ def multiclass_expected_decision_cost(
     if torch.any((probabilities < 0) | (probabilities > 1)):
         raise ValueError("probabilities must lie in [0, 1].")
     if not torch.allclose(
-        probabilities.sum(dim=-1), torch.ones_like(probabilities[..., 0]),
-        atol=1e-6, rtol=1e-6,
+        probabilities.sum(dim=-1),
+        torch.ones_like(probabilities[..., 0]),
+        atol=1e-6,
+        rtol=1e-6,
     ):
         raise ValueError("Class probabilities must sum to one.")
     num_classes = probabilities.shape[-1]
@@ -40,13 +40,9 @@ def multiclass_expected_decision_cost(
     return probabilities @ cost_matrix.transpose(-1, -2)
 
 
-def multiclass_cost_sensitive_prediction(
-    probabilities: Tensor, *, cost_matrix: Tensor
-) -> Tensor:
+def multiclass_cost_sensitive_prediction(probabilities: Tensor, *, cost_matrix: Tensor) -> Tensor:
     """Select the action with lowest posterior expected misclassification cost."""
-    return multiclass_expected_decision_cost(
-        probabilities, cost_matrix=cost_matrix
-    ).argmin(dim=-1)
+    return multiclass_expected_decision_cost(probabilities, cost_matrix=cost_matrix).argmin(dim=-1)
 
 
 def ordinal_cost_matrix(
@@ -72,11 +68,7 @@ def ordinal_cost_matrix(
     return distance.pow(power)
 
 
-def ordinal_cost_sensitive_prediction(
-    probabilities: Tensor, *, power: float = 1.0
-) -> Tensor:
+def ordinal_cost_sensitive_prediction(probabilities: Tensor, *, power: float = 1.0) -> Tensor:
     """Choose the lowest expected ordinal-distance cost action."""
-    cost_matrix = ordinal_cost_matrix(
-        probabilities.shape[-1], power=power, reference=probabilities
-    )
+    cost_matrix = ordinal_cost_matrix(probabilities.shape[-1], power=power, reference=probabilities)
     return multiclass_cost_sensitive_prediction(probabilities, cost_matrix=cost_matrix)
