@@ -346,3 +346,16 @@ Notebook 30 にクラス確率の比較・候補提案の実行例がありま�
 ### Bootstrap Ensemble
 
 `BootstrapGradientBoostingMulticlassClassifier` は既存の二値Bootstrap Ensembleに対応した拡張です。`n_members`個の独立したブートストラップ標本でGradient Boostingモデルを学習します。`fit()`後は`probability_posterior()`で各モデルのクラス確率分布を、`predict_proba()`で平均を取得できます。クラス数が少ない場合にも各標本が全クラスを含むよう再抽出しますが、希少クラスが極端に少ない場合は標本の作成に失敗することがあります。重み付け可能な任意のモデルの統合には`MulticlassClassificationEnsemble`を使用してください。
+
+
+## 校正・Conformal予測集合・費用を考慮した判断・Active Learning
+
+既存の`TemperatureScalingCalibrator`はクラス数に依存しません。学習に使っていない検証データで`fit(probabilities, labels)`してから、`CalibratedMulticlassClassifier(model, calibrator)`に渡します。校正済みラッパーは`predict_proba()`、`sample_class_probabilities()`、`probability_posterior()`を提供し、基礎GPの`latent_posterior()`は変更しません。`probability_posterior()`は校正後サンプルの**経験的Posterior**であり、基礎GPの解析的潜在Posteriorではありません。単一非GPモデルの認識論的サンプリングは未対応としてエラーにします。
+
+`SplitConformalClassifier(calibrated_model, alpha=0.1)`はマルチクラス・順序分類でも既存実装を利用できます。基礎モデル学習・温度校正に使っていない**別の保留データ**を`calibrate(calibration_X, calibration_Y)`に渡し、`prediction_set(X)`でクラスごとの真偽値マスクを取得します。交換可能性のもとでの周辺被覆率の保証であり、クラス条件付き被覆や分布シフトに対する保証ではありません。
+
+誤分類コストでは、`multiclass_expected_decision_cost(probabilities, cost_matrix=costs)`と`multiclass_cost_sensitive_prediction(...)`を利用します。`cost_matrix[a, y]`は真のラベルが`y`で行動`a`を選ぶコストです。行動軸と真のクラス軸を取り違えないでください。マルチクラスではコストの非対称性を明示的に表現できます。
+
+既存の`PredictiveEntropy`、`BALD`、`qPredictiveEntropy`は、校正ラッパーの公開クラス確率APIを通じて利用できます。`qPredictiveEntropy`はバッチ内の周辺エントロピー平均であり、厳密な同時情報利得ではありません。非GP単体にはBALD用Posteriorはありません。予測クラスのコスト、Conformal予測集合の大きさ、予測エントロピーはそれぞれ別の基準です。
+
+[Notebook 30](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)で、データ分割、モデル学習、温度校正、Conformal集合、費用に基づく判断と候補点提案を確認できます。
