@@ -41,9 +41,7 @@ def test_gp_calibration_conformal_posterior_and_al(base_class, calibrated_class)
     calibrated = calibrated_class(model, calibrator)
     with torch.no_grad():
         probabilities = calibrated.predict_proba(pool)
-        samples = calibrated.sample_class_probabilities(
-            pool, sample_shape=torch.Size([8])
-        )
+        samples = calibrated.sample_class_probabilities(pool, sample_shape=torch.Size([8]))
         posterior = calibrated.probability_posterior(pool, num_samples=8)
         score = PredictiveEntropy(calibrated)(pool.unsqueeze(-2))
         q_score = qPredictiveEntropy(calibrated)(pool.reshape(3, 2, 1))
@@ -76,8 +74,14 @@ def test_gp_calibration_conformal_posterior_and_al(base_class, calibrated_class)
 
 def test_temperature_scaling_fit_multiclass_validation():
     calibration_probs = torch.tensor(
-        [[0.8, 0.1, 0.1], [0.3, 0.6, 0.1], [0.1, 0.2, 0.7],
-         [0.5, 0.3, 0.2], [0.2, 0.3, 0.5], [0.15, 0.75, 0.1]],
+        [
+            [0.8, 0.1, 0.1],
+            [0.3, 0.6, 0.1],
+            [0.1, 0.2, 0.7],
+            [0.5, 0.3, 0.2],
+            [0.2, 0.3, 0.5],
+            [0.15, 0.75, 0.1],
+        ],
         dtype=torch.double,
     )
     y = torch.tensor([0, 1, 2, 0, 2, 1])
@@ -93,9 +97,7 @@ def test_temperature_scaling_fit_multiclass_validation():
 
 def test_multiclass_decisions_cost_conventions_and_ordinal_loss():
     p = torch.tensor([[0.4, 0.35, 0.25], [0.1, 0.2, 0.7]], dtype=torch.double)
-    cost = torch.tensor(
-        [[0., 2., 5.], [1., 0., 2.], [4., 1., 0.]], dtype=torch.double
-    )
+    cost = torch.tensor([[0.0, 2.0, 5.0], [1.0, 0.0, 2.0], [4.0, 1.0, 0.0]], dtype=torch.double)
     expected = p @ cost.T
     torch.testing.assert_close(multiclass_expected_decision_cost(p, cost_matrix=cost), expected)
     torch.testing.assert_close(
@@ -120,9 +122,7 @@ def test_deterministic_non_gp_calibration_does_not_invent_epistemic_posterior():
     pytest.importorskip("sklearn")
     x = torch.rand(18, 2, dtype=torch.double)
     y = torch.arange(18) % 3
-    model = RandomForestMulticlassClassifier(
-        x, y, num_classes=3, n_estimators=8, random_state=13
-    )
+    model = RandomForestMulticlassClassifier(x, y, num_classes=3, n_estimators=8, random_state=13)
     model.fit()
     calibrated = CalibratedMulticlassClassifier(
         model, TemperatureScalingCalibrator(temperature=1.2).to(x)
