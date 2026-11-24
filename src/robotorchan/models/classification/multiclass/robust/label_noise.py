@@ -228,3 +228,71 @@ class LabelNoiseMulticlassGPClassifier(MulticlassSingleTaskGPClassifier):
             mean=probabilities.mean(dim=0),
             variance=probabilities.var(dim=0, unbiased=False),
         )
+
+
+def _contamination_transition(
+    num_classes: int,
+    reference: Tensor,
+    contamination_probability: float,
+    contaminant_distribution: Tensor | None,
+) -> Tensor:
+    """Construct a fixed class-independent contaminant-label process."""
+    if not isinstance(contamination_probability, int | float) or not math.isfinite(
+        contamination_probability
+    ):
+        raise ValueError("contamination_probability must be finite.")
+    if not 0.0 < contamination_probability < 1.0:
+        raise ValueError("contamination_probability must be strictly between 0 and 1.")
+    base = (
+        torch.full(
+            (num_classes,), 1.0 / num_classes, device=reference.device, dtype=reference.dtype
+        )
+        if contaminant_distribution is None
+        else torch.as_tensor(
+            contaminant_distribution, device=reference.device, dtype=reference.dtype
+        )
+    )
+    if base.shape != (num_classes,):
+        raise ValueError("contaminant_distribution must have shape [num_classes].")
+    if not torch.isfinite(base).all() or torch.any(base < 0) or torch.any(base > 1):
+        raise ValueError("contaminant_distribution must contain finite probabilities.")
+    if not torch.allclose(base.sum(), base.new_tensor(1.0), atol=1e-6, rtol=1e-5):
+        raise ValueError("contaminant_distribution must sum to one.")
+    identity = torch.eye(num_classes, device=reference.device, dtype=reference.dtype)
+    return (1.0 - contamination_probability) * identity + contamination_probability * base
+
+
+class ContaminatedMulticlassGPClassifier(LabelNoiseMulticlassGPClassifier):
+    """Multiclass GP with an input-independent contaminant-label distribution."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        contamination_probability: float = 0.05,
+        contaminant_distribution: Tensor | None = None,
+    ) -> None:
+        transition = _contamination_transition(
+            num_classes, train_X, contamination_probability, contaminant_distribution
+        )
+        super().__init__(train_X, train_Y, num_classes=num_classes, transition_matrix=transition)
+
+
+class ContaminatedOrdinalGPClassifier(LabelNoiseOrdinalGPClassifier):
+    """Ordinal GP with an input-independent contaminant-label distribution."""
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        contamination_probability: float = 0.05,
+        contaminant_distribution: Tensor | None = None,
+    ) -> None:
+        transition = _contamination_transition(
+            num_classes, train_X, contamination_probability, contaminant_distribution
+        )
+        super().__init__(train_X, train_Y, num_classes=num_classes, transition_matrix=transition)
