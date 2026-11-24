@@ -531,3 +531,32 @@ $$
 クラス別潜在GPのSoftmaxを積分して得られた分類確率に対して、さらに入力の不確実性を周辺化します。 対象が入力不確実性込みのクラスエントロピーである場合、周辺化後の確率からエントロピーを計算します。通常の候補入力に対して評価した獲得関数をそのまま呼び出しても、入力不確実性は自動的には考慮されません。
 
 **参考文献**：McHutchon and Rasmussen (2011), *Gaussian Process Training with Input Noise*; Nogueira et al. (2016), *Bayesian Optimization with Unknown Constraints*（候補評価の不確実性とは異なる関連領域）; Bogunovic et al. (2018), *Adversarially Robust Optimization with Gaussian Processes*（ロバスト目的の別の定式化）。
+
+
+## Ensemble・非GP分類：予測確率とモデル間の不確実性
+
+GP以外の教師あり分類器（Random Forest、Extra Trees、Gradient Boosting、Histogram Gradient Boosting）は、分類の入力とラベルから直接クラス確率を学習します。これらはガウス過程の潜在関数のPosteriorを持ちません。単一の推定器が返すクラス確率のエントロピーと、モデルパラメータについての**認識論的不確実性**は区別する必要があります。実装では単一の非GP推定器に対して虚偽の `latent_posterior()`、`probability_posterior()` やBALD値を生成しません。
+
+予測確率のアンサンブルでは、モデル $m=1,\ldots,M$ のクラス確率 $p_m(y=c\mid x)$ を重み $w_m$（$w_m\geq0$、$\sum_m w_m=1$）で平均します。
+
+$$
+\bar p_c(x)=\sum_{m=1}^{M}w_m p_m(y=c\mid x)
+$$
+
+モデル間の確率分散は
+
+$$
+V_c(x)=\sum_m w_m\bigl(p_m(y=c\mid x)-\bar p_c(x)\bigr)^2
+$$
+
+です。ラベルの予測エントロピー $H(\bar p)$ と、個別モデルのエントロピーの加重平均との差
+
+$$
+H(\bar p)-\sum_m w_m H(p_m)
+$$
+
+は**アンサンブルメンバー間の意見の不一致**を測ります。これはメンバーを確率的に選ぶという近似のもとでの相互情報量であり、必ずしも真のベイズPosteriorのBALDとは一致しません。GPと非GPの混合アンサンブルでは、単一の共通潜在GPを定義していません。
+
+マルチクラスの非GP分類器は0からC−1までのクラス確率を返し、観測されなかったクラスの確率列は0で補います。 クラス確率が真に校正されているかは別途検証が必要です。
+
+**参考文献：** Breiman (2001), *Random Forests*; Geurts, Ernst and Wehenkel (2006), *Extremely randomized trees*; Lakshminarayanan, Pritzel and Blundell (2017), *Simple and Scalable Predictive Uncertainty Estimation using Deep Ensembles*; Dietterich (2000), *Ensemble Methods in Machine Learning*.
