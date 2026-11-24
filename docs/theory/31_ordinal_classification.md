@@ -450,3 +450,34 @@ $$
 遷移行列が正しく指定されているかどうかにモデルの解釈は依存します。ノイズ率の識別・推定は別問題であり、固定の既知遷移行列を指定しただけで未知の系統的なラベル誤りを解決できるわけではありません。データ分布や評価条件に応じてノイズ機構の妥当性を検討してください。
 
 **参考文献**：Frénay and Verleysen (2014), *Classification in the Presence of Label Noise: A Survey*; Natarajan et al. (2013), *Learning with Noisy Labels*; Patrini et al. (2017), *Making Deep Neural Networks Robust to Label Noise: A Loss Correction Approach*.
+
+
+## 入力不確実性：候補点の摂動とカテゴリ分布
+
+分類モデルへの入力 $x$ が完全には制御できない場合、設計した候補値 $x$ と実際に評価される入力 $\tilde x$ を分けて考えます。本節は**候補入力の不確実性**を対象とし、学習時の説明変数に含まれる測定誤差を修正する仕組みとは異なります。
+
+連続入力で、$\tilde x=x+\varepsilon$、$\varepsilon\sim\mathcal N(0,\Sigma_x)$ と仮定します。データ $\mathcal D$ から学習したモデルのクラス予測確率を $p(y=c\mid z,\mathcal D)$ とすると、
+
+$$
+p_{\mathrm{uncertain}}(y=c\mid x,\mathcal D)
+=\int p(y=c\mid x+\varepsilon,\mathcal D)
+p(\varepsilon)\,d\varepsilon
+\approx\frac{1}{M}\sum_{m=1}^M
+p(y=c\mid x+\varepsilon_m,\mathcal D)
+$$
+
+によって不確実性を周辺化します。**GP潜在関数の平均を先に入力摂動で平均してから尤度に入れる方法ではありません。** 非線形な分類リンクを経由した確率を積分する必要があります。共分散 $\Sigma_x$ は標準偏差（各軸独立）または半正定値の共分散行列として指定できます。
+
+カテゴリ値が不確かな場合、カテゴリの有限集合 $\{a_k\}$ と確率 $w_k$ が既知であれば、
+
+$$
+p_{\mathrm{uncertain}}(y=c\mid x,\mathcal D)
+=\sum_{k}w_k\,
+p(y=c\mid x_{\mathrm{cat}}=a_k,\mathcal D)
+$$
+
+を厳密な**有限和**で計算できます。カテゴリIDは連続的なガウス摂動の対象にせず、既存のMixedカーネルのまま扱います。
+
+単一潜在GPのOrdered Probitにより計算した各順序クラスの確率を、入力不確実性について周辺化します。 対象が入力不確実性込みのクラスエントロピーである場合、周辺化後の確率からエントロピーを計算します。通常の候補入力に対して評価した獲得関数をそのまま呼び出しても、入力不確実性は自動的には考慮されません。
+
+**参考文献**：McHutchon and Rasmussen (2011), *Gaussian Process Training with Input Noise*; Nogueira et al. (2016), *Bayesian Optimization with Unknown Constraints*（候補評価の不確実性とは異なる関連領域）; Bogunovic et al. (2018), *Adversarially Robust Optimization with Gaussian Processes*（ロバスト目的の別の定式化）。
