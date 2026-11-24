@@ -138,3 +138,14 @@ returns a configured vector optimizer accepting an objective and bounds, not q.
 Mixed, one-shot, safe and contextual entry points retain their original contracts.
 ContextualOptimizer is a configured constructor, not a scalar acquisition dispatcher.
 Custom callables are accepted without assigning inferred capability metadata.
+
+## Search strategy factory
+
+`create_search_strategy("SobolSearchStrategy", bounds, num_samples=128)`
+returns the original strategy instance. Call its existing optimize method to
+obtain SearchResult. `list_search_strategies()` lists concrete SearchStrategy
+classes by canonical name. Class and callable inputs are also supported.
+State, reconstruction objects and constraints are passed unchanged to the
+constructor. No fitting, state updates or candidate generation occurs in the factory.
+TuRBOMultiRegionState, BOCS/COMBO proposal functions and SafeBOWorkflow retain
+their dedicated APIs because they do not implement SearchStrategy.
