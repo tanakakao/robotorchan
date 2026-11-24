@@ -417,3 +417,24 @@ $$
 クラス確率の分散やBALDも同じサンプルから推定できますが、サンプル数による誤差があります。今回のモデルは既存の 既存の深層ガウス過程の確率的階層を再利用し、ガウス事後を前提とする通常のExact GP獲得関数と同一視しません。
 
 **参考文献**：Damianou and Lawrence (2013), *Deep Gaussian Processes*; Salimbeni and Deisenroth (2017), *Doubly Stochastic Variational Inference for Deep Gaussian Processes*; Hensman et al. (2015), *Scalable Variational Gaussian Process Classification*.
+
+
+## 無限幅ニューラルネットワーク由来のGPカーネル（NNGP）
+
+無限幅の全結合ReLUニューラルネットワークを考えると、適切な重みの事前分布と幅の極限の下で、その関数の事前分布はガウス過程になります。これがNeural Network Gaussian Process（NNGP）です。有限幅のニューラルネットワークを学習するという意味ではありません。また、複数の確率的なGP層を組み合わせるDeep GPとも異なります。
+
+初期共分散の例として、設計変数 $x,z$ に対し
+
+$$
+K^{(0)}(x,z)=\sigma_b^2+\frac{\sigma_w^2}{d}x^\top z
+$$
+
+を用います。ReLUの各層で、角度 $\theta$ と両入力の分散から解析的なReLU共分散写像を繰り返して $K^{(\ell+1)}$ を得ます。分類には、この共分散を潜在GPの事前分布として与えます。
+
+マルチクラス分類ではクラス別潜在GPに共通のNNGP型共分散を与え、Softmax尤度と変分推論からクラス確率を推定します。
+
+Mixed入力では、連続設計変数のNNGP型共分散と、カテゴリ変数用の共分散を組み合わせます。カテゴリコードを無条件に連続変数と見なすものではありません。
+
+NNGPカーネルを使用しても分類尤度は非ガウスであるため、分類の事後計算は変分近似です。NNGPの無限幅極限という理論と、有限の学習データから行う近似推論は区別してください。
+
+**参考文献：** Lee et al. (2018), *Deep Neural Networks as Gaussian Processes*; Matthews et al. (2018), *Gaussian Process Behaviour in Wide Deep Neural Networks*; Williams (1997), *Computing with Infinite Networks*.
