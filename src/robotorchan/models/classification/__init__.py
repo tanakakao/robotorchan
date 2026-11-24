@@ -119,6 +119,12 @@ from robotorchan.models.classification.multiclass.high_dimensional.saas import (
     SaasMulticlassGPClassifier,
     SaasOrdinalGPClassifier,
 )
+from robotorchan.models.classification.multiclass.standard.contextual import (
+    ContextualMulticlassGPClassifier,
+    ContextualOrdinalGPClassifier,
+    HierarchicalMulticlassGPClassifier,
+    HierarchicalOrdinalGPClassifier,
+)
 from robotorchan.models.classification.multiclass.standard.infinite_width_bnn import (
     InfiniteWidthBNNMulticlassGPClassifier,
     InfiniteWidthBNNOrdinalGPClassifier,
@@ -198,12 +204,16 @@ __all__ = [
     "ContaminatedBernoulliLikelihood",
     "ContaminatedBinarySingleTaskGPClassifier",
     "ContextualBinaryGPClassifier",
+    "ContextualMulticlassGPClassifier",
+    "ContextualOrdinalGPClassifier",
     "ContinuousUncertainInputBinarySingleTaskGPClassifier",
     "ExtraTreesBinaryClassifier",
     "GPBinaryClassificationEnsemble",
     "GradientBoostingBinaryClassifier",
     "HeterogeneousBinaryClassificationEnsemble",
     "HierarchicalBinaryGPClassifier",
+    "HierarchicalMulticlassGPClassifier",
+    "HierarchicalOrdinalGPClassifier",
     "HistGradientBoostingBinaryClassifier",
     "InfiniteWidthBNNBinaryGPClassifier",
     "InfiniteWidthBNNMulticlassGPClassifier",
