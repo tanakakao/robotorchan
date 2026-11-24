@@ -366,3 +366,16 @@ Notebook 31 にクラス確率の比較・候補提案の実行例がありま�
 - 連続摂動の周辺化はモンテカルロ近似です。カテゴリ分布の周辺化は有限サポートの正確な重み付き和です。学習モデルの不確実性と入力不確実性は異なります。
 
 [Notebook 31](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb) に、単一モデルの学習、候補確率、可視化と候補提案を追加しています。
+
+
+## Ensembleと非GP分類器
+
+`RandomForestOrdinalClassifier`、`ExtraTreesOrdinalClassifier`、`GradientBoostingOrdinalClassifier`、`HistGradientBoostingOrdinalClassifier` は、scikit-learnの分類器を使用する公開アダプターです。`train_X`、`train_Y`、`num_classes`を渡し、`fit()`後に`predict_proba(X)`、`predict_class(X)`、`predictive_entropy(X)`を利用します。scikit-learnは任意依存です。
+
+`OrdinalClassificationEnsemble` は、学習済み分類器2つ以上を位置引数に渡し、`weights`でメンバーの重みを設定します。メンバーのクラス数・クラスラベル順序が一致している必要があります。`predict_proba()`は重み付き平均、`probability_posterior()`はメンバー確率に関する経験的Posterior、`mutual_information()`はモデル間の不一致を返します。GPと非GP分類器も同時に組み込めますが、**共通潜在Posteriorはありません**。
+
+非GP単体での`probability_posterior()`、`mutual_information()`、`latent_posterior()`は未定義であり、明示的なエラーとなります。Active Learningの予測エントロピーは単一モデルでも利用できますが、BALD型のメンバー不一致はEnsemble側で評価してください。
+
+順序分類用の非GPツリーモデルはラベルをカテゴリとして扱い、Ordered Probitと同じ閾値構造は仮定しません。順序に特有の尤度を利用したい場合は既存のOrdinal GPを使用してください。
+
+実行例・予測グラフ・候補提案については[Notebook 31](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)を参照してください。
