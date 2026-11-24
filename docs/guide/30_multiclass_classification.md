@@ -315,3 +315,16 @@ Notebook 30 にクラス確率の比較・候補提案の実行例がありま�
 
 汚染率と汚染ラベル分布は既知・固定として指定します。
 `predict_clean_proba()` は汚染前、`predict_proba()` は汚染後の予測です。
+
+
+## 入力不確実性を考慮する分類
+
+`ContinuousUncertainInputMulticlassGPClassifier` は、候補点が正規摂動する状況を扱います。従来の分類モデルと同じ `fit()` で学習した後、`predict_proba_with_input_uncertainty(X, input_std=..., num_samples=...)` または `input_covar=...` を指定して予測確率を周辺化します。標準偏差は `X` と同じ形・dtype・device、共分散は `[...,d,d]` の半正定値行列とします。
+
+`UncertainCategoricalMulticlassGPClassifier` はMixed入力に対して、1列のカテゴリ値が確率的に変わる場合を扱います。`cat_dims` と `uncertain_cat_dim` を指定し、`predict_proba_with_category_uncertainty(X, category_values=..., category_probabilities=...)` でカテゴリごとのクラス確率を確率加重平均します。各候補点のカテゴリ確率の行和は1が必要です。
+
+- 両モデルとも**学習入力自体の誤差を考慮するモデルではありません**。候補点を実際に評価するときの入力不確実性を予測上で周辺化します。
+- 通常の `predict_proba(X)` と `PredictiveEntropy(model)(X.unsqueeze(-2))` は、公称入力に対する結果です。入力不確実性を含む候補選択を行うには、周辺化済みの予測確率からクラスエントロピーなどを計算してください。既存の獲得関数が自動的に入力を摂動するわけではありません。
+- 連続摂動の周辺化はモンテカルロ近似です。カテゴリ分布の周辺化は有限サポートの正確な重み付き和です。学習モデルの不確実性と入力不確実性は異なります。
+
+[Notebook 30](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb) に、単一モデルの学習、候補確率、可視化と候補提案を追加しています。
