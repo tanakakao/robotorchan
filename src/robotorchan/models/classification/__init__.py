@@ -154,6 +154,12 @@ from robotorchan.models.classification.multiclass.standard.single_task import (
     MixedMulticlassSingleTaskGPClassifier,
     MulticlassSingleTaskGPClassifier,
 )
+from robotorchan.models.classification.multiclass.uncertain_input import (
+    ContinuousUncertainInputMulticlassGPClassifier,
+    ContinuousUncertainInputOrdinalGPClassifier,
+    UncertainCategoricalMulticlassGPClassifier,
+    UncertainCategoricalOrdinalGPClassifier,
+)
 from robotorchan.models.classification.ordinal.deep_gp import (
     OrdinalSingleTaskDeepGPClassifier,
 )
@@ -216,6 +222,8 @@ __all__ = [
     "ContextualMulticlassGPClassifier",
     "ContextualOrdinalGPClassifier",
     "ContinuousUncertainInputBinarySingleTaskGPClassifier",
+    "ContinuousUncertainInputMulticlassGPClassifier",
+    "ContinuousUncertainInputOrdinalGPClassifier",
     "ExtraTreesBinaryClassifier",
     "GPBinaryClassificationEnsemble",
     "GradientBoostingBinaryClassifier",
@@ -304,6 +312,8 @@ __all__ = [
     "TemperatureScalingCalibrator",
     "UncertainBinaryClassificationMixin",
     "UncertainCategoricalBinarySingleTaskGPClassifier",
+    "UncertainCategoricalMulticlassGPClassifier",
+    "UncertainCategoricalOrdinalGPClassifier",
     "UncertainClassificationMetadata",
     "binary_cost_sensitive_prediction",
     "binary_cost_sensitive_threshold",
