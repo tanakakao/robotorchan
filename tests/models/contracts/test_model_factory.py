@@ -1,5 +1,7 @@
 """Unified factory construction and public registry coverage."""
 
+import inspect
+
 import pytest
 import torch
 
@@ -18,7 +20,11 @@ def test_registry_resolution() -> None:
         assert get_model_class(entry.model_class.__name__) is entry.model_class
     for name in classification.__all__:
         if name.endswith(("GPClassifier", "ClassificationEnsemble")):
-            assert get_model_class(name) is getattr(classification, name)
+            cls = getattr(classification, name)
+            if inspect.isabstract(cls):
+                assert name not in names
+            else:
+                assert get_model_class(name) is cls
 
 
 def test_special_surrogates() -> None:
@@ -31,7 +37,12 @@ def test_special_surrogates() -> None:
 
 
 def test_non_models_and_unknown_names() -> None:
-    for name in ("ModelCapabilities", "OrderedProbitLikelihood", "not_a_model"):
+    for name in (
+        "ModelCapabilities",
+        "OrderedProbitLikelihood",
+        "BootstrapBinaryClassificationEnsemble",
+        "not_a_model",
+    ):
         assert name not in list_models()
         with pytest.raises(KeyError, match="Unknown model"):
             get_model_class(name)

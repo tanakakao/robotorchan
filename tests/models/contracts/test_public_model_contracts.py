@@ -187,7 +187,10 @@ def test_public_model_exports_are_complete_and_explicit() -> None:
         "RobustnessType",
         "TaskType",
         "UnsupportedModelOperationError",
+        "create_model",
+        "get_model_class",
         "get_model_registry_entry",
+        "list_models",
     }
 
     assert exported == PUBLIC_MODEL_NAMES | non_model_exports
