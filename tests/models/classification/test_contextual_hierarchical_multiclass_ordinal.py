@@ -6,6 +6,7 @@ from gpytorch.kernels import AdditiveKernel
 
 from robotorchan.acquisition.active_learning.classification import (
     PredictiveEntropy,
+    qBALD,
     qPredictiveEntropy,
 )
 from robotorchan.models.classification import (
@@ -66,11 +67,14 @@ def test_contextual_hierarchical_fit_predict_and_candidate(model_type):
         )
         scores = PredictiveEntropy(model)(pool.unsqueeze(-2))
         q_scores = qPredictiveEntropy(model)(pool.reshape(4, 2, 3))
+        joint_scores = qBALD(model, num_samples=8)(pool.reshape(4, 2, 3))
     assert probabilities.shape == (8, 3)
     assert posterior.mean.shape == (8, 3)
     assert posterior.variance.shape == (8, 3)
     assert scores.shape == (8,)
     assert q_scores.shape == (4,)
+    assert joint_scores.shape == (4,)
+    assert torch.isfinite(joint_scores).all()
     torch.testing.assert_close(
         probabilities.sum(-1),
         torch.ones(8, dtype=torch.double),
