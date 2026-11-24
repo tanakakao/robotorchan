@@ -416,3 +416,37 @@ $$
 既知のコンテキスト下で候補点を選ぶことと、未観測のコンテキストに汎化させることは区別してください。新しいIDを用いる際の扱いはモデル仕様によって制限されます。
 
 **参考文献：** Bonilla, Chai and Williams (2008), *Multi-task Gaussian Process Prediction*; Álvarez, Rosasco and Lawrence (2012), *Kernels for Vector-Valued Functions: a Review*; Gelman et al. (2013), *Bayesian Data Analysis*（階層モデリングの背景）。
+
+
+## 観測ラベルノイズを考慮した分類
+
+ラベルの誤記録がある場合、潜在的な**真のクラス** $y$ と、学習データに記録された**観測ラベル** $\\tilde y$ を区別します。誤記録を表す遷移行列 $T$ を
+
+$$
+T_{ij}=P(\\tilde y=j\\mid y=i),\\qquad
+T_{ij}\\geq 0,\\quad\\sum_j T_{ij}=1
+$$
+
+と定義します。各行は真のクラスごとに観測ラベルへ移る条件付き確率を表すため、行和が1です。クラス $i$ の真の予測確率を $p_i(x)$ とすると、観測ラベルの予測確率は
+
+$$
+P(\\tilde y=j\\mid x,\\mathcal D)
+=\\sum_{i=0}^{C-1}p_i(x)T_{ij}
+$$
+
+です。対称ノイズ率 $\\epsilon$ なら、対角要素は $1-\\epsilon$、非対角要素は $\\epsilon/(C-1)$ です。より一般には非対称な行列を指定できます。
+
+**学習の際に遷移行列を使うことが重要です。** 推論後の確率に行列を掛けるだけでは、ノイズの影響を含む学習にはなりません。モデルの潜在関数から得たクラス確率 $p_i(x;f)$ に対し、観測ラベルの対数尤度
+
+$$
+\\log P(\\tilde y=j\\mid f,x)
+=\\log\\left(\\sum_i p_i(x;f)T_{ij}\\right)
+$$
+
+を使い、変分ELBOを最大化します。
+
+真の順序クラス確率は単一潜在GPとOrdered Probitの閾値から定義し、観測ラベルの確率に遷移行列を掛けてGauss–Hermite求積で期待対数尤度を近似します。
+
+遷移行列が正しく指定されているかどうかにモデルの解釈は依存します。ノイズ率の識別・推定は別問題であり、固定の既知遷移行列を指定しただけで未知の系統的なラベル誤りを解決できるわけではありません。データ分布や評価条件に応じてノイズ機構の妥当性を検討してください。
+
+**参考文献**：Frénay and Verleysen (2014), *Classification in the Presence of Label Noise: A Survey*; Natarajan et al. (2013), *Learning with Noisy Labels*; Patrini et al. (2017), *Making Deep Neural Networks Robust to Label Noise: A Loss Correction Approach*.
