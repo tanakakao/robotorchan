@@ -110,7 +110,7 @@ def test_hierarchy_rejects_shared_subgroups_and_duplicate_features(model_type):
     y = torch.arange(8) % 3
     x[:, 1] = (torch.arange(8) % 2).to(torch.double)
     x[:, 2] = (torch.arange(8) % 2).to(torch.double)
-    with pytest.raises(ValueError, match="distinct"):
+    with pytest.raises(ValueError, match="duplicate dimensions"):
         model_type(x, y, group_feature=1, subgroup_feature=1, num_classes=3)
     x[:, 2] = 0.0
     with pytest.raises(ValueError, match="exactly one group"):
