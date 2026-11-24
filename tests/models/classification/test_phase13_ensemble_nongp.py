@@ -75,9 +75,7 @@ def test_ensemble_weighted_posterior_and_active_learning(ensemble_class, member_
     second = member_class(x, y, num_classes=3, n_estimators=9, random_state=17)
     first.fit()
     second.fit()
-    ensemble = ensemble_class(
-        first, second, weights=torch.tensor([0.3, 0.7], dtype=torch.double)
-    )
+    ensemble = ensemble_class(first, second, weights=torch.tensor([0.3, 0.7], dtype=torch.double))
     with torch.no_grad():
         posterior = ensemble.probability_posterior(x[:5])
         mean = ensemble.predict_proba(x[:5])
@@ -130,22 +128,16 @@ def test_nongp_restores_missing_class_probability_axis():
         ),
     ],
 )
-def test_hybrid_gp_non_gp_ensemble_candidate_acquisition(
-    ensemble_class, member_class, gp_class
-):
+def test_hybrid_gp_non_gp_ensemble_candidate_acquisition(ensemble_class, member_class, gp_class):
     pytest.importorskip("sklearn")
     torch.manual_seed(13)
     x = torch.linspace(0, 1, 15, dtype=torch.double).unsqueeze(-1)
-    y = torch.bucketize(
-        x[:, 0], torch.tensor([0.33, 0.66], dtype=torch.double)
-    )
+    y = torch.bucketize(x[:, 0], torch.tensor([0.33, 0.66], dtype=torch.double))
     nongp = member_class(x, y, num_classes=3, n_estimators=8, random_state=9)
     nongp.fit()
     gp = gp_class(x, y, num_classes=3)
     gp.fit(epochs=2, lr=0.005)
-    ensemble = ensemble_class(
-        nongp, gp, weights=torch.tensor([0.5, 0.5], dtype=torch.double)
-    )
+    ensemble = ensemble_class(nongp, gp, weights=torch.tensor([0.5, 0.5], dtype=torch.double))
     candidates = x[:6]
     with torch.no_grad():
         probabilities = ensemble.predict_proba(candidates)
