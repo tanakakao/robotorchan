@@ -379,3 +379,8 @@ Notebook 31 にクラス確率の比較・候補提案の実行例がありま�
 順序分類用の非GPツリーモデルはラベルをカテゴリとして扱い、Ordered Probitと同じ閾値構造は仮定しません。順序に特有の尤度を利用したい場合は既存のOrdinal GPを使用してください。
 
 実行例・予測グラフ・候補提案については[Notebook 31](../../examples/notebooks/31_ordinal_classification_active_learning.ipynb)を参照してください。
+
+
+### Bootstrap Ensemble
+
+`BootstrapGradientBoostingOrdinalClassifier` は既存の二値Bootstrap Ensembleに対応した拡張です。`n_members`個の独立したブートストラップ標本でGradient Boostingモデルを学習します。`fit()`後は`probability_posterior()`で各モデルのクラス確率分布を、`predict_proba()`で平均を取得できます。クラス数が少ない場合にも各標本が全クラスを含むよう再抽出しますが、希少クラスが極端に少ない場合は標本の作成に失敗することがあります。重み付け可能な任意のモデルの統合には`OrdinalClassificationEnsemble`を使用してください。
