@@ -91,8 +91,9 @@ It accepts an existing BoTorch acquisition function and dispatches by `optimizer
 Available names are `botorch`, `torch_adam`, `torch_adamw`, `torch_sgd`,
 `random`, `sobol`, `de`, `cmaes`, `ga`, `pso`, and `hybrid`.
 For `optimizer="ga"`, a mixed `MixedVariableSpace` selects the mixed GA backend.
-The dispatcher does not consume `MixedVariableSpace` with `optimizer="botorch"`;
-use the explicit BoTorch mixed optimizer for that case.
+Mixed BoTorch dispatch requires explicit discrete configurations in
+`optimizer_options["fixed_features_list"]`. Mixed CMA-ES is selected for discrete
+variables when using the CMA-ES dispatcher name.
 
 Example:
 
@@ -123,3 +124,17 @@ This gives robotorchan two properties at the same time:
 - BoTorch users can use the library naturally without relearning core concepts.
 - users who want more choices can select additional optimization methods through
   a convenience argument and receive capability validation before optimization.
+
+## Configured optimizer factory
+
+`create_optimizer("sobol", seed=4, raw_samples=128)` returns a standard Python
+partial of the existing dispatcher. Invoke it with an acquisition, bounds and q.
+Call-time keywords override configured defaults; validation remains in the dispatcher.
+`list_optimizers()` includes all scalar registry names and dedicated public entry
+points, without adding dedicated names to the scalar capability registry.
+
+For example, `create_optimizer("optimize_vector_nsga2", population_size=32)`
+returns a configured vector optimizer accepting an objective and bounds, not q.
+Mixed, one-shot, safe and contextual entry points retain their original contracts.
+ContextualOptimizer is a configured constructor, not a scalar acquisition dispatcher.
+Custom callables are accepted without assigning inferred capability metadata.

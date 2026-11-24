@@ -206,6 +206,8 @@ def test_public_optim_exports_are_complete() -> None:
         "DiscreteTrustRegionState",
         "DiscreteTrustRegionStrategy",
         "apply_fixed_features",
+        "create_optimizer",
+        "list_optimizers",
         "optimize_acqf",
         "optimize_acqf_sequential",
         "optimize_mixed_one_shot_acqf",
