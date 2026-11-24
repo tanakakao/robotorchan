@@ -390,9 +390,7 @@ def create_model(model: Callable[..., T], /, *args: Any, **kwargs: Any) -> T: ..
 def create_model(model: str, /, *args: Any, **kwargs: Any) -> Any: ...
 
 
-def create_model(
-    model: str | Callable[..., T], /, *args: Any, **kwargs: Any
-) -> T | Any:
+def create_model(model: str | Callable[..., T], /, *args: Any, **kwargs: Any) -> T | Any:
     """Call the original constructor without fitting or transforming arguments."""
     constructor = get_model_class(model) if isinstance(model, str) else model
     if not callable(constructor):
