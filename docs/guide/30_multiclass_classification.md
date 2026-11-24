@@ -281,3 +281,37 @@ NNGPカーネルを用いた分類も、非ガウス尤度に対する変分推�
 両モデルとも `num_classes` を指定し、既存の分類APIで `fit()`、`predict_proba()`、`probability_posterior()`、`PredictiveEntropy(model)`、`qPredictiveEntropy(model)` を利用します。候補は**既知のコンテキスト／グループIDを明示**して提案し、その条件における分類の不確実性を評価します。コンテキストIDやグループIDを連続最適化してはいけません。新しい未知IDへの外挿は保証しません。
 
 共通＋偏差という加法共分散を使うため、単純なOne-hot入力やカテゴリを連続量として解釈する手法とは異なります。詳しい動作例とグラフは[Notebook 30](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)を参照してください。
+
+
+## ラベルノイズを考慮したGP分類
+
+`LabelNoiseMulticlassGPClassifier` は、真のクラスから観測ラベルへ移る確率を表す
+**クラス遷移行列**を指定して学習します。
+`flip_probability=0.2` は各真のクラスが確率0.2で他のクラスへ
+一様に置き換わる対称ノイズです。非対称な誤記録率をモデル化するときは
+`transition_matrix`（行が真のクラス、列が観測クラス）を指定します。
+二つの指定は同時に使えません。遷移行列は各要素が0から1の有限値であり、
+各行の総和が1でなければなりません。
+
+`fit()` は**観測ラベル確率による学習目的関数**を使用します。
+`predict_clean_proba(X)` は誤記録前の真のクラス分布、
+`predict_proba(X)` と `probability_posterior(X)` は誤記録後の
+観測ラベル分布を返します。予測クラスや既存の
+`PredictiveEntropy` / `qPredictiveEntropy` は既定で
+**観測ラベルの不確実性**を評価します。実際に知りたい対象が真の
+クラスなのか、誤記録された観測なのかを混同しないでください。
+
+このモデルは遷移行列が**既知かつ固定**であることを前提とします。
+ノイズ率の自動推定や、入力位置によって変化する誤記録確率はこのモデルの対象外です。
+真のラベルのないデータだけから任意の遷移行列を識別できると想定してはいけません。
+Notebook 30 にクラス確率の比較・候補提案の実行例があります。
+
+
+### 汚染ラベルへの対応
+
+`ContaminatedMulticlassGPClassifier` は、確率 `contamination_probability` で真のラベルとは無関係な
+`contaminant_distribution` から観測ラベルが生成される状況を扱います。
+これはクラス遷移行列の特殊形であり、既存のラベルノイズ学習処理を再利用します。
+
+汚染率と汚染ラベル分布は既知・固定として指定します。
+`predict_clean_proba()` は汚染前、`predict_proba()` は汚染後の予測です。
