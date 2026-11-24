@@ -73,9 +73,7 @@ def test_make_model_sampler_selects_stochastic_sampler_for_deep_gp() -> None:
 
 @pytest.mark.parametrize("mixed", [False, True])
 def test_pairwise_sampler_runs_against_gaussian_posterior(mixed: bool) -> None:
-    datapoints = torch.tensor(
-        [[0.0, 0.0], [0.3, 1.0], [0.7, 0.0], [1.0, 1.0]], dtype=torch.double
-    )
+    datapoints = torch.tensor([[0.0, 0.0], [0.3, 1.0], [0.7, 0.0], [1.0, 1.0]], dtype=torch.double)
     comparisons = torch.tensor([[1, 0], [2, 3], [1, 2]], dtype=torch.long)
     if mixed:
         model = MixedPairwiseGP(datapoints, comparisons, cat_dims=[1])
