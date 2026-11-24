@@ -161,9 +161,7 @@ class _CategoricalCandidateInputMixin(UncertainBinaryClassificationMixin):
             category_probabilities=category_probabilities,
         )
         num_categories = category_values.numel()
-        expanded = X.unsqueeze(-2).expand(
-            *X.shape[:-1], num_categories, X.shape[-1]
-        ).clone()
+        expanded = X.unsqueeze(-2).expand(*X.shape[:-1], num_categories, X.shape[-1]).clone()
         expanded[..., self.uncertain_cat_dim] = category_values
         probabilities = super().predict_proba(expanded, **kwargs)
         return (probabilities * category_probabilities.unsqueeze(-1)).sum(dim=-2)
@@ -184,9 +182,7 @@ class UncertainCategoricalMulticlassGPClassifier(
         num_classes: int,
         **kwargs: object,
     ) -> None:
-        super().__init__(
-            train_X, train_Y, num_classes=num_classes, cat_dims=cat_dims, **kwargs
-        )
+        super().__init__(train_X, train_Y, num_classes=num_classes, cat_dims=cat_dims, **kwargs)
         self._validate_uncertain_cat_dim(train_X, uncertain_cat_dim)
 
 
@@ -205,7 +201,5 @@ class UncertainCategoricalOrdinalGPClassifier(
         num_classes: int,
         **kwargs: object,
     ) -> None:
-        super().__init__(
-            train_X, train_Y, num_classes=num_classes, cat_dims=cat_dims, **kwargs
-        )
+        super().__init__(train_X, train_Y, num_classes=num_classes, cat_dims=cat_dims, **kwargs)
         self._validate_uncertain_cat_dim(train_X, uncertain_cat_dim)
