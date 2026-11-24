@@ -54,6 +54,14 @@
 - 複数の分類制約間でも独立性の近似が入ります。
 - qEI・qEHVI側の候補間のGP事後相関と、PoF重み付け側の独立性近似は別に考えます。
 
+## マルチクラス分類のMonte Carlo評価と再現性
+
+`MulticlassSingleTaskGPClassifier.predict_proba(X)` は潜在GPの事後サンプルをSoftmax変換したMonte Carlo平均です。そのため、**同じ候補を再評価しても**有限サンプルによる確率の揺れがあり、重み付け後の獲得関数値も変わり得ます。これは回帰側qEI/qEHVIの `SobolQMCNormalSampler` だけにseedを設定しても解消されません。
+
+一方、`OrdinalSingleTaskGPClassifier.predict_proba(X)` はGaussian潜在事後とOrdered-probitの下で周辺予測確率を解析的に計算します。両者の計算上のばらつきを区別してください。
+
+この違いは、特に獲得関数を反復評価する最適化器で注意が必要です。候補の安定性を評価するときは乱数シード・Monte Carloサンプル数と複数回評価を確認し、**単一回の候補提案が再現性や確率校正の保証にはならない**ことを明記します。これは制約付きBOの理論上の独立性近似とは別の、有限サンプルによる数値誤差です。
+
 ## 注意点と適用範囲
 
 - `probability_threshold` を指定した確率下限は、ここで紹介するPoF重み付けにより強制されません。確率重み付けと閾値制約は別物です。
