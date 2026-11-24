@@ -120,6 +120,8 @@ from robotorchan.models.classification.multiclass.high_dimensional.saas import (
     SaasOrdinalGPClassifier,
 )
 from robotorchan.models.classification.multiclass.robust.label_noise import (
+    ContaminatedMulticlassGPClassifier,
+    ContaminatedOrdinalGPClassifier,
     LabelNoiseMulticlassGPClassifier,
     LabelNoiseOrderedProbitLikelihood,
     LabelNoiseOrdinalGPClassifier,
@@ -208,6 +210,8 @@ __all__ = [
     "ClassificationUncertaintyTarget",
     "ContaminatedBernoulliLikelihood",
     "ContaminatedBinarySingleTaskGPClassifier",
+    "ContaminatedMulticlassGPClassifier",
+    "ContaminatedOrdinalGPClassifier",
     "ContextualBinaryGPClassifier",
     "ContextualMulticlassGPClassifier",
     "ContextualOrdinalGPClassifier",
