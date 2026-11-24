@@ -34,6 +34,7 @@ from robotorchan.models.expressive.spectral_mixture import (
     SpectralMixtureKroneckerMultiTaskGP,
     SpectralMixtureMultiTaskGP,
 )
+from robotorchan.models.factory import create_model, get_model_class, list_models
 from robotorchan.models.heterogeneous import HeterogeneousModel
 from robotorchan.models.high_dimensional.alebo import ALEBOGP
 from robotorchan.models.high_dimensional.fully_bayesian import (
@@ -349,5 +350,8 @@ __all__ = [
     "UnsupportedModelOperationError",
     "VAEKroneckerMultiTaskGP",
     "VAEMultiTaskGP",
+    "create_model",
+    "get_model_class",
     "get_model_registry_entry",
+    "list_models",
 ]
