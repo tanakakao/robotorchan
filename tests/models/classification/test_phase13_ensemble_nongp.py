@@ -12,11 +12,11 @@ from robotorchan.models.classification import (
     HistGradientBoostingMulticlassClassifier,
     HistGradientBoostingOrdinalClassifier,
     MulticlassClassificationEnsemble,
+    MulticlassSingleTaskGPClassifier,
     OrdinalClassificationEnsemble,
+    OrdinalSingleTaskGPClassifier,
     RandomForestMulticlassClassifier,
     RandomForestOrdinalClassifier,
-    MulticlassSingleTaskGPClassifier,
-    OrdinalSingleTaskGPClassifier,
 )
 
 
