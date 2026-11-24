@@ -65,9 +65,7 @@ def test_label_noise_custom_transition_and_validation(model_type):
     with pytest.raises(ValueError, match="shape"):
         model_type(x, y, num_classes=3, transition_matrix=torch.eye(2))
     with pytest.raises(ValueError, match="not both"):
-        model_type(
-            x, y, num_classes=3, transition_matrix=transition, flip_probability=0.1
-        )
+        model_type(x, y, num_classes=3, transition_matrix=transition, flip_probability=0.1)
     with pytest.raises(ValueError, match="flip_probability"):
         model_type(x, y, num_classes=3, flip_probability=-0.1)
 
@@ -117,6 +115,4 @@ def test_contaminant_rejects_invalid_distribution(model_type):
     with pytest.raises(ValueError, match="strictly between"):
         model_type(x, y, num_classes=3, contamination_probability=1.0)
     with pytest.raises(ValueError, match="sum to one"):
-        model_type(
-            x, y, num_classes=3, contaminant_distribution=torch.ones(3, dtype=torch.double)
-        )
+        model_type(x, y, num_classes=3, contaminant_distribution=torch.ones(3, dtype=torch.double))
