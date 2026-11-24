@@ -60,7 +60,9 @@ def test_registry_covers_public_acquisition_classes() -> None:
         for name, entry in ACQUISITION_REGISTRY.items()
         if entry.capabilities.purpose is AcquisitionPurpose.ACTIVE_LEARNING
     }
-    assert public_extensions == expected
+    assert public_extensions == expected | {"PairwiseBayesianActiveLearningByDisagreement"}
+    assert "PairwiseBayesianActiveLearningByDisagreement" not in acquisition.__all__
+    assert acquisition.get_acquisition_class("PairwiseBayesianActiveLearningByDisagreement")
 
 
 def test_single_task_gp_supports_scalar_active_learning() -> None:
