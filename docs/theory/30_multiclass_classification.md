@@ -56,7 +56,7 @@ $$
 \log P(y_i\mid \boldsymbol f(x_i))
 \right]
 -
-\operatorname{KL}\bigl(q(\boldsymbol u)\,\|\,p(\boldsymbol u)\bigr).
+\mathrm{KL}\bigl(q(\boldsymbol u)\,\|\,p(\boldsymbol u)\bigr).
 $$
 
 前項は観測ラベルへの対数確率を高くし、後項は変分分布がGP事前分布から過度に離れることを抑えます。softmaxの非線形性によって期待対数尤度は一般に解析積分できず、モンテカルロ法などで近似します。
@@ -85,7 +85,7 @@ $$
 {\sum_{j=0}^{C-1}\exp(f_j^{(s)}(x))}
 $$
 
-と近似します。ここで、\(\operatorname{softmax}(\mathbb E[\boldsymbol f])\) と \(\mathbb E[\operatorname{softmax}(\boldsymbol f)]\) は一般に一致しません。モンテカルロサンプルを増やすと積分の近似誤差は低減し得ますが、学習データ不足やモデルの仮定違反から生じる誤差まで解消されるわけではありません。
+と近似します。ここで、\(\mathrm{softmax}(\mathbb E[\boldsymbol f])\) と \(\mathbb E[\mathrm{softmax}(\boldsymbol f)]\) は一般に一致しません。モンテカルロサンプルを増やすと積分の近似誤差は低減し得ますが、学習データ不足やモデルの仮定違反から生じる誤差まで解消されるわけではありません。
 
 ### 2.3 予測EntropyとBALDの違いを式で確認する
 
@@ -207,7 +207,7 @@ GPは潜在関数に事前分布を置きます。しかしCategorical尤度とG
 次の事後期待値です。
 
 $$
-p(y=c\mid x,D)=\mathbb{E}_{f\mid D}[\operatorname{softmax}(f(x))_c].
+p(y=c\mid x,D)=\mathbb{E}_{f\mid D}[\mathrm{softmax}(f(x))_c].
 $$
 softmaxは非線形なので一般に
 期待値のsoftmaxとsoftmaxの期待値は一致しません。
@@ -254,14 +254,14 @@ Accuracyだけでなく、NLL・Brier score・クラス別Recallも確認して�
 多クラス負の対数尤度（NLL）は
 
 $$
-\operatorname{NLL}
+\mathrm{NLL}
 =-\frac1n\sum_{i=1}^{n}\log p_{i,y_i}
 $$
 
 であり、真のクラスへ極端に小さい確率を与えた予測を強く罰します。多クラスBrier scoreは
 
 $$
-\operatorname{Brier}
+\mathrm{Brier}
 =\frac1n\sum_{i=1}^{n}\sum_{c=0}^{C-1}
 \left(p_{ic}-\boldsymbol1[y_i=c]\right)^2
 $$
