@@ -39,6 +39,7 @@ from robotorchan.optim.embedding import (
     REMBOStrategy,
     update_baxus_state,
 )
+from robotorchan.optim.factory import create_optimizer, list_optimizers
 from robotorchan.optim.latent import (
     LatentReconstruction,
     LatentSpaceStrategy,
@@ -128,12 +129,14 @@ __all__ = [
     "TuRBOState",
     "TuRBOStrategy",
     "apply_fixed_features",
+    "create_optimizer",
     "gen_augmented_one_shot_initial_conditions",
     "generate_turbo_restart_center",
     "generate_turbo_thompson_choices",
     "get_optimizer_capabilities",
     "hamming_distance",
     "hamming_neighbors",
+    "list_optimizers",
     "optimize_acqf",
     "optimize_acqf_sequential",
     "optimize_mixed_one_shot_acqf",
