@@ -24,7 +24,9 @@ def test_label_noise_fit_clean_observed_probability_and_candidate_proposal(model
     model.fit(epochs=2, lr=0.005)
     pool = torch.linspace(0.0, 1.0, 6, dtype=torch.double).unsqueeze(-1)
     with torch.no_grad():
+        torch.manual_seed(123)
         clean = model.predict_clean_proba(pool)
+        torch.manual_seed(123)
         observed = model.predict_proba(pool)
         posterior = (
             model.probability_posterior(pool, num_samples=16, seed=11)
