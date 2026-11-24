@@ -110,3 +110,10 @@ source/target models; causal surrogates require intervention data and a known
 DAG. SCMs are not native BoTorch models. Calibrated classifiers and generic
 classification ensembles require checks of the supplied base estimator or
 members. These entries are conditional, not automatically recommended.
+
+Classifier feasibility adapters are evaluated separately from single-model
+acquisition metadata. ClassificationProbabilityAcquisition is scalar and q=1;
+FeasibilityWeightedAcquisition requires both an objective acquisition and a
+classifier feasibility adapter, inherits the wrapped acquisition's q and
+objective limits, and rejects pending candidates and joint fantasization.
+The product reduction assumes independent feasibility probabilities.

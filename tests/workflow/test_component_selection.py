@@ -137,3 +137,21 @@ def test_special_model_contracts() -> None:
     models = {item.name: item for item in evaluate_components(spec).models}
     assert models["CalibratedOrdinalClassifier"].status is SelectionStatus.CONDITIONAL
     assert models["BOCSSurrogate"].status is SelectionStatus.INCOMPATIBLE
+
+
+def test_classifier_feasibility_acquisition_conditions() -> None:
+    spec = ProblemSpec(purpose="bayesian_optimization", observation_kind="binary")
+    acquisitions = {item.name: item for item in evaluate_components(spec).acquisitions}
+    assert (
+        acquisitions["ClassificationProbabilityAcquisition"].status is SelectionStatus.CONDITIONAL
+    )
+    assert acquisitions["FeasibilityWeightedAcquisition"].status is SelectionStatus.CONDITIONAL
+    spec = ProblemSpec(purpose="bayesian_optimization", q=2, constrained=True)
+    acquisitions = {item.name: item for item in evaluate_components(spec).acquisitions}
+    assert (
+        acquisitions["ClassificationProbabilityAcquisition"].status is SelectionStatus.INCOMPATIBLE
+    )
+    assert acquisitions["FeasibilityWeightedAcquisition"].status is SelectionStatus.CONDITIONAL
+    assert "does not support pending candidates or joint fantasization" in (
+        acquisitions["FeasibilityWeightedAcquisition"].reasons
+    )

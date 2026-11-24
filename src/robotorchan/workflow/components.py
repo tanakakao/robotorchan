@@ -123,10 +123,38 @@ def _model(spec: ProblemSpec, name: str) -> ComponentSelection:
     return _result(name, list(model_selection_reasons(spec, caps, kind)))
 
 
+def _special_acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
+    reasons = []
+    if name == "ClassificationProbabilityAcquisition":
+        if spec.observation_kind is ObservationKind.REGRESSION:
+            reasons.append("requires a classifier probability of feasibility")
+        if spec.purpose.value != "bayesian_optimization":
+            reasons.append("optimizes feasibility rather than information gain")
+        if spec.q != 1:
+            reasons.append("supports q=1 only")
+        if spec.objective_type is ObjectiveType.MULTI:
+            reasons.append("returns a scalar feasibility score")
+        return _result(name, reasons, ("requires a feasible class and probability adapter",))
+    if name == "FeasibilityWeightedAcquisition":
+        if spec.purpose.value != "bayesian_optimization":
+            reasons.append("requires an objective optimization acquisition")
+        return _result(
+            name,
+            reasons,
+            (
+                "requires an objective acquisition and classifier feasibility adapter",
+                "q and objective support depend on the wrapped acquisition",
+                "does not support pending candidates or joint fantasization",
+                "product reduction assumes independent feasibility probabilities",
+            ),
+        )
+    return _unknown(name)
+
+
 def _acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
     entry = ACQUISITION_REGISTRY.get(name)
     if entry is None:
-        return _unknown(name)
+        return _special_acquisition(spec, name)
     caps = entry.capabilities
     reasons = []
     observation = (
