@@ -272,7 +272,7 @@ NNGPカーネルを用いた分類も、非ガウス尤度に対する変分推�
 を参照してください。
 
 
-## Contextual・Hierarchical分類モデル（Phase 10）
+## Contextual・Hierarchical分類モデル
 
 `ContextualMulticlassGPClassifier` は、コンテキストを表す整数IDを入力列の一つとして受け取ります。例えば `train_X=[design_x, context_id]` として `context_feature=-1` を指定し、`rank` でコンテキスト間の相関の階数を制御します。
 
