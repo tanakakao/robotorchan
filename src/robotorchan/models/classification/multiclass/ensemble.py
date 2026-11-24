@@ -6,6 +6,8 @@ probabilities*, not an invented shared GP latent posterior.
 
 from __future__ import annotations
 
+from typing import Any, ClassVar
+
 import torch
 from torch import Tensor, nn
 from torch.distributions import Categorical
@@ -14,6 +16,10 @@ from robotorchan.models.classification.base import (
     ClassificationLikelihoodFamily,
     ClassificationModelMixin,
     LatentOutputStructure,
+)
+from robotorchan.models.classification.multiclass.non_gp import (
+    GradientBoostingMulticlassClassifier,
+    GradientBoostingOrdinalClassifier,
 )
 from robotorchan.models.classification.posterior.ensemble import (
     ClassificationEnsemblePosterior,
@@ -143,3 +149,74 @@ class MulticlassClassificationEnsemble(ClassificationModelMixin, nn.Module):
 
 class OrdinalClassificationEnsemble(MulticlassClassificationEnsemble):
     """Ensemble over ordered category labels; does not assume latent GP coherence."""
+
+
+class BootstrapMulticlassClassificationEnsemble(MulticlassClassificationEnsemble):
+    """Bootstrap complete non-GP classifiers and retain member epistemic spread."""
+
+    member_class: ClassVar[type[nn.Module]] = GradientBoostingMulticlassClassifier
+
+    def __init__(
+        self,
+        train_X: Tensor,
+        train_Y: Tensor,
+        *,
+        num_classes: int,
+        n_members: int = 8,
+        random_state: int | None = None,
+        **estimator_kwargs: Any,
+    ) -> None:
+        if train_X.ndim != 2:
+            raise ValueError("train_X must have shape [n, d].")
+        labels = train_Y.squeeze(-1) if train_Y.ndim == 2 else train_Y
+        if labels.ndim != 1 or labels.shape[0] != train_X.shape[0]:
+            raise ValueError("train_Y must contain one label per row.")
+        if not isinstance(n_members, int) or n_members < 2:
+            raise ValueError("n_members must be at least two.")
+        generator = torch.Generator(device="cpu")
+        if random_state is None:
+            generator.seed()
+        else:
+            generator.manual_seed(random_state)
+        members = []
+        cpu_labels = labels.detach().cpu()
+        for index in range(n_members):
+            for _ in range(100):
+                sampled = torch.randint(
+                    len(labels), (len(labels),), generator=generator
+                )
+                if torch.unique(cpu_labels[sampled]).numel() == num_classes:
+                    break
+            else:
+                raise RuntimeError(
+                    "Could not draw a bootstrap sample containing all classes."
+                )
+            indices = sampled.to(device=train_X.device)
+            kwargs = dict(estimator_kwargs)
+            kwargs.setdefault(
+                "random_state",
+                None if random_state is None else random_state + index,
+            )
+            members.append(
+                self.member_class(
+                    train_X[indices], labels[indices],
+                    num_classes=num_classes, **kwargs
+                )
+            )
+        super().__init__(*members)
+        self.n_members = n_members
+
+    def fit(self) -> None:
+        """Fit all bootstrap members on their independently resampled data."""
+        for member in self.members:
+            member.fit()
+
+
+class BootstrapGradientBoostingMulticlassClassifier(BootstrapMulticlassClassificationEnsemble):
+    """Bootstrap gradient boosting with an empirical multiclass posterior."""
+
+
+class BootstrapGradientBoostingOrdinalClassifier(BootstrapMulticlassClassificationEnsemble):
+    """Bootstrap gradient boosting over ordinal labels (without ordered thresholds)."""
+
+    member_class = GradientBoostingOrdinalClassifier
