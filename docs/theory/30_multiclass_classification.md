@@ -438,3 +438,31 @@ Mixed入力では、連続設計変数のNNGP型共分散と、カテゴリ変�
 NNGPカーネルを使用しても分類尤度は非ガウスであるため、分類の事後計算は変分近似です。NNGPの無限幅極限という理論と、有限の学習データから行う近似推論は区別してください。
 
 **参考文献：** Lee et al. (2018), *Deep Neural Networks as Gaussian Processes*; Matthews et al. (2018), *Gaussian Process Behaviour in Wide Deep Neural Networks*; Williams (1997), *Computing with Infinite Networks*.
+
+
+## Contextual・Hierarchical GP分類
+
+実験条件・設備・製造ラインなどの**コンテキスト**が変わると、同じ設計変数でも分類確率が変わることがあります。データが少ないコンテキストにも学習結果を共有できるよう、共通の潜在GP成分とコンテキスト固有の偏差成分を加法的にモデル化します。
+
+設計変数 $x$ とコンテキスト識別子 $c$ に対して、
+
+$$
+k((x,c),(x',c'))=k_0(x,x')+k_1(x,x')k_c(c,c')
+$$
+
+を考えます。$k_c$ は識別子の関連性を表すIndexKernelであり、数値IDを連続量の距離として解釈するものではありません。共通項 $k_0$ が複数コンテキスト間の統計的共有を担い、相互作用項 $k_1 k_c$ がコンテキスト別の偏差を表します。
+
+さらに、グループ $g$ とその下位サブグループ $s$ がある場合は
+
+$$
+k((x,g,s),(x',g',s')) =
+k_0(x,x')+k_g(x,x')k_G(g,g')+k_s(x,x')k_S(s,s')
+$$
+
+とし、全体・グループ・サブグループの3層を表現します。ここでは**各サブグループIDが一つのグループにのみ属する**ことを前提とし、入力で検証します。これは厳密な因果的階層の推定ではなく、階層を反映したGP共分散の指定です。
+
+マルチクラス分類では、クラス別の潜在GPにこの共分散構造を与え、Softmaxを介してクラス確率を推定します。 分類尤度は非ガウスであるため、潜在GPの学習は変分近似です。
+
+既知のコンテキスト下で候補点を選ぶことと、未観測のコンテキストに汎化させることは区別してください。新しいIDを用いる際の扱いはモデル仕様によって制限されます。
+
+**参考文献：** Bonilla, Chai and Williams (2008), *Multi-task Gaussian Process Prediction*; Álvarez, Rosasco and Lawrence (2012), *Kernels for Vector-Valued Functions: a Review*; Gelman et al. (2013), *Bayesian Data Analysis*（階層モデリングの背景）。
