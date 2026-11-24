@@ -85,6 +85,8 @@ def _special_model(spec: ProblemSpec, name: str) -> ComponentSelection:
             [],
             ("requires a known DAG and causal intervention workflow; not a BoTorch Model",),
         )
+    if name == "HeterogeneousModel":
+        return _result(name, [], ("capabilities depend on supplied heterogeneous members",))
     kinds = {
         "CalibratedBinaryClassifier": ObservationKind.BINARY,
         "CalibratedMulticlassClassifier": ObservationKind.MULTICLASS,
@@ -125,6 +127,40 @@ def _model(spec: ProblemSpec, name: str) -> ComponentSelection:
 
 def _special_acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
     reasons = []
+    if name in ("ConstrainedExpectedImprovement", "LogConstrainedExpectedImprovement"):
+        if spec.observation_kind is not ObservationKind.REGRESSION:
+            reasons.append("requires regression objective and constraint posteriors")
+        if spec.purpose.value != "bayesian_optimization":
+            reasons.append("purpose does not match")
+        if spec.q != 1:
+            reasons.append("supports q=1 only")
+        if spec.objective_type is ObjectiveType.MULTI:
+            reasons.append("requires a single objective")
+        if spec.preference:
+            reasons.append("requires numeric objective and constraint outcomes")
+        return _result(
+            name,
+            reasons,
+            ("requires independent Gaussian outputs and explicit constraint bounds",),
+        )
+    if name in ("PosteriorStandardDeviation", "qPosteriorStandardDeviation"):
+        if spec.observation_kind is not ObservationKind.REGRESSION:
+            reasons.append("requires a regression posterior")
+        if name == "PosteriorStandardDeviation" and spec.q != 1:
+            reasons.append("supports q=1 only")
+        if spec.objective_type is ObjectiveType.MULTI or spec.constrained:
+            reasons.append("requires scalar unconstrained uncertainty objective")
+        return _result(name, reasons, ("requires a scalar posterior or scalarization",))
+    if name == "qNegIntegratedPosteriorVariance":
+        if spec.purpose.value != "active_learning":
+            reasons.append("purpose does not match")
+        if spec.observation_kind is not ObservationKind.REGRESSION:
+            reasons.append("requires regression posterior variance")
+        return _result(
+            name,
+            reasons,
+            ("requires fantasy conditioning and integration points; check posterior shape",),
+        )
     if name == "ClassificationProbabilityAcquisition":
         if spec.observation_kind is ObservationKind.REGRESSION:
             reasons.append("requires a classifier probability of feasibility")

@@ -117,3 +117,13 @@ FeasibilityWeightedAcquisition requires both an objective acquisition and a
 classifier feasibility adapter, inherits the wrapped acquisition's q and
 objective limits, and rejects pending candidates and joint fantasization.
 The product reduction assumes independent feasibility probabilities.
+
+Additional native acquisition contracts cover analytic constrained EI, posterior
+standard deviation, and negative integrated posterior variance when exposed by
+the installed BoTorch version. The latter requires fantasy conditioning and
+integration points. HeterogeneousModel remains conditional on its members.
+To inspect remaining unknown factory names and counts, run:
+
+```bash
+pytest -s tests/workflow/test_component_selection.py -k report_remaining_unknown
+```

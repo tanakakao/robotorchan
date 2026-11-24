@@ -155,3 +155,28 @@ def test_classifier_feasibility_acquisition_conditions() -> None:
     assert "does not support pending candidates or joint fantasization" in (
         acquisitions["FeasibilityWeightedAcquisition"].reasons
     )
+
+
+def test_additional_native_acquisition_contracts() -> None:
+    result = evaluate_components(ProblemSpec(purpose="bayesian_optimization", q=2))
+    acquisitions = {item.name: item.status for item in result.acquisitions}
+    for name in (
+        "ConstrainedExpectedImprovement",
+        "LogConstrainedExpectedImprovement",
+        "PosteriorStandardDeviation",
+    ):
+        if name in acquisitions:
+            assert acquisitions[name] is SelectionStatus.INCOMPATIBLE
+    result = evaluate_components(ProblemSpec(purpose="active_learning", q=2))
+    acquisitions = {item.name: item.status for item in result.acquisitions}
+    if "qNegIntegratedPosteriorVariance" in acquisitions:
+        assert acquisitions["qNegIntegratedPosteriorVariance"] is SelectionStatus.CONDITIONAL
+
+
+def test_report_remaining_unknown_components() -> None:
+    result = evaluate_components(ProblemSpec(purpose="bayesian_optimization"))
+    for category in ("models", "acquisitions", "optimizers", "search_strategies"):
+        entries = getattr(result, category)
+        unknown = [item.name for item in entries if item.status is SelectionStatus.UNKNOWN]
+        print(f"{category}: {len(unknown)}/{len(entries)} unknown: {unknown}")
+        assert all(item.reasons for item in entries if item.status is SelectionStatus.UNKNOWN)
