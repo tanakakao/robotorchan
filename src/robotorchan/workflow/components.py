@@ -134,6 +134,22 @@ _SPECIALIST_CAPABILITIES = {
 
 
 def _optimizer(spec: ProblemSpec, name: str) -> ComponentSelection:
+    if name == "optimize_mixed_one_shot_acqf":
+        reasons = []
+        if spec.input_type is not InputType.MIXED:
+            reasons.append("requires mixed categorical assignments")
+        if spec.q != 1:
+            reasons.append("supports q=1 only")
+        if spec.candidate_constrained:
+            reasons.append("does not accept candidate constraints")
+        return _result(name, reasons, ("requires one-shot acquisition and assignment budget",))
+    if name == "optimize_safe_acqf":
+        reasons = []
+        if spec.candidate_constrained:
+            reasons.append("does not accept general candidate constraints")
+        return _result(name, reasons, ("requires safety model and posterior safety constraints",))
+    if name == "ContextualOptimizer":
+        return _result(name, [], ("requires context and compatible underlying optimizer",))
     caps = OPTIMIZER_CAPABILITIES.get(name, _SPECIALIST_CAPABILITIES.get(name))
     if caps is None:
         return _unknown(name)

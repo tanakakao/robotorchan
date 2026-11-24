@@ -76,3 +76,12 @@ def test_extended_classification_model_selection() -> None:
     assert models["PCAOrdinalGPClassifier"].status is SelectionStatus.COMPATIBLE
     assert models["PCAMulticlassGPClassifier"].status is SelectionStatus.INCOMPATIBLE
     assert models["RandomForestOrdinalClassifier"].status is SelectionStatus.INCOMPATIBLE
+
+
+def test_remaining_specialist_optimizer_contracts() -> None:
+    result = evaluate_components(ProblemSpec(purpose="bayesian_optimization", q=2))
+    optimizers = {item.name: item for item in result.optimizers}
+    assert all(item.status is not SelectionStatus.UNKNOWN for item in result.optimizers)
+    assert optimizers["optimize_mixed_one_shot_acqf"].status is SelectionStatus.INCOMPATIBLE
+    assert optimizers["optimize_safe_acqf"].status is SelectionStatus.CONDITIONAL
+    assert optimizers["ContextualOptimizer"].status is SelectionStatus.CONDITIONAL

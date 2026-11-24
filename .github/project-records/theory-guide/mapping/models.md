@@ -788,6 +788,13 @@ not an assertion that every entry has its own notebook.
 | `multiclass.contaminated`, `ordinal.contaminated` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
 | `multiclass.continuous_uncertain_input`, `ordinal.continuous_uncertain_input` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
 | `multiclass.uncertain_categorical`, `ordinal.uncertain_categorical` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.alebo`, `ordinal.alebo` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.joint_encoder`, `ordinal.joint_encoder` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.contextual`, `ordinal.contextual` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.hierarchical`, `ordinal.hierarchical` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.deep_gp`, `ordinal.deep_gp` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.ensemble`, `ordinal.ensemble` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.bootstrap_gradient_boosting`, `ordinal.bootstrap_gradient_boosting` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
 
 The shared classification guide explicitly documents family capabilities,
 predictive probability versus latent posterior, robust observation-process

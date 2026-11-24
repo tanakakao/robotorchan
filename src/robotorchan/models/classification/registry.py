@@ -20,6 +20,10 @@ from robotorchan.models.capabilities import (
 from robotorchan.models.classification.binary.registry import (
     BINARY_CLASSIFICATION_MODEL_SPECS,
 )
+from robotorchan.models.classification.expressive.joint_encoder import (
+    JointEncoderMulticlassGPClassifier,
+    JointEncoderOrdinalGPClassifier,
+)
 from robotorchan.models.classification.expressive.nonstationary import (
     MixedNonstationaryMulticlassGPClassifier,
     MixedNonstationaryOrdinalGPClassifier,
@@ -31,6 +35,19 @@ from robotorchan.models.classification.expressive.spectral_mixture import (
     MixedSpectralMixtureOrdinalGPClassifier,
     SpectralMixtureMulticlassGPClassifier,
     SpectralMixtureOrdinalGPClassifier,
+)
+from robotorchan.models.classification.multiclass.deep_gp import (
+    MulticlassSingleTaskDeepGPClassifier,
+)
+from robotorchan.models.classification.multiclass.ensemble import (
+    BootstrapGradientBoostingMulticlassClassifier,
+    BootstrapGradientBoostingOrdinalClassifier,
+    MulticlassClassificationEnsemble,
+    OrdinalClassificationEnsemble,
+)
+from robotorchan.models.classification.multiclass.high_dimensional.alebo import (
+    ALEBOMulticlassGPClassifier,
+    ALEBOOrdinalGPClassifier,
 )
 from robotorchan.models.classification.multiclass.high_dimensional.reduced import (
     PCAMulticlassGPClassifier,
@@ -64,6 +81,12 @@ from robotorchan.models.classification.multiclass.robust.label_noise import (
     LabelNoiseMulticlassGPClassifier,
     LabelNoiseOrdinalGPClassifier,
 )
+from robotorchan.models.classification.multiclass.standard.contextual import (
+    ContextualMulticlassGPClassifier,
+    ContextualOrdinalGPClassifier,
+    HierarchicalMulticlassGPClassifier,
+    HierarchicalOrdinalGPClassifier,
+)
 from robotorchan.models.classification.multiclass.standard.infinite_width_bnn import (
     InfiniteWidthBNNMulticlassGPClassifier,
     InfiniteWidthBNNOrdinalGPClassifier,
@@ -91,6 +114,9 @@ from robotorchan.models.classification.multiclass.uncertain_input import (
     ContinuousUncertainInputOrdinalGPClassifier,
     UncertainCategoricalMulticlassGPClassifier,
     UncertainCategoricalOrdinalGPClassifier,
+)
+from robotorchan.models.classification.ordinal.deep_gp import (
+    OrdinalSingleTaskDeepGPClassifier,
 )
 from robotorchan.models.classification.ordinal.standard.single_task import (
     MixedOrdinalSingleTaskGPClassifier,
@@ -217,6 +243,67 @@ def _make_registry() -> dict[str, ClassificationModelRegistryEntry]:
 def _register_extended_models(registry: dict[str, ClassificationModelRegistryEntry]) -> None:
     """Register explicit paired implementations using their standard GP contracts."""
     pairs = (
+        (
+            "alebo",
+            ALEBOMulticlassGPClassifier,
+            ALEBOOrdinalGPClassifier,
+            "high_dimensional",
+            {"high_dimensional": HighDimensionalStrategy.RANDOM_EMBEDDING},
+        ),
+        (
+            "joint_encoder",
+            JointEncoderMulticlassGPClassifier,
+            JointEncoderOrdinalGPClassifier,
+            "expressive",
+            {"high_dimensional": HighDimensionalStrategy.NEURAL_REDUCTION},
+        ),
+        (
+            "contextual",
+            ContextualMulticlassGPClassifier,
+            ContextualOrdinalGPClassifier,
+            "standard",
+            {},
+        ),
+        (
+            "hierarchical",
+            HierarchicalMulticlassGPClassifier,
+            HierarchicalOrdinalGPClassifier,
+            "standard",
+            {},
+        ),
+        (
+            "deep_gp",
+            MulticlassSingleTaskDeepGPClassifier,
+            OrdinalSingleTaskDeepGPClassifier,
+            "expressive",
+            {
+                "high_dimensional": HighDimensionalStrategy.DEEP,
+                "posterior_sampling_type": PosteriorSamplingType.STOCHASTIC,
+            },
+        ),
+        (
+            "ensemble",
+            MulticlassClassificationEnsemble,
+            OrdinalClassificationEnsemble,
+            "ensemble",
+            {
+                "inference": InferenceType.NOT_APPLICABLE,
+                "ensemble_posterior": True,
+                "posterior_sampling_type": PosteriorSamplingType.ENSEMBLE,
+            },
+        ),
+        (
+            "bootstrap_gradient_boosting",
+            BootstrapGradientBoostingMulticlassClassifier,
+            BootstrapGradientBoostingOrdinalClassifier,
+            "ensemble",
+            {
+                "inference": InferenceType.NOT_APPLICABLE,
+                "non_gp": True,
+                "ensemble_posterior": True,
+                "posterior_sampling_type": PosteriorSamplingType.ENSEMBLE,
+            },
+        ),
         (
             "pca",
             PCAMulticlassGPClassifier,
