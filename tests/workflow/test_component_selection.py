@@ -39,7 +39,7 @@ def test_observation_kind_is_distinct_from_output_count() -> None:
 def test_unregistered_metadata_is_not_inferred_from_names() -> None:
     result = evaluate_components(ProblemSpec(purpose="bayesian_optimization"))
     acquisitions = {item.name: item for item in result.acquisitions}
-    assert acquisitions["ExpectedImprovement"].status is SelectionStatus.UNKNOWN
+    assert acquisitions["qMultiStepLookahead"].status is SelectionStatus.UNKNOWN
 
 
 def test_all_search_strategies_have_explicit_capability_checks() -> None:
@@ -60,3 +60,21 @@ def test_specialist_and_strategy_constraints() -> None:
     assert optimizers["optimize_acqf_mixed_ga"].status is SelectionStatus.CONDITIONAL
     assert optimizers["optimize_acqf_ga"].status is SelectionStatus.INCOMPATIBLE
     assert optimizers["optimize_vector_nsga2_mixed"].status is SelectionStatus.INCOMPATIBLE
+
+
+def test_native_analytic_and_mc_acquisition_batch_limits() -> None:
+    result = evaluate_components(ProblemSpec(purpose="bayesian_optimization", q=2))
+    acquisitions = {item.name: item for item in result.acquisitions}
+    assert acquisitions["ExpectedImprovement"].status is SelectionStatus.INCOMPATIBLE
+    assert acquisitions["qExpectedImprovement"].status is SelectionStatus.CONDITIONAL
+
+
+def test_extended_classification_model_selection() -> None:
+    spec = ProblemSpec(
+        purpose="active_learning", observation_kind="ordinal", high_dimensional=True
+    )
+    result = evaluate_components(spec)
+    models = {item.name: item for item in result.models}
+    assert models["PCAOrdinalGPClassifier"].status is SelectionStatus.COMPATIBLE
+    assert models["PCAMulticlassGPClassifier"].status is SelectionStatus.INCOMPATIBLE
+    assert models["RandomForestOrdinalClassifier"].status is SelectionStatus.INCOMPATIBLE
