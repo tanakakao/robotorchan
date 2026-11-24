@@ -5,6 +5,8 @@ import torch
 
 from robotorchan.acquisition.active_learning.classification import PredictiveEntropy
 from robotorchan.models.classification import (
+    BootstrapGradientBoostingMulticlassClassifier,
+    BootstrapGradientBoostingOrdinalClassifier,
     ExtraTreesMulticlassClassifier,
     ExtraTreesOrdinalClassifier,
     GradientBoostingMulticlassClassifier,
@@ -154,3 +156,25 @@ def test_hybrid_gp_non_gp_ensemble_candidate_acquisition(
     assert scores.shape == (6,)
     assert torch.isfinite(scores).all()
     assert candidates[scores.argmax()].shape == (1,)
+
+
+@pytest.mark.parametrize(
+    "model_class",
+    [BootstrapGradientBoostingMulticlassClassifier, BootstrapGradientBoostingOrdinalClassifier],
+)
+def test_bootstrap_ensemble_fit_posterior_and_candidate(model_class):
+    pytest.importorskip("sklearn")
+    torch.manual_seed(20)
+    x = torch.linspace(0, 1, 24, dtype=torch.double).unsqueeze(-1)
+    y = torch.arange(24) % 3
+    ensemble = model_class(x, y, num_classes=3, n_members=3, random_state=8)
+    ensemble.fit()
+    with torch.no_grad():
+        posterior = ensemble.probability_posterior(x[:6])
+        scores = PredictiveEntropy(ensemble)(x[:6].unsqueeze(-2))
+    assert posterior.num_members == 3
+    assert posterior.mean.shape == posterior.variance.shape == (6, 3)
+    assert scores.shape == (6,)
+    assert torch.isfinite(scores).all()
+    with pytest.raises(ValueError, match="at least two"):
+        model_class(x, y, num_classes=3, n_members=1)
