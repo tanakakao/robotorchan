@@ -100,6 +100,9 @@ from robotorchan.models.classification.multiclass.deep_gp import (
     MulticlassSingleTaskDeepGPClassifier,
 )
 from robotorchan.models.classification.multiclass.ensemble import (
+    BootstrapGradientBoostingMulticlassClassifier,
+    BootstrapGradientBoostingOrdinalClassifier,
+    BootstrapMulticlassClassificationEnsemble,
     MulticlassClassificationEnsemble,
     OrdinalClassificationEnsemble,
 )
@@ -215,6 +218,9 @@ __all__ = [
     "BinarySingleTaskGPClassifier",
     "BootstrapBinaryClassificationEnsemble",
     "BootstrapGradientBoostingBinaryClassifier",
+    "BootstrapGradientBoostingMulticlassClassifier",
+    "BootstrapGradientBoostingOrdinalClassifier",
+    "BootstrapMulticlassClassificationEnsemble",
     "CalibratedBinaryClassifier",
     "ClassificationEnsemblePosterior",
     "ClassificationInputUncertaintyType",
