@@ -39,9 +39,7 @@ class ComponentSelections:
     search_strategies: tuple[ComponentSelection, ...]
 
 
-def _result(
-    name: str, reasons: list[str], conditions: tuple[str, ...] = ()
-) -> ComponentSelection:
+def _result(name: str, reasons: list[str], conditions: tuple[str, ...] = ()) -> ComponentSelection:
     if reasons:
         return ComponentSelection(name, SelectionStatus.INCOMPATIBLE, tuple(reasons))
     if conditions:
