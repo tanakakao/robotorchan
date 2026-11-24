@@ -51,18 +51,17 @@ _NON_MODELS = frozenset(
 # Public constructors outside the two aggregate namespaces. Import only on
 # resolution so optional causal dependencies are not required by list_models.
 _SPECIAL_MODELS = {
-    "BOCSSurrogate": "robotorchan.models.standard",
-    "COMBOSurrogate": "robotorchan.models.standard",
+    "BOCSSurrogate": "robotorchan.models.standard.bocs",
+    "COMBOSurrogate": "robotorchan.models.standard.combo",
     "RGPEModel": "robotorchan.optim.transfer.rgpe_model",
-    "InterventionGPSurrogate": "robotorchan.causal",
-    "GPStructuralCausalModel": "robotorchan.causal",
-    "StructuralCausalModel": "robotorchan.causal",
+    "InterventionGPSurrogate": "robotorchan.causal.surrogate",
+    "GPStructuralCausalModel": "robotorchan.causal.gp_scm",
+    "StructuralCausalModel": "robotorchan.causal.scm",
 }
 
 
-def public_constructors(
-    models: ModuleType, classification: ModuleType
-) -> dict[str, type]:
+def public_constructors(models: ModuleType, classification: ModuleType) -> dict[str, type]:
+    """Collect concrete constructors from the public facade namespaces."""
     constructors: dict[str, type] = {}
     for namespace in (models, classification):
         for name in namespace.__all__:
@@ -107,4 +106,3 @@ def resolve_model_class(name: str, constructors: dict[str, type]) -> type:
         return constructors[name]
     except KeyError as error:
         raise KeyError(f"Unknown model {name!r}. Use list_models() for available names.") from error
-
