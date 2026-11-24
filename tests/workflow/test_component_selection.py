@@ -70,9 +70,7 @@ def test_native_analytic_and_mc_acquisition_batch_limits() -> None:
 
 
 def test_extended_classification_model_selection() -> None:
-    spec = ProblemSpec(
-        purpose="active_learning", observation_kind="ordinal", high_dimensional=True
-    )
+    spec = ProblemSpec(purpose="active_learning", observation_kind="ordinal", high_dimensional=True)
     result = evaluate_components(spec)
     models = {item.name: item for item in result.models}
     assert models["PCAOrdinalGPClassifier"].status is SelectionStatus.COMPATIBLE

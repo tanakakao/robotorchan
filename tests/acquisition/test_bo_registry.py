@@ -45,6 +45,8 @@ def test_constrained_bo_filters_acquisition_metadata() -> None:
     names = {item.acquisition_name for item in recommend_compatible_workflows(spec)}
 
     assert names == {
+        "qExpectedImprovement",
+        "qNoisyExpectedImprovement",
         "qLogExpectedImprovement",
         "qLogNoisyExpectedImprovement",
         "qProbabilityOfImprovement",
@@ -68,6 +70,7 @@ def test_botorch_q_acquisitions_require_posterior_samples() -> None:
         entry
         for entry in ACQUISITION_REGISTRY.values()
         if entry.capabilities.purpose is AcquisitionPurpose.BAYESIAN_OPTIMIZATION
+        and entry.capabilities.monte_carlo
     )
 
     assert all(
@@ -87,7 +90,17 @@ def test_constrained_multi_objective_bo_keeps_registered_native_paths() -> None:
     names = {item.acquisition_name for item in recommend_compatible_workflows(spec)}
 
     assert names == {
+        "qExpectedHypervolumeImprovement",
+        "qNoisyExpectedHypervolumeImprovement",
         "qLogExpectedHypervolumeImprovement",
         "qLogNoisyExpectedHypervolumeImprovement",
         "qLogNParEGO",
     }
+
+
+def test_analytic_bo_acquisitions_require_marginal_moments() -> None:
+    for name in ("ExpectedImprovement", "LogExpectedImprovement", "PosteriorMean"):
+        caps = ACQUISITION_REGISTRY[name].capabilities
+        assert caps.posterior_requirement is PosteriorRequirement.MARGINAL_MOMENTS
+        assert caps.max_q == 1
+        assert not caps.monte_carlo

@@ -764,6 +764,30 @@ not an assertion that every entry has its own notebook.
 | `binary.uncertain.categorical_input`, `binary.uncertain.continuous_input` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
 | `binary.robust.label_noise`, `binary.robust.contaminated`, `binary.robust.replicate_labels`, `binary.robust.input_dependent_label_noise`, `binary.robust.nonstationary`, `binary.robust.mixed_nonstationary`, `binary.robust.multitask_nonstationary` | `docs/models/classification.md` | `docs/theory/24_classification.md` | Per-ID execution **unverified** |
 | `binary.non_gp.bootstrap_gradient_boosting`, `binary.non_gp.random_forest`, `binary.non_gp.extra_trees`, `binary.non_gp.gradient_boosting`, `binary.non_gp.hist_gradient_boosting` | `docs/models/classification.md` | `docs/theory/24_classification.md` (probability/latent distinction; not a GP derivation for sklearn) | Per-ID execution **unverified** |
+| `multiclass.pca`, `ordinal.pca` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.pls`, `ordinal.pls` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.random_projection`, `ordinal.random_projection` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.reduced`, `ordinal.reduced` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.saas`, `ordinal.saas` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.map_saas`, `ordinal.map_saas` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.multi_fidelity`, `ordinal.multi_fidelity` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.mixed_multi_fidelity`, `ordinal.mixed_multi_fidelity` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.multi_task`, `ordinal.multi_task` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.kronecker_multi_task`, `ordinal.kronecker_multi_task` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.random_forest`, `ordinal.random_forest` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.extra_trees`, `ordinal.extra_trees` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.gradient_boosting`, `ordinal.gradient_boosting` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.hist_gradient_boosting`, `ordinal.hist_gradient_boosting` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.nonstationary`, `ordinal.nonstationary` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.mixed_nonstationary`, `ordinal.mixed_nonstationary` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.spectral_mixture`, `ordinal.spectral_mixture` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.mixed_spectral_mixture`, `ordinal.mixed_spectral_mixture` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.infinite_width_bnn`, `ordinal.infinite_width_bnn` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.mixed_infinite_width_bnn`, `ordinal.mixed_infinite_width_bnn` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.label_noise`, `ordinal.label_noise` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.contaminated`, `ordinal.contaminated` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.continuous_uncertain_input`, `ordinal.continuous_uncertain_input` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
+| `multiclass.uncertain_categorical`, `ordinal.uncertain_categorical` | `docs/models/classification.md` | `docs/theory/24_classification.md` (shared background) | Per-ID execution **unverified** |
 
 The shared classification guide explicitly documents family capabilities,
 predictive probability versus latent posterior, robust observation-process

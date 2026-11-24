@@ -34,10 +34,9 @@ def test_registry_uses_stable_unique_ids() -> None:
 
 def test_prefix_filter_is_multiclass_ready() -> None:
     assert list_classification_models(prefix="binary.")
-    assert list_classification_models(prefix="multiclass.") == (
-        "multiclass.standard",
-        "multiclass.mixed",
-    )
+    names = list_classification_models(prefix="multiclass.")
+    assert {"multiclass.standard", "multiclass.mixed", "multiclass.pca"} <= set(names)
+    assert all(name.startswith("multiclass.") for name in names)
 
 
 def test_unknown_model_reports_available_ids() -> None:
