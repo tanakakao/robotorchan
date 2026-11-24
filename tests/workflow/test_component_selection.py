@@ -40,3 +40,23 @@ def test_unregistered_metadata_is_not_inferred_from_names() -> None:
     result = evaluate_components(ProblemSpec(purpose="bayesian_optimization"))
     acquisitions = {item.name: item for item in result.acquisitions}
     assert acquisitions["ExpectedImprovement"].status is SelectionStatus.UNKNOWN
+
+
+def test_all_search_strategies_have_explicit_capability_checks() -> None:
+    result = evaluate_components(ProblemSpec(purpose="bayesian_optimization"))
+    assert all(item.status is not SelectionStatus.UNKNOWN for item in result.search_strategies)
+
+
+def test_specialist_and_strategy_constraints() -> None:
+    spec = ProblemSpec(
+        purpose="bayesian_optimization", input_type="mixed", q=2, candidate_constrained=True
+    )
+    result = evaluate_components(spec)
+    strategies = {item.name: item for item in result.search_strategies}
+    optimizers = {item.name: item for item in result.optimizers}
+    assert strategies["DiscreteTrustRegionStrategy"].status is SelectionStatus.INCOMPATIBLE
+    assert strategies["REMBOStrategy"].status is SelectionStatus.INCOMPATIBLE
+    assert strategies["TuRBOStrategy"].status is SelectionStatus.CONDITIONAL
+    assert optimizers["optimize_acqf_mixed_ga"].status is SelectionStatus.CONDITIONAL
+    assert optimizers["optimize_acqf_ga"].status is SelectionStatus.INCOMPATIBLE
+    assert optimizers["optimize_vector_nsga2_mixed"].status is SelectionStatus.INCOMPATIBLE
