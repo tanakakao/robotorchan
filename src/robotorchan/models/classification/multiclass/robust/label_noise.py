@@ -34,6 +34,8 @@ def _transition_matrix(
     transition_matrix: Tensor | None,
 ) -> Tensor:
     """Validate P(observed label | clean label) for every true class."""
+    if num_classes < 3:
+        raise ValueError("num_classes must be at least 3.")
     if transition_matrix is not None:
         if flip_probability != 0.0:
             raise ValueError("Specify transition_matrix or flip_probability, not both.")
