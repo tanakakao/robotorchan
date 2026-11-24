@@ -328,3 +328,21 @@ Notebook 30 にクラス確率の比較・候補提案の実行例がありま�
 - 連続摂動の周辺化はモンテカルロ近似です。カテゴリ分布の周辺化は有限サポートの正確な重み付き和です。学習モデルの不確実性と入力不確実性は異なります。
 
 [Notebook 30](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb) に、単一モデルの学習、候補確率、可視化と候補提案を追加しています。
+
+
+## Ensembleと非GP分類器
+
+`RandomForestMulticlassClassifier`、`ExtraTreesMulticlassClassifier`、`GradientBoostingMulticlassClassifier`、`HistGradientBoostingMulticlassClassifier` は、scikit-learnの分類器を使用する公開アダプターです。`train_X`、`train_Y`、`num_classes`を渡し、`fit()`後に`predict_proba(X)`、`predict_class(X)`、`predictive_entropy(X)`を利用します。scikit-learnは任意依存です。
+
+`MulticlassClassificationEnsemble` は、学習済み分類器2つ以上を位置引数に渡し、`weights`でメンバーの重みを設定します。メンバーのクラス数・クラスラベル順序が一致している必要があります。`predict_proba()`は重み付き平均、`probability_posterior()`はメンバー確率に関する経験的Posterior、`mutual_information()`はモデル間の不一致を返します。GPと非GP分類器も同時に組み込めますが、**共通潜在Posteriorはありません**。
+
+非GP単体での`probability_posterior()`、`mutual_information()`、`latent_posterior()`は未定義であり、明示的なエラーとなります。Active Learningの予測エントロピーは単一モデルでも利用できますが、BALD型のメンバー不一致はEnsemble側で評価してください。
+
+マルチクラス分類で訓練データに一部クラスが登場しない場合も、公開確率の最後の軸は0からC−1までの全クラスを維持します。
+
+実行例・予測グラフ・候補提案については[Notebook 30](../../examples/notebooks/30_multiclass_classification_active_learning.ipynb)を参照してください。
+
+
+### Bootstrap Ensemble
+
+`BootstrapGradientBoostingMulticlassClassifier` は既存の二値Bootstrap Ensembleに対応した拡張です。`n_members`個の独立したブートストラップ標本でGradient Boostingモデルを学習します。`fit()`後は`probability_posterior()`で各モデルのクラス確率分布を、`predict_proba()`で平均を取得できます。クラス数が少ない場合にも各標本が全クラスを含むよう再抽出しますが、希少クラスが極端に少ない場合は標本の作成に失敗することがあります。重み付け可能な任意のモデルの統合には`MulticlassClassificationEnsemble`を使用してください。
