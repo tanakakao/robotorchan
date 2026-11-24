@@ -7406,6 +7406,11 @@
       "path": "docs/guide/31_ordinal_classification.md",
       "category": "Guide",
       "reason": "Ordinal GP classification implementation guide separated from chapter 24."
+    },
+    {
+      "path": "docs/unified_factory_design.md",
+      "category": "Design",
+      "reason": "Unified Factory and Capability-based Workflow API design contract and phased implementation gates."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
