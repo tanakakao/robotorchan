@@ -3,7 +3,13 @@
 from robotorchan.acquisition import list_acquisitions
 from robotorchan.models import list_models
 from robotorchan.optim import list_optimizers, list_search_strategies
-from robotorchan.workflow import ProblemSpec, SelectionStatus, evaluate_components
+from robotorchan.workflow import (
+    ProblemSpec,
+    SelectionStatus,
+    evaluate_components,
+    select_compatible_models,
+)
+from robotorchan.workflow.components import evaluate_component_inventory
 
 
 def test_every_factory_name_has_an_explicit_status() -> None:
@@ -94,3 +100,28 @@ def test_specialized_acquisition_requirements() -> None:
     assert acquisitions["qMultiFidelityMaxValueEntropy"].status is SelectionStatus.INCOMPATIBLE
     assert acquisitions["qExpectedUtilityOfBestOption"].status is SelectionStatus.INCOMPATIBLE
     assert acquisitions["qJointEntropySearch"].status is SelectionStatus.CONDITIONAL
+
+
+
+def test_model_selector_agrees_with_component_selection() -> None:
+    for kind in ("regression", "binary", "multiclass", "ordinal"):
+        spec = ProblemSpec(purpose="active_learning", observation_kind=kind)
+        selected = select_compatible_models(spec)
+        statuses = {item.name: item.status for item in evaluate_components(spec).models}
+        assert selected
+        assert all(statuses[name] is SelectionStatus.COMPATIBLE for name in selected)
+        if kind != "regression":
+            assert all(name.startswith(f"{kind}.") for name in selected)
+
+
+def test_unknown_inventory_entries_remain_explicit() -> None:
+    result = evaluate_component_inventory(
+        ProblemSpec(purpose="bayesian_optimization"),
+        models=("unregistered_model",),
+        acquisitions=("unregistered_acquisition",),
+        optimizers=("unregistered_optimizer",),
+        search_strategies=("unregistered_strategy",),
+    )
+    for group in (result.models, result.acquisitions, result.optimizers, result.search_strategies):
+        assert group[0].status is SelectionStatus.UNKNOWN
+        assert group[0].reasons

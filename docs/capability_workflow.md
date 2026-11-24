@@ -93,5 +93,13 @@ are compatible, incompatible, conditional and unknown. Unknown means metadata
 is missing; conditional means runtime or cross-component checks are required.
 `ProblemSpec.observation_kind` distinguishes regression, binary, multiclass and
 ordinal observations. `candidate_constrained` is separate from outcome
-constraints (`constrained`). Existing model-only and recommendation APIs retain
-their registry scope. Full pairwise compatibility is a subsequent phase.
+constraints (`constrained`). Model-only selection uses the regression registry by default and classification
+registry IDs for binary, multiclass and ordinal problems. Both selectors share
+structural checks. Recommendation accepts these registry IDs for static
+model/acquisition checks; full four-component compatibility is a subsequent phase.
+
+
+Factory names without reliable metadata remain unknown, including generic
+wrappers whose capabilities depend on their supplied base model. This is not
+an assertion that the implementation is unsupported. Acquisition limitations
+are included in conditional selection reasons.

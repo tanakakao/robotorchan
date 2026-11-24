@@ -7,8 +7,9 @@ from robotorchan.models.capabilities import (
     ModelCapabilities,
     ModelRegistryEntry,
 )
+from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.registry import MODEL_REGISTRY
-from robotorchan.workflow.problem import OutputType, ProblemSpec
+from robotorchan.workflow.problem import ObservationKind, OutputType, ProblemSpec
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,7 +22,7 @@ class ModelSelectionResult:
 
 
 def _check_model(spec: ProblemSpec, entry: ModelRegistryEntry) -> ModelSelectionResult:
-    reasons = model_requirement_reasons(spec, entry.capabilities)
+    reasons = model_selection_reasons(spec, entry.capabilities, ObservationKind.REGRESSION)
     return ModelSelectionResult(entry.model_name, not reasons, reasons)
 
 
@@ -52,11 +53,28 @@ def model_requirement_reasons(
     return tuple(reasons)
 
 
+def model_selection_reasons(
+    spec: ProblemSpec, capabilities: ModelCapabilities, kind: ObservationKind
+) -> tuple[str, ...]:
+    """Check model structure and the declared observation kind."""
+    reasons = model_requirement_reasons(spec, capabilities)
+    if kind is not spec.observation_kind:
+        return (*reasons, "observation kind does not match")
+    return reasons
+
+
 def evaluate_models(
     spec: ProblemSpec,
     registry: dict[str, ModelRegistryEntry] | None = None,
 ) -> tuple[ModelSelectionResult, ...]:
     """Evaluate registered models without ranking compatible candidates."""
+    if registry is None and spec.observation_kind is not ObservationKind.REGRESSION:
+        results = []
+        for entry in CLASSIFICATION_MODEL_REGISTRY.values():
+            kind = ObservationKind(entry.model_id.split(".", 1)[0])
+            reasons = model_selection_reasons(spec, entry.capabilities, kind)
+            results.append(ModelSelectionResult(entry.model_id, not reasons, reasons))
+        return tuple(results)
     source = MODEL_REGISTRY if registry is None else registry
     return tuple(_check_model(spec, entry) for entry in source.values())
 

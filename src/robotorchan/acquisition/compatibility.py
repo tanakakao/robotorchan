@@ -6,6 +6,7 @@ from enum import StrEnum
 from robotorchan.acquisition.capabilities import AcquisitionTarget, PosteriorRequirement
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.models.capabilities import ModelCapabilities
+from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.registry import MODEL_REGISTRY
 
 
@@ -66,6 +67,7 @@ def check_capabilities_acquisition_compatibility(
         reasons.append("structured-output posteriors require scalarization")
     if (
         model_capabilities.supports_multi_output
+        and not probability_space_classification
         and not acquisition_capabilities.supports_multi_output
     ):
         reasons.append("acquisition does not support multi-output posteriors")
@@ -104,5 +106,8 @@ def check_model_acquisition_compatibility(
     acquisition_name: str,
 ) -> CompatibilityResult:
     """Check static compatibility using registry metadata only."""
-    model_capabilities = MODEL_REGISTRY[model_name].capabilities
+    entry = CLASSIFICATION_MODEL_REGISTRY.get(model_name)
+    model_capabilities = (
+        MODEL_REGISTRY[model_name].capabilities if entry is None else entry.capabilities
+    )
     return check_capabilities_acquisition_compatibility(model_capabilities, acquisition_name)

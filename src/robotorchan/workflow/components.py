@@ -24,7 +24,7 @@ from robotorchan.optim.capabilities import (
     TORCH_OPTIMIZER_CAPABILITIES,
 )
 from robotorchan.workflow.problem import ObjectiveType, ObservationKind, OutputType, ProblemSpec
-from robotorchan.workflow.selector import model_requirement_reasons
+from robotorchan.workflow.selector import model_selection_reasons
 
 
 class SelectionStatus(StrEnum):
@@ -77,10 +77,7 @@ def _model(spec: ProblemSpec, name: str) -> ComponentSelection:
         item = matches[0]
         caps = item.capabilities
         kind = ObservationKind(item.model_id.split(".", 1)[0])
-    reasons = list(model_requirement_reasons(spec, caps))
-    if kind is not spec.observation_kind:
-        reasons.append("observation kind does not match")
-    return _result(name, reasons)
+    return _result(name, list(model_selection_reasons(spec, caps, kind)))
 
 
 def _acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
@@ -114,7 +111,8 @@ def _acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
         reasons.append("requires preference model support")
     if caps.requires_multi_fidelity and not spec.multi_fidelity:
         reasons.append("requires multi-fidelity structure")
-    return _result(name, reasons, ("model posterior and constructor arguments must be checked",))
+    conditions = ("model posterior and constructor arguments must be checked", *entry.limitations)
+    return _result(name, reasons, conditions)
 
 
 # Reuse backend descriptors; dedicated entry points are not dispatcher aliases.
