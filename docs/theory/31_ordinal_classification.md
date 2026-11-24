@@ -71,7 +71,7 @@ $1-\Phi(-0.3)\approx0.618$ です。
 
 $$
 b_1=0,\quad
-\delta_j=\operatorname{softplus}(a_j)+10^{-4}>0,\quad
+\delta_j=\mathrm{softplus}(a_j)+10^{-4}>0,\quad
 b_{j+1}=\sum_{i=1}^{j}\delta_i.
 $$
 
@@ -91,7 +91,7 @@ $$
 \mathcal L =
 \sum_{i=1}^{n}\mathbb E_{q(f_i)}
   [\log P(y_i\mid f_i)]
--\operatorname{KL}(q(u)\|p(u)).
+-\mathrm{KL}(q(u)\|p(u)).
 $$
 
 第一項は観測した順序ラベルをどれだけ説明できるか、
