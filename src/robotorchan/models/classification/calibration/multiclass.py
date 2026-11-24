@@ -118,9 +118,7 @@ class CalibratedMulticlassClassifier(ClassificationModelMixin, nn.Module):
         )
         return -torch.special.xlogy(probabilities, probabilities).sum(dim=-1).mean(dim=0)
 
-    def mutual_information(
-        self, X: Tensor, *, num_samples: int = 128, **kwargs: object
-    ) -> Tensor:
+    def mutual_information(self, X: Tensor, *, num_samples: int = 128, **kwargs: object) -> Tensor:
         if num_samples < 2:
             raise ValueError("num_samples must be at least 2.")
         probabilities = self.sample_class_probabilities(
