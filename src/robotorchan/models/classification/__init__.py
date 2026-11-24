@@ -119,6 +119,11 @@ from robotorchan.models.classification.multiclass.high_dimensional.saas import (
     SaasMulticlassGPClassifier,
     SaasOrdinalGPClassifier,
 )
+from robotorchan.models.classification.multiclass.robust.label_noise import (
+    LabelNoiseMulticlassGPClassifier,
+    LabelNoiseOrderedProbitLikelihood,
+    LabelNoiseOrdinalGPClassifier,
+)
 from robotorchan.models.classification.multiclass.standard.contextual import (
     ContextualMulticlassGPClassifier,
     ContextualOrdinalGPClassifier,
@@ -228,6 +233,9 @@ __all__ = [
     "KroneckerMultiTaskOrdinalGPClassifier",
     "LabelNoiseBernoulliLikelihood",
     "LabelNoiseBinarySingleTaskGPClassifier",
+    "LabelNoiseMulticlassGPClassifier",
+    "LabelNoiseOrderedProbitLikelihood",
+    "LabelNoiseOrdinalGPClassifier",
     "LatentOutputStructure",
     "MapSaasBinarySingleTaskGPClassifier",
     "MapSaasMulticlassGPClassifier",
