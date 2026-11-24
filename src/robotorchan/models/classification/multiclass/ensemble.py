@@ -69,16 +69,16 @@ class MulticlassClassificationEnsemble(ClassificationModelMixin, nn.Module):
     def class_labels(self) -> tuple[object, ...]:
         return self._class_labels
 
-    def probability_posterior(
-        self, X: Tensor, **kwargs: object
-    ) -> ClassificationEnsemblePosterior:
+    def probability_posterior(self, X: Tensor, **kwargs: object) -> ClassificationEnsemblePosterior:
         target = (*X.shape[:-1], self.num_classes)
         normalized = []
         for member in self.members:
             probabilities = member.predict_proba(X, **kwargs)
             if probabilities.shape != target:
-                if X.ndim >= 3 and X.shape[-2] == 1 and probabilities.shape == (
-                    *X.shape[:-2], self.num_classes
+                if (
+                    X.ndim >= 3
+                    and X.shape[-2] == 1
+                    and probabilities.shape == (*X.shape[:-2], self.num_classes)
                 ):
                     probabilities = probabilities.unsqueeze(-2)
                 else:
@@ -121,9 +121,7 @@ class MulticlassClassificationEnsemble(ClassificationModelMixin, nn.Module):
         del num_samples
         return self.probability_posterior(X, **kwargs).expected_class_entropy
 
-    def mutual_information(
-        self, X: Tensor, *, num_samples: int = 128, **kwargs: object
-    ) -> Tensor:
+    def mutual_information(self, X: Tensor, *, num_samples: int = 128, **kwargs: object) -> Tensor:
         del num_samples
         return self.probability_posterior(X, **kwargs).mutual_information
 
@@ -182,15 +180,11 @@ class BootstrapMulticlassClassificationEnsemble(MulticlassClassificationEnsemble
         cpu_labels = labels.detach().cpu()
         for index in range(n_members):
             for _ in range(100):
-                sampled = torch.randint(
-                    len(labels), (len(labels),), generator=generator
-                )
+                sampled = torch.randint(len(labels), (len(labels),), generator=generator)
                 if torch.unique(cpu_labels[sampled]).numel() == num_classes:
                     break
             else:
-                raise RuntimeError(
-                    "Could not draw a bootstrap sample containing all classes."
-                )
+                raise RuntimeError("Could not draw a bootstrap sample containing all classes.")
             indices = sampled.to(device=train_X.device)
             kwargs = dict(estimator_kwargs)
             kwargs.setdefault(
@@ -199,8 +193,7 @@ class BootstrapMulticlassClassificationEnsemble(MulticlassClassificationEnsemble
             )
             members.append(
                 self.member_class(
-                    train_X[indices], labels[indices],
-                    num_classes=num_classes, **kwargs
+                    train_X[indices], labels[indices], num_classes=num_classes, **kwargs
                 )
             )
         super().__init__(*members)
