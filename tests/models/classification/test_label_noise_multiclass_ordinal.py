@@ -8,6 +8,8 @@ from robotorchan.acquisition.active_learning.classification import (
     qPredictiveEntropy,
 )
 from robotorchan.models.classification import (
+    ContaminatedMulticlassGPClassifier,
+    ContaminatedOrdinalGPClassifier,
     LabelNoiseMulticlassGPClassifier,
     LabelNoiseOrdinalGPClassifier,
 )
@@ -79,3 +81,42 @@ def test_ordinal_noisy_likelihood_is_used_in_fit():
     observed = model.likelihood.class_probabilities(latent)
     torch.testing.assert_close(observed, clean @ model.transition_matrix)
     assert not torch.allclose(clean, observed)
+
+
+@pytest.mark.parametrize(
+    "model_type", [ContaminatedMulticlassGPClassifier, ContaminatedOrdinalGPClassifier]
+)
+def test_contaminant_label_process_reuses_transition_training(model_type):
+    x = torch.linspace(0, 1, 9, dtype=torch.double).unsqueeze(-1)
+    y = torch.arange(9) % 3
+    distribution = torch.tensor([0.2, 0.5, 0.3], dtype=torch.double)
+    model = model_type(
+        x,
+        y,
+        num_classes=3,
+        contamination_probability=0.2,
+        contaminant_distribution=distribution,
+    )
+    expected = 0.8 * torch.eye(3, dtype=torch.double) + 0.2 * distribution
+    torch.testing.assert_close(model.transition_matrix, expected)
+    model.fit(epochs=2, lr=0.005)
+    with torch.no_grad():
+        torch.manual_seed(11)
+        clean = model.predict_clean_proba(x[:4])
+        torch.manual_seed(11)
+        observed = model.predict_proba(x[:4])
+    torch.testing.assert_close(observed, clean @ expected, atol=1e-5, rtol=1e-5)
+
+
+@pytest.mark.parametrize(
+    "model_type", [ContaminatedMulticlassGPClassifier, ContaminatedOrdinalGPClassifier]
+)
+def test_contaminant_rejects_invalid_distribution(model_type):
+    x = torch.rand(5, 1, dtype=torch.double)
+    y = torch.arange(5) % 3
+    with pytest.raises(ValueError, match="strictly between"):
+        model_type(x, y, num_classes=3, contamination_probability=1.0)
+    with pytest.raises(ValueError, match="sum to one"):
+        model_type(
+            x, y, num_classes=3, contaminant_distribution=torch.ones(3, dtype=torch.double)
+        )
