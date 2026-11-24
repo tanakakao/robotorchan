@@ -19,7 +19,10 @@ Current robotorchan-owned acquisition code covers:
 - finite-set Thompson-style candidate selection.
 
 The acquisition registry is metadata for workflow recommendation and compatibility dispatch.
-It does not replace BoTorch constructors and is not a string-based acquisition factory.
+It does not replace BoTorch constructors: the registry is metadata, not a string-based factory.
+The separate acquisition factory resolves original classes without changing their arguments.
+`create_acquisition`, `get_acquisition_class`, and `list_acquisitions` expose this optional
+construction interface. Listing a class does not establish capability compatibility.
 
 ## Ownership rules
 
@@ -182,6 +185,7 @@ acquisition/
 ├── capabilities.py
 ├── classification_constraints.py
 ├── compatibility.py
+├── factory.py
 ├── non_gp.py
 ├── optimizer_compatibility.py
 ├── registry.py
