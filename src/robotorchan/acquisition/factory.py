@@ -112,7 +112,9 @@ def create_acquisition(
     acquisition: str | Callable[..., T], /, *args: Any, **kwargs: Any
 ) -> AcquisitionFunction | T:
     """Forward constructor arguments unchanged; do not fit or select a sampler."""
-    constructor = get_acquisition_class(acquisition) if isinstance(acquisition, str) else acquisition
+    constructor = (
+        get_acquisition_class(acquisition) if isinstance(acquisition, str) else acquisition
+    )
     if not callable(constructor):
         raise TypeError("acquisition must be a registered name, class or callable")
     return constructor(*args, **kwargs)
