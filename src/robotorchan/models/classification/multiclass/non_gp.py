@@ -102,9 +102,7 @@ class SklearnMulticlassClassifier(ClassificationModelMixin, nn.Module):
         probabilities = self._estimator.predict_proba(flat)
         result = X.new_zeros((flat.shape[0], self.num_classes))
         classes = torch.as_tensor(self._estimator.classes_, dtype=torch.long, device=X.device)
-        result[:, classes] = torch.as_tensor(
-            probabilities, dtype=X.dtype, device=X.device
-        )
+        result[:, classes] = torch.as_tensor(probabilities, dtype=X.dtype, device=X.device)
         return result.reshape(*X.shape[:-1], self.num_classes)
 
     def latent_posterior(self, X: Tensor, **kwargs: object):
