@@ -11,9 +11,7 @@ import math
 
 import torch
 from botorch.sampling.normal import SobolQMCNormalSampler
-from gpytorch.distributions import MultivariateNormal
 from torch import Tensor
-from torch.distributions import Categorical
 from torch.utils.data import DataLoader, TensorDataset
 
 from robotorchan.models.classification.multiclass.standard.single_task import (
