@@ -15,6 +15,8 @@ from robotorchan.models.classification import (
     OrdinalClassificationEnsemble,
     RandomForestMulticlassClassifier,
     RandomForestOrdinalClassifier,
+    MulticlassSingleTaskGPClassifier,
+    OrdinalSingleTaskGPClassifier,
 )
 
 
@@ -109,3 +111,46 @@ def test_nongp_restores_missing_class_probability_axis():
     p = model.predict_proba(x[:4])
     assert p.shape == (4, 3)
     torch.testing.assert_close(p[:, 2], torch.zeros(4, dtype=torch.double))
+
+
+@pytest.mark.parametrize(
+    "ensemble_class, member_class, gp_class",
+    [
+        (
+            MulticlassClassificationEnsemble,
+            RandomForestMulticlassClassifier,
+            MulticlassSingleTaskGPClassifier,
+        ),
+        (
+            OrdinalClassificationEnsemble,
+            RandomForestOrdinalClassifier,
+            OrdinalSingleTaskGPClassifier,
+        ),
+    ],
+)
+def test_hybrid_gp_non_gp_ensemble_candidate_acquisition(
+    ensemble_class, member_class, gp_class
+):
+    pytest.importorskip("sklearn")
+    torch.manual_seed(13)
+    x = torch.linspace(0, 1, 15, dtype=torch.double).unsqueeze(-1)
+    y = torch.bucketize(
+        x[:, 0], torch.tensor([0.33, 0.66], dtype=torch.double)
+    )
+    nongp = member_class(x, y, num_classes=3, n_estimators=8, random_state=9)
+    nongp.fit()
+    gp = gp_class(x, y, num_classes=3)
+    gp.fit(epochs=2, lr=0.005)
+    ensemble = ensemble_class(
+        nongp, gp, weights=torch.tensor([0.5, 0.5], dtype=torch.double)
+    )
+    candidates = x[:6]
+    with torch.no_grad():
+        probabilities = ensemble.predict_proba(candidates)
+        posterior = ensemble.probability_posterior(candidates)
+        scores = PredictiveEntropy(ensemble)(candidates.unsqueeze(-2))
+    assert probabilities.shape == (6, 3)
+    assert posterior.variance.shape == (6, 3)
+    assert scores.shape == (6,)
+    assert torch.isfinite(scores).all()
+    assert candidates[scores.argmax()].shape == (1,)
