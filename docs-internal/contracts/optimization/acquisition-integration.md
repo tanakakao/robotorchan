@@ -228,3 +228,7 @@ This does not claim arbitrary discrete joint-q categorical assignment
 coverage or correlation between classifier feasibility events. Additional
 MultiTask/high-dimensional combinations retain their separate tests and
 capability boundaries.
+
+## Native acquisition capability selection
+
+The registry includes analytic q=1 acquisitions `ExpectedImprovement`, `LogExpectedImprovement`, `ProbabilityOfImprovement`, `UpperConfidenceBound`, `PosteriorMean`, `NoisyExpectedImprovement`, `LogNoisyExpectedImprovement` and Monte Carlo acquisitions `qExpectedImprovement`, `qNoisyExpectedImprovement`, `qExpectedHypervolumeImprovement`, and `qNoisyExpectedHypervolumeImprovement`. Static metadata does not establish runtime compatibility.
