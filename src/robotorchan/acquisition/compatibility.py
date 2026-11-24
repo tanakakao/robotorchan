@@ -51,6 +51,8 @@ def check_capabilities_acquisition_compatibility(
         posterior_requirement = acquisition_capabilities.posterior_requirement
         if posterior_requirement is not PosteriorRequirement.MARGINAL_MOMENTS:
             reasons.append("non-GP models require BoTorch Monte Carlo acquisitions")
+    if acquisition_capabilities.requires_preference and not model_capabilities.preference:
+        reasons.append("acquisition requires preference model support")
     if acquisition_capabilities.requires_fantasize and not model_capabilities.supports_fantasize:
         reasons.append("acquisition requires fantasy-model support")
     if acquisition_capabilities.requires_multi_fidelity and not model_capabilities.multi_fidelity:

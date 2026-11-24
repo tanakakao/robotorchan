@@ -36,10 +36,10 @@ def test_observation_kind_is_distinct_from_output_count() -> None:
     assert acquisitions["qPredictiveEntropy"].status is SelectionStatus.CONDITIONAL
 
 
-def test_unregistered_metadata_is_not_inferred_from_names() -> None:
+def test_lookahead_metadata_is_registered() -> None:
     result = evaluate_components(ProblemSpec(purpose="bayesian_optimization"))
     acquisitions = {item.name: item for item in result.acquisitions}
-    assert acquisitions["qMultiStepLookahead"].status is SelectionStatus.UNKNOWN
+    assert acquisitions["qMultiStepLookahead"].status is SelectionStatus.CONDITIONAL
 
 
 def test_all_search_strategies_have_explicit_capability_checks() -> None:
@@ -85,3 +85,12 @@ def test_remaining_specialist_optimizer_contracts() -> None:
     assert optimizers["optimize_mixed_one_shot_acqf"].status is SelectionStatus.INCOMPATIBLE
     assert optimizers["optimize_safe_acqf"].status is SelectionStatus.CONDITIONAL
     assert optimizers["ContextualOptimizer"].status is SelectionStatus.CONDITIONAL
+
+
+def test_specialized_acquisition_requirements() -> None:
+    result = evaluate_components(ProblemSpec(purpose="bayesian_optimization", q=2))
+    acquisitions = {item.name: item for item in result.acquisitions}
+    assert acquisitions["qMaxValueEntropy"].status is SelectionStatus.INCOMPATIBLE
+    assert acquisitions["qMultiFidelityMaxValueEntropy"].status is SelectionStatus.INCOMPATIBLE
+    assert acquisitions["qExpectedUtilityOfBestOption"].status is SelectionStatus.INCOMPATIBLE
+    assert acquisitions["qJointEntropySearch"].status is SelectionStatus.CONDITIONAL

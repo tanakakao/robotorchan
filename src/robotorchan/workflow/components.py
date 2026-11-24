@@ -110,6 +110,8 @@ def _acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
         reasons.append("requires multi-output support")
     if spec.constrained and not caps.supports_constraints:
         reasons.append("requires outcome constraint support")
+    if caps.requires_preference and not spec.preference:
+        reasons.append("requires preference model support")
     if caps.requires_multi_fidelity and not spec.multi_fidelity:
         reasons.append("requires multi-fidelity structure")
     return _result(name, reasons, ("model posterior and constructor arguments must be checked",))
