@@ -83,3 +83,15 @@ When extending the library, keep these layers distinct:
 - benchmark evidence: comparative quality or performance has been measured.
 
 Do not infer runtime validation or benchmark superiority from registry membership alone.
+
+## Component selection
+
+Use `evaluate_components(spec)` to inspect every factory-visible model,
+acquisition, optimizer and search strategy. Results are independent component
+checks, not compatible workflow tuples or performance rankings. Status values
+are compatible, incompatible, conditional and unknown. Unknown means metadata
+is missing; conditional means runtime or cross-component checks are required.
+`ProblemSpec.observation_kind` distinguishes regression, binary, multiclass and
+ordinal observations. `candidate_constrained` is separate from outcome
+constraints (`constrained`). Existing model-only and recommendation APIs retain
+their registry scope. Full pairwise compatibility is a subsequent phase.

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from robotorchan.models.capabilities import (
     HighDimensionalStrategy,
+    ModelCapabilities,
     ModelRegistryEntry,
 )
 from robotorchan.models.registry import MODEL_REGISTRY
@@ -20,7 +21,14 @@ class ModelSelectionResult:
 
 
 def _check_model(spec: ProblemSpec, entry: ModelRegistryEntry) -> ModelSelectionResult:
-    capabilities = entry.capabilities
+    reasons = model_requirement_reasons(spec, entry.capabilities)
+    return ModelSelectionResult(entry.model_name, not reasons, reasons)
+
+
+def model_requirement_reasons(
+    spec: ProblemSpec, capabilities: ModelCapabilities
+) -> tuple[str, ...]:
+    """Check shared model structure independently of observation kind."""
     reasons: list[str] = []
 
     if capabilities.input_type is not spec.input_type:
@@ -41,7 +49,7 @@ def _check_model(spec: ProblemSpec, entry: ModelRegistryEntry) -> ModelSelection
     if capabilities.preference is not spec.preference:
         reasons.append("preference-observation structure does not match the problem")
 
-    return ModelSelectionResult(entry.model_name, not reasons, tuple(reasons))
+    return tuple(reasons)
 
 
 def evaluate_models(

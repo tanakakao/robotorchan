@@ -11,6 +11,13 @@ class ProblemPurpose(StrEnum):
     ACTIVE_LEARNING = "active_learning"
 
 
+class ObservationKind(StrEnum):
+    REGRESSION = "regression"
+    BINARY = "binary"
+    MULTICLASS = "multiclass"
+    ORDINAL = "ordinal"
+
+
 class ObjectiveType(StrEnum):
     SINGLE = "single"
     MULTI = "multi"
@@ -37,9 +44,22 @@ class ProblemSpec:
     preference: bool = False
     q: int = 1
     constrained: bool = False
+    observation_kind: ObservationKind = ObservationKind.REGRESSION
+    candidate_constrained: bool = False
 
     def __post_init__(self) -> None:
         """Validate purpose-specific fields."""
+        for name, enum in (
+            ("purpose", ProblemPurpose),
+            ("input_type", InputType),
+            ("task_type", TaskType),
+            ("output_type", OutputType),
+            ("objective_type", ObjectiveType),
+            ("observation_kind", ObservationKind),
+        ):
+            value = getattr(self, name)
+            if value is not None:
+                object.__setattr__(self, name, enum(value))
         if self.q < 1:
             raise ValueError("q must be at least 1")
         if self.purpose is ProblemPurpose.BAYESIAN_OPTIMIZATION:
