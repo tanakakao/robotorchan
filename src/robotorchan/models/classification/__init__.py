@@ -99,6 +99,10 @@ from robotorchan.models.classification.model_list import ClassificationModelList
 from robotorchan.models.classification.multiclass.deep_gp import (
     MulticlassSingleTaskDeepGPClassifier,
 )
+from robotorchan.models.classification.multiclass.ensemble import (
+    MulticlassClassificationEnsemble,
+    OrdinalClassificationEnsemble,
+)
 from robotorchan.models.classification.multiclass.high_dimensional.alebo import (
     ALEBOMulticlassGPClassifier,
     ALEBOOrdinalGPClassifier,
@@ -118,10 +122,6 @@ from robotorchan.models.classification.multiclass.high_dimensional.saas import (
     MapSaasOrdinalGPClassifier,
     SaasMulticlassGPClassifier,
     SaasOrdinalGPClassifier,
-)
-from robotorchan.models.classification.multiclass.ensemble import (
-    MulticlassClassificationEnsemble,
-    OrdinalClassificationEnsemble,
 )
 from robotorchan.models.classification.multiclass.non_gp import (
     ExtraTreesMulticlassClassifier,
