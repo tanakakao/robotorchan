@@ -167,12 +167,9 @@ class LabelNoiseMulticlassGPClassifier(MulticlassSingleTaskGPClassifier):
                 )
                 observed = latent_samples.softmax(dim=-1) @ self.transition_matrix
                 selected = observed.gather(-1, batch_Y.long().reshape(-1, 1))
-                log_likelihood = selected.clamp_min(
-                    torch.finfo(selected.dtype).tiny
-                ).log().mean()
+                log_likelihood = selected.clamp_min(torch.finfo(selected.dtype).tiny).log().mean()
                 kl = sum(
-                    gp.model.variational_strategy.kl_divergence().sum()
-                    for gp in self.class_models
+                    gp.model.variational_strategy.kl_divergence().sum() for gp in self.class_models
                 )
                 loss = -log_likelihood + kl / n
                 loss.backward()
@@ -218,8 +215,9 @@ class LabelNoiseMulticlassGPClassifier(MulticlassSingleTaskGPClassifier):
             raise ValueError("num_samples must be at least 2.")
         latent = self.latent_posterior(X)
         probabilities = (
-            SobolQMCNormalSampler(sample_shape=torch.Size([num_samples]), seed=seed)(latent)
-            .softmax(dim=-1)
+            SobolQMCNormalSampler(sample_shape=torch.Size([num_samples]), seed=seed)(
+                latent
+            ).softmax(dim=-1)
             @ self.transition_matrix
         )
         return ClassificationProbabilityPosterior(
