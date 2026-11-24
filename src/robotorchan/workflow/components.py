@@ -9,9 +9,19 @@ from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGI
 from robotorchan.models.registry import MODEL_REGISTRY
 from robotorchan.optim.capabilities import (
     BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
+    BOTORCH_OPTIMIZER_CAPABILITIES,
+    CMAES_OPTIMIZER_CAPABILITIES,
+    DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES,
+    GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+    HYBRID_OPTIMIZER_CAPABILITIES,
     MIXED_CMAES_OPTIMIZER_CAPABILITIES,
     MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+    MIXED_NSGA2_OPTIMIZER_CAPABILITIES,
+    NSGA2_OPTIMIZER_CAPABILITIES,
     OPTIMIZER_CAPABILITIES,
+    PSO_OPTIMIZER_CAPABILITIES,
+    SAMPLING_OPTIMIZER_CAPABILITIES,
+    TORCH_OPTIMIZER_CAPABILITIES,
 )
 from robotorchan.workflow.problem import ObjectiveType, ObservationKind, OutputType, ProblemSpec
 from robotorchan.workflow.selector import model_requirement_reasons
@@ -105,8 +115,26 @@ def _acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
     return _result(name, reasons, ("model posterior and constructor arguments must be checked",))
 
 
+# Reuse backend descriptors; dedicated entry points are not dispatcher aliases.
+_SPECIALIST_CAPABILITIES = {
+    "optimize_acqf_botorch": BOTORCH_OPTIMIZER_CAPABILITIES,
+    "optimize_acqf_mixed_botorch": BOTORCH_MIXED_OPTIMIZER_CAPABILITIES,
+    "optimize_acqf_cmaes": CMAES_OPTIMIZER_CAPABILITIES,
+    "optimize_acqf_de": DIFFERENTIAL_EVOLUTION_OPTIMIZER_CAPABILITIES,
+    "optimize_acqf_ga": GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+    "optimize_acqf_hybrid": HYBRID_OPTIMIZER_CAPABILITIES,
+    "optimize_acqf_mixed_cmaes": MIXED_CMAES_OPTIMIZER_CAPABILITIES,
+    "optimize_acqf_mixed_ga": MIXED_GENETIC_ALGORITHM_OPTIMIZER_CAPABILITIES,
+    "optimize_acqf_pso": PSO_OPTIMIZER_CAPABILITIES,
+    "optimize_acqf_sampling": SAMPLING_OPTIMIZER_CAPABILITIES,
+    "optimize_acqf_torch": TORCH_OPTIMIZER_CAPABILITIES,
+    "optimize_vector_nsga2": NSGA2_OPTIMIZER_CAPABILITIES,
+    "optimize_vector_nsga2_mixed": MIXED_NSGA2_OPTIMIZER_CAPABILITIES,
+}
+
+
 def _optimizer(spec: ProblemSpec, name: str) -> ComponentSelection:
-    caps = OPTIMIZER_CAPABILITIES.get(name)
+    caps = OPTIMIZER_CAPABILITIES.get(name, _SPECIALIST_CAPABILITIES.get(name))
     if caps is None:
         return _unknown(name)
     conditions = ["acquisition semantics and runtime arguments must be checked"]
@@ -119,6 +147,12 @@ def _optimizer(spec: ProblemSpec, name: str) -> ComponentSelection:
         elif name == "cmaes":
             caps = MIXED_CMAES_OPTIMIZER_CAPABILITIES
     reasons = []
+    if name in ("optimize_vector_nsga2", "optimize_vector_nsga2_mixed"):
+        if spec.objective_type is not ObjectiveType.MULTI:
+            reasons.append("requires a multi-objective vector function")
+        conditions.append("returns a Pareto population, not a scalar acquisition q-batch")
+    if name == "optimize_acqf_mixed_botorch":
+        conditions.append("requires fixed_features_list")
     if spec.input_type is InputType.MIXED and not caps.mixed:
         reasons.append("requires mixed-domain support")
     if spec.q > 1 and not caps.q_batch:
@@ -146,6 +180,46 @@ def _strategy(spec: ProblemSpec, name: str) -> ComponentSelection:
         if spec.input_type is InputType.MIXED or spec.candidate_constrained:
             return _result(name, ["strategy does not accept mixed or constraint arguments"])
         return _result(name, [], ("acquisition semantics must be checked",))
+    if name in ("HammingLocalSearchStrategy", "DiscreteTrustRegionStrategy"):
+        reasons = []
+        if spec.input_type is not InputType.MIXED:
+            reasons.append("requires a fully discrete domain")
+        if spec.q != 1:
+            reasons.append("supports q=1 only")
+        return _result(name, reasons, ("requires discrete space and feasible starts",))
+    if name == "TreeEnsembleSearchStrategy":
+        reasons = []
+        if spec.candidate_constrained:
+            reasons.append("does not accept candidate constraints")
+        return _result(name, reasons, ("requires tree-compatible acquisition and domain setup",))
+    if name == "OriginalSpaceStrategy":
+        reasons = []
+        if spec.input_type is InputType.MIXED:
+            reasons.append("requires continuous inputs")
+        return _result(name, reasons, ("requires BoTorch-compatible acquisition and constraints",))
+    if name == "TuRBOStrategy":
+        return _result(
+            name,
+            [],
+            ("requires trust-region state matching q and explicit domain-specific proposal path",),
+        )
+    if name in (
+        "ALEBOStrategy",
+        "REMBOStrategy",
+        "HeSBOStrategy",
+        "BAxUSStrategy",
+        "BAxUSThompsonSamplingStrategy",
+        "LatentSpaceStrategy",
+    ):
+        reasons = []
+        if spec.input_type is InputType.MIXED:
+            reasons.append("requires continuous embedding coordinates")
+        if spec.candidate_constrained:
+            reasons.append("does not support unmapped candidate constraints")
+        conditions = ["requires compatible embedding or reconstruction and acquisition"]
+        if name == "BAxUSThompsonSamplingStrategy":
+            conditions.append("requires a posterior suitable for MaxPosteriorSampling")
+        return _result(name, reasons, tuple(conditions))
     return _unknown(name)
 
 
