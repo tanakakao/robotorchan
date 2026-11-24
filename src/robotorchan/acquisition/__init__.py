@@ -56,6 +56,11 @@ from robotorchan.acquisition.composition import (
     make_sample_classification_feasibility_bridge,
     resolve_acquisition_composition,
 )
+from robotorchan.acquisition.factory import (
+    create_acquisition,
+    get_acquisition_class,
+    list_acquisitions,
+)
 from robotorchan.acquisition.non_gp import make_non_gp_acquisition, validate_non_gp_acquisition
 from robotorchan.acquisition.registry import get_acquisition_registry_entry
 from robotorchan.acquisition.sampling import select_thompson_candidates
@@ -78,7 +83,10 @@ __all__ = [
     "ProbabilityObjectiveBridge",
     "ProbabilityVariance",
     "SampleShapeContract",
+    "create_acquisition",
+    "get_acquisition_class",
     "get_acquisition_registry_entry",
+    "list_acquisitions",
     "make_botorch_multiobjective_bridge",
     "make_botorch_objective_bridge",
     "make_classification_constrained_qei_acquisition",
