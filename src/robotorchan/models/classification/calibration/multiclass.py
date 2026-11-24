@@ -12,6 +12,10 @@ from robotorchan.models.classification.base import (
     LatentOutputStructure,
 )
 from robotorchan.models.classification.calibration.base import ProbabilityCalibrator
+from robotorchan.models.classification.posterior.ensemble import (
+    ClassificationEnsemblePosterior,
+    make_classification_ensemble_posterior,
+)
 
 
 class CalibratedMulticlassClassifier(ClassificationModelMixin, nn.Module):
@@ -72,6 +76,27 @@ class CalibratedMulticlassClassifier(ClassificationModelMixin, nn.Module):
         self, X: Tensor, sample_shape: torch.Size | None = None, **kwargs: object
     ) -> Tensor:
         return self.model.sample_latent(X, sample_shape=sample_shape, **kwargs)
+
+    def probability_posterior(
+        self,
+        X: Tensor,
+        *,
+        num_samples: int = 128,
+        **kwargs: object,
+    ) -> ClassificationEnsemblePosterior:
+        """Empirical distribution of calibrated class-probability samples.
+
+        This Monte Carlo posterior integrates the underlying predictive
+        probability samples rather than transforming their posterior mean.
+        No single deterministic non-GP estimator is assigned a fictitious
+        epistemic posterior.
+        """
+        if num_samples < 2:
+            raise ValueError("num_samples must be at least 2.")
+        samples = self.sample_class_probabilities(
+            X, sample_shape=torch.Size([num_samples]), **kwargs
+        )
+        return make_classification_ensemble_posterior(samples)
 
     def probability_variance(
         self, X: Tensor, *, num_samples: int = 128, **kwargs: object
