@@ -86,8 +86,6 @@ def test_turbo_preserves_state_and_updates_after_proposal() -> None:
 def test_mixed_constructor_preserves_assignments() -> None:
     bounds = torch.tensor([[0.0, 0.0], [1.0, 2.0]], dtype=torch.double)
     assignments = [{1: 0.0}, {1: 2.0}]
-    strategy = create_search_strategy(
-        "MixedSpaceStrategy", bounds, fixed_features_list=assignments
-    )
+    strategy = create_search_strategy("MixedSpaceStrategy", bounds, fixed_features_list=assignments)
     assert isinstance(strategy, optim.MixedSpaceStrategy)
     assert strategy.fixed_features_list == assignments
