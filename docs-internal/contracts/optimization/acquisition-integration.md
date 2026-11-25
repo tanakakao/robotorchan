@@ -249,3 +249,21 @@ The registry includes analytic q=1 acquisitions `ExpectedImprovement`, `LogExpec
 - `ExpectedHypervolumeImprovement`: marginal_moments, maximum q=1.
 
 These are static requirements, not runtime validation. Method-specific constructor inputs, exact batch restrictions, and posterior compatibility must be checked separately.
+
+
+## Native decoupled hypervolume knowledge gradient
+
+| Acquisition | Model requirements | Optimization requirements |
+| --- | --- | --- |
+| `qHypervolumeKnowledgeGradient` | Independent output-wise ModelList with masked fantasy support; reference point | One-shot augmented candidates |
+| `qMultiFidelityHypervolumeKnowledgeGradient` | Same masked fantasy support, multi-fidelity models, target fidelities and projection | One-shot augmented candidates with fidelity structure |
+
+Both constructors are resolved directly from BoTorch by the acquisition factory.
+The boolean evaluation mask describes actual evaluation rows, not auxiliary
+fantasy Pareto rows. Partial observations are represented by separate training
+datasets per output. Forward and gradient tests cover the native acquisitions;
+joint candidate/mask optimization and cost-aware incremental value are separate
+integration gates. Standard mixed optimization is not a valid one-shot backend.
+Ensemble, outcome-constrained, and classification combinations are not claimed
+as supported. Workflow selection remains conditional on model and optimizer
+requirements.

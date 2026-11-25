@@ -25,8 +25,8 @@ initial numerical contract tests HVKG with independent partially observed GPs,
 boolean evaluation masks, augmented one-shot inputs and finite gradients.
 MFHVKG numerical validation, constrained value of information and correlated
 output models remain separate gates. Do not mask EI or UCB as a substitute for
-information value. Registry recommendation is deferred until model and optimizer
-requirements can be represented without overstating support.
+information value. Registry entries now record native one-shot and fantasy requirements;
+workflow selection remains conditional on model and optimizer requirements.
 
 ### Phase 3 scope boundary
 
