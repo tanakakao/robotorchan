@@ -213,3 +213,12 @@ dispatcher names use the optimizer factory; specialist APIs with different
 signatures or vector results are not accepted as Study optimizer names.
 The existing restrictions on strategy instances (mixed domains, constraints,
 and context-fixed proposals) still apply.
+
+
+A selected `WorkflowRecommendation` can be supplied to `create_study` using
+`recommendation=selection` instead of explicit model, acquisition and optimizer
+names. Study rechecks the scalar regression BO contract for its domain and
+candidate constraints at construction. This is a q=1 static check, not a
+guarantee for later batch sizes or constructor arguments. Supply required
+method-specific kwargs explicitly. Recommendations specifying both an optimizer
+and a search strategy are rejected rather than silently dropping either.

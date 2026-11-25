@@ -3,6 +3,7 @@
 import pytest
 
 from robotorchan.study import TrialState, create_study
+from robotorchan.workflow import ProblemSpec, recommend
 
 
 def test_sobol_ask_tell_and_reproducibility() -> None:
@@ -91,3 +92,38 @@ def test_named_search_strategy_ask_tell() -> None:
 def test_study_rejects_unsupported_optimizer_names(name: str) -> None:
     with pytest.raises(ValueError, match="scalar dispatcher"):
         create_study(search_space={"x": (0.0, 1.0)}, optimizer=name)
+
+
+def test_study_from_selected_recommendation() -> None:
+    (selection,) = recommend(
+        ProblemSpec(purpose="bayesian_optimization"),
+        model="SingleTaskGP",
+        acquisition="qLogExpectedImprovement",
+        optimizer="sobol",
+    )
+    study = create_study(
+        search_space={"x": (0.0, 1.0)},
+        recommendation=selection,
+        optimizer_kwargs={"raw_samples": 16, "seed": 17},
+        n_initial_trials=3,
+        seed=17,
+    )
+    for _ in range(3):
+        trial = study.ask()
+        study.tell(trial, -((trial.params["x"] - 0.6) ** 2))
+    for trial in study.ask_batch(2):
+        study.tell(trial, -((trial.params["x"] - 0.6) ** 2))
+    assert len(study.trials) == 5
+    with pytest.raises(ValueError, match="explicit component"):
+        create_study(search_space={"x": (0.0, 1.0)}, recommendation=selection, optimizer="ga")
+
+
+def test_study_rejects_classification_recommendation() -> None:
+    (selection,) = recommend(
+        ProblemSpec(purpose="active_learning", observation_kind="binary"),
+        model="BinarySingleTaskGPClassifier",
+        acquisition="qPredictiveEntropy",
+        optimizer="sobol",
+    )
+    with pytest.raises(ValueError, match="incompatible with scalar Study"):
+        create_study(search_space={"x": (0.0, 1.0)}, recommendation=selection)
