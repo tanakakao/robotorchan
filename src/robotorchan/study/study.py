@@ -362,7 +362,9 @@ def create_study(
             search_strategy=recommendation.search_strategy_name,
         )
         if decision.status not in (SelectionStatus.COMPATIBLE, SelectionStatus.CONDITIONAL):
-            raise ValueError(f"recommendation is incompatible with scalar Study: {decision.reasons}")
+            raise ValueError(
+                f"recommendation is incompatible with scalar Study: {decision.reasons}"
+            )
         model = recommendation.model_name
         acquisition = recommendation.acquisition_name
         optimizer = recommendation.search_strategy_name or recommendation.optimizer_name
