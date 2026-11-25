@@ -13,13 +13,13 @@
 Notebook 用依存関係を含めてインストールします。
 
 ```bash
-pip install -e ".[examples]"
+pip install -e ".[examples,dataframe]"
 ```
 
 Fully Bayesian SAAS の例も実行する場合は次を使用します。
 
 ```bash
-pip install -e ".[examples,fully-bayesian]"
+pip install -e ".[examples,dataframe,fully-bayesian]"
 ```
 
 ## 単体実行できるPython例
