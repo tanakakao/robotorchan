@@ -63,9 +63,7 @@ def test_mfhvkg_partial_observation_value_and_gradient():
     observed[0, 1] = False
     observed[-1, 0] = False
     data = split_partial_observations(X, Y, observed)
-    model = ModelListGP(
-        *(SingleTaskMultiFidelityGP(a, b, data_fidelities=[1]) for a, b, _ in data)
-    )
+    model = ModelListGP(*(SingleTaskMultiFidelityGP(a, b, data_fidelities=[1]) for a, b, _ in data))
     model.eval()
     with torch.no_grad():
         model.posterior(X[:1])
@@ -80,6 +78,7 @@ def test_mfhvkg_partial_observation_value_and_gradient():
         num_fantasies=2,
         num_pareto=2,
         X_evaluation_mask=torch.tensor([[True, False]]),
+        target_fidelities={1: 1.0},
         project=project,
     )
     augmented_q = acq.get_augmented_q_batch_size(1)
