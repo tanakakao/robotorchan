@@ -264,3 +264,64 @@ integration test exercises the named model/acquisition/optimizer path with q=2.
 These are representative runtime contracts, not exhaustive cross-product tests.
 Persistent Study storage, exact checkpoint replay and specialized multi-output,
 classification or causal Study loops are outside this integration boundary.
+
+
+## 統一Factoryによる候補提案
+
+Factoryは既存クラスを生成する入口であり、学習や候補提案を暗黙に実行しません。
+
+```python
+import torch
+from robotorchan.models import create_model, list_models
+from robotorchan.acquisition import create_acquisition, list_acquisitions
+from robotorchan.optim import create_optimizer, list_optimizers
+
+X = torch.linspace(0.1, 0.9, 6, dtype=torch.double).unsqueeze(-1)
+Y = -((X - 0.6) ** 2)
+bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+model = create_model("SingleTaskGP", X, Y)
+model.fit()
+acq = create_acquisition("qLogExpectedImprovement", model=model, best_f=Y.max())
+optimize = create_optimizer("sobol", raw_samples=64, seed=17)
+candidates, values = optimize(acq, bounds, q=2)
+```
+
+文字列には公開Factoryの一覧にある名前を使います。従来のクラスを直接
+importして構築する方法も引き続き利用できます。Optimizer Factoryは
+呼び出し可能な最適化関数を返します。Search Strategy Factoryは
+状態を保持し得る既存のStrategyインスタンスを返す点が異なります。
+
+## 問題設定から構成を選ぶ
+
+```python
+from robotorchan.workflow import ProblemSpec, evaluate_components, recommend
+from robotorchan.study import create_study
+
+spec = ProblemSpec(purpose="bayesian_optimization", q=2)
+inventory = evaluate_components(spec)
+(selection,) = recommend(
+    spec,
+    model="SingleTaskGP",
+    acquisition="qLogExpectedImprovement",
+    optimizer="sobol",
+)
+print(selection.compatibility)
+print(selection.required_arguments())
+study = create_study(
+    search_space={"x": (0.0, 1.0)},
+    recommendation=selection,
+    optimizer_kwargs={"raw_samples": 64, "seed": 17},
+    seed=17,
+)
+study.optimize(lambda trial: -((trial.params["x"] - 0.6) ** 2), n_trials=3)
+for trial in study.ask_batch(2):
+    study.tell(trial, -((trial.params["x"] - 0.6) ** 2))
+```
+
+判定は compatible / conditional / incompatible / unknown の4種類です。
+conditional は追加の引数やposterior等の条件が残ることを示します。
+recommend は性能順位ではなく静的な適合候補を返します。
+Studyは単目的のスカラー観測を対象とし、すべてのFactory構成を
+そのままStudyへ渡せるわけではありません。
+
+実装構造については[Guide](guide/13_model_selection.md)を参照してください。

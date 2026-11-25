@@ -48,62 +48,18 @@ Theoryの観測形式・予測対象・decision purposeの区別に対応しま�
 [opt-compat]: ../../src/robotorchan/acquisition/optimizer_compatibility.py
 
 
-## 統一Factoryによる候補提案
+## 統一Factoryと構成選択の実装境界
 
-Factoryは既存クラスを生成する入口であり、学習や候補提案を暗黙に実行しません。
+Model・Acquisition Factoryは既存のコンストラクタを解決し、引数を渡す。
+学習はモデルのfitが担当し、候補生成はOptimizerまたはSearch Strategyが担当する。
+Optimizer Factoryは呼び出し可能な関数を返す一方、Search Strategy Factoryは
+既存のStrategyインスタンスを返す。
 
-```python
-import torch
-from robotorchan.models import create_model, list_models
-from robotorchan.acquisition import create_acquisition, list_acquisitions
-from robotorchan.optim import create_optimizer, list_optimizers
+[components.py](../../src/robotorchan/workflow/components.py)は各要素の能力を照合し、
+[recommendation.py](../../src/robotorchan/workflow/recommendation.py)は
+要素間の条件を集約する。判定は適合、条件付き、不適合、不明を区別する。
+条件付きは実行時のposteriorや引数などの確認が必要であることを意味する。
 
-X = torch.linspace(0.1, 0.9, 6, dtype=torch.double).unsqueeze(-1)
-Y = -((X - 0.6) ** 2)
-bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
-model = create_model("SingleTaskGP", X, Y)
-model.fit()
-acq = create_acquisition("qLogExpectedImprovement", model=model, best_f=Y.max())
-optimize = create_optimizer("sobol", raw_samples=64, seed=17)
-candidates, values = optimize(acq, bounds, q=2)
-```
-
-文字列には公開Factoryの一覧にある名前を使います。従来のクラスを直接
-importして構築する方法も引き続き利用できます。Optimizer Factoryは
-呼び出し可能な最適化関数を返します。Search Strategy Factoryは
-状態を保持し得る既存のStrategyインスタンスを返す点が異なります。
-
-## 問題設定から構成を選ぶ
-
-```python
-from robotorchan.workflow import ProblemSpec, evaluate_components, recommend
-from robotorchan.study import create_study
-
-spec = ProblemSpec(purpose="bayesian_optimization", q=2)
-inventory = evaluate_components(spec)
-(selection,) = recommend(
-    spec,
-    model="SingleTaskGP",
-    acquisition="qLogExpectedImprovement",
-    optimizer="sobol",
-)
-print(selection.compatibility)
-print(selection.required_arguments())
-study = create_study(
-    search_space={"x": (0.0, 1.0)},
-    recommendation=selection,
-    optimizer_kwargs={"raw_samples": 64, "seed": 17},
-    seed=17,
-)
-study.optimize(lambda trial: -((trial.params["x"] - 0.6) ** 2), n_trials=3)
-for trial in study.ask_batch(2):
-    study.tell(trial, -((trial.params["x"] - 0.6) ** 2))
-```
-
-判定は compatible / conditional / incompatible / unknown の4種類です。
-conditional は追加の引数やposterior等の条件が残ることを示します。
-recommend は性能順位ではなく静的な適合候補を返します。
-Studyは単目的のスカラー観測を対象とし、すべてのFactory構成を
-そのままStudyへ渡せるわけではありません。
-
-詳細は[Capability Workflow](../capability_workflow.md)を参照してください。
+Studyは選択された構成を既存の候補生成処理へ接続する。
+静的な判定は学習や性能比較を実行しない。
+利用例は[Capability Workflow](../capability_workflow.md)を参照。
