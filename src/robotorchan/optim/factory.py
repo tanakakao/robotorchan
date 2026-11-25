@@ -23,6 +23,7 @@ from robotorchan.optim.backends.sampling import optimize_acqf_sampling
 from robotorchan.optim.backends.torch import optimize_acqf_torch
 from robotorchan.optim.capabilities import OPTIMIZER_CAPABILITIES
 from robotorchan.optim.contextual import ContextualOptimizer
+from robotorchan.optim.decoupled import optimize_acqf_decoupled
 from robotorchan.optim.dispatch import optimize_acqf
 from robotorchan.optim.one_shot.mixed import optimize_mixed_one_shot_acqf
 from robotorchan.optim.safe import optimize_safe_acqf
@@ -33,6 +34,7 @@ _SPECIALISTS = {
     function.__name__: function
     for function in (
         optimize_acqf_botorch,
+        optimize_acqf_decoupled,
         optimize_acqf_mixed_botorch,
         optimize_acqf_cmaes,
         optimize_acqf_de,
