@@ -69,7 +69,7 @@ def test_mfhvkg_partial_observation_value_and_gradient():
         model.posterior(X[:1])
 
     def project(points):
-        return project_to_target_fidelity(points, target_fidelities={1: 1.0})
+        return project_to_target_fidelity(points, d=2, target_fidelities={1: 1.0})
 
     acq = create_acquisition(
         "qMultiFidelityHypervolumeKnowledgeGradient",
