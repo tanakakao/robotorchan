@@ -37,3 +37,16 @@ are not provided by the native HVKG constructor contract; they are not claimed
 as implemented. Workflow selection is conditional, not a recommendation of
 arbitrary model and optimizer combinations. Classification information value
 remains a Phase 8 topic.
+
+
+## Phase 4: candidate and mask optimization
+
+`optimize_acqf_decoupled` enumerates allowed boolean masks of shape (k, m)
+for q=1 and delegates each continuous optimization to the existing BoTorch
+dispatcher. It returns (candidate, selected_mask, value), with shapes (1, d)
+and (1, m) for the first two items. The original mask is restored in a finally
+block. Ties retain the first mask. Nonfinite results fail explicitly.
+One-shot auxiliary rows are handled by the underlying BoTorch optimizer.
+Mixed domains, joint q>1, candidate constraints and pending evaluations are
+separate integration gates. Raw acquisition values are compared without cost
+normalization.

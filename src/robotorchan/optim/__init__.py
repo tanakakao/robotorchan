@@ -28,6 +28,7 @@ from robotorchan.optim.constraints.contracts import (
     NonlinearConstraintCallable,
 )
 from robotorchan.optim.contextual import ContextualOptimizer
+from robotorchan.optim.decoupled import optimize_acqf_decoupled
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 from robotorchan.optim.domains import MixedVariableSpace, hamming_distance, hamming_neighbors
 from robotorchan.optim.embedding import (
@@ -141,6 +142,7 @@ __all__ = [
     "list_optimizers",
     "list_search_strategies",
     "optimize_acqf",
+    "optimize_acqf_decoupled",
     "optimize_acqf_sequential",
     "optimize_mixed_one_shot_acqf",
     "optimize_safe_acqf",
