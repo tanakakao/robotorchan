@@ -212,9 +212,7 @@ def test_workflow_compatibility_and_explicit_recommendation() -> None:
     )
     assert result.status is SelectionStatus.CONDITIONAL
     assert result.conditions
-    recommendations = recommend(
-        spec, model="SingleTaskGP", acquisition="qLogExpectedImprovement"
-    )
+    recommendations = recommend(spec, model="SingleTaskGP", acquisition="qLogExpectedImprovement")
     assert len(recommendations) == 1
     assert recommendations[0].model_name == "SingleTaskGP"
     assert not recommend(spec, model="SingleTaskGP", acquisition="ExpectedImprovement")
