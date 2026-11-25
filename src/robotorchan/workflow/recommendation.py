@@ -8,11 +8,11 @@ from robotorchan.acquisition.capabilities import AcquisitionPurpose
 from robotorchan.acquisition.compatibility import (
     check_model_acquisition_compatibility,
 )
+from robotorchan.acquisition.factory import get_acquisition_class, list_acquisitions
 from robotorchan.acquisition.optimizer_compatibility import (
     CandidateOptimizer,
     check_acquisition_optimizer_compatibility,
 )
-from robotorchan.acquisition.factory import get_acquisition_class, list_acquisitions
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.models.capabilities import InputType
 from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
