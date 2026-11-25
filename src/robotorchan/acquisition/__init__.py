@@ -56,7 +56,10 @@ from robotorchan.acquisition.composition import (
     make_sample_classification_feasibility_bridge,
     resolve_acquisition_composition,
 )
-from robotorchan.acquisition.decoupled import qDecoupledKnowledgeGradient
+from robotorchan.acquisition.decoupled import (
+    qDecoupledExpectedPredictiveInformationGain,
+    qDecoupledKnowledgeGradient,
+)
 from robotorchan.acquisition.factory import (
     create_acquisition,
     get_acquisition_class,
@@ -110,6 +113,7 @@ __all__ = [
     "qBALD",
     "qBoundaryVariance",
     "qConditionalExpectedPredictiveInformationGain",
+    "qDecoupledExpectedPredictiveInformationGain",
     "qDecoupledKnowledgeGradient",
     "qExpectedPredictiveInformationGain",
     "qJointExpectedPredictiveInformationGain",

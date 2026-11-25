@@ -514,3 +514,15 @@ ACQUISITION_REGISTRY["qDecoupledKnowledgeGradient"] = AcquisitionRegistryEntry(
         "pending evaluations and outcome constraints are not supported",
     ),
 )
+
+
+ACQUISITION_REGISTRY["qDecoupledExpectedPredictiveInformationGain"] = _active_learning(
+    "qDecoupledExpectedPredictiveInformationGain",
+    posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+    max_q=None,
+    limitations=(
+        "requires independent ModelListGP outputs and positive observation noise",
+        "requires output weights and an evaluation mask for candidate rows",
+        "pending evaluations and correlated outputs are not supported",
+    ),
+)

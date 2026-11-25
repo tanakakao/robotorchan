@@ -7,6 +7,8 @@ from botorch.sampling.list_sampler import ListSampler
 from botorch.utils.transforms import t_batch_mode_transform
 from torch import Tensor
 
+from robotorchan.acquisition.active_learning.epig import qJointExpectedPredictiveInformationGain
+
 
 class qDecoupledKnowledgeGradient(AcquisitionFunction):
     """Masked fantasy KG with a fixed terminal decision set and linear utility.
@@ -107,3 +109,65 @@ class qDecoupledKnowledgeGradient(AcquisitionFunction):
         fantasy = self.model.fantasize(X=X, sampler=self.sampler, evaluation_mask=mask)
         decision = self.decision_X.expand(*X.shape[:-2], *self.decision_X.shape)
         return self._terminal_value(fantasy, decision).mean(dim=0) - self.current_value
+
+
+class qDecoupledExpectedPredictiveInformationGain(AcquisitionFunction):
+    """Weighted joint EPIG across independent outputs and masked candidate rows.
+
+    Output weights define the target prediction distribution. Observation noise
+    is a strictly positive variance in each output's original units.
+    """
+
+    def __init__(
+        self,
+        model: ModelListGP,
+        target_X: Tensor,
+        X_evaluation_mask: Tensor,
+        observation_noise: Tensor,
+        output_weights: Tensor | None = None,
+    ) -> None:
+        super().__init__(model=model)
+        if not isinstance(model, ModelListGP) or len(model.models) != model.num_outputs:
+            raise ValueError("requires one independent GP per output")
+        m = model.num_outputs
+        if observation_noise.shape != (m,) or not (
+            torch.isfinite(observation_noise) & (observation_noise > 0)
+        ).all():
+            raise ValueError("requires positive finite observation noise per output")
+        if output_weights is None:
+            output_weights = observation_noise.new_ones(m)
+        if (
+            output_weights.shape != (m,)
+            or not torch.isfinite(output_weights).all()
+            or (output_weights < 0).any()
+            or output_weights.sum() <= 0
+        ):
+            raise ValueError("requires nonnegative finite output weights with positive sum")
+        self.register_buffer("output_weights", output_weights / output_weights.sum())
+        self.register_buffer("X_evaluation_mask", X_evaluation_mask)
+        self.components = torch.nn.ModuleList(
+            qJointExpectedPredictiveInformationGain(
+                child, target_X, observation_noise=observation_noise[j]
+            )
+            for j, child in enumerate(model.models)
+        )
+
+    def set_X_pending(self, X_pending: Tensor | None = None) -> None:
+        if X_pending is not None:
+            raise NotImplementedError("pending evaluations are not supported")
+        super().set_X_pending(None)
+
+    @t_batch_mode_transform()
+    def forward(self, X: Tensor) -> Tensor:
+        mask = self.X_evaluation_mask
+        if (
+            mask.shape != (X.shape[-2], self.model.num_outputs)
+            or mask.dtype != torch.bool
+            or not mask.any(dim=-1).all()
+        ):
+            raise ValueError("evaluation mask must select outputs for each candidate")
+        result = X.sum(dim=(-2, -1)) * 0
+        for j, component in enumerate(self.components):
+            if mask[:, j].any():
+                result = result + self.output_weights[j] * component(X[..., mask[:, j], :])
+        return result

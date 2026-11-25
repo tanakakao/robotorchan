@@ -286,3 +286,14 @@ weighted by failure probability. Abstention at the same payoff is allowed.
 Constraint outputs must have zero objective weights. This is a decision
 utility, not a hard posterior feasibility guarantee. The generic workflow
 registry remains conservative until constrained optimizer integration is tested.
+
+
+### Decoupled predictive information gain
+
+`qDecoupledExpectedPredictiveInformationGain` reuses joint Gaussian EPIG for
+each independently modeled output, selecting only candidate rows assigned to
+that output. The weighted sum is the expected mutual information for a target
+output and target location drawn from the specified prediction distribution.
+Weights are normalized across all outputs, not only observed outputs. Positive
+per-output observation noise variances are required. This is predictive
+information gain, not information about the optimizer or Pareto front.
