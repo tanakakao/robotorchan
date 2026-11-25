@@ -16,6 +16,10 @@ from robotorchan.workflow.problem import (
 )
 from robotorchan.workflow.recommendation import (
     Recommendation,
+    WorkflowCompatibility,
+    WorkflowRecommendation,
+    check_compatibility,
+    recommend,
     recommend_compatible_workflows,
 )
 from robotorchan.workflow.selector import (
@@ -36,8 +40,12 @@ __all__ = [
     "ProblemSpec",
     "Recommendation",
     "SelectionStatus",
+    "WorkflowCompatibility",
+    "WorkflowRecommendation",
+    "check_compatibility",
     "evaluate_components",
     "evaluate_models",
+    "recommend",
     "recommend_compatible_workflows",
     "select_compatible_models",
 ]

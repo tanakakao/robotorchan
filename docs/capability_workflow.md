@@ -134,3 +134,49 @@ scalarization, feasibility, probability of improvement, confidence bounds,
 pairwise variance and lower-bound entropy acquisitions are included. This
 is not a guarantee of runtime compatibility or a count of unique classes.
 Unrecognized external names still return UNKNOWN.
+
+
+### Integrated workflow compatibility
+
+`check_compatibility(spec, model=..., acquisition=..., optimizer=...,
+search_strategy=...)` combines the component checks with registered posterior
+and one-shot optimizer contracts. Reasons describe rejection; conditions
+describe unresolved runtime requirements. It does not fit or construct models.
+
+`recommend(spec, model=..., acquisition=..., optimizer="botorch")` returns
+unranked candidates with the compatibility result. Explicit choices are not
+silently replaced. The default optimizer is BoTorch, not a performance ranking.
+An empty result means no candidate passed these checks. Use the compatibility
+function to diagnose an explicitly rejected combination.
+
+
+Explicit model class names and special acquisition names are preserved even
+when only one component is specified. Automatic enumeration uses registered
+models and acquisitions. When a strategy is specified without an optimizer,
+the strategy owns optimization; no dispatcher default is injected. Explicit
+optimizer choices are accepted only for matching BoTorch strategy paths or
+the continuous TuRBO dispatcher interface.
+
+
+Use `optimizer="auto"` or `search_strategy="auto"` to enumerate the respective
+factory inventory, rather than silently choosing a backend. Results remain
+unranked and conditional; explicit names are preserved. Both auto options
+enumerate their combinations, so specify a model and acquisition to limit
+the result size. Dedicated causal surrogates require their own workflow
+or native model extraction; vector NSGA-II is not a scalar acquisition backend.
+
+
+Explicit `model="auto"` and `acquisition="auto"` include all factory names,
+including special conditional components. Omitted names retain the registered
+default inventory. Class names and registry IDs may refer to the same class.
+`WorkflowRecommendation.required_arguments()` inspects the original
+constructor or optimizer signature on demand, without constructing a model.
+It lists required named parameters, not their values or conditional kwargs;
+None means signature inspection is unavailable. Runtime conditions still apply.
+
+
+Integration tests exercise recommendations through the original factories,
+explicit fit calls, acquisition construction and candidate generation for
+single-objective, multi-objective, outcome-constrained, mixed candidate-constrained,
+binary, multiclass and ordinal problems. These are smoke tests, not performance
+benchmarks or exhaustive validation of every conditional combination.

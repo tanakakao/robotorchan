@@ -21,6 +21,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
     "SingleTaskGP": ModelRegistryEntry(
         "SingleTaskGP",
         ModelCapabilities(
+            supports_multi_output=True,
             supports_posterior_samples=True,
             posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
             supports_fantasize=True,
@@ -36,6 +37,7 @@ MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {
         "MixedSingleTaskGP",
         ModelCapabilities(
             input_type=InputType.MIXED,
+            supports_multi_output=True,
             supports_posterior_samples=True,
             posterior_sampling_type=PosteriorSamplingType.GAUSSIAN,
             supports_fantasize=True,
