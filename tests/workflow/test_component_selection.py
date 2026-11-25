@@ -257,3 +257,25 @@ def test_strategy_owns_optimizer_selection() -> None:
     results = recommend(spec, **kwargs, optimizer="ga", search_strategy="TuRBOStrategy")
     assert results
     assert results[0].optimizer_name == "ga"
+
+
+def test_auto_optimizer_and_strategy_candidates() -> None:
+    spec = ProblemSpec(purpose="bayesian_optimization")
+    kwargs = dict(model="SingleTaskGP", acquisition="qLogExpectedImprovement")
+    results = recommend(spec, **kwargs, optimizer="auto")
+    names = {item.optimizer_name for item in results}
+    assert {"botorch", "ga", "sobol"} <= names
+    assert "optimize_vector_nsga2" not in names
+    assert "optimize_acqf_mixed_botorch" not in names
+    results = recommend(spec, **kwargs, search_strategy="auto")
+    names = {item.search_strategy_name for item in results}
+    assert {"OriginalSpaceStrategy", "SobolSearchStrategy", "TuRBOStrategy"} <= names
+    assert "MixedSpaceStrategy" not in names
+    assert all(item.optimizer_name is None for item in results)
+
+
+def test_causal_models_require_dedicated_workflow() -> None:
+    spec = ProblemSpec(purpose="bayesian_optimization")
+    for model in ("GPStructuralCausalModel", "StructuralCausalModel", "InterventionGPSurrogate"):
+        result = check_compatibility(spec, model=model, acquisition="qLogExpectedImprovement")
+        assert result.status is SelectionStatus.INCOMPATIBLE

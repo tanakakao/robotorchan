@@ -15,6 +15,8 @@ from robotorchan.models.capabilities import InputType
 from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.registry import MODEL_REGISTRY
 from robotorchan.optim.capabilities import OPTIMIZER_CAPABILITIES
+from robotorchan.optim.factory import list_optimizers
+from robotorchan.optim.search_factory import list_search_strategies
 from robotorchan.workflow.components import SelectionStatus, evaluate_component_inventory
 from robotorchan.workflow.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.workflow.selector import select_compatible_models
@@ -163,8 +165,20 @@ def check_compatibility(
             conditions.append("strategy owns the matching BoTorch optimization path")
         else:
             reasons.append("strategy does not expose the specified optimizer selection")
+    if model in ("GPStructuralCausalModel", "StructuralCausalModel", "InterventionGPSurrogate"):
+        reasons.append("use the dedicated causal workflow or extract its native BoTorch model")
+    if (
+        optimizer
+        in ("optimize_acqf_mixed_botorch", "optimize_acqf_mixed_ga", "optimize_acqf_mixed_cmaes")
+        and spec.input_type is not InputType.MIXED
+    ):
+        reasons.append("dedicated mixed optimizer requires a mixed domain")
+    if optimizer == "optimize_acqf_botorch" and spec.input_type is InputType.MIXED:
+        reasons.append("continuous BoTorch backend does not enumerate mixed assignments")
     if optimizer in ("optimize_vector_nsga2", "optimize_vector_nsga2_mixed"):
         reasons.append("vector optimizer does not consume a scalar acquisition")
+    if entry is None and optimizer == "optimize_mixed_one_shot_acqf":
+        conditions.append("wrapped acquisition must implement the one-shot contract")
     if entry is not None:
         if optimizer == "optimize_mixed_one_shot_acqf":
             backend = CandidateOptimizer.MIXED_ONE_SHOT
@@ -218,7 +232,7 @@ def recommend(
     optimizer: str | None = None,
     search_strategy: str | None = None,
 ) -> tuple[WorkflowRecommendation, ...]:
-    """Enumerate unranked registered pairs, preserving explicit component choices."""
+    """Enumerate unranked candidates; use auto to enumerate optimizer or strategy names."""
     if optimizer is None and search_strategy is None:
         optimizer = "botorch"
     model_names = (model,) if model is not None else select_compatible_models(spec)
@@ -228,25 +242,29 @@ def recommend(
         for model_name in model_names
         for acquisition_name in acquisition_names
     )
+    optimizer_names = list_optimizers() if optimizer == "auto" else (optimizer,)
+    strategy_names = list_search_strategies() if search_strategy == "auto" else (search_strategy,)
     results = []
     for model_name, acquisition_name in pairs:
-        decision = check_compatibility(
-            spec,
-            model=model_name,
-            acquisition=acquisition_name,
-            optimizer=optimizer,
-            search_strategy=search_strategy,
-        )
-        if decision.status not in (SelectionStatus.COMPATIBLE, SelectionStatus.CONDITIONAL):
-            continue
-        results.append(
-            WorkflowRecommendation(
-                model_name,
-                acquisition_name,
-                optimizer,
-                search_strategy,
-                decision,
-                ("static capability match; no empirical performance ranking",),
-            )
-        )
+        for optimizer_name in optimizer_names:
+            for strategy_name in strategy_names:
+                decision = check_compatibility(
+                    spec,
+                    model=model_name,
+                    acquisition=acquisition_name,
+                    optimizer=optimizer_name,
+                    search_strategy=strategy_name,
+                )
+                if decision.status in (SelectionStatus.INCOMPATIBLE, SelectionStatus.UNKNOWN):
+                    continue
+                results.append(
+                    WorkflowRecommendation(
+                        model_name,
+                        acquisition_name,
+                        optimizer_name,
+                        strategy_name,
+                        decision,
+                        ("static capability match; no empirical performance ranking",),
+                    )
+                )
     return tuple(results)

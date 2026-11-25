@@ -156,3 +156,11 @@ models and acquisitions. When a strategy is specified without an optimizer,
 the strategy owns optimization; no dispatcher default is injected. Explicit
 optimizer choices are accepted only for matching BoTorch strategy paths or
 the continuous TuRBO dispatcher interface.
+
+
+Use `optimizer="auto"` or `search_strategy="auto"` to enumerate the respective
+factory inventory, rather than silently choosing a backend. Results remain
+unranked and conditional; explicit names are preserved. Both auto options
+enumerate their combinations, so specify a model and acquisition to limit
+the result size. Dedicated causal surrogates require their own workflow
+or native model extraction; vector NSGA-II is not a scalar acquisition backend.
