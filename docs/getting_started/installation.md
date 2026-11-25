@@ -16,7 +16,7 @@ cd robotorchan
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
-python -m pip install -e ".[dev,examples]"
+python -m pip install -e ".[dev,examples,dataframe]"
 python -m pip check
 ```
 
@@ -54,13 +54,13 @@ python -m pip install -e .
 Notebook も実行する場合:
 
 ```bash
-python -m pip install -e ".[examples]"
+python -m pip install -e ".[examples,dataframe]"
 ```
 
 Fully Bayesian SAAS の Notebook も実行する場合:
 
 ```bash
-python -m pip install -e ".[examples,fully-bayesian]"
+python -m pip install -e ".[examples,dataframe,fully-bayesian]"
 ```
 
 追加依存の用途は次のとおりです。必要な機能に合わせて指定してください。
@@ -69,6 +69,7 @@ python -m pip install -e ".[examples,fully-bayesian]"
 | --- | --- |
 | `dev` | pytest、coverage、Ruffによる開発・検証 |
 | `examples` | JupyterLab、描画、Notebookの実行 |
+| `dataframe` | pandasによるStudy試行履歴のDataFrame出力 |
 | `fully-bayesian` | Fully Bayesian SAASのNUTS推論 |
 | `ngboost` | NGBoost surrogate |
 | `cmaes` | CMA-ES候補最適化backend |

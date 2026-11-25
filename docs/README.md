@@ -17,6 +17,14 @@
 
 モデルファミリー別の詳細は [Model guides](models/README.md) に整理しています。内容を削減せず、利用ガイド・Theory・Notebookを相互に辿れる構成を維持します。
 
+### 統一Factoryで構成を選びたい
+
+[Capability-aware workflow](capability_workflow.md) では公開名による生成、問題要件、適合判定、推薦、Study連携を説明します。
+
+- [62: 個別Factory](../examples/notebooks/62_unified_factories.ipynb)
+- [63: Capability・Recommendation](../examples/notebooks/63_capability_recommendation.ipynb)
+- [64: Study・Benchmark](../examples/notebooks/64_unified_study_benchmark.ipynb)
+
 ### 理論を学びたい
 
 [理論ガイド](theory/README.md) は、ベイズ最適化、Gaussian Process、獲得関数から、高次元・ロバスト・入力不確かさ・次元削減までを扱います。

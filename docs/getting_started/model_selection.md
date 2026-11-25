@@ -31,10 +31,12 @@ robotorchan では、モデルの複雑さではなく **データ生成過程�
 
 ## Classification を選ぶ
 
-二値分類ではlabelの生成過程と予測不確実性の意味から選びます。
+分類ではlabelの生成過程と予測不確実性の意味から選びます。二値・多クラス・順序カテゴリでは観測尤度と予測の意味が異なります。
 
 | 問題設定 | 候補 | 選択上の注意 |
 |---|---|---|
+| 順序のない3クラス以上 | `MulticlassSingleTaskGPClassifier` | クラス確率を扱う |
+| 順序カテゴリ | `OrdinalSingleTaskGPClassifier` | カテゴリ順序と閾値を扱う |
 | 通常の二値分類 | `BinarySingleTaskGPClassifier` | Bernoulli variational GPを基準とする |
 | 連続・カテゴリ混合 | `MixedBinarySingleTaskGPClassifier` | カテゴリを連続距離として扱わない |
 | 高次元 | SAAS / reduced / ALEBO / Joint Encoder classifier | 表現・疎性の仮定を比較する |
@@ -90,6 +92,14 @@ DeepGPは確率的な階層構造を持つvariational surrogateです。
 単一タスク、Mixed単一タスク、long-format MultiTask、Mixed MultiTaskの実装があり、
 通常のExact GPと同じ学習手順を仮定しないでください。
 [DeepGP guide](../models/deep_gp.md) に入力構造と学習契約をまとめています。
+
+## Capabilityによる構成選択
+
+`ProblemSpec` の `observation_kind` は regression / binary / multiclass / ordinal を区別します。
+`evaluate_components` で候補を絞り、`check_compatibility` と `recommend` で獲得関数・Optimizer・Search Strategyを含む構成を確認できます。
+静的な適合判定は予測精度や最適化性能の順位ではありません。
+利用方法は [Capability-aware workflow](../capability_workflow.md) と
+[Notebook 63](../../examples/notebooks/63_capability_recommendation.ipynb) を参照してください。
 
 ## 詳細へ進む
 

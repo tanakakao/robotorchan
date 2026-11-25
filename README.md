@@ -14,7 +14,9 @@ BoTorch-native なモデル構成を維持しながら、raw training data の�
 - **幅広い surrogate**: 標準 GP、Mixed、Multi-Fidelity、Multi-task / Multi-output、Robust / Noise / Input uncertainty をサポート
 - **高次元・表現力**: PCA / PLS / Random Projection、AE / VAE、SAAS、DeepGP、Infinite-width BNN GP、Spectral Mixture GP を提供
 - **Non-GP surrogate**: Random Forest、Extra Trees、Gradient Boosting 系を共通の探索フローで利用可能
-- **Classification / Active Learning**: Binary GP、robust・uncertain-input、non-GP・ensemble分類とEntropy、BALD、Margin、Probability Variance、Latent qStraddleを提供
+- **Classification / Active Learning**: 二値・多クラス・順序回帰GP、robust・uncertain-input、non-GP・ensemble分類とEntropy、BALD、Margin、Probability Variance、Latent qStraddleを提供
+- **統一Factory・構成選択**: モデル、獲得関数、Optimizer、Search Strategyを公開名から生成し、問題要件に基づく適合判定と推薦を利用可能
+- **Study / Ask-and-Tell**: スカラー目的BOの試行管理、バッチ提案、履歴復元、DataFrame出力
 - **探索戦略の分離**: REMBO、HeSBO、ALEBO、TuRBO、BAxUS、tree ensemble search などを `SearchStrategy` として利用可能
 - **実行可能な資料**: モデル選択ガイド、理論ドキュメント、Jupyter Notebook を同じリポジトリで管理
 
@@ -79,11 +81,39 @@ robotorchan では、**surrogate model** で目的関数や制約の事後分布
 [optimizer別の制約対応表](docs/optimization/constraint-support-matrix.md)、
 [Notebook一覧](examples/README.md) から確認してください。
 
-## Capability-aware workflow
+## 統一FactoryとCapability-aware workflow
 
 問題要件を `ProblemSpec` で宣言し、model registry、selector、model-acquisition compatibility、recommendation、capability benchmark を一貫した metadata で接続します。モデル名から能力を推測せず、互換候補と不適合理由を明示的に扱います。
 
-詳細は [Capability-aware workflow](docs/capability_workflow.md) を参照してください。
+既存のクラスを直接構築する方法に加え、公開名から同じ実装を生成できます。
+
+```python
+from robotorchan.models import create_model
+from robotorchan.acquisition import create_acquisition
+from robotorchan.optim import create_optimizer
+
+model = create_model("SingleTaskGP", train_X, train_Y)
+model.fit()
+acq = create_acquisition("qLogExpectedImprovement", model=model, best_f=train_Y.max())
+bounds = torch.tensor([[0., 0.], [1., 1.]], dtype=train_X.dtype)
+optimize = create_optimizer("sobol", raw_samples=64, seed=17)
+candidates, values = optimize(acq, bounds, q=2)
+```
+
+`list_models()`、`list_acquisitions()`、`list_optimizers()`、
+`list_search_strategies()` で公開名を確認できます。
+`create_search_strategy()` は既存のStrategyインスタンスを生成します。
+
+`evaluate_components()` は個別の適合性、`check_compatibility()` は構成全体の適合性、
+`recommend()` は適合候補を返します。回帰・二値分類・多クラス分類・順序回帰を区別し、
+静的判定を性能ランキングや実行保証とはみなしません。
+スカラー目的BOでは選択した推薦構成を `create_study(recommendation=...)` に渡せます。
+
+詳細は [Capability-aware workflow](docs/capability_workflow.md) と以下の実行例を参照してください。
+
+- [62: 個別Factory](examples/notebooks/62_unified_factories.ipynb)
+- [63: Capability・Recommendation](examples/notebooks/63_capability_recommendation.ipynb)
+- [64: Study・Ask-and-Tell・Benchmark](examples/notebooks/64_unified_study_benchmark.ipynb)
 
 ## ドキュメント
 
@@ -139,13 +169,13 @@ pip install -e ".[fully-bayesian]"
 Notebook 例も動かす場合:
 
 ```bash
-pip install -e ".[examples]"
+pip install -e ".[examples,dataframe]"
 ```
 
 Fully Bayesian SAAS の例も動かす場合:
 
 ```bash
-pip install -e ".[examples,fully-bayesian]"
+pip install -e ".[examples,dataframe,fully-bayesian]"
 ```
 
 ## モデル共通規約
@@ -172,7 +202,7 @@ robotorchan の public model API は多数の派生モデルを含むため、RE
 
 | ファミリー | 代表的なモデル・機能 |
 |---|---|
-| Classification | Binary、Mixed、MultiTask、SAAS、reduced、ALEBO、Joint Encoder、DeepGP分類 |
+| Classification | Binary、Multiclass、Ordinal、Mixed、MultiTask、SAAS、reduced、ALEBO、Joint Encoder、DeepGP分類 |
 | Standard / Mixed / Multi-Fidelity | `SingleTaskGP`, `MixedSingleTaskGP`, `SingleTaskMultiFidelityGP` |
 | Multi-task / Multi-output | `MultiTaskGP`, `KroneckerMultiTaskGP`, `ModelListGP`, Mixed / heterogeneous variants |
 | High-dimensional / Reduction | PCA, PLS, Random Projection, AE / VAE, Joint Encoder, SAAS, MAP-SAAS, ALEBO |
