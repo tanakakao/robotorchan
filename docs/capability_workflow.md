@@ -222,3 +222,22 @@ candidate constraints at construction. This is a q=1 static check, not a
 guarantee for later batch sizes or constructor arguments. Supply required
 method-specific kwargs explicitly. Recommendations specifying both an optimizer
 and a search strategy are rejected rather than silently dropping either.
+
+
+The existing single-objective benchmark callback also accepts factory names:
+
+```python
+from robotorchan.benchmarks.botorch_strategy import make_botorch_gp_strategy
+
+strategy = make_botorch_gp_strategy(
+    model_factory="SingleTaskGP",
+    acquisition="qLogExpectedImprovement",
+    optimizer="sobol",
+    raw_samples=64,
+)
+```
+
+Named models use their existing fit method. The original callable model factory
+retains native exact GP fitting, and the legacy acquisition names and default
+native optimizer remain supported. This callback remains restricted to
+unconstrained continuous scalar regression BO; other benchmark paths are unchanged.
