@@ -1635,3 +1635,41 @@ validation
 5. [High-dimensional GP](08_high_dimensional_gp.md)
 6. [Robust Gaussian Process](14_robust_gaussian_process.md)
 7. [Non-GP Surrogates](23_non_gp_surrogates.md)
+
+
+## 能力ベースの構成選択と統計的モデル選択の違い
+
+BOの構成をモデル $M$、獲得関数 $a$、最適化器 $O$、探索戦略 $S$
+の組 $w=(M,a,O,S)$ とする。問題要件 $P$ に対し、各要素と
+要素間の必要条件を満たす構成集合を
+
+$$
+\mathcal W_P = \{w\in\mathcal W : C(P,w)=1\}
+$$
+
+と書ける。ここで $C$ は数学的・実装上の適合条件を表す理想化した
+述語である。実装では情報が不足する場合もあるため、二値ではなく
+適合、不適合、条件付き、不明を区別する。
+
+例えば、q-batch獲得関数は候補集合 $X_q$ の同時事後分布を利用する
+場合がある。周辺平均と分散のみを持つモデルでは、その同時分布の
+サンプリングが可能とは限らない。分類のクラス確率と潜在GPの
+Gaussian posteriorも異なる量である。したがってモデルと獲得関数の
+個別適合だけでは構成全体の適合は保証されない。
+
+一方、統計的なモデル選択は、例えば検証データ上の予測損失
+$L_{\mathrm{val}}(M)$ を比較する問題である。
+
+$$
+M^* \in \arg\min_{M\in\mathcal M_P} L_{\mathrm{val}}(M)
+$$
+
+能力ベースの選択は候補集合を絞る前段階であり、この損失を計算したり
+BOの期待regretを最小化する構成を推定したりするものではない。
+条件付き候補は実際のデータ、posterior形状、制約、引数、候補生成で
+検証する必要がある。
+
+参考文献：Rasmussen and Williams (2006), *Gaussian Processes for Machine
+Learning*; Frazier (2018), *A Tutorial on Bayesian Optimization*,
+[arXiv:1807.02811](https://arxiv.org/abs/1807.02811)。
+実装との対応は[Guide](../guide/13_model_selection.md)を参照。

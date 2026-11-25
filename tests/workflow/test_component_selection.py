@@ -426,3 +426,16 @@ def test_configurable_gp_output_count() -> None:
         assert recommend(single, model=name, acquisition="LogExpectedImprovement")
         assert recommend(multi, model=name, acquisition="qLogExpectedHypervolumeImprovement")
         assert not recommend(multi, model=name, acquisition="LogExpectedImprovement")
+
+
+def test_additive_map_saas_recommendation_with_rembo() -> None:
+    from robotorchan.workflow import recommend
+
+    spec = ProblemSpec(purpose="bayesian_optimization", high_dimensional=True)
+    (choice,) = recommend(
+        spec,
+        model="AdditiveMapSaasSingleTaskGP",
+        acquisition="qLogExpectedImprovement",
+        search_strategy="REMBOStrategy",
+    )
+    assert choice.search_strategy_name == "REMBOStrategy"

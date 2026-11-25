@@ -463,6 +463,8 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         "GradientBoostingSurrogate",
         "HistGradientBoostingSurrogate",
         "NGBoostSurrogate",
+        "AdditiveMapSaasSingleTaskGP",
+        "MixedAdditiveMapSaasSingleTaskGP",
         "EnsembleMapSaasSingleTaskGP",
         "MixedEnsembleMapSaasSingleTaskGP",
         "MixedPCAGP",

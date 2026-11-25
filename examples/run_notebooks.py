@@ -58,6 +58,9 @@ DEFAULT_NOTEBOOKS = [
     "48_robust_input_perturbation.ipynb",
     "58_causal_bayesian_optimization.ipynb",
     "61_heterogeneous_classification_constraints.ipynb",
+    "62_unified_factories.ipynb",
+    "63_capability_recommendation.ipynb",
+    "64_unified_study_benchmark.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [

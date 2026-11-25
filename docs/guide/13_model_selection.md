@@ -16,7 +16,7 @@
 
 ## 条件を照合し、不適合理由を保持する
 
-[selector.py](../../src/robotorchan/workflow/selector.py)の`_check_model()`は
+[selector.py](../../src/robotorchan/workflow/selector.py)の`model_requirement_reasons()`は
 `ProblemSpec`と各entryのcapabilityを比較し、理由を`reasons`へ蓄積します。入力型・task型・preference・multi-fidelityには一致を要求し、
 multi-output・structured output・頑健性などには必要な能力の存在を要求します。
 
@@ -46,3 +46,20 @@ Theoryの観測形式・予測対象・decision purposeの区別に対応しま�
 
 [acq-compat]: ../../src/robotorchan/acquisition/compatibility.py
 [opt-compat]: ../../src/robotorchan/acquisition/optimizer_compatibility.py
+
+
+## 統一Factoryと構成選択の実装境界
+
+Model・Acquisition Factoryは既存のコンストラクタを解決し、引数を渡す。
+学習はモデルのfitが担当し、候補生成はOptimizerまたはSearch Strategyが担当する。
+Optimizer Factoryは呼び出し可能な関数を返す一方、Search Strategy Factoryは
+既存のStrategyインスタンスを返す。
+
+[components.py](../../src/robotorchan/workflow/components.py)は各要素の能力を照合し、
+[recommendation.py](../../src/robotorchan/workflow/recommendation.py)は
+要素間の条件を集約する。判定は適合、条件付き、不適合、不明を区別する。
+条件付きは実行時のposteriorや引数などの確認が必要であることを意味する。
+
+Studyは選択された構成を既存の候補生成処理へ接続する。
+静的な判定は学習や性能比較を実行しない。
+利用例は[Capability Workflow](../capability_workflow.md)を参照。

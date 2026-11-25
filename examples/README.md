@@ -13,13 +13,13 @@
 Notebook 用依存関係を含めてインストールします。
 
 ```bash
-pip install -e ".[examples]"
+pip install -e ".[examples,dataframe]"
 ```
 
 Fully Bayesian SAAS の例も実行する場合は次を使用します。
 
 ```bash
-pip install -e ".[examples,fully-bayesian]"
+pip install -e ".[examples,dataframe,fully-bayesian]"
 ```
 
 ## 単体実行できるPython例
@@ -91,7 +91,7 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 
 ## Notebook 一覧
 
-理論の基礎からモデル構築、獲得関数、最適化、応用へ進める順に01〜59を採番しています。CIの実行順・実行区分は `run_notebooks.py` で管理します。
+理論の基礎からモデル構築、獲得関数、最適化、応用へ進める順に01〜64を採番しています。CIの実行順・実行区分は `run_notebooks.py` で管理します。
 
 ### GPの基礎
 
@@ -303,3 +303,12 @@ Accuracy・NLL・Brier score・ordinal MAEをCSVへ記録します。
 [Ordinal GP 理論](../docs/theory/24_classification.md)、
 [Ordinal GP Guide](../docs/guide/24_classification.md)と
 [31番Notebook](notebooks/31_ordinal_classification_active_learning.ipynb)を参照してください。
+
+
+### 統一Factory
+
+[`62_unified_factories.ipynb`](notebooks/62_unified_factories.ipynb)：モデル・獲得関数・Optimizer・Search StrategyのFactory、回帰BO・Mixed制約・多目的・分類ALの候補提案。
+
+[`63_capability_recommendation.ipynb`](notebooks/63_capability_recommendation.ipynb)：問題要件・適合判定・推薦構成から候補提案まで。
+
+[`64_unified_study_benchmark.ipynb`](notebooks/64_unified_study_benchmark.ipynb)：個別FactoryのBOループ、Study、Ask-and-Tell、履歴再開、Mixed制約、Benchmark比較。

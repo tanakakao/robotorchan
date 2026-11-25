@@ -4,7 +4,7 @@ robotorchan は、モデル数を増やすだけでなく、問題要件と実�
 
 ## 流れ
 
-ProblemSpec → Model Registry → Selector → Model × Acquisition Compatibility → Recommendation → Capability Benchmark
+ProblemSpec → Component selection → Workflow compatibility → Recommendation → Explicit factory construction / Study
 
 ProblemSpec は問題の構造を宣言します。モデル名を直接指定する設定ではありません。
 
@@ -34,7 +34,9 @@ ProblemSpec は問題の構造を宣言します。モデル名を直接指定�
 - robust: robustness strategy を必要とするか
 - preference: pairwise preference observation を使うか
 - q: 同時に評価する候補数。1以上
-- constrained: BOで制約付き最適化を宣言するか
+- constrained: BOで未知の出力制約を宣言するか
+- candidate_constrained: 既知の候補入力制約を宣言するか
+- observation_kind: regression / binary / multiclass / ordinal
 
 q と constrained は ProblemSpec の契約として保持します。Active Learning / Bayesian Optimization の acquisition metadata と Recommendation が q、制約、目的数を照合します。
 
@@ -96,11 +98,11 @@ ordinal observations. `candidate_constrained` is separate from outcome
 constraints (`constrained`). Model-only selection uses the regression registry by default and classification
 registry IDs for binary, multiclass and ordinal problems. Both selectors share
 structural checks. Recommendation accepts these registry IDs for static
-model/acquisition checks; full four-component compatibility is a subsequent phase.
+model/acquisition checks; full four-component compatibility is available through check_compatibility().
 
 
-Factory names without reliable metadata remain unknown, including generic
-wrappers whose capabilities depend on their supplied base model. This is not
+Unrecognized names without reliable metadata remain unknown. Generic
+wrappers with known constructor-dependent contracts are conditional. This is not
 an assertion that the implementation is unsupported. Acquisition limitations
 are included in conditional selection reasons.
 
@@ -255,7 +257,7 @@ cannot be reconstructed from individual trial records and is not rechecked;
 parameter bounds and discrete domains are validated.
 
 
-### Phase 8 integration boundary
+### Study and benchmark integration boundary
 
 The Study integration tests cover selected recommendations with either a scalar
 dispatcher or a named Sobol search strategy, minimization, model-based q-batch
@@ -264,3 +266,92 @@ integration test exercises the named model/acquisition/optimizer path with q=2.
 These are representative runtime contracts, not exhaustive cross-product tests.
 Persistent Study storage, exact checkpoint replay and specialized multi-output,
 classification or causal Study loops are outside this integration boundary.
+
+
+## 統一Factoryによる候補提案
+
+Factoryは既存クラスを生成する入口であり、学習や候補提案を暗黙に実行しません。
+
+```python
+import torch
+from robotorchan.models import create_model, list_models
+from robotorchan.acquisition import create_acquisition, list_acquisitions
+from robotorchan.optim import create_optimizer, list_optimizers
+
+X = torch.linspace(0.1, 0.9, 6, dtype=torch.double).unsqueeze(-1)
+Y = -((X - 0.6) ** 2)
+bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+model = create_model("SingleTaskGP", X, Y)
+model.fit()
+acq = create_acquisition("qLogExpectedImprovement", model=model, best_f=Y.max())
+optimize = create_optimizer("sobol", raw_samples=64, seed=17)
+candidates, values = optimize(acq, bounds, q=2)
+```
+
+文字列には公開Factoryの一覧にある名前を使います。従来のクラスを直接
+importして構築する方法も引き続き利用できます。Optimizer Factoryは
+呼び出し可能な最適化関数を返します。Search Strategy Factoryは
+状態を保持し得る既存のStrategyインスタンスを返す点が異なります。
+
+## 問題設定から構成を選ぶ
+
+```python
+from robotorchan.workflow import ProblemSpec, evaluate_components, recommend
+from robotorchan.study import create_study
+
+spec = ProblemSpec(purpose="bayesian_optimization", q=2)
+inventory = evaluate_components(spec)
+(selection,) = recommend(
+    spec,
+    model="SingleTaskGP",
+    acquisition="qLogExpectedImprovement",
+    optimizer="sobol",
+)
+print(selection.compatibility)
+print(selection.required_arguments())
+study = create_study(
+    search_space={"x": (0.0, 1.0)},
+    recommendation=selection,
+    optimizer_kwargs={"raw_samples": 64, "seed": 17},
+    seed=17,
+)
+study.optimize(lambda trial: -((trial.params["x"] - 0.6) ** 2), n_trials=3)
+for trial in study.ask_batch(2):
+    study.tell(trial, -((trial.params["x"] - 0.6) ** 2))
+```
+
+判定は compatible / conditional / incompatible / unknown の4種類です。
+conditional は追加の引数やposterior等の条件が残ることを示します。
+recommend は性能順位ではなく静的な適合候補を返します。
+Studyは単目的のスカラー観測を対象とし、すべてのFactory構成を
+そのままStudyへ渡せるわけではありません。
+
+実装構造については[Guide](guide/13_model_selection.md)を参照してください。
+
+
+## 公開APIリファレンス
+
+| 公開モジュール | API | 戻り値・役割 |
+|---|---|---|
+| robotorchan.models | `list_models()`, `get_model_class(name)`, `create_model(name_or_callable, *args, **kwargs)` | 公開名一覧、元のクラス、未学習のモデル |
+| robotorchan.acquisition | `list_acquisitions()`, `get_acquisition_class(name)`, `create_acquisition(name_or_callable, *args, **kwargs)` | 公開名一覧、元のクラス、獲得関数 |
+| robotorchan.optim | `list_optimizers()`, `create_optimizer(name_or_callable, **kwargs)` | 公開名一覧、設定済みCallable |
+| robotorchan.optim | `list_search_strategies()`, `create_search_strategy(name_or_callable, *args, **kwargs)` | 公開名一覧、元のStrategyインスタンス |
+| robotorchan.workflow | `ProblemSpec`, `evaluate_components(spec)` | 問題要件、個別コンポーネントの判定 |
+| robotorchan.workflow | `check_compatibility(spec, model=..., acquisition=..., optimizer=..., search_strategy=...)` | WorkflowCompatibility |
+| robotorchan.workflow | `recommend(spec, ...)` | WorkflowRecommendationの候補集合 |
+| robotorchan.study | `create_study(..., recommendation=..., initial_trials=...)` | スカラー目的のStudy |
+
+Factoryの識別子は位置引数で渡します。モデル固有の引数は元のコンストラクタへ渡されます。
+公開名一覧には登録IDとクラス名の両方が含まれる場合があります。
+`required_arguments()` は必要な引数名を調べるもので、値を自動決定しません。
+専用の因果・安全・多目的ベクトル探索などは固有APIの契約を維持します。
+
+## 実行可能なNotebook
+
+- [62: 個別Factory](../examples/notebooks/62_unified_factories.ipynb)
+- [63: Capability・Recommendation](../examples/notebooks/63_capability_recommendation.ipynb)
+- [64: Study・Ask-and-Tell・Benchmark](../examples/notebooks/64_unified_study_benchmark.ipynb)
+
+Notebook 64のDataFrame出力には `dataframe` extraが必要です。
+`pip install -e ".[examples,dataframe]"` で実行環境を準備できます。
