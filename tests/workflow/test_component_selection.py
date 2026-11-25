@@ -412,3 +412,17 @@ def test_recommended_classification_candidate_generation(
     assert torch.isfinite(search.acquisition_value).all()
     assert torch.all(search.candidates >= bounds[0])
     assert torch.all(search.candidates <= bounds[1])
+
+
+def test_configurable_gp_output_count() -> None:
+    for name, input_type in (("SingleTaskGP", "continuous"), ("MixedSingleTaskGP", "mixed")):
+        single = ProblemSpec(purpose="bayesian_optimization", input_type=input_type)
+        multi = ProblemSpec(
+            purpose="bayesian_optimization",
+            input_type=input_type,
+            output_type="multi",
+            objective_type="multi",
+        )
+        assert recommend(single, model=name, acquisition="LogExpectedImprovement")
+        assert recommend(multi, model=name, acquisition="qLogExpectedHypervolumeImprovement")
+        assert not recommend(multi, model=name, acquisition="LogExpectedImprovement")

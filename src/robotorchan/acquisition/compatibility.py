@@ -1,6 +1,6 @@
 """Compatibility checks between registered models and acquisitions."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 
 from robotorchan.acquisition.capabilities import AcquisitionTarget, PosteriorRequirement
@@ -108,10 +108,16 @@ def check_capabilities_acquisition_compatibility(
 def check_model_acquisition_compatibility(
     model_name: str,
     acquisition_name: str,
+    *,
+    multi_output: bool | None = None,
 ) -> CompatibilityResult:
-    """Check static compatibility using registry metadata only."""
+    """Check registry metadata, optionally resolving configurable GP output count."""
     entry = CLASSIFICATION_MODEL_REGISTRY.get(model_name)
     model_capabilities = (
         MODEL_REGISTRY[model_name].capabilities if entry is None else entry.capabilities
     )
+    if model_name in ("SingleTaskGP", "MixedSingleTaskGP"):
+        # These native models can be constructed with one or multiple outputs.
+        # Preserve the historical scalar default when no problem is supplied.
+        model_capabilities = replace(model_capabilities, supports_multi_output=multi_output is True)
     return check_capabilities_acquisition_compatibility(model_capabilities, acquisition_name)

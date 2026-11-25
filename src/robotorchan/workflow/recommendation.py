@@ -70,7 +70,9 @@ def recommend_compatible_workflows(spec: ProblemSpec) -> tuple[Recommendation, .
                 continue
             if spec.output_type is OutputType.MULTI and capabilities.requires_single_output:
                 continue
-            result = check_model_acquisition_compatibility(model_name, acquisition_name)
+            result = check_model_acquisition_compatibility(
+                model_name, acquisition_name, multi_output=spec.output_type is OutputType.MULTI
+            )
             if not result.compatible:
                 continue
             recommendations.append(
@@ -146,7 +148,9 @@ def check_compatibility(
     registered_model = model_id in MODEL_REGISTRY or model_id in CLASSIFICATION_MODEL_REGISTRY
     entry = ACQUISITION_REGISTRY.get(acquisition)
     if registered_model and entry is not None:
-        pair = check_model_acquisition_compatibility(model_id, acquisition)
+        pair = check_model_acquisition_compatibility(
+            model_id, acquisition, multi_output=spec.output_type is OutputType.MULTI
+        )
         reasons.extend(pair.reasons)
     else:
         conditions.append("model/acquisition posterior contract requires explicit validation")
