@@ -60,6 +60,7 @@ DEFAULT_NOTEBOOKS = [
     "61_heterogeneous_classification_constraints.ipynb",
     "62_unified_factories.ipynb",
     "63_capability_recommendation.ipynb",
+    "64_unified_study_benchmark.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [
