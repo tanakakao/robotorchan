@@ -196,7 +196,8 @@ def _special_acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
         if spec.objective_type is ObjectiveType.MULTI:
             reasons.append("requires a scalar objective")
         if (
-            name in (
+            name
+            in (
                 "LogProbabilityOfFeasibility",
                 "LogProbabilityOfImprovement",
                 "ScalarizedPosteriorMean",
