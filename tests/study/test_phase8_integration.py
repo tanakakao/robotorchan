@@ -77,3 +77,42 @@ def test_dataframe_roundtrip_with_filtered_states() -> None:
     assert pd.isna(frame.loc[1, "value"])
     filtered = study.trials_dataframe(states=(TrialState.COMPLETE,))
     assert list(filtered["number"]) == [0]
+
+
+def test_factory_study_resume_from_history() -> None:
+    kwargs = {
+        "search_space": {"x": (0.0, 1.0)},
+        "model": "SingleTaskGP",
+        "acquisition": "qLogExpectedImprovement",
+        "optimizer": "sobol",
+        "optimizer_kwargs": {"raw_samples": 16, "seed": 17},
+        "n_initial_trials": 3,
+        "seed": 17,
+    }
+    original = create_study(**kwargs)
+    for _ in range(3):
+        trial = original.ask()
+        original.tell(trial, trial.params["x"])
+    failed = original.ask()
+    original.tell(failed, state=TrialState.FAIL)
+    pending = original.ask()
+    original.add_trial({"x": 0.5})
+
+    resumed = create_study(**kwargs, initial_trials=original.trials)
+    assert resumed.trials == original.trials
+    assert resumed.best_value == original.best_value
+    resumed.tell(pending.number, pending.params["x"])
+    trials = resumed.ask_batch(2)
+    assert [trial.number for trial in trials] == [6, 7]
+    for trial in trials:
+        resumed.tell(trial, trial.params["x"])
+    assert len(resumed.trials) == 8
+
+
+def test_resume_rejects_duplicate_history_and_invalid_domain() -> None:
+    original = create_study(search_space={"x": (0.0, 1.0)})
+    trial = original.add_trial({"x": 0.8})
+    with pytest.raises(ValueError, match="strictly increasing"):
+        create_study(search_space={"x": (0.0, 1.0)}, initial_trials=[trial, trial])
+    with pytest.raises(ValueError, match="outside"):
+        create_study(search_space={"x": (0.0, 0.5)}, initial_trials=[trial])

@@ -241,3 +241,15 @@ Named models use their existing fit method. The original callable model factory
 retains native exact GP fitting, and the legacy acquisition names and default
 native optimizer remain supported. This callback remains restricted to
 unconstrained continuous scalar regression BO; other benchmark paths are unchanged.
+
+
+Study is in-memory; benchmark checkpoint/storage is a separate API.
+To resume from historical observations, construct a Study with the same
+explicit component configuration (or selected recommendation) and pass
+`initial_trials=previous_study.trials`. Trial IDs, states and observations
+are retained, including running and waiting trials. The next model fit uses
+completed observations only. This is history restoration, not a persistent
+storage backend or exact RNG/strategy checkpoint. The caller must retain the
+configuration and history externally. Historical joint-batch feasibility
+cannot be reconstructed from individual trial records and is not rechecked;
+parameter bounds and discrete domains are validated.

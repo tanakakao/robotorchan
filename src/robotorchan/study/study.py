@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import replace
 from math import isfinite
 from typing import Any
@@ -329,8 +329,9 @@ def create_study(
     constraints: CandidateConstraints | None = None,
     context_names: tuple[str, ...] = (),
     recommendation: WorkflowRecommendation | None = None,
+    initial_trials: Iterable[Trial] = (),
 ) -> Study:
-    """Create a scalar Study from explicit components or a selected recommendation."""
+    """Create a scalar Study, optionally restoring ordered historical trial snapshots."""
     if recommendation is not None:
         if any(value is not None for value in (model, acquisition, optimizer)):
             raise ValueError("recommendation cannot accompany explicit component selections.")
@@ -367,7 +368,7 @@ def create_study(
         optimizer = recommendation.search_strategy_name or recommendation.optimizer_name
     if not isinstance(search_space, SearchSpace):
         search_space = SearchSpace(search_space)
-    return Study(
+    study = Study(
         search_space,
         direction=direction,
         model=SingleTaskGP if model is None else model,
@@ -382,3 +383,20 @@ def create_study(
         constraints=constraints,
         context_names=context_names,
     )
+    # Restore observations, not optimizer or random-number-generator state.
+    for trial in initial_trials:
+        if not isinstance(trial, Trial):
+            raise TypeError("initial_trials must contain Trial snapshots.")
+        if type(trial.number) is not int or trial.number < study._next_number:
+            raise ValueError("initial_trials must have strictly increasing integer numbers.")
+        if not isinstance(trial.state, TrialState):
+            raise ValueError("initial_trials must have valid TrialState values.")
+        if trial.state is TrialState.COMPLETE and (
+            isinstance(trial.value, bool) or not isinstance(trial.value, (int, float))
+        ):
+            raise ValueError("Completed trials require a numeric observation.")
+        # Historical joint batches cannot be reconstructed from individual trials.
+        study._next_number = trial.number
+        study._register_trial(trial.params)
+        study._trials[trial.number] = trial
+    return study
