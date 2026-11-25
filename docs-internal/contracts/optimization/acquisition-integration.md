@@ -267,3 +267,13 @@ integration gates. Standard mixed optimization is not a valid one-shot backend.
 Ensemble, outcome-constrained, and classification combinations are not claimed
 as supported. Workflow selection remains conditional on model and optimizer
 requirements.
+
+
+### Finite-decision-set single-objective KG
+
+`qDecoupledKnowledgeGradient` uses native ModelListGP masked fantasies and
+maximizes posterior expected linear utility over a fixed terminal decision set.
+It subtracts the current terminal value and averages over fantasies. Independent
+zero-weight outputs have no information value for this utility. This is a
+finite-set approximation, not continuous one-shot KG. Pending evaluations,
+correlated outputs and outcome constraints are not supported.

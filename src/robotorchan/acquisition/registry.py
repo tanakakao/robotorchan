@@ -496,3 +496,21 @@ for name in ("qHypervolumeKnowledgeGradient", "qMultiFidelityHypervolumeKnowledg
             "decoupled workflow and optimizer compatibility are not yet verified",
         ),
     )
+
+
+ACQUISITION_REGISTRY["qDecoupledKnowledgeGradient"] = AcquisitionRegistryEntry(
+    acquisition_name="qDecoupledKnowledgeGradient",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+        supports_multi_output=True,
+        monte_carlo=True,
+        requires_fantasize=True,
+    ),
+    implementation_strategy="robotorchan finite-decision-set masked fantasy acquisition",
+    limitations=(
+        "requires independent ModelListGP outputs and a fixed terminal decision set",
+        "requires one fantasy sampler per output and a boolean evaluation mask",
+        "pending evaluations and outcome constraints are not supported",
+    ),
+)
