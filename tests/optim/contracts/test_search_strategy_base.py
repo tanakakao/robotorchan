@@ -211,6 +211,7 @@ def test_public_optim_exports_are_complete() -> None:
         "list_optimizers",
         "list_search_strategies",
         "optimize_acqf",
+        "optimize_acqf_decoupled",
         "optimize_acqf_sequential",
         "optimize_mixed_one_shot_acqf",
         "optimize_safe_acqf",
