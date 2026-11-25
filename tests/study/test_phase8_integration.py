@@ -6,6 +6,7 @@ import torch
 from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.study import TrialState, create_study
+from robotorchan.workflow import ProblemSpec, recommend
 
 
 def test_ask_tell_optimize_and_best_trial_lifecycle() -> None:
@@ -116,3 +117,41 @@ def test_resume_rejects_duplicate_history_and_invalid_domain() -> None:
         create_study(search_space={"x": (0.0, 1.0)}, initial_trials=[trial, trial])
     with pytest.raises(ValueError, match="outside"):
         create_study(search_space={"x": (0.0, 0.5)}, initial_trials=[trial])
+
+
+@pytest.mark.parametrize("use_strategy", [False, True])
+def test_recommendation_study_resume_end_to_end(use_strategy: bool) -> None:
+    spec = ProblemSpec(purpose="bayesian_optimization", q=2)
+    (selection,) = recommend(
+        spec,
+        model="SingleTaskGP",
+        acquisition="qLogExpectedImprovement",
+        optimizer=None if use_strategy else "sobol",
+        search_strategy="SobolSearchStrategy" if use_strategy else None,
+    )
+    options = (
+        {"num_samples": 16, "seed": 17} if use_strategy else {"raw_samples": 16, "seed": 17}
+    )
+    kwargs = {
+        "search_space": {"x": (0.0, 1.0)},
+        "recommendation": selection,
+        "optimizer_kwargs": options,
+        "n_initial_trials": 3,
+        "direction": "minimize",
+        "seed": 17,
+    }
+    study = create_study(**kwargs)
+
+    def objective(trial):
+        return (trial.params["x"] - 0.3) ** 2
+
+    study.optimize(objective, n_trials=3)
+    for trial in study.ask_batch(2):
+        study.tell(trial, objective(trial))
+    resumed = create_study(**kwargs, initial_trials=study.trials)
+    assert resumed.trials == study.trials
+    resumed.optimize(objective, n_trials=1)
+    assert [trial.number for trial in resumed.trials] == list(range(6))
+    assert all(trial.state is TrialState.COMPLETE for trial in resumed.trials)
+    assert all(0.0 <= trial.params["x"] <= 1.0 for trial in resumed.trials)
+    assert resumed.best_value <= study.best_value

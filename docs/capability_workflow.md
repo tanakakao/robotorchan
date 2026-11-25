@@ -253,3 +253,14 @@ storage backend or exact RNG/strategy checkpoint. The caller must retain the
 configuration and history externally. Historical joint-batch feasibility
 cannot be reconstructed from individual trial records and is not rechecked;
 parameter bounds and discrete domains are validated.
+
+
+### Phase 8 integration boundary
+
+The Study integration tests cover selected recommendations with either a scalar
+dispatcher or a named Sobol search strategy, minimization, model-based q-batch
+proposals, trial history restoration and continued optimization. The benchmark
+integration test exercises the named model/acquisition/optimizer path with q=2.
+These are representative runtime contracts, not exhaustive cross-product tests.
+Persistent Study storage, exact checkpoint replay and specialized multi-output,
+classification or causal Study loops are outside this integration boundary.
