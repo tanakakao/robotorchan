@@ -129,9 +129,8 @@ def test_recommendation_study_resume_end_to_end(use_strategy: bool) -> None:
         optimizer=None if use_strategy else "sobol",
         search_strategy="SobolSearchStrategy" if use_strategy else None,
     )
-    options = (
-        {"num_samples": 16, "seed": 17} if use_strategy else {"raw_samples": 16, "seed": 17}
-    )
+    sample_key = "num_samples" if use_strategy else "raw_samples"
+    options = {sample_key: 16, "seed": 17}
     kwargs = {
         "search_space": {"x": (0.0, 1.0)},
         "recommendation": selection,
