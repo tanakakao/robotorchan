@@ -27,6 +27,7 @@ _NATIVE_MODULES = (
     "multi_objective.analytic",
     "multi_objective.monte_carlo",
     "multi_objective.logei",
+    "multi_objective.hypervolume_knowledge_gradient",
     "multi_objective.parego",
     "multi_objective.joint_entropy_search",
     "multi_objective.predictive_entropy_search",
@@ -40,6 +41,7 @@ _LOCAL_MODULES = (
     "active_learning.straddle",
     "active_learning.variance",
     "classification_constraints",
+    "decoupled",
 )
 _BASE_NAMES = frozenset(
     {

@@ -473,3 +473,56 @@ ACQUISITION_REGISTRY["ExpectedHypervolumeImprovement"] = AcquisitionRegistryEntr
     implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
     limitations=("requires method-specific constructor inputs and posterior checks",),
 )
+
+
+# Native hypervolume KG requires independent output-wise fantasy conditioning.
+for name in ("qHypervolumeKnowledgeGradient", "qMultiFidelityHypervolumeKnowledgeGradient"):
+    ACQUISITION_REGISTRY[name] = AcquisitionRegistryEntry(
+        acquisition_name=name,
+        capabilities=AcquisitionCapabilities(
+            purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+            posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
+            supports_multi_output=True,
+            supports_multi_objective=True,
+            monte_carlo=True,
+            requires_fantasize=True,
+            requires_multi_fidelity=name == "qMultiFidelityHypervolumeKnowledgeGradient",
+            one_shot=True,
+        ),
+        implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+        limitations=(
+            "requires ModelList with masked fantasy support and a reference point",
+            "requires one-shot optimization with augmented candidates",
+            "decoupled workflow and optimizer compatibility are not yet verified",
+        ),
+    )
+
+
+ACQUISITION_REGISTRY["qDecoupledKnowledgeGradient"] = AcquisitionRegistryEntry(
+    acquisition_name="qDecoupledKnowledgeGradient",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
+        supports_multi_output=True,
+        monte_carlo=True,
+        requires_fantasize=True,
+    ),
+    implementation_strategy="robotorchan finite-decision-set masked fantasy acquisition",
+    limitations=(
+        "requires independent ModelListGP outputs and a fixed terminal decision set",
+        "requires one fantasy sampler per output and a boolean evaluation mask",
+        "pending evaluations and outcome constraints are not supported",
+    ),
+)
+
+
+ACQUISITION_REGISTRY["qDecoupledExpectedPredictiveInformationGain"] = _active_learning(
+    "qDecoupledExpectedPredictiveInformationGain",
+    posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+    max_q=None,
+    limitations=(
+        "requires independent ModelListGP outputs and positive observation noise",
+        "requires output weights and an evaluation mask for candidate rows",
+        "pending evaluations and correlated outputs are not supported",
+    ),
+)

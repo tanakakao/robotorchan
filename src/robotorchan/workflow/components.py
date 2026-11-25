@@ -132,6 +132,26 @@ def _model(spec: ProblemSpec, name: str) -> ComponentSelection:
 
 def _special_acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
     reasons = []
+    if name in ("qHypervolumeKnowledgeGradient", "qMultiFidelityHypervolumeKnowledgeGradient"):
+        if spec.observation_kind is not ObservationKind.REGRESSION:
+            reasons.append("requires numeric regression objectives")
+        if spec.purpose.value != "bayesian_optimization":
+            reasons.append("purpose does not match")
+        if spec.objective_type is not ObjectiveType.MULTI:
+            reasons.append("requires multiple objectives")
+        if spec.constrained or spec.preference:
+            reasons.append("requires unconstrained numeric objectives")
+        if name == "qMultiFidelityHypervolumeKnowledgeGradient" and not spec.multi_fidelity:
+            reasons.append("requires multi-fidelity structure")
+        return _result(
+            name,
+            reasons,
+            (
+                "requires ModelList with masked fantasy support and a reference point",
+                "requires one-shot optimization with augmented candidates",
+                "decoupled workflow and optimizer compatibility are not yet verified",
+            ),
+        )
     if name in ("ConstrainedExpectedImprovement", "LogConstrainedExpectedImprovement"):
         if spec.observation_kind is not ObservationKind.REGRESSION:
             reasons.append("requires regression objective and constraint posteriors")
@@ -251,7 +271,10 @@ def _special_acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
 
 def _acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
     entry = ACQUISITION_REGISTRY.get(name)
-    if entry is None:
+    if entry is None or name in (
+        "qHypervolumeKnowledgeGradient",
+        "qMultiFidelityHypervolumeKnowledgeGradient",
+    ):
         return _special_acquisition(spec, name)
     caps = entry.capabilities
     reasons = []

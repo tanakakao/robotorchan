@@ -439,3 +439,11 @@ def test_additive_map_saas_recommendation_with_rembo() -> None:
         search_strategy="REMBOStrategy",
     )
     assert choice.search_strategy_name == "REMBOStrategy"
+
+
+def test_decoupled_acquisition_selection_requires_multiple_objectives() -> None:
+    result = evaluate_components(ProblemSpec(purpose="bayesian_optimization"))
+    acquisitions = {item.name: item for item in result.acquisitions}
+    for name in ("qHypervolumeKnowledgeGradient", "qMultiFidelityHypervolumeKnowledgeGradient"):
+        assert acquisitions[name].status is SelectionStatus.INCOMPATIBLE
+        assert "requires multiple objectives" in acquisitions[name].reasons

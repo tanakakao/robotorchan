@@ -249,3 +249,51 @@ The registry includes analytic q=1 acquisitions `ExpectedImprovement`, `LogExpec
 - `ExpectedHypervolumeImprovement`: marginal_moments, maximum q=1.
 
 These are static requirements, not runtime validation. Method-specific constructor inputs, exact batch restrictions, and posterior compatibility must be checked separately.
+
+
+## Native decoupled hypervolume knowledge gradient
+
+| Acquisition | Model requirements | Optimization requirements |
+| --- | --- | --- |
+| `qHypervolumeKnowledgeGradient` | Independent output-wise ModelList with masked fantasy support; reference point | One-shot augmented candidates |
+| `qMultiFidelityHypervolumeKnowledgeGradient` | Same masked fantasy support, multi-fidelity models, target fidelities and projection | One-shot augmented candidates with fidelity structure |
+
+Both constructors are resolved directly from BoTorch by the acquisition factory.
+The boolean evaluation mask describes actual evaluation rows, not auxiliary
+fantasy Pareto rows. Partial observations are represented by separate training
+datasets per output. Forward and gradient tests cover the native acquisitions;
+joint candidate/mask optimization and cost-aware incremental value are separate
+integration gates. Standard mixed optimization is not a valid one-shot backend.
+Ensemble, outcome-constrained, and classification combinations are not claimed
+as supported. Workflow selection remains conditional on model and optimizer
+requirements.
+
+
+### Finite-decision-set single-objective KG
+
+`qDecoupledKnowledgeGradient` uses native ModelListGP masked fantasies and
+maximizes posterior expected linear utility over a fixed terminal decision set.
+It subtracts the current terminal value and averages over fantasies. Independent
+zero-weight outputs have no information value for this utility. This is a
+finite-set approximation, not continuous one-shot KG. Pending evaluations and correlated outputs are not supported.
+
+
+The finite-set KG also accepts independent Gaussian upper-bound outcome
+constraints via `constraint_indices`, `constraint_thresholds` and
+`infeasible_utility`. Terminal expected utility is the feasible objective
+mean weighted by joint feasibility probability plus the infeasible payoff
+weighted by failure probability. Abstention at the same payoff is allowed.
+Constraint outputs must have zero objective weights. This is a decision
+utility, not a hard posterior feasibility guarantee. The generic workflow
+registry remains conservative until constrained optimizer integration is tested.
+
+
+### Decoupled predictive information gain
+
+`qDecoupledExpectedPredictiveInformationGain` reuses joint Gaussian EPIG for
+each independently modeled output, selecting only candidate rows assigned to
+that output. The weighted sum is the expected mutual information for a target
+output and target location drawn from the specified prediction distribution.
+Weights are normalized across all outputs, not only observed outputs. Positive
+per-output observation noise variances are required. This is predictive
+information gain, not information about the optimizer or Pareto front.
