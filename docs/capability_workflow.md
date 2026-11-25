@@ -127,3 +127,10 @@ To inspect remaining unknown factory names and counts, run:
 ```bash
 pytest -s tests/workflow/test_component_selection.py -k report_remaining_unknown
 ```
+
+The final inventory gate requires every factory name to have an explicit
+static decision or a constructor-dependent condition. Native projection,
+scalarization, feasibility, probability of improvement, confidence bounds,
+pairwise variance and lower-bound entropy acquisitions are included. This
+is not a guarantee of runtime compatibility or a count of unique classes.
+Unrecognized external names still return UNKNOWN.

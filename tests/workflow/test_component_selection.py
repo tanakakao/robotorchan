@@ -180,7 +180,7 @@ def test_report_remaining_unknown_components(capsys) -> None:
         unknown = [item.name for item in entries if item.status is SelectionStatus.UNKNOWN]
         with capsys.disabled():
             print(f"{category}: {len(unknown)}/{len(entries)} unknown: {unknown}")
-        assert all(item.reasons for item in entries if item.status is SelectionStatus.UNKNOWN)
+        assert not unknown, f"{category}: missing capability checks: {unknown}"
 
 
 def test_generic_binary_ensemble_and_causal_boundaries() -> None:
@@ -190,3 +190,14 @@ def test_generic_binary_ensemble_and_causal_boundaries() -> None:
         assert models[name].status in (SelectionStatus.COMPATIBLE, SelectionStatus.CONDITIONAL)
     assert models["GPStructuralCausalModel"].status is SelectionStatus.INCOMPATIBLE
     assert models["StructuralCausalModel"].status is SelectionStatus.INCOMPATIBLE
+
+
+def test_remaining_native_acquisition_conditions() -> None:
+    result = evaluate_components(ProblemSpec(purpose="bayesian_optimization", q=2))
+    acquisitions = {item.name: item.status for item in result.acquisitions}
+    assert acquisitions["LogProbabilityOfImprovement"] is SelectionStatus.INCOMPATIBLE
+    assert acquisitions["qMultiFidelityLowerBoundMaxValueEntropy"] is SelectionStatus.INCOMPATIBLE
+    assert acquisitions["ProjectedAcquisitionFunction"] is SelectionStatus.CONDITIONAL
+    result = evaluate_components(ProblemSpec(purpose="active_learning", q=2, preference=True))
+    acquisitions = {item.name: item.status for item in result.acquisitions}
+    assert acquisitions["PairwiseMCPosteriorVariance"] is SelectionStatus.CONDITIONAL

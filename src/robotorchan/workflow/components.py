@@ -166,6 +166,63 @@ def _special_acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
             reasons,
             ("requires fantasy conditioning and integration points; check posterior shape",),
         )
+    if name == "ProjectedAcquisitionFunction":
+        return _result(
+            name,
+            [],
+            ("requires a wrapped acquisition and projection; inherits their limitations",),
+        )
+    if name in (
+        "LogProbabilityOfFeasibility",
+        "LogProbabilityOfImprovement",
+        "ScalarizedPosteriorMean",
+        "qAnalyticProbabilityOfImprovement",
+        "qLogProbabilityOfFeasibility",
+        "qLowerConfidenceBound",
+        "qLowerBoundMaxValueEntropy",
+        "qMultiFidelityLowerBoundMaxValueEntropy",
+        "PairwiseMCPosteriorVariance",
+    ):
+        if spec.observation_kind is not ObservationKind.REGRESSION:
+            reasons.append("requires numeric posterior outcomes")
+        if name == "PairwiseMCPosteriorVariance":
+            if spec.purpose.value != "active_learning":
+                reasons.append("purpose does not match")
+            if spec.q != 2:
+                reasons.append("requires a pair of candidates")
+            return _result(
+                name, reasons, ("requires samples of pairwise utility differences",)
+            )
+        if spec.purpose.value != "bayesian_optimization":
+            reasons.append("purpose does not match")
+        if spec.objective_type is ObjectiveType.MULTI:
+            reasons.append("requires a scalar objective")
+        if (
+            name in (
+                "LogProbabilityOfFeasibility",
+                "LogProbabilityOfImprovement",
+                "ScalarizedPosteriorMean",
+            )
+            and spec.q != 1
+        ):
+            reasons.append("supports q=1 only")
+        if spec.constrained and name not in (
+            "LogProbabilityOfFeasibility", "qLogProbabilityOfFeasibility"
+        ):
+            reasons.append("requires an unconstrained acquisition")
+        if name == "qMultiFidelityLowerBoundMaxValueEntropy" and not spec.multi_fidelity:
+            reasons.append("requires multi-fidelity structure")
+        conditions = {
+            "LogProbabilityOfFeasibility": "requires Gaussian constraint outputs and bounds",
+            "LogProbabilityOfImprovement": "requires scalar Gaussian posterior and best_f",
+            "ScalarizedPosteriorMean": "requires explicit output weights",
+            "qAnalyticProbabilityOfImprovement": "requires joint Gaussian posterior and best_f",
+            "qLogProbabilityOfFeasibility": "requires constraint callables and posterior samples",
+            "qLowerConfidenceBound": "requires scalarized posterior samples and beta",
+            "qLowerBoundMaxValueEntropy": "requires candidate set and entropy posterior checks",
+            "qMultiFidelityLowerBoundMaxValueEntropy": "requires fidelity projection and cost checks",
+        }
+        return _result(name, reasons, (conditions[name],))
     if name == "ClassificationProbabilityAcquisition":
         if spec.observation_kind is ObservationKind.REGRESSION:
             reasons.append("requires a classifier probability of feasibility")
