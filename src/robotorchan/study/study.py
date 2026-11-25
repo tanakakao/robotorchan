@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import replace
 from math import isfinite
 from typing import Any
@@ -18,6 +18,9 @@ from robotorchan.study.feasibility import is_feasible
 from robotorchan.study.generation import CandidateGenerator
 from robotorchan.study.search_space import SearchSpace
 from robotorchan.study.trial import Trial, TrialState
+from robotorchan.workflow.components import SelectionStatus
+from robotorchan.workflow.problem import ProblemSpec
+from robotorchan.workflow.recommendation import WorkflowRecommendation, check_compatibility
 
 
 class Study:
@@ -28,9 +31,9 @@ class Study:
         search_space: SearchSpace,
         *,
         direction: str = "maximize",
-        model: Callable[..., Any] = SingleTaskGP,
+        model: str | Callable[..., Any] = SingleTaskGP,
         model_kwargs: Mapping[str, Any] | None = None,
-        acquisition: Callable[..., Any] = qLogExpectedImprovement,
+        acquisition: str | Callable[..., Any] = qLogExpectedImprovement,
         acquisition_kwargs: Mapping[str, Any] | None = None,
         optimizer: str | SearchStrategy = "botorch",
         optimizer_kwargs: Mapping[str, Any] | None = None,
@@ -314,29 +317,65 @@ def create_study(
     *,
     search_space: SearchSpace | Mapping[str, tuple[float, float]],
     direction: str = "maximize",
-    model: Callable[..., Any] = SingleTaskGP,
+    model: str | Callable[..., Any] | None = None,
     model_kwargs: Mapping[str, Any] | None = None,
-    acquisition: Callable[..., Any] = qLogExpectedImprovement,
+    acquisition: str | Callable[..., Any] | None = None,
     acquisition_kwargs: Mapping[str, Any] | None = None,
-    optimizer: str | SearchStrategy = "botorch",
+    optimizer: str | SearchStrategy | None = None,
     optimizer_kwargs: Mapping[str, Any] | None = None,
     n_initial_trials: int = 3,
     seed: int | None = None,
     variable_space: MixedVariableSpace | None = None,
     constraints: CandidateConstraints | None = None,
     context_names: tuple[str, ...] = (),
+    recommendation: WorkflowRecommendation | None = None,
+    initial_trials: Iterable[Trial] = (),
 ) -> Study:
-    """Create an in-memory single-objective Study."""
+    """Create a scalar Study, optionally restoring ordered historical trial snapshots."""
+    if recommendation is not None:
+        if any(value is not None for value in (model, acquisition, optimizer)):
+            raise ValueError("recommendation cannot accompany explicit component selections.")
+        if recommendation.compatibility.status not in (
+            SelectionStatus.COMPATIBLE,
+            SelectionStatus.CONDITIONAL,
+        ):
+            raise ValueError("recommendation must be compatible or conditional.")
+        if (
+            recommendation.optimizer_name is not None
+            and recommendation.search_strategy_name is not None
+        ):
+            raise ValueError("Study requires one optimizer or search strategy, not both.")
+        if recommendation.optimizer_name is None and recommendation.search_strategy_name is None:
+            raise ValueError("recommendation must specify an optimizer or search strategy.")
+        spec = ProblemSpec(
+            purpose="bayesian_optimization",
+            input_type="mixed" if variable_space is not None else "continuous",
+            candidate_constrained=constraints is not None and constraints.has_constraints,
+        )
+        decision = check_compatibility(
+            spec,
+            model=recommendation.model_name,
+            acquisition=recommendation.acquisition_name,
+            optimizer=recommendation.optimizer_name,
+            search_strategy=recommendation.search_strategy_name,
+        )
+        if decision.status not in (SelectionStatus.COMPATIBLE, SelectionStatus.CONDITIONAL):
+            raise ValueError(
+                f"recommendation is incompatible with scalar Study: {decision.reasons}"
+            )
+        model = recommendation.model_name
+        acquisition = recommendation.acquisition_name
+        optimizer = recommendation.search_strategy_name or recommendation.optimizer_name
     if not isinstance(search_space, SearchSpace):
         search_space = SearchSpace(search_space)
-    return Study(
+    study = Study(
         search_space,
         direction=direction,
-        model=model,
+        model=SingleTaskGP if model is None else model,
         model_kwargs=model_kwargs,
-        acquisition=acquisition,
+        acquisition=qLogExpectedImprovement if acquisition is None else acquisition,
         acquisition_kwargs=acquisition_kwargs,
-        optimizer=optimizer,
+        optimizer="botorch" if optimizer is None else optimizer,
         optimizer_kwargs=optimizer_kwargs,
         n_initial_trials=n_initial_trials,
         seed=seed,
@@ -344,3 +383,20 @@ def create_study(
         constraints=constraints,
         context_names=context_names,
     )
+    # Restore observations, not optimizer or random-number-generator state.
+    for trial in initial_trials:
+        if not isinstance(trial, Trial):
+            raise TypeError("initial_trials must contain Trial snapshots.")
+        if type(trial.number) is not int or trial.number < study._next_number:
+            raise ValueError("initial_trials must have strictly increasing integer numbers.")
+        if not isinstance(trial.state, TrialState):
+            raise ValueError("initial_trials must have valid TrialState values.")
+        if trial.state is TrialState.COMPLETE and (
+            isinstance(trial.value, bool) or not isinstance(trial.value, (int, float))
+        ):
+            raise ValueError("Completed trials require a numeric observation.")
+        # Historical joint batches cannot be reconstructed from individual trials.
+        study._next_number = trial.number
+        study._register_trial(trial.params)
+        study._trials[trial.number] = trial
+    return study

@@ -52,3 +52,27 @@ def test_strategy_rejects_invalid_acquisition() -> None:
         botorch_gp_candidates(
             problem, X, Y, 1, torch.Generator().manual_seed(0), acquisition="unknown"
         )
+
+
+def test_factory_benchmark_end_to_end() -> None:
+    registry = BenchmarkProblemRegistry()
+    registry.register("quadratic", _problem)
+    config = BenchmarkExperimentConfig(
+        problem="quadratic",
+        strategy="factory",
+        seeds=(3,),
+        initial_points=4,
+        evaluation_budget=2,
+        q=2,
+    )
+    strategy = make_botorch_gp_strategy(
+        model_factory="SingleTaskGP",
+        acquisition="qLogExpectedImprovement",
+        optimizer="sobol",
+        raw_samples=16,
+        optimizer_kwargs={"seed": 17},
+    )
+    result = run_benchmark(config, strategy, registry=registry)[0]
+    assert result.X.shape == (6, 1)
+    assert result.Y_observed.shape == (6, 1)
+    assert torch.isfinite(result.X).all()

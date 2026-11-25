@@ -180,3 +180,87 @@ explicit fit calls, acquisition construction and candidate generation for
 single-objective, multi-objective, outcome-constrained, mixed candidate-constrained,
 binary, multiclass and ordinal problems. These are smoke tests, not performance
 benchmarks or exhaustive validation of every conditional combination.
+
+
+### Study integration
+
+The existing scalar-objective Study accepts exact model and acquisition factory
+names as well as the original callable constructors. Names are resolved at
+Study construction, before initial trials; training remains in the existing
+candidate generation loop. This does not extend Study to vector observations
+or classification active learning.
+
+```python
+from robotorchan.study import create_study
+
+study = create_study(
+    search_space={"x": (0.0, 1.0)},
+    model="SingleTaskGP",
+    acquisition="qLogExpectedImprovement",
+    optimizer="sobol",
+)
+for _ in range(5):
+    trial = study.ask()
+    study.tell(trial, -((trial.params["x"] - 0.6) ** 2))
+```
+
+
+Study also accepts canonical SearchStrategy names through its existing optimizer
+argument. For example, `optimizer="SobolSearchStrategy"` with
+`optimizer_kwargs={"num_samples": 32}` constructs the original strategy once
+using Study bounds. An existing strategy instance remains valid. Scalar
+dispatcher names use the optimizer factory; specialist APIs with different
+signatures or vector results are not accepted as Study optimizer names.
+The existing restrictions on strategy instances (mixed domains, constraints,
+and context-fixed proposals) still apply.
+
+
+A selected `WorkflowRecommendation` can be supplied to `create_study` using
+`recommendation=selection` instead of explicit model, acquisition and optimizer
+names. Study rechecks the scalar regression BO contract for its domain and
+candidate constraints at construction. This is a q=1 static check, not a
+guarantee for later batch sizes or constructor arguments. Supply required
+method-specific kwargs explicitly. Recommendations specifying both an optimizer
+and a search strategy are rejected rather than silently dropping either.
+
+
+The existing single-objective benchmark callback also accepts factory names:
+
+```python
+from robotorchan.benchmarks.botorch_strategy import make_botorch_gp_strategy
+
+strategy = make_botorch_gp_strategy(
+    model_factory="SingleTaskGP",
+    acquisition="qLogExpectedImprovement",
+    optimizer="sobol",
+    raw_samples=64,
+)
+```
+
+Named models use their existing fit method. The original callable model factory
+retains native exact GP fitting, and the legacy acquisition names and default
+native optimizer remain supported. This callback remains restricted to
+unconstrained continuous scalar regression BO; other benchmark paths are unchanged.
+
+
+Study is in-memory; benchmark checkpoint/storage is a separate API.
+To resume from historical observations, construct a Study with the same
+explicit component configuration (or selected recommendation) and pass
+`initial_trials=previous_study.trials`. Trial IDs, states and observations
+are retained, including running and waiting trials. The next model fit uses
+completed observations only. This is history restoration, not a persistent
+storage backend or exact RNG/strategy checkpoint. The caller must retain the
+configuration and history externally. Historical joint-batch feasibility
+cannot be reconstructed from individual trial records and is not rechecked;
+parameter bounds and discrete domains are validated.
+
+
+### Phase 8 integration boundary
+
+The Study integration tests cover selected recommendations with either a scalar
+dispatcher or a named Sobol search strategy, minimization, model-based q-batch
+proposals, trial history restoration and continued optimization. The benchmark
+integration test exercises the named model/acquisition/optimizer path with q=2.
+These are representative runtime contracts, not exhaustive cross-product tests.
+Persistent Study storage, exact checkpoint replay and specialized multi-output,
+classification or causal Study loops are outside this integration boundary.

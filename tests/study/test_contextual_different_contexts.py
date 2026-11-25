@@ -81,7 +81,7 @@ def test_ask_contexts_model_based_dispatches_independent_q1() -> None:
     )
     first = study.ask(context={"ambient": 0.3})
     study.tell(first, 0.5)
-    with patch("robotorchan.study.generation.optimize_acqf") as optimize:
+    with patch("robotorchan.optim.factory.optimize_acqf") as optimize:
         optimize.side_effect = [
             (torch.tensor([[0.4, 0.2]], dtype=torch.double), torch.tensor(0.0)),
             (torch.tensor([[0.6, 0.8]], dtype=torch.double), torch.tensor(0.0)),
