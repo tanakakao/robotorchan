@@ -34,3 +34,30 @@ def test_decoupled_kg(mask):
     else:
         (gradient,) = torch.autograd.grad(value.sum(), candidate)
         assert torch.isfinite(gradient).all()
+
+
+def test_constraint_only_observation_has_information_value():
+    X = torch.linspace(0, 1, 6, dtype=torch.double).unsqueeze(-1)
+    model = ModelListGP(SingleTaskGP(X, 1 + X), SingleTaskGP(X, X - 0.5))
+    model.eval()
+    acq = create_acquisition(
+        "qDecoupledKnowledgeGradient",
+        model=model,
+        decision_X=X,
+        weights=X.new_tensor([1.0, 0.0]),
+        sampler=ListSampler(
+            SobolQMCNormalSampler(torch.Size([64]), seed=42),
+            SobolQMCNormalSampler(torch.Size([64]), seed=43),
+        ),
+        X_evaluation_mask=torch.tensor([[False, True]]),
+        constraint_indices=(1,),
+        constraint_thresholds=X.new_tensor([0.0]),
+        infeasible_utility=0.0,
+    )
+    candidate = X.new_tensor([[[0.5]]]).requires_grad_()
+    value = acq(candidate)
+    assert value.shape == (1,)
+    assert torch.isfinite(value).all()
+    assert value.item() > 0
+    (gradient,) = torch.autograd.grad(value.sum(), candidate)
+    assert torch.isfinite(gradient).all()

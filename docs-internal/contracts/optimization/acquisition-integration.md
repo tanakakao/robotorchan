@@ -275,5 +275,14 @@ requirements.
 maximizes posterior expected linear utility over a fixed terminal decision set.
 It subtracts the current terminal value and averages over fantasies. Independent
 zero-weight outputs have no information value for this utility. This is a
-finite-set approximation, not continuous one-shot KG. Pending evaluations,
-correlated outputs and outcome constraints are not supported.
+finite-set approximation, not continuous one-shot KG. Pending evaluations and correlated outputs are not supported.
+
+
+The finite-set KG also accepts independent Gaussian upper-bound outcome
+constraints via `constraint_indices`, `constraint_thresholds` and
+`infeasible_utility`. Terminal expected utility is the feasible objective
+mean weighted by joint feasibility probability plus the infeasible payoff
+weighted by failure probability. Abstention at the same payoff is allowed.
+Constraint outputs must have zero objective weights. This is a decision
+utility, not a hard posterior feasibility guarantee. The generic workflow
+registry remains conservative until constrained optimizer integration is tested.
