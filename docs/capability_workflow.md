@@ -201,5 +201,5 @@ study = create_study(
 )
 for _ in range(5):
     trial = study.ask()
-    study.tell(trial, -(trial.params["x"] - 0.6) ** 2)
+    study.tell(trial, -((trial.params["x"] - 0.6) ** 2))
 ```

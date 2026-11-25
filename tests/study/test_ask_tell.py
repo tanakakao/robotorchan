@@ -53,12 +53,12 @@ def test_named_model_and_acquisition_ask_tell() -> None:
     )
     for _ in range(3):
         trial = study.ask()
-        study.tell(trial, -(trial.params["x"] - 0.6) ** 2)
+        study.tell(trial, -((trial.params["x"] - 0.6) ** 2))
     trials = study.ask_batch(2)
     assert len(trials) == 2
     for trial in trials:
         assert 0.0 <= trial.params["x"] <= 1.0
-        study.tell(trial, -(trial.params["x"] - 0.6) ** 2)
+        study.tell(trial, -((trial.params["x"] - 0.6) ** 2))
     assert len(study.trials) == 5
 
 
