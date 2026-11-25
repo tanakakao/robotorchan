@@ -80,9 +80,12 @@ def _special_model(spec: ProblemSpec, name: str) -> ComponentSelection:
             conditions = ("requires a known DAG and fixed intervention data; use native model",)
         return _result(name, reasons, conditions)
     if name in ("GPStructuralCausalModel", "StructuralCausalModel"):
+        reasons = []
+        if spec.observation_kind is not ObservationKind.REGRESSION:
+            reasons.append("requires numeric causal outcomes")
         return _result(
             name,
-            [],
+            reasons,
             ("requires a known DAG and causal intervention workflow; not a BoTorch Model",),
         )
     if name == "HeterogeneousModel":
@@ -92,6 +95,8 @@ def _special_model(spec: ProblemSpec, name: str) -> ComponentSelection:
         "CalibratedMulticlassClassifier": ObservationKind.MULTICLASS,
         "CalibratedOrdinalClassifier": ObservationKind.ORDINAL,
         "BootstrapMulticlassClassificationEnsemble": ObservationKind.MULTICLASS,
+        "GPBinaryClassificationEnsemble": ObservationKind.BINARY,
+        "HeterogeneousBinaryClassificationEnsemble": ObservationKind.BINARY,
         "SklearnBinaryClassifier": ObservationKind.BINARY,
         "SklearnMulticlassClassifier": ObservationKind.MULTICLASS,
     }

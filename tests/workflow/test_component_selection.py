@@ -173,10 +173,20 @@ def test_additional_native_acquisition_contracts() -> None:
         assert acquisitions["qNegIntegratedPosteriorVariance"] is SelectionStatus.CONDITIONAL
 
 
-def test_report_remaining_unknown_components() -> None:
+def test_report_remaining_unknown_components(capsys) -> None:
     result = evaluate_components(ProblemSpec(purpose="bayesian_optimization"))
     for category in ("models", "acquisitions", "optimizers", "search_strategies"):
         entries = getattr(result, category)
         unknown = [item.name for item in entries if item.status is SelectionStatus.UNKNOWN]
-        print(f"{category}: {len(unknown)}/{len(entries)} unknown: {unknown}")
+        with capsys.disabled():
+            print(f"{category}: {len(unknown)}/{len(entries)} unknown: {unknown}")
         assert all(item.reasons for item in entries if item.status is SelectionStatus.UNKNOWN)
+
+
+def test_generic_binary_ensemble_and_causal_boundaries() -> None:
+    spec = ProblemSpec(purpose="active_learning", observation_kind="binary")
+    models = {item.name: item for item in evaluate_components(spec).models}
+    for name in ("GPBinaryClassificationEnsemble", "HeterogeneousBinaryClassificationEnsemble"):
+        assert models[name].status in (SelectionStatus.COMPATIBLE, SelectionStatus.CONDITIONAL)
+    assert models["GPStructuralCausalModel"].status is SelectionStatus.INCOMPATIBLE
+    assert models["StructuralCausalModel"].status is SelectionStatus.INCOMPATIBLE
