@@ -173,3 +173,10 @@ default inventory. Class names and registry IDs may refer to the same class.
 constructor or optimizer signature on demand, without constructing a model.
 It lists required named parameters, not their values or conditional kwargs;
 None means signature inspection is unavailable. Runtime conditions still apply.
+
+
+Integration tests exercise recommendations through the original factories,
+explicit fit calls, acquisition construction and candidate generation for
+single-objective, multi-objective, outcome-constrained, mixed candidate-constrained,
+binary, multiclass and ordinal problems. These are smoke tests, not performance
+benchmarks or exhaustive validation of every conditional combination.

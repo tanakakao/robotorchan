@@ -1,8 +1,23 @@
 """Contracts for cross-component capability filtering."""
 
-from robotorchan.acquisition import list_acquisitions
-from robotorchan.models import list_models
-from robotorchan.optim import list_optimizers, list_search_strategies
+import pytest
+import torch
+from botorch.acquisition.objective import GenericMCObjective
+from botorch.sampling.normal import SobolQMCNormalSampler
+from botorch.utils.multi_objective.box_decompositions.non_dominated import (
+    FastNondominatedPartitioning,
+)
+
+from robotorchan.acquisition import create_acquisition, list_acquisitions
+from robotorchan.models import create_model, list_models
+from robotorchan.optim import (
+    CandidateConstraints,
+    MixedVariableSpace,
+    create_optimizer,
+    create_search_strategy,
+    list_optimizers,
+    list_search_strategies,
+)
 from robotorchan.workflow import (
     ProblemSpec,
     SelectionStatus,
@@ -301,3 +316,99 @@ def test_recommendation_required_arguments() -> None:
     assert {"train_X", "train_Y"} <= set(arguments["model"])
     assert {"model", "best_f"} <= set(arguments["acquisition"])
     assert {"acq_function", "bounds", "q"} <= set(arguments["optimizer"])
+
+
+@pytest.mark.parametrize("case", ["single", "multi", "outcome_constrained", "mixed"])
+def test_recommended_regression_candidate_generation(case: str) -> None:
+    torch.manual_seed(17)
+    X = torch.linspace(0.1, 0.9, 9, dtype=torch.double).unsqueeze(-1)
+    Y = -(X - 0.65).square()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=X.dtype)
+    model_kwargs = {}
+    acq_kwargs = {"best_f": Y.max()}
+    optimizer_kwargs = {}
+    spec_kwargs = {}
+    model_name = "SingleTaskGP"
+    acq_name = "qLogExpectedImprovement"
+    if case == "multi":
+        Y = torch.cat((Y, -(X - 0.25).square()), dim=-1)
+        ref = Y.min(dim=0).values - 0.1
+        acq_kwargs = {
+            "ref_point": ref.tolist(),
+            "partitioning": FastNondominatedPartitioning(ref_point=ref, Y=Y),
+        }
+        acq_name = "qLogExpectedHypervolumeImprovement"
+        spec_kwargs = {"output_type": "multi", "objective_type": "multi"}
+    elif case == "outcome_constrained":
+        Y = torch.cat((Y, X - 0.8), dim=-1)
+        acq_kwargs.update(
+            objective=GenericMCObjective(lambda samples, X=None: samples[..., 0]),
+            constraints=[lambda samples: samples[..., 1]],
+        )
+        spec_kwargs = {"output_type": "multi", "constrained": True}
+    elif case == "mixed":
+        X = torch.cat((X, (torch.arange(9) % 2).to(X).unsqueeze(-1)), dim=-1)
+        bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=X.dtype)
+        model_name = "MixedSingleTaskGP"
+        model_kwargs = {"cat_dims": [1]}
+        optimizer_kwargs = {
+            "variable_space": MixedVariableSpace(bounds, integer_dims=(1,)),
+            "constraints": CandidateConstraints(
+                inequality_constraints=((torch.tensor([0]), torch.tensor([1.0]), 0.2),)
+            ),
+        }
+        spec_kwargs = {"input_type": "mixed", "candidate_constrained": True}
+    spec = ProblemSpec(purpose="bayesian_optimization", q=2, **spec_kwargs)
+    result = recommend(spec, model=model_name, acquisition=acq_name, optimizer="sobol")[0]
+    model = create_model(result.model_name, X, Y, **model_kwargs)
+    model.fit(optimizer_kwargs={"options": {"maxiter": 5}})
+    acq = create_acquisition(
+        result.acquisition_name,
+        model=model,
+        sampler=SobolQMCNormalSampler(torch.Size([16]), seed=17),
+        **acq_kwargs,
+    )
+    optimize = create_optimizer(result.optimizer_name, raw_samples=32, seed=17)
+    candidates, value = optimize(acq, bounds, q=spec.q, **optimizer_kwargs)
+    assert candidates.shape == (2, X.shape[-1])
+    assert torch.isfinite(candidates).all()
+    assert torch.isfinite(value).all()
+    assert torch.all(candidates >= bounds[0])
+    assert torch.all(candidates <= bounds[1])
+    if case == "mixed":
+        assert torch.all(candidates[:, 0] >= 0.2 - 1e-6)
+        torch.testing.assert_close(candidates[:, 1], candidates[:, 1].round())
+
+
+@pytest.mark.parametrize(
+    ("kind", "model_name", "num_classes"),
+    [
+        ("binary", "BinarySingleTaskGPClassifier", 2),
+        ("multiclass", "MulticlassSingleTaskGPClassifier", 3),
+        ("ordinal", "OrdinalSingleTaskGPClassifier", 3),
+    ],
+)
+def test_recommended_classification_candidate_generation(
+    kind: str, model_name: str, num_classes: int
+) -> None:
+    torch.manual_seed(17)
+    X = torch.linspace(0.1, 0.9, 9, dtype=torch.double).unsqueeze(-1)
+    Y = (X.squeeze(-1) * num_classes).long()
+    kwargs = {"num_classes": num_classes} if num_classes > 2 else {}
+    spec = ProblemSpec(purpose="active_learning", observation_kind=kind, q=2)
+    result = recommend(
+        spec,
+        model=model_name,
+        acquisition="qPredictiveEntropy",
+        search_strategy="SobolSearchStrategy",
+    )[0]
+    model = create_model(result.model_name, X, Y, **kwargs)
+    model.fit(epochs=2)
+    acq = create_acquisition(result.acquisition_name, model=model)
+    bounds = torch.tensor([[0.0], [1.0]], dtype=X.dtype)
+    strategy = create_search_strategy(result.search_strategy_name, bounds, num_samples=16, seed=17)
+    search = strategy.optimize(acq, q=spec.q)
+    assert search.candidates.shape == (2, 1)
+    assert torch.isfinite(search.acquisition_value).all()
+    assert torch.all(search.candidates >= bounds[0])
+    assert torch.all(search.candidates <= bounds[1])
