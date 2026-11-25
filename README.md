@@ -95,7 +95,7 @@ from robotorchan.optim import create_optimizer
 model = create_model("SingleTaskGP", train_X, train_Y)
 model.fit()
 acq = create_acquisition("qLogExpectedImprovement", model=model, best_f=train_Y.max())
-bounds = torch.tensor([[0., 0.], [1., 1.]], dtype=train_X.dtype)
+bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=train_X.dtype)
 optimize = create_optimizer("sobol", raw_samples=64, seed=17)
 candidates, values = optimize(acq, bounds, q=2)
 ```
