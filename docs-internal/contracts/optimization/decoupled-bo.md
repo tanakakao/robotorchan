@@ -27,3 +27,13 @@ MFHVKG numerical validation, constrained value of information and correlated
 output models remain separate gates. Do not mask EI or UCB as a substitute for
 information value. Registry recommendation is deferred until model and optimizer
 requirements can be represented without overstating support.
+
+### Phase 3 scope boundary
+
+MFHVKG has a forward and gradient test using native fidelity projection and
+partial observations. Cost-aware incremental value is a Phase 5 gate.
+Single-objective masked KG and constrained or entropy-based information value
+are not provided by the native HVKG constructor contract; they are not claimed
+as implemented. Workflow selection is conditional, not a recommendation of
+arbitrary model and optimizer combinations. Classification information value
+remains a Phase 8 topic.
