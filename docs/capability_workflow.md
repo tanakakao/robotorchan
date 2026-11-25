@@ -203,3 +203,13 @@ for _ in range(5):
     trial = study.ask()
     study.tell(trial, -((trial.params["x"] - 0.6) ** 2))
 ```
+
+
+Study also accepts canonical SearchStrategy names through its existing optimizer
+argument. For example, `optimizer="SobolSearchStrategy"` with
+`optimizer_kwargs={"num_samples": 32}` constructs the original strategy once
+using Study bounds. An existing strategy instance remains valid. Scalar
+dispatcher names use the optimizer factory; specialist APIs with different
+signatures or vector results are not accepted as Study optimizer names.
+The existing restrictions on strategy instances (mixed domains, constraints,
+and context-fixed proposals) still apply.

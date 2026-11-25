@@ -16,8 +16,10 @@ from robotorchan.acquisition.factory import get_acquisition_class
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.base import SearchStrategy
 from robotorchan.optim.constraints.contracts import CandidateConstraints
-from robotorchan.optim.dispatch import optimize_acqf
+from robotorchan.optim.capabilities import OPTIMIZER_CAPABILITIES
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
+from robotorchan.optim.factory import create_optimizer
+from robotorchan.optim.search_factory import create_search_strategy, list_search_strategies
 from robotorchan.study.feasibility import is_feasible
 from robotorchan.study.search_space import SearchSpace
 from robotorchan.study.trial import Trial
@@ -66,8 +68,15 @@ class CandidateGenerator:
         self.model_kwargs = dict(model_kwargs or {})
         self.acquisition = acquisition
         self.acquisition_kwargs = dict(acquisition_kwargs or {})
-        self.optimizer = optimizer
         self.optimizer_kwargs = dict(optimizer_kwargs or {})
+        if isinstance(optimizer, str) and optimizer in list_search_strategies():
+            optimizer = create_search_strategy(optimizer, self._bounds(), **self.optimizer_kwargs)
+            self.optimizer_kwargs = {}
+        if isinstance(optimizer, str):
+            if optimizer.lower() not in OPTIMIZER_CAPABILITIES:
+                raise ValueError("Study requires a scalar dispatcher optimizer or SearchStrategy.")
+            create_optimizer(optimizer, **self.optimizer_kwargs)
+        self.optimizer = optimizer
         self.n_initial_trials = n_initial_trials
         self._sobol = SobolEngine(len(space.bounds), scramble=True, seed=seed)
         self._random = torch.Generator()
@@ -174,11 +183,11 @@ class CandidateGenerator:
                 options.setdefault("raw_samples", 64)
                 if fixed and "fixed_features" in options:
                     raise ValueError("optimizer_kwargs must not override context fixed features.")
-                candidate, _ = optimize_acqf(
+                optimize = create_optimizer(self.optimizer)
+                candidate, _ = optimize(
                     acq,
                     bounds,
                     q=q,
-                    optimizer=self.optimizer,
                     variable_space=self.variable_space,
                     constraints=self.constraints,
                     fixed_features=fixed or None,

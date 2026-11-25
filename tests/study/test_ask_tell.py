@@ -66,3 +66,28 @@ def test_invalid_factory_names_fail_before_initial_trials() -> None:
     for kwargs in ({"model": "unknown"}, {"acquisition": "unknown"}):
         with pytest.raises(KeyError):
             create_study(search_space={"x": (0.0, 1.0)}, **kwargs)
+
+
+def test_named_search_strategy_ask_tell() -> None:
+    study = create_study(
+        search_space={"x": (0.0, 1.0)},
+        model="SingleTaskGP",
+        acquisition="qLogExpectedImprovement",
+        optimizer="SobolSearchStrategy",
+        optimizer_kwargs={"num_samples": 16, "seed": 17},
+        n_initial_trials=3,
+        seed=17,
+    )
+    for _ in range(3):
+        trial = study.ask()
+        study.tell(trial, -((trial.params["x"] - 0.6) ** 2))
+    for trial in study.ask_batch(2):
+        assert 0.0 <= trial.params["x"] <= 1.0
+        study.tell(trial, -((trial.params["x"] - 0.6) ** 2))
+    assert len(study.trials) == 5
+
+
+@pytest.mark.parametrize("name", ["unknown", "optimize_vector_nsga2"])
+def test_study_rejects_unsupported_optimizer_names(name: str) -> None:
+    with pytest.raises(ValueError, match="scalar dispatcher"):
+        create_study(search_space={"x": (0.0, 1.0)}, optimizer=name)
