@@ -7,6 +7,7 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 
 from robotorchan.optim import create_optimizer, optimize_acqf_decoupled
+from robotorchan.workflow.cost_budget import CostBudget
 
 
 class MaskedQuadratic(AcquisitionFunction):
@@ -51,3 +52,56 @@ def test_decoupled_optimizer_rejects_empty_mask():
         optimize_acqf_decoupled(
             MaskedQuadratic(), torch.tensor([[0.0], [1.0]]), torch.tensor([[False, False]])
         )
+
+
+def test_fixed_cost_and_budget_mask_selection(monkeypatch):
+    acq = MaskedQuadratic()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[True, False], [False, True], [True, True]])
+
+    def optimize(**kwargs):
+        mask = kwargs["acq_function"].X_evaluation_mask
+        gain = 6.0 if mask[0, 1] else 2.0
+        return bounds.new_tensor([[0.5]]), bounds.new_tensor(gain)
+
+    monkeypatch.setattr("robotorchan.optim.decoupled.optimize_acqf", optimize)
+    budget = CostBudget(total=5.0)
+    budget.reserve("pending", 2.0)
+    _, mask, score = optimize_acqf_decoupled(
+        acq, bounds, masks, output_costs=bounds.new_tensor([1.0, 4.0]), budget=budget
+    )
+    assert torch.equal(mask, masks[:1])
+    torch.testing.assert_close(score, bounds.new_tensor(2.0))
+    assert budget.remaining == 3.0 and budget.spent == 0.0
+    _, mask, score = optimize_acqf_decoupled(
+        acq, bounds, masks, mask_costs=bounds.new_tensor([2.0, 4.0, 1.0])
+    )
+    assert torch.equal(mask, masks[-1:])
+    torch.testing.assert_close(score, bounds.new_tensor(6.0))
+
+
+def test_no_affordable_mask():
+    bounds = torch.tensor([[0.0], [1.0]])
+    with pytest.raises(ValueError, match="no affordable"):
+        optimize_acqf_decoupled(
+            MaskedQuadratic(),
+            bounds,
+            torch.tensor([[True, False]]),
+            output_costs=bounds.new_tensor([2.0, 3.0]),
+            budget=CostBudget(total=1.0),
+        )
+
+
+def test_negative_gain_cost_ranking(monkeypatch):
+    bounds = torch.tensor([[0.0], [1.0]])
+    masks = torch.tensor([[True, False], [False, True]])
+
+    def optimize(**kwargs):
+        return bounds.new_tensor([[0.5]]), bounds.new_tensor(-1.0)
+
+    monkeypatch.setattr("robotorchan.optim.decoupled.optimize_acqf", optimize)
+    _, mask, score = optimize_acqf_decoupled(
+        MaskedQuadratic(), bounds, masks, output_costs=bounds.new_tensor([1.0, 4.0])
+    )
+    assert torch.equal(mask, masks[:1])
+    torch.testing.assert_close(score, bounds.new_tensor(-1.0))

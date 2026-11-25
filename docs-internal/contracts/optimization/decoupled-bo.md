@@ -50,3 +50,18 @@ One-shot auxiliary rows are handled by the underlying BoTorch optimizer.
 Mixed domains, joint q>1, candidate constraints and pending evaluations are
 separate integration gates. Raw acquisition values are compared without cost
 normalization.
+
+
+## Phase 5: fixed evaluation costs
+
+The optimizer accepts either additive positive output_costs (m,) or explicit
+positive mask_costs (k,), including nonadditive joint measurement costs.
+For fixed positive costs, maximizing gain per cost for each mask leaves the
+within-mask maximizer unchanged. Negative gains are multiplied by cost
+rather than divided, following the sign-aware inverse-cost convention.
+The third return value is the adjusted ranking score when costs are supplied.
+CostBudget filters unaffordable masks using remaining funds including
+reservations; candidate proposal does not mutate the ledger. No affordable
+mask raises ValueError. Native cost-aware utilities must not be combined with
+external cost scaling. Input-dependent and learned costs require a separate
+within-mask optimization integration.
