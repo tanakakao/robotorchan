@@ -164,3 +164,12 @@ unranked and conditional; explicit names are preserved. Both auto options
 enumerate their combinations, so specify a model and acquisition to limit
 the result size. Dedicated causal surrogates require their own workflow
 or native model extraction; vector NSGA-II is not a scalar acquisition backend.
+
+
+Explicit `model="auto"` and `acquisition="auto"` include all factory names,
+including special conditional components. Omitted names retain the registered
+default inventory. Class names and registry IDs may refer to the same class.
+`WorkflowRecommendation.required_arguments()` inspects the original
+constructor or optimizer signature on demand, without constructing a model.
+It lists required named parameters, not their values or conditional kwargs;
+None means signature inspection is unavailable. Runtime conditions still apply.

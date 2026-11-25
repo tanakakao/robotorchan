@@ -43,6 +43,11 @@ _STRATEGIES: dict[str, type[SearchStrategy]] = {
 T = TypeVar("T", bound=SearchStrategy)
 
 
+def resolve_search_strategy(name: str) -> type[SearchStrategy]:
+    """Resolve the original constructor for internal signature inspection."""
+    return _STRATEGIES[name]
+
+
 def list_search_strategies() -> tuple[str, ...]:
     """List concrete search strategies by their canonical class names."""
     return tuple(sorted(_STRATEGIES))

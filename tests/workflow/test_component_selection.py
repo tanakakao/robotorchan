@@ -279,3 +279,25 @@ def test_causal_models_require_dedicated_workflow() -> None:
     for model in ("GPStructuralCausalModel", "StructuralCausalModel", "InterventionGPSurrogate"):
         result = check_compatibility(spec, model=model, acquisition="qLogExpectedImprovement")
         assert result.status is SelectionStatus.INCOMPATIBLE
+
+
+def test_auto_model_and_acquisition_factory_inventory() -> None:
+    spec = ProblemSpec(purpose="bayesian_optimization")
+    results = recommend(spec, model="auto", acquisition="qLogExpectedImprovement")
+    names = {item.model_name for item in results}
+    assert "SingleTaskGP" in names
+    assert "RGPEModel" in names
+    assert "StructuralCausalModel" not in names
+    results = recommend(spec, model="SingleTaskGP", acquisition="auto")
+    names = {item.acquisition_name for item in results}
+    assert "qLogExpectedImprovement" in names
+    assert "LogProbabilityOfImprovement" in names
+
+
+def test_recommendation_required_arguments() -> None:
+    spec = ProblemSpec(purpose="bayesian_optimization")
+    result = recommend(spec, model="SingleTaskGP", acquisition="LogExpectedImprovement")[0]
+    arguments = result.required_arguments()
+    assert {"train_X", "train_Y"} <= set(arguments["model"])
+    assert {"model", "best_f"} <= set(arguments["acquisition"])
+    assert {"acq_function", "bounds", "q"} <= set(arguments["optimizer"])

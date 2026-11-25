@@ -1,6 +1,8 @@
 """Explainable recommendations built from capability compatibility facts."""
 
 from dataclasses import dataclass
+from importlib import import_module
+from inspect import Parameter, signature
 
 from robotorchan.acquisition.capabilities import AcquisitionPurpose
 from robotorchan.acquisition.compatibility import (
@@ -10,13 +12,14 @@ from robotorchan.acquisition.optimizer_compatibility import (
     CandidateOptimizer,
     check_acquisition_optimizer_compatibility,
 )
+from robotorchan.acquisition.factory import get_acquisition_class, list_acquisitions
 from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.models.capabilities import InputType
 from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.registry import MODEL_REGISTRY
 from robotorchan.optim.capabilities import OPTIMIZER_CAPABILITIES
-from robotorchan.optim.factory import list_optimizers
-from robotorchan.optim.search_factory import list_search_strategies
+from robotorchan.optim.factory import create_optimizer, list_optimizers
+from robotorchan.optim.search_factory import list_search_strategies, resolve_search_strategy
 from robotorchan.workflow.components import SelectionStatus, evaluate_component_inventory
 from robotorchan.workflow.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.workflow.selector import select_compatible_models
@@ -223,6 +226,34 @@ class WorkflowRecommendation:
     compatibility: WorkflowCompatibility
     rationale: tuple[str, ...]
 
+    def required_arguments(self) -> dict[str, tuple[str, ...] | None]:
+        """Inspect original signatures; None means introspection is unavailable."""
+        models = import_module("robotorchan.models")
+        result = {
+            "model": _required_parameters(models.get_model_class(self.model_name)),
+            "acquisition": _required_parameters(get_acquisition_class(self.acquisition_name)),
+        }
+        if self.optimizer_name is not None:
+            result["optimizer"] = _required_parameters(create_optimizer(self.optimizer_name))
+        if self.search_strategy_name is not None:
+            result["search_strategy"] = _required_parameters(
+                resolve_search_strategy(self.search_strategy_name)
+            )
+        return result
+
+
+def _required_parameters(constructor: object) -> tuple[str, ...] | None:
+    try:
+        parameters = signature(constructor).parameters.values()
+    except (TypeError, ValueError):
+        return None
+    return tuple(
+        parameter.name
+        for parameter in parameters
+        if parameter.default is Parameter.empty
+        and parameter.kind not in (Parameter.VAR_POSITIONAL, Parameter.VAR_KEYWORD)
+    )
+
 
 def recommend(
     spec: ProblemSpec,
@@ -235,8 +266,34 @@ def recommend(
     """Enumerate unranked candidates; use auto to enumerate optimizer or strategy names."""
     if optimizer is None and search_strategy is None:
         optimizer = "botorch"
-    model_names = (model,) if model is not None else select_compatible_models(spec)
-    acquisition_names = (acquisition,) if acquisition is not None else tuple(ACQUISITION_REGISTRY)
+    if model == "auto":
+        models = import_module("robotorchan.models")
+        model_names = models.list_models()
+    else:
+        model_names = (model,) if model is not None else select_compatible_models(spec)
+    if acquisition == "auto":
+        acquisition_names = list_acquisitions()
+    elif acquisition is None:
+        acquisition_names = tuple(ACQUISITION_REGISTRY)
+    else:
+        acquisition_names = (acquisition,)
+    inventory = evaluate_component_inventory(
+        spec,
+        models=model_names,
+        acquisitions=acquisition_names,
+        optimizers=(),
+        search_strategies=(),
+    )
+    model_names = tuple(
+        item.name
+        for item in inventory.models
+        if item.status in (SelectionStatus.COMPATIBLE, SelectionStatus.CONDITIONAL)
+    )
+    acquisition_names = tuple(
+        item.name
+        for item in inventory.acquisitions
+        if item.status in (SelectionStatus.COMPATIBLE, SelectionStatus.CONDITIONAL)
+    )
     pairs = (
         (model_name, acquisition_name)
         for model_name in model_names
