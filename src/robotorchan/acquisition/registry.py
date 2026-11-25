@@ -280,3 +280,196 @@ ACQUISITION_REGISTRY.update(
         ),
     }
 )
+
+
+# Native analytic acquisitions have a single-candidate contract.
+for name in (
+    "ExpectedImprovement",
+    "LogExpectedImprovement",
+    "ProbabilityOfImprovement",
+    "UpperConfidenceBound",
+    "PosteriorMean",
+    "NoisyExpectedImprovement",
+    "LogNoisyExpectedImprovement",
+):
+    ACQUISITION_REGISTRY[name] = AcquisitionRegistryEntry(
+        acquisition_name=name,
+        capabilities=AcquisitionCapabilities(
+            purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+            posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+            max_q=1,
+            requires_single_output=True,
+        ),
+        implementation_strategy="BoTorch-native analytic acquisition",
+        limitations=("requires a compatible scalar posterior or posterior transform",),
+    )
+
+ACQUISITION_REGISTRY.update(
+    {
+        "qExpectedImprovement": _botorch_bo("qExpectedImprovement", supports_constraints=True),
+        "qNoisyExpectedImprovement": _botorch_bo(
+            "qNoisyExpectedImprovement", supports_constraints=True
+        ),
+        "qExpectedHypervolumeImprovement": _botorch_bo(
+            "qExpectedHypervolumeImprovement",
+            supports_constraints=True,
+            supports_multi_objective=True,
+        ),
+        "qNoisyExpectedHypervolumeImprovement": _botorch_bo(
+            "qNoisyExpectedHypervolumeImprovement",
+            supports_constraints=True,
+            supports_multi_objective=True,
+        ),
+    }
+)
+
+
+# Specialized native acquisitions retain their original constructor contracts.
+ACQUISITION_REGISTRY["qMultiStepLookahead"] = AcquisitionRegistryEntry(
+    acquisition_name="qMultiStepLookahead",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
+        requires_single_output=True,
+        requires_fantasize=True,
+        one_shot=True,
+    ),
+    implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    limitations=("requires method-specific constructor inputs and posterior checks",),
+)
+
+ACQUISITION_REGISTRY["qMaxValueEntropy"] = AcquisitionRegistryEntry(
+    acquisition_name="qMaxValueEntropy",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+        max_q=1,
+        requires_single_output=True,
+        requires_fantasize=True,
+    ),
+    implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    limitations=("requires method-specific constructor inputs and posterior checks",),
+)
+
+ACQUISITION_REGISTRY["qMultiFidelityMaxValueEntropy"] = AcquisitionRegistryEntry(
+    acquisition_name="qMultiFidelityMaxValueEntropy",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+        max_q=1,
+        requires_single_output=True,
+        requires_fantasize=True,
+        requires_multi_fidelity=True,
+    ),
+    implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    limitations=("requires method-specific constructor inputs and posterior checks",),
+)
+
+ACQUISITION_REGISTRY["qJointEntropySearch"] = AcquisitionRegistryEntry(
+    acquisition_name="qJointEntropySearch",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+        requires_single_output=True,
+    ),
+    implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    limitations=("requires method-specific constructor inputs and posterior checks",),
+)
+
+ACQUISITION_REGISTRY["qPredictiveEntropySearch"] = AcquisitionRegistryEntry(
+    acquisition_name="qPredictiveEntropySearch",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+        requires_single_output=True,
+    ),
+    implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    limitations=("requires method-specific constructor inputs and posterior checks",),
+)
+
+ACQUISITION_REGISTRY["qLowerBoundMultiObjectiveJointEntropySearch"] = AcquisitionRegistryEntry(
+    acquisition_name="qLowerBoundMultiObjectiveJointEntropySearch",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+        supports_multi_output=True,
+        supports_multi_objective=True,
+    ),
+    implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    limitations=("requires method-specific constructor inputs and posterior checks",),
+)
+
+ACQUISITION_REGISTRY["qMultiObjectivePredictiveEntropySearch"] = AcquisitionRegistryEntry(
+    acquisition_name="qMultiObjectivePredictiveEntropySearch",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+        supports_multi_output=True,
+        supports_multi_objective=True,
+    ),
+    implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    limitations=("requires method-specific constructor inputs and posterior checks",),
+)
+
+ACQUISITION_REGISTRY["qLowerBoundMultiObjectiveMaxValueEntropySearch"] = AcquisitionRegistryEntry(
+    acquisition_name="qLowerBoundMultiObjectiveMaxValueEntropySearch",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+        supports_multi_output=True,
+        supports_multi_objective=True,
+    ),
+    implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    limitations=("requires method-specific constructor inputs and posterior checks",),
+)
+
+ACQUISITION_REGISTRY["AnalyticExpectedUtilityOfBestOption"] = AcquisitionRegistryEntry(
+    acquisition_name="AnalyticExpectedUtilityOfBestOption",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+        max_q=2,
+        requires_single_output=True,
+        requires_preference=True,
+    ),
+    implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    limitations=("requires method-specific constructor inputs and posterior checks",),
+)
+
+ACQUISITION_REGISTRY["qExpectedUtilityOfBestOption"] = AcquisitionRegistryEntry(
+    acquisition_name="qExpectedUtilityOfBestOption",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
+        requires_single_output=True,
+        requires_preference=True,
+    ),
+    implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    limitations=("requires method-specific constructor inputs and posterior checks",),
+)
+
+ACQUISITION_REGISTRY["PairwiseBayesianActiveLearningByDisagreement"] = AcquisitionRegistryEntry(
+    acquisition_name="PairwiseBayesianActiveLearningByDisagreement",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.ACTIVE_LEARNING,
+        posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+        max_q=2,
+        requires_single_output=True,
+        requires_preference=True,
+    ),
+    implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    limitations=("requires method-specific constructor inputs and posterior checks",),
+)
+
+ACQUISITION_REGISTRY["ExpectedHypervolumeImprovement"] = AcquisitionRegistryEntry(
+    acquisition_name="ExpectedHypervolumeImprovement",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+        max_q=1,
+        supports_multi_output=True,
+        supports_multi_objective=True,
+    ),
+    implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+    limitations=("requires method-specific constructor inputs and posterior checks",),
+)

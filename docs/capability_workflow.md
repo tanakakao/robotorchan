@@ -83,3 +83,54 @@ When extending the library, keep these layers distinct:
 - benchmark evidence: comparative quality or performance has been measured.
 
 Do not infer runtime validation or benchmark superiority from registry membership alone.
+
+## Component selection
+
+Use `evaluate_components(spec)` to inspect every factory-visible model,
+acquisition, optimizer and search strategy. Results are independent component
+checks, not compatible workflow tuples or performance rankings. Status values
+are compatible, incompatible, conditional and unknown. Unknown means metadata
+is missing; conditional means runtime or cross-component checks are required.
+`ProblemSpec.observation_kind` distinguishes regression, binary, multiclass and
+ordinal observations. `candidate_constrained` is separate from outcome
+constraints (`constrained`). Model-only selection uses the regression registry by default and classification
+registry IDs for binary, multiclass and ordinal problems. Both selectors share
+structural checks. Recommendation accepts these registry IDs for static
+model/acquisition checks; full four-component compatibility is a subsequent phase.
+
+
+Factory names without reliable metadata remain unknown, including generic
+wrappers whose capabilities depend on their supplied base model. This is not
+an assertion that the implementation is unsupported. Acquisition limitations
+are included in conditional selection reasons.
+
+Specialized constructors are also classified when their contracts are known:
+BOCS and COMBO require binary design coordinates; RGPE requires scalar Gaussian
+source/target models; causal surrogates require intervention data and a known
+DAG. SCMs are not native BoTorch models. Calibrated classifiers and generic
+classification ensembles require checks of the supplied base estimator or
+members. These entries are conditional, not automatically recommended.
+
+Classifier feasibility adapters are evaluated separately from single-model
+acquisition metadata. ClassificationProbabilityAcquisition is scalar and q=1;
+FeasibilityWeightedAcquisition requires both an objective acquisition and a
+classifier feasibility adapter, inherits the wrapped acquisition's q and
+objective limits, and rejects pending candidates and joint fantasization.
+The product reduction assumes independent feasibility probabilities.
+
+Additional native acquisition contracts cover analytic constrained EI, posterior
+standard deviation, and negative integrated posterior variance when exposed by
+the installed BoTorch version. The latter requires fantasy conditioning and
+integration points. HeterogeneousModel remains conditional on its members.
+To inspect remaining unknown factory names and counts, run:
+
+```bash
+pytest -s tests/workflow/test_component_selection.py -k report_remaining_unknown
+```
+
+The final inventory gate requires every factory name to have an explicit
+static decision or a constructor-dependent condition. Native projection,
+scalarization, feasibility, probability of improvement, confidence bounds,
+pairwise variance and lower-bound entropy acquisitions are included. This
+is not a guarantee of runtime compatibility or a count of unique classes.
+Unrecognized external names still return UNKNOWN.

@@ -36,6 +36,7 @@ def test_existing_active_learning_acquisitions_remain_regression_compatible() ->
         for name, entry in ACQUISITION_REGISTRY.items()
         if entry.capabilities.purpose is AcquisitionPurpose.ACTIVE_LEARNING
         and ObservationType.REGRESSION in entry.capabilities.observation_types
+        and not entry.capabilities.requires_preference
     )
 
     for acquisition_name in regression_active_learning:
@@ -69,3 +70,22 @@ def test_regression_acquisitions_do_not_silently_become_classification_only() ->
         }:
             continue
         assert ObservationType.REGRESSION in entry.capabilities.observation_types, name
+
+
+def test_preference_acquisitions_require_preference_models() -> None:
+    names = {
+        name
+        for name, entry in ACQUISITION_REGISTRY.items()
+        if entry.capabilities.requires_preference
+    }
+    assert names == {
+        "AnalyticExpectedUtilityOfBestOption",
+        "qExpectedUtilityOfBestOption",
+        "PairwiseBayesianActiveLearningByDisagreement",
+    }
+    for name in names:
+        result = check_model_acquisition_compatibility("SingleTaskGP", name)
+        assert result.status is CompatibilityStatus.INCOMPATIBLE
+        assert "acquisition requires preference model support" in result.reasons
+        result = check_model_acquisition_compatibility("PairwiseGP", name)
+        assert result.status is CompatibilityStatus.COMPATIBLE, (name, result.reasons)

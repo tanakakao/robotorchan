@@ -228,3 +228,24 @@ This does not claim arbitrary discrete joint-q categorical assignment
 coverage or correlation between classifier feasibility events. Additional
 MultiTask/high-dimensional combinations retain their separate tests and
 capability boundaries.
+
+## Native acquisition capability selection
+
+The registry includes analytic q=1 acquisitions `ExpectedImprovement`, `LogExpectedImprovement`, `ProbabilityOfImprovement`, `UpperConfidenceBound`, `PosteriorMean`, `NoisyExpectedImprovement`, `LogNoisyExpectedImprovement` and Monte Carlo acquisitions `qExpectedImprovement`, `qNoisyExpectedImprovement`, `qExpectedHypervolumeImprovement`, and `qNoisyExpectedHypervolumeImprovement`. Static metadata does not establish runtime compatibility.
+
+## Specialized native acquisition selection
+
+- `qMultiStepLookahead`: posterior_samples, no declared maximum q, fantasy support, one-shot optimization.
+- `qMaxValueEntropy`: joint_gaussian, maximum q=1, fantasy support.
+- `qMultiFidelityMaxValueEntropy`: joint_gaussian, maximum q=1, multi-fidelity model, fantasy support.
+- `qJointEntropySearch`: joint_gaussian, no declared maximum q.
+- `qPredictiveEntropySearch`: joint_gaussian, no declared maximum q.
+- `qLowerBoundMultiObjectiveJointEntropySearch`: joint_gaussian, no declared maximum q.
+- `qMultiObjectivePredictiveEntropySearch`: joint_gaussian, no declared maximum q.
+- `qLowerBoundMultiObjectiveMaxValueEntropySearch`: joint_gaussian, no declared maximum q.
+- `AnalyticExpectedUtilityOfBestOption`: joint_gaussian, maximum q=2, preference model.
+- `qExpectedUtilityOfBestOption`: posterior_samples, no declared maximum q, preference model.
+- `PairwiseBayesianActiveLearningByDisagreement`: joint_gaussian, maximum q=2, preference model.
+- `ExpectedHypervolumeImprovement`: marginal_moments, maximum q=1.
+
+These are static requirements, not runtime validation. Method-specific constructor inputs, exact batch restrictions, and posterior compatibility must be checked separately.

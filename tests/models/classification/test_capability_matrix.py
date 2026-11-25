@@ -204,3 +204,11 @@ def test_non_gp_probability_ensemble_supports_sampling_active_learning() -> None
             acquisition_name,
         )
         assert result.status is CompatibilityStatus.COMPATIBLE, result.reasons
+
+
+def test_multiclass_probability_axis_is_not_a_multitask_axis() -> None:
+    for name in ("PredictiveEntropy", "MarginUncertainty", "BALD", "ProbabilityVariance"):
+        standard = CLASSIFICATION_MODEL_REGISTRY["multiclass.standard"].capabilities
+        multitask = CLASSIFICATION_MODEL_REGISTRY["multiclass.multi_task"].capabilities
+        assert check_capabilities_acquisition_compatibility(standard, name).compatible
+        assert not check_capabilities_acquisition_compatibility(multitask, name).compatible

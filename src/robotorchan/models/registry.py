@@ -449,6 +449,8 @@ _POSTERIOR_SAMPLING_MODELS = frozenset(
         if MODEL_REGISTRY[name].capabilities.supports_posterior_samples
     }
     | {
+        "PairwiseGP",
+        "MixedPairwiseGP",
         "MixedSingleTaskMultiFidelityGP",
         "MixedSingleTaskVariationalGP",
         "MultiTaskGP",

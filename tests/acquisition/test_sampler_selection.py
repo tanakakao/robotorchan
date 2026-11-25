@@ -7,7 +7,12 @@ from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.sampling.stochastic_samplers import StochasticSampler
 
 from robotorchan.acquisition.samplers import make_model_sampler
-from robotorchan.models import EnsembleMapSaasSingleTaskGP, MixedEnsembleMapSaasSingleTaskGP
+from robotorchan.models import (
+    EnsembleMapSaasSingleTaskGP,
+    MixedEnsembleMapSaasSingleTaskGP,
+    MixedPairwiseGP,
+    PairwiseGP,
+)
 from robotorchan.models.expressive.deep_gp_posterior import DeepGPPosterior
 
 
@@ -23,7 +28,7 @@ def test_make_model_sampler_selects_ensemble_sampler() -> None:
 
 def test_make_model_sampler_rejects_unsupported_sampling() -> None:
     with pytest.raises(ValueError, match="does not advertise posterior sampling support"):
-        make_model_sampler("PairwiseGP", torch.Size([8]))
+        make_model_sampler("HigherOrderGP", torch.Size([8]))
 
 
 def test_map_saas_ensemble_sampler_runs_against_gaussian_posterior() -> None:
@@ -64,3 +69,19 @@ def test_make_model_sampler_selects_stochastic_sampler_for_deep_gp() -> None:
     assert isinstance(sampler, StochasticSampler)
     assert samples.shape == torch.Size([8, 3, 1])
     assert all(any(torch.equal(sample, trajectory) for trajectory in stored) for sample in samples)
+
+
+@pytest.mark.parametrize("mixed", [False, True])
+def test_pairwise_sampler_runs_against_gaussian_posterior(mixed: bool) -> None:
+    datapoints = torch.tensor([[0.0, 0.0], [0.3, 1.0], [0.7, 0.0], [1.0, 1.0]], dtype=torch.double)
+    comparisons = torch.tensor([[1, 0], [2, 3], [1, 2]], dtype=torch.long)
+    if mixed:
+        model = MixedPairwiseGP(datapoints, comparisons, cat_dims=[1])
+    else:
+        model = PairwiseGP(datapoints, comparisons)
+    model.eval()
+    sampler = make_model_sampler(type(model).__name__, torch.Size([8]))
+    samples = sampler(model.posterior(datapoints[:2]))
+    assert isinstance(sampler, SobolQMCNormalSampler)
+    assert samples.shape == torch.Size([8, 2, 1])
+    assert torch.isfinite(samples).all()
