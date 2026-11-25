@@ -59,9 +59,7 @@ def append_partial_observations(
     if len(observations) != len(updates):
         raise ValueError("existing observations must match the number of outputs")
     result = []
-    for (old_x, old_y, old_var), (new_x, new_y, new_var) in zip(
-        observations, updates, strict=True
-    ):
+    for (old_x, old_y, old_var), (new_x, new_y, new_var) in zip(observations, updates, strict=True):
         if new_x.shape[0] == 0:
             result.append((old_x, old_y, old_var))
             continue

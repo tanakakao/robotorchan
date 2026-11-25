@@ -42,6 +42,9 @@ def test_native_masked_fantasy():
     model = ModelListGP(*(SingleTaskGP(x, y) for x, y, _ in data))
     model.eval()
     candidate = X[2:3]
+    # Initialize prediction caches for every output, including unobserved ones.
+    with torch.no_grad():
+        model.posterior(candidate)
     sampler = ListSampler(
         SobolQMCNormalSampler(torch.Size([4]), seed=1),
         SobolQMCNormalSampler(torch.Size([4]), seed=2),

@@ -7411,6 +7411,11 @@
       "path": "docs/unified_factory_design.md",
       "category": "Design",
       "reason": "Unified Factory and Capability-based Workflow API design contract and phased implementation gates."
+    },
+    {
+      "path": "docs-internal/contracts/optimization/decoupled-bo.md",
+      "category": "Design",
+      "reason": "Decoupled Bayesian optimization partial observation and masked fantasy design contract."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
