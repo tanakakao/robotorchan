@@ -6,7 +6,9 @@ from robotorchan.optim import list_optimizers, list_search_strategies
 from robotorchan.workflow import (
     ProblemSpec,
     SelectionStatus,
+    check_compatibility,
     evaluate_components,
+    recommend,
     select_compatible_models,
 )
 from robotorchan.workflow.components import evaluate_component_inventory
@@ -201,3 +203,36 @@ def test_remaining_native_acquisition_conditions() -> None:
     result = evaluate_components(ProblemSpec(purpose="active_learning", q=2, preference=True))
     acquisitions = {item.name: item.status for item in result.acquisitions}
     assert acquisitions["PairwiseMCPosteriorVariance"] is SelectionStatus.CONDITIONAL
+
+
+def test_workflow_compatibility_and_explicit_recommendation() -> None:
+    spec = ProblemSpec(purpose="bayesian_optimization", q=2)
+    result = check_compatibility(
+        spec, model="SingleTaskGP", acquisition="qLogExpectedImprovement", optimizer="botorch"
+    )
+    assert result.status is SelectionStatus.CONDITIONAL
+    assert result.conditions
+    recommendations = recommend(
+        spec, model="SingleTaskGP", acquisition="qLogExpectedImprovement"
+    )
+    assert len(recommendations) == 1
+    assert recommendations[0].model_name == "SingleTaskGP"
+    assert not recommend(spec, model="SingleTaskGP", acquisition="ExpectedImprovement")
+
+
+def test_workflow_unknown_and_one_shot_rejection() -> None:
+    spec = ProblemSpec(purpose="bayesian_optimization")
+    result = check_compatibility(spec, model="unknown", acquisition="qLogExpectedImprovement")
+    assert result.status is SelectionStatus.UNKNOWN
+    result = check_compatibility(
+        spec, model="SingleTaskGP", acquisition="qKnowledgeGradient", optimizer="sobol"
+    )
+    assert result.status is SelectionStatus.INCOMPATIBLE
+
+
+def test_workflow_classification_class_name() -> None:
+    spec = ProblemSpec(purpose="active_learning", observation_kind="multiclass")
+    result = check_compatibility(
+        spec, model="MulticlassSingleTaskGPClassifier", acquisition="PredictiveEntropy"
+    )
+    assert result.status is SelectionStatus.CONDITIONAL
