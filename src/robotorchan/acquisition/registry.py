@@ -473,3 +473,26 @@ ACQUISITION_REGISTRY["ExpectedHypervolumeImprovement"] = AcquisitionRegistryEntr
     implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
     limitations=("requires method-specific constructor inputs and posterior checks",),
 )
+
+
+# Native hypervolume KG requires independent output-wise fantasy conditioning.
+for name in ("qHypervolumeKnowledgeGradient", "qMultiFidelityHypervolumeKnowledgeGradient"):
+    ACQUISITION_REGISTRY[name] = AcquisitionRegistryEntry(
+        acquisition_name=name,
+        capabilities=AcquisitionCapabilities(
+            purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+            posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
+            supports_multi_output=True,
+            supports_multi_objective=True,
+            monte_carlo=True,
+            requires_fantasize=True,
+            requires_multi_fidelity=name == "qMultiFidelityHypervolumeKnowledgeGradient",
+            one_shot=True,
+        ),
+        implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
+        limitations=(
+            "requires ModelList with masked fantasy support and a reference point",
+            "requires one-shot optimization with augmented candidates",
+            "decoupled workflow and optimizer compatibility are not yet verified",
+        ),
+    )

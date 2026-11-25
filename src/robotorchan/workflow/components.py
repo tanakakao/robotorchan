@@ -271,7 +271,10 @@ def _special_acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
 
 def _acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
     entry = ACQUISITION_REGISTRY.get(name)
-    if entry is None:
+    if entry is None or name in (
+        "qHypervolumeKnowledgeGradient",
+        "qMultiFidelityHypervolumeKnowledgeGradient",
+    ):
         return _special_acquisition(spec, name)
     caps = entry.capabilities
     reasons = []

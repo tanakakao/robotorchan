@@ -10,6 +10,11 @@ from botorch.acquisition.utils import project_to_target_fidelity
 from botorch.models import ModelListGP, SingleTaskGP, SingleTaskMultiFidelityGP
 
 from robotorchan.acquisition import create_acquisition, get_acquisition_class, list_acquisitions
+from robotorchan.acquisition.optimizer_compatibility import (
+    CandidateOptimizer,
+    check_acquisition_optimizer_compatibility,
+)
+from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.models.partial_observations import split_partial_observations
 
 
@@ -90,3 +95,15 @@ def test_mfhvkg_partial_observation_value_and_gradient():
     assert gradient.shape == augmented.shape
     assert torch.isfinite(gradient).all()
     assert acq.extract_candidates(augmented).shape == (1, 1, 2)
+
+
+@pytest.mark.parametrize(
+    "name", ["qHypervolumeKnowledgeGradient", "qMultiFidelityHypervolumeKnowledgeGradient"]
+)
+def test_decoupled_registry_one_shot_contract(name):
+    caps = ACQUISITION_REGISTRY[name].capabilities
+    assert caps.one_shot and caps.requires_fantasize and caps.supports_multi_objective
+    assert not caps.supports_ensemble
+    assert not caps.supports_constraints
+    assert caps.requires_multi_fidelity == (name == "qMultiFidelityHypervolumeKnowledgeGradient")
+    assert not check_acquisition_optimizer_compatibility(name, CandidateOptimizer.MIXED).compatible
