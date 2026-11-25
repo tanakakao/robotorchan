@@ -15,8 +15,8 @@ from torch.quasirandom import SobolEngine
 from robotorchan.acquisition.factory import get_acquisition_class
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.base import SearchStrategy
-from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.capabilities import OPTIMIZER_CAPABILITIES
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.optim.factory import create_optimizer
 from robotorchan.optim.search_factory import create_search_strategy, list_search_strategies

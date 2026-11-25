@@ -41,7 +41,7 @@ def test_model_based_mixed_q_batch_passes_context_to_dispatch() -> None:
     first = study.ask(context={"integer": 1.0})
     study.tell(first, 0.3)
     expected = torch.tensor([[0.4, 1.0, 0.0], [0.7, 1.0, 2.0]], dtype=torch.double)
-    with patch("robotorchan.study.generation.optimize_acqf") as optimize:
+    with patch("robotorchan.optim.factory.optimize_acqf") as optimize:
         optimize.return_value = (expected, torch.tensor(0.0))
         trials = study.ask_batch(2, context={"integer": 1.0})
     assert len(trials) == 2
@@ -78,7 +78,7 @@ def test_model_based_context_rejects_backend_context_violation() -> None:
     )
     first = study.ask(context={"context": 0.5})
     study.tell(first, 0.1)
-    with patch("robotorchan.study.generation.optimize_acqf") as optimize:
+    with patch("robotorchan.optim.factory.optimize_acqf") as optimize:
         optimize.return_value = (
             torch.tensor([[0.4, 0.6]], dtype=torch.double),
             torch.tensor(0.0),
