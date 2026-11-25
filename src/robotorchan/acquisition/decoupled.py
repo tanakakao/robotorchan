@@ -130,9 +130,8 @@ class qDecoupledExpectedPredictiveInformationGain(AcquisitionFunction):
         if not isinstance(model, ModelListGP) or len(model.models) != model.num_outputs:
             raise ValueError("requires one independent GP per output")
         m = model.num_outputs
-        if observation_noise.shape != (m,) or not (
-            torch.isfinite(observation_noise) & (observation_noise > 0)
-        ).all():
+        valid_noise = torch.isfinite(observation_noise) & (observation_noise > 0)
+        if observation_noise.shape != (m,) or not valid_noise.all():
             raise ValueError("requires positive finite observation noise per output")
         if output_weights is None:
             output_weights = observation_noise.new_ones(m)
