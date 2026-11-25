@@ -91,7 +91,7 @@ Notebook は標準 GP から Robust / Noise / Input uncertainty / Nonstationary�
 
 ## Notebook 一覧
 
-理論の基礎からモデル構築、獲得関数、最適化、応用へ進める順に01〜62を採番しています。CIの実行順・実行区分は `run_notebooks.py` で管理します。
+理論の基礎からモデル構築、獲得関数、最適化、応用へ進める順に01〜63を採番しています。CIの実行順・実行区分は `run_notebooks.py` で管理します。
 
 ### GPの基礎
 
@@ -308,3 +308,5 @@ Accuracy・NLL・Brier score・ordinal MAEをCSVへ記録します。
 ### 統一Factory
 
 [`62_unified_factories.ipynb`](notebooks/62_unified_factories.ipynb)：モデル・獲得関数・Optimizer・Search StrategyのFactory、回帰BO・Mixed制約・多目的・分類ALの候補提案。
+
+[`63_capability_recommendation.ipynb`](notebooks/63_capability_recommendation.ipynb)：問題要件・適合判定・推薦構成から候補提案まで。

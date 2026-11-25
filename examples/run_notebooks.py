@@ -59,6 +59,7 @@ DEFAULT_NOTEBOOKS = [
     "58_causal_bayesian_optimization.ipynb",
     "61_heterogeneous_classification_constraints.ipynb",
     "62_unified_factories.ipynb",
+    "63_capability_recommendation.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [
