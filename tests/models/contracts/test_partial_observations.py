@@ -54,7 +54,10 @@ def test_native_masked_fantasy():
     )
     assert fantasy.models[0].train_inputs[0].shape[-2] == 6
     assert fantasy.models[1].train_inputs[0].shape[-2] == 5
-    torch.testing.assert_close(
-        fantasy.models[1].posterior(candidate).mean,
-        model.models[1].posterior(candidate).mean,
-    )
+    actual = fantasy.models[1].posterior(candidate).mean
+    expected = model.models[1].posterior(candidate).mean
+    assert actual.shape == torch.Size([4, 1, 1])
+    torch.testing.assert_close(actual, expected.expand_as(actual))
+    actual_variance = fantasy.models[1].posterior(candidate).variance
+    expected_variance = model.models[1].posterior(candidate).variance
+    torch.testing.assert_close(actual_variance, expected_variance.expand_as(actual_variance))
