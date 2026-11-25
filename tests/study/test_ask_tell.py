@@ -39,3 +39,30 @@ def test_default_gp_acquisition_optimizer_loop() -> None:
         study.tell(trial, -((trial.params["x"] - 0.3) ** 2))
     assert len(study.trials) == 4
     assert all(trial.state is TrialState.COMPLETE for trial in study.trials)
+
+
+def test_named_model_and_acquisition_ask_tell() -> None:
+    study = create_study(
+        search_space={"x": (0.0, 1.0)},
+        model="SingleTaskGP",
+        acquisition="qLogExpectedImprovement",
+        optimizer="sobol",
+        optimizer_kwargs={"raw_samples": 16, "seed": 17},
+        n_initial_trials=3,
+        seed=17,
+    )
+    for _ in range(3):
+        trial = study.ask()
+        study.tell(trial, -(trial.params["x"] - 0.6) ** 2)
+    trials = study.ask_batch(2)
+    assert len(trials) == 2
+    for trial in trials:
+        assert 0.0 <= trial.params["x"] <= 1.0
+        study.tell(trial, -(trial.params["x"] - 0.6) ** 2)
+    assert len(study.trials) == 5
+
+
+def test_invalid_factory_names_fail_before_initial_trials() -> None:
+    for kwargs in ({"model": "unknown"}, {"acquisition": "unknown"}):
+        with pytest.raises(KeyError):
+            create_study(search_space={"x": (0.0, 1.0)}, **kwargs)

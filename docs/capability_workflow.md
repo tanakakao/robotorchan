@@ -180,3 +180,26 @@ explicit fit calls, acquisition construction and candidate generation for
 single-objective, multi-objective, outcome-constrained, mixed candidate-constrained,
 binary, multiclass and ordinal problems. These are smoke tests, not performance
 benchmarks or exhaustive validation of every conditional combination.
+
+
+### Study integration
+
+The existing scalar-objective Study accepts exact model and acquisition factory
+names as well as the original callable constructors. Names are resolved at
+Study construction, before initial trials; training remains in the existing
+candidate generation loop. This does not extend Study to vector observations
+or classification active learning.
+
+```python
+from robotorchan.study import create_study
+
+study = create_study(
+    search_space={"x": (0.0, 1.0)},
+    model="SingleTaskGP",
+    acquisition="qLogExpectedImprovement",
+    optimizer="sobol",
+)
+for _ in range(5):
+    trial = study.ask()
+    study.tell(trial, -(trial.params["x"] - 0.6) ** 2)
+```

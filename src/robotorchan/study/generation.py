@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from importlib import import_module
 from inspect import signature
 from typing import Any
 
@@ -11,6 +12,7 @@ from botorch.acquisition.logei import qLogExpectedImprovement
 from torch import Tensor
 from torch.quasirandom import SobolEngine
 
+from robotorchan.acquisition.factory import get_acquisition_class
 from robotorchan.models.standard.single_task import SingleTaskGP
 from robotorchan.optim.base import SearchStrategy
 from robotorchan.optim.constraints.contracts import CandidateConstraints
@@ -29,9 +31,9 @@ class CandidateGenerator:
         space: SearchSpace,
         *,
         direction: str = "maximize",
-        model: Callable[..., Any] = SingleTaskGP,
+        model: str | Callable[..., Any] = SingleTaskGP,
         model_kwargs: Mapping[str, Any] | None = None,
-        acquisition: Callable[..., Any] = qLogExpectedImprovement,
+        acquisition: str | Callable[..., Any] = qLogExpectedImprovement,
         acquisition_kwargs: Mapping[str, Any] | None = None,
         optimizer: str | SearchStrategy = "botorch",
         optimizer_kwargs: Mapping[str, Any] | None = None,
@@ -44,8 +46,12 @@ class CandidateGenerator:
             raise ValueError("direction must be 'maximize' or 'minimize'.")
         if n_initial_trials < 1:
             raise ValueError("n_initial_trials must be at least 1.")
+        if isinstance(model, str):
+            model = import_module("robotorchan.models").get_model_class(model)
+        if isinstance(acquisition, str):
+            acquisition = get_acquisition_class(acquisition)
         if not callable(model) or not callable(acquisition):
-            raise TypeError("model and acquisition must be callable.")
+            raise TypeError("model and acquisition must be registered names or callable.")
         if not isinstance(optimizer, (str, SearchStrategy)):
             raise TypeError("optimizer must be a backend name or SearchStrategy.")
         self.space = space
