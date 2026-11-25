@@ -190,9 +190,7 @@ def _special_acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
                 reasons.append("purpose does not match")
             if spec.q != 2:
                 reasons.append("requires a pair of candidates")
-            return _result(
-                name, reasons, ("requires samples of pairwise utility differences",)
-            )
+            return _result(name, reasons, ("requires samples of pairwise utility differences",))
         if spec.purpose.value != "bayesian_optimization":
             reasons.append("purpose does not match")
         if spec.objective_type is ObjectiveType.MULTI:
@@ -207,7 +205,8 @@ def _special_acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
         ):
             reasons.append("supports q=1 only")
         if spec.constrained and name not in (
-            "LogProbabilityOfFeasibility", "qLogProbabilityOfFeasibility"
+            "LogProbabilityOfFeasibility",
+            "qLogProbabilityOfFeasibility",
         ):
             reasons.append("requires an unconstrained acquisition")
         if name == "qMultiFidelityLowerBoundMaxValueEntropy" and not spec.multi_fidelity:
@@ -220,7 +219,7 @@ def _special_acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
             "qLogProbabilityOfFeasibility": "requires constraint callables and posterior samples",
             "qLowerConfidenceBound": "requires scalarized posterior samples and beta",
             "qLowerBoundMaxValueEntropy": "requires candidate set and entropy posterior checks",
-            "qMultiFidelityLowerBoundMaxValueEntropy": "requires fidelity projection and cost checks",
+            "qMultiFidelityLowerBoundMaxValueEntropy": "requires fidelity projection and cost",
         }
         return _result(name, reasons, (conditions[name],))
     if name == "ClassificationProbabilityAcquisition":
