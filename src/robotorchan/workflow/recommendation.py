@@ -14,6 +14,7 @@ from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
 from robotorchan.models.capabilities import InputType
 from robotorchan.models.classification.registry import CLASSIFICATION_MODEL_REGISTRY
 from robotorchan.models.registry import MODEL_REGISTRY
+from robotorchan.optim.capabilities import OPTIMIZER_CAPABILITIES
 from robotorchan.workflow.components import SelectionStatus, evaluate_component_inventory
 from robotorchan.workflow.problem import ObjectiveType, OutputType, ProblemPurpose, ProblemSpec
 from robotorchan.workflow.selector import select_compatible_models
@@ -80,6 +81,19 @@ def recommend_compatible_workflows(spec: ProblemSpec) -> tuple[Recommendation, .
     return tuple(recommendations)
 
 
+def _model_registry_id(model: str) -> str:
+    if model in MODEL_REGISTRY or model in CLASSIFICATION_MODEL_REGISTRY:
+        return model
+    return next(
+        (
+            key
+            for key, entry in CLASSIFICATION_MODEL_REGISTRY.items()
+            if entry.model_class.__name__ == model
+        ),
+        model,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class WorkflowCompatibility:
     """Static decision for a named workflow, not a runtime validation."""
@@ -123,16 +137,7 @@ def check_compatibility(
                 conditions.extend(messages)
             else:
                 conditions.extend(messages)
-    model_id = model
-    if model not in MODEL_REGISTRY and model not in CLASSIFICATION_MODEL_REGISTRY:
-        model_id = next(
-            (
-                key
-                for key, entry in CLASSIFICATION_MODEL_REGISTRY.items()
-                if entry.model_class.__name__ == model
-            ),
-            model,
-        )
+    model_id = _model_registry_id(model)
     registered_model = model_id in MODEL_REGISTRY or model_id in CLASSIFICATION_MODEL_REGISTRY
     entry = ACQUISITION_REGISTRY.get(acquisition)
     if registered_model and entry is not None:
@@ -141,7 +146,23 @@ def check_compatibility(
     else:
         conditions.append("model/acquisition posterior contract requires explicit validation")
     if optimizer is not None and search_strategy is not None:
-        conditions.append("strategy must explicitly accept and use the specified optimizer")
+        if search_strategy == "TuRBOStrategy":
+            if optimizer not in OPTIMIZER_CAPABILITIES:
+                reasons.append("TuRBO requires a scalar dispatcher optimizer name")
+            elif spec.input_type is InputType.MIXED:
+                reasons.append("TuRBO mixed path owns its optimizer selection")
+            else:
+                conditions.append("pass optimizer to the TuRBO constructor")
+        elif (
+            search_strategy == "OriginalSpaceStrategy"
+            and optimizer in ("botorch", "optimize_acqf_botorch")
+        ) or (
+            search_strategy == "MixedSpaceStrategy"
+            and optimizer in ("botorch", "optimize_acqf_mixed_botorch")
+        ):
+            conditions.append("strategy owns the matching BoTorch optimization path")
+        else:
+            reasons.append("strategy does not expose the specified optimizer selection")
     if optimizer in ("optimize_vector_nsga2", "optimize_vector_nsga2_mixed"):
         reasons.append("vector optimizer does not consume a scalar acquisition")
     if entry is not None:
@@ -183,7 +204,7 @@ def check_compatibility(
 class WorkflowRecommendation:
     model_name: str
     acquisition_name: str
-    optimizer_name: str
+    optimizer_name: str | None
     search_strategy_name: str | None
     compatibility: WorkflowCompatibility
     rationale: tuple[str, ...]
@@ -194,21 +215,19 @@ def recommend(
     *,
     model: str | None = None,
     acquisition: str | None = None,
-    optimizer: str = "botorch",
+    optimizer: str | None = None,
     search_strategy: str | None = None,
 ) -> tuple[WorkflowRecommendation, ...]:
     """Enumerate unranked registered pairs, preserving explicit component choices."""
-    candidates = recommend_compatible_workflows(spec)
-    if model is not None and acquisition is not None:
-        pairs = ((model, acquisition),)
-    else:
-        pairs = tuple(
-            (item.model_name, item.acquisition_name)
-            for item in candidates
-            if item.acquisition_name is not None
-            and (model is None or item.model_name == model)
-            and (acquisition is None or item.acquisition_name == acquisition)
-        )
+    if optimizer is None and search_strategy is None:
+        optimizer = "botorch"
+    model_names = (model,) if model is not None else select_compatible_models(spec)
+    acquisition_names = (acquisition,) if acquisition is not None else tuple(ACQUISITION_REGISTRY)
+    pairs = (
+        (model_name, acquisition_name)
+        for model_name in model_names
+        for acquisition_name in acquisition_names
+    )
     results = []
     for model_name, acquisition_name in pairs:
         decision = check_compatibility(

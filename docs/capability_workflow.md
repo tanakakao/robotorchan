@@ -148,3 +148,11 @@ unranked candidates with the compatibility result. Explicit choices are not
 silently replaced. The default optimizer is BoTorch, not a performance ranking.
 An empty result means no candidate passed these checks. Use the compatibility
 function to diagnose an explicitly rejected combination.
+
+
+Explicit model class names and special acquisition names are preserved even
+when only one component is specified. Automatic enumeration uses registered
+models and acquisitions. When a strategy is specified without an optimizer,
+the strategy owns optimization; no dispatcher default is injected. Explicit
+optimizer choices are accepted only for matching BoTorch strategy paths or
+the continuous TuRBO dispatcher interface.

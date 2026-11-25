@@ -234,3 +234,26 @@ def test_workflow_classification_class_name() -> None:
         spec, model="MulticlassSingleTaskGPClassifier", acquisition="PredictiveEntropy"
     )
     assert result.status is SelectionStatus.CONDITIONAL
+
+
+def test_recommendation_preserves_class_name_and_special_acquisition() -> None:
+    spec = ProblemSpec(purpose="active_learning", observation_kind="multiclass")
+    results = recommend(spec, model="MulticlassSingleTaskGPClassifier")
+    assert results
+    assert all(item.model_name == "MulticlassSingleTaskGPClassifier" for item in results)
+    spec = ProblemSpec(purpose="bayesian_optimization")
+    results = recommend(spec, acquisition="LogProbabilityOfImprovement")
+    assert results
+    assert all(item.acquisition_name == "LogProbabilityOfImprovement" for item in results)
+
+
+def test_strategy_owns_optimizer_selection() -> None:
+    spec = ProblemSpec(purpose="bayesian_optimization")
+    kwargs = dict(model="SingleTaskGP", acquisition="qLogExpectedImprovement")
+    assert not recommend(spec, **kwargs, optimizer="ga", search_strategy="OriginalSpaceStrategy")
+    results = recommend(spec, **kwargs, search_strategy="SobolSearchStrategy")
+    assert results
+    assert results[0].optimizer_name is None
+    results = recommend(spec, **kwargs, optimizer="ga", search_strategy="TuRBOStrategy")
+    assert results
+    assert results[0].optimizer_name == "ga"
