@@ -344,10 +344,7 @@ def create_study(
             and recommendation.search_strategy_name is not None
         ):
             raise ValueError("Study requires one optimizer or search strategy, not both.")
-        if (
-            recommendation.optimizer_name is None
-            and recommendation.search_strategy_name is None
-        ):
+        if recommendation.optimizer_name is None and recommendation.search_strategy_name is None:
             raise ValueError("recommendation must specify an optimizer or search strategy.")
         spec = ProblemSpec(
             purpose="bayesian_optimization",
