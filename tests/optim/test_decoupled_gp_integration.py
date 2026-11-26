@@ -241,8 +241,10 @@ def test_learned_log_cost_decoupled_epig():
 
 
 @pytest.mark.parametrize("kind", ["kg", "epig", "hvkg"])
-@pytest.mark.parametrize("q", [1, 2])
-def test_mixed_gp_decoupled_candidate(kind, q):
+@pytest.mark.parametrize("q, strategy", [(1, "joint"), (2, "joint"), (2, "sequential")])
+def test_mixed_gp_decoupled_candidate(kind, q, strategy):
+    if kind == "hvkg" and strategy == "sequential":
+        pytest.skip("one-shot sequential is not supported")
     torch.manual_seed(42)
     x = torch.linspace(0, 1, 6, dtype=torch.double)
     X = torch.stack((x, torch.arange(6, dtype=x.dtype) % 2), dim=-1)
@@ -290,6 +292,7 @@ def test_mixed_gp_decoupled_candidate(kind, q):
         masks,
         variable_space=space,
         q=q,
+        strategy=strategy,
         num_restarts=2,
         raw_samples=8,
     )

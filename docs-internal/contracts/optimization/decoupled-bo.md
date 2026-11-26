@@ -141,3 +141,13 @@ The existing row-specific one-shot enumeration also handles ordinary joint
 acquisitions, using q rows without fantasy augmentation. Each row has its own
 discrete assignment. One-shot acquisitions retain auxiliary rows and extract
 only actual candidates. The discrete cap applies per evaluation-mask assignment.
+
+### Greedy sequential batches
+
+`strategy="sequential"` fixes previously selected candidate rows and masks,
+then optimizes the full prefix acquisition over the next row. Fixed costs
+rank total prefix utility against total prefix cost; the budget reserves
+minimum possible cost for remaining rows without mutating the ledger.
+This is a greedy approximation, not joint optimality or pending fantasies.
+One-shot, custom starts, candidate constraints and input-dependent costs
+are not supported in this mode yet.

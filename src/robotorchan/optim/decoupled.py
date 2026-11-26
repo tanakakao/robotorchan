@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from itertools import product
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction, OneShotAcquisitionFunction
@@ -62,6 +62,7 @@ def optimize_acqf_decoupled(
     max_mask_assignments: int = 256,
     variable_space: MixedVariableSpace | None = None,
     max_discrete_assignments: int = 256,
+    strategy: Literal["joint", "sequential"] = "joint",
 ) -> tuple[Tensor, Tensor, Tensor]:
     """Return candidate, selected evaluation mask, and acquisition value.
 
@@ -122,7 +123,9 @@ def optimize_acqf_decoupled(
     if budget is not None and mask_costs is None and cost_function is None:
         raise ValueError("budget filtering requires explicit costs")
     k = evaluation_masks.shape[0]
-    if k**q > max_mask_assignments:
+    if strategy not in ("joint", "sequential"):
+        raise ValueError("unknown decoupled strategy")
+    if (k**q if strategy == "joint" else k) > max_mask_assignments:
         raise ValueError("mask assignments exceed max_mask_assignments")
     discrete = {}
     if variable_space is not None:
@@ -140,7 +143,8 @@ def optimize_acqf_decoupled(
     if discrete:
         if cost_function is not None and budget is not None:
             raise NotImplementedError("mixed predicted hard budgets are not supported yet")
-        if (q > 1 or isinstance(acq_function, OneShotAcquisitionFunction)) and (
+        joint_mixed = q > 1 and strategy == "joint"
+        if (joint_mixed or isinstance(acq_function, OneShotAcquisitionFunction)) and (
             constraints is not None
             or fixed_features
             or batch_initial_conditions is not None
@@ -154,6 +158,31 @@ def optimize_acqf_decoupled(
             count *= len(values)
         if count > max_discrete_assignments:
             raise ValueError("discrete assignments exceed max_discrete_assignments")
+    if strategy == "sequential" and q > 1:
+        if (
+            isinstance(acq_function, OneShotAcquisitionFunction)
+            or constraints is not None
+            or batch_initial_conditions is not None
+            or cost_function is not None
+            or getattr(acq_function, "cost_aware_utility", None) is not None
+        ):
+            raise NotImplementedError(
+                "sequential requires ordinary acquisition without constraints, starts or costs"
+            )
+        return _optimize_sequential(
+            acq_function,
+            bounds,
+            evaluation_masks,
+            q,
+            mask_costs=mask_costs,
+            budget=budget,
+            num_restarts=num_restarts,
+            raw_samples=raw_samples,
+            options=options,
+            fixed_features=fixed_features,
+            variable_space=variable_space,
+            max_discrete_assignments=max_discrete_assignments,
+        )
     original_mask = acq_function.X_evaluation_mask
     best = None
     try:
@@ -250,3 +279,62 @@ def optimize_acqf_decoupled(
     if best is None:
         raise ValueError("no affordable evaluation mask")
     return best
+
+
+class _PrefixAcquisition(AcquisitionFunction):
+    """Evaluate the full joint acquisition with a fixed selected prefix."""
+
+    def __init__(self, acquisition: AcquisitionFunction, prefix: Tensor) -> None:
+        super().__init__(model=acquisition.model)
+        self.acquisition = acquisition
+        self.register_buffer("prefix", prefix)
+
+    def forward(self, X: Tensor) -> Tensor:
+        prefix = self.prefix.expand(*X.shape[:-2], *self.prefix.shape)
+        return self.acquisition(torch.cat((prefix, X), dim=-2))
+
+
+def _optimize_sequential(
+    acq_function: AcquisitionFunction,
+    bounds: Tensor,
+    evaluation_masks: Tensor,
+    q: int,
+    *,
+    mask_costs: Tensor | None,
+    budget: CostBudget | None,
+    **optimizer_kwargs: Any,
+) -> tuple[Tensor, Tensor, Tensor]:
+    original = acq_function.X_evaluation_mask
+    prefix = bounds.new_empty((0, bounds.shape[-1]))
+    selected = evaluation_masks[:0]
+    spent = 0.0
+    try:
+        for step in range(q):
+            best = None
+            for index, mask in enumerate(evaluation_masks):
+                cost = 0.0 if mask_costs is None else mask_costs[index].item()
+                total = spent + cost
+                if budget is not None:
+                    minimum = mask_costs.min().item()
+                    if not budget.can_afford(total + (q - step - 1) * minimum):
+                        continue
+                trial_mask = torch.cat((selected, mask.unsqueeze(0)), dim=0)
+                acq_function.X_evaluation_mask = trial_mask
+                objective = _PrefixAcquisition(acq_function, prefix)
+                # Reuse q=1 dispatch with a local mask; the prefix wrapper
+                # evaluates the original acquisition with the full mask.
+                objective.X_evaluation_mask = mask.unsqueeze(0)
+                candidate, _, value = optimize_acqf_decoupled(
+                    objective, bounds, mask.unsqueeze(0), **optimizer_kwargs
+                )
+                if mask_costs is not None:
+                    value = torch.where(value >= 0, value / total, value * total)
+                if best is None or value.item() > best[2].item():
+                    best = (candidate, trial_mask, value, total)
+            if best is None:
+                raise ValueError("no affordable sequential evaluation mask")
+            candidate, selected, value, spent = best
+            prefix = torch.cat((prefix, candidate), dim=0)
+        return prefix, selected, value
+    finally:
+        acq_function.X_evaluation_mask = original
