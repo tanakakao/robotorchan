@@ -50,3 +50,67 @@ One-shot auxiliary rows are handled by the underlying BoTorch optimizer.
 Mixed domains, joint q>1, candidate constraints and pending evaluations are
 separate integration gates. Raw acquisition values are compared without cost
 normalization.
+
+
+## Phase 5: fixed evaluation costs
+
+The optimizer accepts either additive positive output_costs (m,) or explicit
+positive mask_costs (k,), including nonadditive joint measurement costs.
+For fixed positive costs, maximizing gain per cost for each mask leaves the
+within-mask maximizer unchanged. Negative gains are multiplied by cost
+rather than divided, following the sign-aware inverse-cost convention.
+The third return value is the adjusted ranking score when costs are supplied.
+CostBudget filters unaffordable masks using remaining funds including
+reservations; candidate proposal does not mutate the ledger. No affordable
+mask raises ValueError. Native cost-aware utilities must not be combined with
+external cost scaling. Input-dependent and learned costs require a separate
+within-mask optimization integration.
+
+
+### Input-dependent predicted costs
+
+For ordinary acquisitions, cost_function(X, mask) returns one strictly positive
+finite differentiable cost per t-batch, matching the acquisition value shape.
+The cost-adjusted objective is optimized directly, rather than adjusting only
+the final candidate. Fidelity columns can be used as ordinary inputs to the
+cost function. A learned model's posterior mean can be used as a deterministic
+predicted cost if positive and differentiable; this is not expected inverse cost
+under a random cost posterior. One-shot acquisitions require their native
+cost-aware utility. Input-dependent budgets require feasible initial conditions.
+
+
+### Native one-shot cost utility
+
+HVKG and MFHVKG use the native InverseCostWeightedUtility with a positive
+multi-output cost model and a current hypervolume baseline. The native
+acquisition handles evaluation masks and applies cost to actual candidates,
+not fantasy decision rows. The decoupled optimizer compares the resulting
+native scores without additional scaling. The integration test uses a
+finite target-set hypervolume baseline as an approximation, not an exact
+continuous Pareto optimum.
+
+
+### Predicted-cost budget constraint
+
+For ordinary acquisitions with input-dependent costs, supply explicit
+batch_initial_conditions. Each mask filters those starts by remaining budget
+and delegates a differentiable nonlinear inequality to the existing BoTorch
+backend. Masks without feasible supplied starts are skipped; this does not
+prove global infeasibility. Returned candidates are checked against the
+ledger again, without spending or reserving funds. This constrains predicted
+cost, not uncertain realized cost. Native one-shot budgets remain unsupported.
+
+If a local optimizer returns a point outside the strict predicted budget,
+the best affordable supplied restart is retained instead of accepting an
+overspend or discarding the entire mask.
+
+
+### Phase 5 scope boundary
+
+The continuous q=1 path supports fixed additive and nonadditive costs,
+differentiable predicted costs, and predicted-cost budgets for ordinary
+acquisitions with supplied feasible starts. Native HVKG and MFHVKG support
+their own cost utility; hard input-dependent budgets for native one-shot
+acquisitions are outside this phase's supported contract. Mixed and batch
+candidate optimization are subsequent extensions. The learned-cost EPIG
+integration fits a log-cost GP before candidate generation.

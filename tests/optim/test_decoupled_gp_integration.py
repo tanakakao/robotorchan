@@ -3,11 +3,16 @@
 import pytest
 import torch
 from botorch.acquisition.acquisition import OneShotAcquisitionFunction
+from botorch.acquisition.cost_aware import InverseCostWeightedUtility
 from botorch.acquisition.utils import project_to_target_fidelity
+from botorch.fit import fit_gpytorch_mll
 from botorch.models import ModelListGP, SingleTaskGP, SingleTaskMultiFidelityGP
+from botorch.models.deterministic import GenericDeterministicModel
 from botorch.optim import optimize_acqf
 from botorch.sampling.list_sampler import ListSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
+from botorch.utils.multi_objective.hypervolume import Hypervolume
+from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.acquisition import create_acquisition
 from robotorchan.optim import optimize_acqf_decoupled
@@ -120,3 +125,112 @@ def test_decoupled_gp_candidate_proposal(kind):
     assert torch.equal(full_mask, masks[-1:])
     torch.testing.assert_close(full_candidate, direct_candidate)
     torch.testing.assert_close(full_value, direct_value)
+
+
+@pytest.mark.parametrize("multifidelity", [False, True])
+def test_native_cost_aware_decoupled_one_shot(multifidelity):
+    x = torch.linspace(0, 1, 6, dtype=torch.double)
+    X = x.unsqueeze(-1)
+    if multifidelity:
+        X = torch.stack((x, torch.arange(6, dtype=x.dtype) % 2), dim=-1)
+        model = ModelListGP(
+            SingleTaskMultiFidelityGP(X, x.sin().unsqueeze(-1), data_fidelities=[1]),
+            SingleTaskMultiFidelityGP(X, x.cos().unsqueeze(-1), data_fidelities=[1]),
+        )
+    else:
+        model = ModelListGP(SingleTaskGP(X, X.sin()), SingleTaskGP(X, X.cos()))
+    model.eval()
+    ref = X.new_tensor([-1.0, -1.0])
+    extra = {}
+    name = "qHypervolumeKnowledgeGradient"
+    target = X
+    if multifidelity:
+        name = "qMultiFidelityHypervolumeKnowledgeGradient"
+
+        def project(points):
+            return project_to_target_fidelity(points, d=2, target_fidelities={1: 1.0})
+
+        extra = dict(target_fidelities={1: 1.0}, project=project)
+        target = project(X)
+    with torch.no_grad():
+        current_value = X.new_tensor(Hypervolume(ref).compute(model.posterior(target).mean))
+
+    def costs(points):
+        # Native utility must receive actual candidates, not augmented one-shot rows.
+        assert points.shape[-2] == 1
+        coordinate = points[..., -1:]
+        return torch.cat((1 + coordinate, 3 + 2 * coordinate), dim=-1)
+
+    cost_model = GenericDeterministicModel(costs, num_outputs=2)
+    utility = InverseCostWeightedUtility(cost_model=cost_model, use_mean=True)
+    masks = torch.tensor([[True, False], [False, True], [True, True]])
+    acq = create_acquisition(
+        name,
+        model=model,
+        ref_point=ref,
+        num_fantasies=2,
+        num_pareto=2,
+        X_evaluation_mask=masks[:1],
+        current_value=current_value,
+        cost_aware_utility=utility,
+        **extra,
+    )
+    bounds = torch.stack((X.new_zeros(X.shape[-1]), X.new_ones(X.shape[-1])))
+    initial = torch.rand(
+        2,
+        acq.get_augmented_q_batch_size(1),
+        X.shape[-1],
+        generator=torch.Generator().manual_seed(42),
+        dtype=X.dtype,
+    )
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        num_restarts=2,
+        raw_samples=8,
+        options={"maxiter": 5},
+        batch_initial_conditions=initial,
+    )
+    assert candidate.shape == (1, X.shape[-1])
+    assert (masks == mask).all(dim=-1).any()
+    assert torch.isfinite(score).all()
+    assert torch.equal(acq.X_evaluation_mask, masks[:1])
+    with pytest.raises(ValueError, match="already has a cost-aware utility"):
+        optimize_acqf_decoupled(acq, bounds, masks, output_costs=X.new_tensor([1.0, 2.0]))
+
+
+def test_learned_log_cost_decoupled_epig():
+    X = torch.linspace(0, 1, 6, dtype=torch.double).unsqueeze(-1)
+    model = ModelListGP(SingleTaskGP(X, X.sin()), SingleTaskGP(X, X.cos()))
+    cost_model = SingleTaskGP(X, torch.cat((1 + X, 2 + 3 * X), dim=-1).log())
+    model.eval()
+    fit_gpytorch_mll(ExactMarginalLogLikelihood(cost_model.likelihood, cost_model))
+    cost_model.eval()
+    masks = torch.tensor([[True, False], [False, True], [True, True]])
+    acq = create_acquisition(
+        "qDecoupledExpectedPredictiveInformationGain",
+        model=model,
+        target_X=X,
+        observation_noise=X.new_tensor([0.01, 0.02]),
+        X_evaluation_mask=masks[:1],
+    )
+
+    def cost(points, mask):
+        posterior = cost_model.posterior(points)
+        expected = (posterior.mean + 0.5 * posterior.variance).exp()
+        return (expected * mask.to(points)).sum(dim=(-2, -1))
+
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        X.new_tensor([[0.0], [1.0]]),
+        masks,
+        cost_function=cost,
+        num_restarts=2,
+        raw_samples=8,
+        options={"maxiter": 5, "seed": 42},
+    )
+    assert candidate.shape == (1, 1)
+    assert (masks == mask).all(dim=-1).any()
+    assert torch.isfinite(score)
+    assert cost(candidate.unsqueeze(0), mask).item() > 0
