@@ -518,3 +518,54 @@ def test_fidelity_dependent_noise_and_shared_design():
     torch.testing.assert_close(candidate[0, 0], candidate[1, 0], atol=1e-6, rtol=0)
     assert torch.equal(selected, masks)
     assert torch.isfinite(score)
+
+
+@pytest.mark.parametrize("kind", ["epig", "hvkg"])
+@pytest.mark.parametrize("discrete", [False, True])
+def test_shared_design_fidelity_linear_constraints(kind, discrete):
+    torch.manual_seed(42)
+    x = torch.linspace(0, 1, 6, dtype=torch.double)
+    X = torch.stack((x, torch.arange(6, dtype=x.dtype) % 2), dim=-1)
+    model = ModelListGP(
+        SingleTaskMultiFidelityGP(X, x.sin().unsqueeze(-1), data_fidelities=[1]),
+        SingleTaskMultiFidelityGP(X, x.cos().unsqueeze(-1), data_fidelities=[1]),
+    )
+    model.eval()
+    masks = torch.tensor([[True, False], [False, True]])
+    common = dict(model=model, X_evaluation_mask=masks, target_fidelities={1: 1.0})
+    if kind == "epig":
+        acq = create_acquisition(
+            "qDecoupledExpectedPredictiveInformationGain",
+            **common,
+            target_X=X,
+            observation_noise=X.new_tensor([0.01, 0.02]),
+        )
+    else:
+        acq = create_acquisition(
+            "qMultiFidelityHypervolumeKnowledgeGradient",
+            **common,
+            ref_point=X.new_tensor([-2.0, -2.0]),
+            num_fantasies=1,
+            num_pareto=1,
+        )
+    bounds = X.new_tensor([[0.0, 0.0], [1.0, 1.0]])
+    space = MixedVariableSpace(bounds, categorical_values={1: (0.0, 1.0)}) if discrete else None
+    constraints = CandidateConstraints(
+        equality_constraints=((torch.tensor([[0, 0], [1, 0]]), X.new_tensor([1.0, -1.0]), 0.0),),
+    )
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        q=2,
+        variable_space=space,
+        constraints=constraints,
+        mask_constraint=lambda mask: bool(torch.equal(mask, masks)),
+        num_restarts=2,
+        raw_samples=16,
+    )
+    torch.testing.assert_close(candidate[0, 0], candidate[1, 0], atol=1e-5, rtol=0)
+    assert torch.equal(mask, masks)
+    assert torch.isfinite(score)
+    if discrete:
+        assert ((candidate[:, 1] == 0) | (candidate[:, 1] == 1)).all()

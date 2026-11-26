@@ -7,6 +7,8 @@ from botorch.acquisition.acquisition import AcquisitionFunction, OneShotAcquisit
 from botorch.optim import optimize_acqf
 from torch import Tensor
 
+from robotorchan.optim.constraints.contracts import CandidateConstraints, LinearConstraint
+
 
 def optimize_mixed_one_shot_acqf(
     acq_function: AcquisitionFunction,
@@ -17,6 +19,7 @@ def optimize_mixed_one_shot_acqf(
     num_restarts: int = 10,
     raw_samples: int = 256,
     max_assignments: int = 256,
+    constraints: CandidateConstraints | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Optimize row-specific discrete assignments, including one-shot auxiliary rows."""
     if q < 1:
@@ -51,6 +54,25 @@ def optimize_mixed_one_shot_acqf(
             f"limit is {max_assignments}"
         )
     row_assignments = list(product(*choices))
+    if constraints is not None and constraints.has_nonlinear_constraints:
+        raise NotImplementedError("flattened optimization supports linear constraints only")
+
+    def flatten(entries: tuple[LinearConstraint, ...]) -> list[LinearConstraint]:
+        result = []
+        for indices, coefficients, rhs in entries:
+            if indices.ndim == 1:
+                for row in range(q):
+                    result.append((indices + row * feature_count, coefficients, rhs))
+            else:
+                if (indices[:, 0] < 0).any() or (indices[:, 0] >= q).any():
+                    raise ValueError("constraint row must refer to an actual candidate")
+                result.append(
+                    (indices[:, 0] * feature_count + indices[:, 1], coefficients, rhs)
+                )
+        return result
+
+    inequalities = flatten(constraints.inequality_constraints) if constraints else []
+    equalities = flatten(constraints.equality_constraints) if constraints else []
 
     best_augmented: Tensor | None = None
     best_value: Tensor | None = None
@@ -74,6 +96,8 @@ def optimize_mixed_one_shot_acqf(
             num_restarts=num_restarts,
             raw_samples=raw_samples,
             fixed_features=fixed_features,
+            inequality_constraints=inequalities or None,
+            equality_constraints=equalities or None,
         )
         augmented = flat_candidate.reshape(augmented_q, bounds.shape[-1])
         if best_value is None or value.max() > best_value.max():

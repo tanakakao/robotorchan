@@ -215,3 +215,9 @@ For shared designs with output-specific fidelity, use separate masked rows and
 BoTorch inter-point linear equalities on design coordinates. This is supported
 for ordinary continuous joint acquisitions; mixed and one-shot constraint
 limitations from Phase 6 still apply.
+
+Linear actual-row constraints are mapped into flattened joint coordinates for
+mixed joint and one-shot optimization. Auxiliary rows are excluded from the
+constraint mapping. Nonlinear constraints and custom constrained one-shot
+initialization remain unsupported. Shared-design equality on continuous design
+coordinates can be combined with discrete fidelity enumeration.
