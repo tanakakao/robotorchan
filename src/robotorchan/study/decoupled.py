@@ -6,7 +6,7 @@ from typing import Any
 import torch
 from torch import Tensor
 
-from robotorchan.acquisition import create_acquisition
+from robotorchan.acquisition.factory import create_acquisition
 from robotorchan.optim.decoupled import optimize_acqf_decoupled
 from robotorchan.study.trial import TrialState
 from robotorchan.workflow.cost_budget import CostBudget
@@ -75,7 +75,7 @@ def create_decoupled_proposer(
             if trial.state is TrialState.RUNNING:
                 for name in trial.evaluation_mask:
                     if name not in trial.observations:
-                        ledger.reserve(f"{trial.number}:{name}", estimate(trial.params, name))
+                        ledger.reserve(f"{trial.number}:{name}", costs[name])
         return ledger
 
     def check_retry_budget(history, remaining):
