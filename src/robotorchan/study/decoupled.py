@@ -67,9 +67,7 @@ def create_decoupled_proposer(
         for trial in history:
             for name in set(trial.observations) | set(trial.actual_costs):
                 ledger.record(
-                    trial.actual_costs[name]
-                    if name in trial.actual_costs
-                    else costs[name]
+                    trial.actual_costs[name] if name in trial.actual_costs else costs[name]
                 )
         for trial in history:
             if trial.state is TrialState.RUNNING:
