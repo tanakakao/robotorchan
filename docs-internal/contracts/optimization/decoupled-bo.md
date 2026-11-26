@@ -234,3 +234,14 @@ remain independent. If the native solver raises CandidateGenerationError and
 validated starts exist, the best finite feasible start is retained. This fallback
 is not a guarantee of optimizer convergence. Trace observation expansion is a
 separate future extension requiring an explicit observation and cost contract.
+
+## Phase 8: heterogeneous active learning
+
+The qDecoupledActiveLearning acquisition composes existing child acquisitions
+on masked rows of a HeterogeneousModel with one semantic output per entry.
+Explicit weights define the common utility scale; marginal means and joint
+information retain their original meanings. Classification logits are not
+separate evaluation outputs. This is not a correlated-output information gain
+or a classification fantasy KG. Pending evaluations remain unsupported.
+The constructor is discoverable by the factory; automatic recommendation is
+not enabled until component-specific capability checks are available.

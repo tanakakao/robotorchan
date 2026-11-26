@@ -11,6 +11,7 @@ from botorch.utils.transforms import t_batch_mode_transform
 from torch import Tensor
 
 from robotorchan.acquisition.active_learning.epig import qJointExpectedPredictiveInformationGain
+from robotorchan.models.heterogeneous import HeterogeneousModel
 
 
 def _target_points(X: Tensor, target_fidelities: dict[int, float] | None) -> Tensor:
@@ -200,4 +201,73 @@ class qDecoupledExpectedPredictiveInformationGain(AcquisitionFunction):
         for j, component in enumerate(self.components):
             if mask[:, j].any():
                 result = result + self.output_weights[j] * component(X[..., mask[:, j], :])
+        return result
+
+
+class qDecoupledActiveLearning(AcquisitionFunction):
+    """Explicit weighted sum of per-output acquisitions on selected candidate rows.
+
+    Weights must express a common utility scale. Components retain their own
+    batch semantics (joint information or marginal mean, for example).
+    This is not a joint information gain for dependent outputs.
+    """
+
+    def __init__(
+        self,
+        model: HeterogeneousModel,
+        components: Sequence[AcquisitionFunction],
+        X_evaluation_mask: Tensor,
+        output_weights: Tensor,
+    ) -> None:
+        super().__init__(model=model)
+        if not isinstance(model, HeterogeneousModel):
+            raise TypeError("requires HeterogeneousModel")
+        if any(count != 1 for count in model.entry_num_outputs):
+            raise ValueError("requires one semantic output per model entry")
+        if len(components) != model.num_outputs:
+            raise ValueError("requires one acquisition per semantic output")
+        for child, component in zip(model.entries, components, strict=True):
+            if component.model is not child:
+                raise ValueError("component must use its corresponding child model")
+            if getattr(component, "X_pending", None) is not None:
+                raise ValueError("component pending evaluations are not supported")
+        if (
+            output_weights.shape != (model.num_outputs,)
+            or not torch.isfinite(output_weights).all()
+            or (output_weights < 0).any()
+            or not (output_weights > 0).any()
+        ):
+            raise ValueError("requires finite nonnegative weights with positive sum")
+        self.components = torch.nn.ModuleList(components)
+        self.register_buffer("output_weights", output_weights)
+        self.register_buffer("X_evaluation_mask", X_evaluation_mask)
+        self._validate_mask(X_evaluation_mask)
+
+    def _validate_mask(self, mask: Tensor) -> None:
+        if (
+            mask.ndim != 2
+            or mask.shape[-1] != self.model.num_outputs
+            or mask.dtype != torch.bool
+            or not mask.any(dim=-1).all()
+        ):
+            raise ValueError("evaluation mask must select outputs for each candidate")
+
+    def set_X_pending(self, X_pending: Tensor | None = None) -> None:
+        if X_pending is not None:
+            raise NotImplementedError("pending evaluations are not supported")
+        super().set_X_pending(None)
+
+    @t_batch_mode_transform()
+    def forward(self, X: Tensor) -> Tensor:
+        mask = self.X_evaluation_mask
+        self._validate_mask(mask)
+        if mask.shape[0] != X.shape[-2] or mask.device != X.device:
+            raise ValueError("evaluation mask must match candidate q and device")
+        result = X.sum(dim=(-2, -1)) * 0
+        for j, component in enumerate(self.components):
+            if mask[:, j].any():
+                value = component(X[..., mask[:, j], :])
+                if value.shape != result.shape:
+                    raise ValueError("component must return one scalar per t-batch")
+                result = result + self.output_weights[j] * value
         return result
