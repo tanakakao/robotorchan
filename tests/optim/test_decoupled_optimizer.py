@@ -155,7 +155,35 @@ def test_input_cost_budget_constrains_candidate():
         batch_initial_conditions=bounds.new_tensor([[[0.0]], [[0.05]], [[0.8]]]),
         num_restarts=3,
     )
-    assert candidate.item() <= 0.1
+    assert budget.can_afford(cost(candidate.unsqueeze(0), mask).item())
     assert torch.equal(mask, masks)
     assert torch.isfinite(score)
     assert budget.spent == 0
+
+
+def test_budget_boundary_falls_back_to_feasible_restart(monkeypatch):
+    acq = MaskedQuadratic()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[False, True]])
+    budget = CostBudget(total=1.1)
+
+    def cost(X, mask):
+        return 1 + X[..., 0, 0]
+
+    def optimize(**kwargs):
+        return bounds.new_tensor([[0.10000001]]), bounds.new_tensor(1.0)
+
+    monkeypatch.setattr("robotorchan.optim.decoupled.optimize_acqf", optimize)
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        cost_function=cost,
+        budget=budget,
+        batch_initial_conditions=bounds.new_tensor([[[0.0]], [[0.05]]]),
+        num_restarts=2,
+    )
+    assert budget.can_afford(cost(candidate.unsqueeze(0), mask).item())
+    torch.testing.assert_close(candidate, bounds.new_tensor([[0.05]]))
+    acq.X_evaluation_mask = mask
+    torch.testing.assert_close(score, acq(candidate) / cost(candidate, mask))

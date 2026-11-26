@@ -156,7 +156,16 @@ def optimize_acqf_decoupled(
                 with torch.no_grad():
                     estimate = cost_function(candidate.unsqueeze(0), selected).item()
                 if not budget.can_afford(estimate):
-                    continue
+                    # SLSQP can return a point just outside the exact budget.
+                    # Retain the best strictly affordable supplied restart.
+                    with torch.no_grad():
+                        initial_values = objective(initial)
+                        index = initial_values.reshape(-1).argmax()
+                        candidate = initial[index]
+                        value = initial_values.reshape(-1)[index]
+                        estimate = cost_function(candidate.unsqueeze(0), selected).item()
+                    if not budget.can_afford(estimate) or not torch.isfinite(value):
+                        continue
             if cost is not None:
                 value = torch.where(value >= 0, value / cost, value * cost)
                 if not torch.isfinite(value).all():

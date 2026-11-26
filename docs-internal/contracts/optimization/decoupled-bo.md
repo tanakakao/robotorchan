@@ -99,3 +99,7 @@ backend. Masks without feasible supplied starts are skipped; this does not
 prove global infeasibility. Returned candidates are checked against the
 ledger again, without spending or reserving funds. This constrains predicted
 cost, not uncertain realized cost. Native one-shot budgets remain unsupported.
+
+If a local optimizer returns a point outside the strict predicted budget,
+the best affordable supplied restart is retained instead of accepting an
+overspend or discarding the entire mask.
