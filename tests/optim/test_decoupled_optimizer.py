@@ -266,3 +266,49 @@ def test_mixed_decoupled_candidate():
     torch.testing.assert_close(candidate, bounds.new_tensor([[1.0]]))
     assert torch.equal(mask, masks[1:])
     torch.testing.assert_close(score, bounds.new_tensor(0.9375))
+
+
+class BatchMaskedQuadratic(MaskedQuadratic):
+    def forward(self, X):
+        second = self.X_evaluation_mask[:, 1].to(X)
+        center = 0.25 + 0.5 * second
+        return (2 + second - (X[..., :, 0] - center).square()).sum(dim=-1)
+
+
+@pytest.mark.parametrize("strategy", ["joint", "sequential", "heuristic"])
+@pytest.mark.parametrize("optimizer", ["random", "sobol", "botorch"])
+def test_batch_strategies_with_backend_and_budget(strategy, optimizer):
+    acq = BatchMaskedQuadratic()
+    original = acq.X_evaluation_mask
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[True, False], [False, True]])
+    budget = CostBudget(total=3.0)
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        q=3,
+        strategy=strategy,
+        optimizer=optimizer,
+        output_costs=bounds.new_tensor([1.0, 2.0]),
+        budget=budget,
+        max_mask_assignments=8 if strategy == "joint" else 2,
+        num_restarts=2,
+        raw_samples=16,
+        seed=42,
+    )
+    assert candidate.shape == (3, 1)
+    assert torch.equal(mask, masks[:1].expand(3, -1))
+    assert torch.isfinite(score)
+    assert budget.remaining == 3.0
+    assert acq.X_evaluation_mask is original
+
+
+def test_heuristic_assignment_limit_and_seed():
+    from robotorchan.optim.decoupled import _heuristic_assignments
+
+    first = list(_heuristic_assignments(3, 5, 7, 42, torch.tensor([2.0, 1.0, 3.0])))
+    second = list(_heuristic_assignments(3, 5, 7, 42, torch.tensor([2.0, 1.0, 3.0])))
+    assert first == second
+    assert len(set(first)) == 7
+    assert first[0] == (1,) * 5

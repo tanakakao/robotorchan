@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from itertools import product
+from random import Random
 from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction, OneShotAcquisitionFunction
 from torch import Tensor
 
-from robotorchan.optim.dispatch import optimize_acqf
+from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 from robotorchan.optim.one_shot.mixed import optimize_mixed_one_shot_acqf
 
 if TYPE_CHECKING:
@@ -62,7 +63,10 @@ def optimize_acqf_decoupled(
     max_mask_assignments: int = 256,
     variable_space: MixedVariableSpace | None = None,
     max_discrete_assignments: int = 256,
-    strategy: Literal["joint", "sequential"] = "joint",
+    strategy: Literal["joint", "sequential", "heuristic"] = "joint",
+    optimizer: OptimizerName = "botorch",
+    optimizer_options: dict[str, Any] | None = None,
+    seed: int | None = None,
 ) -> tuple[Tensor, Tensor, Tensor]:
     """Return candidate, selected evaluation mask, and acquisition value.
 
@@ -75,8 +79,8 @@ def optimize_acqf_decoupled(
     Differentiable cost_function(X, mask) returns a positive cost per t-batch.
     Input-dependent budgets require explicit feasible initial conditions.
     """
-    if q < 1 or max_mask_assignments < 1:
-        raise ValueError("q and max_mask_assignments must be positive")
+    if q < 1 or max_mask_assignments < 1 or max_discrete_assignments < 1:
+        raise ValueError("q and assignment limits must be positive")
     if (
         cost_function is not None
         and budget is not None
@@ -123,10 +127,15 @@ def optimize_acqf_decoupled(
     if budget is not None and mask_costs is None and cost_function is None:
         raise ValueError("budget filtering requires explicit costs")
     k = evaluation_masks.shape[0]
-    if strategy not in ("joint", "sequential"):
+    if strategy not in ("joint", "sequential", "heuristic"):
         raise ValueError("unknown decoupled strategy")
-    if (k**q if strategy == "joint" else k) > max_mask_assignments:
+    assignment_count = k**q if strategy == "joint" else k
+    if strategy != "heuristic" and assignment_count > max_mask_assignments:
         raise ValueError("mask assignments exceed max_mask_assignments")
+    if isinstance(acq_function, OneShotAcquisitionFunction) and optimizer != "botorch":
+        raise NotImplementedError("one-shot acquisitions require the BoTorch backend")
+    if cost_function is not None and budget is not None and optimizer != "botorch":
+        raise NotImplementedError("predicted hard budgets require the BoTorch backend")
     discrete = {}
     if variable_space is not None:
         if not torch.equal(variable_space.bounds, bounds):
@@ -140,15 +149,16 @@ def optimize_acqf_decoupled(
         for dim, value in (fixed_features or {}).items():
             if dim in discrete:
                 discrete[dim] = (float(value),)
-    if discrete:
+    if discrete and optimizer == "botorch":
         if cost_function is not None and budget is not None:
             raise NotImplementedError("mixed predicted hard budgets are not supported yet")
-        joint_mixed = q > 1 and strategy == "joint"
+        joint_mixed = q > 1 and strategy != "sequential"
         if (joint_mixed or isinstance(acq_function, OneShotAcquisitionFunction)) and (
             constraints is not None
             or fixed_features
             or batch_initial_conditions is not None
             or options is not None
+            or optimizer_options is not None
         ):
             raise NotImplementedError(
                 "mixed joint or one-shot constraints and custom starts or options"
@@ -182,11 +192,17 @@ def optimize_acqf_decoupled(
             fixed_features=fixed_features,
             variable_space=variable_space,
             max_discrete_assignments=max_discrete_assignments,
+            optimizer=optimizer,
+            optimizer_options=optimizer_options,
+            seed=seed,
         )
     original_mask = acq_function.X_evaluation_mask
     best = None
     try:
-        for assignment in product(range(k), repeat=q):
+        assignments: Iterable[tuple[int, ...]] = product(range(k), repeat=q)
+        if strategy == "heuristic":
+            assignments = _heuristic_assignments(k, q, max_mask_assignments, seed, mask_costs)
+        for assignment in assignments:
             indices = list(assignment)
             cost = None if mask_costs is None else mask_costs[indices].sum()
             if budget is not None and cost is not None and not budget.can_afford(cost.item()):
@@ -199,6 +215,13 @@ def optimize_acqf_decoupled(
             initial = batch_initial_conditions
             restarts = num_restarts
             extra = {}
+            if optimizer_options is not None:
+                extra["optimizer_options"] = optimizer_options
+            if seed is not None and optimizer != "botorch":
+                extra["seed"] = seed
+            if optimizer != "botorch":
+                extra["optimizer"] = optimizer
+                extra["variable_space"] = variable_space
             if cost_function is not None and budget is not None:
                 remaining = budget.remaining
 
@@ -218,7 +241,11 @@ def optimize_acqf_decoupled(
                     continue
                 restarts = initial.shape[0]
                 extra["nonlinear_inequality_constraints"] = ((budget_constraint, True),)
-            if discrete and (q > 1 or isinstance(objective, OneShotAcquisitionFunction)):
+            if (
+                discrete
+                and optimizer == "botorch"
+                and (q > 1 or isinstance(objective, OneShotAcquisitionFunction))
+            ):
                 candidate, value = optimize_mixed_one_shot_acqf(
                     objective,
                     bounds,
@@ -229,7 +256,9 @@ def optimize_acqf_decoupled(
                     max_assignments=max_discrete_assignments,
                 )
             else:
-                if discrete:
+                if discrete and optimizer == "botorch":
+                    if optimizer_options is not None:
+                        raise ValueError("mixed BoTorch mask optimization owns fixed_features_list")
                     dims = tuple(discrete)
                     extra["variable_space"] = variable_space
                     extra["optimizer_options"] = {
@@ -338,3 +367,21 @@ def _optimize_sequential(
         return prefix, selected, value
     finally:
         acq_function.X_evaluation_mask = original
+
+
+def _heuristic_assignments(
+    k: int, q: int, limit: int, seed: int | None, costs: Tensor | None
+) -> Iterable[tuple[int, ...]]:
+    """Bounded joint search over distinct mask assignments."""
+    if k**q <= limit:
+        return product(range(k), repeat=q)
+    rng = Random(seed)
+    cheapest = 0 if costs is None else int(costs.argmin().item())
+    selected = {(cheapest,) * q: None}
+    for index in range(k):
+        if len(selected) == limit:
+            break
+        selected[(index,) * q] = None
+    while len(selected) < limit:
+        selected[tuple(rng.randrange(k) for _ in range(q))] = None
+    return iter(selected)

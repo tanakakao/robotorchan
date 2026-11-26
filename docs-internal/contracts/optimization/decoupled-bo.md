@@ -151,3 +151,13 @@ minimum possible cost for remaining rows without mutating the ledger.
 This is a greedy approximation, not joint optimality or pending fantasies.
 One-shot, custom starts, candidate constraints and input-dependent costs
 are not supported in this mode yet.
+
+### Bounded heuristic and named backends
+
+`strategy="heuristic"` evaluates at most `max_mask_assignments` distinct
+joint masks, including the cheapest homogeneous mask when costs are known,
+other homogeneous masks, then seeded random assignments. It is exhaustive
+when the full set fits the cap. It does not approximate the acquisition itself.
+Ordinary acquisitions delegate named optimizer selection and backend options
+to existing dispatch, including mixed-capable backends. One-shot and predicted
+hard budgets require BoTorch. Backend capability restrictions remain in force.
