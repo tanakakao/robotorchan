@@ -19,7 +19,8 @@ from robotorchan.optim import optimize_acqf_decoupled
 
 
 @pytest.mark.parametrize("kind", ["kg", "constrained", "epig", "hvkg", "mfhvkg"])
-def test_decoupled_gp_candidate_proposal(kind):
+@pytest.mark.parametrize("q", [1, 2])
+def test_decoupled_gp_candidate_proposal(kind, q):
     x = torch.linspace(0, 1, 6, dtype=torch.double)
     X = x.unsqueeze(-1)
     if kind == "mfhvkg":
@@ -81,7 +82,7 @@ def test_decoupled_gp_candidate_proposal(kind):
             **extra,
         )
     bounds = torch.stack((X.new_zeros(X.shape[-1]), X.new_ones(X.shape[-1])))
-    q_aug = acq.get_augmented_q_batch_size(1) if isinstance(acq, OneShotAcquisitionFunction) else 1
+    q_aug = acq.get_augmented_q_batch_size(q) if isinstance(acq, OneShotAcquisitionFunction) else q
     generator = torch.Generator().manual_seed(42)
     initial = torch.rand(2, q_aug, X.shape[-1], generator=generator, dtype=X.dtype)
     masks = torch.tensor([[True, False], [False, True], [True, True]])
@@ -90,15 +91,16 @@ def test_decoupled_gp_candidate_proposal(kind):
         acq,
         bounds,
         masks,
+        q=q,
         num_restarts=2,
         raw_samples=8,
         options=options,
         batch_initial_conditions=initial,
     )
-    assert candidate.shape == (1, X.shape[-1])
-    assert mask.shape == (1, 2)
+    assert candidate.shape == (q, X.shape[-1])
+    assert mask.shape == (q, 2)
     assert (candidate >= bounds[0]).all() and (candidate <= bounds[1]).all()
-    assert (masks == mask).all(dim=-1).any()
+    assert (masks.unsqueeze(0) == mask.unsqueeze(1)).all(dim=-1).any(dim=-1).all()
     assert torch.isfinite(value).all()
     assert torch.equal(acq.X_evaluation_mask, original)
 
@@ -107,22 +109,23 @@ def test_decoupled_gp_candidate_proposal(kind):
         acq,
         bounds,
         masks[-1:],
+        q=q,
         num_restarts=2,
         raw_samples=8,
         options=options,
         batch_initial_conditions=initial,
     )
-    acq.X_evaluation_mask = masks[-1:]
+    acq.X_evaluation_mask = masks[-1:].expand(q, -1).clone()
     direct_candidate, direct_value = optimize_acqf(
         acq,
         bounds,
-        q=1,
+        q=q,
         num_restarts=2,
         raw_samples=8,
         options=options,
         batch_initial_conditions=initial,
     )
-    assert torch.equal(full_mask, masks[-1:])
+    assert torch.equal(full_mask, masks[-1:].expand(q, -1))
     torch.testing.assert_close(full_candidate, direct_candidate)
     torch.testing.assert_close(full_value, direct_value)
 
