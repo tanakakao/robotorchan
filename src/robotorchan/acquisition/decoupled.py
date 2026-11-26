@@ -1,5 +1,7 @@
 """Finite-decision-set knowledge gradient for independently observed outputs."""
 
+from collections.abc import Callable, Sequence
+
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.utils import project_to_target_fidelity
@@ -141,6 +143,8 @@ class qDecoupledExpectedPredictiveInformationGain(AcquisitionFunction):
         output_weights: Tensor | None = None,
         *,
         target_fidelities: dict[int, float] | None = None,
+        candidate_noise_functions: Sequence[Callable[[Tensor], Tensor] | None] | None = None,
+        target_noise_functions: Sequence[Callable[[Tensor], Tensor] | None] | None = None,
     ) -> None:
         super().__init__(model=model)
         if not isinstance(model, ModelListGP) or len(model.models) != model.num_outputs:
@@ -161,9 +165,19 @@ class qDecoupledExpectedPredictiveInformationGain(AcquisitionFunction):
         self.register_buffer("output_weights", output_weights / output_weights.sum())
         self.register_buffer("X_evaluation_mask", X_evaluation_mask)
         target_X = _target_points(target_X, target_fidelities)
+        if candidate_noise_functions is None:
+            candidate_noise_functions = [None] * m
+        if target_noise_functions is None:
+            target_noise_functions = [None] * m
+        if len(candidate_noise_functions) != m or len(target_noise_functions) != m:
+            raise ValueError("noise functions require one entry per output")
         self.components = torch.nn.ModuleList(
             qJointExpectedPredictiveInformationGain(
-                child, target_X, observation_noise=observation_noise[j]
+                child,
+                target_X,
+                observation_noise=observation_noise[j],
+                candidate_noise_function=candidate_noise_functions[j],
+                target_noise_function=target_noise_functions[j],
             )
             for j, child in enumerate(model.models)
         )

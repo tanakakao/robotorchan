@@ -16,6 +16,7 @@ from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.acquisition import create_acquisition
 from robotorchan.optim import optimize_acqf_decoupled
+from robotorchan.optim.constraints.contracts import CandidateConstraints
 from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 
@@ -461,3 +462,63 @@ def test_fidelity_projection_equivalence_and_output_specific_batch(kind):
     assert (candidate[:, 1] == 1).all()
     torch.testing.assert_close(candidate, direct)
     torch.testing.assert_close(score, direct_score)
+
+
+def test_fidelity_dependent_noise_and_shared_design():
+    x = torch.linspace(0, 1, 6, dtype=torch.double)
+    X = torch.stack((x, torch.arange(6, dtype=x.dtype) % 2), dim=-1)
+    model = ModelListGP(
+        SingleTaskMultiFidelityGP(X, x.sin().unsqueeze(-1), data_fidelities=[1]),
+        SingleTaskMultiFidelityGP(X, x.cos().unsqueeze(-1), data_fidelities=[1]),
+    )
+    model.eval()
+    masks = torch.tensor([[True, False], [False, True]])
+
+    def noise(points):
+        return 0.01 + 0.1 * (1 - points[..., 1])
+
+    def constant(points):
+        return points.new_full(points.shape[:-1], 0.01)
+
+    common = dict(
+        model=model,
+        target_X=X,
+        target_fidelities={1: 1.0},
+        X_evaluation_mask=masks,
+        observation_noise=X.new_tensor([0.01, 0.01]),
+    )
+    baseline = create_acquisition("qDecoupledExpectedPredictiveInformationGain", **common)
+    acq = create_acquisition(
+        "qDecoupledExpectedPredictiveInformationGain",
+        **common,
+        candidate_noise_functions=[noise, noise],
+        target_noise_functions=[constant, constant],
+    )
+    high = X.new_tensor([[[0.4, 1.0], [0.4, 1.0]]])
+    low = X.new_tensor([[[0.4, 0.0], [0.4, 1.0]]]).requires_grad_()
+    torch.testing.assert_close(acq(high), baseline(high))
+    assert (acq(low) <= baseline(low) + 1e-10).all()
+    assert torch.isfinite(torch.autograd.grad(acq(low).sum(), low)[0]).all()
+
+    constraints = CandidateConstraints(
+        equality_constraints=(
+            (torch.tensor([[0, 0], [1, 0]]), X.new_tensor([1.0, -1.0]), 0.0),
+        ),
+    )
+    candidate, selected, score = optimize_acqf_decoupled(
+        acq,
+        X.new_tensor([[0.0, 0.0], [1.0, 1.0]]),
+        masks,
+        q=2,
+        constraints=constraints,
+        mask_constraint=lambda mask: bool(torch.equal(mask, masks)),
+        batch_initial_conditions=X.new_tensor(
+            [[[0.2, 0.0], [0.2, 1.0]], [[0.8, 0.0], [0.8, 1.0]]]
+        ),
+        num_restarts=2,
+        raw_samples=8,
+        options={"maxiter": 10},
+    )
+    torch.testing.assert_close(candidate[0, 0], candidate[1, 0], atol=1e-6, rtol=0)
+    assert torch.equal(selected, masks)
+    assert torch.isfinite(score)

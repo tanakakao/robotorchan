@@ -203,7 +203,15 @@ per-output fidelity vectors within a single row are not implemented.
 Target projection is equivalent to explicitly supplying projected terminal
 points. Fixed-fidelity all-output optimization is compared against direct
 BoTorch optimization of the same acquisition, not against a differently
-trained single-fidelity GP. EPIG assumes constant observation variance per
-output across fidelity levels. Fidelity-specific noise and same-row per-output
-fidelity vectors are outside this contract. Native MFHVKG trace observations
+trained single-fidelity GP. EPIG supports constant or point-dependent observation variance per output.
+Same-row per-output fidelity vectors are outside this contract. Native MFHVKG trace observations
 and pending workflow integration are not claimed.
+
+Joint EPIG accepts independent candidate_noise_function and target_noise_function
+callbacks returning pointwise variances with shape X.shape[:-1]. Decoupled EPIG
+accepts one callback per output (None retains the scalar variance). These are
+independent additive observation variances, not fidelity bias or correlated noise.
+For shared designs with output-specific fidelity, use separate masked rows and
+BoTorch inter-point linear equalities on design coordinates. This is supported
+for ordinary continuous joint acquisitions; mixed and one-shot constraint
+limitations from Phase 6 still apply.

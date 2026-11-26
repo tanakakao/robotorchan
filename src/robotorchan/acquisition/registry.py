@@ -524,7 +524,7 @@ ACQUISITION_REGISTRY["qDecoupledExpectedPredictiveInformationGain"] = _active_le
     limitations=(
         "requires independent ModelListGP outputs and positive observation noise",
         "requires output weights and an evaluation mask for candidate rows",
-        "optional target fidelity projection with constant per-output observation noise",
+        "optional target fidelity projection and point-dependent observation variance",
         "pending evaluations and correlated outputs are not supported",
     ),
 )

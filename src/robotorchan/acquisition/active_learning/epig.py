@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.models.model import Model
@@ -93,6 +95,22 @@ class qExpectedPredictiveInformationGain(ExpectedPredictiveInformationGain):
 class qJointExpectedPredictiveInformationGain(ExpectedPredictiveInformationGain):
     """Joint Gaussian information gain between a candidate batch and target points."""
 
+    def __init__(
+        self,
+        model: Model,
+        target_X: Tensor,
+        *,
+        observation_noise: float | Tensor = 0.0,
+        target_weights: Tensor | None = None,
+        candidate_noise_function: Callable[[Tensor], Tensor] | None = None,
+        target_noise_function: Callable[[Tensor], Tensor] | None = None,
+    ) -> None:
+        super().__init__(
+            model, target_X, observation_noise=observation_noise, target_weights=target_weights
+        )
+        self.candidate_noise_function = candidate_noise_function
+        self.target_noise_function = target_noise_function
+
     def forward(self, X: Tensor) -> Tensor:
         q = X.shape[-2]
         if q < 1:
@@ -115,10 +133,28 @@ class qJointExpectedPredictiveInformationGain(ExpectedPredictiveInformationGain)
         if noise.numel() != 1 or not torch.isfinite(noise).all() or (noise < 0).any():
             raise ValueError("Joint EPIG requires finite non-negative scalar observation noise.")
         candidate_cov = covariance[..., :q, :q]
-        identity = torch.eye(q, dtype=X.dtype, device=X.device)
-        candidate_cov = candidate_cov + noise * identity
+        candidate_noise = (
+            noise.expand(X.shape[:-1])
+            if self.candidate_noise_function is None
+            else self.candidate_noise_function(X)
+        )
+        target_noise = (
+            noise.expand(target_X.shape[:-1])
+            if self.target_noise_function is None
+            else self.target_noise_function(target_X)
+        )
+        for values, points in ((candidate_noise, X), (target_noise, target_X)):
+            if (
+                values.shape != points.shape[:-1]
+                or values.device != points.device
+                or values.dtype != points.dtype
+                or not torch.isfinite(values).all()
+                or (values < 0).any()
+            ):
+                raise ValueError("noise functions must return finite nonnegative point variances")
+        candidate_cov = candidate_cov + torch.diag_embed(candidate_noise).unsqueeze(-3)
         cross_cov = covariance[..., :q, q].unsqueeze(-1)
-        target_var = covariance[..., q, q] + noise
+        target_var = covariance[..., q, q] + target_noise
         factor = torch.linalg.cholesky(candidate_cov)
         explained = (
             (cross_cov.transpose(-2, -1) @ torch.cholesky_solve(cross_cov, factor))
