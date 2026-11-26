@@ -217,15 +217,11 @@ class Study:
         candidates = self._generator.propose_batch(completed, q=q, fixed_features=fixed)
         return tuple(self.start_trial(self._register_trial(params).number) for params in candidates)
 
-    def _ask_decoupled(
-        self, q: int, fixed: Mapping[int, float] | None
-    ) -> tuple[Trial, ...]:
+    def _ask_decoupled(self, q: int, fixed: Mapping[int, float] | None) -> tuple[Trial, ...]:
         if type(q) is not int or q < 1:
             raise ValueError("q must be a positive integer.")
         bounds = torch.tensor(list(self.search_space.bounds.values()), dtype=torch.double).T
-        points, mask, _ = self.decoupled_proposer(
-            self.trials, bounds, q=q, fixed_features=fixed
-        )
+        points, mask, _ = self.decoupled_proposer(self.trials, bounds, q=q, fixed_features=fixed)
         if points.shape != (q, bounds.shape[-1]) or not torch.isfinite(points).all():
             raise ValueError("Proposer must return finite [q, d] candidates.")
         if (
@@ -249,7 +245,8 @@ class Study:
                 self._register_trial(
                     dict(zip(names, row.tolist(), strict=True)),
                     evaluation_mask=tuple(
-                        name for name, selected in zip(self.output_names, flags, strict=True)
+                        name
+                        for name, selected in zip(self.output_names, flags, strict=True)
                         if selected
                     ),
                 ).number
@@ -374,9 +371,9 @@ class Study:
             variable_space=self._generator.variable_space,
         ):
             raise ValueError("Trial parameters violate CandidateConstraints.")
-        if bool(evaluation_mask) != bool(self.output_names) or not set(
-            evaluation_mask
-        ).issubset(self.output_names):
+        if bool(evaluation_mask) != bool(self.output_names) or not set(evaluation_mask).issubset(
+            self.output_names
+        ):
             raise ValueError("Evaluation mask must select configured outputs.")
         trial = Trial(number=self._next_number, params=params, evaluation_mask=evaluation_mask)
         self._trials[trial.number] = trial
@@ -499,8 +496,10 @@ def create_study(
             raise ValueError("initial_trials must have strictly increasing integer numbers.")
         if not isinstance(trial.state, TrialState):
             raise ValueError("initial_trials must have valid TrialState values.")
-        if not trial.evaluation_mask and trial.state is TrialState.COMPLETE and (
-            isinstance(trial.value, bool) or not isinstance(trial.value, (int, float))
+        if (
+            not trial.evaluation_mask
+            and trial.state is TrialState.COMPLETE
+            and (isinstance(trial.value, bool) or not isinstance(trial.value, (int, float)))
         ):
             raise ValueError("Completed trials require a numeric observation.")
         # Historical joint batches cannot be reconstructed from individual trials.
