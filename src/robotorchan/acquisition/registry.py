@@ -557,6 +557,7 @@ ACQUISITION_REGISTRY["qDecoupledParticleKnowledgeGradient"] = AcquisitionRegistr
         observation_types=frozenset({ObservationType.REGRESSION, ObservationType.CLASSIFICATION}),
         supports_multi_output=True,
         requires_heterogeneous_model=True,
+        requires_derivative_free=True,
         supports_constraints=True,
     ),
     implementation_strategy="robotorchan likelihood-weighted particle KG",

@@ -196,3 +196,18 @@ def test_decoupled_al_requires_explicit_heterogeneous_composition() -> None:
     result = check_model_acquisition_compatibility("SingleTaskGP", "qDecoupledActiveLearning")
     assert not result.compatible
     assert "requires explicit HeterogeneousModel and child acquisition validation" in result.reasons
+
+
+def test_particle_kg_optimizer_capability() -> None:
+    from robotorchan.acquisition.optimizer_compatibility import (
+        CandidateOptimizer,
+        check_acquisition_optimizer_compatibility,
+    )
+
+    name = "qDecoupledParticleKnowledgeGradient"
+    assert not check_acquisition_optimizer_compatibility(
+        name, CandidateOptimizer.CONTINUOUS
+    ).compatible
+    assert check_acquisition_optimizer_compatibility(
+        name, CandidateOptimizer.DERIVATIVE_FREE, q=2
+    ).compatible

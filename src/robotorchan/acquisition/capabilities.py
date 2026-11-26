@@ -45,6 +45,7 @@ class AcquisitionCapabilities:
     one_shot: bool = False
     requires_preference: bool = False
     requires_heterogeneous_model: bool = False
+    requires_derivative_free: bool = False
 
 
 @dataclass(frozen=True, slots=True)

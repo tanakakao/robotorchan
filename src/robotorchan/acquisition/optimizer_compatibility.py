@@ -10,6 +10,7 @@ class CandidateOptimizer(StrEnum):
     CONTINUOUS = "continuous"
     MIXED = "mixed"
     MIXED_ONE_SHOT = "mixed_one_shot"
+    DERIVATIVE_FREE = "derivative_free"
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,6 +31,11 @@ def check_acquisition_optimizer_compatibility(
     capabilities = ACQUISITION_REGISTRY[acquisition_name].capabilities
     reasons: list[str] = []
 
+    if (
+        capabilities.requires_derivative_free
+        and optimizer is not CandidateOptimizer.DERIVATIVE_FREE
+    ):
+        reasons.append("acquisition requires derivative-free optimization")
     if capabilities.max_q is not None and q > capabilities.max_q:
         reasons.append(f"{acquisition_name} supports q <= {capabilities.max_q}; received q={q}")
     if optimizer is CandidateOptimizer.MIXED and capabilities.one_shot:

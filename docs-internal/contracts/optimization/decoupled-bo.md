@@ -251,3 +251,8 @@ child posterior samples, explicit Gaussian observation variance and categorical
 label likelihood. It approximates posterior conditioning without refitting a
 classifier. It is not exact variational fantasy inference. Discrete simulated
 labels require derivative-free optimization; pending evaluations are deferred.
+
+The mixed-domain tests exercise binary, multiclass and ordinal children with
+both masked AL and particle KG, using legal categorical values and joint q=2.
+Particle KG requires a derivative-free backend; its finite-particle estimate
+is not guaranteed nonnegative. Constant terminal utility has zero VOI.
