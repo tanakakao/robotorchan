@@ -184,3 +184,18 @@ candidate constraints need actual-row mapping and remain unsupported.
 Mixed BoTorch joint enumeration does not accept custom constraints or starts;
 other mixed backends follow their existing capability contracts. Predicted hard
 budgets are continuous BoTorch only and cannot combine other candidate constraints.
+
+## Phase 7: common-fidelity decoupled optimization
+
+Reuse independent SingleTaskMultiFidelityGP children in ModelListGP. Candidate
+rows contain design and fidelity coordinates, and masks select outputs at that
+row's common fidelity. Native qMultiFidelityHypervolumeKnowledgeGradient uses
+its public project and cost-aware utility arguments. Finite-decision KG and
+weighted Gaussian EPIG accept optional target_fidelities and project only their
+terminal decision or prediction points using BoTorch's public projection.
+Candidate fidelity remains free. Continuous fidelity uses ordinary bounds;
+discrete fidelity uses existing MixedVariableSpace categorical values.
+Output-dependent costs use the existing mask-aware cost callback or native
+multi-output cost utility, never both. Different fidelities for different
+outputs at the same design can be represented by separate masked candidate rows;
+per-output fidelity vectors within a single row are not implemented.

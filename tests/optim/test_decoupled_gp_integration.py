@@ -302,3 +302,89 @@ def test_mixed_gp_decoupled_candidate(kind, q, strategy):
     assert (masks.unsqueeze(0) == mask.unsqueeze(1)).all(dim=-1).any(dim=-1).all()
     assert torch.isfinite(value).all()
     assert acq.X_evaluation_mask is original
+
+
+@pytest.mark.parametrize("kind", ["kg", "epig", "hvkg"])
+@pytest.mark.parametrize("discrete", [False, True])
+def test_target_fidelity_decoupled_proposal(kind, discrete):
+    torch.manual_seed(42)
+    x = torch.linspace(0, 1, 6, dtype=torch.double)
+    fidelity = torch.arange(6, dtype=x.dtype) % 2
+    X = torch.stack((x, fidelity), dim=-1)
+    model = ModelListGP(
+        SingleTaskMultiFidelityGP(X, (x.sin() + fidelity).unsqueeze(-1), data_fidelities=[1]),
+        SingleTaskMultiFidelityGP(X, (x.cos() + fidelity).unsqueeze(-1), data_fidelities=[1]),
+    )
+    model.eval()
+    with torch.no_grad():
+        model.posterior(X[:1])
+    masks = torch.tensor([[True, False], [False, True]])
+    target = {1: 1.0}
+    common = dict(model=model, X_evaluation_mask=masks[:1], target_fidelities=target)
+
+    def project(points):
+        return project_to_target_fidelity(points, d=2, target_fidelities=target)
+
+    def costs(points):
+        fidelity = points[..., 1:2]
+        return torch.cat((1 + fidelity, 2 + 3 * fidelity), dim=-1)
+
+    def cost(points, mask):
+        return (costs(points) * mask.to(points)).sum(dim=(-2, -1))
+
+    extra = {}
+    if kind == "kg":
+        acq = create_acquisition(
+            "qDecoupledKnowledgeGradient",
+            **common,
+            decision_X=X,
+            weights=X.new_tensor([1.0, 1.0]),
+            sampler=ListSampler(
+                SobolQMCNormalSampler(torch.Size([2]), seed=42),
+                SobolQMCNormalSampler(torch.Size([2]), seed=43),
+            ),
+        )
+        torch.testing.assert_close(acq.decision_X, project(X))
+        extra["cost_function"] = cost
+    elif kind == "epig":
+        acq = create_acquisition(
+            "qDecoupledExpectedPredictiveInformationGain",
+            **common,
+            target_X=X,
+            observation_noise=X.new_tensor([0.01, 0.02]),
+        )
+        extra["cost_function"] = cost
+    else:
+        ref = X.new_tensor([-2.0, -2.0])
+        with torch.no_grad():
+            current = X.new_tensor(Hypervolume(ref).compute(model.posterior(project(X)).mean))
+        acq = create_acquisition(
+            "qMultiFidelityHypervolumeKnowledgeGradient",
+            **common,
+            project=project,
+            ref_point=ref,
+            num_fantasies=1,
+            num_pareto=1,
+            current_value=current,
+            cost_aware_utility=InverseCostWeightedUtility(
+                cost_model=GenericDeterministicModel(costs, num_outputs=2), use_mean=True
+            ),
+        )
+    bounds = X.new_tensor([[0.0, 0.0], [1.0, 1.0]])
+    space = MixedVariableSpace(bounds, categorical_values={1: (0.0, 1.0)}) if discrete else None
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        variable_space=space,
+        num_restarts=2,
+        raw_samples=8,
+        **extra,
+    )
+    assert candidate.shape == (1, 2)
+    assert (candidate >= bounds[0]).all() and (candidate <= bounds[1]).all()
+    if discrete:
+        assert candidate[0, 1].item() in (0.0, 1.0)
+    assert (masks == mask).all(dim=-1).any()
+    assert torch.isfinite(score)
+    assert cost(candidate, mask) > 0
