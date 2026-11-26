@@ -114,3 +114,73 @@ their own cost utility; hard input-dependent budgets for native one-shot
 acquisitions are outside this phase's supported contract. Mixed and batch
 candidate optimization are subsequent extensions. The learned-cost EPIG
 integration fits a log-cost GP before candidate generation.
+
+
+## Phase 6: joint batch enumeration
+
+The continuous optimizer enumerates ordered assignments of allowed mask rows
+to q actual candidates, with an explicit max_mask_assignments cap (default
+256). Fixed per-mask costs are summed across candidates; cross-candidate
+discounts are not implied. Candidate constraints and fixed features are
+delegated to the existing dispatch. Predicted hard budgets combined with
+other constraints or q > 1 remain unsupported until feasible-start handling
+is extended. Mixed and sequential strategies require separate validation.
+
+
+### Mixed q=1
+
+MixedVariableSpace supplies integer and categorical choices. Ordinary masked
+acquisitions delegate to the existing mixed BoTorch dispatch; one-shot
+acquisitions delegate to the existing row-specific mixed one-shot optimizer.
+The discrete enumeration cap is separate from the mask cap. Mixed predicted hard budgets and custom joint or one-shot constraints,
+fixed features, starts and options are not yet supported.
+
+### Mixed joint batches
+
+The existing row-specific one-shot enumeration also handles ordinary joint
+acquisitions, using q rows without fantasy augmentation. Each row has its own
+discrete assignment. One-shot acquisitions retain auxiliary rows and extract
+only actual candidates. The discrete cap applies per evaluation-mask assignment.
+
+### Greedy sequential batches
+
+`strategy="sequential"` fixes previously selected candidate rows and masks,
+then optimizes the full prefix acquisition over the next row. Fixed costs
+rank total prefix utility against total prefix cost; the budget reserves
+minimum possible cost for remaining rows without mutating the ledger.
+This is a greedy approximation, not joint optimality or pending fantasies.
+One-shot, custom starts, candidate constraints and input-dependent costs
+are not supported in this mode yet.
+
+### Bounded heuristic and named backends
+
+`strategy="heuristic"` evaluates at most `max_mask_assignments` distinct
+joint masks, including the cheapest homogeneous mask when costs are known,
+other homogeneous masks, then seeded random assignments. It is exhaustive
+when the full set fits the cap. It does not approximate the acquisition itself.
+Ordinary acquisitions delegate named optimizer selection and backend options
+to existing dispatch, including mixed-capable backends. One-shot and predicted
+hard budgets require BoTorch. Backend capability restrictions remain in force.
+
+### Joint mask constraints and predicted batch budgets
+
+`mask_constraint(mask)` filters complete boolean `[q, m]` assignments before
+optimization in joint and heuristic modes. Sequential rejects arbitrary
+full-batch mask predicates because prefix feasibility cannot be inferred.
+Ordinary continuous BoTorch acquisitions support predicted hard batch budgets
+with feasible explicit starts and an inter-point nonlinear cost constraint.
+Other candidate constraints and fixed features cannot yet be combined with
+this predicted budget path. One-shot candidate constraints are rejected until
+actual-row mapping is available. Heuristic failure does not prove infeasibility.
+
+### Phase 6 capability boundary
+
+Factory selection remains conditional on masked acquisition semantics, backend,
+strategy, discrete assignment limits, and runtime constraints. Ordinary joint
+and heuristic acquisitions delegate candidate constraints to existing backends.
+Sequential supports fixed features and fixed costs, but not arbitrary joint
+predicates, one-shot acquisitions or input-dependent costs. Native one-shot
+candidate constraints need actual-row mapping and remain unsupported.
+Mixed BoTorch joint enumeration does not accept custom constraints or starts;
+other mixed backends follow their existing capability contracts. Predicted hard
+budgets are continuous BoTorch only and cannot combine other candidate constraints.

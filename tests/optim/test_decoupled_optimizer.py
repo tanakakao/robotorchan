@@ -7,6 +7,7 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 
 from robotorchan.optim import create_optimizer, optimize_acqf_decoupled
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.workflow.cost_budget import CostBudget
 
 
@@ -226,3 +227,208 @@ def test_input_cost_budget_skips_unaffordable_masks():
             num_restarts=2,
         )
     assert acq.X_evaluation_mask is original
+
+
+def test_joint_mask_assignments_and_batch_cost(monkeypatch):
+    acq = MaskedQuadratic()
+    original = acq.X_evaluation_mask
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[True, False], [False, True]])
+    seen = []
+
+    def optimize(**kwargs):
+        mask = kwargs["acq_function"].X_evaluation_mask
+        seen.append(mask.clone())
+        gain = 9.0 if torch.equal(mask, masks) else 1.0
+        return bounds.new_tensor([[0.2], [0.8]]), bounds.new_tensor(gain)
+
+    monkeypatch.setattr("robotorchan.optim.decoupled.optimize_acqf", optimize)
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq, bounds, masks, q=2, output_costs=bounds.new_tensor([1.0, 2.0])
+    )
+    assert len(seen) == 4
+    assert candidate.shape == (2, 1)
+    assert torch.equal(mask, masks)
+    torch.testing.assert_close(score, bounds.new_tensor(3.0))
+    assert acq.X_evaluation_mask is original
+    with pytest.raises(ValueError, match="max_mask_assignments"):
+        optimize_acqf_decoupled(acq, bounds, masks, q=2, max_mask_assignments=3)
+
+
+def test_mixed_decoupled_candidate():
+    acq = MaskedQuadratic()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[True, False], [False, True]])
+    space = MixedVariableSpace(bounds, categorical_values={0: (0.0, 1.0)})
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq, bounds, masks, variable_space=space, num_restarts=2, raw_samples=8
+    )
+    torch.testing.assert_close(candidate, bounds.new_tensor([[1.0]]))
+    assert torch.equal(mask, masks[1:])
+    torch.testing.assert_close(score, bounds.new_tensor(0.9375))
+
+
+class BatchMaskedQuadratic(MaskedQuadratic):
+    def forward(self, X):
+        second = self.X_evaluation_mask[:, 1].to(X)
+        center = 0.25 + 0.5 * second
+        return (2 + second - (X[..., :, 0] - center).square()).sum(dim=-1)
+
+
+@pytest.mark.parametrize("strategy", ["joint", "sequential", "heuristic"])
+@pytest.mark.parametrize("optimizer", ["random", "sobol", "botorch"])
+def test_batch_strategies_with_backend_and_budget(strategy, optimizer):
+    acq = BatchMaskedQuadratic()
+    original = acq.X_evaluation_mask
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[True, False], [False, True]])
+    budget = CostBudget(total=3.0)
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        q=3,
+        strategy=strategy,
+        optimizer=optimizer,
+        output_costs=bounds.new_tensor([1.0, 2.0]),
+        budget=budget,
+        max_mask_assignments=8 if strategy == "joint" else 2,
+        num_restarts=2,
+        raw_samples=16,
+        seed=42,
+    )
+    assert candidate.shape == (3, 1)
+    assert torch.equal(mask, masks[:1].expand(3, -1))
+    assert torch.isfinite(score)
+    assert budget.remaining == 3.0
+    assert acq.X_evaluation_mask is original
+
+
+def test_heuristic_assignment_limit_and_seed():
+    from robotorchan.optim.decoupled import _heuristic_assignments
+
+    first = list(_heuristic_assignments(3, 5, 7, 42, torch.tensor([2.0, 1.0, 3.0])))
+    second = list(_heuristic_assignments(3, 5, 7, 42, torch.tensor([2.0, 1.0, 3.0])))
+    assert first == second
+    assert len(set(first)) == 7
+    assert first[0] == (1,) * 5
+
+
+@pytest.mark.parametrize("strategy", ["joint", "heuristic"])
+def test_joint_mask_constraint(strategy):
+    acq = BatchMaskedQuadratic()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[True, False], [False, True]])
+    _, selected, _ = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        q=2,
+        strategy=strategy,
+        optimizer="sobol",
+        mask_constraint=lambda mask: bool(mask.any(dim=0).all()),
+        raw_samples=16,
+    )
+    assert selected.any(dim=0).all()
+
+
+def test_joint_input_cost_budget():
+    acq = BatchMaskedQuadratic()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[False, True]])
+    budget = CostBudget(total=2.5)
+
+    def cost(X, mask):
+        return 2 + X[..., :, 0].sum(dim=-1)
+
+    initial = bounds.new_tensor([[[0.1], [0.1]], [[0.2], [0.2]]])
+    candidate, selected, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        q=2,
+        cost_function=cost,
+        budget=budget,
+        batch_initial_conditions=initial,
+        num_restarts=2,
+    )
+    assert candidate.shape == (2, 1)
+    assert budget.can_afford(cost(candidate, selected).item())
+    assert torch.isfinite(score)
+    assert budget.remaining == 2.5
+
+
+@pytest.mark.parametrize("optimizer", ["torch_adam", "torch_adamw", "torch_sgd"])
+def test_named_gradient_backend(optimizer):
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    candidate, mask, score = optimize_acqf_decoupled(
+        BatchMaskedQuadratic(),
+        bounds,
+        torch.tensor([[True, False], [False, True]]),
+        q=2,
+        optimizer=optimizer,
+        num_restarts=2,
+        raw_samples=8,
+    )
+    assert candidate.shape == (2, 1)
+    assert mask.shape == (2, 2)
+    assert torch.isfinite(score)
+
+
+@pytest.mark.parametrize(
+    "optimizer, backend_options",
+    [
+        ("de", {"options": {"maxiter": 2, "popsize": 4, "polish": False}}),
+        ("ga", {"population_size": 12, "generations": 2}),
+        ("cmaes", {"population_size": 8, "max_generations": 2}),
+        ("pso", {"swarm_size": 12, "iterations": 2}),
+        (
+            "hybrid",
+            {
+                "global_optimizer": "de",
+                "global_options": {"options": {"maxiter": 2, "popsize": 4, "polish": False}},
+            },
+        ),
+    ],
+)
+def test_evolutionary_backend_dispatch(optimizer, backend_options):
+    if optimizer == "cmaes":
+        pytest.importorskip("cmaes")
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    acq = BatchMaskedQuadratic()
+    original = acq.X_evaluation_mask
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        torch.tensor([[True, False], [False, True]]),
+        q=2,
+        optimizer=optimizer,
+        optimizer_options=backend_options,
+        seed=42,
+    )
+    assert candidate.shape == (2, 1)
+    assert ((candidate >= bounds[0]) & (candidate <= bounds[1])).all()
+    assert mask.shape == (2, 2)
+    assert torch.isfinite(score)
+    assert acq.X_evaluation_mask is original
+
+
+def test_joint_interpoint_linear_constraint():
+    from robotorchan.optim.constraints.contracts import CandidateConstraints
+
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (torch.tensor([[0, 0], [1, 0]]), bounds.new_tensor([-1.0, -1.0]), -0.8),
+        ),
+    )
+    candidate, _, _ = optimize_acqf_decoupled(
+        BatchMaskedQuadratic(),
+        bounds,
+        torch.tensor([[False, True]]),
+        q=2,
+        constraints=constraints,
+        num_restarts=2,
+        raw_samples=16,
+    )
+    assert candidate.sum().item() <= 0.80001

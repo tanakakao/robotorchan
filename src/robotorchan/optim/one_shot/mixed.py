@@ -3,13 +3,13 @@
 from collections.abc import Sequence
 from itertools import product
 
-from botorch.acquisition.acquisition import OneShotAcquisitionFunction
+from botorch.acquisition.acquisition import AcquisitionFunction, OneShotAcquisitionFunction
 from botorch.optim import optimize_acqf
 from torch import Tensor
 
 
 def optimize_mixed_one_shot_acqf(
-    acq_function: OneShotAcquisitionFunction,
+    acq_function: AcquisitionFunction,
     bounds: Tensor,
     *,
     categorical_features: dict[int, Sequence[float]],
@@ -18,10 +18,11 @@ def optimize_mixed_one_shot_acqf(
     raw_samples: int = 256,
     max_assignments: int = 256,
 ) -> tuple[Tensor, Tensor]:
-    """Optimize a q=1 one-shot acquisition with row-specific categorical assignments."""
-    if q != 1:
-        raise NotImplementedError("mixed one-shot optimization currently supports q=1 only")
-    augmented_q = acq_function.get_augmented_q_batch_size(q)
+    """Optimize row-specific discrete assignments, including one-shot auxiliary rows."""
+    if q < 1:
+        raise ValueError("q must be positive")
+    one_shot = isinstance(acq_function, OneShotAcquisitionFunction)
+    augmented_q = acq_function.get_augmented_q_batch_size(q) if one_shot else q
     dimensions = sorted(categorical_features)
     feature_count = bounds.shape[-1]
     for dimension in dimensions:
@@ -81,5 +82,9 @@ def optimize_mixed_one_shot_acqf(
 
     if best_augmented is None or best_value is None:
         raise RuntimeError("mixed one-shot optimization produced no candidate")
-    candidate = acq_function.extract_candidates(best_augmented.unsqueeze(0)).squeeze(0)
+    candidate = (
+        acq_function.extract_candidates(best_augmented.unsqueeze(0)).squeeze(0)
+        if one_shot
+        else best_augmented
+    )
     return candidate, best_value
