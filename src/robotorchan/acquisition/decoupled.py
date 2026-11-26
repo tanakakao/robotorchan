@@ -7,6 +7,7 @@ from botorch.acquisition.acquisition import AcquisitionFunction
 from botorch.acquisition.utils import project_to_target_fidelity
 from botorch.models import ModelListGP
 from botorch.sampling.list_sampler import ListSampler
+from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.transforms import t_batch_mode_transform
 from torch import Tensor
 
@@ -271,3 +272,131 @@ class qDecoupledActiveLearning(AcquisitionFunction):
                     raise ValueError("component must return one scalar per t-batch")
                 result = result + self.output_weights[j] * value
         return result
+
+
+class qDecoupledParticleKnowledgeGradient(AcquisitionFunction):
+    """Finite-set approximate KG using likelihood-weighted posterior particles.
+
+    Each child supplies joint latent regression or class-probability samples.
+    The utility receives decision-set samples in semantic output order.
+    Gaussian observations use explicit noise variances; categorical observations
+    use the sampled class probabilities. Use derivative-free optimization:
+    sampled categorical labels are discrete, not pathwise differentiable.
+    """
+
+    requires_derivative_free = True
+
+    def __init__(
+        self,
+        model: HeterogeneousModel,
+        decision_X: Tensor,
+        utility: Callable[[Sequence[Tensor]], Tensor],
+        X_evaluation_mask: Tensor,
+        observation_noise: Sequence[float | None],
+        *,
+        num_particles: int = 128,
+        num_fantasies: int = 16,
+        seed: int = 0,
+        abstain_utility: float | None = None,
+    ) -> None:
+        super().__init__(model=model)
+        if not isinstance(model, HeterogeneousModel):
+            raise TypeError("requires HeterogeneousModel")
+        if any(count != 1 for count in model.entry_num_outputs):
+            raise ValueError("requires one semantic output per entry")
+        if decision_X.ndim != 2 or not len(decision_X) or not torch.isfinite(decision_X).all():
+            raise ValueError("decision_X must be a finite nonempty matrix")
+        if len(observation_noise) != model.num_outputs or min(num_particles, num_fantasies) < 2:
+            raise ValueError("requires per-output noise and at least two particles and fantasies")
+        for child, noise in zip(model.entries, observation_noise, strict=True):
+            if callable(getattr(child, "probability_posterior", None)):
+                if noise is not None:
+                    raise ValueError("categorical observations require noise=None")
+            elif noise is None or not torch.isfinite(decision_X.new_tensor(noise)) or noise <= 0:
+                raise ValueError("regression requires positive finite observation variance")
+        if abstain_utility is not None and not torch.isfinite(decision_X.new_tensor(abstain_utility)):
+            raise ValueError("abstain utility must be finite")
+        self.utility = utility
+        self.observation_noise = tuple(observation_noise)
+        self.num_particles = num_particles
+        self.num_fantasies = num_fantasies
+        self.seed = seed
+        self.abstain_utility = abstain_utility
+        self.register_buffer("decision_X", decision_X)
+        self.register_buffer("X_evaluation_mask", X_evaluation_mask)
+        self.samplers = torch.nn.ModuleList(
+            SobolQMCNormalSampler(
+                sample_shape=torch.Size([num_particles + num_fantasies]), seed=seed + j
+            )
+            for j in range(model.num_outputs)
+        )
+
+    def set_X_pending(self, X_pending: Tensor | None = None) -> None:
+        if X_pending is not None:
+            raise NotImplementedError("pending evaluations are not supported")
+        super().set_X_pending(None)
+
+    def _best(self, values: Tensor) -> Tensor:
+        best = values.amax(dim=-1)
+        if self.abstain_utility is not None:
+            best = best.clamp_min(self.abstain_utility)
+        return best
+
+    @t_batch_mode_transform()
+    def forward(self, X: Tensor) -> Tensor:
+        mask = self.X_evaluation_mask
+        q = X.shape[-2]
+        if (
+            mask.shape != (q, self.model.num_outputs)
+            or mask.dtype != torch.bool
+            or mask.device != X.device
+            or not mask.any(dim=-1).all()
+        ):
+            raise ValueError("evaluation mask must select outputs for each candidate")
+        decision = self.decision_X.expand(*X.shape[:-2], *self.decision_X.shape)
+        joint = torch.cat([X, decision], dim=-2)
+        n, f = self.num_particles, self.num_fantasies
+        log_weights = X.new_zeros((f, n, *X.shape[:-2]))
+        decision_samples = []
+        generator = torch.Generator(device="cpu").manual_seed(self.seed)
+        for j, (child, sampler, noise) in enumerate(
+            zip(self.model.entries, self.samplers, self.observation_noise, strict=True)
+        ):
+            posterior = (
+                child.probability_posterior(joint) if noise is None else child.posterior(joint)
+            )
+            samples = sampler(posterior)
+            decision_samples.append(samples[:n, ..., q:, :])
+            if not mask[:, j].any():
+                continue
+            selected = samples[..., :q, :][..., mask[:, j], :]
+            particles, fantasies = selected[:n], selected[n:]
+            if noise is None:
+                uniform = torch.rand(
+                    (f, *([1] * (X.ndim - 2)), fantasies.shape[-2], 1),
+                    generator=generator,
+                    dtype=X.dtype,
+                ).to(X)
+                labels = (uniform > fantasies.cumsum(dim=-1)).sum(dim=-1)
+                labels = labels.clamp_max(fantasies.shape[-1] - 1)
+                indices = labels.unsqueeze(1).unsqueeze(-1).expand(f, n, *particles.shape[1:-1], 1)
+                likelihood = particles.unsqueeze(0).expand(f, *particles.shape)
+                likelihood = likelihood.gather(-1, indices).squeeze(-1)
+                log_likelihood = likelihood.clamp_min(torch.finfo(X.dtype).tiny).log()
+                log_weights = log_weights + log_likelihood.sum(dim=-1)
+            else:
+                epsilon = torch.randn(
+                    (f, *([1] * (X.ndim - 2)), fantasies.shape[-2], 1),
+                    generator=generator,
+                    dtype=X.dtype,
+                ).to(X)
+                observed = fantasies + noise**0.5 * epsilon
+                residual = observed.unsqueeze(1) - particles.unsqueeze(0)
+                log_weights = log_weights - residual.square().sum(dim=(-2, -1)) / (2 * noise)
+        values = self.utility(decision_samples)
+        if values.shape != (n, *X.shape[:-2], len(self.decision_X)):
+            raise ValueError("utility must return [particles, *batch, decisions]")
+        if not torch.isfinite(values).all():
+            raise ValueError("utility must be finite")
+        updated = (log_weights.softmax(dim=1).unsqueeze(-1) * values.unsqueeze(0)).sum(dim=1)
+        return self._best(updated).mean(dim=0) - self._best(values.mean(dim=0))

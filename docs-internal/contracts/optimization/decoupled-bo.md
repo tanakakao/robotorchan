@@ -245,3 +245,9 @@ separate evaluation outputs. This is not a correlated-output information gain
 or a classification fantasy KG. Pending evaluations remain unsupported.
 The constructor is discoverable by the factory; automatic recommendation is
 not enabled until component-specific capability checks are available.
+
+Particle KG extends heterogeneous BO with a finite decision set, independent
+child posterior samples, explicit Gaussian observation variance and categorical
+label likelihood. It approximates posterior conditioning without refitting a
+classifier. It is not exact variational fantasy inference. Discrete simulated
+labels require derivative-free optimization; pending evaluations are deferred.

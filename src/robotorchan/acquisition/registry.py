@@ -547,3 +547,23 @@ ACQUISITION_REGISTRY["qDecoupledActiveLearning"] = AcquisitionRegistryEntry(
         "pending evaluations are not supported",
     ),
 )
+
+
+ACQUISITION_REGISTRY["qDecoupledParticleKnowledgeGradient"] = AcquisitionRegistryEntry(
+    acquisition_name="qDecoupledParticleKnowledgeGradient",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
+        posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
+        observation_types=frozenset({ObservationType.REGRESSION, ObservationType.CLASSIFICATION}),
+        supports_multi_output=True,
+        requires_heterogeneous_model=True,
+        supports_constraints=True,
+    ),
+    implementation_strategy="robotorchan likelihood-weighted particle KG",
+    limitations=(
+        "finite decision set and independent semantic outputs",
+        "requires explicit sample utility and Gaussian observation variances",
+        "approximate posterior update; derivative-free optimization only",
+        "pending evaluations are not supported",
+    ),
+)

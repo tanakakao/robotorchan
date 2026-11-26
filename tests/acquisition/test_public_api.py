@@ -49,6 +49,7 @@ def test_acquisition_public_api_is_intentionally_small() -> None:
         "qDecoupledActiveLearning",
         "qDecoupledExpectedPredictiveInformationGain",
         "qDecoupledKnowledgeGradient",
+        "qDecoupledParticleKnowledgeGradient",
         "qExpectedPredictiveInformationGain",
         "qJointExpectedPredictiveInformationGain",
         "qJointPosteriorEntropy",

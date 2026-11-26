@@ -60,7 +60,7 @@ def test_registry_covers_public_acquisition_classes() -> None:
         for name, entry in ACQUISITION_REGISTRY.items()
         if entry.capabilities.purpose is AcquisitionPurpose.ACTIVE_LEARNING
     }
-    bo_extensions = {"qDecoupledKnowledgeGradient"}
+    bo_extensions = {"qDecoupledKnowledgeGradient", "qDecoupledParticleKnowledgeGradient"}
     assert public_extensions == (expected - bo_extensions) | {
         "PairwiseBayesianActiveLearningByDisagreement"
     }

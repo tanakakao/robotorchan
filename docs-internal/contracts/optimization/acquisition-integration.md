@@ -304,3 +304,12 @@ information gain, not information about the optimizer or Pareto front.
 rows of a `HeterogeneousModel`. Explicit utility weights are required; child
 posterior and batch requirements remain applicable. The registry marks this
 as requiring a heterogeneous model, not a standalone SingleTaskGP acquisition.
+
+### Particle-based heterogeneous knowledge gradient
+
+`qDecoupledParticleKnowledgeGradient` estimates finite-decision-set value of
+information using joint posterior particles and simulated Gaussian or categorical
+observations. A user-supplied utility maps decision-set samples to scalar rewards,
+including class probabilities, ordinal utilities and feasibility penalties.
+Likelihood reweighting is approximate and can suffer particle degeneracy or
+finite-sample negative estimates. Use derivative-free candidate optimization.
