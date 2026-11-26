@@ -45,17 +45,19 @@ def test_pending_epig_conditional_information():
     model = ModelListGP(SingleTaskGP(X, X.sin()), SingleTaskGP(X, X.cos()))
     model.eval()
     mask = torch.tensor([[True, False]])
-    acq = qDecoupledExpectedPredictiveInformationGain(
-        model, X, mask, X.new_tensor([0.1, 0.1])
+    acq = create_acquisition(
+        "qDecoupledExpectedPredictiveInformationGain",
+        model=model,
+        target_X=X,
+        X_evaluation_mask=mask,
+        observation_noise=X.new_tensor([0.1, 0.1]),
     )
     pending = X.new_tensor([[0.3]])
     candidate = X.new_tensor([[[0.4]], [[0.8]]]).requires_grad_()
     acq.set_X_pending(pending, X_pending_evaluation_mask=mask)
     expanded = pending.expand(2, 1, 1)
     component = acq.components[0]
-    expected = 0.5 * (
-        component(torch.cat((expanded, candidate), dim=-2)) - component(expanded)
-    )
+    expected = 0.5 * (component(torch.cat((expanded, candidate), dim=-2)) - component(expanded))
     actual = acq(candidate)
     torch.testing.assert_close(actual, expected)
     assert (actual >= -1e-8).all()
