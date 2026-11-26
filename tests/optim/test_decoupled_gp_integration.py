@@ -501,9 +501,7 @@ def test_fidelity_dependent_noise_and_shared_design():
     assert torch.isfinite(torch.autograd.grad(acq(low).sum(), low)[0]).all()
 
     constraints = CandidateConstraints(
-        equality_constraints=(
-            (torch.tensor([[0, 0], [1, 0]]), X.new_tensor([1.0, -1.0]), 0.0),
-        ),
+        equality_constraints=((torch.tensor([[0, 0], [1, 0]]), X.new_tensor([1.0, -1.0]), 0.0),),
     )
     candidate, selected, score = optimize_acqf_decoupled(
         acq,
@@ -512,9 +510,7 @@ def test_fidelity_dependent_noise_and_shared_design():
         q=2,
         constraints=constraints,
         mask_constraint=lambda mask: bool(torch.equal(mask, masks)),
-        batch_initial_conditions=X.new_tensor(
-            [[[0.2, 0.0], [0.2, 1.0]], [[0.8, 0.0], [0.8, 1.0]]]
-        ),
+        batch_initial_conditions=X.new_tensor([[[0.2, 0.0], [0.2, 1.0]], [[0.8, 0.0], [0.8, 1.0]]]),
         num_restarts=2,
         raw_samples=8,
         options={"maxiter": 10},
