@@ -184,3 +184,53 @@ candidate constraints need actual-row mapping and remain unsupported.
 Mixed BoTorch joint enumeration does not accept custom constraints or starts;
 other mixed backends follow their existing capability contracts. Predicted hard
 budgets are continuous BoTorch only and cannot combine other candidate constraints.
+
+## Phase 7: common-fidelity decoupled optimization
+
+Reuse independent SingleTaskMultiFidelityGP children in ModelListGP. Candidate
+rows contain design and fidelity coordinates, and masks select outputs at that
+row's common fidelity. Native qMultiFidelityHypervolumeKnowledgeGradient uses
+its public project and cost-aware utility arguments. Finite-decision KG and
+weighted Gaussian EPIG accept optional target_fidelities and project only their
+terminal decision or prediction points using BoTorch's public projection.
+Candidate fidelity remains free. Continuous fidelity uses ordinary bounds;
+discrete fidelity uses existing MixedVariableSpace categorical values.
+Output-dependent costs use the existing mask-aware cost callback or native
+multi-output cost utility, never both. Different fidelities for different
+outputs at the same design can be represented by separate masked candidate rows;
+per-output fidelity vectors within a single row are not implemented.
+
+Target projection is equivalent to explicitly supplying projected terminal
+points. Fixed-fidelity all-output optimization is compared against direct
+BoTorch optimization of the same acquisition, not against a differently
+trained single-fidelity GP. EPIG supports constant or point-dependent observation variance per output.
+Same-row per-output fidelity vectors are outside this contract. Native MFHVKG trace observations
+and pending workflow integration are not claimed.
+
+Joint EPIG accepts independent candidate_noise_function and target_noise_function
+callbacks returning pointwise variances with shape X.shape[:-1]. Decoupled EPIG
+accepts one callback per output (None retains the scalar variance). These are
+independent additive observation variances, not fidelity bias or correlated noise.
+For shared designs with output-specific fidelity, use separate masked rows and
+BoTorch inter-point linear equalities on design coordinates. This is supported
+for ordinary continuous joint acquisitions; mixed and one-shot constraint
+limitations from Phase 6 still apply.
+
+Linear actual-row constraints are mapped into flattened joint coordinates for
+mixed joint and one-shot optimization. Auxiliary rows are excluded from the
+constraint mapping. Nonlinear constraints and custom constrained one-shot
+initialization remain unsupported. Shared-design equality on continuous design
+coordinates can be combined with discrete fidelity enumeration.
+
+Flattened optimization also maps nonlinear constraints to actual candidate rows.
+Explicit feasible augmented initial conditions are required for nonlinear constraints;
+starts are projected onto each enumerated discrete assignment and filtered for
+feasibility. Assignments without feasible supplied starts are skipped, not proven
+infeasible. Custom solver options are supported. Trace observations remain outside
+this contract because native masked MFHVKG does not implement trace expansion.
+
+Fixed features apply to actual candidate rows only; auxiliary discrete assignments
+remain independent. If the native solver raises CandidateGenerationError and
+validated starts exist, the best finite feasible start is retained. This fallback
+is not a guarantee of optimizer convergence. Trace observation expansion is a
+separate future extension requiring an explicit observation and cost contract.

@@ -493,7 +493,7 @@ for name in ("qHypervolumeKnowledgeGradient", "qMultiFidelityHypervolumeKnowledg
         limitations=(
             "requires ModelList with masked fantasy support and a reference point",
             "requires one-shot optimization with augmented candidates",
-            "decoupled workflow and optimizer compatibility are not yet verified",
+            "joint masked optimization supported; pending workflow remains unverified",
         ),
     )
 
@@ -511,7 +511,8 @@ ACQUISITION_REGISTRY["qDecoupledKnowledgeGradient"] = AcquisitionRegistryEntry(
     limitations=(
         "requires independent ModelListGP outputs and a fixed terminal decision set",
         "requires one fantasy sampler per output and a boolean evaluation mask",
-        "pending evaluations and outcome constraints are not supported",
+        "optional target fidelity projection; independent Gaussian constraint utility",
+        "pending evaluations are not supported",
     ),
 )
 
@@ -523,6 +524,7 @@ ACQUISITION_REGISTRY["qDecoupledExpectedPredictiveInformationGain"] = _active_le
     limitations=(
         "requires independent ModelListGP outputs and positive observation noise",
         "requires output weights and an evaluation mask for candidate rows",
+        "optional target fidelity projection and point-dependent observation variance",
         "pending evaluations and correlated outputs are not supported",
     ),
 )

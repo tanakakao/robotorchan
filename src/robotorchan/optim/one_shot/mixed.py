@@ -1,11 +1,17 @@
 """Correctness-first optimization for mixed one-shot acquisitions."""
 
 from collections.abc import Sequence
+from functools import partial
 from itertools import product
+from typing import Any
 
+import torch
 from botorch.acquisition.acquisition import AcquisitionFunction, OneShotAcquisitionFunction
+from botorch.exceptions.errors import CandidateGenerationError
 from botorch.optim import optimize_acqf
 from torch import Tensor
+
+from robotorchan.optim.constraints.contracts import CandidateConstraints, LinearConstraint
 
 
 def optimize_mixed_one_shot_acqf(
@@ -17,6 +23,10 @@ def optimize_mixed_one_shot_acqf(
     num_restarts: int = 10,
     raw_samples: int = 256,
     max_assignments: int = 256,
+    constraints: CandidateConstraints | None = None,
+    batch_initial_conditions: Tensor | None = None,
+    options: dict[str, Any] | None = None,
+    fixed_features: dict[int, float] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Optimize row-specific discrete assignments, including one-shot auxiliary rows."""
     if q < 1:
@@ -30,6 +40,14 @@ def optimize_mixed_one_shot_acqf(
             raise ValueError(
                 f"categorical feature index {dimension} is outside [0, {feature_count})"
             )
+    actual_fixed = dict(fixed_features or {})
+    for index, value in actual_fixed.items():
+        if index < 0 or index >= feature_count:
+            raise ValueError("fixed feature index outside bounds")
+        if not bounds[0, index] <= value <= bounds[1, index]:
+            raise ValueError("fixed feature value outside bounds")
+        if index in categorical_features and value not in categorical_features[index]:
+            raise ValueError("fixed feature must be a legal categorical value")
     choices = [tuple(categorical_features[index]) for index in dimensions]
     for dimension, values in zip(dimensions, choices, strict=True):
         if not values:
@@ -51,15 +69,75 @@ def optimize_mixed_one_shot_acqf(
             f"limit is {max_assignments}"
         )
     row_assignments = list(product(*choices))
+    if (
+        constraints is not None
+        and constraints.has_nonlinear_constraints
+        and batch_initial_conditions is None
+    ):
+        raise ValueError("nonlinear constraints require feasible batch_initial_conditions")
+    if batch_initial_conditions is not None and (
+        batch_initial_conditions.ndim != 3
+        or batch_initial_conditions.shape[1:] != (augmented_q, feature_count)
+        or not torch.isfinite(batch_initial_conditions).all()
+    ):
+        raise ValueError("initial conditions must have shape [restarts, augmented_q, d]")
+
+    def nonlinear_values(x: Tensor) -> Tensor:
+        actual = x.reshape(augmented_q, feature_count)[:q]
+        values = []
+        for function, intrapoint in constraints.nonlinear_inequality_constraints:
+            if intrapoint:
+                values.extend(function(row).reshape(()) for row in actual)
+            else:
+                values.append(function(actual).reshape(()))
+        return torch.stack(values)
+
+    nonlinear = []
+    if constraints is not None and constraints.has_nonlinear_constraints:
+
+        def component(x: Tensor, index: int) -> Tensor:
+            return nonlinear_values(x)[index]
+
+        count = sum(q if intra else 1 for _, intra in constraints.nonlinear_inequality_constraints)
+        nonlinear = [(partial(component, index=i), True) for i in range(count)]
+
+    def flatten(entries: tuple[LinearConstraint, ...]) -> list[LinearConstraint]:
+        result = []
+        for indices, coefficients, rhs in entries:
+            if indices.ndim == 1:
+                for row in range(q):
+                    result.append((indices + row * feature_count, coefficients, rhs))
+            else:
+                if (indices[:, 0] < 0).any() or (indices[:, 0] >= q).any():
+                    raise ValueError("constraint row must refer to an actual candidate")
+                result.append((indices[:, 0] * feature_count + indices[:, 1], coefficients, rhs))
+        return result
+
+    inequalities = flatten(constraints.inequality_constraints) if constraints else []
+    equalities = flatten(constraints.equality_constraints) if constraints else []
 
     best_augmented: Tensor | None = None
     best_value: Tensor | None = None
     for assignment in product(row_assignments, repeat=augmented_q):
-        fixed_features = {
+        flat_fixed = {
             row * bounds.shape[-1] + dimension: value
             for row, values in enumerate(assignment)
             for dimension, value in zip(dimensions, values, strict=True)
         }
+
+        if any(
+            flat_fixed.get(row * feature_count + index, value) != value
+            for row in range(q)
+            for index, value in actual_fixed.items()
+        ):
+            continue
+        flat_fixed.update(
+            {
+                row * feature_count + index: value
+                for row in range(q)
+                for index, value in actual_fixed.items()
+            }
+        )
 
         def flattened_acquisition(x: Tensor) -> Tensor:
             batch_shape = x.shape[:-2]
@@ -67,14 +145,58 @@ def optimize_mixed_one_shot_acqf(
             return acq_function(augmented)
 
         flat_bounds = bounds.repeat(1, augmented_q)
-        flat_candidate, value = optimize_acqf(
-            acq_function=flattened_acquisition,
-            bounds=flat_bounds,
-            q=1,
-            num_restarts=num_restarts,
-            raw_samples=raw_samples,
-            fixed_features=fixed_features,
-        )
+        initial = None
+        restarts = num_restarts
+        if batch_initial_conditions is not None:
+            initial = batch_initial_conditions.reshape(-1, 1, augmented_q * feature_count).clone()
+            for index, value in flat_fixed.items():
+                initial[..., index] = value
+            feasible = []
+            for row in initial:
+                flat = row.squeeze(0)
+                valid = bool(((flat >= flat_bounds[0]) & (flat <= flat_bounds[1])).all())
+                for indices, coefficients, rhs in inequalities:
+                    valid = valid and bool((flat[indices] * coefficients).sum() >= rhs - 1e-7)
+                for indices, coefficients, rhs in equalities:
+                    residual = (flat[indices] * coefficients).sum() - rhs
+                    valid = valid and bool(residual.abs() <= 1e-7)
+                if nonlinear:
+                    valid = valid and bool((nonlinear_values(flat) >= 0).all())
+                feasible.append(valid)
+            initial = initial[torch.tensor(feasible, device=initial.device, dtype=torch.bool)]
+            if not len(initial):
+                continue
+            restarts = min(num_restarts, len(initial))
+            initial = initial[:restarts]
+        solver_options = dict(options or {})
+        if nonlinear:
+            solver_options.setdefault("batch_limit", 1)
+        try:
+            flat_candidate, value = optimize_acqf(
+                acq_function=flattened_acquisition,
+                bounds=flat_bounds,
+                q=1,
+                num_restarts=restarts,
+                raw_samples=raw_samples,
+                fixed_features=flat_fixed,
+                inequality_constraints=inequalities or None,
+                equality_constraints=equalities or None,
+                nonlinear_inequality_constraints=nonlinear or None,
+                batch_initial_conditions=initial,
+                options=solver_options or None,
+            )
+        except CandidateGenerationError:
+            if initial is None:
+                raise
+            # The supplied starts have already passed all candidate constraints.
+            with torch.no_grad():
+                values = flattened_acquisition(initial).reshape(-1)
+                finite = torch.isfinite(values)
+                if not finite.any():
+                    continue
+                index = values.masked_fill(~finite, -torch.inf).argmax()
+                flat_candidate = initial[index]
+                value = values[index]
         augmented = flat_candidate.reshape(augmented_q, bounds.shape[-1])
         if best_value is None or value.max() > best_value.max():
             best_augmented = augmented
