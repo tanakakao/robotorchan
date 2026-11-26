@@ -2,7 +2,6 @@
 
 import pytest
 import torch
-
 from botorch.models import ModelListGP, SingleTaskGP
 
 from robotorchan.acquisition import qDecoupledExpectedPredictiveInformationGain
