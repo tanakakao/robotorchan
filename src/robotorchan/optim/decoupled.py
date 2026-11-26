@@ -124,7 +124,9 @@ def optimize_acqf_decoupled(
             if cost_function is not None and budget is not None:
                 remaining = budget.remaining
 
-                def budget_constraint(x: Tensor) -> Tensor:
+                def budget_constraint(
+                    x: Tensor, remaining: float = remaining, selected: Tensor = selected
+                ) -> Tensor:
                     return remaining - cost_function(x.reshape(1, 1, -1), selected).reshape(())
 
                 with torch.no_grad():
