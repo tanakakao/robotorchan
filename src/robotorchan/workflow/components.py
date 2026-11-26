@@ -327,18 +327,19 @@ _SPECIALIST_CAPABILITIES = {
 
 def _optimizer(spec: ProblemSpec, name: str) -> ComponentSelection:
     if name == "optimize_acqf_decoupled":
-        reasons = []
-        if spec.q != 1:
-            reasons.append("supports q=1 only")
-        if spec.input_type is InputType.MIXED or spec.candidate_constrained:
-            reasons.append("requires unconstrained continuous candidate space")
-        return _result(name, reasons, ("requires masked acquisition and allowed evaluation masks",))
+        return _result(
+            name,
+            [],
+            (
+                "requires masked acquisition and allowed evaluation masks",
+                "joint, sequential and heuristic support depends on acquisition and backend",
+                "mixed, one-shot, candidate constraints and budget combinations require checks",
+            ),
+        )
     if name == "optimize_mixed_one_shot_acqf":
         reasons = []
         if spec.input_type is not InputType.MIXED:
             reasons.append("requires mixed categorical assignments")
-        if spec.q != 1:
-            reasons.append("supports q=1 only")
         if spec.candidate_constrained:
             reasons.append("does not accept candidate constraints")
         return _result(name, reasons, ("requires one-shot acquisition and assignment budget",))

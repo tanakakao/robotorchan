@@ -172,3 +172,15 @@ with feasible explicit starts and an inter-point nonlinear cost constraint.
 Other candidate constraints and fixed features cannot yet be combined with
 this predicted budget path. One-shot candidate constraints are rejected until
 actual-row mapping is available. Heuristic failure does not prove infeasibility.
+
+### Phase 6 capability boundary
+
+Factory selection remains conditional on masked acquisition semantics, backend,
+strategy, discrete assignment limits, and runtime constraints. Ordinary joint
+and heuristic acquisitions delegate candidate constraints to existing backends.
+Sequential supports fixed features and fixed costs, but not arbitrary joint
+predicates, one-shot acquisitions or input-dependent costs. Native one-shot
+candidate constraints need actual-row mapping and remain unsupported.
+Mixed BoTorch joint enumeration does not accept custom constraints or starts;
+other mixed backends follow their existing capability contracts. Predicted hard
+budgets are continuous BoTorch only and cannot combine other candidate constraints.

@@ -373,3 +373,56 @@ def test_named_gradient_backend(optimizer):
     assert candidate.shape == (2, 1)
     assert mask.shape == (2, 2)
     assert torch.isfinite(score)
+
+
+@pytest.mark.parametrize(
+    "optimizer, backend_options",
+    [
+        ("de", {"options": {"maxiter": 2, "popsize": 4, "polish": False}}),
+        ("ga", {"population_size": 12, "generations": 2}),
+        ("cmaes", {"population_size": 8, "max_generations": 2}),
+        ("pso", {"swarm_size": 12, "iterations": 2}),
+        ("hybrid", {"global_optimizer": "sobol", "global_options": {"num_samples": 16}}),
+    ],
+)
+def test_evolutionary_backend_dispatch(optimizer, backend_options):
+    if optimizer == "cmaes":
+        pytest.importorskip("cma")
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    acq = BatchMaskedQuadratic()
+    original = acq.X_evaluation_mask
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        torch.tensor([[True, False], [False, True]]),
+        q=2,
+        optimizer=optimizer,
+        optimizer_options=backend_options,
+        seed=42,
+    )
+    assert candidate.shape == (2, 1)
+    assert ((candidate >= bounds[0]) & (candidate <= bounds[1])).all()
+    assert mask.shape == (2, 2)
+    assert torch.isfinite(score)
+    assert acq.X_evaluation_mask is original
+
+
+def test_joint_interpoint_linear_constraint():
+    from robotorchan.optim.constraints.contracts import CandidateConstraints
+
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    constraints = CandidateConstraints(
+        inequality_constraints=(
+            (torch.tensor([[0, 0], [1, 0]]), bounds.new_tensor([-1.0, -1.0]), -0.8),
+        ),
+    )
+    candidate, _, _ = optimize_acqf_decoupled(
+        BatchMaskedQuadratic(),
+        bounds,
+        torch.tensor([[False, True]]),
+        q=2,
+        constraints=constraints,
+        num_restarts=2,
+        raw_samples=16,
+    )
+    assert candidate.sum().item() <= 0.80001
