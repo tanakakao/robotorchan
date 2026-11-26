@@ -42,6 +42,8 @@ class Study:
         variable_space: MixedVariableSpace | None = None,
         constraints: CandidateConstraints | None = None,
         context_names: tuple[str, ...] = (),
+        output_names: tuple[str, ...] = (),
+        decoupled_proposer: Callable[..., Any] | None = None,
     ) -> None:
         self.search_space = search_space
         names = tuple(search_space.bounds)
@@ -52,6 +54,16 @@ class Study:
         ):
             raise ValueError("context_names must be unique known dimensions with decisions left.")
         self.context_names = tuple(context_names)
+        if len(set(output_names)) != len(output_names) or any(
+            not isinstance(name, str) or not name for name in output_names
+        ):
+            raise ValueError("output_names must contain unique nonempty names.")
+        if bool(output_names) != (decoupled_proposer is not None):
+            raise ValueError("Decoupled Study requires output_names and a proposer.")
+        if decoupled_proposer is not None and not callable(decoupled_proposer):
+            raise TypeError("decoupled_proposer must be callable.")
+        self.output_names = tuple(output_names)
+        self.decoupled_proposer = decoupled_proposer
         self._generator = CandidateGenerator(
             search_space,
             direction=direction,
@@ -94,12 +106,22 @@ class Study:
             raise TypeError("states must be a tuple of TrialState values.")
         names = tuple(self.search_space.bounds)
         columns = ["number", "state", "value", *names]
+        if self.output_names:
+            columns += ["evaluation_mask", *[f"observation:{n}" for n in self.output_names]]
         rows = [
             {
                 "number": trial.number,
                 "state": trial.state.value,
                 "value": trial.value,
                 **trial.params,
+                **(
+                    {
+                        "evaluation_mask": trial.evaluation_mask,
+                        **{f"observation:{n}": v for n, v in trial.observations.items()},
+                    }
+                    if self.output_names
+                    else {}
+                ),
             }
             for trial in self.trials
             if states is None or trial.state in states
@@ -109,6 +131,8 @@ class Study:
     @property
     def best_trial(self) -> Trial:
         """Return the best completed trial, or raise if none exists."""
+        if self.output_names:
+            raise ValueError("Decoupled Study has no implicit scalar best trial.")
         completed = [trial for trial in self.trials if trial.state is TrialState.COMPLETE]
         if not completed:
             raise ValueError("No completed trials are available.")
@@ -140,6 +164,8 @@ class Study:
         matching catch mark the trial failed; other exceptions are re-raised
         after marking the trial failed. Callback errors propagate.
         """
+        if self.output_names:
+            raise NotImplementedError("Use ask/tell with named observations for decoupled Study.")
         if not callable(objective):
             raise TypeError("objective must be callable.")
         if isinstance(n_trials, bool) or not isinstance(n_trials, int) or n_trials < 0:
@@ -185,9 +211,51 @@ class Study:
             if context is not None
             else None
         )
+        if self.decoupled_proposer is not None:
+            return self._ask_decoupled(q, fixed)
         completed = [trial for trial in self.trials if trial.state is TrialState.COMPLETE]
         candidates = self._generator.propose_batch(completed, q=q, fixed_features=fixed)
         return tuple(self.start_trial(self._register_trial(params).number) for params in candidates)
+
+    def _ask_decoupled(
+        self, q: int, fixed: Mapping[int, float] | None
+    ) -> tuple[Trial, ...]:
+        if type(q) is not int or q < 1:
+            raise ValueError("q must be a positive integer.")
+        bounds = torch.tensor(list(self.search_space.bounds.values()), dtype=torch.double).T
+        points, mask, _ = self.decoupled_proposer(
+            self.trials, bounds, q=q, fixed_features=fixed
+        )
+        if points.shape != (q, bounds.shape[-1]) or not torch.isfinite(points).all():
+            raise ValueError("Proposer must return finite [q, d] candidates.")
+        if (
+            mask.shape != (q, len(self.output_names))
+            or mask.dtype != torch.bool
+            or not mask.any(dim=-1).all()
+        ):
+            raise ValueError("Proposer must return nonempty boolean [q, m] masks.")
+        if not ((points >= bounds[0]) & (points <= bounds[1])).all():
+            raise ValueError("Proposer returned out-of-bounds candidates.")
+        for dim, value in (fixed or {}).items():
+            if not (points[:, dim] == value).all():
+                raise ValueError("Proposer violated fixed context.")
+        if not is_feasible(
+            points, self._generator.constraints, variable_space=self._generator.variable_space
+        ):
+            raise ValueError("Proposer returned infeasible candidates.")
+        names = tuple(self.search_space.bounds)
+        return tuple(
+            self.start_trial(
+                self._register_trial(
+                    dict(zip(names, row.tolist(), strict=True)),
+                    evaluation_mask=tuple(
+                        name for name, selected in zip(self.output_names, flags, strict=True)
+                        if selected
+                    ),
+                ).number
+            )
+            for row, flags in zip(points, mask.tolist(), strict=True)
+        )
 
     def ask_contexts(self, contexts: list[Mapping[str, float]]) -> tuple[Trial, ...]:
         """Propose one candidate per observed context using independent q=1 searches.
@@ -195,6 +263,8 @@ class Study:
         This is not joint q-batch acquisition optimization. CandidateConstraints
         must be intra-point because different contexts are optimized separately.
         """
+        if self.output_names:
+            raise NotImplementedError("Use ask_batch with one context for decoupled Study.")
         if not self.context_names:
             raise ValueError("ask_contexts requires configured context_names.")
         if not isinstance(contexts, list) or not contexts:
@@ -229,12 +299,34 @@ class Study:
         value: float | None = None,
         *,
         state: TrialState = TrialState.COMPLETE,
+        observations: Mapping[str, float] | None = None,
     ) -> Trial:
         """Complete or fail a running trial after external evaluation."""
         number = trial.number if isinstance(trial, Trial) else trial
         current = self.get_trial(number)
         if isinstance(trial, Trial) and trial.params != current.params:
             raise ValueError("Trial parameters do not match the current Study trial.")
+        if current.evaluation_mask:
+            if value is not None:
+                raise ValueError("Decoupled trials require named observations.")
+            if current.state is not TrialState.RUNNING:
+                raise ValueError("Only running trials accept observations.")
+            if state not in (TrialState.COMPLETE, TrialState.FAIL):
+                raise ValueError("Invalid tell state.")
+            updates = dict(observations or {})
+            if set(updates) & set(current.observations):
+                raise ValueError("An output has already been observed.")
+            merged = {**current.observations, **updates}
+            if not updates and state is not TrialState.FAIL:
+                raise ValueError("Provide at least one observation.")
+            target = state
+            if state is TrialState.COMPLETE and set(merged) != set(current.evaluation_mask):
+                target = TrialState.RUNNING
+            updated = replace(current, observations=merged, state=target)
+            self._trials[number] = updated
+            return updated
+        if observations is not None:
+            raise ValueError("Scalar trials do not accept named observations.")
         if state is TrialState.COMPLETE:
             if value is None:
                 raise ValueError("Completed trials require an observation.")
@@ -245,12 +337,18 @@ class Study:
             return self.fail_trial(number)
         raise ValueError("tell() only accepts COMPLETE or FAIL as terminal states.")
 
-    def add_trial(self, params: Mapping[str, float]) -> Trial:
+    def add_trial(
+        self, params: Mapping[str, float], *, evaluation_mask: tuple[str, ...] = ()
+    ) -> Trial:
         """Register a feasible externally supplied candidate in WAITING state."""
-        return self._register_trial(params, check_constraints=True)
+        return self._register_trial(params, check_constraints=True, evaluation_mask=evaluation_mask)
 
     def _register_trial(
-        self, params: Mapping[str, float], *, check_constraints: bool = False
+        self,
+        params: Mapping[str, float],
+        *,
+        check_constraints: bool = False,
+        evaluation_mask: tuple[str, ...] = (),
     ) -> Trial:
         self.search_space.validate(params)
         if self._generator.variable_space is not None:
@@ -276,7 +374,11 @@ class Study:
             variable_space=self._generator.variable_space,
         ):
             raise ValueError("Trial parameters violate CandidateConstraints.")
-        trial = Trial(number=self._next_number, params=params)
+        if bool(evaluation_mask) != bool(self.output_names) or not set(
+            evaluation_mask
+        ).issubset(self.output_names):
+            raise ValueError("Evaluation mask must select configured outputs.")
+        trial = Trial(number=self._next_number, params=params, evaluation_mask=evaluation_mask)
         self._trials[trial.number] = trial
         self._next_number += 1
         return trial
@@ -328,11 +430,15 @@ def create_study(
     variable_space: MixedVariableSpace | None = None,
     constraints: CandidateConstraints | None = None,
     context_names: tuple[str, ...] = (),
+    output_names: tuple[str, ...] = (),
+    decoupled_proposer: Callable[..., Any] | None = None,
     recommendation: WorkflowRecommendation | None = None,
     initial_trials: Iterable[Trial] = (),
 ) -> Study:
     """Create a scalar Study, optionally restoring ordered historical trial snapshots."""
     if recommendation is not None:
+        if output_names:
+            raise ValueError("Scalar recommendations do not configure decoupled Study.")
         if any(value is not None for value in (model, acquisition, optimizer)):
             raise ValueError("recommendation cannot accompany explicit component selections.")
         if recommendation.compatibility.status not in (
@@ -382,6 +488,8 @@ def create_study(
         variable_space=variable_space,
         constraints=constraints,
         context_names=context_names,
+        output_names=output_names,
+        decoupled_proposer=decoupled_proposer,
     )
     # Restore observations, not optimizer or random-number-generator state.
     for trial in initial_trials:
@@ -391,12 +499,12 @@ def create_study(
             raise ValueError("initial_trials must have strictly increasing integer numbers.")
         if not isinstance(trial.state, TrialState):
             raise ValueError("initial_trials must have valid TrialState values.")
-        if trial.state is TrialState.COMPLETE and (
+        if not trial.evaluation_mask and trial.state is TrialState.COMPLETE and (
             isinstance(trial.value, bool) or not isinstance(trial.value, (int, float))
         ):
             raise ValueError("Completed trials require a numeric observation.")
         # Historical joint batches cannot be reconstructed from individual trials.
         study._next_number = trial.number
-        study._register_trial(trial.params)
+        study._register_trial(trial.params, evaluation_mask=trial.evaluation_mask)
         study._trials[trial.number] = trial
     return study

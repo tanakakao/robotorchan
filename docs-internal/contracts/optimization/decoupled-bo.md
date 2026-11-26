@@ -256,3 +256,9 @@ The mixed-domain tests exercise binary, multiclass and ordinal children with
 both masked AL and particle KG, using legal categorical values and joint q=2.
 Particle KG requires a derivative-free backend; its finite-particle estimate
 is not guaranteed nonnegative. Constant terminal utility has zero VOI.
+
+Phase 9 extends existing Study and Trial snapshots with named evaluation masks
+and partial observations. A decoupled proposer receives all trial snapshots,
+bounds, q and fixed features, returning the existing optimizer's triple.
+Partial results remain available after failure and restoration. No implicit
+scalar best trial is defined for heterogeneous objectives.
