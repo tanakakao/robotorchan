@@ -12,7 +12,6 @@ from botorch.optim import optimize_acqf
 from botorch.sampling.list_sampler import ListSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.hypervolume import Hypervolume
-
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.acquisition import create_acquisition
