@@ -9,11 +9,11 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction, OneShotAcquisitionFunction
-from torch import Tensor
-
 from botorch.acquisition.multi_objective.hypervolume_knowledge_gradient import (
     qHypervolumeKnowledgeGradient,
 )
+from torch import Tensor
+
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 from robotorchan.optim.one_shot.mixed import optimize_mixed_one_shot_acqf
 
