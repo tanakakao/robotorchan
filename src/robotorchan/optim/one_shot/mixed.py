@@ -7,6 +7,7 @@ from typing import Any
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction, OneShotAcquisitionFunction
+from botorch.exceptions.errors import CandidateGenerationError
 from botorch.optim import optimize_acqf
 from torch import Tensor
 
@@ -59,16 +60,18 @@ def optimize_mixed_one_shot_acqf(
             f"limit is {max_assignments}"
         )
     row_assignments = list(product(*choices))
-    if constraints is not None and constraints.has_nonlinear_constraints:
-        if batch_initial_conditions is None:
-            raise ValueError("nonlinear constraints require feasible batch_initial_conditions")
-    if batch_initial_conditions is not None:
-        if (
-            batch_initial_conditions.ndim != 3
-            or batch_initial_conditions.shape[1:] != (augmented_q, feature_count)
-            or not torch.isfinite(batch_initial_conditions).all()
-        ):
-            raise ValueError("initial conditions must have shape [restarts, augmented_q, d]")
+    if (
+        constraints is not None
+        and constraints.has_nonlinear_constraints
+        and batch_initial_conditions is None
+    ):
+        raise ValueError("nonlinear constraints require feasible batch_initial_conditions")
+    if batch_initial_conditions is not None and (
+        batch_initial_conditions.ndim != 3
+        or batch_initial_conditions.shape[1:] != (augmented_q, feature_count)
+        or not torch.isfinite(batch_initial_conditions).all()
+    ):
+        raise ValueError("initial conditions must have shape [restarts, augmented_q, d]")
 
     def nonlinear_values(x: Tensor) -> Tensor:
         actual = x.reshape(augmented_q, feature_count)[:q]
@@ -145,19 +148,32 @@ def optimize_mixed_one_shot_acqf(
         solver_options = dict(options or {})
         if nonlinear:
             solver_options.setdefault("batch_limit", 1)
-        flat_candidate, value = optimize_acqf(
-            acq_function=flattened_acquisition,
-            bounds=flat_bounds,
-            q=1,
-            num_restarts=restarts,
-            raw_samples=raw_samples,
-            fixed_features=fixed_features,
-            inequality_constraints=inequalities or None,
-            equality_constraints=equalities or None,
-            nonlinear_inequality_constraints=nonlinear or None,
-            batch_initial_conditions=initial,
-            options=solver_options or None,
-        )
+        try:
+            flat_candidate, value = optimize_acqf(
+                acq_function=flattened_acquisition,
+                bounds=flat_bounds,
+                q=1,
+                num_restarts=restarts,
+                raw_samples=raw_samples,
+                fixed_features=fixed_features,
+                inequality_constraints=inequalities or None,
+                equality_constraints=equalities or None,
+                nonlinear_inequality_constraints=nonlinear or None,
+                batch_initial_conditions=initial,
+                options=solver_options or None,
+            )
+        except CandidateGenerationError:
+            if initial is None:
+                raise
+            # The supplied starts have already passed all candidate constraints.
+            with torch.no_grad():
+                values = flattened_acquisition(initial).reshape(-1)
+                finite = torch.isfinite(values)
+                if not finite.any():
+                    continue
+                index = values.masked_fill(~finite, -torch.inf).argmax()
+                flat_candidate = initial[index]
+                value = values[index]
         augmented = flat_candidate.reshape(augmented_q, bounds.shape[-1])
         if best_value is None or value.max() > best_value.max():
             best_augmented = augmented

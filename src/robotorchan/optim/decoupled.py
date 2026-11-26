@@ -134,9 +134,12 @@ def optimize_acqf_decoupled(
     assignment_count = k**q if strategy == "joint" else k
     if strategy != "heuristic" and assignment_count > max_mask_assignments:
         raise ValueError("mask assignments exceed max_mask_assignments")
-    if isinstance(acq_function, OneShotAcquisitionFunction) and constraints is not None:
-        if fixed_features:
-            raise NotImplementedError("one-shot constrained fixed features are unsupported")
+    if (
+        isinstance(acq_function, OneShotAcquisitionFunction)
+        and constraints is not None
+        and fixed_features
+    ):
+        raise NotImplementedError("one-shot constrained fixed features are unsupported")
     if isinstance(acq_function, OneShotAcquisitionFunction) and optimizer != "botorch":
         raise NotImplementedError("one-shot acquisitions require the BoTorch backend")
     if cost_function is not None and budget is not None and optimizer != "botorch":
