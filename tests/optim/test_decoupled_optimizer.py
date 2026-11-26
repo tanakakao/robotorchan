@@ -382,12 +382,18 @@ def test_named_gradient_backend(optimizer):
         ("ga", {"population_size": 12, "generations": 2}),
         ("cmaes", {"population_size": 8, "max_generations": 2}),
         ("pso", {"swarm_size": 12, "iterations": 2}),
-        ("hybrid", {"global_optimizer": "sobol", "global_options": {"num_samples": 16}}),
+        (
+            "hybrid",
+            {
+                "global_optimizer": "de",
+                "global_options": {"options": {"maxiter": 2, "popsize": 4, "polish": False}},
+            },
+        ),
     ],
 )
 def test_evolutionary_backend_dispatch(optimizer, backend_options):
     if optimizer == "cmaes":
-        pytest.importorskip("cma")
+        pytest.importorskip("cmaes")
     bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
     acq = BatchMaskedQuadratic()
     original = acq.X_evaluation_mask
