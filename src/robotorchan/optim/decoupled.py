@@ -253,12 +253,9 @@ def optimize_acqf_decoupled(
                     continue
                 restarts = initial.shape[0]
                 extra["nonlinear_inequality_constraints"] = ((budget_constraint, q == 1),)
-            if (
-                optimizer == "botorch"
-                and (
-                    (discrete and (q > 1 or isinstance(objective, OneShotAcquisitionFunction)))
-                    or (isinstance(objective, OneShotAcquisitionFunction) and constraints is not None)
-                )
+            one_shot = isinstance(objective, OneShotAcquisitionFunction)
+            if optimizer == "botorch" and (
+                (discrete and (q > 1 or one_shot)) or (one_shot and constraints is not None)
             ):
                 candidate, value = optimize_mixed_one_shot_acqf(
                     objective,
