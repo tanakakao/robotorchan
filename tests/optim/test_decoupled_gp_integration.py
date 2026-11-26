@@ -5,12 +5,15 @@ import torch
 from botorch.acquisition.acquisition import OneShotAcquisitionFunction
 from botorch.acquisition.cost_aware import InverseCostWeightedUtility
 from botorch.acquisition.utils import project_to_target_fidelity
+from botorch.fit import fit_gpytorch_mll
 from botorch.models import ModelListGP, SingleTaskGP, SingleTaskMultiFidelityGP
 from botorch.models.deterministic import GenericDeterministicModel
 from botorch.optim import optimize_acqf
 from botorch.sampling.list_sampler import ListSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.hypervolume import Hypervolume
+
+from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.acquisition import create_acquisition
 from robotorchan.optim import optimize_acqf_decoupled
@@ -203,6 +206,7 @@ def test_learned_log_cost_decoupled_epig():
     model = ModelListGP(SingleTaskGP(X, X.sin()), SingleTaskGP(X, X.cos()))
     cost_model = SingleTaskGP(X, torch.cat((1 + X, 2 + 3 * X), dim=-1).log())
     model.eval()
+    fit_gpytorch_mll(ExactMarginalLogLikelihood(cost_model.likelihood, cost_model))
     cost_model.eval()
     masks = torch.tensor([[True, False], [False, True], [True, True]])
     acq = create_acquisition(

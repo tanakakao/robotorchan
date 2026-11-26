@@ -103,3 +103,14 @@ cost, not uncertain realized cost. Native one-shot budgets remain unsupported.
 If a local optimizer returns a point outside the strict predicted budget,
 the best affordable supplied restart is retained instead of accepting an
 overspend or discarding the entire mask.
+
+
+### Phase 5 scope boundary
+
+The continuous q=1 path supports fixed additive and nonadditive costs,
+differentiable predicted costs, and predicted-cost budgets for ordinary
+acquisitions with supplied feasible starts. Native HVKG and MFHVKG support
+their own cost utility; hard input-dependent budgets for native one-shot
+acquisitions are outside this phase's supported contract. Mixed and batch
+candidate optimization are subsequent extensions. The learned-cost EPIG
+integration fits a log-cost GP before candidate generation.

@@ -187,3 +187,42 @@ def test_budget_boundary_falls_back_to_feasible_restart(monkeypatch):
     torch.testing.assert_close(candidate, bounds.new_tensor([[0.05]]))
     acq.X_evaluation_mask = mask
     torch.testing.assert_close(score, acq(candidate) / cost(candidate, mask))
+
+
+def test_input_cost_budget_skips_unaffordable_masks():
+    acq = MaskedQuadratic()
+    original = acq.X_evaluation_mask
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[True, False], [False, True]])
+    budget = CostBudget(total=2.0)
+    budget.reserve("pending", 0.5)
+
+    def cost(X, mask):
+        return 1 + X[..., 0, 0] + 2 * mask[0, 1].to(X)
+
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        cost_function=cost,
+        budget=budget,
+        batch_initial_conditions=bounds.new_tensor([[[0.0]], [[0.2]]]),
+        num_restarts=2,
+    )
+    assert torch.equal(mask, masks[:1])
+    assert budget.can_afford(cost(candidate.unsqueeze(0), mask).item())
+    assert torch.isfinite(score)
+    assert budget.remaining == 1.5
+    assert acq.X_evaluation_mask is original
+
+    with pytest.raises(ValueError, match="no affordable"):
+        optimize_acqf_decoupled(
+            acq,
+            bounds,
+            masks[1:],
+            cost_function=cost,
+            budget=budget,
+            batch_initial_conditions=bounds.new_tensor([[[0.0]], [[0.2]]]),
+            num_restarts=2,
+        )
+    assert acq.X_evaluation_mask is original
