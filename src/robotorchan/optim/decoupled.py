@@ -143,7 +143,9 @@ def optimize_acqf_decoupled(
         if cost_function is not None and budget is not None:
             raise NotImplementedError("mixed predicted hard budgets are not supported yet")
         if isinstance(acq_function, OneShotAcquisitionFunction) and (
-            constraints is not None or fixed_features or batch_initial_conditions is not None
+            constraints is not None
+            or fixed_features
+            or batch_initial_conditions is not None
             or options is not None
         ):
             raise NotImplementedError("mixed one-shot constraints and custom starts or options")
