@@ -314,7 +314,9 @@ class qDecoupledParticleKnowledgeGradient(AcquisitionFunction):
                     raise ValueError("categorical observations require noise=None")
             elif noise is None or not torch.isfinite(decision_X.new_tensor(noise)) or noise <= 0:
                 raise ValueError("regression requires positive finite observation variance")
-        if abstain_utility is not None and not torch.isfinite(decision_X.new_tensor(abstain_utility)):
+        if abstain_utility is not None and not torch.isfinite(
+            decision_X.new_tensor(abstain_utility)
+        ):
             raise ValueError("abstain utility must be finite")
         self.utility = utility
         self.observation_noise = tuple(observation_noise)
