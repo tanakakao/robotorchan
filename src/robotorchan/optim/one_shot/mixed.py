@@ -66,9 +66,7 @@ def optimize_mixed_one_shot_acqf(
             else:
                 if (indices[:, 0] < 0).any() or (indices[:, 0] >= q).any():
                     raise ValueError("constraint row must refer to an actual candidate")
-                result.append(
-                    (indices[:, 0] * feature_count + indices[:, 1], coefficients, rhs)
-                )
+                result.append((indices[:, 0] * feature_count + indices[:, 1], coefficients, rhs))
         return result
 
     inequalities = flatten(constraints.inequality_constraints) if constraints else []
