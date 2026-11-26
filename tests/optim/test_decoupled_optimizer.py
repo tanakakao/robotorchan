@@ -7,6 +7,7 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction
 
 from robotorchan.optim import create_optimizer, optimize_acqf_decoupled
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.workflow.cost_budget import CostBudget
 
 
@@ -252,3 +253,16 @@ def test_joint_mask_assignments_and_batch_cost(monkeypatch):
     assert acq.X_evaluation_mask is original
     with pytest.raises(ValueError, match="max_mask_assignments"):
         optimize_acqf_decoupled(acq, bounds, masks, q=2, max_mask_assignments=3)
+
+
+def test_mixed_decoupled_candidate():
+    acq = MaskedQuadratic()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[True, False], [False, True]])
+    space = MixedVariableSpace(bounds, categorical_values={0: (0.0, 1.0)})
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq, bounds, masks, variable_space=space, num_restarts=2, raw_samples=8
+    )
+    torch.testing.assert_close(candidate, bounds.new_tensor([[1.0]]))
+    assert torch.equal(mask, masks[1:])
+    torch.testing.assert_close(score, bounds.new_tensor(0.9375))

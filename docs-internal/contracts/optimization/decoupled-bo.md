@@ -125,3 +125,13 @@ discounts are not implied. Candidate constraints and fixed features are
 delegated to the existing dispatch. Predicted hard budgets combined with
 other constraints or q > 1 remain unsupported until feasible-start handling
 is extended. Mixed and sequential strategies require separate validation.
+
+
+### Mixed q=1
+
+MixedVariableSpace supplies integer and categorical choices. Ordinary masked
+acquisitions delegate to the existing mixed BoTorch dispatch; one-shot
+acquisitions delegate to the existing row-specific mixed one-shot optimizer.
+The discrete enumeration cap is separate from the mask cap. Mixed joint
+batches, mixed predicted hard budgets, and custom one-shot constraints,
+fixed features, starts and options are not yet supported.

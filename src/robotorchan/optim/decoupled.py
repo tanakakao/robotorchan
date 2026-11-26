@@ -11,9 +11,11 @@ from botorch.acquisition.acquisition import AcquisitionFunction, OneShotAcquisit
 from torch import Tensor
 
 from robotorchan.optim.dispatch import optimize_acqf
+from robotorchan.optim.one_shot.mixed import optimize_mixed_one_shot_acqf
 
 if TYPE_CHECKING:
     from robotorchan.optim.constraints.contracts import CandidateConstraints
+    from robotorchan.optim.domains.variable_space import MixedVariableSpace
     from robotorchan.workflow.cost_budget import CostBudget
 
 
@@ -58,6 +60,8 @@ def optimize_acqf_decoupled(
     constraints: CandidateConstraints | None = None,
     fixed_features: dict[int, float | Tensor] | None = None,
     max_mask_assignments: int = 256,
+    variable_space: MixedVariableSpace | None = None,
+    max_discrete_assignments: int = 256,
 ) -> tuple[Tensor, Tensor, Tensor]:
     """Return candidate, selected evaluation mask, and acquisition value.
 
@@ -120,6 +124,34 @@ def optimize_acqf_decoupled(
     k = evaluation_masks.shape[0]
     if k**q > max_mask_assignments:
         raise ValueError("mask assignments exceed max_mask_assignments")
+    discrete = {}
+    if variable_space is not None:
+        if not torch.equal(variable_space.bounds, bounds):
+            raise ValueError("variable_space bounds must match bounds")
+        variable_space.validate_fixed_features(fixed_features)
+        discrete = dict(variable_space.categorical_values or {})
+        for dim in variable_space.integer_dims:
+            lower = int(bounds[0, dim].ceil().item())
+            upper = int(bounds[1, dim].floor().item())
+            discrete[dim] = tuple(range(lower, upper + 1))
+        for dim, value in (fixed_features or {}).items():
+            if dim in discrete:
+                discrete[dim] = (float(value),)
+    if discrete:
+        if q != 1:
+            raise NotImplementedError("mixed decoupled joint batches are not supported yet")
+        if cost_function is not None and budget is not None:
+            raise NotImplementedError("mixed predicted hard budgets are not supported yet")
+        if isinstance(acq_function, OneShotAcquisitionFunction) and (
+            constraints is not None or fixed_features or batch_initial_conditions is not None
+            or options is not None
+        ):
+            raise NotImplementedError("mixed one-shot constraints and custom starts or options")
+        count = 1
+        for values in discrete.values():
+            count *= len(values)
+        if count > max_discrete_assignments:
+            raise ValueError("discrete assignments exceed max_discrete_assignments")
     original_mask = acq_function.X_evaluation_mask
     best = None
     try:
@@ -155,18 +187,38 @@ def optimize_acqf_decoupled(
                     continue
                 restarts = initial.shape[0]
                 extra["nonlinear_inequality_constraints"] = ((budget_constraint, True),)
-            candidate, value = optimize_acqf(
-                acq_function=objective,
-                bounds=bounds,
-                q=q,
-                num_restarts=restarts,
-                raw_samples=raw_samples,
-                options=options,
-                batch_initial_conditions=initial,
-                constraints=constraints,
-                fixed_features=fixed_features,
-                **extra,
-            )
+            if discrete and isinstance(objective, OneShotAcquisitionFunction):
+                candidate, value = optimize_mixed_one_shot_acqf(
+                    objective,
+                    bounds,
+                    categorical_features=discrete,
+                    q=q,
+                    num_restarts=restarts,
+                    raw_samples=raw_samples,
+                    max_assignments=max_discrete_assignments,
+                )
+            else:
+                if discrete:
+                    dims = tuple(discrete)
+                    extra["variable_space"] = variable_space
+                    extra["optimizer_options"] = {
+                        "fixed_features_list": [
+                            dict(zip(dims, values, strict=True))
+                            for values in product(*(discrete[dim] for dim in dims))
+                        ]
+                    }
+                candidate, value = optimize_acqf(
+                    acq_function=objective,
+                    bounds=bounds,
+                    q=q,
+                    num_restarts=restarts,
+                    raw_samples=raw_samples,
+                    options=options,
+                    batch_initial_conditions=initial,
+                    constraints=constraints,
+                    fixed_features=fixed_features,
+                    **extra,
+                )
             if candidate.shape != (q, bounds.shape[-1]) or value.numel() != 1:
                 raise RuntimeError("optimizer returned unexpected candidate or value shape")
             if not torch.isfinite(candidate).all() or not torch.isfinite(value).all():
