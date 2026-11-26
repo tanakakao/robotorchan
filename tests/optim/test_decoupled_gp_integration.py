@@ -388,3 +388,76 @@ def test_target_fidelity_decoupled_proposal(kind, discrete):
     assert (masks == mask).all(dim=-1).any()
     assert torch.isfinite(score)
     assert cost(candidate, mask) > 0
+
+
+@pytest.mark.parametrize("kind", ["kg", "epig"])
+def test_fidelity_projection_equivalence_and_output_specific_batch(kind):
+    x = torch.linspace(0, 1, 6, dtype=torch.double)
+    X = torch.stack((x, torch.arange(6, dtype=x.dtype) % 2), dim=-1)
+    model = ModelListGP(
+        SingleTaskMultiFidelityGP(X, x.sin().unsqueeze(-1), data_fidelities=[1]),
+        SingleTaskMultiFidelityGP(X, x.cos().unsqueeze(-1), data_fidelities=[1]),
+    )
+    model.eval()
+    with torch.no_grad():
+        model.posterior(X[:1])
+    masks = torch.tensor([[True, False], [False, True]])
+    target = project_to_target_fidelity(X, d=2, target_fidelities={1: 1.0})
+
+    def make(points, projection):
+        common = dict(model=model, X_evaluation_mask=masks, target_fidelities=projection)
+        if kind == "kg":
+            return create_acquisition(
+                "qDecoupledKnowledgeGradient",
+                **common,
+                decision_X=points,
+                weights=X.new_tensor([1.0, 1.0]),
+                sampler=ListSampler(
+                    SobolQMCNormalSampler(torch.Size([4]), seed=42),
+                    SobolQMCNormalSampler(torch.Size([4]), seed=43),
+                ),
+            )
+        return create_acquisition(
+            "qDecoupledExpectedPredictiveInformationGain",
+            **common,
+            target_X=points,
+            observation_noise=X.new_tensor([0.01, 0.02]),
+        )
+
+    projected = make(X, {1: 1.0})
+    explicit = make(target, None)
+    # Same design, different output and fidelity on each actual candidate row.
+    batch = X.new_tensor([[[0.4, 0.0], [0.4, 1.0]]]).requires_grad_()
+    value = projected(batch)
+    torch.testing.assert_close(value, explicit(batch))
+    assert torch.isfinite(torch.autograd.grad(value.sum(), batch)[0]).all()
+
+    bounds = X.new_tensor([[0.0, 0.0], [1.0, 1.0]])
+    full = torch.ones(1, 2, dtype=torch.bool)
+    initial = X.new_tensor([[[0.2, 1.0], [0.8, 1.0]], [[0.4, 1.0], [0.6, 1.0]]])
+    candidate, mask, score = optimize_acqf_decoupled(
+        projected,
+        bounds,
+        full,
+        q=2,
+        fixed_features={1: 1.0},
+        batch_initial_conditions=initial,
+        num_restarts=2,
+        raw_samples=8,
+        options={"maxiter": 5},
+    )
+    explicit.X_evaluation_mask = full.expand(2, -1)
+    direct, direct_score = optimize_acqf(
+        explicit,
+        bounds,
+        q=2,
+        fixed_features={1: 1.0},
+        batch_initial_conditions=initial,
+        num_restarts=2,
+        raw_samples=8,
+        options={"maxiter": 5},
+    )
+    assert mask.all()
+    assert (candidate[:, 1] == 1).all()
+    torch.testing.assert_close(candidate, direct)
+    torch.testing.assert_close(score, direct_score)

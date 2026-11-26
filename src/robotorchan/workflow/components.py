@@ -149,7 +149,7 @@ def _special_acquisition(spec: ProblemSpec, name: str) -> ComponentSelection:
             (
                 "requires ModelList with masked fantasy support and a reference point",
                 "requires one-shot optimization with augmented candidates",
-                "decoupled workflow and optimizer compatibility are not yet verified",
+                "joint masked optimization supported; pending workflow remains unverified",
             ),
         )
     if name in ("ConstrainedExpectedImprovement", "LogConstrainedExpectedImprovement"):

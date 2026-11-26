@@ -199,3 +199,11 @@ Output-dependent costs use the existing mask-aware cost callback or native
 multi-output cost utility, never both. Different fidelities for different
 outputs at the same design can be represented by separate masked candidate rows;
 per-output fidelity vectors within a single row are not implemented.
+
+Target projection is equivalent to explicitly supplying projected terminal
+points. Fixed-fidelity all-output optimization is compared against direct
+BoTorch optimization of the same acquisition, not against a differently
+trained single-fidelity GP. EPIG assumes constant observation variance per
+output across fidelity levels. Fidelity-specific noise and same-row per-output
+fidelity vectors are outside this contract. Native MFHVKG trace observations
+and pending workflow integration are not claimed.
