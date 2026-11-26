@@ -37,6 +37,7 @@ def test_existing_active_learning_acquisitions_remain_regression_compatible() ->
         if entry.capabilities.purpose is AcquisitionPurpose.ACTIVE_LEARNING
         and ObservationType.REGRESSION in entry.capabilities.observation_types
         and not entry.capabilities.requires_preference
+        and not entry.capabilities.requires_heterogeneous_model
     )
 
     for acquisition_name in regression_active_learning:

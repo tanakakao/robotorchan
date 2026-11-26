@@ -44,6 +44,7 @@ class AcquisitionCapabilities:
     requires_multi_fidelity: bool = False
     one_shot: bool = False
     requires_preference: bool = False
+    requires_heterogeneous_model: bool = False
 
 
 @dataclass(frozen=True, slots=True)

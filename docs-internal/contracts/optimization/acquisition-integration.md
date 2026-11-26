@@ -297,3 +297,10 @@ output and target location drawn from the specified prediction distribution.
 Weights are normalized across all outputs, not only observed outputs. Positive
 per-output observation noise variances are required. This is predictive
 information gain, not information about the optimizer or Pareto front.
+
+### Heterogeneous masked active learning
+
+`qDecoupledActiveLearning` composes child acquisitions on selected candidate
+rows of a `HeterogeneousModel`. Explicit utility weights are required; child
+posterior and batch requirements remain applicable. The registry marks this
+as requiring a heterogeneous model, not a standalone SingleTaskGP acquisition.

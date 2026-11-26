@@ -191,6 +191,7 @@ def test_binary_classifier_rejects_botorch_regression_bo_acquisition() -> None:
 
 
 def test_decoupled_al_requires_explicit_heterogeneous_composition() -> None:
+    assert ACQUISITION_REGISTRY["qDecoupledActiveLearning"].capabilities.requires_heterogeneous_model
     result = check_model_acquisition_compatibility("SingleTaskGP", "qDecoupledActiveLearning")
     assert not result.compatible
     assert "requires explicit HeterogeneousModel and child acquisition validation" in result.reasons

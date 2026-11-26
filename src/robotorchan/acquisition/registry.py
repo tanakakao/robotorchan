@@ -537,6 +537,7 @@ ACQUISITION_REGISTRY["qDecoupledActiveLearning"] = AcquisitionRegistryEntry(
         posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
         observation_types=frozenset({ObservationType.REGRESSION, ObservationType.CLASSIFICATION}),
         supports_multi_output=True,
+        requires_heterogeneous_model=True,
     ),
     implementation_strategy="robotorchan masked heterogeneous acquisition composition",
     limitations=(
