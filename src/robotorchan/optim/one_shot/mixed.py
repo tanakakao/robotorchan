@@ -26,6 +26,7 @@ def optimize_mixed_one_shot_acqf(
     constraints: CandidateConstraints | None = None,
     batch_initial_conditions: Tensor | None = None,
     options: dict[str, Any] | None = None,
+    fixed_features: dict[int, float] | None = None,
 ) -> tuple[Tensor, Tensor]:
     """Optimize row-specific discrete assignments, including one-shot auxiliary rows."""
     if q < 1:
@@ -39,6 +40,14 @@ def optimize_mixed_one_shot_acqf(
             raise ValueError(
                 f"categorical feature index {dimension} is outside [0, {feature_count})"
             )
+    actual_fixed = dict(fixed_features or {})
+    for index, value in actual_fixed.items():
+        if index < 0 or index >= feature_count:
+            raise ValueError("fixed feature index outside bounds")
+        if not bounds[0, index] <= value <= bounds[1, index]:
+            raise ValueError("fixed feature value outside bounds")
+        if index in categorical_features and value not in categorical_features[index]:
+            raise ValueError("fixed feature must be a legal categorical value")
     choices = [tuple(categorical_features[index]) for index in dimensions]
     for dimension, values in zip(dimensions, choices, strict=True):
         if not values:
@@ -110,11 +119,25 @@ def optimize_mixed_one_shot_acqf(
     best_augmented: Tensor | None = None
     best_value: Tensor | None = None
     for assignment in product(row_assignments, repeat=augmented_q):
-        fixed_features = {
+        flat_fixed = {
             row * bounds.shape[-1] + dimension: value
             for row, values in enumerate(assignment)
             for dimension, value in zip(dimensions, values, strict=True)
         }
+
+        if any(
+            flat_fixed.get(row * feature_count + index, value) != value
+            for row in range(q)
+            for index, value in actual_fixed.items()
+        ):
+            continue
+        flat_fixed.update(
+            {
+                row * feature_count + index: value
+                for row in range(q)
+                for index, value in actual_fixed.items()
+            }
+        )
 
         def flattened_acquisition(x: Tensor) -> Tensor:
             batch_shape = x.shape[:-2]
@@ -126,7 +149,7 @@ def optimize_mixed_one_shot_acqf(
         restarts = num_restarts
         if batch_initial_conditions is not None:
             initial = batch_initial_conditions.reshape(-1, 1, augmented_q * feature_count).clone()
-            for index, value in fixed_features.items():
+            for index, value in flat_fixed.items():
                 initial[..., index] = value
             feasible = []
             for row in initial:
@@ -155,7 +178,7 @@ def optimize_mixed_one_shot_acqf(
                 q=1,
                 num_restarts=restarts,
                 raw_samples=raw_samples,
-                fixed_features=fixed_features,
+                fixed_features=flat_fixed,
                 inequality_constraints=inequalities or None,
                 equality_constraints=equalities or None,
                 nonlinear_inequality_constraints=nonlinear or None,

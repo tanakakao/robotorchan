@@ -134,12 +134,6 @@ def optimize_acqf_decoupled(
     assignment_count = k**q if strategy == "joint" else k
     if strategy != "heuristic" and assignment_count > max_mask_assignments:
         raise ValueError("mask assignments exceed max_mask_assignments")
-    if (
-        isinstance(acq_function, OneShotAcquisitionFunction)
-        and constraints is not None
-        and fixed_features
-    ):
-        raise NotImplementedError("one-shot constrained fixed features are unsupported")
     if isinstance(acq_function, OneShotAcquisitionFunction) and optimizer != "botorch":
         raise NotImplementedError("one-shot acquisitions require the BoTorch backend")
     if cost_function is not None and budget is not None and optimizer != "botorch":
@@ -154,15 +148,13 @@ def optimize_acqf_decoupled(
             lower = int(bounds[0, dim].ceil().item())
             upper = int(bounds[1, dim].floor().item())
             discrete[dim] = tuple(range(lower, upper + 1))
-        for dim, value in (fixed_features or {}).items():
-            if dim in discrete:
-                discrete[dim] = (float(value),)
     if discrete and optimizer == "botorch":
         if cost_function is not None and budget is not None:
             raise NotImplementedError("mixed predicted hard budgets are not supported yet")
         joint_mixed = q > 1 and strategy != "sequential"
-        if (joint_mixed or isinstance(acq_function, OneShotAcquisitionFunction)) and (
-            fixed_features or optimizer_options is not None
+        if (
+            (joint_mixed or isinstance(acq_function, OneShotAcquisitionFunction))
+            and optimizer_options is not None
         ):
             raise NotImplementedError(
                 "mixed joint or one-shot constraints and custom starts or options"
@@ -253,7 +245,8 @@ def optimize_acqf_decoupled(
                 extra["nonlinear_inequality_constraints"] = ((budget_constraint, q == 1),)
             one_shot = isinstance(objective, OneShotAcquisitionFunction)
             if optimizer == "botorch" and (
-                (discrete and (q > 1 or one_shot)) or (one_shot and constraints is not None)
+                (discrete and (q > 1 or one_shot))
+                or (one_shot and (constraints is not None or fixed_features))
             ):
                 candidate, value = optimize_mixed_one_shot_acqf(
                     objective,
@@ -266,6 +259,7 @@ def optimize_acqf_decoupled(
                     constraints=constraints,
                     batch_initial_conditions=initial,
                     options=options,
+                    fixed_features=fixed_features,
                 )
             else:
                 if discrete and optimizer == "botorch":

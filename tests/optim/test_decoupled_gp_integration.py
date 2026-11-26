@@ -623,3 +623,31 @@ def test_mixed_fidelity_nonlinear_constraint(kind):
     assert limit(candidate) >= -1e-6
     assert torch.equal(mask, masks)
     assert torch.isfinite(score)
+
+
+def test_flattened_fixed_features_and_solver_fallback(monkeypatch):
+    from botorch.exceptions.errors import CandidateGenerationError
+
+    from robotorchan.optim.one_shot import mixed
+
+    class Quadratic:
+        def __call__(self, X):
+            return -((X[..., 0] - 0.4).square()).sum(dim=-1)
+
+    def fail(**kwargs):
+        raise CandidateGenerationError("forced solver failure")
+
+    monkeypatch.setattr(mixed, "optimize_acqf", fail)
+    bounds = torch.tensor([[0.0, 0.0], [1.0, 1.0]], dtype=torch.double)
+    starts = bounds.new_tensor([[[0.2, 0.0], [0.3, 1.0]], [[0.4, 0.0], [0.4, 1.0]]])
+    candidate, value = mixed.optimize_mixed_one_shot_acqf(
+        Quadratic(),
+        bounds,
+        categorical_features={1: (0.0, 1.0)},
+        q=2,
+        fixed_features={1: 1.0},
+        batch_initial_conditions=starts,
+        num_restarts=2,
+    )
+    torch.testing.assert_close(candidate, bounds.new_tensor([[0.4, 1.0], [0.4, 1.0]]))
+    torch.testing.assert_close(value, bounds.new_tensor(0.0))

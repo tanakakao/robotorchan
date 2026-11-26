@@ -228,3 +228,9 @@ starts are projected onto each enumerated discrete assignment and filtered for
 feasibility. Assignments without feasible supplied starts are skipped, not proven
 infeasible. Custom solver options are supported. Trace observations remain outside
 this contract because native masked MFHVKG does not implement trace expansion.
+
+Fixed features apply to actual candidate rows only; auxiliary discrete assignments
+remain independent. If the native solver raises CandidateGenerationError and
+validated starts exist, the best finite feasible start is retained. This fallback
+is not a guarantee of optimizer convergence. Trace observation expansion is a
+separate future extension requiring an explicit observation and cost contract.
