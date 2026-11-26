@@ -192,3 +192,54 @@ def test_actual_costs_and_retry_budget():
     assert failed.actual_costs == {"a": 2.0, "b": 2.0}
     with pytest.raises(ValueError, match="budget"):
         study.retry_failed(trial.number)
+
+
+def test_actual_cost_dataframe_and_resume():
+    pytest.importorskip("pandas")
+    kwargs = dict(
+        search_space={"x": (0.0, 1.0)},
+        output_names=("strength", "quality"),
+        decoupled_proposer=proposer,
+    )
+    study = create_study(**kwargs)
+    trial = study.ask()
+    study.tell(
+        trial,
+        observations={"strength": 2.0},
+        actual_costs={"strength": 3.0, "quality": 1.0},
+        state=TrialState.FAIL,
+    )
+    restored = create_study(**kwargs, initial_trials=study.trials)
+    frame = restored.trials_dataframe()
+    assert frame.loc[0, "actual_cost:strength"] == 3.0
+    assert frame.loc[0, "actual_cost:quality"] == 1.0
+
+
+def test_registered_acquisition_proposer():
+    X = torch.linspace(0, 1, 5, dtype=torch.double).unsqueeze(-1)
+    masks = torch.tensor([[True, False], [False, True]])
+
+    def model_factory(data):
+        model = ModelListGP(SingleTaskGP(X, X.sin()), SingleTaskGP(X, X.cos()))
+        model.eval()
+        return model
+
+    propose = create_decoupled_proposer(
+        parameter_names=("x",),
+        output_names=("a", "b"),
+        evaluation_masks=masks,
+        model_factory=model_factory,
+        acquisition_factory="qDecoupledExpectedPredictiveInformationGain",
+        acquisition_kwargs={
+            "target_X": X,
+            "X_evaluation_mask": masks[:1],
+            "observation_noise": X.new_tensor([0.1, 0.1]),
+        },
+        optimizer_kwargs={"optimizer": "sobol", "optimizer_options": {"num_samples": 8}},
+    )
+    study = create_study(
+        search_space={"x": (0.0, 1.0)},
+        output_names=("a", "b"),
+        decoupled_proposer=propose,
+    )
+    assert len(study.ask().evaluation_mask) == 1

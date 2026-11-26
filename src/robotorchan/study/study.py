@@ -107,7 +107,11 @@ class Study:
         names = tuple(self.search_space.bounds)
         columns = ["number", "state", "value", *names]
         if self.output_names:
-            columns += ["evaluation_mask", *[f"observation:{n}" for n in self.output_names]]
+            columns += [
+                "evaluation_mask",
+                *[f"observation:{n}" for n in self.output_names],
+                *[f"actual_cost:{n}" for n in self.output_names],
+            ]
         rows = [
             {
                 "number": trial.number,
@@ -118,6 +122,7 @@ class Study:
                     {
                         "evaluation_mask": trial.evaluation_mask,
                         **{f"observation:{n}": v for n, v in trial.observations.items()},
+                        **{f"actual_cost:{n}": v for n, v in trial.actual_costs.items()},
                     }
                     if self.output_names
                     else {}

@@ -281,3 +281,6 @@ The optimizer receives the CostBudget ledger, not a scalar remaining amount.
 Actual per-output charges can be supplied through tell(actual_costs=...),
 including failed evaluations. The fixed-cost proposer checks remaining budget
 before manual retries. Predicted costs remain fixed per output.
+
+Study DataFrame export includes actual_cost:<output> columns. The proposer
+accepts registered acquisition names with acquisition_kwargs via create_acquisition.

@@ -6,6 +6,7 @@ from typing import Any
 import torch
 from torch import Tensor
 
+from robotorchan.acquisition import create_acquisition
 from robotorchan.optim.decoupled import optimize_acqf_decoupled
 from robotorchan.study.trial import TrialState
 from robotorchan.workflow.cost_budget import CostBudget
@@ -17,7 +18,8 @@ def create_decoupled_proposer(
     output_names: Sequence[str],
     evaluation_masks: Tensor,
     model_factory: Callable[..., Any],
-    acquisition_factory: Callable[..., Any],
+    acquisition_factory: str | Callable[..., Any],
+    acquisition_kwargs: Mapping[str, Any] | None = None,
     optimizer_kwargs: Mapping[str, Any] | None = None,
     allow_pending: bool = False,
     pending_fantasies: bool = False,
@@ -64,12 +66,16 @@ def create_decoupled_proposer(
         ledger = CostBudget(total_budget)
         for trial in history:
             for name in set(trial.observations) | set(trial.actual_costs):
-                ledger.record(trial.actual_costs.get(name, costs[name]))
+                ledger.record(
+                    trial.actual_costs[name]
+                    if name in trial.actual_costs
+                    else costs[name]
+                )
         for trial in history:
             if trial.state is TrialState.RUNNING:
                 for name in trial.evaluation_mask:
                     if name not in trial.observations:
-                        ledger.reserve(f"{trial.number}:{name}", costs[name])
+                        ledger.reserve(f"{trial.number}:{name}", estimate(trial.params, name))
         return ledger
 
     def check_retry_budget(history, remaining):
@@ -98,7 +104,11 @@ def create_decoupled_proposer(
             call_options["output_costs"] = bounds.new_tensor([costs[n] for n in outputs])
             call_options["budget"] = ledger
         model = model_factory(data)
-        acq = acquisition_factory(model)
+        kwargs = dict(acquisition_kwargs or {})
+        if isinstance(acquisition_factory, str):
+            acq = create_acquisition(acquisition_factory, model=model, **kwargs)
+        else:
+            acq = acquisition_factory(model, **kwargs)
         if pending_fantasies and pending:
             pending_X = bounds.new_tensor(
                 [[trial.params[key] for key in parameters] for trial in pending]
