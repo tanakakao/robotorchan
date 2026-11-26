@@ -153,9 +153,8 @@ def optimize_acqf_decoupled(
             raise NotImplementedError("mixed predicted hard budgets are not supported yet")
         joint_mixed = q > 1 and strategy != "sequential"
         if (
-            (joint_mixed or isinstance(acq_function, OneShotAcquisitionFunction))
-            and optimizer_options is not None
-        ):
+            joint_mixed or isinstance(acq_function, OneShotAcquisitionFunction)
+        ) and optimizer_options is not None:
             raise NotImplementedError(
                 "mixed joint or one-shot constraints and custom starts or options"
             )
