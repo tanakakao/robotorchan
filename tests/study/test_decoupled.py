@@ -133,3 +133,34 @@ def test_fixed_cost_budget_from_history(monkeypatch):
     study.start_trial(trial.number)
     study.tell(trial, observations={"a": 1.0})
     study.ask()
+
+
+def test_pending_mask_excludes_observed_outputs(monkeypatch):
+    from robotorchan.study import decoupled
+
+    class Acquisition:
+        def set_X_pending(self, X, *, X_pending_evaluation_mask):
+            torch.testing.assert_close(X, X.new_tensor([[0.5]]))
+            assert torch.equal(X_pending_evaluation_mask, torch.tensor([[False, True]]))
+
+    def optimize(acq, bounds, masks, **kwargs):
+        return bounds.mean(dim=0).unsqueeze(0), masks[:1], bounds.new_tensor(0.0)
+
+    monkeypatch.setattr(decoupled, "optimize_acqf_decoupled", optimize)
+    propose = create_decoupled_proposer(
+        parameter_names=("x",),
+        output_names=("a", "b"),
+        evaluation_masks=torch.tensor([[True, False]]),
+        model_factory=lambda data: None,
+        acquisition_factory=lambda model: Acquisition(),
+        pending_fantasies=True,
+    )
+    study = create_study(
+        search_space={"x": (0.0, 1.0)},
+        output_names=("a", "b"),
+        decoupled_proposer=propose,
+    )
+    trial = study.add_trial({"x": 0.5}, evaluation_mask=("a", "b"))
+    study.start_trial(trial.number)
+    study.tell(trial, observations={"a": 1.0})
+    study.ask()
