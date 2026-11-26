@@ -146,7 +146,9 @@ def optimize_acqf_decoupled(
             or batch_initial_conditions is not None
             or options is not None
         ):
-            raise NotImplementedError("mixed joint or one-shot constraints and custom starts or options")
+            raise NotImplementedError(
+                "mixed joint or one-shot constraints and custom starts or options"
+            )
         count = 1
         for values in discrete.values():
             count *= len(values)
