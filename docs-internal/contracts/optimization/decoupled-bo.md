@@ -65,3 +65,15 @@ reservations; candidate proposal does not mutate the ledger. No affordable
 mask raises ValueError. Native cost-aware utilities must not be combined with
 external cost scaling. Input-dependent and learned costs require a separate
 within-mask optimization integration.
+
+
+### Input-dependent predicted costs
+
+For ordinary acquisitions, cost_function(X, mask) returns one strictly positive
+finite differentiable cost per t-batch, matching the acquisition value shape.
+The cost-adjusted objective is optimized directly, rather than adjusting only
+the final candidate. Fidelity columns can be used as ordinary inputs to the
+cost function. A learned model's posterior mean can be used as a deterministic
+predicted cost if positive and differentiable; this is not expected inverse cost
+under a random cost posterior. One-shot acquisitions require their native
+cost-aware utility and input-dependent hard budgets are not yet supported.

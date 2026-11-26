@@ -2,16 +2,41 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 import torch
-from botorch.acquisition.acquisition import AcquisitionFunction
+from botorch.acquisition.acquisition import AcquisitionFunction, OneShotAcquisitionFunction
 from torch import Tensor
 
 from robotorchan.optim.dispatch import optimize_acqf
 
 if TYPE_CHECKING:
     from robotorchan.workflow.cost_budget import CostBudget
+
+
+class _InputCostAcquisition(AcquisitionFunction):
+    """Apply deterministic predicted cost to an ordinary masked acquisition."""
+
+    def __init__(
+        self,
+        acquisition: AcquisitionFunction,
+        cost_function: Callable[[Tensor, Tensor], Tensor],
+        mask: Tensor,
+    ) -> None:
+        super().__init__(model=acquisition.model)
+        self.acquisition = acquisition
+        self.cost_function = cost_function
+        self.register_buffer("mask", mask)
+
+    def forward(self, X: Tensor) -> Tensor:
+        value = self.acquisition(X)
+        cost = self.cost_function(X, self.mask)
+        if cost.shape != value.shape:
+            raise ValueError("cost_function must return one cost per acquisition batch")
+        if not torch.isfinite(cost).all() or (cost <= 0).any():
+            raise ValueError("predicted costs must be finite and positive")
+        return torch.where(value >= 0, value / cost, value * cost)
 
 
 def optimize_acqf_decoupled(
@@ -27,6 +52,7 @@ def optimize_acqf_decoupled(
     output_costs: Tensor | None = None,
     mask_costs: Tensor | None = None,
     budget: CostBudget | None = None,
+    cost_function: Callable[[Tensor, Tensor], Tensor] | None = None,
 ) -> tuple[Tensor, Tensor, Tensor]:
     """Return candidate, selected evaluation mask, and acquisition value.
 
@@ -36,6 +62,8 @@ def optimize_acqf_decoupled(
     Fixed costs rank nonnegative gains by gain / cost and negative gains by
     gain * cost. The returned value is the ranking score when costs are given.
     Budget filtering does not reserve or charge the ledger.
+    Differentiable cost_function(X, mask) returns a positive cost per t-batch.
+    Input-dependent costs currently support ordinary acquisitions without a budget.
     """
     if q != 1:
         raise NotImplementedError("decoupled mask enumeration currently requires q=1")
@@ -53,8 +81,15 @@ def optimize_acqf_decoupled(
         raise ValueError("evaluation_masks and bounds must share a device")
     if getattr(acq_function, "X_pending", None) is not None:
         raise NotImplementedError("pending evaluations are not supported")
-    if output_costs is not None and mask_costs is not None:
-        raise ValueError("provide output_costs or mask_costs, not both")
+    if sum(cost is not None for cost in (output_costs, mask_costs, cost_function)) > 1:
+        raise ValueError("provide only one cost specification")
+    if cost_function is not None:
+        if isinstance(acq_function, OneShotAcquisitionFunction):
+            raise NotImplementedError("use native cost-aware utility for one-shot acquisitions")
+        if budget is not None:
+            raise NotImplementedError("input-dependent budget constraints are not yet supported")
+        if getattr(acq_function, "cost_aware_utility", None) is not None:
+            raise ValueError("acquisition already has a cost-aware utility")
     if output_costs is not None:
         if output_costs.shape != (evaluation_masks.shape[1],):
             raise ValueError("output_costs must have one entry per output")
@@ -80,8 +115,11 @@ def optimize_acqf_decoupled(
                 continue
             selected = mask.unsqueeze(0).clone()
             acq_function.X_evaluation_mask = selected
+            objective = acq_function
+            if cost_function is not None:
+                objective = _InputCostAcquisition(acq_function, cost_function, selected)
             candidate, value = optimize_acqf(
-                acq_function=acq_function,
+                acq_function=objective,
                 bounds=bounds,
                 q=q,
                 num_restarts=num_restarts,

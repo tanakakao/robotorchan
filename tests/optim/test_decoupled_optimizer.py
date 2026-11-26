@@ -105,3 +105,33 @@ def test_negative_gain_cost_ranking(monkeypatch):
     )
     assert torch.equal(mask, masks[:1])
     torch.testing.assert_close(score, bounds.new_tensor(-1.0))
+
+
+def test_input_cost_changes_continuous_candidate():
+    acq = MaskedQuadratic()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[False, True]])
+
+    def cost(X, mask):
+        return 1 + 4 * X[..., 0, 0]
+
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq, bounds, masks, cost_function=cost, num_restarts=3, raw_samples=32
+    )
+    assert candidate.item() < 0.5
+    assert torch.equal(mask, masks)
+    acq.X_evaluation_mask = mask
+    expected = acq(candidate) / cost(candidate, mask)
+    torch.testing.assert_close(score, expected)
+
+
+def test_input_cost_budget_is_explicitly_unsupported():
+    bounds = torch.tensor([[0.0], [1.0]])
+    with pytest.raises(NotImplementedError, match="budget"):
+        optimize_acqf_decoupled(
+            MaskedQuadratic(),
+            bounds,
+            torch.tensor([[True, False]]),
+            cost_function=lambda X, mask: X[..., 0, 0] + 1,
+            budget=CostBudget(total=1.0),
+        )
