@@ -135,10 +135,8 @@ def optimize_acqf_decoupled(
     if strategy != "heuristic" and assignment_count > max_mask_assignments:
         raise ValueError("mask assignments exceed max_mask_assignments")
     if isinstance(acq_function, OneShotAcquisitionFunction) and constraints is not None:
-        if constraints.has_nonlinear_constraints:
-            raise NotImplementedError("one-shot nonlinear candidate constraints are unsupported")
-        if fixed_features or batch_initial_conditions is not None or options is not None:
-            raise NotImplementedError("one-shot constrained custom starts or options")
+        if fixed_features:
+            raise NotImplementedError("one-shot constrained fixed features are unsupported")
     if isinstance(acq_function, OneShotAcquisitionFunction) and optimizer != "botorch":
         raise NotImplementedError("one-shot acquisitions require the BoTorch backend")
     if cost_function is not None and budget is not None and optimizer != "botorch":
@@ -161,10 +159,7 @@ def optimize_acqf_decoupled(
             raise NotImplementedError("mixed predicted hard budgets are not supported yet")
         joint_mixed = q > 1 and strategy != "sequential"
         if (joint_mixed or isinstance(acq_function, OneShotAcquisitionFunction)) and (
-            fixed_features
-            or batch_initial_conditions is not None
-            or options is not None
-            or optimizer_options is not None
+            fixed_features or optimizer_options is not None
         ):
             raise NotImplementedError(
                 "mixed joint or one-shot constraints and custom starts or options"
@@ -266,6 +261,8 @@ def optimize_acqf_decoupled(
                     raw_samples=raw_samples,
                     max_assignments=max_discrete_assignments,
                     constraints=constraints,
+                    batch_initial_conditions=initial,
+                    options=options,
                 )
             else:
                 if discrete and optimizer == "botorch":

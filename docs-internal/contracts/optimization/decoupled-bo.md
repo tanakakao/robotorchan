@@ -221,3 +221,10 @@ mixed joint and one-shot optimization. Auxiliary rows are excluded from the
 constraint mapping. Nonlinear constraints and custom constrained one-shot
 initialization remain unsupported. Shared-design equality on continuous design
 coordinates can be combined with discrete fidelity enumeration.
+
+Flattened optimization also maps nonlinear constraints to actual candidate rows.
+Explicit feasible augmented initial conditions are required for nonlinear constraints;
+starts are projected onto each enumerated discrete assignment and filtered for
+feasibility. Assignments without feasible supplied starts are skipped, not proven
+infeasible. Custom solver options are supported. Trace observations remain outside
+this contract because native masked MFHVKG does not implement trace expansion.

@@ -569,3 +569,57 @@ def test_shared_design_fidelity_linear_constraints(kind, discrete):
     assert torch.isfinite(score)
     if discrete:
         assert ((candidate[:, 1] == 0) | (candidate[:, 1] == 1)).all()
+
+
+@pytest.mark.parametrize("kind", ["epig", "hvkg"])
+def test_mixed_fidelity_nonlinear_constraint(kind):
+    torch.manual_seed(42)
+    x = torch.linspace(0, 1, 6, dtype=torch.double)
+    X = torch.stack((x, torch.arange(6, dtype=x.dtype) % 2), dim=-1)
+    model = ModelListGP(
+        SingleTaskMultiFidelityGP(X, x.sin().unsqueeze(-1), data_fidelities=[1]),
+        SingleTaskMultiFidelityGP(X, x.cos().unsqueeze(-1), data_fidelities=[1]),
+    )
+    model.eval()
+    masks = torch.tensor([[True, False], [False, True]])
+    common = dict(model=model, X_evaluation_mask=masks, target_fidelities={1: 1.0})
+    if kind == "epig":
+        acq = create_acquisition(
+            "qDecoupledExpectedPredictiveInformationGain",
+            **common,
+            target_X=X,
+            observation_noise=X.new_tensor([0.01, 0.02]),
+        )
+        augmented_q = 2
+    else:
+        acq = create_acquisition(
+            "qMultiFidelityHypervolumeKnowledgeGradient",
+            **common,
+            ref_point=X.new_tensor([-2.0, -2.0]),
+            num_fantasies=1,
+            num_pareto=1,
+        )
+        augmented_q = acq.get_augmented_q_batch_size(2)
+
+    def limit(batch):
+        return 0.25 - batch[:, 0].square().sum()
+
+    bounds = X.new_tensor([[0.0, 0.0], [1.0, 1.0]])
+    space = MixedVariableSpace(bounds, categorical_values={1: (0.0, 1.0)})
+    initial = X.new_full((2, augmented_q, 2), 0.2)
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        q=2,
+        variable_space=space,
+        constraints=CandidateConstraints(nonlinear_inequality_constraints=((limit, False),)),
+        mask_constraint=lambda mask: bool(torch.equal(mask, masks)),
+        batch_initial_conditions=initial,
+        num_restarts=2,
+        raw_samples=8,
+        options={"maxiter": 10},
+    )
+    assert limit(candidate) >= -1e-6
+    assert torch.equal(mask, masks)
+    assert torch.isfinite(score)
