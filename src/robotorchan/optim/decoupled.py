@@ -72,9 +72,12 @@ def optimize_acqf_decoupled(
     """
     if q < 1 or max_mask_assignments < 1:
         raise ValueError("q and max_mask_assignments must be positive")
-    if cost_function is not None and budget is not None:
-        if q != 1 or constraints is not None or fixed_features:
-            raise NotImplementedError("predicted budgets with batch or other constraints")
+    if (
+        cost_function is not None
+        and budget is not None
+        and (q != 1 or constraints is not None or fixed_features)
+    ):
+        raise NotImplementedError("predicted budgets with batch or other constraints")
     if not hasattr(acq_function, "X_evaluation_mask"):
         raise TypeError("acquisition must support X_evaluation_mask")
     if (
