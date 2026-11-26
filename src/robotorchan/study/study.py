@@ -254,6 +254,18 @@ class Study:
             for row, flags in zip(points, mask.tolist(), strict=True)
         )
 
+    def retry_failed(self, number: int) -> Trial:
+        """Register a new trial for only the failed trial's unobserved outputs."""
+        current = self.get_trial(number)
+        if current.state is not TrialState.FAIL or not current.evaluation_mask:
+            raise ValueError("Retry requires a failed decoupled trial.")
+        remaining = tuple(n for n in current.evaluation_mask if n not in current.observations)
+        if not remaining:
+            raise ValueError("No unobserved outputs remain.")
+        return self.start_trial(
+            self._register_trial(current.params, evaluation_mask=remaining).number
+        )
+
     def ask_contexts(self, contexts: list[Mapping[str, float]]) -> tuple[Trial, ...]:
         """Propose one candidate per observed context using independent q=1 searches.
 

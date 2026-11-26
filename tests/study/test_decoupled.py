@@ -87,3 +87,49 @@ def test_real_gp_proposer_uses_only_observed_outputs():
     assert seen[-1][name][1].shape == (1, 1)
     other = "b" if name == "a" else "a"
     assert seen[-1][other][1].shape == (0, 1)
+
+
+def test_retry_preserves_partial_results():
+    study = create_study(
+        search_space={"x": (0.0, 1.0)},
+        output_names=("strength", "quality"),
+        decoupled_proposer=proposer,
+    )
+    trial = study.ask()
+    study.tell(trial, observations={"strength": 2.0}, state=TrialState.FAIL)
+    retry = study.retry_failed(trial.number)
+    assert retry.params == trial.params
+    assert retry.evaluation_mask == ("quality",)
+    assert retry.number != trial.number
+    study.tell(retry, observations={"quality": 1.0})
+    assert study.get_trial(trial.number).observations == {"strength": 2.0}
+
+
+def test_fixed_cost_budget_from_history(monkeypatch):
+    from robotorchan.study import decoupled
+
+    def optimize(acq, bounds, masks, **kwargs):
+        assert kwargs["budget"] == 2.0
+        torch.testing.assert_close(kwargs["output_costs"], bounds.new_tensor([1.0, 2.0]))
+        return bounds.mean(dim=0).unsqueeze(0), masks[:1], bounds.new_tensor(0.0)
+
+    monkeypatch.setattr(decoupled, "optimize_acqf_decoupled", optimize)
+    propose = create_decoupled_proposer(
+        parameter_names=("x",),
+        output_names=("a", "b"),
+        evaluation_masks=torch.tensor([[True, False]]),
+        model_factory=lambda data: None,
+        acquisition_factory=lambda model: None,
+        allow_pending=True,
+        output_costs={"a": 1.0, "b": 2.0},
+        total_budget=5.0,
+    )
+    study = create_study(
+        search_space={"x": (0.0, 1.0)},
+        output_names=("a", "b"),
+        decoupled_proposer=propose,
+    )
+    trial = study.add_trial({"x": 0.5}, evaluation_mask=("a", "b"))
+    study.start_trial(trial.number)
+    study.tell(trial, observations={"a": 1.0})
+    study.ask()
