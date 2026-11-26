@@ -191,9 +191,7 @@ def check_compatibility(
             backend = CandidateOptimizer.MIXED_ONE_SHOT
         elif optimizer in ("random", "sobol", "de", "ga", "cmaes", "pso"):
             backend = CandidateOptimizer.DERIVATIVE_FREE
-        elif (
-            optimizer == "optimize_acqf_decoupled" and entry.capabilities.requires_derivative_free
-        ):
+        elif optimizer == "optimize_acqf_decoupled" and entry.capabilities.requires_derivative_free:
             backend = CandidateOptimizer.DERIVATIVE_FREE
             conditions.append("select a derivative-free backend in the decoupled optimizer")
         elif spec.input_type is InputType.MIXED:
