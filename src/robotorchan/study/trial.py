@@ -29,6 +29,8 @@ class Trial:
     evaluation_mask: tuple[str, ...] = ()
     observations: Mapping[str, float] = field(default_factory=dict)
 
+    actual_costs: Mapping[str, float] = field(default_factory=dict)
+
     def __post_init__(self) -> None:
         if self.number < 0:
             raise ValueError("Trial number must be non-negative.")
@@ -52,6 +54,17 @@ class Trial:
             raise ValueError("Observations must be finite numeric values for selected outputs.")
         object.__setattr__(self, "evaluation_mask", mask)
         object.__setattr__(self, "observations", MappingProxyType(observations))
+        costs = dict(self.actual_costs)
+        if not set(costs).issubset(mask) or any(
+            isinstance(v, bool) or not isinstance(v, (int, float)) or not isfinite(v) or v < 0
+            for v in costs.values()
+        ):
+            raise ValueError("Actual costs must be finite nonnegative selected-output costs.")
+        if self.state is TrialState.WAITING and costs:
+            raise ValueError("Waiting trials cannot contain actual costs.")
+        if self.state is TrialState.RUNNING and not set(costs).issubset(observations):
+            raise ValueError("Running trials can record costs only for observed outputs.")
+        object.__setattr__(self, "actual_costs", MappingProxyType(costs))
         if mask:
             if self.value is not None:
                 raise ValueError("Decoupled trials cannot contain a scalar value.")

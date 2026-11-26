@@ -277,3 +277,7 @@ manual retry and does not pass through proposer budget checks.
 Native hypervolume KG pending masks can be supplied through the proposer
 with pending_fantasies=True. Only outstanding outputs are included.
 The optimizer receives the CostBudget ledger, not a scalar remaining amount.
+
+Actual per-output charges can be supplied through tell(actual_costs=...),
+including failed evaluations. The fixed-cost proposer checks remaining budget
+before manual retries. Predicted costs remain fixed per output.

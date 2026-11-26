@@ -164,3 +164,31 @@ def test_pending_mask_excludes_observed_outputs(monkeypatch):
     study.start_trial(trial.number)
     study.tell(trial, observations={"a": 1.0})
     study.ask()
+
+
+def test_actual_costs_and_retry_budget():
+    propose = create_decoupled_proposer(
+        parameter_names=("x",),
+        output_names=("a", "b"),
+        evaluation_masks=torch.tensor([[True, False]]),
+        model_factory=lambda data: None,
+        acquisition_factory=lambda model: None,
+        output_costs={"a": 1.0, "b": 2.0},
+        total_budget=5.0,
+    )
+    study = create_study(
+        search_space={"x": (0.0, 1.0)},
+        output_names=("a", "b"),
+        decoupled_proposer=propose,
+    )
+    trial = study.add_trial({"x": 0.5}, evaluation_mask=("a", "b"))
+    study.start_trial(trial.number)
+    failed = study.tell(
+        trial,
+        observations={"a": 1.0},
+        actual_costs={"a": 2.0, "b": 2.0},
+        state=TrialState.FAIL,
+    )
+    assert failed.actual_costs == {"a": 2.0, "b": 2.0}
+    with pytest.raises(ValueError, match="budget"):
+        study.retry_failed(trial.number)

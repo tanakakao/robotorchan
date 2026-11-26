@@ -60,6 +60,24 @@ def create_decoupled_proposer(
         if {"output_costs", "mask_costs", "cost_function", "budget"} & options.keys():
             raise ValueError("Budget configuration conflicts with optimizer_kwargs.")
 
+    def budget_from_history(history):
+        ledger = CostBudget(total_budget)
+        for trial in history:
+            for name in set(trial.observations) | set(trial.actual_costs):
+                ledger.record(trial.actual_costs.get(name, costs[name]))
+        for trial in history:
+            if trial.state is TrialState.RUNNING:
+                for name in trial.evaluation_mask:
+                    if name not in trial.observations:
+                        ledger.reserve(f"{trial.number}:{name}", costs[name])
+        return ledger
+
+    def check_retry_budget(history, remaining):
+        if total_budget is not None and not budget_from_history(history).can_afford(
+            sum(costs[name] for name in remaining)
+        ):
+            raise ValueError("Insufficient evaluation budget for retry.")
+
     def propose(history, bounds, *, q, fixed_features):
         pending = [t for t in history if t.state is TrialState.RUNNING]
         if not (allow_pending or pending_fantasies) and pending:
@@ -74,15 +92,7 @@ def create_decoupled_proposer(
             data[name] = (X, Y)
         call_options = dict(options)
         if total_budget is not None:
-            ledger = CostBudget(total_budget)
-            for trial in history:
-                for name in trial.observations:
-                    ledger.record(costs[name])
-            for trial in history:
-                if trial.state is TrialState.RUNNING:
-                    for name in trial.evaluation_mask:
-                        if name not in trial.observations:
-                            ledger.reserve(f"{trial.number}:{name}", costs[name])
+            ledger = budget_from_history(history)
             if ledger.exhausted:
                 raise ValueError("Evaluation budget exhausted.")
             call_options["output_costs"] = bounds.new_tensor([costs[n] for n in outputs])
@@ -111,4 +121,5 @@ def create_decoupled_proposer(
             **call_options,
         )
 
+    propose.check_retry_budget = check_retry_budget
     return propose

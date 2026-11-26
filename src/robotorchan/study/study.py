@@ -262,6 +262,9 @@ class Study:
         remaining = tuple(n for n in current.evaluation_mask if n not in current.observations)
         if not remaining:
             raise ValueError("No unobserved outputs remain.")
+        check_budget = getattr(self.decoupled_proposer, "check_retry_budget", None)
+        if check_budget is not None:
+            check_budget(self.trials, remaining)
         return self.start_trial(
             self._register_trial(current.params, evaluation_mask=remaining).number
         )
@@ -309,6 +312,7 @@ class Study:
         *,
         state: TrialState = TrialState.COMPLETE,
         observations: Mapping[str, float] | None = None,
+        actual_costs: Mapping[str, float] | None = None,
     ) -> Trial:
         """Complete or fail a running trial after external evaluation."""
         number = trial.number if isinstance(trial, Trial) else trial
@@ -331,10 +335,18 @@ class Study:
             target = state
             if state is TrialState.COMPLETE and set(merged) != set(current.evaluation_mask):
                 target = TrialState.RUNNING
-            updated = replace(current, observations=merged, state=target)
+            costs = dict(actual_costs or {})
+            if set(costs) & set(current.actual_costs):
+                raise ValueError("An actual cost has already been recorded.")
+            updated = replace(
+                current,
+                observations=merged,
+                actual_costs={**current.actual_costs, **costs},
+                state=target,
+            )
             self._trials[number] = updated
             return updated
-        if observations is not None:
+        if observations is not None or actual_costs is not None:
             raise ValueError("Scalar trials do not accept named observations.")
         if state is TrialState.COMPLETE:
             if value is None:
