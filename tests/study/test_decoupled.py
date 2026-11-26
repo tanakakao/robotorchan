@@ -109,7 +109,7 @@ def test_fixed_cost_budget_from_history(monkeypatch):
     from robotorchan.study import decoupled
 
     def optimize(acq, bounds, masks, **kwargs):
-        assert kwargs["budget"] == 2.0
+        assert kwargs["budget"].remaining == 2.0
         torch.testing.assert_close(kwargs["output_costs"], bounds.new_tensor([1.0, 2.0]))
         return bounds.mean(dim=0).unsqueeze(0), masks[:1], bounds.new_tensor(0.0)
 

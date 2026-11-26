@@ -11,6 +11,9 @@ import torch
 from botorch.acquisition.acquisition import AcquisitionFunction, OneShotAcquisitionFunction
 from torch import Tensor
 
+from botorch.acquisition.multi_objective.hypervolume_knowledge_gradient import (
+    qHypervolumeKnowledgeGradient,
+)
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
 from robotorchan.optim.one_shot.mixed import optimize_mixed_one_shot_acqf
 
@@ -109,8 +112,10 @@ def optimize_acqf_decoupled(
         raise ValueError("evaluation_masks must contain nonempty boolean output masks")
     if evaluation_masks.device != bounds.device:
         raise ValueError("evaluation_masks and bounds must share a device")
-    if getattr(acq_function, "X_pending", None) is not None:
-        raise NotImplementedError("pending evaluations are not supported")
+    if getattr(acq_function, "X_pending", None) is not None and not isinstance(
+        acq_function, qHypervolumeKnowledgeGradient
+    ):
+        raise NotImplementedError("pending evaluations require native hypervolume KG")
     if sum(cost is not None for cost in (output_costs, mask_costs, cost_function)) > 1:
         raise ValueError("provide only one cost specification")
     if cost_function is not None:

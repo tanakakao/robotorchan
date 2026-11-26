@@ -273,3 +273,7 @@ observed results and outstanding running evaluations. Failed unobserved
 outputs release their reservations; failed evaluation charges are not modeled.
 `retry_failed` creates a new trial for remaining outputs; it is an explicit
 manual retry and does not pass through proposer budget checks.
+
+Native hypervolume KG pending masks can be supplied through the proposer
+with pending_fantasies=True. Only outstanding outputs are included.
+The optimizer receives the CostBudget ledger, not a scalar remaining amount.

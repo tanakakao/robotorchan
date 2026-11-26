@@ -20,6 +20,7 @@ def create_decoupled_proposer(
     acquisition_factory: Callable[..., Any],
     optimizer_kwargs: Mapping[str, Any] | None = None,
     allow_pending: bool = False,
+    pending_fantasies: bool = False,
     output_costs: Mapping[str, float] | None = None,
     total_budget: float | None = None,
 ) -> Callable[..., Any]:
@@ -27,7 +28,9 @@ def create_decoupled_proposer(
 
     Factories receive named training pairs and a fitted model, respectively.
     The model factory owns fitting and initial data for outputs without observations.
-    Pending evaluations are rejected by default; opt-in ignores pending information.
+    Pending evaluations are rejected by default. With pending_fantasies, native
+    hypervolume KG incorporates outstanding output evaluations. Otherwise opt-in
+    ignores pending information.
     """
     parameters = tuple(parameter_names)
     outputs = tuple(output_names)
@@ -58,7 +61,8 @@ def create_decoupled_proposer(
             raise ValueError("Budget configuration conflicts with optimizer_kwargs.")
 
     def propose(history, bounds, *, q, fixed_features):
-        if not allow_pending and any(t.state is TrialState.RUNNING for t in history):
+        pending = [t for t in history if t.state is TrialState.RUNNING]
+        if not (allow_pending or pending_fantasies) and pending:
             raise ValueError("Pending evaluations require an explicit pending policy.")
         data = {}
         for name in outputs:
@@ -82,9 +86,22 @@ def create_decoupled_proposer(
             if ledger.exhausted:
                 raise ValueError("Evaluation budget exhausted.")
             call_options["output_costs"] = bounds.new_tensor([costs[n] for n in outputs])
-            call_options["budget"] = ledger.remaining
+            call_options["budget"] = ledger
         model = model_factory(data)
         acq = acquisition_factory(model)
+        if pending_fantasies and pending:
+            pending_X = bounds.new_tensor(
+                [[trial.params[key] for key in parameters] for trial in pending]
+            )
+            pending_mask = torch.tensor(
+                [
+                    [name in t.evaluation_mask and name not in t.observations for name in outputs]
+                    for t in pending
+                ],
+                dtype=torch.bool,
+                device=bounds.device,
+            )
+            acq.set_X_pending(pending_X, X_pending_evaluation_mask=pending_mask)
         return optimize_acqf_decoupled(
             acq,
             bounds,
