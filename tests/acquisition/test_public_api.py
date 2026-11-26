@@ -47,7 +47,7 @@ def test_acquisition_public_api_is_intentionally_small() -> None:
         "qBoundaryVariance",
         "qConditionalExpectedPredictiveInformationGain",
         "qDecoupledActiveLearning",
-    "qDecoupledExpectedPredictiveInformationGain",
+        "qDecoupledExpectedPredictiveInformationGain",
         "qDecoupledKnowledgeGradient",
         "qExpectedPredictiveInformationGain",
         "qJointExpectedPredictiveInformationGain",

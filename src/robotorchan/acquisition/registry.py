@@ -528,3 +528,21 @@ ACQUISITION_REGISTRY["qDecoupledExpectedPredictiveInformationGain"] = _active_le
         "pending evaluations and correlated outputs are not supported",
     ),
 )
+
+
+ACQUISITION_REGISTRY["qDecoupledActiveLearning"] = AcquisitionRegistryEntry(
+    acquisition_name="qDecoupledActiveLearning",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.ACTIVE_LEARNING,
+        posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
+        observation_types=frozenset({ObservationType.REGRESSION, ObservationType.CLASSIFICATION}),
+        supports_multi_output=True,
+    ),
+    implementation_strategy="robotorchan masked heterogeneous acquisition composition",
+    limitations=(
+        "requires HeterogeneousModel with one semantic output per entry",
+        "posterior requirements and q limits depend on the supplied child acquisitions",
+        "requires explicit utility weights and evaluation masks",
+        "pending evaluations are not supported",
+    ),
+)

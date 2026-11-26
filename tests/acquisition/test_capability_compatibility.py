@@ -188,3 +188,9 @@ def test_binary_classifier_rejects_botorch_regression_bo_acquisition() -> None:
     result = check_capabilities_acquisition_compatibility(model, "qLogExpectedImprovement")
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "acquisition does not support classification observations" in result.reasons
+
+
+def test_decoupled_al_requires_explicit_heterogeneous_composition() -> None:
+    result = check_model_acquisition_compatibility("SingleTaskGP", "qDecoupledActiveLearning")
+    assert not result.compatible
+    assert "requires explicit HeterogeneousModel and child acquisition validation" in result.reasons

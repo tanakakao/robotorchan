@@ -34,6 +34,8 @@ def check_capabilities_acquisition_compatibility(
     acquisition = ACQUISITION_REGISTRY[acquisition_name]
     acquisition_capabilities = acquisition.capabilities
     reasons: list[str] = []
+    if acquisition_name == "qDecoupledActiveLearning":
+        reasons.append("requires explicit HeterogeneousModel and child acquisition validation")
 
     if model_capabilities.observation_type not in acquisition_capabilities.observation_types:
         reasons.append(
