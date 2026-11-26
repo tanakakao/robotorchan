@@ -132,6 +132,12 @@ is extended. Mixed and sequential strategies require separate validation.
 MixedVariableSpace supplies integer and categorical choices. Ordinary masked
 acquisitions delegate to the existing mixed BoTorch dispatch; one-shot
 acquisitions delegate to the existing row-specific mixed one-shot optimizer.
-The discrete enumeration cap is separate from the mask cap. Mixed joint
-batches, mixed predicted hard budgets, and custom one-shot constraints,
+The discrete enumeration cap is separate from the mask cap. Mixed predicted hard budgets and custom joint or one-shot constraints,
 fixed features, starts and options are not yet supported.
+
+### Mixed joint batches
+
+The existing row-specific one-shot enumeration also handles ordinary joint
+acquisitions, using q rows without fantasy augmentation. Each row has its own
+discrete assignment. One-shot acquisitions retain auxiliary rows and extract
+only actual candidates. The discrete cap applies per evaluation-mask assignment.

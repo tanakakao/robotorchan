@@ -241,7 +241,8 @@ def test_learned_log_cost_decoupled_epig():
 
 
 @pytest.mark.parametrize("kind", ["kg", "epig", "hvkg"])
-def test_mixed_gp_decoupled_candidate(kind):
+@pytest.mark.parametrize("q", [1, 2])
+def test_mixed_gp_decoupled_candidate(kind, q):
     torch.manual_seed(42)
     x = torch.linspace(0, 1, 6, dtype=torch.double)
     X = torch.stack((x, torch.arange(6, dtype=x.dtype) % 2), dim=-1)
@@ -288,12 +289,13 @@ def test_mixed_gp_decoupled_candidate(kind):
         bounds,
         masks,
         variable_space=space,
+        q=q,
         num_restarts=2,
         raw_samples=8,
     )
-    assert candidate.shape == (1, 2)
-    assert candidate[0, 1].item() in (0.0, 1.0)
+    assert candidate.shape == (q, 2)
+    assert ((candidate[:, 1] == 0) | (candidate[:, 1] == 1)).all()
     assert (candidate >= bounds[0]).all() and (candidate <= bounds[1]).all()
-    assert (masks == mask).all(dim=-1).any()
+    assert (masks.unsqueeze(0) == mask.unsqueeze(1)).all(dim=-1).any(dim=-1).all()
     assert torch.isfinite(value).all()
     assert acq.X_evaluation_mask is original

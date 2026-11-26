@@ -138,17 +138,15 @@ def optimize_acqf_decoupled(
             if dim in discrete:
                 discrete[dim] = (float(value),)
     if discrete:
-        if q != 1:
-            raise NotImplementedError("mixed decoupled joint batches are not supported yet")
         if cost_function is not None and budget is not None:
             raise NotImplementedError("mixed predicted hard budgets are not supported yet")
-        if isinstance(acq_function, OneShotAcquisitionFunction) and (
+        if (q > 1 or isinstance(acq_function, OneShotAcquisitionFunction)) and (
             constraints is not None
             or fixed_features
             or batch_initial_conditions is not None
             or options is not None
         ):
-            raise NotImplementedError("mixed one-shot constraints and custom starts or options")
+            raise NotImplementedError("mixed joint or one-shot constraints and custom starts or options")
         count = 1
         for values in discrete.values():
             count *= len(values)
@@ -189,7 +187,7 @@ def optimize_acqf_decoupled(
                     continue
                 restarts = initial.shape[0]
                 extra["nonlinear_inequality_constraints"] = ((budget_constraint, True),)
-            if discrete and isinstance(objective, OneShotAcquisitionFunction):
+            if discrete and (q > 1 or isinstance(objective, OneShotAcquisitionFunction)):
                 candidate, value = optimize_mixed_one_shot_acqf(
                     objective,
                     bounds,
