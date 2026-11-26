@@ -67,6 +67,7 @@ def optimize_acqf_decoupled(
     optimizer: OptimizerName = "botorch",
     optimizer_options: dict[str, Any] | None = None,
     seed: int | None = None,
+    mask_constraint: Callable[[Tensor], bool] | None = None,
 ) -> tuple[Tensor, Tensor, Tensor]:
     """Return candidate, selected evaluation mask, and acquisition value.
 
@@ -78,15 +79,16 @@ def optimize_acqf_decoupled(
     Budget filtering does not reserve or charge the ledger.
     Differentiable cost_function(X, mask) returns a positive cost per t-batch.
     Input-dependent budgets require explicit feasible initial conditions.
+    mask_constraint filters complete joint masks before candidate optimization.
     """
     if q < 1 or max_mask_assignments < 1 or max_discrete_assignments < 1:
         raise ValueError("q and assignment limits must be positive")
     if (
         cost_function is not None
         and budget is not None
-        and (q != 1 or constraints is not None or fixed_features)
+        and (constraints is not None or fixed_features)
     ):
-        raise NotImplementedError("predicted budgets with batch or other constraints")
+        raise NotImplementedError("predicted budgets with other candidate constraints")
     if not hasattr(acq_function, "X_evaluation_mask"):
         raise TypeError("acquisition must support X_evaluation_mask")
     if (
@@ -132,6 +134,8 @@ def optimize_acqf_decoupled(
     assignment_count = k**q if strategy == "joint" else k
     if strategy != "heuristic" and assignment_count > max_mask_assignments:
         raise ValueError("mask assignments exceed max_mask_assignments")
+    if isinstance(acq_function, OneShotAcquisitionFunction) and constraints is not None:
+        raise NotImplementedError("one-shot candidate constraints require actual-row mapping")
     if isinstance(acq_function, OneShotAcquisitionFunction) and optimizer != "botorch":
         raise NotImplementedError("one-shot acquisitions require the BoTorch backend")
     if cost_function is not None and budget is not None and optimizer != "botorch":
@@ -142,7 +146,7 @@ def optimize_acqf_decoupled(
             raise ValueError("variable_space bounds must match bounds")
         variable_space.validate_fixed_features(fixed_features)
         discrete = dict(variable_space.categorical_values or {})
-        for dim in variable_space.integer_dims:
+        for dim in variable_space.integer_dims if optimizer == "botorch" else ():
             lower = int(bounds[0, dim].ceil().item())
             upper = int(bounds[1, dim].floor().item())
             discrete[dim] = tuple(range(lower, upper + 1))
@@ -172,6 +176,7 @@ def optimize_acqf_decoupled(
         if (
             isinstance(acq_function, OneShotAcquisitionFunction)
             or constraints is not None
+            or mask_constraint is not None
             or batch_initial_conditions is not None
             or cost_function is not None
             or getattr(acq_function, "cost_aware_utility", None) is not None
@@ -208,6 +213,8 @@ def optimize_acqf_decoupled(
             if budget is not None and cost is not None and not budget.can_afford(cost.item()):
                 continue
             selected = evaluation_masks[indices].clone()
+            if mask_constraint is not None and not mask_constraint(selected):
+                continue
             acq_function.X_evaluation_mask = selected
             objective = acq_function
             if cost_function is not None:
@@ -228,9 +235,12 @@ def optimize_acqf_decoupled(
                 def budget_constraint(
                     x: Tensor, remaining: float = remaining, selected: Tensor = selected
                 ) -> Tensor:
-                    return remaining - cost_function(x.reshape(1, 1, -1), selected).reshape(())
+                    batch = x.reshape(1, selected.shape[0], -1)
+                    return remaining - cost_function(batch, selected).reshape(())
 
                 with torch.no_grad():
+                    if initial.ndim != 3 or initial.shape[1:] != (q, bounds.shape[-1]):
+                        raise ValueError("initial conditions must have shape [restarts, q, d]")
                     estimates = cost_function(initial, selected)
                     if estimates.shape != initial.shape[:-2]:
                         raise ValueError("cost_function must return one cost per initial batch")
@@ -240,7 +250,7 @@ def optimize_acqf_decoupled(
                 if initial.shape[0] == 0:
                     continue
                 restarts = initial.shape[0]
-                extra["nonlinear_inequality_constraints"] = ((budget_constraint, True),)
+                extra["nonlinear_inequality_constraints"] = ((budget_constraint, q == 1),)
             if (
                 discrete
                 and optimizer == "botorch"
@@ -306,7 +316,7 @@ def optimize_acqf_decoupled(
     finally:
         acq_function.X_evaluation_mask = original_mask
     if best is None:
-        raise ValueError("no affordable evaluation mask")
+        raise ValueError("no affordable evaluation mask satisfying the requested constraints")
     return best
 
 

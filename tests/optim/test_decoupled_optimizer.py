@@ -312,3 +312,64 @@ def test_heuristic_assignment_limit_and_seed():
     assert first == second
     assert len(set(first)) == 7
     assert first[0] == (1,) * 5
+
+
+@pytest.mark.parametrize("strategy", ["joint", "heuristic"])
+def test_joint_mask_constraint(strategy):
+    acq = BatchMaskedQuadratic()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[True, False], [False, True]])
+    _, selected, _ = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        q=2,
+        strategy=strategy,
+        optimizer="sobol",
+        mask_constraint=lambda mask: bool(mask.any(dim=0).all()),
+        raw_samples=16,
+    )
+    assert selected.any(dim=0).all()
+
+
+def test_joint_input_cost_budget():
+    acq = BatchMaskedQuadratic()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[False, True]])
+    budget = CostBudget(total=2.5)
+
+    def cost(X, mask):
+        return 2 + X[..., :, 0].sum(dim=-1)
+
+    initial = bounds.new_tensor([[[0.1], [0.1]], [[0.2], [0.2]]])
+    candidate, selected, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        q=2,
+        cost_function=cost,
+        budget=budget,
+        batch_initial_conditions=initial,
+        num_restarts=2,
+    )
+    assert candidate.shape == (2, 1)
+    assert budget.can_afford(cost(candidate, selected).item())
+    assert torch.isfinite(score)
+    assert budget.remaining == 2.5
+
+
+@pytest.mark.parametrize("optimizer", ["torch_adam", "torch_adamw", "torch_sgd"])
+def test_named_gradient_backend(optimizer):
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    candidate, mask, score = optimize_acqf_decoupled(
+        BatchMaskedQuadratic(),
+        bounds,
+        torch.tensor([[True, False], [False, True]]),
+        q=2,
+        optimizer=optimizer,
+        num_restarts=2,
+        raw_samples=8,
+    )
+    assert candidate.shape == (2, 1)
+    assert mask.shape == (2, 2)
+    assert torch.isfinite(score)

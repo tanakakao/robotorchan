@@ -161,3 +161,14 @@ when the full set fits the cap. It does not approximate the acquisition itself.
 Ordinary acquisitions delegate named optimizer selection and backend options
 to existing dispatch, including mixed-capable backends. One-shot and predicted
 hard budgets require BoTorch. Backend capability restrictions remain in force.
+
+### Joint mask constraints and predicted batch budgets
+
+`mask_constraint(mask)` filters complete boolean `[q, m]` assignments before
+optimization in joint and heuristic modes. Sequential rejects arbitrary
+full-batch mask predicates because prefix feasibility cannot be inferred.
+Ordinary continuous BoTorch acquisitions support predicted hard batch budgets
+with feasible explicit starts and an inter-point nonlinear cost constraint.
+Other candidate constraints and fixed features cannot yet be combined with
+this predicted budget path. One-shot candidate constraints are rejected until
+actual-row mapping is available. Heuristic failure does not prove infeasibility.
