@@ -112,10 +112,12 @@ def optimize_acqf_decoupled(
         raise ValueError("evaluation_masks must contain nonempty boolean output masks")
     if evaluation_masks.device != bounds.device:
         raise ValueError("evaluation_masks and bounds must share a device")
-    if getattr(acq_function, "X_pending", None) is not None and not isinstance(
-        acq_function, qHypervolumeKnowledgeGradient
+    if (
+        getattr(acq_function, "X_pending", None) is not None
+        and not isinstance(acq_function, qHypervolumeKnowledgeGradient)
+        and not getattr(acq_function, "supports_masked_pending", False)
     ):
-        raise NotImplementedError("pending evaluations require native hypervolume KG")
+        raise NotImplementedError("acquisition does not support masked pending evaluations")
     if sum(cost is not None for cost in (output_costs, mask_costs, cost_function)) > 1:
         raise ValueError("provide only one cost specification")
     if cost_function is not None:

@@ -284,3 +284,7 @@ before manual retries. Predicted costs remain fixed per output.
 
 Study DataFrame export includes actual_cost:<output> columns. The proposer
 accepts registered acquisition names with acquisition_kwargs via create_acquisition.
+
+Decoupled Gaussian EPIG supports masked pending evaluations through the
+conditional mutual information identity I(Y; C | P) = I(Y; C,P) - I(Y; P).
+Only outstanding outputs enter P; pending-only outputs contribute zero gain.
