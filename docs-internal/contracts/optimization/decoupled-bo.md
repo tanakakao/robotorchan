@@ -77,3 +77,14 @@ cost function. A learned model's posterior mean can be used as a deterministic
 predicted cost if positive and differentiable; this is not expected inverse cost
 under a random cost posterior. One-shot acquisitions require their native
 cost-aware utility and input-dependent hard budgets are not yet supported.
+
+
+### Native one-shot cost utility
+
+HVKG and MFHVKG use the native InverseCostWeightedUtility with a positive
+multi-output cost model and a current hypervolume baseline. The native
+acquisition handles evaluation masks and applies cost to actual candidates,
+not fantasy decision rows. The decoupled optimizer compares the resulting
+native scores without additional scaling. The integration test uses a
+finite target-set hypervolume baseline as an approximation, not an exact
+continuous Pareto optimum.
