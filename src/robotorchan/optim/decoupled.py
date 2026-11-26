@@ -81,6 +81,14 @@ def optimize_acqf_decoupled(
     Input-dependent budgets require explicit feasible initial conditions.
     mask_constraint filters complete joint masks before candidate optimization.
     """
+    if getattr(acq_function, "requires_derivative_free", False) and optimizer in (
+        "botorch",
+        "torch_adam",
+        "torch_adamw",
+        "torch_sgd",
+        "hybrid",
+    ):
+        raise ValueError("acquisition requires a derivative-free optimizer")
     if q < 1 or max_mask_assignments < 1 or max_discrete_assignments < 1:
         raise ValueError("q and assignment limits must be positive")
     if (

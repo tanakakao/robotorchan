@@ -60,7 +60,7 @@ def test_registry_covers_public_acquisition_classes() -> None:
         for name, entry in ACQUISITION_REGISTRY.items()
         if entry.capabilities.purpose is AcquisitionPurpose.ACTIVE_LEARNING
     }
-    bo_extensions = {"qDecoupledKnowledgeGradient"}
+    bo_extensions = {"qDecoupledKnowledgeGradient", "qDecoupledParticleKnowledgeGradient"}
     assert public_extensions == (expected - bo_extensions) | {
         "PairwiseBayesianActiveLearningByDisagreement"
     }
@@ -188,3 +188,26 @@ def test_binary_classifier_rejects_botorch_regression_bo_acquisition() -> None:
     result = check_capabilities_acquisition_compatibility(model, "qLogExpectedImprovement")
     assert result.status is CompatibilityStatus.INCOMPATIBLE
     assert "acquisition does not support classification observations" in result.reasons
+
+
+def test_decoupled_al_requires_explicit_heterogeneous_composition() -> None:
+    entry = ACQUISITION_REGISTRY["qDecoupledActiveLearning"]
+    assert entry.capabilities.requires_heterogeneous_model
+    result = check_model_acquisition_compatibility("SingleTaskGP", "qDecoupledActiveLearning")
+    assert not result.compatible
+    assert "requires explicit HeterogeneousModel and child acquisition validation" in result.reasons
+
+
+def test_particle_kg_optimizer_capability() -> None:
+    from robotorchan.acquisition.optimizer_compatibility import (
+        CandidateOptimizer,
+        check_acquisition_optimizer_compatibility,
+    )
+
+    name = "qDecoupledParticleKnowledgeGradient"
+    assert not check_acquisition_optimizer_compatibility(
+        name, CandidateOptimizer.CONTINUOUS
+    ).compatible
+    assert check_acquisition_optimizer_compatibility(
+        name, CandidateOptimizer.DERIVATIVE_FREE, q=2
+    ).compatible

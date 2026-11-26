@@ -57,8 +57,10 @@ from robotorchan.acquisition.composition import (
     resolve_acquisition_composition,
 )
 from robotorchan.acquisition.decoupled import (
+    qDecoupledActiveLearning,
     qDecoupledExpectedPredictiveInformationGain,
     qDecoupledKnowledgeGradient,
+    qDecoupledParticleKnowledgeGradient,
 )
 from robotorchan.acquisition.factory import (
     create_acquisition,
@@ -113,8 +115,10 @@ __all__ = [
     "qBALD",
     "qBoundaryVariance",
     "qConditionalExpectedPredictiveInformationGain",
+    "qDecoupledActiveLearning",
     "qDecoupledExpectedPredictiveInformationGain",
     "qDecoupledKnowledgeGradient",
+    "qDecoupledParticleKnowledgeGradient",
     "qExpectedPredictiveInformationGain",
     "qJointExpectedPredictiveInformationGain",
     "qJointPosteriorEntropy",
