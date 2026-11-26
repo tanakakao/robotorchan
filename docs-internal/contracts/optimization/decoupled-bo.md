@@ -114,3 +114,14 @@ their own cost utility; hard input-dependent budgets for native one-shot
 acquisitions are outside this phase's supported contract. Mixed and batch
 candidate optimization are subsequent extensions. The learned-cost EPIG
 integration fits a log-cost GP before candidate generation.
+
+
+## Phase 6: joint batch enumeration
+
+The continuous optimizer enumerates ordered assignments of allowed mask rows
+to q actual candidates, with an explicit max_mask_assignments cap (default
+256). Fixed per-mask costs are summed across candidates; cross-candidate
+discounts are not implied. Candidate constraints and fixed features are
+delegated to the existing dispatch. Predicted hard budgets combined with
+other constraints or q > 1 remain unsupported until feasible-start handling
+is extended. Mixed and sequential strategies require separate validation.

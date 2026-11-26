@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from itertools import product
 from typing import TYPE_CHECKING, Any
 
 import torch
@@ -12,6 +13,7 @@ from torch import Tensor
 from robotorchan.optim.dispatch import optimize_acqf
 
 if TYPE_CHECKING:
+    from robotorchan.optim.constraints.contracts import CandidateConstraints
     from robotorchan.workflow.cost_budget import CostBudget
 
 
@@ -53,10 +55,13 @@ def optimize_acqf_decoupled(
     mask_costs: Tensor | None = None,
     budget: CostBudget | None = None,
     cost_function: Callable[[Tensor, Tensor], Tensor] | None = None,
+    constraints: CandidateConstraints | None = None,
+    fixed_features: dict[int, float | Tensor] | None = None,
+    max_mask_assignments: int = 256,
 ) -> tuple[Tensor, Tensor, Tensor]:
     """Return candidate, selected evaluation mask, and acquisition value.
 
-    Phase 4 enumerates allowed masks for q=1 in continuous domains. One-shot
+    Enumerate ordered mask assignments for joint q-batches. One-shot
     auxiliary candidates are managed by BoTorch, never included in the mask.
     The original acquisition mask is restored even if optimization fails.
     Fixed costs rank nonnegative gains by gain / cost and negative gains by
@@ -65,8 +70,11 @@ def optimize_acqf_decoupled(
     Differentiable cost_function(X, mask) returns a positive cost per t-batch.
     Input-dependent budgets require explicit feasible initial conditions.
     """
-    if q != 1:
-        raise NotImplementedError("decoupled mask enumeration currently requires q=1")
+    if q < 1 or max_mask_assignments < 1:
+        raise ValueError("q and max_mask_assignments must be positive")
+    if cost_function is not None and budget is not None:
+        if q != 1 or constraints is not None or fixed_features:
+            raise NotImplementedError("predicted budgets with batch or other constraints")
     if not hasattr(acq_function, "X_evaluation_mask"):
         raise TypeError("acquisition must support X_evaluation_mask")
     if (
@@ -106,14 +114,18 @@ def optimize_acqf_decoupled(
             raise ValueError("acquisition already has a cost-aware utility")
     if budget is not None and mask_costs is None and cost_function is None:
         raise ValueError("budget filtering requires explicit costs")
+    k = evaluation_masks.shape[0]
+    if k**q > max_mask_assignments:
+        raise ValueError("mask assignments exceed max_mask_assignments")
     original_mask = acq_function.X_evaluation_mask
     best = None
     try:
-        for i, mask in enumerate(evaluation_masks):
-            cost = None if mask_costs is None else mask_costs[i]
+        for assignment in product(range(k), repeat=q):
+            indices = list(assignment)
+            cost = None if mask_costs is None else mask_costs[indices].sum()
             if budget is not None and cost is not None and not budget.can_afford(cost.item()):
                 continue
-            selected = mask.unsqueeze(0).clone()
+            selected = evaluation_masks[indices].clone()
             acq_function.X_evaluation_mask = selected
             objective = acq_function
             if cost_function is not None:
@@ -148,6 +160,8 @@ def optimize_acqf_decoupled(
                 raw_samples=raw_samples,
                 options=options,
                 batch_initial_conditions=initial,
+                constraints=constraints,
+                fixed_features=fixed_features,
                 **extra,
             )
             if candidate.shape != (q, bounds.shape[-1]) or value.numel() != 1:

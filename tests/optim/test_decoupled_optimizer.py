@@ -226,3 +226,29 @@ def test_input_cost_budget_skips_unaffordable_masks():
             num_restarts=2,
         )
     assert acq.X_evaluation_mask is original
+
+
+def test_joint_mask_assignments_and_batch_cost(monkeypatch):
+    acq = MaskedQuadratic()
+    original = acq.X_evaluation_mask
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[True, False], [False, True]])
+    seen = []
+
+    def optimize(**kwargs):
+        mask = kwargs["acq_function"].X_evaluation_mask
+        seen.append(mask.clone())
+        gain = 9.0 if torch.equal(mask, masks) else 1.0
+        return bounds.new_tensor([[0.2], [0.8]]), bounds.new_tensor(gain)
+
+    monkeypatch.setattr("robotorchan.optim.decoupled.optimize_acqf", optimize)
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq, bounds, masks, q=2, output_costs=bounds.new_tensor([1.0, 2.0])
+    )
+    assert len(seen) == 4
+    assert candidate.shape == (2, 1)
+    assert torch.equal(mask, masks)
+    torch.testing.assert_close(score, bounds.new_tensor(3.0))
+    assert acq.X_evaluation_mask is original
+    with pytest.raises(ValueError, match="max_mask_assignments"):
+        optimize_acqf_decoupled(acq, bounds, masks, q=2, max_mask_assignments=3)
