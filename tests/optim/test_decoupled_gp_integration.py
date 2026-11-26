@@ -6,7 +6,7 @@ from botorch.acquisition.acquisition import OneShotAcquisitionFunction
 from botorch.acquisition.cost_aware import InverseCostWeightedUtility
 from botorch.acquisition.utils import project_to_target_fidelity
 from botorch.fit import fit_gpytorch_mll
-from botorch.models import ModelListGP, SingleTaskGP, SingleTaskMultiFidelityGP
+from botorch.models import MixedSingleTaskGP, ModelListGP, SingleTaskGP, SingleTaskMultiFidelityGP
 from botorch.models.deterministic import GenericDeterministicModel
 from botorch.optim import optimize_acqf
 from botorch.sampling.list_sampler import ListSampler
@@ -16,6 +16,7 @@ from gpytorch.mlls import ExactMarginalLogLikelihood
 
 from robotorchan.acquisition import create_acquisition
 from robotorchan.optim import optimize_acqf_decoupled
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 
 
 @pytest.mark.parametrize("kind", ["kg", "constrained", "epig", "hvkg", "mfhvkg"])
@@ -237,3 +238,62 @@ def test_learned_log_cost_decoupled_epig():
     assert (masks == mask).all(dim=-1).any()
     assert torch.isfinite(score)
     assert cost(candidate.unsqueeze(0), mask).item() > 0
+
+
+@pytest.mark.parametrize("kind", ["kg", "epig", "hvkg"])
+def test_mixed_gp_decoupled_candidate(kind):
+    torch.manual_seed(42)
+    x = torch.linspace(0, 1, 6, dtype=torch.double)
+    X = torch.stack((x, torch.arange(6, dtype=x.dtype) % 2), dim=-1)
+    model = ModelListGP(
+        MixedSingleTaskGP(X, (x.sin() + X[:, 1]).unsqueeze(-1), cat_dims=[1]),
+        MixedSingleTaskGP(X, (x.cos() - X[:, 1]).unsqueeze(-1), cat_dims=[1]),
+    )
+    model.eval()
+    with torch.no_grad():
+        model.posterior(X[:1])
+    masks = torch.tensor([[True, False], [False, True]])
+    original = masks[:1]
+    common = dict(model=model, X_evaluation_mask=original)
+    if kind == "kg":
+        acq = create_acquisition(
+            "qDecoupledKnowledgeGradient",
+            **common,
+            decision_X=X,
+            weights=X.new_tensor([1.0, 1.0]),
+            sampler=ListSampler(
+                SobolQMCNormalSampler(torch.Size([2]), seed=42),
+                SobolQMCNormalSampler(torch.Size([2]), seed=43),
+            ),
+        )
+    elif kind == "epig":
+        acq = create_acquisition(
+            "qDecoupledExpectedPredictiveInformationGain",
+            **common,
+            target_X=X,
+            observation_noise=X.new_tensor([0.01, 0.02]),
+        )
+    else:
+        acq = create_acquisition(
+            "qHypervolumeKnowledgeGradient",
+            **common,
+            ref_point=X.new_tensor([-2.0, -2.0]),
+            num_fantasies=1,
+            num_pareto=1,
+        )
+    bounds = X.new_tensor([[0.0, 0.0], [1.0, 1.0]])
+    space = MixedVariableSpace(bounds, categorical_values={1: (0.0, 1.0)})
+    candidate, mask, value = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        variable_space=space,
+        num_restarts=2,
+        raw_samples=8,
+    )
+    assert candidate.shape == (1, 2)
+    assert candidate[0, 1].item() in (0.0, 1.0)
+    assert (candidate >= bounds[0]).all() and (candidate <= bounds[1]).all()
+    assert (masks == mask).all(dim=-1).any()
+    assert torch.isfinite(value).all()
+    assert acq.X_evaluation_mask is original
