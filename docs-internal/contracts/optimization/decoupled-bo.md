@@ -262,3 +262,8 @@ and partial observations. A decoupled proposer receives all trial snapshots,
 bounds, q and fixed features, returning the existing optimizer's triple.
 Partial results remain available after failure and restoration. No implicit
 scalar best trial is defined for heterogeneous objectives.
+
+`create_decoupled_proposer` assembles observed-only training pairs by output
+and delegates model fitting and acquisition construction to explicit factories.
+It calls the existing decoupled optimizer. Pending evaluations are rejected
+by default; opt-in currently ignores pending information rather than fantasizing.

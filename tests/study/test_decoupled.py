@@ -3,7 +3,10 @@
 import pytest
 import torch
 
-from robotorchan.study import create_study
+from botorch.models import ModelListGP, SingleTaskGP
+
+from robotorchan.acquisition import qDecoupledExpectedPredictiveInformationGain
+from robotorchan.study import create_decoupled_proposer, create_study
 from robotorchan.study.trial import TrialState
 
 
@@ -35,3 +38,53 @@ def test_partial_observations_resume_and_failure():
     assert restored.ask().number == 2
     with pytest.raises(ValueError, match="scalar"):
         _ = restored.best_trial
+
+
+def test_real_gp_proposer_uses_only_observed_outputs():
+    seen = []
+    X = torch.linspace(0, 1, 5, dtype=torch.double).unsqueeze(-1)
+
+    def model_factory(data):
+        seen.append(data)
+        models = []
+        for j, (train_X, train_Y) in enumerate(data.values()):
+            model = SingleTaskGP(
+                torch.cat([X, train_X]),
+                torch.cat([X.sin() + j, train_Y]),
+            )
+            model.eval()
+            models.append(model)
+        return ModelListGP(*models)
+
+    masks = torch.tensor([[True, False], [False, True]])
+
+    def acquisition_factory(model):
+        return qDecoupledExpectedPredictiveInformationGain(
+            model=model,
+            target_X=X,
+            X_evaluation_mask=masks[:1],
+            observation_noise=X.new_tensor([0.1, 0.1]),
+        )
+
+    propose = create_decoupled_proposer(
+        parameter_names=("x",),
+        output_names=("a", "b"),
+        evaluation_masks=masks,
+        model_factory=model_factory,
+        acquisition_factory=acquisition_factory,
+        optimizer_kwargs={"optimizer": "sobol", "optimizer_options": {"num_samples": 8}},
+    )
+    study = create_study(
+        search_space={"x": (0.0, 1.0)},
+        output_names=("a", "b"),
+        decoupled_proposer=propose,
+    )
+    trial = study.ask()
+    with pytest.raises(ValueError, match="Pending"):
+        study.ask()
+    name = trial.evaluation_mask[0]
+    study.tell(trial, observations={name: 0.5})
+    study.ask()
+    assert seen[-1][name][1].shape == (1, 1)
+    other = "b" if name == "a" else "a"
+    assert seen[-1][other][1].shape == (0, 1)
