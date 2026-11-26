@@ -125,9 +125,9 @@ def test_input_cost_changes_continuous_candidate():
     torch.testing.assert_close(score, expected)
 
 
-def test_input_cost_budget_is_explicitly_unsupported():
+def test_input_cost_budget_requires_initial_conditions():
     bounds = torch.tensor([[0.0], [1.0]])
-    with pytest.raises(NotImplementedError, match="budget"):
+    with pytest.raises(ValueError, match="batch_initial_conditions"):
         optimize_acqf_decoupled(
             MaskedQuadratic(),
             bounds,
@@ -135,3 +135,27 @@ def test_input_cost_budget_is_explicitly_unsupported():
             cost_function=lambda X, mask: X[..., 0, 0] + 1,
             budget=CostBudget(total=1.0),
         )
+
+
+def test_input_cost_budget_constrains_candidate():
+    acq = MaskedQuadratic()
+    bounds = torch.tensor([[0.0], [1.0]], dtype=torch.double)
+    masks = torch.tensor([[False, True]])
+    budget = CostBudget(total=1.1)
+
+    def cost(X, mask):
+        return 1 + X[..., 0, 0]
+
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        cost_function=cost,
+        budget=budget,
+        batch_initial_conditions=bounds.new_tensor([[[0.0]], [[0.05]], [[0.8]]]),
+        num_restarts=3,
+    )
+    assert candidate.item() <= 0.1
+    assert torch.equal(mask, masks)
+    assert torch.isfinite(score)
+    assert budget.spent == 0

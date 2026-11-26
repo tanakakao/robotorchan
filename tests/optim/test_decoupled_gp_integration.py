@@ -196,3 +196,38 @@ def test_native_cost_aware_decoupled_one_shot(multifidelity):
     assert torch.equal(acq.X_evaluation_mask, masks[:1])
     with pytest.raises(ValueError, match="already has a cost-aware utility"):
         optimize_acqf_decoupled(acq, bounds, masks, output_costs=X.new_tensor([1.0, 2.0]))
+
+
+def test_learned_log_cost_decoupled_epig():
+    X = torch.linspace(0, 1, 6, dtype=torch.double).unsqueeze(-1)
+    model = ModelListGP(SingleTaskGP(X, X.sin()), SingleTaskGP(X, X.cos()))
+    cost_model = SingleTaskGP(X, torch.cat((1 + X, 2 + 3 * X), dim=-1).log())
+    model.eval()
+    cost_model.eval()
+    masks = torch.tensor([[True, False], [False, True], [True, True]])
+    acq = create_acquisition(
+        "qDecoupledExpectedPredictiveInformationGain",
+        model=model,
+        target_X=X,
+        observation_noise=X.new_tensor([0.01, 0.02]),
+        X_evaluation_mask=masks[:1],
+    )
+
+    def cost(points, mask):
+        posterior = cost_model.posterior(points)
+        expected = (posterior.mean + 0.5 * posterior.variance).exp()
+        return (expected * mask.to(points)).sum(dim=(-2, -1))
+
+    candidate, mask, score = optimize_acqf_decoupled(
+        acq,
+        X.new_tensor([[0.0], [1.0]]),
+        masks,
+        cost_function=cost,
+        num_restarts=2,
+        raw_samples=8,
+        options={"maxiter": 5, "seed": 42},
+    )
+    assert candidate.shape == (1, 1)
+    assert (masks == mask).all(dim=-1).any()
+    assert torch.isfinite(score)
+    assert cost(candidate.unsqueeze(0), mask).item() > 0

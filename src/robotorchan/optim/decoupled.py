@@ -63,7 +63,7 @@ def optimize_acqf_decoupled(
     gain * cost. The returned value is the ranking score when costs are given.
     Budget filtering does not reserve or charge the ledger.
     Differentiable cost_function(X, mask) returns a positive cost per t-batch.
-    Input-dependent costs currently support ordinary acquisitions without a budget.
+    Input-dependent budgets require explicit feasible initial conditions.
     """
     if q != 1:
         raise NotImplementedError("decoupled mask enumeration currently requires q=1")
@@ -86,8 +86,8 @@ def optimize_acqf_decoupled(
     if cost_function is not None:
         if isinstance(acq_function, OneShotAcquisitionFunction):
             raise NotImplementedError("use native cost-aware utility for one-shot acquisitions")
-        if budget is not None:
-            raise NotImplementedError("input-dependent budget constraints are not yet supported")
+        if budget is not None and batch_initial_conditions is None:
+            raise ValueError("input-dependent budget requires batch_initial_conditions")
         if getattr(acq_function, "cost_aware_utility", None) is not None:
             raise ValueError("acquisition already has a cost-aware utility")
     if output_costs is not None:
@@ -104,33 +104,59 @@ def optimize_acqf_decoupled(
         mask_costs = mask_costs.to(bounds)
         if getattr(acq_function, "cost_aware_utility", None) is not None:
             raise ValueError("acquisition already has a cost-aware utility")
-    if budget is not None and mask_costs is None:
+    if budget is not None and mask_costs is None and cost_function is None:
         raise ValueError("budget filtering requires explicit costs")
     original_mask = acq_function.X_evaluation_mask
     best = None
     try:
         for i, mask in enumerate(evaluation_masks):
             cost = None if mask_costs is None else mask_costs[i]
-            if budget is not None and not budget.can_afford(cost.item()):
+            if budget is not None and cost is not None and not budget.can_afford(cost.item()):
                 continue
             selected = mask.unsqueeze(0).clone()
             acq_function.X_evaluation_mask = selected
             objective = acq_function
             if cost_function is not None:
                 objective = _InputCostAcquisition(acq_function, cost_function, selected)
+            initial = batch_initial_conditions
+            restarts = num_restarts
+            extra = {}
+            if cost_function is not None and budget is not None:
+                remaining = budget.remaining
+
+                def budget_constraint(x: Tensor) -> Tensor:
+                    return remaining - cost_function(x.reshape(1, 1, -1), selected).reshape(())
+
+                with torch.no_grad():
+                    estimates = cost_function(initial, selected)
+                    if estimates.shape != initial.shape[:-2]:
+                        raise ValueError("cost_function must return one cost per initial batch")
+                    if not torch.isfinite(estimates).all() or (estimates <= 0).any():
+                        raise ValueError("predicted costs must be finite and positive")
+                    initial = initial[estimates <= remaining]
+                if initial.shape[0] == 0:
+                    continue
+                restarts = initial.shape[0]
+                extra["nonlinear_inequality_constraints"] = ((budget_constraint, True),)
             candidate, value = optimize_acqf(
                 acq_function=objective,
                 bounds=bounds,
                 q=q,
-                num_restarts=num_restarts,
+                num_restarts=restarts,
                 raw_samples=raw_samples,
                 options=options,
-                batch_initial_conditions=batch_initial_conditions,
+                batch_initial_conditions=initial,
+                **extra,
             )
             if candidate.shape != (q, bounds.shape[-1]) or value.numel() != 1:
                 raise RuntimeError("optimizer returned unexpected candidate or value shape")
             if not torch.isfinite(candidate).all() or not torch.isfinite(value).all():
                 raise RuntimeError("optimizer returned nonfinite candidate or value")
+            if cost_function is not None and budget is not None:
+                with torch.no_grad():
+                    estimate = cost_function(candidate.unsqueeze(0), selected).item()
+                if not budget.can_afford(estimate):
+                    continue
             if cost is not None:
                 value = torch.where(value >= 0, value / cost, value * cost)
                 if not torch.isfinite(value).all():

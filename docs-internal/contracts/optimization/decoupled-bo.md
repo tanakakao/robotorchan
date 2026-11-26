@@ -76,7 +76,7 @@ the final candidate. Fidelity columns can be used as ordinary inputs to the
 cost function. A learned model's posterior mean can be used as a deterministic
 predicted cost if positive and differentiable; this is not expected inverse cost
 under a random cost posterior. One-shot acquisitions require their native
-cost-aware utility and input-dependent hard budgets are not yet supported.
+cost-aware utility. Input-dependent budgets require feasible initial conditions.
 
 
 ### Native one-shot cost utility
@@ -88,3 +88,14 @@ not fantasy decision rows. The decoupled optimizer compares the resulting
 native scores without additional scaling. The integration test uses a
 finite target-set hypervolume baseline as an approximation, not an exact
 continuous Pareto optimum.
+
+
+### Predicted-cost budget constraint
+
+For ordinary acquisitions with input-dependent costs, supply explicit
+batch_initial_conditions. Each mask filters those starts by remaining budget
+and delegates a differentiable nonlinear inequality to the existing BoTorch
+backend. Masks without feasible supplied starts are skipped; this does not
+prove global infeasibility. Returned candidates are checked against the
+ledger again, without spending or reserving funds. This constrains predicted
+cost, not uncertain realized cost. Native one-shot budgets remain unsupported.
