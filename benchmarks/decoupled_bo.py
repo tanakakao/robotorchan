@@ -14,15 +14,24 @@ def main():
     )
     parser.add_argument("--seeds", default="0,1,2")
     parser.add_argument("--budget", type=int, default=40)
+    parser.add_argument("--policies", default="epig,random,sobol")
+    parser.add_argument("--no-fit", action="store_true")
     args = parser.parse_args()
     problem = {"branin_currin": branin_currin, "zdt1": zdt1, "dtlz2": dtlz2}[args.problem]()
     costs = tuple(2 * i + 1 for i in range(problem.n_objectives))
     for seed in map(int, args.seeds.split(",")):
-        for decoupled in (False, True):
-            for row in run_decoupled_benchmark(
-                problem, seed=seed, budget=args.budget, output_costs=costs, decoupled=decoupled
-            ):
-                print(json.dumps({"problem": problem.name, **row}))
+        for policy in args.policies.split(","):
+            for decoupled in (False, True):
+                for row in run_decoupled_benchmark(
+                    problem,
+                    seed=seed,
+                    budget=args.budget,
+                    output_costs=costs,
+                    decoupled=decoupled,
+                    policy=policy,
+                    fit_model=not args.no_fit,
+                ):
+                    print(json.dumps({"problem": problem.name, **row}))
 
 
 if __name__ == "__main__":
