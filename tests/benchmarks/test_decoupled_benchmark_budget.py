@@ -5,9 +5,16 @@ from robotorchan.benchmarks.multiobjective_problems import branin_currin
 
 
 @pytest.mark.parametrize("decoupled", [False, True])
-def test_equal_budget_accounting(decoupled):
+@pytest.mark.parametrize("policy", ["epig", "random", "sobol"])
+def test_equal_budget_accounting(decoupled, policy):
     records = run_decoupled_benchmark(
-        branin_currin(), budget=12, n_initial=2, num_samples=4, decoupled=decoupled
+        branin_currin(),
+        budget=12,
+        n_initial=2,
+        num_samples=4,
+        decoupled=decoupled,
+        policy=policy,
+        fit_model=False,
     )
     assert records[0]["cost"] == 8
     assert len(records) >= 2
