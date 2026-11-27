@@ -1,11 +1,14 @@
 """Equal-budget coupled and decoupled information acquisition benchmarks."""
 
 from time import perf_counter
+from typing import Literal
 
 import torch
+from botorch.fit import fit_gpytorch_mll
 from botorch.models import ModelListGP, SingleTaskGP
 from botorch.utils.multi_objective.hypervolume import Hypervolume
 from botorch.utils.multi_objective.pareto import is_non_dominated
+from gpytorch.mlls import SumMarginalLogLikelihood
 
 from robotorchan.acquisition.factory import create_acquisition
 from robotorchan.benchmarks.problem import BenchmarkProblem
@@ -22,6 +25,8 @@ def run_decoupled_benchmark(
     n_initial: int = 4,
     num_samples: int = 16,
     decoupled: bool = True,
+    policy: Literal["epig", "random", "sobol"] = "epig",
+    fit_model: bool = True,
 ) -> list[dict]:
     """Compare masked EPIG policies using a common finite recommendation set.
 
@@ -29,6 +34,8 @@ def run_decoupled_benchmark(
     partially observed rows. Oracle values never enter training or selection.
     Initial design costs count against the same total budget.
     """
+    if policy not in ("epig", "random", "sobol"):
+        raise ValueError("Unknown benchmark policy.")
     m = problem.n_objectives
     if (
         m < 2
@@ -59,11 +66,15 @@ def run_decoupled_benchmark(
     spent = n_initial * sum(output_costs)
     reference = problem.to_maximization(problem.reference_point.to(bounds))
     hv = Hypervolume(reference)
+    generator = torch.Generator(device=bounds.device).manual_seed(seed)
+    baseline_engine = torch.quasirandom.SobolEngine(d, scramble=True, seed=seed + 1)
     records = []
     elapsed = 0.0
     while True:
         start = perf_counter()
         model = ModelListGP(*(SingleTaskGP(x, y) for x, y in zip(train_X, train_Y, strict=True)))
+        if fit_model:
+            fit_gpytorch_mll(SumMarginalLogLikelihood(model.likelihood, model))
         model.eval()
         with torch.no_grad():
             mean = model.posterior(target).mean
@@ -74,7 +85,7 @@ def run_decoupled_benchmark(
         records.append(
             {
                 "seed": seed,
-                "method": "decoupled_epig" if decoupled else "coupled_epig",
+                "method": f"{'decoupled' if decoupled else 'coupled'}_{policy}",
                 "cost": spent,
                 "hypervolume": score,
                 "runtime_seconds": elapsed,
@@ -84,23 +95,37 @@ def run_decoupled_benchmark(
         if not any(ledger.can_afford(float(c)) for c in masks.to(bounds) @ costs):
             break
         start = perf_counter()
-        acq = create_acquisition(
-            "qDecoupledExpectedPredictiveInformationGain",
-            model=model,
-            target_X=target,
-            X_evaluation_mask=masks[:1],
-            observation_noise=costs.new_full((m,), 0.1),
-        )
-        candidate, mask, _ = optimize_acqf_decoupled(
-            acq,
-            bounds,
-            masks,
-            output_costs=costs,
-            budget=ledger,
-            optimizer="sobol",
-            optimizer_options={"num_samples": num_samples},
-            seed=seed + len(records),
-        )
+        if policy == "epig":
+            acq = create_acquisition(
+                "qDecoupledExpectedPredictiveInformationGain",
+                model=model,
+                target_X=target,
+                X_evaluation_mask=masks[:1],
+                observation_noise=costs.new_full((m,), 0.1),
+            )
+            candidate, mask, _ = optimize_acqf_decoupled(
+                acq,
+                bounds,
+                masks,
+                output_costs=costs,
+                budget=ledger,
+                optimizer="sobol",
+                optimizer_options={"num_samples": num_samples},
+                seed=seed + len(records),
+            )
+        else:
+            affordable = masks[(masks.to(bounds) @ costs) <= ledger.remaining]
+            index = torch.randint(
+                len(affordable), (1,), generator=generator, device=bounds.device
+            )
+            mask = affordable[index]
+            if policy == "sobol":
+                unit = baseline_engine.draw(1).to(bounds)
+            else:
+                unit = torch.rand(
+                    (1, d), generator=generator, dtype=bounds.dtype, device=bounds.device
+                )
+            candidate = bounds[0] + unit * (bounds[1] - bounds[0])
         charge = int((mask.to(costs) @ costs).sum().item())
         ledger.record(charge)
         spent += charge
