@@ -129,6 +129,17 @@ def check_compatibility(
     reasons: list[str] = []
     conditions: list[str] = []
     unknown = False
+    if spec.decoupled:
+        masked_entry = ACQUISITION_REGISTRY.get(acquisition)
+        if masked_entry is None or not masked_entry.capabilities.supports_decoupled:
+            reasons.append("requires a verified masked acquisition")
+        if spec.masked_pending and (
+            masked_entry is None or not masked_entry.capabilities.supports_masked_pending
+        ):
+            reasons.append("requires masked pending evaluation support")
+        if optimizer != "optimize_acqf_decoupled" or search_strategy is not None:
+            reasons.append("requires the dedicated decoupled optimizer without a search strategy")
+        conditions.append("validate output-specific training data and evaluation masks")
     for group in (
         inventory.models,
         inventory.acquisitions,
@@ -194,6 +205,13 @@ def check_compatibility(
         elif optimizer == "optimize_acqf_decoupled" and entry.capabilities.requires_derivative_free:
             backend = CandidateOptimizer.DERIVATIVE_FREE
             conditions.append("select a derivative-free backend in the decoupled optimizer")
+        elif (
+            optimizer == "optimize_acqf_decoupled"
+            and spec.input_type is InputType.MIXED
+            and entry.capabilities.one_shot
+        ):
+            backend = CandidateOptimizer.MIXED_ONE_SHOT
+            conditions.append("requires supported mixed one-shot assignments")
         elif spec.input_type is InputType.MIXED:
             backend = CandidateOptimizer.MIXED
         else:
@@ -208,6 +226,7 @@ def check_compatibility(
             "botorch",
             "optimize_acqf_botorch",
             "optimize_mixed_one_shot_acqf",
+            "optimize_acqf_decoupled",
         ):
             reasons.append("optimizer has no verified one-shot augmented-batch path")
         if entry.capabilities.one_shot and search_strategy not in (
@@ -274,7 +293,7 @@ def recommend(
 ) -> tuple[WorkflowRecommendation, ...]:
     """Enumerate unranked candidates; use auto to enumerate optimizer or strategy names."""
     if optimizer is None and search_strategy is None:
-        optimizer = "botorch"
+        optimizer = "optimize_acqf_decoupled" if spec.decoupled else "botorch"
     if model == "auto":
         models = import_module("robotorchan.models")
         model_names = models.list_models()

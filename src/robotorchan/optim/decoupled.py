@@ -9,6 +9,9 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import torch
 from botorch.acquisition.acquisition import AcquisitionFunction, OneShotAcquisitionFunction
+from botorch.acquisition.multi_objective.hypervolume_knowledge_gradient import (
+    qHypervolumeKnowledgeGradient,
+)
 from torch import Tensor
 
 from robotorchan.optim.dispatch import OptimizerName, optimize_acqf
@@ -109,8 +112,12 @@ def optimize_acqf_decoupled(
         raise ValueError("evaluation_masks must contain nonempty boolean output masks")
     if evaluation_masks.device != bounds.device:
         raise ValueError("evaluation_masks and bounds must share a device")
-    if getattr(acq_function, "X_pending", None) is not None:
-        raise NotImplementedError("pending evaluations are not supported")
+    if (
+        getattr(acq_function, "X_pending", None) is not None
+        and not isinstance(acq_function, qHypervolumeKnowledgeGradient)
+        and not getattr(acq_function, "supports_masked_pending", False)
+    ):
+        raise NotImplementedError("acquisition does not support masked pending evaluations")
     if sum(cost is not None for cost in (output_costs, mask_costs, cost_function)) > 1:
         raise ValueError("provide only one cost specification")
     if cost_function is not None:

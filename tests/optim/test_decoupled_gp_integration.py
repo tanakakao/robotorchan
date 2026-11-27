@@ -651,3 +651,54 @@ def test_flattened_fixed_features_and_solver_fallback(monkeypatch):
     )
     torch.testing.assert_close(candidate, bounds.new_tensor([[0.4, 1.0], [0.4, 1.0]]))
     torch.testing.assert_close(value, bounds.new_tensor(0.0))
+
+
+@pytest.mark.parametrize("multifidelity", [False, True])
+def test_native_pending_decoupled_candidate(multifidelity):
+    torch.manual_seed(42)
+    x = torch.linspace(0, 1, 6, dtype=torch.double)
+    X = x.unsqueeze(-1)
+    extra = {}
+    name = "qHypervolumeKnowledgeGradient"
+    if multifidelity:
+        X = torch.stack((x, torch.arange(6, dtype=x.dtype) % 2), dim=-1)
+        model = ModelListGP(
+            SingleTaskMultiFidelityGP(X, x.sin().unsqueeze(-1), data_fidelities=[1]),
+            SingleTaskMultiFidelityGP(X, x.cos().unsqueeze(-1), data_fidelities=[1]),
+        )
+        name = "qMultiFidelityHypervolumeKnowledgeGradient"
+        extra = {"target_fidelities": {1: 1.0}}
+    else:
+        model = ModelListGP(SingleTaskGP(X, X.sin()), SingleTaskGP(X, X.cos()))
+    model.eval()
+    with torch.no_grad():
+        model.posterior(X[:1])
+    masks = torch.tensor([[True, False], [False, True]])
+    acq = create_acquisition(
+        name,
+        model=model,
+        ref_point=X.new_tensor([-2.0, -2.0]),
+        num_fantasies=2,
+        num_pareto=1,
+        X_evaluation_mask=masks[:1],
+        **extra,
+    )
+    pending = X[:1].clone()
+    acq.set_X_pending(pending, X_pending_evaluation_mask=masks[1:])
+    bounds = torch.stack((X.new_zeros(X.shape[-1]), X.new_ones(X.shape[-1])))
+    initial = torch.rand(2, acq.get_augmented_q_batch_size(1), X.shape[-1], dtype=X.dtype)
+    candidate, selected, value = optimize_acqf_decoupled(
+        acq,
+        bounds,
+        masks,
+        num_restarts=2,
+        raw_samples=8,
+        batch_initial_conditions=initial,
+        options={"maxiter": 5},
+    )
+    assert candidate.shape == (1, X.shape[-1])
+    assert (masks == selected).all(dim=-1).any()
+    assert torch.isfinite(value)
+    torch.testing.assert_close(acq.X_pending, pending)
+    assert torch.equal(acq.X_pending_evaluation_mask, masks[1:])
+    assert torch.equal(acq.X_evaluation_mask, masks[:1])

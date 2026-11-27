@@ -166,6 +166,7 @@ class qDecoupledExpectedPredictiveInformationGain(AcquisitionFunction):
             raise ValueError("requires nonnegative finite output weights with positive sum")
         self.register_buffer("output_weights", output_weights / output_weights.sum())
         self.register_buffer("X_evaluation_mask", X_evaluation_mask)
+        self.set_X_pending(None)
         target_X = _target_points(target_X, target_fidelities)
         if candidate_noise_functions is None:
             candidate_noise_functions = [None] * m
@@ -184,10 +185,30 @@ class qDecoupledExpectedPredictiveInformationGain(AcquisitionFunction):
             for j, child in enumerate(model.models)
         )
 
-    def set_X_pending(self, X_pending: Tensor | None = None) -> None:
+    supports_masked_pending = True
+
+    def set_X_pending(
+        self,
+        X_pending: Tensor | None = None,
+        X_pending_evaluation_mask: Tensor | None = None,
+    ) -> None:
         if X_pending is not None:
-            raise NotImplementedError("pending evaluations are not supported")
-        super().set_X_pending(None)
+            mask = X_pending_evaluation_mask
+            if (
+                X_pending.ndim != 2
+                or mask is None
+                or mask.shape != (X_pending.shape[0], self.model.num_outputs)
+                or mask.dtype != torch.bool
+                or mask.device != X_pending.device
+                or not mask.any(dim=-1).all()
+            ):
+                raise ValueError("pending points require a matching boolean evaluation mask")
+        elif X_pending_evaluation_mask is not None:
+            raise ValueError("pending mask requires pending points")
+        super().set_X_pending(X_pending)
+        self.X_pending_evaluation_mask = (
+            None if X_pending_evaluation_mask is None else X_pending_evaluation_mask.clone()
+        )
 
     @t_batch_mode_transform()
     def forward(self, X: Tensor) -> Tensor:
@@ -201,7 +222,15 @@ class qDecoupledExpectedPredictiveInformationGain(AcquisitionFunction):
         result = X.sum(dim=(-2, -1)) * 0
         for j, component in enumerate(self.components):
             if mask[:, j].any():
-                result = result + self.output_weights[j] * component(X[..., mask[:, j], :])
+                selected = X[..., mask[:, j], :]
+                if self.X_pending is not None and self.X_pending_evaluation_mask[:, j].any():
+                    pending = self.X_pending[self.X_pending_evaluation_mask[:, j]]
+                    pending = pending.expand(*X.shape[:-2], *pending.shape)
+                    joint = torch.cat((pending, selected), dim=-2)
+                    gain = component(joint) - component(pending)
+                else:
+                    gain = component(selected)
+                result = result + self.output_weights[j] * gain
         return result
 
 

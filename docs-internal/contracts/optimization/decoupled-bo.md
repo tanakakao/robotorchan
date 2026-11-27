@@ -256,3 +256,35 @@ The mixed-domain tests exercise binary, multiclass and ordinal children with
 both masked AL and particle KG, using legal categorical values and joint q=2.
 Particle KG requires a derivative-free backend; its finite-particle estimate
 is not guaranteed nonnegative. Constant terminal utility has zero VOI.
+
+Phase 9 extends existing Study and Trial snapshots with named evaluation masks
+and partial observations. A decoupled proposer receives all trial snapshots,
+bounds, q and fixed features, returning the existing optimizer's triple.
+Partial results remain available after failure and restoration. No implicit
+scalar best trial is defined for heterogeneous objectives.
+
+`create_decoupled_proposer` assembles observed-only training pairs by output
+and delegates model fitting and acquisition construction to explicit factories.
+It calls the existing decoupled optimizer. Pending evaluations are rejected
+by default; opt-in currently ignores pending information rather than fantasizing.
+
+The proposer optionally reconstructs a fixed-output-cost CostBudget from
+observed results and outstanding running evaluations. Failed unobserved
+outputs release their reservations; failed evaluation charges are not modeled.
+`retry_failed` creates a new trial for remaining outputs; it is an explicit
+manual retry and does not pass through proposer budget checks.
+
+Native hypervolume KG pending masks can be supplied through the proposer
+with pending_fantasies=True. Only outstanding outputs are included.
+The optimizer receives the CostBudget ledger, not a scalar remaining amount.
+
+Actual per-output charges can be supplied through tell(actual_costs=...),
+including failed evaluations. The fixed-cost proposer checks remaining budget
+before manual retries. Predicted costs remain fixed per output.
+
+Study DataFrame export includes actual_cost:<output> columns. The proposer
+accepts registered acquisition names with acquisition_kwargs via create_acquisition.
+
+Decoupled Gaussian EPIG supports masked pending evaluations through the
+conditional mutual information identity I(Y; C | P) = I(Y; C,P) - I(Y; P).
+Only outstanding outputs enter P; pending-only outputs contribute zero gain.
