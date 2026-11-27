@@ -4,7 +4,7 @@ from time import perf_counter
 
 import torch
 from botorch.fit import fit_gpytorch_mll
-from botorch.models import ModelListGP, SingleTaskGP
+from botorch.models import MixedSingleTaskGP, ModelListGP, SingleTaskGP
 from botorch.sampling.list_sampler import ListSampler
 from botorch.sampling.normal import SobolQMCNormalSampler
 from gpytorch.mlls import SumMarginalLogLikelihood
@@ -12,6 +12,7 @@ from gpytorch.mlls import SumMarginalLogLikelihood
 from robotorchan.acquisition.factory import create_acquisition
 from robotorchan.benchmarks.problem import BenchmarkProblem
 from robotorchan.optim.decoupled import optimize_acqf_decoupled
+from robotorchan.optim.domains.variable_space import MixedVariableSpace
 from robotorchan.workflow.cost_budget import CostBudget
 
 
@@ -37,7 +38,6 @@ def run_constrained_decoupled_benchmark(
         problem.n_objectives != 1
         or problem.n_constraints < 1
         or problem.optimal_value is None
-        or any(kind != "continuous" for kind in problem.variable_types)
         or len(output_costs) != m
         or any(c <= 0 for c in output_costs)
         or n_initial < 2
@@ -47,8 +47,26 @@ def run_constrained_decoupled_benchmark(
         raise ValueError("Invalid constrained benchmark configuration.")
     bounds = problem.bounds
     engine = torch.quasirandom.SobolEngine(problem.dimension, scramble=True, seed=seed)
-    X = bounds[0] + engine.draw(n_initial).to(bounds) * (bounds[1] - bounds[0])
-    target = bounds[0] + engine.draw(64).to(bounds) * (bounds[1] - bounds[0])
+    integer_dims = tuple(i for i, kind in enumerate(problem.variable_types) if kind == "integer")
+    cat_dims = [i for i, kind in enumerate(problem.variable_types) if kind == "categorical"]
+    categories = {
+        i: tuple(float(v) for v in range(int(bounds[0, i]), int(bounds[1, i]) + 1))
+        for i in cat_dims
+    }
+    space = (
+        MixedVariableSpace(bounds, integer_dims=integer_dims, categorical_values=categories)
+        if integer_dims or cat_dims
+        else None
+    )
+
+    def design(n):
+        x = bounds[0] + engine.draw(n).to(bounds) * (bounds[1] - bounds[0])
+        for i in (*integer_dims, *cat_dims):
+            x[:, i] = x[:, i].round()
+        return x
+
+    X = design(n_initial)
+    target = design(64)
 
     def evaluate(x):
         return torch.cat(
@@ -74,7 +92,12 @@ def run_constrained_decoupled_benchmark(
     elapsed = 0.0
     while True:
         start = perf_counter()
-        model = ModelListGP(*(SingleTaskGP(x, y) for x, y in zip(train_X, train_Y, strict=True)))
+        model = ModelListGP(
+            *(
+                MixedSingleTaskGP(x, y, cat_dims=cat_dims) if cat_dims else SingleTaskGP(x, y)
+                for x, y in zip(train_X, train_Y, strict=True)
+            )
+        )
         if fit_model:
             fit_gpytorch_mll(SumMarginalLogLikelihood(model.likelihood, model))
         model.eval()
@@ -102,6 +125,7 @@ def run_constrained_decoupled_benchmark(
                 "simple_regret": regret,
                 "runtime_seconds": elapsed,
                 "observations": [len(x) for x in train_X],
+                "recommendation": recommendation.squeeze(0).tolist(),
             }
         )
         if not any(ledger.can_afford(float(c)) for c in masks.to(bounds) @ costs):
@@ -130,6 +154,7 @@ def run_constrained_decoupled_benchmark(
             masks,
             output_costs=costs,
             budget=ledger,
+            variable_space=space,
             optimizer="sobol",
             optimizer_options={"num_samples": num_samples},
             seed=seed + len(records),
