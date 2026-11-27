@@ -46,3 +46,22 @@ def test_decoupled_rejects_scalar_optimizer():
     assert "requires the dedicated decoupled optimizer without a search strategy" in (
         decision.reasons
     )
+
+
+@pytest.mark.parametrize(
+    ("name", "pending"),
+    [
+        ("qHypervolumeKnowledgeGradient", True),
+        ("qMultiFidelityHypervolumeKnowledgeGradient", True),
+        ("qDecoupledKnowledgeGradient", False),
+        ("qDecoupledExpectedPredictiveInformationGain", True),
+        ("qDecoupledActiveLearning", False),
+        ("qDecoupledParticleKnowledgeGradient", False),
+    ],
+)
+def test_masked_registry_capabilities(name, pending):
+    from robotorchan.acquisition.registry import ACQUISITION_REGISTRY
+
+    caps = ACQUISITION_REGISTRY[name].capabilities
+    assert caps.supports_decoupled
+    assert caps.supports_masked_pending is pending
