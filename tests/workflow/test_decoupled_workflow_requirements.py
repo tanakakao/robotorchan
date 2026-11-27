@@ -65,3 +65,41 @@ def test_masked_registry_capabilities(name, pending):
     caps = ACQUISITION_REGISTRY[name].capabilities
     assert caps.supports_decoupled
     assert caps.supports_masked_pending is pending
+
+
+def test_recommendation_driven_proposer():
+    import torch
+
+    from robotorchan.study.decoupled import create_decoupled_proposer
+    from robotorchan.workflow import recommend
+
+    spec = ProblemSpec(
+        purpose="bayesian_optimization",
+        output_type="multi",
+        decoupled=True,
+    )
+    recommendations = recommend(
+        spec,
+        model="HeterogeneousModel",
+        acquisition="qDecoupledParticleKnowledgeGradient",
+    )
+    assert recommendations
+    recommendation = recommendations[0]
+    assert recommendation.optimizer_name == "optimize_acqf_decoupled"
+    kwargs = dict(
+        parameter_names=("x",),
+        output_names=("a", "b"),
+        evaluation_masks=torch.eye(2, dtype=torch.bool),
+        model_factory=lambda data: None,
+        recommendation=recommendation,
+        problem_spec=spec,
+    )
+    proposer = create_decoupled_proposer(**kwargs)
+    with pytest.raises(ValueError, match="Requested q"):
+        proposer([], torch.tensor([[0.0], [1.0]]), q=2, fixed_features={})
+    with pytest.raises(ValueError, match="cannot accompany"):
+        create_decoupled_proposer(
+            **kwargs, acquisition_factory="qDecoupledParticleKnowledgeGradient"
+        )
+    with pytest.raises(ValueError, match="masked_pending"):
+        create_decoupled_proposer(**kwargs, pending_fantasies=True)
