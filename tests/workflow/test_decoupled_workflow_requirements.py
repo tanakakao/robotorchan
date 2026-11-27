@@ -103,3 +103,37 @@ def test_recommendation_driven_proposer():
         )
     with pytest.raises(ValueError, match="masked_pending"):
         create_decoupled_proposer(**kwargs, pending_fantasies=True)
+
+
+@pytest.mark.parametrize("invalid", [(0.5, 0.0), (1.0, 1.0)])
+def test_invalid_mixed_batch_leaves_no_pending_trials(invalid):
+    import torch
+
+    from robotorchan.optim.domains.variable_space import MixedVariableSpace
+    from robotorchan.study import create_study
+
+    bounds = torch.tensor([[0.0, 0.0], [2.0, 2.0]], dtype=torch.double)
+    space = MixedVariableSpace(
+        bounds, integer_dims=(0,), categorical_values={1: (0.0, 2.0)}
+    )
+    rows = [(0.0, 0.0), invalid]
+
+    def propose(history, bounds, *, q, fixed_features):
+        return (
+            bounds.new_tensor(rows),
+            torch.ones((q, 2), dtype=torch.bool),
+            bounds.new_tensor(0.0),
+        )
+
+    study = create_study(
+        search_space={"integer": (0.0, 2.0), "category": (0.0, 2.0)},
+        variable_space=space,
+        output_names=("a", "b"),
+        decoupled_proposer=propose,
+    )
+    with pytest.raises(ValueError, match="integer|categorical"):
+        study.ask_batch(2)
+    assert not study.trials
+    rows[1] = (2.0, 2.0)
+    trials = study.ask_batch(2)
+    assert [trial.number for trial in trials] == [0, 1]
