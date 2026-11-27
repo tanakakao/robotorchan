@@ -115,9 +115,7 @@ def run_decoupled_benchmark(
             )
         else:
             affordable = masks[(masks.to(bounds) @ costs) <= ledger.remaining]
-            index = torch.randint(
-                len(affordable), (1,), generator=generator, device=bounds.device
-            )
+            index = torch.randint(len(affordable), (1,), generator=generator, device=bounds.device)
             mask = affordable[index]
             if policy == "sobol":
                 unit = baseline_engine.draw(1).to(bounds)
