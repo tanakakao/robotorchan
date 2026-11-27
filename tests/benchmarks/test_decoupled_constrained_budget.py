@@ -6,7 +6,9 @@ from robotorchan.benchmarks.mixed_problems import mixed_process_yield
 
 
 @pytest.mark.parametrize("decoupled", [False, True])
-@pytest.mark.parametrize("factory", [constrained_quadratic, constrained_annulus, mixed_process_yield])
+@pytest.mark.parametrize(
+    "factory", [constrained_quadratic, constrained_annulus, mixed_process_yield]
+)
 def test_constrained_budget(factory, decoupled):
     problem = factory()
     costs = (3,) + (1,) * problem.n_constraints
