@@ -9,7 +9,9 @@ from robotorchan.benchmarks.multiobjective_problems import branin_currin, dtlz2,
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--problem", choices=("branin_currin", "zdt1", "dtlz2"), default="branin_currin")
+    parser.add_argument(
+        "--problem", choices=("branin_currin", "zdt1", "dtlz2"), default="branin_currin"
+    )
     parser.add_argument("--seeds", default="0,1,2")
     parser.add_argument("--budget", type=int, default=40)
     args = parser.parse_args()
