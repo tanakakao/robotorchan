@@ -14,7 +14,7 @@ def main():
     )
     parser.add_argument("--seeds", default="0,1,2")
     parser.add_argument("--budget", type=int, default=40)
-    parser.add_argument("--policies", default="epig,random,sobol")
+    parser.add_argument("--policies", default="epig,kg,hvkg,random,sobol")
     parser.add_argument("--no-fit", action="store_true")
     args = parser.parse_args()
     problem = {"branin_currin": branin_currin, "zdt1": zdt1, "dtlz2": dtlz2}[args.problem]()
