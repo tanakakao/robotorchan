@@ -10,6 +10,7 @@ from robotorchan.benchmarks.constrained_problems import (
     constrained_quadratic,
 )
 from robotorchan.benchmarks.decoupled_constrained import run_constrained_decoupled_benchmark
+from robotorchan.benchmarks.mixed_problems import mixed_process_yield
 
 
 def main():
@@ -18,6 +19,7 @@ def main():
         "annulus": constrained_annulus,
         "disconnected": constrained_disconnected,
         "narrow_band": constrained_narrow_band,
+        "mixed_process_yield": mixed_process_yield,
     }
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--problem", choices=tuple(factories), default="quadratic")
