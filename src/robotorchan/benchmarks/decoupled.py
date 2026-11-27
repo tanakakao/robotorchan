@@ -6,6 +6,8 @@ from typing import Literal
 import torch
 from botorch.fit import fit_gpytorch_mll
 from botorch.models import ModelListGP, SingleTaskGP
+from botorch.sampling.list_sampler import ListSampler
+from botorch.sampling.normal import SobolQMCNormalSampler
 from botorch.utils.multi_objective.hypervolume import Hypervolume
 from botorch.utils.multi_objective.pareto import is_non_dominated
 from gpytorch.mlls import SumMarginalLogLikelihood
@@ -25,16 +27,16 @@ def run_decoupled_benchmark(
     n_initial: int = 4,
     num_samples: int = 16,
     decoupled: bool = True,
-    policy: Literal["epig", "random", "sobol"] = "epig",
+    policy: Literal["epig", "kg", "hvkg", "random", "sobol"] = "epig",
     fit_model: bool = True,
 ) -> list[dict]:
-    """Compare masked EPIG policies using a common finite recommendation set.
+    """Compare masked acquisition and baseline policies using a common finite recommendation set.
 
     Oracle hypervolume evaluates posterior-mean Pareto recommendations, not
     partially observed rows. Oracle values never enter training or selection.
     Initial design costs count against the same total budget.
     """
-    if policy not in ("epig", "random", "sobol"):
+    if policy not in ("epig", "kg", "hvkg", "random", "sobol"):
         raise ValueError("Unknown benchmark policy.")
     m = problem.n_objectives
     if (
@@ -113,6 +115,54 @@ def run_decoupled_benchmark(
                 optimizer_options={"num_samples": num_samples},
                 seed=seed + len(records),
             )
+        elif policy == "kg":
+            weights = costs.new_full((m,), 1.0 / m)
+            sampler = ListSampler(
+                *(
+                    SobolQMCNormalSampler(torch.Size([4]), seed=seed + len(records) * m + j)
+                    for j in range(m)
+                )
+            )
+            acq = create_acquisition(
+                "qDecoupledKnowledgeGradient",
+                model=model,
+                decision_X=target,
+                weights=weights,
+                sampler=sampler,
+                X_evaluation_mask=masks[:1],
+            )
+            candidate, mask, _ = optimize_acqf_decoupled(
+                acq,
+                bounds,
+                masks,
+                output_costs=costs,
+                budget=ledger,
+                optimizer="sobol",
+                optimizer_options={"num_samples": num_samples},
+                seed=seed + len(records),
+            )
+        elif policy == "hvkg":
+            acq = create_acquisition(
+                "qHypervolumeKnowledgeGradient",
+                model=model,
+                ref_point=reference,
+                num_fantasies=2,
+                num_pareto=2,
+                current_value=mean.new_tensor(hv.compute(mean)),
+                X_evaluation_mask=masks[:1],
+            )
+            with torch.random.fork_rng(devices=[]):
+                torch.manual_seed(seed + len(records))
+                candidate, mask, _ = optimize_acqf_decoupled(
+                    acq,
+                    bounds,
+                    masks,
+                    output_costs=costs,
+                    budget=ledger,
+                    num_restarts=2,
+                    raw_samples=max(8, num_samples),
+                    options={"maxiter": 20},
+                )
         else:
             affordable = masks[(masks.to(bounds) @ costs) <= ledger.remaining]
             index = torch.randint(len(affordable), (1,), generator=generator, device=bounds.device)
