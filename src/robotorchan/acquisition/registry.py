@@ -488,12 +488,14 @@ for name in ("qHypervolumeKnowledgeGradient", "qMultiFidelityHypervolumeKnowledg
             requires_fantasize=True,
             requires_multi_fidelity=name == "qMultiFidelityHypervolumeKnowledgeGradient",
             one_shot=True,
+            supports_decoupled=True,
+            supports_masked_pending=True,
         ),
         implementation_strategy="BoTorch-native acquisition; no robotorchan wrapper",
         limitations=(
             "requires ModelList with masked fantasy support and a reference point",
             "requires one-shot optimization with augmented candidates",
-            "joint masked optimization supported; pending workflow remains unverified",
+            "joint masked optimization and masked pending supported",
         ),
     )
 
@@ -504,6 +506,7 @@ ACQUISITION_REGISTRY["qDecoupledKnowledgeGradient"] = AcquisitionRegistryEntry(
         purpose=AcquisitionPurpose.BAYESIAN_OPTIMIZATION,
         posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
         supports_multi_output=True,
+        supports_decoupled=True,
         monte_carlo=True,
         requires_fantasize=True,
     ),
@@ -517,15 +520,21 @@ ACQUISITION_REGISTRY["qDecoupledKnowledgeGradient"] = AcquisitionRegistryEntry(
 )
 
 
-ACQUISITION_REGISTRY["qDecoupledExpectedPredictiveInformationGain"] = _active_learning(
-    "qDecoupledExpectedPredictiveInformationGain",
-    posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
-    max_q=None,
+ACQUISITION_REGISTRY["qDecoupledExpectedPredictiveInformationGain"] = AcquisitionRegistryEntry(
+    acquisition_name="qDecoupledExpectedPredictiveInformationGain",
+    capabilities=AcquisitionCapabilities(
+        purpose=AcquisitionPurpose.ACTIVE_LEARNING,
+        posterior_requirement=PosteriorRequirement.JOINT_GAUSSIAN,
+        supports_multi_output=True,
+        supports_decoupled=True,
+        supports_masked_pending=True,
+    ),
+    implementation_strategy="robotorchan active-learning acquisition",
     limitations=(
         "requires independent ModelListGP outputs and positive observation noise",
         "requires output weights and an evaluation mask for candidate rows",
         "optional target fidelity projection and point-dependent observation variance",
-        "pending evaluations and correlated outputs are not supported",
+        "masked pending supported; correlated outputs are not supported",
     ),
 )
 
@@ -537,6 +546,7 @@ ACQUISITION_REGISTRY["qDecoupledActiveLearning"] = AcquisitionRegistryEntry(
         posterior_requirement=PosteriorRequirement.MARGINAL_MOMENTS,
         observation_types=frozenset({ObservationType.REGRESSION, ObservationType.CLASSIFICATION}),
         supports_multi_output=True,
+        supports_decoupled=True,
         requires_heterogeneous_model=True,
     ),
     implementation_strategy="robotorchan masked heterogeneous acquisition composition",
@@ -556,6 +566,7 @@ ACQUISITION_REGISTRY["qDecoupledParticleKnowledgeGradient"] = AcquisitionRegistr
         posterior_requirement=PosteriorRequirement.POSTERIOR_SAMPLES,
         observation_types=frozenset({ObservationType.REGRESSION, ObservationType.CLASSIFICATION}),
         supports_multi_output=True,
+        supports_decoupled=True,
         requires_heterogeneous_model=True,
         requires_derivative_free=True,
         supports_constraints=True,
