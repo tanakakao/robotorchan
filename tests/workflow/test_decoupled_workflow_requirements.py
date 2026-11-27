@@ -129,7 +129,7 @@ def test_invalid_mixed_batch_leaves_no_pending_trials(invalid):
         output_names=("a", "b"),
         decoupled_proposer=propose,
     )
-    with pytest.raises(ValueError, match="integer|categorical"):
+    with pytest.raises(ValueError, match=r"integer|categorical"):
         study.ask_batch(2)
     assert not study.trials
     rows[1] = (2.0, 2.0)
