@@ -166,6 +166,7 @@ class qDecoupledExpectedPredictiveInformationGain(AcquisitionFunction):
             raise ValueError("requires nonnegative finite output weights with positive sum")
         self.register_buffer("output_weights", output_weights / output_weights.sum())
         self.register_buffer("X_evaluation_mask", X_evaluation_mask)
+        self.set_X_pending(None)
         target_X = _target_points(target_X, target_fidelities)
         if candidate_noise_functions is None:
             candidate_noise_functions = [None] * m
