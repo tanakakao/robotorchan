@@ -10,6 +10,9 @@ from robotorchan.acquisition.factory import create_acquisition
 from robotorchan.optim.decoupled import optimize_acqf_decoupled
 from robotorchan.study.trial import TrialState
 from robotorchan.workflow.cost_budget import CostBudget
+from robotorchan.workflow.components import SelectionStatus
+from robotorchan.workflow.problem import ProblemSpec
+from robotorchan.workflow.recommendation import WorkflowRecommendation, check_compatibility
 
 
 def create_decoupled_proposer(
@@ -18,7 +21,9 @@ def create_decoupled_proposer(
     output_names: Sequence[str],
     evaluation_masks: Tensor,
     model_factory: Callable[..., Any],
-    acquisition_factory: str | Callable[..., Any],
+    acquisition_factory: str | Callable[..., Any] | None = None,
+    recommendation: WorkflowRecommendation | None = None,
+    problem_spec: ProblemSpec | None = None,
     acquisition_kwargs: Mapping[str, Any] | None = None,
     optimizer_kwargs: Mapping[str, Any] | None = None,
     allow_pending: bool = False,
@@ -34,6 +39,31 @@ def create_decoupled_proposer(
     hypervolume KG incorporates outstanding output evaluations. Otherwise opt-in
     ignores pending information.
     """
+    if recommendation is not None:
+        if acquisition_factory is not None:
+            raise ValueError("recommendation cannot accompany acquisition_factory.")
+        if problem_spec is None or not problem_spec.decoupled:
+            raise ValueError("recommendation requires a decoupled problem_spec.")
+        if problem_spec.masked_pending != pending_fantasies:
+            raise ValueError("problem_spec masked_pending must match pending_fantasies.")
+        if recommendation.compatibility.status not in (
+            SelectionStatus.COMPATIBLE, SelectionStatus.CONDITIONAL
+        ):
+            raise ValueError("recommendation must be compatible or conditional.")
+        decision = check_compatibility(
+            problem_spec,
+            model=recommendation.model_name,
+            acquisition=recommendation.acquisition_name,
+            optimizer=recommendation.optimizer_name,
+            search_strategy=recommendation.search_strategy_name,
+        )
+        if decision.status not in (SelectionStatus.COMPATIBLE, SelectionStatus.CONDITIONAL):
+            raise ValueError(f"Incompatible decoupled recommendation: {decision.reasons}")
+        acquisition_factory = recommendation.acquisition_name
+    elif problem_spec is not None:
+        raise ValueError("problem_spec requires a recommendation.")
+    if acquisition_factory is None:
+        raise ValueError("Specify acquisition_factory or recommendation.")
     parameters = tuple(parameter_names)
     outputs = tuple(output_names)
     options = dict(optimizer_kwargs or {})
@@ -83,6 +113,8 @@ def create_decoupled_proposer(
             raise ValueError("Insufficient evaluation budget for retry.")
 
     def propose(history, bounds, *, q, fixed_features):
+        if problem_spec is not None and q != problem_spec.q:
+            raise ValueError("Requested q must match problem_spec.q.")
         pending = [t for t in history if t.state is TrialState.RUNNING]
         if not (allow_pending or pending_fantasies) and pending:
             raise ValueError("Pending evaluations require an explicit pending policy.")
