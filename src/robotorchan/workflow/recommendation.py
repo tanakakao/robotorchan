@@ -130,22 +130,12 @@ def check_compatibility(
     conditions: list[str] = []
     unknown = False
     if spec.decoupled:
-        masked = {
-            "qHypervolumeKnowledgeGradient",
-            "qMultiFidelityHypervolumeKnowledgeGradient",
-            "qDecoupledKnowledgeGradient",
-            "qDecoupledExpectedPredictiveInformationGain",
-            "qDecoupledActiveLearning",
-            "qDecoupledParticleKnowledgeGradient",
-        }
-        pending = {
-            "qHypervolumeKnowledgeGradient",
-            "qMultiFidelityHypervolumeKnowledgeGradient",
-            "qDecoupledExpectedPredictiveInformationGain",
-        }
-        if acquisition not in masked:
+        masked_entry = ACQUISITION_REGISTRY.get(acquisition)
+        if masked_entry is None or not masked_entry.capabilities.supports_decoupled:
             reasons.append("requires a verified masked acquisition")
-        if spec.masked_pending and acquisition not in pending:
+        if spec.masked_pending and (
+            masked_entry is None or not masked_entry.capabilities.supports_masked_pending
+        ):
             reasons.append("requires masked pending evaluation support")
         if optimizer != "optimize_acqf_decoupled" or search_strategy is not None:
             reasons.append("requires the dedicated decoupled optimizer without a search strategy")
