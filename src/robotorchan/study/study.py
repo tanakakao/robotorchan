@@ -245,6 +245,14 @@ class Study:
         ):
             raise ValueError("Proposer returned infeasible candidates.")
         names = tuple(self.search_space.bounds)
+        variable_space = self._generator.variable_space
+        if variable_space is not None:
+            for dim in variable_space.integer_dims:
+                if not (points[:, dim] == points[:, dim].round()).all():
+                    raise ValueError("Trial integer parameter must be integral.")
+            for dim, values in variable_space.categorical_values.items():
+                if any(value not in values for value in points[:, dim].tolist()):
+                    raise ValueError("Trial categorical parameter is not allowed.")
         return tuple(
             self.start_trial(
                 self._register_trial(
