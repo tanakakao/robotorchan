@@ -63,9 +63,7 @@ def run_decoupled_benchmark(
     elapsed = 0.0
     while True:
         start = perf_counter()
-        model = ModelListGP(
-            *(SingleTaskGP(x, y) for x, y in zip(train_X, train_Y, strict=True))
-        )
+        model = ModelListGP(*(SingleTaskGP(x, y) for x, y in zip(train_X, train_Y, strict=True)))
         model.eval()
         with torch.no_grad():
             mean = model.posterior(target).mean
