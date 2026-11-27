@@ -8,14 +8,18 @@ from botorch.fit import fit_gpytorch_mll
 from botorch.models import SingleTaskGP
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.acquisition import create_acquisition
-from robotorchan.models.classification import (
+from robotorchan.acquisition.factory import create_acquisition
+from robotorchan.models.classification.binary.standard.single_task import (
     BinarySingleTaskGPClassifier,
+)
+from robotorchan.models.classification.multiclass.standard.single_task import (
     MulticlassSingleTaskGPClassifier,
+)
+from robotorchan.models.classification.ordinal.standard.single_task import (
     OrdinalSingleTaskGPClassifier,
 )
 from robotorchan.models.heterogeneous import HeterogeneousModel
-from robotorchan.optim import optimize_acqf_decoupled
+from robotorchan.optim.decoupled import optimize_acqf_decoupled
 from robotorchan.workflow.cost_budget import CostBudget
 
 
