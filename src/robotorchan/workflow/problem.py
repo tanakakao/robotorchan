@@ -46,6 +46,8 @@ class ProblemSpec:
     constrained: bool = False
     observation_kind: ObservationKind = ObservationKind.REGRESSION
     candidate_constrained: bool = False
+    decoupled: bool = False
+    masked_pending: bool = False
 
     def __post_init__(self) -> None:
         """Validate purpose-specific fields."""
@@ -60,6 +62,10 @@ class ProblemSpec:
             value = getattr(self, name)
             if value is not None:
                 object.__setattr__(self, name, enum(value))
+        if self.decoupled and self.output_type is not OutputType.MULTI:
+            raise ValueError("decoupled evaluation requires multi-output observations")
+        if self.masked_pending and not self.decoupled:
+            raise ValueError("masked_pending requires decoupled evaluation")
         if self.q < 1:
             raise ValueError("q must be at least 1")
         if self.purpose is ProblemPurpose.BAYESIAN_OPTIMIZATION:
