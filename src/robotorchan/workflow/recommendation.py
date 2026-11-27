@@ -129,6 +129,27 @@ def check_compatibility(
     reasons: list[str] = []
     conditions: list[str] = []
     unknown = False
+    if spec.decoupled:
+        masked = {
+            "qHypervolumeKnowledgeGradient",
+            "qMultiFidelityHypervolumeKnowledgeGradient",
+            "qDecoupledKnowledgeGradient",
+            "qDecoupledExpectedPredictiveInformationGain",
+            "qDecoupledActiveLearning",
+            "qDecoupledParticleKnowledgeGradient",
+        }
+        pending = {
+            "qHypervolumeKnowledgeGradient",
+            "qMultiFidelityHypervolumeKnowledgeGradient",
+            "qDecoupledExpectedPredictiveInformationGain",
+        }
+        if acquisition not in masked:
+            reasons.append("requires a verified masked acquisition")
+        if spec.masked_pending and acquisition not in pending:
+            reasons.append("requires masked pending evaluation support")
+        if optimizer != "optimize_acqf_decoupled" or search_strategy is not None:
+            reasons.append("requires the dedicated decoupled optimizer without a search strategy")
+        conditions.append("validate output-specific training data and evaluation masks")
     for group in (
         inventory.models,
         inventory.acquisitions,
@@ -282,7 +303,7 @@ def recommend(
 ) -> tuple[WorkflowRecommendation, ...]:
     """Enumerate unranked candidates; use auto to enumerate optimizer or strategy names."""
     if optimizer is None and search_strategy is None:
-        optimizer = "botorch"
+        optimizer = "optimize_acqf_decoupled" if spec.decoupled else "botorch"
     if model == "auto":
         models = import_module("robotorchan.models")
         model_names = models.list_models()
