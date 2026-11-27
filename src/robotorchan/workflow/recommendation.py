@@ -194,6 +194,13 @@ def check_compatibility(
         elif optimizer == "optimize_acqf_decoupled" and entry.capabilities.requires_derivative_free:
             backend = CandidateOptimizer.DERIVATIVE_FREE
             conditions.append("select a derivative-free backend in the decoupled optimizer")
+        elif (
+            optimizer == "optimize_acqf_decoupled"
+            and spec.input_type is InputType.MIXED
+            and entry.capabilities.one_shot
+        ):
+            backend = CandidateOptimizer.MIXED_ONE_SHOT
+            conditions.append("requires supported mixed one-shot assignments")
         elif spec.input_type is InputType.MIXED:
             backend = CandidateOptimizer.MIXED
         else:
@@ -208,6 +215,7 @@ def check_compatibility(
             "botorch",
             "optimize_acqf_botorch",
             "optimize_mixed_one_shot_acqf",
+            "optimize_acqf_decoupled",
         ):
             reasons.append("optimizer has no verified one-shot augmented-batch path")
         if entry.capabilities.one_shot and search_strategy not in (
