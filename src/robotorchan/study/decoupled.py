@@ -9,8 +9,8 @@ from torch import Tensor
 from robotorchan.acquisition.factory import create_acquisition
 from robotorchan.optim.decoupled import optimize_acqf_decoupled
 from robotorchan.study.trial import TrialState
-from robotorchan.workflow.cost_budget import CostBudget
 from robotorchan.workflow.components import SelectionStatus
+from robotorchan.workflow.cost_budget import CostBudget
 from robotorchan.workflow.problem import ProblemSpec
 from robotorchan.workflow.recommendation import WorkflowRecommendation, check_compatibility
 
@@ -47,7 +47,8 @@ def create_decoupled_proposer(
         if problem_spec.masked_pending != pending_fantasies:
             raise ValueError("problem_spec masked_pending must match pending_fantasies.")
         if recommendation.compatibility.status not in (
-            SelectionStatus.COMPATIBLE, SelectionStatus.CONDITIONAL
+            SelectionStatus.COMPATIBLE,
+            SelectionStatus.CONDITIONAL,
         ):
             raise ValueError("recommendation must be compatible or conditional.")
         decision = check_compatibility(
