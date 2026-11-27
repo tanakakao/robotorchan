@@ -46,6 +46,8 @@ class AcquisitionCapabilities:
     requires_preference: bool = False
     requires_heterogeneous_model: bool = False
     requires_derivative_free: bool = False
+    supports_decoupled: bool = False
+    supports_masked_pending: bool = False
 
 
 @dataclass(frozen=True, slots=True)
