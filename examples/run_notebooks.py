@@ -62,6 +62,7 @@ DEFAULT_NOTEBOOKS = [
     "63_capability_recommendation.ipynb",
     "64_unified_study_benchmark.ipynb",
     "65_decoupled_bo_basics.ipynb",
+    "66_decoupled_cost_mixed_multifidelity.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [
