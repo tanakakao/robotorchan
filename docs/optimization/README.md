@@ -44,6 +44,8 @@ candidate optimizer と役割を区別して利用してください。公開 AP
 - **Transfer BO**: 過去タスク情報を使う探索。[実装ガイド](../guide/26_transfer_bayesian_optimization.md) / [Notebook](../../examples/notebooks/52_transfer_bayesian_optimization.ipynb)
 - **Cost-aware / Multi-Fidelity BO**: fidelity・評価コスト・予算を使う探索。[ガイド](multifidelity-cost-aware.md) / [予算管理](cost-budget.md) / [Notebook](../../examples/notebooks/49_multifidelity_cost_aware.ipynb)
 
+- **Decoupled BO**: 設計点と評価マスクを同時選択する `optimize_acqf_decoupled`。[理論](../theory/33_decoupled_bayesian_optimization.md) / [実装ガイド](../guide/33_decoupled_bayesian_optimization.md) / [Notebook](../../examples/notebooks/65_decoupled_bo_basics.ipynb)
+
 候補最適化の対応可否は [Public optimizer API](public-optimizer-api.md)、
 [Candidate constraint support matrix](constraint-support-matrix.md)、
 [Candidate constraints](candidate-constraints.md) を正とします。
