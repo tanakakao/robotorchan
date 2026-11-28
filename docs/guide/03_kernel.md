@@ -118,6 +118,41 @@ Kronecker構造を使う`KroneckerMultiTaskGP`は[多タスクGuide](07_multitas
 contextの構造は[階層・文脈Guide](12_hierarchical_contextual_gp.md)を参照してください。
 これらを標準RBF部品だけの説明で置き換えることはできません。
 
+## 時系列カーネル
+
+`robotorchan.temporal.make_temporal_kernel` は時間列を指定して既存GPyTorch部品を
+構成します。専用GPクラスは必要ありません。RBF、Matérn、指数（Matérn 0.5）、
+Rational Quadratic、周期、局所周期、線形、Spectral Mixtureを選択できます。
+時間列以外の連続変数には別のカーネルを用い、和または積で組み合わせます。
+
+局所周期カーネルは周期カーネルとRBFの積です。周期長は入力時間座標の単位で、
+周期内の滑らかさを表すlengthscaleとは異なります。
+入力時間を正規化した場合には周期長・局所長さ尺度も同じ座標系に合わせます。
+Spectral Mixtureは固有の混合重みを持つため追加のScaleKernelで包みません。
+等間隔データを前提とするスペクトル初期化を不規則時系列へそのまま適用しないでください。
+
+```python
+import torch
+from gpytorch.kernels import RBFKernel, ScaleKernel
+
+from robotorchan.models.standard.single_task import SingleTaskGP
+from robotorchan.temporal import make_temporal_kernel
+
+t = torch.tensor([0.0, 0.1, 0.3, 0.5, 0.8, 1.0], dtype=torch.double)
+u = torch.linspace(0, 1, len(t), dtype=t.dtype)
+X = torch.stack((t, u), dim=-1)
+Y = (torch.sin(2 * torch.pi * t) + u).unsqueeze(-1)
+time_kernel = make_temporal_kernel("locally_periodic", period_length=1.0)
+control_kernel = ScaleKernel(RBFKernel(active_dims=(1,)))
+model = SingleTaskGP(X, Y, covar_module=time_kernel + control_kernel)
+model.fit()
+posterior = model.posterior(torch.tensor([[1.1, 0.5]], dtype=X.dtype))
+```
+
+時刻が制御できない場合は、候補提案時に固定します。
+時間座標を自由に最適化すると実行不可能な提案を得る場合があります。
+成分別の条件付き分布の推論は後続の加法GP拡張で扱います。
+
 ## 6. 実装の担当範囲と参照先
 
 RBF・Matérn・和・積・スケール・カテゴリ比較の数値計算はDelegatedです。
