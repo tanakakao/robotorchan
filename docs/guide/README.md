@@ -35,6 +35,10 @@
 - [Transfer BO：理論と実装の対応](26_transfer_bayesian_optimization.md)
 - [実行Notebook](../../examples/notebooks/52_transfer_bayesian_optimization.ipynb)
 
+## Decoupled Bayesian Optimization
+
+- [理論第33章](../theory/33_decoupled_bayesian_optimization.md) / [実装ガイド](33_decoupled_bayesian_optimization.md) / [Notebook 65](../../examples/notebooks/65_decoupled_bo_basics.ipynb)
+
 ## このガイドの目的
 
 [Theory](../theory/README.md)の数式・アルゴリズムが、robotorchanのどのクラス・
