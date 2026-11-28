@@ -312,3 +312,7 @@ Accuracy・NLL・Brier score・ordinal MAEをCSVへ記録します。
 [`63_capability_recommendation.ipynb`](notebooks/63_capability_recommendation.ipynb)：問題要件・適合判定・推薦構成から候補提案まで。
 
 [`64_unified_study_benchmark.ipynb`](notebooks/64_unified_study_benchmark.ipynb)：個別FactoryのBOループ、Study、Ask-and-Tell、履歴再開、Mixed制約、Benchmark比較。
+
+### Decoupled Bayesian Optimization
+
+[65. Decoupled BO 基礎](notebooks/65_decoupled_bo_basics.ipynb)：部分観測、EPIG、KG、HVKG、費用付き反復。
