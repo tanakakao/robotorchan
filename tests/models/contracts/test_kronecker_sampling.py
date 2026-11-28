@@ -70,9 +70,8 @@ def test_latent_kronecker_native_posterior_rsample_shape_and_finite() -> None:
     test_x = torch.tensor([[0.25], [0.75]], dtype=torch.double)
     test_t = torch.tensor([[0.25], [0.75]], dtype=torch.double)
 
-    with model.use_iterative_methods():
-        posterior = model.posterior(test_x, test_t)
-        samples = posterior.rsample(torch.Size([16]))
+    posterior = model.posterior(test_x, test_t)
+    samples = posterior.rsample(torch.Size([16]))
 
     assert samples.shape == torch.Size([16, 2, 2])
     assert samples.dtype == test_x.dtype
@@ -86,10 +85,9 @@ def test_latent_kronecker_native_sampling_preserves_candidate_gradient() -> None
     test_x = torch.tensor([[0.3], [0.7]], dtype=torch.double, requires_grad=True)
     test_t = torch.tensor([[0.25], [0.75]], dtype=torch.double)
 
-    with model.use_iterative_methods():
-        posterior = model.posterior(test_x, test_t)
-        samples = posterior.rsample(torch.Size([8]))
-        gradient = torch.autograd.grad(samples.mean(), test_x)[0]
+    posterior = model.posterior(test_x, test_t)
+    samples = posterior.rsample(torch.Size([8]))
+    gradient = torch.autograd.grad(samples.mean(), test_x)[0]
 
     assert gradient.shape == test_x.shape
     assert torch.isfinite(gradient).all()
