@@ -75,23 +75,27 @@ before lookup if that policy is not appropriate.
 ```python
 import torch
 from robotorchan.temporal import (
-    TimeAxis, elapsed_lag_features, forecast_times, lagged_rows, rolling_origin_splits,
+    TimeAxis,
+    elapsed_lag_features,
+    forecast_times,
+    lagged_rows,
+    rolling_origin_splits,
 )
 
-t = torch.tensor([0., 1., 3., 4., 7., 8., 10., 12., 15.], dtype=torch.double)
+t = torch.tensor([0.0, 1.0, 3.0, 4.0, 7.0, 8.0, 10.0, 12.0, 15.0], dtype=torch.double)
 y = torch.sin(t / 3).unsqueeze(-1)
 X, Y, decision, target = lagged_rows(t, y, lags=[0, 1, 2])
 for train, test in rolling_origin_splits(
-    t[decision], t[target], origins=[8., 10.], test_duration=2.
+    t[decision], t[target], origins=[8.0, 10.0], test_duration=2.0
 ):
     axis = TimeAxis.fit(t[decision[train]])
     train_time = axis.transform(t[decision[train]])
     test_time = axis.transform(t[decision[test]])
 
 # Build inputs without any future labels.
-origins = torch.tensor([15.], dtype=t.dtype)
-future_X, valid = elapsed_lag_features(t, y, origins, lags=[0., 3.], max_age=2.)
-future_t = forecast_times(origins[valid], [1., 3.])
+origins = torch.tensor([15.0], dtype=t.dtype)
+future_X, valid = elapsed_lag_features(t, y, origins, lags=[0.0, 3.0], max_age=2.0)
+future_t = forecast_times(origins[valid], [1.0, 3.0])
 ```
 
 For pandas input, use `dataframe_to_tensors(frame, time_column="time",
