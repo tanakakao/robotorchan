@@ -18,6 +18,8 @@ from robotorchan.benchmarks.random_streams import derive_stream_seed, make_strea
 from robotorchan.benchmarks.registry import BenchmarkProblemRegistry
 from robotorchan.benchmarks.strategy_rng import strategy_rng_scope
 
+ObservationConsumer = Callable[[Tensor, Tensor, Tensor, Tensor, bool], None]
+
 CandidateGenerator = Callable[
     [BenchmarkProblem | CandidateProblemView, Tensor, Tensor, int, torch.Generator], Tensor
 ]
@@ -101,6 +103,8 @@ def run_benchmark(
     independent_rng_streams: bool = False,
     observation_noise: SeededObservationNoise | None = None,
     isolate_strategy_rng: bool = False,
+    initial_design: Tensor | None = None,
+    observation_consumer: ObservationConsumer | None = None,
 ) -> tuple[BenchmarkTrajectory, ...]:
     """Run independent seeds with a strict evaluation budget.
 
@@ -110,7 +114,12 @@ def run_benchmark(
     Set independent_rng_streams=True to isolate initial-design and candidate seeds.
     Seeded observation_noise overrides problem.observe and uses a separate RNG stream.
     Set isolate_strategy_rng=True to seed PyTorch global RNG per candidate batch.
+    An explicit initial design or observation consumer requires a single seed.
+    The consumer is called once for the initial design and once per evaluated batch,
+    with defensive copies of X, observations, constraints, costs and an initial flag.
     """
+    if len(config.seeds) != 1 and (initial_design is not None or observation_consumer):
+        raise ValueError("An explicit initial design or consumer requires one seed.")
     device = config.torch_device
     dtype = config.torch_dtype
     trajectories = []
@@ -132,9 +141,14 @@ def run_benchmark(
         candidate_problem = (
             CandidateProblemView.from_problem(problem) if restrict_candidate_problem else problem
         )
-        X = sobol_initial_design(
-            problem, config.initial_points, initial_seed, dtype=dtype, device=device
-        )
+        if initial_design is None:
+            X = sobol_initial_design(
+                problem, config.initial_points, initial_seed, dtype=dtype, device=device
+            )
+        else:
+            if initial_design.shape != (config.initial_points, problem.dimension):
+                raise ValueError("Initial design must have shape (initial_points, dimension).")
+            X = initial_design.detach().to(dtype=dtype, device=device).clone()
         if device.type == "cuda":
             torch.cuda.synchronize(device)
         initial_start = perf_counter()
@@ -149,6 +163,10 @@ def run_benchmark(
         if device.type == "cuda":
             torch.cuda.synchronize(device)
         initial_evaluation_seconds = perf_counter() - initial_start
+        if observation_consumer is not None:
+            observation_consumer(
+                X.clone(), observed.clone(), constraints.clone(), costs.clone(), True
+            )
         completed_batches = []
         candidate_seconds = []
         evaluation_seconds = []
@@ -188,6 +206,14 @@ def run_benchmark(
             if device.type == "cuda":
                 torch.cuda.synchronize(device)
             evaluation_seconds.append(perf_counter() - evaluation_start)
+            if observation_consumer is not None:
+                observation_consumer(
+                    candidates.clone(),
+                    new_observed.clone(),
+                    new_constraints.clone(),
+                    new_costs.clone(),
+                    False,
+                )
             X = torch.cat((X, candidates), dim=0)
             observed = torch.cat((observed, new_observed), dim=0)
             truth = torch.cat((truth, new_truth), dim=0)
