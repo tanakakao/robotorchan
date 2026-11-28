@@ -40,8 +40,6 @@ class RobustRelevancePursuitMultiTaskGP(MultiTaskGP, RobustRelevancePursuitMixin
 
     supports_fit = True
 
-    supports_fit = True
-
     def __init__(
         self,
         train_X: Tensor,
@@ -287,7 +285,6 @@ class _IterativeHeteroskedasticFitMixin:
     """Shared alternating fit for scalar and long-format response GPs."""
 
     def _set_observation_variance(self, variance: Tensor) -> None:
-        # FixedNoiseGaussianLikelihood operates in the response GP's internal units.
         self.eval()
         transform = getattr(self, "outcome_transform", None)
         if transform is not None:
@@ -295,19 +292,71 @@ class _IterativeHeteroskedasticFitMixin:
         self.likelihood.noise_covar.noise = variance.squeeze(-1)
         self.prediction_strategy = None
 
-    def fit(
-        self,
-        *,
-        iterations: int = 3,
-        optimizer_kwargs: dict | None = None,
-    ) -> None:
-        """Fit response and log-noise GPs using the public training interface."""
+    def fit(self, *, iterations: int = 3, optimizer_kwargs: dict | None = None) -> None:
+        """Fit both response and log-noise GPs."""
         self.fit_heteroskedastic(iterations=iterations, optimizer_kwargs=optimizer_kwargs)
 
-    def _build_log_noise_model(self, X: Tensor, log_noise: Tensor):
-        from robotorchan.models.standard.single_task import MixedSingleTaskGP
+    def fit_heteroskedastic(self, *, iterations: int = 3, optimizer_kwargs: dict | None = None):
+        """Estimate noise from replicates or approximate leave-one-out residuals."""
+        from botorch.fit import fit_gpytorch_mll
 
-        return MixedSingleTaskGP(X, log_noise, cat_dims=list(self.cat_dims))
+        if iterations < 1:
+            raise ValueError("iterations must be at least 1.")
+        X, Y = self.raw_train_X, self.raw_train_Y
+        if X.ndim != 2 or Y.ndim != 2 or Y.shape[-1] != 1:
+            raise ValueError("Iterative heteroskedastic fitting requires scalar, unbatched data.")
+        unique_X, inverse, counts = torch.unique(X, dim=0, return_inverse=True, return_counts=True)
+        repeated = counts >= 2
+        if repeated.all():
+            noise_X = unique_X
+            noise_variance = torch.stack(
+                [Y[inverse == i].var(dim=0, unbiased=True) for i in range(len(unique_X))]
+            ).clamp_min(self.noise_floor)
+        else:
+            noise_X = X
+            noise_variance = None
+
+        # Avoid initializing the response GP as an effectively noiseless interpolator.
+        initial = max(self.noise_floor, Y.var(unbiased=False).item() * 0.01)
+        if noise_variance is not None:
+            initial = noise_variance.median().item()
+        variance = torch.full_like(Y, initial)
+        self._set_observation_variance(variance)
+
+        for _ in range(iterations):
+            fit_gpytorch_mll(self.make_mll(), optimizer_kwargs=optimizer_kwargs)
+            with torch.no_grad():
+                if noise_variance is None:
+                    posterior = self.posterior(X)
+                    residual = Y - posterior.mean.reshape_as(Y)
+                    latent_var = posterior.variance.reshape_as(Y)
+                    complement = (1 - latent_var / variance).clamp(min=1e-6, max=1.0)
+                    loo_residual = residual / complement
+                    loo_latent_var = latent_var / complement
+                    target = (loo_residual.square() - loo_latent_var).clamp_min(self.noise_floor)
+                else:
+                    target = noise_variance
+                log_noise = target.log()
+            noise_model = self._build_log_noise_model(noise_X, log_noise)
+            fit_gpytorch_mll(noise_model.make_mll(), optimizer_kwargs=optimizer_kwargs)
+            with torch.no_grad():
+                variance = noise_model.posterior(X).mean.reshape_as(Y).exp()
+                variance = variance.clamp_min(self.noise_floor)
+            self._set_observation_variance(variance)
+            self.noise_model = noise_model
+            self._noise_model_fitted = True
+
+        fit_gpytorch_mll(self.make_mll(), optimizer_kwargs=optimizer_kwargs)
+        self.eval()
+        return self
+
+
+class HeteroskedasticSingleTaskGP(
+    _IterativeHeteroskedasticFitMixin, ExactGPModelMixin, BoTorchRobustRelevancePursuitSingleTaskGP
+):
+    """Iterative two-GP surrogate for input-dependent observation noise."""
+
+    supports_fit = True
 
     def __init__(
         self,
@@ -660,6 +709,14 @@ class MixedHeteroskedasticMultiTaskGP(HeteroskedasticMultiTaskGP):
             cont_kernel_factory=self._cont_kernel_factory,
         )
 
+
+class MixedHeteroskedasticSingleTaskGP(
+    _IterativeHeteroskedasticFitMixin, RobustRelevancePursuitSingleTaskGP
+):
+    """Iterative heteroskedastic GP with native mixed categorical covariance."""
+
+    supports_fit = True
+
     def __init__(
         self,
         train_X: Tensor,
@@ -702,30 +759,10 @@ class MixedHeteroskedasticMultiTaskGP(HeteroskedasticMultiTaskGP):
         self.cat_dims = normalized_cat_dims
         self.noise_model = None
 
-    def fit_heteroskedastic(self, *, iterations: int = 3) -> MixedHeteroskedasticSingleTaskGP:
-        """Alternately fit mixed response and mixed log-noise GPs."""
-        from botorch.fit import fit_gpytorch_mll
-
+    def _build_log_noise_model(self, X: Tensor, log_noise: Tensor):
         from robotorchan.models.standard.single_task import MixedSingleTaskGP
 
-        if iterations < 1:
-            raise ValueError("iterations must be at least 1.")
-        train_X = self.raw_train_X
-        train_Y = self.raw_train_Y
-        for _ in range(iterations):
-            fit_gpytorch_mll(self.make_mll())
-            with torch.no_grad():
-                residual = train_Y - self.posterior(train_X).mean
-                log_noise = torch.log(residual.square().clamp_min(self.noise_floor))
-            noise_model = MixedSingleTaskGP(train_X, log_noise, cat_dims=list(self.cat_dims))
-            fit_gpytorch_mll(noise_model.make_mll())
-            with torch.no_grad():
-                predicted_noise = noise_model.posterior(train_X).mean.exp()
-                predicted_noise = predicted_noise.clamp_min(self.noise_floor)
-            self.likelihood.noise_covar.noise = predicted_noise.squeeze(-1)
-            self.noise_model = noise_model
-            self._noise_model_fitted = True
-        return self
+        return MixedSingleTaskGP(X, log_noise, cat_dims=list(self.cat_dims))
 
     def noise_posterior(self, X: Tensor):
         """Return the mixed latent posterior for log observation variance."""
