@@ -115,6 +115,26 @@ candidates, values = optimize(acq, bounds, q=2)
 - [63: Capability・Recommendation](examples/notebooks/63_capability_recommendation.ipynb)
 - [64: Study・Ask-and-Tell・Benchmark](examples/notebooks/64_unified_study_benchmark.ipynb)
 
+## Decoupled Bayesian Optimization
+
+設計点と測定項目を同時に選択し、部分観測を用いて評価予算を配分します。
+独立GPのKG・EPIG、BoTorch native HVKG / MFHVKG、異種出力のParticle KGとActive Learningを利用できます。
+`optimize_acqf_decoupled` は候補点・評価マスク・ランキング値を返し、
+`create_decoupled_proposer` はStudyの部分tell・非同期評価へ接続します。
+対応するモデル、optimizer、pending、制約の組合せは獲得関数ごとに異なります。
+
+[理論](docs/theory/33_decoupled_bayesian_optimization.md) /
+[実装ガイド](docs/guide/33_decoupled_bayesian_optimization.md) /
+[比較実験](benchmarks/README.md)
+
+| Notebook | 内容 |
+| --- | --- |
+| [65](examples/notebooks/65_decoupled_bo_basics.ipynb) | 部分観測・KG・EPIG・HVKG |
+| [66](examples/notebooks/66_decoupled_cost_mixed_multifidelity.ipynb) | 費用・Mixed・バッチ・忠実度 |
+| [67](examples/notebooks/67_decoupled_heterogeneous_classification.ipynb) | 回帰・二値・多クラス・順序分類 |
+| [68](examples/notebooks/68_decoupled_study_async.ipynb) | Study・部分tell・pending・retry |
+| [69](examples/notebooks/69_decoupled_bo_benchmark.ipynb) | 共通予算比較・統計的評価 |
+
 ## ドキュメント
 
 目的に応じて次の順に進むと、モデル選択から理論、実行例まで辿れます。
