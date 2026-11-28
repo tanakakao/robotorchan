@@ -152,9 +152,7 @@ def test_latent_kronecker_fit_enables_iterative_methods(
         assert optimizer_kwargs == {"options": {"maxiter": 2}}
 
     monkeypatch.setattr(model, "use_iterative_methods", tracked_context)
-    monkeypatch.setattr(
-        "robotorchan.models.structured.latent_kronecker.fit_gpytorch_mll", fake_fit
-    )
+    monkeypatch.setattr("robotorchan.models.structured.latent_kronecker.fit_gpytorch_mll", fake_fit)
 
     model.fit(optimizer_kwargs={"options": {"maxiter": 2}})
 
