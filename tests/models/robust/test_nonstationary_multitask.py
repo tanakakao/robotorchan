@@ -97,3 +97,15 @@ def test_mixed_nonstationary_multitask_posterior_and_acquisition() -> None:
         cat_dims=[1],
     )
     _assert_posterior_and_acquisition(model, train_x, train_y)
+
+
+def test_nonstationary_data_covariance_excludes_task_identity() -> None:
+    X, Y = _data()
+    model = NonstationaryMultiTaskGP(X, Y, task_feature=-1, initial_lengthscale=0.1)
+    kernel = model.covar_module.kernels[0]
+    with torch.no_grad():
+        model.gibbs_kernel.lengthscale_slope.fill_(-1.0)
+    x0 = X[:3]
+    x1 = X[3:]
+    torch.testing.assert_close(kernel(x0, x0).to_dense(), kernel(x0, x1).to_dense())
+    torch.testing.assert_close(model.local_lengthscale(x0), model.local_lengthscale(x1))
