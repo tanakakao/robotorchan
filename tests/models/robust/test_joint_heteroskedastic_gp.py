@@ -77,3 +77,27 @@ def test_mixed_joint_state_dict_round_trip_and_repeated_posteriors() -> None:
     for _ in range(2):
         torch.testing.assert_close(restored.posterior(mixed_X).mean, expected_mean)
         torch.testing.assert_close(restored.predicted_noise(mixed_X), expected_noise)
+
+
+def test_joint_training_with_repeated_observations() -> None:
+    X, Y = _data()
+    X = X.repeat_interleave(4, dim=0)
+    Y = Y.repeat_interleave(4, dim=0) + 0.03 * torch.randn_like(X)
+    mixed_X = torch.cat([X, (X > 0.5).to(X)], dim=-1)
+    models = (
+        JointHeteroskedasticSingleTaskGP(X, Y, num_inducing=8),
+        MixedJointHeteroskedasticSingleTaskGP(mixed_X, Y, cat_dims=[1], num_inducing=8),
+    )
+    for model in models:
+        model.train()
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+        for _ in range(200):
+            optimizer.zero_grad()
+            loss = model.training_loss()
+            assert torch.isfinite(loss)
+            loss.backward()
+            optimizer.step()
+        model.eval()
+        with torch.no_grad():
+            assert torch.isfinite(model.posterior(model.raw_train_X).mean).all()
+            assert torch.isfinite(model.predicted_noise(model.raw_train_X)).all()
