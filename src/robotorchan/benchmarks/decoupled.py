@@ -18,6 +18,16 @@ from robotorchan.optim.decoupled import optimize_acqf_decoupled
 from robotorchan.workflow.cost_budget import CostBudget
 
 
+def _finite_pair_hypervolume(mean: torch.Tensor, hv: Hypervolume) -> float:
+    """Best hypervolume of at most two points on a finite decision grid."""
+    front = mean[is_non_dominated(mean)]
+    best = max(hv.compute(point.unsqueeze(0)) for point in front)
+    for i, point in enumerate(front):
+        for other in front[i + 1 :]:
+            best = max(best, hv.compute(torch.stack((point, other))))
+    return best
+
+
 def run_decoupled_benchmark(
     problem: BenchmarkProblem,
     *,
@@ -148,7 +158,7 @@ def run_decoupled_benchmark(
                 ref_point=reference,
                 num_fantasies=2,
                 num_pareto=2,
-                current_value=mean.new_tensor(hv.compute(mean)),
+                current_value=mean.new_tensor(_finite_pair_hypervolume(mean, hv)),
                 X_evaluation_mask=masks[:1],
             )
             with torch.random.fork_rng(devices=[]):
