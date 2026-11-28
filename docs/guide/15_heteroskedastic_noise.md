@@ -134,3 +134,7 @@ noisy acquisitionを選ぶことだけでheteroskedastic surrogateを学習し�
 [joint]: ../../src/robotorchan/models/robust/joint_heteroskedastic.py
 
 使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/15_noise_models.ipynb)を参照してください。
+
+### 統一学習 API とノイズ推定
+
+`fit(iterations=3, optimizer_kwargs=None)` は応答GPと対数ノイズGPを学習します。従来の `fit_heteroskedastic()` も利用できます。全入力条件に反復測定がある場合は各条件の不偏標本分散をノイズGPの教師信号に用います（集約平均の分散ではなく単発測定の分散）。それ以外は学習点での単純な残差ではなく、近似leave-one-out残差と潜在分散を利用します。初期分散を下限に固定せず、最後に推定ノイズで応答GPを再学習します。標準化を使用する場合は内部尤度へ渡す分散を変換します。単一観測からのノイズ推定は識別が難しく、推定値の精度を保証するものではありません。Kronecker prototypeは対象外です。
