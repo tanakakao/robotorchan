@@ -96,3 +96,23 @@ def test_heteroskedastic_kronecker_prototype_rejects_broadcast_noise() -> None:
 
     with pytest.raises(ValueError, match="same shape"):
         HeteroskedasticKroneckerMultiTaskGP(X, Y, train_Yvar=bad_Yvar)
+
+
+def test_fit_recovers_replicated_noise_in_original_units() -> None:
+    X = torch.linspace(0.0, 1.0, 9, dtype=torch.double).unsqueeze(-1)
+    offsets = torch.tensor([-1.0, 1.0, -1.0, 1.0], dtype=torch.double)
+    offsets = offsets / offsets.std()
+    scale = 0.03 + 0.12 * X
+    Y = torch.sin(2 * torch.pi * X) + scale * offsets
+    model = HeteroskedasticSingleTaskGP(X.repeat_interleave(4, dim=0), Y.reshape(-1, 1))
+    assert model.supports_fit
+    model.fit(iterations=2)
+    # Repeated fitting must also detach the previously registered auxiliary GP.
+    model.fit(iterations=1)
+    with torch.no_grad():
+        noise = model.predicted_noise(X)
+    assert torch.isfinite(noise).all()
+    assert noise[-1] > 2 * noise[0]
+    assert noise.mean() > 10 * model.noise_floor
+    expected = scale.square()
+    torch.testing.assert_close(noise, expected, atol=0.008, rtol=0.5)
