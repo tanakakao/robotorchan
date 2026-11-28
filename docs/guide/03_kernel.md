@@ -131,23 +131,8 @@ Rational Quadratic、周期、局所周期、線形、Spectral Mixtureを選択�
 Spectral Mixtureは固有の混合重みを持つため追加のScaleKernelで包みません。
 等間隔データを前提とするスペクトル初期化を不規則時系列へそのまま適用しないでください。
 
-```python
-import torch
-from gpytorch.kernels import RBFKernel, ScaleKernel
-
-from robotorchan.models.standard.single_task import SingleTaskGP
-from robotorchan.temporal import make_temporal_kernel
-
-t = torch.tensor([0.0, 0.1, 0.3, 0.5, 0.8, 1.0], dtype=torch.double)
-u = torch.linspace(0, 1, len(t), dtype=t.dtype)
-X = torch.stack((t, u), dim=-1)
-Y = (torch.sin(2 * torch.pi * t) + u).unsqueeze(-1)
-time_kernel = make_temporal_kernel("locally_periodic", period_length=1.0)
-control_kernel = ScaleKernel(RBFKernel(active_dims=(1,)))
-model = SingleTaskGP(X, Y, covar_module=time_kernel + control_kernel)
-model.fit()
-posterior = model.posterior(torch.tensor([[1.1, 0.5]], dtype=X.dtype))
-```
+実行例は[時系列拡張の設計資料](../../docs-internal/architecture/temporal-extension.md)の
+Temporal kernel usage節を参照してください。
 
 時刻が制御できない場合は、候補提案時に固定します。
 時間座標を自由に最適化すると実行不可能な提案を得る場合があります。

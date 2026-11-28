@@ -27,11 +27,14 @@ TemporalKernelKind = Literal[
 ]
 
 
+_EMPTY_BATCH_SHAPE = torch.Size()
+
+
 def make_temporal_kernel(
     kind: TemporalKernelKind,
     *,
     time_dim: int = 0,
-    batch_shape: torch.Size = torch.Size(),
+    batch_shape: torch.Size = _EMPTY_BATCH_SHAPE,
     period_length: float | None = None,
     lengthscale: float | None = None,
     local_lengthscale: float | None = None,
