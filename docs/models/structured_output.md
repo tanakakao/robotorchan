@@ -102,7 +102,6 @@ posterior.mean: [4, 32, 32]
 ## 11.27 fitting example
 
 ```python
-from botorch.fit import fit_gpytorch_mll
 from robotorchan.models import LatentKroneckerGP
 
 model = LatentKroneckerGP(
@@ -111,15 +110,12 @@ model = LatentKroneckerGP(
     train_Y=train_Y,
 )
 
-mll = model.make_mll()
-
-with model.use_iterative_methods():
-    fit_gpytorch_mll(mll)
+model.fit()
 ```
 
 です。
 
-HOGP と異なり、こちらは `use_iterative_methods()` が重要です。
+`LatentKroneckerGP.fit()` が学習時の `use_iterative_methods()` を内部で管理します。学習処理を自前で構築し、直接 `fit_gpytorch_mll()` を呼ぶ場合は、この context を明示的に設定してください。予測時は引き続き `with model.use_iterative_methods():` を利用します。
 
 ---
 
@@ -272,7 +268,6 @@ posterior = model.posterior(test_X)
 ## 11.58 LatentKroneckerGP example
 
 ```python
-from botorch.fit import fit_gpytorch_mll
 from robotorchan.models import LatentKroneckerGP
 
 model = LatentKroneckerGP(
@@ -281,10 +276,9 @@ model = LatentKroneckerGP(
     train_Y=train_Y,
 )
 
-mll = model.make_mll()
+model.fit()
 
 with model.use_iterative_methods():
-    fit_gpytorch_mll(mll)
     posterior = model.posterior(test_X, test_T)
 ```
 
@@ -468,7 +462,7 @@ with model.use_iterative_methods():
 
 という context manager が用意されています。
 
-学習と posterior inference で、この context を使うのが重要です。
+学習時は `model.fit()` が内部でこの context を有効化します。posterior inference では呼び出し側で明示的に context を使ってください。
 
 ---
 
