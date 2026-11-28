@@ -78,3 +78,7 @@ pending対応はnative HVKG系とGaussian EPIGなどの明示的に対応した�
 ## 7. 費用・Mixed・忠実度の実行例
 
 [Notebook 66](../../examples/notebooks/66_decoupled_cost_mixed_multifidelity.ipynb) では、固定費用、工程共有費用、入力依存費用、joint q-batch、候補制約、Mixed変数、忠実度別費用を比較します。忠実度ごとのランキング値を比較し、選択されたマスクの実測費用だけを記録します。
+
+## 8. 分類・異種出力の実行例
+
+[Notebook 67](../../examples/notebooks/67_decoupled_heterogeneous_classification.ipynb) では、二値・多クラス・順序分類の各モデルを回帰と組み合わせます。分類のクラス数ではなく測定項目数がマスク幅になります。Particle KGの utility は粒子ごとの連続値とクラス確率から意思決定報酬を返し、観測雑音は回帰に分散、分類に None を指定します。離散ラベルの生成を含むため微分不要optimizerを使用します。Active Learningでは子獲得関数の尺度に応じた重みを設定します。両獲得関数ともmasked pendingには未対応です。
