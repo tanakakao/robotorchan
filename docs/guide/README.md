@@ -133,6 +133,7 @@ TheoryとGuideは主要章の章番号とファイル名を対応させていま
 | [26_transfer_bayesian_optimization.md](../theory/26_transfer_bayesian_optimization.md) | [Guide](26_transfer_bayesian_optimization.md) |
 | [27_combinatorial_bayesian_optimization.md](../theory/27_combinatorial_bayesian_optimization.md) | [Guide](27_combinatorial_bayesian_optimization.md) |
 | [28_causal_bayesian_optimization.md](../theory/28_causal_bayesian_optimization.md) | [Guide](28_causal_bayesian_optimization.md) |
+| [33_decoupled_bayesian_optimization.md](../theory/33_decoupled_bayesian_optimization.md) | [Guide](33_decoupled_bayesian_optimization.md) |
 
 ## 獲得関数：理論13サブ章と1対1対応
 
