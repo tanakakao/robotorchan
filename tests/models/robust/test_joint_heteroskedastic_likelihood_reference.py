@@ -44,9 +44,7 @@ def test_joint_training_loss_matches_clamped_gaussian_reference(
         variance = log_noise[:, i].exp().clamp_min(noise_floor)
         second_moment = response.variance[i] + response.mean[i].square()
         expected_error = y[i, 0].square() - 2 * y[i, 0] * response.mean[i] + second_moment
-        terms.append(
-            0.5 * (math.log(2 * math.pi) + variance.log() + expected_error / variance)
-        )
+        terms.append(0.5 * (math.log(2 * math.pi) + variance.log() + expected_error / variance))
     gaussian_nll = torch.stack(terms, dim=-1)
     kl_response = model.response_model.model.variational_strategy.kl_divergence().sum()
     kl_noise = model.noise_model.model.variational_strategy.kl_divergence().sum()
