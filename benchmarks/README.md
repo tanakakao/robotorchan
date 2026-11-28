@@ -85,3 +85,5 @@ uv run --extra examples python benchmarks/decoupled_report.py materials.jsonl --
 - 模擬真値は評価指標の算出にも使用しますが、学習には選択された出力のみを追加します。
 - Multi-Fidelity のコスト、分類の効用、Particle KG の粒子数は実験設定であり、
   実測材料データに対する性能保証ではありません。
+
+実行可能な比較・可視化の例は [Notebook 69](../examples/notebooks/69_decoupled_bo_benchmark.ipynb) を参照してください。
