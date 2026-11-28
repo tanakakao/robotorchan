@@ -260,11 +260,10 @@ class NonstationaryMultiTaskGP(MultiTaskGP):
             len(data_dims),
             lengthscale_floor=lengthscale_floor,
             initial_lengthscale=initial_lengthscale,
-            active_dims=list(data_dims),
         )
-        # Keep original columns at the outer kernel; select data columns only once.
-        data_covar = ScaleKernel(gibbs_kernel)
-        data_covar.active_dims = torch.arange(input_dim, device=train_X.device)
+        # ScaleKernel.forward calls base_kernel.forward directly, so select the
+        # original non-task columns on the outer kernel before that call.
+        data_covar = ScaleKernel(gibbs_kernel, active_dims=list(data_dims))
         super().__init__(
             train_X=train_X,
             train_Y=train_Y,
