@@ -66,9 +66,11 @@ def test_split_availability_and_gap():
     )
     assert folds[0][0].tolist() == [0, 1, 2]
     assert folds[0][1].tolist() == [5, 6]
-    train, _ = next(rolling_origin_splits(
-        t, target, origins=[7.0], test_duration=2.0, gap=1.0, train_duration=4.
-    ))
+    train, _ = next(
+        rolling_origin_splits(
+            t, target, origins=[7.0], test_duration=2.0, gap=1.0, train_duration=4.0
+        )
+    )
     assert train.tolist() == [2, 3, 4]
 
 

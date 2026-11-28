@@ -2,6 +2,7 @@
 
 import math
 from collections.abc import Iterator, Sequence
+from itertools import pairwise
 
 from torch import Tensor
 
@@ -44,7 +45,7 @@ def rolling_origin_splits(
         raise ValueError("train_duration must be positive and finite")
     if not origins or any(not math.isfinite(origin) for origin in origins):
         raise ValueError("origins must be nonempty and finite")
-    if any(a >= b for a, b in zip(origins, origins[1:], strict=False)):
+    if any(a >= b for a, b in pairwise(origins)):
         raise ValueError("origins must be strictly increasing")
     for origin in origins:
         cutoff = origin - gap
