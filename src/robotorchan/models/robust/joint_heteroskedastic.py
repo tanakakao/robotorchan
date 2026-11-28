@@ -6,6 +6,7 @@ import math
 
 import torch
 from botorch.posteriors.gpytorch import GPyTorchPosterior
+from gpytorch.means import ConstantMean
 from gpytorch.utils.memoize import clear_cache_hook
 from torch import Tensor, nn
 
@@ -46,18 +47,24 @@ class JointHeteroskedasticSingleTaskGP(RawDataMixin, nn.Module):
         self.num_mc_samples = int(num_mc_samples)
         self.beta_response = float(beta_response)
         self.beta_noise = float(beta_noise)
-        inducing = min(int(num_inducing), train_X.shape[-2])
+        inducing = min(int(num_inducing), torch.unique(train_X, dim=0).shape[-2])
 
         self.response_model = SingleTaskVariationalGP(
             train_X,
             train_Y,
             inducing_points=inducing,
+            learn_inducing_points=False,
         )
-        initial_log_noise = torch.full_like(train_Y, math.log(self.noise_floor))
+        initial_variance = train_Y.var(unbiased=False).clamp_min(self.noise_floor)
+        initial_log_noise = torch.full_like(train_Y, initial_variance.log().item())
+        noise_mean = ConstantMean().to(train_X)
+        noise_mean.initialize(constant=initial_variance.log())
         self.noise_model = SingleTaskVariationalGP(
             train_X,
             initial_log_noise,
+            mean_module=noise_mean,
             inducing_points=inducing,
+            learn_inducing_points=False,
         )
         self._store_raw_tensor("train_X", train_X.detach().clone())
         self._store_raw_tensor("train_Y", train_Y.detach().clone())
@@ -127,11 +134,16 @@ class JointHeteroskedasticSingleTaskGP(RawDataMixin, nn.Module):
         Y = self.raw_train_Y.squeeze(-1)
         response_dist = self.response_model.model(X)
         noise_dist = self.noise_model.model(X)
-        response_samples = response_dist.rsample(torch.Size([samples]))
-        log_noise_samples = noise_dist.rsample(torch.Size([samples]))
-        variance = log_noise_samples.exp().clamp_min(self.noise_floor)
+        # Rao-Blackwellize the response Gaussian and integrate only log noise.
+        # This avoids a singular joint sample covariance for repeated inputs.
+        squared_error = (Y - response_dist.mean).square() + response_dist.variance
+        standard_samples = torch.randn(
+            (samples, *noise_dist.mean.shape), dtype=X.dtype, device=X.device
+        )
+        log_noise_samples = noise_dist.mean + noise_dist.variance.sqrt() * standard_samples
+        log_variance = log_noise_samples.clamp_min(math.log(self.noise_floor))
         log_likelihood = -0.5 * (
-            math.log(2 * math.pi) + variance.log() + (Y - response_samples).square() / variance
+            math.log(2 * math.pi) + log_variance + squared_error * (-log_variance).exp()
         )
         expected_log_likelihood = log_likelihood.mean(0).sum()
 
@@ -171,19 +183,25 @@ class MixedJointHeteroskedasticSingleTaskGP(JointHeteroskedasticSingleTaskGP):
         self.num_mc_samples = int(num_mc_samples)
         self.beta_response = float(beta_response)
         self.beta_noise = float(beta_noise)
-        inducing = min(int(num_inducing), train_X.shape[-2])
+        inducing = min(int(num_inducing), torch.unique(train_X, dim=0).shape[-2])
         self.response_model = MixedSingleTaskVariationalGP(
             train_X,
             train_Y,
             cat_dims=cat_dims,
             inducing_points=inducing,
+            learn_inducing_points=False,
         )
-        initial_log_noise = torch.full_like(train_Y, math.log(self.noise_floor))
+        initial_variance = train_Y.var(unbiased=False).clamp_min(self.noise_floor)
+        initial_log_noise = torch.full_like(train_Y, initial_variance.log().item())
+        noise_mean = ConstantMean().to(train_X)
+        noise_mean.initialize(constant=initial_variance.log())
         self.noise_model = MixedSingleTaskVariationalGP(
             train_X,
             initial_log_noise,
+            mean_module=noise_mean,
             cat_dims=cat_dims,
             inducing_points=inducing,
+            learn_inducing_points=False,
         )
         self.cat_dims = self.response_model.cat_dims
         self._store_raw_tensor("train_X", train_X)
