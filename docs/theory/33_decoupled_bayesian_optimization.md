@@ -277,14 +277,14 @@ one-shot最適化では実験候補と fantasy ごとの終端推奨点を同時
 設計変数を $x$、忠実度を $s$、目標忠実度を $s_*$ とする。
 観測は $(x,s,a)$ で行うが、終端効用は $f(z,s_*)$ から計算する。
 
-$
+$$
 V_*(D)=\max_{z\in Z}\mathbb E[u(f(z,s_*))\mid D],
-$
+$$
 
-$
+$$
 \alpha(x,s,a)=\mathbb E_{Y_a(x,s)\mid D}
 [V_*(D\cup\{(x,s,a,Y_a)\})]-V_*(D).
-$
+$$
 
 低忠実度の価値は目標忠実度との事後共分散に依存する。
 相関が弱い測定は安価でも目標の改善に寄与しにくい。
@@ -299,10 +299,10 @@ $
 未完了の観測値 $Y_P$ は未知なので、対応する獲得関数ではその事後予測分布を積分する。
 例えば pending を考慮した追加測定のKGは
 
-$
+$$
 \mathbb E_{Y_P,Y_a\mid D}[V(D,Y_P,Y_a)]
 -\mathbb E_{Y_P\mid D}[V(D,Y_P)].
-$
+$$
 
 すでに発注した測定だけで得られる期待価値を基準にする。
 Gaussian EPIGでは条件付き共分散を使って pending の情報を考慮できる。
@@ -323,9 +323,11 @@ Gaussian EPIGでは条件付き共分散を使って pending の情報を考慮�
 ## 参考文献
 
 - Frazier, Powell and Dayanik (2009), The Knowledge-Gradient Policy for Correlated Normal Beliefs, INFORMS Journal on Computing.
-- Hernández-Lobato et al. (2016), Predictive Entropy Search for Multi-objective Bayesian Optimization with Constraints, arXiv:1609.01051.
+- Hernández-Lobato et al. (2016), [Predictive Entropy Search for Multi-objective Bayesian Optimization](https://proceedings.mlr.press/v48/hernandez-lobatoa16.html), ICML, PMLR 48:1492–1501.
+- Garrido-Merchán and Hernández-Lobato (2016), [Predictive Entropy Search for Multi-objective Bayesian Optimization with Constraints](https://arxiv.org/abs/1609.01051), arXiv:1609.01051.
+- Hernández-Lobato et al. (2016), [A General Framework for Constrained Bayesian Optimization using Information-based Search](https://www.jmlr.org/papers/v17/15-616.html), JMLR 17(160):1–53.
 - Gelbart, Snoek and Adams (2014), Bayesian Optimization with Unknown Constraints, UAI.
-- Daulton et al. (2023), Hypervolume Knowledge Gradient: Multi-Objective Bayesian Optimization with Partial Information, ICML, PMLR 202.
-- Bickford Smith et al. (2023), Prediction-Oriented Bayesian Active Learning, AISTATS, PMLR 206.
-- Wu and Frazier (2017), Continuous-Fidelity Bayesian Optimization with Knowledge Gradient, arXiv:1703.07012.
+- Daulton et al. (2023), [Hypervolume Knowledge Gradient: A Lookahead Approach for Multi-Objective Bayesian Optimization with Partial Information](https://proceedings.mlr.press/v202/daulton23a.html), ICML, PMLR 202:7167–7204.
+- Bickford Smith et al. (2023), [Prediction-Oriented Bayesian Active Learning](https://proceedings.mlr.press/v206/bickfordsmith23a.html), AISTATS, PMLR 206:7331–7348.
+- Wu and Frazier (2017), [Continuous-Fidelity Bayesian Optimization with Knowledge Gradient](https://bayesopt.github.io/papers/2017/20.pdf), NIPS 2017 workshop (non-archival version).
 
