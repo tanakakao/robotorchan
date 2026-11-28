@@ -7073,6 +7073,11 @@
   ],
   "generated_documents": [
     {
+      "path": "benchmarks/cross_library/README.md",
+      "category": "Benchmark Guide",
+      "reason": "Run instructions, dependency pins, and result contract for the cross-library benchmark."
+    },
+    {
       "path": "docs/theory/29_contextual_bayesian_optimization.md",
       "category": "Theory",
       "reason": "Phase 8 contextual Bayesian optimization mathematical foundations."
