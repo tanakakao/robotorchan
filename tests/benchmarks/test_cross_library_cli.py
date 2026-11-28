@@ -92,3 +92,52 @@ def test_unsupported_case_writes_a_failure_record(tmp_path: Path) -> None:
     assert row["error"]
     assert row["evaluation_count"] == 0
     assert row["trajectory"] is None
+
+
+def test_analysis_pairs_only_matching_seeds_and_checks_fingerprints(monkeypatch) -> None:
+    import importlib
+
+    monkeypatch.syspath_prepend(str(SCRIPT.parent))
+    analyze = importlib.import_module("analyze")
+
+    def trial(name, seed, value):
+        return dict(
+            schema_version=1,
+            commit="fixed",
+            profile="standard",
+            environment={"threads": 1},
+            config={"problem": "test", "q": 2, "initial_points": 3},
+            library=name,
+            library_version="1",
+            mode="A",
+            seed=seed,
+            initial_data_id=f"fixture-{seed}",
+            evaluation_count=6,
+            evaluation_budget_total=6,
+            metrics={
+                "simple_regret": [4, 4, 4, 3, 2, value],
+                "feasible_count": 6,
+                "constraint_violation_rate": 0.0,
+            },
+            status="ok",
+            trajectory={"candidate_seconds": [0.1, 0.2]},
+        )
+
+    rows = [
+        trial("sobol", 100, 3),
+        trial("sobol", 101, 2),
+        trial("botorch", 100, 1),
+        trial("botorch", 101, None),
+    ]
+    summary, paired, curves = analyze.compare(analyze.group_records(rows), {100, 101, 102})
+    assert summary[0]["finite_final_runs"] == 1
+    assert summary[0]["missing_runs"] == 1
+    assert paired[0]["pairs"] == 1
+    assert paired[0]["mean_difference"] == -2
+    assert paired[0]["ci_lower"] is None
+    assert [row["evaluations"] for row in curves if row["library"] == "botorch"] == [3, 5, 6]
+    rows[2]["initial_data_id"] = "different"
+    import pytest
+
+    with pytest.raises(ValueError, match="fingerprint"):
+        analyze.group_records(rows)

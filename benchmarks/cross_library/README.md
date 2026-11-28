@@ -83,3 +83,43 @@ Vizier, Trieste, SMAC3, OpenBox and pymoo, need separate validation before their
 Phase 4 cells are used. The current adapter contract covers synchronous BO.
 Pool AL, asynchronous evaluation and cost-budget stopping have their own
 benchmark contracts. Statistical performance evaluation is covered in Phase 4.
+
+## Phase 4 quantitative protocol
+
+The [Phase 4 configuration](phase4.json) lists 69 cells runnable with the
+Phase 3 adapters. Use the same lock and record separate campaigns for pilot
+seeds 10–19 and final seeds 100–124. The process launcher retains an exit
+record and worker log for every cell and seed. Start with a subset of cells
+to estimate time and memory before allocating the remaining budget.
+
+```sh
+python benchmarks/cross_library/campaign.py \
+  --problems branin --modes A \
+  --libraries robotorchan botorch optuna random sobol \
+  --seeds $(seq 100 124) --workers 4 --timeout 720 \
+  --output-dir results/phase4-branin
+python benchmarks/cross_library/analyze.py results/phase4-branin/results.jsonl \
+  --manifest results/phase4-branin/manifest.json \
+  --output-dir results/phase4-branin-report --plots
+```
+
+The analyzer checks for duplicate runs, mismatched initial observation
+fingerprints and mixed software environments. `summary.csv` reports
+completed, failed and missing results, feasibility and timing.
+`paired.csv` reports final mean differences and 95% percentile intervals
+from 10,000 seed-level paired bootstrap resamples where at least two finite
+pairs are available. Mode A uses Sobol as reference, Mode B uses the
+matched BoTorch cell, and Mode C uses Optuna TPE. Positive differences
+favor the reference for regret and the candidate for hypervolume.
+`curves.csv` and the plots show medians and interquartile ranges at complete
+evaluation batches. Missing feasible regret is excluded from curve
+quantiles and remains visible in finite-pair counts. Join missing records
+to `jobs.jsonl` for timeout and process exit details. Concurrent wall
+times are planning measurements and depend on run load.
+
+The five remaining Mode A specialist cells require SMAC3 (Mixed Quadratic
+and Categorical Switch), pymoo (Branin–Currin), OpenBox (constrained
+annulus), and Trieste (Hartmann6 q=4). Mode B for Ax requires matching
+the generation strategy and transformations. Mode C for OSS Vizier and
+TuRBO requires the corresponding adapters. The BoFire constrained default
+cell also represents the identical Mode C setting.
