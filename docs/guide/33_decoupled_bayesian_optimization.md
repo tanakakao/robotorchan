@@ -82,3 +82,7 @@ pending対応はnative HVKG系とGaussian EPIGなどの明示的に対応した�
 ## 8. 分類・異種出力の実行例
 
 [Notebook 67](../../examples/notebooks/67_decoupled_heterogeneous_classification.ipynb) では、二値・多クラス・順序分類の各モデルを回帰と組み合わせます。分類のクラス数ではなく測定項目数がマスク幅になります。Particle KGの utility は粒子ごとの連続値とクラス確率から意思決定報酬を返し、観測雑音は回帰に分散、分類に None を指定します。離散ラベルの生成を含むため微分不要optimizerを使用します。Active Learningでは子獲得関数の尺度に応じた重みを設定します。両獲得関数ともmasked pendingには未対応です。
+
+## 9. Studyによる非同期評価の実行例
+
+[Notebook 68](../../examples/notebooks/68_decoupled_study_async.ipynb) は ProblemSpec と recommend から実際のGP学習を行う proposer を構成します。部分tellで取得済み出力を学習し、未取得出力だけをpendingとしてEPIGで次の候補を提案します。失敗時の実測費用と取得済み観測を保持し、retry_failedで未取得項目だけを再試行します。initial_trialsによる履歴再開は外部永続化とは異なります。
