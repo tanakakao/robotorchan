@@ -1,13 +1,19 @@
 import inspect
+from contextlib import contextmanager
 
+import pytest
 import torch
 from botorch.models.latent_kronecker_gp import (
     LatentKroneckerGP as BoTorchLatentKroneckerGP,
 )
 from botorch.models.transforms.input import Normalize
 from gpytorch.mlls import ExactMarginalLogLikelihood
+from linear_operator import settings
 
-from robotorchan.models.structured.latent_kronecker import LatentKroneckerGP
+from robotorchan.models.structured.latent_kronecker import (
+    LatentKroneckerGP,
+    MixedLatentKroneckerGP,
+)
 
 
 def _training_data() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -95,8 +101,7 @@ def test_latent_kronecker_gp_matches_upstream_posterior() -> None:
     wrapper.eval()
     upstream.eval()
 
-    with wrapper.use_iterative_methods():
-        wrapper_posterior = wrapper.posterior(test_X, test_T)
+    wrapper_posterior = wrapper.posterior(test_X, test_T)
     with upstream.use_iterative_methods():
         upstream_posterior = upstream.posterior(test_X, test_T)
 
@@ -108,3 +113,105 @@ def test_latent_kronecker_gp_matches_upstream_posterior() -> None:
     )
     torch.testing.assert_close(wrapper_posterior.mean, expected_mean.squeeze(-1))
     torch.testing.assert_close(wrapper_posterior.variance, expected_variance.squeeze(-1))
+
+
+@pytest.mark.parametrize("mixed", [False, True], ids=["continuous", "mixed"])
+def test_latent_kronecker_fit_enables_iterative_methods(
+    monkeypatch: pytest.MonkeyPatch, mixed: bool
+) -> None:
+    train_X, train_T, train_Y = _training_data()
+    if mixed:
+        train_X = train_X.clone()
+        train_X[:, 1] = torch.tensor([0.0, 1.0, 0.0, 1.0], dtype=torch.double)
+        model = MixedLatentKroneckerGP(
+            train_X=train_X, train_T=train_T, train_Y=train_Y, cat_dims=[1]
+        )
+    else:
+        model = LatentKroneckerGP(train_X=train_X, train_T=train_T, train_Y=train_Y)
+
+    original_context = model.use_iterative_methods
+    inside_context = False
+    fit_was_called = False
+
+    @contextmanager
+    def tracked_context():
+        nonlocal inside_context
+        with original_context():
+            inside_context = True
+            try:
+                yield
+            finally:
+                inside_context = False
+
+    def fake_fit(mll, *, optimizer_kwargs=None):
+        nonlocal fit_was_called
+        fit_was_called = True
+        assert inside_context
+        assert isinstance(mll, ExactMarginalLogLikelihood)
+        assert mll.model is model
+        assert optimizer_kwargs == {"options": {"maxiter": 2}}
+
+    monkeypatch.setattr(model, "use_iterative_methods", tracked_context)
+    monkeypatch.setattr("robotorchan.models.structured.latent_kronecker.fit_gpytorch_mll", fake_fit)
+
+    model.fit(optimizer_kwargs={"options": {"maxiter": 2}})
+
+    assert fit_was_called
+    assert not inside_context
+
+
+@pytest.mark.parametrize("standardize", [False, True])
+def test_latent_kronecker_posterior_manages_solver_context(monkeypatch, standardize):
+    train_X, train_T, train_Y = _training_data()
+    kwargs = {} if standardize else {"outcome_transform": None}
+    model = LatentKroneckerGP(train_X=train_X, train_T=train_T, train_Y=train_Y, **kwargs)
+    model.eval()
+    original_context = model.use_iterative_methods
+    calls = []
+    tolerances = []
+
+    @contextmanager
+    def tracked_context(*args, **kwargs):
+        calls.append("enter")
+        with original_context(*args, **kwargs):
+            tolerances.append(settings.cg_tolerance.value())
+            try:
+                yield
+            finally:
+                calls.append("exit")
+
+    monkeypatch.setattr(model, "use_iterative_methods", tracked_context)
+    posterior = model.posterior(train_X[:2], train_T)
+    assert calls == ["enter", "exit"]
+
+    for operation in (
+        lambda: posterior.mean,
+        lambda: posterior.variance,
+        lambda: posterior.rsample(torch.Size([2])),
+        lambda: posterior.rsample_from_base_samples(
+            torch.Size([2]),
+            torch.randn(torch.Size([2]) + posterior.base_sample_shape, dtype=torch.double),
+        ),
+    ):
+        calls.clear()
+        assert torch.isfinite(operation()).all()
+        assert calls
+        depth = 0
+        for event in calls:
+            depth += 1 if event == "enter" else -1
+            assert depth >= 0
+        assert depth == 0
+
+    calls.clear()
+    tolerances.clear()
+    original_tolerance = settings.cg_tolerance.value()
+    with model.use_iterative_methods(tol=0.005):
+        assert torch.isfinite(model.posterior(train_X[:2], train_T).mean).all()
+        assert torch.isfinite(posterior.rsample(torch.Size([2]))).all()
+        assert settings.cg_tolerance.value() == 0.005
+        assert tolerances and all(tol == 0.005 for tol in tolerances)
+        assert calls[0] == "enter"
+        assert calls.count("enter") == calls.count("exit") + 1
+    assert calls[-1] == "exit"
+    assert calls.count("enter") == calls.count("exit")
+    assert settings.cg_tolerance.value() == original_tolerance

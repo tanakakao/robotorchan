@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from contextvars import ContextVar
+from functools import wraps
+
+import torch
 from botorch.fit import fit_gpytorch_mll
 from botorch.models.latent_kronecker_gp import (
     LatentKroneckerGP as BoTorchLatentKroneckerGP,
 )
 from botorch.models.transforms.input import InputTransform
 from botorch.models.transforms.outcome import OutcomeTransform, Standardize
+from botorch.posteriors.latent_kronecker import LatentKroneckerGPPosterior
 from botorch.posteriors.posterior import Posterior
 from botorch.posteriors.transformed import TransformedPosterior
 from botorch.utils.types import DEFAULT, _DefaultType
@@ -23,6 +29,35 @@ from robotorchan.models.base import (
     normalize_feature_dims,
 )
 
+# Track explicit contexts without storing transient state on the torch module.
+_ACTIVE_ITERATIVE_MODELS: ContextVar[tuple[int, ...]] = ContextVar(
+    "_ACTIVE_ITERATIVE_MODELS", default=()
+)
+
+
+class _IterativeLatentKroneckerPosterior(LatentKroneckerGPPosterior):
+    """Keep upstream pathwise sampling and lazy moments inside solver settings."""
+
+    @property
+    def mean(self) -> Tensor:
+        with self.model._iterative_context():
+            return super().mean
+
+    @property
+    def variance(self) -> Tensor:
+        with self.model._iterative_context():
+            return super().variance
+
+    def rsample(self, sample_shape: torch.Size | None = None) -> Tensor:
+        with self.model._iterative_context():
+            return super().rsample(sample_shape=sample_shape)
+
+    def rsample_from_base_samples(self, sample_shape: torch.Size, base_samples: Tensor) -> Tensor:
+        with self.model._iterative_context():
+            return super().rsample_from_base_samples(
+                sample_shape=sample_shape, base_samples=base_samples
+            )
+
 
 class LatentKroneckerGP(ExactGPModelMixin, BoTorchLatentKroneckerGP):
     """BoTorch ``LatentKroneckerGP`` with robotorchan conveniences.
@@ -35,9 +70,32 @@ class LatentKroneckerGP(ExactGPModelMixin, BoTorchLatentKroneckerGP):
 
     supports_fit = True
 
+    @contextmanager
+    @wraps(BoTorchLatentKroneckerGP.use_iterative_methods)
+    def use_iterative_methods(self, *args, **kwargs):
+        """Preserve explicit solver settings across upstream default-only calls."""
+        if not args and not kwargs and id(self) in _ACTIVE_ITERATIVE_MODELS.get():
+            yield
+            return
+        with super().use_iterative_methods(*args, **kwargs):
+            token = _ACTIVE_ITERATIVE_MODELS.set((*_ACTIVE_ITERATIVE_MODELS.get(), id(self)))
+            try:
+                yield
+            finally:
+                _ACTIVE_ITERATIVE_MODELS.reset(token)
+
+    @contextmanager
+    def _iterative_context(self):
+        """Use defaults unless this model already has explicit solver settings."""
+        if id(self) in _ACTIVE_ITERATIVE_MODELS.get():
+            yield
+        else:
+            with self.use_iterative_methods():
+                yield
+
     def fit(self, *, optimizer_kwargs: dict | None = None) -> None:
         """Fit the native MLL in BoTorch's iterative-methods context."""
-        with self.use_iterative_methods():
+        with self._iterative_context():
             fit_gpytorch_mll(self.make_mll(), optimizer_kwargs=optimizer_kwargs)
 
     def posterior(self, X: Tensor, T: Tensor | None = None, **kwargs) -> Posterior:
@@ -47,7 +105,11 @@ class LatentKroneckerGP(ExactGPModelMixin, BoTorchLatentKroneckerGP):
         while its distribution moments are not. A TransformedPosterior with an
         identity sample transform preserves its specialized pathwise sampler.
         """
-        posterior = super().posterior(X, T=T, **kwargs)
+        with self._iterative_context():
+            native = super().posterior(X, T=T, **kwargs)
+            posterior = _IterativeLatentKroneckerPosterior(
+                model=self, distribution=native.distribution, X=native.X, T=native.T
+            )
         transform = getattr(self, "outcome_transform", None)
         if transform is None:
             return posterior
