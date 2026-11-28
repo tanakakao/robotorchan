@@ -52,9 +52,7 @@ class _IterativeLatentKroneckerPosterior(LatentKroneckerGPPosterior):
         with self.model._iterative_context():
             return super().rsample(sample_shape=sample_shape)
 
-    def rsample_from_base_samples(
-        self, sample_shape: torch.Size, base_samples: Tensor
-    ) -> Tensor:
+    def rsample_from_base_samples(self, sample_shape: torch.Size, base_samples: Tensor) -> Tensor:
         with self.model._iterative_context():
             return super().rsample_from_base_samples(
                 sample_shape=sample_shape, base_samples=base_samples
