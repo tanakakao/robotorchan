@@ -104,10 +104,10 @@ def test_fit_recovers_replicated_noise_in_original_units() -> None:
     offsets = offsets / offsets.std()
     scale = 0.03 + 0.12 * X
     Y = torch.sin(2 * torch.pi * X) + scale * offsets
-    model = HeteroskedasticSingleTaskGP(
-        X.repeat_interleave(4, dim=0), Y.reshape(-1, 1)
-    )
+    model = HeteroskedasticSingleTaskGP(X.repeat_interleave(4, dim=0), Y.reshape(-1, 1))
     assert model.supports_fit
+    model.fit(iterations=2)
+    # Repeated fitting must also detach the previously registered auxiliary GP.
     model.fit(iterations=1)
     with torch.no_grad():
         noise = model.predicted_noise(X)
