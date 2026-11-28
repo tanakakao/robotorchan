@@ -8,6 +8,7 @@ from botorch.models.latent_kronecker_gp import (
 )
 from botorch.models.transforms.input import Normalize
 from gpytorch.mlls import ExactMarginalLogLikelihood
+from linear_operator import settings
 
 from robotorchan.models.structured.latent_kronecker import (
     LatentKroneckerGP,
@@ -169,11 +170,13 @@ def test_latent_kronecker_posterior_manages_solver_context(monkeypatch, standard
     model.eval()
     original_context = model.use_iterative_methods
     calls = []
+    tolerances = []
 
     @contextmanager
     def tracked_context(*args, **kwargs):
         calls.append("enter")
         with original_context(*args, **kwargs):
+            tolerances.append(settings.cg_tolerance.value())
             try:
                 yield
             finally:
@@ -195,11 +198,22 @@ def test_latent_kronecker_posterior_manages_solver_context(monkeypatch, standard
         calls.clear()
         assert torch.isfinite(operation()).all()
         assert calls
-        assert calls == ["enter", "exit"] * (len(calls) // 2)
+        depth = 0
+        for event in calls:
+            depth += 1 if event == "enter" else -1
+            assert depth >= 0
+        assert depth == 0
 
     calls.clear()
+    tolerances.clear()
+    original_tolerance = settings.cg_tolerance.value()
     with model.use_iterative_methods(tol=0.005):
         assert torch.isfinite(model.posterior(train_X[:2], train_T).mean).all()
         assert torch.isfinite(posterior.rsample(torch.Size([2]))).all()
-        assert calls == ["enter"]
-    assert calls == ["enter", "exit"]
+        assert settings.cg_tolerance.value() == 0.005
+        assert tolerances and all(tol == 0.005 for tol in tolerances)
+        assert calls[0] == "enter"
+        assert calls.count("enter") == calls.count("exit") + 1
+    assert calls[-1] == "exit"
+    assert calls.count("enter") == calls.count("exit")
+    assert settings.cg_tolerance.value() == original_tolerance
