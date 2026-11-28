@@ -11,7 +11,7 @@ ell(x) = softplus(a + B x) + lengthscale_floor
 ```
 
 
-切片・傾きのパラメータを GP と同時学習し、入力空間で滑らかさを変化させます。`lengthscale_floor` は正です。
+切片・傾きのパラメータを GP と同時学習し、入力空間で滑らかさを変化させます。`lengthscale_floor` は正です。`initial_lengthscale` を指定すると、傾きゼロの状態で局所 lengthscale がその値になるように切片を初期化します。省略時の初期化は従来どおりです。入力を正規化している場合でも、観測間隔や応答の変化速度に応じて初期値・下限を選択してください。
 
 ## モデル
 
@@ -19,7 +19,7 @@ ell(x) = softplus(a + B x) + lengthscale_floor
 | --- | --- | --- |
 | `NonstationarySingleTaskGP` | 連続・単一タスク | `local_lengthscale(X)` |
 | `MixedNonstationarySingleTaskGP` | Mixed・単一タスク、`cat_dims` | 加法・相互作用の連続 branch の組 |
-| `NonstationaryMultiTaskGP` | long-format task 列 | task ID を除くデータ特徴の値 |
+| `NonstationaryMultiTaskGP` | long-format task 列 | task ID を除いたデータ特徴のみから計算 |
 | `MixedNonstationaryMultiTaskGP` | long-format task と Mixed データ | 連続 branch の組 |
 | `NonstationaryKroneckerMultiTaskGP` | block-design 多出力 | データ特徴の `local_lengthscale(X)` |
 
@@ -29,7 +29,6 @@ Mixed は連続データ列に Gibbs kernel を適用し、カテゴリ共分散
 
 ```python
 import torch
-from botorch.fit import fit_gpytorch_mll
 from robotorchan.models import NonstationarySingleTaskGP
 
 train_X = torch.rand(24, 2, dtype=torch.double)
@@ -40,7 +39,7 @@ model = NonstationarySingleTaskGP(
     train_Y,
     lengthscale_floor=1e-3,
 )
-fit_gpytorch_mll(model.make_mll())
+model.fit()
 
 test_X = torch.rand(5, 2, dtype=torch.double)
 posterior = model.posterior(test_X)
