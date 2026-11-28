@@ -318,3 +318,5 @@ Accuracy・NLL・Brier score・ordinal MAEをCSVへ記録します。
 [65. Decoupled BO 基礎](notebooks/65_decoupled_bo_basics.ipynb)：部分観測、EPIG、KG、HVKG、費用付き反復。
 
 [66. Decoupled BO：評価費用・Mixed・バッチ・Multi-Fidelity](notebooks/66_decoupled_cost_mixed_multifidelity.ipynb)：費用モデル、候補制約、同時バッチ、忠実度選択。
+
+[67. Decoupled BO：分類・順序回帰・異種出力](notebooks/67_decoupled_heterogeneous_classification.ipynb)：クラス確率、Particle KG、Active Learning、材料探索。
