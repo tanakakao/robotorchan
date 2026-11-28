@@ -41,5 +41,24 @@ Tensor-first; time dimension normalized to nonnegative index; consistent units a
 
 For each phase record existing verified / newly implemented / conditional / mathematically inappropriate / technically unsupported. Static candidate reuse is not verified support. Test direct dependencies and relevant cross-cutting combinations, not unrelated repository-wide audits. Add tests and docs with implementation; no audit-only completion for implementation phases. Keep PRs coherent by feature, avoid artificial micro-phases. No API or package skeleton added in Phase 1.
 
-## Literature and upstream verification still required
-Starting references: Rasmussen & Williams (2006), Wilson & Adams (2013), Hartikainen & Särkkä (2010), Frigola et al. (2014), Bui et al. (2017), Bogunovic et al. (2016), Balandat et al. (2020). Verify originals, applicable assumptions, upstream public API/version and licenses before marking Phase 1 complete. No runtime or CI evidence is asserted by this record.
+## Upstream API and literature decisions
+
+The project metadata requires Python >=3.11 and botorch>=0.18.1,<0.19; pandas is already optional via dataframe. BoTorch 0.18 release notes require PyTorch >=2.4. Keep dependency metadata unchanged. Stable/latest documentation is evidence of public interfaces, not a substitute for tests against the supported version range.
+
+- [BoTorch model API](https://botorch.readthedocs.io/en/stable/models.html): reuse SingleTaskGP, ModelListGP, MultiTaskGP and public condition_on_observations where supported. Conditioning returns a new model; validate robotorchan raw training data metadata and fixed-noise transforms before online reuse. MixedSingleTaskGP exposes cont_kernel_factory; verify actual behavior on supported versions rather than assuming all mixed wrappers accept custom kernels.
+- [BoTorch releases](https://github.com/meta-pytorch/botorch/releases): OrthogonalAdditiveGP and LatentKroneckerGP already exist in the 0.18 series. Evaluate OrthogonalAdditiveGP for Phase 4 before creating a new model; its orthogonality assumptions are not interchangeable with arbitrary additive temporal decomposition.
+- [GPyTorch kernel API](https://docs.gpytorch.ai/en/latest/kernels.html): use native PeriodicKernel, ScaleKernel and kernel products/sums, spectral mixture and grid interpolation. Preserve units of period_length and active_dims. Grid methods require suitable stationary kernels and structured inducing grids; irregular observations are not themselves a regular grid.
+
+Primary design references checked at publisher abstract or paper level:
+- [Wilson and Adams (2013)](https://proceedings.mlr.press/v28/wilson13.html), Gaussian Process Kernels for Pattern Discovery and Extrapolation: stationary spectral mixtures, Phase 3.
+- [Hartikainen and Särkkä (2010)](https://doi.org/10.1109/MLSP.2010.5589113): temporal state-space GP, Phase 7. Half-integer Matérn admits finite exact representation; squared exponential requires approximation.
+- [Särkkä and Hartikainen (2012)](https://proceedings.mlr.press/v22/sarkka12.html): spatiotemporal state-space inference with separability conditions, Phase 8.
+- [Frigola et al. (2014)](https://proceedings.neurips.cc/paper_files/paper/2014/file/875b60cf697a9e09e12c0f07b982e431-Paper.pdf): nonlinear GPSSM with variational and sequential Monte Carlo inference, Phase 7; distinct from linear state-space GP.
+- [Bui et al. (2017)](https://proceedings.neurips.cc/paper/2017/hash/f31b20466ae89669f9741e047487eb37-Abstract.html): streaming sparse posterior and hyperparameter updates, Phase 11.
+- [Bogunovic et al. (2016)](https://proceedings.mlr.press/v51/bogunovic16.html): Markov time-varying GP-UCB, reset and gradual forgetting, Phase 14; regret claims require stated drift assumptions.
+
+Use original implementations based on mathematical descriptions or existing installed public APIs, not copied third-party source. No new external code or datasets introduced; check license of any subsequently proposed code/data before adoption. Detailed derivations and exact-version runtime checks are acceptance gates of the respective implementation phases.
+
+## Phase 1 disposition
+
+Design baseline and upstream selection are established. No runtime support is claimed until implementation tests pass. Phase 2 can proceed after this contract PR passes CI and is merged. Phase 2 should deliver a coherent tensor-first time-axis, lag, missing-data and temporal split implementation with tests, rather than further planning-only PRs.
