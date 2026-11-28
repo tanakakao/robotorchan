@@ -316,3 +316,5 @@ Accuracy・NLL・Brier score・ordinal MAEをCSVへ記録します。
 ### Decoupled Bayesian Optimization
 
 [65. Decoupled BO 基礎](notebooks/65_decoupled_bo_basics.ipynb)：部分観測、EPIG、KG、HVKG、費用付き反復。
+
+[66. Decoupled BO：評価費用・Mixed・バッチ・Multi-Fidelity](notebooks/66_decoupled_cost_mixed_multifidelity.ipynb)：費用モデル、候補制約、同時バッチ、忠実度選択。
