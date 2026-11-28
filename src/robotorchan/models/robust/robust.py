@@ -321,6 +321,9 @@ class _IterativeHeteroskedasticFitMixin:
         if noise_variance is not None:
             initial = noise_variance.median().item()
         variance = torch.full_like(Y, initial)
+        # Keep the fitted auxiliary GP outside the response MLL module tree.
+        self.noise_model = None
+        self._noise_model_fitted = False
         self._set_observation_variance(variance)
 
         for _ in range(iterations):
@@ -343,10 +346,9 @@ class _IterativeHeteroskedasticFitMixin:
                 variance = noise_model.posterior(X).mean.reshape_as(Y).exp()
                 variance = variance.clamp_min(self.noise_floor)
             self._set_observation_variance(variance)
-            self.noise_model = noise_model
-            self._noise_model_fitted = True
-
         fit_gpytorch_mll(self.make_mll(), optimizer_kwargs=optimizer_kwargs)
+        self.noise_model = noise_model
+        self._noise_model_fitted = True
         self.eval()
         return self
 
