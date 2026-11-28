@@ -74,3 +74,7 @@ pending対応はnative HVKG系とGaussian EPIGなどの明示的に対応した�
 真値で測る推奨Hypervolumeと、実際に学習へ追加する部分観測は区別します。
 コスト格子で直前の結果を保持し、seed軌跡単位でBootstrapを行います。
 信頼区間は点ごとの区間であり、性能優位性を自動的に保証しません。
+
+## 7. 費用・Mixed・忠実度の実行例
+
+[Notebook 66](../../examples/notebooks/66_decoupled_cost_mixed_multifidelity.ipynb) では、固定費用、工程共有費用、入力依存費用、joint q-batch、候補制約、Mixed変数、忠実度別費用を比較します。忠実度ごとのランキング値を比較し、選択されたマスクの実測費用だけを記録します。
