@@ -115,18 +115,14 @@ model.fit()
 
 です。
 
-`LatentKroneckerGP.fit()` が学習時の `use_iterative_methods()` を内部で管理します。学習処理を自前で構築し、直接 `fit_gpytorch_mll()` を呼ぶ場合は、この context を明示的に設定してください。予測時は引き続き `with model.use_iterative_methods():` を利用します。
+`LatentKroneckerGP.fit()` が学習時の `use_iterative_methods()` を内部で管理します。学習処理を自前で構築し、直接 `fit_gpytorch_mll()` を呼ぶ場合は、この context を明示的に設定してください。予測時も `posterior()` と事後平均・分散・サンプリングが内部で管理するため、通常は明示的な context は不要です。
 
 ---
 
 ## 11.28 posterior example
 
 ```python
-with model.use_iterative_methods():
-    posterior = model.posterior(
-        test_X,
-        test_T,
-    )
+posterior = model.posterior(test_X, test_T)
 ```
 
 とします。
@@ -278,8 +274,7 @@ model = LatentKroneckerGP(
 
 model.fit()
 
-with model.use_iterative_methods():
-    posterior = model.posterior(test_X, test_T)
+posterior = model.posterior(test_X, test_T)
 ```
 
 ---
@@ -462,7 +457,7 @@ with model.use_iterative_methods():
 
 という context manager が用意されています。
 
-学習時は `model.fit()` が内部でこの context を有効化します。posterior inference では呼び出し側で明示的に context を使ってください。
+学習・予測・事後平均・分散・サンプリングではモデルが内部で context を管理します。必要なら `with model.use_iterative_methods(tol=..., max_iter=...):` で明示的な設定を指定できます。
 
 ---
 
