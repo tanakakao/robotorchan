@@ -7426,6 +7426,11 @@
       "path": "docs/guide/33_decoupled_bayesian_optimization.md",
       "category": "Guide",
       "reason": "Implementation guide for decoupled Bayesian optimization."
+    },
+    {
+      "path": "docs-internal/architecture/temporal-extension.md",
+      "category": "Design",
+      "reason": "Temporal Gaussian process and dynamic Bayesian optimization architecture contract and phased implementation gates."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
