@@ -43,9 +43,7 @@ def lagged_rows(
     if len(set(lags)) != len(lags):
         raise ValueError("lags must be unique")
     ids = (
-        torch.zeros(n, dtype=torch.long, device=times.device)
-        if series_ids is None
-        else series_ids
+        torch.zeros(n, dtype=torch.long, device=times.device) if series_ids is None else series_ids
     )
     if ids.shape != (n,) or ids.device != times.device:
         raise ValueError("series_ids must align with times")

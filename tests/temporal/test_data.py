@@ -46,9 +46,7 @@ def test_missing_delayed_and_exogenous():
     y[1] = torch.nan
     available = t.clone()
     available[3] = 5
-    x, target, decision, _ = lagged_rows(
-        t, y, lags=[0], available_times=available, exogenous=y
-    )
+    x, target, decision, _ = lagged_rows(t, y, lags=[0], available_times=available, exogenous=y)
     assert observed_rows(y).tolist() == [True, False, True, True, True, True]
     assert decision.tolist() == [2, 4]
     assert x.tolist() == [[2.0, 2.0], [4.0, 4.0]]

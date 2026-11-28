@@ -39,9 +39,7 @@ def rolling_origin_splits(
         raise ValueError("test_duration must be positive and finite")
     if not math.isfinite(gap) or gap < 0:
         raise ValueError("gap must be nonnegative and finite")
-    if train_duration is not None and (
-        not math.isfinite(train_duration) or train_duration <= 0
-    ):
+    if train_duration is not None and (not math.isfinite(train_duration) or train_duration <= 0):
         raise ValueError("train_duration must be positive and finite")
     if not origins or any(not math.isfinite(origin) for origin in origins):
         raise ValueError("origins must be nonempty and finite")
