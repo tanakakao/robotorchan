@@ -24,6 +24,7 @@ def lagged_rows(
     series_ids: Tensor | None = None,
     available_times: Tensor | None = None,
     exogenous: Tensor | None = None,
+    exogenous_available_times: Tensor | None = None,
 ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
     """Return features, targets, decision row indices and target row indices.
 
@@ -62,6 +63,15 @@ def lagged_rows(
         or exogenous.dtype != values.dtype
     ):
         raise ValueError("exogenous must align with values in rows, device and dtype")
+    if exogenous_available_times is not None:
+        if exogenous is None:
+            raise ValueError("exogenous is required for exogenous availability")
+        validate_times(exogenous_available_times)
+        if (
+            exogenous_available_times.shape != times.shape
+            or exogenous_available_times.device != times.device
+        ):
+            raise ValueError("exogenous availability must align with times")
     features, targets, decisions, target_indices = [], [], [], []
     for group in ids.unique():
         idx = (ids == group).nonzero(as_tuple=True)[0]
@@ -76,6 +86,11 @@ def lagged_rows(
                 continue
             x = values[history].flatten()
             if exogenous is not None:
+                if (
+                    exogenous_available_times is not None
+                    and exogenous_available_times[decision] > times[decision]
+                ):
+                    continue
                 x = torch.cat((x, exogenous[decision]))
             y = values[target]
             if torch.isfinite(x).all() and torch.isfinite(y).all():
