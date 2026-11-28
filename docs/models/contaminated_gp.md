@@ -11,3 +11,7 @@
 [理論](../theory/14_robust_gaussian_process.md)と[実装ガイド](../guide/14_robust_gaussian_process.md)で仮定・推論方法・近似を確認できます。[ソース](../../src/robotorchan/models/robust/contaminated.py)から API と処理を確認してください。
 
 過去の設計条件・数式・検証要件は[設計記録](../../.github/project-records/model-design/contaminated_gp.md)に原文を保存しています。そこでの将来計画や Phase の完了条件は現在の対応保証ではありません。現在のモデル選択は[モデル索引](README.md)を参照してください。
+
+### 学習の安定化
+
+既定の `training_loss()` は一次元 Gaussian marginal の Gauss–Hermite 求積（最低32点）で期待対数混合尤度を近似します。`num_likelihood_samples` は求積点数の下限を制御し、`training_loss(num_likelihood_samples=...)` を明示すると従来のMonte Carlo評価を利用できます。`fit(steps=400, lr=0.02, warmup_steps=100)` は通常成分の標準偏差を一時的に広げ、指定した標準偏差に戻すオプションです。既定の `warmup_steps=0` では温度調整を行いません。収束や精度はデータごとに検証してください。

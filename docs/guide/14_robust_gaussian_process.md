@@ -135,3 +135,7 @@ robotorchanはこのモデル固有の目的とデータ保持を接続します
 posterior meanの残差から混合成分の近似確率を求めます。この診断を潜在変数の厳密な事後推論と取り違えない設計です。
 
 使用手順と結果の可視化は[対応するNotebook](../../examples/notebooks/14_robust_observation_models.ipynb)を参照してください。
+
+### Contamination mixture の求積と学習初期化
+
+観測尤度は観測点ごとに因数分解するため、期待対数尤度は潜在GPの一次元周辺Gaussian分布に対する積分で計算できる。既定ではGPyTorchの `GaussHermiteQuadrature1D` を利用し、明示的な `training_loss(num_likelihood_samples=...)` では従来のMonte Carlo近似を利用できる。`fit(warmup_steps=...)` は通常成分の標準偏差を一時的に広げてから元の設定へ戻す継続法であり、最終目的関数の混合分布は変えない。局所解の回避や収束は保証しない。
