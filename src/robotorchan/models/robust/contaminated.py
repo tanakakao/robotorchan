@@ -6,6 +6,7 @@ import math
 
 import torch
 from botorch.posteriors.gpytorch import GPyTorchPosterior
+from gpytorch.utils.quadrature import GaussHermiteQuadrature1D
 from torch import Tensor, nn
 
 from robotorchan.models.base import RawDataMixin
@@ -124,22 +125,62 @@ class ContaminatedSingleTaskGP(_RobustObservationFitMixin, RawDataMixin, nn.Modu
         return torch.logsumexp(components, dim=0)
 
     def training_loss(self, *, num_likelihood_samples: int | None = None) -> Tensor:
-        """Return Monte Carlo negative ELBO under the contamination likelihood."""
-        samples = (
-            self.num_likelihood_samples
-            if num_likelihood_samples is None
-            else int(num_likelihood_samples)
-        )
-        if samples < 1:
+        """Return negative ELBO using marginal Gaussian quadrature by default.
+
+        Explicit num_likelihood_samples retains the stochastic Monte Carlo
+        estimator for comparison. The likelihood factorizes over observations,
+        so only the one-dimensional Gaussian marginals are needed.
+        """
+        if num_likelihood_samples is not None and num_likelihood_samples < 1:
             raise ValueError("num_likelihood_samples must be positive.")
 
         X = self.raw_train_X
         Y = self.raw_train_Y.squeeze(-1)
         latent = self.response_model.model(X)
-        latent_samples = latent.rsample(torch.Size([samples]))
-        expected_log_likelihood = self._mixture_log_prob(Y - latent_samples).mean(0).sum()
+        if num_likelihood_samples is None:
+            quadrature = GaussHermiteQuadrature1D(
+                num_locs=max(32, self.num_likelihood_samples)
+            ).to(X)
+            expected_log_likelihood = quadrature(
+                lambda values: self._mixture_log_prob(Y - values), latent
+            ).sum()
+        else:
+            latent_samples = latent.rsample(torch.Size([int(num_likelihood_samples)]))
+            expected_log_likelihood = self._mixture_log_prob(Y - latent_samples).mean(0).sum()
         kl = self.response_model.model.variational_strategy.kl_divergence().sum()
         return (-expected_log_likelihood + self.beta * kl) / X.shape[-2]
+
+    def fit(
+        self, *, steps: int = 100, lr: float = 0.03, warmup_steps: int = 0
+    ) -> None:
+        """Fit the mixture, optionally warming up with a broader inlier component.
+
+        Warmup temporarily broadens the inlier standard deviation and anneals it
+        to the specified value. The final objective and all predictions use the
+        original mixture parameters.
+        """
+        if warmup_steps < 0 or warmup_steps >= steps:
+            raise ValueError("warmup_steps must be nonnegative and less than steps.")
+        if not 0 < lr < float("inf"):
+            raise ValueError("lr must be positive and finite.")
+        if warmup_steps == 0:
+            super().fit(steps=steps, lr=lr)
+            return
+        self.train()
+        optimizer = torch.optim.Adam(self.parameters(), lr=lr)
+        target_scale = self.inlier_scale
+        initial_scale = max(target_scale, min(self.outlier_scale * 0.5, 0.3))
+        try:
+            for step in range(steps):
+                fraction = min(step / warmup_steps, 1.0)
+                self.inlier_scale = initial_scale * (target_scale / initial_scale) ** fraction
+                optimizer.zero_grad()
+                loss = self.training_loss()
+                loss.backward()
+                optimizer.step()
+        finally:
+            self.inlier_scale = target_scale
+        self.eval()
 
     def contamination_diagnostic(self, X: Tensor, Y: Tensor) -> Tensor:
         """Approximate contamination probability using the latent posterior mean."""
