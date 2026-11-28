@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import torch
 import torch.nn.functional as F
 from gpytorch.kernels import Kernel, ScaleKernel
@@ -21,8 +23,15 @@ class GibbsKernel(Kernel):
 
     has_lengthscale = False
 
-    def __init__(self, input_dim: int, *, lengthscale_floor: float = 1e-3) -> None:
-        super().__init__()
+    def __init__(
+        self,
+        input_dim: int,
+        *,
+        lengthscale_floor: float = 1e-3,
+        initial_lengthscale: float | None = None,
+        active_dims: list[int] | None = None,
+    ) -> None:
+        super().__init__(active_dims=active_dims)
         if input_dim < 1:
             raise ValueError("input_dim must be positive.")
         if lengthscale_floor <= 0:
@@ -32,6 +41,14 @@ class GibbsKernel(Kernel):
         self.lengthscale_floor = float(lengthscale_floor)
         self.lengthscale_intercept = nn.Parameter(torch.zeros(input_dim))
         self.lengthscale_slope = nn.Parameter(torch.zeros(input_dim, input_dim))
+        if initial_lengthscale is not None:
+            delta = initial_lengthscale - lengthscale_floor
+            if not math.isfinite(delta) or delta <= 0:
+                raise ValueError("initial_lengthscale must exceed lengthscale_floor and be finite.")
+            # Stable inverse softplus.
+            intercept = delta + math.log(-math.expm1(-delta))
+            with torch.no_grad():
+                self.lengthscale_intercept.fill_(intercept)
 
     def local_lengthscale(self, X: Tensor) -> Tensor:
         """Return positive local lengthscales for each input location."""
@@ -84,9 +101,14 @@ class NonstationarySingleTaskGP(SingleTaskGP):
         train_Yvar: Tensor | None = None,
         *,
         lengthscale_floor: float = 1e-3,
+        initial_lengthscale: float | None = None,
     ) -> None:
         input_dim = train_X.shape[-1]
-        gibbs_kernel = GibbsKernel(input_dim, lengthscale_floor=lengthscale_floor)
+        gibbs_kernel = GibbsKernel(
+            input_dim,
+            lengthscale_floor=lengthscale_floor,
+            initial_lengthscale=initial_lengthscale,
+        )
         super().__init__(
             train_X=train_X,
             train_Y=train_Y,
@@ -120,6 +142,7 @@ class MixedNonstationarySingleTaskGP(SingleTaskGP):
         cat_dims: list[int],
         train_Yvar: Tensor | None = None,
         lengthscale_floor: float = 1e-3,
+        initial_lengthscale: float | None = None,
     ) -> None:
         input_dim = train_X.shape[-1]
         normalized_cat_dims = normalize_feature_dims(cat_dims, input_dim, name="cat_dims")
@@ -133,7 +156,11 @@ class MixedNonstationarySingleTaskGP(SingleTaskGP):
         def gibbs_factory(batch_shape, ard_num_dims, active_dims):
             del batch_shape, ard_num_dims
             return ScaleKernel(
-                GibbsKernel(len(active_dims), lengthscale_floor=lengthscale_floor),
+                GibbsKernel(
+                    len(active_dims),
+                    lengthscale_floor=lengthscale_floor,
+                    initial_lengthscale=initial_lengthscale,
+                ),
                 active_dims=active_dims,
             )
 
@@ -182,9 +209,14 @@ class NonstationaryKroneckerMultiTaskGP(KroneckerMultiTaskGP):
         train_Yvar: Tensor | None = None,
         *,
         lengthscale_floor: float = 1e-3,
+        initial_lengthscale: float | None = None,
     ) -> None:
         input_dim = train_X.shape[-1]
-        gibbs_kernel = GibbsKernel(input_dim, lengthscale_floor=lengthscale_floor)
+        gibbs_kernel = GibbsKernel(
+            input_dim,
+            lengthscale_floor=lengthscale_floor,
+            initial_lengthscale=initial_lengthscale,
+        )
         super().__init__(
             train_X=train_X,
             train_Y=train_Y,
@@ -219,12 +251,19 @@ class NonstationaryMultiTaskGP(MultiTaskGP):
         train_Yvar: Tensor | None = None,
         *,
         lengthscale_floor: float = 1e-3,
+        initial_lengthscale: float | None = None,
     ) -> None:
         input_dim = train_X.shape[-1]
         task_dim = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
         data_dims = continuous_feature_dims(input_dim, cat_dims=[task_dim])
-        gibbs_kernel = GibbsKernel(input_dim, lengthscale_floor=lengthscale_floor)
-        data_covar = ScaleKernel(gibbs_kernel, active_dims=data_dims)
+        gibbs_kernel = GibbsKernel(
+            len(data_dims),
+            lengthscale_floor=lengthscale_floor,
+            initial_lengthscale=initial_lengthscale,
+            active_dims=list(data_dims),
+        )
+        # Keep original columns at the outer kernel; select data columns only once.
+        data_covar = ScaleKernel(gibbs_kernel)
         data_covar.active_dims = torch.arange(input_dim, device=train_X.device)
         super().__init__(
             train_X=train_X,
@@ -247,8 +286,7 @@ class NonstationaryMultiTaskGP(MultiTaskGP):
 
     def local_lengthscale(self, X: Tensor) -> Tensor:
         """Return local lengthscales for data features, excluding task identity."""
-        lengthscale = self.gibbs_kernel.local_lengthscale(X)
-        return lengthscale[..., list(self.continuous_dims)]
+        return self.gibbs_kernel.local_lengthscale(X[..., list(self.continuous_dims)])
 
 
 class MixedNonstationaryMultiTaskGP(MultiTaskGP):
@@ -265,6 +303,7 @@ class MixedNonstationaryMultiTaskGP(MultiTaskGP):
         cat_dims: list[int],
         train_Yvar: Tensor | None = None,
         lengthscale_floor: float = 1e-3,
+        initial_lengthscale: float | None = None,
     ) -> None:
         input_dim = train_X.shape[-1]
         task_dim = normalize_feature_dims([task_feature], input_dim, name="task_feature")[0]
@@ -286,7 +325,11 @@ class MixedNonstationaryMultiTaskGP(MultiTaskGP):
         def gibbs_factory(batch_shape, ard_num_dims, active_dims):
             del batch_shape, ard_num_dims
             return ScaleKernel(
-                GibbsKernel(len(active_dims), lengthscale_floor=lengthscale_floor),
+                GibbsKernel(
+                    len(active_dims),
+                    lengthscale_floor=lengthscale_floor,
+                    initial_lengthscale=initial_lengthscale,
+                ),
                 active_dims=active_dims,
             )
 
