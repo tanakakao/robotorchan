@@ -138,9 +138,9 @@ class ContaminatedSingleTaskGP(_RobustObservationFitMixin, RawDataMixin, nn.Modu
         Y = self.raw_train_Y.squeeze(-1)
         latent = self.response_model.model(X)
         if num_likelihood_samples is None:
-            quadrature = GaussHermiteQuadrature1D(
-                num_locs=max(32, self.num_likelihood_samples)
-            ).to(X)
+            quadrature = GaussHermiteQuadrature1D(num_locs=max(32, self.num_likelihood_samples)).to(
+                X
+            )
             expected_log_likelihood = quadrature(
                 lambda values: self._mixture_log_prob(Y - values), latent
             ).sum()
@@ -150,9 +150,7 @@ class ContaminatedSingleTaskGP(_RobustObservationFitMixin, RawDataMixin, nn.Modu
         kl = self.response_model.model.variational_strategy.kl_divergence().sum()
         return (-expected_log_likelihood + self.beta * kl) / X.shape[-2]
 
-    def fit(
-        self, *, steps: int = 100, lr: float = 0.03, warmup_steps: int = 0
-    ) -> None:
+    def fit(self, *, steps: int = 100, lr: float = 0.03, warmup_steps: int = 0) -> None:
         """Fit the mixture, optionally warming up with a broader inlier component.
 
         Warmup temporarily broadens the inlier standard deviation and anneals it
