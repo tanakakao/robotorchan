@@ -86,3 +86,7 @@ pending対応はnative HVKG系とGaussian EPIGなどの明示的に対応した�
 ## 9. Studyによる非同期評価の実行例
 
 [Notebook 68](../../examples/notebooks/68_decoupled_study_async.ipynb) は ProblemSpec と recommend から実際のGP学習を行う proposer を構成します。部分tellで取得済み出力を学習し、未取得出力だけをpendingとしてEPIGで次の候補を提案します。失敗時の実測費用と取得済み観測を保持し、retry_failedで未取得項目だけを再試行します。initial_trialsによる履歴再開は外部永続化とは異なります。
+
+## 10. 共通評価予算による比較
+
+[Notebook 69](../../examples/notebooks/69_decoupled_bo_benchmark.ipynb) では既存のベンチマーク関数を用いて、問題ごとにCoupledとDecoupledを比較します。累積費用で整列した軌跡とpaired bootstrapによる差の区間を可視化します。少数seedの実行例から一般的な性能優位性は結論づけられません。
