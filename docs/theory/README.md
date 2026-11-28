@@ -36,6 +36,7 @@
 - [30. マルチクラスGP分類](30_multiclass_classification.md)
 - [31. 順序GP分類](31_ordinal_classification.md)
 - [32. 異種モデルによる分類制約付きベイズ最適化](32_heterogeneous_classification_constraints.md)
+- [33. Decoupled Bayesian Optimization](33_decoupled_bayesian_optimization.md)
 - [獲得関数の詳細理論](acquisition/README.md)
 - [候補最適化の詳細理論](optimization/README.md)
 
