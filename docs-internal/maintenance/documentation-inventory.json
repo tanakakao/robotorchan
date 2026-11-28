@@ -7416,6 +7416,11 @@
       "path": "docs-internal/contracts/optimization/decoupled-bo.md",
       "category": "Design",
       "reason": "Decoupled Bayesian optimization partial observation and masked fantasy design contract."
+    },
+    {
+      "path": "docs/theory/33_decoupled_bayesian_optimization.md",
+      "category": "Theory",
+      "reason": "Mathematical foundations of decoupled Bayesian optimization and partial observations."
     }
   ],
   "status": "Documentation restructuring complete; local validation passed. Remote CI has not been run.",
