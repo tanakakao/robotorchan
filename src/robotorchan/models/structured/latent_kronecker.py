@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from contextvars import ContextVar
+from functools import wraps
 
 import torch
 from botorch.fit import fit_gpytorch_mll
@@ -27,7 +28,6 @@ from robotorchan.models.base import (
     make_mixed_covar_module,
     normalize_feature_dims,
 )
-
 
 # Track explicit contexts without storing transient state on the torch module.
 _ACTIVE_ITERATIVE_MODELS: ContextVar[tuple[int, ...]] = ContextVar(
@@ -73,22 +73,13 @@ class LatentKroneckerGP(ExactGPModelMixin, BoTorchLatentKroneckerGP):
     supports_fit = True
 
     @contextmanager
-    def use_iterative_methods(
-        self,
-        tol: float = 0.01,
-        max_iter: int = 10000,
-        covar_root_decomposition: bool = False,
-        log_prob: bool = True,
-        solves: bool = True,
-    ):
-        """Expose native solver settings, including explicit caller overrides."""
-        with super().use_iterative_methods(
-            tol=tol,
-            max_iter=max_iter,
-            covar_root_decomposition=covar_root_decomposition,
-            log_prob=log_prob,
-            solves=solves,
-        ):
+    @wraps(BoTorchLatentKroneckerGP.use_iterative_methods)
+    def use_iterative_methods(self, *args, **kwargs):
+        """Preserve explicit solver settings across upstream default-only calls."""
+        if not args and not kwargs and id(self) in _ACTIVE_ITERATIVE_MODELS.get():
+            yield
+            return
+        with super().use_iterative_methods(*args, **kwargs):
             token = _ACTIVE_ITERATIVE_MODELS.set((*_ACTIVE_ITERATIVE_MODELS.get(), id(self)))
             try:
                 yield
