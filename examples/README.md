@@ -322,3 +322,5 @@ Accuracy・NLL・Brier score・ordinal MAEをCSVへ記録します。
 [67. Decoupled BO：分類・順序回帰・異種出力](notebooks/67_decoupled_heterogeneous_classification.ipynb)：クラス確率、Particle KG、Active Learning、材料探索。
 
 [68. Decoupled BO：Study・非同期評価](notebooks/68_decoupled_study_async.ipynb)：推薦、部分tell、pending、retry、予算、履歴再開。
+
+[69. Decoupled BO：共通評価予算によるベンチマーク](notebooks/69_decoupled_bo_benchmark.ipynb)：多目的、制約、Mixed、忠実度、異種出力、paired bootstrap。
