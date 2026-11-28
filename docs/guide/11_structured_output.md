@@ -54,7 +54,7 @@ Matheron型のconditioningはこのsamplingを理解するための基礎とな�
 
 `LatentKroneckerGP`は`X × T`の積空間をモデル化する。例えば`train_X: [n,d]`、`train_T: [m,1]`、
 `train_Y: [n,m]`でスペクトルを表す。`T`は波長・時刻・位置などの座標であり、単なるカテゴリtask IDと同じではない。観測部分へのconditioning、反復線形ソルバ、
-pathwise posterior samplingはBoTorchへ委譲する。
+pathwise posterior samplingはBoTorchへ委譲する。robotorchanの`fit()`、`posterior()`、事後平均・分散・サンプリングは反復計算のcontextを内部で管理する。
 
 BoTorch 0.18.1のこのposteriorは、`mean`をXとTの積に沿う平坦な形で返す。batchなしの平均はXとTの積に沿う値を持ち、sampleではX軸とT軸に分かれる。
 posterior sampleとmomentのshapeを同じと推測せず、batch次元も含めて確認する。
@@ -72,7 +72,7 @@ posterior sampleとmomentのshapeを同じと推測せず、batch次元も含め
 | 主な応答 | 画像などのtensor | 時刻・波長などの座標に沿った応答 |
 | 出力側の表現 | 各tensor軸の潜在座標 | 明示的な`T` |
 | 新しい出力位置 | 学習したtensor軸の構造に依存 | `test_T`で指定 |
-| 学習上の要点 | `_fast_solves`とPyTorch optimizer | `use_iterative_methods()` |
+| 学習上の要点 | `_fast_solves`とPyTorch optimizer | `fit()` 内部の `use_iterative_methods()` |
 | 固有のraw API | `raw_train_X`, `raw_train_Y` | 左に加えて`raw_train_T` |
 | Mixed版 | `MixedHigherOrderGP` | `MixedLatentKroneckerGP` |
 
