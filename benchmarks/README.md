@@ -89,3 +89,8 @@ uv run --extra examples python benchmarks/decoupled_report.py materials.jsonl --
 実行可能な比較・可視化の例は [Notebook 69](../examples/notebooks/69_decoupled_bo_benchmark.ipynb) を参照してください。
 
 HVKGの現在価値は有限候補集合上の最大2点のHypervolumeとし、fantasy側の推奨集合サイズに揃えます。現在価値の有限格子近似とfantasy側の連続最適化には差が残ります。報告用Hypervolumeは従来通り有限候補集合上の全非劣推奨点の真値で評価します。
+
+## Cross-library comparison
+
+[Cross-library benchmark](cross_library/README.md) explains the locked
+CPU environment, paired initial data, adapters, and JSONL/CSV results.

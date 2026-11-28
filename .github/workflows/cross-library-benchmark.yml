@@ -1,0 +1,33 @@
+name: Cross-library benchmark smoke
+
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install locked benchmark environment
+        run: |
+          python -m pip install --require-hashes -r benchmarks/cross_library/requirements-linux-x86_64-py312.lock
+          python -m pip install --no-deps -e .
+          python -m pip check
+      - name: Run candidate generation and evaluation
+        run: >-
+          python benchmarks/cross_library/run.py --seeds 0
+          --output results/cross-library-smoke.jsonl
+          --summary results/cross-library-smoke.csv
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: cross-library-smoke
+          path: results/
