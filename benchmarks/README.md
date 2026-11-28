@@ -45,3 +45,43 @@ identical initial hard-intervention experiments. Per-evaluation CSV
 and seed-aggregated JSON outputs include best outcome, simple regret,
 and cumulative intervention cost. Interpretation and limitations are
 in [docs/benchmarks/README.md](../docs/benchmarks/README.md).
+
+
+## Decoupled Bayesian optimization
+
+同一の初期観測と累積評価予算で、全出力を測定する Coupled BO と部分観測を選択する
+Decoupled BO を比較します。各スクリプトは JSON Lines を標準出力に書き出します。
+
+| スクリプト | 対象 |
+| --- | --- |
+| `decoupled_bo.py` | Branin-Currin、ZDT1、DTLZ2、EPIG/KG/HVKG/Random/Sobol |
+| `decoupled_constrained_bo.py` | 制約付き回帰、Mixed Process Yield |
+| `decoupled_multifidelity_bo.py` | 離散 fidelity と部分観測 |
+| `decoupled_heterogeneous_bo.py` | 回帰と二値・多クラス・順序分類 |
+| `decoupled_materials_bo.py` | 強度・導電率・品質合否の材料探索模擬問題 |
+| `decoupled_report.py` | コスト整列、Bootstrap、比較グラフ |
+
+学習を含む最小実行例（初期コスト16、総予算20）:
+
+```bash
+uv run python benchmarks/decoupled_bo.py --problem branin_currin --seeds 0,1 --budget 20 --policies kg > decoupled.jsonl
+uv run --extra examples python benchmarks/decoupled_report.py decoupled.jsonl --metric hypervolume --start 16 --stop 20 --plot decoupled.png
+```
+
+材料探索の例:
+
+```bash
+uv run python benchmarks/decoupled_materials_bo.py --seeds 0,1,2 --weights 0.5 --budget 60 > materials.jsonl
+uv run --extra examples python benchmarks/decoupled_report.py materials.jsonl --metric utility --start 36 --stop 60 --baseline coupled_particle_kg --plot materials.png
+```
+
+- 初期観測も予算に含めます。残予算で評価できない場合は終了します。
+- 共通コスト格子では直前の推奨結果を保持し、未来の観測値を補間しません。
+  終了後の保持は追加観測がない場合の性能を表します。中断した実験とは区別してください。
+- Bootstrap は seed 軌跡単位で再標本化する点ごとの区間です。同時信頼帯ではありません。
+  少数 seed は動作確認用です。比較には十分な独立 seed と同一条件が必要です。
+- 欠損した regret をゼロに置換しません。制約付き問題では feasibility を別に報告します。
+- KG と材料探索の効用は固定重みのスカラー化です。HVKG の Pareto 最適化とは区別します。
+- 模擬真値は評価指標の算出にも使用しますが、学習には選択された出力のみを追加します。
+- Multi-Fidelity のコスト、分類の効用、Particle KG の粒子数は実験設定であり、
+  実測材料データに対する性能保証ではありません。
