@@ -1,5 +1,7 @@
 import inspect
+from contextlib import contextmanager
 
+import pytest
 import torch
 from botorch.models.latent_kronecker_gp import (
     LatentKroneckerGP as BoTorchLatentKroneckerGP,
@@ -7,7 +9,10 @@ from botorch.models.latent_kronecker_gp import (
 from botorch.models.transforms.input import Normalize
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
-from robotorchan.models.structured.latent_kronecker import LatentKroneckerGP
+from robotorchan.models.structured.latent_kronecker import (
+    LatentKroneckerGP,
+    MixedLatentKroneckerGP,
+)
 
 
 def _training_data() -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -108,3 +113,50 @@ def test_latent_kronecker_gp_matches_upstream_posterior() -> None:
     )
     torch.testing.assert_close(wrapper_posterior.mean, expected_mean.squeeze(-1))
     torch.testing.assert_close(wrapper_posterior.variance, expected_variance.squeeze(-1))
+
+
+@pytest.mark.parametrize("mixed", [False, True], ids=["continuous", "mixed"])
+def test_latent_kronecker_fit_enables_iterative_methods(
+    monkeypatch: pytest.MonkeyPatch, mixed: bool
+) -> None:
+    train_X, train_T, train_Y = _training_data()
+    if mixed:
+        train_X = train_X.clone()
+        train_X[:, 1] = torch.tensor([0.0, 1.0, 0.0, 1.0], dtype=torch.double)
+        model = MixedLatentKroneckerGP(
+            train_X=train_X, train_T=train_T, train_Y=train_Y, cat_dims=[1]
+        )
+    else:
+        model = LatentKroneckerGP(train_X=train_X, train_T=train_T, train_Y=train_Y)
+
+    original_context = model.use_iterative_methods
+    inside_context = False
+    fit_was_called = False
+
+    @contextmanager
+    def tracked_context():
+        nonlocal inside_context
+        with original_context():
+            inside_context = True
+            try:
+                yield
+            finally:
+                inside_context = False
+
+    def fake_fit(mll, *, optimizer_kwargs=None):
+        nonlocal fit_was_called
+        fit_was_called = True
+        assert inside_context
+        assert isinstance(mll, ExactMarginalLogLikelihood)
+        assert mll.model is model
+        assert optimizer_kwargs == {"options": {"maxiter": 2}}
+
+    monkeypatch.setattr(model, "use_iterative_methods", tracked_context)
+    monkeypatch.setattr(
+        "robotorchan.models.structured.latent_kronecker.fit_gpytorch_mll", fake_fit
+    )
+
+    model.fit(optimizer_kwargs={"options": {"maxiter": 2}})
+
+    assert fit_was_called
+    assert not inside_context
