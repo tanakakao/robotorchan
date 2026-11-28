@@ -14,9 +14,7 @@ def test_cost_alignment_and_paired_bootstrap():
             )
     curves = align_cost_curves(records, "utility", [2, 3, 4, 5])
     torch.testing.assert_close(curves["a"][0], torch.tensor([1, 1, 3, 3], dtype=torch.double))
-    rows = summarize_cost_curves(
-        records, "utility", [2, 3, 4, 5], baseline="b", n_resamples=20
-    )
+    rows = summarize_cost_curves(records, "utility", [2, 3, 4, 5], baseline="b", n_resamples=20)
     selected = [row for row in rows if row["method"] == "a"]
     assert [row["difference"] for row in selected] == [0, -1, 1, 1]
     assert all(row["n_seeds"] == 2 for row in rows)
