@@ -100,8 +100,7 @@ def test_latent_kronecker_gp_matches_upstream_posterior() -> None:
     wrapper.eval()
     upstream.eval()
 
-    with wrapper.use_iterative_methods():
-        wrapper_posterior = wrapper.posterior(test_X, test_T)
+    wrapper_posterior = wrapper.posterior(test_X, test_T)
     with upstream.use_iterative_methods():
         upstream_posterior = upstream.posterior(test_X, test_T)
 
@@ -160,3 +159,47 @@ def test_latent_kronecker_fit_enables_iterative_methods(
 
     assert fit_was_called
     assert not inside_context
+
+
+@pytest.mark.parametrize("standardize", [False, True])
+def test_latent_kronecker_posterior_manages_solver_context(monkeypatch, standardize):
+    train_X, train_T, train_Y = _training_data()
+    kwargs = {} if standardize else {"outcome_transform": None}
+    model = LatentKroneckerGP(train_X=train_X, train_T=train_T, train_Y=train_Y, **kwargs)
+    model.eval()
+    original_context = model.use_iterative_methods
+    calls = []
+
+    @contextmanager
+    def tracked_context(*args, **kwargs):
+        calls.append("enter")
+        with original_context(*args, **kwargs):
+            try:
+                yield
+            finally:
+                calls.append("exit")
+
+    monkeypatch.setattr(model, "use_iterative_methods", tracked_context)
+    posterior = model.posterior(train_X[:2], train_T)
+    assert calls == ["enter", "exit"]
+
+    for operation in (
+        lambda: posterior.mean,
+        lambda: posterior.variance,
+        lambda: posterior.rsample(torch.Size([2])),
+        lambda: posterior.rsample_from_base_samples(
+            torch.Size([2]),
+            torch.randn(torch.Size([2]) + posterior.base_sample_shape, dtype=torch.double),
+        ),
+    ):
+        calls.clear()
+        assert torch.isfinite(operation()).all()
+        assert calls
+        assert calls == ["enter", "exit"] * (len(calls) // 2)
+
+    calls.clear()
+    with model.use_iterative_methods(tol=0.005):
+        assert torch.isfinite(model.posterior(train_X[:2], train_T).mean).all()
+        assert torch.isfinite(posterior.rsample(torch.Size([2]))).all()
+        assert calls == ["enter"]
+    assert calls == ["enter", "exit"]
