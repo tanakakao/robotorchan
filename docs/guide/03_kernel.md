@@ -121,7 +121,9 @@ contextの構造は[階層・文脈Guide](12_hierarchical_contextual_gp.md)を�
 ## 時系列カーネル
 
 `robotorchan.temporal.make_temporal_kernel` は時間列を指定して既存GPyTorch部品を
-構成します。専用GPクラスは必要ありません。RBF、Matérn、指数（Matérn 0.5）、
+構成します。専用GPクラスは必要ありません。Mixedモデルの連続カーネル生成関数は
+BoTorchからキーワード引数 `batch_shape`、`ard_num_dims`、`active_dims` を受け取ります。
+RBF、Matérn、指数（Matérn 0.5）、
 Rational Quadratic、周期、局所周期、線形、Spectral Mixtureを選択できます。
 時間列以外の連続変数には別のカーネルを用い、和または積で組み合わせます。
 

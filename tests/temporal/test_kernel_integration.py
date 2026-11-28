@@ -43,8 +43,9 @@ def test_mixed_temporal_q_batch():
     x = torch.stack((t, u, cat), dim=-1)
     y = (torch.sin(6 * t) + u + 0.2 * cat).unsqueeze(-1)
 
-    def continuous_kernel(batch_shape, num_dims, active_dims):
-        assert num_dims == len(active_dims)
+    def continuous_kernel(batch_shape, ard_num_dims, active_dims):
+        assert ard_num_dims == len(active_dims)
+        assert tuple(active_dims) == (0, 1)
         time = make_temporal_kernel("locally_periodic", time_dim=0, batch_shape=batch_shape)
         control = make_temporal_kernel("rbf", time_dim=1, batch_shape=batch_shape)
         return time * control
