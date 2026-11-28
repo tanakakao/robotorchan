@@ -66,6 +66,7 @@ DEFAULT_NOTEBOOKS = [
     "67_decoupled_heterogeneous_classification.ipynb",
     "68_decoupled_study_async.ipynb",
     "69_decoupled_bo_benchmark.ipynb",
+    "70_temporal_gp.ipynb",
 ]
 
 SLOW_NOTEBOOKS = [

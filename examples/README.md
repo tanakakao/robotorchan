@@ -324,3 +324,7 @@ Accuracy・NLL・Brier score・ordinal MAEをCSVへ記録します。
 [68. Decoupled BO：Study・非同期評価](notebooks/68_decoupled_study_async.ipynb)：推薦、部分tell、pending、retry、予算、履歴再開。
 
 [69. Decoupled BO：共通評価予算によるベンチマーク](notebooks/69_decoupled_bo_benchmark.ipynb)：多目的、制約、Mixed、忠実度、異種出力、paired bootstrap。
+
+### 時系列Gaussian Process
+
+[70. 時系列GPと時間カーネル](notebooks/70_temporal_gp.ipynb)：不規則時系列、時間カーネル比較、将来予測、固定時刻BO、Mixed・q-batch、独立多出力。

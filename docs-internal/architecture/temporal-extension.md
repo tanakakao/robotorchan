@@ -112,3 +112,26 @@ Elapsed lag features are target-free and do not automatically align arbitrary
 future targets to observed rows. Use explicit target times and availability for
 supervised labels and evaluation. The reference implementation uses per-decision
 search; large-scale acceleration is deferred to Phase 10 as appropriate.
+
+## Temporal kernel usage
+
+Reuse native GPyTorch covariance modules with the existing SingleTaskGP.
+The following example fits a model and predicts at a future time.
+
+```python
+import torch
+from gpytorch.kernels import RBFKernel, ScaleKernel
+
+from robotorchan.models.standard.single_task import SingleTaskGP
+from robotorchan.temporal import make_temporal_kernel
+
+t = torch.tensor([0.0, 0.1, 0.3, 0.5, 0.8, 1.0], dtype=torch.double)
+u = torch.linspace(0, 1, len(t), dtype=t.dtype)
+X = torch.stack((t, u), dim=-1)
+Y = (torch.sin(2 * torch.pi * t) + u).unsqueeze(-1)
+time_kernel = make_temporal_kernel("locally_periodic", period_length=1.0)
+control_kernel = ScaleKernel(RBFKernel(active_dims=(1,)))
+model = SingleTaskGP(X, Y, covar_module=(time_kernel + control_kernel).double())
+model.fit()
+posterior = model.posterior(torch.tensor([[1.1, 0.5]], dtype=X.dtype))
+```
