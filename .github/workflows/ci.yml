@@ -51,6 +51,43 @@ jobs:
           --ignore=tests/models/high_dimensional/test_fully_bayesian_multi_task_gp.py
           --ignore=tests/models/high_dimensional/test_mixed_fully_bayesian.py
 
+  decoupled-benchmark-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Install CPU PyTorch
+        run: python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.4"
+      - name: Install benchmark dependencies
+        run: python -m pip install -e ".[examples]"
+      - name: Run fitted benchmark and report
+        env:
+          MPLBACKEND: Agg
+          OMP_NUM_THREADS: "1"
+          MKL_NUM_THREADS: "1"
+        run: |
+          mkdir -p benchmark-output
+          python benchmarks/decoupled_bo.py --seeds 0,1 --budget 20 --policies kg > benchmark-output/raw.jsonl
+          python benchmarks/decoupled_report.py benchmark-output/raw.jsonl --metric hypervolume --start 16 --stop 20 --plot benchmark-output/comparison.png > benchmark-output/summary.jsonl
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("benchmark-output")
+          rows = [json.loads(line) for line in (root / "summary.jsonl").read_text().splitlines()]
+          assert len(rows) == 10
+          assert all(row["n_seeds"] == 2 for row in rows)
+          assert {row["cost"] for row in rows} == set(range(16, 21))
+          assert (root / "comparison.png").stat().st_size > 0
+          PY
+      - uses: actions/upload-artifact@v7
+        with:
+          name: decoupled-benchmark-smoke
+          path: benchmark-output/
+          if-no-files-found: error
+
   package:
     runs-on: ubuntu-latest
 
