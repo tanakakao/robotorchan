@@ -62,3 +62,53 @@ Use original implementations based on mathematical descriptions or existing inst
 ## Phase 1 disposition
 
 Design baseline and upstream selection are established. No runtime support is claimed until implementation tests pass. Phase 2 can proceed after this contract PR passes CI and is merged. Phase 2 should deliver a coherent tensor-first time-axis, lag, missing-data and temporal split implementation with tests, rather than further planning-only PRs.
+
+## Phase 2 usage
+
+Observation-step lags and elapsed-time lags are distinct. Step lags use ordered rows
+within one series; elapsed lags use the latest finite observation at or before the
+requested lag time that was available at the decision time. A maximum age can
+reject stale observations. Duplicate timestamps in step lags are rejected; elapsed
+lookup chooses the first eligible row on a timestamp tie. Aggregate replicates
+before lookup if that policy is not appropriate.
+
+```python
+import torch
+from robotorchan.temporal import (
+    TimeAxis,
+    elapsed_lag_features,
+    forecast_times,
+    lagged_rows,
+    rolling_origin_splits,
+)
+
+t = torch.tensor([0.0, 1.0, 3.0, 4.0, 7.0, 8.0, 10.0, 12.0, 15.0], dtype=torch.double)
+y = torch.sin(t / 3).unsqueeze(-1)
+X, Y, decision, target = lagged_rows(t, y, lags=[0, 1, 2])
+for train, test in rolling_origin_splits(
+    t[decision], t[target], origins=[8.0, 10.0], test_duration=2.0
+):
+    axis = TimeAxis.fit(t[decision[train]])
+    train_time = axis.transform(t[decision[train]])
+    test_time = axis.transform(t[decision[test]])
+
+# Build inputs without any future labels.
+origins = torch.tensor([15.0], dtype=t.dtype)
+future_X, valid = elapsed_lag_features(t, y, origins, lags=[0.0, 3.0], max_age=2.0)
+future_t = forecast_times(origins[valid], [1.0, 3.0])
+```
+
+For pandas input, use `dataframe_to_tensors(frame, time_column="time",
+value_columns=["y"], origin=origin)` with timezone-aware datetimes and an
+explicit origin, or omit origin for numeric coordinates. Numeric missing values
+remain NaN. The optional dataframe dependency is not imported until conversion.
+Row-based exogenous availability is independent of response availability; callers
+must supply the latest actual availability across all included covariates or
+ensure the covariates are already known. Future covariate scenarios and recursive
+uncertainty propagation belong to Phase 12. Rolling splits enforce label
+availability but do not validate preprocessing performed outside these utilities.
+
+Elapsed lag features are target-free and do not automatically align arbitrary
+future targets to observed rows. Use explicit target times and availability for
+supervised labels and evaluation. The reference implementation uses per-decision
+search; large-scale acceleration is deferred to Phase 10 as appropriate.
