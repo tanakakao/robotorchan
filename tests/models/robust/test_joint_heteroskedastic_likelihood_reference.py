@@ -12,11 +12,14 @@ from robotorchan.models import (
 
 
 @pytest.mark.parametrize("mixed", [False, True])
-def test_joint_training_loss_matches_clamped_gaussian_reference(mixed: bool) -> None:
+@pytest.mark.parametrize("noise_floor", [1e-6, 10.0])
+def test_joint_training_loss_matches_clamped_gaussian_reference(
+    mixed: bool, noise_floor: float
+) -> None:
     torch.manual_seed(11)
     x = torch.linspace(0, 1, 8, dtype=torch.double).unsqueeze(-1)
     y = torch.sin(x)
-    kwargs = {"num_inducing": 4, "noise_floor": 10.0, "num_mc_samples": 3}
+    kwargs = {"num_inducing": 4, "noise_floor": noise_floor, "num_mc_samples": 3}
     if mixed:
         x = torch.cat((x, (torch.arange(8) % 2).to(x).unsqueeze(-1)), dim=-1)
         model = MixedJointHeteroskedasticSingleTaskGP(x, y, cat_dims=[1], **kwargs)
@@ -28,15 +31,23 @@ def test_joint_training_loss_matches_clamped_gaussian_reference(mixed: bool) -> 
     model.response_model.model(x)
     model.noise_model.model(x)
 
-    # Independently reconstruct the Gaussian negative ELBO from latent draws.
+    # Independent scalar Gaussian expectation, conditional on each sampled log variance.
+    response = model.response_model.model(x)
+    noise = model.noise_model.model(x)
     torch.manual_seed(123)
-    response = model.response_model.model(x).rsample(torch.Size([3]))
-    log_noise = model.noise_model.model(x).rsample(torch.Size([3]))
-    variance = log_noise.exp().clamp_min(model.noise_floor)
-    assert torch.any(log_noise.exp() < model.noise_floor)
-    gaussian_nll = 0.5 * (
-        math.log(2 * math.pi) + variance.log() + (y.squeeze(-1) - response).square() / variance
-    )
+    standard_draws = torch.randn(3, x.shape[0], dtype=x.dtype, device=x.device)
+    log_noise = noise.mean + standard_draws * noise.variance.sqrt()
+    if noise_floor == 10.0:
+        assert torch.any(log_noise.exp() < noise_floor)
+    terms = []
+    for i in range(x.shape[0]):
+        variance = log_noise[:, i].exp().clamp_min(noise_floor)
+        second_moment = response.variance[i] + response.mean[i].square()
+        expected_error = y[i, 0].square() - 2 * y[i, 0] * response.mean[i] + second_moment
+        terms.append(
+            0.5 * (math.log(2 * math.pi) + variance.log() + expected_error / variance)
+        )
+    gaussian_nll = torch.stack(terms, dim=-1)
     kl_response = model.response_model.model.variational_strategy.kl_divergence().sum()
     kl_noise = model.noise_model.model.variational_strategy.kl_divergence().sum()
     expected = (gaussian_nll.mean(0).sum() + kl_response + kl_noise) / x.shape[-2]
