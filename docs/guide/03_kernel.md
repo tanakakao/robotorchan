@@ -131,8 +131,7 @@ Rational Quadratic、周期、局所周期、線形、Spectral Mixtureを選択�
 Spectral Mixtureは固有の混合重みを持つため追加のScaleKernelで包みません。
 等間隔データを前提とするスペクトル初期化を不規則時系列へそのまま適用しないでください。
 
-実行例は[時系列拡張の設計資料](../../docs-internal/architecture/temporal-extension.md)の
-Temporal kernel usage節を参照してください。
+実行例は[時系列GP Notebook](../../examples/notebooks/70_temporal_gp.ipynb)を参照してください。
 
 時刻が制御できない場合は、候補提案時に固定します。
 時間座標を自由に最適化すると実行不可能な提案を得る場合があります。

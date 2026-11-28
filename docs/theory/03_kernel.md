@@ -548,6 +548,42 @@ Kernel は surrogate model の予測平均だけでなく、posterior uncertaint
 基本原理です。ただし任意の距離やマスク処理を既存のカーネルに適用しても、
 正半定値性が保証されるわけではありません。
 
+### 時系列における周期・局所周期カーネル
+
+時間差を $\tau=t-t'$ とすると、周期カーネルの一例は
+
+$
+k_{\mathrm{per}}(\tau)=\sigma^2\exp\left(-\frac{2\sin^2(\pi\tau/p)}{\ell_p^2}\right).
+$
+
+$p$ は時間の単位を持つ周期、$\ell_p$ は周期内の滑らかさを表す無次元量です。
+整数周期だけ離れた点では共分散が最大になります。
+局所周期カーネルはこれにRBFの包絡を掛けた
+
+$
+k_{\mathrm{local}}(\tau)=k_{\mathrm{per}}(\tau)\exp\left(-\frac{\tau^2}{2\ell_t^2}\right)
+$
+
+であり、遠い周期同士の相関を弱めます。どちらも時間差だけに依存する定常カーネルです。
+周期や振幅そのものが時刻に依存する非定常モデルとは異なります。
+
+定常カーネルのスペクトル密度を対称なGaussian混合で表すと、
+WilsonとAdams (2013) のスペクトル混合カーネル
+
+$
+k_{\mathrm{SM}}(\tau)=
+\sum_{j=1}^{Q} w_j\exp(-2\pi^2v_j\tau^2)\cos(2\pi\mu_j\tau)
+$
+
+が得られます。$w_j$ は非負の重み、$v_j$ は正の周波数分散、$\mu_j$ は中心周波数です。
+不規則サンプリングでも共分散行列を直接評価できますが、等間隔を前提とする周波数推定や
+初期化はそのまま適用できません。短い観測期間から周期を識別できるとは限りません。
+
+線形カーネルは固定原点を基準にした非定常共分散であり、時間差のみの関数ではありません。
+時間座標を変換すると長さ尺度と周期の意味も変わるため、学習区間だけで変換を推定し、
+将来時刻にも同じ変換を使います。時刻が操作不能なら、候補探索は指定時刻で条件付けた
+制御変数の探索として定式化します。
+
 ## 3.22 この章で覚えておくこと
 
 Kernelについて最初に押さえるべき点は、次の関係です。
@@ -586,3 +622,5 @@ GPが予測平均と不確実性を返す仕組みを理解したら、次はそ
    *Interpolation of Spatial Data: Some Theory for Kriging*. Springer.
 3. GPyTorch documentation.
    Kernel implementations used by the upstream GP stack.
+4. Wilson, A. G., and Adams, R. P. (2013).
+   [Gaussian Process Kernels for Pattern Discovery and Extrapolation](https://proceedings.mlr.press/v28/wilson13.html). ICML.
