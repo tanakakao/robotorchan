@@ -82,3 +82,9 @@ def test_raw_training_data_and_lengthscale_diagnostic() -> None:
     lengthscale = model.local_lengthscale(X)
     assert lengthscale.shape == X.shape
     assert torch.all(lengthscale > 0)
+
+
+def test_configurable_initial_lengthscale() -> None:
+    X, _ = _data()
+    kernel = GibbsKernel(1, lengthscale_floor=0.015, initial_lengthscale=0.1).double()
+    torch.testing.assert_close(kernel.local_lengthscale(X), torch.full_like(X, 0.1))
